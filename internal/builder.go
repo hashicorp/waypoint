@@ -1,8 +1,12 @@
 package internal
 
+import (
+	"context"
+)
+
 // Builder is responsible for building an artifact from source.
 type Builder interface {
-	Build() (Artifact, error)
+	Build(context.Context) (Artifact, error)
 }
 
 // An artifact is the result of a Builder and can be stored in an
@@ -17,11 +21,4 @@ type Source struct {
 
 	// Path is the path to the root directory of the source tree.
 	Path string
-}
-
-// PackBuilder uses `pack`, the frontend for CloudNative Buildpacks,
-// to build an artifact from source.
-type PackBuilder struct{}
-
-func (b *PackBuilder) Build() (Artifact, error) {
 }
