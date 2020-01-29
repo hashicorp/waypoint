@@ -4,7 +4,7 @@ import (
 	"github.com/mitchellh/devflow/internal"
 	"github.com/mitchellh/devflow/internal/mapper"
 
-	"github.com/mitchellh/devflow/internal/builder/pack"
+	"github.com/mitchellh/devflow/internal/builtin/pack"
 )
 
 var (
