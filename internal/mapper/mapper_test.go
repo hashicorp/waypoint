@@ -3,6 +3,7 @@ package mapper
 import (
 	"testing"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -30,6 +31,23 @@ func TestMapper(t *testing.T) {
 		fn := m.Mapper("two", "hello")
 		require.Nil(fn)
 	}
+}
+
+func TestMapper_hclog(t *testing.T) {
+	require := require.New(t)
+
+	m := NewM((*adder)(nil))
+	require.NoError(m.RegisterImpl("two", (*adderTwo)(nil)))
+	require.NoError(m.RegisterMapper("two", func(log hclog.Logger) *adderTwo {
+		return &adderTwo{From: 12}
+	}))
+
+	fn := m.Mapper("two", hclog.L())
+	require.NotNil(fn)
+	impl, err := fn()
+	require.NoError(err)
+	adder := impl.(adder)
+	require.Equal(adder.Add(), 14)
 }
 
 type adder interface {

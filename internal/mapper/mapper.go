@@ -126,7 +126,20 @@ func (m *mapper) Prepare(vt map[reflect.Type]reflect.Value) *preparedMapper {
 	for idx, arg := range m.Args {
 		v := vt[arg]
 		if !v.IsValid() {
-			return nil
+			// If we didn't find a direct type matching, then we go loop
+			// through all the values to see if we have a value that implements
+			// the interface argument.
+			for t, vv := range vt {
+				if t.Implements(arg) {
+					v = vv
+					break
+				}
+			}
+
+			// We didn't find a direct value or a value impl the interface
+			if !v.IsValid() {
+				return nil
+			}
 		}
 
 		in[idx] = v
