@@ -6,7 +6,7 @@ import (
 
 // Config is the configuration structure.
 type Config struct {
-	App []*App `hcl:"app,block"`
+	Apps []*App `hcl:"app,block"`
 }
 
 // App represents a single application.

@@ -12,7 +12,7 @@ type Registry struct {
 }
 
 // Config implements Configurable
-func (r *Registry) Config() *Config {
+func (r *Registry) Config() interface{} {
 	return &r.config
 }
 

@@ -3,6 +3,7 @@ package mapper
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // NOTE(mitchellh): The whole algorithm below is sub-optimal in many ways:
@@ -130,4 +131,15 @@ func (c *Chain) Call() (interface{}, error) {
 	}
 
 	return result, nil
+}
+
+// String implements Stringer and outputs a human-friendly description
+// of the call chain that this represents.
+func (c *Chain) String() string {
+	ss := make([]string, len(c.funcs))
+	for i, f := range c.funcs {
+		ss[i] = f.Func.String()
+	}
+
+	return strings.Join(ss, " => ")
 }
