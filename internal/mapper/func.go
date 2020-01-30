@@ -88,10 +88,10 @@ func (f *Func) args(
 		v := vt[arg]
 
 		if !v.IsValid() {
+			// If we didn't find a direct type matching, then we go loop
+			// through all the values to see if we have a value that implements
+			// the interface argument. We only do this for interface types.
 			if arg.Kind() == reflect.Interface {
-				// If we didn't find a direct type matching, then we go loop
-				// through all the values to see if we have a value that implements
-				// the interface argument.
 				for t, vv := range vt {
 					if t.Implements(arg) {
 						v = vv
