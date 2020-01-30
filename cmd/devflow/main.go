@@ -24,6 +24,8 @@ func realMain() int {
 	})
 
 	source := &component.Source{App: "myapp", Path: "."}
+
+	// Builder
 	fn := builtin.Builders.Func("pack")
 	if fn == nil {
 		println(fmt.Sprintf("NO BUILDER"))
@@ -45,6 +47,33 @@ func realMain() int {
 		panic(err)
 	}
 
-	fmt.Println("DONE")
+	// Registry
+	fn = builtin.Registries.Func("docker")
+	if fn == nil {
+		println(fmt.Sprintf("NO REGISTRY"))
+		return 1
+	}
+
+	registry, err := fn.Call(source, log)
+	if err != nil {
+		panic(err)
+	}
+
+	pushFunc, err := mapper.NewFunc(registry.(component.Registry).PushFunc())
+	if err != nil {
+		panic(err)
+	}
+
+	chain, err := pushFunc.Chain(builtin.Mappers, context.Background(), source, log)
+	if err != nil {
+		panic(err)
+	}
+
+	artifact, err := chain.Call()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("DONE: %#v\n", artifact)
 	return 0
 }
