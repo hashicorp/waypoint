@@ -7,8 +7,9 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/mitchellh/devflow/internal"
 	"github.com/mitchellh/devflow/internal/builtin"
+	"github.com/mitchellh/devflow/internal/component"
+	"github.com/mitchellh/devflow/internal/mapper"
 )
 
 func main() {
@@ -22,19 +23,24 @@ func realMain() int {
 		Color: hclog.AutoColor,
 	})
 
-	source := &internal.Source{App: "myapp", Path: "."}
-	fn := builtin.BuilderM.Mapper("pack", source, log)
+	source := &component.Source{App: "myapp", Path: "."}
+	fn := builtin.Builders.Func("pack")
 	if fn == nil {
 		println(fmt.Sprintf("NO BUILDER"))
 		return 1
 	}
 
-	builder, err := fn()
+	builder, err := fn.Call(source, log)
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = builder.(internal.Builder).Build(context.Background())
+	buildFunc, err := mapper.NewFunc(builder.(component.Builder).BuildFunc())
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = buildFunc.Call(context.Background(), source, log)
 	if err != nil {
 		panic(err)
 	}
