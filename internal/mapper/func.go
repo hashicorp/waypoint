@@ -62,36 +62,51 @@ func (f *Func) Call(values ...interface{}) (interface{}, error) {
 // performant to call Call on the returned PreparedFunc rather than Call on
 // Func. This will avoid duplicate work.
 func (f *Func) Prepare(values ...interface{}) *PreparedFunc {
+	return f.prepare(f.valueMap(values...))
+}
+
+// valueMap turns a list of values into the map required for processing.
+func (f *Func) valueMap(values ...interface{}) map[reflect.Type]reflect.Value {
 	vt := make(map[reflect.Type]reflect.Value)
 	for _, value := range values {
 		v := reflect.ValueOf(value)
 		vt[v.Type()] = v
 	}
 
-	return f.prepare(vt)
+	return vt
 }
 
-// prepare is an unexported version of Prepare that takes a further
-// preprocessed value map form.
-func (f *Func) prepare(vt map[reflect.Type]reflect.Value) *PreparedFunc {
+// args builds the list of args for the function given the valueMap. If
+// missing is non-nil, then it will be populated with any missing values.
+// If missing is nil, then nil will be returned if there are any missing values.
+func (f *Func) args(
+	vt map[reflect.Type]reflect.Value,
+	missing map[reflect.Type]int,
+) []reflect.Value {
 	in := make([]reflect.Value, len(f.Args))
 	for idx, arg := range f.Args {
 		v := vt[arg]
 
 		if !v.IsValid() {
-			// If we didn't find a direct type matching, then we go loop
-			// through all the values to see if we have a value that implements
-			// the interface argument.
-			for t, vv := range vt {
-				if t.Implements(arg) {
-					v = vv
-					break
+			if arg.Kind() == reflect.Interface {
+				// If we didn't find a direct type matching, then we go loop
+				// through all the values to see if we have a value that implements
+				// the interface argument.
+				for t, vv := range vt {
+					if t.Implements(arg) {
+						v = vv
+						break
+					}
 				}
 			}
 
 			// We didn't find a direct value or a value impl the interface
 			if !v.IsValid() {
-				return nil
+				if missing == nil {
+					return nil
+				}
+
+				missing[arg] = idx
 			}
 		}
 
@@ -99,6 +114,13 @@ func (f *Func) prepare(vt map[reflect.Type]reflect.Value) *PreparedFunc {
 		in[idx] = v
 	}
 
+	return in
+}
+
+// prepare is an unexported version of Prepare that takes a further
+// preprocessed value map form.
+func (f *Func) prepare(vt map[reflect.Type]reflect.Value) *PreparedFunc {
+	in := f.args(vt, nil)
 	return &PreparedFunc{Func: f, In: in}
 }
 
