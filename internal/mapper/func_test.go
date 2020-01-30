@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -16,6 +17,30 @@ func TestFunc(t *testing.T) {
 	result, err := f.Call(1)
 	require.NoError(err)
 	require.Equal(result, 3)
+}
+
+func TestFunc_error(t *testing.T) {
+	t.Run("nil error", func(t *testing.T) {
+		require := require.New(t)
+
+		addTwo := func(a int) (int, error) { return a + 2, nil }
+		f, err := NewFunc(addTwo)
+		require.NoError(err)
+		result, err := f.Call(1)
+		require.NoError(err)
+		require.Equal(result, 3)
+	})
+
+	t.Run("nil error", func(t *testing.T) {
+		require := require.New(t)
+
+		addTwo := func(a int) (int, error) { return a + 2, errors.New("error!") }
+		f, err := NewFunc(addTwo)
+		require.NoError(err)
+		result, err := f.Call(1)
+		require.Error(err)
+		require.Equal(result, 3)
+	})
 }
 
 func TestFunc_hclog(t *testing.T) {

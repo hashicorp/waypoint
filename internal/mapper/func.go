@@ -114,7 +114,9 @@ func (f *PreparedFunc) Call() (interface{}, error) {
 	var err error
 	out := f.Func.Func.Call(f.In)
 	if len(out) > 1 {
-		err = out[1].Interface().(error)
+		if v := out[1].Interface(); v != nil {
+			err = v.(error)
+		}
 	}
 
 	return out[0].Interface(), err
