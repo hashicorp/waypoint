@@ -8,6 +8,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.3.0
 	github.com/mitchellh/go-linereader v0.0.0-20190213213312-1b945b3263eb
+	github.com/mitchellh/go-testing-interface v1.0.0
 	github.com/sebdah/goldie v1.0.0
 	github.com/stretchr/testify v1.4.0
 )

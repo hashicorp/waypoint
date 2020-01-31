@@ -21,6 +21,7 @@ import (
 	"github.com/mitchellh/go-linereader"
 
 	"github.com/mitchellh/devflow/internal/datadir"
+	"github.com/mitchellh/devflow/internal/pkg/httpfs"
 )
 
 // Terraform is a wrapper for the Terraform executable and operations
@@ -38,10 +39,13 @@ type Terraform struct {
 	// so that the Terraform run doesn't clobber any data.
 	Dir datadir.Dir
 
-	// ConfigDir is the directory with Terraform configuration files.
-	// These files will be copied as necessary. The format http.File makes
-	// it easy to integrate with go-bindata.
-	ConfigDir http.File
+	// ConfigFS is the http.FileSystem with Terraform configuration files.
+	// These files will be copied as necessary.
+	//
+	// ConfigPath is the path to the directory containing the configuration
+	// files within the filesystem. Example: "config/"
+	ConfigFS   http.FileSystem
+	ConfigPath string
 
 	// Vars are variables to set for the Terraform configuration. The value
 	// type should be a valid primitive that can be encoded to JSON for input
@@ -121,7 +125,20 @@ func (tf *Terraform) terraformVersion() (*version.Version, error) {
 
 // setupConfig copies the configuration into the target directory.
 func (tf *Terraform) setupConfig() error {
-	// TODO
+	// We put the configuration under the cache directory
+	tf.configPath = filepath.Join(tf.Dir.CacheDir(), "config")
+	if err := os.RemoveAll(tf.configPath); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(tf.configPath, 0755); err != nil {
+		return err
+	}
+
+	// Copy the files
+	if err := httpfs.Copy(tf.ConfigFS, tf.configPath, tf.ConfigPath); err != nil {
+		return err
+	}
+
 	return nil
 }
 
