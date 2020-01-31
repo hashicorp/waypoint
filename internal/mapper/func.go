@@ -3,6 +3,7 @@ package mapper
 import (
 	"fmt"
 	"reflect"
+	"runtime"
 )
 
 // Func is a dependency-injected function.
@@ -10,6 +11,7 @@ import (
 // The concrete function must return 1 or 2 results: a value alone or
 // a value with an error. No other shape of function is allowed.
 type Func struct {
+	Name string
 	Args []reflect.Type
 	Out  reflect.Type
 	Func reflect.Value
@@ -28,6 +30,16 @@ func NewFunc(f interface{}) (*Func, error) {
 		return nil, fmt.Errorf("fn should return one or two results, got %d", n)
 	}
 
+	// Get the reflect.Value for f since we'll need to store this but also
+	// needs to get the address and so on.
+	fv := reflect.ValueOf(f)
+
+	// Try to get a name for the function
+	var name string
+	if rfunc := runtime.FuncForPC(fv.Pointer()); rfunc != nil {
+		name = rfunc.Name()
+	}
+
 	// Build our args list
 	args := make([]reflect.Type, 0, ft.NumIn())
 	for i := 0; i < ft.NumIn(); i++ {
@@ -35,10 +47,21 @@ func NewFunc(f interface{}) (*Func, error) {
 	}
 
 	return &Func{
-		Func: reflect.ValueOf(f),
+		Name: name,
+		Func: fv,
 		Args: args,
 		Out:  ft.Out(0),
 	}, nil
+}
+
+// String returns the name of the function. If a name is not available, the
+// raw type signature is returned instead.
+func (f *Func) String() string {
+	if f.Name != "" {
+		return f.Name
+	}
+
+	return f.Func.String()
 }
 
 // Call calls the function with the given values and returns the result and

@@ -138,7 +138,7 @@ func (c *Chain) Call() (interface{}, error) {
 func (c *Chain) String() string {
 	ss := make([]string, len(c.funcs))
 	for i, f := range c.funcs {
-		ss[i] = f.Func.String()
+		ss[i] = f.String()
 	}
 
 	return strings.Join(ss, " => ")
