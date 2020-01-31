@@ -23,6 +23,10 @@ func init() {
 }
 
 func TestTerraform(t *testing.T) {
+	if !hasTerraform {
+		t.SkipNow()
+	}
+
 	require := require.New(t)
 
 	dir, closer := datadir.TestDir(t)
