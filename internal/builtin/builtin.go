@@ -5,12 +5,14 @@ import (
 	"github.com/mitchellh/devflow/internal/mapper"
 
 	"github.com/mitchellh/devflow/internal/builtin/docker"
+	"github.com/mitchellh/devflow/internal/builtin/google"
 	"github.com/mitchellh/devflow/internal/builtin/pack"
 )
 
 var (
 	Builders   = mustFactory(mapper.NewFactory((*component.Builder)(nil)))
 	Registries = mustFactory(mapper.NewFactory((*component.Registry)(nil)))
+	Platforms  = mustFactory(mapper.NewFactory((*component.Platform)(nil)))
 	Mappers    = []*mapper.Func{
 		mustFunc(mapper.NewFunc(docker.PackImageMapper)),
 	}
@@ -18,7 +20,10 @@ var (
 
 func init() {
 	must(Builders.Register("pack", pack.NewBuilder))
+
 	must(Registries.Register("docker", docker.NewRegistry))
+
+	must(Platforms.Register("google-cloud-run", google.NewCloudRunPlatform))
 }
 
 func must(err error) {

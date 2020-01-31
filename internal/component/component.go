@@ -25,6 +25,17 @@ type Registry interface {
 	PushFunc() interface{}
 }
 
+// Platform is responsible for deploying artifacts.
+type Platform interface {
+	// DeployFunc should return the method handle for the "deploy" operation.
+	// The deploy function has access to the following and should use this
+	// as necessary to perform a deploy.
+	//
+	//   artifact, artifact registry
+	//
+	DeployFunc() interface{}
+}
+
 // Source represents the source code for an application. This is used by
 // the builder for creating an Artifact.
 type Source struct {

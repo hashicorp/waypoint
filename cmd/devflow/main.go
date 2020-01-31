@@ -11,6 +11,7 @@ import (
 	"github.com/mitchellh/devflow/internal/builtin"
 	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/config"
+	"github.com/mitchellh/devflow/internal/datadir"
 	"github.com/mitchellh/devflow/internal/mapper"
 )
 
@@ -64,6 +65,30 @@ func realMain() int {
 	}
 	registry := raw.(component.Registry)
 
+	// Platform
+	log.Info("loading component", "type", "platform", "name", app.Platform.Type)
+	raw, err = loadComponent(builtin.Platforms, app.Platform, ctx, log)
+	if err != nil {
+		log.Error("error loading registry", "error", err)
+		return 1
+	}
+	platform := raw.(component.Platform)
+
+	// Setup our directory
+	log.Debug("preparing project directory", "path", ".devflow")
+	projDir, err := datadir.NewProject(".devflow")
+	if err != nil {
+		log.Error("error preparing data directory", "error", err)
+		return 1
+	}
+
+	log.Debug("preparing app directory", "app", app.Name)
+	appDir, err := projDir.App(app.Name)
+	if err != nil {
+		log.Error("error preparing data directory", "error", err)
+		return 1
+	}
+
 	// Build
 	buildFunc, err := mapper.NewFunc(builder.BuildFunc())
 	if err != nil {
@@ -104,7 +129,33 @@ func realMain() int {
 		return 1
 	}
 
-	fmt.Printf("DONE: %#v\n", artifact)
+	// Deploy
+	platformDir, err := appDir.Component("platform", app.Platform.Type)
+	if err != nil {
+		log.Error("error preparing platform deploy", "error", err)
+		return 1
+	}
+
+	deployFunc, err := mapper.NewFunc(platform.DeployFunc())
+	if err != nil {
+		log.Error("error preparing platform deploy", "error", err)
+		return 1
+	}
+
+	chain, err = deployFunc.Chain(builtin.Mappers, ctx, log, artifact, platformDir)
+	if err != nil {
+		log.Error("error preparing platform deploy", "error", err)
+		return 1
+	}
+	log.Debug("function chain", "chain", chain.String())
+
+	_, err = chain.Call()
+	if err != nil {
+		log.Error("error deploying", "error", err)
+		return 1
+	}
+
+	println("DONE")
 	return 0
 }
 
