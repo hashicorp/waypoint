@@ -10,6 +10,10 @@
 // framework (see internal/mapper) to call these functions.
 package component
 
+import (
+	"fmt"
+)
+
 // Builder is responsible for building an artifact from source.
 type Builder interface {
 	// BuildFunc should return the method handle for the "build" operation.
@@ -47,3 +51,7 @@ type Source struct {
 }
 
 type Artifact interface{}
+
+type Deployment interface {
+	fmt.Stringer
+}

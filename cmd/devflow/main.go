@@ -103,6 +103,7 @@ func realMain() int {
 	}
 	log.Debug("function chain", "chain", chain.String())
 
+	fmt.Fprintf(os.Stdout, "==> Building image\n")
 	buildArtifact, err := chain.Call()
 	if err != nil {
 		log.Error("error running builder", "error", err)
@@ -123,6 +124,7 @@ func realMain() int {
 	}
 	log.Debug("function chain", "chain", chain.String())
 
+	fmt.Fprintf(os.Stdout, "==> Pushing artifact\n")
 	artifact, err := chain.Call()
 	if err != nil {
 		log.Error("error pushing artifact to registry", "error", err)
@@ -142,20 +144,21 @@ func realMain() int {
 		return 1
 	}
 
-	chain, err = deployFunc.Chain(builtin.Mappers, ctx, log, artifact, platformDir)
+	chain, err = deployFunc.Chain(builtin.Mappers, ctx, log, artifact, platformDir, source)
 	if err != nil {
 		log.Error("error preparing platform deploy", "error", err)
 		return 1
 	}
 	log.Debug("function chain", "chain", chain.String())
 
-	_, err = chain.Call()
+	fmt.Fprintf(os.Stdout, "==> Deploying\n")
+	deployment, err := chain.Call()
 	if err != nil {
 		log.Error("error deploying", "error", err)
 		return 1
 	}
 
-	println("DONE")
+	fmt.Fprintf(os.Stdout, "%s\n", deployment.(component.Deployment).String())
 	return 0
 }
 
