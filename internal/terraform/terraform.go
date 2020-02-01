@@ -204,7 +204,12 @@ func (tf *Terraform) terraformInit() error {
 	// If we have a backend configuration written then we need to
 	// merge that configuration as part of initialization.
 	if tf.backendPath != "" {
-		cmd.Args = append(cmd.Args, "-backend-config", tf.backendPath)
+		path, err := filepath.Rel(cmd.Dir, tf.backendPath)
+		if err != nil {
+			return err
+		}
+
+		cmd.Args = append(cmd.Args, "-backend-config", path)
 	}
 
 	return cmd.Run()
