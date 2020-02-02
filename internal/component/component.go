@@ -14,6 +14,20 @@ import (
 	"fmt"
 )
 
+//go:generate stringer -type=Type
+
+// Type is an enum of all the types of components supported.
+// This isn't used directly in this package but is used by other packages
+// to reference the component types.
+type Type uint
+
+const (
+	InvalidType Type = iota
+	BuilderType
+	RegistryType
+	PlatformType
+)
+
 // Builder is responsible for building an artifact from source.
 type Builder interface {
 	// BuildFunc should return the method handle for the "build" operation.
