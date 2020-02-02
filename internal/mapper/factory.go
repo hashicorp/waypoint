@@ -35,7 +35,9 @@ func (f *Factory) Register(name string, fn interface{}) error {
 		return err
 	}
 
-	if !ff.Out.Implements(f.iface) {
+	// We only verify the output type if it isn't interface{}. If it is
+	// interface{} we trust that the caller is returning a valid type.
+	if ff.Out.Kind() != reflect.Interface && !ff.Out.Implements(f.iface) {
 		return fmt.Errorf("result of factory must implement interface")
 	}
 
