@@ -75,6 +75,14 @@ func (a *App) initComponent(
 	f *mapper.Factory,
 	cfg *config.Component,
 ) error {
+	// Before we do anything, the target should be a pointer. If so,
+	// then we get the value of the pointer so we can set it later.
+	targetV := reflect.ValueOf(target)
+	if targetV.Kind() != reflect.Ptr {
+		return fmt.Errorf("target value should be a pointer")
+	}
+	targetV = reflect.Indirect(targetV)
+
 	// Get the factory function for this type
 	fn := f.Func(cfg.Type)
 	if fn == nil {
@@ -88,11 +96,6 @@ func (a *App) initComponent(
 	}
 
 	// We have our value so let's make sure it is the correct type.
-	targetV := reflect.ValueOf(target)
-	if targetV.Kind() != reflect.Ptr {
-		return fmt.Errorf("target value should be a pointer")
-	}
-	targetV = reflect.Indirect(targetV)
 	rawV := reflect.ValueOf(raw)
 	if !rawV.Type().AssignableTo(targetV.Type()) {
 		return fmt.Errorf("component %s not assigntable to type %s", rawV.Type(), targetV.Type())

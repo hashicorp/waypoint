@@ -14,7 +14,8 @@ import (
 	"fmt"
 )
 
-//go:generate stringer -type=Type
+//go:generate stringer -type=Type -linecomment
+//go:generate mockery -all -case underscore
 
 // Type is an enum of all the types of components supported.
 // This isn't used directly in this package but is used by other packages
@@ -22,11 +23,20 @@ import (
 type Type uint
 
 const (
-	InvalidType Type = iota
-	BuilderType
-	RegistryType
-	PlatformType
+	InvalidType  Type = iota // Invalid
+	BuilderType              // Builder
+	RegistryType             // Registry
+	PlatformType             // Platform
+	maxType
 )
+
+// TypeMap is a mapping of Type to the nil pointer to the interface of that
+// type. This can be used with libraries such as mapper.
+var TypeMap = map[Type]interface{}{
+	BuilderType:  (*Builder)(nil),
+	RegistryType: (*Registry)(nil),
+	PlatformType: (*Platform)(nil),
+}
 
 // Builder is responsible for building an artifact from source.
 type Builder interface {

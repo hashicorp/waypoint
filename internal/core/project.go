@@ -78,3 +78,9 @@ func WithConfig(c *config.Config) Option {
 func WithLogger(log hclog.Logger) Option {
 	return func(p *Project, opts *options) { p.logger = log }
 }
+
+// WithFactory sets a factory for a component type. If this isn't set for
+// any component type, then the builtin mapper will be used.
+func WithFactory(t component.Type, f *mapper.Factory) Option {
+	return func(p *Project, opts *options) { p.factories[t] = f }
+}
