@@ -16,11 +16,22 @@ func TestForType(t *testing.T) {
 	}
 }
 
-func TestMock(t *testing.T) {
+func TestMock_typed(t *testing.T) {
 	require := require.New(t)
 
 	b := &Builder{}
 	m := Mock(b)
 	require.NotNil(m)
 	require.Equal(m, &b.Mock)
+}
+
+func TestMock_allTypes(t *testing.T) {
+	for typ := range component.TypeMap {
+		t.Run(typ.String(), func(t *testing.T) {
+			require := require.New(t)
+			v := ForType(typ)
+			m := Mock(v)
+			require.NotNil(m)
+		})
+	}
 }

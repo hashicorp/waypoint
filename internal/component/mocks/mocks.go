@@ -30,6 +30,14 @@ func ForType(t component.Type) interface{} {
 // should be one of the mocks in this package. This will panic if an incorrect
 // value is given, error checking is not done.
 func Mock(v interface{}) *mock.Mock {
-	field := reflect.ValueOf(v).Elem().FieldByName("mock")
+	value := reflect.ValueOf(v)
+	if value.Kind() == reflect.Interface {
+		value = reflect.Indirect(value)
+	}
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+
+	field := value.FieldByName("Mock")
 	return field.Addr().Interface().(*mock.Mock)
 }
