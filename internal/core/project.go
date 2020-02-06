@@ -2,12 +2,14 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/internal/builtin"
 	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/config"
+	"github.com/mitchellh/devflow/internal/datadir"
 	"github.com/mitchellh/devflow/internal/mapper"
 )
 
@@ -16,6 +18,8 @@ type Project struct {
 	logger    hclog.Logger
 	apps      map[string]*App
 	factories map[component.Type]*mapper.Factory
+	dir       *datadir.Project
+	mappers   []*mapper.Func
 }
 
 // NewProject creates a new Project with the given options.
@@ -35,6 +39,16 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	var opts options
 	for _, o := range os {
 		o(p, &opts)
+	}
+
+	// Defaults
+	if len(p.mappers) == 0 {
+		p.mappers = builtin.Mappers
+	}
+
+	// Validation
+	if p.dir == nil {
+		return nil, fmt.Errorf("WithDataDir must be specified")
 	}
 
 	// Initialize all the applications and load all their components.
@@ -73,6 +87,11 @@ func WithConfig(c *config.Config) Option {
 	return func(p *Project, opts *options) { opts.Config = c }
 }
 
+// WithDataDir sets the datadir that will be used for this project.
+func WithDataDir(dir *datadir.Project) Option {
+	return func(p *Project, opts *options) { p.dir = dir }
+}
+
 // WithLogger sets the logger to use with the project. If this option
 // is not provided, a default logger will be used (`hclog.L()`).
 func WithLogger(log hclog.Logger) Option {
@@ -83,4 +102,9 @@ func WithLogger(log hclog.Logger) Option {
 // any component type, then the builtin mapper will be used.
 func WithFactory(t component.Type, f *mapper.Factory) Option {
 	return func(p *Project, opts *options) { p.factories[t] = f }
+}
+
+// WithMappers adds the mappers to the list of mappers.
+func WithMappers(m ...*mapper.Func) Option {
+	return func(p *Project, opts *options) { p.mappers = append(p.mappers, m...) }
 }

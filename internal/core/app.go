@@ -9,6 +9,7 @@ import (
 
 	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/config"
+	"github.com/mitchellh/devflow/internal/datadir"
 	"github.com/mitchellh/devflow/internal/mapper"
 )
 
@@ -23,8 +24,10 @@ type App struct {
 	Registry component.Registry
 	Platform component.Platform
 
-	source *component.Source
-	logger hclog.Logger
+	source  *component.Source
+	logger  hclog.Logger
+	dir     *datadir.App
+	mappers []*mapper.Func
 }
 
 // newApp creates an App for the given project and configuration. This will
@@ -34,9 +37,17 @@ type App struct {
 func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	// Initialize
 	app := &App{
-		source: &component.Source{App: cfg.Name, Path: "."},
-		logger: p.logger.Named(cfg.Name),
+		source:  &component.Source{App: cfg.Name, Path: "."},
+		logger:  p.logger.Named("app").Named(cfg.Name),
+		mappers: p.mappers,
 	}
+
+	// Setup our directory
+	dir, err := p.dir.App(cfg.Name)
+	if err != nil {
+		return nil, err
+	}
+	app.dir = dir
 
 	// Load all the components
 	components := []struct {
@@ -61,7 +72,33 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	return app, nil
 }
 
-func (a *App) Build() (component.Artifact, error) { return nil, nil }
+// Build builds the artifact from source for this app.
+func (a *App) Build(ctx context.Context) (component.Artifact, error) {
+	log := a.logger.Named("build")
+
+	buildFunc, err := mapper.NewFunc(a.Builder.BuildFunc())
+	if err != nil {
+		return nil, err
+	}
+
+	chain, err := buildFunc.Chain(a.mappers,
+		ctx,
+		log,
+		a.source,
+		a.dir,
+	)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug("function chain", "chain", chain.String())
+
+	buildArtifact, err := chain.Call()
+	if err != nil {
+		return nil, err
+	}
+
+	return buildArtifact.(component.Artifact), nil
+}
 
 func (a *App) Push(component.Artifact) (component.Artifact, error) { return nil, nil }
 

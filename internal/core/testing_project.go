@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"io/ioutil"
 
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/mock"
@@ -10,6 +11,7 @@ import (
 	"github.com/mitchellh/devflow/internal/component"
 	componentmocks "github.com/mitchellh/devflow/internal/component/mocks"
 	"github.com/mitchellh/devflow/internal/config"
+	"github.com/mitchellh/devflow/internal/datadir"
 	"github.com/mitchellh/devflow/internal/mapper"
 )
 
@@ -17,8 +19,15 @@ import (
 // can be used for testing. Additional options can be given to provide your own
 // factories, configuration, etc.
 func TestProject(t testing.T, opts ...Option) *Project {
+	td, err := ioutil.TempDir("", "core")
+	require.NoError(t, err)
+
+	projDir, err := datadir.NewProject(td)
+	require.NoError(t, err)
+
 	defaultOpts := []Option{
 		WithConfig(config.TestConfig(t, testProjectConfig)),
+		WithDataDir(projDir),
 	}
 
 	// Create the default factory for all component types
