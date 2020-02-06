@@ -73,36 +73,56 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 }
 
 // Build builds the artifact from source for this app.
+// TODO(mitchellh): test
 func (a *App) Build(ctx context.Context) (component.Artifact, error) {
 	log := a.logger.Named("build")
-
-	buildFunc, err := mapper.NewFunc(a.Builder.BuildFunc())
+	result, err := a.callDynamicFunc(ctx, log, a.Builder.BuildFunc(), a.source, a.dir)
 	if err != nil {
 		return nil, err
 	}
 
-	chain, err := buildFunc.Chain(a.mappers,
-		ctx,
-		log,
-		a.source,
-		a.dir,
-	)
+	return result.(component.Artifact), nil
+}
+
+// Push pushes the given artifact to the registry.
+// TODO(mitchellh): test
+func (a *App) Push(ctx context.Context, artifact component.Artifact) (component.Artifact, error) {
+	log := a.logger.Named("push")
+	result, err := a.callDynamicFunc(ctx, log, a.Registry.PushFunc(), artifact)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(component.Artifact), nil
+}
+
+func (a *App) Deploy(component.Artifact) (component.Deployment, error) { return nil, nil }
+
+// callDynamicFunc calls a dynamic function which is a common pattern for
+// our component interfaces. These are functions that are given to mapper,
+// supplied with a series of arguments, dependency-injected, and then called.
+func (a *App) callDynamicFunc(
+	ctx context.Context,
+	log hclog.Logger,
+	f interface{},
+	values ...interface{},
+) (interface{}, error) {
+	rawFunc, err := mapper.NewFunc(f)
+	if err != nil {
+		return nil, err
+	}
+
+	// Make sure we have access to our context and logger
+	values = append(values, ctx, log)
+
+	// Build the chain and call it
+	chain, err := rawFunc.Chain(a.mappers, values...)
 	if err != nil {
 		return nil, err
 	}
 	log.Debug("function chain", "chain", chain.String())
-
-	buildArtifact, err := chain.Call()
-	if err != nil {
-		return nil, err
-	}
-
-	return buildArtifact.(component.Artifact), nil
+	return chain.Call()
 }
-
-func (a *App) Push(component.Artifact) (component.Artifact, error) { return nil, nil }
-
-func (a *App) Deploy(component.Artifact) (component.Deployment, error) { return nil, nil }
 
 // initComponent initializes a component with the given factory and configuration
 // and then sets it on the value pointed to by target.
