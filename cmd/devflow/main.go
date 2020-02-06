@@ -8,11 +8,9 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 
-	"github.com/mitchellh/devflow/internal/builtin"
-	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/config"
+	"github.com/mitchellh/devflow/internal/core"
 	"github.com/mitchellh/devflow/internal/datadir"
-	"github.com/mitchellh/devflow/internal/mapper"
 )
 
 func main() {
@@ -27,52 +25,15 @@ func realMain() int {
 		Output: os.Stderr,
 	})
 
-	log.Debug("decoding configuration")
-	var config config.Config
-	if err := hclsimple.DecodeFile("devflow.hcl", nil, &config); err != nil {
-		log.Error("error decoding configuration", "error", err)
-		return 1
-	}
-
-	if len(config.Apps) > 1 {
-		log.Error("only one app is supported at this time")
-		return 1
-	}
-
-	app := config.Apps[0]
-
 	// Context for our CLI
 	ctx := context.Background()
 
-	// Load all our components
-	source := &component.Source{App: app.Name, Path: "."}
-
-	// Builder
-	log.Info("loading component", "type", "builder", "name", app.Build.Type)
-	raw, err := loadComponent(builtin.Builders, app.Build, ctx, log)
-	if err != nil {
-		log.Error("error loading builder", "error", err)
+	log.Debug("decoding configuration")
+	var cfg config.Config
+	if err := hclsimple.DecodeFile("devflow.hcl", nil, &cfg); err != nil {
+		log.Error("error decoding configuration", "error", err)
 		return 1
 	}
-	builder := raw.(component.Builder)
-
-	// Registry
-	log.Info("loading component", "type", "registry", "name", app.Registry.Type)
-	raw, err = loadComponent(builtin.Registries, app.Registry, ctx, log)
-	if err != nil {
-		log.Error("error loading registry", "error", err)
-		return 1
-	}
-	registry := raw.(component.Registry)
-
-	// Platform
-	log.Info("loading component", "type", "platform", "name", app.Platform.Type)
-	raw, err = loadComponent(builtin.Platforms, app.Platform, ctx, log)
-	if err != nil {
-		log.Error("error loading registry", "error", err)
-		return 1
-	}
-	platform := raw.(component.Platform)
 
 	// Setup our directory
 	log.Debug("preparing project directory", "path", ".devflow")
@@ -82,105 +43,52 @@ func realMain() int {
 		return 1
 	}
 
-	log.Debug("preparing app directory", "app", app.Name)
-	appDir, err := projDir.App(app.Name)
+	// Create our project
+	proj, err := core.NewProject(ctx,
+		core.WithLogger(log),
+		core.WithConfig(&cfg),
+		core.WithDataDir(projDir),
+	)
 	if err != nil {
-		log.Error("error preparing data directory", "error", err)
+		log.Error("failed to create project", "error", err)
+		return 1
+	}
+
+	// NOTE(mitchellh): temporary restriction
+	if len(cfg.Apps) != 1 {
+		log.Error("only one app is supported at this time")
+		return 1
+	}
+
+	// Get our app
+	app, err := proj.App(cfg.Apps[0].Name)
+	if err != nil {
+		log.Error("failed to initialize app", "error", err)
 		return 1
 	}
 
 	// Build
-	buildFunc, err := mapper.NewFunc(builder.BuildFunc())
-	if err != nil {
-		log.Error("error preparing builder", "error", err)
-		return 1
-	}
-
-	chain, err := buildFunc.Chain(builtin.Mappers, ctx, source, log)
-	if err != nil {
-		log.Error("error preparing builder", "error", err)
-		return 1
-	}
-	log.Debug("function chain", "chain", chain.String())
-
-	fmt.Fprintf(os.Stdout, "==> Building image\n")
-	buildArtifact, err := chain.Call()
+	fmt.Fprintf(os.Stdout, "==> Building\n")
+	buildArtifact, err := app.Build(ctx)
 	if err != nil {
 		log.Error("error running builder", "error", err)
 		return 1
 	}
 
-	// Registry
-	pushFunc, err := mapper.NewFunc(registry.PushFunc())
-	if err != nil {
-		log.Error("error preparing registry push", "error", err)
-		return 1
-	}
-
-	chain, err = pushFunc.Chain(builtin.Mappers, ctx, source, log, buildArtifact)
-	if err != nil {
-		log.Error("error preparing registry push", "error", err)
-		return 1
-	}
-	log.Debug("function chain", "chain", chain.String())
-
 	fmt.Fprintf(os.Stdout, "==> Pushing artifact\n")
-	artifact, err := chain.Call()
+	pushedArtifact, err := app.Push(ctx, buildArtifact)
 	if err != nil {
 		log.Error("error pushing artifact to registry", "error", err)
 		return 1
 	}
 
-	// Deploy
-	platformDir, err := appDir.Component("platform", app.Platform.Type)
-	if err != nil {
-		log.Error("error preparing platform deploy", "error", err)
-		return 1
-	}
-
-	deployFunc, err := mapper.NewFunc(platform.DeployFunc())
-	if err != nil {
-		log.Error("error preparing platform deploy", "error", err)
-		return 1
-	}
-
-	chain, err = deployFunc.Chain(builtin.Mappers, ctx, log, artifact, platformDir, source)
-	if err != nil {
-		log.Error("error preparing platform deploy", "error", err)
-		return 1
-	}
-	log.Debug("function chain", "chain", chain.String())
-
 	fmt.Fprintf(os.Stdout, "==> Deploying\n")
-	deployment, err := chain.Call()
+	deployment, err := app.Deploy(ctx, pushedArtifact)
 	if err != nil {
 		log.Error("error deploying", "error", err)
 		return 1
 	}
 
-	fmt.Fprintf(os.Stdout, "%s\n", deployment.(component.Deployment).String())
+	fmt.Fprintf(os.Stdout, "%s\n", deployment.String())
 	return 0
-}
-
-func loadComponent(
-	f *mapper.Factory,
-	c *config.Component,
-	args ...interface{},
-) (interface{}, error) {
-	fn := f.Func(c.Type)
-	if fn == nil {
-		return nil, fmt.Errorf("unknown type: %q", c.Type)
-	}
-
-	raw, err := fn.Call(args...)
-	if err != nil {
-		return nil, err
-	}
-
-	diag := component.Configure(raw, c.Body, nil)
-	if diag.HasErrors() {
-		return nil, diag
-	}
-
-	return raw, nil
 }

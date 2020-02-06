@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 
@@ -24,10 +25,11 @@ type App struct {
 	Registry component.Registry
 	Platform component.Platform
 
-	source  *component.Source
-	logger  hclog.Logger
-	dir     *datadir.App
-	mappers []*mapper.Func
+	source        *component.Source
+	logger        hclog.Logger
+	dir           *datadir.App
+	mappers       []*mapper.Func
+	componentDirs map[interface{}]*datadir.Component
 }
 
 // newApp creates an App for the given project and configuration. This will
@@ -37,9 +39,10 @@ type App struct {
 func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	// Initialize
 	app := &App{
-		source:  &component.Source{App: cfg.Name, Path: "."},
-		logger:  p.logger.Named("app").Named(cfg.Name),
-		mappers: p.mappers,
+		source:        &component.Source{App: cfg.Name, Path: "."},
+		logger:        p.logger.Named("app").Named(cfg.Name),
+		mappers:       p.mappers,
+		componentDirs: make(map[interface{}]*datadir.Component),
 	}
 
 	// Setup our directory
@@ -56,6 +59,8 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 		Config *config.Component
 	}{
 		{&app.Builder, component.BuilderType, cfg.Build},
+		{&app.Registry, component.RegistryType, cfg.Registry},
+		{&app.Platform, component.PlatformType, cfg.Platform},
 	}
 	for _, c := range components {
 		if c.Config == nil {
@@ -63,7 +68,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 			continue
 		}
 
-		err := app.initComponent(ctx, c.Target, p.factories[c.Type], c.Config)
+		err = app.initComponent(ctx, c.Type, c.Target, p.factories[c.Type], c.Config)
 		if err != nil {
 			return nil, err
 		}
@@ -76,7 +81,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 // TODO(mitchellh): test
 func (a *App) Build(ctx context.Context) (component.Artifact, error) {
 	log := a.logger.Named("build")
-	result, err := a.callDynamicFunc(ctx, log, a.Builder.BuildFunc(), a.source, a.dir)
+	result, err := a.callDynamicFunc(ctx, log, a.Builder, a.Builder.BuildFunc(), a.source, a.dir)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +93,7 @@ func (a *App) Build(ctx context.Context) (component.Artifact, error) {
 // TODO(mitchellh): test
 func (a *App) Push(ctx context.Context, artifact component.Artifact) (component.Artifact, error) {
 	log := a.logger.Named("push")
-	result, err := a.callDynamicFunc(ctx, log, a.Registry.PushFunc(), artifact)
+	result, err := a.callDynamicFunc(ctx, log, a.Registry, a.Registry.PushFunc(), artifact)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +101,17 @@ func (a *App) Push(ctx context.Context, artifact component.Artifact) (component.
 	return result.(component.Artifact), nil
 }
 
-func (a *App) Deploy(component.Artifact) (component.Deployment, error) { return nil, nil }
+// Deploy deploys the given artifact.
+// TODO(mitchellh): test
+func (a *App) Deploy(ctx context.Context, artifact component.Artifact) (component.Deployment, error) {
+	log := a.logger.Named("platform")
+	result, err := a.callDynamicFunc(ctx, log, a.Platform, a.Platform.DeployFunc(), artifact)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(component.Deployment), nil
+}
 
 // callDynamicFunc calls a dynamic function which is a common pattern for
 // our component interfaces. These are functions that are given to mapper,
@@ -104,7 +119,8 @@ func (a *App) Deploy(component.Artifact) (component.Deployment, error) { return 
 func (a *App) callDynamicFunc(
 	ctx context.Context,
 	log hclog.Logger,
-	f interface{},
+	c interface{}, // component
+	f interface{}, // function
 	values ...interface{},
 ) (interface{}, error) {
 	rawFunc, err := mapper.NewFunc(f)
@@ -112,8 +128,14 @@ func (a *App) callDynamicFunc(
 		return nil, err
 	}
 
+	// Get the component directory
+	cdir, ok := a.componentDirs[c]
+	if !ok {
+		return nil, fmt.Errorf("component dir not found for: %T", c)
+	}
+
 	// Make sure we have access to our context and logger
-	values = append(values, ctx, log)
+	values = append(values, ctx, log, cdir)
 
 	// Build the chain and call it
 	chain, err := rawFunc.Chain(a.mappers, values...)
@@ -128,6 +150,7 @@ func (a *App) callDynamicFunc(
 // and then sets it on the value pointed to by target.
 func (a *App) initComponent(
 	ctx context.Context,
+	typ component.Type,
 	target interface{},
 	f *mapper.Factory,
 	cfg *config.Component,
@@ -146,11 +169,20 @@ func (a *App) initComponent(
 		return fmt.Errorf("unknown type: %q", cfg.Type)
 	}
 
-	// Call the factory to get our raw value (interface{} type)
-	raw, err := fn.Call(ctx, a.source, a.logger)
+	// Create the data directory for this component
+	cdir, err := a.dir.Component(strings.ToLower(typ.String()), cfg.Type)
 	if err != nil {
 		return err
 	}
+
+	// Call the factory to get our raw value (interface{} type)
+	raw, err := fn.Call(ctx, a.source, a.logger, cdir)
+	if err != nil {
+		return err
+	}
+
+	// Store the component dir mapping
+	a.componentDirs[raw] = cdir
 
 	// We have our value so let's make sure it is the correct type.
 	rawV := reflect.ValueOf(raw)
