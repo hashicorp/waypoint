@@ -81,7 +81,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 // TODO(mitchellh): test
 func (a *App) Build(ctx context.Context) (component.Artifact, error) {
 	log := a.logger.Named("build")
-	result, err := a.callDynamicFunc(ctx, log, a.Builder, a.Builder.BuildFunc(), a.source, a.dir)
+	result, err := a.callDynamicFunc(ctx, log, a.Builder, a.Builder.BuildFunc())
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +116,12 @@ func (a *App) Deploy(ctx context.Context, artifact component.Artifact) (componen
 // callDynamicFunc calls a dynamic function which is a common pattern for
 // our component interfaces. These are functions that are given to mapper,
 // supplied with a series of arguments, dependency-injected, and then called.
+//
+// This always provides some common values for injection:
+//
+//   * *component.Source
+//   * *datadir.Project
+//
 func (a *App) callDynamicFunc(
 	ctx context.Context,
 	log hclog.Logger,
@@ -134,8 +140,14 @@ func (a *App) callDynamicFunc(
 		return nil, fmt.Errorf("component dir not found for: %T", c)
 	}
 
-	// Make sure we have access to our context and logger
-	values = append(values, ctx, log, cdir)
+	// Make sure we have access to our context and logger and default args
+	values = append(values,
+		ctx,
+		log,
+		a.source,
+		a.dir,
+		cdir,
+	)
 
 	// Build the chain and call it
 	chain, err := rawFunc.Chain(a.mappers, values...)
