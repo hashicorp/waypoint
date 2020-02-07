@@ -6,6 +6,7 @@ import (
 
 	"github.com/mitchellh/devflow/internal/builtin/docker"
 	"github.com/mitchellh/devflow/internal/builtin/google"
+	"github.com/mitchellh/devflow/internal/builtin/lambda"
 	"github.com/mitchellh/devflow/internal/builtin/pack"
 )
 
@@ -20,10 +21,12 @@ var (
 
 func init() {
 	must(Builders.Register("pack", pack.NewBuilder))
+	must(Builders.Register("lambda", lambda.NewBuilder))
 
 	must(Registries.Register("docker", docker.NewRegistry))
 
 	must(Platforms.Register("google-cloud-run", google.NewCloudRunPlatform))
+	must(Platforms.Register("lambda", lambda.NewDeployer))
 }
 
 func must(err error) {
