@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 
+	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/core"
 	"github.com/mitchellh/devflow/internal/datadir"
@@ -75,11 +76,17 @@ func realMain() int {
 		return 1
 	}
 
-	fmt.Fprintf(os.Stdout, "==> Pushing artifact\n")
-	pushedArtifact, err := app.Push(ctx, buildArtifact)
-	if err != nil {
-		log.Error("error pushing artifact to registry", "error", err)
-		return 1
+	var pushedArtifact component.Artifact
+
+	if app.Registry != nil {
+		fmt.Fprintf(os.Stdout, "==> Pushing artifact\n")
+		pushedArtifact, err = app.Push(ctx, buildArtifact)
+		if err != nil {
+			log.Error("error pushing artifact to registry", "error", err)
+			return 1
+		}
+	} else {
+		pushedArtifact = buildArtifact
 	}
 
 	fmt.Fprintf(os.Stdout, "==> Deploying\n")
