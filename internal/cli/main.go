@@ -75,7 +75,8 @@ func interruptContext(ctx context.Context, log hclog.Logger) (context.Context, f
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt)
 	go func() {
-		log.Info("interrupt received, cancelling context")
+		log.Trace("interrupt listener goroutine started")
+
 		select {
 		case <-ch:
 			log.Warn("interrupt received, cancelling context")

@@ -4,12 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/hcl/v2/hclsimple"
-
 	"github.com/mitchellh/devflow/internal/component"
-	"github.com/mitchellh/devflow/internal/config"
-	"github.com/mitchellh/devflow/internal/core"
-	"github.com/mitchellh/devflow/internal/datadir"
 )
 
 type UpCommand struct {
@@ -20,42 +15,23 @@ func (c *UpCommand) Run([]string) int {
 	ctx := c.Ctx
 	log := c.Log.Named("up")
 
-	log.Debug("decoding configuration")
-	var cfg config.Config
-	if err := hclsimple.DecodeFile("devflow.hcl", nil, &cfg); err != nil {
-		log.Error("error decoding configuration", "error", err)
+	// Initialize. If we fail, we just exit since Init handles the UI.
+	if err := c.Init(); err != nil {
 		return 1
 	}
-
-	// Setup our directory
-	log.Debug("preparing project directory", "path", ".devflow")
-	projDir, err := datadir.NewProject(".devflow")
-	if err != nil {
-		log.Error("error preparing data directory", "error", err)
-		return 1
-	}
-
-	// Create our project
-	proj, err := core.NewProject(ctx,
-		core.WithLogger(log),
-		core.WithConfig(&cfg),
-		core.WithDataDir(projDir),
-	)
-	if err != nil {
-		log.Error("failed to create project", "error", err)
-		return 1
-	}
+	cfg := c.cfg
+	proj := c.project
 
 	// NOTE(mitchellh): temporary restriction
 	if len(cfg.Apps) != 1 {
-		log.Error("only one app is supported at this time")
+		c.ui.Error("only one app is supported at this time")
 		return 1
 	}
 
 	// Get our app
 	app, err := proj.App(cfg.Apps[0].Name)
 	if err != nil {
-		log.Error("failed to initialize app", "error", err)
+		c.logError(c.Log, "failed to initialize app", err)
 		return 1
 	}
 
