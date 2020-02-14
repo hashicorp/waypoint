@@ -12,6 +12,7 @@ import (
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/datadir"
 	"github.com/mitchellh/devflow/internal/mapper"
+	"github.com/mitchellh/devflow/internal/pkg/status"
 )
 
 // App represents a single application and exposes all the operations
@@ -115,7 +116,7 @@ func (a *App) Deploy(ctx context.Context, artifact component.Artifact) (componen
 
 // Exec using the deployer phase
 // TODO(evanphx): test
-func (a *App) Exec(ctx context.Context) error {
+func (a *App) Exec(ctx context.Context, updater status.Updater) error {
 	log := a.logger.Named("platform")
 
 	ep, ok := a.Platform.(component.ExecPlatform)
@@ -123,7 +124,7 @@ func (a *App) Exec(ctx context.Context) error {
 		return fmt.Errorf("This platform does not support exec yet")
 	}
 
-	_, err := a.callDynamicFunc(ctx, log, a.Platform, ep.ExecFunc())
+	_, err := a.callDynamicFunc(ctx, log, a.Platform, ep.ExecFunc(), updater)
 	if err != nil {
 		return err
 	}

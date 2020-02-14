@@ -29,7 +29,7 @@ func (c *ExecCommand) Run([]string) int {
 		return 1
 	}
 
-	err = app.Exec(ctx)
+	err = app.Exec(ctx, c.Updater)
 	if err != nil {
 		log.Error("error exec", "error", err)
 		return 1

@@ -9,6 +9,7 @@ import (
 
 	"github.com/creack/pty"
 	"github.com/mattn/go-isatty"
+	"github.com/mitchellh/devflow/internal/pkg/status"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -30,7 +31,8 @@ func (c *ConsoleClient) UseApp(cfg *LayerConfiguration) {
 	c.AppConfig = cfg
 }
 
-func (c *ConsoleClient) Exec(name, cmd string) error {
+func (c *ConsoleClient) Exec(S status.Updater, name, cmd string) error {
+	S.Update("connecting to tunnel broker")
 	conn, err := c.Tunnel.Connect()
 	if err != nil {
 		return err
@@ -40,6 +42,7 @@ func (c *ConsoleClient) Exec(name, cmd string) error {
 	cfg.SetDefaults()
 	cfg.HostKeyCallback = ssh.InsecureIgnoreHostKey()
 
+	S.Update("establishing console session")
 	sshc, chans, reqs, err := ssh.NewClientConn(conn, "tunnel", cfg)
 	if err != nil {
 		return err
@@ -61,6 +64,7 @@ func (c *ConsoleClient) Exec(name, cmd string) error {
 		sess.Setenv("DEVFLOW_CONFIG", base64.RawURLEncoding.EncodeToString(data))
 	}
 
+	S.Update("configuring session parameters")
 	sess.Stdin = os.Stdin
 	sess.Stdout = os.Stdout
 	sess.Stderr = os.Stderr
@@ -87,6 +91,8 @@ func (c *ConsoleClient) Exec(name, cmd string) error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM,
 		syscall.SIGALRM, syscall.SIGUSR1, syscall.SIGUSR2)
+
+	S.Close()
 
 	if cmd == "" {
 		sess.Shell()

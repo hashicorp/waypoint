@@ -11,15 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/devflow/internal/component"
-
-	"github.com/briandowns/spinner"
+	"github.com/mitchellh/devflow/internal/pkg/status"
 )
 
 type ECSLauncher struct {
 	roleName string
 	roleArn  string
 
-	spinner *spinner.Spinner
+	status status.Updater
 }
 
 func imageForRuntime(runtime string) string {
@@ -29,11 +28,7 @@ func imageForRuntime(runtime string) string {
 const host = "securetunnel-dev.df.hashicorp.engineering"
 
 func (e *ECSLauncher) updateStatus(str string) {
-	if e.spinner == nil {
-		e.spinner = spinner.New(spinner.CharSets[11], time.Second/6, spinner.WithSuffix(" "+str), spinner.WithColor("bold"))
-	}
-
-	e.spinner.Suffix = " " + str
+	e.status.Update(str)
 }
 
 func (e *ECSLauncher) SetupCluster(ctx context.Context) error {
@@ -155,12 +150,8 @@ func (e *ECSLauncher) SetupLogs(L hclog.Logger, logGroup string) error {
 
 }
 
-func (e *ECSLauncher) Launch(ctx context.Context, L hclog.Logger, app *component.Source, cfg *LayerConfiguration) (*ConsoleClient, error) {
-	defer func() {
-		if e.spinner != nil {
-			e.spinner.Stop()
-		}
-	}()
+func (e *ECSLauncher) Launch(ctx context.Context, L hclog.Logger, S status.Updater, app *component.Source, cfg *LayerConfiguration) (*ConsoleClient, error) {
+	e.status = S
 
 	err := e.SetupCluster(ctx)
 	if err != nil {

@@ -16,6 +16,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/mitchellh/devflow/internal/builtin/lambda/runner"
 	"github.com/mitchellh/devflow/internal/component"
+	"github.com/mitchellh/devflow/internal/pkg/status"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -401,7 +402,7 @@ func (d *Deployer) Deploy(ctx context.Context, L hclog.Logger, app *component.So
 	return &LambdaDeployment{arn}, nil
 }
 
-func (d *Deployer) Exec(ctx context.Context, L hclog.Logger, app *component.Source) error {
+func (d *Deployer) Exec(ctx context.Context, L hclog.Logger, S status.Updater, app *component.Source) error {
 	L.Debug("executing lambda app-style environment in ECS", "app", app.App)
 
 	var r runner.Runner
@@ -414,7 +415,7 @@ func (d *Deployer) Exec(ctx context.Context, L hclog.Logger, app *component.Sour
 	L.Debug("extracted lambda configuration")
 
 	ecsLauncher := runner.ECSLauncher{}
-	cc, err := ecsLauncher.Launch(ctx, L, app, cfg)
+	cc, err := ecsLauncher.Launch(ctx, L, S, app, cfg)
 	if err != nil {
 		L.Error("error launching ecs task", "error", err)
 		return err
@@ -434,7 +435,7 @@ func (d *Deployer) Exec(ctx context.Context, L hclog.Logger, app *component.Sour
 		}
 	}
 
-	cc.Exec(app.App, "/bin/bash -l")
+	cc.Exec(S, app.App, "/bin/bash -l")
 
 	terminal.Restore(int(fd), st)
 
