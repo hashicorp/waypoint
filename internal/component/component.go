@@ -64,6 +64,10 @@ type Platform interface {
 	DeployFunc() interface{}
 }
 
+type ExecPlatform interface {
+	ExecFunc() interface{}
+}
+
 // Source represents the source code for an application. This is used by
 // the builder for creating an Artifact.
 type Source struct {

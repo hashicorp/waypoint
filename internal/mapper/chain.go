@@ -127,7 +127,9 @@ func (c *Chain) Call() (interface{}, error) {
 		}
 
 		v := reflect.ValueOf(result)
-		c.vt[v.Type()] = v
+		if v.IsValid() {
+			c.vt[v.Type()] = v
+		}
 	}
 
 	return result, nil

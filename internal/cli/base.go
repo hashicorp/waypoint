@@ -15,6 +15,7 @@ import (
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/core"
 	"github.com/mitchellh/devflow/internal/datadir"
+	"github.com/mitchellh/devflow/internal/pkg/status"
 )
 
 // baseCommand is embedded in all commands to provide common logic and data.
@@ -29,6 +30,11 @@ type baseCommand struct {
 
 	// Log is the logger to use.
 	Log hclog.Logger
+
+	// Used to update the human running the commands of status updates
+	// These take the form of more UX oriented items that just logging
+	// within the components.
+	Updater status.Updater
 
 	//---------------------------------------------------------------
 	// The fields below are only available after calling Init.
