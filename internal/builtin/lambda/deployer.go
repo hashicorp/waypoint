@@ -441,3 +441,93 @@ func (d *Deployer) Exec(ctx context.Context, L hclog.Logger, S status.Updater, a
 
 	return nil
 }
+
+func (d *Deployer) ConfigSet(ctx context.Context, L hclog.Logger, app *component.Source, cv *component.ConfigVar) error {
+	lamSvc := lambda.New(sess)
+
+	fnInfo, err := lamSvc.GetFunction(&lambda.GetFunctionInput{
+		FunctionName: aws.String(app.App),
+	})
+	if err != nil {
+		return err
+	}
+
+	cur := fnInfo.Configuration
+
+	var envvars map[string]*string
+
+	if cur.Environment != nil {
+		envvars = cur.Environment.Variables
+		if _, exists := cur.Environment.Variables[cv.Name]; exists {
+			L.Warn("Updating config variable", "name", cv.Name)
+		} else {
+			L.Warn("Setting config variable", "name", cv.Name)
+		}
+	} else {
+		envvars = map[string]*string{}
+	}
+
+	var layers []*string
+
+	for _, cl := range cur.Layers {
+		layers = append(layers, cl.Arn)
+	}
+
+	envvars[cv.Name] = aws.String(cv.Value)
+
+	_, err = lamSvc.UpdateFunctionConfiguration(&lambda.UpdateFunctionConfigurationInput{
+		FunctionName: aws.String(app.App),
+		Layers:       layers,
+		Handler:      cur.Handler,
+		Environment: &lambda.Environment{
+			Variables: envvars,
+		},
+		Role:       cur.Role,
+		Timeout:    cur.Timeout,
+		MemorySize: cur.MemorySize,
+		Runtime:    cur.Runtime,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	ver, err := lamSvc.PublishVersion(&lambda.PublishVersionInput{
+		FunctionName: aws.String(app.App),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	L.Info("Created new function version", "arn", *ver.FunctionArn)
+	return nil
+}
+
+func (d *Deployer) ConfigSetFunc() interface{} {
+	return d.ConfigSet
+}
+
+func (d *Deployer) ConfigGet(ctx context.Context, L hclog.Logger, app *component.Source, cv *component.ConfigVar) error {
+	lamSvc := lambda.New(sess)
+
+	fnInfo, err := lamSvc.GetFunction(&lambda.GetFunctionInput{
+		FunctionName: aws.String(app.App),
+	})
+	if err != nil {
+		return err
+	}
+
+	cur := fnInfo.Configuration
+
+	if val, exists := cur.Environment.Variables[cv.Name]; exists {
+		cv.Value = *val
+		return nil
+	} else {
+		return component.ErrNoSuchVariable
+	}
+}
+
+func (d *Deployer) ConfigGetFunc() interface{} {
+	return d.ConfigGet
+}
