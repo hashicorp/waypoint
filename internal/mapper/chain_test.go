@@ -38,6 +38,10 @@ func TestChain_simple(t *testing.T) {
 		return intC(5)
 	}))
 
+	noop := func() error { return nil }
+	noopFunc, err := NewFunc(noop)
+	require.NoError(t, err)
+
 	t.Run("satisfied", func(t *testing.T) {
 		require := require.New(t)
 
@@ -114,4 +118,14 @@ func TestChain_simple(t *testing.T) {
 		require.Nil(chain)
 		t.Log(err.Error())
 	})
+
+	t.Run("only one return value as nil", func(t *testing.T) {
+		require := require.New(t)
+
+		chain, err := noopFunc.Chain([]*Func{})
+		require.NoError(err)
+		_, err = chain.Call()
+		require.NoError(err)
+	})
+
 }
