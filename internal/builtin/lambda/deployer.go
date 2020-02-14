@@ -13,7 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/go-hclog"
+	"github.com/mattn/go-isatty"
+	"github.com/mitchellh/devflow/internal/builtin/lambda/runner"
 	"github.com/mitchellh/devflow/internal/component"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -46,6 +49,10 @@ func (d *Deployer) Config() interface{} {
 
 func (d *Deployer) DeployFunc() interface{} {
 	return d.Deploy
+}
+
+func (d *Deployer) ExecFunc() interface{} {
+	return d.Exec
 }
 
 func NewDeployer() *Deployer {
@@ -392,4 +399,44 @@ func (d *Deployer) Deploy(ctx context.Context, L hclog.Logger, app *component.So
 	}
 
 	return &LambdaDeployment{arn}, nil
+}
+
+func (d *Deployer) Exec(ctx context.Context, L hclog.Logger, app *component.Source) error {
+	L.Debug("executing lambda app-style environment in ECS", "app", app.App)
+
+	var r runner.Runner
+
+	cfg, err := r.ExtractFromLambda(app.App)
+	if err != nil {
+		return err
+	}
+
+	L.Debug("extracted lambda configuration")
+
+	ecsLauncher := runner.ECSLauncher{}
+	cc, err := ecsLauncher.Launch(ctx, L, app, cfg)
+	if err != nil {
+		L.Error("error launching ecs task", "error", err)
+		return err
+	}
+
+	var (
+		fd = os.Stdin.Fd()
+		st *terminal.State
+	)
+
+	isterm := isatty.IsTerminal(fd)
+
+	if isterm {
+		st, err = terminal.MakeRaw(int(fd))
+		if err == nil {
+			defer terminal.Restore(int(fd), st)
+		}
+	}
+
+	cc.Exec(app.App, "/bin/bash -l")
+
+	terminal.Restore(int(fd), st)
+
+	return nil
 }

@@ -63,10 +63,12 @@ var supportedRuntimes = map[string]struct{}{
 	"ruby2.5": struct{}{},
 }
 
+// These are paths that we want to remove to try to make the build more reproducible and smaller.
+// NOTE: The following paths must be left in to keep thing works properly:
+// * ruby/2.5.0/extensions/x86_64-linux/.*/gem.build_complete
 var pruneRegexp = []*regexp.Regexp{
 	regexp.MustCompile("ruby/2.5.0/extensions/x86_64-linux/.*/gem_make.out"),
 	regexp.MustCompile("ruby/2.5.0/extensions/x86_64-linux/.*/mkmf.log"),
-	regexp.MustCompile("ruby/2.5.0/extensions/x86_64-linux/.*/gem.build_complete"),
 	regexp.MustCompile("ruby/2.5.0/gems/.*/Makefile"),
 }
 

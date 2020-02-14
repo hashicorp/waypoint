@@ -19,7 +19,7 @@ const (
 // The arguments SHOULD include argv[0] as the program name.
 func Main(args []string) int {
 	// Initialize our logger based on env vars
-	log, err := logger(args[0])
+	args, log, err := logger(args)
 	if err != nil {
 		panic(err)
 	}
@@ -56,6 +56,11 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 	return map[string]cli.CommandFactory{
 		"up": func() (cli.Command, error) {
 			return &UpCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"exec": func() (cli.Command, error) {
+			return &ExecCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
@@ -98,16 +103,43 @@ func interruptContext(ctx context.Context, log hclog.Logger) (context.Context, f
 
 // logger returns the logger to use for the CLI. Output, level, etc. are
 // determined based on environment variables if set.
-func logger(app string) (hclog.Logger, error) {
-	level := hclog.Trace
+func logger(args []string) ([]string, hclog.Logger, error) {
+	app := args[0]
+	level := hclog.Warn
 	if v := os.Getenv(EnvLogLevel); v != "" {
 		level = hclog.LevelFromString(v)
 		if level == hclog.NoLevel {
-			return nil, fmt.Errorf("%s value %q is not a valid log level", EnvLogLevel, v)
+			return nil, nil, fmt.Errorf("%s value %q is not a valid log level", EnvLogLevel, v)
 		}
 	}
 
-	return hclog.New(&hclog.LoggerOptions{
+	var outArgs []string
+
+	for _, arg := range args {
+		if arg[0] != '-' {
+			outArgs = append(outArgs, arg)
+			continue
+		}
+
+		switch arg {
+		case "-v":
+			if level > hclog.Info {
+				level = hclog.Info
+			}
+		case "-vv":
+			if level > hclog.Debug {
+				level = hclog.Debug
+			}
+		case "-vvv":
+			if level > hclog.Trace {
+				level = hclog.Trace
+			}
+		default:
+			outArgs = append(outArgs, arg)
+		}
+	}
+
+	return outArgs, hclog.New(&hclog.LoggerOptions{
 		Name:   app,
 		Level:  level,
 		Color:  hclog.AutoColor,

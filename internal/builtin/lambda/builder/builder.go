@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/devflow/pkg/lambda"
 	"github.com/hashicorp/go-hclog"
+	"github.com/mitchellh/devflow/internal/builtin/lambda"
 )
 
 var (
