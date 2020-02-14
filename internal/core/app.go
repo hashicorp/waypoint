@@ -139,7 +139,7 @@ func (a *App) ConfigSet(ctx context.Context, key, val string) error {
 
 	ep, ok := a.Platform.(component.ConfigPlatform)
 	if !ok {
-		return fmt.Errorf("This platform does not support exec yet")
+		return fmt.Errorf("This platform does not support config yet")
 	}
 
 	cv := &component.ConfigVar{Name: key, Value: val}
@@ -159,7 +159,7 @@ func (a *App) ConfigGet(ctx context.Context, key string) (*component.ConfigVar, 
 
 	ep, ok := a.Platform.(component.ConfigPlatform)
 	if !ok {
-		return nil, fmt.Errorf("This platform does not support exec yet")
+		return nil, fmt.Errorf("This platform does not support config yet")
 	}
 
 	cv := &component.ConfigVar{
@@ -172,6 +172,24 @@ func (a *App) ConfigGet(ctx context.Context, key string) (*component.ConfigVar, 
 	}
 
 	return cv, nil
+}
+
+// Retrieve log viewer on the deployer phase
+// TODO(evanphx): test
+func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
+	log := a.logger.Named("platform")
+
+	ep, ok := a.Platform.(component.LogsPlatform)
+	if !ok {
+		return nil, fmt.Errorf("This platform does not support logs yet")
+	}
+
+	lv, err := a.callDynamicFunc(ctx, log, a.Platform, ep.LogsFunc())
+	if err != nil {
+		return nil, err
+	}
+
+	return lv.(component.LogViewer), nil
 }
 
 // callDynamicFunc calls a dynamic function which is a common pattern for

@@ -5,9 +5,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -530,4 +533,82 @@ func (d *Deployer) ConfigGet(ctx context.Context, L hclog.Logger, app *component
 
 func (d *Deployer) ConfigGetFunc() interface{} {
 	return d.ConfigGet
+}
+
+type cloudwatchLogsViewer struct {
+	logs      *cloudwatchlogs.CloudWatchLogs
+	group     string
+	lastToken *string
+
+	stream  *cloudwatchlogs.LogStream
+	streams []*cloudwatchlogs.LogStream
+}
+
+func (c *cloudwatchLogsViewer) NextBatch() ([]component.LogEvent, error) {
+	for {
+		if c.stream == nil {
+			if len(c.streams) == 0 {
+				return nil, nil
+			}
+			c.stream = c.streams[0]
+			c.streams = c.streams[1:]
+			c.lastToken = nil
+		}
+
+		output, err := c.logs.GetLogEvents(&cloudwatchlogs.GetLogEventsInput{
+			NextToken:     c.lastToken,
+			StartFromHead: aws.Bool(true),
+			LogGroupName:  aws.String(c.group),
+			LogStreamName: c.stream.LogStreamName,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(output.Events) != 0 {
+			c.lastToken = output.NextForwardToken
+
+			events := make([]component.LogEvent, len(output.Events))
+
+			for i, ev := range output.Events {
+				ms := *ev.Timestamp
+				ts := time.Unix(ms/1000, (ms%1000)*1000000)
+				msg := strings.TrimRight(*ev.Message, "\n\t")
+				events[i] = component.LogEvent{
+					Partition: *c.stream.LogStreamName,
+					Timestamp: ts,
+					Message:   msg,
+				}
+			}
+
+			return events, nil
+		}
+
+		c.stream = nil
+	}
+}
+
+func (d *Deployer) Logs(ctx context.Context, L hclog.Logger, app *component.Source) (component.LogViewer, error) {
+	logs := cloudwatchlogs.New(sess)
+
+	streams, err := logs.DescribeLogStreams(&cloudwatchlogs.DescribeLogStreamsInput{
+		LogGroupName: aws.String(fmt.Sprintf("/aws/lambda/%s", app.App)),
+		Descending:   aws.Bool(false),
+		OrderBy:      aws.String("LastEventTime"),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &cloudwatchLogsViewer{
+		logs:    logs,
+		group:   fmt.Sprintf("/aws/lambda/%s", app.App),
+		streams: streams.LogStreams,
+	}, nil
+}
+
+func (d *Deployer) LogsFunc() interface{} {
+	return d.Logs
 }

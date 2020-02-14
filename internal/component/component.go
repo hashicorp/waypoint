@@ -77,6 +77,12 @@ type ConfigPlatform interface {
 	ConfigGetFunc() interface{}
 }
 
+// A Platform that supports the ability to set and view configuration
+// variables.
+type LogsPlatform interface {
+	LogsFunc() interface{}
+}
+
 // Source represents the source code for an application. This is used by
 // the builder for creating an Artifact.
 type Source struct {

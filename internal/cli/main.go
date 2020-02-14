@@ -76,6 +76,11 @@ func commands(ctx context.Context, log hclog.Logger, stat status.Updater) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"logs": func() (cli.Command, error) {
+			return &LogsCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 }
 
