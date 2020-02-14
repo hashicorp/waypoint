@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -27,6 +28,7 @@ import (
 
 type BuilderConfig struct {
 	Runtime string `hcl:"runtime"`
+	Setup   string `hcl:"setup"`
 }
 
 type Builder struct {
@@ -121,6 +123,16 @@ type MappedFile struct {
 	Dest   string `json:"dest"`
 }
 
+func (b *Builder) HashData(parts ...[]byte) (string, error) {
+	h := sha256.New()
+
+	for _, part := range parts {
+		h.Write(part)
+	}
+
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
 func (b *Builder) HashDir(dir string) (string, error) {
 	h := sha256.New()
 
@@ -163,6 +175,17 @@ func HashFile(path string) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
+func (b *Builder) dockerClient(ctx context.Context) (*client.Client, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return nil, err
+	}
+
+	cli.NegotiateAPIVersion(ctx)
+
+	return cli, nil
+}
+
 func (b *Builder) HashFile(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -192,12 +215,12 @@ func (b *Builder) Build(
 
 	scratchDir := subDir.DataDir()
 
-	err = b.BuildPreImage(L, src, scratchDir, ctx)
+	err = b.BuildPreImage(ctx, L, src, scratchDir)
 	if err != nil {
 		return nil, err
 	}
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
+	cli, err := b.dockerClient(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +398,7 @@ func (b *Builder) Build(
 	return b.AppInfo(), nil
 }
 
-func (b *Builder) BuildPreImage(L hclog.Logger, src *component.Source, scratchDir string, ctx context.Context) error {
+func (b *Builder) BuildPreImage(ctx context.Context, L hclog.Logger, src *component.Source, scratchDir string) error {
 	runtime, err := b.ExtractRuntime(ctx, src)
 	if err != nil {
 		return err
@@ -385,12 +408,12 @@ func (b *Builder) BuildPreImage(L hclog.Logger, src *component.Source, scratchDi
 
 	L.Info("detected runtime", "runtime", runtime)
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.38"))
+	cli, err := b.dockerClient(ctx)
 	if err != nil {
 		return err
 	}
 
-	sum, err := b.HashDir(filepath.Join(filepath.Join(src.Path, ".devflow")))
+	sum, err := b.HashData([]byte(runtime), []byte(b.config.Setup))
 	if err != nil {
 		return err
 	}
@@ -441,15 +464,14 @@ func (b *Builder) BuildPreImage(L hclog.Logger, src *component.Source, scratchDi
 
 		L.Info("running container for prehooks", "name", name, "src", src.Path)
 
-		cfg := container.Config{
-			AttachStdout: true,
-			AttachStderr: true,
-			Image:        "devflow/lambda:" + runtime,
+		prePath := filepath.Join(scratchDir, "pre.sh")
+
+		err = ioutil.WriteFile(prePath, []byte(b.config.Setup+"\n"), 0755)
+		if err != nil {
+			return err
 		}
 
-		cfg.Cmd = append(cfg.Cmd, "/builder", "-pre")
-
-		absPath, err := filepath.Abs(src.Path)
+		absPath, err := filepath.Abs(scratchDir)
 		if err != nil {
 			return err
 		}
@@ -458,6 +480,14 @@ func (b *Builder) BuildPreImage(L hclog.Logger, src *component.Source, scratchDi
 			Binds: []string{absPath + ":/input"},
 		}
 		networkCfg := network.NetworkingConfig{}
+
+		cfg := container.Config{
+			AttachStdout: true,
+			AttachStderr: true,
+			Image:        "robloweco/lambda:" + runtime,
+		}
+
+		cfg.Cmd = append(cfg.Cmd, "/builder", "-pre", "/input/pre.sh")
 
 		body, err := cli.ContainerCreate(ctx, &cfg, &hostCfg, &networkCfg, name)
 		if err != nil {

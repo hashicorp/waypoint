@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"crypto/sha1"
-	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -11,7 +10,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -21,7 +19,7 @@ import (
 
 var (
 	fPath    = flag.String("input", "/input", "path for the input application")
-	fPre     = flag.Bool("pre", false, "run prehooks")
+	fPre     = flag.String("pre", "", "run prehooks")
 	fExtract = flag.String("extract", "", "extract written data using this path as manifest")
 	fLayer   = flag.String("layer", "", "path to store layer output if observed")
 )
@@ -132,7 +130,7 @@ func main() {
 
 			f.Close()
 
-			fmt.Printf("added %s (%s)\n", hdr.Name, hex.EncodeToString(h.Sum(nil))[:10])
+			// fmt.Printf("added %s (%s)\n", hdr.Name, hex.EncodeToString(h.Sum(nil))[:10])
 		}
 
 		tw.Close()
@@ -152,30 +150,30 @@ func main() {
 
 	L.Info("Starting Devflow Lambda Builder...")
 
-	if *fPre {
+	if *fPre != "" {
 		L.Info("Executing prehooks...")
 
-		if _, err := os.Stat(filepath.Join(*fPath, preHook)); err != nil {
-			L.Info("No prehook defined")
-			os.Exit(10)
-		}
-
-		os.MkdirAll("/prebuild", 0755)
-
-		cp := exec.Command("cp", "-r", *fPath+"/.devflow/.", "/prebuild")
-		cp.Stdout = os.Stdout
-		cp.Stderr = os.Stderr
-
-		err := cp.Run()
+		f, err := os.Open(*fPre)
 		if err != nil {
-			L.Error("error copying application into image", "error", err)
+			L.Error("error opening pre", "error", err)
 			os.Exit(1)
 		}
 
-		pre := exec.Command("bash", "pre.sh")
+		to, err := os.Create("/tmp/pre.sh")
+		if err != nil {
+			L.Error("error creating pre temp", "error", err)
+			os.Exit(1)
+		}
+
+		io.Copy(to, f)
+
+		to.Close()
+		f.Close()
+
+		pre := exec.Command("bash", "/tmp/pre.sh")
 		pre.Stdout = os.Stdout
 		pre.Stderr = os.Stderr
-		pre.Dir = filepath.Dir(filepath.Join(*fPath, preHook))
+		pre.Dir = "/tmp"
 
 		err = pre.Run()
 		if err != nil {
