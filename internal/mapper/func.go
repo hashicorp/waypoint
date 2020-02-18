@@ -12,16 +12,22 @@ import (
 // a value with an error. No other shape of function is allowed.
 type Func struct {
 	Name string
-	Args []reflect.Type
-	Out  reflect.Type
+	Args []Type
+	Out  Type
 	Func reflect.Value
 }
 
 // NewFunc creates a new Func from f. f must be a function pointer.
-func NewFunc(f interface{}) (*Func, error) {
+func NewFunc(f interface{}, opts ...Option) (*Func, error) {
 	ft := reflect.TypeOf(f)
 	if k := ft.Kind(); k != reflect.Func {
 		return nil, fmt.Errorf("fn should be a function, got %s", k)
+	}
+
+	// Apply all the configs
+	var cfg config
+	for _, opt := range opts {
+		opt(&cfg)
 	}
 
 	// We should have one or two results: a concrete type alone or a concrete
@@ -41,17 +47,54 @@ func NewFunc(f interface{}) (*Func, error) {
 	}
 
 	// Build our args list
-	args := make([]reflect.Type, 0, ft.NumIn())
+	args := make([]Type, 0, ft.NumIn())
 	for i := 0; i < ft.NumIn(); i++ {
-		args = append(args, ft.In(i))
+		var arg Type
+		typ := ft.In(i)
+
+		// If we have a type matching override then use that.
+		if cfg.WithType != nil {
+			f, ok := cfg.WithType[typ]
+			if ok {
+				arg = f(i, typ)
+			}
+		}
+
+		// Default to the reflection type
+		if arg == nil {
+			arg = &ReflectType{Type: typ}
+		}
+
+		args = append(args, arg)
 	}
 
 	return &Func{
 		Name: name,
 		Func: fv,
 		Args: args,
-		Out:  ft.Out(0),
+		Out:  &ReflectType{Type: ft.Out(0)},
 	}, nil
+}
+
+// config is the intermediary configuration used by Option to configure
+// funcs during NewFunc.
+type config struct {
+	WithType map[reflect.Type]func(int, reflect.Type) Type
+}
+
+// Option is used to configure NewFunc
+type Option func(*config)
+
+// WithType replaces arguments of the given reflection type with the
+// special Type implementation returned by the callback.
+func WithType(typ reflect.Type, f func(int, reflect.Type) Type) Option {
+	return func(c *config) {
+		if c.WithType == nil {
+			c.WithType = make(map[reflect.Type]func(int, reflect.Type) Type)
+		}
+
+		c.WithType[typ] = f
+	}
 }
 
 // String returns the name of the function. If a name is not available, the
@@ -85,66 +128,38 @@ func (f *Func) Call(values ...interface{}) (interface{}, error) {
 // performant to call Call on the returned PreparedFunc rather than Call on
 // Func. This will avoid duplicate work.
 func (f *Func) Prepare(values ...interface{}) *PreparedFunc {
-	return f.prepare(f.valueMap(values...))
-}
-
-// valueMap turns a list of values into the map required for processing.
-func (f *Func) valueMap(values ...interface{}) map[reflect.Type]reflect.Value {
-	vt := make(map[reflect.Type]reflect.Value)
-	for _, value := range values {
-		v := reflect.ValueOf(value)
-		vt[v.Type()] = v
-	}
-
-	return vt
+	// TODO: panic if missing values
+	in := f.args(values, nil)
+	return &PreparedFunc{Func: f, In: in}
 }
 
 // args builds the list of args for the function given the valueMap. If
 // missing is non-nil, then it will be populated with any missing values.
 // If missing is nil, then nil will be returned if there are any missing values.
 func (f *Func) args(
-	vt map[reflect.Type]reflect.Value,
-	missing map[reflect.Type]int,
+	values []interface{},
+	missing map[Type]int,
 ) []reflect.Value {
 	in := make([]reflect.Value, len(f.Args))
+
+	// NOTE(mitchellh): this is not very efficient at all, but I think in
+	// general this won't be a hot-spot because we won't have many args
+	// or values, and the cost will be amortized across the execution of
+	// the program. If it does become an issue we can potentially optimize
+	// through optional interface implementations by Value.
 	for idx, arg := range f.Args {
-		v := vt[arg]
-
-		if !v.IsValid() {
-			// If we didn't find a direct type matching, then we go loop
-			// through all the values to see if we have a value that implements
-			// the interface argument. We only do this for interface types.
-			if arg.Kind() == reflect.Interface {
-				for t, vv := range vt {
-					if t.Implements(arg) {
-						v = vv
-						break
-					}
-				}
-			}
-
-			// We didn't find a direct value or a value impl the interface
-			if !v.IsValid() {
-				if missing == nil {
-					return nil
-				}
-
-				missing[arg] = idx
-			}
+		value := arg.Match(values...)
+		if value != nil {
+			in[idx] = reflect.ValueOf(value)
+			continue
 		}
 
-		// Store the argument
-		in[idx] = v
+		if missing != nil {
+			missing[arg] = idx
+		}
 	}
 
 	return in
-}
-
-// prepare is an unexported version of Prepare that takes a further
-// preprocessed value map form.
-func (f *Func) prepare(vt map[reflect.Type]reflect.Value) *PreparedFunc {
-	in := f.args(vt, nil)
-	return &PreparedFunc{Func: f, In: in}
 }
 
 // PreparedFunc is created by calling Prepare on a Func and is a preprocessed
