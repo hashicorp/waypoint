@@ -5,9 +5,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -440,4 +443,172 @@ func (d *Deployer) Exec(ctx context.Context, L hclog.Logger, S status.Updater, a
 	terminal.Restore(int(fd), st)
 
 	return nil
+}
+
+func (d *Deployer) ConfigSet(ctx context.Context, L hclog.Logger, app *component.Source, cv *component.ConfigVar) error {
+	lamSvc := lambda.New(sess)
+
+	fnInfo, err := lamSvc.GetFunction(&lambda.GetFunctionInput{
+		FunctionName: aws.String(app.App),
+	})
+	if err != nil {
+		return err
+	}
+
+	cur := fnInfo.Configuration
+
+	var envvars map[string]*string
+
+	if cur.Environment != nil {
+		envvars = cur.Environment.Variables
+		if _, exists := cur.Environment.Variables[cv.Name]; exists {
+			L.Warn("Updating config variable", "name", cv.Name)
+		} else {
+			L.Warn("Setting config variable", "name", cv.Name)
+		}
+	} else {
+		envvars = map[string]*string{}
+	}
+
+	var layers []*string
+
+	for _, cl := range cur.Layers {
+		layers = append(layers, cl.Arn)
+	}
+
+	envvars[cv.Name] = aws.String(cv.Value)
+
+	_, err = lamSvc.UpdateFunctionConfiguration(&lambda.UpdateFunctionConfigurationInput{
+		FunctionName: aws.String(app.App),
+		Layers:       layers,
+		Handler:      cur.Handler,
+		Environment: &lambda.Environment{
+			Variables: envvars,
+		},
+		Role:       cur.Role,
+		Timeout:    cur.Timeout,
+		MemorySize: cur.MemorySize,
+		Runtime:    cur.Runtime,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	ver, err := lamSvc.PublishVersion(&lambda.PublishVersionInput{
+		FunctionName: aws.String(app.App),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	L.Info("Created new function version", "arn", *ver.FunctionArn)
+	return nil
+}
+
+func (d *Deployer) ConfigSetFunc() interface{} {
+	return d.ConfigSet
+}
+
+func (d *Deployer) ConfigGet(ctx context.Context, L hclog.Logger, app *component.Source, cv *component.ConfigVar) error {
+	lamSvc := lambda.New(sess)
+
+	fnInfo, err := lamSvc.GetFunction(&lambda.GetFunctionInput{
+		FunctionName: aws.String(app.App),
+	})
+	if err != nil {
+		return err
+	}
+
+	cur := fnInfo.Configuration
+
+	if val, exists := cur.Environment.Variables[cv.Name]; exists {
+		cv.Value = *val
+		return nil
+	} else {
+		return component.ErrNoSuchVariable
+	}
+}
+
+func (d *Deployer) ConfigGetFunc() interface{} {
+	return d.ConfigGet
+}
+
+type cloudwatchLogsViewer struct {
+	logs      *cloudwatchlogs.CloudWatchLogs
+	group     string
+	lastToken *string
+
+	stream  *cloudwatchlogs.LogStream
+	streams []*cloudwatchlogs.LogStream
+}
+
+func (c *cloudwatchLogsViewer) NextBatch() ([]component.LogEvent, error) {
+	for {
+		if c.stream == nil {
+			if len(c.streams) == 0 {
+				return nil, nil
+			}
+			c.stream = c.streams[0]
+			c.streams = c.streams[1:]
+			c.lastToken = nil
+		}
+
+		output, err := c.logs.GetLogEvents(&cloudwatchlogs.GetLogEventsInput{
+			NextToken:     c.lastToken,
+			StartFromHead: aws.Bool(true),
+			LogGroupName:  aws.String(c.group),
+			LogStreamName: c.stream.LogStreamName,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(output.Events) != 0 {
+			c.lastToken = output.NextForwardToken
+
+			events := make([]component.LogEvent, len(output.Events))
+
+			for i, ev := range output.Events {
+				ms := *ev.Timestamp
+				ts := time.Unix(ms/1000, (ms%1000)*1000000)
+				msg := strings.TrimRight(*ev.Message, "\n\t")
+				events[i] = component.LogEvent{
+					Partition: *c.stream.LogStreamName,
+					Timestamp: ts,
+					Message:   msg,
+				}
+			}
+
+			return events, nil
+		}
+
+		c.stream = nil
+	}
+}
+
+func (d *Deployer) Logs(ctx context.Context, L hclog.Logger, app *component.Source) (component.LogViewer, error) {
+	logs := cloudwatchlogs.New(sess)
+
+	streams, err := logs.DescribeLogStreams(&cloudwatchlogs.DescribeLogStreamsInput{
+		LogGroupName: aws.String(fmt.Sprintf("/aws/lambda/%s", app.App)),
+		Descending:   aws.Bool(false),
+		OrderBy:      aws.String("LastEventTime"),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &cloudwatchLogsViewer{
+		logs:    logs,
+		group:   fmt.Sprintf("/aws/lambda/%s", app.App),
+		streams: streams.LogStreams,
+	}, nil
+}
+
+func (d *Deployer) LogsFunc() interface{} {
+	return d.Logs
 }

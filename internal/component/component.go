@@ -64,8 +64,23 @@ type Platform interface {
 	DeployFunc() interface{}
 }
 
+// A Platform that supports the ability to exec into a shell environment
+// for the app.
 type ExecPlatform interface {
 	ExecFunc() interface{}
+}
+
+// A Platform that supports the ability to set and view configuration
+// variables.
+type ConfigPlatform interface {
+	ConfigSetFunc() interface{}
+	ConfigGetFunc() interface{}
+}
+
+// A Platform that supports the ability to set and view configuration
+// variables.
+type LogsPlatform interface {
+	LogsFunc() interface{}
 }
 
 // Source represents the source code for an application. This is used by

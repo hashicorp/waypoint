@@ -66,6 +66,21 @@ func commands(ctx context.Context, log hclog.Logger, stat status.Updater) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"config-get": func() (cli.Command, error) {
+			return &ConfigGetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"config-set": func() (cli.Command, error) {
+			return &ConfigSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"logs": func() (cli.Command, error) {
+			return &LogsCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 }
 
