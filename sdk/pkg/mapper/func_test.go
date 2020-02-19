@@ -53,3 +53,11 @@ func TestFunc_hclog(t *testing.T) {
 	require.NoError(err)
 	require.Equal(result, 42)
 }
+
+func mustFunc(t *testing.T, f interface{}) *Func {
+	t.Helper()
+
+	result, err := NewFunc(f)
+	require.NoError(t, err)
+	return result
+}

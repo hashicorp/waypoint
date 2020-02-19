@@ -45,6 +45,112 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 	return &Chain{funcs: chain, values: values}, nil
 }
 
+// ChainInputSet returns the list of types that must be satisfied in order to
+// call this function. The mappers are candidates to be called to perform
+// type conversion along the way. And the check function will be called for
+// the various inputs to check if it can be satisfied by the caller.
+//
+// For check, the caller should return true if the caller can produce a
+// value to match that type or false if not.
+//
+// The result is a list of types that when satisfied will result in a
+// guaranteed callable Func.
+func (f *Func) ChainInputSet(mappers []*Func, check func(Type) bool) []Type {
+	typeMap := f.inputSet(mappers, check, map[*Func]struct{}{}, nil)
+	if typeMap == nil {
+		return nil
+	}
+
+	result := make([]Type, 0, len(typeMap))
+	for _, typ := range typeMap {
+		result = append(result, typ)
+	}
+
+	return result
+}
+
+// NOTE(mitchellh): this is probably better suited for solving via
+// SAT or something similar. In practice our sets are small enough that
+// this search is probably cheap enough.
+func (f *Func) inputSet(
+	mappers []*Func,
+	check func(Type) bool,
+	visited map[*Func]struct{},
+	input map[interface{}]Type,
+) map[interface{}]Type {
+	missing := make(map[interface{}]Type)
+	pending := make(map[interface{}]Type)
+	for k, v := range input {
+		pending[k] = v
+	}
+
+	// Go through each argument type we expect
+	for _, arg := range f.Args {
+		key := arg.Key()
+
+		// If we're already expecting this type it means we can satisfy it
+		if _, ok := pending[key]; ok {
+			continue
+		}
+
+		// If we can't satisfy it, then this is something we need a mapper for.
+		if !check(arg) {
+			missing[arg.Key()] = arg
+			continue
+		}
+
+		// We can satisfy this type, add it to the pending result
+		pending[key] = arg
+	}
+
+	// If we satisfied everything, then we're good!
+	if len(missing) == 0 {
+		return pending
+	}
+
+	// We're missing some values, let's see if the mappers can get us there.
+	for _, m := range mappers {
+		// If we already visited this mapper, ignore it to avoid cycles
+		// as well as repeated work.
+		if _, ok := visited[m]; ok {
+			continue
+		}
+
+		key := m.Out.Key()
+
+		// If our output type is not in the missing map, then we don't
+		// need it so we can just skip it.
+		if _, ok := missing[key]; !ok {
+			continue
+		}
+
+		// We need this type! Let's see if we satisfy everything.
+		// We also mark this as visited so that in the future we never
+		// attempt to use this mapper again.
+		visited[m] = struct{}{}
+		result := m.inputSet(mappers, check, visited, pending)
+		if result == nil {
+			// Failed to find a path.
+			continue
+		}
+
+		// We found a path! Delete the missing type since it is now satisfied
+		delete(missing, key)
+
+		// If we are out of missing values, then we found a path!
+		if len(missing) == 0 {
+			return result
+		}
+
+		// Accumulate
+		pending = result
+	}
+
+	// If we made it here it means that we couldn't find a path since
+	// the loop above will return early if we find the path.
+	return nil
+}
+
 // chain is the internal recursive functions called on functions to build
 // up the chain.
 func (f *Func) chain(

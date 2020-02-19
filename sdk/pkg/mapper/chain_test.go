@@ -1,13 +1,14 @@
 package mapper
 
 import (
+	"reflect"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestChain_simple(t *testing.T) {
+func TestFuncChain(t *testing.T) {
 	type intA int
 	type intB int
 	type intC int
@@ -128,4 +129,146 @@ func TestChain_simple(t *testing.T) {
 		require.NoError(err)
 	})
 
+}
+
+func TestFuncChainInputSet(t *testing.T) {
+	checkMatchType := func(v interface{}) func(Type) bool {
+		return func(t Type) bool {
+			return t.(*ReflectType).Type == reflect.TypeOf(v)
+		}
+	}
+
+	checkOr := func(fs ...func(Type) bool) func(Type) bool {
+		return func(t Type) bool {
+			for _, f := range fs {
+				if f(t) {
+					return true
+				}
+			}
+
+			return false
+		}
+	}
+
+	checkMatchBool := checkMatchType(false)
+	checkMatchInt := checkMatchType(int(12))
+
+	t.Run("already satisfied (no args)", func(t *testing.T) {
+		require := require.New(t)
+
+		f, err := NewFunc(func() int { return 42 })
+		require.NoError(err)
+		result := f.ChainInputSet([]*Func{}, func(Type) bool { return false })
+		require.NotNil(result)
+		require.Len(result, 0)
+	})
+
+	t.Run("depth 0", func(t *testing.T) {
+		require := require.New(t)
+
+		f := mustFunc(t, func(v int) int { return v + 1 })
+		result := f.ChainInputSet([]*Func{}, checkMatchInt)
+		require.NotNil(result)
+
+		// We expect 1 result because we want the one "int"
+		require.Len(result, 1)
+	})
+
+	t.Run("depth 0,1", func(t *testing.T) {
+		require := require.New(t)
+
+		type intA int
+		type intB int
+
+		// The path here:
+		//   - f requires intA, intB
+		//   - a mapper provides intB from int
+		//   - a mapper provides intA from int
+		//   > can solve with int
+		f := mustFunc(t, func(intA, intB) int { return 0 })
+		result := f.ChainInputSet([]*Func{
+			mustFunc(t, func(int) intA { return 0 }),
+			mustFunc(t, func(int) intB { return 0 }),
+		}, checkMatchInt)
+		require.NotNil(result)
+
+		// We expect 1 result because we want the one "int"
+		require.Len(result, 1)
+	})
+
+	t.Run("depth 1,2", func(t *testing.T) {
+		require := require.New(t)
+
+		type intA int
+		type intB int
+		type intC int
+
+		// The path here:
+		//   - f requires intA, intB
+		//   - a mapper provides intA from int
+		//   - a mapper provides intC from inB
+		//   - a mapper provides intB from int
+		//   > can solve with int
+		f := mustFunc(t, func(intA, intB) int { return 0 })
+		result := f.ChainInputSet([]*Func{
+			mustFunc(t, func(int) intA { return 0 }),
+			mustFunc(t, func(intC) intB { return 0 }),
+			mustFunc(t, func(int) intC { return 0 }),
+		}, checkMatchInt)
+		require.NotNil(result)
+
+		// We expect 1 result because we want the one "int"
+		require.Len(result, 1)
+	})
+
+	t.Run("cycle", func(t *testing.T) {
+		require := require.New(t)
+
+		type intA int
+		type intB int
+		type intC int
+
+		f := mustFunc(t, func(intA, intB) int { return 0 })
+		result := f.ChainInputSet([]*Func{
+			mustFunc(t, func(intB) intA { return 0 }),
+			mustFunc(t, func(intA) intB { return 0 }),
+		}, checkMatchInt)
+		require.Nil(result)
+	})
+
+	t.Run("depth 0 multiple", func(t *testing.T) {
+		require := require.New(t)
+
+		f := mustFunc(t, func(int, bool) int { return 0 })
+		result := f.ChainInputSet([]*Func{}, checkOr(checkMatchInt, checkMatchBool))
+		require.NotNil(result)
+
+		// We expect 2 results: bool and int
+		require.Len(result, 2)
+	})
+
+	t.Run("depth 1,2 multiple", func(t *testing.T) {
+		require := require.New(t)
+
+		type intA int
+		type intB int
+		type intC int
+
+		// The path here:
+		//   - f requires intA, intB
+		//   - a mapper provides intA from int
+		//   - a mapper provides intC from inB
+		//   - a mapper provides intB from bool
+		//   > can solve with int and bool
+		f := mustFunc(t, func(intA, intB) int { return 0 })
+		result := f.ChainInputSet([]*Func{
+			mustFunc(t, func(int) intA { return 0 }),
+			mustFunc(t, func(intC) intB { return 0 }),
+			mustFunc(t, func(bool) intC { return 0 }),
+		}, checkOr(checkMatchInt, checkMatchBool))
+		require.NotNil(result)
+
+		// We expect 2 results: bool and int
+		require.Len(result, 2)
+	})
 }
