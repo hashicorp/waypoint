@@ -141,17 +141,6 @@ func (s *builderServer) Build(
 	return &proto.Build_Resp{Result: encoded}, nil
 }
 
-// specToFunc takes a FuncSpec and returns a mapper.Func that can be used.
-func specToFunc(s *proto.FuncSpec, cb interface{}) *mapper.Func {
-	// Build the function
-	f, err := mapper.NewFunc(cb, mapper.WithType(dynamicArgsType, makeDynamicArgsMapperType(s)))
-	if err != nil {
-		panic(err)
-	}
-
-	return f
-}
-
 // appendArgs is a helper to encode a number of protobuf.Message into
 // any.Any and add it to the list of dynamicArgs to make it easier to build
 // up a dynamic function call.
