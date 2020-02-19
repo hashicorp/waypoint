@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/internal/component"
+	"github.com/mitchellh/devflow/sdk/component"
 )
 
 func TestForType(t *testing.T) {

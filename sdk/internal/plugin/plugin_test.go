@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/internal/component/mocks"
+	"github.com/mitchellh/devflow/sdk/component/mocks"
 )
 
 func TestPlugins(t *testing.T) {

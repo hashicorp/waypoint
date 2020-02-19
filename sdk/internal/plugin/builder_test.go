@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/internal/component"
-	"github.com/mitchellh/devflow/internal/component/mocks"
-	"github.com/mitchellh/devflow/internal/mapper"
+	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/mitchellh/devflow/sdk/component/mocks"
+	"github.com/mitchellh/devflow/sdk/pkg/mapper"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 

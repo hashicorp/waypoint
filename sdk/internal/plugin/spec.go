@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"github.com/mitchellh/devflow/internal/mapper"
+	"github.com/mitchellh/devflow/sdk/pkg/mapper"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 

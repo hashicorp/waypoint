@@ -6,7 +6,7 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/internal/mapper"
+	"github.com/mitchellh/devflow/sdk/pkg/mapper"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 
