@@ -2,7 +2,11 @@ package plugin
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 
+	protobuf "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
@@ -52,8 +56,21 @@ func (c *builderClient) build(
 	ctx context.Context,
 	src *proto.Args_Source,
 	args dynamicArgs,
-) interface{} {
-	return nil
+) (interface{}, error) {
+	// Encode our standard arguments
+	args, err := appendArgs(args, src)
+	if err != nil {
+		return nil, err
+	}
+
+	// Call our function
+	resp, err := c.client.Build(ctx, &proto.Build_Args{Args: args})
+	if err != nil {
+		return nil, err
+	}
+
+	// We return the *any.Any directly.
+	return resp.Result, nil
 }
 
 // builderServer is a gRPC server that the client talks to and calls a
@@ -73,7 +90,55 @@ func (s *builderServer) Build(
 	ctx context.Context,
 	args *proto.Build_Args,
 ) (*proto.Build_Resp, error) {
-	return nil, nil
+	// Decode all our arguments
+	decoded := make([]interface{}, len(args.Args)+1)
+	decoded[0] = ctx
+	for idx, arg := range args.Args {
+		name, err := ptypes.AnyMessageName(arg)
+		if err != nil {
+			return nil, err
+		}
+
+		typ := protobuf.MessageType(name)
+		if typ == nil {
+			return nil, fmt.Errorf("cannot decode type: %s", name)
+		}
+
+		if typ.Kind() == reflect.Ptr {
+			typ = typ.Elem()
+		}
+
+		v := reflect.New(typ)
+		v.Elem().Set(reflect.Zero(typ))
+
+		if err := ptypes.UnmarshalAny(arg, v.Interface().(protobuf.Message)); err != nil {
+			return nil, err
+		}
+
+		decoded[idx+1] = v.Interface()
+	}
+
+	f, err := mapper.NewFunc(s.Impl.BuildFunc())
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := f.Call(decoded...)
+	if err != nil {
+		return nil, err
+	}
+
+	msg, ok := result.(protobuf.Message)
+	if !ok {
+		return nil, fmt.Errorf("result of plugin-based function must be a proto.Message, got %T", msg)
+	}
+
+	encoded, err := ptypes.MarshalAny(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &proto.Build_Resp{Result: encoded}, nil
 }
 
 // specToFunc takes a FuncSpec and returns a mapper.Func that can be used.
@@ -85,6 +150,22 @@ func specToFunc(s *proto.FuncSpec, cb interface{}) *mapper.Func {
 	}
 
 	return f
+}
+
+// appendArgs is a helper to encode a number of protobuf.Message into
+// any.Any and add it to the list of dynamicArgs to make it easier to build
+// up a dynamic function call.
+func appendArgs(args dynamicArgs, ms ...protobuf.Message) (dynamicArgs, error) {
+	for _, m := range ms {
+		encoded, err := ptypes.MarshalAny(m)
+		if err != nil {
+			return nil, err
+		}
+
+		args = append(args, encoded)
+	}
+
+	return args, nil
 }
 
 var (

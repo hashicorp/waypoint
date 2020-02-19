@@ -1,19 +1,35 @@
 package plugin
 
 import (
+	"context"
 	"testing"
 
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-plugin"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mitchellh/devflow/internal/component"
+	"github.com/mitchellh/devflow/internal/component/mocks"
 	"github.com/mitchellh/devflow/internal/mapper"
+	"github.com/mitchellh/devflow/sdk/plugin/proto"
 )
 
 func TestBuilderBuild(t *testing.T) {
 	require := require.New(t)
 
-	client, server := plugin.TestPluginGRPCConn(t, Plugins[1])
+	called := false
+	buildFunc := func(ctx context.Context) *proto.Empty {
+		called = true
+		require.NotNil(ctx)
+		return &proto.Empty{}
+	}
+
+	mockB := &mocks.Builder{}
+	mockB.On("BuildFunc").Return(buildFunc)
+
+	plugins := Plugins(mockB)
+	client, server := plugin.TestPluginGRPCConn(t, plugins[1])
 	defer client.Close()
 	defer server.Stop()
 
@@ -22,4 +38,15 @@ func TestBuilderBuild(t *testing.T) {
 	builder := raw.(component.Builder)
 	f := builder.BuildFunc().(*mapper.Func)
 	require.NotNil(f)
+
+	raw, err = f.Call(context.Background(), &proto.Args_Source{})
+	require.NoError(err)
+	require.NotNil(raw)
+
+	result := raw.(*any.Any)
+	name, err := ptypes.AnyMessageName(result)
+	require.NoError(err)
+	require.Equal("proto.Empty", name)
+
+	require.True(called)
 }
