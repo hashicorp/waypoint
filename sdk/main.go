@@ -6,6 +6,8 @@ import (
 	sdkplugin "github.com/mitchellh/devflow/sdk/plugin"
 )
 
+//go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"
+
 // Main is the primary entrypoint for plugins serving components. This
 // function never returns; it blocks until the program is exited. This should
 // be called immediately in main() in your plugin binaries, no prior setup

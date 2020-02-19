@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 
 	"github.com/mitchellh/devflow/internal/mapper"
-	"github.com/mitchellh/devflow/sdk/plugin/proto"
+	"github.com/mitchellh/devflow/sdk/proto"
 )
 
 // dynamicArgs is the type expected for the argument for a dynamicArgsType.

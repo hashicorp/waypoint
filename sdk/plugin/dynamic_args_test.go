@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mitchellh/devflow/internal/mapper"
-	"github.com/mitchellh/devflow/sdk/plugin/proto"
+	"github.com/mitchellh/devflow/sdk/proto"
 )
 
 func TestDynamicArgsMapperType(t *testing.T) {

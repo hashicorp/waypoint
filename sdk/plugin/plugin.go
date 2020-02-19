@@ -7,8 +7,6 @@ import (
 	"github.com/hashicorp/go-plugin"
 )
 
-//go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"
-
 // Handshake is a common handshake that is shared by plugin and host.
 var Handshake = plugin.HandshakeConfig{
 	// Not secret, just to avoid plugins being launched manually. The

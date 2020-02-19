@@ -12,7 +12,7 @@ import (
 	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/component/mocks"
 	"github.com/mitchellh/devflow/internal/mapper"
-	"github.com/mitchellh/devflow/sdk/plugin/proto"
+	"github.com/mitchellh/devflow/sdk/proto"
 )
 
 func TestBuilderBuild(t *testing.T) {

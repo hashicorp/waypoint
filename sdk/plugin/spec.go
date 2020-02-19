@@ -2,7 +2,7 @@ package plugin
 
 import (
 	"github.com/mitchellh/devflow/internal/mapper"
-	pb "github.com/mitchellh/devflow/sdk/plugin/proto"
+	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
 // funcToSpec takes a function pointer and generates a FuncSpec from it.

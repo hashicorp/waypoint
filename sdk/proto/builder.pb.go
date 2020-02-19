@@ -37,7 +37,7 @@ func (m *Args) Reset()         { *m = Args{} }
 func (m *Args) String() string { return proto.CompactTextString(m) }
 func (*Args) ProtoMessage()    {}
 func (*Args) Descriptor() ([]byte, []int) {
-	return fileDescriptor_builder_48e7186ce11bf882, []int{0}
+	return fileDescriptor_builder_0a8d3c301b8a85d1, []int{0}
 }
 func (m *Args) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Args.Unmarshal(m, b)
@@ -70,7 +70,7 @@ func (m *Args_Source) Reset()         { *m = Args_Source{} }
 func (m *Args_Source) String() string { return proto.CompactTextString(m) }
 func (*Args_Source) ProtoMessage()    {}
 func (*Args_Source) Descriptor() ([]byte, []int) {
-	return fileDescriptor_builder_48e7186ce11bf882, []int{0, 0}
+	return fileDescriptor_builder_0a8d3c301b8a85d1, []int{0, 0}
 }
 func (m *Args_Source) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Args_Source.Unmarshal(m, b)
@@ -114,7 +114,7 @@ func (m *Build) Reset()         { *m = Build{} }
 func (m *Build) String() string { return proto.CompactTextString(m) }
 func (*Build) ProtoMessage()    {}
 func (*Build) Descriptor() ([]byte, []int) {
-	return fileDescriptor_builder_48e7186ce11bf882, []int{1}
+	return fileDescriptor_builder_0a8d3c301b8a85d1, []int{1}
 }
 func (m *Build) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Build.Unmarshal(m, b)
@@ -136,8 +136,9 @@ var xxx_messageInfo_Build proto.InternalMessageInfo
 
 type Build_Args struct {
 	// args is the list of argument types. This will include some of the
-	// standard types in this file as well as custom types declared by
-	// the func spec.
+	// standard types in this file (in the Args message namespace) as well
+	// as custom types declared by the FuncSpec that the plugin is expected
+	// to understand how to decode.
 	Args                 []*any.Any `protobuf:"bytes,1,rep,name=args,proto3" json:"args,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
 	XXX_unrecognized     []byte     `json:"-"`
@@ -148,7 +149,7 @@ func (m *Build_Args) Reset()         { *m = Build_Args{} }
 func (m *Build_Args) String() string { return proto.CompactTextString(m) }
 func (*Build_Args) ProtoMessage()    {}
 func (*Build_Args) Descriptor() ([]byte, []int) {
-	return fileDescriptor_builder_48e7186ce11bf882, []int{1, 0}
+	return fileDescriptor_builder_0a8d3c301b8a85d1, []int{1, 0}
 }
 func (m *Build_Args) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Build_Args.Unmarshal(m, b)
@@ -186,7 +187,7 @@ func (m *Build_Resp) Reset()         { *m = Build_Resp{} }
 func (m *Build_Resp) String() string { return proto.CompactTextString(m) }
 func (*Build_Resp) ProtoMessage()    {}
 func (*Build_Resp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_builder_48e7186ce11bf882, []int{1, 1}
+	return fileDescriptor_builder_0a8d3c301b8a85d1, []int{1, 1}
 }
 func (m *Build_Resp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Build_Resp.Unmarshal(m, b)
@@ -224,7 +225,7 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_builder_48e7186ce11bf882, []int{2}
+	return fileDescriptor_builder_0a8d3c301b8a85d1, []int{2}
 }
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
@@ -263,7 +264,7 @@ func (m *FuncSpec) Reset()         { *m = FuncSpec{} }
 func (m *FuncSpec) String() string { return proto.CompactTextString(m) }
 func (*FuncSpec) ProtoMessage()    {}
 func (*FuncSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_builder_48e7186ce11bf882, []int{3}
+	return fileDescriptor_builder_0a8d3c301b8a85d1, []int{3}
 }
 func (m *FuncSpec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FuncSpec.Unmarshal(m, b)
@@ -412,9 +413,9 @@ var _Builder_serviceDesc = grpc.ServiceDesc{
 	Metadata: "builder.proto",
 }
 
-func init() { proto.RegisterFile("builder.proto", fileDescriptor_builder_48e7186ce11bf882) }
+func init() { proto.RegisterFile("builder.proto", fileDescriptor_builder_0a8d3c301b8a85d1) }
 
-var fileDescriptor_builder_48e7186ce11bf882 = []byte{
+var fileDescriptor_builder_0a8d3c301b8a85d1 = []byte{
 	// 253 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x90, 0xc1, 0x4e, 0x84, 0x30,
 	0x10, 0x86, 0x83, 0x0b, 0xac, 0x8c, 0x1a, 0x75, 0x62, 0x0c, 0xf6, 0xb4, 0xe1, 0x44, 0x8c, 0x76,

@@ -12,7 +12,7 @@ import (
 
 	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/mapper"
-	"github.com/mitchellh/devflow/sdk/plugin/proto"
+	"github.com/mitchellh/devflow/sdk/proto"
 )
 
 // BuilderPlugin implements plugin.Plugin (specifically GRPCPlugin) for
