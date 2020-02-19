@@ -3,7 +3,7 @@ package sdk
 import (
 	"github.com/hashicorp/go-plugin"
 
-	sdkplugin "github.com/mitchellh/devflow/sdk/plugin"
+	sdkplugin "github.com/mitchellh/devflow/sdk/internal/plugin"
 )
 
 //go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"
