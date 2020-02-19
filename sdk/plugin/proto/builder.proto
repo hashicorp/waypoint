@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/any.proto";
+
+service Builder {
+  rpc BuildSpec(Empty) returns (FuncSpec);
+  rpc Build(Build.Args) returns (Build.Resp);
+}
+
+// Args are the common argument types that are available to many of the
+// dynamic functions. The exact list of available argument types is available
+// on the Go interface docs.
+message Args {
+  // See component.Source
+  message Source {
+    string app = 1;
+    string path = 2;
+  }
+}
+
+message Build {
+  message Args {
+    // args is the list of argument types. This will include some of the
+    // standard types in this file (in the Args message namespace) as well
+    // as custom types declared by the FuncSpec that the plugin is expected
+    // to understand how to decode.
+    repeated google.protobuf.Any args = 1;
+  }
+
+  message Resp {
+    google.protobuf.Any result = 1;
+  }
+}
+
+// Empty is just an empty message useful with some RPC endpoints.
+message Empty {}
+
+// FuncSpec describes a function and is used by the dependency-injection
+// framework to provide the function with the proper values.
+//
+// Value types are specified using strings. Built-in framework types
+// are defined via constants in the `sdk` package. For custom types, you
+// can use whatever string as long as it is unique. We recommend using a
+// unique prefix plus the Go type name.
+message FuncSpec {
+  repeated string args = 1;
+  string result = 2;
+}
