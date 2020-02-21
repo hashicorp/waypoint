@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package testproto;
+
+// Data is just some data, used for tests so meant to be meaningless.
+message Data {
+  string value = 1;
+}

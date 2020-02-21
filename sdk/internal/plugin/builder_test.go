@@ -12,6 +12,7 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/component/mocks"
+	"github.com/mitchellh/devflow/sdk/internal/testproto"
 	"github.com/mitchellh/devflow/sdk/pkg/mapper"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
@@ -21,11 +22,11 @@ func TestBuilderBuild(t *testing.T) {
 	assert := assert.New(t)
 
 	called := false
-	buildFunc := func(ctx context.Context, args *proto.Args_Source) *proto.Empty {
+	buildFunc := func(ctx context.Context, args *proto.Args_Source) *testproto.Data {
 		called = true
 		assert.NotNil(ctx)
 		assert.Equal("foo", args.App)
-		return &proto.Empty{}
+		return &testproto.Data{Value: "hello"}
 	}
 
 	mockB := &mocks.Builder{}
@@ -49,7 +50,7 @@ func TestBuilderBuild(t *testing.T) {
 	result := raw.(*any.Any)
 	name, err := ptypes.AnyMessageName(result)
 	require.NoError(err)
-	require.Equal("proto.Empty", name)
+	require.Equal("testproto.Data", name)
 
 	require.True(called)
 }
