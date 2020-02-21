@@ -8,6 +8,61 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestChainTarget(t *testing.T) {
+	t.Run("direct", func(t *testing.T) {
+		require := require.New(t)
+
+		chain := ChainTarget(checkMatchType(int(42)), []*Func{
+			mustFunc(t, func() int { return 12 }),
+			mustFunc(t, func() int32 { return 24 }),
+		})
+		require.NotNil(chain)
+
+		result, err := chain.Call()
+		require.NoError(err)
+		require.Equal(int(12), result)
+	})
+
+	t.Run("function chain no args", func(t *testing.T) {
+		require := require.New(t)
+
+		chain := ChainTarget(checkMatchType(int(42)), []*Func{
+			mustFunc(t, func(bool) int { return 12 }),
+			mustFunc(t, func(string) bool { return false }),
+			mustFunc(t, func() string { return "" }),
+		})
+		require.NotNil(chain)
+
+		result, err := chain.Call()
+		require.NoError(err)
+		require.Equal(int(12), result)
+	})
+
+	t.Run("function chain with args", func(t *testing.T) {
+		require := require.New(t)
+
+		chain := ChainTarget(checkMatchType(int(42)), []*Func{
+			mustFunc(t, func(bool) int { return 12 }),
+			mustFunc(t, func(string) bool { return false }),
+		}, "hello")
+		require.NotNil(chain)
+
+		result, err := chain.Call()
+		require.NoError(err)
+		require.Equal(int(12), result)
+	})
+
+	t.Run("function chain with args (unsatisfied)", func(t *testing.T) {
+		require := require.New(t)
+
+		chain := ChainTarget(checkMatchType(int(42)), []*Func{
+			mustFunc(t, func(bool) int { return 12 }),
+			mustFunc(t, func(string) bool { return false }),
+		})
+		require.Nil(chain)
+	})
+}
+
 func TestFuncChain(t *testing.T) {
 	type intA int
 	type intB int
@@ -132,12 +187,6 @@ func TestFuncChain(t *testing.T) {
 }
 
 func TestFuncChainInputSet(t *testing.T) {
-	checkMatchType := func(v interface{}) func(Type) bool {
-		return func(t Type) bool {
-			return t.(*ReflectType).Type == reflect.TypeOf(v)
-		}
-	}
-
 	checkOr := func(fs ...func(Type) bool) func(Type) bool {
 		return func(t Type) bool {
 			for _, f := range fs {
@@ -271,4 +320,10 @@ func TestFuncChainInputSet(t *testing.T) {
 		// We expect 2 results: bool and int
 		require.Len(result, 2)
 	})
+}
+
+func checkMatchType(v interface{}) func(Type) bool {
+	return func(t Type) bool {
+		return t.(*ReflectType).Type == reflect.TypeOf(v)
+	}
 }

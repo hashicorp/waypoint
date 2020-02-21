@@ -6,6 +6,31 @@ import (
 	"strings"
 )
 
+// CheckFunc is a function type used with many Chain functions to perform
+// a check if a type is satisfied. The exact meaning of "satisfied" depends
+// on the chain function called.
+type CheckFunc func(Type) bool
+
+// ChainTarget finds a Chain that results in the result satisfying the check
+// function given a set of functions and input values. This will return nil
+// if no valid chain can be found.
+func ChainTarget(check CheckFunc, mappers []*Func, values ...interface{}) *Chain {
+	for _, m := range mappers {
+		// If this mapper doesn't result in a valid output, ignore it.
+		if !check(m.Out) {
+			continue
+		}
+
+		// We have a valid output, let's see if we can build a chain.
+		chain, err := m.Chain(mappers, values...)
+		if err == nil {
+			return chain
+		}
+	}
+
+	return nil
+}
+
 // NOTE(mitchellh): The whole algorithm below is sub-optimal in many ways:
 // we use too much state, we duplicate processing work, etc. We can improve
 // this as needed since the tests are written and are high level.
@@ -219,6 +244,11 @@ type Chain struct {
 
 	// values is the list of values we have
 	values []interface{}
+}
+
+// Out returns the output type for the chain.
+func (c *Chain) Out() Type {
+	return c.funcs[len(c.funcs)-1].Out
 }
 
 // Call calls all the functions in the chain and returns the first error
