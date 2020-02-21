@@ -5,11 +5,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 
 	"github.com/mitchellh/devflow/sdk/pkg/mapper"
-	"github.com/mitchellh/devflow/sdk/proto"
+	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
 // dynamicArgs is the type expected for the argument for a dynamicArgsType.
@@ -29,7 +30,7 @@ type dynamicArgsMapperType struct {
 
 // makeDynamicArgsMapperType can be used with mapper.WithType as a second
 // parameter to construct the dynamicArgsMapperType for a func spec.
-func makeDynamicArgsMapperType(s *proto.FuncSpec) func(int, reflect.Type) mapper.Type {
+func makeDynamicArgsMapperType(s *pb.FuncSpec) func(int, reflect.Type) mapper.Type {
 	return func(int, reflect.Type) mapper.Type {
 		return &dynamicArgsMapperType{
 			Expected: s.Args,
@@ -49,8 +50,30 @@ func (t *dynamicArgsMapperType) Match(values ...interface{}) interface{} {
 	for _, raw := range values {
 		av, ok := raw.(*any.Any)
 
+		// If this isn't an *any.Any, we can still take a proto.Message
+		// and manually encode it. This path is really only used for our
+		// built-in types since any custom types are never going to be
+		// decoded in core (since we don't link against plugins directly).
+		if !ok {
+			pv, ok := raw.(proto.Message)
+			if !ok {
+				continue
+			}
+
+			// If we don't expect this value, then ignore
+			if _, ok := expectMap[proto.MessageName(pv)]; !ok {
+				continue
+			}
+
+			var err error
+			av, err = ptypes.MarshalAny(pv)
+			if err != nil {
+				continue
+			}
+		}
+
 		// If this value isn't an Any then ignore it
-		if !ok || av == nil {
+		if av == nil {
 			continue
 		}
 

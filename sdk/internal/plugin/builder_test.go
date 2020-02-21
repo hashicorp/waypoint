@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-plugin"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mitchellh/devflow/sdk/component"
@@ -17,11 +18,13 @@ import (
 
 func TestBuilderBuild(t *testing.T) {
 	require := require.New(t)
+	assert := assert.New(t)
 
 	called := false
-	buildFunc := func(ctx context.Context) *proto.Empty {
+	buildFunc := func(ctx context.Context, args *proto.Args_Source) *proto.Empty {
 		called = true
-		require.NotNil(ctx)
+		assert.NotNil(ctx)
+		assert.Equal("foo", args.App)
 		return &proto.Empty{}
 	}
 
@@ -39,7 +42,7 @@ func TestBuilderBuild(t *testing.T) {
 	f := builder.BuildFunc().(*mapper.Func)
 	require.NotNil(f)
 
-	raw, err = f.Call(context.Background(), &proto.Args_Source{})
+	raw, err = f.Call(context.Background(), &proto.Args_Source{App: "foo"})
 	require.NoError(err)
 	require.NotNil(raw)
 

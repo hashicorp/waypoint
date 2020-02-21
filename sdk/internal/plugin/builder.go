@@ -54,15 +54,8 @@ func (c *builderClient) BuildFunc() interface{} {
 
 func (c *builderClient) build(
 	ctx context.Context,
-	src *proto.Args_Source,
 	args dynamicArgs,
 ) (interface{}, error) {
-	// Encode our standard arguments
-	args, err := appendArgs(args, src)
-	if err != nil {
-		return nil, err
-	}
-
 	// Call our function
 	resp, err := c.client.Build(ctx, &proto.Build_Args{Args: args})
 	if err != nil {
@@ -83,7 +76,7 @@ func (s *builderServer) BuildSpec(
 	ctx context.Context,
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
-	return &proto.FuncSpec{}, nil
+	return funcToSpec(s.Impl.BuildFunc(), nil)
 }
 
 func (s *builderServer) Build(

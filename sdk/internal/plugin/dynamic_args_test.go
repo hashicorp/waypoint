@@ -3,11 +3,13 @@ package plugin
 import (
 	"testing"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mitchellh/devflow/sdk/pkg/mapper"
-	"github.com/mitchellh/devflow/sdk/proto"
+	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
 func TestDynamicArgsMapperType(t *testing.T) {
@@ -27,6 +29,21 @@ func TestDynamicArgsMapperType(t *testing.T) {
 		require.Panics(func() {
 			f.Call(&any.Any{TypeUrl: "example.com/baz"}, &any.Any{TypeUrl: "example.com/bar"})
 		})
+	})
+
+	t.Run("match proto.Message", func(t *testing.T) {
+		data := &pb.Args_Source{}
+
+		require := require.New(t)
+		f, args := testDynamicArgsFunc(t, []string{proto.MessageName(data)})
+		result, err := f.Call(data)
+		require.NoError(err)
+		require.NotNil(result)
+		require.Len(*args, 1)
+
+		var value pb.Args_Source
+		require.NoError(ptypes.UnmarshalAny((*args)[0], &value))
+		require.Equal(data, &value)
 	})
 
 	t.Run("multiple requirements: match", func(t *testing.T) {
@@ -66,7 +83,7 @@ func testDynamicArgsFunc(t *testing.T, types []string) (*mapper.Func, *dynamicAr
 	f, err := mapper.NewFunc(func(args dynamicArgs) int {
 		result = args
 		return 0
-	}, mapper.WithType(dynamicArgsType, makeDynamicArgsMapperType(&proto.FuncSpec{
+	}, mapper.WithType(dynamicArgsType, makeDynamicArgsMapperType(&pb.FuncSpec{
 		Args: types,
 	})))
 	require.NoError(t, err)
