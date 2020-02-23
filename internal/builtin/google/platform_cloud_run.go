@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/internal/builtin/docker"
-	"github.com/mitchellh/devflow/internal/component"
-	"github.com/mitchellh/devflow/internal/datadir"
 	"github.com/mitchellh/devflow/internal/terraform"
+	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/mitchellh/devflow/sdk/datadir"
 )
 
 // CloudRunPlatform is the Platform implementation for Google Cloud Run.

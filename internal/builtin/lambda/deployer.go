@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/mattn/go-isatty"
 	"github.com/mitchellh/devflow/internal/builtin/lambda/runner"
-	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/pkg/status"
+	"github.com/mitchellh/devflow/sdk/component"
 	"golang.org/x/crypto/ssh/terminal"
 )
 

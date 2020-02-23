@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/mitchellh/devflow/internal/component"
+	"github.com/mitchellh/devflow/sdk/component"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build

@@ -20,8 +20,8 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/hashicorp/go-hclog"
-	"github.com/mitchellh/devflow/internal/component"
-	"github.com/mitchellh/devflow/internal/datadir"
+	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
 )

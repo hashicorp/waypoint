@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
-	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/pkg/status"
+	"github.com/mitchellh/devflow/sdk/component"
 )
 
 type ECSLauncher struct {

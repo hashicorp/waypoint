@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/mitchellh/devflow/internal/component"
+	"github.com/mitchellh/devflow/sdk/component"
 )
 
 type LogsCommand struct {

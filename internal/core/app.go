@@ -8,11 +8,11 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/config"
-	"github.com/mitchellh/devflow/internal/datadir"
-	"github.com/mitchellh/devflow/internal/mapper"
 	"github.com/mitchellh/devflow/internal/pkg/status"
+	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/mitchellh/devflow/sdk/datadir"
+	"github.com/mitchellh/devflow/sdk/pkg/mapper"
 )
 
 // App represents a single application and exposes all the operations

@@ -14,8 +14,8 @@ import (
 
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/core"
-	"github.com/mitchellh/devflow/internal/datadir"
 	"github.com/mitchellh/devflow/internal/pkg/status"
+	"github.com/mitchellh/devflow/sdk/datadir"
 )
 
 // baseCommand is embedded in all commands to provide common logic and data.
