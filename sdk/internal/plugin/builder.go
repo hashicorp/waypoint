@@ -20,11 +20,12 @@ import (
 type BuilderPlugin struct {
 	plugin.NetRPCUnsupportedPlugin
 
-	Impl component.Builder // Impl is the concrete implementation
+	Impl    component.Builder // Impl is the concrete implementation
+	Mappers []*mapper.Func    // Mappers
 }
 
 func (p *BuilderPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterBuilderServer(s, &builderServer{Impl: p.Impl})
+	proto.RegisterBuilderServer(s, &builderServer{Impl: p.Impl, Mappers: p.Mappers})
 	return nil
 }
 
@@ -69,14 +70,15 @@ func (c *builderClient) build(
 // builderServer is a gRPC server that the client talks to and calls a
 // real implementation of the component.
 type builderServer struct {
-	Impl component.Builder
+	Impl    component.Builder
+	Mappers []*mapper.Func
 }
 
 func (s *builderServer) BuildSpec(
 	ctx context.Context,
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
-	return funcToSpec(s.Impl.BuildFunc(), nil)
+	return funcToSpec(s.Impl.BuildFunc(), s.Mappers)
 }
 
 func (s *builderServer) Build(
@@ -116,7 +118,12 @@ func (s *builderServer) Build(
 		return nil, err
 	}
 
-	result, err := f.Call(decoded...)
+	chain, err := f.Chain(s.Mappers, decoded...)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := chain.Call()
 	if err != nil {
 		return nil, err
 	}

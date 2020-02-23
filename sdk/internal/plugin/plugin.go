@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/devflow/sdk/pkg/mapper"
 )
 
 // Handshake is a common handshake that is shared by plugin and host.
@@ -17,7 +18,12 @@ var Handshake = plugin.HandshakeConfig{
 
 // Plugins returns the list of available plugins and initializes them with
 // the given components. This will panic if an invalid component is given.
-func Plugins(components ...interface{}) map[int]plugin.PluginSet {
+func Plugins(opts ...Option) map[int]plugin.PluginSet {
+	var c pluginConfig
+	for _, opt := range opts {
+		opt(&c)
+	}
+
 	// Build our plugin types
 	result := map[int]plugin.PluginSet{
 		1: plugin.PluginSet{
@@ -25,23 +31,49 @@ func Plugins(components ...interface{}) map[int]plugin.PluginSet {
 		},
 	}
 
-	// Set the components
-	for _, c := range components {
-		if err := setComponent(result, c); err != nil {
+	// Set the various field values
+	for _, c := range c.Components {
+		if err := setFieldValue(result, c); err != nil {
 			panic(err)
 		}
+	}
+
+	// Set the mappers
+	if err := setFieldValue(result, c.Mappers); err != nil {
+		panic(err)
 	}
 
 	return result
 }
 
-// setComponent sets the component on any public assignable fields
-// of a plugin that match the type of c. An error is returned if
-// c can't be assigned to any plugin type.
+// pluginConfig is used to configure Plugins via Option calls.
+type pluginConfig struct {
+	Components []interface{}
+	Mappers    []*mapper.Func
+}
+
+// Option configures Plugins
+type Option func(*pluginConfig)
+
+// WithComponents sets the components to configure for the plugins.
+// This will append to the components.
+func WithComponents(cs ...interface{}) Option {
+	return func(c *pluginConfig) { c.Components = append(c.Components, cs...) }
+}
+
+// WithMappers sets the mappers to configure for the plugins. This will
+// append to the existing mappers.
+func WithMappers(ms ...*mapper.Func) Option {
+	return func(c *pluginConfig) { c.Mappers = append(c.Mappers, ms...) }
+}
+
+// setFieldValue sets the given value c on any exported field of an available
+// plugin that matches the type of c. An error is returned if c can't be
+// assigned to ANY plugin type.
 //
 // preconditions:
 //   - plugins in m are pointers to structs
-func setComponent(m map[int]plugin.PluginSet, c interface{}) error {
+func setFieldValue(m map[int]plugin.PluginSet, c interface{}) error {
 	cv := reflect.ValueOf(c)
 	ct := cv.Type()
 
@@ -68,5 +100,5 @@ func setComponent(m map[int]plugin.PluginSet, c interface{}) error {
 		}
 	}
 
-	return fmt.Errorf("no plugin available for component of type %T", c)
+	return fmt.Errorf("no plugin available for setting field of type %T", c)
 }

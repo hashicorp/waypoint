@@ -83,13 +83,9 @@ type LogsPlatform interface {
 	LogsFunc() interface{}
 }
 
-// Source represents the source code for an application. This is used by
-// the builder for creating an Artifact.
+// See Args.Source in the protobuf protocol.
 type Source struct {
-	// App is the name of the application being built.
-	App string
-
-	// Path is the path to the root directory of the source tree.
+	App  string
 	Path string
 }
 

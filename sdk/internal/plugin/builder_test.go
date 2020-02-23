@@ -22,7 +22,7 @@ func TestBuilderBuild(t *testing.T) {
 	assert := assert.New(t)
 
 	called := false
-	buildFunc := func(ctx context.Context, args *proto.Args_Source) *testproto.Data {
+	buildFunc := func(ctx context.Context, args *component.Source) *testproto.Data {
 		called = true
 		assert.NotNil(ctx)
 		assert.Equal("foo", args.App)
@@ -32,7 +32,7 @@ func TestBuilderBuild(t *testing.T) {
 	mockB := &mocks.Builder{}
 	mockB.On("BuildFunc").Return(buildFunc)
 
-	plugins := Plugins(mockB)
+	plugins := Plugins(WithComponents(mockB), WithMappers(testDefaultMappers(t)...))
 	client, server := plugin.TestPluginGRPCConn(t, plugins[1])
 	defer client.Close()
 	defer server.Stop()

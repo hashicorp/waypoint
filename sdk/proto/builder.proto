@@ -13,9 +13,12 @@ service Builder {
 // dynamic functions. The exact list of available argument types is available
 // on the Go interface docs.
 message Args {
-  // See component.Source
+  // Source represents the source directory for an application.
   message Source {
+    // app is the name of the application being deployed.
     string app = 1;
+
+    // path is the absolute directory path to the root directory for source files.
     string path = 2;
   }
 }
