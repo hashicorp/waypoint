@@ -25,6 +25,14 @@ func TestMappers(t *testing.T) {
 			&component.Source{App: "foo"},
 			"",
 		},
+
+		{
+			"SourceProto",
+			SourceProto,
+			[]interface{}{&component.Source{App: "foo"}},
+			&pb.Args_Source{App: "foo"},
+			"",
+		},
 	}
 
 	for _, tt := range cases {

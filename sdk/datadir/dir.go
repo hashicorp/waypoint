@@ -55,6 +55,12 @@ func newRootDir(path string) (Dir, error) {
 	return &basicDir{cacheDir: cacheDir, dataDir: dataDir}, nil
 }
 
+// NewBasicDir creates a Dir implementation with a manually specified
+// set of directories.
+func NewBasicDir(cacheDir, dataDir string) Dir {
+	return &basicDir{cacheDir: cacheDir, dataDir: dataDir}
+}
+
 // NewScopedDir creates a ScopedDir for the given parent at the relative
 // child path of path. The caller should take care that multiple scoped
 // dirs with overlapping paths are not created, since they could still
