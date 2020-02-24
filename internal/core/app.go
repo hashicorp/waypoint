@@ -208,9 +208,16 @@ func (a *App) callDynamicFunc(
 	f interface{}, // function
 	values ...interface{},
 ) (interface{}, error) {
-	rawFunc, err := mapper.NewFunc(f)
-	if err != nil {
-		return nil, err
+	// We allow f to be a *mapper.Func because our plugin system creates
+	// a func directly due to special argument types.
+	// TODO: test
+	rawFunc, ok := f.(*mapper.Func)
+	if !ok {
+		var err error
+		rawFunc, err = mapper.NewFunc(f)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get the component directory
