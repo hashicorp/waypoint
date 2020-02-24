@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mitchellh/devflow/sdk/component/mocks"
-	"github.com/mitchellh/devflow/sdk/internal/protomappers"
 	"github.com/mitchellh/devflow/sdk/pkg/mapper"
+	"github.com/mitchellh/devflow/sdk/protomappers"
 )
 
 func TestPlugins(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"github.com/hashicorp/go-plugin"
 
 	sdkplugin "github.com/mitchellh/devflow/sdk/internal/plugin"
-	"github.com/mitchellh/devflow/sdk/internal/protomappers"
 	"github.com/mitchellh/devflow/sdk/pkg/mapper"
+	"github.com/mitchellh/devflow/sdk/protomappers"
 )
 
 //go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"
