@@ -155,7 +155,17 @@ func (f *Func) args(
 		}
 
 		if missing != nil {
-			missing[arg] = idx
+			// Check if the type if there are alternate values we should
+			// be looking for to satisfy this. This is only in cases where
+			// the arg expects multiple types.
+			types := arg.Missing(values...)
+			if types == nil {
+				types = []Type{arg}
+			}
+
+			for _, typ := range types {
+				missing[typ] = idx
+			}
 		}
 	}
 

@@ -22,6 +22,14 @@ type Type interface {
 	// the input when a match occurs.
 	Match(values ...interface{}) interface{}
 
+	// Missing is called during the slow-path where Match returns nil and
+	// we need to know what values we are missing. In most cases this should
+	// just return the type (self). If you return other types, then it means
+	// that if the returned types are satisfied, then Match will succeed.
+	//
+	// If nil is returned, then self is assumed.
+	Missing(values ...interface{}) []Type
+
 	// Key should return a unique comparable key for this type. T1.Key == T2.Key
 	// when both T1 and T2 are "equal" Type values. This is used so that we can
 	// do major performance improvements for chaining functions.
@@ -56,6 +64,11 @@ func (v *ReflectType) Match(values ...interface{}) interface{} {
 		}
 	}
 
+	return nil
+}
+
+// Missing implements Type by returning nil meaning to use itself.
+func (v *ReflectType) Missing(values ...interface{}) []Type {
 	return nil
 }
 

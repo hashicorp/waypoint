@@ -8,4 +8,8 @@
 // The core of mapper is the Func struct, which maps a single function.
 // Higher level structs like Factory then build on top of this to provide
 // more functionality.
+//
+// Note that this package is exported from the SDK but please do not use it
+// publicly. It is only exported to satisfy the requirements of both the
+// SDK as well as core, and should be considered an internal package.
 package mapper

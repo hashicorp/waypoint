@@ -12,7 +12,7 @@ import (
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
-func TestDynamicArgsMapperType(t *testing.T) {
+func TestDynamicArgsMapperType_Match(t *testing.T) {
 	t.Run("simple match", func(t *testing.T) {
 		require := require.New(t)
 		f, args := testDynamicArgsFunc(t, []string{"foo"})
@@ -71,6 +71,33 @@ func TestDynamicArgsMapperType(t *testing.T) {
 				&any.Any{TypeUrl: "example.com/foo"},
 			)
 		})
+	})
+}
+
+func TestDynamicArgsMapperType_Missing(t *testing.T) {
+	t.Run("missing only known types", func(t *testing.T) {
+		require := require.New(t)
+
+		typ := &dynamicArgsMapperType{Expected: []string{
+			proto.MessageName(&pb.Args_Source{}),
+			proto.MessageName(&pb.Args_DataDir_Project{}),
+		}}
+
+		types := typ.Missing()
+		require.NotNil(types)
+		require.Len(types, 2)
+	})
+
+	t.Run("missing unregistered type", func(t *testing.T) {
+		require := require.New(t)
+
+		typ := &dynamicArgsMapperType{Expected: []string{
+			proto.MessageName(&pb.Args_Source{}),
+			"bar",
+		}}
+
+		types := typ.Missing()
+		require.Nil(types)
 	})
 }
 

@@ -41,6 +41,19 @@ func makeDynamicArgsMapperType(s *pb.FuncSpec) func(int, reflect.Type) mapper.Ty
 // Match implements mapper.Type by constructing an []*any.Any if there
 // exists an *any.Any for all expected types.
 func (t *dynamicArgsMapperType) Match(values ...interface{}) interface{} {
+	return t.args(values, nil)
+}
+
+func (t *dynamicArgsMapperType) Missing(values ...interface{}) []mapper.Type {
+	var missing []mapper.Type
+	t.args(values, &missing)
+	return missing
+}
+
+func (t *dynamicArgsMapperType) args(
+	values []interface{},
+	missing *[]mapper.Type, // if non-nil, will be populated with missing types
+) interface{} {
 	expectMap := make(map[string]struct{})
 	for _, v := range t.Expected {
 		expectMap[v] = struct{}{}
@@ -97,7 +110,28 @@ func (t *dynamicArgsMapperType) Match(values ...interface{}) interface{} {
 
 	// If we're missing any expected values, then we can't match.
 	if len(expectMap) > 0 {
-		return nil
+		// If we don't need to track missing values, just return
+		if missing == nil {
+			return nil
+		}
+
+		// We are tracking missing values so go through the expect typed
+		// and if we know the proto type (it is registered locally) then
+		// offer that.
+		for name := range expectMap {
+			if typ := proto.MessageType(name); typ != nil {
+				*missing = append(*missing, &mapper.ReflectType{
+					Type: typ,
+				})
+
+				delete(expectMap, name)
+			}
+		}
+
+		// If we have any we still expect, then use the default type
+		if len(expectMap) > 0 {
+			*missing = nil
+		}
 	}
 
 	return result
