@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"os"
+
 	"github.com/hashicorp/go-plugin"
 
 	internalplugin "github.com/mitchellh/devflow/sdk/internal/plugin"
@@ -14,5 +16,10 @@ func ClientConfig() *plugin.ClientConfig {
 		HandshakeConfig:  internalplugin.Handshake,
 		VersionedPlugins: internalplugin.Plugins(),
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
+
+		// Syncing is very important to enable. This causes the stdout/err
+		// of the plugin subprocesses to show up in our stdout/stderr.
+		SyncStdout: os.Stdout,
+		SyncStderr: os.Stderr,
 	}
 }
