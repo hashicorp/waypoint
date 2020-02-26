@@ -3,7 +3,7 @@ package plugin
 import (
 	"testing"
 
-	"github.com/mitchellh/devflow/sdk/pkg/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/mitchellh/devflow/sdk/proto"

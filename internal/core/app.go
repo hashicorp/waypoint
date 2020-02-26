@@ -12,7 +12,7 @@ import (
 	"github.com/mitchellh/devflow/internal/pkg/status"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
-	"github.com/mitchellh/devflow/sdk/pkg/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
 // App represents a single application and exposes all the operations

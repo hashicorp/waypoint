@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/go-plugin"
-	"github.com/mitchellh/devflow/sdk/pkg/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
 // Handshake is a common handshake that is shared by plugin and host.

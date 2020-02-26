@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 
-	"github.com/mitchellh/devflow/sdk/pkg/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 

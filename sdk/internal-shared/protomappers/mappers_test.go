@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/pkg/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 

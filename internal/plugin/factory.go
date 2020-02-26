@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 
 	"github.com/mitchellh/devflow/sdk/component"
-	sdkplugin "github.com/mitchellh/devflow/sdk/plugin"
+	"github.com/mitchellh/devflow/sdk/internal-shared/pluginclient"
 )
 
 // exePath contains the value of os.Executable. We cache the value because
@@ -28,7 +28,7 @@ func init() {
 // represented by an *exec.Cmd.
 func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 	return func(log hclog.Logger) (interface{}, error) {
-		config := sdkplugin.ClientConfig()
+		config := pluginclient.ClientConfig()
 		config.Cmd = cmd
 		config.Logger = log
 		config.AutoMTLS = true

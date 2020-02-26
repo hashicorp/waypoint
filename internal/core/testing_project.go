@@ -12,7 +12,7 @@ import (
 	"github.com/mitchellh/devflow/sdk/component"
 	componentmocks "github.com/mitchellh/devflow/sdk/component/mocks"
 	"github.com/mitchellh/devflow/sdk/datadir"
-	"github.com/mitchellh/devflow/sdk/pkg/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
 // TestProject returns a fully in-memory and side-effect free Project that

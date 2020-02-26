@@ -10,8 +10,8 @@ import (
 	"github.com/mitchellh/devflow/internal/plugin"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
-	"github.com/mitchellh/devflow/sdk/pkg/mapper"
-	"github.com/mitchellh/devflow/sdk/protomappers"
+	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
 // Project represents a project with one or more applications.

@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/pkg/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 
