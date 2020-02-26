@@ -1,4 +1,4 @@
-package pack
+package docker
 
 import (
 	"github.com/mitchellh/devflow/sdk"
@@ -8,5 +8,5 @@ import (
 
 // Options are the SDK options to use for instantiation.
 var Options = []sdk.Option{
-	sdk.WithComponents(&Builder{}),
+	sdk.WithComponents(&Registry{}),
 }

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package proto;
+package pack;
 
 // DockerImage is the artifact type for the builder.
 message DockerImage {

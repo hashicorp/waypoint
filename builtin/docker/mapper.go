@@ -1,13 +1,8 @@
 package docker
 
 import (
-	"github.com/mitchellh/devflow/internal/builtin/pack"
+	"github.com/mitchellh/devflow/builtin/pack"
 )
-
-// NewRegistry is the factory function to create a Registry.
-func NewRegistry() *Registry {
-	return &Registry{}
-}
 
 // PackImageMapper maps a pack.DockerImage to our Image structure.
 //

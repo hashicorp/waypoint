@@ -6,8 +6,6 @@ import (
 	"os/exec"
 
 	"github.com/mitchellh/devflow/sdk/component"
-
-	pb "github.com/mitchellh/devflow/builtin/pack/proto"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
@@ -20,7 +18,7 @@ func (b *Builder) BuildFunc() interface{} {
 }
 
 // Build
-func (b *Builder) Build(ctx context.Context, src *component.Source) (*pb.DockerImage, error) {
+func (b *Builder) Build(ctx context.Context, src *component.Source) (*DockerImage, error) {
 	// Build the image using `pack`. This doesn't give us any more information
 	// unfortunately so we can only run the build with the image name
 	// we want as a result.
@@ -34,7 +32,7 @@ func (b *Builder) Build(ctx context.Context, src *component.Source) (*pb.DockerI
 
 	// We don't even need to inspect Docker to verify we have the image.
 	// If `pack` succeeded we can assume that it created an image for us.
-	return &pb.DockerImage{
+	return &DockerImage{
 		Image: src.App,
 		Tag:   "latest", // It always tags latest
 	}, nil
