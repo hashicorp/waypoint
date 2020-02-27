@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package proto;
+
+// Args are the common argument types that are available to many of the
+// dynamic functions. The exact list of available argument types is available
+// on the Go interface docs.
+message Args {
+  // See component.Source
+  message Source {
+    // app is the name of the application being deployed.
+    string app = 1;
+
+    // path is the absolute directory path to the root directory for source files.
+    string path = 2;
+  }
+
+  // DataDir represents the directory where data can be stored. This is an internal
+  // struct and shouldn't be used directly. Use the relevant *datadir implementation
+  // instead.
+  message DataDir {
+    // NOTE(mitchellh): we use specific types here rather than a single type
+    // with an enum "type" field or something since this maps more cleanly
+    // to our internal dependency-injection API.
+
+    message Project {
+      string cache_dir = 2;
+      string data_dir = 3;
+    }
+
+    message App {
+      string cache_dir = 2;
+      string data_dir = 3;
+    }
+
+    message Component {
+      string cache_dir = 2;
+      string data_dir = 3;
+    }
+  }
+}
+
+// Empty is just an empty message useful with some RPC endpoints.
+message Empty {}
+
+// FuncSpec describes a function and is used by the dependency-injection
+// framework to provide the function with the proper values.
+//
+// Value types are specified using strings. Built-in framework types
+// are defined via constants in the `sdk` package. For custom types, you
+// can use whatever string as long as it is unique. We recommend using a
+// unique prefix plus the Go type name.
+message FuncSpec {
+  repeated string args = 1;
+  string result = 2;
+}

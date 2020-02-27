@@ -5,14 +5,16 @@ package proto;
 import "google/protobuf/any.proto";
 import "plugin.proto";
 
-// Builder service is a builder that takes some set of arguments and produces
-// an artifact.
-service Builder {
-  rpc BuildSpec(Empty) returns (FuncSpec);
-  rpc Build(Build.Args) returns (Build.Resp);
+// Registry is responsible for pushing a built artifact to some registry.
+// The difference between a registry and a builder is that while a builder
+// produces an artifact from source, a registry provides operations to work
+// with artifacts such as listing previous, deleting, etc.
+service Registry {
+  rpc PushSpec(Empty) returns (FuncSpec);
+  rpc Push(Push.Args) returns (Push.Resp);
 }
 
-message Build {
+message Push {
   message Args {
     // args is the list of argument types. This will include some of the
     // standard types in this file (in the Args message namespace) as well
@@ -22,7 +24,7 @@ message Build {
   }
 
   message Resp {
-    // result is the resulting data type for building.
+    // result is the resulting opaque data type
     google.protobuf.Any result = 1;
   }
 }
