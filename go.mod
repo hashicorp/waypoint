@@ -19,7 +19,7 @@ require (
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
 	github.com/gliderlabs/ssh v0.2.2
-	github.com/golang/protobuf v1.3.3
+	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/hashicorp/go-hclog v0.12.0
 	github.com/hashicorp/go-version v1.2.0
@@ -51,4 +51,4 @@ require (
 // This pulls in this PR: https://github.com/hashicorp/go-plugin/pull/135
 // which we require to see the output of the commands that we execute.
 // Once that PR is merged we should update the version.
-require github.com/hashicorp/go-plugin v1.0.2-0.20200224191941-23912559aaf4
+require github.com/hashicorp/go-plugin v1.1.0
