@@ -22,6 +22,7 @@ require (
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/hashicorp/go-hclog v0.12.0
+	github.com/hashicorp/go-plugin v1.1.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.3.0
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
@@ -47,8 +48,3 @@ require (
 	google.golang.org/grpc v1.27.1
 	gotest.tools v2.2.0+incompatible // indirect
 )
-
-// This pulls in this PR: https://github.com/hashicorp/go-plugin/pull/135
-// which we require to see the output of the commands that we execute.
-// Once that PR is merged we should update the version.
-require github.com/hashicorp/go-plugin v1.1.0
