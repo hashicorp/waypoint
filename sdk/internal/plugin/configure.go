@@ -74,14 +74,20 @@ func configure(impl interface{}, req *pb.Config_ConfigureRequest) (*empty.Empty,
 		return &empty.Empty{}, nil
 	}
 
+	// Get our value that we can decode into
+	v, err := c.Config()
+	if err != nil {
+		return nil, err
+	}
+
 	// Decode our JSON value directly into our structure.
-	if err := json.Unmarshal(req.Json, c); err != nil {
+	if err := json.Unmarshal(req.Json, v); err != nil {
 		return nil, err
 	}
 
 	// If our client also implements the notify interface, call that.
 	if cn, ok := c.(component.ConfigurableNotify); ok {
-		if err := cn.ConfigSet(c); err != nil {
+		if err := cn.ConfigSet(v); err != nil {
 			return nil, err
 		}
 	}
