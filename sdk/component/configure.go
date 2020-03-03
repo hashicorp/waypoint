@@ -44,6 +44,12 @@ func Configure(c interface{}, body hcl.Body, ctx *hcl.EvalContext) hcl.Diagnosti
 			}
 		}
 
+		// If the configuration structure is nil then we behave as if the
+		// component is not configurable.
+		if v == nil {
+			return nil
+		}
+
 		// Decode
 		if diag := gohcl.DecodeBody(body, ctx, v); len(diag) > 0 {
 			return diag

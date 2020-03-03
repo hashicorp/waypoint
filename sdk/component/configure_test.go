@@ -54,6 +54,41 @@ func TestConfigure(t *testing.T) {
 		require.True(diag.HasErrors())
 		require.Contains(diag.Error(), "is required")
 	})
+
+	t.Run("nil interface", func(t *testing.T) {
+		require := require.New(t)
+
+		var s struct {
+			Block struct {
+				Label string   `hcl:",label"`
+				Body  hcl.Body `hcl:",remain"`
+			} `hcl:"block,block"`
+		}
+
+		src := `block "foo" {}`
+		require.NoError(hclsimple.Decode("test.hcl", []byte(src), nil, &s))
+
+		diag := Configure(nil, s.Block.Body, nil)
+		require.False(diag.HasErrors())
+	})
+
+	t.Run("nil config struct", func(t *testing.T) {
+		require := require.New(t)
+
+		var s struct {
+			Block struct {
+				Label string   `hcl:",label"`
+				Body  hcl.Body `hcl:",remain"`
+			} `hcl:"block,block"`
+		}
+
+		src := `block "foo" {}`
+		require.NoError(hclsimple.Decode("test.hcl", []byte(src), nil, &s))
+
+		var c implNil
+		diag := Configure(&c, s.Block.Body, nil)
+		require.False(diag.HasErrors())
+	})
 }
 
 func TestConfigure_nonImpl(t *testing.T) {
@@ -112,6 +147,10 @@ type testConfig struct {
 type impl struct{ config testConfig }
 
 func (c *impl) Config() (interface{}, error) { return &c.config, nil }
+
+type implNil struct{}
+
+func (c *implNil) Config() (interface{}, error) { return nil, nil }
 
 type implNotify struct {
 	impl
