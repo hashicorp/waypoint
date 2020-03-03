@@ -32,7 +32,7 @@ func (m *Args) Reset()         { *m = Args{} }
 func (m *Args) String() string { return proto.CompactTextString(m) }
 func (*Args) ProtoMessage()    {}
 func (*Args) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{0}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{0}
 }
 func (m *Args) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Args.Unmarshal(m, b)
@@ -67,7 +67,7 @@ func (m *Args_Source) Reset()         { *m = Args_Source{} }
 func (m *Args_Source) String() string { return proto.CompactTextString(m) }
 func (*Args_Source) ProtoMessage()    {}
 func (*Args_Source) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{0, 0}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{0, 0}
 }
 func (m *Args_Source) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Args_Source.Unmarshal(m, b)
@@ -114,7 +114,7 @@ func (m *Args_DataDir) Reset()         { *m = Args_DataDir{} }
 func (m *Args_DataDir) String() string { return proto.CompactTextString(m) }
 func (*Args_DataDir) ProtoMessage()    {}
 func (*Args_DataDir) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{0, 1}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{0, 1}
 }
 func (m *Args_DataDir) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Args_DataDir.Unmarshal(m, b)
@@ -146,7 +146,7 @@ func (m *Args_DataDir_Project) Reset()         { *m = Args_DataDir_Project{} }
 func (m *Args_DataDir_Project) String() string { return proto.CompactTextString(m) }
 func (*Args_DataDir_Project) ProtoMessage()    {}
 func (*Args_DataDir_Project) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{0, 1, 0}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{0, 1, 0}
 }
 func (m *Args_DataDir_Project) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Args_DataDir_Project.Unmarshal(m, b)
@@ -192,7 +192,7 @@ func (m *Args_DataDir_App) Reset()         { *m = Args_DataDir_App{} }
 func (m *Args_DataDir_App) String() string { return proto.CompactTextString(m) }
 func (*Args_DataDir_App) ProtoMessage()    {}
 func (*Args_DataDir_App) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{0, 1, 1}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{0, 1, 1}
 }
 func (m *Args_DataDir_App) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Args_DataDir_App.Unmarshal(m, b)
@@ -238,7 +238,7 @@ func (m *Args_DataDir_Component) Reset()         { *m = Args_DataDir_Component{}
 func (m *Args_DataDir_Component) String() string { return proto.CompactTextString(m) }
 func (*Args_DataDir_Component) ProtoMessage()    {}
 func (*Args_DataDir_Component) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{0, 1, 2}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{0, 1, 2}
 }
 func (m *Args_DataDir_Component) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Args_DataDir_Component.Unmarshal(m, b)
@@ -283,7 +283,7 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{1}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{1}
 }
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
@@ -322,7 +322,7 @@ func (m *FuncSpec) Reset()         { *m = FuncSpec{} }
 func (m *FuncSpec) String() string { return proto.CompactTextString(m) }
 func (*FuncSpec) ProtoMessage()    {}
 func (*FuncSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{2}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{2}
 }
 func (m *FuncSpec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FuncSpec.Unmarshal(m, b)
@@ -374,7 +374,7 @@ func (m *Config) Reset()         { *m = Config{} }
 func (m *Config) String() string { return proto.CompactTextString(m) }
 func (*Config) ProtoMessage()    {}
 func (*Config) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{3}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{3}
 }
 func (m *Config) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Config.Unmarshal(m, b)
@@ -398,9 +398,7 @@ var xxx_messageInfo_Config proto.InternalMessageInfo
 // is complete to actually assign the values to the structure.
 type Config_ConfigureRequest struct {
 	// json is the json data for the structure returned in the StructResp.
-	// This JSON is in HCL format as defined by the schema given in the
-	// structure so it should be decoded using the HCL package. It is guaranteed
-	// to decode cleanly into the structure given by StructResp.
+	// It is guaranteed to decode cleanly into the target structure.
 	Json                 []byte   `protobuf:"bytes,1,opt,name=json,proto3" json:"json,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -411,7 +409,7 @@ func (m *Config_ConfigureRequest) Reset()         { *m = Config_ConfigureRequest
 func (m *Config_ConfigureRequest) String() string { return proto.CompactTextString(m) }
 func (*Config_ConfigureRequest) ProtoMessage()    {}
 func (*Config_ConfigureRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{3, 0}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{3, 0}
 }
 func (m *Config_ConfigureRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Config_ConfigureRequest.Unmarshal(m, b)
@@ -441,7 +439,7 @@ func (m *Config_ConfigureRequest) GetJson() []byte {
 // StructResp returns the struct for configuration.
 type Config_StructResp struct {
 	// struct is the configuration structure (or empty/nil if one doesn't exist).
-	// This struct should have all the proper struct tags for HCL decoding.
+	// This struct should have all the proper struct tags for HCL decoding
 	// You should do validation on the Configure call.
 	Struct               *protostructure.Struct `protobuf:"bytes,1,opt,name=struct,proto3" json:"struct,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
@@ -453,7 +451,7 @@ func (m *Config_StructResp) Reset()         { *m = Config_StructResp{} }
 func (m *Config_StructResp) String() string { return proto.CompactTextString(m) }
 func (*Config_StructResp) ProtoMessage()    {}
 func (*Config_StructResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_feb9332f213a94c2, []int{3, 1}
+	return fileDescriptor_plugin_ccec9e6487d051c0, []int{3, 1}
 }
 func (m *Config_StructResp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Config_StructResp.Unmarshal(m, b)
@@ -494,9 +492,9 @@ func init() {
 	proto.RegisterType((*Config_StructResp)(nil), "proto.Config.StructResp")
 }
 
-func init() { proto.RegisterFile("plugin.proto", fileDescriptor_plugin_feb9332f213a94c2) }
+func init() { proto.RegisterFile("plugin.proto", fileDescriptor_plugin_ccec9e6487d051c0) }
 
-var fileDescriptor_plugin_feb9332f213a94c2 = []byte{
+var fileDescriptor_plugin_ccec9e6487d051c0 = []byte{
 	// 291 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x91, 0xb1, 0x4e, 0xfb, 0x30,
 	0x10, 0xc6, 0x95, 0xa6, 0x4d, 0xda, 0xfb, 0x77, 0xa8, 0xac, 0xbf, 0xaa, 0x62, 0x96, 0x2a, 0x03,

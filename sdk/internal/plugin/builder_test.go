@@ -12,8 +12,8 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/component/mocks"
-	"github.com/mitchellh/devflow/sdk/internal/testproto"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal/testproto"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -53,4 +53,14 @@ func TestBuilderBuild(t *testing.T) {
 	require.Equal("testproto.Data", name)
 
 	require.True(called)
+}
+
+func TestBuilderConfig(t *testing.T) {
+	mockV := &mockBuilderConfigurable{}
+	testConfigurable(t, "builder", mockV, &mockV.Configurable)
+}
+
+type mockBuilderConfigurable struct {
+	mocks.Builder
+	mocks.Configurable
 }

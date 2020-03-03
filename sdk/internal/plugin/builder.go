@@ -7,6 +7,7 @@ import (
 
 	protobuf "github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
@@ -43,6 +44,14 @@ type builderClient struct {
 	client proto.BuilderClient
 }
 
+func (c *builderClient) Config() (interface{}, error) {
+	return configStructCall(context.Background(), c.client)
+}
+
+func (c *builderClient) ConfigSet(v interface{}) error {
+	return configureCall(context.Background(), c.client, v)
+}
+
 func (c *builderClient) BuildFunc() interface{} {
 	// Get the build spec
 	spec, err := c.client.BuildSpec(context.Background(), &proto.Empty{})
@@ -72,6 +81,20 @@ func (c *builderClient) build(
 type builderServer struct {
 	Impl    component.Builder
 	Mappers []*mapper.Func
+}
+
+func (s *builderServer) ConfigStruct(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.Config_StructResp, error) {
+	return configStruct(s.Impl)
+}
+
+func (s *builderServer) Configure(
+	ctx context.Context,
+	req *proto.Config_ConfigureRequest,
+) (*empty.Empty, error) {
+	return configure(s.Impl, req)
 }
 
 func (s *builderServer) BuildSpec(
@@ -158,8 +181,10 @@ func appendArgs(args dynamicArgs, ms ...protobuf.Message) (dynamicArgs, error) {
 }
 
 var (
-	_ plugin.Plugin       = (*BuilderPlugin)(nil)
-	_ plugin.GRPCPlugin   = (*BuilderPlugin)(nil)
-	_ proto.BuilderServer = (*builderServer)(nil)
-	_ component.Builder   = (*builderClient)(nil)
+	_ plugin.Plugin                = (*BuilderPlugin)(nil)
+	_ plugin.GRPCPlugin            = (*BuilderPlugin)(nil)
+	_ proto.BuilderServer          = (*builderServer)(nil)
+	_ component.Builder            = (*builderClient)(nil)
+	_ component.Configurable       = (*builderClient)(nil)
+	_ component.ConfigurableNotify = (*builderClient)(nil)
 )
