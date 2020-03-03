@@ -3,12 +3,12 @@ package sdk
 import (
 	"github.com/hashicorp/go-plugin"
 
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
 	sdkplugin "github.com/mitchellh/devflow/sdk/internal/plugin"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
-//go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"
+//go:generate sh -c "protoc -I`go list -m -f \"{{.Dir}}\" github.com/mitchellh/protostructure` -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"
 
 // Main is the primary entrypoint for plugins serving components. This
 // function never returns; it blocks until the program is exited. This should

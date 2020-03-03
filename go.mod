@@ -32,6 +32,7 @@ require (
 	github.com/mitchellh/go-linereader v0.0.0-20190213213312-1b945b3263eb
 	github.com/mitchellh/go-testing-interface v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
+	github.com/mitchellh/protostructure v0.0.0-20200302233719-00c1118a7e52
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/oklog/ulid v1.3.1
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
@@ -39,7 +40,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sebdah/goldie v1.0.0
 	github.com/sirupsen/logrus v1.4.2 // indirect
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	go.etcd.io/bbolt v1.3.3 // indirect
 	golang.org/x/crypto v0.0.0-20200214034016-1d94cc7ab1c6
 	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3

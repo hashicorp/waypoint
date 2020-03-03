@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
@@ -38,6 +39,14 @@ type registryClient struct {
 	client proto.RegistryClient
 }
 
+func (c *registryClient) Config() (interface{}, error) {
+	return configStructCall(context.Background(), c.client)
+}
+
+func (c *registryClient) ConfigSet(v interface{}) error {
+	return configureCall(context.Background(), c.client, v)
+}
+
 func (c *registryClient) PushFunc() interface{} {
 	// Get the spec
 	spec, err := c.client.PushSpec(context.Background(), &proto.Empty{})
@@ -69,6 +78,20 @@ type registryServer struct {
 	Mappers []*mapper.Func
 }
 
+func (s *registryServer) ConfigStruct(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.Config_StructResp, error) {
+	return configStruct(s.Impl)
+}
+
+func (s *registryServer) Configure(
+	ctx context.Context,
+	req *proto.Config_ConfigureRequest,
+) (*empty.Empty, error) {
+	return configure(s.Impl, req)
+}
+
 func (s *registryServer) PushSpec(
 	ctx context.Context,
 	args *proto.Empty,
@@ -89,8 +112,10 @@ func (s *registryServer) Push(
 }
 
 var (
-	_ plugin.Plugin        = (*RegistryPlugin)(nil)
-	_ plugin.GRPCPlugin    = (*RegistryPlugin)(nil)
-	_ proto.RegistryServer = (*registryServer)(nil)
-	_ component.Registry   = (*registryClient)(nil)
+	_ plugin.Plugin                = (*RegistryPlugin)(nil)
+	_ plugin.GRPCPlugin            = (*RegistryPlugin)(nil)
+	_ proto.RegistryServer         = (*registryServer)(nil)
+	_ component.Registry           = (*registryClient)(nil)
+	_ component.Configurable       = (*registryClient)(nil)
+	_ component.ConfigurableNotify = (*registryClient)(nil)
 )

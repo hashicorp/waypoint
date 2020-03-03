@@ -3,6 +3,7 @@ syntax = "proto3";
 package proto;
 
 import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
 import "plugin.proto";
 
 // Registry is responsible for pushing a built artifact to some registry.
@@ -10,6 +11,9 @@ import "plugin.proto";
 // produces an artifact from source, a registry provides operations to work
 // with artifacts such as listing previous, deleting, etc.
 service Registry {
+  rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
+  rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
+
   rpc PushSpec(Empty) returns (FuncSpec);
   rpc Push(Push.Args) returns (Push.Resp);
 }

@@ -89,10 +89,41 @@ func TestConfigure_nonImpl(t *testing.T) {
 	})
 }
 
+func TestConfigure_notify(t *testing.T) {
+	t.Run("valid config", func(t *testing.T) {
+		require := require.New(t)
+
+		src := `name = "foo"`
+		f, diag := hclparse.NewParser().ParseHCL([]byte(src), "test.hcl")
+		require.False(diag.HasErrors())
+
+		var c implNotify
+		diag = Configure(&c, f.Body, nil)
+		require.False(diag.HasErrors())
+		require.Equal(c.config.Name, "foo")
+		require.True(c.Notified)
+	})
+}
+
 type testConfig struct {
 	Name string `hcl:"name,attr"`
 }
 
 type impl struct{ config testConfig }
 
-func (c *impl) Config() interface{} { return &c.config }
+func (c *impl) Config() (interface{}, error) { return &c.config, nil }
+
+type implNotify struct {
+	impl
+	Notified bool
+}
+
+func (c *implNotify) ConfigSet(interface{}) error {
+	c.Notified = true
+	return nil
+}
+
+var (
+	_ Configurable       = (*implNotify)(nil)
+	_ ConfigurableNotify = (*implNotify)(nil)
+)
