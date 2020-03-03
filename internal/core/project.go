@@ -10,8 +10,8 @@ import (
 	"github.com/mitchellh/devflow/internal/plugin"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
-	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
 )
 
 // Project represents a project with one or more applications.
@@ -44,7 +44,13 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 	// Defaults
 	if len(p.mappers) == 0 {
-		p.mappers = protomappers.AllFuncs
+		var err error
+		p.mappers, err = mapper.NewFuncList(protomappers.All,
+			mapper.WithLogger(p.logger),
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Validation

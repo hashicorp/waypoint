@@ -2,12 +2,11 @@ package plugin
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 
 	protobuf "github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
@@ -23,10 +22,15 @@ type BuilderPlugin struct {
 
 	Impl    component.Builder // Impl is the concrete implementation
 	Mappers []*mapper.Func    // Mappers
+	Logger  hclog.Logger      // Logger
 }
 
 func (p *BuilderPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterBuilderServer(s, &builderServer{Impl: p.Impl, Mappers: p.Mappers})
+	proto.RegisterBuilderServer(s, &builderServer{
+		Impl:    p.Impl,
+		Mappers: p.Mappers,
+		Logger:  p.Logger,
+	})
 	return nil
 }
 
@@ -35,13 +39,17 @@ func (p *BuilderPlugin) GRPCClient(
 	broker *plugin.GRPCBroker,
 	c *grpc.ClientConn,
 ) (interface{}, error) {
-	return &builderClient{client: proto.NewBuilderClient(c)}, nil
+	return &builderClient{
+		client: proto.NewBuilderClient(c),
+		logger: p.Logger,
+	}, nil
 }
 
 // builderClient is an implementation of component.Builder that
 // communicates over gRPC.
 type builderClient struct {
 	client proto.BuilderClient
+	logger hclog.Logger
 }
 
 func (c *builderClient) Config() (interface{}, error) {
@@ -59,7 +67,7 @@ func (c *builderClient) BuildFunc() interface{} {
 		panic(err)
 	}
 
-	return specToFunc(spec, c.build)
+	return specToFunc(c.logger, spec, c.build)
 }
 
 func (c *builderClient) build(
@@ -81,6 +89,7 @@ func (c *builderClient) build(
 type builderServer struct {
 	Impl    component.Builder
 	Mappers []*mapper.Func
+	Logger  hclog.Logger
 }
 
 func (s *builderServer) ConfigStruct(
@@ -101,62 +110,14 @@ func (s *builderServer) BuildSpec(
 	ctx context.Context,
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
-	return funcToSpec(s.Impl.BuildFunc(), s.Mappers)
+	return funcToSpec(s.Logger, s.Impl.BuildFunc(), s.Mappers)
 }
 
 func (s *builderServer) Build(
 	ctx context.Context,
 	args *proto.Build_Args,
 ) (*proto.Build_Resp, error) {
-	// Decode all our arguments
-	decoded := make([]interface{}, len(args.Args)+1)
-	decoded[0] = ctx
-	for idx, arg := range args.Args {
-		name, err := ptypes.AnyMessageName(arg)
-		if err != nil {
-			return nil, err
-		}
-
-		typ := protobuf.MessageType(name)
-		if typ == nil {
-			return nil, fmt.Errorf("cannot decode type: %s", name)
-		}
-
-		if typ.Kind() == reflect.Ptr {
-			typ = typ.Elem()
-		}
-
-		v := reflect.New(typ)
-		v.Elem().Set(reflect.Zero(typ))
-
-		if err := ptypes.UnmarshalAny(arg, v.Interface().(protobuf.Message)); err != nil {
-			return nil, err
-		}
-
-		decoded[idx+1] = v.Interface()
-	}
-
-	f, err := mapper.NewFunc(s.Impl.BuildFunc())
-	if err != nil {
-		return nil, err
-	}
-
-	chain, err := f.Chain(s.Mappers, decoded...)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := chain.Call()
-	if err != nil {
-		return nil, err
-	}
-
-	msg, ok := result.(protobuf.Message)
-	if !ok {
-		return nil, fmt.Errorf("result of plugin-based function must be a proto.Message, got %T", msg)
-	}
-
-	encoded, err := ptypes.MarshalAny(msg)
+	encoded, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.BuildFunc(), s.Mappers)
 	if err != nil {
 		return nil, err
 	}

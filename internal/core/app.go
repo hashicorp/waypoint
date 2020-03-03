@@ -214,7 +214,7 @@ func (a *App) callDynamicFunc(
 	rawFunc, ok := f.(*mapper.Func)
 	if !ok {
 		var err error
-		rawFunc, err = mapper.NewFunc(f)
+		rawFunc, err = mapper.NewFunc(f, mapper.WithLogger(log))
 		if err != nil {
 			return nil, err
 		}

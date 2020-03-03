@@ -5,7 +5,6 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -19,20 +18,6 @@ var All = []interface{}{
 	DatadirProjectProto,
 	DatadirAppProto,
 	DatadirComponentProto,
-}
-
-// AllFuncs is the same as All but as mapper.Funcs.
-var AllFuncs []*mapper.Func
-
-func init() {
-	for _, raw := range All {
-		f, err := mapper.NewFunc(raw)
-		if err != nil {
-			panic(err)
-		}
-
-		AllFuncs = append(AllFuncs, f)
-	}
 }
 
 // Source maps Args.Source to component.Source.

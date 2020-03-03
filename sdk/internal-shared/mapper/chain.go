@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/hashicorp/go-hclog"
 )
 
 // CheckFunc is a function type used with many Chain functions to perform
@@ -39,13 +41,22 @@ func ChainTarget(check CheckFunc, mappers []*Func, values ...interface{}) *Chain
 // can be called as intermediaries to convert parameters to the expected
 // parameters for this func. The result is a "Chain" of function calls.
 func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
+	log := f.Logger.With("func", f.String())
+	log.Trace("creating chain", "values", values)
+
 	// First, we need to determine what we're missing for our func.
 	missing := make(map[Type]int)
 	f.args(values, missing)
 
 	// If we're not missing anything then short-circuit the whole thing
 	if len(missing) == 0 {
+		log.Info("chain satisfied by inputs", "values", values)
 		return &Chain{funcs: []*Func{f}, values: values}, nil
+	}
+	if log.IsDebug() {
+		for t, idx := range missing {
+			log.Debug("missing argument", "type", t.String(), "idx", idx)
+		}
 	}
 	missing = nil // We don't need this anymore
 
@@ -53,10 +64,12 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 	mapperByOut := make(map[interface{}][]*Func)
 	for _, m := range mappers {
 		mapperByOut[m.Out.Key()] = append(mapperByOut[m.Out.Key()], m)
+		log.Debug("available mapper", "out_type", m.Out.String(), "out_key", m.Out.Key())
 	}
 
 	// Build our chain
 	chain, err := f.chain(
+		log,
 		values,
 		mapperByOut,
 		make([]*Func, 0, 1),
@@ -64,9 +77,11 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 		make(map[*Func]struct{}),
 	)
 	if err != nil {
+		log.Warn("chain not found, DEBUG and lower level has search information")
 		return nil, err
 	}
 
+	log.Info("chain satisfied by mappers", "values", values, "chain", chain)
 	return &Chain{funcs: chain, values: values}, nil
 }
 
@@ -179,6 +194,7 @@ func (f *Func) inputSet(
 // chain is the internal recursive functions called on functions to build
 // up the chain.
 func (f *Func) chain(
+	log hclog.Logger,
 	values []interface{},
 	mapperByOut map[interface{}][]*Func, // mappers by output type
 	chain []*Func, // chain so far
@@ -221,8 +237,13 @@ MISSING_LOOP:
 					continue
 				}
 
-				nextChain, err := m.chain(values, mapperByOut, chain, chainSet, pendingSet)
+				nextChain, err := m.chain(log, values, mapperByOut, chain, chainSet, pendingSet)
 				if err == nil {
+					log.Trace("missing argument satisfied by mapper",
+						"out_type", t.String(),
+						"out_key", t.Key(),
+					)
+
 					// Satisfied!
 					chain = nextChain
 					continue MISSING_LOOP

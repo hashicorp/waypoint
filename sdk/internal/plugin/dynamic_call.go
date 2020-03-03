@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
@@ -17,6 +18,7 @@ import (
 // by most component gRPC servers to implement their function calls.
 func callDynamicFunc(
 	ctx context.Context,
+	log hclog.Logger,
 	args []*any.Any,
 	f interface{},
 	mappers []*mapper.Func,
@@ -55,7 +57,7 @@ func callDynamicFunc(
 	// Build our mapper function and find the chain to get us to the required
 	// arguments if possible. This chain will do things like convert from
 	// our raw proto types to richer structures if the plugin expects that.
-	mf, err := mapper.NewFunc(f)
+	mf, err := mapper.NewFunc(f, mapper.WithLogger(log))
 	if err != nil {
 		return nil, err
 	}

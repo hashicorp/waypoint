@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	pb "github.com/mitchellh/devflow/sdk/proto"
@@ -15,8 +16,8 @@ import (
 // The function must only take and return values that are proto.Message
 // implementations OR have a chain of mappers that directly covert from/to a
 // proto.Message.
-func funcToSpec(f interface{}, mappers []*mapper.Func) (*pb.FuncSpec, error) {
-	mf, err := mapper.NewFunc(f)
+func funcToSpec(log hclog.Logger, f interface{}, mappers []*mapper.Func) (*pb.FuncSpec, error) {
+	mf, err := mapper.NewFunc(f, mapper.WithLogger(log))
 	if err != nil {
 		return nil, err
 	}
@@ -72,9 +73,12 @@ func funcToSpec(f interface{}, mappers []*mapper.Func) (*pb.FuncSpec, error) {
 
 // specToFunc takes a FuncSpec and returns a mapper.Func that can be called
 // to invoke this function.
-func specToFunc(s *pb.FuncSpec, cb interface{}) *mapper.Func {
+func specToFunc(log hclog.Logger, s *pb.FuncSpec, cb interface{}) *mapper.Func {
 	// Build the function
-	f, err := mapper.NewFunc(cb, mapper.WithType(dynamicArgsType, makeDynamicArgsMapperType(s)))
+	f, err := mapper.NewFunc(cb,
+		mapper.WithType(dynamicArgsType, makeDynamicArgsMapperType(s)),
+		mapper.WithLogger(log),
+	)
 	if err != nil {
 		panic(err)
 	}

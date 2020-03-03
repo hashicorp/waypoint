@@ -28,7 +28,7 @@ func init() {
 // represented by an *exec.Cmd.
 func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 	return func(log hclog.Logger) (interface{}, error) {
-		config := pluginclient.ClientConfig()
+		config := pluginclient.ClientConfig(log)
 		config.Cmd = cmd
 		config.Logger = log
 		config.AutoMTLS = true

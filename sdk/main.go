@@ -1,6 +1,9 @@
 package sdk
 
 import (
+	"os"
+
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
@@ -25,6 +28,22 @@ func Main(opts ...Option) {
 		opt(&c)
 	}
 
+	// Create our logger. We also set this as the default logger in case
+	// any other libraries are using hclog and our plugin doesn't properly
+	// chain it along.
+	log := hclog.New(&hclog.LoggerOptions{
+		Name:   "plugin",
+		Level:  hclog.Trace,
+		Output: os.Stderr,
+		Color:  hclog.AutoColor,
+
+		// Critical that this is JSON-formatted. Since we're a plugin this
+		// will enable the host to parse our logs and output them in a
+		// structured way.
+		JSONFormat: true,
+	})
+	hclog.SetDefault(log)
+
 	// Build up our mappers
 	var mappers []*mapper.Func
 	for _, raw := range c.Mappers {
@@ -32,7 +51,7 @@ func Main(opts ...Option) {
 		m, ok := raw.(*mapper.Func)
 		if !ok {
 			var err error
-			m, err = mapper.NewFunc(raw)
+			m, err = mapper.NewFunc(raw, mapper.WithLogger(log))
 			if err != nil {
 				panic(err)
 			}
@@ -47,8 +66,10 @@ func Main(opts ...Option) {
 		VersionedPlugins: sdkplugin.Plugins(
 			sdkplugin.WithComponents(c.Components...),
 			sdkplugin.WithMappers(mappers...),
+			sdkplugin.WithLogger(log),
 		),
 		GRPCServer: plugin.DefaultGRPCServer,
+		Logger:     log,
 	})
 }
 

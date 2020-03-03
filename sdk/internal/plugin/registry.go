@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
@@ -19,10 +20,15 @@ type RegistryPlugin struct {
 
 	Impl    component.Registry // Impl is the concrete implementation
 	Mappers []*mapper.Func     // Mappers
+	Logger  hclog.Logger       // Logger
 }
 
 func (p *RegistryPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterRegistryServer(s, &registryServer{Impl: p.Impl, Mappers: p.Mappers})
+	proto.RegisterRegistryServer(s, &registryServer{
+		Impl:    p.Impl,
+		Mappers: p.Mappers,
+		Logger:  p.Logger,
+	})
 	return nil
 }
 
@@ -31,12 +37,16 @@ func (p *RegistryPlugin) GRPCClient(
 	broker *plugin.GRPCBroker,
 	c *grpc.ClientConn,
 ) (interface{}, error) {
-	return &registryClient{client: proto.NewRegistryClient(c)}, nil
+	return &registryClient{
+		client: proto.NewRegistryClient(c),
+		logger: p.Logger,
+	}, nil
 }
 
 // registryClient is an implementation of component.Registry over gRPC.
 type registryClient struct {
 	client proto.RegistryClient
+	logger hclog.Logger
 }
 
 func (c *registryClient) Config() (interface{}, error) {
@@ -54,7 +64,7 @@ func (c *registryClient) PushFunc() interface{} {
 		panic(err)
 	}
 
-	return specToFunc(spec, c.push)
+	return specToFunc(c.logger, spec, c.push)
 }
 
 func (c *registryClient) push(
@@ -76,6 +86,7 @@ func (c *registryClient) push(
 type registryServer struct {
 	Impl    component.Registry
 	Mappers []*mapper.Func
+	Logger  hclog.Logger
 }
 
 func (s *registryServer) ConfigStruct(
@@ -96,14 +107,14 @@ func (s *registryServer) PushSpec(
 	ctx context.Context,
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
-	return funcToSpec(s.Impl.PushFunc(), s.Mappers)
+	return funcToSpec(s.Logger, s.Impl.PushFunc(), s.Mappers)
 }
 
 func (s *registryServer) Push(
 	ctx context.Context,
 	args *proto.Push_Args,
 ) (*proto.Push_Resp, error) {
-	encoded, err := callDynamicFunc(ctx, args.Args, s.Impl.PushFunc(), s.Mappers)
+	encoded, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.PushFunc(), s.Mappers)
 	if err != nil {
 		return nil, err
 	}

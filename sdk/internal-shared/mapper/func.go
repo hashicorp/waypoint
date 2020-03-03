@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+
+	"github.com/hashicorp/go-hclog"
 )
 
 // Func is a dependency-injected function.
@@ -11,10 +13,28 @@ import (
 // The concrete function must return 1 or 2 results: a value alone or
 // a value with an error. No other shape of function is allowed.
 type Func struct {
-	Name string
-	Args []Type
-	Out  Type
-	Func reflect.Value
+	Name   string
+	Args   []Type
+	Out    Type
+	Func   reflect.Value
+	Logger hclog.Logger
+}
+
+// NewFuncList creates a slice of funcs from a slice of function pointers.
+// The options if given are passed to each call to NewFunc for each function
+// pointer.
+func NewFuncList(fs []interface{}, opts ...Option) ([]*Func, error) {
+	var result []*Func
+	for _, raw := range fs {
+		f, err := NewFunc(raw, opts...)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, f)
+	}
+
+	return result, nil
 }
 
 // NewFunc creates a new Func from f. f must be a function pointer.
@@ -28,6 +48,11 @@ func NewFunc(f interface{}, opts ...Option) (*Func, error) {
 	var cfg config
 	for _, opt := range opts {
 		opt(&cfg)
+	}
+
+	// Defaults
+	if cfg.Logger == nil {
+		cfg.Logger = hclog.L()
 	}
 
 	// We should have one or two results: a concrete type alone or a concrete
@@ -69,16 +94,18 @@ func NewFunc(f interface{}, opts ...Option) (*Func, error) {
 	}
 
 	return &Func{
-		Name: name,
-		Func: fv,
-		Args: args,
-		Out:  &ReflectType{Type: ft.Out(0)},
+		Name:   name,
+		Func:   fv,
+		Args:   args,
+		Out:    &ReflectType{Type: ft.Out(0)},
+		Logger: cfg.Logger,
 	}, nil
 }
 
 // config is the intermediary configuration used by Option to configure
 // funcs during NewFunc.
 type config struct {
+	Logger   hclog.Logger
 	WithType map[reflect.Type]func(int, reflect.Type) Type
 }
 
@@ -95,6 +122,12 @@ func WithType(typ reflect.Type, f func(int, reflect.Type) Type) Option {
 
 		c.WithType[typ] = f
 	}
+}
+
+// WithLogger sets a logger onto the mapper. If this isn't set it defaults to
+// hclog.L() (the default logger).
+func WithLogger(log hclog.Logger) Option {
+	return func(c *config) { c.Logger = log }
 }
 
 // String returns the name of the function. If a name is not available, the

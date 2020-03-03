@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
@@ -23,6 +25,11 @@ func Plugins(opts ...Option) map[int]plugin.PluginSet {
 	var c pluginConfig
 	for _, opt := range opts {
 		opt(&c)
+	}
+
+	// If we have no logger, we use the default
+	if c.Logger == nil {
+		c.Logger = hclog.L()
 	}
 
 	// Build our plugin types
@@ -44,6 +51,10 @@ func Plugins(opts ...Option) map[int]plugin.PluginSet {
 	if err := setFieldValue(result, c.Mappers); err != nil {
 		panic(err)
 	}
+	// Set the logger
+	if err := setFieldValue(result, c.Logger); err != nil {
+		panic(err)
+	}
 
 	return result
 }
@@ -52,6 +63,7 @@ func Plugins(opts ...Option) map[int]plugin.PluginSet {
 type pluginConfig struct {
 	Components []interface{}
 	Mappers    []*mapper.Func
+	Logger     hclog.Logger
 }
 
 // Option configures Plugins
@@ -69,6 +81,11 @@ func WithMappers(ms ...*mapper.Func) Option {
 	return func(c *pluginConfig) { c.Mappers = append(c.Mappers, ms...) }
 }
 
+// WithLogger sets the logger for the plugins.
+func WithLogger(log hclog.Logger) Option {
+	return func(c *pluginConfig) { c.Logger = log }
+}
+
 // setFieldValue sets the given value c on any exported field of an available
 // plugin that matches the type of c. An error is returned if c can't be
 // assigned to ANY plugin type.
@@ -80,6 +97,7 @@ func setFieldValue(m map[int]plugin.PluginSet, c interface{}) error {
 	ct := cv.Type()
 
 	// Go through each pluginset
+	once := false
 	for _, set := range m {
 		// Go through each plugin
 		for _, p := range set {
@@ -92,15 +110,20 @@ func setFieldValue(m map[int]plugin.PluginSet, c interface{}) error {
 				f := v.Field(i)
 
 				// If the field is valid and our component can be assigned
-				// to it then we set the value directly. We then return since
-				// we expect a plugin to only represent one kind of plugin.
+				// to it then we set the value directly. We continue setting
+				// values because some values we set are available in multiple
+				// plugins (loggers for example).
 				if f.IsValid() && ct.AssignableTo(f.Type()) {
 					f.Set(cv)
-					return nil
+					once = true
 				}
 			}
 		}
 	}
 
-	return fmt.Errorf("no plugin available for setting field of type %T", c)
+	if !once {
+		return fmt.Errorf("no plugin available for setting field of type %T", c)
+	}
+
+	return nil
 }
