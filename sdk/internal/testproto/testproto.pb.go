@@ -30,7 +30,7 @@ func (m *Data) Reset()         { *m = Data{} }
 func (m *Data) String() string { return proto.CompactTextString(m) }
 func (*Data) ProtoMessage()    {}
 func (*Data) Descriptor() ([]byte, []int) {
-	return fileDescriptor_testproto_ef01c4082d21a958, []int{0}
+	return fileDescriptor_testproto_76f5b2045967b243, []int{0}
 }
 func (m *Data) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Data.Unmarshal(m, b)
@@ -57,17 +57,98 @@ func (m *Data) GetValue() string {
 	return ""
 }
 
-func init() {
-	proto.RegisterType((*Data)(nil), "testproto.Data")
+// Other types that we can use. There isn't any purpose for this other
+// than to provide message types that can be used for tests.
+type A struct {
+	Value                int32    `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func init() { proto.RegisterFile("testproto.proto", fileDescriptor_testproto_ef01c4082d21a958) }
+func (m *A) Reset()         { *m = A{} }
+func (m *A) String() string { return proto.CompactTextString(m) }
+func (*A) ProtoMessage()    {}
+func (*A) Descriptor() ([]byte, []int) {
+	return fileDescriptor_testproto_76f5b2045967b243, []int{1}
+}
+func (m *A) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_A.Unmarshal(m, b)
+}
+func (m *A) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_A.Marshal(b, m, deterministic)
+}
+func (dst *A) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_A.Merge(dst, src)
+}
+func (m *A) XXX_Size() int {
+	return xxx_messageInfo_A.Size(m)
+}
+func (m *A) XXX_DiscardUnknown() {
+	xxx_messageInfo_A.DiscardUnknown(m)
+}
 
-var fileDescriptor_testproto_ef01c4082d21a958 = []byte{
-	// 72 bytes of a gzipped FileDescriptorProto
+var xxx_messageInfo_A proto.InternalMessageInfo
+
+func (m *A) GetValue() int32 {
+	if m != nil {
+		return m.Value
+	}
+	return 0
+}
+
+type B struct {
+	Value                int32    `protobuf:"varint,2,opt,name=value,proto3" json:"value,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *B) Reset()         { *m = B{} }
+func (m *B) String() string { return proto.CompactTextString(m) }
+func (*B) ProtoMessage()    {}
+func (*B) Descriptor() ([]byte, []int) {
+	return fileDescriptor_testproto_76f5b2045967b243, []int{2}
+}
+func (m *B) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_B.Unmarshal(m, b)
+}
+func (m *B) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_B.Marshal(b, m, deterministic)
+}
+func (dst *B) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_B.Merge(dst, src)
+}
+func (m *B) XXX_Size() int {
+	return xxx_messageInfo_B.Size(m)
+}
+func (m *B) XXX_DiscardUnknown() {
+	xxx_messageInfo_B.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_B proto.InternalMessageInfo
+
+func (m *B) GetValue() int32 {
+	if m != nil {
+		return m.Value
+	}
+	return 0
+}
+
+func init() {
+	proto.RegisterType((*Data)(nil), "testproto.Data")
+	proto.RegisterType((*A)(nil), "testproto.A")
+	proto.RegisterType((*B)(nil), "testproto.B")
+}
+
+func init() { proto.RegisterFile("testproto.proto", fileDescriptor_testproto_76f5b2045967b243) }
+
+var fileDescriptor_testproto_76f5b2045967b243 = []byte{
+	// 88 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2f, 0x49, 0x2d, 0x2e,
 	0x29, 0x28, 0xca, 0x2f, 0xc9, 0xd7, 0x03, 0x93, 0x42, 0x9c, 0x70, 0x01, 0x25, 0x19, 0x2e, 0x16,
 	0x97, 0xc4, 0x92, 0x44, 0x21, 0x11, 0x2e, 0xd6, 0xb2, 0xc4, 0x9c, 0xd2, 0x54, 0x09, 0x46, 0x05,
-	0x46, 0x0d, 0xce, 0x20, 0x08, 0x27, 0x89, 0x0d, 0xac, 0xc8, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff,
-	0xd2, 0xc0, 0xb7, 0x24, 0x42, 0x00, 0x00, 0x00,
+	0x46, 0x0d, 0xce, 0x20, 0x08, 0x47, 0x49, 0x92, 0x8b, 0xd1, 0x11, 0x55, 0x8a, 0x15, 0x49, 0xca,
+	0x09, 0x21, 0xc5, 0x84, 0x24, 0x95, 0xc4, 0x06, 0x36, 0xda, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff,
+	0x45, 0xd1, 0xa0, 0xf8, 0x78, 0x00, 0x00, 0x00,
 }

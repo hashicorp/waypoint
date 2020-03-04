@@ -3,12 +3,18 @@ package plugin
 import (
 	"testing"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mitchellh/devflow/sdk/component/mocks"
-	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
 )
+
+func init() {
+	// Set our default log level lower for tests
+	hclog.L().SetLevel(hclog.Debug)
+}
 
 func TestPlugins(t *testing.T) {
 	require := require.New(t)

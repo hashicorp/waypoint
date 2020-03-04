@@ -59,7 +59,7 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 	mapperByOut := make(map[interface{}][]*Func)
 	for _, m := range mappers {
 		mapperByOut[m.Out.Key()] = append(mapperByOut[m.Out.Key()], m)
-		log.Debug("available mapper", "out_type", m.Out.String(), "out_key", m.Out.Key())
+		log.Debug("available mapper", "in_types", m.Args, "out_type", m.Out.String(), "out_key", m.Out.Key())
 	}
 
 	// Build our chain
