@@ -8,11 +8,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-// CheckFunc is a function type used with many Chain functions to perform
-// a check if a type is satisfied. The exact meaning of "satisfied" depends
-// on the chain function called.
-type CheckFunc func(Type) bool
-
 // ChainTarget finds a Chain that results in the result satisfying the check
 // function given a set of functions and input values. This will return nil
 // if no valid chain can be found.
