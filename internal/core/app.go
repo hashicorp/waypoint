@@ -10,6 +10,7 @@ import (
 
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/pkg/status"
+	"github.com/mitchellh/devflow/internal/plugin"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
@@ -42,8 +43,10 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	app := &App{
 		source:        &component.Source{App: cfg.Name, Path: "."},
 		logger:        p.logger.Named("app").Named(cfg.Name),
-		mappers:       p.mappers,
 		componentDirs: make(map[interface{}]*datadir.Component),
+
+		// very important below that we allocate a new slice since we modify
+		mappers: append([]*mapper.Func{}, p.mappers...),
 	}
 
 	// Setup our directory
@@ -277,6 +280,21 @@ func (a *App) initComponent(
 	raw, err := fn.Call(ctx, a.source, a.logger, cdir)
 	if err != nil {
 		return err
+	}
+	a.logger.Info("initialized component", "type", typ.String())
+
+	// If we have a plugin.Instance then we can extract other information
+	// from this plugin. We accept pure factories too that don't return
+	// this so we type-check here.
+	if pinst, ok := raw.(*plugin.Instance); ok {
+		raw = pinst.Component
+
+		// Plugins may contain their own dedicated mappers. We want to be
+		// aware of them so that we can map data to/from as necessary.
+		// These mappers become app-specific here so that other apps aren't
+		// affected by other plugins.
+		a.mappers = append(a.mappers, pinst.Mappers...)
+		a.logger.Info("registered component-specific mappers", "len", len(pinst.Mappers))
 	}
 
 	// Store the component dir mapping

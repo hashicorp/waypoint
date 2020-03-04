@@ -12,8 +12,8 @@ type Registry struct {
 }
 
 // Config implements Configurable
-func (r *Registry) Config() interface{} {
-	return &r.config
+func (r *Registry) Config() (interface{}, error) {
+	return &r.config, nil
 }
 
 // PushFunc implements component.Registry

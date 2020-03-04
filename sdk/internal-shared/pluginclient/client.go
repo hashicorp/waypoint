@@ -1,11 +1,13 @@
 package pluginclient
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	internalplugin "github.com/mitchellh/devflow/sdk/internal/plugin"
 )
 
@@ -23,4 +25,24 @@ func ClientConfig(log hclog.Logger) *plugin.ClientConfig {
 		SyncStdout: os.Stdout,
 		SyncStderr: os.Stderr,
 	}
+}
+
+// Mappers returns the mappers supported by the plugin.
+func Mappers(c *plugin.Client) ([]*mapper.Func, error) {
+	rpcClient, err := c.Client()
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := rpcClient.Dispense("mapper")
+	if err != nil {
+		return nil, err
+	}
+
+	client, ok := v.(*internalplugin.MapperClient)
+	if !ok {
+		return nil, fmt.Errorf("mapper service was unexpected type: %T", v)
+	}
+
+	return client.Mappers()
 }

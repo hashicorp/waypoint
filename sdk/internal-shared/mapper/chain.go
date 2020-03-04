@@ -48,9 +48,9 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 		log.Info("chain satisfied by inputs", "values", values)
 		return &Chain{funcs: []*Func{f}, values: values}, nil
 	}
-	if log.IsDebug() {
+	if log.IsTrace() {
 		for t, idx := range missing {
-			log.Debug("missing argument", "type", t.String(), "idx", idx)
+			log.Trace("missing argument", "type", t.String(), "idx", idx)
 		}
 	}
 	missing = nil // We don't need this anymore
@@ -59,7 +59,7 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 	mapperByOut := make(map[interface{}][]*Func)
 	for _, m := range mappers {
 		mapperByOut[m.Out.Key()] = append(mapperByOut[m.Out.Key()], m)
-		log.Debug("available mapper", "in_types", m.Args, "out_type", m.Out.String(), "out_key", m.Out.Key())
+		log.Trace("available mapper", "in_types", m.Args, "out_type", m.Out.String(), "out_key", m.Out.Key())
 	}
 
 	// Build our chain
@@ -72,7 +72,7 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 		make(map[*Func]struct{}),
 	)
 	if err != nil {
-		log.Warn("chain not found, DEBUG and lower level has search information")
+		log.Trace("chain not found, DEBUG and lower level has search information")
 		return nil, err
 	}
 
