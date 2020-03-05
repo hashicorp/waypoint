@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -111,6 +112,11 @@ func (s *mapperServer) ListMappers(
 	// Go through each mapper and build up our FuncSpecs for each of them.
 	var result pb.Map_ListResponse
 	for _, m := range s.Mappers {
+		// Skip our built-in protomappers
+		if _, ok := protomapperAllMap[m.Func.Type()]; ok {
+			continue
+		}
+
 		spec, err := funcToSpec(s.Logger, m.Func.Interface(), s.Mappers)
 		if err != nil {
 			s.Logger.Warn(
@@ -164,4 +170,14 @@ var (
 	_ plugin.Plugin     = (*MapperPlugin)(nil)
 	_ plugin.GRPCPlugin = (*MapperPlugin)(nil)
 	_ pb.MapperServer   = (*mapperServer)(nil)
+
+	// protomapperAllMap is a set of all the protomapper mappers so
+	// that we can easily filter them in ListMappers.
+	protomapperAllMap = map[reflect.Type]struct{}{}
 )
+
+func init() {
+	for _, f := range protomappers.All {
+		protomapperAllMap[reflect.TypeOf(f)] = struct{}{}
+	}
+}
