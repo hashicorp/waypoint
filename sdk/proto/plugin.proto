@@ -53,8 +53,9 @@ message Empty {}
 // can use whatever string as long as it is unique. We recommend using a
 // unique prefix plus the Go type name.
 message FuncSpec {
-  repeated string args = 1;
-  string result = 2;
+  string name = 1;
+  repeated string args = 2;
+  string result = 3;
 }
 
 // Config is the namespace of messages related to configuration.

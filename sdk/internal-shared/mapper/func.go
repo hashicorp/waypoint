@@ -66,9 +66,11 @@ func NewFunc(f interface{}, opts ...Option) (*Func, error) {
 	fv := reflect.ValueOf(f)
 
 	// Try to get a name for the function
-	var name string
-	if rfunc := runtime.FuncForPC(fv.Pointer()); rfunc != nil {
-		name = rfunc.Name()
+	name := cfg.Name
+	if name == "" {
+		if rfunc := runtime.FuncForPC(fv.Pointer()); rfunc != nil {
+			name = rfunc.Name()
+		}
 	}
 
 	// Build our args list
@@ -105,6 +107,7 @@ func NewFunc(f interface{}, opts ...Option) (*Func, error) {
 // config is the intermediary configuration used by Option to configure
 // funcs during NewFunc.
 type config struct {
+	Name     string
 	Logger   hclog.Logger
 	WithType map[reflect.Type]func(int, reflect.Type) Type
 }
@@ -128,6 +131,13 @@ func WithType(typ reflect.Type, f func(int, reflect.Type) Type) Option {
 // hclog.L() (the default logger).
 func WithLogger(log hclog.Logger) Option {
 	return func(c *config) { c.Logger = log }
+}
+
+// WithName sets the function name. This is used in debug messages. If this
+// isn't set we try to use the function pointer to look up the function
+// package and name.
+func WithName(n string) Option {
+	return func(c *config) { c.Name = n }
 }
 
 // String returns the name of the function. If a name is not available, the

@@ -256,6 +256,8 @@ func (a *App) initComponent(
 	f *mapper.Factory,
 	cfg *config.Component,
 ) error {
+	log := a.logger.Named(strings.ToLower(typ.String()))
+
 	// Before we do anything, the target should be a pointer. If so,
 	// then we get the value of the pointer so we can set it later.
 	targetV := reflect.ValueOf(target)
@@ -277,11 +279,11 @@ func (a *App) initComponent(
 	}
 
 	// Call the factory to get our raw value (interface{} type)
-	raw, err := fn.Call(ctx, a.source, a.logger, cdir)
+	raw, err := fn.Call(ctx, a.source, log, cdir)
 	if err != nil {
 		return err
 	}
-	a.logger.Info("initialized component", "type", typ.String())
+	log.Info("initialized component", "type", typ.String())
 
 	// If we have a plugin.Instance then we can extract other information
 	// from this plugin. We accept pure factories too that don't return
@@ -294,7 +296,7 @@ func (a *App) initComponent(
 		// These mappers become app-specific here so that other apps aren't
 		// affected by other plugins.
 		a.mappers = append(a.mappers, pinst.Mappers...)
-		a.logger.Info("registered component-specific mappers", "len", len(pinst.Mappers))
+		log.Info("registered component-specific mappers", "len", len(pinst.Mappers))
 	}
 
 	// Store the component dir mapping

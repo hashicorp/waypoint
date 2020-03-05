@@ -3,6 +3,7 @@ package mapper
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -37,7 +38,16 @@ func ChainTarget(check CheckFunc, mappers []*Func, values ...interface{}) *Chain
 // parameters for this func. The result is a "Chain" of function calls.
 func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 	log := f.Logger.With("func", f.String())
-	log.Trace("creating chain", "values", values)
+
+	// If we're logging, then build up a more log-friendly view of values.
+	var valueTypes []string
+	if log.IsTrace() {
+		for _, v := range values {
+			valueTypes = append(valueTypes, fmt.Sprintf("%T", v))
+		}
+		sort.Strings(valueTypes)
+	}
+	log.Trace("creating chain", "values", valueTypes)
 
 	// First, we need to determine what we're missing for our func.
 	missing := make(map[Type]int)
@@ -45,7 +55,7 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 
 	// If we're not missing anything then short-circuit the whole thing
 	if len(missing) == 0 {
-		log.Info("chain satisfied by inputs", "values", values)
+		log.Trace("chain satisfied by inputs")
 		return &Chain{funcs: []*Func{f}, values: values}, nil
 	}
 	if log.IsTrace() {
@@ -76,7 +86,7 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 		return nil, err
 	}
 
-	log.Info("chain satisfied by mappers", "values", values, "chain", chain)
+	log.Trace("chain satisfied by mappers", "chain", chain)
 	return &Chain{funcs: chain, values: values}, nil
 }
 
@@ -234,9 +244,8 @@ MISSING_LOOP:
 
 				nextChain, err := m.chain(log, values, mapperByOut, chain, chainSet, pendingSet)
 				if err == nil {
-					log.Trace("missing argument satisfied by mapper",
-						"out_type", t.String(),
-						"out_key", t.Key(),
+					log.Trace("missing argument successfully satisfied by mapper",
+						"type", t.String(),
 					)
 
 					// Satisfied!

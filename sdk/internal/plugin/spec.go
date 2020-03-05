@@ -39,8 +39,10 @@ func funcToSpec(log hclog.Logger, f interface{}, mappers []*mapper.Func) (*pb.Fu
 		return nil, fmt.Errorf("cannot satisfy the function %s", mf)
 	}
 
+	// Build our FuncSpec. The name we use is just the name on this side.
+	result := pb.FuncSpec{Name: mf.Name}
+
 	// For each type, get the Any message name for it.
-	var result pb.FuncSpec
 	for _, t := range types {
 		typ := t.(*mapper.ReflectType).Type
 
@@ -76,6 +78,7 @@ func funcToSpec(log hclog.Logger, f interface{}, mappers []*mapper.Func) (*pb.Fu
 func specToFunc(log hclog.Logger, s *pb.FuncSpec, cb interface{}) *mapper.Func {
 	// Build the function
 	f, err := mapper.NewFunc(cb,
+		mapper.WithName(s.Name),
 		mapper.WithType(dynamicArgsType, makeDynamicArgsMapperType(s)),
 		mapper.WithLogger(log),
 	)
