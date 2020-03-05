@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/mitchellh/devflow/internal/builtin/docker"
+	"github.com/mitchellh/devflow/builtin/docker"
 	"github.com/mitchellh/devflow/internal/terraform"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
