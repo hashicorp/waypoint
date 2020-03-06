@@ -7,9 +7,16 @@ import (
 
 	"github.com/mitchellh/devflow/builtin/docker"
 	"github.com/mitchellh/devflow/internal/terraform"
+	"github.com/mitchellh/devflow/sdk"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
 )
+
+// CloudRunOptions are the SDK options to use for instantiation for
+// the Google Cloud Run plugin.
+var CloudRunOptions = []sdk.Option{
+	sdk.WithComponents(&CloudRunPlatform{}),
+}
 
 // CloudRunPlatform is the Platform implementation for Google Cloud Run.
 type CloudRunPlatform struct {

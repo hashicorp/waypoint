@@ -37,6 +37,7 @@ func Plugins(opts ...Option) map[int]plugin.PluginSet {
 		1: plugin.PluginSet{
 			"mapper":   &MapperPlugin{},
 			"builder":  &BuilderPlugin{},
+			"platform": &PlatformPlugin{},
 			"registry": &RegistryPlugin{},
 		},
 	}
