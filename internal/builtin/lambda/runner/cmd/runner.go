@@ -63,7 +63,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var cfg runner.LayerConfiguration
+	var cfg runner.LambdaConfiguration
 
 	err = json.NewDecoder(f).Decode(&cfg)
 
@@ -207,7 +207,7 @@ func sessionHandler(sess ssh.Session) {
 
 	// Setup the lambda-esque env
 
-	var cfg runner.LayerConfiguration
+	var cfg runner.LambdaConfiguration
 
 	err := json.Unmarshal(cfgStr, &cfg)
 	if err != nil {
@@ -231,6 +231,10 @@ func sessionHandler(sess ssh.Session) {
 
 	cmd := r.Command(L, cs...)
 	cmd.Env = append(cmd.Env, outEnv...)
+
+	for k, v := range cfg.Variables {
+		cmd.Env = append(cmd.Env, k+"="+v)
+	}
 
 	if req, win, ok := sess.Pty(); ok {
 		cmd.Env = append(cmd.Env, "TERM="+req.Term)
@@ -331,7 +335,7 @@ func clientConnect() {
 		}
 	}
 
-	cc.Exec("app", "/bin/bash")
+	cc.Exec(nil, "app", "/bin/bash")
 
 	terminal.Restore(int(fd), st)
 }

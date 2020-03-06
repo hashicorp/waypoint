@@ -22,17 +22,18 @@ type Runner struct {
 
 var sess = session.New(aws.NewConfig().WithRegion("us-west-2"))
 
-type LayerConfiguration struct {
-	Runtime   string   `json:"runtime"`
-	BuildID   string   `json:"build_id"`
-	AppUrl    string   `json:"app_url"`
-	LayerUrls []string `json:"layer_urls"`
+type LambdaConfiguration struct {
+	Runtime   string            `json:"runtime"`
+	BuildID   string            `json:"build_id"`
+	AppUrl    string            `json:"app_url"`
+	LayerUrls []string          `json:"layer_urls"`
+	Variables map[string]string `json:"variables"`
 }
 
-func (r *Runner) ExtractFromLambda(name string) (*LayerConfiguration, error) {
+func (r *Runner) ExtractFromLambda(name string) (*LambdaConfiguration, error) {
 	lamSvc := lambda.New(sess)
 
-	var cfg LayerConfiguration
+	var cfg LambdaConfiguration
 
 	fnInfo, err := lamSvc.GetFunction(&lambda.GetFunctionInput{
 		FunctionName: aws.String(name),
@@ -45,6 +46,14 @@ func (r *Runner) ExtractFromLambda(name string) (*LayerConfiguration, error) {
 	cfg.Runtime = *fnInfo.Configuration.Runtime
 	cfg.BuildID = *fnInfo.Tags["devflow.app.id"]
 	cfg.AppUrl = *fnInfo.Code.Location
+
+	cfg.Variables = map[string]string{}
+
+	if fnInfo.Configuration.Environment != nil {
+		for k, v := range fnInfo.Configuration.Environment.Variables {
+			cfg.Variables[k] = *v
+		}
+	}
 
 	for _, layer := range fnInfo.Configuration.Layers {
 		ver, err := lamSvc.GetLayerVersionByArn(&lambda.GetLayerVersionByArnInput{

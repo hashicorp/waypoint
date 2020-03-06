@@ -15,7 +15,7 @@ import (
 
 type ConsoleClient struct {
 	Tunnel    *Tunnel
-	AppConfig *LayerConfiguration
+	AppConfig *LambdaConfiguration
 }
 
 func NewConsoleClient(host string) (*ConsoleClient, error) {
@@ -27,7 +27,7 @@ func NewConsoleClient(host string) (*ConsoleClient, error) {
 	return &ConsoleClient{Tunnel: tun}, nil
 }
 
-func (c *ConsoleClient) UseApp(cfg *LayerConfiguration) {
+func (c *ConsoleClient) UseApp(cfg *LambdaConfiguration) {
 	c.AppConfig = cfg
 }
 

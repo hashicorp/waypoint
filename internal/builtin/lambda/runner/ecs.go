@@ -150,7 +150,7 @@ func (e *ECSLauncher) SetupLogs(L hclog.Logger, logGroup string) error {
 
 }
 
-func (e *ECSLauncher) Launch(ctx context.Context, L hclog.Logger, S status.Updater, app *component.Source, cfg *LayerConfiguration) (*ConsoleClient, error) {
+func (e *ECSLauncher) Launch(ctx context.Context, L hclog.Logger, S status.Updater, app *component.Source, cfg *LambdaConfiguration) (*ConsoleClient, error) {
 	e.status = S
 
 	err := e.SetupCluster(ctx)
