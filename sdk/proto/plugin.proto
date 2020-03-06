@@ -40,6 +40,12 @@ message Args {
       string data_dir = 3;
     }
   }
+
+  // Logger is used to construct an logger for the plugin.
+  message Logger {
+    // name is the name of the logger
+    string name = 1;
+  }
 }
 
 // Empty is just an empty message useful with some RPC endpoints.

@@ -1,6 +1,7 @@
 package protomappers
 
 import (
+	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/mitchellh/devflow/sdk/component"
@@ -18,6 +19,8 @@ var All = []interface{}{
 	DatadirProjectProto,
 	DatadirAppProto,
 	DatadirComponentProto,
+	Logger,
+	LoggerProto,
 }
 
 // Source maps Args.Source to component.Source.
@@ -68,5 +71,19 @@ func DatadirComponentProto(input *datadir.Component) *pb.Args_DataDir_Component 
 	return &pb.Args_DataDir_Component{
 		CacheDir: input.CacheDir(),
 		DataDir:  input.DataDir(),
+	}
+}
+
+// Logger maps *pb.Args_Logger to an hclog.Logger
+func Logger(input *pb.Args_Logger) hclog.Logger {
+	// We use the default logger as the base. Within a plugin we always set
+	// it so we can confidently use this. This lets plugins potentially mess
+	// with this but that's a risk we have to take.
+	return hclog.L().ResetNamed(input.Name)
+}
+
+func LoggerProto(log hclog.Logger) *pb.Args_Logger {
+	return &pb.Args_Logger{
+		Name: log.Name(),
 	}
 }

@@ -12,6 +12,15 @@ import (
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
+// funcErr returns a function that can be returned for any of the
+// Func component calls that just returns an error. This lets us surface
+// RPC errors cleanly rather than a panic.
+func funcErr(err error) interface{} {
+	return func(context.Context) (interface{}, error) {
+		return nil, err
+	}
+}
+
 // funcToSpec takes a function pointer and generates a FuncSpec from it.
 // The function must only take and return values that are proto.Message
 // implementations OR have a chain of mappers that directly covert from/to a
@@ -36,7 +45,10 @@ func funcToSpec(log hclog.Logger, f interface{}, mappers []*mapper.Func) (*pb.Fu
 			typ == contextType
 	})
 	if len(types) == 0 {
-		return nil, fmt.Errorf("cannot satisfy the function %s", mf)
+		return nil, fmt.Errorf(
+			"cannot satisfy the function %s. The function takes arguments that "+
+				"are not proto.Messages or have no mappers to convert to proto.Messages",
+			mf)
 	}
 
 	// Build our FuncSpec. The name we use is just the name on this side.

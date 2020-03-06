@@ -64,7 +64,7 @@ func (c *builderClient) BuildFunc() interface{} {
 	// Get the build spec
 	spec, err := c.client.BuildSpec(context.Background(), &proto.Empty{})
 	if err != nil {
-		panic(err)
+		return funcErr(err)
 	}
 
 	return specToFunc(c.logger, spec, c.build)
