@@ -24,8 +24,8 @@ type CloudRunPlatform struct {
 }
 
 // Config implements Configurable
-func (p *CloudRunPlatform) Config() interface{} {
-	return &p.config
+func (p *CloudRunPlatform) Config() (interface{}, error) {
+	return &p.config, nil
 }
 
 // DeployFunc implements component.Platform
@@ -70,7 +70,7 @@ func (p *CloudRunPlatform) Deploy(
 	}
 
 	return &CloudRunDeployment{
-		URL: outputs["url"].(string),
+		Url: outputs["url"].(string),
 	}, nil
 }
 
@@ -84,18 +84,14 @@ type Config struct {
 	Unauthenticated *bool `hcl:"unauthenticated,optional"`
 }
 
-// CloudRunDeployment represents a deployment to Google Cloud Run.
-type CloudRunDeployment struct {
-	// URL is the URL for the deployment
-	URL string
+// MarshalText implements encoding.TextMarshaler so that protobuf generates
+// the correct string version.
+func (d *CloudRunDeployment) MarshalText() ([]byte, error) {
+	return []byte("URL: " + d.Url), nil
 }
 
-// String implements component.Deployment
-func (d *CloudRunDeployment) String() string {
-	return "URL: " + d.URL
-}
-
-// NewCloudRunPlatform is a factory method.
-func NewCloudRunPlatform() *CloudRunPlatform { return &CloudRunPlatform{} }
-
-var _ component.Deployment = (*CloudRunDeployment)(nil)
+var (
+	_ component.Platform     = (*CloudRunPlatform)(nil)
+	_ component.Configurable = (*CloudRunPlatform)(nil)
+	_ component.Deployment   = (*CloudRunDeployment)(nil)
+)
