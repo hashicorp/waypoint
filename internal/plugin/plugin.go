@@ -7,6 +7,7 @@ import (
 
 	"github.com/mitchellh/devflow/builtin/docker"
 	"github.com/mitchellh/devflow/builtin/google"
+	"github.com/mitchellh/devflow/builtin/lambda"
 	"github.com/mitchellh/devflow/builtin/pack"
 )
 
@@ -21,15 +22,18 @@ var (
 		"pack":             pack.Options,
 		"docker":           docker.Options,
 		"google-cloud-run": google.CloudRunOptions,
+		"lambda":           lambda.Options,
 	}
 )
 
 func init() {
 	Builders.Register("pack", BuiltinFactory("pack", component.BuilderType))
+	Builders.Register("lambda", BuiltinFactory("lambda", component.BuilderType))
 
 	Registries.Register("docker", BuiltinFactory("docker", component.RegistryType))
 
 	Platforms.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.PlatformType))
+	Platforms.Register("lambda", BuiltinFactory("lambda", component.PlatformType))
 }
 
 func must(err error) {

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/securetunnel"
 	"github.com/mattn/go-isatty"
-	"github.com/mitchellh/devflow/internal/builtin/lambda/runner"
+	"github.com/mitchellh/devflow/builtin/lambda/runner"
 	"golang.org/x/crypto/ssh/terminal"
 )
 

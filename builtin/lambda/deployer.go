@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mattn/go-isatty"
-	"github.com/mitchellh/devflow/internal/builtin/lambda/runner"
+	"github.com/mitchellh/devflow/builtin/lambda/runner"
 	"github.com/mitchellh/devflow/internal/pkg/status"
 	"github.com/mitchellh/devflow/sdk/component"
 	"golang.org/x/crypto/ssh/terminal"
@@ -47,8 +47,8 @@ type Deployer struct {
 	roleArn  string
 }
 
-func (d *Deployer) Config() interface{} {
-	return &d.config
+func (d *Deployer) Config() (interface{}, error) {
+	return &d.config, nil
 }
 
 func (d *Deployer) DeployFunc() interface{} {
@@ -612,3 +612,8 @@ func (d *Deployer) Logs(ctx context.Context, L hclog.Logger, app *component.Sour
 func (d *Deployer) LogsFunc() interface{} {
 	return d.Logs
 }
+
+var (
+	_ component.Platform     = (*Deployer)(nil)
+	_ component.Configurable = (*Deployer)(nil)
+)

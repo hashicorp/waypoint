@@ -47,8 +47,8 @@ func NewBuilder() *Builder {
 	return &Builder{}
 }
 
-func (b *Builder) Config() interface{} {
-	return &b.config
+func (b *Builder) Config() (interface{}, error) {
+	return &b.config, nil
 }
 
 func (b *Builder) BuildFunc() interface{} {
@@ -763,3 +763,8 @@ func (b *Builder) extractFileDiff(ctx context.Context, L hclog.Logger, src *comp
 
 	return zipFiles, nil
 }
+
+var (
+	_ component.Builder      = (*Builder)(nil)
+	_ component.Configurable = (*Builder)(nil)
+)
