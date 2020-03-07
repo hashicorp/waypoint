@@ -1,2 +1,8 @@
-.DS_Store
 tmp/
+
+# Repo-specific
+.devflow/
+/devflow
+
+# System-specific
+.DS_Store
