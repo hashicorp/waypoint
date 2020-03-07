@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package lambda;
+
+message AppInfo {
+  string runtime = 1;
+  string pre_zip = 2;
+  string lib_zip = 3;
+  string app_zip = 4;
+  string build_id = 5;
+  string metadata_sum = 6;
+}
+
+message LambdaDeployment {
+  string function_arn = 1;
+}

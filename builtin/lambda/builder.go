@@ -76,16 +76,6 @@ var pruneRegexp = []*regexp.Regexp{
 
 const runtimePath = ".devflow/runtime"
 
-type AppInfo struct {
-	Runtime string `json:"runtime"`
-	PreZip  string `json:"pre_zip"`
-	LibZip  string `json:"lib_zip"`
-	AppZip  string `json:"app_zip"`
-
-	BuildID     string `json:"build_id"`
-	MetadataSum string `json:"metadata_sum"`
-}
-
 func (b *Builder) AppInfo() *AppInfo {
 	return &AppInfo{
 		Runtime: b.runtime,
@@ -93,7 +83,7 @@ func (b *Builder) AppInfo() *AppInfo {
 		LibZip:  b.libZip,
 		AppZip:  b.appZip,
 
-		BuildID:     b.id,
+		BuildId:     b.id,
 		MetadataSum: b.sum,
 	}
 }
@@ -206,7 +196,7 @@ func (b *Builder) Build(
 	L hclog.Logger,
 	src *component.Source,
 	dir *datadir.Component,
-) (component.Artifact, error) {
+) (*AppInfo, error) {
 
 	subDir, err := datadir.NewScopedDir(dir, "lambda-build")
 	if err != nil {

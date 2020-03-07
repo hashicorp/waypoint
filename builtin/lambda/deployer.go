@@ -201,7 +201,7 @@ func (d *Deployer) CreateLayer(L hclog.Logger, app *component.Source, info *AppI
 		return "", err
 	}
 
-	layerName := fmt.Sprintf("%s-%s-%s.zip", app.App, info.BuildID, name)
+	layerName := fmt.Sprintf("%s-%s-%s.zip", app.App, info.BuildId, name)
 
 	L.Info("uploading lib layer", "key", layerName, "size", stat.Size())
 	headOut, err := s3Svc.HeadObject(&s3.HeadObjectInput{
@@ -223,7 +223,7 @@ func (d *Deployer) CreateLayer(L hclog.Logger, app *component.Source, info *AppI
 	}
 
 	pubOut, err := lamSvc.PublishLayerVersion(&lambda.PublishLayerVersionInput{
-		Description:        aws.String(fmt.Sprintf("devflow app %s - %s", app.App, info.BuildID)),
+		Description:        aws.String(fmt.Sprintf("devflow app %s - %s", app.App, info.BuildId)),
 		LayerName:          aws.String(name),
 		CompatibleRuntimes: []*string{aws.String(info.Runtime)},
 		Content: &lambda.LayerVersionContentInput{
@@ -262,7 +262,7 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 		return "", err
 	}
 
-	layerName := fmt.Sprintf("%s-%s-app.zip", app.App, info.BuildID)
+	layerName := fmt.Sprintf("%s-%s-app.zip", app.App, info.BuildId)
 
 	L.Info("uploading app", "size", stat.Size(), "bucket", d.config.Bucket, "key", layerName)
 
@@ -344,7 +344,7 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 
 	} else {
 		funcOut, err := lamSvc.CreateFunction(&lambda.CreateFunctionInput{
-			Description:  aws.String(fmt.Sprintf("devflow app %s - %s", app.App, info.BuildID)),
+			Description:  aws.String(fmt.Sprintf("devflow app %s - %s", app.App, info.BuildId)),
 			FunctionName: aws.String(app.App),
 			Handler:      aws.String("app.handler"),
 			Role:         aws.String(d.roleArn),
@@ -354,7 +354,7 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 			MemorySize:   aws.Int64(DefaultMemory),
 			Tags: map[string]*string{
 				"devflow.app":    aws.String(app.App),
-				"devflow.app.id": aws.String(info.BuildID),
+				"devflow.app.id": aws.String(info.BuildId),
 			},
 			Code: &lambda.FunctionCode{
 				S3Bucket: aws.String(d.config.Bucket),
@@ -383,12 +383,10 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 	return arn, nil
 }
 
-type LambdaDeployment struct {
-	FunctionArn string
-}
-
-func (l *LambdaDeployment) String() string {
-	return l.FunctionArn
+// MarshalText implements encoding.TextMarshaler so that protobuf generates
+// the correct string version.
+func (l *LambdaDeployment) MarshalText() ([]byte, error) {
+	return []byte(l.FunctionArn), nil
 }
 
 func (d *Deployer) Deploy(ctx context.Context, L hclog.Logger, app *component.Source, info *AppInfo) (*LambdaDeployment, error) {
@@ -402,7 +400,7 @@ func (d *Deployer) Deploy(ctx context.Context, L hclog.Logger, app *component.So
 		return nil, err
 	}
 
-	return &LambdaDeployment{arn}, nil
+	return &LambdaDeployment{FunctionArn: arn}, nil
 }
 
 func (d *Deployer) Exec(ctx context.Context, L hclog.Logger, S status.Updater, app *component.Source) error {
