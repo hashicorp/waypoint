@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package proto;
+
+import "protostructure.proto";
+
+// Args are the common argument types that are available to many of the
+// dynamic functions. The exact list of available argument types is available
+// on the Go interface docs.
+message Args {
+  // See component.Source
+  message Source {
+    // app is the name of the application being deployed.
+    string app = 1;
+
+    // path is the absolute directory path to the root directory for source files.
+    string path = 2;
+  }
+
+  // DataDir represents the directory where data can be stored. This is an internal
+  // struct and shouldn't be used directly. Use the relevant *datadir implementation
+  // instead.
+  message DataDir {
+    // NOTE(mitchellh): we use specific types here rather than a single type
+    // with an enum "type" field or something since this maps more cleanly
+    // to our internal dependency-injection API.
+
+    message Project {
+      string cache_dir = 2;
+      string data_dir = 3;
+    }
+
+    message App {
+      string cache_dir = 2;
+      string data_dir = 3;
+    }
+
+    message Component {
+      string cache_dir = 2;
+      string data_dir = 3;
+    }
+  }
+
+  // Logger is used to construct an logger for the plugin.
+  message Logger {
+    // name is the name of the logger
+    string name = 1;
+  }
+}
+
+// Empty is just an empty message useful with some RPC endpoints.
+message Empty {}
+
+// FuncSpec describes a function and is used by the dependency-injection
+// framework to provide the function with the proper values.
+//
+// Value types are specified using strings. Built-in framework types
+// are defined via constants in the `sdk` package. For custom types, you
+// can use whatever string as long as it is unique. We recommend using a
+// unique prefix plus the Go type name.
+message FuncSpec {
+  string name = 1;
+  repeated string args = 2;
+  string result = 3;
+}
+
+// Config is the namespace of messages related to configuration.
+//
+// All components that take configuration are expected to have two RPC calls:
+//
+//   * ConfigStruct - Returns the configuration structure.
+//   * Configure - Sends the configuration data back to the plugin and the
+//       plugin is also expected to perform any validation at this stage.
+//
+message Config {
+  // ConfigureRequest is the request sent once the configuration decoding
+  // is complete to actually assign the values to the structure.
+  message ConfigureRequest {
+    // json is the json data for the structure returned in the StructResp.
+    // It is guaranteed to decode cleanly into the target structure.
+    bytes json = 1;
+  }
+
+  // StructResp returns the struct for configuration.
+  message StructResp {
+    // struct is the configuration structure (or empty/nil if one doesn't exist).
+    // This struct should have all the proper struct tags for HCL decoding
+    // You should do validation on the Configure call.
+    protostructure.Struct struct = 1;
+  }
+}

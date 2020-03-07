@@ -1,5 +1,5 @@
 (config.Config) {
- App: ([]*config.App) (len=1 cap=1) {
+ Apps: ([]*config.App) (len=1 cap=1) {
   (*config.App)({
    Name: (string) (len=3) "web",
    Path: (string) "",
@@ -57,7 +57,7 @@
      EndRange: (hcl.Range) testdata/basic.hcl:6,6-6
     })
    }),
-   Deploy: (*config.Component)({
+   Platform: (*config.Component)({
     Type: (string) (len=16) "google-cloud-run",
     Body: (*hclsyntax.Body)({
      Attributes: (hclsyntax.Attributes) {

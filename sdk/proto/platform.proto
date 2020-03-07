@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "plugin.proto";
+
+// Platform is responsible for deploying an artifact that is in a registry.
+service Platform {
+  rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
+  rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
+
+  rpc DeploySpec(Empty) returns (FuncSpec);
+  rpc Deploy(Deploy.Args) returns (Deploy.Resp);
+}
+
+message Deploy {
+  message Args {
+    // args is the list of argument types. This will include some of the
+    // standard types in this file (in the Args message namespace) as well
+    // as custom types declared by the FuncSpec that the plugin is expected
+    // to understand how to decode.
+    repeated google.protobuf.Any args = 1;
+  }
+
+  message Resp {
+    // result is the resulting opaque data type
+    google.protobuf.Any result = 1;
+  }
+}

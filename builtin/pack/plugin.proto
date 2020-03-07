@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package pack;
+
+// DockerImage is the artifact type for the builder.
+message DockerImage {
+  string image = 1;
+  string tag = 2;
+}

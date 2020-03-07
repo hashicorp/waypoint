@@ -8,11 +8,12 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/config"
-	"github.com/mitchellh/devflow/internal/datadir"
-	"github.com/mitchellh/devflow/internal/mapper"
 	"github.com/mitchellh/devflow/internal/pkg/status"
+	"github.com/mitchellh/devflow/internal/plugin"
+	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/mitchellh/devflow/sdk/datadir"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
 // App represents a single application and exposes all the operations
@@ -42,8 +43,10 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	app := &App{
 		source:        &component.Source{App: cfg.Name, Path: "."},
 		logger:        p.logger.Named("app").Named(cfg.Name),
-		mappers:       p.mappers,
 		componentDirs: make(map[interface{}]*datadir.Component),
+
+		// very important below that we allocate a new slice since we modify
+		mappers: append([]*mapper.Func{}, p.mappers...),
 	}
 
 	// Setup our directory
@@ -208,9 +211,16 @@ func (a *App) callDynamicFunc(
 	f interface{}, // function
 	values ...interface{},
 ) (interface{}, error) {
-	rawFunc, err := mapper.NewFunc(f)
-	if err != nil {
-		return nil, err
+	// We allow f to be a *mapper.Func because our plugin system creates
+	// a func directly due to special argument types.
+	// TODO: test
+	rawFunc, ok := f.(*mapper.Func)
+	if !ok {
+		var err error
+		rawFunc, err = mapper.NewFunc(f, mapper.WithLogger(log))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get the component directory
@@ -246,6 +256,8 @@ func (a *App) initComponent(
 	f *mapper.Factory,
 	cfg *config.Component,
 ) error {
+	log := a.logger.Named(strings.ToLower(typ.String()))
+
 	// Before we do anything, the target should be a pointer. If so,
 	// then we get the value of the pointer so we can set it later.
 	targetV := reflect.ValueOf(target)
@@ -267,9 +279,24 @@ func (a *App) initComponent(
 	}
 
 	// Call the factory to get our raw value (interface{} type)
-	raw, err := fn.Call(ctx, a.source, a.logger, cdir)
+	raw, err := fn.Call(ctx, a.source, log, cdir)
 	if err != nil {
 		return err
+	}
+	log.Info("initialized component", "type", typ.String())
+
+	// If we have a plugin.Instance then we can extract other information
+	// from this plugin. We accept pure factories too that don't return
+	// this so we type-check here.
+	if pinst, ok := raw.(*plugin.Instance); ok {
+		raw = pinst.Component
+
+		// Plugins may contain their own dedicated mappers. We want to be
+		// aware of them so that we can map data to/from as necessary.
+		// These mappers become app-specific here so that other apps aren't
+		// affected by other plugins.
+		a.mappers = append(a.mappers, pinst.Mappers...)
+		log.Info("registered component-specific mappers", "len", len(pinst.Mappers))
 	}
 
 	// Store the component dir mapping

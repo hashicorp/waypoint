@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "plugin.proto";
+
+// Registry is responsible for pushing a built artifact to some registry.
+// The difference between a registry and a builder is that while a builder
+// produces an artifact from source, a registry provides operations to work
+// with artifacts such as listing previous, deleting, etc.
+service Registry {
+  rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
+  rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
+
+  rpc PushSpec(Empty) returns (FuncSpec);
+  rpc Push(Push.Args) returns (Push.Resp);
+}
+
+message Push {
+  message Args {
+    // args is the list of argument types. This will include some of the
+    // standard types in this file (in the Args message namespace) as well
+    // as custom types declared by the FuncSpec that the plugin is expected
+    // to understand how to decode.
+    repeated google.protobuf.Any args = 1;
+  }
+
+  message Resp {
+    // result is the resulting opaque data type
+    google.protobuf.Any result = 1;
+  }
+}

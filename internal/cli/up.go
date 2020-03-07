@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mitchellh/devflow/internal/component"
+	"github.com/mitchellh/devflow/sdk/component"
 )
 
 type UpCommand struct {

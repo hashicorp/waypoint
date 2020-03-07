@@ -81,6 +81,13 @@ func commands(ctx context.Context, log hclog.Logger, stat status.Updater) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		// TODO(mitchellh): make hidden
+		"plugin": func() (cli.Command, error) {
+			return &PluginCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 }
 
@@ -122,6 +129,8 @@ func interruptContext(ctx context.Context, log hclog.Logger) (context.Context, f
 // determined based on environment variables if set.
 func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
 	app := args[0]
+
+	// Default level is warn, can override with an env var
 	level := hclog.Warn
 	if v := os.Getenv(EnvLogLevel); v != "" {
 		level = hclog.LevelFromString(v)
@@ -131,7 +140,6 @@ func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
 	}
 
 	var outArgs []string
-
 	for _, arg := range args {
 		if arg[0] != '-' {
 			outArgs = append(outArgs, arg)
@@ -164,7 +172,6 @@ func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
 	})
 
 	var update status.Updater
-
 	if level <= hclog.Warn {
 		update = &status.SpinnerStatus{}
 	} else {

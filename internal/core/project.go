@@ -6,11 +6,12 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/mitchellh/devflow/internal/builtin"
-	"github.com/mitchellh/devflow/internal/component"
 	"github.com/mitchellh/devflow/internal/config"
-	"github.com/mitchellh/devflow/internal/datadir"
-	"github.com/mitchellh/devflow/internal/mapper"
+	"github.com/mitchellh/devflow/internal/plugin"
+	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/mitchellh/devflow/sdk/datadir"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
 )
 
 // Project represents a project with one or more applications.
@@ -29,9 +30,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		logger: hclog.L(),
 		apps:   make(map[string]*App),
 		factories: map[component.Type]*mapper.Factory{
-			component.BuilderType:  builtin.Builders,
-			component.RegistryType: builtin.Registries,
-			component.PlatformType: builtin.Platforms,
+			component.BuilderType:  plugin.Builders,
+			component.RegistryType: plugin.Registries,
+			component.PlatformType: plugin.Platforms,
 		},
 	}
 
@@ -43,7 +44,13 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 	// Defaults
 	if len(p.mappers) == 0 {
-		p.mappers = builtin.Mappers
+		var err error
+		p.mappers, err = mapper.NewFuncList(protomappers.All,
+			mapper.WithLogger(p.logger),
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Validation
