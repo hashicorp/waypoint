@@ -77,9 +77,11 @@ type ConfigPlatform interface {
 	ConfigGetFunc() interface{}
 }
 
-// A Platform that supports the ability to set and view configuration
-// variables.
-type LogsPlatform interface {
+// LogPlatform is responsible for reading the logs for a deployment.
+// This doesn't need to be the same as the Platform but a Platform can also
+// implement this interface to natively provide logs.
+type LogPlatform interface {
+	// LogsFunc should return an implementation of LogViewer.
 	LogsFunc() interface{}
 }
 

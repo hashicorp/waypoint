@@ -159,7 +159,7 @@ func (s *mapperServer) Map(
 	).Interface()
 
 	// Call it!
-	result, err := callDynamicFunc(ctx, s.Logger, args.Args, f, s.Mappers)
+	result, err := callDynamicFuncAny(ctx, s.Logger, args.Args, f, s.Mappers)
 	if err != nil {
 		return nil, err
 	}

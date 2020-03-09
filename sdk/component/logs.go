@@ -1,22 +1,27 @@
 package component
 
 import (
+	"context"
 	"encoding/base32"
 	"time"
 
 	"golang.org/x/crypto/blake2b"
 )
 
+// LogViewer returns batches of log lines. This is expected to be returned
+// by a LogPlatform implementation.
+type LogViewer interface {
+	// NextBatch is called to return the next batch of logs. This is expected
+	// to block if there are no logs available. The context passed in will be
+	// cancelled if the logs viewer is interrupted.
+	NextLogBatch(ctx context.Context) ([]LogEvent, error)
+}
+
+// LogEvent represents a single log entry.
 type LogEvent struct {
 	Partition string
 	Timestamp time.Time
 	Message   string
-}
-
-// An interface returned by a platforms logging system that returns
-// batches of log lines
-type LogViewer interface {
-	NextBatch() ([]LogEvent, error)
 }
 
 type PartitionViewer struct {

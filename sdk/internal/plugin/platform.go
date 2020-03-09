@@ -114,7 +114,7 @@ func (s *platformServer) Deploy(
 	ctx context.Context,
 	args *proto.Deploy_Args,
 ) (*proto.Deploy_Resp, error) {
-	encoded, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.DeployFunc(), s.Mappers)
+	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.DeployFunc(), s.Mappers)
 	if err != nil {
 		return nil, err
 	}

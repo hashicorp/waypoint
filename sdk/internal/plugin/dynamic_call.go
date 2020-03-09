@@ -22,7 +22,7 @@ func callDynamicFunc(
 	args []*any.Any,
 	f interface{},
 	mappers []*mapper.Func,
-) (*any.Any, error) {
+) (interface{}, error) {
 	// Decode all our arguments. We are on the plugin side now so we expect
 	// to be able to decode all types sent to us.
 	decoded := make([]interface{}, len(args)+1)
@@ -67,7 +67,19 @@ func callDynamicFunc(
 		return nil, err
 	}
 
-	result, err := chain.Call()
+	return chain.Call()
+}
+
+// callDynamicFuncAny is callDynamicFunc that automatically encodes the
+// result to an *any.Any.
+func callDynamicFuncAny(
+	ctx context.Context,
+	log hclog.Logger,
+	args []*any.Any,
+	f interface{},
+	mappers []*mapper.Func,
+) (*any.Any, error) {
+	result, err := callDynamicFunc(ctx, log, args, f, mappers)
 	if err != nil {
 		return nil, err
 	}

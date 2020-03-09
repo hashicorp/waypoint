@@ -117,7 +117,7 @@ func (s *builderServer) Build(
 	ctx context.Context,
 	args *proto.Build_Args,
 ) (*proto.Build_Resp, error) {
-	encoded, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.BuildFunc(), s.Mappers)
+	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.BuildFunc(), s.Mappers)
 	if err != nil {
 		return nil, err
 	}

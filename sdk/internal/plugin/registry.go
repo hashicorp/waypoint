@@ -114,7 +114,7 @@ func (s *registryServer) Push(
 	ctx context.Context,
 	args *proto.Push_Args,
 ) (*proto.Push_Resp, error) {
-	encoded, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.PushFunc(), s.Mappers)
+	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.PushFunc(), s.Mappers)
 	if err != nil {
 		return nil, err
 	}
