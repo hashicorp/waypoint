@@ -63,14 +63,17 @@ func (c *logPlatformClient) push(
 	ctx context.Context,
 	args dynamicArgs,
 ) (interface{}, error) {
-	// Call our function
-	resp, err := c.client.Deploy(ctx, &proto.Deploy_Args{Args: args})
-	if err != nil {
-		return nil, err
-	}
+	/*
+		// Call our function
+		resp, err := c.client.Deploy(ctx, &proto.Deploy_Args{Args: args})
+		if err != nil {
+			return nil, err
+		}
 
-	// We return the *any.Any directly.
-	return resp.Result, nil
+		// We return the *any.Any directly.
+		return resp.Result, nil
+	*/
+	return nil, nil
 }
 
 // logPlatformServer is a gRPC server that the client talks to and calls a
@@ -92,7 +95,7 @@ func (s *logPlatformServer) Logs(
 	ctx context.Context,
 	args *proto.FuncSpec_Args,
 ) (*proto.Logs_Resp, error) {
-	result, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.LogsFunc(), s.Mappers)
+	_, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.LogsFunc(), s.Mappers)
 	if err != nil {
 		return nil, err
 	}
