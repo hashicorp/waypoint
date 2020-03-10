@@ -22,6 +22,14 @@ func Spec(f interface{}, opts ...Option) (*pb.FuncSpec, error) {
 		opt(&cfg)
 	}
 
+	// Defaults
+	if cfg.Logger == nil {
+		cfg.Logger = hclog.L()
+	}
+	if cfg.Output == nil {
+		cfg.Output = protoMessageType
+	}
+
 	// Build our initial mapper
 	mf, err := mapper.NewFunc(f, mapper.WithLogger(cfg.Logger))
 	if err != nil {
@@ -60,18 +68,21 @@ func Spec(f interface{}, opts ...Option) (*pb.FuncSpec, error) {
 
 	// Get the result type. If it isn't a proto message, we look for a chain
 	// to get us to that proto message.
+	checkOutput := mapper.CheckReflectType(cfg.Output)
 	out := mf.Out
-	if !checkProto(out) {
-		chain := mapper.ChainTarget(checkProto, cfg.Mappers)
+	if !checkOutput(out) {
+		chain := mapper.ChainTarget(checkOutput, cfg.Mappers)
 		if chain == nil {
 			return nil, fmt.Errorf(
-				"function must output a type that is a proto.Message or has " +
-					"a chain of mappers that result in a proto.Message")
+				"function must output a type that is a %[1]s or has "+
+					"a chain of mappers that result in a %[1]s", cfg.Output.String())
 		}
 
 		out = chain.Out()
 	}
-	result.Result = typeToMessage(out)
+	if checkProto(out) {
+		result.Result = typeToMessage(out)
+	}
 
 	return &result, nil
 }
@@ -79,16 +90,31 @@ func Spec(f interface{}, opts ...Option) (*pb.FuncSpec, error) {
 type config struct {
 	Logger  hclog.Logger
 	Mappers []*mapper.Func
+	Output  reflect.Type
 }
 
 type Option func(*config)
 
+// WithLogger specifies a logger. If this isn't specified then the default
+// logger will be used.
 func WithLogger(v hclog.Logger) Option {
 	return func(c *config) { c.Logger = v }
 }
 
+// WithMappers specifies mappers and appends the mappers to the configuration.
+// For Spec, these mappers will be used to verify that the arguments and
+// result can be converted to proto.Message values. For Func, this has no
+// effect.
 func WithMappers(v []*mapper.Func) Option {
 	return func(c *config) { c.Mappers = append(c.Mappers, v...) }
+}
+
+// WithOutput specifies the expected output type of the function. This
+// defaults to a proto.Message by default. If this type is NOT a proto.Message
+// then the protobuf FuncSpec "out" field will be set to blank indicating
+// that it is some other type.
+func WithOutput(t reflect.Type) Option {
+	return func(c *config) { c.Output = t }
 }
 
 // typeToMessage converts a mapper.Type to the proto.Message name value.

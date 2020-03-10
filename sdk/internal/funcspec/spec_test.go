@@ -1,6 +1,7 @@
 package funcspec
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
@@ -46,6 +47,45 @@ func TestSpec(t *testing.T) {
 		require.Error(err)
 		require.Nil(spec)
 	})
+
+	t.Run("proto to int", func(t *testing.T) {
+		require := require.New(t)
+
+		spec, err := Spec(func(*pb.Empty) int { return 0 })
+		require.Error(err)
+		require.Nil(spec)
+	})
+
+	t.Run("WithOutput proto to int", func(t *testing.T) {
+		require := require.New(t)
+
+		spec, err := Spec(func(*pb.Empty) int { return 0 },
+			WithOutput(reflect.TypeOf(int(0))))
+		require.NoError(err)
+		require.NotNil(spec)
+		require.Equal([]string{"proto.Empty"}, spec.Args)
+		require.Empty(spec.Result)
+	})
+
+	t.Run("WithOutput proto to interface, doesn't implement", func(t *testing.T) {
+		require := require.New(t)
+
+		spec, err := Spec(func(*pb.Empty) struct{} { return struct{}{} },
+			WithOutput(reflect.TypeOf((*testSpecInterface)(nil)).Elem()))
+		require.Error(err)
+		require.Nil(spec)
+	})
+
+	t.Run("WithOutput proto to interface", func(t *testing.T) {
+		require := require.New(t)
+
+		spec, err := Spec(func(*pb.Empty) *testSpecInterfaceImpl { return nil },
+			WithOutput(reflect.TypeOf((*testSpecInterface)(nil)).Elem()))
+		require.NoError(err)
+		require.NotNil(spec)
+		require.Equal([]string{"proto.Empty"}, spec.Args)
+		require.Empty(spec.Result)
+	})
 }
 
 func mustFunc(t *testing.T, f interface{}) *mapper.Func {
@@ -55,3 +95,11 @@ func mustFunc(t *testing.T, f interface{}) *mapper.Func {
 	require.NoError(t, err)
 	return result
 }
+
+type testSpecInterface interface {
+	hello()
+}
+
+type testSpecInterfaceImpl struct{}
+
+func (testSpecInterfaceImpl) hello() {}
