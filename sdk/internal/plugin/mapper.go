@@ -15,6 +15,7 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
+	"github.com/mitchellh/devflow/sdk/internal/funcspec"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -69,7 +70,7 @@ func (c *MapperClient) Mappers() ([]*mapper.Func, error) {
 		// We use a closure here to capture spec so that we can provide
 		// the correct result type. All we're doing is making our callback
 		// call the Map RPC call and return the result/error.
-		f := specToFunc(c.logger, specCopy, func(ctx context.Context, args dynamicArgs) (*any.Any, error) {
+		cb := func(ctx context.Context, args funcspec.Args) (*any.Any, error) {
 			resp, err := c.client.Map(ctx, &pb.Map_Request{
 				Args:   args,
 				Result: specCopy.Result,
@@ -79,7 +80,10 @@ func (c *MapperClient) Mappers() ([]*mapper.Func, error) {
 			}
 
 			return resp.Result, nil
-		})
+		}
+
+		// Build our funcspec function
+		f := funcspec.Func(specCopy, cb, funcspec.WithLogger(c.logger))
 
 		// We need to override the output type to be either the direct output
 		// type if we know about it, or a dynamic type that can map to the
@@ -89,7 +93,7 @@ func (c *MapperClient) Mappers() ([]*mapper.Func, error) {
 			f.Out = &mapper.ReflectType{Type: typ}
 		}
 		if f.Out == nil {
-			f.Out = &dynamicArgsMapperType{Expected: []string{specCopy.Result}}
+			f.Out = &funcspec.ArgsMapperType{Expected: []string{specCopy.Result}}
 		}
 
 		// Accumulate our functions
@@ -117,7 +121,9 @@ func (s *mapperServer) ListMappers(
 			continue
 		}
 
-		spec, err := funcToSpec(s.Logger, m.Func.Interface(), s.Mappers)
+		spec, err := funcspec.Spec(m.Func.Interface(),
+			funcspec.WithMappers(s.Mappers),
+			funcspec.WithLogger(s.Logger))
 		if err != nil {
 			s.Logger.Warn(
 				"error converting mapper, will not notify plugin host",

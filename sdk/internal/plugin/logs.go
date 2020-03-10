@@ -10,6 +10,7 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal/funcspec"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -56,12 +57,12 @@ func (c *logPlatformClient) LogsFunc() interface{} {
 		return funcErr(err)
 	}
 
-	return specToFunc(c.logger, spec, c.push)
+	return funcspec.Func(spec, c.push, funcspec.WithLogger(c.logger))
 }
 
 func (c *logPlatformClient) push(
 	ctx context.Context,
-	args dynamicArgs,
+	args funcspec.Args,
 ) (interface{}, error) {
 	/*
 		// Call our function
@@ -88,7 +89,9 @@ func (s *logPlatformServer) LogsSpec(
 	ctx context.Context,
 	args *empty.Empty,
 ) (*proto.FuncSpec, error) {
-	return funcToSpec(s.Logger, s.Impl.LogsFunc(), s.Mappers)
+	return funcspec.Spec(s.Impl.LogsFunc(),
+		funcspec.WithMappers(s.Mappers),
+		funcspec.WithLogger(s.Logger))
 }
 
 func (s *logPlatformServer) Logs(

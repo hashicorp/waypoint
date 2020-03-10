@@ -3,8 +3,6 @@ package plugin
 import (
 	"context"
 
-	protobuf "github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -12,6 +10,7 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal/funcspec"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -67,12 +66,12 @@ func (c *builderClient) BuildFunc() interface{} {
 		return funcErr(err)
 	}
 
-	return specToFunc(c.logger, spec, c.build)
+	return funcspec.Func(spec, c.build, funcspec.WithLogger(c.logger))
 }
 
 func (c *builderClient) build(
 	ctx context.Context,
-	args dynamicArgs,
+	args funcspec.Args,
 ) (interface{}, error) {
 	// Call our function
 	resp, err := c.client.Build(ctx, &proto.Build_Args{Args: args})
@@ -110,7 +109,9 @@ func (s *builderServer) BuildSpec(
 	ctx context.Context,
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
-	return funcToSpec(s.Logger, s.Impl.BuildFunc(), s.Mappers)
+	return funcspec.Spec(s.Impl.BuildFunc(),
+		funcspec.WithMappers(s.Mappers),
+		funcspec.WithLogger(s.Logger))
 }
 
 func (s *builderServer) Build(
@@ -123,22 +124,6 @@ func (s *builderServer) Build(
 	}
 
 	return &proto.Build_Resp{Result: encoded}, nil
-}
-
-// appendArgs is a helper to encode a number of protobuf.Message into
-// any.Any and add it to the list of dynamicArgs to make it easier to build
-// up a dynamic function call.
-func appendArgs(args dynamicArgs, ms ...protobuf.Message) (dynamicArgs, error) {
-	for _, m := range ms {
-		encoded, err := ptypes.MarshalAny(m)
-		if err != nil {
-			return nil, err
-		}
-
-		args = append(args, encoded)
-	}
-
-	return args, nil
 }
 
 var (

@@ -10,6 +10,7 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal/funcspec"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -64,12 +65,12 @@ func (c *registryClient) PushFunc() interface{} {
 		panic(err)
 	}
 
-	return specToFunc(c.logger, spec, c.push)
+	return funcspec.Func(spec, c.push, funcspec.WithLogger(c.logger))
 }
 
 func (c *registryClient) push(
 	ctx context.Context,
-	args dynamicArgs,
+	args funcspec.Args,
 ) (interface{}, error) {
 	// Call our function
 	resp, err := c.client.Push(ctx, &proto.Push_Args{Args: args})
@@ -107,7 +108,9 @@ func (s *registryServer) PushSpec(
 	ctx context.Context,
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
-	return funcToSpec(s.Logger, s.Impl.PushFunc(), s.Mappers)
+	return funcspec.Spec(s.Impl.PushFunc(),
+		funcspec.WithMappers(s.Mappers),
+		funcspec.WithLogger(s.Logger))
 }
 
 func (s *registryServer) Push(

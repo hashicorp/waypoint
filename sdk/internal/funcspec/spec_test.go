@@ -1,20 +1,19 @@
-package plugin
+package funcspec
 
 import (
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
-func TestFuncToSpec(t *testing.T) {
+func TestSpec(t *testing.T) {
 	t.Run("proto to proto", func(t *testing.T) {
 		require := require.New(t)
 
-		spec, err := funcToSpec(hclog.L(), func(*pb.Empty) *pb.Empty { return nil }, nil)
+		spec, err := Spec(func(*pb.Empty) *pb.Empty { return nil })
 		require.NoError(err)
 		require.NotNil(spec)
 		require.Equal([]string{"proto.Empty"}, spec.Args)
@@ -26,9 +25,9 @@ func TestFuncToSpec(t *testing.T) {
 
 		type Foo struct{}
 
-		spec, err := funcToSpec(hclog.L(), func(*Foo) *pb.Empty { return nil }, []*mapper.Func{
+		spec, err := Spec(func(*Foo) *pb.Empty { return nil }, WithMappers([]*mapper.Func{
 			mustFunc(t, func(*pb.Empty) *Foo { return nil }),
-		})
+		}))
 		require.NoError(err)
 		require.NotNil(spec)
 		require.Equal([]string{"proto.Empty"}, spec.Args)
@@ -41,9 +40,9 @@ func TestFuncToSpec(t *testing.T) {
 		type Foo struct{}
 		type Bar struct{}
 
-		spec, err := funcToSpec(hclog.L(), func(*Foo) *pb.Empty { return nil }, []*mapper.Func{
+		spec, err := Spec(func(*Foo) *pb.Empty { return nil }, WithMappers([]*mapper.Func{
 			mustFunc(t, func(*pb.Empty) *Bar { return nil }),
-		})
+		}))
 		require.Error(err)
 		require.Nil(spec)
 	})
