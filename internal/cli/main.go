@@ -7,6 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
 	"github.com/mitchellh/cli"
 	"github.com/mitchellh/devflow/internal/pkg/status"
 )
@@ -19,6 +20,13 @@ const (
 // Main runs the CLI with the given arguments and returns the exit code.
 // The arguments SHOULD include argv[0] as the program name.
 func Main(args []string) int {
+	// Clean up all our plugins so we don't leave any dangling processes.
+	// TODO(mitchellh): we should always keep this call just in case but
+	// what we really want to do is implement io.Closer and have our
+	// `internal/core` structures call that as necessary when they're done
+	// with components.
+	defer plugin.CleanupClients()
+
 	// Initialize our logger based on env vars
 	args, log, stat, err := logger(args)
 	if err != nil {
