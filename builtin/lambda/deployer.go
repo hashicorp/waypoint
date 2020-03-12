@@ -20,6 +20,7 @@ import (
 	"github.com/mitchellh/devflow/builtin/lambda/runner"
 	"github.com/mitchellh/devflow/internal/pkg/status"
 	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -85,6 +86,10 @@ var ignorePrefixes = []string{
 
 type prefix struct {
 	prefix, shift string
+}
+
+var layerPrefixes = []string{
+	"vendor/bundle/ruby",
 }
 
 var shiftPrefix = []prefix{
@@ -231,6 +236,10 @@ func (d *Deployer) CreateLayer(L hclog.Logger, app *component.Source, info *AppI
 			S3Key:    aws.String(layerName),
 		},
 	})
+
+	if err != nil {
+		return "", errors.Wrapf(err, "attempting to publish: %s", path)
+	}
 
 	L.Info("published layer", "name", name, "arn", *pubOut.LayerArn, "sha", *pubOut.Content.CodeSha256, "sha-local", sum)
 
