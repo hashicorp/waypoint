@@ -24,6 +24,11 @@ func ClientConfig(log hclog.Logger) *plugin.ClientConfig {
 		// of the plugin subprocesses to show up in our stdout/stderr.
 		SyncStdout: os.Stdout,
 		SyncStderr: os.Stderr,
+
+		// We always set managed to true just in case we don't properly
+		// call Kill so that CleanupClients gets it. If we do properly call
+		// Kill, then it is a no-op to call it again so this is safe.
+		Managed: true,
 	}
 }
 
