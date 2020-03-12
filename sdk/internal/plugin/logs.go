@@ -2,11 +2,14 @@ package plugin
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
@@ -29,6 +32,7 @@ func (p *LogPlatformPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server
 		Impl:    p.Impl,
 		Mappers: p.Mappers,
 		Logger:  p.Logger,
+		Broker:  broker,
 	})
 	return nil
 }
@@ -41,6 +45,7 @@ func (p *LogPlatformPlugin) GRPCClient(
 	return &logPlatformClient{
 		client: proto.NewLogPlatformClient(c),
 		logger: p.Logger,
+		broker: broker,
 	}, nil
 }
 
@@ -48,6 +53,7 @@ func (p *LogPlatformPlugin) GRPCClient(
 type logPlatformClient struct {
 	client proto.LogPlatformClient
 	logger hclog.Logger
+	broker *plugin.GRPCBroker
 }
 
 func (c *logPlatformClient) LogsFunc() interface{} {
@@ -57,24 +63,29 @@ func (c *logPlatformClient) LogsFunc() interface{} {
 		return funcErr(err)
 	}
 
-	return funcspec.Func(spec, c.push, funcspec.WithLogger(c.logger))
+	return funcspec.Func(spec, c.logs, funcspec.WithLogger(c.logger))
 }
 
-func (c *logPlatformClient) push(
+func (c *logPlatformClient) logs(
 	ctx context.Context,
 	args funcspec.Args,
-) (interface{}, error) {
-	/*
-		// Call our function
-		resp, err := c.client.Deploy(ctx, &proto.Deploy_Args{Args: args})
-		if err != nil {
-			return nil, err
-		}
+) (component.LogViewer, error) {
+	// Call our function
+	resp, err := c.client.Logs(ctx, &proto.FuncSpec_Args{Args: args})
+	if err != nil {
+		return nil, err
+	}
 
-		// We return the *any.Any directly.
-		return resp.Result, nil
-	*/
-	return nil, nil
+	// Get the stream ID and connect to it
+	conn, err := c.broker.Dial(resp.StreamId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &logViewerClient{
+		Client: proto.NewLogViewerClient(conn),
+		Logger: c.logger.Named("logviewer"),
+	}, nil
 }
 
 // logPlatformServer is a gRPC server that the client talks to and calls a
@@ -83,6 +94,7 @@ type logPlatformServer struct {
 	Impl    component.LogPlatform
 	Mappers []*mapper.Func
 	Logger  hclog.Logger
+	Broker  *plugin.GRPCBroker
 }
 
 func (s *logPlatformServer) LogsSpec(
@@ -91,19 +103,43 @@ func (s *logPlatformServer) LogsSpec(
 ) (*proto.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.LogsFunc(),
 		funcspec.WithMappers(s.Mappers),
-		funcspec.WithLogger(s.Logger))
+		funcspec.WithLogger(s.Logger),
+
+		// We expect a component.LogViewer output type and not a proto.Message
+		funcspec.WithOutput(reflect.TypeOf((*component.LogViewer)(nil)).Elem()),
+	)
 }
 
 func (s *logPlatformServer) Logs(
 	ctx context.Context,
 	args *proto.FuncSpec_Args,
 ) (*proto.Logs_Resp, error) {
-	_, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.LogsFunc(), s.Mappers)
+	result, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.LogsFunc(), s.Mappers)
 	if err != nil {
 		return nil, err
 	}
 
-	return &proto.Logs_Resp{}, nil
+	lv, ok := result.(component.LogViewer)
+	if !ok {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"plugin Logs function should've returned a component.LogViewer, got %T",
+			result)
+	}
+
+	// Get the ID for the server we're going to start to run our viewer
+	id := s.Broker.NextId()
+
+	// Start our server
+	go s.Broker.AcceptAndServe(id, func(opts []grpc.ServerOption) *grpc.Server {
+		server := plugin.DefaultGRPCServer(opts)
+		proto.RegisterLogViewerServer(server, &logViewerServer{
+			Impl:   lv,
+			Logger: s.Logger.Named("logviewer"),
+		})
+		return server
+	})
+
+	return &proto.Logs_Resp{StreamId: id}, nil
 }
 
 var (

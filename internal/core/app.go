@@ -182,7 +182,7 @@ func (a *App) ConfigGet(ctx context.Context, key string) (*component.ConfigVar, 
 func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
 	log := a.logger.Named("platform")
 
-	ep, ok := a.Platform.(component.LogsPlatform)
+	ep, ok := a.Platform.(component.LogPlatform)
 	if !ok {
 		return nil, fmt.Errorf("This platform does not support logs yet")
 	}
