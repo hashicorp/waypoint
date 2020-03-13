@@ -35,7 +35,7 @@ func (m *Logs) Reset()         { *m = Logs{} }
 func (m *Logs) String() string { return proto.CompactTextString(m) }
 func (*Logs) ProtoMessage()    {}
 func (*Logs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_logs_28bb25cc553231c5, []int{0}
+	return fileDescriptor_logs_355d40aed9ccd76d, []int{0}
 }
 func (m *Logs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Logs.Unmarshal(m, b)
@@ -68,7 +68,7 @@ func (m *Logs_Resp) Reset()         { *m = Logs_Resp{} }
 func (m *Logs_Resp) String() string { return proto.CompactTextString(m) }
 func (*Logs_Resp) ProtoMessage()    {}
 func (*Logs_Resp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_logs_28bb25cc553231c5, []int{0, 0}
+	return fileDescriptor_logs_355d40aed9ccd76d, []int{0, 0}
 }
 func (m *Logs_Resp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Logs_Resp.Unmarshal(m, b)
@@ -106,7 +106,7 @@ func (m *Logs_NextBatchResp) Reset()         { *m = Logs_NextBatchResp{} }
 func (m *Logs_NextBatchResp) String() string { return proto.CompactTextString(m) }
 func (*Logs_NextBatchResp) ProtoMessage()    {}
 func (*Logs_NextBatchResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_logs_28bb25cc553231c5, []int{0, 1}
+	return fileDescriptor_logs_355d40aed9ccd76d, []int{0, 1}
 }
 func (m *Logs_NextBatchResp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Logs_NextBatchResp.Unmarshal(m, b)
@@ -146,7 +146,7 @@ func (m *Logs_Event) Reset()         { *m = Logs_Event{} }
 func (m *Logs_Event) String() string { return proto.CompactTextString(m) }
 func (*Logs_Event) ProtoMessage()    {}
 func (*Logs_Event) Descriptor() ([]byte, []int) {
-	return fileDescriptor_logs_28bb25cc553231c5, []int{0, 2}
+	return fileDescriptor_logs_355d40aed9ccd76d, []int{0, 2}
 }
 func (m *Logs_Event) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Logs_Event.Unmarshal(m, b)
@@ -363,9 +363,9 @@ var _LogViewer_serviceDesc = grpc.ServiceDesc{
 	Metadata: "logs.proto",
 }
 
-func init() { proto.RegisterFile("logs.proto", fileDescriptor_logs_28bb25cc553231c5) }
+func init() { proto.RegisterFile("logs.proto", fileDescriptor_logs_355d40aed9ccd76d) }
 
-var fileDescriptor_logs_28bb25cc553231c5 = []byte{
+var fileDescriptor_logs_355d40aed9ccd76d = []byte{
 	// 325 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x90, 0x5d, 0x4b, 0xfb, 0x30,
 	0x14, 0xc6, 0xe9, 0x7f, 0x2f, 0xac, 0x67, 0x1b, 0x7f, 0x0d, 0x22, 0x33, 0x13, 0x1c, 0x7a, 0x33,

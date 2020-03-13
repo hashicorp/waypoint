@@ -38,10 +38,43 @@ func (p *PlatformPlugin) GRPCClient(
 	broker *plugin.GRPCBroker,
 	c *grpc.ClientConn,
 ) (interface{}, error) {
-	return &platformClient{
+	// Keep track of all our impl types
+	var platformLog component.LogPlatform
+
+	// Build our client to the platform service
+	client := &platformClient{
 		client: proto.NewPlatformClient(c),
 		logger: p.Logger,
-	}, nil
+	}
+
+	// Check if we also implement the LogPlatform
+	resp, err := client.client.IsLogPlatform(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	if resp.Implements {
+		raw, err := (&LogPlatformPlugin{
+			Logger: p.Logger,
+		}).GRPCClient(ctx, broker, c)
+		if err != nil {
+			return nil, err
+		}
+
+		platformLog = raw.(component.LogPlatform)
+	}
+
+	// Build our result
+	var result interface{} = client
+	if platformLog != nil {
+		p.Logger.Info("platform plugin capable of logs")
+		result = &platform_Log{
+			ConfigurableNotify: client,
+			Platform:           client,
+			LogPlatform:        platformLog,
+		}
+	}
+
+	return result, nil
 }
 
 // platformClient is an implementation of component.Platform over gRPC.
@@ -88,6 +121,14 @@ type platformServer struct {
 	Impl    component.Platform
 	Mappers []*mapper.Func
 	Logger  hclog.Logger
+}
+
+func (s *platformServer) IsLogPlatform(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.ImplementsResp, error) {
+	_, ok := s.Impl.(component.LogPlatform)
+	return &proto.ImplementsResp{Implements: ok}, nil
 }
 
 func (s *platformServer) ConfigStruct(

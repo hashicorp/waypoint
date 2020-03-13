@@ -106,3 +106,8 @@ message Config {
     protostructure.Struct struct = 1;
   }
 }
+
+// ImplementsResp returns true if the component implements an additional interface.
+message ImplementsResp {
+  bool implements = 1;
+}
