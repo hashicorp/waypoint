@@ -47,7 +47,7 @@ func (c *LogsCommand) Run(args []string) int {
 	var pv component.PartitionViewer
 
 	for {
-		batch, err := lv.NextBatch()
+		batch, err := lv.NextLogBatch(ctx)
 		if err != nil {
 			log.Error("Error retrieving logs", "error", err)
 			return 1
