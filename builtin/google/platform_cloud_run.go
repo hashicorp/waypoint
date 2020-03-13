@@ -74,6 +74,16 @@ func (p *CloudRunPlatform) Deploy(
 	}, nil
 }
 
+// LogsFunc implements component.LogPlatform by returning c.LogViewer
+// which uses the `gcloud` CLI to show logs.
+func (p *CloudRunPlatform) LogsFunc() interface{} {
+	return p.Logs
+}
+
+func (p *CloudRunPlatform) Logs(context.Context) (component.LogViewer, error) {
+	return &LogViewer{}, nil
+}
+
 // Config is the configuration structure for the CloudRunPlatform.
 type Config struct {
 	// Project is the project to deploy to.
@@ -92,6 +102,7 @@ func (d *CloudRunDeployment) MarshalText() ([]byte, error) {
 
 var (
 	_ component.Platform     = (*CloudRunPlatform)(nil)
+	_ component.LogPlatform  = (*CloudRunPlatform)(nil)
 	_ component.Configurable = (*CloudRunPlatform)(nil)
 	_ component.Deployment   = (*CloudRunDeployment)(nil)
 )
