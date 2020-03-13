@@ -160,15 +160,15 @@ func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
 
 		switch arg {
 		case "-v":
-			if level > hclog.Info {
+			if level == hclog.NoLevel || level > hclog.Info {
 				level = hclog.Info
 			}
 		case "-vv":
-			if level > hclog.Debug {
+			if level == hclog.NoLevel || level > hclog.Debug {
 				level = hclog.Debug
 			}
 		case "-vvv":
-			if level > hclog.Trace {
+			if level == hclog.NoLevel || level > hclog.Trace {
 				level = hclog.Trace
 			}
 		default:
