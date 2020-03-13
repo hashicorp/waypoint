@@ -1,8 +1,11 @@
 package lambda
 
 import (
+	"archive/tar"
+	"archive/zip"
 	"context"
 	"crypto/rand"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -14,6 +17,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -191,12 +195,40 @@ func (b *Builder) HashFile(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
+type builderInput struct {
+	Schema string `json:"jsonschema"`
+	Id     int    `json:"id"`
+	Method string `json:"method"`
+	Params struct {
+		Version    string `json:"__protocol_version"`
+		Capability struct {
+			Language             string `json:"language"`
+			DependencyManager    string `json:"dependency_manager"`
+			ApplicationFramework string `json:"application_framework"`
+		} `json:"capability"`
+		SourceDir     string   `json:"source_dir"`
+		ArtifactsDir  string   `json:"artifacts_dir"`
+		ScratchDir    string   `json:"scratch_dir"`
+		ManifestPath  string   `json:"manifest_path"`
+		Runtime       string   `json:"runtime"`
+		Optimizations string   `json:"optimizations"`
+		Options       string   `json:"options"`
+		SearchPaths   []string `json:"executable_search_paths"`
+		Mode          string   `json:"mode"`
+	} `json:"params"`
+}
+
 func (b *Builder) Build(
 	ctx context.Context,
 	L hclog.Logger,
 	src *component.Source,
 	dir *datadir.Component,
 ) (*AppInfo, error) {
+
+	rtc, err := FindRuntimeConfig(b.config.Runtime, src.Path)
+	if err != nil {
+		return nil, err
+	}
 
 	subDir, err := datadir.NewScopedDir(dir, "lambda-build")
 	if err != nil {
@@ -221,18 +253,26 @@ func (b *Builder) Build(
 	cfg := container.Config{
 		AttachStdout: true,
 		AttachStderr: true,
+		AttachStdin:  true,
+		OpenStdin:    true,
+		StdinOnce:    true,
 		Image:        b.preRef,
 	}
 
-	cfg.Cmd = append(cfg.Cmd, "/builder")
+	cfg.Cmd = append(cfg.Cmd, "/bin/sh", "-c", "GLOBIGNORE=*/.devflow; mkdir -p /tmp/src /tmp/scratch; for i in /input/*; do ln -s $i /tmp/src/; done; lambda-builders")
 
 	absPath, err := filepath.Abs(src.Path)
 	if err != nil {
 		return nil, err
 	}
 
+	outputPath, err := filepath.Abs(filepath.Join(scratchDir, "output"))
+	if err != nil {
+		return nil, err
+	}
+
 	hostCfg := container.HostConfig{
-		Binds: []string{absPath + ":/input"},
+		Binds: []string{absPath + ":/input", outputPath + ":/output"},
 	}
 	networkCfg := network.NetworkingConfig{}
 
@@ -243,16 +283,11 @@ func (b *Builder) Build(
 
 	defer cli.ContainerRemove(ctx, body.ID, types.ContainerRemoveOptions{Force: true})
 
-	err = cli.ContainerStart(ctx, body.ID, types.ContainerStartOptions{})
-	if err != nil {
-		return nil, err
-	}
-
 	opts := types.ContainerAttachOptions{
-		Logs:   true,
 		Stream: true,
 		Stdout: true,
 		Stderr: true,
+		Stdin:  true,
 	}
 
 	resp, err := cli.ContainerAttach(ctx, body.ID, opts)
@@ -264,10 +299,38 @@ func (b *Builder) Build(
 	lg.Prefix = "[app-builder] "
 
 	go func() {
-		L.Info("forwarding logs from prehook container")
+		L.Info("forwarding logs from build container")
 		lg.Display(resp.Reader)
-		L.Info("logs from prehook container done")
+		L.Info("logs from container done")
 	}()
+
+	// Ok, rotate the .devflow directory to avoid pulling it into the build.
+	err = cli.ContainerStart(ctx, body.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var bc builderInput
+	bc.Schema = "2.0"
+	bc.Id = 1
+	bc.Method = "LambdaBuilder.build"
+	bc.Params.Version = "0.3"
+	bc.Params.Capability.Language = rtc.Language
+	bc.Params.Capability.DependencyManager = rtc.DepManager
+	bc.Params.Capability.ApplicationFramework = rtc.AppFramework
+	bc.Params.SourceDir = "/tmp/src"
+	bc.Params.ScratchDir = "/tmp/scratch"
+	bc.Params.ArtifactsDir = "/output"
+	bc.Params.ManifestPath = "/input/Gemfile"
+	bc.Params.Runtime = b.config.Runtime
+	bc.Params.SearchPaths = rtc.SearchPaths
+
+	err = json.NewEncoder(resp.Conn).Encode(&bc)
+	if err != nil {
+		return nil, err
+	}
+
+	resp.CloseWrite()
 
 	c, errc := cli.ContainerWait(ctx, body.ID, container.WaitConditionNotRunning)
 
@@ -289,75 +352,6 @@ func (b *Builder) Build(
 		}
 	}
 
-	rid, err := b.randomId()
-	if err != nil {
-		return nil, err
-	}
-
-	ref := "devflow.local/tmp:" + rid
-
-	L.Info("container finished and temp committed", "ref", ref)
-	_, err = cli.ContainerCommit(ctx, body.ID, types.ContainerCommitOptions{
-		Reference: ref,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	defer cli.ImageRemove(ctx, ref, types.ImageRemoveOptions{PruneChildren: true})
-
-	L.Info("extracting application from container", "ref", body.ID)
-
-	diff, err := cli.ContainerDiff(ctx, body.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	var files []MappedFile
-
-	for _, change := range diff {
-		if change.Kind == 2 { // skip anything deleted
-			continue
-		}
-
-		path := change.Path
-		src := path
-
-		if path[0] == '/' {
-			path = path[1:]
-		}
-
-		include := true
-		for _, prefix := range ignorePrefixes {
-			if strings.HasPrefix(path, prefix) {
-				include = false
-				break
-			}
-		}
-
-		if include {
-			for _, re := range pruneRegexp {
-				if re.MatchString(path) {
-					include = false
-					break
-				}
-			}
-		}
-
-		if include {
-			dest := path
-
-			for _, shift := range shiftPrefix {
-				if strings.HasPrefix(dest, shift.prefix) {
-					dest = shift.shift + dest[len(shift.prefix):]
-					break
-				}
-			}
-
-			files = append(files, MappedFile{Source: src, Dest: dest})
-		}
-	}
-
 	id, err := b.randomId()
 	if err != nil {
 		return nil, ErrInvalidRuntime
@@ -365,23 +359,106 @@ func (b *Builder) Build(
 
 	b.id = id
 
-	zipFiles, err := b.extractFileDiff(ctx, L, src, scratchDir, id, id+"-lib", cli, ref, files)
+	b.appZip = filepath.Join(scratchDir, id+".zip")
+
+	af, err := os.Create(b.appZip)
 	if err != nil {
 		return nil, err
 	}
 
-	b.appZip = zipFiles[0]
+	defer af.Close()
 
-	if len(zipFiles) > 1 {
-		b.libZip = zipFiles[1]
-	}
+	az := zip.NewWriter(af)
 
-	appHash, err := b.HashFile(zipFiles[0])
+	defer az.Close()
+
+	b.libZip = filepath.Join(scratchDir, id+"-lib.zip")
+
+	lf, err := os.Create(b.libZip)
 	if err != nil {
 		return nil, err
 	}
 
-	layerHash, _ := b.HashFile(zipFiles[1])
+	defer lf.Close()
+
+	lz := zip.NewWriter(lf)
+
+	defer lz.Close()
+
+	filepath.Walk(outputPath, func(entryPath string, fi os.FileInfo, err error) error {
+		if fi.IsDir() {
+			return nil
+		}
+
+		if outputPath == entryPath {
+			return nil
+		}
+
+		path := entryPath[len(outputPath):]
+		if path == "" {
+			return nil
+		}
+
+		if path[0] == '/' {
+			path = path[1:]
+		}
+
+		for _, re := range pruneRegexp {
+			if re.MatchString(path) {
+				return nil
+			}
+		}
+
+		hdr, err := zip.FileInfoHeader(fi)
+		if err != nil {
+			return err
+		}
+
+		hdr.Modified = time.Time{}
+		hdr.ModifiedDate = 0
+		hdr.ModifiedTime = 0
+
+		hdr.Name = path
+
+		var ew io.Writer
+
+		for _, prefix := range layerPrefixes {
+			if strings.HasPrefix(path, prefix) {
+
+				ew, err = lz.CreateHeader(hdr)
+				if err != nil {
+					return err
+				}
+
+				break
+			}
+		}
+
+		if ew == nil {
+			ew, err = az.CreateHeader(hdr)
+			if err != nil {
+				return err
+			}
+		}
+
+		f, err := os.Open(entryPath)
+		if err != nil {
+			return err
+		}
+
+		defer f.Close()
+
+		io.Copy(ew, f)
+
+		return nil
+	})
+
+	appHash, err := b.HashFile(b.appZip)
+	if err != nil {
+		return nil, err
+	}
+
+	layerHash, _ := b.HashFile(b.libZip)
 
 	L.Info("extracted app", "id", id, "app-hash", appHash[:10], "layer-hash", layerHash[:10])
 
@@ -474,10 +551,10 @@ func (b *Builder) BuildPreImage(ctx context.Context, L hclog.Logger, src *compon
 		cfg := container.Config{
 			AttachStdout: true,
 			AttachStderr: true,
-			Image:        "robloweco/lambda:" + runtime,
+			Image:        "lambci/lambda:build-" + runtime,
 		}
 
-		cfg.Cmd = append(cfg.Cmd, "/builder", "-pre", "/input/pre.sh")
+		cfg.Cmd = append(cfg.Cmd, "/bin/bash", "-c", "cd /tmp && cp /input/pre.sh . && bash ./pre.sh")
 
 		body, err := cli.ContainerCreate(ctx, &cfg, &hostCfg, &networkCfg, name)
 		if err != nil {
@@ -653,17 +730,27 @@ func (b *Builder) extractFileDiff(ctx context.Context, L hclog.Logger, src *comp
 	}
 	defer w.Close()
 
-	err = json.NewEncoder(w).Encode(files)
-	if err != nil {
-		return nil, err
+	sourceMap := map[string]string{}
+
+	for _, file := range files {
+		sourceMap[file.Source] = file.Dest
+		fmt.Fprintln(w, file.Source)
 	}
+
+	// err = json.NewEncoder(w).Encode(files)
+	// if err != nil {
+	// return nil, err
+	// }
 
 	w.Close()
 
-	cfg.Cmd = append(cfg.Cmd, "/builder", "-extract", "/output/"+id)
-	if secondaryId != "" {
-		cfg.Cmd = append(cfg.Cmd, "-layer", "/output/"+secondaryId)
-	}
+	cfg.Cmd = append(cfg.Cmd, "/bin/sh", "-c", fmt.Sprintf(
+		`xargs -rd '\n' sh -c 'exec find "$@" -prune ! -type d' sh < /output/%s| tar -T - -cvpPnf /output/main.tar`, id))
+
+	// cfg.Cmd = append(cfg.Cmd, "zip", "-@", "/output/files.zip")
+	// if secondaryId != "" {
+	// cfg.Cmd = append(cfg.Cmd, "-layer", "/output/"+secondaryId)
+	// }
 
 	scratch, err := filepath.Abs(scratchDir)
 	if err != nil {
@@ -733,23 +820,97 @@ func (b *Builder) extractFileDiff(ctx context.Context, L hclog.Logger, src *comp
 		}
 	}
 
+	L.Info("extracting files into lambda zips")
+
 	var zipFiles []string
 
 	primary := filepath.Join(scratchDir, id+".zip")
-	if _, err := os.Stat(primary); err != nil {
-		return nil, ErrUnexpectedError
-	}
-
-	L.Info("gathering zip files", "id", id, "secondary-id", secondaryId)
 
 	zipFiles = append(zipFiles, primary)
 
+	pf, err := os.Create(primary)
+	if err != nil {
+		return nil, err
+	}
+
+	defer pf.Close()
+
+	pfz := zip.NewWriter(pf)
+
+	defer pfz.Close()
+
+	var (
+		sf  *os.File
+		sfz *zip.Writer
+	)
+
 	if secondaryId != "" {
 		secondary := filepath.Join(scratchDir, secondaryId+".zip")
-		if _, err := os.Stat(secondary); err == nil {
-			zipFiles = append(zipFiles, secondary)
+		zipFiles = append(zipFiles, secondary)
+
+		sf, err = os.Create(secondary)
+		if err != nil {
+			return nil, err
+		}
+
+		defer sf.Close()
+
+		sfz = zip.NewWriter(sf)
+
+		defer sfz.Close()
+	}
+
+	tf, err := os.Open(filepath.Join(scratchDir, "main.tar"))
+	if err != nil {
+		return nil, err
+	}
+
+	tr := tar.NewReader(tf)
+
+	h := sha1.New()
+
+	var (
+		layerFiles int
+	)
+
+	for {
+		thdr, err := tr.Next()
+		if err != nil {
+			break
+		}
+
+		hdr, err := zip.FileInfoHeader(thdr.FileInfo())
+		if err != nil {
+			return nil, err
+		}
+
+		path := sourceMap[thdr.Name]
+
+		if sfz != nil && strings.HasPrefix(path, "_layer/") {
+			hdr.Name = path[len("_layer/"):]
+
+			body, err := sfz.CreateHeader(hdr)
+			if err != nil {
+				return nil, err
+			}
+
+			io.Copy(io.MultiWriter(body, h), tr)
+
+			layerFiles++
+
+		} else {
+			hdr.Name = path
+
+			body, err := pfz.CreateHeader(hdr)
+			if err != nil {
+				return nil, err
+			}
+
+			io.Copy(io.MultiWriter(body, h), tr)
 		}
 	}
+
+	L.Info("extracted files", "cas", hex.EncodeToString(h.Sum(nil)))
 
 	return zipFiles, nil
 }
