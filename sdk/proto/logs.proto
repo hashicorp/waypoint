@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "plugin.proto";
+
+// LogPlatform is responsible for reading logs for a deployment.
+service LogPlatform {
+  rpc LogsSpec(google.protobuf.Empty) returns (FuncSpec);
+  rpc Logs(FuncSpec.Args) returns (Logs.Resp);
+}
+
+// LogViewer returns batches of log lines for a single app deployed
+// on a platform (though that app may itself have multiple instances).
+service LogViewer {
+  rpc NextLogBatch(google.protobuf.Empty) returns (Logs.NextBatchResp);
+}
+
+message Logs {
+  message Resp {
+    // stream_id is the stream ID to connect to to get access to the
+    // LogViewer service.
+    uint32 stream_id = 1;
+  }
+
+  message NextBatchResp {
+    repeated Event events = 1;
+  }
+
+  message Event {
+    string partition = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    string contents = 3;
+  }
+}

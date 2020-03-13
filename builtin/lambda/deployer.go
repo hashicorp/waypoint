@@ -551,7 +551,7 @@ type cloudwatchLogsViewer struct {
 	streams []*cloudwatchlogs.LogStream
 }
 
-func (c *cloudwatchLogsViewer) NextBatch() ([]component.LogEvent, error) {
+func (c *cloudwatchLogsViewer) NextLogBatch(ctx context.Context) ([]component.LogEvent, error) {
 	for {
 		if c.stream == nil {
 			if len(c.streams) == 0 {

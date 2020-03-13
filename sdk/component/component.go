@@ -23,19 +23,23 @@ import (
 type Type uint
 
 const (
-	InvalidType  Type = iota // Invalid
-	BuilderType              // Builder
-	RegistryType             // Registry
-	PlatformType             // Platform
+	InvalidType     Type = iota // Invalid
+	BuilderType                 // Builder
+	RegistryType                // Registry
+	PlatformType                // Platform
+	LogPlatformType             // LogPlatform
+	LogViewerType               // LogViewer
 	maxType
 )
 
 // TypeMap is a mapping of Type to the nil pointer to the interface of that
 // type. This can be used with libraries such as mapper.
 var TypeMap = map[Type]interface{}{
-	BuilderType:  (*Builder)(nil),
-	RegistryType: (*Registry)(nil),
-	PlatformType: (*Platform)(nil),
+	BuilderType:     (*Builder)(nil),
+	RegistryType:    (*Registry)(nil),
+	PlatformType:    (*Platform)(nil),
+	LogPlatformType: (*LogPlatform)(nil),
+	LogViewerType:   (*LogViewer)(nil),
 }
 
 // Builder is responsible for building an artifact from source.
@@ -77,9 +81,11 @@ type ConfigPlatform interface {
 	ConfigGetFunc() interface{}
 }
 
-// A Platform that supports the ability to set and view configuration
-// variables.
-type LogsPlatform interface {
+// LogPlatform is responsible for reading the logs for a deployment.
+// This doesn't need to be the same as the Platform but a Platform can also
+// implement this interface to natively provide logs.
+type LogPlatform interface {
+	// LogsFunc should return an implementation of LogViewer.
 	LogsFunc() interface{}
 }
 

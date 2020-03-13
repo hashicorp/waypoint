@@ -21,6 +21,12 @@ func ForType(t component.Type) interface{} {
 	case component.PlatformType:
 		return &Platform{}
 
+	case component.LogPlatformType:
+		return &LogPlatform{}
+
+	case component.LogViewerType:
+		return &LogViewer{}
+
 	default:
 		return nil
 	}

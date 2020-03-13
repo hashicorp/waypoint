@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFunc(t *testing.T) {
+func TestFunc_basic(t *testing.T) {
 	require := require.New(t)
 
 	addTwo := func(a int) int { return a + 2 }

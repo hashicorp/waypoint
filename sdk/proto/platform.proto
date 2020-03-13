@@ -13,6 +13,9 @@ service Platform {
 
   rpc DeploySpec(Empty) returns (FuncSpec);
   rpc Deploy(Deploy.Args) returns (Deploy.Resp);
+
+  // IsLogPlatform returns true if this platform also implements LogPlatform.
+  rpc IsLogPlatform(google.protobuf.Empty) returns (ImplementsResp);
 }
 
 message Deploy {

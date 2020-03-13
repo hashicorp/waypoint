@@ -1,4 +1,4 @@
-package plugin
+package funcspec
 
 import (
 	"testing"
@@ -12,10 +12,10 @@ import (
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
 
-func TestDynamicArgsMapperType_Match(t *testing.T) {
+func TestArgsMapperType_Match(t *testing.T) {
 	t.Run("simple match", func(t *testing.T) {
 		require := require.New(t)
-		f, args := testDynamicArgsFunc(t, []string{"foo"})
+		f, args := testArgsFunc(t, []string{"foo"})
 		result, err := f.Call(&any.Any{TypeUrl: "example.com/foo"}, &any.Any{TypeUrl: "example.com/bar"})
 		require.NoError(err)
 		require.NotNil(result)
@@ -25,7 +25,7 @@ func TestDynamicArgsMapperType_Match(t *testing.T) {
 
 	t.Run("no matches", func(t *testing.T) {
 		require := require.New(t)
-		f, _ := testDynamicArgsFunc(t, []string{"foo"})
+		f, _ := testArgsFunc(t, []string{"foo"})
 		require.Panics(func() {
 			f.Call(&any.Any{TypeUrl: "example.com/baz"}, &any.Any{TypeUrl: "example.com/bar"})
 		})
@@ -35,7 +35,7 @@ func TestDynamicArgsMapperType_Match(t *testing.T) {
 		data := &pb.Args_Source{}
 
 		require := require.New(t)
-		f, args := testDynamicArgsFunc(t, []string{proto.MessageName(data)})
+		f, args := testArgsFunc(t, []string{proto.MessageName(data)})
 		result, err := f.Call(data)
 		require.NoError(err)
 		require.NotNil(result)
@@ -48,7 +48,7 @@ func TestDynamicArgsMapperType_Match(t *testing.T) {
 
 	t.Run("multiple requirements: match", func(t *testing.T) {
 		require := require.New(t)
-		f, args := testDynamicArgsFunc(t, []string{"foo", "bar"})
+		f, args := testArgsFunc(t, []string{"foo", "bar"})
 		result, err := f.Call(
 			&any.Any{TypeUrl: "example.com/baz"},
 			&any.Any{TypeUrl: "example.com/bar"},
@@ -64,7 +64,7 @@ func TestDynamicArgsMapperType_Match(t *testing.T) {
 
 	t.Run("multiple requirements: missing one", func(t *testing.T) {
 		require := require.New(t)
-		f, _ := testDynamicArgsFunc(t, []string{"foo", "bar"})
+		f, _ := testArgsFunc(t, []string{"foo", "bar"})
 		require.Panics(func() {
 			f.Call(
 				&any.Any{TypeUrl: "example.com/baz"},
@@ -74,11 +74,11 @@ func TestDynamicArgsMapperType_Match(t *testing.T) {
 	})
 }
 
-func TestDynamicArgsMapperType_Missing(t *testing.T) {
+func TestArgsMapperType_Missing(t *testing.T) {
 	t.Run("missing only known types", func(t *testing.T) {
 		require := require.New(t)
 
-		typ := &dynamicArgsMapperType{Expected: []string{
+		typ := &ArgsMapperType{Expected: []string{
 			proto.MessageName(&pb.Args_Source{}),
 			proto.MessageName(&pb.Args_DataDir_Project{}),
 		}}
@@ -91,7 +91,7 @@ func TestDynamicArgsMapperType_Missing(t *testing.T) {
 	t.Run("missing unregistered type", func(t *testing.T) {
 		require := require.New(t)
 
-		typ := &dynamicArgsMapperType{Expected: []string{
+		typ := &ArgsMapperType{Expected: []string{
 			proto.MessageName(&pb.Args_Source{}),
 			"bar",
 		}}
@@ -101,16 +101,16 @@ func TestDynamicArgsMapperType_Missing(t *testing.T) {
 	})
 }
 
-// testDynamicArgsFunc returns a new mapper func that when called sets the
-// returned dynamicArgs pointer value to the value called.
+// testArgsFunc returns a new mapper func that when called sets the
+// returned Args pointer value to the value called.
 //
 // The types argument is the types that are expected.
-func testDynamicArgsFunc(t *testing.T, types []string) (*mapper.Func, *dynamicArgs) {
-	var result dynamicArgs
-	f, err := mapper.NewFunc(func(args dynamicArgs) int {
+func testArgsFunc(t *testing.T, types []string) (*mapper.Func, *Args) {
+	var result Args
+	f, err := mapper.NewFunc(func(args Args) int {
 		result = args
 		return 0
-	}, mapper.WithType(dynamicArgsType, makeDynamicArgsMapperType(&pb.FuncSpec{
+	}, mapper.WithType(ArgsType, makeArgsMapperType(&pb.FuncSpec{
 		Args: types,
 	})))
 	require.NoError(t, err)

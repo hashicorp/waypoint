@@ -10,6 +10,7 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal/funcspec"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -37,10 +38,43 @@ func (p *PlatformPlugin) GRPCClient(
 	broker *plugin.GRPCBroker,
 	c *grpc.ClientConn,
 ) (interface{}, error) {
-	return &platformClient{
+	// Keep track of all our impl types
+	var platformLog component.LogPlatform
+
+	// Build our client to the platform service
+	client := &platformClient{
 		client: proto.NewPlatformClient(c),
 		logger: p.Logger,
-	}, nil
+	}
+
+	// Check if we also implement the LogPlatform
+	resp, err := client.client.IsLogPlatform(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	if resp.Implements {
+		raw, err := (&LogPlatformPlugin{
+			Logger: p.Logger,
+		}).GRPCClient(ctx, broker, c)
+		if err != nil {
+			return nil, err
+		}
+
+		platformLog = raw.(component.LogPlatform)
+	}
+
+	// Build our result
+	var result interface{} = client
+	if platformLog != nil {
+		p.Logger.Info("platform plugin capable of logs")
+		result = &platform_Log{
+			ConfigurableNotify: client,
+			Platform:           client,
+			LogPlatform:        platformLog,
+		}
+	}
+
+	return result, nil
 }
 
 // platformClient is an implementation of component.Platform over gRPC.
@@ -64,12 +98,12 @@ func (c *platformClient) DeployFunc() interface{} {
 		return funcErr(err)
 	}
 
-	return specToFunc(c.logger, spec, c.push)
+	return funcspec.Func(spec, c.push, funcspec.WithLogger(c.logger))
 }
 
 func (c *platformClient) push(
 	ctx context.Context,
-	args dynamicArgs,
+	args funcspec.Args,
 ) (interface{}, error) {
 	// Call our function
 	resp, err := c.client.Deploy(ctx, &proto.Deploy_Args{Args: args})
@@ -87,6 +121,14 @@ type platformServer struct {
 	Impl    component.Platform
 	Mappers []*mapper.Func
 	Logger  hclog.Logger
+}
+
+func (s *platformServer) IsLogPlatform(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.ImplementsResp, error) {
+	_, ok := s.Impl.(component.LogPlatform)
+	return &proto.ImplementsResp{Implements: ok}, nil
 }
 
 func (s *platformServer) ConfigStruct(
@@ -107,14 +149,16 @@ func (s *platformServer) DeploySpec(
 	ctx context.Context,
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
-	return funcToSpec(s.Logger, s.Impl.DeployFunc(), s.Mappers)
+	return funcspec.Spec(s.Impl.DeployFunc(),
+		funcspec.WithMappers(s.Mappers),
+		funcspec.WithLogger(s.Logger))
 }
 
 func (s *platformServer) Deploy(
 	ctx context.Context,
 	args *proto.Deploy_Args,
 ) (*proto.Deploy_Resp, error) {
-	encoded, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.DeployFunc(), s.Mappers)
+	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.DeployFunc(), s.Mappers)
 	if err != nil {
 		return nil, err
 	}

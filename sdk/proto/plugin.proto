@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package proto;
 
+import "google/protobuf/any.proto";
 import "protostructure.proto";
 
 // Args are the common argument types that are available to many of the
@@ -59,9 +60,25 @@ message Empty {}
 // can use whatever string as long as it is unique. We recommend using a
 // unique prefix plus the Go type name.
 message FuncSpec {
+  // name of the function. This is used for improved logging.
   string name = 1;
+
+  // args is the list of arguments by protobuf Any types.
   repeated string args = 2;
+
+  // result is the resulting type. This is only critically important to be
+  // set for functions that may chain to other functions. It can be set to
+  // blank in which case it will not be used.
   string result = 3;
+
+  // Args is the standard argument type for an RPC that is calling a FuncSpec.
+  message Args {
+    // args is the list of argument types. This will include some of the
+    // standard types in this file (in the Args message namespace) as well
+    // as custom types declared by the FuncSpec that the plugin is expected
+    // to understand how to decode.
+    repeated google.protobuf.Any args = 1;
+  }
 }
 
 // Config is the namespace of messages related to configuration.
@@ -88,4 +105,9 @@ message Config {
     // You should do validation on the Configure call.
     protostructure.Struct struct = 1;
   }
+}
+
+// ImplementsResp returns true if the component implements an additional interface.
+message ImplementsResp {
+  bool implements = 1;
 }

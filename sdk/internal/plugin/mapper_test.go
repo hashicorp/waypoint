@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/internal/funcspec"
 	"github.com/mitchellh/devflow/sdk/internal/testproto"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
@@ -17,7 +19,7 @@ func TestMapperClient(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)
 
-	mA := mustFunc(t, func(a *testproto.A) *testproto.B {
+	mA := mapper.TestFunc(t, func(a *testproto.A) *testproto.B {
 		return &testproto.B{Value: a.Value + 1}
 	})
 
@@ -40,7 +42,7 @@ func TestMapperClient(t *testing.T) {
 	}
 
 	called := false
-	target := specToFunc(hclog.L(), targetSpec, func(args dynamicArgs) (interface{}, error) {
+	target := funcspec.Func(targetSpec, func(args funcspec.Args) (interface{}, error) {
 		cb := func(v *testproto.B) *testproto.Data {
 			called = true
 			assert.Equal(int32(2), v.Value)
