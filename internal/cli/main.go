@@ -3,6 +3,8 @@ package cli
 import (
 	"context"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
 
@@ -138,8 +140,8 @@ func interruptContext(ctx context.Context, log hclog.Logger) (context.Context, f
 func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
 	app := args[0]
 
-	// Default level is warn, can override with an env var
-	level := hclog.Warn
+	// Determine our log level if we have any. First override we check if env var
+	level := hclog.NoLevel
 	if v := os.Getenv(EnvLogLevel); v != "" {
 		level = hclog.LevelFromString(v)
 		if level == hclog.NoLevel {
@@ -147,6 +149,8 @@ func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
 		}
 	}
 
+	// Process arguments looking for `-v` flags to control the log level.
+	// This overrides whatever the env var set.
 	var outArgs []string
 	for _, arg := range args {
 		if arg[0] != '-' {
@@ -172,11 +176,19 @@ func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
 		}
 	}
 
+	// Default output is nowhere unless we enable logging.
+	var output io.Writer = ioutil.Discard
+	color := hclog.ColorOff
+	if level != hclog.NoLevel {
+		output = os.Stderr
+		color = hclog.AutoColor
+	}
+
 	logger := hclog.New(&hclog.LoggerOptions{
 		Name:   app,
 		Level:  level,
-		Color:  hclog.AutoColor,
-		Output: os.Stderr,
+		Color:  color,
+		Output: output,
 	})
 
 	var update status.Updater
