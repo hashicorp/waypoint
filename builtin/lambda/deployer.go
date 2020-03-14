@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -101,6 +103,185 @@ var shiftPrefix = []prefix{
 }
 
 var sess = session.New(aws.NewConfig().WithRegion("us-west-2"))
+
+func (d *Deployer) albSubnets(L hclog.Logger, app *component.Source) ([]*string, string, error) {
+	ec2Svc := ec2.New(sess)
+
+	var (
+		vpcid     string
+		token     *string
+		subnetIds []*string
+	)
+
+vpcs:
+	for {
+		vpcs, err := ec2Svc.DescribeVpcs(&ec2.DescribeVpcsInput{
+			NextToken: token,
+		})
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if len(vpcs.Vpcs) == 0 {
+			break
+		}
+
+		for _, vpc := range vpcs.Vpcs {
+			if *vpc.IsDefault {
+				vpcid = *vpc.VpcId
+				break vpcs
+			}
+		}
+
+		token = vpcs.NextToken
+	}
+
+	L.Debug("found vpc", "vpc-id", vpcid)
+
+	subnets, err := ec2Svc.DescribeSubnets(&ec2.DescribeSubnetsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("vpc-id"),
+				Values: []*string{aws.String(vpcid)},
+			},
+		},
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	for _, subnet := range subnets.Subnets {
+		if *subnet.DefaultForAz && *subnet.MapPublicIpOnLaunch {
+			subnetIds = append(subnetIds, subnet.SubnetId)
+		}
+	}
+
+	csg, err := ec2Svc.CreateSecurityGroup(&ec2.CreateSecurityGroupInput{
+		Description: aws.String(fmt.Sprintf("devflow app: %s (ALB access)", app.App)),
+		GroupName:   aws.String(app.App + "-alb"),
+		VpcId:       &vpcid,
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	_, err = ec2Svc.AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
+		GroupId: csg.GroupId,
+		IpPermissions: []*ec2.IpPermission{
+			{
+				FromPort:   aws.Int64(80),
+				ToPort:     aws.Int64(80),
+				IpProtocol: aws.String("tcp"),
+				IpRanges: []*ec2.IpRange{
+					{
+						CidrIp: aws.String("0.0.0.0/0"),
+					},
+				},
+			},
+		},
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	return subnetIds, *csg.GroupId, nil
+}
+
+func (d *Deployer) SetupALB(L hclog.Logger, app *component.Source, arn string) (string, error) {
+	L.Info("connecting ALB to function", "func-arn", arn)
+
+	svc := elbv2.New(sess)
+
+	dlbs, err := svc.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{})
+	if err != nil {
+		return "", err
+	}
+
+	for _, dlb := range dlbs.LoadBalancers {
+		tags, err := svc.DescribeTags(&elbv2.DescribeTagsInput{
+			ResourceArns: []*string{dlb.LoadBalancerArn},
+		})
+
+		if err != nil {
+			return "", err
+		}
+
+		for _, tag := range tags.TagDescriptions[0].Tags {
+			if *tag.Key == "devflow-app" && *tag.Value == app.App {
+				L.Info("detected existing alb", "arn", *dlb.LoadBalancerArn)
+				return *dlb.DNSName, nil
+			}
+		}
+	}
+
+	subnets, secGroup, err := d.albSubnets(L, app)
+	if err != nil {
+		return "", err
+	}
+
+	L.Debug("deploying alb", "subnets", subnets)
+
+	ctg, err := svc.CreateTargetGroup(&elbv2.CreateTargetGroupInput{
+		Name:       aws.String(app.App),
+		TargetType: aws.String(elbv2.TargetTypeEnumLambda),
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	_, err = svc.RegisterTargets(&elbv2.RegisterTargetsInput{
+		TargetGroupArn: ctg.TargetGroups[0].TargetGroupArn,
+		Targets: []*elbv2.TargetDescription{
+			{
+				Id: aws.String(arn),
+			},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	clb, err := svc.CreateLoadBalancer(&elbv2.CreateLoadBalancerInput{
+		Name:           aws.String(app.App),
+		Subnets:        subnets,
+		SecurityGroups: []*string{&secGroup},
+		Tags: []*elbv2.Tag{
+			{
+				Key:   aws.String("devflow-app"),
+				Value: aws.String(app.App),
+			},
+		},
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	_, err = svc.CreateListener(&elbv2.CreateListenerInput{
+		LoadBalancerArn: clb.LoadBalancers[0].LoadBalancerArn,
+		Port:            aws.Int64(80),
+		Protocol:        aws.String("HTTP"),
+		DefaultActions: []*elbv2.Action{
+			{
+				Type:           aws.String(elbv2.ActionTypeEnumForward),
+				TargetGroupArn: ctg.TargetGroups[0].TargetGroupArn,
+			},
+		},
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	L.Info("created ALB", "arn", *clb.LoadBalancers[0].LoadBalancerArn)
+
+	return *clb.LoadBalancers[0].DNSName, nil
+}
 
 func (d *Deployer) SetupRole(L hclog.Logger, app *component.Source) error {
 	svc := iam.New(sess)
@@ -254,21 +435,21 @@ func (d *Deployer) CreatePreLayer(L hclog.Logger, app *component.Source, info *A
 	return d.CreateLayer(L, app, info, fmt.Sprintf("%s-pre", app.App), path)
 }
 
-func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *AppInfo) (string, error) {
+func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *AppInfo) (string, string, error) {
 	lamSvc := lambda.New(sess)
 
 	uploader := s3manager.NewUploader(sess)
 
 	f, err := os.Open(info.AppZip)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	defer f.Close()
 
 	stat, err := f.Stat()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	layerName := fmt.Sprintf("%s-%s-app.zip", app.App, info.BuildId)
@@ -281,24 +462,24 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 		Key:    aws.String(layerName),
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	preLayer, err := d.CreatePreLayer(L, app, info, info.PreZip)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	libLayer, err := d.CreateLibraryLayer(L, app, info, info.LibZip)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	fnInfo, err := lamSvc.GetFunction(&lambda.GetFunctionInput{
 		FunctionName: aws.String(app.App),
 	})
 
-	var arn string
+	var funcarn, verarn string
 
 	if err == nil {
 		var newLayers bool
@@ -324,7 +505,7 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 			})
 
 			if err != nil {
-				return "", err
+				return "", "", err
 			}
 		}
 
@@ -335,8 +516,10 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 		})
 
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
+
+		funcarn = *funcCfg.FunctionArn
 
 		ver, err := lamSvc.PublishVersion(&lambda.PublishVersionInput{
 			CodeSha256:   funcCfg.CodeSha256,
@@ -344,12 +527,12 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 		})
 
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
-		arn = *ver.FunctionArn
+		verarn = *ver.FunctionArn
 
-		L.Info("updated function", "arn", arn, "sha", *funcCfg.CodeSha256)
+		L.Info("updated function", "arn", verarn, "sha", *funcCfg.CodeSha256)
 
 	} else {
 		funcOut, err := lamSvc.CreateFunction(&lambda.CreateFunctionInput{
@@ -371,8 +554,10 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 			},
 		})
 
+		funcarn = *funcOut.FunctionArn
+
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
 		ver, err := lamSvc.PublishVersion(&lambda.PublishVersionInput{
@@ -381,15 +566,27 @@ func (d *Deployer) CreateFunction(L hclog.Logger, app *component.Source, info *A
 		})
 
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
-		arn = *ver.FunctionArn
+		verarn = *ver.FunctionArn
 
-		L.Info("created function", "arn", arn, "sha", *funcOut.CodeSha256)
+		L.Info("created function", "arn", verarn, "sha", *funcOut.CodeSha256)
 	}
 
-	return arn, nil
+	L.Info("updating function permissions to add ALB invoke")
+
+	lamSvc = lambda.New(sess)
+
+	// This might fail if it's already setup, that's fine.
+	lamSvc.AddPermission(&lambda.AddPermissionInput{
+		Action:       aws.String("lambda:InvokeFunction"),
+		FunctionName: aws.String(funcarn),
+		Principal:    aws.String("elasticloadbalancing.amazonaws.com"),
+		StatementId:  aws.String("load-balancer"),
+	})
+
+	return funcarn, verarn, nil
 }
 
 // MarshalText implements encoding.TextMarshaler so that protobuf generates
@@ -404,12 +601,17 @@ func (d *Deployer) Deploy(ctx context.Context, L hclog.Logger, app *component.So
 		return nil, err
 	}
 
-	arn, err := d.CreateFunction(L, app, info)
+	funcarn, verarn, err := d.CreateFunction(L, app, info)
 	if err != nil {
 		return nil, err
 	}
 
-	return &LambdaDeployment{FunctionArn: arn}, nil
+	url, err := d.SetupALB(L, app, funcarn)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LambdaDeployment{Url: url, FunctionArn: verarn}, nil
 }
 
 func (d *Deployer) Exec(ctx context.Context, L hclog.Logger, S status.Updater, app *component.Source) error {
