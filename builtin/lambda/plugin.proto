@@ -13,4 +13,5 @@ message AppInfo {
 
 message LambdaDeployment {
   string function_arn = 1;
+  string url = 2;
 }
