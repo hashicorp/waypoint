@@ -3,6 +3,7 @@ package plugin
 import (
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -76,6 +77,13 @@ func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 // BuiltinFactory creates a factory for a built-in plugin type.
 func BuiltinFactory(name string, typ component.Type) interface{} {
 	cmd := exec.Command(exePath, "plugin", name)
+
+	// For non-windows systems, we attach stdout/stderr as extra fds
+	// so that we can get direct access to the TTY if possible for output.
+	if runtime.GOOS != "windows" {
+		cmd.ExtraFiles = []*os.File{os.Stdout, os.Stderr}
+	}
+
 	return Factory(cmd, typ)
 }
 

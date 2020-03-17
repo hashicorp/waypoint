@@ -51,6 +51,11 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 
 		// very important below that we allocate a new slice since we modify
 		mappers: append([]*mapper.Func{}, p.mappers...),
+
+		// set the UI, which for now is identical to project but in the
+		// future should probably change as we do app-scoping, parallelization,
+		// etc.
+		UI: p.UI,
 	}
 
 	// Setup our directory
@@ -240,6 +245,7 @@ func (a *App) callDynamicFunc(
 		a.source,
 		a.dir,
 		cdir,
+		a.UI,
 	)
 
 	// Build the chain and call it
