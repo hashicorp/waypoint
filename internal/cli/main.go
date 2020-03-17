@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/mitchellh/cli"
-	"github.com/mitchellh/devflow/internal/pkg/status"
 )
 
 const (
@@ -30,7 +29,7 @@ func Main(args []string) int {
 	defer plugin.CleanupClients()
 
 	// Initialize our logger based on env vars
-	args, log, stat, err := logger(args)
+	args, log, err := logger(args)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +42,7 @@ func Main(args []string) int {
 	cli := &cli.CLI{
 		Name:                       args[0],
 		Args:                       args[1:],
-		Commands:                   commands(ctx, log, stat),
+		Commands:                   commands(ctx, log),
 		Autocomplete:               true,
 		AutocompleteNoDefaultFlags: true,
 	}
@@ -58,11 +57,10 @@ func Main(args []string) int {
 }
 
 // commands returns the map of commands that can be used to initialize a CLI.
-func commands(ctx context.Context, log hclog.Logger, stat status.Updater) map[string]cli.CommandFactory {
+func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFactory {
 	baseCommand := &baseCommand{
-		Ctx:     ctx,
-		Log:     log,
-		Updater: stat,
+		Ctx: ctx,
+		Log: log,
 	}
 
 	return map[string]cli.CommandFactory{
@@ -137,7 +135,7 @@ func interruptContext(ctx context.Context, log hclog.Logger) (context.Context, f
 
 // logger returns the logger to use for the CLI. Output, level, etc. are
 // determined based on environment variables if set.
-func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
+func logger(args []string) ([]string, hclog.Logger, error) {
 	app := args[0]
 
 	// Determine our log level if we have any. First override we check if env var
@@ -145,7 +143,7 @@ func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
 	if v := os.Getenv(EnvLogLevel); v != "" {
 		level = hclog.LevelFromString(v)
 		if level == hclog.NoLevel {
-			return nil, nil, nil, fmt.Errorf("%s value %q is not a valid log level", EnvLogLevel, v)
+			return nil, nil, fmt.Errorf("%s value %q is not a valid log level", EnvLogLevel, v)
 		}
 	}
 
@@ -191,15 +189,5 @@ func logger(args []string) ([]string, hclog.Logger, status.Updater, error) {
 		Output: output,
 	})
 
-	var update status.Updater
-	if level <= hclog.Warn {
-		update = &status.SpinnerStatus{}
-	} else {
-		update = &status.HCLog{
-			L:     logger,
-			Level: level,
-		}
-	}
-
-	return outArgs, logger, update, nil
+	return outArgs, logger, nil
 }

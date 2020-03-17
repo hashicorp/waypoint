@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/internal/config"
-	"github.com/mitchellh/devflow/internal/pkg/status"
 	"github.com/mitchellh/devflow/internal/plugin"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 // App represents a single application and exposes all the operations
@@ -26,6 +26,10 @@ type App struct {
 	Builder  component.Builder
 	Registry component.Registry
 	Platform component.Platform
+
+	// UI is the UI that should be used for any output that is specific
+	// to this app vs the project UI.
+	UI terminal.UI
 
 	source        *component.Source
 	logger        hclog.Logger
@@ -119,7 +123,7 @@ func (a *App) Deploy(ctx context.Context, artifact component.Artifact) (componen
 
 // Exec using the deployer phase
 // TODO(evanphx): test
-func (a *App) Exec(ctx context.Context, updater status.Updater) error {
+func (a *App) Exec(ctx context.Context) error {
 	log := a.logger.Named("platform")
 
 	ep, ok := a.Platform.(component.ExecPlatform)
@@ -127,7 +131,7 @@ func (a *App) Exec(ctx context.Context, updater status.Updater) error {
 		return fmt.Errorf("This platform does not support exec yet")
 	}
 
-	_, err := a.callDynamicFunc(ctx, log, a.Platform, ep.ExecFunc(), updater)
+	_, err := a.callDynamicFunc(ctx, log, a.Platform, ep.ExecFunc())
 	if err != nil {
 		return err
 	}

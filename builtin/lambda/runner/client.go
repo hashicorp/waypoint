@@ -9,8 +9,9 @@ import (
 
 	"github.com/creack/pty"
 	"github.com/mattn/go-isatty"
-	"github.com/mitchellh/devflow/internal/pkg/status"
 	"golang.org/x/crypto/ssh"
+
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 type ConsoleClient struct {
@@ -31,7 +32,10 @@ func (c *ConsoleClient) UseApp(cfg *LambdaConfiguration) {
 	c.AppConfig = cfg
 }
 
-func (c *ConsoleClient) Exec(S status.Updater, name, cmd string) error {
+func (c *ConsoleClient) Exec(ui terminal.UI, name, cmd string) error {
+	S := ui.Status()
+	defer S.Close()
+
 	S.Update("connecting to tunnel broker")
 	conn, err := c.Tunnel.Connect()
 	if err != nil {

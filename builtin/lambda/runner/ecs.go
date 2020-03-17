@@ -10,15 +10,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-hclog"
-	"github.com/mitchellh/devflow/internal/pkg/status"
 	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 type ECSLauncher struct {
 	roleName string
 	roleArn  string
 
-	status status.Updater
+	status terminal.Status
 }
 
 func imageForRuntime(runtime string) string {
@@ -150,7 +150,9 @@ func (e *ECSLauncher) SetupLogs(L hclog.Logger, logGroup string) error {
 
 }
 
-func (e *ECSLauncher) Launch(ctx context.Context, L hclog.Logger, S status.Updater, app *component.Source, cfg *LambdaConfiguration) (*ConsoleClient, error) {
+func (e *ECSLauncher) Launch(ctx context.Context, L hclog.Logger, UI terminal.UI, app *component.Source, cfg *LambdaConfiguration) (*ConsoleClient, error) {
+	S := UI.Status()
+	defer S.Close()
 	e.status = S
 
 	err := e.SetupCluster(ctx)

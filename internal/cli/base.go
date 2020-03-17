@@ -8,7 +8,6 @@ import (
 
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/core"
-	"github.com/mitchellh/devflow/internal/pkg/status"
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/terminal"
 )
@@ -25,11 +24,6 @@ type baseCommand struct {
 
 	// Log is the logger to use.
 	Log hclog.Logger
-
-	// Used to update the human running the commands of status updates
-	// These take the form of more UX oriented items that just logging
-	// within the components.
-	Updater status.Updater
 
 	//---------------------------------------------------------------
 	// The fields below are only available after calling Init.
