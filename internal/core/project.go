@@ -12,6 +12,7 @@ import (
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 // Project represents a project with one or more applications.
@@ -21,12 +22,19 @@ type Project struct {
 	factories map[component.Type]*mapper.Factory
 	dir       *datadir.Project
 	mappers   []*mapper.Func
+
+	// UI is the terminal UI to use for messages related to the project
+	// as a whole. These messages will show up unprefixed for example compared
+	// to the app-specific UI.
+	UI terminal.UI
 }
 
 // NewProject creates a new Project with the given options.
 func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// Defaults
 	p := &Project{
+		UI: &terminal.BasicUI{},
+
 		logger: hclog.L(),
 		apps:   make(map[string]*App),
 		factories: map[component.Type]*mapper.Factory{

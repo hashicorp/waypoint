@@ -1,21 +1,16 @@
 package cli
 
 import (
-	"bufio"
 	"context"
-	"fmt"
-	"io"
-	"os"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2/hclsimple"
-	"github.com/mattn/go-colorable"
-	"github.com/mitchellh/cli"
 
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/core"
 	"github.com/mitchellh/devflow/internal/pkg/status"
 	"github.com/mitchellh/devflow/sdk/datadir"
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 // baseCommand is embedded in all commands to provide common logic and data.
@@ -49,14 +44,15 @@ type baseCommand struct {
 	project *core.Project
 
 	// UI is used to write to the CLI.
-	ui cli.Ui
+	ui terminal.UI
 }
 
 // Init initializes the command by parsing flags, parsing the configuration,
 // setting up the project, etc. You can control what is done by using the
 // options.
 func (c *baseCommand) Init() error {
-	c.initUi()
+	// Init our UI first so we can write output to the user immediately.
+	c.ui = &terminal.BasicUI{}
 
 	// Parse the configuration
 	c.Log.Debug("reading configuration", "path", "devflow.hcl")
@@ -93,30 +89,5 @@ func (c *baseCommand) Init() error {
 // logError logs an error and outputs it to the UI.
 func (c *baseCommand) logError(log hclog.Logger, prefix string, err error) {
 	log.Error(prefix, "error", err)
-	c.ui.Error(fmt.Sprintf("%s: %s", prefix, err))
-}
-
-// initUi initializes the ui field.
-func (c *baseCommand) initUi() {
-	// Create the output and error writers. If they are files, we wrap
-	// them in colorable so that colors work properly on Windows.
-	var uiOut io.Writer = os.Stdout
-	var uiErr io.Writer = os.Stderr
-	if f, ok := uiOut.(*os.File); ok {
-		uiOut = colorable.NewColorable(f)
-	}
-	if f, ok := uiErr.(*os.File); ok {
-		uiErr = colorable.NewColorable(f)
-	}
-
-	// Create our UI
-	c.ui = &cli.ColoredUi{
-		ErrorColor: cli.UiColorRed,
-		WarnColor:  cli.UiColorYellow,
-		Ui: &cli.BasicUi{
-			Reader:      bufio.NewReader(os.Stdin),
-			Writer:      uiOut,
-			ErrorWriter: uiErr,
-		},
-	}
+	c.ui.Output("%s: %s", prefix, err, terminal.WithErrorStyle())
 }

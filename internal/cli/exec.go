@@ -1,5 +1,7 @@
 package cli
 
+import "github.com/mitchellh/devflow/sdk/terminal"
+
 type ExecCommand struct {
 	*baseCommand
 }
@@ -18,7 +20,7 @@ func (c *ExecCommand) Run([]string) int {
 
 	// NOTE(mitchellh): temporary restriction
 	if len(cfg.Apps) != 1 {
-		c.ui.Error("only one app is supported at this time")
+		proj.UI.Output("only one app is supported at this time", terminal.WithErrorStyle())
 		return 1
 	}
 

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 type UpCommand struct {
@@ -24,7 +25,7 @@ func (c *UpCommand) Run([]string) int {
 
 	// NOTE(mitchellh): temporary restriction
 	if len(cfg.Apps) != 1 {
-		c.ui.Error("only one app is supported at this time")
+		proj.UI.Output("only one app is supported at this time", terminal.WithErrorStyle())
 		return 1
 	}
 
