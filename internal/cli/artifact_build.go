@@ -14,12 +14,15 @@ type ArtifactBuildCommand struct {
 	flagPush bool
 }
 
-func (c *ArtifactBuildCommand) Run([]string) int {
+func (c *ArtifactBuildCommand) Run(args []string) int {
 	//ctx := c.Ctx
 	//log := c.Log.Named("artifact").Named("build")
 
 	// Initialize. If we fail, we just exit since Init handles the UI.
-	if err := c.Init(); err != nil {
+	if err := c.Init(
+		WithArgs(args),
+		WithFlags(c.Flags()),
+	); err != nil {
 		return 1
 	}
 

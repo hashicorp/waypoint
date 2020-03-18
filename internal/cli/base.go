@@ -52,9 +52,23 @@ type baseCommand struct {
 // Init initializes the command by parsing flags, parsing the configuration,
 // setting up the project, etc. You can control what is done by using the
 // options.
-func (c *baseCommand) Init() error {
+//
+// Init should be called FIRST within the Run function implementation. Many
+// options will affect behavior of other functions that can be called later.
+func (c *baseCommand) Init(opts ...Option) error {
+	var baseCfg baseConfig
+	for _, opt := range opts {
+		opt(&baseCfg)
+	}
+
 	// Init our UI first so we can write output to the user immediately.
 	c.ui = &terminal.BasicUI{}
+
+	// Parse flags
+	if err := baseCfg.Flags.Parse(baseCfg.Args); err != nil {
+		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		return err
+	}
 
 	// Parse the configuration
 	c.Log.Debug("reading configuration", "path", "devflow.hcl")
@@ -85,6 +99,14 @@ func (c *baseCommand) Init() error {
 		return err
 	}
 
+	return nil
+}
+
+// DoApp calls the callback for each app. This lets you execute logic
+// in an app-specific context safely. This automatically handles any
+// parallelization, waiting, and error handling. Your code should be
+// thread-safe.
+func (c *baseCommand) DoApp(ctx context.Context, f func(*core.App)) error {
 	return nil
 }
 
