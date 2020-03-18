@@ -26,7 +26,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.3.0
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
-	github.com/mattn/go-colorable v0.1.4
+	github.com/kr/text v0.1.0
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.0.0
 	github.com/mitchellh/go-linereader v0.0.0-20190213213312-1b945b3263eb
@@ -38,6 +38,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/posener/complete v1.1.1
 	github.com/sebdah/goldie v1.0.0
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/stretchr/testify v1.5.1

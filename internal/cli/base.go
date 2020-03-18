@@ -2,12 +2,14 @@ package cli
 
 import (
 	"context"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/core"
+	"github.com/mitchellh/devflow/internal/pkg/flag"
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/terminal"
 )
@@ -39,6 +41,12 @@ type baseCommand struct {
 
 	// UI is used to write to the CLI.
 	ui terminal.UI
+
+	//---------------------------------------------------------------
+	// Internal fields that should not be accessed directly
+
+	flags     *flag.Sets
+	flagsOnce sync.Once
 }
 
 // Init initializes the command by parsing flags, parsing the configuration,
@@ -85,3 +93,30 @@ func (c *baseCommand) logError(log hclog.Logger, prefix string, err error) {
 	log.Error(prefix, "error", err)
 	c.ui.Output("%s: %s", prefix, err, terminal.WithErrorStyle())
 }
+
+// flagSet creates the flags for this command. The callback should be used
+// to configure the set with your own custom options.
+//
+// The result is cached on the command to save performance on future calls
+// since it may be called multiple times for help generation.
+func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
+	c.flagsOnce.Do(func() {
+		set := flag.NewSets()
+
+		// Configure our values
+		f(set)
+
+		// Cache
+		c.flags = set
+	})
+
+	return c.flags
+}
+
+// flagSetBit is used with baseCommand.flagSet
+type flagSetBit uint
+
+const (
+	flagSetNone flagSetBit = 1 << iota
+	flagSetHTTP            // not used currently, should replace when we don't need
+)
