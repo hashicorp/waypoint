@@ -2,9 +2,12 @@ package cli
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 
 	"github.com/mitchellh/devflow/internal/config"
@@ -47,6 +50,11 @@ type baseCommand struct {
 
 	flags     *flag.Sets
 	flagsOnce sync.Once
+
+	// app is the targeted application. This is only set if you use the
+	// WithSingleApp option. You should not access this directly
+	// though and use the DoApp function.
+	app string
 }
 
 // Init initializes the command by parsing flags, parsing the configuration,
@@ -99,6 +107,20 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 
+	// If this is a single app mode then make sure that we only have
+	// one app or that we have an app target.
+	if baseCfg.AppMode == appModeSingle {
+		// TODO(mitchellh): when we support app targeting we can have more
+		// than one as long as its targeted.
+		if len(cfg.Apps) != 1 {
+			c.project.UI.Output(errAppModeSingle, terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
+		// Set our targeted app
+		c.app = cfg.Apps[0].Name
+	}
+
 	return nil
 }
 
@@ -106,8 +128,47 @@ func (c *baseCommand) Init(opts ...Option) error {
 // in an app-specific context safely. This automatically handles any
 // parallelization, waiting, and error handling. Your code should be
 // thread-safe.
-func (c *baseCommand) DoApp(ctx context.Context, f func(*core.App)) error {
-	return nil
+//
+// If any error is returned, the caller should just exit. The error handling
+// including messaging to the user is handling by this function call.
+//
+// If you want to early exit all the running functions, you should use
+// the callback closure properties to cancel the passed in context. This
+// will stop any remaining callbacks and exit early.
+func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *core.App) error) error {
+	var apps []*core.App
+	for _, appCfg := range c.cfg.Apps {
+		// If we're doing single targeting and this app isn't what we
+		// want then continue. In practice we don't need to loop at all
+		// for single targeting but it simplifies the implementation and
+		// the performance here doesn't matter currently.
+		if c.app != "" && appCfg.Name != c.app {
+			continue
+		}
+
+		app, err := c.project.App(appCfg.Name)
+		if err != nil {
+			panic(err)
+		}
+
+		c.Log.Debug("will operate on app", "name", appCfg.Name)
+		apps = append(apps, app)
+	}
+
+	// Just a serialize loop for now, one day we'll parallelize.
+	var finalErr error
+	for _, app := range apps {
+		// Support cancellation
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		if err := f(ctx, app); err != nil {
+			finalErr = multierror.Append(finalErr, err)
+		}
+	}
+
+	return finalErr
 }
 
 // logError logs an error and outputs it to the UI.
@@ -141,4 +202,14 @@ type flagSetBit uint
 const (
 	flagSetNone flagSetBit = 1 << iota
 	flagSetHTTP            // not used currently, should replace when we don't need
+)
+
+var (
+	// ErrSentinel is a sentinel value that we can return from Init to force an exit.
+	ErrSentinel = errors.New("error sentinel")
+
+	errAppModeSingle = strings.TrimSpace(`
+This command requires a single targeted app. You have multiple apps defined
+so you can specify the app to target using the "-app" flag.
+`)
 )

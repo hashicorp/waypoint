@@ -22,6 +22,7 @@ require (
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/hashicorp/go-hclog v0.12.0
+	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-plugin v1.1.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.3.0

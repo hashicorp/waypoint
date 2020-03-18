@@ -1,11 +1,14 @@
 package cli
 
 import (
+	"context"
 	"strings"
 
 	"github.com/posener/complete"
 
+	"github.com/mitchellh/devflow/internal/core"
 	"github.com/mitchellh/devflow/internal/pkg/flag"
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 type ArtifactBuildCommand struct {
@@ -22,11 +25,21 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
+		WithSingleApp(),
 	); err != nil {
 		return 1
 	}
 
-	c.project.UI.Output("Coming soon")
+	c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
+		_, err := app.Build(ctx)
+		if err != nil {
+			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
+		return nil
+	})
+
 	return 0
 }
 

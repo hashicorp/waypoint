@@ -21,7 +21,27 @@ func WithFlags(f *flag.Sets) Option {
 	return func(c *baseConfig) { c.Flags = f }
 }
 
-type baseConfig struct {
-	Args  []string
-	Flags *flag.Sets
+// WithSingleApp configures the CLI to expect a configuration with
+// one or more apps defined but a single app targeted with `-app`.
+// If only a single app exists, it is implicitly the target.
+// Zero apps is an error.
+func WithSingleApp() Option {
+	return func(c *baseConfig) { c.AppMode = appModeSingle }
 }
+
+type baseConfig struct {
+	Args    []string
+	Flags   *flag.Sets
+	AppMode appMode
+}
+
+// appMode is used with baseConfig to specify how we handle multiple
+// apps in a configuration file. See the different Option functions more
+// detailed documentation on each app mode.
+type appMode uint8
+
+const (
+	appModeNone   appMode = iota // no apps required, no config required
+	appModeSingle                // must target a single app
+	appModeMulti                 // one or more apps, can target single
+)
