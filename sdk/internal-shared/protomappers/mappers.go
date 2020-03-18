@@ -6,7 +6,9 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
+	"github.com/mitchellh/devflow/sdk/internal/pluginterminal"
 	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 // All is the list of all mappers as raw function pointers.
@@ -21,6 +23,8 @@ var All = []interface{}{
 	DatadirComponentProto,
 	Logger,
 	LoggerProto,
+	TerminalUI,
+	TerminalUIProto,
 }
 
 // Source maps Args.Source to component.Source.
@@ -86,4 +90,13 @@ func LoggerProto(log hclog.Logger) *pb.Args_Logger {
 	return &pb.Args_Logger{
 		Name: log.Name(),
 	}
+}
+
+// TerminalUI maps *pb.Args_TerminalUI to an hclog.TerminalUI
+func TerminalUI(input *pb.Args_TerminalUI) terminal.UI {
+	return &pluginterminal.UI{}
+}
+
+func TerminalUIProto(ui terminal.UI) *pb.Args_TerminalUI {
+	return &pb.Args_TerminalUI{}
 }

@@ -2,10 +2,10 @@ package pack
 
 import (
 	"context"
-	"os"
 	"os/exec"
 
 	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
@@ -18,14 +18,23 @@ func (b *Builder) BuildFunc() interface{} {
 }
 
 // Build
-func (b *Builder) Build(ctx context.Context, src *component.Source) (*DockerImage, error) {
+func (b *Builder) Build(
+	ctx context.Context,
+	ui terminal.UI,
+	src *component.Source,
+) (*DockerImage, error) {
+	stdout, stderr, err := ui.OutputWriters()
+	if err != nil {
+		return nil, err
+	}
+
 	// Build the image using `pack`. This doesn't give us any more information
 	// unfortunately so we can only run the build with the image name
 	// we want as a result.
 	cmd := exec.CommandContext(ctx, "pack", "build", src.App)
 	cmd.Dir = src.Path
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
 		return nil, err
 	}

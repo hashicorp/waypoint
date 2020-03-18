@@ -3,6 +3,7 @@ package terminal
 import (
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/fatih/color"
 )
@@ -19,6 +20,12 @@ type UI interface {
 	// arguments should be interpolations for the format string. After the
 	// interpolations you may add Options.
 	Output(string, ...interface{})
+
+	// OutputWriters returns stdout and stderr writers. These are usually
+	// but not always TTYs. This is useful for subprocesses, network requests,
+	// etc. Note that writing to these is not thread-safe by default so
+	// you must take care that there is only ever one writer.
+	OutputWriters() (stdout, stderr io.Writer, err error)
 
 	// Status returns a live-updating status that can be used for single-line
 	// status updates that typically have a spinner or some similar style.
@@ -53,6 +60,11 @@ func (ui *BasicUI) Output(msg string, raw ...interface{}) {
 
 	// Write it
 	fmt.Fprintln(cfg.Writer, cfg.Message)
+}
+
+// OutputWriters implements UI
+func (ui *BasicUI) OutputWriters() (io.Writer, io.Writer, error) {
+	return os.Stdout, os.Stderr, nil
 }
 
 // Status implements UI

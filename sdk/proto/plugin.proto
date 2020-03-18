@@ -47,6 +47,11 @@ message Args {
     // name is the name of the logger
     string name = 1;
   }
+
+  // TerminalUI is used to construct the terminal.UI for the plugin.
+  message TerminalUI {
+    // empty for now
+  }
 }
 
 // Empty is just an empty message useful with some RPC endpoints.

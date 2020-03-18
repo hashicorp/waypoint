@@ -25,9 +25,9 @@ func callDynamicFunc(
 ) (interface{}, error) {
 	// Decode all our arguments. We are on the plugin side now so we expect
 	// to be able to decode all types sent to us.
-	decoded := make([]interface{}, len(args)+1)
-	decoded[0] = ctx
-	for idx, arg := range args {
+	decoded := make([]interface{}, 0, len(args)+1)
+	decoded = append(decoded, ctx)
+	for _, arg := range args {
 		name, err := ptypes.AnyMessageName(arg)
 		if err != nil {
 			return nil, err
@@ -51,7 +51,7 @@ func callDynamicFunc(
 			return nil, err
 		}
 
-		decoded[idx+1] = v.Interface()
+		decoded = append(decoded, v.Interface())
 	}
 
 	// Build our mapper function and find the chain to get us to the required
