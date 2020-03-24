@@ -51,11 +51,14 @@ message Status {
   // for the same state to provide updated details about the state.
   string details = 2;
 
+  // error is set if the state == ERROR with the error that occurred.
+  google.rpc.Status error = 3;
+
   // start_time is the time the operation was started.
-  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp start_time = 4;
 
   // complete_time is the time the operation completed (success or fail).
-  google.protobuf.Timestamp complete_time = 4;
+  google.protobuf.Timestamp complete_time = 5;
 
   enum State {
     UNKNOWN = 0;
@@ -83,8 +86,13 @@ message CompleteBuildRequest {
   // id is the unique ID of the build to complete.
   string id = 1;
 
-  // artifact is the artifact that was created for this build.
-  Artifact artifact = 2;
+  oneof result {
+    // artifact is the artifact that was created for this build
+    Artifact artifact = 2;
+
+    // error is an error that occurred as part of the build
+    google.rpc.Status error = 3;
+  }
 }
 
 message ListBuildsResponse {

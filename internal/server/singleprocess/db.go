@@ -37,3 +37,11 @@ func dbGet(b *bolt.Bucket, id string, msg proto.Message) error {
 
 	return nil
 }
+
+// dbList is a helper to list all the values in a bucket into a slice.
+// The result should be a pointer to a typed slice of proto messages, example
+// `[]*pb.Build`. This uses reflection to allocate the proper type and decode
+// the messages.
+func dbList(b *bolt.Bucket, result interface{}) error {
+	return nil
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/boltdb/bolt"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
@@ -58,10 +59,18 @@ func (s *service) CompleteBuild(
 			return err
 		}
 
-		// Update the status
-		build.Status.State = pb.Status_SUCCESS
+		// Regardless of the outcome, we update our completion time.
 		build.Status.CompleteTime = ptypes.TimestampNow()
-		build.Artifact = req.Artifact
+
+		switch result := req.Result.(type) {
+		case *pb.CompleteBuildRequest_Artifact:
+			build.Status.State = pb.Status_SUCCESS
+			build.Artifact = result.Artifact
+
+		case *pb.CompleteBuildRequest_Error:
+			build.Status.State = pb.Status_ERROR
+			build.Status.Error = result.Error
+		}
 
 		// Save
 		return dbPut(bucket, build.Id, &build)
@@ -72,5 +81,19 @@ func (s *service) ListBuilds(
 	ctx context.Context,
 	req *empty.Empty,
 ) (*pb.ListBuildsResponse, error) {
-	return nil, nil
+	var result []*pb.Build
+	s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(buildBucket)
+		return bucket.ForEach(func(k, v []byte) error {
+			var build pb.Build
+			if err := proto.Unmarshal(v, &build); err != nil {
+				panic(err)
+			}
+
+			result = append(result, &build)
+			return nil
+		})
+	})
+
+	return &pb.ListBuildsResponse{Builds: result}, nil
 }

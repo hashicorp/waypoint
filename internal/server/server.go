@@ -6,7 +6,7 @@ import (
 	"github.com/oklog/ulid"
 )
 
-//go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:gen/"
+//go:generate sh -c "protoc -I../../vendor/proto/api-common-protos -Iproto/ proto/*.proto --go_out=plugins=grpc:gen/"
 
 var ulidReader = ulid.Monotonic(rand.Reader, 1)
 
