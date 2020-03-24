@@ -7,6 +7,7 @@ require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/aws/aws-sdk-go v1.28.12
+	github.com/boltdb/bolt v1.3.1
 	github.com/briandowns/spinner v1.8.0
 	github.com/containerd/containerd v1.3.2 // indirect
 	github.com/creack/pty v1.1.9

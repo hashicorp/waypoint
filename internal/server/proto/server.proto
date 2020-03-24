@@ -1,9 +1,11 @@
 syntax = "proto3";
 
-package proto;
+package hashicorp.devflow;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Devflow {
@@ -14,6 +16,10 @@ service Devflow {
   // This updates the final status of the build, including information about
   // the generated artifact.
   rpc CompleteBuild(CompleteBuildRequest) returns (google.protobuf.Empty);
+
+  // ListBuilds returns the builds. This automatically returns the builds
+  // in descending order based on start time.
+  rpc ListBuilds(google.protobuf.Empty) returns (ListBuildsResponse);
 }
 
 /********************************************************************
@@ -45,6 +51,12 @@ message Status {
   // for the same state to provide updated details about the state.
   string details = 2;
 
+  // start_time is the time the operation was started.
+  google.protobuf.Timestamp start_time = 3;
+
+  // complete_time is the time the operation completed (success or fail).
+  google.protobuf.Timestamp complete_time = 4;
+
   enum State {
     UNKNOWN = 0;
     RUNNING = 1;
@@ -73,6 +85,11 @@ message CompleteBuildRequest {
 
   // artifact is the artifact that was created for this build.
   Artifact artifact = 2;
+}
+
+message ListBuildsResponse {
+  // builds is the list of builds.
+  repeated Build builds = 1;
 }
 
 // Build represents a process of creating an artifact that can be in any state,
