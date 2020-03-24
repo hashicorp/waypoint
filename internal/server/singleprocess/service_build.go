@@ -16,6 +16,10 @@ import (
 
 var buildBucket = []byte("build")
 
+func init() {
+	dbBuckets = append(dbBuckets, buildBucket)
+}
+
 func (s *service) CreateBuild(
 	ctx context.Context,
 	req *pb.CreateBuildRequest,

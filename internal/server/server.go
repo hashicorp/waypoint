@@ -1,23 +1,88 @@
 package server
 
 import (
-	"crypto/rand"
+	"context"
+	"net"
 
-	"github.com/oklog/ulid"
+	"github.com/hashicorp/go-hclog"
+	"github.com/oklog/run"
+
+	pb "github.com/mitchellh/devflow/internal/server/gen"
 )
 
 //go:generate sh -c "protoc -I../../vendor/proto/api-common-protos -Iproto/ proto/*.proto --go_out=plugins=grpc:gen/"
 
-var ulidReader = ulid.Monotonic(rand.Reader, 1)
-
-// Id returns a unique Id that can be used for new values. This generates
-// a ulid value but the ID itself should be an internal detail. An error will
-// be returned if the ID could be generated.
-func Id() (string, error) {
-	id, err := ulid.New(ulid.Now(), ulidReader)
-	if err != nil {
-		return "", err
+// Run initializes and starts the server. This will block until the server
+// exits (by cancelling the associated context set with WithContext or due
+// to an unrecoverable error).
+func Run(opts ...Option) error {
+	var cfg options
+	for _, opt := range opts {
+		opt(&cfg)
 	}
 
-	return id.String(), nil
+	// Set defaults
+	if cfg.Context == nil {
+		cfg.Context = context.Background()
+	}
+	if cfg.Logger == nil {
+		cfg.Logger = hclog.L()
+	}
+
+	// Setup our run group since we're going to be starting multiple
+	// goroutines for all the servers that we want to live/die as a group.
+	var group run.Group
+
+	// Setup our gRPC server.
+	if err := grpcInit(&group, &cfg); err != nil {
+		return err
+	}
+
+	// Run!
+	return group.Run()
+}
+
+// Option configures Run
+type Option func(*options)
+
+// options configure a server and are set by users only using the exported
+// Option functions.
+type options struct {
+	// Context is the context to use for the server. When this is cancelled,
+	// the server will be gracefully shutdown.
+	Context context.Context
+
+	// Logger is the logger to use. This will default to hclog.L() if not set.
+	Logger hclog.Logger
+
+	// Service is the backend service implementation to use for the server.
+	Service pb.DevflowServer
+
+	// GRPCListener will setup the gRPC server. If this is nil, then a
+	// random loopback port will be chosen. The gRPC server must run since it
+	// serves the HTTP endpoints as well.
+	GRPCListener net.Listener
+}
+
+// WithContext sets the context for the server. When this context is cancelled,
+// the server will be shut down.
+func WithContext(ctx context.Context) Option {
+	return func(opts *options) { opts.Context = ctx }
+}
+
+// WithLogger sets the logger.
+func WithLogger(log hclog.Logger) Option {
+	return func(opts *options) { opts.Logger = log }
+}
+
+// WithGRPC sets the GRPC listener. This listener must be closed manually
+// by the caller. Prior to closing the listener, it is recommended that you
+// cancel the context set with WithContext and wait for Run to return.
+func WithGRPC(ln net.Listener) Option {
+	return func(opts *options) { opts.GRPCListener = ln }
+}
+
+// WithImpl sets the service implementation to serve.
+func WithImpl(impl pb.DevflowServer) Option {
+	return func(opts *options) { opts.Service = impl }
 }

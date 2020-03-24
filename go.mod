@@ -32,10 +32,11 @@ require (
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.0.0
 	github.com/mitchellh/go-linereader v0.0.0-20190213213312-1b945b3263eb
-	github.com/mitchellh/go-testing-interface v1.0.0
+	github.com/mitchellh/go-testing-interface v1.14.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/protostructure v0.0.0-20200302233719-00c1118a7e52
 	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/oklog/run v1.0.0
 	github.com/oklog/ulid v1.3.1
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
