@@ -6,10 +6,14 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/plugin"
+	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
@@ -31,10 +35,12 @@ type App struct {
 	// to this app vs the project UI.
 	UI terminal.UI
 
+	client        pb.DevflowClient
 	source        *component.Source
 	logger        hclog.Logger
 	dir           *datadir.App
 	mappers       []*mapper.Func
+	components    map[interface{}]*pb.Component
 	componentDirs map[interface{}]*datadir.Component
 }
 
@@ -45,8 +51,10 @@ type App struct {
 func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	// Initialize
 	app := &App{
+		client:        p.client,
 		source:        &component.Source{App: cfg.Name, Path: "."},
 		logger:        p.logger.Named("app").Named(cfg.Name),
+		components:    make(map[interface{}]*pb.Component),
 		componentDirs: make(map[interface{}]*datadir.Component),
 
 		// very important below that we allocate a new slice since we modify
@@ -94,7 +102,48 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 // TODO(mitchellh): test
 func (a *App) Build(ctx context.Context) (component.Artifact, error) {
 	log := a.logger.Named("build")
+
+	// Create the metadata
+	log.Debug("creating build metadata on server")
+	resp, err := a.client.CreateBuild(ctx, &pb.CreateBuildRequest{
+		Component: a.components[a.Builder],
+	})
+	if err != nil {
+		return nil, err
+	}
+	log = log.With("id", resp.Id)
+
+	// Run the build
+	log.Info("starting build")
 	result, err := a.callDynamicFunc(ctx, log, a.Builder, a.Builder.BuildFunc())
+
+	// Complete the build regardless of error so we can set the error if necessary
+	req := &pb.CompleteBuildRequest{Id: resp.Id}
+	if err != nil {
+		st, ok := status.FromError(err)
+		if !ok {
+			st = status.Newf(codes.Internal, "Non-status error %T: %s", err, err)
+		}
+
+		req.Result = &pb.CompleteBuildRequest_Error{Error: st.Proto()}
+	} else {
+		val, ok := result.(*any.Any)
+		if !ok {
+			// TODO
+			panic("non-any result")
+		}
+
+		req.Result = &pb.CompleteBuildRequest_Artifact{
+			Artifact: &pb.Artifact{
+				Artifact: val,
+			},
+		}
+	}
+	if _, err := a.client.CompleteBuild(ctx, req); err != nil {
+		log.Warn("error completing build, the build status may be stuck")
+	}
+	log.Debug("build marked as complete on server")
+
 	if err != nil {
 		return nil, err
 	}
@@ -327,6 +376,12 @@ func (a *App) initComponent(
 
 	// Assign our value now that we won't error anymore
 	targetV.Set(rawV)
+
+	// Store component metadata
+	a.components[raw] = &pb.Component{
+		Type: pb.Component_Type(typ),
+		Name: cfg.Type,
+	}
 
 	return nil
 }

@@ -107,6 +107,11 @@ func (p *Project) App(name string) (*App, error) {
 	return p.apps[name], nil
 }
 
+// Client returns the API client for the backend server.
+func (p *Project) Client() pb.DevflowClient {
+	return p.client
+}
+
 // Close is called to clean up resources allocated by the project.
 // This should be called and blocked on to gracefully stop the project.
 func (p *Project) Close() error {
