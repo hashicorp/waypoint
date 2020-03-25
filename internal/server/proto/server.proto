@@ -9,7 +9,16 @@ import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Devflow {
-  // CreateBuild starts an artifact build.
+  // ListBuilds returns the builds.
+  rpc ListBuilds(google.protobuf.Empty) returns (ListBuildsResponse);
+
+  //----------------------------------------------------------------------
+  // Internal metadata endpoints. The endpoints below are expected to be
+  // called for internal bookkeeping only. They should be avoided for general
+  // API clients since they can be used to damage internal state.
+  //----------------------------------------------------------------------
+
+  // CreateBuild creates the metadata associated with an artifact build.
   rpc CreateBuild(CreateBuildRequest) returns (CreateBuildResponse);
 
   // CompleteBuild is called when a build is completed (for a local run).
@@ -17,9 +26,9 @@ service Devflow {
   // the generated artifact.
   rpc CompleteBuild(CompleteBuildRequest) returns (google.protobuf.Empty);
 
-  // ListBuilds returns the builds. This automatically returns the builds
-  // in descending order based on start time.
-  rpc ListBuilds(google.protobuf.Empty) returns (ListBuildsResponse);
+  // UpsertPushedArtifact updates or inserts a pushed artifact. This is
+  // useful for local operations to work on a pushed artifact.
+  rpc UpsertPushedArtifact(UpsertPushedArtifactRequest) returns (UpsertPushedArtifactResponse);
 }
 
 /********************************************************************
@@ -41,6 +50,7 @@ message Component {
   enum Type {
     UNKNOWN = 0;
     BUILDER = 1;
+    REGISTRY = 2;
   }
 }
 
@@ -126,4 +136,36 @@ message Artifact {
   // The receiving end must have access to the component proto files to
   // know how to decode this.
   google.protobuf.Any artifact = 1;
+}
+
+/********************************************************************
+* Registry
+********************************************************************/
+
+message UpsertPushedArtifactRequest {
+  // artifact to upsert. If the id in the artifact is empty, then this
+  // will be an insert. Otherwise, this will be an update and if the ID
+  // isn't found, it will be an error.
+  PushedArtifact artifact = 1;
+}
+
+message UpsertPushedArtifactResponse {
+  // resulting push object, you should replace this with what was sent
+  // since the update operation may touch up the input data (i.e. update
+  // timestamps)
+  PushedArtifact artifact = 1;
+}
+
+message PushedArtifact {
+  // id is a unique ID for this push
+  string id = 1;
+
+  // status of the push operation
+  Status status = 2;
+
+  // component that pushed this artifact
+  Component component = 3;
+
+  // artifact is the artifact that was a result from the push.
+  Artifact artifact = 4;
 }

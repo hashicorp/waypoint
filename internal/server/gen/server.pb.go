@@ -27,27 +27,33 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+// Supported component types, the values here MUST match the enum values
+// in the Go sdk/component package exactly. A test in internal/server
+// validates this.
 type Component_Type int32
 
 const (
-	Component_UNKNOWN Component_Type = 0
-	Component_BUILDER Component_Type = 1
+	Component_UNKNOWN  Component_Type = 0
+	Component_BUILDER  Component_Type = 1
+	Component_REGISTRY Component_Type = 2
 )
 
 var Component_Type_name = map[int32]string{
 	0: "UNKNOWN",
 	1: "BUILDER",
+	2: "REGISTRY",
 }
 var Component_Type_value = map[string]int32{
-	"UNKNOWN": 0,
-	"BUILDER": 1,
+	"UNKNOWN":  0,
+	"BUILDER":  1,
+	"REGISTRY": 2,
 }
 
 func (x Component_Type) String() string {
 	return proto.EnumName(Component_Type_name, int32(x))
 }
 func (Component_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{0, 0}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{0, 0}
 }
 
 type Status_State int32
@@ -76,7 +82,7 @@ func (x Status_State) String() string {
 	return proto.EnumName(Status_State_name, int32(x))
 }
 func (Status_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{1, 0}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{1, 0}
 }
 
 // Component represents metadata about a component. A component is the
@@ -95,7 +101,7 @@ func (m *Component) Reset()         { *m = Component{} }
 func (m *Component) String() string { return proto.CompactTextString(m) }
 func (*Component) ProtoMessage()    {}
 func (*Component) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{0}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{0}
 }
 func (m *Component) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Component.Unmarshal(m, b)
@@ -152,7 +158,7 @@ func (m *Status) Reset()         { *m = Status{} }
 func (m *Status) String() string { return proto.CompactTextString(m) }
 func (*Status) ProtoMessage()    {}
 func (*Status) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{1}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{1}
 }
 func (m *Status) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Status.Unmarshal(m, b)
@@ -219,7 +225,7 @@ func (m *CreateBuildRequest) Reset()         { *m = CreateBuildRequest{} }
 func (m *CreateBuildRequest) String() string { return proto.CompactTextString(m) }
 func (*CreateBuildRequest) ProtoMessage()    {}
 func (*CreateBuildRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{2}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{2}
 }
 func (m *CreateBuildRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateBuildRequest.Unmarshal(m, b)
@@ -258,7 +264,7 @@ func (m *CreateBuildResponse) Reset()         { *m = CreateBuildResponse{} }
 func (m *CreateBuildResponse) String() string { return proto.CompactTextString(m) }
 func (*CreateBuildResponse) ProtoMessage()    {}
 func (*CreateBuildResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{3}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{3}
 }
 func (m *CreateBuildResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateBuildResponse.Unmarshal(m, b)
@@ -301,7 +307,7 @@ func (m *CompleteBuildRequest) Reset()         { *m = CompleteBuildRequest{} }
 func (m *CompleteBuildRequest) String() string { return proto.CompactTextString(m) }
 func (*CompleteBuildRequest) ProtoMessage()    {}
 func (*CompleteBuildRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{4}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{4}
 }
 func (m *CompleteBuildRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CompleteBuildRequest.Unmarshal(m, b)
@@ -451,7 +457,7 @@ func (m *ListBuildsResponse) Reset()         { *m = ListBuildsResponse{} }
 func (m *ListBuildsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListBuildsResponse) ProtoMessage()    {}
 func (*ListBuildsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{5}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{5}
 }
 func (m *ListBuildsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListBuildsResponse.Unmarshal(m, b)
@@ -498,7 +504,7 @@ func (m *Build) Reset()         { *m = Build{} }
 func (m *Build) String() string { return proto.CompactTextString(m) }
 func (*Build) ProtoMessage()    {}
 func (*Build) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{6}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{6}
 }
 func (m *Build) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Build.Unmarshal(m, b)
@@ -562,7 +568,7 @@ func (m *Artifact) Reset()         { *m = Artifact{} }
 func (m *Artifact) String() string { return proto.CompactTextString(m) }
 func (*Artifact) ProtoMessage()    {}
 func (*Artifact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_0a2f9a9a4afd2d9a, []int{7}
+	return fileDescriptor_server_6854e6c6e112be6a, []int{7}
 }
 func (m *Artifact) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Artifact.Unmarshal(m, b)
@@ -589,6 +595,154 @@ func (m *Artifact) GetArtifact() *any.Any {
 	return nil
 }
 
+type UpsertPushedArtifactRequest struct {
+	// artifact to upsert. If the id in the artifact is empty, then this
+	// will be an insert. Otherwise, this will be an update and if the ID
+	// isn't found, it will be an error.
+	Artifact             *PushedArtifact `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
+}
+
+func (m *UpsertPushedArtifactRequest) Reset()         { *m = UpsertPushedArtifactRequest{} }
+func (m *UpsertPushedArtifactRequest) String() string { return proto.CompactTextString(m) }
+func (*UpsertPushedArtifactRequest) ProtoMessage()    {}
+func (*UpsertPushedArtifactRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_server_6854e6c6e112be6a, []int{8}
+}
+func (m *UpsertPushedArtifactRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpsertPushedArtifactRequest.Unmarshal(m, b)
+}
+func (m *UpsertPushedArtifactRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpsertPushedArtifactRequest.Marshal(b, m, deterministic)
+}
+func (dst *UpsertPushedArtifactRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpsertPushedArtifactRequest.Merge(dst, src)
+}
+func (m *UpsertPushedArtifactRequest) XXX_Size() int {
+	return xxx_messageInfo_UpsertPushedArtifactRequest.Size(m)
+}
+func (m *UpsertPushedArtifactRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpsertPushedArtifactRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpsertPushedArtifactRequest proto.InternalMessageInfo
+
+func (m *UpsertPushedArtifactRequest) GetArtifact() *PushedArtifact {
+	if m != nil {
+		return m.Artifact
+	}
+	return nil
+}
+
+type UpsertPushedArtifactResponse struct {
+	// resulting push object, you should replace this with what was sent
+	// since the update operation may touch up the input data (i.e. update
+	// timestamps)
+	Artifact             *PushedArtifact `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
+}
+
+func (m *UpsertPushedArtifactResponse) Reset()         { *m = UpsertPushedArtifactResponse{} }
+func (m *UpsertPushedArtifactResponse) String() string { return proto.CompactTextString(m) }
+func (*UpsertPushedArtifactResponse) ProtoMessage()    {}
+func (*UpsertPushedArtifactResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_server_6854e6c6e112be6a, []int{9}
+}
+func (m *UpsertPushedArtifactResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpsertPushedArtifactResponse.Unmarshal(m, b)
+}
+func (m *UpsertPushedArtifactResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpsertPushedArtifactResponse.Marshal(b, m, deterministic)
+}
+func (dst *UpsertPushedArtifactResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpsertPushedArtifactResponse.Merge(dst, src)
+}
+func (m *UpsertPushedArtifactResponse) XXX_Size() int {
+	return xxx_messageInfo_UpsertPushedArtifactResponse.Size(m)
+}
+func (m *UpsertPushedArtifactResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpsertPushedArtifactResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpsertPushedArtifactResponse proto.InternalMessageInfo
+
+func (m *UpsertPushedArtifactResponse) GetArtifact() *PushedArtifact {
+	if m != nil {
+		return m.Artifact
+	}
+	return nil
+}
+
+type PushedArtifact struct {
+	// id is a unique ID for this push
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// status of the push operation
+	Status *Status `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	// component that pushed this artifact
+	Component *Component `protobuf:"bytes,3,opt,name=component,proto3" json:"component,omitempty"`
+	// artifact is the artifact that was a result from the push.
+	Artifact             *Artifact `protobuf:"bytes,4,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *PushedArtifact) Reset()         { *m = PushedArtifact{} }
+func (m *PushedArtifact) String() string { return proto.CompactTextString(m) }
+func (*PushedArtifact) ProtoMessage()    {}
+func (*PushedArtifact) Descriptor() ([]byte, []int) {
+	return fileDescriptor_server_6854e6c6e112be6a, []int{10}
+}
+func (m *PushedArtifact) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PushedArtifact.Unmarshal(m, b)
+}
+func (m *PushedArtifact) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PushedArtifact.Marshal(b, m, deterministic)
+}
+func (dst *PushedArtifact) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PushedArtifact.Merge(dst, src)
+}
+func (m *PushedArtifact) XXX_Size() int {
+	return xxx_messageInfo_PushedArtifact.Size(m)
+}
+func (m *PushedArtifact) XXX_DiscardUnknown() {
+	xxx_messageInfo_PushedArtifact.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PushedArtifact proto.InternalMessageInfo
+
+func (m *PushedArtifact) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *PushedArtifact) GetStatus() *Status {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *PushedArtifact) GetComponent() *Component {
+	if m != nil {
+		return m.Component
+	}
+	return nil
+}
+
+func (m *PushedArtifact) GetArtifact() *Artifact {
+	if m != nil {
+		return m.Artifact
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Component)(nil), "hashicorp.devflow.Component")
 	proto.RegisterType((*Status)(nil), "hashicorp.devflow.Status")
@@ -598,6 +752,9 @@ func init() {
 	proto.RegisterType((*ListBuildsResponse)(nil), "hashicorp.devflow.ListBuildsResponse")
 	proto.RegisterType((*Build)(nil), "hashicorp.devflow.Build")
 	proto.RegisterType((*Artifact)(nil), "hashicorp.devflow.Artifact")
+	proto.RegisterType((*UpsertPushedArtifactRequest)(nil), "hashicorp.devflow.UpsertPushedArtifactRequest")
+	proto.RegisterType((*UpsertPushedArtifactResponse)(nil), "hashicorp.devflow.UpsertPushedArtifactResponse")
+	proto.RegisterType((*PushedArtifact)(nil), "hashicorp.devflow.PushedArtifact")
 	proto.RegisterEnum("hashicorp.devflow.Component_Type", Component_Type_name, Component_Type_value)
 	proto.RegisterEnum("hashicorp.devflow.Status_State", Status_State_name, Status_State_value)
 }
@@ -614,15 +771,17 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DevflowClient interface {
-	// CreateBuild starts an artifact build.
+	// ListBuilds returns the builds.
+	ListBuilds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListBuildsResponse, error)
+	// CreateBuild creates the metadata associated with an artifact build.
 	CreateBuild(ctx context.Context, in *CreateBuildRequest, opts ...grpc.CallOption) (*CreateBuildResponse, error)
 	// CompleteBuild is called when a build is completed (for a local run).
 	// This updates the final status of the build, including information about
 	// the generated artifact.
 	CompleteBuild(ctx context.Context, in *CompleteBuildRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	// ListBuilds returns the builds. This automatically returns the builds
-	// in descending order based on start time.
-	ListBuilds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListBuildsResponse, error)
+	// UpsertPushedArtifact updates or inserts a pushed artifact. This is
+	// useful for local operations to work on a pushed artifact.
+	UpsertPushedArtifact(ctx context.Context, in *UpsertPushedArtifactRequest, opts ...grpc.CallOption) (*UpsertPushedArtifactResponse, error)
 }
 
 type devflowClient struct {
@@ -631,6 +790,15 @@ type devflowClient struct {
 
 func NewDevflowClient(cc *grpc.ClientConn) DevflowClient {
 	return &devflowClient{cc}
+}
+
+func (c *devflowClient) ListBuilds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListBuildsResponse, error) {
+	out := new(ListBuildsResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.devflow.Devflow/ListBuilds", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *devflowClient) CreateBuild(ctx context.Context, in *CreateBuildRequest, opts ...grpc.CallOption) (*CreateBuildResponse, error) {
@@ -651,9 +819,9 @@ func (c *devflowClient) CompleteBuild(ctx context.Context, in *CompleteBuildRequ
 	return out, nil
 }
 
-func (c *devflowClient) ListBuilds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListBuildsResponse, error) {
-	out := new(ListBuildsResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.devflow.Devflow/ListBuilds", in, out, opts...)
+func (c *devflowClient) UpsertPushedArtifact(ctx context.Context, in *UpsertPushedArtifactRequest, opts ...grpc.CallOption) (*UpsertPushedArtifactResponse, error) {
+	out := new(UpsertPushedArtifactResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.devflow.Devflow/UpsertPushedArtifact", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -662,19 +830,39 @@ func (c *devflowClient) ListBuilds(ctx context.Context, in *empty.Empty, opts ..
 
 // DevflowServer is the server API for Devflow service.
 type DevflowServer interface {
-	// CreateBuild starts an artifact build.
+	// ListBuilds returns the builds.
+	ListBuilds(context.Context, *empty.Empty) (*ListBuildsResponse, error)
+	// CreateBuild creates the metadata associated with an artifact build.
 	CreateBuild(context.Context, *CreateBuildRequest) (*CreateBuildResponse, error)
 	// CompleteBuild is called when a build is completed (for a local run).
 	// This updates the final status of the build, including information about
 	// the generated artifact.
 	CompleteBuild(context.Context, *CompleteBuildRequest) (*empty.Empty, error)
-	// ListBuilds returns the builds. This automatically returns the builds
-	// in descending order based on start time.
-	ListBuilds(context.Context, *empty.Empty) (*ListBuildsResponse, error)
+	// UpsertPushedArtifact updates or inserts a pushed artifact. This is
+	// useful for local operations to work on a pushed artifact.
+	UpsertPushedArtifact(context.Context, *UpsertPushedArtifactRequest) (*UpsertPushedArtifactResponse, error)
 }
 
 func RegisterDevflowServer(s *grpc.Server, srv DevflowServer) {
 	s.RegisterService(&_Devflow_serviceDesc, srv)
+}
+
+func _Devflow_ListBuilds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DevflowServer).ListBuilds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.devflow.Devflow/ListBuilds",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DevflowServer).ListBuilds(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Devflow_CreateBuild_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -713,20 +901,20 @@ func _Devflow_CompleteBuild_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Devflow_ListBuilds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+func _Devflow_UpsertPushedArtifact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertPushedArtifactRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DevflowServer).ListBuilds(ctx, in)
+		return srv.(DevflowServer).UpsertPushedArtifact(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hashicorp.devflow.Devflow/ListBuilds",
+		FullMethod: "/hashicorp.devflow.Devflow/UpsertPushedArtifact",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DevflowServer).ListBuilds(ctx, req.(*empty.Empty))
+		return srv.(DevflowServer).UpsertPushedArtifact(ctx, req.(*UpsertPushedArtifactRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -736,6 +924,10 @@ var _Devflow_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*DevflowServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "ListBuilds",
+			Handler:    _Devflow_ListBuilds_Handler,
+		},
+		{
 			MethodName: "CreateBuild",
 			Handler:    _Devflow_CreateBuild_Handler,
 		},
@@ -744,55 +936,60 @@ var _Devflow_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Devflow_CompleteBuild_Handler,
 		},
 		{
-			MethodName: "ListBuilds",
-			Handler:    _Devflow_ListBuilds_Handler,
+			MethodName: "UpsertPushedArtifact",
+			Handler:    _Devflow_UpsertPushedArtifact_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "server.proto",
 }
 
-func init() { proto.RegisterFile("server.proto", fileDescriptor_server_0a2f9a9a4afd2d9a) }
+func init() { proto.RegisterFile("server.proto", fileDescriptor_server_6854e6c6e112be6a) }
 
-var fileDescriptor_server_0a2f9a9a4afd2d9a = []byte{
-	// 614 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0xed, 0x4e, 0xd3, 0x50,
-	0x18, 0xc7, 0xe9, 0xde, 0xa0, 0x4f, 0x81, 0xcc, 0x47, 0xa2, 0xa5, 0x98, 0x30, 0x9b, 0xa0, 0x8b,
-	0x1f, 0x0a, 0xd6, 0x10, 0x83, 0x31, 0x31, 0x30, 0xa6, 0x10, 0x48, 0x21, 0x67, 0x2c, 0x7e, 0x31,
-	0x31, 0xa5, 0x3b, 0x40, 0x93, 0xbe, 0x79, 0xce, 0x19, 0xba, 0x1b, 0xf0, 0x16, 0xbc, 0x17, 0xbf,
-	0x78, 0x6b, 0xa6, 0xa7, 0x2d, 0x63, 0xeb, 0x70, 0xf1, 0xd3, 0x76, 0xce, 0xf9, 0x3d, 0x6f, 0xff,
-	0xe7, 0xbf, 0xc1, 0x32, 0xa7, 0xec, 0x96, 0x32, 0x2b, 0x61, 0xb1, 0x88, 0xf1, 0xd1, 0x8d, 0xcb,
-	0x6f, 0x7c, 0x2f, 0x66, 0x89, 0x35, 0xa0, 0xb7, 0x57, 0x41, 0xfc, 0xdd, 0x58, 0xbf, 0x8e, 0xe3,
-	0xeb, 0x80, 0x6e, 0x4b, 0xe0, 0x72, 0x78, 0xb5, 0xed, 0x46, 0xa3, 0x8c, 0x36, 0x36, 0xa6, 0x9f,
-	0x68, 0x98, 0x88, 0xe2, 0x71, 0x73, 0xfa, 0x51, 0xf8, 0x21, 0xe5, 0xc2, 0x0d, 0x93, 0x1c, 0x78,
-	0x9a, 0x03, 0x2c, 0xf1, 0xb6, 0xb9, 0x70, 0xc5, 0x90, 0x67, 0x0f, 0xe6, 0x0f, 0x50, 0x3b, 0x71,
-	0x98, 0xc4, 0x11, 0x8d, 0x04, 0xee, 0x42, 0x4d, 0x8c, 0x12, 0xaa, 0x2b, 0x2d, 0xa5, 0xbd, 0x6a,
-	0x3f, 0xb7, 0x4a, 0x0d, 0x5a, 0x77, 0xac, 0x75, 0x31, 0x4a, 0x28, 0x91, 0x38, 0x22, 0xd4, 0x22,
-	0x37, 0xa4, 0x7a, 0xa5, 0xa5, 0xb4, 0x55, 0x22, 0xbf, 0x9b, 0x2d, 0xa8, 0xa5, 0x04, 0x6a, 0xb0,
-	0xd8, 0x77, 0x4e, 0x9c, 0xb3, 0xcf, 0x4e, 0x73, 0x21, 0x3d, 0x1c, 0xf4, 0x8f, 0x4f, 0x0f, 0xbb,
-	0xa4, 0xa9, 0x98, 0xbf, 0x2b, 0xd0, 0xe8, 0xc9, 0x56, 0x70, 0x17, 0xea, 0x69, 0x53, 0x45, 0xe1,
-	0xcd, 0x19, 0x85, 0x33, 0x52, 0x7e, 0x50, 0x92, 0xd1, 0xa8, 0xc3, 0xe2, 0x80, 0x0a, 0xd7, 0x0f,
-	0x78, 0x5e, 0xba, 0x38, 0x62, 0x1b, 0xea, 0x94, 0xb1, 0x98, 0xe9, 0xd5, 0x96, 0xd2, 0xd6, 0x6c,
-	0xb4, 0xb2, 0xf1, 0x2d, 0x96, 0x78, 0x79, 0x26, 0x92, 0x01, 0xb8, 0x07, 0xc0, 0x85, 0xcb, 0xc4,
-	0xd7, 0x54, 0x31, 0xbd, 0x26, 0x71, 0xa3, 0xc0, 0x0b, 0x39, 0xad, 0x8b, 0x42, 0x4e, 0xa2, 0x4a,
-	0x3a, 0x3d, 0xe3, 0x07, 0x58, 0xf1, 0xe2, 0x30, 0x09, 0xa8, 0xa0, 0x59, 0x74, 0x7d, 0x6e, 0xf4,
-	0x72, 0x11, 0x90, 0x5e, 0x99, 0x7b, 0x50, 0x97, 0xf3, 0x94, 0x44, 0x22, 0x7d, 0xc7, 0x39, 0x76,
-	0x3e, 0x35, 0x95, 0xf4, 0xd0, 0xeb, 0x77, 0x3a, 0xdd, 0x5e, 0xaf, 0x59, 0x41, 0x15, 0xea, 0x5d,
-	0x42, 0xce, 0x48, 0xb3, 0x6a, 0x9e, 0x03, 0x76, 0x18, 0x75, 0x05, 0x3d, 0x18, 0xfa, 0xc1, 0x80,
-	0xd0, 0x6f, 0x43, 0xca, 0x05, 0xbe, 0x03, 0xd5, 0x2b, 0x16, 0x24, 0xb5, 0xd4, 0xec, 0x67, 0xff,
-	0x5a, 0x22, 0x19, 0xe3, 0xe6, 0x16, 0x3c, 0x9e, 0xc8, 0xc8, 0x93, 0x38, 0xe2, 0x14, 0x57, 0xa1,
-	0xe2, 0x0f, 0x64, 0x2e, 0x95, 0x54, 0xfc, 0x81, 0xf9, 0x4b, 0x81, 0xb5, 0x4e, 0x3e, 0xc4, 0x44,
-	0xed, 0x29, 0x10, 0xf7, 0x60, 0xc9, 0x65, 0xc2, 0xbf, 0x72, 0x3d, 0x21, 0xb7, 0xa3, 0xd9, 0x1b,
-	0x33, 0x5a, 0xd9, 0xcf, 0x91, 0xa3, 0x05, 0x72, 0x87, 0xe3, 0xab, 0xb9, 0xdb, 0x3b, 0x5a, 0xc8,
-	0xf7, 0x77, 0xb0, 0x04, 0x0d, 0x46, 0xf9, 0x30, 0x10, 0xe6, 0x47, 0xc0, 0x53, 0x9f, 0x0b, 0xd9,
-	0x14, 0xbf, 0xeb, 0x7f, 0x07, 0x1a, 0x97, 0xf2, 0x46, 0x57, 0x5a, 0xd5, 0xb6, 0x66, 0xeb, 0x33,
-	0x9a, 0xc8, 0xe6, 0xc8, 0x39, 0xf3, 0x8f, 0x02, 0x75, 0x79, 0x53, 0x1a, 0xe9, 0x35, 0x34, 0xb2,
-	0xdf, 0x4e, 0x3e, 0xd0, 0xfa, 0x83, 0x3e, 0x25, 0x39, 0x38, 0xb9, 0x91, 0xea, 0x7f, 0x6d, 0x04,
-	0xdf, 0xde, 0x53, 0xb0, 0x36, 0x57, 0xc1, 0xb1, 0x7e, 0xe6, 0x7b, 0x58, 0x2a, 0x6e, 0x71, 0xe7,
-	0x5e, 0x92, 0xcc, 0x11, 0x6b, 0x25, 0x7f, 0xee, 0x47, 0xa3, 0x71, 0xb4, 0xfd, 0xb3, 0x02, 0x8b,
-	0x87, 0x59, 0x72, 0xfc, 0x02, 0xda, 0x3d, 0x53, 0xe0, 0xd6, 0xac, 0xd6, 0x4b, 0x36, 0x34, 0x5e,
-	0xcc, 0xc3, 0xf2, 0xdd, 0x9c, 0xc3, 0xca, 0x84, 0x95, 0xf0, 0xe5, 0x03, 0xd2, 0x4c, 0x9b, 0xcd,
-	0x78, 0x52, 0x9a, 0xa1, 0x9b, 0xfe, 0x1b, 0xe2, 0x09, 0xc0, 0xd8, 0x03, 0xf8, 0x00, 0x65, 0xcc,
-	0x1a, 0xa3, 0x6c, 0x9d, 0xcb, 0x86, 0x0c, 0x7b, 0xf3, 0x37, 0x00, 0x00, 0xff, 0xff, 0x00, 0x54,
-	0x2d, 0xcb, 0xb6, 0x05, 0x00, 0x00,
+var fileDescriptor_server_6854e6c6e112be6a = []byte{
+	// 696 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0xdd, 0x4e, 0x13, 0x41,
+	0x14, 0xc7, 0xd9, 0x7e, 0xd1, 0x9e, 0x02, 0xa9, 0x47, 0xa2, 0xcb, 0x42, 0x42, 0xdd, 0x04, 0x6d,
+	0xbc, 0xd8, 0x62, 0x0d, 0x31, 0x18, 0x8d, 0x81, 0x52, 0x81, 0x40, 0x0a, 0x99, 0xd2, 0x18, 0x13,
+	0x8c, 0x59, 0xda, 0x01, 0x36, 0x69, 0xbb, 0xeb, 0xcc, 0x14, 0xd2, 0x17, 0xf0, 0x15, 0x7c, 0x17,
+	0x6f, 0xbc, 0xf5, 0xad, 0x34, 0x3b, 0x3b, 0xdb, 0xaf, 0x5d, 0xa8, 0xc6, 0x2b, 0xaf, 0xda, 0x99,
+	0xf9, 0x9d, 0x7f, 0xcf, 0x39, 0xff, 0x33, 0x53, 0x58, 0xe0, 0x94, 0xdd, 0x50, 0x66, 0x79, 0xcc,
+	0x15, 0x2e, 0x3e, 0xb8, 0xb6, 0xf9, 0xb5, 0xd3, 0x72, 0x99, 0x67, 0xb5, 0xe9, 0xcd, 0x65, 0xc7,
+	0xbd, 0x35, 0x56, 0xae, 0x5c, 0xf7, 0xaa, 0x43, 0xcb, 0x12, 0xb8, 0xe8, 0x5f, 0x96, 0xed, 0xde,
+	0x20, 0xa0, 0x8d, 0xd5, 0xe9, 0x23, 0xda, 0xf5, 0x44, 0x78, 0xb8, 0x3e, 0x7d, 0x28, 0x9c, 0x2e,
+	0xe5, 0xc2, 0xee, 0x7a, 0x0a, 0x78, 0xac, 0x00, 0xe6, 0xb5, 0xca, 0x5c, 0xd8, 0xa2, 0xcf, 0x83,
+	0x03, 0xf3, 0xab, 0x06, 0xb9, 0xaa, 0xdb, 0xf5, 0xdc, 0x1e, 0xed, 0x09, 0xdc, 0x82, 0x94, 0x18,
+	0x78, 0x54, 0xd7, 0x8a, 0x5a, 0x69, 0xa9, 0xf2, 0xc4, 0x8a, 0x64, 0x68, 0x0d, 0x59, 0xeb, 0x6c,
+	0xe0, 0x51, 0x22, 0x71, 0x44, 0x48, 0xf5, 0xec, 0x2e, 0xd5, 0x13, 0x45, 0xad, 0x94, 0x23, 0xf2,
+	0xbb, 0x69, 0x41, 0xca, 0x27, 0x30, 0x0f, 0xf3, 0xcd, 0xfa, 0x51, 0xfd, 0xe4, 0x43, 0xbd, 0x30,
+	0xe7, 0x2f, 0x76, 0x9b, 0x87, 0xc7, 0x7b, 0x35, 0x52, 0xd0, 0x70, 0x01, 0xb2, 0xa4, 0xb6, 0x7f,
+	0xd8, 0x38, 0x23, 0x1f, 0x0b, 0x09, 0xf3, 0x7b, 0x02, 0x32, 0x0d, 0x99, 0x19, 0x6e, 0x41, 0xda,
+	0xcf, 0x31, 0x4c, 0x63, 0x3d, 0x26, 0x8d, 0x80, 0x94, 0x1f, 0x94, 0x04, 0x34, 0xea, 0x30, 0xdf,
+	0xa6, 0xc2, 0x76, 0x3a, 0x5c, 0x25, 0x12, 0x2e, 0xb1, 0x04, 0x69, 0xca, 0x98, 0xcb, 0xf4, 0x64,
+	0x51, 0x2b, 0xe5, 0x2b, 0x68, 0x05, 0xdd, 0xb0, 0x98, 0xd7, 0x52, 0x4a, 0x24, 0x00, 0x70, 0x1b,
+	0x80, 0x0b, 0x9b, 0x89, 0xcf, 0x7e, 0x03, 0xf5, 0x94, 0xc4, 0x8d, 0x10, 0x0f, 0xbb, 0x6b, 0x9d,
+	0x85, 0xdd, 0x25, 0x39, 0x49, 0xfb, 0x6b, 0x7c, 0x07, 0x8b, 0x2d, 0xb7, 0xeb, 0x75, 0xa8, 0xa0,
+	0x41, 0x74, 0x7a, 0x66, 0xf4, 0x42, 0x18, 0xe0, 0x6f, 0x99, 0xdb, 0x90, 0x96, 0xf5, 0x44, 0x5a,
+	0x46, 0x9a, 0xf5, 0xfa, 0x61, 0x7d, 0xbf, 0xa0, 0xf9, 0x8b, 0x46, 0xb3, 0x5a, 0xad, 0x35, 0x1a,
+	0x85, 0x04, 0xe6, 0x20, 0x5d, 0x23, 0xe4, 0x84, 0x14, 0x92, 0xe6, 0x29, 0x60, 0x95, 0x51, 0x5b,
+	0xd0, 0xdd, 0xbe, 0xd3, 0x69, 0x13, 0xfa, 0xa5, 0x4f, 0xb9, 0xc0, 0xd7, 0x90, 0x6b, 0x85, 0x76,
+	0xc9, 0x5e, 0xe6, 0x2b, 0x6b, 0xf7, 0x59, 0x4a, 0x46, 0xb8, 0xb9, 0x01, 0x0f, 0x27, 0x14, 0xb9,
+	0xe7, 0xf6, 0x38, 0xc5, 0x25, 0x48, 0x38, 0x6d, 0xa9, 0x95, 0x23, 0x09, 0xa7, 0x6d, 0x7e, 0xd3,
+	0x60, 0xb9, 0xaa, 0x8a, 0x98, 0xf8, 0xed, 0x29, 0x10, 0xb7, 0x21, 0x6b, 0x33, 0xe1, 0x5c, 0xda,
+	0x2d, 0x21, 0xdd, 0xc9, 0x57, 0x56, 0x63, 0x52, 0xd9, 0x51, 0xc8, 0xc1, 0x1c, 0x19, 0xe2, 0xf8,
+	0x7c, 0xa6, 0x7b, 0x07, 0x73, 0xca, 0xbf, 0xdd, 0x2c, 0x64, 0x18, 0xe5, 0xfd, 0x8e, 0x30, 0xdf,
+	0x03, 0x1e, 0x3b, 0x5c, 0xc8, 0xa4, 0xf8, 0x30, 0xff, 0x4d, 0xc8, 0x5c, 0xc8, 0x1d, 0x5d, 0x2b,
+	0x26, 0x4b, 0xf9, 0x8a, 0x1e, 0x93, 0x44, 0x50, 0x87, 0xe2, 0xcc, 0x1f, 0x1a, 0xa4, 0xe5, 0x4e,
+	0xa4, 0xa4, 0x17, 0x90, 0x09, 0xae, 0x92, 0x2a, 0x68, 0xe5, 0xce, 0x39, 0x25, 0x0a, 0x9c, 0x74,
+	0x24, 0xf9, 0x57, 0x8e, 0xe0, 0xab, 0xb1, 0x0e, 0xa6, 0x66, 0x76, 0x70, 0xd4, 0x3f, 0xf3, 0x0d,
+	0x64, 0xc3, 0x5d, 0xdc, 0x1c, 0x13, 0x09, 0x26, 0x62, 0x39, 0x32, 0x9f, 0x3b, 0xbd, 0xc1, 0x58,
+	0xf4, 0x39, 0xac, 0x36, 0x3d, 0x4e, 0x99, 0x38, 0xed, 0xf3, 0x6b, 0xda, 0x1e, 0xea, 0x2b, 0x9f,
+	0xdf, 0x46, 0x04, 0xe3, 0x5e, 0x8d, 0xa9, 0xd8, 0x91, 0xfa, 0x27, 0x58, 0x8b, 0x57, 0x57, 0x7e,
+	0xfd, 0xa3, 0xfc, 0x4f, 0x0d, 0x96, 0x26, 0x0f, 0xff, 0x57, 0x17, 0x2b, 0xbf, 0x12, 0x30, 0xbf,
+	0x17, 0x1c, 0xe3, 0x11, 0xc0, 0x68, 0xb6, 0xf1, 0x51, 0xc4, 0xc1, 0x9a, 0xff, 0xd7, 0x60, 0x6c,
+	0xc4, 0x08, 0xc7, 0x5c, 0x89, 0x73, 0xc8, 0x8f, 0xdd, 0x74, 0x8c, 0x8b, 0x8a, 0xbe, 0x2d, 0xc6,
+	0xd3, 0x59, 0x98, 0x52, 0x3f, 0x85, 0xc5, 0x89, 0xf7, 0x01, 0x9f, 0xdd, 0xd1, 0xa9, 0xe9, 0x17,
+	0xc4, 0xb8, 0xa3, 0x2c, 0xbc, 0x85, 0xe5, 0xb8, 0x91, 0x41, 0x2b, 0x46, 0xf8, 0x9e, 0xc9, 0x35,
+	0xca, 0x7f, 0xcc, 0x07, 0xa5, 0x5c, 0x64, 0x64, 0x22, 0x2f, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff,
+	0x50, 0xff, 0x8f, 0x61, 0xc6, 0x07, 0x00, 0x00,
 }
