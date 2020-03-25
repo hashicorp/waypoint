@@ -3,11 +3,14 @@ package core
 import (
 	"context"
 	"fmt"
+	"io"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/plugin"
+	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
@@ -16,12 +19,22 @@ import (
 )
 
 // Project represents a project with one or more applications.
+//
+// The Close function should be called when finished with the project
+// to properly clean up any open resources.
 type Project struct {
 	logger    hclog.Logger
 	apps      map[string]*App
 	factories map[component.Type]*mapper.Factory
 	dir       *datadir.Project
 	mappers   []*mapper.Func
+	client    pb.DevflowClient
+
+	// This lock only needs to be held currently to protect localClosers.
+	lock sync.Mutex
+
+	// The below are resources we need to close when Close is called, if non-nil
+	localClosers []io.Closer
 
 	// UI is the terminal UI to use for messages related to the project
 	// as a whole. These messages will show up unprefixed for example compared
@@ -66,6 +79,16 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		return nil, fmt.Errorf("WithDataDir must be specified")
 	}
 
+	// Setup our server if we're in local mode. In local mode,
+	// we store data locally in the datadir.
+	// TODO(mitchellh): we have a lot of work to do around data migration
+	if err := p.initLocalServer(ctx); err != nil {
+		return nil, fmt.Errorf("Error initializing for local operations: %s", err)
+	}
+	if p.client == nil {
+		panic("p.client should never be nil")
+	}
+
 	// Initialize all the applications and load all their components.
 	for _, appConfig := range opts.Config.Apps {
 		app, err := newApp(ctx, p, appConfig)
@@ -82,6 +105,25 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 // App initializes and returns the app with the given name.
 func (p *Project) App(name string) (*App, error) {
 	return p.apps[name], nil
+}
+
+// Close is called to clean up resources allocated by the project.
+// This should be called and blocked on to gracefully stop the project.
+func (p *Project) Close() error {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	p.logger.Debug("closing project")
+
+	// If we're running in local mode, close our local resources we started
+	for _, c := range p.localClosers {
+		if err := c.Close(); err != nil {
+			return err
+		}
+	}
+	p.localClosers = nil
+
+	return nil
 }
 
 // options is the configuration to construct a new Project. Some

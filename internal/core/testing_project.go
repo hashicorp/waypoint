@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"io/ioutil"
+	"os"
 
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/mock"
@@ -21,6 +22,7 @@ import (
 func TestProject(t testing.T, opts ...Option) *Project {
 	td, err := ioutil.TempDir("", "core")
 	require.NoError(t, err)
+	t.Cleanup(func() { os.RemoveAll(td) })
 
 	projDir, err := datadir.NewProject(td)
 	require.NoError(t, err)
@@ -38,6 +40,7 @@ func TestProject(t testing.T, opts ...Option) *Project {
 
 	p, err := NewProject(context.Background(), append(defaultOpts, opts...)...)
 	require.NoError(t, err)
+	t.Cleanup(func() { p.Close() })
 
 	return p
 }
