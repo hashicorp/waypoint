@@ -186,8 +186,10 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 	c.flagsOnce.Do(func() {
 		set := flag.NewSets()
 
-		// Configure our values
-		f(set)
+		if f != nil {
+			// Configure our values
+			f(set)
+		}
 
 		// Cache
 		c.flags = set

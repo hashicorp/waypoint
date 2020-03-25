@@ -63,7 +63,14 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 		Log: log,
 	}
 
-	return map[string]cli.CommandFactory{
+	// aliases is a list of command aliases we have. The key is the CLI
+	// command (the alias) and the value is the existing target command.
+	aliases := map[string]string{
+		"build": "artifact build",
+	}
+
+	// start building our commands
+	commands := map[string]cli.CommandFactory{
 		"up": func() (cli.Command, error) {
 			return &UpCommand{
 				baseCommand: baseCommand,
@@ -96,6 +103,12 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 			}, nil
 		},
 
+		"artifact list-builds": func() (cli.Command, error) {
+			return &BuildListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		// TODO(mitchellh): make hidden
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
@@ -103,6 +116,13 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 			}, nil
 		},
 	}
+
+	// register our aliases
+	for from, to := range aliases {
+		commands[from] = commands[to]
+	}
+
+	return commands
 }
 
 // interruptContext returns a Context that is done when an interrupt
