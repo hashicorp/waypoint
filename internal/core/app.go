@@ -8,11 +8,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/plugin"
+	"github.com/mitchellh/devflow/internal/server"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
@@ -100,47 +99,43 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 
 // Build builds the artifact from source for this app.
 // TODO(mitchellh): test
-func (a *App) Build(ctx context.Context) (component.Artifact, error) {
+func (a *App) Build(ctx context.Context) (*pb.Build, error) {
 	log := a.logger.Named("build")
 
 	// Create the metadata
 	log.Debug("creating build metadata on server")
-	resp, err := a.client.CreateBuild(ctx, &pb.CreateBuildRequest{
+	build := &pb.Build{
 		Component: a.components[a.Builder],
-	})
+		Status:    server.NewStatus(pb.Status_RUNNING),
+	}
+	resp, err := a.client.UpsertBuild(ctx, &pb.UpsertBuildRequest{Build: build})
 	if err != nil {
 		return nil, err
 	}
-	log = log.With("id", resp.Id)
+	build = resp.Build
+	log = log.With("id", build.Id)
 
 	// Run the build
 	log.Info("starting build")
 	result, err := a.callDynamicFunc(ctx, log, a.Builder, a.Builder.BuildFunc())
 
 	// Complete the build regardless of error so we can set the error if necessary
-	req := &pb.CompleteBuildRequest{Id: resp.Id}
 	if err != nil {
-		st, ok := status.FromError(err)
-		if !ok {
-			st = status.Newf(codes.Internal, "Non-status error %T: %s", err, err)
-		}
-
-		req.Result = &pb.CompleteBuildRequest_Error{Error: st.Proto()}
+		server.StatusSetError(build.Status, err)
 	} else {
+		server.StatusSetSuccess(build.Status)
+
 		val, ok := result.(*any.Any)
 		if !ok {
 			// TODO
 			panic("non-any result")
 		}
 
-		req.Result = &pb.CompleteBuildRequest_Artifact{
-			Artifact: &pb.Artifact{
-				Artifact: val,
-			},
-		}
+		build.Artifact = &pb.Artifact{Artifact: val}
 	}
-	if _, err := a.client.CompleteBuild(ctx, req); err != nil {
-		log.Warn("error completing build, the build status may be stuck")
+	resp, err = a.client.UpsertBuild(ctx, &pb.UpsertBuildRequest{Build: build})
+	if err != nil {
+		log.Warn("error marking build as complete, the build status may be stuck")
 	}
 	log.Debug("build marked as complete on server")
 
@@ -148,14 +143,56 @@ func (a *App) Build(ctx context.Context) (component.Artifact, error) {
 		return nil, err
 	}
 
-	return result.(component.Artifact), nil
+	return resp.Build, nil
 }
 
-// Push pushes the given artifact to the registry.
+// Push pushes the given build to a registry.
 // TODO(mitchellh): test
-func (a *App) Push(ctx context.Context, artifact component.Artifact) (component.Artifact, error) {
+func (a *App) PushBuild(ctx context.Context, build *pb.Build) (component.Artifact, error) {
 	log := a.logger.Named("push")
+
+	// Extract the raw artifact from the build.
+	artifact := build.Artifact.Artifact
+
+	// Create our metadata
+	push := &pb.PushedArtifact{
+		Component: a.components[a.Registry],
+		Status:    server.NewStatus(pb.Status_RUNNING),
+		BuildId:   build.Id,
+	}
+
+	// Init our metadata on the server
+	log.Debug("creating push metadata on server")
+	resp, err := a.client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{Artifact: push})
+	if err != nil {
+		return nil, err
+	}
+	push = resp.Artifact
+	log = log.With("id", push.Id)
+
+	// Run the push
+	log.Info("starting push")
 	result, err := a.callDynamicFunc(ctx, log, a.Registry, a.Registry.PushFunc(), artifact)
+
+	// Complete the metadata
+	if err != nil {
+		server.StatusSetError(push.Status, err)
+	} else {
+		server.StatusSetSuccess(push.Status)
+
+		val, ok := result.(*any.Any)
+		if !ok {
+			// TODO
+			panic("non-any result")
+		}
+		push.Artifact = &pb.Artifact{Artifact: val}
+	}
+	resp, err = a.client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{Artifact: push})
+	if err != nil {
+		log.Warn("error marking push as complete, the status may be stuck")
+	}
+	log.Debug("push marked as complete on server")
+
 	if err != nil {
 		return nil, err
 	}

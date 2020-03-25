@@ -53,7 +53,7 @@ func (x Component_Type) String() string {
 	return proto.EnumName(Component_Type_name, int32(x))
 }
 func (Component_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{0, 0}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{0, 0}
 }
 
 type Status_State int32
@@ -82,7 +82,7 @@ func (x Status_State) String() string {
 	return proto.EnumName(Status_State_name, int32(x))
 }
 func (Status_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{1, 0}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{1, 0}
 }
 
 // Component represents metadata about a component. A component is the
@@ -101,7 +101,7 @@ func (m *Component) Reset()         { *m = Component{} }
 func (m *Component) String() string { return proto.CompactTextString(m) }
 func (*Component) ProtoMessage()    {}
 func (*Component) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{0}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{0}
 }
 func (m *Component) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Component.Unmarshal(m, b)
@@ -158,7 +158,7 @@ func (m *Status) Reset()         { *m = Status{} }
 func (m *Status) String() string { return proto.CompactTextString(m) }
 func (*Status) ProtoMessage()    {}
 func (*Status) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{1}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{1}
 }
 func (m *Status) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Status.Unmarshal(m, b)
@@ -213,236 +213,83 @@ func (m *Status) GetCompleteTime() *timestamp.Timestamp {
 	return nil
 }
 
-type CreateBuildRequest struct {
-	// component type being used for the build
-	Component            *Component `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
-	XXX_unrecognized     []byte     `json:"-"`
-	XXX_sizecache        int32      `json:"-"`
-}
-
-func (m *CreateBuildRequest) Reset()         { *m = CreateBuildRequest{} }
-func (m *CreateBuildRequest) String() string { return proto.CompactTextString(m) }
-func (*CreateBuildRequest) ProtoMessage()    {}
-func (*CreateBuildRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{2}
-}
-func (m *CreateBuildRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_CreateBuildRequest.Unmarshal(m, b)
-}
-func (m *CreateBuildRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_CreateBuildRequest.Marshal(b, m, deterministic)
-}
-func (dst *CreateBuildRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CreateBuildRequest.Merge(dst, src)
-}
-func (m *CreateBuildRequest) XXX_Size() int {
-	return xxx_messageInfo_CreateBuildRequest.Size(m)
-}
-func (m *CreateBuildRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_CreateBuildRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_CreateBuildRequest proto.InternalMessageInfo
-
-func (m *CreateBuildRequest) GetComponent() *Component {
-	if m != nil {
-		return m.Component
-	}
-	return nil
-}
-
-type CreateBuildResponse struct {
-	// id is the unique ID for this build.
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+type UpsertBuildRequest struct {
+	// Build to upsert. If an ID is not set, this will be an insert operation.
+	// If the ID is set, that build is updated. It is an error if an update
+	// is requested on a non-existent build.
+	Build                *Build   `protobuf:"bytes,1,opt,name=build,proto3" json:"build,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *CreateBuildResponse) Reset()         { *m = CreateBuildResponse{} }
-func (m *CreateBuildResponse) String() string { return proto.CompactTextString(m) }
-func (*CreateBuildResponse) ProtoMessage()    {}
-func (*CreateBuildResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{3}
+func (m *UpsertBuildRequest) Reset()         { *m = UpsertBuildRequest{} }
+func (m *UpsertBuildRequest) String() string { return proto.CompactTextString(m) }
+func (*UpsertBuildRequest) ProtoMessage()    {}
+func (*UpsertBuildRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{2}
 }
-func (m *CreateBuildResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_CreateBuildResponse.Unmarshal(m, b)
+func (m *UpsertBuildRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpsertBuildRequest.Unmarshal(m, b)
 }
-func (m *CreateBuildResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_CreateBuildResponse.Marshal(b, m, deterministic)
+func (m *UpsertBuildRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpsertBuildRequest.Marshal(b, m, deterministic)
 }
-func (dst *CreateBuildResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CreateBuildResponse.Merge(dst, src)
+func (dst *UpsertBuildRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpsertBuildRequest.Merge(dst, src)
 }
-func (m *CreateBuildResponse) XXX_Size() int {
-	return xxx_messageInfo_CreateBuildResponse.Size(m)
+func (m *UpsertBuildRequest) XXX_Size() int {
+	return xxx_messageInfo_UpsertBuildRequest.Size(m)
 }
-func (m *CreateBuildResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_CreateBuildResponse.DiscardUnknown(m)
+func (m *UpsertBuildRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpsertBuildRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CreateBuildResponse proto.InternalMessageInfo
+var xxx_messageInfo_UpsertBuildRequest proto.InternalMessageInfo
 
-func (m *CreateBuildResponse) GetId() string {
+func (m *UpsertBuildRequest) GetBuild() *Build {
 	if m != nil {
-		return m.Id
+		return m.Build
 	}
-	return ""
+	return nil
 }
 
-type CompleteBuildRequest struct {
-	// id is the unique ID of the build to complete.
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Types that are valid to be assigned to Result:
-	//	*CompleteBuildRequest_Artifact
-	//	*CompleteBuildRequest_Error
-	Result               isCompleteBuildRequest_Result `protobuf_oneof:"result"`
-	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
-	XXX_unrecognized     []byte                        `json:"-"`
-	XXX_sizecache        int32                         `json:"-"`
+type UpsertBuildResponse struct {
+	Build                *Build   `protobuf:"bytes,1,opt,name=build,proto3" json:"build,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *CompleteBuildRequest) Reset()         { *m = CompleteBuildRequest{} }
-func (m *CompleteBuildRequest) String() string { return proto.CompactTextString(m) }
-func (*CompleteBuildRequest) ProtoMessage()    {}
-func (*CompleteBuildRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{4}
+func (m *UpsertBuildResponse) Reset()         { *m = UpsertBuildResponse{} }
+func (m *UpsertBuildResponse) String() string { return proto.CompactTextString(m) }
+func (*UpsertBuildResponse) ProtoMessage()    {}
+func (*UpsertBuildResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{3}
 }
-func (m *CompleteBuildRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_CompleteBuildRequest.Unmarshal(m, b)
+func (m *UpsertBuildResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpsertBuildResponse.Unmarshal(m, b)
 }
-func (m *CompleteBuildRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_CompleteBuildRequest.Marshal(b, m, deterministic)
+func (m *UpsertBuildResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpsertBuildResponse.Marshal(b, m, deterministic)
 }
-func (dst *CompleteBuildRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CompleteBuildRequest.Merge(dst, src)
+func (dst *UpsertBuildResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpsertBuildResponse.Merge(dst, src)
 }
-func (m *CompleteBuildRequest) XXX_Size() int {
-	return xxx_messageInfo_CompleteBuildRequest.Size(m)
+func (m *UpsertBuildResponse) XXX_Size() int {
+	return xxx_messageInfo_UpsertBuildResponse.Size(m)
 }
-func (m *CompleteBuildRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_CompleteBuildRequest.DiscardUnknown(m)
+func (m *UpsertBuildResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpsertBuildResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CompleteBuildRequest proto.InternalMessageInfo
+var xxx_messageInfo_UpsertBuildResponse proto.InternalMessageInfo
 
-func (m *CompleteBuildRequest) GetId() string {
+func (m *UpsertBuildResponse) GetBuild() *Build {
 	if m != nil {
-		return m.Id
-	}
-	return ""
-}
-
-type isCompleteBuildRequest_Result interface {
-	isCompleteBuildRequest_Result()
-}
-
-type CompleteBuildRequest_Artifact struct {
-	Artifact *Artifact `protobuf:"bytes,2,opt,name=artifact,proto3,oneof"`
-}
-
-type CompleteBuildRequest_Error struct {
-	Error *status.Status `protobuf:"bytes,3,opt,name=error,proto3,oneof"`
-}
-
-func (*CompleteBuildRequest_Artifact) isCompleteBuildRequest_Result() {}
-
-func (*CompleteBuildRequest_Error) isCompleteBuildRequest_Result() {}
-
-func (m *CompleteBuildRequest) GetResult() isCompleteBuildRequest_Result {
-	if m != nil {
-		return m.Result
+		return m.Build
 	}
 	return nil
-}
-
-func (m *CompleteBuildRequest) GetArtifact() *Artifact {
-	if x, ok := m.GetResult().(*CompleteBuildRequest_Artifact); ok {
-		return x.Artifact
-	}
-	return nil
-}
-
-func (m *CompleteBuildRequest) GetError() *status.Status {
-	if x, ok := m.GetResult().(*CompleteBuildRequest_Error); ok {
-		return x.Error
-	}
-	return nil
-}
-
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*CompleteBuildRequest) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _CompleteBuildRequest_OneofMarshaler, _CompleteBuildRequest_OneofUnmarshaler, _CompleteBuildRequest_OneofSizer, []interface{}{
-		(*CompleteBuildRequest_Artifact)(nil),
-		(*CompleteBuildRequest_Error)(nil),
-	}
-}
-
-func _CompleteBuildRequest_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*CompleteBuildRequest)
-	// result
-	switch x := m.Result.(type) {
-	case *CompleteBuildRequest_Artifact:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Artifact); err != nil {
-			return err
-		}
-	case *CompleteBuildRequest_Error:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Error); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("CompleteBuildRequest.Result has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _CompleteBuildRequest_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*CompleteBuildRequest)
-	switch tag {
-	case 2: // result.artifact
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(Artifact)
-		err := b.DecodeMessage(msg)
-		m.Result = &CompleteBuildRequest_Artifact{msg}
-		return true, err
-	case 3: // result.error
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(status.Status)
-		err := b.DecodeMessage(msg)
-		m.Result = &CompleteBuildRequest_Error{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _CompleteBuildRequest_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*CompleteBuildRequest)
-	// result
-	switch x := m.Result.(type) {
-	case *CompleteBuildRequest_Artifact:
-		s := proto.Size(x.Artifact)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *CompleteBuildRequest_Error:
-		s := proto.Size(x.Error)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type ListBuildsResponse struct {
@@ -457,7 +304,7 @@ func (m *ListBuildsResponse) Reset()         { *m = ListBuildsResponse{} }
 func (m *ListBuildsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListBuildsResponse) ProtoMessage()    {}
 func (*ListBuildsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{5}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{4}
 }
 func (m *ListBuildsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListBuildsResponse.Unmarshal(m, b)
@@ -504,7 +351,7 @@ func (m *Build) Reset()         { *m = Build{} }
 func (m *Build) String() string { return proto.CompactTextString(m) }
 func (*Build) ProtoMessage()    {}
 func (*Build) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{6}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{5}
 }
 func (m *Build) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Build.Unmarshal(m, b)
@@ -568,7 +415,7 @@ func (m *Artifact) Reset()         { *m = Artifact{} }
 func (m *Artifact) String() string { return proto.CompactTextString(m) }
 func (*Artifact) ProtoMessage()    {}
 func (*Artifact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{7}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{6}
 }
 func (m *Artifact) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Artifact.Unmarshal(m, b)
@@ -609,7 +456,7 @@ func (m *UpsertPushedArtifactRequest) Reset()         { *m = UpsertPushedArtifac
 func (m *UpsertPushedArtifactRequest) String() string { return proto.CompactTextString(m) }
 func (*UpsertPushedArtifactRequest) ProtoMessage()    {}
 func (*UpsertPushedArtifactRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{8}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{7}
 }
 func (m *UpsertPushedArtifactRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UpsertPushedArtifactRequest.Unmarshal(m, b)
@@ -650,7 +497,7 @@ func (m *UpsertPushedArtifactResponse) Reset()         { *m = UpsertPushedArtifa
 func (m *UpsertPushedArtifactResponse) String() string { return proto.CompactTextString(m) }
 func (*UpsertPushedArtifactResponse) ProtoMessage()    {}
 func (*UpsertPushedArtifactResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{9}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{8}
 }
 func (m *UpsertPushedArtifactResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UpsertPushedArtifactResponse.Unmarshal(m, b)
@@ -685,17 +532,19 @@ type PushedArtifact struct {
 	// component that pushed this artifact
 	Component *Component `protobuf:"bytes,3,opt,name=component,proto3" json:"component,omitempty"`
 	// artifact is the artifact that was a result from the push.
-	Artifact             *Artifact `protobuf:"bytes,4,opt,name=artifact,proto3" json:"artifact,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
-	XXX_unrecognized     []byte    `json:"-"`
-	XXX_sizecache        int32     `json:"-"`
+	Artifact *Artifact `protobuf:"bytes,4,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	// the id of the build that this pushed artifact was sourced from.
+	BuildId              string   `protobuf:"bytes,5,opt,name=build_id,json=buildId,proto3" json:"build_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *PushedArtifact) Reset()         { *m = PushedArtifact{} }
 func (m *PushedArtifact) String() string { return proto.CompactTextString(m) }
 func (*PushedArtifact) ProtoMessage()    {}
 func (*PushedArtifact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_server_6854e6c6e112be6a, []int{10}
+	return fileDescriptor_server_7c5a9548fd41d3fd, []int{9}
 }
 func (m *PushedArtifact) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PushedArtifact.Unmarshal(m, b)
@@ -743,12 +592,18 @@ func (m *PushedArtifact) GetArtifact() *Artifact {
 	return nil
 }
 
+func (m *PushedArtifact) GetBuildId() string {
+	if m != nil {
+		return m.BuildId
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*Component)(nil), "hashicorp.devflow.Component")
 	proto.RegisterType((*Status)(nil), "hashicorp.devflow.Status")
-	proto.RegisterType((*CreateBuildRequest)(nil), "hashicorp.devflow.CreateBuildRequest")
-	proto.RegisterType((*CreateBuildResponse)(nil), "hashicorp.devflow.CreateBuildResponse")
-	proto.RegisterType((*CompleteBuildRequest)(nil), "hashicorp.devflow.CompleteBuildRequest")
+	proto.RegisterType((*UpsertBuildRequest)(nil), "hashicorp.devflow.UpsertBuildRequest")
+	proto.RegisterType((*UpsertBuildResponse)(nil), "hashicorp.devflow.UpsertBuildResponse")
 	proto.RegisterType((*ListBuildsResponse)(nil), "hashicorp.devflow.ListBuildsResponse")
 	proto.RegisterType((*Build)(nil), "hashicorp.devflow.Build")
 	proto.RegisterType((*Artifact)(nil), "hashicorp.devflow.Artifact")
@@ -773,12 +628,10 @@ const _ = grpc.SupportPackageIsVersion4
 type DevflowClient interface {
 	// ListBuilds returns the builds.
 	ListBuilds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListBuildsResponse, error)
-	// CreateBuild creates the metadata associated with an artifact build.
-	CreateBuild(ctx context.Context, in *CreateBuildRequest, opts ...grpc.CallOption) (*CreateBuildResponse, error)
-	// CompleteBuild is called when a build is completed (for a local run).
-	// This updates the final status of the build, including information about
-	// the generated artifact.
-	CompleteBuild(ctx context.Context, in *CompleteBuildRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// UpsertBuild updates or inserts a build. A build is responsible for
+	// taking some set of source information and turning it into an initial
+	// artifact. This artifact is considered "local" until it is pushed.
+	UpsertBuild(ctx context.Context, in *UpsertBuildRequest, opts ...grpc.CallOption) (*UpsertBuildResponse, error)
 	// UpsertPushedArtifact updates or inserts a pushed artifact. This is
 	// useful for local operations to work on a pushed artifact.
 	UpsertPushedArtifact(ctx context.Context, in *UpsertPushedArtifactRequest, opts ...grpc.CallOption) (*UpsertPushedArtifactResponse, error)
@@ -801,18 +654,9 @@ func (c *devflowClient) ListBuilds(ctx context.Context, in *empty.Empty, opts ..
 	return out, nil
 }
 
-func (c *devflowClient) CreateBuild(ctx context.Context, in *CreateBuildRequest, opts ...grpc.CallOption) (*CreateBuildResponse, error) {
-	out := new(CreateBuildResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.devflow.Devflow/CreateBuild", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *devflowClient) CompleteBuild(ctx context.Context, in *CompleteBuildRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/hashicorp.devflow.Devflow/CompleteBuild", in, out, opts...)
+func (c *devflowClient) UpsertBuild(ctx context.Context, in *UpsertBuildRequest, opts ...grpc.CallOption) (*UpsertBuildResponse, error) {
+	out := new(UpsertBuildResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.devflow.Devflow/UpsertBuild", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -832,12 +676,10 @@ func (c *devflowClient) UpsertPushedArtifact(ctx context.Context, in *UpsertPush
 type DevflowServer interface {
 	// ListBuilds returns the builds.
 	ListBuilds(context.Context, *empty.Empty) (*ListBuildsResponse, error)
-	// CreateBuild creates the metadata associated with an artifact build.
-	CreateBuild(context.Context, *CreateBuildRequest) (*CreateBuildResponse, error)
-	// CompleteBuild is called when a build is completed (for a local run).
-	// This updates the final status of the build, including information about
-	// the generated artifact.
-	CompleteBuild(context.Context, *CompleteBuildRequest) (*empty.Empty, error)
+	// UpsertBuild updates or inserts a build. A build is responsible for
+	// taking some set of source information and turning it into an initial
+	// artifact. This artifact is considered "local" until it is pushed.
+	UpsertBuild(context.Context, *UpsertBuildRequest) (*UpsertBuildResponse, error)
 	// UpsertPushedArtifact updates or inserts a pushed artifact. This is
 	// useful for local operations to work on a pushed artifact.
 	UpsertPushedArtifact(context.Context, *UpsertPushedArtifactRequest) (*UpsertPushedArtifactResponse, error)
@@ -865,38 +707,20 @@ func _Devflow_ListBuilds_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Devflow_CreateBuild_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateBuildRequest)
+func _Devflow_UpsertBuild_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertBuildRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DevflowServer).CreateBuild(ctx, in)
+		return srv.(DevflowServer).UpsertBuild(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hashicorp.devflow.Devflow/CreateBuild",
+		FullMethod: "/hashicorp.devflow.Devflow/UpsertBuild",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DevflowServer).CreateBuild(ctx, req.(*CreateBuildRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Devflow_CompleteBuild_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CompleteBuildRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DevflowServer).CompleteBuild(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.devflow.Devflow/CompleteBuild",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DevflowServer).CompleteBuild(ctx, req.(*CompleteBuildRequest))
+		return srv.(DevflowServer).UpsertBuild(ctx, req.(*UpsertBuildRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -928,12 +752,8 @@ var _Devflow_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Devflow_ListBuilds_Handler,
 		},
 		{
-			MethodName: "CreateBuild",
-			Handler:    _Devflow_CreateBuild_Handler,
-		},
-		{
-			MethodName: "CompleteBuild",
-			Handler:    _Devflow_CompleteBuild_Handler,
+			MethodName: "UpsertBuild",
+			Handler:    _Devflow_UpsertBuild_Handler,
 		},
 		{
 			MethodName: "UpsertPushedArtifact",
@@ -944,52 +764,49 @@ var _Devflow_serviceDesc = grpc.ServiceDesc{
 	Metadata: "server.proto",
 }
 
-func init() { proto.RegisterFile("server.proto", fileDescriptor_server_6854e6c6e112be6a) }
+func init() { proto.RegisterFile("server.proto", fileDescriptor_server_7c5a9548fd41d3fd) }
 
-var fileDescriptor_server_6854e6c6e112be6a = []byte{
-	// 696 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0xdd, 0x4e, 0x13, 0x41,
-	0x14, 0xc7, 0xd9, 0x7e, 0xd1, 0x9e, 0x02, 0xa9, 0x47, 0xa2, 0xcb, 0x42, 0x42, 0xdd, 0x04, 0x6d,
-	0xbc, 0xd8, 0x62, 0x0d, 0x31, 0x18, 0x8d, 0x81, 0x52, 0x81, 0x40, 0x0a, 0x99, 0xd2, 0x18, 0x13,
-	0x8c, 0x59, 0xda, 0x01, 0x36, 0x69, 0xbb, 0xeb, 0xcc, 0x14, 0xd2, 0x17, 0xf0, 0x15, 0x7c, 0x17,
-	0x6f, 0xbc, 0xf5, 0xad, 0x34, 0x3b, 0x3b, 0xdb, 0xaf, 0x5d, 0xa8, 0xc6, 0x2b, 0xaf, 0xda, 0x99,
-	0xf9, 0x9d, 0x7f, 0xcf, 0x39, 0xff, 0x33, 0x53, 0x58, 0xe0, 0x94, 0xdd, 0x50, 0x66, 0x79, 0xcc,
-	0x15, 0x2e, 0x3e, 0xb8, 0xb6, 0xf9, 0xb5, 0xd3, 0x72, 0x99, 0x67, 0xb5, 0xe9, 0xcd, 0x65, 0xc7,
-	0xbd, 0x35, 0x56, 0xae, 0x5c, 0xf7, 0xaa, 0x43, 0xcb, 0x12, 0xb8, 0xe8, 0x5f, 0x96, 0xed, 0xde,
-	0x20, 0xa0, 0x8d, 0xd5, 0xe9, 0x23, 0xda, 0xf5, 0x44, 0x78, 0xb8, 0x3e, 0x7d, 0x28, 0x9c, 0x2e,
-	0xe5, 0xc2, 0xee, 0x7a, 0x0a, 0x78, 0xac, 0x00, 0xe6, 0xb5, 0xca, 0x5c, 0xd8, 0xa2, 0xcf, 0x83,
-	0x03, 0xf3, 0xab, 0x06, 0xb9, 0xaa, 0xdb, 0xf5, 0xdc, 0x1e, 0xed, 0x09, 0xdc, 0x82, 0x94, 0x18,
-	0x78, 0x54, 0xd7, 0x8a, 0x5a, 0x69, 0xa9, 0xf2, 0xc4, 0x8a, 0x64, 0x68, 0x0d, 0x59, 0xeb, 0x6c,
-	0xe0, 0x51, 0x22, 0x71, 0x44, 0x48, 0xf5, 0xec, 0x2e, 0xd5, 0x13, 0x45, 0xad, 0x94, 0x23, 0xf2,
-	0xbb, 0x69, 0x41, 0xca, 0x27, 0x30, 0x0f, 0xf3, 0xcd, 0xfa, 0x51, 0xfd, 0xe4, 0x43, 0xbd, 0x30,
-	0xe7, 0x2f, 0x76, 0x9b, 0x87, 0xc7, 0x7b, 0x35, 0x52, 0xd0, 0x70, 0x01, 0xb2, 0xa4, 0xb6, 0x7f,
-	0xd8, 0x38, 0x23, 0x1f, 0x0b, 0x09, 0xf3, 0x7b, 0x02, 0x32, 0x0d, 0x99, 0x19, 0x6e, 0x41, 0xda,
-	0xcf, 0x31, 0x4c, 0x63, 0x3d, 0x26, 0x8d, 0x80, 0x94, 0x1f, 0x94, 0x04, 0x34, 0xea, 0x30, 0xdf,
-	0xa6, 0xc2, 0x76, 0x3a, 0x5c, 0x25, 0x12, 0x2e, 0xb1, 0x04, 0x69, 0xca, 0x98, 0xcb, 0xf4, 0x64,
-	0x51, 0x2b, 0xe5, 0x2b, 0x68, 0x05, 0xdd, 0xb0, 0x98, 0xd7, 0x52, 0x4a, 0x24, 0x00, 0x70, 0x1b,
-	0x80, 0x0b, 0x9b, 0x89, 0xcf, 0x7e, 0x03, 0xf5, 0x94, 0xc4, 0x8d, 0x10, 0x0f, 0xbb, 0x6b, 0x9d,
-	0x85, 0xdd, 0x25, 0x39, 0x49, 0xfb, 0x6b, 0x7c, 0x07, 0x8b, 0x2d, 0xb7, 0xeb, 0x75, 0xa8, 0xa0,
-	0x41, 0x74, 0x7a, 0x66, 0xf4, 0x42, 0x18, 0xe0, 0x6f, 0x99, 0xdb, 0x90, 0x96, 0xf5, 0x44, 0x5a,
-	0x46, 0x9a, 0xf5, 0xfa, 0x61, 0x7d, 0xbf, 0xa0, 0xf9, 0x8b, 0x46, 0xb3, 0x5a, 0xad, 0x35, 0x1a,
-	0x85, 0x04, 0xe6, 0x20, 0x5d, 0x23, 0xe4, 0x84, 0x14, 0x92, 0xe6, 0x29, 0x60, 0x95, 0x51, 0x5b,
-	0xd0, 0xdd, 0xbe, 0xd3, 0x69, 0x13, 0xfa, 0xa5, 0x4f, 0xb9, 0xc0, 0xd7, 0x90, 0x6b, 0x85, 0x76,
-	0xc9, 0x5e, 0xe6, 0x2b, 0x6b, 0xf7, 0x59, 0x4a, 0x46, 0xb8, 0xb9, 0x01, 0x0f, 0x27, 0x14, 0xb9,
-	0xe7, 0xf6, 0x38, 0xc5, 0x25, 0x48, 0x38, 0x6d, 0xa9, 0x95, 0x23, 0x09, 0xa7, 0x6d, 0x7e, 0xd3,
-	0x60, 0xb9, 0xaa, 0x8a, 0x98, 0xf8, 0xed, 0x29, 0x10, 0xb7, 0x21, 0x6b, 0x33, 0xe1, 0x5c, 0xda,
-	0x2d, 0x21, 0xdd, 0xc9, 0x57, 0x56, 0x63, 0x52, 0xd9, 0x51, 0xc8, 0xc1, 0x1c, 0x19, 0xe2, 0xf8,
-	0x7c, 0xa6, 0x7b, 0x07, 0x73, 0xca, 0xbf, 0xdd, 0x2c, 0x64, 0x18, 0xe5, 0xfd, 0x8e, 0x30, 0xdf,
-	0x03, 0x1e, 0x3b, 0x5c, 0xc8, 0xa4, 0xf8, 0x30, 0xff, 0x4d, 0xc8, 0x5c, 0xc8, 0x1d, 0x5d, 0x2b,
-	0x26, 0x4b, 0xf9, 0x8a, 0x1e, 0x93, 0x44, 0x50, 0x87, 0xe2, 0xcc, 0x1f, 0x1a, 0xa4, 0xe5, 0x4e,
-	0xa4, 0xa4, 0x17, 0x90, 0x09, 0xae, 0x92, 0x2a, 0x68, 0xe5, 0xce, 0x39, 0x25, 0x0a, 0x9c, 0x74,
-	0x24, 0xf9, 0x57, 0x8e, 0xe0, 0xab, 0xb1, 0x0e, 0xa6, 0x66, 0x76, 0x70, 0xd4, 0x3f, 0xf3, 0x0d,
-	0x64, 0xc3, 0x5d, 0xdc, 0x1c, 0x13, 0x09, 0x26, 0x62, 0x39, 0x32, 0x9f, 0x3b, 0xbd, 0xc1, 0x58,
-	0xf4, 0x39, 0xac, 0x36, 0x3d, 0x4e, 0x99, 0x38, 0xed, 0xf3, 0x6b, 0xda, 0x1e, 0xea, 0x2b, 0x9f,
-	0xdf, 0x46, 0x04, 0xe3, 0x5e, 0x8d, 0xa9, 0xd8, 0x91, 0xfa, 0x27, 0x58, 0x8b, 0x57, 0x57, 0x7e,
-	0xfd, 0xa3, 0xfc, 0x4f, 0x0d, 0x96, 0x26, 0x0f, 0xff, 0x57, 0x17, 0x2b, 0xbf, 0x12, 0x30, 0xbf,
-	0x17, 0x1c, 0xe3, 0x11, 0xc0, 0x68, 0xb6, 0xf1, 0x51, 0xc4, 0xc1, 0x9a, 0xff, 0xd7, 0x60, 0x6c,
-	0xc4, 0x08, 0xc7, 0x5c, 0x89, 0x73, 0xc8, 0x8f, 0xdd, 0x74, 0x8c, 0x8b, 0x8a, 0xbe, 0x2d, 0xc6,
-	0xd3, 0x59, 0x98, 0x52, 0x3f, 0x85, 0xc5, 0x89, 0xf7, 0x01, 0x9f, 0xdd, 0xd1, 0xa9, 0xe9, 0x17,
-	0xc4, 0xb8, 0xa3, 0x2c, 0xbc, 0x85, 0xe5, 0xb8, 0x91, 0x41, 0x2b, 0x46, 0xf8, 0x9e, 0xc9, 0x35,
-	0xca, 0x7f, 0xcc, 0x07, 0xa5, 0x5c, 0x64, 0x64, 0x22, 0x2f, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff,
-	0x50, 0xff, 0x8f, 0x61, 0xc6, 0x07, 0x00, 0x00,
+var fileDescriptor_server_7c5a9548fd41d3fd = []byte{
+	// 652 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x94, 0xdf, 0x4e, 0x13, 0x41,
+	0x14, 0xc6, 0xdd, 0xa5, 0xdb, 0x76, 0x4f, 0x91, 0xd4, 0x23, 0xd1, 0xa5, 0x90, 0x50, 0x37, 0xd1,
+	0xf4, 0x6a, 0x8b, 0x35, 0xc4, 0x60, 0x34, 0x86, 0x3f, 0x95, 0x34, 0x90, 0x62, 0xa6, 0x34, 0xc6,
+	0x04, 0x43, 0x96, 0xee, 0x00, 0x9b, 0xb4, 0xdd, 0x75, 0x66, 0x0a, 0xe9, 0x0b, 0xf8, 0x36, 0xbe,
+	0x80, 0x37, 0x3e, 0x8c, 0x2f, 0x62, 0x76, 0x66, 0xb6, 0x40, 0xbb, 0x80, 0xc6, 0x2b, 0xaf, 0xda,
+	0x33, 0xe7, 0x77, 0xbe, 0x39, 0x3d, 0xe7, 0x9b, 0xc2, 0x3c, 0xa7, 0xec, 0x82, 0x32, 0x2f, 0x66,
+	0x91, 0x88, 0xf0, 0xd1, 0xb9, 0xcf, 0xcf, 0xc3, 0x5e, 0xc4, 0x62, 0x2f, 0xa0, 0x17, 0xa7, 0xfd,
+	0xe8, 0xb2, 0xb2, 0x74, 0x16, 0x45, 0x67, 0x7d, 0x5a, 0x97, 0xc0, 0xc9, 0xe8, 0xb4, 0xee, 0x0f,
+	0xc7, 0x8a, 0xae, 0x2c, 0x4f, 0xa7, 0xe8, 0x20, 0x16, 0x69, 0x72, 0x75, 0x3a, 0x29, 0xc2, 0x01,
+	0xe5, 0xc2, 0x1f, 0xc4, 0x1a, 0x78, 0xaa, 0x01, 0x16, 0xf7, 0xea, 0x5c, 0xf8, 0x62, 0xc4, 0x55,
+	0xc2, 0xfd, 0x66, 0x80, 0xbd, 0x1d, 0x0d, 0xe2, 0x68, 0x48, 0x87, 0x02, 0xd7, 0x21, 0x27, 0xc6,
+	0x31, 0x75, 0x8c, 0xaa, 0x51, 0x5b, 0x68, 0x3c, 0xf3, 0x66, 0x3a, 0xf4, 0x26, 0xac, 0x77, 0x38,
+	0x8e, 0x29, 0x91, 0x38, 0x22, 0xe4, 0x86, 0xfe, 0x80, 0x3a, 0x66, 0xd5, 0xa8, 0xd9, 0x44, 0x7e,
+	0x77, 0x3d, 0xc8, 0x25, 0x04, 0x96, 0xa0, 0xd0, 0x6d, 0xef, 0xb5, 0x0f, 0x3e, 0xb5, 0xcb, 0x0f,
+	0x92, 0x60, 0xab, 0xdb, 0xda, 0xdf, 0x69, 0x92, 0xb2, 0x81, 0xf3, 0x50, 0x24, 0xcd, 0xdd, 0x56,
+	0xe7, 0x90, 0x7c, 0x2e, 0x9b, 0xee, 0x0f, 0x13, 0xf2, 0x1d, 0xd9, 0x19, 0xae, 0x83, 0x95, 0xf4,
+	0x98, 0xb6, 0xb1, 0x9a, 0xd1, 0x86, 0x22, 0xe5, 0x07, 0x25, 0x8a, 0x46, 0x07, 0x0a, 0x01, 0x15,
+	0x7e, 0xd8, 0xe7, 0xba, 0x91, 0x34, 0xc4, 0x1a, 0x58, 0x94, 0xb1, 0x88, 0x39, 0x73, 0x55, 0xa3,
+	0x56, 0x6a, 0xa0, 0xa7, 0xa6, 0xe1, 0xb1, 0xb8, 0xa7, 0x95, 0x88, 0x02, 0x70, 0x03, 0x80, 0x0b,
+	0x9f, 0x89, 0xe3, 0x64, 0x80, 0x4e, 0x4e, 0xe2, 0x95, 0x14, 0x4f, 0xa7, 0xeb, 0x1d, 0xa6, 0xd3,
+	0x25, 0xb6, 0xa4, 0x93, 0x18, 0xdf, 0xc3, 0xc3, 0x5e, 0x34, 0x88, 0xfb, 0x54, 0x50, 0x55, 0x6d,
+	0xdd, 0x5b, 0x3d, 0x9f, 0x16, 0x24, 0x47, 0xee, 0x06, 0x58, 0xf2, 0xf7, 0xcc, 0x8c, 0x8c, 0x74,
+	0xdb, 0xed, 0x56, 0x7b, 0xb7, 0x6c, 0x24, 0x41, 0xa7, 0xbb, 0xbd, 0xdd, 0xec, 0x74, 0xca, 0x26,
+	0xda, 0x60, 0x35, 0x09, 0x39, 0x20, 0xe5, 0x39, 0x77, 0x07, 0xb0, 0x1b, 0x73, 0xca, 0xc4, 0xd6,
+	0x28, 0xec, 0x07, 0x84, 0x7e, 0x1d, 0x51, 0x2e, 0xd0, 0x03, 0xeb, 0x24, 0x89, 0xe5, 0x1c, 0x4b,
+	0x0d, 0x27, 0x63, 0x8e, 0x8a, 0x57, 0x98, 0xdb, 0x84, 0xc7, 0x37, 0x54, 0x78, 0x1c, 0x0d, 0x39,
+	0xfd, 0x6b, 0x99, 0x0f, 0x80, 0xfb, 0x21, 0x57, 0x22, 0x7c, 0xa2, 0xb2, 0x06, 0x79, 0x99, 0xe6,
+	0x8e, 0x51, 0x9d, 0xbb, 0x53, 0x46, 0x73, 0xee, 0x4f, 0x03, 0x2c, 0x79, 0x82, 0x0b, 0x60, 0x86,
+	0xea, 0x7a, 0x9b, 0x98, 0x61, 0x80, 0x2f, 0x21, 0xaf, 0x4c, 0x2c, 0x17, 0x5d, 0x6a, 0x2c, 0xdd,
+	0xea, 0x10, 0xa2, 0x41, 0x7c, 0x03, 0x76, 0x2f, 0xb5, 0xae, 0xb6, 0xc1, 0xca, 0x5d, 0xf6, 0x26,
+	0x57, 0x38, 0xbe, 0x86, 0xa2, 0xcf, 0x44, 0x78, 0xea, 0xf7, 0x84, 0xb6, 0xc4, 0x72, 0x46, 0xe9,
+	0xa6, 0x46, 0xc8, 0x04, 0x76, 0xdf, 0x42, 0x31, 0x3d, 0xc5, 0xb5, 0x6b, 0x22, 0x6a, 0x90, 0x8b,
+	0x33, 0xce, 0xd8, 0x1c, 0x8e, 0xaf, 0x55, 0x1f, 0xc1, 0xb2, 0x5a, 0xc7, 0xc7, 0x11, 0x3f, 0xa7,
+	0xc1, 0x44, 0x5f, 0x6f, 0xf7, 0xdd, 0x8c, 0x60, 0xd6, 0x7b, 0x9d, 0xaa, 0xbd, 0x52, 0xff, 0x02,
+	0x2b, 0xd9, 0xea, 0x7a, 0x5f, 0xff, 0x28, 0xff, 0xcb, 0x80, 0x85, 0x9b, 0xc9, 0xff, 0x75, 0x8b,
+	0xb8, 0x04, 0x45, 0xe9, 0xc8, 0xe3, 0x30, 0x90, 0x6f, 0xda, 0x26, 0x05, 0x19, 0xb7, 0x82, 0xc6,
+	0x77, 0x13, 0x0a, 0x3b, 0xaa, 0x12, 0xf7, 0x00, 0xae, 0x6c, 0x8f, 0x4f, 0x66, 0x96, 0xdb, 0x4c,
+	0xfe, 0xaf, 0x2b, 0xcf, 0x33, 0xee, 0xcc, 0x78, 0x2d, 0x47, 0x50, 0xba, 0xf6, 0x14, 0x31, 0xab,
+	0x6a, 0xf6, 0xc1, 0x57, 0x5e, 0xdc, 0x87, 0x69, 0xf5, 0x4b, 0x58, 0xcc, 0xda, 0x3d, 0x7a, 0xb7,
+	0xd6, 0x67, 0x5a, 0xb0, 0x52, 0xff, 0x63, 0x5e, 0x5d, 0x7c, 0x92, 0x97, 0xd3, 0x78, 0xf5, 0x3b,
+	0x00, 0x00, 0xff, 0xff, 0xa4, 0xa4, 0x07, 0x63, 0x09, 0x07, 0x00, 0x00,
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,65 +19,34 @@ func init() {
 	dbBuckets = append(dbBuckets, buildBucket)
 }
 
-func (s *service) CreateBuild(
+func (s *service) UpsertBuild(
 	ctx context.Context,
-	req *pb.CreateBuildRequest,
-) (*pb.CreateBuildResponse, error) {
-	id, err := server.Id()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
-	}
+	req *pb.UpsertBuildRequest,
+) (*pb.UpsertBuildResponse, error) {
+	result := req.Build
 
-	// Create the build
-	build := &pb.Build{
-		Id: id,
-		Status: &pb.Status{
-			State:     pb.Status_RUNNING,
-			StartTime: ptypes.TimestampNow(),
-		},
-		Component: req.Component,
+	// If we have no ID, then we're inserting and need to generate an ID.
+	insert := result.Id == ""
+	if insert {
+		// Get the next id
+		id, err := server.Id()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
+		}
+
+		// Specify the id
+		result.Id = id
 	}
 
 	// Insert into our database
-	err = s.db.Update(func(tx *bolt.Tx) error {
-		return dbPut(tx.Bucket(buildBucket), build.Id, build)
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		return dbUpsert(tx.Bucket(buildBucket), !insert, result.Id, result)
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.CreateBuildResponse{Id: id}, nil
-}
-
-func (s *service) CompleteBuild(
-	ctx context.Context,
-	req *pb.CompleteBuildRequest,
-) (*empty.Empty, error) {
-	return &empty.Empty{}, s.db.Update(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(buildBucket)
-
-		// Read our build
-		var build pb.Build
-		if err := dbGet(bucket, req.Id, &build); err != nil {
-			return err
-		}
-
-		// Regardless of the outcome, we update our completion time.
-		build.Status.CompleteTime = ptypes.TimestampNow()
-
-		switch result := req.Result.(type) {
-		case *pb.CompleteBuildRequest_Artifact:
-			build.Status.State = pb.Status_SUCCESS
-			build.Artifact = result.Artifact
-
-		case *pb.CompleteBuildRequest_Error:
-			build.Status.State = pb.Status_ERROR
-			build.Status.Error = result.Error
-		}
-
-		// Save
-		return dbPut(bucket, build.Id, &build)
-	})
+	return &pb.UpsertBuildResponse{Build: result}, nil
 }
 
 func (s *service) ListBuilds(

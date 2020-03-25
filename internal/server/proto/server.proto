@@ -18,13 +18,10 @@ service Devflow {
   // API clients since they can be used to damage internal state.
   //----------------------------------------------------------------------
 
-  // CreateBuild creates the metadata associated with an artifact build.
-  rpc CreateBuild(CreateBuildRequest) returns (CreateBuildResponse);
-
-  // CompleteBuild is called when a build is completed (for a local run).
-  // This updates the final status of the build, including information about
-  // the generated artifact.
-  rpc CompleteBuild(CompleteBuildRequest) returns (google.protobuf.Empty);
+  // UpsertBuild updates or inserts a build. A build is responsible for
+  // taking some set of source information and turning it into an initial
+  // artifact. This artifact is considered "local" until it is pushed.
+  rpc UpsertBuild(UpsertBuildRequest) returns (UpsertBuildResponse);
 
   // UpsertPushedArtifact updates or inserts a pushed artifact. This is
   // useful for local operations to work on a pushed artifact.
@@ -85,27 +82,15 @@ message Status {
 * Build
 ********************************************************************/
 
-message CreateBuildRequest {
-  // component type being used for the build
-  Component component = 1;
+message UpsertBuildRequest {
+  // Build to upsert. If an ID is not set, this will be an insert operation.
+  // If the ID is set, that build is updated. It is an error if an update
+  // is requested on a non-existent build.
+  Build build = 1;
 }
 
-message CreateBuildResponse {
-  // id is the unique ID for this build.
-  string id = 1;
-}
-
-message CompleteBuildRequest {
-  // id is the unique ID of the build to complete.
-  string id = 1;
-
-  oneof result {
-    // artifact is the artifact that was created for this build
-    Artifact artifact = 2;
-
-    // error is an error that occurred as part of the build
-    google.rpc.Status error = 3;
-  }
+message UpsertBuildResponse {
+  Build build = 1;
 }
 
 message ListBuildsResponse {
@@ -168,4 +153,7 @@ message PushedArtifact {
 
   // artifact is the artifact that was a result from the push.
   Artifact artifact = 4;
+
+  // the id of the build that this pushed artifact was sourced from.
+  string build_id = 5;
 }
