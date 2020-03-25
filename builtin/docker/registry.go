@@ -2,8 +2,9 @@ package docker
 
 import (
 	"context"
-	"os"
 	"os/exec"
+
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 // Registry represents access to a Docker registry.
@@ -22,14 +23,23 @@ func (r *Registry) PushFunc() interface{} {
 }
 
 // Push pushes an image to the registry.
-func (r *Registry) Push(ctx context.Context, img *Image) (*Image, error) {
+func (r *Registry) Push(
+	ctx context.Context,
+	img *Image,
+	ui terminal.UI,
+) (*Image, error) {
+	stdout, stderr, err := ui.OutputWriters()
+	if err != nil {
+		return nil, err
+	}
+
 	target := &Image{Image: r.config.Image, Tag: r.config.Tag}
 
 	{
 		// Re-tag the image to our target value
 		cmd := exec.CommandContext(ctx, "docker", "tag", img.Name(), target.Name())
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {
 			return nil, err
 		}
@@ -38,8 +48,8 @@ func (r *Registry) Push(ctx context.Context, img *Image) (*Image, error) {
 	{
 		// Push it
 		cmd := exec.CommandContext(ctx, "docker", "push", target.Name())
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {
 			return nil, err
 		}
