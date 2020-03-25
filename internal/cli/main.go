@@ -109,6 +109,12 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 			}, nil
 		},
 
+		"artifact push": func() (cli.Command, error) {
+			return &ArtifactPushCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		// TODO(mitchellh): make hidden
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{

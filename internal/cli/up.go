@@ -48,7 +48,7 @@ func (c *UpCommand) Run([]string) int {
 
 	if app.Registry != nil {
 		fmt.Fprintf(os.Stdout, "==> Pushing artifact\n")
-		pushedArtifact, err = app.Push(ctx, buildArtifact)
+		pushedArtifact, err = app.PushBuild(ctx, nil)
 		if err != nil {
 			log.Error("error pushing artifact to registry", "error", err)
 			return 1

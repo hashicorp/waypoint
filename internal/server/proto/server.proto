@@ -12,6 +12,10 @@ service Devflow {
   // ListBuilds returns the builds.
   rpc ListBuilds(google.protobuf.Empty) returns (ListBuildsResponse);
 
+  // GetLatestBuild returns the most recent successfully completed build
+  // for an app.
+  rpc GetLatestBuild(google.protobuf.Empty) returns (Build);
+
   //----------------------------------------------------------------------
   // Internal metadata endpoints. The endpoints below are expected to be
   // called for internal bookkeeping only. They should be avoided for general

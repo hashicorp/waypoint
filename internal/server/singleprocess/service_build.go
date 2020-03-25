@@ -2,9 +2,11 @@ package singleprocess
 
 import (
 	"context"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -68,4 +70,40 @@ func (s *service) ListBuilds(
 	})
 
 	return &pb.ListBuildsResponse{Builds: result}, nil
+}
+
+// TODO: test
+func (s *service) GetLatestBuild(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.Build, error) {
+	var result *pb.Build
+	var resultTime time.Time
+	s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(buildBucket)
+		return bucket.ForEach(func(k, v []byte) error {
+			var build pb.Build
+			if err := proto.Unmarshal(v, &build); err != nil {
+				panic(err)
+			}
+
+			// Looking for the build that is complete
+			if build.Status.State != pb.Status_SUCCESS {
+				return nil
+			}
+
+			t, err := ptypes.Timestamp(build.Status.CompleteTime)
+			if err != nil {
+				return status.Errorf(codes.Internal, "time for build can't be parsed")
+			}
+
+			if result == nil || resultTime.Before(t) {
+				result = &build
+			}
+
+			return nil
+		})
+	})
+
+	return result, nil
 }
