@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/mitchellh/devflow/internal/pkg/flag"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
+	serversort "github.com/mitchellh/devflow/internal/server/sort"
 	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
@@ -36,6 +38,7 @@ func (c *BuildListCommand) Run(args []string) int {
 		c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
 		return 1
 	}
+	sort.Sort(serversort.BuildStartDesc(resp.Builds))
 
 	// Get our direct stdout handle cause we're going to be writing colors
 	// and want color detection to work.
