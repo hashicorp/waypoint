@@ -13,7 +13,7 @@ service Devflow {
   rpc ListBuilds(google.protobuf.Empty) returns (ListBuildsResponse);
 
   // GetLatestBuild returns the most recent successfully completed build
-  // for an app.
+// for an app.
   rpc GetLatestBuild(google.protobuf.Empty) returns (Build);
 
   //----------------------------------------------------------------------
@@ -30,6 +30,9 @@ service Devflow {
   // UpsertPushedArtifact updates or inserts a pushed artifact. This is
   // useful for local operations to work on a pushed artifact.
   rpc UpsertPushedArtifact(UpsertPushedArtifactRequest) returns (UpsertPushedArtifactResponse);
+
+  // UpsertDeployment updates or inserts a deployment.
+  rpc UpsertDeployment(UpsertDeploymentRequest) returns (UpsertDeploymentResponse);
 }
 
 /********************************************************************
@@ -160,4 +163,41 @@ message PushedArtifact {
 
   // the id of the build that this pushed artifact was sourced from.
   string build_id = 5;
+}
+
+/********************************************************************
+* Platform
+********************************************************************/
+
+message UpsertDeploymentRequest {
+  // deployment to upsert. If the id in the artifact is empty, then this
+  // will be an insert. Otherwise, this will be an update and if the ID
+  // isn't found, it will be an error.
+  Deployment deployment = 1;
+}
+
+message UpsertDeploymentResponse {
+  // resulting object, you should replace this with what was sent in the request
+  // since the update operation may touch up the input data (i.e. update
+  // timestamps)
+  Deployment deployment = 1;
+}
+
+message Deployment {
+  // id is the unique ID for this deployment
+  string id = 1;
+
+  // status of the deployment
+  Status status = 2;
+
+  // component that initiated this deployment
+  Component component = 3;
+
+  // ID of the PushedArtifact that was deployed.
+  string artifact_id = 4;
+
+  // deployment is the full raw deployment object encoded directly from
+  // the plugin. The client must have all the plugins setup to properly
+  // decode this.
+  google.protobuf.Any deployment = 5;
 }
