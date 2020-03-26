@@ -1,12 +1,16 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"sort"
+	"strings"
+	"text/tabwriter"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -16,6 +20,21 @@ import (
 const (
 	// EnvLogLevel is the env var to set with the log level.
 	EnvLogLevel = "DF_LOG_LEVEL"
+)
+
+var (
+	// commonCommands are the commands that are deemed "common" and shown first
+	// in the CLI help output.
+	commonCommands = map[string]struct{}{
+		"build": struct{}{},
+		"push":  struct{}{},
+		"up":    struct{}{},
+	}
+
+	// hiddenCommands are not shown in CLI help output.
+	hiddenCommands = map[string]struct{}{
+		"plugin": struct{}{},
+	}
 )
 
 // Main runs the CLI with the given arguments and returns the exit code.
@@ -45,6 +64,7 @@ func Main(args []string) int {
 		Commands:                   commands(ctx, log),
 		Autocomplete:               true,
 		AutocompleteNoDefaultFlags: true,
+		HelpFunc:                   groupedHelpFunc(cli.BasicHelpFunc("devflow")),
 	}
 
 	// Run the CLI
@@ -115,8 +135,6 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 				baseCommand: baseCommand,
 			}, nil
 		},
-
-		// TODO(mitchellh): make hidden
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
 				baseCommand: baseCommand,
@@ -223,4 +241,50 @@ func logger(args []string) ([]string, hclog.Logger, error) {
 	})
 
 	return outArgs, logger, nil
+}
+
+func groupedHelpFunc(f cli.HelpFunc) cli.HelpFunc {
+	return func(commands map[string]cli.CommandFactory) string {
+		var b bytes.Buffer
+		tw := tabwriter.NewWriter(&b, 0, 2, 6, ' ', 0)
+
+		fmt.Fprintf(tw, "Usage: devflow [-version] [-help] [-autocomplete-(un)install] <command> [args]\n\n")
+		fmt.Fprintf(tw, "Common commands:\n")
+		for k, _ := range commonCommands {
+			printCommand(tw, k, commands[k])
+		}
+
+		// Filter out common commands and aliased commands from the other
+		// commands output
+		otherCommands := make([]string, 0, len(commands))
+		for k := range commands {
+			if _, ok := commonCommands[k]; ok {
+				continue
+			}
+			if _, ok := hiddenCommands[k]; ok {
+				continue
+			}
+
+			otherCommands = append(otherCommands, k)
+		}
+		sort.Strings(otherCommands)
+
+		fmt.Fprintf(tw, "\n")
+		fmt.Fprintf(tw, "Other commands:\n")
+		for _, v := range otherCommands {
+			printCommand(tw, v, commands[v])
+		}
+
+		tw.Flush()
+
+		return strings.TrimSpace(b.String())
+	}
+}
+
+func printCommand(w io.Writer, name string, cmdFn cli.CommandFactory) {
+	cmd, err := cmdFn()
+	if err != nil {
+		panic(fmt.Sprintf("failed to load %q command: %s", name, err))
+	}
+	fmt.Fprintf(w, "    %s\t%s\n", name, cmd.Synopsis())
 }
