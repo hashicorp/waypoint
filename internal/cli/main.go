@@ -23,6 +23,9 @@ const (
 )
 
 var (
+	// cliName is the name of this CLI.
+	cliName = "devflow"
+
 	// commonCommands are the commands that are deemed "common" and shown first
 	// in the CLI help output.
 	commonCommands = map[string]struct{}{
@@ -64,7 +67,7 @@ func Main(args []string) int {
 		Commands:                   commands(ctx, log),
 		Autocomplete:               true,
 		AutocompleteNoDefaultFlags: true,
-		HelpFunc:                   groupedHelpFunc(cli.BasicHelpFunc("devflow")),
+		HelpFunc:                   groupedHelpFunc(cli.BasicHelpFunc(cliName)),
 	}
 
 	// Run the CLI
@@ -248,7 +251,7 @@ func groupedHelpFunc(f cli.HelpFunc) cli.HelpFunc {
 		var b bytes.Buffer
 		tw := tabwriter.NewWriter(&b, 0, 2, 6, ' ', 0)
 
-		fmt.Fprintf(tw, "Usage: devflow [-version] [-help] [-autocomplete-(un)install] <command> [args]\n\n")
+		fmt.Fprintf(tw, "Usage: %s [-version] [-help] [-autocomplete-(un)install] <command> [args]\n\n", cliName)
 		fmt.Fprintf(tw, "Common commands:\n")
 		for k, _ := range commonCommands {
 			printCommand(tw, k, commands[k])
