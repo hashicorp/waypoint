@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -177,20 +176,23 @@ func (a *App) PushBuild(ctx context.Context, build *pb.Build) (component.Artifac
 	// Run the push
 	log.Info("starting push")
 	result, err := a.callDynamicFunc(ctx, log, (*component.Artifact)(nil), a.Registry, a.Registry.PushFunc(), artifact)
-
-	// Complete the metadata
-	if err != nil {
-		server.StatusSetError(push.Status, err)
-	} else {
-		server.StatusSetSuccess(push.Status)
-
-		val, ok := result.(*any.Any)
-		if !ok {
-			// TODO
-			panic("non-any result")
+	if err == nil {
+		server.StatusSetSuccess(build.Status)
+		val, verr := component.ProtoAny(result.(component.Artifact))
+		if verr != nil {
+			err = verr
 		}
+
 		push.Artifact = &pb.Artifact{Artifact: val}
 	}
+
+	// If we have an error, then we set that up now.
+	if err != nil {
+		push.Artifact = nil
+		server.StatusSetError(build.Status, err)
+	}
+
+	// Complete the metadata
 	resp, err = a.client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{Artifact: push})
 	if err != nil {
 		log.Warn("error marking push as complete, the status may be stuck")

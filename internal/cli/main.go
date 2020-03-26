@@ -67,6 +67,7 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 	// command (the alias) and the value is the existing target command.
 	aliases := map[string]string{
 		"build": "artifact build",
+		"push":  "artifact push",
 	}
 
 	// start building our commands
