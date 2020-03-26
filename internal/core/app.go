@@ -219,7 +219,7 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (component.De
 	log := a.logger.Named("platform")
 
 	// Extract the raw artifact from the build.
-	artifact := push.Artifact
+	artifact := push.Artifact.Artifact
 
 	// Create our metadata
 	deploy := &pb.Deployment{
