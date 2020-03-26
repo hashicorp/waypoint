@@ -11,6 +11,7 @@ import (
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/internal/funcspec"
+	"github.com/mitchellh/devflow/sdk/internal/plugincomponent"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -71,7 +72,7 @@ func (c *registryClient) PushFunc() interface{} {
 func (c *registryClient) push(
 	ctx context.Context,
 	args funcspec.Args,
-) (interface{}, error) {
+) (component.Artifact, error) {
 	// Call our function
 	resp, err := c.client.Push(ctx, &proto.Push_Args{Args: args})
 	if err != nil {
@@ -79,7 +80,7 @@ func (c *registryClient) push(
 	}
 
 	// We return the *any.Any directly.
-	return resp.Result, nil
+	return &plugincomponent.Artifact{Any: resp.Result}, nil
 }
 
 // registryServer is a gRPC server that the client talks to and calls a

@@ -12,9 +12,16 @@ service Devflow {
   // ListBuilds returns the builds.
   rpc ListBuilds(google.protobuf.Empty) returns (ListBuildsResponse);
 
+  // ListPushedArtifacts returns the builds.
+  rpc ListPushedArtifacts(google.protobuf.Empty) returns (ListPushedArtifactsResponse);
+
   // GetLatestBuild returns the most recent successfully completed build
-// for an app.
+  // for an app.
   rpc GetLatestBuild(google.protobuf.Empty) returns (Build);
+
+  // GetLatestPushedArtifact returns the most recent successfully completed
+  // artifact push for an app.
+  rpc GetLatestPushedArtifact(google.protobuf.Empty) returns (PushedArtifact);
 
   //----------------------------------------------------------------------
   // Internal metadata endpoints. The endpoints below are expected to be
@@ -146,6 +153,11 @@ message UpsertPushedArtifactResponse {
   // since the update operation may touch up the input data (i.e. update
   // timestamps)
   PushedArtifact artifact = 1;
+}
+
+message ListPushedArtifactsResponse {
+  // artifacts is the list of artifacts.
+  repeated PushedArtifact artifacts = 1;
 }
 
 message PushedArtifact {

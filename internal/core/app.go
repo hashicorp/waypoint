@@ -151,7 +151,7 @@ func (a *App) Build(ctx context.Context) (*pb.Build, error) {
 
 // Push pushes the given build to a registry.
 // TODO(mitchellh): test
-func (a *App) PushBuild(ctx context.Context, build *pb.Build) (component.Artifact, error) {
+func (a *App) PushBuild(ctx context.Context, build *pb.Build) (*pb.PushedArtifact, error) {
 	log := a.logger.Named("push")
 
 	// Extract the raw artifact from the build.
@@ -175,9 +175,15 @@ func (a *App) PushBuild(ctx context.Context, build *pb.Build) (component.Artifac
 
 	// Run the push
 	log.Info("starting push")
-	result, err := a.callDynamicFunc(ctx, log, (*component.Artifact)(nil), a.Registry, a.Registry.PushFunc(), artifact)
+	result, err := a.callDynamicFunc(
+		ctx,
+		log,
+		(*component.Artifact)(nil),
+		a.Registry,
+		a.Registry.PushFunc(),
+		artifact)
 	if err == nil {
-		server.StatusSetSuccess(build.Status)
+		server.StatusSetSuccess(push.Status)
 		val, verr := component.ProtoAny(result.(component.Artifact))
 		if verr != nil {
 			err = verr
@@ -188,8 +194,9 @@ func (a *App) PushBuild(ctx context.Context, build *pb.Build) (component.Artifac
 
 	// If we have an error, then we set that up now.
 	if err != nil {
+		log.Warn("error during push", "err", err)
 		push.Artifact = nil
-		server.StatusSetError(build.Status, err)
+		server.StatusSetError(push.Status, err)
 	}
 
 	// Complete the metadata
@@ -203,14 +210,65 @@ func (a *App) PushBuild(ctx context.Context, build *pb.Build) (component.Artifac
 		return nil, err
 	}
 
-	return result.(component.Artifact), nil
+	return push, nil
 }
 
 // Deploy deploys the given artifact.
 // TODO(mitchellh): test
-func (a *App) Deploy(ctx context.Context, artifact component.Artifact) (component.Deployment, error) {
+func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (component.Deployment, error) {
 	log := a.logger.Named("platform")
-	result, err := a.callDynamicFunc(ctx, log, (*component.Platform)(nil), a.Platform, a.Platform.DeployFunc(), artifact)
+
+	// Extract the raw artifact from the build.
+	artifact := push.Artifact
+
+	// Create our metadata
+	deploy := &pb.Deployment{
+		Component:  a.components[a.Registry],
+		Status:     server.NewStatus(pb.Status_RUNNING),
+		ArtifactId: push.Id,
+	}
+
+	// Init our metadata on the server
+	log.Debug("creating deployment metadata on server")
+	resp, err := a.client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{Deployment: deploy})
+	if err != nil {
+		return nil, err
+	}
+	deploy = resp.Deployment
+	log = log.With("id", deploy.Id)
+
+	// Run the deploy
+	log.Info("starting deploy")
+	result, err := a.callDynamicFunc(ctx,
+		log,
+		(*component.Deployment)(nil),
+		a.Platform,
+		a.Platform.DeployFunc(),
+		artifact)
+	if err == nil {
+		server.StatusSetSuccess(deploy.Status)
+		val, verr := component.ProtoAny(result.(component.Deployment))
+		if verr != nil {
+			err = verr
+		}
+
+		deploy.Deployment = val
+	}
+
+	// If we have an error, then we set that up now.
+	if err != nil {
+		log.Warn("error during deploy", "err", err)
+		deploy.Deployment = nil
+		server.StatusSetError(deploy.Status, err)
+	}
+
+	// Complete the metadata
+	resp, err = a.client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{Deployment: deploy})
+	if err != nil {
+		log.Warn("error marking deploy as complete, the status may be stuck")
+	}
+	log.Debug("deploy marked as complete on server")
+
 	if err != nil {
 		return nil, err
 	}

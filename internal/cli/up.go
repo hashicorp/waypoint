@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
@@ -44,17 +43,11 @@ func (c *UpCommand) Run([]string) int {
 		return 1
 	}
 
-	var pushedArtifact component.Artifact
-
-	if app.Registry != nil {
-		fmt.Fprintf(os.Stdout, "==> Pushing artifact\n")
-		pushedArtifact, err = app.PushBuild(ctx, build)
-		if err != nil {
-			log.Error("error pushing artifact to registry", "error", err)
-			return 1
-		}
-	} else {
-		//pushedArtifact = buildArtifact
+	fmt.Fprintf(os.Stdout, "==> Pushing artifact\n")
+	pushedArtifact, err := app.PushBuild(ctx, build)
+	if err != nil {
+		log.Error("error pushing artifact to registry", "error", err)
+		return 1
 	}
 
 	fmt.Fprintf(os.Stdout, "==> Deploying\n")

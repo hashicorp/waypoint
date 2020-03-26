@@ -29,9 +29,10 @@ var (
 	// commonCommands are the commands that are deemed "common" and shown first
 	// in the CLI help output.
 	commonCommands = map[string]struct{}{
-		"build": struct{}{},
-		"push":  struct{}{},
-		"up":    struct{}{},
+		"build":  struct{}{},
+		"push":   struct{}{},
+		"deploy": struct{}{},
+		"up":     struct{}{},
 	}
 
 	// hiddenCommands are not shown in CLI help output.
@@ -89,8 +90,9 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 	// aliases is a list of command aliases we have. The key is the CLI
 	// command (the alias) and the value is the existing target command.
 	aliases := map[string]string{
-		"build": "artifact build",
-		"push":  "artifact push",
+		"build":  "artifact build",
+		"deploy": "deployment deploy",
+		"push":   "artifact push",
 	}
 
 	// start building our commands
@@ -127,6 +129,12 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 			}, nil
 		},
 
+		"artifact list": func() (cli.Command, error) {
+			return &ArtifactListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"artifact list-builds": func() (cli.Command, error) {
 			return &BuildListCommand{
 				baseCommand: baseCommand,
@@ -138,6 +146,13 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"deployment deploy": func() (cli.Command, error) {
+			return &DeploymentCreateCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
 				baseCommand: baseCommand,

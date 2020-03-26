@@ -3,6 +3,7 @@ package google
 import (
 	"context"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/builtin/docker"
@@ -98,6 +99,11 @@ type Config struct {
 // the correct string version.
 func (d *CloudRunDeployment) MarshalText() ([]byte, error) {
 	return []byte("URL: " + d.Url), nil
+}
+
+// Proto implements component.ProtoMarshaler
+func (d *CloudRunDeployment) Proto() proto.Message {
+	return d
 }
 
 var (

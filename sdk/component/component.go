@@ -100,5 +100,6 @@ type Artifact interface {
 }
 
 type Deployment interface {
+	ProtoMarshaler
 	fmt.Stringer
 }

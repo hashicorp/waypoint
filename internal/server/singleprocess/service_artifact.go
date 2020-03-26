@@ -2,8 +2,12 @@ package singleprocess
 
 import (
 	"context"
+	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -45,4 +49,67 @@ func (s *service) UpsertPushedArtifact(
 	}
 
 	return &pb.UpsertPushedArtifactResponse{Artifact: result}, nil
+}
+
+// TODO: test
+func (s *service) ListPushedArtifacts(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.ListPushedArtifactsResponse, error) {
+	var result []*pb.PushedArtifact
+	s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(pushBucket)
+		return bucket.ForEach(func(k, v []byte) error {
+			var push pb.PushedArtifact
+			if err := proto.Unmarshal(v, &push); err != nil {
+				panic(err)
+			}
+
+			result = append(result, &push)
+			return nil
+		})
+	})
+
+	return &pb.ListPushedArtifactsResponse{Artifacts: result}, nil
+}
+
+// TODO: test
+func (s *service) GetLatestPushedArtifact(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.PushedArtifact, error) {
+	var result *pb.PushedArtifact
+	var resultTime time.Time
+	s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(pushBucket)
+		return bucket.ForEach(func(k, v []byte) error {
+			var push pb.PushedArtifact
+			if err := proto.Unmarshal(v, &push); err != nil {
+				panic(err)
+			}
+
+			// Looking for the push that is complete
+			if push.Status.State != pb.Status_SUCCESS {
+				return nil
+			}
+
+			t, err := ptypes.Timestamp(push.Status.CompleteTime)
+			if err != nil {
+				return status.Errorf(codes.Internal, "time for push can't be parsed")
+			}
+
+			if result == nil || resultTime.Before(t) {
+				result = &push
+				resultTime = t
+			}
+
+			return nil
+		})
+	})
+
+	if result == nil {
+		return nil, status.Errorf(codes.NotFound, "no successful pushes")
+	}
+
+	return result, nil
 }
