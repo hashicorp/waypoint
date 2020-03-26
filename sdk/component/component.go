@@ -95,7 +95,9 @@ type Source struct {
 	Path string
 }
 
-type Artifact interface{}
+type Artifact interface {
+	ProtoMarshaler
+}
 
 type Deployment interface {
 	fmt.Stringer

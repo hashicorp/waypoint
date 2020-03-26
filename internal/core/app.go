@@ -8,6 +8,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/plugin"
@@ -115,24 +117,26 @@ func (a *App) Build(ctx context.Context) (*pb.Build, error) {
 	build = resp.Build
 	log = log.With("id", build.Id)
 
-	// Run the build
+	// Run the build and set our result.
 	log.Info("starting build")
-	result, err := a.callDynamicFunc(ctx, log, a.Builder, a.Builder.BuildFunc())
-
-	// Complete the build regardless of error so we can set the error if necessary
-	if err != nil {
-		server.StatusSetError(build.Status, err)
-	} else {
+	result, err := a.callDynamicFunc(ctx, log, (*component.Artifact)(nil), a.Builder, a.Builder.BuildFunc())
+	if err == nil {
 		server.StatusSetSuccess(build.Status)
-
-		val, ok := result.(*any.Any)
-		if !ok {
-			// TODO
-			panic("non-any result")
+		val, verr := component.ProtoAny(result.(component.Artifact))
+		if verr != nil {
+			err = verr
 		}
 
 		build.Artifact = &pb.Artifact{Artifact: val}
 	}
+
+	// If we have an error, then we set that up now.
+	if err != nil {
+		build.Artifact = nil
+		server.StatusSetError(build.Status, err)
+	}
+
+	// Update the build status
 	resp, err = a.client.UpsertBuild(ctx, &pb.UpsertBuildRequest{Build: build})
 	if err != nil {
 		log.Warn("error marking build as complete, the build status may be stuck")
@@ -172,7 +176,7 @@ func (a *App) PushBuild(ctx context.Context, build *pb.Build) (component.Artifac
 
 	// Run the push
 	log.Info("starting push")
-	result, err := a.callDynamicFunc(ctx, log, a.Registry, a.Registry.PushFunc(), artifact)
+	result, err := a.callDynamicFunc(ctx, log, (*component.Artifact)(nil), a.Registry, a.Registry.PushFunc(), artifact)
 
 	// Complete the metadata
 	if err != nil {
@@ -204,7 +208,7 @@ func (a *App) PushBuild(ctx context.Context, build *pb.Build) (component.Artifac
 // TODO(mitchellh): test
 func (a *App) Deploy(ctx context.Context, artifact component.Artifact) (component.Deployment, error) {
 	log := a.logger.Named("platform")
-	result, err := a.callDynamicFunc(ctx, log, a.Platform, a.Platform.DeployFunc(), artifact)
+	result, err := a.callDynamicFunc(ctx, log, (*component.Platform)(nil), a.Platform, a.Platform.DeployFunc(), artifact)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +226,7 @@ func (a *App) Exec(ctx context.Context) error {
 		return fmt.Errorf("This platform does not support exec yet")
 	}
 
-	_, err := a.callDynamicFunc(ctx, log, a.Platform, ep.ExecFunc())
+	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ExecFunc())
 	if err != nil {
 		return err
 	}
@@ -242,7 +246,7 @@ func (a *App) ConfigSet(ctx context.Context, key, val string) error {
 
 	cv := &component.ConfigVar{Name: key, Value: val}
 
-	_, err := a.callDynamicFunc(ctx, log, a.Platform, ep.ConfigSetFunc(), cv)
+	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigSetFunc(), cv)
 	if err != nil {
 		return err
 	}
@@ -264,7 +268,7 @@ func (a *App) ConfigGet(ctx context.Context, key string) (*component.ConfigVar, 
 		Name: key,
 	}
 
-	_, err := a.callDynamicFunc(ctx, log, a.Platform, ep.ConfigGetFunc(), cv)
+	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigGetFunc(), cv)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +286,7 @@ func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
 		return nil, fmt.Errorf("This platform does not support logs yet")
 	}
 
-	lv, err := a.callDynamicFunc(ctx, log, a.Platform, ep.LogsFunc())
+	lv, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.LogsFunc())
 	if err != nil {
 		return nil, err
 	}
@@ -302,6 +306,7 @@ func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
 func (a *App) callDynamicFunc(
 	ctx context.Context,
 	log hclog.Logger,
+	result interface{}, // expected result type
 	c interface{}, // component
 	f interface{}, // function
 	values ...interface{},
@@ -340,7 +345,27 @@ func (a *App) callDynamicFunc(
 		return nil, err
 	}
 	log.Debug("function chain", "chain", chain.String())
-	return chain.Call()
+	raw, err := chain.Call()
+	if err != nil {
+		return nil, err
+	}
+
+	// If we don't have an expected result type, then just return as-is.
+	// Otherwise, we need to verify the result type matches properly.
+	if result == nil {
+		return raw, nil
+	}
+
+	// Verify
+	interfaceType := reflect.TypeOf(result).Elem()
+	if rawType := reflect.TypeOf(raw); !rawType.Implements(interfaceType) {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"operation expected result type %s, got %s",
+			interfaceType.String(),
+			rawType.String())
+	}
+
+	return raw, nil
 }
 
 // initComponent initializes a component with the given factory and configuration

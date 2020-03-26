@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
 
+	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
@@ -37,6 +38,21 @@ func TestArgsMapperType_Match(t *testing.T) {
 		require := require.New(t)
 		f, args := testArgsFunc(t, []string{proto.MessageName(data)})
 		result, err := f.Call(data)
+		require.NoError(err)
+		require.NotNil(result)
+		require.Len(*args, 1)
+
+		var value pb.Args_Source
+		require.NoError(ptypes.UnmarshalAny((*args)[0], &value))
+		require.Equal(data, &value)
+	})
+
+	t.Run("match component.ProtoMarshaler", func(t *testing.T) {
+		data := &pb.Args_Source{}
+
+		require := require.New(t)
+		f, args := testArgsFunc(t, []string{proto.MessageName(data)})
+		result, err := f.Call(&testProtoMarshaler{Value: data})
 		require.NoError(err)
 		require.NotNil(result)
 		require.Len(*args, 1)
@@ -117,3 +133,12 @@ func testArgsFunc(t *testing.T, types []string) (*mapper.Func, *Args) {
 
 	return f, &result
 }
+
+// testProtoMarshaler implements component.ProtoMarshaler for tests.
+type testProtoMarshaler struct {
+	Value proto.Message
+}
+
+func (t *testProtoMarshaler) Proto() proto.Message { return t.Value }
+
+var _ component.ProtoMarshaler = (*testProtoMarshaler)(nil)

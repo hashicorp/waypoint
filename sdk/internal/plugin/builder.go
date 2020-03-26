@@ -11,6 +11,7 @@ import (
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/internal/funcspec"
+	"github.com/mitchellh/devflow/sdk/internal/plugincomponent"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
 
@@ -72,15 +73,15 @@ func (c *builderClient) BuildFunc() interface{} {
 func (c *builderClient) build(
 	ctx context.Context,
 	args funcspec.Args,
-) (interface{}, error) {
+) (component.Artifact, error) {
 	// Call our function
 	resp, err := c.client.Build(ctx, &proto.Build_Args{Args: args})
 	if err != nil {
 		return nil, err
 	}
 
-	// We return the *any.Any directly.
-	return resp.Result, nil
+	// We return the
+	return &plugincomponent.Artifact{Any: resp.Result}, nil
 }
 
 // builderServer is a gRPC server that the client talks to and calls a

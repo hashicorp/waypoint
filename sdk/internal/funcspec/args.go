@@ -9,6 +9,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 
+	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
@@ -76,6 +77,16 @@ func (t *ArgsMapperType) args(
 
 	var result []*any.Any
 	for _, raw := range values {
+		// If the raw value is a ProtoMarshaler then we unwrap that first.
+		// This is likely in the scenario that we are doing multiple operations
+		// in one run (i.e. "up") where we're passing the result from a plugin
+		// build directly to push for example. In this case, we'd have the
+		// direct component.Artifact rather than the proto-encoded form.
+		if pm, ok := raw.(component.ProtoMarshaler); ok {
+			raw = pm.Proto()
+		}
+
+		// We expect or hope for an *any.Any directly.
 		av, ok := raw.(*any.Any)
 
 		// If this isn't an *any.Any, we can still take a proto.Message
