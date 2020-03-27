@@ -51,13 +51,12 @@ func (c *UpCommand) Run([]string) int {
 	}
 
 	fmt.Fprintf(os.Stdout, "==> Deploying\n")
-	deployment, err := app.Deploy(ctx, pushedArtifact)
+	_, err = app.Deploy(ctx, pushedArtifact)
 	if err != nil {
 		log.Error("error deploying", "error", err)
 		return 1
 	}
 
-	fmt.Fprintf(os.Stdout, "%s\n", deployment.String())
 	return 0
 }
 

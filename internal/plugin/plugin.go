@@ -6,7 +6,7 @@ import (
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 
 	"github.com/mitchellh/devflow/builtin/docker"
-	"github.com/mitchellh/devflow/builtin/google"
+	"github.com/mitchellh/devflow/builtin/google/cloudrun"
 	"github.com/mitchellh/devflow/builtin/lambda"
 	"github.com/mitchellh/devflow/builtin/pack"
 )
@@ -22,7 +22,7 @@ var (
 	Builtins = map[string][]sdk.Option{
 		"pack":             pack.Options,
 		"docker":           docker.Options,
-		"google-cloud-run": google.CloudRunOptions,
+		"google-cloud-run": cloudrun.Options,
 		"lambda":           lambda.Options,
 	}
 )

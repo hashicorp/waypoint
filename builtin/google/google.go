@@ -1,5 +1,3 @@
-// Package google contains components for interacting with Google Cloud
-// technologies, such as Google Cloud Run as a deployment platform.
 package google
 
-//go:generate go-bindata -fs -nomemcopy -nometadata -pkg google -prefix data/ data/...
+//go:generate sh -c "protoc -I ./proto ./proto/*.proto --go_out=plugins=grpc:./proto"

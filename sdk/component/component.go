@@ -10,10 +10,6 @@
 // framework (see internal/mapper) to call these functions.
 package component
 
-import (
-	"fmt"
-)
-
 //go:generate stringer -type=Type -linecomment
 //go:generate mockery -all -case underscore
 
@@ -110,7 +106,6 @@ type Artifact interface {
 
 type Deployment interface {
 	ProtoMarshaler
-	fmt.Stringer
 }
 
 type Release interface {
