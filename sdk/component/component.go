@@ -68,6 +68,13 @@ type Platform interface {
 	DeployFunc() interface{}
 }
 
+// ReleaseManager is responsible for taking a deployment and making it
+// "released" which means that traffic can now route to it.
+type ReleaseManager interface {
+	// ReleaseFunc should return the method handle for the "release" operation.
+	ReleaseFunc() interface{}
+}
+
 // A Platform that supports the ability to exec into a shell environment
 // for the app.
 type ExecPlatform interface {
@@ -102,4 +109,11 @@ type Artifact interface {
 type Deployment interface {
 	ProtoMarshaler
 	fmt.Stringer
+}
+
+type Release interface {
+	ProtoMarshaler
+
+	// URL is the URL to access this release.
+	URL() string
 }

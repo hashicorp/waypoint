@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "plugin.proto";
+
+// ReleaseManager is a serivce that handles the process of exposing
+// a deployment to traffic.
+service ReleaseManager {
+  rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
+  rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
+
+  rpc ReleaseSpec(Empty) returns (FuncSpec);
+  rpc Release(Release.Args) returns (Release.Resp);
+}
+
+message Release {
+  string url = 1;
+
+  message Args {
+    // args is the list of argument types. This will include some of the
+    // standard types in this file (in the Args message namespace) as well
+    // as custom types declared by the FuncSpec that the plugin is expected
+    // to understand how to decode.
+    repeated google.protobuf.Any args = 1;
+  }
+
+  message Resp {
+    // result is the resulting data type for building.
+    google.protobuf.Any result = 1;
+
+    // release structure
+    Release release = 2;
+  }
+}

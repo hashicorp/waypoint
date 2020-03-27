@@ -40,6 +40,9 @@ service Devflow {
 
   // UpsertDeployment updates or inserts a deployment.
   rpc UpsertDeployment(UpsertDeploymentRequest) returns (UpsertDeploymentResponse);
+
+  // UpsertRelease updates or inserts a release.
+  // rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
 }
 
 /********************************************************************
@@ -212,4 +215,39 @@ message Deployment {
   // the plugin. The client must have all the plugins setup to properly
   // decode this.
   google.protobuf.Any deployment = 5;
+}
+
+/********************************************************************
+* Release Management
+********************************************************************/
+
+message UpsertReleaseRequest {
+  // release to upsert. If the id in the artifact is empty, then this
+  // will be an insert. Otherwise, this will be an update and if the ID
+  // isn't found, it will be an error.
+  Release release = 1;
+}
+
+message UpsertReleaseResponse {
+  // resulting object, you should replace this with what was sent in the request
+  // since the update operation may touch up the input data (i.e. update
+  // timestamps)
+  Release release = 1;
+}
+
+message Release {
+  // id is the unique ID for this release.
+  string id = 1;
+
+  // status of the release operation.
+  Status status = 2;
+
+  // component managing the release process.
+  Component component = 3;
+
+  // release is the raw release object encoded directly from the plugin.
+  google.protobuf.Any release = 4;
+
+  // id of the deployment that was released
+  string deployment_id = 5;
 }
