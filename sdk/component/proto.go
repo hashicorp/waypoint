@@ -4,6 +4,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // ProtoMarshaler is the interface required by objects that must support
@@ -22,8 +24,20 @@ type ProtoMarshaler interface {
 }
 
 // ProtoAny returns an *any.Any for the given ProtoMarshaler object.
-func ProtoAny(m ProtoMarshaler) (*any.Any, error) {
-	msg := m.Proto()
+func ProtoAny(m interface{}) (*any.Any, error) {
+	msg, ok := m.(proto.Message)
+
+	// If it isn't a message directly, we accept marshalers
+	if !ok {
+		pm, ok := m.(ProtoMarshaler)
+		if !ok {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"expected value to be a proto message, got %T",
+				m)
+		}
+
+		msg = pm.Proto()
+	}
 
 	// If the message is already an Any, then we're done
 	if result, ok := msg.(*any.Any); ok {

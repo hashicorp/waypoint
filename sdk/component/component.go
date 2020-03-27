@@ -100,17 +100,11 @@ type Source struct {
 	Path string
 }
 
-type Artifact interface {
-	ProtoMarshaler
-}
+type Artifact interface{}
 
-type Deployment interface {
-	ProtoMarshaler
-}
+type Deployment interface{}
 
 type Release interface {
-	ProtoMarshaler
-
 	// URL is the URL to access this release.
 	URL() string
 }
