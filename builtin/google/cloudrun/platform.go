@@ -9,8 +9,6 @@ import (
 	"github.com/mitchellh/devflow/internal/terraform"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
-
-	pb "github.com/mitchellh/devflow/builtin/google/proto"
 )
 
 // Platform is the Platform implementation for Google Cloud Run.
@@ -65,9 +63,7 @@ func (p *Platform) Deploy(
 	}
 
 	return &Deployment{
-		Value: &pb.CloudRunDeployment{
-			Url: outputs["url"].(string),
-		},
+		Url: outputs["url"].(string),
 	}, nil
 }
 

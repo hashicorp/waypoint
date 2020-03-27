@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package google;
-
-message CloudRunDeployment {
-  string url = 1;
-}

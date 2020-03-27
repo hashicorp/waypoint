@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package google.cloudrun;
+
+option go_package = "cloudrun";
+
+message Deployment {
+  string url = 1;
+}
