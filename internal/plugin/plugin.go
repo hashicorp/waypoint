@@ -15,6 +15,7 @@ var (
 	Builders   = mustFactory(mapper.NewFactory((*component.Builder)(nil)))
 	Registries = mustFactory(mapper.NewFactory((*component.Registry)(nil)))
 	Platforms  = mustFactory(mapper.NewFactory((*component.Platform)(nil)))
+	Releasers  = mustFactory(mapper.NewFactory((*component.ReleaseManager)(nil)))
 
 	// Builtins is the map of all available builtin plugins and their
 	// options for launching them.

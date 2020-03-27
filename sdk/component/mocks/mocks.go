@@ -27,6 +27,9 @@ func ForType(t component.Type) interface{} {
 	case component.LogViewerType:
 		return &LogViewer{}
 
+	case component.ReleaseManagerType:
+		return &ReleaseManager{}
+
 	default:
 		return nil
 	}
