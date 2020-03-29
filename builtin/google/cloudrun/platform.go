@@ -16,6 +16,7 @@ import (
 	"github.com/mitchellh/devflow/builtin/docker"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
+	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 // Platform is the Platform implementation for Google Cloud Run.
@@ -40,6 +41,7 @@ func (p *Platform) Deploy(
 	src *component.Source,
 	img *docker.Image,
 	dir *datadir.Component,
+	ui terminal.UI,
 ) (*Deployment, error) {
 	// Start building our deployment since we use this information
 	result := &Deployment{
@@ -90,6 +92,7 @@ func (p *Platform) Deploy(
 	create := false
 	client := run.NewNamespacesServicesService(apiService)
 	log.Trace("checking if service already exists", "service", result.apiName())
+	ui.Output("Checking if service is already created", terminal.WithStatusStyle())
 	if _, err := client.Get(result.apiName()).Context(ctx).Do(); err != nil {
 		gerr, ok := err.(*googleapi.Error)
 		if !ok {
@@ -108,6 +111,7 @@ func (p *Platform) Deploy(
 	if create {
 		// Create the service
 		log.Info("creating the service")
+		ui.Output("Creating new Cloud Run service", terminal.WithStatusStyle())
 		service, err = client.Create("namespaces/"+result.Resource.Project, service).
 			Context(ctx).Do()
 		if err != nil {
@@ -116,6 +120,7 @@ func (p *Platform) Deploy(
 	} else {
 		// Update
 		log.Info("updating a pre-existing service", "service", result.apiName())
+		ui.Output("Deploying new Cloud Run revision", terminal.WithStatusStyle())
 		service, err = client.ReplaceService(result.apiName(), service).
 			Context(ctx).Do()
 		if err != nil {
@@ -129,6 +134,7 @@ func (p *Platform) Deploy(
 	}
 
 	// Poll the service and wait for completion
+	ui.Output("Waiting for revision to be ready", terminal.WithStatusStyle())
 	service, err = p.pollServiceReady(ctx, log, result, apiService)
 	if err != nil {
 		return nil, err

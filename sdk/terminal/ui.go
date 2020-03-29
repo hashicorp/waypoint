@@ -95,6 +95,13 @@ func WithHeaderStyle() Option {
 	}
 }
 
+// WithStatusStyle styles the output like a status update.
+func WithStatusStyle() Option {
+	return func(c *config) {
+		c.Message = colorStatus.Sprintf("    %s", c.Message)
+	}
+}
+
 // WithErrorStyle styles the output as an error message.
 func WithErrorStyle() Option {
 	return func(c *config) {
@@ -102,7 +109,13 @@ func WithErrorStyle() Option {
 	}
 }
 
+// WithWriter specifies the writer for the output.
+func WithWriter(w io.Writer) Option {
+	return func(c *config) { c.Writer = w }
+}
+
 var (
-	colorHeader = color.New(color.FgGreen, color.Bold)
+	colorHeader = color.New(color.Bold)
 	colorError  = color.New(color.FgRed)
+	colorStatus = color.New()
 )

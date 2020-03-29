@@ -37,6 +37,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		}
 
 		// Push it
+		app.UI.Output("Deploying...", terminal.WithHeaderStyle())
 		_, err = app.Deploy(ctx, push)
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
