@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	run "google.golang.org/api/run/v1"
 	"google.golang.org/grpc/codes"
@@ -62,13 +63,15 @@ func (p *Platform) Deploy(
 		Kind:       "Service",
 		Metadata: &run.ObjectMeta{
 			Name: result.Resource.Name,
-			Annotations: map[string]string{
-				"devflow": "1",
-			},
 		},
 
 		Spec: &run.ServiceSpec{
 			Template: &run.RevisionTemplate{
+				Metadata: &run.ObjectMeta{
+					Annotations: map[string]string{
+						"devflow.hashicorp.com/nonce": time.Now().UTC().Format(time.RFC3339Nano),
+					},
+				},
 				Spec: &run.RevisionSpec{
 					Containers: []*run.Container{
 						&run.Container{
@@ -80,12 +83,44 @@ func (p *Platform) Deploy(
 		},
 	}
 
-	// Create the service
+	// We need to determine if we're creating or updating a service. To
+	// do this, we just query GCP directly. There is a bit of a race here
+	// but we expect to own this service, so even if we get a delete/create
+	// in the middle, we'll just error later.
+	create := false
 	client := run.NewNamespacesServicesService(apiService)
-	service, err = client.Create("namespaces/"+result.Resource.Project, service).
-		Context(ctx).Do()
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
+	log.Trace("checking if service already exists", "service", result.apiName())
+	if _, err := client.Get(result.apiName()).Context(ctx).Do(); err != nil {
+		gerr, ok := err.(*googleapi.Error)
+		if !ok {
+			return nil, err
+		}
+		log.Trace("googleapi.Error value", "error", gerr)
+
+		// If we have a 404 then we just haven't created it yet.
+		if gerr.Code != 404 {
+			return nil, err
+		}
+
+		create = true
+	}
+
+	if create {
+		// Create the service
+		log.Info("creating the service")
+		service, err = client.Create("namespaces/"+result.Resource.Project, service).
+			Context(ctx).Do()
+		if err != nil {
+			return nil, status.Errorf(codes.Aborted, err.Error())
+		}
+	} else {
+		// Update
+		log.Info("updating a pre-existing service", "service", result.apiName())
+		service, err = client.ReplaceService(result.apiName(), service).
+			Context(ctx).Do()
+		if err != nil {
+			return nil, status.Errorf(codes.Aborted, err.Error())
+		}
 	}
 
 	// Set the IAM policy so global traffic is allowed
