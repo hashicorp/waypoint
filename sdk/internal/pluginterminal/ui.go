@@ -13,18 +13,6 @@ type UI struct {
 	*terminal.BasicUI
 }
 
-// Output implements UI. We override this to make sure we send to our
-// plugin stdout.
-func (ui *UI) Output(msg string, raw ...interface{}) {
-	stdout, _, err := ui.OutputWriters()
-	if err != nil {
-		panic(err)
-	}
-
-	raw = append(raw, terminal.WithWriter(stdout))
-	ui.BasicUI.Output(msg, raw...)
-}
-
 // OutputWriters implements UI to return the direct TTY output from
 // the parent process and not our os.Stdout/stderr since those are
 // redirected over the gRPC interface.

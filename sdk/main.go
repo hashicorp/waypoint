@@ -3,12 +3,15 @@ package sdk
 import (
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/mattn/go-colorable"
 
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
 	sdkplugin "github.com/mitchellh/devflow/sdk/internal/plugin"
+	"github.com/mitchellh/devflow/sdk/internal/stdio"
 )
 
 //go:generate sh -c "protoc -I`go list -m -f \"{{.Dir}}\" github.com/mitchellh/protostructure` -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"
@@ -18,6 +21,7 @@ import (
 // be called immediately in main() in your plugin binaries, no prior setup
 // should be done.
 func Main(opts ...Option) {
+
 	var c config
 
 	// Default our mappers
@@ -27,6 +31,12 @@ func Main(opts ...Option) {
 	for _, opt := range opts {
 		opt(&c)
 	}
+
+	// We have to rewrite the fatih/color package output/error writers
+	// to be our plugin stdout/stderr. We use the color package a lot in
+	// our UI and this causes the UI to work.
+	color.Output = colorable.NewColorable(stdio.Stdout())
+	color.Error = colorable.NewColorable(stdio.Stderr())
 
 	// Create our logger. We also set this as the default logger in case
 	// any other libraries are using hclog and our plugin doesn't properly

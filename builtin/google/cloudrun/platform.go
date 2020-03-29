@@ -85,6 +85,10 @@ func (p *Platform) Deploy(
 		},
 	}
 
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
 	// We need to determine if we're creating or updating a service. To
 	// do this, we just query GCP directly. There is a bit of a race here
 	// but we expect to own this service, so even if we get a delete/create
@@ -92,7 +96,7 @@ func (p *Platform) Deploy(
 	create := false
 	client := run.NewNamespacesServicesService(apiService)
 	log.Trace("checking if service already exists", "service", result.apiName())
-	ui.Output("Checking if service is already created", terminal.WithStatusStyle())
+	st.Update("Checking if service is already created")
 	if _, err := client.Get(result.apiName()).Context(ctx).Do(); err != nil {
 		gerr, ok := err.(*googleapi.Error)
 		if !ok {
@@ -111,7 +115,7 @@ func (p *Platform) Deploy(
 	if create {
 		// Create the service
 		log.Info("creating the service")
-		ui.Output("Creating new Cloud Run service", terminal.WithStatusStyle())
+		st.Update("Creating new Cloud Run service")
 		service, err = client.Create("namespaces/"+result.Resource.Project, service).
 			Context(ctx).Do()
 		if err != nil {
@@ -120,7 +124,7 @@ func (p *Platform) Deploy(
 	} else {
 		// Update
 		log.Info("updating a pre-existing service", "service", result.apiName())
-		ui.Output("Deploying new Cloud Run revision", terminal.WithStatusStyle())
+		st.Update("Deploying new Cloud Run revision")
 		service, err = client.ReplaceService(result.apiName(), service).
 			Context(ctx).Do()
 		if err != nil {
@@ -134,7 +138,7 @@ func (p *Platform) Deploy(
 	}
 
 	// Poll the service and wait for completion
-	ui.Output("Waiting for revision to be ready", terminal.WithStatusStyle())
+	st.Update("Waiting for revision to be ready")
 	service, err = p.pollServiceReady(ctx, log, result, apiService)
 	if err != nil {
 		return nil, err
