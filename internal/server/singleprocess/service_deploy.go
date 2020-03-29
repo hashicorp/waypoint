@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/boltdb/bolt"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -45,4 +47,26 @@ func (s *service) UpsertDeployment(
 	}
 
 	return &pb.UpsertDeploymentResponse{Deployment: result}, nil
+}
+
+// TODO: test
+func (s *service) ListDeployments(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.ListDeploymentsResponse, error) {
+	var result []*pb.Deployment
+	s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(deployBucket)
+		return bucket.ForEach(func(k, v []byte) error {
+			var deploy pb.Deployment
+			if err := proto.Unmarshal(v, &deploy); err != nil {
+				panic(err)
+			}
+
+			result = append(result, &deploy)
+			return nil
+		})
+	})
+
+	return &pb.ListDeploymentsResponse{Deployments: result}, nil
 }

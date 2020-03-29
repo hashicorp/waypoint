@@ -15,6 +15,9 @@ service Devflow {
   // ListPushedArtifacts returns the builds.
   rpc ListPushedArtifacts(google.protobuf.Empty) returns (ListPushedArtifactsResponse);
 
+  // ListDeployments returns the deployments.
+  rpc ListDeployments(google.protobuf.Empty) returns (ListDeploymentsResponse);
+
   // GetLatestBuild returns the most recent successfully completed build
   // for an app.
   rpc GetLatestBuild(google.protobuf.Empty) returns (Build);
@@ -196,6 +199,11 @@ message UpsertDeploymentResponse {
   // since the update operation may touch up the input data (i.e. update
   // timestamps)
   Deployment deployment = 1;
+}
+
+message ListDeploymentsResponse {
+  // deployments is the list of deployments.
+  repeated Deployment deployments = 1;
 }
 
 message Deployment {
