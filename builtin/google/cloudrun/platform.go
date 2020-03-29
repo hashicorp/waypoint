@@ -56,9 +56,8 @@ func (p *Platform) Deploy(
 		return nil, status.Errorf(codes.Aborted, err.Error())
 	}
 
-	// Create the service
-	client := run.NewNamespacesServicesService(apiService)
-	service, err := client.Create("namespaces/"+result.Resource.Project, &run.Service{
+	// Our service we'll be creating
+	service := &run.Service{
 		ApiVersion: "serving.knative.dev/v1",
 		Kind:       "Service",
 		Metadata: &run.ObjectMeta{
@@ -79,7 +78,12 @@ func (p *Platform) Deploy(
 				},
 			},
 		},
-	}).Context(ctx).Do()
+	}
+
+	// Create the service
+	client := run.NewNamespacesServicesService(apiService)
+	service, err = client.Create("namespaces/"+result.Resource.Project, service).
+		Context(ctx).Do()
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
 	}
