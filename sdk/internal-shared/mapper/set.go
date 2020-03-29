@@ -63,3 +63,25 @@ func (s Set) ConvertSlice(in, out interface{}) error {
 
 	return nil
 }
+
+// ConvertType converts the input to the output type using the set of mappers.
+// outType should be a pointer to a nil value of the type you want to convert
+// to. Example: (*Foo)(nil). This will return the converted value.
+func (s Set) ConvertType(in, outType interface{}) (interface{}, error) {
+	// Get the output type and create a value for that type
+	typ := reflect.TypeOf(outType).Elem()
+	outVal := reflect.New(typ)
+	switch typ.Kind() {
+	case reflect.Slice:
+		if err := s.ConvertSlice(in, outVal.Interface()); err != nil {
+			return nil, err
+		}
+
+	default:
+		if err := s.Convert(in, outVal.Interface()); err != nil {
+			return nil, err
+		}
+	}
+
+	return outVal.Elem().Interface(), nil
+}
