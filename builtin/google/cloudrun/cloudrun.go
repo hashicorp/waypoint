@@ -11,5 +11,5 @@ import (
 // Options are the SDK options to use for instantiation for
 // the Google Cloud Run plugin.
 var Options = []sdk.Option{
-	sdk.WithComponents(&Platform{}),
+	sdk.WithComponents(&Platform{}, &Releaser{}),
 }

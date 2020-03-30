@@ -6,12 +6,16 @@ option go_package = "cloudrun";
 
 message Deployment {
   string url = 1;
-
   Resource resource = 2;
+  string revision_id = 3;
 
   message Resource {
     string location = 1;
     string project = 2;
     string name = 3;
   }
+}
+
+message Release {
+  string url = 1;
 }

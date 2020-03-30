@@ -132,6 +132,9 @@ func (p *Platform) Deploy(
 		}
 	}
 
+	// Update the service
+	result.RevisionId = service.Status.LatestCreatedRevisionName
+
 	// Set the IAM policy so global traffic is allowed
 	if err := p.setNoAuthPolicy(ctx, result, apiService); err != nil {
 		return nil, err
