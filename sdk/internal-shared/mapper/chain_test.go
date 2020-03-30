@@ -184,6 +184,18 @@ func TestFuncChain(t *testing.T) {
 		require.NoError(err)
 	})
 
+	t.Run("two funcs with input via extra args", func(t *testing.T) {
+		require := require.New(t)
+
+		adderFunc := TestFunc(t, adder, WithValues(intC(5)))
+		chain, err := adderFunc.Chain([]*Func{
+			produceAfromC, produceBfromC,
+		})
+		require.NoError(err)
+		result, err := chain.Call()
+		require.NoError(err)
+		require.Equal(15, result)
+	})
 }
 
 func TestFuncChainInputSet(t *testing.T) {

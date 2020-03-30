@@ -18,6 +18,7 @@ type Func struct {
 	Out    Type
 	Func   reflect.Value
 	Logger hclog.Logger
+	Values []interface{} // extra values
 }
 
 // NewFuncList creates a slice of funcs from a slice of function pointers.
@@ -101,6 +102,7 @@ func NewFunc(f interface{}, opts ...Option) (*Func, error) {
 		Args:   args,
 		Out:    &ReflectType{Type: ft.Out(0)},
 		Logger: cfg.Logger,
+		Values: cfg.Values,
 	}, nil
 }
 
@@ -110,6 +112,7 @@ type config struct {
 	Name     string
 	Logger   hclog.Logger
 	WithType map[reflect.Type]func(int, reflect.Type) Type
+	Values   []interface{}
 }
 
 // Option is used to configure NewFunc
@@ -138,6 +141,14 @@ func WithLogger(log hclog.Logger) Option {
 // package and name.
 func WithName(n string) Option {
 	return func(c *config) { c.Name = n }
+}
+
+// WithValues sets some argument values that are always available to the
+// function. These will also be available to any mappers when a Chain
+// function is called on this func. This is useful to add some extra values
+// that may be necessary to get to the types required by this function.
+func WithValues(vs ...interface{}) Option {
+	return func(c *config) { c.Values = vs }
 }
 
 // String returns the name of the function. If a name is not available, the
@@ -171,6 +182,9 @@ func (f *Func) Call(values ...interface{}) (interface{}, error) {
 // performant to call Call on the returned PreparedFunc rather than Call on
 // Func. This will avoid duplicate work.
 func (f *Func) Prepare(values ...interface{}) *PreparedFunc {
+	// Add any extra values
+	values = append(values, f.Values...)
+
 	// TODO: panic if missing values
 	in := f.args(values, nil)
 	return &PreparedFunc{Func: f, In: in}

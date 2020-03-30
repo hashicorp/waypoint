@@ -54,6 +54,16 @@ func TestFunc_hclog(t *testing.T) {
 	require.Equal(result, 42)
 }
 
+func TestFunc_values(t *testing.T) {
+	require := require.New(t)
+
+	f := TestFunc(t, func(a int) int { return a + 2 },
+		WithValues(int(12)))
+	result, err := f.Call()
+	require.NoError(err)
+	require.Equal(14, result)
+}
+
 func mustFunc(t *testing.T, f interface{}) *Func {
 	t.Helper()
 

@@ -39,6 +39,9 @@ func ChainTarget(check CheckFunc, mappers []*Func, values ...interface{}) *Chain
 func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 	log := f.Logger.With("func", f.String())
 
+	// Add any extra values
+	values = append(values, f.Values...)
+
 	// If we're logging, then build up a more log-friendly view of values.
 	var valueTypes []string
 	if log.IsTrace() {
