@@ -6,6 +6,9 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
+	"github.com/mitchellh/devflow/sdk/history"
+	"github.com/mitchellh/devflow/sdk/history/mocks"
+	"github.com/mitchellh/devflow/sdk/internal/pluginargs"
 	"github.com/mitchellh/devflow/sdk/internal/pluginterminal"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 	"github.com/mitchellh/devflow/sdk/terminal"
@@ -25,6 +28,8 @@ var All = []interface{}{
 	LoggerProto,
 	TerminalUI,
 	TerminalUIProto,
+	HistoryClient,
+	HistoryClientProto,
 }
 
 // Source maps Args.Source to component.Source.
@@ -99,4 +104,16 @@ func TerminalUI(input *pb.Args_TerminalUI) terminal.UI {
 
 func TerminalUIProto(ui terminal.UI) *pb.Args_TerminalUI {
 	return &pb.Args_TerminalUI{}
+}
+
+func HistoryClient(input *pb.Args_HistoryClient) history.Client {
+	return &mocks.Client{}
+}
+
+func HistoryClientProto(
+	client history.Client,
+	broker pluginargs.Broker,
+	cleanup *pluginargs.Cleanup,
+) *pb.Args_HistoryClient {
+	return &pb.Args_HistoryClient{StreamId: 0}
 }

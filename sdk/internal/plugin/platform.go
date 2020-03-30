@@ -11,6 +11,7 @@ import (
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/internal/funcspec"
+	"github.com/mitchellh/devflow/sdk/internal/pluginargs"
 	"github.com/mitchellh/devflow/sdk/internal/plugincomponent"
 	"github.com/mitchellh/devflow/sdk/proto"
 )
@@ -46,6 +47,7 @@ func (p *PlatformPlugin) GRPCClient(
 	client := &platformClient{
 		client: proto.NewPlatformClient(c),
 		logger: p.Logger,
+		broker: broker,
 	}
 
 	// Check if we also implement the LogPlatform
@@ -82,6 +84,7 @@ func (p *PlatformPlugin) GRPCClient(
 type platformClient struct {
 	client proto.PlatformClient
 	logger hclog.Logger
+	broker *plugin.GRPCBroker
 }
 
 func (c *platformClient) Config() (interface{}, error) {
@@ -99,13 +102,23 @@ func (c *platformClient) DeployFunc() interface{} {
 		return funcErr(err)
 	}
 
-	return funcspec.Func(spec, c.push, funcspec.WithLogger(c.logger))
+	return funcspec.Func(spec, c.deploy,
+		funcspec.WithLogger(c.logger),
+		funcspec.WithValues(
+			pluginargs.Broker(c.broker),
+			&pluginargs.Cleanup{},
+		),
+	)
 }
 
-func (c *platformClient) push(
+func (c *platformClient) deploy(
 	ctx context.Context,
 	args funcspec.Args,
+	cleanup *pluginargs.Cleanup,
 ) (component.Deployment, error) {
+	// Run the cleanup
+	defer cleanup.Close()
+
 	// Call our function
 	resp, err := c.client.Deploy(ctx, &proto.Deploy_Args{Args: args})
 	if err != nil {

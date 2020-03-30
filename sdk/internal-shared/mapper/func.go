@@ -185,8 +185,16 @@ func (f *Func) Prepare(values ...interface{}) *PreparedFunc {
 	// Add any extra values
 	values = append(values, f.Values...)
 
-	// TODO: panic if missing values
-	in := f.args(values, nil)
+	// Determine our args and if we're missing any
+	missing := map[Type]int{}
+	in := f.args(values, missing)
+	if len(missing) > 0 {
+		// TODO: panic if missing values
+		for t := range missing {
+			f.Logger.Error("missing value", "type", t.String())
+		}
+	}
+
 	return &PreparedFunc{Func: f, In: in}
 }
 

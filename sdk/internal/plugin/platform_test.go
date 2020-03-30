@@ -46,6 +46,14 @@ func TestPlatform_logsPlatform(t *testing.T) {
 	})
 }
 
+func TestPlatformDynamicFunc(t *testing.T) {
+	testDynamicFunc(t, "platform", &mocks.Platform{}, func(v, f interface{}) {
+		v.(*mocks.Platform).On("DeployFunc").Return(f)
+	}, func(raw interface{}) interface{} {
+		return raw.(component.Platform).DeployFunc()
+	})
+}
+
 func TestPlatformConfig(t *testing.T) {
 	mockV := &mockPlatformConfigurable{}
 	testConfigurable(t, "platform", mockV, &mockV.Configurable)

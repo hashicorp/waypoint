@@ -48,7 +48,7 @@ func TestBuilderBuild(t *testing.T) {
 	require.NotNil(raw)
 	require.Implements((*component.Artifact)(nil), raw)
 
-	result := raw.(component.Artifact).Proto().(*any.Any)
+	result := raw.(component.ProtoMarshaler).Proto().(*any.Any)
 	name, err := ptypes.AnyMessageName(result)
 	require.NoError(err)
 	require.Equal("testproto.Data", name)

@@ -52,6 +52,11 @@ message Args {
   message TerminalUI {
     // empty for now
   }
+
+  // HistoryClient is used to serve the history client for the plugin.
+  message HistoryClient {
+    uint32 stream_id = 1;
+  }
 }
 
 // Empty is just an empty message useful with some RPC endpoints.

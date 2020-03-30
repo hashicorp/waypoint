@@ -20,6 +20,7 @@ func Func(s *pb.FuncSpec, cb interface{}, opts ...Option) *mapper.Func {
 		mapper.WithName(s.Name),
 		mapper.WithType(ArgsType, makeArgsMapperType(s)),
 		mapper.WithLogger(cfg.Logger),
+		mapper.WithValues(cfg.Values...),
 	)
 	if err != nil {
 		panic(err)

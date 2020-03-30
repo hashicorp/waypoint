@@ -14,6 +14,7 @@ import (
 	"github.com/mitchellh/devflow/internal/plugin"
 	"github.com/mitchellh/devflow/internal/server"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
+	"github.com/mitchellh/devflow/internal/serverhistory"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
@@ -362,6 +363,7 @@ func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
 //
 //   * *component.Source
 //   * *datadir.Project
+//   * history.Client
 //
 func (a *App) callDynamicFunc(
 	ctx context.Context,
@@ -397,6 +399,7 @@ func (a *App) callDynamicFunc(
 		a.dir,
 		cdir,
 		a.UI,
+		&serverhistory.Client{APIClient: a.client, MapperSet: mapper.Set(a.mappers)},
 	)
 
 	// Build the chain and call it

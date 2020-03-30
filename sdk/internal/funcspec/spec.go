@@ -91,6 +91,7 @@ type config struct {
 	Logger  hclog.Logger
 	Mappers []*mapper.Func
 	Output  reflect.Type
+	Values  []interface{}
 }
 
 type Option func(*config)
@@ -115,6 +116,12 @@ func WithMappers(v []*mapper.Func) Option {
 // that it is some other type.
 func WithOutput(t reflect.Type) Option {
 	return func(c *config) { c.Output = t }
+}
+
+// WithValues specifies extra values, this just passes through to the
+// mapper.WithValues.
+func WithValues(vs ...interface{}) Option {
+	return func(c *config) { c.Values = vs }
 }
 
 // typeToMessage converts a mapper.Type to the proto.Message name value.
