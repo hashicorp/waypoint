@@ -109,13 +109,21 @@ func WithErrorStyle() Option {
 	}
 }
 
+// WithSuccessStyle styles the output as a success message.
+func WithSuccessStyle() Option {
+	return func(c *config) {
+		c.Message = colorSuccess.Sprint(c.Original)
+	}
+}
+
 // WithWriter specifies the writer for the output.
 func WithWriter(w io.Writer) Option {
 	return func(c *config) { c.Writer = w }
 }
 
 var (
-	colorHeader = color.New(color.Bold)
-	colorError  = color.New(color.FgRed)
-	colorStatus = color.New()
+	colorHeader  = color.New(color.Bold)
+	colorStatus  = color.New()
+	colorError   = color.New(color.FgRed)
+	colorSuccess = color.New(color.FgGreen)
 )
