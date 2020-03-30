@@ -3,10 +3,17 @@ package pluginargs
 
 import (
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
-// Broker is the GRPCBroker so that plugins can setup new streams.
-type Broker *plugin.GRPCBroker
+// Internal is a struct that is available to mappers. This is an internal-only
+// type that is not possible for plugins to register for since it is only
+// exported in an internal package.
+type Internal struct {
+	Broker  *plugin.GRPCBroker
+	Mappers mapper.Set
+	Cleanup *Cleanup
+}
 
 // Cleanup can be used to register cleanup functions.
 type Cleanup struct {

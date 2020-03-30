@@ -4,13 +4,13 @@ package serverhistory
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/history"
+	"github.com/mitchellh/devflow/sdk/history/convert"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
@@ -27,18 +27,17 @@ func (c *Client) Deployments(ctx context.Context, cfg *history.Lookup) ([]compon
 		return nil, err
 	}
 
-	raw, err := c.MapperSet.ConvertType(resp.Deployments, cfg.Type)
+	result, err := convert.Component(
+		c.MapperSet,
+		resp.Deployments,
+		cfg.Type,
+		(*component.Deployment)(nil),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	rawVal := reflect.ValueOf(raw)
-	result := make([]component.Deployment, rawVal.Len())
-	for i := 0; i < rawVal.Len(); i++ {
-		result[i] = rawVal.Index(i).Interface().(component.Deployment)
-	}
-
-	return result, nil
+	return result.([]component.Deployment), nil
 }
 
 var _ history.Client = (*Client)(nil)

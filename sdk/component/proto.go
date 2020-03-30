@@ -1,6 +1,8 @@
 package component
 
 import (
+	"reflect"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -46,4 +48,20 @@ func ProtoAny(m interface{}) (*any.Any, error) {
 
 	// Marshal it
 	return ptypes.MarshalAny(msg)
+}
+
+// ProtoAny returns []*any.Any for the given input slice by encoding
+// each result into a proto value.
+func ProtoAnySlice(m interface{}) ([]*any.Any, error) {
+	val := reflect.ValueOf(m)
+	result := make([]*any.Any, val.Len())
+	for i := 0; i < val.Len(); i++ {
+		var err error
+		result[i], err = ProtoAny(val.Index(i).Interface())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
 }

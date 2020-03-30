@@ -31,6 +31,7 @@ func (p *PlatformPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) e
 		Impl:    p.Impl,
 		Mappers: p.Mappers,
 		Logger:  p.Logger,
+		Broker:  broker,
 	})
 	return nil
 }
@@ -45,9 +46,10 @@ func (p *PlatformPlugin) GRPCClient(
 
 	// Build our client to the platform service
 	client := &platformClient{
-		client: proto.NewPlatformClient(c),
-		logger: p.Logger,
-		broker: broker,
+		client:  proto.NewPlatformClient(c),
+		logger:  p.Logger,
+		broker:  broker,
+		mappers: p.Mappers,
 	}
 
 	// Check if we also implement the LogPlatform
@@ -82,9 +84,10 @@ func (p *PlatformPlugin) GRPCClient(
 
 // platformClient is an implementation of component.Platform over gRPC.
 type platformClient struct {
-	client proto.PlatformClient
-	logger hclog.Logger
-	broker *plugin.GRPCBroker
+	client  proto.PlatformClient
+	logger  hclog.Logger
+	broker  *plugin.GRPCBroker
+	mappers []*mapper.Func
 }
 
 func (c *platformClient) Config() (interface{}, error) {
@@ -104,20 +107,21 @@ func (c *platformClient) DeployFunc() interface{} {
 
 	return funcspec.Func(spec, c.deploy,
 		funcspec.WithLogger(c.logger),
-		funcspec.WithValues(
-			pluginargs.Broker(c.broker),
-			&pluginargs.Cleanup{},
-		),
+		funcspec.WithValues(&pluginargs.Internal{
+			Broker:  c.broker,
+			Mappers: c.mappers,
+			Cleanup: &pluginargs.Cleanup{},
+		}),
 	)
 }
 
 func (c *platformClient) deploy(
 	ctx context.Context,
 	args funcspec.Args,
-	cleanup *pluginargs.Cleanup,
+	internal *pluginargs.Internal,
 ) (component.Deployment, error) {
 	// Run the cleanup
-	defer cleanup.Close()
+	defer internal.Cleanup.Close()
 
 	// Call our function
 	resp, err := c.client.Deploy(ctx, &proto.Deploy_Args{Args: args})
@@ -134,6 +138,7 @@ type platformServer struct {
 	Impl    component.Platform
 	Mappers []*mapper.Func
 	Logger  hclog.Logger
+	Broker  *plugin.GRPCBroker
 }
 
 func (s *platformServer) IsLogPlatform(
@@ -164,19 +169,32 @@ func (s *platformServer) DeploySpec(
 ) (*proto.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.DeployFunc(),
 		funcspec.WithMappers(s.Mappers),
-		funcspec.WithLogger(s.Logger))
+		funcspec.WithLogger(s.Logger),
+		funcspec.WithValues(s.internal()),
+	)
 }
 
 func (s *platformServer) Deploy(
 	ctx context.Context,
 	args *proto.Deploy_Args,
 ) (*proto.Deploy_Resp, error) {
-	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.DeployFunc(), s.Mappers)
+	internal := s.internal()
+	defer internal.Cleanup.Close()
+
+	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.DeployFunc(), s.Mappers, internal)
 	if err != nil {
 		return nil, err
 	}
 
 	return &proto.Deploy_Resp{Result: encoded}, nil
+}
+
+func (s *platformServer) internal() *pluginargs.Internal {
+	return &pluginargs.Internal{
+		Broker:  s.Broker,
+		Mappers: s.Mappers,
+		Cleanup: &pluginargs.Cleanup{},
+	}
 }
 
 var (

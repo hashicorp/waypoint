@@ -31,7 +31,7 @@ func Spec(f interface{}, opts ...Option) (*pb.FuncSpec, error) {
 	}
 
 	// Build our initial mapper
-	mf, err := mapper.NewFunc(f, mapper.WithLogger(cfg.Logger))
+	mf, err := mapper.NewFunc(f, mapper.WithLogger(cfg.Logger), mapper.WithValues(cfg.Values...))
 	if err != nil {
 		return nil, err
 	}
@@ -40,9 +40,15 @@ func Spec(f interface{}, opts ...Option) (*pb.FuncSpec, error) {
 	checkCtx := mapper.CheckReflectType(contextType)
 	checkProto := mapper.CheckReflectType(protoMessageType)
 
+	// Our input set can be ctx, proto, or any of the extra values given
+	inputCheck := mapper.CheckOr(checkCtx, checkProto)
+	for _, v := range cfg.Values {
+		inputCheck = mapper.CheckOr(inputCheck, mapper.CheckReflectType(reflect.TypeOf(v)))
+	}
+
 	// We need to find a path through that only has protobuf requirements
 	// or "context". These are the only given values to the func for plugins.
-	types := mf.ChainInputSet(cfg.Mappers, mapper.CheckOr(checkCtx, checkProto))
+	types := mf.ChainInputSet(cfg.Mappers, inputCheck)
 	if len(types) == 0 {
 		return nil, fmt.Errorf(
 			"cannot satisfy the function %s. The function takes arguments that "+

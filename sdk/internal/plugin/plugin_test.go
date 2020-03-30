@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mitchellh/devflow/sdk/component"
@@ -15,6 +16,7 @@ import (
 	historymocks "github.com/mitchellh/devflow/sdk/history/mocks"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
+	"github.com/mitchellh/devflow/sdk/internal/plugincomponent"
 	"github.com/mitchellh/devflow/sdk/internal/testproto"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
@@ -70,7 +72,14 @@ func testDynamicFunc(
 		assert.NotNil(ctx)
 		assert.Equal("foo", args.App)
 
+		// Test history client
 		assert.NotNil(historyClient)
+		resp, err := historyClient.Deployments(ctx, &history.Lookup{
+			Type: (*[]*plugincomponent.Artifact)(nil),
+		})
+		if assert.NoError(err) {
+			assert.NotNil(resp)
+		}
 
 		return &testproto.Data{Value: "hello"}
 	})
@@ -89,13 +98,18 @@ func testDynamicFunc(
 	require.NoError(err)
 	implFunc := getFunc(raw).(*mapper.Func)
 
+	historyMock := &historymocks.Client{}
+	historyMock.On("Deployments", mock.Anything, (*history.Lookup)(nil)).Return([]component.Deployment{}, nil)
+
 	// Call our function by building a chain. We use the chain so we
 	// have access to the same level of mappers that a default plugin
 	// would normally have.
 	chain, err := implFunc.Chain(mappers,
 		context.Background(),
+		hclog.L(),
+
 		&pb.Args_Source{App: "foo"},
-		&historymocks.Client{},
+		historyMock,
 	)
 	require.NoError(err)
 	require.NotNil(chain)

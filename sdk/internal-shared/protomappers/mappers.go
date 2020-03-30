@@ -1,13 +1,17 @@
 package protomappers
 
 import (
+	"context"
+
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
 	"github.com/mitchellh/mapstructure"
+	"google.golang.org/grpc"
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/history"
-	"github.com/mitchellh/devflow/sdk/history/mocks"
+	pluginhistory "github.com/mitchellh/devflow/sdk/internal/plugin/history"
 	"github.com/mitchellh/devflow/sdk/internal/pluginargs"
 	"github.com/mitchellh/devflow/sdk/internal/pluginterminal"
 	pb "github.com/mitchellh/devflow/sdk/proto"
@@ -106,14 +110,52 @@ func TerminalUIProto(ui terminal.UI) *pb.Args_TerminalUI {
 	return &pb.Args_TerminalUI{}
 }
 
-func HistoryClient(input *pb.Args_HistoryClient) history.Client {
-	return &mocks.Client{}
+func HistoryClient(
+	ctx context.Context,
+	log hclog.Logger,
+	input *pb.Args_HistoryClient,
+	internal *pluginargs.Internal,
+) (history.Client, error) {
+	// Create our plugin
+	p := &pluginhistory.HistoryPlugin{
+		Mappers: internal.Mappers,
+		Logger:  log,
+	}
+
+	conn, err := internal.Broker.Dial(input.StreamId)
+	if err != nil {
+		return nil, err
+	}
+	internal.Cleanup.Do(func() { conn.Close() })
+
+	client, err := p.GRPCClient(ctx, internal.Broker, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.(history.Client), nil
 }
 
 func HistoryClientProto(
 	client history.Client,
-	broker pluginargs.Broker,
-	cleanup *pluginargs.Cleanup,
+	log hclog.Logger,
+	internal *pluginargs.Internal,
 ) *pb.Args_HistoryClient {
-	return &pb.Args_HistoryClient{StreamId: 0}
+	// Create our plugin
+	p := &pluginhistory.HistoryPlugin{
+		Impl:    client,
+		Mappers: internal.Mappers,
+		Logger:  log,
+	}
+
+	id := internal.Broker.NextId()
+
+	// Serve it
+	go internal.Broker.AcceptAndServe(id, func(opts []grpc.ServerOption) *grpc.Server {
+		server := plugin.DefaultGRPCServer(opts)
+		p.GRPCServer(internal.Broker, server)
+		return server
+	})
+
+	return &pb.Args_HistoryClient{StreamId: id}
 }

@@ -22,11 +22,13 @@ func callDynamicFunc(
 	args []*any.Any,
 	f interface{},
 	mappers []*mapper.Func,
+	values ...interface{},
 ) (interface{}, error) {
 	// Decode all our arguments. We are on the plugin side now so we expect
 	// to be able to decode all types sent to us.
 	decoded := make([]interface{}, 0, len(args)+1)
 	decoded = append(decoded, ctx)
+	decoded = append(decoded, values...)
 	for _, arg := range args {
 		name, err := ptypes.AnyMessageName(arg)
 		if err != nil {
@@ -78,8 +80,9 @@ func callDynamicFuncAny(
 	args []*any.Any,
 	f interface{},
 	mappers []*mapper.Func,
+	values ...interface{},
 ) (*any.Any, error) {
-	result, err := callDynamicFunc(ctx, log, args, f, mappers)
+	result, err := callDynamicFunc(ctx, log, args, f, mappers, values...)
 	if err != nil {
 		return nil, err
 	}
