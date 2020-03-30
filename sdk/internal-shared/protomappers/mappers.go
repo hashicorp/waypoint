@@ -157,7 +157,9 @@ func HistoryClientProto(
 	// Serve it
 	go internal.Broker.AcceptAndServe(id, func(opts []grpc.ServerOption) *grpc.Server {
 		server := plugin.DefaultGRPCServer(opts)
-		p.GRPCServer(internal.Broker, server)
+		if err := p.GRPCServer(internal.Broker, server); err != nil {
+			panic(err)
+		}
 		return server
 	})
 

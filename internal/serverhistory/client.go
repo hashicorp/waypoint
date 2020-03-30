@@ -7,10 +7,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	servercomponent "github.com/mitchellh/devflow/internal/server/component"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/history"
-	"github.com/mitchellh/devflow/sdk/history/convert"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 )
 
@@ -27,17 +27,14 @@ func (c *Client) Deployments(ctx context.Context, cfg *history.Lookup) ([]compon
 		return nil, err
 	}
 
-	result, err := convert.Component(
-		c.MapperSet,
-		resp.Deployments,
-		cfg.Type,
-		(*component.Deployment)(nil),
-	)
-	if err != nil {
-		return nil, err
+	result := make([]component.Deployment, 0, len(resp.Deployments))
+	for _, v := range resp.Deployments {
+		if v.Deployment != nil {
+			result = append(result, servercomponent.Deployment(v))
+		}
 	}
 
-	return result.([]component.Deployment), nil
+	return result, nil
 }
 
 var _ history.Client = (*Client)(nil)

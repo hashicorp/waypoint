@@ -9,7 +9,6 @@ import (
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/history"
-	"github.com/mitchellh/devflow/sdk/history/convert"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
@@ -58,22 +57,18 @@ func (c *historyClient) Deployments(
 	cfg *history.Lookup,
 ) ([]component.Deployment, error) {
 	// Call it
-	resp, err := c.client.Deployments(ctx, &pb.History_LookupRequest{})
+	resp, err := c.client.Deployments(ctx, LookupToProto(cfg))
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := convert.Component(
-		mapper.Set(c.mappers),
-		resp.Results,
-		cfg.Type,
-		(*component.Deployment)(nil),
-	)
-	if err != nil {
+	// Decode our slice
+	var result []component.Deployment
+	if err := unmarshalSlice(resp.Results, &result); err != nil {
 		return nil, err
 	}
 
-	return result.([]component.Deployment), nil
+	return result, nil
 }
 
 // historyServer is a gRPC server that the client talks to and calls a
@@ -88,7 +83,7 @@ func (s *historyServer) Deployments(
 	ctx context.Context,
 	args *pb.History_LookupRequest,
 ) (*pb.History_LookupResponse, error) {
-	result, err := s.Impl.Deployments(ctx, nil)
+	result, err := s.Impl.Deployments(ctx, LookupFromProto(args))
 	if err != nil {
 		return nil, err
 	}

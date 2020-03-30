@@ -29,6 +29,12 @@ func ClientConfig(log hclog.Logger) *plugin.ClientConfig {
 		// call Kill so that CleanupClients gets it. If we do properly call
 		// Kill, then it is a no-op to call it again so this is safe.
 		Managed: true,
+
+		// This is super important. There appears to be a bug with AutoMTLS
+		// when using GRPCBroker and listening from the _client_ side. The
+		// TLS fails to negotiate. For now we just disable this but we should
+		// look into fixing that later.
+		AutoMTLS: false,
 	}
 }
 

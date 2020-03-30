@@ -36,7 +36,6 @@ func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 		config := pluginclient.ClientConfig(log)
 		config.Cmd = cmd
 		config.Logger = log
-		config.AutoMTLS = true
 
 		// Log that we're going to launch this
 		log.Info("launching plugin", "type", typ, "path", cmd.Path, "args", cmd.Args)

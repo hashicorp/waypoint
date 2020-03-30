@@ -16,7 +16,6 @@ import (
 	historymocks "github.com/mitchellh/devflow/sdk/history/mocks"
 	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
 	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
-	"github.com/mitchellh/devflow/sdk/internal/plugincomponent"
 	"github.com/mitchellh/devflow/sdk/internal/testproto"
 	pb "github.com/mitchellh/devflow/sdk/proto"
 )
@@ -74,12 +73,8 @@ func testDynamicFunc(
 
 		// Test history client
 		assert.NotNil(historyClient)
-		resp, err := historyClient.Deployments(ctx, &history.Lookup{
-			Type: (*plugincomponent.Artifact)(nil),
-		})
-		if assert.NoError(err) {
-			assert.NotNil(resp)
-		}
+		_, err := historyClient.Deployments(ctx, nil)
+		assert.NoError(err)
 
 		return &testproto.Data{Value: "hello"}
 	})
@@ -99,7 +94,7 @@ func testDynamicFunc(
 	implFunc := getFunc(raw).(*mapper.Func)
 
 	historyMock := &historymocks.Client{}
-	historyMock.On("Deployments", mock.Anything, (*history.Lookup)(nil)).Return([]component.Deployment{}, nil)
+	historyMock.On("Deployments", mock.Anything, &history.Lookup{}).Return([]component.Deployment{}, nil)
 
 	// Call our function by building a chain. We use the chain so we
 	// have access to the same level of mappers that a default plugin
