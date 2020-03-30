@@ -2,15 +2,16 @@ package singleprocess
 
 import (
 	"context"
+	"sort"
 
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/mitchellh/devflow/internal/server"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
+	serversort "github.com/mitchellh/devflow/internal/server/sort"
 )
 
 var deployBucket = []byte("deployments")
@@ -52,7 +53,7 @@ func (s *service) UpsertDeployment(
 // TODO: test
 func (s *service) ListDeployments(
 	ctx context.Context,
-	req *empty.Empty,
+	req *pb.ListDeploymentsRequest,
 ) (*pb.ListDeploymentsResponse, error) {
 	var result []*pb.Deployment
 	s.db.View(func(tx *bolt.Tx) error {
@@ -63,10 +64,39 @@ func (s *service) ListDeployments(
 				panic(err)
 			}
 
+			// Filter
+			if !statusFilterMatch(req.Status, deploy.Status) {
+				return nil
+			}
+
 			result = append(result, &deploy)
 			return nil
 		})
 	})
+
+	// Sort if we have to
+	var sortIface sort.Interface
+	switch req.Order {
+	case pb.ListDeploymentsRequest_START_TIME:
+		sortIface = serversort.DeploymentStartDesc(result)
+		if !req.OrderDesc {
+			sortIface = sort.Reverse(sortIface)
+		}
+
+	case pb.ListDeploymentsRequest_COMPLETE_TIME:
+		sortIface = serversort.DeploymentCompleteDesc(result)
+		if !req.OrderDesc {
+			sortIface = sort.Reverse(sortIface)
+		}
+	}
+	if sortIface != nil {
+		sort.Sort(sortIface)
+	}
+
+	// Limit
+	if req.Limit > 0 && req.Limit < uint32(len(result)) {
+		result = result[:req.Limit]
+	}
 
 	return &pb.ListDeploymentsResponse{Deployments: result}, nil
 }

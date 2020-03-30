@@ -29,10 +29,11 @@ var (
 	// commonCommands are the commands that are deemed "common" and shown first
 	// in the CLI help output.
 	commonCommands = map[string]struct{}{
-		"build":  struct{}{},
-		"push":   struct{}{},
-		"deploy": struct{}{},
-		"up":     struct{}{},
+		"build":   struct{}{},
+		"push":    struct{}{},
+		"deploy":  struct{}{},
+		"release": struct{}{},
+		"up":      struct{}{},
 	}
 
 	// hiddenCommands are not shown in CLI help output.
@@ -149,6 +150,12 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 
 		"deployment deploy": func() (cli.Command, error) {
 			return &DeploymentCreateCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"release": func() (cli.Command, error) {
+			return &ReleaseCreateCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

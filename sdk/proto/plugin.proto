@@ -57,6 +57,20 @@ message Args {
   message HistoryClient {
     uint32 stream_id = 1;
   }
+
+  // ReleaseTargets is the set of targets for a release operation.
+  message ReleaseTargets {
+    // The set of targets for a release. This is always guaranteed by
+    // the caller to sum to 100%. If the release component doesn't support
+    // traffic splitting, this is guaranteed to always be length 1.
+    repeated Target targets = 1;
+
+    // Target is a single target for releasing.
+    message Target {
+      google.protobuf.Any deployment = 1;
+      uint32 percent = 2;
+    }
+  }
 }
 
 // Empty is just an empty message useful with some RPC endpoints.

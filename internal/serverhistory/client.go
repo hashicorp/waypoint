@@ -5,8 +5,6 @@ package serverhistory
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	servercomponent "github.com/mitchellh/devflow/internal/server/component"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/sdk/component"
@@ -22,7 +20,10 @@ type Client struct {
 
 // Deployments implements history.Client
 func (c *Client) Deployments(ctx context.Context, cfg *history.Lookup) ([]component.Deployment, error) {
-	resp, err := c.APIClient.ListDeployments(ctx, &empty.Empty{})
+	resp, err := c.APIClient.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+		Order:     pb.ListDeploymentsRequest_COMPLETE_TIME,
+		OrderDesc: true,
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -100,6 +100,11 @@ type Source struct {
 	Path string
 }
 
+type ReleaseTarget struct {
+	Deployment Deployment
+	Percent    uint
+}
+
 type Artifact interface{}
 
 type Deployment interface{}

@@ -16,7 +16,7 @@ service Devflow {
   rpc ListPushedArtifacts(google.protobuf.Empty) returns (ListPushedArtifactsResponse);
 
   // ListDeployments returns the deployments.
-  rpc ListDeployments(google.protobuf.Empty) returns (ListDeploymentsResponse);
+  rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
 
   // GetLatestBuild returns the most recent successfully completed build
   // for an app.
@@ -95,6 +95,18 @@ message Status {
     RUNNING = 1;
     SUCCESS = 2;
     ERROR = 3;
+  }
+}
+
+message StatusFilter {
+  // Filters are ANDed together.
+  repeated Filter filters = 1;
+
+  message Filter {
+    oneof filter {
+      // state will match any status that has the given state.
+      Status.State state = 2;
+    }
   }
 }
 
@@ -201,6 +213,25 @@ message UpsertDeploymentResponse {
   Deployment deployment = 1;
 }
 
+message ListDeploymentsRequest {
+  // The filters to apply to this request. These are ORed, so you should
+  // specify multiple filters in the StatusFilter for AND behavior.
+  repeated StatusFilter status = 1;
+
+  // Order for the results.
+  Order order = 2;
+  bool order_desc = 3;
+
+  // Limit the number of results
+  uint32 limit = 4;
+
+  enum Order {
+    UNSET = 0;
+    START_TIME = 1;
+    COMPLETE_TIME = 2;
+  }
+}
+
 message ListDeploymentsResponse {
   // deployments is the list of deployments.
   repeated Deployment deployments = 1;
@@ -256,6 +287,23 @@ message Release {
   // release is the raw release object encoded directly from the plugin.
   google.protobuf.Any release = 4;
 
-  // id of the deployment that was released
-  string deployment_id = 5;
+  oneof strategy {
+    // id of the deployment that was released. This is a 100% single target.
+    string deployment_id = 5;
+
+    // split traffic between multiple deployments
+    Split traffic_split = 6;
+  }
+
+  message Split {
+    repeated SplitTarget targets = 1;
+  }
+
+  message SplitTarget {
+    // id the deployment target
+    string deployment_id = 1;
+
+    // percentage of traffic
+    int32 percent = 2;
+  }
 }
