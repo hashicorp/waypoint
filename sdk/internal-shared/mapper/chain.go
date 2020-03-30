@@ -104,6 +104,11 @@ func (f *Func) Chain(mappers []*Func, values ...interface{}) (*Chain, error) {
 // The result is a list of types that when satisfied will result in a
 // guaranteed callable Func.
 func (f *Func) ChainInputSet(mappers []*Func, check func(Type) bool) []Type {
+	f.Logger.Trace("available mappers", "len", len(mappers))
+	for _, m := range mappers {
+		f.Logger.Trace("available mapper", "in_types", m.Args, "out_type", m.Out.String(), "out_key", m.Out.Key())
+	}
+
 	typeMap := f.inputSet(mappers, check, map[*Func]struct{}{}, nil)
 	if typeMap == nil {
 		return nil
@@ -156,6 +161,11 @@ func (f *Func) inputSet(
 		return pending
 	}
 
+	// We have missing values
+	for _, t := range missing {
+		f.Logger.Trace("missing argument", "func", f.String(), "type", t.String())
+	}
+
 	// We're missing some values, let's see if the mappers can get us there.
 	for _, m := range mappers {
 		// If we already visited this mapper, ignore it to avoid cycles
@@ -172,18 +182,27 @@ func (f *Func) inputSet(
 			continue
 		}
 
+		log := f.Logger.With("func", m.String(), "func_out", m.Out.String())
+		log.Trace("func may satisfy missing argument")
+
 		// We need this type! Let's see if we satisfy everything.
 		// We also mark this as visited so that in the future we never
-		// attempt to use this mapper again.
+		// attempt to use this mapper again. We delete the visited marker
+		// right after because we only don't want to visit again in the same
+		// chain.
 		visited[m] = struct{}{}
 		result := m.inputSet(mappers, check, visited, pending)
+		delete(visited, m)
 		if result == nil {
 			// Failed to find a path.
+			log.Trace("func did NOT satisfy requirements")
 			continue
 		}
 
 		// We found a path! Delete the missing type since it is now satisfied
 		delete(missing, key)
+
+		log.Trace("missing argument satisfied")
 
 		// If we are out of missing values, then we found a path!
 		if len(missing) == 0 {
@@ -192,6 +211,12 @@ func (f *Func) inputSet(
 
 		// Accumulate
 		pending = result
+	}
+
+	if input == nil {
+		for _, t := range missing {
+			f.Logger.Trace("final missing argument", "type", t.String())
+		}
 	}
 
 	// If we made it here it means that we couldn't find a path since
