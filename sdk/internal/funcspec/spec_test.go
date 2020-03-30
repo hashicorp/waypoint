@@ -86,6 +86,21 @@ func TestSpec(t *testing.T) {
 		require.Equal([]string{"proto.Empty"}, spec.Args)
 		require.Empty(spec.Result)
 	})
+
+	t.Run("args as extra values", func(t *testing.T) {
+		require := require.New(t)
+
+		type Foo struct{}
+		type Bar struct{}
+
+		spec, err := Spec(func(*Foo, *Bar) *pb.Empty { return nil }, WithMappers([]*mapper.Func{
+			mustFunc(t, func(*pb.Empty) *Foo { return nil }),
+		}), WithValues(&Bar{}))
+		require.NoError(err)
+		require.NotNil(spec)
+		require.Equal([]string{"proto.Empty"}, spec.Args)
+		require.Equal("proto.Empty", spec.Result)
+	})
 }
 
 func mustFunc(t *testing.T, f interface{}) *mapper.Func {

@@ -75,7 +75,7 @@ func testDynamicFunc(
 		// Test history client
 		assert.NotNil(historyClient)
 		resp, err := historyClient.Deployments(ctx, &history.Lookup{
-			Type: (*[]*plugincomponent.Artifact)(nil),
+			Type: (*plugincomponent.Artifact)(nil),
 		})
 		if assert.NoError(err) {
 			assert.NotNil(resp)

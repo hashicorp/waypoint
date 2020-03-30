@@ -13,8 +13,14 @@ import (
 // value using mappers, and then converts that to a slice of the resulting
 // component type.
 func Component(set mapper.Set, input, lookup, result interface{}) (interface{}, error) {
+	// lookup will be in the form of (*Type)(nil) but we really want to
+	// convert to a slice for components of (*[]Type)(nil) so this converts
+	// to that.
+	lookupType := reflect.TypeOf(lookup).Elem()
+	lookupSlice := reflect.New(reflect.SliceOf(lookupType)).Interface()
+
 	// Convert from the input type to our lookup type using mappers
-	raw, err := set.ConvertType(input, lookup)
+	raw, err := set.ConvertType(input, lookupSlice)
 	if err != nil {
 		return nil, err
 	}

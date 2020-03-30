@@ -110,6 +110,9 @@ func TerminalUIProto(ui terminal.UI) *pb.Args_TerminalUI {
 	return &pb.Args_TerminalUI{}
 }
 
+// HistoryClient connects to a history.Client served via the plugin interface.
+//
+// Note these are tested in sdk/internal/plugin via testDynamicFunc.
 func HistoryClient(
 	ctx context.Context,
 	log hclog.Logger,
@@ -136,6 +139,7 @@ func HistoryClient(
 	return client.(history.Client), nil
 }
 
+// HistoryClientProto takes a history.Client and serves it over the plugin interface.
 func HistoryClientProto(
 	client history.Client,
 	log hclog.Logger,

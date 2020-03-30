@@ -19,7 +19,7 @@ func TestComponent(t *testing.T) {
 
 	raw, err := Component(set,
 		[]int{1, 2, 3},
-		(*[]*mocks.Deployment)(nil),
+		(**mocks.Deployment)(nil),
 		(*component.Deployment)(nil),
 	)
 	require.NoError(err)
