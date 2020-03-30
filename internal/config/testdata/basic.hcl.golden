@@ -71,7 +71,8 @@
      SrcRange: (hcl.Range) testdata/basic.hcl:8,31-33,
      EndRange: (hcl.Range) testdata/basic.hcl:8,33-33
     })
-   })
+   }),
+   Release: (*config.Component)(<nil>)
   })
  }
 }

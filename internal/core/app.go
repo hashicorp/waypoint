@@ -31,6 +31,7 @@ type App struct {
 	Builder  component.Builder
 	Registry component.Registry
 	Platform component.Platform
+	Releaser component.ReleaseManager
 
 	// UI is the UI that should be used for any output that is specific
 	// to this app vs the project UI.
@@ -83,6 +84,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 		{&app.Builder, component.BuilderType, cfg.Build},
 		{&app.Registry, component.RegistryType, cfg.Registry},
 		{&app.Platform, component.PlatformType, cfg.Platform},
+		{&app.Releaser, component.ReleaseManagerType, cfg.Release},
 	}
 	for _, c := range components {
 		if c.Config == nil {
@@ -275,6 +277,69 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (component.De
 	}
 
 	return result.(component.Deployment), nil
+}
+
+// Release releases a set of deploys.
+// TODO(mitchellh): test
+func (a *App) Release(ctx context.Context, targets []component.ReleaseTarget) (component.Release, error) {
+	log := a.logger.Named("release")
+
+	// Create our metadata
+	release := &pb.Release{
+		Component: a.components[a.Releaser],
+		Status:    server.NewStatus(pb.Status_RUNNING),
+	}
+
+	// Init our metadata on the server
+	log.Debug("creating release metadata on server")
+	/*
+		resp, err := a.client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{Deployment: deploy})
+		if err != nil {
+			return nil, err
+		}
+		deploy = resp.Deployment
+		log = log.With("id", deploy.Id)
+	*/
+
+	// Run the deploy
+	log.Info("starting release")
+	result, err := a.callDynamicFunc(ctx,
+		log,
+		(*component.Release)(nil),
+		a.Releaser,
+		a.Releaser.ReleaseFunc(),
+		targets)
+	if err == nil {
+		server.StatusSetSuccess(release.Status)
+		val, verr := component.ProtoAny(result.(component.Release))
+		if verr != nil {
+			err = verr
+		}
+
+		release.Release = val
+	}
+
+	// If we have an error, then we set that up now.
+	if err != nil {
+		log.Warn("error during release", "err", err)
+		release.Release = nil
+		server.StatusSetError(release.Status, err)
+	}
+
+	/*
+		// Complete the metadata
+		resp, err = a.client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{Deployment: deploy})
+		if err != nil {
+			log.Warn("error marking deploy as complete, the status may be stuck")
+		}
+		log.Debug("deploy marked as complete on server")
+	*/
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(component.Release), nil
 }
 
 // Exec using the deployer phase

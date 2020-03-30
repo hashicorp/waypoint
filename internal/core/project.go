@@ -51,9 +51,10 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		logger: hclog.L(),
 		apps:   make(map[string]*App),
 		factories: map[component.Type]*mapper.Factory{
-			component.BuilderType:  plugin.Builders,
-			component.RegistryType: plugin.Registries,
-			component.PlatformType: plugin.Platforms,
+			component.BuilderType:        plugin.Builders,
+			component.RegistryType:       plugin.Registries,
+			component.PlatformType:       plugin.Platforms,
+			component.ReleaseManagerType: plugin.Releasers,
 		},
 	}
 

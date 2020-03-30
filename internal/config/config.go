@@ -17,6 +17,7 @@ type App struct {
 	Build    *Component `hcl:"build,block"`
 	Registry *Component `hcl:"registry,block"`
 	Platform *Component `hcl:"deploy,block"`
+	Release  *Component `hcl:"release,block"`
 }
 
 // Component is an internal name used to describe a single component such as

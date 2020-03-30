@@ -108,7 +108,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			})
 		}
 
-		// Release it
+		// UI
 		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
 		for _, t := range targets {
 			completeTime, _ := ptypes.Timestamp(t.Deployment.Status.CompleteTime)
@@ -120,6 +120,18 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 				terminal.WithStatusStyle(),
 			)
 		}
+
+		// Release
+		targetArgs := make([]component.ReleaseTarget, len(targets))
+		for i, target := range targets {
+			targetArgs[i] = target.Target
+		}
+		_, err = app.Release(ctx, targetArgs)
+		if err != nil {
+			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
 		return nil
 	})
 	if err != nil {

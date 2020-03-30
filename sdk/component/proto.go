@@ -65,3 +65,30 @@ func ProtoAnySlice(m interface{}) ([]*any.Any, error) {
 
 	return result, nil
 }
+
+// ProtoAnyUnmarshal attempts to unmarshal a ProtoMarshler implementation
+// to another type. This can be used to get more concrete data out of a
+// generic component.
+func ProtoAnyUnmarshal(m interface{}, out proto.Message) error {
+	msg, ok := m.(proto.Message)
+
+	// If it isn't a message directly, we accept marshalers
+	if !ok {
+		pm, ok := m.(ProtoMarshaler)
+		if !ok {
+			return status.Errorf(codes.FailedPrecondition,
+				"expected value to be a proto message, got %T",
+				m)
+		}
+
+		msg = pm.Proto()
+	}
+
+	result, ok := msg.(*any.Any)
+	if !ok {
+		return status.Errorf(codes.FailedPrecondition, "expected *any.Any, got %T", msg)
+	}
+
+	// Unmarshal
+	return ptypes.UnmarshalAny(result, out)
+}

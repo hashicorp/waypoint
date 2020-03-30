@@ -10,9 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/mitchellh/devflow/builtin/docker"
 	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
@@ -35,15 +33,22 @@ func (r *Releaser) ReleaseFunc() interface{} {
 func (r *Releaser) Release(
 	ctx context.Context,
 	log hclog.Logger,
-	src *component.Source,
-	img *docker.Image,
-	dir *datadir.Component,
 	ui terminal.UI,
 	targets []component.ReleaseTarget,
 ) (*Release, error) {
-	// Get the deployment
-	var deploy Deployment
-	return nil, nil
+	// Get the deployments
+	var deploys []*Deployment
+	for _, t := range targets {
+		var deploy Deployment
+		if err := component.ProtoAnyUnmarshal(t.Deployment, &deploy); err != nil {
+			return nil, err
+		}
+
+		deploys = append(deploys, &deploy)
+	}
+
+	// We use the most recent deploy for most things
+	deploy := deploys[0]
 
 	// Get the API service
 	apiService, err := deploy.apiService(ctx)
@@ -63,8 +68,21 @@ func (r *Releaser) Release(
 		return nil, err
 	}
 
+	// Reset our service for an update
+	//service.Metadata = &run.ObjectMeta{Name: deploy.Resource.Name}
+	//service.Status = nil
+
 	// Update the service with the traffic info
-	// TODO
+	service.Spec.Traffic = nil
+	for i, t := range targets {
+		log.Debug("setting traffic target",
+			"revision", deploys[i].RevisionId,
+			"percent", t.Percent)
+		service.Spec.Traffic = append(service.Spec.Traffic, &run.TrafficTarget{
+			RevisionName: deploys[i].RevisionId,
+			Percent:      int64(t.Percent),
+		})
+	}
 
 	// Replace the service
 	st.Update("Deploying routing changes")
@@ -75,7 +93,7 @@ func (r *Releaser) Release(
 	}
 
 	// Set the IAM policy so global traffic is allowed
-	if err := r.setNoAuthPolicy(ctx, &deploy, apiService); err != nil {
+	if err := r.setNoAuthPolicy(ctx, deploy, apiService); err != nil {
 		return nil, err
 	}
 
