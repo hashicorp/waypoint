@@ -59,32 +59,6 @@ func (p *Platform) Deploy(
 		return nil, status.Errorf(codes.Aborted, err.Error())
 	}
 
-	// Our service we'll be creating
-	service := &run.Service{
-		ApiVersion: "serving.knative.dev/v1",
-		Kind:       "Service",
-		Metadata: &run.ObjectMeta{
-			Name: result.Resource.Name,
-		},
-
-		Spec: &run.ServiceSpec{
-			Template: &run.RevisionTemplate{
-				Metadata: &run.ObjectMeta{
-					Annotations: map[string]string{
-						"devflow.hashicorp.com/nonce": time.Now().UTC().Format(time.RFC3339Nano),
-					},
-				},
-				Spec: &run.RevisionSpec{
-					Containers: []*run.Container{
-						&run.Container{
-							Image: img.Name(),
-						},
-					},
-				},
-			},
-		},
-	}
-
 	// We'll update the user in real time
 	st := ui.Status()
 	defer st.Close()
@@ -97,7 +71,8 @@ func (p *Platform) Deploy(
 	client := run.NewNamespacesServicesService(apiService)
 	log.Trace("checking if service already exists", "service", result.apiName())
 	st.Update("Checking if service is already created")
-	if _, err := client.Get(result.apiName()).Context(ctx).Do(); err != nil {
+	service, err := client.Get(result.apiName()).Context(ctx).Do()
+	if err != nil {
 		gerr, ok := err.(*googleapi.Error)
 		if !ok {
 			return nil, err
@@ -110,6 +85,31 @@ func (p *Platform) Deploy(
 		}
 
 		create = true
+		service = &run.Service{
+			ApiVersion: "serving.knative.dev/v1",
+			Kind:       "Service",
+			Metadata: &run.ObjectMeta{
+				Name: result.Resource.Name,
+			},
+			Spec: &run.ServiceSpec{},
+		}
+	}
+
+	// Regardless of if we're creating or updating, we update our
+	// spec to force a new revision.
+	service.Spec.Template = &run.RevisionTemplate{
+		Metadata: &run.ObjectMeta{
+			Annotations: map[string]string{
+				"devflow.hashicorp.com/nonce": time.Now().UTC().Format(time.RFC3339Nano),
+			},
+		},
+		Spec: &run.RevisionSpec{
+			Containers: []*run.Container{
+				&run.Container{
+					Image: img.Name(),
+				},
+			},
+		},
 	}
 
 	if create {
@@ -132,9 +132,6 @@ func (p *Platform) Deploy(
 		}
 	}
 
-	// Update the service
-	result.RevisionId = service.Status.LatestCreatedRevisionName
-
 	// Set the IAM policy so global traffic is allowed
 	if err := p.setNoAuthPolicy(ctx, result, apiService); err != nil {
 		return nil, err
@@ -148,6 +145,7 @@ func (p *Platform) Deploy(
 	}
 
 	// Now that the service is ready we can set the latest URL
+	result.RevisionId = service.Status.LatestCreatedRevisionName
 	result.Url = service.Status.Url
 
 	// If we have tracing enabled we just dump the full service as we know it
