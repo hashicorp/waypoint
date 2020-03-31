@@ -68,10 +68,6 @@ func (r *Releaser) Release(
 		return nil, err
 	}
 
-	// Reset our service for an update
-	//service.Metadata = &run.ObjectMeta{Name: deploy.Resource.Name}
-	//service.Status = nil
-
 	// Update the service with the traffic info
 	service.Spec.Traffic = nil
 	for i, t := range targets {
