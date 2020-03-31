@@ -95,6 +95,20 @@ func (p *Platform) Deploy(
 		}
 	}
 
+	// If we're deploying to the "latest revision" then we want to enforce
+	// we're only going to the last revision so that we don't release at the
+	// same time. This happens because when we create the service we don't
+	// specify a traffic target (because we don't have a revision ID yet) and
+	// it defaults to latest revision.
+	if len(service.Spec.Traffic) > 0 && service.Spec.Traffic[0].LatestRevision {
+		service.Spec.Traffic = []*run.TrafficTarget{
+			&run.TrafficTarget{
+				RevisionName: service.Status.LatestCreatedRevisionName,
+				Percent:      100,
+			},
+		}
+	}
+
 	// Regardless of if we're creating or updating, we update our
 	// spec to force a new revision.
 	service.Spec.Template = &run.RevisionTemplate{
@@ -132,14 +146,9 @@ func (p *Platform) Deploy(
 		}
 	}
 
-	// Set the IAM policy so global traffic is allowed
-	if err := p.setNoAuthPolicy(ctx, result, apiService); err != nil {
-		return nil, err
-	}
-
 	// Poll the service and wait for completion
 	st.Update("Waiting for revision to be ready")
-	service, err = p.pollServiceReady(ctx, log, result, apiService)
+	service, err = result.pollServiceReady(ctx, log, apiService)
 	if err != nil {
 		return nil, err
 	}
@@ -156,68 +165,6 @@ func (p *Platform) Deploy(
 	}
 
 	return result, nil
-}
-
-// pollServiceReady waits for the service to become ready.
-func (p *Platform) pollServiceReady(
-	ctx context.Context,
-	log hclog.Logger,
-	deployment *Deployment,
-	apiService *run.APIService,
-) (*run.Service, error) {
-	log = log.With("service", deployment.Resource.Name)
-	log.Info("waiting for cloud run service to be ready")
-	client := run.NewNamespacesServicesService(apiService)
-	for {
-		log.Trace("querying service")
-		service, err := client.Get(deployment.apiName()).Context(ctx).Do()
-		if err != nil {
-			return nil, status.Errorf(codes.Aborted, err.Error())
-		}
-
-		for _, cond := range service.Status.Conditions {
-			if cond.Type != "Ready" {
-				continue
-			}
-
-			log.Debug("ready status", "status", cond.Status)
-			switch cond.Status {
-			case "True":
-				log.Info("service is ready")
-				return service, nil
-
-			case "False":
-				return nil, status.Errorf(codes.Aborted, "service failed to get ready")
-			}
-		}
-
-		time.Sleep(1 * time.Second)
-	}
-}
-
-// setNoAuthPolicy sets the IAM policy on the deployment so that anyone
-// can access it (no auth required).
-func (p *Platform) setNoAuthPolicy(
-	ctx context.Context,
-	deployment *Deployment,
-	apiService *run.APIService,
-) error {
-	client := run.NewProjectsLocationsServicesService(apiService)
-	_, err := client.SetIamPolicy(deployment.apiResource(), &run.SetIamPolicyRequest{
-		Policy: &run.Policy{
-			Bindings: []*run.Binding{
-				&run.Binding{
-					Role:    "roles/run.invoker",
-					Members: []string{"allUsers"},
-				},
-			},
-		},
-	}).Context(ctx).Do()
-	if err != nil {
-		return status.Errorf(codes.Aborted, err.Error())
-	}
-
-	return nil
 }
 
 // Config is the configuration structure for the Platform.
