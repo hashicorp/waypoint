@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
@@ -54,6 +55,9 @@ func (a *App) doOperation(
 	if err != nil {
 		return nil, nil, err
 	}
+	if id := msgId(msg); id != "" {
+		log = log.With("id", id)
+	}
 	statusPtr = op.StatusPtr(msg)
 	valuePtr := op.ValuePtr(msg)
 
@@ -92,4 +96,21 @@ func (a *App) doOperation(
 	}
 
 	return result, msg, nil
+}
+
+// msgId gets the id of the message by looking for the "Id" field. This
+// will return empty string if the ID field can't be found for any reason.
+func msgId(msg proto.Message) string {
+	val := reflect.ValueOf(msg)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	// Get the Id field
+	val = val.FieldByName("Id")
+	if !val.IsValid() || val.Kind() != reflect.String {
+		return ""
+	}
+
+	return val.String()
 }
