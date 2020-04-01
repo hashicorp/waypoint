@@ -19,7 +19,8 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type Deployment struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -29,7 +30,7 @@ func (m *Deployment) Reset()         { *m = Deployment{} }
 func (m *Deployment) String() string { return proto.CompactTextString(m) }
 func (*Deployment) ProtoMessage()    {}
 func (*Deployment) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_939706bbb61a7552, []int{0}
+	return fileDescriptor_plugin_0d12d4bfb9c62025, []int{0}
 }
 func (m *Deployment) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Deployment.Unmarshal(m, b)
@@ -49,6 +50,13 @@ func (m *Deployment) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Deployment proto.InternalMessageInfo
 
+func (m *Deployment) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
 func (m *Deployment) GetName() string {
 	if m != nil {
 		return m.Name
@@ -56,18 +64,50 @@ func (m *Deployment) GetName() string {
 	return ""
 }
 
-func init() {
-	proto.RegisterType((*Deployment)(nil), "k8s.Deployment")
+type Release struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func init() { proto.RegisterFile("plugin.proto", fileDescriptor_plugin_939706bbb61a7552) }
+func (m *Release) Reset()         { *m = Release{} }
+func (m *Release) String() string { return proto.CompactTextString(m) }
+func (*Release) ProtoMessage()    {}
+func (*Release) Descriptor() ([]byte, []int) {
+	return fileDescriptor_plugin_0d12d4bfb9c62025, []int{1}
+}
+func (m *Release) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Release.Unmarshal(m, b)
+}
+func (m *Release) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Release.Marshal(b, m, deterministic)
+}
+func (dst *Release) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Release.Merge(dst, src)
+}
+func (m *Release) XXX_Size() int {
+	return xxx_messageInfo_Release.Size(m)
+}
+func (m *Release) XXX_DiscardUnknown() {
+	xxx_messageInfo_Release.DiscardUnknown(m)
+}
 
-var fileDescriptor_plugin_939706bbb61a7552 = []byte{
-	// 84 bytes of a gzipped FileDescriptorProto
+var xxx_messageInfo_Release proto.InternalMessageInfo
+
+func init() {
+	proto.RegisterType((*Deployment)(nil), "k8s.Deployment")
+	proto.RegisterType((*Release)(nil), "k8s.Release")
+}
+
+func init() { proto.RegisterFile("plugin.proto", fileDescriptor_plugin_0d12d4bfb9c62025) }
+
+var fileDescriptor_plugin_0d12d4bfb9c62025 = []byte{
+	// 108 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x29, 0xc8, 0x29, 0x4d,
-	0xcf, 0xcc, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xce, 0xb6, 0x28, 0x56, 0x52, 0xe0,
-	0xe2, 0x72, 0x49, 0x2d, 0xc8, 0xc9, 0xaf, 0xcc, 0x4d, 0xcd, 0x2b, 0x11, 0x12, 0xe2, 0x62, 0xc9,
-	0x4b, 0xcc, 0x4d, 0x95, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x02, 0xb3, 0x9d, 0x58, 0xa3, 0x40,
-	0x0a, 0x93, 0xd8, 0xc0, 0x9a, 0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0xac, 0x28, 0x65, 0x50,
-	0x44, 0x00, 0x00, 0x00,
+	0xcf, 0xcc, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xce, 0xb6, 0x28, 0x56, 0x32, 0xe0,
+	0xe2, 0x72, 0x49, 0x2d, 0xc8, 0xc9, 0xaf, 0xcc, 0x4d, 0xcd, 0x2b, 0x11, 0xe2, 0xe3, 0x62, 0xca,
+	0x4c, 0x91, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x62, 0xca, 0x4c, 0x11, 0x12, 0xe2, 0x62, 0xc9,
+	0x4b, 0xcc, 0x4d, 0x95, 0x60, 0x02, 0x8b, 0x80, 0xd9, 0x4a, 0x9c, 0x5c, 0xec, 0x41, 0xa9, 0x39,
+	0xa9, 0x89, 0xc5, 0xa9, 0x4e, 0xac, 0x51, 0x20, 0x33, 0x92, 0xd8, 0xc0, 0xe6, 0x19, 0x03, 0x02,
+	0x00, 0x00, 0xff, 0xff, 0x03, 0xeb, 0x8f, 0x94, 0x5f, 0x00, 0x00, 0x00,
 }

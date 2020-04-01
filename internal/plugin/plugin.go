@@ -40,6 +40,7 @@ func init() {
 	Platforms.Register("lambda", BuiltinFactory("lambda", component.PlatformType))
 
 	Releasers.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.ReleaseManagerType))
+	Releasers.Register("kubernetes", BuiltinFactory("kubernetes", component.ReleaseManagerType))
 }
 
 func must(err error) {

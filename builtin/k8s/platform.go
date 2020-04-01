@@ -2,24 +2,23 @@ package k8s
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/mitchellh/go-homedir"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/mitchellh/devflow/builtin/docker"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/datadir"
 	"github.com/mitchellh/devflow/sdk/terminal"
+)
+
+const (
+	labelId    = "devflow.hashicorp.com/id"
+	labelNonce = "devflow.hashicorp.com/nonce"
 )
 
 // Platform is the Platform implementation for Google Cloud Run.
@@ -46,14 +45,21 @@ func (p *Platform) Deploy(
 	dir *datadir.Component,
 	ui terminal.UI,
 ) (*Deployment, error) {
+	// Create our deployment and set an initial ID
 	var result Deployment
+	id, err := component.Id()
+	if err != nil {
+		return nil, err
+	}
+	result.Id = id
+	result.Name = src.App
 
 	// We'll update the user in real time
 	st := ui.Status()
 	defer st.Close()
 
 	// Get our client
-	clientset, ns, err := p.clientset()
+	clientset, ns, err := clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -62,29 +68,46 @@ func (p *Platform) Deploy(
 
 	// Determine if we have a deployment that we manage already
 	create := false
-	deployment, err := deployclient.Get(ctx, src.App, metav1.GetOptions{})
+	deployment, err := deployclient.Get(ctx, result.Name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
-		deployment = result.newDeployment(src.App)
+		deployment = result.newDeployment(result.Name)
 		create = true
+		err = nil
 	}
 	if err != nil {
 		return nil, err
 	}
 
+	// Set our ID on the label. We use this ID so that we can have a key
+	// to route to multiple versions during release management.
+	deployment.Spec.Template.Labels[labelId] = result.Id
+
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{
 			corev1.Container{
-				Name:            src.App,
+				Name:            result.Name,
 				Image:           img.Name(),
 				ImagePullPolicy: corev1.PullAlways,
+				Ports: []corev1.ContainerPort{
+					corev1.ContainerPort{
+						Name:          "http",
+						ContainerPort: 3000,
+					},
+				},
+				Env: []corev1.EnvVar{
+					corev1.EnvVar{
+						Name:  "PORT",
+						Value: "3000",
+					},
+				},
 			},
 		},
 	}
 	if deployment.Spec.Template.Annotations == nil {
 		deployment.Spec.Template.Annotations = make(map[string]string)
 	}
-	deployment.Spec.Template.Annotations["devflow.hashicorp.com/nonce"] =
+	deployment.Spec.Template.Annotations[labelNonce] =
 		time.Now().UTC().Format(time.RFC3339Nano)
 
 	// Create/update
@@ -101,54 +124,7 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	return &Deployment{
-		Name: deployment.Name,
-	}, nil
-}
-
-// clientset returns a K8S clientset and configured namespace.
-func (p *Platform) clientset() (*kubernetes.Clientset, string, error) {
-	// Path to the kube config file
-	kubeconfig := p.config.KubeconfigPath
-	if kubeconfig == "" {
-		dir, err := homedir.Dir()
-		if err != nil {
-			return nil, "", status.Errorf(codes.Aborted,
-				"failed to load home directory: %s",
-				err)
-		}
-
-		kubeconfig = filepath.Join(dir, ".kube", "config")
-	}
-
-	// Build our config and client
-	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig},
-		&clientcmd.ConfigOverrides{
-			CurrentContext: p.config.Context,
-		},
-	)
-
-	// Get our configured namespace
-	ns, _, err := config.Namespace()
-	if err != nil {
-		return nil, "", status.Errorf(codes.Aborted,
-			"failed to initialize K8S client configuration: %s", err)
-	}
-
-	clientconfig, err := config.ClientConfig()
-	if err != nil {
-		return nil, "", status.Errorf(codes.Aborted,
-			"failed to initialize K8S client configuration: %s", err)
-	}
-
-	clientset, err := kubernetes.NewForConfig(clientconfig)
-	if err != nil {
-		return nil, "", status.Errorf(codes.Aborted,
-			"failed to initialize K8S client: %s", err)
-	}
-
-	return clientset, ns, nil
+	return &result, nil
 }
 
 // Config is the configuration structure for the Platform.
