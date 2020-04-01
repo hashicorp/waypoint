@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package k8s;
+
+option go_package = "k8s";
+
+message Deployment {
+  string name = 1;
+}

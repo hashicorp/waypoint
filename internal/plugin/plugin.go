@@ -7,6 +7,7 @@ import (
 
 	"github.com/mitchellh/devflow/builtin/docker"
 	"github.com/mitchellh/devflow/builtin/google/cloudrun"
+	"github.com/mitchellh/devflow/builtin/k8s"
 	"github.com/mitchellh/devflow/builtin/lambda"
 	"github.com/mitchellh/devflow/builtin/pack"
 )
@@ -23,6 +24,7 @@ var (
 		"pack":             pack.Options,
 		"docker":           docker.Options,
 		"google-cloud-run": cloudrun.Options,
+		"kubernetes":       k8s.Options,
 		"lambda":           lambda.Options,
 	}
 )
@@ -34,6 +36,7 @@ func init() {
 	Registries.Register("docker", BuiltinFactory("docker", component.RegistryType))
 
 	Platforms.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.PlatformType))
+	Platforms.Register("kubernetes", BuiltinFactory("kubernetes", component.PlatformType))
 	Platforms.Register("lambda", BuiltinFactory("lambda", component.PlatformType))
 
 	Releasers.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.ReleaseManagerType))
