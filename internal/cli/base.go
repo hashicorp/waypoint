@@ -57,6 +57,18 @@ type baseCommand struct {
 	app string
 }
 
+// Close cleans up any resources that the command created. This should be
+// defered by any CLI command that embeds baseCommand in the Run command.
+func (c *baseCommand) Close() error {
+	if c.project != nil {
+		if err := c.project.Close(); err != nil {
+			c.Log.Warn("error closing project", "err", err)
+		}
+	}
+
+	return nil
+}
+
 // Init initializes the command by parsing flags, parsing the configuration,
 // setting up the project, etc. You can control what is done by using the
 // options.

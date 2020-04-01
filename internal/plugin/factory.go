@@ -69,6 +69,7 @@ func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 		return &Instance{
 			Component: raw,
 			Mappers:   mappers,
+			Close:     func() { client.Kill() },
 		}, nil
 	}
 }
@@ -94,4 +95,8 @@ type Instance struct {
 
 	// Mappers is the list of mappers that this plugin is providing.
 	Mappers []*mapper.Func
+
+	// Closer is a function that should be called to clean up resources
+	// associated with this plugin.
+	Close func()
 }

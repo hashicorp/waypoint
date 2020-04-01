@@ -121,6 +121,14 @@ func (p *Project) Close() error {
 
 	p.logger.Debug("closing project")
 
+	// Stop all our apps
+	for name, app := range p.apps {
+		p.logger.Trace("closing app", "app", name)
+		if err := app.Close(); err != nil {
+			p.logger.Warn("error closing app", "err", err)
+		}
+	}
+
 	// If we're running in local mode, close our local resources we started
 	for _, c := range p.localClosers {
 		if err := c.Close(); err != nil {

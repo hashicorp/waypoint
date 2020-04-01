@@ -46,10 +46,8 @@ var (
 // The arguments SHOULD include argv[0] as the program name.
 func Main(args []string) int {
 	// Clean up all our plugins so we don't leave any dangling processes.
-	// TODO(mitchellh): we should always keep this call just in case but
-	// what we really want to do is implement io.Closer and have our
-	// `internal/core` structures call that as necessary when they're done
-	// with components.
+	// Note that this is a "just in case" catch. We should be properly cleaning
+	// up plugin processes by calling Close on all the resources we use.
 	defer plugin.CleanupClients()
 
 	// Initialize our logger based on env vars

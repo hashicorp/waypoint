@@ -22,6 +22,8 @@ type ReleaseCreateCommand struct {
 }
 
 func (c *ReleaseCreateCommand) Run(args []string) int {
+	defer c.Close()
+
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
 		WithArgs(args),

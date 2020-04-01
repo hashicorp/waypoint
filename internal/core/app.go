@@ -43,6 +43,7 @@ type App struct {
 	mappers       []*mapper.Func
 	components    map[interface{}]*pb.Component
 	componentDirs map[interface{}]*datadir.Component
+	closers       []func() error
 }
 
 // newApp creates an App for the given project and configuration. This will
@@ -98,6 +99,16 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	}
 
 	return app, nil
+}
+
+// Close is called to clean up any resources. This should be called
+// whenever the app is done being used. This will be called by Project.Close.
+func (a *App) Close() error {
+	for _, c := range a.closers {
+		c()
+	}
+
+	return nil
 }
 
 // Exec using the deployer phase
@@ -304,6 +315,12 @@ func (a *App) initComponent(
 		// affected by other plugins.
 		a.mappers = append(a.mappers, pinst.Mappers...)
 		log.Info("registered component-specific mappers", "len", len(pinst.Mappers))
+
+		// Store the closer
+		a.closers = append(a.closers, func() error {
+			pinst.Close()
+			return nil
+		})
 	}
 
 	// Store the component dir mapping
