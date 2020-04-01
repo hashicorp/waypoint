@@ -122,12 +122,22 @@ func (s *releaseManagerServer) Release(
 	ctx context.Context,
 	args *proto.Release_Args,
 ) (*proto.Release_Resp, error) {
-	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.ReleaseFunc(), s.Mappers)
+	raw, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.ReleaseFunc(), s.Mappers)
+	if err != nil {
+		return nil, err
+	}
+	encoded, err := component.ProtoAny(raw)
 	if err != nil {
 		return nil, err
 	}
 
-	return &proto.Release_Resp{Result: encoded}, nil
+	release := raw.(component.Release)
+	return &proto.Release_Resp{
+		Result: encoded,
+		Release: &proto.Release{
+			Url: release.URL(),
+		},
+	}, nil
 }
 
 var (

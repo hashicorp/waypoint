@@ -103,6 +103,9 @@ type Source struct {
 type ReleaseTarget struct {
 	Deployment Deployment
 	Percent    uint
+
+	// Will always be zero for plugins.
+	DeploymentId string
 }
 
 type Artifact interface{}

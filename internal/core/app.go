@@ -286,30 +286,37 @@ func (a *App) Release(ctx context.Context, targets []component.ReleaseTarget) (c
 
 	// Create our metadata
 	release := &pb.Release{
-		Component: a.components[a.Releaser],
-		Status:    server.NewStatus(pb.Status_RUNNING),
+		Component:    a.components[a.Releaser],
+		Status:       server.NewStatus(pb.Status_RUNNING),
+		TrafficSplit: &pb.Release_Split{},
+	}
+
+	// Create our splits for the release
+	for _, target := range targets {
+		release.TrafficSplit.Targets = append(release.TrafficSplit.Targets, &pb.Release_SplitTarget{
+			DeploymentId: target.DeploymentId,
+			Percent:      int32(target.Percent),
+		})
 	}
 
 	// Init our metadata on the server
 	log.Debug("creating release metadata on server")
-	/*
-		resp, err := a.client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{Deployment: deploy})
-		if err != nil {
-			return nil, err
-		}
-		deploy = resp.Deployment
-		log = log.With("id", deploy.Id)
-	*/
+	resp, err := a.client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{Release: release})
+	if err != nil {
+		return nil, err
+	}
+	release = resp.Release
+	log = log.With("id", release.Id)
 
 	// Run the deploy
 	log.Info("starting release")
-	result, err := a.callDynamicFunc(ctx,
+	result, rerr := a.callDynamicFunc(ctx,
 		log,
 		(*component.Release)(nil),
 		a.Releaser,
 		a.Releaser.ReleaseFunc(),
 		targets)
-	if err == nil {
+	if rerr == nil {
 		server.StatusSetSuccess(release.Status)
 		val, verr := component.ProtoAny(result.(component.Release))
 		if verr != nil {
@@ -320,22 +327,21 @@ func (a *App) Release(ctx context.Context, targets []component.ReleaseTarget) (c
 	}
 
 	// If we have an error, then we set that up now.
-	if err != nil {
+	if rerr != nil {
 		log.Warn("error during release", "err", err)
 		release.Release = nil
 		server.StatusSetError(release.Status, err)
 	}
 
-	/*
-		// Complete the metadata
-		resp, err = a.client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{Deployment: deploy})
-		if err != nil {
-			log.Warn("error marking deploy as complete, the status may be stuck")
-		}
-		log.Debug("deploy marked as complete on server")
-	*/
-
+	// Complete the metadata
+	resp, err = a.client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{Release: release})
 	if err != nil {
+		log.Warn("error marking release as complete, the status may be stuck")
+	}
+	log.Debug("release marked as complete on server")
+
+	// Finally return the original error we got.
+	if rerr != nil {
 		return nil, err
 	}
 

@@ -140,7 +140,10 @@ func (r *Releaser) setNoAuthPolicy(
 // ReleaserConfig is the configuration structure for the Releaser.
 type ReleaserConfig struct{}
 
+func (r *Release) URL() string { return r.Url }
+
 var (
 	_ component.ReleaseManager = (*Releaser)(nil)
 	_ component.Configurable   = (*Releaser)(nil)
+	_ component.Release        = (*Release)(nil)
 )

@@ -89,8 +89,9 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		targets = append(targets, target{
 			resp.Deployments[0],
 			component.ReleaseTarget{
-				Deployment: servercomponent.Deployment(resp.Deployments[0]),
-				Percent:    uint(number),
+				DeploymentId: resp.Deployments[0].Id,
+				Deployment:   servercomponent.Deployment(resp.Deployments[0]),
+				Percent:      uint(number),
 			},
 		})
 		if number < 100 {
@@ -126,12 +127,13 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		for i, target := range targets {
 			targetArgs[i] = target.Target
 		}
-		_, err = app.Release(ctx, targetArgs)
+		release, err := app.Release(ctx, targetArgs)
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
+		app.UI.Output("\nURL: %s", release.URL(), terminal.WithSuccessStyle())
 		return nil
 	})
 	if err != nil {

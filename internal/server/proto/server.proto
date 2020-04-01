@@ -45,7 +45,7 @@ service Devflow {
   rpc UpsertDeployment(UpsertDeploymentRequest) returns (UpsertDeploymentResponse);
 
   // UpsertRelease updates or inserts a release.
-  // rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
+  rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
 }
 
 /********************************************************************
@@ -287,13 +287,8 @@ message Release {
   // release is the raw release object encoded directly from the plugin.
   google.protobuf.Any release = 4;
 
-  oneof strategy {
-    // id of the deployment that was released. This is a 100% single target.
-    string deployment_id = 5;
-
-    // split traffic between multiple deployments
-    Split traffic_split = 6;
-  }
+  // split traffic between multiple deployments
+  Split traffic_split = 5;
 
   message Split {
     repeated SplitTarget targets = 1;
