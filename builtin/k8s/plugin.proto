@@ -9,4 +9,6 @@ message Deployment {
   string name = 2;
 }
 
-message Release {}
+message Release {
+  string Url = 1;
+}

@@ -3,12 +3,14 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/terminal"
@@ -98,7 +100,26 @@ func (r *Releaser) Release(
 		return nil, err
 	}
 
-	return &Release{}, nil
+	// Wait on the IP
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		service, err = serviceclient.Get(ctx, src.App, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		return len(service.Status.LoadBalancer.Ingress) > 0, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ingress := service.Status.LoadBalancer.Ingress[0]
+	result.Url = "http://" + ingress.IP
+	if ingress.Hostname != "" {
+		result.Url = "http://" + ingress.Hostname
+	}
+
+	return &result, nil
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.
