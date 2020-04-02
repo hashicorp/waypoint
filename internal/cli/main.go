@@ -51,7 +51,7 @@ func Main(args []string) int {
 	defer plugin.CleanupClients()
 
 	// Initialize our logger based on env vars
-	args, log, err := logger(args)
+	args, log, logOutput, err := logger(args)
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +64,7 @@ func Main(args []string) int {
 	cli := &cli.CLI{
 		Name:                       args[0],
 		Args:                       args[1:],
-		Commands:                   commands(ctx, log),
+		Commands:                   commands(ctx, log, logOutput),
 		Autocomplete:               true,
 		AutocompleteNoDefaultFlags: true,
 		HelpFunc:                   groupedHelpFunc(cli.BasicHelpFunc(cliName)),
@@ -80,10 +80,11 @@ func Main(args []string) int {
 }
 
 // commands returns the map of commands that can be used to initialize a CLI.
-func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFactory {
+func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[string]cli.CommandFactory {
 	baseCommand := &baseCommand{
-		Ctx: ctx,
-		Log: log,
+		Ctx:       ctx,
+		Log:       log,
+		LogOutput: logOutput,
 	}
 
 	// aliases is a list of command aliases we have. The key is the CLI
@@ -158,6 +159,12 @@ func commands(ctx context.Context, log hclog.Logger) map[string]cli.CommandFacto
 			}, nil
 		},
 
+		"server": func() (cli.Command, error) {
+			return &ServerCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
 				baseCommand: baseCommand,
@@ -209,7 +216,7 @@ func interruptContext(ctx context.Context, log hclog.Logger) (context.Context, f
 
 // logger returns the logger to use for the CLI. Output, level, etc. are
 // determined based on environment variables if set.
-func logger(args []string) ([]string, hclog.Logger, error) {
+func logger(args []string) ([]string, hclog.Logger, io.Writer, error) {
 	app := args[0]
 
 	// Determine our log level if we have any. First override we check if env var
@@ -217,7 +224,7 @@ func logger(args []string) ([]string, hclog.Logger, error) {
 	if v := os.Getenv(EnvLogLevel); v != "" {
 		level = hclog.LevelFromString(v)
 		if level == hclog.NoLevel {
-			return nil, nil, fmt.Errorf("%s value %q is not a valid log level", EnvLogLevel, v)
+			return nil, nil, nil, fmt.Errorf("%s value %q is not a valid log level", EnvLogLevel, v)
 		}
 	}
 
@@ -263,7 +270,7 @@ func logger(args []string) ([]string, hclog.Logger, error) {
 		Output: output,
 	})
 
-	return outArgs, logger, nil
+	return outArgs, logger, output, nil
 }
 
 func groupedHelpFunc(f cli.HelpFunc) cli.HelpFunc {

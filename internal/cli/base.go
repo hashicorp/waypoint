@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"errors"
+	"io"
 	"strings"
 	"sync"
 
@@ -29,6 +30,11 @@ type baseCommand struct {
 
 	// Log is the logger to use.
 	Log hclog.Logger
+
+	// LogOutput is the writer that Log points to. You SHOULD NOT use
+	// this directly. We have access to this so you can use
+	// hclog.OutputResettable if necessary.
+	LogOutput io.Writer
 
 	//---------------------------------------------------------------
 	// The fields below are only available after calling Init.
@@ -91,13 +97,20 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 
 	// Parse the configuration
-	c.Log.Debug("reading configuration", "path", "devflow.hcl")
 	var cfg config.Config
+	c.cfg = &cfg
+
+	// If we have an app mode, then we're loading project settings
+	if baseCfg.AppMode == appModeNone {
+		c.Log.Info("app mode for this command is 'none', not loading config")
+		return nil
+	}
+
+	c.Log.Debug("reading configuration", "path", "devflow.hcl")
 	if err := hclsimple.DecodeFile("devflow.hcl", nil, &cfg); err != nil {
 		c.logError(c.Log, "error decoding configuration", err)
 		return err
 	}
-	c.cfg = &cfg
 
 	// Setup our project data directory
 	c.Log.Debug("preparing project directory", "path", ".devflow")

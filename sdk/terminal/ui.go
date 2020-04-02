@@ -1,9 +1,11 @@
 package terminal
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -98,7 +100,12 @@ func WithHeaderStyle() Option {
 // WithStatusStyle styles the output like a status update.
 func WithStatusStyle() Option {
 	return func(c *config) {
-		c.Message = colorStatus.Sprintf("    %s", c.Message)
+		lines := strings.Split(c.Message, "\n")
+		for i, line := range lines {
+			lines[i] = colorStatus.Sprintf("    %s", line)
+		}
+
+		c.Message = strings.Join(lines, "\n")
 	}
 }
 
@@ -113,6 +120,52 @@ func WithErrorStyle() Option {
 func WithSuccessStyle() Option {
 	return func(c *config) {
 		c.Message = colorSuccess.Sprint(c.Original)
+	}
+}
+
+// WithKeyValueStyle styles the output with aligned key/values with
+// the given separator. This expects the the message is multiple lines
+// which will be aligned. If a line doesn't contain a separator, it is
+// ignored.
+func WithKeyValueStyle(sep string) Option {
+	return func(c *config) {
+		// Trim whitespace first
+		msg := strings.TrimSpace(c.Message)
+		if len(msg) == 0 {
+			return
+		}
+
+		// Go through each line, find the separator and record the whitespace.
+		lines := strings.Split(msg, "\n")
+		lineIdx := make([]int, len(lines))
+		maxIdx := 0
+		for i, line := range lines {
+			lineIdx[i] = strings.Index(line, sep)
+			if lineIdx[i] > maxIdx {
+				maxIdx = lineIdx[i]
+			}
+		}
+
+		// Output
+		var buf bytes.Buffer
+		for i, line := range lines {
+			sepIdx := lineIdx[i]
+
+			// Ignore lines with no sep
+			if sepIdx < 0 {
+				buf.WriteString(line)
+				buf.WriteRune('\n')
+				continue
+			}
+
+			// Pad
+			buf.WriteString(strings.Repeat(" ", maxIdx-sepIdx))
+			buf.WriteString(line)
+			buf.WriteRune('\n')
+		}
+
+		bs := buf.Bytes()
+		c.Message = string(bs[:len(bs)-1])
 	}
 }
 

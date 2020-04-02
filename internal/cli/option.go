@@ -29,6 +29,12 @@ func WithSingleApp() Option {
 	return func(c *baseConfig) { c.AppMode = appModeSingle }
 }
 
+// WithNoConfig configures the CLI to not expect any project configuration.
+// This will not read any configuration files.
+func WithNoConfig() Option {
+	return func(c *baseConfig) { c.AppMode = appModeNone }
+}
+
 type baseConfig struct {
 	Args    []string
 	Flags   *flag.Sets
