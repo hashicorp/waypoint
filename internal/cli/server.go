@@ -84,7 +84,7 @@ gRPC Address: %[2]s`,
 	c.ui.Output("Server logs:", terminal.WithHeaderStyle())
 	c.ui.Output("")
 
-	// Set our log output higher if its not
+	// Set our log output higher if its not already so that it begins showing.
 	if !log.IsInfo() {
 		log.SetLevel(hclog.Info)
 	}

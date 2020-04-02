@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
 
@@ -13,7 +14,14 @@ import (
 func grpcInit(group *run.Group, opts *options) error {
 	log := opts.Logger.Named("grpc")
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			// Insert our logger and also log req/resp
+			logInterceptor(log, false),
+		)),
+	)
+
+	// Register our server
 	pb.RegisterDevflowServer(s, opts.Service)
 
 	// Create a cancellation context we'll use to stop our gRPC server

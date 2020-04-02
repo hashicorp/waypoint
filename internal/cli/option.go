@@ -47,7 +47,7 @@ type baseConfig struct {
 type appMode uint8
 
 const (
-	appModeNone   appMode = iota // no apps required, no config required
+	appModeMulti  appMode = iota // one or more apps, can target single
+	appModeNone                  // no apps required, no config required
 	appModeSingle                // must target a single app
-	appModeMulti                 // one or more apps, can target single
 )
