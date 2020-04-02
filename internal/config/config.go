@@ -6,7 +6,8 @@ import (
 
 // Config is the configuration structure.
 type Config struct {
-	Apps []*App `hcl:"app,block"`
+	Server *Server `hcl:"server,block"`
+	Apps   []*App  `hcl:"app,block"`
 }
 
 // App represents a single application.
@@ -25,4 +26,9 @@ type App struct {
 type Component struct {
 	Type string   `hcl:",label"`
 	Body hcl.Body `hcl:",remain"`
+}
+
+// Server configures the remote server.
+type Server struct {
+	Address string `hcl:"address,attr"`
 }

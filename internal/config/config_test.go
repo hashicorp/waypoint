@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
@@ -35,6 +36,10 @@ func TestParseFile(t *testing.T) {
 		t.Run(fi.Name(), func(t *testing.T) {
 			var cfg Config
 			err := hclsimple.DecodeFile(filepath.Join("testdata", fi.Name()), nil, &cfg)
+			if strings.HasSuffix(fi.Name(), "_error.hcl") {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 			goldie.Assert(t, fi.Name(), []byte(spew.Sdump(cfg)))
 		})

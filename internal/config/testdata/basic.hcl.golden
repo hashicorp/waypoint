@@ -1,4 +1,5 @@
 (config.Config) {
+ Server: (*config.Server)(<nil>),
  Apps: ([]*config.App) (len=1 cap=1) {
   (*config.App)({
    Name: (string) (len=3) "web",
