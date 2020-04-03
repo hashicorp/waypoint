@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"io/ioutil"
 	"net"
 	"strings"
 
@@ -87,6 +88,27 @@ gRPC Address: %[2]s`,
 	// Set our log output higher if its not already so that it begins showing.
 	if !log.IsInfo() {
 		log.SetLevel(hclog.Info)
+	}
+
+	// If our output is to discard, then we want to redirect the output
+	// to the console. We should be able to do this as long as our logger
+	// supports the OutputResettable interface.
+	if c.LogOutput == ioutil.Discard {
+		if lr, ok := log.(hclog.OutputResettable); ok {
+			output, _, err := c.ui.OutputWriters()
+			if err != nil {
+				c.ui.Output(
+					"Error setting up logger: %s", err.Error(),
+					terminal.WithErrorStyle(),
+				)
+				return 1
+			}
+
+			lr.ResetOutput(&hclog.LoggerOptions{
+				Output: output,
+				Color:  hclog.AutoColor,
+			})
+		}
 	}
 
 	// Run the server
