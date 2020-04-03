@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/posener/complete"
 
+	"github.com/mitchellh/devflow/internal/config"
 	"github.com/mitchellh/devflow/internal/pkg/flag"
 	"github.com/mitchellh/devflow/internal/server"
 	"github.com/mitchellh/devflow/internal/server/singleprocess"
@@ -17,6 +18,8 @@ import (
 
 type ServerCommand struct {
 	*baseCommand
+
+	config config.ServerConfig
 }
 
 func (c *ServerCommand) Run(args []string) int {
@@ -33,7 +36,11 @@ func (c *ServerCommand) Run(args []string) int {
 	}
 
 	// Open our database
-	path := "data.db"
+	if c.config.DBPath == "" {
+		c.ui.Output(serverWarnDBPath, terminal.WithWarningStyle())
+		c.config.DBPath = "data.db"
+	}
+	path := c.config.DBPath
 	log.Info("opening DB", "path", path)
 	db, err := bolt.Open(path, 0600, nil)
 	if err != nil {
@@ -61,7 +68,7 @@ func (c *ServerCommand) Run(args []string) int {
 	}
 
 	// We listen on a random locally bound port
-	ln, err := net.Listen("tcp", "127.0.0.1:1234")
+	ln, err := net.Listen("tcp", c.config.Listeners.GRPC)
 	if err != nil {
 		c.ui.Output(
 			"Error starting listener: %s", err.Error(),
@@ -122,7 +129,22 @@ gRPC Address: %[2]s`,
 }
 
 func (c *ServerCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(0, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.StringVar(&flag.StringVar{
+			Name:    "db",
+			Target:  &c.config.DBPath,
+			Usage:   "Path to the database file.",
+			Default: "",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "listen-grpc",
+			Target:  &c.config.Listeners.GRPC,
+			Usage:   "Address to bind to for gRPC connections.",
+			Default: "127.0.0.1:1234", // TODO(mitchellh: change default
+		})
+	})
 }
 
 func (c *ServerCommand) AutocompleteArgs() complete.Predictor {
@@ -147,3 +169,10 @@ Usage: devflow server [options]
 
 	return strings.TrimSpace(helpText)
 }
+
+const serverWarnDBPath = `Warning! Default DB path will be used. This is at the path shown below.
+The server stores persistent data here so this file should be saved and
+consistent for every server run otherwise data loss will occur. It is
+recommended that you explicitly set the "-db" flag as acknowledgement of
+the importance of the DB file.
+`

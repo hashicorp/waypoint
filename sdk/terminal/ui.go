@@ -116,6 +116,13 @@ func WithErrorStyle() Option {
 	}
 }
 
+// WithWarningStyle styles the output as an error message.
+func WithWarningStyle() Option {
+	return func(c *config) {
+		c.Message = colorWarning.Sprint(c.Original)
+	}
+}
+
 // WithSuccessStyle styles the output as a success message.
 func WithSuccessStyle() Option {
 	return func(c *config) {
@@ -179,4 +186,5 @@ var (
 	colorStatus  = color.New()
 	colorError   = color.New(color.FgRed)
 	colorSuccess = color.New(color.FgGreen)
+	colorWarning = color.New(color.FgYellow)
 )

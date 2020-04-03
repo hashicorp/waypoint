@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"strings"
-	"sync"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
@@ -54,8 +53,7 @@ type baseCommand struct {
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
 
-	flags     *flag.Sets
-	flagsOnce sync.Once
+	flags *flag.Sets
 
 	// app is the targeted application. This is only set if you use the
 	// WithSingleApp option. You should not access this directly
@@ -204,23 +202,14 @@ func (c *baseCommand) logError(log hclog.Logger, prefix string, err error) {
 
 // flagSet creates the flags for this command. The callback should be used
 // to configure the set with your own custom options.
-//
-// The result is cached on the command to save performance on future calls
-// since it may be called multiple times for help generation.
 func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
-	c.flagsOnce.Do(func() {
-		set := flag.NewSets()
+	set := flag.NewSets()
+	if f != nil {
+		// Configure our values
+		f(set)
+	}
 
-		if f != nil {
-			// Configure our values
-			f(set)
-		}
-
-		// Cache
-		c.flags = set
-	})
-
-	return c.flags
+	return set
 }
 
 // flagSetBit is used with baseCommand.flagSet
