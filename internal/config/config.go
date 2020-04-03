@@ -30,5 +30,6 @@ type Component struct {
 
 // Server configures the remote server.
 type Server struct {
-	Address string `hcl:"address,attr"`
+	Address  string `hcl:"address,attr"`
+	Insecure bool   `hcl:"insecure,optional"`
 }

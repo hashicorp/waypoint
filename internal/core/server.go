@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"path/filepath"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"google.golang.org/grpc"
@@ -12,6 +13,39 @@ import (
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/internal/server/singleprocess"
 )
+
+// initServer initializes our connection to the server either by connecting
+// directly to it or spinning up an in-process server if we're operating in
+// local mode.
+func (p *Project) initServer(ctx context.Context, opts *options) error {
+	// If we didn't configure server access, then just use a local server.
+	cfg := opts.Config.Server
+	if cfg == nil {
+		return p.initLocalServer(ctx)
+	}
+
+	// Build our options
+	grpcOpts := []grpc.DialOption{
+		grpc.WithBlock(),
+		grpc.WithTimeout(5 * time.Second),
+	}
+	if cfg.Insecure {
+		grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	}
+
+	// Connect to this server
+	p.logger.Info("connecting to server", "addr", cfg.Address)
+	conn, err := grpc.DialContext(ctx, cfg.Address, grpcOpts...)
+	if err != nil {
+		return err
+	}
+	p.localClosers = append(p.localClosers, conn)
+
+	// Init our client
+	p.client = pb.NewDevflowClient(conn)
+
+	return nil
+}
 
 // initLocalServer starts the local server and configures p.client to
 // point to it. This also configures p.localClosers so that all the

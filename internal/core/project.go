@@ -80,11 +80,10 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		return nil, fmt.Errorf("WithDataDir must be specified")
 	}
 
-	// Setup our server if we're in local mode. In local mode,
-	// we store data locally in the datadir.
-	// TODO(mitchellh): we have a lot of work to do around data migration
-	if err := p.initLocalServer(ctx); err != nil {
-		return nil, fmt.Errorf("Error initializing for local operations: %s", err)
+	// Init our server connection. This may be in-process if we're in
+	// local mode.
+	if err := p.initServer(ctx, &opts); err != nil {
+		return nil, fmt.Errorf("Error initializing server access: %s", err)
 	}
 	if p.client == nil {
 		panic("p.client should never be nil")
