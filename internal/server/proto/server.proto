@@ -26,6 +26,9 @@ service Devflow {
   // artifact push for an app.
   rpc GetLatestPushedArtifact(google.protobuf.Empty) returns (PushedArtifact);
 
+  // GetLogStream reads the log stream for a deployment.
+  // rpc GetLogStream(GetLogStreamRequest) returns (stream LogEntry);
+
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
   // the entrypoint binary only.
@@ -313,6 +316,24 @@ message Release {
     // percentage of traffic
     int32 percent = 2;
   }
+}
+
+/********************************************************************
+* Logs
+********************************************************************/
+
+message GetLogStreamRequest {
+  // Deployment to request logs for.
+  string deployment_id = 1;
+}
+
+message LogEntry {
+  string deployment_id = 1;
+
+  // line is the set of log lines. On the server if there is a partial
+  // log message (hasn't ended in a newline yet) then it will be buffered
+  // and not sent down until we see the newline.
+  repeated string lines = 2;
 }
 
 /********************************************************************
