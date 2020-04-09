@@ -27,6 +27,18 @@ service Devflow {
   rpc GetLatestPushedArtifact(google.protobuf.Empty) returns (PushedArtifact);
 
   //----------------------------------------------------------------------
+  // Entrypoint binary endpoints. These are all expected to be called by
+  // the entrypoint binary only.
+  //----------------------------------------------------------------------
+
+  // EntrypointConfig is called to get the configuration for the entrypoint
+  // and also to get any potential updates.
+  rpc EntrypointConfig(EntrypointConfigRequest) returns (stream EntrypointConfigResponse);
+
+  // EntrypointLogStream is called to open the stream that logs are sent to.
+  rpc EntrypointLogStream(stream EntrypointLogBatch) returns (google.protobuf.Empty);
+
+  //----------------------------------------------------------------------
   // Internal metadata endpoints. The endpoints below are expected to be
   // called for internal bookkeeping only. They should be avoided for general
   // API clients since they can be used to damage internal state.
@@ -301,4 +313,30 @@ message Release {
     // percentage of traffic
     int32 percent = 2;
   }
+}
+
+/********************************************************************
+* Entrypoint
+********************************************************************/
+
+message EntrypointConfigRequest {}
+
+message EntrypointConfigResponse {
+  // token is the token to use for follow-up Entrypoint RPC calls. This is
+  // not a security measure but just a way to identify this specific
+  // entrypoint instance.
+  string token = 1;
+
+  EntrypointConfig config = 2;
+}
+
+message EntrypointConfig {}
+
+// A batch of data for log streaming from the entrypoint.
+message EntrypointLogBatch {
+  // token is the token returned by EntrypointConfigResponse, not an auth token.
+  // this is used internally to identify the entrypoint connection.
+  string token = 1;
+
+  bytes data = 2;
 }
