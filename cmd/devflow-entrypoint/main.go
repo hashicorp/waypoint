@@ -5,12 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"unicode"
 
-	"golang.org/x/sys/unix"
+	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/internal/ceb"
 )
@@ -29,37 +27,16 @@ func realMain() int {
 		return 1
 	}
 
-	// Init our core logic
-	core, err := ceb.New(context.Background(),
+	hclog.L().SetLevel(hclog.Trace)
+
+	// Run our core logic
+	err := ceb.Run(context.Background(),
 		ceb.WithEnvDefaults(),
 		ceb.WithExec(args),
 	)
 	if err != nil {
 		fmt.Fprintf(flag.CommandLine.Output(),
 			"Error initializing Devflow entrypoint: %s\n", err)
-		return 1
-	}
-	defer core.Close()
-
-	// Exec requires a full path to a binary. If we weren't given an absolute
-	// path then we need to look it up via the PATH.
-	if !filepath.IsAbs(args[0]) {
-		path, err := exec.LookPath(args[0])
-		if err != nil {
-			fmt.Fprintf(flag.CommandLine.Output(),
-				"Error execing process: %s\n", err)
-			usage()
-			return 1
-		}
-
-		args[0] = path
-	}
-
-	err = unix.Exec(args[0], args, os.Environ())
-	if err != nil {
-		fmt.Fprintf(flag.CommandLine.Output(),
-			"Error execing process: %s\n", err)
-		usage()
 		return 1
 	}
 

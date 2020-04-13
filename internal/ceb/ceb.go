@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	envServerAddr = "DEVFLOW_SERVER_ADDR"
+	envServerAddr     = "DEVFLOW_SERVER_ADDR"
+	envServerInsecure = "DEVFLOW_SERVER_INSECURE"
 )
 
 // CEB represents the state of a running CEB.
@@ -28,16 +29,16 @@ type CEB struct {
 	cleanupFunc func()
 }
 
-// New creates a new CEB with the given options.
+// Run runs a CEB with the given options.
 //
-// The context is only used to cancel any blocking initialization tasks
-// for starting the CEB. Once this function returns, cancelling the given
-// context has no effect.
-func New(ctx context.Context, os ...Option) (*CEB, error) {
+// This will run until the context is cancelled. If the context is cancelled,
+// we will attempt to gracefully exit the underlying program and attempt to
+// clean up all resources.
+func Run(ctx context.Context, os ...Option) error {
 	// Create our ID
 	id, err := server.Id()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal,
+		return status.Errorf(codes.Internal,
 			"failed to generate unique ID: %s", err)
 	}
 
@@ -46,6 +47,7 @@ func New(ctx context.Context, os ...Option) (*CEB, error) {
 		id:     id,
 		logger: hclog.L(),
 	}
+	defer ceb.Close()
 
 	// Set our options
 	var cfg config
@@ -55,18 +57,36 @@ func New(ctx context.Context, os ...Option) (*CEB, error) {
 
 	// Initialize our server connection
 	if err := ceb.dialServer(ctx, &cfg); err != nil {
-		return nil, status.Errorf(codes.Aborted,
+		return status.Errorf(codes.Aborted,
 			"failed to connect to server: %s", err)
 	}
 
 	// Initialize our command
 	if err := ceb.initChildCmd(ctx, &cfg); err != nil {
-		defer ceb.Close()
-		return nil, status.Errorf(codes.Aborted,
+		return status.Errorf(codes.Aborted,
 			"failed to connect to server: %s", err)
 	}
 
-	return ceb, nil
+	// Initialize our log stream
+	// NOTE(mitchellh): at some point we want this to be configurable
+	// but for now we're just going for it.
+	if err := ceb.initLogStream(ctx, &cfg); err != nil {
+		return status.Errorf(codes.Aborted,
+			"failed to initialize log streaming: %s", err)
+	}
+
+	// Run our subprocess
+	if err := ceb.childCmd.Start(); err != nil {
+		return status.Errorf(codes.Aborted,
+			"failed to execute subprocess: %s", err)
+	}
+
+	// Wait for it to end
+	if err := ceb.childCmd.Wait(); err != nil {
+		panic(err)
+	}
+
+	return nil
 }
 
 // Close cleans up any resources created by the CEB and should be called
@@ -104,6 +124,7 @@ type Option func(*CEB, *config)
 func WithEnvDefaults() Option {
 	return func(ceb *CEB, cfg *config) {
 		cfg.ServerAddr = os.Getenv(envServerAddr)
+		cfg.ServerInsecure = os.Getenv(envServerInsecure) != ""
 	}
 }
 

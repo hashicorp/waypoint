@@ -26,6 +26,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config) error {
 	if err != nil {
 		return err
 	}
+	ceb.logger.Trace("server connection successful")
 	ceb.cleanup(func() { conn.Close() })
 
 	// Init our client
