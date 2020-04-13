@@ -40,3 +40,36 @@ func (ceb *CEB) initChildCmd(ctx context.Context, cfg *config) error {
 
 	return nil
 }
+
+// execChildCmd starts the child process, and waits for completion by sending an
+// error along the channel.
+func (ceb *CEB) execChildCmd(ctx context.Context) <-chan error {
+	ch := make(chan error, 1)
+	cmd := ceb.childCmd
+
+	// Start our subprocess
+	log := ceb.logger.With(
+		"cmd", cmd.Path,
+		"args", cmd.Args,
+	)
+	log.Info("starting child process")
+	if err := cmd.Start(); err != nil {
+		ch <- status.Errorf(codes.Aborted,
+			"failed to execute subprocess: %s", err)
+		return ch
+	}
+
+	// Start a goroutine to wait for completion
+	go func() {
+		err := cmd.Wait()
+		if err == nil {
+			log.Info("subprocess gracefully exited")
+		} else {
+			log.Warn("subprocess exited", "err", err)
+		}
+
+		ch <- err
+	}()
+
+	return ch
+}

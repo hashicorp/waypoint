@@ -76,14 +76,15 @@ func Run(ctx context.Context, os ...Option) error {
 	}
 
 	// Run our subprocess
-	if err := ceb.childCmd.Start(); err != nil {
-		return status.Errorf(codes.Aborted,
-			"failed to execute subprocess: %s", err)
-	}
+	errCh := ceb.execChildCmd(ctx)
+	select {
+	case err := <-errCh:
+		return err
 
-	// Wait for it to end
-	if err := ceb.childCmd.Wait(); err != nil {
-		panic(err)
+	case <-ctx.Done():
+		ceb.logger.Info("received cancellation request, gracefully exiting")
+		ceb.childCmd.Process.Kill()
+		<-errCh
 	}
 
 	return nil
