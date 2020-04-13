@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/internal/ceb"
+	"github.com/mitchellh/devflow/internal/pkg/signalcontext"
 )
 
 func main() {
@@ -27,10 +28,16 @@ func realMain() int {
 		return 1
 	}
 
+	// TODO(mitchellh): proper log setup
+	log := hclog.L()
 	hclog.L().SetLevel(hclog.Trace)
 
+	// Create a context that is cancelled on interrupt
+	ctx, closer := signalcontext.WithInterrupt(context.Background(), log)
+	defer closer()
+
 	// Run our core logic
-	err := ceb.Run(context.Background(),
+	err := ceb.Run(ctx,
 		ceb.WithEnvDefaults(),
 		ceb.WithExec(args),
 	)

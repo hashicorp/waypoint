@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/signal"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -15,6 +14,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/mitchellh/cli"
+
+	"github.com/mitchellh/devflow/internal/pkg/signalcontext"
 )
 
 const (
@@ -57,7 +58,7 @@ func Main(args []string) int {
 	}
 
 	// Build our cancellation context
-	ctx, closer := interruptContext(context.Background(), log)
+	ctx, closer := signalcontext.WithInterrupt(context.Background(), log)
 	defer closer()
 
 	// Build the CLI
@@ -178,40 +179,6 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 	}
 
 	return commands
-}
-
-// interruptContext returns a Context that is done when an interrupt
-// signal is received. It also returns a closer function that should be
-// deferred for proper cleanup.
-func interruptContext(ctx context.Context, log hclog.Logger) (context.Context, func()) {
-	log.Trace("starting interrupt listener for context cancellation")
-
-	// Create the cancellable context that we'll use when we receive an interrupt
-	ctx, cancel := context.WithCancel(ctx)
-
-	// Create the signal channel and cancel the context when we get a signal
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt)
-	go func() {
-		log.Trace("interrupt listener goroutine started")
-
-		select {
-		case <-ch:
-			log.Warn("interrupt received, cancelling context")
-			cancel()
-		case <-ctx.Done():
-			log.Warn("context cancelled, stopping interrupt listener loop")
-			return
-		}
-	}()
-
-	// Return the context and a closer that cancels the context and also
-	// stops any signals from coming to our channel.
-	return ctx, func() {
-		log.Trace("stopping signal listeners and cancelling the context")
-		signal.Stop(ch)
-		cancel()
-	}
 }
 
 // logger returns the logger to use for the CLI. Output, level, etc. are
