@@ -32,6 +32,7 @@ func realMain() int {
 	// Init our core logic
 	core, err := ceb.New(context.Background(),
 		ceb.WithEnvDefaults(),
+		ceb.WithExec(args),
 	)
 	if err != nil {
 		fmt.Fprintf(flag.CommandLine.Output(),

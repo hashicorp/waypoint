@@ -5,11 +5,8 @@ import (
 
 	"github.com/armon/circbuf"
 	"github.com/golang/protobuf/ptypes/empty"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/mitchellh/devflow/internal/pkg/circbufsync"
-	"github.com/mitchellh/devflow/internal/server"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 )
 
@@ -27,16 +24,8 @@ func (s *service) EntrypointConfig(
 	req *pb.EntrypointConfigRequest,
 	srv pb.Devflow_EntrypointConfigServer,
 ) error {
-	// Get our token
-	token, err := server.Id()
-	if err != nil {
-		return status.Errorf(codes.Internal, "uuid generation failed: %s", err)
-	}
-
 	// Send initial config
-	if err := srv.Send(&pb.EntrypointConfigResponse{
-		Token: token,
-	}); err != nil {
+	if err := srv.Send(&pb.EntrypointConfigResponse{}); err != nil {
 		return err
 	}
 
@@ -60,7 +49,7 @@ func (s *service) EntrypointLogStream(
 
 		// If we haven't initialized our buffer yet, do that
 		if buf == nil {
-			buf, err = s.initLogBuffer(batch.Token)
+			buf, err = s.initLogBuffer(batch.InstanceId)
 			if err != nil {
 				return err
 			}
@@ -75,12 +64,12 @@ func (s *service) EntrypointLogStream(
 	return server.SendAndClose(&empty.Empty{})
 }
 
-// initLogBuffer initializes the circular buffer for an entrypoint token.
-func (s *service) initLogBuffer(token string) (*circbufsync.Buffer, error) {
+// initLogBuffer initializes the circular buffer for an entrypoint ID.
+func (s *service) initLogBuffer(id string) (*circbufsync.Buffer, error) {
 	logBuffersLock.Lock()
 	defer logBuffersLock.Unlock()
 
-	buf, ok := logBuffers[token]
+	buf, ok := logBuffers[id]
 	if ok {
 		return buf, nil
 	}
@@ -91,6 +80,6 @@ func (s *service) initLogBuffer(token string) (*circbufsync.Buffer, error) {
 	}
 
 	buf = circbufsync.New(cbuf)
-	logBuffers[token] = buf
+	logBuffers[id] = buf
 	return buf, nil
 }

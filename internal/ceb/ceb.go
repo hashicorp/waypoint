@@ -4,11 +4,13 @@ package ceb
 import (
 	"context"
 	"os"
+	"os/exec"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/mitchellh/devflow/internal/server"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 )
 
@@ -18,8 +20,10 @@ const (
 
 // CEB represents the state of a running CEB.
 type CEB struct {
-	logger hclog.Logger
-	client pb.DevflowClient
+	id       string
+	logger   hclog.Logger
+	client   pb.DevflowClient
+	childCmd *exec.Cmd
 
 	cleanupFunc func()
 }
@@ -30,8 +34,16 @@ type CEB struct {
 // for starting the CEB. Once this function returns, cancelling the given
 // context has no effect.
 func New(ctx context.Context, os ...Option) (*CEB, error) {
+	// Create our ID
+	id, err := server.Id()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal,
+			"failed to generate unique ID: %s", err)
+	}
+
 	// Defaults, initialization
 	ceb := &CEB{
+		id:     id,
 		logger: hclog.L(),
 	}
 
@@ -43,6 +55,13 @@ func New(ctx context.Context, os ...Option) (*CEB, error) {
 
 	// Initialize our server connection
 	if err := ceb.dialServer(ctx, &cfg); err != nil {
+		return nil, status.Errorf(codes.Aborted,
+			"failed to connect to server: %s", err)
+	}
+
+	// Initialize our command
+	if err := ceb.initChildCmd(ctx, &cfg); err != nil {
+		defer ceb.Close()
 		return nil, status.Errorf(codes.Aborted,
 			"failed to connect to server: %s", err)
 	}
@@ -72,6 +91,7 @@ func (ceb *CEB) cleanup(f func()) {
 }
 
 type config struct {
+	ExecArgs       []string
 	ServerAddr     string
 	ServerInsecure bool
 }
@@ -84,5 +104,14 @@ type Option func(*CEB, *config)
 func WithEnvDefaults() Option {
 	return func(ceb *CEB, cfg *config) {
 		cfg.ServerAddr = os.Getenv(envServerAddr)
+	}
+}
+
+// WithExec sets the binary and arguments for the child process that the
+// ceb execs. If the first value is not absolute then we'll look for it on
+// the PATH.
+func WithExec(args []string) Option {
+	return func(ceb *CEB, cfg *config) {
+		cfg.ExecArgs = args
 	}
 }
