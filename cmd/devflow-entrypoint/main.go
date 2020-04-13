@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -10,6 +11,8 @@ import (
 	"unicode"
 
 	"golang.org/x/sys/unix"
+
+	"github.com/mitchellh/devflow/internal/ceb"
 )
 
 func main() {
@@ -26,6 +29,17 @@ func realMain() int {
 		return 1
 	}
 
+	// Init our core logic
+	core, err := ceb.New(context.Background(),
+		ceb.WithEnvDefaults(),
+	)
+	if err != nil {
+		fmt.Fprintf(flag.CommandLine.Output(),
+			"Error initializing Devflow entrypoint: %s\n", err)
+		return 1
+	}
+	defer core.Close()
+
 	// Exec requires a full path to a binary. If we weren't given an absolute
 	// path then we need to look it up via the PATH.
 	if !filepath.IsAbs(args[0]) {
@@ -40,7 +54,7 @@ func realMain() int {
 		args[0] = path
 	}
 
-	err := unix.Exec(args[0], args, os.Environ())
+	err = unix.Exec(args[0], args, os.Environ())
 	if err != nil {
 		fmt.Fprintf(flag.CommandLine.Output(),
 			"Error execing process: %s\n", err)
