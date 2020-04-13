@@ -5,6 +5,7 @@ import (
 
 	"github.com/armon/circbuf"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-hclog"
 
 	"github.com/mitchellh/devflow/internal/pkg/circbufsync"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
@@ -39,6 +40,8 @@ func (s *service) EntrypointConfig(
 func (s *service) EntrypointLogStream(
 	server pb.Devflow_EntrypointLogStreamServer,
 ) error {
+	log := hclog.FromContext(server.Context())
+
 	var buf *circbufsync.Buffer
 	for {
 		// Read the next log entry
@@ -53,6 +56,13 @@ func (s *service) EntrypointLogStream(
 			if err != nil {
 				return err
 			}
+
+			log = log.With("instance_id", batch.InstanceId)
+		}
+
+		// Log that we received data in trace mode
+		if log.IsTrace() {
+			log.Trace("received data", "len", len(batch.Data))
 		}
 
 		// Write our log data to the circular buffer

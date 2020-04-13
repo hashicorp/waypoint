@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func TestLogInterceptor(t *testing.T) {
+func TestLogUnaryInterceptor(t *testing.T) {
 	require := require.New(t)
 
 	var buf bytes.Buffer
@@ -21,7 +21,7 @@ func TestLogInterceptor(t *testing.T) {
 		IncludeLocation: true,
 	})
 
-	f := logInterceptor(logger, false)
+	f := logUnaryInterceptor(logger, false)
 
 	// Empty context
 	called := false

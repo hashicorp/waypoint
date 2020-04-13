@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
 
@@ -15,10 +14,15 @@ func grpcInit(group *run.Group, opts *options) error {
 	log := opts.Logger.Named("grpc")
 
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+		grpc.ChainUnaryInterceptor(
 			// Insert our logger and also log req/resp
-			logInterceptor(log, false),
-		)),
+			logUnaryInterceptor(log, false),
+		),
+
+		grpc.ChainStreamInterceptor(
+			// Insert our logger and log
+			logStreamInterceptor(log, false),
+		),
 	)
 
 	// Register our server

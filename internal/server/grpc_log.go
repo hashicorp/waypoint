@@ -8,12 +8,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-// logInterceptor returns a gRPC unary interceptor that inserts a hclog.Logger
+// logUnaryInterceptor returns a gRPC unary interceptor that inserts a hclog.Logger
 // into the request context.
 //
-// Additionally, logInterceptor logs request and response metadata. If verbose
+// Additionally, logUnaryInterceptor logs request and response metadata. If verbose
 // is set to true, the request and response attributes are logged too.
-func logInterceptor(logger hclog.Logger, verbose bool) grpc.UnaryServerInterceptor {
+func logUnaryInterceptor(logger hclog.Logger, verbose bool) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
 		req interface{},
@@ -50,4 +50,45 @@ func logInterceptor(logger hclog.Logger, verbose bool) grpc.UnaryServerIntercept
 
 		return resp, err
 	}
+}
+
+// logUnaryInterceptor returns a gRPC unary interceptor that inserts a hclog.Logger
+// into the request context.
+//
+// Additionally, logUnaryInterceptor logs request and response metadata. If verbose
+// is set to true, the request and response attributes are logged too.
+func logStreamInterceptor(logger hclog.Logger, verbose bool) grpc.StreamServerInterceptor {
+	return func(
+		srv interface{},
+		ss grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler) error {
+		start := time.Now()
+
+		// Log the request.
+		logger.Info(info.FullMethod + " request")
+
+		// Invoke the handler.
+		err := handler(srv, &logStream{
+			ServerStream: ss,
+			context:      hclog.WithContext(ss.Context(), logger),
+		})
+
+		// Log the response.
+		logger.Info(info.FullMethod+" response",
+			"error", err,
+			"duration", time.Since(start).String(),
+		)
+
+		return err
+	}
+}
+
+type logStream struct {
+	grpc.ServerStream
+	context context.Context
+}
+
+func (s *logStream) Context() context.Context {
+	return s.context
 }
