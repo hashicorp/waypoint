@@ -2,6 +2,7 @@ package ceb
 
 import (
 	"context"
+	"io"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/mitchellh/go-grpc-net-conn"
@@ -34,9 +35,11 @@ func (ceb *CEB) initLogStream(ctx context.Context, cfg *config) error {
 		}),
 	}
 
-	// Set our output for the command
-	ceb.childCmd.Stdout = conn
-	ceb.childCmd.Stderr = conn
+	// Set our output for the command. We use a multiwriter so that we
+	// can always send the out/err back to the normal channels so that
+	// users can see it.
+	ceb.childCmd.Stdout = io.MultiWriter(conn, ceb.childCmd.Stdout)
+	ceb.childCmd.Stderr = io.MultiWriter(conn, ceb.childCmd.Stderr)
 
 	return nil
 }
