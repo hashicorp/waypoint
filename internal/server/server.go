@@ -33,6 +33,15 @@ func Run(opts ...Option) error {
 	// goroutines for all the servers that we want to live/die as a group.
 	var group run.Group
 
+	// We first add an actor that just returns when the context ends. This
+	// will trigger the rest of the group to end since a group will not exit
+	// until any of its actors exit.
+	ctx, cancelCtx := context.WithCancel(cfg.Context)
+	group.Add(func() error {
+		<-ctx.Done()
+		return ctx.Err()
+	}, func(error) { cancelCtx() })
+
 	// Setup our gRPC server.
 	if err := grpcInit(&group, &cfg); err != nil {
 		return err

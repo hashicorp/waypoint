@@ -1,7 +1,7 @@
 package server
 
 import (
-	"context"
+	"time"
 
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
@@ -28,24 +28,30 @@ func grpcInit(group *run.Group, opts *options) error {
 	// Register our server
 	pb.RegisterDevflowServer(s, opts.Service)
 
-	// Create a cancellation context we'll use to stop our gRPC server
-	ctx, cancel := context.WithCancel(opts.Context)
-
 	// Add our gRPC server to the run group
 	group.Add(func() error {
-		// Start a goroutine that waits for cancellation
-		go func() {
-			<-ctx.Done()
-			log.Info("shutting down gRPC server")
-			s.GracefulStop()
-		}()
-
 		// Serve traffic
 		ln := opts.GRPCListener
 		log.Info("starting gRPC server", "addr", ln.Addr().String())
 		return s.Serve(ln)
 	}, func(err error) {
-		cancel()
+		// Graceful in a goroutine so we can timeout
+		gracefulCh := make(chan struct{})
+		go func() {
+			defer close(gracefulCh)
+			log.Info("shutting down gRPC server")
+			s.GracefulStop()
+		}()
+
+		select {
+		case <-gracefulCh:
+
+		// After a timeout we just forcibly exit. Our gRPC endpoints should
+		// be fairly quick and their operations are atomic so we just kill
+		// the connections after a few seconds.
+		case <-time.After(2 * time.Second):
+			s.Stop()
+		}
 	})
 
 	return nil
