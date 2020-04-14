@@ -23,6 +23,8 @@ import (
 var All = []interface{}{
 	Source,
 	SourceProto,
+	DeploymentConfig,
+	DeploymentConfigProto,
 	DatadirProject,
 	DatadirApp,
 	DatadirComponent,
@@ -48,6 +50,17 @@ func Source(input *pb.Args_Source) (*component.Source, error) {
 // SourceProto
 func SourceProto(input *component.Source) (*pb.Args_Source, error) {
 	var result pb.Args_Source
+	return &result, mapstructure.Decode(input, &result)
+}
+
+// DeploymentConfig
+func DeploymentConfig(input *pb.Args_DeploymentConfig) (*component.DeploymentConfig, error) {
+	var result component.DeploymentConfig
+	return &result, mapstructure.Decode(input, &result)
+}
+
+func DeploymentConfigProto(input *component.DeploymentConfig) (*pb.Args_DeploymentConfig, error) {
+	var result pb.Args_DeploymentConfig
 	return &result, mapstructure.Decode(input, &result)
 }
 

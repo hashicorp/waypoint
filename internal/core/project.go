@@ -29,6 +29,7 @@ type Project struct {
 	dir       *datadir.Project
 	mappers   []*mapper.Func
 	client    pb.DevflowClient
+	dconfig   component.DeploymentConfig
 
 	// This lock only needs to be held currently to protect localClosers.
 	lock sync.Mutex

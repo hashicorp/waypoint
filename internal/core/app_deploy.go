@@ -15,7 +15,8 @@ import (
 // TODO(mitchellh): test
 func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (component.Deployment, error) {
 	result, _, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployOperation{
-		Push: push,
+		Push:             push,
+		DeploymentConfig: &a.dconfig,
 	})
 	if err != nil {
 		return nil, err
@@ -25,7 +26,8 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (component.De
 }
 
 type deployOperation struct {
-	Push *pb.PushedArtifact
+	Push             *pb.PushedArtifact
+	DeploymentConfig *component.DeploymentConfig
 }
 
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
@@ -57,6 +59,7 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App) (
 		app.Platform,
 		app.Platform.DeployFunc(),
 		op.Push.Artifact.Artifact,
+		op.DeploymentConfig,
 	)
 }
 

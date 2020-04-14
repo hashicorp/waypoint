@@ -41,6 +41,7 @@ func (p *Platform) Deploy(
 	src *component.Source,
 	img *docker.Image,
 	dir *datadir.Component,
+	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
 	// Start building our deployment since we use this information
@@ -109,6 +110,15 @@ func (p *Platform) Deploy(
 		}
 	}
 
+	// Create our env vars
+	var env []*run.EnvVar
+	for k, v := range deployConfig.Env() {
+		env = append(env, &run.EnvVar{
+			Name:  k,
+			Value: v,
+		})
+	}
+
 	// Regardless of if we're creating or updating, we update our
 	// spec to force a new revision.
 	service.Spec.Template = &run.RevisionTemplate{
@@ -121,6 +131,7 @@ func (p *Platform) Deploy(
 			Containers: []*run.Container{
 				&run.Container{
 					Image: img.Name(),
+					Env:   env,
 				},
 			},
 		},

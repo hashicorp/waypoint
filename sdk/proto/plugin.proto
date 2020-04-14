@@ -18,6 +18,12 @@ message Args {
     string path = 2;
   }
 
+  // See component.DeploymentConfig
+  message DeploymentConfig {
+    string server_addr = 1;
+    bool server_insecure = 2;
+  }
+
   // DataDir represents the directory where data can be stored. This is an internal
   // struct and shouldn't be used directly. Use the relevant *datadir implementation
   // instead.

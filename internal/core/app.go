@@ -38,6 +38,7 @@ type App struct {
 
 	client        pb.DevflowClient
 	source        *component.Source
+	dconfig       component.DeploymentConfig
 	logger        hclog.Logger
 	dir           *datadir.App
 	mappers       []*mapper.Func
@@ -55,6 +56,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	app := &App{
 		client:        p.client,
 		source:        &component.Source{App: cfg.Name, Path: "."},
+		dconfig:       p.dconfig,
 		logger:        p.logger.Named("app").Named(cfg.Name),
 		components:    make(map[interface{}]*pb.Component),
 		componentDirs: make(map[interface{}]*datadir.Component),

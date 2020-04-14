@@ -12,6 +12,7 @@ import (
 	"github.com/mitchellh/devflow/internal/server"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/internal/server/singleprocess"
+	"github.com/mitchellh/devflow/sdk/component"
 )
 
 // initServer initializes our connection to the server either by connecting
@@ -43,6 +44,15 @@ func (p *Project) initServer(ctx context.Context, opts *options) error {
 
 	// Init our client
 	p.client = pb.NewDevflowClient(conn)
+
+	// Set our deployment config. For now we just set this to what was
+	// configured for the application. In the future we probably want to
+	// have an API for the server to note some "advertise addr" that may
+	// be different for applications.
+	p.dconfig = component.DeploymentConfig{
+		ServerAddr:     cfg.Address,
+		ServerInsecure: cfg.Insecure,
+	}
 
 	return nil
 }
