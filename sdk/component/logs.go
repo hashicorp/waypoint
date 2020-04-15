@@ -8,6 +8,14 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
+// LogPlatform is responsible for reading the logs for a deployment.
+// This doesn't need to be the same as the Platform but a Platform can also
+// implement this interface to natively provide logs.
+type LogPlatform interface {
+	// LogsFunc should return an implementation of LogViewer.
+	LogsFunc() interface{}
+}
+
 // LogViewer returns batches of log lines. This is expected to be returned
 // by a LogPlatform implementation.
 type LogViewer interface {
