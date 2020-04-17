@@ -135,7 +135,7 @@ func (r *Reader) Read(max int) []*Entry {
 		return nil
 	}
 
-	chunk := r.chunks[r.idx]
+	chunk := &r.chunks[r.idx] // Important: this must be the pointer
 	result, cursor := chunk.read(r.b.cond, &r.closed, r.cursor, uint32(max))
 
 	// If we're not at the end, return our result

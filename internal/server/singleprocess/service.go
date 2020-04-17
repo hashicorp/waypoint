@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"github.com/boltdb/bolt"
+	"github.com/hashicorp/go-memdb"
 
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 )
@@ -10,7 +11,13 @@ import (
 
 // service implements the gRPC service for the server.
 type service struct {
+	// db is the persisted on-disk database used for historical data
 	db *bolt.DB
+
+	// inmem is our in-memory database that stores ephemeral data in an
+	// easier-to-query way. Some of this data may be periodically persisted
+	// but most of this data is meant to be lost when the process restarts.
+	inmem *memdb.MemDB
 }
 
 // New returns a devflow server implementation that uses BotlDB plus
@@ -21,7 +28,13 @@ func New(db *bolt.DB) (pb.DevflowServer, error) {
 		return nil, err
 	}
 
-	return &service{db: db}, nil
+	// Initialize our in-memory database
+	inmem, err := memdbInit()
+	if err != nil {
+		return nil, err
+	}
+
+	return &service{db: db, inmem: inmem}, nil
 }
 
 var _ pb.DevflowServer = (*service)(nil)

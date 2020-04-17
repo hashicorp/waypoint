@@ -1,30 +1,71 @@
 package singleprocess
 
 import (
-	"sync"
-
-	"github.com/armon/circbuf"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-memdb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	"github.com/mitchellh/devflow/internal/pkg/circbufsync"
 	pb "github.com/mitchellh/devflow/internal/server/gen"
+	"github.com/mitchellh/devflow/internal/server/logbuffer"
 )
 
-// For now we just store logs in memory in circular buffers, one per
-// instance of an application. This is NOT what we want to do long term
-// probably but it was easiest to get started.
-var (
-	logBuffers     = make(map[string]*circbufsync.Buffer)
-	logBuffersLock sync.Mutex
-	logBufferSize  int64 = 1024 * 1024 * 4 // 4 MB
-)
+func init() {
+	memdbSchema.Tables["instances"] = &memdb.TableSchema{
+		Name: "instances",
+		Indexes: map[string]*memdb.IndexSchema{
+			"id": &memdb.IndexSchema{
+				Name:         "id",
+				AllowMissing: false,
+				Unique:       true,
+				Indexer: &memdb.StringFieldIndex{
+					Field:     "Id",
+					Lowercase: true,
+				},
+			},
+
+			"deployment-id": &memdb.IndexSchema{
+				Name:         "deployment-id",
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.StringFieldIndex{
+					Field:     "DeploymentId",
+					Lowercase: true,
+				},
+			},
+		},
+	}
+}
 
 // TODO: test
 func (s *service) EntrypointConfig(
 	req *pb.EntrypointConfigRequest,
 	srv pb.Devflow_EntrypointConfigServer,
 ) error {
+	log := hclog.FromContext(srv.Context())
+
+	// Create our record
+	record := &instanceRecord{
+		Id:           req.InstanceId,
+		DeploymentId: req.DeploymentId,
+		LogBuffer:    logbuffer.New(),
+	}
+	if err := s.instancesCreate(record); err != nil {
+		return err
+	}
+
+	// Defer deleting this.
+	// TODO(mitchellh): this is too aggressive and we want to have some grace
+	// period for reconnecting clients. We should clean this up.
+	defer func() {
+		tx := s.inmem.Txn(true)
+		if err := tx.Delete("instances", record); err != nil {
+			log.Error("failed to delete instance data. This should not happen.", "err", err)
+		}
+		tx.Commit()
+	}()
+
 	// Send initial config
 	if err := srv.Send(&pb.EntrypointConfigResponse{}); err != nil {
 		return err
@@ -42,7 +83,7 @@ func (s *service) EntrypointLogStream(
 ) error {
 	log := hclog.FromContext(server.Context())
 
-	var buf *circbufsync.Buffer
+	var buf *logbuffer.Buffer
 	for {
 		// Read the next log entry
 		batch, err := server.Recv()
@@ -52,44 +93,83 @@ func (s *service) EntrypointLogStream(
 
 		// If we haven't initialized our buffer yet, do that
 		if buf == nil {
-			buf, err = s.initLogBuffer(batch.InstanceId)
+			log = log.With("instance_id", batch.InstanceId)
+
+			// Read our instance record
+			instance, err := s.instanceById(batch.InstanceId)
 			if err != nil {
 				return err
 			}
 
-			log = log.With("instance_id", batch.InstanceId)
+			// Get our log buffer
+			buf = instance.LogBuffer
 		}
 
 		// Log that we received data in trace mode
 		if log.IsTrace() {
-			log.Trace("received data", "len", len(batch.Data))
+			log.Trace("received data", "lines", len(batch.Lines))
 		}
 
 		// Write our log data to the circular buffer
-		if _, err := buf.Write(batch.Data); err != nil {
-			return err
-		}
+		buf.Write(batch.Lines...)
 	}
 
 	return server.SendAndClose(&empty.Empty{})
 }
 
-// initLogBuffer initializes the circular buffer for an entrypoint ID.
-func (s *service) initLogBuffer(id string) (*circbufsync.Buffer, error) {
-	logBuffersLock.Lock()
-	defer logBuffersLock.Unlock()
-
-	buf, ok := logBuffers[id]
-	if ok {
-		return buf, nil
+func (s *service) instancesCreate(record *instanceRecord) error {
+	// Insert this mapping into our memdb
+	tx := s.inmem.Txn(true)
+	defer tx.Abort()
+	if err := tx.Insert("instances", record); err != nil {
+		return status.Errorf(codes.Aborted, err.Error())
 	}
+	tx.Commit()
 
-	cbuf, err := circbuf.NewBuffer(logBufferSize)
+	return nil
+}
+
+func (s *service) instanceById(id string) (*instanceRecord, error) {
+	tx := s.inmem.Txn(false)
+	raw, err := tx.First("instances", "id", id)
+	tx.Abort()
 	if err != nil {
 		return nil, err
 	}
+	if raw == nil {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"instance ID not found, please call EntrypointConfig first")
+	}
 
-	buf = circbufsync.New(cbuf)
-	logBuffers[id] = buf
-	return buf, nil
+	return raw.(*instanceRecord), nil
+}
+
+func (s *service) instancesByDeployment(id string, ws memdb.WatchSet) ([]*instanceRecord, error) {
+	txn := s.inmem.Txn(false)
+	defer txn.Abort()
+
+	// Find all the instances
+	iter, err := txn.Get("instances", "deployment-id", id)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, err.Error())
+	}
+
+	// If we're tracking changes, add that
+	if ws != nil {
+		ws.Add(iter.WatchCh())
+	}
+
+	var result []*instanceRecord
+	for raw := iter.Next(); raw != nil; raw = iter.Next() {
+		result = append(result, raw.(*instanceRecord))
+	}
+
+	return result, nil
+}
+
+// instanceRecord is the record type that we'll insert into memdb
+type instanceRecord struct {
+	Id           string
+	DeploymentId string
+	LogBuffer    *logbuffer.Buffer
 }

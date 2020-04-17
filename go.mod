@@ -25,8 +25,8 @@ require (
 	github.com/gliderlabs/ssh v0.2.2
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/mux v1.7.3 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 	github.com/hashicorp/go-hclog v0.12.0
+	github.com/hashicorp/go-memdb v1.2.0
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-plugin v1.1.0
 	github.com/hashicorp/go-version v1.2.0
@@ -62,7 +62,7 @@ require (
 	go.opencensus.io v0.22.2 // indirect
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
 	golang.org/x/net v0.0.0-20200219183655-46282727080f
-	golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c
+	golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200218151345-dad8c97a84f5
