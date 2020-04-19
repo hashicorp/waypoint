@@ -30,6 +30,7 @@ var (
 )
 
 func init() {
+	Builders.Register("docker", BuiltinFactory("docker", component.BuilderType))
 	Builders.Register("pack", BuiltinFactory("pack", component.BuilderType))
 	Builders.Register("lambda", BuiltinFactory("lambda", component.BuilderType))
 
