@@ -28,6 +28,9 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (component.De
 type deployOperation struct {
 	Push             *pb.PushedArtifact
 	DeploymentConfig *component.DeploymentConfig
+
+	// id is populated with the deployment id on Upsert
+	id string
 }
 
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
@@ -49,17 +52,23 @@ func (op *deployOperation) Upsert(
 		return nil, err
 	}
 
+	// Set our internal ID for the Do step
+	op.id = resp.Deployment.Id
+
 	return resp.Deployment, nil
 }
 
 func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App) (interface{}, error) {
+	dconfig := *op.DeploymentConfig
+	dconfig.Id = op.id
+
 	return app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
 		app.Platform,
 		app.Platform.DeployFunc(),
 		op.Push.Artifact.Artifact,
-		op.DeploymentConfig,
+		&dconfig,
 	)
 }
 
