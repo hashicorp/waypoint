@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	envDeploymentId   = "DEVFLOW_DEPLOYMENT_ID"
 	envServerAddr     = "DEVFLOW_SERVER_ADDR"
 	envServerInsecure = "DEVFLOW_SERVER_INSECURE"
 )
@@ -25,6 +26,7 @@ type CEB struct {
 	logger   hclog.Logger
 	client   pb.DevflowClient
 	childCmd *exec.Cmd
+	config   *pb.EntrypointConfig
 
 	cleanupFunc func()
 }
@@ -55,6 +57,11 @@ func Run(ctx context.Context, os ...Option) error {
 		o(ceb, &cfg)
 	}
 
+	ceb.logger.Info("entrypoint starting",
+		"deployment_id", cfg.DeploymentId,
+		"instance_id", ceb.id,
+	)
+
 	// Initialize our server connection
 	if err := ceb.dialServer(ctx, &cfg); err != nil {
 		return status.Errorf(codes.Aborted,
@@ -67,12 +74,16 @@ func Run(ctx context.Context, os ...Option) error {
 			"failed to connect to server: %s", err)
 	}
 
+	// Get our configuration and start the long-running stream for it.
+	if err := ceb.initConfigStream(ctx, &cfg); err != nil {
+		return err
+	}
+
 	// Initialize our log stream
 	// NOTE(mitchellh): at some point we want this to be configurable
 	// but for now we're just going for it.
 	if err := ceb.initLogStream(ctx, &cfg); err != nil {
-		return status.Errorf(codes.Aborted,
-			"failed to initialize log streaming: %s", err)
+		return err
 	}
 
 	// Run our subprocess
@@ -113,6 +124,7 @@ func (ceb *CEB) cleanup(f func()) {
 
 type config struct {
 	ExecArgs       []string
+	DeploymentId   string
 	ServerAddr     string
 	ServerInsecure bool
 }
@@ -124,6 +136,7 @@ type Option func(*CEB, *config)
 // based confiugration will be ignored.
 func WithEnvDefaults() Option {
 	return func(ceb *CEB, cfg *config) {
+		cfg.DeploymentId = os.Getenv(envDeploymentId)
 		cfg.ServerAddr = os.Getenv(envServerAddr)
 		cfg.ServerInsecure = os.Getenv(envServerInsecure) != ""
 	}

@@ -53,7 +53,10 @@ func (ceb *CEB) initLogStream(ctx context.Context, cfg *config) error {
 				return
 			}
 
-			log.Trace("sending line", "line", line)
+			if log.IsTrace() {
+				log.Trace("sending line", "line", line[:len(line)-1])
+			}
+
 			err = client.Send(&pb.EntrypointLogBatch{
 				InstanceId: ceb.id,
 				Lines: []*pb.LogBatch_Entry{
