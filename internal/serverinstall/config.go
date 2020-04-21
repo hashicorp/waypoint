@@ -10,9 +10,10 @@ import (
 
 // Config is the configuration for the Kubernetes installation template.
 type Config struct {
-	Namespace   string
-	ServiceName string
-	ServerImage string
+	Namespace          string
+	ServiceName        string
+	ServerImage        string
+	ServiceAnnotations map[string]string
 }
 
 // Render renders the installation files with the given configuration.

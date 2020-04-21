@@ -15,3 +15,9 @@ bin/linux: # create Linux binaries
 docker/mitchellh:
 	docker build -t gcr.io/mitchellh-test/devflow:latest .
 	docker push gcr.io/mitchellh-test/devflow:latest
+
+.PHONY: k8s/mitchellh
+k8s/mitchellh:
+	./devflow install \
+		--annotate-service "external-dns.alpha.kubernetes.io/hostname=*.df.gcp.mitchellh.dev.,df.gcp.mitchellh.dev." \
+		| kubectl apply -f -

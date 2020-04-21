@@ -75,6 +75,12 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Usage:   "Docker image for the server image.",
 			Default: "gcr.io/mitchellh-test/devflow:latest",
 		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "annotate-service",
+			Target: &c.config.ServiceAnnotations,
+			Usage:  "Annotations for the Service generated.",
+		})
 	})
 }
 

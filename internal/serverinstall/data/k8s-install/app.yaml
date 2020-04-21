@@ -4,6 +4,12 @@ kind: Service
 metadata:
   name: {{ .ServiceName }}
   namespace: {{ .Namespace }}
+  {{ if .ServiceAnnotations -}}
+  annotations:
+  {{- range $key, $value := .ServiceAnnotations }}
+    {{ $key }}: "{{ $value }}"
+  {{- end }}
+  {{- end }}
 spec:
   ports:
   - port: 9701
