@@ -154,6 +154,12 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 			}, nil
 		},
 
+		"install": func() (cli.Command, error) {
+			return &InstallCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"release": func() (cli.Command, error) {
 			return &ReleaseCreateCommand{
 				baseCommand: baseCommand,

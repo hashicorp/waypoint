@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .ServiceName }}
+  namespace: {{ .Namespace }}
+spec:
+  ports:
+  - port: 9701
+    name: grpc
+  selector:
+    app: devflow-server
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devflow-server
+  namespace: {{ .Namespace }}
+  labels:
+    app: devflow-server
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: devflow-server
+  template:
+    metadata:
+      labels:
+        app: devflow-server
+    spec:
+      containers:
+      - name: server
+        image: {{ .ServerImage }}
+        imagePullPolicy: Always
+        command:
+        - "/devflow"
+        args:
+        - server
+        - -vvv
+        - -db=/data/data.db
+        - -listen-grpc=0.0.0.0:9701
+        ports:
+        - containerPort: 9701
+          name: grpc
+        livenessProbe:
+          tcpSocket:
+            port: grpc
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: devflow-server-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: devflow-server-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
