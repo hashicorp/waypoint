@@ -215,7 +215,6 @@ func (w *chunk) full() bool {
 // this will always return immediately to avoid blocking forever.
 func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32) ([]*Entry, uint32) {
 	idx := atomic.LoadUint32(&w.idx)
-	println(idx, current)
 	if idx <= current {
 		// If we're at the end we'd block forever cause we'll never see another
 		// write, so just return the current cursor again. This should never
