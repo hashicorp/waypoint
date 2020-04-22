@@ -43,6 +43,7 @@ func (p *Platform) Deploy(
 	src *component.Source,
 	img *docker.Image,
 	dir *datadir.Component,
+	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
 	// Create our deployment and set an initial ID
@@ -78,6 +79,20 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	// Build our env vars
+	env := []corev1.EnvVar{
+		corev1.EnvVar{
+			Name:  "PORT",
+			Value: "3000",
+		},
+	}
+	for k, v := range deployConfig.Env() {
+		env = append(env, corev1.EnvVar{
+			Name:  k,
+			Value: v,
+		})
+	}
+
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
 	deployment.Spec.Template.Labels[labelId] = result.Id
@@ -95,12 +110,7 @@ func (p *Platform) Deploy(
 						ContainerPort: 3000,
 					},
 				},
-				Env: []corev1.EnvVar{
-					corev1.EnvVar{
-						Name:  "PORT",
-						Value: "3000",
-					},
-				},
+				Env: env,
 			},
 		},
 	}
