@@ -93,6 +93,10 @@ func (p *Platform) Deploy(
 		})
 	}
 
+	if p.config.Count > 0 {
+		deployment.Spec.Replicas = &p.config.Count
+	}
+
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
 	deployment.Spec.Template.Labels[labelId] = result.Id
@@ -145,6 +149,8 @@ type Config struct {
 
 	// Context specifies the kube context to use.
 	Context string `hcl:"context,optional"`
+
+	Count int32 `hcl:"replicas,optional"`
 }
 
 var (
