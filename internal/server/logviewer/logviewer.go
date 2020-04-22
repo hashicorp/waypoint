@@ -20,19 +20,20 @@ type Viewer struct {
 
 // NextLogBatch implements component.LogViewer
 func (v *Viewer) NextLogBatch(ctx context.Context) ([]component.LogEvent, error) {
-	// Get the next entry. Note that we specifically do NOT buffer here because
+	// Get the next batch. Note that we specifically do NOT buffer here because
 	// we want to provide the proper amount of backpressure and we expect our
 	// downstream caller to be calling these as quickly as possible.
-	entry, err := v.Stream.Recv()
+	batch, err := v.Stream.Recv()
 	if err != nil {
 		return nil, err
 	}
 
-	events := make([]component.LogEvent, len(entry.Lines))
-	for i, entry := range entry.Lines {
+	events := make([]component.LogEvent, len(batch.Lines))
+	for i, entry := range batch.Lines {
 		ts, _ := ptypes.Timestamp(entry.Timestamp)
 
 		events[i] = component.LogEvent{
+			Partition: batch.InstanceId,
 			Timestamp: ts,
 			Message:   entry.Line,
 		}
