@@ -11,11 +11,14 @@ import (
 
 // Logs returns the log viewer for the given deployment.
 // TODO(evanphx): test
-func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
+func (a *App) Logs(ctx context.Context, d *pb.Deployment) (component.LogViewer, error) {
 	log := a.logger.Named("logs")
 
 	// First we attempt to query the server for logs for this deployment.
-	client, err := a.client.GetLogStream(ctx, &pb.GetLogStreamRequest{})
+	log.Info("requesting log stream", "deployment_id", d.Id)
+	client, err := a.client.GetLogStream(ctx, &pb.GetLogStreamRequest{
+		DeploymentId: d.Id,
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -20,8 +20,9 @@ message Args {
 
   // See component.DeploymentConfig
   message DeploymentConfig {
-    string server_addr = 1;
-    bool server_insecure = 2;
+    string id = 1;
+    string server_addr = 2;
+    bool server_insecure = 3;
   }
 
   // DataDir represents the directory where data can be stored. This is an internal

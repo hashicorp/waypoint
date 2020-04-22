@@ -60,6 +60,7 @@ func Run(ctx context.Context, os ...Option) error {
 	ceb.logger.Info("entrypoint starting",
 		"deployment_id", cfg.DeploymentId,
 		"instance_id", ceb.id,
+		"args", cfg.ExecArgs,
 	)
 
 	// Initialize our server connection

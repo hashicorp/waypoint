@@ -9,6 +9,7 @@ import (
 
 	"github.com/mitchellh/devflow/internal/core"
 	"github.com/mitchellh/devflow/internal/pkg/flag"
+	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/terminal"
 )
@@ -29,8 +30,24 @@ func (c *LogsCommand) Run(args []string) int {
 		return 1
 	}
 
+	client := c.project.Client()
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
-		lv, err := app.Logs(ctx)
+		// Get the latest deployment
+		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+			Limit:     1,
+			Order:     pb.ListDeploymentsRequest_COMPLETE_TIME,
+			OrderDesc: true,
+		})
+		if err != nil {
+			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+		if len(resp.Deployments) == 0 {
+			app.UI.Output("No successful deployments found.", terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
+		lv, err := app.Logs(ctx, resp.Deployments[0])
 		if err != nil {
 			app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
 			return ErrSentinel

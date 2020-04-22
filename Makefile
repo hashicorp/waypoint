@@ -12,7 +12,7 @@ bin/linux: # create Linux binaries
 	GOOS=linux GOARCH=amd64 $(MAKE) bin
 
 .PHONY: docker/mitchellh
-docker/mitchellh:
+docker/mitchellh: bin/linux
 	docker build -t gcr.io/mitchellh-test/devflow:latest .
 	docker push gcr.io/mitchellh-test/devflow:latest
 
