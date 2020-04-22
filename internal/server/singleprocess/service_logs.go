@@ -12,7 +12,7 @@ func (s *service) GetLogStream(
 	req *pb.GetLogStreamRequest,
 	srv pb.Devflow_GetLogStreamServer,
 ) error {
-	log := hclog.FromContext(srv.Context())
+	log := hclog.FromContext(srv.Context()).With("deployment_id", req.DeploymentId)
 	ws := memdb.NewWatchSet()
 
 	// Get all our initial records
@@ -20,6 +20,7 @@ func (s *service) GetLogStream(
 	if err != nil {
 		return err
 	}
+	log.Trace("instances for deployment", "len", len(records))
 
 	// For each record, start a goroutine that reads the log entries and sends them.
 	for _, record := range records {

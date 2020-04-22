@@ -13,6 +13,7 @@ func TestBuffer(t *testing.T) {
 	require := require.New(t)
 
 	b := New()
+	defer b.Close()
 
 	// Get a reader
 	r1 := b.Reader()
@@ -39,10 +40,47 @@ func TestBuffer(t *testing.T) {
 	}
 }
 
+func TestBuffer_close(t *testing.T) {
+	require := require.New(t)
+
+	b := New()
+	defer b.Close()
+
+	// Get a reader
+	r1 := b.Reader()
+
+	// We should block on the next read
+	doneCh := make(chan struct{})
+	go func() {
+		defer close(doneCh)
+		r1.Read(10)
+	}()
+
+	select {
+	case <-doneCh:
+		t.Fatal("should block")
+	case <-time.After(50 * time.Millisecond):
+	}
+
+	// Close our buffer
+	require.NoError(b.Close())
+
+	// Should be done
+	select {
+	case <-doneCh:
+	case <-time.After(50 * time.Millisecond):
+		t.Fatal("should not block")
+	}
+
+	// Should be safe to run
+	require.NoError(r1.Close())
+}
+
 func TestBuffer_readPartial(t *testing.T) {
 	require := require.New(t)
 
 	b := New()
+	defer b.Close()
 
 	// Get a reader
 	r1 := b.Reader()
@@ -74,6 +112,7 @@ func TestBuffer_writeFull(t *testing.T) {
 	// Create a buffer and write a bunch of data. This should overflow easily.
 	// We want to verify we don't block or crash.
 	b := New()
+	defer b.Close()
 	for i := 0; i < 53; i++ {
 		b.Write(&Entry{
 			Line: strconv.Itoa(i),
@@ -96,6 +135,7 @@ func TestBuffer_readFull(t *testing.T) {
 	// Create a buffer and get a reader immediately so we snapshot our
 	// current set of buffers.
 	b := New()
+	defer b.Close()
 	r := b.Reader()
 
 	// Write a lot of data to ensure we move the window
@@ -124,6 +164,7 @@ func TestReader_cancel(t *testing.T) {
 	require := require.New(t)
 
 	b := New()
+	defer b.Close()
 
 	// Get a reader
 	r1 := b.Reader()
@@ -160,6 +201,7 @@ func TestReader_cancelContext(t *testing.T) {
 
 	// Get a reader
 	b := New()
+	defer b.Close()
 	r1 := b.Reader()
 	go r1.CloseContext(ctx)
 

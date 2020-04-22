@@ -55,6 +55,7 @@ type Buffer struct {
 	chunks  []chunk
 	cond    *sync.Cond
 	current int
+	readers map[*Reader]struct{}
 }
 
 // New creates a new Buffer.
@@ -105,7 +106,35 @@ func (b *Buffer) Write(entries ...*Entry) {
 func (b *Buffer) Reader() *Reader {
 	b.cond.L.Lock()
 	defer b.cond.L.Unlock()
-	return &Reader{b: b, chunks: b.chunks, closeCh: make(chan struct{})}
+
+	result := &Reader{b: b, chunks: b.chunks, closeCh: make(chan struct{})}
+
+	// Track our reader
+	if b.readers == nil {
+		b.readers = make(map[*Reader]struct{})
+	}
+	b.readers[result] = struct{}{}
+
+	return result
+}
+
+// Close closes this log buffer. This will immediately close all active
+// readers and further writes will do nothing.
+func (b *Buffer) Close() error {
+	// We grab a lock to quickly get the readers map, then set the map to
+	// nil. Reader Close also grabs a lock so we can't hold the whole time.
+	// We know we'll close all readers so we set the map to nil.
+	b.cond.L.Lock()
+	rs := b.readers
+	b.readers = nil
+	b.cond.L.Unlock()
+
+	// Close all our readers
+	for r, _ := range rs {
+		r.Close()
+	}
+
+	return nil
 }
 
 // Reader reads log entry values from a buffer.
@@ -164,6 +193,11 @@ func (r *Reader) Read(max int) []*Entry {
 // This is safe to call concurrently with Read.
 func (r *Reader) Close() error {
 	if atomic.CompareAndSwapUint32(&r.closed, 0, 1) {
+		// Delete ourselves from the registered readers
+		r.b.cond.L.Lock()
+		delete(r.b.readers, r)
+		r.b.cond.L.Unlock()
+
 		close(r.closeCh)
 
 		// Only broadcast if we closed. The broadcast will wake up any waiters
@@ -232,6 +266,7 @@ func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32) ([]*E
 
 			// If we closed, exit
 			if atomic.LoadUint32(closed) > 0 {
+				cond.L.Unlock()
 				return nil, current
 			}
 
