@@ -215,6 +215,7 @@ func (w *chunk) full() bool {
 // this will always return immediately to avoid blocking forever.
 func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32) ([]*Entry, uint32) {
 	idx := atomic.LoadUint32(&w.idx)
+	println(idx, current)
 	if idx <= current {
 		// If we're at the end we'd block forever cause we'll never see another
 		// write, so just return the current cursor again. This should never
@@ -252,7 +253,7 @@ func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32) ([]*E
 	// Return the slice. Note we set the cap() here to be the length
 	// returned just so the caller doesn't get any leaked info about
 	// our underlying buffer.
-	return w.buffer[current : end : end-current], idx
+	return w.buffer[current:end:end], end
 }
 
 // write wites the set of entries into this chunk and returns the number

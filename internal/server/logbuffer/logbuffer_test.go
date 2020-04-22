@@ -39,6 +39,32 @@ func TestBuffer(t *testing.T) {
 	}
 }
 
+func TestBuffer_readPartial(t *testing.T) {
+	require := require.New(t)
+
+	b := New()
+
+	// Get a reader
+	r1 := b.Reader()
+
+	// Write some entries
+	b.Write(nil, nil, nil)
+
+	{
+		// Get two immediately
+		v := r1.Read(2)
+		require.Len(v, 2)
+		require.Equal(2, cap(v))
+	}
+
+	{
+		// Get the last one
+		v := r1.Read(1)
+		require.Len(v, 1)
+		require.Equal(1, cap(v))
+	}
+}
+
 func TestBuffer_writeFull(t *testing.T) {
 	require := require.New(t)
 
