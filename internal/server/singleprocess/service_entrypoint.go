@@ -63,6 +63,9 @@ func (s *service) EntrypointConfig(
 	// TODO(mitchellh): this is too aggressive and we want to have some grace
 	// period for reconnecting clients. We should clean this up.
 	defer func() {
+		// We want to close all our readers at the end of this
+		defer record.LogBuffer.Close()
+
 		log.Trace("deleting entrypoint")
 		tx := s.inmem.Txn(true)
 		if err := tx.Delete("instances", record); err != nil {
