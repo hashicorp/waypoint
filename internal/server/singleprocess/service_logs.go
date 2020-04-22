@@ -1,6 +1,7 @@
 package singleprocess
 
 import (
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 
 	pb "github.com/mitchellh/devflow/internal/server/gen"
@@ -11,6 +12,7 @@ func (s *service) GetLogStream(
 	req *pb.GetLogStreamRequest,
 	srv pb.Devflow_GetLogStreamServer,
 ) error {
+	log := hclog.FromContext(srv.Context())
 	ws := memdb.NewWatchSet()
 
 	// Get all our initial records
@@ -23,18 +25,26 @@ func (s *service) GetLogStream(
 	for _, record := range records {
 		instanceId := record.Id
 		r := record.LogBuffer.Reader()
+
+		instanceLog := log.With("instance_id", instanceId)
+		instanceLog.Trace("instance log stream starting")
 		go r.CloseContext(srv.Context())
 		go func() {
-			entries := r.Read(64)
-			if entries == nil {
-				return
-			}
+			defer instanceLog.Debug("instance log stream ending")
 
-			srv.Send(&pb.LogBatch{
-				DeploymentId: req.DeploymentId,
-				InstanceId:   instanceId,
-				Lines:        entries,
-			})
+			for {
+				entries := r.Read(64)
+				if entries == nil {
+					return
+				}
+
+				instanceLog.Trace("sending instance log data", "entries", len(entries))
+				srv.Send(&pb.LogBatch{
+					DeploymentId: req.DeploymentId,
+					InstanceId:   instanceId,
+					Lines:        entries,
+				})
+			}
 		}()
 	}
 

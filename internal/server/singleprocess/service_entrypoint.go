@@ -1,6 +1,8 @@
 package singleprocess
 
 import (
+	"strings"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -46,6 +48,8 @@ func (s *service) EntrypointConfig(
 	log := hclog.FromContext(srv.Context())
 
 	// Create our record
+	log = log.With("deployment_id", req.DeploymentId, "instance_id", req.InstanceId)
+	log.Trace("registering entrypoint")
 	record := &instanceRecord{
 		Id:           req.InstanceId,
 		DeploymentId: req.DeploymentId,
@@ -59,6 +63,7 @@ func (s *service) EntrypointConfig(
 	// TODO(mitchellh): this is too aggressive and we want to have some grace
 	// period for reconnecting clients. We should clean this up.
 	defer func() {
+		log.Trace("deleting entrypoint")
 		tx := s.inmem.Txn(true)
 		if err := tx.Delete("instances", record); err != nil {
 			log.Error("failed to delete instance data. This should not happen.", "err", err)
@@ -108,6 +113,11 @@ func (s *service) EntrypointLogStream(
 		// Log that we received data in trace mode
 		if log.IsTrace() {
 			log.Trace("received data", "lines", len(batch.Lines))
+		}
+
+		// Strip any trailing whitespace
+		for _, entry := range batch.Lines {
+			entry.Line = strings.TrimSuffix(entry.Line, "\n")
 		}
 
 		// Write our log data to the circular buffer

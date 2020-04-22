@@ -3,6 +3,8 @@ package logviewer
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes"
+
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/sdk/component"
 )
@@ -28,8 +30,11 @@ func (v *Viewer) NextLogBatch(ctx context.Context) ([]component.LogEvent, error)
 
 	events := make([]component.LogEvent, len(entry.Lines))
 	for i, entry := range entry.Lines {
+		ts, _ := ptypes.Timestamp(entry.Timestamp)
+
 		events[i] = component.LogEvent{
-			Message: entry.Line,
+			Timestamp: ts,
+			Message:   entry.Line,
 		}
 	}
 

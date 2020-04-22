@@ -66,6 +66,8 @@ func (c *LogsCommand) Run(args []string) int {
 			}
 
 			for _, event := range batch {
+				event.Message = strings.TrimSuffix(event.Message, "\n")
+
 				// We use this format rather than regular RFC3339Nano because we use .0
 				// instead of .9, which preserves the spacing so the output is always
 				// lined up
