@@ -13,8 +13,8 @@ import (
 
 // Deploy deploys the given artifact.
 // TODO(mitchellh): test
-func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (component.Deployment, error) {
-	result, _, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployOperation{
+func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployment, error) {
+	_, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployOperation{
 		Push:             push,
 		DeploymentConfig: &a.dconfig,
 	})
@@ -22,7 +22,7 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (component.De
 		return nil, err
 	}
 
-	return result.(component.Deployment), nil
+	return msg.(*pb.Deployment), nil
 }
 
 type deployOperation struct {

@@ -9,11 +9,15 @@ import (
 
 	"github.com/mitchellh/devflow/internal/core"
 	"github.com/mitchellh/devflow/internal/pkg/flag"
+	servercomponent "github.com/mitchellh/devflow/internal/server/component"
+	"github.com/mitchellh/devflow/sdk/component"
 	"github.com/mitchellh/devflow/sdk/terminal"
 )
 
 type DeploymentCreateCommand struct {
 	*baseCommand
+
+	flagRelease bool
 }
 
 func (c *DeploymentCreateCommand) Run(args []string) int {
@@ -38,12 +42,32 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 		// Push it
 		app.UI.Output("Deploying...", terminal.WithHeaderStyle())
-		_, err = app.Deploy(ctx, push)
+		deployment, err := app.Deploy(ctx, push)
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
+		// If we're not releasing then we're done
+		if !c.flagRelease {
+			return nil
+		}
+
+		// We're releasing, do that too.
+		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
+		release, err := app.Release(ctx, []component.ReleaseTarget{
+			component.ReleaseTarget{
+				DeploymentId: deployment.Id,
+				Deployment:   servercomponent.Deployment(deployment),
+				Percent:      100,
+			},
+		})
+		if err != nil {
+			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
+		app.UI.Output("\nURL: %s", release.URL(), terminal.WithSuccessStyle())
 		return nil
 	})
 
@@ -51,7 +75,15 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 }
 
 func (c *DeploymentCreateCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(0, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:    "release",
+			Target:  &c.flagRelease,
+			Usage:   "Release this deployment immedately.",
+			Default: false,
+		})
+	})
 }
 
 func (c *DeploymentCreateCommand) AutocompleteArgs() complete.Predictor {
