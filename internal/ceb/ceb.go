@@ -24,9 +24,11 @@ const (
 type CEB struct {
 	id       string
 	logger   hclog.Logger
+	context  context.Context
 	client   pb.DevflowClient
 	childCmd *exec.Cmd
 	config   *pb.EntrypointConfig
+	execIdx  int64
 
 	cleanupFunc func()
 }
@@ -46,8 +48,9 @@ func Run(ctx context.Context, os ...Option) error {
 
 	// Defaults, initialization
 	ceb := &CEB{
-		id:     id,
-		logger: hclog.L(),
+		id:      id,
+		logger:  hclog.L(),
+		context: ctx,
 	}
 	defer ceb.Close()
 
