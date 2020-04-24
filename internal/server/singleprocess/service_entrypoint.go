@@ -1,11 +1,16 @@
 package singleprocess
 
 import (
+	"context"
+	"io"
 	"strings"
+	"sync/atomic"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
+	"github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -130,6 +135,81 @@ func (s *service) EntrypointLogStream(
 	return server.SendAndClose(&empty.Empty{})
 }
 
+// TODO: test
+func (s *service) EntrypointExecStream(
+	server pb.Devflow_EntrypointExecStreamServer,
+) error {
+	log := hclog.FromContext(server.Context())
+
+	// Receive our opening message so we can determine the exec stream.
+	req, err := server.Recv()
+	if err != nil {
+		return err
+	}
+	open, ok := req.Event.(*pb.EntrypointExecRequest_Open_)
+	if !ok {
+		return status.Errorf(codes.FailedPrecondition,
+			"first message must be open type")
+	}
+
+	// Get our instance and look for this exec index
+	rec, err := s.instanceById(open.Open.InstanceId)
+	if err != nil {
+		return err
+	}
+	exec, ok := rec.Exec[int32(open.Open.Index)]
+	if !ok {
+		return status.Errorf(codes.NotFound,
+			"exec session index not found")
+	}
+	log = log.With("instance_id", open.Open.InstanceId, "index", open.Open.Index)
+
+	// Mark we're connected
+	if !atomic.CompareAndSwapUint32(&exec.Connected, 0, 1) {
+		return status.Errorf(codes.FailedPrecondition,
+			"exec session is already open for this index")
+	}
+	log.Debug("exec stream open")
+
+	// We want to ensure we close the exec stream ALWAYS in case we don't
+	// gracefully close it below.
+	defer exec.Cancel()
+
+	// Connect the reader to send data down
+	go io.Copy(&grpc_net_conn.Conn{
+		Stream:  server,
+		Request: &pb.EntrypointExecResponse{},
+		Encode: grpc_net_conn.SimpleEncoder(func(msg proto.Message) *[]byte {
+			return &msg.(*pb.EntrypointExecResponse).Data
+		}),
+	}, exec.Reader)
+
+	// Loop through our receive loop
+	for {
+		req, err := server.Recv()
+		if err != nil {
+			// TODO: error handling
+			return err
+		}
+
+		// Send the event
+		exec.EventCh <- req
+
+		// If this is an exit or error event then we also exit this loop now.
+		switch event := req.Event.(type) {
+		case *pb.EntrypointExecRequest_Exit_:
+			log.Debug("exec stream exiting due to exit message", "code", event.Exit.Code)
+			return nil
+		case *pb.EntrypointExecRequest_Error_:
+			log.Debug("exec stream exiting due to client error",
+				"error", event.Error.Error.Message)
+			return nil
+		}
+	}
+
+	return nil
+}
+
 func (s *service) instancesCreate(record *instanceRecord) error {
 	// Insert this mapping into our memdb
 	tx := s.inmem.Txn(true)
@@ -185,4 +265,13 @@ type instanceRecord struct {
 	Id           string
 	DeploymentId string
 	LogBuffer    *logbuffer.Buffer
+	Exec         map[int32]*instanceExec
+}
+
+type instanceExec struct {
+	Args      []string
+	Reader    io.Reader
+	EventCh   chan<- *pb.EntrypointExecRequest
+	Cancel    context.CancelFunc
+	Connected uint32
 }

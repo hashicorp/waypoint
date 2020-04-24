@@ -48,6 +48,9 @@ service Devflow {
   // EntrypointLogStream is called to open the stream that logs are sent to.
   rpc EntrypointLogStream(stream EntrypointLogBatch) returns (google.protobuf.Empty);
 
+  // EntrypointExecStream is called to open the data stream for the exec session.
+  rpc EntrypointExecStream(stream EntrypointExecRequest) returns (stream EntrypointExecResponse);
+
   //----------------------------------------------------------------------
   // Internal metadata endpoints. The endpoints below are expected to be
   // called for internal bookkeeping only. They should be avoided for general
@@ -362,7 +365,15 @@ message EntrypointConfigResponse {
   EntrypointConfig config = 2;
 }
 
-message EntrypointConfig {}
+message EntrypointConfig {
+  // Exec are requested exec sessions for this instance.
+  repeated Exec exec = 1;
+
+  message Exec {
+    int64 index = 1;
+    repeated string args = 2;
+  }
+}
 
 // A batch of data for log streaming from the entrypoint.
 message EntrypointLogBatch {
@@ -372,4 +383,50 @@ message EntrypointLogBatch {
 
   // lines is the set of lines
   repeated LogBatch.Entry lines = 2;
+}
+
+message EntrypointExecRequest {
+  oneof event {
+    // open MUST BE the first message sent by a client. This will be used
+    // by the server side to perform some initialization. If the first message
+    // is not open the server will close the connection.
+    Open open = 1;
+
+    // exit should be sent as a final message type after the command exits.
+    Exit exit = 2;
+
+    // output contains stdout/stderr
+    Output output = 3;
+
+    // error indicates an error occurred. This will terminate the stream.
+    Error error = 4;
+  }
+
+  message Open {
+    string instance_id = 1;
+    int64 index = 2;
+  }
+
+  message Exit {
+    int32 code = 1;
+  }
+
+  message Output {
+    Channel channel = 1;
+    bytes data = 2;
+
+    enum Channel {
+      UNKNOWN = 0;
+      STDOUT  = 1;
+      STDERR  = 2;
+    }
+  }
+
+  message Error {
+    google.rpc.Status error = 1;
+  }
+}
+
+message EntrypointExecResponse {
+  bytes data = 1;
 }
