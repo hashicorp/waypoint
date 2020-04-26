@@ -98,7 +98,10 @@ func (s *service) StartExecStream(
 
 		// Send our response
 		if send != nil {
-			srv.Send(send)
+			if err := srv.Send(send); err != nil {
+				log.Warn("stream error", "err", err)
+				return err
+			}
 		}
 	}
 }

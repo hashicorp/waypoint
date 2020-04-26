@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -49,13 +50,33 @@ func (s *service) EntrypointConfig(
 		}
 	}()
 
-	// Send initial config
-	if err := srv.Send(&pb.EntrypointConfigResponse{}); err != nil {
-		return err
-	}
+	// Build our config in a loop.
+	for {
+		ws := memdb.NewWatchSet()
+		execs, err := s.state.InstanceExecListByInstanceId(req.InstanceId, ws)
+		if err != nil {
+			return err
+		}
 
-	// TODO(mitchellh): loop, send down any changes in configuration.
-	<-srv.Context().Done()
+		// Build our config
+		config := &pb.EntrypointConfig{}
+		for _, exec := range execs {
+			config.Exec = append(config.Exec, &pb.EntrypointConfig_Exec{
+				Index: exec.Id,
+				Args:  exec.Args,
+			})
+		}
+
+		// Send new config
+		if err := srv.Send(&pb.EntrypointConfigResponse{}); err != nil {
+			return err
+		}
+
+		// Wait for any changes
+		if err := ws.WatchCtx(srv.Context()); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
