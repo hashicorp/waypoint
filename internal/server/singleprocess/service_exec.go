@@ -47,13 +47,13 @@ func (s *service) StartExecStream(
 	}
 
 	// Register the exec session
-	instanceId, index, err := s.instanceRegisterExecDeployment(start.Start.DeploymentId, execRec)
+	execRec, err = s.instanceRegisterExecDeployment(start.Start.DeploymentId, execRec)
 	if err != nil {
 		return err
 	}
 
 	// Make sure we always deregister it
-	defer s.deregisterInstanceExec(instanceId, index)
+	defer s.deleteInstanceExec(execRec.Id)
 
 	// Loop through and read events
 	for {

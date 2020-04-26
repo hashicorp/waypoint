@@ -42,6 +42,30 @@ func init() {
 			},
 		},
 	}
+
+	memdbSchema.Tables["instance-execs"] = &memdb.TableSchema{
+		Name: "instance-execs",
+		Indexes: map[string]*memdb.IndexSchema{
+			"id": &memdb.IndexSchema{
+				Name:         "id",
+				AllowMissing: false,
+				Unique:       true,
+				Indexer: &memdb.IntFieldIndex{
+					Field: "Id",
+				},
+			},
+
+			"instance-id": &memdb.IndexSchema{
+				Name:         "instance-id",
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.StringFieldIndex{
+					Field:     "InstanceId",
+					Lowercase: true,
+				},
+			},
+		},
+	}
 }
 
 // TODO: test
@@ -213,9 +237,17 @@ func (s *service) instancesCreate(record *instanceRecord) error {
 	// Insert this mapping into our memdb
 	tx := s.inmem.Txn(true)
 	defer tx.Abort()
+
+	// Create our instance
 	if err := tx.Insert("instances", record); err != nil {
 		return status.Errorf(codes.Aborted, err.Error())
 	}
+
+	// Delete all the instance exec sessions. This should be empty anyways.
+	if _, err := tx.DeleteAll("instance-execs", "instance-id", record.Id); err != nil {
+		return status.Errorf(codes.Aborted, err.Error())
+	}
+
 	tx.Commit()
 
 	return nil
@@ -259,64 +291,63 @@ func (s *service) instancesByDeployment(id string, ws memdb.WatchSet) ([]*instan
 	return result, nil
 }
 
-func (s *service) instanceRegisterExecDeployment(did string, exec *instanceExec) (string, int32, error) {
+func (s *service) instanceRegisterExecDeployment(did string, exec *instanceExec) (*instanceExec, error) {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
-	// Find all the instances by deployment
-	iter, err := txn.Get("instances", "deployment-id", did)
-	if err != nil {
-		return "", 0, status.Errorf(codes.Aborted, err.Error())
-	}
-
-	// Go through each and just take the first one that doesn't have an
-	// exec session.
-	var min *instanceRecord
-	for raw := iter.Next(); raw != nil; raw = iter.Next() {
-		rec := raw.(*instanceRecord)
-
-		// Zero length exec means we take it right away
-		if len(rec.Exec) == 0 {
-			min = rec
-			break
+	// If we have no instance ID set, we find an instance to register this
+	// with based on the deployment ID.
+	if exec.InstanceId == "" {
+		// Find all the instances by deployment
+		iter, err := txn.Get("instances", "deployment-id", did)
+		if err != nil {
+			return nil, status.Errorf(codes.Aborted, err.Error())
 		}
 
-		// Otherwise we keep track of the lowest "load" exec which we just
-		// choose by the minimum number of registered sessions.
-		if min == nil || len(rec.Exec) < len(min.Exec) {
-			min = rec
+		// Go through each and just take the first one that doesn't have an
+		// exec session.
+		var min *instanceRecord
+		for raw := iter.Next(); raw != nil; raw = iter.Next() {
+			rec := raw.(*instanceRecord)
+
+			// Zero length exec means we take it right away
+			if len(rec.Exec) == 0 {
+				min = rec
+				break
+			}
+
+			// Otherwise we keep track of the lowest "load" exec which we just
+			// choose by the minimum number of registered sessions.
+			if min == nil || len(rec.Exec) < len(min.Exec) {
+				min = rec
+			}
 		}
+
+		if min == nil {
+			return nil, status.Errorf(codes.ResourceExhausted,
+				"No available instances for exec.")
+		}
+
+		exec.InstanceId = min.Id
 	}
 
-	if min == nil {
-		return "", 0, status.Errorf(codes.ResourceExhausted,
-			"No available instances for exec.")
-	}
+	// Set our ID
+	exec.Id = atomic.AddInt64(&instanceExecId, 1)
 
-	index := atomic.AddInt32(&min.LastExec, 1)
-	min.Exec[index] = exec
-	if err := txn.Insert("instances", min); err != nil {
-		return "", 0, status.Errorf(codes.Aborted, err.Error())
+	// Insert
+	if err := txn.Insert("instance-execs", exec); err != nil {
+		return nil, status.Errorf(codes.Aborted, err.Error())
 	}
 	txn.Commit()
 
-	return min.Id, index, nil
+	return exec, nil
 }
 
-func (s *service) deregisterInstanceExec(instanceId string, index int32) error {
+func (s *service) deleteInstanceExec(index int64) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
-
-	raw, err := txn.First("instances", "id", instanceId)
-	if err != nil {
+	if err := txn.Delete("instance-execs", index); err != nil {
 		return err
-	}
-
-	rec := raw.(*instanceRecord)
-	delete(rec.Exec, index)
-
-	if err := txn.Insert("instances", rec); err != nil {
-		return status.Errorf(codes.Aborted, err.Error())
 	}
 	txn.Commit()
 
@@ -333,8 +364,13 @@ type instanceRecord struct {
 }
 
 type instanceExec struct {
-	Args      []string
-	Reader    io.Reader
-	EventCh   chan<- *pb.EntrypointExecRequest
-	Connected uint32
+	Id         int64
+	InstanceId string
+	Args       []string
+	Reader     io.Reader
+	EventCh    chan<- *pb.EntrypointExecRequest
+	Connected  uint32
 }
+
+// This global is used to get the next exec ID that we set.
+var instanceExecId int64
