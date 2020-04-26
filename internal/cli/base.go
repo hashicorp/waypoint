@@ -53,8 +53,6 @@ type baseCommand struct {
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
 
-	flags *flag.Sets
-
 	// app is the targeted application. This is only set if you use the
 	// WithSingleApp option. You should not access this directly
 	// though and use the DoApp function.
