@@ -72,6 +72,10 @@ func (s *service) EntrypointConfig(
 			return err
 		}
 
+		// Nil out the stuff we used so that if we're waiting awhile we can GC
+		config = nil
+		execs = nil
+
 		// Wait for any changes
 		if err := ws.WatchCtx(srv.Context()); err != nil {
 			return err
