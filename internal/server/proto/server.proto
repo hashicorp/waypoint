@@ -32,6 +32,9 @@ service Devflow {
   // The client can choose to retry or not.
   rpc GetLogStream(GetLogStreamRequest) returns (stream LogBatch);
 
+  // StartExecStream starts an exec session.
+  rpc StartExecStream(stream ExecStreamRequest) returns (stream ExecStreamResponse);
+
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
   // the entrypoint binary only.
@@ -345,6 +348,51 @@ message LogBatch {
   message Entry {
     google.protobuf.Timestamp timestamp = 1;
     string line = 2;
+  }
+}
+
+/********************************************************************
+* Exec
+********************************************************************/
+
+message ExecStreamRequest {
+  oneof event {
+    Start start = 1;
+    Input input = 2;
+  }
+
+  message Start {
+    // Deployment to exec into
+    string deployment_id = 1;
+
+    // Args including the command at args[0] to execute.
+    repeated string args = 2;
+  }
+
+  message Input {
+    bytes data = 1;
+  }
+}
+
+message ExecStreamResponse {
+  oneof event {
+    Output output = 1;
+    Exit exit = 2;
+  }
+
+  message Exit {
+    int32 code = 1;
+  }
+
+  message Output {
+    Channel channel = 1;
+    bytes data = 2;
+
+    enum Channel {
+      UNKNOWN = 0;
+      STDOUT  = 1;
+      STDERR  = 2;
+    }
   }
 }
 

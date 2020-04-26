@@ -1,7 +1,6 @@
 package singleprocess
 
 import (
-	"context"
 	"io"
 	"strings"
 	"sync/atomic"
@@ -171,9 +170,9 @@ func (s *service) EntrypointExecStream(
 	}
 	log.Debug("exec stream open")
 
-	// We want to ensure we close the exec stream ALWAYS in case we don't
-	// gracefully close it below.
-	defer exec.Cancel()
+	// Always close the event channel which signals to the reader end that
+	// we are done.
+	defer close(exec.EventCh)
 
 	// Connect the reader to send data down
 	go io.Copy(&grpc_net_conn.Conn{
@@ -260,18 +259,82 @@ func (s *service) instancesByDeployment(id string, ws memdb.WatchSet) ([]*instan
 	return result, nil
 }
 
+func (s *service) instanceRegisterExecDeployment(did string, exec *instanceExec) (string, int32, error) {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	// Find all the instances by deployment
+	iter, err := txn.Get("instances", "deployment-id", did)
+	if err != nil {
+		return "", 0, status.Errorf(codes.Aborted, err.Error())
+	}
+
+	// Go through each and just take the first one that doesn't have an
+	// exec session.
+	var min *instanceRecord
+	for raw := iter.Next(); raw != nil; raw = iter.Next() {
+		rec := raw.(*instanceRecord)
+
+		// Zero length exec means we take it right away
+		if len(rec.Exec) == 0 {
+			min = rec
+			break
+		}
+
+		// Otherwise we keep track of the lowest "load" exec which we just
+		// choose by the minimum number of registered sessions.
+		if min == nil || len(rec.Exec) < len(min.Exec) {
+			min = rec
+		}
+	}
+
+	if min == nil {
+		return "", 0, status.Errorf(codes.ResourceExhausted,
+			"No available instances for exec.")
+	}
+
+	index := atomic.AddInt32(&min.LastExec, 1)
+	min.Exec[index] = exec
+	if err := txn.Insert("instances", min); err != nil {
+		return "", 0, status.Errorf(codes.Aborted, err.Error())
+	}
+	txn.Commit()
+
+	return min.Id, index, nil
+}
+
+func (s *service) deregisterInstanceExec(instanceId string, index int32) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	raw, err := txn.First("instances", "id", instanceId)
+	if err != nil {
+		return err
+	}
+
+	rec := raw.(*instanceRecord)
+	delete(rec.Exec, index)
+
+	if err := txn.Insert("instances", rec); err != nil {
+		return status.Errorf(codes.Aborted, err.Error())
+	}
+	txn.Commit()
+
+	return nil
+}
+
 // instanceRecord is the record type that we'll insert into memdb
 type instanceRecord struct {
 	Id           string
 	DeploymentId string
 	LogBuffer    *logbuffer.Buffer
 	Exec         map[int32]*instanceExec
+	LastExec     int32
 }
 
 type instanceExec struct {
 	Args      []string
 	Reader    io.Reader
 	EventCh   chan<- *pb.EntrypointExecRequest
-	Cancel    context.CancelFunc
 	Connected uint32
 }
