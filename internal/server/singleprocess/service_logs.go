@@ -25,7 +25,7 @@ func (s *service) GetLogStream(
 	for {
 		// Get all our records
 		ws := memdb.NewWatchSet()
-		records, err := s.instancesByDeployment(req.DeploymentId, ws)
+		records, err := s.state.InstancesByDeployment(req.DeploymentId, ws)
 		if err != nil {
 			return err
 		}

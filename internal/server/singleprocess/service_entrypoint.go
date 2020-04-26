@@ -8,65 +8,14 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/mitchellh/devflow/internal/server/gen"
 	"github.com/mitchellh/devflow/internal/server/logbuffer"
+	"github.com/mitchellh/devflow/internal/server/singleprocess/state"
 )
-
-func init() {
-	memdbSchema.Tables["instances"] = &memdb.TableSchema{
-		Name: "instances",
-		Indexes: map[string]*memdb.IndexSchema{
-			"id": &memdb.IndexSchema{
-				Name:         "id",
-				AllowMissing: false,
-				Unique:       true,
-				Indexer: &memdb.StringFieldIndex{
-					Field:     "Id",
-					Lowercase: true,
-				},
-			},
-
-			"deployment-id": &memdb.IndexSchema{
-				Name:         "deployment-id",
-				AllowMissing: false,
-				Unique:       false,
-				Indexer: &memdb.StringFieldIndex{
-					Field:     "DeploymentId",
-					Lowercase: true,
-				},
-			},
-		},
-	}
-
-	memdbSchema.Tables["instance-execs"] = &memdb.TableSchema{
-		Name: "instance-execs",
-		Indexes: map[string]*memdb.IndexSchema{
-			"id": &memdb.IndexSchema{
-				Name:         "id",
-				AllowMissing: false,
-				Unique:       true,
-				Indexer: &memdb.IntFieldIndex{
-					Field: "Id",
-				},
-			},
-
-			"instance-id": &memdb.IndexSchema{
-				Name:         "instance-id",
-				AllowMissing: false,
-				Unique:       false,
-				Indexer: &memdb.StringFieldIndex{
-					Field:     "InstanceId",
-					Lowercase: true,
-				},
-			},
-		},
-	}
-}
 
 // TODO: test
 func (s *service) EntrypointConfig(
@@ -78,12 +27,12 @@ func (s *service) EntrypointConfig(
 	// Create our record
 	log = log.With("deployment_id", req.DeploymentId, "instance_id", req.InstanceId)
 	log.Trace("registering entrypoint")
-	record := &instanceRecord{
+	record := &state.Instance{
 		Id:           req.InstanceId,
 		DeploymentId: req.DeploymentId,
 		LogBuffer:    logbuffer.New(),
 	}
-	if err := s.instancesCreate(record); err != nil {
+	if err := s.state.InstanceCreate(record); err != nil {
 		return err
 	}
 
@@ -95,11 +44,9 @@ func (s *service) EntrypointConfig(
 		defer record.LogBuffer.Close()
 
 		log.Trace("deleting entrypoint")
-		tx := s.inmem.Txn(true)
-		if err := tx.Delete("instances", record); err != nil {
+		if err := s.state.InstanceDelete(record.Id); err != nil {
 			log.Error("failed to delete instance data. This should not happen.", "err", err)
 		}
-		tx.Commit()
 	}()
 
 	// Send initial config
@@ -132,7 +79,7 @@ func (s *service) EntrypointLogStream(
 			log = log.With("instance_id", batch.InstanceId)
 
 			// Read our instance record
-			instance, err := s.instanceById(batch.InstanceId)
+			instance, err := s.state.InstanceById(batch.InstanceId)
 			if err != nil {
 				return err
 			}
@@ -176,16 +123,11 @@ func (s *service) EntrypointExecStream(
 	}
 
 	// Get our instance and look for this exec index
-	rec, err := s.instanceById(open.Open.InstanceId)
+	exec, err := s.state.InstanceExecById(open.Open.Index)
 	if err != nil {
 		return err
 	}
-	exec, ok := rec.Exec[int32(open.Open.Index)]
-	if !ok {
-		return status.Errorf(codes.NotFound,
-			"exec session index not found")
-	}
-	log = log.With("instance_id", open.Open.InstanceId, "index", open.Open.Index)
+	log = log.With("instance_id", exec.InstanceId, "index", open.Open.Index)
 
 	// Mark we're connected
 	if !atomic.CompareAndSwapUint32(&exec.Connected, 0, 1) {
@@ -232,145 +174,3 @@ func (s *service) EntrypointExecStream(
 
 	return nil
 }
-
-func (s *service) instancesCreate(record *instanceRecord) error {
-	// Insert this mapping into our memdb
-	tx := s.inmem.Txn(true)
-	defer tx.Abort()
-
-	// Create our instance
-	if err := tx.Insert("instances", record); err != nil {
-		return status.Errorf(codes.Aborted, err.Error())
-	}
-
-	// Delete all the instance exec sessions. This should be empty anyways.
-	if _, err := tx.DeleteAll("instance-execs", "instance-id", record.Id); err != nil {
-		return status.Errorf(codes.Aborted, err.Error())
-	}
-
-	tx.Commit()
-
-	return nil
-}
-
-func (s *service) instanceById(id string) (*instanceRecord, error) {
-	tx := s.inmem.Txn(false)
-	raw, err := tx.First("instances", "id", id)
-	tx.Abort()
-	if err != nil {
-		return nil, err
-	}
-	if raw == nil {
-		return nil, status.Errorf(codes.FailedPrecondition,
-			"instance ID not found, please call EntrypointConfig first")
-	}
-
-	return raw.(*instanceRecord), nil
-}
-
-func (s *service) instancesByDeployment(id string, ws memdb.WatchSet) ([]*instanceRecord, error) {
-	txn := s.inmem.Txn(false)
-	defer txn.Abort()
-
-	// Find all the instances
-	iter, err := txn.Get("instances", "deployment-id", id)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
-	}
-
-	// If we're tracking changes, add that
-	if ws != nil {
-		ws.Add(iter.WatchCh())
-	}
-
-	var result []*instanceRecord
-	for raw := iter.Next(); raw != nil; raw = iter.Next() {
-		result = append(result, raw.(*instanceRecord))
-	}
-
-	return result, nil
-}
-
-func (s *service) instanceRegisterExecDeployment(did string, exec *instanceExec) (*instanceExec, error) {
-	txn := s.inmem.Txn(true)
-	defer txn.Abort()
-
-	// If we have no instance ID set, we find an instance to register this
-	// with based on the deployment ID.
-	if exec.InstanceId == "" {
-		// Find all the instances by deployment
-		iter, err := txn.Get("instances", "deployment-id", did)
-		if err != nil {
-			return nil, status.Errorf(codes.Aborted, err.Error())
-		}
-
-		// Go through each and just take the first one that doesn't have an
-		// exec session.
-		var min *instanceRecord
-		for raw := iter.Next(); raw != nil; raw = iter.Next() {
-			rec := raw.(*instanceRecord)
-
-			// Zero length exec means we take it right away
-			if len(rec.Exec) == 0 {
-				min = rec
-				break
-			}
-
-			// Otherwise we keep track of the lowest "load" exec which we just
-			// choose by the minimum number of registered sessions.
-			if min == nil || len(rec.Exec) < len(min.Exec) {
-				min = rec
-			}
-		}
-
-		if min == nil {
-			return nil, status.Errorf(codes.ResourceExhausted,
-				"No available instances for exec.")
-		}
-
-		exec.InstanceId = min.Id
-	}
-
-	// Set our ID
-	exec.Id = atomic.AddInt64(&instanceExecId, 1)
-
-	// Insert
-	if err := txn.Insert("instance-execs", exec); err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
-	}
-	txn.Commit()
-
-	return exec, nil
-}
-
-func (s *service) deleteInstanceExec(index int64) error {
-	txn := s.inmem.Txn(true)
-	defer txn.Abort()
-	if err := txn.Delete("instance-execs", index); err != nil {
-		return err
-	}
-	txn.Commit()
-
-	return nil
-}
-
-// instanceRecord is the record type that we'll insert into memdb
-type instanceRecord struct {
-	Id           string
-	DeploymentId string
-	LogBuffer    *logbuffer.Buffer
-	Exec         map[int32]*instanceExec
-	LastExec     int32
-}
-
-type instanceExec struct {
-	Id         int64
-	InstanceId string
-	Args       []string
-	Reader     io.Reader
-	EventCh    chan<- *pb.EntrypointExecRequest
-	Connected  uint32
-}
-
-// This global is used to get the next exec ID that we set.
-var instanceExecId int64

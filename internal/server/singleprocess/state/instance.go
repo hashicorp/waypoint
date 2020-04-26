@@ -94,3 +94,20 @@ func (s *State) InstanceById(id string) (*Instance, error) {
 
 	return raw.(*Instance), nil
 }
+
+func (s *State) InstancesByDeployment(id string, ws memdb.WatchSet) ([]*Instance, error) {
+	txn := s.inmem.Txn(false)
+	defer txn.Abort()
+	iter, err := txn.Get(instanceTableName, instanceDeploymentIdIndexName, id)
+	if err != nil {
+		return nil, err
+	}
+	ws.Add(iter.WatchCh())
+
+	var result []*Instance
+	for raw := iter.Next(); raw != nil; raw = iter.Next() {
+		result = append(result, raw.(*Instance))
+	}
+
+	return result, nil
+}

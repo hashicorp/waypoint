@@ -2,9 +2,9 @@ package singleprocess
 
 import (
 	"github.com/boltdb/bolt"
-	"github.com/hashicorp/go-memdb"
 
 	pb "github.com/mitchellh/devflow/internal/server/gen"
+	"github.com/mitchellh/devflow/internal/server/singleprocess/state"
 )
 
 //go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:gen/"
@@ -14,10 +14,9 @@ type service struct {
 	// db is the persisted on-disk database used for historical data
 	db *bolt.DB
 
-	// inmem is our in-memory database that stores ephemeral data in an
-	// easier-to-query way. Some of this data may be periodically persisted
-	// but most of this data is meant to be lost when the process restarts.
-	inmem *memdb.MemDB
+	// state is the state management interface that provides functions for
+	// safely mutating server state.
+	state *state.State
 }
 
 // New returns a devflow server implementation that uses BotlDB plus
@@ -28,13 +27,13 @@ func New(db *bolt.DB) (pb.DevflowServer, error) {
 		return nil, err
 	}
 
-	// Initialize our in-memory database
-	inmem, err := memdbInit()
+	// Initialize our state
+	st, err := state.New()
 	if err != nil {
 		return nil, err
 	}
 
-	return &service{db: db, inmem: inmem}, nil
+	return &service{db: db, state: st}, nil
 }
 
 var _ pb.DevflowServer = (*service)(nil)

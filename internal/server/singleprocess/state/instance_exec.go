@@ -75,7 +75,7 @@ func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) e
 	for raw := iter.Next(); raw != nil; raw = iter.Next() {
 		rec := raw.(*Instance)
 
-		execs, err := s.instanceExecListByInstanceId(txn, rec.Id)
+		execs, err := s.instanceExecListByInstanceId(txn, rec.Id, nil)
 		if err != nil {
 			return err
 		}
@@ -125,7 +125,29 @@ func (s *State) InstanceExecDelete(id int64) error {
 	return nil
 }
 
-func (s *State) instanceExecListByInstanceId(txn *memdb.Txn, id string) ([]*InstanceExec, error) {
+func (s *State) InstanceExecById(id int64) (*InstanceExec, error) {
+	txn := s.inmem.Txn(false)
+	raw, err := txn.First(instanceExecTableName, instanceExecIdIndexName, id)
+	txn.Abort()
+	if err != nil {
+		return nil, err
+	}
+	if raw == nil {
+		return nil, status.Errorf(codes.NotFound, "instance exec ID not found")
+	}
+
+	return raw.(*InstanceExec), nil
+}
+
+func (s *State) InstanceExecListByInstanceId(id string, ws memdb.WatchSet) ([]*InstanceExec, error) {
+	txn := s.inmem.Txn(false)
+	defer txn.Abort()
+	return s.instanceExecListByInstanceId(txn, id, ws)
+}
+
+func (s *State) instanceExecListByInstanceId(
+	txn *memdb.Txn, id string, ws memdb.WatchSet,
+) ([]*InstanceExec, error) {
 	// Find all the exec sessions
 	iter, err := txn.Get(instanceExecTableName, instanceExecInstanceIdIndexName, id)
 	if err != nil {
@@ -136,6 +158,8 @@ func (s *State) instanceExecListByInstanceId(txn *memdb.Txn, id string) ([]*Inst
 	for raw := iter.Next(); raw != nil; raw = iter.Next() {
 		result = append(result, raw.(*InstanceExec))
 	}
+
+	ws.Add(iter.WatchCh())
 
 	return result, nil
 }

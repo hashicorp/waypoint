@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/mitchellh/devflow/internal/server/gen"
+	"github.com/mitchellh/devflow/internal/server/singleprocess/state"
 )
 
 // TODO: test
@@ -34,7 +35,7 @@ func (s *service) StartExecStream(
 	// once we register, this will trigger any watchers to be notified of
 	// a change and the instance should try to connect to us.
 	eventCh := make(chan *pb.EntrypointExecRequest)
-	execRec := &instanceExec{
+	execRec := &state.InstanceExec{
 		Args: start.Start.Args,
 		Reader: &grpc_net_conn.Conn{
 			Stream:   srv,
@@ -47,13 +48,13 @@ func (s *service) StartExecStream(
 	}
 
 	// Register the exec session
-	execRec, err = s.instanceRegisterExecDeployment(start.Start.DeploymentId, execRec)
+	err = s.state.InstanceExecCreateByDeployment(start.Start.DeploymentId, execRec)
 	if err != nil {
 		return err
 	}
 
 	// Make sure we always deregister it
-	defer s.deleteInstanceExec(execRec.Id)
+	defer s.state.InstanceExecDelete(execRec.Id)
 
 	// Loop through and read events
 	for {
