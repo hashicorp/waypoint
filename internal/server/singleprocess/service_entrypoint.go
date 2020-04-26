@@ -68,7 +68,9 @@ func (s *service) EntrypointConfig(
 		}
 
 		// Send new config
-		if err := srv.Send(&pb.EntrypointConfigResponse{}); err != nil {
+		if err := srv.Send(&pb.EntrypointConfigResponse{
+			Config: config,
+		}); err != nil {
 			return err
 		}
 
