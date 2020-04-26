@@ -178,11 +178,13 @@ func (s *service) EntrypointExecStream(
 
 	// Loop through our receive loop
 	for {
+		log.Trace("waiting for entrypoint exec event")
 		req, err := server.Recv()
 		if err != nil {
 			// TODO: error handling
 			return err
 		}
+		log.Trace("entrypoint event received", "event", req.Event)
 
 		// Send the event
 		exec.EventCh <- req

@@ -58,18 +58,21 @@ func (s *service) StartExecStream(
 
 	// Loop through and read events
 	for {
+		log.Trace("waiting for exec event")
 		var entryReq *pb.EntrypointExecRequest
-		var closed bool
+		var notClosed bool
 		select {
 		case <-srv.Context().Done():
 			// TODO: we need to notify the entrypoint side that we're over
+			log.Debug("context ended")
 			return nil
 
-		case entryReq, closed = <-eventCh:
+		case entryReq, notClosed = <-eventCh:
 			// We got an event, exit out of the select and determine our action
 		}
 
-		if closed {
+		if !notClosed {
+			log.Debug("event channel closed, exiting")
 			return nil
 		}
 
