@@ -37,6 +37,7 @@ func (s *service) StartExecStream(
 	eventCh := make(chan *pb.EntrypointExecRequest)
 	execRec := &state.InstanceExec{
 		Args: start.Start.Args,
+		Pty:  start.Start.Pty,
 		Reader: &grpc_net_conn.Conn{
 			Stream:   srv,
 			Response: &pb.ExecStreamRequest{},

@@ -367,10 +367,30 @@ message ExecStreamRequest {
 
     // Args including the command at args[0] to execute.
     repeated string args = 2;
+
+    // Pty is set if we should allocate a PTY for this exec stream.
+    PTY pty = 3;
   }
 
   message Input {
     bytes data = 1;
+  }
+
+  message PTY {
+    bool enable = 1;
+
+    // term is the TERM value to request on the remote side. This should be set.
+    string term = 2;
+
+    // window_size is the initial window size
+    WindowSize window_size = 3;
+  }
+
+  message WindowSize {
+    int32 rows = 1;
+    int32 cols = 2;
+    int32 width = 3;
+    int32 height = 4;
   }
 }
 
@@ -420,6 +440,7 @@ message EntrypointConfig {
   message Exec {
     int64 index = 1;
     repeated string args = 2;
+    ExecStreamRequest.PTY pty = 3;
   }
 }
 

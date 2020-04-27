@@ -2,10 +2,11 @@ package ceb
 
 import (
 	"io"
+	"os"
 	"os/exec"
 	"syscall"
 
-	//"github.com/creack/pty"
+	"github.com/creack/pty"
 	"github.com/golang/protobuf/proto"
 	"github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	internalptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func (ceb *CEB) startExecGroup(es []*pb.EntrypointConfig_Exec) {
@@ -88,9 +90,76 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 	cmd.Stdout = ceb.execOutputWriter(client, pb.EntrypointExecRequest_Output_STDOUT)
 	cmd.Stderr = ceb.execOutputWriter(client, pb.EntrypointExecRequest_Output_STDERR)
 
+	// PTY
+	var ptyFile *os.File
+	if ptyReq := execConfig.Pty; ptyReq != nil && ptyReq.Enable {
+		log.Info("pty requested, allocating a pty")
+
+		// If we're setting a pty we'll be overriding our stdin/out/err
+		// so we need to get access to the original gRPC writers so we can
+		// copy later.
+		stdin := cmd.Stdin
+		stdout := cmd.Stdout
+
+		// We need to nil these so they get set to the pty below
+		cmd.Stdin = nil
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+
+		// Set our TERM value
+		if ptyReq.Term != "" {
+			cmd.Env = append(cmd.Env, "TERM="+ptyReq.Term)
+		}
+
+		// Start with a pty
+		ptyFile, err = pty.StartWithSize(cmd, internalptypes.Winsize(ptyReq.WindowSize))
+		if err != nil {
+			log.Warn("error building exec command", "err", err)
+			st, ok := status.FromError(err)
+			if !ok {
+				st = status.New(codes.Unknown, err.Error())
+			}
+
+			if err := client.Send(&pb.EntrypointExecRequest{
+				Event: &pb.EntrypointExecRequest_Error_{
+					Error: &pb.EntrypointExecRequest_Error{
+						Error: st.Proto(),
+					},
+				},
+			}); err != nil {
+				log.Warn("error sending error message", "err", err)
+				return
+			}
+		}
+		defer ptyFile.Close()
+
+		// Copy stdin to the pty
+		go io.Copy(ptyFile, stdin)
+		go io.Copy(stdout, ptyFile)
+	} else {
+		if err := cmd.Start(); err != nil {
+			log.Warn("error building exec command", "err", err)
+			st, ok := status.FromError(err)
+			if !ok {
+				st = status.New(codes.Unknown, err.Error())
+			}
+
+			if err := client.Send(&pb.EntrypointExecRequest{
+				Event: &pb.EntrypointExecRequest_Error_{
+					Error: &pb.EntrypointExecRequest_Error{
+						Error: st.Proto(),
+					},
+				},
+			}); err != nil {
+				log.Warn("error sending error message", "err", err)
+				return
+			}
+		}
+	}
+
 	// Run the command and wait for it to end
 	exitCode := 0
-	err = cmd.Run()
+	err = cmd.Wait()
 	if err != nil {
 		if exiterr, ok := err.(*exec.ExitError); ok {
 			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {

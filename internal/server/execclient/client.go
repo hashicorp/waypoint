@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 
+	"github.com/creack/pty"
 	"github.com/golang/protobuf/proto"
 	"github.com/mitchellh/go-grpc-net-conn"
+	"golang.org/x/crypto/ssh/terminal"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	internalptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 type Client struct {
@@ -22,6 +26,31 @@ type Client struct {
 }
 
 func (c *Client) Run() (int, error) {
+	// Determine if we should allocate a pty. If we should, we need to send
+	// along a TERM value to the remote end that matches our own.
+	var ptyReq *pb.ExecStreamRequest_PTY
+	if f, ok := c.Stdout.(*os.File); ok && terminal.IsTerminal(int(f.Fd())) {
+		ws, err := pty.GetsizeFull(f)
+		if err != nil {
+			return 0, err
+		}
+
+		ptyReq = &pb.ExecStreamRequest_PTY{
+			Enable:     true,
+			Term:       os.Getenv("TERM"),
+			WindowSize: internalptypes.WinsizeProto(ws),
+		}
+
+		// We need to go into raw mode with stdin
+		if f, ok := c.Stdin.(*os.File); ok {
+			oldState, err := terminal.MakeRaw(int(f.Fd()))
+			if err != nil {
+				return 0, err
+			}
+			defer func() { _ = terminal.Restore(int(f.Fd()), oldState) }()
+		}
+	}
+
 	// Start our exec stream
 	client, err := c.Client.StartExecStream(c.Context)
 	if err != nil {
@@ -34,6 +63,7 @@ func (c *Client) Run() (int, error) {
 			Start: &pb.ExecStreamRequest_Start{
 				DeploymentId: c.DeploymentId,
 				Args:         c.Args,
+				Pty:          ptyReq,
 			},
 		},
 	}); err != nil {

@@ -52,10 +52,13 @@ func instanceExecSchema() *memdb.TableSchema {
 type InstanceExec struct {
 	Id         int64
 	InstanceId string
-	Args       []string
-	Reader     io.Reader
-	EventCh    chan<- *pb.EntrypointExecRequest
-	Connected  uint32
+
+	Args []string
+	Pty  *pb.ExecStreamRequest_PTY
+
+	Reader    io.Reader
+	EventCh   chan<- *pb.EntrypointExecRequest
+	Connected uint32
 }
 
 func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) error {

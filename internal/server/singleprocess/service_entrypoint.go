@@ -64,6 +64,7 @@ func (s *service) EntrypointConfig(
 			config.Exec = append(config.Exec, &pb.EntrypointConfig_Exec{
 				Index: exec.Id,
 				Args:  exec.Args,
+				Pty:   exec.Pty,
 			})
 		}
 
