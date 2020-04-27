@@ -1,9 +1,9 @@
 tmp/
 
 # Repo-specific
-.devflow/
-/devflow
-/devflow-entrypoint
+.waypoint/
+/waypoint
+/waypoint-entrypoint
 
 # System-specific
 .DS_Store
