@@ -117,8 +117,8 @@ func (c *BuildListCommand) Synopsis() string {
 
 func (c *BuildListCommand) Help() string {
 	helpText := `
-Usage: devflow artifact build [options]
-Alias: devflow build
+Usage: waypoint artifact build [options]
+Alias: waypoint build
 
   Build a new versioned artifact from source.
 

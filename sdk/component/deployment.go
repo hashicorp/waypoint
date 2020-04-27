@@ -13,18 +13,18 @@ type DeploymentConfig struct {
 // binary to have the proper configuration.
 func (c *DeploymentConfig) Env() map[string]string {
 	results := map[string]string{
-		"DEVFLOW_DEPLOYMENT_ID": c.Id,
+		"WAYPOINT_DEPLOYMENT_ID": c.Id,
 	}
 
 	if c.ServerAddr == "" {
 		// If the server is disabled we set this env var. Note that having
 		// no address given also causes it to behave the same way.
-		results["DEVFLOW_SERVER_DISABLE"] = "1"
+		results["WAYPOINT_SERVER_DISABLE"] = "1"
 	} else {
 		// Note the server address.
-		results["DEVFLOW_SERVER_ADDR"] = c.ServerAddr
+		results["WAYPOINT_SERVER_ADDR"] = c.ServerAddr
 		if c.ServerInsecure {
-			results["DEVFLOW_SERVER_INSECURE"] = "1"
+			results["WAYPOINT_SERVER_INSECURE"] = "1"
 		}
 	}
 

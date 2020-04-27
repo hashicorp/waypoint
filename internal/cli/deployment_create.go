@@ -100,7 +100,7 @@ func (c *DeploymentCreateCommand) Synopsis() string {
 
 func (c *DeploymentCreateCommand) Help() string {
 	helpText := `
-Usage: devflow deployment deploy [options]
+Usage: waypoint deployment deploy [options]
 
   Deploy an application. This will deploy the most recent successful
   pushed artifact by default. You can view a list of recent artifacts

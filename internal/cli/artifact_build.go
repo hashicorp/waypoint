@@ -68,8 +68,8 @@ func (c *ArtifactBuildCommand) Synopsis() string {
 
 func (c *ArtifactBuildCommand) Help() string {
 	helpText := `
-Usage: devflow artifact build [options]
-Alias: devflow build
+Usage: waypoint artifact build [options]
+Alias: waypoint build
 
   Build a new versioned artifact from source.
 

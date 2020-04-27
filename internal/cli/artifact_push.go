@@ -67,8 +67,8 @@ func (c *ArtifactPushCommand) Synopsis() string {
 
 func (c *ArtifactPushCommand) Help() string {
 	helpText := `
-Usage: devflow artifact push [options]
-Alias: devflow push
+Usage: waypoint artifact push [options]
+Alias: waypoint push
 
   Push a local build to a registry. This will push the most recent
   successful local build by default. You can view a list of the recent

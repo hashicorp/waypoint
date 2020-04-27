@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	envDeploymentId   = "DEVFLOW_DEPLOYMENT_ID"
-	envServerAddr     = "DEVFLOW_SERVER_ADDR"
-	envServerInsecure = "DEVFLOW_SERVER_INSECURE"
+	envDeploymentId   = "WAYPOINT_DEPLOYMENT_ID"
+	envServerAddr     = "WAYPOINT_SERVER_ADDR"
+	envServerInsecure = "WAYPOINT_SERVER_INSECURE"
 )
 
 // CEB represents the state of a running CEB.

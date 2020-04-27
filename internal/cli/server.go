@@ -161,7 +161,7 @@ func (c *ServerCommand) Synopsis() string {
 
 func (c *ServerCommand) Help() string {
 	helpText := `
-Usage: devflow server [options]
+Usage: waypoint server [options]
 
   Run the builtin server.
 

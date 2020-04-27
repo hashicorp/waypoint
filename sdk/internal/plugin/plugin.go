@@ -15,7 +15,7 @@ var Handshake = plugin.HandshakeConfig{
 	// Not secret, just to avoid plugins being launched manually. The
 	// cookie value is a random SHA256 via /dev/urandom. This cookie value
 	// must NEVER be changed or plugins will stop working.
-	MagicCookieKey:   "DEVFLOW_PLUGIN",
+	MagicCookieKey:   "WAYPOINT_PLUGIN",
 	MagicCookieValue: "be6c1928786a4df0222c13eef44ac846da2c0d461d99addc93f804601c6b7205",
 }
 

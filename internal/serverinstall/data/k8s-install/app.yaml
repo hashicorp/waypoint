@@ -15,33 +15,33 @@ spec:
   - port: 9701
     name: grpc
   selector:
-    app: devflow-server
+    app: waypoint-server
   type: LoadBalancer
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devflow-server
+  name: waypoint-server
   namespace: {{ .Namespace }}
   labels:
-    app: devflow-server
+    app: waypoint-server
 spec:
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: devflow-server
+      app: waypoint-server
   template:
     metadata:
       labels:
-        app: devflow-server
+        app: waypoint-server
     spec:
       containers:
       - name: server
         image: {{ .ServerImage }}
         imagePullPolicy: Always
         command:
-        - "/devflow"
+        - "/waypoint"
         args:
         - server
         - -vvv
@@ -63,12 +63,12 @@ spec:
       volumes:
       - name: data
         persistentVolumeClaim:
-          claimName: devflow-server-pvc
+          claimName: waypoint-server-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: devflow-server-pvc
+  name: waypoint-server-pvc
 spec:
   accessModes:
     - ReadWriteOnce

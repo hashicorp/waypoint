@@ -66,14 +66,14 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Name:    "service",
 			Target:  &c.config.ServiceName,
 			Usage:   "Name of the Kubernetes service for the server.",
-			Default: "devflow",
+			Default: "waypoint",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "server-image",
 			Target:  &c.config.ServerImage,
 			Usage:   "Docker image for the server image.",
-			Default: "gcr.io/mitchellh-test/devflow:latest",
+			Default: "gcr.io/mitchellh-test/waypoint:latest",
 		})
 
 		f.StringMapVar(&flag.StringMapVar{
@@ -98,12 +98,12 @@ func (c *InstallCommand) Synopsis() string {
 
 func (c *InstallCommand) Help() string {
 	helpText := `
-Usage: devflow install [options]
+Usage: waypoint install [options]
 
   Outputs the Kubernetes configurations required to run a self-hosted
-  Devflow server. You can deploy to Kubernetes by piping this to kubectl.
+  Waypoint server. You can deploy to Kubernetes by piping this to kubectl.
 
-  Example: devflow install | kubectl apply -f -
+  Example: waypoint install | kubectl apply -f -
 
 ` + c.Flags().Help()
 

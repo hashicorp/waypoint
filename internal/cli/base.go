@@ -102,15 +102,15 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return nil
 	}
 
-	c.Log.Debug("reading configuration", "path", "devflow.hcl")
-	if err := hclsimple.DecodeFile("devflow.hcl", nil, &cfg); err != nil {
+	c.Log.Debug("reading configuration", "path", "waypoint.hcl")
+	if err := hclsimple.DecodeFile("waypoint.hcl", nil, &cfg); err != nil {
 		c.logError(c.Log, "error decoding configuration", err)
 		return err
 	}
 
 	// Setup our project data directory
-	c.Log.Debug("preparing project directory", "path", ".devflow")
-	projDir, err := datadir.NewProject(".devflow")
+	c.Log.Debug("preparing project directory", "path", ".waypoint")
+	projDir, err := datadir.NewProject(".waypoint")
 	if err != nil {
 		c.logError(c.Log, "error preparing data directory", err)
 		return err

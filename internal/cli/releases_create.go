@@ -163,7 +163,7 @@ func (c *ReleaseCreateCommand) Synopsis() string {
 
 func (c *ReleaseCreateCommand) Help() string {
 	helpText := `
-Usage: devflow release [options] [percentage...]
+Usage: waypoint release [options] [percentage...]
 
   Open a deployment to traffic. This will default to shifting traffic
   100% to the latest deployment. You can specify multiple percentages to
@@ -171,12 +171,12 @@ Usage: devflow release [options] [percentage...]
 
 Examples:
 
-  "devflow release" - will send 100% of traffic to the latest deployment.
+  "waypoint release" - will send 100% of traffic to the latest deployment.
 
-  "devflow release 90" - will send 90% of traffic to the latest deployment
+  "waypoint release 90" - will send 90% of traffic to the latest deployment
   and 10% of traffic to the prior deployment.
 
-  "devflow release '+10'" - will send 10% more traffic to the latest deployment.
+  "waypoint release '+10'" - will send 10% more traffic to the latest deployment.
 
 ` + c.Flags().Help()
 

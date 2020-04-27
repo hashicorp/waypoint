@@ -20,12 +20,12 @@ import (
 
 const (
 	// EnvLogLevel is the env var to set with the log level.
-	EnvLogLevel = "DF_LOG_LEVEL"
+	EnvLogLevel = "WAYPOINT_LOG_LEVEL"
 )
 
 var (
 	// cliName is the name of this CLI.
-	cliName = "devflow"
+	cliName = "waypoint"
 
 	// commonCommands are the commands that are deemed "common" and shown first
 	// in the CLI help output.
