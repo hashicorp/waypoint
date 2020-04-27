@@ -15,7 +15,7 @@ import (
 
 // TestServer starts a singleprocess server and returns the connected client.
 // We use t.Cleanup to ensure resources are automatically cleaned up.
-func TestServer(t testing.T) pb.DevflowClient {
+func TestServer(t testing.T) pb.WaypointClient {
 	impl, err := New(testDB(t))
 	require.NoError(t, err)
 	return server.TestServer(t, impl)

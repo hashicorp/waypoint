@@ -37,7 +37,7 @@ func (op *pushBuildOperation) Init(app *App) (proto.Message, error) {
 
 func (op *pushBuildOperation) Upsert(
 	ctx context.Context,
-	client pb.DevflowClient,
+	client pb.WaypointClient,
 	msg proto.Message,
 ) (proto.Message, error) {
 	resp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{

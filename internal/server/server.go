@@ -65,7 +65,7 @@ type options struct {
 	Logger hclog.Logger
 
 	// Service is the backend service implementation to use for the server.
-	Service pb.DevflowServer
+	Service pb.WaypointServer
 
 	// GRPCListener will setup the gRPC server. If this is nil, then a
 	// random loopback port will be chosen. The gRPC server must run since it
@@ -92,6 +92,6 @@ func WithGRPC(ln net.Listener) Option {
 }
 
 // WithImpl sets the service implementation to serve.
-func WithImpl(impl pb.DevflowServer) Option {
+func WithImpl(impl pb.WaypointServer) Option {
 	return func(opts *options) { opts.Service = impl }
 }

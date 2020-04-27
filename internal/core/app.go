@@ -36,7 +36,7 @@ type App struct {
 	// to this app vs the project UI.
 	UI terminal.UI
 
-	client        pb.DevflowClient
+	client        pb.WaypointClient
 	source        *component.Source
 	dconfig       component.DeploymentConfig
 	logger        hclog.Logger

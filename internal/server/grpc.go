@@ -26,7 +26,7 @@ func grpcInit(group *run.Group, opts *options) error {
 	)
 
 	// Register our server
-	pb.RegisterDevflowServer(s, opts.Service)
+	pb.RegisterWaypointServer(s, opts.Service)
 
 	// Add our gRPC server to the run group
 	group.Add(func() error {

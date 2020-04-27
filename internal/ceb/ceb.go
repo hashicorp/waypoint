@@ -25,7 +25,7 @@ type CEB struct {
 	id       string
 	logger   hclog.Logger
 	context  context.Context
-	client   pb.DevflowClient
+	client   pb.WaypointClient
 	childCmd *exec.Cmd
 	config   *pb.EntrypointConfig
 	execIdx  int64

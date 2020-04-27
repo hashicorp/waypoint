@@ -21,7 +21,7 @@ import (
 // TODO: test
 func (s *service) EntrypointConfig(
 	req *pb.EntrypointConfigRequest,
-	srv pb.Devflow_EntrypointConfigServer,
+	srv pb.Waypoint_EntrypointConfigServer,
 ) error {
 	log := hclog.FromContext(srv.Context())
 
@@ -89,7 +89,7 @@ func (s *service) EntrypointConfig(
 
 // TODO: test
 func (s *service) EntrypointLogStream(
-	server pb.Devflow_EntrypointLogStreamServer,
+	server pb.Waypoint_EntrypointLogStreamServer,
 ) error {
 	log := hclog.FromContext(server.Context())
 
@@ -134,7 +134,7 @@ func (s *service) EntrypointLogStream(
 
 // TODO: test
 func (s *service) EntrypointExecStream(
-	server pb.Devflow_EntrypointExecStreamServer,
+	server pb.Waypoint_EntrypointExecStreamServer,
 ) error {
 	log := hclog.FromContext(server.Context())
 

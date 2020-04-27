@@ -13,7 +13,7 @@ import (
 
 // TestServer starts a server and returns a gRPC client to that server.
 // We use t.Cleanup to ensure resources are automatically cleaned up.
-func TestServer(t testing.T, impl pb.DevflowServer) pb.DevflowClient {
+func TestServer(t testing.T, impl pb.WaypointServer) pb.WaypointClient {
 	require := require.New(t)
 
 	// Listen on a random port
@@ -38,5 +38,5 @@ func TestServer(t testing.T, impl pb.DevflowServer) pb.DevflowClient {
 	require.NoError(err)
 	t.Cleanup(func() { conn.Close() })
 
-	return pb.NewDevflowClient(conn)
+	return pb.NewWaypointClient(conn)
 }

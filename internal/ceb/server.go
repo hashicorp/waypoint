@@ -30,6 +30,6 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config) error {
 	ceb.cleanup(func() { conn.Close() })
 
 	// Init our client
-	ceb.client = pb.NewDevflowClient(conn)
+	ceb.client = pb.NewWaypointClient(conn)
 	return nil
 }

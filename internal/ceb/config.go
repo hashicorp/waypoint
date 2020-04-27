@@ -55,7 +55,7 @@ func (ceb *CEB) watchConfig(ch <-chan *pb.EntrypointConfig) {
 
 func (ceb *CEB) recvConfig(
 	ctx context.Context,
-	client pb.Devflow_EntrypointConfigClient,
+	client pb.Waypoint_EntrypointConfigClient,
 	ch chan<- *pb.EntrypointConfig,
 ) {
 	log := ceb.logger.Named("config_recv")

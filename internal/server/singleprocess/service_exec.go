@@ -13,7 +13,7 @@ import (
 
 // TODO: test
 func (s *service) StartExecStream(
-	srv pb.Devflow_StartExecStreamServer,
+	srv pb.Waypoint_StartExecStreamServer,
 ) error {
 	log := hclog.FromContext(srv.Context())
 

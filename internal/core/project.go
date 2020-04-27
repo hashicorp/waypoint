@@ -28,7 +28,7 @@ type Project struct {
 	factories map[component.Type]*mapper.Factory
 	dir       *datadir.Project
 	mappers   []*mapper.Func
-	client    pb.DevflowClient
+	client    pb.WaypointClient
 	dconfig   component.DeploymentConfig
 
 	// This lock only needs to be held currently to protect localClosers.
@@ -109,7 +109,7 @@ func (p *Project) App(name string) (*App, error) {
 }
 
 // Client returns the API client for the backend server.
-func (p *Project) Client() pb.DevflowClient {
+func (p *Project) Client() pb.WaypointClient {
 	return p.client
 }
 

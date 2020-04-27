@@ -21,7 +21,7 @@ type service struct {
 
 // New returns a devflow server implementation that uses BotlDB plus
 // in-memory locks to operate safely.
-func New(db *bolt.DB) (pb.DevflowServer, error) {
+func New(db *bolt.DB) (pb.WaypointServer, error) {
 	// Initialize our DB
 	if err := dbInit(db); err != nil {
 		return nil, err
@@ -36,4 +36,4 @@ func New(db *bolt.DB) (pb.DevflowServer, error) {
 	return &service{db: db, state: st}, nil
 }
 
-var _ pb.DevflowServer = (*service)(nil)
+var _ pb.WaypointServer = (*service)(nil)

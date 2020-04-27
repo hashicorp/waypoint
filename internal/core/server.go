@@ -43,7 +43,7 @@ func (p *Project) initServer(ctx context.Context, opts *options) error {
 	p.localClosers = append(p.localClosers, conn)
 
 	// Init our client
-	p.client = pb.NewDevflowClient(conn)
+	p.client = pb.NewWaypointClient(conn)
 
 	// Set our deployment config. For now we just set this to what was
 	// configured for the application. In the future we probably want to
@@ -129,7 +129,7 @@ func (p *Project) initLocalServer(ctx context.Context) error {
 	p.localClosers = append(p.localClosers, conn)
 
 	// Init our client
-	p.client = pb.NewDevflowClient(conn)
+	p.client = pb.NewWaypointClient(conn)
 
 	// Success, nil our closers so we don't defer close them
 	closers = nil

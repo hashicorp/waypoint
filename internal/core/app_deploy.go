@@ -42,7 +42,7 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 
 func (op *deployOperation) Upsert(
 	ctx context.Context,
-	client pb.DevflowClient,
+	client pb.WaypointClient,
 	msg proto.Message,
 ) (proto.Message, error) {
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{

@@ -15,7 +15,7 @@ import (
 // network errors.
 type Viewer struct {
 	// Stream is the log stream client to use.
-	Stream pb.Devflow_GetLogStreamClient
+	Stream pb.Waypoint_GetLogStreamClient
 }
 
 // NextLogBatch implements component.LogViewer

@@ -13,7 +13,7 @@ import (
 
 type Client struct {
 	Context      context.Context
-	Client       pb.DevflowClient
+	Client       pb.WaypointClient
 	DeploymentId string
 	Args         []string
 	Stdin        io.Reader

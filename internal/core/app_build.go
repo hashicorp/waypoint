@@ -34,7 +34,7 @@ func (op *buildOperation) Init(app *App) (proto.Message, error) {
 
 func (op *buildOperation) Upsert(
 	ctx context.Context,
-	client pb.DevflowClient,
+	client pb.WaypointClient,
 	msg proto.Message,
 ) (proto.Message, error) {
 	resp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{

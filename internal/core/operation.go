@@ -21,7 +21,7 @@ type operation interface {
 	Init(*App) (proto.Message, error)
 
 	// Upsert performs an upsert operation for some metadata
-	Upsert(context.Context, pb.DevflowClient, proto.Message) (proto.Message, error)
+	Upsert(context.Context, pb.WaypointClient, proto.Message) (proto.Message, error)
 
 	// Do performs the actual operation and returns the result that you
 	// want to return from the operation. This result will be marshaled into

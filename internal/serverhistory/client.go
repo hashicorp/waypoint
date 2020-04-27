@@ -14,7 +14,7 @@ import (
 
 // Client implements history.Client and provides history using a backend server.
 type Client struct {
-	APIClient pb.DevflowClient // Client to the API server
+	APIClient pb.WaypointClient // Client to the API server
 	MapperSet mapper.Set       // Set of mappers we can use for type conversion
 }
 

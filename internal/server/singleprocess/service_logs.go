@@ -12,7 +12,7 @@ import (
 // TODO: test
 func (s *service) GetLogStream(
 	req *pb.GetLogStreamRequest,
-	srv pb.Devflow_GetLogStreamServer,
+	srv pb.Waypoint_GetLogStreamServer,
 ) error {
 	log := hclog.FromContext(srv.Context()).With("deployment_id", req.DeploymentId)
 

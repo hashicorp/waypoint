@@ -47,7 +47,7 @@ func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 
 func (op *releaseOperation) Upsert(
 	ctx context.Context,
-	client pb.DevflowClient,
+	client pb.WaypointClient,
 	msg proto.Message,
 ) (proto.Message, error) {
 	resp, err := client.UpsertRelease(ctx, &pb.UpsertReleaseRequest{
