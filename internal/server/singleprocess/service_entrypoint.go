@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"io"
 	"strings"
 	"sync/atomic"
 
@@ -179,7 +180,16 @@ func (s *service) EntrypointExecStream(
 		for {
 			log.Trace("waiting for entrypoint exec event")
 			req, err := server.Recv()
+			if err == io.EOF {
+				// On EOF, this means the client closed their write side.
+				// In this case, we assume we have exited and exit accordingly.
+				return
+			}
+
 			if err != nil {
+				// For any other error, we send the error along and exit the
+				// read loop. The sent error will be picked up and sent back
+				// as a result to the client.
 				errCh <- err
 				return
 			}

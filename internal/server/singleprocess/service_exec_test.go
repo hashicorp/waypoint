@@ -68,6 +68,7 @@ func TestServiceStartExecStream_start(t *testing.T) {
 
 	// Get our instance exec value
 	exec := testGetInstanceExec(t, impl, instanceId)
+	require.Equal([]string{"foo", "bar"}, exec.Args)
 
 	// Close send
 	require.NoError(stream.CloseSend())
