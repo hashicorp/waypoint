@@ -51,7 +51,7 @@ func (c *Client) Run() (int, error) {
 			if err != nil {
 				return 0, err
 			}
-			defer func() { _ = terminal.Restore(int(f.Fd()), oldState) }()
+			defer terminal.Restore(int(f.Fd()), oldState)
 		}
 	}
 
