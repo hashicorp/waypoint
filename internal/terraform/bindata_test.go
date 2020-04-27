@@ -7,9 +7,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"net/http"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -77,7 +77,6 @@ func (fi bindataFileInfo) IsDir() bool {
 func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
-
 
 type assetFile struct {
 	*bytes.Reader

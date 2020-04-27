@@ -17,8 +17,8 @@ import (
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/securetunnel"
-	"github.com/mattn/go-isatty"
 	"github.com/hashicorp/waypoint/builtin/lambda/runner"
+	"github.com/mattn/go-isatty"
 	"golang.org/x/crypto/ssh/terminal"
 )
 

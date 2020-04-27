@@ -18,10 +18,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/go-hclog"
-	"github.com/mattn/go-isatty"
 	"github.com/hashicorp/waypoint/builtin/lambda/runner"
 	"github.com/hashicorp/waypoint/sdk/component"
 	sdkterminal "github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh/terminal"
 )

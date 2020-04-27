@@ -1,4 +1,4 @@
-module github.com/mitchellh/devflow
+module github.com/hashicorp/waypoint
 
 go 1.13
 
