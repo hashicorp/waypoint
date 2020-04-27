@@ -130,26 +130,23 @@ func (c *Client) Run() (int, error) {
 				return int(event.Exit.Code), nil
 			}
 
-			/*
-				TODO: send this once the server side handles this
-					case <-winchCh:
-						// Window change, send new size
-						ws, err := pty.GetsizeFull(ptyF)
-						if err != nil {
-							// Ignore errors
-							continue
-						}
+		case <-winchCh:
+			// Window change, send new size
+			ws, err := pty.GetsizeFull(ptyF)
+			if err != nil {
+				// Ignore errors
+				continue
+			}
 
-						// Send the new window size
-						if err := client.Send(&pb.ExecStreamRequest{
-							Event: &pb.ExecStreamRequest_Winch{
-								Winch: internalptypes.WinsizeProto(ws),
-							},
-						}); err != nil {
-							// Ignore this error
-							continue
-						}
-			*/
+			// Send the new window size
+			if err := client.Send(&pb.ExecStreamRequest{
+				Event: &pb.ExecStreamRequest_Winch{
+					Winch: internalptypes.WinsizeProto(ws),
+				},
+			}); err != nil {
+				// Ignore this error
+				continue
+			}
 
 		case <-ctx.Done():
 			return 1, nil

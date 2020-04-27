@@ -498,5 +498,8 @@ message EntrypointExecRequest {
 }
 
 message EntrypointExecResponse {
-  bytes data = 1;
+  oneof event {
+    bytes input = 1;
+    ExecStreamRequest.WindowSize winch = 2;
+  }
 }

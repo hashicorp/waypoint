@@ -1,7 +1,6 @@
 package state
 
 import (
-	"io"
 	"sync/atomic"
 
 	"github.com/hashicorp/go-memdb"
@@ -56,9 +55,9 @@ type InstanceExec struct {
 	Args []string
 	Pty  *pb.ExecStreamRequest_PTY
 
-	Reader    io.Reader
-	EventCh   chan<- *pb.EntrypointExecRequest
-	Connected uint32
+	ClientEventCh     <-chan *pb.ExecStreamRequest
+	EntrypointEventCh chan<- *pb.EntrypointExecRequest
+	Connected         uint32
 }
 
 func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) error {

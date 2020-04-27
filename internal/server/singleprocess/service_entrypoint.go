@@ -1,15 +1,13 @@
 package singleprocess
 
 import (
-	"io"
+	"context"
 	"strings"
 	"sync/atomic"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
-	"github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -166,39 +164,97 @@ func (s *service) EntrypointExecStream(
 
 	// Always close the event channel which signals to the reader end that
 	// we are done.
-	defer close(exec.EventCh)
+	defer close(exec.EntrypointEventCh)
 
-	// Connect the reader to send data down
-	go io.Copy(&grpc_net_conn.Conn{
-		Stream:  server,
-		Request: &pb.EntrypointExecResponse{},
-		Encode: grpc_net_conn.SimpleEncoder(func(msg proto.Message) *[]byte {
-			return &msg.(*pb.EntrypointExecResponse).Data
-		}),
-	}, exec.Reader)
+	// Create a context we can use to cancel
+	ctx, cancel := context.WithCancel(server.Context())
+	defer cancel()
+
+	// Create a goroutine that just waits for events from the entrypoint
+	// and sends them along to the client side.
+	errCh := make(chan error, 1)
+	go func() {
+		defer cancel()
+
+		for {
+			log.Trace("waiting for entrypoint exec event")
+			req, err := server.Recv()
+			if err != nil {
+				errCh <- err
+				return
+			}
+			log.Trace("entrypoint event received", "event", req.Event)
+
+			// Send the event along
+			select {
+			case exec.EntrypointEventCh <- req:
+			case <-ctx.Done():
+				return
+			}
+
+			// If this is an exit or error event then we also exit this loop now.
+			switch event := req.Event.(type) {
+			case *pb.EntrypointExecRequest_Exit_:
+				log.Debug("exec stream exiting due to exit message", "code", event.Exit.Code)
+				return
+			case *pb.EntrypointExecRequest_Error_:
+				log.Debug("exec stream exiting due to client error",
+					"error", event.Error.Error.Message)
+				return
+			}
+		}
+	}()
 
 	// Loop through our receive loop
 	for {
-		log.Trace("waiting for entrypoint exec event")
-		req, err := server.Recv()
-		if err != nil {
-			// TODO: error handling
+		select {
+		case <-ctx.Done():
+			return nil
+
+		case err := <-errCh:
 			return err
+
+		case req, active := <-exec.ClientEventCh:
+			if !active {
+				log.Debug("client event channel closed, exiting")
+				return nil
+			}
+
+			if err := s.handleClientExecRequest(log, server, req); err != nil {
+				return err
+			}
 		}
-		log.Trace("entrypoint event received", "event", req.Event)
+	}
+}
 
-		// Send the event
-		exec.EventCh <- req
+func (s *service) handleClientExecRequest(
+	log hclog.Logger,
+	srv pb.Waypoint_EntrypointExecStreamServer,
+	req *pb.ExecStreamRequest,
+) error {
+	log.Trace("event received from client", "event", req.Event)
+	var send *pb.EntrypointExecResponse
+	switch event := req.Event.(type) {
+	case *pb.ExecStreamRequest_Input_:
+		send = &pb.EntrypointExecResponse{
+			Event: &pb.EntrypointExecResponse_Input{
+				Input: event.Input.Data,
+			},
+		}
 
-		// If this is an exit or error event then we also exit this loop now.
-		switch event := req.Event.(type) {
-		case *pb.EntrypointExecRequest_Exit_:
-			log.Debug("exec stream exiting due to exit message", "code", event.Exit.Code)
-			return nil
-		case *pb.EntrypointExecRequest_Error_:
-			log.Debug("exec stream exiting due to client error",
-				"error", event.Error.Error.Message)
-			return nil
+	case *pb.ExecStreamRequest_Winch:
+		send = &pb.EntrypointExecResponse{
+			Event: &pb.EntrypointExecResponse_Winch{
+				Winch: event.Winch,
+			},
+		}
+	}
+
+	// Send our response
+	if send != nil {
+		if err := srv.Send(send); err != nil {
+			log.Warn("stream error", "err", err)
+			return err
 		}
 	}
 

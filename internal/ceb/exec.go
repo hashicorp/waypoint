@@ -1,6 +1,7 @@
 package ceb
 
 import (
+	"bytes"
 	"io"
 	"os"
 	"os/exec"
@@ -85,8 +86,26 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 		}
 	}
 
+	// Create our pipe for stdin so that we can send data
+	stdinR, stdinW := io.Pipe()
+	defer stdinW.Close()
+
+	// Start our receive data loop
+	respCh := make(chan *pb.EntrypointExecResponse)
+	go func() {
+		for {
+			resp, err := client.Recv()
+			if err != nil {
+				// TODO
+				return
+			}
+
+			respCh <- resp
+		}
+	}()
+
 	// We need to modify our command so the input/output is all over gRPC
-	cmd.Stdin = ceb.execInputReader(client)
+	cmd.Stdin = stdinR
 	cmd.Stdout = ceb.execOutputWriter(client, pb.EntrypointExecRequest_Output_STDOUT)
 	cmd.Stderr = ceb.execOutputWriter(client, pb.EntrypointExecRequest_Output_STDERR)
 
@@ -157,31 +176,59 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 		}
 	}
 
-	// Run the command and wait for it to end
-	exitCode := 0
-	err = cmd.Wait()
-	if err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				exitCode = status.ExitStatus()
+	// Wait for the command to exit in a goroutine so we can handle
+	// concurrent events happening below.
+	cmdExitCh := make(chan error, 1)
+	go func() {
+		cmdExitCh <- cmd.Wait()
+	}()
+
+	for {
+		select {
+		case resp := <-respCh:
+			switch event := resp.Event.(type) {
+			case *pb.EntrypointExecResponse_Input:
+				// Copy the input to stdin
+				log.Trace("input received", "data", event.Input)
+				io.Copy(stdinW, bytes.NewReader(event.Input))
+
+			case *pb.EntrypointExecResponse_Winch:
+				log.Debug("window size change event, changing")
+				if err := pty.Setsize(ptyFile, internalptypes.Winsize(event.Winch)); err != nil {
+					log.Warn("error changing window size, this doesn't quit the stream",
+						"err", err)
+				}
 			}
-		} else {
-			exitCode = 1
+
+		case err := <-cmdExitCh:
+			var exitCode int
+			if err != nil {
+				if exiterr, ok := err.(*exec.ExitError); ok {
+					if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+						exitCode = status.ExitStatus()
+					}
+				} else {
+					exitCode = 1
+				}
+			}
+
+			// Send our exit code
+			log.Info("exec stream exited", "code", exitCode)
+			if err := client.Send(&pb.EntrypointExecRequest{
+				Event: &pb.EntrypointExecRequest_Exit_{
+					Exit: &pb.EntrypointExecRequest_Exit{
+						Code: int32(exitCode),
+					},
+				},
+			}); err != nil {
+				log.Warn("error sending exit message", "err", err)
+			}
+
+			// Exit!
+			return
 		}
 	}
 
-	// Send our exit code
-	log.Info("exec stream exited", "code", exitCode)
-	if err := client.Send(&pb.EntrypointExecRequest{
-		Event: &pb.EntrypointExecRequest_Exit_{
-			Exit: &pb.EntrypointExecRequest_Exit{
-				Code: int32(exitCode),
-			},
-		},
-	}); err != nil {
-		log.Warn("error sending exit message", "err", err)
-		return
-	}
 }
 
 func (ceb *CEB) execOutputWriter(
@@ -202,18 +249,6 @@ func (ceb *CEB) execOutputWriter(
 			}
 
 			return &req.Event.(*pb.EntrypointExecRequest_Output_).Output.Data
-		}),
-	}
-}
-
-func (ceb *CEB) execInputReader(
-	client grpc.ClientStream,
-) io.Reader {
-	return &grpc_net_conn.Conn{
-		Stream:   client,
-		Response: &pb.EntrypointExecResponse{},
-		Decode: grpc_net_conn.SimpleDecoder(func(msg proto.Message) *[]byte {
-			return &msg.(*pb.EntrypointExecResponse).Data
 		}),
 	}
 }

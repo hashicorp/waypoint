@@ -1,9 +1,7 @@
 package singleprocess
 
 import (
-	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
-	"github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -34,18 +32,13 @@ func (s *service) StartExecStream(
 	// Create our exec. We have to populate everything here first because
 	// once we register, this will trigger any watchers to be notified of
 	// a change and the instance should try to connect to us.
+	clientEventCh := make(chan *pb.ExecStreamRequest)
 	eventCh := make(chan *pb.EntrypointExecRequest)
 	execRec := &state.InstanceExec{
-		Args: start.Start.Args,
-		Pty:  start.Start.Pty,
-		Reader: &grpc_net_conn.Conn{
-			Stream:   srv,
-			Response: &pb.ExecStreamRequest{},
-			Decode: grpc_net_conn.SimpleDecoder(func(msg proto.Message) *[]byte {
-				return &msg.(*pb.ExecStreamRequest).Event.(*pb.ExecStreamRequest_Input_).Input.Data
-			}),
-		},
-		EventCh: eventCh,
+		Args:              start.Start.Args,
+		Pty:               start.Start.Pty,
+		ClientEventCh:     clientEventCh,
+		EntrypointEventCh: eventCh,
 	}
 
 	// Register the exec session
@@ -57,55 +50,77 @@ func (s *service) StartExecStream(
 	// Make sure we always deregister it
 	defer s.state.InstanceExecDelete(execRec.Id)
 
+	// Start our receive loop to read data from the client
+	go func() {
+		defer close(clientEventCh)
+		for {
+			resp, err := srv.Recv()
+			if err != nil {
+				// TODO
+				continue
+			}
+
+			clientEventCh <- resp
+		}
+	}()
+
 	// Loop through and read events
 	for {
-		log.Trace("waiting for exec event")
-		var entryReq *pb.EntrypointExecRequest
-		var notClosed bool
 		select {
 		case <-srv.Context().Done():
 			// TODO: we need to notify the entrypoint side that we're over
 			log.Debug("context ended")
 			return nil
 
-		case entryReq, notClosed = <-eventCh:
+		case entryReq, active := <-eventCh:
 			// We got an event, exit out of the select and determine our action
-		}
-
-		if !notClosed {
-			log.Debug("event channel closed, exiting")
-			return nil
-		}
-
-		log.Trace("event received", "event", entryReq.Event)
-		var send *pb.ExecStreamResponse
-		switch event := entryReq.Event.(type) {
-		case *pb.EntrypointExecRequest_Output_:
-			send = &pb.ExecStreamResponse{
-				Event: &pb.ExecStreamResponse_Output_{
-					Output: &pb.ExecStreamResponse_Output{
-						Channel: pb.ExecStreamResponse_Output_Channel(event.Output.Channel),
-						Data:    event.Output.Data,
-					},
-				},
+			if !active {
+				log.Debug("event channel closed, exiting")
+				return nil
 			}
 
-		case *pb.EntrypointExecRequest_Exit_:
-			send = &pb.ExecStreamResponse{
-				Event: &pb.ExecStreamResponse_Exit_{
-					Exit: &pb.ExecStreamResponse_Exit{
-						Code: event.Exit.Code,
-					},
-				},
-			}
-		}
-
-		// Send our response
-		if send != nil {
-			if err := srv.Send(send); err != nil {
-				log.Warn("stream error", "err", err)
+			if err := s.handleEntrypointExecRequest(log, srv, entryReq); err != nil {
 				return err
 			}
 		}
 	}
+}
+
+func (s *service) handleEntrypointExecRequest(
+	log hclog.Logger,
+	srv pb.Waypoint_StartExecStreamServer,
+	entryReq *pb.EntrypointExecRequest,
+) error {
+	log.Trace("event received from entrypoint", "event", entryReq.Event)
+	var send *pb.ExecStreamResponse
+	switch event := entryReq.Event.(type) {
+	case *pb.EntrypointExecRequest_Output_:
+		send = &pb.ExecStreamResponse{
+			Event: &pb.ExecStreamResponse_Output_{
+				Output: &pb.ExecStreamResponse_Output{
+					Channel: pb.ExecStreamResponse_Output_Channel(event.Output.Channel),
+					Data:    event.Output.Data,
+				},
+			},
+		}
+
+	case *pb.EntrypointExecRequest_Exit_:
+		send = &pb.ExecStreamResponse{
+			Event: &pb.ExecStreamResponse_Exit_{
+				Exit: &pb.ExecStreamResponse_Exit{
+					Code: event.Exit.Code,
+				},
+			},
+		}
+	}
+
+	// Send our response
+	if send != nil {
+		if err := srv.Send(send); err != nil {
+			log.Warn("stream error", "err", err)
+			return err
+		}
+	}
+
+	return nil
 }
