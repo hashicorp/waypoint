@@ -43,7 +43,7 @@ func realMain() int {
 	)
 	if err != nil {
 		fmt.Fprintf(flag.CommandLine.Output(),
-			"Error initializing Devflow entrypoint: %s\n", err)
+			"Error initializing Waypoint entrypoint: %s\n", err)
 		return 1
 	}
 
@@ -60,7 +60,7 @@ func usage() {
 const usageText = `
 Usage: %[1]s [cmd] [args...]
 
-    This the custom entrypoint to support Devflow. It will re-execute any
-    command given after configuring the environment for usage with Devflow.
+    This the custom entrypoint to support Waypoint. It will re-execute any
+    command given after configuring the environment for usage with Waypoint.
 
 `
