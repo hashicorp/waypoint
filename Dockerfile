@@ -1,6 +1,6 @@
 FROM scratch
 
-COPY ./devflow /devflow
-COPY ./devflow-entrypoint /devflow-entrypoint
+COPY ./waypoint /waypoint
+COPY ./waypoint-entrypoint /waypoint-entrypoint
 
-ENTRYPOINT ["/devflow"]
+ENTRYPOINT ["/waypoint"]
