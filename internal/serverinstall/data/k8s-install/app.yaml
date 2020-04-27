@@ -39,7 +39,7 @@ spec:
       containers:
       - name: server
         image: {{ .ServerImage }}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         command:
         - "/waypoint"
         args:

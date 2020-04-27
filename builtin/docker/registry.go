@@ -45,7 +45,7 @@ func (r *Registry) Push(
 		}
 	}
 
-	{
+	if !r.config.Local {
 		// Push it
 		cmd := exec.CommandContext(ctx, "docker", "push", target.Name())
 		cmd.Stdout = stdout
@@ -65,4 +65,7 @@ type Config struct {
 
 	// Tag is the tag to apply to the image.
 	Tag string `hcl:"tag,attr"`
+
+	// Local if true will not push this image to a remote registry.
+	Local bool `hcl:"local,optional"`
 }

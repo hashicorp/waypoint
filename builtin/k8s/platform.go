@@ -107,7 +107,7 @@ func (p *Platform) Deploy(
 			corev1.Container{
 				Name:            result.Name,
 				Image:           img.Name(),
-				ImagePullPolicy: corev1.PullAlways,
+				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{
 					corev1.ContainerPort{
 						Name:          "http",

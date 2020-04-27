@@ -32,4 +32,9 @@ type Component struct {
 type Server struct {
 	Address  string `hcl:"address,attr"`
 	Insecure bool   `hcl:"insecure,optional"`
+
+	// AddressInternal is a temporary config to work with local deployments
+	// on platforms such as Docker for Mac. We need to discuss a more
+	// long term approach to this.
+	AddressInternal string `hcl:"address_internal,optional"`
 }

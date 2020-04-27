@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"syscall"
 
+	//"github.com/creack/pty"
 	"github.com/golang/protobuf/proto"
 	"github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc"

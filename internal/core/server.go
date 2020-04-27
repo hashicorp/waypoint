@@ -53,6 +53,9 @@ func (p *Project) initServer(ctx context.Context, opts *options) error {
 		ServerAddr:     cfg.Address,
 		ServerInsecure: cfg.Insecure,
 	}
+	if v := cfg.AddressInternal; v != "" {
+		p.dconfig.ServerAddr = v
+	}
 
 	return nil
 }
