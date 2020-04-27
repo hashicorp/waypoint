@@ -1,6 +1,8 @@
 package singleprocess
 
 import (
+	"io"
+
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -51,13 +53,22 @@ func (s *service) StartExecStream(
 	defer s.state.InstanceExecDelete(execRec.Id)
 
 	// Start our receive loop to read data from the client
+	clientCloseCh := make(chan error, 1)
 	go func() {
 		defer close(clientEventCh)
+		defer close(clientCloseCh)
 		for {
 			resp, err := srv.Recv()
+			if err == io.EOF {
+				// This means our client closed the stream. if the client
+				// closed the stream, we want to end the exec stream completely.
+				return
+			}
+
 			if err != nil {
-				// TODO
-				continue
+				// Non EOF errors we will just send the error down and exit.
+				clientCloseCh <- err
+				return
 			}
 
 			clientEventCh <- resp
@@ -68,9 +79,14 @@ func (s *service) StartExecStream(
 	for {
 		select {
 		case <-srv.Context().Done():
-			// TODO: we need to notify the entrypoint side that we're over
-			log.Debug("context ended")
+			// The context was closed so we just exit. This will trigger
+			// the EOF in the recv goroutine which will end the entrypoint
+			// side as well.
 			return nil
+
+		case err := <-clientCloseCh:
+			// The client closed the connection so we want to exit the stream.
+			return err
 
 		case entryReq, active := <-eventCh:
 			// We got an event, exit out of the select and determine our action
@@ -79,7 +95,8 @@ func (s *service) StartExecStream(
 				return nil
 			}
 
-			if err := s.handleEntrypointExecRequest(log, srv, entryReq); err != nil {
+			exit, err := s.handleEntrypointExecRequest(log, srv, entryReq)
+			if exit || err != nil {
 				return err
 			}
 		}
@@ -90,9 +107,10 @@ func (s *service) handleEntrypointExecRequest(
 	log hclog.Logger,
 	srv pb.Waypoint_StartExecStreamServer,
 	entryReq *pb.EntrypointExecRequest,
-) error {
+) (bool, error) {
 	log.Trace("event received from entrypoint", "event", entryReq.Event)
 	var send *pb.ExecStreamResponse
+	exit := false
 	switch event := entryReq.Event.(type) {
 	case *pb.EntrypointExecRequest_Output_:
 		send = &pb.ExecStreamResponse{
@@ -105,6 +123,7 @@ func (s *service) handleEntrypointExecRequest(
 		}
 
 	case *pb.EntrypointExecRequest_Exit_:
+		exit = true
 		send = &pb.ExecStreamResponse{
 			Event: &pb.ExecStreamResponse_Exit_{
 				Exit: &pb.ExecStreamResponse_Exit{
@@ -118,9 +137,9 @@ func (s *service) handleEntrypointExecRequest(
 	if send != nil {
 		if err := srv.Send(send); err != nil {
 			log.Warn("stream error", "err", err)
-			return err
+			return false, err
 		}
 	}
 
-	return nil
+	return exit, nil
 }
