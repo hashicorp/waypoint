@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
-// TODO: test
 func (s *service) StartExecStream(
 	srv pb.Waypoint_StartExecStreamServer,
 ) error {

@@ -14,7 +14,7 @@ bin/linux: # create Linux binaries
 .PHONY: docker/mitchellh
 docker/mitchellh: bin/linux
 	docker build -t gcr.io/mitchellh-test/waypoint:latest .
-	docker push gcr.io/mitchellh-test/waypoint:latest
+	#docker push gcr.io/mitchellh-test/waypoint:latest
 
 .PHONY: k8s/mitchellh
 k8s/mitchellh:
