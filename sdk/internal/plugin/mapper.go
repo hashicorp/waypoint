@@ -13,10 +13,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
-	"github.com/mitchellh/devflow/sdk/internal/funcspec"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/protomappers"
+	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // MapperPlugin implements plugin.Plugin (specifically GRPCPlugin) for

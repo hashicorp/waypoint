@@ -4,8 +4,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/component"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // Release implements component.Release.

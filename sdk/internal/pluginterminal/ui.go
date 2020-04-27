@@ -3,8 +3,8 @@ package pluginterminal
 import (
 	"io"
 
-	"github.com/mitchellh/devflow/sdk/internal/stdio"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/sdk/internal/stdio"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // UI is a wrapper around the basic terminal UI so that we can

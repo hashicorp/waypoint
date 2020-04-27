@@ -3,7 +3,7 @@ package pluginargs
 
 import (
 	"github.com/hashicorp/go-plugin"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 )
 
 // Internal is a struct that is available to mappers. This is an internal-only

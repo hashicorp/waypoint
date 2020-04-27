@@ -19,9 +19,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mattn/go-isatty"
-	"github.com/mitchellh/devflow/builtin/lambda/runner"
-	"github.com/mitchellh/devflow/sdk/component"
-	sdkterminal "github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/lambda/runner"
+	"github.com/hashicorp/waypoint/sdk/component"
+	sdkterminal "github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh/terminal"
 )

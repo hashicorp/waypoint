@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"github.com/mitchellh/devflow/internal/plugin"
-	"github.com/mitchellh/devflow/sdk"
+	"github.com/hashicorp/waypoint/internal/plugin"
+	"github.com/hashicorp/waypoint/sdk"
 )
 
 type PluginCommand struct {

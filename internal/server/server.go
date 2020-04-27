@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/oklog/run"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 //go:generate sh -c "protoc -I../../vendor/proto/api-common-protos -Iproto/ proto/*.proto --go_out=plugins=grpc:gen/"

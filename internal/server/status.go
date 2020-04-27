@@ -5,7 +5,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // NewStatus returns a new Status message with the given initial state.

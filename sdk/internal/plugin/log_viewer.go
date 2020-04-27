@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/component"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // logViewerClient is an implementation of component.LogViewer over gRPC.

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/sdk/datadir"
+	"github.com/hashicorp/waypoint/sdk/datadir"
 )
 
 //go:generate go-bindata -fs -nomemcopy -nometadata -pkg terraform -o bindata_test.go -prefix testdata/ testdata/...

@@ -9,10 +9,10 @@ import (
 	"github.com/boltdb/bolt"
 	"google.golang.org/grpc"
 
-	"github.com/mitchellh/devflow/internal/server"
-	pb "github.com/mitchellh/devflow/internal/server/gen"
-	"github.com/mitchellh/devflow/internal/server/singleprocess"
-	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/hashicorp/waypoint/internal/server"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 // initServer initializes our connection to the server either by connecting

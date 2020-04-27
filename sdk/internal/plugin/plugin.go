@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 )
 
 // Handshake is a common handshake that is shared by plugin and host.

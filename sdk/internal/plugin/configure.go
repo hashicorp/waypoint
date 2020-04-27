@@ -8,8 +8,8 @@ import (
 	"github.com/mitchellh/protostructure"
 	"google.golang.org/grpc"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/component"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // configStruct is the shared helper to implement the ConfigStruct RPC call

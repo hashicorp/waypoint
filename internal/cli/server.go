@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/posener/complete"
 
-	"github.com/mitchellh/devflow/internal/config"
-	"github.com/mitchellh/devflow/internal/pkg/flag"
-	"github.com/mitchellh/devflow/internal/server"
-	"github.com/mitchellh/devflow/internal/server/singleprocess"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/server"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type ServerCommand struct {

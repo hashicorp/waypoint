@@ -7,10 +7,10 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/history"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/history"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // HistoryPlugin implements plugin.Plugin (specifically GRPCPlugin) for

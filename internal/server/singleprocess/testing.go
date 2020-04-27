@@ -9,8 +9,8 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/internal/server"
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // TestServer starts a singleprocess server and returns the connected client.

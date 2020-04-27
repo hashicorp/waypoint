@@ -3,7 +3,7 @@ package history
 import (
 	"context"
 
-	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 // Client is the client to access historical information. Component

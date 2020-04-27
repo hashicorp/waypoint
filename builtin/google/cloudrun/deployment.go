@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 // apiResource returns the GCP API "resource" string format for API calls.

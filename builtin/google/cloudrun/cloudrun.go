@@ -2,7 +2,7 @@
 package cloudrun
 
 import (
-	"github.com/mitchellh/devflow/sdk"
+	"github.com/hashicorp/waypoint/sdk"
 )
 
 //go:generate sh -c "protoc -I ./ ./*.proto --go_out=plugins=grpc:./"

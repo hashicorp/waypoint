@@ -10,14 +10,14 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/mitchellh/devflow/internal/config"
-	"github.com/mitchellh/devflow/internal/plugin"
-	pb "github.com/mitchellh/devflow/internal/server/gen"
-	"github.com/mitchellh/devflow/internal/serverhistory"
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/datadir"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverhistory"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/datadir"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // App represents a single application and exposes all the operations

@@ -1,7 +1,7 @@
 package docker
 
 import (
-	"github.com/mitchellh/devflow/builtin/pack"
+	"github.com/hashicorp/waypoint/builtin/pack"
 )
 
 // PackImageMapper maps a pack.DockerImage to our Image structure.

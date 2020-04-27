@@ -10,8 +10,8 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/mitchellh/devflow/internal/ceb"
-	"github.com/mitchellh/devflow/internal/pkg/signalcontext"
+	"github.com/hashicorp/waypoint/internal/ceb"
+	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
 )
 
 func main() {

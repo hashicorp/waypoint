@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/stretchr/testify/require"
 
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 func TestSpec(t *testing.T) {

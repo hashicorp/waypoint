@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mitchellh/devflow/internal/cli"
+	"github.com/hashicorp/waypoint/internal/cli"
 )
 
 func main() {

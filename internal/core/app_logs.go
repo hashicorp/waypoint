@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
-	"github.com/mitchellh/devflow/internal/server/logviewer"
-	"github.com/mitchellh/devflow/sdk/component"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/logviewer"
+	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 // Logs returns the log viewer for the given deployment.

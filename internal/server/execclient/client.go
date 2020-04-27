@@ -8,7 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/mitchellh/go-grpc-net-conn"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 type Client struct {

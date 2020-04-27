@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/mitchellh/devflow/internal/server"
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func TestServiceDeployment(t *testing.T) {

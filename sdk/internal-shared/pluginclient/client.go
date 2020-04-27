@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	internalplugin "github.com/mitchellh/devflow/sdk/internal/plugin"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	internalplugin "github.com/hashicorp/waypoint/sdk/internal/plugin"
 )
 
 // ClientConfig returns the base client config to use when connecting

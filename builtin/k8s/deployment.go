@@ -5,7 +5,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 // newDeployment returns the basic structure for a new deployment.

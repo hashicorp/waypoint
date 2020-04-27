@@ -6,9 +6,9 @@ import (
 
 	"github.com/posener/complete"
 
-	"github.com/mitchellh/devflow/internal/pkg/flag"
-	"github.com/mitchellh/devflow/internal/serverinstall"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/serverinstall"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type InstallCommand struct {

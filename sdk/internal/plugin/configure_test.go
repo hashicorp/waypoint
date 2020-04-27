@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/component/mocks"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/component/mocks"
 )
 
 // testConfigurable is a reusable helper that tests that a component implements

@@ -11,7 +11,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type ConsoleClient struct {

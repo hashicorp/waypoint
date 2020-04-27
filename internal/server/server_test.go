@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
-	"github.com/mitchellh/devflow/sdk/component"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 func TestComponentEnum(t *testing.T) {

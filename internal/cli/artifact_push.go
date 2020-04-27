@@ -7,9 +7,9 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
 
-	"github.com/mitchellh/devflow/internal/core"
-	"github.com/mitchellh/devflow/internal/pkg/flag"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/core"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type ArtifactPushCommand struct {

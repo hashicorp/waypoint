@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/component/mocks"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	"github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/component/mocks"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/proto"
 )
 
 func TestLogPlatformLogs(t *testing.T) {

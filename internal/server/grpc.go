@@ -6,7 +6,7 @@ import (
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // grpcInit initializes the gRPC server and adds it to the run group.

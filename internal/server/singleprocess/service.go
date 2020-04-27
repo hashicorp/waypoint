@@ -3,8 +3,8 @@ package singleprocess
 import (
 	"github.com/boltdb/bolt"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
-	"github.com/mitchellh/devflow/internal/server/singleprocess/state"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
 //go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:gen/"

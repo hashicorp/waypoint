@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func (ceb *CEB) startExecGroup(es []*pb.EntrypointConfig_Exec) {

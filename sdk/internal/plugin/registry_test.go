@@ -3,7 +3,7 @@ package plugin
 import (
 	"testing"
 
-	"github.com/mitchellh/devflow/sdk/component/mocks"
+	"github.com/hashicorp/waypoint/sdk/component/mocks"
 )
 
 func TestRegistryConfig(t *testing.T) {

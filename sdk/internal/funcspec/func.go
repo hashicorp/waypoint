@@ -1,8 +1,8 @@
 package funcspec
 
 import (
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // Func takes a FuncSpec and returns a *mapper.Func that can be called

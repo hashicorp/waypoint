@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 // ForType returns an implementation of the given type that supports mocking.

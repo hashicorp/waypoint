@@ -5,11 +5,11 @@ package serverhistory
 import (
 	"context"
 
-	servercomponent "github.com/mitchellh/devflow/internal/server/component"
-	pb "github.com/mitchellh/devflow/internal/server/gen"
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/history"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	servercomponent "github.com/hashicorp/waypoint/internal/server/component"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/history"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 )
 
 // Client implements history.Client and provides history using a backend server.

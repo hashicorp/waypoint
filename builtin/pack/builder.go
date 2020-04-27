@@ -4,8 +4,8 @@ import (
 	"context"
 	"os/exec"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build

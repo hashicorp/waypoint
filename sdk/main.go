@@ -8,10 +8,10 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/mattn/go-colorable"
 
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
-	sdkplugin "github.com/mitchellh/devflow/sdk/internal/plugin"
-	"github.com/mitchellh/devflow/sdk/internal/stdio"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/protomappers"
+	sdkplugin "github.com/hashicorp/waypoint/sdk/internal/plugin"
+	"github.com/hashicorp/waypoint/sdk/internal/stdio"
 )
 
 //go:generate sh -c "protoc -I`go list -m -f \"{{.Dir}}\" github.com/mitchellh/protostructure` -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"

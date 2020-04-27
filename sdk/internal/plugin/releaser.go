@@ -8,11 +8,11 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	"github.com/mitchellh/devflow/sdk/internal/funcspec"
-	"github.com/mitchellh/devflow/sdk/internal/plugincomponent"
-	"github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
+	"github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // ReleaseManagerPlugin implements plugin.Plugin (specifically GRPCPlugin) for

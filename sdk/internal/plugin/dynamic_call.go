@@ -10,7 +10,7 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 )
 
 // callDynamicFunc calls a dynamic (mapper-based) function with the

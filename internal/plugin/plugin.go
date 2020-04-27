@@ -1,15 +1,15 @@
 package plugin
 
 import (
-	"github.com/mitchellh/devflow/sdk"
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 
-	"github.com/mitchellh/devflow/builtin/docker"
-	"github.com/mitchellh/devflow/builtin/google/cloudrun"
-	"github.com/mitchellh/devflow/builtin/k8s"
-	"github.com/mitchellh/devflow/builtin/lambda"
-	"github.com/mitchellh/devflow/builtin/pack"
+	"github.com/hashicorp/waypoint/builtin/docker"
+	"github.com/hashicorp/waypoint/builtin/google/cloudrun"
+	"github.com/hashicorp/waypoint/builtin/k8s"
+	"github.com/hashicorp/waypoint/builtin/lambda"
+	"github.com/hashicorp/waypoint/builtin/pack"
 )
 
 var (

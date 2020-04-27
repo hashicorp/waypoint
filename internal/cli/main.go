@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/mitchellh/cli"
 
-	"github.com/mitchellh/devflow/internal/pkg/signalcontext"
+	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
 )
 
 const (

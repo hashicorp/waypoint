@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 
-	"github.com/mitchellh/devflow/internal/config"
-	"github.com/mitchellh/devflow/internal/core"
-	"github.com/mitchellh/devflow/internal/pkg/flag"
-	"github.com/mitchellh/devflow/sdk/datadir"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/core"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/sdk/datadir"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // baseCommand is embedded in all commands to provide common logic and data.

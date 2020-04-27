@@ -8,8 +8,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // Spec takes a function pointer and generates a FuncSpec from it. The

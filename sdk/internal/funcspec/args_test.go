@@ -8,9 +8,9 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 func TestArgsMapperType_Match(t *testing.T) {

@@ -8,15 +8,15 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"google.golang.org/grpc"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/datadir"
-	"github.com/mitchellh/devflow/sdk/history"
-	pluginhistory "github.com/mitchellh/devflow/sdk/internal/plugin/history"
-	"github.com/mitchellh/devflow/sdk/internal/pluginargs"
-	"github.com/mitchellh/devflow/sdk/internal/plugincomponent"
-	"github.com/mitchellh/devflow/sdk/internal/pluginterminal"
-	pb "github.com/mitchellh/devflow/sdk/proto"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/datadir"
+	"github.com/hashicorp/waypoint/sdk/history"
+	pluginhistory "github.com/hashicorp/waypoint/sdk/internal/plugin/history"
+	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
+	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
+	"github.com/hashicorp/waypoint/sdk/internal/pluginterminal"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // All is the list of all mappers as raw function pointers.

@@ -1,7 +1,7 @@
 package singleprocess
 
 import (
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func statusFilterMatch(

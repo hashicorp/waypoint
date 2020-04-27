@@ -6,7 +6,7 @@ package convert
 import (
 	"reflect"
 
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 )
 
 // Component converts a raw input value to a requested Lookup.Type

@@ -4,7 +4,7 @@ import (
 	"context"
 	"os/exec"
 
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // Registry represents access to a Docker registry.

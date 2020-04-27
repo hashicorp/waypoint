@@ -3,7 +3,7 @@ package ceb
 import (
 	"context"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {

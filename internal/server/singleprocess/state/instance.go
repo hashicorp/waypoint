@@ -5,7 +5,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/mitchellh/devflow/internal/server/logbuffer"
+	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 )
 
 const (

@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/mitchellh/devflow/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
 )
 
 // Option is used to configure Init on baseCommand.

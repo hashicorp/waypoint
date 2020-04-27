@@ -1,8 +1,8 @@
 package history
 
 import (
-	"github.com/mitchellh/devflow/sdk/history"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/history"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // LookupToProto converts a history.Lookup to the proto value.

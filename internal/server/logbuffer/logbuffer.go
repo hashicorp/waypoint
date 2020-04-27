@@ -7,7 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	pb "github.com/mitchellh/devflow/internal/server/gen"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // Entry is an alias to our entry type. We do this to simplify the typing.

@@ -6,7 +6,7 @@ import (
 	//"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/internal/config"
+	"github.com/hashicorp/waypoint/internal/config"
 )
 
 func TestNewProject(t *testing.T) {

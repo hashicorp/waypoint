@@ -9,12 +9,12 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 
-	"github.com/mitchellh/devflow/internal/core"
-	"github.com/mitchellh/devflow/internal/pkg/flag"
-	servercomponent "github.com/mitchellh/devflow/internal/server/component"
-	pb "github.com/mitchellh/devflow/internal/server/gen"
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/core"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	servercomponent "github.com/hashicorp/waypoint/internal/server/component"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type ReleaseCreateCommand struct {

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/mitchellh/devflow/internal/serverinstall/datagen"
+	"github.com/hashicorp/waypoint/internal/serverinstall/datagen"
 )
 
 // Config is the configuration for the Kubernetes installation template.

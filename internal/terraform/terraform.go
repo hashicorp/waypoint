@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/mitchellh/go-linereader"
 
-	"github.com/mitchellh/devflow/internal/pkg/httpfs"
-	"github.com/mitchellh/devflow/sdk/datadir"
+	"github.com/hashicorp/waypoint/internal/pkg/httpfs"
+	"github.com/hashicorp/waypoint/sdk/datadir"
 )
 
 // Terraform is a wrapper for the Terraform executable and operations

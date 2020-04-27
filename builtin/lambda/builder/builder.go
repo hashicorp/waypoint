@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/mitchellh/devflow/builtin/lambda"
+	"github.com/hashicorp/waypoint/builtin/lambda"
 )
 
 var (

@@ -10,10 +10,10 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/posener/complete"
 
-	"github.com/mitchellh/devflow/internal/pkg/flag"
-	pb "github.com/mitchellh/devflow/internal/server/gen"
-	serversort "github.com/mitchellh/devflow/internal/server/sort"
-	"github.com/mitchellh/devflow/sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serversort "github.com/hashicorp/waypoint/internal/server/sort"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type BuildListCommand struct {

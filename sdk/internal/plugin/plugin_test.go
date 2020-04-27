@@ -10,14 +10,14 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/component/mocks"
-	"github.com/mitchellh/devflow/sdk/history"
-	historymocks "github.com/mitchellh/devflow/sdk/history/mocks"
-	"github.com/mitchellh/devflow/sdk/internal-shared/mapper"
-	"github.com/mitchellh/devflow/sdk/internal-shared/protomappers"
-	"github.com/mitchellh/devflow/sdk/internal/testproto"
-	pb "github.com/mitchellh/devflow/sdk/proto"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/component/mocks"
+	"github.com/hashicorp/waypoint/sdk/history"
+	historymocks "github.com/hashicorp/waypoint/sdk/history/mocks"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/hashicorp/waypoint/sdk/internal-shared/protomappers"
+	"github.com/hashicorp/waypoint/sdk/internal/testproto"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 func init() {

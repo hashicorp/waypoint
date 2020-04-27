@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/go-plugin"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mitchellh/devflow/sdk/component"
-	"github.com/mitchellh/devflow/sdk/component/mocks"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/component/mocks"
 )
 
 func TestPlatform_logsPlatform(t *testing.T) {

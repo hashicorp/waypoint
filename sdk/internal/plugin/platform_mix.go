@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"github.com/mitchellh/devflow/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 // This file contains the structs that "mix" different platform types
