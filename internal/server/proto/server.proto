@@ -359,6 +359,7 @@ message ExecStreamRequest {
   oneof event {
     Start start = 1;
     Input input = 2;
+    WindowSize winch = 3;
   }
 
   message Start {
