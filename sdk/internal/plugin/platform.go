@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/caststructure"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -72,11 +73,11 @@ func (p *PlatformPlugin) GRPCClient(
 	var result interface{} = client
 	if platformLog != nil {
 		p.Logger.Info("platform plugin capable of logs")
-		result = &platform_Log{
-			ConfigurableNotify: client,
-			Platform:           client,
-			LogPlatform:        platformLog,
-		}
+		result = caststructure.Must(caststructure.Compose(
+			client, (*component.ConfigurableNotify)(nil),
+			client, (*component.Platform)(nil),
+			platformLog, (*component.LogPlatform)(nil),
+		))
 	}
 
 	return result, nil

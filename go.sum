@@ -215,6 +215,8 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/mattn/go-runewidth v0.0.7 h1:Ei8KR0497xHyKJPAv59M1dkC+rOZCMBJ+t3fZ+twI54=
 github.com/mattn/go-runewidth v0.0.7/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
+github.com/mitchellh/caststructure v0.0.0-20200429234907-c50277f5cbe8 h1:9coW1JmpWnz/uV1UrIoDMbc5M2RLJstcsFCNUeO9LUg=
+github.com/mitchellh/caststructure v0.0.0-20200429234907-c50277f5cbe8/go.mod h1:lXIkF31v8dzBr3rcYEc6YOeVRGI8MgmWsr6n17m/VoI=
 github.com/mitchellh/cli v1.0.0 h1:iGBIsUe3+HZ/AD/Vd7DErOt5sU9fa8Uj7A2s1aggv1Y=
 github.com/mitchellh/cli v1.0.0/go.mod h1:hNIlj7HEI86fIcpObd7a0FcrxTWetlwJDGcceTlRvqc=
 github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8 h1:vYarZ5R8DcSQ4MayciodsBAPc9pVGnFucqOfd+Rfaxw=

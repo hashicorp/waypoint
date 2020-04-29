@@ -38,6 +38,7 @@ require (
 	github.com/kr/text v0.1.0
 	github.com/mattn/go-colorable v0.1.4
 	github.com/mattn/go-isatty v0.0.12
+	github.com/mitchellh/caststructure v0.0.0-20200429234907-c50277f5cbe8
 	github.com/mitchellh/cli v1.0.0
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
 	github.com/mitchellh/go-homedir v1.1.0
