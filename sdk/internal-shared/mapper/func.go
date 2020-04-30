@@ -96,11 +96,23 @@ func NewFunc(f interface{}, opts ...Option) (*Func, error) {
 		args = append(args, arg)
 	}
 
+	// Determine our out type. This is just the first out value unless
+	// our only result type is an error. In that case we have no results
+	// and we jsut return error.
+	outType := ft.Out(0)
+	if ft.NumOut() == 1 && outType == errType {
+		outType = nil
+	}
+	var out Type
+	if outType != nil {
+		out = &ReflectType{Type: outType}
+	}
+
 	return &Func{
 		Name:   name,
 		Func:   fv,
 		Args:   args,
-		Out:    &ReflectType{Type: ft.Out(0)},
+		Out:    out,
 		Logger: cfg.Logger,
 		Values: cfg.Values,
 	}, nil
@@ -248,6 +260,17 @@ type PreparedFunc struct {
 func (f *PreparedFunc) Call() (interface{}, error) {
 	var err error
 	out := f.Func.Func.Call(f.In)
+
+	// If we have no output type, then this just returns an error.
+	if f.Func.Out == nil {
+		if v := out[0].Interface(); v != nil {
+			err = v.(error)
+		}
+
+		return nil, err
+	}
+
+	// If we have an error result as well, then return that
 	if len(out) > 1 {
 		if v := out[1].Interface(); v != nil {
 			err = v.(error)
@@ -256,3 +279,6 @@ func (f *PreparedFunc) Call() (interface{}, error) {
 
 	return out[0].Interface(), err
 }
+
+// errType is used for comparison in Spec
+var errType = reflect.TypeOf((*error)(nil)).Elem()

@@ -19,6 +19,17 @@ func TestFunc_basic(t *testing.T) {
 	require.Equal(result, 3)
 }
 
+func TestFunc_errorOnly(t *testing.T) {
+	require := require.New(t)
+
+	addTwo := func(a int) error { return errors.New("error!") }
+	f, err := NewFunc(addTwo)
+	require.NoError(err)
+	result, err := f.Call(1)
+	require.Nil(result)
+	require.Error(err)
+}
+
 func TestFunc_error(t *testing.T) {
 	t.Run("nil error", func(t *testing.T) {
 		require := require.New(t)
@@ -31,7 +42,7 @@ func TestFunc_error(t *testing.T) {
 		require.Equal(result, 3)
 	})
 
-	t.Run("nil error", func(t *testing.T) {
+	t.Run("error", func(t *testing.T) {
 		require := require.New(t)
 
 		addTwo := func(a int) (int, error) { return a + 2, errors.New("error!") }
