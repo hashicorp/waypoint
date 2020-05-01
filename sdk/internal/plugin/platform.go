@@ -42,15 +42,18 @@ func (p *PlatformPlugin) GRPCClient(
 	broker *plugin.GRPCBroker,
 	c *grpc.ClientConn,
 ) (interface{}, error) {
-	// Keep track of all our impl types
-	var platformLog component.LogPlatform
-
 	// Build our client to the platform service
 	client := &platformClient{
 		client:  proto.NewPlatformClient(c),
 		logger:  p.Logger,
 		broker:  broker,
 		mappers: p.Mappers,
+	}
+
+	// Build our resulting implementations
+	compose := []interface{}{
+		client, (*component.ConfigurableNotify)(nil),
+		client, (*component.Platform)(nil),
 	}
 
 	// Check if we also implement the LogPlatform
@@ -66,21 +69,25 @@ func (p *PlatformPlugin) GRPCClient(
 			return nil, err
 		}
 
-		platformLog = raw.(component.LogPlatform)
-	}
-
-	// Build our result
-	var result interface{} = client
-	if platformLog != nil {
 		p.Logger.Info("platform plugin capable of logs")
-		result = caststructure.Must(caststructure.Compose(
-			client, (*component.ConfigurableNotify)(nil),
-			client, (*component.Platform)(nil),
-			platformLog, (*component.LogPlatform)(nil),
-		))
+		compose = append(compose,
+			raw, (*component.LogPlatform)(nil),
+		)
 	}
 
-	return result, nil
+	// Check if we also implement the Destroyer
+	resp, err = client.client.IsDestroyer(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	if resp.Implements {
+		p.Logger.Info("platform plugin capable of destroy")
+		compose = append(compose,
+			client, (*component.Destroyer)(nil),
+		)
+	}
+
+	return caststructure.Must(caststructure.Compose(compose...)), nil
 }
 
 // platformClient is an implementation of component.Platform over gRPC.
@@ -131,6 +138,36 @@ func (c *platformClient) deploy(
 	}
 
 	return &plugincomponent.Deployment{Any: resp.Result}, nil
+}
+
+func (c *platformClient) DestroyFunc() interface{} {
+	// Get the spec
+	spec, err := c.client.DestroySpec(context.Background(), &empty.Empty{})
+	if err != nil {
+		return funcErr(err)
+	}
+
+	return funcspec.Func(spec, c.destroy,
+		funcspec.WithLogger(c.logger),
+		funcspec.WithValues(&pluginargs.Internal{
+			Broker:  c.broker,
+			Mappers: c.mappers,
+			Cleanup: &pluginargs.Cleanup{},
+		}),
+	)
+}
+
+func (c *platformClient) destroy(
+	ctx context.Context,
+	args funcspec.Args,
+	internal *pluginargs.Internal,
+) error {
+	// Run the cleanup
+	defer internal.Cleanup.Close()
+
+	// Call our function
+	_, err := c.client.Destroy(ctx, &proto.FuncSpec_Args{Args: args})
+	return err
 }
 
 // platformServer is a gRPC server that the client talks to and calls a
@@ -190,6 +227,39 @@ func (s *platformServer) Deploy(
 	return &proto.Deploy_Resp{Result: encoded}, nil
 }
 
+func (s *platformServer) IsDestroyer(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.ImplementsResp, error) {
+	_, ok := s.Impl.(component.Destroyer)
+	return &proto.ImplementsResp{Implements: ok}, nil
+}
+
+func (s *platformServer) DestroySpec(
+	ctx context.Context,
+	args *empty.Empty,
+) (*proto.FuncSpec, error) {
+	return funcspec.Spec(s.Impl.(component.Destroyer).DestroyFunc(),
+		funcspec.WithMappers(s.Mappers),
+		funcspec.WithLogger(s.Logger),
+		funcspec.WithValues(s.internal()),
+	)
+}
+
+func (s *platformServer) Destroy(
+	ctx context.Context,
+	args *proto.FuncSpec_Args,
+) (*empty.Empty, error) {
+	internal := s.internal()
+	defer internal.Cleanup.Close()
+
+	_, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.(component.Destroyer).DestroyFunc(), s.Mappers, internal)
+	if err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
+}
 func (s *platformServer) internal() *pluginargs.Internal {
 	return &pluginargs.Internal{
 		Broker:  s.Broker,

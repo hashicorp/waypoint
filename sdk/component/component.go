@@ -73,6 +73,14 @@ type ReleaseManager interface {
 	ReleaseFunc() interface{}
 }
 
+// Destroyer is responsible for destroying resources associated with this
+// implementation. This can be implemented by all of the component types
+// and will be called to perform cleanup on any created resources.
+type Destroyer interface {
+	// DestroyFunc should return the method handle for the destroy operation.
+	DestroyFunc() interface{}
+}
+
 // A Platform that supports the ability to exec into a shell environment
 // for the app.
 type ExecPlatform interface {

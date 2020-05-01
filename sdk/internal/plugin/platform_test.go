@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component/mocks"
 )
 
-func TestPlatform_logsPlatform(t *testing.T) {
-	t.Run("implements", func(t *testing.T) {
+func TestPlatform_optionalInterfaces(t *testing.T) {
+	t.Run("implements LogPlatform", func(t *testing.T) {
 		require := require.New(t)
 
 		mockV := &mockPlatformLog{}
@@ -25,9 +25,12 @@ func TestPlatform_logsPlatform(t *testing.T) {
 		require.NoError(err)
 		require.Implements((*component.Platform)(nil), raw)
 		require.Implements((*component.LogPlatform)(nil), raw)
+
+		_, ok := raw.(component.Destroyer)
+		require.False(ok, "should not implement")
 	})
 
-	t.Run("doesn't implement", func(t *testing.T) {
+	t.Run("doesn't implement LogPlatform", func(t *testing.T) {
 		require := require.New(t)
 
 		mockV := &mocks.Platform{}
@@ -43,6 +46,28 @@ func TestPlatform_logsPlatform(t *testing.T) {
 
 		_, ok := raw.(component.LogPlatform)
 		require.False(ok, "does not implement LogPlatform")
+
+		_, ok = raw.(component.Destroyer)
+		require.False(ok, "should not implement")
+	})
+
+	t.Run("implements Destroyer", func(t *testing.T) {
+		require := require.New(t)
+
+		mockV := &mockPlatformDestroyer{}
+
+		plugins := Plugins(WithComponents(mockV), WithMappers(testDefaultMappers(t)...))
+		client, server := plugin.TestPluginGRPCConn(t, plugins[1])
+		defer client.Close()
+		defer server.Stop()
+
+		raw, err := client.Dispense("platform")
+		require.NoError(err)
+		require.Implements((*component.Platform)(nil), raw)
+		require.Implements((*component.Destroyer)(nil), raw)
+
+		_, ok := raw.(component.LogPlatform)
+		require.False(ok, "does not implement LogPlatform")
 	})
 }
 
@@ -51,6 +76,14 @@ func TestPlatformDynamicFunc(t *testing.T) {
 		v.(*mocks.Platform).On("DeployFunc").Return(f)
 	}, func(raw interface{}) interface{} {
 		return raw.(component.Platform).DeployFunc()
+	})
+}
+
+func TestPlatformDynamicFunc_destroy(t *testing.T) {
+	testDynamicFunc(t, "platform", &mockPlatformDestroyer{}, func(v, f interface{}) {
+		v.(*mockPlatformDestroyer).Destroyer.On("DestroyFunc").Return(f)
+	}, func(raw interface{}) interface{} {
+		return raw.(component.Destroyer).DestroyFunc()
 	})
 }
 
@@ -67,4 +100,9 @@ type mockPlatformConfigurable struct {
 type mockPlatformLog struct {
 	mocks.Platform
 	mocks.LogPlatform
+}
+
+type mockPlatformDestroyer struct {
+	mocks.Platform
+	mocks.Destroyer
 }

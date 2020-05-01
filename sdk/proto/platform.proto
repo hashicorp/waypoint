@@ -14,6 +14,11 @@ service Platform {
   rpc DeploySpec(Empty) returns (FuncSpec);
   rpc Deploy(Deploy.Args) returns (Deploy.Resp);
 
+  // component.Destroyer optional implementation
+  rpc IsDestroyer(google.protobuf.Empty) returns (ImplementsResp);
+  rpc DestroySpec(google.protobuf.Empty) returns (FuncSpec);
+  rpc Destroy(FuncSpec.Args) returns (google.protobuf.Empty);
+
   // IsLogPlatform returns true if this platform also implements LogPlatform.
   rpc IsLogPlatform(google.protobuf.Empty) returns (ImplementsResp);
 }

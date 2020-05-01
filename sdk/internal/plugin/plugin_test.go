@@ -112,7 +112,14 @@ func testDynamicFunc(
 	// Call our function chain
 	raw, err = chain.Call()
 	require.NoError(err)
-	require.NotNil(raw)
+
+	// We only require a result if the function type expects us to return
+	// a result. Otherwise, we just expect nil because it is error-only.
+	if implFunc.Out != nil {
+		require.NotNil(raw)
+	} else {
+		require.Nil(raw)
+	}
 
 	require.True(called)
 }
