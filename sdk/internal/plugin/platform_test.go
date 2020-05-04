@@ -71,7 +71,7 @@ func TestPlatform_optionalInterfaces(t *testing.T) {
 	})
 }
 
-func TestPlatformDynamicFunc(t *testing.T) {
+func TestPlatformDynamicFunc_core(t *testing.T) {
 	testDynamicFunc(t, "platform", &mocks.Platform{}, func(v, f interface{}) {
 		v.(*mocks.Platform).On("DeployFunc").Return(f)
 	}, func(raw interface{}) interface{} {

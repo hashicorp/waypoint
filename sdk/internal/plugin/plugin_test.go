@@ -22,7 +22,7 @@ import (
 
 func init() {
 	// Set our default log level lower for tests
-	hclog.L().SetLevel(hclog.Debug)
+	hclog.L().SetLevel(hclog.Trace)
 }
 
 func TestPlugins(t *testing.T) {
