@@ -63,6 +63,8 @@ func (c *destroyerClient) destroy(
 	return err
 }
 
+// destroyerServer implements the common Destroyer-related RPC calls.
+// This should be embedded into the service implementation.
 type destroyerServer struct {
 	*base
 	Impl interface{}
