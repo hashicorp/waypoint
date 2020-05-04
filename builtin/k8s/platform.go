@@ -36,6 +36,11 @@ func (p *Platform) DeployFunc() interface{} {
 	return p.Deploy
 }
 
+// DestroyFunc implements component.Destroyer
+func (p *Platform) DestroyFunc() interface{} {
+	return p.Destroy
+}
+
 // Deploy deploys an image to GCR.
 func (p *Platform) Deploy(
 	ctx context.Context,
@@ -141,6 +146,27 @@ func (p *Platform) Deploy(
 	return &result, nil
 }
 
+// Destroy deletes the K8S deployment.
+func (p *Platform) Destroy(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) error {
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
+	clientset, ns, err := clientset(p.config.KubeconfigPath, p.config.Context)
+	if err != nil {
+		return err
+	}
+
+	st.Update("Deleting deployment...")
+	deployclient := clientset.AppsV1().Deployments(ns)
+	return deployclient.Delete(ctx, deployment.Name, metav1.DeleteOptions{})
+}
+
 // Config is the configuration structure for the Platform.
 type Config struct {
 	// KubeconfigPath is the path to the kubeconfig file. If this is
@@ -156,4 +182,5 @@ type Config struct {
 var (
 	_ component.Platform     = (*Platform)(nil)
 	_ component.Configurable = (*Platform)(nil)
+	_ component.Destroyer    = (*Platform)(nil)
 )
