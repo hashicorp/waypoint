@@ -11,8 +11,13 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 )
 
+// CanDestroyDeploy returns true if this app supports destroying deployments.
+func (a *App) CanDestroyDeploy() bool {
+	_, ok := a.Platform.(component.Destroyer)
+	return ok
+}
+
 // DestroyDeploy destroyes a specific deployment.
-// TODO(mitchellh): test
 func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
 	_, _, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployDestroyOperation{
 		Deployment: d,
@@ -22,9 +27,6 @@ func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
 
 type deployDestroyOperation struct {
 	Deployment *pb.Deployment
-
-	// id is populated with the deployment id on Upsert
-	id string
 }
 
 func (op *deployDestroyOperation) Init(app *App) (proto.Message, error) {

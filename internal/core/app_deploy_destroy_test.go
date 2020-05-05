@@ -15,6 +15,52 @@ import (
 	componentmocks "github.com/hashicorp/waypoint/sdk/component/mocks"
 )
 
+func TestAppCanDestroyDeploy(t *testing.T) {
+	t.Run("can", func(t *testing.T) {
+		require := require.New(t)
+
+		// Our mock platform, which must also implement Destroyer
+		mock := struct {
+			*componentmocks.Platform
+			*componentmocks.Destroyer
+		}{
+			&componentmocks.Platform{},
+			&componentmocks.Destroyer{},
+		}
+
+		// Make our factory for platforms
+		factory := TestFactory(t, component.PlatformType)
+		TestFactoryRegister(t, factory, "test", mock)
+
+		// Make our app
+		app := TestApp(t, TestProject(t,
+			WithConfig(config.TestConfig(t, testPlatformConfig)),
+			WithFactory(component.PlatformType, factory),
+		), "test")
+
+		require.True(app.CanDestroyDeploy())
+	})
+
+	t.Run("cannot", func(t *testing.T) {
+		require := require.New(t)
+
+		// Our mock platform, which must also implement Destroyer
+		mock := &componentmocks.Platform{}
+
+		// Make our factory for platforms
+		factory := TestFactory(t, component.PlatformType)
+		TestFactoryRegister(t, factory, "test", mock)
+
+		// Make our app
+		app := TestApp(t, TestProject(t,
+			WithConfig(config.TestConfig(t, testPlatformConfig)),
+			WithFactory(component.PlatformType, factory),
+		), "test")
+
+		require.False(app.CanDestroyDeploy())
+	})
+}
+
 func TestAppDestroyDeploy_happy(t *testing.T) {
 	require := require.New(t)
 
