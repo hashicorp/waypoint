@@ -45,8 +45,14 @@ func (a *App) doOperation(
 		return nil, nil, err
 	}
 
-	// Update the status
+	// If we have no status pointer, then we just allocate one for this
+	// function. We don't send this anywhere but this just lets us follow
+	// the remaining logic without a bunch of nil checks.
 	statusPtr := op.StatusPtr(msg)
+	if statusPtr == nil {
+		var status *pb.Status
+		statusPtr = &status
+	}
 	*statusPtr = server.NewStatus(pb.Status_RUNNING)
 
 	// Upsert the metadata for our running state
@@ -58,8 +64,19 @@ func (a *App) doOperation(
 	if id := msgId(msg); id != "" {
 		log = log.With("id", id)
 	}
-	statusPtr = op.StatusPtr(msg)
+
+	// Reset the status pointer because we might have a new message type
+	if ptr := op.StatusPtr(msg); ptr != nil {
+		statusPtr = ptr
+	}
+
+	// Get where we'll set the value. Similar to statusPtr, we set this
+	// to a local value if we get nil so that we can avoid nil checks.
 	valuePtr := op.ValuePtr(msg)
+	if valuePtr == nil {
+		var value *any.Any
+		valuePtr = &value
+	}
 
 	// Run the function
 	log.Debug("running local operation")
@@ -68,10 +85,13 @@ func (a *App) doOperation(
 		// No error, our state is success
 		server.StatusSetSuccess(*statusPtr)
 
-		// Set our final value
-		*valuePtr, err = component.ProtoAny(result)
-		if err != nil {
-			doErr = err
+		// Set our final value if we have a value pointer
+		*valuePtr = nil
+		if result != nil {
+			*valuePtr, err = component.ProtoAny(result)
+			if err != nil {
+				doErr = err
+			}
 		}
 	}
 
