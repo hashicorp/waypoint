@@ -38,8 +38,17 @@ func (op *deployDestroyOperation) Upsert(
 	client pb.WaypointClient,
 	msg proto.Message,
 ) (proto.Message, error) {
-	// We don't interact with the server
-	return op.Deployment, nil
+	d := msg.(*pb.Deployment)
+	d.State = pb.Deployment_DESTROY
+
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: d,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Deployment, nil
 }
 
 func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App) (interface{}, error) {
@@ -55,7 +64,7 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 }
 
 func (op *deployDestroyOperation) StatusPtr(msg proto.Message) **pb.Status {
-	return nil
+	return &(msg.(*pb.Deployment).Status)
 }
 
 func (op *deployDestroyOperation) ValuePtr(msg proto.Message) **any.Any {

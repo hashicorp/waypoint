@@ -93,20 +93,39 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 		return nil
 	})
 
-	// Destroy
-	require.NoError(app.DestroyDeploy(context.Background(), &pb.Deployment{
-		Deployment: deployment,
-	}))
+	{
+		// Destroy
+		require.NoError(app.DestroyDeploy(context.Background(), &pb.Deployment{
+			Deployment: deployment,
+		}))
 
-	// Try with an error
-	mock.Destroyer.Mock = mockpkg.Mock{}
-	mock.Destroyer.On("DestroyFunc").Return(func() error {
-		return fmt.Errorf("error!")
-	})
+		// Verify that we set the status properly
+		resp, err := app.client.ListDeployments(context.Background(), &pb.ListDeploymentsRequest{})
+		require.NoError(err)
+		require.Equal(pb.Deployment_DESTROY, resp.Deployments[0].State)
+		require.Equal(pb.Status_SUCCESS, resp.Deployments[0].Status.State)
+	}
 
-	err := app.DestroyDeploy(context.Background(), &pb.Deployment{})
-	require.Error(err)
-	require.Contains(err.Error(), "error")
+	{
+		// Try with an error
+		mock.Destroyer.Mock = mockpkg.Mock{}
+		mock.Destroyer.On("DestroyFunc").Return(func() error {
+			return fmt.Errorf("error!")
+		})
+
+		err := app.DestroyDeploy(context.Background(), &pb.Deployment{})
+		require.Error(err)
+		require.Contains(err.Error(), "error")
+
+		// Verify that we set the status properly
+		resp, err := app.client.ListDeployments(context.Background(), &pb.ListDeploymentsRequest{
+			Order:     pb.ListDeploymentsRequest_COMPLETE_TIME,
+			OrderDesc: true,
+		})
+		require.NoError(err)
+		require.Equal(pb.Deployment_DESTROY, resp.Deployments[0].State)
+		require.Equal(pb.Status_ERROR, resp.Deployments[0].Status.State)
+	}
 }
 
 const testPlatformConfig = `

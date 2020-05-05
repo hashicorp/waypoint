@@ -37,6 +37,7 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 	return &pb.Deployment{
 		Component:  app.components[app.Platform],
 		ArtifactId: op.Push.Id,
+		State:      pb.Deployment_DEPLOY,
 	}, nil
 }
 
