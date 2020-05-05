@@ -177,10 +177,7 @@ type platformServer struct {
 	*base
 	*destroyerServer
 
-	Impl    component.Platform
-	Mappers []*mapper.Func
-	Logger  hclog.Logger
-	Broker  *plugin.GRPCBroker
+	Impl component.Platform
 }
 
 func (s *platformServer) IsLogPlatform(

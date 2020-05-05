@@ -12,7 +12,6 @@ import (
 
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/datadir"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -47,7 +46,6 @@ func (p *Platform) Deploy(
 	log hclog.Logger,
 	src *component.Source,
 	img *docker.Image,
-	dir *datadir.Component,
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {

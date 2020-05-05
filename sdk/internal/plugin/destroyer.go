@@ -83,6 +83,7 @@ func (s *destroyerServer) DestroySpec(
 	args *empty.Empty,
 ) (*pb.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.(component.Destroyer).DestroyFunc(),
+		funcspec.WithNoOutput(), // we only expect an error value so ignore the rest
 		funcspec.WithMappers(s.Mappers),
 		funcspec.WithLogger(s.Logger),
 		funcspec.WithValues(s.internal()),
@@ -96,7 +97,7 @@ func (s *destroyerServer) Destroy(
 	internal := s.internal()
 	defer internal.Cleanup.Close()
 
-	_, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.(component.Destroyer).DestroyFunc(), s.Mappers, internal)
+	_, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.(component.Destroyer).DestroyFunc(), s.Mappers, internal)
 	if err != nil {
 		return nil, err
 	}
