@@ -16,6 +16,7 @@ import (
 	"github.com/mitchellh/cli"
 
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
+	"github.com/hashicorp/waypoint/internal/version"
 )
 
 const (
@@ -186,6 +187,13 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"version": func() (cli.Command, error) {
+			return &VersionCommand{
+				VersionInfo: version.GetVersion(),
 				baseCommand: baseCommand,
 			}, nil
 		},
