@@ -62,3 +62,49 @@ func TestServiceDeployment(t *testing.T) {
 		require.Equal(codes.NotFound, st.Code())
 	})
 }
+
+func TestServiceDeployment_GetDeployment(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	db := testDB(t)
+	impl, err := New(db)
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Best way to mock for now is to make a request
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: &pb.Deployment{},
+	})
+
+	require.NoError(t, err)
+
+	// Simplify writing tests
+	type Req = pb.GetDeploymentRequest
+
+	t.Run("get existing", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get, should return a deployment
+		deployment, err := client.GetDeployment(ctx, &Req{
+			DeploymentId: resp.Deployment.Id,
+		})
+		require.NoError(err)
+		require.NotNil(deployment)
+		require.NotEmpty(deployment.Id)
+	})
+
+	t.Run("get non-existing", func(t *testing.T) {
+		require := require.New(t)
+
+		// get, should fail
+		resp, err := client.GetDeployment(ctx, &Req{
+			DeploymentId: "nope",
+		})
+		require.Error(err)
+		require.Nil(resp)
+		st, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.NotFound, st.Code())
+	})
+}
