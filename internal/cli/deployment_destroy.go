@@ -45,6 +45,12 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
+		// Can't destroy a deployment that was not successful
+		if deployment.Status.GetState() != pb.Status_SUCCESS {
+			app.UI.Output("Cannot destroy deployment that is not successful", terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
 		if err := app.DestroyDeploy(ctx, deployment); err != nil {
 			app.UI.Output("Error destroying the deployment: %s", err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
