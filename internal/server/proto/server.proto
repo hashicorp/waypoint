@@ -241,11 +241,6 @@ message GetDeploymentRequest {
   string deployment_id = 1;
 }
 
-message GetDeploymentResponse {
-  // resulting deployment.
-  Deployment deployment = 1;
-}
-
 message UpsertDeploymentRequest {
   // deployment to upsert. If the id in the artifact is empty, then this
   // will be an insert. Otherwise, this will be an update and if the ID
