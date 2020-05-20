@@ -1,6 +1,35 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgsPath ? <nixpkgs> }:
 
-with pkgs; let
+let
+  # First we setup our overlays. These are overrides of the official nix packages.
+  # We do this to pin the versions we want to use of the software that is in
+  # the official nixpkgs repo.
+  pkgs = import pkgsPath {
+    overlays = [(self: super: {
+
+      go = super.go.overrideAttrs ( old: rec {
+        version = "1.14.3";
+        src = super.fetchurl {
+          url = "https://dl.google.com/go/go${version}.src.tar.gz";
+          sha256 = "0mmgf74snprdiajgh99jjliwjl5im71qcgm5qrxpnyfisiw3f0lk";
+        };
+      });
+
+      go-protobuf = super.go-protobuf.overrideAttrs ( old: rec {
+        version = "1.3.5";
+        src = super.fetchFromGitHub {
+          owner = "golang";
+          repo = "protobuf";
+          rev = "v${version}";
+          sha256 = "1gkd1942vk9n8kfzdwy1iil6wgvlwjq7a3y5jc49ck4lz9rhmgkq";
+        };
+
+        modSha256 = "0jjjj9z1dhilhpc8pq4154czrb79z9cm044jvn75kxcjv6v5l2m5";
+      });
+
+    })];
+  };
+in with pkgs; let
   go-protobuf-json = buildGoModule rec {
     pname = "go-protobuf-json";
     version = "069933b8c8344593ed8905d46d59c6647c886f47";
