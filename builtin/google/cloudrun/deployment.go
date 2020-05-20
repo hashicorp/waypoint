@@ -31,6 +31,15 @@ func (d *Deployment) apiName() string {
 	)
 }
 
+// apiRevisionName returns the GCP API "name" string format for API calls
+// to the revisons api.
+func (d *Deployment) apiRevisionName() string {
+	return fmt.Sprintf("namespaces/%s/revisions/%s",
+		d.Resource.Project,
+		d.RevisionId,
+	)
+}
+
 // apiService returns the API service for GCP client usage.
 func (d *Deployment) apiService(ctx context.Context) (*run.APIService, error) {
 	result, err := run.NewService(ctx,
