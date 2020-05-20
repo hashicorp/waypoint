@@ -1,0 +1,264 @@
+---
+version: 2
+
+references:
+  images:
+    go: &GOLANG_IMAGE circleci/golang:1.14.3
+    middleman: &MIDDLEMAN_IMAGE hashicorp/middleman-hashicorp:0.3.44
+    ember: &EMBER_IMAGE circleci/node:12-browsers
+
+  paths:
+    test-results: &TEST_RESULTS_DIR /tmp/test-results
+
+  cache:
+    yarn: &YARN_CACHE_KEY waypoint-ui-{{ checksum "ui/yarn.lock" }}
+    rubygem: &RUBYGEM_CACHE_KEY static-site-gems-v1-{{ checksum "Gemfile.lock" }}
+
+  environment: &ENVIRONMENT
+    TEST_RESULTS_DIR: *TEST_RESULTS_DIR
+    GOTESTSUM_RELEASE: 0.4.2
+    EMAIL: noreply@hashicorp.com
+    GIT_AUTHOR_NAME: circleci-waypoint
+    GIT_COMMITTER_NAME: circleci-waypoint
+    BASH_ENV: .circleci/bash_env.sh
+
+jobs:
+  # Runs Go linters
+  lint:
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      GOTAGS: ""
+    steps:
+      - checkout
+      - run:
+          name: Install golangci-lint
+          command: |
+            download=https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh
+            wget -O- -q $download | sh -x -s -- -d -b /go/bin/ v1.23.6
+      - run: go mod download
+      - run:
+          name: lint
+          command: &lintcmd |
+            golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2
+
+  # checks vendor directory is correct
+  check-vendor:
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - checkout
+      - run:
+          command: make update-vendor
+      - run: |
+          if ! git diff --exit-code; then
+            echo "Git directory has vendor changes"
+            exit 1
+          fi
+
+  go-test:
+    docker:
+      - image: *GOLANG_IMAGE
+    parallelism: 4
+    environment:
+      <<: *ENVIRONMENT
+      GOTAGS: ""
+      # GOMAXPROCS defaults to number of cores on underlying hardware, set
+      # explicitly to avoid OOM issues https://support.circleci.com/hc/en-us/articles/360034684273-common-GoLang-memory-issues
+      GOMAXPROCS: 4
+      # The medium resource class (default) boxes are 2 vCPUs, 4GB RAM
+      # https://circleci.com/docs/2.0/configuration-reference/#docker-executor
+      # but we can run a little over that limit.
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /go/bin
+      - run: sudo apt-get update && sudo apt-get install -y rsyslog
+      - run: sudo service rsyslog start
+      - run: &install_gotestsum
+          name: Install gotestsum
+          command: |
+            url=https://github.com/gotestyourself/gotestsum/releases/download
+            curl -sSL "${url}/v${GOTESTSUM_RELEASE}/gotestsum_${GOTESTSUM_RELEASE}_linux_amd64.tar.gz" | \
+              sudo tar -xz --overwrite -C /usr/local/bin gotestsum
+      - run: go mod download
+      - run:
+          name: go test
+          command: |
+            mkdir -p $TEST_RESULTS_DIR
+            PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
+            echo "Running $(echo $PACKAGE_NAMES | wc -w) packages"
+            echo $PACKAGE_NAMES
+            gotestsum --format=short-verbose \
+              --junitfile $TEST_RESULTS_DIR/gotestsum-report.xml -- \
+              -tags="$GOTAGS" -p 2 \
+              -cover -coverprofile=coverage.txt \
+              $PACKAGE_NAMES
+
+      - store_test_results:
+          path: *TEST_RESULTS_DIR
+      - store_artifacts:
+          path: *TEST_RESULTS_DIR
+      - run: &codecov_upload
+          name: codecov upload
+          when: always
+          # The -C flag shouldn't be necessary, but it fails to find the commit
+          # without it.
+          command: bash <(curl -s https://codecov.io/bash) -C "$CIRCLE_SHA1"
+  
+          # create a development build
+  dev-build:
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - checkout
+      - attach_workspace: # this normally runs as the first job and has nothing to attach; only used in master branch after rebuilding UI
+          at: .
+      - run:
+          command: go build ./...
+
+      # save dev build to pass to downstream jobs
+      - persist_to_workspace:
+          root: /go/bin
+          paths:
+            - waypoint
+
+  # todo: re-enable when we need a UI
+  #
+  # build frontend yarn cache
+  # frontend-cache:
+  #   docker:
+  #     - image: *EMBER_IMAGE
+  #   steps:
+  #     - checkout
+
+  #     # cache yarn deps
+  #     - restore_cache:
+  #         key: *YARN_CACHE_KEY
+
+  #     - run:
+  #         name: install yarn packages
+  #         command: cd ui && yarn install
+
+  #     - save_cache:
+  #         key: *YARN_CACHE_KEY
+  #         paths:
+  #           - ui/node_modules
+
+  # build ember so frontend tests run faster
+  # ember-build:
+  #   docker:
+  #     - image: *EMBER_IMAGE
+  #   environment:
+  #     JOBS: 2 # limit parallelism for broccoli-babel-transpiler
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         key: *YARN_CACHE_KEY
+  #     - run: cd ui && make build-ci
+
+  #     # saves the build to a workspace to be passed to a downstream job
+  #     - persist_to_workspace:
+  #         root: ui
+  #         paths:
+  #           - dist
+
+  # # rebuild UI for packaging
+  # ember-build-prod:
+  #   docker:
+  #     - image: *EMBER_IMAGE
+  #   environment:
+  #     JOBS: 2 # limit parallelism for broccoli-babel-transpiler
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         key: *YARN_CACHE_KEY
+  #     - run: cd ui && make
+
+  #     # saves the build to a workspace to be passed to a downstream job
+  #     - persist_to_workspace:
+  #         root: ui
+  #         paths:
+  #           - dist
+
+  # # run ember frontend tests
+  # ember-test:
+  #   docker:
+  #     - image: *EMBER_IMAGE
+  #   environment:
+  #     EMBER_TEST_REPORT: test-results/report-oss.xml #outputs test report for CircleCI test summary
+  #     EMBER_TEST_PARALLEL: true #enables test parallelization with ember-exam
+  #   parallelism: 2
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         key: *YARN_CACHE_KEY
+  #     - attach_workspace:
+  #         at: ui
+  #     - run:
+  #         working_directory: ui
+  #         command: node_modules/.bin/ember exam --split=$CIRCLE_NODE_TOTAL --partition=`expr $CIRCLE_NODE_INDEX + 1` --path dist --silent -r xunit
+  #     - store_test_results:
+  #         path: ui/test-results
+  # ember-coverage:
+  #   docker:
+  #     - image: *EMBER_IMAGE
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         key: *YARN_CACHE_KEY
+  #     - attach_workspace:
+  #         at: ui
+  #     - run:
+  #         working_directory: ui
+  #         command: make test-coverage-ci
+  #     - run:
+  #         name: codecov ui upload
+  #         working_directory: ui
+  #         command: bash <(curl -s https://codecov.io/bash) -v -c -C $CIRCLE_SHA1 -F ui
+
+workflows:
+  version: 2
+  go-tests:
+    jobs:
+      - check-vendor: &filter-ignore-non-go-branches
+          filters:
+            branches:
+              ignore:
+                - stable-website
+                - /^docs\/.*/
+                - /^ui\/.*/
+      - lint: *filter-ignore-non-go-branches
+      - dev-build: *filter-ignore-non-go-branches
+      - go-test:
+          requires: [dev-build]
+
+  # website:
+  #   jobs:
+  #     - build-website-docker-image:
+  #         context: website-docker-image
+  #         filters:
+  #           branches:
+  #             only:
+  #               - master
+ 
+  # frontend:
+  #   jobs:
+  #     - frontend-cache:
+  #         filters:
+  #           branches:
+  #             only:
+  #               - master
+  #     - ember-build:
+  #         requires:
+  #           - frontend-cache
+  #     - ember-test:
+  #         requires:
+  #           - ember-build
+  #     - ember-coverage:
+  #         requires:
+  #           - ember-build
