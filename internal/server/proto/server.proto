@@ -18,6 +18,9 @@ service Waypoint {
   // ListDeployments returns the deployments.
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
 
+  // GetDeployment returns a deployment
+  rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
+
   // GetLatestBuild returns the most recent successfully completed build
   // for an app.
   rpc GetLatestBuild(google.protobuf.Empty) returns (Build);
@@ -232,6 +235,16 @@ message PushedArtifact {
 /********************************************************************
 * Platform
 ********************************************************************/
+
+message GetDeploymentRequest {
+  // Deployment to return.
+  string deployment_id = 1;
+}
+
+message GetDeploymentResponse {
+  // resulting deployment.
+  Deployment deployment = 1;
+}
 
 message UpsertDeploymentRequest {
   // deployment to upsert. If the id in the artifact is empty, then this
