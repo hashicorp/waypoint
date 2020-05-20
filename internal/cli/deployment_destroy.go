@@ -29,25 +29,23 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 	}
 
 	args = flags.Args()
+	if len(args) != 1 {
+		c.ui.Output("you must supply a single deployment ID", terminal.WithErrorStyle)
+		return 1
+	}
 
 	client := c.project.Client()
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
-		// Get the latest deployment
-		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Limit:     1,
-			Order:     pb.ListDeploymentsRequest_COMPLETE_TIME,
-			OrderDesc: true,
+		// Get the deployment
+		deployment, err := client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+			DeploymentId: args[0],
 		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
-		if len(resp.Deployments) == 0 {
-			app.UI.Output("No successful deployments found.", terminal.WithErrorStyle())
-			return ErrSentinel
-		}
 
-		if err := app.DestroyDeploy(ctx, resp.Deployments[0]); err != nil {
+		if err := app.DestroyDeploy(ctx, deployment); err != nil {
 			app.UI.Output("Error destroying the deployment: %s", err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
