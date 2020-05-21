@@ -30,6 +30,9 @@ jobs:
     environment:
       GOTAGS: ""
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
       - checkout
       - run:
           name: Install golangci-lint
@@ -49,6 +52,9 @@ jobs:
     environment:
       <<: *ENVIRONMENT
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
       - checkout
       - run:
           command: make update-vendor
@@ -72,6 +78,9 @@ jobs:
       # https://circleci.com/docs/2.0/configuration-reference/#docker-executor
       # but we can run a little over that limit.
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
       - checkout
       - attach_workspace:
           at: /go/bin
@@ -115,6 +124,9 @@ jobs:
     environment:
       <<: *ENVIRONMENT
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
       - checkout
       - attach_workspace: # this normally runs as the first job and has nothing to attach; only used in master branch after rebuilding UI
           at: .
