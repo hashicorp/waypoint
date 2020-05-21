@@ -109,15 +109,8 @@ jobs:
       - store_test_results:
           path: *TEST_RESULTS_DIR
       - store_artifacts:
-          path: *TEST_RESULTS_DIR
-      - run: &codecov_upload
-          name: codecov upload
-          when: always
-          # The -C flag shouldn't be necessary, but it fails to find the commit
-          # without it.
-          command: bash <(curl -s https://codecov.io/bash) -C "$CIRCLE_SHA1"
-  
-          # create a development build
+          path: *TEST_RESULTS_DIR  
+  # create a development build
   dev-build:
     docker:
       - image: *GOLANG_IMAGE
@@ -228,10 +221,6 @@ jobs:
   #     - run:
   #         working_directory: ui
   #         command: make test-coverage-ci
-  #     - run:
-  #         name: codecov ui upload
-  #         working_directory: ui
-  #         command: bash <(curl -s https://codecov.io/bash) -v -c -C $CIRCLE_SHA1 -F ui
 
 workflows:
   version: 2
