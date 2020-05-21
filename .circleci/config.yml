@@ -131,7 +131,7 @@ jobs:
       - attach_workspace: # this normally runs as the first job and has nothing to attach; only used in master branch after rebuilding UI
           at: .
       - run:
-          command: go build ./...
+          command: go install ./...
 
       # save dev build to pass to downstream jobs
       - persist_to_workspace:
