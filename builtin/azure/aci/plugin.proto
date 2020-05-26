@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package azure.aci;
+
+option go_package = "aci";
+
+message Deployment {
+  string url = 1;
+  Resource resource = 2;
+  string revision_id = 3;
+
+  message Resource {
+    string name = 1;
+    string resource_group = 2;
+  }
+}
+
+message Release {
+  string url = 1;
+}

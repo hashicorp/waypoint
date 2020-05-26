@@ -4,7 +4,14 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.45.1 // indirect
+	github.com/Azure/azure-sdk-for-go v42.3.0+incompatible
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
+	github.com/Azure/go-autorest/autorest v0.10.2 // indirect
+	github.com/Azure/go-autorest/autorest/adal v0.8.3 // indirect
+	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2
+	github.com/Azure/go-autorest/autorest/to v0.3.0
+	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 // indirect
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
@@ -23,6 +30,7 @@ require (
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
 	github.com/gliderlabs/ssh v0.2.2
+	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8 // indirect
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/hashicorp/go-hclog v0.12.0
@@ -56,15 +64,19 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.1.1
 	github.com/sebdah/goldie v1.0.0
+	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
+	github.com/spf13/cobra v1.0.0 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.5.1
 	go.etcd.io/bbolt v1.3.3 // indirect
 	go.opencensus.io v0.22.2 // indirect
-	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-	golang.org/x/net v0.0.0-20200219183655-46282727080f
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/mod v0.3.0 // indirect
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
 	golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200218151345-dad8c97a84f5
 	google.golang.org/grpc v1.28.1
