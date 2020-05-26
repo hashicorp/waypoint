@@ -124,7 +124,7 @@ func (p *Platform) Deploy(
 	service.Spec.Template = &run.RevisionTemplate{
 		Metadata: &run.ObjectMeta{
 			Annotations: map[string]string{
-				"devflow.hashicorp.com/nonce": time.Now().UTC().Format(time.RFC3339Nano),
+				"waypoint.hashicorp.com/nonce": time.Now().UTC().Format(time.RFC3339Nano),
 			},
 		},
 		Spec: &run.RevisionSpec{
