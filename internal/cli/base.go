@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -102,30 +103,34 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return nil
 	}
 
-	c.Log.Debug("reading configuration", "path", "waypoint.hcl")
-	if err := hclsimple.DecodeFile("waypoint.hcl", nil, &cfg); err != nil {
-		c.logError(c.Log, "error decoding configuration", err)
-		return err
-	}
+	if _, err := os.Stat("waypoint.hcl"); err == nil {
+		c.Log.Debug("reading configuration", "path", "waypoint.hcl")
+		if err := hclsimple.DecodeFile("waypoint.hcl", nil, &cfg); err != nil {
+			c.logError(c.Log, "error decoding configuration", err)
+			return err
+		}
 
-	// Setup our project data directory
-	c.Log.Debug("preparing project directory", "path", ".waypoint")
-	projDir, err := datadir.NewProject(".waypoint")
-	if err != nil {
-		c.logError(c.Log, "error preparing data directory", err)
-		return err
-	}
-	c.dir = projDir
+		// Setup our project data directory
+		c.Log.Debug("preparing project directory", "path", ".waypoint")
+		projDir, err := datadir.NewProject(".waypoint")
+		if err != nil {
+			c.logError(c.Log, "error preparing data directory", err)
+			return err
+		}
+		c.dir = projDir
 
-	// Create our project
-	c.project, err = core.NewProject(c.Ctx,
-		core.WithLogger(c.Log),
-		core.WithConfig(&cfg),
-		core.WithDataDir(projDir),
-	)
-	if err != nil {
-		c.logError(c.Log, "failed to create project", err)
-		return err
+		// Create our project
+		c.project, err = core.NewProject(c.Ctx,
+			core.WithLogger(c.Log),
+			core.WithConfig(&cfg),
+			core.WithDataDir(projDir),
+		)
+		if err != nil {
+			c.logError(c.Log, "failed to create project", err)
+			return err
+		}
+	} else {
+		c.Log.Debug("no waypoint configuration file, no project configured")
 	}
 
 	// If this is a single app mode then make sure that we only have

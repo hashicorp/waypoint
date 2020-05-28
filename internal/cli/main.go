@@ -190,10 +190,24 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
-
 		"version": func() (cli.Command, error) {
 			return &VersionCommand{
 				VersionInfo: version.GetVersion(),
+			}, nil
+		},
+		"expose": func() (cli.Command, error) {
+			return &ExposeCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"register account": func() (cli.Command, error) {
+			return &RegisterCommand{
+				baseCommand: baseCommand,
+				account:     true,
+			}, nil
+		},
+		"register hostname": func() (cli.Command, error) {
+			return &RegisterCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
