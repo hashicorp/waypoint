@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -134,14 +133,16 @@ func (c *ExposeCommand) Run(args []string) int {
 
 	dc, err := discovery.NewClient(c.horizonAddr)
 	if err != nil {
-		log.Fatal(err)
+		c.ui.Output("Error connecting to waypoint control service: %s", err, terminal.WithErrorStyle())
+		return 1
 	}
 
 	L.Debug("refreshing data")
 
 	err = dc.Refresh(ctx)
 	if err != nil {
-		log.Fatal(err)
+		c.ui.Output("Error discovering network endpoints: %s", err, terminal.WithErrorStyle())
+		return 1
 	}
 
 	err = g.Start(ctx, dc)

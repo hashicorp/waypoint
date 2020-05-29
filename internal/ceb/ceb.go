@@ -90,6 +90,10 @@ func Run(ctx context.Context, os ...Option) error {
 		return err
 	}
 
+	if err := ceb.initURLService(ctx, &cfg); err != nil {
+		return err
+	}
+
 	// Run our subprocess
 	errCh := ceb.execChildCmd(ctx)
 	select {
@@ -131,6 +135,11 @@ type config struct {
 	DeploymentId   string
 	ServerAddr     string
 	ServerInsecure bool
+
+	WaypointToken       string
+	WaypointControlAddr string
+	URLServicePort      int
+	URLServiceLabels    string
 }
 
 type Option func(*CEB, *config)
@@ -152,5 +161,17 @@ func WithEnvDefaults() Option {
 func WithExec(args []string) Option {
 	return func(ceb *CEB, cfg *config) {
 		cfg.ExecArgs = args
+	}
+}
+
+// WithURLService indicates that the CEB should boot a connection to the
+// Waypoint URL Service and forward HTTP traffic send to the given labels
+// to the given localhost port.
+func WithURLService(controlAddr, token string, port int, labels string) Option {
+	return func(ceb *CEB, cfg *config) {
+		cfg.WaypointControlAddr = controlAddr
+		cfg.WaypointToken = token
+		cfg.URLServicePort = port
+		cfg.URLServiceLabels = labels
 	}
 }
