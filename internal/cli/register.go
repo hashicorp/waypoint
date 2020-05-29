@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/posener/complete"
@@ -25,6 +26,9 @@ type RegisterCommand struct {
 	name    string
 	token   string
 	labels  string
+
+	deleteHostname bool
+	listHostnames  bool
 
 	debug bool
 }
@@ -48,6 +52,32 @@ type HostnameRequest struct {
 type HostnameResponse struct {
 	FQDN  string `json:"fqdn"`
 	Error string `json:"error"`
+}
+
+type ListRequest struct {
+	Token string
+}
+
+type ListHostname struct {
+	Hostname string
+	Labels   []string
+}
+
+type ListResponse struct {
+	Hostnames []ListHostname
+}
+
+type DeleteRequest struct {
+	Token    string
+	Hostname string
+}
+
+func (c *RegisterCommand) authToken() string {
+	if c.token != "" {
+		return c.token
+	}
+
+	return os.Getenv("WAYPOINT_TOKEN")
 }
 
 func (c *RegisterCommand) Run(args []string) int {
@@ -98,8 +128,118 @@ func (c *RegisterCommand) Run(args []string) int {
 		return 0
 	}
 
+	token := c.authToken()
+	if token == "" {
+		c.ui.Output("No authentication token found. Pass --token or set WAYPOINT_TOKEN.", terminal.WithErrorStyle())
+		return 1
+	}
+
+	if c.listHostnames {
+		var lr ListRequest
+		lr.Token = token
+
+		var buf bytes.Buffer
+
+		err := json.NewEncoder(&buf).Encode(&lr)
+		if err != nil {
+			c.ui.Output("Error encoding request to register account: %s", err, terminal.WithErrorStyle())
+			return 1
+		}
+
+		resp, err := http.Post(DefaultWaypointRegister+"/list-hostnames", "application/json", &buf)
+		if err != nil {
+			c.ui.Output("Error requesting hostname: %s", err, terminal.WithErrorStyle())
+			return 1
+		}
+
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			if resp.Header.Get("Content-Type") == "application/json" {
+				var hrr HostnameResponse
+
+				err = json.NewDecoder(resp.Body).Decode(&hrr)
+				if err == nil && hrr.Error != "" {
+					c.ui.Output("Unknown error requesting hostname: %s", hrr.Error)
+					return 1
+				}
+			}
+
+			c.ui.Output("Unknown error requesting hostname (status code %d)", resp.StatusCode)
+			return 1
+		}
+
+		var lrr ListResponse
+
+		err = json.NewDecoder(resp.Body).Decode(&lrr)
+		if err != nil {
+			c.ui.Output("Error decoding hostname response: %s", err, terminal.WithErrorStyle())
+			return 1
+		}
+
+		if len(lrr.Hostnames) == 0 {
+			c.ui.Output("No hostnames registered.")
+			return 0
+		}
+
+		c.ui.Output("Configured hostnames:", terminal.WithHeaderStyle())
+		for _, lh := range lrr.Hostnames {
+			c.ui.Output("Hostname: %[1]s\nLabels: %[2]s",
+				lh.Hostname,
+				strings.Join(lh.Labels, ", "),
+				terminal.WithKeyValueStyle(":"),
+				terminal.WithStatusStyle(),
+			)
+
+			c.ui.Output("")
+		}
+
+		return 0
+
+	}
+
+	if c.deleteHostname {
+		var hr DeleteRequest
+		hr.Token = token
+		hr.Hostname = c.name
+
+		var buf bytes.Buffer
+
+		err := json.NewEncoder(&buf).Encode(&hr)
+		if err != nil {
+			c.ui.Output("Error encoding request to register account: %s", err, terminal.WithErrorStyle())
+			return 1
+		}
+
+		resp, err := http.Post(DefaultWaypointRegister+"/delete-hostname", "application/json", &buf)
+		if err != nil {
+			c.ui.Output("Error requesting hostname: %s", err, terminal.WithErrorStyle())
+			return 1
+		}
+
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 204 {
+			if resp.Header.Get("Content-Type") == "application/json" {
+				var hrr HostnameResponse
+
+				err = json.NewDecoder(resp.Body).Decode(&hrr)
+				if err == nil && hrr.Error != "" {
+					c.ui.Output("Unknown error requesting hostname: %s", hrr.Error)
+					return 1
+				}
+			}
+
+			c.ui.Output("Unknown error requesting hostname (status code %d)", resp.StatusCode)
+			return 1
+		}
+
+		c.ui.Output("Successfully deleted hostname: %s", hr.Hostname)
+		return 0
+	}
+
 	var hr HostnameRequest
-	hr.Token = c.token
+	hr.Token = token
 	hr.Hostname = c.name
 	hr.Labels = strings.Split(c.labels, ",")
 

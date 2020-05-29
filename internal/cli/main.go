@@ -200,15 +200,27 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"register account": func() (cli.Command, error) {
+		"account register": func() (cli.Command, error) {
 			return &RegisterCommand{
 				baseCommand: baseCommand,
 				account:     true,
 			}, nil
 		},
-		"register hostname": func() (cli.Command, error) {
+		"hostname register": func() (cli.Command, error) {
 			return &RegisterCommand{
 				baseCommand: baseCommand,
+			}, nil
+		},
+		"hostname list": func() (cli.Command, error) {
+			return &RegisterCommand{
+				baseCommand:   baseCommand,
+				listHostnames: true,
+			}, nil
+		},
+		"hostname delete": func() (cli.Command, error) {
+			return &RegisterCommand{
+				baseCommand:    baseCommand,
+				deleteHostname: true,
 			}, nil
 		},
 	}
