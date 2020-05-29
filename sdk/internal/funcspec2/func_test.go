@@ -26,14 +26,13 @@ func TestFunc(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(spec)
 
-		f, err := Func(spec, func(args Args) (*any.Any, error) {
+		f := Func(spec, func(args Args) (*any.Any, error) {
 			require.Len(args, 1)
 			require.NotNil(args[0])
 
 			// At this point we'd normally RPC out.
 			return ptypes.MarshalAny(&pb.Empty{})
 		})
-		require.NoError(err)
 
 		msg, err := ptypes.MarshalAny(&pb.Empty{})
 		require.NoError(err)
@@ -50,14 +49,13 @@ func TestFunc(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(spec)
 
-		f, err := Func(spec, func(args Args) (*any.Any, error) {
+		f := Func(spec, func(args Args) (*any.Any, error) {
 			require.Len(args, 1)
 			require.NotNil(args[0])
 
 			// At this point we'd normally RPC out.
 			return ptypes.MarshalAny(&pb.Empty{})
 		})
-		require.NoError(err)
 
 		// Create an argument with the wrong type
 		msg, err := ptypes.MarshalAny(&pb.FuncSpec{})
@@ -80,12 +78,11 @@ func TestFunc(t *testing.T) {
 		spec.Result = nil
 
 		// Build our func to return a primitive
-		f, err := Func(spec, func(args Args) int {
+		f := Func(spec, func(args Args) int {
 			require.Len(args, 1)
 			require.NotNil(args[0])
 			return 42
 		})
-		require.NoError(err)
 
 		// Call the function with the proto type we expect
 		msg, err := ptypes.MarshalAny(&pb.Empty{})

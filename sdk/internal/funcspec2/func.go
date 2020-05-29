@@ -18,12 +18,12 @@ type Args []*any.Any
 // to invoke this function. The callback can have an argument type of Args
 // in order to get access to the required dynamic proto.Any types of the
 // FuncSpec.
-func Func(s *pb.FuncSpec2, cb interface{}) (*argmapper.Func, error) {
+func Func(s *pb.FuncSpec2, cb interface{}, args ...argmapper.Arg) *argmapper.Func {
 	// Build a Func around our callback so that we can inspect the
 	// input/output sets since we want to merge with that.
 	cbFunc, err := argmapper.NewFunc(cb)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	// Create the argmapper input values. All our args are expected to be
@@ -51,7 +51,7 @@ func Func(s *pb.FuncSpec2, cb interface{}) (*argmapper.Func, error) {
 
 	inputSet, err := argmapper.NewValueSet(inputValues)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	// Build our output set. By default this just matches our output function.
@@ -73,16 +73,18 @@ func Func(s *pb.FuncSpec2, cb interface{}) (*argmapper.Func, error) {
 
 		outputSet, err = argmapper.NewValueSet(outputValues)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 	}
 
-	return argmapper.BuildFunc(inputSet, outputSet, func(in, out *argmapper.ValueSet) error {
+	result, err := argmapper.BuildFunc(inputSet, outputSet, func(in, out *argmapper.ValueSet) error {
+		callArgs := make([]argmapper.Arg, len(args), len(args)+len(in.Values()))
+		copy(callArgs, args)
+
 		// Build up our callArgs which we'll pass to our callback. We pass
 		// through all args except for *any.Any values. For *any values, we
 		// add them to our Args list.
 		var args Args
-		var callArgs []argmapper.Arg
 		for _, v := range in.Values() {
 			// If we have any *any.Any then we append it to args
 			if v.Type == anyType {
@@ -134,6 +136,11 @@ func Func(s *pb.FuncSpec2, cb interface{}) (*argmapper.Func, error) {
 		// Go through our callback output looking
 		return nil
 	})
+	if err != nil {
+		panic(err)
+	}
+
+	return result
 }
 
 var (
