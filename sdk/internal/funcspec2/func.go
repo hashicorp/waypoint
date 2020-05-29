@@ -40,7 +40,7 @@ func Func(s *pb.FuncSpec2, cb interface{}) (*argmapper.Func, error) {
 	}
 
 	// Remove the Args value if there is one, since we're going to populate
-	// that later.
+	// that later and we don't need it for the initial call.
 	for i, v := range inputValues {
 		if v.Type == argsType {
 			inputValues[i] = inputValues[len(inputValues)-1]
@@ -54,8 +54,13 @@ func Func(s *pb.FuncSpec2, cb interface{}) (*argmapper.Func, error) {
 		return nil, err
 	}
 
-	// Build our output values based on the advertised result value.
+	// Build our output set. By default this just matches our output function.
 	outputSet := cbFunc.Output()
+
+	// If we have results specified on the Spec, then we expect this to represent
+	// a mapper. Mapper callbacks MUST return *any.Any or []*any.Any. When we
+	// have a mapper, we change the output type to be all the values we're
+	// mapping to.
 	if len(s.Result) > 0 {
 		var outputValues []argmapper.Value
 		for _, result := range s.Result {
@@ -73,7 +78,9 @@ func Func(s *pb.FuncSpec2, cb interface{}) (*argmapper.Func, error) {
 	}
 
 	return argmapper.BuildFunc(inputSet, outputSet, func(in, out *argmapper.ValueSet) error {
-		// Build up our callArgs which we'll pass to our callback.
+		// Build up our callArgs which we'll pass to our callback. We pass
+		// through all args except for *any.Any values. For *any values, we
+		// add them to our Args list.
 		var args Args
 		var callArgs []argmapper.Arg
 		for _, v := range in.Values() {
@@ -90,16 +97,20 @@ func Func(s *pb.FuncSpec2, cb interface{}) (*argmapper.Func, error) {
 		// Add our grouped Args type.
 		callArgs = append(callArgs, argmapper.Typed(args))
 
-		// Call into our callback. We should have the exact arguments
-		// required in our args list since we merged them earlier. We
-		// extract this into our callback output results.
+		// Call into our callback. This populates our callback function output.
 		cbOut := cbFunc.Output()
 		if err := cbOut.FromResult(cbFunc.Call(callArgs...)); err != nil {
 			return err
 		}
 
-		// Go through our output types from the callback
-		// TODO docs
+		// If we aren't a mapper, we return now since we've populated our callback.
+		if len(s.Result) == 0 {
+			return nil
+		}
+
+		// We're a mapper, so we have to go through our values and look
+		// for the *any.Any value or []*any.Any and populate our expected
+		// outputs.
 		for _, v := range cbOut.Values() {
 			switch v.Type {
 			case anyType:
