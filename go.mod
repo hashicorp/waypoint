@@ -23,6 +23,7 @@ require (
 	github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568 // indirect
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
 	github.com/gliderlabs/ssh v0.2.2
+	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/hashicorp/go-hclog v0.12.0

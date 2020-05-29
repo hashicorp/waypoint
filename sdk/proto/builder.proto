@@ -12,7 +12,7 @@ service Builder {
   rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
   rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
 
-  rpc BuildSpec(Empty) returns (FuncSpec);
+  rpc BuildSpec(Empty) returns (FuncSpec2);
   rpc Build(Build.Args) returns (Build.Resp);
 }
 

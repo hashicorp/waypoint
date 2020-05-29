@@ -6,11 +6,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
-	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
 	"github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -21,7 +21,7 @@ type BuilderPlugin struct {
 	plugin.NetRPCUnsupportedPlugin
 
 	Impl    component.Builder // Impl is the concrete implementation
-	Mappers []*mapper.Func    // Mappers
+	Mappers []*argmapper.Func // Mappers
 	Logger  hclog.Logger      // Logger
 }
 
@@ -67,7 +67,10 @@ func (c *builderClient) BuildFunc() interface{} {
 		return funcErr(err)
 	}
 
-	return funcspec.Func(spec, c.build, funcspec.WithLogger(c.logger))
+	// We don't want to be a mapper
+	spec.Result = nil
+
+	return funcspec.Func(spec, c.build, argmapper.Logger(c.logger))
 }
 
 func (c *builderClient) build(
@@ -88,7 +91,7 @@ func (c *builderClient) build(
 // real implementation of the component.
 type builderServer struct {
 	Impl    component.Builder
-	Mappers []*mapper.Func
+	Mappers []*argmapper.Func
 	Logger  hclog.Logger
 }
 
@@ -109,17 +112,21 @@ func (s *builderServer) Configure(
 func (s *builderServer) BuildSpec(
 	ctx context.Context,
 	args *proto.Empty,
-) (*proto.FuncSpec, error) {
+) (*proto.FuncSpec2, error) {
 	return funcspec.Spec(s.Impl.BuildFunc(),
-		funcspec.WithMappers(s.Mappers),
-		funcspec.WithLogger(s.Logger))
+		argmapper.Logger(s.Logger),
+		argmapper.ConverterFunc(s.Mappers...))
 }
 
 func (s *builderServer) Build(
 	ctx context.Context,
 	args *proto.Build_Args,
 ) (*proto.Build_Resp, error) {
-	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.BuildFunc(), s.Mappers)
+	encoded, err := callDynamicFuncAny2(s.Impl.BuildFunc(), args.Args,
+		argmapper.Typed(ctx),
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger),
+	)
 	if err != nil {
 		return nil, err
 	}

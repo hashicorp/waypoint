@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/go-argmapper"
 
 	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 )
@@ -55,6 +56,9 @@ func Plugins(opts ...Option) map[int]plugin.PluginSet {
 	if err := setFieldValue(result, c.Mappers); err != nil {
 		panic(err)
 	}
+	if err := setFieldValue(result, c.Mappers2); err != nil {
+		panic(err)
+	}
 	// Set the logger
 	if err := setFieldValue(result, c.Logger); err != nil {
 		panic(err)
@@ -67,6 +71,7 @@ func Plugins(opts ...Option) map[int]plugin.PluginSet {
 type pluginConfig struct {
 	Components []interface{}
 	Mappers    []*mapper.Func
+	Mappers2   []*argmapper.Func // TODO(funcspec2) make primary
 	Logger     hclog.Logger
 }
 
@@ -82,7 +87,19 @@ func WithComponents(cs ...interface{}) Option {
 // WithMappers sets the mappers to configure for the plugins. This will
 // append to the existing mappers.
 func WithMappers(ms ...*mapper.Func) Option {
-	return func(c *pluginConfig) { c.Mappers = append(c.Mappers, ms...) }
+	return func(c *pluginConfig) {
+		c.Mappers = append(c.Mappers, ms...)
+
+		// TODO(funcspec2) temporary shim while we are working on the transition
+		for _, m := range ms {
+			f, err := argmapper.NewFunc(m.Func.Interface())
+			if err != nil {
+				panic(err)
+			}
+
+			c.Mappers2 = append(c.Mappers2, f)
+		}
+	}
 }
 
 // WithLogger sets the logger for the plugins.

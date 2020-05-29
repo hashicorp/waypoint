@@ -46,6 +46,10 @@ func Spec(fn interface{}, args ...argmapper.Arg) (*pb.FuncSpec2, error) {
 	// Grab the input set of the function and build up our funcspec
 	result := pb.FuncSpec2{}
 	for _, v := range f.Input().Values() {
+		if !filterProto(v) {
+			continue
+		}
+
 		result.Args = append(result.Args, &pb.FuncSpec2_Value{
 			Name: v.Name,
 			Type: typeToMessage(v.Type),
@@ -56,7 +60,7 @@ func Spec(fn interface{}, args ...argmapper.Arg) (*pb.FuncSpec2, error) {
 	for _, v := range f.Output().Values() {
 		// We only advertise proto types in output since those are the only
 		// types we can send across the plugin boundary.
-		if !filterProto(argmapper.Value{Type: v.Type}) {
+		if !filterProto(v) {
 			continue
 		}
 
