@@ -6,10 +6,10 @@ option go_package = "aci";
 
 message Deployment {
   string url = 1;
-  Resource resource = 2;
-  string revision_id = 3;
+  string id = 2;
+  ContainerGroup container_group = 3;
 
-  message Resource {
+  message ContainerGroup {
     string name = 1;
     string resource_group = 2;
   }

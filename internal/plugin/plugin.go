@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 
+	"github.com/hashicorp/waypoint/builtin/azure/aci"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/builtin/google/cloudrun"
 	"github.com/hashicorp/waypoint/builtin/k8s"
@@ -24,6 +25,7 @@ var (
 		"pack":             pack.Options,
 		"docker":           docker.Options,
 		"google-cloud-run": cloudrun.Options,
+		"azure-aci":        aci.Options,
 		"kubernetes":       k8s.Options,
 		"lambda":           lambda.Options,
 	}
@@ -39,8 +41,10 @@ func init() {
 	Platforms.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.PlatformType))
 	Platforms.Register("kubernetes", BuiltinFactory("kubernetes", component.PlatformType))
 	Platforms.Register("lambda", BuiltinFactory("lambda", component.PlatformType))
+	Platforms.Register("azure-aci", BuiltinFactory("azure-aci", component.PlatformType))
 
 	Releasers.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.ReleaseManagerType))
+	Releasers.Register("azure-aci", BuiltinFactory("azure-aci", component.ReleaseManagerType))
 	Releasers.Register("kubernetes", BuiltinFactory("kubernetes", component.ReleaseManagerType))
 }
 
