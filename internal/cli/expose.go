@@ -1,8 +1,10 @@
 package cli
 
 import (
-	"context"
+	"fmt"
 	"log"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -27,6 +29,17 @@ type ExposeCommand struct {
 	horizonPort   string
 	tcpService    bool
 	debug         bool
+
+	test     bool
+	testAddr string
+}
+
+func (c *ExposeCommand) authToken() string {
+	if c.horizonToken != "" {
+		return c.horizonToken
+	}
+
+	return os.Getenv("WAYPOINT_TOKEN")
 }
 
 func (c *ExposeCommand) Run(args []string) int {
@@ -38,113 +51,110 @@ func (c *ExposeCommand) Run(args []string) int {
 		return 1
 	}
 
-	err := func(ctx context.Context) error {
-		level := hclog.Warn
+	L := c.Log
 
-		if c.debug {
-			level = hclog.Trace
+	ctx := hclog.WithContext(c.Ctx, L)
+
+	if c.test {
+		c.ui.Output("Running test HTTP server: %s", c.testAddr)
+		go http.ListenAndServe(":"+c.testAddr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "Welcome to Waypoint! This means you've successfully configured an application to be accessible via the Waypoint URL Service. Next up, your app!\n")
+		}))
+
+		<-ctx.Done()
+		return 0
+	}
+
+	L.Debug("starting agent")
+
+	g, err := agent.NewAgent(L.Named("agent"))
+	if err != nil {
+		c.ui.Output("Error configuring local interface to waypoint url service: %s", err, terminal.WithErrorStyle())
+		return 1
+	}
+
+	g.Token = c.authToken()
+	if g.Token == "" {
+		c.ui.Output("No token available. Use --token or set WAYPOINT_TOKEN.", terminal.WithErrorStyle())
+		return 1
+	}
+
+	target := c.horizonPort
+
+	labels := pb.ParseLabelSet(c.horizonLabels)
+
+	if !c.tcpService {
+		if strings.IndexByte(target, ':') == -1 {
+			_, err := strconv.Atoi(target)
+			if err == nil {
+				target = "127.0.0.1:" + target
+			} else {
+				target = target + ":80"
+			}
 		}
 
-		L := hclog.New(&hclog.LoggerOptions{
-			Name:  "waypoint",
-			Level: level,
+		_, err = g.AddService(&agent.Service{
+			Type:    "http",
+			Labels:  labels,
+			Handler: agent.HTTPHandler("http://" + target),
 		})
 
-		ctx = hclog.WithContext(ctx, L)
-
-		L.Debug("starting agent")
-
-		g, err := agent.NewAgent(L.Named("agent"))
 		if err != nil {
-			c.ui.Output("Error configuring local interface to waypoint url service: %s", err, terminal.WithErrorStyle())
-			return ErrSentinel
+			c.ui.Output("Error registering service: %s", err, terminal.WithErrorStyle())
+			return 1
 		}
 
-		g.Token = c.horizonToken
-
-		target := c.horizonPort
-
-		labels := pb.ParseLabelSet(c.horizonLabels)
-
-		if !c.tcpService {
-			if strings.IndexByte(target, ':') == -1 {
-				_, err := strconv.Atoi(target)
-				if err == nil {
-					target = "127.0.0.1:" + target
-				} else {
-					target = target + ":80"
-				}
+		c.ui.Output("registering HTTP service at %s", target)
+	} else {
+		if strings.IndexByte(target, ':') == -1 {
+			_, err := strconv.Atoi(target)
+			if err == nil {
+				target = "127.0.0.1:" + target
+			} else {
+				c.ui.Output("Unable to interpret '%s' as TCP target address", target, terminal.WithErrorStyle())
+				return 1
 			}
-
-			_, err = g.AddService(&agent.Service{
-				Type:    "http",
-				Labels:  labels,
-				Handler: agent.HTTPHandler("http://" + target),
-			})
-
-			if err != nil {
-				c.ui.Output("Error registering service: %s", err, terminal.WithErrorStyle())
-				return ErrSentinel
-			}
-
-			c.ui.Output("registering HTTP service at %s", target)
-		} else {
-			if strings.IndexByte(target, ':') == -1 {
-				_, err := strconv.Atoi(target)
-				if err == nil {
-					target = "127.0.0.1:" + target
-				} else {
-					c.ui.Output("Unable to interpret '%s' as TCP target address", target, terminal.WithErrorStyle())
-					return ErrSentinel
-				}
-			}
-
-			_, err = g.AddService(&agent.Service{
-				Type:    "tcp",
-				Labels:  labels,
-				Handler: agent.TCPHandler(target),
-			})
-
-			if err != nil {
-				c.ui.Output("Error registering service: %s", err, terminal.WithErrorStyle())
-				return ErrSentinel
-			}
-
-			c.ui.Output("registering TCP service at %s", target)
 		}
 
-		L.Debug("discovering hubs")
+		_, err = g.AddService(&agent.Service{
+			Type:    "tcp",
+			Labels:  labels,
+			Handler: agent.TCPHandler(target),
+		})
 
-		dc, err := discovery.NewClient(c.horizonAddr)
 		if err != nil {
-			log.Fatal(err)
+			c.ui.Output("Error registering service: %s", err, terminal.WithErrorStyle())
+			return 1
 		}
 
-		L.Debug("refreshing data")
+		c.ui.Output("registering TCP service at %s", target)
+	}
 
-		err = dc.Refresh(ctx)
-		if err != nil {
-			log.Fatal(err)
-		}
+	L.Debug("discovering hubs")
 
-		err = g.Start(ctx, dc)
-		if err != nil {
-			c.ui.Output("Error service traffic: %s", err, terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
-		c.ui.Output("serving connections to configured services")
-
-		err = g.Wait(ctx)
-		if err != nil {
-			c.ui.Output("Error service traffic: %s", err, terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
-		return nil
-	}(c.Ctx)
-
+	dc, err := discovery.NewClient(c.horizonAddr)
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	L.Debug("refreshing data")
+
+	err = dc.Refresh(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = g.Start(ctx, dc)
+	if err != nil {
+		c.ui.Output("Error service traffic: %s", err, terminal.WithErrorStyle())
+		return 1
+	}
+
+	c.ui.Output("Serving connections to configured service: %s", c.horizonLabels)
+
+	err = g.Wait(ctx)
+	if err != nil {
+		c.ui.Output("Error service traffic: %s", err, terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -154,6 +164,17 @@ func (c *ExposeCommand) Run(args []string) int {
 func (c *ExposeCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
+		if c.test {
+			f.StringVar(&flag.StringVar{
+				Name:    "port",
+				Target:  &c.testAddr,
+				Default: "8081",
+				Usage:   "Port for the test server to listen on.",
+			})
+
+			return
+		}
+
 		f.StringVar(&flag.StringVar{
 			Name:    "cluster-address",
 			Target:  &c.horizonAddr,
@@ -177,7 +198,7 @@ func (c *ExposeCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "address",
 			Aliases: []string{"p", "port"},
-			Target:  &c.horizonLabels,
+			Target:  &c.horizonPort,
 			Usage:   "Address of service to expose. Either a port number of address:port combo.",
 		})
 

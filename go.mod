@@ -24,7 +24,7 @@ require (
 	github.com/hashicorp/go-plugin v1.1.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.3.0
-	github.com/hashicorp/horizon v0.0.0-20200528211835-505098930c5b
+	github.com/hashicorp/horizon v0.0.0-20200529210319-3ee3f485d2ca
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/kr/text v0.1.0

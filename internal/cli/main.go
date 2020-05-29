@@ -200,6 +200,12 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"expose test": func() (cli.Command, error) {
+			return &ExposeCommand{
+				baseCommand: baseCommand,
+				test:        true,
+			}, nil
+		},
 		"account register": func() (cli.Command, error) {
 			return &RegisterCommand{
 				baseCommand: baseCommand,
