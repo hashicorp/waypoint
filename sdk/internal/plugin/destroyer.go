@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
+	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -81,7 +81,7 @@ func (s *destroyerServer) IsDestroyer(
 func (s *destroyerServer) DestroySpec(
 	ctx context.Context,
 	args *empty.Empty,
-) (*pb.FuncSpec2, error) {
+) (*pb.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.(component.Destroyer).DestroyFunc(),
 		//argmapper.WithNoOutput(), // we only expect an error value so ignore the rest
 		argmapper.ConverterFunc(s.Mappers...),
@@ -113,7 +113,7 @@ func (s *destroyerServer) Destroy(
 // supports destroy to implement.
 type destroyerProtoClient interface {
 	IsDestroyer(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.ImplementsResp, error)
-	DestroySpec(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.FuncSpec2, error)
+	DestroySpec(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.FuncSpec, error)
 	Destroy(context.Context, *pb.FuncSpec_Args, ...grpc.CallOption) (*empty.Empty, error)
 }
 

@@ -13,7 +13,7 @@ import (
 // Spec takes a function pointer and generates a FuncSpec from it. The
 // function must only take arguments that are proto.Message implementations
 // or have a chain of converters that directly convert to a proto.Message.
-func Spec(fn interface{}, args ...argmapper.Arg) (*pb.FuncSpec2, error) {
+func Spec(fn interface{}, args ...argmapper.Arg) (*pb.FuncSpec, error) {
 	filterProto := argmapper.FilterType(protoMessageType)
 
 	// Copy our args cause we're going to use append() and we don't
@@ -44,13 +44,13 @@ func Spec(fn interface{}, args ...argmapper.Arg) (*pb.FuncSpec2, error) {
 	}
 
 	// Grab the input set of the function and build up our funcspec
-	result := pb.FuncSpec2{}
+	result := pb.FuncSpec{}
 	for _, v := range f.Input().Values() {
 		if !filterProto(v) {
 			continue
 		}
 
-		result.Args = append(result.Args, &pb.FuncSpec2_Value{
+		result.Args = append(result.Args, &pb.FuncSpec_Value{
 			Name: v.Name,
 			Type: typeToMessage(v.Type),
 		})
@@ -64,7 +64,7 @@ func Spec(fn interface{}, args ...argmapper.Arg) (*pb.FuncSpec2, error) {
 			continue
 		}
 
-		result.Result = append(result.Result, &pb.FuncSpec2_Value{
+		result.Result = append(result.Result, &pb.FuncSpec_Value{
 			Name: v.Name,
 			Type: typeToMessage(v.Type),
 		})

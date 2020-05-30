@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
+	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
 	"github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -112,7 +112,7 @@ func (s *builderServer) Configure(
 func (s *builderServer) BuildSpec(
 	ctx context.Context,
 	args *proto.Empty,
-) (*proto.FuncSpec2, error) {
+) (*proto.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.BuildFunc(),
 		argmapper.Logger(s.Logger),
 		argmapper.ConverterFunc(s.Mappers...))

@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/sdk/internal-shared/protomappers"
-	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
+	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 

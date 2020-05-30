@@ -18,7 +18,7 @@ type Args []*any.Any
 // to invoke this function. The callback can have an argument type of Args
 // in order to get access to the required dynamic proto.Any types of the
 // FuncSpec.
-func Func(s *pb.FuncSpec2, cb interface{}, args ...argmapper.Arg) *argmapper.Func {
+func Func(s *pb.FuncSpec, cb interface{}, args ...argmapper.Arg) *argmapper.Func {
 	// Build a Func around our callback so that we can inspect the
 	// input/output sets since we want to merge with that.
 	cbFunc, err := argmapper.NewFunc(cb)

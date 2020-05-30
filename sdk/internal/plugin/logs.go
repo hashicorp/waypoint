@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
+	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/proto"
 )
 
@@ -103,7 +103,7 @@ type logPlatformServer struct {
 func (s *logPlatformServer) LogsSpec(
 	ctx context.Context,
 	args *empty.Empty,
-) (*proto.FuncSpec2, error) {
+) (*proto.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.LogsFunc(),
 		argmapper.ConverterFunc(s.Mappers...),
 		argmapper.Logger(s.Logger),

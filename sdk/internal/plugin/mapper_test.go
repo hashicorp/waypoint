@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
+	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/testproto"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -36,15 +36,15 @@ func TestMapperClient(t *testing.T) {
 	require.NoError(err)
 	require.NotEmpty(mappers)
 
-	targetSpec := &pb.FuncSpec2{
-		Args: []*pb.FuncSpec2_Value{
-			&pb.FuncSpec2_Value{
+	targetSpec := &pb.FuncSpec{
+		Args: []*pb.FuncSpec_Value{
+			&pb.FuncSpec_Value{
 				Type: "testproto.B",
 			},
 		},
 
-		Result: []*pb.FuncSpec2_Value{
-			&pb.FuncSpec2_Value{
+		Result: []*pb.FuncSpec_Value{
+			&pb.FuncSpec_Value{
 				Type: "testproto.Data",
 			},
 		},

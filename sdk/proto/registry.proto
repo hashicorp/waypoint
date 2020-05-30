@@ -14,7 +14,7 @@ service Registry {
   rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
   rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
 
-  rpc PushSpec(Empty) returns (FuncSpec2);
+  rpc PushSpec(Empty) returns (FuncSpec);
   rpc Push(Push.Args) returns (Push.Resp);
 }
 
