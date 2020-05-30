@@ -33,6 +33,6 @@ message Map {
 
   message ListResponse {
     // FuncSpec
-    repeated FuncSpec funcs = 1;
+    repeated FuncSpec2 funcs = 1;
   }
 }

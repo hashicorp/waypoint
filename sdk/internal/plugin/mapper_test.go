@@ -4,13 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/go-argmapper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
-	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
 	"github.com/hashicorp/waypoint/sdk/internal/testproto"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -36,9 +36,18 @@ func TestMapperClient(t *testing.T) {
 	require.NoError(err)
 	require.NotEmpty(mappers)
 
-	targetSpec := &pb.FuncSpec{
-		Args:   []string{"testproto.B"},
-		Result: "testproto.Data",
+	targetSpec := &pb.FuncSpec2{
+		Args: []*pb.FuncSpec2_Value{
+			&pb.FuncSpec2_Value{
+				Type: "testproto.B",
+			},
+		},
+
+		Result: []*pb.FuncSpec2_Value{
+			&pb.FuncSpec2_Value{
+				Type: "testproto.Data",
+			},
+		},
 	}
 
 	called := false
@@ -49,14 +58,17 @@ func TestMapperClient(t *testing.T) {
 			return &testproto.Data{}
 		}
 
-		return callDynamicFunc(context.Background(), hclog.L(), args, cb, mappers)
+		return callDynamicFunc2(cb, args,
+			argmapper.Typed(context.Background()),
+			argmapper.ConverterFunc(mappers...),
+		)
 	})
 
-	chain, err := target.Chain(mappers, context.Background(), &testproto.A{Value: 1})
-	require.NoError(err)
-	require.NotNil(chain)
-
-	_, err = chain.Call()
-	require.NoError(err)
+	result := target.Call(
+		argmapper.Typed(context.Background()),
+		argmapper.Typed(&testproto.A{Value: 1}),
+		argmapper.ConverterFunc(mappers...),
+	)
+	require.NoError(result.Err())
 	require.True(called)
 }
