@@ -8,7 +8,7 @@ import "plugin.proto";
 
 // LogPlatform is responsible for reading logs for a deployment.
 service LogPlatform {
-  rpc LogsSpec(google.protobuf.Empty) returns (FuncSpec);
+  rpc LogsSpec(google.protobuf.Empty) returns (FuncSpec2);
   rpc Logs(FuncSpec.Args) returns (Logs.Resp);
 }
 

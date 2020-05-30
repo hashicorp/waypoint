@@ -7,13 +7,13 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/go-argmapper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
-	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
 	"github.com/hashicorp/waypoint/sdk/proto"
 )
 
@@ -23,7 +23,7 @@ type LogPlatformPlugin struct {
 	plugin.NetRPCUnsupportedPlugin
 
 	Impl    component.LogPlatform // Impl is the concrete implementation
-	Mappers []*mapper.Func        // Mappers
+	Mappers []*argmapper.Func     // Mappers
 	Logger  hclog.Logger          // Logger
 }
 
@@ -63,7 +63,10 @@ func (c *logPlatformClient) LogsFunc() interface{} {
 		return funcErr(err)
 	}
 
-	return funcspec.Func(spec, c.logs, funcspec.WithLogger(c.logger))
+	// We don't want to be a mapper
+	spec.Result = nil
+
+	return funcspec.Func(spec, c.logs, argmapper.Logger(c.logger))
 }
 
 func (c *logPlatformClient) logs(
@@ -92,7 +95,7 @@ func (c *logPlatformClient) logs(
 // real implementation of the component.
 type logPlatformServer struct {
 	Impl    component.LogPlatform
-	Mappers []*mapper.Func
+	Mappers []*argmapper.Func
 	Logger  hclog.Logger
 	Broker  *plugin.GRPCBroker
 }
@@ -100,13 +103,15 @@ type logPlatformServer struct {
 func (s *logPlatformServer) LogsSpec(
 	ctx context.Context,
 	args *empty.Empty,
-) (*proto.FuncSpec, error) {
+) (*proto.FuncSpec2, error) {
 	return funcspec.Spec(s.Impl.LogsFunc(),
-		funcspec.WithMappers(s.Mappers),
-		funcspec.WithLogger(s.Logger),
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger),
 
 		// We expect a component.LogViewer output type and not a proto.Message
-		funcspec.WithOutput(reflect.TypeOf((*component.LogViewer)(nil)).Elem()),
+		argmapper.FilterOutput(argmapper.FilterType(
+			reflect.TypeOf((*component.LogViewer)(nil)).Elem()),
+		),
 	)
 }
 
@@ -114,7 +119,9 @@ func (s *logPlatformServer) Logs(
 	ctx context.Context,
 	args *proto.FuncSpec_Args,
 ) (*proto.Logs_Resp, error) {
-	result, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.LogsFunc(), s.Mappers)
+	result, err := callDynamicFunc2(s.Impl.LogsFunc(), args.Args,
+		argmapper.Typed(ctx),
+		argmapper.ConverterFunc(s.Mappers...))
 	if err != nil {
 		return nil, err
 	}
