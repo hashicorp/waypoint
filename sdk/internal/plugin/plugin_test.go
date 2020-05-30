@@ -65,19 +65,16 @@ func testDynamicFunc(
 	setFunc(value, func(
 		ctx context.Context,
 		args *component.Source,
-		// TODO(mitchellh): uncomment
-		//historyClient history.Client,
+		historyClient history.Client,
 	) *testproto.Data {
 		called = true
 		assert.NotNil(ctx)
 		assert.Equal("foo", args.App)
 
 		// Test history client
-		/*
-			assert.NotNil(historyClient)
-			_, err := historyClient.Deployments(ctx, nil)
-			assert.NoError(err)
-		*/
+		assert.NotNil(historyClient)
+		_, err := historyClient.Deployments(ctx, nil)
+		assert.NoError(err)
 
 		return &testproto.Data{Value: "hello"}
 	})
