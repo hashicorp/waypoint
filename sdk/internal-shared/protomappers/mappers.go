@@ -23,30 +23,22 @@ import (
 var All = []interface{}{
 	Source,
 	SourceProto,
-	/*
-		DeploymentConfig,
-		DeploymentConfigProto,
-		DatadirProject,
-		DatadirApp,
-		DatadirComponent,
-		DatadirProjectProto,
-		DatadirAppProto,
-		DatadirComponentProto,
-	*/
-	/*
-		Logger,
-		LoggerProto,
-	*/
-	/*
-		TerminalUI,
-		TerminalUIProto,
-	*/
+	DeploymentConfig,
+	DeploymentConfigProto,
+	DatadirProject,
+	DatadirApp,
+	DatadirComponent,
+	DatadirProjectProto,
+	DatadirAppProto,
+	DatadirComponentProto,
+	Logger,
+	LoggerProto,
+	TerminalUI,
+	TerminalUIProto,
 	HistoryClient,
 	HistoryClientProto,
-	/*
-		ReleaseTargets,
-		ReleaseTargetsProto,
-	*/
+	ReleaseTargets,
+	ReleaseTargetsProto,
 }
 
 // Source maps Args.Source to component.Source.

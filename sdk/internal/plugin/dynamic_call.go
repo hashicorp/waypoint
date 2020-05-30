@@ -1,34 +1,24 @@
 package plugin
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/hashicorp/go-hclog"
-
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/mitchellh/go-argmapper"
 )
 
 // callDynamicFunc calls a dynamic (mapper-based) function with the
 // given input arguments. This is a helper that is expected to be used
 // by most component gRPC servers to implement their function calls.
-func callDynamicFunc(
-	ctx context.Context,
-	log hclog.Logger,
-	args []*any.Any,
+func callDynamicFunc2(
 	f interface{},
-	mappers []*mapper.Func,
-	values ...interface{},
+	args []*any.Any,
+	callArgs ...argmapper.Arg,
 ) (interface{}, error) {
-	// Decode all our arguments. We are on the plugin side now so we expect
-	// to be able to decode all types sent to us.
-	decoded := make([]interface{}, 0, len(args)+1)
-	decoded = append(decoded, ctx)
-	decoded = append(decoded, values...)
+	// Decode our *any.Any values.
 	for _, arg := range args {
 		name, err := ptypes.AnyMessageName(arg)
 		if err != nil {
@@ -53,36 +43,30 @@ func callDynamicFunc(
 			return nil, err
 		}
 
-		decoded = append(decoded, v.Interface())
+		callArgs = append(callArgs, argmapper.Typed(v.Interface()))
 	}
 
-	// Build our mapper function and find the chain to get us to the required
-	// arguments if possible. This chain will do things like convert from
-	// our raw proto types to richer structures if the plugin expects that.
-	mf, err := mapper.NewFunc(f, mapper.WithLogger(log))
+	mapF, err := argmapper.NewFunc(f)
 	if err != nil {
 		return nil, err
 	}
 
-	chain, err := mf.Chain(mappers, decoded...)
-	if err != nil {
+	result := mapF.Call(callArgs...)
+	if err := result.Err(); err != nil {
 		return nil, err
 	}
 
-	return chain.Call()
+	return result.Out(0), nil
 }
 
 // callDynamicFuncAny is callDynamicFunc that automatically encodes the
 // result to an *any.Any.
-func callDynamicFuncAny(
-	ctx context.Context,
-	log hclog.Logger,
-	args []*any.Any,
+func callDynamicFuncAny2(
 	f interface{},
-	mappers []*mapper.Func,
-	values ...interface{},
+	args []*any.Any,
+	callArgs ...argmapper.Arg,
 ) (*any.Any, error) {
-	result, err := callDynamicFunc(ctx, log, args, f, mappers, values...)
+	result, err := callDynamicFunc2(f, args, callArgs...)
 	if err != nil {
 		return nil, err
 	}
