@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/mattn/go-colorable"
+	"github.com/mitchellh/go-argmapper"
 
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/internal-shared/protomappers"
 	sdkplugin "github.com/hashicorp/waypoint/sdk/internal/plugin"
 	"github.com/hashicorp/waypoint/sdk/internal/stdio"
@@ -55,13 +55,13 @@ func Main(opts ...Option) {
 	hclog.SetDefault(log)
 
 	// Build up our mappers
-	var mappers []*mapper.Func
+	var mappers []*argmapper.Func
 	for _, raw := range c.Mappers {
-		// If the mapper is already a mapper.Func, then we let that through as-is
-		m, ok := raw.(*mapper.Func)
+		// If the mapper is already a argmapper.Func, then we let that through as-is
+		m, ok := raw.(*argmapper.Func)
 		if !ok {
 			var err error
-			m, err = mapper.NewFunc(raw, mapper.WithLogger(log))
+			m, err = argmapper.NewFunc(raw, argmapper.Logger(log))
 			if err != nil {
 				panic(err)
 			}
