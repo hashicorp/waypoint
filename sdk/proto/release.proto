@@ -12,7 +12,7 @@ service ReleaseManager {
   rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
   rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
 
-  rpc ReleaseSpec(Empty) returns (FuncSpec);
+  rpc ReleaseSpec(Empty) returns (FuncSpec2);
   rpc Release(Release.Args) returns (Release.Resp);
 }
 

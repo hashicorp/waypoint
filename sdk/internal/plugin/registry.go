@@ -6,11 +6,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
-	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
 	"github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -21,7 +21,7 @@ type RegistryPlugin struct {
 	plugin.NetRPCUnsupportedPlugin
 
 	Impl    component.Registry // Impl is the concrete implementation
-	Mappers []*mapper.Func     // Mappers
+	Mappers []*argmapper.Func  // Mappers
 	Logger  hclog.Logger       // Logger
 }
 
@@ -66,7 +66,10 @@ func (c *registryClient) PushFunc() interface{} {
 		panic(err)
 	}
 
-	return funcspec.Func(spec, c.push, funcspec.WithLogger(c.logger))
+	// We don't want to be a mapper
+	spec.Result = nil
+
+	return funcspec.Func(spec, c.push, argmapper.Logger(c.logger))
 }
 
 func (c *registryClient) push(
@@ -87,7 +90,7 @@ func (c *registryClient) push(
 // real implementation of the component.
 type registryServer struct {
 	Impl    component.Registry
-	Mappers []*mapper.Func
+	Mappers []*argmapper.Func
 	Logger  hclog.Logger
 }
 
@@ -108,17 +111,20 @@ func (s *registryServer) Configure(
 func (s *registryServer) PushSpec(
 	ctx context.Context,
 	args *proto.Empty,
-) (*proto.FuncSpec, error) {
+) (*proto.FuncSpec2, error) {
 	return funcspec.Spec(s.Impl.PushFunc(),
-		funcspec.WithMappers(s.Mappers),
-		funcspec.WithLogger(s.Logger))
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger))
 }
 
 func (s *registryServer) Push(
 	ctx context.Context,
 	args *proto.Push_Args,
 ) (*proto.Push_Resp, error) {
-	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.PushFunc(), s.Mappers)
+	encoded, err := callDynamicFuncAny2(s.Impl.PushFunc(), args.Args,
+		argmapper.Typed(ctx),
+		argmapper.ConverterFunc(s.Mappers...),
+	)
 	if err != nil {
 		return nil, err
 	}
