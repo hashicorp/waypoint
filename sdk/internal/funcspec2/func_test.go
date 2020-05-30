@@ -93,4 +93,28 @@ func TestFunc(t *testing.T) {
 		require.NoError(result.Err())
 		require.Equal(42, result.Out(0))
 	})
+
+	t.Run("provide input arguments", func(t *testing.T) {
+		require := require.New(t)
+
+		spec, err := Spec(func(*pb.Empty) *pb.Empty { return &pb.Empty{} })
+		require.NoError(err)
+		require.NotNil(spec)
+
+		f := Func(spec, func(args Args, v int) (*any.Any, error) {
+			require.Len(args, 1)
+			require.NotNil(args[0])
+			require.Equal(42, v)
+
+			// At this point we'd normally RPC out.
+			return ptypes.MarshalAny(&pb.Empty{})
+		}, argmapper.Typed(int(42)))
+
+		msg, err := ptypes.MarshalAny(&pb.Empty{})
+		require.NoError(err)
+
+		result := f.Call(argmapper.TypedSubtype(msg, proto.MessageName(&pb.Empty{})))
+		require.NoError(result.Err())
+		require.Equal(reflect.Struct, reflect.ValueOf(result.Out(0)).Kind())
+	})
 }

@@ -79,9 +79,6 @@ func Func(s *pb.FuncSpec2, cb interface{}, args ...argmapper.Arg) *argmapper.Fun
 
 	result, err := argmapper.BuildFunc(inputSet, outputSet, func(in, out *argmapper.ValueSet) error {
 		callArgs := make([]argmapper.Arg, 0, len(args)+len(in.Values()))
-		// TODO(mitchellh): do we need to copy these args over?
-		//callArgs := make([]argmapper.Arg, len(args), len(args)+len(in.Values()))
-		//copy(callArgs, args)
 
 		// Build up our callArgs which we'll pass to our callback. We pass
 		// through all args except for *any.Any values. For *any values, we
