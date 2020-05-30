@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
 	"github.com/hashicorp/waypoint/sdk/internal/testproto"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
@@ -19,9 +18,10 @@ func TestMapperClient(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)
 
-	mA := mapper.TestFunc(t, func(a *testproto.A) *testproto.B {
+	mA, err := argmapper.NewFunc(func(a *testproto.A) *testproto.B {
 		return &testproto.B{Value: a.Value + 1}
 	})
+	require.NoError(err)
 
 	plugins := Plugins(WithMappers(append(testDefaultMappers(t), mA)...))
 	client, server := plugin.TestPluginGRPCConn(t, plugins[1])

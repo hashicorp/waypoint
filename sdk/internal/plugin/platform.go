@@ -6,11 +6,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
-	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
 	"github.com/hashicorp/waypoint/sdk/proto"
@@ -22,7 +22,7 @@ type PlatformPlugin struct {
 	plugin.NetRPCUnsupportedPlugin
 
 	Impl    component.Platform // Impl is the concrete implementation
-	Mappers []*mapper.Func     // Mappers
+	Mappers []*argmapper.Func  // Mappers
 	Logger  hclog.Logger       // Logger
 }
 
@@ -126,7 +126,7 @@ type platformClient struct {
 	client  proto.PlatformClient
 	logger  hclog.Logger
 	broker  *plugin.GRPCBroker
-	mappers []*mapper.Func
+	mappers []*argmapper.Func
 }
 
 func (c *platformClient) Config() (interface{}, error) {
@@ -145,8 +145,8 @@ func (c *platformClient) DeployFunc() interface{} {
 	}
 
 	return funcspec.Func(spec, c.deploy,
-		funcspec.WithLogger(c.logger),
-		funcspec.WithValues(&pluginargs.Internal{
+		argmapper.Logger(c.logger),
+		argmapper.Typed(&pluginargs.Internal{
 			Broker:  c.broker,
 			Mappers: c.mappers,
 			Cleanup: &pluginargs.Cleanup{},
@@ -205,11 +205,11 @@ func (s *platformServer) Configure(
 func (s *platformServer) DeploySpec(
 	ctx context.Context,
 	args *proto.Empty,
-) (*proto.FuncSpec, error) {
+) (*proto.FuncSpec2, error) {
 	return funcspec.Spec(s.Impl.DeployFunc(),
-		funcspec.WithMappers(s.Mappers),
-		funcspec.WithLogger(s.Logger),
-		funcspec.WithValues(s.internal()),
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger),
+		argmapper.Typed(s.internal()),
 	)
 }
 
@@ -220,7 +220,11 @@ func (s *platformServer) Deploy(
 	internal := s.internal()
 	defer internal.Cleanup.Close()
 
-	encoded, err := callDynamicFuncAny(ctx, s.Logger, args.Args, s.Impl.DeployFunc(), s.Mappers, internal)
+	encoded, err := callDynamicFuncAny2(s.Impl.DeployFunc(), args.Args,
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Typed(internal),
+		argmapper.Typed(ctx),
+	)
 	if err != nil {
 		return nil, err
 	}

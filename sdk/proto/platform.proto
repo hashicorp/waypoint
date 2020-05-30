@@ -11,12 +11,12 @@ service Platform {
   rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
   rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
 
-  rpc DeploySpec(Empty) returns (FuncSpec);
+  rpc DeploySpec(Empty) returns (FuncSpec2);
   rpc Deploy(Deploy.Args) returns (Deploy.Resp);
 
   // component.Destroyer optional implementation
   rpc IsDestroyer(google.protobuf.Empty) returns (ImplementsResp);
-  rpc DestroySpec(google.protobuf.Empty) returns (FuncSpec);
+  rpc DestroySpec(google.protobuf.Empty) returns (FuncSpec2);
   rpc Destroy(FuncSpec.Args) returns (google.protobuf.Empty);
 
   // IsLogPlatform returns true if this platform also implements LogPlatform.

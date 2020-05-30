@@ -6,11 +6,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/mitchellh/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
-	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	funcspec "github.com/hashicorp/waypoint/sdk/internal/funcspec2"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -21,7 +21,7 @@ type destroyerClient struct {
 	Client  destroyerProtoClient
 	Logger  hclog.Logger
 	Broker  *plugin.GRPCBroker
-	Mappers mapper.Set
+	Mappers []*argmapper.Func
 }
 
 func (c *destroyerClient) Implements(ctx context.Context) (bool, error) {
@@ -41,8 +41,8 @@ func (c *destroyerClient) DestroyFunc() interface{} {
 	}
 
 	return funcspec.Func(spec, c.destroy,
-		funcspec.WithLogger(c.Logger),
-		funcspec.WithValues(&pluginargs.Internal{
+		argmapper.Logger(c.Logger),
+		argmapper.Typed(&pluginargs.Internal{
 			Broker:  c.Broker,
 			Mappers: c.Mappers,
 			Cleanup: &pluginargs.Cleanup{},
@@ -81,12 +81,12 @@ func (s *destroyerServer) IsDestroyer(
 func (s *destroyerServer) DestroySpec(
 	ctx context.Context,
 	args *empty.Empty,
-) (*pb.FuncSpec, error) {
+) (*pb.FuncSpec2, error) {
 	return funcspec.Spec(s.Impl.(component.Destroyer).DestroyFunc(),
-		funcspec.WithNoOutput(), // we only expect an error value so ignore the rest
-		funcspec.WithMappers(s.Mappers),
-		funcspec.WithLogger(s.Logger),
-		funcspec.WithValues(s.internal()),
+		//argmapper.WithNoOutput(), // we only expect an error value so ignore the rest
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger),
+		argmapper.Typed(s.internal()),
 	)
 }
 
@@ -97,7 +97,11 @@ func (s *destroyerServer) Destroy(
 	internal := s.internal()
 	defer internal.Cleanup.Close()
 
-	_, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.(component.Destroyer).DestroyFunc(), s.Mappers, internal)
+	_, err := callDynamicFunc2(s.Impl.(component.Destroyer).DestroyFunc(), args.Args,
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Typed(internal),
+		argmapper.Typed(ctx),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +113,7 @@ func (s *destroyerServer) Destroy(
 // supports destroy to implement.
 type destroyerProtoClient interface {
 	IsDestroyer(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.ImplementsResp, error)
-	DestroySpec(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.FuncSpec, error)
+	DestroySpec(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.FuncSpec2, error)
 	Destroy(context.Context, *pb.FuncSpec_Args, ...grpc.CallOption) (*empty.Empty, error)
 }
 
