@@ -135,7 +135,7 @@ func Func(s *pb.FuncSpec2, cb interface{}, args ...argmapper.Arg) *argmapper.Fun
 
 		// Go through our callback output looking
 		return nil
-	})
+	}, argmapper.ConverterGen(anyConvGen))
 	if err != nil {
 		panic(err)
 	}
