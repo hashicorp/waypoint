@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-argmapper"
 
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/plugin"
@@ -27,7 +28,7 @@ type Project struct {
 	apps      map[string]*App
 	factories map[component.Type]*mapper.Factory
 	dir       *datadir.Project
-	mappers   []*mapper.Func
+	mappers   []*argmapper.Func
 	client    pb.WaypointClient
 	dconfig   component.DeploymentConfig
 
@@ -68,8 +69,8 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// Defaults
 	if len(p.mappers) == 0 {
 		var err error
-		p.mappers, err = mapper.NewFuncList(protomappers.All,
-			mapper.WithLogger(p.logger),
+		p.mappers, err = argmapper.NewFuncList(protomappers.All,
+			argmapper.Logger(p.logger),
 		)
 		if err != nil {
 			return nil, err
@@ -176,6 +177,6 @@ func WithFactory(t component.Type, f *mapper.Factory) Option {
 }
 
 // WithMappers adds the mappers to the list of mappers.
-func WithMappers(m ...*mapper.Func) Option {
+func WithMappers(m ...*argmapper.Func) Option {
 	return func(p *Project, opts *options) { p.mappers = append(p.mappers, m...) }
 }

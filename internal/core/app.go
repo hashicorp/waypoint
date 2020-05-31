@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-argmapper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -41,7 +42,7 @@ type App struct {
 	dconfig       component.DeploymentConfig
 	logger        hclog.Logger
 	dir           *datadir.App
-	mappers       []*mapper.Func
+	mappers       []*argmapper.Func
 	components    map[interface{}]*pb.Component
 	componentDirs map[interface{}]*datadir.Component
 	closers       []func() error
@@ -62,7 +63,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 		componentDirs: make(map[interface{}]*datadir.Component),
 
 		// very important below that we allocate a new slice since we modify
-		mappers: append([]*mapper.Func{}, p.mappers...),
+		mappers: append([]*argmapper.Func{}, p.mappers...),
 
 		// set the UI, which for now is identical to project but in the
 		// future should probably change as we do app-scoping, parallelization,
@@ -194,10 +195,10 @@ func (a *App) callDynamicFunc(
 	// We allow f to be a *mapper.Func because our plugin system creates
 	// a func directly due to special argument types.
 	// TODO: test
-	rawFunc, ok := f.(*mapper.Func)
+	rawFunc, ok := f.(*argmapper.Func)
 	if !ok {
 		var err error
-		rawFunc, err = mapper.NewFunc(f, mapper.WithLogger(log))
+		rawFunc, err = argmapper.NewFunc(f, argmapper.Logger(log))
 		if err != nil {
 			return nil, err
 		}
@@ -217,19 +218,15 @@ func (a *App) callDynamicFunc(
 		a.dir,
 		cdir,
 		a.UI,
-		&serverhistory.Client{APIClient: a.client, MapperSet: mapper.Set(a.mappers)},
+		&serverhistory.Client{APIClient: a.client, MapperSet: a.mappers},
 	)
 
 	// Build the chain and call it
-	chain, err := rawFunc.Chain(a.mappers, values...)
-	if err != nil {
+	callResult := rawFunc.Call(argmapper.ConverterFunc(a.mappers...), argmapper.Typed(values...))
+	if err := callResult.Err(); err != nil {
 		return nil, err
 	}
-	log.Debug("function chain", "chain", chain.String())
-	raw, err := chain.Call()
-	if err != nil {
-		return nil, err
-	}
+	raw := callResult.Out(0)
 
 	// If we don't have an expected result type, then just return as-is.
 	// Otherwise, we need to verify the result type matches properly.

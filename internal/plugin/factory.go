@@ -8,9 +8,9 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-argmapper"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/internal-shared/pluginclient"
 )
 
@@ -94,7 +94,7 @@ type Instance struct {
 	Component interface{}
 
 	// Mappers is the list of mappers that this plugin is providing.
-	Mappers []*mapper.Func
+	Mappers []*argmapper.Func
 
 	// Closer is a function that should be called to clean up resources
 	// associated with this plugin.

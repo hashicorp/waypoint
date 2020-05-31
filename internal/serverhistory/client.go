@@ -9,13 +9,13 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/history"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/hashicorp/go-argmapper"
 )
 
 // Client implements history.Client and provides history using a backend server.
 type Client struct {
 	APIClient pb.WaypointClient // Client to the API server
-	MapperSet mapper.Set       // Set of mappers we can use for type conversion
+	MapperSet []*argmapper.Func // Set of mappers we can use for type conversion
 }
 
 // Deployments implements history.Client
