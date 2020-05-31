@@ -19,9 +19,9 @@ type Factory struct {
 	funcs map[string]*argmapper.Func
 }
 
-// NewFactory creates a Factory for the interface iface. The parameter
+// New creates a Factory for the interface iface. The parameter
 // iface should be a nil pointer to the interface type. Example: (*iface)(nil).
-func NewFactory(iface interface{}) (*Factory, error) {
+func New(iface interface{}) (*Factory, error) {
 	// Get the interface type
 	it := reflect.TypeOf(iface)
 	if k := it.Kind(); k != reflect.Ptr {
@@ -36,10 +36,33 @@ func NewFactory(iface interface{}) (*Factory, error) {
 }
 
 // Register registers a factory function named name for the interface.
+//
+// This will error if the function given doesn't result in a single non-error
+// output that implements the interface registered with this factory. The
+// function return signature can be: (T) or (T, error) where T implements
+// the interface type for this factory.
+//
+// T is allowed to be a literal interface{} type. In this case, it is the
+// callers responsibility to ensure the result is the proper type.
+//
+// fn may take any number and types of inputs. It is the callers responsibilty
+// when using Func and Call to pass in the required parameters.
 func (f *Factory) Register(name string, fn interface{}) error {
 	ff, err := argmapper.NewFunc(fn)
 	if err != nil {
 		return err
+	}
+
+	outputs := ff.Output().Values()
+	if len(outputs) != 1 {
+		return fmt.Errorf("factory functions should have exactly one output: the implementation")
+	}
+
+	// We allow "interface{}" to pass through, in which case we trust that
+	// the callback is generating the correct type.
+	typ := outputs[0].Type
+	if typ != ifaceType && !typ.Implements(f.iface) {
+		return fmt.Errorf("factory output should implement interface: %s", f.iface)
 	}
 
 	f.funcs[name] = ff
@@ -51,3 +74,5 @@ func (f *Factory) Register(name string, fn interface{}) error {
 func (f *Factory) Func(name string) *argmapper.Func {
 	return f.funcs[name]
 }
+
+var ifaceType = reflect.TypeOf((*interface{})(nil)).Elem()

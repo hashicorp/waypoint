@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	Builders   = mustFactory(factory.NewFactory((*component.Builder)(nil)))
-	Registries = mustFactory(factory.NewFactory((*component.Registry)(nil)))
-	Platforms  = mustFactory(factory.NewFactory((*component.Platform)(nil)))
-	Releasers  = mustFactory(factory.NewFactory((*component.ReleaseManager)(nil)))
+	Builders   = mustFactory(factory.New((*component.Builder)(nil)))
+	Registries = mustFactory(factory.New((*component.Registry)(nil)))
+	Platforms  = mustFactory(factory.New((*component.Platform)(nil)))
+	Releasers  = mustFactory(factory.New((*component.ReleaseManager)(nil)))
 
 	// Builtins is the map of all available builtin plugins and their
 	// options for launching them.

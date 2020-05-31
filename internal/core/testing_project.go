@@ -60,7 +60,7 @@ func TestFactorySingle(t testing.T, typ component.Type, n string) (*factory.Fact
 
 // TestFactory creates a factory for the given component type.
 func TestFactory(t testing.T, typ component.Type) *factory.Factory {
-	f, err := factory.NewFactory(component.TypeMap[typ])
+	f, err := factory.New(component.TypeMap[typ])
 	require.NoError(t, err)
 	return f
 }
