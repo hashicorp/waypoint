@@ -3,7 +3,7 @@ package protomappers
 import (
 	"testing"
 
-	"github.com/mitchellh/go-argmapper"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/sdk/component"

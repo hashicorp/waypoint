@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/mitchellh/go-argmapper"
+	"github.com/hashicorp/go-argmapper"
 
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )

@@ -7,7 +7,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-plugin"
-	"github.com/mitchellh/go-argmapper"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

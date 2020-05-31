@@ -5,7 +5,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/mitchellh/go-argmapper"
+	"github.com/hashicorp/go-argmapper"
 
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/mitchellh/go-argmapper"
+	"github.com/hashicorp/go-argmapper"
 )
 
 // Factory keeps track of named dependency-injected factory functions to

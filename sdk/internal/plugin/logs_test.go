@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-plugin"
-	"github.com/mitchellh/go-argmapper"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 

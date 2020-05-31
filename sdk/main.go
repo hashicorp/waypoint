@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/mattn/go-colorable"
-	"github.com/mitchellh/go-argmapper"
+	"github.com/hashicorp/go-argmapper"
 
 	"github.com/hashicorp/waypoint/sdk/internal-shared/protomappers"
 	sdkplugin "github.com/hashicorp/waypoint/sdk/internal/plugin"
