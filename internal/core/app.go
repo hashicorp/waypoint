@@ -6,18 +6,18 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-argmapper"
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverhistory"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -252,7 +252,7 @@ func (a *App) initComponent(
 	ctx context.Context,
 	typ component.Type,
 	target interface{},
-	f *mapper.Factory,
+	f *factory.Factory,
 	cfg *config.Component,
 ) error {
 	log := a.logger.Named(strings.ToLower(typ.String()))
@@ -278,11 +278,12 @@ func (a *App) initComponent(
 	}
 
 	// Call the factory to get our raw value (interface{} type)
-	raw, err := fn.Call(ctx, a.source, log, cdir)
-	if err != nil {
+	result := fn.Call(argmapper.Typed(ctx, a.source, log, cdir))
+	if err := result.Err(); err != nil {
 		return err
 	}
 	log.Info("initialized component", "type", typ.String())
+	raw := result.Out(0)
 
 	// If we have a plugin.Instance then we can extract other information
 	// from this plugin. We accept pure factories too that don't return

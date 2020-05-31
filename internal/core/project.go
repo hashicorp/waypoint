@@ -6,15 +6,15 @@ import (
 	"io"
 	"sync"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-argmapper"
+	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/internal-shared/protomappers"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -26,7 +26,7 @@ import (
 type Project struct {
 	logger    hclog.Logger
 	apps      map[string]*App
-	factories map[component.Type]*mapper.Factory
+	factories map[component.Type]*factory.Factory
 	dir       *datadir.Project
 	mappers   []*argmapper.Func
 	client    pb.WaypointClient
@@ -52,7 +52,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 		logger: hclog.L(),
 		apps:   make(map[string]*App),
-		factories: map[component.Type]*mapper.Factory{
+		factories: map[component.Type]*factory.Factory{
 			component.BuilderType:        plugin.Builders,
 			component.RegistryType:       plugin.Registries,
 			component.PlatformType:       plugin.Platforms,
@@ -172,7 +172,7 @@ func WithLogger(log hclog.Logger) Option {
 
 // WithFactory sets a factory for a component type. If this isn't set for
 // any component type, then the builtin mapper will be used.
-func WithFactory(t component.Type, f *mapper.Factory) Option {
+func WithFactory(t component.Type, f *factory.Factory) Option {
 	return func(p *Project, opts *options) { p.factories[t] = f }
 }
 
