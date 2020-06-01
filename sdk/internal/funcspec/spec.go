@@ -2,148 +2,78 @@ package funcspec
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-argmapper"
 
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 // Spec takes a function pointer and generates a FuncSpec from it. The
 // function must only take arguments that are proto.Message implementations
-// or have a chain of mappers that directly convert to a proto.Message.
-func Spec(f interface{}, opts ...Option) (*pb.FuncSpec, error) {
-	// Build our configuration
-	var cfg config
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+// or have a chain of converters that directly convert to a proto.Message.
+func Spec(fn interface{}, args ...argmapper.Arg) (*pb.FuncSpec, error) {
+	filterProto := argmapper.FilterType(protoMessageType)
 
-	// Defaults
-	if cfg.Logger == nil {
-		cfg.Logger = hclog.L()
-	}
-	if cfg.Output == nil {
-		cfg.Output = protoMessageType
-	}
+	// Copy our args cause we're going to use append() and we don't
+	// want to modify our caller.
+	args = append([]argmapper.Arg{
+		argmapper.FilterOutput(filterProto),
+	}, args...)
 
-	// Build our initial mapper
-	mf, err := mapper.NewFunc(f, mapper.WithLogger(cfg.Logger), mapper.WithValues(cfg.Values...))
+	// Build our function
+	f, err := argmapper.NewFunc(fn)
 	if err != nil {
 		return nil, err
 	}
 
-	// These check functions are used multiple times to check type impl.
-	checkCtx := mapper.CheckReflectType(contextType)
-	checkProto := mapper.CheckReflectType(protoMessageType)
+	filter := argmapper.FilterOr(
+		argmapper.FilterType(contextType),
+		filterProto,
+	)
 
-	// Our input set can be ctx, proto, or any of the extra values given
-	inputCheck := mapper.CheckOr(checkCtx, checkProto)
-	for _, v := range cfg.Values {
-		inputCheck = mapper.CheckOr(inputCheck, mapper.CheckReflectType(reflect.TypeOf(v)))
+	// Redefine the function in terms of protobuf messages. "Redefine" changes
+	// the inputs of a function to only require values that match our filter
+	// function. In our case, that is protobuf messages.
+	f, err = f.Redefine(append(args,
+		argmapper.FilterInput(filter),
+	)...)
+	if err != nil {
+		return nil, err
 	}
 
-	// We need to find a path through that only has protobuf requirements
-	// or "context". These are the only given values to the func for plugins.
-	types := mf.ChainInputSet(cfg.Mappers, inputCheck)
-	if len(types) == 0 {
-		return nil, fmt.Errorf(
-			"cannot satisfy the function %s. The function takes arguments that "+
-				"are not proto.Messages or have no mappers to convert to proto.Messages",
-			mf)
-	}
-
-	// Build our FuncSpec. The name we use is just the name on this side.
-	result := pb.FuncSpec{Name: mf.Name}
-
-	// For each type, get the Any message name for it.
-	for _, t := range types {
-		// Ignore any non-proto types. We verify above that we only get
-		// types we accept so we don't care what the other types are at this
-		// point.
-		if !checkProto(t) {
+	// Grab the input set of the function and build up our funcspec
+	result := pb.FuncSpec{}
+	for _, v := range f.Input().Values() {
+		if !filterProto(v) {
 			continue
 		}
 
-		// If we're here we know its a proto.Message
-		result.Args = append(result.Args, typeToMessage(t))
+		result.Args = append(result.Args, &pb.FuncSpec_Value{
+			Name: v.Name,
+			Type: typeToMessage(v.Type),
+		})
 	}
 
-	// Get the result type. If it isn't a proto message, we look for a chain
-	// to get us to that proto message.
-	checkOutput := mapper.CheckReflectType(cfg.Output)
-	out := mf.Out
-	if !cfg.NoOutput && !checkOutput(out) {
-		chain := mapper.ChainTarget(checkOutput, cfg.Mappers)
-		if chain == nil {
-			return nil, fmt.Errorf(
-				"function must output a type that is a %[1]s or has "+
-					"a chain of mappers that result in a %[1]s", cfg.Output.String())
+	// Grab the output set and store that
+	for _, v := range f.Output().Values() {
+		// We only advertise proto types in output since those are the only
+		// types we can send across the plugin boundary.
+		if !filterProto(v) {
+			continue
 		}
 
-		out = chain.Out()
-	}
-	if checkProto(out) {
-		result.Result = typeToMessage(out)
+		result.Result = append(result.Result, &pb.FuncSpec_Value{
+			Name: v.Name,
+			Type: typeToMessage(v.Type),
+		})
 	}
 
 	return &result, nil
 }
 
-type config struct {
-	Logger   hclog.Logger
-	Mappers  []*mapper.Func
-	Output   reflect.Type
-	NoOutput bool
-	Values   []interface{}
-}
-
-type Option func(*config)
-
-// WithLogger specifies a logger. If this isn't specified then the default
-// logger will be used.
-func WithLogger(v hclog.Logger) Option {
-	return func(c *config) { c.Logger = v }
-}
-
-// WithMappers specifies mappers and appends the mappers to the configuration.
-// For Spec, these mappers will be used to verify that the arguments and
-// result can be converted to proto.Message values. For Func, this has no
-// effect.
-func WithMappers(v []*mapper.Func) Option {
-	return func(c *config) { c.Mappers = append(c.Mappers, v...) }
-}
-
-// WithOutput specifies the expected output type of the function. This
-// defaults to a proto.Message by default. If this type is NOT a proto.Message
-// then the protobuf FuncSpec "out" field will be set to blank indicating
-// that it is some other type.
-func WithOutput(t reflect.Type) Option {
-	return func(c *config) { c.Output = t }
-}
-
-// WithNoOutput specifies that there is no output type expected, it is
-// just a function that returns an error type.
-func WithNoOutput() Option {
-	return func(c *config) { c.NoOutput = true }
-}
-
-// WithValues specifies extra values, this just passes through to the
-// mapper.WithValues.
-func WithValues(vs ...interface{}) Option {
-	return func(c *config) { c.Values = vs }
-}
-
-// typeToMessage converts a mapper.Type to the proto.Message name value.
-//
-// preconditions:
-//   - t is a ReflectType
-//   - the typ represented by t is a proto.Message
-func typeToMessage(t mapper.Type) string {
-	typ := t.(*mapper.ReflectType).Type
+func typeToMessage(typ reflect.Type) string {
 	return proto.MessageName(reflect.Zero(typ).Interface().(proto.Message))
 }
 

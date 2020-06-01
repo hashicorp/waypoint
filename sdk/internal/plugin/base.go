@@ -3,8 +3,8 @@ package plugin
 import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-argmapper"
 
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 )
 
@@ -13,7 +13,7 @@ import (
 type base struct {
 	Broker  *plugin.GRPCBroker
 	Logger  hclog.Logger
-	Mappers mapper.Set
+	Mappers []*argmapper.Func
 }
 
 // internal returns a new pluginargs.Internal that can be used with

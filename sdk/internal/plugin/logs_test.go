@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/component/mocks"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/proto"
 )
 
@@ -41,17 +41,22 @@ func TestLogPlatformLogs(t *testing.T) {
 	raw, err := client.Dispense("log_platform")
 	require.NoError(err)
 	lp := raw.(component.LogPlatform)
-	f := lp.LogsFunc().(*mapper.Func)
+	f := lp.LogsFunc().(*argmapper.Func)
 	require.NotNil(f)
 
-	raw, err = f.Call(context.Background(), &proto.Args_Source{App: "foo"})
-	require.NoError(err)
+	result := f.Call(
+		argmapper.Typed(context.Background()),
+		argmapper.Typed(&proto.Args_Source{App: "foo"}),
+	)
+	require.NoError(result.Err())
+
+	raw = result.Out(0)
 	require.NotNil(raw)
 
-	result := raw.(component.LogViewer)
-	require.NotNil(result)
+	value := raw.(component.LogViewer)
+	require.NotNil(value)
 
-	entries, err := result.NextLogBatch(context.Background())
+	entries, err := value.NextLogBatch(context.Background())
 	require.NoError(err)
 	require.Len(entries, 1)
 	require.Equal(expected[0].Message, entries[0].Message)

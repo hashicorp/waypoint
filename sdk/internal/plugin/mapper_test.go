@@ -4,12 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/testproto"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
@@ -19,9 +18,10 @@ func TestMapperClient(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)
 
-	mA := mapper.TestFunc(t, func(a *testproto.A) *testproto.B {
+	mA, err := argmapper.NewFunc(func(a *testproto.A) *testproto.B {
 		return &testproto.B{Value: a.Value + 1}
 	})
+	require.NoError(err)
 
 	plugins := Plugins(WithMappers(append(testDefaultMappers(t), mA)...))
 	client, server := plugin.TestPluginGRPCConn(t, plugins[1])
@@ -37,8 +37,17 @@ func TestMapperClient(t *testing.T) {
 	require.NotEmpty(mappers)
 
 	targetSpec := &pb.FuncSpec{
-		Args:   []string{"testproto.B"},
-		Result: "testproto.Data",
+		Args: []*pb.FuncSpec_Value{
+			&pb.FuncSpec_Value{
+				Type: "testproto.B",
+			},
+		},
+
+		Result: []*pb.FuncSpec_Value{
+			&pb.FuncSpec_Value{
+				Type: "testproto.Data",
+			},
+		},
 	}
 
 	called := false
@@ -49,14 +58,17 @@ func TestMapperClient(t *testing.T) {
 			return &testproto.Data{}
 		}
 
-		return callDynamicFunc(context.Background(), hclog.L(), args, cb, mappers)
+		return callDynamicFunc2(cb, args,
+			argmapper.Typed(context.Background()),
+			argmapper.ConverterFunc(mappers...),
+		)
 	})
 
-	chain, err := target.Chain(mappers, context.Background(), &testproto.A{Value: 1})
-	require.NoError(err)
-	require.NotNil(chain)
-
-	_, err = chain.Call()
-	require.NoError(err)
+	result := target.Call(
+		argmapper.Typed(context.Background()),
+		argmapper.Typed(&testproto.A{Value: 1}),
+		argmapper.ConverterFunc(mappers...),
+	)
+	require.NoError(result.Err())
 	require.True(called)
 }

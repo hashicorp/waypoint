@@ -7,14 +7,14 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/component/mocks"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/internal/testproto"
-	"github.com/hashicorp/waypoint/sdk/proto"
+	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
 func TestBuilderBuild(t *testing.T) {
@@ -40,16 +40,21 @@ func TestBuilderBuild(t *testing.T) {
 	raw, err := client.Dispense("builder")
 	require.NoError(err)
 	builder := raw.(component.Builder)
-	f := builder.BuildFunc().(*mapper.Func)
+	f := builder.BuildFunc().(*argmapper.Func)
 	require.NotNil(f)
 
-	raw, err = f.Call(context.Background(), &proto.Args_Source{App: "foo"})
-	require.NoError(err)
+	result := f.Call(
+		argmapper.Typed(context.Background()),
+		argmapper.Typed(&pb.Args_Source{App: "foo"}),
+	)
+	require.NoError(result.Err())
+
+	raw = result.Out(0)
 	require.NotNil(raw)
 	require.Implements((*component.Artifact)(nil), raw)
 
-	result := raw.(component.ProtoMarshaler).Proto().(*any.Any)
-	name, err := ptypes.AnyMessageName(result)
+	anyVal := raw.(component.ProtoMarshaler).Proto().(*any.Any)
+	name, err := ptypes.AnyMessageName(anyVal)
 	require.NoError(err)
 	require.Equal("testproto.Data", name)
 

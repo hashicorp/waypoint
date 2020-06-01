@@ -6,8 +6,8 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-argmapper"
 
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	internalplugin "github.com/hashicorp/waypoint/sdk/internal/plugin"
 )
 
@@ -39,7 +39,7 @@ func ClientConfig(log hclog.Logger) *plugin.ClientConfig {
 }
 
 // Mappers returns the mappers supported by the plugin.
-func Mappers(c *plugin.Client) ([]*mapper.Func, error) {
+func Mappers(c *plugin.Client) ([]*argmapper.Func, error) {
 	rpcClient, err := c.Client()
 	if err != nil {
 		return nil, err

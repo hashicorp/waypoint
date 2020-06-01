@@ -29,7 +29,7 @@ func (b *Builder) Build(
 	}
 
 	result := &Image{
-		Image: fmt.Sprintf("devflow.local/%s", src.App),
+		Image: fmt.Sprintf("waypoint.local/%s", src.App),
 		Tag:   "latest",
 	}
 

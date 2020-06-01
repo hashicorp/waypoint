@@ -6,8 +6,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/hashicorp/go-argmapper"
 )
 
 // Handshake is a common handshake that is shared by plugin and host.
@@ -66,7 +65,7 @@ func Plugins(opts ...Option) map[int]plugin.PluginSet {
 // pluginConfig is used to configure Plugins via Option calls.
 type pluginConfig struct {
 	Components []interface{}
-	Mappers    []*mapper.Func
+	Mappers    []*argmapper.Func
 	Logger     hclog.Logger
 }
 
@@ -81,8 +80,10 @@ func WithComponents(cs ...interface{}) Option {
 
 // WithMappers sets the mappers to configure for the plugins. This will
 // append to the existing mappers.
-func WithMappers(ms ...*mapper.Func) Option {
-	return func(c *pluginConfig) { c.Mappers = append(c.Mappers, ms...) }
+func WithMappers(ms ...*argmapper.Func) Option {
+	return func(c *pluginConfig) {
+		c.Mappers = append(c.Mappers, ms...)
+	}
 }
 
 // WithLogger sets the logger for the plugins.

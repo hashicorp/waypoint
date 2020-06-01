@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	labelId    = "devflow.hashicorp.com/id"
-	labelNonce = "devflow.hashicorp.com/nonce"
+	labelId    = "waypoint.hashicorp.com/id"
+	labelNonce = "waypoint.hashicorp.com/nonce"
 )
 
 // Platform is the Platform implementation for Google Cloud Run.

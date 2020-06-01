@@ -1,9 +1,9 @@
 package plugin
 
 import (
+	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/sdk"
 	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 
 	"github.com/hashicorp/waypoint/builtin/azure/aci"
 	"github.com/hashicorp/waypoint/builtin/docker"
@@ -14,10 +14,10 @@ import (
 )
 
 var (
-	Builders   = mustFactory(mapper.NewFactory((*component.Builder)(nil)))
-	Registries = mustFactory(mapper.NewFactory((*component.Registry)(nil)))
-	Platforms  = mustFactory(mapper.NewFactory((*component.Platform)(nil)))
-	Releasers  = mustFactory(mapper.NewFactory((*component.ReleaseManager)(nil)))
+	Builders   = mustFactory(factory.New((*component.Builder)(nil)))
+	Registries = mustFactory(factory.New((*component.Registry)(nil)))
+	Platforms  = mustFactory(factory.New((*component.Platform)(nil)))
+	Releasers  = mustFactory(factory.New((*component.ReleaseManager)(nil)))
 
 	// Builtins is the map of all available builtin plugins and their
 	// options for launching them.
@@ -54,7 +54,7 @@ func must(err error) {
 	}
 }
 
-func mustFactory(f *mapper.Factory, err error) *mapper.Factory {
+func mustFactory(f *factory.Factory, err error) *factory.Factory {
 	must(err)
 	return f
 }

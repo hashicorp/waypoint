@@ -6,10 +6,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
 	"github.com/hashicorp/waypoint/sdk/proto"
@@ -21,7 +21,7 @@ type ReleaseManagerPlugin struct {
 	plugin.NetRPCUnsupportedPlugin
 
 	Impl    component.ReleaseManager // Impl is the concrete implementation
-	Mappers []*mapper.Func           // Mappers
+	Mappers []*argmapper.Func        // Mappers
 	Logger  hclog.Logger             // Logger
 }
 
@@ -67,7 +67,7 @@ func (c *releaseManagerClient) ReleaseFunc() interface{} {
 		return funcErr(err)
 	}
 
-	return funcspec.Func(spec, c.build, funcspec.WithLogger(c.logger))
+	return funcspec.Func(spec, c.build, argmapper.Logger(c.logger))
 }
 
 func (c *releaseManagerClient) build(
@@ -91,7 +91,7 @@ func (c *releaseManagerClient) build(
 // real implementation of the component.
 type releaseManagerServer struct {
 	Impl    component.ReleaseManager
-	Mappers []*mapper.Func
+	Mappers []*argmapper.Func
 	Logger  hclog.Logger
 }
 
@@ -114,15 +114,18 @@ func (s *releaseManagerServer) ReleaseSpec(
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.ReleaseFunc(),
-		funcspec.WithMappers(s.Mappers),
-		funcspec.WithLogger(s.Logger))
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger))
 }
 
 func (s *releaseManagerServer) Release(
 	ctx context.Context,
 	args *proto.Release_Args,
 ) (*proto.Release_Resp, error) {
-	raw, err := callDynamicFunc(ctx, s.Logger, args.Args, s.Impl.ReleaseFunc(), s.Mappers)
+	raw, err := callDynamicFunc2(s.Impl.ReleaseFunc(), args.Args,
+		argmapper.Typed(ctx),
+		argmapper.ConverterFunc(s.Mappers...),
+	)
 	if err != nil {
 		return nil, err
 	}
