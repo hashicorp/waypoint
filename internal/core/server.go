@@ -123,12 +123,17 @@ func (p *Project) initLocalServer(ctx context.Context) error {
 		grpc.WithBlock(),
 		grpc.WithInsecure(),
 	)
+
 	if err != nil {
 		cancel()
 		ln.Close()
 		db.Close()
 		return err
 	}
+
+	// We can safely cancel, as the context has been utilized
+	cancel()
+
 	p.localClosers = append(p.localClosers, conn)
 
 	// Init our client
