@@ -10,10 +10,6 @@ import (
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
-// Args is a type that will be populated with all the expected args of
-// the FuncSpec. This can be used in the callback (cb) to Func.
-type Args []*any.Any
-
 // Func takes a FuncSpec and returns a *mapper.Func that can be called
 // to invoke this function. The callback can have an argument type of Args
 // in order to get access to the required dynamic proto.Any types of the
@@ -87,7 +83,7 @@ func Func(s *pb.FuncSpec, cb interface{}, args ...argmapper.Arg) *argmapper.Func
 		for _, v := range in.Values() {
 			// If we have any *any.Any then we append it to args
 			if v.Type == anyType {
-				args = append(args, v.Value.Interface().(*any.Any))
+				args = appendValue(args, v)
 				continue
 			}
 
