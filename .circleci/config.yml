@@ -224,15 +224,15 @@ workflows:
   version: 2
   go-tests:
     jobs:
-      - check-vendor: &filter-ignore-non-go-branches
+      - check-vendor:
           filters:
             branches:
               ignore:
                 - stable-website
                 - /^docs\/.*/
                 - /^ui\/.*/
-      - lint: *filter-ignore-non-go-branches
-      - dev-build: *filter-ignore-non-go-branches
+      - lint:
+      - dev-build:
       - go-test:
           requires: [dev-build]
 
