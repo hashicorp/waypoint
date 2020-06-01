@@ -224,17 +224,10 @@ workflows:
   version: 2
   go-tests:
     jobs:
-      - check-vendor:
-          filters:
-            branches:
-              ignore:
-                - stable-website
-                - /^docs\/.*/
-                - /^ui\/.*/
-      - lint:
-      - dev-build:
-      - go-test:
-          requires: [dev-build]
+      - check-vendor
+      - lint
+      - dev-build
+      - go-test
 
   # website:
   #   jobs:
