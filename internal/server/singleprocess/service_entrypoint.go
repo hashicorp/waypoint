@@ -167,6 +167,15 @@ func (s *service) EntrypointExecStream(
 	// we are done.
 	defer close(exec.EntrypointEventCh)
 
+	// Note to the caller that we're opened
+	if err := server.Send(&pb.EntrypointExecResponse{
+		Event: &pb.EntrypointExecResponse_Opened{
+			Opened: true,
+		},
+	}); err != nil {
+		return err
+	}
+
 	// Create a context we can use to cancel
 	ctx, cancel := context.WithCancel(server.Context())
 	defer cancel()
