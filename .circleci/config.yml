@@ -43,7 +43,10 @@ jobs:
       - run:
           name: lint
           command: &lintcmd |
-            golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2
+            golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
+              --disable-all \
+              --enable gosimple \
+              --enable govet
 
   # checks vendor directory is correct
   check-vendor:
