@@ -1,15 +1,16 @@
-package mapper
+package factory
 
 import (
 	"testing"
 
+	"github.com/hashicorp/go-argmapper"
 	"github.com/stretchr/testify/require"
 )
 
 func TestFactory(t *testing.T) {
 	require := require.New(t)
 
-	factory, err := NewFactory((*adder)(nil))
+	factory, err := New((*adder)(nil))
 	require.NoError(err)
 	require.NoError(factory.Register("two", func(a int) *adderTwo {
 		return &adderTwo{From: a}
@@ -19,9 +20,9 @@ func TestFactory(t *testing.T) {
 	{
 		fn := factory.Func("two")
 		require.NotNil(fn)
-		impl, err := fn.Call("two", 42)
-		require.NoError(err)
-		adder := impl.(adder)
+		result := fn.Call(argmapper.Typed("two", 42))
+		require.NoError(result.Err())
+		adder := result.Out(0).(adder)
 		require.Equal(adder.Add(), 44)
 	}
 
@@ -32,12 +33,36 @@ func TestFactory(t *testing.T) {
 	}
 }
 
+func TestFactory_invalidOutputCount(t *testing.T) {
+	require := require.New(t)
+
+	factory, err := New((*adder)(nil))
+	require.NoError(err)
+
+	err = factory.Register("two", func(a int) (string, *adderTwo) {
+		return "", nil
+	})
+	require.Error(err)
+}
+
+func TestFactory_invalidOutputType(t *testing.T) {
+	require := require.New(t)
+
+	factory, err := New((*adder)(nil))
+	require.NoError(err)
+
+	err = factory.Register("two", func(a int) string {
+		return ""
+	})
+	require.Error(err)
+}
+
 // Test that our function can return an interface{} type and still implement
 // the factory interface.
 func TestFactory_interface(t *testing.T) {
 	require := require.New(t)
 
-	factory, err := NewFactory((*adder)(nil))
+	factory, err := New((*adder)(nil))
 	require.NoError(err)
 	require.NoError(factory.Register("two", func(a int) interface{} {
 		return &adderTwo{From: a}
@@ -45,9 +70,9 @@ func TestFactory_interface(t *testing.T) {
 
 	fn := factory.Func("two")
 	require.NotNil(fn)
-	impl, err := fn.Call("two", 42)
-	require.NoError(err)
-	adder := impl.(adder)
+	result := fn.Call(argmapper.Typed("two", 42))
+	require.NoError(result.Err())
+	adder := result.Out(0).(adder)
 	require.Equal(adder.Add(), 44)
 }
 

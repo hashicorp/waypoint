@@ -5,11 +5,11 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/history"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
@@ -18,9 +18,9 @@ import (
 type HistoryPlugin struct {
 	plugin.NetRPCUnsupportedPlugin
 
-	Impl    history.Client // Impl is the concrete implementation
-	Mappers []*mapper.Func // Mappers
-	Logger  hclog.Logger   // Logger
+	Impl    history.Client    // Impl is the concrete implementation
+	Mappers []*argmapper.Func // Mappers
+	Logger  hclog.Logger      // Logger
 }
 
 func (p *HistoryPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
@@ -49,7 +49,7 @@ func (p *HistoryPlugin) GRPCClient(
 type historyClient struct {
 	client  pb.HistoryServiceClient
 	logger  hclog.Logger
-	mappers []*mapper.Func
+	mappers []*argmapper.Func
 }
 
 func (c *historyClient) Deployments(
@@ -75,7 +75,7 @@ func (c *historyClient) Deployments(
 // real implementation of the component.
 type historyServer struct {
 	Impl    history.Client
-	Mappers []*mapper.Func
+	Mappers []*argmapper.Func
 	Logger  hclog.Logger
 }
 

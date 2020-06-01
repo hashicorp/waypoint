@@ -3,7 +3,7 @@ package pluginargs
 
 import (
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
+	"github.com/hashicorp/go-argmapper"
 )
 
 // Internal is a struct that is available to mappers. This is an internal-only
@@ -11,7 +11,7 @@ import (
 // exported in an internal package.
 type Internal struct {
 	Broker  *plugin.GRPCBroker
-	Mappers mapper.Set
+	Mappers []*argmapper.Func
 	Cleanup *Cleanup
 }
 

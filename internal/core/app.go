@@ -6,17 +6,18 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverhistory"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
-	"github.com/hashicorp/waypoint/sdk/internal-shared/mapper"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -41,7 +42,7 @@ type App struct {
 	dconfig       component.DeploymentConfig
 	logger        hclog.Logger
 	dir           *datadir.App
-	mappers       []*mapper.Func
+	mappers       []*argmapper.Func
 	components    map[interface{}]*pb.Component
 	componentDirs map[interface{}]*datadir.Component
 	closers       []func() error
@@ -62,7 +63,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 		componentDirs: make(map[interface{}]*datadir.Component),
 
 		// very important below that we allocate a new slice since we modify
-		mappers: append([]*mapper.Func{}, p.mappers...),
+		mappers: append([]*argmapper.Func{}, p.mappers...),
 
 		// set the UI, which for now is identical to project but in the
 		// future should probably change as we do app-scoping, parallelization,
@@ -194,10 +195,10 @@ func (a *App) callDynamicFunc(
 	// We allow f to be a *mapper.Func because our plugin system creates
 	// a func directly due to special argument types.
 	// TODO: test
-	rawFunc, ok := f.(*mapper.Func)
+	rawFunc, ok := f.(*argmapper.Func)
 	if !ok {
 		var err error
-		rawFunc, err = mapper.NewFunc(f, mapper.WithLogger(log))
+		rawFunc, err = argmapper.NewFunc(f, argmapper.Logger(log))
 		if err != nil {
 			return nil, err
 		}
@@ -217,19 +218,15 @@ func (a *App) callDynamicFunc(
 		a.dir,
 		cdir,
 		a.UI,
-		&serverhistory.Client{APIClient: a.client, MapperSet: mapper.Set(a.mappers)},
+		&serverhistory.Client{APIClient: a.client, MapperSet: a.mappers},
 	)
 
 	// Build the chain and call it
-	chain, err := rawFunc.Chain(a.mappers, values...)
-	if err != nil {
+	callResult := rawFunc.Call(argmapper.ConverterFunc(a.mappers...), argmapper.Typed(values...))
+	if err := callResult.Err(); err != nil {
 		return nil, err
 	}
-	log.Debug("function chain", "chain", chain.String())
-	raw, err := chain.Call()
-	if err != nil {
-		return nil, err
-	}
+	raw := callResult.Out(0)
 
 	// If we don't have an expected result type, then just return as-is.
 	// Otherwise, we need to verify the result type matches properly.
@@ -255,7 +252,7 @@ func (a *App) initComponent(
 	ctx context.Context,
 	typ component.Type,
 	target interface{},
-	f *mapper.Factory,
+	f *factory.Factory,
 	cfg *config.Component,
 ) error {
 	log := a.logger.Named(strings.ToLower(typ.String()))
@@ -281,11 +278,12 @@ func (a *App) initComponent(
 	}
 
 	// Call the factory to get our raw value (interface{} type)
-	raw, err := fn.Call(ctx, a.source, log, cdir)
-	if err != nil {
+	result := fn.Call(argmapper.Typed(ctx, a.source, log, cdir))
+	if err := result.Err(); err != nil {
 		return err
 	}
 	log.Info("initialized component", "type", typ.String())
+	raw := result.Out(0)
 
 	// If we have a plugin.Instance then we can extract other information
 	// from this plugin. We accept pure factories too that don't return
