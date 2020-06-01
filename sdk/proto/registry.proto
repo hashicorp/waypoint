@@ -15,18 +15,10 @@ service Registry {
   rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
 
   rpc PushSpec(Empty) returns (FuncSpec);
-  rpc Push(Push.Args) returns (Push.Resp);
+  rpc Push(FuncSpec.Args) returns (Push.Resp);
 }
 
 message Push {
-  message Args {
-    // args is the list of argument types. This will include some of the
-    // standard types in this file (in the Args message namespace) as well
-    // as custom types declared by the FuncSpec that the plugin is expected
-    // to understand how to decode.
-    repeated google.protobuf.Any args = 1;
-  }
-
   message Resp {
     // result is the resulting opaque data type
     google.protobuf.Any result = 1;

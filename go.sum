@@ -150,6 +150,8 @@ github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/U
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-argmapper v0.0.0-20200601004043-186fd6f9a46a h1:wvwRmAGARM89mfZ9WcofDzyFCLxx5W+VQQQ8XSXUlzw=
 github.com/hashicorp/go-argmapper v0.0.0-20200601004043-186fd6f9a46a/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
+github.com/hashicorp/go-argmapper v0.0.0-20200601005345-c13e5b41aa1f h1:kk56BnUsQ2SAjLhppLSmgAI7W+XbislfNuEK5u4Dz38=
+github.com/hashicorp/go-argmapper v0.0.0-20200601005345-c13e5b41aa1f/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
 github.com/hashicorp/go-hclog v0.0.0-20180709165350-ff2cf002a8dd/go.mod h1:9bjs9uLqI8l75knNv3lV1kA55veR+WUPSiKIWcQHudI=
 github.com/hashicorp/go-hclog v0.11.0/go.mod h1:whpDNt7SSdeAju8AWKIWsul05p54N/39EeqMAyrmvFQ=
 github.com/hashicorp/go-hclog v0.14.0 h1:1X+ga+2ki9aUJJaliI2isvjNLI8rNCGHFkZ1FaVpvCA=

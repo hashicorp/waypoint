@@ -19,7 +19,7 @@ service Mapper {
 message Map {
   message Request {
     // args is the list of argument types.
-    repeated google.protobuf.Any args = 1;
+    FuncSpec.Args args = 1;
 
     // result is the desired result type.
     string result = 2;

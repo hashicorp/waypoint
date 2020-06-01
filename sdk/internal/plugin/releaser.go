@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -75,7 +75,7 @@ func (c *releaseManagerClient) build(
 	args funcspec.Args,
 ) (component.Release, error) {
 	// Call our function
-	resp, err := c.client.Release(ctx, &proto.Release_Args{Args: args})
+	resp, err := c.client.Release(ctx, &proto.FuncSpec_Args{Args: args})
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (s *releaseManagerServer) ReleaseSpec(
 
 func (s *releaseManagerServer) Release(
 	ctx context.Context,
-	args *proto.Release_Args,
+	args *proto.FuncSpec_Args,
 ) (*proto.Release_Resp, error) {
 	raw, err := callDynamicFunc2(s.Impl.ReleaseFunc(), args.Args,
 		argmapper.Typed(ctx),

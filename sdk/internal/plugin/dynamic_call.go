@@ -8,6 +8,8 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-argmapper"
+
+	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 )
 
 // callDynamicFunc calls a dynamic (mapper-based) function with the
@@ -15,12 +17,14 @@ import (
 // by most component gRPC servers to implement their function calls.
 func callDynamicFunc2(
 	f interface{},
-	args []*any.Any,
+	args funcspec.Args,
 	callArgs ...argmapper.Arg,
 ) (interface{}, error) {
 	// Decode our *any.Any values.
 	for _, arg := range args {
-		name, err := ptypes.AnyMessageName(arg)
+		anyVal := arg.Value
+
+		name, err := ptypes.AnyMessageName(anyVal)
 		if err != nil {
 			return nil, err
 		}
@@ -39,11 +43,13 @@ func callDynamicFunc2(
 		v.Elem().Set(reflect.Zero(typ))
 
 		// Unmarshal directly into our newly allocated structure.
-		if err := ptypes.UnmarshalAny(arg, v.Interface().(proto.Message)); err != nil {
+		if err := ptypes.UnmarshalAny(anyVal, v.Interface().(proto.Message)); err != nil {
 			return nil, err
 		}
 
-		callArgs = append(callArgs, argmapper.Typed(v.Interface()))
+		callArgs = append(callArgs,
+			argmapper.NamedSubtype(arg.Name, v.Interface(), arg.Type),
+		)
 	}
 
 	mapF, err := argmapper.NewFunc(f)
@@ -63,7 +69,7 @@ func callDynamicFunc2(
 // result to an *any.Any.
 func callDynamicFuncAny2(
 	f interface{},
-	args []*any.Any,
+	args funcspec.Args,
 	callArgs ...argmapper.Arg,
 ) (*any.Any, error) {
 	result, err := callDynamicFunc2(f, args, callArgs...)

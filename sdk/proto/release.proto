@@ -13,19 +13,11 @@ service ReleaseManager {
   rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
 
   rpc ReleaseSpec(Empty) returns (FuncSpec);
-  rpc Release(Release.Args) returns (Release.Resp);
+  rpc Release(FuncSpec.Args) returns (Release.Resp);
 }
 
 message Release {
   string url = 1;
-
-  message Args {
-    // args is the list of argument types. This will include some of the
-    // standard types in this file (in the Args message namespace) as well
-    // as custom types declared by the FuncSpec that the plugin is expected
-    // to understand how to decode.
-    repeated google.protobuf.Any args = 1;
-  }
 
   message Resp {
     // result is the resulting data type for building.

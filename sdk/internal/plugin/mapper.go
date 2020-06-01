@@ -7,9 +7,9 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-argmapper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -72,7 +72,7 @@ func (c *MapperClient) Mappers() ([]*argmapper.Func, error) {
 		// call the Map RPC call and return the result/error.
 		cb := func(ctx context.Context, args funcspec.Args) (*any.Any, error) {
 			resp, err := c.client.Map(ctx, &pb.Map_Request{
-				Args:   args,
+				Args:   &pb.FuncSpec_Args{Args: args},
 				Result: specCopy.Result[0].Type,
 			})
 			if err != nil {
@@ -156,7 +156,7 @@ func (s *mapperServer) Map(
 	).Interface()
 
 	// Call it!
-	result, err := callDynamicFuncAny2(f, args.Args,
+	result, err := callDynamicFuncAny2(f, args.Args.Args,
 		argmapper.Typed(ctx),
 		argmapper.ConverterFunc(s.Mappers...),
 	)

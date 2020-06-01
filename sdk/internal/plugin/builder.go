@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -78,7 +78,7 @@ func (c *builderClient) build(
 	args funcspec.Args,
 ) (component.Artifact, error) {
 	// Call our function
-	resp, err := c.client.Build(ctx, &proto.Build_Args{Args: args})
+	resp, err := c.client.Build(ctx, &proto.FuncSpec_Args{Args: args})
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (s *builderServer) BuildSpec(
 
 func (s *builderServer) Build(
 	ctx context.Context,
-	args *proto.Build_Args,
+	args *proto.FuncSpec_Args,
 ) (*proto.Build_Resp, error) {
 	encoded, err := callDynamicFuncAny2(s.Impl.BuildFunc(), args.Args,
 		argmapper.Typed(ctx),
