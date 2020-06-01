@@ -148,8 +148,6 @@ github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/ad
 github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7/go.mod h1:FecbI9+v66THATjSRHfNgh1IVFe/9kFxbXtjV0ctIMA=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
-github.com/hashicorp/go-argmapper v0.0.0-20200601004043-186fd6f9a46a h1:wvwRmAGARM89mfZ9WcofDzyFCLxx5W+VQQQ8XSXUlzw=
-github.com/hashicorp/go-argmapper v0.0.0-20200601004043-186fd6f9a46a/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
 github.com/hashicorp/go-argmapper v0.0.0-20200601005345-c13e5b41aa1f h1:kk56BnUsQ2SAjLhppLSmgAI7W+XbislfNuEK5u4Dz38=
 github.com/hashicorp/go-argmapper v0.0.0-20200601005345-c13e5b41aa1f/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
 github.com/hashicorp/go-hclog v0.0.0-20180709165350-ff2cf002a8dd/go.mod h1:9bjs9uLqI8l75knNv3lV1kA55veR+WUPSiKIWcQHudI=
