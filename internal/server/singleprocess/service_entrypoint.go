@@ -6,7 +6,6 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
@@ -83,8 +82,6 @@ func (s *service) EntrypointConfig(
 			return err
 		}
 	}
-
-	return nil
 }
 
 // TODO: test
@@ -128,8 +125,6 @@ func (s *service) EntrypointLogStream(
 		// Write our log data to the circular buffer
 		buf.Write(batch.Lines...)
 	}
-
-	return server.SendAndClose(&empty.Empty{})
 }
 
 // TODO: test

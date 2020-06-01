@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logviewer"
@@ -25,16 +24,4 @@ func (a *App) Logs(ctx context.Context, d *pb.Deployment) (component.LogViewer, 
 
 	// Build our log viewer
 	return &logviewer.Viewer{Stream: client}, nil
-
-	ep, ok := a.Platform.(component.LogPlatform)
-	if !ok {
-		return nil, fmt.Errorf("This platform does not support logs yet")
-	}
-
-	lv, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.LogsFunc())
-	if err != nil {
-		return nil, err
-	}
-
-	return lv.(component.LogViewer), nil
 }

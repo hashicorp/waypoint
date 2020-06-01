@@ -62,7 +62,7 @@ require (
 	go.etcd.io/bbolt v1.3.3 // indirect
 	go.opencensus.io v0.22.2 // indirect
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-	golang.org/x/net v0.0.0-20200219183655-46282727080f
+	golang.org/x/net v0.0.0-20200219183655-46282727080f // indirect
 	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/api v0.20.0
