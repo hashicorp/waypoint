@@ -57,7 +57,7 @@ jobs:
             - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
       - checkout
       - run:
-          command: make update-vendor
+          command: go mod tidy
       - run: |
           if ! git diff --exit-code; then
             echo "Git directory has vendor changes"

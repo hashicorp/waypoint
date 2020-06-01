@@ -22,14 +22,4 @@ k8s/mitchellh:
 		--annotate-service "external-dns.alpha.kubernetes.io/hostname=*.df.gcp.mitchellh.dev.,df.gcp.mitchellh.dev." \
 		| kubectl apply -f -
 
-go-mod-tidy:
-	@echo "--> Running go mod tidy"
-	@go mod tidy
 
-update-vendor: go-mod-tidy
-	@echo "--> Running go mod vendor"
-	@go mod vendor
-	@echo "--> Removing vendoring of our own nested modules"
-	@rm -rf vendor/github.com/hashicorp/consul
-	@grep -v "hashicorp/consul/" < vendor/modules.txt > vendor/modules.txt.new
-	@mv vendor/modules.txt.new vendor/modules.txt
