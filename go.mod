@@ -25,7 +25,7 @@ require (
 	github.com/gliderlabs/ssh v0.2.2
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/mux v1.7.3 // indirect
-	github.com/hashicorp/go-argmapper v0.0.0-20200531051437-cfed12c9ac52
+	github.com/hashicorp/go-argmapper v0.0.0-20200601004043-186fd6f9a46a
 	github.com/hashicorp/go-hclog v0.14.0
 	github.com/hashicorp/go-memdb v1.2.0
 	github.com/hashicorp/go-multierror v1.1.0
