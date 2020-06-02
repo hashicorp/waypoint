@@ -77,6 +77,7 @@ func (c *builderClient) build(
 	ctx context.Context,
 	args funcspec.Args,
 ) (component.Artifact, error) {
+	c.logger.Warn("ARGS", "args", args)
 	// Call our function
 	resp, err := c.client.Build(ctx, &proto.FuncSpec_Args{Args: args})
 	if err != nil {

@@ -157,7 +157,7 @@ func (a *App) ConfigSet(ctx context.Context, key, val string) error {
 
 	cv := &component.ConfigVar{Name: key, Value: val}
 
-	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigSetFunc(), cv)
+	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigSetFunc(), argmapper.Typed(cv))
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (a *App) ConfigGet(ctx context.Context, key string) (*component.ConfigVar, 
 		Name: key,
 	}
 
-	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigGetFunc(), cv)
+	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigGetFunc(), argmapper.Typed(cv))
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (a *App) callDynamicFunc(
 	result interface{}, // expected result type
 	c interface{}, // component
 	f interface{}, // function
-	values ...interface{},
+	args ...argmapper.Arg,
 ) (interface{}, error) {
 	// We allow f to be a *mapper.Func because our plugin system creates
 	// a func directly due to special argument types.
@@ -218,24 +218,29 @@ func (a *App) callDynamicFunc(
 	}
 
 	// Get the component directory
-	component, ok := a.components[c]
+	componentData, ok := a.components[c]
 	if !ok {
 		return nil, fmt.Errorf("component dir not found for: %T", c)
 	}
 
 	// Make sure we have access to our context and logger and default args
-	values = append(values,
-		ctx,
-		log,
-		a.source,
-		a.dir,
-		component.Dir,
-		a.UI,
-		&serverhistory.Client{APIClient: a.client, MapperSet: a.mappers},
+	args = append(args,
+		argmapper.ConverterFunc(a.mappers...),
+		argmapper.Typed(
+			ctx,
+			log,
+			a.source,
+			a.dir,
+			componentData.Dir,
+			a.UI,
+			&serverhistory.Client{APIClient: a.client, MapperSet: a.mappers},
+		),
+
+		argmapper.Named("labels", &component.LabelSet{Labels: componentData.Labels}),
 	)
 
 	// Build the chain and call it
-	callResult := rawFunc.Call(argmapper.ConverterFunc(a.mappers...), argmapper.Typed(values...))
+	callResult := rawFunc.Call(args...)
 	if err := callResult.Err(); err != nil {
 		return nil, err
 	}

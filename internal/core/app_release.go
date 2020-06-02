@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -67,7 +68,7 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App) 
 		(*component.Release)(nil),
 		app.Releaser,
 		app.Releaser.ReleaseFunc(),
-		op.Targets,
+		argmapper.Named("targets", op.Targets),
 	)
 }
 
