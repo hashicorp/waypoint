@@ -4,6 +4,7 @@
   (*config.App)({
    Name: (string) (len=3) "web",
    Path: (string) "",
+   Labels: (map[string]string) <nil>,
    Build: (*config.Component)({
     Type: (string) (len=4) "pack",
     Body: (*hclsyntax.Body)({
@@ -17,7 +18,8 @@
      },
      SrcRange: (hcl.Range) testdata/basic.hcl:2,18-20,
      EndRange: (hcl.Range) testdata/basic.hcl:2,20-20
-    })
+    }),
+    Labels: (map[string]string) <nil>
    }),
    Registry: (*config.Component)({
     Type: (string) (len=6) "docker",
@@ -56,7 +58,8 @@
      },
      SrcRange: (hcl.Range) testdata/basic.hcl:4,23-6,6,
      EndRange: (hcl.Range) testdata/basic.hcl:6,6-6
-    })
+    }),
+    Labels: (map[string]string) <nil>
    }),
    Platform: (*config.Component)({
     Type: (string) (len=16) "google-cloud-run",
@@ -71,9 +74,11 @@
      },
      SrcRange: (hcl.Range) testdata/basic.hcl:8,31-33,
      EndRange: (hcl.Range) testdata/basic.hcl:8,33-33
-    })
+    }),
+    Labels: (map[string]string) <nil>
    }),
    Release: (*config.Component)(<nil>)
   })
- }
+ },
+ Labels: (map[string]string) <nil>
 }

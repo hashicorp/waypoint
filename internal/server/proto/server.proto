@@ -172,6 +172,9 @@ message Build {
 
   // artifact is the result of the build if the status.state == SUCCESS
   Artifact artifact = 4;
+
+  // labels are the set of labels that are present on this build.
+  map<string,string> labels = 5;
 }
 
 // Artifact is the result of a build or registry. This is the metadata only.
@@ -221,6 +224,9 @@ message PushedArtifact {
 
   // the id of the build that this pushed artifact was sourced from.
   string build_id = 5;
+
+  // labels are the set of labels that are present on this build.
+  map<string,string> labels = 6;
 }
 
 /********************************************************************
@@ -286,6 +292,9 @@ message Deployment {
   // decode this.
   google.protobuf.Any deployment = 6;
 
+  // labels are the set of labels that are present on this build.
+  map<string,string> labels = 7;
+
   enum State {
     UNKNOWN = 0;
     PENDING = 1;
@@ -327,6 +336,9 @@ message Release {
 
   // split traffic between multiple deployments
   Split traffic_split = 5;
+
+  // labels are the set of labels that are present on this build.
+  map<string,string> labels = 6;
 
   message Split {
     repeated SplitTarget targets = 1;

@@ -37,15 +37,26 @@ type App struct {
 	// to this app vs the project UI.
 	UI terminal.UI
 
-	client        pb.WaypointClient
-	source        *component.Source
-	dconfig       component.DeploymentConfig
-	logger        hclog.Logger
-	dir           *datadir.App
-	mappers       []*argmapper.Func
-	components    map[interface{}]*pb.Component
-	componentDirs map[interface{}]*datadir.Component
-	closers       []func() error
+	client     pb.WaypointClient
+	source     *component.Source
+	dconfig    component.DeploymentConfig
+	logger     hclog.Logger
+	dir        *datadir.App
+	mappers    []*argmapper.Func
+	components map[interface{}]*appComponent
+	closers    []func() error
+}
+
+type appComponent struct {
+	// Info is the protobuf metadata for this component.
+	Info *pb.Component
+
+	// Dir is the data directory for this component.
+	Dir *datadir.Component
+
+	// Labels are the set of labels that were set for this component.
+	// This is already merged with parent labels.
+	Labels map[string]string
 }
 
 // newApp creates an App for the given project and configuration. This will
@@ -55,12 +66,11 @@ type App struct {
 func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	// Initialize
 	app := &App{
-		client:        p.client,
-		source:        &component.Source{App: cfg.Name, Path: "."},
-		dconfig:       p.dconfig,
-		logger:        p.logger.Named("app").Named(cfg.Name),
-		components:    make(map[interface{}]*pb.Component),
-		componentDirs: make(map[interface{}]*datadir.Component),
+		client:     p.client,
+		source:     &component.Source{App: cfg.Name, Path: "."},
+		dconfig:    p.dconfig,
+		logger:     p.logger.Named("app").Named(cfg.Name),
+		components: make(map[interface{}]*appComponent),
 
 		// very important below that we allocate a new slice since we modify
 		mappers: append([]*argmapper.Func{}, p.mappers...),
@@ -95,7 +105,10 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 			continue
 		}
 
-		err = app.initComponent(ctx, c.Type, c.Target, p.factories[c.Type], c.Config)
+		// Get our labels
+		labels := p.mergeLabels(cfg.Labels, c.Config.Labels)
+
+		err = app.initComponent(ctx, c.Type, c.Target, p.factories[c.Type], c.Config, labels)
 		if err != nil {
 			return nil, err
 		}
@@ -205,7 +218,7 @@ func (a *App) callDynamicFunc(
 	}
 
 	// Get the component directory
-	cdir, ok := a.componentDirs[c]
+	component, ok := a.components[c]
 	if !ok {
 		return nil, fmt.Errorf("component dir not found for: %T", c)
 	}
@@ -216,7 +229,7 @@ func (a *App) callDynamicFunc(
 		log,
 		a.source,
 		a.dir,
-		cdir,
+		component.Dir,
 		a.UI,
 		&serverhistory.Client{APIClient: a.client, MapperSet: a.mappers},
 	)
@@ -254,6 +267,7 @@ func (a *App) initComponent(
 	target interface{},
 	f *factory.Factory,
 	cfg *config.Component,
+	labels map[string]string,
 ) error {
 	log := a.logger.Named(strings.ToLower(typ.String()))
 
@@ -305,9 +319,6 @@ func (a *App) initComponent(
 		})
 	}
 
-	// Store the component dir mapping
-	a.componentDirs[raw] = cdir
-
 	// We have our value so let's make sure it is the correct type.
 	rawV := reflect.ValueOf(raw)
 	if !rawV.Type().AssignableTo(targetV.Type()) {
@@ -325,9 +336,14 @@ func (a *App) initComponent(
 	targetV.Set(rawV)
 
 	// Store component metadata
-	a.components[raw] = &pb.Component{
-		Type: pb.Component_Type(typ),
-		Name: cfg.Type,
+	a.components[raw] = &appComponent{
+		Info: &pb.Component{
+			Type: pb.Component_Type(typ),
+			Name: cfg.Type,
+		},
+
+		Dir:    cdir,
+		Labels: labels,
 	}
 
 	return nil

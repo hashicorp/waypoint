@@ -30,7 +30,8 @@ type releaseOperation struct {
 
 func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 	release := &pb.Release{
-		Component:    app.components[app.Releaser],
+		Component:    app.components[app.Releaser].Info,
+		Labels:       app.components[app.Releaser].Labels,
 		TrafficSplit: &pb.Release_Split{},
 	}
 

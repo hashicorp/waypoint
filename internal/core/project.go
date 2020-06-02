@@ -32,6 +32,9 @@ type Project struct {
 	client    pb.WaypointClient
 	dconfig   component.DeploymentConfig
 
+	// labels is the list of labels that are assigned to this project.
+	labels map[string]string
+
 	// This lock only needs to be held currently to protect localClosers.
 	lock sync.Mutex
 
@@ -91,6 +94,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		panic("p.client should never be nil")
 	}
 
+	// Set our labels
+	p.labels = opts.Config.Labels
+
 	// Initialize all the applications and load all their components.
 	for _, appConfig := range opts.Config.Apps {
 		app, err := newApp(ctx, p, appConfig)
@@ -139,6 +145,26 @@ func (p *Project) Close() error {
 	p.localClosers = nil
 
 	return nil
+}
+
+// mergeLabels merges the set of labels given. This will set the project
+// labels as a base automatically and then merge ls in order.
+func (p *Project) mergeLabels(ls ...map[string]string) map[string]string {
+	result := map[string]string{}
+
+	// Set our project labels
+	for k, v := range p.labels {
+		result[k] = v
+	}
+
+	// Set any labels given
+	for _, lm := range ls {
+		for k, v := range lm {
+			result[k] = v
+		}
+	}
+
+	return result
 }
 
 // options is the configuration to construct a new Project. Some
