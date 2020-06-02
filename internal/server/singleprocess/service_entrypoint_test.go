@@ -124,6 +124,9 @@ func TestServiceEntrypointExecStream_closeSend(t *testing.T) {
 		},
 	}))
 
+	// Wait to hear we opened
+	testEntrypointExecOpened(t, stream)
+
 	// Close our sending side
 	require.NoError(stream.CloseSend())
 
@@ -158,6 +161,9 @@ func TestServiceEntrypointExecStream_doubleStart(t *testing.T) {
 		},
 	}))
 	defer stream.CloseSend()
+
+	// Wait to hear we opened
+	testEntrypointExecOpened(t, stream)
 
 	// Start a second exec
 	stream2, err := client.EntrypointExecStream(ctx)
@@ -210,4 +216,10 @@ func testRegisterExec(t *testing.T, client pb.WaypointClient, impl pb.WaypointSe
 	return list[0], func() {
 		stream.CloseSend()
 	}
+}
+
+func testEntrypointExecOpened(t *testing.T, stream pb.Waypoint_EntrypointExecStreamClient) {
+	resp, err := stream.Recv()
+	require.NoError(t, err)
+	require.IsType(t, resp.Event, (*pb.EntrypointExecResponse_Opened)(nil))
 }

@@ -509,7 +509,15 @@ message EntrypointExecRequest {
 
 message EntrypointExecResponse {
   oneof event {
+    // input is raw stdin input from the client
     bytes input = 1;
+
+    // winch is SIGWNCH information for window sizing
     ExecStreamRequest.WindowSize winch = 2;
+
+    // opened is sent when the entrypoint session is successfully opened.
+    // The value of this message is meaningless. The existence of the message
+    // itself is a signal that the stream was opened properly.
+    bool opened = 3;
   }
 }

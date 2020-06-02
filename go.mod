@@ -33,7 +33,7 @@ require (
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8 // indirect
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/mux v1.7.3 // indirect
-	github.com/hashicorp/go-argmapper v0.0.0-20200531051437-cfed12c9ac52
+	github.com/hashicorp/go-argmapper v0.0.0-20200601005345-c13e5b41aa1f
 	github.com/hashicorp/go-hclog v0.14.0
 	github.com/hashicorp/go-memdb v1.2.0
 	github.com/hashicorp/go-multierror v1.1.0
@@ -73,7 +73,7 @@ require (
 	go.etcd.io/bbolt v1.3.3 // indirect
 	go.opencensus.io v0.22.2 // indirect
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
+	golang.org/x/net v0.0.0-20200219183655-46282727080f // indirect
 	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375 // indirect

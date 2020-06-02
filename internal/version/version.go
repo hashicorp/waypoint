@@ -47,14 +47,14 @@ func (c *VersionInfo) VersionNumber() string {
 		return "(version unknown)"
 	}
 
-	version := fmt.Sprintf("%s", c.Version)
+	version := c.Version
 
 	if c.VersionPrerelease != "" {
-		version = fmt.Sprintf("%s-%s", version, c.VersionPrerelease)
+		version = fmt.Sprintf("%s-%s", c.Version, c.VersionPrerelease)
 	}
 
 	if c.VersionMetadata != "" {
-		version = fmt.Sprintf("%s+%s", version, c.VersionMetadata)
+		version = fmt.Sprintf("%s+%s", c.Version, c.VersionMetadata)
 	}
 
 	return version

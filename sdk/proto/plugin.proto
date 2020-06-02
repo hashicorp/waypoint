@@ -110,15 +110,19 @@ message FuncSpec {
     // *any.Any so this type specifies the proto Any message type and not
     // a language-specific type.
     string type = 2;
+
+    // value is the value for this Value. This is only expected to be set
+    // for Args and has no impact on specs.
+    google.protobuf.Any value = 3;
   }
 
   // Args is the standard argument type for an RPC that is calling a FuncSpec.
   message Args {
-    // args is the list of argument types. This will include some of the
+    // args is the list of arguments. This will include some of the
     // standard types in this file (in the Args message namespace) as well
     // as custom types declared by the FuncSpec that the plugin is expected
     // to understand how to decode.
-    repeated google.protobuf.Any args = 1;
+    repeated Value args = 1;
   }
 }
 // Config is the namespace of messages related to configuration.

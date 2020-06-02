@@ -273,7 +273,7 @@ func groupedHelpFunc(f cli.HelpFunc) cli.HelpFunc {
 
 		fmt.Fprintf(tw, "Usage: %s [-version] [-help] [-autocomplete-(un)install] <command> [args]\n\n", cliName)
 		fmt.Fprintf(tw, "Common commands:\n")
-		for k, _ := range commonCommands {
+		for k := range commonCommands {
 			printCommand(tw, k, commands[k])
 		}
 

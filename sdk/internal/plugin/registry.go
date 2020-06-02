@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -77,7 +77,7 @@ func (c *registryClient) push(
 	args funcspec.Args,
 ) (component.Artifact, error) {
 	// Call our function
-	resp, err := c.client.Push(ctx, &proto.Push_Args{Args: args})
+	resp, err := c.client.Push(ctx, &proto.FuncSpec_Args{Args: args})
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (s *registryServer) PushSpec(
 
 func (s *registryServer) Push(
 	ctx context.Context,
-	args *proto.Push_Args,
+	args *proto.FuncSpec_Args,
 ) (*proto.Push_Resp, error) {
 	encoded, err := callDynamicFuncAny2(s.Impl.PushFunc(), args.Args,
 		argmapper.Typed(ctx),

@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-argmapper"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -163,7 +163,7 @@ func (c *platformClient) deploy(
 	defer internal.Cleanup.Close()
 
 	// Call our function
-	resp, err := c.client.Deploy(ctx, &proto.Deploy_Args{Args: args})
+	resp, err := c.client.Deploy(ctx, &proto.FuncSpec_Args{Args: args})
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (s *platformServer) DeploySpec(
 
 func (s *platformServer) Deploy(
 	ctx context.Context,
-	args *proto.Deploy_Args,
+	args *proto.FuncSpec_Args,
 ) (*proto.Deploy_Resp, error) {
 	internal := s.internal()
 	defer internal.Cleanup.Close()

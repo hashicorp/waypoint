@@ -44,7 +44,7 @@ func Spec(fn interface{}, args ...argmapper.Arg) (*pb.FuncSpec, error) {
 	}
 
 	// Grab the input set of the function and build up our funcspec
-	result := pb.FuncSpec{}
+	result := pb.FuncSpec{Name: f.Name()}
 	for _, v := range f.Input().Values() {
 		if !filterProto(v) {
 			continue

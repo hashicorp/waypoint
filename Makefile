@@ -21,3 +21,5 @@ k8s/mitchellh:
 	./waypoint install \
 		--annotate-service "external-dns.alpha.kubernetes.io/hostname=*.df.gcp.mitchellh.dev.,df.gcp.mitchellh.dev." \
 		| kubectl apply -f -
+
+
