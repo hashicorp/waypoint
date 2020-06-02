@@ -3,8 +3,10 @@ package ceb
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -18,6 +20,11 @@ const (
 	envDeploymentId   = "WAYPOINT_DEPLOYMENT_ID"
 	envServerAddr     = "WAYPOINT_SERVER_ADDR"
 	envServerInsecure = "WAYPOINT_SERVER_INSECURE"
+)
+
+const (
+	DefaultPort                = 5000
+	DefaultWaypointControlAddr = "control.alpha.waypoint.run"
 )
 
 // CEB represents the state of a running CEB.
@@ -57,7 +64,10 @@ func Run(ctx context.Context, os ...Option) error {
 	// Set our options
 	var cfg config
 	for _, o := range os {
-		o(ceb, &cfg)
+		err := o(ceb, &cfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	ceb.logger.Info("entrypoint starting",
@@ -87,6 +97,10 @@ func Run(ctx context.Context, os ...Option) error {
 	// NOTE(mitchellh): at some point we want this to be configurable
 	// but for now we're just going for it.
 	if err := ceb.initLogStream(ctx, &cfg); err != nil {
+		return err
+	}
+
+	if err := ceb.initURLService(ctx, &cfg); err != nil {
 		return err
 	}
 
@@ -131,18 +145,61 @@ type config struct {
 	DeploymentId   string
 	ServerAddr     string
 	ServerInsecure bool
+
+	WaypointToken       string
+	WaypointControlAddr string
+	URLServicePort      int
+	URLServiceLabels    string
 }
 
-type Option func(*CEB, *config)
+type Option func(*CEB, *config) error
 
 // WithEnvDefaults sets the configuration based on well-known accepted
 // environment variables. If this is NOT called, then the environment variable
 // based confiugration will be ignored.
 func WithEnvDefaults() Option {
-	return func(ceb *CEB, cfg *config) {
+	return func(ceb *CEB, cfg *config) error {
+		labels := os.Getenv("WAYPOINT_URL_LABELS")
+		if labels != "" {
+			cfg.URLServiceLabels = labels
+
+			var port int
+
+			portStr := os.Getenv("PORT")
+			if portStr == "" {
+				port = DefaultPort
+				os.Setenv("PORT", strconv.Itoa(DefaultPort))
+			} else {
+				i, err := strconv.Atoi(portStr)
+				if err != nil {
+					return fmt.Errorf("Invalid value of PORT: %s", err)
+				}
+
+				port = i
+			}
+
+			cfg.URLServicePort = port
+
+			controlAddr := os.Getenv("WAYPOINT_CONTROL_ADDR")
+			if controlAddr == "" {
+				controlAddr = DefaultWaypointControlAddr
+			}
+
+			cfg.WaypointControlAddr = controlAddr
+
+			token := os.Getenv("WAYPOINT_TOKEN")
+			if token == "" {
+				return fmt.Errorf("No token provided via WAYPOINT_TOKEN.")
+			}
+
+			cfg.WaypointToken = token
+		}
+
 		cfg.DeploymentId = os.Getenv(envDeploymentId)
 		cfg.ServerAddr = os.Getenv(envServerAddr)
 		cfg.ServerInsecure = os.Getenv(envServerInsecure) != ""
+
+		return nil
 	}
 }
 
@@ -150,7 +207,22 @@ func WithEnvDefaults() Option {
 // ceb execs. If the first value is not absolute then we'll look for it on
 // the PATH.
 func WithExec(args []string) Option {
-	return func(ceb *CEB, cfg *config) {
+	return func(ceb *CEB, cfg *config) error {
 		cfg.ExecArgs = args
+		return nil
+	}
+}
+
+// WithURLService indicates that the CEB should boot a connection to the
+// Waypoint URL Service and forward HTTP traffic send to the given labels
+// to the given localhost port.
+func WithURLService(controlAddr, token string, port int, labels string) Option {
+	return func(ceb *CEB, cfg *config) error {
+		cfg.WaypointControlAddr = controlAddr
+		cfg.WaypointToken = token
+		cfg.URLServicePort = port
+		cfg.URLServiceLabels = labels
+
+		return nil
 	}
 }

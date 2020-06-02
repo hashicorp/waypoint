@@ -39,8 +39,7 @@ func realMain() int {
 	// Run our core logic
 	err := ceb.Run(ctx,
 		ceb.WithEnvDefaults(),
-		ceb.WithExec(args),
-	)
+		ceb.WithExec(args))
 	if err != nil {
 		fmt.Fprintf(flag.CommandLine.Output(),
 			"Error initializing Waypoint entrypoint: %s\n", err)
