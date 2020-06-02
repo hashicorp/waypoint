@@ -130,7 +130,7 @@ func (b *Buffer) Close() error {
 	b.cond.L.Unlock()
 
 	// Close all our readers
-	for r, _ := range rs {
+	for r := range rs {
 		r.Close()
 	}
 
