@@ -84,6 +84,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	if p.dir == nil {
 		return nil, fmt.Errorf("WithDataDir must be specified")
 	}
+	if err := opts.Config.Validate(); err != nil {
+		return nil, err
+	}
 
 	// Init our server connection. This may be in-process if we're in
 	// local mode.

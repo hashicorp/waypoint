@@ -50,6 +50,7 @@ func (c *Component) validate(key string) error {
 	return multierror.Prefix(result, fmt.Sprintf("%s:", key))
 }
 
+// ValidateLabels validates a set of labels.
 func ValidateLabels(labels map[string]string) []error {
 	var errs []error
 	for k, v := range labels {
