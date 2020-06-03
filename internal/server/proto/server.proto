@@ -77,6 +77,12 @@ service Waypoint {
 
   // UpsertRelease updates or inserts a release.
   rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
+
+  // Set a single configuration item for the application.
+  rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);
+
+  // Retrieve configuration for the application.
+  rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 }
 
 /********************************************************************
@@ -447,6 +453,27 @@ message ExecStreamResponse {
   }
 }
 
+message ConfigVar {
+  string name = 1;
+  string value = 2;
+}
+
+message ConfigSetRequest {
+  ConfigVar var = 1;
+}
+
+message ConfigSetResponse {}
+
+message ConfigGetRequest {
+  // Get all configuration entries under the given prefix. Therefore when empty, return
+  // all configuration.
+  string prefix = 1;
+}
+
+message ConfigGetResponse {
+  repeated ConfigVar variables = 1;
+}
+
 /********************************************************************
 * Entrypoint
 ********************************************************************/
@@ -473,6 +500,8 @@ message EntrypointConfig {
     repeated string args = 2;
     ExecStreamRequest.PTY pty = 3;
   }
+
+  repeated ConfigVar env_vars = 2;
 }
 
 // A batch of data for log streaming from the entrypoint.

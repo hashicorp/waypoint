@@ -28,6 +28,11 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
 		return err
 	}
 
+	// Modify childCmd to contain any passed variables as environment variables
+	for _, cv := range resp.Config.EnvVars {
+		ceb.childCmd.Env = append(ceb.childCmd.Env, cv.Name+"="+cv.Value)
+	}
+
 	// Start the watcher
 	ch := make(chan *pb.EntrypointConfig)
 	go ceb.watchConfig(ch)
