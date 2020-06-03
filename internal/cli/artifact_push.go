@@ -50,7 +50,7 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 }
 
 func (c *ArtifactPushCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetLabel, nil)
 }
 
 func (c *ArtifactPushCommand) AutocompleteArgs() complete.Predictor {
