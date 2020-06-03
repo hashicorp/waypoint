@@ -61,6 +61,9 @@ type baseCommand struct {
 
 	// flagLabels are set via -label if flagSetLabel is set.
 	flagLabels map[string]string
+
+	// args that were present after parsing flags
+	args []string
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -95,6 +98,8 @@ func (c *baseCommand) Init(opts ...Option) error {
 		c.ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
 	}
+
+	c.args = baseCfg.Flags.Args()
 
 	// Parse the configuration
 	var cfg config.Config
