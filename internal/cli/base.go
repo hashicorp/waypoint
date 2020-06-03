@@ -58,6 +58,9 @@ type baseCommand struct {
 	// WithSingleApp option. You should not access this directly
 	// though and use the DoApp function.
 	app string
+
+	// flagLabels are set via -label if flagSetLabel is set.
+	flagLabels map[string]string
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -124,6 +127,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 			core.WithLogger(c.Log),
 			core.WithConfig(&cfg),
 			core.WithDataDir(projDir),
+			core.WithLabels(c.flagLabels),
 		)
 		if err != nil {
 			c.logError(c.Log, "failed to create project", err)
@@ -207,6 +211,15 @@ func (c *baseCommand) logError(log hclog.Logger, prefix string, err error) {
 // to configure the set with your own custom options.
 func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 	set := flag.NewSets()
+	if bit&flagSetLabel != 0 {
+		f := set.NewSet("Common Options")
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "label",
+			Target: &c.flagLabels,
+			Usage:  "Labels to set for this operation. Can be specified multiple times.",
+		})
+	}
+
 	if f != nil {
 		// Configure our values
 		f(set)
@@ -219,8 +232,8 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 type flagSetBit uint
 
 const (
-	flagSetNone flagSetBit = 1 << iota
-	flagSetHTTP            // not used currently, should replace when we don't need
+	flagSetNone  flagSetBit = 1 << iota
+	flagSetLabel            // can set labels
 )
 
 var (

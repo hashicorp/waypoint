@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/factory"
@@ -45,6 +46,10 @@ type Project struct {
 	// as a whole. These messages will show up unprefixed for example compared
 	// to the app-specific UI.
 	UI terminal.UI
+
+	// overrideLabels are the labels specified via the CLI to override
+	// all other conflicting keys.
+	overrideLabels map[string]string
 }
 
 // NewProject creates a new Project with the given options.
@@ -86,6 +91,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	}
 	if err := opts.Config.Validate(); err != nil {
 		return nil, err
+	}
+	if errs := config.ValidateLabels(p.overrideLabels); len(errs) > 0 {
+		return nil, multierror.Append(nil, errs...)
 	}
 
 	// Init our server connection. This may be in-process if we're in
@@ -167,6 +175,11 @@ func (p *Project) mergeLabels(ls ...map[string]string) map[string]string {
 		}
 	}
 
+	// Set any overrides
+	for k, v := range p.overrideLabels {
+		result[k] = v
+	}
+
 	return result
 }
 
@@ -208,4 +221,9 @@ func WithFactory(t component.Type, f *factory.Factory) Option {
 // WithMappers adds the mappers to the list of mappers.
 func WithMappers(m ...*argmapper.Func) Option {
 	return func(p *Project, opts *options) { p.mappers = append(p.mappers, m...) }
+}
+
+// WithLabels sets the labels that will override any other labels set.
+func WithLabels(m map[string]string) Option {
+	return func(p *Project, opts *options) { p.overrideLabels = m }
 }
