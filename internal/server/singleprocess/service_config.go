@@ -27,7 +27,14 @@ func (s *service) SetConfig(
 			return err
 		}
 
-		return dbPut(b, req.Var.Name, req.Var)
+		for _, cv := range req.Variables {
+			err = dbPut(b, cv.Name, cv)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 
 	if err != nil {

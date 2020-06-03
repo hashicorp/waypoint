@@ -109,12 +109,12 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"config-get": func() (cli.Command, error) {
+		"config get": func() (cli.Command, error) {
 			return &ConfigGetCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"config-set": func() (cli.Command, error) {
+		"config set": func() (cli.Command, error) {
 			return &ConfigSetCommand{
 				baseCommand: baseCommand,
 			}, nil

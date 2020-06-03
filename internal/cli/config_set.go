@@ -24,18 +24,30 @@ func (c *ConfigSetCommand) Run(args []string) int {
 		return 1
 	}
 
-	// Get our API client
-	client := c.project.Client()
-
-	if len(c.args) != 2 {
-		fmt.Fprintf(os.Stderr, "config-set requires 2 arguments: a variable name and it's value")
+	if len(c.args) == 0 {
+		fmt.Fprintf(os.Stderr, "config-set requires at least one key=value entry")
 		return 1
 	}
 
-	_, err := client.SetConfig(c.Ctx, &pb.ConfigSetRequest{
-		Var: &pb.ConfigVar{Name: c.args[0], Value: c.args[1]},
-	})
+	// Get our API client
+	client := c.project.Client()
 
+	var req pb.ConfigSetRequest
+
+	for _, arg := range c.args {
+		idx := strings.IndexByte(arg, '=')
+		if idx == -1 || idx == 0 || idx == len(arg)-1 {
+			fmt.Fprintf(os.Stderr, "variables must be in the form key=value")
+			return 1
+		}
+
+		req.Variables = append(req.Variables, &pb.ConfigVar{
+			Name:  arg[:idx],
+			Value: arg[idx+1:],
+		})
+	}
+
+	_, err := client.SetConfig(c.Ctx, &req)
 	if err != nil {
 		c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
 		return 1

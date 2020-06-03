@@ -459,7 +459,7 @@ message ConfigVar {
 }
 
 message ConfigSetRequest {
-  ConfigVar var = 1;
+  repeated ConfigVar variables = 1;
 }
 
 message ConfigSetResponse {}
@@ -495,13 +495,13 @@ message EntrypointConfig {
   // Exec are requested exec sessions for this instance.
   repeated Exec exec = 1;
 
+  repeated ConfigVar env_vars = 2;
+
   message Exec {
     int64 index = 1;
     repeated string args = 2;
     ExecStreamRequest.PTY pty = 3;
   }
-
-  repeated ConfigVar env_vars = 2;
 }
 
 // A batch of data for log streaming from the entrypoint.
