@@ -16,12 +16,23 @@ import (
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
 // an artifact from source.
 type Builder struct {
-	DisableCEB bool
+	config BuilderConfig
 }
 
 // BuildFunc implements component.Builder
 func (b *Builder) BuildFunc() interface{} {
 	return b.Build
+}
+
+// Config is the configuration structure for the registry.
+type BuilderConfig struct {
+	// Control whether or not to inject the entrypoint binary into the resulting image
+	DisableCEB bool `hcl:"disable_ceb,attr"`
+}
+
+// Config implements Configurable
+func (b *Builder) Config() (interface{}, error) {
+	return &b.config, nil
 }
 
 // Build
@@ -46,7 +57,7 @@ func (b *Builder) Build(
 		return nil, err
 	}
 
-	if !b.DisableCEB {
+	if !b.config.DisableCEB {
 		tmpdir, err := ioutil.TempDir("", "waypoint")
 		if err != nil {
 			return nil, err
