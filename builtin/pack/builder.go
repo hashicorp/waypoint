@@ -27,7 +27,7 @@ func (b *Builder) BuildFunc() interface{} {
 // Config is the configuration structure for the registry.
 type BuilderConfig struct {
 	// Control whether or not to inject the entrypoint binary into the resulting image
-	DisableCEB bool `hcl:"disable_ceb,attr"`
+	DisableCEB bool `hcl:"disable_ceb,optional"`
 }
 
 // Config implements Configurable
