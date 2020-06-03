@@ -146,7 +146,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 }
 
 func (c *ReleaseCreateCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetLabel, nil)
 }
 
 func (c *ReleaseCreateCommand) AutocompleteArgs() complete.Predictor {

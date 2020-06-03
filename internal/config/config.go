@@ -6,14 +6,16 @@ import (
 
 // Config is the configuration structure.
 type Config struct {
-	Server *Server `hcl:"server,block"`
-	Apps   []*App  `hcl:"app,block"`
+	Server *Server           `hcl:"server,block"`
+	Apps   []*App            `hcl:"app,block"`
+	Labels map[string]string `hcl:"labels,optional"`
 }
 
 // App represents a single application.
 type App struct {
-	Name string `hcl:",label"`
-	Path string `hcl:"path,optional"`
+	Name   string            `hcl:",label"`
+	Path   string            `hcl:"path,optional"`
+	Labels map[string]string `hcl:"labels,optional"`
 
 	Build    *Component `hcl:"build,block"`
 	Registry *Component `hcl:"registry,block"`
@@ -24,8 +26,9 @@ type App struct {
 // Component is an internal name used to describe a single component such as
 // build, deploy, releaser, etc.
 type Component struct {
-	Type string   `hcl:",label"`
-	Body hcl.Body `hcl:",remain"`
+	Type   string            `hcl:",label"`
+	Body   hcl.Body          `hcl:",remain"`
+	Labels map[string]string `hcl:"labels,optional"`
 }
 
 // Server configures the remote server.

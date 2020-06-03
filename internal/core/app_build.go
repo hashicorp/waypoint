@@ -28,7 +28,8 @@ type buildOperation struct {
 
 func (op *buildOperation) Init(app *App) (proto.Message, error) {
 	return &pb.Build{
-		Component: app.components[app.Builder],
+		Component: app.components[app.Builder].Info,
+		Labels:    app.components[app.Builder].Labels,
 	}, nil
 }
 

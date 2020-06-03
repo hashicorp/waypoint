@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/factory"
@@ -32,6 +33,9 @@ type Project struct {
 	client    pb.WaypointClient
 	dconfig   component.DeploymentConfig
 
+	// labels is the list of labels that are assigned to this project.
+	labels map[string]string
+
 	// This lock only needs to be held currently to protect localClosers.
 	lock sync.Mutex
 
@@ -42,6 +46,10 @@ type Project struct {
 	// as a whole. These messages will show up unprefixed for example compared
 	// to the app-specific UI.
 	UI terminal.UI
+
+	// overrideLabels are the labels specified via the CLI to override
+	// all other conflicting keys.
+	overrideLabels map[string]string
 }
 
 // NewProject creates a new Project with the given options.
@@ -81,6 +89,12 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	if p.dir == nil {
 		return nil, fmt.Errorf("WithDataDir must be specified")
 	}
+	if err := opts.Config.Validate(); err != nil {
+		return nil, err
+	}
+	if errs := config.ValidateLabels(p.overrideLabels); len(errs) > 0 {
+		return nil, multierror.Append(nil, errs...)
+	}
 
 	// Init our server connection. This may be in-process if we're in
 	// local mode.
@@ -90,6 +104,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	if p.client == nil {
 		panic("p.client should never be nil")
 	}
+
+	// Set our labels
+	p.labels = opts.Config.Labels
 
 	// Initialize all the applications and load all their components.
 	for _, appConfig := range opts.Config.Apps {
@@ -141,6 +158,31 @@ func (p *Project) Close() error {
 	return nil
 }
 
+// mergeLabels merges the set of labels given. This will set the project
+// labels as a base automatically and then merge ls in order.
+func (p *Project) mergeLabels(ls ...map[string]string) map[string]string {
+	result := map[string]string{}
+
+	// Set our project labels
+	for k, v := range p.labels {
+		result[k] = v
+	}
+
+	// Set any labels given
+	for _, lm := range ls {
+		for k, v := range lm {
+			result[k] = v
+		}
+	}
+
+	// Set any overrides
+	for k, v := range p.overrideLabels {
+		result[k] = v
+	}
+
+	return result
+}
+
 // options is the configuration to construct a new Project. Some
 // configuration is set directly on the Project. This is only used for
 // intermediate values that need to be processed further before initializing
@@ -179,4 +221,9 @@ func WithFactory(t component.Type, f *factory.Factory) Option {
 // WithMappers adds the mappers to the list of mappers.
 func WithMappers(m ...*argmapper.Func) Option {
 	return func(p *Project, opts *options) { p.mappers = append(p.mappers, m...) }
+}
+
+// WithLabels sets the labels that will override any other labels set.
+func WithLabels(m map[string]string) Option {
+	return func(p *Project, opts *options) { p.overrideLabels = m }
 }

@@ -44,7 +44,7 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 }
 
 func (c *ArtifactBuildCommand) Flags() *flag.Sets {
-	return c.flagSet(0, func(set *flag.Sets) {
+	return c.flagSet(flagSetLabel, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
 			Name:   "push",

@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -35,7 +36,8 @@ type deployOperation struct {
 
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
 	return &pb.Deployment{
-		Component:  app.components[app.Platform],
+		Component:  app.components[app.Platform].Info,
+		Labels:     app.components[app.Platform].Labels,
 		ArtifactId: op.Push.Id,
 		State:      pb.Deployment_DEPLOY,
 	}, nil
@@ -68,8 +70,8 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App) (
 		(*component.Deployment)(nil),
 		app.Platform,
 		app.Platform.DeployFunc(),
-		op.Push.Artifact.Artifact,
-		&dconfig,
+		argmapper.Named("artifact", op.Push.Artifact.Artifact),
+		argmapper.Typed(&dconfig),
 	)
 }
 

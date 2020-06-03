@@ -37,15 +37,26 @@ type App struct {
 	// to this app vs the project UI.
 	UI terminal.UI
 
-	client        pb.WaypointClient
-	source        *component.Source
-	dconfig       component.DeploymentConfig
-	logger        hclog.Logger
-	dir           *datadir.App
-	mappers       []*argmapper.Func
-	components    map[interface{}]*pb.Component
-	componentDirs map[interface{}]*datadir.Component
-	closers       []func() error
+	client     pb.WaypointClient
+	source     *component.Source
+	dconfig    component.DeploymentConfig
+	logger     hclog.Logger
+	dir        *datadir.App
+	mappers    []*argmapper.Func
+	components map[interface{}]*appComponent
+	closers    []func() error
+}
+
+type appComponent struct {
+	// Info is the protobuf metadata for this component.
+	Info *pb.Component
+
+	// Dir is the data directory for this component.
+	Dir *datadir.Component
+
+	// Labels are the set of labels that were set for this component.
+	// This is already merged with parent labels.
+	Labels map[string]string
 }
 
 // newApp creates an App for the given project and configuration. This will
@@ -55,12 +66,11 @@ type App struct {
 func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	// Initialize
 	app := &App{
-		client:        p.client,
-		source:        &component.Source{App: cfg.Name, Path: "."},
-		dconfig:       p.dconfig,
-		logger:        p.logger.Named("app").Named(cfg.Name),
-		components:    make(map[interface{}]*pb.Component),
-		componentDirs: make(map[interface{}]*datadir.Component),
+		client:     p.client,
+		source:     &component.Source{App: cfg.Name, Path: "."},
+		dconfig:    p.dconfig,
+		logger:     p.logger.Named("app").Named(cfg.Name),
+		components: make(map[interface{}]*appComponent),
 
 		// very important below that we allocate a new slice since we modify
 		mappers: append([]*argmapper.Func{}, p.mappers...),
@@ -95,7 +105,10 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 			continue
 		}
 
-		err = app.initComponent(ctx, c.Type, c.Target, p.factories[c.Type], c.Config)
+		// Get our labels
+		labels := p.mergeLabels(cfg.Labels, c.Config.Labels)
+
+		err = app.initComponent(ctx, c.Type, c.Target, p.factories[c.Type], c.Config, labels)
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +157,7 @@ func (a *App) ConfigSet(ctx context.Context, key, val string) error {
 
 	cv := &component.ConfigVar{Name: key, Value: val}
 
-	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigSetFunc(), cv)
+	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigSetFunc(), argmapper.Typed(cv))
 	if err != nil {
 		return err
 	}
@@ -166,7 +179,7 @@ func (a *App) ConfigGet(ctx context.Context, key string) (*component.ConfigVar, 
 		Name: key,
 	}
 
-	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigGetFunc(), cv)
+	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigGetFunc(), argmapper.Typed(cv))
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +203,7 @@ func (a *App) callDynamicFunc(
 	result interface{}, // expected result type
 	c interface{}, // component
 	f interface{}, // function
-	values ...interface{},
+	args ...argmapper.Arg,
 ) (interface{}, error) {
 	// We allow f to be a *mapper.Func because our plugin system creates
 	// a func directly due to special argument types.
@@ -205,24 +218,29 @@ func (a *App) callDynamicFunc(
 	}
 
 	// Get the component directory
-	cdir, ok := a.componentDirs[c]
+	componentData, ok := a.components[c]
 	if !ok {
 		return nil, fmt.Errorf("component dir not found for: %T", c)
 	}
 
 	// Make sure we have access to our context and logger and default args
-	values = append(values,
-		ctx,
-		log,
-		a.source,
-		a.dir,
-		cdir,
-		a.UI,
-		&serverhistory.Client{APIClient: a.client, MapperSet: a.mappers},
+	args = append(args,
+		argmapper.ConverterFunc(a.mappers...),
+		argmapper.Typed(
+			ctx,
+			log,
+			a.source,
+			a.dir,
+			componentData.Dir,
+			a.UI,
+			&serverhistory.Client{APIClient: a.client, MapperSet: a.mappers},
+		),
+
+		argmapper.Named("labels", &component.LabelSet{Labels: componentData.Labels}),
 	)
 
 	// Build the chain and call it
-	callResult := rawFunc.Call(argmapper.ConverterFunc(a.mappers...), argmapper.Typed(values...))
+	callResult := rawFunc.Call(args...)
 	if err := callResult.Err(); err != nil {
 		return nil, err
 	}
@@ -254,6 +272,7 @@ func (a *App) initComponent(
 	target interface{},
 	f *factory.Factory,
 	cfg *config.Component,
+	labels map[string]string,
 ) error {
 	log := a.logger.Named(strings.ToLower(typ.String()))
 
@@ -305,9 +324,6 @@ func (a *App) initComponent(
 		})
 	}
 
-	// Store the component dir mapping
-	a.componentDirs[raw] = cdir
-
 	// We have our value so let's make sure it is the correct type.
 	rawV := reflect.ValueOf(raw)
 	if !rawV.Type().AssignableTo(targetV.Type()) {
@@ -325,9 +341,14 @@ func (a *App) initComponent(
 	targetV.Set(rawV)
 
 	// Store component metadata
-	a.components[raw] = &pb.Component{
-		Type: pb.Component_Type(typ),
-		Name: cfg.Type,
+	a.components[raw] = &appComponent{
+		Info: &pb.Component{
+			Type: pb.Component_Type(typ),
+			Name: cfg.Type,
+		},
+
+		Dir:    cdir,
+		Labels: labels,
 	}
 
 	return nil
