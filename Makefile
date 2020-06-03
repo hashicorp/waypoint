@@ -4,15 +4,17 @@
 # bin creates the binaries for Waypoint
 .PHONY: bin
 bin:
-	GOOS=linux go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
+	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets ./ceb
 	go build -o ./waypoint ./cmd/waypoint
 	go build -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
+	# We're checking the version in git back out now to avoid checking in the giant
+	# one. The version in git works with dev for testing just fine.
 	git checkout internal/assets/bindata.go
 
 .PHONY: dev
 dev:
-	GOOS=linux go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
+	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -dev -pkg assets ./ceb
 	go build -o ./waypoint ./cmd/waypoint
 	go build -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint

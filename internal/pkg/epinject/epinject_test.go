@@ -16,6 +16,11 @@ import (
 
 func TestEPInject(t *testing.T) {
 	t.Run("can alter the entrypoint of a docker image", func(t *testing.T) {
+		_, err := exec.LookPath("docker")
+		if err != nil {
+			t.Skip("docker isn't available to test with")
+		}
+
 		// Use the nginx image for this
 
 		out, err := exec.Command("docker", "pull", "nginx").CombinedOutput()
