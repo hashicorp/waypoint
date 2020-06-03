@@ -18,7 +18,7 @@ func TestEPInject(t *testing.T) {
 	t.Run("can alter the entrypoint of a docker image", func(t *testing.T) {
 		// Use the nginx image for this
 
-		out, err := exec.Command("docker", "pull", "nginx").Output()
+		out, err := exec.Command("docker", "pull", "nginx").CombinedOutput()
 		require.NoError(t, err, string(out))
 
 		var inspectOut []struct {
@@ -27,8 +27,8 @@ func TestEPInject(t *testing.T) {
 			} `json:"Config"`
 		}
 
-		out, err = exec.Command("docker", "inspect", "nginx").Output()
-		require.NoError(t, err)
+		out, err = exec.Command("docker", "inspect", "nginx").CombinedOutput()
+		require.NoError(t, err, string(out))
 
 		err = json.Unmarshal(out, &inspectOut)
 		require.NoError(t, err)
