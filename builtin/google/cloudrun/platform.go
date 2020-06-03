@@ -34,6 +34,11 @@ func (p *Platform) DeployFunc() interface{} {
 	return p.Deploy
 }
 
+// DestroyFunc implements component.Destroyer
+func (p *Platform) DestroyFunc() interface{} {
+	return p.Destroy
+}
+
 // Deploy deploys an image to GCR.
 func (p *Platform) Deploy(
 	ctx context.Context,
@@ -176,6 +181,29 @@ func (p *Platform) Deploy(
 	}
 
 	return result, nil
+}
+
+// Destroy deletes the cloud run revision
+func (p *Platform) Destroy(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) error {
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
+	apiService, err := deployment.apiService(ctx)
+	if err != nil {
+		return err
+	}
+	client := run.NewNamespacesRevisionsService(apiService)
+
+	st.Update("Deleting deployment...")
+
+	_, err = client.Delete(deployment.apiRevisionName()).Context(ctx).Do()
+	return err
 }
 
 // Config is the configuration structure for the Platform.

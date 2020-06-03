@@ -100,3 +100,32 @@ func (s *service) ListDeployments(
 
 	return &pb.ListDeploymentsResponse{Deployments: result}, nil
 }
+
+// GetDeployment returns a Deployment based on ID
+func (s *service) GetDeployment(
+	ctx context.Context,
+	req *pb.GetDeploymentRequest,
+) (*pb.Deployment, error) {
+	var result pb.Deployment
+
+	// Get by ID
+	err := s.db.View(func(tx *bolt.Tx) error {
+		// todo: use a working helper
+		bucket := tx.Bucket(deployBucket)
+		raw := bucket.Get([]byte(req.DeploymentId))
+		if raw == nil {
+			return status.Errorf(codes.NotFound, "record not found for ID: %s", req.DeploymentId)
+		}
+
+		if err := proto.Unmarshal(raw, &result); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
