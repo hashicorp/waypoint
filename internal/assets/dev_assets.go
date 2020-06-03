@@ -2,7 +2,7 @@
 // sources:
 // ceb/ceb (13.263MB)
 
-// +build !assets-embedded
+// +build !assetsembedded
 
 package assets
 

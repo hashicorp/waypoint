@@ -1,4 +1,4 @@
-//go:generate go-bindata -dev -pkg assets -o dev_assets.go -tags !assets-embedded ceb
+//go:generate go-bindata -dev -pkg assets -o dev_assets.go -tags !assetsembedded ceb
 
 package assets
 

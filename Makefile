@@ -5,9 +5,9 @@
 .PHONY: bin
 bin:
 	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
-	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assets-embedded ./ceb
-	go build -tags assets-embedded -o ./waypoint ./cmd/waypoint
-	go build -tags assets-embedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
+	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
+	go build -tags assetsembedded -o ./waypoint ./cmd/waypoint
+	go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
 .PHONY: dev
 dev:
