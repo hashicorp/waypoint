@@ -5,17 +5,14 @@
 .PHONY: bin
 bin:
 	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
-	cd internal/assets && go-bindata -pkg assets ./ceb
-	go build -o ./waypoint ./cmd/waypoint
-	go build -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
-	# We're checking the version in git back out now to avoid checking in the giant
-	# one. The version in git works with dev for testing just fine.
-	git checkout internal/assets/bindata.go
+	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assets-embedded ./ceb
+	go build -tags assets-embedded -o ./waypoint ./cmd/waypoint
+	go build -tags assets-embedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
 .PHONY: dev
 dev:
 	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
-	cd internal/assets && go-bindata -dev -pkg assets ./ceb
+	cd internal/assets && go generate
 	go build -o ./waypoint ./cmd/waypoint
 	go build -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 

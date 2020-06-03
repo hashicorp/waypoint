@@ -1,3 +1,5 @@
+//go:generate go-bindata -dev -pkg assets -o dev_assets.go -tags !assets-embedded ceb
+
 package assets
 
 import (

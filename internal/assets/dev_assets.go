@@ -2,6 +2,8 @@
 // sources:
 // ceb/ceb (13.263MB)
 
+// +build !assets-embedded
+
 package assets
 
 import (
