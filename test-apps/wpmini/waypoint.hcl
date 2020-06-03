@@ -1,0 +1,4 @@
+app "wpmini" {
+  build "pack" {
+  }
+}

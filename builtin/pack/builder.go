@@ -2,19 +2,37 @@ package pack
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
 
+	"github.com/hashicorp/waypoint/internal/assets"
+	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
 // an artifact from source.
-type Builder struct{}
+type Builder struct {
+	config BuilderConfig
+}
 
 // BuildFunc implements component.Builder
 func (b *Builder) BuildFunc() interface{} {
 	return b.Build
+}
+
+// Config is the configuration structure for the registry.
+type BuilderConfig struct {
+	// Control whether or not to inject the entrypoint binary into the resulting image
+	DisableCEB bool `hcl:"disable_ceb,optional"`
+}
+
+// Config implements Configurable
+func (b *Builder) Config() (interface{}, error) {
+	return &b.config, nil
 }
 
 // Build
@@ -37,6 +55,35 @@ func (b *Builder) Build(
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
 		return nil, err
+	}
+
+	if !b.config.DisableCEB {
+		tmpdir, err := ioutil.TempDir("", "waypoint")
+		if err != nil {
+			return nil, err
+		}
+
+		defer os.RemoveAll(tmpdir)
+
+		err = assets.RestoreAsset(tmpdir, "ceb/ceb")
+		if err != nil {
+			return nil, err
+		}
+
+		err = epinject.AlterEntrypoint(ctx, src.App+":latest", func(cur []string) (*epinject.NewEntrypoint, error) {
+			ep := &epinject.NewEntrypoint{
+				Entrypoint: append([]string{"/bin/wpceb"}, cur...),
+				InjectFiles: map[string]string{
+					filepath.Join(tmpdir, "ceb/ceb"): "/bin/wpceb",
+				},
+			}
+
+			return ep, nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// We don't even need to inspect Docker to verify we have the image.
