@@ -87,6 +87,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: /go/bin
+      - setup_remote_docker:
+          docker_layer_cache: true
       - run: &install_gotestsum
           name: Install gotestsum
           command: |
