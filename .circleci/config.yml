@@ -45,6 +45,7 @@ jobs:
           command: &lintcmd |
             golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
               --disable-all \
+              --timeout 10m \
               --enable gosimple \
               --enable govet
 
