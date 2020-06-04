@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package netlify;
+
+option go_package = "netlify";
+
+message Deployment {
+  // string url = 1;
+  // Resource resource = 2;
+  // string revision_id = 3;
+
+}
+
+message Release {
+  // string url = 1;
+}
+
+// NetlifyFileDigest is the artifact type for the builder.
+message NetlifyFileDigest {
+  string image = 1;
+  string tag = 2;
+}
