@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"sort"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -28,7 +29,12 @@ func (s *service) SetConfig(
 		}
 
 		for _, cv := range req.Variables {
-			err = dbPut(b, cv.Name, cv)
+			if cv.Value == "" {
+				err = b.Delete([]byte(cv.App + ":" + cv.Name))
+			} else {
+				err = dbPut(b, cv.App+":"+cv.Name, cv)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -57,21 +63,66 @@ func (s *service) GetConfig(
 			return nil
 		}
 
-		return b.ForEach(func(k, v []byte) error {
-			name := string(k)
+		if req.App != "" {
+			vars := map[string]*pb.ConfigVar{}
+			var keys []string
 
-			if req.Prefix == "" || strings.HasPrefix(name, req.Prefix) {
-				var cv pb.ConfigVar
+			err := b.ForEach(func(k, v []byte) error {
+				name := string(k)
 
-				err := proto.Unmarshal(v, &cv)
-				if err != nil {
-					return err
+				if req.Prefix == "" || strings.HasPrefix(name, req.Prefix) {
+					var cv pb.ConfigVar
+
+					err := proto.Unmarshal(v, &cv)
+					if err != nil {
+						return err
+					}
+
+					if cv.App != req.App {
+						return nil
+					}
+
+					cur := vars[cv.Name]
+					if cur != nil && cur.App != "" {
+						return nil
+					}
+
+					vars[cv.Name] = &cv
+					keys = append(keys, cv.Name)
+					return nil
 				}
-				resp.Variables = append(resp.Variables, &cv)
+
+				return nil
+			})
+			if err != nil {
+				return err
 			}
 
-			return nil
-		})
+			sort.Strings(keys)
+
+			for _, k := range keys {
+				resp.Variables = append(resp.Variables, vars[k])
+			}
+		} else {
+			return b.ForEach(func(k, v []byte) error {
+				name := string(k)
+
+				if req.Prefix == "" || strings.HasPrefix(name, req.Prefix) {
+					var cv pb.ConfigVar
+
+					err := proto.Unmarshal(v, &cv)
+					if err != nil {
+						return err
+					}
+
+					resp.Variables = append(resp.Variables, &cv)
+				}
+
+				return nil
+			})
+		}
+
+		return nil
 	})
 
 	if err != nil {

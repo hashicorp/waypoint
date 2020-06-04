@@ -30,7 +30,7 @@ func TestServiceConfig(t *testing.T) {
 		require := require.New(t)
 
 		// Create, should get an ID back
-		resp, err := client.SetConfig(ctx, &SReq{Var: Var})
+		resp, err := client.SetConfig(ctx, &SReq{Variables: []*pb.ConfigVar{Var}})
 		require.NoError(err)
 		require.NotNil(resp)
 

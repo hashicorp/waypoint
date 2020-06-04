@@ -13,6 +13,8 @@ import (
 
 type ConfigSetCommand struct {
 	*baseCommand
+
+	app string
 }
 
 func (c *ConfigSetCommand) Run(args []string) int {
@@ -36,12 +38,13 @@ func (c *ConfigSetCommand) Run(args []string) int {
 
 	for _, arg := range c.args {
 		idx := strings.IndexByte(arg, '=')
-		if idx == -1 || idx == 0 || idx == len(arg)-1 {
+		if idx == -1 || idx == 0 {
 			fmt.Fprintf(os.Stderr, "variables must be in the form key=value")
 			return 1
 		}
 
 		req.Variables = append(req.Variables, &pb.ConfigVar{
+			App:   c.app,
 			Name:  arg[:idx],
 			Value: arg[idx+1:],
 		})
@@ -57,7 +60,14 @@ func (c *ConfigSetCommand) Run(args []string) int {
 }
 
 func (c *ConfigSetCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(0, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.StringVar(&flag.StringVar{
+			Name:   "app",
+			Target: &c.app,
+			Usage:  "Scope the variables to a specific app.",
+		})
+	})
 }
 
 func (c *ConfigSetCommand) AutocompleteArgs() complete.Predictor {

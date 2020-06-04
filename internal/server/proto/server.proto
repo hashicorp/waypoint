@@ -456,6 +456,10 @@ message ExecStreamResponse {
 message ConfigVar {
   string name = 1;
   string value = 2;
+
+  // Scope the variables just to the given application. If empty, the variables
+  // will be project scoped.
+  string app = 3;
 }
 
 message ConfigSetRequest {
@@ -468,6 +472,10 @@ message ConfigGetRequest {
   // Get all configuration entries under the given prefix. Therefore when empty, return
   // all configuration.
   string prefix = 1;
+
+  // Get the configuration that would be applied to an application of the given name.
+  // If empty, return configuration for all applications.
+  string app = 2;
 }
 
 message ConfigGetResponse {

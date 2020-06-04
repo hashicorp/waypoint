@@ -18,6 +18,7 @@ type ConfigGetCommand struct {
 
 	json bool
 	raw  bool
+	app  string
 }
 
 func (c *ConfigGetCommand) Run(args []string) int {
@@ -46,6 +47,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 
 	resp, err := client.GetConfig(c.Ctx, &pb.ConfigGetRequest{
 		Prefix: prefix,
+		App:    c.app,
 	})
 
 	if err != nil {
@@ -86,14 +88,16 @@ func (c *ConfigGetCommand) Run(args []string) int {
 	}
 
 	table := tablewriter.NewWriter(out)
-	table.SetHeader([]string{"Name", "Value"})
+	table.SetHeader([]string{"Scope", "Name", "Value"})
 	table.SetBorder(false)
 
 	for _, v := range resp.Variables {
 		table.Rich([]string{
+			v.App,
 			v.Name,
 			v.Value,
 		}, []tablewriter.Colors{
+			{},
 			{tablewriter.FgGreenColor},
 			{},
 		})
@@ -117,6 +121,12 @@ func (c *ConfigGetCommand) Flags() *flag.Sets {
 			Name:   "raw",
 			Target: &c.raw,
 			Usage:  "Output the value for the named variable only (disables prefix matching)",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "app",
+			Target: &c.app,
+			Usage:  "Scope the variables to a specific app.",
 		})
 	})
 }
