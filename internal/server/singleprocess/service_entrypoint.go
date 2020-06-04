@@ -48,6 +48,17 @@ func (s *service) EntrypointConfig(
 		}
 	}()
 
+	// Fetch the deployment info so we can calculate the config variables to send
+	deployment, err := s.GetDeployment(srv.Context(), &pb.GetDeploymentRequest{
+		DeploymentId: req.DeploymentId,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	name := deployment.Component.Name
+
 	// Build our config in a loop.
 	for {
 		ws := memdb.NewWatchSet()
@@ -65,6 +76,16 @@ func (s *service) EntrypointConfig(
 				Pty:   exec.Pty,
 			})
 		}
+
+		cfgvars, err := s.GetConfig(srv.Context(), &pb.ConfigGetRequest{
+			App: name,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		config.EnvVars = cfgvars.Variables
 
 		// Send new config
 		if err := srv.Send(&pb.EntrypointConfigResponse{

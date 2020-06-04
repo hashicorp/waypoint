@@ -66,3 +66,4 @@ func (b *boolValue) Get() interface{} { return *b.target }
 func (b *boolValue) String() string   { return strconv.FormatBool(*b.target) }
 func (b *boolValue) Example() string  { return "" }
 func (b *boolValue) Hidden() bool     { return b.hidden }
+func (b *boolValue) IsBoolFlag() bool { return true }

@@ -34,7 +34,6 @@ type CEB struct {
 	context  context.Context
 	client   pb.WaypointClient
 	childCmd *exec.Cmd
-	config   *pb.EntrypointConfig
 	execIdx  int64
 
 	cleanupFunc func()

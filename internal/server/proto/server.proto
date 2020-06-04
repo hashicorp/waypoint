@@ -78,6 +78,12 @@ service Waypoint {
   // UpsertRelease updates or inserts a release.
   rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
 
+  // Set a single configuration item for the application.
+  rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);
+
+  // Retrieve configuration for the application.
+  rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
+
   // Generate a new invite token that users can exchange for a login token.
   rpc GenerateInviteToken(InviteTokenRequest) returns (NewTokenResponse);
 
@@ -456,6 +462,35 @@ message ExecStreamResponse {
   }
 }
 
+message ConfigVar {
+  string name = 1;
+  string value = 2;
+
+  // Scope the variables just to the given application. If empty, the variables
+  // will be project scoped.
+  string app = 3;
+}
+
+message ConfigSetRequest {
+  repeated ConfigVar variables = 1;
+}
+
+message ConfigSetResponse {}
+
+message ConfigGetRequest {
+  // Get all configuration entries under the given prefix. Therefore when empty, return
+  // all configuration.
+  string prefix = 1;
+
+  // Get the configuration that would be applied to an application of the given name.
+  // If empty, return configuration for all applications.
+  string app = 2;
+}
+
+message ConfigGetResponse {
+  repeated ConfigVar variables = 1;
+}
+
 /********************************************************************
 * Entrypoint
 ********************************************************************/
@@ -476,6 +511,8 @@ message EntrypointConfigResponse {
 message EntrypointConfig {
   // Exec are requested exec sessions for this instance.
   repeated Exec exec = 1;
+
+  repeated ConfigVar env_vars = 2;
 
   message Exec {
     int64 index = 1;
