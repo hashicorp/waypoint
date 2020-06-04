@@ -541,3 +541,22 @@ message EntrypointExecResponse {
     bool opened = 3;
   }
 }
+
+/********
+ * Token
+ *********/
+
+message TokenTransport {
+  bytes body = 1;
+  bytes signature = 2;
+  string key_id = 3;
+  map<string, string> metadata = 4;
+}
+
+message Token {
+  string user = 1;
+  bytes token_id = 2;
+  google.protobuf.Timestamp valid_until = 3;
+  bool login = 4;
+  bool invite = 5;
+}

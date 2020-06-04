@@ -37,6 +37,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/protostructure v0.0.0-20200302233719-00c1118a7e52
+	github.com/mr-tron/base58 v1.2.0
 	github.com/oklog/run v1.1.0
 	github.com/oklog/ulid v1.3.1
 	github.com/olekukonko/tablewriter v0.0.4
@@ -44,7 +45,7 @@ require (
 	github.com/posener/complete v1.1.1
 	github.com/sebdah/goldie v1.0.0
 	github.com/stretchr/testify v1.5.1
-	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6
+	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
 	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200416231807-8751e049a2a0

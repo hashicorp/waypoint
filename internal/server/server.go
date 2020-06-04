@@ -71,6 +71,9 @@ type options struct {
 	// random loopback port will be chosen. The gRPC server must run since it
 	// serves the HTTP endpoints as well.
 	GRPCListener net.Listener
+
+	// AuthChecker, if set, activates authentication checking on the server.
+	AuthChecker AuthChecker
 }
 
 // WithContext sets the context for the server. When this context is cancelled,
@@ -94,4 +97,9 @@ func WithGRPC(ln net.Listener) Option {
 // WithImpl sets the service implementation to serve.
 func WithImpl(impl pb.WaypointServer) Option {
 	return func(opts *options) { opts.Service = impl }
+}
+
+// WithAuthentication configures the server to require authentication.
+func WithAuthentication(ac AuthChecker) Option {
+	return func(opts *options) { opts.AuthChecker = ac }
 }
