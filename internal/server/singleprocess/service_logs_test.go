@@ -21,8 +21,19 @@ func TestServiceGetLogStream(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	// Register our instances
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: &pb.Deployment{
+			Component: &pb.Component{
+				Name: "testapp",
+			},
+		},
+	})
+
+	require.NoError(t, err)
+
+	dep := resp.Deployment
 	configClient, err := client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
-		DeploymentId: "d",
+		DeploymentId: dep.Id,
 		InstanceId:   "1",
 	})
 	require.NoError(t, err)
@@ -54,7 +65,7 @@ func TestServiceGetLogStream(t *testing.T) {
 
 	// Connect to the stream and download the logs
 	logRecvClient, err := client.GetLogStream(ctx, &pb.GetLogStreamRequest{
-		DeploymentId: "d",
+		DeploymentId: dep.Id,
 	})
 	require.NoError(err)
 
