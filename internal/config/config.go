@@ -40,4 +40,9 @@ type Server struct {
 	// on platforms such as Docker for Mac. We need to discuss a more
 	// long term approach to this.
 	AddressInternal string `hcl:"address_internal,optional"`
+
+	// Indicates that we need to present a token to connect to this server.
+	// We don't allow the token to be hardcoded into the config though, we
+	// always read that out of an env var later.
+	RequireAuth bool `hcl:"require_auth,optional"`
 }
