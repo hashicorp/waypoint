@@ -229,6 +229,21 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				deleteHostname: true,
 			}, nil
 		},
+		"token new": func() (cli.Command, error) {
+			return &GetTokenCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"token invite": func() (cli.Command, error) {
+			return &GetInviteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"token exchange": func() (cli.Command, error) {
+			return &ExchangeInviteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases

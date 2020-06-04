@@ -25,7 +25,7 @@ func TestServiceAuth(t *testing.T) {
 			"addr": "test",
 		}
 
-		token, err := s.GenerateLoginToken(DefaultKeyId, md)
+		token, err := s.NewLoginToken(DefaultKeyId, md)
 		require.NoError(t, err)
 
 		require.True(t, len(token) > 5)
@@ -59,7 +59,7 @@ func TestServiceAuth(t *testing.T) {
 			"addr": "test",
 		}
 
-		token, err := s.GenerateLoginToken(DefaultKeyId, md)
+		token, err := s.NewLoginToken(DefaultKeyId, md)
 		require.NoError(t, err)
 
 		require.True(t, len(token) > 5)
@@ -93,7 +93,7 @@ func TestServiceAuth(t *testing.T) {
 	t.Run("exchange an invite token", func(t *testing.T) {
 		s := impl.(*service)
 
-		invite, err := s.GenerateInviteToken(2*time.Second, DefaultKeyId, nil)
+		invite, err := s.NewInviteToken(2*time.Second, DefaultKeyId, nil)
 		require.NoError(t, err)
 
 		lt, err := s.ExchangeInvite(DefaultKeyId, invite)

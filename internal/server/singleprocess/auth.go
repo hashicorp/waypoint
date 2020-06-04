@@ -12,6 +12,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/mr-tron/base58"
 	"github.com/pkg/errors"
@@ -113,6 +114,11 @@ func (s *service) DecodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 // either ["readonly"] or ["mutable"] to indicate if the endpoint will be only reading
 // data or also mutating it.
 func (s *service) Authenticate(ctx context.Context, token, endpoint string, effects []string) error {
+	// We always allow ConvertInviteToken so that folks can actually get authentication data
+	if endpoint == "ConvertInviteToken" {
+		return nil
+	}
+
 	_, body, err := s.DecodeToken(token)
 	if err != nil {
 		return err
@@ -195,7 +201,7 @@ func (s *service) GenerateToken(keyId string, metadata map[string]string, body *
 // Create a new login token.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
-func (s *service) GenerateLoginToken(keyId string, metadata map[string]string) (string, error) {
+func (s *service) NewLoginToken(keyId string, metadata map[string]string) (string, error) {
 	var body pb.Token
 	body.Login = true
 	body.User = DefaultUser
@@ -209,16 +215,26 @@ func (s *service) GenerateLoginToken(keyId string, metadata map[string]string) (
 	return s.GenerateToken(keyId, metadata, &body)
 }
 
+// Create a new login token. This is just a gRPC wrapper around NewLoginToken.
+func (s *service) GenerateLoginToken(ctx context.Context, _ *empty.Empty) (*pb.NewTokenResponse, error) {
+	token, err := s.NewLoginToken(DefaultKeyId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.NewTokenResponse{Token: token}, nil
+}
+
 // Generate a token in the default way. This token is presented to the user when running
 // `waypoint server`.
 func (s *service) DefaultToken() (string, error) {
-	return s.GenerateLoginToken(DefaultKeyId, nil)
+	return s.NewLoginToken(DefaultKeyId, nil)
 }
 
 // Create a new invite token. The duration controls for how long the invite token is valid.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
-func (s *service) GenerateInviteToken(duration time.Duration, keyId string, metadata map[string]string) (string, error) {
+func (s *service) NewInviteToken(duration time.Duration, keyId string, metadata map[string]string) (string, error) {
 	var body pb.Token
 	body.Invite = true
 	body.TokenId = make([]byte, 16)
@@ -237,6 +253,21 @@ func (s *service) GenerateInviteToken(duration time.Duration, keyId string, meta
 	return s.GenerateToken(keyId, metadata, &body)
 }
 
+// Create a new invite token. This is just a gRPC wrapper around NewInviteToken.
+func (s *service) GenerateInviteToken(ctx context.Context, req *pb.InviteTokenRequest) (*pb.NewTokenResponse, error) {
+	dur, err := time.ParseDuration(req.Duration)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := s.NewInviteToken(dur, DefaultKeyId, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.NewTokenResponse{Token: token}, nil
+}
+
 // Given an invite token, validate it and return a login token
 func (s *service) ExchangeInvite(keyId, invite string) (string, error) {
 	tt, body, err := s.DecodeToken(invite)
@@ -248,5 +279,15 @@ func (s *service) ExchangeInvite(keyId, invite string) (string, error) {
 		return "", errors.Wrapf(ErrInvalidToken, "not an invite token")
 	}
 
-	return s.GenerateLoginToken(keyId, tt.Metadata)
+	return s.NewLoginToken(keyId, tt.Metadata)
+}
+
+// Given an invite token, validate it and return a login token. This is a gRPC wrapper around ExchangeInvite.
+func (s *service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteTokenRequest) (*pb.NewTokenResponse, error) {
+	token, err := s.ExchangeInvite(DefaultKeyId, req.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.NewTokenResponse{Token: token}, nil
 }

@@ -77,6 +77,15 @@ service Waypoint {
 
   // UpsertRelease updates or inserts a release.
   rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
+
+  // Generate a new invite token that users can exchange for a login token.
+  rpc GenerateInviteToken(InviteTokenRequest) returns (NewTokenResponse);
+
+  // Generate a new login token that users can use to login directly.
+  rpc GenerateLoginToken(google.protobuf.Empty) returns (NewTokenResponse);
+
+  // Exchange a invite token for a login token.
+  rpc ConvertInviteToken(ConvertInviteTokenRequest) returns (NewTokenResponse);
 }
 
 /********************************************************************
@@ -559,4 +568,16 @@ message Token {
   google.protobuf.Timestamp valid_until = 3;
   bool login = 4;
   bool invite = 5;
+}
+
+message InviteTokenRequest {
+  string duration = 1;
+}
+
+message NewTokenResponse {
+  string token = 1;
+}
+
+message ConvertInviteTokenRequest {
+  string token = 1;
 }
