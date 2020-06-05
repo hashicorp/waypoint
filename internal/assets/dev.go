@@ -15,14 +15,19 @@ func init() {
 		panic(err)
 	}
 
-	for dir != "." {
+	for dir != "/" {
 		path := filepath.Join(dir, "internal/assets")
 		if _, err := os.Stat(path); err == nil {
 			rootDir = path
 			return
 		}
 
-		dir = filepath.Dir(dir)
+		nextDir := filepath.Dir(dir)
+		if nextDir == dir {
+			break
+		}
+
+		dir = nextDir
 	}
 
 	// Uuuuhhh...
