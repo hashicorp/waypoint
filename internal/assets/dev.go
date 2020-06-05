@@ -15,7 +15,7 @@ func init() {
 		panic(err)
 	}
 
-	for len(dir) > 0 {
+	for dir != "." {
 		path := filepath.Join(dir, "internal/assets")
 		if _, err := os.Stat(path); err == nil {
 			rootDir = path
