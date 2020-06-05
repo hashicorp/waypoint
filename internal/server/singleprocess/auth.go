@@ -21,11 +21,23 @@ import (
 )
 
 const (
-	DefaultUser  = "waypoint"
+	// The user that all tokens are encoded with. The server has a single server model
+	// so all actions are mapped to this user.
+	DefaultUser = "waypoint"
+
+	// The identifier for the default key to use to generating tokens.
 	DefaultKeyId = "k1"
 
-	tokenMagic  = "wp24"
+	// Used as a byte sequence prepended to the encoded TokenTransport to identify
+	// the token as valid before attempting to decode it. This is mostly a nicity to improve
+	// understanding of the token data and error messages.
+	tokenMagic = "wp24"
+
+	// The size in bytes that the HMAC keys should be. Each key will contain this number of bytes
+	// of data from rand.Reader
 	hmacKeySize = 32
+
+	// A prefix added to the key id when looking up the HMAC key from the database
 	dbKeyPrefix = "hmacKey:"
 )
 

@@ -10,24 +10,31 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// An interface implemented by something that wishes to authenticate the server
+// actions.
 type AuthChecker interface {
+	// Called before each RPC to authenticate it.
 	Authenticate(ctx context.Context, token, endpoint string, effects []string) error
+
+	// Return an authenticaten token for the initial server to user for access
+	// to the server.
 	DefaultToken() (string, error)
 }
 
 var readonly = []string{"readonly"}
 
+// Information about the effects of endpoints that are authenticated. If a endpoint
+// is not listed, the DefaultEffect value is used.
 var Effects = map[string][]string{
 	"ListBuilds": readonly,
 }
 
-var defaultEffects = []string{"mutable"}
+var DefaultEffects = []string{"mutable"}
 
-// logUnaryInterceptor returns a gRPC unary interceptor that inserts a hclog.Logger
-// into the request context.
-//
-// Additionally, logUnaryInterceptor logs request and response metadata. If verbose
-// is set to true, the request and response attributes are logged too.
+// authUnaryInterceptor returns a gRPC unary interceptor that inspects the metadata
+// attached to the context. A token is extract from that metadata and the given
+// AuthChecker is invoked to guard calling the target handler. Effectively
+// it implements authentication in front of any unary call.
 func authUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
@@ -39,7 +46,7 @@ func authUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {
 
 		effects, ok := Effects[name]
 		if !ok {
-			effects = defaultEffects
+			effects = DefaultEffects
 		}
 
 		md, ok := metadata.FromIncomingContext(ctx)
@@ -62,11 +69,10 @@ func authUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {
 	}
 }
 
-// logUnaryInterceptor returns a gRPC unary interceptor that inserts a hclog.Logger
-// into the request context.
-//
-// Additionally, logUnaryInterceptor logs request and response metadata. If verbose
-// is set to true, the request and response attributes are logged too.
+// authStreamInterceptor returns a gRPC unary interceptor that inspects the metadata
+// attached to the context. A token is extract from that metadata and the given
+// AuthChecker is invoked to guard calling the target handler. Effectively
+// it implements authentication in front of any stream call.
 func authStreamInterceptor(checker AuthChecker) grpc.StreamServerInterceptor {
 	return func(
 		srv interface{},
@@ -77,7 +83,7 @@ func authStreamInterceptor(checker AuthChecker) grpc.StreamServerInterceptor {
 
 		effects, ok := Effects[name]
 		if !ok {
-			effects = defaultEffects
+			effects = DefaultEffects
 		}
 
 		md, ok := metadata.FromIncomingContext(ss.Context())

@@ -588,33 +588,63 @@ message EntrypointExecResponse {
   }
 }
 
-/********
- * Token
- *********/
+/********************************************************************
+* Token
+********************************************************************/
 
+// The outer structure of the token that is directly Marshaled and
+// ASCII armored.
 message TokenTransport {
+  // A Marshaled token, stored as bytes because we need to to validate
+  // it with the given signature.
   bytes body = 1;
+
+  // The signature of body for validation.
   bytes signature = 2;
+
+  // The key used to generate the signature.
   string key_id = 3;
+
+  // Any configuration style metadata that can be passed along with the token
+  // without invalidating the token body itself.
   map<string, string> metadata = 4;
 }
 
+// The authenticated Token information. This is used to authenticate requests.
 message Token {
+  // The user that the token is fore.
   string user = 1;
+
+  // A random id for the token. Also functions as a nonce when signing.
   bytes token_id = 2;
+
+  // When the token is valid until. After the given date, the token will be rejected.
+  // When this is not set, the token is valid forever.
   google.protobuf.Timestamp valid_until = 3;
+
+  // Indicates whether or not this token can be used for to authenticate RPCs.
   bool login = 4;
+
+  // Inidicates whether or not this token can be used as an invite.
   bool invite = 5;
 }
 
+// Passed with GenerateInviteToken with the params on how the invite token should
+// be generate.
 message InviteTokenRequest {
+  // How long the token should be valid until. The resulting token has a timestamp
+  // encoded within it by adding the current time to this duration.
   string duration = 1;
 }
 
+// Returned by any action that creates a token.
 message NewTokenResponse {
+  // The new token which can be presented to whichever API expects it.
   string token = 1;
 }
 
+// Passed to ConvertInviteToken to create a new token that can be used to authenticate RPCs.
 message ConvertInviteTokenRequest {
+  // A token previous returned by GenerateInviteToken.
   string token = 1;
 }

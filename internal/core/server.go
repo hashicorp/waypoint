@@ -17,6 +17,10 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 )
 
+// This is a weird type that only exists to satisify the interface required by
+// grpc.WithPerRPCCredentials. That api is designed to incorporate things like OAuth
+// but in our case, we really just want to send this static token through, but we still
+// need to the dance.
 type staticToken string
 
 func (t staticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
