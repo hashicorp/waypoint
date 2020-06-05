@@ -21,6 +21,8 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type Deployment struct {
+	SiteId               string   `protobuf:"bytes,1,opt,name=site_id,json=siteId,proto3" json:"site_id,omitempty"`
+	Url                  string   `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -51,7 +53,22 @@ func (m *Deployment) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Deployment proto.InternalMessageInfo
 
+func (m *Deployment) GetSiteId() string {
+	if m != nil {
+		return m.SiteId
+	}
+	return ""
+}
+
+func (m *Deployment) GetUrl() string {
+	if m != nil {
+		return m.Url
+	}
+	return ""
+}
+
 type Release struct {
+	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -82,50 +99,9 @@ func (m *Release) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Release proto.InternalMessageInfo
 
-// NetlifyFileDigest is the artifact type for the builder.
-type NetlifyFileDigest struct {
-	Image                string   `protobuf:"bytes,1,opt,name=image,proto3" json:"image,omitempty"`
-	Tag                  string   `protobuf:"bytes,2,opt,name=tag,proto3" json:"tag,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *NetlifyFileDigest) Reset()         { *m = NetlifyFileDigest{} }
-func (m *NetlifyFileDigest) String() string { return proto.CompactTextString(m) }
-func (*NetlifyFileDigest) ProtoMessage()    {}
-func (*NetlifyFileDigest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_22a625af4bc1cc87, []int{2}
-}
-
-func (m *NetlifyFileDigest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_NetlifyFileDigest.Unmarshal(m, b)
-}
-func (m *NetlifyFileDigest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_NetlifyFileDigest.Marshal(b, m, deterministic)
-}
-func (m *NetlifyFileDigest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NetlifyFileDigest.Merge(m, src)
-}
-func (m *NetlifyFileDigest) XXX_Size() int {
-	return xxx_messageInfo_NetlifyFileDigest.Size(m)
-}
-func (m *NetlifyFileDigest) XXX_DiscardUnknown() {
-	xxx_messageInfo_NetlifyFileDigest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_NetlifyFileDigest proto.InternalMessageInfo
-
-func (m *NetlifyFileDigest) GetImage() string {
+func (m *Release) GetUrl() string {
 	if m != nil {
-		return m.Image
-	}
-	return ""
-}
-
-func (m *NetlifyFileDigest) GetTag() string {
-	if m != nil {
-		return m.Tag
+		return m.Url
 	}
 	return ""
 }
@@ -133,7 +109,6 @@ func (m *NetlifyFileDigest) GetTag() string {
 func init() {
 	proto.RegisterType((*Deployment)(nil), "netlify.Deployment")
 	proto.RegisterType((*Release)(nil), "netlify.Release")
-	proto.RegisterType((*NetlifyFileDigest)(nil), "netlify.NetlifyFileDigest")
 }
 
 func init() {
@@ -141,14 +116,13 @@ func init() {
 }
 
 var fileDescriptor_22a625af4bc1cc87 = []byte{
-	// 130 bytes of a gzipped FileDescriptorProto
+	// 122 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x29, 0xc8, 0x29, 0x4d,
 	0xcf, 0xcc, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xcf, 0x4b, 0x2d, 0xc9, 0xc9, 0x4c,
-	0xab, 0x54, 0xe2, 0xe1, 0xe2, 0x72, 0x49, 0x2d, 0xc8, 0xc9, 0xaf, 0xcc, 0x4d, 0xcd, 0x2b, 0x51,
-	0xe2, 0xe4, 0x62, 0x0f, 0x4a, 0xcd, 0x49, 0x4d, 0x2c, 0x4e, 0x55, 0xb2, 0xe6, 0x12, 0xf4, 0x83,
-	0xa8, 0x71, 0xcb, 0xcc, 0x49, 0x75, 0xc9, 0x4c, 0x4f, 0x2d, 0x2e, 0x11, 0x12, 0xe1, 0x62, 0xcd,
-	0xcc, 0x4d, 0x4c, 0x4f, 0x95, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x82, 0x70, 0x84, 0x04, 0xb8,
-	0x98, 0x4b, 0x12, 0xd3, 0x25, 0x98, 0xc0, 0x62, 0x20, 0xa6, 0x13, 0x67, 0x14, 0xcc, 0x82, 0x24,
-	0x36, 0xb0, 0x85, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xc8, 0x1f, 0x17, 0x97, 0x80, 0x00,
-	0x00, 0x00,
+	0xab, 0x54, 0x32, 0xe7, 0xe2, 0x72, 0x49, 0x2d, 0xc8, 0xc9, 0xaf, 0xcc, 0x4d, 0xcd, 0x2b, 0x11,
+	0x12, 0xe7, 0x62, 0x2f, 0xce, 0x2c, 0x49, 0x8d, 0xcf, 0x4c, 0x91, 0x60, 0x54, 0x60, 0xd4, 0xe0,
+	0x0c, 0x62, 0x03, 0x71, 0x3d, 0x53, 0x84, 0x04, 0xb8, 0x98, 0x4b, 0x8b, 0x72, 0x24, 0x98, 0xc0,
+	0x82, 0x20, 0xa6, 0x92, 0x34, 0x17, 0x7b, 0x50, 0x6a, 0x4e, 0x6a, 0x62, 0x71, 0x2a, 0x4c, 0x92,
+	0x11, 0x2e, 0xe9, 0xc4, 0x19, 0x05, 0xb3, 0x20, 0x89, 0x0d, 0x6c, 0xa1, 0x31, 0x20, 0x00, 0x00,
+	0xff, 0xff, 0x50, 0x6d, 0xa8, 0x89, 0x80, 0x00, 0x00, 0x00,
 }

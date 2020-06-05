@@ -36,6 +36,7 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/protostructure v0.0.0-20200302233719-00c1118a7e52
 	github.com/mr-tron/base58 v1.2.0
+	github.com/netlify/open-api v0.15.0
 	github.com/oklog/run v1.1.0
 	github.com/oklog/ulid v1.3.1
 	github.com/olekukonko/tablewriter v0.0.4
