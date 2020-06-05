@@ -89,6 +89,16 @@ service Waypoint {
 * Shared Messages
 ********************************************************************/
 
+// Ref contains shared messages used for references to other resources.
+message Ref {
+  // Application references an application. To uniquely identify an
+  // application, this must encapsulate the full hierarchy to the application.
+  message Application {
+    string application = 1;
+    string project = 2;
+  }
+}
+
 // Component represents metadata about a component. A component is the
 // generic name for a builder, registry, platform, etc.
 message Component {
@@ -170,6 +180,9 @@ message ListBuildsResponse {
 // Build represents a process of creating an artifact that can be in any state,
 // such as complete. A successful complete build produces an artifact.
 message Build {
+  // The application that this build is part of.
+  Ref.Application application = 6;
+
   // id is the unique ID of the build
   string id = 1;
 
