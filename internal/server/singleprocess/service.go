@@ -28,7 +28,7 @@ func New(db *bolt.DB) (pb.WaypointServer, error) {
 	}
 
 	// Initialize our state
-	st, err := state.New()
+	st, err := state.New(db)
 	if err != nil {
 		return nil, err
 	}
