@@ -85,6 +85,16 @@ service Waypoint {
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 }
 
+message Application {
+  Ref.Project project = 2;
+
+  string name = 1;
+}
+
+message Project {
+  string name = 1;
+}
+
 /********************************************************************
 * Shared Messages
 ********************************************************************/
@@ -96,6 +106,11 @@ message Ref {
   message Application {
     string application = 1;
     string project = 2;
+  }
+
+  // Project references a project.
+  message Project {
+    string project = 1;
   }
 }
 
