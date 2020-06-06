@@ -5,7 +5,6 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -58,7 +57,7 @@ func (op *pushBuildOperation) Do(ctx context.Context, log hclog.Logger, app *App
 		(*component.Artifact)(nil),
 		app.Registry,
 		app.Registry.PushFunc(),
-		argmapper.Named("artifact", op.Build.Artifact.Artifact),
+		argNamedAny("artifact", op.Build.Artifact.Artifact),
 	)
 }
 
