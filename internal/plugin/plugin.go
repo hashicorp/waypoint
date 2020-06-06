@@ -40,6 +40,7 @@ func init() {
 	Builders.Register("lambda", BuiltinFactory("lambda", component.BuilderType))
 
 	Registries.Register("docker", BuiltinFactory("docker", component.RegistryType))
+	Registries.Register("files", BuiltinFactory("files", component.RegistryType))
 
 	Platforms.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.PlatformType))
 	Platforms.Register("kubernetes", BuiltinFactory("kubernetes", component.PlatformType))

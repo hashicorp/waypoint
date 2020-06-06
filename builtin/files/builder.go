@@ -41,6 +41,8 @@ func (b *Builder) Build(
 			if err != nil {
 				return err
 			}
+
+			ui.Output("Have file %s", path)
 		}
 		return nil
 	})
