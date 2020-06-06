@@ -74,6 +74,13 @@ type buildIndexRecord struct {
 	CompleteTime time.Time
 }
 
+// MatchRef checks if a record matches the ref value. We have to provide
+// this because we use LowerBound lookups in memdb and this may return
+// a non-matching value at a certain point.
+func (rec *buildIndexRecord) MatchRef(ref *pb.Ref_Application) bool {
+	return rec.Project == ref.Project && rec.App == ref.Application
+}
+
 // BuildPut inserts or updates a build record.
 func (s *State) BuildPut(update bool, b *pb.Build) error {
 	memTxn := s.inmem.Txn(true)
@@ -102,6 +109,48 @@ func (s *State) BuildGet(id string) (*pb.Build, error) {
 	return &result, nil
 }
 
+func (s *State) BuildList(ref *pb.Ref_Application) ([]*pb.Build, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.LowerBound(
+		buildIndexTableName,
+		buildIndexCompleteTimeIndexName,
+		ref.Project,
+		ref.Application,
+		time.Unix(math.MaxInt64, 0),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pb.Build
+	s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(buildBucket)
+
+		for {
+			current := iter.Next()
+			if current == nil {
+				return nil
+			}
+
+			record := current.(*buildIndexRecord)
+			if !record.MatchRef(ref) {
+				return nil
+			}
+
+			var build pb.Build
+			if err := dbGet(bucket, []byte(record.Id), &build); err != nil {
+				return err
+			}
+
+			result = append(result, &build)
+		}
+	})
+
+	return result, nil
+}
+
 // BuildLatest gets the latest build that was completed.
 func (s *State) BuildLatest(ref *pb.Ref_Application) (*pb.Build, error) {
 	memTxn := s.inmem.Txn(false)
@@ -124,6 +173,10 @@ func (s *State) BuildLatest(ref *pb.Ref_Application) (*pb.Build, error) {
 	}
 
 	record := raw.(*buildIndexRecord)
+	if !record.MatchRef(ref) {
+		return nil, nil
+	}
+
 	return s.BuildGet(record.Id)
 }
 

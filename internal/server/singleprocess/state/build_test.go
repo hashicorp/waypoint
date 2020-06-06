@@ -70,12 +70,32 @@ func TestBuild(t *testing.T) {
 			}))
 		}
 
-		// Get the latest
-		b, err := s.BuildLatest(&pb.Ref_Application{
+		ref := &pb.Ref_Application{
 			Application: "a_test",
 			Project:     "p_test",
-		})
+		}
+
+		// Get the latest
+		b, err := s.BuildLatest(ref)
 		require.NoError(err)
 		require.Equal(strconv.FormatInt(latest.Unix(), 10), b.Id)
+
+		// Try listing
+		builds, err := s.BuildList(ref)
+		require.NoError(err)
+		require.Len(builds, len(times))
+
+		// Lists should be in descending order by completion time
+		var lastTime time.Time
+		for _, build := range builds {
+			timeVal, err := ptypes.Timestamp(build.Status.CompleteTime)
+			require.NoError(err)
+
+			if !lastTime.IsZero() && timeVal.After(lastTime) {
+				t.Fatal("timestamp should be descending")
+			}
+
+			lastTime = timeVal
+		}
 	})
 }
