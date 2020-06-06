@@ -53,7 +53,7 @@ func (p *Platform) Deploy(
 
 	deployOptions := netlify.DeployOptions{
 		IsDraft: true,
-		Dir:     files.GetDirectory(),
+		Dir:     files.GetAbsolute(),
 		SiteID:  siteID,
 	}
 
@@ -79,7 +79,7 @@ func (p *Platform) Deploy(
 // Config is the configuration structure for the Platform.
 type Config struct {
 	// SiteID is the site to deploy to
-	SiteID string `hcl:"site_id,attr"`
+	SiteID string `hcl:"site_id,optional"`
 }
 
 var (
