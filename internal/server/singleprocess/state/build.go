@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
@@ -23,6 +24,7 @@ const (
 
 func init() {
 	dbBuckets = append(dbBuckets, buildBucket)
+	dbIndexers = append(dbIndexers, (*State).buildIndexInit)
 	schemas = append(schemas, buildIndexSchema)
 }
 
@@ -141,6 +143,21 @@ func (s *State) buildPut(
 
 	// Create our index value and write that.
 	return s.buildPutIndex(inmemTxn, build)
+}
+
+func (s *State) buildIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
+	bucket := dbTxn.Bucket(buildBucket)
+	return bucket.ForEach(func(k, v []byte) error {
+		var build pb.Build
+		if err := proto.Unmarshal(v, &build); err != nil {
+			return err
+		}
+		if err := s.buildPutIndex(memTxn, &build); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (s *State) buildPutIndex(txn *memdb.Txn, build *pb.Build) error {

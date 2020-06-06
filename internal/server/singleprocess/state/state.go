@@ -21,6 +21,10 @@ var (
 	// dbBuckets is the list of buckets that should be created by dbInit.
 	// Various components should use init() funcs to append to this.
 	dbBuckets [][]byte
+
+	// dbIndexers is the list of functions to call to initialize the
+	// in-memory indexes from the persisted db.
+	dbIndexers []indexFn
 )
 
 // State is the primary API for state mutation for the server.
@@ -51,7 +55,26 @@ func New(db *bolt.DB) (*State, error) {
 		return nil, err
 	}
 
-	return &State{inmem: inmem, db: db}, nil
+	s := &State{inmem: inmem, db: db}
+
+	// Initialize our in-memory indexes
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+	err = s.db.Update(func(dbTxn *bolt.Tx) error {
+		for _, indexer := range dbIndexers {
+			if err := indexer(s, dbTxn, memTxn); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	memTxn.Commit()
+
+	return s, nil
 }
 
 // Close should be called to gracefully close any resources.
@@ -83,6 +106,11 @@ func stateStoreSchema() *memdb.DBSchema {
 
 	return db
 }
+
+// indexFn is the function type for initializing in-memory indexes from
+// persisted data. This is usually specified as a method handle to a
+// *State method.
+type indexFn func(*State, *bolt.Tx, *memdb.Txn) error
 
 // dbInit sets up the database. This should be called once on all new
 // DB handles before accepting API calls. It is safe to be called multiple
