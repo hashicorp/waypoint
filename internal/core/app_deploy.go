@@ -70,7 +70,7 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App) (
 		(*component.Deployment)(nil),
 		app.Platform,
 		app.Platform.DeployFunc(),
-		argmapper.Named("artifact", op.Push.Artifact.Artifact),
+		argNamedAny("artifact", op.Push.Artifact.Artifact),
 		argmapper.Typed(&dconfig),
 	)
 }
