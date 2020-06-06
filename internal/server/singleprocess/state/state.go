@@ -60,7 +60,7 @@ func New(db *bolt.DB) (*State, error) {
 	// Initialize our in-memory indexes
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
-	err = s.db.Update(func(dbTxn *bolt.Tx) error {
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
 		for _, indexer := range dbIndexers {
 			if err := indexer(s, dbTxn, memTxn); err != nil {
 				return err
@@ -110,6 +110,8 @@ func stateStoreSchema() *memdb.DBSchema {
 // indexFn is the function type for initializing in-memory indexes from
 // persisted data. This is usually specified as a method handle to a
 // *State method.
+//
+// The bolt.Tx is read-only while the memdb.Txn is a write transaction.
 type indexFn func(*State, *bolt.Tx, *memdb.Txn) error
 
 // dbInit sets up the database. This should be called once on all new
