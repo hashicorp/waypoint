@@ -37,3 +37,16 @@ func dbGet(b *bolt.Bucket, id []byte, msg proto.Message) error {
 
 	return nil
 }
+
+// dbUpsert is a helper to upsert a message. The update boolean will cause
+// this to error if the ID is not found. This reflects our API behavior for
+// upserts so that we don't let the end user pick any ID.
+func dbUpsert(b *bolt.Bucket, update bool, id []byte, msg proto.Message) error {
+	// If we're updating, the ID must exist
+	if update && b.Get([]byte(id)) == nil {
+		return status.Errorf(codes.NotFound, "record not found for ID: %s", id)
+	}
+
+	// Insert
+	return dbPut(b, id, msg)
+}
