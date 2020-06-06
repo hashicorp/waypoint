@@ -65,6 +65,7 @@ func TestBuild(t *testing.T) {
 				},
 
 				Status: &pb.Status{
+					StartTime:    pt,
 					CompleteTime: pt,
 				},
 			}))

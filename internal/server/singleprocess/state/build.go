@@ -19,6 +19,7 @@ var buildBucket = []byte("build")
 const (
 	buildIndexTableName             = "build-index"
 	buildIndexIdIndexName           = "id"
+	buildIndexStartTimeIndexName    = "start-time-by-app"
 	buildIndexCompleteTimeIndexName = "complete-time-by-app"
 )
 
@@ -38,6 +39,29 @@ func buildIndexSchema() *memdb.TableSchema {
 				Unique:       true,
 				Indexer: &memdb.StringFieldIndex{
 					Field: "Id",
+				},
+			},
+
+			buildIndexStartTimeIndexName: &memdb.IndexSchema{
+				Name:         buildIndexStartTimeIndexName,
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field:     "Project",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "App",
+							Lowercase: true,
+						},
+
+						&IndexTime{
+							Field: "StartTime",
+						},
+					},
 				},
 			},
 
@@ -71,6 +95,7 @@ type buildIndexRecord struct {
 	Id           string
 	Project      string
 	App          string
+	StartTime    time.Time
 	CompleteTime time.Time
 }
 
@@ -115,7 +140,7 @@ func (s *State) BuildList(ref *pb.Ref_Application) ([]*pb.Build, error) {
 
 	iter, err := memTxn.LowerBound(
 		buildIndexTableName,
-		buildIndexCompleteTimeIndexName,
+		buildIndexStartTimeIndexName,
 		ref.Project,
 		ref.Application,
 		time.Unix(math.MaxInt64, 0),
@@ -214,20 +239,27 @@ func (s *State) buildIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 }
 
 func (s *State) buildPutIndex(txn *memdb.Txn, build *pb.Build) error {
-	var completeTime time.Time
+	var startTime, completeTime time.Time
 	if build.Status != nil {
-		t, err := ptypes.Timestamp(build.Status.CompleteTime)
+		st, err := ptypes.Timestamp(build.Status.StartTime)
 		if err != nil {
 			return status.Errorf(codes.Internal, "time for build can't be parsed")
 		}
 
-		completeTime = t
+		ct, err := ptypes.Timestamp(build.Status.CompleteTime)
+		if err != nil {
+			return status.Errorf(codes.Internal, "time for build can't be parsed")
+		}
+
+		startTime = st
+		completeTime = ct
 	}
 
 	return txn.Insert(buildIndexTableName, &buildIndexRecord{
 		Id:           build.Id,
 		Project:      build.Application.Project,
 		App:          build.Application.Application,
+		StartTime:    startTime,
 		CompleteTime: completeTime,
 	})
 }
