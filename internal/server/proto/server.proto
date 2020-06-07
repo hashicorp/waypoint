@@ -10,7 +10,7 @@ import "google/rpc/status.proto";
 // The service that is implemented for the server backend.
 service Waypoint {
   // ListBuilds returns the builds.
-  rpc ListBuilds(google.protobuf.Empty) returns (ListBuildsResponse);
+  rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
   // ListPushedArtifacts returns the builds.
   rpc ListPushedArtifacts(google.protobuf.Empty) returns (ListPushedArtifactsResponse);
@@ -23,7 +23,7 @@ service Waypoint {
 
   // GetLatestBuild returns the most recent successfully completed build
   // for an app.
-  rpc GetLatestBuild(google.protobuf.Empty) returns (Build);
+  rpc GetLatestBuild(GetLatestBuildRequest) returns (Build);
 
   // GetLatestPushedArtifact returns the most recent successfully completed
   // artifact push for an app.
@@ -187,9 +187,18 @@ message UpsertBuildResponse {
   Build build = 1;
 }
 
+message ListBuildsRequest {
+  // The application whose builds to list. This must be set.
+  Ref.Application application = 1;
+}
+
 message ListBuildsResponse {
   // builds is the list of builds.
   repeated Build builds = 1;
+}
+
+message GetLatestBuildRequest {
+  Ref.Application application = 1;
 }
 
 // Build represents a process of creating an artifact that can be in any state,

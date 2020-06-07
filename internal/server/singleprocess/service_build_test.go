@@ -23,12 +23,17 @@ func TestServiceBuild(t *testing.T) {
 	// Simplify writing tests
 	type Req = pb.UpsertBuildRequest
 
+	ref := &pb.Ref_Application{
+		Application: "a_test",
+		Project:     "p_test",
+	}
+
 	t.Run("create and update", func(t *testing.T) {
 		require := require.New(t)
 
 		// Create, should get an ID back
 		resp, err := client.UpsertBuild(ctx, &Req{
-			Build: &pb.Build{},
+			Build: &pb.Build{Application: ref},
 		})
 		require.NoError(err)
 		require.NotNil(resp)
@@ -53,7 +58,7 @@ func TestServiceBuild(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertBuild(ctx, &Req{
-			Build: &pb.Build{Id: "nope"},
+			Build: &pb.Build{Id: "nope", Application: ref},
 		})
 		require.Error(err)
 		require.Nil(resp)

@@ -231,6 +231,12 @@ func (s *State) buildPut(
 
 	// Get the global bucket and write the value to it.
 	b := tx.Bucket(buildBucket)
+
+	// If we're updating, then this shouldn't already exist
+	if update && b.Get(id) == nil {
+		return status.Errorf(codes.NotFound, "record with ID %q not found for update", build.Id)
+	}
+
 	if err := dbPut(b, id, build); err != nil {
 		return err
 	}
