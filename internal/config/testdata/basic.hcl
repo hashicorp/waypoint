@@ -1,3 +1,5 @@
+project = "foo"
+
 app "web" {
     build "pack" {}
 

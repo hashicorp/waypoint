@@ -33,6 +33,9 @@ type Project struct {
 	client    pb.WaypointClient
 	dconfig   component.DeploymentConfig
 
+	// name is the name of the project
+	name string
+
 	// labels is the list of labels that are assigned to this project.
 	labels map[string]string
 
@@ -198,7 +201,10 @@ type Option func(*Project, *options)
 // Project. This configuration must be validated already prior to using this
 // option.
 func WithConfig(c *config.Config) Option {
-	return func(p *Project, opts *options) { opts.Config = c }
+	return func(p *Project, opts *options) {
+		opts.Config = c
+		p.name = c.Project
+	}
 }
 
 // WithDataDir sets the datadir that will be used for this project.

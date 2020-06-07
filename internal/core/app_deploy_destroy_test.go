@@ -129,6 +129,8 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 }
 
 const testPlatformConfig = `
+project = "test"
+
 app "test" {
 	deploy "test" {}
 }

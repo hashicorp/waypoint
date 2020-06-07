@@ -37,6 +37,7 @@ type App struct {
 	// to this app vs the project UI.
 	UI terminal.UI
 
+	ref        *pb.Ref_Application
 	client     pb.WaypointClient
 	source     *component.Source
 	dconfig    component.DeploymentConfig
@@ -71,6 +72,10 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 		dconfig:    p.dconfig,
 		logger:     p.logger.Named("app").Named(cfg.Name),
 		components: make(map[interface{}]*appComponent),
+		ref: &pb.Ref_Application{
+			Application: cfg.Name,
+			Project:     p.name,
+		},
 
 		// very important below that we allocate a new slice since we modify
 		mappers: append([]*argmapper.Func{}, p.mappers...),
@@ -125,6 +130,11 @@ func (a *App) Close() error {
 	}
 
 	return nil
+}
+
+// Ref returns the reference to this application for us in API calls.
+func (a *App) Ref() *pb.Ref_Application {
+	return a.ref
 }
 
 // Exec using the deployer phase
