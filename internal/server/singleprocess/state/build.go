@@ -176,7 +176,7 @@ func (s *State) BuildList(ref *pb.Ref_Application) ([]*pb.Build, error) {
 	return result, nil
 }
 
-// BuildLatest gets the latest build that was completed.
+// BuildLatest gets the latest build that was completed successfully.
 func (s *State) BuildLatest(ref *pb.Ref_Application) (*pb.Build, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
@@ -192,17 +192,33 @@ func (s *State) BuildLatest(ref *pb.Ref_Application) (*pb.Build, error) {
 		return nil, err
 	}
 
-	raw := iter.Next()
-	if raw == nil {
-		return nil, nil
-	}
+	for {
+		raw := iter.Next()
+		if raw == nil {
+			return nil, nil
+		}
 
-	record := raw.(*buildIndexRecord)
-	if !record.MatchRef(ref) {
-		return nil, nil
-	}
+		record := raw.(*buildIndexRecord)
+		if !record.MatchRef(ref) {
+			return nil, nil
+		}
 
-	return s.BuildGet(record.Id)
+		b, err := s.BuildGet(record.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		// Shouldn't happen but if it does, return nothing.
+		if b.Status == nil {
+			return nil, nil
+		}
+
+		// State must be success.
+		switch b.Status.State {
+		case pb.Status_SUCCESS:
+			return b, nil
+		}
+	}
 }
 
 func (s *State) buildPut(
@@ -241,18 +257,23 @@ func (s *State) buildIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 func (s *State) buildPutIndex(txn *memdb.Txn, build *pb.Build) error {
 	var startTime, completeTime time.Time
 	if build.Status != nil {
-		st, err := ptypes.Timestamp(build.Status.StartTime)
-		if err != nil {
-			return status.Errorf(codes.Internal, "time for build can't be parsed")
+		if t := build.Status.StartTime; t != nil {
+			st, err := ptypes.Timestamp(t)
+			if err != nil {
+				return status.Errorf(codes.Internal, "time for build can't be parsed")
+			}
+
+			startTime = st
 		}
 
-		ct, err := ptypes.Timestamp(build.Status.CompleteTime)
-		if err != nil {
-			return status.Errorf(codes.Internal, "time for build can't be parsed")
-		}
+		if t := build.Status.CompleteTime; t != nil {
+			ct, err := ptypes.Timestamp(build.Status.CompleteTime)
+			if err != nil {
+				return status.Errorf(codes.Internal, "time for build can't be parsed")
+			}
 
-		startTime = st
-		completeTime = ct
+			completeTime = ct
+		}
 	}
 
 	return txn.Insert(buildIndexTableName, &buildIndexRecord{

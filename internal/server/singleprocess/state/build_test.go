@@ -65,6 +65,7 @@ func TestBuild(t *testing.T) {
 				},
 
 				Status: &pb.Status{
+					State:        pb.Status_SUCCESS,
 					StartTime:    pt,
 					CompleteTime: pt,
 				},
@@ -98,5 +99,35 @@ func TestBuild(t *testing.T) {
 
 			lastTime = timeVal
 		}
+	})
+
+	t.Run("latest nil if none are completed", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		ref := &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		}
+
+		ts := time.Now().Add(5 * time.Hour)
+		pt, err := ptypes.TimestampProto(ts)
+		require.NoError(err)
+
+		require.NoError(s.BuildPut(false, &pb.Build{
+			Id:          strconv.FormatInt(ts.Unix(), 10),
+			Application: ref,
+			Status: &pb.Status{
+				State:     pb.Status_RUNNING,
+				StartTime: pt,
+			},
+		}))
+
+		// Get the latest
+		b, err := s.BuildLatest(ref)
+		require.NoError(err)
+		require.Nil(b)
 	})
 }
