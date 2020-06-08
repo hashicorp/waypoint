@@ -13,6 +13,8 @@ import (
 )
 
 func TestBuild(t *testing.T) {
+	buildOp.Test(t)
+
 	t.Run("basic put and get", func(t *testing.T) {
 		require := require.New(t)
 
@@ -32,6 +34,7 @@ func TestBuild(t *testing.T) {
 		b, err := s.BuildGet("A")
 		require.NoError(err)
 		require.NotNil(b.Application)
+		require.Equal("A", b.Id)
 	})
 
 	t.Run("latest", func(t *testing.T) {
