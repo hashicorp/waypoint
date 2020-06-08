@@ -5,6 +5,5 @@ package files;
 option go_package = "files";
 
 message Files {
-  string directory = 1;
-  string absolute = 2;
+  string path = 1;
 }

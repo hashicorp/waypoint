@@ -2,10 +2,12 @@ package files
 
 import (
 	"context"
+	"crypto/rand"
 	"path"
 
 	"github.com/hashicorp/waypoint/internal/pkg/copy"
 	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/oklog/ulid"
 )
 
 // Registry represents access to a Files registry.
@@ -29,15 +31,23 @@ func (r *Registry) Push(
 	files *Files,
 	ui terminal.UI,
 ) (*Files, error) {
-	dst := path.Join(files.Directory, r.config.Path)
+	// Generate a unique path for the destination file
+	dstID, err := ulid.New(ulid.Now(), rand.Reader)
+	if err != nil {
+		return nil, err
+	}
 
-	err := copy.CopyDir(files.Directory, dst)
+	dst := path.Join(r.config.Path, files.Path, dstID.String())
+	ui.Output("Copying from", files.Path)
+	ui.Output("Copying to", dst)
+
+	err = copy.CopyDir(files.Path, dst)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Files{Absolute: dst}, nil
+	return &Files{Path: dst}, nil
 }
 
 // Config is the configuration structure for the registry.

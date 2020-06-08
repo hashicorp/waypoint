@@ -52,6 +52,6 @@ func (b *Builder) Build(
 	}
 
 	return &Files{
-		Directory: src.Path,
+		Path: src.Path,
 	}, nil
 }

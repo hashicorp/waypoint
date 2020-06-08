@@ -45,6 +45,8 @@ func (p *Platform) Deploy(
 	st := ui.Status()
 	defer st.Close()
 
+	st.Update("Setting up deploy")
+
 	// Default siteID to the app name, unless provided
 	siteID := src.App
 	if p.config.SiteID != "" {
@@ -53,7 +55,7 @@ func (p *Platform) Deploy(
 
 	deployOptions := netlify.DeployOptions{
 		IsDraft: true,
-		Dir:     files.GetAbsolute(),
+		Dir:     files.Path,
 		SiteID:  siteID,
 	}
 
