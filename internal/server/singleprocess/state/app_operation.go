@@ -381,6 +381,8 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 	}
 }
 
+// operationIndexRecord is the record we store in MemDB to perform
+// indexed lookup operations by project, app, time, etc.
 type operationIndexRecord struct {
 	Id           string
 	Project      string
@@ -391,15 +393,15 @@ type operationIndexRecord struct {
 
 // MatchRef checks if a record matches the ref value. We have to provide
 // this because we use LowerBound lookups in memdb and this may return
-// a non-matching value at a certain point.
+// a non-matching value at a certain point after iteration.
 func (rec *operationIndexRecord) MatchRef(ref *pb.Ref_Application) bool {
 	return rec.Project == ref.Project && rec.App == ref.Application
 }
 
 const (
-	opIdIndexName           = "id"
-	opStartTimeIndexName    = "start-time"
-	opCompleteTimeIndexName = "complete-time"
+	opIdIndexName           = "id"            // id index name
+	opStartTimeIndexName    = "start-time"    // start time index
+	opCompleteTimeIndexName = "complete-time" // complete time index
 )
 
 // listOperationsOptions are options that can be set for List calls on
@@ -437,6 +439,8 @@ func ListWithOrder(f *pb.OperationOrder) ListOperationOption {
 	}
 }
 
+// statusFilterMatch is a helper that compares a pb.Status to a set of
+// StatusFilters. This returns true if the filters match.
 func statusFilterMatch(
 	filters []*pb.StatusFilter,
 	status *pb.Status,
