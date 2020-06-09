@@ -119,7 +119,7 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 		idx,
 		opts.Application.Project,
 		opts.Application.Application,
-		time.Unix(math.MaxInt64, 0),
+		time.Unix(math.MaxInt64, math.MaxInt64),
 	)
 	if err != nil {
 		return nil, err
@@ -139,7 +139,6 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 			if !record.MatchRef(opts.Application) {
 				return nil
 			}
-			println(record.Id)
 
 			value := op.newStruct()
 			if err := dbGet(bucket, []byte(record.Id), value); err != nil {
@@ -178,7 +177,7 @@ func (op *appOperation) Latest(s *State, ref *pb.Ref_Application) (interface{}, 
 		opCompleteTimeIndexName,
 		ref.Project,
 		ref.Application,
-		time.Unix(math.MaxInt64, 0),
+		time.Unix(math.MaxInt64, math.MaxInt64),
 	)
 	if err != nil {
 		return nil, err

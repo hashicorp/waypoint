@@ -96,11 +96,14 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 	{
 		// Destroy
 		require.NoError(app.DestroyDeploy(context.Background(), &pb.Deployment{
-			Deployment: deployment,
+			Application: app.ref,
+			Deployment:  deployment,
 		}))
 
 		// Verify that we set the status properly
-		resp, err := app.client.ListDeployments(context.Background(), &pb.ListDeploymentsRequest{})
+		resp, err := app.client.ListDeployments(context.Background(), &pb.ListDeploymentsRequest{
+			Application: app.ref,
+		})
 		require.NoError(err)
 		require.Equal(pb.Deployment_DESTROY, resp.Deployments[0].State)
 		require.Equal(pb.Status_SUCCESS, resp.Deployments[0].Status.State)
@@ -113,14 +116,19 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 			return fmt.Errorf("error!")
 		})
 
-		err := app.DestroyDeploy(context.Background(), &pb.Deployment{})
+		err := app.DestroyDeploy(context.Background(), &pb.Deployment{
+			Application: app.ref,
+		})
 		require.Error(err)
 		require.Contains(err.Error(), "error")
 
 		// Verify that we set the status properly
 		resp, err := app.client.ListDeployments(context.Background(), &pb.ListDeploymentsRequest{
-			Order:     pb.ListDeploymentsRequest_COMPLETE_TIME,
-			OrderDesc: true,
+			Application: app.ref,
+			Order: &pb.OperationOrder{
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Desc:  true,
+			},
 		})
 		require.NoError(err)
 		require.Equal(pb.Deployment_DESTROY, resp.Deployments[0].State)

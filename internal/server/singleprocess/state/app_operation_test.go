@@ -46,7 +46,7 @@ func TestAppOperation(t *testing.T) {
 		require.Equal("A", b.Id)
 	})
 
-	t.Run("latest", func(t *testing.T) {
+	t.Run("latest basic", func(t *testing.T) {
 		require := require.New(t)
 
 		s := TestState(t)

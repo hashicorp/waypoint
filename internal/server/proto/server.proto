@@ -177,7 +177,7 @@ message StatusFilter {
 message OperationOrder {
   // Order for the results.
   Order order = 2;
-  bool order_desc = 3;
+  bool desc = 3;
 
   // Limit the number of results
   uint32 limit = 4;
