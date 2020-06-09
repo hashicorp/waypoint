@@ -13,7 +13,7 @@ service Waypoint {
   rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
   // ListPushedArtifacts returns the builds.
-  rpc ListPushedArtifacts(google.protobuf.Empty) returns (ListPushedArtifactsResponse);
+  rpc ListPushedArtifacts(ListPushedArtifactsRequest) returns (ListPushedArtifactsResponse);
 
   // ListDeployments returns the deployments.
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
@@ -27,7 +27,7 @@ service Waypoint {
 
   // GetLatestPushedArtifact returns the most recent successfully completed
   // artifact push for an app.
-  rpc GetLatestPushedArtifact(google.protobuf.Empty) returns (PushedArtifact);
+  rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
 
   // GetLogStream reads the log stream for a deployment. This will immediately
   // send a single LogEntry with the lines we have so far. If there are no
@@ -267,12 +267,33 @@ message UpsertPushedArtifactResponse {
   PushedArtifact artifact = 1;
 }
 
+message GetLatestPushedArtifactRequest {
+  // application that this belongs to
+  Ref.Application application = 1;
+}
+
+message ListPushedArtifactsRequest {
+  // application that this belongs to
+  Ref.Application application = 3;
+
+  // The filters to apply to this request. These are ORed, so you should
+  // specify multiple filters in the StatusFilter for AND behavior.
+  repeated StatusFilter status = 1;
+
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 2;
+}
+
 message ListPushedArtifactsResponse {
   // artifacts is the list of artifacts.
   repeated PushedArtifact artifacts = 1;
 }
 
 message PushedArtifact {
+  // application that this belongs to
+  Ref.Application application = 7;
+
   // id is a unique ID for this push
   string id = 1;
 

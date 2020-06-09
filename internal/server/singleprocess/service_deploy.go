@@ -42,9 +42,6 @@ func (s *service) ListDeployments(
 	ctx context.Context,
 	req *pb.ListDeploymentsRequest,
 ) (*pb.ListDeploymentsResponse, error) {
-	if req.Application == nil {
-		return nil, status.Errorf(codes.Internal, "bad")
-	}
 	result, err := s.state.DeploymentList(req.Application,
 		state.ListWithStatusFilter(req.Status...),
 		state.ListWithOrder(req.Order),

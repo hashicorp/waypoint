@@ -28,7 +28,12 @@ func TestServiceArtifact(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertPushedArtifact(ctx, &Req{
-			Artifact: &pb.PushedArtifact{},
+			Artifact: &pb.PushedArtifact{
+				Application: &pb.Ref_Application{
+					Application: "test",
+					Project:     "test",
+				},
+			},
 		})
 		require.NoError(err)
 		require.NotNil(resp)
