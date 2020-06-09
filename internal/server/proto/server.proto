@@ -172,6 +172,23 @@ message StatusFilter {
   }
 }
 
+// OperationOrder is a shared message type used for controlling the order
+// of results in queries for app operations such as build, deploys, etc.
+message OperationOrder {
+  // Order for the results.
+  Order order = 2;
+  bool order_desc = 3;
+
+  // Limit the number of results
+  uint32 limit = 4;
+
+  enum Order {
+    UNSET = 0;
+    START_TIME = 1;
+    COMPLETE_TIME = 2;
+  }
+}
+
 /********************************************************************
 * Build
 ********************************************************************/

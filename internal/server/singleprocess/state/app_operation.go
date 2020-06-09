@@ -102,6 +102,7 @@ func (op *appOperation) Get(s *State, id string) (interface{}, error) {
 type listOperationsOptions struct {
 	Application *pb.Ref_Application
 	Status      []*pb.StatusFilter
+	Order       *pb.OperationOrder
 }
 
 // List lists all the records.
@@ -109,9 +110,19 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
+	// Set the proper index for our ordering
+	idx := opStartTimeIndexName
+	if opts.Order != nil {
+		switch opts.Order.Order {
+		case pb.OperationOrder_COMPLETE_TIME:
+			idx = opCompleteTimeIndexName
+		}
+	}
+
+	// Get the iterator for lower-bound based querying
 	iter, err := memTxn.LowerBound(
 		op.memTableName(),
-		opStartTimeIndexName,
+		idx,
 		opts.Application.Project,
 		opts.Application.Application,
 		time.Unix(math.MaxInt64, 0),
@@ -147,11 +158,16 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 
 				// Filter. If we don't match the filter, then ignore this result.
 				if !statusFilterMatch(opts.Status, status) {
-					return nil
+					continue
 				}
 			}
 
 			result = append(result, value)
+
+			// If we have a limit, check that now
+			if o := opts.Order; o != nil && o.Limit > 0 && len(result) >= int(o.Limit) {
+				return nil
+			}
 		}
 	})
 
