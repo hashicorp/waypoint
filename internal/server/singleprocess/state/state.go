@@ -7,8 +7,6 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-memdb"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // The global variables below can be set by init() functions of other
@@ -113,43 +111,3 @@ func stateStoreSchema() *memdb.DBSchema {
 //
 // The bolt.Tx is read-only while the memdb.Txn is a write transaction.
 type indexFn func(*State, *bolt.Tx, *memdb.Txn) error
-
-// dbInit sets up the database. This should be called once on all new
-// DB handles before accepting API calls. It is safe to be called multiple
-// times.
-func dbInit(db *bolt.DB) error {
-	return db.Update(func(tx *bolt.Tx) error {
-		// Create all our buckets
-		for _, b := range dbBuckets {
-			if _, err := tx.CreateBucketIfNotExists(b); err != nil {
-				return err
-			}
-		}
-
-		// Check our data version
-		// TODO(mitchellh): make this work
-		sys := tx.Bucket(sysBucket)
-		vsnRaw := sys.Get(sysVersionKey)
-		if len(vsnRaw) > 0 {
-			return status.Errorf(
-				codes.FailedPrecondition,
-				"system version is set, shouldn't be yet",
-			)
-		}
-
-		return nil
-	})
-}
-
-var (
-	// sysBucket stores system-related information.
-	sysBucket = []byte("system")
-
-	// sysVersionKey stores the version of the data that is stored.
-	// This is used for data migration.
-	sysVersionKey = []byte("version")
-)
-
-func init() {
-	dbBuckets = append(dbBuckets, sysBucket)
-}
