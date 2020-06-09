@@ -40,6 +40,11 @@ func (p *PlatformPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) e
 			Impl: p.Impl,
 		},
 
+		authenticatorServer: &authenticatorServer{
+			base: base,
+			Impl: p.Impl,
+		},
+
 		Impl: p.Impl,
 	})
 
@@ -137,6 +142,23 @@ func (c *platformClient) ConfigSet(v interface{}) error {
 	return configureCall(context.Background(), c.client, v)
 }
 
+func (c *platformClient) AuthFunc() interface{} {
+	// Get the spec
+	spec, err := c.client.AuthSpec(context.Background(), &proto.Empty{})
+	if err != nil {
+		return funcErr(err)
+	}
+
+	return funcspec.Func(spec, c.auth,
+		argmapper.Logger(c.logger),
+		argmapper.Typed(&pluginargs.Internal{
+			Broker:  c.broker,
+			Mappers: c.mappers,
+			Cleanup: &pluginargs.Cleanup{},
+		}),
+	)
+}
+
 func (c *platformClient) DeployFunc() interface{} {
 	// Get the spec
 	spec, err := c.client.DeploySpec(context.Background(), &proto.Empty{})
@@ -174,11 +196,29 @@ func (c *platformClient) deploy(
 	return &plugincomponent.Deployment{Any: resp.Result}, nil
 }
 
+func (c *platformClient) auth(
+	ctx context.Context,
+	args funcspec.Args,
+	internal *pluginargs.Internal,
+) error {
+	// Run the cleanup
+	defer internal.Cleanup.Close()
+
+	// Call our function
+	_, err := c.client.Auth(ctx, &proto.FuncSpec_Args{Args: args})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // platformServer is a gRPC server that the client talks to and calls a
 // real implementation of the component.
 type platformServer struct {
 	*base
 	*destroyerServer
+	*authenticatorServer
 
 	Impl component.Platform
 }
@@ -242,4 +282,5 @@ var (
 	_ component.Platform           = (*platformClient)(nil)
 	_ component.Configurable       = (*platformClient)(nil)
 	_ component.ConfigurableNotify = (*platformClient)(nil)
+	_ component.Authenticator      = (*platformClient)(nil)
 )

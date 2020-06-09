@@ -124,6 +124,20 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	return app, nil
 }
 
+// AuthenticateComponents iterates through all components and
+// performs auth validation, followed by retrieving credentials
+// from the user if necessary and possible
+func (a *App) AuthenticateComponents(ctx context.Context, log hclog.Logger, authenticator component.Authenticator) (interface{}, error) {
+	a.UI.Output("Authenticating...")
+
+	return a.callDynamicFunc(ctx,
+		log,
+		nil,
+		authenticator,
+		authenticator.AuthFunc(),
+	)
+}
+
 // Close is called to clean up any resources. This should be called
 // whenever the app is done being used. This will be called by Project.Close.
 func (a *App) Close() error {

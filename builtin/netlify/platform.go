@@ -26,9 +26,32 @@ func (p *Platform) Config() (interface{}, error) {
 	return &p.config, nil
 }
 
+// AuthFunc implements component.Authenticator
+func (p *Platform) AuthFunc() interface{} {
+	return p.Auth
+}
+
 // DeployFunc implements component.Platform
 func (p *Platform) DeployFunc() interface{} {
 	return p.Deploy
+}
+
+// Auth retrieves a token and stores it
+func (p *Platform) Auth(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	dir *datadir.Component,
+	deployConfig *component.DeploymentConfig,
+	ui terminal.UI,
+) error {
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
+	st.Update("Logging into Netlify")
+
+	return nil
 }
 
 // Deploy deploys a set of files to netlify
