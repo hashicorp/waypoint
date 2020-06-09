@@ -23,6 +23,11 @@ func TestServiceGetLogStream(t *testing.T) {
 	// Register our instances
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
 		Deployment: &pb.Deployment{
+			Application: &pb.Ref_Application{
+				Application: "testapp",
+				Project:     "testproj",
+			},
+
 			Component: &pb.Component{
 				Name: "testapp",
 			},

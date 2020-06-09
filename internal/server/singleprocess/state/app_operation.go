@@ -99,12 +99,6 @@ func (op *appOperation) Get(s *State, id string) (interface{}, error) {
 	return result, nil
 }
 
-type listOperationsOptions struct {
-	Application *pb.Ref_Application
-	Status      []*pb.StatusFilter
-	Order       *pb.OperationOrder
-}
-
 // List lists all the records.
 func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface{}, error) {
 	memTxn := s.inmem.Txn(false)
@@ -409,6 +403,41 @@ const (
 	opStartTimeIndexName    = "start-time"
 	opCompleteTimeIndexName = "complete-time"
 )
+
+// listOperationsOptions are options that can be set for List calls on
+// operations for filtering and limiting the response.
+type listOperationsOptions struct {
+	Application *pb.Ref_Application
+	Status      []*pb.StatusFilter
+	Order       *pb.OperationOrder
+}
+
+func buildListOperationsOptions(ref *pb.Ref_Application, opts ...ListOperationOption) *listOperationsOptions {
+	var result listOperationsOptions
+	result.Application = ref
+	for _, opt := range opts {
+		opt(&result)
+	}
+
+	return &result
+}
+
+// ListOperationOption is an exported type to set configuration for listing operations.
+type ListOperationOption func(opts *listOperationsOptions)
+
+// ListWithStatusFilter sets a status filter.
+func ListWithStatusFilter(f ...*pb.StatusFilter) ListOperationOption {
+	return func(opts *listOperationsOptions) {
+		opts.Status = f
+	}
+}
+
+// ListWithOrder sets ordering on the list operation.
+func ListWithOrder(f *pb.OperationOrder) ListOperationOption {
+	return func(opts *listOperationsOptions) {
+		opts.Order = f
+	}
+}
 
 func statusFilterMatch(
 	filters []*pb.StatusFilter,

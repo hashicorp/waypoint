@@ -14,7 +14,7 @@ import (
 var configBucket = []byte("config")
 
 func init() {
-	dbBuckets = append(dbBuckets, deployBucket)
+	dbBuckets = append(dbBuckets, configBucket)
 }
 
 func (s *service) SetConfig(

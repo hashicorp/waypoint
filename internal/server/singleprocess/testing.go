@@ -30,6 +30,11 @@ func TestEntrypoint(t testing.T, client pb.WaypointClient) (string, string, func
 
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
 		Deployment: &pb.Deployment{
+			Application: &pb.Ref_Application{
+				Application: "testapp",
+				Project:     "testproj",
+			},
+
 			Component: &pb.Component{
 				Name: "testapp",
 			},
