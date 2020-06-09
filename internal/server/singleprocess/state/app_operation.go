@@ -99,16 +99,21 @@ func (op *appOperation) Get(s *State, id string) (interface{}, error) {
 	return result, nil
 }
 
+type listOperationsOptions struct {
+	Application *pb.Ref_Application
+	Status      []*pb.StatusFilter
+}
+
 // List lists all the records.
-func (op *appOperation) List(s *State, ref *pb.Ref_Application) ([]interface{}, error) {
+func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface{}, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
 	iter, err := memTxn.LowerBound(
 		op.memTableName(),
 		opStartTimeIndexName,
-		ref.Project,
-		ref.Application,
+		opts.Application.Project,
+		opts.Application.Application,
 		time.Unix(math.MaxInt64, 0),
 	)
 	if err != nil {
@@ -126,13 +131,24 @@ func (op *appOperation) List(s *State, ref *pb.Ref_Application) ([]interface{}, 
 			}
 
 			record := current.(*operationIndexRecord)
-			if !record.MatchRef(ref) {
+			if !record.MatchRef(opts.Application) {
 				return nil
 			}
+			println(record.Id)
 
 			value := op.newStruct()
 			if err := dbGet(bucket, []byte(record.Id), value); err != nil {
 				return err
+			}
+
+			if len(opts.Status) > 0 {
+				// Get our status field
+				status := op.valueField(value, "Status").(*pb.Status)
+
+				// Filter. If we don't match the filter, then ignore this result.
+				if !statusFilterMatch(opts.Status, status) {
+					return nil
+				}
 			}
 
 			result = append(result, value)
@@ -377,3 +393,40 @@ const (
 	opStartTimeIndexName    = "start-time"
 	opCompleteTimeIndexName = "complete-time"
 )
+
+func statusFilterMatch(
+	filters []*pb.StatusFilter,
+	status *pb.Status,
+) bool {
+	if len(filters) == 0 {
+		return true
+	}
+
+NEXT_FILTER:
+	for _, group := range filters {
+		for _, filter := range group.Filters {
+			if !statusFilterMatchSingle(filter, status) {
+				continue NEXT_FILTER
+			}
+		}
+
+		// If any match we match (OR)
+		return true
+	}
+
+	return false
+}
+
+func statusFilterMatchSingle(
+	filter *pb.StatusFilter_Filter,
+	status *pb.Status,
+) bool {
+	switch f := filter.Filter.(type) {
+	case *pb.StatusFilter_Filter_State:
+		return status.State == f.State
+
+	default:
+		// unknown filters never match
+		return false
+	}
+}

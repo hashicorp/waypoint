@@ -96,7 +96,9 @@ func TestAppOperation(t *testing.T) {
 		require.Equal(strconv.FormatInt(latest.Unix(), 10), b.Id)
 
 		// Try listing
-		builds, err := op.List(s, ref)
+		builds, err := op.List(s, &listOperationsOptions{
+			Application: ref,
+		})
 		require.NoError(err)
 		require.Len(builds, len(times))
 
@@ -143,5 +145,78 @@ func TestAppOperation(t *testing.T) {
 		b, err := op.Latest(s, ref)
 		require.NoError(err)
 		require.Nil(b)
+	})
+
+	t.Run("list with filter", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		ref := &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		}
+
+		{
+			ts := time.Now().Add(5 * time.Hour)
+			pt, err := ptypes.TimestampProto(ts)
+			require.NoError(err)
+
+			require.NoError(op.Put(s, false, &pb.Build{
+				Id:          "A",
+				Application: ref,
+				Status: &pb.Status{
+					State:     pb.Status_RUNNING,
+					StartTime: pt,
+				},
+			}))
+		}
+		{
+			ts := time.Now().Add(6 * time.Hour)
+			pt, err := ptypes.TimestampProto(ts)
+			require.NoError(err)
+
+			require.NoError(op.Put(s, false, &pb.Build{
+				Id:          "B",
+				Application: ref,
+				Status: &pb.Status{
+					State:     pb.Status_ERROR,
+					StartTime: pt,
+				},
+			}))
+		}
+		{
+			ts := time.Now().Add(7 * time.Hour)
+			pt, err := ptypes.TimestampProto(ts)
+			require.NoError(err)
+
+			require.NoError(op.Put(s, false, &pb.Build{
+				Id:          "C",
+				Application: ref,
+				Status: &pb.Status{
+					State:     pb.Status_ERROR,
+					StartTime: pt,
+				},
+			}))
+		}
+
+		// List with a filter
+		results, err := op.List(s, &listOperationsOptions{
+			Application: ref,
+			Status: []*pb.StatusFilter{
+				&pb.StatusFilter{
+					Filters: []*pb.StatusFilter_Filter{
+						&pb.StatusFilter_Filter{
+							Filter: &pb.StatusFilter_Filter_State{
+								State: pb.Status_ERROR,
+							},
+						},
+					},
+				},
+			},
+		})
+		require.NoError(err)
+		require.Len(results, 2)
 	})
 }

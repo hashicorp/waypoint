@@ -172,25 +172,6 @@ message StatusFilter {
   }
 }
 
-message AppOperationListRequest {
-  // The filters to apply to this request. These are ORed, so you should
-  // specify multiple filters in the StatusFilter for AND behavior.
-  repeated StatusFilter status = 1;
-
-  // Order for the results.
-  Order order = 2;
-  bool order_desc = 3;
-
-  // Limit the number of results
-  uint32 limit = 4;
-
-  enum Order {
-    UNSET = 0;
-    START_TIME = 1;
-    COMPLETE_TIME = 2;
-  }
-}
-
 /********************************************************************
 * Build
 ********************************************************************/

@@ -29,7 +29,9 @@ func (s *State) DeploymentGet(id string) (*pb.Deployment, error) {
 }
 
 func (s *State) DeploymentList(ref *pb.Ref_Application) ([]*pb.Deployment, error) {
-	raw, err := deploymentOp.List(s, ref)
+	raw, err := deploymentOp.List(s, &listOperationsOptions{
+		Application: ref,
+	})
 	if err != nil {
 		return nil, err
 	}
