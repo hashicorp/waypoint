@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+// indexTimeLatest is a special sentinel type that can be specified
+// when querying by IndexTime to use the largest possible time value.
+type indexTimeLatest struct{}
+
 // IndexTime indexes a time.Time field of a struct.
 // TODO(mitchellh): test
 type IndexTime struct {
@@ -40,6 +44,15 @@ func (idx *IndexTime) FromArgs(args ...interface{}) ([]byte, error) {
 		return nil, fmt.Errorf("must provide only a single argument")
 	}
 
+	if _, ok := args[0].(indexTimeLatest); ok {
+		if idx.Asc {
+			return nil, fmt.Errorf("ascending indexTimeLatest value")
+		}
+
+		var zeroValue [8]byte
+		return zeroValue[:], nil
+	}
+
 	arg, ok := args[0].(time.Time)
 	if !ok {
 		return nil, fmt.Errorf("argument must be a time: %#v", args[0])
@@ -60,15 +73,9 @@ func (idx *IndexTime) fromTime(t time.Time) []byte {
 		val = math.MaxInt64 - val
 	}
 
-	buf := make([]byte, binary.MaxVarintLen64)
-	binary.PutVarint(buf, val)
-
-	// The endianness of binary.PutVarint is reversed for byte-based
-	// sorting. We need to reverse.
-	for i := len(buf)/2 - 1; i >= 0; i-- {
-		opp := len(buf) - 1 - i
-		buf[i], buf[opp] = buf[opp], buf[i]
-	}
-
-	return buf
+	// Encoding uint64 is exactly 8 bytes. You can verify this in
+	// the encoding/binary source in the Go stdlib.
+	var buf [8]byte
+	binary.BigEndian.PutUint64(buf[:], uint64(val))
+	return buf[:]
 }

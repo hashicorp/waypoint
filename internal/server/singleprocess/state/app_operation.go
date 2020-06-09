@@ -119,7 +119,7 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 		idx,
 		opts.Application.Project,
 		opts.Application.Application,
-		time.Unix(math.MaxInt64, math.MaxInt64),
+		indexTimeLatest{},
 	)
 	if err != nil {
 		return nil, err
