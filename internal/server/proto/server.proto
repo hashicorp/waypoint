@@ -408,6 +408,9 @@ message UpsertReleaseResponse {
 }
 
 message Release {
+  // application that this deployment belongs to
+  Ref.Application application = 7;
+
   // id is the unique ID for this release.
   string id = 1;
 

@@ -3,19 +3,12 @@ package singleprocess
 import (
 	"context"
 
-	"github.com/boltdb/bolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
-
-var releaseBucket = []byte("releases")
-
-func init() {
-	dbBuckets = append(dbBuckets, releaseBucket)
-}
 
 func (s *service) UpsertRelease(
 	ctx context.Context,
@@ -36,11 +29,7 @@ func (s *service) UpsertRelease(
 		result.Id = id
 	}
 
-	// Insert into our database
-	err := s.db.Update(func(tx *bolt.Tx) error {
-		return dbUpsert(tx.Bucket(releaseBucket), !insert, result.Id, result)
-	})
-	if err != nil {
+	if err := s.state.ReleasePut(!insert, result); err != nil {
 		return nil, err
 	}
 
