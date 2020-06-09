@@ -51,7 +51,7 @@ func (idx *IndexTime) FromArgs(args ...interface{}) ([]byte, error) {
 func (idx *IndexTime) fromTime(t time.Time) []byte {
 	// If we're ascending, we just use the unix timestamp. This will give us
 	// the proper ordering.
-	val := t.Unix()
+	val := t.UnixNano()
 
 	// If we're descending, we use the time until max int64 which is the
 	// maximum size of a Go unix timestamp. This will give us a SMALLER
