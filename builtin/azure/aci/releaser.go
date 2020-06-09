@@ -75,7 +75,7 @@ func (r *Releaser) Release(
 	containerGroupResource.Tags = containerGroup.Tags
 
 	// Set tags
-	containerGroupResource.Tags["name"] = to.StringPtr(deploy.Id)
+	containerGroupResource.Tags["_waypoint_hashicorp_com_id"] = to.StringPtr(deploy.Id)
 
 	// Update
 	log.Info("updating a pre-existing container group with container group tags")

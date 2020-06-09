@@ -80,10 +80,9 @@ func (p *Platform) Deploy(
 		Value: to.StringPtr("8080"),
 	})
 
-	// todo: mishra to look into the waypoint tagging scheme as aci doesn't allow
-	// '<,>,%!!(MISSING),(MISSING)&,\\,?,/' characters in the tags.
+	// Add tag
 	var tags = map[string]*string{
-		"waypoint.hashicorp.com": to.StringPtr(time.Now().UTC().Format(time.RFC3339Nano)),
+		"_waypoint_hashicorp_com_nonce": to.StringPtr(time.Now().UTC().Format(time.RFC3339Nano)),
 	}
 
 	create := false
