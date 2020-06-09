@@ -1,7 +1,6 @@
 package state
 
 import (
-	"math"
 	"reflect"
 	"strings"
 	"time"
@@ -177,7 +176,7 @@ func (op *appOperation) Latest(s *State, ref *pb.Ref_Application) (interface{}, 
 		opCompleteTimeIndexName,
 		ref.Project,
 		ref.Application,
-		time.Unix(math.MaxInt64, math.MaxInt64),
+		indexTimeLatest{},
 	)
 	if err != nil {
 		return nil, err
