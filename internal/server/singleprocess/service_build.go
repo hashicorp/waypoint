@@ -2,24 +2,13 @@ package singleprocess
 
 import (
 	"context"
-	"time"
 
-	"github.com/boltdb/bolt"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
-
-var buildBucket = []byte("build")
-
-func init() {
-	dbBuckets = append(dbBuckets, buildBucket)
-}
 
 func (s *service) UpsertBuild(
 	ctx context.Context,
@@ -40,11 +29,7 @@ func (s *service) UpsertBuild(
 		result.Id = id
 	}
 
-	// Insert into our database
-	err := s.db.Update(func(tx *bolt.Tx) error {
-		return dbUpsert(tx.Bucket(buildBucket), !insert, result.Id, result)
-	})
-	if err != nil {
+	if err := s.state.BuildPut(!insert, result); err != nil {
 		return nil, err
 	}
 
@@ -53,57 +38,19 @@ func (s *service) UpsertBuild(
 
 func (s *service) ListBuilds(
 	ctx context.Context,
-	req *empty.Empty,
+	req *pb.ListBuildsRequest,
 ) (*pb.ListBuildsResponse, error) {
-	var result []*pb.Build
-	s.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(buildBucket)
-		return bucket.ForEach(func(k, v []byte) error {
-			var build pb.Build
-			if err := proto.Unmarshal(v, &build); err != nil {
-				panic(err)
-			}
-
-			result = append(result, &build)
-			return nil
-		})
-	})
+	result, err := s.state.BuildList(req.Application)
+	if err != nil {
+		return nil, err
+	}
 
 	return &pb.ListBuildsResponse{Builds: result}, nil
 }
 
-// TODO: test
 func (s *service) GetLatestBuild(
 	ctx context.Context,
-	req *empty.Empty,
+	req *pb.GetLatestBuildRequest,
 ) (*pb.Build, error) {
-	var result *pb.Build
-	var resultTime time.Time
-	s.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(buildBucket)
-		return bucket.ForEach(func(k, v []byte) error {
-			var build pb.Build
-			if err := proto.Unmarshal(v, &build); err != nil {
-				panic(err)
-			}
-
-			// Looking for the build that is complete
-			if build.Status.State != pb.Status_SUCCESS {
-				return nil
-			}
-
-			t, err := ptypes.Timestamp(build.Status.CompleteTime)
-			if err != nil {
-				return status.Errorf(codes.Internal, "time for build can't be parsed")
-			}
-
-			if result == nil || resultTime.Before(t) {
-				result = &build
-			}
-
-			return nil
-		})
-	})
-
-	return result, nil
+	return s.state.BuildLatest(req.Application)
 }

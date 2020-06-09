@@ -30,9 +30,10 @@ type pushBuildOperation struct {
 
 func (op *pushBuildOperation) Init(app *App) (proto.Message, error) {
 	return &pb.PushedArtifact{
-		Component: app.components[app.Registry].Info,
-		Labels:    app.components[app.Registry].Labels,
-		BuildId:   op.Build.Id,
+		Application: app.ref,
+		Component:   app.components[app.Registry].Info,
+		Labels:      app.components[app.Registry].Labels,
+		BuildId:     op.Build.Id,
 	}, nil
 }
 

@@ -23,6 +23,8 @@ func TestNewProject(t *testing.T) {
 }
 
 const testNewProjectConfig = `
+project = "test"
+
 app "test" {
 	build "test" {}
 }

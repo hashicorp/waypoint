@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -111,9 +112,19 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return nil
 	}
 
-	if _, err := os.Stat("waypoint.hcl"); err == nil {
-		c.Log.Debug("reading configuration", "path", "waypoint.hcl")
-		if err := hclsimple.DecodeFile("waypoint.hcl", nil, &cfg); err != nil {
+	// TODO(mitchellh): don't hardcode this, look up directories
+	path := "waypoint.hcl"
+
+	// We want an absolute path since we use the directory name as
+	// the default project name if we need it.
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		c.Log.Debug("reading configuration", "path", path)
+		if err := hclsimple.DecodeFile(path, nil, &cfg); err != nil {
 			c.logError(c.Log, "error decoding configuration", err)
 			return err
 		}

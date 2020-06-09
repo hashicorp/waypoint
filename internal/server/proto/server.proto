@@ -10,10 +10,10 @@ import "google/rpc/status.proto";
 // The service that is implemented for the server backend.
 service Waypoint {
   // ListBuilds returns the builds.
-  rpc ListBuilds(google.protobuf.Empty) returns (ListBuildsResponse);
+  rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
   // ListPushedArtifacts returns the builds.
-  rpc ListPushedArtifacts(google.protobuf.Empty) returns (ListPushedArtifactsResponse);
+  rpc ListPushedArtifacts(ListPushedArtifactsRequest) returns (ListPushedArtifactsResponse);
 
   // ListDeployments returns the deployments.
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
@@ -23,11 +23,11 @@ service Waypoint {
 
   // GetLatestBuild returns the most recent successfully completed build
   // for an app.
-  rpc GetLatestBuild(google.protobuf.Empty) returns (Build);
+  rpc GetLatestBuild(GetLatestBuildRequest) returns (Build);
 
   // GetLatestPushedArtifact returns the most recent successfully completed
   // artifact push for an app.
-  rpc GetLatestPushedArtifact(google.protobuf.Empty) returns (PushedArtifact);
+  rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
 
   // GetLogStream reads the log stream for a deployment. This will immediately
   // send a single LogEntry with the lines we have so far. If there are no
@@ -85,9 +85,34 @@ service Waypoint {
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 }
 
+message Application {
+  Ref.Project project = 2;
+
+  string name = 1;
+}
+
+message Project {
+  string name = 1;
+}
+
 /********************************************************************
 * Shared Messages
 ********************************************************************/
+
+// Ref contains shared messages used for references to other resources.
+message Ref {
+  // Application references an application. To uniquely identify an
+  // application, this must encapsulate the full hierarchy to the application.
+  message Application {
+    string application = 1;
+    string project = 2;
+  }
+
+  // Project references a project.
+  message Project {
+    string project = 1;
+  }
+}
 
 // Component represents metadata about a component. A component is the
 // generic name for a builder, registry, platform, etc.
@@ -147,6 +172,23 @@ message StatusFilter {
   }
 }
 
+// OperationOrder is a shared message type used for controlling the order
+// of results in queries for app operations such as build, deploys, etc.
+message OperationOrder {
+  // Order for the results.
+  Order order = 2;
+  bool desc = 3;
+
+  // Limit the number of results
+  uint32 limit = 4;
+
+  enum Order {
+    UNSET = 0;
+    START_TIME = 1;
+    COMPLETE_TIME = 2;
+  }
+}
+
 /********************************************************************
 * Build
 ********************************************************************/
@@ -162,14 +204,26 @@ message UpsertBuildResponse {
   Build build = 1;
 }
 
+message ListBuildsRequest {
+  // The application whose builds to list. This must be set.
+  Ref.Application application = 1;
+}
+
 message ListBuildsResponse {
   // builds is the list of builds.
   repeated Build builds = 1;
 }
 
+message GetLatestBuildRequest {
+  Ref.Application application = 1;
+}
+
 // Build represents a process of creating an artifact that can be in any state,
 // such as complete. A successful complete build produces an artifact.
 message Build {
+  // The application that this build is part of.
+  Ref.Application application = 6;
+
   // id is the unique ID of the build
   string id = 1;
 
@@ -213,12 +267,33 @@ message UpsertPushedArtifactResponse {
   PushedArtifact artifact = 1;
 }
 
+message GetLatestPushedArtifactRequest {
+  // application that this belongs to
+  Ref.Application application = 1;
+}
+
+message ListPushedArtifactsRequest {
+  // application that this belongs to
+  Ref.Application application = 3;
+
+  // The filters to apply to this request. These are ORed, so you should
+  // specify multiple filters in the StatusFilter for AND behavior.
+  repeated StatusFilter status = 1;
+
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 2;
+}
+
 message ListPushedArtifactsResponse {
   // artifacts is the list of artifacts.
   repeated PushedArtifact artifacts = 1;
 }
 
 message PushedArtifact {
+  // application that this belongs to
+  Ref.Application application = 7;
+
   // id is a unique ID for this push
   string id = 1;
 
@@ -262,22 +337,16 @@ message UpsertDeploymentResponse {
 }
 
 message ListDeploymentsRequest {
+  // application that this deployment belongs to
+  Ref.Application application = 3;
+
   // The filters to apply to this request. These are ORed, so you should
   // specify multiple filters in the StatusFilter for AND behavior.
   repeated StatusFilter status = 1;
 
-  // Order for the results.
-  Order order = 2;
-  bool order_desc = 3;
-
-  // Limit the number of results
-  uint32 limit = 4;
-
-  enum Order {
-    UNSET = 0;
-    START_TIME = 1;
-    COMPLETE_TIME = 2;
-  }
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 2;
 }
 
 message ListDeploymentsResponse {
@@ -286,6 +355,9 @@ message ListDeploymentsResponse {
 }
 
 message Deployment {
+  // application that this deployment belongs to
+  Ref.Application application = 8;
+
   // id is the unique ID for this deployment
   string id = 1;
 
@@ -336,6 +408,9 @@ message UpsertReleaseResponse {
 }
 
 message Release {
+  // application that this deployment belongs to
+  Ref.Application application = 7;
+
   // id is the unique ID for this release.
   string id = 1;
 
