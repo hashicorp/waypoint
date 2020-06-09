@@ -41,7 +41,9 @@ service Waypoint {
   // Set a single configuration item for the application.
   rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);
 
-  // Retrieve configuration for the application.
+  // Retrieve merged configuration values for a specific scope. You can determine
+  // where a configuration variable was set by looking at the scope field on
+  // each variable.
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 
   //----------------------------------------------------------------------

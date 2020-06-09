@@ -2,12 +2,14 @@ package state
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serversort "github.com/hashicorp/waypoint/internal/server/sort"
 )
 
 var configBucket = []byte("config")
@@ -47,7 +49,7 @@ func (s *State) ConfigGet(req *pb.ConfigGetRequest) ([]*pb.ConfigVar, error) {
 	var result []*pb.ConfigVar
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		var err error
-		result, err = s.configGet(dbTxn, memTxn, req)
+		result, err = s.configGetMerged(dbTxn, memTxn, req)
 		return err
 	})
 
@@ -71,35 +73,91 @@ func (s *State) configSet(
 	return s.configIndexSet(memTxn, id, value)
 }
 
-func (s *State) configGet(
+func (s *State) configGetMerged(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
 	req *pb.ConfigGetRequest,
 ) ([]*pb.ConfigVar, error) {
+	var mergeSet [][]*pb.ConfigVar
+	switch scope := req.Scope.(type) {
+	case *pb.ConfigGetRequest_Project:
+		// For project scope, we just return the project scoped values.
+		return s.configGetExact(dbTxn, memTxn, scope.Project, req.Prefix)
+
+	case *pb.ConfigGetRequest_Application:
+		// Application scope, we have to get the project scope first
+		projectVars, err := s.configGetExact(dbTxn, memTxn, &pb.Ref_Project{
+			Project: scope.Application.Project,
+		}, req.Prefix)
+		if err != nil {
+			return nil, err
+		}
+
+		// Then the application scope
+		appVars, err := s.configGetExact(dbTxn, memTxn, scope.Application, req.Prefix)
+		if err != nil {
+			return nil, err
+		}
+
+		// Build our merge set
+		mergeSet = append(mergeSet, projectVars, appVars)
+
+	default:
+		panic("unknown scope")
+	}
+
+	// Merge our merge set
+	merged := make(map[string]*pb.ConfigVar)
+	for _, set := range mergeSet {
+		for _, v := range set {
+			merged[v.Name] = v
+		}
+	}
+
+	result := make([]*pb.ConfigVar, 0, len(merged))
+	for _, v := range merged {
+		result = append(result, v)
+	}
+
+	sort.Sort(serversort.ConfigName(result))
+
+	return result, nil
+}
+
+// configGetExact returns the list of config variables for a scope
+// exactly. By "exactly" we mean without any merging logic: if you request
+// app-scoped variables, you'll get app-scoped variables. If a project-scoped
+// variable matches, it will not be merged in.
+func (s *State) configGetExact(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref interface{}, // should be one of the *pb.Ref_ values.
+	prefix string,
+) ([]*pb.ConfigVar, error) {
 	// We have to get the correct iterator based on the scope. We check the
 	// scope and use the proper index to get the iterator here.
 	var iter memdb.ResultIterator
-	switch scope := req.Scope.(type) {
-	case *pb.ConfigGetRequest_Application:
+	switch ref := ref.(type) {
+	case *pb.Ref_Application:
 		var err error
 		iter, err = memTxn.Get(
 			configIndexTableName,
 			configIndexApplicationIndexName+"_prefix",
-			scope.Application.Project,
-			scope.Application.Application,
-			req.Prefix,
+			ref.Project,
+			ref.Application,
+			prefix,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-	case *pb.ConfigGetRequest_Project:
+	case *pb.Ref_Project:
 		var err error
 		iter, err = memTxn.Get(
 			configIndexTableName,
 			configIndexProjectIndexName+"_prefix",
-			scope.Project.Project,
-			req.Prefix,
+			ref.Project,
+			prefix,
 		)
 		if err != nil {
 			return nil, err

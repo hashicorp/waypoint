@@ -66,4 +66,66 @@ func TestConfig(t *testing.T) {
 			require.Empty(vs)
 		}
 	})
+
+	t.Run("merging", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.ConfigSet(
+			&pb.ConfigVar{
+				Scope: &pb.ConfigVar_Project{
+					Project: &pb.Ref_Project{
+						Project: "foo",
+					},
+				},
+
+				Name:  "global",
+				Value: "value",
+			},
+			&pb.ConfigVar{
+				Scope: &pb.ConfigVar_Project{
+					Project: &pb.Ref_Project{
+						Project: "foo",
+					},
+				},
+
+				Name:  "hello",
+				Value: "project",
+			},
+			&pb.ConfigVar{
+				Scope: &pb.ConfigVar_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+
+				Name:  "hello",
+				Value: "app",
+			},
+		))
+
+		{
+			// Get our merged variables
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Application{
+					Application: &pb.Ref_Application{
+						Project:     "foo",
+						Application: "bar",
+					},
+				},
+			})
+			require.NoError(err)
+			require.Len(vs, 2)
+
+			// They are sorted, so check on them
+			require.Equal("global", vs[0].Name)
+			require.Equal("value", vs[0].Value)
+			require.Equal("hello", vs[1].Name)
+			require.Equal("app", vs[1].Value)
+		}
+	})
 }
