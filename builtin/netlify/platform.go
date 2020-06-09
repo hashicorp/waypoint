@@ -4,8 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/go-hclog"
 	netlify "github.com/netlify/open-api/go/porcelain"
+	netlifyContext "github.com/netlify/open-api/go/porcelain/context"
 
 	"github.com/hashicorp/waypoint/builtin/files"
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -28,6 +31,25 @@ func (p *Platform) DeployFunc() interface{} {
 	return p.Deploy
 }
 
+// netlifyContext returns context.Context suitable for Netlify
+// API operations. If an access token is blank it will return
+// an unauthenticated context
+func (p *Platform) apiContext(accessToken string) context.Context {
+	ctx := context.Background()
+
+	apiAuthInfo := func(accessToken string) runtime.ClientAuthInfoWriter {
+		return runtime.ClientAuthInfoWriterFunc(func(r runtime.ClientRequest, _ strfmt.Registry) error {
+			r.SetHeaderParam("User-Agent", "wp-dev")
+			if accessToken != "" {
+				r.SetHeaderParam("Authorization", "Bearer "+accessToken)
+			}
+			return nil
+		})
+	}
+
+	return netlifyContext.WithAuthInfo(ctx, apiAuthInfo(accessToken))
+}
+
 // Deploy deploys a set of files to netlify
 func (p *Platform) Deploy(
 	ctx context.Context,
@@ -40,10 +62,27 @@ func (p *Platform) Deploy(
 ) (*Deployment, error) {
 	deployment := &Deployment{}
 	client := netlify.Default
+	clientContext := p.apiContext("")
 
-	// We'll update the user in real time
+	// We'll update the user in realtime
 	st := ui.Status()
 	defer st.Close()
+
+	// Use configured token, otherwise retrieve one with the user
+	token := p.config.AccessToken
+	if token == "" {
+		st.Update("Logging into your Netlify account")
+		token, err := Authenticate(clientContext, log)
+
+		if err != nil {
+			return nil, err
+		}
+
+		_ = token
+	}
+
+	// Setup a new authenticated context
+	clientContext = p.apiContext(token)
 
 	st.Update("Setting up deploy")
 
@@ -82,6 +121,9 @@ func (p *Platform) Deploy(
 type Config struct {
 	// SiteID is the site to deploy to
 	SiteID string `hcl:"site_id,optional"`
+	// AccessToken is the access token to use, will
+	// prompt oauth exchange if not specified
+	AccessToken string `hcl:"access_token,optional"`
 }
 
 var (

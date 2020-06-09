@@ -15,6 +15,8 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
 	github.com/gliderlabs/ssh v0.2.2
+	github.com/go-openapi/runtime v0.19.15
+	github.com/go-openapi/strfmt v0.19.5
 	github.com/golang/protobuf v1.3.5
 	github.com/hashicorp/go-argmapper v0.0.0-20200606213939-1b3495a979bb
 	github.com/hashicorp/go-hclog v0.14.0
@@ -43,6 +45,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.1.1
 	github.com/sebdah/goldie v1.0.0
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6
 	golang.org/x/sys v0.0.0-20200602225109-6fdc65e7d980 // indirect
