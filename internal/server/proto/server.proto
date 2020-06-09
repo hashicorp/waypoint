@@ -38,6 +38,12 @@ service Waypoint {
   // StartExecStream starts an exec session.
   rpc StartExecStream(stream ExecStreamRequest) returns (stream ExecStreamResponse);
 
+  // Set a single configuration item for the application.
+  rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);
+
+  // Retrieve configuration for the application.
+  rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
+
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
   // the entrypoint binary only.
@@ -77,12 +83,6 @@ service Waypoint {
 
   // UpsertRelease updates or inserts a release.
   rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
-
-  // Set a single configuration item for the application.
-  rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);
-
-  // Retrieve configuration for the application.
-  rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 }
 
 message Application {
@@ -463,6 +463,43 @@ message LogBatch {
 }
 
 /********************************************************************
+* Config
+********************************************************************/
+
+message ConfigVar {
+  // scope is the scoping for this config variable.
+  oneof scope {
+    Ref.Application application = 3;
+    Ref.Project project = 4;
+  }
+
+  string name = 1;
+  string value = 2;
+}
+
+message ConfigSetRequest {
+  repeated ConfigVar variables = 1;
+}
+
+message ConfigSetResponse {}
+
+message ConfigGetRequest {
+  // scope is the scoping for this config variable.
+  oneof scope {
+    Ref.Application application = 2;
+    Ref.Project project = 3;
+  }
+
+  // Get all configuration entries under the given prefix. When empty,
+  // returns all config variables.
+  string prefix = 1;
+}
+
+message ConfigGetResponse {
+  repeated ConfigVar variables = 1;
+}
+
+/********************************************************************
 * Exec
 ********************************************************************/
 
@@ -526,35 +563,6 @@ message ExecStreamResponse {
       STDERR  = 2;
     }
   }
-}
-
-message ConfigVar {
-  string name = 1;
-  string value = 2;
-
-  // Scope the variables just to the given application. If empty, the variables
-  // will be project scoped.
-  string app = 3;
-}
-
-message ConfigSetRequest {
-  repeated ConfigVar variables = 1;
-}
-
-message ConfigSetResponse {}
-
-message ConfigGetRequest {
-  // Get all configuration entries under the given prefix. Therefore when empty, return
-  // all configuration.
-  string prefix = 1;
-
-  // Get the configuration that would be applied to an application of the given name.
-  // If empty, return configuration for all applications.
-  string app = 2;
-}
-
-message ConfigGetResponse {
-  repeated ConfigVar variables = 1;
 }
 
 /********************************************************************
