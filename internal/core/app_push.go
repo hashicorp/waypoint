@@ -31,6 +31,7 @@ type pushBuildOperation struct {
 func (op *pushBuildOperation) Init(app *App) (proto.Message, error) {
 	return &pb.PushedArtifact{
 		Application: app.ref,
+		Workspace:   app.workspace,
 		Component:   app.components[app.Registry].Info,
 		Labels:      app.components[app.Registry].Labels,
 		BuildId:     op.Build.Id,

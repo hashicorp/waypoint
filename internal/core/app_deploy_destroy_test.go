@@ -97,12 +97,14 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 		// Destroy
 		require.NoError(app.DestroyDeploy(context.Background(), &pb.Deployment{
 			Application: app.ref,
+			Workspace:   app.workspace,
 			Deployment:  deployment,
 		}))
 
 		// Verify that we set the status properly
 		resp, err := app.client.ListDeployments(context.Background(), &pb.ListDeploymentsRequest{
 			Application: app.ref,
+			Workspace:   app.workspace,
 		})
 		require.NoError(err)
 		require.Equal(pb.Deployment_DESTROY, resp.Deployments[0].State)
@@ -118,6 +120,7 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 
 		err := app.DestroyDeploy(context.Background(), &pb.Deployment{
 			Application: app.ref,
+			Workspace:   app.workspace,
 		})
 		require.Error(err)
 		require.Contains(err.Error(), "error")
@@ -125,6 +128,7 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 		// Verify that we set the status properly
 		resp, err := app.client.ListDeployments(context.Background(), &pb.ListDeploymentsRequest{
 			Application: app.ref,
+			Workspace:   app.workspace,
 			Order: &pb.OperationOrder{
 				Order: pb.OperationOrder_COMPLETE_TIME,
 				Desc:  true,

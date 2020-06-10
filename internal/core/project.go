@@ -39,6 +39,9 @@ type Project struct {
 	// labels is the list of labels that are assigned to this project.
 	labels map[string]string
 
+	// workspace is the workspace that this project will work in.
+	workspace string
+
 	// This lock only needs to be held currently to protect localClosers.
 	lock sync.Mutex
 
@@ -61,8 +64,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	p := &Project{
 		UI: &terminal.BasicUI{},
 
-		logger: hclog.L(),
-		apps:   make(map[string]*App),
+		logger:    hclog.L(),
+		workspace: "default",
+		apps:      make(map[string]*App),
 		factories: map[component.Type]*factory.Factory{
 			component.BuilderType:        plugin.Builders,
 			component.RegistryType:       plugin.Registries,
@@ -137,6 +141,13 @@ func (p *Project) Client() pb.WaypointClient {
 // Ref returns the project ref for API calls.
 func (p *Project) Ref() *pb.Ref_Project {
 	return &pb.Ref_Project{Project: p.name}
+}
+
+// WorkspaceRef returns the project ref for API calls.
+func (p *Project) WorkspaceRef() *pb.Ref_Workspace {
+	return &pb.Ref_Workspace{
+		Workspace: p.workspace,
+	}
 }
 
 // Close is called to clean up resources allocated by the project.
@@ -237,4 +248,9 @@ func WithMappers(m ...*argmapper.Func) Option {
 // WithLabels sets the labels that will override any other labels set.
 func WithLabels(m map[string]string) Option {
 	return func(p *Project, opts *options) { p.overrideLabels = m }
+}
+
+// WithWorkspace sets the workspace we'll be working in.
+func WithWorkspace(ws string) Option {
+	return func(p *Project, opts *options) { p.workspace = ws }
 }

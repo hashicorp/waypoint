@@ -38,6 +38,7 @@ type App struct {
 	UI terminal.UI
 
 	ref        *pb.Ref_Application
+	workspace  *pb.Ref_Workspace
 	client     pb.WaypointClient
 	source     *component.Source
 	dconfig    component.DeploymentConfig
@@ -76,6 +77,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 			Application: cfg.Name,
 			Project:     p.name,
 		},
+		workspace: p.WorkspaceRef(),
 
 		// very important below that we allocate a new slice since we modify
 		mappers: append([]*argmapper.Func{}, p.mappers...),

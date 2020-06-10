@@ -37,6 +37,7 @@ type deployOperation struct {
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
 	return &pb.Deployment{
 		Application: app.ref,
+		Workspace:   app.workspace,
 		Component:   app.components[app.Platform].Info,
 		Labels:      app.components[app.Platform].Labels,
 		ArtifactId:  op.Push.Id,
