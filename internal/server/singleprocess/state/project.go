@@ -12,6 +12,14 @@ func init() {
 	dbBuckets = append(dbBuckets, projectBucket)
 }
 
+// projectDefaultForRef returns a default pb.Project for a ref. This
+// can be used in tandem with projectCreateIfNotExist to create defaults.
+func (s *State) projectDefaultForRef(ref *pb.Ref_Project) *pb.Project {
+	return &pb.Project{
+		Name: ref.Project,
+	}
+}
+
 func (s *State) projectCreateIfNotExist(tx *bolt.Tx, p *pb.Project) error {
 	b, err := s.projectBucket(tx, p)
 	if err != nil {

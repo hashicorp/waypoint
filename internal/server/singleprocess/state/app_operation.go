@@ -60,6 +60,10 @@ func (op *appOperation) Test(t testing.T) {
 		field := op.valueField(v, "Application")
 		require.IsType((*pb.Ref_Application)(nil), field)
 	}
+	{
+		field := op.valueField(v, "Workspace")
+		require.IsType((*pb.Ref_Workspace)(nil), field)
+	}
 }
 
 // register should be called in init() to register this operation with
@@ -76,7 +80,7 @@ func (op *appOperation) Put(s *State, update bool, value proto.Message) error {
 	defer memTxn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		return op.dbPut(dbTxn, memTxn, update, value)
+		return op.dbPut(s, dbTxn, memTxn, update, value)
 	})
 	if err == nil {
 		memTxn.Commit()
@@ -215,17 +219,23 @@ func (op *appOperation) Latest(s *State, ref *pb.Ref_Application) (interface{}, 
 // dbPut wites the value to the database and also sets up any index records.
 // It expects to hold a write transaction to both bolt and memdb.
 func (op *appOperation) dbPut(
+	s *State,
 	tx *bolt.Tx,
 	inmemTxn *memdb.Txn,
 	update bool,
 	value proto.Message,
 ) error {
-	id := []byte(op.valueField(value, "Id").(string))
+	// Get our application and ensure it is created
+	appRef := op.valueField(value, "Application").(*pb.Ref_Application)
+	if err := s.appCreateIfNotExist(tx, s.appDefaultForRef(appRef)); err != nil {
+		return err
+	}
 
 	// Get the global bucket and write the value to it.
 	b := tx.Bucket(op.Bucket)
 
 	// If we're updating, then this shouldn't already exist
+	id := []byte(op.valueField(value, "Id").(string))
 	if update && b.Get(id) == nil {
 		return status.Errorf(codes.NotFound, "record with ID %q not found for update", string(id))
 	}

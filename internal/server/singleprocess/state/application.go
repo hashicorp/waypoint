@@ -12,11 +12,20 @@ func init() {
 	dbBuckets = append(dbBuckets, appBucket)
 }
 
+// appDefaultForRef returns a default pb.Application for a ref. This
+// can be used in tandem with appCreateIfNotExist to create defaults.
+func (s *State) appDefaultForRef(ref *pb.Ref_Application) *pb.Application {
+	return &pb.Application{
+		Name: ref.Application,
+		Project: &pb.Ref_Project{
+			Project: ref.Project,
+		},
+	}
+}
+
 func (s *State) appCreateIfNotExist(tx *bolt.Tx, app *pb.Application) error {
 	// Create our project if we don't have it already.
-	err := s.projectCreateIfNotExist(tx, &pb.Project{
-		Name: app.Project.Project,
-	})
+	err := s.projectCreateIfNotExist(tx, s.projectDefaultForRef(app.Project))
 	if err != nil {
 		return err
 	}
