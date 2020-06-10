@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
 func (s *service) UpsertBuild(
@@ -40,7 +41,9 @@ func (s *service) ListBuilds(
 	ctx context.Context,
 	req *pb.ListBuildsRequest,
 ) (*pb.ListBuildsResponse, error) {
-	result, err := s.state.BuildList(req.Application)
+	result, err := s.state.BuildList(req.Application,
+		state.ListWithWorkspace(req.Workspace),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -52,5 +55,5 @@ func (s *service) GetLatestBuild(
 	ctx context.Context,
 	req *pb.GetLatestBuildRequest,
 ) (*pb.Build, error) {
-	return s.state.BuildLatest(req.Application)
+	return s.state.BuildLatest(req.Application, req.Workspace)
 }

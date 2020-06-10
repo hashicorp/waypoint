@@ -32,6 +32,7 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 		// Get the most recent build
 		build, err := client.GetLatestBuild(ctx, &pb.GetLatestBuildRequest{
 			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
 		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())

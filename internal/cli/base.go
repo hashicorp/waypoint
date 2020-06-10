@@ -63,6 +63,9 @@ type baseCommand struct {
 	// flagLabels are set via -label if flagSetLabel is set.
 	flagLabels map[string]string
 
+	// flagWorkspace is the workspace to work in.
+	flagWorkspace string
+
 	// args that were present after parsing flags
 	args []string
 }
@@ -144,6 +147,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 			core.WithConfig(&cfg),
 			core.WithDataDir(projDir),
 			core.WithLabels(c.flagLabels),
+			core.WithWorkspace(c.flagWorkspace),
 		)
 		if err != nil {
 			c.logError(c.Log, "failed to create project", err)
@@ -227,6 +231,15 @@ func (c *baseCommand) logError(log hclog.Logger, prefix string, err error) {
 // to configure the set with your own custom options.
 func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 	set := flag.NewSets()
+	{
+		f := set.NewSet("Global Options")
+		f.StringVar(&flag.StringVar{
+			Name:   "workspace",
+			Target: &c.flagWorkspace,
+			Usage:  "Workspace to operate in. Defaults to 'default'.",
+		})
+	}
+
 	if bit&flagSetLabel != 0 {
 		f := set.NewSet("Common Options")
 		f.StringMapVar(&flag.StringMapVar{

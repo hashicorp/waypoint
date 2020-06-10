@@ -45,6 +45,7 @@ func (s *service) ListPushedArtifacts(
 	result, err := s.state.ArtifactList(req.Application,
 		state.ListWithStatusFilter(req.Status...),
 		state.ListWithOrder(req.Order),
+		state.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
 		return nil, err
@@ -58,5 +59,5 @@ func (s *service) GetLatestPushedArtifact(
 	ctx context.Context,
 	req *pb.GetLatestPushedArtifactRequest,
 ) (*pb.PushedArtifact, error) {
-	return s.state.ArtifactLatest(req.Application)
+	return s.state.ArtifactLatest(req.Application, req.Workspace)
 }

@@ -36,6 +36,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		// Get the most recent pushed artifact
 		push, err := client.GetLatestPushedArtifact(ctx, &pb.GetLatestPushedArtifactRequest{
 			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
 		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())

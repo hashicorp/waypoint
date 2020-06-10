@@ -46,8 +46,11 @@ func (s *State) DeploymentList(
 }
 
 // DeploymentLatest gets the latest deployment that was completed successfully.
-func (s *State) DeploymentLatest(ref *pb.Ref_Application) (*pb.Deployment, error) {
-	result, err := deploymentOp.Latest(s, ref)
+func (s *State) DeploymentLatest(
+	ref *pb.Ref_Application,
+	ws *pb.Ref_Workspace,
+) (*pb.Deployment, error) {
+	result, err := deploymentOp.Latest(s, ref, ws)
 	if result == nil || err != nil {
 		return nil, err
 	}

@@ -97,11 +97,17 @@ message Project {
   string name = 1;
 }
 
+message Workspace {
+  string name = 1;
+}
+
 /********************************************************************
 * Shared Messages
 ********************************************************************/
 
 // Ref contains shared messages used for references to other resources.
+//
+// Refs should be used when the full type shouldn't be embedded in the message.
 message Ref {
   // Application references an application. To uniquely identify an
   // application, this must encapsulate the full hierarchy to the application.
@@ -113,6 +119,11 @@ message Ref {
   // Project references a project.
   message Project {
     string project = 1;
+  }
+
+  // Workspace references a workspace.
+  message Workspace {
+    string workspace = 1;
   }
 }
 
@@ -209,6 +220,10 @@ message UpsertBuildResponse {
 message ListBuildsRequest {
   // The application whose builds to list. This must be set.
   Ref.Application application = 1;
+
+  // The workspace to list builds for. If this isn't set, then all builds
+  // for the other filters are listed.
+  Ref.Workspace workspace = 2;
 }
 
 message ListBuildsResponse {
@@ -218,6 +233,7 @@ message ListBuildsResponse {
 
 message GetLatestBuildRequest {
   Ref.Application application = 1;
+  Ref.Workspace workspace = 2;
 }
 
 // Build represents a process of creating an artifact that can be in any state,
@@ -225,6 +241,9 @@ message GetLatestBuildRequest {
 message Build {
   // The application that this build is part of.
   Ref.Application application = 6;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 7;
 
   // id is the unique ID of the build
   string id = 1;
@@ -272,11 +291,17 @@ message UpsertPushedArtifactResponse {
 message GetLatestPushedArtifactRequest {
   // application that this belongs to
   Ref.Application application = 1;
+
+  // workspace for the artifact, any workspace if empty
+  Ref.Workspace workspace = 2;
 }
 
 message ListPushedArtifactsRequest {
   // application that this belongs to
   Ref.Application application = 3;
+
+  // workspace for the results, or all if not set
+  Ref.Workspace workspace = 4;
 
   // The filters to apply to this request. These are ORed, so you should
   // specify multiple filters in the StatusFilter for AND behavior.
@@ -295,6 +320,9 @@ message ListPushedArtifactsResponse {
 message PushedArtifact {
   // application that this belongs to
   Ref.Application application = 7;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 8;
 
   // id is a unique ID for this push
   string id = 1;
@@ -342,6 +370,10 @@ message ListDeploymentsRequest {
   // application that this deployment belongs to
   Ref.Application application = 3;
 
+  // workspace that this should belong to. If this is empty, values in
+  // all workspaces will be listed.
+  Ref.Workspace workspace = 4;
+
   // The filters to apply to this request. These are ORed, so you should
   // specify multiple filters in the StatusFilter for AND behavior.
   repeated StatusFilter status = 1;
@@ -359,6 +391,9 @@ message ListDeploymentsResponse {
 message Deployment {
   // application that this deployment belongs to
   Ref.Application application = 8;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 9;
 
   // id is the unique ID for this deployment
   string id = 1;
@@ -412,6 +447,9 @@ message UpsertReleaseResponse {
 message Release {
   // application that this deployment belongs to
   Ref.Application application = 7;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 8;
 
   // id is the unique ID for this release.
   string id = 1;

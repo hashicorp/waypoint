@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func TestBuild(t *testing.T) {
@@ -22,13 +23,9 @@ func TestBuild(t *testing.T) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "A",
-			Application: &pb.Ref_Application{
-				Application: "a_test",
-				Project:     "p_test",
-			},
-		}))
+		})))
 
 		// Read it back
 		b, err := s.BuildGet("A")
@@ -56,12 +53,12 @@ func TestBuild(t *testing.T) {
 		rand.Shuffle(len(times), func(i, j int) { times[i], times[j] = times[j], times[i] })
 
 		// Create a build for each time
-		for _, t := range times {
-			pt, err := ptypes.TimestampProto(t)
+		for _, ts := range times {
+			pt, err := ptypes.TimestampProto(ts)
 			require.NoError(err)
 
-			require.NoError(s.BuildPut(false, &pb.Build{
-				Id: strconv.FormatInt(t.Unix(), 10),
+			require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: strconv.FormatInt(ts.Unix(), 10),
 				Application: &pb.Ref_Application{
 					Application: "a_test",
 					Project:     "p_test",
@@ -72,7 +69,7 @@ func TestBuild(t *testing.T) {
 					StartTime:    pt,
 					CompleteTime: pt,
 				},
-			}))
+			})))
 		}
 
 		ref := &pb.Ref_Application{
@@ -81,7 +78,7 @@ func TestBuild(t *testing.T) {
 		}
 
 		// Get the latest
-		b, err := s.BuildLatest(ref)
+		b, err := s.BuildLatest(ref, nil)
 		require.NoError(err)
 		require.Equal(strconv.FormatInt(latest.Unix(), 10), b.Id)
 
@@ -119,17 +116,17 @@ func TestBuild(t *testing.T) {
 		pt, err := ptypes.TimestampProto(ts)
 		require.NoError(err)
 
-		require.NoError(s.BuildPut(false, &pb.Build{
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id:          strconv.FormatInt(ts.Unix(), 10),
 			Application: ref,
 			Status: &pb.Status{
 				State:     pb.Status_RUNNING,
 				StartTime: pt,
 			},
-		}))
+		})))
 
 		// Get the latest
-		b, err := s.BuildLatest(ref)
+		b, err := s.BuildLatest(ref, nil)
 		require.NoError(err)
 		require.Nil(b)
 	})

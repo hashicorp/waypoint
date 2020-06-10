@@ -19,6 +19,8 @@ import (
 
 type ArtifactListCommand struct {
 	*baseCommand
+
+	flagWorkspaceAll bool
 }
 
 func (c *ArtifactListCommand) Run(args []string) int {
@@ -35,9 +37,15 @@ func (c *ArtifactListCommand) Run(args []string) int {
 	client := c.project.Client()
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
+		var wsRef *pb.Ref_Workspace
+		if !c.flagWorkspaceAll {
+			wsRef = c.project.WorkspaceRef()
+		}
+
 		// List builds
 		resp, err := client.ListPushedArtifacts(c.Ctx, &pb.ListPushedArtifactsRequest{
 			Application: app.Ref(),
+			Workspace:   wsRef,
 		})
 		if err != nil {
 			c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
@@ -88,11 +96,13 @@ func (c *ArtifactListCommand) Run(args []string) int {
 			table.Rich([]string{
 				status,
 				b.Id,
+				b.Workspace.Workspace,
 				b.Component.Name,
 				startTime,
 				completeTime,
 			}, []tablewriter.Colors{
 				statusColor,
+				tablewriter.Colors{},
 				tablewriter.Colors{},
 				tablewriter.Colors{},
 				tablewriter.Colors{},
@@ -111,7 +121,14 @@ func (c *ArtifactListCommand) Run(args []string) int {
 }
 
 func (c *ArtifactListCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(0, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:   "workspace-all",
+			Target: &c.flagWorkspaceAll,
+			Usage:  "List builds in all workspaces for this project and application.",
+		})
+	})
 }
 
 func (c *ArtifactListCommand) AutocompleteArgs() complete.Predictor {

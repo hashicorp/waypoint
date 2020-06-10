@@ -46,8 +46,11 @@ func (s *State) ReleaseList(
 }
 
 // ReleaseLatest gets the latest release that was completed successfully.
-func (s *State) ReleaseLatest(ref *pb.Ref_Application) (*pb.Release, error) {
-	result, err := releaseOp.Latest(s, ref)
+func (s *State) ReleaseLatest(
+	ref *pb.Ref_Application,
+	ws *pb.Ref_Workspace,
+) (*pb.Release, error) {
+	result, err := releaseOp.Latest(s, ref, ws)
 	if result == nil || err != nil {
 		return nil, err
 	}

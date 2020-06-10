@@ -2,6 +2,7 @@ package state
 
 import (
 	"math/rand"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func TestAppOperation(t *testing.T) {
@@ -27,13 +29,9 @@ func TestAppOperation(t *testing.T) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(op.Put(s, false, &pb.Build{
+		require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "A",
-			Application: &pb.Ref_Application{
-				Application: "a_test",
-				Project:     "p_test",
-			},
-		}))
+		})))
 
 		// Read it back
 		raw, err := op.Get(s, "A")
@@ -65,12 +63,12 @@ func TestAppOperation(t *testing.T) {
 		rand.Shuffle(len(times), func(i, j int) { times[i], times[j] = times[j], times[i] })
 
 		// Create a build for each time
-		for _, t := range times {
-			pt, err := ptypes.TimestampProto(t)
+		for _, timeVal := range times {
+			pt, err := ptypes.TimestampProto(timeVal)
 			require.NoError(err)
 
-			require.NoError(op.Put(s, false, &pb.Build{
-				Id: strconv.FormatInt(t.Unix(), 10),
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: strconv.FormatInt(timeVal.Unix(), 10),
 				Application: &pb.Ref_Application{
 					Application: "a_test",
 					Project:     "p_test",
@@ -81,7 +79,7 @@ func TestAppOperation(t *testing.T) {
 					StartTime:    pt,
 					CompleteTime: pt,
 				},
-			}))
+			})))
 		}
 
 		ref := &pb.Ref_Application{
@@ -90,7 +88,7 @@ func TestAppOperation(t *testing.T) {
 		}
 
 		// Get the latest
-		raw, err := op.Latest(s, ref)
+		raw, err := op.Latest(s, ref, nil)
 		require.NoError(err)
 		b := raw.(*pb.Build)
 		require.Equal(strconv.FormatInt(latest.Unix(), 10), b.Id)
@@ -132,17 +130,17 @@ func TestAppOperation(t *testing.T) {
 		pt, err := ptypes.TimestampProto(ts)
 		require.NoError(err)
 
-		require.NoError(op.Put(s, false, &pb.Build{
+		require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id:          strconv.FormatInt(ts.Unix(), 10),
 			Application: ref,
 			Status: &pb.Status{
 				State:     pb.Status_RUNNING,
 				StartTime: pt,
 			},
-		}))
+		})))
 
 		// Get the latest
-		b, err := op.Latest(s, ref)
+		b, err := op.Latest(s, ref, nil)
 		require.NoError(err)
 		require.Nil(b)
 	})
@@ -163,42 +161,42 @@ func TestAppOperation(t *testing.T) {
 			pt, err := ptypes.TimestampProto(ts)
 			require.NoError(err)
 
-			require.NoError(op.Put(s, false, &pb.Build{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "A",
 				Application: ref,
 				Status: &pb.Status{
 					State:     pb.Status_RUNNING,
 					StartTime: pt,
 				},
-			}))
+			})))
 		}
 		{
 			ts := time.Now().Add(6 * time.Hour)
 			pt, err := ptypes.TimestampProto(ts)
 			require.NoError(err)
 
-			require.NoError(op.Put(s, false, &pb.Build{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "B",
 				Application: ref,
 				Status: &pb.Status{
 					State:     pb.Status_ERROR,
 					StartTime: pt,
 				},
-			}))
+			})))
 		}
 		{
 			ts := time.Now().Add(7 * time.Hour)
 			pt, err := ptypes.TimestampProto(ts)
 			require.NoError(err)
 
-			require.NoError(op.Put(s, false, &pb.Build{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "C",
 				Application: ref,
 				Status: &pb.Status{
 					State:     pb.Status_ERROR,
 					StartTime: pt,
 				},
-			}))
+			})))
 		}
 
 		// List with a filter
@@ -218,5 +216,103 @@ func TestAppOperation(t *testing.T) {
 		})
 		require.NoError(err)
 		require.Len(results, 2)
+	})
+
+	t.Run("list by workspace specified", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "A",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_A",
+				},
+			})))
+		}
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "B",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_B",
+				},
+			})))
+		}
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "C",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_A",
+				},
+			})))
+		}
+
+		// List with a filter
+		build := serverptypes.TestValidBuild(t, nil)
+		results, err := op.List(s, &listOperationsOptions{
+			Application: build.Application,
+			Workspace:   &pb.Ref_Workspace{Workspace: "WS_A"},
+		})
+		require.NoError(err)
+		require.Len(results, 2)
+
+		var ids []string
+		for _, result := range results {
+			ids = append(ids, result.(*pb.Build).Id)
+		}
+		sort.Strings(ids)
+		require.Equal("A", ids[0])
+		require.Equal("C", ids[1])
+	})
+
+	t.Run("list by workspace unspecified", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "A",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_A",
+				},
+			})))
+		}
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "B",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_B",
+				},
+			})))
+		}
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "C",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_A",
+				},
+			})))
+		}
+
+		// List with a filter
+		build := serverptypes.TestValidBuild(t, nil)
+		results, err := op.List(s, &listOperationsOptions{
+			Application: build.Application,
+		})
+		require.NoError(err)
+		require.Len(results, 3)
+
+		var ids []string
+		for _, result := range results {
+			ids = append(ids, result.(*pb.Build).Id)
+		}
+		sort.Strings(ids)
+		require.Equal("A", ids[0])
+		require.Equal("B", ids[1])
+		require.Equal("C", ids[2])
 	})
 }

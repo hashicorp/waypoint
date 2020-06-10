@@ -60,6 +60,10 @@ func (op *appOperation) Test(t testing.T) {
 		field := op.valueField(v, "Application")
 		require.IsType((*pb.Ref_Application)(nil), field)
 	}
+	{
+		field := op.valueField(v, "Workspace")
+		require.IsType((*pb.Ref_Workspace)(nil), field)
+	}
 }
 
 // register should be called in init() to register this operation with
@@ -76,7 +80,7 @@ func (op *appOperation) Put(s *State, update bool, value proto.Message) error {
 	defer memTxn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		return op.dbPut(dbTxn, memTxn, update, value)
+		return op.dbPut(s, dbTxn, memTxn, update, value)
 	})
 	if err == nil {
 		memTxn.Commit()
@@ -139,6 +143,11 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 				return nil
 			}
 
+			// If our workspace doesn't match then continue to the next result.
+			if opts.Workspace != nil && record.Workspace != opts.Workspace.Workspace {
+				continue
+			}
+
 			value := op.newStruct()
 			if err := dbGet(bucket, []byte(record.Id), value); err != nil {
 				return err
@@ -167,7 +176,11 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 }
 
 // Latest gets the latest operation that was completed successfully.
-func (op *appOperation) Latest(s *State, ref *pb.Ref_Application) (interface{}, error) {
+func (op *appOperation) Latest(
+	s *State,
+	ref *pb.Ref_Application,
+	ws *pb.Ref_Workspace,
+) (interface{}, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -193,6 +206,11 @@ func (op *appOperation) Latest(s *State, ref *pb.Ref_Application) (interface{}, 
 			return nil, nil
 		}
 
+		// If our workspace doesn't match then continue to the next result.
+		if ws != nil && record.Workspace != ws.Workspace {
+			continue
+		}
+
 		v, err := op.Get(s, record.Id)
 		if err != nil {
 			return nil, err
@@ -215,17 +233,35 @@ func (op *appOperation) Latest(s *State, ref *pb.Ref_Application) (interface{}, 
 // dbPut wites the value to the database and also sets up any index records.
 // It expects to hold a write transaction to both bolt and memdb.
 func (op *appOperation) dbPut(
+	s *State,
 	tx *bolt.Tx,
 	inmemTxn *memdb.Txn,
 	update bool,
 	value proto.Message,
 ) error {
-	id := []byte(op.valueField(value, "Id").(string))
+	// Get our application and ensure it is created
+	appRef := op.valueField(value, "Application").(*pb.Ref_Application)
+	if appRef == nil {
+		return status.Errorf(codes.Internal, "state: Application must be set on value %T", value)
+	}
+	if err := s.appCreateIfNotExist(tx, s.appDefaultForRef(appRef)); err != nil {
+		return err
+	}
+
+	// Get our workspace reference and ensure it is created
+	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
+	if wsRef == nil {
+		return status.Errorf(codes.Internal, "state: Workspace must be set on value %T", value)
+	}
+	if err := s.workspaceCreateIfNotExist(tx, s.workspaceDefaultForRef(wsRef)); err != nil {
+		return err
+	}
 
 	// Get the global bucket and write the value to it.
 	b := tx.Bucket(op.Bucket)
 
 	// If we're updating, then this shouldn't already exist
+	id := []byte(op.valueField(value, "Id").(string))
 	if update && b.Get(id) == nil {
 		return status.Errorf(codes.NotFound, "record with ID %q not found for update", string(id))
 	}
@@ -284,10 +320,12 @@ func (op *appOperation) indexPut(txn *memdb.Txn, value proto.Message) error {
 	}
 
 	ref := op.valueField(value, "Application").(*pb.Ref_Application)
+	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
 	return txn.Insert(op.memTableName(), &operationIndexRecord{
 		Id:           op.valueField(value, "Id").(string),
 		Project:      ref.Project,
 		App:          ref.Application,
+		Workspace:    wsRef.Workspace,
 		StartTime:    startTime,
 		CompleteTime: completeTime,
 	})
@@ -387,6 +425,7 @@ type operationIndexRecord struct {
 	Id           string
 	Project      string
 	App          string
+	Workspace    string
 	StartTime    time.Time
 	CompleteTime time.Time
 }
@@ -408,6 +447,7 @@ const (
 // operations for filtering and limiting the response.
 type listOperationsOptions struct {
 	Application *pb.Ref_Application
+	Workspace   *pb.Ref_Workspace
 	Status      []*pb.StatusFilter
 	Order       *pb.OperationOrder
 }
@@ -436,6 +476,13 @@ func ListWithStatusFilter(f ...*pb.StatusFilter) ListOperationOption {
 func ListWithOrder(f *pb.OperationOrder) ListOperationOption {
 	return func(opts *listOperationsOptions) {
 		opts.Order = f
+	}
+}
+
+// ListWithWorkspace sets ordering on the list operation.
+func ListWithWorkspace(f *pb.Ref_Workspace) ListOperationOption {
+	return func(opts *listOperationsOptions) {
+		opts.Workspace = f
 	}
 }
 
