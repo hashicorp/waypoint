@@ -1,6 +1,9 @@
 package ptypes
 
 import (
+	"time"
+
+	"github.com/golang/protobuf/ptypes"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
@@ -23,6 +26,7 @@ func TestValidBuild(t testing.T, src *pb.Build) *pb.Build {
 		Workspace: &pb.Ref_Workspace{
 			Workspace: "default",
 		},
+		Status: testStatus(t),
 	}))
 
 	return src
@@ -43,6 +47,7 @@ func TestValidArtifact(t testing.T, src *pb.PushedArtifact) *pb.PushedArtifact {
 		Workspace: &pb.Ref_Workspace{
 			Workspace: "default",
 		},
+		Status: testStatus(t),
 	}))
 
 	return src
@@ -63,7 +68,19 @@ func TestValidDeployment(t testing.T, src *pb.Deployment) *pb.Deployment {
 		Workspace: &pb.Ref_Workspace{
 			Workspace: "default",
 		},
+		Status: testStatus(t),
 	}))
 
 	return src
+}
+
+func testStatus(t testing.T) *pb.Status {
+	pt, err := ptypes.TimestampProto(time.Now())
+	require.NoError(t, err)
+
+	return &pb.Status{
+		State:        pb.Status_SUCCESS,
+		StartTime:    pt,
+		CompleteTime: pt,
+	}
 }

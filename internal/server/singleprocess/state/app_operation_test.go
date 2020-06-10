@@ -2,6 +2,7 @@ package state
 
 import (
 	"math/rand"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -215,5 +216,103 @@ func TestAppOperation(t *testing.T) {
 		})
 		require.NoError(err)
 		require.Len(results, 2)
+	})
+
+	t.Run("list by workspace specified", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "A",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_A",
+				},
+			})))
+		}
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "B",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_B",
+				},
+			})))
+		}
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "C",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_A",
+				},
+			})))
+		}
+
+		// List with a filter
+		build := serverptypes.TestValidBuild(t, nil)
+		results, err := op.List(s, &listOperationsOptions{
+			Application: build.Application,
+			Workspace:   &pb.Ref_Workspace{Workspace: "WS_A"},
+		})
+		require.NoError(err)
+		require.Len(results, 2)
+
+		var ids []string
+		for _, result := range results {
+			ids = append(ids, result.(*pb.Build).Id)
+		}
+		sort.Strings(ids)
+		require.Equal("A", ids[0])
+		require.Equal("C", ids[1])
+	})
+
+	t.Run("list by workspace unspecified", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "A",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_A",
+				},
+			})))
+		}
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "B",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_B",
+				},
+			})))
+		}
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "C",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "WS_A",
+				},
+			})))
+		}
+
+		// List with a filter
+		build := serverptypes.TestValidBuild(t, nil)
+		results, err := op.List(s, &listOperationsOptions{
+			Application: build.Application,
+		})
+		require.NoError(err)
+		require.Len(results, 3)
+
+		var ids []string
+		for _, result := range results {
+			ids = append(ids, result.(*pb.Build).Id)
+		}
+		sort.Strings(ids)
+		require.Equal("A", ids[0])
+		require.Equal("B", ids[1])
+		require.Equal("C", ids[2])
 	})
 }

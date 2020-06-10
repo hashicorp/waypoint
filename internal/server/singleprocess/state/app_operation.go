@@ -143,6 +143,11 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 				return nil
 			}
 
+			// If our workspace doesn't match then continue to the next result.
+			if opts.Workspace != nil && record.Workspace != opts.Workspace.Workspace {
+				continue
+			}
+
 			value := op.newStruct()
 			if err := dbGet(bucket, []byte(record.Id), value); err != nil {
 				return err
@@ -306,10 +311,12 @@ func (op *appOperation) indexPut(txn *memdb.Txn, value proto.Message) error {
 	}
 
 	ref := op.valueField(value, "Application").(*pb.Ref_Application)
+	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
 	return txn.Insert(op.memTableName(), &operationIndexRecord{
 		Id:           op.valueField(value, "Id").(string),
 		Project:      ref.Project,
 		App:          ref.Application,
+		Workspace:    wsRef.Workspace,
 		StartTime:    startTime,
 		CompleteTime: completeTime,
 	})
@@ -409,6 +416,7 @@ type operationIndexRecord struct {
 	Id           string
 	Project      string
 	App          string
+	Workspace    string
 	StartTime    time.Time
 	CompleteTime time.Time
 }
@@ -430,6 +438,7 @@ const (
 // operations for filtering and limiting the response.
 type listOperationsOptions struct {
 	Application *pb.Ref_Application
+	Workspace   *pb.Ref_Workspace
 	Status      []*pb.StatusFilter
 	Order       *pb.OperationOrder
 }
@@ -458,6 +467,13 @@ func ListWithStatusFilter(f ...*pb.StatusFilter) ListOperationOption {
 func ListWithOrder(f *pb.OperationOrder) ListOperationOption {
 	return func(opts *listOperationsOptions) {
 		opts.Order = f
+	}
+}
+
+// ListWithWorkspace sets ordering on the list operation.
+func ListWithWorkspace(f *pb.Ref_Workspace) ListOperationOption {
+	return func(opts *listOperationsOptions) {
+		opts.Workspace = f
 	}
 }
 
