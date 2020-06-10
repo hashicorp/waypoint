@@ -125,6 +125,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		p.apps[appConfig.Name] = app
 	}
 
+	p.logger.Info("project initialized", "workspace", p.workspace)
 	return p, nil
 }
 
@@ -252,5 +253,9 @@ func WithLabels(m map[string]string) Option {
 
 // WithWorkspace sets the workspace we'll be working in.
 func WithWorkspace(ws string) Option {
-	return func(p *Project, opts *options) { p.workspace = ws }
+	return func(p *Project, opts *options) {
+		if ws != "" {
+			p.workspace = ws
+		}
+	}
 }
