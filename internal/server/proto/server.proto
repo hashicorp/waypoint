@@ -300,6 +300,9 @@ message ListPushedArtifactsRequest {
   // application that this belongs to
   Ref.Application application = 3;
 
+  // workspace for the results, or all if not set
+  Ref.Workspace workspace = 4;
+
   // The filters to apply to this request. These are ORed, so you should
   // specify multiple filters in the StatusFilter for AND behavior.
   repeated StatusFilter status = 1;

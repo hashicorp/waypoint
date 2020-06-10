@@ -45,6 +45,7 @@ func (s *service) ListPushedArtifacts(
 	result, err := s.state.ArtifactList(req.Application,
 		state.ListWithStatusFilter(req.Status...),
 		state.ListWithOrder(req.Order),
+		state.ListWithWorkspace(req.Workspace),
 	)
 	if err != nil {
 		return nil, err
