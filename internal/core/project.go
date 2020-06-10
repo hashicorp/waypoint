@@ -183,6 +183,9 @@ func (p *Project) Close() error {
 func (p *Project) mergeLabels(ls ...map[string]string) map[string]string {
 	result := map[string]string{}
 
+	// Set our builtin labels
+	result["waypoint/workspace"] = p.workspace
+
 	// Set our project labels
 	for k, v := range p.labels {
 		result[k] = v
