@@ -38,6 +38,7 @@ func (c *BuildListCommand) Run(args []string) int {
 		// List builds
 		resp, err := client.ListBuilds(c.Ctx, &pb.ListBuildsRequest{
 			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
 		})
 		if err != nil {
 			c.project.UI.Output(err.Error(), terminal.WithErrorStyle())

@@ -220,6 +220,10 @@ message UpsertBuildResponse {
 message ListBuildsRequest {
   // The application whose builds to list. This must be set.
   Ref.Application application = 1;
+
+  // The workspace to list builds for. If this isn't set, then all builds
+  // for the other filters are listed.
+  Ref.Workspace workspace = 2;
 }
 
 message ListBuildsResponse {

@@ -28,10 +28,11 @@ func (s *State) BuildGet(id string) (*pb.Build, error) {
 	return result.(*pb.Build), nil
 }
 
-func (s *State) BuildList(ref *pb.Ref_Application) ([]*pb.Build, error) {
-	raw, err := buildOp.List(s, &listOperationsOptions{
-		Application: ref,
-	})
+func (s *State) BuildList(
+	ref *pb.Ref_Application,
+	opts ...ListOperationOption,
+) ([]*pb.Build, error) {
+	raw, err := buildOp.List(s, buildListOperationsOptions(ref, opts...))
 	if err != nil {
 		return nil, err
 	}
