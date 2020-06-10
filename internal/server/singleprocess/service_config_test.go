@@ -24,7 +24,17 @@ func TestServiceConfig(t *testing.T) {
 		GReq = pb.ConfigGetRequest
 	)
 
-	Var := &pb.ConfigVar{Name: "DATABASE_URL", Value: "postgresql:///"}
+	Var := &pb.ConfigVar{
+		Scope: &pb.ConfigVar_Application{
+			Application: &pb.Ref_Application{
+				Application: "foo",
+				Project:     "bar",
+			},
+		},
+
+		Name:  "DATABASE_URL",
+		Value: "postgresql:///",
+	}
 
 	t.Run("set and get", func(t *testing.T) {
 		require := require.New(t)
@@ -36,7 +46,14 @@ func TestServiceConfig(t *testing.T) {
 
 		// Let's write some data
 
-		grep, err := client.GetConfig(ctx, &GReq{})
+		grep, err := client.GetConfig(ctx, &GReq{
+			Scope: &pb.ConfigGetRequest_Application{
+				Application: &pb.Ref_Application{
+					Application: "foo",
+					Project:     "bar",
+				},
+			},
+		})
 		require.NoError(err)
 		require.NotNil(grep)
 

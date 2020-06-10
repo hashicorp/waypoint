@@ -45,11 +45,20 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		return 1
 	}
 
-	resp, err := client.GetConfig(c.Ctx, &pb.ConfigGetRequest{
+	req := &pb.ConfigGetRequest{
+		Scope:  &pb.ConfigGetRequest_Project{Project: c.project.Ref()},
 		Prefix: prefix,
-		App:    c.app,
-	})
+	}
+	if c.app != "" {
+		req.Scope = &pb.ConfigGetRequest_Application{
+			Application: &pb.Ref_Application{
+				Project:     c.project.Ref().Project,
+				Application: c.app,
+			},
+		}
+	}
 
+	resp, err := client.GetConfig(c.Ctx, req)
 	if err != nil {
 		c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
 		return 1
@@ -92,8 +101,13 @@ func (c *ConfigGetCommand) Run(args []string) int {
 	table.SetBorder(false)
 
 	for _, v := range resp.Variables {
+		var app string
+		if scope, ok := v.Scope.(*pb.ConfigVar_Application); ok {
+			app = scope.Application.Application
+		}
+
 		table.Rich([]string{
-			v.App,
+			app,
 			v.Name,
 			v.Value,
 		}, []tablewriter.Colors{

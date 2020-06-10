@@ -43,11 +43,25 @@ func (c *ConfigSetCommand) Run(args []string) int {
 			return 1
 		}
 
-		req.Variables = append(req.Variables, &pb.ConfigVar{
-			App:   c.app,
+		configVar := &pb.ConfigVar{
 			Name:  arg[:idx],
 			Value: arg[idx+1:],
-		})
+		}
+
+		if c.app == "" {
+			configVar.Scope = &pb.ConfigVar_Project{
+				Project: c.project.Ref(),
+			}
+		} else {
+			configVar.Scope = &pb.ConfigVar_Application{
+				Application: &pb.Ref_Application{
+					Project:     c.project.Ref().Project,
+					Application: c.app,
+				},
+			}
+		}
+
+		req.Variables = append(req.Variables, configVar)
 	}
 
 	_, err := client.SetConfig(c.Ctx, &req)
