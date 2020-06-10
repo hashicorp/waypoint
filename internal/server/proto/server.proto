@@ -233,6 +233,7 @@ message ListBuildsResponse {
 
 message GetLatestBuildRequest {
   Ref.Application application = 1;
+  Ref.Workspace workspace = 2;
 }
 
 // Build represents a process of creating an artifact that can be in any state,
@@ -290,6 +291,9 @@ message UpsertPushedArtifactResponse {
 message GetLatestPushedArtifactRequest {
   // application that this belongs to
   Ref.Application application = 1;
+
+  // workspace for the artifact, any workspace if empty
+  Ref.Workspace workspace = 2;
 }
 
 message ListPushedArtifactsRequest {

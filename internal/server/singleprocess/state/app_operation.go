@@ -176,7 +176,11 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 }
 
 // Latest gets the latest operation that was completed successfully.
-func (op *appOperation) Latest(s *State, ref *pb.Ref_Application) (interface{}, error) {
+func (op *appOperation) Latest(
+	s *State,
+	ref *pb.Ref_Application,
+	ws *pb.Ref_Workspace,
+) (interface{}, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -200,6 +204,11 @@ func (op *appOperation) Latest(s *State, ref *pb.Ref_Application) (interface{}, 
 		record := raw.(*operationIndexRecord)
 		if !record.MatchRef(ref) {
 			return nil, nil
+		}
+
+		// If our workspace doesn't match then continue to the next result.
+		if ws != nil && record.Workspace != ws.Workspace {
+			continue
 		}
 
 		v, err := op.Get(s, record.Id)

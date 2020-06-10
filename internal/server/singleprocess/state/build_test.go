@@ -78,7 +78,7 @@ func TestBuild(t *testing.T) {
 		}
 
 		// Get the latest
-		b, err := s.BuildLatest(ref)
+		b, err := s.BuildLatest(ref, nil)
 		require.NoError(err)
 		require.Equal(strconv.FormatInt(latest.Unix(), 10), b.Id)
 
@@ -126,7 +126,7 @@ func TestBuild(t *testing.T) {
 		})))
 
 		// Get the latest
-		b, err := s.BuildLatest(ref)
+		b, err := s.BuildLatest(ref, nil)
 		require.NoError(err)
 		require.Nil(b)
 	})

@@ -46,8 +46,11 @@ func (s *State) BuildList(
 }
 
 // BuildLatest gets the latest build that was completed successfully.
-func (s *State) BuildLatest(ref *pb.Ref_Application) (*pb.Build, error) {
-	result, err := buildOp.Latest(s, ref)
+func (s *State) BuildLatest(
+	ref *pb.Ref_Application,
+	ws *pb.Ref_Workspace,
+) (*pb.Build, error) {
+	result, err := buildOp.Latest(s, ref, ws)
 	if result == nil || err != nil {
 		return nil, err
 	}

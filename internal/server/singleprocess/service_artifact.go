@@ -58,5 +58,5 @@ func (s *service) GetLatestPushedArtifact(
 	ctx context.Context,
 	req *pb.GetLatestPushedArtifactRequest,
 ) (*pb.PushedArtifact, error) {
-	return s.state.ArtifactLatest(req.Application)
+	return s.state.ArtifactLatest(req.Application, req.Workspace)
 }

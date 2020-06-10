@@ -55,5 +55,5 @@ func (s *service) GetLatestBuild(
 	ctx context.Context,
 	req *pb.GetLatestBuildRequest,
 ) (*pb.Build, error) {
-	return s.state.BuildLatest(req.Application)
+	return s.state.BuildLatest(req.Application, req.Workspace)
 }

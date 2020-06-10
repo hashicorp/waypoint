@@ -46,8 +46,11 @@ func (s *State) ArtifactList(
 }
 
 // ArtifactLatest gets the latest artifact that was completed successfully.
-func (s *State) ArtifactLatest(ref *pb.Ref_Application) (*pb.PushedArtifact, error) {
-	result, err := artifactOp.Latest(s, ref)
+func (s *State) ArtifactLatest(
+	ref *pb.Ref_Application,
+	ws *pb.Ref_Workspace,
+) (*pb.PushedArtifact, error) {
+	result, err := artifactOp.Latest(s, ref, ws)
 	if result == nil || err != nil {
 		return nil, err
 	}

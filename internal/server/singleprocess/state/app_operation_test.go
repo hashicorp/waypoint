@@ -88,7 +88,7 @@ func TestAppOperation(t *testing.T) {
 		}
 
 		// Get the latest
-		raw, err := op.Latest(s, ref)
+		raw, err := op.Latest(s, ref, nil)
 		require.NoError(err)
 		b := raw.(*pb.Build)
 		require.Equal(strconv.FormatInt(latest.Unix(), 10), b.Id)
@@ -140,7 +140,7 @@ func TestAppOperation(t *testing.T) {
 		})))
 
 		// Get the latest
-		b, err := op.Latest(s, ref)
+		b, err := op.Latest(s, ref, nil)
 		require.NoError(err)
 		require.Nil(b)
 	})
