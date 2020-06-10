@@ -65,8 +65,14 @@ func (s *State) configSet(
 
 	// Get the global bucket and write the value to it.
 	b := dbTxn.Bucket(configBucket)
-	if err := dbPut(b, id, value); err != nil {
-		return err
+	if value.Value == "" {
+		if err := b.Delete(id); err != nil {
+			return err
+		}
+	} else {
+		if err := dbPut(b, id, value); err != nil {
+			return err
+		}
 	}
 
 	// Create our index value and write that.
@@ -203,12 +209,20 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 		panic("unknown scope")
 	}
 
-	return txn.Insert(configIndexTableName, &configIndexRecord{
+	record := &configIndexRecord{
 		Id:          string(id),
 		Project:     project,
 		Application: application,
 		Name:        value.Name,
-	})
+	}
+
+	// If we have no value, we delete from the memdb index
+	if value.Value == "" {
+		return txn.Delete(configIndexTableName, record)
+	}
+
+	// Insert the index
+	return txn.Insert(configIndexTableName, record)
 }
 
 // configIndexInit initializes the config index from persisted data.

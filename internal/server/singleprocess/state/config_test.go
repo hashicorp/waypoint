@@ -141,4 +141,61 @@ func TestConfig(t *testing.T) {
 			require.Len(vs, 3)
 		}
 	})
+
+	t.Run("delete", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a var
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "foo",
+			Value: "bar",
+		}))
+
+		{
+			// Get it exactly
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		// Delete it
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name: "foo",
+		}))
+
+		// Should not exist
+		{
+			// Get it exactly
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 0)
+		}
+	})
 }
