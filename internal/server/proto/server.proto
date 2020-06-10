@@ -242,7 +242,7 @@ message Build {
   // The application that this build is part of.
   Ref.Application application = 6;
 
-  // The workspace that this build is in.
+  // The workspace that this exists in
   Ref.Workspace workspace = 7;
 
   // id is the unique ID of the build
@@ -321,7 +321,7 @@ message PushedArtifact {
   // application that this belongs to
   Ref.Application application = 7;
 
-  // The workspace that this build is in.
+  // The workspace that this exists in
   Ref.Workspace workspace = 8;
 
   // id is a unique ID for this push
@@ -392,7 +392,7 @@ message Deployment {
   // application that this deployment belongs to
   Ref.Application application = 8;
 
-  // The workspace that this build is in.
+  // The workspace that this exists in
   Ref.Workspace workspace = 9;
 
   // id is the unique ID for this deployment
@@ -448,7 +448,7 @@ message Release {
   // application that this deployment belongs to
   Ref.Application application = 7;
 
-  // The workspace that this build is in.
+  // The workspace that this exists in
   Ref.Workspace workspace = 8;
 
   // id is the unique ID for this release.
