@@ -35,7 +35,6 @@ func TestServiceBuild(t *testing.T) {
 		require.NotNil(resp)
 		result := resp.Build
 		require.NotEmpty(result.Id)
-		require.Nil(result.Status)
 
 		// Let's write some data
 		result.Status = server.NewStatus(pb.Status_RUNNING)

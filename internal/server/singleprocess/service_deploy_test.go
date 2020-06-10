@@ -35,7 +35,6 @@ func TestServiceDeployment(t *testing.T) {
 		require.NotNil(resp)
 		result := resp.Deployment
 		require.NotEmpty(result.Id)
-		require.Nil(result.Status)
 
 		// Let's write some data
 		result.Status = server.NewStatus(pb.Status_RUNNING)
