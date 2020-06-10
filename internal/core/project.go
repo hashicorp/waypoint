@@ -134,6 +134,11 @@ func (p *Project) Client() pb.WaypointClient {
 	return p.client
 }
 
+// Ref returns the project ref for API calls.
+func (p *Project) Ref() *pb.Ref_Project {
+	return &pb.Ref_Project{Project: p.name}
+}
+
 // Close is called to clean up resources allocated by the project.
 // This should be called and blocked on to gracefully stop the project.
 func (p *Project) Close() error {
