@@ -73,8 +73,5 @@ func testDB(t testing.T) *bolt.DB {
 	require.NoError(t, err)
 	t.Cleanup(func() { db.Close() })
 
-	// Init
-	require.NoError(t, dbInit(db))
-
 	return db
 }

@@ -11,9 +11,6 @@ import (
 
 // service implements the gRPC service for the server.
 type service struct {
-	// db is the persisted on-disk database used for historical data
-	db *bolt.DB
-
 	// state is the state management interface that provides functions for
 	// safely mutating server state.
 	state *state.State
@@ -22,18 +19,13 @@ type service struct {
 // New returns a devflow server implementation that uses BotlDB plus
 // in-memory locks to operate safely.
 func New(db *bolt.DB) (pb.WaypointServer, error) {
-	// Initialize our DB
-	if err := dbInit(db); err != nil {
-		return nil, err
-	}
-
 	// Initialize our state
 	st, err := state.New(db)
 	if err != nil {
 		return nil, err
 	}
 
-	return &service{db: db, state: st}, nil
+	return &service{state: st}, nil
 }
 
 var _ pb.WaypointServer = (*service)(nil)
