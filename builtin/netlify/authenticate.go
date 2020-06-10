@@ -4,8 +4,11 @@ import (
 	"context"
 	fmt "fmt"
 
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/go-hclog"
 	netlify "github.com/netlify/open-api/go/porcelain"
+	netlifyContext "github.com/netlify/open-api/go/porcelain/context"
 	"github.com/skratchdot/open-golang/open"
 )
 
@@ -15,8 +18,34 @@ const (
 	netlifyUI = "https://app.netlify.com"
 )
 
+// credentials returns a ClientAuthInfoWriter that
+// applies the API token to the authentication header if it
+// exists
+func credentials(token string) runtime.ClientAuthInfoWriter {
+	return runtime.ClientAuthInfoWriterFunc(func(r runtime.ClientRequest, _ strfmt.Registry) error {
+		// todo(pearkes): use a proper user agent
+		r.SetHeaderParam("User-Agent", "wp")
+		if token != "" {
+			r.SetHeaderParam("Authorization", "Bearer "+token)
+		}
+		return nil
+	})
+}
+
+// apiContext returns context.Context suitable for Netlify
+// API operations. If an access token is blank it will return
+// an unauthenticated context
+func apiContext(accessToken string) context.Context {
+	ctx := context.Background()
+
+	ctx = netlifyContext.WithAuthInfo(ctx, credentials(accessToken))
+
+	return ctx
+}
+
 // Authenticate makes API calls and user interactions appropriate to create
 // and return an API access token
+// todo(pearkes): use Authenticator when it exists
 func Authenticate(
 	ctx context.Context,
 	log hclog.Logger,

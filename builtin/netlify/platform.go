@@ -2,13 +2,13 @@ package netlify
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/go-openapi/runtime"
-	"github.com/go-openapi/strfmt"
 	"github.com/hashicorp/go-hclog"
+	"github.com/netlify/open-api/go/models"
+	"github.com/netlify/open-api/go/plumbing/operations"
 	netlify "github.com/netlify/open-api/go/porcelain"
-	netlifyContext "github.com/netlify/open-api/go/porcelain/context"
 
 	"github.com/hashicorp/waypoint/builtin/files"
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -31,25 +31,6 @@ func (p *Platform) DeployFunc() interface{} {
 	return p.Deploy
 }
 
-// netlifyContext returns context.Context suitable for Netlify
-// API operations. If an access token is blank it will return
-// an unauthenticated context
-func (p *Platform) apiContext(accessToken string) context.Context {
-	ctx := context.Background()
-
-	apiAuthInfo := func(accessToken string) runtime.ClientAuthInfoWriter {
-		return runtime.ClientAuthInfoWriterFunc(func(r runtime.ClientRequest, _ strfmt.Registry) error {
-			r.SetHeaderParam("User-Agent", "wp-dev")
-			if accessToken != "" {
-				r.SetHeaderParam("Authorization", "Bearer "+accessToken)
-			}
-			return nil
-		})
-	}
-
-	return netlifyContext.WithAuthInfo(ctx, apiAuthInfo(accessToken))
-}
-
 // Deploy deploys a set of files to netlify
 func (p *Platform) Deploy(
 	ctx context.Context,
@@ -62,7 +43,7 @@ func (p *Platform) Deploy(
 ) (*Deployment, error) {
 	deployment := &Deployment{}
 	client := netlify.Default
-	clientContext := p.apiContext("")
+	clientContext := apiContext("")
 
 	// We'll update the user in realtime
 	st := ui.Status()
@@ -72,47 +53,84 @@ func (p *Platform) Deploy(
 	token := p.config.AccessToken
 	if token == "" {
 		st.Update("Logging into your Netlify account")
-		token, err := Authenticate(clientContext, log)
+		auth, err := Authenticate(clientContext, log)
+		token = auth
 
 		if err != nil {
 			return nil, err
 		}
-
-		_ = token
 	}
 
 	// Setup a new authenticated context
-	clientContext = p.apiContext(token)
+	clientContext = apiContext(token)
+	log.Trace("have token", "token id", token)
 
 	st.Update("Setting up deploy")
 
 	// Default siteID to the app name, unless provided
-	siteID := src.App
-	if p.config.SiteID != "" {
-		siteID = p.config.SiteID
+	siteName := src.App
+	if p.config.SiteName != "" {
+		siteName = p.config.SiteName
 	}
 
+	siteSetup := &models.SiteSetup{
+		Site: *&models.Site{
+			Name: siteName,
+		},
+	}
+
+	listParams := operations.NewListSitesParams()
+	listParams.Name = &siteName
+	sites, err := client.ListSites(clientContext, listParams)
+	if err != nil {
+		return nil, err
+	}
+
+	site := &models.Site{}
+
+	switch len(sites) {
+	case 0:
+		log.Trace("site does not exist, creating site", "site name", siteName)
+		st.Update("Creating site")
+		site, err := client.CreateSite(clientContext, siteSetup, false)
+		if err != nil {
+			return nil, err
+		}
+
+		_ = site
+	case 1:
+		site = sites[0]
+		if site.Name != siteName {
+			return nil, fmt.Errorf("site returned does not match")
+		}
+		log.Trace("found site", "site id", site.ID)
+	default:
+		return nil, fmt.Errorf("incorrect sites returned from netlify")
+	}
+
+	deployment.SiteId = site.ID
 	deployOptions := netlify.DeployOptions{
 		IsDraft: true,
 		Dir:     files.Path,
-		SiteID:  siteID,
+		SiteID:  site.ID,
 	}
 
-	log.Trace("deploying site", "site id", siteID)
+	log.Trace("deploying site", "site id", site.ID)
 	st.Update("Deploying site")
-	deploy, err := client.DeploySite(ctx, deployOptions)
+	deploy, err := client.DeploySite(clientContext, deployOptions)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Trace("waiting for deploying to become ready", "site id", siteID)
+	log.Trace("waiting for deploying to become ready", "site id", site.ID)
 	st.Update("Waiting for deploy to be ready")
-	deploy, err = client.WaitUntilDeployReady(ctx, deploy, 10*time.Minute)
+	deploy, err = client.WaitUntilDeployReady(clientContext, deploy, 10*time.Minute)
 	if err != nil {
 		return nil, err
 	}
 
-	deployment.Url = deploy.URL
+	deployment.Url = deploy.DeploySslURL
+	log.Trace("url available", "url", deploy.DeploySslURL)
 
 	return deployment, nil
 }
@@ -121,6 +139,9 @@ func (p *Platform) Deploy(
 type Config struct {
 	// SiteID is the site to deploy to
 	SiteID string `hcl:"site_id,optional"`
+	// SiteName is the name of the site we create. Defaults
+	// to the application.
+	SiteName string `hcl:"site_name,optional"`
 	// AccessToken is the access token to use, will
 	// prompt oauth exchange if not specified
 	AccessToken string `hcl:"access_token,optional"`
