@@ -127,5 +127,18 @@ func TestConfig(t *testing.T) {
 			require.Equal("hello", vs[1].Name)
 			require.Equal("app", vs[1].Value)
 		}
+
+		{
+			// Get project scoped variables. This should return everything.
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{
+						Project: "foo",
+					},
+				},
+			})
+			require.NoError(err)
+			require.Len(vs, 3)
+		}
 	})
 }
