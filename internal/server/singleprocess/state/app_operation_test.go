@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func TestAppOperation(t *testing.T) {
@@ -27,13 +28,9 @@ func TestAppOperation(t *testing.T) {
 		defer s.Close()
 
 		// Create a build
-		require.NoError(op.Put(s, false, &pb.Build{
+		require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id: "A",
-			Application: &pb.Ref_Application{
-				Application: "a_test",
-				Project:     "p_test",
-			},
-		}))
+		})))
 
 		// Read it back
 		raw, err := op.Get(s, "A")
@@ -65,12 +62,12 @@ func TestAppOperation(t *testing.T) {
 		rand.Shuffle(len(times), func(i, j int) { times[i], times[j] = times[j], times[i] })
 
 		// Create a build for each time
-		for _, t := range times {
-			pt, err := ptypes.TimestampProto(t)
+		for _, timeVal := range times {
+			pt, err := ptypes.TimestampProto(timeVal)
 			require.NoError(err)
 
-			require.NoError(op.Put(s, false, &pb.Build{
-				Id: strconv.FormatInt(t.Unix(), 10),
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: strconv.FormatInt(timeVal.Unix(), 10),
 				Application: &pb.Ref_Application{
 					Application: "a_test",
 					Project:     "p_test",
@@ -81,7 +78,7 @@ func TestAppOperation(t *testing.T) {
 					StartTime:    pt,
 					CompleteTime: pt,
 				},
-			}))
+			})))
 		}
 
 		ref := &pb.Ref_Application{
@@ -132,14 +129,14 @@ func TestAppOperation(t *testing.T) {
 		pt, err := ptypes.TimestampProto(ts)
 		require.NoError(err)
 
-		require.NoError(op.Put(s, false, &pb.Build{
+		require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 			Id:          strconv.FormatInt(ts.Unix(), 10),
 			Application: ref,
 			Status: &pb.Status{
 				State:     pb.Status_RUNNING,
 				StartTime: pt,
 			},
-		}))
+		})))
 
 		// Get the latest
 		b, err := op.Latest(s, ref)
@@ -163,42 +160,42 @@ func TestAppOperation(t *testing.T) {
 			pt, err := ptypes.TimestampProto(ts)
 			require.NoError(err)
 
-			require.NoError(op.Put(s, false, &pb.Build{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "A",
 				Application: ref,
 				Status: &pb.Status{
 					State:     pb.Status_RUNNING,
 					StartTime: pt,
 				},
-			}))
+			})))
 		}
 		{
 			ts := time.Now().Add(6 * time.Hour)
 			pt, err := ptypes.TimestampProto(ts)
 			require.NoError(err)
 
-			require.NoError(op.Put(s, false, &pb.Build{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "B",
 				Application: ref,
 				Status: &pb.Status{
 					State:     pb.Status_ERROR,
 					StartTime: pt,
 				},
-			}))
+			})))
 		}
 		{
 			ts := time.Now().Add(7 * time.Hour)
 			pt, err := ptypes.TimestampProto(ts)
 			require.NoError(err)
 
-			require.NoError(op.Put(s, false, &pb.Build{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
 				Id:          "C",
 				Application: ref,
 				Status: &pb.Status{
 					State:     pb.Status_ERROR,
 					StartTime: pt,
 				},
-			}))
+			})))
 		}
 
 		// List with a filter

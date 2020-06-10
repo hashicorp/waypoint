@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func TestServiceDeployment(t *testing.T) {
@@ -23,17 +24,12 @@ func TestServiceDeployment(t *testing.T) {
 	// Simplify writing tests
 	type Req = pb.UpsertDeploymentRequest
 
-	ref := &pb.Ref_Application{
-		Application: "a_test",
-		Project:     "p_test",
-	}
-
 	t.Run("create and update", func(t *testing.T) {
 		require := require.New(t)
 
 		// Create, should get an ID back
 		resp, err := client.UpsertDeployment(ctx, &Req{
-			Deployment: &pb.Deployment{Application: ref},
+			Deployment: serverptypes.TestValidDeployment(t, nil),
 		})
 		require.NoError(err)
 		require.NotNil(resp)
@@ -58,10 +54,9 @@ func TestServiceDeployment(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertDeployment(ctx, &Req{
-			Deployment: &pb.Deployment{
-				Application: ref,
-				Id:          "nope",
-			},
+			Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+				Id: "nope",
+			}),
 		})
 		require.Error(err)
 		require.Nil(resp)
@@ -80,16 +75,9 @@ func TestServiceDeployment_GetDeployment(t *testing.T) {
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
-	ref := &pb.Ref_Application{
-		Application: "a_test",
-		Project:     "p_test",
-	}
-
 	// Best way to mock for now is to make a request
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: &pb.Deployment{
-			Application: ref,
-		},
+		Deployment: serverptypes.TestValidDeployment(t, nil),
 	})
 
 	require.NoError(t, err)

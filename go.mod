@@ -26,7 +26,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.3.0
 	github.com/hashicorp/horizon v0.0.0-20200529210319-3ee3f485d2ca
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
-	github.com/imdario/mergo v0.3.8 // indirect
+	github.com/imdario/mergo v0.3.8
 	github.com/kr/text v0.1.0
 	github.com/mattn/go-colorable v0.1.6
 	github.com/mattn/go-isatty v0.0.12

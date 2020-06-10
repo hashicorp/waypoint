@@ -227,7 +227,19 @@ func (op *appOperation) dbPut(
 ) error {
 	// Get our application and ensure it is created
 	appRef := op.valueField(value, "Application").(*pb.Ref_Application)
+	if appRef == nil {
+		return status.Errorf(codes.Internal, "state: Application must be set on value %T", value)
+	}
 	if err := s.appCreateIfNotExist(tx, s.appDefaultForRef(appRef)); err != nil {
+		return err
+	}
+
+	// Get our workspace reference and ensure it is created
+	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
+	if wsRef == nil {
+		return status.Errorf(codes.Internal, "state: Workspace must be set on value %T", value)
+	}
+	if err := s.workspaceCreateIfNotExist(tx, s.workspaceDefaultForRef(wsRef)); err != nil {
 		return err
 	}
 

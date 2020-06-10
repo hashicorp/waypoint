@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func TestServiceBuild(t *testing.T) {
@@ -23,17 +24,12 @@ func TestServiceBuild(t *testing.T) {
 	// Simplify writing tests
 	type Req = pb.UpsertBuildRequest
 
-	ref := &pb.Ref_Application{
-		Application: "a_test",
-		Project:     "p_test",
-	}
-
 	t.Run("create and update", func(t *testing.T) {
 		require := require.New(t)
 
 		// Create, should get an ID back
 		resp, err := client.UpsertBuild(ctx, &Req{
-			Build: &pb.Build{Application: ref},
+			Build: serverptypes.TestValidBuild(t, nil),
 		})
 		require.NoError(err)
 		require.NotNil(resp)
@@ -58,7 +54,7 @@ func TestServiceBuild(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertBuild(ctx, &Req{
-			Build: &pb.Build{Id: "nope", Application: ref},
+			Build: serverptypes.TestValidBuild(t, &pb.Build{Id: "nope"}),
 		})
 		require.Error(err)
 		require.Nil(resp)
