@@ -31,7 +31,6 @@ require (
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.0.0
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-linereader v0.0.0-20190213213312-1b945b3263eb
 	github.com/mitchellh/go-testing-interface v1.14.0
 	github.com/mitchellh/mapstructure v1.1.2
