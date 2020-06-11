@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
@@ -14,14 +15,19 @@ import (
 func clientset(kubeconfig, context string) (*kubernetes.Clientset, string, error) {
 	// Path to the kube config file
 	if kubeconfig == "" {
-		dir, err := homedir.Dir()
-		if err != nil {
-			return nil, "", status.Errorf(codes.Aborted,
-				"failed to load home directory: %s",
-				err)
-		}
+		path := os.Getenv("KUBECONFIG")
+		if path != "" {
+			kubeconfig = path
+		} else {
+			dir, err := homedir.Dir()
+			if err != nil {
+				return nil, "", status.Errorf(codes.Aborted,
+					"failed to load home directory: %s",
+					err)
+			}
 
-		kubeconfig = filepath.Join(dir, ".kube", "config")
+			kubeconfig = filepath.Join(dir, ".kube", "config")
+		}
 	}
 
 	// Build our config and client

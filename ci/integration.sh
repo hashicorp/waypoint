@@ -8,6 +8,8 @@ WP="$(pwd)/waypoint"
 
 test -e "$WP"
 
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
 cd ci/sinatra || exit 1
 
 "$WP" build
