@@ -20,6 +20,9 @@ cd ci/sinatra || exit 1
 
 "$WP" release
 
+## Let things get going.
+sleep 10
+
 PORT=$(kubectl get service sinatra -o jsonpath="{.spec.ports[0].nodePort}")
 
 test "$(curl -s "localhost:$PORT")" = "Welcome to Waypoint!"
