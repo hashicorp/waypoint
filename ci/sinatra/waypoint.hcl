@@ -10,6 +10,7 @@ app "sinatra" {
   }
   
   deploy "kubernetes" {
+    probe_path = "/"
   }
 
   release "kubernetes" {

@@ -87,7 +87,7 @@ func (p *Platform) Deploy(
 
 	// Build our env vars
 	env := []corev1.EnvVar{
-		corev1.EnvVar{
+		{
 			Name:  "PORT",
 			Value: "3000",
 		},
@@ -127,6 +127,7 @@ func (p *Platform) Deploy(
 						},
 					},
 					InitialDelaySeconds: 5,
+					TimeoutSeconds:      5,
 					FailureThreshold:    5,
 				},
 				ReadinessProbe: &corev1.Probe{
@@ -136,11 +137,39 @@ func (p *Platform) Deploy(
 						},
 					},
 					InitialDelaySeconds: 5,
+					TimeoutSeconds:      5,
 				},
 				Env: env,
 			},
 		},
 	}
+
+	// Override the default TCP socket checks if we have a probe path
+	if p.config.ProbePath != "" {
+		deployment.Spec.Template.Spec.Containers[0].LivenessProbe = &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: p.config.ProbePath,
+					Port: intstr.FromInt(3000),
+				},
+			},
+			InitialDelaySeconds: 5,
+			TimeoutSeconds:      5,
+			FailureThreshold:    5,
+		}
+
+		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe = &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: p.config.ProbePath,
+					Port: intstr.FromInt(3000),
+				},
+			},
+			InitialDelaySeconds: 5,
+			TimeoutSeconds:      5,
+		}
+	}
+
 	if deployment.Spec.Template.Annotations == nil {
 		deployment.Spec.Template.Annotations = make(map[string]string)
 	}
@@ -173,9 +202,9 @@ func (p *Platform) Deploy(
 		if time.Since(lastStatus) > 10*time.Second {
 			st.Update(fmt.Sprintf(
 				"Waiting on deployment to become available: %d/%d/%d",
-				dep.Status.Replicas,
-				dep.Status.AvailableReplicas,
+				*dep.Spec.Replicas,
 				dep.Status.UnavailableReplicas,
+				dep.Status.AvailableReplicas,
 			))
 			lastStatus = time.Now()
 		}
@@ -224,6 +253,11 @@ type Config struct {
 	Context string `hcl:"context,optional"`
 
 	Count int32 `hcl:"replicas,optional"`
+
+	// If set, this is the HTTP path to request to test that the application
+	// is up and running. Without this, we only test that a connection can be
+	// made to the port.
+	ProbePath string `hcl:"probe_path,optional"`
 }
 
 var (
