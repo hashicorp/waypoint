@@ -255,6 +255,10 @@ workflows:
       - dev-build
       - go-test
 
+  integration:
+    jobs:
+      - integration
+
   # website:
   #   jobs:
   #     - build-website-docker-image:
