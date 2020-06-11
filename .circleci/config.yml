@@ -136,6 +136,26 @@ jobs:
           paths:
             - waypoint
 
+  integration:
+    machine:
+      image: circleci/classic:201808-01
+
+    steps:
+      - checkout
+      - run:
+          name: Setup k3s
+          command: |
+            curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik --write-kubeconfig-mode 664" sh -
+            sleep 5
+      - run:
+          name: Get k3s nodes
+          command: |
+            kubectl get node
+      - run:
+          name: Execute Integration Tests
+          command: ./ci/integration.sh
+
+
   # todo: re-enable when we need a UI
   #
   # build frontend yarn cache
