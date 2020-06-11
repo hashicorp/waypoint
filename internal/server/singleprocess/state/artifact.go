@@ -2,6 +2,8 @@ package state
 
 import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var artifactOp = &appOperation{
@@ -51,8 +53,12 @@ func (s *State) ArtifactLatest(
 	ws *pb.Ref_Workspace,
 ) (*pb.PushedArtifact, error) {
 	result, err := artifactOp.Latest(s, ref, ws)
-	if result == nil || err != nil {
+	if err != nil {
 		return nil, err
+	}
+
+	if result == nil {
+		return nil, status.Error(codes.NotFound, "no artifacts available")
 	}
 
 	return result.(*pb.PushedArtifact), nil
