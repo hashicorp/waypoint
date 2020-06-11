@@ -68,7 +68,8 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 	err = c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
 		// Get the latest deployment
 		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Workspace: c.project.WorkspaceRef(),
+			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
 			Order: &pb.OperationOrder{
 				Limit: 2,
 				Order: pb.OperationOrder_COMPLETE_TIME,
