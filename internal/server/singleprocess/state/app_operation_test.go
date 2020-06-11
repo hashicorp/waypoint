@@ -115,7 +115,7 @@ func TestAppOperation(t *testing.T) {
 		}
 	})
 
-	t.Run("latest nil if none are completed", func(t *testing.T) {
+	t.Run("returns error if none are completed", func(t *testing.T) {
 		require := require.New(t)
 
 		s := TestState(t)
@@ -141,7 +141,7 @@ func TestAppOperation(t *testing.T) {
 
 		// Get the latest
 		b, err := op.Latest(s, ref, nil)
-		require.NoError(err)
+		require.Error(err)
 		require.Nil(b)
 	})
 

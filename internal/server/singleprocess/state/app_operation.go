@@ -198,12 +198,12 @@ func (op *appOperation) Latest(
 	for {
 		raw := iter.Next()
 		if raw == nil {
-			return nil, nil
+			break
 		}
 
 		record := raw.(*operationIndexRecord)
 		if !record.MatchRef(ref) {
-			return nil, nil
+			break
 		}
 
 		// If our workspace doesn't match then continue to the next result.
@@ -219,7 +219,7 @@ func (op *appOperation) Latest(
 		// Shouldn't happen but if it does, return nothing.
 		st := op.valueField(v, "Status")
 		if st == nil {
-			return nil, nil
+			break
 		}
 
 		// State must be success.
@@ -228,6 +228,8 @@ func (op *appOperation) Latest(
 			return v, nil
 		}
 	}
+
+	return nil, status.Error(codes.NotFound, "none available")
 }
 
 // dbPut wites the value to the database and also sets up any index records.
