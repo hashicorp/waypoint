@@ -259,6 +259,7 @@ workflows:
 
   integration:
     jobs:
+      - dev-build
       - integration:
           requires:
             - dev-build
