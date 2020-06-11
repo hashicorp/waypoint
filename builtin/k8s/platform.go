@@ -99,6 +99,9 @@ func (p *Platform) Deploy(
 		})
 	}
 
+	// If no count is specified, presume that the user is managing the replica
+	// count some other way (perhaps manual scaling, perhaps a pod autoscaler).
+	// Either way if they don't specify a count, we should be sure we don't send one.
 	if p.config.Count > 0 {
 		deployment.Spec.Replicas = &p.config.Count
 	}
