@@ -92,12 +92,11 @@ func (p *Platform) Deploy(
 	case 0:
 		log.Trace("site does not exist, creating site", "site name", siteName)
 		st.Update("Creating site")
-		site, err := client.CreateSite(clientContext, siteSetup, false)
+		createdSite, err := client.CreateSite(clientContext, siteSetup, false)
+		site = createdSite
 		if err != nil {
 			return nil, err
 		}
-
-		_ = site
 	case 1:
 		site = sites[0]
 		if site.Name != siteName {
@@ -118,8 +117,9 @@ func (p *Platform) Deploy(
 	log.Trace("deploying site", "site id", site.ID)
 	st.Update("Deploying site")
 	deploy, err := client.DeploySite(clientContext, deployOptions)
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error deploying site: %s", err)
 	}
 
 	log.Trace("waiting for deploying to become ready", "site id", site.ID)
@@ -131,6 +131,7 @@ func (p *Platform) Deploy(
 
 	deployment.Url = deploy.DeploySslURL
 	log.Trace("url available", "url", deploy.DeploySslURL)
+	ui.Output("\nURL: %s", deployment.Url, terminal.WithSuccessStyle())
 
 	return deployment, nil
 }

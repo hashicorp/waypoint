@@ -38,8 +38,6 @@ func (r *Registry) Push(
 	}
 
 	dst := path.Join(r.config.Path, files.Path, dstID.String())
-	ui.Output("Copying from", files.Path)
-	ui.Output("Copying to", dst)
 
 	err = copy.CopyDir(files.Path, dst)
 
