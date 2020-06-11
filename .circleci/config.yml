@@ -152,7 +152,7 @@ jobs:
           command: |
             kubectl get node
       - attach_workspace:
-          at: /go/bin
+          at: .
       - run:
           name: Execute Integration Tests
           command: ./ci/integration.sh

@@ -4,7 +4,7 @@ set -e -u -o pipefail
 
 set -x
 
-WP="/go/bin/waypoint"
+WP="$(pwd)/waypoint"
 
 test -e "$WP"
 
