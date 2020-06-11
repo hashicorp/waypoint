@@ -4,17 +4,19 @@ set -e -u -o pipefail
 
 set -x
 
-go build -o ./waypoint ./cmd/waypoint
+WP="/go/bin/waypoint"
+
+test -e "$WP"
 
 cd ci/sinatra || exit 1
 
-../../waypoint build
+"$WP" build
 
-../../waypoint push
+"$WP" push
 
-../../waypoint deploy
+"$WP" deploy
 
-../../waypoint release
+"$WP" release
 
 PORT=$(kubectl get service sinatra -o jsonpath="{.spec.ports[0].nodePort}")
 

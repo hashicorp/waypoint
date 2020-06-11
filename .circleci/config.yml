@@ -151,6 +151,8 @@ jobs:
           name: Get k3s nodes
           command: |
             kubectl get node
+      - attach_workspace:
+          at: /go/bin
       - run:
           name: Execute Integration Tests
           command: ./ci/integration.sh
@@ -257,7 +259,9 @@ workflows:
 
   integration:
     jobs:
-      - integration
+      - integration:
+          requires:
+            - dev-build
 
   # website:
   #   jobs:
