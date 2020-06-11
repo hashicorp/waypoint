@@ -5,9 +5,8 @@ app "sinatra" {
   }
 
   registry "docker" {
-    image = "waypoint.local/sinatra"
+    image = "localhost:5000/sinatra"
     tag = "latest"
-    local = true
   }
   
   deploy "kubernetes" {
