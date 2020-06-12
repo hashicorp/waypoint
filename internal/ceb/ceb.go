@@ -75,10 +75,18 @@ func Run(ctx context.Context, os ...Option) error {
 		"args", cfg.ExecArgs,
 	)
 
-	// Initialize our server connection
-	if err := ceb.dialServer(ctx, &cfg); err != nil {
-		return status.Errorf(codes.Aborted,
-			"failed to connect to server: %s", err)
+	var useServer bool
+
+	if cfg.ServerAddr == "" {
+		ceb.logger.Info("no waypoint server configured, disabled management")
+	} else {
+		useServer = true
+
+		// Initialize our server connection
+		if err := ceb.dialServer(ctx, &cfg); err != nil {
+			return status.Errorf(codes.Aborted,
+				"failed to connect to server: %s", err)
+		}
 	}
 
 	// Initialize our command
@@ -87,16 +95,18 @@ func Run(ctx context.Context, os ...Option) error {
 			"failed to connect to server: %s", err)
 	}
 
-	// Get our configuration and start the long-running stream for it.
-	if err := ceb.initConfigStream(ctx, &cfg); err != nil {
-		return err
-	}
+	if useServer {
+		// Get our configuration and start the long-running stream for it.
+		if err := ceb.initConfigStream(ctx, &cfg); err != nil {
+			return err
+		}
 
-	// Initialize our log stream
-	// NOTE(mitchellh): at some point we want this to be configurable
-	// but for now we're just going for it.
-	if err := ceb.initLogStream(ctx, &cfg); err != nil {
-		return err
+		// Initialize our log stream
+		// NOTE(mitchellh): at some point we want this to be configurable
+		// but for now we're just going for it.
+		if err := ceb.initLogStream(ctx, &cfg); err != nil {
+			return err
+		}
 	}
 
 	if err := ceb.initURLService(ctx, &cfg); err != nil {

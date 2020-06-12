@@ -4,12 +4,12 @@ import (
 	"context"
 	"strings"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	servercomponent "github.com/hashicorp/waypoint/internal/server/component"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -34,7 +34,10 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 	c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
 		// Get the most recent pushed artifact
-		push, err := client.GetLatestPushedArtifact(ctx, &empty.Empty{})
+		push, err := client.GetLatestPushedArtifact(ctx, &pb.GetLatestPushedArtifactRequest{
+			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
+		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel

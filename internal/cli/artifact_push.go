@@ -4,11 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -30,7 +30,10 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 
 	c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
 		// Get the most recent build
-		build, err := client.GetLatestBuild(ctx, &empty.Empty{})
+		build, err := client.GetLatestBuild(ctx, &pb.GetLatestBuildRequest{
+			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
+		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel

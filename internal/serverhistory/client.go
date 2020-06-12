@@ -5,11 +5,11 @@ package serverhistory
 import (
 	"context"
 
+	"github.com/hashicorp/go-argmapper"
 	servercomponent "github.com/hashicorp/waypoint/internal/server/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/history"
-	"github.com/hashicorp/go-argmapper"
 )
 
 // Client implements history.Client and provides history using a backend server.
@@ -21,8 +21,10 @@ type Client struct {
 // Deployments implements history.Client
 func (c *Client) Deployments(ctx context.Context, cfg *history.Lookup) ([]component.Deployment, error) {
 	resp, err := c.APIClient.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-		Order:     pb.ListDeploymentsRequest_COMPLETE_TIME,
-		OrderDesc: true,
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Desc:  true,
+		},
 	})
 	if err != nil {
 		return nil, err

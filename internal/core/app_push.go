@@ -5,7 +5,6 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -31,9 +30,11 @@ type pushBuildOperation struct {
 
 func (op *pushBuildOperation) Init(app *App) (proto.Message, error) {
 	return &pb.PushedArtifact{
-		Component: app.components[app.Registry].Info,
-		Labels:    app.components[app.Registry].Labels,
-		BuildId:   op.Build.Id,
+		Application: app.ref,
+		Workspace:   app.workspace,
+		Component:   app.components[app.Registry].Info,
+		Labels:      app.components[app.Registry].Labels,
+		BuildId:     op.Build.Id,
 	}, nil
 }
 
@@ -58,7 +59,7 @@ func (op *pushBuildOperation) Do(ctx context.Context, log hclog.Logger, app *App
 		(*component.Artifact)(nil),
 		app.Registry,
 		app.Registry.PushFunc(),
-		argmapper.Named("artifact", op.Build.Artifact.Artifact),
+		argNamedAny("artifact", op.Build.Artifact.Artifact),
 	)
 }
 

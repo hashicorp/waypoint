@@ -16,6 +16,9 @@ import (
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
+// The port that a service will forward to the pod(s)
+const DefaultPort = 80
+
 // Releaser is the ReleaseManager implementation for Google Cloud Run.
 type Releaser struct {
 	config ReleaserConfig
@@ -31,7 +34,7 @@ func (r *Releaser) ReleaseFunc() interface{} {
 	return r.Release
 }
 
-// Release deploys an image to GCR.
+// Release creates a Kubernetes service configured for the deployment
 func (r *Releaser) Release(
 	ctx context.Context,
 	log hclog.Logger,
@@ -79,12 +82,32 @@ func (r *Releaser) Release(
 		"name":  deploy.Name,
 		labelId: deploy.Id,
 	}
-	service.Spec.Type = corev1.ServiceTypeLoadBalancer
+
+	var checkLB bool
+
+	if r.config.LoadBalancer {
+		service.Spec.Type = corev1.ServiceTypeLoadBalancer
+		checkLB = true
+	} else if r.config.NodePort != 0 {
+		service.Spec.Type = corev1.ServiceTypeNodePort
+		if r.config.NodePort < 0 {
+			r.config.NodePort = 0
+		}
+	} else {
+		service.Spec.Type = corev1.ServiceTypeClusterIP
+	}
+
+	port := r.config.Port
+	if port == 0 {
+		port = DefaultPort
+	}
+
 	service.Spec.Ports = []corev1.ServicePort{
-		corev1.ServicePort{
-			Port:       80,
+		{
+			Port:       int32(port),
 			TargetPort: intstr.FromString("http"),
 			Protocol:   corev1.ProtocolTCP,
+			NodePort:   int32(r.config.NodePort),
 		},
 	}
 
@@ -107,16 +130,33 @@ func (r *Releaser) Release(
 			return false, err
 		}
 
-		return len(service.Status.LoadBalancer.Ingress) > 0, nil
+		if checkLB {
+			return len(service.Status.LoadBalancer.Ingress) > 0, nil
+		} else {
+			return service.Spec.ClusterIP != "", nil
+		}
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	ingress := service.Status.LoadBalancer.Ingress[0]
-	result.Url = "http://" + ingress.IP
-	if ingress.Hostname != "" {
-		result.Url = "http://" + ingress.Hostname
+	if r.config.LoadBalancer {
+		ingress := service.Status.LoadBalancer.Ingress[0]
+		result.Url = "http://" + ingress.IP
+		if ingress.Hostname != "" {
+			result.Url = "http://" + ingress.Hostname
+		}
+	} else if service.Spec.Ports[0].NodePort > 0 {
+		nodeclient := clientset.CoreV1().Nodes()
+		nodes, err := nodeclient.List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		nodeIP := nodes.Items[0].Status.Addresses[0].Address
+		result.Url = fmt.Sprintf("http://%s:%d", nodeIP, service.Spec.Ports[0].NodePort)
+	} else {
+		result.Url = fmt.Sprintf("http://%s:%d", service.Spec.ClusterIP, service.Spec.Ports[0].Port)
 	}
 
 	return &result, nil
@@ -130,6 +170,18 @@ type ReleaserConfig struct {
 
 	// Context specifies the kube context to use.
 	Context string `hcl:"context,optional"`
+
+	// Load Balancer sets whether or not the service will be a load
+	// balancer type service
+	LoadBalancer bool `hcl:"load_balancer,optional"`
+
+	// Port configures the port that is used to access the service.
+	// The default is 80.
+	Port int `hcl:"port,optional"`
+
+	// NodePort configures a port to access the service on whichever node
+	// is running service.
+	NodePort int `hcl:"node_port,optional"`
 }
 
 var (

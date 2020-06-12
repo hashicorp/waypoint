@@ -144,6 +144,9 @@ func (c *platformClient) DeployFunc() interface{} {
 		return funcErr(err)
 	}
 
+	// We don't want to be a mapper
+	spec.Result = nil
+
 	return funcspec.Func(spec, c.deploy,
 		argmapper.Logger(c.logger),
 		argmapper.Typed(&pluginargs.Internal{

@@ -75,4 +75,5 @@ func TestValidation(t *testing.T) {
 }
 
 var testConfigValidSrc = `
+project = "test"
 `

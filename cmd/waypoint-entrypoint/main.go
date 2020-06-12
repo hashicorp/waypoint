@@ -9,6 +9,7 @@ import (
 	"unicode"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/ceb"
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
@@ -42,11 +43,19 @@ func realMain() int {
 		ceb.WithExec(args))
 	if err != nil {
 		fmt.Fprintf(flag.CommandLine.Output(),
-			"Error initializing Waypoint entrypoint: %s\n", err)
+			"Error initializing Waypoint entrypoint: %s\n", formatError(err))
 		return 1
 	}
 
 	return 0
+}
+
+func formatError(err error) string {
+	if s, ok := status.FromError(err); ok {
+		return s.Message()
+	}
+
+	return err.Error()
 }
 
 func usage() {

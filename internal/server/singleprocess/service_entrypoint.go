@@ -57,8 +57,6 @@ func (s *service) EntrypointConfig(
 		return err
 	}
 
-	name := deployment.Component.Name
-
 	// Build our config in a loop.
 	for {
 		ws := memdb.NewWatchSet()
@@ -78,7 +76,9 @@ func (s *service) EntrypointConfig(
 		}
 
 		cfgvars, err := s.GetConfig(srv.Context(), &pb.ConfigGetRequest{
-			App: name,
+			Scope: &pb.ConfigGetRequest_Application{
+				Application: deployment.Application,
+			},
 		})
 
 		if err != nil {

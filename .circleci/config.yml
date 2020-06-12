@@ -128,13 +128,38 @@ jobs:
       - attach_workspace: # this normally runs as the first job and has nothing to attach; only used in master branch after rebuilding UI
           at: .
       - run:
-          command: go install ./...
+          command: |
+            go get github.com/kevinburke/go-bindata/...
+            PATH=/go/bin:$PATH make bin
+            cp waypoint /go/bin
 
       # save dev build to pass to downstream jobs
       - persist_to_workspace:
           root: /go/bin
           paths:
             - waypoint
+
+  integration:
+    machine:
+      image: circleci/classic:201808-01
+
+    steps:
+      - checkout
+      - run:
+          name: Setup k3s
+          command: |
+            curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--docker --disable=traefik --write-kubeconfig-mode 664" sh -
+            sleep 5
+      - run:
+          name: Get k3s nodes
+          command: |
+            kubectl get node
+      - attach_workspace:
+          at: .
+      - run:
+          name: Execute Integration Tests
+          command: ./ci/integration.sh
+
 
   # todo: re-enable when we need a UI
   #
@@ -234,6 +259,13 @@ workflows:
       - lint
       - dev-build
       - go-test
+
+  integration:
+    jobs:
+      - dev-build
+      - integration:
+          requires:
+            - dev-build
 
   # website:
   #   jobs:

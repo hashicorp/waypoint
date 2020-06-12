@@ -2,12 +2,15 @@ package k8s
 
 import (
 	"context"
+	fmt "fmt"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/hashicorp/waypoint/builtin/docker"
@@ -84,7 +87,7 @@ func (p *Platform) Deploy(
 
 	// Build our env vars
 	env := []corev1.EnvVar{
-		corev1.EnvVar{
+		{
 			Name:  "PORT",
 			Value: "3000",
 		},
@@ -96,6 +99,9 @@ func (p *Platform) Deploy(
 		})
 	}
 
+	// If no count is specified, presume that the user is managing the replica
+	// count some other way (perhaps manual scaling, perhaps a pod autoscaler).
+	// Either way if they don't specify a count, we should be sure we don't send one.
 	if p.config.Count > 0 {
 		deployment.Spec.Replicas = &p.config.Count
 	}
@@ -107,36 +113,111 @@ func (p *Platform) Deploy(
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{
-			corev1.Container{
+			{
 				Name:            result.Name,
 				Image:           img.Name(),
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				Ports: []corev1.ContainerPort{
-					corev1.ContainerPort{
+					{
 						Name:          "http",
 						ContainerPort: 3000,
 					},
+				},
+				LivenessProbe: &corev1.Probe{
+					Handler: corev1.Handler{
+						TCPSocket: &corev1.TCPSocketAction{
+							Port: intstr.FromInt(3000),
+						},
+					},
+					InitialDelaySeconds: 5,
+					TimeoutSeconds:      5,
+					FailureThreshold:    5,
+				},
+				ReadinessProbe: &corev1.Probe{
+					Handler: corev1.Handler{
+						TCPSocket: &corev1.TCPSocketAction{
+							Port: intstr.FromInt(3000),
+						},
+					},
+					InitialDelaySeconds: 5,
+					TimeoutSeconds:      5,
 				},
 				Env: env,
 			},
 		},
 	}
+
+	// Override the default TCP socket checks if we have a probe path
+	if p.config.ProbePath != "" {
+		deployment.Spec.Template.Spec.Containers[0].LivenessProbe = &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: p.config.ProbePath,
+					Port: intstr.FromInt(3000),
+				},
+			},
+			InitialDelaySeconds: 5,
+			TimeoutSeconds:      5,
+			FailureThreshold:    5,
+		}
+
+		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe = &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: p.config.ProbePath,
+					Port: intstr.FromInt(3000),
+				},
+			},
+			InitialDelaySeconds: 5,
+			TimeoutSeconds:      5,
+		}
+	}
+
 	if deployment.Spec.Template.Annotations == nil {
 		deployment.Spec.Template.Annotations = make(map[string]string)
 	}
 	deployment.Spec.Template.Annotations[labelNonce] =
 		time.Now().UTC().Format(time.RFC3339Nano)
 
+	dc := clientset.AppsV1().Deployments(ns)
+
 	// Create/update
 	if create {
 		st.Update("Creating deployment...")
-		deployment, err = clientset.AppsV1().Deployments(ns).Create(
-			ctx, deployment, metav1.CreateOptions{})
+		deployment, err = dc.Create(ctx, deployment, metav1.CreateOptions{})
 	} else {
 		st.Update("Updating deployment...")
-		deployment, err = clientset.AppsV1().Deployments(ns).Update(
-			ctx, deployment, metav1.UpdateOptions{})
+		deployment, err = dc.Update(ctx, deployment, metav1.UpdateOptions{})
 	}
+	if err != nil {
+		return nil, err
+	}
+
+	var lastStatus time.Time
+
+	// Wait on the Pod to start
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		dep, err := dc.Get(ctx, src.App, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		if time.Since(lastStatus) > 10*time.Second {
+			st.Update(fmt.Sprintf(
+				"Waiting on deployment to become available: %d/%d/%d",
+				*dep.Spec.Replicas,
+				dep.Status.UnavailableReplicas,
+				dep.Status.AvailableReplicas,
+			))
+			lastStatus = time.Now()
+		}
+
+		if dep.Status.AvailableReplicas > 0 {
+			return true, nil
+		}
+
+		return false, nil
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +256,11 @@ type Config struct {
 	Context string `hcl:"context,optional"`
 
 	Count int32 `hcl:"replicas,optional"`
+
+	// If set, this is the HTTP path to request to test that the application
+	// is up and running. Without this, we only test that a connection can be
+	// made to the port.
+	ProbePath string `hcl:"probe_path,optional"`
 }
 
 var (

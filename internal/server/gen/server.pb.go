@@ -56,7 +56,7 @@ func (x Component_Type) String() string {
 }
 
 func (Component_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{0, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{4, 0}
 }
 
 type Status_State int32
@@ -87,35 +87,35 @@ func (x Status_State) String() string {
 }
 
 func (Status_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{1, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{5, 0}
 }
 
-type ListDeploymentsRequest_Order int32
+type OperationOrder_Order int32
 
 const (
-	ListDeploymentsRequest_UNSET         ListDeploymentsRequest_Order = 0
-	ListDeploymentsRequest_START_TIME    ListDeploymentsRequest_Order = 1
-	ListDeploymentsRequest_COMPLETE_TIME ListDeploymentsRequest_Order = 2
+	OperationOrder_UNSET         OperationOrder_Order = 0
+	OperationOrder_START_TIME    OperationOrder_Order = 1
+	OperationOrder_COMPLETE_TIME OperationOrder_Order = 2
 )
 
-var ListDeploymentsRequest_Order_name = map[int32]string{
+var OperationOrder_Order_name = map[int32]string{
 	0: "UNSET",
 	1: "START_TIME",
 	2: "COMPLETE_TIME",
 }
 
-var ListDeploymentsRequest_Order_value = map[string]int32{
+var OperationOrder_Order_value = map[string]int32{
 	"UNSET":         0,
 	"START_TIME":    1,
 	"COMPLETE_TIME": 2,
 }
 
-func (x ListDeploymentsRequest_Order) String() string {
-	return proto.EnumName(ListDeploymentsRequest_Order_name, int32(x))
+func (x OperationOrder_Order) String() string {
+	return proto.EnumName(OperationOrder_Order_name, int32(x))
 }
 
-func (ListDeploymentsRequest_Order) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{15, 0}
+func (OperationOrder_Order) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{7, 0}
 }
 
 type Deployment_State int32
@@ -146,7 +146,7 @@ func (x Deployment_State) String() string {
 }
 
 func (Deployment_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{17, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{26, 0}
 }
 
 type ExecStreamResponse_Output_Channel int32
@@ -174,7 +174,7 @@ func (x ExecStreamResponse_Output_Channel) String() string {
 }
 
 func (ExecStreamResponse_Output_Channel) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{24, 1, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{38, 1, 0}
 }
 
 type EntrypointExecRequest_Output_Channel int32
@@ -202,7 +202,295 @@ func (x EntrypointExecRequest_Output_Channel) String() string {
 }
 
 func (EntrypointExecRequest_Output_Channel) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{34, 2, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{43, 2, 0}
+}
+
+type Application struct {
+	Project              *Ref_Project `protobuf:"bytes,2,opt,name=project,proto3" json:"project,omitempty"`
+	Name                 string       `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *Application) Reset()         { *m = Application{} }
+func (m *Application) String() string { return proto.CompactTextString(m) }
+func (*Application) ProtoMessage()    {}
+func (*Application) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{0}
+}
+
+func (m *Application) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Application.Unmarshal(m, b)
+}
+func (m *Application) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Application.Marshal(b, m, deterministic)
+}
+func (m *Application) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Application.Merge(m, src)
+}
+func (m *Application) XXX_Size() int {
+	return xxx_messageInfo_Application.Size(m)
+}
+func (m *Application) XXX_DiscardUnknown() {
+	xxx_messageInfo_Application.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Application proto.InternalMessageInfo
+
+func (m *Application) GetProject() *Ref_Project {
+	if m != nil {
+		return m.Project
+	}
+	return nil
+}
+
+func (m *Application) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+type Project struct {
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Project) Reset()         { *m = Project{} }
+func (m *Project) String() string { return proto.CompactTextString(m) }
+func (*Project) ProtoMessage()    {}
+func (*Project) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{1}
+}
+
+func (m *Project) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Project.Unmarshal(m, b)
+}
+func (m *Project) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Project.Marshal(b, m, deterministic)
+}
+func (m *Project) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Project.Merge(m, src)
+}
+func (m *Project) XXX_Size() int {
+	return xxx_messageInfo_Project.Size(m)
+}
+func (m *Project) XXX_DiscardUnknown() {
+	xxx_messageInfo_Project.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Project proto.InternalMessageInfo
+
+func (m *Project) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+type Workspace struct {
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Workspace) Reset()         { *m = Workspace{} }
+func (m *Workspace) String() string { return proto.CompactTextString(m) }
+func (*Workspace) ProtoMessage()    {}
+func (*Workspace) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{2}
+}
+
+func (m *Workspace) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Workspace.Unmarshal(m, b)
+}
+func (m *Workspace) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Workspace.Marshal(b, m, deterministic)
+}
+func (m *Workspace) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Workspace.Merge(m, src)
+}
+func (m *Workspace) XXX_Size() int {
+	return xxx_messageInfo_Workspace.Size(m)
+}
+func (m *Workspace) XXX_DiscardUnknown() {
+	xxx_messageInfo_Workspace.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Workspace proto.InternalMessageInfo
+
+func (m *Workspace) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+// Ref contains shared messages used for references to other resources.
+//
+// Refs should be used when the full type shouldn't be embedded in the message.
+type Ref struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Ref) Reset()         { *m = Ref{} }
+func (m *Ref) String() string { return proto.CompactTextString(m) }
+func (*Ref) ProtoMessage()    {}
+func (*Ref) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{3}
+}
+
+func (m *Ref) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Ref.Unmarshal(m, b)
+}
+func (m *Ref) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Ref.Marshal(b, m, deterministic)
+}
+func (m *Ref) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Ref.Merge(m, src)
+}
+func (m *Ref) XXX_Size() int {
+	return xxx_messageInfo_Ref.Size(m)
+}
+func (m *Ref) XXX_DiscardUnknown() {
+	xxx_messageInfo_Ref.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Ref proto.InternalMessageInfo
+
+// Application references an application. To uniquely identify an
+// application, this must encapsulate the full hierarchy to the application.
+type Ref_Application struct {
+	Application          string   `protobuf:"bytes,1,opt,name=application,proto3" json:"application,omitempty"`
+	Project              string   `protobuf:"bytes,2,opt,name=project,proto3" json:"project,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Ref_Application) Reset()         { *m = Ref_Application{} }
+func (m *Ref_Application) String() string { return proto.CompactTextString(m) }
+func (*Ref_Application) ProtoMessage()    {}
+func (*Ref_Application) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{3, 0}
+}
+
+func (m *Ref_Application) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Ref_Application.Unmarshal(m, b)
+}
+func (m *Ref_Application) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Ref_Application.Marshal(b, m, deterministic)
+}
+func (m *Ref_Application) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Ref_Application.Merge(m, src)
+}
+func (m *Ref_Application) XXX_Size() int {
+	return xxx_messageInfo_Ref_Application.Size(m)
+}
+func (m *Ref_Application) XXX_DiscardUnknown() {
+	xxx_messageInfo_Ref_Application.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Ref_Application proto.InternalMessageInfo
+
+func (m *Ref_Application) GetApplication() string {
+	if m != nil {
+		return m.Application
+	}
+	return ""
+}
+
+func (m *Ref_Application) GetProject() string {
+	if m != nil {
+		return m.Project
+	}
+	return ""
+}
+
+// Project references a project.
+type Ref_Project struct {
+	Project              string   `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Ref_Project) Reset()         { *m = Ref_Project{} }
+func (m *Ref_Project) String() string { return proto.CompactTextString(m) }
+func (*Ref_Project) ProtoMessage()    {}
+func (*Ref_Project) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{3, 1}
+}
+
+func (m *Ref_Project) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Ref_Project.Unmarshal(m, b)
+}
+func (m *Ref_Project) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Ref_Project.Marshal(b, m, deterministic)
+}
+func (m *Ref_Project) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Ref_Project.Merge(m, src)
+}
+func (m *Ref_Project) XXX_Size() int {
+	return xxx_messageInfo_Ref_Project.Size(m)
+}
+func (m *Ref_Project) XXX_DiscardUnknown() {
+	xxx_messageInfo_Ref_Project.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Ref_Project proto.InternalMessageInfo
+
+func (m *Ref_Project) GetProject() string {
+	if m != nil {
+		return m.Project
+	}
+	return ""
+}
+
+// Workspace references a workspace.
+type Ref_Workspace struct {
+	Workspace            string   `protobuf:"bytes,1,opt,name=workspace,proto3" json:"workspace,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Ref_Workspace) Reset()         { *m = Ref_Workspace{} }
+func (m *Ref_Workspace) String() string { return proto.CompactTextString(m) }
+func (*Ref_Workspace) ProtoMessage()    {}
+func (*Ref_Workspace) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{3, 2}
+}
+
+func (m *Ref_Workspace) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Ref_Workspace.Unmarshal(m, b)
+}
+func (m *Ref_Workspace) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Ref_Workspace.Marshal(b, m, deterministic)
+}
+func (m *Ref_Workspace) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Ref_Workspace.Merge(m, src)
+}
+func (m *Ref_Workspace) XXX_Size() int {
+	return xxx_messageInfo_Ref_Workspace.Size(m)
+}
+func (m *Ref_Workspace) XXX_DiscardUnknown() {
+	xxx_messageInfo_Ref_Workspace.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Ref_Workspace proto.InternalMessageInfo
+
+func (m *Ref_Workspace) GetWorkspace() string {
+	if m != nil {
+		return m.Workspace
+	}
+	return ""
 }
 
 // Component represents metadata about a component. A component is the
@@ -221,7 +509,7 @@ func (m *Component) Reset()         { *m = Component{} }
 func (m *Component) String() string { return proto.CompactTextString(m) }
 func (*Component) ProtoMessage()    {}
 func (*Component) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{0}
+	return fileDescriptor_ad098daeda4239f7, []int{4}
 }
 
 func (m *Component) XXX_Unmarshal(b []byte) error {
@@ -279,7 +567,7 @@ func (m *Status) Reset()         { *m = Status{} }
 func (m *Status) String() string { return proto.CompactTextString(m) }
 func (*Status) ProtoMessage()    {}
 func (*Status) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{1}
+	return fileDescriptor_ad098daeda4239f7, []int{5}
 }
 
 func (m *Status) XXX_Unmarshal(b []byte) error {
@@ -347,7 +635,7 @@ func (m *StatusFilter) Reset()         { *m = StatusFilter{} }
 func (m *StatusFilter) String() string { return proto.CompactTextString(m) }
 func (*StatusFilter) ProtoMessage()    {}
 func (*StatusFilter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{2}
+	return fileDescriptor_ad098daeda4239f7, []int{6}
 }
 
 func (m *StatusFilter) XXX_Unmarshal(b []byte) error {
@@ -388,7 +676,7 @@ func (m *StatusFilter_Filter) Reset()         { *m = StatusFilter_Filter{} }
 func (m *StatusFilter_Filter) String() string { return proto.CompactTextString(m) }
 func (*StatusFilter_Filter) ProtoMessage()    {}
 func (*StatusFilter_Filter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{2, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{6, 0}
 }
 
 func (m *StatusFilter_Filter) XXX_Unmarshal(b []byte) error {
@@ -440,6 +728,65 @@ func (*StatusFilter_Filter) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+// OperationOrder is a shared message type used for controlling the order
+// of results in queries for app operations such as build, deploys, etc.
+type OperationOrder struct {
+	// Order for the results.
+	Order OperationOrder_Order `protobuf:"varint,2,opt,name=order,proto3,enum=hashicorp.waypoint.OperationOrder_Order" json:"order,omitempty"`
+	Desc  bool                 `protobuf:"varint,3,opt,name=desc,proto3" json:"desc,omitempty"`
+	// Limit the number of results
+	Limit                uint32   `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *OperationOrder) Reset()         { *m = OperationOrder{} }
+func (m *OperationOrder) String() string { return proto.CompactTextString(m) }
+func (*OperationOrder) ProtoMessage()    {}
+func (*OperationOrder) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{7}
+}
+
+func (m *OperationOrder) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_OperationOrder.Unmarshal(m, b)
+}
+func (m *OperationOrder) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_OperationOrder.Marshal(b, m, deterministic)
+}
+func (m *OperationOrder) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OperationOrder.Merge(m, src)
+}
+func (m *OperationOrder) XXX_Size() int {
+	return xxx_messageInfo_OperationOrder.Size(m)
+}
+func (m *OperationOrder) XXX_DiscardUnknown() {
+	xxx_messageInfo_OperationOrder.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OperationOrder proto.InternalMessageInfo
+
+func (m *OperationOrder) GetOrder() OperationOrder_Order {
+	if m != nil {
+		return m.Order
+	}
+	return OperationOrder_UNSET
+}
+
+func (m *OperationOrder) GetDesc() bool {
+	if m != nil {
+		return m.Desc
+	}
+	return false
+}
+
+func (m *OperationOrder) GetLimit() uint32 {
+	if m != nil {
+		return m.Limit
+	}
+	return 0
+}
+
 type UpsertBuildRequest struct {
 	// Build to upsert. If an ID is not set, this will be an insert operation.
 	// If the ID is set, that build is updated. It is an error if an update
@@ -454,7 +801,7 @@ func (m *UpsertBuildRequest) Reset()         { *m = UpsertBuildRequest{} }
 func (m *UpsertBuildRequest) String() string { return proto.CompactTextString(m) }
 func (*UpsertBuildRequest) ProtoMessage()    {}
 func (*UpsertBuildRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{3}
+	return fileDescriptor_ad098daeda4239f7, []int{8}
 }
 
 func (m *UpsertBuildRequest) XXX_Unmarshal(b []byte) error {
@@ -493,7 +840,7 @@ func (m *UpsertBuildResponse) Reset()         { *m = UpsertBuildResponse{} }
 func (m *UpsertBuildResponse) String() string { return proto.CompactTextString(m) }
 func (*UpsertBuildResponse) ProtoMessage()    {}
 func (*UpsertBuildResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{4}
+	return fileDescriptor_ad098daeda4239f7, []int{9}
 }
 
 func (m *UpsertBuildResponse) XXX_Unmarshal(b []byte) error {
@@ -521,6 +868,56 @@ func (m *UpsertBuildResponse) GetBuild() *Build {
 	return nil
 }
 
+type ListBuildsRequest struct {
+	// The application whose builds to list. This must be set.
+	Application *Ref_Application `protobuf:"bytes,1,opt,name=application,proto3" json:"application,omitempty"`
+	// The workspace to list builds for. If this isn't set, then all builds
+	// for the other filters are listed.
+	Workspace            *Ref_Workspace `protobuf:"bytes,2,opt,name=workspace,proto3" json:"workspace,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *ListBuildsRequest) Reset()         { *m = ListBuildsRequest{} }
+func (m *ListBuildsRequest) String() string { return proto.CompactTextString(m) }
+func (*ListBuildsRequest) ProtoMessage()    {}
+func (*ListBuildsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{10}
+}
+
+func (m *ListBuildsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListBuildsRequest.Unmarshal(m, b)
+}
+func (m *ListBuildsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListBuildsRequest.Marshal(b, m, deterministic)
+}
+func (m *ListBuildsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListBuildsRequest.Merge(m, src)
+}
+func (m *ListBuildsRequest) XXX_Size() int {
+	return xxx_messageInfo_ListBuildsRequest.Size(m)
+}
+func (m *ListBuildsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListBuildsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListBuildsRequest proto.InternalMessageInfo
+
+func (m *ListBuildsRequest) GetApplication() *Ref_Application {
+	if m != nil {
+		return m.Application
+	}
+	return nil
+}
+
+func (m *ListBuildsRequest) GetWorkspace() *Ref_Workspace {
+	if m != nil {
+		return m.Workspace
+	}
+	return nil
+}
+
 type ListBuildsResponse struct {
 	// builds is the list of builds.
 	Builds               []*Build `protobuf:"bytes,1,rep,name=builds,proto3" json:"builds,omitempty"`
@@ -533,7 +930,7 @@ func (m *ListBuildsResponse) Reset()         { *m = ListBuildsResponse{} }
 func (m *ListBuildsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListBuildsResponse) ProtoMessage()    {}
 func (*ListBuildsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{5}
+	return fileDescriptor_ad098daeda4239f7, []int{11}
 }
 
 func (m *ListBuildsResponse) XXX_Unmarshal(b []byte) error {
@@ -561,9 +958,60 @@ func (m *ListBuildsResponse) GetBuilds() []*Build {
 	return nil
 }
 
+type GetLatestBuildRequest struct {
+	Application          *Ref_Application `protobuf:"bytes,1,opt,name=application,proto3" json:"application,omitempty"`
+	Workspace            *Ref_Workspace   `protobuf:"bytes,2,opt,name=workspace,proto3" json:"workspace,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
+	XXX_unrecognized     []byte           `json:"-"`
+	XXX_sizecache        int32            `json:"-"`
+}
+
+func (m *GetLatestBuildRequest) Reset()         { *m = GetLatestBuildRequest{} }
+func (m *GetLatestBuildRequest) String() string { return proto.CompactTextString(m) }
+func (*GetLatestBuildRequest) ProtoMessage()    {}
+func (*GetLatestBuildRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{12}
+}
+
+func (m *GetLatestBuildRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetLatestBuildRequest.Unmarshal(m, b)
+}
+func (m *GetLatestBuildRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetLatestBuildRequest.Marshal(b, m, deterministic)
+}
+func (m *GetLatestBuildRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetLatestBuildRequest.Merge(m, src)
+}
+func (m *GetLatestBuildRequest) XXX_Size() int {
+	return xxx_messageInfo_GetLatestBuildRequest.Size(m)
+}
+func (m *GetLatestBuildRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetLatestBuildRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetLatestBuildRequest proto.InternalMessageInfo
+
+func (m *GetLatestBuildRequest) GetApplication() *Ref_Application {
+	if m != nil {
+		return m.Application
+	}
+	return nil
+}
+
+func (m *GetLatestBuildRequest) GetWorkspace() *Ref_Workspace {
+	if m != nil {
+		return m.Workspace
+	}
+	return nil
+}
+
 // Build represents a process of creating an artifact that can be in any state,
 // such as complete. A successful complete build produces an artifact.
 type Build struct {
+	// The application that this build is part of.
+	Application *Ref_Application `protobuf:"bytes,6,opt,name=application,proto3" json:"application,omitempty"`
+	// The workspace that this exists in
+	Workspace *Ref_Workspace `protobuf:"bytes,7,opt,name=workspace,proto3" json:"workspace,omitempty"`
 	// id is the unique ID of the build
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// status of the build
@@ -583,7 +1031,7 @@ func (m *Build) Reset()         { *m = Build{} }
 func (m *Build) String() string { return proto.CompactTextString(m) }
 func (*Build) ProtoMessage()    {}
 func (*Build) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{6}
+	return fileDescriptor_ad098daeda4239f7, []int{13}
 }
 
 func (m *Build) XXX_Unmarshal(b []byte) error {
@@ -603,6 +1051,20 @@ func (m *Build) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_Build proto.InternalMessageInfo
+
+func (m *Build) GetApplication() *Ref_Application {
+	if m != nil {
+		return m.Application
+	}
+	return nil
+}
+
+func (m *Build) GetWorkspace() *Ref_Workspace {
+	if m != nil {
+		return m.Workspace
+	}
+	return nil
+}
 
 func (m *Build) GetId() string {
 	if m != nil {
@@ -655,7 +1117,7 @@ func (m *Artifact) Reset()         { *m = Artifact{} }
 func (m *Artifact) String() string { return proto.CompactTextString(m) }
 func (*Artifact) ProtoMessage()    {}
 func (*Artifact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{7}
+	return fileDescriptor_ad098daeda4239f7, []int{14}
 }
 
 func (m *Artifact) XXX_Unmarshal(b []byte) error {
@@ -697,7 +1159,7 @@ func (m *UpsertPushedArtifactRequest) Reset()         { *m = UpsertPushedArtifac
 func (m *UpsertPushedArtifactRequest) String() string { return proto.CompactTextString(m) }
 func (*UpsertPushedArtifactRequest) ProtoMessage()    {}
 func (*UpsertPushedArtifactRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{8}
+	return fileDescriptor_ad098daeda4239f7, []int{15}
 }
 
 func (m *UpsertPushedArtifactRequest) XXX_Unmarshal(b []byte) error {
@@ -739,7 +1201,7 @@ func (m *UpsertPushedArtifactResponse) Reset()         { *m = UpsertPushedArtifa
 func (m *UpsertPushedArtifactResponse) String() string { return proto.CompactTextString(m) }
 func (*UpsertPushedArtifactResponse) ProtoMessage()    {}
 func (*UpsertPushedArtifactResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{9}
+	return fileDescriptor_ad098daeda4239f7, []int{16}
 }
 
 func (m *UpsertPushedArtifactResponse) XXX_Unmarshal(b []byte) error {
@@ -767,6 +1229,124 @@ func (m *UpsertPushedArtifactResponse) GetArtifact() *PushedArtifact {
 	return nil
 }
 
+type GetLatestPushedArtifactRequest struct {
+	// application that this belongs to
+	Application *Ref_Application `protobuf:"bytes,1,opt,name=application,proto3" json:"application,omitempty"`
+	// workspace for the artifact, any workspace if empty
+	Workspace            *Ref_Workspace `protobuf:"bytes,2,opt,name=workspace,proto3" json:"workspace,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *GetLatestPushedArtifactRequest) Reset()         { *m = GetLatestPushedArtifactRequest{} }
+func (m *GetLatestPushedArtifactRequest) String() string { return proto.CompactTextString(m) }
+func (*GetLatestPushedArtifactRequest) ProtoMessage()    {}
+func (*GetLatestPushedArtifactRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{17}
+}
+
+func (m *GetLatestPushedArtifactRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetLatestPushedArtifactRequest.Unmarshal(m, b)
+}
+func (m *GetLatestPushedArtifactRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetLatestPushedArtifactRequest.Marshal(b, m, deterministic)
+}
+func (m *GetLatestPushedArtifactRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetLatestPushedArtifactRequest.Merge(m, src)
+}
+func (m *GetLatestPushedArtifactRequest) XXX_Size() int {
+	return xxx_messageInfo_GetLatestPushedArtifactRequest.Size(m)
+}
+func (m *GetLatestPushedArtifactRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetLatestPushedArtifactRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetLatestPushedArtifactRequest proto.InternalMessageInfo
+
+func (m *GetLatestPushedArtifactRequest) GetApplication() *Ref_Application {
+	if m != nil {
+		return m.Application
+	}
+	return nil
+}
+
+func (m *GetLatestPushedArtifactRequest) GetWorkspace() *Ref_Workspace {
+	if m != nil {
+		return m.Workspace
+	}
+	return nil
+}
+
+type ListPushedArtifactsRequest struct {
+	// application that this belongs to
+	Application *Ref_Application `protobuf:"bytes,3,opt,name=application,proto3" json:"application,omitempty"`
+	// workspace for the results, or all if not set
+	Workspace *Ref_Workspace `protobuf:"bytes,4,opt,name=workspace,proto3" json:"workspace,omitempty"`
+	// The filters to apply to this request. These are ORed, so you should
+	// specify multiple filters in the StatusFilter for AND behavior.
+	Status []*StatusFilter `protobuf:"bytes,1,rep,name=status,proto3" json:"status,omitempty"`
+	// Specifies the order of results. If this isn't specified, the results
+	// are in an undefined order.
+	Order                *OperationOrder `protobuf:"bytes,2,opt,name=order,proto3" json:"order,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
+}
+
+func (m *ListPushedArtifactsRequest) Reset()         { *m = ListPushedArtifactsRequest{} }
+func (m *ListPushedArtifactsRequest) String() string { return proto.CompactTextString(m) }
+func (*ListPushedArtifactsRequest) ProtoMessage()    {}
+func (*ListPushedArtifactsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{18}
+}
+
+func (m *ListPushedArtifactsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListPushedArtifactsRequest.Unmarshal(m, b)
+}
+func (m *ListPushedArtifactsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListPushedArtifactsRequest.Marshal(b, m, deterministic)
+}
+func (m *ListPushedArtifactsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListPushedArtifactsRequest.Merge(m, src)
+}
+func (m *ListPushedArtifactsRequest) XXX_Size() int {
+	return xxx_messageInfo_ListPushedArtifactsRequest.Size(m)
+}
+func (m *ListPushedArtifactsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListPushedArtifactsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListPushedArtifactsRequest proto.InternalMessageInfo
+
+func (m *ListPushedArtifactsRequest) GetApplication() *Ref_Application {
+	if m != nil {
+		return m.Application
+	}
+	return nil
+}
+
+func (m *ListPushedArtifactsRequest) GetWorkspace() *Ref_Workspace {
+	if m != nil {
+		return m.Workspace
+	}
+	return nil
+}
+
+func (m *ListPushedArtifactsRequest) GetStatus() []*StatusFilter {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+func (m *ListPushedArtifactsRequest) GetOrder() *OperationOrder {
+	if m != nil {
+		return m.Order
+	}
+	return nil
+}
+
 type ListPushedArtifactsResponse struct {
 	// artifacts is the list of artifacts.
 	Artifacts            []*PushedArtifact `protobuf:"bytes,1,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
@@ -779,7 +1359,7 @@ func (m *ListPushedArtifactsResponse) Reset()         { *m = ListPushedArtifacts
 func (m *ListPushedArtifactsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListPushedArtifactsResponse) ProtoMessage()    {}
 func (*ListPushedArtifactsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{10}
+	return fileDescriptor_ad098daeda4239f7, []int{19}
 }
 
 func (m *ListPushedArtifactsResponse) XXX_Unmarshal(b []byte) error {
@@ -808,6 +1388,10 @@ func (m *ListPushedArtifactsResponse) GetArtifacts() []*PushedArtifact {
 }
 
 type PushedArtifact struct {
+	// application that this belongs to
+	Application *Ref_Application `protobuf:"bytes,7,opt,name=application,proto3" json:"application,omitempty"`
+	// The workspace that this exists in
+	Workspace *Ref_Workspace `protobuf:"bytes,8,opt,name=workspace,proto3" json:"workspace,omitempty"`
 	// id is a unique ID for this push
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// status of the push operation
@@ -829,7 +1413,7 @@ func (m *PushedArtifact) Reset()         { *m = PushedArtifact{} }
 func (m *PushedArtifact) String() string { return proto.CompactTextString(m) }
 func (*PushedArtifact) ProtoMessage()    {}
 func (*PushedArtifact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{11}
+	return fileDescriptor_ad098daeda4239f7, []int{20}
 }
 
 func (m *PushedArtifact) XXX_Unmarshal(b []byte) error {
@@ -849,6 +1433,20 @@ func (m *PushedArtifact) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_PushedArtifact proto.InternalMessageInfo
+
+func (m *PushedArtifact) GetApplication() *Ref_Application {
+	if m != nil {
+		return m.Application
+	}
+	return nil
+}
+
+func (m *PushedArtifact) GetWorkspace() *Ref_Workspace {
+	if m != nil {
+		return m.Workspace
+	}
+	return nil
+}
 
 func (m *PushedArtifact) GetId() string {
 	if m != nil {
@@ -904,7 +1502,7 @@ func (m *GetDeploymentRequest) Reset()         { *m = GetDeploymentRequest{} }
 func (m *GetDeploymentRequest) String() string { return proto.CompactTextString(m) }
 func (*GetDeploymentRequest) ProtoMessage()    {}
 func (*GetDeploymentRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{12}
+	return fileDescriptor_ad098daeda4239f7, []int{21}
 }
 
 func (m *GetDeploymentRequest) XXX_Unmarshal(b []byte) error {
@@ -946,7 +1544,7 @@ func (m *UpsertDeploymentRequest) Reset()         { *m = UpsertDeploymentRequest
 func (m *UpsertDeploymentRequest) String() string { return proto.CompactTextString(m) }
 func (*UpsertDeploymentRequest) ProtoMessage()    {}
 func (*UpsertDeploymentRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{13}
+	return fileDescriptor_ad098daeda4239f7, []int{22}
 }
 
 func (m *UpsertDeploymentRequest) XXX_Unmarshal(b []byte) error {
@@ -988,7 +1586,7 @@ func (m *UpsertDeploymentResponse) Reset()         { *m = UpsertDeploymentRespon
 func (m *UpsertDeploymentResponse) String() string { return proto.CompactTextString(m) }
 func (*UpsertDeploymentResponse) ProtoMessage()    {}
 func (*UpsertDeploymentResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{14}
+	return fileDescriptor_ad098daeda4239f7, []int{23}
 }
 
 func (m *UpsertDeploymentResponse) XXX_Unmarshal(b []byte) error {
@@ -1017,24 +1615,27 @@ func (m *UpsertDeploymentResponse) GetDeployment() *Deployment {
 }
 
 type ListDeploymentsRequest struct {
+	// application that this deployment belongs to
+	Application *Ref_Application `protobuf:"bytes,3,opt,name=application,proto3" json:"application,omitempty"`
+	// workspace that this should belong to. If this is empty, values in
+	// all workspaces will be listed.
+	Workspace *Ref_Workspace `protobuf:"bytes,4,opt,name=workspace,proto3" json:"workspace,omitempty"`
 	// The filters to apply to this request. These are ORed, so you should
 	// specify multiple filters in the StatusFilter for AND behavior.
 	Status []*StatusFilter `protobuf:"bytes,1,rep,name=status,proto3" json:"status,omitempty"`
-	// Order for the results.
-	Order     ListDeploymentsRequest_Order `protobuf:"varint,2,opt,name=order,proto3,enum=hashicorp.waypoint.ListDeploymentsRequest_Order" json:"order,omitempty"`
-	OrderDesc bool                         `protobuf:"varint,3,opt,name=order_desc,json=orderDesc,proto3" json:"order_desc,omitempty"`
-	// Limit the number of results
-	Limit                uint32   `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	// Specifies the order of results. If this isn't specified, the results
+	// are in an undefined order.
+	Order                *OperationOrder `protobuf:"bytes,2,opt,name=order,proto3" json:"order,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
 }
 
 func (m *ListDeploymentsRequest) Reset()         { *m = ListDeploymentsRequest{} }
 func (m *ListDeploymentsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListDeploymentsRequest) ProtoMessage()    {}
 func (*ListDeploymentsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{15}
+	return fileDescriptor_ad098daeda4239f7, []int{24}
 }
 
 func (m *ListDeploymentsRequest) XXX_Unmarshal(b []byte) error {
@@ -1055,6 +1656,20 @@ func (m *ListDeploymentsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ListDeploymentsRequest proto.InternalMessageInfo
 
+func (m *ListDeploymentsRequest) GetApplication() *Ref_Application {
+	if m != nil {
+		return m.Application
+	}
+	return nil
+}
+
+func (m *ListDeploymentsRequest) GetWorkspace() *Ref_Workspace {
+	if m != nil {
+		return m.Workspace
+	}
+	return nil
+}
+
 func (m *ListDeploymentsRequest) GetStatus() []*StatusFilter {
 	if m != nil {
 		return m.Status
@@ -1062,25 +1677,11 @@ func (m *ListDeploymentsRequest) GetStatus() []*StatusFilter {
 	return nil
 }
 
-func (m *ListDeploymentsRequest) GetOrder() ListDeploymentsRequest_Order {
+func (m *ListDeploymentsRequest) GetOrder() *OperationOrder {
 	if m != nil {
 		return m.Order
 	}
-	return ListDeploymentsRequest_UNSET
-}
-
-func (m *ListDeploymentsRequest) GetOrderDesc() bool {
-	if m != nil {
-		return m.OrderDesc
-	}
-	return false
-}
-
-func (m *ListDeploymentsRequest) GetLimit() uint32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
+	return nil
 }
 
 type ListDeploymentsResponse struct {
@@ -1095,7 +1696,7 @@ func (m *ListDeploymentsResponse) Reset()         { *m = ListDeploymentsResponse
 func (m *ListDeploymentsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListDeploymentsResponse) ProtoMessage()    {}
 func (*ListDeploymentsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{16}
+	return fileDescriptor_ad098daeda4239f7, []int{25}
 }
 
 func (m *ListDeploymentsResponse) XXX_Unmarshal(b []byte) error {
@@ -1124,6 +1725,10 @@ func (m *ListDeploymentsResponse) GetDeployments() []*Deployment {
 }
 
 type Deployment struct {
+	// application that this deployment belongs to
+	Application *Ref_Application `protobuf:"bytes,8,opt,name=application,proto3" json:"application,omitempty"`
+	// The workspace that this exists in
+	Workspace *Ref_Workspace `protobuf:"bytes,9,opt,name=workspace,proto3" json:"workspace,omitempty"`
 	// id is the unique ID for this deployment
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// state is the state of this deployment.
@@ -1149,7 +1754,7 @@ func (m *Deployment) Reset()         { *m = Deployment{} }
 func (m *Deployment) String() string { return proto.CompactTextString(m) }
 func (*Deployment) ProtoMessage()    {}
 func (*Deployment) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{17}
+	return fileDescriptor_ad098daeda4239f7, []int{26}
 }
 
 func (m *Deployment) XXX_Unmarshal(b []byte) error {
@@ -1169,6 +1774,20 @@ func (m *Deployment) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_Deployment proto.InternalMessageInfo
+
+func (m *Deployment) GetApplication() *Ref_Application {
+	if m != nil {
+		return m.Application
+	}
+	return nil
+}
+
+func (m *Deployment) GetWorkspace() *Ref_Workspace {
+	if m != nil {
+		return m.Workspace
+	}
+	return nil
+}
 
 func (m *Deployment) GetId() string {
 	if m != nil {
@@ -1233,7 +1852,7 @@ func (m *UpsertReleaseRequest) Reset()         { *m = UpsertReleaseRequest{} }
 func (m *UpsertReleaseRequest) String() string { return proto.CompactTextString(m) }
 func (*UpsertReleaseRequest) ProtoMessage()    {}
 func (*UpsertReleaseRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{18}
+	return fileDescriptor_ad098daeda4239f7, []int{27}
 }
 
 func (m *UpsertReleaseRequest) XXX_Unmarshal(b []byte) error {
@@ -1275,7 +1894,7 @@ func (m *UpsertReleaseResponse) Reset()         { *m = UpsertReleaseResponse{} }
 func (m *UpsertReleaseResponse) String() string { return proto.CompactTextString(m) }
 func (*UpsertReleaseResponse) ProtoMessage()    {}
 func (*UpsertReleaseResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{19}
+	return fileDescriptor_ad098daeda4239f7, []int{28}
 }
 
 func (m *UpsertReleaseResponse) XXX_Unmarshal(b []byte) error {
@@ -1304,6 +1923,10 @@ func (m *UpsertReleaseResponse) GetRelease() *Release {
 }
 
 type Release struct {
+	// application that this deployment belongs to
+	Application *Ref_Application `protobuf:"bytes,7,opt,name=application,proto3" json:"application,omitempty"`
+	// The workspace that this exists in
+	Workspace *Ref_Workspace `protobuf:"bytes,8,opt,name=workspace,proto3" json:"workspace,omitempty"`
 	// id is the unique ID for this release.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// status of the release operation.
@@ -1325,7 +1948,7 @@ func (m *Release) Reset()         { *m = Release{} }
 func (m *Release) String() string { return proto.CompactTextString(m) }
 func (*Release) ProtoMessage()    {}
 func (*Release) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{20}
+	return fileDescriptor_ad098daeda4239f7, []int{29}
 }
 
 func (m *Release) XXX_Unmarshal(b []byte) error {
@@ -1345,6 +1968,20 @@ func (m *Release) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_Release proto.InternalMessageInfo
+
+func (m *Release) GetApplication() *Ref_Application {
+	if m != nil {
+		return m.Application
+	}
+	return nil
+}
+
+func (m *Release) GetWorkspace() *Ref_Workspace {
+	if m != nil {
+		return m.Workspace
+	}
+	return nil
+}
 
 func (m *Release) GetId() string {
 	if m != nil {
@@ -1399,7 +2036,7 @@ func (m *Release_Split) Reset()         { *m = Release_Split{} }
 func (m *Release_Split) String() string { return proto.CompactTextString(m) }
 func (*Release_Split) ProtoMessage()    {}
 func (*Release_Split) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{20, 1}
+	return fileDescriptor_ad098daeda4239f7, []int{29, 1}
 }
 
 func (m *Release_Split) XXX_Unmarshal(b []byte) error {
@@ -1441,7 +2078,7 @@ func (m *Release_SplitTarget) Reset()         { *m = Release_SplitTarget{} }
 func (m *Release_SplitTarget) String() string { return proto.CompactTextString(m) }
 func (*Release_SplitTarget) ProtoMessage()    {}
 func (*Release_SplitTarget) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{20, 2}
+	return fileDescriptor_ad098daeda4239f7, []int{29, 2}
 }
 
 func (m *Release_SplitTarget) XXX_Unmarshal(b []byte) error {
@@ -1488,7 +2125,7 @@ func (m *GetLogStreamRequest) Reset()         { *m = GetLogStreamRequest{} }
 func (m *GetLogStreamRequest) String() string { return proto.CompactTextString(m) }
 func (*GetLogStreamRequest) ProtoMessage()    {}
 func (*GetLogStreamRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{21}
+	return fileDescriptor_ad098daeda4239f7, []int{30}
 }
 
 func (m *GetLogStreamRequest) XXX_Unmarshal(b []byte) error {
@@ -1529,7 +2166,7 @@ func (m *LogBatch) Reset()         { *m = LogBatch{} }
 func (m *LogBatch) String() string { return proto.CompactTextString(m) }
 func (*LogBatch) ProtoMessage()    {}
 func (*LogBatch) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{22}
+	return fileDescriptor_ad098daeda4239f7, []int{31}
 }
 
 func (m *LogBatch) XXX_Unmarshal(b []byte) error {
@@ -1583,7 +2220,7 @@ func (m *LogBatch_Entry) Reset()         { *m = LogBatch_Entry{} }
 func (m *LogBatch_Entry) String() string { return proto.CompactTextString(m) }
 func (*LogBatch_Entry) ProtoMessage()    {}
 func (*LogBatch_Entry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{22, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{31, 0}
 }
 
 func (m *LogBatch_Entry) XXX_Unmarshal(b []byte) error {
@@ -1618,6 +2255,305 @@ func (m *LogBatch_Entry) GetLine() string {
 	return ""
 }
 
+type ConfigVar struct {
+	// scope is the scoping for this config variable.
+	//
+	// Types that are valid to be assigned to Scope:
+	//	*ConfigVar_Application
+	//	*ConfigVar_Project
+	Scope                isConfigVar_Scope `protobuf_oneof:"scope"`
+	Name                 string            `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Value                string            `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *ConfigVar) Reset()         { *m = ConfigVar{} }
+func (m *ConfigVar) String() string { return proto.CompactTextString(m) }
+func (*ConfigVar) ProtoMessage()    {}
+func (*ConfigVar) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{32}
+}
+
+func (m *ConfigVar) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ConfigVar.Unmarshal(m, b)
+}
+func (m *ConfigVar) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ConfigVar.Marshal(b, m, deterministic)
+}
+func (m *ConfigVar) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConfigVar.Merge(m, src)
+}
+func (m *ConfigVar) XXX_Size() int {
+	return xxx_messageInfo_ConfigVar.Size(m)
+}
+func (m *ConfigVar) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConfigVar.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConfigVar proto.InternalMessageInfo
+
+type isConfigVar_Scope interface {
+	isConfigVar_Scope()
+}
+
+type ConfigVar_Application struct {
+	Application *Ref_Application `protobuf:"bytes,3,opt,name=application,proto3,oneof"`
+}
+
+type ConfigVar_Project struct {
+	Project *Ref_Project `protobuf:"bytes,4,opt,name=project,proto3,oneof"`
+}
+
+func (*ConfigVar_Application) isConfigVar_Scope() {}
+
+func (*ConfigVar_Project) isConfigVar_Scope() {}
+
+func (m *ConfigVar) GetScope() isConfigVar_Scope {
+	if m != nil {
+		return m.Scope
+	}
+	return nil
+}
+
+func (m *ConfigVar) GetApplication() *Ref_Application {
+	if x, ok := m.GetScope().(*ConfigVar_Application); ok {
+		return x.Application
+	}
+	return nil
+}
+
+func (m *ConfigVar) GetProject() *Ref_Project {
+	if x, ok := m.GetScope().(*ConfigVar_Project); ok {
+		return x.Project
+	}
+	return nil
+}
+
+func (m *ConfigVar) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *ConfigVar) GetValue() string {
+	if m != nil {
+		return m.Value
+	}
+	return ""
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*ConfigVar) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*ConfigVar_Application)(nil),
+		(*ConfigVar_Project)(nil),
+	}
+}
+
+type ConfigSetRequest struct {
+	Variables            []*ConfigVar `protobuf:"bytes,1,rep,name=variables,proto3" json:"variables,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *ConfigSetRequest) Reset()         { *m = ConfigSetRequest{} }
+func (m *ConfigSetRequest) String() string { return proto.CompactTextString(m) }
+func (*ConfigSetRequest) ProtoMessage()    {}
+func (*ConfigSetRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{33}
+}
+
+func (m *ConfigSetRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ConfigSetRequest.Unmarshal(m, b)
+}
+func (m *ConfigSetRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ConfigSetRequest.Marshal(b, m, deterministic)
+}
+func (m *ConfigSetRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConfigSetRequest.Merge(m, src)
+}
+func (m *ConfigSetRequest) XXX_Size() int {
+	return xxx_messageInfo_ConfigSetRequest.Size(m)
+}
+func (m *ConfigSetRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConfigSetRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConfigSetRequest proto.InternalMessageInfo
+
+func (m *ConfigSetRequest) GetVariables() []*ConfigVar {
+	if m != nil {
+		return m.Variables
+	}
+	return nil
+}
+
+type ConfigSetResponse struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ConfigSetResponse) Reset()         { *m = ConfigSetResponse{} }
+func (m *ConfigSetResponse) String() string { return proto.CompactTextString(m) }
+func (*ConfigSetResponse) ProtoMessage()    {}
+func (*ConfigSetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{34}
+}
+
+func (m *ConfigSetResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ConfigSetResponse.Unmarshal(m, b)
+}
+func (m *ConfigSetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ConfigSetResponse.Marshal(b, m, deterministic)
+}
+func (m *ConfigSetResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConfigSetResponse.Merge(m, src)
+}
+func (m *ConfigSetResponse) XXX_Size() int {
+	return xxx_messageInfo_ConfigSetResponse.Size(m)
+}
+func (m *ConfigSetResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConfigSetResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConfigSetResponse proto.InternalMessageInfo
+
+type ConfigGetRequest struct {
+	// scope is the scoping for this config variable.
+	//
+	// Types that are valid to be assigned to Scope:
+	//	*ConfigGetRequest_Application
+	//	*ConfigGetRequest_Project
+	Scope isConfigGetRequest_Scope `protobuf_oneof:"scope"`
+	// Get all configuration entries under the given prefix. When empty,
+	// returns all config variables.
+	Prefix               string   `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ConfigGetRequest) Reset()         { *m = ConfigGetRequest{} }
+func (m *ConfigGetRequest) String() string { return proto.CompactTextString(m) }
+func (*ConfigGetRequest) ProtoMessage()    {}
+func (*ConfigGetRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{35}
+}
+
+func (m *ConfigGetRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ConfigGetRequest.Unmarshal(m, b)
+}
+func (m *ConfigGetRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ConfigGetRequest.Marshal(b, m, deterministic)
+}
+func (m *ConfigGetRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConfigGetRequest.Merge(m, src)
+}
+func (m *ConfigGetRequest) XXX_Size() int {
+	return xxx_messageInfo_ConfigGetRequest.Size(m)
+}
+func (m *ConfigGetRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConfigGetRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConfigGetRequest proto.InternalMessageInfo
+
+type isConfigGetRequest_Scope interface {
+	isConfigGetRequest_Scope()
+}
+
+type ConfigGetRequest_Application struct {
+	Application *Ref_Application `protobuf:"bytes,2,opt,name=application,proto3,oneof"`
+}
+
+type ConfigGetRequest_Project struct {
+	Project *Ref_Project `protobuf:"bytes,3,opt,name=project,proto3,oneof"`
+}
+
+func (*ConfigGetRequest_Application) isConfigGetRequest_Scope() {}
+
+func (*ConfigGetRequest_Project) isConfigGetRequest_Scope() {}
+
+func (m *ConfigGetRequest) GetScope() isConfigGetRequest_Scope {
+	if m != nil {
+		return m.Scope
+	}
+	return nil
+}
+
+func (m *ConfigGetRequest) GetApplication() *Ref_Application {
+	if x, ok := m.GetScope().(*ConfigGetRequest_Application); ok {
+		return x.Application
+	}
+	return nil
+}
+
+func (m *ConfigGetRequest) GetProject() *Ref_Project {
+	if x, ok := m.GetScope().(*ConfigGetRequest_Project); ok {
+		return x.Project
+	}
+	return nil
+}
+
+func (m *ConfigGetRequest) GetPrefix() string {
+	if m != nil {
+		return m.Prefix
+	}
+	return ""
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*ConfigGetRequest) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*ConfigGetRequest_Application)(nil),
+		(*ConfigGetRequest_Project)(nil),
+	}
+}
+
+type ConfigGetResponse struct {
+	Variables            []*ConfigVar `protobuf:"bytes,1,rep,name=variables,proto3" json:"variables,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *ConfigGetResponse) Reset()         { *m = ConfigGetResponse{} }
+func (m *ConfigGetResponse) String() string { return proto.CompactTextString(m) }
+func (*ConfigGetResponse) ProtoMessage()    {}
+func (*ConfigGetResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ad098daeda4239f7, []int{36}
+}
+
+func (m *ConfigGetResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ConfigGetResponse.Unmarshal(m, b)
+}
+func (m *ConfigGetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ConfigGetResponse.Marshal(b, m, deterministic)
+}
+func (m *ConfigGetResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConfigGetResponse.Merge(m, src)
+}
+func (m *ConfigGetResponse) XXX_Size() int {
+	return xxx_messageInfo_ConfigGetResponse.Size(m)
+}
+func (m *ConfigGetResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConfigGetResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConfigGetResponse proto.InternalMessageInfo
+
+func (m *ConfigGetResponse) GetVariables() []*ConfigVar {
+	if m != nil {
+		return m.Variables
+	}
+	return nil
+}
+
 type ExecStreamRequest struct {
 	// Types that are valid to be assigned to Event:
 	//	*ExecStreamRequest_Start_
@@ -1633,7 +2569,7 @@ func (m *ExecStreamRequest) Reset()         { *m = ExecStreamRequest{} }
 func (m *ExecStreamRequest) String() string { return proto.CompactTextString(m) }
 func (*ExecStreamRequest) ProtoMessage()    {}
 func (*ExecStreamRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{23}
+	return fileDescriptor_ad098daeda4239f7, []int{37}
 }
 
 func (m *ExecStreamRequest) XXX_Unmarshal(b []byte) error {
@@ -1729,7 +2665,7 @@ func (m *ExecStreamRequest_Start) Reset()         { *m = ExecStreamRequest_Start
 func (m *ExecStreamRequest_Start) String() string { return proto.CompactTextString(m) }
 func (*ExecStreamRequest_Start) ProtoMessage()    {}
 func (*ExecStreamRequest_Start) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{23, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{37, 0}
 }
 
 func (m *ExecStreamRequest_Start) XXX_Unmarshal(b []byte) error {
@@ -1782,7 +2718,7 @@ func (m *ExecStreamRequest_Input) Reset()         { *m = ExecStreamRequest_Input
 func (m *ExecStreamRequest_Input) String() string { return proto.CompactTextString(m) }
 func (*ExecStreamRequest_Input) ProtoMessage()    {}
 func (*ExecStreamRequest_Input) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{23, 1}
+	return fileDescriptor_ad098daeda4239f7, []int{37, 1}
 }
 
 func (m *ExecStreamRequest_Input) XXX_Unmarshal(b []byte) error {
@@ -1825,7 +2761,7 @@ func (m *ExecStreamRequest_PTY) Reset()         { *m = ExecStreamRequest_PTY{} }
 func (m *ExecStreamRequest_PTY) String() string { return proto.CompactTextString(m) }
 func (*ExecStreamRequest_PTY) ProtoMessage()    {}
 func (*ExecStreamRequest_PTY) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{23, 2}
+	return fileDescriptor_ad098daeda4239f7, []int{37, 2}
 }
 
 func (m *ExecStreamRequest_PTY) XXX_Unmarshal(b []byte) error {
@@ -1881,7 +2817,7 @@ func (m *ExecStreamRequest_WindowSize) Reset()         { *m = ExecStreamRequest_
 func (m *ExecStreamRequest_WindowSize) String() string { return proto.CompactTextString(m) }
 func (*ExecStreamRequest_WindowSize) ProtoMessage()    {}
 func (*ExecStreamRequest_WindowSize) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{23, 3}
+	return fileDescriptor_ad098daeda4239f7, []int{37, 3}
 }
 
 func (m *ExecStreamRequest_WindowSize) XXX_Unmarshal(b []byte) error {
@@ -1944,7 +2880,7 @@ func (m *ExecStreamResponse) Reset()         { *m = ExecStreamResponse{} }
 func (m *ExecStreamResponse) String() string { return proto.CompactTextString(m) }
 func (*ExecStreamResponse) ProtoMessage()    {}
 func (*ExecStreamResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{24}
+	return fileDescriptor_ad098daeda4239f7, []int{38}
 }
 
 func (m *ExecStreamResponse) XXX_Unmarshal(b []byte) error {
@@ -2021,7 +2957,7 @@ func (m *ExecStreamResponse_Exit) Reset()         { *m = ExecStreamResponse_Exit
 func (m *ExecStreamResponse_Exit) String() string { return proto.CompactTextString(m) }
 func (*ExecStreamResponse_Exit) ProtoMessage()    {}
 func (*ExecStreamResponse_Exit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{24, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{38, 0}
 }
 
 func (m *ExecStreamResponse_Exit) XXX_Unmarshal(b []byte) error {
@@ -2061,7 +2997,7 @@ func (m *ExecStreamResponse_Output) Reset()         { *m = ExecStreamResponse_Ou
 func (m *ExecStreamResponse_Output) String() string { return proto.CompactTextString(m) }
 func (*ExecStreamResponse_Output) ProtoMessage()    {}
 func (*ExecStreamResponse_Output) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{24, 1}
+	return fileDescriptor_ad098daeda4239f7, []int{38, 1}
 }
 
 func (m *ExecStreamResponse_Output) XXX_Unmarshal(b []byte) error {
@@ -2096,223 +3032,6 @@ func (m *ExecStreamResponse_Output) GetData() []byte {
 	return nil
 }
 
-type ConfigVar struct {
-	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	// Scope the variables just to the given application. If empty, the variables
-	// will be project scoped.
-	App                  string   `protobuf:"bytes,3,opt,name=app,proto3" json:"app,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ConfigVar) Reset()         { *m = ConfigVar{} }
-func (m *ConfigVar) String() string { return proto.CompactTextString(m) }
-func (*ConfigVar) ProtoMessage()    {}
-func (*ConfigVar) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{25}
-}
-
-func (m *ConfigVar) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ConfigVar.Unmarshal(m, b)
-}
-func (m *ConfigVar) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ConfigVar.Marshal(b, m, deterministic)
-}
-func (m *ConfigVar) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfigVar.Merge(m, src)
-}
-func (m *ConfigVar) XXX_Size() int {
-	return xxx_messageInfo_ConfigVar.Size(m)
-}
-func (m *ConfigVar) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfigVar.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConfigVar proto.InternalMessageInfo
-
-func (m *ConfigVar) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *ConfigVar) GetValue() string {
-	if m != nil {
-		return m.Value
-	}
-	return ""
-}
-
-func (m *ConfigVar) GetApp() string {
-	if m != nil {
-		return m.App
-	}
-	return ""
-}
-
-type ConfigSetRequest struct {
-	Variables            []*ConfigVar `protobuf:"bytes,1,rep,name=variables,proto3" json:"variables,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
-	XXX_unrecognized     []byte       `json:"-"`
-	XXX_sizecache        int32        `json:"-"`
-}
-
-func (m *ConfigSetRequest) Reset()         { *m = ConfigSetRequest{} }
-func (m *ConfigSetRequest) String() string { return proto.CompactTextString(m) }
-func (*ConfigSetRequest) ProtoMessage()    {}
-func (*ConfigSetRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{26}
-}
-
-func (m *ConfigSetRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ConfigSetRequest.Unmarshal(m, b)
-}
-func (m *ConfigSetRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ConfigSetRequest.Marshal(b, m, deterministic)
-}
-func (m *ConfigSetRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfigSetRequest.Merge(m, src)
-}
-func (m *ConfigSetRequest) XXX_Size() int {
-	return xxx_messageInfo_ConfigSetRequest.Size(m)
-}
-func (m *ConfigSetRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfigSetRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConfigSetRequest proto.InternalMessageInfo
-
-func (m *ConfigSetRequest) GetVariables() []*ConfigVar {
-	if m != nil {
-		return m.Variables
-	}
-	return nil
-}
-
-type ConfigSetResponse struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ConfigSetResponse) Reset()         { *m = ConfigSetResponse{} }
-func (m *ConfigSetResponse) String() string { return proto.CompactTextString(m) }
-func (*ConfigSetResponse) ProtoMessage()    {}
-func (*ConfigSetResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{27}
-}
-
-func (m *ConfigSetResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ConfigSetResponse.Unmarshal(m, b)
-}
-func (m *ConfigSetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ConfigSetResponse.Marshal(b, m, deterministic)
-}
-func (m *ConfigSetResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfigSetResponse.Merge(m, src)
-}
-func (m *ConfigSetResponse) XXX_Size() int {
-	return xxx_messageInfo_ConfigSetResponse.Size(m)
-}
-func (m *ConfigSetResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfigSetResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConfigSetResponse proto.InternalMessageInfo
-
-type ConfigGetRequest struct {
-	// Get all configuration entries under the given prefix. Therefore when empty, return
-	// all configuration.
-	Prefix string `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	// Get the configuration that would be applied to an application of the given name.
-	// If empty, return configuration for all applications.
-	App                  string   `protobuf:"bytes,2,opt,name=app,proto3" json:"app,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ConfigGetRequest) Reset()         { *m = ConfigGetRequest{} }
-func (m *ConfigGetRequest) String() string { return proto.CompactTextString(m) }
-func (*ConfigGetRequest) ProtoMessage()    {}
-func (*ConfigGetRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{28}
-}
-
-func (m *ConfigGetRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ConfigGetRequest.Unmarshal(m, b)
-}
-func (m *ConfigGetRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ConfigGetRequest.Marshal(b, m, deterministic)
-}
-func (m *ConfigGetRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfigGetRequest.Merge(m, src)
-}
-func (m *ConfigGetRequest) XXX_Size() int {
-	return xxx_messageInfo_ConfigGetRequest.Size(m)
-}
-func (m *ConfigGetRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfigGetRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConfigGetRequest proto.InternalMessageInfo
-
-func (m *ConfigGetRequest) GetPrefix() string {
-	if m != nil {
-		return m.Prefix
-	}
-	return ""
-}
-
-func (m *ConfigGetRequest) GetApp() string {
-	if m != nil {
-		return m.App
-	}
-	return ""
-}
-
-type ConfigGetResponse struct {
-	Variables            []*ConfigVar `protobuf:"bytes,1,rep,name=variables,proto3" json:"variables,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
-	XXX_unrecognized     []byte       `json:"-"`
-	XXX_sizecache        int32        `json:"-"`
-}
-
-func (m *ConfigGetResponse) Reset()         { *m = ConfigGetResponse{} }
-func (m *ConfigGetResponse) String() string { return proto.CompactTextString(m) }
-func (*ConfigGetResponse) ProtoMessage()    {}
-func (*ConfigGetResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{29}
-}
-
-func (m *ConfigGetResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ConfigGetResponse.Unmarshal(m, b)
-}
-func (m *ConfigGetResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ConfigGetResponse.Marshal(b, m, deterministic)
-}
-func (m *ConfigGetResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ConfigGetResponse.Merge(m, src)
-}
-func (m *ConfigGetResponse) XXX_Size() int {
-	return xxx_messageInfo_ConfigGetResponse.Size(m)
-}
-func (m *ConfigGetResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ConfigGetResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ConfigGetResponse proto.InternalMessageInfo
-
-func (m *ConfigGetResponse) GetVariables() []*ConfigVar {
-	if m != nil {
-		return m.Variables
-	}
-	return nil
-}
-
 type EntrypointConfigRequest struct {
 	// id of the deployment that this instance is a part of
 	DeploymentId string `protobuf:"bytes,1,opt,name=deployment_id,json=deploymentId,proto3" json:"deployment_id,omitempty"`
@@ -2328,7 +3047,7 @@ func (m *EntrypointConfigRequest) Reset()         { *m = EntrypointConfigRequest
 func (m *EntrypointConfigRequest) String() string { return proto.CompactTextString(m) }
 func (*EntrypointConfigRequest) ProtoMessage()    {}
 func (*EntrypointConfigRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{30}
+	return fileDescriptor_ad098daeda4239f7, []int{39}
 }
 
 func (m *EntrypointConfigRequest) XXX_Unmarshal(b []byte) error {
@@ -2374,7 +3093,7 @@ func (m *EntrypointConfigResponse) Reset()         { *m = EntrypointConfigRespon
 func (m *EntrypointConfigResponse) String() string { return proto.CompactTextString(m) }
 func (*EntrypointConfigResponse) ProtoMessage()    {}
 func (*EntrypointConfigResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{31}
+	return fileDescriptor_ad098daeda4239f7, []int{40}
 }
 
 func (m *EntrypointConfigResponse) XXX_Unmarshal(b []byte) error {
@@ -2415,7 +3134,7 @@ func (m *EntrypointConfig) Reset()         { *m = EntrypointConfig{} }
 func (m *EntrypointConfig) String() string { return proto.CompactTextString(m) }
 func (*EntrypointConfig) ProtoMessage()    {}
 func (*EntrypointConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{32}
+	return fileDescriptor_ad098daeda4239f7, []int{41}
 }
 
 func (m *EntrypointConfig) XXX_Unmarshal(b []byte) error {
@@ -2463,7 +3182,7 @@ func (m *EntrypointConfig_Exec) Reset()         { *m = EntrypointConfig_Exec{} }
 func (m *EntrypointConfig_Exec) String() string { return proto.CompactTextString(m) }
 func (*EntrypointConfig_Exec) ProtoMessage()    {}
 func (*EntrypointConfig_Exec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{32, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{41, 0}
 }
 
 func (m *EntrypointConfig_Exec) XXX_Unmarshal(b []byte) error {
@@ -2521,7 +3240,7 @@ func (m *EntrypointLogBatch) Reset()         { *m = EntrypointLogBatch{} }
 func (m *EntrypointLogBatch) String() string { return proto.CompactTextString(m) }
 func (*EntrypointLogBatch) ProtoMessage()    {}
 func (*EntrypointLogBatch) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{33}
+	return fileDescriptor_ad098daeda4239f7, []int{42}
 }
 
 func (m *EntrypointLogBatch) XXX_Unmarshal(b []byte) error {
@@ -2572,7 +3291,7 @@ func (m *EntrypointExecRequest) Reset()         { *m = EntrypointExecRequest{} }
 func (m *EntrypointExecRequest) String() string { return proto.CompactTextString(m) }
 func (*EntrypointExecRequest) ProtoMessage()    {}
 func (*EntrypointExecRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{34}
+	return fileDescriptor_ad098daeda4239f7, []int{43}
 }
 
 func (m *EntrypointExecRequest) XXX_Unmarshal(b []byte) error {
@@ -2678,7 +3397,7 @@ func (m *EntrypointExecRequest_Open) Reset()         { *m = EntrypointExecReques
 func (m *EntrypointExecRequest_Open) String() string { return proto.CompactTextString(m) }
 func (*EntrypointExecRequest_Open) ProtoMessage()    {}
 func (*EntrypointExecRequest_Open) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{34, 0}
+	return fileDescriptor_ad098daeda4239f7, []int{43, 0}
 }
 
 func (m *EntrypointExecRequest_Open) XXX_Unmarshal(b []byte) error {
@@ -2724,7 +3443,7 @@ func (m *EntrypointExecRequest_Exit) Reset()         { *m = EntrypointExecReques
 func (m *EntrypointExecRequest_Exit) String() string { return proto.CompactTextString(m) }
 func (*EntrypointExecRequest_Exit) ProtoMessage()    {}
 func (*EntrypointExecRequest_Exit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{34, 1}
+	return fileDescriptor_ad098daeda4239f7, []int{43, 1}
 }
 
 func (m *EntrypointExecRequest_Exit) XXX_Unmarshal(b []byte) error {
@@ -2764,7 +3483,7 @@ func (m *EntrypointExecRequest_Output) Reset()         { *m = EntrypointExecRequ
 func (m *EntrypointExecRequest_Output) String() string { return proto.CompactTextString(m) }
 func (*EntrypointExecRequest_Output) ProtoMessage()    {}
 func (*EntrypointExecRequest_Output) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{34, 2}
+	return fileDescriptor_ad098daeda4239f7, []int{43, 2}
 }
 
 func (m *EntrypointExecRequest_Output) XXX_Unmarshal(b []byte) error {
@@ -2810,7 +3529,7 @@ func (m *EntrypointExecRequest_Error) Reset()         { *m = EntrypointExecReque
 func (m *EntrypointExecRequest_Error) String() string { return proto.CompactTextString(m) }
 func (*EntrypointExecRequest_Error) ProtoMessage()    {}
 func (*EntrypointExecRequest_Error) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{34, 3}
+	return fileDescriptor_ad098daeda4239f7, []int{43, 3}
 }
 
 func (m *EntrypointExecRequest_Error) XXX_Unmarshal(b []byte) error {
@@ -2853,7 +3572,7 @@ func (m *EntrypointExecResponse) Reset()         { *m = EntrypointExecResponse{}
 func (m *EntrypointExecResponse) String() string { return proto.CompactTextString(m) }
 func (*EntrypointExecResponse) ProtoMessage()    {}
 func (*EntrypointExecResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{35}
+	return fileDescriptor_ad098daeda4239f7, []int{44}
 }
 
 func (m *EntrypointExecResponse) XXX_Unmarshal(b []byte) error {
@@ -2933,10 +3652,18 @@ func (*EntrypointExecResponse) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+// The outer structure of the token that is directly Marshaled and
+// ASCII armored.
 type TokenTransport struct {
-	Body                 []byte            `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
-	Signature            []byte            `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
-	KeyId                string            `protobuf:"bytes,3,opt,name=key_id,json=keyId,proto3" json:"key_id,omitempty"`
+	// A Marshaled token, stored as bytes because we need to to validate
+	// it with the given signature.
+	Body []byte `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
+	// The signature of body for validation.
+	Signature []byte `protobuf:"bytes,2,opt,name=signature,proto3" json:"signature,omitempty"`
+	// The key used to generate the signature.
+	KeyId string `protobuf:"bytes,3,opt,name=key_id,json=keyId,proto3" json:"key_id,omitempty"`
+	// Any configuration style metadata that can be passed along with the token
+	// without invalidating the token body itself.
 	Metadata             map[string]string `protobuf:"bytes,4,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
@@ -2947,7 +3674,7 @@ func (m *TokenTransport) Reset()         { *m = TokenTransport{} }
 func (m *TokenTransport) String() string { return proto.CompactTextString(m) }
 func (*TokenTransport) ProtoMessage()    {}
 func (*TokenTransport) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{36}
+	return fileDescriptor_ad098daeda4239f7, []int{45}
 }
 
 func (m *TokenTransport) XXX_Unmarshal(b []byte) error {
@@ -2996,22 +3723,29 @@ func (m *TokenTransport) GetMetadata() map[string]string {
 	return nil
 }
 
+// The authenticated Token information. This is used to authenticate requests.
 type Token struct {
-	User                 string               `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	TokenId              []byte               `protobuf:"bytes,2,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
-	ValidUntil           *timestamp.Timestamp `protobuf:"bytes,3,opt,name=valid_until,json=validUntil,proto3" json:"valid_until,omitempty"`
-	Login                bool                 `protobuf:"varint,4,opt,name=login,proto3" json:"login,omitempty"`
-	Invite               bool                 `protobuf:"varint,5,opt,name=invite,proto3" json:"invite,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
-	XXX_unrecognized     []byte               `json:"-"`
-	XXX_sizecache        int32                `json:"-"`
+	// The user that the token is fore.
+	User string `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	// A random id for the token. Also functions as a nonce when signing.
+	TokenId []byte `protobuf:"bytes,2,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
+	// When the token is valid until. After the given date, the token will be rejected.
+	// When this is not set, the token is valid forever.
+	ValidUntil *timestamp.Timestamp `protobuf:"bytes,3,opt,name=valid_until,json=validUntil,proto3" json:"valid_until,omitempty"`
+	// Indicates whether or not this token can be used for to authenticate RPCs.
+	Login bool `protobuf:"varint,4,opt,name=login,proto3" json:"login,omitempty"`
+	// Inidicates whether or not this token can be used as an invite.
+	Invite               bool     `protobuf:"varint,5,opt,name=invite,proto3" json:"invite,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *Token) Reset()         { *m = Token{} }
 func (m *Token) String() string { return proto.CompactTextString(m) }
 func (*Token) ProtoMessage()    {}
 func (*Token) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{37}
+	return fileDescriptor_ad098daeda4239f7, []int{46}
 }
 
 func (m *Token) XXX_Unmarshal(b []byte) error {
@@ -3067,7 +3801,11 @@ func (m *Token) GetInvite() bool {
 	return false
 }
 
+// Passed with GenerateInviteToken with the params on how the invite token should
+// be generate.
 type InviteTokenRequest struct {
+	// How long the token should be valid until. The resulting token has a timestamp
+	// encoded within it by adding the current time to this duration.
 	Duration             string   `protobuf:"bytes,1,opt,name=duration,proto3" json:"duration,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -3078,7 +3816,7 @@ func (m *InviteTokenRequest) Reset()         { *m = InviteTokenRequest{} }
 func (m *InviteTokenRequest) String() string { return proto.CompactTextString(m) }
 func (*InviteTokenRequest) ProtoMessage()    {}
 func (*InviteTokenRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{38}
+	return fileDescriptor_ad098daeda4239f7, []int{47}
 }
 
 func (m *InviteTokenRequest) XXX_Unmarshal(b []byte) error {
@@ -3106,7 +3844,9 @@ func (m *InviteTokenRequest) GetDuration() string {
 	return ""
 }
 
+// Returned by any action that creates a token.
 type NewTokenResponse struct {
+	// The new token which can be presented to whichever API expects it.
 	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -3117,7 +3857,7 @@ func (m *NewTokenResponse) Reset()         { *m = NewTokenResponse{} }
 func (m *NewTokenResponse) String() string { return proto.CompactTextString(m) }
 func (*NewTokenResponse) ProtoMessage()    {}
 func (*NewTokenResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{39}
+	return fileDescriptor_ad098daeda4239f7, []int{48}
 }
 
 func (m *NewTokenResponse) XXX_Unmarshal(b []byte) error {
@@ -3145,7 +3885,9 @@ func (m *NewTokenResponse) GetToken() string {
 	return ""
 }
 
+// Passed to ConvertInviteToken to create a new token that can be used to authenticate RPCs.
 type ConvertInviteTokenRequest struct {
+	// A token previous returned by GenerateInviteToken.
 	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -3156,7 +3898,7 @@ func (m *ConvertInviteTokenRequest) Reset()         { *m = ConvertInviteTokenReq
 func (m *ConvertInviteTokenRequest) String() string { return proto.CompactTextString(m) }
 func (*ConvertInviteTokenRequest) ProtoMessage()    {}
 func (*ConvertInviteTokenRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ad098daeda4239f7, []int{40}
+	return fileDescriptor_ad098daeda4239f7, []int{49}
 }
 
 func (m *ConvertInviteTokenRequest) XXX_Unmarshal(b []byte) error {
@@ -3187,22 +3929,34 @@ func (m *ConvertInviteTokenRequest) GetToken() string {
 func init() {
 	proto.RegisterEnum("hashicorp.waypoint.Component_Type", Component_Type_name, Component_Type_value)
 	proto.RegisterEnum("hashicorp.waypoint.Status_State", Status_State_name, Status_State_value)
-	proto.RegisterEnum("hashicorp.waypoint.ListDeploymentsRequest_Order", ListDeploymentsRequest_Order_name, ListDeploymentsRequest_Order_value)
+	proto.RegisterEnum("hashicorp.waypoint.OperationOrder_Order", OperationOrder_Order_name, OperationOrder_Order_value)
 	proto.RegisterEnum("hashicorp.waypoint.Deployment_State", Deployment_State_name, Deployment_State_value)
 	proto.RegisterEnum("hashicorp.waypoint.ExecStreamResponse_Output_Channel", ExecStreamResponse_Output_Channel_name, ExecStreamResponse_Output_Channel_value)
 	proto.RegisterEnum("hashicorp.waypoint.EntrypointExecRequest_Output_Channel", EntrypointExecRequest_Output_Channel_name, EntrypointExecRequest_Output_Channel_value)
+	proto.RegisterType((*Application)(nil), "hashicorp.waypoint.Application")
+	proto.RegisterType((*Project)(nil), "hashicorp.waypoint.Project")
+	proto.RegisterType((*Workspace)(nil), "hashicorp.waypoint.Workspace")
+	proto.RegisterType((*Ref)(nil), "hashicorp.waypoint.Ref")
+	proto.RegisterType((*Ref_Application)(nil), "hashicorp.waypoint.Ref.Application")
+	proto.RegisterType((*Ref_Project)(nil), "hashicorp.waypoint.Ref.Project")
+	proto.RegisterType((*Ref_Workspace)(nil), "hashicorp.waypoint.Ref.Workspace")
 	proto.RegisterType((*Component)(nil), "hashicorp.waypoint.Component")
 	proto.RegisterType((*Status)(nil), "hashicorp.waypoint.Status")
 	proto.RegisterType((*StatusFilter)(nil), "hashicorp.waypoint.StatusFilter")
 	proto.RegisterType((*StatusFilter_Filter)(nil), "hashicorp.waypoint.StatusFilter.Filter")
+	proto.RegisterType((*OperationOrder)(nil), "hashicorp.waypoint.OperationOrder")
 	proto.RegisterType((*UpsertBuildRequest)(nil), "hashicorp.waypoint.UpsertBuildRequest")
 	proto.RegisterType((*UpsertBuildResponse)(nil), "hashicorp.waypoint.UpsertBuildResponse")
+	proto.RegisterType((*ListBuildsRequest)(nil), "hashicorp.waypoint.ListBuildsRequest")
 	proto.RegisterType((*ListBuildsResponse)(nil), "hashicorp.waypoint.ListBuildsResponse")
+	proto.RegisterType((*GetLatestBuildRequest)(nil), "hashicorp.waypoint.GetLatestBuildRequest")
 	proto.RegisterType((*Build)(nil), "hashicorp.waypoint.Build")
 	proto.RegisterMapType((map[string]string)(nil), "hashicorp.waypoint.Build.LabelsEntry")
 	proto.RegisterType((*Artifact)(nil), "hashicorp.waypoint.Artifact")
 	proto.RegisterType((*UpsertPushedArtifactRequest)(nil), "hashicorp.waypoint.UpsertPushedArtifactRequest")
 	proto.RegisterType((*UpsertPushedArtifactResponse)(nil), "hashicorp.waypoint.UpsertPushedArtifactResponse")
+	proto.RegisterType((*GetLatestPushedArtifactRequest)(nil), "hashicorp.waypoint.GetLatestPushedArtifactRequest")
+	proto.RegisterType((*ListPushedArtifactsRequest)(nil), "hashicorp.waypoint.ListPushedArtifactsRequest")
 	proto.RegisterType((*ListPushedArtifactsResponse)(nil), "hashicorp.waypoint.ListPushedArtifactsResponse")
 	proto.RegisterType((*PushedArtifact)(nil), "hashicorp.waypoint.PushedArtifact")
 	proto.RegisterMapType((map[string]string)(nil), "hashicorp.waypoint.PushedArtifact.LabelsEntry")
@@ -3222,6 +3976,11 @@ func init() {
 	proto.RegisterType((*GetLogStreamRequest)(nil), "hashicorp.waypoint.GetLogStreamRequest")
 	proto.RegisterType((*LogBatch)(nil), "hashicorp.waypoint.LogBatch")
 	proto.RegisterType((*LogBatch_Entry)(nil), "hashicorp.waypoint.LogBatch.Entry")
+	proto.RegisterType((*ConfigVar)(nil), "hashicorp.waypoint.ConfigVar")
+	proto.RegisterType((*ConfigSetRequest)(nil), "hashicorp.waypoint.ConfigSetRequest")
+	proto.RegisterType((*ConfigSetResponse)(nil), "hashicorp.waypoint.ConfigSetResponse")
+	proto.RegisterType((*ConfigGetRequest)(nil), "hashicorp.waypoint.ConfigGetRequest")
+	proto.RegisterType((*ConfigGetResponse)(nil), "hashicorp.waypoint.ConfigGetResponse")
 	proto.RegisterType((*ExecStreamRequest)(nil), "hashicorp.waypoint.ExecStreamRequest")
 	proto.RegisterType((*ExecStreamRequest_Start)(nil), "hashicorp.waypoint.ExecStreamRequest.Start")
 	proto.RegisterType((*ExecStreamRequest_Input)(nil), "hashicorp.waypoint.ExecStreamRequest.Input")
@@ -3230,11 +3989,6 @@ func init() {
 	proto.RegisterType((*ExecStreamResponse)(nil), "hashicorp.waypoint.ExecStreamResponse")
 	proto.RegisterType((*ExecStreamResponse_Exit)(nil), "hashicorp.waypoint.ExecStreamResponse.Exit")
 	proto.RegisterType((*ExecStreamResponse_Output)(nil), "hashicorp.waypoint.ExecStreamResponse.Output")
-	proto.RegisterType((*ConfigVar)(nil), "hashicorp.waypoint.ConfigVar")
-	proto.RegisterType((*ConfigSetRequest)(nil), "hashicorp.waypoint.ConfigSetRequest")
-	proto.RegisterType((*ConfigSetResponse)(nil), "hashicorp.waypoint.ConfigSetResponse")
-	proto.RegisterType((*ConfigGetRequest)(nil), "hashicorp.waypoint.ConfigGetRequest")
-	proto.RegisterType((*ConfigGetResponse)(nil), "hashicorp.waypoint.ConfigGetResponse")
 	proto.RegisterType((*EntrypointConfigRequest)(nil), "hashicorp.waypoint.EntrypointConfigRequest")
 	proto.RegisterType((*EntrypointConfigResponse)(nil), "hashicorp.waypoint.EntrypointConfigResponse")
 	proto.RegisterType((*EntrypointConfig)(nil), "hashicorp.waypoint.EntrypointConfig")
@@ -3259,164 +4013,181 @@ func init() {
 }
 
 var fileDescriptor_ad098daeda4239f7 = []byte{
-	// 2508 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0x5b, 0x73, 0xdb, 0xc6,
-	0x15, 0x36, 0x28, 0x82, 0x97, 0x43, 0x49, 0x61, 0x56, 0x8a, 0x2c, 0xc3, 0x4e, 0xad, 0xa2, 0x71,
-	0x2c, 0xdb, 0x0d, 0x25, 0xab, 0x75, 0x46, 0xb6, 0xec, 0xa4, 0xba, 0xd0, 0x34, 0x53, 0x5a, 0x52,
-	0x97, 0x54, 0x1c, 0xb5, 0x53, 0x6b, 0x20, 0x62, 0x25, 0xa1, 0x26, 0x01, 0x04, 0x00, 0x25, 0x33,
-	0x33, 0x7d, 0xeb, 0xb4, 0x7f, 0xa1, 0x2f, 0x99, 0xb4, 0xbf, 0xa3, 0xfd, 0x27, 0x7d, 0xea, 0x4c,
-	0xfb, 0xd0, 0xd7, 0xbe, 0x74, 0xa6, 0x4f, 0x9d, 0xbd, 0x01, 0xbc, 0x80, 0x24, 0x64, 0xbb, 0xd3,
-	0xe9, 0x13, 0xf6, 0x72, 0xce, 0xb7, 0xe7, 0x9c, 0x3d, 0x97, 0xdd, 0x05, 0x4c, 0xfb, 0xc4, 0x3b,
-	0x27, 0x5e, 0xc9, 0xf5, 0x9c, 0xc0, 0x41, 0xe8, 0xcc, 0xf0, 0xcf, 0xac, 0xa6, 0xe3, 0xb9, 0xa5,
-	0x0b, 0xa3, 0xeb, 0x3a, 0x96, 0x1d, 0x68, 0xd7, 0x4e, 0x1d, 0xe7, 0xb4, 0x45, 0x56, 0x18, 0xc5,
-	0x71, 0xe7, 0x64, 0xc5, 0xb0, 0xbb, 0x9c, 0x5c, 0xbb, 0x3e, 0x38, 0x45, 0xda, 0x6e, 0x20, 0x27,
-	0x6f, 0x0e, 0x4e, 0x06, 0x56, 0x9b, 0xf8, 0x81, 0xd1, 0x76, 0x05, 0xc1, 0x55, 0x41, 0xe0, 0xb9,
-	0xcd, 0x15, 0x3f, 0x30, 0x82, 0x8e, 0xcf, 0x27, 0xf4, 0xdf, 0x29, 0x90, 0xdf, 0x76, 0xda, 0xae,
-	0x63, 0x13, 0x3b, 0x40, 0x9f, 0x42, 0x3a, 0xe8, 0xba, 0x64, 0x51, 0x59, 0x52, 0x96, 0x67, 0xd7,
-	0xf4, 0xd2, 0xb0, 0x88, 0xa5, 0x90, 0xb8, 0xd4, 0xe8, 0xba, 0x04, 0x33, 0x7a, 0x84, 0x20, 0x6d,
-	0x1b, 0x6d, 0xb2, 0x98, 0x5a, 0x52, 0x96, 0xf3, 0x98, 0xb5, 0xf5, 0x12, 0xa4, 0x29, 0x05, 0x2a,
-	0x40, 0xf6, 0x60, 0xf7, 0xa7, 0xbb, 0x7b, 0x2f, 0x76, 0x8b, 0x57, 0x68, 0x67, 0xeb, 0xa0, 0x5a,
-	0xdb, 0x29, 0xe3, 0xa2, 0x82, 0xa6, 0x21, 0x87, 0xcb, 0x95, 0x6a, 0xbd, 0x81, 0x0f, 0x8b, 0x29,
-	0xfd, 0x4f, 0x29, 0xc8, 0xd4, 0x99, 0x68, 0xe8, 0x53, 0x50, 0xa9, 0x90, 0x52, 0x8e, 0xa5, 0x38,
-	0x39, 0x38, 0x29, 0xfb, 0x10, 0xcc, 0xc9, 0xd1, 0x22, 0x64, 0x4d, 0x12, 0x18, 0x56, 0xcb, 0x17,
-	0x92, 0xc8, 0x2e, 0x5a, 0x06, 0x95, 0x78, 0x9e, 0xe3, 0x2d, 0x4e, 0x2d, 0x29, 0xcb, 0x85, 0x35,
-	0x54, 0xe2, 0xf6, 0x28, 0x79, 0x6e, 0x53, 0x20, 0x61, 0x4e, 0x80, 0x1e, 0x02, 0xf8, 0x81, 0xe1,
-	0x05, 0x47, 0xd4, 0x84, 0x8b, 0x69, 0x46, 0xae, 0x49, 0x72, 0x69, 0xdf, 0x52, 0x43, 0xda, 0x17,
-	0xe7, 0x19, 0x35, 0xed, 0xa3, 0xcf, 0x61, 0xa6, 0xe9, 0xb4, 0xdd, 0x16, 0x09, 0x08, 0xe7, 0x56,
-	0x27, 0x72, 0x4f, 0x4b, 0x06, 0x3a, 0xa4, 0x3f, 0x04, 0x95, 0xe9, 0x33, 0x64, 0x33, 0x7c, 0xb0,
-	0xbb, 0x5b, 0xdd, 0xad, 0x14, 0x15, 0xda, 0xa9, 0x1f, 0x6c, 0x6f, 0x97, 0xeb, 0xf5, 0x62, 0x0a,
-	0xe5, 0x41, 0x2d, 0x63, 0xbc, 0x87, 0x8b, 0x53, 0xfa, 0x77, 0x0a, 0x4c, 0x73, 0x45, 0x9e, 0x5a,
-	0xad, 0x80, 0x78, 0x68, 0x13, 0xb2, 0x27, 0xac, 0xe5, 0x2f, 0x2a, 0x4b, 0x53, 0xcb, 0x85, 0xb5,
-	0xdb, 0xa3, 0xad, 0xc8, 0x59, 0x4a, 0xfc, 0x83, 0x25, 0x9f, 0x56, 0x83, 0x8c, 0x00, 0x5b, 0x97,
-	0x1b, 0x92, 0x4a, 0xb6, 0x21, 0xcf, 0xae, 0x88, 0x2d, 0xd9, 0xca, 0x41, 0x86, 0xc3, 0xe9, 0x65,
-	0x40, 0x07, 0xae, 0x4f, 0xbc, 0x60, 0xab, 0x63, 0xb5, 0x4c, 0x4c, 0xbe, 0xee, 0x10, 0x3f, 0x40,
-	0x2b, 0xa0, 0x1e, 0xd3, 0x3e, 0xdb, 0xea, 0xc2, 0xda, 0xb5, 0x38, 0x64, 0xce, 0xc0, 0xe9, 0xf4,
-	0xa7, 0x30, 0xd7, 0x07, 0xe3, 0xbb, 0x8e, 0xed, 0x93, 0xcb, 0xe3, 0x54, 0x00, 0xd5, 0x2c, 0x9f,
-	0xa3, 0xf8, 0x21, 0xcc, 0x7d, 0xc8, 0xb0, 0x69, 0x69, 0xb4, 0x31, 0x38, 0x82, 0x50, 0xff, 0x73,
-	0x0a, 0x54, 0x36, 0x82, 0x66, 0x21, 0x65, 0x71, 0x01, 0xf2, 0x38, 0x65, 0x99, 0x68, 0x0d, 0x32,
-	0x3c, 0xd6, 0x98, 0xd9, 0xa8, 0x23, 0x8c, 0x34, 0x1b, 0x16, 0x94, 0x68, 0x03, 0xf2, 0x4d, 0x19,
-	0x61, 0xc2, 0x59, 0x3f, 0x1c, 0x1b, 0x86, 0x38, 0xa2, 0x47, 0xeb, 0x90, 0x33, 0xbc, 0xc0, 0x3a,
-	0x31, 0x9a, 0x81, 0xf0, 0xdc, 0x1b, 0x71, 0xbc, 0x9b, 0x82, 0x06, 0x87, 0xd4, 0xe8, 0x09, 0x64,
-	0x5a, 0xc6, 0x31, 0x69, 0xf9, 0x8b, 0x2a, 0xd3, 0xfb, 0xd6, 0x48, 0xbd, 0x4b, 0x35, 0x46, 0x57,
-	0xb6, 0x03, 0xaf, 0x8b, 0x05, 0x93, 0xf6, 0x10, 0x0a, 0x3d, 0xc3, 0xa8, 0x08, 0x53, 0xaf, 0x48,
-	0x57, 0x58, 0x82, 0x36, 0xd1, 0x3c, 0xa8, 0xe7, 0x46, 0xab, 0x23, 0x33, 0x04, 0xef, 0x3c, 0x4a,
-	0xad, 0x2b, 0xfa, 0x63, 0xc8, 0x49, 0x79, 0xd0, 0x6a, 0x8f, 0xfc, 0x7c, 0x1f, 0xe7, 0x87, 0x62,
-	0x67, 0xd3, 0xee, 0x46, 0x72, 0xeb, 0xbf, 0x84, 0xeb, 0xdc, 0x1b, 0xf6, 0x3b, 0xfe, 0x19, 0x31,
-	0x43, 0xcd, 0x84, 0x77, 0x7d, 0x36, 0x04, 0x18, 0x9b, 0xd3, 0x06, 0x98, 0x23, 0xf8, 0x97, 0x70,
-	0x23, 0x1e, 0x5e, 0xb8, 0xcb, 0xdb, 0xe2, 0x1f, 0xc1, 0x75, 0xea, 0x84, 0xfd, 0xf3, 0x91, 0x37,
-	0xfe, 0x04, 0xf2, 0x92, 0x54, 0x3a, 0x64, 0x12, 0xfc, 0x88, 0x49, 0xff, 0x47, 0x0a, 0x66, 0xfb,
-	0x67, 0xff, 0x9f, 0xbd, 0xf4, 0x1a, 0xe4, 0x58, 0xd0, 0x1d, 0x59, 0x26, 0xcb, 0xad, 0x79, 0x9c,
-	0x65, 0xfd, 0xaa, 0x89, 0x9e, 0x86, 0x0e, 0x9c, 0x61, 0x76, 0x2a, 0x4d, 0xb6, 0xd3, 0xbb, 0xf6,
-	0xe4, 0x0d, 0x98, 0xaf, 0x90, 0x60, 0x87, 0xb8, 0x2d, 0xa7, 0xdb, 0xa6, 0x3a, 0x0b, 0x27, 0xfc,
-	0x01, 0xcc, 0x98, 0xe1, 0xe0, 0x51, 0x68, 0xfb, 0xe9, 0x68, 0xb0, 0x6a, 0xea, 0x87, 0x70, 0x95,
-	0x7b, 0xda, 0x30, 0xff, 0x67, 0x00, 0x11, 0xa9, 0x70, 0xb3, 0xef, 0xc5, 0xa9, 0xd7, 0xc3, 0xda,
-	0xc3, 0xa1, 0xff, 0x1c, 0x16, 0x87, 0xa1, 0x43, 0x07, 0x7e, 0x3b, 0xec, 0xdf, 0xa6, 0x60, 0x81,
-	0x7a, 0x70, 0x34, 0xed, 0x4b, 0xb1, 0xd7, 0x43, 0xbf, 0xe2, 0x9e, 0xbb, 0x34, 0xa9, 0xfe, 0x84,
-	0xde, 0xf5, 0x14, 0x54, 0xc7, 0x33, 0x89, 0x27, 0xaa, 0xcd, 0x6a, 0x1c, 0x63, 0xfc, 0xa2, 0xa5,
-	0x3d, 0xca, 0x87, 0x39, 0x3b, 0xfa, 0x10, 0x80, 0x35, 0x8e, 0x4c, 0xe2, 0x37, 0x99, 0x9b, 0xe6,
-	0x70, 0x9e, 0x8d, 0xec, 0x10, 0xbf, 0x49, 0x77, 0xb2, 0x65, 0xb5, 0x2d, 0xee, 0x84, 0x33, 0x98,
-	0x77, 0xf4, 0x07, 0xa0, 0x32, 0x10, 0x5a, 0x5c, 0x0f, 0x76, 0xeb, 0xe5, 0x46, 0xf1, 0x0a, 0x9a,
-	0x05, 0xa8, 0x37, 0x36, 0x71, 0xe3, 0xa8, 0x51, 0x7d, 0x5e, 0x2e, 0x2a, 0xe8, 0x7d, 0x98, 0xd9,
-	0xde, 0x7b, 0xbe, 0x5f, 0x2b, 0x37, 0xca, 0x7c, 0x28, 0xa5, 0xff, 0x02, 0xae, 0x0e, 0x89, 0x14,
-	0x46, 0x71, 0x21, 0xb2, 0x98, 0xb4, 0xc6, 0x24, 0x23, 0xf7, 0xb2, 0xe8, 0x7f, 0x99, 0x02, 0x88,
-	0xe6, 0x86, 0x22, 0xf8, 0x51, 0x7f, 0x75, 0xfe, 0x68, 0x3c, 0x74, 0xff, 0x91, 0x29, 0x8a, 0xfe,
-	0xa9, 0x37, 0x8b, 0xfe, 0xf4, 0x25, 0xa3, 0xff, 0x26, 0x14, 0x64, 0x3c, 0x47, 0x61, 0x0c, 0x72,
-	0xa8, 0x6a, 0xa2, 0x1f, 0xf7, 0xb9, 0x64, 0x66, 0x4c, 0x19, 0xe8, 0xa1, 0x43, 0x5b, 0x61, 0xfc,
-	0x67, 0x99, 0x7d, 0xef, 0x4e, 0x30, 0xc2, 0x3b, 0x8e, 0xfd, 0x47, 0xa3, 0x4e, 0x6e, 0xfb, 0xe5,
-	0xdd, 0x1d, 0x7e, 0x72, 0x03, 0xc8, 0xec, 0x94, 0xf7, 0x6b, 0x7b, 0x87, 0xc5, 0x29, 0x3a, 0xb1,
-	0x53, 0xae, 0x37, 0xf0, 0xde, 0x61, 0x31, 0xad, 0x3f, 0x87, 0x79, 0x1e, 0x9f, 0x98, 0xb4, 0x88,
-	0xe1, 0x13, 0x19, 0x40, 0x0f, 0x20, 0xeb, 0xf1, 0x11, 0x11, 0x98, 0xd7, 0xe3, 0x74, 0x92, 0x4c,
-	0x92, 0x56, 0xdf, 0x85, 0x0f, 0x06, 0xe0, 0x84, 0x1f, 0xbe, 0x21, 0xde, 0xef, 0xd3, 0x90, 0x15,
-	0x83, 0xff, 0xfb, 0xda, 0x51, 0x8a, 0x74, 0x48, 0x8f, 0xf1, 0x0c, 0x49, 0x84, 0x9e, 0xc2, 0x4c,
-	0xe0, 0x19, 0x27, 0x27, 0x56, 0xf3, 0xc8, 0x77, 0x5b, 0x56, 0x20, 0x8e, 0xe4, 0xdf, 0x1f, 0xa3,
-	0x79, 0xa9, 0x4e, 0x09, 0xf1, 0xb4, 0xe0, 0x63, 0x3d, 0xf4, 0xf9, 0x40, 0x79, 0xb9, 0x3d, 0x0e,
-	0xe0, 0xdd, 0xfa, 0x96, 0xf6, 0x05, 0xa8, 0x5c, 0x88, 0x4d, 0xc8, 0x06, 0x86, 0x77, 0x4a, 0x82,
-	0xb1, 0x47, 0xfa, 0x3e, 0x35, 0x1a, 0x8c, 0x1e, 0x4b, 0x3e, 0xad, 0x06, 0x85, 0x9e, 0xf1, 0x44,
-	0xa5, 0x89, 0xde, 0xaa, 0x5c, 0xe2, 0x35, 0xe9, 0x76, 0x51, 0xd9, 0x54, 0x2c, 0xbb, 0xfa, 0x23,
-	0x98, 0xab, 0x90, 0xa0, 0xe6, 0x9c, 0xd6, 0x03, 0x8f, 0x18, 0xed, 0x4b, 0x15, 0xbc, 0xbf, 0x2a,
-	0x90, 0xab, 0x39, 0xa7, 0x5b, 0x46, 0xd0, 0x3c, 0x4b, 0x26, 0xc7, 0x4d, 0x28, 0x58, 0xb6, 0x1f,
-	0x18, 0x76, 0x93, 0x50, 0x12, 0x6e, 0x27, 0x90, 0x43, 0x55, 0x93, 0xde, 0x52, 0x5a, 0x96, 0x4d,
-	0x68, 0x2a, 0x1b, 0x79, 0x54, 0x92, 0x4b, 0x96, 0xf8, 0xf6, 0x70, 0x06, 0xed, 0x00, 0x54, 0xbe,
-	0x2f, 0xeb, 0x90, 0x0f, 0xaf, 0xce, 0x22, 0x4a, 0xc6, 0x5e, 0xfe, 0x42, 0x62, 0x7a, 0x05, 0xa6,
-	0x58, 0xf2, 0x0a, 0x4c, 0xdb, 0xfa, 0xbf, 0xd2, 0xf0, 0x7e, 0xf9, 0x35, 0x69, 0xf6, 0x9b, 0x67,
-	0x9b, 0xa5, 0x6b, 0x4f, 0x96, 0xdb, 0x7b, 0x71, 0x62, 0x0e, 0x71, 0xd1, 0x28, 0xf2, 0x02, 0x71,
-	0xaf, 0xf2, 0x18, 0x88, 0x65, 0xbb, 0x9d, 0x40, 0x04, 0x5e, 0x42, 0x90, 0x2a, 0x65, 0xa1, 0x20,
-	0x8c, 0x17, 0x3d, 0x03, 0xf5, 0xc2, 0xb2, 0x9b, 0x67, 0x22, 0x0c, 0x57, 0x93, 0x81, 0xbc, 0xb0,
-	0x6c, 0xd3, 0xb9, 0xa8, 0x5b, 0xdf, 0xb0, 0x6b, 0x1e, 0x03, 0xd0, 0x7e, 0xcd, 0xf2, 0x9f, 0x97,
-	0xd0, 0xa3, 0x10, 0xa4, 0x0d, 0xef, 0x94, 0x26, 0x8d, 0x29, 0x6a, 0x2b, 0xda, 0x46, 0x1b, 0x30,
-	0xe5, 0x06, 0x5d, 0x21, 0xc9, 0x9d, 0x64, 0x92, 0xec, 0x37, 0x0e, 0x31, 0xe5, 0xd2, 0xae, 0x83,
-	0xca, 0x54, 0xa3, 0xc8, 0xa6, 0x11, 0x18, 0x6c, 0xd5, 0x69, 0xcc, 0xda, 0xda, 0x6f, 0x14, 0x98,
-	0xda, 0x6f, 0x1c, 0xa2, 0x05, 0xc8, 0x10, 0xdb, 0x38, 0x6e, 0xf1, 0xf4, 0x97, 0xc3, 0xa2, 0x47,
-	0x79, 0x02, 0xe2, 0xb5, 0xe5, 0xce, 0xd1, 0x36, 0xfa, 0x19, 0x14, 0x2e, 0x98, 0x9a, 0x47, 0xbe,
-	0xf5, 0x0d, 0x79, 0x53, 0xfb, 0x60, 0xb8, 0x08, 0xdb, 0xda, 0x31, 0x40, 0x34, 0x43, 0x17, 0xf5,
-	0x9c, 0x0b, 0x9f, 0x89, 0xa2, 0x62, 0xd6, 0xa6, 0x63, 0x4d, 0x47, 0xbc, 0x5d, 0xa8, 0x98, 0xb5,
-	0x69, 0x5a, 0xb8, 0xb0, 0xcc, 0x80, 0x6f, 0x91, 0x8a, 0x79, 0x87, 0xaa, 0x72, 0x46, 0xac, 0xd3,
-	0x33, 0x5e, 0x7e, 0x55, 0x2c, 0x7a, 0x5b, 0x59, 0x50, 0xc9, 0x39, 0x8d, 0xcc, 0xbf, 0xa7, 0x00,
-	0xf5, 0x4a, 0x26, 0x4a, 0x40, 0x05, 0x32, 0x4e, 0x27, 0xa0, 0x6e, 0xc3, 0x7d, 0xef, 0x93, 0x49,
-	0x1a, 0x71, 0xbe, 0xd2, 0x1e, 0x63, 0x7a, 0x76, 0x05, 0x0b, 0x76, 0xb4, 0x09, 0x69, 0xf2, 0xda,
-	0x4a, 0xec, 0x7d, 0x02, 0xa6, 0xfc, 0xda, 0xa2, 0x20, 0x8c, 0x55, 0xd3, 0x20, 0x4d, 0xfb, 0x5c,
-	0x6b, 0x93, 0x48, 0x4b, 0xd0, 0xb6, 0xf6, 0xad, 0x02, 0x19, 0xbe, 0x26, 0xda, 0x83, 0x6c, 0xf3,
-	0xcc, 0xb0, 0x6d, 0xd2, 0x12, 0xaf, 0x41, 0x0f, 0x2e, 0x25, 0x73, 0x69, 0x9b, 0x33, 0x63, 0x89,
-	0x12, 0xba, 0x48, 0x2a, 0x72, 0x11, 0xbd, 0x04, 0x59, 0x41, 0xd7, 0x5f, 0xc0, 0x01, 0x32, 0xf5,
-	0xc6, 0xce, 0xde, 0x41, 0x83, 0xd7, 0xef, 0x7a, 0x63, 0xa7, 0x8c, 0x71, 0x31, 0x15, 0xd9, 0xb9,
-	0x02, 0xf9, 0x6d, 0xc7, 0x3e, 0xb1, 0x4e, 0xbf, 0x34, 0xbc, 0xf0, 0x15, 0x4c, 0x89, 0x5e, 0xc1,
-	0xe2, 0xd3, 0x3a, 0x4d, 0xff, 0x86, 0xeb, 0xb2, 0x3d, 0xcd, 0x63, 0xda, 0xd4, 0xf7, 0xa0, 0xc8,
-	0x81, 0xea, 0x24, 0x3c, 0xf8, 0x6f, 0x40, 0xfe, 0xdc, 0xf0, 0x2c, 0xea, 0xa4, 0x32, 0xe3, 0x8f,
-	0xa8, 0x94, 0x42, 0x02, 0x1c, 0xd1, 0xeb, 0x73, 0xf0, 0x7e, 0x0f, 0x20, 0xb7, 0x89, 0xfe, 0x58,
-	0xae, 0x52, 0x89, 0x56, 0x59, 0x80, 0x8c, 0xeb, 0x91, 0x13, 0xeb, 0xb5, 0x90, 0x5b, 0xf4, 0xa4,
-	0x8c, 0xa9, 0x48, 0xc6, 0x7d, 0x09, 0x59, 0x89, 0x20, 0xdf, 0x4e, 0xc8, 0x23, 0xb8, 0xca, 0xf2,
-	0x2e, 0x23, 0xe1, 0x14, 0x97, 0x29, 0x22, 0x13, 0x4b, 0x82, 0xfe, 0x15, 0x2c, 0x0e, 0x2f, 0x20,
-	0x24, 0x7f, 0x0c, 0x99, 0x26, 0x1b, 0x11, 0x5e, 0x1c, 0x7b, 0x6e, 0x1e, 0xe2, 0x16, 0x3c, 0xfa,
-	0xbf, 0x15, 0x28, 0x0e, 0x4e, 0xa2, 0x27, 0x34, 0x2c, 0x48, 0x53, 0xd8, 0xe1, 0x4e, 0x12, 0x40,
-	0xe6, 0xba, 0x98, 0xb1, 0xd1, 0x9b, 0x31, 0xb1, 0xcf, 0x8f, 0xce, 0x0d, 0x8f, 0xe7, 0xc6, 0x89,
-	0xa6, 0xcc, 0x12, 0xfb, 0xfc, 0x4b, 0xc3, 0xf3, 0xb5, 0x36, 0x0d, 0x26, 0xc2, 0xee, 0x34, 0x96,
-	0x6d, 0x12, 0xbe, 0x97, 0x53, 0x98, 0x77, 0xde, 0x79, 0xbe, 0xd5, 0x1d, 0x40, 0x91, 0x1e, 0x61,
-	0x15, 0x1f, 0xd8, 0x0d, 0x65, 0x74, 0x81, 0x4e, 0x5d, 0xb2, 0x40, 0xeb, 0xff, 0x4c, 0xc3, 0x07,
-	0xd1, 0x8a, 0xcc, 0x64, 0xc2, 0x4f, 0x76, 0x20, 0xed, 0xb8, 0xc4, 0x16, 0x09, 0xad, 0x34, 0xde,
-	0xe4, 0x3d, 0x8c, 0xa5, 0x3d, 0x97, 0xd8, 0x34, 0x19, 0x51, 0x6e, 0x8a, 0xd2, 0x93, 0xcf, 0x2e,
-	0x81, 0xd2, 0x9b, 0xd2, 0xd0, 0x17, 0x61, 0x7a, 0x1d, 0x57, 0x30, 0xe2, 0xa5, 0x19, 0xcc, 0xb0,
-	0x15, 0xf9, 0x62, 0xcd, 0xcf, 0xb9, 0x2b, 0x97, 0x10, 0x89, 0xb2, 0xd1, 0xd2, 0xcc, 0xf8, 0xb5,
-	0x27, 0x90, 0xa6, 0xaa, 0x4e, 0xde, 0x9d, 0xd0, 0x77, 0x52, 0x3d, 0xbe, 0x33, 0x36, 0x4d, 0xff,
-	0x21, 0x4a, 0xd3, 0x78, 0x30, 0x4d, 0xaf, 0x5f, 0x56, 0xf7, 0xff, 0x4a, 0xa6, 0xd6, 0xee, 0x83,
-	0xca, 0xec, 0x11, 0xfd, 0x01, 0x50, 0x26, 0xfc, 0x01, 0x88, 0x92, 0xfb, 0xb7, 0x0a, 0x2c, 0x0c,
-	0x4a, 0x2c, 0x72, 0xc7, 0x82, 0x3c, 0x7e, 0xb1, 0x83, 0x46, 0xcc, 0x89, 0x2a, 0xf5, 0x96, 0x27,
-	0x2a, 0xb4, 0x08, 0x19, 0xea, 0x99, 0xc4, 0xe4, 0x0f, 0x17, 0xcc, 0x33, 0x58, 0x3f, 0x92, 0xef,
-	0x6f, 0x0a, 0xcc, 0x36, 0x9c, 0x57, 0xc4, 0x6e, 0x78, 0x86, 0xed, 0xbb, 0x8e, 0xc7, 0x76, 0xe9,
-	0xd8, 0x31, 0xbb, 0xf2, 0xfc, 0x43, 0xdb, 0xe8, 0x06, 0xe4, 0x7d, 0xeb, 0xd4, 0x36, 0x82, 0x8e,
-	0x47, 0x84, 0x2d, 0xa3, 0x01, 0xf4, 0x01, 0x64, 0x5e, 0x91, 0x2e, 0xf5, 0x08, 0x5e, 0x8d, 0xd4,
-	0x57, 0xa4, 0x5b, 0x35, 0x51, 0x0d, 0x72, 0x6d, 0x12, 0x18, 0xcc, 0xfe, 0x69, 0x16, 0xad, 0xb1,
-	0xba, 0xf4, 0x2f, 0x5f, 0x7a, 0x2e, 0x58, 0x78, 0xec, 0x86, 0x08, 0xda, 0x06, 0xcc, 0xf4, 0x4d,
-	0x5d, 0xea, 0x6e, 0xfd, 0x47, 0x05, 0x54, 0xb6, 0x0e, 0xd5, 0xae, 0xe3, 0x13, 0x4f, 0x16, 0x58,
-	0xda, 0x46, 0xd7, 0x20, 0x17, 0xd0, 0x49, 0x99, 0xff, 0xa7, 0x71, 0x96, 0xf5, 0xab, 0x26, 0xda,
-	0x80, 0xc2, 0xb9, 0xd1, 0xb2, 0xcc, 0xa3, 0x8e, 0x1d, 0x58, 0xad, 0xf0, 0x81, 0x63, 0xf4, 0x71,
-	0x1e, 0x18, 0xf9, 0x01, 0xa5, 0x66, 0xaf, 0x43, 0xce, 0xa9, 0x65, 0xb3, 0xf8, 0xcb, 0x61, 0xde,
-	0xa1, 0xc5, 0xd2, 0xb2, 0xcf, 0xad, 0x80, 0xff, 0xdb, 0xc9, 0x61, 0xd1, 0xd3, 0x57, 0x01, 0x55,
-	0x59, 0x8b, 0x09, 0x2a, 0x73, 0x93, 0x06, 0x39, 0xb3, 0xe3, 0x19, 0x81, 0xe5, 0xd8, 0x42, 0xe6,
-	0xb0, 0xaf, 0x2f, 0x43, 0x71, 0x97, 0x5c, 0x08, 0x72, 0xe1, 0x55, 0xf3, 0xa0, 0x32, 0xd9, 0x05,
-	0x31, 0xef, 0xe8, 0xf7, 0xe1, 0xda, 0xb6, 0x63, 0x9f, 0x13, 0x2f, 0x88, 0x59, 0x22, 0x96, 0x65,
-	0xed, 0xbb, 0xf7, 0x20, 0xf7, 0x42, 0xec, 0x11, 0xaa, 0x01, 0x44, 0x7f, 0x3a, 0xd0, 0xc2, 0x90,
-	0xfe, 0xe5, 0x36, 0x3d, 0x42, 0x7f, 0x3c, 0xea, 0x95, 0x6d, 0xe0, 0x0f, 0xc9, 0x4b, 0x98, 0x8b,
-	0x79, 0xb2, 0x1e, 0x09, 0xbb, 0x32, 0x0a, 0x76, 0xd4, 0x9b, 0xf7, 0xaf, 0xe0, 0xbd, 0x81, 0x87,
-	0x34, 0x74, 0x37, 0xf9, 0x03, 0xa0, 0x76, 0x2f, 0x11, 0xad, 0x58, 0xeb, 0x10, 0x66, 0xfa, 0x5e,
-	0x6c, 0xd1, 0x72, 0x1c, 0x77, 0xdc, 0xa3, 0xae, 0x36, 0xe1, 0xfd, 0x0e, 0x6d, 0xc3, 0x2c, 0xbd,
-	0x1a, 0x1b, 0x01, 0x11, 0x16, 0x1c, 0x69, 0xa1, 0xd1, 0xbf, 0x98, 0xd0, 0x01, 0x5c, 0x0d, 0x41,
-	0x06, 0x5e, 0xf1, 0x47, 0xa1, 0x25, 0xf8, 0x3f, 0x80, 0x5e, 0xc0, 0x74, 0xef, 0xb5, 0x1d, 0xdd,
-	0x1e, 0xa1, 0xf5, 0xe0, 0xc5, 0x5e, 0xbb, 0x31, 0xae, 0x60, 0xaf, 0x2a, 0xc8, 0x84, 0xf7, 0xd8,
-	0x2d, 0x30, 0xca, 0x70, 0xe8, 0x56, 0xa2, 0x0c, 0x18, 0xef, 0x7d, 0xc3, 0x87, 0xfa, 0x65, 0x65,
-	0x55, 0x41, 0x4e, 0xcc, 0xc1, 0xeb, 0x5e, 0xa2, 0xb3, 0x9b, 0x58, 0xec, 0x87, 0xc9, 0x88, 0xf9,
-	0x92, 0xab, 0x0a, 0x7a, 0x01, 0x73, 0x7d, 0xa7, 0x1d, 0xa1, 0xda, 0xc7, 0xe3, 0x61, 0xa4, 0x5d,
-	0xb4, 0x11, 0x5b, 0xb5, 0xac, 0xa0, 0xaf, 0x61, 0xbe, 0xbf, 0xbe, 0x08, 0xe4, 0x3b, 0x89, 0x6b,
-	0xa7, 0x76, 0x37, 0x09, 0x69, 0x8f, 0xf1, 0x5e, 0x42, 0xa1, 0xe7, 0xf7, 0x69, 0xbc, 0x0e, 0xc3,
-	0xbf, 0x69, 0xb5, 0xdb, 0x13, 0xe9, 0x44, 0x48, 0x75, 0xe5, 0x63, 0xe6, 0x80, 0xcf, 0xad, 0x8c,
-	0x06, 0x88, 0xfd, 0x75, 0xa7, 0xad, 0x26, 0x67, 0x10, 0x4b, 0xb7, 0xa1, 0x38, 0xf8, 0x9f, 0x23,
-	0xde, 0x2f, 0x46, 0xfc, 0x68, 0x89, 0xf7, 0x8b, 0x91, 0xbf, 0x4e, 0x4c, 0x98, 0xe9, 0x7b, 0x67,
-	0x8d, 0x4f, 0x1e, 0x71, 0x2f, 0xbb, 0xda, 0x9d, 0x04, 0x94, 0x62, 0x95, 0xaf, 0x20, 0x5f, 0x27,
-	0xd2, 0xcb, 0x3f, 0x1a, 0x7d, 0x1b, 0x88, 0xae, 0x8d, 0xda, 0xad, 0x09, 0x54, 0x11, 0x72, 0x25,
-	0x09, 0x72, 0x25, 0x11, 0x72, 0xef, 0x95, 0xb0, 0x09, 0x73, 0x15, 0x62, 0x13, 0xcf, 0x08, 0x48,
-	0x4f, 0xc5, 0x8a, 0xf7, 0xb5, 0xe1, 0x92, 0xa6, 0xc5, 0xca, 0x32, 0x54, 0x2b, 0x31, 0x20, 0xb9,
-	0x48, 0x8d, 0x96, 0x66, 0xbe, 0xc6, 0xa8, 0xb4, 0x98, 0x0c, 0xd3, 0x02, 0x34, 0x5c, 0x69, 0xd1,
-	0x27, 0x23, 0xb4, 0x8e, 0xaf, 0xc8, 0xc9, 0x96, 0x3a, 0xce, 0x30, 0x01, 0x7f, 0xf4, 0x9f, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0xdf, 0x8d, 0x0e, 0xe3, 0x14, 0x24, 0x00, 0x00,
+	// 2784 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x5a, 0x5b, 0x6f, 0x1b, 0xc7,
+	0xf5, 0xf7, 0x92, 0x5c, 0x5e, 0x0e, 0x25, 0x85, 0x1e, 0xdf, 0xe4, 0xb5, 0x13, 0x3b, 0x9b, 0x8b,
+	0xe5, 0xe4, 0x1f, 0x4a, 0xd1, 0xbf, 0x09, 0x64, 0x2b, 0x97, 0xca, 0x12, 0x4d, 0x33, 0x95, 0x25,
+	0x75, 0x48, 0x45, 0x51, 0xd3, 0x46, 0x58, 0x71, 0x47, 0xd2, 0xc6, 0xe4, 0xee, 0x66, 0x77, 0x25,
+	0x99, 0x01, 0xfa, 0x56, 0xa0, 0x5f, 0xa0, 0x0f, 0x05, 0x8a, 0xa0, 0xee, 0x5b, 0x5f, 0xfb, 0x58,
+	0xf4, 0x35, 0x5f, 0xa4, 0x68, 0xfb, 0x01, 0x5a, 0xa0, 0x28, 0xd0, 0xa7, 0x62, 0x6e, 0xbb, 0x4b,
+	0x72, 0x49, 0xae, 0x6c, 0x15, 0x08, 0xd0, 0xbc, 0x48, 0x33, 0xbb, 0xe7, 0x9c, 0x39, 0xd7, 0xdf,
+	0x99, 0x9d, 0x21, 0x4c, 0xf9, 0xc4, 0x3b, 0x21, 0x5e, 0xd5, 0xf5, 0x9c, 0xc0, 0x41, 0xe8, 0xc8,
+	0xf0, 0x8f, 0xac, 0xb6, 0xe3, 0xb9, 0xd5, 0x53, 0xa3, 0xe7, 0x3a, 0x96, 0x1d, 0x68, 0xd7, 0x0f,
+	0x1d, 0xe7, 0xb0, 0x43, 0xe6, 0x19, 0xc5, 0xfe, 0xf1, 0xc1, 0xbc, 0x61, 0xf7, 0x38, 0xb9, 0x76,
+	0x63, 0xf0, 0x15, 0xe9, 0xba, 0x81, 0x7c, 0x79, 0x6b, 0xf0, 0x65, 0x60, 0x75, 0x89, 0x1f, 0x18,
+	0x5d, 0x57, 0x10, 0x5c, 0x13, 0x04, 0x9e, 0xdb, 0x9e, 0xf7, 0x03, 0x23, 0x38, 0xf6, 0xf9, 0x0b,
+	0xfd, 0xa7, 0x50, 0x5e, 0x71, 0xdd, 0x8e, 0xd5, 0x36, 0x02, 0xcb, 0xb1, 0xd1, 0x3d, 0x28, 0xb8,
+	0x9e, 0xf3, 0x25, 0x69, 0x07, 0xb3, 0x99, 0xdb, 0xca, 0x5c, 0x79, 0xf1, 0x56, 0x75, 0x58, 0xcd,
+	0x2a, 0x26, 0x07, 0xd5, 0x2d, 0x4e, 0x86, 0x25, 0x3d, 0x42, 0x90, 0xb3, 0x8d, 0x2e, 0x99, 0x55,
+	0x6e, 0x2b, 0x73, 0x25, 0xcc, 0xc6, 0xfa, 0xcb, 0x50, 0xd8, 0x1a, 0xf3, 0xfa, 0x16, 0x94, 0x76,
+	0x1c, 0xef, 0x89, 0xef, 0x1a, 0x6d, 0x92, 0x48, 0xf0, 0x4c, 0x81, 0x2c, 0x26, 0x07, 0x5a, 0xa3,
+	0x5f, 0xcb, 0xdb, 0x50, 0x36, 0xa2, 0xa9, 0xe0, 0x88, 0x3f, 0x42, 0xb3, 0xfd, 0x76, 0x94, 0x42,
+	0x35, 0xb5, 0xd7, 0x22, 0x95, 0x62, 0x44, 0x4a, 0x3f, 0xd1, 0xdd, 0xb8, 0x62, 0x37, 0xa1, 0x74,
+	0x2a, 0x27, 0x82, 0x30, 0x7a, 0xa0, 0xff, 0x52, 0x81, 0xd2, 0xaa, 0xd3, 0x75, 0x1d, 0x9b, 0xd8,
+	0x01, 0x7a, 0x1f, 0x72, 0x41, 0xcf, 0xe5, 0x64, 0x33, 0x8b, 0x7a, 0x92, 0xf3, 0x42, 0xe2, 0x6a,
+	0xab, 0xe7, 0x12, 0xcc, 0xe8, 0x43, 0xe3, 0x33, 0x31, 0xe3, 0xab, 0x90, 0xa3, 0x14, 0xa8, 0x0c,
+	0x85, 0xed, 0x8d, 0x1f, 0x6d, 0x6c, 0xee, 0x6c, 0x54, 0x2e, 0xd0, 0xc9, 0x83, 0xed, 0xc6, 0xfa,
+	0x5a, 0x0d, 0x57, 0x14, 0x34, 0x05, 0x45, 0x5c, 0xab, 0x37, 0x9a, 0x2d, 0xbc, 0x5b, 0xc9, 0xe8,
+	0x7f, 0xca, 0x40, 0xbe, 0xc9, 0x62, 0x8b, 0xde, 0x07, 0x95, 0x46, 0x59, 0xea, 0x71, 0x3b, 0x49,
+	0x0f, 0x4e, 0xca, 0xfe, 0x11, 0xcc, 0xc9, 0xa9, 0x47, 0x4c, 0x12, 0x18, 0x56, 0xc7, 0x97, 0x6e,
+	0x13, 0x53, 0x34, 0x07, 0x2a, 0xf1, 0x3c, 0xc7, 0x9b, 0xcd, 0xb2, 0xb4, 0x40, 0x55, 0x9e, 0x50,
+	0x55, 0xcf, 0x6d, 0x0b, 0x49, 0x98, 0x13, 0xa0, 0x7b, 0x00, 0x7e, 0x60, 0x78, 0xc1, 0x1e, 0xcd,
+	0xc1, 0xd9, 0x1c, 0x23, 0xd7, 0x24, 0xb9, 0x4c, 0xd0, 0x6a, 0x4b, 0x26, 0x28, 0x2e, 0x31, 0x6a,
+	0x3a, 0x47, 0x1f, 0xc3, 0x74, 0xdb, 0xe9, 0xba, 0x1d, 0x12, 0x10, 0xce, 0xad, 0x4e, 0xe4, 0x9e,
+	0x92, 0x0c, 0xf4, 0x91, 0x7e, 0x0f, 0x54, 0x66, 0xcf, 0x90, 0xcf, 0xf0, 0xf6, 0xc6, 0x46, 0x63,
+	0xa3, 0x5e, 0x51, 0xe8, 0xa4, 0xb9, 0xbd, 0xba, 0x5a, 0x6b, 0x36, 0x2b, 0x19, 0x54, 0x02, 0xb5,
+	0x86, 0xf1, 0x26, 0xae, 0x64, 0xf5, 0xdf, 0x2a, 0x30, 0xc5, 0x0d, 0x79, 0x68, 0x75, 0x02, 0xe2,
+	0xa1, 0x15, 0x28, 0x1c, 0xb0, 0x91, 0x3f, 0xab, 0xdc, 0xce, 0xce, 0x95, 0x17, 0xef, 0x8c, 0xf6,
+	0x22, 0x67, 0xa9, 0xf2, 0x7f, 0x58, 0xf2, 0x69, 0xeb, 0x90, 0x17, 0xc2, 0x96, 0x64, 0x40, 0x32,
+	0xe9, 0x02, 0xf2, 0xe8, 0x82, 0x08, 0xc9, 0x83, 0x22, 0xe4, 0xb9, 0x38, 0xfd, 0x0f, 0x0a, 0xcc,
+	0x6c, 0xba, 0xc4, 0x63, 0x19, 0xbe, 0xe9, 0x99, 0xc4, 0x43, 0x1f, 0x81, 0xea, 0xd0, 0x81, 0x10,
+	0x3b, 0x97, 0x24, 0xb6, 0x9f, 0xa5, 0xca, 0xfe, 0x62, 0xce, 0x46, 0xd3, 0xce, 0x24, 0x7e, 0x9b,
+	0x05, 0xb5, 0x88, 0xd9, 0x18, 0x5d, 0x06, 0xb5, 0x63, 0x75, 0xad, 0x80, 0x85, 0x6e, 0x1a, 0xf3,
+	0x89, 0xfe, 0x1e, 0xa8, 0x7c, 0xc9, 0x12, 0xa8, 0xdb, 0x1b, 0xcd, 0x5a, 0xab, 0x72, 0x01, 0xcd,
+	0x00, 0x34, 0x5b, 0x2b, 0xb8, 0xb5, 0xd7, 0x6a, 0x3c, 0xae, 0x55, 0x14, 0x74, 0x11, 0xa6, 0x57,
+	0x37, 0x1f, 0x6f, 0xad, 0xd7, 0x5a, 0x35, 0xfe, 0x28, 0xa3, 0xd7, 0x00, 0x6d, 0xbb, 0x3e, 0xf1,
+	0x82, 0x07, 0xc7, 0x56, 0xc7, 0xc4, 0xe4, 0xab, 0x63, 0xe2, 0x07, 0x68, 0x1e, 0xd4, 0x7d, 0x3a,
+	0x67, 0xe9, 0x59, 0x5e, 0xbc, 0x9e, 0xa4, 0x36, 0x67, 0xe0, 0x74, 0xfa, 0x43, 0xb8, 0xd4, 0x27,
+	0xc6, 0x77, 0x1d, 0xdb, 0x27, 0x67, 0x97, 0xf3, 0x1b, 0x05, 0x2e, 0xae, 0x5b, 0x3e, 0x17, 0xe3,
+	0x4b, 0x75, 0x6a, 0xc3, 0x70, 0x52, 0x5e, 0x7c, 0x6d, 0x14, 0xf0, 0xc5, 0x80, 0xa8, 0x1f, 0x73,
+	0x3e, 0x8e, 0xe3, 0x04, 0x47, 0xcf, 0x57, 0x47, 0x09, 0x09, 0xd1, 0x25, 0x0e, 0x25, 0x75, 0x40,
+	0x71, 0xe5, 0x84, 0x91, 0xef, 0x42, 0x9e, 0x29, 0x2f, 0xd3, 0x70, 0x8c, 0x95, 0x82, 0x90, 0xe6,
+	0xf2, 0x95, 0x3a, 0x09, 0xd6, 0x8d, 0x80, 0xf8, 0xfd, 0x9e, 0xff, 0xae, 0x98, 0xfa, 0x6d, 0x16,
+	0x54, 0xa6, 0xd8, 0xa0, 0x46, 0xf9, 0xf3, 0xd0, 0xa8, 0x70, 0x76, 0x8d, 0xd0, 0x0c, 0x64, 0x2c,
+	0x53, 0xc0, 0x7b, 0xc6, 0x32, 0xd1, 0x22, 0xe4, 0x79, 0xa3, 0x14, 0xf6, 0x69, 0xa3, 0x4b, 0x16,
+	0x0b, 0x4a, 0xb4, 0x0c, 0xa5, 0xb6, 0x44, 0x77, 0x01, 0x94, 0x2f, 0x8f, 0x6d, 0x01, 0x38, 0xa2,
+	0x47, 0x4b, 0x50, 0x34, 0xbc, 0xc0, 0x3a, 0x30, 0xda, 0x81, 0x40, 0xcd, 0x9b, 0x49, 0xbc, 0x2b,
+	0x82, 0x06, 0x87, 0xd4, 0xe8, 0x43, 0xc8, 0x77, 0x8c, 0x7d, 0xd2, 0xf1, 0x67, 0x55, 0x96, 0x21,
+	0x6f, 0x8c, 0xcc, 0x90, 0xea, 0x3a, 0xa3, 0xab, 0xd9, 0x81, 0xd7, 0xc3, 0x82, 0x49, 0xbb, 0x07,
+	0xe5, 0xd8, 0x63, 0x54, 0x81, 0xec, 0x13, 0xd2, 0x13, 0x9e, 0xa0, 0x43, 0x8a, 0x08, 0x27, 0x46,
+	0xe7, 0x58, 0x76, 0x27, 0x3e, 0xb9, 0x9f, 0x59, 0x52, 0xf4, 0x0f, 0xa0, 0x28, 0xf5, 0x41, 0x0b,
+	0x31, 0xfd, 0x79, 0x5e, 0x5d, 0x1e, 0xc2, 0xed, 0x15, 0xbb, 0x17, 0xe9, 0xad, 0xff, 0x0c, 0x6e,
+	0xf0, 0xaa, 0xde, 0x3a, 0xf6, 0x8f, 0x88, 0x19, 0x5a, 0x26, 0x72, 0xf5, 0xa3, 0x21, 0x81, 0x89,
+	0xfd, 0x74, 0x80, 0x39, 0x12, 0xff, 0x05, 0xdc, 0x4c, 0x16, 0x2f, 0x0a, 0xeb, 0x45, 0xe5, 0xff,
+	0x5e, 0x81, 0x57, 0xc2, 0x2a, 0x4b, 0x36, 0xe1, 0xbb, 0x52, 0x6e, 0xbf, 0xce, 0x80, 0x46, 0xa1,
+	0xa5, 0x5f, 0xcb, 0x51, 0x00, 0x98, 0x3d, 0x0f, 0x35, 0x73, 0xcf, 0x51, 0x83, 0x4b, 0x61, 0xcd,
+	0x71, 0xa8, 0xbb, 0x3d, 0xa9, 0xe3, 0x86, 0x95, 0xb7, 0x14, 0x6f, 0x84, 0x23, 0x02, 0xd9, 0xdf,
+	0x08, 0x45, 0x0b, 0xd4, 0xf7, 0xe0, 0x46, 0xa2, 0x67, 0x44, 0x92, 0xfc, 0x10, 0x4a, 0x32, 0xe0,
+	0x52, 0xab, 0x34, 0x59, 0x12, 0x31, 0xe9, 0x7f, 0xcf, 0xc2, 0x4c, 0xff, 0xdb, 0x41, 0x7f, 0x17,
+	0xce, 0xc3, 0xdf, 0xc5, 0xff, 0x2d, 0xcc, 0xbb, 0x0e, 0x45, 0xd6, 0xec, 0xf6, 0x2c, 0x93, 0xed,
+	0x12, 0x4b, 0xb8, 0xc0, 0xe6, 0x0d, 0x13, 0x3d, 0x0c, 0xe1, 0x30, 0xcf, 0xe2, 0x55, 0x9d, 0x1c,
+	0xaf, 0xf3, 0xc6, 0xc5, 0x65, 0xb8, 0x5c, 0x27, 0xc1, 0x1a, 0x71, 0x3b, 0x4e, 0xaf, 0x4b, 0x6d,
+	0x16, 0x85, 0xf6, 0x1a, 0x4c, 0x9b, 0xe1, 0xc3, 0xbd, 0xd0, 0xf7, 0x53, 0xd1, 0xc3, 0x86, 0xa9,
+	0xef, 0xc2, 0x35, 0x8e, 0x5b, 0xc3, 0xfc, 0x1f, 0x01, 0x44, 0xa4, 0x02, 0x4e, 0x5e, 0x49, 0x32,
+	0x2f, 0xc6, 0x1a, 0xe3, 0xd0, 0x7f, 0x02, 0xb3, 0xc3, 0xa2, 0x43, 0x38, 0x7c, 0x31, 0xd9, 0xbf,
+	0xca, 0xc0, 0x55, 0x5a, 0x49, 0xd1, 0xeb, 0xef, 0xf1, 0x85, 0x78, 0xfa, 0xe7, 0x70, 0x6d, 0xc8,
+	0x2b, 0x21, 0xb6, 0x94, 0x23, 0xff, 0x49, 0x9d, 0x26, 0xb9, 0x3c, 0xce, 0xa2, 0xff, 0x25, 0x07,
+	0x10, 0xbd, 0x1b, 0xf4, 0x73, 0xf1, 0x3c, 0xfc, 0x5c, 0x3a, 0x07, 0x5c, 0xb9, 0xdf, 0xff, 0xf5,
+	0xf3, 0xfa, 0x78, 0x13, 0xfb, 0x3f, 0x49, 0x23, 0x4c, 0xca, 0x3e, 0x1f, 0x26, 0xe5, 0xce, 0x88,
+	0x49, 0xb7, 0xa0, 0x2c, 0x51, 0x26, 0x02, 0x17, 0x90, 0x8f, 0x1a, 0x26, 0xfa, 0x41, 0x5f, 0xa1,
+	0xe4, 0xc7, 0x6c, 0x75, 0x62, 0x74, 0xe8, 0x41, 0x88, 0x4a, 0x05, 0x16, 0xe7, 0xb7, 0x26, 0x38,
+	0xe1, 0x9c, 0x11, 0xe9, 0xfe, 0xa8, 0x2f, 0xe3, 0xad, 0xda, 0xc6, 0x1a, 0xff, 0x32, 0x06, 0xc8,
+	0xaf, 0xd5, 0xb6, 0xd6, 0x37, 0x77, 0x2b, 0x59, 0xfa, 0x62, 0xad, 0xd6, 0x6c, 0xe1, 0xcd, 0xdd,
+	0x4a, 0x4e, 0x7f, 0x0c, 0x97, 0x39, 0x6a, 0x60, 0xd2, 0x21, 0x86, 0x4f, 0x64, 0x59, 0xbf, 0x07,
+	0x05, 0x8f, 0x3f, 0x11, 0x70, 0x71, 0x23, 0x39, 0x4b, 0x38, 0x93, 0xa4, 0xd5, 0x37, 0xe0, 0xca,
+	0x80, 0x38, 0x51, 0x0f, 0xcf, 0x29, 0xef, 0x99, 0x0a, 0x05, 0xf1, 0xf0, 0xfb, 0xce, 0x2a, 0xb3,
+	0xb8, 0x1a, 0xf9, 0x32, 0x37, 0x26, 0x43, 0x25, 0x11, 0x7a, 0x08, 0xd3, 0x81, 0x67, 0x1c, 0x1c,
+	0x58, 0xed, 0x3d, 0xdf, 0xed, 0x58, 0x81, 0x38, 0x7a, 0x79, 0x75, 0x4c, 0x04, 0xaa, 0x4d, 0x4a,
+	0x88, 0xa7, 0x04, 0x1f, 0x9b, 0xa1, 0x8f, 0x07, 0x9a, 0xef, 0x9d, 0x71, 0x02, 0xce, 0x37, 0xc7,
+	0xb5, 0x4f, 0x40, 0xe5, 0x4a, 0xac, 0x40, 0x21, 0x30, 0xbc, 0x43, 0x12, 0x8c, 0x3d, 0xba, 0xe9,
+	0x33, 0xa3, 0xc5, 0xe8, 0xb1, 0xe4, 0xd3, 0xd6, 0xa1, 0x1c, 0x7b, 0x9e, 0xaa, 0x71, 0xb3, 0xf3,
+	0x44, 0xe2, 0xb5, 0x69, 0xb8, 0xa8, 0x6e, 0x2a, 0x96, 0x53, 0xfd, 0x3e, 0x5c, 0xa2, 0x5f, 0x0a,
+	0xce, 0x61, 0x33, 0xf0, 0x88, 0xd1, 0x3d, 0xd3, 0x76, 0xe0, 0xcf, 0x0a, 0x14, 0xd7, 0x9d, 0xc3,
+	0x07, 0x46, 0xd0, 0x3e, 0x4a, 0xa7, 0xc7, 0x2d, 0x28, 0x5b, 0xb6, 0x1f, 0x18, 0x76, 0x9b, 0x50,
+	0x12, 0xee, 0x27, 0x90, 0x8f, 0x1a, 0x26, 0xed, 0x66, 0x1d, 0xcb, 0x26, 0x14, 0x52, 0x47, 0x6e,
+	0x68, 0xe5, 0x92, 0x55, 0x1e, 0x1e, 0xce, 0xa0, 0x6d, 0x83, 0xca, 0xe3, 0xb2, 0x04, 0xa5, 0xf0,
+	0x8c, 0x59, 0x54, 0xeb, 0xd8, 0x43, 0xbe, 0x90, 0x18, 0x21, 0xc8, 0x51, 0x59, 0xf2, 0xa8, 0x93,
+	0x8e, 0xf5, 0x6f, 0xd9, 0x21, 0xaa, 0x7d, 0x60, 0x1d, 0x7e, 0x6a, 0x78, 0xa8, 0xfe, 0xbc, 0xdb,
+	0x85, 0x47, 0x17, 0xfa, 0xcb, 0x78, 0x39, 0x3a, 0xe0, 0xcd, 0xa5, 0x3a, 0xcd, 0x7e, 0x74, 0x61,
+	0xec, 0x79, 0x76, 0x72, 0xee, 0x3d, 0x28, 0x80, 0xea, 0xb7, 0x1d, 0x97, 0xe8, 0x9b, 0x50, 0xe1,
+	0x56, 0x34, 0x49, 0xb8, 0x65, 0x5b, 0x86, 0xd2, 0x89, 0xe1, 0x59, 0xc6, 0x7e, 0x87, 0xc8, 0x6c,
+	0x1c, 0x51, 0xc5, 0xc2, 0x7c, 0x1c, 0xd1, 0xeb, 0x97, 0xe0, 0x62, 0x4c, 0x20, 0x87, 0x49, 0xfd,
+	0x8f, 0x8a, 0x5c, 0xa6, 0x1e, 0x2d, 0x33, 0xe0, 0xb3, 0xcc, 0x79, 0xf8, 0x2c, 0x7b, 0x66, 0x9f,
+	0x5d, 0x85, 0xbc, 0xeb, 0x91, 0x03, 0xeb, 0xa9, 0xf0, 0x9a, 0x98, 0x45, 0x1e, 0xda, 0x92, 0x06,
+	0xd5, 0x23, 0x83, 0x5e, 0xcc, 0x45, 0xff, 0xca, 0xc1, 0xc5, 0xda, 0x53, 0xd2, 0xee, 0xaf, 0xac,
+	0x55, 0xb6, 0xe3, 0xf0, 0xe4, 0x3e, 0xf6, 0xed, 0x24, 0x71, 0x43, 0x5c, 0x14, 0x80, 0xbd, 0x40,
+	0x1c, 0xbd, 0x7a, 0x4c, 0x88, 0x65, 0xbb, 0xc7, 0xf2, 0x2a, 0x24, 0xa5, 0x90, 0x06, 0x65, 0xa1,
+	0x42, 0x18, 0x2f, 0x7a, 0x04, 0xea, 0xa9, 0x65, 0xb7, 0x8f, 0x84, 0x37, 0x17, 0xd2, 0x09, 0xd9,
+	0xb1, 0x6c, 0xd3, 0x39, 0x6d, 0x5a, 0x5f, 0xb3, 0x93, 0x60, 0x26, 0x40, 0xfb, 0x39, 0x6b, 0xe1,
+	0x5e, 0x4a, 0x30, 0x42, 0x90, 0x33, 0xbc, 0x43, 0xda, 0x6f, 0xb2, 0x34, 0x7d, 0xe9, 0x18, 0x2d,
+	0x43, 0xd6, 0x0d, 0x7a, 0x42, 0x93, 0xbb, 0xe9, 0x34, 0xd9, 0x6a, 0xed, 0x62, 0xca, 0xa5, 0xdd,
+	0x00, 0x95, 0x99, 0xc6, 0x0e, 0x8d, 0x8d, 0xc0, 0x60, 0xab, 0x4e, 0x61, 0x36, 0xd6, 0x7e, 0xa1,
+	0x40, 0x76, 0xab, 0xb5, 0x4b, 0x13, 0x80, 0xd8, 0x34, 0x30, 0xec, 0x6d, 0x11, 0x8b, 0x19, 0xe5,
+	0x09, 0x88, 0xd7, 0x95, 0x45, 0x4f, 0xc7, 0xe8, 0xc7, 0x50, 0x3e, 0x65, 0x66, 0xee, 0xf9, 0xd6,
+	0xd7, 0xe4, 0x79, 0xfd, 0x83, 0xe1, 0x34, 0x1c, 0x6b, 0xfb, 0x00, 0xd1, 0x1b, 0xba, 0xa8, 0xe7,
+	0x9c, 0xfa, 0x4c, 0x15, 0x15, 0xb3, 0x31, 0x7d, 0xd6, 0x76, 0xc4, 0xf5, 0x86, 0x8a, 0xd9, 0x98,
+	0x56, 0xf5, 0xa9, 0x65, 0x06, 0x3c, 0x44, 0x2a, 0xe6, 0x13, 0x6a, 0xca, 0x11, 0xb1, 0x0e, 0x8f,
+	0x38, 0x76, 0xa8, 0x58, 0xcc, 0x68, 0x2e, 0x93, 0x13, 0x0a, 0xea, 0x7f, 0xcb, 0x00, 0x8a, 0x6b,
+	0x26, 0xb2, 0xb9, 0x0e, 0x79, 0xe7, 0x38, 0xa0, 0x69, 0xc3, 0x73, 0xef, 0x9d, 0x49, 0x16, 0x71,
+	0xbe, 0xea, 0x26, 0x63, 0x7a, 0x74, 0x01, 0x0b, 0x76, 0xb4, 0x02, 0x39, 0xf2, 0xd4, 0x4a, 0x9d,
+	0x7d, 0x42, 0x4c, 0xed, 0xa9, 0x45, 0x85, 0x30, 0x56, 0x4d, 0x83, 0x1c, 0x9d, 0x73, 0xab, 0x4d,
+	0x22, 0x3d, 0x41, 0xc7, 0xda, 0x37, 0x0a, 0xe4, 0xf9, 0x9a, 0x68, 0x13, 0x0a, 0xed, 0x23, 0xc3,
+	0xb6, 0x49, 0x47, 0x5c, 0x18, 0xbd, 0x77, 0x26, 0x9d, 0xab, 0xab, 0x9c, 0x19, 0x4b, 0x29, 0x61,
+	0x8a, 0x64, 0xa2, 0x14, 0xd1, 0xab, 0x50, 0x10, 0x74, 0xfd, 0x7b, 0x50, 0x80, 0x7c, 0xb3, 0xb5,
+	0xb6, 0xb9, 0xdd, 0xe2, 0x5b, 0xd0, 0x66, 0x6b, 0xad, 0x86, 0x71, 0x25, 0x13, 0xf9, 0x79, 0x0f,
+	0xae, 0xb1, 0x9e, 0xc3, 0xb4, 0xe0, 0x18, 0x70, 0x96, 0x06, 0x3a, 0xb1, 0x1d, 0xea, 0x9f, 0xc1,
+	0xec, 0xf0, 0x02, 0x22, 0x9a, 0x1f, 0x40, 0xbe, 0xcd, 0x9e, 0x88, 0x30, 0x24, 0x7e, 0xbb, 0x0c,
+	0x71, 0x0b, 0x1e, 0xfd, 0xdf, 0x0a, 0x54, 0x06, 0x5f, 0xa2, 0x0f, 0x69, 0x5c, 0x49, 0x5b, 0x20,
+	0xdd, 0xdd, 0x34, 0x02, 0x99, 0xef, 0x31, 0x63, 0x43, 0x4b, 0x50, 0x24, 0xf6, 0xc9, 0xde, 0x89,
+	0xe1, 0xf1, 0xe2, 0x9e, 0x08, 0x96, 0x05, 0x62, 0x9f, 0x7c, 0x6a, 0x78, 0xbe, 0xd6, 0xa5, 0xd9,
+	0x40, 0xd8, 0x0d, 0x8f, 0x65, 0x9b, 0x84, 0x83, 0x74, 0x16, 0xf3, 0xc9, 0xb9, 0x03, 0x86, 0xee,
+	0x00, 0x8a, 0xec, 0x08, 0x77, 0x30, 0x03, 0xd1, 0x50, 0x46, 0x6f, 0x4e, 0x32, 0x67, 0xdc, 0x9c,
+	0xe8, 0xff, 0xc8, 0xc1, 0x95, 0x68, 0x45, 0xe6, 0x32, 0x91, 0x27, 0x6b, 0x90, 0x73, 0x5c, 0x22,
+	0x0f, 0x60, 0xab, 0xe3, 0x5d, 0x1e, 0x63, 0xa4, 0xdf, 0xf4, 0xb4, 0x43, 0x32, 0x6e, 0x2a, 0x25,
+	0x56, 0x90, 0x67, 0x90, 0x12, 0xaf, 0x49, 0xf4, 0x49, 0x88, 0x0f, 0xe3, 0x10, 0x2f, 0x59, 0x9b,
+	0x41, 0x88, 0xa8, 0xcb, 0x5b, 0x59, 0xbe, 0xbd, 0x99, 0x3f, 0x83, 0x4a, 0x94, 0x8d, 0xf6, 0x16,
+	0xc6, 0xaf, 0x7d, 0x08, 0x39, 0x6a, 0xea, 0xe4, 0xe8, 0x84, 0xb9, 0x93, 0x89, 0xe5, 0xce, 0x58,
+	0x9c, 0x79, 0x16, 0xe1, 0x0c, 0x1e, 0xc4, 0x99, 0xa5, 0xb3, 0xda, 0xfe, 0x5f, 0x81, 0x1a, 0xed,
+	0x5d, 0x50, 0x99, 0x3f, 0xa2, 0x5b, 0x6e, 0x65, 0xc2, 0x2d, 0x77, 0x84, 0x4e, 0xdf, 0x28, 0x70,
+	0x75, 0x50, 0x63, 0x81, 0x1d, 0x57, 0xe5, 0xfe, 0x81, 0x75, 0xca, 0x84, 0x2d, 0x41, 0xe6, 0x05,
+	0xb7, 0x04, 0x68, 0x16, 0xf2, 0x34, 0x33, 0x89, 0xc9, 0x6f, 0x70, 0x59, 0x66, 0xb0, 0x79, 0xa4,
+	0xdf, 0x5f, 0x15, 0x98, 0x69, 0x39, 0x4f, 0x88, 0xdd, 0xf2, 0x0c, 0xdb, 0x77, 0x1d, 0x8f, 0x45,
+	0x69, 0xdf, 0x31, 0x7b, 0xb2, 0x81, 0xd3, 0x31, 0xba, 0x09, 0x25, 0xdf, 0x3a, 0xb4, 0x8d, 0xe0,
+	0xd8, 0x23, 0xc2, 0x97, 0xd1, 0x03, 0x74, 0x05, 0xf2, 0x4f, 0x48, 0x8f, 0x66, 0x44, 0x96, 0x6f,
+	0x7c, 0x9f, 0x90, 0x5e, 0xc3, 0x44, 0xeb, 0x50, 0xec, 0x92, 0xc0, 0x60, 0xfe, 0xcf, 0xb1, 0x6a,
+	0x4d, 0xb4, 0xa5, 0x7f, 0xf9, 0xea, 0x63, 0xc1, 0xc2, 0x6b, 0x37, 0x94, 0xa0, 0x2d, 0xc3, 0x74,
+	0xdf, 0xab, 0x33, 0x9d, 0x6f, 0xfc, 0x4e, 0x01, 0x95, 0xad, 0x43, 0xad, 0x3b, 0xf6, 0x89, 0x27,
+	0xf7, 0xed, 0x74, 0x8c, 0xae, 0x43, 0x31, 0xa0, 0x2f, 0x25, 0xfe, 0x4f, 0xe1, 0x02, 0x9b, 0x37,
+	0x4c, 0xb4, 0x0c, 0xe5, 0x13, 0xa3, 0x63, 0x99, 0x7b, 0xc7, 0x76, 0x60, 0x75, 0xc2, 0x43, 0xa6,
+	0xd1, 0x9f, 0x32, 0xc0, 0xc8, 0xb7, 0x29, 0x35, 0xbb, 0x2b, 0x77, 0x0e, 0x2d, 0x9b, 0xd5, 0x5f,
+	0x11, 0xf3, 0x09, 0xdd, 0x39, 0x58, 0xf6, 0x89, 0x15, 0xf0, 0xdf, 0x2f, 0x14, 0xb1, 0x98, 0xe9,
+	0x0b, 0x80, 0x1a, 0x6c, 0xc4, 0x14, 0x95, 0xd8, 0xa4, 0x41, 0xd1, 0x3c, 0xf6, 0xe2, 0xbf, 0x64,
+	0x09, 0xe7, 0xfa, 0x1c, 0x54, 0x36, 0xc8, 0xa9, 0x20, 0x17, 0x59, 0x75, 0x19, 0x54, 0xa6, 0xbb,
+	0x20, 0xe6, 0x13, 0xfd, 0x5d, 0xb8, 0xbe, 0xea, 0xd8, 0x27, 0xc4, 0x0b, 0x12, 0x96, 0x48, 0x64,
+	0x59, 0xfc, 0xe7, 0x4b, 0x50, 0xdc, 0x11, 0x31, 0x42, 0x9f, 0x03, 0x44, 0x77, 0xcf, 0x28, 0xf1,
+	0x06, 0x71, 0xe8, 0xe2, 0x5c, 0x7b, 0x73, 0x12, 0x99, 0x50, 0xf9, 0x04, 0x2e, 0x25, 0xdc, 0xb1,
+	0xa0, 0xea, 0x28, 0xf6, 0xe4, 0x6b, 0x2a, 0x6d, 0x3e, 0x35, 0xbd, 0x58, 0xf7, 0x4b, 0x78, 0x69,
+	0xe0, 0xec, 0x15, 0xbd, 0x35, 0x4a, 0xc6, 0xf0, 0xb1, 0xb5, 0xf6, 0x76, 0x2a, 0x5a, 0xb1, 0xd6,
+	0x2e, 0x4c, 0xf7, 0x1d, 0xf9, 0xa3, 0xc4, 0x1f, 0x63, 0x24, 0xdd, 0x0a, 0x68, 0x13, 0x8e, 0x7c,
+	0xd1, 0xa7, 0x30, 0xd3, 0x7f, 0x9b, 0x8f, 0xee, 0x8e, 0x90, 0x3d, 0x7c, 0xe3, 0xaf, 0x8d, 0xfe,
+	0xb9, 0x00, 0xfa, 0x0a, 0xae, 0x8d, 0xb8, 0xbf, 0x44, 0x8b, 0x63, 0x17, 0x48, 0xbc, 0xec, 0xd4,
+	0x52, 0xdc, 0x8b, 0xa1, 0x1d, 0x98, 0x8a, 0x1f, 0x84, 0xa0, 0x3b, 0xa3, 0xd6, 0x19, 0x38, 0x2a,
+	0xd1, 0x6e, 0x8e, 0xdb, 0x06, 0x2c, 0x28, 0xc8, 0x84, 0x97, 0xd8, 0xc7, 0x51, 0x84, 0x9b, 0xc9,
+	0x49, 0x3c, 0x84, 0xab, 0xc9, 0x49, 0x3c, 0xbc, 0xd7, 0x9d, 0x53, 0x16, 0x14, 0xf4, 0x19, 0x94,
+	0x9a, 0x44, 0xee, 0xe3, 0x5e, 0x1f, 0xbd, 0xed, 0x8a, 0xbe, 0xff, 0xb5, 0x37, 0x26, 0x50, 0x89,
+	0xf4, 0xf9, 0x0c, 0x4a, 0xf5, 0x34, 0x92, 0xeb, 0xa9, 0x24, 0xc7, 0xbf, 0xae, 0x9d, 0x84, 0x2d,
+	0xe8, 0xdb, 0xa9, 0x76, 0xb1, 0x62, 0x9d, 0xff, 0x4b, 0x47, 0xcc, 0x97, 0x5b, 0x50, 0xd0, 0x0e,
+	0x5c, 0xea, 0xdb, 0xf7, 0x89, 0x70, 0xbc, 0x39, 0x5e, 0x8c, 0x8c, 0xa5, 0x76, 0x75, 0x08, 0x7b,
+	0x6b, 0x5d, 0x37, 0xe8, 0xcd, 0x29, 0xe8, 0x2b, 0xb8, 0xdc, 0xdf, 0x69, 0x85, 0xe4, 0xbb, 0xa9,
+	0x77, 0x11, 0xda, 0x5b, 0x69, 0x48, 0x63, 0x01, 0xff, 0x02, 0xca, 0xb1, 0x1f, 0x1e, 0x25, 0xdb,
+	0x30, 0xfc, 0x03, 0x27, 0xed, 0xce, 0x44, 0x3a, 0x11, 0x9c, 0x9e, 0x3c, 0x5a, 0x1f, 0xa8, 0x93,
+	0xf9, 0xd1, 0x02, 0x92, 0x8b, 0x6f, 0x21, 0x3d, 0x83, 0x58, 0xba, 0x0b, 0x95, 0xc1, 0xbb, 0xc0,
+	0xe4, 0xbc, 0x18, 0x71, 0x19, 0x99, 0x9c, 0x17, 0x23, 0xaf, 0x17, 0x4d, 0x98, 0xee, 0x3b, 0xf5,
+	0x4f, 0xc6, 0xc7, 0xa4, 0x7b, 0x06, 0xed, 0x6e, 0x0a, 0x4a, 0xb1, 0x4a, 0x1b, 0x2e, 0xd5, 0x89,
+	0x4d, 0x3c, 0x23, 0x20, 0xb1, 0x3e, 0x98, 0x1c, 0xb7, 0xe1, 0x46, 0xa9, 0x25, 0x16, 0xde, 0x50,
+	0x07, 0xc6, 0x80, 0xe4, 0x22, 0xeb, 0xb4, 0xe1, 0xf3, 0x35, 0x46, 0xe4, 0x6d, 0x4a, 0x99, 0x16,
+	0xa0, 0xe1, 0xfe, 0x8d, 0xde, 0x19, 0x51, 0xe2, 0xc9, 0x7d, 0x3e, 0xdd, 0x52, 0xfb, 0x79, 0xa6,
+	0xe0, 0xff, 0xff, 0x27, 0x00, 0x00, 0xff, 0xff, 0xa1, 0x40, 0x10, 0xa2, 0x8f, 0x2c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -3432,19 +4203,19 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type WaypointClient interface {
 	// ListBuilds returns the builds.
-	ListBuilds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListBuildsResponse, error)
+	ListBuilds(ctx context.Context, in *ListBuildsRequest, opts ...grpc.CallOption) (*ListBuildsResponse, error)
 	// ListPushedArtifacts returns the builds.
-	ListPushedArtifacts(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListPushedArtifactsResponse, error)
+	ListPushedArtifacts(ctx context.Context, in *ListPushedArtifactsRequest, opts ...grpc.CallOption) (*ListPushedArtifactsResponse, error)
 	// ListDeployments returns the deployments.
 	ListDeployments(ctx context.Context, in *ListDeploymentsRequest, opts ...grpc.CallOption) (*ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
 	GetDeployment(ctx context.Context, in *GetDeploymentRequest, opts ...grpc.CallOption) (*Deployment, error)
 	// GetLatestBuild returns the most recent successfully completed build
 	// for an app.
-	GetLatestBuild(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Build, error)
+	GetLatestBuild(ctx context.Context, in *GetLatestBuildRequest, opts ...grpc.CallOption) (*Build, error)
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
-	GetLatestPushedArtifact(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*PushedArtifact, error)
+	GetLatestPushedArtifact(ctx context.Context, in *GetLatestPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error)
 	// GetLogStream reads the log stream for a deployment. This will immediately
 	// send a single LogEntry with the lines we have so far. If there are no
 	// available lines this will NOT block and instead will return an error.
@@ -3452,6 +4223,12 @@ type WaypointClient interface {
 	GetLogStream(ctx context.Context, in *GetLogStreamRequest, opts ...grpc.CallOption) (Waypoint_GetLogStreamClient, error)
 	// StartExecStream starts an exec session.
 	StartExecStream(ctx context.Context, opts ...grpc.CallOption) (Waypoint_StartExecStreamClient, error)
+	// Set a single configuration item for the application.
+	SetConfig(ctx context.Context, in *ConfigSetRequest, opts ...grpc.CallOption) (*ConfigSetResponse, error)
+	// Retrieve merged configuration values for a specific scope. You can determine
+	// where a configuration variable was set by looking at the scope field on
+	// each variable.
+	GetConfig(ctx context.Context, in *ConfigGetRequest, opts ...grpc.CallOption) (*ConfigGetResponse, error)
 	// EntrypointConfig is called to get the configuration for the entrypoint
 	// and also to get any potential updates.
 	//
@@ -3474,10 +4251,6 @@ type WaypointClient interface {
 	UpsertDeployment(ctx context.Context, in *UpsertDeploymentRequest, opts ...grpc.CallOption) (*UpsertDeploymentResponse, error)
 	// UpsertRelease updates or inserts a release.
 	UpsertRelease(ctx context.Context, in *UpsertReleaseRequest, opts ...grpc.CallOption) (*UpsertReleaseResponse, error)
-	// Set a single configuration item for the application.
-	SetConfig(ctx context.Context, in *ConfigSetRequest, opts ...grpc.CallOption) (*ConfigSetResponse, error)
-	// Retrieve configuration for the application.
-	GetConfig(ctx context.Context, in *ConfigGetRequest, opts ...grpc.CallOption) (*ConfigGetResponse, error)
 	// Generate a new invite token that users can exchange for a login token.
 	GenerateInviteToken(ctx context.Context, in *InviteTokenRequest, opts ...grpc.CallOption) (*NewTokenResponse, error)
 	// Generate a new login token that users can use to login directly.
@@ -3494,7 +4267,7 @@ func NewWaypointClient(cc grpc.ClientConnInterface) WaypointClient {
 	return &waypointClient{cc}
 }
 
-func (c *waypointClient) ListBuilds(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListBuildsResponse, error) {
+func (c *waypointClient) ListBuilds(ctx context.Context, in *ListBuildsRequest, opts ...grpc.CallOption) (*ListBuildsResponse, error) {
 	out := new(ListBuildsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListBuilds", in, out, opts...)
 	if err != nil {
@@ -3503,7 +4276,7 @@ func (c *waypointClient) ListBuilds(ctx context.Context, in *empty.Empty, opts .
 	return out, nil
 }
 
-func (c *waypointClient) ListPushedArtifacts(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListPushedArtifactsResponse, error) {
+func (c *waypointClient) ListPushedArtifacts(ctx context.Context, in *ListPushedArtifactsRequest, opts ...grpc.CallOption) (*ListPushedArtifactsResponse, error) {
 	out := new(ListPushedArtifactsResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/ListPushedArtifacts", in, out, opts...)
 	if err != nil {
@@ -3530,7 +4303,7 @@ func (c *waypointClient) GetDeployment(ctx context.Context, in *GetDeploymentReq
 	return out, nil
 }
 
-func (c *waypointClient) GetLatestBuild(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Build, error) {
+func (c *waypointClient) GetLatestBuild(ctx context.Context, in *GetLatestBuildRequest, opts ...grpc.CallOption) (*Build, error) {
 	out := new(Build)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestBuild", in, out, opts...)
 	if err != nil {
@@ -3539,7 +4312,7 @@ func (c *waypointClient) GetLatestBuild(ctx context.Context, in *empty.Empty, op
 	return out, nil
 }
 
-func (c *waypointClient) GetLatestPushedArtifact(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*PushedArtifact, error) {
+func (c *waypointClient) GetLatestPushedArtifact(ctx context.Context, in *GetLatestPushedArtifactRequest, opts ...grpc.CallOption) (*PushedArtifact, error) {
 	out := new(PushedArtifact)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact", in, out, opts...)
 	if err != nil {
@@ -3609,6 +4382,24 @@ func (x *waypointStartExecStreamClient) Recv() (*ExecStreamResponse, error) {
 		return nil, err
 	}
 	return m, nil
+}
+
+func (c *waypointClient) SetConfig(ctx context.Context, in *ConfigSetRequest, opts ...grpc.CallOption) (*ConfigSetResponse, error) {
+	out := new(ConfigSetResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/SetConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *waypointClient) GetConfig(ctx context.Context, in *ConfigGetRequest, opts ...grpc.CallOption) (*ConfigGetResponse, error) {
+	out := new(ConfigGetResponse)
+	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *waypointClient) EntrypointConfig(ctx context.Context, in *EntrypointConfigRequest, opts ...grpc.CallOption) (Waypoint_EntrypointConfigClient, error) {
@@ -3744,24 +4535,6 @@ func (c *waypointClient) UpsertRelease(ctx context.Context, in *UpsertReleaseReq
 	return out, nil
 }
 
-func (c *waypointClient) SetConfig(ctx context.Context, in *ConfigSetRequest, opts ...grpc.CallOption) (*ConfigSetResponse, error) {
-	out := new(ConfigSetResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/SetConfig", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *waypointClient) GetConfig(ctx context.Context, in *ConfigGetRequest, opts ...grpc.CallOption) (*ConfigGetResponse, error) {
-	out := new(ConfigGetResponse)
-	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GetConfig", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *waypointClient) GenerateInviteToken(ctx context.Context, in *InviteTokenRequest, opts ...grpc.CallOption) (*NewTokenResponse, error) {
 	out := new(NewTokenResponse)
 	err := c.cc.Invoke(ctx, "/hashicorp.waypoint.Waypoint/GenerateInviteToken", in, out, opts...)
@@ -3792,19 +4565,19 @@ func (c *waypointClient) ConvertInviteToken(ctx context.Context, in *ConvertInvi
 // WaypointServer is the server API for Waypoint service.
 type WaypointServer interface {
 	// ListBuilds returns the builds.
-	ListBuilds(context.Context, *empty.Empty) (*ListBuildsResponse, error)
+	ListBuilds(context.Context, *ListBuildsRequest) (*ListBuildsResponse, error)
 	// ListPushedArtifacts returns the builds.
-	ListPushedArtifacts(context.Context, *empty.Empty) (*ListPushedArtifactsResponse, error)
+	ListPushedArtifacts(context.Context, *ListPushedArtifactsRequest) (*ListPushedArtifactsResponse, error)
 	// ListDeployments returns the deployments.
 	ListDeployments(context.Context, *ListDeploymentsRequest) (*ListDeploymentsResponse, error)
 	// GetDeployment returns a deployment
 	GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error)
 	// GetLatestBuild returns the most recent successfully completed build
 	// for an app.
-	GetLatestBuild(context.Context, *empty.Empty) (*Build, error)
+	GetLatestBuild(context.Context, *GetLatestBuildRequest) (*Build, error)
 	// GetLatestPushedArtifact returns the most recent successfully completed
 	// artifact push for an app.
-	GetLatestPushedArtifact(context.Context, *empty.Empty) (*PushedArtifact, error)
+	GetLatestPushedArtifact(context.Context, *GetLatestPushedArtifactRequest) (*PushedArtifact, error)
 	// GetLogStream reads the log stream for a deployment. This will immediately
 	// send a single LogEntry with the lines we have so far. If there are no
 	// available lines this will NOT block and instead will return an error.
@@ -3812,6 +4585,12 @@ type WaypointServer interface {
 	GetLogStream(*GetLogStreamRequest, Waypoint_GetLogStreamServer) error
 	// StartExecStream starts an exec session.
 	StartExecStream(Waypoint_StartExecStreamServer) error
+	// Set a single configuration item for the application.
+	SetConfig(context.Context, *ConfigSetRequest) (*ConfigSetResponse, error)
+	// Retrieve merged configuration values for a specific scope. You can determine
+	// where a configuration variable was set by looking at the scope field on
+	// each variable.
+	GetConfig(context.Context, *ConfigGetRequest) (*ConfigGetResponse, error)
 	// EntrypointConfig is called to get the configuration for the entrypoint
 	// and also to get any potential updates.
 	//
@@ -3834,10 +4613,6 @@ type WaypointServer interface {
 	UpsertDeployment(context.Context, *UpsertDeploymentRequest) (*UpsertDeploymentResponse, error)
 	// UpsertRelease updates or inserts a release.
 	UpsertRelease(context.Context, *UpsertReleaseRequest) (*UpsertReleaseResponse, error)
-	// Set a single configuration item for the application.
-	SetConfig(context.Context, *ConfigSetRequest) (*ConfigSetResponse, error)
-	// Retrieve configuration for the application.
-	GetConfig(context.Context, *ConfigGetRequest) (*ConfigGetResponse, error)
 	// Generate a new invite token that users can exchange for a login token.
 	GenerateInviteToken(context.Context, *InviteTokenRequest) (*NewTokenResponse, error)
 	// Generate a new login token that users can use to login directly.
@@ -3850,10 +4625,10 @@ type WaypointServer interface {
 type UnimplementedWaypointServer struct {
 }
 
-func (*UnimplementedWaypointServer) ListBuilds(ctx context.Context, req *empty.Empty) (*ListBuildsResponse, error) {
+func (*UnimplementedWaypointServer) ListBuilds(ctx context.Context, req *ListBuildsRequest) (*ListBuildsResponse, error) {
 	return nil, status1.Errorf(codes.Unimplemented, "method ListBuilds not implemented")
 }
-func (*UnimplementedWaypointServer) ListPushedArtifacts(ctx context.Context, req *empty.Empty) (*ListPushedArtifactsResponse, error) {
+func (*UnimplementedWaypointServer) ListPushedArtifacts(ctx context.Context, req *ListPushedArtifactsRequest) (*ListPushedArtifactsResponse, error) {
 	return nil, status1.Errorf(codes.Unimplemented, "method ListPushedArtifacts not implemented")
 }
 func (*UnimplementedWaypointServer) ListDeployments(ctx context.Context, req *ListDeploymentsRequest) (*ListDeploymentsResponse, error) {
@@ -3862,10 +4637,10 @@ func (*UnimplementedWaypointServer) ListDeployments(ctx context.Context, req *Li
 func (*UnimplementedWaypointServer) GetDeployment(ctx context.Context, req *GetDeploymentRequest) (*Deployment, error) {
 	return nil, status1.Errorf(codes.Unimplemented, "method GetDeployment not implemented")
 }
-func (*UnimplementedWaypointServer) GetLatestBuild(ctx context.Context, req *empty.Empty) (*Build, error) {
+func (*UnimplementedWaypointServer) GetLatestBuild(ctx context.Context, req *GetLatestBuildRequest) (*Build, error) {
 	return nil, status1.Errorf(codes.Unimplemented, "method GetLatestBuild not implemented")
 }
-func (*UnimplementedWaypointServer) GetLatestPushedArtifact(ctx context.Context, req *empty.Empty) (*PushedArtifact, error) {
+func (*UnimplementedWaypointServer) GetLatestPushedArtifact(ctx context.Context, req *GetLatestPushedArtifactRequest) (*PushedArtifact, error) {
 	return nil, status1.Errorf(codes.Unimplemented, "method GetLatestPushedArtifact not implemented")
 }
 func (*UnimplementedWaypointServer) GetLogStream(req *GetLogStreamRequest, srv Waypoint_GetLogStreamServer) error {
@@ -3873,6 +4648,12 @@ func (*UnimplementedWaypointServer) GetLogStream(req *GetLogStreamRequest, srv W
 }
 func (*UnimplementedWaypointServer) StartExecStream(srv Waypoint_StartExecStreamServer) error {
 	return status1.Errorf(codes.Unimplemented, "method StartExecStream not implemented")
+}
+func (*UnimplementedWaypointServer) SetConfig(ctx context.Context, req *ConfigSetRequest) (*ConfigSetResponse, error) {
+	return nil, status1.Errorf(codes.Unimplemented, "method SetConfig not implemented")
+}
+func (*UnimplementedWaypointServer) GetConfig(ctx context.Context, req *ConfigGetRequest) (*ConfigGetResponse, error) {
+	return nil, status1.Errorf(codes.Unimplemented, "method GetConfig not implemented")
 }
 func (*UnimplementedWaypointServer) EntrypointConfig(req *EntrypointConfigRequest, srv Waypoint_EntrypointConfigServer) error {
 	return status1.Errorf(codes.Unimplemented, "method EntrypointConfig not implemented")
@@ -3895,12 +4676,6 @@ func (*UnimplementedWaypointServer) UpsertDeployment(ctx context.Context, req *U
 func (*UnimplementedWaypointServer) UpsertRelease(ctx context.Context, req *UpsertReleaseRequest) (*UpsertReleaseResponse, error) {
 	return nil, status1.Errorf(codes.Unimplemented, "method UpsertRelease not implemented")
 }
-func (*UnimplementedWaypointServer) SetConfig(ctx context.Context, req *ConfigSetRequest) (*ConfigSetResponse, error) {
-	return nil, status1.Errorf(codes.Unimplemented, "method SetConfig not implemented")
-}
-func (*UnimplementedWaypointServer) GetConfig(ctx context.Context, req *ConfigGetRequest) (*ConfigGetResponse, error) {
-	return nil, status1.Errorf(codes.Unimplemented, "method GetConfig not implemented")
-}
 func (*UnimplementedWaypointServer) GenerateInviteToken(ctx context.Context, req *InviteTokenRequest) (*NewTokenResponse, error) {
 	return nil, status1.Errorf(codes.Unimplemented, "method GenerateInviteToken not implemented")
 }
@@ -3916,7 +4691,7 @@ func RegisterWaypointServer(s *grpc.Server, srv WaypointServer) {
 }
 
 func _Waypoint_ListBuilds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(ListBuildsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -3928,13 +4703,13 @@ func _Waypoint_ListBuilds_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/hashicorp.waypoint.Waypoint/ListBuilds",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).ListBuilds(ctx, req.(*empty.Empty))
+		return srv.(WaypointServer).ListBuilds(ctx, req.(*ListBuildsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Waypoint_ListPushedArtifacts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(ListPushedArtifactsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -3946,7 +4721,7 @@ func _Waypoint_ListPushedArtifacts_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/hashicorp.waypoint.Waypoint/ListPushedArtifacts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).ListPushedArtifacts(ctx, req.(*empty.Empty))
+		return srv.(WaypointServer).ListPushedArtifacts(ctx, req.(*ListPushedArtifactsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3988,7 +4763,7 @@ func _Waypoint_GetDeployment_Handler(srv interface{}, ctx context.Context, dec f
 }
 
 func _Waypoint_GetLatestBuild_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(GetLatestBuildRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -4000,13 +4775,13 @@ func _Waypoint_GetLatestBuild_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestBuild",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).GetLatestBuild(ctx, req.(*empty.Empty))
+		return srv.(WaypointServer).GetLatestBuild(ctx, req.(*GetLatestBuildRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Waypoint_GetLatestPushedArtifact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(GetLatestPushedArtifactRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -4018,7 +4793,7 @@ func _Waypoint_GetLatestPushedArtifact_Handler(srv interface{}, ctx context.Cont
 		FullMethod: "/hashicorp.waypoint.Waypoint/GetLatestPushedArtifact",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).GetLatestPushedArtifact(ctx, req.(*empty.Empty))
+		return srv.(WaypointServer).GetLatestPushedArtifact(ctx, req.(*GetLatestPushedArtifactRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4068,6 +4843,42 @@ func (x *waypointStartExecStreamServer) Recv() (*ExecStreamRequest, error) {
 		return nil, err
 	}
 	return m, nil
+}
+
+func _Waypoint_SetConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigSetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).SetConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/SetConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).SetConfig(ctx, req.(*ConfigSetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Waypoint_GetConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigGetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WaypointServer).GetConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/hashicorp.waypoint.Waypoint/GetConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WaypointServer).GetConfig(ctx, req.(*ConfigGetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Waypoint_EntrypointConfig_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -4215,42 +5026,6 @@ func _Waypoint_UpsertRelease_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Waypoint_SetConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfigSetRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).SetConfig(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/SetConfig",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).SetConfig(ctx, req.(*ConfigSetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Waypoint_GetConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfigGetRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WaypointServer).GetConfig(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/hashicorp.waypoint.Waypoint/GetConfig",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaypointServer).GetConfig(ctx, req.(*ConfigGetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Waypoint_GenerateInviteToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(InviteTokenRequest)
 	if err := dec(in); err != nil {
@@ -4334,6 +5109,14 @@ var _Waypoint_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Waypoint_GetLatestPushedArtifact_Handler,
 		},
 		{
+			MethodName: "SetConfig",
+			Handler:    _Waypoint_SetConfig_Handler,
+		},
+		{
+			MethodName: "GetConfig",
+			Handler:    _Waypoint_GetConfig_Handler,
+		},
+		{
 			MethodName: "UpsertBuild",
 			Handler:    _Waypoint_UpsertBuild_Handler,
 		},
@@ -4348,14 +5131,6 @@ var _Waypoint_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertRelease",
 			Handler:    _Waypoint_UpsertRelease_Handler,
-		},
-		{
-			MethodName: "SetConfig",
-			Handler:    _Waypoint_SetConfig_Handler,
-		},
-		{
-			MethodName: "GetConfig",
-			Handler:    _Waypoint_GetConfig_Handler,
 		},
 		{
 			MethodName: "GenerateInviteToken",

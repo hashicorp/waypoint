@@ -2,23 +2,14 @@ package singleprocess
 
 import (
 	"context"
-	"sort"
 
-	"github.com/boltdb/bolt"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	serversort "github.com/hashicorp/waypoint/internal/server/sort"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
-
-var deployBucket = []byte("deployments")
-
-func init() {
-	dbBuckets = append(dbBuckets, deployBucket)
-}
 
 func (s *service) UpsertDeployment(
 	ctx context.Context,
@@ -39,11 +30,7 @@ func (s *service) UpsertDeployment(
 		result.Id = id
 	}
 
-	// Insert into our database
-	err := s.db.Update(func(tx *bolt.Tx) error {
-		return dbUpsert(tx.Bucket(deployBucket), !insert, result.Id, result)
-	})
-	if err != nil {
+	if err := s.state.DeploymentPut(!insert, result); err != nil {
 		return nil, err
 	}
 
@@ -55,47 +42,13 @@ func (s *service) ListDeployments(
 	ctx context.Context,
 	req *pb.ListDeploymentsRequest,
 ) (*pb.ListDeploymentsResponse, error) {
-	var result []*pb.Deployment
-	s.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(deployBucket)
-		return bucket.ForEach(func(k, v []byte) error {
-			var deploy pb.Deployment
-			if err := proto.Unmarshal(v, &deploy); err != nil {
-				panic(err)
-			}
-
-			// Filter
-			if !statusFilterMatch(req.Status, deploy.Status) {
-				return nil
-			}
-
-			result = append(result, &deploy)
-			return nil
-		})
-	})
-
-	// Sort if we have to
-	var sortIface sort.Interface
-	switch req.Order {
-	case pb.ListDeploymentsRequest_START_TIME:
-		sortIface = serversort.DeploymentStartDesc(result)
-		if !req.OrderDesc {
-			sortIface = sort.Reverse(sortIface)
-		}
-
-	case pb.ListDeploymentsRequest_COMPLETE_TIME:
-		sortIface = serversort.DeploymentCompleteDesc(result)
-		if !req.OrderDesc {
-			sortIface = sort.Reverse(sortIface)
-		}
-	}
-	if sortIface != nil {
-		sort.Sort(sortIface)
-	}
-
-	// Limit
-	if req.Limit > 0 && req.Limit < uint32(len(result)) {
-		result = result[:req.Limit]
+	result, err := s.state.DeploymentList(req.Application,
+		state.ListWithStatusFilter(req.Status...),
+		state.ListWithOrder(req.Order),
+		state.ListWithWorkspace(req.Workspace),
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	return &pb.ListDeploymentsResponse{Deployments: result}, nil
@@ -106,26 +59,5 @@ func (s *service) GetDeployment(
 	ctx context.Context,
 	req *pb.GetDeploymentRequest,
 ) (*pb.Deployment, error) {
-	var result pb.Deployment
-
-	// Get by ID
-	err := s.db.View(func(tx *bolt.Tx) error {
-		// todo: use a working helper
-		bucket := tx.Bucket(deployBucket)
-		raw := bucket.Get([]byte(req.DeploymentId))
-		if raw == nil {
-			return status.Errorf(codes.NotFound, "record not found for ID: %s", req.DeploymentId)
-		}
-
-		if err := proto.Unmarshal(raw, &result); err != nil {
-			return err
-		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+	return s.state.DeploymentGet(req.DeploymentId)
 }

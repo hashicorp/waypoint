@@ -192,6 +192,7 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 		},
 		"version": func() (cli.Command, error) {
 			return &VersionCommand{
+				baseCommand: baseCommand,
 				VersionInfo: version.GetVersion(),
 			}, nil
 		},

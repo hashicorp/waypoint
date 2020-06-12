@@ -73,6 +73,8 @@ func TestFactoryRegister(t testing.T, f *factory.Factory, n string, v interface{
 
 // testProjectConfig is the default config for TestProject
 const testProjectConfig = `
+project = "test"
+
 app "test" {
 	build "test" {}
 }

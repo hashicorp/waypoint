@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func TestServiceBuild(t *testing.T) {
@@ -28,13 +29,12 @@ func TestServiceBuild(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertBuild(ctx, &Req{
-			Build: &pb.Build{},
+			Build: serverptypes.TestValidBuild(t, nil),
 		})
 		require.NoError(err)
 		require.NotNil(resp)
 		result := resp.Build
 		require.NotEmpty(result.Id)
-		require.Nil(result.Status)
 
 		// Let's write some data
 		result.Status = server.NewStatus(pb.Status_RUNNING)
@@ -53,7 +53,7 @@ func TestServiceBuild(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertBuild(ctx, &Req{
-			Build: &pb.Build{Id: "nope"},
+			Build: serverptypes.TestValidBuild(t, &pb.Build{Id: "nope"}),
 		})
 		require.Error(err)
 		require.Nil(resp)

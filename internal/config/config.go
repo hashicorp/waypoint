@@ -6,9 +6,10 @@ import (
 
 // Config is the configuration structure.
 type Config struct {
-	Server *Server           `hcl:"server,block"`
-	Apps   []*App            `hcl:"app,block"`
-	Labels map[string]string `hcl:"labels,optional"`
+	Server  *Server           `hcl:"server,block"`
+	Project string            `hcl:"project,attr"`
+	Apps    []*App            `hcl:"app,block"`
+	Labels  map[string]string `hcl:"labels,optional"`
 }
 
 // App represents a single application.

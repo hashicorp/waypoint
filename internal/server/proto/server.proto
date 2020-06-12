@@ -10,10 +10,10 @@ import "google/rpc/status.proto";
 // The service that is implemented for the server backend.
 service Waypoint {
   // ListBuilds returns the builds.
-  rpc ListBuilds(google.protobuf.Empty) returns (ListBuildsResponse);
+  rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
   // ListPushedArtifacts returns the builds.
-  rpc ListPushedArtifacts(google.protobuf.Empty) returns (ListPushedArtifactsResponse);
+  rpc ListPushedArtifacts(ListPushedArtifactsRequest) returns (ListPushedArtifactsResponse);
 
   // ListDeployments returns the deployments.
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
@@ -23,11 +23,11 @@ service Waypoint {
 
   // GetLatestBuild returns the most recent successfully completed build
   // for an app.
-  rpc GetLatestBuild(google.protobuf.Empty) returns (Build);
+  rpc GetLatestBuild(GetLatestBuildRequest) returns (Build);
 
   // GetLatestPushedArtifact returns the most recent successfully completed
   // artifact push for an app.
-  rpc GetLatestPushedArtifact(google.protobuf.Empty) returns (PushedArtifact);
+  rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
 
   // GetLogStream reads the log stream for a deployment. This will immediately
   // send a single LogEntry with the lines we have so far. If there are no
@@ -37,6 +37,14 @@ service Waypoint {
 
   // StartExecStream starts an exec session.
   rpc StartExecStream(stream ExecStreamRequest) returns (stream ExecStreamResponse);
+
+  // Set a single configuration item for the application.
+  rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);
+
+  // Retrieve merged configuration values for a specific scope. You can determine
+  // where a configuration variable was set by looking at the scope field on
+  // each variable.
+  rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
@@ -78,12 +86,6 @@ service Waypoint {
   // UpsertRelease updates or inserts a release.
   rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
 
-  // Set a single configuration item for the application.
-  rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);
-
-  // Retrieve configuration for the application.
-  rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
-
   // Generate a new invite token that users can exchange for a login token.
   rpc GenerateInviteToken(InviteTokenRequest) returns (NewTokenResponse);
 
@@ -94,9 +96,45 @@ service Waypoint {
   rpc ConvertInviteToken(ConvertInviteTokenRequest) returns (NewTokenResponse);
 }
 
+message Application {
+  Ref.Project project = 2;
+
+  string name = 1;
+}
+
+message Project {
+  string name = 1;
+}
+
+message Workspace {
+  string name = 1;
+}
+
 /********************************************************************
 * Shared Messages
 ********************************************************************/
+
+// Ref contains shared messages used for references to other resources.
+//
+// Refs should be used when the full type shouldn't be embedded in the message.
+message Ref {
+  // Application references an application. To uniquely identify an
+  // application, this must encapsulate the full hierarchy to the application.
+  message Application {
+    string application = 1;
+    string project = 2;
+  }
+
+  // Project references a project.
+  message Project {
+    string project = 1;
+  }
+
+  // Workspace references a workspace.
+  message Workspace {
+    string workspace = 1;
+  }
+}
 
 // Component represents metadata about a component. A component is the
 // generic name for a builder, registry, platform, etc.
@@ -156,6 +194,23 @@ message StatusFilter {
   }
 }
 
+// OperationOrder is a shared message type used for controlling the order
+// of results in queries for app operations such as build, deploys, etc.
+message OperationOrder {
+  // Order for the results.
+  Order order = 2;
+  bool desc = 3;
+
+  // Limit the number of results
+  uint32 limit = 4;
+
+  enum Order {
+    UNSET = 0;
+    START_TIME = 1;
+    COMPLETE_TIME = 2;
+  }
+}
+
 /********************************************************************
 * Build
 ********************************************************************/
@@ -171,14 +226,34 @@ message UpsertBuildResponse {
   Build build = 1;
 }
 
+message ListBuildsRequest {
+  // The application whose builds to list. This must be set.
+  Ref.Application application = 1;
+
+  // The workspace to list builds for. If this isn't set, then all builds
+  // for the other filters are listed.
+  Ref.Workspace workspace = 2;
+}
+
 message ListBuildsResponse {
   // builds is the list of builds.
   repeated Build builds = 1;
 }
 
+message GetLatestBuildRequest {
+  Ref.Application application = 1;
+  Ref.Workspace workspace = 2;
+}
+
 // Build represents a process of creating an artifact that can be in any state,
 // such as complete. A successful complete build produces an artifact.
 message Build {
+  // The application that this build is part of.
+  Ref.Application application = 6;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 7;
+
   // id is the unique ID of the build
   string id = 1;
 
@@ -222,12 +297,42 @@ message UpsertPushedArtifactResponse {
   PushedArtifact artifact = 1;
 }
 
+message GetLatestPushedArtifactRequest {
+  // application that this belongs to
+  Ref.Application application = 1;
+
+  // workspace for the artifact, any workspace if empty
+  Ref.Workspace workspace = 2;
+}
+
+message ListPushedArtifactsRequest {
+  // application that this belongs to
+  Ref.Application application = 3;
+
+  // workspace for the results, or all if not set
+  Ref.Workspace workspace = 4;
+
+  // The filters to apply to this request. These are ORed, so you should
+  // specify multiple filters in the StatusFilter for AND behavior.
+  repeated StatusFilter status = 1;
+
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 2;
+}
+
 message ListPushedArtifactsResponse {
   // artifacts is the list of artifacts.
   repeated PushedArtifact artifacts = 1;
 }
 
 message PushedArtifact {
+  // application that this belongs to
+  Ref.Application application = 7;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 8;
+
   // id is a unique ID for this push
   string id = 1;
 
@@ -271,22 +376,20 @@ message UpsertDeploymentResponse {
 }
 
 message ListDeploymentsRequest {
+  // application that this deployment belongs to
+  Ref.Application application = 3;
+
+  // workspace that this should belong to. If this is empty, values in
+  // all workspaces will be listed.
+  Ref.Workspace workspace = 4;
+
   // The filters to apply to this request. These are ORed, so you should
   // specify multiple filters in the StatusFilter for AND behavior.
   repeated StatusFilter status = 1;
 
-  // Order for the results.
-  Order order = 2;
-  bool order_desc = 3;
-
-  // Limit the number of results
-  uint32 limit = 4;
-
-  enum Order {
-    UNSET = 0;
-    START_TIME = 1;
-    COMPLETE_TIME = 2;
-  }
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 2;
 }
 
 message ListDeploymentsResponse {
@@ -295,6 +398,12 @@ message ListDeploymentsResponse {
 }
 
 message Deployment {
+  // application that this deployment belongs to
+  Ref.Application application = 8;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 9;
+
   // id is the unique ID for this deployment
   string id = 1;
 
@@ -345,6 +454,12 @@ message UpsertReleaseResponse {
 }
 
 message Release {
+  // application that this deployment belongs to
+  Ref.Application application = 7;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 8;
+
   // id is the unique ID for this release.
   string id = 1;
 
@@ -394,6 +509,43 @@ message LogBatch {
     google.protobuf.Timestamp timestamp = 1;
     string line = 2;
   }
+}
+
+/********************************************************************
+* Config
+********************************************************************/
+
+message ConfigVar {
+  // scope is the scoping for this config variable.
+  oneof scope {
+    Ref.Application application = 3;
+    Ref.Project project = 4;
+  }
+
+  string name = 1;
+  string value = 2;
+}
+
+message ConfigSetRequest {
+  repeated ConfigVar variables = 1;
+}
+
+message ConfigSetResponse {}
+
+message ConfigGetRequest {
+  // scope is the scoping for this config variable.
+  oneof scope {
+    Ref.Application application = 2;
+    Ref.Project project = 3;
+  }
+
+  // Get all configuration entries under the given prefix. When empty,
+  // returns all config variables.
+  string prefix = 1;
+}
+
+message ConfigGetResponse {
+  repeated ConfigVar variables = 1;
 }
 
 /********************************************************************
@@ -460,35 +612,6 @@ message ExecStreamResponse {
       STDERR  = 2;
     }
   }
-}
-
-message ConfigVar {
-  string name = 1;
-  string value = 2;
-
-  // Scope the variables just to the given application. If empty, the variables
-  // will be project scoped.
-  string app = 3;
-}
-
-message ConfigSetRequest {
-  repeated ConfigVar variables = 1;
-}
-
-message ConfigSetResponse {}
-
-message ConfigGetRequest {
-  // Get all configuration entries under the given prefix. Therefore when empty, return
-  // all configuration.
-  string prefix = 1;
-
-  // Get the configuration that would be applied to an application of the given name.
-  // If empty, return configuration for all applications.
-  string app = 2;
-}
-
-message ConfigGetResponse {
-  repeated ConfigVar variables = 1;
 }
 
 /********************************************************************

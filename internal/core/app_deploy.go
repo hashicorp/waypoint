@@ -7,6 +7,8 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -35,11 +37,17 @@ type deployOperation struct {
 }
 
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
+	if app.components[app.Platform] == nil {
+		return nil, status.Error(codes.NotFound, "no deployment configured")
+	}
+
 	return &pb.Deployment{
-		Component:  app.components[app.Platform].Info,
-		Labels:     app.components[app.Platform].Labels,
-		ArtifactId: op.Push.Id,
-		State:      pb.Deployment_DEPLOY,
+		Application: app.ref,
+		Workspace:   app.workspace,
+		Component:   app.components[app.Platform].Info,
+		Labels:      app.components[app.Platform].Labels,
+		ArtifactId:  op.Push.Id,
+		State:       pb.Deployment_DEPLOY,
 	}, nil
 }
 
@@ -70,7 +78,7 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App) (
 		(*component.Deployment)(nil),
 		app.Platform,
 		app.Platform.DeployFunc(),
-		argmapper.Named("artifact", op.Push.Artifact.Artifact),
+		argNamedAny("artifact", op.Push.Artifact.Artifact),
 		argmapper.Typed(&dconfig),
 	)
 }

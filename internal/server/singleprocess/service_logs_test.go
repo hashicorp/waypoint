@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func TestServiceGetLogStream(t *testing.T) {
@@ -22,11 +23,11 @@ func TestServiceGetLogStream(t *testing.T) {
 
 	// Register our instances
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: &pb.Deployment{
+		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Component: &pb.Component{
 				Name: "testapp",
 			},
-		},
+		}),
 	})
 
 	require.NoError(t, err)
