@@ -163,7 +163,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		// TODO(mitchellh): when we support app targeting we can have more
 		// than one as long as its targeted.
 		if len(cfg.Apps) != 1 {
-			c.project.UI.Output(errAppModeSingle, terminal.WithErrorStyle())
+			c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
