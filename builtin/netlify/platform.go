@@ -66,44 +66,53 @@ func (p *Platform) Deploy(
 
 	st.Update("Setting up deploy")
 
-	// Default siteID to the app name, unless provided
-	siteName := src.App
-	if p.config.SiteName != "" {
-		siteName = p.config.SiteName
-	}
-
-	siteSetup := &models.SiteSetup{
-		Site: *&models.Site{
-			Name: siteName,
-		},
-	}
-
-	listParams := operations.NewListSitesParams()
-	listParams.Name = &siteName
-	sites, err := client.ListSites(clientContext, listParams)
-	if err != nil {
-		return nil, err
-	}
-
 	site := &models.Site{}
 
-	switch len(sites) {
-	case 0:
-		log.Trace("site does not exist, creating site", "site name", siteName)
-		st.Update("Creating site")
-		createdSite, err := client.CreateSite(clientContext, siteSetup, false)
-		site = createdSite
+	// If the user specifies a site ID, use it
+	if p.config.SiteID != "" {
+		retrievedSite, err := client.GetSite(clientContext, p.config.SiteID)
+		site = retrievedSite
 		if err != nil {
 			return nil, err
 		}
-	case 1:
-		site = sites[0]
-		if site.Name != siteName {
-			return nil, fmt.Errorf("site returned does not match")
+	} else {
+		// If the user specified a site name, use that to find or create
+		// otherwise, default to the app name
+		siteName := src.App
+		if p.config.SiteName != "" {
+			siteName = p.config.SiteName
 		}
-		log.Trace("found site", "site id", site.ID)
-	default:
-		return nil, fmt.Errorf("incorrect sites returned from netlify")
+
+		siteSetup := &models.SiteSetup{
+			Site: *&models.Site{
+				Name: siteName,
+			},
+		}
+
+		listParams := operations.NewListSitesParams()
+		listParams.Name = &siteName
+		sites, err := client.ListSites(clientContext, listParams)
+		if err != nil {
+			return nil, err
+		}
+
+		// Create the site if there are no results for that name, otherwise use
+		// it.
+		if len(sites) == 0 {
+			log.Trace("site does not exist, creating site", "site name", siteName)
+			st.Update("Creating site")
+			createdSite, err := client.CreateSite(clientContext, siteSetup, false)
+			site = createdSite
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			site = sites[0]
+			if site.Name != siteName {
+				return nil, fmt.Errorf("site returned does not match")
+			}
+			log.Trace("found site", "site id", site.ID)
+		}
 	}
 
 	deployment.SiteId = site.ID
