@@ -10,7 +10,11 @@ require (
 	github.com/buildpacks/pack v0.11.1
 	github.com/creack/pty v1.1.9
 	github.com/davecgh/go-spew v1.1.1
+	github.com/docker/cli v0.0.0-20200312141509-ef2f64abbd37
+	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v1.4.2-0.20200221181110-62bd5a33f707
+	github.com/docker/go-metrics v0.0.1 // indirect
+	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.9.0
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6

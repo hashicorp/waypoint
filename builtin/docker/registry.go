@@ -2,9 +2,18 @@ package docker
 
 import (
 	"context"
-	"os/exec"
+	"encoding/base64"
+	"encoding/json"
+	"os"
 
+	"github.com/docker/cli/cli/config"
+	"github.com/docker/distribution/reference"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/registry"
 	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/mattn/go-isatty"
 )
 
 // Registry represents access to a Docker registry.
@@ -35,24 +44,70 @@ func (r *Registry) Push(
 
 	target := &Image{Image: r.config.Image, Tag: r.config.Tag}
 
-	{
-		// Re-tag the image to our target value
-		cmd := exec.CommandContext(ctx, "docker", "tag", img.Name(), target.Name())
-		cmd.Stdout = stdout
-		cmd.Stderr = stderr
-		if err := cmd.Run(); err != nil {
-			return nil, err
-		}
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return nil, err
 	}
 
-	if !r.config.Local {
-		// Push it
-		cmd := exec.CommandContext(ctx, "docker", "push", target.Name())
-		cmd.Stdout = stdout
-		cmd.Stderr = stderr
-		if err := cmd.Run(); err != nil {
+	cli.NegotiateAPIVersion(ctx)
+
+	err = cli.ImageTag(ctx, img.Name(), target.Name())
+	if err != nil {
+		return nil, err
+	}
+
+	if r.config.Local {
+		return target, nil
+	}
+
+	ref, err := reference.ParseNormalizedNamed(target.Name())
+	if err != nil {
+		return nil, err
+	}
+
+	encodedAuth := r.config.EncodedAuth
+
+	if encodedAuth == "" {
+		// Resolve the Repository name from fqn to RepositoryInfo
+		repoInfo, err := registry.ParseRepositoryInfo(ref)
+		if err != nil {
 			return nil, err
 		}
+
+		cf := config.LoadDefaultConfigFile(stderr)
+
+		authConfig, _ := cf.GetAuthConfig(repoInfo.Index.Name)
+		buf, err := json.Marshal(authConfig)
+		if err != nil {
+			return nil, err
+		}
+		encodedAuth = base64.URLEncoding.EncodeToString(buf)
+	}
+
+	options := types.ImagePushOptions{
+		RegistryAuth: encodedAuth,
+	}
+
+	responseBody, err := cli.ImagePush(ctx, reference.FamiliarString(ref), options)
+	if err != nil {
+		return nil, err
+	}
+
+	defer responseBody.Close()
+
+	var (
+		termFd uintptr
+		isTerm bool
+	)
+
+	if f, ok := stdout.(*os.File); ok {
+		termFd = f.Fd()
+		isTerm = isatty.IsTerminal(termFd)
+	}
+
+	err = jsonmessage.DisplayJSONMessagesStream(responseBody, stdout, termFd, isTerm, nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return target, nil
@@ -68,4 +123,7 @@ type Config struct {
 
 	// Local if true will not push this image to a remote registry.
 	Local bool `hcl:"local,optional"`
+
+	// The docker specific encoded authentication string to use to talk to the registry.
+	EncodedAuth string `hcl:"encoded_auth,optional"`
 }

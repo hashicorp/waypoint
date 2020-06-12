@@ -5,13 +5,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 
+	"github.com/docker/cli/cli/command/image/build"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/idtools"
+	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/mattn/go-isatty"
+	"github.com/pkg/errors"
 )
 
 // Builder uses `docker build` to build a Docker iamge.
@@ -28,6 +35,9 @@ func (b *Builder) BuildFunc() interface{} {
 type BuilderConfig struct {
 	// Control whether or not to inject the entrypoint binary into the resulting image
 	DisableCEB bool `hcl:"disable_ceb,optional"`
+
+	// Controls whether or not the image should be build with buildkit or docker v1
+	UseBuildKit bool `hcl:"buildkit,optional"`
 }
 
 // Config implements Configurable
@@ -41,7 +51,7 @@ func (b *Builder) Build(
 	ui terminal.UI,
 	src *component.Source,
 ) (*Image, error) {
-	stdout, stderr, err := ui.OutputWriters()
+	stdout, _, err := ui.OutputWriters()
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +61,68 @@ func (b *Builder) Build(
 		Tag:   "latest",
 	}
 
-	// Build the image with Docker build
-	cmd := exec.CommandContext(ctx, "docker", "build", ".", "-t", result.Name())
-	cmd.Dir = src.Path
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return nil, err
+	}
+
+	cli.NegotiateAPIVersion(ctx)
+
+	contextDir, relDockerfile, err := build.GetContextFromLocalDir(src.Path, "")
+	if err != nil {
+		return nil, err
+	}
+
+	excludes, err := build.ReadDockerignore(contextDir)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := build.ValidateContextDirectory(contextDir, excludes); err != nil {
+		return nil, errors.Errorf("error checking context: '%s'.", err)
+	}
+
+	// And canonicalize dockerfile name to a platform-independent one
+	relDockerfile = archive.CanonicalTarNameForPath(relDockerfile)
+
+	excludes = build.TrimBuildFilesFromExcludes(excludes, relDockerfile, false)
+	buildCtx, err := archive.TarWithOptions(contextDir, &archive.TarOptions{
+		ExcludePatterns: excludes,
+		ChownOpts:       &idtools.Identity{UID: 0, GID: 0},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	ver := types.BuilderV1
+	if b.config.UseBuildKit {
+		ver = types.BuilderBuildKit
+	}
+
+	resp, err := cli.ImageBuild(ctx, buildCtx, types.ImageBuildOptions{
+		Version:    ver,
+		Dockerfile: relDockerfile,
+		Tags:       []string{result.Name()},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var (
+		termFd uintptr
+		isTerm bool
+	)
+
+	if f, ok := stdout.(*os.File); ok {
+		termFd = f.Fd()
+		isTerm = isatty.IsTerminal(termFd)
+	}
+
+	err = jsonmessage.DisplayJSONMessagesStream(resp.Body, stdout, termFd, isTerm, nil)
+	if err != nil {
 		return nil, err
 	}
 
