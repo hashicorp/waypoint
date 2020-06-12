@@ -2,8 +2,6 @@ package files
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -33,24 +31,6 @@ func (b *Builder) Build(
 	ui terminal.UI,
 	src *component.Source,
 ) (*Files, error) {
-	err := filepath.Walk(src.Path, func(path string, info os.FileInfo, err error) error {
-		// Check each file
-		if !info.IsDir() && info.Mode().IsRegular() {
-			o, err := os.Open(path)
-			defer o.Close()
-			if err != nil {
-				return err
-			}
-
-			ui.Output("Have file %s", path)
-		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
 	return &Files{
 		Path: src.Path,
 	}, nil
