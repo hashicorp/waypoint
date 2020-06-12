@@ -752,6 +752,15 @@ message Token {
   bool invite = 5;
 }
 
+// Represents a key used to sign tokens using HMAC
+message HMACKey {
+  // The identifier of the key.
+  string id = 1;
+
+  // A randomly generated key used to sign tokens with
+  bytes key = 2;
+}
+
 // Passed with GenerateInviteToken with the params on how the invite token should
 // be generate.
 message InviteTokenRequest {

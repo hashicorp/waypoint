@@ -10,7 +10,6 @@ import (
 
 	"golang.org/x/crypto/blake2b"
 
-	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -43,13 +42,7 @@ const (
 
 var (
 	ErrInvalidToken = errors.New("invalid authentication token")
-
-	authBucket = []byte("auth")
 )
-
-func init() {
-	dbBuckets = append(dbBuckets, authBucket)
-}
 
 // DecodeToken parses the string and validates it as a valid token. If the token
 // has a validity period attached to it, the period is checked here.
@@ -70,26 +63,12 @@ func (s *service) DecodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 		return nil, nil, err
 	}
 
-	var hmacKey []byte
-
-	err = s.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(authBucket)
-		if b == nil {
-			return errors.Wrapf(ErrInvalidToken, "unknown key")
-		}
-
-		hmacKey = b.Get([]byte(dbKeyPrefix + tt.KeyId))
-		if hmacKey == nil {
-			return errors.Wrapf(ErrInvalidToken, "unknown key")
-		}
-
-		return nil
-	})
+	key, err := s.state.HMACKeyGet(tt.KeyId)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrapf(ErrInvalidToken, "unknown key")
 	}
 
-	h, err := blake2b.New256(hmacKey)
+	h, err := blake2b.New256(key.Key)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -152,30 +131,7 @@ func (s *service) Authenticate(ctx context.Context, token, endpoint string, effe
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
 func (s *service) GenerateToken(keyId string, metadata map[string]string, body *pb.Token) (string, error) {
-	var hmacKey []byte
-
-	dbKey := []byte(dbKeyPrefix + keyId)
-
-	err := s.db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists(authBucket)
-		if err != nil {
-			return err
-		}
-
-		hmacKey = b.Get(dbKey)
-		if hmacKey == nil {
-			hmacKey = make([]byte, hmacKeySize)
-
-			_, err = io.ReadFull(rand.Reader, hmacKey)
-			if err != nil {
-				return err
-			}
-
-			return b.Put(dbKey, hmacKey)
-		}
-
-		return nil
-	})
+	key, err := s.state.HMACKeyCreate(keyId, hmacKeySize)
 	if err != nil {
 		return "", err
 	}
@@ -185,7 +141,7 @@ func (s *service) GenerateToken(keyId string, metadata map[string]string, body *
 		return "", err
 	}
 
-	h, err := blake2b.New256(hmacKey)
+	h, err := blake2b.New256(key.Key)
 	if err != nil {
 		return "", err
 	}
