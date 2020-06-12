@@ -51,7 +51,7 @@ func (s *State) ArtifactLatest(
 	ws *pb.Ref_Workspace,
 ) (*pb.PushedArtifact, error) {
 	result, err := artifactOp.Latest(s, ref, ws)
-	if result == nil || err != nil {
+	if err != nil {
 		return nil, err
 	}
 

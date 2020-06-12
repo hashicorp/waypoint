@@ -7,6 +7,8 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -35,6 +37,10 @@ type deployOperation struct {
 }
 
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
+	if app.components[app.Platform] == nil {
+		return nil, status.Error(codes.NotFound, "no deployment configured")
+	}
+
 	return &pb.Deployment{
 		Application: app.ref,
 		Workspace:   app.workspace,
