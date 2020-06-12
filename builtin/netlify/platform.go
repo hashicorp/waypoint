@@ -63,7 +63,6 @@ func (p *Platform) Deploy(
 
 	// Setup a new authenticated context
 	clientContext = apiContext(token)
-	log.Trace("have token", "token id", token)
 
 	st.Update("Setting up deploy")
 
