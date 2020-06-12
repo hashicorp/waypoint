@@ -2,7 +2,9 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -14,6 +16,22 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	"github.com/hashicorp/waypoint/sdk/component"
 )
+
+// This is a weird type that only exists to satisify the interface required by
+// grpc.WithPerRPCCredentials. That api is designed to incorporate things like OAuth
+// but in our case, we really just want to send this static token through, but we still
+// need to the dance.
+type staticToken string
+
+func (t staticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{
+		"authorization": string(t),
+	}, nil
+}
+
+func (t staticToken) RequireTransportSecurity() bool {
+	return false
+}
 
 // initServer initializes our connection to the server either by connecting
 // directly to it or spinning up an in-process server if we're operating in
@@ -32,6 +50,15 @@ func (p *Project) initServer(ctx context.Context, opts *options) error {
 	}
 	if cfg.Insecure {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	}
+
+	if cfg.RequireAuth {
+		token := os.Getenv("WAYPOINT_SERVER_TOKEN")
+		if token == "" {
+			return fmt.Errorf("No token available at the WAYPOINT_SERVER_TOKEN environment variable")
+		}
+
+		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(staticToken(token)))
 	}
 
 	// Connect to this server

@@ -78,16 +78,60 @@ func (c *ServerCommand) Run(args []string) int {
 	}
 	defer ln.Close()
 
+	options := []server.Option{
+		server.WithContext(c.Ctx),
+		server.WithLogger(log),
+		server.WithGRPC(ln),
+		server.WithImpl(impl),
+	}
+
+	var token string
+
+	if c.config.RequireAuth {
+		ac, ok := impl.(server.AuthChecker)
+		if !ok {
+			c.ui.Output(
+				"Server implementation not capable of authentication",
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
+		token, err = ac.DefaultToken()
+		if err != nil {
+			c.ui.Output(
+				"Error generating default token: %s", err,
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
+		options = append(options, server.WithAuthentication(ac))
+	}
+
 	// Output information to the user
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
 	c.ui.Output("")
-	c.ui.Output(`
+	if token == "" {
+		c.ui.Output(`
 DB Path: %[1]s
 gRPC Address: %[2]s`,
-		path, ln.Addr().String(),
-		terminal.WithKeyValueStyle(":"),
-		terminal.WithStatusStyle(),
-	)
+			path, ln.Addr().String(),
+			terminal.WithKeyValueStyle(":"),
+			terminal.WithStatusStyle(),
+		)
+	} else {
+		c.ui.Output(`
+DB Path: %[1]s
+gRPC Address: %[2]s
+Token: %[3]s`,
+			path, ln.Addr().String(), token,
+			terminal.WithKeyValueStyle(":"),
+			terminal.WithStatusStyle(),
+		)
+	}
 	c.ui.Output("")
 	c.ui.Output("Server logs:", terminal.WithHeaderStyle())
 	c.ui.Output("")
@@ -120,11 +164,7 @@ gRPC Address: %[2]s`,
 
 	// Run the server
 	log.Info("starting built-in server", "addr", ln.Addr().String())
-	server.Run(server.WithContext(c.Ctx),
-		server.WithLogger(log),
-		server.WithGRPC(ln),
-		server.WithImpl(impl),
-	)
+	server.Run(options...)
 	return 0
 }
 
@@ -143,6 +183,12 @@ func (c *ServerCommand) Flags() *flag.Sets {
 			Target:  &c.config.Listeners.GRPC,
 			Usage:   "Address to bind to for gRPC connections.",
 			Default: "127.0.0.1:1234", // TODO(mitchellh: change default
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "require-authentication",
+			Target: &c.config.RequireAuth,
+			Usage:  "Require authentication to communicate with the server.",
 		})
 	})
 }
