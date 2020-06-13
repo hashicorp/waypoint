@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package files;
+
+option go_package = "files";
+
+message Files {
+  string path = 1;
+}

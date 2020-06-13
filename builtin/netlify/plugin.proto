@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package netlify;
+
+option go_package = "netlify";
+
+message Deployment {
+  string site_id = 1;
+  string url = 2;
+}
+
+message Release {
+  string url = 1;
+}
