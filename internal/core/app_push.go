@@ -67,17 +67,25 @@ type pushBuildOperation struct {
 }
 
 func (opts *pushBuildOptions) Validate() error {
-	return validation.ValidateStruct(&opts,
+	return validation.ValidateStruct(opts,
 		validation.Field(&opts.Build, validation.Required),
 	)
 }
 
 func (op *pushBuildOperation) Init(app *App) (proto.Message, error) {
+	// Our component is typically the registry but if we don't have
+	// one configured, then we specify the component as our builder since
+	// that is what is creating the pushed artifact.
+	var component interface{} = app.Registry
+	if component == nil {
+		component = app.Builder
+	}
+
 	return &pb.PushedArtifact{
 		Application: app.ref,
 		Workspace:   app.workspace,
-		Component:   app.components[app.Registry].Info,
-		Labels:      app.components[app.Registry].Labels,
+		Component:   app.components[component].Info,
+		Labels:      app.components[component].Labels,
 		BuildId:     op.Build.Id,
 	}, nil
 }
@@ -98,6 +106,11 @@ func (op *pushBuildOperation) Upsert(
 }
 
 func (op *pushBuildOperation) Do(ctx context.Context, log hclog.Logger, app *App) (interface{}, error) {
+	// If we have no registry, we just push the local build.
+	if app.Registry == nil {
+		return op.Build.Artifact.Artifact, nil
+	}
+
 	return app.callDynamicFunc(ctx,
 		log,
 		(*component.Artifact)(nil),
