@@ -39,6 +39,8 @@ var All = []interface{}{
 	HistoryClientProto,
 	ReleaseTargets,
 	ReleaseTargetsProto,
+	LabelSet,
+	LabelSetProto,
 }
 
 // Source maps Args.Source to component.Source.
@@ -153,6 +155,16 @@ func ReleaseTargetsProto(ts []component.ReleaseTarget) (*pb.Args_ReleaseTargets,
 	}
 
 	return &result, nil
+}
+
+func LabelSet(input *pb.Args_LabelSet) *component.LabelSet {
+	return &component.LabelSet{
+		Labels: input.Labels,
+	}
+}
+
+func LabelSetProto(labels *component.LabelSet) *pb.Args_LabelSet {
+	return &pb.Args_LabelSet{Labels: labels.Labels}
 }
 
 // HistoryClient connects to a history.Client served via the plugin interface.

@@ -2,24 +2,14 @@ package singleprocess
 
 import (
 	"context"
-	"time"
 
-	"github.com/boltdb/bolt"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
-
-var pushBucket = []byte("pushed_artifacts")
-
-func init() {
-	dbBuckets = append(dbBuckets, pushBucket)
-}
 
 func (s *service) UpsertPushedArtifact(
 	ctx context.Context,
@@ -40,11 +30,7 @@ func (s *service) UpsertPushedArtifact(
 		result.Id = id
 	}
 
-	// Insert into our database
-	err := s.db.Update(func(tx *bolt.Tx) error {
-		return dbUpsert(tx.Bucket(pushBucket), !insert, result.Id, result)
-	})
-	if err != nil {
+	if err := s.state.ArtifactPut(!insert, result); err != nil {
 		return nil, err
 	}
 
@@ -54,21 +40,16 @@ func (s *service) UpsertPushedArtifact(
 // TODO: test
 func (s *service) ListPushedArtifacts(
 	ctx context.Context,
-	req *empty.Empty,
+	req *pb.ListPushedArtifactsRequest,
 ) (*pb.ListPushedArtifactsResponse, error) {
-	var result []*pb.PushedArtifact
-	s.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(pushBucket)
-		return bucket.ForEach(func(k, v []byte) error {
-			var push pb.PushedArtifact
-			if err := proto.Unmarshal(v, &push); err != nil {
-				panic(err)
-			}
-
-			result = append(result, &push)
-			return nil
-		})
-	})
+	result, err := s.state.ArtifactList(req.Application,
+		state.ListWithStatusFilter(req.Status...),
+		state.ListWithOrder(req.Order),
+		state.ListWithWorkspace(req.Workspace),
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &pb.ListPushedArtifactsResponse{Artifacts: result}, nil
 }
@@ -76,40 +57,7 @@ func (s *service) ListPushedArtifacts(
 // TODO: test
 func (s *service) GetLatestPushedArtifact(
 	ctx context.Context,
-	req *empty.Empty,
+	req *pb.GetLatestPushedArtifactRequest,
 ) (*pb.PushedArtifact, error) {
-	var result *pb.PushedArtifact
-	var resultTime time.Time
-	s.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(pushBucket)
-		return bucket.ForEach(func(k, v []byte) error {
-			var push pb.PushedArtifact
-			if err := proto.Unmarshal(v, &push); err != nil {
-				panic(err)
-			}
-
-			// Looking for the push that is complete
-			if push.Status.State != pb.Status_SUCCESS {
-				return nil
-			}
-
-			t, err := ptypes.Timestamp(push.Status.CompleteTime)
-			if err != nil {
-				return status.Errorf(codes.Internal, "time for push can't be parsed")
-			}
-
-			if result == nil || resultTime.Before(t) {
-				result = &push
-				resultTime = t
-			}
-
-			return nil
-		})
-	})
-
-	if result == nil {
-		return nil, status.Errorf(codes.NotFound, "no successful pushes")
-	}
-
-	return result, nil
+	return s.state.ArtifactLatest(req.Application, req.Workspace)
 }

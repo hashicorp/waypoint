@@ -1,9 +1,6 @@
 package k8s
 
 import (
-	"path/filepath"
-
-	"github.com/mitchellh/go-homedir"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"k8s.io/client-go/kubernetes"
@@ -12,21 +9,16 @@ import (
 
 // clientset returns a K8S clientset and configured namespace.
 func clientset(kubeconfig, context string) (*kubernetes.Clientset, string, error) {
-	// Path to the kube config file
-	if kubeconfig == "" {
-		dir, err := homedir.Dir()
-		if err != nil {
-			return nil, "", status.Errorf(codes.Aborted,
-				"failed to load home directory: %s",
-				err)
-		}
+	loader := clientcmd.NewDefaultClientConfigLoadingRules()
 
-		kubeconfig = filepath.Join(dir, ".kube", "config")
+	// Path to the kube config file
+	if kubeconfig != "" {
+		loader.ExplicitPath = kubeconfig
 	}
 
 	// Build our config and client
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig},
+		loader,
 		&clientcmd.ConfigOverrides{
 			CurrentContext: context,
 		},

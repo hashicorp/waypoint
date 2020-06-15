@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 // TestServer starts a singleprocess server and returns the connected client.
@@ -26,10 +27,23 @@ func TestEntrypoint(t testing.T, client pb.WaypointClient) (string, string, func
 	instanceId, err := server.Id()
 	require.NoError(t, err)
 
+	ctx := context.Background()
+
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Component: &pb.Component{
+				Name: "testapp",
+			},
+		}),
+	})
+	require.NoError(t, err)
+
+	dep := resp.Deployment
+
 	// Create the config
-	stream, err := client.EntrypointConfig(context.Background(), &pb.EntrypointConfigRequest{
+	stream, err := client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
 		InstanceId:   instanceId,
-		DeploymentId: "A",
+		DeploymentId: dep.Id,
 	})
 	require.NoError(t, err)
 
@@ -37,7 +51,7 @@ func TestEntrypoint(t testing.T, client pb.WaypointClient) (string, string, func
 	_, err = stream.Recv()
 	require.NoError(t, err)
 
-	return instanceId, "A", func() {
+	return instanceId, dep.Id, func() {
 		stream.CloseSend()
 	}
 }
@@ -54,9 +68,6 @@ func testDB(t testing.T) *bolt.DB {
 	db, err := bolt.Open(filepath.Join(td, "test.db"), 0600, nil)
 	require.NoError(t, err)
 	t.Cleanup(func() { db.Close() })
-
-	// Init
-	require.NoError(t, dbInit(db))
 
 	return db
 }

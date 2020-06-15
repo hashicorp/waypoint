@@ -68,9 +68,13 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 	err = c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
 		// Get the latest deployment
 		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Limit:     2,
-			Order:     pb.ListDeploymentsRequest_COMPLETE_TIME,
-			OrderDesc: true,
+			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
+			Order: &pb.OperationOrder{
+				Limit: 2,
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Desc:  true,
+			},
 		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
@@ -146,7 +150,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 }
 
 func (c *ReleaseCreateCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetLabel, nil)
 }
 
 func (c *ReleaseCreateCommand) AutocompleteArgs() complete.Predictor {

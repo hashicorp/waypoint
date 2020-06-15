@@ -78,6 +78,12 @@ message Args {
       uint32 percent = 2;
     }
   }
+
+  // LabelSet is a set of labels for anything that can be labelled, such
+  // as a deployment, build, etc.
+  message LabelSet {
+    map<string, string> labels = 1;
+  }
 }
 
 // Empty is just an empty message useful with some RPC endpoints.

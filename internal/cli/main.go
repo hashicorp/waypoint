@@ -32,7 +32,6 @@ var (
 	// in the CLI help output.
 	commonCommands = map[string]struct{}{
 		"build":   struct{}{},
-		"push":    struct{}{},
 		"deploy":  struct{}{},
 		"release": struct{}{},
 		"up":      struct{}{},
@@ -109,12 +108,12 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"config-get": func() (cli.Command, error) {
+		"config get": func() (cli.Command, error) {
 			return &ConfigGetCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
-		"config-set": func() (cli.Command, error) {
+		"config set": func() (cli.Command, error) {
 			return &ConfigSetCommand{
 				baseCommand: baseCommand,
 			}, nil
@@ -192,6 +191,7 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 		},
 		"version": func() (cli.Command, error) {
 			return &VersionCommand{
+				baseCommand: baseCommand,
 				VersionInfo: version.GetVersion(),
 			}, nil
 		},
@@ -227,6 +227,21 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 			return &RegisterCommand{
 				baseCommand:    baseCommand,
 				deleteHostname: true,
+			}, nil
+		},
+		"token new": func() (cli.Command, error) {
+			return &GetTokenCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"token invite": func() (cli.Command, error) {
+			return &GetInviteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"token exchange": func() (cli.Command, error) {
+			return &ExchangeInviteCommand{
+				baseCommand: baseCommand,
 			}, nil
 		},
 	}

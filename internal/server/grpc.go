@@ -13,17 +13,27 @@ import (
 func grpcInit(group *run.Group, opts *options) error {
 	log := opts.Logger.Named("grpc")
 
-	s := grpc.NewServer(
+	var so []grpc.ServerOption
+
+	if opts.AuthChecker != nil {
+		so = append(so,
+			grpc.ChainUnaryInterceptor(authUnaryInterceptor(opts.AuthChecker)),
+			grpc.ChainStreamInterceptor(authStreamInterceptor(opts.AuthChecker)),
+		)
+	}
+
+	so = append(so,
 		grpc.ChainUnaryInterceptor(
 			// Insert our logger and also log req/resp
 			logUnaryInterceptor(log, false),
 		),
-
 		grpc.ChainStreamInterceptor(
 			// Insert our logger and log
 			logStreamInterceptor(log, false),
 		),
 	)
+
+	s := grpc.NewServer(so...)
 
 	// Register our server
 	pb.RegisterWaypointServer(s, opts.Service)

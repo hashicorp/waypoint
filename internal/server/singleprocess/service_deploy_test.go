@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func TestServiceDeployment(t *testing.T) {
@@ -28,13 +29,12 @@ func TestServiceDeployment(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertDeployment(ctx, &Req{
-			Deployment: &pb.Deployment{},
+			Deployment: serverptypes.TestValidDeployment(t, nil),
 		})
 		require.NoError(err)
 		require.NotNil(resp)
 		result := resp.Deployment
 		require.NotEmpty(result.Id)
-		require.Nil(result.Status)
 
 		// Let's write some data
 		result.Status = server.NewStatus(pb.Status_RUNNING)
@@ -53,7 +53,55 @@ func TestServiceDeployment(t *testing.T) {
 
 		// Create, should get an ID back
 		resp, err := client.UpsertDeployment(ctx, &Req{
-			Deployment: &pb.Deployment{Id: "nope"},
+			Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+				Id: "nope",
+			}),
+		})
+		require.Error(err)
+		require.Nil(resp)
+		st, ok := status.FromError(err)
+		require.True(ok)
+		require.Equal(codes.NotFound, st.Code())
+	})
+}
+
+func TestServiceDeployment_GetDeployment(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	db := testDB(t)
+	impl, err := New(db)
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Best way to mock for now is to make a request
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, nil),
+	})
+
+	require.NoError(t, err)
+
+	// Simplify writing tests
+	type Req = pb.GetDeploymentRequest
+
+	t.Run("get existing", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get, should return a deployment
+		deployment, err := client.GetDeployment(ctx, &Req{
+			DeploymentId: resp.Deployment.Id,
+		})
+		require.NoError(err)
+		require.NotNil(deployment)
+		require.NotEmpty(deployment.Id)
+	})
+
+	t.Run("get non-existing", func(t *testing.T) {
+		require := require.New(t)
+
+		// get, should fail
+		resp, err := client.GetDeployment(ctx, &Req{
+			DeploymentId: "nope",
 		})
 		require.Error(err)
 		require.Nil(resp)

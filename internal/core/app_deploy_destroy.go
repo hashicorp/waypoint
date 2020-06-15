@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -59,7 +60,7 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 		nil,
 		destroyer,
 		destroyer.DestroyFunc(),
-		op.Deployment.Deployment,
+		argmapper.Named("deployment", op.Deployment.Deployment),
 	)
 }
 

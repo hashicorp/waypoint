@@ -4,6 +4,15 @@
 # bin creates the binaries for Waypoint
 .PHONY: bin
 bin:
+	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
+	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
+	go build -tags assetsembedded -o ./waypoint ./cmd/waypoint
+	go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
+
+.PHONY: dev
+dev:
+	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
+	cd internal/assets && go generate
 	go build -o ./waypoint ./cmd/waypoint
 	go build -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 

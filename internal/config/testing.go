@@ -10,6 +10,8 @@ import (
 // TestConfig returns a Config from a string source and fails the test if
 // parsing the configuration fails.
 func TestConfig(t testing.T, src string) *Config {
+	t.Helper()
+
 	var result Config
 	require.NoError(t, hclsimple.Decode("test.hcl", []byte(src), nil, &result))
 	return &result

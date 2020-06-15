@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -37,16 +38,9 @@ func (c *UpCommand) Run([]string) int {
 
 	// Build
 	fmt.Fprintf(os.Stdout, "==> Building\n")
-	build, err := app.Build(ctx)
+	_, pushedArtifact, err := app.Build(ctx, core.BuildWithPush(true))
 	if err != nil {
 		log.Error("error running builder", "error", err)
-		return 1
-	}
-
-	fmt.Fprintf(os.Stdout, "==> Pushing artifact\n")
-	pushedArtifact, err := app.PushBuild(ctx, build)
-	if err != nil {
-		log.Error("error pushing artifact to registry", "error", err)
 		return 1
 	}
 

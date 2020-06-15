@@ -31,7 +31,7 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 	}
 
 	c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
-		_, err := app.Build(ctx)
+		_, _, err := app.Build(ctx, core.BuildWithPush(c.flagPush))
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
@@ -44,12 +44,13 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 }
 
 func (c *ArtifactBuildCommand) Flags() *flag.Sets {
-	return c.flagSet(0, func(set *flag.Sets) {
+	return c.flagSet(flagSetLabel, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
-			Name:   "push",
-			Target: &c.flagPush,
-			Usage:  "Push the artifact to the configured registry.",
+			Name:    "push",
+			Target:  &c.flagPush,
+			Default: true,
+			Usage:   "Push the artifact to the configured registry.",
 		})
 	})
 }

@@ -36,9 +36,11 @@ func (c *ExecCommand) Run(args []string) int {
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
 		// Get the latest deployment
 		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Limit:     1,
-			Order:     pb.ListDeploymentsRequest_COMPLETE_TIME,
-			OrderDesc: true,
+			Order: &pb.OperationOrder{
+				Limit: 1,
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Desc:  true,
+			},
 		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())

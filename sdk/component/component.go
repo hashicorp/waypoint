@@ -108,6 +108,10 @@ type ReleaseTarget struct {
 	DeploymentId string
 }
 
+type LabelSet struct {
+	Labels map[string]string
+}
+
 type Artifact interface{}
 
 type Deployment interface{}

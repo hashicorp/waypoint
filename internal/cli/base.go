@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -58,6 +59,15 @@ type baseCommand struct {
 	// WithSingleApp option. You should not access this directly
 	// though and use the DoApp function.
 	app string
+
+	// flagLabels are set via -label if flagSetLabel is set.
+	flagLabels map[string]string
+
+	// flagWorkspace is the workspace to work in.
+	flagWorkspace string
+
+	// args that were present after parsing flags
+	args []string
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -93,6 +103,8 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 
+	c.args = baseCfg.Flags.Args()
+
 	// Parse the configuration
 	var cfg config.Config
 	c.cfg = &cfg
@@ -103,9 +115,19 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return nil
 	}
 
-	if _, err := os.Stat("waypoint.hcl"); err == nil {
-		c.Log.Debug("reading configuration", "path", "waypoint.hcl")
-		if err := hclsimple.DecodeFile("waypoint.hcl", nil, &cfg); err != nil {
+	// TODO(mitchellh): don't hardcode this, look up directories
+	path := "waypoint.hcl"
+
+	// We want an absolute path since we use the directory name as
+	// the default project name if we need it.
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		c.Log.Debug("reading configuration", "path", path)
+		if err := hclsimple.DecodeFile(path, nil, &cfg); err != nil {
 			c.logError(c.Log, "error decoding configuration", err)
 			return err
 		}
@@ -124,6 +146,8 @@ func (c *baseCommand) Init(opts ...Option) error {
 			core.WithLogger(c.Log),
 			core.WithConfig(&cfg),
 			core.WithDataDir(projDir),
+			core.WithLabels(c.flagLabels),
+			core.WithWorkspace(c.flagWorkspace),
 		)
 		if err != nil {
 			c.logError(c.Log, "failed to create project", err)
@@ -139,7 +163,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		// TODO(mitchellh): when we support app targeting we can have more
 		// than one as long as its targeted.
 		if len(cfg.Apps) != 1 {
-			c.project.UI.Output(errAppModeSingle, terminal.WithErrorStyle())
+			c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
@@ -207,6 +231,24 @@ func (c *baseCommand) logError(log hclog.Logger, prefix string, err error) {
 // to configure the set with your own custom options.
 func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 	set := flag.NewSets()
+	{
+		f := set.NewSet("Global Options")
+		f.StringVar(&flag.StringVar{
+			Name:   "workspace",
+			Target: &c.flagWorkspace,
+			Usage:  "Workspace to operate in. Defaults to 'default'.",
+		})
+	}
+
+	if bit&flagSetLabel != 0 {
+		f := set.NewSet("Common Options")
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "label",
+			Target: &c.flagLabels,
+			Usage:  "Labels to set for this operation. Can be specified multiple times.",
+		})
+	}
+
 	if f != nil {
 		// Configure our values
 		f(set)
@@ -219,8 +261,8 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 type flagSetBit uint
 
 const (
-	flagSetNone flagSetBit = 1 << iota
-	flagSetHTTP            // not used currently, should replace when we don't need
+	flagSetNone  flagSetBit = 1 << iota
+	flagSetLabel            // can set labels
 )
 
 var (
