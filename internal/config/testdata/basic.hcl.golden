@@ -6,63 +6,111 @@
    Name: (string) (len=3) "web",
    Path: (string) "",
    Labels: (map[string]string) <nil>,
-   Build: (*config.Component)({
+   Build: (*config.Build)({
     Type: (string) (len=4) "pack",
     Body: (*hclsyntax.Body)({
      Attributes: (hclsyntax.Attributes) {
      },
-     Blocks: (hclsyntax.Blocks) {
-     },
-     hiddenAttrs: (map[string]struct {}) {
-     },
-     hiddenBlocks: (map[string]struct {}) {
-     },
-     SrcRange: (hcl.Range) testdata/basic.hcl:4,18-20,
-     EndRange: (hcl.Range) testdata/basic.hcl:4,20-20
-    }),
-    Labels: (map[string]string) <nil>
-   }),
-   Registry: (*config.Component)({
-    Type: (string) (len=6) "docker",
-    Body: (*hclsyntax.Body)({
-     Attributes: (hclsyntax.Attributes) (len=1) {
-      (string) (len=4) "name": (*hclsyntax.Attribute)({
-       Name: (string) (len=4) "name",
-       Expr: (*hclsyntax.TemplateExpr)({
-        Parts: ([]hclsyntax.Expression) (len=1 cap=1) {
-         (*hclsyntax.LiteralValueExpr)({
-          Val: (cty.Value) {
-           ty: (cty.Type) {
-            typeImpl: (cty.primitiveType) {
-             typeImplSigil: (cty.typeImplSigil) {
+     Blocks: (hclsyntax.Blocks) (len=1 cap=1) {
+      (*hclsyntax.Block)({
+       Type: (string) (len=8) "registry",
+       Labels: ([]string) (len=1 cap=1) {
+        (string) (len=6) "docker"
+       },
+       Body: (*hclsyntax.Body)({
+        Attributes: (hclsyntax.Attributes) (len=1) {
+         (string) (len=4) "name": (*hclsyntax.Attribute)({
+          Name: (string) (len=4) "name",
+          Expr: (*hclsyntax.TemplateExpr)({
+           Parts: ([]hclsyntax.Expression) (len=1 cap=1) {
+            (*hclsyntax.LiteralValueExpr)({
+             Val: (cty.Value) {
+              ty: (cty.Type) {
+               typeImpl: (cty.primitiveType) {
+                typeImplSigil: (cty.typeImplSigil) {
+                },
+                Kind: (cty.primitiveTypeKind) 83
+               }
+              },
+              v: (string) (len=34) "gcr.io/mitchellh-test/myapp:latest"
              },
-             Kind: (cty.primitiveTypeKind) 83
-            }
+             SrcRange: (hcl.Range) testdata/basic.hcl:6,21-55
+            })
            },
-           v: (string) (len=34) "gcr.io/mitchellh-test/myapp:latest"
-          },
-          SrcRange: (hcl.Range) testdata/basic.hcl:7,17-51
+           SrcRange: (hcl.Range) testdata/basic.hcl:6,20-56
+          }),
+          SrcRange: (hcl.Range) testdata/basic.hcl:6,13-56,
+          NameRange: (hcl.Range) testdata/basic.hcl:6,13-17,
+          EqualsRange: (hcl.Range) testdata/basic.hcl:6,18-19
          })
         },
-        SrcRange: (hcl.Range) testdata/basic.hcl:7,16-52
+        Blocks: (hclsyntax.Blocks) {
+        },
+        hiddenAttrs: (map[string]struct {}) <nil>,
+        hiddenBlocks: (map[string]struct {}) <nil>,
+        SrcRange: (hcl.Range) testdata/basic.hcl:5,27-7,10,
+        EndRange: (hcl.Range) testdata/basic.hcl:7,10-10
        }),
-       SrcRange: (hcl.Range) testdata/basic.hcl:7,9-52,
-       NameRange: (hcl.Range) testdata/basic.hcl:7,9-13,
-       EqualsRange: (hcl.Range) testdata/basic.hcl:7,14-15
+       TypeRange: (hcl.Range) testdata/basic.hcl:5,9-17,
+       LabelRanges: ([]hcl.Range) (len=1 cap=1) {
+        (hcl.Range) testdata/basic.hcl:5,18-26
+       },
+       OpenBraceRange: (hcl.Range) testdata/basic.hcl:5,27-28,
+       CloseBraceRange: (hcl.Range) testdata/basic.hcl:7,9-10
       })
-     },
-     Blocks: (hclsyntax.Blocks) {
      },
      hiddenAttrs: (map[string]struct {}) {
      },
-     hiddenBlocks: (map[string]struct {}) {
+     hiddenBlocks: (map[string]struct {}) (len=1) {
+      (string) (len=8) "registry": (struct {}) {
+      }
      },
-     SrcRange: (hcl.Range) testdata/basic.hcl:6,23-8,6,
+     SrcRange: (hcl.Range) testdata/basic.hcl:4,18-8,6,
      EndRange: (hcl.Range) testdata/basic.hcl:8,6-6
     }),
-    Labels: (map[string]string) <nil>
+    Labels: (map[string]string) <nil>,
+    Registry: (*config.Operation)({
+     Type: (string) (len=6) "docker",
+     Body: (*hclsyntax.Body)({
+      Attributes: (hclsyntax.Attributes) (len=1) {
+       (string) (len=4) "name": (*hclsyntax.Attribute)({
+        Name: (string) (len=4) "name",
+        Expr: (*hclsyntax.TemplateExpr)({
+         Parts: ([]hclsyntax.Expression) (len=1 cap=1) {
+          (*hclsyntax.LiteralValueExpr)({
+           Val: (cty.Value) {
+            ty: (cty.Type) {
+             typeImpl: (cty.primitiveType) {
+              typeImplSigil: (cty.typeImplSigil) {
+              },
+              Kind: (cty.primitiveTypeKind) 83
+             }
+            },
+            v: (string) (len=34) "gcr.io/mitchellh-test/myapp:latest"
+           },
+           SrcRange: (hcl.Range) testdata/basic.hcl:6,21-55
+          })
+         },
+         SrcRange: (hcl.Range) testdata/basic.hcl:6,20-56
+        }),
+        SrcRange: (hcl.Range) testdata/basic.hcl:6,13-56,
+        NameRange: (hcl.Range) testdata/basic.hcl:6,13-17,
+        EqualsRange: (hcl.Range) testdata/basic.hcl:6,18-19
+       })
+      },
+      Blocks: (hclsyntax.Blocks) {
+      },
+      hiddenAttrs: (map[string]struct {}) {
+      },
+      hiddenBlocks: (map[string]struct {}) {
+      },
+      SrcRange: (hcl.Range) testdata/basic.hcl:5,27-7,10,
+      EndRange: (hcl.Range) testdata/basic.hcl:7,10-10
+     }),
+     Labels: (map[string]string) <nil>
+    })
    }),
-   Platform: (*config.Component)({
+   Platform: (*config.Operation)({
     Type: (string) (len=16) "google-cloud-run",
     Body: (*hclsyntax.Body)({
      Attributes: (hclsyntax.Attributes) {
@@ -78,7 +126,7 @@
     }),
     Labels: (map[string]string) <nil>
    }),
-   Release: (*config.Component)(<nil>)
+   Release: (*config.Operation)(<nil>)
   })
  },
  Labels: (map[string]string) <nil>

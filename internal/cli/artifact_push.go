@@ -40,7 +40,7 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 		}
 
 		// Push it
-		_, err = app.PushBuild(ctx, build)
+		_, err = app.PushBuild(ctx, core.PushWithBuild(build))
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel

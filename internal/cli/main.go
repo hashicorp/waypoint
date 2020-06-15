@@ -32,7 +32,6 @@ var (
 	// in the CLI help output.
 	commonCommands = map[string]struct{}{
 		"build":   struct{}{},
-		"push":    struct{}{},
 		"deploy":  struct{}{},
 		"release": struct{}{},
 		"up":      struct{}{},
