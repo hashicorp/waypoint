@@ -99,10 +99,10 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	components := []struct {
 		Target interface{}
 		Type   component.Type
-		Config *config.Component
+		Config *config.Operation
 	}{
-		{&app.Builder, component.BuilderType, cfg.Build},
-		{&app.Registry, component.RegistryType, cfg.Registry},
+		{&app.Builder, component.BuilderType, cfg.Build.Operation()},
+		{&app.Registry, component.RegistryType, cfg.Build.RegistryOperation()},
 		{&app.Platform, component.PlatformType, cfg.Platform},
 		{&app.Releaser, component.ReleaseManagerType, cfg.Release},
 	}
@@ -283,7 +283,7 @@ func (a *App) initComponent(
 	typ component.Type,
 	target interface{},
 	f *factory.Factory,
-	cfg *config.Component,
+	cfg *config.Operation,
 	labels map[string]string,
 ) error {
 	log := a.logger.Named(strings.ToLower(typ.String()))

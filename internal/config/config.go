@@ -47,3 +47,23 @@ type Build struct {
 	Labels   map[string]string `hcl:"labels,optional"`
 	Registry *Operation        `hcl:"registry,block"`
 }
+
+func (b *Build) Operation() *Operation {
+	if b == nil {
+		return nil
+	}
+
+	return &Operation{
+		Type:   b.Type,
+		Body:   b.Body,
+		Labels: b.Labels,
+	}
+}
+
+func (b *Build) RegistryOperation() *Operation {
+	if b == nil {
+		return nil
+	}
+
+	return b.Registry
+}
