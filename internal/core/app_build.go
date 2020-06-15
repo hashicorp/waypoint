@@ -13,15 +13,71 @@ import (
 
 // Build builds the artifact from source for this app.
 // TODO(mitchellh): test
-func (a *App) Build(ctx context.Context) (*pb.Build, error) {
-	_, msg, err := a.doOperation(ctx, a.logger.Named("build"), &buildOperation{})
+func (a *App) Build(ctx context.Context, optFuncs ...BuildOption) (
+	*pb.Build,
+	*pb.PushedArtifact,
+	error,
+) {
+	opts, err := newBuildOptions(optFuncs...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return msg.(*pb.Build), nil
+	// First we do the build
+	_, msg, err := a.doOperation(ctx, a.logger.Named("build"), &buildOperation{})
+	if err != nil {
+		return nil, nil, err
+	}
+	build := msg.(*pb.Build)
+
+	// If we're not pushing, then we're done!
+	if !opts.Push {
+		return build, nil, nil
+	}
+
+	// We're also pushing to a registry, so invoke that.
+	artifact, err := a.PushBuild(ctx, PushWithBuild(build))
+	return build, artifact, err
 }
 
+// BuildOption is used to configure a Build
+type BuildOption func(*buildOptions) error
+
+// BuildWithPush sets whether or not the build will push. The default
+// is for the build to push.
+func BuildWithPush(v bool) BuildOption {
+	return func(opts *buildOptions) error {
+		opts.Push = v
+		return nil
+	}
+}
+
+type buildOptions struct {
+	Push bool
+}
+
+func defaultBuildOptions() *buildOptions {
+	return &buildOptions{
+		Push: true,
+	}
+}
+
+func newBuildOptions(opts ...BuildOption) (*buildOptions, error) {
+	def := defaultBuildOptions()
+	for _, f := range opts {
+		if err := f(def); err != nil {
+			return nil, err
+		}
+	}
+
+	return def, def.Validate()
+}
+
+func (opts *buildOptions) Validate() error {
+	return nil
+}
+
+// buildOperation implements the operation interface.
 type buildOperation struct {
 	Build *pb.Build
 }

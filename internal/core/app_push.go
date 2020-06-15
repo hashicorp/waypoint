@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 
+	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
@@ -11,11 +12,21 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 )
 
-// Push pushes the given build to a registry.
+// Push pushes the given build to the configured registry. This requires
+// that the build artifact be available, which we leave up to the caller.
+// Therefore, please note that this generally can't be called on separate
+// machines, long after a build is done (because the person may have deleted
+// the physical artifact, etc.).
+//
 // TODO(mitchellh): test
-func (a *App) PushBuild(ctx context.Context, build *pb.Build) (*pb.PushedArtifact, error) {
+func (a *App) PushBuild(ctx context.Context, optFuncs ...PushBuildOption) (*pb.PushedArtifact, error) {
+	opts, err := newPushBuildOptions(optFuncs...)
+	if err != nil {
+		return nil, err
+	}
+
 	_, msg, err := a.doOperation(ctx, a.logger.Named("push"), &pushBuildOperation{
-		Build: build,
+		Build: opts.Build,
 	})
 	if err != nil {
 		return nil, err
@@ -24,8 +35,41 @@ func (a *App) PushBuild(ctx context.Context, build *pb.Build) (*pb.PushedArtifac
 	return msg.(*pb.PushedArtifact), nil
 }
 
+// PushBuildOption is used to configure a Build
+type PushBuildOption func(*pushBuildOptions) error
+
+// BuildWithPush sets whether or not the build will push. The default
+// is for the build to push.
+func PushWithBuild(b *pb.Build) PushBuildOption {
+	return func(opts *pushBuildOptions) error {
+		opts.Build = b
+		return nil
+	}
+}
+
+type pushBuildOptions struct {
+	Build *pb.Build
+}
+
+func newPushBuildOptions(opts ...PushBuildOption) (*pushBuildOptions, error) {
+	def := &pushBuildOptions{}
+	for _, f := range opts {
+		if err := f(def); err != nil {
+			return nil, err
+		}
+	}
+
+	return def, def.Validate()
+}
+
 type pushBuildOperation struct {
 	Build *pb.Build
+}
+
+func (opts *pushBuildOptions) Validate() error {
+	return validation.ValidateStruct(&opts,
+		validation.Field(&opts.Build, validation.Required),
+	)
 }
 
 func (op *pushBuildOperation) Init(app *App) (proto.Message, error) {

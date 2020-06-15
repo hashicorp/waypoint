@@ -17,6 +17,7 @@ require (
 	github.com/gliderlabs/ssh v0.2.2
 	github.com/go-openapi/runtime v0.19.15
 	github.com/go-openapi/strfmt v0.19.5
+	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang/protobuf v1.3.5
 	github.com/hashicorp/go-argmapper v0.0.0-20200606213939-1b3495a979bb
 	github.com/hashicorp/go-hclog v0.14.0
