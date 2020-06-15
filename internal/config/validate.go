@@ -8,6 +8,13 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+// internalValidator is an interface implemented internally for validation.
+// This is unexported since it takes a name parameter to build better error
+// messages.
+type internalValidator interface {
+	validate(name string) error
+}
+
 func (c *Config) Validate() error {
 	var result error
 
@@ -30,7 +37,7 @@ func (app *App) Validate() error {
 		result = multierror.Append(result, errs...)
 	}
 
-	for k, v := range app.components() {
+	for k, v := range app.validatorChildren() {
 		if v != nil {
 			if err := v.validate(k); err != nil {
 				result = multierror.Append(result, err)
@@ -41,13 +48,43 @@ func (app *App) Validate() error {
 	return multierror.Prefix(result, fmt.Sprintf("app[%s]:", app.Name))
 }
 
-func (c *Component) validate(key string) error {
+func (app *App) validatorChildren() map[string]internalValidator {
+	result := map[string]internalValidator{
+		"build":   app.Build,
+		"deploy":  app.Platform,
+		"release": app.Release,
+	}
+
+	if app.Build != nil && app.Build.Registry != nil {
+		result["build.registry"] = app.Build.Registry
+	}
+
+	return result
+}
+
+func (c *Operation) validate(key string) error {
+	if c == nil {
+		return nil
+	}
+
 	var result error
 	if errs := ValidateLabels(c.Labels); len(errs) > 0 {
 		result = multierror.Append(result, errs...)
 	}
 
 	return multierror.Prefix(result, fmt.Sprintf("%s:", key))
+}
+
+func (b *Build) validate(key string) error {
+	if b == nil {
+		return nil
+	}
+
+	return (&Operation{
+		Type:   b.Type,
+		Body:   b.Body,
+		Labels: b.Labels,
+	}).validate(key)
 }
 
 // ValidateLabels validates a set of labels.
