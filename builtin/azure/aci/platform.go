@@ -194,6 +194,8 @@ func (p *Platform) Deploy(
 	}
 	result.Url = fmt.Sprintf("http://%s:%d", to.String(containerGroupResult.IPAddress.Fqdn), portInt32)
 
+	// Clear the status before we print the url
+	st.Close()
 	// Show the container group url
 	ui.Output("\nURL: %s", result.Url, terminal.WithSuccessStyle())
 
