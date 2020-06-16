@@ -10,5 +10,5 @@ import (
 // Options are the SDK options to use for instantiation for
 // the Azure ACI plugin.
 var Options = []sdk.Option{
-	sdk.WithComponents(&Platform{}, &Releaser{}),
+	sdk.WithComponents(&Platform{}),
 }

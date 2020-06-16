@@ -194,10 +194,16 @@ func (p *Platform) Deploy(
 	}
 	result.Url = fmt.Sprintf("http://%s:%d", to.String(containerGroupResult.IPAddress.Fqdn), portInt32)
 
+	// Show the container group url
+	ui.Output("\nURL: %s", result.Url, terminal.WithSuccessStyle())
+
 	// If we have tracing enabled we just dump the full container group as we know it
 	// in case we need to look up what the raw value is.
 	if log.IsTrace() {
-		bs, _ := containerGroupResult.MarshalJSON()
+		bs, err := containerGroupResult.MarshalJSON()
+		if err != nil {
+			return nil, status.Errorf(codes.Aborted, err.Error())
+		}
 		log.Trace("container group JSON", "json", base64.StdEncoding.EncodeToString(bs))
 	}
 

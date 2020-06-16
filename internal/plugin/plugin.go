@@ -51,7 +51,6 @@ func init() {
 	Platforms.Register("netlify", BuiltinFactory("netlify", component.PlatformType))
 
 	Releasers.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.ReleaseManagerType))
-	Releasers.Register("azure-aci", BuiltinFactory("azure-aci", component.ReleaseManagerType))
 	Releasers.Register("kubernetes", BuiltinFactory("kubernetes", component.ReleaseManagerType))
 }
 
