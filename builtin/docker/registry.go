@@ -74,9 +74,22 @@ func (r *Registry) Push(
 			return nil, err
 		}
 
+		var server string
+
+		if repoInfo.Index.Official {
+			info, err := cli.Info(ctx)
+			if err != nil || info.IndexServerAddress == "" {
+				server = registry.IndexServer
+			} else {
+				server = info.IndexServerAddress
+			}
+		} else {
+			server = repoInfo.Index.Name
+		}
+
 		cf := config.LoadDefaultConfigFile(stderr)
 
-		authConfig, _ := cf.GetAuthConfig(repoInfo.Index.Name)
+		authConfig, _ := cf.GetAuthConfig(server)
 		buf, err := json.Marshal(authConfig)
 		if err != nil {
 			return nil, err
