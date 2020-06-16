@@ -29,8 +29,8 @@ require (
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang/protobuf v1.3.5
-	github.com/hashicorp/go-argmapper v0.0.0-20200606213939-1b3495a979bb
-	github.com/hashicorp/go-hclog v0.14.0
+	github.com/hashicorp/go-argmapper v0.0.0-20200616194852-38cf1bb095a3
+	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/go-memdb v1.2.0
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-plugin v1.1.0
@@ -59,7 +59,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6
-	golang.org/x/sys v0.0.0-20200602225109-6fdc65e7d980 // indirect
+	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200416231807-8751e049a2a0
 	google.golang.org/grpc v1.28.1
