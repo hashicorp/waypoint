@@ -46,6 +46,26 @@ service Waypoint {
   // each variable.
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 
+  // TODO(mitchellh): runners
+  // rpc QueueJob(QueueJobRequest) returns (QueueJobResponse);
+
+  // GetJobStream opens a job event stream for a running job. This can be
+  // used to listen for terminal output and other events of a running job.
+  // Multiple listeners can open a job stream.
+  // rpc GetJobStream(GetJobStreamRequest) returns (stream GetJobStreamResponse);
+
+  //----------------------------------------------------------------------
+  // Runner endpoints. These are expected to be called only by a runner.
+  // These are not meant to be public endpoints.
+  //----------------------------------------------------------------------
+
+  // RunnerConfig is called to register a runner and receive the configuration
+  // for the runner. The response is a stream so that the configuration can
+  // be updated later.
+  // rpc RunnerConfig(RunnerConfigRequest) returns (stream RunnerConfigResponse);
+
+  // rpc RunnerJobStream(stream RunnerJobStreamRequest) returns (stream RunnerJobStreamResponse);
+
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
   // the entrypoint binary only.
@@ -134,6 +154,21 @@ message Ref {
   message Workspace {
     string workspace = 1;
   }
+
+  // Runner references a runner process which executes operations. This
+  // can reference a runner by any of the more specific types, such as
+  // by ID. If you want to constrain which runners can be targeted,
+  // a different ref type should be used.
+  message Runner {
+    oneof target {
+      RunnerId id = 1;
+    }
+  }
+
+  // RunenrId references a runner by ID.
+  message RunnerId {
+    string id = 1;
+  }
 }
 
 // Component represents metadata about a component. A component is the
@@ -208,6 +243,216 @@ message OperationOrder {
     UNSET = 0;
     START_TIME = 1;
     COMPLETE_TIME = 2;
+  }
+}
+
+/********************************************************************
+* Queueing
+********************************************************************/
+
+message QueueJobRequest {
+  // The job to queue. See the Job message documentation for more details
+  // on what to set.
+  Job job = 1;
+}
+
+message QueueJobResponse {
+  // the job ID that was queued. This can be used with other RPC methods
+  // to check on the status, cancel, etc.
+  string job_id = 1;
+}
+
+// A Job is a job that executes on a runner and is queued by QueueOperation.
+message Job {
+  reserved 21 to 49; // future data source range
+  reserved 51 to 79; // future operation range
+
+  // id of the job. This is generated on the server side when queued. If
+  // you are queueing a job, this must be empty or unset.
+  string id = 1;
+
+  // The application to target for the operation. Some operations may allow
+  // certain fields of this to be empty, so check with the operation
+  // documentation to determine what needs to be set. Generally, project
+  // must be set.
+  Ref.Application application = 2;
+
+  // The runner that should execute this job. This is required.
+  Ref.Runner target_runner = 3;
+
+  // data_source determines where the data to operate on (such as the
+  // application source code and Waypoint configuration) comes from.
+  oneof data_source {
+    // local means the runner has access to the data locally and will
+    // know what to do. This is primarily only useful if the target_runner
+    // is a specific runner and should not be used by any runner unless your
+    // runners are configured to have access to the proper data.
+    Local local = 20;
+  }
+
+  // The operation to execute.
+  oneof operation {
+    BuildOp build = 50;
+  }
+
+  // TODO(mitchellh): component lists so that we can verify the runner
+  // has the expected components.
+
+  message Local {}
+
+  message BuildOp {}
+}
+
+message GetJobStreamRequest {
+  string job_id = 1;
+
+  // Future: can add a timestamp here so that only output from after the
+  // given timestamp is sent down.
+}
+
+message GetJobStreamResponse {
+  oneof event {
+    // Open is sent as confirmation that the job stream successfully opened.
+    // This will be sent immediately by the server if the job ID is valid.
+    // This is useful since other events such as terminal output may not
+    // happen for a long time while the job is executing, queued, etc.
+    //
+    // This is ALWAYS sent. If the job is already completed, this will be
+    // sent first followed immediately by a Complete.
+    Open open = 1;
+
+    // terminal output. On initial connection, the server may send buffered
+    // historical terminal data so there isn't a race between queueing a job
+    // and getting its first byte output. You can determine this based on the
+    // flag on Terminal.
+    Terminal terminal = 2;
+
+    // an error regarding the stream itself, rather than the executing job.
+    // For example, if you request a job stream for an invalid job ID,
+    // this will be sent back. If this is sent, no further messages will
+    // be sent and the stream is terminated.
+    //
+    // For errors in job execution, see "complete".
+    Error error = 3;
+
+    // job completion, no more events will follow this one. This can be
+    // both success or failure, the event must be checked. Any errors
+    // in complete are errors from the job execution itself.
+    Complete complete = 4;
+  }
+
+  message Open {}
+
+  message Terminal {
+    // lines are each line of terminal output in order for this batch
+    repeated Line lines = 1;
+
+    // buffered if true signifies that the data being sent is from the
+    // server buffer and is historical vs real-time since the stream was
+    // opened. If this is true, all lines are buffered. We will never mix
+    // buffered and non-buffered lines.
+    bool buffered = 2;
+
+    message Line {
+      // raw is the uncolorized, minimally formatted output.
+      string raw = 1;
+
+      // line message is potentially formatted with ANSI escape sequences.
+      string line = 2;
+
+      // timestamp of the terminal line as seen by the runner. This might be
+      // skewed from the server or the client but relative to all other
+      // line output, it will be accurate.
+      google.protobuf.Timestamp timestamp = 3;
+    }
+  }
+
+  message Error {
+    google.rpc.Status error = 1;
+  }
+
+  message Complete {
+    // error, if set, is an error that occurred as part of the job execution
+    // and resulted in job termination. This is different than the "error"
+    // event which is an error in the stream itself.
+    google.rpc.Status error = 1;
+  }
+}
+
+/********************************************************************
+* Runner
+********************************************************************/
+
+message RunnerConfigRequest {
+  // id is a unique ID generated by the runner. This should be a UUID or some
+  // other guaranteed unique mechanism. This is not an auth mechanism, just
+  // a way to associate an ID to a runner.
+  string id = 1;
+}
+
+message RunnerConfigResponse {
+  // config is any updated configuration for the runner.
+  RunnerConfig config = 2;
+}
+
+message RunnerConfig {
+  // The configuration for the runner. Any locally set runner config will
+  // take priority in a conflict. This allows operators to setup runners
+  // with specific configuration without fear that the server will override
+  // them.
+  repeated ConfigVar config_vars = 1;
+}
+
+message RunnerJobStreamRequest {
+  oneof event {
+    // request MUST BE the first message sent by a client. This is used to
+    // signify that a runner is ready to accept a job. This is only ever
+    // sent once. Once a job is complete, the client must terminate the
+    // stream and open a new connection.
+    Request request = 1;
+
+    // ack is sent to accept a job assignment from the server. This
+    // should be sent soon after the job is assigned to avoid the job being
+    // reassigned and duplicated.
+    Ack ack = 2;
+
+    // complete is sent on job completion. This is only sent if there
+    // were no errors, so this signals a successful completion. An erroneous
+    // completion is signaled by sending an Error event.
+    Complete complete = 3;
+
+    // error is sent when there was an error with job execution (after
+    // accept was sent). This signals that the job failed and it cannot
+    // be retried. This terminates the job and no other events should be
+    // sent.
+    Error error = 4;
+
+    // terminal output from the job.
+    GetJobStreamResponse.Terminal terminal = 5;
+  }
+
+  message Request {
+    string runner_id = 1;
+  }
+
+  message Ack {}
+
+  message Complete {}
+
+  message Error {
+    google.rpc.Status error = 1;
+  }
+}
+
+message RunnerJobStreamResponse {
+  oneof event {
+    // assignment is when a job is assigned to this job stream. This
+    // will happen ONLY in response to a "Request" message from the client.
+    JobAssignment assignment = 1;
+  }
+
+  message JobAssignment {
+    Job job = 1;
   }
 }
 
