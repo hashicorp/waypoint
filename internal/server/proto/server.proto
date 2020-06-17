@@ -62,7 +62,7 @@ service Waypoint {
   // RunnerConfig is called to register a runner and receive the configuration
   // for the runner. The response is a stream so that the configuration can
   // be updated later.
-  // rpc RunnerConfig(RunnerConfigRequest) returns (stream RunnerConfigResponse);
+  rpc RunnerConfig(RunnerConfigRequest) returns (stream RunnerConfigResponse);
 
   // rpc RunnerJobStream(stream RunnerJobStreamRequest) returns (stream RunnerJobStreamResponse);
 
