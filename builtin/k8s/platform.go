@@ -23,7 +23,7 @@ const (
 	labelNonce = "waypoint.hashicorp.com/nonce"
 )
 
-// Platform is the Platform implementation for Google Cloud Run.
+// Platform is the Platform implementation for Kubernetes.
 type Platform struct {
 	config Config
 }
@@ -43,7 +43,7 @@ func (p *Platform) DestroyFunc() interface{} {
 	return p.Destroy
 }
 
-// Deploy deploys an image to GCR.
+// Deploy deploys an image to Kubernetes.
 func (p *Platform) Deploy(
 	ctx context.Context,
 	log hclog.Logger,
@@ -92,6 +92,14 @@ func (p *Platform) Deploy(
 			Value: "3000",
 		},
 	}
+
+	for k, v := range p.config.StaticEnvVars {
+		env = append(env, corev1.EnvVar{
+			Name:  k,
+			Value: v,
+		})
+	}
+
 	for k, v := range deployConfig.Env() {
 		env = append(env, corev1.EnvVar{
 			Name:  k,
@@ -173,9 +181,36 @@ func (p *Platform) Deploy(
 		}
 	}
 
+	if p.config.ScratchSpace != "" {
+		deployment.Spec.Template.Spec.Volumes = []corev1.Volume{
+			{
+				Name: "scratch",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			},
+		}
+
+		deployment.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
+			{
+				Name:      "scratch",
+				MountPath: p.config.ScratchSpace,
+			},
+		}
+	}
+
+	if p.config.ImageSecret != "" {
+		deployment.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{
+			{
+				Name: p.config.ImageSecret,
+			},
+		}
+	}
+
 	if deployment.Spec.Template.Annotations == nil {
 		deployment.Spec.Template.Annotations = make(map[string]string)
 	}
+
 	deployment.Spec.Template.Annotations[labelNonce] =
 		time.Now().UTC().Format(time.RFC3339Nano)
 
@@ -216,6 +251,10 @@ func (p *Platform) Deploy(
 			return true, nil
 		}
 
+		// TODO: Report the statuses and events of the pods that are starting
+		// here so that users know why stuff isn't starting. Most commonly here
+		// it's going to be an error pulling the image.
+
 		return false, nil
 	})
 	if err != nil {
@@ -255,12 +294,30 @@ type Config struct {
 	// Context specifies the kube context to use.
 	Context string `hcl:"context,optional"`
 
+	// The number of replicas of the service to maintain. If this number is maintained
+	// outside waypoint, for instance by a pod autoscaler, do not set this variable.
 	Count int32 `hcl:"replicas,optional"`
 
 	// If set, this is the HTTP path to request to test that the application
 	// is up and running. Without this, we only test that a connection can be
 	// made to the port.
 	ProbePath string `hcl:"probe_path,optional"`
+
+	// A path to a directory that will be created for the service to store
+	// temporary data.
+	ScratchSpace string `hcl:"scratch_path,optional"`
+
+	// The name of the Kubernetes secret to use to pull the image stored
+	// in the registry.
+	// TODO This maybe should be required because the vast majority of deployments
+	// will be against private images.
+	ImageSecret string `hcl:"image_secret,optional"`
+
+	// Environment variables that are meant to configure the application in a static
+	// way. This might be control an image that has mulitple modes of operation,
+	// selected via environment variable. Most configuration should use the waypoint
+	// config commands.
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 var (
