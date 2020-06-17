@@ -53,18 +53,14 @@ func persistLocalToken(dir string, token string) error {
 }
 
 // retrieveLocalToken returns a token from the specified directory
-func retrieveLocalToken(dir string) (string, error) {
+func retrieveLocalToken(dir string) string {
 	path := filepath.Join(dir, tokenFilename)
-	token, err := ioutil.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
 
-	if len(token) <= 0 {
-		return "", fmt.Errorf("token is incorrectly formatted")
-	}
+	// Intentionally not checking the error here as we'll
+	// validate the token
+	token, _ := ioutil.ReadFile(path)
 
-	return string(token), nil
+	return string(token)
 }
 
 // apiContext returns context.Context suitable for Netlify

@@ -64,15 +64,6 @@ func (p *Platform) Auth(
 		return nil
 	}
 
-	// Check if there is a local token
-	_, err := retrieveLocalToken(dir.DataDir())
-	if err == nil {
-		log.Debug("using locally persisted token, not authenticating")
-		return nil
-	}
-
-	st.Update("Logging into Netlify")
-
 	client := netlify.Default
 
 	// Create a ticket to exchange for a secret token
@@ -120,8 +111,7 @@ func (p *Platform) ValidateAuth(
 	st := ui.Status()
 	defer st.Close()
 
-	// Setup API content for netlify, we are not authenticated yet
-	// clientContext := apiContext("")
+	st.Update("Validating credentials...")
 
 	// If the user configured a token, just stop and use that
 	if p.config.AccessToken != "" {
@@ -130,13 +120,19 @@ func (p *Platform) ValidateAuth(
 		return nil
 	}
 
-	// Check if there is a local token
-	_, err := retrieveLocalToken(dir.DataDir())
-	if err == nil {
-		log.Debug("using locally persisted token, not authenticating")
-		return nil
+	// Will retrive local token it if exists
+	token := retrieveLocalToken(dir.DataDir())
+
+	clientContext := apiContext(token)
+	client := netlify.Default
+
+	// Try listing sites to validate auth
+	_, err := client.ListSites(clientContext, nil)
+	if err != nil {
+		return err
 	}
 
+	// Auth is valid if we did not error
 	return nil
 }
 
@@ -157,10 +153,7 @@ func (p *Platform) Deploy(
 	// get the token that should exist because of auth calls
 	var token string
 	if p.config.AccessToken == "" {
-		localToken, err := retrieveLocalToken(dir.DataDir())
-		if err != nil {
-			return nil, err
-		}
+		localToken := retrieveLocalToken(dir.DataDir())
 		token = localToken
 	}
 
@@ -169,9 +162,8 @@ func (p *Platform) Deploy(
 
 	// We'll update the user in realtime
 	st := ui.Status()
-	defer st.Close()
 
-	st.Update("Setting up deploy")
+	st.Update("Setting up deploy...")
 
 	site := &models.Site{}
 
@@ -243,6 +235,9 @@ func (p *Platform) Deploy(
 	if err != nil {
 		return nil, err
 	}
+
+	// Clear the status
+	st.Close()
 
 	deployment.Url = deploy.DeploySslURL
 	log.Trace("url available", "url", deploy.DeploySslURL)
