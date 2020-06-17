@@ -81,12 +81,15 @@ type Destroyer interface {
 	DestroyFunc() interface{}
 }
 
-// Authenticator is responsible for destroying resources associated with this
-// implementation. This can be implemented by all of the component types.
+// Authenticator is responsible for authenticating different types of plugins.
 type Authenticator interface {
-	// AuthFunc should return the method handle for getting credentials for a
+	// AuthFunc should return the method for getting credentials for a
 	// plugin.
 	AuthFunc() interface{}
+
+	// ValidateAuthFunc should return the method for validating authentication
+	// credentials for the plugin
+	ValidateAuthFunc() interface{}
 }
 
 // A Platform that supports the ability to exec into a shell environment

@@ -35,7 +35,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		// We're authenticating with a platform for deployments
 		authenticator := app.Platform.(component.Authenticator)
 
-		_, err := app.AuthenticateComponents(ctx, c.Log, authenticator)
+		_, err := app.AuthenticateComponent(ctx, c.Log, authenticator)
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel

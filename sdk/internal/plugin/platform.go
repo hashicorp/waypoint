@@ -159,6 +159,23 @@ func (c *platformClient) AuthFunc() interface{} {
 	)
 }
 
+func (c *platformClient) ValidateAuthFunc() interface{} {
+	// Get the spec
+	spec, err := c.client.ValidateAuthSpec(context.Background(), &proto.Empty{})
+	if err != nil {
+		return funcErr(err)
+	}
+
+	return funcspec.Func(spec, c.ValidateAuth,
+		argmapper.Logger(c.logger),
+		argmapper.Typed(&pluginargs.Internal{
+			Broker:  c.broker,
+			Mappers: c.mappers,
+			Cleanup: &pluginargs.Cleanup{},
+		}),
+	)
+}
+
 func (c *platformClient) DeployFunc() interface{} {
 	// Get the spec
 	spec, err := c.client.DeploySpec(context.Background(), &proto.Empty{})
@@ -206,6 +223,23 @@ func (c *platformClient) auth(
 
 	// Call our function
 	_, err := c.client.Auth(ctx, &proto.FuncSpec_Args{Args: args})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *platformClient) ValidateAuth(
+	ctx context.Context,
+	args funcspec.Args,
+	internal *pluginargs.Internal,
+) error {
+	// Run the cleanup
+	defer internal.Cleanup.Close()
+
+	// Call our function
+	_, err := c.client.ValidateAuth(ctx, &proto.FuncSpec_Args{Args: args})
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package proto;
 
+option go_package = '.;proto';
+
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 import "plugin.proto";
@@ -10,6 +12,9 @@ import "plugin.proto";
 service Platform {
   rpc Auth(FuncSpec.Args) returns (google.protobuf.Empty);
   rpc AuthSpec(Empty) returns (FuncSpec);
+
+  rpc ValidateAuth(FuncSpec.Args) returns (google.protobuf.Empty);
+  rpc ValidateAuthSpec(Empty) returns (FuncSpec);
 
   rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
   rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);

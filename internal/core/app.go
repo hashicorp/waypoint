@@ -124,18 +124,50 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	return app, nil
 }
 
-// AuthenticateComponents iterates through all components and
-// performs auth validation, followed by retrieving credentials
-// from the user if necessary and possible
-func (a *App) AuthenticateComponents(ctx context.Context, log hclog.Logger, authenticator component.Authenticator) (interface{}, error) {
-	a.UI.Output("Authenticating...")
+// AuthenticateComponent validated authentication for a specific
+// component, and if necessary retrieves credentials from the user
+func (a *App) AuthenticateComponent(ctx context.Context, log hclog.Logger, authenticator component.Authenticator) (interface{}, error) {
+	validate := func() error {
+		_, err := a.callDynamicFunc(ctx,
+			log,
+			nil,
+			authenticator,
+			authenticator.ValidateAuthFunc(),
+		)
 
-	return a.callDynamicFunc(ctx,
-		log,
-		nil,
-		authenticator,
-		authenticator.AuthFunc(),
-	)
+		return err
+	}
+
+	a.UI.Output("Validating credentials...", terminal.WithHeaderStyle())
+
+	// If validate returns an error, try to auth, otherwise we assume
+	// we are valid
+	if err := validate(); err != nil {
+		a.UI.Output(`There are plugins that require authentication. Waypoint
+will guide you through authentication.
+
+`)
+
+		a.UI.Output("Logging in...", terminal.WithHeaderStyle())
+
+		_, err = a.callDynamicFunc(ctx,
+			log,
+			nil,
+			authenticator,
+			authenticator.AuthFunc(),
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if err := validate(); err != nil {
+			return nil, err
+		}
+	}
+
+	// All is well, continue
+	return nil, nil
 }
 
 // Close is called to clean up any resources. This should be called

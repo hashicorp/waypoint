@@ -18,7 +18,7 @@ import (
 // have the authenticator RPC methods.
 type authenticatorProtoClient interface {
 	Auth(context.Context, *empty.Empty, ...grpc.CallOption) (*empty.Empty, error)
-	AuthValidate(context.Context, *empty.Empty, ...grpc.CallOption) (*empty.Empty, error)
+	ValidateAuth(context.Context, *empty.Empty, ...grpc.CallOption) (*empty.Empty, error)
 }
 
 // authenticatorClient implements component.Authenticator for a service that
@@ -55,6 +55,36 @@ func (s *authenticatorServer) Auth(
 	defer internal.Cleanup.Close()
 
 	_, err := callDynamicFunc2(s.Impl.(component.Authenticator).AuthFunc(), args.Args,
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Typed(internal),
+		argmapper.Typed(ctx),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
+}
+
+func (s *authenticatorServer) ValidateAuthSpec(
+	ctx context.Context,
+	args *pb.Empty,
+) (*pb.FuncSpec, error) {
+	return funcspec.Spec(s.Impl.(component.Authenticator).ValidateAuthFunc(),
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger),
+		argmapper.Typed(s.internal()),
+	)
+}
+
+func (s *authenticatorServer) ValidateAuth(
+	ctx context.Context,
+	args *pb.FuncSpec_Args,
+) (*empty.Empty, error) {
+	internal := s.internal()
+	defer internal.Cleanup.Close()
+
+	_, err := callDynamicFunc2(s.Impl.(component.Authenticator).ValidateAuthFunc(), args.Args,
 		argmapper.ConverterFunc(s.Mappers...),
 		argmapper.Typed(internal),
 		argmapper.Typed(ctx),
