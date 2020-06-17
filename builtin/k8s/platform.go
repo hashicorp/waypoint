@@ -317,7 +317,7 @@ type Config struct {
 	// way. This might be control an image that has mulitple modes of operation,
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
-	StaticEnvVars map[string]string `hcl:"static_environment"`
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 var (
