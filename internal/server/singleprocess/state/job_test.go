@@ -2,10 +2,13 @@ package state
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
@@ -223,5 +226,71 @@ func TestJobAck(t *testing.T) {
 		job, err = s.JobById(job.Id)
 		require.NoError(err)
 		require.Equal(pb.Job_QUEUED, job.State)
+	})
+}
+
+func TestJobComplete(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+
+		// Ack it
+		require.NoError(s.JobAck(job.Id, true))
+
+		// Complete it
+		require.NoError(s.JobComplete(job.Id, nil))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id)
+		require.NoError(err)
+		require.Equal(pb.Job_SUCCESS, job.State)
+		require.Nil(job.Error)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+
+		// Ack it
+		require.NoError(s.JobAck(job.Id, true))
+
+		// Complete it
+		require.NoError(s.JobComplete(job.Id, fmt.Errorf("bad")))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.State)
+		require.NotNil(job.Error)
+
+		st := status.FromProto(job.Error)
+		require.Equal(codes.Unknown, st.Code())
+		require.Contains(st.Message(), "bad")
 	})
 }

@@ -322,6 +322,9 @@ message Job {
   google.protobuf.Timestamp ack_time = 104;
   google.protobuf.Timestamp complete_time = 105;
 
+  // error is set if state == ERROR
+  google.rpc.Status error = 106;
+
   enum State {
     UNKNOWN = 0;
     QUEUED = 1; // queued and waiting for assignment

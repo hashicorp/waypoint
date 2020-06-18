@@ -315,6 +315,56 @@ func (s *State) JobAck(id string, ack bool) error {
 	return nil
 }
 
+// JobComplete marks a running job as complete. If an error is given,
+// the job is marked as failed (a completed state). If no error is given,
+// the job is marked as successful.
+func (s *State) JobComplete(id string, cerr error) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	// Get the job
+	raw, err := txn.First(jobTableName, jobIdIndexName, id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "job not found: %s", id)
+	}
+	job := raw.(*Job)
+
+	// If the job is not in the assigned state, then this is an error.
+	if job.State != pb.Job_RUNNING {
+		return status.Errorf(codes.FailedPrecondition,
+			"job can't be completed from state: %s",
+			job.State.String())
+	}
+
+	// Set to complete, assume success for now
+	job.State = pb.Job_SUCCESS
+	job.Job.State = job.State
+	job.Job.CompleteTime, err = ptypes.TimestampProto(time.Now())
+	if err != nil {
+		// This should never happen since encoding a time now should be safe
+		panic("time encoding failed: " + err.Error())
+	}
+
+	if cerr != nil {
+		job.State = pb.Job_ERROR
+		job.Job.State = job.State
+
+		st, _ := status.FromError(cerr)
+		job.Job.Error = st.Proto()
+	}
+
+	// Insert to update
+	if err := txn.Insert(jobTableName, job); err != nil {
+		return err
+	}
+
+	txn.Commit()
+	return nil
+}
+
 func (s *State) jobCreate(memTxn *memdb.Txn, jobpb *pb.Job) error {
 	rec := &Job{
 		Id:        jobpb.Id,
