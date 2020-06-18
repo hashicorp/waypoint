@@ -64,7 +64,9 @@ service Waypoint {
   // be updated later.
   rpc RunnerConfig(RunnerConfigRequest) returns (stream RunnerConfigResponse);
 
-  // rpc RunnerJobStream(stream RunnerJobStreamRequest) returns (stream RunnerJobStreamResponse);
+  // RunnerJobStream is called by a runner to request a single job for
+  // execution and update the status of that job.
+  rpc RunnerJobStream(stream RunnerJobStreamRequest) returns (stream RunnerJobStreamResponse);
 
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
@@ -161,7 +163,8 @@ message Ref {
   // a different ref type should be used.
   message Runner {
     oneof target {
-      RunnerId id = 1;
+      RunnerAny any = 1;
+      RunnerId id = 2;
     }
   }
 
@@ -169,6 +172,9 @@ message Ref {
   message RunnerId {
     string id = 1;
   }
+
+  // RunnerAny will reference any runner.
+  message RunnerAny {}
 }
 
 // Component represents metadata about a component. A component is the
@@ -297,6 +303,33 @@ message Job {
 
   // TODO(mitchellh): component lists so that we can verify the runner
   // has the expected components.
+
+  //-----------------------------------------------------------------
+  // Server-side fields - the fields below are all set by the server
+  // and should not be set on the queueing request.
+  //-----------------------------------------------------------------
+
+  // state of the job
+  State state = 100;
+
+  // The runner that was assigned to execute this job. Note that the
+  // runner may have been ephemeral and may no longer exist.
+  Ref.RunnerId assigned_runner = 101;
+
+  // The time when the job was queued.
+  google.protobuf.Timestamp queue_time = 102;
+  google.protobuf.Timestamp assign_time = 103;
+  google.protobuf.Timestamp ack_time = 104;
+  google.protobuf.Timestamp complete_time = 105;
+
+  enum State {
+    UNKNOWN = 0;
+    QUEUED = 1; // queued and waiting for assignment
+    WAITING = 2; // assigned to a runner, waiting for runner to ack
+    RUNNING = 3; // runner acked and is executing
+    ERROR = 4; // job failed
+    SUCCESS = 5; // job succeeded
+  }
 
   message Local {}
 

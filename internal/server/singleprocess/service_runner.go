@@ -2,6 +2,8 @@ package singleprocess
 
 import (
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
@@ -53,4 +55,26 @@ func (s *service) RunnerConfig(
 		// until we're done. But soon we'll have config changes.
 		<-srv.Context().Done()
 	}
+}
+
+// TODO: test
+func (s *service) RunnerJobStream(
+	server pb.Waypoint_RunnerJobStreamServer,
+) error {
+	log := hclog.FromContext(server.Context())
+
+	// Receive our opening message so we can determine the runner ID.
+	req, err := server.Recv()
+	if err != nil {
+		return err
+	}
+	reqEvent, ok := req.Event.(*pb.RunnerJobStreamRequest_Request_)
+	if !ok {
+		return status.Errorf(codes.FailedPrecondition,
+			"first message must be a Request event")
+	}
+
+	log = log.With("runner_id", reqEvent.Request.RunnerId)
+
+	return nil
 }
