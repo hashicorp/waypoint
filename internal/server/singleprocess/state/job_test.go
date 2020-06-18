@@ -171,3 +171,57 @@ func TestJobAssign(t *testing.T) {
 		}
 	})
 }
+
+func TestJobAck(t *testing.T) {
+	t.Run("ack", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+
+		// Ack it
+		require.NoError(s.JobAck(job.Id, true))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id)
+		require.NoError(err)
+		require.Equal(pb.Job_RUNNING, job.State)
+	})
+
+	t.Run("ack negative", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+
+		// Ack it
+		require.NoError(s.JobAck(job.Id, false))
+
+		// Verify it is changed
+		job, err = s.JobById(job.Id)
+		require.NoError(err)
+		require.Equal(pb.Job_QUEUED, job.State)
+	})
+}

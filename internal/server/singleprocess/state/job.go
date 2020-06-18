@@ -8,6 +8,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -121,6 +123,27 @@ func (s *State) JobCreate(jobpb *pb.Job) error {
 
 	txn.Commit()
 	return nil
+}
+
+// JobById looks up a job by ID. The returned Job will be a deep copy
+// of the job so it is safe to read/write. If the job can't be found,
+// a nil result with no error is returned.
+func (s *State) JobById(id string) (*pb.Job, error) {
+	// TODO(mitchellh): this isn't actually a deep copy until we persist to bolt
+
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	raw, err := memTxn.First(jobTableName, jobIdIndexName, id)
+	if err != nil {
+		return nil, err
+	}
+	if raw == nil {
+		return nil, nil
+	}
+	job := raw.(*Job)
+
+	return job.Job, nil
 }
 
 // JobAssignForRunner will wait for and assign a job to a specific runner.
@@ -243,8 +266,52 @@ RETRY_ASSIGN:
 	goto RETRY_ASSIGN
 }
 
-// JobAck acknowledges that a job has been accepted by the runner.
-func (s *State) JobAck(job *pb.Job) error {
+// JobAck acknowledges that a job has been accepted or rejected by the runner.
+// If ack is false, then this will move the job back to the queued state
+// and be eligible for assignment.
+func (s *State) JobAck(id string, ack bool) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	// Get the job
+	raw, err := txn.First(jobTableName, jobIdIndexName, id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "job not found: %s", id)
+	}
+	job := raw.(*Job)
+
+	// If the job is not in the assigned state, then this is an error.
+	if job.State != pb.Job_WAITING {
+		return status.Errorf(codes.FailedPrecondition,
+			"job can't be acked from state: %s",
+			job.State.String())
+	}
+
+	if ack {
+		// Set to accepted
+		job.State = pb.Job_RUNNING
+		job.Job.State = job.State
+		job.Job.AckTime, err = ptypes.TimestampProto(time.Now())
+		if err != nil {
+			// This should never happen since encoding a time now should be safe
+			panic("time encoding failed: " + err.Error())
+		}
+	} else {
+		// Set to queued
+		job.State = pb.Job_QUEUED
+		job.Job.State = job.State
+		job.Job.AssignTime = nil
+	}
+
+	// Insert to update
+	if err := txn.Insert(jobTableName, job); err != nil {
+		return err
+	}
+
+	txn.Commit()
 	return nil
 }
 
