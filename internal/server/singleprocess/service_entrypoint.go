@@ -143,8 +143,14 @@ func (s *service) EntrypointLogStream(
 			entry.Line = strings.TrimSuffix(entry.Line, "\n")
 		}
 
+		// Convert the lines to an interface{} for our buffer
+		entries := make([]logbuffer.Entry, len(batch.Lines))
+		for i, l := range batch.Lines {
+			entries[i] = l
+		}
+
 		// Write our log data to the circular buffer
-		buf.Write(batch.Lines...)
+		buf.Write(entries...)
 	}
 }
 
