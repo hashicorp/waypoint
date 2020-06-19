@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 )
 
 var jobBucket = []byte("jobs")
@@ -99,7 +100,7 @@ func jobSchema() *memdb.TableSchema {
 	}
 }
 
-type Job struct {
+type jobIndex struct {
 	Id string
 
 	// QueueTime is the time that the job was queued.
@@ -113,6 +114,21 @@ type Job struct {
 
 	// State is the current state of this job.
 	State pb.Job_State
+
+	// OutputBuffer stores the terminal output
+	OutputBuffer *logbuffer.Buffer
+}
+
+// Job is the exported structure that is returned for most state APIs
+// and gives callers access to more information than the pure job structure.
+type Job struct {
+	// Full job structure.
+	*pb.Job
+
+	// OutputBuffer is the terminal output for this job. This is a buffer
+	// that may not contain the full amount of output depending on the
+	// time of connection.
+	OutputBuffer *logbuffer.Buffer
 }
 
 // JobCreate queues the given job.
@@ -133,7 +149,7 @@ func (s *State) JobCreate(jobpb *pb.Job) error {
 // JobById looks up a job by ID. The returned Job will be a deep copy
 // of the job so it is safe to read/write. If the job can't be found,
 // a nil result with no error is returned.
-func (s *State) JobById(id string) (*pb.Job, error) {
+func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -144,7 +160,7 @@ func (s *State) JobById(id string) (*pb.Job, error) {
 	if raw == nil {
 		return nil, nil
 	}
-	job := raw.(*Job)
+	job := raw.(*jobIndex)
 
 	var result *pb.Job
 	err = s.db.View(func(dbTxn *bolt.Tx) error {
@@ -152,7 +168,7 @@ func (s *State) JobById(id string) (*pb.Job, error) {
 		return err
 	})
 
-	return result, err
+	return job.Job(result), err
 }
 
 // JobAssignForRunner will wait for and assign a job to a specific runner.
@@ -164,19 +180,19 @@ func (s *State) JobById(id string) (*pb.Job, error) {
 //
 // If ctx is provided and assignment has to block waiting for new jobs,
 // this will cancel when the context is done.
-func (s *State) JobAssignForRunner(ctx context.Context, r *Runner) (*pb.Job, error) {
+func (s *State) JobAssignForRunner(ctx context.Context, r *Runner) (*Job, error) {
 RETRY_ASSIGN:
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 
 	// candidateQuery finds candidate jobs to assign.
-	candidateQuery := []func(*memdb.Txn, *Runner) (*Job, error){
+	candidateQuery := []func(*memdb.Txn, *Runner) (*jobIndex, error){
 		s.jobCandidateById,
 		s.jobCandidateAny,
 	}
 
 	// Build the list of candidates
-	var candidates []*Job
+	var candidates []*jobIndex
 	for _, f := range candidateQuery {
 		job, err := f(txn, r)
 		if err != nil {
@@ -241,7 +257,7 @@ RETRY_ASSIGN:
 		// We need to verify that in the time between our candidate search
 		// and our write lock acquisition, that this job hasn't been assigned,
 		// canceled, etc. If so, this is an invalid candidate.
-		job := raw.(*Job)
+		job := raw.(*jobIndex)
 		if job == nil || job.State != pb.Job_QUEUED {
 			continue
 		}
@@ -267,7 +283,7 @@ RETRY_ASSIGN:
 		}
 
 		txn.Commit()
-		return result, nil
+		return job.Job(result), nil
 	}
 	txn.Abort()
 
@@ -290,7 +306,7 @@ func (s *State) JobAck(id string, ack bool) error {
 	if raw == nil {
 		return status.Errorf(codes.NotFound, "job not found: %s", id)
 	}
-	job := raw.(*Job)
+	job := raw.(*jobIndex)
 
 	// If the job is not in the assigned state, then this is an error.
 	if job.State != pb.Job_WAITING {
@@ -309,6 +325,10 @@ func (s *State) JobAck(id string, ack bool) error {
 				// This should never happen since encoding a time now should be safe
 				panic("time encoding failed: " + err.Error())
 			}
+
+			// We also initialize the output buffer here because we can
+			// expect output to begin streaming in.
+			job.OutputBuffer = logbuffer.New()
 		} else {
 			// Set to queued
 			job.State = pb.Job_QUEUED
@@ -346,7 +366,7 @@ func (s *State) JobComplete(id string, cerr error) error {
 	if raw == nil {
 		return status.Errorf(codes.NotFound, "job not found: %s", id)
 	}
-	job := raw.(*Job)
+	job := raw.(*jobIndex)
 
 	// If the job is not in the assigned state, then this is an error.
 	if job.State != pb.Job_RUNNING {
@@ -406,7 +426,7 @@ func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 
 // jobIndexSet writes an index record for a single job.
 func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
-	rec := &Job{
+	rec := &jobIndex{
 		Id:    jobpb.Id,
 		State: jobpb.State,
 	}
@@ -490,7 +510,7 @@ func (s *State) jobReadAndUpdate(id string, f func(*pb.Job) error) (*pb.Job, err
 
 // jobCandidateById returns the most promising candidate job to assign
 // that is targeting a specific runner by ID.
-func (s *State) jobCandidateById(memTxn *memdb.Txn, r *Runner) (*Job, error) {
+func (s *State) jobCandidateById(memTxn *memdb.Txn, r *Runner) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobTargetIdIndexName,
@@ -508,7 +528,7 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, r *Runner) (*Job, error) {
 			break
 		}
 
-		job := raw.(*Job)
+		job := raw.(*jobIndex)
 		if job.State != pb.Job_QUEUED || job.TargetRunnerId == "" {
 			continue
 		}
@@ -520,7 +540,7 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, r *Runner) (*Job, error) {
 }
 
 // jobCandidateAny returns the first candidate job that targets any runner.
-func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *Runner) (*Job, error) {
+func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *Runner) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobQueueTimeIndexName,
@@ -537,7 +557,7 @@ func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *Runner) (*Job, error) {
 			break
 		}
 
-		job := raw.(*Job)
+		job := raw.(*jobIndex)
 		if job.State != pb.Job_QUEUED || !job.TargetAny {
 			continue
 		}
@@ -546,4 +566,12 @@ func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *Runner) (*Job, error) {
 	}
 
 	return nil, nil
+}
+
+// Job returns the Job for an index.
+func (idx *jobIndex) Job(jobpb *pb.Job) *Job {
+	return &Job{
+		Job:          jobpb,
+		OutputBuffer: idx.OutputBuffer,
+	}
 }

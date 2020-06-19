@@ -33,6 +33,9 @@ func TestJobAssign(t *testing.T) {
 		require.Equal("A", job.Id)
 		require.Equal(pb.Job_WAITING, job.State)
 
+		// We should not have an output buffer yet
+		require.Nil(job.OutputBuffer)
+
 		// Should block if requesting another since none exist
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
@@ -64,7 +67,7 @@ func TestJobAssign(t *testing.T) {
 		{
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			var job *pb.Job
+			var job *Job
 			var jerr error
 			doneCh := make(chan struct{})
 			go func() {
@@ -199,7 +202,10 @@ func TestJobAck(t *testing.T) {
 		// Verify it is changed
 		job, err = s.JobById(job.Id)
 		require.NoError(err)
-		require.Equal(pb.Job_RUNNING, job.State)
+		require.Equal(pb.Job_RUNNING, job.Job.State)
+
+		// We should have an output buffer
+		require.NotNil(job.OutputBuffer)
 	})
 
 	t.Run("ack negative", func(t *testing.T) {
@@ -226,6 +232,9 @@ func TestJobAck(t *testing.T) {
 		job, err = s.JobById(job.Id)
 		require.NoError(err)
 		require.Equal(pb.Job_QUEUED, job.State)
+
+		// We should not have an output buffer
+		require.Nil(job.OutputBuffer)
 	})
 }
 
