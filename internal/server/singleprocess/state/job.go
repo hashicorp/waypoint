@@ -153,10 +153,13 @@ func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
-	raw, err := memTxn.First(jobTableName, jobIdIndexName, id)
+	watchCh, raw, err := memTxn.FirstWatch(jobTableName, jobIdIndexName, id)
 	if err != nil {
 		return nil, err
 	}
+
+	ws.Add(watchCh)
+
 	if raw == nil {
 		return nil, nil
 	}
@@ -294,28 +297,28 @@ RETRY_ASSIGN:
 // JobAck acknowledges that a job has been accepted or rejected by the runner.
 // If ack is false, then this will move the job back to the queued state
 // and be eligible for assignment.
-func (s *State) JobAck(id string, ack bool) error {
+func (s *State) JobAck(id string, ack bool) (*Job, error) {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
 	// Get the job
 	raw, err := txn.First(jobTableName, jobIdIndexName, id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if raw == nil {
-		return status.Errorf(codes.NotFound, "job not found: %s", id)
+		return nil, status.Errorf(codes.NotFound, "job not found: %s", id)
 	}
 	job := raw.(*jobIndex)
 
 	// If the job is not in the assigned state, then this is an error.
 	if job.State != pb.Job_WAITING {
-		return status.Errorf(codes.FailedPrecondition,
+		return nil, status.Errorf(codes.FailedPrecondition,
 			"job can't be acked from state: %s",
 			job.State.String())
 	}
 
-	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+	result, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
 		if ack {
 			// Set to accepted
 			job.State = pb.Job_RUNNING
@@ -339,16 +342,16 @@ func (s *State) JobAck(id string, ack bool) error {
 		return nil
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Insert to update
 	if err := txn.Insert(jobTableName, job); err != nil {
-		return err
+		return nil, err
 	}
 
 	txn.Commit()
-	return nil
+	return job.Job(result), nil
 }
 
 // JobComplete marks a running job as complete. If an error is given,

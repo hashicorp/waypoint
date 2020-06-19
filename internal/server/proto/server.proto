@@ -46,13 +46,14 @@ service Waypoint {
   // each variable.
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 
-  // TODO(mitchellh): runners
+  // QueueJob queues a job for execution by a runner. This will return as
+  // soon as the job is queued, it will not wait for execution.
   rpc QueueJob(QueueJobRequest) returns (QueueJobResponse);
 
   // GetJobStream opens a job event stream for a running job. This can be
   // used to listen for terminal output and other events of a running job.
   // Multiple listeners can open a job stream.
-  // rpc GetJobStream(GetJobStreamRequest) returns (stream GetJobStreamResponse);
+  rpc GetJobStream(GetJobStreamRequest) returns (stream GetJobStreamResponse);
 
   //----------------------------------------------------------------------
   // Runner endpoints. These are expected to be called only by a runner.

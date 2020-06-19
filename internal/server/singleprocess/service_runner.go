@@ -61,7 +61,6 @@ func (s *service) RunnerConfig(
 	}
 }
 
-// TODO: test
 func (s *service) RunnerJobStream(
 	server pb.Waypoint_RunnerJobStreamServer,
 ) error {
@@ -123,7 +122,8 @@ func (s *service) RunnerJobStream(
 	}
 
 	// Send the ack
-	if ackerr := s.state.JobAck(job.Id, ack); ackerr != nil {
+	job, ackerr := s.state.JobAck(job.Id, ack)
+	if ackerr != nil {
 		// If this fails, we just log, there is nothing more we can do.
 		log.Warn("job ack failed", "outer_error", err, "error", ackerr)
 
@@ -188,7 +188,17 @@ func (s *service) RunnerJobStream(
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			// We need to drain the event channel
+			for {
+				select {
+				case req := <-eventCh:
+					if err := s.handleJobStreamRequest(log, job, server, req); err != nil {
+						return err
+					}
+				default:
+					return nil
+				}
+			}
 
 		case err := <-errCh:
 			return err

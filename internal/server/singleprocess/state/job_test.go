@@ -197,10 +197,11 @@ func TestJobAck(t *testing.T) {
 		require.Equal("A", job.Id)
 
 		// Ack it
-		require.NoError(s.JobAck(job.Id, true))
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
 
 		// Verify it is changed
-		job, err = s.JobById(job.Id)
+		job, err = s.JobById(job.Id, nil)
 		require.NoError(err)
 		require.Equal(pb.Job_RUNNING, job.Job.State)
 
@@ -226,10 +227,11 @@ func TestJobAck(t *testing.T) {
 		require.Equal("A", job.Id)
 
 		// Ack it
-		require.NoError(s.JobAck(job.Id, false))
+		_, err = s.JobAck(job.Id, false)
+		require.NoError(err)
 
 		// Verify it is changed
-		job, err = s.JobById(job.Id)
+		job, err = s.JobById(job.Id, nil)
 		require.NoError(err)
 		require.Equal(pb.Job_QUEUED, job.State)
 
@@ -257,13 +259,14 @@ func TestJobComplete(t *testing.T) {
 		require.Equal("A", job.Id)
 
 		// Ack it
-		require.NoError(s.JobAck(job.Id, true))
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
 
 		// Complete it
 		require.NoError(s.JobComplete(job.Id, nil))
 
 		// Verify it is changed
-		job, err = s.JobById(job.Id)
+		job, err = s.JobById(job.Id, nil)
 		require.NoError(err)
 		require.Equal(pb.Job_SUCCESS, job.State)
 		require.Nil(job.Error)
@@ -287,13 +290,14 @@ func TestJobComplete(t *testing.T) {
 		require.Equal("A", job.Id)
 
 		// Ack it
-		require.NoError(s.JobAck(job.Id, true))
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
 
 		// Complete it
 		require.NoError(s.JobComplete(job.Id, fmt.Errorf("bad")))
 
 		// Verify it is changed
-		job, err = s.JobById(job.Id)
+		job, err = s.JobById(job.Id, nil)
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.State)
 		require.NotNil(job.Error)
