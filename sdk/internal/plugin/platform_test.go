@@ -69,6 +69,25 @@ func TestPlatform_optionalInterfaces(t *testing.T) {
 		_, ok := raw.(component.LogPlatform)
 		require.False(ok, "does not implement LogPlatform")
 	})
+
+	t.Run("implements Authenticator", func(t *testing.T) {
+		require := require.New(t)
+
+		mockV := &mockPlatformAuthenticator{}
+
+		plugins := Plugins(WithComponents(mockV), WithMappers(testDefaultMappers(t)...))
+		client, server := plugin.TestPluginGRPCConn(t, plugins[1])
+		defer client.Close()
+		defer server.Stop()
+
+		raw, err := client.Dispense("platform")
+		require.NoError(err)
+		require.Implements((*component.Platform)(nil), raw)
+		require.Implements((*component.Authenticator)(nil), raw)
+
+		_, ok := raw.(component.LogPlatform)
+		require.False(ok, "does not implement LogPlatform")
+	})
 }
 
 func TestPlatformDynamicFunc_core(t *testing.T) {
@@ -87,9 +106,30 @@ func TestPlatformDynamicFunc_destroy(t *testing.T) {
 	})
 }
 
+func TestPlatformDynamicFunc_auth(t *testing.T) {
+	testDynamicFunc(t, "platform", &mockPlatformAuthenticator{}, func(v, f interface{}) {
+		v.(*mockPlatformAuthenticator).Authenticator.On("AuthFunc").Return(f)
+	}, func(raw interface{}) interface{} {
+		return raw.(component.Authenticator).AuthFunc()
+	})
+}
+
+func TestPlatformDynamicFunc_validateAuth(t *testing.T) {
+	testDynamicFunc(t, "platform", &mockPlatformAuthenticator{}, func(v, f interface{}) {
+		v.(*mockPlatformAuthenticator).Authenticator.On("ValidateAuthFunc").Return(f)
+	}, func(raw interface{}) interface{} {
+		return raw.(component.Authenticator).ValidateAuthFunc()
+	})
+}
+
 func TestPlatformConfig(t *testing.T) {
 	mockV := &mockPlatformConfigurable{}
 	testConfigurable(t, "platform", mockV, &mockV.Configurable)
+}
+
+type mockPlatformAuthenticator struct {
+	mocks.Platform
+	mocks.Authenticator
 }
 
 type mockPlatformConfigurable struct {
