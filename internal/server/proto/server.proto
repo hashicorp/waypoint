@@ -47,7 +47,7 @@ service Waypoint {
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 
   // TODO(mitchellh): runners
-  // rpc QueueJob(QueueJobRequest) returns (QueueJobResponse);
+  rpc QueueJob(QueueJobRequest) returns (QueueJobResponse);
 
   // GetJobStream opens a job event stream for a running job. This can be
   // used to listen for terminal output and other events of a running job.
