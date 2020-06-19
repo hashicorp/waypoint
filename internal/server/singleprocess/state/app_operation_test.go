@@ -145,6 +145,16 @@ func TestAppOperation(t *testing.T) {
 		require.Nil(b)
 	})
 
+	t.Run("list without application returns error", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		_, err := op.List(s, &listOperationsOptions{})
+		require.Error(err)
+	})
+
 	t.Run("list with filter", func(t *testing.T) {
 		require := require.New(t)
 

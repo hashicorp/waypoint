@@ -1,6 +1,7 @@
 package state
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 	"time"
@@ -114,6 +115,13 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 		case pb.OperationOrder_COMPLETE_TIME:
 			idx = opCompleteTimeIndexName
 		}
+	}
+
+	// We need an application to do this, so return an error
+	// to avoid a panic. This should not commonly be a user-facing
+	// error
+	if opts.Application == nil {
+		return nil, errors.New("must provide an Application.Ref to List")
 	}
 
 	// Get the iterator for lower-bound based querying
