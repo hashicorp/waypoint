@@ -1,11 +1,15 @@
 package singleprocess
 
 import (
+	"context"
+	"io"
+
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -62,6 +66,8 @@ func (s *service) RunnerJobStream(
 	server pb.Waypoint_RunnerJobStreamServer,
 ) error {
 	log := hclog.FromContext(server.Context())
+	ctx, cancel := context.WithCancel(server.Context())
+	defer cancel()
 
 	// Receive our opening message so we can determine the runner ID.
 	req, err := server.Recv()
@@ -73,8 +79,164 @@ func (s *service) RunnerJobStream(
 		return status.Errorf(codes.FailedPrecondition,
 			"first message must be a Request event")
 	}
-
 	log = log.With("runner_id", reqEvent.Request.RunnerId)
+
+	// Get the runner to validate it is registered
+	runner, err := s.state.RunnerById(reqEvent.Request.RunnerId)
+	if err != nil {
+		return err
+	}
+
+	// Get a job assignment for this runner
+	job, err := s.state.JobAssignForRunner(ctx, runner)
+	if err != nil {
+		return err
+	}
+
+	// Send the job assignment
+	err = server.Send(&pb.RunnerJobStreamResponse{
+		Event: &pb.RunnerJobStreamResponse_Assignment{
+			Assignment: &pb.RunnerJobStreamResponse_JobAssignment{
+				Job: job.Job,
+			},
+		},
+	})
+
+	// Wait for an ack
+	ack := false
+	if err == nil { // if sending the job assignment was a success
+		req, err = server.Recv()
+		if err == nil { // if receiving the message was a success
+			switch req.Event.(type) {
+			case *pb.RunnerJobStreamRequest_Ack_:
+				ack = true
+
+			case *pb.RunnerJobStreamRequest_Error_:
+				ack = false
+
+			default:
+				ack = false
+				err = status.Errorf(codes.FailedPrecondition,
+					"ack expected, got: %T", req.Event)
+			}
+		}
+	}
+
+	// Send the ack
+	if ackerr := s.state.JobAck(job.Id, ack); ackerr != nil {
+		// If this fails, we just log, there is nothing more we can do.
+		log.Warn("job ack failed", "outer_error", err, "error", ackerr)
+
+		// If we had no outer error, set the ackerr so that we exit
+		if err == nil {
+			err = ackerr
+		}
+	}
+
+	// If we have an error, return that. We also return if we didn't ack for
+	// any reason.
+	if err != nil || !ack {
+		return err
+	}
+
+	// Create a goroutine that just waits for events. We have to do this
+	// so we can exit properly on client side close.
+	errCh := make(chan error, 1)
+	eventCh := make(chan *pb.RunnerJobStreamRequest, 1)
+	go func() {
+		defer cancel()
+
+		for {
+			log.Trace("waiting for job stream event")
+			req, err := server.Recv()
+			if err == io.EOF {
+				// On EOF, this means the client closed their write side.
+				// In this case, we assume we have exited and exit accordingly.
+				return
+			}
+
+			if err != nil {
+				// For any other error, we send the error along and exit the
+				// read loop. The sent error will be picked up and sent back
+				// as a result to the client.
+				errCh <- err
+				return
+			}
+			log.Trace("event received", "event", req.Event)
+
+			// Send the event down
+			select {
+			case eventCh <- req:
+			case <-ctx.Done():
+				return
+			}
+
+			// If this is a terminating event, we exit this loop
+			switch event := req.Event.(type) {
+			case *pb.RunnerJobStreamRequest_Complete_:
+				log.Debug("job stream recv loop exiting due to completion")
+				return
+			case *pb.RunnerJobStreamRequest_Error_:
+				log.Debug("job stream recv loop exiting due to error",
+					"error", event.Error.Error.Message)
+				return
+			}
+		}
+	}()
+
+	// Recv events in a loop
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+
+		case err := <-errCh:
+			return err
+
+		case req := <-eventCh:
+			if err := s.handleJobStreamRequest(log, job, server, req); err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func (s *service) handleJobStreamRequest(
+	log hclog.Logger,
+	job *state.Job,
+	srv pb.Waypoint_RunnerJobStreamServer,
+	req *pb.RunnerJobStreamRequest,
+) error {
+	log.Trace("event received", "event", req.Event)
+	switch event := req.Event.(type) {
+	case *pb.RunnerJobStreamRequest_Complete_:
+		return s.state.JobComplete(job.Id, nil)
+
+	case *pb.RunnerJobStreamRequest_Error_:
+		return s.state.JobComplete(job.Id, status.FromProto(event.Error.Error).Err())
+
+	case *pb.RunnerJobStreamRequest_Terminal:
+		// This shouldn't happen but we want to protect against it to prevent
+		// a panic.
+		if job.OutputBuffer == nil {
+			log.Warn("got terminal event but internal output buffer is nil, dropping lines")
+			return nil
+		}
+
+		// Write the entries to the output buffer
+		entries := make([]logbuffer.Entry, len(event.Terminal.Lines))
+		for i, line := range event.Terminal.Lines {
+			entries[i] = line
+		}
+
+		// Write the logs
+		job.OutputBuffer.Write(entries...)
+
+		return nil
+
+	default:
+		log.Warn("unexpected event received", "event", req.Event)
+	}
 
 	return nil
 }
