@@ -64,6 +64,13 @@ func (p *PlatformPlugin) GRPCClient(
 		mappers: p.Mappers,
 	}
 
+	authenticator := &authenticatorClient{
+		Client:  client.client,
+		Logger:  client.logger,
+		Broker:  client.broker,
+		Mappers: client.mappers,
+	}
+
 	// Check if we also implement the LogPlatform
 	var logPlatform component.LogPlatform
 	resp, err := client.client.IsLogPlatform(ctx, &empty.Empty{})
@@ -102,6 +109,7 @@ func (p *PlatformPlugin) GRPCClient(
 	switch {
 	case logPlatform != nil && destroyer != nil:
 		result = &mix_Platform_Log_Destroy{
+			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
 			LogPlatform:        logPlatform,
@@ -110,6 +118,7 @@ func (p *PlatformPlugin) GRPCClient(
 
 	case logPlatform != nil:
 		result = &mix_Platform_Log{
+			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
 			LogPlatform:        logPlatform,
@@ -117,6 +126,7 @@ func (p *PlatformPlugin) GRPCClient(
 
 	case destroyer != nil:
 		result = &mix_Platform_Destroy{
+			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
 			Destroyer:          destroyer,
@@ -144,7 +154,7 @@ func (c *platformClient) ConfigSet(v interface{}) error {
 
 func (c *platformClient) AuthFunc() interface{} {
 	// Get the spec
-	spec, err := c.client.AuthSpec(context.Background(), &proto.Empty{})
+	spec, err := c.client.AuthSpec(context.Background(), &empty.Empty{})
 	if err != nil {
 		return funcErr(err)
 	}
@@ -161,7 +171,7 @@ func (c *platformClient) AuthFunc() interface{} {
 
 func (c *platformClient) ValidateAuthFunc() interface{} {
 	// Get the spec
-	spec, err := c.client.ValidateAuthSpec(context.Background(), &proto.Empty{})
+	spec, err := c.client.ValidateAuthSpec(context.Background(), &empty.Empty{})
 	if err != nil {
 		return funcErr(err)
 	}
