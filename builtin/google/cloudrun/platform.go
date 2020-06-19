@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -17,6 +20,11 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
 	"github.com/hashicorp/waypoint/sdk/terminal"
+)
+
+const (
+	// todo: make user configurable
+	deployRegion = "us-central1"
 )
 
 // Platform is the Platform implementation for Google Cloud Run.
@@ -53,7 +61,53 @@ func (p *Platform) Auth() error {
 	return nil
 }
 
-func (p *Platform) ValidateAuth() error {
+func (p *Platform) ValidateAuth(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	dir *datadir.Component,
+	ui terminal.UI,
+) error {
+	apiService, err := run.NewService(ctx,
+		option.WithEndpoint("https://"+deployRegion+"-run.googleapis.com"),
+	)
+	if err != nil {
+		return status.Errorf(codes.Aborted, err.Error())
+	}
+
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
+	client := run.NewProjectsLocationsServicesService(apiService)
+
+	expectedPermissions := []string{
+		"roles/run.admin",
+	}
+
+	// run.admin encompasses all the permissions we should need
+	testReq := run.TestIamPermissionsRequest{
+		Permissions: expectedPermissions,
+	}
+
+	// The resource we are checking permissions on
+	apiResource := fmt.Sprintf("projects/%s/locations/%s/services/%s",
+		p.config.Project,
+		deployRegion,
+		src.App,
+	)
+
+	st.Update("Testing IAM permissions...")
+	result, err := client.TestIamPermissions(apiResource, &testReq).Do()
+	if err != nil {
+		return err
+	}
+
+	// If our resulting permissions do not equal our expected permissions, auth does not validate
+	if !reflect.DeepEqual(result.Permissions, expectedPermissions) {
+		return fmt.Errorf("incorrect IAM permissions, received %s", strings.Join(result.Permissions, ", "))
+	}
+
 	return nil
 }
 
@@ -70,7 +124,7 @@ func (p *Platform) Deploy(
 	// Start building our deployment since we use this information
 	result := &Deployment{
 		Resource: &Deployment_Resource{
-			Location: "us-central1",
+			Location: deployRegion,
 			Project:  p.config.Project,
 			Name:     src.App,
 		},
