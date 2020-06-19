@@ -6,13 +6,18 @@ import (
 	"sort"
 	"time"
 
+	"github.com/boltdb/bolt"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+var jobBucket = []byte("jobs")
 
 const (
 	jobTableName          = "jobs"
@@ -23,6 +28,8 @@ const (
 )
 
 func init() {
+	dbBuckets = append(dbBuckets, jobBucket)
+	dbIndexers = append(dbIndexers, (*State).jobIndexInit)
 	schemas = append(schemas, jobSchema)
 }
 
@@ -106,10 +113,6 @@ type Job struct {
 
 	// State is the current state of this job.
 	State pb.Job_State
-
-	// TODO(mitchellh): we should persist the job to boltdb rather
-	// than storing it in memory so that we can get the value back.
-	Job *pb.Job
 }
 
 // JobCreate queues the given job.
@@ -117,20 +120,20 @@ func (s *State) JobCreate(jobpb *pb.Job) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
-	if err := s.jobCreate(txn, jobpb); err != nil {
-		return err
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.jobCreate(dbTxn, txn, jobpb)
+	})
+	if err == nil {
+		txn.Commit()
 	}
 
-	txn.Commit()
-	return nil
+	return err
 }
 
 // JobById looks up a job by ID. The returned Job will be a deep copy
 // of the job so it is safe to read/write. If the job can't be found,
 // a nil result with no error is returned.
 func (s *State) JobById(id string) (*pb.Job, error) {
-	// TODO(mitchellh): this isn't actually a deep copy until we persist to bolt
-
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -143,7 +146,13 @@ func (s *State) JobById(id string) (*pb.Job, error) {
 	}
 	job := raw.(*Job)
 
-	return job.Job, nil
+	var result *pb.Job
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		result, err = s.jobById(dbTxn, job.Id)
+		return err
+	})
+
+	return result, err
 }
 
 // JobAssignForRunner will wait for and assign a job to a specific runner.
@@ -237,20 +246,20 @@ RETRY_ASSIGN:
 			continue
 		}
 
-		// Delete the job. We have to delete + insert to do an index update.
-		if err := txn.Delete(jobTableName, job); err != nil {
-			// Some other error. Give up. This should NEVER be an ErrNotFound
-			// since we're in a transaction that verified it exists above by
-			// doing a Get.
-			return nil, err
-		}
-
+		// Update our state and update our on-disk job
 		job.State = pb.Job_WAITING
-		job.Job.State = job.State
-		job.Job.AssignTime, err = ptypes.TimestampProto(time.Now())
+		result, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+			jobpb.State = job.State
+			jobpb.AssignTime, err = ptypes.TimestampProto(time.Now())
+			if err != nil {
+				// This should never happen since encoding a time now should be safe
+				panic("time encoding failed: " + err.Error())
+			}
+
+			return nil
+		})
 		if err != nil {
-			// This should never happen since encoding a time now should be safe
-			panic("time encoding failed: " + err.Error())
+			return nil, err
 		}
 
 		if err := txn.Insert(jobTableName, job); err != nil {
@@ -258,7 +267,7 @@ RETRY_ASSIGN:
 		}
 
 		txn.Commit()
-		return job.Job, nil
+		return result, nil
 	}
 	txn.Abort()
 
@@ -290,20 +299,27 @@ func (s *State) JobAck(id string, ack bool) error {
 			job.State.String())
 	}
 
-	if ack {
-		// Set to accepted
-		job.State = pb.Job_RUNNING
-		job.Job.State = job.State
-		job.Job.AckTime, err = ptypes.TimestampProto(time.Now())
-		if err != nil {
-			// This should never happen since encoding a time now should be safe
-			panic("time encoding failed: " + err.Error())
+	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+		if ack {
+			// Set to accepted
+			job.State = pb.Job_RUNNING
+			jobpb.State = job.State
+			jobpb.AckTime, err = ptypes.TimestampProto(time.Now())
+			if err != nil {
+				// This should never happen since encoding a time now should be safe
+				panic("time encoding failed: " + err.Error())
+			}
+		} else {
+			// Set to queued
+			job.State = pb.Job_QUEUED
+			jobpb.State = job.State
+			jobpb.AssignTime = nil
 		}
-	} else {
-		// Set to queued
-		job.State = pb.Job_QUEUED
-		job.Job.State = job.State
-		job.Job.AssignTime = nil
+
+		return nil
+	})
+	if err != nil {
+		return err
 	}
 
 	// Insert to update
@@ -339,21 +355,28 @@ func (s *State) JobComplete(id string, cerr error) error {
 			job.State.String())
 	}
 
-	// Set to complete, assume success for now
-	job.State = pb.Job_SUCCESS
-	job.Job.State = job.State
-	job.Job.CompleteTime, err = ptypes.TimestampProto(time.Now())
+	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+		// Set to complete, assume success for now
+		job.State = pb.Job_SUCCESS
+		jobpb.State = job.State
+		jobpb.CompleteTime, err = ptypes.TimestampProto(time.Now())
+		if err != nil {
+			// This should never happen since encoding a time now should be safe
+			panic("time encoding failed: " + err.Error())
+		}
+
+		if cerr != nil {
+			job.State = pb.Job_ERROR
+			jobpb.State = job.State
+
+			st, _ := status.FromError(cerr)
+			jobpb.Error = st.Proto()
+		}
+
+		return nil
+	})
 	if err != nil {
-		// This should never happen since encoding a time now should be safe
-		panic("time encoding failed: " + err.Error())
-	}
-
-	if cerr != nil {
-		job.State = pb.Job_ERROR
-		job.Job.State = job.State
-
-		st, _ := status.FromError(cerr)
-		job.Job.Error = st.Proto()
+		return err
 	}
 
 	// Insert to update
@@ -365,14 +388,30 @@ func (s *State) JobComplete(id string, cerr error) error {
 	return nil
 }
 
-func (s *State) jobCreate(memTxn *memdb.Txn, jobpb *pb.Job) error {
+// jobIndexInit initializes the config index from persisted data.
+func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
+	bucket := dbTxn.Bucket(jobBucket)
+	return bucket.ForEach(func(k, v []byte) error {
+		var value pb.Job
+		if err := proto.Unmarshal(v, &value); err != nil {
+			return err
+		}
+		if err := s.jobIndexSet(memTxn, k, &value); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+// jobIndexSet writes an index record for a single job.
+func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 	rec := &Job{
-		Id:        jobpb.Id,
-		State:     pb.Job_QUEUED,
-		QueueTime: time.Now(),
-		Job:       jobpb,
+		Id:    jobpb.Id,
+		State: jobpb.State,
 	}
 
+	// Target
 	switch v := jobpb.TargetRunner.Target.(type) {
 	case *pb.Ref_Runner_Any:
 		rec.TargetAny = true
@@ -384,20 +423,69 @@ func (s *State) jobCreate(memTxn *memdb.Txn, jobpb *pb.Job) error {
 		return fmt.Errorf("unknown runner target value: %#v", jobpb.TargetRunner.Target)
 	}
 
+	// Timestamps
+	timestamps := []struct {
+		Field *time.Time
+		Src   *timestamp.Timestamp
+	}{
+		{&rec.QueueTime, jobpb.QueueTime},
+	}
+	for _, ts := range timestamps {
+		t, err := ptypes.Timestamp(ts.Src)
+		if err != nil {
+			return err
+		}
+
+		*ts.Field = t
+	}
+
+	// Insert the index
+	return txn.Insert(jobTableName, rec)
+}
+
+func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) error {
 	// Setup our initial job state
 	var err error
-	jobpb.State = rec.State
-	jobpb.QueueTime, err = ptypes.TimestampProto(rec.QueueTime)
+	jobpb.State = pb.Job_QUEUED
+	jobpb.QueueTime, err = ptypes.TimestampProto(time.Now())
 	if err != nil {
 		return err
 	}
 
-	// Insert into the DB
-	if err := memTxn.Insert(jobTableName, rec); err != nil {
+	id := []byte(jobpb.Id)
+
+	// Insert into bolt
+	if err := dbPut(dbTxn.Bucket(jobBucket), id, jobpb); err != nil {
 		return err
 	}
 
-	return nil
+	// Insert into the DB
+	return s.jobIndexSet(memTxn, id, jobpb)
+}
+
+func (s *State) jobById(dbTxn *bolt.Tx, id string) (*pb.Job, error) {
+	var result pb.Job
+	b := dbTxn.Bucket(jobBucket)
+	return &result, dbGet(b, []byte(id), &result)
+}
+
+func (s *State) jobReadAndUpdate(id string, f func(*pb.Job) error) (*pb.Job, error) {
+	var result *pb.Job
+	var err error
+	return result, s.db.Update(func(dbTxn *bolt.Tx) error {
+		result, err = s.jobById(dbTxn, id)
+		if err != nil {
+			return err
+		}
+
+		// Modify
+		if err := f(result); err != nil {
+			return err
+		}
+
+		// Commit
+		return dbPut(dbTxn.Bucket(jobBucket), []byte(id), result)
+	})
 }
 
 // jobCandidateById returns the most promising candidate job to assign
