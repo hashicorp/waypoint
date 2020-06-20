@@ -9,7 +9,6 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -32,15 +31,6 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 	client := c.project.Client()
 
 	c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		// We're authenticating with a platform for deployments
-		authenticator := app.Platform.(component.Authenticator)
-
-		_, err := app.AuthenticateComponent(ctx, c.Log, authenticator)
-		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
 		// Get the most recent pushed artifact
 		push, err := client.GetLatestPushedArtifact(ctx, &pb.GetLatestPushedArtifactRequest{
 			Application: app.Ref(),

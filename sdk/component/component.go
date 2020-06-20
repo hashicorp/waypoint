@@ -26,6 +26,7 @@ const (
 	ReleaseManagerType             // ReleaseManager
 	LogPlatformType                // LogPlatform
 	LogViewerType                  // LogViewer
+	AuthenticatorType              // Authenticator
 	maxType
 )
 
@@ -38,6 +39,7 @@ var TypeMap = map[Type]interface{}{
 	ReleaseManagerType: (*ReleaseManager)(nil),
 	LogPlatformType:    (*LogPlatform)(nil),
 	LogViewerType:      (*LogViewer)(nil),
+	AuthenticatorType:  (*Authenticator)(nil),
 }
 
 // Builder is responsible for building an artifact from source.

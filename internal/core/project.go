@@ -25,13 +25,14 @@ import (
 // The Close function should be called when finished with the project
 // to properly clean up any open resources.
 type Project struct {
-	logger    hclog.Logger
-	apps      map[string]*App
-	factories map[component.Type]*factory.Factory
-	dir       *datadir.Project
-	mappers   []*argmapper.Func
-	client    pb.WaypointClient
-	dconfig   component.DeploymentConfig
+	logger         hclog.Logger
+	apps           map[string]*App
+	factories      map[component.Type]*factory.Factory
+	dir            *datadir.Project
+	authComponents bool
+	mappers        []*argmapper.Func
+	client         pb.WaypointClient
+	dconfig        component.DeploymentConfig
 
 	// name is the name of the project
 	name string
@@ -244,6 +245,13 @@ func WithConfig(c *config.Config) Option {
 		opts.Config = c
 		p.name = c.Project
 	}
+}
+
+// WithAuth tells this project to interactively ask for authentication
+// credentials while initializing
+func WithAuth(opt bool) Option {
+	return func(p *Project, opts *options) { p.authComponents = opt }
+
 }
 
 // WithDataDir sets the datadir that will be used for this project.
