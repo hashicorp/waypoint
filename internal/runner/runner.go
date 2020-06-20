@@ -176,3 +176,12 @@ func WithClient(client pb.WaypointClient) Option {
 		return nil
 	}
 }
+
+// WithLogger sets the logger that the runner will use. If this isn't
+// set it uses hclog.L().
+func WithLogger(logger hclog.Logger) Option {
+	return func(r *Runner, cfg *config) error {
+		r.logger = logger
+		return nil
+	}
+}
