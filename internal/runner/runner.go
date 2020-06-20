@@ -2,7 +2,10 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"os"
+	"sync"
+	"sync/atomic"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -12,6 +15,8 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+var ErrClosed = errors.New("runner is closed")
 
 // Runners in Waypoint execute operations. These can be local (the CLI)
 // or they can be remote (triggered by some webhook). In either case, they
@@ -39,6 +44,9 @@ type Runner struct {
 	client      pb.WaypointClient
 	ctx         context.Context
 	cleanupFunc func()
+
+	closedVal int32
+	acceptWg  sync.WaitGroup
 }
 
 // New initializes a new runner.
@@ -81,6 +89,10 @@ func (r *Runner) Id() string {
 // server. This will spawn goroutines for management. This will return after
 // registration so this should not be executed in a goroutine.
 func (r *Runner) Start() error {
+	if r.closed() {
+		return ErrClosed
+	}
+
 	log := r.logger
 
 	// Register
@@ -113,13 +125,28 @@ func (r *Runner) Start() error {
 }
 
 // Close gracefully exits the runner. This will wait for any pending
-// job executions to complete and then deregister the runner.
+// job executions to complete and then deregister the runner. After
+// this is called, Start and Accept will no longer function and will
+// return errors immediately.
 func (r *Runner) Close() error {
+	// If we can't swap, we're already closed.
+	if !atomic.CompareAndSwapInt32(&r.closedVal, 0, 1) {
+		return nil
+	}
+
+	// Wait for our jobs to complete
+	r.acceptWg.Wait()
+
+	// Run any cleanup necessary
 	if f := r.cleanupFunc; f != nil {
 		f()
 	}
 
 	return nil
+}
+
+func (r *Runner) closed() bool {
+	return atomic.LoadInt32(&r.closedVal) > 0
 }
 
 type config struct {

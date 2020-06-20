@@ -15,6 +15,10 @@ import (
 // This is safe to be called concurrently which can be used to execute
 // multiple jobs in parallel as a runner.
 func (r *Runner) Accept() error {
+	if r.closed() {
+		return ErrClosed
+	}
+
 	log := r.logger
 
 	// Open a new job stream
@@ -53,6 +57,13 @@ func (r *Runner) Accept() error {
 	}
 	log = log.With("job_id", assignment.Assignment.Job.Id)
 	log.Info("job assignment received")
+
+	// We increment the waitgroup at this point since prior to this if we're
+	// forcefully quit, we shouldn't have acked. This is somewhat brittle so
+	// a todo here is to build a better notification mechanism that we've quit
+	// and exit here.
+	r.acceptWg.Add(1)
+	defer r.acceptWg.Done()
 
 	// Ack the assignment
 	log.Trace("acking job assignment")
