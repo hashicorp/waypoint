@@ -50,6 +50,9 @@ service Waypoint {
   // soon as the job is queued, it will not wait for execution.
   rpc QueueJob(QueueJobRequest) returns (QueueJobResponse);
 
+  // GetJob queries a job by ID.
+  rpc GetJob(GetJobRequest) returns (Job);
+
   // GetJobStream opens a job event stream for a running job. This can be
   // used to listen for terminal output and other events of a running job.
   // Multiple listeners can open a job stream.
@@ -341,6 +344,11 @@ message Job {
   message Local {}
 
   message BuildOp {}
+}
+
+message GetJobRequest {
+  // ID of the job to request.
+  string job_id = 1;
 }
 
 message GetJobStreamRequest {

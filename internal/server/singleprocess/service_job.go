@@ -14,6 +14,22 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
+// TODO: test
+func (s *service) GetJob(
+	ctx context.Context,
+	req *pb.GetJobRequest,
+) (*pb.Job, error) {
+	job, err := s.state.JobById(req.JobId, nil)
+	if err != nil {
+		return nil, err
+	}
+	if job == nil || job.Job == nil {
+		return nil, status.Errorf(codes.NotFound, "job not found")
+	}
+
+	return job.Job, nil
+}
+
 func (s *service) QueueJob(
 	ctx context.Context,
 	req *pb.QueueJobRequest,

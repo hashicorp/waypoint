@@ -25,6 +25,9 @@ func TestJobNew(t testing.T, src *pb.Job) *pb.Job {
 				Any: &pb.Ref_RunnerAny{},
 			},
 		},
+		Operation: &pb.Job_Noop_{
+			Noop: &pb.Job_Noop{},
+		},
 	}))
 
 	return src
