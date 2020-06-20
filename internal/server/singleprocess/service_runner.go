@@ -23,16 +23,28 @@ func (s *service) GetRunner(
 
 // TODO: test
 func (s *service) RunnerConfig(
-	req *pb.RunnerConfigRequest,
 	srv pb.Waypoint_RunnerConfigServer,
 ) error {
 	log := hclog.FromContext(srv.Context())
+	ctx, cancel := context.WithCancel(srv.Context())
+	defer cancel()
+
+	// Get the request
+	event, err := srv.Recv()
+	if err != nil {
+		return err
+	}
+	req, ok := event.Event.(*pb.RunnerConfigRequest_Open_)
+	if !ok {
+		return status.Errorf(codes.FailedPrecondition,
+			"expected open event, got %T", event)
+	}
 
 	// Create our record
-	log = log.With("runner_id", req.Id)
+	log = log.With("runner_id", req.Open.Id)
 	log.Trace("registering runner")
 	record := &pb.Runner{
-		Id: req.Id,
+		Id: req.Open.Id,
 	}
 	if err := s.state.RunnerCreate(record); err != nil {
 		return err
@@ -45,6 +57,23 @@ func (s *service) RunnerConfig(
 		log.Trace("deleting runner")
 		if err := s.state.RunnerDelete(record.Id); err != nil {
 			log.Error("failed to delete runner data. This should not happen.", "err", err)
+		}
+	}()
+
+	// Start a goroutine that listens on the recvmsg so we can detect
+	// when the client exited.
+	go func() {
+		defer cancel()
+
+		for {
+			_, err := srv.Recv()
+			if err != nil {
+				if err != io.EOF {
+					log.Warn("unknown error from recvmsg", "err", err)
+				}
+
+				return
+			}
 		}
 	}()
 
@@ -65,7 +94,8 @@ func (s *service) RunnerConfig(
 
 		// We don't ever currently have config changes so we just block
 		// until we're done. But soon we'll have config changes.
-		<-srv.Context().Done()
+		<-ctx.Done()
+		return nil
 	}
 }
 

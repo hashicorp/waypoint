@@ -58,13 +58,7 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	configStream, err := client.RunnerConfig(ctx, &pb.RunnerConfigRequest{
-		Id: "R_A",
-	})
-	require.NoError(err)
-	defer configStream.CloseSend()
-	_, err = configStream.Recv()
-	require.NoError(err)
+	id, _ := TestRunner(t, client)
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -72,7 +66,7 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Request_{
 			Request: &pb.RunnerJobStreamRequest_Request{
-				RunnerId: "R_A",
+				RunnerId: id,
 			},
 		},
 	}))
@@ -168,13 +162,7 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	configStream, err := client.RunnerConfig(ctx, &pb.RunnerConfigRequest{
-		Id: "R_A",
-	})
-	require.NoError(err)
-	defer configStream.CloseSend()
-	_, err = configStream.Recv()
-	require.NoError(err)
+	id, _ := TestRunner(t, client)
 
 	// Start a job request
 	runnerStream, err := client.RunnerJobStream(ctx)
@@ -182,7 +170,7 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Request_{
 			Request: &pb.RunnerJobStreamRequest_Request{
-				RunnerId: "R_A",
+				RunnerId: id,
 			},
 		},
 	}))
