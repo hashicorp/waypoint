@@ -4,6 +4,8 @@ import (
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 const (
@@ -32,11 +34,7 @@ func runnerSchema() *memdb.TableSchema {
 	}
 }
 
-type Runner struct {
-	Id string
-}
-
-func (s *State) RunnerCreate(rec *Runner) error {
+func (s *State) RunnerCreate(rec *pb.Runner) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -61,7 +59,7 @@ func (s *State) RunnerDelete(id string) error {
 	return nil
 }
 
-func (s *State) RunnerById(id string) (*Runner, error) {
+func (s *State) RunnerById(id string) (*pb.Runner, error) {
 	txn := s.inmem.Txn(false)
 	raw, err := txn.First(runnerTableName, runnerIdIndexName, id)
 	txn.Abort()
@@ -72,5 +70,5 @@ func (s *State) RunnerById(id string) (*Runner, error) {
 		return nil, status.Errorf(codes.NotFound, "runner ID not found")
 	}
 
-	return raw.(*Runner), nil
+	return raw.(*pb.Runner), nil
 }

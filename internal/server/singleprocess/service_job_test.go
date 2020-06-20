@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -103,6 +104,11 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 		require.NotNil(open)
 
 	}
+
+	// We need to give the stream time to initialize the output readers
+	// so our output below doesn't become buffered. This isn't really that
+	// brittle and 100ms should be more than enough.
+	time.Sleep(100 * time.Millisecond)
 
 	// Send some output
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{

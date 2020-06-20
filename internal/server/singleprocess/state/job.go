@@ -183,13 +183,13 @@ func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 //
 // If ctx is provided and assignment has to block waiting for new jobs,
 // this will cancel when the context is done.
-func (s *State) JobAssignForRunner(ctx context.Context, r *Runner) (*Job, error) {
+func (s *State) JobAssignForRunner(ctx context.Context, r *pb.Runner) (*Job, error) {
 RETRY_ASSIGN:
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 
 	// candidateQuery finds candidate jobs to assign.
-	candidateQuery := []func(*memdb.Txn, *Runner) (*jobIndex, error){
+	candidateQuery := []func(*memdb.Txn, *pb.Runner) (*jobIndex, error){
 		s.jobCandidateById,
 		s.jobCandidateAny,
 	}
@@ -513,7 +513,7 @@ func (s *State) jobReadAndUpdate(id string, f func(*pb.Job) error) (*pb.Job, err
 
 // jobCandidateById returns the most promising candidate job to assign
 // that is targeting a specific runner by ID.
-func (s *State) jobCandidateById(memTxn *memdb.Txn, r *Runner) (*jobIndex, error) {
+func (s *State) jobCandidateById(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobTargetIdIndexName,
@@ -543,7 +543,7 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, r *Runner) (*jobIndex, error
 }
 
 // jobCandidateAny returns the first candidate job that targets any runner.
-func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *Runner) (*jobIndex, error) {
+func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobQueueTimeIndexName,

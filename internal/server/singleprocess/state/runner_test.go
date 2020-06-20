@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func TestRunner_crud(t *testing.T) {
@@ -15,7 +17,7 @@ func TestRunner_crud(t *testing.T) {
 	defer s.Close()
 
 	// Create an instance
-	rec := &Runner{Id: "A"}
+	rec := &pb.Runner{Id: "A"}
 	require.NoError(s.RunnerCreate(rec))
 
 	// We should be able to find it

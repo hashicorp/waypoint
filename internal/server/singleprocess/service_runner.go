@@ -14,6 +14,14 @@ import (
 )
 
 // TODO: test
+func (s *service) GetRunner(
+	ctx context.Context,
+	req *pb.GetRunnerRequest,
+) (*pb.Runner, error) {
+	return s.state.RunnerById(req.RunnerId)
+}
+
+// TODO: test
 func (s *service) RunnerConfig(
 	req *pb.RunnerConfigRequest,
 	srv pb.Waypoint_RunnerConfigServer,
@@ -23,7 +31,7 @@ func (s *service) RunnerConfig(
 	// Create our record
 	log = log.With("runner_id", req.Id)
 	log.Trace("registering runner")
-	record := &state.Runner{
+	record := &pb.Runner{
 		Id: req.Id,
 	}
 	if err := s.state.RunnerCreate(record); err != nil {
