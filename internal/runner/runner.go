@@ -1,8 +1,15 @@
 package runner
 
 import (
-	"github.com/hashicorp/go-hclog"
+	"context"
+	"os"
 
+	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/hashicorp/waypoint/internal/core"
+	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -27,8 +34,11 @@ import (
 //      for any running jobs to finish.
 //
 type Runner struct {
-	logger hclog.Logger
-	client pb.WaypointClient
+	id          string
+	logger      hclog.Logger
+	client      pb.WaypointClient
+	ctx         context.Context
+	cleanupFunc func()
 }
 
 // New initializes a new runner.
@@ -36,13 +46,79 @@ type Runner struct {
 // You must call Start to start the runner and register with the Waypoint
 // server. See the Runner struct docs for more details.
 func New(opts ...Option) (*Runner, error) {
-	return nil, nil
+	// Create our ID
+	id, err := server.Id()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal,
+			"failed to generate unique ID: %s", err)
+	}
+
+	// Our default runner
+	runner := &Runner{
+		id:     id,
+		logger: hclog.L(),
+		ctx:    context.Background(),
+	}
+
+	// Build our config
+	var cfg config
+	for _, o := range opts {
+		err := o(runner, &cfg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return runner, nil
+}
+
+// Id returns the runner ID.
+func (r *Runner) Id() string {
+	return r.id
 }
 
 // Start starts the runner by registering the runner with the Waypoint
 // server. This will spawn goroutines for management. This will return after
 // registration so this should not be executed in a goroutine.
 func (r *Runner) Start() error {
+	log := r.logger
+
+	// Register
+	log.Debug("registering runner")
+	client, err := r.client.RunnerConfig(r.ctx)
+	if err != nil {
+		return err
+	}
+	r.cleanup(func() { client.CloseSend() })
+
+	// Send request
+	if err := client.Send(&pb.RunnerConfigRequest{
+		Event: &pb.RunnerConfigRequest_Open_{
+			Open: &pb.RunnerConfigRequest_Open{
+				Id: r.id,
+			},
+		},
+	}); err != nil {
+		return err
+	}
+
+	// Wait for an initial config as confirmation we're registered.
+	log.Trace("runner connected, waiting for initial config")
+	_, err = client.Recv()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Close gracefully exits the runner. This will wait for any pending
+// job executions to complete and then deregister the runner.
+func (r *Runner) Close() error {
+	if f := r.cleanupFunc; f != nil {
+		f()
+	}
+
 	return nil
 }
 
@@ -55,6 +131,29 @@ func (r *Runner) Accept() error {
 	return nil
 }
 
-type config struct{}
+type config struct {
+	ServerAddr     string
+	ServerInsecure bool
+}
 
 type Option func(*Runner, *config) error
+
+// WithEnvDefaults sets configuration values based on well-known accepted
+// environment variables. Not all configuration can be set this way.
+func WithEnvDefaults() Option {
+	return func(r *Runner, cfg *config) error {
+		cfg.ServerAddr = os.Getenv(core.EnvServerAddr)
+		cfg.ServerInsecure = os.Getenv(core.EnvServerInsecure) != ""
+		return nil
+	}
+}
+
+// WithClient sets the client directly. In this case, the runner won't
+// attempt any connection at all regardless of other configuration (env
+// vars or waypoint config file). This will be used.
+func WithClient(client pb.WaypointClient) Option {
+	return func(r *Runner, cfg *config) error {
+		r.client = client
+		return nil
+	}
+}
