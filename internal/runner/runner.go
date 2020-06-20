@@ -122,15 +122,6 @@ func (r *Runner) Close() error {
 	return nil
 }
 
-// Accept will accept and execute a single job. This will block until
-// a job is available.
-//
-// This is safe to be called concurrently which can be used to execute
-// multiple jobs in parallel as a runner.
-func (r *Runner) Accept() error {
-	return nil
-}
-
 type config struct {
 	ServerAddr     string
 	ServerInsecure bool

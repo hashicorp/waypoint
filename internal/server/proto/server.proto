@@ -278,7 +278,7 @@ message QueueJobResponse {
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
   reserved 21 to 49; // future data source range
-  reserved 51 to 79; // future operation range
+  reserved 52 to 79; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -303,9 +303,10 @@ message Job {
     Local local = 20;
   }
 
-  // The operation to execute.
+  // The operation to execute. See the message docs for details on the operation.
   oneof operation {
-    BuildOp build = 50;
+    Noop noop = 50;
+    BuildOp build = 51;
   }
 
   // TODO(mitchellh): component lists so that we can verify the runner
@@ -342,6 +343,12 @@ message Job {
   }
 
   message Local {}
+
+  // Noop operations do nothing. This is primarily used for testing.
+  // This operation will still download the data from the data source.
+  // A noop may be useful outside of testing to verify a runner is
+  // executing properly or can access data properly.
+  message Noop {}
 
   message BuildOp {}
 }
