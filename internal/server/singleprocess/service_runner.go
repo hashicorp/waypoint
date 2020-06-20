@@ -92,7 +92,11 @@ func (s *service) RunnerJobStream(
 		return err
 	}
 
-	// Send the job assignment
+	// Send the job assignment.
+	//
+	// If this has an error, we continue to accumulate the error until
+	// we set the ack status in the DB. We do this because if we fail to
+	// send the job assignment we want to nack the job so it is queued again.
 	err = server.Send(&pb.RunnerJobStreamResponse{
 		Event: &pb.RunnerJobStreamResponse_Assignment{
 			Assignment: &pb.RunnerJobStreamResponse_JobAssignment{
@@ -101,11 +105,17 @@ func (s *service) RunnerJobStream(
 		},
 	})
 
-	// Wait for an ack
+	// Wait for an ack. We only do this if the job assignment above
+	// succeeded. If it didn't succeed, the client will never send us
+	// an ack.
 	ack := false
 	if err == nil { // if sending the job assignment was a success
 		req, err = server.Recv()
-		if err == nil { // if receiving the message was a success
+
+		// If we received a message we inspect it. If we failed to
+		// receive a message, we've set the `err` value and we keep
+		// ack to false so that we nack the job later.
+		if err == nil {
 			switch req.Event.(type) {
 			case *pb.RunnerJobStreamRequest_Ack_:
 				ack = true
@@ -121,20 +131,22 @@ func (s *service) RunnerJobStream(
 		}
 	}
 
-	// Send the ack
+	// Send the ack.
 	job, ackerr := s.state.JobAck(job.Id, ack)
 	if ackerr != nil {
 		// If this fails, we just log, there is nothing more we can do.
 		log.Warn("job ack failed", "outer_error", err, "error", ackerr)
 
-		// If we had no outer error, set the ackerr so that we exit
+		// If we had no outer error, set the ackerr so that we exit. If
+		// we do have an outer error, then the ack error only shows up in
+		// the log.
 		if err == nil {
 			err = ackerr
 		}
 	}
 
 	// If we have an error, return that. We also return if we didn't ack for
-	// any reason.
+	// any reason. This error can be set at any point since job assignment.
 	if err != nil || !ack {
 		return err
 	}
