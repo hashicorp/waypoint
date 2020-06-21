@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"path/filepath"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"google.golang.org/grpc"
@@ -84,7 +85,9 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 	log.Debug("opening local mode DB", "path", path)
 
 	// Open our database
-	db, err := bolt.Open(path, 0600, nil)
+	db, err := bolt.Open(path, 0600, &bolt.Options{
+		Timeout: 1 * time.Second,
+	})
 	if err != nil {
 		return nil, err
 	}
