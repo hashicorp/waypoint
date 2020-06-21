@@ -6,7 +6,7 @@ import (
 
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/waypoint/internal/core"
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/server/execclient"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -33,7 +33,7 @@ func (c *ExecCommand) Run(args []string) int {
 
 	var exitCode int
 	client := c.project.Client()
-	err := c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
+	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the latest deployment
 		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
 			Order: &pb.OperationOrder{

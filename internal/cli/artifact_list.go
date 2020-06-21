@@ -10,7 +10,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/waypoint/internal/core"
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
@@ -36,7 +36,7 @@ func (c *ArtifactListCommand) Run(args []string) int {
 	// Get our API client
 	client := c.project.Client()
 
-	err := c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
+	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		var wsRef *pb.Ref_Workspace
 		if !c.flagWorkspaceAll {
 			wsRef = c.project.WorkspaceRef()

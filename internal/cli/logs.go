@@ -7,7 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/waypoint/internal/core"
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -31,7 +31,7 @@ func (c *LogsCommand) Run(args []string) int {
 	}
 
 	client := c.project.Client()
-	err := c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
+	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the latest deployment
 		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
 			Order: &pb.OperationOrder{

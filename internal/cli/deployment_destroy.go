@@ -6,7 +6,7 @@ import (
 
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/waypoint/internal/core"
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -35,7 +35,7 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 	}
 
 	client := c.project.Client()
-	err := c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
+	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the deployment
 		deployment, err := client.GetDeployment(ctx, &pb.GetDeploymentRequest{
 			DeploymentId: args[0],
@@ -51,7 +51,9 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		if err := app.DestroyDeploy(ctx, deployment); err != nil {
+		if err := app.DestroyDeploy(ctx, &pb.Job_DestroyDeployOp{
+			Deployment: deployment,
+		}); err != nil {
 			app.UI.Output("Error destroying the deployment: %s", err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
 		}

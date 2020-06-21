@@ -9,11 +9,9 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/waypoint/internal/core"
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	servercomponent "github.com/hashicorp/waypoint/internal/server/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -65,7 +63,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 	}
 
 	client := c.project.Client()
-	err = c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
+	err = c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the latest deployment
 		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
 			Application: app.Ref(),
@@ -87,17 +85,16 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 		type target struct {
 			Deployment *pb.Deployment
-			Target     component.ReleaseTarget
+			Target     *pb.Release_SplitTarget
 		}
 
 		// Build our targets
 		var targets []target
 		targets = append(targets, target{
 			resp.Deployments[0],
-			component.ReleaseTarget{
+			&pb.Release_SplitTarget{
 				DeploymentId: resp.Deployments[0].Id,
-				Deployment:   servercomponent.Deployment(resp.Deployments[0]),
-				Percent:      uint(number),
+				Percent:      int32(number),
 			},
 		})
 		if number < 100 {
@@ -108,9 +105,9 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 			targets = append(targets, target{
 				resp.Deployments[1],
-				component.ReleaseTarget{
-					Deployment: servercomponent.Deployment(resp.Deployments[1]),
-					Percent:    uint(100 - number),
+				&pb.Release_SplitTarget{
+					DeploymentId: resp.Deployments[1].Id,
+					Percent:      int32(100 - number),
 				},
 			})
 		}
@@ -129,17 +126,21 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		}
 
 		// Release
-		targetArgs := make([]component.ReleaseTarget, len(targets))
+		targetArgs := make([]*pb.Release_SplitTarget, len(targets))
 		for i, target := range targets {
 			targetArgs[i] = target.Target
 		}
-		release, err := app.Release(ctx, targetArgs)
+		err = app.Release(ctx, &pb.Job_ReleaseOp{
+			TrafficSplit: &pb.Release_Split{
+				Targets: targetArgs,
+			},
+		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
-		app.UI.Output("\nURL: %s", release.URL(), terminal.WithSuccessStyle())
+		// app.UI.Output("\nURL: %s", release.URL(), terminal.WithSuccessStyle())
 		return nil
 	})
 	if err != nil {

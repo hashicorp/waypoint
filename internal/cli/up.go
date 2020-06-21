@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/waypoint/internal/core"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -30,22 +30,18 @@ func (c *UpCommand) Run([]string) int {
 	}
 
 	// Get our app
-	app, err := proj.App(cfg.Apps[0].Name)
-	if err != nil {
-		c.logError(c.Log, "failed to initialize app", err)
-		return 1
-	}
+	app := proj.App(cfg.Apps[0].Name)
 
 	// Build
 	fmt.Fprintf(os.Stdout, "==> Building\n")
-	_, pushedArtifact, err := app.Build(ctx, core.BuildWithPush(true))
+	result, err := app.Build(ctx, &pb.Job_BuildOp{})
 	if err != nil {
 		log.Error("error running builder", "error", err)
 		return 1
 	}
 
 	fmt.Fprintf(os.Stdout, "==> Deploying\n")
-	_, err = app.Deploy(ctx, pushedArtifact)
+	_, err = app.Deploy(ctx, &pb.Job_DeployOp{Artifact: result.Push})
 	if err != nil {
 		log.Error("error deploying", "error", err)
 		return 1
