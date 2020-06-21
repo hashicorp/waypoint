@@ -43,6 +43,14 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	if cfg.Insecure {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
 	}
+	if cfg.Auth {
+		token := os.Getenv(EnvServerToken)
+		if token == "" {
+			return nil, fmt.Errorf("No token available at the WAYPOINT_SERVER_TOKEN environment variable")
+		}
+
+		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(staticToken(token)))
+	}
 
 	// Connect to this server
 	return grpc.DialContext(ctx, cfg.Addr, grpcOpts...)
@@ -51,6 +59,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 type connectConfig struct {
 	Addr     string
 	Insecure bool
+	Auth     bool
 	Optional bool // See Optional func
 }
 
@@ -68,13 +77,26 @@ func FromEnv() ConnectOption {
 }
 
 // FromConfig sources connection information from the configuration.
+// This will set Auth if the "RequireAuth" setting is set in the config.
 func FromConfig(cfg *config.Config) ConnectOption {
 	return func(c *connectConfig) error {
 		if cfg.Server != nil && cfg.Server.Address != "" {
 			c.Addr = cfg.Server.Address
 			c.Insecure = cfg.Server.Insecure
+			if cfg.Server.RequireAuth {
+				c.Auth = true
+			}
 		}
 
+		return nil
+	}
+}
+
+// Auth specifies that this server should require auth and therefore
+// a token should be sourced from the environment and sent.
+func Auth() ConnectOption {
+	return func(c *connectConfig) error {
+		c.Auth = true
 		return nil
 	}
 }
@@ -99,4 +121,23 @@ const (
 	// ServerInsecure should be any value that strconv.ParseBool parses as
 	// true to connect to the server insecurely.
 	EnvServerInsecure = "WAYPOINT_SERVER_INSECURE"
+
+	// EnvServerToken is the token for authenticated with the server.
+	EnvServerToken = "WAYPOINT_SERVER_TOKEN"
 )
+
+// This is a weird type that only exists to satisify the interface required by
+// grpc.WithPerRPCCredentials. That api is designed to incorporate things like OAuth
+// but in our case, we really just want to send this static token through, but we still
+// need to the dance.
+type staticToken string
+
+func (t staticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{
+		"authorization": string(t),
+	}, nil
+}
+
+func (t staticToken) RequireTransportSecurity() bool {
+	return false
+}
