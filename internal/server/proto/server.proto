@@ -278,7 +278,7 @@ message QueueJobResponse {
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
   reserved 21 to 49; // future data source range
-  reserved 52 to 79; // future operation range
+  reserved 56 to 79; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -313,6 +313,10 @@ message Job {
   oneof operation {
     Noop noop = 50;
     BuildOp build = 51;
+    PushOp push = 52;
+    DeployOp deploy = 53;
+    DestroyDeployOp destroy_deploy = 54;
+    ReleaseOp release = 55;
   }
 
   // TODO(mitchellh): component lists so that we can verify the runner
@@ -359,6 +363,24 @@ message Job {
   message BuildOp {
     // Don't push the build to any configured registry.
     bool disable_push = 1;
+  }
+
+  message PushOp {
+    // Build to push
+    Build build = 1;
+  }
+
+  message DeployOp {
+    // Artifact to deploy
+    PushedArtifact artifact = 1;
+  }
+
+  message DestroyDeployOp {
+    Deployment deployment = 1;
+  }
+
+  message ReleaseOp {
+    Release.Split traffic_split = 1;
   }
 }
 
