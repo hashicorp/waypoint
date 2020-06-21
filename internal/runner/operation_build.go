@@ -7,10 +7,14 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func (r *Runner) executeBuildOp(ctx context.Context, job *pb.Job, project *core.Project) error {
+func (r *Runner) executeBuildOp(
+	ctx context.Context,
+	job *pb.Job,
+	project *core.Project,
+) (*pb.Job_Result, error) {
 	app, err := project.App(job.Application.Application)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	op, ok := job.Operation.(*pb.Job_Build)
@@ -20,10 +24,15 @@ func (r *Runner) executeBuildOp(ctx context.Context, job *pb.Job, project *core.
 		panic("operation not expected type")
 	}
 
-	_, _, err = app.Build(ctx, core.BuildWithPush(!op.Build.DisablePush))
+	build, push, err := app.Build(ctx, core.BuildWithPush(!op.Build.DisablePush))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &pb.Job_Result{
+		Build: &pb.Job_BuildResult{
+			Build: build,
+			Push:  push,
+		},
+	}, nil
 }

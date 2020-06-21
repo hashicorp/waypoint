@@ -81,7 +81,7 @@ func (r *Runner) Accept() error {
 	// Execute the job. We have to close the UI right afterwards to
 	// ensure that no more output is writting to the client.
 	log.Info("starting job execution")
-	err = r.executeJob(r.ctx, log, ui, assignment.Assignment.Job)
+	result, err := r.executeJob(r.ctx, log, ui, assignment.Assignment.Job)
 	ui.Close()
 
 	// Handle job execution errors
@@ -105,7 +105,9 @@ func (r *Runner) Accept() error {
 	// Complete the job
 	if err := client.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Complete_{
-			Complete: &pb.RunnerJobStreamRequest_Complete{},
+			Complete: &pb.RunnerJobStreamRequest_Complete{
+				Result: result,
+			},
 		},
 	}); err != nil {
 		return err
