@@ -42,13 +42,14 @@ func (r *Runner) executeReleaseOp(
 		}
 	}
 
-	// TODO(mitchellh): query the deployments and return a release
-	_, err = app.Release(ctx, targets)
+	release, _, err := app.Release(ctx, targets)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.Job_Result{
-		Release: &pb.Job_ReleaseResult{},
+		Release: &pb.Job_ReleaseResult{
+			Release: release,
+		},
 	}, nil
 }

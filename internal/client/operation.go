@@ -80,7 +80,7 @@ func (c *App) DestroyDeploy(ctx context.Context, op *pb.Job_DestroyDeployOp) err
 	return err
 }
 
-func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) error {
+func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_ReleaseResult, error) {
 	if op == nil {
 		op = &pb.Job_ReleaseOp{}
 	}
@@ -92,8 +92,12 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) error {
 	}
 
 	// Execute it
-	_, err := c.doJob(ctx, job)
-	return err
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Release, nil
 }
 
 func (a *App) Logs(ctx context.Context, d *pb.Deployment) (component.LogViewer, error) {

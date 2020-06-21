@@ -130,7 +130,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		for i, target := range targets {
 			targetArgs[i] = target.Target
 		}
-		err = app.Release(ctx, &pb.Job_ReleaseOp{
+		result, err := app.Release(ctx, &pb.Job_ReleaseOp{
 			TrafficSplit: &pb.Release_Split{
 				Targets: targetArgs,
 			},
@@ -140,7 +140,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		// app.UI.Output("\nURL: %s", release.URL(), terminal.WithSuccessStyle())
+		app.UI.Output("\nURL: %s", result.Release.Url, terminal.WithSuccessStyle())
 		return nil
 	})
 	if err != nil {

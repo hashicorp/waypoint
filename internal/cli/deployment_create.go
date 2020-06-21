@@ -58,7 +58,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 		// We're releasing, do that too.
 		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
-		err = app.Release(ctx, &pb.Job_ReleaseOp{
+		releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
 			TrafficSplit: &pb.Release_Split{
 				Targets: []*pb.Release_SplitTarget{
 					&pb.Release_SplitTarget{
@@ -73,7 +73,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		//app.UI.Output("\nURL: %s", release.URL(), terminal.WithSuccessStyle())
+		app.UI.Output("\nURL: %s", releaseResult.Release.Url, terminal.WithSuccessStyle())
 		return nil
 	})
 

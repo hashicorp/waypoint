@@ -862,6 +862,11 @@ message Release {
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 6;
 
+  // URL for this release. This is valid while the release is still
+  // in use. After the release is not in use, this may still be set but
+  // may no longer be valid.
+  string url = 9;
+
   message Split {
     repeated SplitTarget targets = 1;
   }
