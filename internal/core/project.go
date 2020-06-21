@@ -105,9 +105,6 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 	// Init our server connection. This may be in-process if we're in
 	// local mode.
-	if err := p.initServer(ctx, &opts); err != nil {
-		return nil, fmt.Errorf("Error initializing server access: %s", err)
-	}
 	if p.client == nil {
 		panic("p.client should never be nil")
 	}
