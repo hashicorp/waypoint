@@ -13,7 +13,14 @@ func (r *Runner) executeBuildOp(ctx context.Context, job *pb.Job, project *core.
 		return err
 	}
 
-	_, _, err = app.Build(ctx, core.BuildWithPush(true))
+	op, ok := job.Operation.(*pb.Job_Build)
+	if !ok {
+		// this shouldn't happen since the call to this function is gated
+		// on the above type match.
+		panic("operation not expected type")
+	}
+
+	_, _, err = app.Build(ctx, core.BuildWithPush(!op.Build.DisablePush))
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,9 @@ import (
 func (c *Client) job() *pb.Job {
 	return &pb.Job{
 		Application:  c.application,
+		Workspace:    c.workspace,
 		TargetRunner: c.runner,
+		Labels:       c.labels,
 
 		DataSource: &pb.Job_Local_{
 			Local: &pb.Job_Local{},

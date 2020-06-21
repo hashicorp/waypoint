@@ -44,7 +44,8 @@ func (r *Runner) executeJob(ctx context.Context, log hclog.Logger, ui terminal.U
 		core.WithClient(r.client),
 		core.WithConfig(&cfg),
 		core.WithDataDir(projDir),
-		core.WithWorkspace("default"), // TODO(mitchellh): configurable
+		core.WithLabels(job.Labels),
+		core.WithWorkspace(job.Workspace.Workspace),
 	)
 	if err != nil {
 		return err

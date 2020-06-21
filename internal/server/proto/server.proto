@@ -290,8 +290,14 @@ message Job {
   // must be set.
   Ref.Application application = 2;
 
+  // The workspace to perform the operation in.
+  Ref.Workspace workspace = 3;
+
   // The runner that should execute this job. This is required.
-  Ref.Runner target_runner = 3;
+  Ref.Runner target_runner = 4;
+
+  // Labels are the labels to set for this operation.
+  map<string, string> labels = 5;
 
   // data_source determines where the data to operate on (such as the
   // application source code and Waypoint configuration) comes from.
@@ -350,7 +356,10 @@ message Job {
   // executing properly or can access data properly.
   message Noop {}
 
-  message BuildOp {}
+  message BuildOp {
+    // Don't push the build to any configured registry.
+    bool disable_push = 1;
+  }
 }
 
 message GetJobRequest {

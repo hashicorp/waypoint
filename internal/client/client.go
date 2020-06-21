@@ -16,7 +16,9 @@ type Client struct {
 	client      pb.WaypointClient
 	logger      hclog.Logger
 	application *pb.Ref_Application
+	workspace   *pb.Ref_Workspace
 	runner      *pb.Ref_Runner
+	labels      map[string]string
 	ui          terminal.UI
 	cleanupFunc func()
 
@@ -52,6 +54,11 @@ func New(opts ...Option) (*Client, error) {
 		client.client = pb.NewWaypointClient(conn)
 	}
 
+	// Default workspace if not specified
+	if client.workspace == nil {
+		client.workspace = &pb.Ref_Workspace{Workspace: "default"}
+	}
+
 	return client, nil
 }
 
@@ -63,6 +70,11 @@ func (c *Client) APIClient() pb.WaypointClient {
 // AppRef returns the application reference that this client is using.
 func (c *Client) AppRef() *pb.Ref_Application {
 	return c.application
+}
+
+// WorkspaceRef returns the application reference that this client is using.
+func (c *Client) WorkspaceRef() *pb.Ref_Workspace {
+	return c.workspace
 }
 
 // Close should be called to clean up any resources that the client created.
@@ -102,6 +114,15 @@ func WithAppRef(ref *pb.Ref_Application) Option {
 	}
 }
 
+// WithWorkspaceRef sets the workspace reference for all operations performed.
+// If this isn't set, the default workspace will be used.
+func WithWorkspaceRef(ref *pb.Ref_Workspace) Option {
+	return func(c *Client, cfg *config) error {
+		c.workspace = ref
+		return nil
+	}
+}
+
 // WithClient sets the client directly. In this case, the runner won't
 // attempt any connection at all regardless of other configuration (env
 // vars or waypoint config file). This will be used.
@@ -120,6 +141,14 @@ func WithClient(client pb.WaypointClient) Option {
 func WithClientConnect(opts ...serverclient.ConnectOption) Option {
 	return func(c *Client, cfg *config) error {
 		cfg.connectOpts = opts
+		return nil
+	}
+}
+
+// WithLabels sets the labels or any operations.
+func WithLabels(m map[string]string) Option {
+	return func(c *Client, cfg *config) error {
+		c.labels = m
 		return nil
 	}
 }

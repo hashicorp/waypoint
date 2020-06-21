@@ -20,6 +20,9 @@ func TestJobNew(t testing.T, src *pb.Job) *pb.Job {
 			Application: "a_test",
 			Project:     "p_test",
 		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: "w_test",
+		},
 		TargetRunner: &pb.Ref_Runner{
 			Target: &pb.Ref_Runner_Any{
 				Any: &pb.Ref_RunnerAny{},
