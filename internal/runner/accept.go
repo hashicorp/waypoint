@@ -75,9 +75,17 @@ func (r *Runner) Accept() error {
 		return err
 	}
 
-	// Execute the job
+	// Start our UI
+	ui := newJobUI(log, client)
+
+	// Execute the job. We have to close the UI right afterwards to
+	// ensure that no more output is writting to the client.
 	log.Info("starting job execution")
-	if err := r.executeJob(r.ctx, log, assignment.Assignment.Job); err != nil {
+	err = r.executeJob(r.ctx, log, ui, assignment.Assignment.Job)
+	ui.Close()
+
+	// Handle job execution errors
+	if err != nil {
 		st, _ := status.FromError(err)
 
 		log.Warn("error during job execution", "err", err)

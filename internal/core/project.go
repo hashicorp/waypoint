@@ -269,3 +269,8 @@ func WithWorkspace(ws string) Option {
 		}
 	}
 }
+
+// WithUI sets the UI to use. If this isn't set, a BasicUI is used.
+func WithUI(ui terminal.UI) Option {
+	return func(p *Project, opts *options) { p.UI = ui }
+}

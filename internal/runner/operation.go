@@ -13,11 +13,12 @@ import (
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/datadir"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // executeJob executes an assigned job. This will source the data (if necessary),
 // setup the project, execute the job, and return the outcome.
-func (r *Runner) executeJob(ctx context.Context, log hclog.Logger, job *pb.Job) error {
+func (r *Runner) executeJob(ctx context.Context, log hclog.Logger, ui terminal.UI, job *pb.Job) error {
 	// Eventually we'll need to extract the data source. For now we're
 	// just building for local exec so it is the working directory.
 	path := configpkg.Filename
@@ -39,6 +40,7 @@ func (r *Runner) executeJob(ctx context.Context, log hclog.Logger, job *pb.Job) 
 	log.Trace("initializing project", "project", cfg.Project)
 	project, err := core.NewProject(ctx,
 		core.WithLogger(log),
+		core.WithUI(ui),
 		core.WithClient(r.client),
 		core.WithConfig(&cfg),
 		core.WithDataDir(projDir),
@@ -55,6 +57,9 @@ func (r *Runner) executeJob(ctx context.Context, log hclog.Logger, job *pb.Job) 
 	case *pb.Job_Noop_:
 		log.Debug("noop job success")
 		return nil
+
+	case *pb.Job_Build:
+		return r.executeBuildOp(ctx, job, project)
 
 	default:
 		return status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)
