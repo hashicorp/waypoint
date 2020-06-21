@@ -6,11 +6,15 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func (c *Client) Build(ctx context.Context) error {
+func (c *App) Build(ctx context.Context, op *pb.Job_BuildOp) error {
+	if op == nil {
+		op = &pb.Job_BuildOp{}
+	}
+
 	// Build our job
 	job := c.job()
 	job.Operation = &pb.Job_Build{
-		Build: &pb.Job_BuildOp{},
+		Build: op,
 	}
 
 	// Execute it

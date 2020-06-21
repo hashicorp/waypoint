@@ -14,17 +14,18 @@ func init() {
 	hclog.L().SetLevel(hclog.Trace)
 }
 
-func TestClientNoop(t *testing.T) {
+func TestProjectNoop(t *testing.T) {
 	ctx := context.Background()
 	require := require.New(t)
 	client := singleprocess.TestServer(t)
 
 	// Build our client
-	c := TestClient(t, WithClient(client), WithLocal())
+	c := TestProject(t, WithClient(client), WithLocal())
+	app := c.App(TestApp(t, c))
 
 	// TODO(mitchellh): once we have an API to list jobs, verify we have
 	// no jobs, and then verify we execute a job after.
 
 	// Noop
-	require.NoError(c.Noop(ctx))
+	require.NoError(app.Noop(ctx))
 }

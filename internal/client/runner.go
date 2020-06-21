@@ -6,7 +6,7 @@ import (
 
 // startRunner initializes and starts a local runner. If the returned
 // runner is non-nil, you must call Close on it to clean up resources properly.
-func (c *Client) startRunner() (*runner.Runner, error) {
+func (c *Project) startRunner() (*runner.Runner, error) {
 	// Initialize our runner
 	r, err := runner.New(
 		runner.WithClient(c.client),

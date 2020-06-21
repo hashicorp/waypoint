@@ -12,14 +12,14 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 )
 
-// TestClient returns an initialized client pointing to an in-memory test
+// TestProject returns an initialized client pointing to an in-memory test
 // server. This will close automatically on test completion.
 //
 // This will also change the working directory to a temporary directory
 // so that any side effect file creation doesn't impact the real working
 // directory. If you need to use your working directory, query it before
 // calling this.
-func TestClient(t testing.T, opts ...Option) *Client {
+func TestProject(t testing.T, opts ...Option) *Project {
 	require := require.New(t)
 	client := singleprocess.TestServer(t)
 
@@ -27,10 +27,7 @@ func TestClient(t testing.T, opts ...Option) *Client {
 	result, err := New(append([]Option{
 		WithClient(client),
 		WithLocal(),
-		WithAppRef(&pb.Ref_Application{
-			Application: "test",
-			Project:     "test",
-		}),
+		WithProjectRef(&pb.Ref_Project{Project: "test_p"}),
 	}, opts...)...)
 	require.NoError(err)
 
@@ -42,6 +39,14 @@ func TestClient(t testing.T, opts ...Option) *Client {
 	configpkg.TestConfigFile(t, configpkg.TestSource(t))
 
 	return result
+}
+
+// TestApp returns an app reference that can be used for testing.
+func TestApp(t testing.T, c *Project) string {
+	// This function doesn't do much right now, but I've kept it as a
+	// function in case in the future we need to create the app in the
+	// server or something.
+	return "test_a"
 }
 
 func testChdir(t testing.T, dir string) {

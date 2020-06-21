@@ -8,29 +8,30 @@ import (
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
-// Client is the primary structure for interacting with a Waypoint
+// Project is the primary structure for interacting with a Waypoint
 // server as a client. The client exposes a slightly higher level of
 // abstraction over the server API for performing operations locally and
 // remotely.
-type Client struct {
+type Project struct {
+	UI terminal.UI
+
 	client      pb.WaypointClient
 	logger      hclog.Logger
-	application *pb.Ref_Application
+	project     *pb.Ref_Project
 	workspace   *pb.Ref_Workspace
 	runner      *pb.Ref_Runner
 	labels      map[string]string
-	ui          terminal.UI
 	cleanupFunc func()
 
 	local bool
 }
 
 // New initializes a new client.
-func New(opts ...Option) (*Client, error) {
+func New(opts ...Option) (*Project, error) {
 	// Our default client
-	client := &Client{
+	client := &Project{
+		UI:     &terminal.BasicUI{},
 		logger: hclog.L(),
-		ui:     &terminal.BasicUI{},
 	}
 
 	// Build our config
@@ -62,23 +63,23 @@ func New(opts ...Option) (*Client, error) {
 	return client, nil
 }
 
-// APIClient returns the raw Waypoint server API client.
-func (c *Client) APIClient() pb.WaypointClient {
+// Ref returns the raw Waypoint server API client.
+func (c *Project) Ref() *pb.Ref_Project {
+	return c.project
+}
+
+// Client returns the raw Waypoint server API client.
+func (c *Project) Client() pb.WaypointClient {
 	return c.client
 }
 
-// AppRef returns the application reference that this client is using.
-func (c *Client) AppRef() *pb.Ref_Application {
-	return c.application
-}
-
 // WorkspaceRef returns the application reference that this client is using.
-func (c *Client) WorkspaceRef() *pb.Ref_Workspace {
+func (c *Project) WorkspaceRef() *pb.Ref_Workspace {
 	return c.workspace
 }
 
 // Close should be called to clean up any resources that the client created.
-func (c *Client) Close() error {
+func (c *Project) Close() error {
 	// Run any cleanup necessary
 	if f := c.cleanupFunc; f != nil {
 		f()
@@ -88,7 +89,7 @@ func (c *Client) Close() error {
 }
 
 // cleanup stacks cleanup functions to call when Close is called.
-func (c *Client) cleanup(f func()) {
+func (c *Project) cleanup(f func()) {
 	oldF := c.cleanupFunc
 	c.cleanupFunc = func() {
 		defer f()
@@ -102,14 +103,12 @@ type config struct {
 	connectOpts []serverclient.ConnectOption
 }
 
-type Option func(*Client, *config) error
+type Option func(*Project, *config) error
 
-// WithAppRef sets the application reference for all operations performed.
-// This determines what project/application operations such as "Build" will
-// target.
-func WithAppRef(ref *pb.Ref_Application) Option {
-	return func(c *Client, cfg *config) error {
-		c.application = ref
+// WithProjectRef sets the project reference for all operations performed.
+func WithProjectRef(ref *pb.Ref_Project) Option {
+	return func(c *Project, cfg *config) error {
+		c.project = ref
 		return nil
 	}
 }
@@ -117,7 +116,7 @@ func WithAppRef(ref *pb.Ref_Application) Option {
 // WithWorkspaceRef sets the workspace reference for all operations performed.
 // If this isn't set, the default workspace will be used.
 func WithWorkspaceRef(ref *pb.Ref_Workspace) Option {
-	return func(c *Client, cfg *config) error {
+	return func(c *Project, cfg *config) error {
 		c.workspace = ref
 		return nil
 	}
@@ -127,7 +126,7 @@ func WithWorkspaceRef(ref *pb.Ref_Workspace) Option {
 // attempt any connection at all regardless of other configuration (env
 // vars or waypoint config file). This will be used.
 func WithClient(client pb.WaypointClient) Option {
-	return func(c *Client, cfg *config) error {
+	return func(c *Project, cfg *config) error {
 		c.client = client
 		return nil
 	}
@@ -139,7 +138,7 @@ func WithClient(client pb.WaypointClient) Option {
 // If WithLocal is set and no client is specified and no server creds
 // can be found, then an in-process server will be created.
 func WithClientConnect(opts ...serverclient.ConnectOption) Option {
-	return func(c *Client, cfg *config) error {
+	return func(c *Project, cfg *config) error {
 		cfg.connectOpts = opts
 		return nil
 	}
@@ -147,7 +146,7 @@ func WithClientConnect(opts ...serverclient.ConnectOption) Option {
 
 // WithLabels sets the labels or any operations.
 func WithLabels(m map[string]string) Option {
-	return func(c *Client, cfg *config) error {
+	return func(c *Project, cfg *config) error {
 		c.labels = m
 		return nil
 	}
@@ -157,7 +156,7 @@ func WithLabels(m map[string]string) Option {
 // will spin up a per-operation runner locally and reference the local on-disk
 // data for all operations.
 func WithLocal() Option {
-	return func(c *Client, cfg *config) error {
+	return func(c *Project, cfg *config) error {
 		c.local = true
 		return nil
 	}
@@ -165,7 +164,7 @@ func WithLocal() Option {
 
 // WithLogger sets the logger for the client.
 func WithLogger(log hclog.Logger) Option {
-	return func(c *Client, cfg *config) error {
+	return func(c *Project, cfg *config) error {
 		c.logger = log
 		return nil
 	}

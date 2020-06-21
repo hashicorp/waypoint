@@ -8,14 +8,14 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // job returns the basic job skeleton prepoulated with the correct
 // defaults based on how the client is configured. For example, for local
 // operations, this will already have the targeting for the local runner.
-func (c *Client) job() *pb.Job {
+func (c *Project) job() *pb.Job {
 	return &pb.Job{
-		Application:  c.application,
 		Workspace:    c.workspace,
 		TargetRunner: c.runner,
 		Labels:       c.labels,
@@ -32,7 +32,7 @@ func (c *Client) job() *pb.Job {
 
 // doJob will queue and execute the job. If the client is configured for
 // local mode, this will start and target the proper runner.
-func (c *Client) doJob(ctx context.Context, job *pb.Job) error {
+func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) error {
 	log := c.logger
 
 	// In local mode we have to start a runner.
@@ -67,12 +67,16 @@ func (c *Client) doJob(ctx context.Context, job *pb.Job) error {
 		}
 	}
 
-	return c.queueAndStreamJob(ctx, job)
+	return c.queueAndStreamJob(ctx, job, ui)
 }
 
 // queueAndStreamJob will queue the job. If the client is configured to watch the job,
 // it'll also stream the output to the configured UI.
-func (c *Client) queueAndStreamJob(ctx context.Context, job *pb.Job) error {
+func (c *Project) queueAndStreamJob(
+	ctx context.Context,
+	job *pb.Job,
+	ui terminal.UI,
+) error {
 	log := c.logger
 
 	// Queue the job
@@ -136,7 +140,7 @@ func (c *Client) queueAndStreamJob(ctx context.Context, job *pb.Job) error {
 		case *pb.GetJobStreamResponse_Terminal_:
 			for _, line := range event.Terminal.Lines {
 				log.Trace("job terminal output", "line", line.Raw)
-				c.ui.Output(line.Line)
+				ui.Output(line.Line)
 			}
 
 		default:

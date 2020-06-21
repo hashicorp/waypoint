@@ -18,7 +18,7 @@ import (
 // This is called if a client wasn't explicitly given with WithClient.
 //
 // If a connection is successfully established, this will register connection
-// closing and server cleanup with the Client cleanup function.
+// closing and server cleanup with the Project cleanup function.
 //
 // This function will do one of two things:
 //
@@ -28,7 +28,7 @@ import (
 //   2. If WithLocal was specified and no connection addresses can be
 //      found, this will spin up an in-memory server.
 //
-func (c *Client) initServerClient(cfg *config) (*grpc.ClientConn, error) {
+func (c *Project) initServerClient(cfg *config) (*grpc.ClientConn, error) {
 	ctx := context.TODO()
 	log := c.logger.Named("server")
 
@@ -67,7 +67,7 @@ func (c *Client) initServerClient(cfg *config) (*grpc.ClientConn, error) {
 //
 // If this returns an error, all resources associated with this operation
 // will be closed, but the project can retry.
-func (c *Client) initLocalServer(ctx context.Context) (*grpc.ClientConn, error) {
+func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error) {
 	log := c.logger.Named("server")
 
 	// We use this pointer to accumulate things we need to clean up
