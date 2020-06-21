@@ -150,7 +150,8 @@ func (s *service) GetJobStream(
 				return server.Send(&pb.GetJobStreamResponse{
 					Event: &pb.GetJobStreamResponse_Complete_{
 						Complete: &pb.GetJobStreamResponse_Complete{
-							Error: job.Error,
+							Error:  job.Error,
+							Result: job.Result,
 						},
 					},
 				})

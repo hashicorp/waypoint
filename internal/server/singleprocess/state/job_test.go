@@ -263,13 +263,17 @@ func TestJobComplete(t *testing.T) {
 		require.NoError(err)
 
 		// Complete it
-		require.NoError(s.JobComplete(job.Id, nil))
+		require.NoError(s.JobComplete(job.Id, &pb.Job_Result{
+			Build: &pb.Job_BuildResult{},
+		}, nil))
 
 		// Verify it is changed
 		job, err = s.JobById(job.Id, nil)
 		require.NoError(err)
 		require.Equal(pb.Job_SUCCESS, job.State)
 		require.Nil(job.Error)
+		require.NotNil(job.Result)
+		require.NotNil(job.Result.Build)
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -294,7 +298,7 @@ func TestJobComplete(t *testing.T) {
 		require.NoError(err)
 
 		// Complete it
-		require.NoError(s.JobComplete(job.Id, fmt.Errorf("bad")))
+		require.NoError(s.JobComplete(job.Id, nil, fmt.Errorf("bad")))
 
 		// Verify it is changed
 		job, err = s.JobById(job.Id, nil)

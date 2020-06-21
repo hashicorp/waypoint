@@ -343,6 +343,10 @@ message Job {
   // error is set if state == ERROR
   google.rpc.Status error = 106;
 
+  // result is set based on the operation specified. A nil result is possible
+  // for some operations.
+  Result result = 107;
+
   enum State {
     UNKNOWN = 0;
     QUEUED = 1; // queued and waiting for assignment
@@ -350,6 +354,13 @@ message Job {
     RUNNING = 3; // runner acked and is executing
     ERROR = 4; // job failed
     SUCCESS = 5; // job succeeded
+  }
+
+  message Result {
+    BuildResult build = 1;
+    PushResult push = 2;
+    DeployResult deploy = 3;
+    ReleaseResult release = 4;
   }
 
   message Local {}
@@ -365,14 +376,30 @@ message Job {
     bool disable_push = 1;
   }
 
+  message BuildResult {
+    // The resulting build
+    Build build = 1;
+
+    // The artifact that was pushed. This will be nil if DisablePush was set.
+    PushedArtifact push = 2;
+  }
+
   message PushOp {
     // Build to push
     Build build = 1;
   }
 
+  message PushResult {
+    PushedArtifact artifact = 1;
+  }
+
   message DeployOp {
     // Artifact to deploy
     PushedArtifact artifact = 1;
+  }
+
+  message DeployResult {
+    Deployment deployment = 1;
   }
 
   message DestroyDeployOp {
@@ -381,6 +408,10 @@ message Job {
 
   message ReleaseOp {
     Release.Split traffic_split = 1;
+  }
+
+  message ReleaseResult {
+    Release release = 1;
   }
 }
 
@@ -462,6 +493,9 @@ message GetJobStreamResponse {
     // and resulted in job termination. This is different than the "error"
     // event which is an error in the stream itself.
     google.rpc.Status error = 1;
+
+    // Result will be set to the final result of the job execution, if any.
+    Job.Result result = 2;
   }
 }
 
@@ -535,7 +569,9 @@ message RunnerJobStreamRequest {
 
   message Ack {}
 
-  message Complete {}
+  message Complete {
+    Job.Result result = 1;
+  }
 
   message Error {
     google.rpc.Status error = 1;

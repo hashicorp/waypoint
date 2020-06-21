@@ -357,7 +357,7 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 // JobComplete marks a running job as complete. If an error is given,
 // the job is marked as failed (a completed state). If no error is given,
 // the job is marked as successful.
-func (s *State) JobComplete(id string, cerr error) error {
+func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -382,6 +382,7 @@ func (s *State) JobComplete(id string, cerr error) error {
 		// Set to complete, assume success for now
 		job.State = pb.Job_SUCCESS
 		jobpb.State = job.State
+		jobpb.Result = result
 		jobpb.CompleteTime, err = ptypes.TimestampProto(time.Now())
 		if err != nil {
 			// This should never happen since encoding a time now should be safe

@@ -270,10 +270,10 @@ func (s *service) handleJobStreamRequest(
 	log.Trace("event received", "event", req.Event)
 	switch event := req.Event.(type) {
 	case *pb.RunnerJobStreamRequest_Complete_:
-		return s.state.JobComplete(job.Id, nil)
+		return s.state.JobComplete(job.Id, event.Complete.Result, nil)
 
 	case *pb.RunnerJobStreamRequest_Error_:
-		return s.state.JobComplete(job.Id, status.FromProto(event.Error.Error).Err())
+		return s.state.JobComplete(job.Id, nil, status.FromProto(event.Error.Error).Err())
 
 	case *pb.RunnerJobStreamRequest_Terminal:
 		// This shouldn't happen but we want to protect against it to prevent
