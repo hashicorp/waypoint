@@ -67,6 +67,18 @@ func (r *Runner) executeJob(
 	case *pb.Job_Build:
 		return r.executeBuildOp(ctx, job, project)
 
+	case *pb.Job_Push:
+		return r.executePushOp(ctx, job, project)
+
+	case *pb.Job_Deploy:
+		return r.executeDeployOp(ctx, job, project)
+
+	case *pb.Job_DestroyDeploy:
+		return r.executeDestroyDeployOp(ctx, job, project)
+
+	case *pb.Job_Release:
+		return r.executeReleaseOp(ctx, job, project)
+
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)
 	}
