@@ -21,5 +21,6 @@ func (c *App) Noop(ctx context.Context) error {
 	}
 
 	// Execute it
-	return c.doJob(ctx, job)
+	_, err := c.doJob(ctx, job)
+	return err
 }

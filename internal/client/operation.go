@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 )
 
-func (c *App) Build(ctx context.Context, op *pb.Job_BuildOp) error {
+func (c *App) Build(ctx context.Context, op *pb.Job_BuildOp) (*pb.Job_BuildResult, error) {
 	if op == nil {
 		op = &pb.Job_BuildOp{}
 	}
@@ -20,7 +20,12 @@ func (c *App) Build(ctx context.Context, op *pb.Job_BuildOp) error {
 	}
 
 	// Execute it
-	return c.doJob(ctx, job)
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Build, nil
 }
 
 func (c *App) PushBuild(ctx context.Context, op *pb.Job_PushOp) error {
@@ -35,10 +40,11 @@ func (c *App) PushBuild(ctx context.Context, op *pb.Job_PushOp) error {
 	}
 
 	// Execute it
-	return c.doJob(ctx, job)
+	_, err := c.doJob(ctx, job)
+	return err
 }
 
-func (c *App) Deploy(ctx context.Context, op *pb.Job_DeployOp) error {
+func (c *App) Deploy(ctx context.Context, op *pb.Job_DeployOp) (*pb.Job_DeployResult, error) {
 	if op == nil {
 		op = &pb.Job_DeployOp{}
 	}
@@ -50,7 +56,12 @@ func (c *App) Deploy(ctx context.Context, op *pb.Job_DeployOp) error {
 	}
 
 	// Execute it
-	return c.doJob(ctx, job)
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Deploy, nil
 }
 
 func (c *App) DestroyDeploy(ctx context.Context, op *pb.Job_DestroyDeployOp) error {
@@ -65,7 +76,8 @@ func (c *App) DestroyDeploy(ctx context.Context, op *pb.Job_DestroyDeployOp) err
 	}
 
 	// Execute it
-	return c.doJob(ctx, job)
+	_, err := c.doJob(ctx, job)
+	return err
 }
 
 func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) error {
@@ -80,7 +92,8 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) error {
 	}
 
 	// Execute it
-	return c.doJob(ctx, job)
+	_, err := c.doJob(ctx, job)
+	return err
 }
 
 func (a *App) Logs(ctx context.Context, d *pb.Deployment) (component.LogViewer, error) {

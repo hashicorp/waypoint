@@ -32,7 +32,7 @@ func (c *Project) job() *pb.Job {
 
 // doJob will queue and execute the job. If the client is configured for
 // local mode, this will start and target the proper runner.
-func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) error {
+func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.Job_Result, error) {
 	log := c.logger
 
 	// In local mode we have to start a runner.
@@ -40,7 +40,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) error 
 		log.Info("local mode, starting local runner")
 		r, err := c.startRunner()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		log.Info("runner started", "runner_id", r.Id())
@@ -76,7 +76,7 @@ func (c *Project) queueAndStreamJob(
 	ctx context.Context,
 	job *pb.Job,
 	ui terminal.UI,
-) error {
+) (*pb.Job_Result, error) {
 	log := c.logger
 
 	// Queue the job
@@ -85,7 +85,7 @@ func (c *Project) queueAndStreamJob(
 		Job: job,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	log = log.With("job_id", queueResp.JobId)
 
@@ -95,16 +95,16 @@ func (c *Project) queueAndStreamJob(
 		JobId: queueResp.JobId,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Wait for open confirmation
 	resp, err := stream.Recv()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if _, ok := resp.Event.(*pb.GetJobStreamResponse_Open_); !ok {
-		return status.Errorf(codes.Aborted,
+		return nil, status.Errorf(codes.Aborted,
 			"job stream failed to open, got unexpected message %T",
 			resp.Event)
 	}
@@ -113,7 +113,7 @@ func (c *Project) queueAndStreamJob(
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if resp == nil {
 			// This shouldn't happen, but if it does, just ignore it.
@@ -125,17 +125,17 @@ func (c *Project) queueAndStreamJob(
 		case *pb.GetJobStreamResponse_Complete_:
 			if event.Complete.Error == nil {
 				log.Info("job completed successfully")
-				return nil
+				return event.Complete.Result, nil
 			}
 
 			st := status.FromProto(event.Complete.Error)
 			log.Warn("job failed", "code", st.Code(), "message", st.Message())
-			return st.Err()
+			return nil, st.Err()
 
 		case *pb.GetJobStreamResponse_Error_:
 			st := status.FromProto(event.Error.Error)
 			log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
-			return st.Err()
+			return nil, st.Err()
 
 		case *pb.GetJobStreamResponse_Terminal_:
 			for _, line := range event.Terminal.Lines {
