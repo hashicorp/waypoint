@@ -10,7 +10,7 @@ func (c *Client) startRunner() (*runner.Runner, error) {
 	// Initialize our runner
 	r, err := runner.New(
 		runner.WithClient(c.client),
-		runner.WithLogger(c.logger),
+		runner.WithLogger(c.logger.Named("runner")),
 	)
 	if err != nil {
 		return nil, err

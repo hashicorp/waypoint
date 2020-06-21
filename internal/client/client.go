@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -17,6 +18,7 @@ type Client struct {
 	application *pb.Ref_Application
 	runner      *pb.Ref_Runner
 	ui          terminal.UI
+	cleanupFunc func()
 
 	local bool
 }
@@ -38,6 +40,18 @@ func New(opts ...Option) (*Client, error) {
 		}
 	}
 
+	// If a client was explicitly provided, we use that. Otherwise, we
+	// have to establish a connection either through the serverclient
+	// package or spinning up an in-process server.
+	if client.client == nil {
+		client.logger.Trace("no API client provided, initializing connection if possible")
+		conn, err := client.initServerClient(&cfg)
+		if err != nil {
+			return nil, err
+		}
+		client.client = pb.NewWaypointClient(conn)
+	}
+
 	return client, nil
 }
 
@@ -51,7 +65,30 @@ func (c *Client) AppRef() *pb.Ref_Application {
 	return c.application
 }
 
-type config struct{}
+// Close should be called to clean up any resources that the client created.
+func (c *Client) Close() error {
+	// Run any cleanup necessary
+	if f := c.cleanupFunc; f != nil {
+		f()
+	}
+
+	return nil
+}
+
+// cleanup stacks cleanup functions to call when Close is called.
+func (c *Client) cleanup(f func()) {
+	oldF := c.cleanupFunc
+	c.cleanupFunc = func() {
+		defer f()
+		if oldF != nil {
+			oldF()
+		}
+	}
+}
+
+type config struct {
+	connectOpts []serverclient.ConnectOption
+}
 
 type Option func(*Client, *config) error
 
@@ -71,6 +108,18 @@ func WithAppRef(ref *pb.Ref_Application) Option {
 func WithClient(client pb.WaypointClient) Option {
 	return func(c *Client, cfg *config) error {
 		c.client = client
+		return nil
+	}
+}
+
+// WithClientConnect specifies the options for connecting to a client.
+// If WithClient is specified, that client is always used.
+//
+// If WithLocal is set and no client is specified and no server creds
+// can be found, then an in-process server will be created.
+func WithClientConnect(opts ...serverclient.ConnectOption) Option {
+	return func(c *Client, cfg *config) error {
+		cfg.connectOpts = opts
 		return nil
 	}
 }
