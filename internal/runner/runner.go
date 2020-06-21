@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
 var ErrClosed = errors.New("runner is closed")
@@ -161,8 +161,8 @@ type Option func(*Runner, *config) error
 // environment variables. Not all configuration can be set this way.
 func WithEnvDefaults() Option {
 	return func(r *Runner, cfg *config) error {
-		cfg.ServerAddr = os.Getenv(core.EnvServerAddr)
-		cfg.ServerInsecure = os.Getenv(core.EnvServerInsecure) != ""
+		cfg.ServerAddr = os.Getenv(serverclient.EnvServerAddr)
+		cfg.ServerInsecure = os.Getenv(serverclient.EnvServerInsecure) != ""
 		return nil
 	}
 }

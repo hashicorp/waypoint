@@ -41,6 +41,16 @@ func New(opts ...Option) (*Client, error) {
 	return client, nil
 }
 
+// APIClient returns the raw Waypoint server API client.
+func (c *Client) APIClient() pb.WaypointClient {
+	return c.client
+}
+
+// AppRef returns the application reference that this client is using.
+func (c *Client) AppRef() *pb.Ref_Application {
+	return c.application
+}
+
 type config struct{}
 
 type Option func(*Client, *config) error
@@ -71,6 +81,14 @@ func WithClient(client pb.WaypointClient) Option {
 func WithLocal() Option {
 	return func(c *Client, cfg *config) error {
 		c.local = true
+		return nil
+	}
+}
+
+// WithLogger sets the logger for the client.
+func WithLogger(log hclog.Logger) Option {
+	return func(c *Client, cfg *config) error {
+		c.logger = log
 		return nil
 	}
 }
