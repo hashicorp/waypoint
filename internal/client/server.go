@@ -28,8 +28,7 @@ import (
 //   2. If WithLocal was specified and no connection addresses can be
 //      found, this will spin up an in-memory server.
 //
-func (c *Project) initServerClient(cfg *config) (*grpc.ClientConn, error) {
-	ctx := context.TODO()
+func (c *Project) initServerClient(ctx context.Context, cfg *config) (*grpc.ClientConn, error) {
 	log := c.logger.Named("server")
 
 	// If we're local, then connection is optional.

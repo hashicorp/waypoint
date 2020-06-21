@@ -1,6 +1,8 @@
 package client
 
 import (
+	"context"
+
 	"github.com/hashicorp/go-hclog"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -48,7 +50,7 @@ func New(opts ...Option) (*Project, error) {
 	// package or spinning up an in-process server.
 	if client.client == nil {
 		client.logger.Trace("no API client provided, initializing connection if possible")
-		conn, err := client.initServerClient(&cfg)
+		conn, err := client.initServerClient(context.Background(), &cfg)
 		if err != nil {
 			return nil, err
 		}
