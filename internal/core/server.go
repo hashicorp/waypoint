@@ -37,6 +37,10 @@ func (t staticToken) RequireTransportSecurity() bool {
 // directly to it or spinning up an in-process server if we're operating in
 // local mode.
 func (p *Project) initServer(ctx context.Context, opts *options) error {
+	if p.client != nil {
+		return nil
+	}
+
 	// If we didn't configure server access, then just use a local server.
 	cfg := opts.Config.Server
 	if cfg == nil {

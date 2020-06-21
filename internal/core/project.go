@@ -217,6 +217,13 @@ type options struct {
 // Option is used to set options for NewProject.
 type Option func(*Project, *options)
 
+// WithClient sets the API client to use.
+func WithClient(client pb.WaypointClient) Option {
+	return func(p *Project, opts *options) {
+		p.client = client
+	}
+}
+
 // WithConfig uses the given project configuration for initializing the
 // Project. This configuration must be validated already prior to using this
 // option.
