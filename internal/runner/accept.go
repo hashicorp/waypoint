@@ -42,7 +42,7 @@ func (r *Runner) Accept() error {
 	}
 
 	// Wait for an assignment
-	log.Trace("waiting for job assignment")
+	log.Info("waiting for job assignment")
 	resp, err := client.Recv()
 	if err != nil {
 		return err
@@ -76,6 +76,7 @@ func (r *Runner) Accept() error {
 	}
 
 	// Execute the job
+	log.Info("starting job execution")
 	if err := r.executeJob(r.ctx, log, assignment.Assignment.Job); err != nil {
 		st, _ := status.FromError(err)
 

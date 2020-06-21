@@ -39,6 +39,7 @@ func (r *Runner) executeJob(ctx context.Context, log hclog.Logger, job *pb.Job) 
 	log.Trace("initializing project", "project", cfg.Project)
 	project, err := core.NewProject(ctx,
 		core.WithLogger(log),
+		core.WithClient(r.client),
 		core.WithConfig(&cfg),
 		core.WithDataDir(projDir),
 		core.WithWorkspace("default"), // TODO(mitchellh): configurable

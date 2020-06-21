@@ -121,6 +121,7 @@ func (r *Runner) Start() error {
 		return err
 	}
 
+	log.Info("runner registered with server")
 	return nil
 }
 
