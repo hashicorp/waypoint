@@ -59,6 +59,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200416231807-8751e049a2a0

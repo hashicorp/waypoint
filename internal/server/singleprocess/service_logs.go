@@ -58,16 +58,21 @@ func (s *service) GetLogStream(
 				}()
 
 				for {
-					entries := r.Read(64)
+					entries := r.Read(64, true)
 					if entries == nil {
 						return
+					}
+
+					lines := make([]*pb.LogBatch_Entry, len(entries))
+					for i, v := range entries {
+						lines[i] = v.(*pb.LogBatch_Entry)
 					}
 
 					instanceLog.Trace("sending instance log data", "entries", len(entries))
 					srv.Send(&pb.LogBatch{
 						DeploymentId: req.DeploymentId,
 						InstanceId:   instanceId,
-						Lines:        entries,
+						Lines:        lines,
 					})
 				}
 			}()

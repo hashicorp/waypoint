@@ -4,6 +4,9 @@ import (
 	"github.com/hashicorp/hcl/v2"
 )
 
+// Filename is the default filename for the Waypoint configuration.
+const Filename = "waypoint.hcl"
+
 // Config is the configuration structure.
 type Config struct {
 	Server  *Server           `hcl:"server,block"`

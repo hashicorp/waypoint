@@ -14,19 +14,25 @@ import (
 
 // Release releases a set of deploys.
 // TODO(mitchellh): test
-func (a *App) Release(ctx context.Context, targets []component.ReleaseTarget) (component.Release, error) {
-	result, _, err := a.doOperation(ctx, a.logger.Named("release"), &releaseOperation{
+func (a *App) Release(ctx context.Context, targets []component.ReleaseTarget) (
+	*pb.Release,
+	component.Release,
+	error,
+) {
+	result, releasepb, err := a.doOperation(ctx, a.logger.Named("release"), &releaseOperation{
 		Targets: targets,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return result.(component.Release), nil
+	return releasepb.(*pb.Release), result.(component.Release), nil
 }
 
 type releaseOperation struct {
 	Targets []component.ReleaseTarget
+
+	result component.Release
 }
 
 func (op *releaseOperation) Init(app *App) (proto.Message, error) {
@@ -36,6 +42,10 @@ func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 		Component:    app.components[app.Releaser].Info,
 		Labels:       app.components[app.Releaser].Labels,
 		TrafficSplit: &pb.Release_Split{},
+	}
+
+	if op.result != nil {
+		release.Url = op.result.URL()
 	}
 
 	// Create our splits for the release
@@ -65,13 +75,19 @@ func (op *releaseOperation) Upsert(
 }
 
 func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App) (interface{}, error) {
-	return app.callDynamicFunc(ctx,
+	result, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Release)(nil),
 		app.Releaser,
 		app.Releaser.ReleaseFunc(),
 		argmapper.Named("targets", op.Targets),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	op.result = result.(component.Release)
+	return result, nil
 }
 
 func (op *releaseOperation) StatusPtr(msg proto.Message) **pb.Status {

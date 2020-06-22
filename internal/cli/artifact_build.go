@@ -6,8 +6,9 @@ import (
 
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/waypoint/internal/core"
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -30,8 +31,10 @@ func (c *ArtifactBuildCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
-		_, _, err := app.Build(ctx, core.BuildWithPush(c.flagPush))
+	c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		_, err := app.Build(ctx, &pb.Job_BuildOp{
+			DisablePush: !c.flagPush,
+		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel

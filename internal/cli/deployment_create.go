@@ -6,11 +6,9 @@ import (
 
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/waypoint/internal/core"
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	servercomponent "github.com/hashicorp/waypoint/internal/server/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -32,7 +30,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 	client := c.project.Client()
 
-	c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
+	c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the most recent pushed artifact
 		push, err := client.GetLatestPushedArtifact(ctx, &pb.GetLatestPushedArtifactRequest{
 			Application: app.Ref(),
@@ -45,7 +43,9 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 		// Push it
 		app.UI.Output("Deploying...", terminal.WithHeaderStyle())
-		deployment, err := app.Deploy(ctx, push)
+		result, err := app.Deploy(ctx, &pb.Job_DeployOp{
+			Artifact: push,
+		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
@@ -58,11 +58,14 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 		// We're releasing, do that too.
 		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
-		release, err := app.Release(ctx, []component.ReleaseTarget{
-			component.ReleaseTarget{
-				DeploymentId: deployment.Id,
-				Deployment:   servercomponent.Deployment(deployment),
-				Percent:      100,
+		releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
+			TrafficSplit: &pb.Release_Split{
+				Targets: []*pb.Release_SplitTarget{
+					&pb.Release_SplitTarget{
+						DeploymentId: result.Deployment.Id,
+						Percent:      100,
+					},
+				},
 			},
 		})
 		if err != nil {
@@ -70,7 +73,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		app.UI.Output("\nURL: %s", release.URL(), terminal.WithSuccessStyle())
+		app.UI.Output("\nURL: %s", releaseResult.Release.Url, terminal.WithSuccessStyle())
 		return nil
 	})
 

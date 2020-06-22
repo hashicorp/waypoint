@@ -7,7 +7,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+type TestEntry = pb.LogBatch_Entry
 
 func TestBuffer(t *testing.T) {
 	require := require.New(t)
@@ -22,7 +26,7 @@ func TestBuffer(t *testing.T) {
 	b.Write(nil, nil, nil)
 
 	// The reader should be able to get three immediately
-	v := r1.Read(10)
+	v := r1.Read(10, true)
 	require.Len(v, 3)
 	require.Equal(3, cap(v))
 
@@ -30,7 +34,7 @@ func TestBuffer(t *testing.T) {
 	doneCh := make(chan struct{})
 	go func() {
 		defer close(doneCh)
-		v = r1.Read(10)
+		v = r1.Read(10, true)
 	}()
 
 	select {
@@ -38,6 +42,23 @@ func TestBuffer(t *testing.T) {
 		t.Fatal("should block")
 	case <-time.After(50 * time.Millisecond):
 	}
+
+	// If we request a non-blocking we should get nil
+	v = r1.Read(10, false)
+	require.Nil(v)
+
+	// Write some more entries which should unblock our reader
+	b.Write(nil, nil)
+	select {
+	case <-doneCh:
+	case <-time.After(50 * time.Millisecond):
+		t.Fatal("should unblock")
+	}
+
+	// Write some more to verify non-blocking reads work
+	b.Write(nil, nil, nil, nil)
+	v = r1.Read(10, false)
+	require.Len(v, 4)
 }
 
 func TestBuffer_close(t *testing.T) {
@@ -53,7 +74,7 @@ func TestBuffer_close(t *testing.T) {
 	doneCh := make(chan struct{})
 	go func() {
 		defer close(doneCh)
-		r1.Read(10)
+		r1.Read(10, true)
 	}()
 
 	select {
@@ -90,14 +111,14 @@ func TestBuffer_readPartial(t *testing.T) {
 
 	{
 		// Get two immediately
-		v := r1.Read(2)
+		v := r1.Read(2, true)
 		require.Len(v, 2)
 		require.Equal(2, cap(v))
 	}
 
 	{
 		// Get the last one
-		v := r1.Read(1)
+		v := r1.Read(1, true)
 		require.Len(v, 1)
 		require.Equal(1, cap(v))
 	}
@@ -114,16 +135,16 @@ func TestBuffer_writeFull(t *testing.T) {
 	b := New()
 	defer b.Close()
 	for i := 0; i < 53; i++ {
-		b.Write(&Entry{
+		b.Write(&TestEntry{
 			Line: strconv.Itoa(i),
 		})
 	}
 
 	// Get a reader and get what we can
 	r := b.Reader()
-	vs := r.Read(10)
+	vs := r.Read(10, true)
 	require.NotEmpty(vs)
-	require.Equal("52", vs[len(vs)-1].Line)
+	require.Equal("52", vs[len(vs)-1].(*TestEntry).Line)
 }
 
 func TestBuffer_readFull(t *testing.T) {
@@ -140,24 +161,24 @@ func TestBuffer_readFull(t *testing.T) {
 
 	// Write a lot of data to ensure we move the window
 	for i := 0; i < 53; i++ {
-		b.Write(&Entry{
+		b.Write(&TestEntry{
 			Line: strconv.Itoa(i),
 		})
 	}
 
 	// Read the data
-	vs := r.Read(1)
+	vs := r.Read(1, true)
 	require.NotEmpty(vs)
-	require.Equal("0", vs[0].Line)
+	require.Equal("0", vs[0].(*TestEntry).Line)
 
-	vs = r.Read(1)
+	vs = r.Read(1, true)
 	require.NotEmpty(vs)
-	require.Equal("1", vs[0].Line)
+	require.Equal("1", vs[0].(*TestEntry).Line)
 
 	// We jump windows here
-	vs = r.Read(1)
+	vs = r.Read(1, true)
 	require.NotEmpty(vs)
-	require.Equal("52", vs[0].Line)
+	require.Equal("52", vs[0].(*TestEntry).Line)
 }
 
 func TestReader_cancel(t *testing.T) {
@@ -173,7 +194,7 @@ func TestReader_cancel(t *testing.T) {
 	doneCh := make(chan struct{})
 	go func() {
 		defer close(doneCh)
-		r1.Read(10)
+		r1.Read(10, true)
 	}()
 
 	select {
@@ -209,7 +230,7 @@ func TestReader_cancelContext(t *testing.T) {
 	doneCh := make(chan struct{})
 	go func() {
 		defer close(doneCh)
-		r1.Read(10)
+		r1.Read(10, true)
 	}()
 
 	select {

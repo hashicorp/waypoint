@@ -6,12 +6,12 @@ import (
 	"context"
 	"sync"
 	"sync/atomic"
-
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// Entry is an alias to our entry type. We do this to simplify the typing.
-type Entry = pb.LogBatch_Entry
+// Entry is just an interface{} type. Buffer doesn't care what the entries
+// are since it assumes they come in in some order and are read in that same
+// order.
+type Entry interface{}
 
 var (
 	chunkCount = 32
@@ -70,7 +70,7 @@ func New() *Buffer {
 // Write writes the set of entries into the buffer.
 //
 // This is safe for concurrent access.
-func (b *Buffer) Write(entries ...*Entry) {
+func (b *Buffer) Write(entries ...Entry) {
 	b.cond.L.Lock()
 	defer b.cond.L.Unlock()
 
@@ -157,15 +157,16 @@ type Reader struct {
 
 // Read returns a batch of log entries, up to "max" amount. If "max" isn't
 // available, this will return any number that currently exists. If zero
-// exist, this will block waiting for available entries.
-func (r *Reader) Read(max int) []*Entry {
+// exist and block is true, this will block waiting for available entries.
+// If block is false and no more log entries exist, this will return nil.
+func (r *Reader) Read(max int, block bool) []Entry {
 	// If we're closed then do nothing.
 	if atomic.LoadUint32(&r.closed) > 0 {
 		return nil
 	}
 
 	chunk := &r.chunks[r.idx] // Important: this must be the pointer
-	result, cursor := chunk.read(r.b.cond, &r.closed, r.cursor, uint32(max))
+	result, cursor := chunk.read(r.b.cond, &r.closed, r.cursor, uint32(max), block)
 
 	// If we're not at the end, return our result
 	if !chunk.atEnd(cursor) {
@@ -223,7 +224,7 @@ func (r *Reader) CloseContext(ctx context.Context) {
 
 type chunk struct {
 	idx    uint32
-	buffer []*Entry
+	buffer []Entry
 }
 
 // atEnd returns true if the cursor is at the end of the chunk. The
@@ -247,13 +248,15 @@ func (w *chunk) full() bool {
 // The caller should take care to check chunk.atEnd with their cursor to
 // see if they're at the end of the chunk. If you're at the end of the chunk,
 // this will always return immediately to avoid blocking forever.
-func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32) ([]*Entry, uint32) {
+func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32, block bool) ([]Entry, uint32) {
 	idx := atomic.LoadUint32(&w.idx)
 	if idx <= current {
 		// If we're at the end we'd block forever cause we'll never see another
 		// write, so just return the current cursor again. This should never
 		// happen because the caller should be checking atEnd manually.
-		if w.atEnd(current) {
+		//
+		// We also return immediately if we're non-blocking.
+		if w.atEnd(current) || !block {
 			return nil, current
 		}
 
@@ -294,12 +297,12 @@ func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32) ([]*E
 // of entries written. If the return value is less than the length of
 // entries, this means this chunk is full and the remaining entries must
 // be written to the next chunk.
-func (w *chunk) write(entries []*Entry) int {
+func (w *chunk) write(entries []Entry) int {
 	// If we have no buffer then allocate it now. This is safe to do in
 	// a concurrent setting because we'll only ever attempt to read
 	// w.buffer in read if w.idx > 0.
 	if w.buffer == nil {
-		w.buffer = make([]*Entry, chunkSize)
+		w.buffer = make([]Entry, chunkSize)
 	}
 
 	// Write as much of the entries as we can into our buffer starting

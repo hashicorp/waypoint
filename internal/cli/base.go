@@ -5,17 +5,17 @@ import (
 	"errors"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/config"
-	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/sdk/datadir"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -43,14 +43,11 @@ type baseCommand struct {
 	// cfg is the parsed configuration
 	cfg *config.Config
 
-	// dir is the project directory
-	dir *datadir.Project
-
-	// project is the main project for the configuration
-	project *core.Project
-
 	// UI is used to write to the CLI.
 	ui terminal.UI
+
+	// client for performing operations
+	project *clientpkg.Project
 
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
@@ -73,12 +70,6 @@ type baseCommand struct {
 // Close cleans up any resources that the command created. This should be
 // defered by any CLI command that embeds baseCommand in the Run command.
 func (c *baseCommand) Close() error {
-	if c.project != nil {
-		if err := c.project.Close(); err != nil {
-			c.Log.Warn("error closing project", "err", err)
-		}
-	}
-
 	return nil
 }
 
@@ -116,15 +107,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 
 	// TODO(mitchellh): don't hardcode this, look up directories
-	path := "waypoint.hcl"
-
-	// We want an absolute path since we use the directory name as
-	// the default project name if we need it.
-	path, err := filepath.Abs(path)
-	if err != nil {
-		return err
-	}
-
+	path := config.Filename
 	if _, err := os.Stat(path); err == nil {
 		c.Log.Debug("reading configuration", "path", path)
 		if err := hclsimple.DecodeFile(path, nil, &cfg); err != nil {
@@ -132,25 +115,24 @@ func (c *baseCommand) Init(opts ...Option) error {
 			return err
 		}
 
-		// Setup our project data directory
-		c.Log.Debug("preparing project directory", "path", ".waypoint")
-		projDir, err := datadir.NewProject(".waypoint")
-		if err != nil {
-			c.logError(c.Log, "error preparing data directory", err)
-			return err
-		}
-		c.dir = projDir
-
-		// Create our project
-		c.project, err = core.NewProject(c.Ctx,
-			core.WithLogger(c.Log),
-			core.WithConfig(&cfg),
-			core.WithDataDir(projDir),
-			core.WithLabels(c.flagLabels),
-			core.WithWorkspace(c.flagWorkspace),
+		// Create our client
+		c.project, err = clientpkg.New(
+			clientpkg.WithLocal(),
+			clientpkg.WithLogger(c.Log),
+			clientpkg.WithClientConnect(
+				serverclient.FromEnv(),
+				serverclient.FromConfig(&cfg),
+			),
+			clientpkg.WithProjectRef(&pb.Ref_Project{
+				Project: cfg.Project,
+			}),
+			clientpkg.WithWorkspaceRef(&pb.Ref_Workspace{
+				Workspace: c.flagWorkspace,
+			}),
+			clientpkg.WithLabels(c.flagLabels),
 		)
 		if err != nil {
-			c.logError(c.Log, "failed to create project", err)
+			c.logError(c.Log, "failed to create client", err)
 			return err
 		}
 	} else {
@@ -185,8 +167,8 @@ func (c *baseCommand) Init(opts ...Option) error {
 // If you want to early exit all the running functions, you should use
 // the callback closure properties to cancel the passed in context. This
 // will stop any remaining callbacks and exit early.
-func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *core.App) error) error {
-	var apps []*core.App
+func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *clientpkg.App) error) error {
+	var apps []*clientpkg.App
 	for _, appCfg := range c.cfg.Apps {
 		// If we're doing single targeting and this app isn't what we
 		// want then continue. In practice we don't need to loop at all
@@ -196,11 +178,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *core.A
 			continue
 		}
 
-		app, err := c.project.App(appCfg.Name)
-		if err != nil {
-			panic(err)
-		}
-
+		app := c.project.App(appCfg.Name)
 		c.Log.Debug("will operate on app", "name", appCfg.Name)
 		apps = append(apps, app)
 	}
@@ -234,9 +212,10 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 	{
 		f := set.NewSet("Global Options")
 		f.StringVar(&flag.StringVar{
-			Name:   "workspace",
-			Target: &c.flagWorkspace,
-			Usage:  "Workspace to operate in. Defaults to 'default'.",
+			Name:    "workspace",
+			Target:  &c.flagWorkspace,
+			Default: "default",
+			Usage:   "Workspace to operate in. Defaults to 'default'.",
 		})
 	}
 

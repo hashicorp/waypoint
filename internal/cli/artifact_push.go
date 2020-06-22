@@ -6,7 +6,7 @@ import (
 
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/waypoint/internal/core"
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -28,7 +28,7 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 
 	client := c.project.Client()
 
-	c.DoApp(c.Ctx, func(ctx context.Context, app *core.App) error {
+	c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the most recent build
 		build, err := client.GetLatestBuild(ctx, &pb.GetLatestBuildRequest{
 			Application: app.Ref(),
@@ -40,7 +40,9 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 		}
 
 		// Push it
-		_, err = app.PushBuild(ctx, core.PushWithBuild(build))
+		err = app.PushBuild(ctx, &pb.Job_PushOp{
+			Build: build,
+		})
 		if err != nil {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel

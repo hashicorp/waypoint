@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/factory"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	"github.com/hashicorp/waypoint/sdk/component"
 	componentmocks "github.com/hashicorp/waypoint/sdk/component/mocks"
 	"github.com/hashicorp/waypoint/sdk/datadir"
@@ -28,6 +29,7 @@ func TestProject(t testing.T, opts ...Option) *Project {
 	require.NoError(t, err)
 
 	defaultOpts := []Option{
+		WithClient(singleprocess.TestServer(t)),
 		WithConfig(config.TestConfig(t, testProjectConfig)),
 		WithDataDir(projDir),
 	}

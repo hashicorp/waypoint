@@ -105,9 +105,6 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 	// Init our server connection. This may be in-process if we're in
 	// local mode.
-	if err := p.initServer(ctx, &opts); err != nil {
-		return nil, fmt.Errorf("Error initializing server access: %s", err)
-	}
 	if p.client == nil {
 		panic("p.client should never be nil")
 	}
@@ -217,6 +214,13 @@ type options struct {
 // Option is used to set options for NewProject.
 type Option func(*Project, *options)
 
+// WithClient sets the API client to use.
+func WithClient(client pb.WaypointClient) Option {
+	return func(p *Project, opts *options) {
+		p.client = client
+	}
+}
+
 // WithConfig uses the given project configuration for initializing the
 // Project. This configuration must be validated already prior to using this
 // option.
@@ -261,4 +265,9 @@ func WithWorkspace(ws string) Option {
 			p.workspace = ws
 		}
 	}
+}
+
+// WithUI sets the UI to use. If this isn't set, a BasicUI is used.
+func WithUI(ui terminal.UI) Option {
+	return func(p *Project, opts *options) { p.UI = ui }
 }
