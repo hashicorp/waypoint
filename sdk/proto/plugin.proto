@@ -57,7 +57,7 @@ message Args {
 
   // TerminalUI is used to construct the terminal.UI for the plugin.
   message TerminalUI {
-    // empty for now
+    uint32 stream_id = 1;
   }
 
   // HistoryClient is used to serve the history client for the plugin.

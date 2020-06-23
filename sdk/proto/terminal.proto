@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/empty.proto";
+
+// TerminalUIService is a service that provides "sdk/terminal.UI" interface
+// to plugins. Plugins don't interact with this directly, they usually
+// interact with it indirectly via a terminal.UI implementation.
+service TerminalUIService {
+  rpc Output(TerminalUI.OutputRequest) returns (google.protobuf.Empty);
+}
+
+message TerminalUI {
+  message OutputRequest {
+    repeated string lines = 1;
+  }
+}

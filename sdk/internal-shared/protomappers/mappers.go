@@ -2,6 +2,7 @@ package protomappers
 
 import (
 	"context"
+	"io"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -12,9 +13,9 @@ import (
 	"github.com/hashicorp/waypoint/sdk/datadir"
 	"github.com/hashicorp/waypoint/sdk/history"
 	pluginhistory "github.com/hashicorp/waypoint/sdk/internal/plugin/history"
+	pluginterminal "github.com/hashicorp/waypoint/sdk/internal/plugin/terminal"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
-	"github.com/hashicorp/waypoint/sdk/internal/pluginterminal"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -120,12 +121,62 @@ func LoggerProto(log hclog.Logger) *pb.Args_Logger {
 }
 
 // TerminalUI maps *pb.Args_TerminalUI to an hclog.TerminalUI
-func TerminalUI(input *pb.Args_TerminalUI) terminal.UI {
-	return &pluginterminal.UI{}
+func TerminalUI(
+	ctx context.Context,
+	input *pb.Args_TerminalUI,
+	log hclog.Logger,
+	internal *pluginargs.Internal,
+) (terminal.UI, error) {
+	// Create our plugin
+	p := &pluginterminal.UIPlugin{
+		Mappers: internal.Mappers,
+		Logger:  log,
+	}
+
+	conn, err := internal.Broker.Dial(input.StreamId)
+	if err != nil {
+		return nil, err
+	}
+	internal.Cleanup.Do(func() { conn.Close() })
+
+	client, err := p.GRPCClient(ctx, internal.Broker, conn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Our UI should implement close since we have to stop streams and
+	// such but we gate it here in case we ever change the implementation.
+	if closer, ok := client.(io.Closer); ok {
+		internal.Cleanup.Do(func() { closer.Close() })
+	}
+
+	return client.(terminal.UI), nil
 }
 
-func TerminalUIProto(ui terminal.UI) *pb.Args_TerminalUI {
-	return &pb.Args_TerminalUI{}
+func TerminalUIProto(
+	ui terminal.UI,
+	log hclog.Logger,
+	internal *pluginargs.Internal,
+) *pb.Args_TerminalUI {
+	// Create our plugin
+	p := &pluginterminal.UIPlugin{
+		Impl:    ui,
+		Mappers: internal.Mappers,
+		Logger:  log,
+	}
+
+	id := internal.Broker.NextId()
+
+	// Serve it
+	go internal.Broker.AcceptAndServe(id, func(opts []grpc.ServerOption) *grpc.Server {
+		server := plugin.DefaultGRPCServer(opts)
+		if err := p.GRPCServer(internal.Broker, server); err != nil {
+			panic(err)
+		}
+		return server
+	})
+
+	return &pb.Args_TerminalUI{StreamId: id}
 }
 
 func ReleaseTargets(input *pb.Args_ReleaseTargets) []component.ReleaseTarget {
