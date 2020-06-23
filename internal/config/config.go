@@ -10,6 +10,7 @@ const Filename = "waypoint.hcl"
 // Config is the configuration structure.
 type Config struct {
 	Server  *Server           `hcl:"server,block"`
+	Runner  *Runner           `hcl:"runner,block"`
 	Project string            `hcl:"project,attr"`
 	Apps    []*App            `hcl:"app,block"`
 	Labels  map[string]string `hcl:"labels,optional"`
@@ -40,6 +41,13 @@ type Server struct {
 	// We don't allow the token to be hardcoded into the config though, we
 	// always read that out of an env var later.
 	RequireAuth bool `hcl:"require_auth,optional"`
+}
+
+// Runner is the configuration for supporting runners in this project.
+type Runner struct {
+	// Enabled is whether or not runners are enabled. If this is false
+	// then the "-remote" flag will not work.
+	Enabled bool `hcl:"enabled,attr"`
 }
 
 // Build are the build settings.
