@@ -3,6 +3,7 @@ package singleprocess
 import (
 	"context"
 	"io"
+	"reflect"
 	"testing"
 	"time"
 
@@ -96,7 +97,18 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 		open, ok := resp.Event.(*pb.GetJobStreamResponse_Open_)
 		require.True(ok, "should be an open")
 		require.NotNil(open)
+	}
 
+	// We should receive an initial state change
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		state, ok := resp.Event.(*pb.GetJobStreamResponse_State_)
+		require.True(ok, "should be a state change")
+		require.NotNil(state)
+
+		require.Equal(pb.Job_UNKNOWN, state.State.Previous)
+		require.NotNil(state.State.Job)
 	}
 
 	// We need to give the stream time to initialize the output readers
@@ -118,10 +130,8 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 
 	// Wait for output
 	{
-		resp, err := stream.Recv()
-		require.NoError(err)
-		event, ok := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
-		require.True(ok, "should be terminal data")
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
 		require.NotNil(event)
 		require.False(event.Terminal.Buffered, 2)
 		require.Len(event.Terminal.Lines, 2)
@@ -137,10 +147,8 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 
 	// Wait for completion
 	{
-		resp, err := stream.Recv()
-		require.NoError(err)
-		event, ok := resp.Event.(*pb.GetJobStreamResponse_Complete_)
-		require.True(ok, "should be terminal data")
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Complete_)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Complete_)
 		require.NotNil(event)
 		require.Nil(event.Complete.Error)
 	}
@@ -229,10 +237,8 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 
 	// Wait for output
 	{
-		resp, err := stream.Recv()
-		require.NoError(err)
-		event, ok := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
-		require.True(ok, "should be terminal data")
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Terminal_)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
 		require.NotNil(event)
 		require.True(event.Terminal.Buffered)
 		require.Len(event.Terminal.Lines, 2)
@@ -241,11 +247,28 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 
 	// Wait for completion
 	{
-		resp, err := stream.Recv()
-		require.NoError(err)
-		event, ok := resp.Event.(*pb.GetJobStreamResponse_Complete_)
-		require.True(ok, "should be terminal data")
-		require.NotNil(event)
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Complete_)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Complete_)
 		require.Nil(event.Complete.Error)
+	}
+}
+
+// jobStreamRecv receives on the stream until an event of the given
+// type is matched.
+func jobStreamRecv(
+	t *testing.T,
+	stream pb.Waypoint_GetJobStreamClient,
+	typ interface{},
+) *pb.GetJobStreamResponse {
+	match := reflect.TypeOf(typ)
+	for {
+		resp, err := stream.Recv()
+		require.NoError(t, err)
+
+		if reflect.TypeOf(resp.Event) == match {
+			return resp
+		}
+
+		t.Logf("received event, but not the type we wanted: %T", resp.Event)
 	}
 }
