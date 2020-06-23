@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
 	"github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -26,10 +27,15 @@ type RegistryPlugin struct {
 }
 
 func (p *RegistryPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterRegistryServer(s, &registryServer{
-		Impl:    p.Impl,
+	base := &base{
 		Mappers: p.Mappers,
 		Logger:  p.Logger,
+		Broker:  broker,
+	}
+
+	proto.RegisterRegistryServer(s, &registryServer{
+		base: base,
+		Impl: p.Impl,
 	})
 	return nil
 }
@@ -40,15 +46,19 @@ func (p *RegistryPlugin) GRPCClient(
 	c *grpc.ClientConn,
 ) (interface{}, error) {
 	return &registryClient{
-		client: proto.NewRegistryClient(c),
-		logger: p.Logger,
+		client:  proto.NewRegistryClient(c),
+		logger:  p.Logger,
+		broker:  broker,
+		mappers: p.Mappers,
 	}, nil
 }
 
 // registryClient is an implementation of component.Registry over gRPC.
 type registryClient struct {
-	client proto.RegistryClient
-	logger hclog.Logger
+	client  proto.RegistryClient
+	logger  hclog.Logger
+	broker  *plugin.GRPCBroker
+	mappers []*argmapper.Func
 }
 
 func (c *registryClient) Config() (interface{}, error) {
@@ -69,7 +79,14 @@ func (c *registryClient) PushFunc() interface{} {
 	// We don't want to be a mapper
 	spec.Result = nil
 
-	return funcspec.Func(spec, c.push, argmapper.Logger(c.logger))
+	return funcspec.Func(spec, c.push,
+		argmapper.Logger(c.logger),
+		argmapper.Typed(&pluginargs.Internal{
+			Broker:  c.broker,
+			Mappers: c.mappers,
+			Cleanup: &pluginargs.Cleanup{},
+		}),
+	)
 }
 
 func (c *registryClient) push(
@@ -89,9 +106,9 @@ func (c *registryClient) push(
 // registryServer is a gRPC server that the client talks to and calls a
 // real implementation of the component.
 type registryServer struct {
-	Impl    component.Registry
-	Mappers []*argmapper.Func
-	Logger  hclog.Logger
+	*base
+
+	Impl component.Registry
 }
 
 func (s *registryServer) ConfigStruct(
@@ -114,16 +131,23 @@ func (s *registryServer) PushSpec(
 ) (*proto.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.PushFunc(),
 		argmapper.ConverterFunc(s.Mappers...),
-		argmapper.Logger(s.Logger))
+		argmapper.Logger(s.Logger),
+		argmapper.Typed(s.internal()),
+	)
 }
 
 func (s *registryServer) Push(
 	ctx context.Context,
 	args *proto.FuncSpec_Args,
 ) (*proto.Push_Resp, error) {
+	internal := s.internal()
+	defer internal.Cleanup.Close()
+
 	encoded, err := callDynamicFuncAny2(s.Impl.PushFunc(), args.Args,
-		argmapper.Typed(ctx),
 		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger),
+		argmapper.Typed(ctx),
+		argmapper.Typed(internal),
 	)
 	if err != nil {
 		return nil, err

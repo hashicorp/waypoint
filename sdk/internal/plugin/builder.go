@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
 	"github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -26,10 +27,15 @@ type BuilderPlugin struct {
 }
 
 func (p *BuilderPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterBuilderServer(s, &builderServer{
-		Impl:    p.Impl,
+	base := &base{
 		Mappers: p.Mappers,
 		Logger:  p.Logger,
+		Broker:  broker,
+	}
+
+	proto.RegisterBuilderServer(s, &builderServer{
+		base: base,
+		Impl: p.Impl,
 	})
 	return nil
 }
@@ -40,16 +46,20 @@ func (p *BuilderPlugin) GRPCClient(
 	c *grpc.ClientConn,
 ) (interface{}, error) {
 	return &builderClient{
-		client: proto.NewBuilderClient(c),
-		logger: p.Logger,
+		client:  proto.NewBuilderClient(c),
+		logger:  p.Logger,
+		broker:  broker,
+		mappers: p.Mappers,
 	}, nil
 }
 
 // builderClient is an implementation of component.Builder that
 // communicates over gRPC.
 type builderClient struct {
-	client proto.BuilderClient
-	logger hclog.Logger
+	client  proto.BuilderClient
+	logger  hclog.Logger
+	broker  *plugin.GRPCBroker
+	mappers []*argmapper.Func
 }
 
 func (c *builderClient) Config() (interface{}, error) {
@@ -70,7 +80,14 @@ func (c *builderClient) BuildFunc() interface{} {
 	// We don't want to be a mapper
 	spec.Result = nil
 
-	return funcspec.Func(spec, c.build, argmapper.Logger(c.logger))
+	return funcspec.Func(spec, c.build,
+		argmapper.Logger(c.logger),
+		argmapper.Typed(&pluginargs.Internal{
+			Broker:  c.broker,
+			Mappers: c.mappers,
+			Cleanup: &pluginargs.Cleanup{},
+		}),
+	)
 }
 
 func (c *builderClient) build(
@@ -90,9 +107,9 @@ func (c *builderClient) build(
 // builderServer is a gRPC server that the client talks to and calls a
 // real implementation of the component.
 type builderServer struct {
-	Impl    component.Builder
-	Mappers []*argmapper.Func
-	Logger  hclog.Logger
+	*base
+
+	Impl component.Builder
 }
 
 func (s *builderServer) ConfigStruct(
@@ -115,17 +132,23 @@ func (s *builderServer) BuildSpec(
 ) (*proto.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.BuildFunc(),
 		argmapper.Logger(s.Logger),
-		argmapper.ConverterFunc(s.Mappers...))
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Typed(s.internal()),
+	)
 }
 
 func (s *builderServer) Build(
 	ctx context.Context,
 	args *proto.FuncSpec_Args,
 ) (*proto.Build_Resp, error) {
+	internal := s.internal()
+	defer internal.Cleanup.Close()
+
 	encoded, err := callDynamicFuncAny2(s.Impl.BuildFunc(), args.Args,
-		argmapper.Typed(ctx),
 		argmapper.ConverterFunc(s.Mappers...),
 		argmapper.Logger(s.Logger),
+		argmapper.Typed(ctx),
+		argmapper.Typed(internal),
 	)
 	if err != nil {
 		return nil, err
