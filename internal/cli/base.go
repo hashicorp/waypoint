@@ -57,8 +57,12 @@ type baseCommand struct {
 	// though and use the DoApp function.
 	app string
 
-	// flagLabels are set via -label if flagSetLabel is set.
+	// flagLabels are set via -label if flagSetOperation is set.
 	flagLabels map[string]string
+
+	// flagRemote is whether to execute using a remote runner or use
+	// a local runner.
+	flagRemote bool
 
 	// flagWorkspace is the workspace to work in.
 	flagWorkspace string
@@ -115,9 +119,8 @@ func (c *baseCommand) Init(opts ...Option) error {
 			return err
 		}
 
-		// Create our client
-		c.project, err = clientpkg.New(
-			clientpkg.WithLocal(),
+		// Start building our client options
+		opts := []clientpkg.Option{
 			clientpkg.WithLogger(c.Log),
 			clientpkg.WithClientConnect(
 				serverclient.FromEnv(),
@@ -130,13 +133,33 @@ func (c *baseCommand) Init(opts ...Option) error {
 				Workspace: c.flagWorkspace,
 			}),
 			clientpkg.WithLabels(c.flagLabels),
-		)
+		}
+		if !c.flagRemote {
+			opts = append(opts, clientpkg.WithLocal())
+		}
+
+		// Create our client
+		c.project, err = clientpkg.New(opts...)
 		if err != nil {
 			c.logError(c.Log, "failed to create client", err)
 			return err
 		}
 	} else {
 		c.Log.Debug("no waypoint configuration file, no project configured")
+	}
+
+	// Validate remote vs. local operations.
+	if c.flagRemote {
+		if c.cfg.Runner == nil || !c.cfg.Runner.Enabled {
+			err := errors.New(
+				"The `-remote` flag was specified but remote operations are not supported\n" +
+					"for this project.\n\n" +
+					"Remote operations must be manually enabled by using setting the 'runner.enabled'\n" +
+					"setting in your Waypoint configuration file. Please see the documentation\n" +
+					"on this setting for more information.")
+			c.logError(c.Log, "", err)
+			return err
+		}
 	}
 
 	// If this is a single app mode then make sure that we only have
@@ -202,7 +225,11 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 // logError logs an error and outputs it to the UI.
 func (c *baseCommand) logError(log hclog.Logger, prefix string, err error) {
 	log.Error(prefix, "error", err)
-	c.ui.Output("%s: %s", prefix, err, terminal.WithErrorStyle())
+
+	if prefix != "" {
+		prefix += ": "
+	}
+	c.ui.Output("%s%s", prefix, err, terminal.WithErrorStyle())
 }
 
 // flagSet creates the flags for this command. The callback should be used
@@ -219,12 +246,20 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		})
 	}
 
-	if bit&flagSetLabel != 0 {
-		f := set.NewSet("Common Options")
+	if bit&flagSetOperation != 0 {
+		f := set.NewSet("Operation Options")
 		f.StringMapVar(&flag.StringMapVar{
 			Name:   "label",
 			Target: &c.flagLabels,
 			Usage:  "Labels to set for this operation. Can be specified multiple times.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "remote",
+			Target:  &c.flagRemote,
+			Default: false,
+			Usage: "True to use a remote runner to execute. This defaults to false \n" +
+				"unless 'runner.default' is set in your configuration.",
 		})
 	}
 
@@ -240,8 +275,8 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 type flagSetBit uint
 
 const (
-	flagSetNone  flagSetBit = 1 << iota
-	flagSetLabel            // can set labels
+	flagSetNone      flagSetBit = 1 << iota
+	flagSetOperation            // shared flags for operations (build, deploy, etc)
 )
 
 var (
