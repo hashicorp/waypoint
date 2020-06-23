@@ -90,9 +90,9 @@ func (ui *jobUI) Output(msg string, raw ...interface{}) {
 
 	// Write to our buffer
 	var buf bytes.Buffer
-	ui.real.Output(msg, append([]interface{}{
+	ui.real.Output(msg, append(raw,
 		terminal.WithWriter(&buf),
-	}, raw...))
+	)...)
 
 	// Scan and construct lines
 	var lines []*pb.GetJobStreamResponse_Terminal_Line
@@ -176,6 +176,12 @@ func (ui *jobUI) sendLines(lines []*pb.GetJobStreamResponse_Terminal_Line) {
 	if ui.closed {
 		ui.logger.Warn("output after close, dropping")
 		return
+	}
+
+	if ui.logger.IsTrace() {
+		for _, line := range lines {
+			ui.logger.Trace("job output", "line", line.Raw)
+		}
 	}
 
 	if err := ui.client.Send(&pb.RunnerJobStreamRequest{

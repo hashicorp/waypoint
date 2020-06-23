@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"errors"
-	"os"
 	"sync"
 	"sync/atomic"
 
@@ -13,7 +12,6 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
 var ErrClosed = errors.New("runner is closed")
@@ -150,22 +148,9 @@ func (r *Runner) closed() bool {
 	return atomic.LoadInt32(&r.closedVal) > 0
 }
 
-type config struct {
-	ServerAddr     string
-	ServerInsecure bool
-}
+type config struct{}
 
 type Option func(*Runner, *config) error
-
-// WithEnvDefaults sets configuration values based on well-known accepted
-// environment variables. Not all configuration can be set this way.
-func WithEnvDefaults() Option {
-	return func(r *Runner, cfg *config) error {
-		cfg.ServerAddr = os.Getenv(serverclient.EnvServerAddr)
-		cfg.ServerInsecure = os.Getenv(serverclient.EnvServerInsecure) != ""
-		return nil
-	}
-}
 
 // WithClient sets the client directly. In this case, the runner won't
 // attempt any connection at all regardless of other configuration (env
