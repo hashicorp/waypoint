@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -110,6 +111,7 @@ func (c *Project) queueAndStreamJob(
 	}
 
 	// Process events
+	var stateEventTimer *time.Timer
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
@@ -143,8 +145,38 @@ func (c *Project) queueAndStreamJob(
 				ui.Output(line.Line)
 			}
 
+		case *pb.GetJobStreamResponse_State_:
+			// Stop any state event timers if we have any since the state
+			// has changed and we don't want to output that information anymore.
+			if stateEventTimer != nil {
+				stateEventTimer.Stop()
+				stateEventTimer = nil
+			}
+
+			// For certain states, we do a quality of life UI message if
+			// the wait time ends up being long.
+			switch event.State.Current {
+			case pb.Job_QUEUED:
+				stateEventTimer = time.AfterFunc(stateEventPause, func() {
+					ui.Output("Operation is queued. Waiting for runner assignment...",
+						terminal.WithHeaderStyle())
+					ui.Output("If you interrupt this command, the job will still run in the background.",
+						terminal.WithStatusStyle())
+				})
+
+			case pb.Job_WAITING:
+				stateEventTimer = time.AfterFunc(stateEventPause, func() {
+					ui.Output("Operation is assigned to a runner. Waiting for start...",
+						terminal.WithHeaderStyle())
+					ui.Output("If you interrupt this command, the job will still run in the background.",
+						terminal.WithStatusStyle())
+				})
+			}
+
 		default:
 			log.Warn("unknown stream event", "event", resp.Event)
 		}
 	}
 }
+
+const stateEventPause = 1500 * time.Millisecond
