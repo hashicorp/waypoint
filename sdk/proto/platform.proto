@@ -10,9 +10,9 @@ import "plugin.proto";
 
 // Platform is responsible for deploying an artifact that is in a registry.
 service Platform {
+  rpc IsAuthenticator(google.protobuf.Empty) returns (ImplementsResp);
   rpc Auth(FuncSpec.Args) returns (google.protobuf.Empty);
   rpc AuthSpec(google.protobuf.Empty) returns (FuncSpec);
-
   rpc ValidateAuth(FuncSpec.Args) returns (google.protobuf.Empty);
   rpc ValidateAuthSpec(google.protobuf.Empty) returns (FuncSpec);
 

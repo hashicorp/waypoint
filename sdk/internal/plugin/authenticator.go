@@ -18,6 +18,7 @@ import (
 // authenticatorClient is the interface implemented by all gRPC services that
 // have the authenticator RPC methods.
 type authenticatorProtoClient interface {
+	IsAuthenticator(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.ImplementsResp, error)
 	Auth(context.Context, *pb.FuncSpec_Args, ...grpc.CallOption) (*empty.Empty, error)
 	ValidateAuth(context.Context, *pb.FuncSpec_Args, ...grpc.CallOption) (*empty.Empty, error)
 	AuthSpec(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.FuncSpec, error)
@@ -31,6 +32,15 @@ type authenticatorClient struct {
 	Logger  hclog.Logger
 	Broker  *plugin.GRPCBroker
 	Mappers []*argmapper.Func
+}
+
+func (c *authenticatorClient) Implements(ctx context.Context) (bool, error) {
+	resp, err := c.Client.IsAuthenticator(ctx, &empty.Empty{})
+	if err != nil {
+		return false, err
+	}
+
+	return resp.Implements, nil
 }
 
 func (c *authenticatorClient) AuthFunc() interface{} {
@@ -97,6 +107,14 @@ func (c *authenticatorClient) validateAuth(
 type authenticatorServer struct {
 	*base
 	Impl interface{}
+}
+
+func (s *destroyerServer) IsAuthenticator(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*pb.ImplementsResp, error) {
+	_, ok := s.Impl.(component.Authenticator)
+	return &pb.ImplementsResp{Implements: ok}, nil
 }
 
 func (s *authenticatorServer) AuthSpec(
