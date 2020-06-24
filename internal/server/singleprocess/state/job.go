@@ -115,6 +115,9 @@ type jobIndex struct {
 	// State is the current state of this job.
 	State pb.Job_State
 
+	// Components required for this job
+	Components []*pb.Ref_Component
+
 	// OutputBuffer stores the terminal output
 	OutputBuffer *logbuffer.Buffer
 }
@@ -188,8 +191,11 @@ RETRY_ASSIGN:
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 
+	// Turn our runner into a runner record so we can more efficiently assign
+	runnerRec := newRunnerRecord(r)
+
 	// candidateQuery finds candidate jobs to assign.
-	type candidateFunc func(*memdb.Txn, *pb.Runner) (*jobIndex, error)
+	type candidateFunc func(*memdb.Txn, *runnerRecord) (*jobIndex, error)
 	candidateQuery := []candidateFunc{
 		s.jobCandidateById,
 		s.jobCandidateAny,
@@ -205,7 +211,7 @@ RETRY_ASSIGN:
 	// Build the list of candidates
 	var candidates []*jobIndex
 	for _, f := range candidateQuery {
-		job, err := f(txn, r)
+		job, err := f(txn, runnerRec)
 		if err != nil {
 			return nil, err
 		}
@@ -471,17 +477,22 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 			// We're out of candidates and we found none.
 			return false, nil
 		}
-		runner := raw.(*pb.Runner)
+		runner := raw.(*runnerRecord)
 
 		// Check our target-specific check
 		if targetCheck != nil {
-			check, err := targetCheck(runner)
+			check, err := targetCheck(runner.Runner)
 			if err != nil {
 				return false, err
 			}
 			if !check {
 				continue
 			}
+		}
+
+		// If the components don't match, then we can't assign
+		if !runner.MatchComponentRefs(jobpb.Components) {
+			continue
 		}
 
 		// This works!
@@ -508,8 +519,9 @@ func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 // jobIndexSet writes an index record for a single job.
 func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 	rec := &jobIndex{
-		Id:    jobpb.Id,
-		State: jobpb.State,
+		Id:         jobpb.Id,
+		State:      jobpb.State,
+		Components: jobpb.Components,
 	}
 
 	// Target
@@ -594,7 +606,7 @@ func (s *State) jobReadAndUpdate(id string, f func(*pb.Job) error) (*pb.Job, err
 
 // jobCandidateById returns the most promising candidate job to assign
 // that is targeting a specific runner by ID.
-func (s *State) jobCandidateById(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, error) {
+func (s *State) jobCandidateById(memTxn *memdb.Txn, r *runnerRecord) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobTargetIdIndexName,
@@ -616,6 +628,9 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, er
 		if job.State != pb.Job_QUEUED || job.TargetRunnerId == "" {
 			continue
 		}
+		if !r.MatchComponentRefs(job.Components) {
+			continue
+		}
 
 		return job, nil
 	}
@@ -624,7 +639,7 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, er
 }
 
 // jobCandidateAny returns the first candidate job that targets any runner.
-func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, error) {
+func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *runnerRecord) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobQueueTimeIndexName,
@@ -643,6 +658,9 @@ func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, err
 
 		job := raw.(*jobIndex)
 		if job.State != pb.Job_QUEUED || !job.TargetAny {
+			continue
+		}
+		if !r.MatchComponentRefs(job.Components) {
 			continue
 		}
 
