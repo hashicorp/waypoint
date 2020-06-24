@@ -116,13 +116,15 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// configured for the application. In the future we probably want to
 	// have an API for the server to note some "advertise addr" that may
 	// be different for applications.
-	p.dconfig = component.DeploymentConfig{
-		ServerAddr:     opts.Config.Server.Address,
-		ServerInsecure: opts.Config.Server.Insecure,
-	}
+	if opts.Config.Server != nil {
+		p.dconfig = component.DeploymentConfig{
+			ServerAddr:     opts.Config.Server.Address,
+			ServerInsecure: opts.Config.Server.Insecure,
+		}
 
-	if v := opts.Config.Server.AddressInternal; v != "" {
-		p.dconfig.ServerAddr = v
+		if v := opts.Config.Server.AddressInternal; v != "" {
+			p.dconfig.ServerAddr = v
+		}
 	}
 
 	// Initialize all the applications and load all their components.
