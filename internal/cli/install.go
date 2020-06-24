@@ -41,7 +41,7 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	out, _, err := c.ui.OutputWriters()
+	out, stderr, err := c.ui.OutputWriters()
 	if err != nil {
 		panic(err)
 	}
@@ -58,6 +58,7 @@ func (c *InstallCommand) Run(args []string) int {
 	cmd := exec.Command("kubectl", "create", "-f", "-")
 	cmd.Stdin = strings.NewReader(output)
 	cmd.Stdout = out
+	cmd.Stderr = stderr
 
 	err = cmd.Run()
 	if err != nil {
