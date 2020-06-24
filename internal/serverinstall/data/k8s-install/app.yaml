@@ -19,29 +19,32 @@ spec:
   type: LoadBalancer
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: waypoint-server
   namespace: {{ .Namespace }}
   labels:
     app: waypoint-server
 spec:
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app: waypoint-server
+  serviceName: waypoint-server
   template:
     metadata:
       labels:
         app: waypoint-server
     spec:
+      {{ if .ImagePullSecret -}}
+      imagePullSecrets:
+      - name: {{ .ImagePullSecret }}
+      {{- end }}
       containers:
       - name: server
         image: {{ .ServerImage }}
         imagePullPolicy: IfNotPresent
         command:
-        - "/waypoint"
+        - "waypoint"
         args:
         - server
         - -vvv
@@ -60,18 +63,12 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /data
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: waypoint-server-pvc
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: waypoint-server-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+
