@@ -53,6 +53,11 @@ service Waypoint {
   // GetJob queries a job by ID.
   rpc GetJob(GetJobRequest) returns (Job);
 
+  // ValidateJob checks if a job appears valid. This will check the job
+  // structure itself (i.e. missing fields) and can also check to ensure
+  // the job is assignable to a runner.
+  rpc ValidateJob(ValidateJobRequest) returns (ValidateJobResponse);
+
   // GetJobStream opens a job event stream for a running job. This can be
   // used to listen for terminal output and other events of a running job.
   // Multiple listeners can open a job stream.
@@ -273,6 +278,32 @@ message QueueJobResponse {
   // the job ID that was queued. This can be used with other RPC methods
   // to check on the status, cancel, etc.
   string job_id = 1;
+}
+
+message ValidateJobRequest {
+  // The job to validate.
+  Job job = 1;
+
+  // If true, will NOT validate that the job is assignable.
+  bool disable_assign = 2;
+}
+
+message ValidateJobResponse {
+  // valid will be true if the job structure is valid. If it is invalid
+  // validation_error will be set with a reason.
+  bool valid = 1;
+  google.rpc.Status validation_error = 2;
+
+  // assignable will be true if the job is assignable at this point-in-time.
+  // Assignable means that there are runners registered with the server that
+  // claim to be able to service this job. Note that this is a point-in-time
+  // result so it doesn't guarantee that a job will be serviced when queued.
+  // Additionally, assignability doesn't imply anything about queue length,
+  // so the job may still be queued for some time.
+  //
+  // This will always be false if "valid" is false since we don't check
+  // assignability of invalid jobs.
+  bool assignable = 3;
 }
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.

@@ -350,3 +350,119 @@ func TestJobComplete(t *testing.T) {
 		require.Contains(st.Message(), "bad")
 	})
 }
+
+func TestJobIsAssignable(t *testing.T) {
+	t.Run("no runners", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		}))
+		require.NoError(err)
+		require.False(result)
+	})
+
+	t.Run("any target, runners exist", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Register a runner
+		require.NoError(s.RunnerCreate(serverptypes.TestRunner(t, nil)))
+
+		// Should be assignable
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Any{
+					Any: &pb.Ref_RunnerAny{},
+				},
+			},
+		}))
+		require.NoError(err)
+		require.True(result)
+	})
+
+	t.Run("any target, runners ByIdOnly", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Register a runner
+		require.NoError(s.RunnerCreate(serverptypes.TestRunner(t, &pb.Runner{
+			ByIdOnly: true,
+		})))
+
+		// Should be assignable
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Any{
+					Any: &pb.Ref_RunnerAny{},
+				},
+			},
+		}))
+		require.NoError(err)
+		require.False(result)
+	})
+
+	t.Run("ID target, no match", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Register a runner
+		require.NoError(s.RunnerCreate(serverptypes.TestRunner(t, nil)))
+
+		// Should be assignable
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Id{
+					Id: &pb.Ref_RunnerId{
+						Id: "R_A",
+					},
+				},
+			},
+		}))
+		require.NoError(err)
+		require.False(result)
+	})
+
+	t.Run("ID target, match", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Register a runner
+		runner := serverptypes.TestRunner(t, nil)
+		require.NoError(s.RunnerCreate(runner))
+
+		// Should be assignable
+		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Id{
+					Id: &pb.Ref_RunnerId{
+						Id: runner.Id,
+					},
+				},
+			},
+		}))
+		require.NoError(err)
+		require.True(result)
+	})
+}

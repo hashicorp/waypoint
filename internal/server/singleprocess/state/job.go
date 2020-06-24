@@ -420,6 +420,75 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 	return nil
 }
 
+// JobIsAssignable returns whether there is a registered runner that
+// meets the requirements to run this job.
+//
+// If this returns true, the job if queued should eventually be assigned
+// successfully to a runner. An assignable result does NOT mean that it will be
+// in queue a short amount of time.
+//
+// Note the result is a point-in-time result. If the only candidate runners
+// deregister between this returning true and queueing, the job may still
+// sit in a queue indefinitely.
+func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	// If we have no runners, we cannot be assigned
+	empty, err := s.runnerEmpty(memTxn)
+	if err != nil {
+		return false, err
+	}
+	if empty {
+		return false, nil
+	}
+
+	// If we have a special targeting constraint, that has to be met
+	var iter memdb.ResultIterator
+	var targetCheck func(*pb.Runner) (bool, error)
+	switch v := jobpb.TargetRunner.Target.(type) {
+	case *pb.Ref_Runner_Any:
+		// We need a special target check that disallows by ID only
+		targetCheck = func(r *pb.Runner) (bool, error) {
+			return !r.ByIdOnly, nil
+		}
+
+		iter, err = memTxn.LowerBound(runnerTableName, runnerIdIndexName, "")
+
+	case *pb.Ref_Runner_Id:
+		iter, err = memTxn.Get(runnerTableName, runnerIdIndexName, v.Id.Id)
+
+	default:
+		return false, fmt.Errorf("unknown runner target value: %#v", jobpb.TargetRunner.Target)
+	}
+	if err != nil {
+		return false, err
+	}
+
+	for {
+		raw := iter.Next()
+		if raw == nil {
+			// We're out of candidates and we found none.
+			return false, nil
+		}
+		runner := raw.(*pb.Runner)
+
+		// Check our target-specific check
+		if targetCheck != nil {
+			check, err := targetCheck(runner)
+			if err != nil {
+				return false, err
+			}
+			if !check {
+				continue
+			}
+		}
+
+		// This works!
+		return true, nil
+	}
+}
+
 // jobIndexInit initializes the config index from persisted data.
 func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	bucket := dbTxn.Bucket(jobBucket)

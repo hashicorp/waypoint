@@ -43,6 +43,46 @@ func TestServiceQueueJob(t *testing.T) {
 	})
 }
 
+func TestServiceValidateJob(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(testDB(t))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Simplify writing tests
+	type Req = pb.ValidateJobRequest
+
+	t.Run("validate success, not assignable", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.ValidateJob(ctx, &Req{
+			Job: serverptypes.TestJobNew(t, nil),
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.True(resp.Valid)
+		require.False(resp.Assignable)
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		job := serverptypes.TestJobNew(t, nil)
+		job.Id = "HELLO"
+		resp, err := client.ValidateJob(ctx, &Req{
+			Job: job,
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.False(resp.Valid)
+		require.False(resp.Assignable)
+	})
+}
+
 func TestServiceGetJobStream_complete(t *testing.T) {
 	ctx := context.Background()
 	require := require.New(t)

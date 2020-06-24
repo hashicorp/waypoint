@@ -1,6 +1,10 @@
 package ptypes
 
 import (
+	"errors"
+	"reflect"
+
+	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
@@ -28,10 +32,33 @@ func TestJobNew(t testing.T, src *pb.Job) *pb.Job {
 				Any: &pb.Ref_RunnerAny{},
 			},
 		},
+		DataSource: &pb.Job_Local_{
+			Local: &pb.Job_Local{},
+		},
 		Operation: &pb.Job_Noop_{
 			Noop: &pb.Job_Noop{},
 		},
 	}))
 
 	return src
+}
+
+// ValidateJob validates the job structure.
+func ValidateJob(job *pb.Job) error {
+	return validation.ValidateStruct(job,
+		validation.Field(&job.Id, validation.By(isEmpty)),
+		validation.Field(&job.Application, validation.Required),
+		validation.Field(&job.Workspace, validation.Required),
+		validation.Field(&job.TargetRunner, validation.Required),
+		validation.Field(&job.DataSource, validation.Required),
+		validation.Field(&job.Operation, validation.Required),
+	)
+}
+
+func isEmpty(v interface{}) error {
+	if reflect.ValueOf(v).IsZero() {
+		return nil
+	}
+
+	return errors.New("must be empty")
 }
