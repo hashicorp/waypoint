@@ -72,3 +72,13 @@ func (s *State) RunnerById(id string) (*pb.Runner, error) {
 
 	return raw.(*pb.Runner), nil
 }
+
+// runnerEmpty returns true if there are no runners registered.
+func (s *State) runnerEmpty(memTxn *memdb.Txn) (bool, error) {
+	iter, err := memTxn.LowerBound(runnerTableName, runnerIdIndexName, "")
+	if err != nil {
+		return false, err
+	}
+
+	return iter.Next() == nil, nil
+}
