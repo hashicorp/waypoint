@@ -41,15 +41,15 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	out, stderr, err := c.ui.OutputWriters()
+	stdout, stderr, err := c.ui.OutputWriters()
 	if err != nil {
 		panic(err)
 	}
 
 	if c.showYaml {
-		fmt.Fprint(out, output)
+		fmt.Fprint(stdout, output)
 		if output[:len(output)-1] != "\n" {
-			fmt.Fprint(out, "\n")
+			fmt.Fprint(stdout, "\n")
 		}
 
 		return 0
@@ -57,7 +57,7 @@ func (c *InstallCommand) Run(args []string) int {
 
 	cmd := exec.Command("kubectl", "create", "-f", "-")
 	cmd.Stdin = strings.NewReader(output)
-	cmd.Stdout = out
+	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
 	err = cmd.Run()
