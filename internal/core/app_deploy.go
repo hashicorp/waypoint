@@ -69,7 +69,7 @@ func (op *deployOperation) Upsert(
 	return resp.Deployment, nil
 }
 
-func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App) (interface{}, error) {
+func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	dconfig := *op.DeploymentConfig
 	dconfig.Id = op.id
 

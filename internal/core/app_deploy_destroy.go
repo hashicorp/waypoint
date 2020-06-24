@@ -52,7 +52,7 @@ func (op *deployDestroyOperation) Upsert(
 	return resp.Deployment, nil
 }
 
-func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App) (interface{}, error) {
+func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	destroyer := app.Platform.(component.Destroyer)
 
 	return app.callDynamicFunc(ctx,

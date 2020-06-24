@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 
-	"github.com/go-ozzo/ozzo-validation/v4"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
@@ -105,7 +105,7 @@ func (op *pushBuildOperation) Upsert(
 	return resp.Artifact, nil
 }
 
-func (op *pushBuildOperation) Do(ctx context.Context, log hclog.Logger, app *App) (interface{}, error) {
+func (op *pushBuildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	// If we have no registry, we just push the local build.
 	if app.Registry == nil {
 		return op.Build.Artifact.Artifact, nil

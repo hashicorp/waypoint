@@ -26,7 +26,10 @@ type operation interface {
 	// Do performs the actual operation and returns the result that you
 	// want to return from the operation. This result will be marshaled into
 	// the ValuePtr if it implements ProtoMarshaler.
-	Do(context.Context, hclog.Logger, *App) (interface{}, error)
+	// Do can alter the proto.Message into it's final form, as it's the value
+	// returned by Init and that will be written back via Upsert after Do
+	// has completed.
+	Do(context.Context, hclog.Logger, *App, proto.Message) (interface{}, error)
 
 	// StatusPtr and ValuePtr return pointers to the fields in the message
 	// for the status and values respectively.
@@ -80,7 +83,7 @@ func (a *App) doOperation(
 
 	// Run the function
 	log.Debug("running local operation")
-	result, doErr := op.Do(ctx, log, a)
+	result, doErr := op.Do(ctx, log, a, msg)
 	if doErr == nil {
 		// No error, our state is success
 		server.StatusSetSuccess(*statusPtr)

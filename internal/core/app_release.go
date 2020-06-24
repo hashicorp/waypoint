@@ -74,7 +74,7 @@ func (op *releaseOperation) Upsert(
 	return resp.Release, nil
 }
 
-func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App) (interface{}, error) {
+func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
 	result, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Release)(nil),
@@ -87,6 +87,10 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App) 
 	}
 
 	op.result = result.(component.Release)
+
+	rm := msg.(*pb.Release)
+	rm.Url = op.result.URL()
+
 	return result, nil
 }
 
