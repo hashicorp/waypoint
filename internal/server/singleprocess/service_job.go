@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -40,8 +41,8 @@ func (s *service) QueueJob(
 	if job == nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "job must be set")
 	}
-	if job.Id != "" {
-		return nil, status.Errorf(codes.FailedPrecondition, "id must not be set")
+	if err := serverptypes.ValidateJob(job); err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 	}
 
 	// Get the next id
@@ -57,6 +58,29 @@ func (s *service) QueueJob(
 	}
 
 	return &pb.QueueJobResponse{JobId: job.Id}, nil
+}
+
+func (s *service) ValidateJob(
+	ctx context.Context,
+	req *pb.ValidateJobRequest,
+) (*pb.ValidateJobResponse, error) {
+	var err error
+	result := &pb.ValidateJobResponse{Valid: true}
+
+	// Struct validation
+	if err := serverptypes.ValidateJob(req.Job); err != nil {
+		result.Valid = false
+		result.ValidationError = status.New(codes.FailedPrecondition, err.Error()).Proto()
+		return result, nil
+	}
+
+	// Check assignability
+	result.Assignable, err = s.state.JobIsAssignable(ctx, req.Job)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (s *service) GetJobStream(
