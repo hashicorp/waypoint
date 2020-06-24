@@ -119,6 +119,7 @@ func (s *service) GetJobStream(
 	}()
 
 	// Enter the event loop
+	var lastState pb.Job_State
 	var linesCh <-chan []*pb.GetJobStreamResponse_Terminal_Line
 	for {
 		select {
@@ -130,6 +131,23 @@ func (s *service) GetJobStream(
 
 		case job := <-jobCh:
 			log.Debug("job state change", "state", job.State)
+
+			// If we have a state change, send that event down.
+			if lastState != job.State {
+				if err := server.Send(&pb.GetJobStreamResponse{
+					Event: &pb.GetJobStreamResponse_State_{
+						State: &pb.GetJobStreamResponse_State{
+							Previous: lastState,
+							Current:  job.State,
+							Job:      job.Job,
+						},
+					},
+				}); err != nil {
+					return err
+				}
+
+				lastState = job.State
+			}
 
 			// If we haven't initialized output streaming and the output buffer
 			// is now non-nil, initialize that. This will send any buffered

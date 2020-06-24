@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
+	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
 	"github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -26,10 +27,15 @@ type ReleaseManagerPlugin struct {
 }
 
 func (p *ReleaseManagerPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
-	proto.RegisterReleaseManagerServer(s, &releaseManagerServer{
-		Impl:    p.Impl,
+	base := &base{
 		Mappers: p.Mappers,
 		Logger:  p.Logger,
+		Broker:  broker,
+	}
+
+	proto.RegisterReleaseManagerServer(s, &releaseManagerServer{
+		base: base,
+		Impl: p.Impl,
 	})
 	return nil
 }
@@ -40,16 +46,20 @@ func (p *ReleaseManagerPlugin) GRPCClient(
 	c *grpc.ClientConn,
 ) (interface{}, error) {
 	return &releaseManagerClient{
-		client: proto.NewReleaseManagerClient(c),
-		logger: p.Logger,
+		client:  proto.NewReleaseManagerClient(c),
+		logger:  p.Logger,
+		broker:  broker,
+		mappers: p.Mappers,
 	}, nil
 }
 
 // releaseManagerClient is an implementation of component.ReleaseManager that
 // communicates over gRPC.
 type releaseManagerClient struct {
-	client proto.ReleaseManagerClient
-	logger hclog.Logger
+	client  proto.ReleaseManagerClient
+	logger  hclog.Logger
+	broker  *plugin.GRPCBroker
+	mappers []*argmapper.Func
 }
 
 func (c *releaseManagerClient) Config() (interface{}, error) {
@@ -70,7 +80,14 @@ func (c *releaseManagerClient) ReleaseFunc() interface{} {
 	// We don't want to be a mapper
 	spec.Result = nil
 
-	return funcspec.Func(spec, c.build, argmapper.Logger(c.logger))
+	return funcspec.Func(spec, c.build,
+		argmapper.Logger(c.logger),
+		argmapper.Typed(&pluginargs.Internal{
+			Broker:  c.broker,
+			Mappers: c.mappers,
+			Cleanup: &pluginargs.Cleanup{},
+		}),
+	)
 }
 
 func (c *releaseManagerClient) build(
@@ -93,9 +110,9 @@ func (c *releaseManagerClient) build(
 // releaseManagerServer is a gRPC server that the client talks to and calls a
 // real implementation of the component.
 type releaseManagerServer struct {
-	Impl    component.ReleaseManager
-	Mappers []*argmapper.Func
-	Logger  hclog.Logger
+	*base
+
+	Impl component.ReleaseManager
 }
 
 func (s *releaseManagerServer) ConfigStruct(
@@ -118,16 +135,23 @@ func (s *releaseManagerServer) ReleaseSpec(
 ) (*proto.FuncSpec, error) {
 	return funcspec.Spec(s.Impl.ReleaseFunc(),
 		argmapper.ConverterFunc(s.Mappers...),
-		argmapper.Logger(s.Logger))
+		argmapper.Logger(s.Logger),
+		argmapper.Typed(s.internal()),
+	)
 }
 
 func (s *releaseManagerServer) Release(
 	ctx context.Context,
 	args *proto.FuncSpec_Args,
 ) (*proto.Release_Resp, error) {
+	internal := s.internal()
+	defer internal.Cleanup.Close()
+
 	raw, err := callDynamicFunc2(s.Impl.ReleaseFunc(), args.Args,
-		argmapper.Typed(ctx),
 		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger),
+		argmapper.Typed(ctx),
+		argmapper.Typed(internal),
 	)
 	if err != nil {
 		return nil, err

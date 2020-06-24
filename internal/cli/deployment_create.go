@@ -81,7 +81,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 }
 
 func (c *DeploymentCreateCommand) Flags() *flag.Sets {
-	return c.flagSet(flagSetLabel, func(set *flag.Sets) {
+	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
 			Name:    "release",

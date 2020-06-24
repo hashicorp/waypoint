@@ -438,11 +438,14 @@ message GetJobStreamResponse {
     // sent first followed immediately by a Complete.
     Open open = 1;
 
+    // state is sent when there is a job state change event.
+    State state = 2;
+
     // terminal output. On initial connection, the server may send buffered
     // historical terminal data so there isn't a race between queueing a job
     // and getting its first byte output. You can determine this based on the
     // flag on Terminal.
-    Terminal terminal = 2;
+    Terminal terminal = 3;
 
     // an error regarding the stream itself, rather than the executing job.
     // For example, if you request a job stream for an invalid job ID,
@@ -450,15 +453,26 @@ message GetJobStreamResponse {
     // be sent and the stream is terminated.
     //
     // For errors in job execution, see "complete".
-    Error error = 3;
+    Error error = 4;
 
     // job completion, no more events will follow this one. This can be
     // both success or failure, the event must be checked. Any errors
     // in complete are errors from the job execution itself.
-    Complete complete = 4;
+    Complete complete = 5;
   }
 
   message Open {}
+
+  message State {
+    // previous and current are the previous and current states, respectively.
+    Job.State previous = 1;
+    Job.State current = 2;
+
+    // The full updated job is also sent because additional fields may be
+    // set depending on the state (such as the assigned runner, assignment
+    // times, etc.)
+    Job job = 3;
+  }
 
   message Terminal {
     // lines are each line of terminal output in order for this batch

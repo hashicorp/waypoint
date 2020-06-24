@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-argmapper"
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/internal-shared/pluginclient"
@@ -33,8 +33,12 @@ func init() {
 // plugin.
 func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 	return func(log hclog.Logger) (interface{}, error) {
+		// We have to copy the command because go-plugin will set some
+		// fields on it.
+		cmdCopy := *cmd
+
 		config := pluginclient.ClientConfig(log)
-		config.Cmd = cmd
+		config.Cmd = &cmdCopy
 		config.Logger = log
 
 		// Log that we're going to launch this

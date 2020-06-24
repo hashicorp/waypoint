@@ -34,6 +34,11 @@ func New(opts ...Option) (*Project, error) {
 	client := &Project{
 		UI:     &terminal.BasicUI{},
 		logger: hclog.L(),
+		runner: &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Any{
+				Any: &pb.Ref_RunnerAny{},
+			},
+		},
 	}
 
 	// Build our config

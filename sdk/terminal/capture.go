@@ -1,4 +1,4 @@
-package runner
+package terminal
 
 import (
 	"bufio"
@@ -8,20 +8,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
-
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
-// jobUI implements terminal.UI and streams the output to the job stream.
+// CaptureUI implements terminal.UI and captures the output, calling the
+// callback function with the output given. This allows the creator of
+// this UI to send the output elsewhere. This is used for example by Waypoint
+// runners to stream output to the server.
 //
 // The caller should call Close when done with the UI to clean up goroutines.
-type jobUI struct {
+type CaptureUI struct {
 	logger hclog.Logger
-	client pb.Waypoint_RunnerJobStreamClient
-	real   terminal.UI
+	real   UI
+
+	// callback is the callback to call when there is captured output.
+	// This is guaranteed to not be called concurrently.
+	callback CaptureCallback
 
 	// closed when true means this UI is closed. Status updates and
 	// outputs no longer work in this case. Setting this can only be done
@@ -41,19 +43,28 @@ type jobUI struct {
 	cancelFunc func()
 }
 
-// newJobUI creates a jobUI for the given job stream. The resulting UI will
+// CaptureCallback is the callback type for CaptureUI.
+type CaptureCallback func([]*CaptureLine) error
+
+// CaptureLine is a single line of output that was captured.
+type CaptureLine struct {
+	Line      string
+	Timestamp time.Time
+}
+
+// NewCaptureUI creates a CaptureUI for the given job stream. The resulting UI will
 // stream any output via the gRPC stream.
-func newJobUI(log hclog.Logger, client pb.Waypoint_RunnerJobStreamClient) *jobUI {
+func NewCaptureUI(log hclog.Logger, callback CaptureCallback) *CaptureUI {
 	// Build a context to cancel
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// Build our jobUI
+	// Build our CaptureUI
 	pr, pw := io.Pipe()
 	pwDoneCh := make(chan struct{})
-	result := &jobUI{
+	result := &CaptureUI{
 		logger:     log,
-		client:     client,
-		real:       &terminal.BasicUI{},
+		real:       &BasicUI{},
+		callback:   callback,
 		pw:         pw,
 		pwDoneCh:   pwDoneCh,
 		cancelFunc: cancel,
@@ -66,11 +77,18 @@ func newJobUI(log hclog.Logger, client pb.Waypoint_RunnerJobStreamClient) *jobUI
 	return result
 }
 
-func (ui *jobUI) Close() error {
+func (ui *CaptureUI) Close() error {
 	// Mark we're closed.
 	ui.sendLock.Lock()
+	if ui.closed {
+		ui.sendLock.Unlock()
+		return nil
+	}
 	ui.closed = true
 	ui.sendLock.Unlock()
+
+	// Close the writer end
+	ui.pw.Close()
 
 	// Cancel the stream
 	ui.cancelFunc()
@@ -78,28 +96,24 @@ func (ui *jobUI) Close() error {
 	// Wait for it to cancel
 	<-ui.pwDoneCh
 
-	// Close the writer end
-	ui.pw.Close()
-
 	return nil
 }
 
-func (ui *jobUI) Output(msg string, raw ...interface{}) {
+func (ui *CaptureUI) Output(msg string, raw ...interface{}) {
 	// Our timestamp for this is now
-	ts := ptypes.TimestampNow()
+	ts := time.Now()
 
 	// Write to our buffer
 	var buf bytes.Buffer
-	ui.real.Output(msg, append([]interface{}{
-		terminal.WithWriter(&buf),
-	}, raw...))
+	ui.real.Output(msg, append(raw,
+		WithWriter(&buf),
+	)...)
 
 	// Scan and construct lines
-	var lines []*pb.GetJobStreamResponse_Terminal_Line
+	var lines []*CaptureLine
 	scanner := bufio.NewScanner(&buf)
 	for scanner.Scan() {
-		lines = append(lines, &pb.GetJobStreamResponse_Terminal_Line{
-			Raw:       scanner.Text(),
+		lines = append(lines, &CaptureLine{
 			Line:      scanner.Text(),
 			Timestamp: ts,
 		})
@@ -113,15 +127,15 @@ func (ui *jobUI) Output(msg string, raw ...interface{}) {
 	ui.sendLines(lines)
 }
 
-func (ui *jobUI) OutputWriters() (io.Writer, io.Writer, error) {
+func (ui *CaptureUI) OutputWriters() (io.Writer, io.Writer, error) {
 	return ui.pw, ui.pw, nil
 }
 
-func (ui *jobUI) Status() terminal.Status {
-	return &jobStatus{UI: ui}
+func (ui *CaptureUI) Status() Status {
+	return &captureStatus{UI: ui}
 }
 
-func (ui *jobUI) streamOutputWriters(ctx context.Context, r *io.PipeReader, doneCh chan<- struct{}) {
+func (ui *CaptureUI) streamOutputWriters(ctx context.Context, r *io.PipeReader, doneCh chan<- struct{}) {
 	// Signal when we're done
 	defer close(doneCh)
 
@@ -129,20 +143,20 @@ func (ui *jobUI) streamOutputWriters(ctx context.Context, r *io.PipeReader, done
 	defer r.Close()
 
 	// We start a goroutine here that just streams lines to us.
-	linesCh := make(chan *pb.GetJobStreamResponse_Terminal_Line, 1)
+	linesCh := make(chan *CaptureLine, 1)
 	go func() {
+		defer close(linesCh)
 		scanner := bufio.NewScanner(r)
 		for scanner.Scan() {
-			linesCh <- &pb.GetJobStreamResponse_Terminal_Line{
-				Raw:       scanner.Text(),
+			linesCh <- &CaptureLine{
 				Line:      scanner.Text(),
-				Timestamp: ptypes.TimestampNow(),
+				Timestamp: time.Now(),
 			}
 		}
 	}()
 
 	// Accumulate lines
-	lines := make([]*pb.GetJobStreamResponse_Terminal_Line, 0, 64)
+	lines := make([]*CaptureLine, 0, 64)
 	for {
 		send := false
 		select {
@@ -150,56 +164,54 @@ func (ui *jobUI) streamOutputWriters(ctx context.Context, r *io.PipeReader, done
 			lines = append(lines, line)
 			send = len(lines) == cap(lines)
 
-		case <-time.After(1 * time.Second):
+		case <-time.After(100 * time.Millisecond):
 			send = len(lines) > 0
 
 		case <-ctx.Done():
+			// Drain our lines
+			for line := range linesCh {
+				lines = append(lines, line)
+			}
+
+			send = len(lines) > 0
+		}
+
+		// If we have lines to send, send them. Otherwise wait.
+		if send {
+			ui.sendLines(lines)
+			lines = lines[:0]
+		}
+
+		// If we're done, then exit
+		if ctx.Err() != nil {
 			return
 		}
-
-		// If we're not supposed to send lines, wait for more
-		if !send {
-			continue
-		}
-
-		// Send the lines
-		ui.sendLines(lines)
 	}
 }
 
-func (ui *jobUI) sendLines(lines []*pb.GetJobStreamResponse_Terminal_Line) {
-	ui.sendLock.Lock()
-	defer ui.sendLock.Unlock()
-
-	// If we're closed, we can't send any output because ui.client may be
-	// used for other things and its not thread-safe to write concurrently.
-	if ui.closed {
-		ui.logger.Warn("output after close, dropping")
-		return
+func (ui *CaptureUI) sendLines(lines []*CaptureLine) {
+	if ui.logger.IsTrace() {
+		for _, line := range lines {
+			ui.logger.Trace("captured output", "line", line.Line)
+		}
 	}
 
-	if err := ui.client.Send(&pb.RunnerJobStreamRequest{
-		Event: &pb.RunnerJobStreamRequest_Terminal{
-			Terminal: &pb.GetJobStreamResponse_Terminal{
-				Lines: lines,
-			},
-		},
-	}); err != nil {
+	if err := ui.callback(lines); err != nil {
 		ui.logger.Warn("error sending output line", "err", err)
 	}
 }
 
-// jobStatus implements terminal.Status to handle status updates over job streams.
+// captureStatus implements terminal.Status to handle status updates over job streams.
 //
 // This is extremely basic right now and just sends along raw lines via
 // the UI. We should make this better.
-type jobStatus struct {
-	UI *jobUI
+type captureStatus struct {
+	UI *CaptureUI
 
 	lastMsg string
 }
 
-func (s *jobStatus) Update(msg string) {
+func (s *captureStatus) Update(msg string) {
 	// Update is often called in a loop since the behavioral expectation
 	// is that it clears the line. We don't support that yet so we just
 	// make sure we're seeing change.
@@ -212,11 +224,11 @@ func (s *jobStatus) Update(msg string) {
 	s.UI.Output(msg)
 }
 
-func (s *jobStatus) Close() error {
+func (s *captureStatus) Close() error {
 	return nil
 }
 
 var (
-	_ terminal.UI     = (*jobUI)(nil)
-	_ terminal.Status = (*jobStatus)(nil)
+	_ UI     = (*CaptureUI)(nil)
+	_ Status = (*captureStatus)(nil)
 )

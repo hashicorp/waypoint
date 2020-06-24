@@ -2,11 +2,10 @@ package pluginclient
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-argmapper"
 
 	internalplugin "github.com/hashicorp/waypoint/sdk/internal/plugin"
 )
@@ -19,11 +18,6 @@ func ClientConfig(log hclog.Logger) *plugin.ClientConfig {
 		HandshakeConfig:  internalplugin.Handshake,
 		VersionedPlugins: internalplugin.Plugins(internalplugin.WithLogger(log)),
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
-
-		// Syncing is very important to enable. This causes the stdout/err
-		// of the plugin subprocesses to show up in our stdout/stderr.
-		SyncStdout: os.Stdout,
-		SyncStderr: os.Stderr,
 
 		// We always set managed to true just in case we don't properly
 		// call Kill so that CleanupClients gets it. If we do properly call

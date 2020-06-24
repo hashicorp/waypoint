@@ -436,6 +436,9 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 	}
 
 	// Target
+	if jobpb.TargetRunner == nil {
+		return fmt.Errorf("job target runner must be set")
+	}
 	switch v := jobpb.TargetRunner.Target.(type) {
 	case *pb.Ref_Runner_Any:
 		rec.TargetAny = true

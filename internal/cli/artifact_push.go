@@ -55,7 +55,7 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 }
 
 func (c *ArtifactPushCommand) Flags() *flag.Sets {
-	return c.flagSet(flagSetLabel, nil)
+	return c.flagSet(flagSetOperation, nil)
 }
 
 func (c *ArtifactPushCommand) AutocompleteArgs() complete.Predictor {
