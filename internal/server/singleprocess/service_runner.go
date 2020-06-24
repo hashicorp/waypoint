@@ -39,13 +39,11 @@ func (s *service) RunnerConfig(
 		return status.Errorf(codes.FailedPrecondition,
 			"expected open event, got %T", event)
 	}
+	record := req.Open.Runner
 
 	// Create our record
-	log = log.With("runner_id", req.Open.Id)
+	log = log.With("runner_id", record.Id)
 	log.Trace("registering runner")
-	record := &pb.Runner{
-		Id: req.Open.Id,
-	}
 	if err := s.state.RunnerCreate(record); err != nil {
 		return err
 	}

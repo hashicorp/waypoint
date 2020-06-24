@@ -31,7 +31,7 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client)
+	id, _ := TestRunner(t, client, nil)
 
 	// Start a job request
 	stream, err := client.RunnerJobStream(ctx)
@@ -119,7 +119,7 @@ func TestServiceRunnerJobStream_errorBeforeAck(t *testing.T) {
 	require.NotEmpty(queueResp.JobId)
 
 	// Register our runner
-	id, _ := TestRunner(t, client)
+	id, _ := TestRunner(t, client, nil)
 
 	// Start a job request
 	stream, err := client.RunnerJobStream(ctx)
