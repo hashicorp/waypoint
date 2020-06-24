@@ -17,3 +17,10 @@ app "wpmini" {
     port = 8080
   }
 }
+
+server {
+  address = "localhost:9701"
+  address_internal = "waypoint:9701"
+  insecure = true
+  require_auth = false
+}
