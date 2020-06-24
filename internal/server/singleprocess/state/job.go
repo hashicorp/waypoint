@@ -425,7 +425,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 //
 // If this returns true, the job if queued should eventually be assigned
 // successfully to a runner. An assignable result does NOT mean that it will be
-// a short queue.
+// in queue a short amount of time.
 //
 // Note the result is a point-in-time result. If the only candidate runners
 // deregister between this returning true and queueing, the job may still
