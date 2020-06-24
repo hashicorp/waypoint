@@ -146,6 +146,10 @@ func (r *Releaser) Release(
 		if ingress.Hostname != "" {
 			result.Url = "http://" + ingress.Hostname
 		}
+
+		if port != 80 {
+			result.Url = fmt.Sprintf("%s:%d", result.Url, port)
+		}
 	} else if service.Spec.Ports[0].NodePort > 0 {
 		nodeclient := clientset.CoreV1().Nodes()
 		nodes, err := nodeclient.List(ctx, metav1.ListOptions{})
