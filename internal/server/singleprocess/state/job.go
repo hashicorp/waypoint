@@ -189,9 +189,17 @@ RETRY_ASSIGN:
 	defer txn.Abort()
 
 	// candidateQuery finds candidate jobs to assign.
-	candidateQuery := []func(*memdb.Txn, *pb.Runner) (*jobIndex, error){
+	type candidateFunc func(*memdb.Txn, *pb.Runner) (*jobIndex, error)
+	candidateQuery := []candidateFunc{
 		s.jobCandidateById,
 		s.jobCandidateAny,
+	}
+
+	// If the runner is by id only, then explicitly set it to by id only.
+	// We explicitly set the full list so that if we add more candidate
+	// searches in the future, we're unlikely to break this.
+	if r.ByIdOnly {
+		candidateQuery = []candidateFunc{s.jobCandidateById}
 	}
 
 	// Build the list of candidates

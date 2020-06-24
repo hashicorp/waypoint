@@ -176,6 +176,45 @@ func TestJobAssign(t *testing.T) {
 			require.Equal("A", job.Id)
 		}
 	})
+
+	t.Run("any cannot be assigned to ByIdOnly runner", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		r := &pb.Runner{Id: "R_A", ByIdOnly: true}
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Should block because none direct assign
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		job, err := s.JobAssignForRunner(ctx, r)
+		require.Error(err)
+		require.Equal(ctx.Err(), err)
+
+		// Create a target
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "B",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Id{
+					Id: &pb.Ref_RunnerId{
+						Id: "R_A",
+					},
+				},
+			},
+		})))
+
+		// Assign it, we should get this build
+		job, err = s.JobAssignForRunner(context.Background(), r)
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("B", job.Id)
+	})
 }
 
 func TestJobAck(t *testing.T) {

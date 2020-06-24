@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/boltdb/bolt"
+	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 
@@ -59,9 +60,16 @@ func TestEntrypoint(t testing.T, client pb.WaypointClient) (string, string, func
 // TestRunner registers a runner and returns the ID and a function to
 // deregister the runner. This uses t.Cleanup so that the runner will always
 // be deregistered on test completion.
-func TestRunner(t testing.T, client pb.WaypointClient) (string, func()) {
+func TestRunner(t testing.T, client pb.WaypointClient, r *pb.Runner) (string, func()) {
 	require := require.New(t)
 	ctx := context.Background()
+
+	// Get the runner
+	if r == nil {
+		r = &pb.Runner{}
+	}
+	id, err := server.Id()
+	require.NoError(mergo.Merge(r, &pb.Runner{Id: id}))
 
 	// Open the config stream
 	stream, err := client.RunnerConfig(ctx)
@@ -69,12 +77,11 @@ func TestRunner(t testing.T, client pb.WaypointClient) (string, func()) {
 	t.Cleanup(func() { stream.CloseSend() })
 
 	// Register
-	id, err := server.Id()
 	require.NoError(err)
 	require.NoError(stream.Send(&pb.RunnerConfigRequest{
 		Event: &pb.RunnerConfigRequest_Open_{
 			Open: &pb.RunnerConfigRequest_Open{
-				Id: id,
+				Runner: r,
 			},
 		},
 	}))

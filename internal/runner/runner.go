@@ -42,6 +42,7 @@ type Runner struct {
 	client      pb.WaypointClient
 	ctx         context.Context
 	cleanupFunc func()
+	runner      *pb.Runner
 
 	closedVal int32
 	acceptWg  sync.WaitGroup
@@ -64,6 +65,7 @@ func New(opts ...Option) (*Runner, error) {
 		id:     id,
 		logger: hclog.L(),
 		ctx:    context.Background(),
+		runner: &pb.Runner{Id: id},
 	}
 
 	// Build our config
@@ -105,7 +107,7 @@ func (r *Runner) Start() error {
 	if err := client.Send(&pb.RunnerConfigRequest{
 		Event: &pb.RunnerConfigRequest_Open_{
 			Open: &pb.RunnerConfigRequest_Open{
-				Id: r.id,
+				Runner: r.runner,
 			},
 		},
 	}); err != nil {
@@ -167,6 +169,15 @@ func WithClient(client pb.WaypointClient) Option {
 func WithLogger(logger hclog.Logger) Option {
 	return func(r *Runner, cfg *config) error {
 		r.logger = logger
+		return nil
+	}
+}
+
+// ByIdOnly sets it so that only jobs that target this runner by specific
+// ID may be assigned.
+func ByIdOnly() Option {
+	return func(r *Runner, cfg *config) error {
+		r.runner.ByIdOnly = true
 		return nil
 	}
 }
