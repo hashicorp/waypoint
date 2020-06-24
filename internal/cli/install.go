@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os/exec"
 	"strings"
 
 	"github.com/posener/complete"
@@ -14,7 +15,8 @@ import (
 type InstallCommand struct {
 	*baseCommand
 
-	config serverinstall.Config
+	config   serverinstall.Config
+	showYaml bool
 }
 
 func (c *InstallCommand) Run(args []string) int {
@@ -39,14 +41,33 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	out, _, err := c.ui.OutputWriters()
+	stdout, stderr, err := c.ui.OutputWriters()
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Fprint(out, output)
-	if output[:len(output)-1] != "\n" {
-		fmt.Fprint(out, "\n")
+	if c.showYaml {
+		fmt.Fprint(stdout, output)
+		if output[:len(output)-1] != "\n" {
+			fmt.Fprint(stdout, "\n")
+		}
+
+		return 0
+	}
+
+	cmd := exec.Command("kubectl", "create", "-f", "-")
+	cmd.Stdin = strings.NewReader(output)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+
+	err = cmd.Run()
+	if err != nil {
+		c.ui.Output(
+			"Error executing kubectl: %s", err.Error(),
+			terminal.WithErrorStyle(),
+		)
+
+		return 1
 	}
 
 	return 0
@@ -73,13 +94,26 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Name:    "server-image",
 			Target:  &c.config.ServerImage,
 			Usage:   "Docker image for the server image.",
-			Default: "gcr.io/mitchellh-test/waypoint:latest",
+			Default: "docker.pkg.github.com/hashicorp/waypoint/alpha:latest",
 		})
 
 		f.StringMapVar(&flag.StringMapVar{
 			Name:   "annotate-service",
 			Target: &c.config.ServiceAnnotations,
 			Usage:  "Annotations for the Service generated.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "pull-secret",
+			Target:  &c.config.ImagePullSecret,
+			Usage:   "Secret to use to access the waypoint server image",
+			Default: "github",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "show-yaml",
+			Target: &c.showYaml,
+			Usage:  "Show the YAML to be send to the cluster.",
 		})
 	})
 }

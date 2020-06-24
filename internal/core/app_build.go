@@ -106,7 +106,7 @@ func (op *buildOperation) Upsert(
 	return resp.Build, nil
 }
 
-func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App) (interface{}, error) {
+func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	return app.callDynamicFunc(ctx,
 		log,
 		(*component.Artifact)(nil),
