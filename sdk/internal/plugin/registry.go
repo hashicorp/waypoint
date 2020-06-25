@@ -36,6 +36,11 @@ func (p *RegistryPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) e
 	proto.RegisterRegistryServer(s, &registryServer{
 		base: base,
 		Impl: p.Impl,
+
+		authenticatorServer: &authenticatorServer{
+			base: base,
+			Impl: p.Impl,
+		},
 	})
 	return nil
 }
@@ -45,12 +50,34 @@ func (p *RegistryPlugin) GRPCClient(
 	broker *plugin.GRPCBroker,
 	c *grpc.ClientConn,
 ) (interface{}, error) {
-	return &registryClient{
+	client := &registryClient{
 		client:  proto.NewRegistryClient(c),
 		logger:  p.Logger,
 		broker:  broker,
 		mappers: p.Mappers,
-	}, nil
+	}
+
+	authenticator := &authenticatorClient{
+		Client:  client.client,
+		Logger:  client.logger,
+		Broker:  client.broker,
+		Mappers: client.mappers,
+	}
+	if ok, err := authenticator.Implements(ctx); err != nil {
+		return nil, err
+	} else if ok {
+		p.Logger.Info("registry plugin capable of auth")
+	} else {
+		authenticator = nil
+	}
+
+	result := &mix_Registry_Authenticator{
+		ConfigurableNotify: client,
+		Registry:           client,
+		Authenticator:      authenticator,
+	}
+
+	return result, nil
 }
 
 // registryClient is an implementation of component.Registry over gRPC.
@@ -107,6 +134,7 @@ func (c *registryClient) push(
 // real implementation of the component.
 type registryServer struct {
 	*base
+	*authenticatorServer
 
 	Impl component.Registry
 }
