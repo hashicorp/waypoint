@@ -18,7 +18,11 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 )
 
-var jobBucket = []byte("jobs")
+var (
+	jobBucket = []byte("jobs")
+
+	jobWaitingTimeout = 2 * time.Minute
+)
 
 const (
 	jobTableName          = "jobs"
@@ -114,6 +118,10 @@ type jobIndex struct {
 
 	// State is the current state of this job.
 	State pb.Job_State
+
+	// StateTimer holds a timer that is usually acting as a timeout mechanism
+	// on the current state. When the state changes, the timer should be cancelled.
+	StateTimer *time.Timer
 
 	// OutputBuffer stores the terminal output
 	OutputBuffer *logbuffer.Buffer
@@ -292,6 +300,11 @@ RETRY_ASSIGN:
 			return nil, err
 		}
 
+		// Create our timer to requeue this if it isn't acked
+		job.StateTimer = time.AfterFunc(jobWaitingTimeout, func() {
+			s.JobAck(job.Id, false)
+		})
+
 		if err := txn.Insert(jobTableName, job); err != nil {
 			return nil, err
 		}
@@ -354,6 +367,12 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// Cancel our timer
+	if job.StateTimer != nil {
+		job.StateTimer.Stop()
+		job.StateTimer = nil
 	}
 
 	// Insert to update
@@ -544,6 +563,15 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 		}
 
 		*ts.Field = t
+	}
+
+	// If this job is assigned. Then we have to start a nacking timer.
+	// We reset the nack timer so it gives runners time to reconnect.
+	if rec.State == pb.Job_WAITING {
+		// Create our timer to requeue this if it isn't acked
+		rec.StateTimer = time.AfterFunc(jobWaitingTimeout, func() {
+			s.JobAck(rec.Id, false)
+		})
 	}
 
 	// Insert the index

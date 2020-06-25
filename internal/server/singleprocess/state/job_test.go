@@ -277,6 +277,41 @@ func TestJobAck(t *testing.T) {
 		// We should not have an output buffer
 		require.Nil(job.OutputBuffer)
 	})
+
+	t.Run("timeout before ack should requeue", func(t *testing.T) {
+		require := require.New(t)
+
+		// Set a short timeout
+		old := jobWaitingTimeout
+		defer func() { jobWaitingTimeout = old }()
+		jobWaitingTimeout = 5 * time.Millisecond
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+
+		// Sleep too long
+		time.Sleep(100 * time.Millisecond)
+
+		// Verify it is queued
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.Equal(pb.Job_QUEUED, job.Job.State)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.Error(err)
+	})
 }
 
 func TestJobComplete(t *testing.T) {
