@@ -350,9 +350,6 @@ message Job {
     ReleaseOp release = 55;
   }
 
-  // TODO(mitchellh): component lists so that we can verify the runner
-  // has the expected components.
-
   //-----------------------------------------------------------------
   // Server-side fields - the fields below are all set by the server
   // and should not be set on the queueing request.
@@ -558,6 +555,10 @@ message Runner {
   // runner by ID. This is used by local runners to prevent external
   // jobs from being assigned to them.
   bool by_id_only = 2;
+
+  // Components are the list of components that the runner supports. This
+  // is used to match jobs to this runner.
+  repeated Component components = 3;
 }
 
 message RunnerConfigRequest {

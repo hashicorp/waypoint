@@ -75,4 +75,14 @@ func (f *Factory) Func(name string) *argmapper.Func {
 	return f.funcs[name]
 }
 
+// Registered returns the names registered with this factory.
+func (f *Factory) Registered() []string {
+	result := make([]string, 0, len(f.funcs))
+	for k := range f.funcs {
+		result = append(result, k)
+	}
+
+	return result
+}
+
 var ifaceType = reflect.TypeOf((*interface{})(nil)).Elem()

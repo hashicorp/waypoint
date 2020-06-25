@@ -188,8 +188,11 @@ RETRY_ASSIGN:
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 
+	// Turn our runner into a runner record so we can more efficiently assign
+	runnerRec := newRunnerRecord(r)
+
 	// candidateQuery finds candidate jobs to assign.
-	type candidateFunc func(*memdb.Txn, *pb.Runner) (*jobIndex, error)
+	type candidateFunc func(*memdb.Txn, *runnerRecord) (*jobIndex, error)
 	candidateQuery := []candidateFunc{
 		s.jobCandidateById,
 		s.jobCandidateAny,
@@ -205,7 +208,7 @@ RETRY_ASSIGN:
 	// Build the list of candidates
 	var candidates []*jobIndex
 	for _, f := range candidateQuery {
-		job, err := f(txn, r)
+		job, err := f(txn, runnerRec)
 		if err != nil {
 			return nil, err
 		}
@@ -471,11 +474,11 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 			// We're out of candidates and we found none.
 			return false, nil
 		}
-		runner := raw.(*pb.Runner)
+		runner := raw.(*runnerRecord)
 
 		// Check our target-specific check
 		if targetCheck != nil {
-			check, err := targetCheck(runner)
+			check, err := targetCheck(runner.Runner)
 			if err != nil {
 				return false, err
 			}
@@ -594,7 +597,7 @@ func (s *State) jobReadAndUpdate(id string, f func(*pb.Job) error) (*pb.Job, err
 
 // jobCandidateById returns the most promising candidate job to assign
 // that is targeting a specific runner by ID.
-func (s *State) jobCandidateById(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, error) {
+func (s *State) jobCandidateById(memTxn *memdb.Txn, r *runnerRecord) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobTargetIdIndexName,
@@ -624,7 +627,7 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, er
 }
 
 // jobCandidateAny returns the first candidate job that targets any runner.
-func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *pb.Runner) (*jobIndex, error) {
+func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *runnerRecord) (*jobIndex, error) {
 	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobQueueTimeIndexName,

@@ -34,12 +34,20 @@ func runnerSchema() *memdb.TableSchema {
 	}
 }
 
-func (s *State) RunnerCreate(rec *pb.Runner) error {
+type runnerRecord struct {
+	// The full Runner. All other fiels are derivatives of this.
+	Runner *pb.Runner
+
+	// Id of the runner
+	Id string
+}
+
+func (s *State) RunnerCreate(r *pb.Runner) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
 	// Create our runner
-	if err := txn.Insert(runnerTableName, rec); err != nil {
+	if err := txn.Insert(runnerTableName, newRunnerRecord(r)); err != nil {
 		return status.Errorf(codes.Aborted, err.Error())
 	}
 
@@ -70,7 +78,7 @@ func (s *State) RunnerById(id string) (*pb.Runner, error) {
 		return nil, status.Errorf(codes.NotFound, "runner ID not found")
 	}
 
-	return raw.(*pb.Runner), nil
+	return raw.(*runnerRecord).Runner, nil
 }
 
 // runnerEmpty returns true if there are no runners registered.
@@ -81,4 +89,14 @@ func (s *State) runnerEmpty(memTxn *memdb.Txn) (bool, error) {
 	}
 
 	return iter.Next() == nil, nil
+}
+
+// newRunnerRecord creates a runnerRecord from a runner.
+func newRunnerRecord(r *pb.Runner) *runnerRecord {
+	rec := &runnerRecord{
+		Runner: r,
+		Id:     r.Id,
+	}
+
+	return rec
 }

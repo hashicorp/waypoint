@@ -263,6 +263,11 @@ func WithFactory(t component.Type, f *factory.Factory) Option {
 	return func(p *Project, opts *options) { p.factories[t] = f }
 }
 
+// WithComponents sets the factories for components.
+func WithComponents(fs map[component.Type]*factory.Factory) Option {
+	return func(p *Project, opts *options) { p.factories = fs }
+}
+
 // WithMappers adds the mappers to the list of mappers.
 func WithMappers(m ...*argmapper.Func) Option {
 	return func(p *Project, opts *options) { p.mappers = append(p.mappers, m...) }

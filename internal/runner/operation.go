@@ -46,6 +46,7 @@ func (r *Runner) executeJob(
 	project, err := core.NewProject(ctx,
 		core.WithLogger(log),
 		core.WithUI(ui),
+		core.WithComponents(r.factories),
 		core.WithClient(r.client),
 		core.WithConfig(&cfg),
 		core.WithDataDir(projDir),
