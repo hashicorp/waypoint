@@ -36,6 +36,11 @@ func (p *BuilderPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) er
 	proto.RegisterBuilderServer(s, &builderServer{
 		base: base,
 		Impl: p.Impl,
+
+		authenticatorServer: &authenticatorServer{
+			base: base,
+			Impl: p.Impl,
+		},
 	})
 	return nil
 }
@@ -45,12 +50,34 @@ func (p *BuilderPlugin) GRPCClient(
 	broker *plugin.GRPCBroker,
 	c *grpc.ClientConn,
 ) (interface{}, error) {
-	return &builderClient{
+	client := &builderClient{
 		client:  proto.NewBuilderClient(c),
 		logger:  p.Logger,
 		broker:  broker,
 		mappers: p.Mappers,
-	}, nil
+	}
+
+	authenticator := &authenticatorClient{
+		Client:  client.client,
+		Logger:  client.logger,
+		Broker:  client.broker,
+		Mappers: client.mappers,
+	}
+	if ok, err := authenticator.Implements(ctx); err != nil {
+		return nil, err
+	} else if ok {
+		p.Logger.Info("builder plugin capable of auth")
+	} else {
+		authenticator = nil
+	}
+
+	result := &mix_Builder_Authenticator{
+		ConfigurableNotify: client,
+		Builder:            client,
+		Authenticator:      authenticator,
+	}
+
+	return result, nil
 }
 
 // builderClient is an implementation of component.Builder that
@@ -108,6 +135,7 @@ func (c *builderClient) build(
 // real implementation of the component.
 type builderServer struct {
 	*base
+	*authenticatorServer
 
 	Impl component.Builder
 }
