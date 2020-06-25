@@ -31,6 +31,13 @@ func TestFactory(t *testing.T) {
 		fn := factory.Func("three")
 		require.Nil(fn)
 	}
+
+	// Registered should return the names
+	{
+		list := factory.Registered()
+		require.Len(list, 1)
+		require.Equal("two", list[0])
+	}
 }
 
 func TestFactory_invalidOutputCount(t *testing.T) {
