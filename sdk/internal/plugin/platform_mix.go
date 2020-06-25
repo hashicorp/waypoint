@@ -4,6 +4,12 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 )
 
+type mix_Platform_Authenticator struct {
+	component.Authenticator
+	component.ConfigurableNotify
+	component.Platform
+}
+
 type mix_Platform_Destroy struct {
 	component.Authenticator
 	component.ConfigurableNotify

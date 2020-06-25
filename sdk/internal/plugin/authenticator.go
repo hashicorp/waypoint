@@ -15,7 +15,7 @@ import (
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
-// authenticatorClient is the interface implemented by all gRPC services that
+// authenticatorProtoClient is the interface implemented by all gRPC services that
 // have the authenticator RPC methods.
 type authenticatorProtoClient interface {
 	IsAuthenticator(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.ImplementsResp, error)
@@ -109,7 +109,7 @@ type authenticatorServer struct {
 	Impl interface{}
 }
 
-func (s *destroyerServer) IsAuthenticator(
+func (s *authenticatorServer) IsAuthenticator(
 	ctx context.Context,
 	empty *empty.Empty,
 ) (*pb.ImplementsResp, error) {
@@ -176,3 +176,7 @@ func (s *authenticatorServer) ValidateAuth(
 
 	return &empty.Empty{}, nil
 }
+
+var (
+	_ component.Authenticator = (*authenticatorClient)(nil)
+)

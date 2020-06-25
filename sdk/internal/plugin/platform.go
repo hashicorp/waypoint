@@ -82,13 +82,6 @@ func (p *PlatformPlugin) GRPCClient(
 		logPlatform = raw.(component.LogPlatform)
 	}
 
-	authenticator := &authenticatorClient{
-		Client:  client.client,
-		Logger:  client.logger,
-		Broker:  client.broker,
-		Mappers: client.mappers,
-	}
-
 	// Compose destroyer
 	destroyer := &destroyerClient{
 		Client:  client.client,
@@ -104,6 +97,12 @@ func (p *PlatformPlugin) GRPCClient(
 		destroyer = nil
 	}
 
+	authenticator := &authenticatorClient{
+		Client:  client.client,
+		Logger:  client.logger,
+		Broker:  client.broker,
+		Mappers: client.mappers,
+	}
 	if ok, err := authenticator.Implements(ctx); err != nil {
 		return nil, err
 	} else if ok {
@@ -138,6 +137,12 @@ func (p *PlatformPlugin) GRPCClient(
 			ConfigurableNotify: client,
 			Platform:           client,
 			Destroyer:          destroyer,
+		}
+	default:
+		result = &mix_Platform_Authenticator{
+			Authenticator:      authenticator,
+			ConfigurableNotify: client,
+			Platform:           client,
 		}
 	}
 
