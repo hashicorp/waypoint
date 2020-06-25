@@ -10,8 +10,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/factory"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 var ErrClosed = errors.New("runner is closed")
@@ -43,6 +46,7 @@ type Runner struct {
 	ctx         context.Context
 	cleanupFunc func()
 	runner      *pb.Runner
+	factories   map[component.Type]*factory.Factory
 
 	closedVal int32
 	acceptWg  sync.WaitGroup
@@ -66,6 +70,12 @@ func New(opts ...Option) (*Runner, error) {
 		logger: hclog.L(),
 		ctx:    context.Background(),
 		runner: &pb.Runner{Id: id},
+		factories: map[component.Type]*factory.Factory{
+			component.BuilderType:        plugin.Builders,
+			component.RegistryType:       plugin.Registries,
+			component.PlatformType:       plugin.Platforms,
+			component.ReleaseManagerType: plugin.Releasers,
+		},
 	}
 
 	// Build our config
@@ -74,6 +84,16 @@ func New(opts ...Option) (*Runner, error) {
 		err := o(runner, &cfg)
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	// Setup our runner components list
+	for t, f := range runner.factories {
+		for _, n := range f.Registered() {
+			runner.runner.Components = append(runner.runner.Components, &pb.Component{
+				Type: pb.Component_Type(t),
+				Name: n,
+			})
 		}
 	}
 
@@ -160,6 +180,15 @@ type Option func(*Runner, *config) error
 func WithClient(client pb.WaypointClient) Option {
 	return func(r *Runner, cfg *config) error {
 		r.client = client
+		return nil
+	}
+}
+
+// WithComponentFactory sets a factory for a component type. If this isn't set for
+// a component type, then the builtins will be used.
+func WithComponentFactory(t component.Type, f *factory.Factory) Option {
+	return func(r *Runner, cfg *config) error {
+		r.factories[t] = f
 		return nil
 	}
 }
