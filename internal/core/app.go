@@ -116,16 +116,6 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 		labels := p.mergeLabels(cfg.Labels, c.Config.Labels)
 
 		err = app.initComponent(ctx, c.Type, c.Target, p.factories[c.Type], c.Config, labels)
-
-		// Authenticate component if configured and implemented by the
-		// plugin
-		if p.authComponents && app.CanAuthenticate(c.Target) {
-			_, err := app.AuthenticateComponent(ctx, c.Target)
-			if err != nil {
-				return nil, err
-			}
-		}
-
 		if err != nil {
 			return nil, err
 		}
