@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -33,29 +34,31 @@ func TestAppAuthenticate(t *testing.T) {
 		WithFactory(component.PlatformType, factory),
 	), "test")
 
+	// Expect to have the validateAuth function called
+	mock.Authenticator.On("ValidateAuthFunc").Return(func() error {
+		return errors.New("foo")
+	})
+
 	// Expect to have the auth function called
 	mock.Authenticator.On("AuthFunc").Return(func() error {
-		return nil
+		return errors.New("foo")
 	})
 
 	{
 		// Authenticate
-		_, err := app.AuthenticateComponent(context.Background(), mock.Platform)
-		require.Contains(err.Error(), "baz")
-		// require.NoError(err)
+		_, err := app.AuthenticateComponent(context.Background(), mock)
+		require.Contains(err.Error(), "foo")
 	}
 }
 
 func TestAppAuthenticate_noAuth(t *testing.T) {
 	require := require.New(t)
 
-	// Our mock builder, which currently doesn't implement auth
+	// Our mock builder, which doesn't implement auth
 	mock := struct {
 		*componentmocks.Builder
-		*componentmocks.Authenticator
 	}{
 		&componentmocks.Builder{},
-		&componentmocks.Authenticator{},
 	}
 
 	// Make our factory for builders
@@ -71,8 +74,8 @@ func TestAppAuthenticate_noAuth(t *testing.T) {
 	{
 		// Authenticate and should not err
 		_, err := app.AuthenticateComponent(context.Background(), mock.Builder)
-		// require.NoError(err)
-		require.Contains(err.Error(), "error")
+		require.Error(err)
+		require.Contains(err.Error(), "does not implement")
 	}
 }
 
