@@ -20,11 +20,15 @@ const (
 	envDeploymentId   = "WAYPOINT_DEPLOYMENT_ID"
 	envServerAddr     = "WAYPOINT_SERVER_ADDR"
 	envServerInsecure = "WAYPOINT_SERVER_INSECURE"
+
+	envURLControl = "WAYPOINT_URL_CONTROL_ADDR"
+	envURLLabels  = "WAYPOINT_URL_LABELS"
+	envURLToken   = "WAYPOINT_URL_TOKEN"
 )
 
 const (
-	DefaultPort                = 5000
-	DefaultWaypointControlAddr = "control.alpha.waypoint.run"
+	DefaultPort           = 5000
+	DefaultURLControlAddr = "control.alpha.hzn.network"
 )
 
 // CEB represents the state of a running CEB.
@@ -155,10 +159,10 @@ type config struct {
 	ServerAddr     string
 	ServerInsecure bool
 
-	WaypointToken       string
-	WaypointControlAddr string
-	URLServicePort      int
-	URLServiceLabels    string
+	URLToken         string
+	URLControlAddr   string
+	URLServicePort   int
+	URLServiceLabels string
 }
 
 type Option func(*CEB, *config) error
@@ -168,7 +172,7 @@ type Option func(*CEB, *config) error
 // based confiugration will be ignored.
 func WithEnvDefaults() Option {
 	return func(ceb *CEB, cfg *config) error {
-		labels := os.Getenv("WAYPOINT_URL_LABELS")
+		labels := os.Getenv(envURLLabels)
 		if labels != "" {
 			cfg.URLServiceLabels = labels
 
@@ -189,19 +193,19 @@ func WithEnvDefaults() Option {
 
 			cfg.URLServicePort = port
 
-			controlAddr := os.Getenv("WAYPOINT_CONTROL_ADDR")
+			controlAddr := os.Getenv(envURLControl)
 			if controlAddr == "" {
-				controlAddr = DefaultWaypointControlAddr
+				controlAddr = DefaultURLControlAddr
 			}
 
-			cfg.WaypointControlAddr = controlAddr
+			cfg.URLControlAddr = controlAddr
 
-			token := os.Getenv("WAYPOINT_TOKEN")
+			token := os.Getenv(envURLToken)
 			if token == "" {
-				return fmt.Errorf("No token provided via WAYPOINT_TOKEN.")
+				return fmt.Errorf("No token provided via " + envURLToken)
 			}
 
-			cfg.WaypointToken = token
+			cfg.URLToken = token
 		}
 
 		cfg.DeploymentId = os.Getenv(envDeploymentId)
@@ -227,8 +231,8 @@ func WithExec(args []string) Option {
 // to the given localhost port.
 func WithURLService(controlAddr, token string, port int, labels string) Option {
 	return func(ceb *CEB, cfg *config) error {
-		cfg.WaypointControlAddr = controlAddr
-		cfg.WaypointToken = token
+		cfg.URLControlAddr = controlAddr
+		cfg.URLToken = token
 		cfg.URLServicePort = port
 		cfg.URLServiceLabels = labels
 

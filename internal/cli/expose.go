@@ -38,7 +38,7 @@ func (c *ExposeCommand) authToken() string {
 		return c.horizonToken
 	}
 
-	return os.Getenv("WAYPOINT_TOKEN")
+	return os.Getenv("WAYPOINT_URL_TOKEN")
 }
 
 func (c *ExposeCommand) Run(args []string) int {

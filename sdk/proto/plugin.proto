@@ -23,6 +23,10 @@ message Args {
     string id = 1;
     string server_addr = 2;
     bool server_insecure = 3;
+
+    string url_token = 4;
+    string url_labels = 5;
+    string url_control_addr = 6;
   }
 
   // DataDir represents the directory where data can be stored. This is an internal

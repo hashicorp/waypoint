@@ -24,7 +24,7 @@ func (ceb *CEB) initURLService(ctx context.Context, cfg *config) error {
 		return errors.Wrapf(err, "error configuring agent")
 	}
 
-	g.Token = cfg.WaypointToken
+	g.Token = cfg.URLToken
 	target := fmt.Sprintf(":%d", cfg.URLServicePort)
 
 	labels := hznpb.ParseLabelSet(cfg.URLServiceLabels)
@@ -41,7 +41,7 @@ func (ceb *CEB) initURLService(ctx context.Context, cfg *config) error {
 
 	L.Debug("discovering hubs")
 
-	dc, err := discovery.NewClient(cfg.WaypointControlAddr)
+	dc, err := discovery.NewClient(cfg.URLControlAddr)
 	if err != nil {
 		return errors.Wrapf(err, "error conecting to waypoint control service")
 	}
@@ -58,12 +58,12 @@ func (ceb *CEB) initURLService(ctx context.Context, cfg *config) error {
 		return errors.Wrapf(err, "error serving traffic")
 	}
 
-	err = g.Wait(ctx)
-	if err != nil {
-		if err != context.Canceled {
-			return errors.Wrapf(err, "error running agent")
+	go func() {
+		err := g.Wait(ctx)
+		if err != nil {
+			L.Error("error in background connection to url service", "error", err)
 		}
-	}
+	}()
 
 	return nil
 }

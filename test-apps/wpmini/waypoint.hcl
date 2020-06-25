@@ -1,6 +1,12 @@
 project = "wpmini"
 
 app "wpmini" {
+
+  labels = {
+    "service" = "wpmini",
+    "env" = "dev"
+  }
+
   build "pack" {
     registry "docker" {
       image = "localhost:5000/wpmini"
@@ -24,3 +30,5 @@ server {
   insecure = true
   require_auth = false
 }
+
+url {}
