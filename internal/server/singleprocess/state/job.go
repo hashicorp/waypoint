@@ -115,9 +115,6 @@ type jobIndex struct {
 	// State is the current state of this job.
 	State pb.Job_State
 
-	// Components required for this job
-	Components []*pb.Ref_Component
-
 	// OutputBuffer stores the terminal output
 	OutputBuffer *logbuffer.Buffer
 }
@@ -490,11 +487,6 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 			}
 		}
 
-		// If the components don't match, then we can't assign
-		if !runner.MatchComponentRefs(jobpb.Components) {
-			continue
-		}
-
 		// This works!
 		return true, nil
 	}
@@ -519,9 +511,8 @@ func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 // jobIndexSet writes an index record for a single job.
 func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 	rec := &jobIndex{
-		Id:         jobpb.Id,
-		State:      jobpb.State,
-		Components: jobpb.Components,
+		Id:    jobpb.Id,
+		State: jobpb.State,
 	}
 
 	// Target
@@ -628,9 +619,6 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, r *runnerRecord) (*jobIndex,
 		if job.State != pb.Job_QUEUED || job.TargetRunnerId == "" {
 			continue
 		}
-		if !r.MatchComponentRefs(job.Components) {
-			continue
-		}
 
 		return job, nil
 	}
@@ -658,9 +646,6 @@ func (s *State) jobCandidateAny(memTxn *memdb.Txn, r *runnerRecord) (*jobIndex, 
 
 		job := raw.(*jobIndex)
 		if job.State != pb.Job_QUEUED || !job.TargetAny {
-			continue
-		}
-		if !r.MatchComponentRefs(job.Components) {
 			continue
 		}
 

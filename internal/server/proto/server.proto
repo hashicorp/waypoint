@@ -187,17 +187,6 @@ message Ref {
 
   // RunnerAny will reference any runner.
   message RunnerAny {}
-
-  // Component allows referencing a component.
-  //
-  // NOTE(mitchellh): This is currently mostly the same as the top-level
-  // Component message. I expect over time this may house version constraints
-  // and things that the top-level Component won't since it represents an
-  // actualized component.
-  message Component {
-    .hashicorp.waypoint.Component.Type type = 1;
-    string name = 2;
-  }
 }
 
 // Component represents metadata about a component. A component is the
@@ -340,11 +329,6 @@ message Job {
 
   // Labels are the labels to set for this operation.
   map<string, string> labels = 5;
-
-  // Components that this job requires to run properly. This is used for
-  // runner assignment purposes. If this isn't set, any runner is valid
-  // but the job is likely to fail due to missing components.
-  repeated Ref.Component components = 6;
 
   // data_source determines where the data to operate on (such as the
   // application source code and Waypoint configuration) comes from.
