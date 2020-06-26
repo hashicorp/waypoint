@@ -347,10 +347,19 @@ func (s *State) configVarId(v *pb.ConfigVar) []byte {
 		))
 
 	case *pb.ConfigVar_Runner:
-		return []byte(fmt.Sprintf("runner/%T/%s",
-			scope.Runner.Target,
-			v.Name,
-		))
+		var t string
+		switch scope.Runner.Target.(type) {
+		case *pb.Ref_Runner_Id:
+			t = "by-id"
+
+		case *pb.Ref_Runner_Any:
+			t = "any"
+
+		default:
+			panic(fmt.Sprintf("unknown runner target scope: %T", scope.Runner.Target))
+		}
+
+		return []byte(fmt.Sprintf("runner/%s/%s", t, v.Name))
 
 	default:
 		panic("unknown scope")
