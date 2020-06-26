@@ -2,7 +2,9 @@ package state
 
 import (
 	"testing"
+	"time"
 
+	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -380,5 +382,44 @@ func TestConfig(t *testing.T) {
 			require.Len(vs, 1)
 			require.Equal("baz", vs[0].Value)
 		}
+	})
+}
+
+func TestConfigWatch(t *testing.T) {
+	t.Run("basic put and get", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		ws := memdb.NewWatchSet()
+
+		// Get it with watch
+		vs, err := s.ConfigGetWatch(&pb.ConfigGetRequest{
+			Scope: &pb.ConfigGetRequest_Project{
+				Project: &pb.Ref_Project{Project: "foo"},
+			},
+
+			Prefix: "foo",
+		}, ws)
+		require.NoError(err)
+		require.Len(vs, 0)
+
+		// Watch should block
+		require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+		// Create a config
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "foo",
+			Value: "bar",
+		}))
+
+		require.False(ws.Watch(time.After(100 * time.Millisecond)))
 	})
 }

@@ -43,13 +43,19 @@ func (s *State) ConfigSet(vs ...*pb.ConfigVar) error {
 
 // ConfigGet gets all the configuration for the given request.
 func (s *State) ConfigGet(req *pb.ConfigGetRequest) ([]*pb.ConfigVar, error) {
+	return s.ConfigGetWatch(req, nil)
+}
+
+// ConfigGetWatch gets all the configuration for the given request. If a non-nil
+// WatchSet is given, this can be watched for potential changes in the config.
+func (s *State) ConfigGetWatch(req *pb.ConfigGetRequest, ws memdb.WatchSet) ([]*pb.ConfigVar, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
 	var result []*pb.ConfigVar
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		var err error
-		result, err = s.configGetMerged(dbTxn, memTxn, req)
+		result, err = s.configGetMerged(dbTxn, memTxn, ws, req)
 		return err
 	})
 
@@ -82,17 +88,18 @@ func (s *State) configSet(
 func (s *State) configGetMerged(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
+	ws memdb.WatchSet,
 	req *pb.ConfigGetRequest,
 ) ([]*pb.ConfigVar, error) {
 	var mergeSet [][]*pb.ConfigVar
 	switch scope := req.Scope.(type) {
 	case *pb.ConfigGetRequest_Project:
 		// For project scope, we just return the project scoped values.
-		return s.configGetExact(dbTxn, memTxn, scope.Project, req.Prefix)
+		return s.configGetExact(dbTxn, memTxn, ws, scope.Project, req.Prefix)
 
 	case *pb.ConfigGetRequest_Application:
 		// Application scope, we have to get the project scope first
-		projectVars, err := s.configGetExact(dbTxn, memTxn, &pb.Ref_Project{
+		projectVars, err := s.configGetExact(dbTxn, memTxn, ws, &pb.Ref_Project{
 			Project: scope.Application.Project,
 		}, req.Prefix)
 		if err != nil {
@@ -100,7 +107,7 @@ func (s *State) configGetMerged(
 		}
 
 		// Then the application scope
-		appVars, err := s.configGetExact(dbTxn, memTxn, scope.Application, req.Prefix)
+		appVars, err := s.configGetExact(dbTxn, memTxn, ws, scope.Application, req.Prefix)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +117,7 @@ func (s *State) configGetMerged(
 
 	case *pb.ConfigGetRequest_Runner:
 		var err error
-		mergeSet, err = s.configGetRunner(dbTxn, memTxn, scope.Runner, req.Prefix)
+		mergeSet, err = s.configGetRunner(dbTxn, memTxn, ws, scope.Runner, req.Prefix)
 		if err != nil {
 			return nil, err
 		}
@@ -144,6 +151,7 @@ func (s *State) configGetMerged(
 func (s *State) configGetExact(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
+	ws memdb.WatchSet,
 	ref interface{}, // should be one of the *pb.Ref_ values.
 	prefix string,
 ) ([]*pb.ConfigVar, error) {
@@ -180,6 +188,9 @@ func (s *State) configGetExact(
 		panic("unknown scope")
 	}
 
+	// Add to our watchset
+	ws.Add(iter.WatchCh())
+
 	// Go through the iterator and accumulate the results
 	var result []*pb.ConfigVar
 	b := dbTxn.Bucket(configBucket)
@@ -205,6 +216,7 @@ func (s *State) configGetExact(
 func (s *State) configGetRunner(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
+	ws memdb.WatchSet,
 	req *pb.Ref_RunnerId,
 	prefix string,
 ) ([][]*pb.ConfigVar, error) {
@@ -217,6 +229,9 @@ func (s *State) configGetRunner(
 	if err != nil {
 		return nil, err
 	}
+
+	// Add to our watch set
+	ws.Add(iter.WatchCh())
 
 	// Results go into two buckets
 	result := make([][]*pb.ConfigVar, 2)
