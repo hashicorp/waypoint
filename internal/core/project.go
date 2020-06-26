@@ -127,6 +127,11 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		}
 	}
 
+	if opts.Config.URL != nil {
+		p.dconfig.UrlControlAddr = opts.Config.URL.ControlAddr
+		p.dconfig.UrlToken = opts.Config.URL.Token
+	}
+
 	// Initialize all the applications and load all their components.
 	for _, appConfig := range opts.Config.Apps {
 		app, err := newApp(ctx, p, appConfig)

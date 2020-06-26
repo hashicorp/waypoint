@@ -77,7 +77,7 @@ func (c *RegisterCommand) authToken() string {
 		return c.token
 	}
 
-	return os.Getenv("WAYPOINT_TOKEN")
+	return os.Getenv("WAYPOINT_URL_TOKEN")
 }
 
 func (c *RegisterCommand) Run(args []string) int {
@@ -130,7 +130,7 @@ func (c *RegisterCommand) Run(args []string) int {
 
 	token := c.authToken()
 	if token == "" {
-		c.ui.Output("No authentication token found. Pass --token or set WAYPOINT_TOKEN.", terminal.WithErrorStyle())
+		c.ui.Output("No authentication token found. Pass --token or set WAYPOINT_URL_TOKEN.", terminal.WithErrorStyle())
 		return 1
 	}
 

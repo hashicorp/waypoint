@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/hcl/v2/hclsimple"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -31,7 +30,9 @@ func (r *Runner) executeJob(
 	// Decode the configuration
 	var cfg configpkg.Config
 	log.Trace("reading configuration", "path", path)
-	if err := hclsimple.DecodeFile(path, nil, &cfg); err != nil {
+	// TODO: This also consults env for things like the waypoint url token.
+	// This should instead consult the auth config storage instead when that arrives.
+	if err := cfg.LoadPath(path); err != nil {
 		return nil, err
 	}
 

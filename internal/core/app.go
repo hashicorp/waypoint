@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/go-argmapper"
@@ -87,6 +88,16 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 		// etc.
 		UI: p.UI,
 	}
+
+	var entries []string
+
+	for k, v := range cfg.Labels {
+		entries = append(entries, k+"="+v)
+	}
+
+	sort.Strings(entries)
+
+	app.dconfig.UrlLabels = strings.Join(entries, ",")
 
 	// Setup our directory
 	dir, err := p.dir.App(cfg.Name)

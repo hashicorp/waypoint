@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2/hclsimple"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/config"
@@ -114,7 +113,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	path := config.Filename
 	if _, err := os.Stat(path); err == nil {
 		c.Log.Debug("reading configuration", "path", path)
-		if err := hclsimple.DecodeFile(path, nil, &cfg); err != nil {
+		if err := cfg.LoadPath(path); err != nil {
 			c.logError(c.Log, "error decoding configuration", err)
 			return err
 		}
