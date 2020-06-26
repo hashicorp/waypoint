@@ -7,6 +7,7 @@ Waypoint is a deployment tool, there are many like it, but it is ours.
 1. Enable Kubernetes in the Docker for Mac configuration
     1. ![Image of Kubernetes Settings](./docs/images/d4m-k8s.png)
 1. Configured kubernetes to access the github docker registry
+    1. https://github.com/settings/tokens/new
     1. https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-docker-for-use-with-github-packages#authenticating-to-github-packages
     1. `kubectl create secret docker-registry github --docker-server=docker.pkg.github.com --docker-username=$GITHUB_USER --docker-password=$GITHUB_PASSWORD --docker-email=$GITHUB_EMAIL`
 1. Download or build waypoint
