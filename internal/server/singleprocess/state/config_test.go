@@ -198,4 +198,187 @@ func TestConfig(t *testing.T) {
 			require.Len(vs, 0)
 		}
 	})
+
+	t.Run("runner configs any", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create the config
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Runner{
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			},
+
+			Name:  "foo",
+			Value: "bar",
+		}))
+
+		// Create a var that shouldn't match
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "bar",
+			Value: "baz",
+		}))
+
+		{
+			// Get it exactly.
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Runner{
+					Runner: &pb.Ref_RunnerId{Id: "R_A"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		{
+			// Get it via a prefix match
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Runner{
+					Runner: &pb.Ref_RunnerId{Id: "R_A"},
+				},
+
+				Prefix: "",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		{
+			// non-matching prefix
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Runner{
+					Runner: &pb.Ref_RunnerId{Id: "R_A"},
+				},
+
+				Prefix: "bar",
+			})
+			require.NoError(err)
+			require.Empty(vs)
+		}
+	})
+
+	t.Run("runner configs targeting ID", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create the config
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Runner{
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Id{
+						Id: &pb.Ref_RunnerId{
+							Id: "R_A",
+						},
+					},
+				},
+			},
+
+			Name:  "foo",
+			Value: "bar",
+		}))
+
+		// Create a var that shouldn't match
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "bar",
+			Value: "baz",
+		}))
+
+		{
+			// Get it exactly.
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Runner{
+					Runner: &pb.Ref_RunnerId{Id: "R_A"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		{
+			// Doesn't match
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Runner{
+					Runner: &pb.Ref_RunnerId{Id: "R_B"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 0)
+		}
+	})
+
+	t.Run("runner configs targeting any and ID", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create the config
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Runner{
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			},
+
+			Name:  "foo",
+			Value: "bar",
+		}))
+
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Runner{
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Id{
+						Id: &pb.Ref_RunnerId{
+							Id: "R_A",
+						},
+					},
+				},
+			},
+
+			Name:  "foo",
+			Value: "baz",
+		}))
+
+		{
+			// Get it exactly.
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Runner{
+					Runner: &pb.Ref_RunnerId{Id: "R_A"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+			require.Equal("baz", vs[0].Value)
+		}
+	})
 }

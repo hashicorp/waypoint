@@ -108,6 +108,13 @@ func (s *State) configGetMerged(
 		// Build our merge set
 		mergeSet = append(mergeSet, projectVars, appVars)
 
+	case *pb.ConfigGetRequest_Runner:
+		var err error
+		mergeSet, err = s.configGetRunner(dbTxn, memTxn, scope.Runner, req.Prefix)
+		if err != nil {
+			return nil, err
+		}
+
 	default:
 		panic("unknown scope")
 	}
@@ -194,9 +201,71 @@ func (s *State) configGetExact(
 	return result, nil
 }
 
+// configGetRunner gets the config vars for a runner.
+func (s *State) configGetRunner(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	req *pb.Ref_RunnerId,
+	prefix string,
+) ([][]*pb.ConfigVar, error) {
+	iter, err := memTxn.Get(
+		configIndexTableName,
+		configIndexRunnerIndexName+"_prefix",
+		true,
+		prefix,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Results go into two buckets
+	result := make([][]*pb.ConfigVar, 2)
+	const (
+		idxAny = 0
+		idxId  = 1
+	)
+
+	// Go through the iterator and accumulate the results
+	b := dbTxn.Bucket(configBucket)
+	for {
+		current := iter.Next()
+		if current == nil {
+			break
+		}
+		record := current.(*configIndexRecord)
+
+		idx := -1
+		switch ref := record.RunnerRef.Target.(type) {
+		case *pb.Ref_Runner_Any:
+			idx = idxAny
+
+		case *pb.Ref_Runner_Id:
+			idx = idxId
+
+			// We need to match this ID
+			if ref.Id.Id != req.Id {
+				continue
+			}
+
+		default:
+			return nil, fmt.Errorf("config has unknown target type: %T", record.RunnerRef.Target)
+		}
+
+		var value pb.ConfigVar
+		if err := dbGet(b, []byte(record.Id), &value); err != nil {
+			return nil, err
+		}
+
+		result[idx] = append(result[idx], &value)
+	}
+
+	return result, nil
+}
+
 // configIndexSet writes an index record for a single config var.
 func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) error {
 	var project, application string
+	var runner *pb.Ref_Runner
 	switch scope := value.Scope.(type) {
 	case *pb.ConfigVar_Application:
 		project = scope.Application.Project
@@ -204,6 +273,9 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 
 	case *pb.ConfigVar_Project:
 		project = scope.Project.Project
+
+	case *pb.ConfigVar_Runner:
+		runner = scope.Runner
 
 	default:
 		panic("unknown scope")
@@ -214,6 +286,8 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 		Project:     project,
 		Application: application,
 		Name:        value.Name,
+		Runner:      runner != nil,
+		RunnerRef:   runner,
 	}
 
 	// If we have no value, we delete from the memdb index
@@ -257,6 +331,12 @@ func (s *State) configVarId(v *pb.ConfigVar) []byte {
 			v.Name,
 		))
 
+	case *pb.ConfigVar_Runner:
+		return []byte(fmt.Sprintf("runner/%T/%s",
+			scope.Runner.Target,
+			v.Name,
+		))
+
 	default:
 		panic("unknown scope")
 	}
@@ -278,7 +358,7 @@ func configIndexSchema() *memdb.TableSchema {
 
 			configIndexProjectIndexName: &memdb.IndexSchema{
 				Name:         configIndexProjectIndexName,
-				AllowMissing: false,
+				AllowMissing: true,
 				Unique:       false,
 				Indexer: &memdb.CompoundIndex{
 					Indexes: []memdb.Indexer{
@@ -318,6 +398,24 @@ func configIndexSchema() *memdb.TableSchema {
 					},
 				},
 			},
+
+			configIndexRunnerIndexName: &memdb.IndexSchema{
+				Name:         configIndexRunnerIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.BoolFieldIndex{
+							Field: "Runner",
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Name",
+							Lowercase: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -327,6 +425,7 @@ const (
 	configIndexIdIndexName          = "id"
 	configIndexProjectIndexName     = "project"
 	configIndexApplicationIndexName = "application"
+	configIndexRunnerIndexName      = "runner"
 )
 
 type configIndexRecord struct {
@@ -334,4 +433,6 @@ type configIndexRecord struct {
 	Project     string
 	Application string
 	Name        string
+	Runner      bool // true if this is a runner config
+	RunnerRef   *pb.Ref_Runner
 }
