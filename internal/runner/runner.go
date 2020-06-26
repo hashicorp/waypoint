@@ -50,6 +50,10 @@ type Runner struct {
 
 	closedVal int32
 	acceptWg  sync.WaitGroup
+
+	// config is the current runner config.
+	config      *pb.RunnerConfig
+	originalEnv []*pb.ConfigVar
 }
 
 // New initializes a new runner.
@@ -136,10 +140,20 @@ func (r *Runner) Start() error {
 
 	// Wait for an initial config as confirmation we're registered.
 	log.Trace("runner connected, waiting for initial config")
-	_, err = client.Recv()
+	resp, err := client.Recv()
 	if err != nil {
 		return err
 	}
+
+	// Handle the first config so our initial setup is done
+	r.handleConfig(resp.Config)
+
+	// Start the watcher
+	ch := make(chan *pb.RunnerConfig)
+	go r.watchConfig(ch)
+
+	// Start the goroutine that waits for all other configs
+	go r.recvConfig(r.ctx, client, ch)
 
 	log.Info("runner registered with server")
 	return nil
