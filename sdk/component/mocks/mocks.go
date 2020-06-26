@@ -30,6 +30,9 @@ func ForType(t component.Type) interface{} {
 	case component.ReleaseManagerType:
 		return &ReleaseManager{}
 
+	case component.AuthenticatorType:
+		return &Authenticator{}
+
 	default:
 		return nil
 	}

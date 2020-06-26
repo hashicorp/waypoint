@@ -3,6 +3,9 @@ package netlify
 import (
 	"context"
 	fmt "fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
@@ -14,8 +17,9 @@ import (
 
 const (
 	// Netlify client ID for the Waypoint OAuth 2 app
-	clientID  = "c9ae91915154e308fc7d5501fbc1799f27ca314503a25956d93ab790be473636"
-	netlifyUI = "https://app.netlify.com"
+	clientID      = "c9ae91915154e308fc7d5501fbc1799f27ca314503a25956d93ab790be473636"
+	netlifyUI     = "https://app.netlify.com"
+	tokenFilename = "netlify-access-token"
 )
 
 // credentials returns a ClientAuthInfoWriter that
@@ -30,6 +34,33 @@ func credentials(token string) runtime.ClientAuthInfoWriter {
 		}
 		return nil
 	})
+}
+
+// persistLocalToken returns a token from the specified directory
+// if the file already exists, this will overwrite it.
+func persistLocalToken(dir string, token string) error {
+	path := filepath.Join(dir, tokenFilename)
+	tokenFile, err := os.Create(path)
+	defer tokenFile.Close()
+
+	_, err = tokenFile.WriteString(token)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// retrieveLocalToken returns a token from the specified directory
+func retrieveLocalToken(dir string) string {
+	path := filepath.Join(dir, tokenFilename)
+
+	// Intentionally not checking the error here as we'll
+	// validate the token
+	token, _ := ioutil.ReadFile(path)
+
+	return string(token)
 }
 
 // apiContext returns context.Context suitable for Netlify

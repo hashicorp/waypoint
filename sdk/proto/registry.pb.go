@@ -107,23 +107,27 @@ func init() {
 }
 
 var fileDescriptor_41af05d40a615591 = []byte{
-	// 244 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x8f, 0x41, 0x4b, 0x03, 0x31,
-	0x10, 0x85, 0x59, 0xa8, 0xa5, 0xc6, 0x45, 0x25, 0x14, 0xa9, 0x11, 0x44, 0x3c, 0x29, 0xc8, 0x14,
-	0xaa, 0x47, 0x0f, 0x96, 0xa2, 0x67, 0xd9, 0xfe, 0x02, 0xbb, 0x4c, 0xe3, 0xc2, 0x9a, 0xc4, 0x24,
-	0x73, 0xe8, 0x7f, 0xf6, 0x47, 0x48, 0x32, 0xa9, 0xe0, 0x8a, 0xa7, 0x30, 0xef, 0x7d, 0x79, 0xf3,
-	0x46, 0x1c, 0x7b, 0xd4, 0x5d, 0x88, 0x7e, 0x07, 0xce, 0xdb, 0x68, 0xe5, 0x41, 0x7e, 0xd4, 0xb9,
-	0xb6, 0x56, 0xf7, 0x38, 0xcf, 0xd3, 0x86, 0xb6, 0xf3, 0x37, 0x53, 0x08, 0x75, 0x31, 0xb4, 0xf0,
-	0xc3, 0xc5, 0xbd, 0x59, 0xbb, 0x9e, 0x74, 0x67, 0x78, 0xba, 0x7e, 0x14, 0xa3, 0x57, 0x0a, 0xef,
-	0xea, 0x41, 0x8c, 0x1a, 0x0c, 0x4e, 0xde, 0x89, 0xb1, 0xc7, 0x40, 0x7d, 0x9c, 0x55, 0x57, 0xd5,
-	0xcd, 0xd1, 0x62, 0x0a, 0x9c, 0x05, 0xfb, 0x2c, 0x58, 0x9a, 0x5d, 0x53, 0x98, 0xc5, 0x57, 0x25,
-	0x26, 0x4d, 0x69, 0x27, 0x9f, 0x44, 0xbd, 0xb2, 0x66, 0xdb, 0xe9, 0x75, 0xf4, 0xd4, 0x46, 0x79,
-	0xf6, 0xe7, 0xeb, 0x73, 0xaa, 0xa1, 0x66, 0x2c, 0x00, 0xc3, 0xc0, 0x74, 0x5e, 0xbe, 0x12, 0x87,
-	0x2c, 0x92, 0x47, 0x79, 0xf9, 0x1b, 0xfb, 0x31, 0x1a, 0xfc, 0x24, 0x0c, 0x51, 0xfd, 0x13, 0x2f,
-	0x6f, 0xc5, 0x24, 0x5d, 0xb4, 0x76, 0xd8, 0xca, 0xba, 0x64, 0xf0, 0xe2, 0x93, 0x32, 0xbd, 0x90,
-	0x69, 0xb3, 0x0d, 0x7c, 0xbc, 0x9c, 0x0e, 0x0c, 0x58, 0x7a, 0x1d, 0xd4, 0x69, 0x51, 0x13, 0x02,
-	0xa9, 0xdf, 0x66, 0x9c, 0x85, 0xfb, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x4b, 0xf0, 0x2c, 0x5b,
-	0x92, 0x01, 0x00, 0x00,
+	// 309 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x52, 0x4d, 0x4b, 0xfb, 0x30,
+	0x18, 0x67, 0xd0, 0xff, 0xd8, 0xff, 0xb1, 0xb8, 0x11, 0xa6, 0xcc, 0x0a, 0x22, 0x9e, 0x14, 0x24,
+	0x83, 0x6d, 0x37, 0x77, 0xd8, 0x18, 0x0a, 0xbb, 0x49, 0x07, 0xde, 0xbb, 0xfa, 0xac, 0x2b, 0x74,
+	0x69, 0x4d, 0x9e, 0x1c, 0xf6, 0x3d, 0xfc, 0xc0, 0x92, 0x97, 0x89, 0x4e, 0x72, 0xd0, 0x53, 0xc9,
+	0xef, 0xbd, 0x69, 0xe1, 0x54, 0x62, 0x51, 0x2a, 0x92, 0x7b, 0xde, 0xc8, 0x9a, 0x6a, 0xf6, 0xcf,
+	0x3e, 0x92, 0x8b, 0xa2, 0xae, 0x8b, 0x0a, 0x87, 0xf6, 0xb4, 0xd6, 0x9b, 0x61, 0x26, 0xbc, 0x22,
+	0xb9, 0x3c, 0xa6, 0x70, 0xd7, 0xd0, 0x81, 0x8c, 0x9b, 0x4a, 0x17, 0xa5, 0x70, 0xa7, 0x9b, 0x29,
+	0x44, 0xcf, 0x5a, 0x6d, 0x93, 0x09, 0x44, 0x29, 0xaa, 0x86, 0xdd, 0x43, 0x5b, 0xa2, 0xd2, 0x15,
+	0x0d, 0x5a, 0xd7, 0xad, 0xdb, 0x93, 0x51, 0x9f, 0xbb, 0x2c, 0x7e, 0xc8, 0xe2, 0x73, 0xb1, 0x4f,
+	0xbd, 0x66, 0xf4, 0x1e, 0x41, 0x27, 0xf5, 0xeb, 0xd8, 0x0c, 0xba, 0x4b, 0x35, 0xd7, 0xb4, 0x45,
+	0x41, 0x65, 0x9e, 0x51, 0x2d, 0xd9, 0xf9, 0x0f, 0xf7, 0xa3, 0x59, 0x92, 0x9c, 0x39, 0x80, 0x2f,
+	0x77, 0x4d, 0x85, 0x3b, 0x14, 0xa4, 0x6c, 0xf9, 0x04, 0x22, 0xe3, 0x67, 0x7d, 0x4f, 0x3f, 0x69,
+	0x91, 0xaf, 0x1a, 0xcc, 0xf9, 0x5c, 0x16, 0x2a, 0x09, 0x84, 0xb1, 0x31, 0x74, 0x8c, 0xcb, 0x08,
+	0x83, 0x85, 0xdd, 0xa3, 0x44, 0x36, 0x85, 0xf8, 0x25, 0xab, 0xca, 0xd7, 0x8c, 0xf0, 0x0f, 0x95,
+	0x0f, 0xd0, 0xfb, 0xea, 0xfe, 0x5d, 0xf5, 0x0c, 0xe2, 0x45, 0x2d, 0x36, 0x65, 0xb1, 0x22, 0xa9,
+	0x73, 0x0a, 0x1a, 0x07, 0xde, 0xe8, 0xc4, 0xdc, 0xa9, 0xed, 0x3d, 0x2d, 0xe0, 0xbf, 0x03, 0xb5,
+	0x44, 0x76, 0xf5, 0x5d, 0xf6, 0x49, 0xa4, 0xf8, 0xa6, 0x51, 0x51, 0xf0, 0x1d, 0xee, 0xa0, 0x63,
+	0xbe, 0xbc, 0x9d, 0x14, 0xfb, 0x8c, 0xc0, 0x62, 0xee, 0x7e, 0x92, 0xc0, 0x25, 0xf5, 0x3c, 0x6a,
+	0x24, 0xdc, 0xec, 0x5b, 0xb7, 0x2d, 0x30, 0xfe, 0x08, 0x00, 0x00, 0xff, 0xff, 0xba, 0x6c, 0xb6,
+	0x65, 0xba, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -138,6 +142,11 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type RegistryClient interface {
+	IsAuthenticator(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error)
+	Auth(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error)
+	AuthSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error)
+	ValidateAuth(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error)
+	ValidateAuthSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error)
 	ConfigStruct(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Config_StructResp, error)
 	Configure(ctx context.Context, in *Config_ConfigureRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	PushSpec(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FuncSpec, error)
@@ -150,6 +159,51 @@ type registryClient struct {
 
 func NewRegistryClient(cc grpc.ClientConnInterface) RegistryClient {
 	return &registryClient{cc}
+}
+
+func (c *registryClient) IsAuthenticator(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error) {
+	out := new(ImplementsResp)
+	err := c.cc.Invoke(ctx, "/proto.Registry/IsAuthenticator", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *registryClient) Auth(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.Registry/Auth", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *registryClient) AuthSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error) {
+	out := new(FuncSpec)
+	err := c.cc.Invoke(ctx, "/proto.Registry/AuthSpec", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *registryClient) ValidateAuth(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.Registry/ValidateAuth", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *registryClient) ValidateAuthSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error) {
+	out := new(FuncSpec)
+	err := c.cc.Invoke(ctx, "/proto.Registry/ValidateAuthSpec", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *registryClient) ConfigStruct(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Config_StructResp, error) {
@@ -190,6 +244,11 @@ func (c *registryClient) Push(ctx context.Context, in *FuncSpec_Args, opts ...gr
 
 // RegistryServer is the server API for Registry service.
 type RegistryServer interface {
+	IsAuthenticator(context.Context, *empty.Empty) (*ImplementsResp, error)
+	Auth(context.Context, *FuncSpec_Args) (*empty.Empty, error)
+	AuthSpec(context.Context, *empty.Empty) (*FuncSpec, error)
+	ValidateAuth(context.Context, *FuncSpec_Args) (*empty.Empty, error)
+	ValidateAuthSpec(context.Context, *empty.Empty) (*FuncSpec, error)
 	ConfigStruct(context.Context, *empty.Empty) (*Config_StructResp, error)
 	Configure(context.Context, *Config_ConfigureRequest) (*empty.Empty, error)
 	PushSpec(context.Context, *Empty) (*FuncSpec, error)
@@ -200,6 +259,21 @@ type RegistryServer interface {
 type UnimplementedRegistryServer struct {
 }
 
+func (*UnimplementedRegistryServer) IsAuthenticator(ctx context.Context, req *empty.Empty) (*ImplementsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsAuthenticator not implemented")
+}
+func (*UnimplementedRegistryServer) Auth(ctx context.Context, req *FuncSpec_Args) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Auth not implemented")
+}
+func (*UnimplementedRegistryServer) AuthSpec(ctx context.Context, req *empty.Empty) (*FuncSpec, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthSpec not implemented")
+}
+func (*UnimplementedRegistryServer) ValidateAuth(ctx context.Context, req *FuncSpec_Args) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateAuth not implemented")
+}
+func (*UnimplementedRegistryServer) ValidateAuthSpec(ctx context.Context, req *empty.Empty) (*FuncSpec, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateAuthSpec not implemented")
+}
 func (*UnimplementedRegistryServer) ConfigStruct(ctx context.Context, req *empty.Empty) (*Config_StructResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfigStruct not implemented")
 }
@@ -215,6 +289,96 @@ func (*UnimplementedRegistryServer) Push(ctx context.Context, req *FuncSpec_Args
 
 func RegisterRegistryServer(s *grpc.Server, srv RegistryServer) {
 	s.RegisterService(&_Registry_serviceDesc, srv)
+}
+
+func _Registry_IsAuthenticator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegistryServer).IsAuthenticator(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Registry/IsAuthenticator",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegistryServer).IsAuthenticator(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Registry_Auth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FuncSpec_Args)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegistryServer).Auth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Registry/Auth",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegistryServer).Auth(ctx, req.(*FuncSpec_Args))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Registry_AuthSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegistryServer).AuthSpec(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Registry/AuthSpec",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegistryServer).AuthSpec(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Registry_ValidateAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FuncSpec_Args)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegistryServer).ValidateAuth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Registry/ValidateAuth",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegistryServer).ValidateAuth(ctx, req.(*FuncSpec_Args))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Registry_ValidateAuthSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RegistryServer).ValidateAuthSpec(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Registry/ValidateAuthSpec",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RegistryServer).ValidateAuthSpec(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Registry_ConfigStruct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -293,6 +457,26 @@ var _Registry_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.Registry",
 	HandlerType: (*RegistryServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "IsAuthenticator",
+			Handler:    _Registry_IsAuthenticator_Handler,
+		},
+		{
+			MethodName: "Auth",
+			Handler:    _Registry_Auth_Handler,
+		},
+		{
+			MethodName: "AuthSpec",
+			Handler:    _Registry_AuthSpec_Handler,
+		},
+		{
+			MethodName: "ValidateAuth",
+			Handler:    _Registry_ValidateAuth_Handler,
+		},
+		{
+			MethodName: "ValidateAuthSpec",
+			Handler:    _Registry_ValidateAuthSpec_Handler,
+		},
 		{
 			MethodName: "ConfigStruct",
 			Handler:    _Registry_ConfigStruct_Handler,

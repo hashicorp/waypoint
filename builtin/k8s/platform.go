@@ -43,6 +43,24 @@ func (p *Platform) DestroyFunc() interface{} {
 	return p.Destroy
 }
 
+// ValidateAuthFunc implements component.Authenticator
+func (p *Platform) ValidateAuthFunc() interface{} {
+	return p.ValidateAuth
+}
+
+// AuthFunc implements component.Authenticator
+func (p *Platform) AuthFunc() interface{} {
+	return p.Auth
+}
+
+func (p *Platform) Auth() error {
+	return nil
+}
+
+func (p *Platform) ValidateAuth() error {
+	return nil
+}
+
 // Deploy deploys an image to Kubernetes.
 func (p *Platform) Deploy(
 	ctx context.Context,

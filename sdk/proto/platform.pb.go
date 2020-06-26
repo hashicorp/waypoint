@@ -107,26 +107,30 @@ func init() {
 }
 
 var fileDescriptor_918f3d50bfb447e4 = []byte{
-	// 304 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x51, 0x4d, 0x4b, 0x33, 0x31,
-	0x10, 0xa6, 0xbc, 0xaf, 0x55, 0xa7, 0x55, 0x21, 0x54, 0xa9, 0x11, 0x44, 0x3c, 0x09, 0x4a, 0x0a,
-	0x55, 0xf4, 0x22, 0xc5, 0xd2, 0x2a, 0x2c, 0x78, 0x90, 0xed, 0x2f, 0x68, 0x97, 0xd9, 0x50, 0xc8,
-	0x26, 0x31, 0x1f, 0x87, 0xfd, 0xb9, 0xfe, 0x13, 0x31, 0xc9, 0x16, 0x6c, 0xd9, 0x83, 0xa7, 0x65,
-	0x9e, 0xaf, 0x3c, 0x33, 0x0b, 0xc7, 0x5a, 0x2c, 0x5d, 0xa9, 0x4c, 0xc5, 0xb4, 0x51, 0x4e, 0x91,
-	0xbd, 0xf0, 0xa1, 0xe7, 0x5c, 0x29, 0x2e, 0x70, 0x14, 0xa6, 0x95, 0x2f, 0x47, 0x4b, 0x59, 0x47,
-	0x05, 0xbd, 0xd8, 0xa6, 0xb0, 0xd2, 0xae, 0x21, 0xfb, 0x5a, 0x78, 0xbe, 0x96, 0x71, 0xba, 0x9e,
-	0x40, 0x77, 0x8e, 0x5a, 0xa8, 0x9a, 0x3e, 0xc0, 0xff, 0x1c, 0xad, 0x26, 0x77, 0xd0, 0x35, 0x68,
-	0xbd, 0x70, 0xc3, 0xce, 0x55, 0xe7, 0xa6, 0x37, 0x1e, 0xb0, 0x98, 0xc6, 0x9a, 0x34, 0x36, 0x95,
-	0x75, 0x9e, 0x34, 0xe3, 0xaf, 0x7f, 0x70, 0xf0, 0x91, 0xfa, 0x91, 0x17, 0xe8, 0xcf, 0x94, 0x2c,
-	0xd7, 0x7c, 0xe1, 0x8c, 0x2f, 0x1c, 0x39, 0xdb, 0xb1, 0xbe, 0xfe, 0x14, 0xa1, 0xc3, 0x08, 0xb0,
-	0x28, 0x66, 0x51, 0x1d, 0x1e, 0x9f, 0xc1, 0x61, 0x04, 0xbd, 0x41, 0x72, 0xf9, 0x5b, 0xb6, 0x21,
-	0x72, 0xfc, 0xf4, 0x68, 0x1d, 0x6d, 0x89, 0x27, 0xb7, 0x00, 0x71, 0xa7, 0x85, 0xc6, 0x82, 0xf4,
-	0x53, 0x4a, 0x7c, 0xfa, 0x24, 0x4d, 0x6f, 0x5e, 0x16, 0x81, 0x1e, 0x37, 0x07, 0x20, 0x83, 0x2d,
-	0x8a, 0x4d, 0x0d, 0xb7, 0x94, 0x24, 0x34, 0x8a, 0x58, 0x68, 0xf9, 0x0c, 0xbd, 0xcc, 0xce, 0xd1,
-	0x3a, 0xa3, 0x6a, 0x34, 0xad, 0x6b, 0x9e, 0x26, 0x6b, 0x56, 0x69, 0x81, 0x15, 0x4a, 0x67, 0x83,
-	0xfb, 0x11, 0x7a, 0xc9, 0x1b, 0x0a, 0xb4, 0xb9, 0x77, 0x9a, 0x3e, 0xc1, 0x7e, 0xf2, 0xb5, 0x54,
-	0x6d, 0xbb, 0xc7, 0x04, 0x8e, 0x32, 0xfb, 0xae, 0xf8, 0xe6, 0x3f, 0xfd, 0xad, 0xf0, 0xaa, 0x1b,
-	0xd0, 0xfb, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x77, 0x77, 0xc5, 0x6a, 0x89, 0x02, 0x00, 0x00,
+	// 362 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x52, 0x4f, 0x6b, 0xe2, 0x40,
+	0x14, 0x47, 0x70, 0xa3, 0x3e, 0xb3, 0xeb, 0x32, 0xb8, 0x8b, 0x9b, 0x85, 0x65, 0xe9, 0xa9, 0xd0,
+	0x32, 0x82, 0x4a, 0x7b, 0x50, 0x44, 0xab, 0x2d, 0x04, 0x7a, 0x28, 0x0a, 0x3d, 0xf4, 0x96, 0xa6,
+	0xcf, 0x34, 0x90, 0x64, 0xa6, 0xf3, 0xe7, 0x90, 0x8f, 0xd0, 0x6f, 0x5d, 0x92, 0x19, 0xa5, 0xb5,
+	0xe4, 0x90, 0x9e, 0x86, 0x79, 0xef, 0xf7, 0x6f, 0xde, 0x3c, 0xf8, 0xc1, 0x93, 0x40, 0xed, 0x98,
+	0x48, 0x29, 0x17, 0x4c, 0x31, 0xf2, 0xad, 0x3c, 0xbc, 0x3f, 0x11, 0x63, 0x51, 0x82, 0xc3, 0xf2,
+	0xf6, 0xa8, 0x77, 0xc3, 0x20, 0xcb, 0x0d, 0xc2, 0xfb, 0x7b, 0xdc, 0xc2, 0x94, 0xab, 0x7d, 0xd3,
+	0xe5, 0x89, 0x8e, 0xe2, 0xcc, 0xdc, 0x4e, 0xe6, 0xe0, 0xac, 0x91, 0x27, 0x2c, 0xf7, 0x26, 0xd0,
+	0xdc, 0xa0, 0xe4, 0xe4, 0x1c, 0x1c, 0x81, 0x52, 0x27, 0x6a, 0xd0, 0xf8, 0xdf, 0x38, 0xed, 0x8e,
+	0xfa, 0xd4, 0xa8, 0xd1, 0xbd, 0x1a, 0x5d, 0x66, 0xf9, 0xc6, 0x62, 0x46, 0xaf, 0x0e, 0xb4, 0xef,
+	0x6c, 0x3e, 0xb2, 0x80, 0x9e, 0x2f, 0x97, 0x5a, 0x3d, 0x63, 0xa6, 0xe2, 0x30, 0x50, 0x4c, 0x90,
+	0xdf, 0x9f, 0xd8, 0xd7, 0x45, 0x16, 0xef, 0x97, 0x29, 0x50, 0x3f, 0xe5, 0x09, 0xa6, 0x98, 0x29,
+	0x59, 0x9a, 0x4f, 0xa0, 0x59, 0xf0, 0x49, 0xdf, 0xb6, 0x6f, 0x74, 0x16, 0x6e, 0x39, 0x86, 0x74,
+	0x29, 0x22, 0xe9, 0x55, 0x88, 0x91, 0x31, 0xb4, 0x0b, 0x56, 0x01, 0xac, 0x34, 0xec, 0x1d, 0x29,
+	0x92, 0x19, 0xb8, 0xf7, 0x41, 0x12, 0x3f, 0x05, 0x0a, 0xbf, 0x60, 0x39, 0x85, 0x9f, 0xef, 0xd9,
+	0xf5, 0xac, 0x17, 0xe0, 0xae, 0x58, 0xb6, 0x8b, 0xa3, 0xad, 0x12, 0x3a, 0x54, 0x95, 0xc4, 0x81,
+	0x25, 0x1a, 0x30, 0x35, 0xe8, 0x72, 0x4e, 0x2b, 0xe8, 0x98, 0xa2, 0x16, 0x48, 0xfe, 0x7d, 0x84,
+	0x1d, 0x1a, 0x1b, 0x7c, 0xd1, 0x28, 0x55, 0xe5, 0x1b, 0xce, 0x00, 0xcc, 0xdf, 0x97, 0xa1, 0x5c,
+	0xab, 0x52, 0x91, 0x79, 0xb4, 0x5f, 0x94, 0x8a, 0x41, 0x11, 0x5b, 0x35, 0x20, 0x5a, 0xa6, 0x9c,
+	0x41, 0xd7, 0x97, 0x6b, 0x94, 0x4a, 0xb0, 0x1c, 0x6b, 0xef, 0xc2, 0x05, 0x74, 0x2d, 0xb7, 0xde,
+	0x74, 0x2f, 0xa1, 0x65, 0x79, 0x35, 0xff, 0x74, 0x0e, 0xdf, 0x7d, 0x79, 0xcb, 0xa2, 0xc3, 0x3e,
+	0xd7, 0x0b, 0x7c, 0xd5, 0x79, 0x68, 0xd1, 0xa9, 0x81, 0x3a, 0xe5, 0x31, 0x7e, 0x0b, 0x00, 0x00,
+	0xff, 0xff, 0x92, 0x81, 0x7b, 0x81, 0xbc, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -141,6 +145,11 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type PlatformClient interface {
+	IsAuthenticator(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error)
+	Auth(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error)
+	AuthSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error)
+	ValidateAuth(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error)
+	ValidateAuthSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error)
 	ConfigStruct(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Config_StructResp, error)
 	Configure(ctx context.Context, in *Config_ConfigureRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	DeploySpec(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FuncSpec, error)
@@ -159,6 +168,51 @@ type platformClient struct {
 
 func NewPlatformClient(cc grpc.ClientConnInterface) PlatformClient {
 	return &platformClient{cc}
+}
+
+func (c *platformClient) IsAuthenticator(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error) {
+	out := new(ImplementsResp)
+	err := c.cc.Invoke(ctx, "/proto.Platform/IsAuthenticator", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformClient) Auth(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.Platform/Auth", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformClient) AuthSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error) {
+	out := new(FuncSpec)
+	err := c.cc.Invoke(ctx, "/proto.Platform/AuthSpec", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformClient) ValidateAuth(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.Platform/ValidateAuth", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformClient) ValidateAuthSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error) {
+	out := new(FuncSpec)
+	err := c.cc.Invoke(ctx, "/proto.Platform/ValidateAuthSpec", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *platformClient) ConfigStruct(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Config_StructResp, error) {
@@ -235,6 +289,11 @@ func (c *platformClient) IsLogPlatform(ctx context.Context, in *empty.Empty, opt
 
 // PlatformServer is the server API for Platform service.
 type PlatformServer interface {
+	IsAuthenticator(context.Context, *empty.Empty) (*ImplementsResp, error)
+	Auth(context.Context, *FuncSpec_Args) (*empty.Empty, error)
+	AuthSpec(context.Context, *empty.Empty) (*FuncSpec, error)
+	ValidateAuth(context.Context, *FuncSpec_Args) (*empty.Empty, error)
+	ValidateAuthSpec(context.Context, *empty.Empty) (*FuncSpec, error)
 	ConfigStruct(context.Context, *empty.Empty) (*Config_StructResp, error)
 	Configure(context.Context, *Config_ConfigureRequest) (*empty.Empty, error)
 	DeploySpec(context.Context, *Empty) (*FuncSpec, error)
@@ -251,6 +310,21 @@ type PlatformServer interface {
 type UnimplementedPlatformServer struct {
 }
 
+func (*UnimplementedPlatformServer) IsAuthenticator(ctx context.Context, req *empty.Empty) (*ImplementsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsAuthenticator not implemented")
+}
+func (*UnimplementedPlatformServer) Auth(ctx context.Context, req *FuncSpec_Args) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Auth not implemented")
+}
+func (*UnimplementedPlatformServer) AuthSpec(ctx context.Context, req *empty.Empty) (*FuncSpec, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AuthSpec not implemented")
+}
+func (*UnimplementedPlatformServer) ValidateAuth(ctx context.Context, req *FuncSpec_Args) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateAuth not implemented")
+}
+func (*UnimplementedPlatformServer) ValidateAuthSpec(ctx context.Context, req *empty.Empty) (*FuncSpec, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateAuthSpec not implemented")
+}
 func (*UnimplementedPlatformServer) ConfigStruct(ctx context.Context, req *empty.Empty) (*Config_StructResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfigStruct not implemented")
 }
@@ -278,6 +352,96 @@ func (*UnimplementedPlatformServer) IsLogPlatform(ctx context.Context, req *empt
 
 func RegisterPlatformServer(s *grpc.Server, srv PlatformServer) {
 	s.RegisterService(&_Platform_serviceDesc, srv)
+}
+
+func _Platform_IsAuthenticator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformServer).IsAuthenticator(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Platform/IsAuthenticator",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).IsAuthenticator(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Platform_Auth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FuncSpec_Args)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformServer).Auth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Platform/Auth",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).Auth(ctx, req.(*FuncSpec_Args))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Platform_AuthSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformServer).AuthSpec(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Platform/AuthSpec",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).AuthSpec(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Platform_ValidateAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FuncSpec_Args)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformServer).ValidateAuth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Platform/ValidateAuth",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).ValidateAuth(ctx, req.(*FuncSpec_Args))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Platform_ValidateAuthSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformServer).ValidateAuthSpec(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Platform/ValidateAuthSpec",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).ValidateAuthSpec(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Platform_ConfigStruct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -428,6 +592,26 @@ var _Platform_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.Platform",
 	HandlerType: (*PlatformServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "IsAuthenticator",
+			Handler:    _Platform_IsAuthenticator_Handler,
+		},
+		{
+			MethodName: "Auth",
+			Handler:    _Platform_Auth_Handler,
+		},
+		{
+			MethodName: "AuthSpec",
+			Handler:    _Platform_AuthSpec_Handler,
+		},
+		{
+			MethodName: "ValidateAuth",
+			Handler:    _Platform_ValidateAuth_Handler,
+		},
+		{
+			MethodName: "ValidateAuthSpec",
+			Handler:    _Platform_ValidateAuthSpec_Handler,
+		},
 		{
 			MethodName: "ConfigStruct",
 			Handler:    _Platform_ConfigStruct_Handler,

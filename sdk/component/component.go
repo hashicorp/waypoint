@@ -26,6 +26,7 @@ const (
 	ReleaseManagerType             // ReleaseManager
 	LogPlatformType                // LogPlatform
 	LogViewerType                  // LogViewer
+	AuthenticatorType              // Authenticator
 	maxType
 )
 
@@ -38,6 +39,7 @@ var TypeMap = map[Type]interface{}{
 	ReleaseManagerType: (*ReleaseManager)(nil),
 	LogPlatformType:    (*LogPlatform)(nil),
 	LogViewerType:      (*LogViewer)(nil),
+	AuthenticatorType:  (*Authenticator)(nil),
 }
 
 // Builder is responsible for building an artifact from source.
@@ -79,6 +81,17 @@ type ReleaseManager interface {
 type Destroyer interface {
 	// DestroyFunc should return the method handle for the destroy operation.
 	DestroyFunc() interface{}
+}
+
+// Authenticator is responsible for authenticating different types of plugins.
+type Authenticator interface {
+	// AuthFunc should return the method for getting credentials for a
+	// plugin.
+	AuthFunc() interface{}
+
+	// ValidateAuthFunc should return the method for validating authentication
+	// credentials for the plugin
+	ValidateAuthFunc() interface{}
 }
 
 // A Platform that supports the ability to exec into a shell environment

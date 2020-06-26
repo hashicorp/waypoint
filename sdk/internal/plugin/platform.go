@@ -40,6 +40,11 @@ func (p *PlatformPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) e
 			Impl: p.Impl,
 		},
 
+		authenticatorServer: &authenticatorServer{
+			base: base,
+			Impl: p.Impl,
+		},
+
 		Impl: p.Impl,
 	})
 
@@ -92,11 +97,26 @@ func (p *PlatformPlugin) GRPCClient(
 		destroyer = nil
 	}
 
+	authenticator := &authenticatorClient{
+		Client:  client.client,
+		Logger:  client.logger,
+		Broker:  client.broker,
+		Mappers: client.mappers,
+	}
+	if ok, err := authenticator.Implements(ctx); err != nil {
+		return nil, err
+	} else if ok {
+		p.Logger.Info("platform plugin capable of auth")
+	} else {
+		authenticator = nil
+	}
+
 	// Figure out what we're returning
 	var result interface{} = client
 	switch {
 	case logPlatform != nil && destroyer != nil:
 		result = &mix_Platform_Log_Destroy{
+			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
 			LogPlatform:        logPlatform,
@@ -105,6 +125,7 @@ func (p *PlatformPlugin) GRPCClient(
 
 	case logPlatform != nil:
 		result = &mix_Platform_Log{
+			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
 			LogPlatform:        logPlatform,
@@ -112,9 +133,16 @@ func (p *PlatformPlugin) GRPCClient(
 
 	case destroyer != nil:
 		result = &mix_Platform_Destroy{
+			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
 			Destroyer:          destroyer,
+		}
+	default:
+		result = &mix_Platform_Authenticator{
+			Authenticator:      authenticator,
+			ConfigurableNotify: client,
+			Platform:           client,
 		}
 	}
 
@@ -179,6 +207,7 @@ func (c *platformClient) deploy(
 type platformServer struct {
 	*base
 	*destroyerServer
+	*authenticatorServer
 
 	Impl component.Platform
 }

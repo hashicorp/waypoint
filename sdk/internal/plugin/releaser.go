@@ -36,6 +36,11 @@ func (p *ReleaseManagerPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Ser
 	proto.RegisterReleaseManagerServer(s, &releaseManagerServer{
 		base: base,
 		Impl: p.Impl,
+
+		authenticatorServer: &authenticatorServer{
+			base: base,
+			Impl: p.Impl,
+		},
 	})
 	return nil
 }
@@ -45,12 +50,34 @@ func (p *ReleaseManagerPlugin) GRPCClient(
 	broker *plugin.GRPCBroker,
 	c *grpc.ClientConn,
 ) (interface{}, error) {
-	return &releaseManagerClient{
+	client := &releaseManagerClient{
 		client:  proto.NewReleaseManagerClient(c),
 		logger:  p.Logger,
 		broker:  broker,
 		mappers: p.Mappers,
-	}, nil
+	}
+
+	authenticator := &authenticatorClient{
+		Client:  client.client,
+		Logger:  client.logger,
+		Broker:  client.broker,
+		Mappers: client.mappers,
+	}
+	if ok, err := authenticator.Implements(ctx); err != nil {
+		return nil, err
+	} else if ok {
+		p.Logger.Info("release plugin capable of auth")
+	} else {
+		authenticator = nil
+	}
+
+	result := &mix_ReleaseManager_Authenticator{
+		ConfigurableNotify: client,
+		ReleaseManager:     client,
+		Authenticator:      authenticator,
+	}
+
+	return result, nil
 }
 
 // releaseManagerClient is an implementation of component.ReleaseManager that
@@ -111,6 +138,7 @@ func (c *releaseManagerClient) build(
 // real implementation of the component.
 type releaseManagerServer struct {
 	*base
+	*authenticatorServer
 
 	Impl component.ReleaseManager
 }

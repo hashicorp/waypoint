@@ -6,8 +6,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/go-argmapper"
+	"github.com/hashicorp/go-plugin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -61,9 +61,30 @@ func TestBuilderBuild(t *testing.T) {
 	require.True(called)
 }
 
+func TestBuilderDynamicFunc_auth(t *testing.T) {
+	testDynamicFunc(t, "builder", &mockBuilderAuthenticator{}, func(v, f interface{}) {
+		v.(*mockBuilderAuthenticator).Authenticator.On("AuthFunc").Return(f)
+	}, func(raw interface{}) interface{} {
+		return raw.(component.Authenticator).AuthFunc()
+	})
+}
+
+func TestBuilderDynamicFunc_validateAuth(t *testing.T) {
+	testDynamicFunc(t, "builder", &mockBuilderAuthenticator{}, func(v, f interface{}) {
+		v.(*mockBuilderAuthenticator).Authenticator.On("ValidateAuthFunc").Return(f)
+	}, func(raw interface{}) interface{} {
+		return raw.(component.Authenticator).ValidateAuthFunc()
+	})
+}
+
 func TestBuilderConfig(t *testing.T) {
 	mockV := &mockBuilderConfigurable{}
 	testConfigurable(t, "builder", mockV, &mockV.Configurable)
+}
+
+type mockBuilderAuthenticator struct {
+	mocks.Builder
+	mocks.Authenticator
 }
 
 type mockBuilderConfigurable struct {

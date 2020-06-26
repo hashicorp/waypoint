@@ -135,6 +135,7 @@ message FuncSpec {
     repeated Value args = 1;
   }
 }
+
 // Config is the namespace of messages related to configuration.
 //
 // All components that take configuration are expected to have two RPC calls:
