@@ -5,10 +5,12 @@ Waypoint is a deployment tool, there are many like it, but it is ours.
 ## Running Waypoint on Docker for Mac Kubernetes
 
 1. Enable Kubernetes in the Docker for Mac configuration
+    1. ![Image of Kubernetes Settings](./docs/images/d4m-k8s.png)
 1. Configured kubernetes to access the github docker registry
     1. https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-docker-for-use-with-github-packages#authenticating-to-github-packages
     1. `kubectl create secret docker-registry github --docker-server=docker.pkg.github.com --docker-username=$GITHUB_USER --docker-password=$GITHUB_PASSWORD --docker-email=$GITHUB_EMAIL`
 1. Download or build waypoint
+    1. https://github.com/hashicorp/waypoint/releases/download/v0.1.0/waypoint-darwin-0.1.0.zip
 1. Create a Waypoint URL Service account:
     1. `waypoint account register --email $MY_EMAIL --accept-eula`
     1. The output will include a token to use. Set this token to WAYPOINT\_URL\_TOKEN in your environment:
