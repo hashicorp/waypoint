@@ -36,7 +36,9 @@ type UI interface {
 }
 
 // BasicUI
-type BasicUI struct{}
+type BasicUI struct {
+	status *spinnerStatus
+}
 
 // Output implements UI
 func (ui *BasicUI) Output(msg string, raw ...interface{}) {
@@ -60,6 +62,13 @@ func (ui *BasicUI) Output(msg string, raw ...interface{}) {
 		opt(cfg)
 	}
 
+	st := ui.status
+
+	if st != nil {
+		st.Pause()
+		defer st.Start()
+	}
+
 	// Write it
 	fmt.Fprintln(cfg.Writer, cfg.Message)
 }
@@ -71,7 +80,11 @@ func (ui *BasicUI) OutputWriters() (io.Writer, io.Writer, error) {
 
 // Status implements UI
 func (ui *BasicUI) Status() Status {
-	return newSpinnerStatus()
+	if ui.status == nil {
+		ui.status = newSpinnerStatus()
+	}
+
+	return ui.status
 }
 
 type config struct {

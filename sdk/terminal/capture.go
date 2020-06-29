@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -226,6 +227,10 @@ func (s *captureStatus) Update(msg string) {
 
 func (s *captureStatus) Close() error {
 	return nil
+}
+
+func (s *captureStatus) Step(status, msg string) {
+	s.UI.Output(fmt.Sprintf("%s: %s", status, msg))
 }
 
 var (
