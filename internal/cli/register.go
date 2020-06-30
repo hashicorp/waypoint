@@ -184,12 +184,10 @@ func (c *RegisterCommand) Run(args []string) int {
 
 		c.ui.Output("Configured hostnames:", terminal.WithHeaderStyle())
 		for _, lh := range lrr.Hostnames {
-			c.ui.Output("Hostname: %[1]s\nLabels: %[2]s",
-				lh.Hostname,
-				strings.Join(lh.Labels, ", "),
-				terminal.WithKeyValueStyle(":"),
-				terminal.WithStatusStyle(),
-			)
+			c.ui.Table([][]string{
+				{"Hostname", lh.Hostname},
+				{"Labels", strings.Join(lh.Labels, ", ")},
+			})
 
 			c.ui.Output("")
 		}

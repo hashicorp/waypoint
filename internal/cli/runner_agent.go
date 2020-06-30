@@ -47,13 +47,9 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	// Output information to the user
 	c.ui.Output("Runner configuration:", terminal.WithHeaderStyle())
 	c.ui.Output("")
-	c.ui.Output(`
-Server address: %[1]s
-`,
-		conn.Target(),
-		terminal.WithKeyValueStyle(":"),
-		terminal.WithStatusStyle(),
-	)
+	c.ui.Table([][]string{
+		{"Server address", conn.Target()},
+	})
 	c.ui.Output("")
 	c.ui.Output("Runner logs:", terminal.WithHeaderStyle())
 	c.ui.Output("")

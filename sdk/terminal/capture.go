@@ -101,18 +101,31 @@ func (ui *CaptureUI) Close() error {
 }
 
 func (ui *CaptureUI) Output(msg string, raw ...interface{}) {
-	// Our timestamp for this is now
-	ts := time.Now()
-
 	// Write to our buffer
 	var buf bytes.Buffer
 	ui.real.Output(msg, append(raw,
 		WithWriter(&buf),
 	)...)
 
+	ui.parseBuf(&buf)
+}
+
+func (ui *CaptureUI) Table(rows [][]string, opts ...Option) {
+	// Write to our buffer
+	var buf bytes.Buffer
+	ui.real.Table(rows, append(opts,
+		WithWriter(&buf),
+	)...)
+
+	ui.parseBuf(&buf)
+}
+
+func (ui *CaptureUI) parseBuf(buf *bytes.Buffer) {
+	ts := time.Now()
+
 	// Scan and construct lines
 	var lines []*CaptureLine
-	scanner := bufio.NewScanner(&buf)
+	scanner := bufio.NewScanner(buf)
 	for scanner.Scan() {
 		lines = append(lines, &CaptureLine{
 			Line:      scanner.Text(),

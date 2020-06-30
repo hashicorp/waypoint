@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/fatih/color"
 )
@@ -22,6 +23,10 @@ type UI interface {
 	// arguments should be interpolations for the format string. After the
 	// interpolations you may add Options.
 	Output(string, ...interface{})
+
+	// Output data as a table of data. Each entry is a row which will be output
+	// with the columns lined up nicely.
+	Table([][]string, ...Option)
 
 	// OutputWriters returns stdout and stderr writers. These are usually
 	// but not always TTYs. This is useful for subprocesses, network requests,
@@ -73,6 +78,24 @@ func (ui *BasicUI) Output(msg string, raw ...interface{}) {
 	fmt.Fprintln(cfg.Writer, cfg.Message)
 }
 
+func (ui *BasicUI) Table(rows [][]string, opts ...Option) {
+	cfg := &config{Writer: color.Output}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	tr := tabwriter.NewWriter(cfg.Writer, 1, 8, 0, ' ', tabwriter.AlignRight)
+	for _, row := range rows {
+		if len(row) == 1 {
+			fmt.Fprintf(tr, "%s\n", row[0])
+		} else {
+			fmt.Fprintf(tr, "%s: \t%s\n", row[0], strings.Join(row[1:], "\t"))
+		}
+	}
+
+	tr.Flush()
+}
+
 // OutputWriters implements UI
 func (ui *BasicUI) OutputWriters() (io.Writer, io.Writer, error) {
 	return os.Stdout, os.Stderr, nil
@@ -110,8 +133,8 @@ func WithHeaderStyle() Option {
 	}
 }
 
-// WithStatusStyle styles the output like a status update.
-func WithStatusStyle() Option {
+// WithInfoStyle styles the output like it's formatted information.
+func WithInfoStyle() Option {
 	return func(c *config) {
 		lines := strings.Split(c.Message, "\n")
 		for i, line := range lines {

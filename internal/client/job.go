@@ -161,7 +161,7 @@ func (c *Project) queueAndStreamJob(
 					ui.Output("Operation is queued. Waiting for runner assignment...",
 						terminal.WithHeaderStyle())
 					ui.Output("If you interrupt this command, the job will still run in the background.",
-						terminal.WithStatusStyle())
+						terminal.WithInfoStyle())
 				})
 
 			case pb.Job_WAITING:
@@ -169,7 +169,7 @@ func (c *Project) queueAndStreamJob(
 					ui.Output("Operation is assigned to a runner. Waiting for start...",
 						terminal.WithHeaderStyle())
 					ui.Output("If you interrupt this command, the job will still run in the background.",
-						terminal.WithStatusStyle())
+						terminal.WithInfoStyle())
 				})
 			}
 

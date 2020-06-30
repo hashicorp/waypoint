@@ -8,24 +8,49 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestKeyValueStyle(t *testing.T) {
+func TestTable(t *testing.T) {
 	require := require.New(t)
 
 	var buf bytes.Buffer
 	var ui BasicUI
-	ui.Output(`
-hello: a
-this: is
-a: test
-of
-the_key_value: style`,
+	ui.Table([][]string{
+		{"hello", "a"},
+		{"this", "is"},
+		{"a", "test"},
+		{"of", "foo"},
+		{"the_key_value", "style"},
+	},
 		WithWriter(&buf),
-		WithKeyValueStyle(":"),
 	)
 
 	expected := `        hello: a
          this: is
             a: test
+           of: foo
+the_key_value: style
+`
+
+	require.Equal(expected, buf.String())
+}
+
+func TestTableWithReset(t *testing.T) {
+	require := require.New(t)
+
+	var buf bytes.Buffer
+	var ui BasicUI
+	ui.Table([][]string{
+		{"hello", "a"},
+		{"this", "is"},
+		{"a", "test"},
+		{"of"},
+		{"the_key_value", "style"},
+	},
+		WithWriter(&buf),
+	)
+
+	expected := `hello: a
+ this: is
+    a: test
 of
 the_key_value: style
 `
@@ -43,7 +68,7 @@ one
 two
   three`),
 		WithWriter(&buf),
-		WithStatusStyle(),
+		WithInfoStyle(),
 	)
 
 	expected := `    one

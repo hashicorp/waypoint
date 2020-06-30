@@ -14,5 +14,40 @@ service TerminalUIService {
 message TerminalUI {
   message OutputRequest {
     repeated string lines = 1;
+
+    oneof update {
+      Status status = 2;
+      Header header = 3;
+      Error error = 4;
+      Warning warning = 5;
+      Success success = 6;
+      KeyValues keyvalues = 7;
+    }
+
+    message Status {
+      string status = 1;
+      string msg = 2;
+      bool step = 3;
+    }
+
+    message Header {
+      string msg = 1;
+    }
+
+    message Error {
+      string msg = 1;
+    }
+
+    message Warning {
+      string msg = 1;
+    }
+
+    message Success {
+      string msg = 1;
+    }
+
+    message KeyValues {
+      string msg = 1;
+    }
   }
 }

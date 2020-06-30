@@ -115,22 +115,16 @@ func (c *ServerCommand) Run(args []string) int {
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
 	c.ui.Output("")
 	if token == "" {
-		c.ui.Output(`
-DB Path: %[1]s
-gRPC Address: %[2]s`,
-			path, ln.Addr().String(),
-			terminal.WithKeyValueStyle(":"),
-			terminal.WithStatusStyle(),
-		)
+		c.ui.Table([][]string{
+			{"DB Path", path},
+			{"gRPC Address", ln.Addr().String()},
+		})
 	} else {
-		c.ui.Output(`
-DB Path: %[1]s
-gRPC Address: %[2]s
-Token: %[3]s`,
-			path, ln.Addr().String(), token,
-			terminal.WithKeyValueStyle(":"),
-			terminal.WithStatusStyle(),
-		)
+		c.ui.Table([][]string{
+			{"DB Path", path},
+			{"gRPC Address", ln.Addr().String()},
+			{"Token", token},
+		})
 	}
 	c.ui.Output("")
 	c.ui.Output("Server logs:", terminal.WithHeaderStyle())

@@ -121,7 +121,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 				t.Target.Percent,
 				t.Deployment.Id,
 				humanize.Time(completeTime),
-				terminal.WithStatusStyle(),
+				terminal.WithInfoStyle(),
 			)
 		}
 
