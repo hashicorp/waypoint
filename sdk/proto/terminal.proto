@@ -9,19 +9,20 @@ import "google/protobuf/empty.proto";
 // interact with it indirectly via a terminal.UI implementation.
 service TerminalUIService {
   rpc Output(TerminalUI.OutputRequest) returns (google.protobuf.Empty);
+  rpc Events(stream TerminalUI.Event) returns (google.protobuf.Empty);
 }
 
 message TerminalUI {
   message OutputRequest {
     repeated string lines = 1;
+  }
 
-    oneof update {
+  message Event {
+    oneof event {
+      Line line = 1;
       Status status = 2;
-      Header header = 3;
-      Error error = 4;
-      Warning warning = 5;
-      Success success = 6;
-      KeyValues keyvalues = 7;
+      Table table = 3;
+      Raw raw = 4;
     }
 
     message Status {
@@ -30,24 +31,22 @@ message TerminalUI {
       bool step = 3;
     }
 
-    message Header {
+    message Line {
       string msg = 1;
+      string style = 2;
     }
 
-    message Error {
-      string msg = 1;
+    message Raw {
+      bytes data = 1;
+      bool stderr = 2;
     }
 
-    message Warning {
-      string msg = 1;
+    message TableRow {
+      repeated string columns = 1;
     }
 
-    message Success {
-      string msg = 1;
-    }
-
-    message KeyValues {
-      string msg = 1;
+    message Table {
+      repeated TableRow rows = 1;
     }
   }
 }

@@ -14,7 +14,7 @@ require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/briandowns/spinner v1.8.0
 	github.com/buildpacks/pack v0.11.1
-	github.com/creack/pty v1.1.9
+	github.com/creack/pty v1.1.11
 	github.com/davecgh/go-spew v1.1.1
 	github.com/docker/cli v0.0.0-20200312141509-ef2f64abbd37
 	github.com/docker/distribution v2.7.1+incompatible
