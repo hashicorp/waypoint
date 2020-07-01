@@ -13,7 +13,7 @@ func TestTable(t *testing.T) {
 
 	var buf bytes.Buffer
 	var ui BasicUI
-	ui.Table([][]string{
+	ui.NamedValues([]NamedValue{
 		{"hello", "a"},
 		{"this", "is"},
 		{"a", "test"},
@@ -23,36 +23,13 @@ func TestTable(t *testing.T) {
 		WithWriter(&buf),
 	)
 
-	expected := `        hello: a
+	expected := `
+        hello: a
          this: is
             a: test
            of: foo
 the_key_value: style
-`
 
-	require.Equal(expected, buf.String())
-}
-
-func TestTableWithReset(t *testing.T) {
-	require := require.New(t)
-
-	var buf bytes.Buffer
-	var ui BasicUI
-	ui.Table([][]string{
-		{"hello", "a"},
-		{"this", "is"},
-		{"a", "test"},
-		{"of"},
-		{"the_key_value", "style"},
-	},
-		WithWriter(&buf),
-	)
-
-	expected := `hello: a
- this: is
-    a: test
-of
-the_key_value: style
 `
 
 	require.Equal(expected, buf.String())
