@@ -110,10 +110,10 @@ func (ui *CaptureUI) Output(msg string, raw ...interface{}) {
 	ui.parseBuf(&buf)
 }
 
-func (ui *CaptureUI) Table(rows [][]string, opts ...Option) {
+func (ui *CaptureUI) NamedValues(rows []NamedValue, opts ...Option) {
 	// Write to our buffer
 	var buf bytes.Buffer
-	ui.real.Table(rows, append(opts,
+	ui.real.NamedValues(rows, append(opts,
 		WithWriter(&buf),
 	)...)
 

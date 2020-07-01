@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sync"
 
@@ -94,14 +95,17 @@ func (s *uiServer) Events(stream pb.TerminalUIService_EventsServer) error {
 		switch ev := ev.Event.(type) {
 		case *pb.TerminalUI_Event_Line_:
 			s.Impl.Output(ev.Line.Msg, terminal.WithStyle(ev.Line.Style))
-		case *pb.TerminalUI_Event_Table_:
-			var rows [][]string
+		case *pb.TerminalUI_Event_NamedValues_:
+			var values []terminal.NamedValue
 
-			for _, row := range ev.Table.Rows {
-				rows = append(rows, row.Columns)
+			for _, nv := range ev.NamedValues.Values {
+				values = append(values, terminal.NamedValue{
+					Name:  nv.Name,
+					Value: nv.Value,
+				})
 			}
 
-			s.Impl.Table(rows)
+			s.Impl.NamedValues(values)
 		case *pb.TerminalUI_Event_Status_:
 			if ev.Status.Msg == "" && !ev.Status.Step {
 				if status != nil {
@@ -186,12 +190,13 @@ func (u *uiBridge) Output(msg string, raw ...interface{}) {
 
 // Output data as a table of data. Each entry is a row which will be output
 // with the columns lined up nicely.
-func (u *uiBridge) Table(srows [][]string, _ ...terminal.Option) {
-	var rows []*pb.TerminalUI_Event_TableRow
+func (u *uiBridge) NamedValues(tvalues []terminal.NamedValue, _ ...terminal.Option) {
+	var values []*pb.TerminalUI_Event_NamedValue
 
-	for _, row := range srows {
-		rows = append(rows, &pb.TerminalUI_Event_TableRow{
-			Columns: row,
+	for _, nv := range tvalues {
+		values = append(values, &pb.TerminalUI_Event_NamedValue{
+			Name:  nv.Name,
+			Value: fmt.Sprintf("%s", nv.Value),
 		})
 	}
 
@@ -203,9 +208,9 @@ func (u *uiBridge) Table(srows [][]string, _ ...terminal.Option) {
 	}
 
 	u.evc.Send(&pb.TerminalUI_Event{
-		Event: &pb.TerminalUI_Event_Table_{
-			Table: &pb.TerminalUI_Event_Table{
-				Rows: rows,
+		Event: &pb.TerminalUI_Event_NamedValues_{
+			NamedValues: &pb.TerminalUI_Event_NamedValues{
+				Values: values,
 			},
 		},
 	})

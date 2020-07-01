@@ -10,6 +10,12 @@ import (
 	"github.com/fatih/color"
 )
 
+// Passed to UI.NamedValues to provide a nicely formatted key: value output
+type NamedValue struct {
+	Name  string
+	Value interface{}
+}
+
 // UI is the primary interface for interacting with a user via the CLI.
 //
 // NOTE(mitchellh): This is an interface and not a struct directly so that
@@ -25,7 +31,7 @@ type UI interface {
 
 	// Output data as a table of data. Each entry is a row which will be output
 	// with the columns lined up nicely.
-	Table([][]string, ...Option)
+	NamedValues([]NamedValue, ...Option)
 
 	// OutputWriters returns stdout and stderr writers. These are usually
 	// but not always TTYs. This is useful for subprocesses, network requests,
@@ -102,7 +108,7 @@ func (ui *BasicUI) Output(msg string, raw ...interface{}) {
 	fmt.Fprintln(w, msg)
 }
 
-func (ui *BasicUI) Table(rows [][]string, opts ...Option) {
+func (ui *BasicUI) NamedValues(rows []NamedValue, opts ...Option) {
 	cfg := &config{Writer: color.Output}
 	for _, opt := range opts {
 		opt(cfg)
@@ -112,11 +118,7 @@ func (ui *BasicUI) Table(rows [][]string, opts ...Option) {
 
 	tr := tabwriter.NewWriter(cfg.Writer, 1, 8, 0, ' ', tabwriter.AlignRight)
 	for _, row := range rows {
-		if len(row) == 1 {
-			colorInfo.Fprintf(tr, "%s\n", row[0])
-		} else {
-			colorInfo.Fprintf(tr, "%s: \t%s\n", row[0], strings.Join(row[1:], "\t "))
-		}
+		colorInfo.Fprintf(tr, "%s: \t%s\n", row.Name, row.Value)
 	}
 
 	tr.Flush()

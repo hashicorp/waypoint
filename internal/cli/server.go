@@ -115,15 +115,15 @@ func (c *ServerCommand) Run(args []string) int {
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
 	c.ui.Output("")
 	if token == "" {
-		c.ui.Table([][]string{
-			{"DB Path", path},
-			{"gRPC Address", ln.Addr().String()},
+		c.ui.NamedValues([]terminal.NamedValue{
+			{Name: "DB Path", Value: path},
+			{Name: "gRPC Address", Value: ln.Addr().String()},
 		})
 	} else {
-		c.ui.Table([][]string{
-			{"DB Path", path},
-			{"gRPC Address", ln.Addr().String()},
-			{"Token", token},
+		c.ui.NamedValues([]terminal.NamedValue{
+			{Name: "DB Path", Value: path},
+			{Name: "gRPC Address", Value: ln.Addr().String()},
+			{Name: "Token", Value: token},
 		})
 	}
 	c.ui.Output("")
