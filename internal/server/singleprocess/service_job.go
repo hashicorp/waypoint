@@ -144,7 +144,7 @@ func (s *service) GetJobStream(
 
 	// Enter the event loop
 	var lastState pb.Job_State
-	var linesCh <-chan []*pb.GetJobStreamResponse_Terminal_Line
+	var eventsCh <-chan []*pb.GetJobStreamResponse_Terminal_Event
 	for {
 		select {
 		case <-ctx.Done():
@@ -176,8 +176,8 @@ func (s *service) GetJobStream(
 			// If we haven't initialized output streaming and the output buffer
 			// is now non-nil, initialize that. This will send any buffered
 			// data down.
-			if linesCh == nil && job.OutputBuffer != nil {
-				linesCh, err = s.getJobStreamOutputInit(ctx, job, server)
+			if eventsCh == nil && job.OutputBuffer != nil {
+				eventsCh, err = s.getJobStreamOutputInit(ctx, job, server)
 				if err != nil {
 					return err
 				}
@@ -199,11 +199,11 @@ func (s *service) GetJobStream(
 				})
 			}
 
-		case lines := <-linesCh:
+		case events := <-eventsCh:
 			if err := server.Send(&pb.GetJobStreamResponse{
 				Event: &pb.GetJobStreamResponse_Terminal_{
 					Terminal: &pb.GetJobStreamResponse_Terminal{
-						Lines: lines,
+						Events: events,
 					},
 				},
 			}); err != nil {
@@ -213,38 +213,38 @@ func (s *service) GetJobStream(
 	}
 }
 
-func (s *service) readJobLogBatch(r *logbuffer.Reader, block bool) []*pb.GetJobStreamResponse_Terminal_Line {
+func (s *service) readJobLogBatch(r *logbuffer.Reader, block bool) []*pb.GetJobStreamResponse_Terminal_Event {
 	entries := r.Read(64, block)
 	if entries == nil {
 		return nil
 	}
 
-	lines := make([]*pb.GetJobStreamResponse_Terminal_Line, len(entries))
+	events := make([]*pb.GetJobStreamResponse_Terminal_Event, len(entries))
 	for i, entry := range entries {
-		lines[i] = entry.(*pb.GetJobStreamResponse_Terminal_Line)
+		events[i] = entry.(*pb.GetJobStreamResponse_Terminal_Event)
 	}
 
-	return lines
+	return events
 }
 
 func (s *service) getJobStreamOutputInit(
 	ctx context.Context,
 	job *state.Job,
 	server pb.Waypoint_GetJobStreamServer,
-) (<-chan []*pb.GetJobStreamResponse_Terminal_Line, error) {
+) (<-chan []*pb.GetJobStreamResponse_Terminal_Event, error) {
 	// Send down all our buffered lines.
 	outputR := job.OutputBuffer.Reader()
 	go outputR.CloseContext(ctx)
 	for {
-		lines := s.readJobLogBatch(outputR, false)
-		if lines == nil {
+		events := s.readJobLogBatch(outputR, false)
+		if events == nil {
 			break
 		}
 
 		if err := server.Send(&pb.GetJobStreamResponse{
 			Event: &pb.GetJobStreamResponse_Terminal_{
 				Terminal: &pb.GetJobStreamResponse_Terminal{
-					Lines:    lines,
+					Events:   events,
 					Buffered: true,
 				},
 			},
@@ -254,21 +254,21 @@ func (s *service) getJobStreamOutputInit(
 	}
 
 	// Start a goroutine that reads output
-	linesCh := make(chan []*pb.GetJobStreamResponse_Terminal_Line, 1)
+	eventsCh := make(chan []*pb.GetJobStreamResponse_Terminal_Event, 1)
 	go func() {
 		for {
-			lines := s.readJobLogBatch(outputR, true)
-			if lines == nil {
+			events := s.readJobLogBatch(outputR, true)
+			if events == nil {
 				return
 			}
 
 			select {
-			case linesCh <- lines:
+			case eventsCh <- events:
 			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 
-	return linesCh, nil
+	return eventsCh, nil
 }
