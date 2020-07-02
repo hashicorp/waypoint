@@ -37,7 +37,7 @@ func (r *Registry) Push(
 	img *Image,
 	ui terminal.UI,
 ) (*Image, error) {
-	ui.Output("Taging Docker image: %s => %s:%s", img.Name(), r.config.Image, r.config.Tag)
+	ui.Output("Tagging Docker image: %s => %s:%s", img.Name(), r.config.Image, r.config.Tag)
 
 	stdout, stderr, err := ui.OutputWriters()
 	if err != nil {

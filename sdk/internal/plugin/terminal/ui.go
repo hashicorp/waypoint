@@ -170,7 +170,7 @@ func (u *uiBridge) Output(msg string, raw ...interface{}) {
 	ev := &pb.TerminalUI_Event{
 		Event: &pb.TerminalUI_Event_Line_{
 			Line: &pb.TerminalUI_Event_Line{
-				Msg:   "BRIDGED: " + msg,
+				Msg:   msg,
 				Style: style,
 			},
 		},
