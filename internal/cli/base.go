@@ -51,6 +51,9 @@ type baseCommand struct {
 	// client for performing operations
 	project *clientpkg.Project
 
+	// contextStorage is for CLI contexts.
+	contextStorage *clicontext.Storage
+
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
 
@@ -118,6 +121,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		c.ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
 	}
+	c.contextStorage = contextStorage
 
 	// Parse the configuration
 	var cfg config.Config
