@@ -187,7 +187,14 @@ jobs:
       - run:
           name: "Docker: Build image"
           command: |
-            docker build --ssh default -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest .
+            # Note that the "id_rsa_FOO" key name is based on the fingerprint of the SSH key
+            # added in add_ssh_keys, but with colons removed.
+            docker build \
+              --ssh default \
+              --secret id=ssh.config,src="${HOME}/project/.circleci/ssh_config" \
+              --secret id=ssh.key,src="${HOME}/.ssh/id_rsa_c6969882dc046c39ddac8305e3151c98" \
+              --progress=plain \
+              -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest .
       - run:
           name: "Docker: Push image"
           command: |
