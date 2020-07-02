@@ -14,7 +14,7 @@ Waypoint is a tool for deploying applications and services to any target. With W
     1. Add your personal access token to the Docker:  
     ``kubectl create secret docker-registry github --docker-server=docker.pkg.github.com --docker-username=my-github-username --docker-password=my-github-personal-access-token --docker-email=my-github-email-address``
 1. Download or build Waypoint.  
-  Note: Be sure to [add Waypoint to your $PATH](##-add-waypoint-to-your-path).
+  Note: Be sure to [add Waypoint to your $PATH](#add-waypoint-to-your-path).
     * To use the compiled version:
       1. Clone the Waypoint repository by using http. You will need to use configuration files and a test app from the Waypoint repository to complete this tutorial.
       1. Download the binary here: https://github.com/hashicorp/waypoint/releases/download/v0.1.0/waypoint-darwin-0.1.0.zip
