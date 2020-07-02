@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
-	"github.com/hashicorp/waypoint/internal/config"
 )
 
 // ConnectOption is used to configure how Waypoint server connection
@@ -76,22 +75,6 @@ func FromEnv() ConnectOption {
 		if v := os.Getenv(EnvServerAddr); v != "" {
 			c.Addr = v
 			c.Insecure = os.Getenv(EnvServerInsecure) != ""
-		}
-
-		return nil
-	}
-}
-
-// FromConfig sources connection information from the configuration.
-// This will set Auth if the "RequireAuth" setting is set in the config.
-func FromConfig(cfg *config.Config) ConnectOption {
-	return func(c *connectConfig) error {
-		if cfg.Server != nil && cfg.Server.Address != "" {
-			c.Addr = cfg.Server.Address
-			c.Insecure = cfg.Server.Insecure
-			if cfg.Server.RequireAuth {
-				c.Auth = true
-			}
 		}
 
 		return nil
