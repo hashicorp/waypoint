@@ -45,7 +45,11 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
 	}
 	if cfg.Auth {
-		token := os.Getenv(EnvServerToken)
+		token := cfg.Token
+		if v := os.Getenv(EnvServerToken); v != "" {
+			token = v
+		}
+
 		if token == "" {
 			return nil, fmt.Errorf("No token available at the WAYPOINT_SERVER_TOKEN environment variable")
 		}
@@ -61,6 +65,7 @@ type connectConfig struct {
 	Addr     string
 	Insecure bool
 	Auth     bool
+	Token    string
 	Optional bool // See Optional func
 }
 
@@ -101,6 +106,7 @@ func FromContextConfig(cfg *clicontext.Config) ConnectOption {
 			c.Insecure = cfg.Server.Insecure
 			if cfg.Server.RequireAuth {
 				c.Auth = true
+				c.Token = cfg.Server.AuthToken
 			}
 		}
 
