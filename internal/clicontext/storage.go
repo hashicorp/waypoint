@@ -113,9 +113,15 @@ func (m *Storage) Delete(n string) error {
 	return err
 }
 
-// SetDefault sets the default context to use.
+// SetDefault sets the default context to use. If the given context
+// doesn't exist, an os.IsNotExist error will be returned.
 func (m *Storage) SetDefault(n string) error {
-	return renameio.Symlink(m.configPath(n), m.defaultPath())
+	src := m.configPath(n)
+	if _, err := os.Stat(src); err != nil {
+		return err
+	}
+
+	return renameio.Symlink(src, m.defaultPath())
 }
 
 // UnsetDefault unsets the default context.
