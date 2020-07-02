@@ -3,6 +3,8 @@ package clicontext
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/google/renameio"
 )
 
 // Storage is the primary struct for interacting with stored CLI contexts.
@@ -113,7 +115,7 @@ func (m *Storage) Delete(n string) error {
 
 // SetDefault sets the default context to use.
 func (m *Storage) SetDefault(n string) error {
-	return os.Symlink(m.configPath(n), m.defaultPath())
+	return renameio.Symlink(m.configPath(n), m.defaultPath())
 }
 
 // UnsetDefault unsets the default context.
