@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/posener/complete"
@@ -35,6 +37,10 @@ func (c *ContextUseCommand) Run(args []string) int {
 
 	// Get our contexts
 	if err := c.contextStorage.SetDefault(name); err != nil {
+		if os.IsNotExist(err) {
+			err = fmt.Errorf("Context %q doesn't exist.", name)
+		}
+
 		c.ui.Output(err.Error(), terminal.WithErrorStyle())
 		return 1
 	}
