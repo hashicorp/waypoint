@@ -136,6 +136,21 @@ func (s *uiServer) Events(stream pb.TerminalUIService_EventsServer) error {
 			} else {
 				stdout.Write(ev.Raw.Data)
 			}
+		case *pb.TerminalUI_Event_Table_:
+			tbl := terminal.NewTable(ev.Table.Headers...)
+
+			for _, row := range ev.Table.Rows {
+				var trow []terminal.TableEntry
+
+				for _, ent := range row.Entries {
+					trow = append(trow, terminal.TableEntry{
+						Value: ent.Value,
+						Color: ent.Color,
+					})
+				}
+			}
+
+			s.Impl.Table(tbl)
 		}
 	}
 }
@@ -280,6 +295,43 @@ func (u *uiBridge) sendData(r io.ReadCloser, stderr bool) {
 		u.evc.Send(ev)
 		u.mu.Unlock()
 	}
+}
+
+func (u *uiBridge) Table(tbl *terminal.Table, opts ...terminal.Option) {
+	var (
+		ptbl *pb.TerminalUI_Event_Table
+		rows []*pb.TerminalUI_Event_TableRow
+	)
+
+	ptbl.Headers = tbl.Headers
+
+	for _, row := range tbl.Rows {
+		var entries []*pb.TerminalUI_Event_TableEntry
+
+		for _, ent := range row {
+			entries = append(entries, &pb.TerminalUI_Event_TableEntry{
+				Value: ent.Value,
+				Color: ent.Color,
+			})
+		}
+
+		rows = append(rows, &pb.TerminalUI_Event_TableRow{
+			Entries: entries,
+		})
+	}
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	if u.evc == nil {
+		return
+	}
+
+	u.evc.Send(&pb.TerminalUI_Event{
+		Event: &pb.TerminalUI_Event_Table_{
+			Table: ptbl,
+		},
+	})
 }
 
 // Status returns a live-updating status that can be used for single-line

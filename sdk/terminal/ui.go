@@ -16,6 +16,48 @@ type NamedValue struct {
 	Value interface{}
 }
 
+// Passed to UI.Table to provide a nicely formatted table.
+type Table struct {
+	Headers []string
+	Rows    [][]TableEntry
+}
+
+type TableHeader struct {
+	Name  string
+	Color string
+}
+
+func NewTable(headers ...string) *Table {
+	return &Table{
+		Headers: headers,
+	}
+}
+
+const (
+	Yellow = "yellow"
+	Green  = "green"
+	Red    = "red"
+)
+
+type TableEntry struct {
+	Value string
+	Color string
+}
+
+func (t *Table) Rich(cols []string, colors []string) {
+	var row []TableEntry
+
+	for i, col := range cols {
+		if i < len(colors) {
+			row = append(row, TableEntry{Value: col, Color: colors[i]})
+		} else {
+			row = append(row, TableEntry{Value: col})
+		}
+	}
+
+	t.Rows = append(t.Rows, row)
+}
+
 // UI is the primary interface for interacting with a user via the CLI.
 //
 // NOTE(mitchellh): This is an interface and not a struct directly so that
@@ -43,6 +85,9 @@ type UI interface {
 	// status updates that typically have a spinner or some similar style.
 	// While a Status is live (Close isn't called), Output should NOT be called.
 	Status() Status
+
+	// Table outputs the information formatted into a Table structure.
+	Table(*Table, ...Option)
 }
 
 // BasicUI

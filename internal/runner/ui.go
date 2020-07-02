@@ -179,6 +179,53 @@ func (u *runnerUI) sendData(r io.ReadCloser, stderr bool) {
 	}
 }
 
+func (u *runnerUI) Table(tbl *terminal.Table, opts ...terminal.Option) {
+	var (
+		ptbl *pb.GetJobStreamResponse_Terminal_Event_Table
+		rows []*pb.GetJobStreamResponse_Terminal_Event_TableRow
+	)
+
+	ptbl.Headers = tbl.Headers
+
+	for _, row := range tbl.Rows {
+		var entries []*pb.GetJobStreamResponse_Terminal_Event_TableEntry
+
+		for _, ent := range row {
+			entries = append(entries, &pb.GetJobStreamResponse_Terminal_Event_TableEntry{
+				Value: ent.Value,
+				Color: ent.Color,
+			})
+		}
+
+		rows = append(rows, &pb.GetJobStreamResponse_Terminal_Event_TableRow{
+			Entries: entries,
+		})
+	}
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	if u.evc == nil {
+		return
+	}
+
+	ev := &pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Terminal{
+			Terminal: &pb.GetJobStreamResponse_Terminal{
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Table_{
+							Table: ptbl,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	u.evc.Send(ev)
+}
+
 // Status returns a live-updating status that can be used for single-line
 // status updates that typically have a spinner or some similar style.
 func (u *runnerUI) Status() terminal.Status {

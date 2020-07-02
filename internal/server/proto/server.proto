@@ -520,12 +520,13 @@ message GetJobStreamResponse {
         Status status = 2;
         NamedValues named_values = 3;
         Raw raw = 4;
+        Table table = 5;
       }
 
       // timestamp of the event as seen by the runner. This might be
       // skewed from the server or the client but relative to all other
       // line output, it will be accurate.
-      google.protobuf.Timestamp timestamp = 5;
+      google.protobuf.Timestamp timestamp = 6;
 
       message Status {
         string status = 1;
@@ -550,6 +551,20 @@ message GetJobStreamResponse {
 
       message NamedValues {
         repeated NamedValue values = 1;
+      }
+
+      message TableEntry {
+        string value = 1;
+        string color = 2;
+      }
+
+      message TableRow {
+        repeated TableEntry entries = 1;
+      }
+
+      message Table {
+        repeated string headers = 1;
+        repeated TableRow rows = 2;
       }
     }
   }

@@ -190,6 +190,21 @@ func (c *Project) queueAndStreamJob(
 					} else {
 						stdout.Write(ev.Raw.Data)
 					}
+				case *pb.GetJobStreamResponse_Terminal_Event_Table_:
+					tbl := terminal.NewTable(ev.Table.Headers...)
+
+					for _, row := range ev.Table.Rows {
+						var trow []terminal.TableEntry
+
+						for _, ent := range row.Entries {
+							trow = append(trow, terminal.TableEntry{
+								Value: ent.Value,
+								Color: ent.Color,
+							})
+						}
+					}
+
+					ui.Table(tbl)
 				}
 			}
 		case *pb.GetJobStreamResponse_State_:
