@@ -27,6 +27,10 @@ func NewStorage(opts ...Option) (*Storage, error) {
 func (m *Storage) List() ([]string, error) {
 	f, err := os.Open(m.dir)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+
 		return nil, err
 	}
 	defer f.Close()
