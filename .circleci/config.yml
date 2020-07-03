@@ -194,7 +194,8 @@ jobs:
               --secret id=ssh.config,src="${HOME}/project/.circleci/ssh_config" \
               --secret id=ssh.key,src="${HOME}/.ssh/id_rsa_c6969882dc046c39ddac8305e3151c98" \
               --progress=plain \
-              -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest .
+              -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest \
+              .
       - run:
           name: "Docker: Push image"
           command: |
@@ -307,12 +308,12 @@ workflows:
             - dev-build
       - image-release:
           requires:
-            # - integration
+            - integration
             - dev-build
-          # filters:
-          #   branches:
-          #     only:
-          #       - master
+          filters:
+            branches:
+              only:
+                - master
 
   # website:
   #   jobs:
