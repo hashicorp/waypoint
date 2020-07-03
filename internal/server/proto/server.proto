@@ -83,6 +83,10 @@ service Waypoint {
   // execution and update the status of that job.
   rpc RunnerJobStream(stream RunnerJobStreamRequest) returns (stream RunnerJobStreamResponse);
 
+  // RunnerGetDeploymentConfig is called by a runner for a deployment operation
+  // to determine the settings to use for a deployment.
+  rpc RunnerGetDeploymentConfig(RunnerGetDeploymentConfigRequest) returns (RunnerGetDeploymentConfigResponse);
+
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
   // the entrypoint binary only.
@@ -643,6 +647,13 @@ message RunnerJobStreamResponse {
   }
 }
 
+message RunnerGetDeploymentConfigRequest {}
+
+message RunnerGetDeploymentConfigResponse {
+  string server_addr = 1;
+  bool server_insecure = 2;
+}
+
 message GetRunnerRequest {
   // ID of the runner to request.
   string runner_id = 1;
@@ -668,6 +679,7 @@ message ServerConfig {
 
   message AdvertiseAddr {
     string addr = 1;
+    bool insecure = 2;
   }
 }
 
