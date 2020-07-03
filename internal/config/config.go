@@ -9,7 +9,6 @@ const Filename = "waypoint.hcl"
 
 // Config is the configuration structure.
 type Config struct {
-	Server  *Server           `hcl:"server,block"`
 	Runner  *Runner           `hcl:"runner,block"`
 	URL     *URL              `hcl:"url,block"`
 	Project string            `hcl:"project,attr"`

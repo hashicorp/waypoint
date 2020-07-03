@@ -123,7 +123,6 @@ func (c *baseCommand) Init(opts ...Option) error {
 			clientpkg.WithLogger(c.Log),
 			clientpkg.WithClientConnect(
 				serverclient.FromEnv(),
-				serverclient.FromConfig(&cfg),
 			),
 			clientpkg.WithProjectRef(&pb.Ref_Project{
 				Project: cfg.Project,
