@@ -18,7 +18,9 @@ func TestServerConfig(t testing.T, src *pb.ServerConfig) *pb.ServerConfig {
 
 	require.NoError(t, mergo.Merge(src, &pb.ServerConfig{
 		AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{
-			{},
+			{
+				Addr: "127.0.0.1",
+			},
 		},
 	}))
 
