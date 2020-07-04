@@ -129,14 +129,15 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 		return nil, err
 	}
 
-	// Setup our server config so anything we launch points to this server.
+	// Setup our server config. The configuration is specifically set so
+	// so that there is no advertise address which will disable the CEB
+	// completely.
 	client := pb.NewWaypointClient(conn)
 	_, err = client.SetServerConfig(ctx, &pb.SetServerConfigRequest{
 		Config: &pb.ServerConfig{
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{
 				{
-					Addr:     ln.Addr().String(),
-					Insecure: true,
+					Addr: "",
 				},
 			},
 		},
