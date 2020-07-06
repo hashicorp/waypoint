@@ -183,6 +183,11 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"server config-set": func() (cli.Command, error) {
+			return &ServerConfigSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
