@@ -11,6 +11,9 @@ import (
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
+// runnerUI Implements terminal.UI and is created by a runner and passed into
+// it's operations. The functions send events back to the server to be saved
+// and sent to job clients rather than displaying the events directly.
 type runnerUI struct {
 	ctx    context.Context
 	cancel func()

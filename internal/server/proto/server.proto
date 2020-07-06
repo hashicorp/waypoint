@@ -503,8 +503,7 @@ message GetJobStreamResponse {
   }
 
   message Terminal {
-    // lines are each line of terminal output in order for this batch
-    // repeated Line lines = 1;
+    repeated Event events = 1;
 
     // buffered if true signifies that the data being sent is from the
     // server buffer and is historical vs real-time since the stream was
@@ -512,21 +511,19 @@ message GetJobStreamResponse {
     // buffered and non-buffered lines.
     bool buffered = 2;
 
-    repeated Event events = 3;
-
     message Event {
-      oneof event {
-        Line line = 1;
-        Status status = 2;
-        NamedValues named_values = 3;
-        Raw raw = 4;
-        Table table = 5;
-      }
-
       // timestamp of the event as seen by the runner. This might be
       // skewed from the server or the client but relative to all other
       // line output, it will be accurate.
-      google.protobuf.Timestamp timestamp = 6;
+      google.protobuf.Timestamp timestamp = 1;
+
+      oneof event {
+        Line line = 2;
+        Status status = 3;
+        NamedValues named_values = 4;
+        Raw raw = 5;
+        Table table = 6;
+      }
 
       message Status {
         string status = 1;
