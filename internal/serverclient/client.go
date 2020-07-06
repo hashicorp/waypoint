@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/clicontext"
 )
 
 // ConnectOption is used to configure how Waypoint server connection
@@ -44,7 +44,11 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
 	}
 	if cfg.Auth {
-		token := os.Getenv(EnvServerToken)
+		token := cfg.Token
+		if v := os.Getenv(EnvServerToken); v != "" {
+			token = v
+		}
+
 		if token == "" {
 			return nil, fmt.Errorf("No token available at the WAYPOINT_SERVER_TOKEN environment variable")
 		}
@@ -60,6 +64,7 @@ type connectConfig struct {
 	Addr     string
 	Insecure bool
 	Auth     bool
+	Token    string
 	Optional bool // See Optional func
 }
 
@@ -76,19 +81,56 @@ func FromEnv() ConnectOption {
 	}
 }
 
-// FromConfig sources connection information from the configuration.
-// This will set Auth if the "RequireAuth" setting is set in the config.
-func FromConfig(cfg *config.Config) ConnectOption {
+// FromContextConfig loads a specific context config.
+func FromContextConfig(cfg *clicontext.Config) ConnectOption {
 	return func(c *connectConfig) error {
-		if cfg.Server != nil && cfg.Server.Address != "" {
+		if cfg != nil && cfg.Server.Address != "" {
 			c.Addr = cfg.Server.Address
 			c.Insecure = cfg.Server.Insecure
 			if cfg.Server.RequireAuth {
 				c.Auth = true
+				c.Token = cfg.Server.AuthToken
 			}
 		}
 
 		return nil
+	}
+}
+
+// FromContext loads the context. This will prefer the given name. If name
+// is empty, we'll respect the WAYPOINT_CONTEXT env var followed by the
+// default context.
+func FromContext(st *clicontext.Storage, n string) ConnectOption {
+	return func(c *connectConfig) error {
+		// Figure out what context to load. We prefer to load a manually
+		// specified one. If that isn't set, we prefer the env var. If that
+		// isn't set, we load the default.
+		if n == "" {
+			if v := os.Getenv(EnvContext); v != "" {
+				n = v
+			} else {
+				def, err := st.Default()
+				if err != nil {
+					return err
+				}
+
+				n = def
+			}
+		}
+
+		// If we still have no name, then we do nothing.
+		if n == "" {
+			return nil
+		}
+
+		// Load it and set it.
+		cfg, err := st.Load(n)
+		if err != nil {
+			return err
+		}
+
+		opt := FromContextConfig(cfg)
+		return opt(c)
 	}
 }
 
@@ -124,6 +166,9 @@ const (
 
 	// EnvServerToken is the token for authenticated with the server.
 	EnvServerToken = "WAYPOINT_SERVER_TOKEN"
+
+	// EnvContext specifies a named context to load.
+	EnvContext = "WAYPOINT_CONTEXT"
 )
 
 // This is a weird type that only exists to satisify the interface required by

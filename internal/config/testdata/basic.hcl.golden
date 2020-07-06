@@ -1,5 +1,4 @@
 (config.Config) {
- Server: (*config.Server)(<nil>),
  Runner: (*config.Runner)(<nil>),
  URL: (*config.URL)(<nil>),
  Project: (string) (len=3) "foo",

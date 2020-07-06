@@ -183,6 +183,11 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"server config-set": func() (cli.Command, error) {
+			return &ServerConfigSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
@@ -247,6 +252,27 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 
 		"runner agent": func() (cli.Command, error) {
 			return &RunnerAgentCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"context create": func() (cli.Command, error) {
+			return &ContextCreateCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"context delete": func() (cli.Command, error) {
+			return &ContextDeleteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"context use": func() (cli.Command, error) {
+			return &ContextUseCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"context list": func() (cli.Command, error) {
+			return &ContextListCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

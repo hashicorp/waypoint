@@ -5,11 +5,14 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/adrg/xdg"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
 
+	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -47,6 +50,9 @@ type baseCommand struct {
 
 	// client for performing operations
 	project *clientpkg.Project
+
+	// contextStorage is for CLI contexts.
+	contextStorage *clicontext.Storage
 
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
@@ -99,6 +105,24 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	c.args = baseCfg.Flags.Args()
 
+	// Setup our base config path
+	homeConfigPath, err := xdg.ConfigFile("waypoint/.ignore")
+	if err != nil {
+		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		return err
+	}
+	homeConfigPath = filepath.Dir(homeConfigPath)
+	c.Log.Debug("home configuration directory", "path", homeConfigPath)
+
+	// Setup our base directory for context management
+	contextStorage, err := clicontext.NewStorage(
+		clicontext.WithDir(filepath.Join(homeConfigPath, "context")))
+	if err != nil {
+		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		return err
+	}
+	c.contextStorage = contextStorage
+
 	// Parse the configuration
 	var cfg config.Config
 	c.cfg = &cfg
@@ -123,7 +147,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 			clientpkg.WithLogger(c.Log),
 			clientpkg.WithClientConnect(
 				serverclient.FromEnv(),
-				serverclient.FromConfig(&cfg),
+				serverclient.FromContext(contextStorage, ""),
 			),
 			clientpkg.WithProjectRef(&pb.Ref_Project{
 				Project: cfg.Project,
