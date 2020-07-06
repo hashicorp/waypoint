@@ -10,9 +10,12 @@ COPY go.mod /tmp/wp-prime
 
 WORKDIR /tmp/wp-prime
 
-RUN ssh-keyscan github.com >> /etc/ssh/ssh_known_hosts
+RUN mkdir -p -m 0600 ~/.ssh \
+    && ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 RUN git config --global url.ssh://git@github.com/.insteadOf https://github.com/
-RUN --mount=type=ssh go mod download
+RUN --mount=type=ssh --mount=type=secret,id=ssh.config --mount=type=secret,id=ssh.key \
+    GIT_SSH_COMMAND="ssh -o \"ControlMaster auto\" -F \"/run/secrets/ssh.config\"" \
+    go mod download
 
 COPY . /tmp/wp-src
 
