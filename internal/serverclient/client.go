@@ -20,7 +20,11 @@ type ConnectOption func(*connectConfig) error
 // We return the raw connection so that you have control over how to close it,
 // and to support potentially alternate services in the future.
 func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, error) {
+	// Defaults
 	var cfg connectConfig
+	cfg.Timeout = 5 * time.Second
+
+	// Set config
 	for _, opt := range opts {
 		if err := opt(&cfg); err != nil {
 			return nil, err
@@ -38,7 +42,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	// Build our options
 	grpcOpts := []grpc.DialOption{
 		grpc.WithBlock(),
-		grpc.WithTimeout(5 * time.Second),
+		grpc.WithTimeout(cfg.Timeout),
 	}
 	if cfg.Insecure {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
@@ -66,6 +70,7 @@ type connectConfig struct {
 	Auth     bool
 	Token    string
 	Optional bool // See Optional func
+	Timeout  time.Duration
 }
 
 // FromEnv sources the connection information from the environment
@@ -150,6 +155,14 @@ func Auth() ConnectOption {
 func Optional() ConnectOption {
 	return func(c *connectConfig) error {
 		c.Optional = true
+		return nil
+	}
+}
+
+// Timeout specifies a connection timeout. This defaults to 5 seconds.
+func Timeout(t time.Duration) ConnectOption {
+	return func(c *connectConfig) error {
+		c.Timeout = t
 		return nil
 	}
 }
