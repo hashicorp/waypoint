@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -46,4 +47,99 @@ func TestRunnerStart(t *testing.T) {
 	_, err = client.GetRunner(ctx, &pb.GetRunnerRequest{RunnerId: runner.Id()})
 	require.Error(err)
 	require.Equal(codes.NotFound, status.Code(err))
+}
+
+func TestRunnerStart_config(t *testing.T) {
+	t.Run("set and unset", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+		client := singleprocess.TestServer(t)
+
+		cfgVar := &pb.ConfigVar{
+			Scope: &pb.ConfigVar_Runner{
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			},
+
+			Name:  "I_AM_A_TEST_VALUE",
+			Value: "1234567890",
+		}
+
+		// Initialize our runner
+		runner := TestRunner(t, WithClient(client))
+		defer runner.Close()
+		require.NoError(runner.Start())
+
+		// Verify it is not set
+		require.Empty(os.Getenv(cfgVar.Name))
+
+		// Set some config
+		_, err := client.SetConfig(ctx, &pb.ConfigSetRequest{Variables: []*pb.ConfigVar{cfgVar}})
+		require.NoError(err)
+
+		// Should be set
+		require.Eventually(func() bool {
+			return os.Getenv(cfgVar.Name) == cfgVar.Value
+		}, 1000*time.Millisecond, 50*time.Millisecond)
+
+		// Unset
+		cfgVar.Value = ""
+		_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{Variables: []*pb.ConfigVar{cfgVar}})
+		require.NoError(err)
+
+		// Should be unset
+		require.Eventually(func() bool {
+			return os.Getenv(cfgVar.Name) == ""
+		}, 1000*time.Millisecond, 50*time.Millisecond)
+	})
+
+	t.Run("unset with original env", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+		client := singleprocess.TestServer(t)
+
+		cfgVar := &pb.ConfigVar{
+			Scope: &pb.ConfigVar_Runner{
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			},
+
+			Name:  "I_AM_A_TEST_VALUE",
+			Value: "1234567890",
+		}
+
+		// Set a value
+		require.NoError(os.Setenv(cfgVar.Name, "ORIGINAL"))
+		defer os.Unsetenv(cfgVar.Name)
+
+		// Initialize our runner
+		runner := TestRunner(t, WithClient(client))
+		defer runner.Close()
+		require.NoError(runner.Start())
+
+		// Set some config
+		_, err := client.SetConfig(ctx, &pb.ConfigSetRequest{Variables: []*pb.ConfigVar{cfgVar}})
+		require.NoError(err)
+
+		// Should be set
+		require.Eventually(func() bool {
+			return os.Getenv(cfgVar.Name) == cfgVar.Value
+		}, 1000*time.Millisecond, 50*time.Millisecond)
+
+		// Unset
+		cfgVar.Value = ""
+		_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{Variables: []*pb.ConfigVar{cfgVar}})
+		require.NoError(err)
+
+		// Should be unset back to original value
+		require.Eventually(func() bool {
+			return os.Getenv(cfgVar.Name) == "ORIGINAL"
+		}, 1000*time.Millisecond, 50*time.Millisecond)
+	})
 }

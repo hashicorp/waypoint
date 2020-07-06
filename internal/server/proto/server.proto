@@ -959,6 +959,10 @@ message ConfigVar {
   oneof scope {
     Ref.Application application = 3;
     Ref.Project project = 4;
+
+    // This specifies that the configuration variable is for runners only.
+    // You can use more complex runner targeting via this ref.
+    Ref.Runner runner = 5;
   }
 
   string name = 1;
@@ -976,6 +980,7 @@ message ConfigGetRequest {
   oneof scope {
     Ref.Application application = 2;
     Ref.Project project = 3;
+    Ref.RunnerId runner = 4;
   }
 
   // Get all configuration entries under the given prefix. When empty,
