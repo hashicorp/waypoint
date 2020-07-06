@@ -7,7 +7,6 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/olekukonko/tablewriter"
 	"github.com/posener/complete"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
@@ -53,35 +52,26 @@ func (c *DeploymentListCommand) Run(args []string) int {
 		}
 		sort.Sort(serversort.DeploymentCompleteDesc(resp.Deployments))
 
-		// Get our direct stdout handle cause we're going to be writing colors
-		// and want color detection to work.
-		out, _, err := c.project.UI.OutputWriters()
-		if err != nil {
-			c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
+		tbl := terminal.NewTable("", "ID", "Registry", "Started", "Completed")
 
 		const bullet = "●"
 
-		table := tablewriter.NewWriter(out)
-		table.SetHeader([]string{"", "ID", "Registry", "Started", "Completed"})
-		table.SetBorder(false)
 		for _, b := range resp.Deployments {
 			// Determine our bullet
 			status := ""
-			statusColor := tablewriter.Colors{}
+			statusColor := ""
 			switch b.Status.State {
 			case pb.Status_RUNNING:
 				status = bullet
-				statusColor = tablewriter.Colors{tablewriter.FgYellowColor}
+				statusColor = terminal.Yellow
 
 			case pb.Status_SUCCESS:
 				status = "✔"
-				statusColor = tablewriter.Colors{tablewriter.FgGreenColor}
+				statusColor = terminal.Green
 
 			case pb.Status_ERROR:
 				status = "✖"
-				statusColor = tablewriter.Colors{tablewriter.FgRedColor}
+				statusColor = terminal.Red
 			}
 
 			// Parse our times
@@ -93,21 +83,18 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				completeTime = humanize.Time(t)
 			}
 
-			table.Rich([]string{
+			tbl.Rich([]string{
 				status,
 				b.Id,
 				b.Component.Name,
 				startTime,
 				completeTime,
-			}, []tablewriter.Colors{
+			}, []string{
 				statusColor,
-				tablewriter.Colors{},
-				tablewriter.Colors{},
-				tablewriter.Colors{},
-				tablewriter.Colors{},
 			})
 		}
-		table.Render()
+
+		c.ui.Table(tbl)
 
 		return nil
 	})

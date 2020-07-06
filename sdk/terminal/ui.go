@@ -1,14 +1,62 @@
 package terminal
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/fatih/color"
 )
+
+// Passed to UI.NamedValues to provide a nicely formatted key: value output
+type NamedValue struct {
+	Name  string
+	Value interface{}
+}
+
+// Passed to UI.Table to provide a nicely formatted table.
+type Table struct {
+	Headers []string
+	Rows    [][]TableEntry
+}
+
+type TableHeader struct {
+	Name  string
+	Color string
+}
+
+func NewTable(headers ...string) *Table {
+	return &Table{
+		Headers: headers,
+	}
+}
+
+const (
+	Yellow = "yellow"
+	Green  = "green"
+	Red    = "red"
+)
+
+type TableEntry struct {
+	Value string
+	Color string
+}
+
+func (t *Table) Rich(cols []string, colors []string) {
+	var row []TableEntry
+
+	for i, col := range cols {
+		if i < len(colors) {
+			row = append(row, TableEntry{Value: col, Color: colors[i]})
+		} else {
+			row = append(row, TableEntry{Value: col})
+		}
+	}
+
+	t.Rows = append(t.Rows, row)
+}
 
 // UI is the primary interface for interacting with a user via the CLI.
 //
@@ -23,6 +71,10 @@ type UI interface {
 	// interpolations you may add Options.
 	Output(string, ...interface{})
 
+	// Output data as a table of data. Each entry is a row which will be output
+	// with the columns lined up nicely.
+	NamedValues([]NamedValue, ...Option)
+
 	// OutputWriters returns stdout and stderr writers. These are usually
 	// but not always TTYs. This is useful for subprocesses, network requests,
 	// etc. Note that writing to these is not thread-safe by default so
@@ -33,13 +85,18 @@ type UI interface {
 	// status updates that typically have a spinner or some similar style.
 	// While a Status is live (Close isn't called), Output should NOT be called.
 	Status() Status
+
+	// Table outputs the information formatted into a Table structure.
+	Table(*Table, ...Option)
 }
 
 // BasicUI
-type BasicUI struct{}
+type BasicUI struct {
+	status *spinnerStatus
+}
 
-// Output implements UI
-func (ui *BasicUI) Output(msg string, raw ...interface{}) {
+// Interpret decomposes the msg and arguments into the message, style, and writer
+func Interpret(msg string, raw ...interface{}) (string, string, io.Writer) {
 	// Build our args and options
 	var args []interface{}
 	var opts []Option
@@ -60,8 +117,58 @@ func (ui *BasicUI) Output(msg string, raw ...interface{}) {
 		opt(cfg)
 	}
 
+	return msg, cfg.Style, cfg.Writer
+}
+
+// Output implements UI
+func (ui *BasicUI) Output(msg string, raw ...interface{}) {
+	msg, style, w := Interpret(msg, raw...)
+
+	switch style {
+	case HeaderStyle:
+		msg = colorHeader.Sprintf("==> %s", msg)
+	case ErrorStyle:
+		msg = colorError.Sprint(msg)
+	case WarningStyle:
+		msg = colorWarning.Sprint(msg)
+	case SuccessStyle:
+		msg = colorSuccess.Sprint(msg)
+	case InfoStyle:
+		lines := strings.Split(msg, "\n")
+		for i, line := range lines {
+			lines[i] = colorInfo.Sprintf("    %s", line)
+		}
+
+		msg = strings.Join(lines, "\n")
+	}
+
+	st := ui.status
+
+	if st != nil {
+		st.Pause()
+		defer st.Start()
+	}
+
 	// Write it
-	fmt.Fprintln(cfg.Writer, cfg.Message)
+	fmt.Fprintln(w, msg)
+}
+
+func (ui *BasicUI) NamedValues(rows []NamedValue, opts ...Option) {
+	cfg := &config{Writer: color.Output}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	cfg.Writer.Write([]byte{'\n'})
+
+	tr := tabwriter.NewWriter(cfg.Writer, 1, 8, 0, ' ', tabwriter.AlignRight)
+	for _, row := range rows {
+		colorInfo.Fprintf(tr, "%s: \t%s\n", row.Name, row.Value)
+	}
+
+	tr.Flush()
+
+	cfg.Writer.Write([]byte{'\n'})
 }
 
 // OutputWriters implements UI
@@ -71,8 +178,20 @@ func (ui *BasicUI) OutputWriters() (io.Writer, io.Writer, error) {
 
 // Status implements UI
 func (ui *BasicUI) Status() Status {
-	return newSpinnerStatus()
+	if ui.status == nil {
+		ui.status = newSpinnerStatus()
+	}
+
+	return ui.status
 }
+
+const (
+	HeaderStyle  = "header"
+	ErrorStyle   = "error"
+	WarningStyle = "warning"
+	InfoStyle    = "info"
+	SuccessStyle = "success"
+)
 
 type config struct {
 	// Original is the original message, this should NOT be modified.
@@ -83,6 +202,9 @@ type config struct {
 
 	// Writer is where the message will be written to.
 	Writer io.Writer
+
+	// The style the output should take on
+	Style string
 }
 
 // Option controls output styling.
@@ -93,86 +215,41 @@ type Option func(*config)
 // output will not look correct.
 func WithHeaderStyle() Option {
 	return func(c *config) {
-		c.Message = colorHeader.Sprintf("==> %s", c.Message)
+		c.Style = HeaderStyle
 	}
 }
 
-// WithStatusStyle styles the output like a status update.
-func WithStatusStyle() Option {
+// WithInfoStyle styles the output like it's formatted information.
+func WithInfoStyle() Option {
 	return func(c *config) {
-		lines := strings.Split(c.Message, "\n")
-		for i, line := range lines {
-			lines[i] = colorStatus.Sprintf("    %s", line)
-		}
-
-		c.Message = strings.Join(lines, "\n")
+		c.Style = InfoStyle
 	}
 }
 
 // WithErrorStyle styles the output as an error message.
 func WithErrorStyle() Option {
 	return func(c *config) {
-		c.Message = colorError.Sprint(c.Original)
+		c.Style = ErrorStyle
 	}
 }
 
 // WithWarningStyle styles the output as an error message.
 func WithWarningStyle() Option {
 	return func(c *config) {
-		c.Message = colorWarning.Sprint(c.Original)
+		c.Style = WarningStyle
 	}
 }
 
 // WithSuccessStyle styles the output as a success message.
 func WithSuccessStyle() Option {
 	return func(c *config) {
-		c.Message = colorSuccess.Sprint(c.Original)
+		c.Style = SuccessStyle
 	}
 }
 
-// WithKeyValueStyle styles the output with aligned key/values with
-// the given separator. This expects the the message is multiple lines
-// which will be aligned. If a line doesn't contain a separator, it is
-// ignored.
-func WithKeyValueStyle(sep string) Option {
+func WithStyle(style string) Option {
 	return func(c *config) {
-		// Trim whitespace first
-		msg := strings.TrimSpace(c.Message)
-		if len(msg) == 0 {
-			return
-		}
-
-		// Go through each line, find the separator and record the whitespace.
-		lines := strings.Split(msg, "\n")
-		lineIdx := make([]int, len(lines))
-		maxIdx := 0
-		for i, line := range lines {
-			lineIdx[i] = strings.Index(line, sep)
-			if lineIdx[i] > maxIdx {
-				maxIdx = lineIdx[i]
-			}
-		}
-
-		// Output
-		var buf bytes.Buffer
-		for i, line := range lines {
-			sepIdx := lineIdx[i]
-
-			// Ignore lines with no sep
-			if sepIdx < 0 {
-				buf.WriteString(line)
-				buf.WriteRune('\n')
-				continue
-			}
-
-			// Pad
-			buf.WriteString(strings.Repeat(" ", maxIdx-sepIdx))
-			buf.WriteString(line)
-			buf.WriteRune('\n')
-		}
-
-		bs := buf.Bytes()
-		c.Message = string(bs[:len(bs)-1])
+		c.Style = style
 	}
 }
 
@@ -183,7 +260,7 @@ func WithWriter(w io.Writer) Option {
 
 var (
 	colorHeader  = color.New(color.Bold)
-	colorStatus  = color.New()
+	colorInfo    = color.New()
 	colorError   = color.New(color.FgRed)
 	colorSuccess = color.New(color.FgGreen)
 	colorWarning = color.New(color.FgYellow)

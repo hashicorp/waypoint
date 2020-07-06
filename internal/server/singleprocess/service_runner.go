@@ -332,12 +332,12 @@ func (s *service) handleJobStreamRequest(
 		}
 
 		// Write the entries to the output buffer
-		entries := make([]logbuffer.Entry, len(event.Terminal.Lines))
-		for i, line := range event.Terminal.Lines {
-			entries[i] = line
+		entries := make([]logbuffer.Entry, len(event.Terminal.Events))
+		for i, ev := range event.Terminal.Events {
+			entries[i] = ev
 		}
 
-		// Write the logs
+		// Write the events
 		job.OutputBuffer.Write(entries...)
 
 		return nil

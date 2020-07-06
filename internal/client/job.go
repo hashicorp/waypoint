@@ -3,11 +3,13 @@ package client
 import (
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -111,7 +113,13 @@ func (c *Project) queueAndStreamJob(
 	}
 
 	// Process events
-	var stateEventTimer *time.Timer
+	var (
+		stateEventTimer *time.Timer
+		tstatus         terminal.Status
+
+		stdout, stderr io.Writer
+	)
+
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
@@ -140,11 +148,68 @@ func (c *Project) queueAndStreamJob(
 			return nil, st.Err()
 
 		case *pb.GetJobStreamResponse_Terminal_:
-			for _, line := range event.Terminal.Lines {
-				log.Trace("job terminal output", "line", line.Raw)
-				ui.Output(line.Line)
-			}
+			for _, ev := range event.Terminal.Events {
+				log.Trace("job terminal output", "event", ev)
 
+				switch ev := ev.Event.(type) {
+				case *pb.GetJobStreamResponse_Terminal_Event_Line_:
+					ui.Output(ev.Line.Msg, terminal.WithStyle(ev.Line.Style))
+				case *pb.GetJobStreamResponse_Terminal_Event_NamedValues_:
+					var values []terminal.NamedValue
+
+					for _, tnv := range ev.NamedValues.Values {
+						values = append(values, terminal.NamedValue{
+							Name:  tnv.Name,
+							Value: tnv.Value,
+						})
+					}
+
+					ui.NamedValues(values)
+				case *pb.GetJobStreamResponse_Terminal_Event_Status_:
+					if tstatus == nil {
+						tstatus = ui.Status()
+						defer tstatus.Close()
+					}
+
+					if ev.Status.Msg == "" && !ev.Status.Step {
+						tstatus.Close()
+					} else if ev.Status.Step {
+						tstatus.Step(ev.Status.Status, ev.Status.Msg)
+					} else {
+						tstatus.Update(ev.Status.Msg)
+					}
+				case *pb.GetJobStreamResponse_Terminal_Event_Raw_:
+					if stdout == nil {
+						stdout, stderr, err = ui.OutputWriters()
+						if err != nil {
+							return nil, err
+						}
+					}
+
+					if ev.Raw.Stderr {
+						stderr.Write(ev.Raw.Data)
+					} else {
+						stdout.Write(ev.Raw.Data)
+					}
+				case *pb.GetJobStreamResponse_Terminal_Event_Table_:
+					tbl := terminal.NewTable(ev.Table.Headers...)
+
+					for _, row := range ev.Table.Rows {
+						var trow []terminal.TableEntry
+
+						for _, ent := range row.Entries {
+							trow = append(trow, terminal.TableEntry{
+								Value: ent.Value,
+								Color: ent.Color,
+							})
+						}
+					}
+
+					ui.Table(tbl)
+				default:
+					c.logger.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
+				}
+			}
 		case *pb.GetJobStreamResponse_State_:
 			// Stop any state event timers if we have any since the state
 			// has changed and we don't want to output that information anymore.
@@ -161,7 +226,7 @@ func (c *Project) queueAndStreamJob(
 					ui.Output("Operation is queued. Waiting for runner assignment...",
 						terminal.WithHeaderStyle())
 					ui.Output("If you interrupt this command, the job will still run in the background.",
-						terminal.WithStatusStyle())
+						terminal.WithInfoStyle())
 				})
 
 			case pb.Job_WAITING:
@@ -169,7 +234,7 @@ func (c *Project) queueAndStreamJob(
 					ui.Output("Operation is assigned to a runner. Waiting for start...",
 						terminal.WithHeaderStyle())
 					ui.Output("If you interrupt this command, the job will still run in the background.",
-						terminal.WithStatusStyle())
+						terminal.WithInfoStyle())
 				})
 			}
 

@@ -1,0 +1,335 @@
+package runner
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"os"
+	"sync"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/terminal"
+)
+
+// runnerUI Implements terminal.UI and is created by a runner and passed into
+// it's operations. The functions send events back to the server to be saved
+// and sent to job clients rather than displaying the events directly.
+type runnerUI struct {
+	ctx    context.Context
+	cancel func()
+	mu     sync.Mutex
+	evc    pb.Waypoint_RunnerJobStreamClient
+
+	stdSetup       sync.Once
+	stdout, stderr io.Writer
+}
+
+func (u *runnerUI) Close() error {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	u.evc = nil
+	u.cancel()
+
+	return nil
+}
+
+// Output outputs a message directly to the terminal. The remaining
+// arguments should be interpolations for the format string. After the
+// interpolations you may add Options.
+func (u *runnerUI) Output(msg string, raw ...interface{}) {
+	msg, style, _ := terminal.Interpret(msg, raw...)
+
+	// Extreme java looking code alert!
+	ev := &pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Terminal{
+			Terminal: &pb.GetJobStreamResponse_Terminal{
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+							Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+								Msg:   msg,
+								Style: style,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	if u.evc == nil {
+		return
+	}
+
+	u.evc.Send(ev)
+}
+
+// Output data as a table of data. Each entry is a row which will be output
+// with the columns lined up nicely.
+func (u *runnerUI) NamedValues(tvalues []terminal.NamedValue, _ ...terminal.Option) {
+	var values []*pb.GetJobStreamResponse_Terminal_Event_NamedValue
+
+	for _, nv := range tvalues {
+		values = append(values, &pb.GetJobStreamResponse_Terminal_Event_NamedValue{
+			Name:  nv.Name,
+			Value: fmt.Sprintf("%s", nv.Value),
+		})
+	}
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	if u.evc == nil {
+		return
+	}
+
+	ev := &pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Terminal{
+			Terminal: &pb.GetJobStreamResponse_Terminal{
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_NamedValues_{
+							NamedValues: &pb.GetJobStreamResponse_Terminal_Event_NamedValues{
+								Values: values,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	u.evc.Send(ev)
+}
+
+// OutputWriters returns stdout and stderr writers. These are usually
+// but not always TTYs. This is useful for subprocesses, network requests,
+// etc. Note that writing to these is not thread-safe by default so
+// you must take care that there is only ever one writer.
+func (u *runnerUI) OutputWriters() (stdout io.Writer, stderr io.Writer, err error) {
+	u.stdSetup.Do(func() {
+		dr, dw, err := os.Pipe()
+		if err != nil {
+			panic(err)
+		}
+
+		go u.sendData(dr, false)
+
+		er, ew, err := os.Pipe()
+		if err != nil {
+			panic(err)
+		}
+
+		go u.sendData(er, true)
+
+		go func() {
+			<-u.ctx.Done()
+			dr.Close()
+			dw.Close()
+			er.Close()
+			ew.Close()
+		}()
+
+		u.stdout = dw
+		u.stderr = ew
+	})
+
+	return u.stdout, u.stderr, nil
+}
+
+func (u *runnerUI) sendData(r io.ReadCloser, stderr bool) {
+	defer r.Close()
+
+	buf := make([]byte, 1024)
+
+	for {
+		n, err := r.Read(buf)
+		if err != nil {
+			return
+		}
+
+		data := buf[:n]
+
+		ev := &pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Terminal{
+				Terminal: &pb.GetJobStreamResponse_Terminal{
+					Events: []*pb.GetJobStreamResponse_Terminal_Event{
+						{
+							Event: &pb.GetJobStreamResponse_Terminal_Event_Raw_{
+								Raw: &pb.GetJobStreamResponse_Terminal_Event_Raw{
+									Data:   data,
+									Stderr: stderr,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		u.mu.Lock()
+		if u.evc == nil {
+			u.mu.Unlock()
+			return
+		}
+
+		u.evc.Send(ev)
+		u.mu.Unlock()
+	}
+}
+
+func (u *runnerUI) Table(tbl *terminal.Table, opts ...terminal.Option) {
+	var (
+		ptbl *pb.GetJobStreamResponse_Terminal_Event_Table
+		rows []*pb.GetJobStreamResponse_Terminal_Event_TableRow
+	)
+
+	ptbl.Headers = tbl.Headers
+
+	for _, row := range tbl.Rows {
+		var entries []*pb.GetJobStreamResponse_Terminal_Event_TableEntry
+
+		for _, ent := range row {
+			entries = append(entries, &pb.GetJobStreamResponse_Terminal_Event_TableEntry{
+				Value: ent.Value,
+				Color: ent.Color,
+			})
+		}
+
+		rows = append(rows, &pb.GetJobStreamResponse_Terminal_Event_TableRow{
+			Entries: entries,
+		})
+	}
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	if u.evc == nil {
+		return
+	}
+
+	ev := &pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Terminal{
+			Terminal: &pb.GetJobStreamResponse_Terminal{
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Table_{
+							Table: ptbl,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	u.evc.Send(ev)
+}
+
+// Status returns a live-updating status that can be used for single-line
+// status updates that typically have a spinner or some similar style.
+func (u *runnerUI) Status() terminal.Status {
+	return &runnerUIStatus{u}
+}
+
+type runnerUIStatus struct {
+	b *runnerUI
+}
+
+// Update writes a new status. This should be a single line.
+func (u *runnerUIStatus) Update(msg string) {
+	u.b.mu.Lock()
+	defer u.b.mu.Unlock()
+
+	if u.b.evc == nil {
+		return
+	}
+
+	ev := &pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Terminal{
+			Terminal: &pb.GetJobStreamResponse_Terminal{
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Status_{
+							Status: &pb.GetJobStreamResponse_Terminal_Event_Status{
+								Msg: msg,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	u.b.evc.Send(ev)
+}
+
+// Indicate that a step has finished, confering an ok, error, or warn upon
+// it's finishing state. If the status is not StatusOK, StatusError, or StatusWarn
+// then the status text is written directly to the output, allowing for custom
+// statuses.
+func (u *runnerUIStatus) Step(status string, msg string) {
+	u.b.mu.Lock()
+	defer u.b.mu.Unlock()
+
+	if u.b.evc == nil {
+		return
+	}
+
+	ev := &pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Terminal{
+			Terminal: &pb.GetJobStreamResponse_Terminal{
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Status_{
+							Status: &pb.GetJobStreamResponse_Terminal_Event_Status{
+								Status: status,
+								Msg:    msg,
+								Step:   true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	u.b.evc.Send(ev)
+}
+
+// Close should be called when the live updating is complete. The
+// status will be cleared from the line.
+func (u *runnerUIStatus) Close() error {
+	u.b.mu.Lock()
+	defer u.b.mu.Unlock()
+
+	if u.b.evc == nil {
+		return nil
+	}
+
+	ev := &pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Terminal{
+			Terminal: &pb.GetJobStreamResponse_Terminal{
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Status_{
+							Status: &pb.GetJobStreamResponse_Terminal_Event_Status{},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	u.b.evc.Send(ev)
+
+	return nil
+}
+
+var (
+	_ terminal.UI     = (*runnerUI)(nil)
+	_ terminal.Status = (*runnerUIStatus)(nil)
+)

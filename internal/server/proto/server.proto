@@ -510,8 +510,7 @@ message GetJobStreamResponse {
   }
 
   message Terminal {
-    // lines are each line of terminal output in order for this batch
-    repeated Line lines = 1;
+    repeated Event events = 1;
 
     // buffered if true signifies that the data being sent is from the
     // server buffer and is historical vs real-time since the stream was
@@ -519,17 +518,58 @@ message GetJobStreamResponse {
     // buffered and non-buffered lines.
     bool buffered = 2;
 
-    message Line {
-      // raw is the uncolorized, minimally formatted output.
-      string raw = 1;
-
-      // line message is potentially formatted with ANSI escape sequences.
-      string line = 2;
-
-      // timestamp of the terminal line as seen by the runner. This might be
+    message Event {
+      // timestamp of the event as seen by the runner. This might be
       // skewed from the server or the client but relative to all other
       // line output, it will be accurate.
-      google.protobuf.Timestamp timestamp = 3;
+      google.protobuf.Timestamp timestamp = 1;
+
+      oneof event {
+        Line line = 2;
+        Status status = 3;
+        NamedValues named_values = 4;
+        Raw raw = 5;
+        Table table = 6;
+      }
+
+      message Status {
+        string status = 1;
+        string msg = 2;
+        bool step = 3;
+      }
+
+      message Line {
+        string msg = 1;
+        string style = 2;
+      }
+
+      message Raw {
+        bytes data = 1;
+        bool stderr = 2;
+      }
+
+      message NamedValue {
+        string name = 1;
+        string value = 2;
+      }
+
+      message NamedValues {
+        repeated NamedValue values = 1;
+      }
+
+      message TableEntry {
+        string value = 1;
+        string color = 2;
+      }
+
+      message TableRow {
+        repeated TableEntry entries = 1;
+      }
+
+      message Table {
+        repeated string headers = 1;
+        repeated TableRow rows = 2;
+      }
     }
   }
 

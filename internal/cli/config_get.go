@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
-	"github.com/olekukonko/tablewriter"
 	"github.com/posener/complete"
 )
 
@@ -64,15 +63,15 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		return 1
 	}
 
-	// Get our direct stdout handle cause we're going to be writing colors
-	// and want color detection to work.
-	out, _, err := c.project.UI.OutputWriters()
-	if err != nil {
-		c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
-		return 1
-	}
-
 	if c.json {
+		// Get our direct stdout handle cause we're going to be writing colors
+		// and want color detection to work.
+		out, _, err := c.project.UI.OutputWriters()
+		if err != nil {
+			c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+			return 1
+		}
+
 		vars := map[string]string{}
 
 		for _, cv := range resp.Variables {
@@ -84,6 +83,14 @@ func (c *ConfigGetCommand) Run(args []string) int {
 	}
 
 	if c.raw {
+		// Get our direct stdout handle cause we're going to be writing colors
+		// and want color detection to work.
+		out, _, err := c.project.UI.OutputWriters()
+		if err != nil {
+			c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+			return 1
+		}
+
 		if len(resp.Variables) == 0 {
 			return 1
 		}
@@ -96,10 +103,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		return 0
 	}
 
-	table := tablewriter.NewWriter(out)
-	table.SetHeader([]string{"Scope", "Name", "Value"})
-	table.SetBorder(false)
-
+	table := terminal.NewTable("Scope", "Name", "Value")
 	for _, v := range resp.Variables {
 		var app string
 		if scope, ok := v.Scope.(*pb.ConfigVar_Application); ok {
@@ -110,14 +114,14 @@ func (c *ConfigGetCommand) Run(args []string) int {
 			app,
 			v.Name,
 			v.Value,
-		}, []tablewriter.Colors{
-			{},
-			{tablewriter.FgGreenColor},
-			{},
+		}, []string{
+			"",
+			terminal.Green,
+			"",
 		})
 	}
 
-	table.Render()
+	c.ui.Table(table)
 
 	return 0
 }

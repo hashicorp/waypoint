@@ -160,9 +160,21 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Terminal{
 			Terminal: &pb.GetJobStreamResponse_Terminal{
-				Lines: []*pb.GetJobStreamResponse_Terminal_Line{
-					{Raw: "hello"},
-					{Raw: "world"},
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+							Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+								Msg: "hello",
+							},
+						},
+					},
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+							Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+								Msg: "world",
+							},
+						},
+					},
 				},
 			},
 		},
@@ -174,7 +186,7 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
 		require.NotNil(event)
 		require.False(event.Terminal.Buffered, 2)
-		require.Len(event.Terminal.Lines, 2)
+		require.Len(event.Terminal.Events, 2)
 
 	}
 
@@ -243,9 +255,21 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Terminal{
 			Terminal: &pb.GetJobStreamResponse_Terminal{
-				Lines: []*pb.GetJobStreamResponse_Terminal_Line{
-					{Raw: "hello"},
-					{Raw: "world"},
+				Events: []*pb.GetJobStreamResponse_Terminal_Event{
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+							Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+								Msg: "hello",
+							},
+						},
+					},
+					{
+						Event: &pb.GetJobStreamResponse_Terminal_Event_Line_{
+							Line: &pb.GetJobStreamResponse_Terminal_Event_Line{
+								Msg: "world",
+							},
+						},
+					},
 				},
 			},
 		},
@@ -281,7 +305,7 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 		event := resp.Event.(*pb.GetJobStreamResponse_Terminal_)
 		require.NotNil(event)
 		require.True(event.Terminal.Buffered)
-		require.Len(event.Terminal.Lines, 2)
+		require.Len(event.Terminal.Events, 2)
 
 	}
 

@@ -1,14 +1,13 @@
 package runner
 
 import (
+	"context"
 	"io"
 
-	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // Accept will accept and execute a single job. This will block until
@@ -77,30 +76,13 @@ func (r *Runner) Accept() error {
 		return err
 	}
 
-	// Start our UI
-	ui := terminal.NewCaptureUI(log, func(lines []*terminal.CaptureLine) error {
-		linespb := make([]*pb.GetJobStreamResponse_Terminal_Line, len(lines))
-		for i, line := range lines {
-			ts, err := ptypes.TimestampProto(line.Timestamp)
-			if err != nil {
-				return err
-			}
+	ctx, cancel := context.WithCancel(r.ctx)
 
-			linespb[i] = &pb.GetJobStreamResponse_Terminal_Line{
-				Raw:       line.Line,
-				Line:      line.Line,
-				Timestamp: ts,
-			}
-		}
-
-		return client.Send(&pb.RunnerJobStreamRequest{
-			Event: &pb.RunnerJobStreamRequest_Terminal{
-				Terminal: &pb.GetJobStreamResponse_Terminal{
-					Lines: linespb,
-				},
-			},
-		})
-	})
+	ui := &runnerUI{
+		ctx:    ctx,
+		cancel: cancel,
+		evc:    client,
+	}
 
 	// Execute the job. We have to close the UI right afterwards to
 	// ensure that no more output is writting to the client.

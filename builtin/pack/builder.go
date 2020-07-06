@@ -47,6 +47,13 @@ func (b *Builder) Build(
 	ui terminal.UI,
 	src *component.Source,
 ) (*DockerImage, error) {
+	builder := b.config.Builder
+	if builder == "" {
+		builder = DefaultBuilder
+	}
+
+	ui.Output("Creating new buildpack-based image using builder: %s", builder, terminal.WithInfoStyle())
+
 	stdout, _, err := ui.OutputWriters()
 	if err != nil {
 		return nil, err
@@ -57,11 +64,6 @@ func (b *Builder) Build(
 	client, err := pack.NewClient(pack.WithLogger(log))
 	if err != nil {
 		return nil, err
-	}
-
-	builder := b.config.Builder
-	if builder == "" {
-		builder = DefaultBuilder
 	}
 
 	err = client.Build(ctx, pack.BuildOptions{
@@ -75,6 +77,8 @@ func (b *Builder) Build(
 	}
 
 	if !b.config.DisableCEB {
+		ui.Output("Adding Waypoint Entrypoint Binary to image...")
+
 		tmpdir, err := ioutil.TempDir("", "waypoint")
 		if err != nil {
 			return nil, err
@@ -102,6 +106,8 @@ func (b *Builder) Build(
 			return nil, err
 		}
 	}
+
+	ui.Output("Generated new Docker image: %s:latest", src.App)
 
 	// We don't even need to inspect Docker to verify we have the image.
 	// If `pack` succeeded we can assume that it created an image for us.
