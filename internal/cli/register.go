@@ -319,7 +319,7 @@ func (c *RegisterCommand) Flags() *flag.Sets {
 			f.StringVar(&flag.StringVar{
 				Name:   "token",
 				Target: &c.token,
-				Usage:  "Token to authenticate with waypoint cluster service (defaults to WAYPOINT_TOKEN env var).",
+				Usage:  "Token to authenticate with waypoint cluster service (defaults to WAYPOINT_URL_TOKEN env var).",
 			})
 
 			f.StringVar(&flag.StringVar{
