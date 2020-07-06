@@ -24,10 +24,11 @@ import (
 type InstallCommand struct {
 	*baseCommand
 
-	config         serverinstall.Config
-	showYaml       bool
-	contextName    string
-	contextDefault bool
+	config            serverinstall.Config
+	showYaml          bool
+	advertiseInternal bool
+	contextName       string
+	contextDefault    bool
 }
 
 func (c *InstallCommand) Run(args []string) int {
@@ -158,6 +159,16 @@ func (c *InstallCommand) Run(args []string) int {
 		// Set our advertise address
 		advertiseAddr.Addr = addr
 		advertiseAddr.Insecure = true
+
+		// If we want internal or we're a localhost address, we use the internal
+		// address. The "localhost" check is specifically for Docker for Desktop
+		// since pods can't reach this.
+		if c.advertiseInternal || strings.HasPrefix(addr, "localhost:") {
+			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
+				c.config.ServiceName,
+				port,
+			)
+		}
 
 		// Set our connection information
 		contextConfig = clicontext.Config{
@@ -292,6 +303,15 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Name:   "show-yaml",
 			Target: &c.showYaml,
 			Usage:  "Show the YAML to be send to the cluster.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "advertise-internal",
+			Target: &c.advertiseInternal,
+			Usage: "Advertise the internal servivce address rather than the external. " +
+				"This is useful if all your deployments will be able to access the private " +
+				"service address. This will default to false but will be automatically set to " +
+				"true if the external host is detected to be localhost.",
 		})
 
 		f.StringVar(&flag.StringVar{
