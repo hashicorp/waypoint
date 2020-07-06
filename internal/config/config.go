@@ -9,7 +9,6 @@ const Filename = "waypoint.hcl"
 
 // Config is the configuration structure.
 type Config struct {
-	Server  *Server           `hcl:"server,block"`
 	Runner  *Runner           `hcl:"runner,block"`
 	URL     *URL              `hcl:"url,block"`
 	Project string            `hcl:"project,attr"`
@@ -42,6 +41,11 @@ type Server struct {
 	// We don't allow the token to be hardcoded into the config though, we
 	// always read that out of an env var later.
 	RequireAuth bool `hcl:"require_auth,optional"`
+
+	// AuthToken is the token to use to authenticate to the server.
+	// Note this will be stored plaintext on disk. You can also use the
+	// WAYPOINT_SERVER_TOKEN env var.
+	AuthToken string `hcl:"auth_token,optional"`
 }
 
 // Runner is the configuration for supporting runners in this project.

@@ -17,9 +17,22 @@ import (
 // Deploy deploys the given artifact.
 // TODO(mitchellh): test
 func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployment, error) {
+	// Get the deployment config
+	resp, err := a.client.RunnerGetDeploymentConfig(ctx, &pb.RunnerGetDeploymentConfigRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Overwrite the server addresses. We still use the initially set dconfig
+	// since we currently still allow the URL service to be specified that way.
+	// This probably won't be true long term.
+	dconfig := a.dconfig
+	dconfig.ServerAddr = resp.ServerAddr
+	dconfig.ServerInsecure = resp.ServerInsecure
+
 	_, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployOperation{
 		Push:             push,
-		DeploymentConfig: &a.dconfig,
+		DeploymentConfig: &dconfig,
 	})
 	if err != nil {
 		return nil, err

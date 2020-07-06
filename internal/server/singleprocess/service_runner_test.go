@@ -160,3 +160,41 @@ func TestServiceRunnerJobStream_errorBeforeAck(t *testing.T) {
 	require.NoError(err)
 	require.Equal(pb.Job_QUEUED, job.State)
 }
+
+func TestServiceRunnerGetDeploymentConfig(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("with no server config", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create our server
+		impl, err := New(testDB(t))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Request deployment config
+		_, err = client.RunnerGetDeploymentConfig(ctx, &pb.RunnerGetDeploymentConfigRequest{})
+		require.Error(err)
+		require.Equal(codes.Aborted, status.Code(err))
+	})
+
+	t.Run("with server config", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create our server
+		impl, err := New(testDB(t))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Set some config
+		_, err = client.SetServerConfig(ctx, &pb.SetServerConfigRequest{
+			Config: serverptypes.TestServerConfig(t, nil),
+		})
+		require.NoError(err)
+
+		// Request deployment config
+		resp, err := client.RunnerGetDeploymentConfig(ctx, &pb.RunnerGetDeploymentConfigRequest{})
+		require.NoError(err)
+		require.NotEmpty(resp.ServerAddr)
+	})
+}

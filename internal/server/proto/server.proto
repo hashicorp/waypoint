@@ -66,6 +66,9 @@ service Waypoint {
   // GetRunner gets information about a single runner.
   rpc GetRunner(GetRunnerRequest) returns (Runner);
 
+  // SetServerConfig sets configuration for the Waypoint server.
+  rpc SetServerConfig(SetServerConfigRequest) returns (google.protobuf.Empty);
+
   //----------------------------------------------------------------------
   // Runner endpoints. These are expected to be called only by a runner.
   // These are not meant to be public endpoints.
@@ -79,6 +82,10 @@ service Waypoint {
   // RunnerJobStream is called by a runner to request a single job for
   // execution and update the status of that job.
   rpc RunnerJobStream(stream RunnerJobStreamRequest) returns (stream RunnerJobStreamResponse);
+
+  // RunnerGetDeploymentConfig is called by a runner for a deployment operation
+  // to determine the settings to use for a deployment.
+  rpc RunnerGetDeploymentConfig(RunnerGetDeploymentConfigRequest) returns (RunnerGetDeploymentConfigResponse);
 
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
@@ -680,9 +687,40 @@ message RunnerJobStreamResponse {
   }
 }
 
+message RunnerGetDeploymentConfigRequest {}
+
+message RunnerGetDeploymentConfigResponse {
+  string server_addr = 1;
+  bool server_insecure = 2;
+}
+
 message GetRunnerRequest {
   // ID of the runner to request.
   string runner_id = 1;
+}
+
+/********************************************************************
+* Server
+********************************************************************/
+
+message SetServerConfigRequest {
+  ServerConfig config = 1;
+}
+
+// ServerConfig is the configuration for the server that can be read and
+// set online. This differs from the configuration used to start the server
+// since some settings can only be set via the file vs. the API.
+message ServerConfig {
+  // The addresses that are advertised for entrypoints. These define how
+  // applications reach back to the server. Currently you may only set
+  // EXACTLY ONE address. In the future, we'll support multiple advertise
+  // addrs and more controls over which are advertised when.
+  repeated AdvertiseAddr advertise_addrs = 1;
+
+  message AdvertiseAddr {
+    string addr = 1;
+    bool insecure = 2;
+  }
 }
 
 /********************************************************************
@@ -999,6 +1037,10 @@ message ConfigVar {
   oneof scope {
     Ref.Application application = 3;
     Ref.Project project = 4;
+
+    // This specifies that the configuration variable is for runners only.
+    // You can use more complex runner targeting via this ref.
+    Ref.Runner runner = 5;
   }
 
   string name = 1;
@@ -1016,6 +1058,7 @@ message ConfigGetRequest {
   oneof scope {
     Ref.Application application = 2;
     Ref.Project project = 3;
+    Ref.RunnerId runner = 4;
   }
 
   // Get all configuration entries under the given prefix. When empty,

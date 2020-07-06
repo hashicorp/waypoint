@@ -9,6 +9,7 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2
 	github.com/Azure/go-autorest/autorest/to v0.3.0
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
+	github.com/adrg/xdg v0.2.1
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
 	github.com/aws/aws-sdk-go v1.28.12
 	github.com/boltdb/bolt v1.3.1
@@ -29,6 +30,7 @@ require (
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang/protobuf v1.3.5
+	github.com/google/renameio v0.1.0
 	github.com/hashicorp/go-argmapper v0.0.0-20200617185818-77662eabd58a
 	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/go-memdb v1.2.0

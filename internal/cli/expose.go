@@ -74,7 +74,7 @@ func (c *ExposeCommand) Run(args []string) int {
 
 	g.Token = c.authToken()
 	if g.Token == "" {
-		c.ui.Output("No token available. Use --token or set WAYPOINT_TOKEN.", terminal.WithErrorStyle())
+		c.ui.Output("No token available. Use --token or set WAYPOINT_URL_TOKEN.", terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -186,7 +186,7 @@ func (c *ExposeCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "token",
 			Target: &c.horizonToken,
-			Usage:  "Token to authenticate with waypoint cluster service (defaults to WAYPOINT_TOKEN env var).",
+			Usage:  "Token to authenticate with waypoint cluster service (defaults to WAYPOINT_URL_TOKEN env var).",
 		})
 
 		f.StringVar(&flag.StringVar{

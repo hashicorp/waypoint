@@ -22,13 +22,4 @@ bin/linux: # create Linux binaries
 
 .PHONY: docker/mitchellh
 docker/mitchellh: bin/linux
-	docker build -t gcr.io/mitchellh-test/waypoint:latest .
-	#docker push gcr.io/mitchellh-test/waypoint:latest
-
-.PHONY: k8s/mitchellh
-k8s/mitchellh:
-	./waypoint install \
-		--annotate-service "external-dns.alpha.kubernetes.io/hostname=*.df.gcp.mitchellh.dev.,df.gcp.mitchellh.dev." \
-		| kubectl apply -f -
-
-
+	DOCKER_BUILDKIT=1 docker build --ssh default -t waypoint:latest .

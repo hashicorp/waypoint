@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/internal/server"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	"github.com/hashicorp/waypoint/internal/serverclient"
 )
@@ -128,6 +129,24 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 		return nil, err
 	}
 
+	// Setup our server config. The configuration is specifically set so
+	// so that there is no advertise address which will disable the CEB
+	// completely.
+	client := pb.NewWaypointClient(conn)
+	_, err = client.SetServerConfig(ctx, &pb.SetServerConfigRequest{
+		Config: &pb.ServerConfig{
+			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{
+				{
+					Addr: "",
+				},
+			},
+		},
+	})
+	if err != nil {
+		cancel()
+		return nil, err
+	}
+
 	// Success, persist the closers
 	cleanupClosers := closers
 	closers = nil
@@ -136,7 +155,6 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 			c.Close()
 		}
 	})
-
 	_ = cancel // pacify vet lostcancel
 
 	return conn, nil

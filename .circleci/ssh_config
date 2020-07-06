@@ -1,0 +1,3 @@
+Host github.com
+  IdentitiesOnly yes
+  IdentityFile /run/secrets/ssh.key

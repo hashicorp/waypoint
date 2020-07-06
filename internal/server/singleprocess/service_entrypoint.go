@@ -75,17 +75,16 @@ func (s *service) EntrypointConfig(
 			})
 		}
 
-		cfgvars, err := s.GetConfig(srv.Context(), &pb.ConfigGetRequest{
+		vars, err := s.state.ConfigGetWatch(&pb.ConfigGetRequest{
 			Scope: &pb.ConfigGetRequest_Application{
 				Application: deployment.Application,
 			},
-		})
-
+		}, ws)
 		if err != nil {
 			return err
 		}
 
-		config.EnvVars = cfgvars.Variables
+		config.EnvVars = vars
 
 		// Send new config
 		if err := srv.Send(&pb.EntrypointConfigResponse{

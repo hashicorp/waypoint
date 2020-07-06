@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -19,6 +20,40 @@ func (s *service) GetRunner(
 	req *pb.GetRunnerRequest,
 ) (*pb.Runner, error) {
 	return s.state.RunnerById(req.RunnerId)
+}
+
+// TODO: test
+func (s *service) RunnerGetDeploymentConfig(
+	ctx context.Context,
+	req *pb.RunnerGetDeploymentConfigRequest,
+) (*pb.RunnerGetDeploymentConfigResponse, error) {
+	// Get our server config
+	cfg, err := s.state.ServerConfigGet()
+	if err != nil {
+		return nil, err
+	}
+
+	// If we have no config set yet, this is an error.
+	if cfg == nil {
+		return nil, status.Errorf(codes.Aborted,
+			"server configuration for deployment information not yet set.")
+	}
+
+	// If we have no advertise addresses, then it is an error
+	if len(cfg.AdvertiseAddrs) == 0 {
+		return nil, status.Errorf(codes.Aborted,
+			"server configuration has no advertise addresses")
+	}
+
+	// Our addr for now is just the first one since we don't support
+	// multiple addresses yet. In the future we will want to support more
+	// advanced choicing.
+	addr := cfg.AdvertiseAddrs[0]
+
+	return &pb.RunnerGetDeploymentConfigResponse{
+		ServerAddr:     addr.Addr,
+		ServerInsecure: addr.Insecure,
+	}, nil
 }
 
 // TODO: test
@@ -77,8 +112,23 @@ func (s *service) RunnerConfig(
 
 	// Build our config in a loop.
 	for {
+		ws := memdb.NewWatchSet()
+
 		// Build our config
 		config := &pb.RunnerConfig{}
+
+		// Get our config vars
+		vars, err := s.state.ConfigGetWatch(&pb.ConfigGetRequest{
+			Scope: &pb.ConfigGetRequest_Runner{
+				Runner: &pb.Ref_RunnerId{
+					Id: record.Id,
+				},
+			},
+		}, ws)
+		if err != nil {
+			return err
+		}
+		config.ConfigVars = vars
 
 		// Send new config
 		if err := srv.Send(&pb.RunnerConfigResponse{
@@ -90,10 +140,10 @@ func (s *service) RunnerConfig(
 		// Nil out the stuff we used so that if we're waiting awhile we can GC
 		config = nil
 
-		// We don't ever currently have config changes so we just block
-		// until we're done. But soon we'll have config changes.
-		<-ctx.Done()
-		return nil
+		// Wait for any changes
+		if err := ws.WatchCtx(ctx); err != nil {
+			return err
+		}
 	}
 }
 
