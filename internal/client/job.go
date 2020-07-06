@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -205,6 +206,8 @@ func (c *Project) queueAndStreamJob(
 					}
 
 					ui.Table(tbl)
+				default:
+					c.logger.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
 				}
 			}
 		case *pb.GetJobStreamResponse_State_:

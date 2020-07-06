@@ -151,6 +151,8 @@ func (s *uiServer) Events(stream pb.TerminalUIService_EventsServer) error {
 			}
 
 			s.Impl.Table(tbl)
+		default:
+			s.Logger.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
 		}
 	}
 }
