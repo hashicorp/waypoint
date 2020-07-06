@@ -146,8 +146,8 @@ func (c *baseCommand) Init(opts ...Option) error {
 		opts := []clientpkg.Option{
 			clientpkg.WithLogger(c.Log),
 			clientpkg.WithClientConnect(
-				serverclient.FromEnv(),
 				serverclient.FromContext(contextStorage, ""),
+				serverclient.FromEnv(),
 			),
 			clientpkg.WithProjectRef(&pb.Ref_Project{
 				Project: cfg.Project,
