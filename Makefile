@@ -21,5 +21,5 @@ bin/linux: # create Linux binaries
 	GOOS=linux GOARCH=amd64 $(MAKE) bin
 
 .PHONY: docker/mitchellh
-docker/mitchellh: bin/linux
+docker/mitchellh:
 	DOCKER_BUILDKIT=1 docker build --ssh default -t waypoint:latest .
