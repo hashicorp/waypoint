@@ -7,3 +7,13 @@ message Image {
   string image = 1;
   string tag = 2;
 }
+
+message Deployment {
+  string id = 1;
+  string name = 2;
+  string container = 3;
+}
+
+message Release {
+  string url = 1;
+}

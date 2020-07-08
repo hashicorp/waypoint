@@ -3,9 +3,11 @@
 
 package docker
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -16,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Image is the artifact type for the registry.
 type Image struct {
@@ -31,16 +33,17 @@ func (m *Image) Reset()         { *m = Image{} }
 func (m *Image) String() string { return proto.CompactTextString(m) }
 func (*Image) ProtoMessage()    {}
 func (*Image) Descriptor() ([]byte, []int) {
-	return fileDescriptor_plugin_f6d33b291aab7c0d, []int{0}
+	return fileDescriptor_22a625af4bc1cc87, []int{0}
 }
+
 func (m *Image) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Image.Unmarshal(m, b)
 }
 func (m *Image) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Image.Marshal(b, m, deterministic)
 }
-func (dst *Image) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Image.Merge(dst, src)
+func (m *Image) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Image.Merge(m, src)
 }
 func (m *Image) XXX_Size() int {
 	return xxx_messageInfo_Image.Size(m)
@@ -65,18 +68,121 @@ func (m *Image) GetTag() string {
 	return ""
 }
 
-func init() {
-	proto.RegisterType((*Image)(nil), "docker.Image")
+type Deployment struct {
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Container            string   `protobuf:"bytes,3,opt,name=container,proto3" json:"container,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func init() { proto.RegisterFile("plugin.proto", fileDescriptor_plugin_f6d33b291aab7c0d) }
+func (m *Deployment) Reset()         { *m = Deployment{} }
+func (m *Deployment) String() string { return proto.CompactTextString(m) }
+func (*Deployment) ProtoMessage()    {}
+func (*Deployment) Descriptor() ([]byte, []int) {
+	return fileDescriptor_22a625af4bc1cc87, []int{1}
+}
 
-var fileDescriptor_plugin_f6d33b291aab7c0d = []byte{
-	// 88 bytes of a gzipped FileDescriptorProto
+func (m *Deployment) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Deployment.Unmarshal(m, b)
+}
+func (m *Deployment) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Deployment.Marshal(b, m, deterministic)
+}
+func (m *Deployment) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Deployment.Merge(m, src)
+}
+func (m *Deployment) XXX_Size() int {
+	return xxx_messageInfo_Deployment.Size(m)
+}
+func (m *Deployment) XXX_DiscardUnknown() {
+	xxx_messageInfo_Deployment.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Deployment proto.InternalMessageInfo
+
+func (m *Deployment) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *Deployment) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Deployment) GetContainer() string {
+	if m != nil {
+		return m.Container
+	}
+	return ""
+}
+
+type Release struct {
+	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Release) Reset()         { *m = Release{} }
+func (m *Release) String() string { return proto.CompactTextString(m) }
+func (*Release) ProtoMessage()    {}
+func (*Release) Descriptor() ([]byte, []int) {
+	return fileDescriptor_22a625af4bc1cc87, []int{2}
+}
+
+func (m *Release) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Release.Unmarshal(m, b)
+}
+func (m *Release) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Release.Marshal(b, m, deterministic)
+}
+func (m *Release) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Release.Merge(m, src)
+}
+func (m *Release) XXX_Size() int {
+	return xxx_messageInfo_Release.Size(m)
+}
+func (m *Release) XXX_DiscardUnknown() {
+	xxx_messageInfo_Release.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Release proto.InternalMessageInfo
+
+func (m *Release) GetUrl() string {
+	if m != nil {
+		return m.Url
+	}
+	return ""
+}
+
+func init() {
+	proto.RegisterType((*Image)(nil), "docker.Image")
+	proto.RegisterType((*Deployment)(nil), "docker.Deployment")
+	proto.RegisterType((*Release)(nil), "docker.Release")
+}
+
+func init() {
+	proto.RegisterFile("plugin.proto", fileDescriptor_22a625af4bc1cc87)
+}
+
+var fileDescriptor_22a625af4bc1cc87 = []byte{
+	// 163 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x29, 0xc8, 0x29, 0x4d,
 	0xcf, 0xcc, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x4b, 0xc9, 0x4f, 0xce, 0x4e, 0x2d,
 	0x52, 0xd2, 0xe7, 0x62, 0xf5, 0xcc, 0x4d, 0x4c, 0x4f, 0x15, 0x12, 0xe1, 0x62, 0xcd, 0x04, 0x31,
 	0x24, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0x20, 0x1c, 0x21, 0x01, 0x2e, 0xe6, 0x92, 0xc4, 0x74,
-	0x09, 0x26, 0xb0, 0x18, 0x88, 0x99, 0xc4, 0x06, 0xd6, 0x6f, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff,
-	0xd2, 0x37, 0x76, 0x36, 0x4f, 0x00, 0x00, 0x00,
+	0x09, 0x26, 0xb0, 0x18, 0x88, 0xa9, 0xe4, 0xc7, 0xc5, 0xe5, 0x92, 0x5a, 0x90, 0x93, 0x5f, 0x99,
+	0x9b, 0x9a, 0x57, 0x22, 0xc4, 0xc7, 0xc5, 0x94, 0x99, 0x02, 0xd5, 0xc2, 0x94, 0x99, 0x22, 0x24,
+	0xc4, 0xc5, 0x92, 0x97, 0x98, 0x9b, 0x0a, 0xd5, 0x00, 0x66, 0x0b, 0xc9, 0x70, 0x71, 0x26, 0xe7,
+	0xe7, 0x95, 0x24, 0x66, 0xe6, 0xa5, 0x16, 0x49, 0x30, 0x83, 0x25, 0x10, 0x02, 0x4a, 0xd2, 0x5c,
+	0xec, 0x41, 0xa9, 0x39, 0xa9, 0x89, 0xc5, 0x60, 0xcb, 0x4a, 0x8b, 0x72, 0xa0, 0xa6, 0x81, 0x98,
+	0x49, 0x6c, 0x60, 0xc7, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0xe3, 0x68, 0x00, 0xe5, 0xbc,
+	0x00, 0x00, 0x00,
 }
