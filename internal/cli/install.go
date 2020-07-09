@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -29,22 +31,12 @@ type InstallCommand struct {
 	advertiseInternal bool
 	contextName       string
 	contextDefault    bool
+	platform          string
 }
 
-func (c *InstallCommand) Run(args []string) int {
-	ctx := c.Ctx
-	log := c.Log.Named("install")
-	defer c.Close()
-
-	// Initialize. If we fail, we just exit since Init handles the UI.
-	if err := c.Init(
-		WithArgs(args),
-		WithFlags(c.Flags()),
-		WithNoConfig(),
-	); err != nil {
-		return 1
-	}
-
+func (c *InstallCommand) InstallKubernetes(
+	ctx context.Context, st terminal.Status, log hclog.Logger,
+) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, int) {
 	// Decode our configuration
 	output, err := serverinstall.Render(&c.config)
 	if err != nil {
@@ -52,7 +44,7 @@ func (c *InstallCommand) Run(args []string) int {
 			"Error generating configuration: %s", err.Error(),
 			terminal.WithErrorStyle(),
 		)
-		return 1
+		return nil, nil, 1
 	}
 
 	stdout, stderr, err := c.ui.OutputWriters()
@@ -66,7 +58,7 @@ func (c *InstallCommand) Run(args []string) int {
 			fmt.Fprint(stdout, "\n")
 		}
 
-		return 0
+		return nil, nil, 0
 	}
 
 	cmd := exec.Command("kubectl", "create", "-f", "-")
@@ -81,11 +73,9 @@ func (c *InstallCommand) Run(args []string) int {
 			terminal.WithErrorStyle(),
 		)
 
-		return 1
+		return nil, nil, 1
 	}
 
-	st := c.ui.Status()
-	defer st.Close()
 	st.Update("Waiting for Kubernetes service to be ready...")
 
 	// Build our K8S client.
@@ -99,15 +89,16 @@ func (c *InstallCommand) Run(args []string) int {
 			"Error initializing kubernetes client: %s", err.Error(),
 			terminal.WithErrorStyle(),
 		)
-		return 1
+		return nil, nil, 1
 	}
+
 	clientset, err := kubernetes.NewForConfig(clientconfig)
 	if err != nil {
 		c.ui.Output(
 			"Error initializing kubernetes client: %s", err.Error(),
 			terminal.WithErrorStyle(),
 		)
-		return 1
+		return nil, nil, 1
 	}
 
 	// Wait for our service to be ready
@@ -187,6 +178,61 @@ func (c *InstallCommand) Run(args []string) int {
 			errInstallRunning,
 			terminal.WithErrorStyle(),
 		)
+		return nil, nil, 1
+	}
+
+	return &contextConfig, &advertiseAddr, 0
+}
+
+func (c *InstallCommand) Run(args []string) int {
+	ctx := c.Ctx
+	log := c.Log.Named("install")
+	defer c.Close()
+
+	// Initialize. If we fail, we just exit since Init handles the UI.
+	if err := c.Init(
+		WithArgs(args),
+		WithFlags(c.Flags()),
+		WithNoConfig(),
+	); err != nil {
+		return 1
+	}
+
+	var (
+		contextConfig *clicontext.Config
+		advertiseAddr *pb.ServerConfig_AdvertiseAddr
+	)
+
+	st := c.ui.Status()
+	defer st.Close()
+
+	var err error
+
+	switch c.platform {
+	case "docker":
+		contextConfig, advertiseAddr, err = serverinstall.InstallDocker(ctx, c.ui, st, &c.config)
+		if err != nil {
+			c.ui.Output(
+				"Error installing server into docker: %s", err.Error(),
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+	case "kubernetes":
+		var code int
+		contextConfig, advertiseAddr, code = c.InstallKubernetes(ctx, st, log)
+		if code != 0 || c.showYaml {
+			return code
+		}
+
+		// ok, inline below.
+	default:
+		c.ui.Output(
+			"Unknown server platform: %s", c.platform,
+			terminal.WithErrorStyle(),
+		)
+
 		return 1
 	}
 
@@ -194,7 +240,7 @@ func (c *InstallCommand) Run(args []string) int {
 	st.Update(fmt.Sprintf("Service ready. Connecting to: %s", contextConfig.Server.Address))
 	log.Info("connecting to the server so we can set the server config", "addr", contextConfig.Server.Address)
 	conn, err := serverclient.Connect(ctx,
-		serverclient.FromContextConfig(&contextConfig),
+		serverclient.FromContextConfig(contextConfig),
 		serverclient.Timeout(1*time.Minute),
 	)
 	if err != nil {
@@ -210,7 +256,7 @@ func (c *InstallCommand) Run(args []string) int {
 
 	// If we connected successfully, lets immediately setup our context.
 	if c.contextName != "" {
-		if err := c.contextStorage.Set(c.contextName, &contextConfig); err != nil {
+		if err := c.contextStorage.Set(c.contextName, contextConfig); err != nil {
 			c.ui.Output(
 				"Error setting the CLI context: %s\n\n%s",
 				err.Error(),
@@ -238,7 +284,7 @@ func (c *InstallCommand) Run(args []string) int {
 	_, err = client.SetServerConfig(ctx, &pb.SetServerConfigRequest{
 		Config: &pb.ServerConfig{
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{
-				&advertiseAddr,
+				advertiseAddr,
 			},
 		},
 	})
@@ -327,6 +373,13 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Target:  &c.contextDefault,
 			Default: true,
 			Usage:   "Set the newly installed server as the default CLI context.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "platform",
+			Target:  &c.platform,
+			Default: "kubernetes",
+			Usage:   "Platform to install the server into.",
 		})
 	})
 }

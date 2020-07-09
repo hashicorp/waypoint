@@ -49,6 +49,7 @@ func init() {
 	Platforms.Register("lambda", BuiltinFactory("lambda", component.PlatformType))
 	Platforms.Register("azure-aci", BuiltinFactory("azure-aci", component.PlatformType))
 	Platforms.Register("netlify", BuiltinFactory("netlify", component.PlatformType))
+	Platforms.Register("docker", BuiltinFactory("docker", component.PlatformType))
 
 	Releasers.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.ReleaseManagerType))
 	Releasers.Register("kubernetes", BuiltinFactory("kubernetes", component.ReleaseManagerType))
