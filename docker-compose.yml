@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  pebble:
+   image: letsencrypt/pebble
+   command: pebble
+   ports:
+     - 14000:14000  # ACME port
+     - 15000:15000  # Management port
+   environment:
+     - PEBBLE_VA_NOSLEEP=1
+     - PEBBLE_VA_ALWAYS_VALID=1
+
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4566-4599:4566-4599"
+      - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
+    environment:
+      - SERVICES=${SERVICES- }
+      - DEBUG=${DEBUG- }
+      - DATA_DIR=${DATA_DIR- }
+      - PORT_WEB_UI=${PORT_WEB_UI- }
+      - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR- }
+      - KINESIS_ERROR_PROBABILITY=${KINESIS_ERROR_PROBABILITY- }
+      - LAMBDA_EXECUTOR=local
+      - HOST_TMP_FOLDER=${TMPDIR}
+    volumes:
+      - "${PWD}/tmp/localstack:/tmp/localstack"
+
+  postgres:
+    image: "postgres:12.3"
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=noop
+      - POSTGRES_PASSWORD=postgres
+
+  vault:
+    image: vault
+    ports:
+      - 8200:8200
+    command: vault server -dev -dev-root-token-id=hznroot
+    environment:
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200

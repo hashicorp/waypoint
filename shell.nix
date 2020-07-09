@@ -75,7 +75,7 @@ in with pkgs; let
 
     subPackages = [ "cmd/mockery" ];
   };
-in stdenv.mkDerivation {
+in pkgs.mkShell rec {
   name = "waypoint";
 
   # The packages in the `buildInputs` list will be added to the PATH in our shell
@@ -84,8 +84,17 @@ in stdenv.mkDerivation {
     pkgs.go-bindata
     pkgs.go-protobuf
     pkgs.protobuf3_11
+    pkgs.postgresql_12
     go-protobuf-json
     go-tools
     go-mockery
   ];
+
+  # Extra env vars
+  PGHOST = "localhost";
+  PGPORT = "5432";
+  PGDATABASE = "noop";
+  PGUSER = "postgres";
+  PGPASSWORD = "postgres";
+  DATABASE_URL = "postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=disablie";
 }
