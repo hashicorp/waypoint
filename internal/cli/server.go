@@ -58,7 +58,7 @@ func (c *ServerCommand) Run(args []string) int {
 	}()
 
 	// Create our server
-	impl, err := singleprocess.New(db)
+	impl, err := singleprocess.New(singleprocess.WithDB(db))
 	if err != nil {
 		c.ui.Output(
 			"Error initializing server: %s", err.Error(),
