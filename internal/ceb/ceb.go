@@ -20,15 +20,10 @@ const (
 	envDeploymentId   = "WAYPOINT_DEPLOYMENT_ID"
 	envServerAddr     = "WAYPOINT_SERVER_ADDR"
 	envServerInsecure = "WAYPOINT_SERVER_INSECURE"
-
-	envURLControl = "WAYPOINT_URL_CONTROL_ADDR"
-	envURLLabels  = "WAYPOINT_URL_LABELS"
-	envURLToken   = "WAYPOINT_URL_TOKEN"
 )
 
 const (
-	DefaultPort           = 5000
-	DefaultURLControlAddr = "control.alpha.hzn.network"
+	DefaultPort = 5000
 )
 
 // CEB represents the state of a running CEB.
@@ -113,10 +108,6 @@ func Run(ctx context.Context, os ...Option) error {
 		}
 	}
 
-	if err := ceb.initURLService(ctx, &cfg); err != nil {
-		return err
-	}
-
 	// Run our subprocess
 	errCh := ceb.execChildCmd(ctx)
 	select {
@@ -159,10 +150,7 @@ type config struct {
 	ServerAddr     string
 	ServerInsecure bool
 
-	URLToken         string
-	URLControlAddr   string
-	URLServicePort   int
-	URLServiceLabels string
+	URLServicePort int
 }
 
 type Option func(*CEB, *config) error
@@ -172,42 +160,21 @@ type Option func(*CEB, *config) error
 // based confiugration will be ignored.
 func WithEnvDefaults() Option {
 	return func(ceb *CEB, cfg *config) error {
-		labels := os.Getenv(envURLLabels)
-		if labels != "" {
-			cfg.URLServiceLabels = labels
-
-			var port int
-
-			portStr := os.Getenv("PORT")
-			if portStr == "" {
-				port = DefaultPort
-				os.Setenv("PORT", strconv.Itoa(DefaultPort))
-			} else {
-				i, err := strconv.Atoi(portStr)
-				if err != nil {
-					return fmt.Errorf("Invalid value of PORT: %s", err)
-				}
-
-				port = i
+		var port int
+		portStr := os.Getenv("PORT")
+		if portStr == "" {
+			port = DefaultPort
+			os.Setenv("PORT", strconv.Itoa(DefaultPort))
+		} else {
+			i, err := strconv.Atoi(portStr)
+			if err != nil {
+				return fmt.Errorf("Invalid value of PORT: %s", err)
 			}
 
-			cfg.URLServicePort = port
-
-			controlAddr := os.Getenv(envURLControl)
-			if controlAddr == "" {
-				controlAddr = DefaultURLControlAddr
-			}
-
-			cfg.URLControlAddr = controlAddr
-
-			token := os.Getenv(envURLToken)
-			if token == "" {
-				return fmt.Errorf("No token provided via " + envURLToken)
-			}
-
-			cfg.URLToken = token
+			port = i
 		}
 
+		cfg.URLServicePort = port
 		cfg.DeploymentId = os.Getenv(envDeploymentId)
 		cfg.ServerAddr = os.Getenv(envServerAddr)
 		cfg.ServerInsecure = os.Getenv(envServerInsecure) != ""
@@ -222,20 +189,6 @@ func WithEnvDefaults() Option {
 func WithExec(args []string) Option {
 	return func(ceb *CEB, cfg *config) error {
 		cfg.ExecArgs = args
-		return nil
-	}
-}
-
-// WithURLService indicates that the CEB should boot a connection to the
-// Waypoint URL Service and forward HTTP traffic send to the given labels
-// to the given localhost port.
-func WithURLService(controlAddr, token string, port int, labels string) Option {
-	return func(ceb *CEB, cfg *config) error {
-		cfg.URLControlAddr = controlAddr
-		cfg.URLToken = token
-		cfg.URLServicePort = port
-		cfg.URLServiceLabels = labels
-
 		return nil
 	}
 }

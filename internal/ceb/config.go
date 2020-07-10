@@ -33,6 +33,13 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
 		ceb.childCmd.Env = append(ceb.childCmd.Env, cv.Name+"="+cv.Value)
 	}
 
+	// If we have URL service configuration, start it.
+	if url := resp.Config.UrlService; url != nil {
+		if err := ceb.initURLService(ctx, cfg.URLServicePort, url); err != nil {
+			return err
+		}
+	}
+
 	// Start the watcher
 	ch := make(chan *pb.EntrypointConfig)
 	go ceb.watchConfig(ch)
