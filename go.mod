@@ -11,7 +11,7 @@ require (
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/adrg/xdg v0.2.1
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
-	github.com/aws/aws-sdk-go v1.28.12
+	github.com/aws/aws-sdk-go v1.33.6
 	github.com/boltdb/bolt v1.3.1
 	github.com/briandowns/spinner v1.8.0
 	github.com/buildpacks/pack v0.11.1
@@ -41,12 +41,15 @@ require (
 	github.com/hashicorp/go-plugin v1.1.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.3.0
-	github.com/hashicorp/horizon v0.0.0-20200529210319-3ee3f485d2ca
+	github.com/hashicorp/horizon v0.0.0-20200716033548-c7273b9d2bca
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
+	github.com/hashicorp/waypoint-hzn v0.0.0-20200716002713-92ca5dee8bef
+	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.8
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
-	github.com/mattn/go-colorable v0.1.6
+	github.com/lib/pq v1.7.0 // indirect
+	github.com/mattn/go-colorable v0.1.7
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.0.0
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
@@ -65,12 +68,14 @@ require (
 	github.com/sebdah/goldie v1.0.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/stretchr/testify v1.5.1
-	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6
-	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
+	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
+	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
+	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/api v0.20.0
-	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
-	google.golang.org/grpc v1.28.1
-	google.golang.org/protobuf v1.23.1-0.20200526195155-81db48ad09cc
+	google.golang.org/genproto v0.0.0-20200715011427-11fb19a81f2c
+	google.golang.org/grpc v1.30.0
+	google.golang.org/protobuf v1.25.0
 	k8s.io/api v0.18.0
 	k8s.io/apimachinery v0.18.0
 	k8s.io/client-go v0.18.0
@@ -79,3 +84,4 @@ require (
 // NOTE(mitchellh): I'm keeping these commented and in here because during
 // development at the moment it is common to be working on these libs too.
 // replace github.com/hashicorp/go-argmapper => ../go-argmapper
+// replace github.com/hashicorp/horizon => ../horizon
