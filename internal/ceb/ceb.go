@@ -74,17 +74,15 @@ func Run(ctx context.Context, os ...Option) error {
 		"args", cfg.ExecArgs,
 	)
 
-	var useServer bool
-
-	if cfg.ServerAddr == "" {
-		ceb.logger.Info("no waypoint server configured, disabled management")
-	} else {
-		useServer = true
-
-		// Initialize our server connection
-		if err := ceb.dialServer(ctx, &cfg); err != nil {
-			return status.Errorf(codes.Aborted,
-				"failed to connect to server: %s", err)
+	if ceb.client == nil {
+		if cfg.ServerAddr == "" {
+			ceb.logger.Info("no waypoint server configured, disabled management")
+		} else {
+			// Initialize our server connection
+			if err := ceb.dialServer(ctx, &cfg); err != nil {
+				return status.Errorf(codes.Aborted,
+					"failed to connect to server: %s", err)
+			}
 		}
 	}
 
@@ -94,7 +92,7 @@ func Run(ctx context.Context, os ...Option) error {
 			"failed to connect to server: %s", err)
 	}
 
-	if useServer {
+	if ceb.client != nil {
 		// Get our configuration and start the long-running stream for it.
 		if err := ceb.initConfigStream(ctx, &cfg); err != nil {
 			return err
@@ -189,6 +187,15 @@ func WithEnvDefaults() Option {
 func WithExec(args []string) Option {
 	return func(ceb *CEB, cfg *config) error {
 		cfg.ExecArgs = args
+		return nil
+	}
+}
+
+// WithClient specifies the Waypoint client to use directly. This will
+// override any env vars or any other form of client connection configuration.
+func WithClient(client pb.WaypointClient) Option {
+	return func(ceb *CEB, cfg *config) error {
+		ceb.client = client
 		return nil
 	}
 }
