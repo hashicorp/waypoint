@@ -17,7 +17,7 @@ func TestServiceGetLogStream(t *testing.T) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 

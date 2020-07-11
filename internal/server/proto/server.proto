@@ -1161,10 +1161,23 @@ message EntrypointConfig {
 
   repeated ConfigVar env_vars = 2;
 
+  // The URL service configuration. This might be nil. If this is nil,
+  // then the URL service is disabled.
+  URLService url_service = 3;
+
   message Exec {
     int64 index = 1;
     repeated string args = 2;
     ExecStreamRequest.PTY pty = 3;
+  }
+
+  message URLService {
+    // address to the control server and the token for auth
+    string control_addr = 1;
+    string token = 2;
+
+    // labels to register this instance under
+    string labels = 3;
   }
 }
 

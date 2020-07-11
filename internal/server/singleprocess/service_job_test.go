@@ -18,7 +18,7 @@ func TestServiceQueueJob(t *testing.T) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
@@ -47,7 +47,7 @@ func TestServiceValidateJob(t *testing.T) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
@@ -88,7 +88,7 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
@@ -211,7 +211,7 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 

@@ -17,7 +17,7 @@ func TestServiceDeployment(t *testing.T) {
 	ctx := context.Background()
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
@@ -70,7 +70,7 @@ func TestServiceDeployment_GetDeployment(t *testing.T) {
 
 	// Create our server
 	db := testDB(t)
-	impl, err := New(db)
+	impl, err := New(WithDB(db))
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
