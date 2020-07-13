@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
@@ -19,6 +20,9 @@ type service struct {
 	// state is the state management interface that provides functions for
 	// safely mutating server state.
 	state *state.State
+
+	// id is our unique server ID.
+	id string
 
 	// urlConfig is not nil if the URL service is enabled. This is guaranteed
 	// to have the configs set.
@@ -44,8 +48,36 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	}
 	s.state = st
 
+	// If we don't have a server ID, set that.
+	id, err := st.ServerIdGet()
+	if err != nil {
+		return nil, err
+	}
+	if id == "" {
+		id, err = server.Id()
+		if err != nil {
+			return nil, err
+		}
+
+		if err := st.ServerIdSet(id); err != nil {
+			return nil, err
+		}
+	}
+	s.id = id
+
 	// Setup our URL service config if it is enabled.
 	if scfg := cfg.serverConfig; scfg != nil && scfg.URL != nil && scfg.URL.Enabled {
+		// Set our config
+		s.urlConfig = scfg.URL
+
+		// If we have no API token, get our guest account token.
+		if scfg.URL.APIToken == "" {
+			if err := s.initURLGuestAccount(); err != nil {
+				return nil, err
+			}
+		}
+
+		// Now that we have a token, connect to the API service.
 		opts := []grpc.DialOption{
 			grpc.WithPerRPCCredentials(hzncontrol.Token(scfg.URL.APIToken)),
 		}
@@ -58,7 +90,6 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 			return nil, err
 		}
 
-		s.urlConfig = scfg.URL
 		s.urlClient = wphznpb.NewWaypointHznClient(conn)
 	}
 
