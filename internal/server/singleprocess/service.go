@@ -3,6 +3,10 @@ package singleprocess
 import (
 	"github.com/boltdb/bolt"
 
+	hzncontrol "github.com/hashicorp/horizon/pkg/control"
+	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
+	"google.golang.org/grpc"
+
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
@@ -19,6 +23,7 @@ type service struct {
 	// urlConfig is not nil if the URL service is enabled. This is guaranteed
 	// to have the configs set.
 	urlConfig *configpkg.URL
+	urlClient wphznpb.WaypointHznClient
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -41,7 +46,20 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 	// Setup our URL service config if it is enabled.
 	if scfg := cfg.serverConfig; scfg != nil && scfg.URL != nil && scfg.URL.Enabled {
+		opts := []grpc.DialOption{
+			grpc.WithPerRPCCredentials(hzncontrol.Token(scfg.URL.APIToken)),
+		}
+		if scfg.URL.APIInsecure {
+			opts = append(opts, grpc.WithInsecure())
+		}
+
+		conn, err := grpc.Dial(scfg.URL.APIAddress, opts...)
+		if err != nil {
+			return nil, err
+		}
+
 		s.urlConfig = scfg.URL
+		s.urlClient = wphznpb.NewWaypointHznClient(conn)
 	}
 
 	return &s, nil

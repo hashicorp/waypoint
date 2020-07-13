@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	hznhub "github.com/hashicorp/horizon/pkg/hub"
 	hzntest "github.com/hashicorp/horizon/pkg/testutils/central"
+	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
+	wphzn "github.com/hashicorp/waypoint-hzn/pkg/server"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
@@ -56,6 +58,18 @@ func TestWithURLService(t testing.T, out *hzntest.DevSetup) Option {
 		*out = *setup
 	}
 
+	// Make our test registration API
+	wphzndata := wphzn.TestServer(t)
+
+	// Make a guest account
+	accountResp, err := wphzndata.Client.RegisterGuestAccount(
+		context.Background(),
+		&wphznpb.RegisterGuestAccountRequest{
+			ServerId: "A",
+		},
+	)
+	require.NoError(t, err)
+
 	return func(s *service, cfg *config) error {
 		if cfg.serverConfig == nil {
 			cfg.serverConfig = &configpkg.ServerConfig{}
@@ -63,7 +77,9 @@ func TestWithURLService(t testing.T, out *hzntest.DevSetup) Option {
 
 		cfg.serverConfig.URL = &configpkg.URL{
 			Enabled:        true,
-			APIAddress:     "",
+			APIAddress:     wphzndata.Addr,
+			APIInsecure:    true,
+			APIToken:       accountResp.Token,
 			ControlAddress: fmt.Sprintf("dev://%s", setup.HubAddr),
 			Token:          setup.AgentToken,
 		}
