@@ -42,7 +42,9 @@ require (
 	github.com/hashicorp/horizon v0.0.0-20200529210319-3ee3f485d2ca
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
 	github.com/imdario/mergo v0.3.8
+	github.com/jaguilar/vt100 v0.0.0-20150826170717-2703a27b14ea // indirect
 	github.com/kr/text v0.2.0
+	github.com/lab47/vterm v0.0.0-20200716000831-9fcb752e6bec
 	github.com/mattn/go-colorable v0.1.6
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.0.0
@@ -51,6 +53,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/protostructure v0.0.0-20200302233719-00c1118a7e52
+	github.com/morikuni/aec v1.0.0
 	github.com/mr-tron/base58 v1.2.0
 	github.com/netlify/open-api v0.15.0
 	github.com/oklog/run v1.1.0
@@ -62,7 +65,6 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6
-	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200416231807-8751e049a2a0
 	google.golang.org/grpc v1.28.1

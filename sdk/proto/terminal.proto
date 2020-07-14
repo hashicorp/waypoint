@@ -24,6 +24,8 @@ message TerminalUI {
       NamedValues named_values = 3;
       Raw raw = 4;
       Table table = 5;
+      StepGroup step_group = 6;
+      Step step = 7;
     }
 
     message Status {
@@ -63,6 +65,18 @@ message TerminalUI {
     message Table {
       repeated string headers = 1;
       repeated TableRow rows = 2;
+    }
+
+    message StepGroup {
+      bool close = 1;
+    }
+
+    message Step {
+      int32 id = 1;
+      bool close = 2;
+      string msg = 3;
+      string status = 4;
+      bytes output = 5;
     }
   }
 }

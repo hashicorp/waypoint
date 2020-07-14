@@ -112,12 +112,21 @@ func (c *Project) queueAndStreamJob(
 			resp.Event)
 	}
 
+	type stepData struct {
+		terminal.Step
+
+		out io.Writer
+	}
+
 	// Process events
 	var (
 		stateEventTimer *time.Timer
 		tstatus         terminal.Status
 
 		stdout, stderr io.Writer
+
+		sg    terminal.StepGroup
+		steps = map[int32]*stepData{}
 	)
 
 	for {
@@ -206,6 +215,46 @@ func (c *Project) queueAndStreamJob(
 					}
 
 					ui.Table(tbl)
+				case *pb.GetJobStreamResponse_Terminal_Event_StepGroup_:
+					if sg != nil {
+						sg.Wait()
+					}
+
+					if !ev.StepGroup.Close {
+						sg = ui.StepGroup()
+					}
+				case *pb.GetJobStreamResponse_Terminal_Event_Step_:
+					if sg == nil {
+						continue
+					}
+
+					step, ok := steps[ev.Step.Id]
+					if !ok {
+						step = &stepData{
+							Step: sg.Add(ev.Step.Msg),
+						}
+						steps[ev.Step.Id] = step
+					} else {
+						if ev.Step.Msg != "" {
+							step.Update(ev.Step.Msg)
+						}
+					}
+
+					if ev.Step.Status != "" {
+						step.Status(ev.Step.Status)
+					}
+
+					if len(ev.Step.Output) > 0 {
+						if step.out == nil {
+							step.out = step.TermOutput()
+						}
+
+						step.out.Write(ev.Step.Output)
+					}
+
+					if ev.Step.Close {
+						step.Done()
+					}
 				default:
 					c.logger.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
 				}

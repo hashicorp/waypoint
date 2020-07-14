@@ -1,13 +1,20 @@
 package terminal
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"text/tabwriter"
 
 	"github.com/fatih/color"
+)
+
+const (
+	TermRows    = 10
+	TermColumns = 100
 )
 
 // Passed to UI.NamedValues to provide a nicely formatted key: value output
@@ -88,6 +95,23 @@ type UI interface {
 
 	// Table outputs the information formatted into a Table structure.
 	Table(*Table, ...Option)
+
+	StepGroup() StepGroup
+}
+
+type StepGroup interface {
+	// Start a step in the output
+	Add(string, ...interface{}) Step
+
+	Wait()
+}
+
+type Step interface {
+	TermOutput() io.Writer
+	Update(string, ...interface{})
+	Status(status string)
+	Done()
+	Abort()
 }
 
 // BasicUI
@@ -183,6 +207,101 @@ func (ui *BasicUI) Status() Status {
 	}
 
 	return ui.status
+}
+
+type fancyStep struct {
+	sg  *fancyStepGroup
+	ent *DisplayEntry
+
+	done bool
+
+	term *Term
+}
+
+func (f *fancyStep) TermOutput() io.Writer {
+	if f.term == nil {
+		t, err := NewTerm(f.sg.ctx, f.ent, TermRows, TermColumns)
+		if err != nil {
+			panic(err)
+		}
+
+		f.term = t
+	}
+
+	return f.term
+}
+
+func (f *fancyStep) Update(str string, args ...interface{}) {
+	f.ent.Update(str, args...)
+}
+
+func (f *fancyStep) Status(status string) {
+	f.ent.SetStatus(status)
+}
+
+func (f *fancyStep) Done() {
+	if f.done {
+		return
+	}
+
+	f.ent.StopSpinner()
+	f.Status(StatusOK)
+	f.done = true
+	f.sg.wg.Done()
+}
+
+func (f *fancyStep) Abort() {
+	if f.done {
+		return
+	}
+
+	f.ent.StopSpinner()
+	f.Status(StatusError)
+
+	f.done = true
+	f.sg.wg.Done()
+}
+
+type fancyStepGroup struct {
+	ctx    context.Context
+	cancel func()
+
+	display *Display
+
+	wg sync.WaitGroup
+}
+
+// Start a step in the output
+func (f *fancyStepGroup) Add(str string, args ...interface{}) Step {
+	f.wg.Add(1)
+
+	ent := f.display.NewStatus(0)
+
+	ent.StartSpinner()
+	ent.Update(str, args...)
+
+	return &fancyStep{
+		sg:  f,
+		ent: ent,
+	}
+}
+
+func (f *fancyStepGroup) Wait() {
+	f.wg.Wait()
+	f.cancel()
+
+	f.display.Close()
+}
+
+func (ui *BasicUI) StepGroup() StepGroup {
+	ctx, cancel := context.WithCancel(context.Background())
+	display := NewDisplay(ctx, color.Output)
+
+	return &fancyStepGroup{
+		ctx:     ctx,
+		cancel:  cancel,
+		display: display,
+	}
 }
 
 const (
