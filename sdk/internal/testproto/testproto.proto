@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package testproto;
-option go_package = '.;proto';
+option go_package = '.;testproto';
 
 // Data is just some data, used for tests so meant to be meaningless.
 message Data {
