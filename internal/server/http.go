@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"time"
 
@@ -28,6 +29,9 @@ func httpInit(group *run.Group, opts *options) error {
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       120 * time.Second,
 		Handler:           httpLogHandler(grpcWrapped, log),
+		BaseContext: func(net.Listener) context.Context {
+			return opts.Context
+		},
 	}
 
 	// Add our gRPC server to the run group

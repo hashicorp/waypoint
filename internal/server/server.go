@@ -38,6 +38,7 @@ func Run(opts ...Option) error {
 	// will trigger the rest of the group to end since a group will not exit
 	// until any of its actors exit.
 	ctx, cancelCtx := context.WithCancel(cfg.Context)
+	cfg.Context = ctx
 	group.Add(func() error {
 		<-ctx.Done()
 		return ctx.Err()
