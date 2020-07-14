@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package google.cloudrun;
 
-option go_package = "cloudrun";
+option go_package = "waypoint/builtin/google/cloudrun";
 
 message Deployment {
   string url = 1;
