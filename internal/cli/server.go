@@ -125,6 +125,11 @@ func (c *ServerCommand) Run(args []string) int {
 		options = append(options, server.WithAuthentication(ac))
 	}
 
+	httpAddr := "disabled"
+	if httpLn != nil {
+		httpAddr = httpLn.Addr().String()
+	}
+
 	// Output information to the user
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
 	c.ui.Output("")
@@ -132,11 +137,13 @@ func (c *ServerCommand) Run(args []string) int {
 		c.ui.NamedValues([]terminal.NamedValue{
 			{Name: "DB Path", Value: path},
 			{Name: "gRPC Address", Value: ln.Addr().String()},
+			{Name: "HTTP Address", Value: httpAddr},
 		})
 	} else {
 		c.ui.NamedValues([]terminal.NamedValue{
 			{Name: "DB Path", Value: path},
 			{Name: "gRPC Address", Value: ln.Addr().String()},
+			{Name: "HTTP Address", Value: httpAddr},
 			{Name: "Token", Value: token},
 		})
 	}
