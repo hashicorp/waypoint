@@ -15,4 +15,5 @@ type ServerConfig struct {
 // Listeners is the configuration for the listeners.
 type Listeners struct {
 	GRPC string `hcl:"grpc,attr"`
+	HTTP string `hcl:"http,attr"`
 }
