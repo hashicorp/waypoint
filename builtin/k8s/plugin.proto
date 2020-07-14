@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package k8s;
 
-option go_package = "k8s";
+option go_package = "waypoint/builtin/k8s";
 
 message Deployment {
   string id = 1;

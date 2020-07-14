@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package files;
 
-option go_package = "files";
+option go_package = "waypoint/builtin/files";
 
 message Files {
   string path = 1;

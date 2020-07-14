@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package docker;
 
+option go_package = "waypoint/builtin/docker";
+
 // Image is the artifact type for the registry.
 message Image {
   string image = 1;
