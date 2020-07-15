@@ -95,9 +95,9 @@ func (s *service) EntrypointConfig(
 
 			// We always have these default labels for the URL service.
 			flatLabels = append(flatLabels,
-				"waypoint.hashicorp.com/app="+deployment.Application.Application,
-				"waypoint.hashicorp.com/project="+deployment.Application.Project,
-				"waypoint.hashicorp.com/workspace="+deployment.Workspace.Workspace,
+				hznLabelApp+"="+deployment.Application.Application,
+				hznLabelProject+"="+deployment.Application.Project,
+				hznLabelWorkspace+"="+deployment.Workspace.Workspace,
 			)
 
 			config.UrlService = &pb.EntrypointConfig_URLService{
