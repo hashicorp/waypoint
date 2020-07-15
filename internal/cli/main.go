@@ -223,9 +223,8 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 			}, nil
 		},
 		"hostname list": func() (cli.Command, error) {
-			return &RegisterCommand{
-				baseCommand:   baseCommand,
-				listHostnames: true,
+			return &HostnameListCommand{
+				baseCommand: baseCommand,
 			}, nil
 		},
 		"hostname delete": func() (cli.Command, error) {
