@@ -51,6 +51,9 @@ service Waypoint {
   // Create a hostname with the URL service.
   rpc CreateHostname(CreateHostnameRequest) returns (CreateHostnameResponse);
 
+  // Delete a hostname with the URL service.
+  rpc DeleteHostname(DeleteHostnameRequest) returns (google.protobuf.Empty);
+
   // List all our registered hostnames.
   rpc ListHostnames(ListHostnamesRequest) returns (ListHostnamesResponse);
 
@@ -754,6 +757,10 @@ message ListHostnamesRequest {
 
 message ListHostnamesResponse {
   repeated Hostname hostnames = 1;
+}
+
+message DeleteHostnameRequest {
+  string hostname = 1;
 }
 
 message Hostname {

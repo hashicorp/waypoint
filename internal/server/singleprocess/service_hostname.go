@@ -18,7 +18,6 @@ const (
 	hznLabelWorkspace = "waypoint.hashicorp.com/workspace"
 )
 
-// TODO: test
 func (s *service) CreateHostname(
 	ctx context.Context,
 	req *pb.CreateHostnameRequest,
@@ -84,7 +83,6 @@ func (s *service) CreateHostname(
 	}, nil
 }
 
-// TODO: test
 func (s *service) ListHostnames(
 	ctx context.Context,
 	req *pb.ListHostnamesRequest,
@@ -114,4 +112,23 @@ func (s *service) ListHostnames(
 	}
 
 	return &pb.ListHostnamesResponse{Hostnames: result}, nil
+}
+
+func (s *service) DeleteHostname(
+	ctx context.Context,
+	req *pb.DeleteHostnameRequest,
+) (*empty.Empty, error) {
+	if s.urlClient == nil {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"server doesn't have the URL service enabled")
+	}
+
+	_, err := s.urlClient.DeleteHostname(ctx, &wphznpb.DeleteHostnameRequest{
+		Hostname: req.Hostname,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
 }

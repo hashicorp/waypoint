@@ -80,12 +80,25 @@ func TestServiceHostname(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(resp)
 		require.NotEmpty(resp.Hostname)
+		hostname := resp.Hostname
 
 		// Should have the hostname
 		{
 			resp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{})
 			require.NoError(err)
 			require.Len(resp.Hostnames, 1)
+		}
+
+		// Can delete
+		{
+			_, err := client.DeleteHostname(ctx, &pb.DeleteHostnameRequest{
+				Hostname: hostname.Hostname,
+			})
+			require.NoError(err)
+
+			resp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{})
+			require.NoError(err)
+			require.Empty(resp.Hostnames)
 		}
 	})
 }
