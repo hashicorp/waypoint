@@ -218,7 +218,7 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 			}, nil
 		},
 		"hostname register": func() (cli.Command, error) {
-			return &RegisterCommand{
+			return &HostnameRegisterCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
