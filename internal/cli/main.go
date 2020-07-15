@@ -229,9 +229,8 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 			}, nil
 		},
 		"hostname delete": func() (cli.Command, error) {
-			return &RegisterCommand{
-				baseCommand:    baseCommand,
-				deleteHostname: true,
+			return &HostnameDeleteCommand{
+				baseCommand: baseCommand,
 			}, nil
 		},
 		"token new": func() (cli.Command, error) {
