@@ -78,10 +78,24 @@ func (c *ServerCommand) Run(args []string) int {
 	}
 	defer ln.Close()
 
+	var httpLn net.Listener
+	if c.config.Listeners.HTTP != "" {
+		httpLn, err = net.Listen("tcp", c.config.Listeners.HTTP)
+		if err != nil {
+			c.ui.Output(
+				"Error starting listener: %s", err.Error(),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		defer httpLn.Close()
+	}
+
 	options := []server.Option{
 		server.WithContext(c.Ctx),
 		server.WithLogger(log),
 		server.WithGRPC(ln),
+		server.WithHTTP(httpLn),
 		server.WithImpl(impl),
 	}
 
@@ -111,6 +125,11 @@ func (c *ServerCommand) Run(args []string) int {
 		options = append(options, server.WithAuthentication(ac))
 	}
 
+	httpAddr := "disabled"
+	if httpLn != nil {
+		httpAddr = httpLn.Addr().String()
+	}
+
 	// Output information to the user
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
 	c.ui.Output("")
@@ -118,11 +137,13 @@ func (c *ServerCommand) Run(args []string) int {
 		c.ui.NamedValues([]terminal.NamedValue{
 			{Name: "DB Path", Value: path},
 			{Name: "gRPC Address", Value: ln.Addr().String()},
+			{Name: "HTTP Address", Value: httpAddr},
 		})
 	} else {
 		c.ui.NamedValues([]terminal.NamedValue{
 			{Name: "DB Path", Value: path},
 			{Name: "gRPC Address", Value: ln.Addr().String()},
+			{Name: "HTTP Address", Value: httpAddr},
 			{Name: "Token", Value: token},
 		})
 	}
@@ -177,6 +198,13 @@ func (c *ServerCommand) Flags() *flag.Sets {
 			Target:  &c.config.Listeners.GRPC,
 			Usage:   "Address to bind to for gRPC connections.",
 			Default: "127.0.0.1:1234", // TODO(mitchellh: change default
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "listen-http",
+			Target:  &c.config.Listeners.HTTP,
+			Usage:   "Address to bind to for HTTP connections. Required for the UI.",
+			Default: "127.0.0.1:1235", // TODO(mitchellh: change default
 		})
 
 		f.BoolVar(&flag.BoolVar{
