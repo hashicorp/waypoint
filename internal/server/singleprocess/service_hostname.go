@@ -83,3 +83,35 @@ func (s *service) CreateHostname(
 		},
 	}, nil
 }
+
+// TODO: test
+func (s *service) ListHostnames(
+	ctx context.Context,
+	req *pb.ListHostnamesRequest,
+) (*pb.ListHostnamesResponse, error) {
+	if s.urlClient == nil {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"server doesn't have the URL service enabled")
+	}
+
+	resp, err := s.urlClient.ListHostnames(ctx, &wphznpb.ListHostnamesRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*pb.Hostname, 0, len(resp.Hostnames))
+	for _, item := range resp.Hostnames {
+		labelsMap := map[string]string{}
+		for _, label := range item.Labels.Labels {
+			labelsMap[label.Name] = label.Value
+		}
+
+		result = append(result, &pb.Hostname{
+			Hostname:     item.Hostname,
+			Fqdn:         item.Fqdn,
+			TargetLabels: labelsMap,
+		})
+	}
+
+	return &pb.ListHostnamesResponse{Hostnames: result}, nil
+}

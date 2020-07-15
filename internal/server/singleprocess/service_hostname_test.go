@@ -12,7 +12,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func TestServiceCreateHostname(t *testing.T) {
+func TestServiceHostname(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("with no URL service", func(t *testing.T) {
@@ -53,6 +53,13 @@ func TestServiceCreateHostname(t *testing.T) {
 		require.NoError(err)
 		client := server.TestServer(t, impl)
 
+		// Should have no hostnames
+		{
+			resp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{})
+			require.NoError(err)
+			require.Empty(resp.Hostnames)
+		}
+
 		// Create a hostname
 		resp, err := client.CreateHostname(ctx, &pb.CreateHostnameRequest{
 			Target: &pb.Hostname_Target{
@@ -73,5 +80,12 @@ func TestServiceCreateHostname(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(resp)
 		require.NotEmpty(resp.Hostname)
+
+		// Should have the hostname
+		{
+			resp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{})
+			require.NoError(err)
+			require.Len(resp.Hostnames, 1)
+		}
 	})
 }
