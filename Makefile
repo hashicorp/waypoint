@@ -28,3 +28,10 @@ docker/mitchellh:
 					--secret id=ssh.key,src="${HOME}/.ssh/config" \
 					-t waypoint:latest \
 					.
+
+.PHONY: docker/evanphx
+docker/evanphx:
+	DOCKER_BUILDKIT=1 docker build -f hack/Dockerfile.evanphx \
+					--ssh default \
+					-t waypoint:latest \
+					.
