@@ -123,8 +123,9 @@ func FromContext(st *clicontext.Storage, n string) ConnectOption {
 			}
 		}
 
-		// If we still have no name, then we do nothing.
-		if n == "" {
+		// If we still have no name, then we do nothing. We also accept
+		// "-" as a valid name that means "do nothing".
+		if n == "" || n == "-" {
 			return nil
 		}
 
