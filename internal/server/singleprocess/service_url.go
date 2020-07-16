@@ -2,10 +2,12 @@ package singleprocess
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func (s *service) initURLGuestAccount() error {
@@ -14,6 +16,9 @@ func (s *service) initURLGuestAccount() error {
 	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(10*time.Second))
 	if s.urlConfig.APIInsecure {
 		opts = append(opts, grpc.WithInsecure())
+	} else {
+		// If it isn't insecure, then we have to specify that we're using TLS
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
 	}
 
 	conn, err := grpc.Dial(s.urlConfig.APIAddress, opts...)

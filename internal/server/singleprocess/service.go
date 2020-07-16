@@ -1,11 +1,13 @@
 package singleprocess
 
 import (
+	"crypto/tls"
 	"github.com/boltdb/bolt"
 
 	hzncontrol "github.com/hashicorp/horizon/pkg/control"
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server"
@@ -83,6 +85,8 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		}
 		if scfg.URL.APIInsecure {
 			opts = append(opts, grpc.WithInsecure())
+		} else {
+			opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
 		}
 
 		conn, err := grpc.Dial(scfg.URL.APIAddress, opts...)
