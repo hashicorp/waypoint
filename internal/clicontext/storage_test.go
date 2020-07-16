@@ -48,8 +48,25 @@ func TestStorage_workflow(t *testing.T) {
 		require.Equal(cfg, actual)
 	}
 
+	// Should be able to rename
+	{
+		err := st.Rename("hello", "goodbye")
+		require.NoError(err)
+
+		// Should be the default since we didn't have one before.
+		def, err := st.Default()
+		require.NoError(err)
+		require.Equal("goodbye", def)
+
+		// Should only have this one
+		list, err := st.List()
+		require.NoError(err)
+		require.Len(list, 1)
+		require.Equal("goodbye", list[0])
+	}
+
 	// Should be able to delete
-	require.NoError(st.Delete("hello"))
+	require.NoError(st.Delete("goodbye"))
 
 	// Should be empty again
 	{
