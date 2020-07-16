@@ -41,14 +41,13 @@ require (
 	github.com/hashicorp/go-plugin v1.1.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.3.0
-	github.com/hashicorp/horizon v0.0.0-20200716033548-c7273b9d2bca
+	github.com/hashicorp/horizon v0.0.0-20200716172631-ddc39af93cbe
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
-	github.com/hashicorp/waypoint-hzn v0.0.0-20200716002713-92ca5dee8bef
+	github.com/hashicorp/waypoint-hzn v0.0.0-20200716172850-719df2bafd65
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.8
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
-	github.com/lib/pq v1.7.0 // indirect
 	github.com/mattn/go-colorable v0.1.7
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.0.0
@@ -69,9 +68,6 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
-	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
-	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200715011427-11fb19a81f2c
 	google.golang.org/grpc v1.30.0
