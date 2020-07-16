@@ -5,7 +5,6 @@ import (
 
 	"github.com/posener/complete"
 
-	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -13,8 +12,7 @@ import (
 type ContextDeleteCommand struct {
 	*baseCommand
 
-	flagConfig     clicontext.Config
-	flagSetDefault bool
+	flagAll bool
 }
 
 func (c *ContextDeleteCommand) Run(args []string) int {
@@ -29,7 +27,10 @@ func (c *ContextDeleteCommand) Run(args []string) int {
 	}
 	args = flagSet.Args()
 
-	// Require one argument
+	if c.flagAll {
+		return c.runDeleteAll(args)
+	}
+
 	if len(args) != 1 {
 		c.ui.Output(c.Flags().Help(), terminal.WithErrorStyle())
 		return 1
@@ -47,8 +48,40 @@ func (c *ContextDeleteCommand) Run(args []string) int {
 	return 0
 }
 
+func (c *ContextDeleteCommand) runDeleteAll(args []string) int {
+	if len(args) > 0 {
+		c.ui.Output(c.Flags().Help(), terminal.WithErrorStyle())
+		return 1
+	}
+
+	// Delete all
+	list, err := c.contextStorage.List()
+	if err != nil {
+		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		return 1
+	}
+
+	for _, name := range list {
+		if err := c.contextStorage.Delete(name); err != nil {
+			c.ui.Output(err.Error(), terminal.WithErrorStyle())
+			return 1
+		}
+	}
+
+	c.ui.Output("%d context(s) deleted.", len(list), terminal.WithSuccessStyle())
+	return 0
+}
+
 func (c *ContextDeleteCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(0, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:   "all",
+			Target: &c.flagAll,
+			Usage: "Delete all contexts. If this is specified, NAME should " +
+				"not be specified in the command arguments.",
+		})
+	})
 }
 
 func (c *ContextDeleteCommand) AutocompleteArgs() complete.Predictor {
