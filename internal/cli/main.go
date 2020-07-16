@@ -257,6 +257,11 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"context rename": func() (cli.Command, error) {
+			return &ContextRenameCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"context list": func() (cli.Command, error) {
 			return &ContextListCommand{
 				baseCommand: baseCommand,
