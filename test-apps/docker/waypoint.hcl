@@ -1,15 +1,12 @@
 project = "wpmini"
 
 app "wpmini" {
-
   labels = {
     "service" = "wpmini",
     "env" = "dev"
   }
 
-  build "pack" {
-  }
+  build "pack" {}
 
-  deploy "docker" {
-  }
+  deploy "docker" {}
 }

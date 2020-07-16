@@ -1,7 +1,6 @@
 project = "wpmini"
 
 app "wpmini" {
-
   labels = {
     "service" = "wpmini",
     "env" = "dev"
@@ -9,8 +8,9 @@ app "wpmini" {
 
   build "pack" {
     registry "docker" {
-      image = "localhost:5000/wpmini"
+      image = "waypoint-example.local/wpmini"
       tag = "latest"
+      local = true
     }
   }
 
@@ -23,12 +23,3 @@ app "wpmini" {
     port = 8080
   }
 }
-
-server {
-  address = "localhost:9701"
-  address_internal = "waypoint:9701"
-  insecure = true
-  require_auth = false
-}
-
-url {}
