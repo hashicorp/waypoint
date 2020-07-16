@@ -28,5 +28,4 @@ type URL struct {
 	APIInsecure    bool   `hcl:"api_insecure,optional"`
 	APIToken       string `hcl:"api_token,optional"`
 	ControlAddress string `hcl:"control_address,optional"`
-	Token          string `hcl:"token,optional"`
 }

@@ -102,7 +102,7 @@ func (s *service) EntrypointConfig(
 
 			config.UrlService = &pb.EntrypointConfig_URLService{
 				ControlAddr: v.ControlAddress,
-				Token:       v.Token,
+				Token:       v.APIToken,
 				Labels:      strings.Join(flatLabels, ","),
 			}
 		}

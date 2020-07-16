@@ -10,7 +10,10 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-hclog"
 	hznhub "github.com/hashicorp/horizon/pkg/hub"
+	hznpb "github.com/hashicorp/horizon/pkg/pb"
 	hzntest "github.com/hashicorp/horizon/pkg/testutils/central"
+	hzntoken "github.com/hashicorp/horizon/pkg/token"
+	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	wphzn "github.com/hashicorp/waypoint-hzn/pkg/server"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
@@ -53,12 +56,33 @@ func TestWithURLService(t testing.T, out *hzntest.DevSetup) Option {
 		<-closeCh
 	})
 	setup := <-setupCh
+
+	// Make our test registration API
+	wphzndata := wphzn.TestServer(t,
+		wphzn.WithNamespace("/"),
+		wphzn.WithHznControl(setup.MgmtClient),
+	)
+
+	// Get our account token.
+	wpaccountResp, err := wphzndata.Client.RegisterGuestAccount(
+		context.Background(),
+		&wphznpb.RegisterGuestAccountRequest{
+			ServerId: "A",
+		},
+	)
+	require.NoError(t, err)
+
+	// We need to get the account since that is what we need to query with
+	tokenInfo, err := setup.MgmtClient.GetTokenPublicKey(context.Background(), &hznpb.Noop{})
+	require.NoError(t, err)
+	token, err := hzntoken.CheckTokenED25519(wpaccountResp.Token, tokenInfo.PublicKey)
+	require.NoError(t, err)
+	setup.Account = token.Account()
+
+	// Copy our setup config
 	if out != nil {
 		*out = *setup
 	}
-
-	// Make our test registration API
-	wphzndata := wphzn.TestServer(t)
 
 	return func(s *service, cfg *config) error {
 		if cfg.serverConfig == nil {
@@ -69,8 +93,8 @@ func TestWithURLService(t testing.T, out *hzntest.DevSetup) Option {
 			Enabled:        true,
 			APIAddress:     wphzndata.Addr,
 			APIInsecure:    true,
+			APIToken:       wpaccountResp.Token,
 			ControlAddress: fmt.Sprintf("dev://%s", setup.HubAddr),
-			Token:          setup.AgentToken,
 		}
 
 		return nil

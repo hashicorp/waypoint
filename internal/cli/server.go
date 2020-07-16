@@ -91,7 +91,6 @@ func (c *ServerCommand) Run(args []string) int {
 			APIAddress:     wphzndata.Addr,
 			APIInsecure:    true,
 			ControlAddress: fmt.Sprintf("dev://%s", setup.HubAddr),
-			Token:          setup.AgentToken,
 		}
 	}
 
@@ -282,7 +281,7 @@ func (c *ServerCommand) Flags() *flag.Sets {
 			Name:    "url-api-addr",
 			Target:  &c.config.URL.APIAddress,
 			Usage:   "Address to Waypoint URL service API",
-			Default: "", // TODO(mitchellh: change default
+			Default: "api.alpha.waypoint.run:443", // TODO(mitchellh: change default
 		})
 
 		f.BoolVar(&flag.BoolVar{
@@ -296,14 +295,14 @@ func (c *ServerCommand) Flags() *flag.Sets {
 			Name:    "url-control-addr",
 			Target:  &c.config.URL.ControlAddress,
 			Usage:   "Address to Waypoint URL service control API",
-			Default: "", // TODO(mitchellh: change default
+			Default: "https://control.alpha.hzn.network",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "url-control-token",
-			Target:  &c.config.URL.Token,
+			Target:  &c.config.URL.APIToken,
 			Usage:   "Token for the Waypoint URL server control API.",
-			Default: "", // TODO(mitchellh: change default
+			Default: "",
 		})
 	})
 }
