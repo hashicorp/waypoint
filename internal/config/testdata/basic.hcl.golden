@@ -1,6 +1,5 @@
 (config.Config) {
  Runner: (*config.Runner)(<nil>),
- URL: (*config.URL)(<nil>),
  Project: (string) (len=3) "foo",
  Apps: ([]*config.App) (len=1 cap=1) {
   (*config.App)({

@@ -15,7 +15,7 @@ import (
 
 func TestServiceAuth(t *testing.T) {
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
 
 	t.Run("create and validate a token", func(t *testing.T) {

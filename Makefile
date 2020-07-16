@@ -22,4 +22,9 @@ bin/linux: # create Linux binaries
 
 .PHONY: docker/mitchellh
 docker/mitchellh:
-	DOCKER_BUILDKIT=1 docker build --ssh default -t waypoint:latest .
+	DOCKER_BUILDKIT=1 docker build \
+					--ssh default \
+					--secret id=ssh.config,src="${HOME}/.ssh/config" \
+					--secret id=ssh.key,src="${HOME}/.ssh/config" \
+					-t waypoint:latest \
+					.

@@ -34,6 +34,7 @@ func grpcInit(group *run.Group, opts *options) error {
 	)
 
 	s := grpc.NewServer(so...)
+	opts.grpcServer = s
 
 	// Register our server
 	pb.RegisterWaypointServer(s, opts.Service)

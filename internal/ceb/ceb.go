@@ -20,15 +20,10 @@ const (
 	envDeploymentId   = "WAYPOINT_DEPLOYMENT_ID"
 	envServerAddr     = "WAYPOINT_SERVER_ADDR"
 	envServerInsecure = "WAYPOINT_SERVER_INSECURE"
-
-	envURLControl = "WAYPOINT_URL_CONTROL_ADDR"
-	envURLLabels  = "WAYPOINT_URL_LABELS"
-	envURLToken   = "WAYPOINT_URL_TOKEN"
 )
 
 const (
-	DefaultPort           = 5000
-	DefaultURLControlAddr = "control.alpha.hzn.network"
+	DefaultPort = 5000
 )
 
 // CEB represents the state of a running CEB.
@@ -79,17 +74,15 @@ func Run(ctx context.Context, os ...Option) error {
 		"args", cfg.ExecArgs,
 	)
 
-	var useServer bool
-
-	if cfg.ServerAddr == "" {
-		ceb.logger.Info("no waypoint server configured, disabled management")
-	} else {
-		useServer = true
-
-		// Initialize our server connection
-		if err := ceb.dialServer(ctx, &cfg); err != nil {
-			return status.Errorf(codes.Aborted,
-				"failed to connect to server: %s", err)
+	if ceb.client == nil {
+		if cfg.ServerAddr == "" {
+			ceb.logger.Info("no waypoint server configured, disabled management")
+		} else {
+			// Initialize our server connection
+			if err := ceb.dialServer(ctx, &cfg); err != nil {
+				return status.Errorf(codes.Aborted,
+					"failed to connect to server: %s", err)
+			}
 		}
 	}
 
@@ -99,7 +92,7 @@ func Run(ctx context.Context, os ...Option) error {
 			"failed to connect to server: %s", err)
 	}
 
-	if useServer {
+	if ceb.client != nil {
 		// Get our configuration and start the long-running stream for it.
 		if err := ceb.initConfigStream(ctx, &cfg); err != nil {
 			return err
@@ -111,10 +104,6 @@ func Run(ctx context.Context, os ...Option) error {
 		if err := ceb.initLogStream(ctx, &cfg); err != nil {
 			return err
 		}
-	}
-
-	if err := ceb.initURLService(ctx, &cfg); err != nil {
-		return err
 	}
 
 	// Run our subprocess
@@ -159,10 +148,7 @@ type config struct {
 	ServerAddr     string
 	ServerInsecure bool
 
-	URLToken         string
-	URLControlAddr   string
-	URLServicePort   int
-	URLServiceLabels string
+	URLServicePort int
 }
 
 type Option func(*CEB, *config) error
@@ -172,42 +158,21 @@ type Option func(*CEB, *config) error
 // based confiugration will be ignored.
 func WithEnvDefaults() Option {
 	return func(ceb *CEB, cfg *config) error {
-		labels := os.Getenv(envURLLabels)
-		if labels != "" {
-			cfg.URLServiceLabels = labels
-
-			var port int
-
-			portStr := os.Getenv("PORT")
-			if portStr == "" {
-				port = DefaultPort
-				os.Setenv("PORT", strconv.Itoa(DefaultPort))
-			} else {
-				i, err := strconv.Atoi(portStr)
-				if err != nil {
-					return fmt.Errorf("Invalid value of PORT: %s", err)
-				}
-
-				port = i
+		var port int
+		portStr := os.Getenv("PORT")
+		if portStr == "" {
+			port = DefaultPort
+			os.Setenv("PORT", strconv.Itoa(DefaultPort))
+		} else {
+			i, err := strconv.Atoi(portStr)
+			if err != nil {
+				return fmt.Errorf("Invalid value of PORT: %s", err)
 			}
 
-			cfg.URLServicePort = port
-
-			controlAddr := os.Getenv(envURLControl)
-			if controlAddr == "" {
-				controlAddr = DefaultURLControlAddr
-			}
-
-			cfg.URLControlAddr = controlAddr
-
-			token := os.Getenv(envURLToken)
-			if token == "" {
-				return fmt.Errorf("No token provided via " + envURLToken)
-			}
-
-			cfg.URLToken = token
+			port = i
 		}
 
+		cfg.URLServicePort = port
 		cfg.DeploymentId = os.Getenv(envDeploymentId)
 		cfg.ServerAddr = os.Getenv(envServerAddr)
 		cfg.ServerInsecure = os.Getenv(envServerInsecure) != ""
@@ -226,16 +191,11 @@ func WithExec(args []string) Option {
 	}
 }
 
-// WithURLService indicates that the CEB should boot a connection to the
-// Waypoint URL Service and forward HTTP traffic send to the given labels
-// to the given localhost port.
-func WithURLService(controlAddr, token string, port int, labels string) Option {
+// WithClient specifies the Waypoint client to use directly. This will
+// override any env vars or any other form of client connection configuration.
+func WithClient(client pb.WaypointClient) Option {
 	return func(ceb *CEB, cfg *config) error {
-		cfg.URLControlAddr = controlAddr
-		cfg.URLToken = token
-		cfg.URLServicePort = port
-		cfg.URLServiceLabels = labels
-
+		ceb.client = client
 		return nil
 	}
 }

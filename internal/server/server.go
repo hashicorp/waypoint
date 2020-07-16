@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/oklog/run"
+	"google.golang.org/grpc"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -37,6 +38,7 @@ func Run(opts ...Option) error {
 	// will trigger the rest of the group to end since a group will not exit
 	// until any of its actors exit.
 	ctx, cancelCtx := context.WithCancel(cfg.Context)
+	cfg.Context = ctx
 	group.Add(func() error {
 		<-ctx.Done()
 		return ctx.Err()
@@ -44,6 +46,11 @@ func Run(opts ...Option) error {
 
 	// Setup our gRPC server.
 	if err := grpcInit(&group, &cfg); err != nil {
+		return err
+	}
+
+	// Setup our HTTP server.
+	if err := httpInit(&group, &cfg); err != nil {
 		return err
 	}
 
@@ -72,8 +79,14 @@ type options struct {
 	// serves the HTTP endpoints as well.
 	GRPCListener net.Listener
 
+	// HTTPListener will setup the HTTP server. If this is nil, then
+	// the HTTP-based API will be disabled.
+	HTTPListener net.Listener
+
 	// AuthChecker, if set, activates authentication checking on the server.
 	AuthChecker AuthChecker
+
+	grpcServer *grpc.Server
 }
 
 // WithContext sets the context for the server. When this context is cancelled,
@@ -92,6 +105,13 @@ func WithLogger(log hclog.Logger) Option {
 // cancel the context set with WithContext and wait for Run to return.
 func WithGRPC(ln net.Listener) Option {
 	return func(opts *options) { opts.GRPCListener = ln }
+}
+
+// WithHTTP sets the HTTP listener. This listener must be closed manually
+// by the caller. Prior to closing the listener, it is recommended that you
+// cancel the context set with WithContext and wait for Run to return.
+func WithHTTP(ln net.Listener) Option {
+	return func(opts *options) { opts.HTTPListener = ln }
 }
 
 // WithImpl sets the service implementation to serve.

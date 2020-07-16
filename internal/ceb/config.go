@@ -27,16 +27,25 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
 	if err != nil {
 		return err
 	}
+	log.Trace("first config received")
 
 	// Modify childCmd to contain any passed variables as environment variables
 	for _, cv := range resp.Config.EnvVars {
 		ceb.childCmd.Env = append(ceb.childCmd.Env, cv.Name+"="+cv.Value)
 	}
 
+	// If we have URL service configuration, start it.
+	if url := resp.Config.UrlService; url != nil {
+		if err := ceb.initURLService(ctx, cfg.URLServicePort, url); err != nil {
+			return err
+		}
+	} else {
+		log.Debug("no URL service configuration, will not register with URL service")
+	}
+
 	// Start the watcher
 	ch := make(chan *pb.EntrypointConfig)
 	go ceb.watchConfig(ch)
-	ceb.cleanup(func() { close(ch) })
 
 	// Send the first config which will trigger setup
 	ch <- resp.Config

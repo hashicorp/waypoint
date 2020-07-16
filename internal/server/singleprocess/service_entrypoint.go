@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"strings"
 	"sync/atomic"
@@ -83,8 +84,28 @@ func (s *service) EntrypointConfig(
 		if err != nil {
 			return err
 		}
-
 		config.EnvVars = vars
+
+		// If we have the URL service setup, note that
+		if v := s.urlConfig; v != nil {
+			var flatLabels []string
+			for k, v := range deployment.Labels {
+				flatLabels = append(flatLabels, fmt.Sprintf("%s=%s", k, v))
+			}
+
+			// We always have these default labels for the URL service.
+			flatLabels = append(flatLabels,
+				hznLabelApp+"="+deployment.Application.Application,
+				hznLabelProject+"="+deployment.Application.Project,
+				hznLabelWorkspace+"="+deployment.Workspace.Workspace,
+			)
+
+			config.UrlService = &pb.EntrypointConfig_URLService{
+				ControlAddr: v.ControlAddress,
+				Token:       v.APIToken,
+				Labels:      strings.Join(flatLabels, ","),
+			}
+		}
 
 		// Send new config
 		if err := srv.Send(&pb.EntrypointConfigResponse{

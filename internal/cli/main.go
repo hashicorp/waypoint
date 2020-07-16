@@ -200,38 +200,19 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				VersionInfo: version.GetVersion(),
 			}, nil
 		},
-		"expose": func() (cli.Command, error) {
-			return &ExposeCommand{
-				baseCommand: baseCommand,
-			}, nil
-		},
-		"expose test": func() (cli.Command, error) {
-			return &ExposeCommand{
-				baseCommand: baseCommand,
-				test:        true,
-			}, nil
-		},
-		"account register": func() (cli.Command, error) {
-			return &RegisterCommand{
-				baseCommand: baseCommand,
-				account:     true,
-			}, nil
-		},
 		"hostname register": func() (cli.Command, error) {
-			return &RegisterCommand{
+			return &HostnameRegisterCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
 		"hostname list": func() (cli.Command, error) {
-			return &RegisterCommand{
-				baseCommand:   baseCommand,
-				listHostnames: true,
+			return &HostnameListCommand{
+				baseCommand: baseCommand,
 			}, nil
 		},
 		"hostname delete": func() (cli.Command, error) {
-			return &RegisterCommand{
-				baseCommand:    baseCommand,
-				deleteHostname: true,
+			return &HostnameDeleteCommand{
+				baseCommand: baseCommand,
 			}, nil
 		},
 		"token new": func() (cli.Command, error) {

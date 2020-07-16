@@ -21,7 +21,7 @@ func TestServiceStartExecStream_badOpen(t *testing.T) {
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
@@ -46,7 +46,7 @@ func TestServiceStartExecStream_start(t *testing.T) {
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
@@ -89,7 +89,7 @@ func TestServiceStartExecStream_eventExit(t *testing.T) {
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
@@ -154,7 +154,7 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
