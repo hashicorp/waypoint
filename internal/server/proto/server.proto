@@ -48,6 +48,15 @@ service Waypoint {
   // each variable.
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 
+  // Create a hostname with the URL service.
+  rpc CreateHostname(CreateHostnameRequest) returns (CreateHostnameResponse);
+
+  // Delete a hostname with the URL service.
+  rpc DeleteHostname(DeleteHostnameRequest) returns (google.protobuf.Empty);
+
+  // List all our registered hostnames.
+  rpc ListHostnames(ListHostnamesRequest) returns (ListHostnamesResponse);
+
   // QueueJob queues a job for execution by a runner. This will return as
   // soon as the job is queued, it will not wait for execution.
   rpc QueueJob(QueueJobRequest) returns (QueueJobResponse);
@@ -726,6 +735,62 @@ message ServerConfig {
 }
 
 /********************************************************************
+* Hostnames
+********************************************************************/
+
+message CreateHostnameRequest {
+  // hostname to register. This may be empty to autogenerate a hostname.
+  string hostname = 1;
+
+  // target determines where the hostname routes to.
+  Hostname.Target target = 2;
+}
+
+message CreateHostnameResponse {
+  // Created hostname
+  Hostname hostname = 1;
+}
+
+message ListHostnamesRequest {
+  // One day we can support filters and such...
+}
+
+message ListHostnamesResponse {
+  repeated Hostname hostnames = 1;
+}
+
+message DeleteHostnameRequest {
+  string hostname = 1;
+}
+
+message Hostname {
+  // hostname alone, such as "fabulous-panda"
+  string hostname = 1;
+
+  // fqdn is the fully qualified domain, such as "fabulous-panda.waypoint.run"
+  string fqdn = 2;
+
+  // target_labels are the raw label targets given to the URL service.
+  // We can't reproduce the richer "Target" structure yet but in the future
+  // we may expose that.
+  map<string,string> target_labels = 3;
+
+  message Target {
+    oneof target {
+      TargetApp application = 20;
+    }
+  }
+
+  // TargetApp targets an application in a specific workspace. With
+  // this target type, you can still target specific deployments by
+  // appending `--<deployment id>` to the hostname after registration.
+  message TargetApp {
+    Ref.Application application = 1;
+    Ref.Workspace workspace = 2;
+  }
+}
+
+/********************************************************************
 * Build
 ********************************************************************/
 
@@ -1161,10 +1226,23 @@ message EntrypointConfig {
 
   repeated ConfigVar env_vars = 2;
 
+  // The URL service configuration. This might be nil. If this is nil,
+  // then the URL service is disabled.
+  URLService url_service = 3;
+
   message Exec {
     int64 index = 1;
     repeated string args = 2;
     ExecStreamRequest.PTY pty = 3;
+  }
+
+  message URLService {
+    // address to the control server and the token for auth
+    string control_addr = 1;
+    string token = 2;
+
+    // labels to register this instance under
+    string labels = 3;
   }
 }
 

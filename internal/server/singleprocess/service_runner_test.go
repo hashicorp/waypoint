@@ -20,7 +20,7 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
@@ -83,7 +83,7 @@ func TestServiceRunnerJobStream_badOpen(t *testing.T) {
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
@@ -108,7 +108,7 @@ func TestServiceRunnerJobStream_errorBeforeAck(t *testing.T) {
 	require := require.New(t)
 
 	// Create our server
-	impl, err := New(testDB(t))
+	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
@@ -168,7 +168,7 @@ func TestServiceRunnerGetDeploymentConfig(t *testing.T) {
 		require := require.New(t)
 
 		// Create our server
-		impl, err := New(testDB(t))
+		impl, err := New(WithDB(testDB(t)))
 		require.NoError(err)
 		client := server.TestServer(t, impl)
 
@@ -182,7 +182,7 @@ func TestServiceRunnerGetDeploymentConfig(t *testing.T) {
 		require := require.New(t)
 
 		// Create our server
-		impl, err := New(testDB(t))
+		impl, err := New(WithDB(testDB(t)))
 		require.NoError(err)
 		client := server.TestServer(t, impl)
 

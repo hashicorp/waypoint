@@ -15,21 +15,25 @@ let
         };
       });
 
-      go-protobuf = super.go-protobuf.overrideAttrs ( old: rec {
-        version = "1.3.5";
-        src = super.fetchFromGitHub {
-          owner = "golang";
-          repo = "protobuf";
-          rev = "v${version}";
-          sha256 = "1gkd1942vk9n8kfzdwy1iil6wgvlwjq7a3y5jc49ck4lz9rhmgkq";
-        };
-
-        modSha256 = "0jjjj9z1dhilhpc8pq4154czrb79z9cm044jvn75kxcjv6v5l2m5";
-      });
-
     })];
   };
 in with pkgs; let
+  go-protobuf = buildGoModule rec {
+    pname = "go-protobuf";
+    version = "v1.4.2";
+
+    src = fetchFromGitHub {
+      owner = "golang";
+      repo = "protobuf";
+      rev = "v1.4.2";
+      sha256 = "0m5z81im4nsyfgarjhppayk4hqnrwswr3nix9mj8pff8x9jvcjqw";
+    };
+
+    modSha256 = "0lnk1zpl6y9vnq6h3l42ssghq6iqvmixd86g2drpa4z8xxk116wf";
+
+    subPackages = [ "protoc-gen-go" ];
+  };
+
   go-protobuf-json = buildGoModule rec {
     pname = "go-protobuf-json";
     version = "069933b8c8344593ed8905d46d59c6647c886f47";
@@ -75,17 +79,26 @@ in with pkgs; let
 
     subPackages = [ "cmd/mockery" ];
   };
-in stdenv.mkDerivation {
+in pkgs.mkShell rec {
   name = "waypoint";
 
   # The packages in the `buildInputs` list will be added to the PATH in our shell
   buildInputs = [
     pkgs.go
     pkgs.go-bindata
-    pkgs.go-protobuf
+    go-protobuf
     pkgs.protobuf3_11
+    pkgs.postgresql_12
     go-protobuf-json
     go-tools
     go-mockery
   ];
+
+  # Extra env vars
+  PGHOST = "localhost";
+  PGPORT = "5432";
+  PGDATABASE = "noop";
+  PGUSER = "postgres";
+  PGPASSWORD = "postgres";
+  DATABASE_URL = "postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}?sslmode=disablie";
 }

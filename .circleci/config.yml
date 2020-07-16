@@ -72,6 +72,19 @@ jobs:
   go-test:
     docker:
       - image: *GOLANG_IMAGE
+      - image: localstack/localstack:latest
+      - image: letsencrypt/pebble
+        command: ["pebble"]
+        environment:
+          PEBBLE_VA_NOSLEEP: 1
+          PEBBLE_VA_ALWAYS_VALID: 1
+      - image: circleci/postgres:11-alpine
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: waypoint_test
+      - image: vault
+        command: ["server", "-dev", "-dev-root-token-id=hznroot"]
+
     parallelism: 4
     environment:
       <<: *ENVIRONMENT
@@ -99,6 +112,16 @@ jobs:
               sudo tar -xz --overwrite -C /usr/local/bin gotestsum
       - run: go mod download
       - run:
+          name: Waiting for Postgres to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+      - run:
           name: go test
           command: |
             mkdir -p $TEST_RESULTS_DIR
@@ -114,7 +137,7 @@ jobs:
       - store_test_results:
           path: *TEST_RESULTS_DIR
       - store_artifacts:
-          path: *TEST_RESULTS_DIR  
+          path: *TEST_RESULTS_DIR
   # create a development build
   dev-build:
     docker:
@@ -323,7 +346,7 @@ workflows:
   #           branches:
   #             only:
   #               - master
- 
+
   # frontend:
   #   jobs:
   #     - frontend-cache:

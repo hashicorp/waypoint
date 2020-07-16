@@ -10,10 +10,22 @@ type ServerConfig struct {
 
 	// Require clients to authenticate themselves
 	RequireAuth bool `hcl:"require_auth,optional"`
+
+	// URL configures a server to use a URL service.
+	URL *URL `hcl:"url,block"`
 }
 
 // Listeners is the configuration for the listeners.
 type Listeners struct {
 	GRPC string `hcl:"grpc,attr"`
 	HTTP string `hcl:"http,attr"`
+}
+
+// URL is the configuration for the URL service.
+type URL struct {
+	Enabled        bool   `hcl:"enabled,optional"`
+	APIAddress     string `hcl:"api_address,optional"`
+	APIInsecure    bool   `hcl:"api_insecure,optional"`
+	APIToken       string `hcl:"api_token,optional"`
+	ControlAddress string `hcl:"control_address,optional"`
 }

@@ -31,7 +31,6 @@ type Project struct {
 	dir       *datadir.Project
 	mappers   []*argmapper.Func
 	client    pb.WaypointClient
-	dconfig   component.DeploymentConfig
 
 	// name is the name of the project
 	name string
@@ -111,11 +110,6 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 	// Set our labels
 	p.labels = opts.Config.Labels
-
-	if opts.Config.URL != nil {
-		p.dconfig.UrlControlAddr = opts.Config.URL.ControlAddr
-		p.dconfig.UrlToken = opts.Config.URL.Token
-	}
 
 	// Initialize all the applications and load all their components.
 	for _, appConfig := range opts.Config.Apps {

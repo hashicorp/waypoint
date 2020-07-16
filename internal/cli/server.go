@@ -1,13 +1,19 @@
 package cli
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net"
 	"strings"
 
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-hclog"
+	hznhub "github.com/hashicorp/horizon/pkg/hub"
+	hzntest "github.com/hashicorp/horizon/pkg/testutils/central"
+	wphzn "github.com/hashicorp/waypoint-hzn/pkg/server"
+	"github.com/mitchellh/go-testing-interface"
 	"github.com/posener/complete"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -19,7 +25,8 @@ import (
 type ServerCommand struct {
 	*baseCommand
 
-	config config.ServerConfig
+	config       config.ServerConfig
+	flagURLInmem bool
 }
 
 func (c *ServerCommand) Run(args []string) int {
@@ -57,8 +64,41 @@ func (c *ServerCommand) Run(args []string) int {
 		}
 	}()
 
+	// Run our in-memory URL service.
+	if c.flagURLInmem {
+		t := &testing.RuntimeT{}
+
+		// Create the inmem Horizon server.
+		setupCh := make(chan *hzntest.DevSetup, 1)
+		closeCh := make(chan struct{})
+		defer close(closeCh)
+		go hzntest.Dev(t, func(setup *hzntest.DevSetup) {
+			hubclient, err := hznhub.NewHub(log.Named("url-hub"), setup.ControlClient, setup.HubToken)
+			require.NoError(t, err)
+			go hubclient.Run(c.Ctx, setup.ClientListener)
+
+			setupCh <- setup
+			<-closeCh
+		})
+		setup := <-setupCh
+
+		// Create the inmem waypoint-hzn server
+		wphzndata := wphzn.TestServer(t)
+
+		// Configure
+		c.config.URL = &config.URL{
+			Enabled:        true,
+			APIAddress:     wphzndata.Addr,
+			APIInsecure:    true,
+			ControlAddress: fmt.Sprintf("dev://%s", setup.HubAddr),
+		}
+	}
+
 	// Create our server
-	impl, err := singleprocess.New(db)
+	impl, err := singleprocess.New(
+		singleprocess.WithDB(db),
+		singleprocess.WithConfig(&c.config),
+	)
 	if err != nil {
 		c.ui.Output(
 			"Error initializing server: %s", err.Error(),
@@ -132,22 +172,27 @@ func (c *ServerCommand) Run(args []string) int {
 
 	// Output information to the user
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
-	c.ui.Output("")
-	if token == "" {
-		c.ui.NamedValues([]terminal.NamedValue{
-			{Name: "DB Path", Value: path},
-			{Name: "gRPC Address", Value: ln.Addr().String()},
-			{Name: "HTTP Address", Value: httpAddr},
-		})
-	} else {
-		c.ui.NamedValues([]terminal.NamedValue{
-			{Name: "DB Path", Value: path},
-			{Name: "gRPC Address", Value: ln.Addr().String()},
-			{Name: "HTTP Address", Value: httpAddr},
-			{Name: "Token", Value: token},
-		})
+	values := []terminal.NamedValue{
+		{Name: "DB Path", Value: path},
+		{Name: "gRPC Address", Value: ln.Addr().String()},
+		{Name: "HTTP Address", Value: httpAddr},
 	}
-	c.ui.Output("")
+	if token != "" {
+		values = append(values, terminal.NamedValue{Name: "Token", Value: token})
+	}
+	if !c.config.URL.Enabled {
+		values = append(values, terminal.NamedValue{Name: "URL Service", Value: "disabled"})
+	} else {
+		value := c.config.URL.APIAddress
+		if c.config.URL.APIToken == "" {
+			value += " (account: guest)"
+		} else {
+			value += " (account: token)"
+		}
+
+		values = append(values, terminal.NamedValue{Name: "URL Service", Value: value})
+	}
+	c.ui.NamedValues(values)
 	c.ui.Output("Server logs:", terminal.WithHeaderStyle())
 	c.ui.Output("")
 
@@ -185,6 +230,10 @@ func (c *ServerCommand) Run(args []string) int {
 
 func (c *ServerCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
+		if c.config.URL == nil {
+			c.config.URL = &config.URL{}
+		}
+
 		f := set.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
 			Name:    "db",
@@ -211,6 +260,49 @@ func (c *ServerCommand) Flags() *flag.Sets {
 			Name:   "require-authentication",
 			Target: &c.config.RequireAuth,
 			Usage:  "Require authentication to communicate with the server.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "url-enabled",
+			Target:  &c.config.URL.Enabled,
+			Usage:   "Enable the URL service.",
+			Default: true,
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "url-inmem",
+			Target:  &c.flagURLInmem,
+			Usage:   "Run an in-memory URL service for dev purposes.",
+			Default: false,
+			Hidden:  true,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "url-api-addr",
+			Target:  &c.config.URL.APIAddress,
+			Usage:   "Address to Waypoint URL service API",
+			Default: "api.alpha.waypoint.run:443", // TODO(mitchellh: change default
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "url-api-insecure",
+			Target:  &c.config.URL.APIInsecure,
+			Usage:   "True if TLS is not enabled for the Waypoint URL service API",
+			Default: false,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "url-control-addr",
+			Target:  &c.config.URL.ControlAddress,
+			Usage:   "Address to Waypoint URL service control API",
+			Default: "https://control.alpha.hzn.network",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "url-control-token",
+			Target:  &c.config.URL.APIToken,
+			Usage:   "Token for the Waypoint URL server control API.",
+			Default: "",
 		})
 	})
 }

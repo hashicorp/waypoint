@@ -8,26 +8,32 @@ import (
 	"github.com/hashicorp/horizon/pkg/discovery"
 	hznpb "github.com/hashicorp/horizon/pkg/pb"
 	"github.com/pkg/errors"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 var ErrURLSetup = errors.New("error configuring url service")
 
-func (ceb *CEB) initURLService(ctx context.Context, cfg *config) error {
-	if len(cfg.URLServiceLabels) == 0 {
+func (ceb *CEB) initURLService(ctx context.Context, port int, cfg *pb.EntrypointConfig_URLService) error {
+	if cfg == nil || len(cfg.Labels) == 0 {
 		return nil
 	}
 
 	L := ceb.logger.Named("url")
+	L.Info("url service enabled, configuring",
+		"addr", cfg.ControlAddr,
+		"service_port", port,
+	)
 
 	g, err := agent.NewAgent(L.Named("agent"))
 	if err != nil {
 		return errors.Wrapf(err, "error configuring agent")
 	}
 
-	g.Token = cfg.URLToken
-	target := fmt.Sprintf(":%d", cfg.URLServicePort)
+	g.Token = cfg.Token
+	target := fmt.Sprintf(":%d", port)
 
-	labels := hznpb.ParseLabelSet(cfg.URLServiceLabels)
+	labels := hznpb.ParseLabelSet(cfg.Labels)
 
 	_, err = g.AddService(&agent.Service{
 		Type:    "http",
@@ -41,7 +47,7 @@ func (ceb *CEB) initURLService(ctx context.Context, cfg *config) error {
 
 	L.Debug("discovering hubs")
 
-	dc, err := discovery.NewClient(cfg.URLControlAddr)
+	dc, err := discovery.NewClient(cfg.ControlAddr)
 	if err != nil {
 		return errors.Wrapf(err, "error conecting to waypoint control service")
 	}

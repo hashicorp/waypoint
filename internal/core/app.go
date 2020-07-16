@@ -42,7 +42,6 @@ type App struct {
 	workspace  *pb.Ref_Workspace
 	client     pb.WaypointClient
 	source     *component.Source
-	dconfig    component.DeploymentConfig
 	logger     hclog.Logger
 	dir        *datadir.App
 	mappers    []*argmapper.Func
@@ -71,7 +70,6 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	app := &App{
 		client:     p.client,
 		source:     &component.Source{App: cfg.Name, Path: "."},
-		dconfig:    p.dconfig,
 		logger:     p.logger.Named("app").Named(cfg.Name),
 		components: make(map[interface{}]*appComponent),
 		ref: &pb.Ref_Application{
@@ -96,8 +94,6 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	}
 
 	sort.Strings(entries)
-
-	app.dconfig.UrlLabels = strings.Join(entries, ",")
 
 	// Setup our directory
 	dir, err := p.dir.App(cfg.Name)

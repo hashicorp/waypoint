@@ -10,7 +10,6 @@ const Filename = "waypoint.hcl"
 // Config is the configuration structure.
 type Config struct {
 	Runner  *Runner           `hcl:"runner,block"`
-	URL     *URL              `hcl:"url,block"`
 	Project string            `hcl:"project,attr"`
 	Apps    []*App            `hcl:"app,block"`
 	Labels  map[string]string `hcl:"labels,optional"`
@@ -82,11 +81,4 @@ func (b *Build) RegistryOperation() *Operation {
 	}
 
 	return b.Registry
-}
-
-// For configuring the details about how to connect and authenticate to the URL
-// service.
-type URL struct {
-	Token       string `hcl:"token,optional"`
-	ControlAddr string `hcl:"control_addr,optional"`
 }
