@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package hashicorp.waypoint;
 
+option go_package = "internal/server/gen";
+
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";

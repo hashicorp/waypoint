@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package azure.aci;
 
-option go_package = "aci";
+option go_package = "waypoint/builtin/azure/aci";
 
 message Deployment {
   string url = 1;

@@ -30,7 +30,7 @@ require (
 	github.com/go-openapi/runtime v0.19.15
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
-	github.com/golang/protobuf v1.3.5
+	github.com/golang/protobuf v1.4.2
 	github.com/google/renameio v0.1.0
 	github.com/hashicorp/go-argmapper v0.0.0-20200617185818-77662eabd58a
 	github.com/hashicorp/go-hclog v0.14.1
@@ -66,8 +66,9 @@ require (
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200317142112-1b76d66859c6
 	google.golang.org/api v0.20.0
-	google.golang.org/genproto v0.0.0-20200416231807-8751e049a2a0
+	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc v1.28.1
+	google.golang.org/protobuf v1.23.1-0.20200526195155-81db48ad09cc
 	k8s.io/api v0.18.0
 	k8s.io/apimachinery v0.18.0
 	k8s.io/client-go v0.18.0

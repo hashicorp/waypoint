@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package lambda;
 
+option go_package = "waypoint/builtin/lambda";
+
 message AppInfo {
   string runtime = 1;
   string pre_zip = 2;

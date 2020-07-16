@@ -10,7 +10,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-//go:generate sh -c "protoc -I../../vendor/proto/api-common-protos -Iproto/ proto/*.proto --go_out=plugins=grpc:gen/"
+//go:generate sh -c "protoc -I../../vendor/proto/api-common-protos -I ../.. internal/server/proto/server.proto --go_out=plugins=grpc:../.."
 
 // Run initializes and starts the server. This will block until the server
 // exits (by cancelling the associated context set with WithContext or due
