@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"sync"
 
 	"github.com/creack/pty"
@@ -76,10 +77,18 @@ func (s *uiServer) Output(
 }
 
 func (s *uiServer) Events(stream pb.TerminalUIService_EventsServer) error {
+	type stepData struct {
+		terminal.Step
+		out io.Writer
+	}
+
 	var (
 		status terminal.Status
 		stdout io.Writer
 		stderr io.Writer
+
+		sg    terminal.StepGroup
+		steps = map[int32]*stepData{}
 	)
 
 	for {
@@ -151,6 +160,46 @@ func (s *uiServer) Events(stream pb.TerminalUIService_EventsServer) error {
 			}
 
 			s.Impl.Table(tbl)
+		case *pb.TerminalUI_Event_StepGroup_:
+			if sg != nil {
+				sg.Wait()
+			}
+
+			if !ev.StepGroup.Close {
+				sg = s.Impl.StepGroup()
+			}
+		case *pb.TerminalUI_Event_Step_:
+			if sg == nil {
+				continue
+			}
+
+			step, ok := steps[ev.Step.Id]
+			if !ok {
+				step = &stepData{
+					Step: sg.Add(ev.Step.Msg),
+				}
+				steps[ev.Step.Id] = step
+			} else {
+				if ev.Step.Msg != "" {
+					step.Update(ev.Step.Msg)
+				}
+			}
+
+			if ev.Step.Status != "" {
+				step.Status(ev.Step.Status)
+			}
+
+			if len(ev.Step.Output) > 0 {
+				if step.out == nil {
+					step.out = step.TermOutput()
+				}
+
+				step.out.Write(ev.Step.Output)
+			}
+
+			if ev.Step.Close {
+				step.Done()
+			}
 		default:
 			s.Logger.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
 		}
@@ -242,9 +291,18 @@ func (u *uiBridge) OutputWriters() (stdout io.Writer, stderr io.Writer, err erro
 			panic(err)
 		}
 
+		err = pty.Setsize(dw, &pty.Winsize{
+			Rows: uint16(terminal.TermRows),
+			Cols: uint16(terminal.TermColumns),
+		})
+
+		if err != nil {
+			panic(err)
+		}
+
 		go u.sendData(dr, false)
 
-		er, ew, err := pty.Open()
+		er, ew, err := os.Pipe()
 		if err != nil {
 			panic(err)
 		}
@@ -334,6 +392,222 @@ func (u *uiBridge) Table(tbl *terminal.Table, opts ...terminal.Option) {
 			Table: ptbl,
 		},
 	})
+}
+
+type uiBridgeSGStep struct {
+	sg   *uiBridgeSG
+	id   int32
+	done bool
+
+	stdSetup sync.Once
+	stdout   io.Writer
+}
+
+func (u *uiBridgeSGStep) TermOutput() io.Writer {
+	u.stdSetup.Do(func() {
+		dr, dw, err := pty.Open()
+		if err != nil {
+			panic(err)
+		}
+
+		go u.sendData(dr, false)
+
+		go func() {
+			<-u.sg.ctx.Done()
+			dr.Close()
+			dw.Close()
+		}()
+
+		u.stdout = dw
+	})
+
+	return u.stdout
+}
+
+func (u *uiBridgeSGStep) sendData(r io.ReadCloser, stderr bool) {
+	defer r.Close()
+
+	buf := make([]byte, 1024)
+
+	for {
+		n, err := r.Read(buf)
+		if err != nil {
+			return
+		}
+
+		data := buf[:n]
+
+		ev := &pb.TerminalUI_Event{
+			Event: &pb.TerminalUI_Event_Step_{
+				Step: &pb.TerminalUI_Event_Step{
+					Id:     u.id,
+					Output: data,
+				},
+			},
+		}
+
+		u.sg.ui.mu.Lock()
+		if u.sg.ui.evc == nil {
+			u.sg.ui.mu.Unlock()
+			return
+		}
+
+		u.sg.ui.evc.Send(ev)
+		u.sg.ui.mu.Unlock()
+	}
+}
+
+func (u *uiBridgeSGStep) Update(str string, args ...interface{}) {
+	msg := fmt.Sprintf(str, args...)
+
+	u.sg.ui.mu.Lock()
+	defer u.sg.ui.mu.Unlock()
+
+	if u.sg.ui.evc != nil {
+		u.sg.ui.evc.Send(&pb.TerminalUI_Event{
+			Event: &pb.TerminalUI_Event_Step_{
+				Step: &pb.TerminalUI_Event_Step{
+					Id:  u.id,
+					Msg: msg,
+				},
+			},
+		})
+	}
+}
+
+func (u *uiBridgeSGStep) Status(status string) {
+	u.sg.ui.mu.Lock()
+	defer u.sg.ui.mu.Unlock()
+
+	if u.sg.ui.evc != nil {
+		u.sg.ui.evc.Send(&pb.TerminalUI_Event{
+			Event: &pb.TerminalUI_Event_Step_{
+				Step: &pb.TerminalUI_Event_Step{
+					Id:     u.id,
+					Status: status,
+				},
+			},
+		})
+	}
+}
+
+func (u *uiBridgeSGStep) Done() {
+	u.sg.ui.mu.Lock()
+	defer u.sg.ui.mu.Unlock()
+
+	if u.done {
+		return
+	}
+
+	u.done = true
+
+	if u.sg.ui.evc != nil {
+		u.sg.ui.evc.Send(&pb.TerminalUI_Event{
+			Event: &pb.TerminalUI_Event_Step_{
+				Step: &pb.TerminalUI_Event_Step{
+					Id:    u.id,
+					Close: true,
+				},
+			},
+		})
+	}
+
+	u.sg.wg.Done()
+}
+
+func (u *uiBridgeSGStep) Abort() {
+	u.sg.ui.mu.Lock()
+	defer u.sg.ui.mu.Unlock()
+
+	if u.done {
+		return
+	}
+
+	u.done = true
+
+	if u.sg.ui.evc != nil {
+		u.sg.ui.evc.Send(&pb.TerminalUI_Event{
+			Event: &pb.TerminalUI_Event_Step_{
+				Step: &pb.TerminalUI_Event_Step{
+					Id:     u.id,
+					Close:  true,
+					Status: terminal.ErrorStyle,
+				},
+			},
+		})
+	}
+
+	u.sg.wg.Done()
+}
+
+type uiBridgeSG struct {
+	ctx    context.Context
+	cancel func()
+
+	ui *uiBridge
+	wg sync.WaitGroup
+
+	steps []*uiBridgeSGStep
+}
+
+// Start a step in the output
+func (u *uiBridgeSG) Add(str string, args ...interface{}) terminal.Step {
+	msg := fmt.Sprintf(str, args...)
+
+	u.ui.mu.Lock()
+	defer u.ui.mu.Unlock()
+
+	u.wg.Add(1)
+
+	step := &uiBridgeSGStep{
+		sg: u,
+		id: int32(len(u.steps)),
+	}
+
+	u.steps = append(u.steps, step)
+
+	u.ui.evc.Send(&pb.TerminalUI_Event{
+		Event: &pb.TerminalUI_Event_Step_{
+			Step: &pb.TerminalUI_Event_Step{
+				Id:  step.id,
+				Msg: msg,
+			},
+		},
+	})
+
+	return step
+}
+
+func (u *uiBridgeSG) Wait() {
+	u.wg.Wait()
+	u.cancel()
+
+	u.ui.evc.Send(&pb.TerminalUI_Event{
+		Event: &pb.TerminalUI_Event_StepGroup_{
+			StepGroup: &pb.TerminalUI_Event_StepGroup{
+				Close: true,
+			},
+		},
+	})
+
+}
+
+func (u *uiBridge) StepGroup() terminal.StepGroup {
+	ctx, cancel := context.WithCancel(u.ctx)
+
+	sg := &uiBridgeSG{
+		ui:     u,
+		ctx:    ctx,
+		cancel: cancel,
+	}
+
+	u.evc.Send(&pb.TerminalUI_Event{
+		Event: &pb.TerminalUI_Event_StepGroup_{
+			StepGroup: &pb.TerminalUI_Event_StepGroup{},
+		},
+	})
+
+	return sg
 }
 
 // Status returns a live-updating status that can be used for single-line

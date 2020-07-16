@@ -48,6 +48,7 @@ require (
 	github.com/imdario/mergo v0.3.8
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
+	github.com/lab47/vterm v0.0.0-20200716000831-9fcb752e6bec
 	github.com/mattn/go-colorable v0.1.7
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.0.0
@@ -56,6 +57,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/protostructure v0.0.0-20200302233719-00c1118a7e52
+	github.com/morikuni/aec v1.0.0
 	github.com/mr-tron/base58 v1.2.0
 	github.com/netlify/open-api v0.15.0
 	github.com/oklog/run v1.1.0

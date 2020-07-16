@@ -54,17 +54,22 @@ func (b *Builder) Build(
 
 	ui.Output("Creating new buildpack-based image using builder: %s", builder, terminal.WithInfoStyle())
 
-	stdout, _, err := ui.OutputWriters()
-	if err != nil {
-		return nil, err
-	}
+	sg := ui.StepGroup()
 
-	log := logging.New(stdout)
+	step := sg.Add("Creating pack client")
+	defer step.Abort()
+
+	build := sg.Add("Building image")
+	defer build.Abort()
+
+	log := logging.New(build.TermOutput())
 
 	client, err := pack.NewClient(pack.WithLogger(log))
 	if err != nil {
 		return nil, err
 	}
+
+	step.Done()
 
 	err = client.Build(ctx, pack.BuildOptions{
 		Image:   src.App,
@@ -76,8 +81,11 @@ func (b *Builder) Build(
 		return nil, err
 	}
 
+	build.Done()
+
 	if !b.config.DisableCEB {
-		ui.Output("Adding Waypoint Entrypoint Binary to image...")
+		inject := sg.Add("Injecting entrypoint binary to image")
+		defer inject.Abort()
 
 		tmpdir, err := ioutil.TempDir("", "waypoint")
 		if err != nil {
@@ -105,7 +113,11 @@ func (b *Builder) Build(
 		if err != nil {
 			return nil, err
 		}
+
+		inject.Done()
 	}
+
+	sg.Wait()
 
 	ui.Output("Generated new Docker image: %s:latest", src.App)
 

@@ -541,6 +541,8 @@ message GetJobStreamResponse {
         NamedValues named_values = 4;
         Raw raw = 5;
         Table table = 6;
+        StepGroup step_group = 7;
+        Step step = 8;
       }
 
       message Status {
@@ -580,6 +582,18 @@ message GetJobStreamResponse {
       message Table {
         repeated string headers = 1;
         repeated TableRow rows = 2;
+      }
+
+      message StepGroup {
+        bool close = 1;
+      }
+
+      message Step {
+        int32 id = 1;
+        bool close = 2;
+        string msg = 3;
+        string status = 4;
+        bytes output = 5;
       }
     }
   }

@@ -19,7 +19,7 @@ const (
 )
 
 var emojiStatus = map[string]string{
-	StatusOK:      "✅",
+	StatusOK:      "\u2713",
 	StatusError:   "❌",
 	StatusWarn:    "⚠️",
 	StatusTimeout: "⌛",
