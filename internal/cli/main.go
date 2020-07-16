@@ -252,6 +252,11 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"context clear": func() (cli.Command, error) {
+			return &ContextClearCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"context list": func() (cli.Command, error) {
 			return &ContextListCommand{
 				baseCommand: baseCommand,
