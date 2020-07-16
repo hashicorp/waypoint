@@ -42,7 +42,6 @@ require (
 	github.com/hashicorp/horizon v0.0.0-20200529210319-3ee3f485d2ca
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
 	github.com/imdario/mergo v0.3.8
-	github.com/jaguilar/vt100 v0.0.0-20150826170717-2703a27b14ea // indirect
 	github.com/kr/text v0.2.0
 	github.com/lab47/vterm v0.0.0-20200716000831-9fcb752e6bec
 	github.com/mattn/go-colorable v0.1.6
