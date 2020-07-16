@@ -1,6 +1,7 @@
 package clicontext
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -88,6 +89,39 @@ func (m *Storage) Set(n string, c *Config) error {
 	}
 
 	return err
+}
+
+// Rename renames a context. This will error if the "from" context does not
+// exist. If "from" is the default context then the default will be switched
+// to "to". If "to" already exists, this will overwrite it.
+func (m *Storage) Rename(from, to string) error {
+	fromPath := m.configPath(from)
+	if _, err := os.Stat(fromPath); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("context %q does not exist", from)
+		}
+
+		return err
+	}
+
+	if err := m.Delete(to); err != nil {
+		return err
+	}
+
+	toPath := m.configPath(to)
+	if err := os.Rename(fromPath, toPath); err != nil {
+		return err
+	}
+
+	def, err := m.Default()
+	if err != nil {
+		return err
+	}
+	if def == from {
+		return m.SetDefault(to)
+	}
+
+	return nil
 }
 
 // Delete deletes the context with the given name.
