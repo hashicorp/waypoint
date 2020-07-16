@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"github.com/boltdb/bolt"
 
-	hzncontrol "github.com/hashicorp/horizon/pkg/control"
+	grpctoken "github.com/hashicorp/horizon/pkg/grpc/token"
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -81,7 +81,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 		// Now that we have a token, connect to the API service.
 		opts := []grpc.DialOption{
-			grpc.WithPerRPCCredentials(hzncontrol.Token(scfg.URL.APIToken)),
+			grpc.WithPerRPCCredentials(grpctoken.Token(scfg.URL.APIToken)),
 		}
 		if scfg.URL.APIInsecure {
 			opts = append(opts, grpc.WithInsecure())
