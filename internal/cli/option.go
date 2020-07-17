@@ -26,28 +26,42 @@ func WithFlags(f *flag.Sets) Option {
 // If only a single app exists, it is implicitly the target.
 // Zero apps is an error.
 func WithSingleApp() Option {
-	return func(c *baseConfig) { c.AppMode = appModeSingle }
+	return func(c *baseConfig) {
+		c.AppTargetRequired = true
+		c.Config = true
+		c.Client = true
+	}
 }
 
 // WithNoConfig configures the CLI to not expect any project configuration.
 // This will not read any configuration files.
 func WithNoConfig() Option {
-	return func(c *baseConfig) { c.AppMode = appModeNone }
+	return func(c *baseConfig) {
+		c.Config = false
+	}
+}
+
+// WithConfig configures the CLI to find and load any project configuration.
+// If optional is true, no error will be shown if a config can't be found.
+func WithConfig(optional bool) Option {
+	return func(c *baseConfig) {
+		c.Config = true
+		c.ConfigOptional = optional
+	}
+}
+
+// WithClient configures the CLI to initialize a client.
+func WithClient(v bool) Option {
+	return func(c *baseConfig) {
+		c.Client = v
+	}
 }
 
 type baseConfig struct {
-	Args    []string
-	Flags   *flag.Sets
-	AppMode appMode
+	Args              []string
+	Flags             *flag.Sets
+	Config            bool
+	ConfigOptional    bool
+	Client            bool
+	AppTargetRequired bool
 }
-
-// appMode is used with baseConfig to specify how we handle multiple
-// apps in a configuration file. See the different Option functions more
-// detailed documentation on each app mode.
-type appMode uint8
-
-const (
-	appModeMulti  appMode = iota // one or more apps, can target single
-	appModeNone                  // no apps required, no config required
-	appModeSingle                // must target a single app
-)
