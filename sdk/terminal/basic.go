@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -57,12 +58,15 @@ func (ui *BasicUI) NamedValues(rows []NamedValue, opts ...Option) {
 
 	cfg.Writer.Write([]byte{'\n'})
 
-	tr := tabwriter.NewWriter(cfg.Writer, 1, 8, 0, ' ', tabwriter.AlignRight)
+	var buf bytes.Buffer
+	tr := tabwriter.NewWriter(&buf, 1, 8, 0, ' ', tabwriter.AlignRight)
 	for _, row := range rows {
-		colorInfo.Fprintf(tr, "%s: \t%s\n", row.Name, row.Value)
+		fmt.Fprintf(tr, "%s: \t%s\n", row.Name, row.Value)
 	}
 
 	tr.Flush()
+
+	colorInfo.Fprintln(cfg.Writer, buf.String())
 
 	cfg.Writer.Write([]byte{'\n'})
 }
