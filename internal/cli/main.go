@@ -98,6 +98,12 @@ func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[st
 
 	// start building our commands
 	commands := map[string]cli.CommandFactory{
+		"init": func() (cli.Command, error) {
+			return &InitCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"up": func() (cli.Command, error) {
 			return &UpCommand{
 				baseCommand: baseCommand,
