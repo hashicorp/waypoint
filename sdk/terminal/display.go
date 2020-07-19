@@ -96,6 +96,7 @@ func (d *Display) renderEntry(ent *DisplayEntry, spin int) {
 		prefix = spinnerSet[spin] + " "
 	}
 
+	var statusColor *aec.Builder
 	if ent.status != "" {
 		icon, ok := statusIcons[ent.status]
 		if !ok {
@@ -107,9 +108,13 @@ func (d *Display) renderEntry(ent *DisplayEntry, spin int) {
 		} else {
 			prefix = icon + " "
 		}
+
+		if codes, ok := colorStatus[ent.status]; ok {
+			statusColor = b.With(codes...)
+		}
 	}
 
-	fmt.Fprintf(d.w, "%s%s%s",
+	line := fmt.Sprintf("%s%s%s",
 		b.
 			Up(diff).
 			Column(0).
@@ -118,6 +123,11 @@ func (d *Display) renderEntry(ent *DisplayEntry, spin int) {
 		prefix,
 		text,
 	)
+	if statusColor != nil {
+		line = statusColor.ANSI.Apply(line)
+	}
+
+	fmt.Fprint(d.w, line)
 
 	for _, body := range ent.body {
 		fmt.Fprintf(d.w, "%s%s",

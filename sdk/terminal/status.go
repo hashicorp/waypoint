@@ -9,6 +9,7 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
+	"github.com/morikuni/aec"
 )
 
 const (
@@ -30,6 +31,11 @@ var textStatus = map[string]string{
 	StatusError:   " !",
 	StatusWarn:    " *",
 	StatusTimeout: "<>",
+}
+
+var colorStatus = map[string][]aec.ANSI{
+	StatusOK:    {aec.GreenF},
+	StatusError: {aec.RedF},
 }
 
 // Status is used to provide an updating status to the user. The status
