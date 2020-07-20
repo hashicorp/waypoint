@@ -11,6 +11,9 @@ import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
+  // rpc UpsertProject(UpsertProjectRequest) returns (UpsertProjectResponse);
+  // rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
+
   // ListBuilds returns the builds.
   rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
@@ -156,6 +159,11 @@ message Application {
 
 message Project {
   string name = 1;
+
+  // The set of applications that are known about this project. Note that
+  // this may not exactly represent the project configuration if a user hasn't
+  // run `waypoint init` yet.
+  repeated Application applications = 2;
 }
 
 message Workspace {
@@ -809,6 +817,27 @@ message Hostname {
     Ref.Application application = 1;
     Ref.Workspace workspace = 2;
   }
+}
+
+/********************************************************************
+* Projects
+********************************************************************/
+
+message UpsertProjectRequest {
+  // Project to upsert. See the message for what fields to set.
+  Project project = 1;
+}
+
+message UpsertProjectResponse {
+  Project project = 1;
+}
+
+message GetProjectRequest {
+  Ref.Project project = 1;
+}
+
+message GetProjectResponse {
+  Project project = 1;
 }
 
 /********************************************************************
