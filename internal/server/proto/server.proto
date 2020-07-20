@@ -327,7 +327,7 @@ message ValidateJobResponse {
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
   reserved 21 to 49; // future data source range
-  reserved 56 to 79; // future operation range
+  reserved 57 to 79; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -366,6 +366,7 @@ message Job {
     DeployOp deploy = 53;
     DestroyDeployOp destroy_deploy = 54;
     ReleaseOp release = 55;
+    ValidateOp validate = 56;
   }
 
   //-----------------------------------------------------------------
@@ -407,6 +408,7 @@ message Job {
     PushResult push = 2;
     DeployResult deploy = 3;
     ReleaseResult release = 4;
+    ValidateResult validate = 5;
   }
 
   message Local {}
@@ -416,6 +418,11 @@ message Job {
   // A noop may be useful outside of testing to verify a runner is
   // executing properly or can access data properly.
   message Noop {}
+
+  // ValidateOp validates various aspects of a configuration.
+  message ValidateOp {}
+
+  message ValidateResult {}
 
   message BuildOp {
     // Don't push the build to any configured registry.

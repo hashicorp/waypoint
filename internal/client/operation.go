@@ -8,6 +8,26 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 )
 
+func (c *Project) Validate(ctx context.Context, op *pb.Job_ValidateOp) (*pb.Job_ValidateResult, error) {
+	if op == nil {
+		op = &pb.Job_ValidateOp{}
+	}
+
+	// Validate our job
+	job := c.job()
+	job.Operation = &pb.Job_Validate{
+		Validate: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job, c.UI)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Validate, nil
+}
+
 func (c *App) Build(ctx context.Context, op *pb.Job_BuildOp) (*pb.Job_BuildResult, error) {
 	if op == nil {
 		op = &pb.Job_BuildOp{}
