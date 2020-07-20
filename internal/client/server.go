@@ -70,6 +70,7 @@ func (c *Project) initServerClient(ctx context.Context, cfg *config) (*grpc.Clie
 // will be closed, but the project can retry.
 func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error) {
 	log := c.logger.Named("server")
+	c.localServer = true
 
 	// We use this pointer to accumulate things we need to clean up
 	// in the case of an error. On success we nil this variable which

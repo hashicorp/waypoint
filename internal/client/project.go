@@ -26,6 +26,8 @@ type Project struct {
 	cleanupFunc func()
 
 	local bool
+
+	localServer bool // True when a local server is created
 }
 
 // New initializes a new client.
@@ -83,6 +85,11 @@ func (c *Project) Client() pb.WaypointClient {
 // WorkspaceRef returns the application reference that this client is using.
 func (c *Project) WorkspaceRef() *pb.Ref_Workspace {
 	return c.workspace
+}
+
+// Local is true if the server is an in-process just-in-time server.
+func (c *Project) Local() bool {
+	return c.localServer
 }
 
 // Close should be called to clean up any resources that the client created.
