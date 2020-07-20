@@ -2,8 +2,8 @@ package cli
 
 import (
 	"strings"
-	"time"
 
+	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/posener/complete"
@@ -11,6 +11,8 @@ import (
 
 type InitCommand struct {
 	*baseCommand
+
+	project *clientpkg.Project
 }
 
 func (c *InitCommand) Run(args []string) int {
@@ -24,18 +26,66 @@ func (c *InitCommand) Run(args []string) int {
 		return 1
 	}
 
-	sg := c.ui.StepGroup()
+	// Steps to run
+	steps := []func(terminal.StepGroup) bool{
+		c.validateConfig,
+		c.validateServer,
+	}
 
-	// If we have a configuration file, let's validate that first.
+	sg := c.ui.StepGroup()
+	for _, step := range steps {
+		if !step(sg) {
+			return 1
+		}
+	}
+	sg.Wait()
+
+	return 0
+}
+
+func (c *InitCommand) validateConfig(sg terminal.StepGroup) bool {
 	s := sg.Add("Validating configuration file...")
-	time.Sleep(1 * time.Second)
+	cfg, err := c.initConfig(false)
+	if err != nil {
+		c.stepError(s, initStepConfig, err)
+		return false
+	}
+	var _ = cfg
+
 	s.Update("Configuration file appears valid")
 	s.Status(terminal.StatusOK)
 	s.Done()
 
-	sg.Wait()
+	return true
+}
 
-	return 0
+func (c *InitCommand) validateServer(sg terminal.StepGroup) bool {
+	s := sg.Add("Validating server credentials...")
+	client, err := c.initClient()
+	if err != nil {
+		c.stepError(s, initStepConnect, err)
+		return false
+	}
+	c.project = client
+
+	s.Update("Connection to server successful.")
+	s.Status(terminal.StatusOK)
+	s.Done()
+	return true
+}
+
+func (c *InitCommand) stepError(s terminal.Step, step initStepType, err error) {
+	stepStrings := initStepStrings[step]
+
+	s.Status(terminal.StatusError)
+	s.Update(stepStrings.Error)
+	s.Done()
+	c.ui.Output("")
+	if v := stepStrings.ErrorDetails; v != "" {
+		c.ui.Output(strings.TrimSpace(v), terminal.WithErrorStyle())
+		c.ui.Output("")
+	}
+	c.ui.Output(err.Error(), terminal.WithErrorStyle())
 }
 
 func (c *InitCommand) Flags() *flag.Sets {
@@ -70,4 +120,31 @@ Usage: waypoint init [options]
 `
 
 	return strings.TrimSpace(helpText)
+}
+
+type initStepType uint
+
+const (
+	initStepInvalid initStepType = iota
+	initStepConfig
+	initStepConnect
+)
+
+var initStepStrings = map[initStepType]struct {
+	Error        string
+	ErrorDetails string
+}{
+	initStepConfig: {
+		Error: "Error loading configuration!",
+	},
+
+	initStepConnect: {
+		Error: "Failed to initialize client for Waypoint server.",
+		ErrorDetails: `
+The Waypoint client validation step validates that we can connect to the
+configured Waypoint server. If this is a local-only operation (no Waypoint
+server is configured), then we validate that we can initialize local writes.
+The error for this failure is shown below.
+			`,
+	},
 }

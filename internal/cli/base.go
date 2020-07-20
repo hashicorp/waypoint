@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -138,44 +136,20 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// If we're loading the config, then get it.
 	if baseCfg.Config {
-		path, err := config.FindPath("", "")
+		cfg, err := c.initConfig(baseCfg.ConfigOptional)
 		if err != nil {
-			return fmt.Errorf("Error looking for a Waypoint configuration: %s", err)
+			return err
 		}
 
-		if path == "" && !baseCfg.ConfigOptional {
-			return errors.New("A Waypoint configuration file is required but wasn't found.")
-		}
-
-		if path != "" {
-			c.Log.Debug("reading configuration", "path", path)
-			if err := cfg.LoadPath(path); err != nil {
-				c.logError(c.Log, "error decoding configuration", err)
-				return err
-			}
-
+		c.cfg = cfg
+		if cfg != nil {
 			c.refProject = &pb.Ref_Project{Project: cfg.Project}
 		}
 	}
 
+	// Create our client
 	if baseCfg.Client {
-		// Start building our client options
-		opts := []clientpkg.Option{
-			clientpkg.WithLogger(c.Log),
-			clientpkg.WithClientConnect(
-				serverclient.FromContext(contextStorage, ""),
-				serverclient.FromEnv(),
-			),
-			clientpkg.WithProjectRef(c.refProject),
-			clientpkg.WithWorkspaceRef(c.refWorkspace),
-			clientpkg.WithLabels(c.flagLabels),
-		}
-		if !c.flagRemote {
-			opts = append(opts, clientpkg.WithLocal())
-		}
-
-		// Create our client
-		c.project, err = clientpkg.New(c.Ctx, opts...)
+		c.project, err = c.initClient()
 		if err != nil {
 			c.logError(c.Log, "failed to create client", err)
 			return err
