@@ -5,6 +5,7 @@ import (
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/posener/complete"
 )
@@ -30,6 +31,7 @@ func (c *InitCommand) Run(args []string) int {
 	steps := []func(terminal.StepGroup) bool{
 		c.validateConfig,
 		c.validateServer,
+		c.validatePlugins,
 	}
 
 	sg := c.ui.StepGroup()
@@ -58,7 +60,7 @@ func (c *InitCommand) validateConfig(sg terminal.StepGroup) bool {
 		c.stepError(s, initStepConfig, err)
 		return false
 	}
-	var _ = cfg
+	c.refProject = &pb.Ref_Project{Project: cfg.Project}
 
 	s.Update("Configuration file appears valid")
 	s.Status(terminal.StatusOK)
@@ -76,7 +78,22 @@ func (c *InitCommand) validateServer(sg terminal.StepGroup) bool {
 	}
 	c.project = client
 
-	s.Update("Connection to server successful.")
+	s.Update("Connection to server successful")
+	s.Status(terminal.StatusOK)
+	s.Done()
+	return true
+}
+
+func (c *InitCommand) validatePlugins(sg terminal.StepGroup) bool {
+	s := sg.Add("Validating required plugins...")
+
+	_, err := c.project.Validate(c.Ctx, &pb.Job_ValidateOp{})
+	if err != nil {
+		c.stepError(s, initStepPluginConfig, err)
+		return false
+	}
+
+	s.Update("Plugins loaded and configured successfully")
 	s.Status(terminal.StatusOK)
 	s.Done()
 	return true
@@ -136,6 +153,7 @@ const (
 	initStepInvalid initStepType = iota
 	initStepConfig
 	initStepConnect
+	initStepPluginConfig
 )
 
 var initStepStrings = map[initStepType]struct {
@@ -154,5 +172,14 @@ configured Waypoint server. If this is a local-only operation (no Waypoint
 server is configured), then we validate that we can initialize local writes.
 The error for this failure is shown below.
 			`,
+	},
+
+	initStepPluginConfig: {
+		Error: "Failed to load and validate plugins!",
+		ErrorDetails: `
+This validation check ensures that you have all the required plugins available
+and the configuration for each plugin (if it exists) is valid. The error message
+below should tell you which plugin(s) failed.
+		`,
 	},
 }
