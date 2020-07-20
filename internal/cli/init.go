@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"io/ioutil"
 	"strings"
 
+	"github.com/hashicorp/waypoint/internal/cli/datagen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
+	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -25,6 +28,21 @@ func (c *InitCommand) Run(args []string) int {
 		WithClient(false),
 	); err != nil {
 		return 1
+	}
+
+	path, err := c.initConfigPath()
+	if err != nil {
+		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		return 1
+	}
+
+	// If we have no config, initialize a new one.
+	if path == "" {
+		if !c.initNew() {
+			return 1
+		}
+
+		return 0
 	}
 
 	// Steps to run
@@ -51,6 +69,34 @@ func (c *InitCommand) Run(args []string) int {
 	)
 
 	return 0
+}
+
+func (c *InitCommand) initNew() bool {
+	data, err := datagen.Asset("init.tpl.hcl")
+	if err != nil {
+		// Should never happen because it is embedded.
+		panic(err)
+	}
+
+	if err := ioutil.WriteFile(configpkg.Filename, data, 0644); err != nil {
+		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		return false
+	}
+
+	c.ui.Output("Initial Waypoint configuration created!", terminal.WithStyle(terminal.SuccessBoldStyle))
+	c.ui.Output(strings.TrimSpace(`
+No Waypoint configuration was found in this directory.
+
+A sample configuration has been created in the file "waypoint.hcl". This
+file is heavily commented to help you get started.
+
+Once you've setup your initial configuration, run "waypoint init" again to
+validate the configuration and initialize your project.
+`),
+		terminal.WithSuccessStyle(),
+	)
+
+	return true
 }
 
 func (c *InitCommand) validateConfig(sg terminal.StepGroup) bool {
