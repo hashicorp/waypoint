@@ -12,13 +12,20 @@ import (
 	"github.com/fatih/color"
 )
 
-// BasicUI
-type BasicUI struct {
+// basicUI
+type basicUI struct {
+	ctx    context.Context
 	status *spinnerStatus
 }
 
+// Returns a UI which will write to the current processes
+// stdout/stderr.
+func ConsoleUI(ctx context.Context) UI {
+	return &basicUI{ctx: ctx}
+}
+
 // Output implements UI
-func (ui *BasicUI) Output(msg string, raw ...interface{}) {
+func (ui *basicUI) Output(msg string, raw ...interface{}) {
 	msg, style, w := Interpret(msg, raw...)
 
 	switch style {
@@ -50,7 +57,7 @@ func (ui *BasicUI) Output(msg string, raw ...interface{}) {
 }
 
 // NamedValues implements UI
-func (ui *BasicUI) NamedValues(rows []NamedValue, opts ...Option) {
+func (ui *basicUI) NamedValues(rows []NamedValue, opts ...Option) {
 	cfg := &config{Writer: color.Output}
 	for _, opt := range opts {
 		opt(cfg)
@@ -69,12 +76,12 @@ func (ui *BasicUI) NamedValues(rows []NamedValue, opts ...Option) {
 }
 
 // OutputWriters implements UI
-func (ui *BasicUI) OutputWriters() (io.Writer, io.Writer, error) {
+func (ui *basicUI) OutputWriters() (io.Writer, io.Writer, error) {
 	return os.Stdout, os.Stderr, nil
 }
 
 // Status implements UI
-func (ui *BasicUI) Status() Status {
+func (ui *basicUI) Status() Status {
 	if ui.status == nil {
 		ui.status = newSpinnerStatus()
 	}
@@ -82,13 +89,14 @@ func (ui *BasicUI) Status() Status {
 	return ui.status
 }
 
-func (ui *BasicUI) StepGroup() StepGroup {
-	ctx, cancel := context.WithCancel(context.Background())
+func (ui *basicUI) StepGroup() StepGroup {
+	ctx, cancel := context.WithCancel(ui.ctx)
 	display := NewDisplay(ctx, color.Output)
 
 	return &fancyStepGroup{
 		ctx:     ctx,
 		cancel:  cancel,
 		display: display,
+		done:    make(chan struct{}),
 	}
 }

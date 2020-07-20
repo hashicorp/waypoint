@@ -3,7 +3,6 @@ package terminal
 import (
 	"context"
 	"io"
-	"sync"
 )
 
 const (
@@ -19,12 +18,13 @@ type fancyStepGroup struct {
 
 	display *Display
 
-	wg sync.WaitGroup
+	steps int
+	done  chan struct{}
 }
 
 // Start a step in the output
 func (f *fancyStepGroup) Add(str string, args ...interface{}) Step {
-	f.wg.Add(1)
+	f.steps++
 
 	ent := f.display.NewStatus(0)
 
@@ -38,7 +38,20 @@ func (f *fancyStepGroup) Add(str string, args ...interface{}) Step {
 }
 
 func (f *fancyStepGroup) Wait() {
-	f.wg.Wait()
+loop:
+	for {
+		select {
+		case <-f.done:
+			f.steps--
+
+			if f.steps <= 0 {
+				break loop
+			}
+		case <-f.ctx.Done():
+			break loop
+		}
+	}
+
 	f.cancel()
 
 	f.display.Close()
@@ -79,10 +92,8 @@ func (f *fancyStep) Done() {
 		return
 	}
 
-	f.ent.StopSpinner()
 	f.Status(StatusOK)
-	f.done = true
-	f.sg.wg.Done()
+	f.signalDone()
 }
 
 func (f *fancyStep) Abort() {
@@ -90,9 +101,22 @@ func (f *fancyStep) Abort() {
 		return
 	}
 
-	f.ent.StopSpinner()
 	f.Status(StatusError)
+	f.signalDone()
+}
 
+func (f *fancyStep) signalDone() {
 	f.done = true
-	f.sg.wg.Done()
+	f.ent.StopSpinner()
+
+	// We don't want to block here because Wait might not yet have been
+	// called. So instead we just spawn the wait update in a goroutine
+	// that can also be cancaled by the context.
+	go func() {
+		select {
+		case f.sg.done <- struct{}{}:
+		case <-f.sg.ctx.Done():
+			return
+		}
+	}()
 }

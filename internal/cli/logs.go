@@ -8,6 +8,7 @@ import (
 	"github.com/posener/complete"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -52,7 +53,9 @@ func (c *LogsCommand) Run(args []string) int {
 
 		lv, err := app.Logs(ctx, resp.Deployments[0])
 		if err != nil {
-			app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
+			if !clierrors.IsCanceled(err) {
+				app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
+			}
 			return ErrSentinel
 		}
 
@@ -60,7 +63,9 @@ func (c *LogsCommand) Run(args []string) int {
 		for {
 			batch, err := lv.NextLogBatch(ctx)
 			if err != nil {
-				app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
+				if !clierrors.IsCanceled(err) {
+					app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
+				}
 				return ErrSentinel
 			}
 

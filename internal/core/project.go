@@ -61,7 +61,7 @@ type Project struct {
 func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// Defaults
 	p := &Project{
-		UI: &terminal.BasicUI{},
+		UI: terminal.ConsoleUI(ctx),
 
 		logger:    hclog.L(),
 		workspace: "default",

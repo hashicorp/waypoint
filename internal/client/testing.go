@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 
@@ -23,8 +24,10 @@ func TestProject(t testing.T, opts ...Option) *Project {
 	require := require.New(t)
 	client := singleprocess.TestServer(t)
 
+	ctx := context.Background()
+
 	// Initialize our client
-	result, err := New(append([]Option{
+	result, err := New(ctx, append([]Option{
 		WithClient(client),
 		WithLocal(),
 		WithProjectRef(&pb.Ref_Project{Project: "test_p"}),

@@ -95,7 +95,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 
 	// Init our UI first so we can write output to the user immediately.
-	c.ui = &terminal.BasicUI{}
+	c.ui = terminal.ConsoleUI(c.Ctx)
 
 	// Parse flags
 	if err := baseCfg.Flags.Parse(baseCfg.Args); err != nil {
@@ -162,7 +162,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 
 		// Create our client
-		c.project, err = clientpkg.New(opts...)
+		c.project, err = clientpkg.New(c.Ctx, opts...)
 		if err != nil {
 			c.logError(c.Log, "failed to create client", err)
 			return err
