@@ -40,6 +40,14 @@ func (c *InitCommand) Run(args []string) int {
 	}
 	sg.Wait()
 
+	c.ui.Output("")
+	c.ui.Output("Project initialized!", terminal.WithStyle(terminal.SuccessBoldStyle))
+	c.ui.Output(
+		"You may now call 'waypoint up' to deploy your project or\n"+
+			"commands such as 'waypoint build' to perform steps individually.",
+		terminal.WithSuccessStyle(),
+	)
+
 	return 0
 }
 

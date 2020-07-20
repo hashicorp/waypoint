@@ -37,6 +37,8 @@ func (ui *basicUI) Output(msg string, raw ...interface{}) {
 		msg = colorWarning.Sprint(msg)
 	case SuccessStyle:
 		msg = colorSuccess.Sprint(msg)
+	case SuccessBoldStyle:
+		msg = colorSuccessBold.Sprint(msg)
 	case InfoStyle:
 		lines := strings.Split(msg, "\n")
 		for i, line := range lines {

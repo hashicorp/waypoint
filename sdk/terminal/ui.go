@@ -109,11 +109,12 @@ func Interpret(msg string, raw ...interface{}) (string, string, io.Writer) {
 }
 
 const (
-	HeaderStyle  = "header"
-	ErrorStyle   = "error"
-	WarningStyle = "warning"
-	InfoStyle    = "info"
-	SuccessStyle = "success"
+	HeaderStyle      = "header"
+	ErrorStyle       = "error"
+	WarningStyle     = "warning"
+	InfoStyle        = "info"
+	SuccessStyle     = "success"
+	SuccessBoldStyle = "success-bold"
 )
 
 type config struct {
@@ -176,9 +177,10 @@ func WithWriter(w io.Writer) Option {
 }
 
 var (
-	colorHeader  = color.New(color.Bold)
-	colorInfo    = color.New()
-	colorError   = color.New(color.FgRed)
-	colorSuccess = color.New(color.FgGreen)
-	colorWarning = color.New(color.FgYellow)
+	colorHeader      = color.New(color.Bold)
+	colorInfo        = color.New()
+	colorError       = color.New(color.FgRed)
+	colorSuccess     = color.New(color.FgGreen)
+	colorSuccessBold = color.New(color.FgGreen, color.Bold)
+	colorWarning     = color.New(color.FgYellow)
 )
