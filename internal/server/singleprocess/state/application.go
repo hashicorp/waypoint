@@ -1,15 +1,56 @@
 package state
 
 import (
+	"strings"
+
 	"github.com/boltdb/bolt"
+	"github.com/hashicorp/go-memdb"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-var appBucket = []byte("app")
+// ProjectAppPut creates or updates the application.
+func (s *State) AppPut(app *pb.Application) (*pb.Application, error) {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
 
-func init() {
-	dbBuckets = append(dbBuckets, appBucket)
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.appPut(dbTxn, memTxn, app)
+	})
+	if err == nil {
+		memTxn.Commit()
+	}
+
+	return app, err
+}
+
+func (s *State) appPut(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	value *pb.Application,
+) error {
+	// Get the project
+	p, err := s.projectGetOrCreate(dbTxn, memTxn, value.Project)
+	if err != nil {
+		return err
+	}
+
+	// If we have a matching app, then modify that that.
+	name := strings.ToLower(value.Name)
+	for i, app := range p.Applications {
+		if strings.ToLower(app.Name) == name {
+			p.Applications[i] = value
+			value = nil
+			break
+		}
+	}
+
+	// If we didn't have a matching app, insert it
+	if value != nil {
+		p.Applications = append(p.Applications, value)
+	}
+
+	return s.projectPut(dbTxn, memTxn, p)
 }
 
 // appDefaultForRef returns a default pb.Application for a ref. This
@@ -21,69 +62,4 @@ func (s *State) appDefaultForRef(ref *pb.Ref_Application) *pb.Application {
 			Project: ref.Project,
 		},
 	}
-}
-
-func (s *State) appCreateIfNotExist(tx *bolt.Tx, app *pb.Application) error {
-	// Create our project if we don't have it already.
-	err := s.projectCreateIfNotExist(tx, s.projectDefaultForRef(app.Project))
-	if err != nil {
-		return err
-	}
-
-	// Get our bucket
-	b, err := s.appBucket(tx, app)
-	if err != nil {
-		return err
-	}
-
-	id := []byte("value")
-	if b.Get(id) != nil {
-		return nil
-	}
-
-	// Write our data
-	return dbPut(b, id, app)
-}
-
-func (s *State) appBucket(tx *bolt.Tx, app *pb.Application) (*bolt.Bucket, error) {
-	// Get the app bucket within the specific project.
-	appBucket, err := s.projectAppBucket(tx, &pb.Project{
-		Name: app.Project.Project,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return appBucket.CreateBucketIfNotExists(s.appId(app))
-}
-
-func (s *State) appChildBucket(tx *bolt.Tx, name []byte, app *pb.Application) (*bolt.Bucket, error) {
-	// Create our app if we don't have it already
-	if err := s.appCreateIfNotExist(tx, app); err != nil {
-		return nil, err
-	}
-
-	// Get the app bucket
-	appBucket, err := s.appBucket(tx, app)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create and return the child bucket
-	return appBucket.CreateBucketIfNotExists(name)
-}
-
-func (s *State) appId(app *pb.Application) []byte {
-	return []byte(app.Name)
-}
-
-func (s *State) projectAppBucket(tx *bolt.Tx, p *pb.Project) (*bolt.Bucket, error) {
-	// Get the project bucket since applications live off of that.
-	projBucket, err := s.projectBucket(tx, p)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create the applications bucket
-	return projBucket.CreateBucketIfNotExists(appBucket)
 }
