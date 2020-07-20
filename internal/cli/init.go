@@ -78,7 +78,12 @@ func (c *InitCommand) validateServer(sg terminal.StepGroup) bool {
 	}
 	c.project = client
 
-	s.Update("Connection to server successful")
+	if c.project.Local() {
+		s.Update("Local mode initialized successfully")
+	} else {
+		s.Update("Connection to Waypoint server was successful")
+	}
+
 	s.Status(terminal.StatusOK)
 	s.Done()
 	return true
