@@ -12,7 +12,7 @@ func TestNamedValues(t *testing.T) {
 	require := require.New(t)
 
 	var buf bytes.Buffer
-	var ui BasicUI
+	var ui basicUI
 	ui.NamedValues([]NamedValue{
 		{"hello", "a"},
 		{"this", "is"},
@@ -39,7 +39,7 @@ func TestNamedValues_server(t *testing.T) {
 	require := require.New(t)
 
 	var buf bytes.Buffer
-	var ui BasicUI
+	var ui basicUI
 	ui.Output("Server configuration:", WithHeaderStyle(), WithWriter(&buf))
 	ui.NamedValues([]NamedValue{
 		{"DB Path", "data.db"},
@@ -66,7 +66,7 @@ func TestStatusStyle(t *testing.T) {
 	require := require.New(t)
 
 	var buf bytes.Buffer
-	var ui BasicUI
+	var ui basicUI
 	ui.Output(strings.TrimSpace(`
 one
 two

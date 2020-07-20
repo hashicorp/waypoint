@@ -40,7 +40,7 @@ func (t *Table) Rich(cols []string, colors []string) {
 }
 
 // Table implements UI
-func (u *BasicUI) Table(tbl *Table, opts ...Option) {
+func (u *basicUI) Table(tbl *Table, opts ...Option) {
 	// Build our config and set our options
 	cfg := &config{Writer: color.Output}
 	for _, opt := range opts {

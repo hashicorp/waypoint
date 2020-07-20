@@ -29,10 +29,10 @@ type Project struct {
 }
 
 // New initializes a new client.
-func New(opts ...Option) (*Project, error) {
+func New(ctx context.Context, opts ...Option) (*Project, error) {
 	// Our default client
 	client := &Project{
-		UI:     &terminal.BasicUI{},
+		UI:     terminal.ConsoleUI(ctx),
 		logger: hclog.L(),
 		runner: &pb.Ref_Runner{
 			Target: &pb.Ref_Runner_Any{
