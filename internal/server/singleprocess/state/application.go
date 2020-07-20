@@ -5,6 +5,8 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-memdb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -22,6 +24,22 @@ func (s *State) AppPut(app *pb.Application) (*pb.Application, error) {
 	}
 
 	return app, err
+}
+
+// AppDelete deletes an application from a project. This will also delete
+// all the operations associated with this application.
+func (s *State) AppDelete(ref *pb.Ref_Application) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.appDelete(dbTxn, memTxn, ref)
+	})
+	if err == nil {
+		memTxn.Commit()
+	}
+
+	return err
 }
 
 func (s *State) appPut(
@@ -51,6 +69,38 @@ func (s *State) appPut(
 	}
 
 	return s.projectPut(dbTxn, memTxn, p)
+}
+
+func (s *State) appDelete(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Application,
+) error {
+	// Get the project
+	p, err := s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
+		Project: ref.Project,
+	})
+	if err != nil {
+		// If the project doesn't exist then the app is deleted.
+		if status.Code(err) == codes.NotFound {
+			return nil
+		}
+
+		return err
+	}
+
+	// If we have a matching app, then modify that that.
+	name := strings.ToLower(ref.Application)
+	for i, app := range p.Applications {
+		if strings.ToLower(app.Name) == name {
+			s := p.Applications
+			s[len(s)-1], s[i] = s[i], s[len(s)-1]
+			p.Applications = s[:len(s)-1]
+			break
+		}
+	}
+
+	return nil
 }
 
 // appDefaultForRef returns a default pb.Application for a ref. This

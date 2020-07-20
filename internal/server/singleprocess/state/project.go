@@ -50,6 +50,18 @@ func (s *State) ProjectGet(ref *pb.Ref_Project) (*pb.Project, error) {
 	return result, err
 }
 
+// ProjectDelete deletes a project by reference. This is a complete data
+// delete. This will delete all operations associated with this project
+// as well.
+func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	return s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.projectDelete(dbTxn, memTxn, ref)
+	})
+}
+
 func (s *State) projectGetOrCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, ref *pb.Ref_Project) (*pb.Project, error) {
 	result, err := s.projectGet(dbTxn, memTxn, ref)
 	if status.Code(err) == codes.NotFound {
@@ -95,6 +107,34 @@ func (s *State) projectGet(
 	var result pb.Project
 	b := dbTxn.Bucket(projectBucket)
 	return &result, dbGet(b, []byte(strings.ToLower(ref.Project)), &result)
+}
+
+func (s *State) projectDelete(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Project,
+) error {
+	// Get the project. If it doesn't exist then we're successful.
+	p, err := s.projectGet(dbTxn, memTxn, ref)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil
+		}
+
+		return err
+	}
+
+	// Delete each application
+	for _, app := range p.Applications {
+		if err := s.appDelete(dbTxn, memTxn, &pb.Ref_Application{
+			Project:     ref.Project,
+			Application: app.Name,
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // projectIndexSet writes an index record for a single project.
