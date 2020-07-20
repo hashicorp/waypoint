@@ -6,10 +6,9 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/posener/complete"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -21,19 +20,6 @@ type LogsCommand struct {
 }
 
 var headerColor = color.New(color.FgCyan)
-
-func isCanceled(err error) bool {
-	if err == context.Canceled {
-		return true
-	}
-
-	s, ok := status.FromError(err)
-	if !ok {
-		return false
-	}
-
-	return s.Code() == codes.Canceled
-}
 
 func (c *LogsCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
@@ -67,7 +53,7 @@ func (c *LogsCommand) Run(args []string) int {
 
 		lv, err := app.Logs(ctx, resp.Deployments[0])
 		if err != nil {
-			if !isCanceled(err) {
+			if !clierrors.IsCanceled(err) {
 				app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
 			}
 			return ErrSentinel
@@ -77,7 +63,7 @@ func (c *LogsCommand) Run(args []string) int {
 		for {
 			batch, err := lv.NextLogBatch(ctx)
 			if err != nil {
-				if !isCanceled(err) {
+				if !clierrors.IsCanceled(err) {
 					app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
 				}
 				return ErrSentinel
