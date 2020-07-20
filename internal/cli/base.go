@@ -131,8 +131,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	c.contextStorage = contextStorage
 
 	// Parse the configuration
-	var cfg config.Config
-	c.cfg = &cfg
+	c.cfg = &config.Config{}
 
 	// If we're loading the config, then get it.
 	if baseCfg.Config {
@@ -175,13 +174,13 @@ func (c *baseCommand) Init(opts ...Option) error {
 	if baseCfg.AppTargetRequired {
 		// TODO(mitchellh): when we support app targeting we can have more
 		// than one as long as its targeted.
-		if len(cfg.Apps) != 1 {
+		if len(c.cfg.Apps) != 1 {
 			c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
 		// Set our targeted app
-		c.app = cfg.Apps[0].Name
+		c.app = c.cfg.Apps[0].Name
 	}
 
 	return nil
