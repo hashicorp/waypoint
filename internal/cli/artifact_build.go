@@ -19,9 +19,6 @@ type ArtifactBuildCommand struct {
 }
 
 func (c *ArtifactBuildCommand) Run(args []string) int {
-	//ctx := c.Ctx
-	//log := c.Log.Named("artifact").Named("build")
-
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
 		WithArgs(args),

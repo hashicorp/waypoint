@@ -24,11 +24,11 @@ func TestNamedValues(t *testing.T) {
 	)
 
 	expected := `
-        hello: a
-         this: is
-            a: test
-           of: foo
-the_key_value: style
+          hello: a
+           this: is
+              a: test
+             of: foo
+  the_key_value: style
 
 `
 
@@ -50,12 +50,13 @@ func TestNamedValues_server(t *testing.T) {
 		WithWriter(&buf),
 	)
 
-	expected := `==> Server configuration:
+	expected := `
+==> Server configuration:
 
-     DB Path: data.db
-gRPC Address: 127.0.0.1:1234
-HTTP Address: 127.0.0.1:1235
- URL Service: api.alpha.waypoint.run:443 (account: token)
+       DB Path: data.db
+  gRPC Address: 127.0.0.1:1234
+  HTTP Address: 127.0.0.1:1235
+   URL Service: api.alpha.waypoint.run:443 (account: token)
 
 `
 

@@ -79,7 +79,7 @@ func (ui *basicUI) Output(msg string, raw ...interface{}) {
 
 	switch style {
 	case HeaderStyle:
-		msg = colorHeader.Sprintf("==> %s", msg)
+		msg = colorHeader.Sprintf("\n==> %s", msg)
 	case ErrorStyle:
 		msg = colorError.Sprint(msg)
 	case WarningStyle:
@@ -119,7 +119,7 @@ func (ui *basicUI) NamedValues(rows []NamedValue, opts ...Option) {
 	var buf bytes.Buffer
 	tr := tabwriter.NewWriter(&buf, 1, 8, 0, ' ', tabwriter.AlignRight)
 	for _, row := range rows {
-		fmt.Fprintf(tr, "%s: \t%s\n", row.Name, row.Value)
+		fmt.Fprintf(tr, "  %s: \t%s\n", row.Name, row.Value)
 	}
 
 	tr.Flush()
