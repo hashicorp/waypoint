@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
+	statuspkg "google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -43,6 +45,11 @@ func (p *UIPlugin) GRPCClient(
 	c *grpc.ClientConn,
 ) (interface{}, error) {
 	client := pb.NewTerminalUIServiceClient(c)
+	resp, err := client.IsInteractive(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+
 	evstream, err := client.Events(ctx)
 	if err != nil {
 		return nil, err
@@ -51,9 +58,10 @@ func (p *UIPlugin) GRPCClient(
 	ctx, cancel := context.WithCancel(ctx)
 
 	return &uiBridge{
-		ctx:    ctx,
-		cancel: cancel,
-		evc:    evstream,
+		ctx:         ctx,
+		cancel:      cancel,
+		interactive: resp.Interactive,
+		evc:         evstream,
 	}, nil
 }
 
@@ -74,6 +82,15 @@ func (s *uiServer) Output(
 	}
 
 	return &empty.Empty{}, nil
+}
+
+func (s *uiServer) IsInteractive(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.TerminalUI_IsInteractiveResponse, error) {
+	return &pb.TerminalUI_IsInteractiveResponse{
+		Interactive: s.Impl.Interactive(),
+	}, nil
 }
 
 func (s *uiServer) Events(stream pb.TerminalUIService_EventsServer) error {
@@ -200,6 +217,30 @@ func (s *uiServer) Events(stream pb.TerminalUIService_EventsServer) error {
 			if ev.Step.Close {
 				step.Done()
 			}
+		case *pb.TerminalUI_Event_Input_:
+			result, err := s.Impl.Input(&terminal.Input{
+				Prompt: ev.Input.Prompt,
+				Style:  ev.Input.Style,
+				Secret: ev.Input.Secret,
+			})
+
+			var sterr *spb.Status
+			if err != nil {
+				st, _ := statuspkg.FromError(err)
+				sterr = st.Proto()
+			}
+
+			respEvent := &pb.TerminalUI_Response{
+				Event: &pb.TerminalUI_Response_Input{
+					Input: &pb.TerminalUI_Event_InputResp{
+						Input: result,
+						Error: sterr,
+					},
+				},
+			}
+			if err := stream.Send(respEvent); err != nil {
+				return err
+			}
 		default:
 			s.Logger.Error("Unknown terminal event seen", "type", hclog.Fmt("%T", ev))
 		}
@@ -207,11 +248,13 @@ func (s *uiServer) Events(stream pb.TerminalUIService_EventsServer) error {
 }
 
 type uiBridge struct {
-	ctx    context.Context
-	cancel func()
-	mu     sync.Mutex
-	evc    pb.TerminalUIService_EventsClient
+	ctx         context.Context
+	cancel      func()
+	mu          sync.Mutex
+	evc         pb.TerminalUIService_EventsClient
+	interactive bool
 
+	evcRecvLock    sync.Mutex
 	stdSetup       sync.Once
 	stdout, stderr io.Writer
 }
@@ -220,7 +263,7 @@ func (u *uiBridge) Close() error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
-	_, err := u.evc.CloseAndRecv()
+	err := u.evc.CloseSend()
 	u.evc = nil
 	u.cancel()
 
@@ -228,11 +271,46 @@ func (u *uiBridge) Close() error {
 }
 
 func (u *uiBridge) Input(input *terminal.Input) (string, error) {
-	return "", terminal.ErrNonInteractive
+	if !u.interactive {
+		return "", terminal.ErrNonInteractive
+	}
+
+	u.evcRecvLock.Lock()
+	defer u.evcRecvLock.Unlock()
+
+	err := u.evc.Send(&pb.TerminalUI_Event{
+		Event: &pb.TerminalUI_Event_Input_{
+			Input: &pb.TerminalUI_Event_Input{
+				Prompt: input.Prompt,
+				Style:  input.Style,
+				Secret: input.Secret,
+			},
+		},
+	})
+	if err != nil {
+		return "", err
+	}
+
+	// Wait for the response
+	resp, err := u.evc.Recv()
+	if err != nil {
+		return "", err
+	}
+
+	respEvent, ok := resp.Event.(*pb.TerminalUI_Response_Input)
+	if !ok {
+		return "", fmt.Errorf("unexpected response type: %T", resp.Event)
+	}
+
+	if respEvent.Input.Error != nil {
+		return "", statuspkg.FromProto(respEvent.Input.Error).Err()
+	}
+
+	return respEvent.Input.Input, nil
 }
 
 func (u *uiBridge) Interactive() bool {
-	return false
+	return u.interactive
 }
 
 // Output outputs a message directly to the terminal. The remaining

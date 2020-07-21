@@ -4,17 +4,17 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/mattn/go-colorable"
-	"github.com/hashicorp/go-argmapper"
 
 	"github.com/hashicorp/waypoint/sdk/internal-shared/protomappers"
 	sdkplugin "github.com/hashicorp/waypoint/sdk/internal/plugin"
 	"github.com/hashicorp/waypoint/sdk/internal/stdio"
 )
 
-//go:generate sh -c "protoc -I`go list -m -f \"{{.Dir}}\" github.com/mitchellh/protostructure` -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"
+//go:generate sh -c "protoc -I`go list -m -f \"{{.Dir}}\" github.com/mitchellh/protostructure` -I ../vendor/proto/api-common-protos -I proto/ proto/*.proto --go_out=plugins=grpc:proto/"
 
 // Main is the primary entrypoint for plugins serving components. This
 // function never returns; it blocks until the program is exited. This should
