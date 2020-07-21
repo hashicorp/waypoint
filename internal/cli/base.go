@@ -229,17 +229,6 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 	return finalErr
 }
 
-// Retrieve the app config for the named application
-func (c *baseCommand) AppConfig(name string) (*config.App, bool) {
-	for _, appCfg := range c.cfg.Apps {
-		if appCfg.Name == name {
-			return appCfg, true
-		}
-	}
-
-	return nil, false
-}
-
 // logError logs an error and outputs it to the UI.
 func (c *baseCommand) logError(log hclog.Logger, prefix string, err error) {
 	log.Error(prefix, "error", err)

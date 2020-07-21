@@ -12,6 +12,17 @@ type Config struct {
 	Labels  map[string]string `hcl:"labels,optional"`
 }
 
+// Retrieve the app config for the named application
+func (c *Config) AppConfig(name string) (*App, bool) {
+	for _, appCfg := range c.Apps {
+		if appCfg.Name == name {
+			return appCfg, true
+		}
+	}
+
+	return nil, false
+}
+
 // App represents a single application.
 type App struct {
 	Name   string            `hcl:",label"`

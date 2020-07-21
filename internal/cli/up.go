@@ -57,7 +57,7 @@ func (c *UpCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		cfg, ok := c.AppConfig(c.app)
+		cfg, ok := c.cfg.AppConfig(c.app)
 		if !ok {
 			app.UI.Output(
 				"Strangly the application configuration is unavailable",
