@@ -38,17 +38,19 @@ func (f *fancyStepGroup) Add(str string, args ...interface{}) Step {
 }
 
 func (f *fancyStepGroup) Wait() {
-loop:
-	for {
-		select {
-		case <-f.done:
-			f.steps--
+	if f.steps > 0 {
+	loop:
+		for {
+			select {
+			case <-f.done:
+				f.steps--
 
-			if f.steps <= 0 {
+				if f.steps <= 0 {
+					break loop
+				}
+			case <-f.ctx.Done():
 				break loop
 			}
-		case <-f.ctx.Done():
-			break loop
 		}
 	}
 

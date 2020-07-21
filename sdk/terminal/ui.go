@@ -1,11 +1,15 @@
 package terminal
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/fatih/color"
 )
+
+// ErrNonInteractive is returned when Input is called on a non-Interactive UI.
+var ErrNonInteractive = errors.New("noninteractive UI doesn't support this operation")
 
 // Passed to UI.NamedValues to provide a nicely formatted key: value output
 type NamedValue struct {
@@ -20,6 +24,15 @@ type NamedValue struct {
 // the close or equivalent method on these values), no other method on the
 // UI should be called.
 type UI interface {
+	// Input asks the user for input. This will immediately return an error
+	// if the UI doesn't support interaction. You can test for interaction
+	// ahead of time with Interactive().
+	Input(*Input) (string, error)
+
+	// Interactive returns true if this prompt supports user interaction.
+	// If this is false, Input will always error.
+	Interactive() bool
+
 	// Output outputs a message directly to the terminal. The remaining
 	// arguments should be interpolations for the format string. After the
 	// interpolations you may add Options.
@@ -46,7 +59,8 @@ type UI interface {
 
 	// StepGroup returns a value that can be used to output individual (possibly
 	// parallel) steps that have their own message, status indicator, spinner, and
-	// body.
+	// body. No other output mechanism (Output, Input, Status, etc.) may be
+	// called until the StepGroup is complete.
 	StepGroup() StepGroup
 }
 
@@ -57,6 +71,7 @@ type StepGroup interface {
 
 	// Wait for all steps to finish. This allows a StepGroup to be used like
 	// a sync.WaitGroup with each step being run in a separate goroutine.
+	// This must be called to properly clean up the step group.
 	Wait()
 }
 

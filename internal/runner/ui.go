@@ -34,6 +34,14 @@ func (u *runnerUI) Close() error {
 	return nil
 }
 
+func (u *runnerUI) Input(input *terminal.Input) (string, error) {
+	return "", terminal.ErrNonInteractive
+}
+
+func (u *runnerUI) Interactive() bool {
+	return false
+}
+
 // Output outputs a message directly to the terminal. The remaining
 // arguments should be interpolations for the format string. After the
 // interpolations you may add Options.

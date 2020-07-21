@@ -5,18 +5,30 @@ package proto;
 option go_package = ".;proto";
 
 import "google/protobuf/empty.proto";
+import "google/rpc/status.proto";
 
 // TerminalUIService is a service that provides "sdk/terminal.UI" interface
 // to plugins. Plugins don't interact with this directly, they usually
 // interact with it indirectly via a terminal.UI implementation.
 service TerminalUIService {
   rpc Output(TerminalUI.OutputRequest) returns (google.protobuf.Empty);
-  rpc Events(stream TerminalUI.Event) returns (google.protobuf.Empty);
+  rpc Events(stream TerminalUI.Event) returns (stream TerminalUI.Response);
+  rpc IsInteractive(google.protobuf.Empty) returns (TerminalUI.IsInteractiveResponse);
 }
 
 message TerminalUI {
+  message IsInteractiveResponse {
+    bool interactive = 1;
+  }
+
   message OutputRequest {
     repeated string lines = 1;
+  }
+
+  message Response {
+    oneof event {
+      Event.InputResp input = 1;
+    }
   }
 
   message Event {
@@ -28,6 +40,18 @@ message TerminalUI {
       Table table = 5;
       StepGroup step_group = 6;
       Step step = 7;
+      Input input = 8;
+    }
+
+    message Input {
+      string prompt = 1;
+      string style = 2;
+      bool secret = 3;
+    }
+
+    message InputResp {
+      string input = 1;
+      google.rpc.Status error = 2;
     }
 
     message Status {
