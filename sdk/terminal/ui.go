@@ -59,7 +59,8 @@ type UI interface {
 
 	// StepGroup returns a value that can be used to output individual (possibly
 	// parallel) steps that have their own message, status indicator, spinner, and
-	// body.
+	// body. No other output mechanism (Output, Input, Status, etc.) may be
+	// called until the StepGroup is complete.
 	StepGroup() StepGroup
 }
 
@@ -70,6 +71,7 @@ type StepGroup interface {
 
 	// Wait for all steps to finish. This allows a StepGroup to be used like
 	// a sync.WaitGroup with each step being run in a separate goroutine.
+	// This must be called to properly clean up the step group.
 	Wait()
 }
 
