@@ -4,19 +4,23 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/hashicorp/waypoint/internal/cli/datagen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
-	"github.com/posener/complete"
 )
 
 type InitCommand struct {
 	*baseCommand
 
 	project *clientpkg.Project
+	cfg     *configpkg.Config
 }
 
 func (c *InitCommand) Run(args []string) int {
@@ -46,19 +50,17 @@ func (c *InitCommand) Run(args []string) int {
 	}
 
 	// Steps to run
-	steps := []func(terminal.StepGroup) bool{
+	steps := []func() bool{
 		c.validateConfig,
 		c.validateServer,
+		c.validateProject,
 		c.validatePlugins,
 	}
-
-	sg := c.ui.StepGroup()
 	for _, step := range steps {
-		if !step(sg) {
+		if !step() {
 			return 1
 		}
 	}
-	sg.Wait()
 
 	c.ui.Output("")
 	c.ui.Output("Project initialized!", terminal.WithStyle(terminal.SuccessBoldStyle))
@@ -99,13 +101,17 @@ validate the configuration and initialize your project.
 	return true
 }
 
-func (c *InitCommand) validateConfig(sg terminal.StepGroup) bool {
+func (c *InitCommand) validateConfig() bool {
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
 	s := sg.Add("Validating configuration file...")
 	cfg, err := c.initConfig(false)
 	if err != nil {
 		c.stepError(s, initStepConfig, err)
 		return false
 	}
+	c.cfg = cfg
 	c.refProject = &pb.Ref_Project{Project: cfg.Project}
 
 	s.Update("Configuration file appears valid")
@@ -115,7 +121,10 @@ func (c *InitCommand) validateConfig(sg terminal.StepGroup) bool {
 	return true
 }
 
-func (c *InitCommand) validateServer(sg terminal.StepGroup) bool {
+func (c *InitCommand) validateServer() bool {
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
 	s := sg.Add("Validating server credentials...")
 	client, err := c.initClient()
 	if err != nil {
@@ -135,7 +144,61 @@ func (c *InitCommand) validateServer(sg terminal.StepGroup) bool {
 	return true
 }
 
-func (c *InitCommand) validatePlugins(sg terminal.StepGroup) bool {
+func (c *InitCommand) validateProject() bool {
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
+	ref := c.project.Ref()
+
+	s := sg.Add("Checking if project %q is registered...", ref.Project)
+
+	client := c.project.Client()
+	resp, err := client.GetProject(c.Ctx, &pb.GetProjectRequest{Project: ref})
+	if status.Code(err) == codes.NotFound {
+		err = nil
+		resp = nil
+	}
+	if err != nil {
+		c.stepError(s, initStepProject, err)
+		return false
+	}
+
+	var project *pb.Project
+	if resp != nil {
+		project = resp.Project
+	}
+
+	// If the project itself is missing, then register that.
+	if project == nil {
+		s.Status(terminal.StatusWarn)
+		s.Update("Project %q is not registered with the server. Registering...", ref.Project)
+
+		resp, err := client.UpsertProject(c.Ctx, &pb.UpsertProjectRequest{
+			Project: &pb.Project{
+				Name: ref.Project,
+			},
+		})
+		if err != nil {
+			c.stepError(s, initStepProject, err)
+			return false
+		}
+
+		project = resp.Project
+	}
+
+	// If the project is missing our apps, then register those.
+	// TODO
+
+	s.Update("Project %q and all apps are registered with the server.", ref.Project)
+	s.Status(terminal.StatusOK)
+	s.Done()
+	return true
+}
+
+func (c *InitCommand) validatePlugins() bool {
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
 	s := sg.Add("Validating required plugins...")
 
 	_, err := c.project.Validate(c.Ctx, &pb.Job_ValidateOp{})
@@ -205,11 +268,13 @@ const (
 	initStepConfig
 	initStepConnect
 	initStepPluginConfig
+	initStepProject
 )
 
 var initStepStrings = map[initStepType]struct {
 	Error        string
 	ErrorDetails string
+	Other        map[string]string
 }{
 	initStepConfig: {
 		Error: "Error loading configuration!",
@@ -232,5 +297,23 @@ This validation check ensures that you have all the required plugins available
 and the configuration for each plugin (if it exists) is valid. The error message
 below should tell you which plugin(s) failed.
 		`,
+	},
+
+	initStepProject: {
+		Error: "Error while checking for project registration.",
+		ErrorDetails: `
+There was an error while the checking if the project and applications
+are registered with the Waypoint server. This error may be temporary and
+you may retry to init. See the error message below.
+		`,
+
+		Other: map[string]string{
+			"unregistered-desc": `
+The project and apps must be registered prior to performing any operations.
+This creates some metadata with the server. We require registration as a
+verification that the project/app names are correct and that you're targeting
+the correct server.
+			`,
+		},
 	},
 }
