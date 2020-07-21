@@ -227,6 +227,14 @@ func (u *uiBridge) Close() error {
 	return err
 }
 
+func (u *uiBridge) Input(input *terminal.Input) (string, error) {
+	return "", terminal.ErrNonInteractive
+}
+
+func (u *uiBridge) Interactive() bool {
+	return false
+}
+
 // Output outputs a message directly to the terminal. The remaining
 // arguments should be interpolations for the format string. After the
 // interpolations you may add Options.
