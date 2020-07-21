@@ -36,6 +36,7 @@ var textStatus = map[string]string{
 var colorStatus = map[string][]aec.ANSI{
 	StatusOK:    {aec.GreenF},
 	StatusError: {aec.RedF},
+	StatusWarn:  {aec.YellowF},
 }
 
 // Status is used to provide an updating status to the user. The status

@@ -84,6 +84,8 @@ func (ui *basicUI) Output(msg string, raw ...interface{}) {
 		msg = colorError.Sprint(msg)
 	case WarningStyle:
 		msg = colorWarning.Sprint(msg)
+	case WarningBoldStyle:
+		msg = colorWarningBold.Sprint(msg)
 	case SuccessStyle:
 		msg = colorSuccess.Sprint(msg)
 	case SuccessBoldStyle:
