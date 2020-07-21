@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -9,7 +10,9 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/bgentry/speakeasy"
 	"github.com/fatih/color"
+	"github.com/mattn/go-isatty"
 )
 
 // basicUI
@@ -22,6 +25,52 @@ type basicUI struct {
 // stdout/stderr.
 func ConsoleUI(ctx context.Context) UI {
 	return &basicUI{ctx: ctx}
+}
+
+// Input implements UI
+func (ui *basicUI) Input(input *Input) (string, error) {
+	var buf bytes.Buffer
+
+	// Write the prompt, add a space.
+	ui.Output(input.Prompt, WithStyle(input.Style), WithWriter(&buf))
+	fmt.Fprint(color.Output, strings.TrimRight(buf.String(), "\r\n"))
+	fmt.Fprint(color.Output, " ")
+
+	// Ask for input in a go-routine so that we can ignore it.
+	errCh := make(chan error, 1)
+	lineCh := make(chan string, 1)
+	go func() {
+		var line string
+		var err error
+		if input.Secret && isatty.IsTerminal(os.Stdin.Fd()) {
+			line, err = speakeasy.Ask("")
+		} else {
+			r := bufio.NewReader(os.Stdin)
+			line, err = r.ReadString('\n')
+		}
+		if err != nil {
+			errCh <- err
+			return
+		}
+
+		lineCh <- strings.TrimRight(line, "\r\n")
+	}()
+
+	select {
+	case err := <-errCh:
+		return "", err
+	case line := <-lineCh:
+		return line, nil
+	case <-ui.ctx.Done():
+		// Print newline so that any further output starts properly
+		fmt.Fprintln(color.Output)
+		return "", ui.ctx.Err()
+	}
+}
+
+// Interactive implements UI
+func (ui *basicUI) Interactive() bool {
+	return isatty.IsTerminal(os.Stdin.Fd())
 }
 
 // Output implements UI

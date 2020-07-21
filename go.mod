@@ -12,6 +12,7 @@ require (
 	github.com/adrg/xdg v0.2.1
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
 	github.com/aws/aws-sdk-go v1.33.6
+	github.com/bgentry/speakeasy v0.1.0
 	github.com/boltdb/bolt v1.3.1
 	github.com/briandowns/spinner v1.8.0
 	github.com/buildpacks/pack v0.11.1
