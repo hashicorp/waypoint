@@ -19,9 +19,12 @@ import (
 // operations, this will already have the targeting for the local runner.
 func (c *Project) job() *pb.Job {
 	return &pb.Job{
-		Workspace:    c.workspace,
 		TargetRunner: c.runner,
 		Labels:       c.labels,
+		Workspace:    c.workspace,
+		Application: &pb.Ref_Application{
+			Project: c.project.Project,
+		},
 
 		DataSource: &pb.Job_Local_{
 			Local: &pb.Job_Local{},

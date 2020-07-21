@@ -81,6 +81,9 @@ func (r *Runner) executeJob(
 	case *pb.Job_Release:
 		return r.executeReleaseOp(ctx, job, project)
 
+	case *pb.Job_Validate:
+		return r.executeValidateOp(ctx, job, project)
+
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)
 	}

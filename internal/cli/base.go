@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -54,6 +52,10 @@ type baseCommand struct {
 	// contextStorage is for CLI contexts.
 	contextStorage *clicontext.Storage
 
+	// refProject and refWorkspace the references for this CLI invocation.
+	refProject   *pb.Ref_Project
+	refWorkspace *pb.Ref_Workspace
+
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
 
@@ -89,7 +91,10 @@ func (c *baseCommand) Close() error {
 // Init should be called FIRST within the Run function implementation. Many
 // options will affect behavior of other functions that can be called later.
 func (c *baseCommand) Init(opts ...Option) error {
-	var baseCfg baseConfig
+	baseCfg := baseConfig{
+		Config: true,
+		Client: true,
+	}
 	for _, opt := range opts {
 		opt(&baseCfg)
 	}
@@ -102,8 +107,10 @@ func (c *baseCommand) Init(opts ...Option) error {
 		c.ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
 	}
-
 	c.args = baseCfg.Flags.Args()
+
+	// With the flags we now know what workspace we're targeting
+	c.refWorkspace = &pb.Ref_Workspace{Workspace: c.flagWorkspace}
 
 	// Setup our base config path
 	homeConfigPath, err := xdg.ConfigFile("waypoint/.ignore")
@@ -124,56 +131,33 @@ func (c *baseCommand) Init(opts ...Option) error {
 	c.contextStorage = contextStorage
 
 	// Parse the configuration
-	var cfg config.Config
-	c.cfg = &cfg
+	c.cfg = &config.Config{}
 
-	// If we have an app mode, then we're loading project settings
-	if baseCfg.AppMode == appModeNone {
-		c.Log.Info("app mode for this command is 'none', not loading config")
-		return nil
-	}
-
-	// TODO(mitchellh): don't hardcode this, look up directories
-	path := config.Filename
-	if _, err := os.Stat(path); err == nil {
-		c.Log.Debug("reading configuration", "path", path)
-		if err := cfg.LoadPath(path); err != nil {
-			c.logError(c.Log, "error decoding configuration", err)
+	// If we're loading the config, then get it.
+	if baseCfg.Config {
+		cfg, err := c.initConfig(baseCfg.ConfigOptional)
+		if err != nil {
 			return err
 		}
 
-		// Start building our client options
-		opts := []clientpkg.Option{
-			clientpkg.WithLogger(c.Log),
-			clientpkg.WithClientConnect(
-				serverclient.FromContext(contextStorage, ""),
-				serverclient.FromEnv(),
-			),
-			clientpkg.WithProjectRef(&pb.Ref_Project{
-				Project: cfg.Project,
-			}),
-			clientpkg.WithWorkspaceRef(&pb.Ref_Workspace{
-				Workspace: c.flagWorkspace,
-			}),
-			clientpkg.WithLabels(c.flagLabels),
+		c.cfg = cfg
+		if cfg != nil {
+			c.refProject = &pb.Ref_Project{Project: cfg.Project}
 		}
-		if !c.flagRemote {
-			opts = append(opts, clientpkg.WithLocal())
-		}
+	}
 
-		// Create our client
-		c.project, err = clientpkg.New(c.Ctx, opts...)
+	// Create our client
+	if baseCfg.Client {
+		c.project, err = c.initClient()
 		if err != nil {
 			c.logError(c.Log, "failed to create client", err)
 			return err
 		}
-	} else {
-		c.Log.Debug("no waypoint configuration file, no project configured")
 	}
 
 	// Validate remote vs. local operations.
 	if c.flagRemote {
-		if c.cfg.Runner == nil || !c.cfg.Runner.Enabled {
+		if c.cfg == nil || c.cfg.Runner == nil || !c.cfg.Runner.Enabled {
 			err := errors.New(
 				"The `-remote` flag was specified but remote operations are not supported\n" +
 					"for this project.\n\n" +
@@ -187,16 +171,16 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// If this is a single app mode then make sure that we only have
 	// one app or that we have an app target.
-	if baseCfg.AppMode == appModeSingle {
+	if baseCfg.AppTargetRequired {
 		// TODO(mitchellh): when we support app targeting we can have more
 		// than one as long as its targeted.
-		if len(cfg.Apps) != 1 {
+		if len(c.cfg.Apps) != 1 {
 			c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
 		// Set our targeted app
-		c.app = cfg.Apps[0].Name
+		c.app = c.cfg.Apps[0].Name
 	}
 
 	return nil
