@@ -1,6 +1,7 @@
 import Service from '@ember/service';
 import {WaypointClient} from 'waypoint-client';
 import {Request, UnaryInterceptor, UnaryResponse} from 'grpc-web';
+import { ListBuildsRequest, ListBuildsResponse } from 'waypoint-pb';
 
 // The UnaryInterceptor interface is for the promise-based client.
 class ExampleUnaryInterceptor implements UnaryInterceptor<
@@ -17,11 +18,12 @@ any, any> {
           return response;
         });
     }
-  }
+}
+
 
 export default class ApiService extends Service {
   opts = {'unaryInterceptors': [new ExampleUnaryInterceptor()]};
-  client = new WaypointClient("http://127.0.0.1:1235", null, this.opts)
+  client = new WaypointClient("http://localhost:1235", null, null)
 }
 
 // DO NOT DELETE: this is how TypeScript knows how to look up your services.
