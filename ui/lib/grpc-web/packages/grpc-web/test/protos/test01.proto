@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-message MessageOuter {
-  message MessageInner {
-    int32 value = 1;
-  }
-
-  repeated MessageInner someProp = 1;
-}

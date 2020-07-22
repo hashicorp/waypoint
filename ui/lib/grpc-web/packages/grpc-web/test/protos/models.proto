@@ -1,6 +1,0 @@
-syntax = "proto3";
-
-package models;
-
-message SimpleMessage {
-}
