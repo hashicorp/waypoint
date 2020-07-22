@@ -210,6 +210,12 @@ message Ref {
     string workspace = 1;
   }
 
+  // Component references a component.
+  message Component {
+    hashicorp.waypoint.Component.Type type = 1;
+    string name = 2;
+  }
+
   // Runner references a runner process which executes operations. This
   // can reference a runner by any of the more specific types, such as
   // by ID. If you want to constrain which runners can be targeted,
@@ -246,6 +252,8 @@ message Component {
     UNKNOWN = 0;
     BUILDER = 1;
     REGISTRY = 2;
+    PLATFORM = 3;
+    RELEASEMANAGER = 4;
   }
 }
 
@@ -350,7 +358,7 @@ message ValidateJobResponse {
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
   reserved 21 to 49; // future data source range
-  reserved 57 to 79; // future operation range
+  reserved 58 to 79; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -390,6 +398,7 @@ message Job {
     DestroyDeployOp destroy_deploy = 54;
     ReleaseOp release = 55;
     ValidateOp validate = 56;
+    AuthOp auth = 57;
   }
 
   //-----------------------------------------------------------------
@@ -432,6 +441,7 @@ message Job {
     DeployResult deploy = 3;
     ReleaseResult release = 4;
     ValidateResult validate = 5;
+    AuthResult auth = 6;
   }
 
   message Local {}
@@ -446,6 +456,45 @@ message Job {
   message ValidateOp {}
 
   message ValidateResult {}
+
+  // AuthOp is the configuration to authenticate any plugins.
+  message AuthOp {
+    // if true, auth will only be checked but not attempted. Currently
+    // this must ALWAYS be true. Only authentication checking is supported.
+    bool check_only = 1;
+
+    // if set, only the component matching this reference will be authed.
+    // If this component doesn't exist, an error will be returned. If this is
+    // unset, all components wll be authed.
+    Ref.Component component = 2;
+  }
+
+  message AuthResult {
+    // results are the list of components that were checked
+    repeated Result results = 1;
+
+    message Result {
+      // component that was checked
+      Component component = 1;
+
+      // result of the auth check. If the component didn't implement the
+      // auth interface this will be set to true. You can check for interface
+      // implementation using auth_supported.
+      bool check_result = 2;
+      google.rpc.Status check_error = 3;
+
+      // this is true if the component was authenticated using the Auth
+      // callback. If false, then no attempt was made to authenticate. This
+      // can be on purpose for example if "check_only" is set to true on
+      // the op.
+      bool auth_completed = 4;
+      google.rpc.Status auth_error = 5;
+
+      // auth supported is true if this component implemented the auth
+      // interface.
+      bool auth_supported = 6;
+    }
+  }
 
   message BuildOp {
     // Don't push the build to any configured registry.
