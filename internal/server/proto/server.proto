@@ -17,6 +17,10 @@ service Waypoint {
   // GetProject returns the project.
   rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
 
+  // UpsertApplication upserts an application with a project. If the application
+  // is already registered this does nothing.
+  rpc UpsertApplication(UpsertApplicationRequest) returns (UpsertApplicationResponse);
+
   // ListBuilds returns the builds.
   rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
@@ -826,7 +830,7 @@ message Hostname {
 }
 
 /********************************************************************
-* Projects
+* Projects & Apps
 ********************************************************************/
 
 message UpsertProjectRequest {
@@ -844,6 +848,18 @@ message GetProjectRequest {
 
 message GetProjectResponse {
   Project project = 1;
+}
+
+message UpsertApplicationRequest {
+  // project to register the app against
+  Ref.Project project = 1;
+
+  // name of the application to register
+  string name = 2;
+}
+
+message UpsertApplicationResponse {
+  Application application = 1;
 }
 
 /********************************************************************

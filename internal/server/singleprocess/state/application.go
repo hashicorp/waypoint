@@ -1,17 +1,16 @@
 package state
 
 import (
-	"strings"
-
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-// ProjectAppPut creates or updates the application.
+// AppPut creates or updates the application.
 func (s *State) AppPut(app *pb.Application) (*pb.Application, error) {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
@@ -42,6 +41,21 @@ func (s *State) AppDelete(ref *pb.Ref_Application) error {
 	return err
 }
 
+// AppGet retrieves the application..
+func (s *State) AppGet(ref *pb.Ref_Application) (*pb.Application, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	var result *pb.Application
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, err = s.appGet(dbTxn, memTxn, ref)
+		return err
+	})
+
+	return result, err
+}
+
 func (s *State) appPut(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
@@ -54,13 +68,10 @@ func (s *State) appPut(
 	}
 
 	// If we have a matching app, then modify that that.
-	name := strings.ToLower(value.Name)
-	for i, app := range p.Applications {
-		if strings.ToLower(app.Name) == name {
-			p.Applications[i] = value
-			value = nil
-			break
-		}
+	pt := &serverptypes.Project{Project: p}
+	if idx := pt.App(value.Name); idx >= 0 {
+		p.Applications[idx] = value
+		value = nil
 	}
 
 	// If we didn't have a matching app, insert it
@@ -90,17 +101,36 @@ func (s *State) appDelete(
 	}
 
 	// If we have a matching app, then modify that that.
-	name := strings.ToLower(ref.Application)
-	for i, app := range p.Applications {
-		if strings.ToLower(app.Name) == name {
-			s := p.Applications
-			s[len(s)-1], s[i] = s[i], s[len(s)-1]
-			p.Applications = s[:len(s)-1]
-			break
-		}
+	pt := &serverptypes.Project{Project: p}
+	if i := pt.App(ref.Application); i >= 0 {
+		s := p.Applications
+		s[len(s)-1], s[i] = s[i], s[len(s)-1]
+		p.Applications = s[:len(s)-1]
 	}
 
 	return nil
+}
+
+func (s *State) appGet(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Application,
+) (*pb.Application, error) {
+	// Get the project
+	p, err := s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
+		Project: ref.Project,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// If we have a matching app, then modify that that.
+	pt := &serverptypes.Project{Project: p}
+	if i := pt.App(ref.Application); i >= 0 {
+		return p.Applications[i], nil
+	}
+
+	return nil, status.Errorf(codes.NotFound, "application not found")
 }
 
 // appDefaultForRef returns a default pb.Application for a ref. This
