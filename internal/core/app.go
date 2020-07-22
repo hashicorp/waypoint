@@ -146,66 +146,6 @@ func (a *App) Ref() *pb.Ref_Application {
 	return a.ref
 }
 
-// Exec using the deployer phase
-// TODO(evanphx): test
-func (a *App) Exec(ctx context.Context) error {
-	log := a.logger.Named("platform")
-
-	ep, ok := a.Platform.(component.ExecPlatform)
-	if !ok {
-		return fmt.Errorf("This platform does not support exec yet")
-	}
-
-	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ExecFunc())
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Set config variables on the deployer phase
-// TODO(evanphx): test
-func (a *App) ConfigSet(ctx context.Context, key, val string) error {
-	log := a.logger.Named("platform")
-
-	ep, ok := a.Platform.(component.ConfigPlatform)
-	if !ok {
-		return fmt.Errorf("This platform does not support config yet")
-	}
-
-	cv := &component.ConfigVar{Name: key, Value: val}
-
-	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigSetFunc(), argmapper.Typed(cv))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Get config variables on the deployer phase
-// TODO(evanphx): test
-func (a *App) ConfigGet(ctx context.Context, key string) (*component.ConfigVar, error) {
-	log := a.logger.Named("platform")
-
-	ep, ok := a.Platform.(component.ConfigPlatform)
-	if !ok {
-		return nil, fmt.Errorf("This platform does not support config yet")
-	}
-
-	cv := &component.ConfigVar{
-		Name: key,
-	}
-
-	_, err := a.callDynamicFunc(ctx, log, nil, a.Platform, ep.ConfigGetFunc(), argmapper.Typed(cv))
-	if err != nil {
-		return nil, err
-	}
-
-	return cv, nil
-}
-
 // callDynamicFunc calls a dynamic function which is a common pattern for
 // our component interfaces. These are functions that are given to mapper,
 // supplied with a series of arguments, dependency-injected, and then called.
