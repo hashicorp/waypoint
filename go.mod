@@ -34,6 +34,7 @@ require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/golang/protobuf v1.4.2
 	github.com/google/renameio v0.1.0
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/go-argmapper v0.0.0-20200617185818-77662eabd58a
 	github.com/hashicorp/go-hclog v0.14.1
@@ -69,6 +70,7 @@ require (
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/sebdah/goldie v1.0.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
+	github.com/slack-go/slack v0.6.5
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	google.golang.org/api v0.20.0

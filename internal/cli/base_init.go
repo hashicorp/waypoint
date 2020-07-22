@@ -67,6 +67,10 @@ func (c *baseCommand) initClient() (*clientpkg.Project, error) {
 		opts = append(opts, clientpkg.WithLocal())
 	}
 
+	if c.ui != nil {
+		opts = append(opts, clientpkg.WithUI(c.ui))
+	}
+
 	// Create our client
 	return clientpkg.New(c.Ctx, opts...)
 }

@@ -183,3 +183,11 @@ func WithLogger(log hclog.Logger) Option {
 		return nil
 	}
 }
+
+// WithUI sets the UI to use for the client.
+func WithUI(ui terminal.UI) Option {
+	return func(c *Project, cfg *config) error {
+		c.UI = ui
+		return nil
+	}
+}

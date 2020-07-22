@@ -76,6 +76,9 @@ type baseCommand struct {
 
 	// args that were present after parsing flags
 	args []string
+
+	// options passed in at the global level
+	globalOptions []Option
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -95,12 +98,22 @@ func (c *baseCommand) Init(opts ...Option) error {
 		Config: true,
 		Client: true,
 	}
+
+	for _, opt := range c.globalOptions {
+		opt(&baseCfg)
+	}
+
 	for _, opt := range opts {
 		opt(&baseCfg)
 	}
 
 	// Init our UI first so we can write output to the user immediately.
-	c.ui = terminal.ConsoleUI(c.Ctx)
+	ui := baseCfg.UI
+	if ui == nil {
+		ui = terminal.ConsoleUI(c.Ctx)
+	}
+
+	c.ui = ui
 
 	// Parse flags
 	if err := baseCfg.Flags.Parse(baseCfg.Args); err != nil {
