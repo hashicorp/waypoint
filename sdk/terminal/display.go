@@ -49,7 +49,7 @@ type Display struct {
 func NewDisplay(ctx context.Context, w io.Writer) *Display {
 	d := &Display{
 		w:       w,
-		width:   50,
+		width:   80,
 		updates: make(chan *DisplayEntry),
 		resize:  make(chan struct{}),
 		newEnt:  make(chan *DisplayEntry),

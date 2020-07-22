@@ -127,6 +127,7 @@ const (
 	HeaderStyle      = "header"
 	ErrorStyle       = "error"
 	WarningStyle     = "warning"
+	WarningBoldStyle = "warning-bold"
 	InfoStyle        = "info"
 	SuccessStyle     = "success"
 	SuccessBoldStyle = "success-bold"
@@ -198,4 +199,5 @@ var (
 	colorSuccess     = color.New(color.FgGreen)
 	colorSuccessBold = color.New(color.FgGreen, color.Bold)
 	colorWarning     = color.New(color.FgYellow)
+	colorWarningBold = color.New(color.FgYellow, color.Bold)
 )

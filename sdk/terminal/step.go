@@ -63,7 +63,8 @@ type fancyStep struct {
 	sg  *fancyStepGroup
 	ent *DisplayEntry
 
-	done bool
+	done   bool
+	status string
 
 	term *Term
 }
@@ -86,6 +87,7 @@ func (f *fancyStep) Update(str string, args ...interface{}) {
 }
 
 func (f *fancyStep) Status(status string) {
+	f.status = status
 	f.ent.SetStatus(status)
 }
 
@@ -94,7 +96,10 @@ func (f *fancyStep) Done() {
 		return
 	}
 
-	f.Status(StatusOK)
+	if f.status == "" {
+		f.Status(StatusOK)
+	}
+
 	f.signalDone()
 }
 

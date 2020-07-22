@@ -244,8 +244,8 @@ func (op *appOperation) Latest(
 // It expects to hold a write transaction to both bolt and memdb.
 func (op *appOperation) dbPut(
 	s *State,
-	tx *bolt.Tx,
-	inmemTxn *memdb.Txn,
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
 	update bool,
 	value proto.Message,
 ) error {
@@ -254,7 +254,7 @@ func (op *appOperation) dbPut(
 	if appRef == nil {
 		return status.Errorf(codes.Internal, "state: Application must be set on value %T", value)
 	}
-	if err := s.appCreateIfNotExist(tx, s.appDefaultForRef(appRef)); err != nil {
+	if err := s.appPut(dbTxn, memTxn, s.appDefaultForRef(appRef)); err != nil {
 		return err
 	}
 
@@ -263,12 +263,12 @@ func (op *appOperation) dbPut(
 	if wsRef == nil {
 		return status.Errorf(codes.Internal, "state: Workspace must be set on value %T", value)
 	}
-	if err := s.workspaceCreateIfNotExist(tx, s.workspaceDefaultForRef(wsRef)); err != nil {
+	if err := s.workspaceCreateIfNotExist(dbTxn, s.workspaceDefaultForRef(wsRef)); err != nil {
 		return err
 	}
 
 	// Get the global bucket and write the value to it.
-	b := tx.Bucket(op.Bucket)
+	b := dbTxn.Bucket(op.Bucket)
 
 	// If we're updating, then this shouldn't already exist
 	id := []byte(op.valueField(value, "Id").(string))
@@ -281,7 +281,7 @@ func (op *appOperation) dbPut(
 	}
 
 	// Create our index value and write that.
-	return op.indexPut(inmemTxn, value)
+	return op.indexPut(memTxn, value)
 }
 
 // indexInit initializes the index table in memdb from all the records

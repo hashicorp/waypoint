@@ -11,6 +11,21 @@ import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
+  // UpsertProject upserts the project.
+  rpc UpsertProject(UpsertProjectRequest) returns (UpsertProjectResponse);
+
+  // GetProject returns the project.
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
+
+  // ListProjects returns a list of all the projects. There is no equivalent
+  // ListApplications because applications are a part of projects and you
+  // can use GetProject to get more information about the project.
+  rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse);
+
+  // UpsertApplication upserts an application with a project. If the application
+  // is already registered this does nothing.
+  rpc UpsertApplication(UpsertApplicationRequest) returns (UpsertApplicationResponse);
+
   // ListBuilds returns the builds.
   rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
@@ -156,6 +171,14 @@ message Application {
 
 message Project {
   string name = 1;
+
+  // The set of applications that are known about this project. Note that
+  // this may not exactly represent the project configuration if a user hasn't
+  // run `waypoint init` yet.
+  //
+  // The applications cannot be modified in any Project APIs. You must
+  // use the dedicated Application APIs.
+  repeated Application applications = 2;
 }
 
 message Workspace {
@@ -809,6 +832,43 @@ message Hostname {
     Ref.Application application = 1;
     Ref.Workspace workspace = 2;
   }
+}
+
+/********************************************************************
+* Projects & Apps
+********************************************************************/
+
+message UpsertProjectRequest {
+  // Project to upsert. See the message for what fields to set.
+  Project project = 1;
+}
+
+message UpsertProjectResponse {
+  Project project = 1;
+}
+
+message GetProjectRequest {
+  Ref.Project project = 1;
+}
+
+message GetProjectResponse {
+  Project project = 1;
+}
+
+message ListProjectsResponse {
+  repeated Ref.Project projects = 1;
+}
+
+message UpsertApplicationRequest {
+  // project to register the app against
+  Ref.Project project = 1;
+
+  // name of the application to register
+  string name = 2;
+}
+
+message UpsertApplicationResponse {
+  Application application = 1;
 }
 
 /********************************************************************
