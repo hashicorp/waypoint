@@ -13,6 +13,7 @@ import (
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -182,12 +183,31 @@ func (c *InitCommand) validateProject() bool {
 			c.stepError(s, initStepProject, err)
 			return false
 		}
+		s.Status(terminal.StatusOK)
 
 		project = resp.Project
 	}
 
-	// If the project is missing our apps, then register those.
-	// TODO
+	pt := &serverptypes.Project{Project: project}
+	for _, app := range c.cfg.Apps {
+		if pt.App(app.Name) >= 0 {
+			continue
+		}
+
+		// Missing an application, register it.
+		s.Status(terminal.StatusWarn)
+		s.Update("Application %q is not registered with the server. Registering...", app.Name)
+
+		_, err := client.UpsertApplication(c.Ctx, &pb.UpsertApplicationRequest{
+			Project: ref,
+			Name:    app.Name,
+		})
+		if err != nil {
+			c.stepError(s, initStepProject, err)
+			return false
+		}
+		s.Status(terminal.StatusOK)
+	}
 
 	s.Update("Project %q and all apps are registered with the server.", ref.Project)
 	s.Status(terminal.StatusOK)
