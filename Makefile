@@ -58,7 +58,8 @@ gen/ts:
 	protoc \
 		-I=./vendor/proto/api-common-protos/ \
 		./vendor/proto/api-common-protos/google/**/*.proto \
-		--js_out=import_style=commonjs,binary:ui/lib/api-common-protos/
+		--js_out=import_style=commonjs,binary:ui/lib/api-common-protos/ \
+		--ts_out=ui/lib/api-common-protos/
 	@rm -rf ./ui/lib/waypoint-pb/internal
 	@rm -rf ./ui/lib/waypoint-client/internal
 	@rm -rf ./ui/vendor/vendor
