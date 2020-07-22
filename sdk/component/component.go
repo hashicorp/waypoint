@@ -94,19 +94,6 @@ type Authenticator interface {
 	ValidateAuthFunc() interface{}
 }
 
-// A Platform that supports the ability to exec into a shell environment
-// for the app.
-type ExecPlatform interface {
-	ExecFunc() interface{}
-}
-
-// A Platform that supports the ability to set and view configuration
-// variables.
-type ConfigPlatform interface {
-	ConfigSetFunc() interface{}
-	ConfigGetFunc() interface{}
-}
-
 // See Args.Source in the protobuf protocol.
 type Source struct {
 	App  string
