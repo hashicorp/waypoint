@@ -30,7 +30,7 @@
       // Ensure that types from libraries are included 
       "lib/waypoint-client":[
         "lib/waypoint-client/*"
-      ],\
+      ],
       "*": [
         "types/*"
       ],
