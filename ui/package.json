@@ -37,6 +37,7 @@
     "ember-cli-babel": "^7.20.5",
     "ember-cli-cjs-transform": "^2.0.0",
     "ember-cli-dependency-checker": "^3.2.0",
+    "ember-cli-favicon": "^2.2.0",
     "ember-cli-htmlbars": "^5.1.2",
     "ember-cli-inject-live-reload": "^2.0.2",
     "ember-cli-mirage": "^1.1.7",

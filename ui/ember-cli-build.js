@@ -2,8 +2,47 @@
 
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
+const ENV = EmberApp.env();
+const isProd = ENV.environment === 'production';
+const isTest = ENV.environment === 'test';
+
 module.exports = function(defaults) {
-  let app = new EmberApp(defaults, {});
+  let app = new EmberApp(defaults, {
+    'ember-cli-favicon': {
+      enabled: true,
+      iconPath: 'favicon.png', // icon path related to `public` folder
+
+      // See the [favicons](https://github.com/itgalaxy/favicons) module for details on the available configuration options.
+      faviconsConfig: {
+        // these options are passed directly to the favicons module
+        path: "http://localhost:4200",
+        appName: 'Waypoint',
+        appShortName: 'WP',
+        developerName: 'HashiCorp',
+        appleStatusBarStyle: 'black',
+        icons: {
+          favicons: true,
+          android: true,
+          appleIcon: true,
+          firefox: true,
+          windows: true,
+          coast: false,
+          appleStartup: false,
+          yandex: false
+        }
+      }
+    },
+    autoImport: {
+      // allows use of a CSP without 'unsafe-eval' directive
+      forbidEval: true,
+      // uncomment this to see a tree view of what ember-cli-auto-import builds
+      //webpack: {
+      //plugins: [
+      //new (require("webpack-bundle-analyzer")).BundleAnalyzerPlugin(),
+      //],
+      //},
+    },
+  });
 
   app.import('node_modules/google-protobuf/google-protobuf.js', {
     using: [
