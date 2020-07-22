@@ -3,6 +3,8 @@ package singleprocess
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
@@ -31,6 +33,19 @@ func (s *service) GetProject(
 	}
 
 	return &pb.GetProjectResponse{Project: result}, nil
+}
+
+// TODO: test
+func (s *service) ListProjects(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.ListProjectsResponse, error) {
+	result, err := s.state.ProjectList()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.ListProjectsResponse{Projects: result}, nil
 }
 
 // TODO: test

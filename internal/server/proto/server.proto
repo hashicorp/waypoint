@@ -17,6 +17,11 @@ service Waypoint {
   // GetProject returns the project.
   rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
 
+  // ListProjects returns a list of all the projects. There is no equivalent
+  // ListApplications because applications are a part of projects and you
+  // can use GetProject to get more information about the project.
+  rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse);
+
   // UpsertApplication upserts an application with a project. If the application
   // is already registered this does nothing.
   rpc UpsertApplication(UpsertApplicationRequest) returns (UpsertApplicationResponse);
@@ -848,6 +853,10 @@ message GetProjectRequest {
 
 message GetProjectResponse {
   Project project = 1;
+}
+
+message ListProjectsResponse {
+  repeated Ref.Project projects = 1;
 }
 
 message UpsertApplicationRequest {

@@ -55,6 +55,13 @@ func TestProject(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(resp)
 		}
+
+		// List
+		{
+			resp, err := s.ProjectList()
+			require.NoError(err)
+			require.Len(resp, 1)
+		}
 	})
 
 	t.Run("Delete", func(t *testing.T) {
@@ -87,10 +94,17 @@ func TestProject(t *testing.T) {
 		// Read
 		{
 			_, err := s.ProjectGet(&pb.Ref_Project{
-				Project: "foo",
+				Project: "AbCdE",
 			})
 			require.Error(err)
 			require.Equal(codes.NotFound, status.Code(err))
+		}
+
+		// List
+		{
+			resp, err := s.ProjectList()
+			require.NoError(err)
+			require.Len(resp, 0)
 		}
 	})
 }

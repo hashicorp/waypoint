@@ -57,9 +57,22 @@ func (s *State) ProjectDelete(ref *pb.Ref_Project) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
-	return s.db.Update(func(dbTxn *bolt.Tx) error {
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
 		return s.projectDelete(dbTxn, memTxn, ref)
 	})
+	if err == nil {
+		memTxn.Commit()
+	}
+
+	return err
+}
+
+// ProjectList returns the list of projects.
+func (s *State) ProjectList() ([]*pb.Ref_Project, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	return s.projectList(memTxn)
 }
 
 func (s *State) projectGetOrCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, ref *pb.Ref_Project) (*pb.Project, error) {
@@ -109,6 +122,30 @@ func (s *State) projectGet(
 	return &result, dbGet(b, []byte(strings.ToLower(ref.Project)), &result)
 }
 
+func (s *State) projectList(
+	memTxn *memdb.Txn,
+) ([]*pb.Ref_Project, error) {
+	iter, err := memTxn.Get(projectIndexTableName, projectIndexIdIndexName+"_prefix", "")
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pb.Ref_Project
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+		idx := next.(*projectIndexRecord)
+
+		result = append(result, &pb.Ref_Project{
+			Project: idx.Id,
+		})
+	}
+
+	return result, nil
+}
+
 func (s *State) projectDelete(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
@@ -132,6 +169,17 @@ func (s *State) projectDelete(
 		}); err != nil {
 			return err
 		}
+	}
+
+	// Delete from bolt
+	id := s.projectIdByRef(ref)
+	if err := dbTxn.Bucket(projectBucket).Delete(id); err != nil {
+		return err
+	}
+
+	// Delete from memdb
+	if err := memTxn.Delete(projectIndexTableName, &projectIndexRecord{Id: string(id)}); err != nil {
+		return err
 	}
 
 	return nil
