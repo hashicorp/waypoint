@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
+	"github.com/hashicorp/waypoint/sdk/internal/testproto"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
@@ -19,7 +21,7 @@ import (
 // have the authenticator RPC methods.
 type authenticatorProtoClient interface {
 	IsAuthenticator(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.ImplementsResp, error)
-	Auth(context.Context, *pb.FuncSpec_Args, ...grpc.CallOption) (*empty.Empty, error)
+	Auth(context.Context, *pb.FuncSpec_Args, ...grpc.CallOption) (*pb.Auth_AuthResponse, error)
 	ValidateAuth(context.Context, *pb.FuncSpec_Args, ...grpc.CallOption) (*empty.Empty, error)
 	AuthSpec(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.FuncSpec, error)
 	ValidateAuthSpec(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.FuncSpec, error)
@@ -50,6 +52,9 @@ func (c *authenticatorClient) AuthFunc() interface{} {
 		return funcErr(err)
 	}
 
+	// We don't want to be a mapper
+	spec.Result = nil
+
 	return funcspec.Func(spec, c.auth,
 		argmapper.Logger(c.Logger),
 		argmapper.Typed(&pluginargs.Internal{
@@ -67,6 +72,9 @@ func (c *authenticatorClient) ValidateAuthFunc() interface{} {
 		return funcErr(err)
 	}
 
+	// We don't want to be a mapper
+	spec.Result = nil
+
 	return funcspec.Func(spec, c.validateAuth,
 		argmapper.Logger(c.Logger),
 		argmapper.Typed(&pluginargs.Internal{
@@ -81,13 +89,19 @@ func (c *authenticatorClient) auth(
 	ctx context.Context,
 	args funcspec.Args,
 	internal *pluginargs.Internal,
-) error {
+) (*component.AuthResult, error) {
 	// Run the cleanup
 	defer internal.Cleanup.Close()
 
 	// Call our function
-	_, err := c.Client.Auth(ctx, &pb.FuncSpec_Args{Args: args})
-	return err
+	resp, err := c.Client.Auth(ctx, &pb.FuncSpec_Args{Args: args})
+	if err != nil {
+		return nil, err
+	}
+
+	return &component.AuthResult{
+		Authenticated: resp.Authenticated,
+	}, nil
 }
 
 func (c *authenticatorClient) validateAuth(
@@ -125,17 +139,25 @@ func (s *authenticatorServer) AuthSpec(
 		argmapper.ConverterFunc(s.Mappers...),
 		argmapper.Logger(s.Logger),
 		argmapper.Typed(s.internal()),
+
+		// We expect a auth result.
+		argmapper.FilterOutput(argmapper.FilterOr(
+			argmapper.FilterType(reflect.TypeOf((*component.AuthResult)(nil))),
+
+			// We expect this for tests.
+			argmapper.FilterType(reflect.TypeOf((*testproto.Data)(nil))),
+		)),
 	)
 }
 
 func (s *authenticatorServer) Auth(
 	ctx context.Context,
 	args *pb.FuncSpec_Args,
-) (*empty.Empty, error) {
+) (*pb.Auth_AuthResponse, error) {
 	internal := s.internal()
 	defer internal.Cleanup.Close()
 
-	_, err := callDynamicFunc2(s.Impl.(component.Authenticator).AuthFunc(), args.Args,
+	raw, err := callDynamicFunc2(s.Impl.(component.Authenticator).AuthFunc(), args.Args,
 		argmapper.ConverterFunc(s.Mappers...),
 		argmapper.Typed(internal),
 		argmapper.Typed(ctx),
@@ -144,7 +166,16 @@ func (s *authenticatorServer) Auth(
 		return nil, err
 	}
 
-	return &empty.Empty{}, nil
+	result, ok := raw.(*component.AuthResult)
+	if !ok {
+		return &pb.Auth_AuthResponse{
+			Authenticated: false,
+		}, nil
+	}
+
+	return &pb.Auth_AuthResponse{
+		Authenticated: result.Authenticated,
+	}, nil
 }
 
 func (s *authenticatorServer) ValidateAuthSpec(

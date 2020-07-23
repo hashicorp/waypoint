@@ -12,7 +12,7 @@ import "plugin.proto";
 // an artifact.
 service Builder {
   rpc IsAuthenticator(google.protobuf.Empty) returns (ImplementsResp);
-  rpc Auth(FuncSpec.Args) returns (google.protobuf.Empty);
+  rpc Auth(FuncSpec.Args) returns (Auth.AuthResponse);
   rpc AuthSpec(google.protobuf.Empty) returns (FuncSpec);
   rpc ValidateAuth(FuncSpec.Args) returns (google.protobuf.Empty);
   rpc ValidateAuthSpec(google.protobuf.Empty) returns (FuncSpec);

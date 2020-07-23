@@ -169,6 +169,14 @@ message Config {
   }
 }
 
+// Auth is the namespace of messages related to auth.
+message Auth {
+  // AuthResponse is returned by the Auth functions.
+  message AuthResponse {
+    bool authenticated = 1;
+  }
+}
+
 // ImplementsResp returns true if the component implements an additional interface.
 message ImplementsResp {
   bool implements = 1;
