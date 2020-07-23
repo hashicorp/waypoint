@@ -1,5 +1,5 @@
 <h3>Builds</h3>
-<ul>
+<ul data-test-build-list=true>
 {{#each @model as |build|}}
     <li>Build ID: {{build.id}} Builder: {{build.component.name}}</li>
 {{/each}}
