@@ -11,6 +11,7 @@ import (
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -42,6 +43,11 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
+	// Build our job info
+	jobInfo := &component.JobInfo{
+		Local: r.local,
+	}
+
 	// Create our project
 	log.Trace("initializing project", "project", cfg.Project)
 	project, err := core.NewProject(ctx,
@@ -53,6 +59,7 @@ func (r *Runner) executeJob(
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
 		core.WithWorkspace(job.Workspace.Workspace),
+		core.WithJobInfo(jobInfo),
 	)
 	if err != nil {
 		return nil, err
