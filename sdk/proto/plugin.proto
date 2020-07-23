@@ -20,6 +20,11 @@ message Args {
     string path = 2;
   }
 
+  // See component.JobInfo
+  message JobInfo {
+    bool local = 1;
+  }
+
   // See component.DeploymentConfig
   message DeploymentConfig {
     string id = 1;

@@ -112,6 +112,15 @@ type LabelSet struct {
 	Labels map[string]string
 }
 
+// JobInfo is available to plugins to get information about the context
+// in which a job is executing.
+type JobInfo struct {
+	// Local is true if the operation is running locally on a machine
+	// alongside the invocation. This can be used to determine if you can
+	// do things such as open browser windows, read user files, etc.
+	Local bool
+}
+
 type Artifact interface{}
 
 type Deployment interface{}
