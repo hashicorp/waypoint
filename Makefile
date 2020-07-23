@@ -46,6 +46,7 @@ gen/ts:
 		--grpc-web_out=import_style=typescript,mode=grpcwebtext:ui/lib/waypoint-client/
 	@mv ./ui/lib/waypoint-client/internal/server/proto/* ./ui/lib/waypoint-client/
 	@mv ./ui/lib/waypoint-client/server_pb.d.ts ./ui/lib/waypoint-pb/
+	@mv ./ui/lib/waypoint-pb/internal/server/proto/* ./ui/lib/waypoint-pb/
 	# Hack: fix import of api-common-protos and various JS/TS imports
 	# These issues below will help:
 	#   https://github.com/protocolbuffers/protobuf/issues/5119
@@ -65,9 +66,7 @@ gen/ts:
 	@rm -rf ./ui/vendor/vendor
 	@rm -rf ./google
 
-
-
-.PHONY: gen/ts
+.PHONY: gen/doc
 gen/doc:
 	@rm -rf ./doc/* 2> /dev/null
 	protoc -I=. \
