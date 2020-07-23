@@ -4,3 +4,7 @@ declare module 'waypoint/templates/*' {
   const tmpl: TemplateFactory;
   export default tmpl;
 }
+
+declare module 'ember-cli-mirage/test-support' {
+  export function setupMirage(hooks: NestedHooks): void;
+}

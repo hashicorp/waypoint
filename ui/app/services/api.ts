@@ -1,7 +1,6 @@
 import Service from '@ember/service';
 import {WaypointClient} from 'waypoint-client';
 import {Request, UnaryInterceptor, UnaryResponse} from 'grpc-web';
-import { ListBuildsRequest, ListBuildsResponse } from 'waypoint-pb';
 
 // The UnaryInterceptor interface is for the promise-based client.
 class ExampleUnaryInterceptor implements UnaryInterceptor<

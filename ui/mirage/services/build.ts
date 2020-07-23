@@ -47,4 +47,3 @@ export function list(schema: Schema, { params, requestHeaders }) {
     resp.setBuildsList(builds);
     return this.serialize(resp, "application")
 }
-  

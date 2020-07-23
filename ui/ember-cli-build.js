@@ -8,6 +8,9 @@ const isTest = ENV.environment === 'test';
 
 module.exports = function(defaults) {
   let app = new EmberApp(defaults, {
+    babel: {
+      sourceMaps: 'inline',
+    },
     'ember-cli-favicon': {
       enabled: true,
       iconPath: 'favicon.png', // icon path related to `public` folder
