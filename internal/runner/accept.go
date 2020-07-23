@@ -77,6 +77,7 @@ func (r *Runner) Accept() error {
 	}
 
 	ctx, cancel := context.WithCancel(r.ctx)
+	defer cancel()
 
 	// For our UI, we will use a manually set UI if available. Otherwise,
 	// we setup the runner UI which streams the output to the server.
