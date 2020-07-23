@@ -56,6 +56,7 @@ func (c *InitCommand) Run(args []string) int {
 		c.validateServer,
 		c.validateProject,
 		c.validatePlugins,
+		c.validateAuth,
 	}
 	for _, step := range steps {
 		if !step() {
@@ -233,6 +234,70 @@ func (c *InitCommand) validatePlugins() bool {
 	return true
 }
 
+func (c *InitCommand) validateAuth() bool {
+	sg := c.ui.StepGroup()
+	defer func() { sg.Wait() }() // defer a func so we can overwrite sg
+
+	s := sg.Add("Checking auth for the configured components...")
+
+	failures := false
+	for _, appcfg := range c.cfg.Apps {
+		app := c.project.App(appcfg.Name)
+
+		ref := app.Ref()
+		s.Update("Checking auth for app: %q", ref.Application)
+
+		result, err := app.Auth(c.Ctx, &pb.Job_AuthOp{
+			CheckOnly: true,
+		})
+		if err != nil {
+			c.stepError(s, initStepAuth, err)
+			return false
+		}
+
+		var requiresAuth []*pb.Component
+		for _, r := range result.Results {
+			if r.CheckResult {
+				continue
+			}
+
+			requiresAuth = append(requiresAuth, r.Component)
+		}
+
+		if len(requiresAuth) == 0 {
+			continue
+		}
+		failures = true
+
+		// Update the status and end the step so we can output normal text
+		s.Status(terminal.StatusWarn)
+		s.Update("%q has plugins that require authentication:", ref.Application)
+		s.Done()
+		sg.Wait()
+
+		for _, comp := range requiresAuth {
+			c.ui.Output("- %s %q",
+				strings.Title(strings.ToLower(comp.Type.String())),
+				comp.Name,
+				terminal.WithStyle(terminal.WarningStyle))
+		}
+
+		// Initialize a new step group for remaining apps
+		sg = c.ui.StepGroup()
+		s = sg.Add("")
+	}
+
+	if !failures {
+		s.Update("Authentication requirements appear satisfied.")
+		s.Status(terminal.StatusOK)
+	} else {
+		s.Update("Authentication checks complete.")
+	}
+
+	s.Done()
+	return true
+}
+
 func (c *InitCommand) stepError(s terminal.Step, step initStepType, err error) {
 	stepStrings := initStepStrings[step]
 
@@ -289,6 +354,7 @@ const (
 	initStepConnect
 	initStepPluginConfig
 	initStepProject
+	initStepAuth
 )
 
 var initStepStrings = map[initStepType]struct {
@@ -335,5 +401,17 @@ verification that the project/app names are correct and that you're targeting
 the correct server.
 			`,
 		},
+	},
+
+	initStepAuth: {
+		Error: "Failed to check authentication requirements!",
+		ErrorDetails: `
+This step verifies that Waypoint has access to the configured systems.
+This is a best-effort check, since not all plugins support this check
+and the check can often only check that any known credentials work at
+a minimal level.
+
+There was an error during this step and it is shown below.
+		`,
 	},
 }
