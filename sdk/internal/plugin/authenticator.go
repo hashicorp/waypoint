@@ -46,6 +46,12 @@ func (c *authenticatorClient) Implements(ctx context.Context) (bool, error) {
 }
 
 func (c *authenticatorClient) AuthFunc() interface{} {
+	if c == nil {
+		return func() (*component.AuthResult, error) {
+			return nil, nil
+		}
+	}
+
 	// Get the spec
 	spec, err := c.Client.AuthSpec(context.Background(), &empty.Empty{})
 	if err != nil {
@@ -66,6 +72,12 @@ func (c *authenticatorClient) AuthFunc() interface{} {
 }
 
 func (c *authenticatorClient) ValidateAuthFunc() interface{} {
+	if c == nil {
+		return func() error {
+			return nil
+		}
+	}
+
 	// Get the spec
 	spec, err := c.Client.ValidateAuthSpec(context.Background(), &empty.Empty{})
 	if err != nil {
