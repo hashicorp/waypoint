@@ -7,6 +7,7 @@ import {
   create,
   collection
 } from 'ember-cli-page-object';
+import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
 const page = create({
   visit: visitable('/builds'),
@@ -18,8 +19,8 @@ module('Acceptance | builds list', function(hooks) {
   setupMirage(hooks);
 
   test('visiting /builds', async function(assert) {
-    await page
-      .visit()
+    await page.visit()
+    await a11yAudit();
 
     // Currently no way to seed past the default in mirage/services/builds.ts
 
