@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 var ErrClosed = errors.New("runner is closed")
@@ -47,6 +48,8 @@ type Runner struct {
 	cleanupFunc func()
 	runner      *pb.Runner
 	factories   map[component.Type]*factory.Factory
+	ui          terminal.UI
+	local       bool
 
 	closedVal int32
 	acceptWg  sync.WaitGroup
@@ -212,6 +215,17 @@ func WithComponentFactory(t component.Type, f *factory.Factory) Option {
 func WithLogger(logger hclog.Logger) Option {
 	return func(r *Runner, cfg *config) error {
 		r.logger = logger
+		return nil
+	}
+}
+
+// WithLocal sets the runner to local mode. This only changes the UI
+// behavior to use the given UI. If ui is nil then the normal streamed
+// UI will be used.
+func WithLocal(ui terminal.UI) Option {
+	return func(r *Runner, cfg *config) error {
+		r.local = true
+		r.ui = ui
 		return nil
 	}
 }

@@ -24,6 +24,8 @@ import (
 var All = []interface{}{
 	Source,
 	SourceProto,
+	JobInfo,
+	JobInfoProto,
 	DeploymentConfig,
 	DeploymentConfigProto,
 	DatadirProject,
@@ -53,6 +55,18 @@ func Source(input *pb.Args_Source) (*component.Source, error) {
 // SourceProto
 func SourceProto(input *component.Source) (*pb.Args_Source, error) {
 	var result pb.Args_Source
+	return &result, mapstructure.Decode(input, &result)
+}
+
+// JobInfo maps Args.JobInfo to component.JobInfo.
+func JobInfo(input *pb.Args_JobInfo) (*component.JobInfo, error) {
+	var result component.JobInfo
+	return &result, mapstructure.Decode(input, &result)
+}
+
+// JobInfoProto
+func JobInfoProto(input *component.JobInfo) (*pb.Args_JobInfo, error) {
+	var result pb.Args_JobInfo
 	return &result, mapstructure.Decode(input, &result)
 }
 

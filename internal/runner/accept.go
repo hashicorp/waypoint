@@ -77,18 +77,26 @@ func (r *Runner) Accept() error {
 	}
 
 	ctx, cancel := context.WithCancel(r.ctx)
+	defer cancel()
 
-	ui := &runnerUI{
-		ctx:    ctx,
-		cancel: cancel,
-		evc:    client,
+	// For our UI, we will use a manually set UI if available. Otherwise,
+	// we setup the runner UI which streams the output to the server.
+	ui := r.ui
+	if ui == nil {
+		ui = &runnerUI{
+			ctx:    ctx,
+			cancel: cancel,
+			evc:    client,
+		}
 	}
 
 	// Execute the job. We have to close the UI right afterwards to
 	// ensure that no more output is writting to the client.
 	log.Info("starting job execution")
 	result, err := r.executeJob(r.ctx, log, ui, assignment.Assignment.Job)
-	ui.Close()
+	if ui, ok := ui.(*runnerUI); ok {
+		ui.Close()
+	}
 
 	// Handle job execution errors
 	if err != nil {

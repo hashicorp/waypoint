@@ -42,6 +42,7 @@ type App struct {
 	workspace  *pb.Ref_Workspace
 	client     pb.WaypointClient
 	source     *component.Source
+	jobInfo    *component.JobInfo
 	logger     hclog.Logger
 	dir        *datadir.App
 	mappers    []*argmapper.Func
@@ -70,6 +71,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	app := &App{
 		client:     p.client,
 		source:     &component.Source{App: cfg.Name, Path: "."},
+		jobInfo:    p.jobInfo,
 		logger:     p.logger.Named("app").Named(cfg.Name),
 		components: make(map[interface{}]*appComponent),
 		ref: &pb.Ref_Application{
@@ -189,6 +191,7 @@ func (a *App) callDynamicFunc(
 			ctx,
 			log,
 			a.source,
+			a.jobInfo,
 			a.dir,
 			componentData.Dir,
 			a.UI,

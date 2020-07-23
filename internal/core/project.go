@@ -41,6 +41,9 @@ type Project struct {
 	// workspace is the workspace that this project will work in.
 	workspace string
 
+	// jobInfo is the base job info for executed functions.
+	jobInfo *component.JobInfo
+
 	// This lock only needs to be held currently to protect localClosers.
 	lock sync.Mutex
 
@@ -66,6 +69,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		logger:    hclog.L(),
 		workspace: "default",
 		apps:      make(map[string]*App),
+		jobInfo:   &component.JobInfo{},
 		factories: map[component.Type]*factory.Factory{
 			component.BuilderType:        plugin.Builders,
 			component.RegistryType:       plugin.Registries,
@@ -274,4 +278,9 @@ func WithWorkspace(ws string) Option {
 // WithUI sets the UI to use. If this isn't set, a BasicUI is used.
 func WithUI(ui terminal.UI) Option {
 	return func(p *Project, opts *options) { p.UI = ui }
+}
+
+// WithJobInfo sets the base job info used for any executed operations.
+func WithJobInfo(info *component.JobInfo) Option {
+	return func(p *Project, opts *options) { p.jobInfo = info }
 }

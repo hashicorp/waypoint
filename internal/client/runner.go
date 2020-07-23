@@ -11,7 +11,8 @@ func (c *Project) startRunner() (*runner.Runner, error) {
 	r, err := runner.New(
 		runner.WithClient(c.client),
 		runner.WithLogger(c.logger.Named("runner")),
-		runner.ByIdOnly(), // We'll direct target this
+		runner.ByIdOnly(),      // We'll direct target this
+		runner.WithLocal(c.UI), // Local mode
 	)
 	if err != nil {
 		return nil, err
