@@ -22,6 +22,9 @@ func TestServiceQueueJob(t *testing.T) {
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
 	// Simplify writing tests
 	type Req = pb.QueueJobRequest
 
@@ -91,6 +94,9 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
 
 	// Create a job
 	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
@@ -214,6 +220,9 @@ func TestServiceGetJobStream_bufferedData(t *testing.T) {
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
 
 	// Create a job
 	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
