@@ -51,16 +51,6 @@ func (p *Platform) Auth(
 	dir *datadir.Component,
 	ui terminal.UI,
 ) (*component.AuthResult, error) {
-	// If we're not running local we can't open browser windows and stuff so
-	// just output some help text to the user.
-	if !info.Local {
-		ui.Output(
-			"Jack Pearkes needs to do this but he'll tell you to open a URL to\n" +
-				"some place and copy some token to some other place and then after\n" +
-				"all that we should be good to go.")
-		return nil, nil
-	}
-
 	// We'll update the user in real time
 	st := ui.Status()
 	defer st.Close()
@@ -85,9 +75,19 @@ func (p *Platform) Auth(
 
 	// Authorize in the users browser
 	url := fmt.Sprintf("%s/authorize?response_type=ticket&ticket=%s", netlifyUI, ticket.ID)
-	if err := open.Start(url); err != nil {
-		err = fmt.Errorf("Error opening URL: %s", err)
-		return nil, err
+
+	// If we're not running local we can't open a browser so output the
+	// link for the user to follow and approve manually
+	if !info.Local {
+		ui.Output(
+			"To authorize Waypoint to create a Netlify token on your behalf\n"+
+				"please open this URL and follow the prompt:\n"+
+				"URL: %s", url)
+	} else {
+		if err := open.Start(url); err != nil {
+			err = fmt.Errorf("Error opening URL: %s", err)
+			return nil, err
+		}
 	}
 
 	// Blocks until the user proceeds in the browser

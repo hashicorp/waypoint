@@ -76,7 +76,6 @@ func apiContext(accessToken string) context.Context {
 
 // Authenticate makes API calls and user interactions appropriate to create
 // and return an API access token
-// todo(pearkes): use Authenticator when it exists
 func Authenticate(
 	ctx context.Context,
 	log hclog.Logger,
