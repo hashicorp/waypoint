@@ -47,9 +47,20 @@ func (p *Platform) Auth(
 	ctx context.Context,
 	log hclog.Logger,
 	src *component.Source,
+	info *component.JobInfo,
 	dir *datadir.Component,
 	ui terminal.UI,
 ) (*component.AuthResult, error) {
+	// If we're not running local we can't open browser windows and stuff so
+	// just output some help text to the user.
+	if !info.Local {
+		ui.Output(
+			"Jack Pearkes needs to do this but he'll tell you to open a URL to\n" +
+				"some place and copy some token to some other place and then after\n" +
+				"all that we should be good to go.")
+		return nil, nil
+	}
+
 	// We'll update the user in real time
 	st := ui.Status()
 	defer st.Close()
