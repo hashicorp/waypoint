@@ -82,6 +82,8 @@ func (ui *basicUI) Output(msg string, raw ...interface{}) {
 		msg = colorHeader.Sprintf("\n==> %s", msg)
 	case ErrorStyle:
 		msg = colorError.Sprint(msg)
+	case ErrorBoldStyle:
+		msg = colorErrorBold.Sprint(msg)
 	case WarningStyle:
 		msg = colorWarning.Sprint(msg)
 	case WarningBoldStyle:
