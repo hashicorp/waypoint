@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -282,6 +283,27 @@ func (c *InitCommand) validateAuth() bool {
 				terminal.WithStyle(terminal.WarningStyle))
 		}
 
+		if c.ui.Interactive() {
+			c.ui.Output("")
+			c.ui.Output(
+				strings.TrimSpace(initStepStrings[initStepAuth].Other["guide"])+"\n",
+				terminal.WithStyle(terminal.WarningBoldStyle),
+			)
+			for {
+				result, err := c.ui.Input(&terminal.Input{
+					Prompt: "Continue? [y/n]",
+					Style:  terminal.WarningBoldStyle,
+				})
+				if err != nil {
+					c.stepError(s, initStepAuth, err)
+					return false
+				}
+				if result == "y" || result == "n" {
+					break
+				}
+			}
+		}
+
 		// Initialize a new step group for remaining apps
 		sg = c.ui.StepGroup()
 		s = sg.Add("")
@@ -292,6 +314,14 @@ func (c *InitCommand) validateAuth() bool {
 		s.Status(terminal.StatusOK)
 	} else {
 		s.Update("Authentication checks complete.")
+	}
+
+	// If we aren't interactive with failures, then we want to report as
+	// an error since the user couldn't have corrected them.
+	if !c.ui.Interactive() && failures {
+		c.stepError(s, initStepAuth, fmt.Errorf(
+			"The plugins above reported that they aren't authenticated."))
+		return false
 	}
 
 	s.Done()
@@ -413,5 +443,14 @@ a minimal level.
 
 There was an error during this step and it is shown below.
 		`,
+
+		Other: map[string]string{
+			"guide": `
+Waypoint will guide you through the authentication process one plugin
+at a time. Plugins may interactively attempt to authenticate or they may
+just output help text to guide you there. You can use Ctrl-C at any point
+to cancel and run "waypoint init" again later.
+			`,
+		},
 	},
 }
