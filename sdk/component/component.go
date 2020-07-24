@@ -86,7 +86,7 @@ type Destroyer interface {
 // Authenticator is responsible for authenticating different types of plugins.
 type Authenticator interface {
 	// AuthFunc should return the method for getting credentials for a
-	// plugin.
+	// plugin. This should return AuthResult.
 	AuthFunc() interface{}
 
 	// ValidateAuthFunc should return the method for validating authentication
@@ -98,6 +98,16 @@ type Authenticator interface {
 type Source struct {
 	App  string
 	Path string
+}
+
+// AuthResult is the return value expected from Authenticator.AuthFunc.
+type AuthResult struct {
+	// Authenticated when true means that the plugin should now be authenticated
+	// (given the other fields in this struct). If ValidateAuth is called,
+	// it should succeed. If this is false, the auth method may have printed
+	// help text or some other information, but it didn't authenticate. However,
+	// this is not an error.
+	Authenticated bool
 }
 
 type ReleaseTarget struct {

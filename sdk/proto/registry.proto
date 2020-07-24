@@ -14,7 +14,7 @@ import "plugin.proto";
 // with artifacts such as listing previous, deleting, etc.
 service Registry {
   rpc IsAuthenticator(google.protobuf.Empty) returns (ImplementsResp);
-  rpc Auth(FuncSpec.Args) returns (google.protobuf.Empty);
+  rpc Auth(FuncSpec.Args) returns (Auth.AuthResponse);
   rpc AuthSpec(google.protobuf.Empty) returns (FuncSpec);
   rpc ValidateAuth(FuncSpec.Args) returns (google.protobuf.Empty);
   rpc ValidateAuthSpec(google.protobuf.Empty) returns (FuncSpec);

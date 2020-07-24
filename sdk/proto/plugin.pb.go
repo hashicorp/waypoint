@@ -228,6 +228,45 @@ func (*Config) Descriptor() ([]byte, []int) {
 	return file_plugin_proto_rawDescGZIP(), []int{3}
 }
 
+// Auth is the namespace of messages related to auth.
+type Auth struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *Auth) Reset() {
+	*x = Auth{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_plugin_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Auth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Auth) ProtoMessage() {}
+
+func (x *Auth) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Auth.ProtoReflect.Descriptor instead.
+func (*Auth) Descriptor() ([]byte, []int) {
+	return file_plugin_proto_rawDescGZIP(), []int{4}
+}
+
 // ImplementsResp returns true if the component implements an additional interface.
 type ImplementsResp struct {
 	state         protoimpl.MessageState
@@ -240,7 +279,7 @@ type ImplementsResp struct {
 func (x *ImplementsResp) Reset() {
 	*x = ImplementsResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[4]
+		mi := &file_plugin_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -253,7 +292,7 @@ func (x *ImplementsResp) String() string {
 func (*ImplementsResp) ProtoMessage() {}
 
 func (x *ImplementsResp) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[4]
+	mi := &file_plugin_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -266,7 +305,7 @@ func (x *ImplementsResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImplementsResp.ProtoReflect.Descriptor instead.
 func (*ImplementsResp) Descriptor() ([]byte, []int) {
-	return file_plugin_proto_rawDescGZIP(), []int{4}
+	return file_plugin_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ImplementsResp) GetImplements() bool {
@@ -291,7 +330,7 @@ type Args_Source struct {
 func (x *Args_Source) Reset() {
 	*x = Args_Source{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[5]
+		mi := &file_plugin_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -304,7 +343,7 @@ func (x *Args_Source) String() string {
 func (*Args_Source) ProtoMessage() {}
 
 func (x *Args_Source) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[5]
+	mi := &file_plugin_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -346,7 +385,7 @@ type Args_JobInfo struct {
 func (x *Args_JobInfo) Reset() {
 	*x = Args_JobInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[6]
+		mi := &file_plugin_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -359,7 +398,7 @@ func (x *Args_JobInfo) String() string {
 func (*Args_JobInfo) ProtoMessage() {}
 
 func (x *Args_JobInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[6]
+	mi := &file_plugin_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -399,7 +438,7 @@ type Args_DeploymentConfig struct {
 func (x *Args_DeploymentConfig) Reset() {
 	*x = Args_DeploymentConfig{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[7]
+		mi := &file_plugin_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -412,7 +451,7 @@ func (x *Args_DeploymentConfig) String() string {
 func (*Args_DeploymentConfig) ProtoMessage() {}
 
 func (x *Args_DeploymentConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[7]
+	mi := &file_plugin_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -482,7 +521,7 @@ type Args_DataDir struct {
 func (x *Args_DataDir) Reset() {
 	*x = Args_DataDir{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[8]
+		mi := &file_plugin_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -495,7 +534,7 @@ func (x *Args_DataDir) String() string {
 func (*Args_DataDir) ProtoMessage() {}
 
 func (x *Args_DataDir) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[8]
+	mi := &file_plugin_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -524,7 +563,7 @@ type Args_Logger struct {
 func (x *Args_Logger) Reset() {
 	*x = Args_Logger{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[9]
+		mi := &file_plugin_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -537,7 +576,7 @@ func (x *Args_Logger) String() string {
 func (*Args_Logger) ProtoMessage() {}
 
 func (x *Args_Logger) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[9]
+	mi := &file_plugin_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -572,7 +611,7 @@ type Args_TerminalUI struct {
 func (x *Args_TerminalUI) Reset() {
 	*x = Args_TerminalUI{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[10]
+		mi := &file_plugin_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -585,7 +624,7 @@ func (x *Args_TerminalUI) String() string {
 func (*Args_TerminalUI) ProtoMessage() {}
 
 func (x *Args_TerminalUI) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[10]
+	mi := &file_plugin_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -620,7 +659,7 @@ type Args_HistoryClient struct {
 func (x *Args_HistoryClient) Reset() {
 	*x = Args_HistoryClient{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[11]
+		mi := &file_plugin_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -633,7 +672,7 @@ func (x *Args_HistoryClient) String() string {
 func (*Args_HistoryClient) ProtoMessage() {}
 
 func (x *Args_HistoryClient) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[11]
+	mi := &file_plugin_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -671,7 +710,7 @@ type Args_ReleaseTargets struct {
 func (x *Args_ReleaseTargets) Reset() {
 	*x = Args_ReleaseTargets{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[12]
+		mi := &file_plugin_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -684,7 +723,7 @@ func (x *Args_ReleaseTargets) String() string {
 func (*Args_ReleaseTargets) ProtoMessage() {}
 
 func (x *Args_ReleaseTargets) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[12]
+	mi := &file_plugin_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -720,7 +759,7 @@ type Args_LabelSet struct {
 func (x *Args_LabelSet) Reset() {
 	*x = Args_LabelSet{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[13]
+		mi := &file_plugin_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -733,7 +772,7 @@ func (x *Args_LabelSet) String() string {
 func (*Args_LabelSet) ProtoMessage() {}
 
 func (x *Args_LabelSet) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[13]
+	mi := &file_plugin_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -768,7 +807,7 @@ type Args_DataDir_Project struct {
 func (x *Args_DataDir_Project) Reset() {
 	*x = Args_DataDir_Project{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[14]
+		mi := &file_plugin_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -781,7 +820,7 @@ func (x *Args_DataDir_Project) String() string {
 func (*Args_DataDir_Project) ProtoMessage() {}
 
 func (x *Args_DataDir_Project) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[14]
+	mi := &file_plugin_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -823,7 +862,7 @@ type Args_DataDir_App struct {
 func (x *Args_DataDir_App) Reset() {
 	*x = Args_DataDir_App{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[15]
+		mi := &file_plugin_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -836,7 +875,7 @@ func (x *Args_DataDir_App) String() string {
 func (*Args_DataDir_App) ProtoMessage() {}
 
 func (x *Args_DataDir_App) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[15]
+	mi := &file_plugin_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -878,7 +917,7 @@ type Args_DataDir_Component struct {
 func (x *Args_DataDir_Component) Reset() {
 	*x = Args_DataDir_Component{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[16]
+		mi := &file_plugin_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -891,7 +930,7 @@ func (x *Args_DataDir_Component) String() string {
 func (*Args_DataDir_Component) ProtoMessage() {}
 
 func (x *Args_DataDir_Component) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[16]
+	mi := &file_plugin_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -934,7 +973,7 @@ type Args_ReleaseTargets_Target struct {
 func (x *Args_ReleaseTargets_Target) Reset() {
 	*x = Args_ReleaseTargets_Target{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[17]
+		mi := &file_plugin_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -947,7 +986,7 @@ func (x *Args_ReleaseTargets_Target) String() string {
 func (*Args_ReleaseTargets_Target) ProtoMessage() {}
 
 func (x *Args_ReleaseTargets_Target) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[17]
+	mi := &file_plugin_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -996,7 +1035,7 @@ type FuncSpec_Value struct {
 func (x *FuncSpec_Value) Reset() {
 	*x = FuncSpec_Value{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[19]
+		mi := &file_plugin_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1009,7 +1048,7 @@ func (x *FuncSpec_Value) String() string {
 func (*FuncSpec_Value) ProtoMessage() {}
 
 func (x *FuncSpec_Value) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[19]
+	mi := &file_plugin_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1062,7 +1101,7 @@ type FuncSpec_Args struct {
 func (x *FuncSpec_Args) Reset() {
 	*x = FuncSpec_Args{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[20]
+		mi := &file_plugin_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1075,7 +1114,7 @@ func (x *FuncSpec_Args) String() string {
 func (*FuncSpec_Args) ProtoMessage() {}
 
 func (x *FuncSpec_Args) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[20]
+	mi := &file_plugin_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1113,7 +1152,7 @@ type Config_ConfigureRequest struct {
 func (x *Config_ConfigureRequest) Reset() {
 	*x = Config_ConfigureRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[21]
+		mi := &file_plugin_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1126,7 +1165,7 @@ func (x *Config_ConfigureRequest) String() string {
 func (*Config_ConfigureRequest) ProtoMessage() {}
 
 func (x *Config_ConfigureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[21]
+	mi := &file_plugin_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1164,7 +1203,7 @@ type Config_StructResp struct {
 func (x *Config_StructResp) Reset() {
 	*x = Config_StructResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_plugin_proto_msgTypes[22]
+		mi := &file_plugin_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1177,7 +1216,7 @@ func (x *Config_StructResp) String() string {
 func (*Config_StructResp) ProtoMessage() {}
 
 func (x *Config_StructResp) ProtoReflect() protoreflect.Message {
-	mi := &file_plugin_proto_msgTypes[22]
+	mi := &file_plugin_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1198,6 +1237,54 @@ func (x *Config_StructResp) GetStruct() *protostructure.Struct {
 		return x.Struct
 	}
 	return nil
+}
+
+// AuthResponse is returned by the Auth functions.
+type Auth_AuthResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Authenticated bool `protobuf:"varint,1,opt,name=authenticated,proto3" json:"authenticated,omitempty"`
+}
+
+func (x *Auth_AuthResponse) Reset() {
+	*x = Auth_AuthResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_plugin_proto_msgTypes[24]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Auth_AuthResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Auth_AuthResponse) ProtoMessage() {}
+
+func (x *Auth_AuthResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_plugin_proto_msgTypes[24]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Auth_AuthResponse.ProtoReflect.Descriptor instead.
+func (*Auth_AuthResponse) Descriptor() ([]byte, []int) {
+	return file_plugin_proto_rawDescGZIP(), []int{4, 0}
+}
+
+func (x *Auth_AuthResponse) GetAuthenticated() bool {
+	if x != nil {
+		return x.Authenticated
+	}
+	return false
 }
 
 var File_plugin_proto protoreflect.FileDescriptor
@@ -1289,12 +1376,16 @@ var file_plugin_proto_rawDesc = []byte{
 	0x1a, 0x3c, 0x0a, 0x0a, 0x53, 0x74, 0x72, 0x75, 0x63, 0x74, 0x52, 0x65, 0x73, 0x70, 0x12, 0x2e,
 	0x0a, 0x06, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x75, 0x72, 0x65, 0x2e,
-	0x53, 0x74, 0x72, 0x75, 0x63, 0x74, 0x52, 0x06, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x22, 0x30,
-	0x0a, 0x0e, 0x49, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70,
-	0x12, 0x1e, 0x0a, 0x0a, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73,
-	0x42, 0x09, 0x5a, 0x07, 0x2e, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x53, 0x74, 0x72, 0x75, 0x63, 0x74, 0x52, 0x06, 0x73, 0x74, 0x72, 0x75, 0x63, 0x74, 0x22, 0x3c,
+	0x0a, 0x04, 0x41, 0x75, 0x74, 0x68, 0x1a, 0x34, 0x0a, 0x0c, 0x41, 0x75, 0x74, 0x68, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x24, 0x0a, 0x0d, 0x61, 0x75, 0x74, 0x68, 0x65, 0x6e,
+	0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0d, 0x61,
+	0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x65, 0x64, 0x22, 0x30, 0x0a, 0x0e,
+	0x49, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x12, 0x1e,
+	0x0a, 0x0a, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x0a, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x42, 0x09,
+	0x5a, 0x07, 0x2e, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -1309,43 +1400,45 @@ func file_plugin_proto_rawDescGZIP() []byte {
 	return file_plugin_proto_rawDescData
 }
 
-var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_plugin_proto_goTypes = []interface{}{
 	(*Args)(nil),                       // 0: proto.Args
 	(*Empty)(nil),                      // 1: proto.Empty
 	(*FuncSpec)(nil),                   // 2: proto.FuncSpec
 	(*Config)(nil),                     // 3: proto.Config
-	(*ImplementsResp)(nil),             // 4: proto.ImplementsResp
-	(*Args_Source)(nil),                // 5: proto.Args.Source
-	(*Args_JobInfo)(nil),               // 6: proto.Args.JobInfo
-	(*Args_DeploymentConfig)(nil),      // 7: proto.Args.DeploymentConfig
-	(*Args_DataDir)(nil),               // 8: proto.Args.DataDir
-	(*Args_Logger)(nil),                // 9: proto.Args.Logger
-	(*Args_TerminalUI)(nil),            // 10: proto.Args.TerminalUI
-	(*Args_HistoryClient)(nil),         // 11: proto.Args.HistoryClient
-	(*Args_ReleaseTargets)(nil),        // 12: proto.Args.ReleaseTargets
-	(*Args_LabelSet)(nil),              // 13: proto.Args.LabelSet
-	(*Args_DataDir_Project)(nil),       // 14: proto.Args.DataDir.Project
-	(*Args_DataDir_App)(nil),           // 15: proto.Args.DataDir.App
-	(*Args_DataDir_Component)(nil),     // 16: proto.Args.DataDir.Component
-	(*Args_ReleaseTargets_Target)(nil), // 17: proto.Args.ReleaseTargets.Target
-	nil,                                // 18: proto.Args.LabelSet.LabelsEntry
-	(*FuncSpec_Value)(nil),             // 19: proto.FuncSpec.Value
-	(*FuncSpec_Args)(nil),              // 20: proto.FuncSpec.Args
-	(*Config_ConfigureRequest)(nil),    // 21: proto.Config.ConfigureRequest
-	(*Config_StructResp)(nil),          // 22: proto.Config.StructResp
-	(*any.Any)(nil),                    // 23: google.protobuf.Any
-	(*protostructure.Struct)(nil),      // 24: protostructure.Struct
+	(*Auth)(nil),                       // 4: proto.Auth
+	(*ImplementsResp)(nil),             // 5: proto.ImplementsResp
+	(*Args_Source)(nil),                // 6: proto.Args.Source
+	(*Args_JobInfo)(nil),               // 7: proto.Args.JobInfo
+	(*Args_DeploymentConfig)(nil),      // 8: proto.Args.DeploymentConfig
+	(*Args_DataDir)(nil),               // 9: proto.Args.DataDir
+	(*Args_Logger)(nil),                // 10: proto.Args.Logger
+	(*Args_TerminalUI)(nil),            // 11: proto.Args.TerminalUI
+	(*Args_HistoryClient)(nil),         // 12: proto.Args.HistoryClient
+	(*Args_ReleaseTargets)(nil),        // 13: proto.Args.ReleaseTargets
+	(*Args_LabelSet)(nil),              // 14: proto.Args.LabelSet
+	(*Args_DataDir_Project)(nil),       // 15: proto.Args.DataDir.Project
+	(*Args_DataDir_App)(nil),           // 16: proto.Args.DataDir.App
+	(*Args_DataDir_Component)(nil),     // 17: proto.Args.DataDir.Component
+	(*Args_ReleaseTargets_Target)(nil), // 18: proto.Args.ReleaseTargets.Target
+	nil,                                // 19: proto.Args.LabelSet.LabelsEntry
+	(*FuncSpec_Value)(nil),             // 20: proto.FuncSpec.Value
+	(*FuncSpec_Args)(nil),              // 21: proto.FuncSpec.Args
+	(*Config_ConfigureRequest)(nil),    // 22: proto.Config.ConfigureRequest
+	(*Config_StructResp)(nil),          // 23: proto.Config.StructResp
+	(*Auth_AuthResponse)(nil),          // 24: proto.Auth.AuthResponse
+	(*any.Any)(nil),                    // 25: google.protobuf.Any
+	(*protostructure.Struct)(nil),      // 26: protostructure.Struct
 }
 var file_plugin_proto_depIdxs = []int32{
-	19, // 0: proto.FuncSpec.args:type_name -> proto.FuncSpec.Value
-	19, // 1: proto.FuncSpec.result:type_name -> proto.FuncSpec.Value
-	17, // 2: proto.Args.ReleaseTargets.targets:type_name -> proto.Args.ReleaseTargets.Target
-	18, // 3: proto.Args.LabelSet.labels:type_name -> proto.Args.LabelSet.LabelsEntry
-	23, // 4: proto.Args.ReleaseTargets.Target.deployment:type_name -> google.protobuf.Any
-	23, // 5: proto.FuncSpec.Value.value:type_name -> google.protobuf.Any
-	19, // 6: proto.FuncSpec.Args.args:type_name -> proto.FuncSpec.Value
-	24, // 7: proto.Config.StructResp.struct:type_name -> protostructure.Struct
+	20, // 0: proto.FuncSpec.args:type_name -> proto.FuncSpec.Value
+	20, // 1: proto.FuncSpec.result:type_name -> proto.FuncSpec.Value
+	18, // 2: proto.Args.ReleaseTargets.targets:type_name -> proto.Args.ReleaseTargets.Target
+	19, // 3: proto.Args.LabelSet.labels:type_name -> proto.Args.LabelSet.LabelsEntry
+	25, // 4: proto.Args.ReleaseTargets.Target.deployment:type_name -> google.protobuf.Any
+	25, // 5: proto.FuncSpec.Value.value:type_name -> google.protobuf.Any
+	20, // 6: proto.FuncSpec.Args.args:type_name -> proto.FuncSpec.Value
+	26, // 7: proto.Config.StructResp.struct:type_name -> protostructure.Struct
 	8,  // [8:8] is the sub-list for method output_type
 	8,  // [8:8] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name
@@ -1408,7 +1501,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ImplementsResp); i {
+			switch v := v.(*Auth); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1420,7 +1513,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_Source); i {
+			switch v := v.(*ImplementsResp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1432,7 +1525,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_JobInfo); i {
+			switch v := v.(*Args_Source); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1444,7 +1537,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_DeploymentConfig); i {
+			switch v := v.(*Args_JobInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1456,7 +1549,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_DataDir); i {
+			switch v := v.(*Args_DeploymentConfig); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1468,7 +1561,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_Logger); i {
+			switch v := v.(*Args_DataDir); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1480,7 +1573,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_TerminalUI); i {
+			switch v := v.(*Args_Logger); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1492,7 +1585,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_HistoryClient); i {
+			switch v := v.(*Args_TerminalUI); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1504,7 +1597,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_ReleaseTargets); i {
+			switch v := v.(*Args_HistoryClient); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1516,7 +1609,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_LabelSet); i {
+			switch v := v.(*Args_ReleaseTargets); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1528,7 +1621,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_DataDir_Project); i {
+			switch v := v.(*Args_LabelSet); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1540,7 +1633,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_DataDir_App); i {
+			switch v := v.(*Args_DataDir_Project); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1552,7 +1645,7 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Args_DataDir_Component); i {
+			switch v := v.(*Args_DataDir_App); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1564,6 +1657,18 @@ func file_plugin_proto_init() {
 			}
 		}
 		file_plugin_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Args_DataDir_Component); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_plugin_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Args_ReleaseTargets_Target); i {
 			case 0:
 				return &v.state
@@ -1575,7 +1680,7 @@ func file_plugin_proto_init() {
 				return nil
 			}
 		}
-		file_plugin_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+		file_plugin_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*FuncSpec_Value); i {
 			case 0:
 				return &v.state
@@ -1587,7 +1692,7 @@ func file_plugin_proto_init() {
 				return nil
 			}
 		}
-		file_plugin_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+		file_plugin_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*FuncSpec_Args); i {
 			case 0:
 				return &v.state
@@ -1599,7 +1704,7 @@ func file_plugin_proto_init() {
 				return nil
 			}
 		}
-		file_plugin_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+		file_plugin_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Config_ConfigureRequest); i {
 			case 0:
 				return &v.state
@@ -1611,8 +1716,20 @@ func file_plugin_proto_init() {
 				return nil
 			}
 		}
-		file_plugin_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+		file_plugin_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Config_StructResp); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_plugin_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Auth_AuthResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1630,7 +1747,7 @@ func file_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_plugin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   23,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

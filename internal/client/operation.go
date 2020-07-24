@@ -28,6 +28,26 @@ func (c *Project) Validate(ctx context.Context, op *pb.Job_ValidateOp) (*pb.Job_
 	return result.Validate, nil
 }
 
+func (c *App) Auth(ctx context.Context, op *pb.Job_AuthOp) (*pb.Job_AuthResult, error) {
+	if op == nil {
+		op = &pb.Job_AuthOp{}
+	}
+
+	// Auth our job
+	job := c.job()
+	job.Operation = &pb.Job_Auth{
+		Auth: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Auth, nil
+}
+
 func (c *App) Build(ctx context.Context, op *pb.Job_BuildOp) (*pb.Job_BuildResult, error) {
 	if op == nil {
 		op = &pb.Job_BuildOp{}

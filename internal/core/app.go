@@ -148,6 +148,27 @@ func (a *App) Ref() *pb.Ref_Application {
 	return a.ref
 }
 
+// Components returns the list of components that were initilized for this app.
+func (a *App) Components() []interface{} {
+	var result []interface{}
+	for c := range a.components {
+		result = append(result, c)
+	}
+
+	return result
+}
+
+// ComponentProto returns the proto info for a component. The passed component
+// must be part of the app or nil will be returned.
+func (a *App) ComponentProto(c interface{}) *pb.Component {
+	info, ok := a.components[c]
+	if !ok {
+		return nil
+	}
+
+	return info.Info
+}
+
 // callDynamicFunc calls a dynamic function which is a common pattern for
 // our component interfaces. These are functions that are given to mapper,
 // supplied with a series of arguments, dependency-injected, and then called.

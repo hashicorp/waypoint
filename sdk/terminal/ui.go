@@ -126,6 +126,7 @@ func Interpret(msg string, raw ...interface{}) (string, string, io.Writer) {
 const (
 	HeaderStyle      = "header"
 	ErrorStyle       = "error"
+	ErrorBoldStyle   = "error-bold"
 	WarningStyle     = "warning"
 	WarningBoldStyle = "warning-bold"
 	InfoStyle        = "info"
@@ -196,6 +197,7 @@ var (
 	colorHeader      = color.New(color.Bold)
 	colorInfo        = color.New()
 	colorError       = color.New(color.FgRed)
+	colorErrorBold   = color.New(color.FgRed, color.Bold)
 	colorSuccess     = color.New(color.FgGreen)
 	colorSuccessBold = color.New(color.FgGreen, color.Bold)
 	colorWarning     = color.New(color.FgYellow)

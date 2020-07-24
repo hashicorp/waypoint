@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -56,9 +57,19 @@ func (c *InitCommand) Run(args []string) int {
 		c.validateServer,
 		c.validateProject,
 		c.validatePlugins,
+		c.validateAuth,
 	}
 	for _, step := range steps {
 		if !step() {
+			c.ui.Output("")
+			c.ui.Output("Project had errors during initialization.", terminal.WithStyle(terminal.ErrorBoldStyle))
+			c.ui.Output(
+				"Waypoint experienced some errors during project initialization. The output\n"+
+					"above should contain the failure messages. Please correct these errors and\n"+
+					"run 'waypoint init' again.",
+				terminal.WithErrorStyle(),
+			)
+
 			return 1
 		}
 	}
@@ -233,6 +244,162 @@ func (c *InitCommand) validatePlugins() bool {
 	return true
 }
 
+func (c *InitCommand) validateAuth() bool {
+	sg := c.ui.StepGroup()
+	defer func() { sg.Wait() }() // defer a func so we can overwrite sg
+
+	s := sg.Add("Checking auth for the configured components...")
+
+	failures := false
+	for _, appcfg := range c.cfg.Apps {
+		app := c.project.App(appcfg.Name)
+
+		ref := app.Ref()
+		s.Update("Checking auth for app: %q", ref.Application)
+
+		result, err := app.Auth(c.Ctx, &pb.Job_AuthOp{
+			CheckOnly: true,
+		})
+		if err != nil {
+			c.stepError(s, initStepAuth, err)
+			return false
+		}
+
+		var requiresAuth []*pb.Component
+		for _, r := range result.Results {
+			if r.CheckResult {
+				continue
+			}
+
+			requiresAuth = append(requiresAuth, r.Component)
+		}
+
+		if len(requiresAuth) == 0 {
+			continue
+		}
+		failures = true
+
+		// Update the status and end the step so we can output normal text
+		s.Status(terminal.StatusWarn)
+		s.Update("%q has plugins that require authentication:", ref.Application)
+		s.Done()
+		sg.Wait()
+
+		for _, comp := range requiresAuth {
+			c.ui.Output("- %s %q",
+				strings.Title(strings.ToLower(comp.Type.String())),
+				comp.Name,
+				terminal.WithStyle(terminal.WarningStyle))
+		}
+
+		if c.ui.Interactive() {
+			c.ui.Output("")
+			c.ui.Output(
+				strings.TrimSpace(initStepStrings[initStepAuth].Other["guide"])+"\n",
+				terminal.WithStyle(terminal.WarningBoldStyle),
+			)
+
+			auth, err := c.inputContinue(terminal.WarningBoldStyle)
+			if err != nil {
+				c.stepError(s, initStepAuth, err)
+				return false
+			}
+			if !auth {
+				return false
+			}
+
+			// Mark failures as false since the user is trying to auth!
+			failures = false
+
+			for i, comp := range requiresAuth {
+				c.ui.Output("Authenticating %s %q",
+					strings.Title(strings.ToLower(comp.Type.String())),
+					comp.Name,
+					terminal.WithStyle(terminal.HeaderStyle),
+				)
+
+				resultRaw, err := app.Auth(c.Ctx, &pb.Job_AuthOp{
+					Component: &pb.Ref_Component{
+						Type: comp.Type,
+						Name: comp.Name,
+					},
+				})
+				if err != nil {
+					c.stepError(s, initStepAuth, err)
+					return false
+				}
+
+				// This should always be exactly one...
+				if len(resultRaw.Results) != 1 {
+					c.stepError(s, initStepAuth, fmt.Errorf(
+						"unexpected result from server on auth: %#v",
+						resultRaw))
+					return false
+				}
+				result := resultRaw.Results[0]
+
+				// Check the results
+				if !result.AuthCompleted {
+					// If we didn't authenticate at all, we still have failures.
+					failures = true
+				} else if !result.CheckResult {
+					// If auth failed, then we still have failures but we also
+					// should tell the user.
+					failures = true
+
+					c.ui.Output(
+						strings.TrimSpace(initStepStrings[initStepAuth].Other["auth-failure"]),
+						status.FromProto(result.CheckError).Message(),
+						terminal.WithStyle(terminal.WarningBoldStyle),
+					)
+				} else {
+					sg = c.ui.StepGroup()
+					s = sg.Add("%s %q authenticated successfully.",
+						strings.Title(strings.ToLower(comp.Type.String())),
+						comp.Name,
+					)
+					s.Done()
+					sg.Wait()
+				}
+
+				if i+1 < len(requiresAuth) {
+					auth, err := c.inputContinue(terminal.WarningBoldStyle)
+					if err != nil {
+						c.stepError(s, initStepAuth, err)
+						return false
+					}
+					if !auth {
+						return false
+					}
+				}
+			}
+		}
+
+		// Initialize a new step group for remaining apps
+		sg = c.ui.StepGroup()
+		s = sg.Add("")
+	}
+
+	if !failures {
+		s.Update("Authentication requirements appear satisfied.")
+		s.Status(terminal.StatusOK)
+	} else {
+		s.Update("Authentication checks had failures.")
+		s.Status(terminal.StatusError)
+	}
+
+	// If we aren't interactive with failures, then we want to report as
+	// an error since the user couldn't have corrected them.
+	if !c.ui.Interactive() && failures {
+		c.stepError(s, initStepAuth, fmt.Errorf(
+			"The plugins above reported that they aren't authenticated."))
+		return false
+	}
+
+	s.Done()
+	return !failures
+}
+
 func (c *InitCommand) stepError(s terminal.Step, step initStepType, err error) {
 	stepStrings := initStepStrings[step]
 
@@ -245,6 +412,21 @@ func (c *InitCommand) stepError(s terminal.Step, step initStepType, err error) {
 		c.ui.Output("")
 	}
 	c.ui.Output(err.Error(), terminal.WithErrorStyle())
+}
+
+func (c *InitCommand) inputContinue(style string) (bool, error) {
+	for {
+		result, err := c.ui.Input(&terminal.Input{
+			Prompt: "Continue? [y/n]",
+			Style:  style,
+		})
+		if err != nil {
+			return false, err
+		}
+		if result == "y" || result == "n" {
+			return result == "y", nil
+		}
+	}
 }
 
 func (c *InitCommand) Flags() *flag.Sets {
@@ -289,6 +471,7 @@ const (
 	initStepConnect
 	initStepPluginConfig
 	initStepProject
+	initStepAuth
 )
 
 var initStepStrings = map[initStepType]struct {
@@ -333,6 +516,31 @@ The project and apps must be registered prior to performing any operations.
 This creates some metadata with the server. We require registration as a
 verification that the project/app names are correct and that you're targeting
 the correct server.
+			`,
+		},
+	},
+
+	initStepAuth: {
+		Error: "Failed to check authentication requirements!",
+		ErrorDetails: `
+This step verifies that Waypoint has access to the configured systems.
+This is a best-effort check, since not all plugins support this check
+and the check can often only check that any known credentials work at
+a minimal level.
+
+There was an error during this step and it is shown below.
+		`,
+
+		Other: map[string]string{
+			"guide": `
+Waypoint will guide you through the authentication process one plugin
+at a time. Plugins may interactively attempt to authenticate or they may
+just output help text to guide you there. You can use Ctrl-C at any point
+to cancel and run "waypoint init" again later.
+			`,
+
+			"auth-failure": `
+Authentication failed with error: %s
 			`,
 		},
 	},
