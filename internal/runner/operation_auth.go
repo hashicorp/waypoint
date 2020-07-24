@@ -4,10 +4,12 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func (r *Runner) executeAuthOp(
@@ -34,6 +36,14 @@ func (r *Runner) executeAuthOp(
 		if info == nil {
 			// Should never happen
 			continue
+		}
+
+		// If we have a ref set for a component then we only auth ones that match.
+		if op.Auth.Component != nil {
+			ptypeC := serverptypes.Component{Component: info}
+			if !ptypeC.Match(op.Auth.Component) {
+				continue
+			}
 		}
 
 		L := log.With("type", info.Type.String(), "name", info.Name)
@@ -71,6 +81,13 @@ func (r *Runner) executeAuthOp(
 		if authResult != nil {
 			result.AuthCompleted = authResult.Authenticated
 		}
+	}
+
+	// If we referenced a component and have no results, then that component
+	// wasn't found and this is an error.
+	if op.Auth.Component != nil && len(results) == 0 {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"component to auth was not found for this app")
 	}
 
 	return &pb.Job_Result{

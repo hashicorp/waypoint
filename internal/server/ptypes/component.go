@@ -11,6 +11,18 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
+// Type wrapper around the proto type so that we can add some methods.
+type Component struct{ *pb.Component }
+
+// Match returns true if the component matches the given ref.
+func (c *Component) Match(ref *pb.Ref_Component) bool {
+	if c == nil || ref == nil {
+		return false
+	}
+
+	return c.Type == ref.Type && c.Name == ref.Name
+}
+
 func TestValidBuild(t testing.T, src *pb.Build) *pb.Build {
 	t.Helper()
 
