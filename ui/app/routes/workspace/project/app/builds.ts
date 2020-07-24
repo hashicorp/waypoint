@@ -7,9 +7,9 @@ export default class Builds extends Route {
   @service api!: ApiService;
 
   async model() {
-    let ws: Ref.Workspace = this.modelFor('workspace').ref;
-    let project: Ref.Project = this.modelFor('workspace.project').ref;
-    let app: Ref.Application = this.modelFor('workspace.project.app').ref;
+    let ws: Ref.Workspace = await this.modelFor('workspace').ref;
+    let project: Ref.Project = await this.modelFor('workspace.project').ref;
+    let app: Ref.Application = await this.modelFor('workspace.project.app').ref;
 
     var req = new ListBuildsRequest();
     req.setApplication(app);
