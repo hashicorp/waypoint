@@ -34,7 +34,10 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	// Connect to the server
 	log.Info("sourcing credentials and connecting to the Waypoint server")
-	conn, err := serverclient.Connect(ctx, serverclient.FromEnv())
+	conn, err := serverclient.Connect(ctx,
+		serverclient.FromContext(c.contextStorage, ""),
+		serverclient.FromEnv(),
+	)
 	if err != nil {
 		c.ui.Output(
 			"Error connecting to the Waypoint server: %s", err.Error(),
@@ -46,11 +49,9 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 	// Output information to the user
 	c.ui.Output("Runner configuration:", terminal.WithHeaderStyle())
-	c.ui.Output("")
 	c.ui.NamedValues([]terminal.NamedValue{
 		{Name: "Server address", Value: conn.Target()},
 	})
-	c.ui.Output("")
 	c.ui.Output("Runner logs:", terminal.WithHeaderStyle())
 	c.ui.Output("")
 

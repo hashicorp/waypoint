@@ -28,7 +28,7 @@ func WithFlags(f *flag.Sets) Option {
 func WithSingleApp() Option {
 	return func(c *baseConfig) {
 		c.AppTargetRequired = true
-		c.Config = true
+		c.Config = false
 		c.Client = true
 	}
 }
