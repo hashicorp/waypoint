@@ -81,6 +81,16 @@ func (r *Runner) executeAuthOp(
 		if authResult != nil {
 			result.AuthCompleted = authResult.Authenticated
 		}
+
+		// If we did complete the auth, revalidate it.
+		if result.AuthCompleted {
+			err := app.ValidateAuth(ctx, c)
+			result.CheckResult = err == nil
+			if err != nil {
+				st, _ := status.FromError(err)
+				result.CheckError = st.Proto()
+			}
+		}
 	}
 
 	// If we referenced a component and have no results, then that component
