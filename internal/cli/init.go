@@ -289,17 +289,58 @@ func (c *InitCommand) validateAuth() bool {
 				strings.TrimSpace(initStepStrings[initStepAuth].Other["guide"])+"\n",
 				terminal.WithStyle(terminal.WarningBoldStyle),
 			)
-			for {
-				result, err := c.ui.Input(&terminal.Input{
-					Prompt: "Continue? [y/n]",
-					Style:  terminal.WarningBoldStyle,
+
+			auth, err := c.inputContinue(terminal.WarningBoldStyle)
+			if err != nil {
+				c.stepError(s, initStepAuth, err)
+				return false
+			}
+			if !auth {
+				return false
+			}
+
+			// Mark failures as false since the user is trying to auth!
+			failures = false
+
+			for i, comp := range requiresAuth {
+				c.ui.Output("Authenticating %s %q",
+					strings.Title(strings.ToLower(comp.Type.String())),
+					comp.Name,
+					terminal.WithStyle(terminal.HeaderStyle),
+				)
+
+				resultRaw, err := app.Auth(c.Ctx, &pb.Job_AuthOp{
+					Component: &pb.Ref_Component{
+						Type: comp.Type,
+						Name: comp.Name,
+					},
 				})
 				if err != nil {
 					c.stepError(s, initStepAuth, err)
 					return false
 				}
-				if result == "y" || result == "n" {
-					break
+
+				// This should always be exactly one...
+				if len(resultRaw.Results) != 1 {
+					c.stepError(s, initStepAuth, fmt.Errorf(
+						"unexpected result from server on auth: %#v",
+						resultRaw))
+					return false
+				}
+				result := resultRaw.Results[0]
+				var _ = result
+
+				// TODO(mitchellh): we should recheck auth
+
+				if i+1 < len(requiresAuth) {
+					auth, err := c.inputContinue(terminal.WarningBoldStyle)
+					if err != nil {
+						c.stepError(s, initStepAuth, err)
+						return false
+					}
+					if !auth {
+						return false
+					}
 				}
 			}
 		}
@@ -340,6 +381,21 @@ func (c *InitCommand) stepError(s terminal.Step, step initStepType, err error) {
 		c.ui.Output("")
 	}
 	c.ui.Output(err.Error(), terminal.WithErrorStyle())
+}
+
+func (c *InitCommand) inputContinue(style string) (bool, error) {
+	for {
+		result, err := c.ui.Input(&terminal.Input{
+			Prompt: "Continue? [y/n]",
+			Style:  style,
+		})
+		if err != nil {
+			return false, err
+		}
+		if result == "y" || result == "n" {
+			return result == "y", nil
+		}
+	}
 }
 
 func (c *InitCommand) Flags() *flag.Sets {
