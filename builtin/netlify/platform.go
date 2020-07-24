@@ -49,7 +49,7 @@ func (p *Platform) Auth(
 	src *component.Source,
 	dir *datadir.Component,
 	ui terminal.UI,
-) error {
+) (*component.AuthResult, error) {
 	// We'll update the user in real time
 	st := ui.Status()
 	defer st.Close()
@@ -61,7 +61,7 @@ func (p *Platform) Auth(
 	if p.config.AccessToken != "" {
 		log.Debug("user configured token in access_token config, not authenticating")
 		st.Update("Using configured token")
-		return nil
+		return nil, nil
 	}
 
 	client := netlify.Default
@@ -69,34 +69,36 @@ func (p *Platform) Auth(
 	// Create a ticket to exchange for a secret token
 	ticket, err := client.CreateTicket(clientContext, clientID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Authorize in the users browser
 	url := fmt.Sprintf("%s/authorize?response_type=ticket&ticket=%s", netlifyUI, ticket.ID)
 	if err := open.Start(url); err != nil {
 		err = fmt.Errorf("Error opening URL: %s", err)
-		return err
+		return nil, err
 	}
 
 	// Blocks until the user proceeds in the browser
 	client.WaitUntilTicketAuthorized(clientContext, ticket)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	token, err := client.ExchangeTicket(clientContext, ticket.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Persist the token for future runs
 	err = persistLocalToken(dir.DataDir(), token.AccessToken)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &component.AuthResult{
+		Authenticated: true,
+	}, nil
 }
 
 // ValidateAuth checks validity of the stored or supplied credential
