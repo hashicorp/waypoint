@@ -479,7 +479,10 @@ message Job {
 
       // result of the auth check. If the component didn't implement the
       // auth interface this will be set to true. You can check for interface
-      // implementation using auth_supported.
+      // implementation using auth_supported. If auth is attempted, the auth
+      // operation will recheck the status and this value will reflect the
+      // check post-auth attempt. You can use this to verify if the auth
+      // succeeded.
       bool check_result = 2;
       google.rpc.Status check_error = 3;
 

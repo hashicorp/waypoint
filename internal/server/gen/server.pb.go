@@ -7103,7 +7103,10 @@ type Job_AuthResult_Result struct {
 	Component *Component `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
 	// result of the auth check. If the component didn't implement the
 	// auth interface this will be set to true. You can check for interface
-	// implementation using auth_supported.
+	// implementation using auth_supported. If auth is attempted, the auth
+	// operation will recheck the status and this value will reflect the
+	// check post-auth attempt. You can use this to verify if the auth
+	// succeeded.
 	CheckResult bool           `protobuf:"varint,2,opt,name=check_result,json=checkResult,proto3" json:"check_result,omitempty"`
 	CheckError  *status.Status `protobuf:"bytes,3,opt,name=check_error,json=checkError,proto3" json:"check_error,omitempty"`
 	// this is true if the component was authenticated using the Auth
