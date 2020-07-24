@@ -27,7 +27,7 @@ func (c *ArtifactListCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
+		WithNoConfig(),
 	); err != nil {
 		return 1
 	}
