@@ -1,0 +1,9 @@
+<h5>Applications for {{@model.project.project}}</h5>
+
+<ul>
+{{#each @model.applications as |app|}}
+    <li>App: <LinkTo @route="workspace.project.app" @model={{app.application}}>{{app.application}}</LinkTo></li>
+{{/each}}
+</ul>
+
+{{outlet}}

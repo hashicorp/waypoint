@@ -1,7 +1,12 @@
-Waypoint UI
+{{t "product.name"}}
 
-<LinkTo @route="builds">
-    Builds
-</LinkTo>
+<h3>{{t "nav.title"}}</h3>
+<ul>
+    <li>
+        <LinkTo @route="workspace" @model={{"default"}}>
+            {{t "nav.default_workspace"}}
+        </LinkTo>
+    </li>
+</ul>
 
 {{outlet}}

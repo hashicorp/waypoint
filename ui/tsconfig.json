@@ -21,24 +21,12 @@
     "module": "es6",
     "experimentalDecorators": true,
     "paths": {
-      "waypoint/tests/*": [
-        "tests/*"
-      ],
-      "waypoint/*": [
-        "app/*"
-      ],
-      // Ensure that types from libraries are included 
-      "lib/waypoint-client":[
-        "lib/waypoint-client/*"
-      ],
-      "*": [
-        "types/*"
-      ],
+      "waypoint/tests/*": ["tests/*"],
+      "waypoint/*": ["app/*"],
+      // Ensure that types from libraries are included
+      "lib/waypoint-client": ["lib/waypoint-client/*"],
+      "*": ["types/*"]
     }
   },
-  "include": [
-    "app/**/*",
-    "tests/**/*",
-    "types/**/*"
-  ]
+  "include": ["app/**/*", "tests/**/*", "types/**/*"]
 }
