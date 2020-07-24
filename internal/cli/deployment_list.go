@@ -27,7 +27,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithNoConfig(),
+		WithSingleApp(),
 	); err != nil {
 		return 1
 	}
