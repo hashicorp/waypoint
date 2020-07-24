@@ -1,7 +1,8 @@
-import { Build, Ref, ListProjectsResponse } from 'waypoint-pb';
+import { Build, Ref, ListProjectsResponse, GetProjectResponse, Project, Application } from 'waypoint-pb';
 import { fakeId } from '../utils';
 import faker from '../faker';
 import { dasherize } from '@ember/string';
+import { create } from 'domain';
 
 function createProjectRef(): Ref.Project {
   let build = new Build();
@@ -17,9 +18,31 @@ function createProjectRef(): Ref.Project {
   return project;
 }
 
+function createApp(): Application {
+  let app = new Application();
+  app.setName(`wp-${faker.hacker.noun()}`);
+
+  return app;
+}
+
+function createProject(): Project {
+  let proj = new Project();
+  proj.setName(dasherize(faker.hacker.noun()));
+  proj.setApplicationsList([createApp(), createApp()]);
+
+  return proj;
+}
+
 export function list(schema: any, { params, requestHeaders }) {
   let resp = new ListProjectsResponse();
   let projs = new Array(createProjectRef(), createProjectRef());
   resp.setProjectsList(projs);
+  return this.serialize(resp, 'application');
+}
+
+export function get(schema: any, { params, requestHeaders }) {
+  let resp = new GetProjectResponse();
+  let proj = createProject();
+  resp.setProject(proj);
   return this.serialize(resp, 'application');
 }

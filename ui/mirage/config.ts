@@ -19,6 +19,7 @@ export default function (this: Server) {
 
   this.post('/ListBuilds', build.list);
   this.post('/ListProjects', project.list);
+  this.post('/GetProject', project.get);
 
   // Pass through all other requests
   this.passthrough();
