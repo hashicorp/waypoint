@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/core"
@@ -57,12 +56,21 @@ func (r *Runner) executeAuthOp(
 
 		L.Debug("auth result", "result", result.CheckResult, "error", result.CheckError)
 
-		if op.Auth.CheckOnly {
+		// If we authed successfully or we're only checking, we're done.
+		if result.CheckResult || op.Auth.CheckOnly {
 			continue
 		}
 
-		// TODO
-		return nil, status.Errorf(codes.Unimplemented, "CheckOnly is required")
+		// Attempt to authenticate
+		L.Trace("attempting auth")
+		authResult, err := app.Auth(ctx, c)
+		if err != nil {
+			st, _ := status.FromError(err)
+			result.AuthError = st.Proto()
+		}
+		if authResult != nil {
+			result.AuthCompleted = authResult.Authenticated
+		}
 	}
 
 	return &pb.Job_Result{
