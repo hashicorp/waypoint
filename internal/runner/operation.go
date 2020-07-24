@@ -66,6 +66,19 @@ func (r *Runner) executeJob(
 	}
 	defer project.Close()
 
+	// If our job targets a specific application, we do validation that
+	// it exists up front.
+	if v := job.Application.Application; v != "" {
+		app, err := project.App(v)
+		if err != nil {
+			return nil, err
+		}
+		if app == nil {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"requested app %q does not exist", v)
+		}
+	}
+
 	// Execute the operation
 	log.Info("executing operation", "type", fmt.Sprintf("%T", job.Operation))
 	switch job.Operation.(type) {
