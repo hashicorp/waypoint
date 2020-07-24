@@ -328,9 +328,30 @@ func (c *InitCommand) validateAuth() bool {
 					return false
 				}
 				result := resultRaw.Results[0]
-				var _ = result
 
-				// TODO(mitchellh): we should recheck auth
+				// Check the results
+				if !result.AuthCompleted {
+					// If we didn't authenticate at all, we still have failures.
+					failures = true
+				} else if !result.CheckResult {
+					// If auth failed, then we still have failures but we also
+					// should tell the user.
+					failures = true
+
+					c.ui.Output(
+						strings.TrimSpace(initStepStrings[initStepAuth].Other["auth-failure"]),
+						status.FromProto(result.CheckError).Message(),
+						terminal.WithStyle(terminal.WarningBoldStyle),
+					)
+				} else {
+					sg = c.ui.StepGroup()
+					s = sg.Add("%s %q authenticated successfully.",
+						strings.Title(strings.ToLower(comp.Type.String())),
+						comp.Name,
+					)
+					s.Done()
+					sg.Wait()
+				}
 
 				if i+1 < len(requiresAuth) {
 					auth, err := c.inputContinue(terminal.WarningBoldStyle)
@@ -354,7 +375,8 @@ func (c *InitCommand) validateAuth() bool {
 		s.Update("Authentication requirements appear satisfied.")
 		s.Status(terminal.StatusOK)
 	} else {
-		s.Update("Authentication checks complete.")
+		s.Update("Authentication checks had failures.")
+		s.Status(terminal.StatusError)
 	}
 
 	// If we aren't interactive with failures, then we want to report as
@@ -366,7 +388,7 @@ func (c *InitCommand) validateAuth() bool {
 	}
 
 	s.Done()
-	return true
+	return !failures
 }
 
 func (c *InitCommand) stepError(s terminal.Step, step initStepType, err error) {
@@ -506,6 +528,10 @@ Waypoint will guide you through the authentication process one plugin
 at a time. Plugins may interactively attempt to authenticate or they may
 just output help text to guide you there. You can use Ctrl-C at any point
 to cancel and run "waypoint init" again later.
+			`,
+
+			"auth-failure": `
+Authentication failed with error: %s
 			`,
 		},
 	},
