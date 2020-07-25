@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
 )
@@ -58,6 +59,10 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 		ArtifactId:  op.Push.Id,
 		State:       pb.Deployment_DEPLOY,
 	}, nil
+}
+
+func (op *deployOperation) Hooks(app *App) map[string][]*config.Hook {
+	return app.components[app.Platform].Hooks
 }
 
 func (op *deployOperation) Upsert(

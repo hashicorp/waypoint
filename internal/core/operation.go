@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
 
+	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -35,6 +36,9 @@ type operation interface {
 	// for the status and values respectively.
 	StatusPtr(proto.Message) **pb.Status
 	ValuePtr(proto.Message) **any.Any
+
+	// Hooks are the hooks to execute as part of this operation keyed by "when"
+	Hooks(*App) map[string][]*config.Hook
 }
 
 func (a *App) doOperation(
@@ -42,6 +46,9 @@ func (a *App) doOperation(
 	log hclog.Logger,
 	op operation,
 ) (interface{}, proto.Message, error) {
+	// Get our hooks
+	hooks := op.Hooks(a)
+
 	// Init the metadata
 	msg, err := op.Init(a)
 	if err != nil {
@@ -81,19 +88,44 @@ func (a *App) doOperation(
 		valuePtr = &value
 	}
 
-	// Run the function
-	log.Debug("running local operation")
-	result, doErr := op.Do(ctx, log, a, msg)
-	if doErr == nil {
-		// No error, our state is success
-		server.StatusSetSuccess(*statusPtr)
+	var doErr error
 
-		// Set our final value if we have a value pointer
-		*valuePtr = nil
-		if result != nil {
-			*valuePtr, err = component.ProtoAny(result)
-			if err != nil {
+	// If we have before hooks, run those
+	for i, h := range hooks["before"] {
+		log.Debug("executing hook", "when", "before", "idx", i)
+		if err := a.execHook(ctx, log, h); err != nil {
+			doErr = err
+			log.Warn("error running before hook", "err", err)
+		}
+	}
+
+	// Run the actual implementation
+	var result interface{}
+	if doErr == nil {
+		log.Debug("running local operation")
+		result, doErr = op.Do(ctx, log, a, msg)
+		if doErr == nil {
+			// No error, our state is success
+			server.StatusSetSuccess(*statusPtr)
+
+			// Set our final value if we have a value pointer
+			*valuePtr = nil
+			if result != nil {
+				*valuePtr, err = component.ProtoAny(result)
+				if err != nil {
+					doErr = err
+				}
+			}
+		}
+	}
+
+	// Run after hooks
+	if doErr == nil {
+		for i, h := range hooks["after"] {
+			log.Debug("executing hook", "when", "after", "idx", i)
+			if err := a.execHook(ctx, log, h); err != nil {
 				doErr = err
+				log.Warn("error running after hook", "err", err)
 			}
 		}
 	}
