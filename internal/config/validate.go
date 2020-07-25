@@ -95,7 +95,7 @@ func (h *Hook) validate(key string) error {
 	}
 
 	switch h.OnFailure {
-	case "continue", "fail":
+	case "", "continue", "fail":
 	default:
 		result = multierror.Append(result, fmt.Errorf("on_failure must be 'continue' or 'fail'"))
 	}
