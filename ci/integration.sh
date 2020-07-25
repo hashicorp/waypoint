@@ -16,6 +16,8 @@ export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 cd ci/sinatra || exit 1
 
+"$WP" init
+
 "$WP" build
 
 "$WP" push
