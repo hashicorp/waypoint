@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/adrg/xdg"
@@ -54,15 +55,11 @@ type baseCommand struct {
 
 	// refProject and refWorkspace the references for this CLI invocation.
 	refProject   *pb.Ref_Project
+	refApp       *pb.Ref_Application
 	refWorkspace *pb.Ref_Workspace
 
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
-
-	// app is the targeted application. This is only set if you use the
-	// WithSingleApp option. You should not access this directly
-	// though and use the DoApp function.
-	app string
 
 	// flagLabels are set via -label if flagSetOperation is set.
 	flagLabels map[string]string
@@ -133,10 +130,39 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// Parse the configuration
 	c.cfg = &config.Config{}
 
+	// If we have an app target requirement, we have to get it from the args
+	// or the config.
+	if baseCfg.AppTargetRequired {
+		// If we have args, attempt to extract there first.
+		if len(c.args) > 0 {
+			match := reAppTarget.FindStringSubmatch(c.args[0])
+			if match != nil {
+				// Set our refs
+				c.refProject = &pb.Ref_Project{Project: match[1]}
+				c.refApp = &pb.Ref_Application{
+					Project:     match[1],
+					Application: match[2],
+				}
+
+				// Shift the args
+				c.args = c.args[1:]
+
+				// Explicitly set remote
+				c.flagRemote = true
+			}
+		}
+
+		// If we didn't get our ref, then we need to load config
+		if c.refApp == nil {
+			baseCfg.Config = true
+		}
+	}
+
 	// If we're loading the config, then get it.
 	if baseCfg.Config {
 		cfg, err := c.initConfig(baseCfg.ConfigOptional)
 		if err != nil {
+			c.logError(c.Log, "failed to load config", err)
 			return err
 		}
 
@@ -156,7 +182,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	}
 
 	// Validate remote vs. local operations.
-	if c.flagRemote {
+	if c.flagRemote && c.refApp == nil {
 		if c.cfg == nil || c.cfg.Runner == nil || !c.cfg.Runner.Enabled {
 			err := errors.New(
 				"The `-remote` flag was specified but remote operations are not supported\n" +
@@ -172,15 +198,17 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// If this is a single app mode then make sure that we only have
 	// one app or that we have an app target.
 	if baseCfg.AppTargetRequired {
-		// TODO(mitchellh): when we support app targeting we can have more
-		// than one as long as its targeted.
-		if len(c.cfg.Apps) != 1 {
-			c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
-			return ErrSentinel
-		}
+		if c.refApp == nil {
+			if len(c.cfg.Apps) != 1 {
+				c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
+				return ErrSentinel
+			}
 
-		// Set our targeted app
-		c.app = c.cfg.Apps[0].Name
+			c.refApp = &pb.Ref_Application{
+				Project:     c.cfg.Project,
+				Application: c.cfg.Apps[0].Name,
+			}
+		}
 	}
 
 	return nil
@@ -198,18 +226,19 @@ func (c *baseCommand) Init(opts ...Option) error {
 // the callback closure properties to cancel the passed in context. This
 // will stop any remaining callbacks and exit early.
 func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *clientpkg.App) error) error {
-	var apps []*clientpkg.App
-	for _, appCfg := range c.cfg.Apps {
-		// If we're doing single targeting and this app isn't what we
-		// want then continue. In practice we don't need to loop at all
-		// for single targeting but it simplifies the implementation and
-		// the performance here doesn't matter currently.
-		if c.app != "" && appCfg.Name != c.app {
-			continue
+	var appTargets []string
+	if c.refApp != nil {
+		appTargets = []string{c.refApp.Application}
+	} else if c.cfg != nil {
+		for _, appCfg := range c.cfg.Apps {
+			appTargets = append(appTargets, appCfg.Name)
 		}
+	}
 
-		app := c.project.App(appCfg.Name)
-		c.Log.Debug("will operate on app", "name", appCfg.Name)
+	var apps []*clientpkg.App
+	for _, appName := range appTargets {
+		app := c.project.App(appName)
+		c.Log.Debug("will operate on app", "name", appName)
 		apps = append(apps, app)
 	}
 
@@ -294,4 +323,6 @@ var (
 This command requires a single targeted app. You have multiple apps defined
 so you can specify the app to target using the "-app" flag.
 `)
+
+	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
 )

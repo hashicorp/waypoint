@@ -46,9 +46,9 @@ func TestProject(t testing.T, opts ...Option) *Project {
 
 // TestApp returns an app reference that can be used for testing.
 func TestApp(t testing.T, c *Project) string {
-	// This function doesn't do much right now, but I've kept it as a
-	// function in case in the future we need to create the app in the
-	// server or something.
+	// Initialize our app
+	singleprocess.TestApp(t, c.Client(), c.App("test_a").Ref())
+
 	return "test_a"
 }
 

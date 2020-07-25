@@ -170,6 +170,26 @@ func TestRunner(t testing.T, client pb.WaypointClient, r *pb.Runner) (string, fu
 	return id, func() { stream.CloseSend() }
 }
 
+// TestApp creates the app in the DB.
+func TestApp(t testing.T, client pb.WaypointClient, ref *pb.Ref_Application) {
+	{
+		_, err := client.UpsertProject(context.Background(), &pb.UpsertProjectRequest{
+			Project: &pb.Project{
+				Name: ref.Project,
+			},
+		})
+		require.NoError(t, err)
+	}
+
+	{
+		_, err := client.UpsertApplication(context.Background(), &pb.UpsertApplicationRequest{
+			Project: &pb.Ref_Project{Project: ref.Project},
+			Name:    ref.Application,
+		})
+		require.NoError(t, err)
+	}
+}
+
 func testDB(t testing.T) *bolt.DB {
 	t.Helper()
 

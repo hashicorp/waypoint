@@ -24,6 +24,9 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 	require.NoError(err)
 	client := server.TestServer(t, impl)
 
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
 	// Create a job
 	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
 	require.NoError(err)
@@ -111,6 +114,9 @@ func TestServiceRunnerJobStream_errorBeforeAck(t *testing.T) {
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(err)
 	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
 
 	// Create a job
 	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
