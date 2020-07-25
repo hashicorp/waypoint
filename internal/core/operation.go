@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
@@ -92,8 +93,7 @@ func (a *App) doOperation(
 
 	// If we have before hooks, run those
 	for i, h := range hooks["before"] {
-		log.Debug("executing hook", "when", "before", "idx", i)
-		if err := a.execHook(ctx, log, h); err != nil {
+		if err := a.execHook(ctx, log.Named(fmt.Sprintf("hook-before-%d", i)), h); err != nil {
 			doErr = err
 			log.Warn("error running before hook", "err", err)
 		}
@@ -122,8 +122,7 @@ func (a *App) doOperation(
 	// Run after hooks
 	if doErr == nil {
 		for i, h := range hooks["after"] {
-			log.Debug("executing hook", "when", "after", "idx", i)
-			if err := a.execHook(ctx, log, h); err != nil {
+			if err := a.execHook(ctx, log.Named(fmt.Sprintf("hook-after-%d", i)), h); err != nil {
 				doErr = err
 				log.Warn("error running after hook", "err", err)
 			}
