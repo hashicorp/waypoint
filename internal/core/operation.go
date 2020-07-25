@@ -94,7 +94,7 @@ func (a *App) doOperation(
 	// If we have before hooks, run those
 	for i, h := range hooks["before"] {
 		if err := a.execHook(ctx, log.Named(fmt.Sprintf("hook-before-%d", i)), h); err != nil {
-			doErr = err
+			doErr = fmt.Errorf("Error running before hook index %d: %w", i, err)
 			log.Warn("error running before hook", "err", err)
 		}
 	}
@@ -123,7 +123,7 @@ func (a *App) doOperation(
 	if doErr == nil {
 		for i, h := range hooks["after"] {
 			if err := a.execHook(ctx, log.Named(fmt.Sprintf("hook-after-%d", i)), h); err != nil {
-				doErr = err
+				doErr = fmt.Errorf("Error running after hook index %d: %w", i, err)
 				log.Warn("error running after hook", "err", err)
 			}
 		}
