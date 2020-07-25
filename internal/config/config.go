@@ -62,11 +62,19 @@ type Runner struct {
 	Enabled bool `hcl:"enabled,attr"`
 }
 
+// Hook is the configuration for a hook that runs at specified times.
+type Hook struct {
+	When      string   `hcl:",label"`
+	Command   []string `hcl:"command,attr"`
+	OnFailure string   `hcl:"on_failure,optional"`
+}
+
 // Build are the build settings.
 type Build struct {
 	Type string   `hcl:",label"`
 	Body hcl.Body `hcl:",remain"`
 
+	Hooks    []*Hook           `hcl:"hook,block"`
 	Labels   map[string]string `hcl:"labels,optional"`
 	Registry *Operation        `hcl:"registry,block"`
 }
@@ -80,6 +88,7 @@ func (b *Build) Operation() *Operation {
 		Type:   b.Type,
 		Body:   b.Body,
 		Labels: b.Labels,
+		Hooks:  b.Hooks,
 	}
 }
 

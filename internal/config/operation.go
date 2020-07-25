@@ -11,4 +11,5 @@ type Operation struct {
 	Type   string            `hcl:",label"`
 	Body   hcl.Body          `hcl:",remain"`
 	Labels map[string]string `hcl:"labels,optional"`
+	Hooks  []*Hook           `hcl:"hook,block"`
 }

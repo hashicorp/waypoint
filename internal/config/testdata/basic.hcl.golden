@@ -61,13 +61,16 @@
      },
      hiddenAttrs: (map[string]struct {}) {
      },
-     hiddenBlocks: (map[string]struct {}) (len=1) {
+     hiddenBlocks: (map[string]struct {}) (len=2) {
+      (string) (len=4) "hook": (struct {}) {
+      },
       (string) (len=8) "registry": (struct {}) {
       }
      },
      SrcRange: (hcl.Range) testdata/basic.hcl:4,18-8,6,
      EndRange: (hcl.Range) testdata/basic.hcl:8,6-6
     }),
+    Hooks: ([]*config.Hook) <nil>,
     Labels: (map[string]string) <nil>,
     Registry: (*config.Operation)({
      Type: (string) (len=6) "docker",
@@ -102,12 +105,15 @@
       },
       hiddenAttrs: (map[string]struct {}) {
       },
-      hiddenBlocks: (map[string]struct {}) {
+      hiddenBlocks: (map[string]struct {}) (len=1) {
+       (string) (len=4) "hook": (struct {}) {
+       }
       },
       SrcRange: (hcl.Range) testdata/basic.hcl:5,27-7,10,
       EndRange: (hcl.Range) testdata/basic.hcl:7,10-10
      }),
-     Labels: (map[string]string) <nil>
+     Labels: (map[string]string) <nil>,
+     Hooks: ([]*config.Hook) <nil>
     })
    }),
    Platform: (*config.Operation)({
@@ -119,12 +125,15 @@
      },
      hiddenAttrs: (map[string]struct {}) {
      },
-     hiddenBlocks: (map[string]struct {}) {
+     hiddenBlocks: (map[string]struct {}) (len=1) {
+      (string) (len=4) "hook": (struct {}) {
+      }
      },
      SrcRange: (hcl.Range) testdata/basic.hcl:10,31-33,
      EndRange: (hcl.Range) testdata/basic.hcl:10,33-33
     }),
-    Labels: (map[string]string) <nil>
+    Labels: (map[string]string) <nil>,
+    Hooks: ([]*config.Hook) <nil>
    }),
    Release: (*config.Operation)(<nil>)
   })
