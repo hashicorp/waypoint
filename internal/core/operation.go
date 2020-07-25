@@ -96,6 +96,11 @@ func (a *App) doOperation(
 		if err := a.execHook(ctx, log.Named(fmt.Sprintf("hook-before-%d", i)), h); err != nil {
 			doErr = fmt.Errorf("Error running before hook index %d: %w", i, err)
 			log.Warn("error running before hook", "err", err)
+
+			if h.ContinueOnFailure() {
+				log.Info("hook configured to continueon failure, ignoring error")
+				doErr = nil
+			}
 		}
 	}
 
@@ -125,6 +130,11 @@ func (a *App) doOperation(
 			if err := a.execHook(ctx, log.Named(fmt.Sprintf("hook-after-%d", i)), h); err != nil {
 				doErr = fmt.Errorf("Error running after hook index %d: %w", i, err)
 				log.Warn("error running after hook", "err", err)
+
+				if h.ContinueOnFailure() {
+					log.Info("hook configured to continueon failure, ignoring error")
+					doErr = nil
+				}
 			}
 		}
 	}

@@ -69,6 +69,10 @@ type Hook struct {
 	OnFailure string   `hcl:"on_failure,optional"`
 }
 
+func (h *Hook) ContinueOnFailure() bool {
+	return h.OnFailure == "continue"
+}
+
 // Build are the build settings.
 type Build struct {
 	Type string   `hcl:",label"`

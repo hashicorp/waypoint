@@ -9,9 +9,8 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 )
 
-// execHook executes the given hook. This will return any errors. If
-// "on_failure" is set to "continue" then if an error occurs it will be logged
-// but the returned error will be nil.
+// execHook executes the given hook. This will return any errors. This ignores
+// on_failure configurations so this must be processed external.
 func (a *App) execHook(ctx context.Context, log hclog.Logger, h *config.Hook) error {
 	log.Debug("executing hook", "command", h.Command)
 
