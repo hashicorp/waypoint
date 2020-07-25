@@ -20,6 +20,9 @@ func TestRunnerAccept(t *testing.T) {
 	runner := TestRunner(t, WithClient(client))
 	require.NoError(runner.Start())
 
+	// Initialize our app
+	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
 	// Queue a job
 	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
 		Job: serverptypes.TestJobNew(t, nil),
