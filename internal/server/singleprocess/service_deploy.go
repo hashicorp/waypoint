@@ -2,7 +2,9 @@ package singleprocess
 
 import (
 	"context"
+	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -32,6 +34,29 @@ func (s *service) UpsertDeployment(
 
 	if err := s.state.DeploymentPut(!insert, result); err != nil {
 		return nil, err
+	}
+
+	if s.urlClient != nil {
+		// Our hostname target. We need this to automatically create a hostname.
+		target := &pb.Hostname_Target{
+			Target: &pb.Hostname_Target_Application{
+				Application: &pb.Hostname_TargetApp{
+					Application: result.Application,
+					Workspace:   result.Workspace,
+				},
+			},
+		}
+
+		// Create a context that will timeout relatively quickly
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		// Create the hostname. We ignore errors.
+		_, err := s.createHostnameIfNotExist(ctx, target)
+		if err != nil {
+			log := hclog.FromContext(ctx)
+			log.Info("error creating default hostname", "err", err)
+		}
 	}
 
 	return &pb.UpsertDeploymentResponse{Deployment: result}, nil

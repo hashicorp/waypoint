@@ -165,3 +165,29 @@ func (s *service) hostnameLabelSetToMap(labels *wphznpb.LabelSet) map[string]str
 
 	return labelsMap
 }
+
+func (s *service) createHostnameIfNotExist(
+	ctx context.Context,
+	t *pb.Hostname_Target,
+) (*pb.Hostname, error) {
+	// First check if we have a matching hostname
+	resp, err := s.ListHostnames(ctx, &pb.ListHostnamesRequest{Target: t})
+	if err != nil {
+		return nil, err
+	}
+
+	// If we have any matches, just return the first.
+	if len(resp.Hostnames) > 0 {
+		return resp.Hostnames[0], nil
+	}
+
+	// Create it
+	createResp, err := s.CreateHostname(ctx, &pb.CreateHostnameRequest{
+		Target: t,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return createResp.Hostname, nil
+}
