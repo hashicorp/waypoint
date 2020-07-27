@@ -51,29 +51,59 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		// If we're not releasing then we're done
-		if !c.flagRelease {
-			return nil
-		}
-
-		// We're releasing, do that too.
-		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
-		releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
-			TrafficSplit: &pb.Release_Split{
-				Targets: []*pb.Release_SplitTarget{
-					&pb.Release_SplitTarget{
-						DeploymentId: result.Deployment.Id,
-						Percent:      100,
+		// Try to get the hostname
+		var hostname *pb.Hostname
+		hostnamesResp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{
+			Target: &pb.Hostname_Target{
+				Target: &pb.Hostname_Target_Application{
+					Application: &pb.Hostname_TargetApp{
+						Application: result.Deployment.Application,
+						Workspace:   result.Deployment.Workspace,
 					},
 				},
 			},
 		})
-		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
-			return ErrSentinel
+		if err == nil && len(hostnamesResp.Hostnames) > 0 {
+			hostname = hostnamesResp.Hostnames[0]
 		}
 
-		app.UI.Output("\nURL: %s", releaseResult.Release.Url, terminal.WithSuccessStyle())
+		// Release if we're releasing
+		var releaseUrl string
+		if c.flagRelease {
+			// We're releasing, do that too.
+			app.UI.Output("Releasing...", terminal.WithHeaderStyle())
+			releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
+				TrafficSplit: &pb.Release_Split{
+					Targets: []*pb.Release_SplitTarget{
+						&pb.Release_SplitTarget{
+							DeploymentId: result.Deployment.Id,
+							Percent:      100,
+						},
+					},
+				},
+			})
+			if err != nil {
+				app.UI.Output(err.Error(), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
+
+			releaseUrl = releaseResult.Release.Url
+		}
+
+		// Output
+		app.UI.Output("")
+		switch {
+		case releaseUrl != "":
+			app.UI.Output("URL: %s", releaseUrl, terminal.WithSuccessStyle())
+
+		case hostname != nil:
+			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			app.UI.Output("URL: %s", hostname.Fqdn, terminal.WithSuccessStyle())
+
+		default:
+			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
+		}
+
 		return nil
 	})
 
@@ -116,3 +146,15 @@ Usage: waypoint deployment deploy [options]
 
 	return strings.TrimSpace(helpText)
 }
+
+const (
+	deployURLService = `
+The deploy was successful! A Waypoint deployment URL is shown below. This
+can be used internally to check your deployment and is not meant for external
+traffic. You can manage this hostname using "waypoint hostname."
+`
+
+	deployNoURL = `
+The deploy was successful!
+`
+)
