@@ -89,6 +89,47 @@ func TestServiceHostname(t *testing.T) {
 			require.Len(resp.Hostnames, 1)
 		}
 
+		// Should be able to filter and have it
+		{
+			resp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{
+				Target: &pb.Hostname_Target{
+					Target: &pb.Hostname_Target_Application{
+						Application: &pb.Hostname_TargetApp{
+							Application: &pb.Ref_Application{
+								Application: "web",
+								Project:     "test",
+							},
+
+							Workspace: &pb.Ref_Workspace{
+								Workspace: "default",
+							},
+						},
+					},
+				},
+			})
+			require.NoError(err)
+			require.Len(resp.Hostnames, 1)
+
+			resp, err = client.ListHostnames(ctx, &pb.ListHostnamesRequest{
+				Target: &pb.Hostname_Target{
+					Target: &pb.Hostname_Target_Application{
+						Application: &pb.Hostname_TargetApp{
+							Application: &pb.Ref_Application{
+								Application: "web2",
+								Project:     "test",
+							},
+
+							Workspace: &pb.Ref_Workspace{
+								Workspace: "default",
+							},
+						},
+					},
+				},
+			})
+			require.NoError(err)
+			require.Len(resp.Hostnames, 0)
+		}
+
 		// Can delete
 		{
 			_, err := client.DeleteHostname(ctx, &pb.DeleteHostnameRequest{

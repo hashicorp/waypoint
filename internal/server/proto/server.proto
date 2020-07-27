@@ -848,7 +848,9 @@ message CreateHostnameResponse {
 }
 
 message ListHostnamesRequest {
-  // One day we can support filters and such...
+  // Target if set will only return hostnames matching this target.
+  // If unset, all hostnames registered for the account will be returned.
+  Hostname.Target target = 1;
 }
 
 message ListHostnamesResponse {
