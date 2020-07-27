@@ -24,14 +24,6 @@ export default class Project extends Route {
       ?.getApplicationsList()
       .map((p) => p.toObject());
 
-    // todo(pearkes): actually list applications once that api is ready
-    // let resp = await this.api.client.listApplications(new Empty(), {})
-    // let apps = resp.getProjectsList().map(p => p.toObject());
-    // var app = new Ref.Application();
-    // app.setProject(proj.getProject());
-    // app.setApplication('wp-gcr-deno-test');
-    // let apps = [app.toObject()];
-
     return {
       ref: proj as Ref.Project,
       project: proj.toObject(),
