@@ -57,6 +57,22 @@ func (c *UpCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
+		// Try to get the hostname
+		var hostname *pb.Hostname
+		hostnamesResp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{
+			Target: &pb.Hostname_Target{
+				Target: &pb.Hostname_Target_Application{
+					Application: &pb.Hostname_TargetApp{
+						Application: result.Deployment.Application,
+						Workspace:   result.Deployment.Workspace,
+					},
+				},
+			},
+		})
+		if err == nil && len(hostnamesResp.Hostnames) > 0 {
+			hostname = hostnamesResp.Hostnames[0]
+		}
+
 		cfg, ok := c.cfg.AppConfig(app.Ref().Application)
 		if !ok {
 			app.UI.Output(
@@ -66,47 +82,41 @@ func (c *UpCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		if cfg.Release == nil {
-			app.UI.Output("App Ready!", terminal.WithHeaderStyle())
-			app.UI.Output("The application did not provide a release step, so here is the deployment info:")
-
-			app.UI.NamedValues([]terminal.NamedValue{
-				{
-					Name:  "Id",
-					Value: result.Deployment.Id,
-				},
-			}, terminal.WithInfoStyle())
-
-			return nil
-		}
-
-		// We're releasing, do that too.
-		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
-
-		releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
-			TrafficSplit: &pb.Release_Split{
-				Targets: []*pb.Release_SplitTarget{
-					{
-						DeploymentId: result.Deployment.Id,
-						Percent:      100,
+		var releaseUrl string
+		if cfg.Release != nil {
+			// We're releasing, do that too.
+			app.UI.Output("Releasing...", terminal.WithHeaderStyle())
+			releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
+				TrafficSplit: &pb.Release_Split{
+					Targets: []*pb.Release_SplitTarget{
+						{
+							DeploymentId: result.Deployment.Id,
+							Percent:      100,
+						},
 					},
 				},
-			},
-		})
-		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
-			return ErrSentinel
+			})
+			if err != nil {
+				app.UI.Output(err.Error(), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
+
+			releaseUrl = releaseResult.Release.Url
 		}
 
-		app.UI.Output("App Ready!", terminal.WithHeaderStyle())
-		app.UI.Output("The application can be accessed using the following information:")
+		// Output
+		app.UI.Output("")
+		switch {
+		case releaseUrl != "":
+			app.UI.Output("URL: %s", releaseUrl, terminal.WithSuccessStyle())
 
-		app.UI.NamedValues([]terminal.NamedValue{
-			{
-				Name:  "URL",
-				Value: releaseResult.Release.Url,
-			},
-		}, terminal.WithInfoStyle())
+		case hostname != nil:
+			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			app.UI.Output("URL: %s", hostname.Fqdn, terminal.WithSuccessStyle())
+
+		default:
+			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
+		}
 
 		return nil
 	})
