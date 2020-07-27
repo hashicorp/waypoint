@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
+	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
 )
@@ -32,6 +33,10 @@ type deployDestroyOperation struct {
 
 func (op *deployDestroyOperation) Init(app *App) (proto.Message, error) {
 	return op.Deployment, nil
+}
+
+func (op *deployDestroyOperation) Hooks(app *App) map[string][]*config.Hook {
+	return nil
 }
 
 func (op *deployDestroyOperation) Upsert(

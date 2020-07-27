@@ -60,6 +60,9 @@ type appComponent struct {
 	// Labels are the set of labels that were set for this component.
 	// This is already merged with parent labels.
 	Labels map[string]string
+
+	// Hooks are the hooks associated with this component keyed by their When value
+	Hooks map[string][]*config.Hook
 }
 
 // newApp creates an App for the given project and configuration. This will
@@ -323,6 +326,12 @@ func (a *App) initComponent(
 	// Assign our value now that we won't error anymore
 	targetV.Set(rawV)
 
+	// Setup our hooks
+	hooks := map[string][]*config.Hook{}
+	for _, h := range cfg.Hooks {
+		hooks[h.When] = append(hooks[h.When], h)
+	}
+
 	// Store component metadata
 	a.components[raw] = &appComponent{
 		Info: &pb.Component{
@@ -331,6 +340,7 @@ func (a *App) initComponent(
 		},
 
 		Dir:    cdir,
+		Hooks:  hooks,
 		Labels: labels,
 	}
 

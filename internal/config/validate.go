@@ -72,6 +72,34 @@ func (c *Operation) validate(key string) error {
 		result = multierror.Append(result, errs...)
 	}
 
+	for i, h := range c.Hooks {
+		if err := h.validate(fmt.Sprintf("hook[%d]", i)); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	return multierror.Prefix(result, fmt.Sprintf("%s:", key))
+}
+
+func (h *Hook) validate(key string) error {
+	var result error
+
+	switch h.When {
+	case "before", "after":
+	default:
+		result = multierror.Append(result, fmt.Errorf("label must be 'before' or 'after'"))
+	}
+
+	if len(h.Command) == 0 {
+		result = multierror.Append(result, fmt.Errorf("command must be non-empty"))
+	}
+
+	switch h.OnFailure {
+	case "", "continue", "fail":
+	default:
+		result = multierror.Append(result, fmt.Errorf("on_failure must be 'continue' or 'fail'"))
+	}
+
 	return multierror.Prefix(result, fmt.Sprintf("%s:", key))
 }
 
@@ -80,11 +108,7 @@ func (b *Build) validate(key string) error {
 		return nil
 	}
 
-	return (&Operation{
-		Type:   b.Type,
-		Body:   b.Body,
-		Labels: b.Labels,
-	}).validate(key)
+	return b.Operation().validate(key)
 }
 
 // ValidateLabels validates a set of labels.

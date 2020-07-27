@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
 
+	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
 )
@@ -89,6 +90,10 @@ func (op *buildOperation) Init(app *App) (proto.Message, error) {
 		Component:   app.components[app.Builder].Info,
 		Labels:      app.components[app.Builder].Labels,
 	}, nil
+}
+
+func (op *buildOperation) Hooks(app *App) map[string][]*config.Hook {
+	return app.components[app.Builder].Hooks
 }
 
 func (op *buildOperation) Upsert(
