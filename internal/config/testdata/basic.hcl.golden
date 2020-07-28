@@ -6,6 +6,7 @@
    Name: (string) (len=3) "web",
    Path: (string) "",
    Labels: (map[string]string) <nil>,
+   URL: (*config.AppURL)(<nil>),
    Build: (*config.Build)({
     Type: (string) (len=4) "pack",
     Body: (*hclsyntax.Body)({
