@@ -18,6 +18,7 @@ func (c *HostnameDeleteCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
+		WithNoConfig(),
 	); err != nil {
 		return 1
 	}
