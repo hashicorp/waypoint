@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"reflect"
 	"strings"
 
 	empty "github.com/golang/protobuf/ptypes/empty"
@@ -28,17 +29,9 @@ func (s *service) CreateHostname(
 	}
 
 	// Determine our labels based on our target
-	labels := &wphznpb.LabelSet{}
-	switch t := req.Target.Target.(type) {
-	case *pb.Hostname_Target_Application:
-		labels.Labels = append(labels.Labels,
-			&wphznpb.Label{Name: hznLabelApp, Value: t.Application.Application.Application},
-			&wphznpb.Label{Name: hznLabelProject, Value: t.Application.Application.Project},
-			&wphznpb.Label{Name: hznLabelWorkspace, Value: t.Application.Workspace.Workspace},
-		)
-
-	default:
-		return nil, status.Errorf(codes.FailedPrecondition, "invalid target type")
+	labels, err := s.hostnameLabelSet(req.Target)
+	if err != nil {
+		return nil, err
 	}
 
 	// Build our request
@@ -69,16 +62,12 @@ func (s *service) CreateHostname(
 	if idx := strings.Index(hostname, "."); idx != -1 {
 		hostname = hostname[:idx]
 	}
-	labelsMap := map[string]string{}
-	for _, label := range labels.Labels {
-		labelsMap[label.Name] = label.Value
-	}
 
 	return &pb.CreateHostnameResponse{
 		Hostname: &pb.Hostname{
 			Hostname:     hostname,
 			Fqdn:         resp.Fqdn,
-			TargetLabels: labelsMap,
+			TargetLabels: s.hostnameLabelSetToMap(labels),
 		},
 	}, nil
 }
@@ -92,6 +81,18 @@ func (s *service) ListHostnames(
 			"server doesn't have the URL service enabled")
 	}
 
+	// If we have a target given, we get the expected label set for that
+	// and build the map.
+	var targetMap map[string]string
+	if req.Target != nil {
+		labels, err := s.hostnameLabelSet(req.Target)
+		if err != nil {
+			return nil, err
+		}
+
+		targetMap = s.hostnameLabelSetToMap(labels)
+	}
+
 	resp, err := s.urlClient.ListHostnames(ctx, &wphznpb.ListHostnamesRequest{})
 	if err != nil {
 		return nil, err
@@ -99,9 +100,13 @@ func (s *service) ListHostnames(
 
 	result := make([]*pb.Hostname, 0, len(resp.Hostnames))
 	for _, item := range resp.Hostnames {
-		labelsMap := map[string]string{}
-		for _, label := range item.Labels.Labels {
-			labelsMap[label.Name] = label.Value
+		labelsMap := s.hostnameLabelSetToMap(item.Labels)
+
+		// If we have a target map, then we only include this result if
+		// the maps match exactly. In the future we may support subset
+		// matching but at this time we do not.
+		if targetMap != nil && !reflect.DeepEqual(labelsMap, targetMap) {
+			continue
 		}
 
 		result = append(result, &pb.Hostname{
@@ -131,4 +136,58 @@ func (s *service) DeleteHostname(
 	}
 
 	return &empty.Empty{}, nil
+}
+
+// hostnameLabelSet returns the label set for a given target.
+func (s *service) hostnameLabelSet(target *pb.Hostname_Target) (*wphznpb.LabelSet, error) {
+	labels := &wphznpb.LabelSet{}
+	switch t := target.Target.(type) {
+	case *pb.Hostname_Target_Application:
+		labels.Labels = append(labels.Labels,
+			&wphznpb.Label{Name: hznLabelApp, Value: t.Application.Application.Application},
+			&wphznpb.Label{Name: hznLabelProject, Value: t.Application.Application.Project},
+			&wphznpb.Label{Name: hznLabelWorkspace, Value: t.Application.Workspace.Workspace},
+		)
+
+	default:
+		return nil, status.Errorf(codes.FailedPrecondition, "invalid target type")
+	}
+
+	return labels, nil
+}
+
+// hostnameLabelSetToMap turns a label set into a map.
+func (s *service) hostnameLabelSetToMap(labels *wphznpb.LabelSet) map[string]string {
+	labelsMap := map[string]string{}
+	for _, label := range labels.Labels {
+		labelsMap[label.Name] = label.Value
+	}
+
+	return labelsMap
+}
+
+func (s *service) createHostnameIfNotExist(
+	ctx context.Context,
+	t *pb.Hostname_Target,
+) (*pb.Hostname, error) {
+	// First check if we have a matching hostname
+	resp, err := s.ListHostnames(ctx, &pb.ListHostnamesRequest{Target: t})
+	if err != nil {
+		return nil, err
+	}
+
+	// If we have any matches, just return the first.
+	if len(resp.Hostnames) > 0 {
+		return resp.Hostnames[0], nil
+	}
+
+	// Create it
+	createResp, err := s.CreateHostname(ctx, &pb.CreateHostnameRequest{
+		Target: t,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return createResp.Hostname, nil
 }

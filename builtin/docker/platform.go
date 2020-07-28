@@ -70,9 +70,10 @@ func (p *Platform) Deploy(
 ) (*Deployment, error) {
 	// We'll update the user in real time
 	sg := ui.StepGroup()
+	defer sg.Wait()
 
-	s1 := sg.Add("Checking for existing containers")
-	defer s1.Abort()
+	s := sg.Add("Checking for existing containers")
+	defer func() { s.Abort() }()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
@@ -102,11 +103,10 @@ func (p *Platform) Deploy(
 	}
 
 	if len(containers) > 0 {
-		s1.Update("Found an existing containers")
-		s1.Done()
+		s.Update("Found an existing containers")
+		s.Done()
 
-		s2 := sg.Add("Deleting existing container: " + containers[0].ID)
-		defer s2.Abort()
+		s = sg.Add("Deleting existing container: " + containers[0].ID)
 
 		err = cli.ContainerRemove(ctx, containers[0].ID, types.ContainerRemoveOptions{
 			Force: true,
@@ -115,13 +115,13 @@ func (p *Platform) Deploy(
 			return nil, err
 		}
 
-		s2.Done()
+		s.Done()
 	} else {
-		s1.Update("No existing containers detected")
+		s.Update("No existing containers detected")
+		s.Done()
 	}
 
-	s3 := sg.Add("Creating new container")
-	defer s3.Abort()
+	s = sg.Add("Creating new container")
 
 	port := "3000"
 
@@ -183,20 +183,17 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	s3.Update("Starting container")
+	s.Update("Starting container")
 	err = cli.ContainerStart(ctx, cr.ID, types.ContainerStartOptions{})
 	if err != nil {
 		return nil, err
 	}
+	s.Done()
 
-	s3.Done()
-
-	s4 := sg.Add("App deployed as container container: " + name)
-	s4.Done()
+	s = sg.Add("App deployed as container container: " + name)
+	s.Done()
 
 	result.Container = cr.ID
-
-	sg.Wait()
 
 	return &result, nil
 }
