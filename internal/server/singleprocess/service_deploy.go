@@ -36,7 +36,7 @@ func (s *service) UpsertDeployment(
 		return nil, err
 	}
 
-	if s.urlClient != nil {
+	if s.urlClient != nil && s.urlConfig.AutomaticAppHostname {
 		// Our hostname target. We need this to automatically create a hostname.
 		target := &pb.Hostname_Target{
 			Target: &pb.Hostname_Target_Application{

@@ -23,9 +23,10 @@ type Listeners struct {
 
 // URL is the configuration for the URL service.
 type URL struct {
-	Enabled        bool   `hcl:"enabled,optional"`
-	APIAddress     string `hcl:"api_address,optional"`
-	APIInsecure    bool   `hcl:"api_insecure,optional"`
-	APIToken       string `hcl:"api_token,optional"`
-	ControlAddress string `hcl:"control_address,optional"`
+	Enabled              bool   `hcl:"enabled,optional"`
+	APIAddress           string `hcl:"api_address,optional"`
+	APIInsecure          bool   `hcl:"api_insecure,optional"`
+	APIToken             string `hcl:"api_token,optional"`
+	ControlAddress       string `hcl:"control_address,optional"`
+	AutomaticAppHostname bool   `hcl:"automatic_app_hostname,optional"`
 }

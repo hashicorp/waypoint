@@ -304,6 +304,13 @@ func (c *ServerCommand) Flags() *flag.Sets {
 			Usage:   "Token for the Waypoint URL server control API.",
 			Default: "",
 		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "url-auto-app-hostname",
+			Target:  &c.config.URL.AutomaticAppHostname,
+			Usage:   "Whether apps automatically get a hostname on deploy.",
+			Default: true,
+		})
 	})
 }
 
