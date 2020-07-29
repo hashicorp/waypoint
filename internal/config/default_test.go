@@ -26,7 +26,7 @@ func TestConfigDefault(t *testing.T) {
 				Apps: []*App{
 					&App{
 						URL: &AppURL{
-							AutoHostname: boolPtr(true),
+							AutoHostname: nil,
 						},
 					},
 				},
@@ -46,7 +46,7 @@ func TestConfigDefault(t *testing.T) {
 				Apps: []*App{
 					&App{
 						URL: &AppURL{
-							AutoHostname: boolPtr(true),
+							AutoHostname: nil,
 						},
 					},
 				},

@@ -37,7 +37,7 @@ type App struct {
 
 // AppURL configures the App-specific URL settings.
 type AppURL struct {
-	AutoHostname *bool `hcl:"auto_hostname,optional" default:"true"`
+	AutoHostname *bool `hcl:"auto_hostname,optional"`
 }
 
 // Server configures the remote server.
