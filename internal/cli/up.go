@@ -121,8 +121,8 @@ func (c *UpCommand) Run(args []string) int {
 
 		case hostname != nil:
 			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
-			app.UI.Output("           URL: %s", hostname.Fqdn, terminal.WithSuccessStyle())
-			app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
+			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
 
 		default:
 			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
