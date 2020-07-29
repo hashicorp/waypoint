@@ -23,6 +23,7 @@ func (ceb *CEB) initURLService(ctx context.Context, port int, cfg *pb.Entrypoint
 	L.Info("url service enabled, configuring",
 		"addr", cfg.ControlAddr,
 		"service_port", port,
+		"labels", cfg.Labels,
 	)
 
 	g, err := agent.NewAgent(L.Named("agent"))

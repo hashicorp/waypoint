@@ -98,6 +98,11 @@ func (s *service) EntrypointConfig(
 				hznLabelApp+"="+deployment.Application.Application,
 				hznLabelProject+"="+deployment.Application.Project,
 				hznLabelWorkspace+"="+deployment.Workspace.Workspace,
+
+				// NOTE(mitchellh): we do a ToLower here since Horizon expects that
+				// but we're currently fixing this in Horizon itself so we can remove
+				// this eventually.
+				":deployment="+strings.ToLower(deployment.Id),
 			)
 
 			config.UrlService = &pb.EntrypointConfig_URLService{
