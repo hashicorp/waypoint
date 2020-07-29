@@ -23,6 +23,7 @@ message Args {
   // See component.JobInfo
   message JobInfo {
     bool local = 1;
+    string workspace = 2;
   }
 
   // See component.DeploymentConfig

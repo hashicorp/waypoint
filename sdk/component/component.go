@@ -129,6 +129,10 @@ type JobInfo struct {
 	// alongside the invocation. This can be used to determine if you can
 	// do things such as open browser windows, read user files, etc.
 	Local bool
+
+	// Workspace is the workspace that this job is executing in. This should
+	// be used by plugins to properly isolate resources from each other.
+	Workspace string
 }
 
 type Artifact interface{}

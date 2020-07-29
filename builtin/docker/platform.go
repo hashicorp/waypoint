@@ -64,6 +64,7 @@ func (p *Platform) Deploy(
 	ctx context.Context,
 	log hclog.Logger,
 	src *component.Source,
+	job *component.JobInfo,
 	img *Image,
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
@@ -95,6 +96,9 @@ func (p *Platform) Deploy(
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: "app=" + src.App,
+		}, filters.KeyValuePair{
+			Key:   "label",
+			Value: "workspace=" + job.Workspace,
 		}),
 	})
 
@@ -148,7 +152,7 @@ func (p *Platform) Deploy(
 	bindings := nat.PortMap{}
 	bindings[np] = []nat.PortBinding{
 		{
-			HostPort: port,
+			HostPort: "",
 		},
 	}
 
@@ -172,8 +176,9 @@ func (p *Platform) Deploy(
 	}
 
 	cfg.Labels = map[string]string{
-		labelId: result.Id,
-		"app":   src.App,
+		labelId:     result.Id,
+		"app":       src.App,
+		"workspace": job.Workspace,
 	}
 
 	name := src.App + "-" + id
