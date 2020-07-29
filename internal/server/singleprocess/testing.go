@@ -90,11 +90,12 @@ func TestWithURLService(t testing.T, out *hzntest.DevSetup) Option {
 		}
 
 		cfg.serverConfig.URL = &configpkg.URL{
-			Enabled:        true,
-			APIAddress:     wphzndata.Addr,
-			APIInsecure:    true,
-			APIToken:       wpaccountResp.Token,
-			ControlAddress: fmt.Sprintf("dev://%s", setup.HubAddr),
+			Enabled:              true,
+			APIAddress:           wphzndata.Addr,
+			APIInsecure:          true,
+			APIToken:             wpaccountResp.Token,
+			ControlAddress:       fmt.Sprintf("dev://%s", setup.HubAddr),
+			AutomaticAppHostname: true,
 		}
 
 		return nil

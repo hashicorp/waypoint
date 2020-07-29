@@ -1080,6 +1080,20 @@ message UpsertDeploymentRequest {
   // will be an insert. Otherwise, this will be an update and if the ID
   // isn't found, it will be an error.
   Deployment deployment = 1;
+
+  // auto_hostname will automatically create a hostname for this app if
+  // one doesn't already exist. This hostname maps to the entire app/workspace
+  // combo, not specifically to this deployment.
+  //
+  // This is a "tri-state" boolean because if this is unset then we use
+  // the configured defaults for the server configuration.
+  Tristate auto_hostname = 2;
+
+  enum Tristate {
+    UNSET = 0;
+    TRUE = 1;
+    FALSE = 2;
+  };
 }
 
 message UpsertDeploymentResponse {

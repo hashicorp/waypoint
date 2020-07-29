@@ -42,6 +42,9 @@ type deployOperation struct {
 	Push             *pb.PushedArtifact
 	DeploymentConfig *component.DeploymentConfig
 
+	// Set by init
+	autoHostname pb.UpsertDeploymentRequest_Tristate
+
 	// id is populated with the deployment id on Upsert
 	id string
 }
@@ -49,6 +52,16 @@ type deployOperation struct {
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
 	if app.components[app.Platform] == nil {
 		return nil, status.Error(codes.NotFound, "no deployment configured")
+	}
+
+	if v := app.config.URL; v != nil {
+		if v.AutoHostname != nil {
+			if *v.AutoHostname {
+				op.autoHostname = pb.UpsertDeploymentRequest_TRUE
+			} else {
+				op.autoHostname = pb.UpsertDeploymentRequest_FALSE
+			}
+		}
 	}
 
 	return &pb.Deployment{
@@ -70,8 +83,10 @@ func (op *deployOperation) Upsert(
 	client pb.WaypointClient,
 	msg proto.Message,
 ) (proto.Message, error) {
+
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: msg.(*pb.Deployment),
+		Deployment:   msg.(*pb.Deployment),
+		AutoHostname: op.autoHostname,
 	})
 	if err != nil {
 		return nil, err

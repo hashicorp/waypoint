@@ -28,10 +28,16 @@ type App struct {
 	Name   string            `hcl:",label"`
 	Path   string            `hcl:"path,optional"`
 	Labels map[string]string `hcl:"labels,optional"`
+	URL    *AppURL           `hcl:"url,block" default:"{}"`
 
 	Build    *Build     `hcl:"build,block"`
 	Platform *Operation `hcl:"deploy,block"`
 	Release  *Operation `hcl:"release,block"`
+}
+
+// AppURL configures the App-specific URL settings.
+type AppURL struct {
+	AutoHostname *bool `hcl:"auto_hostname,optional"`
 }
 
 // Server configures the remote server.
