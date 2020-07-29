@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
@@ -59,6 +60,7 @@ func (c *UpCommand) Run(args []string) int {
 
 		// Try to get the hostname
 		var hostname *pb.Hostname
+		var deployUrl string
 		hostnamesResp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{
 			Target: &pb.Hostname_Target{
 				Target: &pb.Hostname_Target_Application{
@@ -71,6 +73,13 @@ func (c *UpCommand) Run(args []string) int {
 		})
 		if err == nil && len(hostnamesResp.Hostnames) > 0 {
 			hostname = hostnamesResp.Hostnames[0]
+
+			deployUrl = fmt.Sprintf(
+				"%s--%s%s",
+				hostname.Hostname,
+				result.Deployment.Id,
+				strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
+			)
 		}
 
 		cfg, ok := c.cfg.AppConfig(app.Ref().Application)
@@ -112,7 +121,8 @@ func (c *UpCommand) Run(args []string) int {
 
 		case hostname != nil:
 			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
-			app.UI.Output("URL: %s", hostname.Fqdn, terminal.WithSuccessStyle())
+			app.UI.Output("           URL: %s", hostname.Fqdn, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 
 		default:
 			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
