@@ -115,6 +115,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// Set our labels
 	p.labels = opts.Config.Labels
 
+	// Set our final job info
+	p.jobInfo.Workspace = p.workspace
+
 	// Initialize all the applications and load all their components.
 	for _, appConfig := range opts.Config.Apps {
 		app, err := newApp(ctx, p, appConfig)
