@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -33,7 +34,7 @@ func (c *UpCommand) Run(args []string) int {
 
 		_, err := app.Build(ctx, &pb.Job_BuildOp{})
 		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
@@ -43,7 +44,7 @@ func (c *UpCommand) Run(args []string) int {
 			Workspace:   c.project.WorkspaceRef(),
 		})
 		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
@@ -54,7 +55,7 @@ func (c *UpCommand) Run(args []string) int {
 			Artifact: push,
 		})
 		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
@@ -106,7 +107,7 @@ func (c *UpCommand) Run(args []string) int {
 				},
 			})
 			if err != nil {
-				app.UI.Output(err.Error(), terminal.WithErrorStyle())
+				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 				return ErrSentinel
 			}
 
@@ -133,7 +134,7 @@ func (c *UpCommand) Run(args []string) int {
 
 	if err != nil {
 		if err != ErrSentinel {
-			c.ui.Output(err.Error(), terminal.WithErrorStyle())
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		}
 
 		return 1

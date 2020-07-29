@@ -10,6 +10,7 @@ import (
 	"github.com/posener/complete"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
@@ -47,7 +48,7 @@ func (c *BuildListCommand) Run(args []string) int {
 			Workspace:   wsRef,
 		})
 		if err != nil {
-			c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 		sort.Sort(serversort.BuildStartDesc(resp.Builds))

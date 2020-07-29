@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/cli/datagen"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -38,7 +39,7 @@ func (c *InitCommand) Run(args []string) int {
 
 	path, err := c.initConfigPath()
 	if err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -93,7 +94,7 @@ func (c *InitCommand) initNew() bool {
 	}
 
 	if err := ioutil.WriteFile(configpkg.Filename, data, 0644); err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return false
 	}
 
@@ -411,7 +412,7 @@ func (c *InitCommand) stepError(s terminal.Step, step initStepType, err error) {
 		c.ui.Output(strings.TrimSpace(v), terminal.WithErrorStyle())
 		c.ui.Output("")
 	}
-	c.ui.Output(err.Error(), terminal.WithErrorStyle())
+	c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 }
 
 func (c *InitCommand) inputContinue(style string) (bool, error) {

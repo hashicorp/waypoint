@@ -7,6 +7,7 @@ import (
 	"github.com/posener/complete"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -35,7 +36,7 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 			Workspace:   c.project.WorkspaceRef(),
 		})
 		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
@@ -44,7 +45,7 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 			Build: build,
 		})
 		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 

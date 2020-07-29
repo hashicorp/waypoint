@@ -8,6 +8,7 @@ import (
 	"github.com/posener/complete"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -38,7 +39,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			Workspace:   c.project.WorkspaceRef(),
 		})
 		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
@@ -48,7 +49,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			Artifact: push,
 		})
 		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 		deployment := result.Deployment
@@ -93,7 +94,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 				},
 			})
 			if err != nil {
-				app.UI.Output(err.Error(), terminal.WithErrorStyle())
+				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 				return ErrSentinel
 			}
 

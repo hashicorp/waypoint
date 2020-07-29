@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -33,7 +34,7 @@ func (c *GetInviteCommand) Run(args []string) int {
 		Duration: c.duration.String(),
 	})
 	if err != nil {
-		c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -104,7 +105,7 @@ func (c *ExchangeInviteCommand) Run(args []string) int {
 	})
 
 	if err != nil {
-		c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -164,7 +165,7 @@ func (c *GetTokenCommand) Run(args []string) int {
 
 	resp, err := client.GenerateLoginToken(c.Ctx, &empty.Empty{})
 	if err != nil {
-		c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 

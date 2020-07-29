@@ -6,6 +6,7 @@ import (
 
 	"github.com/posener/complete"
 
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -27,7 +28,7 @@ func (c *HostnameListCommand) Run(args []string) int {
 
 	resp, err := c.project.Client().ListHostnames(c.Ctx, &pb.ListHostnamesRequest{})
 	if err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 

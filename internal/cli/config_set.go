@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -66,7 +67,7 @@ func (c *ConfigSetCommand) Run(args []string) int {
 
 	_, err := client.SetConfig(c.Ctx, &req)
 	if err != nil {
-		c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 

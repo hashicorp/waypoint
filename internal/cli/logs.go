@@ -43,7 +43,7 @@ func (c *LogsCommand) Run(args []string) int {
 			},
 		})
 		if err != nil {
-			app.UI.Output(err.Error(), terminal.WithErrorStyle())
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 		if len(resp.Deployments) == 0 {
