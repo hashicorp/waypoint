@@ -98,6 +98,7 @@ func (s *service) EntrypointConfig(
 				hznLabelApp+"="+deployment.Application.Application,
 				hznLabelProject+"="+deployment.Application.Project,
 				hznLabelWorkspace+"="+deployment.Workspace.Workspace,
+				":deployment="+deployment.Id,
 			)
 
 			config.UrlService = &pb.EntrypointConfig_URLService{

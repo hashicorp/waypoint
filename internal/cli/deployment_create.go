@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/posener/complete"
@@ -50,21 +51,30 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			app.UI.Output(err.Error(), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
+		deployment := result.Deployment
 
 		// Try to get the hostname
 		var hostname *pb.Hostname
+		var deployUrl string
 		hostnamesResp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{
 			Target: &pb.Hostname_Target{
 				Target: &pb.Hostname_Target_Application{
 					Application: &pb.Hostname_TargetApp{
-						Application: result.Deployment.Application,
-						Workspace:   result.Deployment.Workspace,
+						Application: deployment.Application,
+						Workspace:   deployment.Workspace,
 					},
 				},
 			},
 		})
 		if err == nil && len(hostnamesResp.Hostnames) > 0 {
 			hostname = hostnamesResp.Hostnames[0]
+
+			deployUrl = fmt.Sprintf(
+				"%s--%s%s",
+				hostname.Hostname,
+				deployment.Id,
+				strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
+			)
 		}
 
 		// Release if we're releasing
@@ -76,7 +86,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 				TrafficSplit: &pb.Release_Split{
 					Targets: []*pb.Release_SplitTarget{
 						&pb.Release_SplitTarget{
-							DeploymentId: result.Deployment.Id,
+							DeploymentId: deployment.Id,
 							Percent:      100,
 						},
 					},
@@ -98,7 +108,8 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 		case hostname != nil:
 			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
-			app.UI.Output("URL: %s", hostname.Fqdn, terminal.WithSuccessStyle())
+			app.UI.Output("           URL: %s", hostname.Fqdn, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 
 		default:
 			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
