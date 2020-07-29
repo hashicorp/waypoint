@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // Option is used to configure Init on baseCommand.
@@ -57,6 +58,13 @@ func WithClient(v bool) Option {
 	}
 }
 
+// WithUI configures the CLI to use a specific UI implementation
+func WithUI(ui terminal.UI) Option {
+	return func(c *baseConfig) {
+		c.UI = ui
+	}
+}
+
 type baseConfig struct {
 	Args              []string
 	Flags             *flag.Sets
@@ -64,4 +72,5 @@ type baseConfig struct {
 	ConfigOptional    bool
 	Client            bool
 	AppTargetRequired bool
+	UI                terminal.UI
 }

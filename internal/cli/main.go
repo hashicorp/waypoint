@@ -67,10 +67,10 @@ func Main(args []string) int {
 	cli := &cli.CLI{
 		Name:                       args[0],
 		Args:                       args[1:],
-		Commands:                   commands(ctx, log, logOutput),
+		Commands:                   Commands(ctx, log, logOutput),
 		Autocomplete:               true,
 		AutocompleteNoDefaultFlags: true,
-		HelpFunc:                   groupedHelpFunc(cli.BasicHelpFunc(cliName)),
+		HelpFunc:                   GroupedHelpFunc(cli.BasicHelpFunc(cliName)),
 	}
 
 	// Run the CLI
@@ -83,11 +83,17 @@ func Main(args []string) int {
 }
 
 // commands returns the map of commands that can be used to initialize a CLI.
-func commands(ctx context.Context, log hclog.Logger, logOutput io.Writer) map[string]cli.CommandFactory {
+func Commands(
+	ctx context.Context,
+	log hclog.Logger,
+	logOutput io.Writer,
+	opts ...Option,
+) map[string]cli.CommandFactory {
 	baseCommand := &baseCommand{
-		Ctx:       ctx,
-		Log:       log,
-		LogOutput: logOutput,
+		Ctx:           ctx,
+		Log:           log,
+		LogOutput:     logOutput,
+		globalOptions: opts,
 	}
 
 	// aliases is a list of command aliases we have. The key is the CLI
@@ -344,7 +350,7 @@ func logger(args []string) ([]string, hclog.Logger, io.Writer, error) {
 	return outArgs, logger, output, nil
 }
 
-func groupedHelpFunc(f cli.HelpFunc) cli.HelpFunc {
+func GroupedHelpFunc(f cli.HelpFunc) cli.HelpFunc {
 	return func(commands map[string]cli.CommandFactory) string {
 		var b bytes.Buffer
 		tw := tabwriter.NewWriter(&b, 0, 2, 6, ' ', 0)

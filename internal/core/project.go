@@ -64,8 +64,6 @@ type Project struct {
 func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// Defaults
 	p := &Project{
-		UI: terminal.ConsoleUI(ctx),
-
 		logger:    hclog.L(),
 		workspace: "default",
 		apps:      make(map[string]*App),
@@ -82,6 +80,10 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	var opts options
 	for _, o := range os {
 		o(p, &opts)
+	}
+
+	if p.UI == nil {
+		p.UI = terminal.ConsoleUI(ctx)
 	}
 
 	// Defaults
