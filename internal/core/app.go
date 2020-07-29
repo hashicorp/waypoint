@@ -38,6 +38,7 @@ type App struct {
 	// to this app vs the project UI.
 	UI terminal.UI
 
+	config     *config.App
 	ref        *pb.Ref_Application
 	workspace  *pb.Ref_Workspace
 	client     pb.WaypointClient
@@ -82,6 +83,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 			Project:     p.name,
 		},
 		workspace: p.WorkspaceRef(),
+		config:    cfg,
 
 		// very important below that we allocate a new slice since we modify
 		mappers: append([]*argmapper.Func{}, p.mappers...),
