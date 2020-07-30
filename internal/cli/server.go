@@ -38,6 +38,7 @@ func (c *ServerCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
+		WithClient(false),
 	); err != nil {
 		return 1
 	}
