@@ -141,7 +141,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		app.UI.Output("\nURL: %s", result.Release.Url, terminal.WithSuccessStyle())
+		app.UI.Output("\nURL: https://%s", result.Release.Url, terminal.WithSuccessStyle())
 		return nil
 	})
 	if err != nil {
