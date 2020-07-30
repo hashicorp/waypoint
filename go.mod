@@ -43,11 +43,11 @@ require (
 	github.com/hashicorp/go-plugin v1.1.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/hcl/v2 v2.3.0
-	github.com/hashicorp/horizon v0.0.0-20200716172631-ddc39af93cbe
+	github.com/hashicorp/horizon v0.0.0-20200730025058-fb1eb53e2305
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
 	github.com/hashicorp/waypoint-hzn v0.0.0-20200716172850-719df2bafd65
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
-	github.com/imdario/mergo v0.3.8
+	github.com/imdario/mergo v0.3.10
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
 	github.com/lab47/vterm v0.0.0-20200730001001-14f91f37349f
