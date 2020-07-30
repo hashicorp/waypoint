@@ -1,19 +1,19 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { ListBuildsRequest, Ref, ListBuildsResponse } from 'waypoint-pb';
+import { ListBuildsRequest, ListBuildsResponse } from 'waypoint-pb';
+import CurrentApplicationService from 'waypoint/services/current-application';
+import CurrentWorkspaceService from 'waypoint/services/current-workspace';
 
 export default class Builds extends Route {
   @service api!: ApiService;
+  @service currentApplication!: CurrentApplicationService;
+  @service currentWorkspace!: CurrentWorkspaceService;
 
   async model() {
-    let ws: Ref.Workspace = await this.modelFor('workspace').ref;
-    let project: Ref.Project = await this.modelFor('workspace.project').ref;
-    let app: Ref.Application = await this.modelFor('workspace.project.app').ref;
-
     var req = new ListBuildsRequest();
-    req.setApplication(app);
-    req.setWorkspace(ws);
+    req.setApplication(this.currentApplication.ref);
+    req.setWorkspace(this.currentWorkspace.ref);
 
     var resp = await this.api.client.listBuilds(req, {});
     let buildResp: ListBuildsResponse = resp;

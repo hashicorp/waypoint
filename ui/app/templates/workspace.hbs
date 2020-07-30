@@ -1,9 +1,5 @@
-<h4>Projects</h4>
-
-<ul data-test-project-list=true>
-{{#each @model.projects as |project|}}
-    <li>Project: <LinkTo @route="workspace.project" @model={{project.project}}>{{project.project}}</LinkTo></li>
-{{/each}}
-</ul>
+<LinkTo @route="workspace.projects.index" @model={{@model}}>
+    {{t "nav.project_list"}}
+</LinkTo>
 
 {{outlet}}

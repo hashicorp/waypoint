@@ -1,0 +1,11 @@
+<hr>
+
+<h3>{{@model.application}}</h3>
+
+<p>Application metadata and other information</p>
+
+<LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
+    Builds
+</LinkTo>
+
+{{outlet}}
