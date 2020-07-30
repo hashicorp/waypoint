@@ -50,7 +50,7 @@ require (
 	github.com/imdario/mergo v0.3.8
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
-	github.com/lab47/vterm v0.0.0-20200716000831-9fcb752e6bec
+	github.com/lab47/vterm v0.0.0-20200730001001-14f91f37349f
 	github.com/mattn/go-colorable v0.1.7
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.0.0
