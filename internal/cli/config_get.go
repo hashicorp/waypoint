@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
@@ -59,7 +60,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 
 	resp, err := client.GetConfig(c.Ctx, req)
 	if err != nil {
-		c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -68,7 +69,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		// and want color detection to work.
 		out, _, err := c.project.UI.OutputWriters()
 		if err != nil {
-			c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 
@@ -87,7 +88,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		// and want color detection to work.
 		out, _, err := c.project.UI.OutputWriters()
 		if err != nil {
-			c.project.UI.Output(err.Error(), terminal.WithErrorStyle())
+			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 

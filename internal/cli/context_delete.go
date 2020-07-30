@@ -5,6 +5,7 @@ import (
 
 	"github.com/posener/complete"
 
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -41,7 +42,7 @@ func (c *ContextDeleteCommand) Run(args []string) int {
 
 	// Get our contexts
 	if err := c.contextStorage.Delete(name); err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -58,13 +59,13 @@ func (c *ContextDeleteCommand) runDeleteAll(args []string) int {
 	// Delete all
 	list, err := c.contextStorage.List()
 	if err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
 	for _, name := range list {
 		if err := c.contextStorage.Delete(name); err != nil {
-			c.ui.Output(err.Error(), terminal.WithErrorStyle())
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return 1
 		}
 	}

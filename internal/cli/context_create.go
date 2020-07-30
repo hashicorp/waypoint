@@ -6,6 +6,7 @@ import (
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -40,7 +41,7 @@ func (c *ContextCreateCommand) Run(args []string) int {
 
 	// Get our contexts
 	if err := c.contextStorage.Set(name, &c.flagConfig); err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 

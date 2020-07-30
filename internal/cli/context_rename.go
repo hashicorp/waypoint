@@ -5,6 +5,7 @@ import (
 
 	"github.com/posener/complete"
 
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -32,7 +33,7 @@ func (c *ContextRenameCommand) Run(args []string) int {
 	}
 
 	if err := c.contextStorage.Rename(args[0], args[1]); err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 

@@ -6,6 +6,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/posener/complete"
 
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -29,14 +30,14 @@ func (c *ContextListCommand) Run(args []string) int {
 	// and want color detection to work.
 	out, _, err := c.ui.OutputWriters()
 	if err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
 	// Get our contexts
 	names, err := c.contextStorage.List()
 	if err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -48,7 +49,7 @@ func (c *ContextListCommand) Run(args []string) int {
 	// Get our default
 	def, err := c.contextStorage.Default()
 	if err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
 

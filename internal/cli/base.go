@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -114,7 +115,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// Parse flags
 	if err := baseCfg.Flags.Parse(baseCfg.Args); err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
 	c.args = baseCfg.Flags.Args()
@@ -125,7 +126,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// Setup our base config path
 	homeConfigPath, err := xdg.ConfigFile("waypoint/.ignore")
 	if err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
 	homeConfigPath = filepath.Dir(homeConfigPath)
@@ -135,7 +136,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	contextStorage, err := clicontext.NewStorage(
 		clicontext.WithDir(filepath.Join(homeConfigPath, "context")))
 	if err != nil {
-		c.ui.Output(err.Error(), terminal.WithErrorStyle())
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
 	c.contextStorage = contextStorage
