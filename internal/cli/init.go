@@ -3,8 +3,12 @@ package cli
 import (
 	"fmt"
 	"io/ioutil"
+	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 
+	getter "github.com/hashicorp/go-getter"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,6 +26,9 @@ import (
 type InitCommand struct {
 	*baseCommand
 
+	from string
+	into string
+
 	project *clientpkg.Project
 	cfg     *configpkg.Config
 }
@@ -35,6 +42,87 @@ func (c *InitCommand) Run(args []string) int {
 		WithClient(false),
 	); err != nil {
 		return 1
+	}
+
+	if c.from != "" {
+		if c.into == "" {
+			if u, err := url.Parse(c.from); err == nil {
+				c.into = filepath.Base(u.Path)
+			} else {
+				c.into = filepath.Base(c.from)
+			}
+
+			ext := filepath.Ext(c.into)
+			if ext != "" {
+				c.into = c.into[:len(c.into)-len(ext)]
+			}
+		}
+
+		var dir string
+
+		if filepath.IsAbs(c.into) {
+			dir = c.into
+		} else {
+			dir = "./" + c.into
+		}
+
+		if _, err := os.Stat(dir); err == nil {
+			c.ui.Output("Cannot perform a remote initialization", terminal.WithStyle(terminal.ErrorBoldStyle))
+			c.ui.Output("")
+			c.ui.Output(
+				"Waypoint has detected an existing directory '"+dir+"' and will not \n"+
+					"overwrite an existing application with a remote one.",
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
+		c.ui.Output("Initializing local application from remote location:")
+		c.ui.NamedValues([]terminal.NamedValue{
+			{
+				Name:  "Location",
+				Value: c.from,
+			},
+			{
+				Name:  "Directory",
+				Value: dir,
+			},
+		}, terminal.WithInfoStyle())
+
+		pwd, err := os.Getwd()
+		if err != nil {
+			c.ui.Output("")
+			c.ui.Output("Project had errors during unpacking.", terminal.WithStyle(terminal.ErrorBoldStyle))
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+
+			return 1
+		}
+
+		client := &getter.Client{
+			Src: c.from,
+			Dst: dir,
+			Pwd: pwd,
+			Dir: true,
+		}
+
+		err = client.Get()
+		if err != nil {
+			c.ui.Output("")
+			c.ui.Output("Project had errors during unpacking.", terminal.WithStyle(terminal.ErrorBoldStyle))
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+
+			return 1
+		}
+
+		err = os.Chdir(dir)
+		if err != nil {
+			c.ui.Output("")
+			c.ui.Output("Project had errors during unpacking.", terminal.WithStyle(terminal.ErrorBoldStyle))
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+
+			return 1
+		}
 	}
 
 	path, err := c.initConfigPath()
@@ -431,7 +519,23 @@ func (c *InitCommand) inputContinue(style string) (bool, error) {
 }
 
 func (c *InitCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(0, func(sets *flag.Sets) {
+		f := sets.NewSet("Command Options")
+
+		f.StringVar(&flag.StringVar{
+			Name:    "from-project",
+			Target:  &c.from,
+			Default: "",
+			Usage:   "Create a new application by fetching the given application from a remote source",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "into",
+			Target:  &c.into,
+			Default: "",
+			Usage:   "Where to write the application fetched via -from",
+		})
+	})
 }
 
 func (c *InitCommand) AutocompleteArgs() complete.Predictor {
