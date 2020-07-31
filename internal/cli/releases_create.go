@@ -62,6 +62,13 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
+		if result.Release.Url == "" {
+			app.UI.Output("\n"+strings.TrimSpace(releaseNoUrl),
+				resp.Deployments[0].Id,
+				terminal.WithSuccessStyle())
+			return nil
+		}
+
 		app.UI.Output("\nURL: https://%s", result.Release.Url, terminal.WithSuccessStyle())
 		return nil
 	})
@@ -109,3 +116,13 @@ Examples:
 
 	return strings.TrimSpace(helpText)
 }
+
+const releaseNoUrl = `
+Deployment %s marked as released.
+
+No release manager was configured and the configured platform doesn't
+natively support releases. This means that releasing doesn't generate any
+public URL. Waypoint marked the deployment aboved as "released" for server
+history and to prevent commands such as "waypoint destroy" from deleting
+the deployment by default.
+`
