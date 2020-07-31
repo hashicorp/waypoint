@@ -1,0 +1,8 @@
+{
+  "name": "waypoint-pb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server_pb.js",
+  "typings": "server_pb.d.ts",
+  "author": ""
+}

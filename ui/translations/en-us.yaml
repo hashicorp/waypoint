@@ -1,0 +1,12 @@
+nav:
+  builds: 'Builds'
+  default_workspace: 'Default workspace'
+  title: 'Menu'
+  project_list: 'View all projects'
+
+product:
+  name: 'Waypoint UI'
+
+page:
+  builds:
+    title: 'Builds'
