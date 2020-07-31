@@ -110,14 +110,6 @@ type AuthResult struct {
 	Authenticated bool
 }
 
-type ReleaseTarget struct {
-	Deployment Deployment
-	Percent    uint
-
-	// Will always be zero for plugins.
-	DeploymentId string
-}
-
 type LabelSet struct {
 	Labels map[string]string
 }

@@ -15,7 +15,6 @@ import (
 	pluginhistory "github.com/hashicorp/waypoint/sdk/internal/plugin/history"
 	pluginterminal "github.com/hashicorp/waypoint/sdk/internal/plugin/terminal"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
-	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -40,8 +39,6 @@ var All = []interface{}{
 	TerminalUIProto,
 	HistoryClient,
 	HistoryClientProto,
-	ReleaseTargets,
-	ReleaseTargetsProto,
 	LabelSet,
 	LabelSetProto,
 }
@@ -191,35 +188,6 @@ func TerminalUIProto(
 	})
 
 	return &pb.Args_TerminalUI{StreamId: id}
-}
-
-func ReleaseTargets(input *pb.Args_ReleaseTargets) []component.ReleaseTarget {
-	var result []component.ReleaseTarget
-	for _, t := range input.Targets {
-		result = append(result, component.ReleaseTarget{
-			Deployment: &plugincomponent.Deployment{Any: t.Deployment},
-			Percent:    uint(t.Percent),
-		})
-	}
-
-	return result
-}
-
-func ReleaseTargetsProto(ts []component.ReleaseTarget) (*pb.Args_ReleaseTargets, error) {
-	var result pb.Args_ReleaseTargets
-	for _, t := range ts {
-		any, err := component.ProtoAny(t.Deployment)
-		if err != nil {
-			return nil, err
-		}
-
-		result.Targets = append(result.Targets, &pb.Args_ReleaseTargets_Target{
-			Deployment: any,
-			Percent:    uint32(t.Percent),
-		})
-	}
-
-	return &result, nil
 }
 
 func LabelSet(input *pb.Args_LabelSet) *component.LabelSet {
