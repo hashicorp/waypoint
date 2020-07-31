@@ -523,7 +523,7 @@ func (c *InitCommand) Flags() *flag.Sets {
 		f := sets.NewSet("Command Options")
 
 		f.StringVar(&flag.StringVar{
-			Name:    "from",
+			Name:    "from-project",
 			Target:  &c.from,
 			Default: "",
 			Usage:   "Create a new application by fetching the given application",
