@@ -5,7 +5,6 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint/internal/config"
@@ -77,7 +76,7 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, 
 		(*component.Release)(nil),
 		app.Releaser,
 		app.Releaser.ReleaseFunc(),
-		argmapper.Named("target", op.Target.Deployment),
+		argNamedAny("target", op.Target.Deployment),
 	)
 	if err != nil {
 		return nil, err
