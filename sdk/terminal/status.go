@@ -1,14 +1,15 @@
 package terminal
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
+	"github.com/hashicorp/waypoint/internal/pkg/spinner"
 	"github.com/morikuni/aec"
 )
 
@@ -75,9 +76,10 @@ func init() {
 	}
 }
 
-func newSpinnerStatus() *spinnerStatus {
+func newSpinnerStatus(ctx context.Context) *spinnerStatus {
 	return &spinnerStatus{
 		spinner: spinner.New(
+			ctx,
 			spinner.CharSets[11],
 			time.Second/6,
 			spinner.WithColor("bold"),
@@ -115,8 +117,14 @@ func (s *spinnerStatus) Step(status, msg string) {
 func (s *spinnerStatus) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.running = false
+
+	if s.running {
+		s.running = false
+		s.spinner.Stop()
+	}
+
 	s.spinner.Stop()
+
 	return nil
 }
 
@@ -124,8 +132,10 @@ func (s *spinnerStatus) Pause() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.running = false
-	s.spinner.Stop()
+	if s.running {
+		s.running = false
+		s.spinner.Stop()
+	}
 }
 
 func (s *spinnerStatus) Start() {

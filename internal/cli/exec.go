@@ -54,6 +54,7 @@ func (c *ExecCommand) Run(args []string) int {
 		}
 
 		client := &execclient.Client{
+			UI:           c.ui,
 			Context:      ctx,
 			Client:       client,
 			DeploymentId: resp.Deployments[0].Id,
