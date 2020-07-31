@@ -15,13 +15,13 @@ import (
 
 // Release releases a set of deploys.
 // TODO(mitchellh): test
-func (a *App) Release(ctx context.Context, targets []component.ReleaseTarget) (
+func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 	*pb.Release,
 	component.Release,
 	error,
 ) {
 	result, releasepb, err := a.doOperation(ctx, a.logger.Named("release"), &releaseOperation{
-		Targets: targets,
+		Target: target,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -31,7 +31,7 @@ func (a *App) Release(ctx context.Context, targets []component.ReleaseTarget) (
 }
 
 type releaseOperation struct {
-	Targets []component.ReleaseTarget
+	Target *pb.Deployment
 
 	result component.Release
 }
@@ -42,19 +42,11 @@ func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 		Workspace:    app.workspace,
 		Component:    app.components[app.Releaser].Info,
 		Labels:       app.components[app.Releaser].Labels,
-		TrafficSplit: &pb.Release_Split{},
+		DeploymentId: op.Target.Id,
 	}
 
 	if op.result != nil {
 		release.Url = op.result.URL()
-	}
-
-	// Create our splits for the release
-	for _, target := range op.Targets {
-		release.TrafficSplit.Targets = append(release.TrafficSplit.Targets, &pb.Release_SplitTarget{
-			DeploymentId: target.DeploymentId,
-			Percent:      int32(target.Percent),
-		})
 	}
 
 	return release, nil
@@ -85,7 +77,7 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, 
 		(*component.Release)(nil),
 		app.Releaser,
 		app.Releaser.ReleaseFunc(),
-		argmapper.Named("targets", op.Targets),
+		argmapper.Named("target", op.Target),
 	)
 	if err != nil {
 		return nil, err
