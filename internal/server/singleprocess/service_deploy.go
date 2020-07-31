@@ -76,6 +76,7 @@ func (s *service) ListDeployments(
 		state.ListWithStatusFilter(req.Status...),
 		state.ListWithOrder(req.Order),
 		state.ListWithWorkspace(req.Workspace),
+		state.ListWithPhysicalState(req.PhysicalState),
 	)
 	if err != nil {
 		return nil, err

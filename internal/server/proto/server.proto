@@ -1131,6 +1131,10 @@ message ListDeploymentsRequest {
   // specify multiple filters in the StatusFilter for AND behavior.
   repeated StatusFilter status = 1;
 
+  // The physical state to filter for. If this is zero or unset then no
+  // filtering on physical state will be done.
+  Operation.PhysicalState physical_state = 5;
+
   // Specifies the order of results. If this isn't specified, the results
   // are in an undefined order.
   OperationOrder order = 2;
