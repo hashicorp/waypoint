@@ -296,6 +296,22 @@ message StatusFilter {
   }
 }
 
+// Operation is a shared message type used to describe "operations" which are
+// executions of a build, deploy, etc. This just contains shared message types
+// used for fields. Each individual operation has their own message type
+// such as Deployment.
+message Operation {
+  // PhysicalState is the state of any physical resources associated with
+  // an operation. A physical resource for example is the actual container
+  // that might be created alongside an operation.
+  enum PhysicalState {
+    UNKNOWN = 0;
+    PENDING = 1;
+    CREATED = 3;
+    DESTROYED = 4;
+  };
+}
+
 // OperationOrder is a shared message type used for controlling the order
 // of results in queries for app operations such as build, deploys, etc.
 message OperationOrder {
@@ -1136,7 +1152,7 @@ message Deployment {
   string id = 1;
 
   // state is the state of this deployment.
-  State state = 2;
+  Operation.PhysicalState state = 2;
 
   // status tracks the status of the most recent operation (creation,
   // destroy, etc. NOTE(mitchellh): I want to separate these out so that
@@ -1156,13 +1172,6 @@ message Deployment {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 7;
-
-  enum State {
-    UNKNOWN = 0;
-    PENDING = 1;
-    DEPLOYED = 3;
-    DESTROYED = 4;
-  };
 }
 
 /********************************************************************

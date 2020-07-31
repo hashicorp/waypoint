@@ -325,4 +325,71 @@ func TestAppOperation(t *testing.T) {
 		require.Equal("B", ids[1])
 		require.Equal("C", ids[2])
 	})
+
+	t.Run("list with physical state filter on unsupported struct", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id: "A",
+			})))
+		}
+
+		// List with a filter
+		build := serverptypes.TestValidBuild(t, nil)
+		results, err := op.List(s, &listOperationsOptions{
+			Application:   build.Application,
+			PhysicalState: pb.Operation_CREATED,
+		})
+		require.NoError(err)
+		require.Len(results, 1)
+	})
+}
+
+func TestAppOperation_deploy(t *testing.T) {
+	op := &appOperation{
+		Struct: (*pb.Deployment)(nil),
+		Bucket: buildOp.Bucket,
+	}
+
+	op.Test(t)
+
+	t.Run("list with physical state filter supported", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+				Id:    "A",
+				State: pb.Operation_CREATED,
+			})))
+		}
+		{
+			require.NoError(op.Put(s, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+				Id:    "B",
+				State: pb.Operation_PENDING,
+			})))
+		}
+
+		// List with a filter
+		deploy := serverptypes.TestValidDeployment(t, nil)
+		results, err := op.List(s, &listOperationsOptions{
+			Application:   deploy.Application,
+			PhysicalState: pb.Operation_CREATED,
+		})
+		require.NoError(err)
+		require.Len(results, 1)
+
+		var ids []string
+		for _, result := range results {
+			ids = append(ids, result.(*pb.Deployment).Id)
+		}
+		sort.Strings(ids)
+		require.Equal("A", ids[0])
+	})
 }
