@@ -26,7 +26,12 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 		return nil, nil, err
 	}
 
-	return releasepb.(*pb.Release), result.(component.Release), nil
+	var release component.Release
+	if result != nil {
+		release = result.(component.Release)
+	}
+
+	return releasepb.(*pb.Release), release, nil
 }
 
 type releaseOperation struct {
@@ -39,9 +44,12 @@ func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 	release := &pb.Release{
 		Application:  app.ref,
 		Workspace:    app.workspace,
-		Component:    app.components[app.Releaser].Info,
-		Labels:       app.components[app.Releaser].Labels,
 		DeploymentId: op.Target.Id,
+	}
+
+	if app.Releaser != nil {
+		release.Component = app.components[app.Releaser].Info
+		release.Labels = app.components[app.Releaser].Labels
 	}
 
 	if op.result != nil {
@@ -52,6 +60,10 @@ func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 }
 
 func (op *releaseOperation) Hooks(app *App) map[string][]*config.Hook {
+	if app.Releaser == nil {
+		return nil
+	}
+
 	return app.components[app.Releaser].Hooks
 }
 
@@ -71,6 +83,12 @@ func (op *releaseOperation) Upsert(
 }
 
 func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
+	// If we have no releaser, we do nothing since we just update the
+	// blank release metadata.
+	if app.Releaser == nil {
+		return nil, nil
+	}
+
 	result, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Release)(nil),
