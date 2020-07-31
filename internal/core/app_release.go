@@ -77,7 +77,7 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, 
 		(*component.Release)(nil),
 		app.Releaser,
 		app.Releaser.ReleaseFunc(),
-		argmapper.Named("target", op.Target),
+		argmapper.Named("target", op.Target.Deployment),
 	)
 	if err != nil {
 		return nil, err
