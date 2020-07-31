@@ -67,7 +67,7 @@ func (c *InitCommand) Run(args []string) int {
 		}
 
 		if _, err := os.Stat(dir); err == nil {
-			c.ui.Output("Refusing to perform a remote initialization.", terminal.WithStyle(terminal.ErrorBoldStyle))
+			c.ui.Output("Cannot perform a remote initialization", terminal.WithStyle(terminal.ErrorBoldStyle))
 			c.ui.Output("")
 			c.ui.Output(
 				"Waypoint has detected an existing directory '"+dir+"' and will not \n"+
