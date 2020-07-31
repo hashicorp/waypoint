@@ -285,6 +285,7 @@ func (s *Spinner) Start() {
 	}
 	s.active = true
 	s.done = make(chan struct{})
+	s.ctx, s.cancel = context.WithCancel(s.parent)
 	s.mu.Unlock()
 
 	go func() {
