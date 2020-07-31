@@ -4,9 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/waypoint/internal/core"
-	servercomponent "github.com/hashicorp/waypoint/internal/server/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 func (r *Runner) executeReleaseOp(
@@ -26,23 +24,7 @@ func (r *Runner) executeReleaseOp(
 		panic("operation not expected type")
 	}
 
-	targets := make([]component.ReleaseTarget, len(op.Release.TrafficSplit.Targets))
-	for i, split := range op.Release.TrafficSplit.Targets {
-		// Get the deployment
-		deployment, err := r.client.GetDeployment(ctx, &pb.GetDeploymentRequest{
-			DeploymentId: split.DeploymentId,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		targets[i] = component.ReleaseTarget{
-			Deployment: servercomponent.Deployment(deployment),
-			Percent:    uint(split.Percent),
-		}
-	}
-
-	release, _, err := app.Release(ctx, targets)
+	release, _, err := app.Release(ctx, op.Release.Deployment)
 	if err != nil {
 		return nil, err
 	}
