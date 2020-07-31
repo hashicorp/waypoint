@@ -34,24 +34,10 @@ func (r *Releaser) Release(
 	ctx context.Context,
 	log hclog.Logger,
 	ui terminal.UI,
-	targets []component.ReleaseTarget,
+	target *Deployment,
 ) (*Release, error) {
-	// Get the deployments
-	var deploys []*Deployment
-	for _, t := range targets {
-		var deploy Deployment
-		if err := component.ProtoAnyUnmarshal(t.Deployment, &deploy); err != nil {
-			return nil, err
-		}
-
-		deploys = append(deploys, &deploy)
-	}
-
-	// We use the most recent deploy for most things
-	deploy := deploys[0]
-
 	// Get the API service
-	apiService, err := deploy.apiService(ctx)
+	apiService, err := target.apiService(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -63,39 +49,38 @@ func (r *Releaser) Release(
 	// Get the service
 	st.Update("Getting service information...")
 	client := run.NewNamespacesServicesService(apiService)
-	service, err := client.Get(deploy.apiName()).Context(ctx).Do()
+	service, err := client.Get(target.apiName()).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
 
-	// Update the service with the traffic info
+	// Update the service with the traffic info. This code is laid out this
+	// way to make it more trivial in the future to add traffic splitting.
 	service.Spec.Traffic = nil
-	for i, t := range targets {
-		log.Debug("setting traffic target",
-			"revision", deploys[i].RevisionId,
-			"percent", t.Percent)
-		service.Spec.Traffic = append(service.Spec.Traffic, &run.TrafficTarget{
-			RevisionName: deploys[i].RevisionId,
-			Percent:      int64(t.Percent),
-		})
-	}
+	log.Debug("setting traffic target",
+		"revision", target.RevisionId,
+		"percent", 100)
+	service.Spec.Traffic = append(service.Spec.Traffic, &run.TrafficTarget{
+		RevisionName: target.RevisionId,
+		Percent:      100,
+	})
 
 	// Replace the service
 	st.Update("Deploying routing changes")
-	service, err = client.ReplaceService(deploy.apiName(), service).
+	service, err = client.ReplaceService(target.apiName(), service).
 		Context(ctx).Do()
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
 	}
 
 	// Set the IAM policy so global traffic is allowed
-	if err := r.setNoAuthPolicy(ctx, deploy, apiService); err != nil {
+	if err := r.setNoAuthPolicy(ctx, target, apiService); err != nil {
 		return nil, err
 	}
 
 	// Poll the service and wait for completion
 	st.Update("Waiting for revision to be ready")
-	service, err = deploy.pollServiceReady(ctx, log, apiService)
+	service, err = target.pollServiceReady(ctx, log, apiService)
 	if err != nil {
 		return nil, err
 	}
