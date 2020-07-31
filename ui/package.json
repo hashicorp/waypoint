@@ -78,7 +78,7 @@
     "api-common-protos": "./lib/api-common-protos/",
     "ember-cli-typescript-blueprints": "^3.0.0",
     "google-protobuf": "^3.12.2",
-    "grpc-web": "./lib/grpc-web/packages/grpc-web",
+    "grpc-web": "./lib/grpc-web",
     "waypoint-client": "./lib/waypoint-client/"
   },
   "ember-addon": {}
