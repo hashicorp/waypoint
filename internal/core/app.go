@@ -135,6 +135,16 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 		}
 	}
 
+	// If we don't have a releaser but our platform implements release then
+	// we use that.
+	if app.Releaser == nil && app.Platform != nil {
+		if r, ok := app.Platform.(component.ReleaseManager); ok && r.ReleaseFunc() != nil {
+			app.logger.Info("platform capable of release, using platform for release")
+			app.Releaser = r
+			app.components[r] = app.components[app.Platform]
+		}
+	}
+
 	return app, nil
 }
 

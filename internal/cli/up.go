@@ -83,36 +83,17 @@ func (c *UpCommand) Run(args []string) int {
 			)
 		}
 
-		cfg, ok := c.cfg.AppConfig(app.Ref().Application)
-		if !ok {
-			app.UI.Output(
-				"Strangly the application configuration is unavailable",
-				terminal.WithErrorStyle(),
-			)
+		// We're releasing, do that too.
+		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
+		releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
+			Deployment: result.Deployment,
+		})
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
-		var releaseUrl string
-		if cfg.Release != nil {
-			// We're releasing, do that too.
-			app.UI.Output("Releasing...", terminal.WithHeaderStyle())
-			releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
-				TrafficSplit: &pb.Release_Split{
-					Targets: []*pb.Release_SplitTarget{
-						{
-							DeploymentId: result.Deployment.Id,
-							Percent:      100,
-						},
-					},
-				},
-			})
-			if err != nil {
-				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-				return ErrSentinel
-			}
-
-			releaseUrl = releaseResult.Release.Url
-		}
+		releaseUrl := releaseResult.Release.Url
 
 		// Output
 		app.UI.Output("")

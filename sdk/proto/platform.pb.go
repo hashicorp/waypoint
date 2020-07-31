@@ -129,7 +129,7 @@ var file_platform_proto_rawDesc = []byte{
 	0x06, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x1a, 0x34, 0x0a, 0x04, 0x52, 0x65, 0x73, 0x70, 0x12,
 	0x2c, 0x0a, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
 	0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
-	0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x32, 0x8b, 0x06,
+	0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x32, 0xce, 0x06,
 	0x0a, 0x08, 0x50, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x12, 0x40, 0x0a, 0x0f, 0x49, 0x73,
 	0x41, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x16, 0x2e,
 	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
@@ -178,8 +178,13 @@ var file_platform_proto_rawDesc = []byte{
 	0x73, 0x4c, 0x6f, 0x67, 0x50, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x12, 0x16, 0x2e, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
 	0x6d, 0x70, 0x74, 0x79, 0x1a, 0x15, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x49, 0x6d, 0x70,
-	0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x42, 0x09, 0x5a, 0x07, 0x2e,
-	0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x12, 0x41, 0x0a, 0x10, 0x49,
+	0x73, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x12,
+	0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x15, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x49, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x42, 0x09,
+	0x5a, 0x07, 0x2e, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -223,21 +228,23 @@ var file_platform_proto_depIdxs = []int32{
 	3,  // 11: proto.Platform.DestroySpec:input_type -> google.protobuf.Empty
 	4,  // 12: proto.Platform.Destroy:input_type -> proto.FuncSpec.Args
 	3,  // 13: proto.Platform.IsLogPlatform:input_type -> google.protobuf.Empty
-	7,  // 14: proto.Platform.IsAuthenticator:output_type -> proto.ImplementsResp
-	8,  // 15: proto.Platform.Auth:output_type -> proto.Auth.AuthResponse
-	9,  // 16: proto.Platform.AuthSpec:output_type -> proto.FuncSpec
-	3,  // 17: proto.Platform.ValidateAuth:output_type -> google.protobuf.Empty
-	9,  // 18: proto.Platform.ValidateAuthSpec:output_type -> proto.FuncSpec
-	10, // 19: proto.Platform.ConfigStruct:output_type -> proto.Config.StructResp
-	3,  // 20: proto.Platform.Configure:output_type -> google.protobuf.Empty
-	9,  // 21: proto.Platform.DeploySpec:output_type -> proto.FuncSpec
-	1,  // 22: proto.Platform.Deploy:output_type -> proto.Deploy.Resp
-	7,  // 23: proto.Platform.IsDestroyer:output_type -> proto.ImplementsResp
-	9,  // 24: proto.Platform.DestroySpec:output_type -> proto.FuncSpec
-	3,  // 25: proto.Platform.Destroy:output_type -> google.protobuf.Empty
-	7,  // 26: proto.Platform.IsLogPlatform:output_type -> proto.ImplementsResp
-	14, // [14:27] is the sub-list for method output_type
-	1,  // [1:14] is the sub-list for method input_type
+	3,  // 14: proto.Platform.IsReleaseManager:input_type -> google.protobuf.Empty
+	7,  // 15: proto.Platform.IsAuthenticator:output_type -> proto.ImplementsResp
+	8,  // 16: proto.Platform.Auth:output_type -> proto.Auth.AuthResponse
+	9,  // 17: proto.Platform.AuthSpec:output_type -> proto.FuncSpec
+	3,  // 18: proto.Platform.ValidateAuth:output_type -> google.protobuf.Empty
+	9,  // 19: proto.Platform.ValidateAuthSpec:output_type -> proto.FuncSpec
+	10, // 20: proto.Platform.ConfigStruct:output_type -> proto.Config.StructResp
+	3,  // 21: proto.Platform.Configure:output_type -> google.protobuf.Empty
+	9,  // 22: proto.Platform.DeploySpec:output_type -> proto.FuncSpec
+	1,  // 23: proto.Platform.Deploy:output_type -> proto.Deploy.Resp
+	7,  // 24: proto.Platform.IsDestroyer:output_type -> proto.ImplementsResp
+	9,  // 25: proto.Platform.DestroySpec:output_type -> proto.FuncSpec
+	3,  // 26: proto.Platform.Destroy:output_type -> google.protobuf.Empty
+	7,  // 27: proto.Platform.IsLogPlatform:output_type -> proto.ImplementsResp
+	7,  // 28: proto.Platform.IsReleaseManager:output_type -> proto.ImplementsResp
+	15, // [15:29] is the sub-list for method output_type
+	1,  // [1:15] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -322,6 +329,8 @@ type PlatformClient interface {
 	Destroy(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error)
 	// IsLogPlatform returns true if this platform also implements LogPlatform.
 	IsLogPlatform(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error)
+	// IsReleaseManager returns true if this platform also implements ReleaseManager.
+	IsReleaseManager(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error)
 }
 
 type platformClient struct {
@@ -449,6 +458,15 @@ func (c *platformClient) IsLogPlatform(ctx context.Context, in *empty.Empty, opt
 	return out, nil
 }
 
+func (c *platformClient) IsReleaseManager(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error) {
+	out := new(ImplementsResp)
+	err := c.cc.Invoke(ctx, "/proto.Platform/IsReleaseManager", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PlatformServer is the server API for Platform service.
 type PlatformServer interface {
 	IsAuthenticator(context.Context, *empty.Empty) (*ImplementsResp, error)
@@ -466,6 +484,8 @@ type PlatformServer interface {
 	Destroy(context.Context, *FuncSpec_Args) (*empty.Empty, error)
 	// IsLogPlatform returns true if this platform also implements LogPlatform.
 	IsLogPlatform(context.Context, *empty.Empty) (*ImplementsResp, error)
+	// IsReleaseManager returns true if this platform also implements ReleaseManager.
+	IsReleaseManager(context.Context, *empty.Empty) (*ImplementsResp, error)
 }
 
 // UnimplementedPlatformServer can be embedded to have forward compatible implementations.
@@ -510,6 +530,9 @@ func (*UnimplementedPlatformServer) Destroy(context.Context, *FuncSpec_Args) (*e
 }
 func (*UnimplementedPlatformServer) IsLogPlatform(context.Context, *empty.Empty) (*ImplementsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsLogPlatform not implemented")
+}
+func (*UnimplementedPlatformServer) IsReleaseManager(context.Context, *empty.Empty) (*ImplementsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsReleaseManager not implemented")
 }
 
 func RegisterPlatformServer(s *grpc.Server, srv PlatformServer) {
@@ -750,6 +773,24 @@ func _Platform_IsLogPlatform_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Platform_IsReleaseManager_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformServer).IsReleaseManager(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Platform/IsReleaseManager",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformServer).IsReleaseManager(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Platform_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.Platform",
 	HandlerType: (*PlatformServer)(nil),
@@ -805,6 +846,10 @@ var _Platform_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "IsLogPlatform",
 			Handler:    _Platform_IsLogPlatform_Handler,
+		},
+		{
+			MethodName: "IsReleaseManager",
+			Handler:    _Platform_IsReleaseManager_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

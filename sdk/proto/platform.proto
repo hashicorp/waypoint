@@ -29,6 +29,9 @@ service Platform {
 
   // IsLogPlatform returns true if this platform also implements LogPlatform.
   rpc IsLogPlatform(google.protobuf.Empty) returns (ImplementsResp);
+
+  // IsReleaseManager returns true if this platform also implements ReleaseManager.
+  rpc IsReleaseManager(google.protobuf.Empty) returns (ImplementsResp);
 }
 
 message Deploy {

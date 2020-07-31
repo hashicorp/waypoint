@@ -40,20 +40,9 @@ func (r *Releaser) Release(
 	log hclog.Logger,
 	src *component.Source,
 	ui terminal.UI,
-	targets []component.ReleaseTarget,
+	target *Deployment,
 ) (*Release, error) {
-	if len(targets) > 1 {
-		return nil, fmt.Errorf(
-			"The 'kubernetes' release manager does not support traffic splitting.")
-	}
-
 	var result Release
-
-	// Get the deployment
-	var deploy Deployment
-	if err := component.ProtoAnyUnmarshal(targets[0].Deployment, &deploy); err != nil {
-		return nil, err
-	}
 
 	st := ui.Status()
 	defer st.Close()
@@ -79,8 +68,8 @@ func (r *Releaser) Release(
 
 	// Update the spec
 	service.Spec.Selector = map[string]string{
-		"name":  deploy.Name,
-		labelId: deploy.Id,
+		"name":  target.Name,
+		labelId: target.Id,
 	}
 
 	var checkLB bool

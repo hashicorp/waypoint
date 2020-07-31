@@ -535,7 +535,7 @@ message Job {
   }
 
   message ReleaseOp {
-    Release.Split traffic_split = 1;
+    Deployment deployment = 1;
   }
 
   message ReleaseResult {
@@ -1138,7 +1138,9 @@ message Deployment {
   // state is the state of this deployment.
   State state = 2;
 
-  // status of the current state of the deployment.
+  // status tracks the status of the most recent operation (creation,
+  // destroy, etc. NOTE(mitchellh): I want to separate these out so that
+  // you can keep history of the status of multiple operations.
   Status status = 3;
 
   // component that initiated this deployment
@@ -1158,8 +1160,8 @@ message Deployment {
   enum State {
     UNKNOWN = 0;
     PENDING = 1;
-    DEPLOY = 3;
-    DESTROY = 4;
+    DEPLOYED = 3;
+    DESTROYED = 4;
   };
 }
 
@@ -1200,8 +1202,8 @@ message Release {
   // release is the raw release object encoded directly from the plugin.
   google.protobuf.Any release = 4;
 
-  // split traffic between multiple deployments
-  Split traffic_split = 5;
+  // ID of the deployment that is being released.
+  string deployment_id = 5;
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 6;
@@ -1210,18 +1212,6 @@ message Release {
   // in use. After the release is not in use, this may still be set but
   // may no longer be valid.
   string url = 9;
-
-  message Split {
-    repeated SplitTarget targets = 1;
-  }
-
-  message SplitTarget {
-    // id the deployment target
-    string deployment_id = 1;
-
-    // percentage of traffic
-    int32 percent = 2;
-  }
 }
 
 /********************************************************************

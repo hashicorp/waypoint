@@ -45,7 +45,7 @@ func (op *deployDestroyOperation) Upsert(
 	msg proto.Message,
 ) (proto.Message, error) {
 	d := msg.(*pb.Deployment)
-	d.State = pb.Deployment_DESTROY
+	d.State = pb.Deployment_DESTROYED
 
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
 		Deployment: d,
