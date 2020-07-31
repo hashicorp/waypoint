@@ -107,7 +107,7 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 			Workspace:   app.workspace,
 		})
 		require.NoError(err)
-		require.Equal(pb.Deployment_DESTROY, resp.Deployments[0].State)
+		require.Equal(pb.Deployment_DESTROYED, resp.Deployments[0].State)
 		require.Equal(pb.Status_SUCCESS, resp.Deployments[0].Status.State)
 	}
 
@@ -135,7 +135,7 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 			},
 		})
 		require.NoError(err)
-		require.Equal(pb.Deployment_DESTROY, resp.Deployments[0].State)
+		require.Equal(pb.Deployment_DESTROYED, resp.Deployments[0].State)
 		require.Equal(pb.Status_ERROR, resp.Deployments[0].Status.State)
 	}
 }
