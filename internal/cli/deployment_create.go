@@ -84,14 +84,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			// We're releasing, do that too.
 			app.UI.Output("Releasing...", terminal.WithHeaderStyle())
 			releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
-				TrafficSplit: &pb.Release_Split{
-					Targets: []*pb.Release_SplitTarget{
-						&pb.Release_SplitTarget{
-							DeploymentId: deployment.Id,
-							Percent:      100,
-						},
-					},
-				},
+				Deployment: deployment,
 			})
 			if err != nil {
 				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())

@@ -97,14 +97,7 @@ func (c *UpCommand) Run(args []string) int {
 			// We're releasing, do that too.
 			app.UI.Output("Releasing...", terminal.WithHeaderStyle())
 			releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
-				TrafficSplit: &pb.Release_Split{
-					Targets: []*pb.Release_SplitTarget{
-						{
-							DeploymentId: result.Deployment.Id,
-							Percent:      100,
-						},
-					},
-				},
+				Deployment: result.Deployment,
 			})
 			if err != nil {
 				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
