@@ -535,7 +535,7 @@ message Job {
   }
 
   message ReleaseOp {
-    Release.Split traffic_split = 1;
+    Deployment deployment = 1;
   }
 
   message ReleaseResult {
@@ -1200,8 +1200,8 @@ message Release {
   // release is the raw release object encoded directly from the plugin.
   google.protobuf.Any release = 4;
 
-  // split traffic between multiple deployments
-  Split traffic_split = 5;
+  // ID of the deployment that is being released.
+  string deployment_id = 5;
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 6;
@@ -1210,18 +1210,6 @@ message Release {
   // in use. After the release is not in use, this may still be set but
   // may no longer be valid.
   string url = 9;
-
-  message Split {
-    repeated SplitTarget targets = 1;
-  }
-
-  message SplitTarget {
-    // id the deployment target
-    string deployment_id = 1;
-
-    // percentage of traffic
-    int32 percent = 2;
-  }
 }
 
 /********************************************************************
