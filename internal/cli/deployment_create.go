@@ -122,7 +122,7 @@ func (c *DeploymentCreateCommand) Flags() *flag.Sets {
 			Name:    "release",
 			Target:  &c.flagRelease,
 			Usage:   "Release this deployment immedately.",
-			Default: false,
+			Default: true,
 		})
 	})
 }
