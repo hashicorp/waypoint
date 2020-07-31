@@ -164,10 +164,7 @@ var colorAttributeMap = map[string]color.Attribute{
 
 // validColor will make sure the given color is actually allowed.
 func validColor(c string) bool {
-	if validColors[c] {
-		return true
-	}
-	return false
+	return validColors[c]
 }
 
 // Spinner struct to hold the provided options.
