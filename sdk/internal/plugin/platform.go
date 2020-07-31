@@ -82,6 +82,24 @@ func (p *PlatformPlugin) GRPCClient(
 		logPlatform = raw.(component.LogPlatform)
 	}
 
+	// Check if we also implement ReleaseManager
+	var releaser component.ReleaseManager = &releaseManagerClient{}
+	resp, err = client.client.IsReleaseManager(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	if resp.Implements {
+		raw, err := (&ReleaseManagerPlugin{
+			Logger: p.Logger,
+		}).GRPCClient(ctx, broker, c)
+		if err != nil {
+			return nil, err
+		}
+
+		p.Logger.Info("platform plugin capable of logs")
+		releaser = raw.(component.ReleaseManager)
+	}
+
 	// Compose destroyer
 	destroyer := &destroyerClient{
 		Client:  client.client,
@@ -119,6 +137,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
+			ReleaseManager:     releaser,
 			LogPlatform:        logPlatform,
 			Destroyer:          destroyer,
 		}
@@ -128,6 +147,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
+			ReleaseManager:     releaser,
 			LogPlatform:        logPlatform,
 		}
 
@@ -136,6 +156,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
+			ReleaseManager:     releaser,
 			Destroyer:          destroyer,
 		}
 	default:
@@ -143,6 +164,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
+			ReleaseManager:     releaser,
 		}
 	}
 
@@ -217,6 +239,14 @@ func (s *platformServer) IsLogPlatform(
 	empty *empty.Empty,
 ) (*proto.ImplementsResp, error) {
 	_, ok := s.Impl.(component.LogPlatform)
+	return &proto.ImplementsResp{Implements: ok}, nil
+}
+
+func (s *platformServer) IsReleaseManager(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.ImplementsResp, error) {
+	_, ok := s.Impl.(component.ReleaseManager)
 	return &proto.ImplementsResp{Implements: ok}, nil
 }
 

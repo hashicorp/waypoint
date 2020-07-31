@@ -98,6 +98,10 @@ func (c *releaseManagerClient) ConfigSet(v interface{}) error {
 }
 
 func (c *releaseManagerClient) ReleaseFunc() interface{} {
+	if c == nil || c.client == nil {
+		return nil
+	}
+
 	// Get the build spec
 	spec, err := c.client.ReleaseSpec(context.Background(), &proto.Empty{})
 	if err != nil {
