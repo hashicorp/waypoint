@@ -79,6 +79,11 @@ func InstallDocker(
 				"use": "waypoint",
 			},
 		})
+
+		if err != nil {
+			return nil, nil, err
+		}
+
 	}
 
 	np, err := nat.NewPort("tcp", port)

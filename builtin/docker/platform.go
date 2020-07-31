@@ -145,6 +145,10 @@ func (p *Platform) Deploy(
 				"use": "waypoint",
 			},
 		})
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	s.Done()
