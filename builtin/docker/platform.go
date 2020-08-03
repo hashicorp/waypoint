@@ -238,10 +238,6 @@ func (p *Platform) Destroy(
 	deployment *Deployment,
 	ui terminal.UI,
 ) error {
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return err
@@ -249,8 +245,18 @@ func (p *Platform) Destroy(
 
 	cli.NegotiateAPIVersion(ctx)
 
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
 	st.Update("Deleting container...")
 
+	// Check if the container exists
+	_, err = cli.ContainerInspect(ctx, deployment.Container)
+	if client.IsErrNotFound(err) {
+		return nil
+	}
+
+	// Remove it
 	return cli.ContainerRemove(ctx, deployment.Container, types.ContainerRemoveOptions{
 		Force: true,
 	})
