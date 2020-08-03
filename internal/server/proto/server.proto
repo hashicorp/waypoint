@@ -556,6 +556,10 @@ message Job {
 
   message ReleaseOp {
     Deployment deployment = 1;
+
+    // Prune settings. This will prune the deployments that aren't released.
+    // The number to prune is determined based on the configuration.
+    bool prune = 2;
   }
 
   message ReleaseResult {

@@ -3,12 +3,16 @@ package runner
 import (
 	"context"
 
+	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 func (r *Runner) executeReleaseOp(
 	ctx context.Context,
+	log hclog.Logger,
 	job *pb.Job,
 	project *core.Project,
 ) (*pb.Job_Result, error) {
@@ -24,14 +28,71 @@ func (r *Runner) executeReleaseOp(
 		panic("operation not expected type")
 	}
 
+	// If we're pruning, then let's query the deployments we want to prune
+	// ahead of time so that fails fast.
+	var pruneDeploys []*pb.Deployment
+	if op.Release.Prune {
+		log.Debug("pruning requested, gathering deployments to prune")
+		resp, err := r.client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+			Application:   app.Ref(),
+			Workspace:     project.WorkspaceRef(),
+			PhysicalState: pb.Operation_CREATED,
+			Order: &pb.OperationOrder{
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Desc:  true,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// If we have less than the prune amount, then we do nothing. Otherwise
+		// we prune away the ones we're definitely keeping.
+		if len(resp.Deployments) <= 2 {
+			log.Debug("less than the limit deployments exists, no pruning")
+			resp.Deployments = nil
+		} else {
+			resp.Deployments = resp.Deployments[2:]
+		}
+
+		// Assign to short character var since we'll manipulate it a lot
+		ds := make([]*pb.Deployment, 0, len(resp.Deployments))
+		for _, d := range resp.Deployments {
+			// If this is the deployment we're releasing, then do NOT delete it.
+			if d.Id == op.Release.Deployment.Id {
+				continue
+			}
+
+			// Mark for deletion
+			ds = append(ds, d)
+		}
+
+		log.Info("will prune deploys", "len", len(ds))
+		pruneDeploys = ds
+	}
+
+	// Do the release
 	release, _, err := app.Release(ctx, op.Release.Deployment)
 	if err != nil {
 		return nil, err
 	}
-
-	return &pb.Job_Result{
+	result := &pb.Job_Result{
 		Release: &pb.Job_ReleaseResult{
 			Release: release,
 		},
-	}, nil
+	}
+
+	// Do the pruning
+	if len(pruneDeploys) > 0 {
+		log.Info("pruning deploys", "len", len(pruneDeploys))
+		app.UI.Output("Pruning old deployments...", terminal.WithHeaderStyle())
+		for _, d := range pruneDeploys {
+			app.UI.Output("Deployment: %s", d.Id, terminal.WithInfoStyle())
+			if err := app.DestroyDeploy(ctx, d); err != nil {
+				return result, err
+			}
+		}
+	}
+
+	return result, nil
 }

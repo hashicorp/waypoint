@@ -86,7 +86,7 @@ func (r *Runner) executeJob(
 		return r.executeDestroyDeployOp(ctx, job, project)
 
 	case *pb.Job_Release:
-		return r.executeReleaseOp(ctx, job, project)
+		return r.executeReleaseOp(ctx, log, job, project)
 
 	case *pb.Job_Validate:
 		return r.executeValidateOp(ctx, job, project)
