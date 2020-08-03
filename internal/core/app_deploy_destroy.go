@@ -5,7 +5,6 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint/internal/config"
@@ -21,6 +20,12 @@ func (a *App) CanDestroyDeploy() bool {
 
 // DestroyDeploy destroyes a specific deployment.
 func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
+	// If the deploy is destroyed already then do nothing.
+	if d.State == pb.Operation_DESTROYED {
+		a.logger.Info("deployment already destroyed, doing nothing", "id", d.Id)
+		return nil
+	}
+
 	_, _, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployDestroyOperation{
 		Deployment: d,
 	})
@@ -49,7 +54,7 @@ func (op *deployDestroyOperation) Upsert(
 	msg proto.Message,
 ) (proto.Message, error) {
 	d := msg.(*pb.Deployment)
-	d.State = pb.Deployment_DESTROYED
+	d.State = pb.Operation_DESTROYED
 
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
 		Deployment: d,
@@ -69,7 +74,7 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 		nil,
 		destroyer,
 		destroyer.DestroyFunc(),
-		argmapper.Named("deployment", op.Deployment.Deployment),
+		argNamedAny("deployment", op.Deployment.Deployment),
 	)
 }
 
