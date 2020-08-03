@@ -46,6 +46,10 @@ service Waypoint {
   // artifact push for an app.
   rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
 
+  // GetLatestRelease returns the most recent successfully completed
+  // artifact push for an app.
+  rpc GetLatestRelease(GetLatestReleaseRequest) returns (Release);
+
   // GetLogStream reads the log stream for a deployment. This will immediately
   // send a single LogEntry with the lines we have so far. If there are no
   // available lines this will NOT block and instead will return an error.
@@ -1194,6 +1198,14 @@ message UpsertReleaseResponse {
   // since the update operation may touch up the input data (i.e. update
   // timestamps)
   Release release = 1;
+}
+
+message GetLatestReleaseRequest {
+  // application that this belongs to
+  Ref.Application application = 1;
+
+  // workspace for the artifact, any workspace if empty
+  Ref.Workspace workspace = 2;
 }
 
 message Release {
