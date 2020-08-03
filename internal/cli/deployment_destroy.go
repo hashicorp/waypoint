@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -16,6 +18,7 @@ import (
 type DeploymentDestroyCommand struct {
 	*baseCommand
 
+	flagAll   bool
 	flagForce bool
 }
 
@@ -96,6 +99,8 @@ func (c *DeploymentDestroyCommand) getDeployments(ctx context.Context, ids []str
 }
 
 func (c *DeploymentDestroyCommand) allDeployments(ctx context.Context) ([]*pb.Deployment, error) {
+	L := c.Log
+
 	var result []*pb.Deployment
 
 	client := c.project.Client()
@@ -113,6 +118,34 @@ func (c *DeploymentDestroyCommand) allDeployments(ctx context.Context) ([]*pb.De
 			return err
 		}
 
+		// If we aren't deploying all, then we have to find the released
+		// deployment and NOT delete that.
+		if !c.flagAll {
+			release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
+				Application: app.Ref(),
+				Workspace:   c.project.WorkspaceRef(),
+			})
+			if status.Code(err) == codes.NotFound {
+				L.Debug("no release found to exclude any deployments")
+				err = nil
+				release = nil
+			}
+			if err != nil {
+				return nil
+			}
+
+			if release != nil {
+				for i, d := range resp.Deployments {
+					if d.Id == release.DeploymentId {
+						L.Info("not destroying deployment that is released", "id", d.Id)
+						resp.Deployments[len(resp.Deployments)-1], resp.Deployments[i] =
+							resp.Deployments[i], resp.Deployments[len(resp.Deployments)-1]
+						resp.Deployments = resp.Deployments[:len(resp.Deployments)-1]
+					}
+				}
+			}
+		}
+
 		result = append(result, resp.Deployments...)
 		return nil
 	})
@@ -123,6 +156,13 @@ func (c *DeploymentDestroyCommand) allDeployments(ctx context.Context) ([]*pb.De
 func (c *DeploymentDestroyCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:    "all",
+			Target:  &c.flagAll,
+			Usage:   "Delete ALL deployments, including released.",
+			Default: false,
+		})
+
 		f.BoolVar(&flag.BoolVar{
 			Name:    "force",
 			Target:  &c.flagForce,
