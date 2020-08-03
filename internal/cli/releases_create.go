@@ -33,8 +33,9 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the latest deployment
 		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Application: app.Ref(),
-			Workspace:   c.project.WorkspaceRef(),
+			Application:   app.Ref(),
+			Workspace:     c.project.WorkspaceRef(),
+			PhysicalState: pb.Operation_CREATED,
 			Order: &pb.OperationOrder{
 				Limit: 1,
 				Order: pb.OperationOrder_COMPLETE_TIME,
@@ -46,16 +47,18 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 		if len(resp.Deployments) == 0 {
-			app.UI.Output("No successful deployments found.", terminal.WithErrorStyle())
+			app.UI.Output(strings.TrimSpace(releaseNoDeploys), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
+
+		deploy := resp.Deployments[0]
 
 		// UI
 		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
 
 		// Release
 		result, err := app.Release(ctx, &pb.Job_ReleaseOp{
-			Deployment: resp.Deployments[0],
+			Deployment: deploy,
 		})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -64,7 +67,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 		if result.Release.Url == "" {
 			app.UI.Output("\n"+strings.TrimSpace(releaseNoUrl),
-				resp.Deployments[0].Id,
+				deploy.Id,
 				terminal.WithSuccessStyle())
 			return nil
 		}
@@ -117,7 +120,8 @@ Examples:
 	return strings.TrimSpace(helpText)
 }
 
-const releaseNoUrl = `
+const (
+	releaseNoUrl = `
 Deployment %s marked as released.
 
 No release manager was configured and the configured platform doesn't
@@ -126,3 +130,12 @@ public URL. Waypoint marked the deployment aboved as "released" for server
 history and to prevent commands such as "waypoint destroy" from deleting
 the deployment by default.
 `
+
+	releaseNoDeploys = `
+No deployments were found.
+
+This may be because this application has never deployed before or it may be
+because any previous deploys have been destroyed. Create a new deployment
+using "waypoint deploy" and try again.
+`
+)
