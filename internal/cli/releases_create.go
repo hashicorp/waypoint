@@ -59,6 +59,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		// Release
 		result, err := app.Release(ctx, &pb.Job_ReleaseOp{
 			Deployment: deploy,
+			Prune:      true,
 		})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
