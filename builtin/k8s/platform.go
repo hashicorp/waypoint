@@ -2,7 +2,8 @@ package k8s
 
 import (
 	"context"
-	fmt "fmt"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -77,7 +78,7 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 	result.Id = id
-	result.Name = src.App
+	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
 
 	// We'll update the user in real time
 	st := ui.Status()
@@ -250,7 +251,7 @@ func (p *Platform) Deploy(
 
 	// Wait on the Pod to start
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		dep, err := dc.Get(ctx, src.App, metav1.GetOptions{})
+		dep, err := dc.Get(ctx, result.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
