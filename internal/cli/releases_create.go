@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -31,6 +33,20 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 	client := c.project.Client()
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		// Get the latest release
+		release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
+			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
+		})
+		if status.Code(err) == codes.NotFound {
+			err = nil
+			release = nil
+		}
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
 		// Get the latest deployment
 		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
 			Application:   app.Ref(),
@@ -50,8 +66,15 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			app.UI.Output(strings.TrimSpace(releaseNoDeploys), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
-
 		deploy := resp.Deployments[0]
+
+		// If the latest release already deployed this then we're done.
+		if release != nil && release.DeploymentId == deploy.Id {
+			app.UI.Output(strings.TrimSpace(releaseUpToDate),
+				deploy.Id,
+				terminal.WithSuccessStyle())
+			return nil
+		}
 
 		// UI
 		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
@@ -138,5 +161,9 @@ No deployments were found.
 This may be because this application has never deployed before or it may be
 because any previous deploys have been destroyed. Create a new deployment
 using "waypoint deploy" and try again.
+`
+
+	releaseUpToDate = `
+The deployment %q is already the released deployment. Nothing to be done.
 `
 )
