@@ -2,12 +2,15 @@ package plugin
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
@@ -82,24 +85,6 @@ func (p *PlatformPlugin) GRPCClient(
 		logPlatform = raw.(component.LogPlatform)
 	}
 
-	// Check if we also implement ReleaseManager
-	var releaser component.ReleaseManager = &releaseManagerClient{}
-	resp, err = client.client.IsReleaseManager(ctx, &empty.Empty{})
-	if err != nil {
-		return nil, err
-	}
-	if resp.Implements {
-		raw, err := (&ReleaseManagerPlugin{
-			Logger: p.Logger,
-		}).GRPCClient(ctx, broker, c)
-		if err != nil {
-			return nil, err
-		}
-
-		p.Logger.Info("platform plugin capable of logs")
-		releaser = raw.(component.ReleaseManager)
-	}
-
 	// Compose destroyer
 	destroyer := &destroyerClient{
 		Client:  client.client,
@@ -137,7 +122,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
-			ReleaseManager:     releaser,
+			PlatformReleaser:   client,
 			LogPlatform:        logPlatform,
 			Destroyer:          destroyer,
 		}
@@ -147,7 +132,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
-			ReleaseManager:     releaser,
+			PlatformReleaser:   client,
 			LogPlatform:        logPlatform,
 		}
 
@@ -156,7 +141,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
-			ReleaseManager:     releaser,
+			PlatformReleaser:   client,
 			Destroyer:          destroyer,
 		}
 	default:
@@ -164,7 +149,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Authenticator:      authenticator,
 			ConfigurableNotify: client,
 			Platform:           client,
-			ReleaseManager:     releaser,
+			PlatformReleaser:   client,
 		}
 	}
 
@@ -224,6 +209,58 @@ func (c *platformClient) deploy(
 	return &plugincomponent.Deployment{Any: resp.Result}, nil
 }
 
+func (c *platformClient) DefaultReleaserFunc() interface{} {
+	// Get the spec. If it is unimplemented thats no big deal we can just
+	// return nil and the caller will handle this properly.
+	spec, err := c.client.DefaultReleaserSpec(context.Background(), &empty.Empty{})
+	if status.Code(err) == codes.Unimplemented {
+		return nil
+	}
+	if err != nil {
+		return funcErr(err)
+	}
+
+	// We don't want to be a mapper
+	spec.Result = nil
+
+	return funcspec.Func(spec, c.defaultReleaser,
+		argmapper.Logger(c.logger),
+		argmapper.Typed(&pluginargs.Internal{
+			Broker:  c.broker,
+			Mappers: c.mappers,
+			Cleanup: &pluginargs.Cleanup{},
+		}),
+	)
+}
+
+func (c *platformClient) defaultReleaser(
+	ctx context.Context,
+	args funcspec.Args,
+	internal *pluginargs.Internal,
+) (component.ReleaseManager, error) {
+	// Run the cleanup
+	defer internal.Cleanup.Close()
+
+	// Call our function
+	resp, err := c.client.DefaultReleaser(ctx, &proto.FuncSpec_Args{Args: args})
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the stream ID and connect to it
+	conn, err := c.broker.Dial(resp.StreamId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &releaseManagerClient{
+		client:  proto.NewReleaseManagerClient(conn),
+		logger:  c.logger.Named("releaser"),
+		broker:  c.broker,
+		mappers: c.mappers,
+	}, nil
+}
+
 // platformServer is a gRPC server that the client talks to and calls a
 // real implementation of the component.
 type platformServer struct {
@@ -239,14 +276,6 @@ func (s *platformServer) IsLogPlatform(
 	empty *empty.Empty,
 ) (*proto.ImplementsResp, error) {
 	_, ok := s.Impl.(component.LogPlatform)
-	return &proto.ImplementsResp{Implements: ok}, nil
-}
-
-func (s *platformServer) IsReleaseManager(
-	ctx context.Context,
-	empty *empty.Empty,
-) (*proto.ImplementsResp, error) {
-	_, ok := s.Impl.(component.ReleaseManager)
 	return &proto.ImplementsResp{Implements: ok}, nil
 }
 
@@ -294,11 +323,85 @@ func (s *platformServer) Deploy(
 	return &proto.Deploy_Resp{Result: encoded}, nil
 }
 
+func (s *platformServer) DefaultReleaserSpec(
+	ctx context.Context,
+	args *empty.Empty,
+) (*proto.FuncSpec, error) {
+	var f interface{}
+	if impl, ok := s.Impl.(component.PlatformReleaser); ok {
+		f = impl.DefaultReleaserFunc()
+	}
+
+	// If there is no function, then we don't implement this.
+	if f == nil {
+		return nil, status.Errorf(codes.Unimplemented, "")
+	}
+
+	return funcspec.Spec(f,
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Logger(s.Logger),
+		argmapper.Typed(s.internal()),
+
+		// We expect a component.LogViewer output type and not a proto.Message
+		argmapper.FilterOutput(argmapper.FilterType(
+			reflect.TypeOf((*component.ReleaseManager)(nil)).Elem()),
+		),
+	)
+}
+
+func (s *platformServer) DefaultReleaser(
+	ctx context.Context,
+	args *proto.FuncSpec_Args,
+) (*proto.DefaultReleaser_Resp, error) {
+	internal := s.internal()
+	defer internal.Cleanup.Close()
+
+	impl, ok := s.Impl.(component.PlatformReleaser)
+	if !ok {
+		return nil, status.Errorf(codes.Unimplemented, "")
+	}
+
+	raw, err := callDynamicFunc2(impl.DefaultReleaserFunc(), args.Args,
+		argmapper.ConverterFunc(s.Mappers...),
+		argmapper.Typed(internal),
+		argmapper.Typed(ctx),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	releaser, ok := raw.(component.ReleaseManager)
+	if !ok || releaser == nil {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"plugin DefaultReleaser function should've returned a component.ReleaseManager, got %T",
+			raw)
+	}
+
+	// Get the ID for the server we're going to start to run our viewer
+	id := s.Broker.NextId()
+
+	// Start our server
+	go s.Broker.AcceptAndServe(id, func(opts []grpc.ServerOption) *grpc.Server {
+		base := *s.base
+		base.Logger = s.Logger.Named("releaser")
+
+		server := plugin.DefaultGRPCServer(opts)
+		proto.RegisterReleaseManagerServer(server, &releaseManagerServer{
+			Impl: releaser,
+			base: &base,
+		})
+		return server
+	})
+
+	return &proto.DefaultReleaser_Resp{StreamId: id}, nil
+}
+
 var (
 	_ plugin.Plugin                = (*PlatformPlugin)(nil)
 	_ plugin.GRPCPlugin            = (*PlatformPlugin)(nil)
 	_ proto.PlatformServer         = (*platformServer)(nil)
 	_ component.Platform           = (*platformClient)(nil)
+	_ component.PlatformReleaser   = (*platformClient)(nil)
 	_ component.Configurable       = (*platformClient)(nil)
 	_ component.ConfigurableNotify = (*platformClient)(nil)
 )
