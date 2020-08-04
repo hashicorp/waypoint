@@ -62,6 +62,11 @@ func (p *Platform) ValidateAuth() error {
 	return nil
 }
 
+// DefaultReleaserFunc implements component.PlatformReleaser
+func (p *Platform) DefaultReleaserFunc() interface{} {
+	return func() *Releaser { return &Releaser{} }
+}
+
 // Deploy deploys an image to Kubernetes.
 func (p *Platform) Deploy(
 	ctx context.Context,
@@ -340,7 +345,8 @@ type Config struct {
 }
 
 var (
-	_ component.Platform     = (*Platform)(nil)
-	_ component.Configurable = (*Platform)(nil)
-	_ component.Destroyer    = (*Platform)(nil)
+	_ component.Platform         = (*Platform)(nil)
+	_ component.PlatformReleaser = (*Platform)(nil)
+	_ component.Configurable     = (*Platform)(nil)
+	_ component.Destroyer        = (*Platform)(nil)
 )
