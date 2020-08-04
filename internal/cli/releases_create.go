@@ -17,6 +17,8 @@ import (
 
 type ReleaseCreateCommand struct {
 	*baseCommand
+
+	flagRepeat bool
 }
 
 func (c *ReleaseCreateCommand) Run(args []string) int {
@@ -70,10 +72,15 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 		// If the latest release already deployed this then we're done.
 		if release != nil && release.DeploymentId == deploy.Id {
-			app.UI.Output(strings.TrimSpace(releaseUpToDate),
-				deploy.Id,
-				terminal.WithSuccessStyle())
-			return nil
+			if c.flagRepeat {
+				c.Log.Warn("deployment already released but -repeat specified, will re-release")
+			} else {
+				c.Log.Warn("deployment already released")
+				app.UI.Output(strings.TrimSpace(releaseUpToDate),
+					deploy.Id,
+					terminal.WithSuccessStyle())
+				return nil
+			}
 		}
 
 		// UI
@@ -107,7 +114,15 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 }
 
 func (c *ReleaseCreateCommand) Flags() *flag.Sets {
-	return c.flagSet(flagSetOperation, nil)
+	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:    "repeat",
+			Target:  &c.flagRepeat,
+			Usage:   "Re-release if deploy is already released.",
+			Default: false,
+		})
+	})
 }
 
 func (c *ReleaseCreateCommand) AutocompleteArgs() complete.Predictor {
