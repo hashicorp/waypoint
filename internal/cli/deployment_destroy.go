@@ -135,12 +135,14 @@ func (c *DeploymentDestroyCommand) allDeployments(ctx context.Context) ([]*pb.De
 			}
 
 			if release != nil {
-				for i, d := range resp.Deployments {
+				for i := 0; i < len(resp.Deployments); i++ {
+					d := resp.Deployments[i]
 					if d.Id == release.DeploymentId {
 						L.Info("not destroying deployment that is released", "id", d.Id)
 						resp.Deployments[len(resp.Deployments)-1], resp.Deployments[i] =
 							resp.Deployments[i], resp.Deployments[len(resp.Deployments)-1]
 						resp.Deployments = resp.Deployments[:len(resp.Deployments)-1]
+						i--
 					}
 				}
 			}
