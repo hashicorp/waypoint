@@ -156,7 +156,7 @@ func (s *mapperServer) Map(
 	).Interface()
 
 	// Call it!
-	result, err := callDynamicFuncAny2(f, args.Args.Args,
+	result, _, err := callDynamicFuncAny2(f, args.Args.Args,
 		argmapper.Typed(ctx),
 		argmapper.ConverterFunc(s.Mappers...),
 	)

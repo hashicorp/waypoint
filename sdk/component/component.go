@@ -127,7 +127,14 @@ type JobInfo struct {
 	Workspace string
 }
 
-type Artifact interface{}
+type Artifact interface {
+	// Labels are the labels to set. These will overwrite any conflicting
+	// labels on the value. Please namespace the labels you set. The recommended
+	// namespacing is using a URL structure, followed by a slash, and a key.
+	// For example: "plugin.example.com/key" as the key. The value can be
+	// any string.
+	Labels() map[string]string
+}
 
 type Deployment interface{}
 

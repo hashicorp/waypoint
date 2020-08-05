@@ -171,7 +171,7 @@ func (s *registryServer) Push(
 	internal := s.internal()
 	defer internal.Cleanup.Close()
 
-	encoded, err := callDynamicFuncAny2(s.Impl.PushFunc(), args.Args,
+	encoded, _, err := callDynamicFuncAny2(s.Impl.PushFunc(), args.Args,
 		argmapper.ConverterFunc(s.Mappers...),
 		argmapper.Logger(s.Logger),
 		argmapper.Typed(ctx),
