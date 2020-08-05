@@ -15,6 +15,7 @@ import (
 func init() {
 	goldie.FixtureDir = "testdata"
 	spew.Config.DisablePointerAddresses = true
+	spew.Config.SortKeys = true
 }
 
 func TestParseFile(t *testing.T) {
