@@ -992,6 +992,9 @@ message Build {
   // The workspace that this exists in
   Ref.Workspace workspace = 7;
 
+  // The sequence number for this build.
+  uint64 sequence = 8;
+
   // id is the unique ID of the build
   string id = 1;
 
