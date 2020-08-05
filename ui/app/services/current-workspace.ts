@@ -1,15 +1,12 @@
 import Service, { inject as service } from '@ember/service';
 import { Ref } from 'waypoint-pb';
 import ApiService from 'waypoint/services/api';
+import { tracked } from '@glimmer/tracking';
 
 export default class CurrentWorkspaceService extends Service {
   @service api!: ApiService;
 
-  ref?: Ref.Workspace;
-
-  setRef(ref: Ref.Workspace) {
-    this.ref = ref;
-  }
+  @tracked ref?: Ref.Workspace;
 }
 
 // DO NOT DELETE: this is how TypeScript knows how to look up your services.

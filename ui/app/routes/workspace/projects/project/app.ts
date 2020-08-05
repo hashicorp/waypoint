@@ -22,7 +22,8 @@ export default class App extends Route {
     app.setApplication(params.app_id);
     app.setProject(proj?.getProject()!);
 
-    this.currentApplication.setRef(app);
+    // Set ref on current app
+    this.currentApplication.ref = app;
 
     return app.toObject();
   }

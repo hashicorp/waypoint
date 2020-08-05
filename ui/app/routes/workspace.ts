@@ -17,8 +17,8 @@ export default class Workspace extends Route {
     let ws = new Ref.Workspace();
     ws.setWorkspace(params.id);
 
-    // Set on service, note we do not have a Workspace
-    this.currentWorkspace.setRef(ws);
+    // Set the ref on service, note we do not have a Workspace
+    this.currentWorkspace.ref = ws;
     return ws.toObject();
   }
 }
