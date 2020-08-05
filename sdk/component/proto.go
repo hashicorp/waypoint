@@ -33,9 +33,7 @@ func ProtoAny(m interface{}) (*any.Any, error) {
 	if !ok {
 		pm, ok := m.(ProtoMarshaler)
 		if !ok {
-			return nil, status.Errorf(codes.FailedPrecondition,
-				"expected value to be a proto message, got %T",
-				m)
+			return nil, nil
 		}
 
 		msg = pm.Proto()
