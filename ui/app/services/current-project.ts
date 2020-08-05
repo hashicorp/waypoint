@@ -1,4 +1,4 @@
-import Service, { inject as service } from '@ember/service';
+import Service from '@ember/service';
 import { Project, Ref } from 'waypoint-pb';
 import { tracked } from '@glimmer/tracking';
 
