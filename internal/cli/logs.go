@@ -59,6 +59,10 @@ func (c *LogsCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
+		partitionMappings := map[string]struct{}{}
+
+		depId := resp.Deployments[0].Id
+
 		var pv component.PartitionViewer
 		for {
 			batch, err := lv.NextLogBatch(ctx)
@@ -81,6 +85,11 @@ func (c *LogsCommand) Run(args []string) int {
 				// lined up
 				ts := event.Timestamp.Format("2006-01-02T15:04:05.000Z07:00")
 				short := pv.Short(event.Partition)
+
+				if _, seen := partitionMappings[depId+short]; !seen {
+					c.ui.Output("# Log partition %s is for deployment %s", short, depId)
+					partitionMappings[depId+short] = struct{}{}
+				}
 
 				header := headerColor.Sprintf("%s %s: ", ts, short)
 				if strings.IndexByte(event.Message, '\n') != -1 {

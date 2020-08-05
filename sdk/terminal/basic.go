@@ -138,7 +138,7 @@ func (ui *basicUI) OutputWriters() (io.Writer, io.Writer, error) {
 // Status implements UI
 func (ui *basicUI) Status() Status {
 	if ui.status == nil {
-		ui.status = newSpinnerStatus()
+		ui.status = newSpinnerStatus(ui.ctx)
 	}
 
 	return ui.status

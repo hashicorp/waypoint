@@ -3,6 +3,7 @@ package execclient
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/signal"
@@ -10,14 +11,16 @@ import (
 
 	"github.com/creack/pty"
 	"github.com/golang/protobuf/proto"
-	"github.com/mitchellh/go-grpc-net-conn"
-	"golang.org/x/crypto/ssh/terminal"
+	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
+	sshterm "golang.org/x/crypto/ssh/terminal"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	internalptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type Client struct {
+	UI           terminal.UI
 	Context      context.Context
 	Client       pb.WaypointClient
 	DeploymentId string
@@ -32,7 +35,13 @@ func (c *Client) Run() (int, error) {
 	// along a TERM value to the remote end that matches our own.
 	var ptyReq *pb.ExecStreamRequest_PTY
 	var ptyF *os.File
-	if f, ok := c.Stdout.(*os.File); ok && terminal.IsTerminal(int(f.Fd())) {
+	var status terminal.Status
+
+	if f, ok := c.Stdout.(*os.File); ok && sshterm.IsTerminal(int(f.Fd())) {
+		status = c.UI.Status()
+		defer status.Close()
+		status.Update(fmt.Sprintf("Connecting to %s...", c.DeploymentId))
+
 		ptyF = f
 		ws, err := pty.GetsizeFull(ptyF)
 		if err != nil {
@@ -44,21 +53,18 @@ func (c *Client) Run() (int, error) {
 			Term:       os.Getenv("TERM"),
 			WindowSize: internalptypes.WinsizeProto(ws),
 		}
-
-		// We need to go into raw mode with stdin
-		if f, ok := c.Stdin.(*os.File); ok {
-			oldState, err := terminal.MakeRaw(int(f.Fd()))
-			if err != nil {
-				return 0, err
-			}
-			defer terminal.Restore(int(f.Fd()), oldState)
-		}
 	}
 
 	// Start our exec stream
 	client, err := c.Client.StartExecStream(c.Context)
 	if err != nil {
 		return 0, err
+	}
+
+	defer client.CloseSend()
+
+	if status != nil {
+		status.Update(fmt.Sprintf("Initializing session on %s...", c.DeploymentId))
 	}
 
 	// Send the start event
@@ -72,6 +78,22 @@ func (c *Client) Run() (int, error) {
 		},
 	}); err != nil {
 		return 0, err
+	}
+
+	if ptyF != nil {
+		status.Close()
+		c.UI.Output("Connected to " + c.DeploymentId)
+
+		// We need to go into raw mode with stdin
+		if f, ok := c.Stdin.(*os.File); ok {
+			oldState, err := sshterm.MakeRaw(int(f.Fd()))
+			if err != nil {
+				return 0, err
+			}
+			defer sshterm.Restore(int(f.Fd()), oldState)
+		}
+
+		fmt.Fprintf(c.Stdout, "\r")
 	}
 
 	// Create the context that we'll listen to that lets us cancel our
