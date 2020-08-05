@@ -35,3 +35,11 @@ func (s *service) UpsertRelease(
 
 	return &pb.UpsertReleaseResponse{Release: result}, nil
 }
+
+// TODO: test
+func (s *service) GetLatestRelease(
+	ctx context.Context,
+	req *pb.GetLatestReleaseRequest,
+) (*pb.Release, error) {
+	return s.state.ReleaseLatest(req.Application, req.Workspace)
+}

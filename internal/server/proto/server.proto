@@ -46,6 +46,10 @@ service Waypoint {
   // artifact push for an app.
   rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
 
+  // GetLatestRelease returns the most recent successfully completed
+  // artifact push for an app.
+  rpc GetLatestRelease(GetLatestReleaseRequest) returns (Release);
+
   // GetLogStream reads the log stream for a deployment. This will immediately
   // send a single LogEntry with the lines we have so far. If there are no
   // available lines this will NOT block and instead will return an error.
@@ -296,6 +300,22 @@ message StatusFilter {
   }
 }
 
+// Operation is a shared message type used to describe "operations" which are
+// executions of a build, deploy, etc. This just contains shared message types
+// used for fields. Each individual operation has their own message type
+// such as Deployment.
+message Operation {
+  // PhysicalState is the state of any physical resources associated with
+  // an operation. A physical resource for example is the actual container
+  // that might be created alongside an operation.
+  enum PhysicalState {
+    UNKNOWN = 0;
+    PENDING = 1;
+    CREATED = 3;
+    DESTROYED = 4;
+  };
+}
+
 // OperationOrder is a shared message type used for controlling the order
 // of results in queries for app operations such as build, deploys, etc.
 message OperationOrder {
@@ -536,6 +556,10 @@ message Job {
 
   message ReleaseOp {
     Deployment deployment = 1;
+
+    // Prune settings. This will prune the deployments that aren't released.
+    // The number to prune is determined based on the configuration.
+    bool prune = 2;
   }
 
   message ReleaseResult {
@@ -1115,6 +1139,10 @@ message ListDeploymentsRequest {
   // specify multiple filters in the StatusFilter for AND behavior.
   repeated StatusFilter status = 1;
 
+  // The physical state to filter for. If this is zero or unset then no
+  // filtering on physical state will be done.
+  Operation.PhysicalState physical_state = 5;
+
   // Specifies the order of results. If this isn't specified, the results
   // are in an undefined order.
   OperationOrder order = 2;
@@ -1136,7 +1164,7 @@ message Deployment {
   string id = 1;
 
   // state is the state of this deployment.
-  State state = 2;
+  Operation.PhysicalState state = 2;
 
   // status tracks the status of the most recent operation (creation,
   // destroy, etc. NOTE(mitchellh): I want to separate these out so that
@@ -1156,13 +1184,6 @@ message Deployment {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 7;
-
-  enum State {
-    UNKNOWN = 0;
-    PENDING = 1;
-    DEPLOYED = 3;
-    DESTROYED = 4;
-  };
 }
 
 /********************************************************************
@@ -1181,6 +1202,14 @@ message UpsertReleaseResponse {
   // since the update operation may touch up the input data (i.e. update
   // timestamps)
   Release release = 1;
+}
+
+message GetLatestReleaseRequest {
+  // application that this belongs to
+  Ref.Application application = 1;
+
+  // workspace for the artifact, any workspace if empty
+  Ref.Workspace workspace = 2;
 }
 
 message Release {

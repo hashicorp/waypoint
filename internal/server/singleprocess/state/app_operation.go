@@ -161,6 +161,15 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 				return err
 			}
 
+			if opts.PhysicalState > 0 {
+				if raw := op.valueField(value, "State"); raw != nil {
+					state := raw.(pb.Operation_PhysicalState)
+					if state != opts.PhysicalState {
+						continue
+					}
+				}
+			}
+
 			if len(opts.Status) > 0 {
 				// Get our status field
 				status := op.valueField(value, "Status").(*pb.Status)
@@ -456,10 +465,11 @@ const (
 // listOperationsOptions are options that can be set for List calls on
 // operations for filtering and limiting the response.
 type listOperationsOptions struct {
-	Application *pb.Ref_Application
-	Workspace   *pb.Ref_Workspace
-	Status      []*pb.StatusFilter
-	Order       *pb.OperationOrder
+	Application   *pb.Ref_Application
+	Workspace     *pb.Ref_Workspace
+	Status        []*pb.StatusFilter
+	Order         *pb.OperationOrder
+	PhysicalState pb.Operation_PhysicalState
 }
 
 func buildListOperationsOptions(ref *pb.Ref_Application, opts ...ListOperationOption) *listOperationsOptions {
@@ -486,6 +496,13 @@ func ListWithStatusFilter(f ...*pb.StatusFilter) ListOperationOption {
 func ListWithOrder(f *pb.OperationOrder) ListOperationOption {
 	return func(opts *listOperationsOptions) {
 		opts.Order = f
+	}
+}
+
+// ListWithPhysicalState sets ordering on the list operation.
+func ListWithPhysicalState(f pb.Operation_PhysicalState) ListOperationOption {
+	return func(opts *listOperationsOptions) {
+		opts.PhysicalState = f
 	}
 }
 

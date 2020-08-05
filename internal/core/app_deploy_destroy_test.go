@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/empty"
 	mockpkg "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
@@ -84,7 +86,8 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 	), "test")
 
 	// Expect to have the destroy function called
-	deployment := &any.Any{}
+	deployment, err := ptypes.MarshalAny(&empty.Empty{})
+	require.NoError(err)
 	mock.Destroyer.On("DestroyFunc").Return(func(v *any.Any) error {
 		if v == nil || v != deployment {
 			return fmt.Errorf("value didn't match")
@@ -107,7 +110,7 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 			Workspace:   app.workspace,
 		})
 		require.NoError(err)
-		require.Equal(pb.Deployment_DESTROYED, resp.Deployments[0].State)
+		require.Equal(pb.Operation_DESTROYED, resp.Deployments[0].State)
 		require.Equal(pb.Status_SUCCESS, resp.Deployments[0].Status.State)
 	}
 
@@ -121,6 +124,7 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 		err := app.DestroyDeploy(context.Background(), &pb.Deployment{
 			Application: app.ref,
 			Workspace:   app.workspace,
+			Deployment:  deployment,
 		})
 		require.Error(err)
 		require.Contains(err.Error(), "error")
@@ -135,7 +139,7 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 			},
 		})
 		require.NoError(err)
-		require.Equal(pb.Deployment_DESTROYED, resp.Deployments[0].State)
+		require.Equal(pb.Operation_DESTROYED, resp.Deployments[0].State)
 		require.Equal(pb.Status_ERROR, resp.Deployments[0].Status.State)
 	}
 }

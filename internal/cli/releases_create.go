@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -15,6 +17,8 @@ import (
 
 type ReleaseCreateCommand struct {
 	*baseCommand
+
+	flagRepeat bool
 }
 
 func (c *ReleaseCreateCommand) Run(args []string) int {
@@ -31,10 +35,25 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 	client := c.project.Client()
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		// Get the latest deployment
-		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+		// Get the latest release
+		release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
 			Application: app.Ref(),
 			Workspace:   c.project.WorkspaceRef(),
+		})
+		if status.Code(err) == codes.NotFound {
+			err = nil
+			release = nil
+		}
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
+		// Get the latest deployment
+		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+			Application:   app.Ref(),
+			Workspace:     c.project.WorkspaceRef(),
+			PhysicalState: pb.Operation_CREATED,
 			Order: &pb.OperationOrder{
 				Limit: 1,
 				Order: pb.OperationOrder_COMPLETE_TIME,
@@ -46,8 +65,22 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 		if len(resp.Deployments) == 0 {
-			app.UI.Output("No successful deployments found.", terminal.WithErrorStyle())
+			app.UI.Output(strings.TrimSpace(releaseNoDeploys), terminal.WithErrorStyle())
 			return ErrSentinel
+		}
+		deploy := resp.Deployments[0]
+
+		// If the latest release already deployed this then we're done.
+		if release != nil && release.DeploymentId == deploy.Id {
+			if c.flagRepeat {
+				c.Log.Warn("deployment already released but -repeat specified, will re-release")
+			} else {
+				c.Log.Warn("deployment already released")
+				app.UI.Output(strings.TrimSpace(releaseUpToDate),
+					deploy.Id,
+					terminal.WithSuccessStyle())
+				return nil
+			}
 		}
 
 		// UI
@@ -55,7 +88,8 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 		// Release
 		result, err := app.Release(ctx, &pb.Job_ReleaseOp{
-			Deployment: resp.Deployments[0],
+			Deployment: deploy,
+			Prune:      true,
 		})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -64,7 +98,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 		if result.Release.Url == "" {
 			app.UI.Output("\n"+strings.TrimSpace(releaseNoUrl),
-				resp.Deployments[0].Id,
+				deploy.Id,
 				terminal.WithSuccessStyle())
 			return nil
 		}
@@ -80,7 +114,15 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 }
 
 func (c *ReleaseCreateCommand) Flags() *flag.Sets {
-	return c.flagSet(flagSetOperation, nil)
+	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:    "repeat",
+			Target:  &c.flagRepeat,
+			Usage:   "Re-release if deploy is already released.",
+			Default: false,
+		})
+	})
 }
 
 func (c *ReleaseCreateCommand) AutocompleteArgs() complete.Predictor {
@@ -117,7 +159,8 @@ Examples:
 	return strings.TrimSpace(helpText)
 }
 
-const releaseNoUrl = `
+const (
+	releaseNoUrl = `
 Deployment %s marked as released.
 
 No release manager was configured and the configured platform doesn't
@@ -126,3 +169,16 @@ public URL. Waypoint marked the deployment aboved as "released" for server
 history and to prevent commands such as "waypoint destroy" from deleting
 the deployment by default.
 `
+
+	releaseNoDeploys = `
+No deployments were found.
+
+This may be because this application has never deployed before or it may be
+because any previous deploys have been destroyed. Create a new deployment
+using "waypoint deploy" and try again.
+`
+
+	releaseUpToDate = `
+The deployment %q is already the released deployment. Nothing to be done.
+`
+)

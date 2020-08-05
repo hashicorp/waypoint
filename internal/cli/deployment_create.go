@@ -85,6 +85,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			app.UI.Output("Releasing...", terminal.WithHeaderStyle())
 			releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
 				Deployment: deployment,
+				Prune:      true,
 			})
 			if err != nil {
 				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())

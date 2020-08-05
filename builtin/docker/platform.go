@@ -73,9 +73,6 @@ func (p *Platform) Deploy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Checking for existing containers")
-	defer func() { s.Abort() }()
-
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
@@ -92,40 +89,8 @@ func (p *Platform) Deploy(
 	result.Id = id
 	result.Name = src.App
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
-		Filters: filters.NewArgs(filters.KeyValuePair{
-			Key:   "label",
-			Value: "app=" + src.App,
-		}, filters.KeyValuePair{
-			Key:   "label",
-			Value: "workspace=" + job.Workspace,
-		}),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(containers) > 0 {
-		s.Update("Found an existing containers")
-		s.Done()
-
-		s = sg.Add("Deleting existing container: " + containers[0].ID)
-
-		err = cli.ContainerRemove(ctx, containers[0].ID, types.ContainerRemoveOptions{
-			Force: true,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		s.Done()
-	} else {
-		s.Update("No existing containers detected")
-		s.Done()
-	}
-
-	s = sg.Add("Setting up waypoint network")
+	s := sg.Add("Setting up waypoint network")
+	defer func() { s.Abort() }()
 
 	nets, err := cli.NetworkList(ctx, types.NetworkListOptions{
 		Filters: filters.NewArgs(filters.Arg("label", "use=waypoint")),
@@ -156,7 +121,6 @@ func (p *Platform) Deploy(
 	s = sg.Add("Creating new container")
 
 	port := "3000"
-
 	np, err := nat.NewPort("tcp", port)
 	if err != nil {
 		return nil, err
@@ -238,10 +202,6 @@ func (p *Platform) Destroy(
 	deployment *Deployment,
 	ui terminal.UI,
 ) error {
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return err
@@ -249,8 +209,18 @@ func (p *Platform) Destroy(
 
 	cli.NegotiateAPIVersion(ctx)
 
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
 	st.Update("Deleting container...")
 
+	// Check if the container exists
+	_, err = cli.ContainerInspect(ctx, deployment.Container)
+	if client.IsErrNotFound(err) {
+		return nil
+	}
+
+	// Remove it
 	return cli.ContainerRemove(ctx, deployment.Container, types.ContainerRemoveOptions{
 		Force: true,
 	})
