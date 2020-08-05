@@ -83,6 +83,7 @@ func InstallDocker(
 		if err != nil {
 			return nil, nil, err
 		}
+
 	}
 
 	np, err := nat.NewPort("tcp", port)

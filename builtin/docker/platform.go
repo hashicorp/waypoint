@@ -125,6 +125,34 @@ func (p *Platform) Deploy(
 		s.Done()
 	}
 
+	s = sg.Add("Setting up waypoint network")
+
+	nets, err := cli.NetworkList(ctx, types.NetworkListOptions{
+		Filters: filters.NewArgs(filters.Arg("label", "use=waypoint")),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(nets) == 0 {
+		_, err = cli.NetworkCreate(ctx, "waypoint", types.NetworkCreate{
+			Driver:         "bridge",
+			CheckDuplicate: true,
+			Internal:       false,
+			Attachable:     true,
+			Labels: map[string]string{
+				"use": "waypoint",
+			},
+		})
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	s.Done()
+
 	s = sg.Add("Creating new container")
 
 	port := "3000"
