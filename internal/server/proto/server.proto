@@ -1074,6 +1074,9 @@ message PushedArtifact {
   // The workspace that this exists in
   Ref.Workspace workspace = 8;
 
+  // The sequence number for this build.
+  uint64 sequence = 9;
+
   // id is a unique ID for this push
   string id = 1;
 
@@ -1163,6 +1166,9 @@ message Deployment {
   // The workspace that this exists in
   Ref.Workspace workspace = 9;
 
+  // The sequence number for this build.
+  uint64 sequence = 10;
+
   // id is the unique ID for this deployment
   string id = 1;
 
@@ -1221,6 +1227,9 @@ message Release {
 
   // The workspace that this exists in
   Ref.Workspace workspace = 8;
+
+  // The sequence number for this build.
+  uint64 sequence = 10;
 
   // id is the unique ID for this release.
   string id = 1;
