@@ -65,7 +65,8 @@
     "pretender": "^3.4.3",
     "qunit-dom": "^1.2.0",
     "typescript": "^3.9.6",
-    "waypoint-pb": "./lib/waypoint-pb/"
+    "waypoint-pb": "./lib/waypoint-pb/",
+    "webpack-bundle-analyzer": "^3.8.0"
   },
   "engines": {
     "node": "10.* || >= 12"
