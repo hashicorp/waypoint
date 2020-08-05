@@ -110,6 +110,9 @@ func (a *App) doOperation(
 		log.Debug("running local operation")
 		result, doErr = op.Do(ctx, log, a, msg)
 		if doErr == nil {
+			// Set our labels if we can
+			msgUpdateLabels(msg, result)
+
 			// No error, our state is success
 			server.StatusSetSuccess(*statusPtr)
 
@@ -162,19 +165,50 @@ func (a *App) doOperation(
 	return result, msg, nil
 }
 
+func msgUpdateLabels(msg proto.Message, result interface{}) {
+	labels, ok := result.(interface{ Labels() map[string]string })
+	if !ok {
+		return
+	}
+
+	val := msgField(msg, "Labels")
+	if !val.IsValid() {
+		return
+	}
+
+	labelMap, ok := val.Interface().(map[string]string)
+	if !ok {
+		return
+	}
+	if labelMap == nil {
+		labelMap = map[string]string{}
+		val.Set(reflect.ValueOf(labelMap))
+	}
+
+	for k, v := range labels.Labels() {
+		labelMap[k] = v
+	}
+}
+
 // msgId gets the id of the message by looking for the "Id" field. This
 // will return empty string if the ID field can't be found for any reason.
 func msgId(msg proto.Message) string {
+	val := msgField(msg, "Id")
+	if !val.IsValid() || val.Kind() != reflect.String {
+		return ""
+	}
+
+	return val.String()
+}
+
+// msgField gets the field from the given message. This will return an
+// invalid value if it doesn't exist.
+func msgField(msg proto.Message, f string) reflect.Value {
 	val := reflect.ValueOf(msg)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 
 	// Get the Id field
-	val = val.FieldByName("Id")
-	if !val.IsValid() || val.Kind() != reflect.String {
-		return ""
-	}
-
-	return val.String()
+	return val.FieldByName(f)
 }
