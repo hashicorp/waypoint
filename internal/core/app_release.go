@@ -67,6 +67,14 @@ func (op *releaseOperation) Hooks(app *App) map[string][]*config.Hook {
 	return app.components[app.Releaser].Hooks
 }
 
+func (op *releaseOperation) Labels(app *App) map[string]string {
+	if app.Releaser == nil {
+		return nil
+	}
+
+	return app.components[app.Releaser].Labels
+}
+
 func (op *releaseOperation) Upsert(
 	ctx context.Context,
 	client pb.WaypointClient,

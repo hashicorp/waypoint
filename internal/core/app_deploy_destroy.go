@@ -39,6 +39,10 @@ func (op *deployDestroyOperation) Hooks(app *App) map[string][]*config.Hook {
 	return nil
 }
 
+func (op *deployDestroyOperation) Labels(app *App) map[string]string {
+	return op.Deployment.Labels
+}
+
 func (op *deployDestroyOperation) Upsert(
 	ctx context.Context,
 	client pb.WaypointClient,

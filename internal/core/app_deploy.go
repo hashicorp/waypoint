@@ -78,6 +78,10 @@ func (op *deployOperation) Hooks(app *App) map[string][]*config.Hook {
 	return app.components[app.Platform].Hooks
 }
 
+func (op *deployOperation) Labels(app *App) map[string]string {
+	return app.components[app.Platform].Labels
+}
+
 func (op *deployOperation) Upsert(
 	ctx context.Context,
 	client pb.WaypointClient,

@@ -88,12 +88,15 @@ func (op *buildOperation) Init(app *App) (proto.Message, error) {
 		Application: app.ref,
 		Workspace:   app.workspace,
 		Component:   app.components[app.Builder].Info,
-		Labels:      app.components[app.Builder].Labels,
 	}, nil
 }
 
 func (op *buildOperation) Hooks(app *App) map[string][]*config.Hook {
 	return app.components[app.Builder].Hooks
+}
+
+func (op *buildOperation) Labels(app *App) map[string]string {
+	return app.components[app.Builder].Labels
 }
 
 func (op *buildOperation) Upsert(
