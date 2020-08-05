@@ -5,8 +5,11 @@ import { setupMirage } from 'ember-cli-mirage/test-support';
 import { visitable, create, collection } from 'ember-cli-page-object';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
+const buildsUrl = '/default/projects/microchip/app/wp-bandwidth/builds';
+
 const page = create({
-  visit: visitable('/builds'),
+  // todo(pearkes): seeds inline tests
+  visit: visitable(buildsUrl),
   buildList: collection('[data-test-build-list] li'),
 });
 
@@ -21,6 +24,6 @@ module('Acceptance | builds list', function (hooks) {
     // Currently no way to seed past the default in mirage/services/builds.ts
 
     assert.equal(page.buildList.length, 4);
-    assert.equal(currentURL(), '/builds');
+    assert.equal(currentURL(), buildsUrl);
   });
 });
