@@ -345,6 +345,14 @@ func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) e
 			return err
 		}
 
+		// Check if this has a bigger sequence number
+		if v := op.valueField(result, "Sequence"); v != nil {
+			seq, ok := v.(uint64)
+			if ok && seq > op.seq {
+				op.seq = seq
+			}
+		}
+
 		return nil
 	})
 }
