@@ -191,24 +191,13 @@ func (p *Project) mergeLabels(ls ...map[string]string) map[string]string {
 	// Set our builtin labels
 	result["waypoint/workspace"] = p.workspace
 
-	// Set our project labels
-	for k, v := range p.labels {
-		result[k] = v
-	}
+	// Merge order
+	mergeOrder := []map[string]string{result, p.labels}
+	mergeOrder = append(mergeOrder, ls...)
+	mergeOrder = append(mergeOrder, p.overrideLabels)
 
-	// Set any labels given
-	for _, lm := range ls {
-		for k, v := range lm {
-			result[k] = v
-		}
-	}
-
-	// Set any overrides
-	for k, v := range p.overrideLabels {
-		result[k] = v
-	}
-
-	return result
+	// Merge them
+	return labelsMerge(mergeOrder...)
 }
 
 // options is the configuration to construct a new Project. Some

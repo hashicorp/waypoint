@@ -40,6 +40,11 @@ type operation interface {
 
 	// Hooks are the hooks to execute as part of this operation keyed by "when"
 	Hooks(*App) map[string][]*config.Hook
+
+	// Labels is called to return any labels that should be set for this
+	// operation. This should include the component labels. These will be merged
+	// with any resulting labels from the operation.
+	Labels(*App) map[string]string
 }
 
 func (a *App) doOperation(
@@ -55,6 +60,9 @@ func (a *App) doOperation(
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// Initialize our labels
+	msgUpdateLabels(a, op.Labels(a), msg, nil)
 
 	// If we have no status pointer, then we just allocate one for this
 	// function. We don't send this anywhere but this just lets us follow
@@ -110,6 +118,9 @@ func (a *App) doOperation(
 		log.Debug("running local operation")
 		result, doErr = op.Do(ctx, log, a, msg)
 		if doErr == nil {
+			// Set our labels if we can
+			msgUpdateLabels(a, op.Labels(a), msg, result)
+
 			// No error, our state is success
 			server.StatusSetSuccess(*statusPtr)
 
@@ -162,19 +173,48 @@ func (a *App) doOperation(
 	return result, msg, nil
 }
 
+func msgUpdateLabels(
+	app *App,
+	base map[string]string,
+	msg proto.Message,
+	result interface{},
+) {
+	// Get our labels field in our proto message. If we don't have one
+	// then we don't bother doing anything else since labels are moot.
+	val := msgField(msg, "Labels")
+	if !val.IsValid() {
+		return
+	}
+
+	// Determine any labels we have in our result
+	var resultLabels map[string]string
+	if labels, ok := result.(interface{ Labels() map[string]string }); ok {
+		resultLabels = labels.Labels()
+	}
+
+	// Merge them
+	val.Set(reflect.ValueOf(app.mergeLabels(base, resultLabels)))
+}
+
 // msgId gets the id of the message by looking for the "Id" field. This
 // will return empty string if the ID field can't be found for any reason.
 func msgId(msg proto.Message) string {
+	val := msgField(msg, "Id")
+	if !val.IsValid() || val.Kind() != reflect.String {
+		return ""
+	}
+
+	return val.String()
+}
+
+// msgField gets the field from the given message. This will return an
+// invalid value if it doesn't exist.
+func msgField(msg proto.Message, f string) reflect.Value {
 	val := reflect.ValueOf(msg)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
 	}
 
 	// Get the Id field
-	val = val.FieldByName("Id")
-	if !val.IsValid() || val.Kind() != reflect.String {
-		return ""
-	}
-
-	return val.String()
+	return val.FieldByName(f)
 }

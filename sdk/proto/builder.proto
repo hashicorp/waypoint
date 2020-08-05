@@ -27,5 +27,6 @@ service Builder {
 message Build {
   message Resp {
     google.protobuf.Any result = 1;
+    map<string, string> labels = 2;
   }
 }

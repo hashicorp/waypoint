@@ -172,7 +172,7 @@ func (s *builderServer) Build(
 	internal := s.internal()
 	defer internal.Cleanup.Close()
 
-	encoded, err := callDynamicFuncAny2(s.Impl.BuildFunc(), args.Args,
+	encoded, raw, err := callDynamicFuncAny2(s.Impl.BuildFunc(), args.Args,
 		argmapper.ConverterFunc(s.Mappers...),
 		argmapper.Logger(s.Logger),
 		argmapper.Typed(ctx),
@@ -182,7 +182,12 @@ func (s *builderServer) Build(
 		return nil, err
 	}
 
-	return &proto.Build_Resp{Result: encoded}, nil
+	result := &proto.Build_Resp{Result: encoded}
+	if artifact, ok := raw.(component.Artifact); ok {
+		result.Labels = artifact.Labels()
+	}
+
+	return result, nil
 }
 
 var (

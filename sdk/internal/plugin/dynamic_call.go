@@ -71,10 +71,10 @@ func callDynamicFuncAny2(
 	f interface{},
 	args funcspec.Args,
 	callArgs ...argmapper.Arg,
-) (*any.Any, error) {
+) (*any.Any, interface{}, error) {
 	result, err := callDynamicFunc2(f, args, callArgs...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// We expect the final result to always be a proto message so we can
@@ -85,9 +85,10 @@ func callDynamicFuncAny2(
 	// proto.Message.
 	msg, ok := result.(proto.Message)
 	if !ok {
-		return nil, fmt.Errorf(
+		return nil, nil, fmt.Errorf(
 			"result of plugin-based function must be a proto.Message, got %T", msg)
 	}
 
-	return ptypes.MarshalAny(msg)
+	anyVal, err := ptypes.MarshalAny(msg)
+	return anyVal, result, err
 }

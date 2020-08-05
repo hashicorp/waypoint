@@ -99,6 +99,14 @@ func (op *pushBuildOperation) Hooks(app *App) map[string][]*config.Hook {
 	return app.components[app.Registry].Hooks
 }
 
+func (op *pushBuildOperation) Labels(app *App) map[string]string {
+	if app.Registry == nil {
+		return nil
+	}
+
+	return app.components[app.Registry].Labels
+}
+
 func (op *pushBuildOperation) Upsert(
 	ctx context.Context,
 	client pb.WaypointClient,

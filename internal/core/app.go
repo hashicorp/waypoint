@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 
 	"github.com/hashicorp/go-argmapper"
@@ -38,6 +37,7 @@ type App struct {
 	// to this app vs the project UI.
 	UI terminal.UI
 
+	project    *Project
 	config     *config.App
 	ref        *pb.Ref_Application
 	workspace  *pb.Ref_Workspace
@@ -59,7 +59,8 @@ type appComponent struct {
 	Dir *datadir.Component
 
 	// Labels are the set of labels that were set for this component.
-	// This is already merged with parent labels.
+	// This isn't merged yet with parent labels and app.mergeLabels must
+	// be called.
 	Labels map[string]string
 
 	// Hooks are the hooks associated with this component keyed by their When value
@@ -73,6 +74,7 @@ type appComponent struct {
 func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	// Initialize
 	app := &App{
+		project:    p,
 		client:     p.client,
 		source:     &component.Source{App: cfg.Name, Path: "."},
 		jobInfo:    p.jobInfo,
@@ -93,14 +95,6 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 		// etc.
 		UI: p.UI,
 	}
-
-	var entries []string
-
-	for k, v := range cfg.Labels {
-		entries = append(entries, k+"="+v)
-	}
-
-	sort.Strings(entries)
 
 	// Setup our directory
 	dir, err := p.dir.App(cfg.Name)
@@ -126,10 +120,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 			continue
 		}
 
-		// Get our labels
-		labels := p.mergeLabels(cfg.Labels, c.Config.Labels)
-
-		err = app.initComponent(ctx, c.Type, c.Target, p.factories[c.Type], c.Config, labels)
+		err = app.initComponent(ctx, c.Type, c.Target, p.factories[c.Type], c.Config, c.Config.Labels)
 		if err != nil {
 			return nil, err
 		}
@@ -198,6 +189,14 @@ func (a *App) ComponentProto(c interface{}) *pb.Component {
 	}
 
 	return info.Info
+}
+
+// mergeLabels merges the set of labels given. See project.mergeLabels.
+// This is the app-specific version that adds the proper app-specific labels
+// as necessary.
+func (a *App) mergeLabels(ls ...map[string]string) map[string]string {
+	ls = append([]map[string]string{a.config.Labels}, ls...)
+	return a.project.mergeLabels(ls...)
 }
 
 // callDynamicFunc calls a dynamic function which is a common pattern for

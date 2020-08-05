@@ -311,7 +311,7 @@ func (s *platformServer) Deploy(
 	internal := s.internal()
 	defer internal.Cleanup.Close()
 
-	encoded, err := callDynamicFuncAny2(s.Impl.DeployFunc(), args.Args,
+	encoded, _, err := callDynamicFuncAny2(s.Impl.DeployFunc(), args.Args,
 		argmapper.ConverterFunc(s.Mappers...),
 		argmapper.Typed(internal),
 		argmapper.Typed(ctx),
