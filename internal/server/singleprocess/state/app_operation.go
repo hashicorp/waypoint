@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -34,6 +35,11 @@ type appOperation struct {
 
 	// Bucket is the global bucket for all records of this operation.
 	Bucket []byte
+
+	// seq is the previous sequence number to set. This is initialized by the
+	// index init on server boot and `sync/atomic` should be used to increment
+	// it on each use.
+	seq uint64
 }
 
 // Test validates that the operation struct is setup properly. This
@@ -279,10 +285,43 @@ func (op *appOperation) dbPut(
 	// Get the global bucket and write the value to it.
 	b := dbTxn.Bucket(op.Bucket)
 
-	// If we're updating, then this shouldn't already exist
 	id := []byte(op.valueField(value, "Id").(string))
-	if update && b.Get(id) == nil {
-		return status.Errorf(codes.NotFound, "record with ID %q not found for update", string(id))
+	if update {
+		// Load the value so that we can retain the values that are read-only.
+		// At the same time we verify it exists
+		existing := op.newStruct()
+		err := dbGet(dbTxn.Bucket(op.Bucket), []byte(id), existing)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				return status.Errorf(codes.NotFound, "record with ID %q not found for update", string(id))
+			}
+
+			return err
+		}
+
+		// Next, ensure that the fields we want to match are matched.
+		matchFields := []string{"Sequence"}
+		for _, name := range matchFields {
+			f := op.valueFieldReflect(value, name)
+			if !f.IsValid() {
+				continue
+			}
+
+			fOld := op.valueFieldReflect(existing, name)
+			if !fOld.IsValid() {
+				continue
+			}
+
+			f.Set(fOld)
+		}
+	}
+
+	// If we're not updating, then set the sequence number up if we have one.
+	if !update {
+		seq := atomic.AddUint64(&op.seq, 1)
+		if f := op.valueFieldReflect(value, "Sequence"); f.IsValid() {
+			f.Set(reflect.ValueOf(seq))
+		}
 	}
 
 	if err := dbPut(b, id, value); err != nil {
@@ -351,17 +390,21 @@ func (op *appOperation) indexPut(txn *memdb.Txn, value proto.Message) error {
 }
 
 func (op *appOperation) valueField(value interface{}, field string) interface{} {
-	v := reflect.ValueOf(value)
-	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
-		v = v.Elem()
-	}
-
-	fv := v.FieldByName(field)
+	fv := op.valueFieldReflect(value, field)
 	if !fv.IsValid() {
 		return nil
 	}
 
 	return fv.Interface()
+}
+
+func (op *appOperation) valueFieldReflect(value interface{}, field string) reflect.Value {
+	v := reflect.ValueOf(value)
+	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
+
+	return v.FieldByName(field)
 }
 
 // newStruct creates a pointer to a new value of the type of op.Struct.
@@ -445,6 +488,7 @@ type operationIndexRecord struct {
 	Project      string
 	App          string
 	Workspace    string
+	Sequence     uint64
 	StartTime    time.Time
 	CompleteTime time.Time
 }

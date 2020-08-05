@@ -42,6 +42,24 @@ func TestAppOperation(t *testing.T) {
 		require.True(ok)
 		require.NotNil(b.Application)
 		require.Equal("A", b.Id)
+		require.Equal(uint64(1), b.Sequence)
+
+		// Create another, try to change the sequence number
+		require.NoError(op.Put(s, true, serverptypes.TestValidBuild(t, &pb.Build{
+			Id:       "A",
+			Sequence: 2,
+		})))
+
+		// Read it back
+		raw, err = op.Get(s, "A")
+		require.NoError(err)
+		require.NotNil(raw)
+
+		b, ok = raw.(*pb.Build)
+		require.True(ok)
+		require.NotNil(b.Application)
+		require.Equal("A", b.Id)
+		require.Equal(uint64(1), b.Sequence)
 	})
 
 	t.Run("latest basic", func(t *testing.T) {
