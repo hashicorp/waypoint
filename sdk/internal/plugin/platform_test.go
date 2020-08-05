@@ -24,6 +24,7 @@ func TestPlatform_optionalInterfaces(t *testing.T) {
 		raw, err := client.Dispense("platform")
 		require.NoError(err)
 		require.Implements((*component.Platform)(nil), raw)
+		require.Implements((*component.PlatformReleaser)(nil), raw)
 		require.Implements((*component.LogPlatform)(nil), raw)
 
 		_, ok := raw.(component.Destroyer)

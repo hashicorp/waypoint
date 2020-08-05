@@ -22,6 +22,10 @@ service Platform {
   rpc DeploySpec(Empty) returns (FuncSpec);
   rpc Deploy(FuncSpec.Args) returns (Deploy.Resp);
 
+  // component.PlatformReleaser optional implementation.
+  rpc DefaultReleaserSpec(google.protobuf.Empty) returns (FuncSpec);
+  rpc DefaultReleaser(FuncSpec.Args) returns (DefaultReleaser.Resp);
+
   // component.Destroyer optional implementation
   rpc IsDestroyer(google.protobuf.Empty) returns (ImplementsResp);
   rpc DestroySpec(google.protobuf.Empty) returns (FuncSpec);
@@ -29,9 +33,14 @@ service Platform {
 
   // IsLogPlatform returns true if this platform also implements LogPlatform.
   rpc IsLogPlatform(google.protobuf.Empty) returns (ImplementsResp);
+}
 
-  // IsReleaseManager returns true if this platform also implements ReleaseManager.
-  rpc IsReleaseManager(google.protobuf.Empty) returns (ImplementsResp);
+message DefaultReleaser {
+  message Resp {
+    // stream_id is the stream ID to connect to to get access to the
+    // ReleaseManager implementation.
+    uint32 stream_id = 1;
+  }
 }
 
 message Deploy {

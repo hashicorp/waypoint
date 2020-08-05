@@ -138,10 +138,26 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 	// If we don't have a releaser but our platform implements release then
 	// we use that.
 	if app.Releaser == nil && app.Platform != nil {
-		if r, ok := app.Platform.(component.ReleaseManager); ok && r.ReleaseFunc() != nil {
+		app.logger.Trace("no releaser configured, checking if platform supports release")
+		if r, ok := app.Platform.(component.PlatformReleaser); ok && r.DefaultReleaserFunc() != nil {
 			app.logger.Info("platform capable of release, using platform for release")
-			app.Releaser = r
-			app.components[r] = app.components[app.Platform]
+			raw, err := app.callDynamicFunc(
+				ctx,
+				app.logger,
+				(*component.ReleaseManager)(nil),
+				app.Platform,
+				r.DefaultReleaserFunc(),
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			app.Releaser = raw.(component.ReleaseManager)
+			app.components[app.Releaser] = app.components[app.Platform]
+		} else {
+			app.logger.Info("no releaser configured, platform does not support a default releaser",
+				"platform_type", fmt.Sprintf("%T", app.Platform),
+			)
 		}
 	}
 

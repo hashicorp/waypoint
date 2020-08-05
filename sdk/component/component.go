@@ -68,6 +68,16 @@ type Platform interface {
 	DeployFunc() interface{}
 }
 
+// PlatformReleaser is an optional interface that a Platform can implement
+// to provide default Release functionality. This only takes effect if
+// no release is configured.
+type PlatformReleaser interface {
+	// DefaultReleaserFunc() should return a function that returns
+	// a ReleaseManger implementation. This ReleaseManager will NOT have
+	// any config so it must work by default.
+	DefaultReleaserFunc() interface{}
+}
+
 // ReleaseManager is responsible for taking a deployment and making it
 // "released" which means that traffic can now route to it.
 type ReleaseManager interface {

@@ -8,14 +8,14 @@ type mix_Platform_Authenticator struct {
 	component.Authenticator
 	component.ConfigurableNotify
 	component.Platform
-	component.ReleaseManager
+	component.PlatformReleaser
 }
 
 type mix_Platform_Destroy struct {
 	component.Authenticator
 	component.ConfigurableNotify
 	component.Platform
-	component.ReleaseManager
+	component.PlatformReleaser
 	component.Destroyer
 }
 
@@ -23,7 +23,7 @@ type mix_Platform_Log struct {
 	component.Authenticator
 	component.ConfigurableNotify
 	component.Platform
-	component.ReleaseManager
+	component.PlatformReleaser
 	component.LogPlatform
 }
 
@@ -31,7 +31,7 @@ type mix_Platform_Log_Destroy struct {
 	component.Authenticator
 	component.ConfigurableNotify
 	component.Platform
-	component.ReleaseManager
+	component.PlatformReleaser
 	component.LogPlatform
 	component.Destroyer
 }
