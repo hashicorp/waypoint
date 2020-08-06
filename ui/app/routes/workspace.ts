@@ -5,7 +5,7 @@ import { Ref } from 'waypoint-pb';
 import CurrentWorkspaceService from 'waypoint/services/current-workspace';
 
 interface WSModelParams {
-  id: string;
+  workspace_id: string;
 }
 
 export default class Workspace extends Route {
@@ -15,10 +15,10 @@ export default class Workspace extends Route {
   async model(params: WSModelParams) {
     // Workspace "id" which is a name, based on URL param
     let ws = new Ref.Workspace();
-    ws.setWorkspace(params.id);
+    ws.setWorkspace(params.workspace_id);
 
-    // Set on service, note we do not have a Workspace
-    this.currentWorkspace.setRef(ws);
+    // Set the ref on service, note we do not have a Workspace
+    this.currentWorkspace.ref = ws;
     return ws.toObject();
   }
 }

@@ -20,13 +20,13 @@ export default class Project extends Route {
     req.setProject(ref);
 
     // Set on service
-    this.currentProject.setRef(ref);
+    this.currentProject.ref = ref;
 
     let resp = await this.api.client.getProject(req, {});
     let project = resp.getProject();
 
     // Set on service
-    this.currentProject.setProject(project!);
+    this.currentProject.project = project;
 
     return project?.toObject();
   }

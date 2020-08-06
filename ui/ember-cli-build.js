@@ -39,45 +39,11 @@ module.exports = function (defaults) {
       // allows use of a CSP without 'unsafe-eval' directive
       forbidEval: true,
       // uncomment this to see a tree view of what ember-cli-auto-import builds
-      //webpack: {
-      //plugins: [
-      //new (require("webpack-bundle-analyzer")).BundleAnalyzerPlugin(),
-      //],
-      //},
+      // webpack: {
+      //   plugins: [new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)()],
+      // },
     },
   });
-
-  app.import('node_modules/google-protobuf/google-protobuf.js', {
-    using: [{ transformation: 'cjs', as: 'google-protobuf' }],
-  });
-
-  app.import('node_modules/google-protobuf/google/protobuf/any_pb.js', {
-    using: [{ transformation: 'cjs', as: 'google-protobuf/google/protobuf/any_pb.js' }],
-  });
-
-  app.import('node_modules/google-protobuf/google/protobuf/timestamp_pb.js', {
-    using: [{ transformation: 'cjs', as: 'google-protobuf/google/protobuf/timestamp_pb.js' }],
-  });
-
-  app.import('node_modules/google-protobuf/google/protobuf/empty_pb.js', {
-    using: [{ transformation: 'cjs', as: 'google-protobuf/google/protobuf/empty_pb.js' }],
-  });
-
-  // There is a known issue in the CJS transform that forces you to
-  // only import from the node_modules path. For this reason we
-  // make a few packages of basically vendored generated clients/messages
-  // https://github.com/rwjblue/ember-cli-cjs-transform/issues/284
-  // In the future this could be an ember add-on or see a fix upstream
-  // and move them back to `vendor/`
-  app.import('node_modules/api-common-protos/google/rpc/status_pb.js', {
-    using: [{ transformation: 'cjs', as: 'api-common-protos/google/rpc/status_pb.js' }],
-  });
-
-  // app.import('node_modules/waypoint-client/ServerServiceClientPb.ts', {
-  //   using: [
-  //     { transformation: 'cjs', as: 'lib/waypoint-client/ServerServiceClientPb' },
-  //   ],
-  // });
 
   // Use `app.import` to add additional libraries to the generated
   // output files.
