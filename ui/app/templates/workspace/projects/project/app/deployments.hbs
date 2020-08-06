@@ -1,0 +1,8 @@
+<h3>{{t "page.deployments.title"}}</h3>
+<ul data-test-deployment-list=true>
+    {{#each @model as |deployment|}}
+    <li>Deployment ID: {{deployment.id}} deployer: {{deployment.component.name}}</li>
+    {{/each}}
+</ul>
+
+{{outlet}}

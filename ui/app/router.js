@@ -15,6 +15,13 @@ Router.map(function () {
         this.route('apps');
         this.route('app', { path: '/app/:app_id' }, function () {
           this.route('builds');
+          this.route('build', { path: '/build/:build_number' });
+          this.route('deployments');
+          this.route('deployment', { path: '/deployment/:deployment_number' });
+          this.route('releases');
+          this.route('release', { path: '/release/:release_number' });
+          this.route('logs', { path: '/logs' });
+          this.route('exec', { path: '/exec' });
         });
       });
     });

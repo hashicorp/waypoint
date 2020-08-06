@@ -3,6 +3,7 @@ import { Server } from 'miragejs';
 
 import * as build from './services/build';
 import * as project from './services/project';
+import * as deployment from './services/deployment';
 
 export default function (this: Server) {
   this.namespace = 'hashicorp.waypoint.Waypoint';
@@ -18,6 +19,7 @@ export default function (this: Server) {
   this.pretender.handledRequest = logRequestConsole;
 
   this.post('/ListBuilds', build.list);
+  this.post('/ListDeployments', deployment.list);
   this.post('/ListProjects', project.list);
   this.post('/GetProject', project.get);
 

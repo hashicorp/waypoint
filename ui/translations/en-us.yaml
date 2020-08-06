@@ -3,6 +3,11 @@ nav:
   workspace_detail: 'Workspace detail page'
   project_index: 'Projects index page'
   application_index: 'Applications index page'
+  builds_index: 'Builds index page'
+  deployments_index: 'Deployments index page'
+  releases_index: 'Releases index page'
+  exec: 'Exec'
+  logs: 'Logs'
 
 product:
   name: 'Waypoint UI'
@@ -10,3 +15,5 @@ product:
 page:
   builds:
     title: 'Builds'
+  deployments:
+    title: 'Deployments'
