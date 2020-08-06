@@ -79,7 +79,7 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 }
 
 func (op *deployDestroyOperation) StatusPtr(msg proto.Message) **pb.Status {
-	return &(msg.(*pb.Deployment).Status)
+	return nil
 }
 
 func (op *deployDestroyOperation) ValuePtr(msg proto.Message) **any.Any {
