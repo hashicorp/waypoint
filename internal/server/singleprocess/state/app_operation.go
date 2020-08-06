@@ -96,10 +96,30 @@ func (op *appOperation) Put(s *State, update bool, value proto.Message) error {
 	return err
 }
 
-// Get gets an operation record by ID.
-func (op *appOperation) Get(s *State, id string) (interface{}, error) {
+// Get gets an operation record by reference.
+func (op *appOperation) Get(s *State, ref *pb.Ref_Operation) (interface{}, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
 	result := op.newStruct()
 	err := s.db.View(func(tx *bolt.Tx) error {
+		var id string
+		switch t := ref.Target.(type) {
+		case *pb.Ref_Operation_Id:
+			id = t.Id
+
+		case *pb.Ref_Operation_Sequence:
+			var err error
+			id, err = op.getIdForSeq(s, tx, memTxn, t.Sequence)
+			if err != nil {
+				return err
+			}
+
+		default:
+			return status.Errorf(codes.FailedPrecondition,
+				"unknown operation reference type: %T", ref.Target)
+		}
+
 		return dbGet(tx.Bucket(op.Bucket), []byte(id), result)
 	})
 	if err != nil {
@@ -107,6 +127,31 @@ func (op *appOperation) Get(s *State, id string) (interface{}, error) {
 	}
 
 	return result, nil
+}
+
+func (op *appOperation) getIdForSeq(
+	s *State,
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_OperationSeq,
+) (string, error) {
+	raw, err := memTxn.First(
+		op.memTableName(),
+		opSeqIndexName,
+		ref.Application.Project,
+		ref.Application.Application,
+		ref.Number,
+	)
+	if err != nil {
+		return "", err
+	}
+	if raw == nil {
+		return "", status.Errorf(codes.NotFound,
+			"not found for sequence number %d", ref.Number)
+	}
+
+	idx := raw.(*operationIndexRecord)
+	return idx.Id, nil
 }
 
 // List lists all the records.
@@ -234,7 +279,9 @@ func (op *appOperation) Latest(
 			continue
 		}
 
-		v, err := op.Get(s, record.Id)
+		v, err := op.Get(s, &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{Id: record.Id},
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -385,6 +432,11 @@ func (op *appOperation) indexPut(txn *memdb.Txn, value proto.Message) error {
 		}
 	}
 
+	var sequence uint64
+	if v := op.valueField(value, "Sequence"); v != nil {
+		sequence = v.(uint64)
+	}
+
 	ref := op.valueField(value, "Application").(*pb.Ref_Application)
 	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
 	return txn.Insert(op.memTableName(), &operationIndexRecord{
@@ -392,6 +444,7 @@ func (op *appOperation) indexPut(txn *memdb.Txn, value proto.Message) error {
 		Project:      ref.Project,
 		App:          ref.Application,
 		Workspace:    wsRef.Workspace,
+		Sequence:     sequence,
 		StartTime:    startTime,
 		CompleteTime: completeTime,
 	})
@@ -485,6 +538,29 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 					},
 				},
 			},
+
+			opSeqIndexName: &memdb.IndexSchema{
+				Name:         opSeqIndexName,
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field:     "Project",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "App",
+							Lowercase: true,
+						},
+
+						&memdb.UintFieldIndex{
+							Field: "Sequence",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -512,6 +588,7 @@ const (
 	opIdIndexName           = "id"            // id index name
 	opStartTimeIndexName    = "start-time"    // start time index
 	opCompleteTimeIndexName = "complete-time" // complete time index
+	opSeqIndexName          = "seq"           // sequence number index
 )
 
 // listOperationsOptions are options that can be set for List calls on

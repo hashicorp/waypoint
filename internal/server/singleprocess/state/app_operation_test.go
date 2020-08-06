@@ -34,7 +34,7 @@ func TestAppOperation(t *testing.T) {
 		})))
 
 		// Read it back
-		raw, err := op.Get(s, "A")
+		raw, err := op.Get(s, appOpById("A"))
 		require.NoError(err)
 		require.NotNil(raw)
 
@@ -51,7 +51,7 @@ func TestAppOperation(t *testing.T) {
 		})))
 
 		// Read it back
-		raw, err = op.Get(s, "A")
+		raw, err = op.Get(s, appOpById("A"))
 		require.NoError(err)
 		require.NotNil(raw)
 
@@ -60,6 +60,26 @@ func TestAppOperation(t *testing.T) {
 		require.NotNil(b.Application)
 		require.Equal("A", b.Id)
 		require.Equal(uint64(1), b.Sequence)
+
+		{
+			// Get it by sequence
+			raw, err = op.Get(s, &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Sequence{
+					Sequence: &pb.Ref_OperationSeq{
+						Application: b.Application,
+						Number:      b.Sequence,
+					},
+				},
+			})
+			require.NoError(err)
+			require.NotNil(raw)
+
+			b, ok = raw.(*pb.Build)
+			require.True(ok)
+			require.NotNil(b.Application)
+			require.Equal("A", b.Id)
+			require.Equal(uint64(1), b.Sequence)
+		}
 	})
 
 	t.Run("latest basic", func(t *testing.T) {
@@ -410,4 +430,10 @@ func TestAppOperation_deploy(t *testing.T) {
 		sort.Strings(ids)
 		require.Equal("A", ids[0])
 	})
+}
+
+func appOpById(id string) *pb.Ref_Operation {
+	return &pb.Ref_Operation{
+		Target: &pb.Ref_Operation_Id{Id: id},
+	}
 }

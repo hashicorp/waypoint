@@ -56,7 +56,9 @@ func (s *State) HMACKeyCreate(id string, size int) (*pb.HMACKey, error) {
 
 // HMACKeyGet gets a build by ID.
 func (s *State) HMACKeyGet(id string) (*pb.HMACKey, error) {
-	result, err := hmacKeyOp.Get(s, id)
+	result, err := hmacKeyOp.Get(s, &pb.Ref_Operation{
+		Target: &pb.Ref_Operation_Id{Id: id},
+	})
 	if err != nil {
 		return nil, err
 	}

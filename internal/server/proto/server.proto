@@ -220,6 +220,21 @@ message Ref {
     string name = 2;
   }
 
+  // Operation references an operation (build, deploy, etc.). This can reference
+  // an operation in multiple ways so you must use the oneof to choose.
+  message Operation {
+    oneof target {
+      string id = 1;
+      OperationSeq sequence = 2;
+    }
+  }
+
+  // OperationSeq references an operation by sequence number.
+  message OperationSeq {
+    Application application = 1;
+    uint64 number = 2;
+  }
+
   // Runner references a runner process which executes operations. This
   // can reference a runner by any of the more specific types, such as
   // by ID. If you want to constrain which runners can be targeted,
@@ -1101,8 +1116,7 @@ message PushedArtifact {
 ********************************************************************/
 
 message GetDeploymentRequest {
-  // Deployment to return.
-  string deployment_id = 1;
+  Ref.Operation ref = 1;
 }
 
 message UpsertDeploymentRequest {

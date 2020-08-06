@@ -18,9 +18,9 @@ func (s *State) ReleasePut(update bool, b *pb.Release) error {
 	return releaseOp.Put(s, update, b)
 }
 
-// ReleaseGet gets a release by ID.
-func (s *State) ReleaseGet(id string) (*pb.Release, error) {
-	result, err := releaseOp.Get(s, id)
+// ReleaseGet gets a release by ref.
+func (s *State) ReleaseGet(ref *pb.Ref_Operation) (*pb.Release, error) {
+	result, err := releaseOp.Get(s, ref)
 	if err != nil {
 		return nil, err
 	}
