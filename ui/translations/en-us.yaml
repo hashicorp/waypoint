@@ -8,6 +8,7 @@ nav:
   releases_index: 'Releases index page'
   exec: 'Exec'
   logs: 'Logs'
+  auth: 'Authenticate'
 
 product:
   name: 'Waypoint UI'
