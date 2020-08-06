@@ -1,6 +1,9 @@
 package state
 
 import (
+	"strings"
+	"sync/atomic"
+
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
@@ -142,4 +145,58 @@ func (s *State) appDefaultForRef(ref *pb.Ref_Application) *pb.Application {
 			Project: ref.Project,
 		},
 	}
+}
+
+// appIncrSeq gets the current sequence number, increments it and returns
+// the one to set.
+func (s *State) appIncrSeq(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Application,
+) (uint64, error) {
+	// Get the project
+	raw, err := memTxn.First(
+		projectIndexTableName,
+		projectIndexIdIndexName,
+		string(s.projectIdByRef(&pb.Ref_Project{Project: ref.Project})),
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	ptr, ok := raw.(*projectIndexRecord).AppSeq[strings.ToLower(ref.Application)]
+	if !ok {
+		return 0, status.Errorf(codes.NotFound, "application not found")
+	}
+
+	return atomic.AddUint64(ptr, 1), nil
+}
+
+// appInitSeq sets the sequence number for an application if it is bigger.
+func (s *State) appInitSeq(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Application,
+	value uint64,
+) error {
+	// Get the project
+	raw, err := memTxn.First(
+		projectIndexTableName,
+		projectIndexIdIndexName,
+		string(s.projectIdByRef(&pb.Ref_Project{Project: ref.Project})),
+	)
+	if err != nil {
+		return err
+	}
+
+	ptr, ok := raw.(*projectIndexRecord).AppSeq[strings.ToLower(ref.Application)]
+	if !ok {
+		return status.Errorf(codes.NotFound, "application not found")
+	}
+
+	if value > *ptr {
+		*ptr = value
+	}
+
+	return nil
 }
