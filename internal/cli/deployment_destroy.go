@@ -86,7 +86,9 @@ func (c *DeploymentDestroyCommand) getDeployments(ctx context.Context, ids []str
 	client := c.project.Client()
 	for _, id := range ids {
 		deployment, err := client.GetDeployment(ctx, &pb.GetDeploymentRequest{
-			DeploymentId: id,
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{Id: id},
+			},
 		})
 		if err != nil {
 			return nil, err
