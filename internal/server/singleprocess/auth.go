@@ -131,7 +131,7 @@ func (s *service) Authenticate(ctx context.Context, token, endpoint string, effe
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
 func (s *service) GenerateToken(keyId string, metadata map[string]string, body *pb.Token) (string, error) {
-	key, err := s.state.HMACKeyCreate(keyId, hmacKeySize)
+	key, err := s.state.HMACKeyCreateIfNotExist(keyId, hmacKeySize)
 	if err != nil {
 		return "", err
 	}
