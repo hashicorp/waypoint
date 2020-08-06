@@ -7,9 +7,12 @@ export default class Router extends EmberRouter {
 }
 
 Router.map(function () {
+  this.route('auth', { path: '/auth' });
+  this.route('workspaces', { path: '/' });
   this.route('workspace', { path: '/:workspace_id' }, function () {
     this.route('projects', { path: '/projects' }, function () {
       this.route('project', { path: '/:project_id' }, function () {
+        this.route('apps');
         this.route('app', { path: '/app/:app_id' }, function () {
           this.route('builds');
         });

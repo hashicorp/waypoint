@@ -1,8 +1,8 @@
 nav:
   builds: 'Builds'
-  default_workspace: 'Default workspace'
-  title: 'Menu'
-  project_list: 'View all projects'
+  workspace_detail: 'Workspace detail page'
+  project_index: 'Projects index page'
+  application_index: 'Applications index page'
 
 product:
   name: 'Waypoint UI'

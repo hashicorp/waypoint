@@ -4,6 +4,8 @@ import faker from '../faker';
 import { dasherize } from '@ember/string';
 import { create } from 'domain';
 
+const projectName = 'marketing-public';
+
 function createProjectRef(): Ref.Project {
   let build = new Build();
   build.setId(fakeId());
@@ -13,7 +15,7 @@ function createProjectRef(): Ref.Project {
   workspace.setWorkspace('default');
 
   let project = new Ref.Project();
-  project.setProject(dasherize(faker.hacker.noun()));
+  project.setProject(projectName);
 
   return project;
 }
@@ -27,7 +29,7 @@ function createApp(): Application {
 
 function createProject(): Project {
   let proj = new Project();
-  proj.setName(dasherize(faker.hacker.noun()));
+  proj.setName(projectName);
   proj.setApplicationsList([createApp(), createApp()]);
 
   return proj;
@@ -35,7 +37,7 @@ function createProject(): Project {
 
 export function list(schema: any, { params, requestHeaders }) {
   let resp = new ListProjectsResponse();
-  let projs = new Array(createProjectRef(), createProjectRef());
+  let projs = new Array(createProjectRef());
   resp.setProjectsList(projs);
   return this.serialize(resp, 'application');
 }

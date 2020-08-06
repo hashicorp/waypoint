@@ -4,8 +4,12 @@
 
 <p>Application metadata and other information</p>
 
-<LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
-    Builds
-</LinkTo>
+<ul>
+    <li>
+        <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
+            Builds
+        </LinkTo>
+    </li>
+</ul>
 
 {{outlet}}

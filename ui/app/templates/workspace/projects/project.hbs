@@ -1,9 +1,7 @@
-<h4>Applications for project: {{@model.name}}</h4>
-<ul>
-    {{#each @model.applicationsList as |app|}}
-    <li>App: <LinkTo @route="workspace.projects.project.app" @model={{app.name}}>{{app.name}}</LinkTo>
-    </li>
-    {{/each}}
-</ul>
+<h4>Project: {{@model.name}}</h4>
+
+<LinkTo @route="workspace.projects.project.apps" @models={{array "default" @model.name }}>
+    {{t "nav.application_index"}}
+</LinkTo>
 
 {{outlet}}
