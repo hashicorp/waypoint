@@ -187,38 +187,9 @@ func (s *State) projectDelete(
 
 // projectIndexSet writes an index record for a single project.
 func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) error {
-	// Get the previous value so we can preserve the sequence numbers.
-	raw, err := txn.First(
-		projectIndexTableName,
-		projectIndexIdIndexName,
-		string(s.projectId(value)),
-	)
-	if err != nil {
-		return err
+	record := &projectIndexRecord{
+		Id: string(id),
 	}
-
-	record, ok := raw.(*projectIndexRecord)
-	if !ok || record == nil {
-		record = &projectIndexRecord{
-			Id: string(id),
-		}
-	}
-
-	// Setup our sequence numbers
-	appSeq := map[string]*uint64{}
-	for _, app := range value.Applications {
-		k := strings.ToLower(app.Name)
-
-		if record.AppSeq != nil {
-			appSeq[k] = record.AppSeq[k]
-		}
-
-		if appSeq[k] == nil {
-			var val uint64
-			appSeq[k] = &val
-		}
-	}
-	record.AppSeq = appSeq
 
 	// Insert the index
 	return txn.Insert(projectIndexTableName, record)
@@ -271,6 +242,5 @@ const (
 )
 
 type projectIndexRecord struct {
-	Id     string
-	AppSeq map[string]*uint64 // AppSeq is the next application sequence number
+	Id string
 }

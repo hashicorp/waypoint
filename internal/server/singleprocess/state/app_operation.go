@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -34,6 +35,11 @@ type appOperation struct {
 
 	// Bucket is the global bucket for all records of this operation.
 	Bucket []byte
+
+	// seq is the previous sequence number to set. This is initialized by the
+	// index init on server boot and `sync/atomic` should be used to increment
+	// it on each use.
+	seq uint64
 }
 
 // Test validates that the operation struct is setup properly. This
@@ -359,12 +365,8 @@ func (op *appOperation) dbPut(
 
 	// If we're not updating, then set the sequence number up if we have one.
 	if !update {
+		seq := atomic.AddUint64(&op.seq, 1)
 		if f := op.valueFieldReflect(value, "Sequence"); f.IsValid() {
-			seq, err := s.appIncrSeq(dbTxn, memTxn, appRef)
-			if err != nil {
-				return err
-			}
-
 			f.Set(reflect.ValueOf(seq))
 		}
 	}
@@ -392,14 +394,9 @@ func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) e
 
 		// Check if this has a bigger sequence number
 		if v := op.valueField(result, "Sequence"); v != nil {
-			appRef := op.valueField(result, "Application").(*pb.Ref_Application)
-			if err := s.appInitSeq(
-				dbTxn,
-				memTxn,
-				appRef,
-				v.(uint64),
-			); err != nil {
-				return err
+			seq, ok := v.(uint64)
+			if ok && seq > op.seq {
+				op.seq = seq
 			}
 		}
 
