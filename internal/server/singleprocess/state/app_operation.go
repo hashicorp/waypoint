@@ -39,7 +39,10 @@ type appOperation struct {
 	// seq is the previous sequence number to set. This is initialized by the
 	// index init on server boot and `sync/atomic` should be used to increment
 	// it on each use.
-	seq uint64
+	//
+	// NOTE(mitchellh): we currently never prune this map. We should do that
+	// once we implement Delete.
+	seq map[string]map[string]*uint64
 }
 
 // Test validates that the operation struct is setup properly. This
@@ -365,8 +368,8 @@ func (op *appOperation) dbPut(
 
 	// If we're not updating, then set the sequence number up if we have one.
 	if !update {
-		seq := atomic.AddUint64(&op.seq, 1)
 		if f := op.valueFieldReflect(value, "Sequence"); f.IsValid() {
+			seq := atomic.AddUint64(op.appSeq(appRef), 1)
 			f.Set(reflect.ValueOf(seq))
 		}
 	}
@@ -377,6 +380,33 @@ func (op *appOperation) dbPut(
 
 	// Create our index value and write that.
 	return op.indexPut(memTxn, value)
+}
+
+// appSeq gets the pointer to the sequence number for the given application.
+// This can only safely be called while holding the memdb write transaction.
+func (op *appOperation) appSeq(ref *pb.Ref_Application) *uint64 {
+	if op.seq == nil {
+		op.seq = map[string]map[string]*uint64{}
+	}
+
+	// Get our apps
+	k := strings.ToLower(ref.Project)
+	apps, ok := op.seq[k]
+	if !ok {
+		apps = map[string]*uint64{}
+		op.seq[k] = apps
+	}
+
+	// Get our app
+	k = strings.ToLower(ref.Application)
+	seq, ok := apps[k]
+	if !ok {
+		var value uint64
+		seq = &value
+		apps[k] = seq
+	}
+
+	return seq
 }
 
 // indexInit initializes the index table in memdb from all the records
@@ -394,9 +424,12 @@ func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) e
 
 		// Check if this has a bigger sequence number
 		if v := op.valueField(result, "Sequence"); v != nil {
-			seq, ok := v.(uint64)
-			if ok && seq > op.seq {
-				op.seq = seq
+			seq := v.(uint64)
+
+			appRef := op.valueField(result, "Application").(*pb.Ref_Application)
+			current := op.appSeq(appRef)
+			if seq > *current {
+				*current = seq
 			}
 		}
 
