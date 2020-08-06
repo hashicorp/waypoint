@@ -44,8 +44,9 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 		// List builds
 		resp, err := client.ListDeployments(c.Ctx, &pb.ListDeploymentsRequest{
-			Application: app.Ref(),
-			Workspace:   wsRef,
+			Application:   app.Ref(),
+			Workspace:     wsRef,
+			PhysicalState: pb.Operation_CREATED,
 		})
 		if err != nil {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
