@@ -43,6 +43,7 @@ func (c *ExecCommand) Run(args []string) int {
 				Order: pb.OperationOrder_COMPLETE_TIME,
 				Desc:  true,
 			},
+			PhysicalState: pb.Operation_CREATED,
 		})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
