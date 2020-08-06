@@ -141,7 +141,9 @@ func TestServiceDeployment_GetDeployment(t *testing.T) {
 
 		// Get, should return a deployment
 		deployment, err := client.GetDeployment(ctx, &Req{
-			DeploymentId: resp.Deployment.Id,
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{Id: resp.Deployment.Id},
+			},
 		})
 		require.NoError(err)
 		require.NotNil(deployment)
@@ -153,7 +155,9 @@ func TestServiceDeployment_GetDeployment(t *testing.T) {
 
 		// get, should fail
 		resp, err := client.GetDeployment(ctx, &Req{
-			DeploymentId: "nope",
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{Id: "nope"},
+			},
 		})
 		require.Error(err)
 		require.Nil(resp)

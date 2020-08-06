@@ -29,8 +29,14 @@ service Waypoint {
   // ListBuilds returns the builds.
   rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
+  // GetBuild returns a build
+  rpc GetBuild(GetBuildRequest) returns (Build);
+
   // ListPushedArtifacts returns the builds.
   rpc ListPushedArtifacts(ListPushedArtifactsRequest) returns (ListPushedArtifactsResponse);
+
+  // GetPushedArtifact returns a deployment
+  rpc GetPushedArtifact(GetPushedArtifactRequest) returns (PushedArtifact);
 
   // ListDeployments returns the deployments.
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
@@ -45,6 +51,12 @@ service Waypoint {
   // GetLatestPushedArtifact returns the most recent successfully completed
   // artifact push for an app.
   rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
+
+  // ListReleases returns the deployments.
+  rpc ListReleases(ListReleasesRequest) returns (ListReleasesResponse);
+
+  // GetRelease returns a deployment
+  rpc GetRelease(GetReleaseRequest) returns (Release);
 
   // GetLatestRelease returns the most recent successfully completed
   // artifact push for an app.
@@ -998,6 +1010,10 @@ message GetLatestBuildRequest {
   Ref.Workspace workspace = 2;
 }
 
+message GetBuildRequest {
+  Ref.Operation ref = 1;
+}
+
 // Build represents a process of creating an artifact that can be in any state,
 // such as complete. A successful complete build produces an artifact.
 message Build {
@@ -1059,6 +1075,10 @@ message GetLatestPushedArtifactRequest {
 
   // workspace for the artifact, any workspace if empty
   Ref.Workspace workspace = 2;
+}
+
+message GetPushedArtifactRequest {
+  Ref.Operation ref = 1;
 }
 
 message ListPushedArtifactsRequest {
@@ -1235,8 +1255,37 @@ message GetLatestReleaseRequest {
   Ref.Workspace workspace = 2;
 }
 
+message ListReleasesRequest {
+  // application that this release belongs to
+  Ref.Application application = 3;
+
+  // workspace that this should belong to. If this is empty, values in
+  // all workspaces will be listed.
+  Ref.Workspace workspace = 4;
+
+  // The filters to apply to this request. These are ORed, so you should
+  // specify multiple filters in the StatusFilter for AND behavior.
+  repeated StatusFilter status = 1;
+
+  // The physical state to filter for. If this is zero or unset then no
+  // filtering on physical state will be done.
+  Operation.PhysicalState physical_state = 5;
+
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 2;
+}
+
+message ListReleasesResponse {
+  repeated Release releases = 1;
+}
+
+message GetReleaseRequest {
+  Ref.Operation ref = 1;
+}
+
 message Release {
-  // application that this deployment belongs to
+  // application that this release belongs to
   Ref.Application application = 7;
 
   // The workspace that this exists in
