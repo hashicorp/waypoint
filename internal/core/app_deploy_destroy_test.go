@@ -111,7 +111,6 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 		})
 		require.NoError(err)
 		require.Equal(pb.Operation_DESTROYED, resp.Deployments[0].State)
-		require.Equal(pb.Status_SUCCESS, resp.Deployments[0].Status.State)
 	}
 
 	{
@@ -140,7 +139,6 @@ func TestAppDestroyDeploy_happy(t *testing.T) {
 		})
 		require.NoError(err)
 		require.Equal(pb.Operation_DESTROYED, resp.Deployments[0].State)
-		require.Equal(pb.Status_ERROR, resp.Deployments[0].Status.State)
 	}
 }
 
