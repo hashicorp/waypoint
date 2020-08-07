@@ -1,10 +1,20 @@
 package cli
 
 import (
+	"bytes"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-hclog"
@@ -110,7 +120,7 @@ func (c *ServerCommand) Run(args []string) int {
 	}
 
 	// We listen on a random locally bound port
-	ln, err := net.Listen("tcp", c.config.Listeners.GRPC)
+	ln, err := c.listenerForConfig(&c.config.GRPC)
 	if err != nil {
 		c.ui.Output(
 			"Error starting listener: %s", err.Error(),
@@ -120,18 +130,15 @@ func (c *ServerCommand) Run(args []string) int {
 	}
 	defer ln.Close()
 
-	var httpLn net.Listener
-	if c.config.Listeners.HTTP != "" {
-		httpLn, err = net.Listen("tcp", c.config.Listeners.HTTP)
-		if err != nil {
-			c.ui.Output(
-				"Error starting listener: %s", err.Error(),
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-		defer httpLn.Close()
+	httpLn, err := c.listenerForConfig(&c.config.HTTP)
+	if err != nil {
+		c.ui.Output(
+			"Error starting listener: %s", err.Error(),
+			terminal.WithErrorStyle(),
+		)
+		return 1
 	}
+	defer httpLn.Close()
 
 	options := []server.Option{
 		server.WithContext(c.Ctx),
@@ -146,17 +153,12 @@ func (c *ServerCommand) Run(args []string) int {
 		auth = true
 	}
 
-	httpAddr := "disabled"
-	if httpLn != nil {
-		httpAddr = httpLn.Addr().String()
-	}
-
 	// Output information to the user
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
 	values := []terminal.NamedValue{
 		{Name: "DB Path", Value: path},
 		{Name: "gRPC Address", Value: ln.Addr().String()},
-		{Name: "HTTP Address", Value: httpAddr},
+		{Name: "HTTP Address", Value: httpLn.Addr().String()},
 	}
 	if auth {
 		values = append(values, terminal.NamedValue{Name: "Auth Required", Value: "yes"})
@@ -225,14 +227,14 @@ func (c *ServerCommand) Flags() *flag.Sets {
 
 		f.StringVar(&flag.StringVar{
 			Name:    "listen-grpc",
-			Target:  &c.config.Listeners.GRPC,
+			Target:  &c.config.GRPC.Addr,
 			Usage:   "Address to bind to for gRPC connections.",
 			Default: "127.0.0.1:1234", // TODO(mitchellh: change default
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "listen-http",
-			Target:  &c.config.Listeners.HTTP,
+			Target:  &c.config.HTTP.Addr,
 			Usage:   "Address to bind to for HTTP connections. Required for the UI.",
 			Default: "127.0.0.1:1235", // TODO(mitchellh: change default
 		})
@@ -317,6 +319,104 @@ Usage: waypoint server [options]
 ` + c.Flags().Help()
 
 	return strings.TrimSpace(helpText)
+}
+
+func (c *ServerCommand) listenerForConfig(cfg *config.Listener) (net.Listener, error) {
+	// Start our bare listener
+	ln, err := net.Listen("tcp", cfg.Addr)
+	if err != nil {
+		return nil, err
+	}
+
+	// If we have TLS disabled then we're done.
+	if cfg.TLSDisable {
+		return ln, nil
+	}
+
+	// If we don't have a cert then we self-sign.
+	var certPEM, keyPEM []byte
+	if cfg.TLSCertFile != "" {
+		certPEM, err = ioutil.ReadFile(cfg.TLSCertFile)
+		if err != nil {
+			return nil, err
+		}
+		keyPEM, err = ioutil.ReadFile(cfg.TLSKeyFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if certPEM == nil {
+		priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+		if err != nil {
+			return nil, err
+		}
+
+		template := x509.Certificate{
+			SerialNumber: big.NewInt(1),
+			Subject: pkix.Name{
+				Organization: []string{"Waypoint"},
+			},
+			NotBefore:             time.Now(),
+			NotAfter:              time.Now().Add(time.Hour * 24 * 365 * 10),
+			KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+			ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+			BasicConstraintsValid: true,
+		}
+
+		derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, publicKey(priv), priv)
+		if err != nil {
+			return nil, err
+		}
+
+		// Write the cert
+		var out bytes.Buffer
+		err = pem.Encode(&out, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+		if err != nil {
+			return nil, err
+		}
+		certPEM = []byte(out.String())
+		out.Reset()
+
+		// Write the key
+		if err := pem.Encode(&out, pemBlockForKey(priv)); err != nil {
+			return nil, err
+		}
+		keyPEM = []byte(out.String())
+	}
+
+	// Setup the TLS listener
+	cert, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		ln.Close()
+		return nil, err
+	}
+
+	return tls.NewListener(ln, &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}), nil
+}
+
+func publicKey(priv interface{}) interface{} {
+	switch k := priv.(type) {
+	case *ecdsa.PrivateKey:
+		return &k.PublicKey
+	default:
+		return nil
+	}
+}
+
+func pemBlockForKey(priv interface{}) *pem.Block {
+	switch k := priv.(type) {
+	case *ecdsa.PrivateKey:
+		b, err := x509.MarshalECPrivateKey(k)
+		if err != nil {
+			panic(err)
+		}
+		return &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
+	default:
+		return nil
+	}
 }
 
 const serverWarnDBPath = `Warning! Default DB path will be used. This is at the path shown below.
