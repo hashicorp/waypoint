@@ -51,7 +51,9 @@ func (s *service) EntrypointConfig(
 
 	// Fetch the deployment info so we can calculate the config variables to send
 	deployment, err := s.GetDeployment(srv.Context(), &pb.GetDeploymentRequest{
-		DeploymentId: req.DeploymentId,
+		Ref: &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{Id: req.DeploymentId},
+		},
 	})
 
 	if err != nil {

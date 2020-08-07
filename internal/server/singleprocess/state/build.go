@@ -18,9 +18,9 @@ func (s *State) BuildPut(update bool, b *pb.Build) error {
 	return buildOp.Put(s, update, b)
 }
 
-// BuildGet gets a build by ID.
-func (s *State) BuildGet(id string) (*pb.Build, error) {
-	result, err := buildOp.Get(s, id)
+// BuildGet gets a build by ref.
+func (s *State) BuildGet(ref *pb.Ref_Operation) (*pb.Build, error) {
+	result, err := buildOp.Get(s, ref)
 	if err != nil {
 		return nil, err
 	}

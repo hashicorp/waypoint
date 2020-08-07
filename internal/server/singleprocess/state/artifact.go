@@ -18,9 +18,9 @@ func (s *State) ArtifactPut(update bool, b *pb.PushedArtifact) error {
 	return artifactOp.Put(s, update, b)
 }
 
-// ArtifactGet gets a artifact by ID.
-func (s *State) ArtifactGet(id string) (*pb.PushedArtifact, error) {
-	result, err := artifactOp.Get(s, id)
+// ArtifactGet gets a artifact by ref.
+func (s *State) ArtifactGet(ref *pb.Ref_Operation) (*pb.PushedArtifact, error) {
+	result, err := artifactOp.Get(s, ref)
 	if err != nil {
 		return nil, err
 	}

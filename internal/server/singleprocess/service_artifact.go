@@ -61,3 +61,11 @@ func (s *service) GetLatestPushedArtifact(
 ) (*pb.PushedArtifact, error) {
 	return s.state.ArtifactLatest(req.Application, req.Workspace)
 }
+
+// GetPushedArtifact returns a PushedArtifact based on ID
+func (s *service) GetPushedArtifact(
+	ctx context.Context,
+	req *pb.GetPushedArtifactRequest,
+) (*pb.PushedArtifact, error) {
+	return s.state.ArtifactGet(req.Ref)
+}

@@ -29,8 +29,14 @@ service Waypoint {
   // ListBuilds returns the builds.
   rpc ListBuilds(ListBuildsRequest) returns (ListBuildsResponse);
 
+  // GetBuild returns a build
+  rpc GetBuild(GetBuildRequest) returns (Build);
+
   // ListPushedArtifacts returns the builds.
   rpc ListPushedArtifacts(ListPushedArtifactsRequest) returns (ListPushedArtifactsResponse);
+
+  // GetPushedArtifact returns a deployment
+  rpc GetPushedArtifact(GetPushedArtifactRequest) returns (PushedArtifact);
 
   // ListDeployments returns the deployments.
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
@@ -45,6 +51,12 @@ service Waypoint {
   // GetLatestPushedArtifact returns the most recent successfully completed
   // artifact push for an app.
   rpc GetLatestPushedArtifact(GetLatestPushedArtifactRequest) returns (PushedArtifact);
+
+  // ListReleases returns the deployments.
+  rpc ListReleases(ListReleasesRequest) returns (ListReleasesResponse);
+
+  // GetRelease returns a deployment
+  rpc GetRelease(GetReleaseRequest) returns (Release);
 
   // GetLatestRelease returns the most recent successfully completed
   // artifact push for an app.
@@ -218,6 +230,21 @@ message Ref {
   message Component {
     hashicorp.waypoint.Component.Type type = 1;
     string name = 2;
+  }
+
+  // Operation references an operation (build, deploy, etc.). This can reference
+  // an operation in multiple ways so you must use the oneof to choose.
+  message Operation {
+    oneof target {
+      string id = 1;
+      OperationSeq sequence = 2;
+    }
+  }
+
+  // OperationSeq references an operation by sequence number.
+  message OperationSeq {
+    Application application = 1;
+    uint64 number = 2;
   }
 
   // Runner references a runner process which executes operations. This
@@ -983,6 +1010,10 @@ message GetLatestBuildRequest {
   Ref.Workspace workspace = 2;
 }
 
+message GetBuildRequest {
+  Ref.Operation ref = 1;
+}
+
 // Build represents a process of creating an artifact that can be in any state,
 // such as complete. A successful complete build produces an artifact.
 message Build {
@@ -991,6 +1022,9 @@ message Build {
 
   // The workspace that this exists in
   Ref.Workspace workspace = 7;
+
+  // The sequence number for this build.
+  uint64 sequence = 8;
 
   // id is the unique ID of the build
   string id = 1;
@@ -1043,6 +1077,10 @@ message GetLatestPushedArtifactRequest {
   Ref.Workspace workspace = 2;
 }
 
+message GetPushedArtifactRequest {
+  Ref.Operation ref = 1;
+}
+
 message ListPushedArtifactsRequest {
   // application that this belongs to
   Ref.Application application = 3;
@@ -1071,6 +1109,9 @@ message PushedArtifact {
   // The workspace that this exists in
   Ref.Workspace workspace = 8;
 
+  // The sequence number for this build.
+  uint64 sequence = 9;
+
   // id is a unique ID for this push
   string id = 1;
 
@@ -1095,8 +1136,7 @@ message PushedArtifact {
 ********************************************************************/
 
 message GetDeploymentRequest {
-  // Deployment to return.
-  string deployment_id = 1;
+  Ref.Operation ref = 1;
 }
 
 message UpsertDeploymentRequest {
@@ -1160,6 +1200,9 @@ message Deployment {
   // The workspace that this exists in
   Ref.Workspace workspace = 9;
 
+  // The sequence number for this build.
+  uint64 sequence = 10;
+
   // id is the unique ID for this deployment
   string id = 1;
 
@@ -1212,12 +1255,44 @@ message GetLatestReleaseRequest {
   Ref.Workspace workspace = 2;
 }
 
+message ListReleasesRequest {
+  // application that this release belongs to
+  Ref.Application application = 3;
+
+  // workspace that this should belong to. If this is empty, values in
+  // all workspaces will be listed.
+  Ref.Workspace workspace = 4;
+
+  // The filters to apply to this request. These are ORed, so you should
+  // specify multiple filters in the StatusFilter for AND behavior.
+  repeated StatusFilter status = 1;
+
+  // The physical state to filter for. If this is zero or unset then no
+  // filtering on physical state will be done.
+  Operation.PhysicalState physical_state = 5;
+
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 2;
+}
+
+message ListReleasesResponse {
+  repeated Release releases = 1;
+}
+
+message GetReleaseRequest {
+  Ref.Operation ref = 1;
+}
+
 message Release {
-  // application that this deployment belongs to
+  // application that this release belongs to
   Ref.Application application = 7;
 
   // The workspace that this exists in
   Ref.Workspace workspace = 8;
+
+  // The sequence number for this build.
+  uint64 sequence = 10;
 
   // id is the unique ID for this release.
   string id = 1;

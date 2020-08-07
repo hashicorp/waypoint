@@ -28,7 +28,7 @@ func TestBuild(t *testing.T) {
 		})))
 
 		// Read it back
-		b, err := s.BuildGet("A")
+		b, err := s.BuildGet(appOpById("A"))
 		require.NoError(err)
 		require.NotNil(b.Application)
 		require.Equal("A", b.Id)

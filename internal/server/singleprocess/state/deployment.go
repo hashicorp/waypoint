@@ -18,9 +18,9 @@ func (s *State) DeploymentPut(update bool, b *pb.Deployment) error {
 	return deploymentOp.Put(s, update, b)
 }
 
-// DeploymentGet gets a deployment by ID.
-func (s *State) DeploymentGet(id string) (*pb.Deployment, error) {
-	result, err := deploymentOp.Get(s, id)
+// DeploymentGet gets a deployment by ref.
+func (s *State) DeploymentGet(ref *pb.Ref_Operation) (*pb.Deployment, error) {
+	result, err := deploymentOp.Get(s, ref)
 	if err != nil {
 		return nil, err
 	}

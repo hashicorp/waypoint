@@ -90,5 +90,5 @@ func (s *service) GetDeployment(
 	ctx context.Context,
 	req *pb.GetDeploymentRequest,
 ) (*pb.Deployment, error) {
-	return s.state.DeploymentGet(req.DeploymentId)
+	return s.state.DeploymentGet(req.Ref)
 }

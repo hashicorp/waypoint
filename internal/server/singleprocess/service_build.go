@@ -57,3 +57,11 @@ func (s *service) GetLatestBuild(
 ) (*pb.Build, error) {
 	return s.state.BuildLatest(req.Application, req.Workspace)
 }
+
+// GetBuild returns a Build based on ID
+func (s *service) GetBuild(
+	ctx context.Context,
+	req *pb.GetBuildRequest,
+) (*pb.Build, error) {
+	return s.state.BuildGet(req.Ref)
+}
