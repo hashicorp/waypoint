@@ -50,12 +50,10 @@ func authUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {
 			return nil, status.Errorf(codes.InvalidArgument, "Retrieving metadata is failed")
 		}
 
-		authHeader, ok := md["authorization"]
-		if !ok {
-			return nil, status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
+		var token string
+		if authHeader, ok := md["authorization"]; ok {
+			token = authHeader[0]
 		}
-
-		token := authHeader[0]
 
 		err := checker.Authenticate(ctx, token, name, effects)
 		if err != nil {

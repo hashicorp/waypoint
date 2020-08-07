@@ -111,6 +111,10 @@ func (s *service) Authenticate(ctx context.Context, token, endpoint string, effe
 		return nil
 	}
 
+	if token == "" {
+		return status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
+	}
+
 	_, body, err := s.DecodeToken(token)
 	if err != nil {
 		return err
