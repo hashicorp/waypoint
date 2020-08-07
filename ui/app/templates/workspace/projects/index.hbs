@@ -2,10 +2,10 @@
 
 <div data-test-project-list=true>
   {{#each @model as |project|}}
-    <Box>
+    <Card>
       <LinkTo @route="workspace.projects.project" @model={{project.project}}>
         <h3>{{project.project}}</h3>
       </LinkTo>
-    </Box>
+    </Card>
   {{/each}}
 </div>

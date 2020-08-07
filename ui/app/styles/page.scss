@@ -14,7 +14,7 @@
     margin-bottom: $spacing-24;
   }
 
-  .box {
+  .card {
     padding: $spacing-16 $spacing-24;
     margin-bottom: $spacing-24;
     box-shadow: $box-shadow;
@@ -73,6 +73,19 @@
     }
   }
 
+  .cards {
+    display: flex;
+
+    .card {
+      flex-grow: 1;
+      margin-right: $spacing-24;
+
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+
   .auth-page {
     display: flex;
     align-items: center;
@@ -80,7 +93,7 @@
     flex-grow: 1;
     height: 100%;
 
-    .box {
+    .card {
       padding: $spacing-80;
     }
   }
