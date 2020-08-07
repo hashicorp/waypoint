@@ -151,7 +151,8 @@ func (c *InstallCommand) InstallKubernetes(
 
 		// Set our advertise address
 		advertiseAddr.Addr = addr
-		advertiseAddr.Insecure = true
+		advertiseAddr.Tls = true
+		advertiseAddr.TlsSkipVerify = true
 
 		// If we want internal or we're a localhost address, we use the internal
 		// address. The "localhost" check is specifically for Docker for Desktop

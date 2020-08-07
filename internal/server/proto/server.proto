@@ -827,7 +827,8 @@ message RunnerGetDeploymentConfigRequest {}
 
 message RunnerGetDeploymentConfigResponse {
   string server_addr = 1;
-  bool server_insecure = 2;
+  bool server_tls = 2;
+  bool server_tls_skip_verify = 3;
 }
 
 message GetRunnerRequest {
@@ -855,7 +856,8 @@ message ServerConfig {
 
   message AdvertiseAddr {
     string addr = 1;
-    bool insecure = 2;
+    bool tls = 2;
+    bool tls_skip_verify = 3;
   }
 }
 

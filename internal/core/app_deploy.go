@@ -27,8 +27,9 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 	_, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployOperation{
 		Push: push,
 		DeploymentConfig: &component.DeploymentConfig{
-			ServerAddr:     resp.ServerAddr,
-			ServerInsecure: resp.ServerInsecure,
+			ServerAddr:          resp.ServerAddr,
+			ServerTls:           resp.ServerTls,
+			ServerTlsSkipVerify: resp.ServerTlsSkipVerify,
 		},
 	})
 	if err != nil {
