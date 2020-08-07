@@ -8,13 +8,14 @@ import (
 	"io"
 	"time"
 
-	"golang.org/x/crypto/blake2b"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/mr-tron/base58"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/blake2b"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -253,6 +254,19 @@ func (s *service) ExchangeInvite(keyId, invite string) (string, error) {
 // Given an invite token, validate it and return a login token. This is a gRPC wrapper around ExchangeInvite.
 func (s *service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteTokenRequest) (*pb.NewTokenResponse, error) {
 	token, err := s.ExchangeInvite(DefaultKeyId, req.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.NewTokenResponse{Token: token}, nil
+}
+
+func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.NewTokenResponse, error) {
+	if !s.state.HMACKeyEmpty() {
+		return nil, status.Errorf(codes.PermissionDenied, "server is already bootstrapped")
+	}
+
+	token, err := s.NewLoginToken(DefaultKeyId, nil)
 	if err != nil {
 		return nil, err
 	}

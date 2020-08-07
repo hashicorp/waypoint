@@ -111,6 +111,20 @@ service Waypoint {
   // SetServerConfig sets configuration for the Waypoint server.
   rpc SetServerConfig(SetServerConfigRequest) returns (google.protobuf.Empty);
 
+  // BootstrapToken returns the initial token for the server. This can only
+  // be requested once on first startup. After initial request this will
+  // always return a PermissionDenied error.
+  rpc BootstrapToken(google.protobuf.Empty) returns (NewTokenResponse);
+
+  // Generate a new invite token that users can exchange for a login token.
+  rpc GenerateInviteToken(InviteTokenRequest) returns (NewTokenResponse);
+
+  // Generate a new login token that users can use to login directly.
+  rpc GenerateLoginToken(google.protobuf.Empty) returns (NewTokenResponse);
+
+  // Exchange a invite token for a login token.
+  rpc ConvertInviteToken(ConvertInviteTokenRequest) returns (NewTokenResponse);
+
   //----------------------------------------------------------------------
   // Runner endpoints. These are expected to be called only by a runner.
   // These are not meant to be public endpoints.
@@ -168,15 +182,6 @@ service Waypoint {
 
   // UpsertRelease updates or inserts a release.
   rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
-
-  // Generate a new invite token that users can exchange for a login token.
-  rpc GenerateInviteToken(InviteTokenRequest) returns (NewTokenResponse);
-
-  // Generate a new login token that users can use to login directly.
-  rpc GenerateLoginToken(google.protobuf.Empty) returns (NewTokenResponse);
-
-  // Exchange a invite token for a login token.
-  rpc ConvertInviteToken(ConvertInviteTokenRequest) returns (NewTokenResponse);
 }
 
 message Application {
