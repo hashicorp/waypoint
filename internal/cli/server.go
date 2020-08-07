@@ -383,14 +383,14 @@ func (c *ServerCommand) listenerForConfig(log hclog.Logger, cfg *config.Listener
 		if err != nil {
 			return nil, err
 		}
-		certPEM = []byte(out.String())
-		out.Reset()
+		certPEM = out.Bytes()
 
 		// Write the key
+		out = bytes.Buffer{}
 		if err := pem.Encode(&out, pemBlockForKey(priv)); err != nil {
 			return nil, err
 		}
-		keyPEM = []byte(out.String())
+		keyPEM = out.Bytes()
 	}
 
 	// Setup the TLS listener
