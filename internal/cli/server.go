@@ -120,7 +120,7 @@ func (c *ServerCommand) Run(args []string) int {
 	}
 
 	// We listen on a random locally bound port
-	ln, err := c.listenerForConfig(&c.config.GRPC)
+	ln, err := c.listenerForConfig(log.Named("grpc"), &c.config.GRPC)
 	if err != nil {
 		c.ui.Output(
 			"Error starting listener: %s", err.Error(),
@@ -130,7 +130,7 @@ func (c *ServerCommand) Run(args []string) int {
 	}
 	defer ln.Close()
 
-	httpLn, err := c.listenerForConfig(&c.config.HTTP)
+	httpLn, err := c.listenerForConfig(log.Named("http"), &c.config.HTTP)
 	if err != nil {
 		c.ui.Output(
 			"Error starting listener: %s", err.Error(),
@@ -321,8 +321,9 @@ Usage: waypoint server [options]
 	return strings.TrimSpace(helpText)
 }
 
-func (c *ServerCommand) listenerForConfig(cfg *config.Listener) (net.Listener, error) {
+func (c *ServerCommand) listenerForConfig(log hclog.Logger, cfg *config.Listener) (net.Listener, error) {
 	// Start our bare listener
+	log.Debug("starting listener", "addr", cfg.Addr)
 	ln, err := net.Listen("tcp", cfg.Addr)
 	if err != nil {
 		return nil, err
@@ -330,6 +331,7 @@ func (c *ServerCommand) listenerForConfig(cfg *config.Listener) (net.Listener, e
 
 	// If we have TLS disabled then we're done.
 	if cfg.TLSDisable {
+		log.Warn("TLS is disabled for this listener")
 		return ln, nil
 	}
 
@@ -344,9 +346,15 @@ func (c *ServerCommand) listenerForConfig(cfg *config.Listener) (net.Listener, e
 		if err != nil {
 			return nil, err
 		}
+
+		log.Info("TLS certs loaded from specified files",
+			"cert", cfg.TLSCertFile,
+			"key", cfg.TLSKeyFile)
 	}
 
 	if certPEM == nil {
+		log.Info("TLS cert wasn't specified, a self-signed certificate will be created")
+
 		priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 		if err != nil {
 			return nil, err
@@ -392,6 +400,7 @@ func (c *ServerCommand) listenerForConfig(cfg *config.Listener) (net.Listener, e
 		return nil, err
 	}
 
+	log.Info("listener is wrapped with TLS")
 	return tls.NewListener(ln, &tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}), nil
