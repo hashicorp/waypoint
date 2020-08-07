@@ -17,6 +17,7 @@ export function fakeId(): string {
  */
 export const componentOptions = {
   1: ['pack', 'docker'],
+  2: ['docker'],
 };
 
 /**

@@ -1,12 +1,11 @@
-{{t "product.name"}}
-
-<h3>{{t "nav.title"}}</h3>
-<ul>
-    <li>
-        <LinkTo @route="workspace" @model={{"default"}}>
-            {{t "nav.default_workspace"}}
-        </LinkTo>
-    </li>
-</ul>
+<h2>
+    <LinkTo @route="application">{{t "product.name"}}</LinkTo>
+</h2>
 
 {{outlet}}
+
+<hr>
+<footer>
+    <em>Footer</em>
+    <LinkTo @route="auth">{{t "nav.auth"}}</LinkTo>
+</footer>

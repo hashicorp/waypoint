@@ -1,8 +1,12 @@
 <h3>{{t "page.builds.title"}}</h3>
 <ul data-test-build-list=true>
-{{#each @model as |build|}}
-    <li>Build ID: {{build.id}} Builder: {{build.component.name}}</li>
-{{/each}}
+    {{#each @model as |build|}}
+    <li>Build ID:
+        <LinkTo @route="workspace.projects.project.app.build" @models={{array build.id}}>
+            {{build.id}}
+        </LinkTo>
+        Builder: {{build.component.name}}</li>
+    {{/each}}
 </ul>
 
 {{outlet}}

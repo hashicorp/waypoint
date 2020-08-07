@@ -4,8 +4,33 @@
 
 <p>Application metadata and other information</p>
 
-<LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
-    Builds
-</LinkTo>
+<ul>
+    <li>
+        <LinkTo @route="workspace.projects.project.app.logs" @models={{array @model.project @model.application }}>
+            {{t "nav.logs"}}
+        </LinkTo>
+    </li>
+    <li>
+        <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
+            {{t "nav.builds_index"}}
+        </LinkTo>
+    </li>
+    <li>
+        <LinkTo @route="workspace.projects.project.app.deployments"
+            @models={{array @model.project @model.application }}>
+            {{t "nav.deployments_index"}}
+        </LinkTo>
+    </li>
+    <li>
+        <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
+            {{t "nav.releases_index"}}
+        </LinkTo>
+    </li>
+    <li>
+        <LinkTo @route="workspace.projects.project.app.exec" @models={{array @model.project @model.application }}>
+            {{t "nav.exec"}}
+        </LinkTo>
+    </li>
+</ul>
 
 {{outlet}}
