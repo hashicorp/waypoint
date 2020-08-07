@@ -121,7 +121,14 @@ func (s *State) hmacKeyIndexSet(txn *memdb.Txn, value *pb.HMACKey) error {
 	}
 
 	// Insert the index
-	return txn.Insert(hmacKeyIndexTableName, record)
+	if err := txn.Insert(hmacKeyIndexTableName, record); err != nil {
+		return err
+	}
+
+	// Set that we're not empty
+	atomic.StoreUint32(&hmacKeyNotEmpty, 1)
+
+	return nil
 }
 
 // hmacKeyIndexInit initializes the hmacKey index from persisted data.
@@ -135,9 +142,6 @@ func (s *State) hmacKeyIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 		if err := s.hmacKeyIndexSet(memTxn, &value); err != nil {
 			return err
 		}
-
-		// Set that we're not empty
-		atomic.StoreUint32(&hmacKeyNotEmpty, 1)
 
 		return nil
 	})
