@@ -23,6 +23,7 @@ func (c *GetInviteCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
+		WithNoConfig(),
 	); err != nil {
 		return 1
 	}
@@ -88,6 +89,7 @@ func (c *ExchangeInviteCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
+		WithNoConfig(),
 	); err != nil {
 		return 1
 	}
@@ -156,6 +158,7 @@ func (c *GetTokenCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
+		WithNoConfig(),
 	); err != nil {
 		return 1
 	}
