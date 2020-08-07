@@ -63,9 +63,15 @@ func (c *ContextCreateCommand) Flags() *flag.Sets {
 			Usage:  "Address for the server.",
 		})
 		f.BoolVar(&flag.BoolVar{
-			Name:   "server-insecure",
-			Target: &c.flagConfig.Server.Insecure,
-			Usage:  "If true, will connect to the server over plain TCP.",
+			Name:    "server-tls",
+			Target:  &c.flagConfig.Server.Tls,
+			Usage:   "If true, will connect to the server over TLS.",
+			Default: true,
+		})
+		f.BoolVar(&flag.BoolVar{
+			Name:   "server-tls-skip-verify",
+			Target: &c.flagConfig.Server.TlsSkipVerify,
+			Usage:  "If true, will not validate TLS cert presented by the server.",
 		})
 		f.BoolVar(&flag.BoolVar{
 			Name:   "server-require-auth",

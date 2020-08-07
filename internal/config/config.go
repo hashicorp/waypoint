@@ -42,8 +42,12 @@ type AppURL struct {
 
 // Server configures the remote server.
 type Server struct {
-	Address  string `hcl:"address,attr"`
-	Insecure bool   `hcl:"insecure,optional"`
+	Address string `hcl:"address,attr"`
+
+	// Tls, if true, will connect to the server with TLS. If TlsSkipVerify
+	// is true, the certificate presented by the server will not be validated.
+	Tls           bool `hcl:"tls,optional"`
+	TlsSkipVerify bool `hcl:"tls_skip_verify,optional"`
 
 	// AddressInternal is a temporary config to work with local deployments
 	// on platforms such as Docker for Mac. We need to discuss a more

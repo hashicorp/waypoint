@@ -46,8 +46,9 @@ func InstallDocker(
 	)
 
 	clicfg.Server = configpkg.Server{
-		Address:  "localhost:" + port,
-		Insecure: true,
+		Address:       "localhost:" + port,
+		Tls:           true,
+		TlsSkipVerify: true,
 	}
 
 	addr.Addr = "waypoint-server:" + port
