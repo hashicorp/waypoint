@@ -167,8 +167,9 @@ func (c *InstallCommand) InstallKubernetes(
 		// Set our connection information
 		contextConfig = clicontext.Config{
 			Server: configpkg.Server{
-				Address:  addr,
-				Insecure: true, // always for now
+				Address:       addr,
+				Tls:           true,
+				TlsSkipVerify: true, // always for now
 			},
 		}
 
