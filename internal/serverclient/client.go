@@ -57,7 +57,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 			return nil, fmt.Errorf("No token available at the WAYPOINT_SERVER_TOKEN environment variable")
 		}
 
-		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(staticToken(token)))
+		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(StaticToken(token)))
 	}
 
 	// Connect to this server
@@ -189,14 +189,14 @@ const (
 // grpc.WithPerRPCCredentials. That api is designed to incorporate things like OAuth
 // but in our case, we really just want to send this static token through, but we still
 // need to the dance.
-type staticToken string
+type StaticToken string
 
-func (t staticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+func (t StaticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
 	return map[string]string{
 		"authorization": string(t),
 	}, nil
 }
 
-func (t staticToken) RequireTransportSecurity() bool {
+func (t StaticToken) RequireTransportSecurity() bool {
 	return false
 }

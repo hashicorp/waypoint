@@ -7,7 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
+	"google.golang.org/grpc"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -255,6 +257,28 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 	client := pb.NewWaypointClient(conn)
 
+	// We need our bootstrap token immediately
+	var callOpts []grpc.CallOption
+	st.Update("Retrieving initial auth token...")
+	tokenResp, err := client.BootstrapToken(ctx, &empty.Empty{})
+	if err != nil {
+		c.ui.Output(
+			"Error getting the initial token: %s\n\n%s",
+			err.Error(),
+			errInstallRunning,
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+	if tokenResp != nil {
+		log.Debug("token received, setting on context")
+		contextConfig.Server.RequireAuth = true
+		contextConfig.Server.AuthToken = tokenResp.Token
+
+		callOpts = append(callOpts, grpc.PerRPCCredentials(
+			serverclient.StaticToken(tokenResp.Token)))
+	}
+
 	// If we connected successfully, lets immediately setup our context.
 	if c.contextName != "" {
 		if err := c.contextStorage.Set(c.contextName, contextConfig); err != nil {
@@ -288,7 +312,7 @@ func (c *InstallCommand) Run(args []string) int {
 				advertiseAddr,
 			},
 		},
-	})
+	}, callOpts...)
 	if err != nil {
 		c.ui.Output(
 			"Error setting the advertise address: %s\n\n%s",
