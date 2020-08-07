@@ -38,6 +38,11 @@ type State struct {
 	// for more efficient lookups into db. This index is built online at
 	// boot.
 	db *bolt.DB
+
+	// hmacKeyNotEmpty is flipped to 1 when an hmac entry is set. This is
+	// used to determine if we're in a bootstrap state and can create a
+	// bootstrap token.
+	hmacKeyNotEmpty uint32
 }
 
 // New initializes a new State store.

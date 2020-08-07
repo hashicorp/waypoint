@@ -12,14 +12,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-var (
-	hmacKeyBucket = []byte("hmac_keys")
-
-	// hmacKeyNotEmpty is flipped to 1 when an hmac entry is set. This is
-	// used to determine if we're in a bootstrap state and can create a
-	// bootstrap token.
-	hmacKeyNotEmpty uint32
-)
+var hmacKeyBucket = []byte("hmac_keys")
 
 func init() {
 	dbBuckets = append(dbBuckets, hmacKeyBucket)
@@ -30,7 +23,7 @@ func init() {
 // HMACKeyEmpty returns true if no HMAC keys have been created. This will
 // be true only when the server is in a bootstrap state.
 func (s *State) HMACKeyEmpty() bool {
-	return atomic.LoadUint32(&hmacKeyNotEmpty) == 0
+	return atomic.LoadUint32(&s.hmacKeyNotEmpty) == 0
 }
 
 // HMACKeyCreateIfNotExist creates a new HMAC key with the given ID and size. If a
@@ -130,7 +123,7 @@ func (s *State) hmacKeyIndexSet(txn *memdb.Txn, value *pb.HMACKey) error {
 	}
 
 	// Set that we're not empty
-	atomic.StoreUint32(&hmacKeyNotEmpty, 1)
+	atomic.StoreUint32(&s.hmacKeyNotEmpty, 1)
 
 	return nil
 }
@@ -139,7 +132,7 @@ func (s *State) hmacKeyIndexSet(txn *memdb.Txn, value *pb.HMACKey) error {
 func (s *State) hmacKeyIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	// Reset that we're empty. In practice this doesn't happen but
 	// for tests we might load the state store multiple times in-process.
-	atomic.StoreUint32(&hmacKeyNotEmpty, 0)
+	atomic.StoreUint32(&s.hmacKeyNotEmpty, 0)
 
 	bucket := dbTxn.Bucket(hmacKeyBucket)
 	return bucket.ForEach(func(k, v []byte) error {
