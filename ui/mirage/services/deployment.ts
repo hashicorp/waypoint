@@ -41,3 +41,8 @@ export function list(schema: any, { params, requestHeaders }) {
   resp.setDeploymentsList(deploys);
   return this.serialize(resp, 'application');
 }
+
+export function get(schema: any, { params, requestHeaders }) {
+  let deploy = createDeployment();
+  return this.serialize(deploy, 'application');
+}

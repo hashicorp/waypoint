@@ -20,6 +20,7 @@ export default function (this: Server) {
 
   this.post('/ListBuilds', build.list);
   this.post('/ListDeployments', deployment.list);
+  this.post('/GetDeployment', deployment.get);
   this.post('/ListProjects', project.list);
   this.post('/GetProject', project.get);
 

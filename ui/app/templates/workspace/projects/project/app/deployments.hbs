@@ -1,7 +1,12 @@
 <h3>{{t "page.deployments.title"}}</h3>
 <ul data-test-deployment-list=true>
     {{#each @model as |deployment|}}
-    <li>Deployment ID: {{deployment.id}} deployer: {{deployment.component.name}}</li>
+    <li>Deployment ID: <LinkTo @route="workspace.projects.project.app.deployment" @models={{array deployment.id}}>
+            {{deployment.id}}
+        </LinkTo>
+        deployer:
+        {{deployment.component.name}}
+    </li>
     {{/each}}
 </ul>
 
