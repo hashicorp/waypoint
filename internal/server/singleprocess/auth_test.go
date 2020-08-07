@@ -7,10 +7,13 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/mr-tron/base58"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/blake2b"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestServiceAuth(t *testing.T) {
@@ -109,4 +112,28 @@ func TestServiceAuth(t *testing.T) {
 		_, err = s.ExchangeInvite(DefaultKeyId, invite)
 		require.Error(t, err)
 	})
+}
+
+func TestServiceBootstrapToken(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+
+	{
+		// Initial bootstrap should return a token
+		resp, err := impl.BootstrapToken(ctx, &empty.Empty{})
+		require.NoError(err)
+		require.NotEmpty(resp.Token)
+	}
+
+	{
+		// Subs calls should fail
+		resp, err := impl.BootstrapToken(ctx, &empty.Empty{})
+		require.Error(err)
+		require.Equal(codes.PermissionDenied, status.Code(err))
+		require.Nil(resp)
+	}
 }
