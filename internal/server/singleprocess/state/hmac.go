@@ -3,6 +3,7 @@ package state
 import (
 	"crypto/rand"
 	"io"
+	"sync/atomic"
 
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
@@ -11,12 +12,21 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-var hmacKeyBucket = []byte("hmac_keys")
+var (
+	hmacKeyBucket   = []byte("hmac_keys")
+	hmacKeyNotEmpty uint32
+)
 
 func init() {
 	dbBuckets = append(dbBuckets, hmacKeyBucket)
 	dbIndexers = append(dbIndexers, (*State).hmacKeyIndexInit)
 	schemas = append(schemas, hmacKeyIndexSchema)
+}
+
+// HMACKeyEmpty returns true if no HMAC keys have been created. This will
+// be true only when the server is in a bootstrap state.
+func (s *State) HMACKeyEmpty() bool {
+	return atomic.LoadUint32(&hmacKeyNotEmpty) == 0
 }
 
 // HMACKeyCreateIfNotExist creates a new HMAC key with the given ID and size. If a
@@ -125,6 +135,9 @@ func (s *State) hmacKeyIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 		if err := s.hmacKeyIndexSet(memTxn, &value); err != nil {
 			return err
 		}
+
+		// Set that we're not empty
+		atomic.StoreUint32(&hmacKeyNotEmpty, 1)
 
 		return nil
 	})
