@@ -17,9 +17,10 @@ import (
 )
 
 const (
-	envDeploymentId   = "WAYPOINT_DEPLOYMENT_ID"
-	envServerAddr     = "WAYPOINT_SERVER_ADDR"
-	envServerInsecure = "WAYPOINT_SERVER_INSECURE"
+	envDeploymentId        = "WAYPOINT_DEPLOYMENT_ID"
+	envServerAddr          = "WAYPOINT_SERVER_ADDR"
+	envServerTls           = "WAYPOINT_SERVER_TLS"
+	envServerTlsSkipVerify = "WAYPOINT_SERVER_TLS_SKIP_VERIFY"
 )
 
 const (
@@ -143,10 +144,11 @@ func (ceb *CEB) cleanup(f func()) {
 }
 
 type config struct {
-	ExecArgs       []string
-	DeploymentId   string
-	ServerAddr     string
-	ServerInsecure bool
+	ExecArgs            []string
+	DeploymentId        string
+	ServerAddr          string
+	ServerTls           bool
+	ServerTlsSkipVerify bool
 
 	URLServicePort int
 }
@@ -175,7 +177,8 @@ func WithEnvDefaults() Option {
 		cfg.URLServicePort = port
 		cfg.DeploymentId = os.Getenv(envDeploymentId)
 		cfg.ServerAddr = os.Getenv(envServerAddr)
-		cfg.ServerInsecure = os.Getenv(envServerInsecure) != ""
+		cfg.ServerTls = os.Getenv(envServerTls) != ""
+		cfg.ServerTlsSkipVerify = os.Getenv(envServerTlsSkipVerify) != ""
 
 		return nil
 	}

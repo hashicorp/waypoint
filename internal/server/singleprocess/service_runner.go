@@ -51,8 +51,9 @@ func (s *service) RunnerGetDeploymentConfig(
 	addr := cfg.AdvertiseAddrs[0]
 
 	return &pb.RunnerGetDeploymentConfigResponse{
-		ServerAddr:     addr.Addr,
-		ServerInsecure: addr.Insecure,
+		ServerAddr:          addr.Addr,
+		ServerTls:           addr.Tls,
+		ServerTlsSkipVerify: addr.TlsSkipVerify,
 	}, nil
 }
 
