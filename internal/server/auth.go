@@ -15,10 +15,6 @@ import (
 type AuthChecker interface {
 	// Called before each RPC to authenticate it.
 	Authenticate(ctx context.Context, token, endpoint string, effects []string) error
-
-	// Return an authenticaten token for the initial server to user for access
-	// to the server.
-	DefaultToken() (string, error)
 }
 
 var readonly = []string{"readonly"}

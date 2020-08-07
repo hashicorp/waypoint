@@ -8,9 +8,6 @@ type ServerConfig struct {
 	// Listeners sets up the listeners
 	Listeners Listeners `hcl:"listeners,block"`
 
-	// Require clients to authenticate themselves
-	RequireAuth bool `hcl:"require_auth,optional"`
-
 	// URL configures a server to use a URL service.
 	URL *URL `hcl:"url,block"`
 }

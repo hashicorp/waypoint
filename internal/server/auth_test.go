@@ -23,12 +23,6 @@ func (t *trivialAuth) Authenticate(ctx context.Context, token string, endpoint s
 	return nil
 }
 
-// Return an authenticaten token for the initial server to user for access
-// to the server.
-func (t *trivialAuth) DefaultToken() (string, error) {
-	return "blah", nil
-}
-
 func TestAuthUnaryInterceptor(t *testing.T) {
 	require := require.New(t)
 
