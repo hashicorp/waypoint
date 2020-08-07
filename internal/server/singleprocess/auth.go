@@ -194,12 +194,6 @@ func (s *service) GenerateLoginToken(ctx context.Context, _ *empty.Empty) (*pb.N
 	return &pb.NewTokenResponse{Token: token}, nil
 }
 
-// Generate a token in the default way. This token is presented to the user when running
-// `waypoint server`.
-func (s *service) DefaultToken() (string, error) {
-	return s.NewLoginToken(DefaultKeyId, nil)
-}
-
 // Create a new invite token. The duration controls for how long the invite token is valid.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information

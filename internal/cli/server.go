@@ -25,8 +25,9 @@ import (
 type ServerCommand struct {
 	*baseCommand
 
-	config       config.ServerConfig
-	flagURLInmem bool
+	config          config.ServerConfig
+	flagDisableAuth bool
+	flagURLInmem    bool
 }
 
 func (c *ServerCommand) Run(args []string) int {
@@ -139,31 +140,10 @@ func (c *ServerCommand) Run(args []string) int {
 		server.WithHTTP(httpLn),
 		server.WithImpl(impl),
 	}
-
-	var token string
-
-	if c.config.RequireAuth {
-		ac, ok := impl.(server.AuthChecker)
-		if !ok {
-			c.ui.Output(
-				"Server implementation not capable of authentication",
-				terminal.WithErrorStyle(),
-			)
-
-			return 1
-		}
-
-		token, err = ac.DefaultToken()
-		if err != nil {
-			c.ui.Output(
-				"Error generating default token: %s", err,
-				terminal.WithErrorStyle(),
-			)
-
-			return 1
-		}
-
+	auth := false
+	if ac, ok := impl.(server.AuthChecker); ok && !c.flagDisableAuth {
 		options = append(options, server.WithAuthentication(ac))
+		auth = true
 	}
 
 	httpAddr := "disabled"
@@ -178,8 +158,8 @@ func (c *ServerCommand) Run(args []string) int {
 		{Name: "gRPC Address", Value: ln.Addr().String()},
 		{Name: "HTTP Address", Value: httpAddr},
 	}
-	if token != "" {
-		values = append(values, terminal.NamedValue{Name: "Token", Value: token})
+	if auth {
+		values = append(values, terminal.NamedValue{Name: "Auth Required", Value: "yes"})
 	}
 	if !c.config.URL.Enabled {
 		values = append(values, terminal.NamedValue{Name: "URL Service", Value: "disabled"})
@@ -258,9 +238,10 @@ func (c *ServerCommand) Flags() *flag.Sets {
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:   "require-authentication",
-			Target: &c.config.RequireAuth,
-			Usage:  "Require authentication to communicate with the server.",
+			Name:    "disable-auth",
+			Target:  &c.flagDisableAuth,
+			Usage:   "Disable auth requirements",
+			Default: false,
 		})
 
 		f.BoolVar(&flag.BoolVar{
