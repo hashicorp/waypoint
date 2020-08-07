@@ -51,8 +51,6 @@ type Server struct {
 	AddressInternal string `hcl:"address_internal,optional"`
 
 	// Indicates that we need to present a token to connect to this server.
-	// We don't allow the token to be hardcoded into the config though, we
-	// always read that out of an env var later.
 	RequireAuth bool `hcl:"require_auth,optional"`
 
 	// AuthToken is the token to use to authenticate to the server.
