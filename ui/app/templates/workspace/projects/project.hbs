@@ -1,7 +1,9 @@
-<h4>Project: {{@model.name}}</h4>
+<h1>{{@model.name}}</h1>
 
-<LinkTo @route="workspace.projects.project.apps" @models={{array "default" @model.name }}>
-    {{t "nav.application_index"}}
-</LinkTo>
+<aside>
+  <LinkTo @route="workspace.projects.project.apps" @models={{array "default" @model.name }}>
+      {{t "nav.application_index"}}
+  </LinkTo>
+</aside>
 
 {{outlet}}

@@ -1,13 +1,14 @@
 <h3>{{t "page.deployments.title"}}</h3>
-<ul data-test-deployment-list=true>
-    {{#each @model as |deployment|}}
-    <li>Deployment ID: <LinkTo @route="workspace.projects.project.app.deployment" @models={{array deployment.id}}>
-            {{deployment.id}}
-        </LinkTo>
-        deployer:
-        {{deployment.component.name}}
+
+<ul data-test-deployment-list=true class="list">
+  {{#each @model as |deployment|}}
+    <li>
+      <LinkTo @route="workspace.projects.project.app.deployment" @models={{array deployment.id}}>
+        {{deployment.id}}
+      </LinkTo>
+      <span>Deployed by <b>{{deployment.component.name}}</b></span>
     </li>
-    {{/each}}
+  {{/each}}
 </ul>
 
 {{outlet}}
