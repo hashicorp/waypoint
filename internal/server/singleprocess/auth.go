@@ -107,7 +107,7 @@ func (s *service) DecodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 // data or also mutating it.
 func (s *service) Authenticate(ctx context.Context, token, endpoint string, effects []string) error {
 	// We always allow ConvertInviteToken so that folks can actually get authentication data
-	if endpoint == "ConvertInviteToken" {
+	if endpoint == "ConvertInviteToken" || endpoint == "BootstrapToken" {
 		return nil
 	}
 
