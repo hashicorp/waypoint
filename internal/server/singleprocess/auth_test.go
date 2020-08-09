@@ -14,6 +14,8 @@ import (
 	"golang.org/x/crypto/blake2b"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func TestServiceAuth(t *testing.T) {
@@ -28,7 +30,7 @@ func TestServiceAuth(t *testing.T) {
 			"addr": "test",
 		}
 
-		token, err := s.NewLoginToken(DefaultKeyId, md)
+		token, err := s.NewLoginToken(DefaultKeyId, md, nil)
 		require.NoError(t, err)
 
 		require.True(t, len(token) > 5)
@@ -62,7 +64,7 @@ func TestServiceAuth(t *testing.T) {
 			"addr": "test",
 		}
 
-		token, err := s.NewLoginToken(DefaultKeyId, md)
+		token, err := s.NewLoginToken(DefaultKeyId, md, nil)
 		require.NoError(t, err)
 
 		require.True(t, len(token) > 5)
@@ -96,7 +98,7 @@ func TestServiceAuth(t *testing.T) {
 	t.Run("exchange an invite token", func(t *testing.T) {
 		s := impl.(*service)
 
-		invite, err := s.NewInviteToken(2*time.Second, DefaultKeyId, nil)
+		invite, err := s.NewInviteToken(2*time.Second, DefaultKeyId, nil, nil)
 		require.NoError(t, err)
 
 		lt, err := s.ExchangeInvite(DefaultKeyId, invite)
@@ -106,6 +108,30 @@ func TestServiceAuth(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.True(t, body.Login)
+
+		time.Sleep(3 * time.Second)
+
+		_, err = s.ExchangeInvite(DefaultKeyId, invite)
+		require.Error(t, err)
+	})
+
+	t.Run("exchange an entrypoint invite token", func(t *testing.T) {
+		s := impl.(*service)
+
+		entry := &pb.Token_Entrypoint{DeploymentId: "foo"}
+
+		invite, err := s.NewInviteToken(2*time.Second, DefaultKeyId, nil, entry)
+		require.NoError(t, err)
+
+		lt, err := s.ExchangeInvite(DefaultKeyId, invite)
+		require.NoError(t, err)
+
+		_, body, err := s.DecodeToken(lt)
+		require.NoError(t, err)
+
+		assert.True(t, body.Login)
+		assert.NotNil(t, body.Entrypoint)
+		assert.Equal(t, entry.DeploymentId, body.Entrypoint.DeploymentId)
 
 		time.Sleep(3 * time.Second)
 
