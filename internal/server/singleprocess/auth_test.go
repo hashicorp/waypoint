@@ -57,6 +57,23 @@ func TestServiceAuth(t *testing.T) {
 		// Generate a legit token with an unknown key though
 	})
 
+	t.Run("entrypoint token can only access entrypoint APIs", func(t *testing.T) {
+		s := impl.(*service)
+
+		token, err := s.NewLoginToken(DefaultKeyId, nil, &pb.Token_Entrypoint{})
+		require.NoError(t, err)
+
+		{
+			err := s.Authenticate(context.Background(), token, "EntrypointConfig", nil)
+			require.NoError(t, err)
+		}
+
+		{
+			err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
+			require.Error(t, err)
+		}
+	})
+
 	t.Run("rejects tokens signed with unknown keys", func(t *testing.T) {
 		s := impl.(*service)
 

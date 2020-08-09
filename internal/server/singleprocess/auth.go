@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -122,6 +123,11 @@ func (s *service) Authenticate(ctx context.Context, token, endpoint string, effe
 
 	if !body.Login {
 		return ErrInvalidToken
+	}
+
+	// If this is an entrypoint token then we can only access entrypoint APIs.
+	if body.Entrypoint != nil && !strings.HasPrefix(endpoint, "Entrypoint") {
+		return status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
 	}
 
 	// TODO When we have a user model, this is where you'll check for the user.
