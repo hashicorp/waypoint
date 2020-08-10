@@ -64,6 +64,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config) error {
 	grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(staticToken(resp.Token)))
 
 	// Reconnect and return
+	conn.Close()
 	ceb.logger.Info("reconnecting to server with authentication")
 	conn, err = grpc.DialContext(ctx, cfg.ServerAddr, grpcOpts...)
 	if err != nil {
