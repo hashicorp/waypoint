@@ -572,8 +572,17 @@ func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 		if err := proto.Unmarshal(v, &value); err != nil {
 			return err
 		}
-		if err := s.jobIndexSet(memTxn, k, &value); err != nil {
+
+		idx, err := s.jobIndexSet(memTxn, k, &value)
+		if err != nil {
 			return err
+		}
+
+		// If the job was running or waiting, set it as assigned.
+		if value.State == pb.Job_RUNNING || value.State == pb.Job_WAITING {
+			if err := s.jobAssignedSet(memTxn, idx, true); err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -581,7 +590,7 @@ func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 }
 
 // jobIndexSet writes an index record for a single job.
-func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
+func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex, error) {
 	rec := &jobIndex{
 		Id:          jobpb.Id,
 		State:       jobpb.State,
@@ -592,7 +601,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 
 	// Target
 	if jobpb.TargetRunner == nil {
-		return fmt.Errorf("job target runner must be set")
+		return nil, fmt.Errorf("job target runner must be set")
 	}
 	switch v := jobpb.TargetRunner.Target.(type) {
 	case *pb.Ref_Runner_Any:
@@ -602,7 +611,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 		rec.TargetRunnerId = v.Id.Id
 
 	default:
-		return fmt.Errorf("unknown runner target value: %#v", jobpb.TargetRunner.Target)
+		return nil, fmt.Errorf("unknown runner target value: %#v", jobpb.TargetRunner.Target)
 	}
 
 	// Timestamps
@@ -615,7 +624,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 	for _, ts := range timestamps {
 		t, err := ptypes.Timestamp(ts.Src)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		*ts.Field = t
@@ -631,7 +640,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 	}
 
 	// Insert the index
-	return txn.Insert(jobTableName, rec)
+	return rec, txn.Insert(jobTableName, rec)
 }
 
 func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) error {
@@ -651,7 +660,8 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 	}
 
 	// Insert into the DB
-	return s.jobIndexSet(memTxn, id, jobpb)
+	_, err = s.jobIndexSet(memTxn, id, jobpb)
+	return err
 }
 
 func (s *State) jobById(dbTxn *bolt.Tx, id string) (*pb.Job, error) {
