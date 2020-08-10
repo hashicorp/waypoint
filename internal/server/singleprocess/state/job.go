@@ -146,6 +146,10 @@ type Job struct {
 	// that may not contain the full amount of output depending on the
 	// time of connection.
 	OutputBuffer *logbuffer.Buffer
+
+	// Blocked is true if this job is blocked on another job for the same
+	// project/app/workspace.
+	Blocked bool
 }
 
 // JobCreate queues the given job.
@@ -180,15 +184,27 @@ func (s *State) JobById(id string, ws memdb.WatchSet) (*Job, error) {
 	if raw == nil {
 		return nil, nil
 	}
-	job := raw.(*jobIndex)
+	jobIdx := raw.(*jobIndex)
 
-	var result *pb.Job
+	// Get blocked status if it is queued.
+	var blocked bool
+	if jobIdx.State == pb.Job_QUEUED {
+		blocked, err = s.jobIsBlocked(memTxn, jobIdx, ws)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var job *pb.Job
 	err = s.db.View(func(dbTxn *bolt.Tx) error {
-		result, err = s.jobById(dbTxn, job.Id)
+		job, err = s.jobById(dbTxn, jobIdx.Id)
 		return err
 	})
 
-	return job.Job(result), err
+	result := jobIdx.Job(job)
+	result.Blocked = blocked
+
+	return result, err
 }
 
 // JobAssignForRunner will wait for and assign a job to a specific runner.
