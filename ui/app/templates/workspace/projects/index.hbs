@@ -1,8 +1,11 @@
-<h4>Projects</h4>
+<h1>Projects</h1>
 
-<ul data-test-project-list=true>
-    {{#each @model as |project|}}
-    <li>Project: <LinkTo @route="workspace.projects.project" @model={{project.project}}>{{project.project}}</LinkTo>
-    </li>
-    {{/each}}
-</ul>
+<div data-test-project-list=true>
+  {{#each @model as |project|}}
+    <Card>
+      <LinkTo @route="workspace.projects.project" @model={{project.project}}>
+        <h3>{{project.project}}</h3>
+      </LinkTo>
+    </Card>
+  {{/each}}
+</div>

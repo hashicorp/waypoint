@@ -1,36 +1,46 @@
-<hr>
+<h1>{{@model.application}}</h1>
 
-<h3>{{@model.application}}</h3>
+<div class="cards">
+  <Card>
+    <p>App metadata</p>
+  </Card>
+  <Card>
+    <p>App metadata</p>
+  </Card>
+  <Card>
+    <p>App metadata</p>
+  </Card>
+</div>
 
-<p>Application metadata and other information</p>
-
-<ul>
+<nav>
+  <ul>
     <li>
-        <LinkTo @route="workspace.projects.project.app.logs" @models={{array @model.project @model.application }}>
-            {{t "nav.logs"}}
-        </LinkTo>
+      <LinkTo @route="workspace.projects.project.app.logs" @models={{array @model.project @model.application }}>
+        {{t "nav.logs"}}
+      </LinkTo>
     </li>
     <li>
-        <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
-            {{t "nav.builds_index"}}
-        </LinkTo>
+      <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
+        {{t "nav.builds_index"}}
+      </LinkTo>
     </li>
     <li>
-        <LinkTo @route="workspace.projects.project.app.deployments"
-            @models={{array @model.project @model.application }}>
-            {{t "nav.deployments_index"}}
-        </LinkTo>
+      <LinkTo @route="workspace.projects.project.app.deployments"
+        @models={{array @model.project @model.application }}>
+        {{t "nav.deployments_index"}}
+      </LinkTo>
     </li>
     <li>
-        <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
-            {{t "nav.releases_index"}}
-        </LinkTo>
+      <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
+        {{t "nav.releases_index"}}
+      </LinkTo>
     </li>
     <li>
-        <LinkTo @route="workspace.projects.project.app.exec" @models={{array @model.project @model.application }}>
-            {{t "nav.exec"}}
-        </LinkTo>
+      <LinkTo @route="workspace.projects.project.app.exec" @models={{array @model.project @model.application }}>
+        {{t "nav.exec"}}
+      </LinkTo>
     </li>
-</ul>
+  </ul>
+</nav>
 
 {{outlet}}

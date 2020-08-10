@@ -1,11 +1,11 @@
-<h2>
-    <LinkTo @route="application">{{t "product.name"}}</LinkTo>
-</h2>
-
-{{outlet}}
-
-<hr>
-<footer>
-    <em>Footer</em>
+<header id="header">
+  <LinkTo @route="application" class="brand">{{t "product.name"}}</LinkTo>
+  <nav>
+    <a href="#" class="soon">Documentation</a>
     <LinkTo @route="auth">{{t "nav.auth"}}</LinkTo>
-</footer>
+  </nav>
+</header>
+
+<section id="page">
+  {{outlet}}
+</section>

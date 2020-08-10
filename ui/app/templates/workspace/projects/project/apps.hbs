@@ -1,9 +1,9 @@
-<ul>
-    {{#each @model as |app|}}
-
-    <li>App: <LinkTo @route="workspace.projects.project.app" @model={{app.name}}>{{app.name}}</LinkTo>
-    </li>
-    {{/each}}
-</ul>
+{{#each @model as |app|}}
+  <Card>
+    <LinkTo @route="workspace.projects.project.app" @model={{app.name}}>
+      <h3>{{app.name}}</h3>
+    </LinkTo>
+  </Card>
+{{/each}}
 
 {{outlet}}
