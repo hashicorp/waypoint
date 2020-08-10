@@ -120,11 +120,17 @@ func TestJobAssign(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w1",
 			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
+			},
 		})))
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w1",
+			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
 			},
 		})))
 
@@ -162,6 +168,9 @@ func TestJobAssign(t *testing.T) {
 				Workspace: &pb.Ref_Workspace{
 					Workspace: "w2",
 				},
+				Operation: &pb.Job_Deploy{
+					Deploy: &pb.Job_DeployOp{},
+				},
 			})))
 
 			// We should get a result
@@ -190,11 +199,17 @@ func TestJobAssign(t *testing.T) {
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w1",
 			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
+			},
 		})))
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "B",
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "w1",
+			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
 			},
 		})))
 
