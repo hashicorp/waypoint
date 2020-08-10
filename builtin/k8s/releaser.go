@@ -129,6 +129,8 @@ func (r *Releaser) Release(
 		return nil, err
 	}
 
+	st.Step(terminal.StatusOK, "Service succesfully configured!")
+
 	if r.config.LoadBalancer {
 		ingress := service.Status.LoadBalancer.Ingress[0]
 		result.Url = "http://" + ingress.IP

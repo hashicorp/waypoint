@@ -292,6 +292,8 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	st.Step(terminal.StatusOK, "Deployment succesfully rolled out!")
+
 	return &result, nil
 }
 
