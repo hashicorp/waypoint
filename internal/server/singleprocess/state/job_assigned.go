@@ -95,3 +95,18 @@ func (s *State) jobIsBlocked(memTxn *memdb.Txn, idx *jobIndex, ws memdb.WatchSet
 	// Blocked if we have a record
 	return value != nil, nil
 }
+
+// jobAssignedSet records the given job as assigned.
+func (s *State) jobAssignedSet(memTxn *memdb.Txn, idx *jobIndex, assigned bool) error {
+	rec := &jobAssignedIndex{
+		Project:     idx.Application.Project,
+		Application: idx.Application.Application,
+		Workspace:   idx.Workspace.Workspace,
+	}
+
+	if assigned {
+		return memTxn.Insert(jobAssignedTableName, rec)
+	}
+
+	return memTxn.Delete(jobAssignedTableName, rec)
+}
