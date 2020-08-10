@@ -355,7 +355,7 @@ func (c *ServerCommand) listenerForConfig(log hclog.Logger, cfg *config.Listener
 	if certPEM == nil {
 		log.Info("TLS cert wasn't specified, a self-signed certificate will be created")
 
-		priv, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+		priv, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		if err != nil {
 			return nil, err
 		}
