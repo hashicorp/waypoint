@@ -76,6 +76,8 @@ func (p *Platform) ValidateAuth(
 		return status.Errorf(codes.Aborted, err.Error())
 	}
 
+	return nil
+
 	// We'll update the user in real time
 	st := ui.Status()
 	defer st.Close()
