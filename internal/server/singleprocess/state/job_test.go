@@ -83,7 +83,7 @@ func TestJobAssign(t *testing.T) {
 			case <-doneCh:
 				t.Fatal("should wait")
 
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(500 * time.Millisecond):
 			}
 
 			// Insert another job
@@ -98,7 +98,7 @@ func TestJobAssign(t *testing.T) {
 			select {
 			case <-doneCh:
 
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(500 * time.Millisecond):
 				t.Fatal("should have a result")
 			}
 
@@ -159,7 +159,7 @@ func TestJobAssign(t *testing.T) {
 			case <-doneCh:
 				t.Fatal("should wait")
 
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(500 * time.Millisecond):
 			}
 
 			// Insert another job for a different workspace
@@ -177,7 +177,7 @@ func TestJobAssign(t *testing.T) {
 			select {
 			case <-doneCh:
 
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(500 * time.Millisecond):
 				t.Fatal("should have a result")
 			}
 
@@ -236,7 +236,7 @@ func TestJobAssign(t *testing.T) {
 			case <-doneCh:
 				t.Fatal("should wait")
 
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(500 * time.Millisecond):
 			}
 
 			// Complete the job
@@ -248,7 +248,7 @@ func TestJobAssign(t *testing.T) {
 			select {
 			case <-doneCh:
 
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(500 * time.Millisecond):
 				t.Fatal("should have a result")
 			}
 
