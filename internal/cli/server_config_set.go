@@ -56,9 +56,16 @@ func (c *ServerConfigSetCommand) Flags() *flag.Sets {
 				"logs, exec, etc. will not work.",
 		})
 		f.BoolVar(&flag.BoolVar{
-			Name:   "advertise-insecure",
-			Target: &c.flagAdvertiseAddr.Insecure,
-			Usage:  "If true, the advertised address should be connected to without TLS.",
+			Name:    "advertise-tls",
+			Target:  &c.flagAdvertiseAddr.Tls,
+			Usage:   "If true, the advertised address should be connected to with TLS.",
+			Default: true,
+		})
+		f.BoolVar(&flag.BoolVar{
+			Name:    "advertise-tls-skip-verify",
+			Target:  &c.flagAdvertiseAddr.TlsSkipVerify,
+			Usage:   "Do not verify the TLS certificate presented by the server.",
+			Default: false,
 		})
 	})
 }

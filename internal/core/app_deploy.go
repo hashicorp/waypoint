@@ -27,8 +27,9 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 	_, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployOperation{
 		Push: push,
 		DeploymentConfig: &component.DeploymentConfig{
-			ServerAddr:     resp.ServerAddr,
-			ServerInsecure: resp.ServerInsecure,
+			ServerAddr:          resp.ServerAddr,
+			ServerTls:           resp.ServerTls,
+			ServerTlsSkipVerify: resp.ServerTlsSkipVerify,
 		},
 	})
 	if err != nil {
@@ -47,6 +48,9 @@ type deployOperation struct {
 
 	// id is populated with the deployment id on Upsert
 	id string
+
+	// cebToken is the token to set for the deployment to auth
+	cebToken string
 }
 
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
@@ -95,8 +99,28 @@ func (op *deployOperation) Upsert(
 		return nil, err
 	}
 
-	// Set our internal ID for the Do step
-	op.id = resp.Deployment.Id
+	if op.id == "" {
+		// Set our internal ID for the Do step
+		op.id = resp.Deployment.Id
+
+		// We need to get our token that we'll give this deployment
+		resp, err := client.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
+			// TODO: this needs to be configurable. For now we set it
+			// to long enough that it should be forever.
+			Duration: "87600h", // 10 years
+
+			// This is an entrypoint token specifically for this deployment
+			Entrypoint: &pb.Token_Entrypoint{
+				DeploymentId: op.id,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// Set our token up
+		op.cebToken = resp.Token
+	}
 
 	return resp.Deployment, nil
 }
@@ -104,6 +128,7 @@ func (op *deployOperation) Upsert(
 func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	dconfig := *op.DeploymentConfig
 	dconfig.Id = op.id
+	dconfig.EntrypointInviteToken = op.cebToken
 
 	return app.callDynamicFunc(ctx,
 		log,

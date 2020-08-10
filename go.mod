@@ -11,6 +11,7 @@ require (
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/adrg/xdg v0.2.1
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
+	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.33.6
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/boltdb/bolt v1.3.1
@@ -43,6 +44,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-plugin v1.1.0
 	github.com/hashicorp/go-version v1.2.0
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.3.0
 	github.com/hashicorp/horizon v0.0.0-20200730033532-a0cec81f4e7a
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
@@ -54,11 +56,11 @@ require (
 	github.com/lab47/vterm v0.0.0-20200730001001-14f91f37349f
 	github.com/mattn/go-colorable v0.1.7
 	github.com/mattn/go-isatty v0.0.12
-	github.com/mitchellh/cli v1.0.0
+	github.com/mitchellh/cli v1.1.0
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
 	github.com/mitchellh/go-linereader v0.0.0-20190213213312-1b945b3263eb
 	github.com/mitchellh/go-testing-interface v1.14.0
-	github.com/mitchellh/mapstructure v1.1.2
+	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/protostructure v0.0.0-20200302233719-00c1118a7e52
 	github.com/morikuni/aec v1.0.0
 	github.com/mr-tron/base58 v1.2.0
@@ -67,7 +69,7 @@ require (
 	github.com/oklog/ulid v1.3.1
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
-	github.com/posener/complete v1.1.1
+	github.com/posener/complete v1.2.3
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/sebdah/goldie v1.0.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966

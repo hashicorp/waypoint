@@ -2,11 +2,13 @@ package serverclient
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"os"
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 )
@@ -44,8 +46,14 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		grpc.WithBlock(),
 		grpc.WithTimeout(cfg.Timeout),
 	}
-	if cfg.Insecure {
+	if !cfg.Tls {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	} else {
+		if cfg.TlsSkipVerify {
+			grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(
+				credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}),
+			))
+		}
 	}
 	if cfg.Auth {
 		token := cfg.Token
@@ -57,7 +65,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 			return nil, fmt.Errorf("No token available at the WAYPOINT_SERVER_TOKEN environment variable")
 		}
 
-		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(staticToken(token)))
+		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(StaticToken(token)))
 	}
 
 	// Connect to this server
@@ -65,12 +73,13 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 }
 
 type connectConfig struct {
-	Addr     string
-	Insecure bool
-	Auth     bool
-	Token    string
-	Optional bool // See Optional func
-	Timeout  time.Duration
+	Addr          string
+	Tls           bool
+	TlsSkipVerify bool
+	Auth          bool
+	Token         string
+	Optional      bool // See Optional func
+	Timeout       time.Duration
 }
 
 // FromEnv sources the connection information from the environment
@@ -79,7 +88,8 @@ func FromEnv() ConnectOption {
 	return func(c *connectConfig) error {
 		if v := os.Getenv(EnvServerAddr); v != "" {
 			c.Addr = v
-			c.Insecure = os.Getenv(EnvServerInsecure) != ""
+			c.Tls = os.Getenv(EnvServerTls) != ""
+			c.TlsSkipVerify = os.Getenv(EnvServerTlsSkipVerify) != ""
 		}
 
 		return nil
@@ -91,7 +101,8 @@ func FromContextConfig(cfg *clicontext.Config) ConnectOption {
 	return func(c *connectConfig) error {
 		if cfg != nil && cfg.Server.Address != "" {
 			c.Addr = cfg.Server.Address
-			c.Insecure = cfg.Server.Insecure
+			c.Tls = cfg.Server.Tls
+			c.TlsSkipVerify = cfg.Server.TlsSkipVerify
 			if cfg.Server.RequireAuth {
 				c.Auth = true
 				c.Token = cfg.Server.AuthToken
@@ -174,9 +185,10 @@ const (
 	// in the format of "ip:port" for TCP.
 	EnvServerAddr = "WAYPOINT_SERVER_ADDR"
 
-	// ServerInsecure should be any value that strconv.ParseBool parses as
-	// true to connect to the server insecurely.
-	EnvServerInsecure = "WAYPOINT_SERVER_INSECURE"
+	// ServerTls should be any value that strconv.ParseBool parses as
+	// true to connect to the server with TLS.
+	EnvServerTls           = "WAYPOINT_SERVER_TLS"
+	EnvServerTlsSkipVerify = "WAYPOINT_SERVER_TLS_SKIP_VERIFY"
 
 	// EnvServerToken is the token for authenticated with the server.
 	EnvServerToken = "WAYPOINT_SERVER_TOKEN"
@@ -189,14 +201,14 @@ const (
 // grpc.WithPerRPCCredentials. That api is designed to incorporate things like OAuth
 // but in our case, we really just want to send this static token through, but we still
 // need to the dance.
-type staticToken string
+type StaticToken string
 
-func (t staticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+func (t StaticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
 	return map[string]string{
 		"authorization": string(t),
 	}, nil
 }
 
-func (t staticToken) RequireTransportSecurity() bool {
+func (t StaticToken) RequireTransportSecurity() bool {
 	return false
 }

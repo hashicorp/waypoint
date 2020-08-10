@@ -5,6 +5,7 @@ import (
 
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -35,6 +36,12 @@ func grpcInit(group *run.Group, opts *options) error {
 
 	s := grpc.NewServer(so...)
 	opts.grpcServer = s
+
+	// Register the reflection service. This makes using tools like grpcurl
+	// easier. It makes it slightly easier for malicious users to know about
+	// the service but I think they'd figure out its a waypoint server
+	// easy enough.
+	reflection.Register(s)
 
 	// Register our server
 	pb.RegisterWaypointServer(s, opts.Service)
