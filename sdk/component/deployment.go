@@ -4,10 +4,11 @@ package component
 // Platforms should take this argument and use the value to set the appropriate
 // settings for the deployment
 type DeploymentConfig struct {
-	Id                  string
-	ServerAddr          string
-	ServerTls           bool
-	ServerTlsSkipVerify bool
+	Id                    string
+	ServerAddr            string
+	ServerTls             bool
+	ServerTlsSkipVerify   bool
+	EntrypointInviteToken string
 }
 
 // Env returns the environment variables that should be set for the entrypoint
@@ -29,6 +30,11 @@ func (c *DeploymentConfig) Env() map[string]string {
 		}
 		if c.ServerTlsSkipVerify {
 			results["WAYPOINT_SERVER_TLS_SKIP_VERIFY"] = "1"
+		}
+
+		// Set our token if we have one
+		if c.EntrypointInviteToken != "" {
+			results["WAYPOINT_CEB_INVITE_TOKEN"] = c.EntrypointInviteToken
 		}
 	}
 

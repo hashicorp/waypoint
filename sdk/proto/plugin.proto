@@ -32,6 +32,7 @@ message Args {
     string server_addr = 2;
     bool server_tls = 3;
     bool server_tls_skip_verify = 4;
+    string entrypoint_invite_token = 5;
   }
 
   // DataDir represents the directory where data can be stored. This is an internal

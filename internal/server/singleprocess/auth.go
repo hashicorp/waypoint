@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -124,6 +125,11 @@ func (s *service) Authenticate(ctx context.Context, token, endpoint string, effe
 		return ErrInvalidToken
 	}
 
+	// If this is an entrypoint token then we can only access entrypoint APIs.
+	if body.Entrypoint != nil && !strings.HasPrefix(endpoint, "Entrypoint") {
+		return status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
+	}
+
 	// TODO When we have a user model, this is where you'll check for the user.
 	if body.User != DefaultUser {
 		return ErrInvalidToken
@@ -174,11 +180,16 @@ func (s *service) GenerateToken(keyId string, metadata map[string]string, body *
 // Create a new login token.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
-func (s *service) NewLoginToken(keyId string, metadata map[string]string) (string, error) {
+func (s *service) NewLoginToken(
+	keyId string,
+	metadata map[string]string,
+	entrypoint *pb.Token_Entrypoint,
+) (string, error) {
 	var body pb.Token
 	body.Login = true
 	body.User = DefaultUser
 	body.TokenId = make([]byte, 16)
+	body.Entrypoint = entrypoint
 
 	_, err := io.ReadFull(rand.Reader, body.TokenId)
 	if err != nil {
@@ -190,7 +201,7 @@ func (s *service) NewLoginToken(keyId string, metadata map[string]string) (strin
 
 // Create a new login token. This is just a gRPC wrapper around NewLoginToken.
 func (s *service) GenerateLoginToken(ctx context.Context, _ *empty.Empty) (*pb.NewTokenResponse, error) {
-	token, err := s.NewLoginToken(DefaultKeyId, nil)
+	token, err := s.NewLoginToken(DefaultKeyId, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -201,10 +212,16 @@ func (s *service) GenerateLoginToken(ctx context.Context, _ *empty.Empty) (*pb.N
 // Create a new invite token. The duration controls for how long the invite token is valid.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
-func (s *service) NewInviteToken(duration time.Duration, keyId string, metadata map[string]string) (string, error) {
+func (s *service) NewInviteToken(
+	duration time.Duration,
+	keyId string,
+	metadata map[string]string,
+	entrypoint *pb.Token_Entrypoint,
+) (string, error) {
 	var body pb.Token
 	body.Invite = true
 	body.TokenId = make([]byte, 16)
+	body.Entrypoint = entrypoint
 
 	now := time.Now().UTC().Add(duration)
 	body.ValidUntil = &timestamp.Timestamp{
@@ -227,7 +244,7 @@ func (s *service) GenerateInviteToken(ctx context.Context, req *pb.InviteTokenRe
 		return nil, err
 	}
 
-	token, err := s.NewInviteToken(dur, DefaultKeyId, nil)
+	token, err := s.NewInviteToken(dur, DefaultKeyId, nil, req.Entrypoint)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +263,7 @@ func (s *service) ExchangeInvite(keyId, invite string) (string, error) {
 		return "", errors.Wrapf(ErrInvalidToken, "not an invite token")
 	}
 
-	return s.NewLoginToken(keyId, tt.Metadata)
+	return s.NewLoginToken(keyId, tt.Metadata, body.Entrypoint)
 }
 
 // Given an invite token, validate it and return a login token. This is a gRPC wrapper around ExchangeInvite.
@@ -264,7 +281,7 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 		return nil, status.Errorf(codes.PermissionDenied, "server is already bootstrapped")
 	}
 
-	token, err := s.NewLoginToken(DefaultKeyId, nil)
+	token, err := s.NewLoginToken(DefaultKeyId, nil, nil)
 	if err != nil {
 		return nil, err
 	}
