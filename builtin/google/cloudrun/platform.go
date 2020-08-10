@@ -72,6 +72,7 @@ func (p *Platform) ValidateAuth(
 		option.WithEndpoint("https://"+deployRegion+"-run.googleapis.com"),
 	)
 	if err != nil {
+		ui.Output("Error constructing api client: "+err.Error(), terminal.WithErrorStyle())
 		return status.Errorf(codes.Aborted, err.Error())
 	}
 
@@ -100,11 +101,13 @@ func (p *Platform) ValidateAuth(
 	st.Update("Testing IAM permissions...")
 	result, err := client.TestIamPermissions(apiResource, &testReq).Do()
 	if err != nil {
+		st.Step(terminal.StatusError, "Error testing IAM permissions: "+err.Error())
 		return err
 	}
 
 	// If our resulting permissions do not equal our expected permissions, auth does not validate
 	if !reflect.DeepEqual(result.Permissions, expectedPermissions) {
+		st.Step(terminal.StatusError, "Incorrect IAM permissions, received "+strings.Join(result.Permissions, ", "))
 		return fmt.Errorf("incorrect IAM permissions, received %s", strings.Join(result.Permissions, ", "))
 	}
 
