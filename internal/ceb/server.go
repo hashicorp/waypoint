@@ -78,7 +78,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config) error {
 // This is a weird type that only exists to satisify the interface required by
 // grpc.WithPerRPCCredentials. That api is designed to incorporate things like OAuth
 // but in our case, we really just want to send this static token through, but we still
-// need to the dance.
+// need to do the dance.
 type staticToken string
 
 func (t staticToken) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
