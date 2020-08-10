@@ -63,6 +63,13 @@ func (r *Runner) executeReleaseOp(
 				continue
 			}
 
+			// TODO this should instead check against the app's platform component
+			// and ignore any deployments that are NOT the app's current platform
+			// component (ya dig?)
+			if d.Component.Name != op.Release.Deployment.Component.Name {
+				continue
+			}
+
 			// Mark for deletion
 			ds = append(ds, d)
 		}
