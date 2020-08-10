@@ -3,6 +3,7 @@ package state
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"sort"
 	"time"
 
@@ -106,6 +107,14 @@ func jobSchema() *memdb.TableSchema {
 
 type jobIndex struct {
 	Id string
+
+	// OpType is the operation type for the job.
+	OpType reflect.Type
+
+	// The project/workspace that this job is part of. This is used
+	// to determine if the job is blocked. See job_assigned.go for more details.
+	Application *pb.Ref_Application
+	Workspace   *pb.Ref_Workspace
 
 	// QueueTime is the time that the job was queued.
 	QueueTime time.Time
@@ -215,25 +224,35 @@ RETRY_ASSIGN:
 
 	// Build the list of candidates
 	var candidates []*jobIndex
+	ws := memdb.NewWatchSet()
 	for _, f := range candidateQuery {
 		job, err := f(txn, runnerRec)
 		if err != nil {
 			return nil, err
 		}
-		if job != nil {
-			candidates = append(candidates, job)
+		if job == nil {
+			continue
 		}
+
+		// If this job is blocked, it is not a candidate.
+		if blocked, err := s.jobIsBlocked(txn, job, ws); err != nil {
+			return nil, err
+		} else if blocked {
+			continue
+		}
+
+		candidates = append(candidates, job)
 	}
 
 	// If we have no candidates, then we have to wait for a job to show up.
 	// We set up a blocking query on the job table for a non-assigned job.
-	var watchCh <-chan struct{}
 	if len(candidates) == 0 {
 		iter, err := txn.Get(jobTableName, jobStateIndexName, pb.Job_QUEUED)
 		if err != nil {
 			return nil, err
 		}
-		watchCh = iter.WatchCh()
+
+		ws.Add(iter.WatchCh())
 	}
 
 	// We're done reading so abort the transaction
@@ -241,14 +260,13 @@ RETRY_ASSIGN:
 
 	// If we have a watch channel set that means we didn't find any
 	// results and we need to retry after waiting for changes.
-	if watchCh != nil {
-		select {
-		case <-watchCh:
-			goto RETRY_ASSIGN
-
-		case <-ctx.Done():
-			return nil, ctx.Err()
+	if len(candidates) == 0 {
+		ws.WatchCtx(ctx)
+		if err := ctx.Err(); err != nil {
+			return nil, err
 		}
+
+		goto RETRY_ASSIGN
 	}
 
 	// We sort our candidates by queue time so that we can find the earliest
@@ -284,6 +302,14 @@ RETRY_ASSIGN:
 			continue
 		}
 
+		// We also need to recheck that we aren't blocked. If we're blocked
+		// now then we need to skip this job.
+		if blocked, err := s.jobIsBlocked(txn, job, nil); blocked {
+			continue
+		} else if err != nil {
+			return nil, err
+		}
+
 		// Update our state and update our on-disk job
 		job.State = pb.Job_WAITING
 		result, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
@@ -299,6 +325,8 @@ RETRY_ASSIGN:
 		if err != nil {
 			return nil, err
 		}
+
+		// Update our assignment state
 
 		// Create our timer to requeue this if it isn't acked
 		job.StateTimer = time.AfterFunc(jobWaitingTimeout, func() {
@@ -530,8 +558,11 @@ func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 // jobIndexSet writes an index record for a single job.
 func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 	rec := &jobIndex{
-		Id:    jobpb.Id,
-		State: jobpb.State,
+		Id:          jobpb.Id,
+		State:       jobpb.State,
+		Application: jobpb.Application,
+		Workspace:   jobpb.Workspace,
+		OpType:      reflect.TypeOf(jobpb.Operation),
 	}
 
 	// Target
