@@ -134,6 +134,11 @@ func (p *Platform) Deploy(
 			Name:     src.App,
 		},
 	}
+	id, err := component.Id()
+	if err != nil {
+		return nil, err
+	}
+	result.Id = id
 
 	apiService, err := run.NewService(ctx,
 		option.WithEndpoint("https://"+result.Resource.Location+"-run.googleapis.com"),
