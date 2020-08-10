@@ -58,7 +58,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 
 		// Accept a job. Our local runners execute exactly one job.
 		go func() {
-			if err := r.Accept(); err != nil {
+			if err := r.Accept(ctx); err != nil {
 				log.Error("runner job accept error", "err", err)
 			}
 		}()

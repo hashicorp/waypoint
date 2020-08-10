@@ -70,6 +70,14 @@ func (r *Runner) executeJob(
 	log.Info("executing operation", "type", fmt.Sprintf("%T", job.Operation))
 	switch job.Operation.(type) {
 	case *pb.Job_Noop_:
+		if r.noopCh != nil {
+			select {
+			case <-r.noopCh:
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+		}
+
 		log.Debug("noop job success")
 		return nil, nil
 

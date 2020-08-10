@@ -13,18 +13,24 @@ import (
 // Accept will accept and execute a single job. This will block until
 // a job is available.
 //
+// An error is only returned if there was an error internal to the runner.
+// Errors during job execution are expected (i.e. a project build is misconfigured)
+// and will be reported on the job.
+//
 // This is safe to be called concurrently which can be used to execute
 // multiple jobs in parallel as a runner.
-func (r *Runner) Accept() error {
+func (r *Runner) Accept(ctx context.Context) error {
 	if r.closed() {
 		return ErrClosed
 	}
 
 	log := r.logger
 
-	// Open a new job stream
+	// Open a new job stream. NOTE: we purposely do NOT use ctx above
+	// since if the context is cancelled we want to continue reporting
+	// errors.
 	log.Debug("opening job stream")
-	client, err := r.client.RunnerJobStream(r.ctx)
+	client, err := r.client.RunnerJobStream(context.Background())
 	if err != nil {
 		return err
 	}
@@ -76,7 +82,7 @@ func (r *Runner) Accept() error {
 		return err
 	}
 
-	ctx, cancel := context.WithCancel(r.ctx)
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	// For our UI, we will use a manually set UI if available. Otherwise,
@@ -93,7 +99,7 @@ func (r *Runner) Accept() error {
 	// Execute the job. We have to close the UI right afterwards to
 	// ensure that no more output is writting to the client.
 	log.Info("starting job execution")
-	result, err := r.executeJob(r.ctx, log, ui, assignment.Assignment.Job)
+	result, err := r.executeJob(ctx, log, ui, assignment.Assignment.Job)
 	if ui, ok := ui.(*runnerUI); ok {
 		ui.Close()
 	}
@@ -113,7 +119,7 @@ func (r *Runner) Accept() error {
 			log.Warn("error sending error event, job may be dangling", "err", rpcerr)
 		}
 
-		return err
+		return nil
 	}
 
 	// Complete the job

@@ -105,7 +105,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	// Accept jobs in goroutine so that we can interrupt it.
 	go func() {
 		for {
-			if err := runner.Accept(); err != nil {
+			if err := runner.Accept(ctx); err != nil {
 				if err == runnerpkg.ErrClosed {
 					return
 				}
