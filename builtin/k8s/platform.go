@@ -142,13 +142,20 @@ func (p *Platform) Deploy(
 	// to route to multiple versions during release management.
 	deployment.Spec.Template.Labels[labelId] = result.Id
 
+	// If the user is using the latest tag, then don't specify an overriding pull policy.
+	// This by default means kubernetes will always pull so that latest is useful.
+	pullPolicy := corev1.PullIfNotPresent
+	if img.Tag == "latest" {
+		pullPolicy = ""
+	}
+
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{
 			{
 				Name:            result.Name,
 				Image:           img.Name(),
-				ImagePullPolicy: corev1.PullIfNotPresent,
+				ImagePullPolicy: pullPolicy,
 				Ports: []corev1.ContainerPort{
 					{
 						Name:          "http",
