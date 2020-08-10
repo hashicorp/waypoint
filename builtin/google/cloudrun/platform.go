@@ -76,6 +76,8 @@ func (p *Platform) ValidateAuth(
 		return status.Errorf(codes.Aborted, err.Error())
 	}
 
+	// TODO auth doesn't work if the service isn't already created, which is a common case.
+	// Until that is fixed, we disable the auth checks.
 	return nil
 
 	// We'll update the user in real time
