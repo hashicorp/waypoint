@@ -98,6 +98,11 @@ func (s *State) jobIsBlocked(memTxn *memdb.Txn, idx *jobIndex, ws memdb.WatchSet
 
 // jobAssignedSet records the given job as assigned.
 func (s *State) jobAssignedSet(memTxn *memdb.Txn, idx *jobIndex, assigned bool) error {
+	// If this job represents a parallelizable operation type, then do nothing.
+	if _, ok := parallelOps[idx.OpType]; ok {
+		return nil
+	}
+
 	rec := &jobAssignedIndex{
 		Project:     idx.Application.Project,
 		Application: idx.Application.Application,
