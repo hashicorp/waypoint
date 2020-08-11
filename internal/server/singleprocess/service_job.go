@@ -156,7 +156,10 @@ func (s *service) GetJobStream(
 
 			// Wait for the job to update
 			if err := ws.WatchCtx(ctx); err != nil {
-				errCh <- err
+				if ctx.Err() == nil {
+					errCh <- err
+				}
+
 				return
 			}
 
