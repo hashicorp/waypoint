@@ -238,9 +238,42 @@ func (s *service) RunnerJobStream(
 		return err
 	}
 
+	// Start a goroutine that watches for job changes
+	jobCh := make(chan *state.Job, 1)
+	errCh := make(chan error, 1)
+	go func() {
+		for {
+			ws := memdb.NewWatchSet()
+			job, err = s.state.JobById(job.Id, ws)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			if job == nil {
+				errCh <- status.Errorf(codes.Internal, "job disappeared")
+				return
+			}
+
+			// Send the job
+			select {
+			case jobCh <- job:
+			case <-ctx.Done():
+				return
+			}
+
+			// Wait for the job to update
+			if err := ws.WatchCtx(ctx); err != nil {
+				if ctx.Err() == nil {
+					errCh <- err
+				}
+
+				return
+			}
+		}
+	}()
+
 	// Create a goroutine that just waits for events. We have to do this
 	// so we can exit properly on client side close.
-	errCh := make(chan error, 1)
 	eventCh := make(chan *pb.RunnerJobStreamRequest, 1)
 	go func() {
 		defer cancel()
@@ -284,6 +317,7 @@ func (s *service) RunnerJobStream(
 	}()
 
 	// Recv events in a loop
+	var lastJob *pb.Job
 	for {
 		select {
 		case <-ctx.Done():
@@ -305,6 +339,24 @@ func (s *service) RunnerJobStream(
 		case req := <-eventCh:
 			if err := s.handleJobStreamRequest(log, job, server, req); err != nil {
 				return err
+			}
+
+		case job := <-jobCh:
+			if lastJob == job.Job {
+				continue
+			}
+			lastJob = job.Job
+
+			// If the job is canceled, send that event.
+			if job.CancelTime != nil {
+				err := server.Send(&pb.RunnerJobStreamResponse{
+					Event: &pb.RunnerJobStreamResponse_Cancel{
+						Cancel: &pb.RunnerJobStreamResponse_JobCancel{},
+					},
+				})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
