@@ -843,11 +843,16 @@ message RunnerJobStreamResponse {
     // assignment is when a job is assigned to this job stream. This
     // will happen ONLY in response to a "Request" message from the client.
     JobAssignment assignment = 1;
+
+    // cancel is sent when a cancel request is made.
+    JobCancel cancel = 2;
   }
 
   message JobAssignment {
     Job job = 1;
   }
+
+  message JobCancel {}
 }
 
 message RunnerGetDeploymentConfigRequest {}
