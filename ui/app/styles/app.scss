@@ -26,5 +26,6 @@ svg.icon {
   height: scale.$lg-2;
 }
 
-@import './header';
-@import './page';
+@import './_header';
+@import './_page';
+@import './_icon-tile';
