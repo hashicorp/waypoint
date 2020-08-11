@@ -382,6 +382,10 @@ message QueueJobRequest {
   // The job to queue. See the Job message documentation for more details
   // on what to set.
   Job job = 1;
+
+  // Set an expiration duration. If the job is not assigned and acked
+  // in the given duration then the job will be automatically cancelled.
+  string expires_in = 2;
 }
 
 message QueueJobResponse {

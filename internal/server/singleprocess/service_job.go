@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
@@ -84,9 +85,35 @@ func (s *service) QueueJob(
 	}
 	job.Id = id
 
+	// Validate expiry if we have one
+	var dur time.Duration
+	if req.ExpiresIn != "" {
+		dur, err = time.ParseDuration(req.ExpiresIn)
+		if err != nil {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"Invalid expiry duration: %s", err.Error())
+		}
+	}
+
 	// Queue the job
 	if err := s.state.JobCreate(job); err != nil {
 		return nil, err
+	}
+
+	// If we have an expiration duration, then do that.
+	if dur > 0 {
+		time.AfterFunc(dur, func() {
+			job, err := s.state.JobById(id, nil)
+			if err != nil {
+				return
+			}
+
+			// We only cancel if we're still queued or waiting.
+			switch job.State {
+			case pb.Job_QUEUED, pb.Job_WAITING:
+				s.state.JobCancel(id)
+			}
+		})
 	}
 
 	return &pb.QueueJobResponse{JobId: job.Id}, nil
