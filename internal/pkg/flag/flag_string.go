@@ -16,6 +16,7 @@ type StringVar struct {
 	EnvVar     string
 	Target     *string
 	Completion complete.Predictor
+	SetHook    func(val string)
 }
 
 func (f *Set) StringVar(i *StringVar) {
@@ -35,19 +36,21 @@ func (f *Set) StringVar(i *StringVar) {
 		Usage:      i.Usage,
 		Default:    def,
 		EnvVar:     i.EnvVar,
-		Value:      newStringValue(initial, i.Target, i.Hidden),
+		Value:      newStringValue(i, initial, i.Target, i.Hidden),
 		Completion: i.Completion,
 	})
 }
 
 type stringValue struct {
+	v      *StringVar
 	hidden bool
 	target *string
 }
 
-func newStringValue(def string, target *string, hidden bool) *stringValue {
+func newStringValue(v *StringVar, def string, target *string, hidden bool) *stringValue {
 	*target = def
 	return &stringValue{
+		v:      v,
 		hidden: hidden,
 		target: target,
 	}
@@ -55,6 +58,11 @@ func newStringValue(def string, target *string, hidden bool) *stringValue {
 
 func (s *stringValue) Set(val string) error {
 	*s.target = val
+
+	if s.v.SetHook != nil {
+		s.v.SetHook(val)
+	}
+
 	return nil
 }
 

@@ -17,6 +17,7 @@ type IntVar struct {
 	EnvVar     string
 	Target     *int
 	Completion complete.Predictor
+	SetHook    func(val int)
 }
 
 func (f *Set) IntVar(i *IntVar) {
@@ -38,19 +39,21 @@ func (f *Set) IntVar(i *IntVar) {
 		Usage:      i.Usage,
 		Default:    def,
 		EnvVar:     i.EnvVar,
-		Value:      newIntValue(initial, i.Target, i.Hidden),
+		Value:      newIntValue(i, initial, i.Target, i.Hidden),
 		Completion: i.Completion,
 	})
 }
 
 type intValue struct {
+	v      *IntVar
 	hidden bool
 	target *int
 }
 
-func newIntValue(def int, target *int, hidden bool) *intValue {
+func newIntValue(v *IntVar, def int, target *int, hidden bool) *intValue {
 	*target = def
 	return &intValue{
+		v:      v,
 		hidden: hidden,
 		target: target,
 	}
@@ -63,6 +66,11 @@ func (i *intValue) Set(s string) error {
 	}
 
 	*i.target = int(v)
+
+	if i.v.SetHook != nil {
+		i.v.SetHook(int(v))
+	}
+
 	return nil
 }
 
@@ -81,6 +89,7 @@ type Int64Var struct {
 	EnvVar     string
 	Target     *int64
 	Completion complete.Predictor
+	SetHook    func(val int64)
 }
 
 func (f *Set) Int64Var(i *Int64Var) {
@@ -102,19 +111,21 @@ func (f *Set) Int64Var(i *Int64Var) {
 		Usage:      i.Usage,
 		Default:    def,
 		EnvVar:     i.EnvVar,
-		Value:      newInt64Value(initial, i.Target, i.Hidden),
+		Value:      newInt64Value(i, initial, i.Target, i.Hidden),
 		Completion: i.Completion,
 	})
 }
 
 type int64Value struct {
+	v      *Int64Var
 	hidden bool
 	target *int64
 }
 
-func newInt64Value(def int64, target *int64, hidden bool) *int64Value {
+func newInt64Value(v *Int64Var, def int64, target *int64, hidden bool) *int64Value {
 	*target = def
 	return &int64Value{
+		v:      v,
 		hidden: hidden,
 		target: target,
 	}
@@ -127,6 +138,11 @@ func (i *int64Value) Set(s string) error {
 	}
 
 	*i.target = v
+
+	if i.v.SetHook != nil {
+		i.v.SetHook(v)
+	}
+
 	return nil
 }
 
@@ -145,6 +161,7 @@ type UintVar struct {
 	EnvVar     string
 	Target     *uint
 	Completion complete.Predictor
+	SetHook    func(val uint)
 }
 
 func (f *Set) UintVar(i *UintVar) {
@@ -166,19 +183,21 @@ func (f *Set) UintVar(i *UintVar) {
 		Usage:      i.Usage,
 		Default:    def,
 		EnvVar:     i.EnvVar,
-		Value:      newUintValue(initial, i.Target, i.Hidden),
+		Value:      newUintValue(i, initial, i.Target, i.Hidden),
 		Completion: i.Completion,
 	})
 }
 
 type uintValue struct {
+	v      *UintVar
 	hidden bool
 	target *uint
 }
 
-func newUintValue(def uint, target *uint, hidden bool) *uintValue {
+func newUintValue(v *UintVar, def uint, target *uint, hidden bool) *uintValue {
 	*target = def
 	return &uintValue{
+		v:      v,
 		hidden: hidden,
 		target: target,
 	}
@@ -191,6 +210,11 @@ func (i *uintValue) Set(s string) error {
 	}
 
 	*i.target = uint(v)
+
+	if i.v.SetHook != nil {
+		i.v.SetHook(uint(v))
+	}
+
 	return nil
 }
 
@@ -209,6 +233,7 @@ type Uint64Var struct {
 	EnvVar     string
 	Target     *uint64
 	Completion complete.Predictor
+	SetHook    func(val uint64)
 }
 
 func (f *Set) Uint64Var(i *Uint64Var) {
@@ -230,19 +255,21 @@ func (f *Set) Uint64Var(i *Uint64Var) {
 		Usage:      i.Usage,
 		Default:    def,
 		EnvVar:     i.EnvVar,
-		Value:      newUint64Value(initial, i.Target, i.Hidden),
+		Value:      newUint64Value(i, initial, i.Target, i.Hidden),
 		Completion: i.Completion,
 	})
 }
 
 type uint64Value struct {
+	v      *Uint64Var
 	hidden bool
 	target *uint64
 }
 
-func newUint64Value(def uint64, target *uint64, hidden bool) *uint64Value {
+func newUint64Value(v *Uint64Var, def uint64, target *uint64, hidden bool) *uint64Value {
 	*target = def
 	return &uint64Value{
+		v:      v,
 		hidden: hidden,
 		target: target,
 	}
@@ -255,6 +282,11 @@ func (i *uint64Value) Set(s string) error {
 	}
 
 	*i.target = v
+
+	if i.v.SetHook != nil {
+		i.v.SetHook(v)
+	}
+
 	return nil
 }
 

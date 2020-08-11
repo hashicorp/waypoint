@@ -21,6 +21,7 @@ type DeploymentListCommand struct {
 	*baseCommand
 
 	flagWorkspaceAll bool
+	filterFlags      filterFlags
 }
 
 func (c *DeploymentListCommand) Run(args []string) int {
@@ -42,11 +43,18 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			wsRef = c.project.WorkspaceRef()
 		}
 
+		phyState, err := c.filterFlags.physState()
+		if err != nil {
+			return err
+		}
+
 		// List builds
 		resp, err := client.ListDeployments(c.Ctx, &pb.ListDeploymentsRequest{
 			Application:   app.Ref(),
 			Workspace:     wsRef,
-			PhysicalState: pb.Operation_CREATED,
+			PhysicalState: phyState,
+			Status:        c.filterFlags.statusFilters(),
+			Order:         c.filterFlags.orderOp(),
 		})
 		if err != nil {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -115,6 +123,8 @@ func (c *DeploymentListCommand) Flags() *flag.Sets {
 			Target: &c.flagWorkspaceAll,
 			Usage:  "List builds in all workspaces for this project and application.",
 		})
+
+		initFilterFlags(set, &c.filterFlags, fillterOptionAll)
 	})
 }
 
