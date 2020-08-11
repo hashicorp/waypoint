@@ -6,10 +6,11 @@ import (
 	"io"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -151,9 +152,7 @@ func (c *Project) queueAndStreamJob(
 				return
 			}
 
-			// Since the context ended, we have to create a new context.
-			// We do this with a short timeout.
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			ctx, cancel := finalcontext.Context(log)
 			defer cancel()
 
 			log.Warn("canceling job")
