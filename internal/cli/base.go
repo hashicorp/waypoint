@@ -265,7 +265,9 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 		}
 
 		if err := f(ctx, app); err != nil {
-			finalErr = multierror.Append(finalErr, err)
+			if err != ErrSentinel {
+				finalErr = multierror.Append(finalErr, err)
+			}
 		}
 	}
 
@@ -274,6 +276,10 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 
 // logError logs an error and outputs it to the UI.
 func (c *baseCommand) logError(log hclog.Logger, prefix string, err error) {
+	if err == ErrSentinel {
+		return
+	}
+
 	log.Error(prefix, "error", err)
 
 	if prefix != "" {

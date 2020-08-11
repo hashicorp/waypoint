@@ -100,7 +100,9 @@ func (c *UpCommand) Run(args []string) int {
 		app.UI.Output("")
 		switch {
 		case releaseUrl != "":
-			app.UI.Output("URL: %s", releaseUrl, terminal.WithSuccessStyle())
+			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
 
 		case hostname != nil:
 			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())

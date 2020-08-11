@@ -72,8 +72,13 @@ func (p *Platform) ValidateAuth(
 		option.WithEndpoint("https://"+deployRegion+"-run.googleapis.com"),
 	)
 	if err != nil {
+		ui.Output("Error constructing api client: "+err.Error(), terminal.WithErrorStyle())
 		return status.Errorf(codes.Aborted, err.Error())
 	}
+
+	// TODO auth doesn't work if the service isn't already created, which is a common case.
+	// Until that is fixed, we disable the auth checks.
+	return nil
 
 	// We'll update the user in real time
 	st := ui.Status()
@@ -100,11 +105,13 @@ func (p *Platform) ValidateAuth(
 	st.Update("Testing IAM permissions...")
 	result, err := client.TestIamPermissions(apiResource, &testReq).Do()
 	if err != nil {
+		st.Step(terminal.StatusError, "Error testing IAM permissions: "+err.Error())
 		return err
 	}
 
 	// If our resulting permissions do not equal our expected permissions, auth does not validate
 	if !reflect.DeepEqual(result.Permissions, expectedPermissions) {
+		st.Step(terminal.StatusError, "Incorrect IAM permissions, received "+strings.Join(result.Permissions, ", "))
 		return fmt.Errorf("incorrect IAM permissions, received %s", strings.Join(result.Permissions, ", "))
 	}
 
@@ -129,6 +136,11 @@ func (p *Platform) Deploy(
 			Name:     src.App,
 		},
 	}
+	id, err := component.Id()
+	if err != nil {
+		return nil, err
+	}
+	result.Id = id
 
 	apiService, err := run.NewService(ctx,
 		option.WithEndpoint("https://"+result.Resource.Location+"-run.googleapis.com"),

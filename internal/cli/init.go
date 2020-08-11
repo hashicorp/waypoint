@@ -123,6 +123,9 @@ func (c *InitCommand) Run(args []string) int {
 
 			return 1
 		}
+
+		c.ui.Output("Project fetched into '%s'", dir)
+		return 0
 	}
 
 	path, err := c.initConfigPath()
@@ -563,7 +566,7 @@ Usage: waypoint init [options]
   This command is always safe to run multiple times. This command will never
   delete your configuration or any data in the server.
 
-`
+` + c.Flags().Help()
 
 	return strings.TrimSpace(helpText)
 }

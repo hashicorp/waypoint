@@ -82,7 +82,7 @@ func (c *Client) Run() (int, error) {
 
 	if ptyF != nil {
 		status.Close()
-		c.UI.Output("Connected to " + c.DeploymentId)
+		c.UI.Output("# Connected to " + c.DeploymentId)
 
 		// We need to go into raw mode with stdin
 		if f, ok := c.Stdin.(*os.File); ok {
