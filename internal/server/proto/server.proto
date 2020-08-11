@@ -92,6 +92,15 @@ service Waypoint {
   // soon as the job is queued, it will not wait for execution.
   rpc QueueJob(QueueJobRequest) returns (QueueJobResponse);
 
+  // CancelJob cancels a job. If the job is still queued this is a quick
+  // and easy operation. If the job is already completed, then this does
+  // nothing. If the job is assigned or running, then this will signal
+  // the runner about the cancellation but it may take time.
+  //
+  // This RPC always returns immediately. You must use GetJob or GetJobStream
+  // to wait on the status of the cancellation.
+  rpc CancelJob(CancelJobRequest) returns (google.protobuf.Empty);
+
   // GetJob queries a job by ID.
   rpc GetJob(GetJobRequest) returns (Job);
 
@@ -381,6 +390,12 @@ message QueueJobResponse {
   string job_id = 1;
 }
 
+
+message CancelJobRequest {
+  // The job to cancel
+  string job_id = 1;
+}
+
 message ValidateJobRequest {
   // The job to validate.
   Job job = 1;
@@ -477,6 +492,12 @@ message Job {
   // result is set based on the operation specified. A nil result is possible
   // for some operations.
   Result result = 107;
+
+  // cancel time is the time that cancellation of this job was requested.
+  // If this is zero then this job was not cancelled. Note that this is the
+  // cancellation _request_ time. The actual time a job ended is noted by
+  // the complete_time field.
+  google.protobuf.Timestamp cancel_time = 108;
 
   enum State {
     UNKNOWN = 0;
