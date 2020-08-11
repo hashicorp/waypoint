@@ -176,6 +176,7 @@ func (s *service) GetJobStream(
 
 	// Enter the event loop
 	var lastState pb.Job_State
+	var cancelSent bool
 	var eventsCh <-chan []*pb.GetJobStreamResponse_Terminal_Event
 	for {
 		select {
@@ -188,14 +189,17 @@ func (s *service) GetJobStream(
 		case job := <-jobCh:
 			log.Debug("job state change", "state", job.State)
 
-			// If we have a state change, send that event down.
-			if lastState != job.State {
+			// If we have a state change, send that event down. We also send
+			// down a state change if we enter a "cancelled" scenario.
+			canceling := job.CancelTime != nil
+			if lastState != job.State || cancelSent != canceling {
 				if err := server.Send(&pb.GetJobStreamResponse{
 					Event: &pb.GetJobStreamResponse_State_{
 						State: &pb.GetJobStreamResponse_State{
-							Previous: lastState,
-							Current:  job.State,
-							Job:      job.Job,
+							Previous:  lastState,
+							Current:   job.State,
+							Job:       job.Job,
+							Canceling: canceling,
 						},
 					},
 				}); err != nil {
@@ -203,6 +207,7 @@ func (s *service) GetJobStream(
 				}
 
 				lastState = job.State
+				cancelSent = canceling
 			}
 
 			// If we haven't initialized output streaming and the output buffer

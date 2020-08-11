@@ -656,6 +656,9 @@ message GetJobStreamResponse {
     // set depending on the state (such as the assigned runner, assignment
     // times, etc.)
     Job job = 3;
+
+    // canceling is true if the job was requested to be canceled.
+    bool canceling = 4;
   }
 
   message Terminal {
