@@ -1,10 +1,8 @@
-@use 'cloud-ui/tokens/color';
-@use 'cloud-ui/tokens/scale';
-@use 'cloud-ui/tokens/typography' as Typography;
+@use 'pds/tokens/color';
+@use 'pds/tokens/scale';
+@use 'pds/tokens/typography' as Typography;
 
-$box-shadow:
-  0 0 0 1px rgba(color.$ui-cool-gray-600, .2),
-  0 2px 1px 1px rgba(color.$ui-cool-gray-600, .1);
+$box-shadow: 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.2), 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1);
 
 #page {
   display: flex;
@@ -18,7 +16,9 @@ $box-shadow:
     background: color.$ui-cool-gray-050;
   }
 
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     margin: 0 0 scale.$lg-2;
   }
 
@@ -95,7 +95,6 @@ $box-shadow:
   }
 
   ul.list {
-
     li {
       display: flex;
       flex-direction: column;

@@ -1,26 +1,26 @@
 {{#each @model as |app|}}
-  <Card>
-    <LinkTo @route="workspace.projects.project.app" @model={{app.name}}>
-      <div class="row">
-        <IconTile @icon="git-repository" />
-        <div class="meta">
-          <h2>{{app.name}}</h2>
-          <small>Application metadata</small>
-        </div>
-      </div>
-    </LinkTo>
-    <div class="row grid">
-      <div class="latest-release">
-        <small>Latest release</small>
-      </div>
-      <div class="latest-deploy">
-        <small>Latest deploy</small>
-      </div>
-      <div class="latest-build">
-        <small>Latest build</small>
+<Detail::Card>
+  <LinkTo @route="workspace.projects.project.app" @model={{app.name}}>
+    <div class="row">
+      <IconTile @icon="git-repository" />
+      <div class="meta">
+        <h2>{{app.name}}</h2>
+        <small>Application metadata</small>
       </div>
     </div>
-  </Card>
+  </LinkTo>
+  <div class="row grid">
+    <div class="latest-release">
+      <small>Latest release</small>
+    </div>
+    <div class="latest-deploy">
+      <small>Latest deploy</small>
+    </div>
+    <div class="latest-build">
+      <small>Latest build</small>
+    </div>
+  </div>
+</Detail::Card>
 {{/each}}
 
 {{outlet}}

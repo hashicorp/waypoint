@@ -1,5 +1,5 @@
-@use 'cloud-ui/tokens/color';
-@use 'cloud-ui/tokens/scale';
+@use 'pds/tokens/color';
+@use 'pds/tokens/scale';
 
 #header {
   position: sticky;
@@ -31,7 +31,7 @@
   }
 
   .soon {
-    opacity: .4;
+    opacity: 0.4;
     pointer-events: none;
   }
 }

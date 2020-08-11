@@ -1,6 +1,6 @@
-@use 'cloud-ui';
-@use 'cloud-ui/tokens/scale';
-@use 'cloud-ui/utils/layout' as Layout;
+@use 'pds';
+@use 'pds/tokens/scale';
+@use 'pds/utils/layout' as Layout;
 
 body {
   @include Layout.stack(0);

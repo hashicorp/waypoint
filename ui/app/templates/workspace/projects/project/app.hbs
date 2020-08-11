@@ -4,15 +4,15 @@
 </PageHeader>
 
 <div class="cards">
-  <Card>
+  <Detail::Card>
     <p>Latest release</p>
-  </Card>
-  <Card>
+  </Detail::Card>
+  <Detail::Card>
     <p>Latest deploy</p>
-  </Card>
-  <Card>
+  </Detail::Card>
+  <Detail::Card>
     <p>Latest build</p>
-  </Card>
+  </Detail::Card>
 </div>
 
 <nav>
@@ -30,8 +30,7 @@
       </LinkTo>
     </li>
     <li>
-      <LinkTo @route="workspace.projects.project.app.deployments"
-        @models={{array @model.project @model.application }}>
+      <LinkTo @route="workspace.projects.project.app.deployments" @models={{array @model.project @model.application }}>
         {{inline-svg "upload" class="icon"}}
         {{t "nav.deployments"}}
       </LinkTo>
