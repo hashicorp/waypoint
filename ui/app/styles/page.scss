@@ -1,22 +1,29 @@
+@use 'cloud-ui/tokens/color';
+@use 'cloud-ui/tokens/scale';
+
+$box-shadow:
+  0 0 0 1px rgba(color.$ui-cool-gray-600, .2),
+  0 2px 1px 1px rgba(color.$ui-cool-gray-600, .1);
+
 #page {
   display: flex;
   flex-direction: column;
-  padding: 0 $spacing-32;
+  padding: 0 scale.$lg-4;
   flex-grow: 1;
 
   aside {
-    margin: 0 (-$spacing-32) $spacing-24;
-    padding: $spacing-24 $spacing-32;
-    background: $lightgray;
+    margin: 0 (-(scale.$lg-4)) scale.$lg-2;
+    padding: scale.$lg-2 scale.$lg-4;
+    background: color.$ui-cool-gray-050;
   }
 
   h1, h3 {
-    margin-bottom: $spacing-24;
+    margin: 0 0 scale.$lg-2;
   }
 
   .card {
-    padding: $spacing-16 $spacing-24;
-    margin-bottom: $spacing-24;
+    padding: scale.$base scale.$lg-2;
+    margin-bottom: scale.$lg-2;
     box-shadow: $box-shadow;
 
     h3 {
@@ -25,28 +32,28 @@
   }
 
   nav {
-    padding-top: $spacing-8;
-    margin-bottom: $spacing-32;
+    padding-top: scale.$sm-2;
+    margin-bottom: scale.$lg-4;
 
     ul {
       display: flex;
 
       li {
-        margin-right: $spacing-24;
+        margin-right: scale.$lg-2;
       }
 
       a {
-        color: $midgray;
+        color: color.$ui-cool-gray-600;
         text-decoration: none;
-        padding: $spacing-8 $spacing-8;
+        padding: scale.$sm-2;
 
         &:hover {
-          color: $darkgray;
+          color: color.$ui-cool-gray-800;
         }
 
         &.active {
-          color: $blue;
-          box-shadow: 0 3px 0 $blue;
+          color: color.$blue-500;
+          box-shadow: 0 3px 0 color.$blue-500;
         }
       }
     }
@@ -57,18 +64,18 @@
     li {
       display: flex;
       flex-direction: column;
-      margin-bottom: $spacing-16;
-      padding-bottom: $spacing-16;
-      border-bottom: 1px solid rgba($midgray, .2);
+      margin-bottom: scale.$base;
+      padding-bottom: scale.$base;
+      border-bottom: 1px solid rgba(color.$ui-cool-gray-600, .2);
 
       &:last-child {
         border: none;
       }
 
       span {
-        color: $midgray;
+        color: color.$ui-cool-gray-600;
         font-size: 0.9rem;
-        padding-top: $spacing-4;
+        padding-top: scale.$sm-3;
       }
     }
   }
@@ -78,7 +85,7 @@
 
     .card {
       flex-grow: 1;
-      margin-right: $spacing-24;
+      margin-right: scale.$lg-2;
 
       &:last-child {
         margin-right: 0;
@@ -94,7 +101,7 @@
     height: 100%;
 
     .card {
-      padding: $spacing-80;
+      padding: scale.$lg-12;
     }
   }
 }

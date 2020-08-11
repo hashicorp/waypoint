@@ -1,0 +1,7 @@
+/* --- Config: Text Field --- */
+
+@mixin apply {
+  .pds-textField {
+    @content;
+  }
+}
