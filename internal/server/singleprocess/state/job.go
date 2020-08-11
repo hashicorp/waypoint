@@ -741,7 +741,7 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 
 		t, err := ptypes.Timestamp(jobpb.ExpireTime)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		dur := t.Sub(now)
