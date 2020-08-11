@@ -85,10 +85,19 @@ func (c *Project) queueAndStreamJob(
 ) (*pb.Job_Result, error) {
 	log := c.logger
 
+	// When local, we set an expiration here in case we can't gracefully
+	// cancel in the event of an error. This will ensure that the jobs don't
+	// remain queued forever. This is only for local ops.
+	expiration := ""
+	if c.local {
+		expiration = "30s"
+	}
+
 	// Queue the job
 	log.Debug("queueing job", "operation", fmt.Sprintf("%T", job.Operation))
 	queueResp, err := c.client.QueueJob(ctx, &pb.QueueJobRequest{
-		Job: job,
+		Job:       job,
+		ExpiresIn: expiration,
 	})
 	if err != nil {
 		return nil, err
