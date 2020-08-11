@@ -1,3 +1,4 @@
+import Transition from '@ember/routing/-private/transition';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
@@ -26,5 +27,12 @@ export default class App extends Route {
     this.currentApplication.ref = app;
 
     return app.toObject();
+  }
+
+  afterModel(model: Ref.Application.AsObject, transition: Transition) {
+    if (model) {
+      return this.transitionTo('workspace.projects.project.app.logs', model.application);
+    }
+    return super.afterModel(model, transition);
   }
 }
