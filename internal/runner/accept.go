@@ -82,6 +82,7 @@ func (r *Runner) Accept(ctx context.Context) error {
 		return err
 	}
 
+	// Create a cancelable context so we can stop if job is canceled
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -95,6 +96,30 @@ func (r *Runner) Accept(ctx context.Context) error {
 			evc:    client,
 		}
 	}
+
+	// Start up a goroutine to listen for any other events
+	errCh := make(chan error, 1)
+	go func() {
+		for {
+			// Wait for the connection to close. We do this because this ensures
+			// that the server received our completion and updated the database.
+			resp, err = client.Recv()
+			if err != nil {
+				errCh <- err
+				return
+			}
+
+			// Determine the event
+			switch resp.Event.(type) {
+			case *pb.RunnerJobStreamResponse_Cancel:
+				log.Info("job cancellation request received, canceling")
+				cancel()
+
+			default:
+				log.Info("unknown job event", "event", resp.Event)
+			}
+		}
+	}()
 
 	// Execute the job. We have to close the UI right afterwards to
 	// ensure that no more output is writting to the client.
@@ -135,7 +160,7 @@ func (r *Runner) Accept(ctx context.Context) error {
 
 	// Wait for the connection to close. We do this because this ensures
 	// that the server received our completion and updated the database.
-	_, err = client.Recv()
+	err = <-errCh
 	if err == io.EOF {
 		return nil
 	}
