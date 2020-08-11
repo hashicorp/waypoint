@@ -4,7 +4,10 @@
   {{#each @model as |project|}}
     <Card>
       <LinkTo @route="workspace.projects.project" @model={{project.project}}>
-        <h3>{{project.project}}</h3>
+        <div class="row">
+          {{inline-svg "folder-outline" class="icon"}}
+          <h3>{{project.project}}</h3>
+        </div>
       </LinkTo>
     </Card>
   {{/each}}

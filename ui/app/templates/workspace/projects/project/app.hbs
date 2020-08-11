@@ -1,14 +1,17 @@
-<h1>{{@model.application}}</h1>
+<h1>
+  {{inline-svg "git-repository" class="icon"}}
+  {{@model.application}}
+</h1>
 
 <div class="cards">
   <Card>
-    <p>App metadata</p>
+    <p>Latest release</p>
   </Card>
   <Card>
-    <p>App metadata</p>
+    <p>Latest deploy</p>
   </Card>
   <Card>
-    <p>App metadata</p>
+    <p>Latest build</p>
   </Card>
 </div>
 
@@ -16,27 +19,32 @@
   <ul>
     <li>
       <LinkTo @route="workspace.projects.project.app.logs" @models={{array @model.project @model.application }}>
+        {{inline-svg "page-outline" class="icon"}}
         {{t "nav.logs"}}
       </LinkTo>
     </li>
     <li>
       <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
-        {{t "nav.builds_index"}}
+        {{inline-svg "source-file" class="icon"}}
+        {{t "nav.builds"}}
       </LinkTo>
     </li>
     <li>
       <LinkTo @route="workspace.projects.project.app.deployments"
         @models={{array @model.project @model.application }}>
-        {{t "nav.deployments_index"}}
+        {{inline-svg "upload" class="icon"}}
+        {{t "nav.deployments"}}
       </LinkTo>
     </li>
     <li>
       <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
-        {{t "nav.releases_index"}}
+        {{inline-svg "public-default" class="icon"}}
+        {{t "nav.releases"}}
       </LinkTo>
     </li>
     <li>
       <LinkTo @route="workspace.projects.project.app.exec" @models={{array @model.project @model.application }}>
+        {{inline-svg "bolt" class="icon"}}
         {{t "nav.exec"}}
       </LinkTo>
     </li>

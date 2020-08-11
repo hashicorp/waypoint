@@ -1,4 +1,5 @@
 @use 'cloud-ui';
+@use 'cloud-ui/tokens/scale';
 @use 'cloud-ui/utils/layout' as Layout;
 
 body {
@@ -19,6 +20,11 @@ ul {
 }
 
 // Waypoint styles
+
+svg.icon {
+  width: scale.$lg-2;
+  height: scale.$lg-2;
+}
 
 @import './header';
 @import './page';
