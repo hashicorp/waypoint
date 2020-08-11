@@ -1,5 +1,7 @@
 nav:
   builds: 'Builds'
+  deployments: 'Deployments'
+  releases: 'Releases'
   workspace_detail: 'Workspace detail page'
   project_index: 'Projects index page'
   application_index: 'Applications index page'
@@ -11,7 +13,7 @@ nav:
   auth: 'Authenticate'
 
 product:
-  name: 'Waypoint UI'
+  name: 'Waypoint'
 
 page:
   builds:
