@@ -503,6 +503,12 @@ message Job {
   // the complete_time field.
   google.protobuf.Timestamp cancel_time = 108;
 
+  // expire time is the time when this job would expire. If this isn't set
+  // then this is a non-expiring job. This will remain set even if the job
+  // never expired because it was accepted and run. This field can be used
+  // to detect that it was configured to expire.
+  google.protobuf.Timestamp expire_time = 109;
+
   enum State {
     UNKNOWN = 0;
     QUEUED = 1; // queued and waiting for assignment

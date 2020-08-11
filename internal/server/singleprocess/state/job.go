@@ -459,6 +459,10 @@ func (s *State) JobCancel(id string) error {
 	}
 	job := raw.(*jobIndex)
 
+	return s.jobCancel(txn, job)
+}
+
+func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
 	// How we handle cancel depends on the state
 	switch job.State {
 	case pb.Job_ERROR, pb.Job_SUCCESS:
@@ -477,7 +481,8 @@ func (s *State) JobCancel(id string) error {
 	}
 
 	// Persist the on-disk data
-	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+	_, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+		var err error
 		jobpb.State = job.State
 		jobpb.CancelTime, err = ptypes.TimestampProto(time.Now())
 		if err != nil {
@@ -498,6 +503,31 @@ func (s *State) JobCancel(id string) error {
 
 	txn.Commit()
 	return nil
+}
+
+// JobExpire expires a job. This will cancel the job if it is still queued.
+func (s *State) JobExpire(id string) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	// Get the job
+	raw, err := txn.First(jobTableName, jobIdIndexName, id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "job not found: %s", id)
+	}
+	job := raw.(*jobIndex)
+
+	// How we handle depends on the state
+	switch job.State {
+	case pb.Job_QUEUED, pb.Job_WAITING:
+		return s.jobCancel(txn, job)
+
+	default:
+		return nil
+	}
 }
 
 // JobIsAssignable returns whether there is a registered runner that
@@ -630,6 +660,23 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) error {
 		rec.StateTimer = time.AfterFunc(jobWaitingTimeout, func() {
 			s.JobAck(rec.Id, false)
 		})
+	}
+
+	// If we have an expiry, we need to set a timer to expire this job.
+	if jobpb.ExpireTime != nil {
+		now := time.Now()
+
+		t, err := ptypes.Timestamp(jobpb.ExpireTime)
+		if err != nil {
+			return err
+		}
+
+		dur := t.Sub(now)
+		if dur < 0 {
+			dur = 1
+		}
+
+		time.AfterFunc(dur, func() { s.JobExpire(jobpb.Id) })
 	}
 
 	// Insert the index
