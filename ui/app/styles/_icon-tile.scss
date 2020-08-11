@@ -1,0 +1,13 @@
+@use 'cloud-ui/tokens/color';
+@use 'cloud-ui/tokens/scale';
+
+.icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: scale.$lg-8;
+  height: scale.$lg-8;
+  background: color.$ui-cool-gray-050;
+  box-shadow: 0 0 0 1px color.$ui-cool-gray-100;
+  border-radius: 6px;
+}

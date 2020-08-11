@@ -1,7 +1,7 @@
-<h1>
-  {{inline-svg "folder-outline" class="icon"}}
-  {{@model.name}}
-</h1>
+<PageHeader @iconName="folder-outline">
+  <h1>{{@model.name}}</h1>
+  <small>Project metadata</small>
+</PageHeader>
 
 <aside>
   <LinkTo @route="workspace.projects.project.apps" @models={{array "default" @model.name }}>

@@ -1,12 +1,18 @@
-<h1>Projects</h1>
+<PageHeader>
+  <h1>Projects</h1>
+  <small>{{pluralize @model.length "project"}}</small>
+</PageHeader>
 
 <div data-test-project-list=true>
   {{#each @model as |project|}}
     <Card>
       <LinkTo @route="workspace.projects.project" @model={{project.project}}>
         <div class="row">
-          {{inline-svg "folder-outline" class="icon"}}
-          <h3>{{project.project}}</h3>
+          <IconTile @icon="folder-outline" />
+          <div class="meta">
+            <h2>{{project.project}}</h2>
+            <small>{{pluralize 99 "application"}}</small>
+          </div>
         </div>
       </LinkTo>
     </Card>

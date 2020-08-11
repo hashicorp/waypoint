@@ -1,5 +1,6 @@
 @use 'cloud-ui/tokens/color';
 @use 'cloud-ui/tokens/scale';
+@use 'cloud-ui/tokens/typography' as Typography;
 
 $box-shadow:
   0 0 0 1px rgba(color.$ui-cool-gray-600, .2),
@@ -17,18 +18,43 @@ $box-shadow:
     background: color.$ui-cool-gray-050;
   }
 
-  h1, h3 {
+  h1, h2, h3 {
     margin: 0 0 scale.$lg-2;
   }
 
   h1 {
+    @include Typography.Heading(1);
+  }
+
+  h2 {
+    @include Typography.Heading(2);
+  }
+
+  h3 {
+    @include Typography.Heading(3);
+  }
+
+  header {
     display: flex;
     align-items: center;
+    margin-bottom: scale.$lg-3;
 
-    .icon {
-      margin-right: scale.$sm-1;
-      width: scale.$lg-3;
-      height: scale.$lg-3;
+    .icon-tile {
+      margin-right: scale.$base;
+    }
+
+    .title {
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    small {
+      color: color.$ui-cool-gray-600;
+      @include Typography.Interface(M);
     }
   }
 
@@ -75,7 +101,7 @@ $box-shadow:
       flex-direction: column;
       margin-bottom: scale.$base;
       padding-bottom: scale.$base;
-      border-bottom: 1px solid rgba(color.$ui-cool-gray-600, .2);
+      border-bottom: 1px solid color.$ui-cool-gray-200;
 
       &:last-child {
         border: none;
@@ -103,16 +129,36 @@ $box-shadow:
   }
 
   .card {
-    padding: scale.$base scale.$lg-2;
+    padding: scale.$base;
     margin-bottom: scale.$lg-2;
     box-shadow: $box-shadow;
 
-    h3 {
-      margin-bottom: 0;
+    h2 {
+      margin: 0;
     }
 
     a {
       text-decoration: none;
+    }
+
+    .grid {
+      margin-top: scale.$base;
+      margin-bottom: -(scale.$sm-2);
+      border-top: 1px solid color.$ui-cool-gray-100;
+
+      div {
+        padding: scale.$sm-2 scale.$base;
+        border-right: 1px solid color.$ui-cool-gray-100;
+
+        &:first-child {
+          padding-left: 0;
+        }
+
+        &:last-child {
+          border: none;
+          padding-right: 0;
+        }
+      }
     }
   }
 
@@ -120,8 +166,8 @@ $box-shadow:
     display: flex;
     align-items: center;
 
-    .icon {
-      margin-right: scale.$sm-1;
+    .icon-tile {
+      margin-right: scale.$base;
     }
   }
 
