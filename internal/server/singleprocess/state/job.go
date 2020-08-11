@@ -442,6 +442,64 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 	return nil
 }
 
+// JobCancel marks a job as cancelled. This will set the internal state
+// and request the cancel but if the job is running then it is up to downstream
+// to listen for and react to Job changes for cancellation.
+func (s *State) JobCancel(id string) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	// Get the job
+	raw, err := txn.First(jobTableName, jobIdIndexName, id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "job not found: %s", id)
+	}
+	job := raw.(*jobIndex)
+
+	// How we handle cancel depends on the state
+	switch job.State {
+	case pb.Job_ERROR, pb.Job_SUCCESS:
+		// Jobs that are already completed do nothing for cancellation.
+		// We do not mark that they were requested as cancelled since they
+		// completed fine.
+		return nil
+
+	case pb.Job_QUEUED:
+		// For queued jobs, we immediately transition them to a success state.
+		job.State = pb.Job_SUCCESS
+
+	case pb.Job_WAITING, pb.Job_RUNNING:
+		// For these states, we just need to mark it as cancelled and have
+		// downstream listeners complete the job.
+	}
+
+	// Persist the on-disk data
+	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+		jobpb.State = job.State
+		jobpb.CancelTime, err = ptypes.TimestampProto(time.Now())
+		if err != nil {
+			// This should never happen since encoding a time now should be safe
+			panic("time encoding failed: " + err.Error())
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Store the inmem data
+	if err := txn.Insert(jobTableName, job); err != nil {
+		return err
+	}
+
+	txn.Commit()
+	return nil
+}
+
 // JobIsAssignable returns whether there is a registered runner that
 // meets the requirements to run this job.
 //
