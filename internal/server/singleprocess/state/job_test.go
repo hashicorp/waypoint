@@ -53,6 +53,9 @@ func TestJobAssign(t *testing.T) {
 		// Create a build
 		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 			Id: "A",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "w1",
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -80,19 +83,172 @@ func TestJobAssign(t *testing.T) {
 			case <-doneCh:
 				t.Fatal("should wait")
 
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(500 * time.Millisecond):
 			}
 
 			// Insert another job
 			require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
 				Id: "B",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "w2",
+				},
 			})))
 
 			// We should get a result
 			select {
 			case <-doneCh:
 
-			case <-time.After(50 * time.Millisecond):
+			case <-time.After(500 * time.Millisecond):
+				t.Fatal("should have a result")
+			}
+
+			require.NoError(jerr)
+			require.NotNil(job)
+			require.Equal("B", job.Id)
+		}
+	})
+
+	t.Run("blocking on matching app and workspace", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create two builds for the same app/workspace
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "w1",
+			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
+			},
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "B",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "w1",
+			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
+			},
+		})))
+
+		// Assign it, we should get this build
+		{
+			job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+			require.NoError(err)
+			require.NotNil(job)
+			require.Equal("A", job.Id)
+		}
+
+		// Get the next value in a goroutine
+		{
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			var job *Job
+			var jerr error
+			doneCh := make(chan struct{})
+			go func() {
+				defer close(doneCh)
+				job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+			}()
+
+			// We should be blocking
+			select {
+			case <-doneCh:
+				t.Fatal("should wait")
+
+			case <-time.After(500 * time.Millisecond):
+			}
+
+			// Insert another job for a different workspace
+			require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+				Id: "C",
+				Workspace: &pb.Ref_Workspace{
+					Workspace: "w2",
+				},
+				Operation: &pb.Job_Deploy{
+					Deploy: &pb.Job_DeployOp{},
+				},
+			})))
+
+			// We should get a result
+			select {
+			case <-doneCh:
+
+			case <-time.After(500 * time.Millisecond):
+				t.Fatal("should have a result")
+			}
+
+			require.NoError(jerr)
+			require.NotNil(job)
+			require.Equal("C", job.Id)
+		}
+	})
+
+	t.Run("blocking on matching app and workspace (sequential)", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create two builds for the same app/workspace
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "w1",
+			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
+			},
+		})))
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "B",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "w1",
+			},
+			Operation: &pb.Job_Deploy{
+				Deploy: &pb.Job_DeployOp{},
+			},
+		})))
+
+		// Assign it, we should get this build
+		job1, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job1)
+		require.Equal("A", job1.Id)
+
+		// Get the next value in a goroutine
+		{
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			var job *Job
+			var jerr error
+			doneCh := make(chan struct{})
+			go func() {
+				defer close(doneCh)
+				job, jerr = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+			}()
+
+			// We should be blocking
+			select {
+			case <-doneCh:
+				t.Fatal("should wait")
+
+			case <-time.After(500 * time.Millisecond):
+			}
+
+			// Complete the job
+			_, err = s.JobAck(job1.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job1.Id, nil, nil))
+
+			// We should get a result
+			select {
+			case <-doneCh:
+
+			case <-time.After(500 * time.Millisecond):
 				t.Fatal("should have a result")
 			}
 
@@ -124,12 +280,18 @@ func TestJobAssign(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("A", job.Id)
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job.Id, nil, nil))
 		}
 		{
 			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("B", job.Id)
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job.Id, nil, nil))
 		}
 	})
 
@@ -166,6 +328,9 @@ func TestJobAssign(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("B", job.Id)
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job.Id, nil, nil))
 		}
 
 		// Assign for R_A, which should get A since it matches the target.
@@ -174,6 +339,9 @@ func TestJobAssign(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(job)
 			require.Equal("A", job.Id)
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job.Id, nil, nil))
 		}
 	})
 
