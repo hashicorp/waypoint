@@ -44,6 +44,26 @@ func TestServiceQueueJob(t *testing.T) {
 		require.NoError(err)
 		require.Equal(pb.Job_QUEUED, job.State)
 	})
+
+	t.Run("expiration", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create, should get an ID back
+		resp, err := client.QueueJob(ctx, &Req{
+			Job:       serverptypes.TestJobNew(t, nil),
+			ExpiresIn: "1ms",
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+		require.NotEmpty(resp.JobId)
+
+		// Job should exist and be queued
+		require.Eventually(func() bool {
+			job, err := testServiceImpl(impl).state.JobById(resp.JobId, nil)
+			require.NoError(err)
+			return job.State == pb.Job_SUCCESS && job.CancelTime != nil
+		}, 2*time.Second, 10*time.Millisecond)
+	})
 }
 
 func TestServiceValidateJob(t *testing.T) {

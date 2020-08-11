@@ -2,7 +2,9 @@ package singleprocess
 
 import (
 	"context"
+	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -83,6 +85,21 @@ func (s *service) QueueJob(
 		return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
 	}
 	job.Id = id
+
+	// Validate expiry if we have one
+	job.ExpireTime = nil
+	if req.ExpiresIn != "" {
+		dur, err := time.ParseDuration(req.ExpiresIn)
+		if err != nil {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"Invalid expiry duration: %s", err.Error())
+		}
+
+		job.ExpireTime, err = ptypes.TimestampProto(time.Now().Add(dur))
+		if err != nil {
+			return nil, status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
+		}
+	}
 
 	// Queue the job
 	if err := s.state.JobCreate(job); err != nil {

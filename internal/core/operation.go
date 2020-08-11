@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -155,6 +156,14 @@ func (a *App) doOperation(
 		log.Warn("error during local operation", "err", doErr)
 		*valuePtr = nil
 		server.StatusSetError(*statusPtr, doErr)
+	}
+
+	// If our context ended we need to create a final context so we
+	// can attempt to finalize our metadata.
+	if ctx.Err() != nil {
+		var cancel context.CancelFunc
+		ctx, cancel = finalcontext.Context(log)
+		defer cancel()
 	}
 
 	// Set the final metadata
