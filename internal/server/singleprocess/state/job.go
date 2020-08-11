@@ -459,7 +459,12 @@ func (s *State) JobCancel(id string) error {
 	}
 	job := raw.(*jobIndex)
 
-	return s.jobCancel(txn, job)
+	if err := s.jobCancel(txn, job); err != nil {
+		return err
+	}
+
+	txn.Commit()
+	return nil
 }
 
 func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
@@ -501,7 +506,6 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
 		return err
 	}
 
-	txn.Commit()
 	return nil
 }
 
@@ -523,11 +527,15 @@ func (s *State) JobExpire(id string) error {
 	// How we handle depends on the state
 	switch job.State {
 	case pb.Job_QUEUED, pb.Job_WAITING:
-		return s.jobCancel(txn, job)
+		if err := s.jobCancel(txn, job); err != nil {
+			return err
+		}
 
 	default:
-		return nil
 	}
+
+	txn.Commit()
+	return nil
 }
 
 // JobIsAssignable returns whether there is a registered runner that
