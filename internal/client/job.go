@@ -132,6 +132,8 @@ func (c *Project) queueAndStreamJob(
 
 	// Process events
 	var (
+		completed bool
+
 		stateEventTimer *time.Timer
 		tstatus         terminal.Status
 
@@ -140,6 +142,31 @@ func (c *Project) queueAndStreamJob(
 		sg    terminal.StepGroup
 		steps = map[int32]*stepData{}
 	)
+
+	if c.local {
+		defer func() {
+			// If we completed then do nothing, or if the context is still
+			// active since this means that we're not cancelled.
+			if completed || ctx.Err() == nil {
+				return
+			}
+
+			// Since the context ended, we have to create a new context.
+			// We do this with a short timeout.
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+
+			log.Warn("canceling job")
+			_, err := c.client.CancelJob(ctx, &pb.CancelJobRequest{
+				JobId: queueResp.JobId,
+			})
+			if err != nil {
+				log.Warn("error canceling job", "err", err)
+			} else {
+				log.Info("job cancelled successfully")
+			}
+		}()
+	}
 
 	for {
 		resp, err := stream.Recv()
@@ -154,6 +181,8 @@ func (c *Project) queueAndStreamJob(
 
 		switch event := resp.Event.(type) {
 		case *pb.GetJobStreamResponse_Complete_:
+			completed = true
+
 			if event.Complete.Error == nil {
 				log.Info("job completed successfully")
 				return event.Complete.Result, nil
@@ -164,6 +193,8 @@ func (c *Project) queueAndStreamJob(
 			return nil, st.Err()
 
 		case *pb.GetJobStreamResponse_Error_:
+			completed = true
+
 			st := status.FromProto(event.Error.Error)
 			log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
 			return nil, st.Err()
