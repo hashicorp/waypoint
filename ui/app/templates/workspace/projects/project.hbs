@@ -1,8 +1,11 @@
-<h1>{{@model.name}}</h1>
+<h1>
+  {{inline-svg "folder-outline" class="icon"}}
+  {{@model.name}}
+</h1>
 
 <aside>
   <LinkTo @route="workspace.projects.project.apps" @models={{array "default" @model.name }}>
-      {{t "nav.application_index"}}
+    {{t "nav.application_index"}}
   </LinkTo>
 </aside>
 
