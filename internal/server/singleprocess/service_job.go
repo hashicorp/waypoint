@@ -3,6 +3,7 @@ package singleprocess
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
@@ -29,6 +30,17 @@ func (s *service) GetJob(
 	}
 
 	return job.Job, nil
+}
+
+func (s *service) CancelJob(
+	ctx context.Context,
+	req *pb.CancelJobRequest,
+) (*empty.Empty, error) {
+	if err := s.state.JobCancel(req.JobId); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
 }
 
 func (s *service) QueueJob(
