@@ -1,0 +1,7 @@
+/* --- Config: Form Field --- */
+
+@mixin apply {
+  .pds-formField {
+    @content;
+  }
+}

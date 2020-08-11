@@ -1,17 +1,20 @@
+@use 'cloud-ui/tokens/color';
+@use 'cloud-ui/tokens/scale';
+
 #header {
   position: sticky;
   top: 0;
-  color: $white;
-  background: $black;
+  color: color.$white;
+  background: color.$black;
   display: flex;
-  padding: $spacing-16 $spacing-32;
+  padding: scale.$base scale.$lg-4;
 
   nav {
     display: flex;
     margin-left: auto;
 
     a {
-      margin-left: $spacing-24;
+      margin-left: scale.$lg-2;
     }
   }
 

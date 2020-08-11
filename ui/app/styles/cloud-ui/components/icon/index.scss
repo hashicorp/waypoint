@@ -1,0 +1,18 @@
+@use "./config" as *;
+
+.pdsIcon {
+  display: inline-block;
+  flex-shrink: 0;
+  font-size: inherit;
+  height: 1em;
+  line-height: 1;
+  width: 1em;
+
+  svg {
+    fill: $color;
+    height: 1em;
+    stroke: none;
+    vertical-align: bottom;
+    width: 1em;
+  }
+}
