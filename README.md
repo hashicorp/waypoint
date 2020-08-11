@@ -31,6 +31,8 @@ Waypoint is a tool for deploying applications and services to any target. With W
     * The server's pod status should be **Running**.
     * If the pod status is **ImagePullBackOff**, your Docker registry access token is incorrect. Review step 2 to verify that you have properly set up your registry secret.
 1. In the Terminal, navigate to the **test-apps/wpmini** Waypoint directory.
+1. Initialize the wpmini app with Waypoint:
+    `waypoint init`
 1. Use Waypoint to build the wpmini app:
     `waypoint build`
 1. Deploy the app with Waypoint:
