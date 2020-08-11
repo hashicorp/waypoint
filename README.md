@@ -38,8 +38,6 @@ Waypoint is a tool for deploying applications and services to any target. With W
 1. Deploy the app with Waypoint:
     `waypoint deploy`
     * TODO: Make Ctrl-C cancel the deploy properly if waiting on the pods to start.
-1. Release the app to make it available on your local server:
-    `waypoint release`
 1. Verify that the app is running:
     `curl localhost:8080`
    * The output should read, **Welcome to Waypoint!**
@@ -49,7 +47,6 @@ Waypoint is a tool for deploying applications and services to any target. With W
     1. Run `waypoint config set NAME=my-name`
     Note: NAME must be capitalized.
     1. Run `waypoint deploy`
-    1. Run `waypoint release`
     1. Run `curl localhost:8080`
     * The new response will read: "Hello your-selected-name, Welcome to Waypoint!"
 1. Access the app with the Waypoint URL Service.
