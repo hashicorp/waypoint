@@ -1,0 +1,49 @@
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+// FIXME: make/use _config
+// FIXME: alphabetize properties
+// FIXME: optimize styles
+
+.pageHeader {
+  padding: scale.$lg-3 scale.$lg-7 scale.$lg-2;
+
+  h1,
+  .h1 {
+    padding: 0;
+    margin: 0;
+    font-size: scale.$lg-3;
+    line-height: scale.$lg-7;
+    font-weight: font.$weight-bold;
+  }
+
+  p,
+  .p {
+    margin: scale.$lg-2 0 0 0;
+    padding: 0;
+  }
+
+  &--filled {
+    background: color.$ui-gray-010;
+    border-bottom: 1px solid color.$ui-gray-300;
+  }
+
+  &__title {
+    align-self: auto;
+  }
+
+  &__actions {
+    align-self: center;
+    text-align: right;
+  }
+
+  &__tabs {
+    margin-top: scale.$sm-3;
+    margin-bottom: (-1 * scale.$lg-2);
+
+    .tabs {
+      border-bottom: 0;
+    }
+  }
+}

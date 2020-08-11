@@ -1,0 +1,29 @@
+@use "pds/tokens/color";
+@use "pds/theme";
+
+// FIXME: no styles in index
+// FIXME: local vars to pds vars mapping
+// FIXME: make/use _config
+// FIXME: no px units
+// FIXME: magic numbers
+
+.region {
+  align-items: center;
+  display: flex;
+
+  > span:not(:last-child) {
+    align-items: center;
+    box-shadow: 1px 0 color.$ui-gray-200;
+    display: inline-flex;
+    height: 36px;
+    margin-right: theme.$size-md;
+    padding-right: theme.$size-md;
+  }
+
+  &__provider img {
+    height: 36px;
+    position: relative;
+    top: 4px;
+    width: 36px;
+  }
+}

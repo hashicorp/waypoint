@@ -1,0 +1,86 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+// FIXME: no direct px units
+
+@mixin active {
+  background-color: color.$ui-gray-200;
+  border-color: color.$ui-gray-600;
+  box-shadow: none;
+  color: color.$ui-gray-900;
+}
+
+@mixin base {
+  align-items: center;
+  background-color: color.$ui-gray-050;
+  border-color: color.$ui-gray-300;
+  border-style: solid;
+  border-radius: theme.$border-radius;
+  border-width: 1px;
+  box-shadow: 0 scale.$sm-3 scale.$sm-3 rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+  color: color.$ui-gray-800;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: font.weight(semibold);
+  justify-content: center;
+  text-align: left;
+  text-decoration: none;
+  line-height: 1.2;
+  padding: scale.$sm-2 scale.$lg-2;
+}
+
+@mixin disabled {
+  box-shadow: none;
+  opacity: 0.5;
+}
+
+@mixin hover {
+  background-color: color.$white;
+  box-shadow: 0 scale.$sm-3 scale.$sm-3 rgba(0, 0, 0, 0.1), 0 scale.$sm-3 scale.$sm-4 rgba(0, 0, 0, 0.05);
+  color: color.$ui-gray-900;
+}
+
+@mixin primaryBase {
+  background-color: color.$blue-500;
+  border-color: color.$blue-900;
+  color: color.$white;
+  text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.25);
+}
+
+@mixin primaryBase--hover {
+  background-color: color.$blue-400;
+  color: color.$white;
+}
+
+@mixin primaryBase--active {
+  background-color: color.$blue-700;
+  color: color.$white;
+}
+
+@mixin ghostBase {
+  background-color: color.$white;
+  border-color: transparent;
+  box-shadow: none;
+  color: color.$blue-500;
+}
+
+@mixin ghostBase--hover {
+  background-color: color.$ui-cool-gray-200;
+  box-shadow: none;
+  color: color.$blue-500;
+}
+
+@mixin ghostBase--active {
+  background-color: color.$ui-cool-gray-100;
+  box-shadow: none;
+  color: color.$blue-500;
+}
+
+@mixin ghostBase--disabled {
+  background-color: transparent;
+}

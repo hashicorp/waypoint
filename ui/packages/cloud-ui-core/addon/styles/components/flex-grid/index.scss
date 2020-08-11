@@ -1,0 +1,211 @@
+// FIXME: alphabetize css properties
+// FIXME: define mixins at root level (in _config)
+// FIXME: formatting (spacing)
+// FIXME: move vars to _config
+// FIXME: optimize styles
+@use "sass:list";
+@use "./config" with (
+  $gutter-width: 1.5rem,
+  $outer-margin: 1rem
+); // FIXME: define correct values in _config, instead of overriding
+
+$gutter-compensation: config.$gutter-width * 0.5 * -1;
+$half-gutter-width: config.$gutter-width * 0.5;
+
+.flexGrid {
+  .wrapper {
+    box-sizing: border-box;
+    max-width: config.$max-width;
+    margin: 0 auto;
+  }
+
+  .container-fluid {
+    margin-right: auto;
+    margin-left: auto;
+    padding-right: config.$outer-margin;
+    padding-left: config.$outer-margin;
+  }
+
+  .row {
+    box-sizing: border-box;
+    display: flex;
+    flex: 0 1 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-right: $gutter-compensation;
+    margin-left: $gutter-compensation;
+  }
+
+  .row.reverse {
+    flex-direction: row-reverse;
+  }
+
+  .col.reverse {
+    flex-direction: column-reverse;
+  }
+
+  @mixin sass-col-common {
+    box-sizing: border-box;
+
+    // split @include flex(0, 0, auto) into individual props
+    flex-grow: 0;
+    flex-shrink: 0;
+
+    // we leave @include flex-basis(auto) out of common because
+    // in some spots we need it and some we dont
+    // more why here: https://github.com/kristoferjoseph/flexboxgrid/issues/126
+
+    padding-right: $half-gutter-width;
+    padding-left: $half-gutter-width;
+  }
+
+  $name: xs;
+  .col-#{$name} {
+    @include sass-col-common;
+    flex-basis: auto;
+  }
+  @for $i from 1 through config.$grid-columns {
+    .col-#{$name}-#{$i} {
+      @include sass-col-common;
+      flex-basis: 100% / config.$grid-columns * $i;
+      max-width: 100% / config.$grid-columns * $i;
+    }
+  }
+  @for $i from 0 through config.$grid-columns {
+    .col-#{$name}-offset-#{$i} {
+      @include sass-col-common;
+      @if $i == 0 {
+        margin-left: 0;
+      } @else {
+        margin-left: 100% / config.$grid-columns * $i;
+      }
+    }
+  }
+  .col-#{$name} {
+    flex-grow: 1;
+    flex-basis: 0;
+    max-width: 100%;
+  }
+  .start-#{$name} {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .center-#{$name} {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .end-#{$name} {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .top-#{$name} {
+    align-items: flex-start;
+  }
+
+  .middle-#{$name} {
+    align-items: center;
+  }
+
+  .bottom-#{$name} {
+    align-items: flex-end;
+  }
+
+  .around-#{$name} {
+    justify-content: space-around;
+  }
+
+  .between-#{$name} {
+    justify-content: space-between;
+  }
+
+  .first-#{$name} {
+    order: -1;
+  }
+
+  .last-#{$name} {
+    order: 1;
+  }
+
+  @each $breakpoint in config.$breakpoints {
+    $name: list.nth($breakpoint, 1);
+    $size: list.nth($breakpoint, 2);
+    $container: list.nth($breakpoint, 3);
+    @media only screen and (min-width: $size) {
+      .container {
+        width: $container;
+      }
+
+      .col-#{$name} {
+        @include sass-col-common;
+        flex-basis: auto;
+      }
+      @for $i from 1 through config.$grid-columns {
+        .col-#{$name}-#{$i} {
+          @include sass-col-common;
+          flex-basis: 100% / config.$grid-columns * $i;
+          max-width: 100% / config.$grid-columns * $i;
+        }
+      }
+      @for $i from 0 through config.$grid-columns {
+        .col-#{$name}-offset-#{$i} {
+          @include sass-col-common;
+          @if $i == 0 {
+            margin-left: 0;
+          } @else {
+            margin-left: 100% / config.$grid-columns * $i;
+          }
+        }
+      }
+      .col-#{$name} {
+        flex-grow: 1;
+        flex-basis: 0;
+        max-width: 100%;
+      }
+      .start-#{$name} {
+        justify-content: flex-start;
+        text-align: left;
+      }
+
+      .center-#{$name} {
+        justify-content: center;
+        text-align: center;
+      }
+
+      .end-#{$name} {
+        justify-content: flex-end;
+        text-align: right;
+      }
+
+      .top-#{$name} {
+        align-items: flex-start;
+      }
+
+      .middle-#{$name} {
+        align-items: center;
+      }
+
+      .bottom-#{$name} {
+        align-items: flex-end;
+      }
+
+      .around-#{$name} {
+        justify-content: space-around;
+      }
+
+      .between-#{$name} {
+        justify-content: space-between;
+      }
+
+      .first-#{$name} {
+        order: -1;
+      }
+
+      .last-#{$name} {
+        order: 1;
+      }
+    }
+  }
+}

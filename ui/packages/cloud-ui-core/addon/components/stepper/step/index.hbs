@@ -1,0 +1,8 @@
+<div class='stepper_step' ...attributes data-test-stepper-step-container>
+  {{yield
+    (hash
+      StepLabel=(component 'stepper/step-label' completed=@completed)
+      StepContent=(component 'stepper/step-content' completed=@completed)
+    )
+  }}
+</div>

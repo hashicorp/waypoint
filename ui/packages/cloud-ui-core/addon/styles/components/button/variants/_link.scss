@@ -1,0 +1,29 @@
+@use "pds/tokens/color";
+@use "pds/tokens/scale";
+
+.button.button--link {
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: color.$blue-400;
+  line-height: scale.$base;
+  padding: 0;
+
+  &:active {
+    background-color: transparent;
+    box-shadow: none;
+    color: color.$blue-700;
+    text-shadow: none;
+    text-decoration: underline;
+  }
+
+  &:hover,
+  &:disabled {
+    background-color: transparent;
+    box-shadow: none;
+    text-shadow: none;
+    color: color.$blue-400;
+    text-decoration: underline;
+  }
+}

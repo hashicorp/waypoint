@@ -1,0 +1,11 @@
+<Paper
+  @variant='outlined'
+  @square={{true}}
+  class='detailSection__zeroState'
+  ...attributes
+  data-test-detail-section-zero-state-container
+>
+  <Box class='text--muted' @padding='lg'>
+    {{yield}}
+  </Box>
+</Paper>

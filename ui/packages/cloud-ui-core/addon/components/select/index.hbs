@@ -1,0 +1,14 @@
+<div class='select'>
+  <select ...attributes data-test-select>
+    {{#each @options key=(or @valuePath '@identity') as |op|}}
+      <option
+        data-test-select-option
+        value={{or (get op @valuePath) op}}
+        selected={{eq @value (or (get op @valuePath) op)}}
+      >
+        {{or (get op @labelPath) op}}
+      </option>
+    {{/each}}
+  </select>
+  <Icon @type='unfold-more' @size='md' class='indicator' aria-hidden='true' />
+</div>

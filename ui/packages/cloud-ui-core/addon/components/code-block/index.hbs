@@ -1,0 +1,16 @@
+<div class='code-block' ...attributes data-test-code-block-container>
+  <pre>
+    <code id="code-block-{{this.codeBlockId}}">
+      {{yield}}
+    </code>
+  </pre>
+
+  <CopyButton @clipboardTarget="#code-block-{{this.codeBlockId}}" @success={{fn (perform this.copied)}}>
+    <Icon
+      class={{this.copyIconClass}}
+      @type={{this.copyIconType}}
+      @size='sm'
+      aria-label={{t 'components.code-block.copy-text'}}
+    />
+  </CopyButton>
+</div>

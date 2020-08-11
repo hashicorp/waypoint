@@ -1,0 +1,12 @@
+<LinkTo
+  class='breadcrumbs__crumb'
+  @route={{@route}}
+  @models={{this.models}}
+  ...attributes
+  data-test-breadcrumbs-crumb
+>
+  {{yield}}
+</LinkTo>
+<span class='breadcrumbs__separator' aria-hidden='true' data-test-breadcrumbs-separator>
+  /
+</span>

@@ -1,0 +1,9 @@
+<section class='zero-state' ...attributes data-test-zero-state-container>
+  {{yield
+    (hash
+      Header=(component 'zero-state/header')
+      Message=(component 'zero-state/message')
+      Action=(component 'zero-state/action')
+    )
+  }}
+</section>

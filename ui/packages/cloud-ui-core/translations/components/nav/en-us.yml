@@ -1,0 +1,14 @@
+help-menu:
+  label: 'Help menu'
+  header: 'Help & support'
+  guide: 'Setup guide'
+  support: 'Get support'
+  feedback: 'Give feedback'
+user-menu:
+  label: 'User menu'
+  header: 'User account'
+  signed-in: Signed in as '<b class="email">'{email}'</b>'
+  access-token-copy: 'Copy access token'
+  access-token-copied: 'Copied!'
+breadcrumbs:
+  label: 'Breadcrumbs'

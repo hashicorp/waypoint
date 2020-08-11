@@ -1,0 +1,14 @@
+<div class='fullHeight flexCentered'>
+  <section class='loadingState' ...attributes data-test-loading-container>
+    <div class='loadingState__icon' data-test-loading-icon-container>
+      <Icon @type='loading' @size='2xl' data-test-loading-icon />
+    </div>
+    {{yield
+      (hash
+        Elapsed=(component 'loading/elapsed')
+        Header=(component 'loading/header')
+        Message=(component 'loading/message')
+      )
+    }}
+  </section>
+</div>

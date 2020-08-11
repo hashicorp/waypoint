@@ -1,0 +1,76 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+.errorState {
+  padding: scale.$lg-4;
+  text-align: left;
+  max-width: 350px;
+  margin: 0 auto;
+
+  &--sm {
+    margin: 46px auto;
+  }
+
+  &--2xl {
+    margin: 100px auto;
+  }
+
+  header {
+    display: flex;
+  }
+
+  &__icon {
+    color: color.$ui-gray-500;
+    margin-right: scale.$sm-1;
+    width: scale.$lg-6;
+
+    .icon {
+      font-size: 3rem;
+      margin-top: -3px;
+    }
+  }
+
+  &__title {
+    h1 {
+      color: color.$ui-gray-500;
+      font-size: scale.$lg-1;
+      line-height: scale.$lg-2;
+      font-weight: font.$weight-regular;
+      margin: 0;
+    }
+  }
+
+  &__subtitle {
+    h2 {
+      color: color.$ui-gray-500;
+      font-size: scale.$sm-1;
+      line-height: scale.$base;
+      font-weight: font.$weight-regular;
+      margin: 0;
+    }
+  }
+
+  &__content {
+    color: color.$ui-gray-500;
+    font-size: scale.$sm-1;
+    line-height: scale.$base;
+    margin-top: scale.$base;
+  }
+
+  &__footer {
+    border-top: 1px solid color.$ui-gray-300;
+    padding: scale.$sm-2 0;
+    margin-top: scale.$lg-2;
+    font-size: scale.$sm-1;
+  }
+}
+
+@media (min-width: theme.$media-sm) {
+  .errorState {
+    &--2xl {
+      margin: 200px auto;
+    }
+  }
+}

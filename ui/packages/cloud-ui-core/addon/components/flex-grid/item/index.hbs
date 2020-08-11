@@ -1,0 +1,33 @@
+<div
+  class="
+    flexGrid__item
+
+    {{if @xs (concat 'col-xs-' @xs) 'col-xs'}}
+
+
+    {{if @xsOffset (concat 'col-xs-offset-' @xsOffset)}}
+
+
+    {{if @sm (concat 'col-sm-' @sm) 'col-sm'}}
+
+
+    {{if @smOffset (concat 'col-sm-offset-' @smOffset)}}
+
+
+    {{if @md (concat 'col-md-' @md) 'col-md'}}
+
+
+    {{if @mdOffset (concat 'col-md-offset-' @mdOffset)}}
+
+
+    {{if @lg (concat 'col-lg-' @lg) 'col-lg'}}
+
+
+    {{if @lgOffset (concat 'col-lg-offset-' @lgOffset)}}
+
+    "
+  ...attributes
+  data-test-flex-grid-item-container
+>
+  {{yield}}
+</div>

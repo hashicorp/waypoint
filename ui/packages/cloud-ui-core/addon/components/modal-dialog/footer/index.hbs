@@ -1,0 +1,4 @@
+<footer data-test-modal-dialog-footer-container>
+  {{yield (hash Actions=(component 'modal-dialog/footer/actions'))}}
+  {{yield (hash Cancel=(component 'modal-dialog/footer/cancel' closeModalDialog=@closeModalDialog))}}
+</footer>

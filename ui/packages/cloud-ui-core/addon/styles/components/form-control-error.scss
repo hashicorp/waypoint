@@ -1,0 +1,14 @@
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+@use "pds/theme";
+
+.form-control-error {
+  display: block;
+  clear: both;
+  color: color.$red-500;
+  .required {
+    font-size: scale.$sm-1;
+    margin-top: 2px;
+  }
+}

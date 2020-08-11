@@ -1,0 +1,17 @@
+@use "../button/config" as ButtonConfig;
+
+a[href].cta-link {
+  @include ButtonConfig.base;
+  @include ButtonConfig.primaryBase;
+  text-decoration: none;
+
+  &:hover {
+    @include ButtonConfig.hover;
+    @include ButtonConfig.primaryBase--hover;
+  }
+
+  &:active {
+    @include ButtonConfig.active;
+    @include ButtonConfig.primaryBase--active;
+  }
+}

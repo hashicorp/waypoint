@@ -1,0 +1,16 @@
+<div class='hcpForm__confirmField'>
+  <label for='confirm'>
+    {{t 'components.modals.delete.confirm-label'}}
+  </label>
+  <p class='hcpForm__helpText'>
+    {{t 'components.modals.delete.confirm-help'}}
+  </p>
+  <input
+    type='text'
+    id='confirm'
+    name='confirm'
+    value={{this.confirmText}}
+    data-test-modal-confirm
+    {{on 'input' this.setConfirm}}
+  />
+</div>

@@ -1,0 +1,10 @@
+@use "pds/tokens/scale";
+
+.button.button--compact {
+  min-height: scale.$lg-2;
+  padding: scale.$sm-3 scale.$sm-1;
+
+  .icon {
+    align-self: flex-start;
+  }
+}

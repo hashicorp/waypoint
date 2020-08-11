@@ -1,0 +1,82 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+// FIXME: no styles in index
+// FIXME: make/use _config
+// FIXME: local vars to pds vars mapping
+// FIXME: alphabetize properties
+// FIXME: optimize styles
+// FIXME: avoid font style overrides
+
+.loadingState {
+  padding: scale.$lg-4;
+  text-align: center;
+
+  &__elapsed {
+    color: color.$black;
+    font-style: normal;
+    font-weight: normal;
+    font-size: scale.$sm-1;
+    line-height: scale.$base;
+    height: scale.$lg-3;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__icon {
+    margin-bottom: scale.$sm-1;
+
+    .icon {
+      font-size: scale.$lg-15;
+    }
+
+    .structure-icon-loading-progress {
+      stroke-linecap: square;
+    }
+
+    svg path {
+      stroke-width: 9%;
+    }
+  }
+
+  &__header {
+    color: color.$black;
+    font-size: scale.$lg-1;
+    font-style: normal;
+    font-weight: font.$weight-bold;
+    height: scale.$lg-3;
+    letter-spacing: -0.34px;
+    line-height: scale.$lg-5;
+    margin-bottom: scale.$base;
+  }
+
+  &__message {
+    color: color.$ui-gray-500;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: font.$weight-medium;
+    line-height: 18px;
+    margin: 0 auto;
+    width: 285px;
+  }
+}
+
+// if it's a direct sibling of the content container,
+// bump it up from center a little
+.pdsAppContent > .fullHeight .loadingState {
+  margin-bottom: 10vh;
+}
+
+@media (min-width: theme.$media-sm) {
+  .loadingState {
+    padding: scale.$lg-13;
+
+    &__message {
+      width: 487px; // FIXME: magic number
+    }
+  }
+}

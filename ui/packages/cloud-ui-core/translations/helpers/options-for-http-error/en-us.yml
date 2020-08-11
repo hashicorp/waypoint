@@ -1,0 +1,14 @@
+error: Error {code}
+goBack: Go back
+default:
+  label: Something went wrong
+  message: We ran into a problem and could not continue. You can ask your administrator or try again later.
+403:
+  label: You are not authorized
+  message: You must be granted permissions to view this data. Ask your administrator if you think you should have access.
+404:
+  label: Page not found
+  message: Sorry, we couldn't find the page you were looking for. You can go back or to one of the links below.
+500:
+  label: Something went wrong
+  message: We ran into a problem and could not continue. You can ask your administrator or try again later.

@@ -1,0 +1,10 @@
+<div
+  data-test-form-control-error-container
+  class='form-control-error'
+  ...attributes
+>
+  <Icon @type='cancel-square-fill' @size='md' aria-hidden='true' />
+  <span class='required'>
+    {{yield to="message"}}
+  </span>
+</div>

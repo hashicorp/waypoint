@@ -1,0 +1,8 @@
+@use "pds/tokens/color";
+
+.button.button--secondary {
+  &.button--text {
+    color: color.$ui-gray-800;
+    text-shadow: none;
+  }
+}

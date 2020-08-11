@@ -1,0 +1,30 @@
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+// FIXME: alphabetize properties
+// FIXME: use/make _config
+// FIXME: avoid font style overrides
+
+.detailSection {
+  &__header {
+    border-bottom: 1px solid color.$ui-gray-200;
+    margin: 0;
+    padding: 0 0 scale.$sm-1 0;
+
+    h2,
+    .h2 {
+      padding: 0;
+      margin: 0;
+      font-style: normal;
+      font-weight: font.$weight-semibold;
+      font-size: scale.$lg-1;
+      line-height: scale.$lg-2;
+      letter-spacing: -0.34px;
+    }
+  }
+
+  &__zeroState {
+    text-align: center;
+  }
+}

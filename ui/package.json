@@ -10,6 +10,9 @@
     "doc": "doc",
     "test": "tests"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "ember build --environment=production",
     "lint": "npm-run-all --aggregate-output --continue-on-error --parallel lint:*",
@@ -71,7 +74,9 @@
     "sass": "^1.26.10",
     "typescript": "^3.9.6",
     "waypoint-pb": "./lib/waypoint-pb/",
-    "webpack-bundle-analyzer": "^3.8.0"
+    "webpack-bundle-analyzer": "^3.8.0",
+    "product-design-system": "*",
+    "cloud-ui-core": "*"
   },
   "engines": {
     "node": "10.* || >= 12"

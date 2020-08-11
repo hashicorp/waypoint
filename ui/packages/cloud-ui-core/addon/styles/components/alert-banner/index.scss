@@ -1,0 +1,72 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+$scale-14: 14px;
+$scale-5: 5px;
+// The $alerts var represents each alert by:  name, icon color, title color, border color, background color
+$alerts: 'error' theme.$failure-base theme.$failure-base theme.$failure-l1 theme.$failure-l2,
+  'info' theme.$info-base theme.$info-d1 theme.$info-l1 theme.$info-l2,
+  'success' theme.$success-base theme.$success-d1 theme.$success-l1 theme.$success-l2,
+  'warning' theme.$warning-base theme.$warning-d1 theme.$warning-l1 theme.$warning-l2;
+
+@mixin parentFlex {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+@mixin childFlex {
+  align-self: auto;
+}
+.alertBanner {
+  padding: $scale-14 scale.$sm-1;
+  border-radius: scale.$sm-4;
+  @include parentFlex;
+
+  &__icon {
+    order: 1;
+    flex: 0 1 auto;
+    @include childFlex;
+    margin-right: $scale-5;
+  }
+
+  &__body {
+    order: 2;
+    flex: 0 1 max-content;
+    @include childFlex;
+  }
+
+  &__title {
+    font-weight: font.$weight-semibold;
+    font-size: scale.$base;
+    margin-bottom: scale.$sm-3;
+    line-height: scale.$lg-1;
+  }
+
+  &__content {
+    font-size: $scale-14;
+    margin-bottom: scale.$sm-2;
+  }
+
+  &__action {
+    button {
+      font-weight: font.$weight-regular;
+    }
+  }
+
+  @each $name, $icon, $title, $border, $background in $alerts {
+    &--#{$name} {
+      .icon {
+        color: $icon;
+      }
+      .alertBanner__title {
+        color: $title;
+      }
+      border: 1px solid $border;
+      background: $background;
+    }
+  }
+}

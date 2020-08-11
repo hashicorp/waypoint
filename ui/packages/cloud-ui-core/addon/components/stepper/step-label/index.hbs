@@ -1,0 +1,21 @@
+<span class='stepper_stepLabel' ...attributes data-test-stepper-step-label-container>
+  <span class='stepper_stepLabelIcon'>
+    <Icon
+      @type={{if @completed 'check-circle-fill' 'radio-button-checked'}}
+      @size='md'
+      class={{if @completed 'text--success' 'text--muted'}}
+      aria-hidden='true'
+      data-test-stepper-step-icon
+    />
+    <span class='pds--visuallyHidden'>
+      {{#if @completed}}
+        {{t 'components.stepper.label.completed'}}
+      {{else}}
+        {{t 'components.stepper.label.uncompleted'}}
+      {{/if}}
+    </span>
+  </span>
+  <span class="stepper_stepLabelWrapper {{if @completed 'text--muted'}}" data-test-stepper-step-label>
+    {{yield}}
+  </span>
+</span>

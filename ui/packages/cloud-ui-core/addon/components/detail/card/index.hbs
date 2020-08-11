@@ -1,0 +1,7 @@
+<div class='detailCard' ...attributes data-test-detail-card-container>
+  <Box @padding='2xs lg 2xs md'>
+    <FlexGrid class='between-sm'>
+      {{yield (hash Content=(component 'detail/card/content') Header=(component 'detail/card/header'))}}
+    </FlexGrid>
+  </Box>
+</div>

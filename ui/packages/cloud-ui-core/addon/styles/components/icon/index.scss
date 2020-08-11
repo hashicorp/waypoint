@@ -1,0 +1,30 @@
+@use "pds/theme";
+@use "pds/components/icon";
+
+// FIXME: make _config
+// FIXME: alphabetize properties
+// FIXME: formatting
+
+$sizes: (
+  sm: theme.$size-sm,
+  md: theme.$size-md,
+  lg: theme.$size-lg,
+  xl: theme.$size-xl,
+  2xl: theme.$size-2xl,
+);
+
+.icon {
+  // TODO: collect more info on whether PDS or HCP has the better vertical alignment strategy.
+  vertical-align: middle;
+}
+
+.icon.addButton {
+  position: relative;
+  left: -#{theme.$size-2xs};
+}
+
+@each $size, $sizeVal in $sizes {
+  .icon--#{$size} {
+    font-size: $sizeVal;
+  }
+}

@@ -1,0 +1,84 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+// FIXME: make/use _config
+// FIXME: formatting (spacing)
+// FIXME: alphabetize properties
+// FIXME: avoid font style overrides
+
+$ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
+$show-transition: all 150ms $ease-out-cubic;
+
+.menu {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  width: auto;
+
+  *:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 1px color.$blue-500;
+  }
+
+  .menuTrigger {
+    align-items: center;
+    cursor: pointer;
+    display: inline-flex;
+    box-sizing: border-box;
+    height: 100%;
+  }
+
+  .menuTrigger.button {
+    display: block;
+  }
+
+  .menuTrigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .menuContent {
+    background-color: theme.$background-color;
+    border-radius: 0 0 theme.$border-radius theme.$border-radius;
+    border: 1px solid color.$ui-gray-300;
+    opacity: 0.2;
+    position: absolute;
+    right: 0;
+    top: calc(100% - 1px);
+    transform: translateY(-0.5rem) scale(0.95);
+    transition: $show-transition;
+    width: 12.5rem; //~200px // FIXME: magic number
+    section:not(:only-child) {
+      border-bottom: 1px solid color.$ui-gray-800;
+    }
+
+    section > * {
+      background: none;
+      border: none;
+      box-sizing: border-box;
+      color: theme.$color;
+      font-size: 14px;
+      display: block;
+      line-height: 1.3;
+      margin: 0;
+      padding: scale.$sm-2 scale.$sm-1;
+      text-align: left;
+      text-decoration: none;
+      width: 100%;
+    }
+    header {
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: font.$weight-medium;
+    }
+    .delete {
+      color: theme.$failure-base;
+    }
+  }
+
+  .menuContent--isOpen {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

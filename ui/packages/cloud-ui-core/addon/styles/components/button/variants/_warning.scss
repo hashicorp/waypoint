@@ -1,0 +1,31 @@
+@use "pds/tokens/color";
+@use "pds/tokens/scale";
+
+.button.button--warning {
+  border-color: color.$red-500;
+  color: color.$red-500;
+
+  &.button--text {
+    color: color.$red-500;
+    text-shadow: none;
+
+    &:hover,
+    &:active {
+      background-color: transparent;
+      color: color.$red-400;
+    }
+  }
+
+  &:hover {
+    background-color: color.$red-500;
+    border-color: color.$red-600;
+    box-shadow: 0 scale.$sm-3 scale.$sm-3 rgba(0, 0, 0, 0.1), 0 scale.$sm-3 scale.$sm-4 rgba(0, 0, 0, 0.05);
+    color: color.$white;
+  }
+
+  &:active {
+    background-color: color.$red-700;
+    border-color: color.$red-700;
+    color: color.$white;
+  }
+}

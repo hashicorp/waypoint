@@ -1,0 +1,19 @@
+{{#let (option-for-http-error @code) as |option|}}
+  <Error class='httpError' ...attributes @iconType={{option.iconType}} data-test-http-error-container>
+    <:title>
+      {{or @title (t option.label)}}
+    </:title>
+    <:subtitle>
+      {{t 'helpers.options-for-http-error.error' code=@code}}
+    </:subtitle>
+    <:content>
+      {{or @message (t option.message)}}
+    </:content>
+    <:footer>
+      <LinkTo @route={{this.previousRoute}}>
+        <Icon @type='chevron-left' @size='sm' aria-hidden='true' />
+        {{t 'helpers.options-for-http-error.goBack'}}
+      </LinkTo>
+    </:footer>
+  </Error>
+{{/let}}

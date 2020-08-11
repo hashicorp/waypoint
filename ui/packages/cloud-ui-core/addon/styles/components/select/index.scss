@@ -1,0 +1,33 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+.select {
+  color: black;
+  display: inline-block;
+  max-width: 32rem;
+  position: relative;
+  width: 80%;
+
+  select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: color.$ui-gray-050;
+    border-radius: theme.$border-radius;
+    border: 1px solid color.$ui-gray-300;
+    box-shadow: inset 0px 3px 1px color.$ui-gray-010;
+    margin-bottom: theme.$size-2xs;
+    padding: theme.$size-xs theme.$size-lg theme.$size-xs theme.$size-sm;
+    width: 100%;
+  }
+
+  .indicator {
+    margin: 0;
+    pointer-events: none;
+    position: absolute;
+    right: scale.$sm-2;
+    top: scale.$sm-2;
+  }
+}

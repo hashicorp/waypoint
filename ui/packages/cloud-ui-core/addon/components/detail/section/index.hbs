@@ -1,0 +1,8 @@
+<section class='detailSection' data-test-detail-section-container ...attributes>
+  <header class='detailSection__header' data-test-detail-section-header>
+    <Typography @variant='h2' data-test-detail-section-header-title>
+      {{@title}}
+    </Typography>
+  </header>
+  {{yield (hash ZeroState=(component 'detail/section/zero-state'))}}
+</section>

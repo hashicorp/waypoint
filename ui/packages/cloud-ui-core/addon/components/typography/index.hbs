@@ -1,0 +1,5 @@
+{{#let (element this.componentTag) as |Tag|}}
+  <Tag class="typography {{this.componentClasses}}" ...attributes>
+    {{yield}}
+  </Tag>
+{{/let}}

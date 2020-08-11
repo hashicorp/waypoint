@@ -1,0 +1,40 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/scale";
+
+// FIXME: make/use _config
+// FIXME: local vars to pds vars mapping
+// FIXME: optimize styles
+
+.menu--topNav {
+  *:focus {
+    box-shadow: inset 0 0 0 1px color.$white;
+  }
+  .menuTrigger {
+    color: color.$ui-gray-400;
+    padding: 0 theme.$size-md;
+  }
+  .menuTrigger:hover,
+  .menuTrigger:focus {
+    color: color.$ui-gray-500;
+  }
+  .menuTrigger:active {
+    color: color.$ui-gray-800;
+  }
+  .menuContent {
+    background: color.$black;
+    border-top: scale.$sm-4 solid color.$ui-gray-800;
+
+    section > * {
+      color: color.$ui-gray-100;
+    }
+
+    header {
+      color: color.$ui-gray-400;
+    }
+  }
+}
+
+.menu--topNav[open] .menuTrigger {
+  color: color.$white;
+}

@@ -1,0 +1,23 @@
+// FIXME: move to _config
+// FIXME: alphabetize properties
+@use "./vars";
+
+@mixin vertical-align-header-elements {
+  line-height: vars.$modal-header-height;
+  vertical-align: middle;
+}
+
+@mixin vertical-align-modal-dialog {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+}
+
+@mixin ellipsis() {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

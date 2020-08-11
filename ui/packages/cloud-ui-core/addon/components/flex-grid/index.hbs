@@ -1,0 +1,5 @@
+<div class='flexGrid'>
+  <div class="row {{if @reverse 'reverse' ''}}" ...attributes data-test-flex-grid-container>
+    {{yield (hash Item=(component 'flex-grid/item'))}}
+  </div>
+</div>

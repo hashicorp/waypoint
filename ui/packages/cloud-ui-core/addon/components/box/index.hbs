@@ -1,0 +1,12 @@
+<div
+  class="box
+    {{concat 'box--padding-top-' (get this.padding 0)}}
+    {{concat 'box--padding-right-' (get this.padding 1)}}
+    {{concat 'box--padding-bottom-' (get this.padding 2)}}
+    {{concat 'box--padding-left-' (get this.padding 3)}}
+    "
+  ...attributes
+  data-test-box-container
+>
+  {{yield}}
+</div>

@@ -1,0 +1,19 @@
+<span class='iconBadge' ...attributes data-test-icon-badge-container>
+  {{#let (option-for-icon-badge @source @variant) as |option|}}
+    <Icon
+      class="iconBadge__icon {{option.textColorClass}}"
+      @size={{option.iconSize}}
+      @type={{option.iconType}}
+      data-test-icon-badge-icon
+    />
+    <span class="iconBadge__label {{if @highlightLabel option.textColorClass}}" data-test-icon-badge-label>
+      {{#if @label}}
+        {{@label}}
+      {{else if option.label}}
+        {{t option.label}}
+      {{else}}
+        {{@variant}}
+      {{/if}}
+    </span>
+  {{/let}}
+</span>

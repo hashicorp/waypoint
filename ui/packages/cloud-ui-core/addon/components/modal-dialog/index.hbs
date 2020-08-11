@@ -1,0 +1,34 @@
+{{#if @isActive}}
+  {{#-in-element this.modalDialogContainer}}
+    <div
+      class='pdsModalDialog'
+      data-test-modal-dialog-container
+      ...attributes
+      {{focus-trap focusTrapOptions=(hash initialFocus='header')}}
+      {{did-insert this.openModalDialog}}
+      {{will-destroy this.teardownModal}}
+    >
+      <Box>
+        <div class='pdsModalDialog__background'></div>
+        <div
+          role='dialog'
+          class="pdsModalDialog__body {{if @variant (concat 'pdsModalDialog__body--' @variant)}}"
+        >
+          {{yield
+            (hash
+              Header=(component
+                'modal-dialog/header'
+                variant=@variant
+                headerIconType=this.headerIconType
+                closeModalDialog=this.closeModalDialog
+              )
+            )
+          }}
+
+          {{yield (hash Body=(component 'modal-dialog/body'))}}
+          {{yield (hash Footer=(component 'modal-dialog/footer' closeModalDialog=this.closeModalDialog))}}
+        </div>
+      </Box>
+    </div>
+  {{/-in-element}}
+{{/if}}

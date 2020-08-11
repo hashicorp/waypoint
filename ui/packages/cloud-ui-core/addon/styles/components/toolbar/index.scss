@@ -1,0 +1,40 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+
+// FIXME: no styles in index
+// FIXME: alphabetize properties
+// FIXME: formatting (spacing)
+// FIXME: avoid font style overrides
+// FIXME: a[href] for links
+// FIXME: make/use _config
+
+.toolbar {
+  align-items: center;
+  background: color.$ui-gray-010;
+  border-top: 1px solid color.$ui-gray-200;
+  border-bottom: 1px solid color.$ui-gray-200;
+  display: flex;
+  justify-content: space-between;
+  min-height: 2.7rem;
+  padding: 0 theme.$size-2xs;
+  position: relative;
+  top: 1px;
+
+  &__filters,
+  &__actions {
+    align-items: center;
+    display: flex;
+    flex: 1;
+  }
+
+  &__actions {
+    justify-content: flex-end;
+    a,
+    button {
+      color: color.$ui-gray-800;
+      font-size: 13px;
+      line-height: 1.8;
+      padding: theme.$size-xs theme.$size-sm;
+    }
+  }
+}

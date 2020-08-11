@@ -1,0 +1,16 @@
+<div class="alertBanner alertBanner--{{this.variant}}" ...attributes data-test-alert-banner-container>
+  <div class='alertBanner__icon'>
+    <Icon @type={{this.iconType}} @size='md' aria-hidden='true' />
+  </div>
+  <div class='alertBanner__body'>
+    <div class='alertBanner__title'>
+      {{yield to='title'}}
+    </div>
+    <div class='alertBanner__content'>
+      {{yield to='content'}}
+    </div>
+    <div class='alertBanner__action'>
+      {{yield to='action'}}
+    </div>
+  </div>
+</div>

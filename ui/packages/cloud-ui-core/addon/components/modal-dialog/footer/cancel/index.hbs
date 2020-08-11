@@ -1,0 +1,10 @@
+<Button
+  data-test-modal-dialog-cancel-button-container
+  aria-label={{t 'components.modals.close.label'}}
+  @variant='secondary'
+  class='close-button'
+  ...attributes
+  {{on 'click' @closeModalDialog}}
+>
+  {{t 'components.form.cancel'}}
+</Button>

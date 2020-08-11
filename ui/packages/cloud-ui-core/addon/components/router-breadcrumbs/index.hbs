@@ -1,0 +1,7 @@
+<Breadcrumbs class='router-breadcrumbs' data-test-router-breadcrumbs-container>
+  {{#each this.crumbs as |crumb|}}
+    <Breadcrumbs::Crumb @route={{crumb.route}} @models={{crumb.models}} data-test-router-breadcrumbs-crumb>
+      {{crumb.title}}
+    </Breadcrumbs::Crumb>
+  {{/each}}
+</Breadcrumbs>

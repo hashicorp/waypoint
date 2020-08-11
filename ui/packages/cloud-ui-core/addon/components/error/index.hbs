@@ -1,0 +1,31 @@
+<div class='fullHeight flexCentered'>
+  <section class='errorState' ...attributes data-test-error-state-container>
+    <header>
+      <div class='errorState__icon'>
+        <Icon @type={{this.iconType}} aria-hidden='true' data-test-error-state-icon />
+      </div>
+      <div class='errorState_headings'>
+        <div class='errorState__title'>
+          <Typography @variant='h1' data-test-error-state-title>
+            {{yield to='title'}}
+          </Typography>
+        </div>
+        <div class='errorState__subtitle' data-test-error-state-subtitle>
+          <Typography @variant='h2'>
+            {{yield to='subtitle'}}
+          </Typography>
+        </div>
+      </div>
+    </header>
+    {{#if (has-block 'content')}}
+      <div class='errorState__content' data-test-error-state-content>
+        {{yield to='content'}}
+      </div>
+    {{/if}}
+    {{#if (has-block 'footer')}}
+      <footer class='errorState__footer' data-test-error-state-footer>
+        {{yield to='footer'}}
+      </footer>
+    {{/if}}
+  </section>
+</div>

@@ -1,0 +1,1 @@
+export { default } from 'cloud-ui-core/components/form-control-error';

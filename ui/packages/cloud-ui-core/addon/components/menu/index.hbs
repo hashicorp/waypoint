@@ -1,0 +1,17 @@
+<details
+  class='menu'
+  open={{this.isOpen}}
+  ...attributes
+  data-test-menu-details
+  {{did-insert this.setupClickOutside}}
+  {{will-destroy this.removeClickOutside}}
+  {{on 'toggle' this.trackOpen}}
+>
+  {{yield
+    (hash
+      isOpen=this.isOpen
+      Trigger=(component 'menu/trigger')
+      Content=(component 'menu/content' isOpen=this.isOpen)
+    )
+  }}
+</details>

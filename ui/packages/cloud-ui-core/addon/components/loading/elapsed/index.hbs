@@ -1,0 +1,10 @@
+<div
+  class='loadingState__elapsed'
+  data-test-loading-elapsed-container
+  {{did-insert this.startTimer}}
+  {{will-destroy this.destroyTimer}}
+>
+  <Typography>
+    {{t 'components.loading.time-elapsed'}}: {{this.elapsed}}
+  </Typography>
+</div>

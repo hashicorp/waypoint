@@ -1,0 +1,76 @@
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+@use "pds/theme";
+
+// FIXME: make _config
+// FIXME: formatting
+// FIXME: optimize styles
+// FIXME: avoid font style overrides
+
+.hcpForm {
+  &:not(.pdsModalDialog &) {
+    margin-bottom: theme.$size-lg;
+  }
+  h3 {
+    font-size: scale.$lg-1;
+    line-height: theme.$size-xl;
+    letter-spacing: -0.34px;
+  }
+  section {
+    box-shadow: 0 1px color.$ui-gray-200;
+    margin-bottom: theme.$size-xl;
+    padding-bottom: theme.$size-xl;
+    & > div {
+      margin-bottom: theme.$size-lg;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: font.$weight-semibold;
+    margin-bottom: theme.$size-2xs;
+  }
+  input[type='text'],
+  textarea {
+    border-radius: theme.$border-radius;
+    border: 1px solid color.$ui-gray-300;
+    box-shadow: inset 0px 3px 1px color.$ui-gray-010;
+    margin-bottom: theme.$size-2xs;
+    max-width: 32rem;
+    padding: theme.$size-xs theme.$size-sm;
+    width: 80%;
+  }
+
+  input[type='text'].error {
+    border: 1px solid color.$red-500;
+  }
+
+  button[type='submit'] {
+    margin-right: theme.$size-sm;
+  }
+
+  .headerHelp {
+    color: color.$ui-gray-400;
+    font-weight: 300;
+  }
+
+  &__helpText {
+    color: color.$ui-gray-500;
+    font-size: 12px;
+    margin: 0;
+    max-width: 30rem;
+    padding: 0 0 0.5rem 0;
+  }
+
+  &__confirmField {
+    padding-top: theme.$size-md;
+  }
+}
+
+.button[type='submit'] {
+  margin-right: theme.$size-sm;
+}

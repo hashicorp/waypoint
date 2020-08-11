@@ -1,0 +1,63 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+// FIXME: no styles in index
+// FIXME: local vars to pds vars mapping
+// FIXME: make/use _config
+// FIXME: formatting
+
+.stepper {
+  display: flex;
+  flex-direction: column;
+  font-size: scale.$sm-1;
+  font-style: normal;
+  font-weight: normal;
+  line-height: scale.$base;
+
+  &_step {
+    position: relative;
+    &::before {
+      content: '';
+      background: color.$ui-gray-200;
+      width: 1px;
+      position: absolute;
+      top: 1rem;
+      bottom: 0;
+      left: 0.5rem;
+    }
+    &:last-child::before {
+      display: none;
+    }
+
+    &Content {
+      margin-left: scale.$sm-2;
+      min-height: scale.$lg-3;
+      padding-left: scale.$lg-1;
+      padding-right: scale.$sm-2;
+      padding-top: scale.$sm-4;
+
+      a {
+        display: block;
+        padding-bottom: 1.5rem;
+      }
+    }
+
+    &Label {
+      align-items: flex-start;
+      display: flex;
+      margin-bottom: (-1 * scale.$sm-4);
+
+      &Icon {
+        display: flex;
+        flex-shrink: 0;
+        padding-right: scale.$sm-1;
+      }
+
+      &Wrapper {
+        width: 100%;
+      }
+    }
+  }
+}

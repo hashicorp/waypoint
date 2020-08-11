@@ -1,0 +1,10 @@
+<Button
+  class='configDownloadButton'
+  @compact='true'
+  type='button'
+  ...attributes
+  {{on 'click' this.performDownload}}
+>
+  <Icon @type='download' @size='md' />
+  {{yield}}
+</Button>

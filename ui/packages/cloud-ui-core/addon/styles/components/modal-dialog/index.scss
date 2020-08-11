@@ -1,0 +1,109 @@
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+@use "pds/theme";
+@use "./vars";
+@use "./mixins";
+
+// FIXME: no styles in index
+// FIXME: remove empty blocks
+// FIXME: formatting, spacing
+// FIXME: local vars to pds vars mapping
+// FIXME: optimize styles
+
+.pdsModalDialog {
+  background: rgba(0, 0, 0, 0.9);
+  height: 100vh;
+  @include mixins.vertical-align-modal-dialog;
+
+  &__background {
+  }
+
+  &__body {
+    background: color.$white;
+    max-width: vars.$modal-default-width;
+    &--delete {
+      max-width: vars.$modal-delete-width;
+    }
+
+    &--edit {
+      max-width: vars.$modal-edit-width;
+    }
+  }
+
+  &__closeButton {
+    padding: 0;
+
+    box-shadow: none;
+    @include mixins.vertical-align-header-elements;
+    color: color.$ui-gray-600;
+    height: 1.5rem;
+    width: 1.5rem;
+  }
+
+  &__header {
+    @include mixins.vertical-align-header-elements;
+    background-color: color.$ui-gray-050;
+    border-bottom: 1px solid color.$ui-gray-300;
+    font-size: scale.$base;
+    overflow: hidden; //to address over flex-ing
+    padding-left: scale.$lg-2;
+
+    .flexGrid__item {
+      margin: 0;
+      padding: 0;
+    }
+    .flexGrid .row {
+      margin: 0;
+    }
+
+    &Label {
+      display: inline-block;
+      max-width: vars.$modal-default-title-width;
+      @include mixins.vertical-align-header-elements;
+      @include mixins.ellipsis;
+    }
+
+    &--error {
+      background: theme.$failure-l2;
+      border-bottom: 1px solid theme.$failure-base;
+      .pdsModalDialog__headerIcon {
+        color: theme.$failure-base;
+      }
+      .pdsModalDialog__headerLabel {
+        color: theme.$failure-d1;
+      }
+    }
+    &--delete {
+      max-width: vars.$modal-delete-width;
+      background: color.$yellow-010;
+      border-bottom: 1px solid color.$yellow-500;
+      .pdsModalDialog__headerIcon {
+        color: color.$yellow-500;
+      }
+      .pdsModalDialog__headerLabel {
+        max-width: vars.$modal-delete-title-width;
+        color: color.$yellow-800;
+      }
+    }
+
+    &--edit {
+      max-width: vars.$modal-edit-width;
+      background: color.$ui-gray-050;
+      border-bottom: 1px solid color.$ui-gray-300;
+      .pdsModalDialog__headerIcon {
+        color: color.$ui-gray-900;
+      }
+      .pdsModalDialog__headerLabel {
+        max-width: vars.$modal-edit-title-width;
+        color: color.$ui-gray-900;
+      }
+    }
+  }
+
+  footer {
+    background-color: color.$ui-gray-050;
+    border-top: 1px solid color.$ui-gray-300;
+    padding: scale.$base scale.$lg-2;
+  }
+}

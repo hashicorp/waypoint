@@ -1,0 +1,26 @@
+@use "pds/tokens/color";
+@use "pds/tokens/scale";
+@use "../config";
+
+.button.button--primary {
+  @include config.primaryBase;
+
+  &.button--text {
+    color: color.$blue-500;
+    text-shadow: none;
+
+    &:hover,
+    &:active {
+      background-color: transparent;
+      color: color.$blue-400;
+    }
+  }
+
+  &:hover {
+    @include config.primaryBase--hover;
+  }
+
+  &:active {
+    @include config.primaryBase--active;
+  }
+}

@@ -1,0 +1,6 @@
+{{!-- template-lint-disable link-href-attributes --}}
+{{!-- the href will be passed in as part of the attributes here --}}
+<a class='external-link' target='_blank' rel='noopener noreferrer' ...attributes data-test-external-link>
+  {{yield}}
+  <Icon @type='exit' @size='md' aria-hidden='true' />
+</a>

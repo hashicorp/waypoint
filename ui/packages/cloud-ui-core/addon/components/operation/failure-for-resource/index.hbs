@@ -1,0 +1,12 @@
+{{#if this.failedOperationError}}
+  <Box @padding='0 0 xl' data-test-operation-failure>
+    <AlertBanner @variant='error'>
+      <:title>
+        {{titleize @resource.state}}
+      </:title>
+      <:content>
+        {{this.failedOperationError.message}}
+      </:content>
+    </AlertBanner>
+  </Box>
+{{/if}}

@@ -1,0 +1,45 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+@use "pds/utils/a11y";
+
+// FIXME: no styles in index
+// FIXME: avoid font style overrides
+// FIXME: make/use _config
+// FIXME: local vars to pds vars mapping
+
+.pdsTable {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+
+  caption {
+    @include a11y.visuallyHidden;
+  }
+
+  thead {
+    background: color.$ui-gray-010;
+  }
+  th,
+  td {
+    border-bottom: 1px solid color.$ui-gray-200;
+    font-size: 14px;
+    font-style: normal;
+    line-height: 1.3;
+    text-align: left;
+  }
+
+  td {
+    color: color.$ui-gray-700;
+    font-weight: font.$weight-regular;
+    padding: scale.$lg-2 scale.$sm-1;
+  }
+
+  th {
+    border-top: 1px solid color.$ui-gray-200;
+    color: color.$ui-gray-500;
+    font-weight: font.$weight-semibold;
+    padding: scale.$sm-1 scale.$sm-1;
+  }
+}

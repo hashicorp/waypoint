@@ -1,0 +1,82 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+// FIXME: no styles in index
+// FIXME: make _config
+// FIXME: move to "sidebar" component
+// FIXME: optimize styles
+// FIXME: differentiate a:active from a.active
+// FIXME: a[href] for links
+// FIXME: avoid font style overrides
+
+.pdsSidebar {
+  hr {
+    border: 1px solid transparent;
+    border-top: 1px solid color.$ui-gray-600;
+    height: 1px;
+    margin: 0 scale.$lg-5;
+    padding: 0 0 scale.$sm-3 0;
+  }
+
+  &__nav,
+  .nav {
+    margin: 0;
+    padding: scale.$lg-1 0 scale.$lg-5 0;
+    position: relative;
+    list-style: none;
+
+    .nav__header {
+      color: color.$white;
+      padding: scale.$sm-1 scale.$lg-5 scale.$sm-1 scale.$lg-5;
+      font-weight: font.$weight-light;
+      font-style: normal;
+      font-size: scale.$lg-1;
+      line-height: scale.$lg-2;
+    }
+
+    .nav__subheader {
+      padding: 0;
+      margin: scale.$lg-2 scale.$lg-5 scale.$sm-2 scale.$lg-5;
+      font-style: normal;
+      font-weight: font.$weight-medium;
+      font-size: scale.$sm-1;
+      line-height: scale.$base;
+      color: color.$ui-cool-gray-400;
+    }
+
+    a {
+      width: 100%;
+      display: flex;
+      position: relative;
+      border-right: scale.$sm-3 solid transparent;
+      box-sizing: border-box;
+      align-items: center;
+      padding: scale.$sm-2 scale.$lg-5;
+      justify-content: flex-start;
+      font-style: normal;
+      font-weight: font.$weight-medium;
+      font-size: 14px;
+      line-height: scale.$lg-1;
+      color: color.$ui-gray-200;
+      text-decoration: none;
+      text-align: left;
+      position: relative;
+    }
+
+    // FIXME: differentiate :active from .active?
+    a {
+      &:hover,
+      &:active,
+      &.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: color.$white;
+      }
+      &:active,
+      &.active {
+        border-color: color.$ui-gray-300;
+      }
+    }
+  }
+}

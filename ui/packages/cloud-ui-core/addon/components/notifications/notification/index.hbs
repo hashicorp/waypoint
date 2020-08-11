@@ -1,0 +1,26 @@
+<FlashMessage role='alertdialog' class='notification' @flash={{@flash}} as |component flash close|>
+  <AlertBanner @variant={{flash.type}}>
+    <:title>
+      {{flash.message}}
+      <Button
+        type='button'
+        class='notification__close'
+        @variant='link'
+        @compact={{true}}
+        {{on 'click' close}}
+      >
+        <Icon @type='cancel-plain' @size='md' aria-label={{t 'components.form.close'}} />
+      </Button>
+    </:title>
+    <:content>
+      {{flash.content}}
+    </:content>
+    <:action>
+      {{#if (and flash.actionText flash.onAction)}}
+        <Button type='button' @variant='link' @compact={{true}} {{on 'click' (fn this.onAction close)}}>
+          {{flash.actionText}}
+        </Button>
+      {{/if}}
+    </:action>
+  </AlertBanner>
+</FlashMessage>

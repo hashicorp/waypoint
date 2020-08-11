@@ -1,0 +1,24 @@
+// FIXME: clean up formatting
+@use "pds/tokens/resolutions";
+// https://github.com/hugeinc/flexboxgrid-sass/blob/14d347cfa2dc11f9fac26fe00a8679fcda2736ff/flexboxgrid.scss
+// but without the browser prefix stuff
+// without vars prefix `flexboxgrid-`
+// and split config in this file and styles scoped to .flexGrid
+
+// Set the number of columns you want to use on your layout.
+$grid-columns: 12 !default;
+// Set the gutter between columns.
+$gutter-width: 1rem !default;
+// Set a margin for the container sides.
+$outer-margin: 2rem !default;
+// Create or remove breakpoints for your project
+// Syntax:
+// name SIZErem,
+// FIXME: formatting
+$breakpoints: sm resolutions.$svga-width resolutions.$svga-width,
+  md resolutions.$xga-width resolutions.$xga-width, lg resolutions.$wxga-width resolutions.$wxga-width !default;
+$max-width: 1200px !default;
+
+//
+// -- Stop editing -- //
+//

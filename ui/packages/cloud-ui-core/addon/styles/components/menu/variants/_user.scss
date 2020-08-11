@@ -1,0 +1,48 @@
+@use "pds/theme";
+@use "pds/tokens/scale";
+
+// FIXME: make/use _config
+// FIXME: local vars to pds vars mapping
+// FIXME: formatting
+// FIXME: optimize styles
+
+$ease-in-cubic: cubic-bezier(0.32, 0, 0.67, 0);
+
+.menu--user {
+  //😭 safari didn't want to play well here so we needed another wrapping div
+  .menuTrigger > div {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .menuContent {
+    width: 15.5rem; //248px; // FIXME: magic number
+    .email {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+  img {
+    border-radius: theme.$border-radius;
+    height: theme.$size-xl;
+    width: theme.$size-xl;
+    transition: filter 75ms $ease-in-cubic;
+  }
+  // border doesn't show by default, but does on any interaction
+  // FIXME: use transparent border trick instead of box-shadow
+  .menuTrigger:hover img,
+  .menuTrigger:focus img,
+  .menuTrigger:active img,
+  &[open] img {
+    filter: drop-shadow(0 -1px currentColor) //top
+      drop-shadow(1px 0 currentColor) //right
+      drop-shadow(0 1px currentColor) //bottom
+      drop-shadow(-1px 0 currentColor); // left
+  }
+  .icon--chevron {
+    font-size: scale.$lg-2;
+    margin-left: scale.$sm-2;
+  }
+}

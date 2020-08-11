@@ -1,0 +1,31 @@
+@use "pds/tokens/color";
+@use "pds/tokens/font";
+@use "pds/tokens/scale";
+
+.code-block {
+  position: relative;
+
+  pre {
+    background-color: color.$black;
+    color: color.$ui-cool-gray-300;
+    padding: scale.$base;
+    white-space: normal;
+    line-height: scale.$lg-1;
+
+    code {
+      padding: 0;
+    }
+  }
+
+  .copy-btn {
+    background-color: transparent;
+    border: 0;
+    color: color.$ui-gray-300;
+    line-height: 0;
+    margin: 0;
+    padding: scale.$sm-2;
+    position: absolute;
+    top: 0;
+    right: (-2 * scale.$base);
+  }
+}

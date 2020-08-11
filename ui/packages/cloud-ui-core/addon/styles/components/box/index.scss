@@ -1,0 +1,37 @@
+@use "pds/theme";
+
+// FIXME: make/use _config
+// FIXME: formatting (spacing)
+
+$scale: (
+  "2xs": theme.$size-2xs,
+  "xs": theme.$size-xs,
+  "sm": theme.$size-sm,
+  "md": theme.$size-md,
+  "lg": theme.$size-lg,
+  "xl": theme.$size-xl,
+  "2xl": theme.$size-2xl,
+);
+
+@mixin spacing-modifiers($type, $direction) {
+  @each $key, $size in $scale {
+    &-#{$key} {
+      #{$type}-#{$direction}: $size;
+    }
+  }
+}
+
+.box {
+  &--padding-top {
+    @include spacing-modifiers("padding", "top");
+  }
+  &--padding-right {
+    @include spacing-modifiers("padding", "right");
+  }
+  &--padding-bottom {
+    @include spacing-modifiers("padding", "bottom");
+  }
+  &--padding-left {
+    @include spacing-modifiers("padding", "left");
+  }
+}

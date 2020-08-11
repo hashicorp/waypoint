@@ -1,0 +1,31 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+
+// FIXME: no styles in index
+// FIXME: formatting (spacing)
+// FIXME: local vars to pds vars mapping
+// FIXME: make/use _config
+
+.text {
+  &--action {
+    color: theme.$action-base;
+  }
+  &--alert {
+    color: theme.$alert-base;
+  }
+  &--failure {
+    color: theme.$failure-base;
+  }
+  &--info {
+    color: theme.$info-base;
+  }
+  &--muted {
+    color: color.$ui-gray-400;
+  }
+  &--success {
+    color: theme.$success-base;
+  }
+  &--warning {
+    color: theme.$warning-base;
+  }
+}

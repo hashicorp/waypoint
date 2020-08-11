@@ -1,0 +1,23 @@
+@use "pds/tokens/color";
+@use "../config";
+
+.button.button--ghost {
+  @include config.ghostBase;
+
+  &.button--text {
+    color: color.$blue-500;
+    text-shadow: none;
+  }
+
+  &:active {
+    @include config.ghostBase--active;
+  }
+
+  &:hover {
+    @include config.ghostBase--hover;
+  }
+
+  &:disabled {
+    @include config.ghostBase--disabled;
+  }
+}

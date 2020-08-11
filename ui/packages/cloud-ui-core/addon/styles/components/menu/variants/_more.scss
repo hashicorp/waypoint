@@ -1,0 +1,30 @@
+@use "pds/theme";
+@use "pds/tokens/color";
+@use "pds/tokens/scale";
+
+.menu--more .menuTrigger {
+  background-color: color.$white;
+  border-color: transparent;
+  align-items: center;
+  border-radius: theme.$border-radius;
+  border-width: 1px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-style: normal;
+  justify-content: center;
+  line-height: 1.2;
+  padding: scale.$sm-3;
+
+  &:hover,
+  &:active {
+    background-color: color.$ui-cool-gray-200;
+    color: color.$blue-500;
+  }
+}
+
+.menu--more .menuTrigger:active,
+.menu--more[open] .menuTrigger {
+  background-color: color.$ui-cool-gray-100;
+}

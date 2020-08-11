@@ -1,0 +1,11 @@
+{{!-- template-lint-disable require-button-type --}}
+{{!-- the type will be passed in as part of the attributes here --}}
+{{!-- TODO revisit when https://github.com/emberjs/ember.js/issues/18232 is closed
+--}}
+<button
+  class="button {{this.variantClass}} {{if @compact 'button--compact' ''}}"
+  ...attributes
+  data-test-button-container
+>
+  {{yield}}
+</button>

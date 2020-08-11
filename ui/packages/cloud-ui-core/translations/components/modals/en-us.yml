@@ -1,0 +1,5 @@
+close:
+  label: 'Close modal'
+delete:
+  confirm-label: 'Confirm deletion'
+  confirm-help: 'To confirm deletion, type "DELETE" below.'

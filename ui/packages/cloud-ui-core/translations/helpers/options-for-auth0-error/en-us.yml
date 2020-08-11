@@ -1,0 +1,22 @@
+default:
+  message: Something went wrong.
+access_denied:
+  message: Access was denied while authenticating.
+invalid_user_password:
+  message: The username and/or password are invalid.
+mfa_invalid_code:
+  message: The multi-factor authentication code provided is invalid or expired.
+mfa_registration_required:
+  message: Your account needs to be enrolled in multi-factor authentication.
+mfa_required:
+  message: A multi-factor authentication code is required to authenticate.
+password_leaked:
+  message: Your password has been leaked and a different one needs to be used.
+PasswordHistoryError:
+  message: The password provided for sign up/update has already been used.
+PasswordStrengthError:
+  message: The password provided does not match the strength requirements.
+too_many_attempts:
+  message: The account is blocked due to too many authentication attempts.
+unauthorized:
+  message: Your account is unauthorized to sign-in.

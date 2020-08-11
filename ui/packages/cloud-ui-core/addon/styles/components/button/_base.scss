@@ -1,0 +1,17 @@
+@use "config";
+
+.button {
+  @include config.base;
+
+  &:active {
+    @include config.active;
+  }
+
+  &:hover {
+    @include config.hover;
+  }
+
+  &:disabled {
+    @include config.disabled;
+  }
+}

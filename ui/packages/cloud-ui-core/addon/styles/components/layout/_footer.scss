@@ -1,0 +1,54 @@
+@use 'pds/theme';
+@use 'pds/tokens/color';
+@use "pds/tokens/scale";
+
+// FIXME: is "only screen" necessary?
+// FIXME: local vars map to pds vars
+// FIXME: make/use _config
+// FIXME: alphabetize properties
+// FIXME: optimize styles
+// FIXME: a[href] for links
+
+$media-tablet-vertical: 768px; // FIXME: use pds resolutions token
+
+.pdsAppFooter {
+  background: color.$white;
+  border-top: 1px solid color.$ui-gray-300;
+  color: color.$ui-gray-400;
+  display: flex;
+  flex-direction: column;
+  font-size: scale.$sm-1;
+  justify-content: center;
+  padding: 0 theme.$size-2xl;
+  text-align: center;
+
+  &__copyright {
+    padding: scale.$base 0 scale.$sm-2 0;
+  }
+
+  &__nav {
+    a {
+      color: color.$ui-gray-400;
+      display: inline-block;
+      padding: scale.$lg-1 scale.$sm-2;
+    }
+  }
+
+  @media (min-width: theme.$media-sm) {
+    flex-direction: row;
+    justify-content: flex-end;
+
+    &__copyright {
+      margin-left: scale.$lg-3;
+      padding: scale.$lg-2 0;
+    }
+
+    &__nav {
+      order: -1;
+
+      a {
+        padding: scale.$lg-2 scale.$sm-2;
+      }
+    }
+  }
+}

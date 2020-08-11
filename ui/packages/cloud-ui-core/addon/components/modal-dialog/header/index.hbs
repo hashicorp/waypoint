@@ -1,0 +1,27 @@
+<header
+  data-test-modal-dialog-header-container
+  tabindex='-1'
+  class="pdsModalDialog__header {{if @variant (concat 'pdsModalDialog__header--' @variant)}}"
+>
+  <FlexGrid as |G|>
+    <G.Item @xs={{11}} @sm={{11}} @md={{11}} @lg={{11}}>
+      {{#if @headerIconType}}
+        <Icon class='pdsModalDialog__headerIcon' @type={{@headerIconType}} @size='md' />
+      {{/if}}
+      <div class='pdsModalDialog__headerLabel'>
+        {{yield}}
+      </div>
+    </G.Item>
+    <G.Item class='center-xs'>
+      <Button
+        data-test-modal-dialog-close-button-container
+        aria-label={{t 'components.modals.close.label'}}
+        class='pdsModalDialog__closeButton'
+        type='button'
+        {{on 'click' @closeModalDialog}}
+      >
+        <Icon @type='cancel-plain' @size='md' />
+      </Button>
+    </G.Item>
+  </FlexGrid>
+</header>
