@@ -92,6 +92,15 @@ service Waypoint {
   // soon as the job is queued, it will not wait for execution.
   rpc QueueJob(QueueJobRequest) returns (QueueJobResponse);
 
+  // CancelJob cancels a job. If the job is still queued this is a quick
+  // and easy operation. If the job is already completed, then this does
+  // nothing. If the job is assigned or running, then this will signal
+  // the runner about the cancellation but it may take time.
+  //
+  // This RPC always returns immediately. You must use GetJob or GetJobStream
+  // to wait on the status of the cancellation.
+  rpc CancelJob(CancelJobRequest) returns (google.protobuf.Empty);
+
   // GetJob queries a job by ID.
   rpc GetJob(GetJobRequest) returns (Job);
 
@@ -373,11 +382,21 @@ message QueueJobRequest {
   // The job to queue. See the Job message documentation for more details
   // on what to set.
   Job job = 1;
+
+  // Set an expiration duration. If the job is not assigned and acked
+  // in the given duration then the job will be automatically cancelled.
+  string expires_in = 2;
 }
 
 message QueueJobResponse {
   // the job ID that was queued. This can be used with other RPC methods
   // to check on the status, cancel, etc.
+  string job_id = 1;
+}
+
+
+message CancelJobRequest {
+  // The job to cancel
   string job_id = 1;
 }
 
@@ -477,6 +496,18 @@ message Job {
   // result is set based on the operation specified. A nil result is possible
   // for some operations.
   Result result = 107;
+
+  // cancel time is the time that cancellation of this job was requested.
+  // If this is zero then this job was not cancelled. Note that this is the
+  // cancellation _request_ time. The actual time a job ended is noted by
+  // the complete_time field.
+  google.protobuf.Timestamp cancel_time = 108;
+
+  // expire time is the time when this job would expire. If this isn't set
+  // then this is a non-expiring job. This will remain set even if the job
+  // never expired because it was accepted and run. This field can be used
+  // to detect that it was configured to expire.
+  google.protobuf.Timestamp expire_time = 109;
 
   enum State {
     UNKNOWN = 0;
@@ -656,6 +687,9 @@ message GetJobStreamResponse {
     // set depending on the state (such as the assigned runner, assignment
     // times, etc.)
     Job job = 3;
+
+    // canceling is true if the job was requested to be canceled.
+    bool canceling = 4;
   }
 
   message Terminal {
@@ -843,11 +877,16 @@ message RunnerJobStreamResponse {
     // assignment is when a job is assigned to this job stream. This
     // will happen ONLY in response to a "Request" message from the client.
     JobAssignment assignment = 1;
+
+    // cancel is sent when a cancel request is made.
+    JobCancel cancel = 2;
   }
 
   message JobAssignment {
     Job job = 1;
   }
+
+  message JobCancel {}
 }
 
 message RunnerGetDeploymentConfigRequest {}

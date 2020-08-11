@@ -167,6 +167,86 @@ func TestServiceRunnerJobStream_errorBeforeAck(t *testing.T) {
 	require.Equal(pb.Job_QUEUED, job.State)
 }
 
+// Complete happy path job stream
+func TestServiceRunnerJobStream_cancel(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Create a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil)})
+	require.NoError(err)
+	require.NotNil(queueResp)
+	require.NotEmpty(queueResp.JobId)
+
+	// Register our runner
+	id, _ := TestRunner(t, client, nil)
+
+	// Start a job request
+	stream, err := client.RunnerJobStream(ctx)
+	require.NoError(err)
+	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Request_{
+			Request: &pb.RunnerJobStreamRequest_Request{
+				RunnerId: id,
+			},
+		},
+	}))
+
+	// Wait for assignment and ack
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		assignment, ok := resp.Event.(*pb.RunnerJobStreamResponse_Assignment)
+		require.True(ok, "should be an assignment")
+		require.NotNil(assignment)
+		require.Equal(queueResp.JobId, assignment.Assignment.Job.Id)
+
+		require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Ack_{
+				Ack: &pb.RunnerJobStreamRequest_Ack{},
+			},
+		}))
+	}
+
+	// Cancel the job
+	_, err = client.CancelJob(ctx, &pb.CancelJobRequest{JobId: queueResp.JobId})
+	require.NoError(err)
+
+	// Wait for the cancel event
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		_, ok := resp.Event.(*pb.RunnerJobStreamResponse_Cancel)
+		require.True(ok, "should be an assignment")
+	}
+
+	// Complete the job
+	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Complete_{
+			Complete: &pb.RunnerJobStreamRequest_Complete{},
+		},
+	}))
+
+	// Should be done
+	_, err = stream.Recv()
+	require.Error(err)
+	require.Equal(io.EOF, err, err.Error())
+
+	// Query our job and it should be done
+	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
+	require.NoError(err)
+	require.Equal(pb.Job_SUCCESS, job.State)
+	require.NotEmpty(job.CancelTime)
+}
+
 func TestServiceRunnerGetDeploymentConfig(t *testing.T) {
 	ctx := context.Background()
 

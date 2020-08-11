@@ -57,6 +57,10 @@ type Runner struct {
 	// config is the current runner config.
 	config      *pb.RunnerConfig
 	originalEnv []*pb.ConfigVar
+
+	// noopCh is used in tests only. This will cause any noop operations
+	// to block until this channel is closed.
+	noopCh <-chan struct{}
 }
 
 // New initializes a new runner.

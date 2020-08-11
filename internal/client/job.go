@@ -6,10 +6,11 @@ import (
 	"io"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -58,7 +59,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 
 		// Accept a job. Our local runners execute exactly one job.
 		go func() {
-			if err := r.Accept(); err != nil {
+			if err := r.Accept(ctx); err != nil {
 				log.Error("runner job accept error", "err", err)
 			}
 		}()
@@ -85,10 +86,19 @@ func (c *Project) queueAndStreamJob(
 ) (*pb.Job_Result, error) {
 	log := c.logger
 
+	// When local, we set an expiration here in case we can't gracefully
+	// cancel in the event of an error. This will ensure that the jobs don't
+	// remain queued forever. This is only for local ops.
+	expiration := ""
+	if c.local {
+		expiration = "30s"
+	}
+
 	// Queue the job
 	log.Debug("queueing job", "operation", fmt.Sprintf("%T", job.Operation))
 	queueResp, err := c.client.QueueJob(ctx, &pb.QueueJobRequest{
-		Job: job,
+		Job:       job,
+		ExpiresIn: expiration,
 	})
 	if err != nil {
 		return nil, err
@@ -123,6 +133,8 @@ func (c *Project) queueAndStreamJob(
 
 	// Process events
 	var (
+		completed bool
+
 		stateEventTimer *time.Timer
 		tstatus         terminal.Status
 
@@ -131,6 +143,29 @@ func (c *Project) queueAndStreamJob(
 		sg    terminal.StepGroup
 		steps = map[int32]*stepData{}
 	)
+
+	if c.local {
+		defer func() {
+			// If we completed then do nothing, or if the context is still
+			// active since this means that we're not cancelled.
+			if completed || ctx.Err() == nil {
+				return
+			}
+
+			ctx, cancel := finalcontext.Context(log)
+			defer cancel()
+
+			log.Warn("canceling job")
+			_, err := c.client.CancelJob(ctx, &pb.CancelJobRequest{
+				JobId: queueResp.JobId,
+			})
+			if err != nil {
+				log.Warn("error canceling job", "err", err)
+			} else {
+				log.Info("job cancelled successfully")
+			}
+		}()
+	}
 
 	for {
 		resp, err := stream.Recv()
@@ -145,6 +180,8 @@ func (c *Project) queueAndStreamJob(
 
 		switch event := resp.Event.(type) {
 		case *pb.GetJobStreamResponse_Complete_:
+			completed = true
+
 			if event.Complete.Error == nil {
 				log.Info("job completed successfully")
 				return event.Complete.Result, nil
@@ -155,6 +192,8 @@ func (c *Project) queueAndStreamJob(
 			return nil, st.Err()
 
 		case *pb.GetJobStreamResponse_Error_:
+			completed = true
+
 			st := status.FromProto(event.Error.Error)
 			log.Warn("job stream failure", "code", st.Code(), "message", st.Message())
 			return nil, st.Err()

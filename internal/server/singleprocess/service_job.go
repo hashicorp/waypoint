@@ -2,7 +2,10 @@ package singleprocess
 
 import (
 	"context"
+	"time"
 
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
@@ -29,6 +32,17 @@ func (s *service) GetJob(
 	}
 
 	return job.Job, nil
+}
+
+func (s *service) CancelJob(
+	ctx context.Context,
+	req *pb.CancelJobRequest,
+) (*empty.Empty, error) {
+	if err := s.state.JobCancel(req.JobId); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
 }
 
 func (s *service) QueueJob(
@@ -71,6 +85,21 @@ func (s *service) QueueJob(
 		return nil, status.Errorf(codes.Internal, "uuid generation failed: %s", err)
 	}
 	job.Id = id
+
+	// Validate expiry if we have one
+	job.ExpireTime = nil
+	if req.ExpiresIn != "" {
+		dur, err := time.ParseDuration(req.ExpiresIn)
+		if err != nil {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"Invalid expiry duration: %s", err.Error())
+		}
+
+		job.ExpireTime, err = ptypes.TimestampProto(time.Now().Add(dur))
+		if err != nil {
+			return nil, status.Errorf(codes.Aborted, "error configuring expiration: %s", err)
+		}
+	}
 
 	// Queue the job
 	if err := s.state.JobCreate(job); err != nil {
@@ -144,7 +173,10 @@ func (s *service) GetJobStream(
 
 			// Wait for the job to update
 			if err := ws.WatchCtx(ctx); err != nil {
-				errCh <- err
+				if ctx.Err() == nil {
+					errCh <- err
+				}
+
 				return
 			}
 
@@ -164,6 +196,7 @@ func (s *service) GetJobStream(
 
 	// Enter the event loop
 	var lastState pb.Job_State
+	var cancelSent bool
 	var eventsCh <-chan []*pb.GetJobStreamResponse_Terminal_Event
 	for {
 		select {
@@ -176,14 +209,17 @@ func (s *service) GetJobStream(
 		case job := <-jobCh:
 			log.Debug("job state change", "state", job.State)
 
-			// If we have a state change, send that event down.
-			if lastState != job.State {
+			// If we have a state change, send that event down. We also send
+			// down a state change if we enter a "cancelled" scenario.
+			canceling := job.CancelTime != nil
+			if lastState != job.State || cancelSent != canceling {
 				if err := server.Send(&pb.GetJobStreamResponse{
 					Event: &pb.GetJobStreamResponse_State_{
 						State: &pb.GetJobStreamResponse_State{
-							Previous: lastState,
-							Current:  job.State,
-							Job:      job.Job,
+							Previous:  lastState,
+							Current:   job.State,
+							Job:       job.Job,
+							Canceling: canceling,
 						},
 					},
 				}); err != nil {
@@ -191,6 +227,7 @@ func (s *service) GetJobStream(
 				}
 
 				lastState = job.State
+				cancelSent = canceling
 			}
 
 			// If we haven't initialized output streaming and the output buffer
