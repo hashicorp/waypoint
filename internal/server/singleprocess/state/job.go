@@ -420,7 +420,8 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 	// Create a new timer that we'll use for our heartbeat. After this
 	// timer expires, the job will immediately move to an error state.
 	job.StateTimer = time.AfterFunc(jobHeartbeatTimeout, func() {
-		// TODO
+		// Force cancel
+		s.JobCancel(job.Id, true)
 	})
 
 	// Insert to update
@@ -493,6 +494,9 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 		return err
 	}
 
+	// End the job
+	job.End()
+
 	// Insert to update
 	if err := txn.Insert(jobTableName, job); err != nil {
 		return err
@@ -546,6 +550,7 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 		// then we immediately transition to error.
 		if force {
 			job.State = pb.Job_ERROR
+			job.End()
 		}
 	}
 
@@ -943,5 +948,13 @@ func (idx *jobIndex) Job(jobpb *pb.Job) *Job {
 	return &Job{
 		Job:          jobpb,
 		OutputBuffer: idx.OutputBuffer,
+	}
+}
+
+// End notes this job is complete and performs any cleanup on the index.
+func (idx *jobIndex) End() {
+	if idx.StateTimer != nil {
+		idx.StateTimer.Stop()
+		idx.StateTimer = nil
 	}
 }

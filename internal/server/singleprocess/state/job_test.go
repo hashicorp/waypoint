@@ -783,3 +783,41 @@ func TestJobCancel(t *testing.T) {
 		require.Empty(job.CancelTime)
 	})
 }
+
+func TestJobHeartbeat(t *testing.T) {
+	t.Run("times out after ack", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set a short timeout
+		old := jobHeartbeatTimeout
+		defer func() { jobHeartbeatTimeout = old }()
+		jobHeartbeatTimeout = 5 * time.Millisecond
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+		require.Equal(pb.Job_WAITING, job.State)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		// Should time out
+		require.Eventually(func() bool {
+			// Verify it is canceled
+			job, err = s.JobById("A", nil)
+			require.NoError(err)
+			return job.Job.State == pb.Job_ERROR
+		}, 1*time.Second, 10*time.Millisecond)
+	})
+}
