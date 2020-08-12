@@ -21,8 +21,10 @@ import { WaypointClient } from 'waypoint-client';
 //   }
 // }
 export default class ApiService extends Service {
+  token = '';
+  credentails = { authorization: this.token };
   // opts = { unaryInterceptors: [new ExampleUnaryInterceptor()] };
-  client = new WaypointClient('http://localhost:1235', null, null);
+  client = new WaypointClient('https://localhost:1235', this.credentails, null);
 }
 
 // DO NOT DELETE: this is how TypeScript knows how to look up your services.
