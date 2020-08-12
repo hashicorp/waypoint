@@ -128,7 +128,7 @@ func (c *builderClient) build(
 	}
 
 	// We return the
-	return &plugincomponent.Artifact{Any: resp.Result}, nil
+	return &plugincomponent.Artifact{Any: resp.Result, LabelsVal: resp.Labels}, nil
 }
 
 // builderServer is a gRPC server that the client talks to and calls a
