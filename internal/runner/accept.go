@@ -129,6 +129,21 @@ func (r *Runner) Accept(ctx context.Context) error {
 		ui.Close()
 	}
 
+	// Check if we were force canceled. If so, then just exit now. Realistically
+	// we could also be force cancelled at any point below but this is the
+	// most likely spot to catch it and the error scenario below is not bad.
+	if ctx.Err() != nil {
+		select {
+		case err := <-errCh:
+			// If we got an EOF then we were force cancelled.
+			if err == io.EOF {
+				log.Info("job force canceled")
+				return nil
+			}
+		default:
+		}
+	}
+
 	// Handle job execution errors
 	if err != nil {
 		st, _ := status.FromError(err)
