@@ -505,7 +505,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 // JobCancel marks a job as cancelled. This will set the internal state
 // and request the cancel but if the job is running then it is up to downstream
 // to listen for and react to Job changes for cancellation.
-func (s *State) JobCancel(id string) error {
+func (s *State) JobCancel(id string, force bool) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -519,7 +519,7 @@ func (s *State) JobCancel(id string) error {
 	}
 	job := raw.(*jobIndex)
 
-	if err := s.jobCancel(txn, job); err != nil {
+	if err := s.jobCancel(txn, job, force); err != nil {
 		return err
 	}
 
@@ -527,7 +527,7 @@ func (s *State) JobCancel(id string) error {
 	return nil
 }
 
-func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
+func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 	// How we handle cancel depends on the state
 	switch job.State {
 	case pb.Job_ERROR, pb.Job_SUCCESS:
@@ -542,7 +542,11 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
 
 	case pb.Job_WAITING, pb.Job_RUNNING:
 		// For these states, we just need to mark it as cancelled and have
-		// downstream listeners complete the job.
+		// downstream listeners complete the job. However, if we are forcing
+		// then we immediately transition to error.
+		if force {
+			job.State = pb.Job_ERROR
+		}
 	}
 
 	// Persist the on-disk data
@@ -553,6 +557,13 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
 		if err != nil {
 			// This should never happen since encoding a time now should be safe
 			panic("time encoding failed: " + err.Error())
+		}
+
+		// If we transitioned to the error state we note that we were force
+		// cancelled. We can only be in the error state under that scenario
+		// since otherwise we would've returned early.
+		if jobpb.State == pb.Job_ERROR {
+			jobpb.Error = status.New(codes.Canceled, "canceled").Proto()
 		}
 
 		return nil
@@ -631,7 +642,7 @@ func (s *State) JobExpire(id string) error {
 	// How we handle depends on the state
 	switch job.State {
 	case pb.Job_QUEUED, pb.Job_WAITING:
-		if err := s.jobCancel(txn, job); err != nil {
+		if err := s.jobCancel(txn, job, false); err != nil {
 			return err
 		}
 

@@ -683,7 +683,7 @@ func TestJobCancel(t *testing.T) {
 		})))
 
 		// Cancel it
-		require.NoError(s.JobCancel("A"))
+		require.NoError(s.JobCancel("A", false))
 
 		// Verify it is canceled
 		job, err := s.JobById("A", nil)
@@ -711,12 +711,40 @@ func TestJobCancel(t *testing.T) {
 		require.Equal(pb.Job_WAITING, job.State)
 
 		// Cancel it
-		require.NoError(s.JobCancel("A"))
+		require.NoError(s.JobCancel("A", false))
 
 		// Verify it is canceled
 		job, err = s.JobById("A", nil)
 		require.NoError(err)
 		require.Equal(pb.Job_WAITING, job.Job.State)
+		require.NotEmpty(job.CancelTime)
+	})
+
+	t.Run("assigned with force", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+		require.Equal(pb.Job_WAITING, job.State)
+
+		// Cancel it
+		require.NoError(s.JobCancel("A", true))
+
+		// Verify it is canceled
+		job, err = s.JobById("A", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
 		require.NotEmpty(job.CancelTime)
 	})
 
@@ -746,7 +774,7 @@ func TestJobCancel(t *testing.T) {
 		require.NoError(s.JobComplete(job.Id, nil, nil))
 
 		// Cancel it
-		require.NoError(s.JobCancel("A"))
+		require.NoError(s.JobCancel("A", false))
 
 		// Verify it is not canceled
 		job, err = s.JobById("A", nil)
