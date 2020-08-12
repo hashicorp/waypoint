@@ -82,6 +82,38 @@ func (s *service) ListDeployments(
 		return nil, err
 	}
 
+	if req.LoadDetails == pb.Deployment_ARTIFACT || req.LoadDetails == pb.Deployment_BUILD {
+		for _, dep := range result {
+			pa, err := s.state.ArtifactGet(&pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: dep.ArtifactId,
+				},
+			})
+
+			// TODO should we error here or just leave the Pointer empty
+			if err != nil {
+				continue
+			}
+
+			dep.Artifact = pa
+
+			if req.LoadDetails == pb.Deployment_BUILD {
+				build, err := s.state.BuildGet(&pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Id{
+						Id: pa.BuildId,
+					},
+				})
+
+				// TODO should we error here or just leave the Pointer empty
+				if err != nil {
+					continue
+				}
+
+				dep.Build = build
+			}
+		}
+	}
+
 	return &pb.ListDeploymentsResponse{Deployments: result}, nil
 }
 

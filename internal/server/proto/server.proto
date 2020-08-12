@@ -1239,6 +1239,10 @@ message ListDeploymentsRequest {
   // Specifies the order of results. If this isn't specified, the results
   // are in an undefined order.
   OperationOrder order = 2;
+
+  // Inidicate of the fetched deployments should include additional information
+  // about each deployment.
+  Deployment.LoadDetails load_details = 6;
 }
 
 message ListDeploymentsResponse {
@@ -1280,6 +1284,19 @@ message Deployment {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 7;
+
+  enum LoadDetails {
+    NONE = 0;
+    ARTIFACT = 1;
+    BUILD = 2;
+  }
+
+  // Populated when a Deployment is read with LoadDetails set
+  // to ARTIFACT or BUILD
+  PushedArtifact artifact = 11;
+
+  // Populated when a Deployment is read with LoadDetails set to BUILD
+  Build build = 12;
 }
 
 /********************************************************************
