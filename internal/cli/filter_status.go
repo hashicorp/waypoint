@@ -96,7 +96,7 @@ func phyStateFlagVar(target *string) *flag.EnumSingleVar {
 	sort.Strings(phyStates)
 
 	return &flag.EnumSingleVar{
-		Name:    "phy-state",
+		Name:    "physical-state",
 		Target:  target,
 		Values:  phyStates,
 		Default: "created",
