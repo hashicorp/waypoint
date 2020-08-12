@@ -886,7 +886,9 @@ message RunnerJobStreamResponse {
     Job job = 1;
   }
 
-  message JobCancel {}
+  message JobCancel {
+    bool force = 1;
+  }
 }
 
 message RunnerGetDeploymentConfigRequest {}
