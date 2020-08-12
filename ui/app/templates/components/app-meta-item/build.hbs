@@ -1,0 +1,12 @@
+<li>
+  <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
+    <p>
+      <code>abcd1234</code>
+      <b class="badge badge--success">Passed</b>
+    </p>
+    <small>
+      {{inline-svg "source-file" class="icon"}}
+      <span>2 hours ago</span>
+    </small>
+  </LinkTo>
+</li>

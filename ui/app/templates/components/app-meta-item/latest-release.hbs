@@ -1,0 +1,14 @@
+<div class="app-meta-item app-meta-item--latest">
+  <div class="app-meta-item-info">
+    <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
+      <p><b class="badge badge--version">v99</b> <code>abcd1234</code></p>
+      <small>
+        {{inline-svg "logo-gcp-color" class="icon"}}
+        <span>Released on <b>GCP</b> 2 hours ago</span>
+      </small>
+    </LinkTo>
+  </div>
+  <button class="button button--primary">
+    {{inline-svg "exit" class="icon"}}
+  </button>
+</div>

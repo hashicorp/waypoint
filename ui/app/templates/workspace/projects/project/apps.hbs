@@ -2,7 +2,7 @@
   <Card>
     <LinkTo @route="workspace.projects.project.app" @model={{app.name}}>
       <div class="row">
-        <IconTile @icon="git-repository" />
+        <IconTile @icon="git-repository" @isSmall={{true}} />
         <div class="meta">
           <h2>{{app.name}}</h2>
           <small>Application metadata</small>
@@ -10,14 +10,17 @@
       </div>
     </LinkTo>
     <div class="row grid">
-      <div class="latest-release">
+      <div class="app-decoration">
         <small>Latest release</small>
+        <AppMetaItem::LatestRelease />
       </div>
-      <div class="latest-deploy">
+      <div class="app-decoration">
         <small>Latest deploy</small>
+        <AppMetaItem::LatestDeployment />
       </div>
-      <div class="latest-build">
+      <div class="app-decoration">
         <small>Latest build</small>
+        <AppMetaItem::LatestBuild />
       </div>
     </div>
   </Card>

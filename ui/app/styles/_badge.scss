@@ -1,0 +1,27 @@
+.badge {
+  @include Typography.Interface(S);
+  padding: scale.$sm-4 scale.$sm-2;
+  border-radius: 2px;
+
+  &--version {
+    @include Typography.Interface(M);
+    color: color.$ui-cool-gray-600;
+    background: color.$ui-cool-gray-100;
+    border-radius: scale.$base;
+  }
+
+  &--success {
+    color: color.$green-700;
+    background: color.$green-050;
+  }
+
+  &--error {
+    color: color.$red-700;
+    background: color.$red-050;
+  }
+
+  &--warning {
+    color: color.$yellow-700;
+    background: color.$yellow-050;
+  }
+}

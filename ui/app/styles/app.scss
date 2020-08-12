@@ -24,8 +24,8 @@ ul {
 svg.icon {
   width: scale.$lg-2;
   height: scale.$lg-2;
+  flex-shrink: 0;
 }
 
 @import './_header';
 @import './_page';
-@import './_icon-tile';

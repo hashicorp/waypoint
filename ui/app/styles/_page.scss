@@ -5,6 +5,13 @@
 $box-shadow:
   0 0 0 1px rgba(color.$ui-cool-gray-600, .2),
   0 2px 1px 1px rgba(color.$ui-cool-gray-600, .1);
+$button-box-shadow:
+  0 3px 2px rgba(color.$ui-cool-gray-600, .2);
+
+@import './_badge';
+@import './_button';
+@import './_icon-tile';
+@import './_app-meta-item';
 
 #page {
   display: flex;
@@ -34,6 +41,10 @@ $box-shadow:
     @include Typography.Heading(3);
   }
 
+  h4 {
+    @include Typography.Heading(4);
+  }
+
   header {
     display: flex;
     align-items: center;
@@ -46,15 +57,20 @@ $box-shadow:
     .title {
       display: flex;
       flex-direction: column;
+
+      h1 {
+        margin: 0;
+      }
+
+      small {
+        color: color.$ui-cool-gray-600;
+        @include Typography.Interface(M);
+      }
     }
 
-    h1 {
-      margin: 0;
-    }
-
-    small {
-      color: color.$ui-cool-gray-600;
-      @include Typography.Interface(M);
+    .actions {
+      display: flex;
+      margin-left: auto;
     }
   }
 
@@ -64,9 +80,10 @@ $box-shadow:
 
     ul {
       display: flex;
+      box-shadow: inset 0 -1px 0 color.$ui-cool-gray-200;
 
       li {
-        margin-right: scale.$lg-2;
+        margin-right: scale.$lg-1;
       }
 
       a {
@@ -74,15 +91,16 @@ $box-shadow:
         text-decoration: none;
         display: flex;
         align-items: center;
-        padding: scale.$sm-2;
+        padding: scale.$sm-2 scale.$sm-2 scale.$base;
 
         &:hover {
           color: color.$ui-cool-gray-800;
+          box-shadow: inset 0 -3px 0 color.$ui-cool-gray-300;
         }
 
         &.active {
           color: color.$blue-500;
-          box-shadow: 0 3px 0 color.$blue-500;
+          box-shadow: inset 0 -3px 0 color.$blue-500;
         }
       }
 
@@ -119,7 +137,7 @@ $box-shadow:
     display: flex;
 
     .card {
-      flex-grow: 1;
+      flex: 1 1 0;
       margin-right: scale.$lg-2;
 
       &:last-child {
@@ -133,8 +151,12 @@ $box-shadow:
     margin-bottom: scale.$lg-2;
     box-shadow: $box-shadow;
 
-    h2 {
+    h2, h4 {
       margin: 0;
+    }
+
+    h4 {
+      color: color.$ui-cool-gray-600;
     }
 
     a {
@@ -146,7 +168,8 @@ $box-shadow:
       margin-bottom: -(scale.$sm-2);
       border-top: 1px solid color.$ui-cool-gray-100;
 
-      div {
+      > div {
+        flex: 1 1 0;
         padding: scale.$sm-2 scale.$base;
         border-right: 1px solid color.$ui-cool-gray-100;
 
@@ -162,12 +185,36 @@ $box-shadow:
     }
   }
 
+  .app-decoration {
+
+    > small {
+      display: block;
+      color: color.$ui-cool-gray-600;
+      @include Typography.Interface(S);
+      padding: scale.$sm-3 0 scale.$sm-2;
+    }
+  }
+
+  .app-latest {
+
+    .app-meta-item {
+      padding-top: scale.$sm-1;
+      margin-top: scale.$sm-1;
+      border-top: 1px solid color.$ui-cool-gray-100;
+    }
+  }
+
   .row {
     display: flex;
     align-items: center;
 
     .icon-tile {
       margin-right: scale.$base;
+    }
+
+    .meta small {
+      color: color.$ui-cool-gray-600;
+      @include Typography.Interface(M);
     }
   }
 

@@ -9,5 +9,10 @@
   height: scale.$lg-8;
   background: color.$ui-cool-gray-050;
   box-shadow: 0 0 0 1px color.$ui-cool-gray-100;
-  border-radius: 6px;
+  border-radius: 1px;
+
+  &--small {
+    width: scale.$lg-6;
+    height: scale.$lg-6;
+  }
 }

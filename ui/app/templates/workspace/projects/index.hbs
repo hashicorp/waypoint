@@ -1,6 +1,8 @@
 <PageHeader>
-  <h1>Projects</h1>
-  <small>{{pluralize @model.length "project"}}</small>
+  <div class="title">
+    <h1>Projects</h1>
+    <small>{{pluralize @model.length "project"}}</small>
+  </div>
 </PageHeader>
 
 <div data-test-project-list=true>
@@ -8,7 +10,7 @@
     <Card>
       <LinkTo @route="workspace.projects.project" @model={{project.project}}>
         <div class="row">
-          <IconTile @icon="folder-outline" />
+          <IconTile @icon="folder-outline" @isSmall={{true}} />
           <div class="meta">
             <h2>{{project.project}}</h2>
             <small>{{pluralize 99 "application"}}</small>
