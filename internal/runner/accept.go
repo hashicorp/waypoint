@@ -3,12 +3,15 @@ package runner
 import (
 	"context"
 	"io"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+var heartbeatDuration = 5 * time.Second
 
 // Accept will accept and execute a single job. This will block until
 // a job is available.
@@ -117,6 +120,29 @@ func (r *Runner) Accept(ctx context.Context) error {
 
 			default:
 				log.Info("unknown job event", "event", resp.Event)
+			}
+		}
+	}()
+
+	// Heartbeat
+	go func() {
+		timer := time.NewTimer(heartbeatDuration)
+		defer timer.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-timer.C:
+			}
+
+			if err := client.Send(&pb.RunnerJobStreamRequest{
+				Event: &pb.RunnerJobStreamRequest_Heartbeat_{
+					Heartbeat: &pb.RunnerJobStreamRequest_Heartbeat{},
+				},
+			}); err != nil && err != io.EOF {
+				log.Warn("error during heartbeat", "err", err)
 			}
 		}
 	}()
