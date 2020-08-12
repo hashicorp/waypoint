@@ -7,16 +7,16 @@
 
 <div data-test-project-list=true>
   {{#each @model as |project|}}
-    <Card>
-      <LinkTo @route="workspace.projects.project" @model={{project.project}}>
-        <div class="row">
-          <IconTile @icon="folder-outline" @isSmall={{true}} />
-          <div class="meta">
-            <h2>{{project.project}}</h2>
-            <small>{{pluralize 99 "application"}}</small>
-          </div>
+  <Card>
+    <LinkTo @route="workspace.projects.project" @model={{project.project}}>
+      <div class="row">
+        <IconTile @icon="folder-outline" @isSmall={{true}} />
+        <div class="meta">
+          <h2>{{project.project}}</h2>
+          <small>{{pluralize 99 "application"}}</small>
         </div>
-      </LinkTo>
-    </Card>
+      </div>
+    </LinkTo>
+  </Card>
   {{/each}}
 </div>
