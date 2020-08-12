@@ -38,7 +38,7 @@ func (s *service) CancelJob(
 	ctx context.Context,
 	req *pb.CancelJobRequest,
 ) (*empty.Empty, error) {
-	if err := s.state.JobCancel(req.JobId); err != nil {
+	if err := s.state.JobCancel(req.JobId, false); err != nil {
 		return nil, err
 	}
 
