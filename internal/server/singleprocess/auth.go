@@ -59,14 +59,13 @@ func (s *service) DecodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 	}
 
 	var tt pb.TokenTransport
-
 	err = proto.Unmarshal(data[len(tokenMagic):], &tt)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	key, err := s.state.HMACKeyGet(tt.KeyId)
-	if err != nil {
+	if err != nil || key == nil {
 		return nil, nil, errors.Wrapf(ErrInvalidToken, "unknown key")
 	}
 
