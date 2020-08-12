@@ -86,9 +86,10 @@ in pkgs.mkShell rec {
   buildInputs = [
     pkgs.go
     pkgs.go-bindata
-    go-protobuf
+    pkgs.nodejs-12_x
     pkgs.protobuf3_11
     pkgs.postgresql_12
+    go-protobuf
     go-protobuf-json
     go-tools
     go-mockery
