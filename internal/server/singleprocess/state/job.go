@@ -22,7 +22,8 @@ import (
 var (
 	jobBucket = []byte("jobs")
 
-	jobWaitingTimeout = 2 * time.Minute
+	jobWaitingTimeout   = 2 * time.Minute
+	jobHeartbeatTimeout = 2 * time.Minute
 )
 
 const (
@@ -416,6 +417,12 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 		job.StateTimer = nil
 	}
 
+	// Create a new timer that we'll use for our heartbeat. After this
+	// timer expires, the job will immediately move to an error state.
+	job.StateTimer = time.AfterFunc(jobHeartbeatTimeout, func() {
+		// TODO
+	})
+
 	// Insert to update
 	if err := txn.Insert(jobTableName, job); err != nil {
 		return nil, err
@@ -558,6 +565,50 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
 	if err := txn.Insert(jobTableName, job); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// JobHeartbeat resets the heartbeat timer for a running job. If the job
+// is not currently running this does nothing, it will not return an error.
+// If the job doesn't exist then this will return an error.
+func (s *State) JobHeartbeat(id string) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	if err := s.jobHeartbeat(txn, id); err != nil {
+		return err
+	}
+
+	txn.Commit()
+	return nil
+}
+
+func (s *State) jobHeartbeat(txn *memdb.Txn, id string) error {
+	// Get the job
+	raw, err := txn.First(jobTableName, jobIdIndexName, id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "job not found: %s", id)
+	}
+	job := raw.(*jobIndex)
+
+	// If the job is not in the running state, we do nothing.
+	if job.State != pb.Job_RUNNING {
+		return nil
+	}
+
+	// If the state timer is nil... that is weird but we ignore it here.
+	// It is up to other parts of the job system to ensure a running
+	// job has a heartbeat timer.
+	if job.StateTimer == nil {
+		return nil
+	}
+
+	// Reset the timer
+	job.StateTimer.Reset(jobHeartbeatTimeout)
 
 	return nil
 }
