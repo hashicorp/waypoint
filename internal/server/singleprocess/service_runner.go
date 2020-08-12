@@ -391,6 +391,9 @@ func (s *service) handleJobStreamRequest(
 	case *pb.RunnerJobStreamRequest_Error_:
 		return s.state.JobComplete(job.Id, nil, status.FromProto(event.Error.Error).Err())
 
+	case *pb.RunnerJobStreamRequest_Heartbeat_:
+		return s.state.JobHeartbeat(job.Id)
+
 	case *pb.RunnerJobStreamRequest_Terminal:
 		// This shouldn't happen but we want to protect against it to prevent
 		// a panic.
