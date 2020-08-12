@@ -855,6 +855,9 @@ message RunnerJobStreamRequest {
 
     // terminal output from the job.
     GetJobStreamResponse.Terminal terminal = 5;
+
+    // heartbeat that the job is still running.
+    Heartbeat heartbeat = 6;
   }
 
   message Request {
@@ -870,6 +873,8 @@ message RunnerJobStreamRequest {
   message Error {
     google.rpc.Status error = 1;
   }
+
+  message Heartbeat {}
 }
 
 message RunnerJobStreamResponse {
@@ -886,7 +891,9 @@ message RunnerJobStreamResponse {
     Job job = 1;
   }
 
-  message JobCancel {}
+  message JobCancel {
+    bool force = 1;
+  }
 }
 
 message RunnerGetDeploymentConfigRequest {}

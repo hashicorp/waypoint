@@ -3,12 +3,15 @@ package runner
 import (
 	"context"
 	"io"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+var heartbeatDuration = 5 * time.Second
 
 // Accept will accept and execute a single job. This will block until
 // a job is available.
@@ -121,12 +124,50 @@ func (r *Runner) Accept(ctx context.Context) error {
 		}
 	}()
 
+	// Heartbeat
+	go func() {
+		timer := time.NewTimer(heartbeatDuration)
+		defer timer.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-timer.C:
+			}
+
+			if err := client.Send(&pb.RunnerJobStreamRequest{
+				Event: &pb.RunnerJobStreamRequest_Heartbeat_{
+					Heartbeat: &pb.RunnerJobStreamRequest_Heartbeat{},
+				},
+			}); err != nil && err != io.EOF {
+				log.Warn("error during heartbeat", "err", err)
+			}
+		}
+	}()
+
 	// Execute the job. We have to close the UI right afterwards to
 	// ensure that no more output is writting to the client.
 	log.Info("starting job execution")
 	result, err := r.executeJob(ctx, log, ui, assignment.Assignment.Job)
 	if ui, ok := ui.(*runnerUI); ok {
 		ui.Close()
+	}
+
+	// Check if we were force canceled. If so, then just exit now. Realistically
+	// we could also be force cancelled at any point below but this is the
+	// most likely spot to catch it and the error scenario below is not bad.
+	if ctx.Err() != nil {
+		select {
+		case err := <-errCh:
+			// If we got an EOF then we were force cancelled.
+			if err == io.EOF {
+				log.Info("job force canceled")
+				return nil
+			}
+		default:
+		}
 	}
 
 	// Handle job execution errors

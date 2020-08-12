@@ -22,7 +22,8 @@ import (
 var (
 	jobBucket = []byte("jobs")
 
-	jobWaitingTimeout = 2 * time.Minute
+	jobWaitingTimeout   = 2 * time.Minute
+	jobHeartbeatTimeout = 2 * time.Minute
 )
 
 const (
@@ -416,6 +417,13 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 		job.StateTimer = nil
 	}
 
+	// Create a new timer that we'll use for our heartbeat. After this
+	// timer expires, the job will immediately move to an error state.
+	job.StateTimer = time.AfterFunc(jobHeartbeatTimeout, func() {
+		// Force cancel
+		s.JobCancel(job.Id, true)
+	})
+
 	// Insert to update
 	if err := txn.Insert(jobTableName, job); err != nil {
 		return nil, err
@@ -486,6 +494,9 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 		return err
 	}
 
+	// End the job
+	job.End()
+
 	// Insert to update
 	if err := txn.Insert(jobTableName, job); err != nil {
 		return err
@@ -498,7 +509,7 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 // JobCancel marks a job as cancelled. This will set the internal state
 // and request the cancel but if the job is running then it is up to downstream
 // to listen for and react to Job changes for cancellation.
-func (s *State) JobCancel(id string) error {
+func (s *State) JobCancel(id string, force bool) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
@@ -512,7 +523,7 @@ func (s *State) JobCancel(id string) error {
 	}
 	job := raw.(*jobIndex)
 
-	if err := s.jobCancel(txn, job); err != nil {
+	if err := s.jobCancel(txn, job, force); err != nil {
 		return err
 	}
 
@@ -520,7 +531,7 @@ func (s *State) JobCancel(id string) error {
 	return nil
 }
 
-func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
+func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 	// How we handle cancel depends on the state
 	switch job.State {
 	case pb.Job_ERROR, pb.Job_SUCCESS:
@@ -535,7 +546,12 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
 
 	case pb.Job_WAITING, pb.Job_RUNNING:
 		// For these states, we just need to mark it as cancelled and have
-		// downstream listeners complete the job.
+		// downstream listeners complete the job. However, if we are forcing
+		// then we immediately transition to error.
+		if force {
+			job.State = pb.Job_ERROR
+			job.End()
+		}
 	}
 
 	// Persist the on-disk data
@@ -548,6 +564,13 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
 			panic("time encoding failed: " + err.Error())
 		}
 
+		// If we transitioned to the error state we note that we were force
+		// cancelled. We can only be in the error state under that scenario
+		// since otherwise we would've returned early.
+		if jobpb.State == pb.Job_ERROR {
+			jobpb.Error = status.New(codes.Canceled, "canceled").Proto()
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -558,6 +581,50 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex) error {
 	if err := txn.Insert(jobTableName, job); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// JobHeartbeat resets the heartbeat timer for a running job. If the job
+// is not currently running this does nothing, it will not return an error.
+// If the job doesn't exist then this will return an error.
+func (s *State) JobHeartbeat(id string) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	if err := s.jobHeartbeat(txn, id); err != nil {
+		return err
+	}
+
+	txn.Commit()
+	return nil
+}
+
+func (s *State) jobHeartbeat(txn *memdb.Txn, id string) error {
+	// Get the job
+	raw, err := txn.First(jobTableName, jobIdIndexName, id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "job not found: %s", id)
+	}
+	job := raw.(*jobIndex)
+
+	// If the job is not in the running state, we do nothing.
+	if job.State != pb.Job_RUNNING {
+		return nil
+	}
+
+	// If the state timer is nil... that is weird but we ignore it here.
+	// It is up to other parts of the job system to ensure a running
+	// job has a heartbeat timer.
+	if job.StateTimer == nil {
+		return nil
+	}
+
+	// Reset the timer
+	job.StateTimer.Reset(jobHeartbeatTimeout)
 
 	return nil
 }
@@ -580,7 +647,7 @@ func (s *State) JobExpire(id string) error {
 	// How we handle depends on the state
 	switch job.State {
 	case pb.Job_QUEUED, pb.Job_WAITING:
-		if err := s.jobCancel(txn, job); err != nil {
+		if err := s.jobCancel(txn, job, false); err != nil {
 			return err
 		}
 
@@ -881,5 +948,13 @@ func (idx *jobIndex) Job(jobpb *pb.Job) *Job {
 	return &Job{
 		Job:          jobpb,
 		OutputBuffer: idx.OutputBuffer,
+	}
+}
+
+// End notes this job is complete and performs any cleanup on the index.
+func (idx *jobIndex) End() {
+	if idx.StateTimer != nil {
+		idx.StateTimer.Stop()
+		idx.StateTimer = nil
 	}
 }
