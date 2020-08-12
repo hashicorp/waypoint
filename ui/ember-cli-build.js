@@ -6,7 +6,7 @@ const ENV = EmberApp.env();
 const isProd = ENV.environment === 'production';
 const isTest = ENV.environment === 'test';
 
-module.exports = function (defaults) {
+module.exports = function(defaults) {
   let app = new EmberApp(defaults, {
     babel: {
       sourceMaps: 'inline',
@@ -36,9 +36,7 @@ module.exports = function (defaults) {
       },
     },
     svg: {
-      paths: [
-        'node_modules/@hashicorp/structure-icons/dist/',
-      ],
+      paths: ['node_modules/@hashicorp/structure-icons/dist/'],
     },
     autoImport: {
       // allows use of a CSP without 'unsafe-eval' directive
@@ -49,6 +47,9 @@ module.exports = function (defaults) {
       // },
     },
   });
+
+  app.import('node_modules/@hashicorp/structure-icons/dist/loading.css');
+  app.import('node_modules/@hashicorp/structure-icons/dist/run.css');
 
   // Use `app.import` to add additional libraries to the generated
   // output files.
