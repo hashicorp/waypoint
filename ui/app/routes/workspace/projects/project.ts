@@ -22,7 +22,7 @@ export default class Project extends Route {
     // Set on service
     this.currentProject.ref = ref;
 
-    let resp = await this.api.client.getProject(req, {});
+    let resp = await this.api.client.getProject(req, this.api.WithMeta());
     let project = resp.getProject();
 
     // Set on service

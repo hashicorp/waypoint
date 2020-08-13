@@ -1,30 +1,18 @@
 import Service from '@ember/service';
 import { WaypointClient } from 'waypoint-client';
-// import { Request, UnaryInterceptor, UnaryResponse } from 'grpc-web';
+import { assign } from '@ember/polyfills';
 
-// The UnaryInterceptor interface is an interceptor example for the promise-based client that
-// makes requests to the grpc-web proxy. Keeping this in source for now
-// given that it will likely be useful for future feature.
-//
-// class ExampleUnaryInterceptor implements UnaryInterceptor<any, any> {
-//   intercept(
-//     request: Request<any, any>,
-//     invoker: (request: Request<any, any>) => Promise<UnaryResponse<any, any>>
-//   ) {
-//     const reqMsg = request.getRequestMessage();
-//     console.log('request message: ', reqMsg);
-//     return invoker(request).then((response: UnaryResponse<any, any>) => {
-//       const responseMsg = response.getResponseMessage();
-//       console.log('response message: ', responseMsg);
-//       return response;
-//     });
-//   }
-// }
 export default class ApiService extends Service {
-  token = '';
-  credentails = { authorization: this.token };
+  token =
+    'bM152PWkXxfoy4vA51JFhR7LsKQez6x23oi2RDqYk8DPjnRdGjWtS6J3CTywJSaBPQX7wZAgV61bFMMLWoqvpjUfr1pL2sq9AcDGL';
+  meta = { authorization: this.token };
   // opts = { unaryInterceptors: [new ExampleUnaryInterceptor()] };
-  client = new WaypointClient('https://localhost:1235', this.credentails, null);
+  client = new WaypointClient('https://localhost:1235', null, null);
+
+  // Merges metadata with required metadata for the request
+  WithMeta(meta?: any) {
+    return assign(this.meta, meta!).valueOf();
+  }
 }
 
 // DO NOT DELETE: this is how TypeScript knows how to look up your services.

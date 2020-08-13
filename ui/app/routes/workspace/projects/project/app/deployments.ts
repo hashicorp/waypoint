@@ -15,7 +15,7 @@ export default class Deployments extends Route {
     req.setApplication(this.currentApplication.ref);
     req.setWorkspace(this.currentWorkspace.ref);
 
-    var resp = await this.api.client.listDeployments(req, {});
+    var resp = await this.api.client.listDeployments(req, this.api.WithMeta());
     let deployResp: ListDeploymentsResponse = resp;
 
     return deployResp.getDeploymentsList().map((b) => b.toObject());
