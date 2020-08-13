@@ -67,7 +67,6 @@ func (s *service) UpsertDeployment(
 	return &pb.UpsertDeploymentResponse{Deployment: result}, nil
 }
 
-// TODO: test
 func (s *service) ListDeployments(
 	ctx context.Context,
 	req *pb.ListDeploymentsRequest,
@@ -90,9 +89,8 @@ func (s *service) ListDeployments(
 				},
 			})
 
-			// TODO should we error here or just leave the Pointer empty
 			if err != nil {
-				continue
+				return nil, err
 			}
 
 			dep.Artifact = pa
@@ -104,9 +102,8 @@ func (s *service) ListDeployments(
 					},
 				})
 
-				// TODO should we error here or just leave the Pointer empty
 				if err != nil {
-					continue
+					return nil, err
 				}
 
 				dep.Build = build

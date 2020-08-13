@@ -37,7 +37,6 @@ func (s *service) UpsertPushedArtifact(
 	return &pb.UpsertPushedArtifactResponse{Artifact: result}, nil
 }
 
-// TODO: test
 func (s *service) ListPushedArtifacts(
 	ctx context.Context,
 	req *pb.ListPushedArtifactsRequest,
@@ -59,9 +58,8 @@ func (s *service) ListPushedArtifacts(
 				},
 			})
 
-			// TODO report this error?
 			if err != nil {
-				continue
+				return nil, err
 			}
 
 			a.Build = b
