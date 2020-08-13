@@ -16,6 +16,7 @@ ul.breadcrumbs {
 
     &::after {
       content: '/';
+      color: color.$ui-cool-gray-500;
       margin-left: scale.$sm-3;
       margin-right: scale.$sm-2;
     }

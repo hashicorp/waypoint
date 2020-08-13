@@ -15,17 +15,28 @@ $button-box-shadow:
 @import './_icon-tile';
 
 #page {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   width: 94vw;
   margin: 0 auto;
-  padding: scale.$lg-3 scale.$lg-4;
+  padding: scale.$lg-3 scale.$lg-4 scale.$lg-6;
 
-  aside {
-    margin: 0 (-(scale.$lg-4)) scale.$lg-2;
-    padding: scale.$lg-2 scale.$lg-4;
-    background: color.$ui-cool-gray-050;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1200px;
+    height: 600px;
+    background:
+      linear-gradient(to right, color.$white, rgba(color.$white, 0)),
+      linear-gradient(to left, color.$white, rgba(color.$white, 0)),
+      linear-gradient(to top, color.$white, color.$white, rgba(color.$white, 0)),
+      url(/images/topography.svg);
+    opacity: 0.2;
+    z-index: -2;
   }
 
   h1, h2, h3 {
@@ -46,6 +57,10 @@ $button-box-shadow:
 
   h4 {
     @include Typography.Heading(4);
+  }
+
+  aside {
+    padding-top: scale.$lg-6;
   }
 
   header {

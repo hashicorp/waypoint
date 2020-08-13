@@ -37,7 +37,8 @@ module.exports = function (defaults) {
     },
     svg: {
       paths: [
-        'node_modules/@hashicorp/structure-icons/dist/',
+        'node_modules/@hashicorp/structure-icons/dist',
+        'public/images',
       ],
     },
     autoImport: {
