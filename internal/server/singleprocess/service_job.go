@@ -246,7 +246,7 @@ func (s *service) GetJobStream(
 
 				// If the job has expired while queued it will have a status
 				// SUCCESS, this should be returned as an error
-				if job.ExpireTime != nil {
+				if job.ExpireTime != nil && job.CancelTime != nil {
 					job.Error = status.Newf(codes.Canceled, "job expired for ID: %s", job.GetId()).Proto()
 				}
 
