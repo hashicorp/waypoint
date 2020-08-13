@@ -131,15 +131,15 @@ func (r *Runner) Accept(ctx context.Context) error {
 
 	// Heartbeat
 	go func() {
-		timer := time.NewTimer(heartbeatDuration)
-		defer timer.Stop()
+		tick := time.NewTicker(heartbeatDuration)
+		defer tick.Stop()
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
 
-			case <-timer.C:
+			case <-tick.C:
 			}
 
 			sendMutex.Lock()
