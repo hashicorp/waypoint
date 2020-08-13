@@ -13,7 +13,15 @@
 
 <div class="cards app-latest">
   <Card>
-    <h4>Latest release</h4>
+    <Card::Header>
+      <h4>
+        {{inline-svg "public-default" class="icon"}}
+        Latest releases
+      </h4>
+      <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
+        View all releases
+      </LinkTo>
+    </Card::Header>
     <AppMetaItem::LatestRelease />
     <div class="app-meta-item">
       <ul class="app-meta-item-info">
@@ -24,7 +32,15 @@
     </div>
   </Card>
   <Card>
-    <h4>Latest deploy</h4>
+    <Card::Header>
+      <h4>
+        {{inline-svg "upload" class="icon"}}
+        Latest deployments
+      </h4>
+      <LinkTo @route="workspace.projects.project.app.deployments" @models={{array @model.project @model.application }}>
+        View all deployments
+      </LinkTo>
+    </Card::Header>
     <AppMetaItem::LatestDeployment />
     <div class="app-meta-item">
       <ul class="app-meta-item-info">
@@ -35,7 +51,15 @@
     </div>
   </Card>
   <Card>
-    <h4>Latest build</h4>
+    <Card::Header>
+      <h4>
+        {{inline-svg "source-file" class="icon"}}
+        Latest builds
+      </h4>
+      <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
+        View all builds
+      </LinkTo>
+    </Card::Header>
     <AppMetaItem::LatestBuild />
     <div class="app-meta-item">
       <ul class="app-meta-item-info">

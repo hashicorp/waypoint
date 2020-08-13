@@ -8,6 +8,7 @@ $box-shadow:
 $button-box-shadow:
   0 3px 2px rgba(color.$ui-cool-gray-600, .2);
 
+@import './_app-item';
 @import './_app-meta-item';
 @import './_badge';
 @import './_breadcrumbs';
@@ -138,20 +139,12 @@ $button-box-shadow:
   ul.list {
 
     li {
-      display: flex;
-      flex-direction: column;
       margin-bottom: scale.$base;
       padding-bottom: scale.$base;
       border-bottom: 1px solid color.$ui-cool-gray-200;
 
       &:last-child {
         border: none;
-      }
-
-      span {
-        color: color.$ui-cool-gray-600;
-        font-size: 0.9rem;
-        padding-top: scale.$sm-3;
       }
     }
   }
@@ -173,6 +166,28 @@ $button-box-shadow:
     padding: scale.$base;
     margin-bottom: scale.$lg-2;
     box-shadow: $box-shadow;
+    background: color.$white;
+
+    &-header {
+      display: flex;
+      align-items: center;
+
+      h4 {
+        display: flex;
+        align-items: center;
+
+        .icon {
+          width: scale.$lg-1;
+          height: scale.$lg-1;
+          margin-right: scale.$sm-3;
+        }
+      }
+
+      a {
+        margin-left: auto;
+        @include Typography.Interface(S);
+      }
+    }
 
     h2, h4 {
       margin: 0;
@@ -238,6 +253,42 @@ $button-box-shadow:
     .meta small {
       color: color.$ui-cool-gray-600;
       @include Typography.Interface(M);
+    }
+  }
+
+  .output-pane {
+    display: flex;
+    flex-direction: column;
+    background: color.$ui-cool-gray-050;
+    border: 1px solid color.$ui-cool-gray-100;
+    border-radius: 2px;
+    min-height: 480px;
+
+    .output {
+      display: flex;
+      flex-direction: column;
+      padding: scale.$sm-2 scale.$sm-1;
+    }
+
+    code {
+      font-size: 1.1rem;
+    }
+
+    .run-prompt {
+      display: flex;
+      align-items: center;
+      align-self: flex-end;
+      width: 100%;
+      padding: scale.$sm-1 scale.$sm-2;
+      background: color.$white;
+      border-top: 1px solid color.$ui-cool-gray-100;
+      position: sticky;
+      bottom: 0;
+      margin-top: auto;
+
+      .icon {
+        color: color.$ui-cool-gray-600;
+      }
     }
   }
 

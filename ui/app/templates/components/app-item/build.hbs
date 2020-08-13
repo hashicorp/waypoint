@@ -1,0 +1,15 @@
+<li class="app-item">
+  <LinkTo @route="workspace.projects.project.app.build" @models={{array @build.id}}>
+    <p>
+      <code>{{@build.id}}</code>
+    </p>
+    <small>
+      {{inline-svg "source-file" class="icon"}}
+      <span>Built with <b>{{@build.component.name}}</b> 2 hours ago</span>
+    </small>
+  </LinkTo>
+  <b class="badge badge--success">
+    {{inline-svg "check-plain" class="icon"}}
+    Passed in 2 minutes 12 seconds
+  </b>
+</li>
