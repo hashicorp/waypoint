@@ -15,6 +15,7 @@ type Config struct {
 	ServerImage        string
 	ServiceAnnotations map[string]string
 	ImagePullSecret    string
+	ImagePullPolicy    string
 }
 
 // Render renders the installation files with the given configuration.

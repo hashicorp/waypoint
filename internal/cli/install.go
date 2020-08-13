@@ -372,6 +372,13 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Default: "github",
 		})
 
+		f.StringVar(&flag.StringVar{
+			Name:    "pull-policy",
+			Target:  &c.config.ImagePullPolicy,
+			Usage:   "",
+			Default: "Always",
+		})
+
 		f.BoolVar(&flag.BoolVar{
 			Name:   "show-yaml",
 			Target: &c.showYaml,
