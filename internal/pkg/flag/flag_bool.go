@@ -17,6 +17,7 @@ type BoolVar struct {
 	EnvVar     string
 	Target     *bool
 	Completion complete.Predictor
+	SetHook    func(val bool)
 }
 
 func (f *Set) BoolVar(i *BoolVar) {
@@ -33,20 +34,22 @@ func (f *Set) BoolVar(i *BoolVar) {
 		Usage:      i.Usage,
 		Default:    strconv.FormatBool(i.Default),
 		EnvVar:     i.EnvVar,
-		Value:      newBoolValue(def, i.Target, i.Hidden),
+		Value:      newBoolValue(i, def, i.Target, i.Hidden),
 		Completion: i.Completion,
 	})
 }
 
 type boolValue struct {
+	v      *BoolVar
 	hidden bool
 	target *bool
 }
 
-func newBoolValue(def bool, target *bool, hidden bool) *boolValue {
+func newBoolValue(v *BoolVar, def bool, target *bool, hidden bool) *boolValue {
 	*target = def
 
 	return &boolValue{
+		v:      v,
 		hidden: hidden,
 		target: target,
 	}
@@ -59,6 +62,11 @@ func (b *boolValue) Set(s string) error {
 	}
 
 	*b.target = v
+
+	if b.v.SetHook != nil {
+		b.v.SetHook(v)
+	}
+
 	return nil
 }
 

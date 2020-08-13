@@ -21,6 +21,7 @@ type ArtifactListCommand struct {
 	*baseCommand
 
 	flagWorkspaceAll bool
+	filterFlags      filterFlags
 }
 
 func (c *ArtifactListCommand) Run(args []string) int {
@@ -46,6 +47,7 @@ func (c *ArtifactListCommand) Run(args []string) int {
 		resp, err := client.ListPushedArtifacts(c.Ctx, &pb.ListPushedArtifactsRequest{
 			Application: app.Ref(),
 			Workspace:   wsRef,
+			Order:       c.filterFlags.orderOp(),
 		})
 		if err != nil {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -114,6 +116,8 @@ func (c *ArtifactListCommand) Flags() *flag.Sets {
 			Target: &c.flagWorkspaceAll,
 			Usage:  "List builds in all workspaces for this project and application.",
 		})
+
+		initFilterFlags(set, &c.filterFlags, filterOptionOrder)
 	})
 }
 
