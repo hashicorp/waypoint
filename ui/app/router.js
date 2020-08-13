@@ -7,7 +7,7 @@ export default class Router extends EmberRouter {
 }
 
 Router.map(function() {
-  this.route('auth', { path: '/auth' });
+  this.route('auth');
   this.route('workspaces', { path: '/' });
   this.route('workspace', { path: '/:workspace_id' }, function() {
     this.route('projects', { path: '/' }, function() {
@@ -20,8 +20,8 @@ Router.map(function() {
           this.route('deployment', { path: '/deployment/:deployment_id' });
           this.route('releases');
           this.route('release', { path: '/release/:release_id' });
-          this.route('logs', { path: '/logs' });
-          this.route('exec', { path: '/exec' });
+          this.route('logs');
+          this.route('exec');
         });
       });
     });

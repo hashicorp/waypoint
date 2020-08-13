@@ -1,11 +1,12 @@
 import Component from '@ember/component';
 import { inject as service } from '@ember/service';
 import { reads } from '@ember/object/computed';
-import { tagName } from '@ember-decorators/component';
+import { tagName, classNames } from '@ember-decorators/component';
 import classic from 'ember-classic-decorator';
 
 @classic
-@tagName('')
+@tagName('ul')
+@classNames('breadcrumbs')
 export default class AppBreadcrumbs extends Component {
   @service('breadcrumbs') breadcrumbsService;
 

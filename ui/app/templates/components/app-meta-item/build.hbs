@@ -2,7 +2,10 @@
   <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
     <p>
       <code>abcd1234</code>
-      <b class="badge badge--success">Passed</b>
+      <b class="badge badge--success">
+        {{inline-svg "check-plain" class="icon"}}
+        Passed
+      </b>
     </p>
     <small>
       {{inline-svg "source-file" class="icon"}}

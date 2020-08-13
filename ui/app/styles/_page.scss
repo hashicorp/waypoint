@@ -8,16 +8,19 @@ $box-shadow:
 $button-box-shadow:
   0 3px 2px rgba(color.$ui-cool-gray-600, .2);
 
+@import './_app-meta-item';
 @import './_badge';
+@import './_breadcrumbs';
 @import './_button';
 @import './_icon-tile';
-@import './_app-meta-item';
 
 #page {
   display: flex;
   flex-direction: column;
-  padding: 0 scale.$lg-4;
   flex-grow: 1;
+  width: 94vw;
+  margin: 0 auto;
+  padding: scale.$lg-3 scale.$lg-4;
 
   aside {
     margin: 0 (-(scale.$lg-4)) scale.$lg-2;
@@ -58,6 +61,10 @@ $button-box-shadow:
       display: flex;
       flex-direction: column;
 
+      &.projects-title {
+        padding-top: scale.$lg-6;
+      }
+
       h1 {
         margin: 0;
       }
@@ -65,6 +72,7 @@ $button-box-shadow:
       small {
         color: color.$ui-cool-gray-600;
         @include Typography.Interface(M);
+        padding-bottom: scale.$sm-3;
       }
     }
 
