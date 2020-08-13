@@ -38,24 +38,19 @@ func shortImg(img string) string {
 	return img[:7]
 }
 
-func niceBuildpack(bp string) string {
-	parts := strings.Split(bp, ",")
-
-	for i, p := range parts {
-		p = strings.TrimSpace(p)
-		idx := strings.IndexByte(p, '/')
-		if idx != -1 {
-			p = p[idx+1:]
-		}
-
-		parts[i] = p
-	}
+// Add either language: or languages: based on how many values are specified
+func niceLanguages(langs string) string {
+	parts := strings.Split(langs, ",")
 
 	if len(parts) == 1 {
-		return "buildpack:" + parts[0]
+		return "language:" + strings.TrimSpace(parts[0])
 	}
 
-	return "buildpacks:" + strings.Join(parts, ", ")
+	for i, p := range parts {
+		parts[i] = strings.TrimSpace(p)
+	}
+
+	return "languages:" + strings.Join(parts, ", ")
 }
 
 func (c *DeploymentListCommand) Run(args []string) int {
@@ -150,8 +145,8 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				details = append(details, "build-user:"+user)
 			}
 
-			if bp, ok := b.Build.Labels["common/buildpacks"]; ok {
-				details = append(details, niceBuildpack(bp))
+			if bp, ok := b.Build.Labels["common/languages"]; ok {
+				details = append(details, niceLanguages(bp))
 			}
 
 			if img, ok := b.Build.Labels["common/image-id"]; ok {

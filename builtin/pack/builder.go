@@ -96,17 +96,22 @@ func (b *Builder) Build(
 
 	labels := map[string]string{}
 
-	var buildpacks []string
+	var languages []string
 
 	for _, bp := range info.Buildpacks {
 		if _, ok := skipBuildPacks[bp.ID]; ok {
 			continue
 		}
 
-		buildpacks = append(buildpacks, bp.ID)
+		idx := strings.IndexByte(bp.ID, '/')
+		if idx != -1 {
+			languages = append(languages, bp.ID[idx+1:])
+		} else {
+			languages = append(languages, bp.ID)
+		}
 	}
 
-	labels["common/buildpacks"] = strings.Join(buildpacks, ",")
+	labels["common/languages"] = strings.Join(languages, ",")
 	labels["common/buildpack-stack"] = info.StackID
 
 	proc := info.Processes.DefaultProcess
