@@ -688,7 +688,8 @@ func TestJobCancel(t *testing.T) {
 		// Verify it is canceled
 		job, err := s.JobById("A", nil)
 		require.NoError(err)
-		require.Equal(pb.Job_SUCCESS, job.Job.State)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
 		require.NotEmpty(job.CancelTime)
 	})
 
