@@ -541,8 +541,8 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 		return nil
 
 	case pb.Job_QUEUED:
-		// For queued jobs, we immediately transition them to a success state.
-		job.State = pb.Job_SUCCESS
+		// For queued jobs, we immediately transition them to an error state.
+		job.State = pb.Job_ERROR
 
 	case pb.Job_WAITING, pb.Job_RUNNING:
 		// For these states, we just need to mark it as cancelled and have

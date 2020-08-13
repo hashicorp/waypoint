@@ -17,7 +17,7 @@ import (
 type runnerUI struct {
 	ctx    context.Context
 	cancel func()
-	mu     sync.Mutex
+	mu     *sync.Mutex
 	evc    pb.Waypoint_RunnerJobStreamClient
 
 	stdSetup       sync.Once

@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"io"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -89,6 +90,9 @@ func (r *Runner) Accept(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// We need a mutex to protect against simultaneous sends to the client.
+	var sendMutex sync.Mutex
+
 	// For our UI, we will use a manually set UI if available. Otherwise,
 	// we setup the runner UI which streams the output to the server.
 	ui := r.ui
@@ -97,6 +101,7 @@ func (r *Runner) Accept(ctx context.Context) error {
 			ctx:    ctx,
 			cancel: cancel,
 			evc:    client,
+			mu:     &sendMutex,
 		}
 	}
 
@@ -126,22 +131,25 @@ func (r *Runner) Accept(ctx context.Context) error {
 
 	// Heartbeat
 	go func() {
-		timer := time.NewTimer(heartbeatDuration)
-		defer timer.Stop()
+		tick := time.NewTicker(heartbeatDuration)
+		defer tick.Stop()
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
 
-			case <-timer.C:
+			case <-tick.C:
 			}
 
-			if err := client.Send(&pb.RunnerJobStreamRequest{
+			sendMutex.Lock()
+			err := client.Send(&pb.RunnerJobStreamRequest{
 				Event: &pb.RunnerJobStreamRequest_Heartbeat_{
 					Heartbeat: &pb.RunnerJobStreamRequest_Heartbeat{},
 				},
-			}); err != nil && err != io.EOF {
+			})
+			sendMutex.Unlock()
+			if err != nil && err != io.EOF {
 				log.Warn("error during heartbeat", "err", err)
 			}
 		}
@@ -169,6 +177,12 @@ func (r *Runner) Accept(ctx context.Context) error {
 		default:
 		}
 	}
+
+	// For the remainder of the job, we're going to hold the mutex. We are
+	// just sending quick status updates so this should not block anything
+	// for very long.
+	sendMutex.Lock()
+	defer sendMutex.Unlock()
 
 	// Handle job execution errors
 	if err != nil {

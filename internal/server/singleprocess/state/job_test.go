@@ -688,7 +688,8 @@ func TestJobCancel(t *testing.T) {
 		// Verify it is canceled
 		job, err := s.JobById("A", nil)
 		require.NoError(err)
-		require.Equal(pb.Job_SUCCESS, job.Job.State)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotNil(job.Job.Error)
 		require.NotEmpty(job.CancelTime)
 	})
 
@@ -819,5 +820,68 @@ func TestJobHeartbeat(t *testing.T) {
 			require.NoError(err)
 			return job.Job.State == pb.Job_ERROR
 		}, 1*time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("doesn't time out if heartbeating", func(t *testing.T) {
+		require := require.New(t)
+
+		// Set a short timeout
+		old := jobHeartbeatTimeout
+		defer func() { jobHeartbeatTimeout = old }()
+		jobHeartbeatTimeout = 250 * time.Millisecond
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+		require.Equal(pb.Job_WAITING, job.State)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		// Start heartbeating
+		ctx, cancel := context.WithCancel(context.Background())
+		doneCh := make(chan struct{})
+		defer func() {
+			cancel()
+			<-doneCh
+		}()
+		go func() {
+			defer close(doneCh)
+
+			tick := time.NewTicker(20 * time.Millisecond)
+			defer tick.Stop()
+
+			for {
+				select {
+				case <-tick.C:
+					s.JobHeartbeat(job.Id)
+
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+
+		// Sleep for a bit
+		time.Sleep(1 * time.Second)
+
+		// Verify it is running
+		job, err = s.JobById("A", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_RUNNING, job.Job.State)
+
+		// Stop it
+		require.NoError(s.JobComplete(job.Id, nil, nil))
 	})
 }
