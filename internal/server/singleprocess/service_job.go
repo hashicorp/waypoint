@@ -244,6 +244,12 @@ func (s *service) GetJobStream(
 			case pb.Job_SUCCESS, pb.Job_ERROR:
 				// TODO(mitchellh): we should drain the output buffer
 
+				// If the job has expired while queued it will have a status
+				// SUCCESS, this should be returned as an error
+				if job.ExpireTime != nil {
+					job.Error = status.Newf(codes.Canceled, "job expired for ID: %s", job.GetId()).Proto()
+				}
+
 				// Job is done. For success, error will be nil, so this
 				// populates the event with the proper values.
 				return server.Send(&pb.GetJobStreamResponse{

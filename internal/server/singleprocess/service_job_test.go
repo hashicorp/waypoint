@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -229,6 +230,37 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 		event := resp.Event.(*pb.GetJobStreamResponse_Complete_)
 		require.NotNil(event)
 		require.Nil(event.Complete.Error)
+	}
+}
+
+func TestServiceGetJobStream_expired(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Initialize our app
+	TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Create a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{Job: serverptypes.TestJobNew(t, nil), ExpiresIn: "10ms"})
+	require.NoError(err)
+	require.NotNil(queueResp)
+	require.NotEmpty(queueResp.JobId)
+
+	// Get our job stream and verify we open
+	stream, err := client.GetJobStream(ctx, &pb.GetJobStreamRequest{JobId: queueResp.JobId})
+	require.NoError(err)
+
+	// Wait for completion
+	{
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Complete_)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Complete_)
+		require.NotNil(event)
+		require.Equal(int32(codes.Canceled), event.Complete.Error.Code)
 	}
 }
 
