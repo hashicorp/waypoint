@@ -51,6 +51,23 @@ func (s *service) ListPushedArtifacts(
 		return nil, err
 	}
 
+	if req.IncludeBuild {
+		for _, a := range result {
+			b, err := s.state.BuildGet(&pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: a.BuildId,
+				},
+			})
+
+			// TODO report this error?
+			if err != nil {
+				continue
+			}
+
+			a.Build = b
+		}
+	}
+
 	return &pb.ListPushedArtifactsResponse{Artifacts: result}, nil
 }
 

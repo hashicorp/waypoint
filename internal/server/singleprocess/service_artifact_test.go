@@ -63,4 +63,47 @@ func TestServiceArtifact(t *testing.T) {
 		require.True(ok)
 		require.Equal(codes.NotFound, st.Code())
 	})
+
+}
+
+func TestServiceArtifact_List(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Simplify writing tests
+	type Req = pb.ListPushedArtifactsRequest
+
+	t.Run("list with build", func(t *testing.T) {
+		require := require.New(t)
+
+		buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
+			Build: serverptypes.TestValidBuild(t, nil),
+		})
+
+		build := buildresp.Build
+
+		artifact := serverptypes.TestValidArtifact(t, nil)
+		artifact.BuildId = build.Id
+
+		resp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
+			Artifact: artifact,
+		})
+
+		artifact = resp.Artifact
+
+		// Create, should get an ID back
+		listresp, err := client.ListPushedArtifacts(ctx, &Req{
+			Application:  artifact.Application,
+			IncludeBuild: true,
+		})
+		require.NoError(err)
+		require.NotNil(listresp)
+
+		require.NotNil(listresp.Artifacts[0].Build)
+	})
+
 }

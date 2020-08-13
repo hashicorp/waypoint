@@ -1148,6 +1148,10 @@ message ListPushedArtifactsRequest {
   // Specifies the order of results. If this isn't specified, the results
   // are in an undefined order.
   OperationOrder order = 2;
+
+  // Indicate if the Build value should be returned for each
+  // of the artifacts as well.
+  bool include_build = 5;
 }
 
 message ListPushedArtifactsResponse {
@@ -1182,6 +1186,10 @@ message PushedArtifact {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 6;
+
+  // If include_build was set on the list request, this will include
+  // the Build value associated with the given build_id.
+  Build build = 10;
 }
 
 /********************************************************************
