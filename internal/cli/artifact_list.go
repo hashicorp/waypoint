@@ -2,8 +2,11 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
@@ -21,6 +24,9 @@ type ArtifactListCommand struct {
 	*baseCommand
 
 	flagWorkspaceAll bool
+	flagVerbose      bool
+	flagJson         bool
+	flagId           idFormat
 	filterFlags      filterFlags
 }
 
@@ -45,9 +51,10 @@ func (c *ArtifactListCommand) Run(args []string) int {
 
 		// List builds
 		resp, err := client.ListPushedArtifacts(c.Ctx, &pb.ListPushedArtifactsRequest{
-			Application: app.Ref(),
-			Workspace:   wsRef,
-			Order:       c.filterFlags.orderOp(),
+			Application:  app.Ref(),
+			Workspace:    wsRef,
+			Order:        c.filterFlags.orderOp(),
+			IncludeBuild: true,
 		})
 		if err != nil {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -55,9 +62,13 @@ func (c *ArtifactListCommand) Run(args []string) int {
 		}
 		sort.Sort(serversort.ArtifactStartDesc(resp.Artifacts))
 
+		if c.flagJson {
+			return c.displayJson(resp.Artifacts)
+		}
+
 		const bullet = "●"
 
-		table := terminal.NewTable("", "ID", "Registry", "Started", "Completed")
+		table := terminal.NewTable("", "ID", "Registry", "Details", "Started", "Completed")
 		for _, b := range resp.Artifacts {
 			// Determine our bullet
 			status := ""
@@ -85,16 +96,70 @@ func (c *ArtifactListCommand) Run(args []string) int {
 				completeTime = humanize.Time(t)
 			}
 
-			table.Rich([]string{
-				status,
-				b.Id,
-				b.Workspace.Workspace,
-				b.Component.Name,
-				startTime,
-				completeTime,
-			}, []string{
-				statusColor,
-			})
+			var (
+				extraDetails []string
+				details      []string
+			)
+
+			if user, ok := b.Labels["common/user"]; ok {
+				details = append(details, "user:"+user)
+			}
+
+			details = append(details, fmt.Sprintf("build:%s", c.flagId.FormatId(b.Build.Sequence, b.Build.Id)))
+
+			if c.flagVerbose {
+				for k, val := range b.Labels {
+					if strings.HasPrefix(k, "waypoint/") {
+						continue
+					}
+
+					if len(val) > 30 {
+						val = val[:30] + "..."
+					}
+
+					extraDetails = append(extraDetails, fmt.Sprintf("artifact.%s:%s", k, val))
+				}
+
+				for k, val := range b.Build.Labels {
+					if strings.HasPrefix(k, "waypoint/") {
+						continue
+					}
+
+					if len(val) > 30 {
+						val = val[:30] + "..."
+					}
+
+					extraDetails = append(extraDetails, fmt.Sprintf("build.%s:%s", k, val))
+				}
+				sort.Strings(extraDetails)
+			}
+
+			sort.Strings(details)
+
+			table.Rich(
+				[]string{
+					status,
+					c.flagId.FormatId(b.Sequence, b.Id),
+					b.Component.Name,
+					details[0],
+					startTime,
+					completeTime,
+				}, []string{
+					statusColor,
+				},
+			)
+
+			if len(details[1:]) > 0 {
+				for _, dr := range details[1:] {
+					table.Rich([]string{"", "", "", dr}, nil)
+				}
+			}
+
+			if len(extraDetails) > 0 {
+				for _, dr := range extraDetails {
+					table.Rich([]string{"", "", "", dr}, nil)
+				}
+			}
 		}
 
 		c.ui.Table(table)
@@ -108,6 +173,55 @@ func (c *ArtifactListCommand) Run(args []string) int {
 	return 0
 }
 
+func (c *ArtifactListCommand) displayJson(artifacts []*pb.PushedArtifact) error {
+	var output []map[string]interface{}
+
+	for _, art := range artifacts {
+		i := map[string]interface{}{}
+
+		i["id"] = art.Id
+		i["sequence"] = art.Sequence
+		i["application"] = art.Application
+		i["labels"] = art.Labels
+		i["component"] = art.Component.Name
+		i["status"] = c.statusJson(art.Status)
+		i["workspace"] = art.Workspace.Workspace
+		i["build"] = c.buildJson(art.Build)
+
+		output = append(output, i)
+	}
+
+	data, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	c.ui.Output(string(data))
+
+	return nil
+}
+
+func (c *ArtifactListCommand) statusJson(status *pb.Status) interface{} {
+	i := map[string]interface{}{}
+
+	i["state"] = status.State.String()
+	i["complete_time"] = status.CompleteTime.AsTime().Format(time.RFC3339Nano)
+	i["start_time"] = status.StartTime.AsTime().Format(time.RFC3339Nano)
+
+	return i
+}
+
+func (c *ArtifactListCommand) buildJson(b *pb.Build) interface{} {
+	i := map[string]interface{}{}
+
+	i["id"] = b.Id
+	i["sequence"] = b.Sequence
+	i["labels"] = b.Labels
+	i["status"] = c.statusJson(b.Status)
+
+	return i
+}
+
 func (c *ArtifactListCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
@@ -117,6 +231,20 @@ func (c *ArtifactListCommand) Flags() *flag.Sets {
 			Usage:  "List builds in all workspaces for this project and application.",
 		})
 
+		f.BoolVar(&flag.BoolVar{
+			Name:    "verbose",
+			Aliases: []string{"V"},
+			Target:  &c.flagVerbose,
+			Usage:   "Display more details about each deployment.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "json",
+			Target: &c.flagJson,
+			Usage:  "Output the deployment information as JSON.",
+		})
+
+		initIdFormat(f, &c.flagId)
 		initFilterFlags(set, &c.filterFlags, filterOptionOrder)
 	})
 }

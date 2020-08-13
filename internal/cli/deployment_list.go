@@ -2,8 +2,11 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
@@ -21,7 +24,38 @@ type DeploymentListCommand struct {
 	*baseCommand
 
 	flagWorkspaceAll bool
+	flagVerbose      bool
+	flagJson         bool
+	flagId           idFormat
 	filterFlags      filterFlags
+}
+
+func shortImg(img string) string {
+	if strings.HasPrefix(img, "sha256:") {
+		return img[7:14]
+	}
+
+	return img[:7]
+}
+
+func niceBuildpack(bp string) string {
+	parts := strings.Split(bp, ",")
+
+	for i, p := range parts {
+		p = strings.TrimSpace(p)
+		idx := strings.IndexByte(p, '/')
+		if idx != -1 {
+			p = p[idx+1:]
+		}
+
+		parts[i] = p
+	}
+
+	if len(parts) == 1 {
+		return "buildpack:" + parts[0]
+	}
+
+	return "buildpacks:" + strings.Join(parts, ", ")
 }
 
 func (c *DeploymentListCommand) Run(args []string) int {
@@ -55,6 +89,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			PhysicalState: phyState,
 			Status:        c.filterFlags.statusFilters(),
 			Order:         c.filterFlags.orderOp(),
+			LoadDetails:   pb.Deployment_BUILD,
 		})
 		if err != nil {
 			c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -62,7 +97,11 @@ func (c *DeploymentListCommand) Run(args []string) int {
 		}
 		sort.Sort(serversort.DeploymentCompleteDesc(resp.Deployments))
 
-		tbl := terminal.NewTable("", "ID", "Registry", "Started", "Completed")
+		if c.flagJson {
+			return c.displayJson(resp.Deployments)
+		}
+
+		tbl := terminal.NewTable("", "ID", "Platform", "Details", "Started", "Completed")
 
 		const bullet = "●"
 
@@ -76,9 +115,16 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				statusColor = terminal.Yellow
 
 			case pb.Status_SUCCESS:
-				status = "✔"
-				statusColor = terminal.Green
-
+				switch b.State {
+				case pb.Operation_DESTROYED:
+					status = bullet
+				case pb.Operation_CREATED:
+					status = "✔"
+					statusColor = terminal.Green
+				default:
+					status = "?"
+					statusColor = terminal.Yellow
+				}
 			case pb.Status_ERROR:
 				status = "✖"
 				statusColor = terminal.Red
@@ -93,15 +139,103 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				completeTime = humanize.Time(t)
 			}
 
-			tbl.Rich([]string{
-				status,
-				b.Id,
-				b.Component.Name,
-				startTime,
-				completeTime,
-			}, []string{
-				statusColor,
-			})
+			var (
+				extraDetails []string
+				details      []string
+			)
+
+			if user, ok := b.Labels["common/user"]; ok {
+				details = append(details, "user:"+user)
+			} else if user, ok := b.Build.Labels["common/user"]; ok {
+				details = append(details, "build-user:"+user)
+			}
+
+			if bp, ok := b.Build.Labels["common/buildpacks"]; ok {
+				details = append(details, niceBuildpack(bp))
+			}
+
+			if img, ok := b.Build.Labels["common/image-id"]; ok {
+				img = shortImg(img)
+
+				details = append(details, "image:"+img)
+			}
+
+			artdetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(b.Artifact.Sequence, b.Artifact.Id))
+			if len(details) == 0 {
+				details = append(details, artdetails)
+			} else if c.flagVerbose {
+				details = append(details,
+					artdetails,
+					fmt.Sprintf("build:%s", c.flagId.FormatId(b.Build.Sequence, b.Build.Id)))
+			}
+
+			if c.flagVerbose {
+				for k, val := range b.Labels {
+					if strings.HasPrefix(k, "waypoint/") {
+						continue
+					}
+
+					if len(val) > 30 {
+						val = val[:30] + "..."
+					}
+
+					extraDetails = append(extraDetails, fmt.Sprintf("deployment.%s:%s", k, val))
+				}
+
+				for k, val := range b.Artifact.Labels {
+					if strings.HasPrefix(k, "waypoint/") {
+						continue
+					}
+
+					if len(val) > 30 {
+						val = val[:30] + "..."
+					}
+
+					extraDetails = append(extraDetails, fmt.Sprintf("artifact.%s:%s", k, val))
+				}
+
+				for k, val := range b.Build.Labels {
+					if strings.HasPrefix(k, "waypoint/") {
+						continue
+					}
+
+					if len(val) > 30 {
+						val = val[:30] + "..."
+					}
+
+					extraDetails = append(extraDetails, fmt.Sprintf("build.%s:%s", k, val))
+				}
+
+				sort.Strings(extraDetails)
+			}
+
+			sort.Strings(details)
+
+			tbl.Rich(
+				[]string{
+					status,
+					c.flagId.FormatId(b.Sequence, b.Id),
+					b.Component.Name,
+					details[0],
+					startTime,
+					completeTime,
+				},
+				[]string{
+					statusColor,
+				},
+			)
+
+			if len(details[1:]) > 0 {
+				for _, dr := range details[1:] {
+					tbl.Rich([]string{"", "", "", dr}, nil)
+				}
+			}
+
+			if len(extraDetails) > 0 {
+				for _, dr := range extraDetails {
+					tbl.Rich([]string{"", "", "", dr}, nil)
+				}
+			}
 		}
 
 		c.ui.Table(tbl)
@@ -115,6 +249,68 @@ func (c *DeploymentListCommand) Run(args []string) int {
 	return 0
 }
 
+func (c *DeploymentListCommand) displayJson(deployments []*pb.Deployment) error {
+	var output []map[string]interface{}
+
+	for _, dep := range deployments {
+		i := map[string]interface{}{}
+
+		i["id"] = dep.Id
+		i["sequence"] = dep.Sequence
+		i["application"] = dep.Application
+		i["labels"] = dep.Labels
+		i["component"] = dep.Component.Name
+		i["physical_state"] = dep.State.String()
+		i["status"] = c.statusJson(dep.Status)
+		i["workspace"] = dep.Workspace.Workspace
+		i["artifact"] = c.artifactJson(dep.Artifact)
+		i["build"] = c.buildJson(dep.Build)
+
+		output = append(output, i)
+	}
+
+	data, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	c.ui.Output(string(data))
+
+	return nil
+}
+
+func (c *DeploymentListCommand) artifactJson(art *pb.PushedArtifact) interface{} {
+	i := map[string]interface{}{}
+
+	i["id"] = art.Id
+	i["sequence"] = art.Sequence
+	i["labels"] = art.Labels
+	i["status"] = c.statusJson(art.Status)
+
+	return i
+}
+
+func (c *DeploymentListCommand) statusJson(status *pb.Status) interface{} {
+	i := map[string]interface{}{}
+
+	i["state"] = status.State.String()
+	i["complete_time"] = status.CompleteTime.AsTime().Format(time.RFC3339Nano)
+	i["start_time"] = status.StartTime.AsTime().Format(time.RFC3339Nano)
+
+	return i
+}
+
+func (c *DeploymentListCommand) buildJson(b *pb.Build) interface{} {
+	i := map[string]interface{}{}
+
+	i["id"] = b.Id
+	i["sequence"] = b.Sequence
+	i["labels"] = b.Labels
+	i["status"] = c.statusJson(b.Status)
+
+	return i
+}
+
 func (c *DeploymentListCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
@@ -124,6 +320,20 @@ func (c *DeploymentListCommand) Flags() *flag.Sets {
 			Usage:  "List builds in all workspaces for this project and application.",
 		})
 
+		f.BoolVar(&flag.BoolVar{
+			Name:    "verbose",
+			Aliases: []string{"V"},
+			Target:  &c.flagVerbose,
+			Usage:   "Display more details about each deployment.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "json",
+			Target: &c.flagJson,
+			Usage:  "Output the deployment information as JSON.",
+		})
+
+		initIdFormat(f, &c.flagId)
 		initFilterFlags(set, &c.filterFlags, fillterOptionAll)
 	})
 }
