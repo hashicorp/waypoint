@@ -15,7 +15,9 @@ func VCSGitFuncs(path string) map[string]function.Function {
 	state := &VCSGit{Path: path}
 
 	return map[string]function.Function{
-		"gitref": state.RefFunc(),
+		"gitrefpretty": state.RefPrettyFunc(),
+		"gitrefhash":   state.RefHashFunc(),
+		"gitreftag":    state.RefTagFunc(),
 	}
 }
 
@@ -28,7 +30,7 @@ type VCSGit struct {
 	repo    *git.Repository
 }
 
-// RefFunc returns a string format of the current Git ref. This function
+// RefPrettyFunc returns a string format of the current Git ref. This function
 // takes some liberties to humanize the output: it will use a tag if the
 // ref matches a tag, it will append "+CHANGES" to the commit if there are
 // uncommitted changed files, etc.
@@ -36,16 +38,16 @@ type VCSGit struct {
 // You may use direct functions such as `gitrefhash` if you want the direct
 // hash. Or `gitreftag` to get the current tag.
 //
-// waypoint:gitref
-func (s *VCSGit) RefFunc() function.Function {
+// waypoint:gitrefpretty
+func (s *VCSGit) RefPrettyFunc() function.Function {
 	return function.New(&function.Spec{
 		Params: []function.Parameter{},
 		Type:   function.StaticReturnType(cty.String),
-		Impl:   s.refFunc,
+		Impl:   s.refPrettyFunc,
 	})
 }
 
-func (s *VCSGit) refFunc(args []cty.Value, retType cty.Type) (cty.Value, error) {
+func (s *VCSGit) refPrettyFunc(args []cty.Value, retType cty.Type) (cty.Value, error) {
 	if err := s.init(); err != nil {
 		return cty.UnknownVal(cty.String), err
 	}
@@ -94,6 +96,73 @@ func (s *VCSGit) refFunc(args []cty.Value, retType cty.Type) (cty.Value, error) 
 	}
 
 	return cty.StringVal(result), nil
+}
+
+// RefHashFunc returns the full hash of the HEAD ref.
+//
+// waypoint:gitrefhash
+func (s *VCSGit) RefHashFunc() function.Function {
+	return function.New(&function.Spec{
+		Params: []function.Parameter{},
+		Type:   function.StaticReturnType(cty.String),
+		Impl:   s.refHashFunc,
+	})
+}
+
+func (s *VCSGit) refHashFunc(args []cty.Value, retType cty.Type) (cty.Value, error) {
+	if err := s.init(); err != nil {
+		return cty.UnknownVal(cty.String), err
+	}
+
+	ref, err := s.repo.Head()
+	if err != nil {
+		return cty.UnknownVal(cty.String), err
+	}
+
+	return cty.StringVal(ref.Hash().String()), nil
+}
+
+// RefTagFunc returns the tag of the HEAD ref or empty if not tag is found.
+//
+// waypoint:gitreftag
+func (s *VCSGit) RefTagFunc() function.Function {
+	return function.New(&function.Spec{
+		Params: []function.Parameter{},
+		Type:   function.StaticReturnType(cty.String),
+		Impl:   s.refTagFunc,
+	})
+}
+
+func (s *VCSGit) refTagFunc(args []cty.Value, retType cty.Type) (cty.Value, error) {
+	if err := s.init(); err != nil {
+		return cty.UnknownVal(cty.String), err
+	}
+
+	ref, err := s.repo.Head()
+	if err != nil {
+		return cty.UnknownVal(cty.String), err
+	}
+
+	// Get the tags
+	iter, err := s.repo.Tags()
+	if err != nil {
+		return cty.UnknownVal(cty.String), err
+	}
+	defer iter.Close()
+	for {
+		tagRef, err := iter.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return cty.UnknownVal(cty.String), err
+		}
+		if tagRef.Hash() == ref.Hash() {
+			return cty.StringVal(tagRef.Name().Short()), nil
+		}
+	}
+
+	return cty.StringVal(""), nil
 }
 
 func (s *VCSGit) init() error {
