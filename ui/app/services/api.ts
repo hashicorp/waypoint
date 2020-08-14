@@ -1,12 +1,13 @@
 import Service from '@ember/service';
 import { WaypointClient } from 'waypoint-client';
+import SessionService from 'waypoint/services/session';
+import { inject as service } from '@ember/service';
 import { assign } from '@ember/polyfills';
 
 export default class ApiService extends Service {
-  token =
-    'bM152PWkXxfoy4vA51JFhR7LsKQez6x23oi2RDqYk8DPjnRdGjWtS6J3CTywJSaBPQX7wZAgV61bFMMLWoqvpjUfr1pL2sq9AcDGL';
-  meta = { authorization: this.token };
-  // opts = { unaryInterceptors: [new ExampleUnaryInterceptor()] };
+  @service session!: SessionService;
+  meta = { authorization: this.session.token };
+
   client = new WaypointClient('https://localhost:1235', null, null);
 
   // Merges metadata with required metadata for the request
