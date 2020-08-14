@@ -75,6 +75,8 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/slack-go/slack v0.6.5
 	github.com/stretchr/testify v1.5.1
+	github.com/zclconf/go-cty v1.5.1
+	github.com/zclconf/go-cty-yaml v1.0.2
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200715011427-11fb19a81f2c
