@@ -2,9 +2,11 @@ package pack
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/buildpacks/pack"
 	"github.com/buildpacks/pack/logging"
@@ -39,6 +41,10 @@ const DefaultBuilder = "heroku/buildpacks:18"
 // Config implements Configurable
 func (b *Builder) Config() (interface{}, error) {
 	return &b.config, nil
+}
+
+var skipBuildPacks = map[string]struct{}{
+	"heroku/procfile": {},
 }
 
 // Build
@@ -77,11 +83,56 @@ func (b *Builder) Build(
 		AppPath: src.Path,
 	})
 
+	build.Done()
+
 	if err != nil {
 		return nil, err
 	}
 
-	build.Done()
+	info, err := client.InspectImage(src.App, true)
+	if err != nil {
+		return nil, err
+	}
+
+	labels := map[string]string{}
+
+	var languages []string
+
+	for _, bp := range info.Buildpacks {
+		if _, ok := skipBuildPacks[bp.ID]; ok {
+			continue
+		}
+
+		idx := strings.IndexByte(bp.ID, '/')
+		if idx != -1 {
+			languages = append(languages, bp.ID[idx+1:])
+		} else {
+			languages = append(languages, bp.ID)
+		}
+	}
+
+	labels["common/languages"] = strings.Join(languages, ",")
+	labels["common/buildpack-stack"] = info.StackID
+
+	proc := info.Processes.DefaultProcess
+	if proc != nil {
+		cmd := proc.Command
+
+		if len(proc.Args) > 0 {
+			if len(cmd) > 0 {
+				cmd = fmt.Sprintf("%s %s", cmd, strings.Join(proc.Args, " "))
+			} else {
+				cmd = strings.Join(proc.Args, " ")
+			}
+		}
+
+		if cmd != "" {
+			labels["common/command"] = cmd
+			if proc.Type != "" {
+				labels["common/command-type"] = proc.Type
+			}
+		}
+	}
 
 	if !b.config.DisableCEB {
 		inject := sg.Add("Injecting entrypoint binary to image")
@@ -99,7 +150,7 @@ func (b *Builder) Build(
 			return nil, err
 		}
 
-		err = epinject.AlterEntrypoint(ctx, src.App+":latest", func(cur []string) (*epinject.NewEntrypoint, error) {
+		imageId, err := epinject.AlterEntrypoint(ctx, src.App+":latest", func(cur []string) (*epinject.NewEntrypoint, error) {
 			ep := &epinject.NewEntrypoint{
 				Entrypoint: append([]string{"/bin/wpceb"}, cur...),
 				InjectFiles: map[string]string{
@@ -114,6 +165,8 @@ func (b *Builder) Build(
 			return nil, err
 		}
 
+		labels["common/image-id"] = imageId
+
 		inject.Done()
 	}
 
@@ -124,7 +177,8 @@ func (b *Builder) Build(
 	// We don't even need to inspect Docker to verify we have the image.
 	// If `pack` succeeded we can assume that it created an image for us.
 	return &DockerImage{
-		Image: src.App,
-		Tag:   "latest", // It always tags latest
+		Image:       src.App,
+		Tag:         "latest", // It always tags latest
+		BuildLabels: labels,
 	}, nil
 }

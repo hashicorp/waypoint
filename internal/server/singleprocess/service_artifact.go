@@ -37,7 +37,6 @@ func (s *service) UpsertPushedArtifact(
 	return &pb.UpsertPushedArtifactResponse{Artifact: result}, nil
 }
 
-// TODO: test
 func (s *service) ListPushedArtifacts(
 	ctx context.Context,
 	req *pb.ListPushedArtifactsRequest,
@@ -49,6 +48,22 @@ func (s *service) ListPushedArtifacts(
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if req.IncludeBuild {
+		for _, a := range result {
+			b, err := s.state.BuildGet(&pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: a.BuildId,
+				},
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			a.Build = b
+		}
 	}
 
 	return &pb.ListPushedArtifactsResponse{Artifacts: result}, nil

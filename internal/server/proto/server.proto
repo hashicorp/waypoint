@@ -1148,6 +1148,10 @@ message ListPushedArtifactsRequest {
   // Specifies the order of results. If this isn't specified, the results
   // are in an undefined order.
   OperationOrder order = 2;
+
+  // Indicate if the Build value should be returned for each
+  // of the artifacts as well.
+  bool include_build = 5;
 }
 
 message ListPushedArtifactsResponse {
@@ -1182,6 +1186,10 @@ message PushedArtifact {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 6;
+
+  // If include_build was set on the list request, this will include
+  // the Build value associated with the given build_id.
+  Build build = 10;
 }
 
 /********************************************************************
@@ -1239,6 +1247,10 @@ message ListDeploymentsRequest {
   // Specifies the order of results. If this isn't specified, the results
   // are in an undefined order.
   OperationOrder order = 2;
+
+  // Inidicate of the fetched deployments should include additional information
+  // about each deployment.
+  Deployment.LoadDetails load_details = 6;
 }
 
 message ListDeploymentsResponse {
@@ -1280,6 +1292,19 @@ message Deployment {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 7;
+
+  enum LoadDetails {
+    NONE = 0;
+    ARTIFACT = 1;
+    BUILD = 2;
+  }
+
+  // Populated when a Deployment is read with LoadDetails set
+  // to ARTIFACT or BUILD
+  PushedArtifact artifact = 11;
+
+  // Populated when a Deployment is read with LoadDetails set to BUILD
+  Build build = 12;
 }
 
 /********************************************************************

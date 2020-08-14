@@ -54,7 +54,7 @@ func TestEPInject(t *testing.T) {
 
 		ctx = hclog.WithContext(ctx, L)
 
-		err = AlterEntrypoint(ctx, "nginx:latest", func(cur []string) (*NewEntrypoint, error) {
+		_, err = AlterEntrypoint(ctx, "nginx:latest", func(cur []string) (*NewEntrypoint, error) {
 			assert.Equal(t, origEp, cur)
 
 			ep := &NewEntrypoint{

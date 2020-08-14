@@ -67,7 +67,6 @@ func (s *service) UpsertDeployment(
 	return &pb.UpsertDeploymentResponse{Deployment: result}, nil
 }
 
-// TODO: test
 func (s *service) ListDeployments(
 	ctx context.Context,
 	req *pb.ListDeploymentsRequest,
@@ -80,6 +79,36 @@ func (s *service) ListDeployments(
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if req.LoadDetails == pb.Deployment_ARTIFACT || req.LoadDetails == pb.Deployment_BUILD {
+		for _, dep := range result {
+			pa, err := s.state.ArtifactGet(&pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: dep.ArtifactId,
+				},
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			dep.Artifact = pa
+
+			if req.LoadDetails == pb.Deployment_BUILD {
+				build, err := s.state.BuildGet(&pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Id{
+						Id: pa.BuildId,
+					},
+				})
+
+				if err != nil {
+					return nil, err
+				}
+
+				dep.Build = build
+			}
+		}
 	}
 
 	return &pb.ListDeploymentsResponse{Deployments: result}, nil

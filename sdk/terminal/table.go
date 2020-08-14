@@ -50,6 +50,7 @@ func (u *basicUI) Table(tbl *Table, opts ...Option) {
 	table := tablewriter.NewWriter(cfg.Writer)
 	table.SetHeader(tbl.Headers)
 	table.SetBorder(false)
+	table.SetAutoWrapText(false)
 
 	for _, row := range tbl.Rows {
 		colors := make([]tablewriter.Colors, len(row))

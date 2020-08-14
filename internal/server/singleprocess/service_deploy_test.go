@@ -166,3 +166,84 @@ func TestServiceDeployment_GetDeployment(t *testing.T) {
 		require.Equal(codes.NotFound, st.Code())
 	})
 }
+
+func TestServiceDeployment_ListDeployments(t *testing.T) {
+	ctx := context.Background()
+
+	// Create our server
+	db := testDB(t)
+	impl, err := New(WithDB(db))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
+		Build: serverptypes.TestValidBuild(t, nil),
+	})
+
+	build := buildresp.Build
+
+	artifact := serverptypes.TestValidArtifact(t, nil)
+	artifact.BuildId = build.Id
+
+	artifactresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
+		Artifact: artifact,
+	})
+
+	dep := serverptypes.TestValidDeployment(t, nil)
+	dep.ArtifactId = artifactresp.Artifact.Id
+
+	// Best way to mock for now is to make a request
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: dep,
+	})
+
+	require.NoError(t, err)
+
+	// Simplify writing tests
+	type Req = pb.ListDeploymentsRequest
+
+	t.Run("list", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get, should return a deployment
+		deployments, err := client.ListDeployments(ctx, &Req{
+			Application: resp.Deployment.Application,
+		})
+		require.NoError(err)
+		require.NotEmpty(deployments)
+		require.Equal(deployments.Deployments[0].Id, resp.Deployment.Id)
+	})
+
+	t.Run("list with artifact", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get, should return a deployment
+		deployments, err := client.ListDeployments(ctx, &Req{
+			Application: resp.Deployment.Application,
+			LoadDetails: pb.Deployment_ARTIFACT,
+		})
+		require.NoError(err)
+		require.NotEmpty(deployments)
+		require.Equal(deployments.Deployments[0].Id, resp.Deployment.Id)
+		require.NotNil(deployments.Deployments[0].Artifact)
+		require.Nil(deployments.Deployments[0].Build)
+		require.Equal(deployments.Deployments[0].Artifact.Id, artifactresp.Artifact.Id)
+	})
+
+	t.Run("list with build", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get, should return a deployment
+		deployments, err := client.ListDeployments(ctx, &Req{
+			Application: resp.Deployment.Application,
+			LoadDetails: pb.Deployment_BUILD,
+		})
+		require.NoError(err)
+		require.NotEmpty(deployments)
+		require.Equal(deployments.Deployments[0].Id, resp.Deployment.Id)
+		require.NotNil(deployments.Deployments[0].Artifact)
+		require.NotNil(deployments.Deployments[0].Build)
+		require.Equal(deployments.Deployments[0].Artifact.Id, artifactresp.Artifact.Id)
+		require.Equal(deployments.Deployments[0].Build.Id, build.Id)
+	})
+}

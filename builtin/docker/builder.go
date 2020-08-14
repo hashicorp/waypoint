@@ -139,7 +139,7 @@ func (b *Builder) Build(
 			return nil, err
 		}
 
-		err = epinject.AlterEntrypoint(ctx, result.Name(), func(cur []string) (*epinject.NewEntrypoint, error) {
+		_, err = epinject.AlterEntrypoint(ctx, result.Name(), func(cur []string) (*epinject.NewEntrypoint, error) {
 			ep := &epinject.NewEntrypoint{
 				Entrypoint: append([]string{"/bin/wpceb"}, cur...),
 				InjectFiles: map[string]string{

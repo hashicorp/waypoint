@@ -40,10 +40,10 @@ type NewEntrypoint struct {
 	InjectFiles map[string]string
 }
 
-func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*NewEntrypoint, error)) error {
+func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*NewEntrypoint, error)) (string, error) {
 	dc, err := dockerClient(ctx)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	L := hclog.FromContext(ctx)
@@ -52,7 +52,7 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 
 	info, _, err := dc.ImageInspectWithRaw(ctx, image)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	icfg := info.Config
@@ -61,7 +61,7 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 
 	newEp, err := f(icfg.Entrypoint)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if newEp.Entrypoint != nil {
@@ -74,7 +74,7 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 
 	u, err := ulid.New(ulid.Now(), rand.Reader)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	name := "epinject-" + u.String()
@@ -87,7 +87,7 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 
 	body, err := dc.ContainerCreate(ctx, &cfg, &hostCfg, &networkCfg, name)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Force a cleanup of our temporary container
@@ -100,7 +100,7 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 
 		f, err := os.Open(host)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		defer f.Close()
@@ -110,7 +110,7 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 		fi, err := f.Stat()
 		hdr, err := tar.FileInfoHeader(fi, "")
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		hdr.Name = filepath.Base(container)
@@ -120,7 +120,7 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 
 		err = dc.CopyToContainer(ctx, body.ID, filepath.Dir(container), &buf, types.CopyToContainerOptions{})
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		L.Debug("injected file into new image", "host", host, "container", container)
@@ -132,11 +132,15 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 		L.Debug("creating new image", "image", newEp.NewImage)
 	}
 
-	_, err = dc.ContainerCommit(ctx, body.ID, types.ContainerCommitOptions{
+	idr, err := dc.ContainerCommit(ctx, body.ID, types.ContainerCommitOptions{
 		Reference: newEp.NewImage,
 		Comment:   fmt.Sprintf("Alter image '%s' to modify entrypoint", image),
 		Config:    icfg,
 	})
 
-	return err
+	if err != nil {
+		return "", err
+	}
+
+	return idr.ID, nil
 }
