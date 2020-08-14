@@ -30,6 +30,7 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
 	github.com/gliderlabs/ssh v0.2.2
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-openapi/runtime v0.19.15
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
@@ -50,7 +51,7 @@ require (
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
 	github.com/hashicorp/waypoint-hzn v0.0.0-20200716172850-719df2bafd65
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
-	github.com/imdario/mergo v0.3.8
+	github.com/imdario/mergo v0.3.9
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
 	github.com/lab47/vterm v0.0.0-20200730001001-14f91f37349f
