@@ -3,8 +3,6 @@ package config
 import (
 	"os"
 	"path/filepath"
-
-	"github.com/hashicorp/hcl/v2/hclsimple"
 )
 
 // Filename is the default filename for the Waypoint configuration.
@@ -45,16 +43,4 @@ func FindPath(start, filename string) (string, error) {
 
 		start = next
 	}
-}
-
-func (c *Config) LoadPath(path string) error {
-	if err := hclsimple.DecodeFile(path, nil, c); err != nil {
-		return err
-	}
-
-	return c.LoadEnv()
-}
-
-func (c *Config) LoadEnv() error {
-	return nil
 }
