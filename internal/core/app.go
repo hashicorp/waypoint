@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/hcl/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -71,7 +72,12 @@ type appComponent struct {
 // initialize and configure all the components of this application. An error
 // will be returned if this app fails to initialize: configuration is invalid,
 // a component could not be found, etc.
-func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
+func newApp(
+	ctx context.Context,
+	p *Project,
+	cfg *config.App,
+	evalContext *hcl.EvalContext,
+) (*App, error) {
 	// Initialize
 	app := &App{
 		project:    p,
@@ -120,7 +126,7 @@ func newApp(ctx context.Context, p *Project, cfg *config.App) (*App, error) {
 			continue
 		}
 
-		err = app.initComponent(ctx, c.Type, c.Target, p.factories[c.Type], c.Config, c.Config.Labels)
+		err = app.initComponent(ctx, evalContext, c.Type, c.Target, p.factories[c.Type], c.Config, c.Config.Labels)
 		if err != nil {
 			return nil, err
 		}
@@ -281,6 +287,7 @@ func (a *App) callDynamicFunc(
 // and then sets it on the value pointed to by target.
 func (a *App) initComponent(
 	ctx context.Context,
+	evalContext *hcl.EvalContext,
 	typ component.Type,
 	target interface{},
 	f *factory.Factory,
@@ -345,7 +352,7 @@ func (a *App) initComponent(
 
 	// Configure the component. This will handle all the cases where no
 	// config is given but required, vice versa, and everything in between.
-	diag := component.Configure(raw, cfg.Body, nil)
+	diag := component.Configure(raw, cfg.Body, evalContext)
 	if diag.HasErrors() {
 		return diag
 	}
