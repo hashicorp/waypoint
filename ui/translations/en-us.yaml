@@ -18,3 +18,9 @@ page:
     title: 'Builds'
   deployments:
     title: 'Deployments'
+
+login:
+  input:
+    placeholder: 'Token value'
+    button: 'Login'
+    label: 'Login'

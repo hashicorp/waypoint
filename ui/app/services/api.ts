@@ -11,6 +11,9 @@ export default class ApiService extends Service {
 
   // Merges metadata with required metadata for the request
   WithMeta(meta?: any) {
+    // In the future we may want additional metadata per-request so this
+    // helper merges that per-request metadata supplied at the client request
+    // with our authentication metadata
     return assign(this.meta, meta!).valueOf();
   }
 }
