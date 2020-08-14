@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os/exec"
 
@@ -53,8 +54,27 @@ func (s *VCSGit) refFunc(args []cty.Value, retType cty.Type) (cty.Value, error) 
 	if err != nil {
 		return cty.UnknownVal(cty.String), err
 	}
-
 	result := ref.Hash().String()
+
+	// Get the tags
+	iter, err := s.repo.Tags()
+	if err != nil {
+		return cty.UnknownVal(cty.String), err
+	}
+	defer iter.Close()
+	for {
+		tagRef, err := iter.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return cty.UnknownVal(cty.String), err
+		}
+		if tagRef.Hash() == ref.Hash() {
+			result = tagRef.Name().Short()
+			break
+		}
+	}
 
 	// To determine if there are changes we subprocess because go-git's Status
 	// function is really, really slow sadly. On the waypoint repo at the time
