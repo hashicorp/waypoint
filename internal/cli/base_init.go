@@ -3,6 +3,9 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+
+	"github.com/hashicorp/hcl/v2/hclsimple"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
@@ -46,8 +49,10 @@ func (c *baseCommand) initConfigPath() (string, error) {
 
 // initConfigLoad loads the configuration at the given path.
 func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
+	configCtx := configpkg.EvalContext(filepath.Dir(path))
+
 	var cfg configpkg.Config
-	return &cfg, cfg.LoadPath(path)
+	return &cfg, hclsimple.DecodeFile(path, configCtx, &cfg)
 }
 
 // initClient initializes the client.
