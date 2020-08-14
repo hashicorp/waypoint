@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty/function"
 
 	"github.com/hashicorp/waypoint/internal/config/funcs"
 )
@@ -18,7 +19,15 @@ func EvalContext(pwd string) *hcl.EvalContext {
 	// Start with our HCL stdlib
 	result.Functions = funcs.Stdlib()
 
+	// add functions to our context
+	addFuncs := func(fs map[string]function.Function) {
+		for k, v := range fs {
+			result.Functions[k] = v
+		}
+	}
+
 	// Add some of our functions
+	addFuncs(funcs.VCSGitFuncs(pwd))
 
 	return &result
 }
