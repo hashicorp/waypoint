@@ -9,7 +9,7 @@ export default class Index extends Route {
   @service currentWorkspace!: CurrentWorkspaceService;
 
   async model() {
-    let resp = await this.api.client.listProjects(new Empty(), {});
+    let resp = await this.api.client.listProjects(new Empty(), this.api.WithMeta());
     let projects = resp.getProjectsList().map((p) => p.toObject());
 
     return projects;

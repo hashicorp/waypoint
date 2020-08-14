@@ -15,7 +15,7 @@ export default class Builds extends Route {
     req.setApplication(this.currentApplication.ref);
     req.setWorkspace(this.currentWorkspace.ref);
 
-    var resp = await this.api.client.listBuilds(req, {});
+    var resp = await this.api.client.listBuilds(req, this.api.WithMeta());
     let buildResp: ListBuildsResponse = resp;
 
     return buildResp.getBuildsList().map((b) => b.toObject());

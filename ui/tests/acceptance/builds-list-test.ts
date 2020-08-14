@@ -18,6 +18,9 @@ module('Acceptance | builds list', function (hooks) {
   setupMirage(hooks);
 
   test('visiting /builds', async function (assert) {
+    // todo(pearkes): generalize login
+    window.localStorage.waypointAuthToken = 'foo';
+
     await page.visit();
     await a11yAudit();
 
