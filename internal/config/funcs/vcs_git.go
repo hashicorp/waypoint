@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os/exec"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/zclconf/go-cty/cty"
@@ -91,7 +92,7 @@ func (s *VCSGit) refPrettyFunc(args []cty.Value, retType cty.Type) (cty.Value, e
 		}
 
 		if exitError.ExitCode() != 0 {
-			result += "_CHANGES"
+			result += fmt.Sprintf("_CHANGES_%d", time.Now().Unix())
 		}
 	}
 
