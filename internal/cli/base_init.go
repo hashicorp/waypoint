@@ -52,7 +52,16 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 	configCtx := configpkg.EvalContext(filepath.Dir(path))
 
 	var cfg configpkg.Config
-	return &cfg, hclsimple.DecodeFile(path, configCtx, &cfg)
+	if err := hclsimple.DecodeFile(path, configCtx, &cfg); err != nil {
+		return nil, err
+	}
+
+	// Set the proper defaults
+	if err := cfg.Default(); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
 }
 
 // initClient initializes the client.
