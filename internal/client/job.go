@@ -27,8 +27,10 @@ func (c *Project) job() *pb.Job {
 			Project: c.project.Project,
 		},
 
-		DataSource: &pb.Job_Local_{
-			Local: &pb.Job_Local{},
+		DataSource: &pb.Job_DataSource{
+			Source: &pb.Job_DataSource_Local{
+				Local: &pb.Job_Local{},
+			},
 		},
 
 		Operation: &pb.Job_Noop_{
