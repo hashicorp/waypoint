@@ -6,7 +6,7 @@ import (
 
 // Config is the configuration structure.
 type Config struct {
-	Runner  *Runner           `hcl:"runner,block"`
+	Runner  *Runner           `hcl:"runner,block" default:"{}"`
 	Project string            `hcl:"project,attr"`
 	Apps    []*App            `hcl:"app,block"`
 	Labels  map[string]string `hcl:"labels,optional"`
@@ -68,6 +68,13 @@ type Runner struct {
 	// Enabled is whether or not runners are enabled. If this is false
 	// then the "-remote" flag will not work.
 	Enabled bool `hcl:"enabled,attr"`
+
+	// DataSource is the default data source when a remote job is queued.
+	DataSource *RunnerDataSource `hcl:"data_source,block" default:"{}"`
+}
+
+type RunnerDataSource struct {
+	Type string `hcl:",label" default:"auto"`
 }
 
 // Hook is the configuration for a hook that runs at specified times.
