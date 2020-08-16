@@ -279,7 +279,8 @@ func (c *InitCommand) validateProject() bool {
 
 		resp, err := client.UpsertProject(c.Ctx, &pb.UpsertProjectRequest{
 			Project: &pb.Project{
-				Name: ref.Project,
+				Name:          ref.Project,
+				RemoteEnabled: c.cfg.Runner.Enabled,
 			},
 		})
 		if err != nil {
