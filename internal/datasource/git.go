@@ -20,7 +20,7 @@ import (
 
 type GitSource struct{}
 
-func newGitSource() interface{} { return &GitSource{} }
+func newGitSource() Sourcer { return &GitSource{} }
 
 func (s *GitSource) ProjectSource(body hcl.Body, ctx *hcl.EvalContext) (*pb.Job_DataSource, error) {
 	// Decode

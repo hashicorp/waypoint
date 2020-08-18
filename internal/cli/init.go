@@ -17,6 +17,7 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/datasource"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
@@ -277,10 +278,29 @@ func (c *InitCommand) validateProject() bool {
 		s.Status(terminal.StatusWarn)
 		s.Update("Project %q is not registered with the server. Registering...", ref.Project)
 
+		// We need to load the data source configuration if we have it
+		var ds *pb.Job_DataSource
+		if dscfg := c.cfg.Runner.DataSource; dscfg != nil {
+			factory, ok := datasource.FromString[dscfg.Type]
+			if !ok {
+				c.stepError(s, initStepProject, fmt.Errorf(
+					"runner data source type %q unknown", dscfg.Type))
+				return false
+			}
+
+			source := factory()
+			ds, err = source.ProjectSource(dscfg.Body, c.cfgCtx)
+			if err != nil {
+				c.stepError(s, initStepProject, err)
+				return false
+			}
+		}
+
 		resp, err := client.UpsertProject(c.Ctx, &pb.UpsertProjectRequest{
 			Project: &pb.Project{
 				Name:          ref.Project,
 				RemoteEnabled: c.cfg.Runner.Enabled,
+				DataSource:    ds,
 			},
 		})
 		if err != nil {

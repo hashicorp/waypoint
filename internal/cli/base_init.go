@@ -49,10 +49,10 @@ func (c *baseCommand) initConfigPath() (string, error) {
 
 // initConfigLoad loads the configuration at the given path.
 func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
-	configCtx := configpkg.EvalContext(filepath.Dir(path))
+	c.cfgCtx = configpkg.EvalContext(filepath.Dir(path))
 
 	var cfg configpkg.Config
-	if err := hclsimple.DecodeFile(path, configCtx, &cfg); err != nil {
+	if err := hclsimple.DecodeFile(path, c.cfgCtx, &cfg); err != nil {
 		return nil, err
 	}
 

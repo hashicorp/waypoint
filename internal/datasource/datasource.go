@@ -37,12 +37,12 @@ type Sourcer interface {
 
 var (
 	// FromString maps a string key to a source implementation.
-	FromString = map[string]func() interface{}{
+	FromString = map[string]func() Sourcer{
 		"git": newGitSource,
 	}
 
 	// FromType maps a server DataSource type to a source implementation.
-	FromType = map[reflect.Type]func() interface{}{
+	FromType = map[reflect.Type]func() Sourcer{
 		reflect.TypeOf((*pb.Job_DataSource_Git)(nil)): newGitSource,
 	}
 )

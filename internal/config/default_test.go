@@ -87,13 +87,6 @@ func TestConfigDefault(t *testing.T) {
 			"/Runner/Enabled",
 			false,
 		},
-
-		{
-			"runner: auto data source by default",
-			&Config{},
-			"/Runner/DataSource/Type",
-			"auto",
-		},
 	}
 
 	for _, tt := range cases {

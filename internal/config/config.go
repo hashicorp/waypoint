@@ -70,11 +70,13 @@ type Runner struct {
 	Enabled bool `hcl:"enabled,attr"`
 
 	// DataSource is the default data source when a remote job is queued.
-	DataSource *RunnerDataSource `hcl:"data_source,block" default:"{}"`
+	DataSource *DataSource `hcl:"data_source,block"`
 }
 
-type RunnerDataSource struct {
-	Type string `hcl:",label" default:"auto"`
+// DataSource configures the data source for the runner.
+type DataSource struct {
+	Type string   `hcl:",label"`
+	Body hcl.Body `hcl:",remain"`
 }
 
 // Hook is the configuration for a hook that runs at specified times.
