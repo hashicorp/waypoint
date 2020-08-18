@@ -17,13 +17,14 @@ import (
 type Project struct {
 	UI terminal.UI
 
-	client      pb.WaypointClient
-	logger      hclog.Logger
-	project     *pb.Ref_Project
-	workspace   *pb.Ref_Workspace
-	runner      *pb.Ref_Runner
-	labels      map[string]string
-	cleanupFunc func()
+	client              pb.WaypointClient
+	logger              hclog.Logger
+	project             *pb.Ref_Project
+	workspace           *pb.Ref_Workspace
+	runner              *pb.Ref_Runner
+	labels              map[string]string
+	dataSourceOverrides map[string]string
+	cleanupFunc         func()
 
 	local bool
 
@@ -162,6 +163,14 @@ func WithClientConnect(opts ...serverclient.ConnectOption) Option {
 func WithLabels(m map[string]string) Option {
 	return func(c *Project, cfg *config) error {
 		c.labels = m
+		return nil
+	}
+}
+
+// WithSourceOverrides sets the data source overrides for queued jobs.
+func WithSourceOverrides(m map[string]string) Option {
+	return func(c *Project, cfg *config) error {
+		c.dataSourceOverrides = m
 		return nil
 	}
 }

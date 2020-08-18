@@ -32,6 +32,7 @@ func (c *Project) job() *pb.Job {
 				Local: &pb.Job_Local{},
 			},
 		},
+		DataSourceOverrides: c.dataSourceOverrides,
 
 		Operation: &pb.Job_Noop_{
 			Noop: &pb.Job_Noop{},
