@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -35,6 +36,23 @@ func (app *App) Validate() error {
 	var result error
 	if errs := ValidateLabels(app.Labels); len(errs) > 0 {
 		result = multierror.Append(result, errs...)
+	}
+
+	// If a path is specified, it must be relative and it must not
+	// contain any "..".
+	if app.Path != "" {
+		if filepath.IsAbs(app.Path) {
+			result = multierror.Append(result, fmt.Errorf(
+				"path: must be a relative path"))
+		}
+
+		for _, part := range filepath.SplitList(app.Path) {
+			if part == ".." {
+				result = multierror.Append(result, fmt.Errorf(
+					"path: must not contain .. entries"))
+				break
+			}
+		}
 	}
 
 	for k, v := range app.validatorChildren() {

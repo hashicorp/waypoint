@@ -65,6 +65,7 @@ func (r *Runner) executeJob(
 		core.WithConfig(&cfg),
 		core.WithConfigContext(configCtx),
 		core.WithDataDir(projDir),
+		core.WithRootDir(filepath.Dir(path)),
 		core.WithLabels(job.Labels),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),

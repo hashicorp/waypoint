@@ -33,6 +33,10 @@ type Project struct {
 	mappers   []*argmapper.Func
 	client    pb.WaypointClient
 
+	// root is the root directory for this project (typically where
+	// the waypoint.hcl file is).
+	root string
+
 	// name is the name of the project
 	name string
 
@@ -69,6 +73,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		workspace: "default",
 		apps:      make(map[string]*App),
 		jobInfo:   &component.JobInfo{},
+		root:      ".",
 		factories: map[component.Type]*factory.Factory{
 			component.BuilderType:        plugin.Builders,
 			component.RegistryType:       plugin.Registries,
@@ -248,6 +253,12 @@ func WithDataDir(dir *datadir.Project) Option {
 // is not provided, a default logger will be used (`hclog.L()`).
 func WithLogger(log hclog.Logger) Option {
 	return func(p *Project, opts *options) { p.logger = log }
+}
+
+// WithRootDir sets the root directory for the project. This is where
+// the root configuration is.
+func WithRootDir(dir string) Option {
+	return func(p *Project, opts *options) { p.root = dir }
 }
 
 // WithFactory sets a factory for a component type. If this isn't set for
