@@ -27,6 +27,11 @@ func (r *Runner) downloadJobData(
 	source *pb.Job_DataSource,
 	overrides map[string]string,
 ) (string, func() error, error) {
+	if source == nil {
+		return "", nil, status.Errorf(codes.Internal,
+			"data source not set for job")
+	}
+
 	// Determine our sourcer
 	typ := reflect.TypeOf(source.Source)
 	factory, ok := datasource.FromType[typ]
