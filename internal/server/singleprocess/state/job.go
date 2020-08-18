@@ -890,7 +890,7 @@ func (s *State) jobCandidateById(memTxn *memdb.Txn, ws memdb.WatchSet, r *runner
 		}
 
 		job := raw.(*jobIndex)
-		if job.State != pb.Job_QUEUED || job.TargetRunnerId == "" {
+		if job.State != pb.Job_QUEUED || job.TargetRunnerId != r.Id {
 			continue
 		}
 
