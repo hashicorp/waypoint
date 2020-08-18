@@ -67,7 +67,7 @@ type Server struct {
 type Runner struct {
 	// Enabled is whether or not runners are enabled. If this is false
 	// then the "-remote" flag will not work.
-	Enabled bool `hcl:"enabled,attr"`
+	Enabled bool `hcl:"enabled,optional"`
 
 	// DataSource is the default data source when a remote job is queued.
 	DataSource *DataSource `hcl:"data_source,block"`
