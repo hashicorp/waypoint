@@ -19,6 +19,7 @@ func VCSGitFuncs(path string) map[string]function.Function {
 		"gitrefpretty": state.RefPrettyFunc(),
 		"gitrefhash":   state.RefHashFunc(),
 		"gitreftag":    state.RefTagFunc(),
+		"gitremoteurl": state.RemoteUrlFunc(),
 	}
 }
 
@@ -164,6 +165,47 @@ func (s *VCSGit) refTagFunc(args []cty.Value, retType cty.Type) (cty.Value, erro
 	}
 
 	return cty.StringVal(""), nil
+}
+
+// RemoteUrlFunc returns the URL for the matching remote or unknown
+// if it can't be found.
+//
+// waypoint:gitremoteurl
+func (s *VCSGit) RemoteUrlFunc() function.Function {
+	return function.New(&function.Spec{
+		Params: []function.Parameter{
+			{
+				Name: "name",
+				Type: cty.String,
+			},
+		},
+		Type: function.StaticReturnType(cty.String),
+		Impl: s.remoteUrlFunc,
+	})
+}
+
+func (s *VCSGit) remoteUrlFunc(args []cty.Value, retType cty.Type) (cty.Value, error) {
+	if err := s.init(); err != nil {
+		return cty.UnknownVal(cty.String), err
+	}
+
+	name := args[0].AsString()
+
+	remote, err := s.repo.Remote(name)
+	if err != nil {
+		if err == git.ErrRemoteNotFound {
+			err = nil
+		}
+
+		return cty.UnknownVal(cty.String), err
+	}
+
+	urls := remote.Config().URLs
+	if len(urls) == 0 {
+		return cty.UnknownVal(cty.String), nil
+	}
+
+	return cty.StringVal(urls[0]), nil
 }
 
 func (s *VCSGit) init() error {
