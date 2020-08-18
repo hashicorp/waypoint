@@ -27,8 +27,9 @@ import (
 type InitCommand struct {
 	*baseCommand
 
-	from string
-	into string
+	from   string
+	into   string
+	update bool
 
 	project *clientpkg.Project
 	cfg     *configpkg.Config
@@ -274,9 +275,13 @@ func (c *InitCommand) validateProject() bool {
 	}
 
 	// If the project itself is missing, then register that.
-	if project == nil {
-		s.Status(terminal.StatusWarn)
-		s.Update("Project %q is not registered with the server. Registering...", ref.Project)
+	if project == nil || c.update {
+		if project == nil {
+			s.Status(terminal.StatusWarn)
+			s.Update("Project %q is not registered with the server. Registering...", ref.Project)
+		} else {
+			s.Update("Updating project %q...", ref.Project)
+		}
 
 		// We need to load the data source configuration if we have it
 		var ds *pb.Job_DataSource
@@ -558,6 +563,14 @@ func (c *InitCommand) Flags() *flag.Sets {
 			Target:  &c.into,
 			Default: "",
 			Usage:   "Where to write the application fetched via -from",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "update",
+			Target:  &c.update,
+			Default: false,
+			Usage: "Update the project configuration if it already exists. This can be used " +
+				"to update settings such as the remote runner data source.",
 		})
 	})
 }
