@@ -157,7 +157,12 @@ func (r *Runner) Accept(ctx context.Context) error {
 
 	// We need to get our data source next prior to executing.
 	var result *pb.Job_Result
-	wd, closer, err := r.downloadJobData(ctx, log, assignment.Assignment.Job.DataSource)
+	wd, closer, err := r.downloadJobData(
+		ctx,
+		log,
+		assignment.Assignment.Job.DataSource,
+		assignment.Assignment.Job.DataSourceOverrides,
+	)
 	if err == nil {
 		if closer != nil {
 			defer func() {

@@ -1,16 +1,14 @@
 package runner
 
 import (
-	"bytes"
 	"context"
-	"io/ioutil"
-	"os"
-	"os/exec"
+	"reflect"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/datasource"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -25,62 +23,25 @@ func (r *Runner) downloadJobData(
 	ctx context.Context,
 	log hclog.Logger,
 	source *pb.Job_DataSource,
+	overrides map[string]string,
 ) (string, func() error, error) {
-	switch s := source.Source.(type) {
-	case *pb.Job_DataSource_Local:
-		// For local data, we just return empty.
-		return "", nil, nil
-
-	case *pb.Job_DataSource_Git:
-		return r.downloadJobData_git(ctx, log, s)
-
-	default:
+	// Determine our sourcer
+	typ := reflect.TypeOf(source.Source)
+	factory, ok := datasource.FromType[typ]
+	if !ok {
 		return "", nil, status.Errorf(codes.FailedPrecondition,
-			"unknown job data source type: %T", source.Source)
+			"invalid data source type: %s", typ.String())
 	}
-}
+	sourcer := factory()
 
-func (r *Runner) downloadJobData_git(
-	ctx context.Context,
-	log hclog.Logger,
-	source *pb.Job_DataSource_Git,
-) (string, func() error, error) {
-	// Create a temporary directory where we will store the cloned data.
-	td, err := ioutil.TempDir(r.tempDir, "waypoint")
-	if err != nil {
-		return "", nil, err
-	}
-	closer := func() error {
-		return os.RemoveAll(td)
-	}
-
-	// Clone
-	var output bytes.Buffer
-	cmd := exec.CommandContext(ctx, "git", "clone", source.Git.Url, td)
-	cmd.Stdout = &output
-	cmd.Stderr = &output
-	cmd.Stdin = nil
-	if err := cmd.Run(); err != nil {
-		closer()
-		return "", nil, status.Errorf(codes.Aborted,
-			"Git clone failed: %s", output.String())
-	}
-
-	// Checkout if we have a ref. If we don't have a ref we use the
-	// default of whatever we got.
-	if ref := source.Git.Ref; ref != "" {
-		output.Reset()
-		cmd := exec.CommandContext(ctx, "git", "checkout", ref)
-		cmd.Dir = td
-		cmd.Stdout = &output
-		cmd.Stderr = &output
-		cmd.Stdin = nil
-		if err := cmd.Run(); err != nil {
-			closer()
-			return "", nil, status.Errorf(codes.Aborted,
-				"Git checkout failed: %s", output.String())
+	// Apply any overrides
+	if len(overrides) > 0 {
+		if err := sourcer.Override(source, overrides); err != nil {
+			return "", nil, status.Errorf(codes.FailedPrecondition,
+				"error with data source overrides: %s", err)
 		}
 	}
 
-	return td, nil, nil
+	// Get data
+	return sourcer.Get(ctx, log, source, r.tempDir)
 }

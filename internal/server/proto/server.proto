@@ -465,7 +465,13 @@ message Job {
   // application source code and Waypoint configuration) comes from.
   // If this is not set then QueueJob will populate this if a default
   // data source is configured for the target project.
+  //
+  // The overrides will set overrides of configs for the data source. This is
+  // data source dependent but this allows for example setting the Git ref
+  // without knowing the full data source. Invalid overrides will fail the
+  // job.
   DataSource data_source = 6;
+  map<string, string> data_source_overrides = 7;
 
   // The operation to execute. See the message docs for details on the operation.
   oneof operation {
