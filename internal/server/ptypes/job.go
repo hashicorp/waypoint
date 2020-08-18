@@ -52,7 +52,6 @@ func ValidateJob(job *pb.Job) error {
 		validation.Field(&job.Application, validation.Required),
 		validation.Field(&job.Workspace, validation.Required),
 		validation.Field(&job.TargetRunner, validation.Required),
-		validation.Field(&job.DataSource, validation.Required),
 		validation.Field(&job.Operation, validation.Required),
 	)
 }

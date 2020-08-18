@@ -70,12 +70,24 @@ func (s *service) QueueJob(
 			)
 		}
 	} else {
-		_, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
+		project, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
 		if status.Code(err) == codes.NotFound {
 			return nil, status.Errorf(codes.NotFound,
 				"Project %s was not found! Please ensure that 'waypoint init' was run with this project.",
 				job.Application.Project,
 			)
+		}
+
+		if job.DataSource == nil {
+			if project.DataSource == nil {
+				return nil, status.Errorf(codes.FailedPrecondition,
+					"Project %s does not have a default data source. A data source must be manually "+
+						"specified for any queued jobs.",
+					job.Application.Project,
+				)
+			}
+
+			job.DataSource = project.DataSource
 		}
 	}
 
