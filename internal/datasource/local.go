@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type LocalSource struct{}
@@ -34,6 +35,7 @@ func (s *LocalSource) Override(raw *pb.Job_DataSource, m map[string]string) erro
 func (s *LocalSource) Get(
 	ctx context.Context,
 	log hclog.Logger,
+	ui terminal.UI,
 	raw *pb.Job_DataSource,
 	baseDir string,
 ) (string, func() error, error) {

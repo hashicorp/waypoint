@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 var testHasGit bool
@@ -115,6 +116,7 @@ func TestGitSourceGet(t *testing.T) {
 	dir, closer, err := s.Get(
 		context.Background(),
 		hclog.L(),
+		terminal.ConsoleUI(context.Background()),
 		&pb.Job_DataSource{
 			Source: &pb.Job_DataSource_Git{
 				Git: &pb.Job_Git{

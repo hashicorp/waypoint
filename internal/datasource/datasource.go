@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // Sourcer is implemented by all data sourcers and is responsible for
@@ -30,6 +31,7 @@ type Sourcer interface {
 	Get(
 		ctx context.Context,
 		log hclog.Logger,
+		ui terminal.UI,
 		source *pb.Job_DataSource,
 		baseDir string,
 	) (string, func() error, error)

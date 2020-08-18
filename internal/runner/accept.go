@@ -160,6 +160,7 @@ func (r *Runner) Accept(ctx context.Context) error {
 	wd, closer, err := r.downloadJobData(
 		ctx,
 		log,
+		ui,
 		assignment.Assignment.Job.DataSource,
 		assignment.Assignment.Job.DataSourceOverrides,
 	)

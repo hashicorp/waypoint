@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/datasource"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // downloadJobData takes the data source of the given job, gets the data,
@@ -22,6 +23,7 @@ import (
 func (r *Runner) downloadJobData(
 	ctx context.Context,
 	log hclog.Logger,
+	ui terminal.UI,
 	source *pb.Job_DataSource,
 	overrides map[string]string,
 ) (string, func() error, error) {
@@ -43,5 +45,5 @@ func (r *Runner) downloadJobData(
 	}
 
 	// Get data
-	return sourcer.Get(ctx, log, source, r.tempDir)
+	return sourcer.Get(ctx, log, ui, source, r.tempDir)
 }

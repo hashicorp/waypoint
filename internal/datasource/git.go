@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type GitSource struct{}
@@ -57,6 +58,7 @@ func (s *GitSource) Override(raw *pb.Job_DataSource, m map[string]string) error 
 func (s *GitSource) Get(
 	ctx context.Context,
 	log hclog.Logger,
+	ui terminal.UI,
 	raw *pb.Job_DataSource,
 	baseDir string,
 ) (string, func() error, error) {
@@ -69,6 +71,13 @@ func (s *GitSource) Get(
 	}
 	closer := func() error {
 		return os.RemoveAll(td)
+	}
+
+	// Output
+	ui.Output("Cloning data from Git", terminal.WithHeaderStyle())
+	ui.Output("URL: %s", source.Git.Url, terminal.WithInfoStyle())
+	if source.Git.Ref != "" {
+		ui.Output("Ref: %s", source.Git.Ref, terminal.WithInfoStyle())
 	}
 
 	// Clone
