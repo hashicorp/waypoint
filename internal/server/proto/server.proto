@@ -562,6 +562,11 @@ message Job {
     // a ref to checkout. If this isn't specified, then the default
     // ref that is cloned from the URL above will be used.
     string ref = 2;
+
+    // path is a subdirectory within the checked out repository to
+    // go into for the configuration. This must be a relative path
+    // and may not contain ".."
+    string path = 3;
   }
 
   // Noop operations do nothing. This is primarily used for testing.

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
@@ -34,7 +35,8 @@ func (s *GitSource) ProjectSource(body hcl.Body, ctx *hcl.EvalContext) (*pb.Job_
 	return &pb.Job_DataSource{
 		Source: &pb.Job_DataSource_Git{
 			Git: &pb.Job_Git{
-				Url: cfg.Url,
+				Url:  cfg.Url,
+				Path: cfg.Path,
 			},
 		},
 	}, nil
@@ -63,6 +65,21 @@ func (s *GitSource) Get(
 	baseDir string,
 ) (string, func() error, error) {
 	source := raw.Source.(*pb.Job_DataSource_Git)
+
+	// Some quick validation
+	if p := source.Git.Path; p != "" {
+		if filepath.IsAbs(p) {
+			return "", nil, status.Errorf(codes.FailedPrecondition,
+				"git path must be relative")
+		}
+
+		for _, part := range filepath.SplitList(p) {
+			if part == ".." {
+				return "", nil, status.Errorf(codes.FailedPrecondition,
+					"git path may not contain '..'")
+			}
+		}
+	}
 
 	// Create a temporary directory where we will store the cloned data.
 	td, err := ioutil.TempDir(baseDir, "waypoint")
@@ -108,11 +125,18 @@ func (s *GitSource) Get(
 		}
 	}
 
-	return td, nil, nil
+	// If we have a path, set it.
+	result := td
+	if p := source.Git.Path; p != "" {
+		result = filepath.Join(result, p)
+	}
+
+	return result, closer, nil
 }
 
 type gitConfig struct {
-	Url string `hcl:"url,attr"`
+	Url  string `hcl:"url,attr"`
+	Path string `hcl:"path,optional"`
 }
 
 var _ Sourcer = (*GitSource)(nil)
