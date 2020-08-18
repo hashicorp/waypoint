@@ -23,6 +23,7 @@ page:
 
 login:
   input:
-    placeholder: 'Token value'
-    button: 'Login'
-    label: 'Login'
+    placeholder: 'Enter your token from the CLI'
+    label: 'Then enter the token below'
+  button: 'Authenticate Waypoint Server'
+  instruction: 'Run the following command in the CLI to generate a token'

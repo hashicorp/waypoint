@@ -2,6 +2,7 @@
   @include Typography.Interface(M);
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   margin: 0;
   padding: scale.$sm-2 scale.$sm-1;
   border-radius: 2px;

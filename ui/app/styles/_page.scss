@@ -7,6 +7,13 @@ $box-shadow:
   0 2px 1px 1px rgba(color.$ui-cool-gray-600, .1);
 $button-box-shadow:
   0 3px 2px rgba(color.$ui-cool-gray-600, .2);
+$inset-box-shadow:
+  inset 0 0 0 1px rgba(color.$ui-cool-gray-600, .2),
+  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, .1);
+$glowing-box-shadow:
+  inset 0 0 0 1px rgba(color.$blue-500, .8),
+  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, .1),
+  0 0 0 3px rgba(color.$blue-500, .2);
 
 @import './_app-item';
 @import './_app-meta-item';
@@ -14,6 +21,7 @@ $button-box-shadow:
 @import './_breadcrumbs';
 @import './_button';
 @import './_icon-tile';
+@import './_login';
 
 #page {
   position: relative;
@@ -300,7 +308,28 @@ $button-box-shadow:
     height: 100%;
 
     .card {
-      padding: scale.$lg-12;
+      text-align: center;
+      padding: scale.$lg-8;
+    }
+
+    .logo {
+      color: color.$black;
+      width: scale.$lg-14;
+      height: scale.$lg-14;
+      padding: scale.$lg-1 scale.$base scale.$base;
+      background: color.$ui-cool-gray-050;
+      box-shadow: 0 0 0 1px color.$ui-cool-gray-100;
+      border-radius: 8px;
+    }
+
+    h1 {
+      margin: scale.$lg-2 auto scale.$sm-2;
+
+      & + p {
+        @include Typography.Interface(L);
+        color: color.$ui-cool-gray-600;
+        margin-bottom: scale.$lg-2;
+      }
     }
   }
 }
