@@ -32,5 +32,9 @@
     height: scale.$base;
     margin-left: -(scale.$sm-4);
     margin-right: scale.$sm-4;
+
+    &:only-child {
+      margin-right: -(scale.$sm-4);;
+    }
   }
 }
