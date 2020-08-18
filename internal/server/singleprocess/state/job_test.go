@@ -345,6 +345,46 @@ func TestJobAssign(t *testing.T) {
 		}
 	})
 
+	t.Run("assignment by ID no candidates", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build by ID
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+			TargetRunner: &pb.Ref_Runner{
+				Target: &pb.Ref_Runner_Id{
+					Id: &pb.Ref_RunnerId{
+						Id: "R_B",
+					},
+				},
+			},
+		})))
+
+		// Assign for R_A which should get nothing cause it doesn't match.
+		// NOTE that using "R_A" here is very important. This fixes a bug
+		// where our lower bound was picking up invalid IDs.
+		{
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			doneCh := make(chan struct{})
+			go func() {
+				defer close(doneCh)
+				s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+			}()
+
+			// We should be blocking
+			select {
+			case <-doneCh:
+				t.Fatal("should wait")
+
+			case <-time.After(500 * time.Millisecond):
+			}
+		}
+	})
+
 	t.Run("any cannot be assigned to ByIdOnly runner", func(t *testing.T) {
 		require := require.New(t)
 
