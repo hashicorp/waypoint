@@ -89,8 +89,20 @@ $glowing-box-shadow:
         padding-top: scale.$lg-6;
       }
 
-      h1 {
+      h1, h2 {
         margin: 0;
+        padding-bottom: scale.$sm-3;
+
+        code {
+          font-size: 1.2em;
+          font-weight: 500;
+        }
+
+        .badge {
+          position: relative;
+          top: -2px;
+          margin-right: scale.$sm-3;
+        }
       }
 
       small {
@@ -261,6 +273,37 @@ $glowing-box-shadow:
     .meta small {
       color: color.$ui-cool-gray-600;
       @include Typography.Interface(M);
+    }
+  }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: scale.$base 0;
+    border-top: 1px solid color.$ui-cool-gray-100;
+    color: color.$ui-cool-gray-600;
+    @include Typography.Interface(M);
+
+    .item {
+
+      a {
+        text-decoration: none;
+
+        .badge {
+          margin: 0 scale.$sm-4;
+        }
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        line-height: 1.1rem;
+        padding: scale.$sm-4 scale.$sm-3;
+      }
+
+      code {
+        font-size: 1.3em;
+      }
     }
   }
 
