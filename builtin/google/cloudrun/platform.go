@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/builtin/google/cloudrun/helper"
 	gcrhelper "github.com/hashicorp/waypoint/builtin/google/cloudrun/helper"
 	"github.com/kr/pretty"
 	"google.golang.org/api/googleapi"
@@ -23,11 +24,6 @@ import (
 	"github.com/hashicorp/waypoint/sdk/datadir"
 	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
-)
-
-const (
-	// todo: make user configurable
-	deployRegion = "us-central1"
 )
 
 // Platform is the Platform implementation for Google Cloud Run.
@@ -72,7 +68,7 @@ func (p *Platform) ValidateAuth(
 	ui terminal.UI,
 ) error {
 	apiService, err := run.NewService(ctx,
-		option.WithEndpoint("https://"+deployRegion+"-run.googleapis.com"),
+		option.WithEndpoint("https://"+p.config.Region+"-run.googleapis.com"),
 	)
 	if err != nil {
 		ui.Output("Error constructing api client: "+err.Error(), terminal.WithErrorStyle())
@@ -101,7 +97,7 @@ func (p *Platform) ValidateAuth(
 	// The resource we are checking permissions on
 	apiResource := fmt.Sprintf("projects/%s/locations/%s/services/%s",
 		p.config.Project,
-		deployRegion,
+		p.config.Region,
 		src.App,
 	)
 
@@ -138,10 +134,29 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	// create an api service for the region lookup
+	apiService, err := run.NewService(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, err.Error())
+	}
+
+	// Validate that the given region is available
+	pClient := run.NewProjectsLocationsService(apiService)
+	pls, err := pClient.List(fmt.Sprintf("projects/%s", p.config.Project)).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to list regions for project %s: %s", p.config.Project, err)
+	}
+
+	// validate the region defined in the config is available for deployment
+	err = helper.ValidateRegionAvailable(p.config.Region, pls.Locations)
+	if err != nil {
+		return nil, err
+	}
+
 	// Start building our deployment since we use this information
 	result := &Deployment{
 		Resource: &Deployment_Resource{
-			Location: deployRegion,
+			Location: p.config.Region,
 			Project:  p.config.Project,
 			Name:     src.App,
 		},
@@ -152,7 +167,7 @@ func (p *Platform) Deploy(
 	}
 	result.Id = id
 
-	apiService, err := run.NewService(ctx,
+	apiService, err = run.NewService(ctx,
 		option.WithEndpoint("https://"+result.Resource.Location+"-run.googleapis.com"),
 	)
 	if err != nil {
@@ -309,6 +324,8 @@ func (p *Platform) Destroy(
 type Config struct {
 	// Project is the project to deploy to.
 	Project string `hcl:"project,attr"`
+	// Region	is the GCP region to deploy to
+	Region string `hcl:"region,attr"`
 
 	// Unauthenticated, if set to true, will allow unauthenticated access
 	// to your deployment. This defaults to true.

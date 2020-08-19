@@ -15,5 +15,6 @@ app "wpmini" {
 
   deploy "google-cloud-run" {
       project = "waypoint-286812"
+      region = "europe-north1"
   }
 }
