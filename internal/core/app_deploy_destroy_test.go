@@ -146,6 +146,8 @@ const testPlatformConfig = `
 project = "test"
 
 app "test" {
-	deploy "test" {}
+	deploy {
+		use "test" {}
+	}
 }
 `

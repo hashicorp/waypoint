@@ -10,8 +10,8 @@
     AutoHostname: (*bool)(<nil>)
    }),
    Build: (*config.Build)(<nil>),
-   Platform: (*config.Operation)(<nil>),
-   Release: (*config.Operation)(<nil>)
+   Deploy: (*config.Deploy)(<nil>),
+   Release: (*config.Release)(<nil>)
   })
  },
  Labels: (map[string]string) <nil>

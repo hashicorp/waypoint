@@ -117,11 +117,11 @@ func newApp(
 	}{
 		{&app.Builder, component.BuilderType, cfg.Build.Operation()},
 		{&app.Registry, component.RegistryType, cfg.Build.RegistryOperation()},
-		{&app.Platform, component.PlatformType, cfg.Platform},
-		{&app.Releaser, component.ReleaseManagerType, cfg.Release},
+		{&app.Platform, component.PlatformType, cfg.Deploy.Operation()},
+		{&app.Releaser, component.ReleaseManagerType, cfg.Release.Operation()},
 	}
 	for _, c := range components {
-		if c.Config == nil {
+		if c.Config == nil || c.Config.Use == nil {
 			// This component is not set, ignore.
 			continue
 		}
@@ -305,13 +305,13 @@ func (a *App) initComponent(
 	targetV = reflect.Indirect(targetV)
 
 	// Get the factory function for this type
-	fn := f.Func(cfg.Type)
+	fn := f.Func(cfg.Use.Type)
 	if fn == nil {
-		return fmt.Errorf("unknown type: %q", cfg.Type)
+		return fmt.Errorf("unknown type: %q", cfg.Use.Type)
 	}
 
 	// Create the data directory for this component
-	cdir, err := a.dir.Component(strings.ToLower(typ.String()), cfg.Type)
+	cdir, err := a.dir.Component(strings.ToLower(typ.String()), cfg.Use.Type)
 	if err != nil {
 		return err
 	}
@@ -352,7 +352,7 @@ func (a *App) initComponent(
 
 	// Configure the component. This will handle all the cases where no
 	// config is given but required, vice versa, and everything in between.
-	diag := component.Configure(raw, cfg.Body, evalContext)
+	diag := component.Configure(raw, cfg.Use.Body, evalContext)
 	if diag.HasErrors() {
 		return diag
 	}
@@ -370,7 +370,7 @@ func (a *App) initComponent(
 	a.components[raw] = &appComponent{
 		Info: &pb.Component{
 			Type: pb.Component_Type(typ),
-			Name: cfg.Type,
+			Name: cfg.Use.Type,
 		},
 
 		Dir:    cdir,

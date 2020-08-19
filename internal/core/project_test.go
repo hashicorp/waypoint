@@ -26,6 +26,8 @@ const testNewProjectConfig = `
 project = "test"
 
 app "test" {
-	build "test" {}
+	build {
+		use "test" {}
+	}
 }
 `
