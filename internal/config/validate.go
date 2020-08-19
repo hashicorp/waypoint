@@ -51,7 +51,7 @@ func (app *App) Validate() error {
 func (app *App) validatorChildren() map[string]internalValidator {
 	result := map[string]internalValidator{
 		"build":   app.Build,
-		"deploy":  app.Platform,
+		"deploy":  app.Deploy,
 		"release": app.Release,
 	}
 
@@ -60,6 +60,22 @@ func (app *App) validatorChildren() map[string]internalValidator {
 	}
 
 	return result
+}
+
+func (c *Build) validate(key string) error {
+	return c.Operation().validate(key)
+}
+
+func (c *Deploy) validate(key string) error {
+	return c.Operation().validate(key)
+}
+
+func (c *Registry) validate(key string) error {
+	return c.Operation().validate(key)
+}
+
+func (c *Release) validate(key string) error {
+	return c.Operation().validate(key)
 }
 
 func (c *Operation) validate(key string) error {
@@ -101,14 +117,6 @@ func (h *Hook) validate(key string) error {
 	}
 
 	return multierror.Prefix(result, fmt.Sprintf("%s:", key))
-}
-
-func (b *Build) validate(key string) error {
-	if b == nil {
-		return nil
-	}
-
-	return b.Operation().validate(key)
 }
 
 // ValidateLabels validates a set of labels.

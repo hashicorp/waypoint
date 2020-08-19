@@ -1,11 +1,17 @@
 project = "foo"
 
 app "web" {
-    build "pack" {
-        registry "docker" {
-            name = "gcr.io/mitchellh-test/myapp:latest"
+    build {
+        use "pack" {}
+
+        registry {
+            use "docker" {
+                name = "gcr.io/mitchellh-test/myapp:latest"
+            }
         }
     }
 
-    deploy "google-cloud-run" {}
+    deploy {
+        use "google-cloud-run" {}
+    }
 }
