@@ -83,7 +83,9 @@ const testAuthPlatformConfig = `
 project = "test"
 
 app "test" {
-	deploy "test" {}
+	deploy {
+		use "test" {}
+	}
 }
 `
 
@@ -91,6 +93,8 @@ const testAuthBuilderConfig = `
 project = "test"
 
 app "test" {
-	build "test" {}
+	build {
+		use "test" {}
+	}
 }
 `

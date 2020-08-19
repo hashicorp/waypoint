@@ -18,6 +18,10 @@ func (b *Build) Operation() *Operation {
 }
 
 func (b *Build) RegistryOperation() *Operation {
+	if b == nil {
+		return nil
+	}
+
 	return b.Registry.Operation()
 }
 
