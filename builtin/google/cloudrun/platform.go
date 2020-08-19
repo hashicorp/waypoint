@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	gcrhelper "github.com/hashicorp/waypoint/builtin/google/cloudrun/helper"
+	"github.com/kr/pretty"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	run "google.golang.org/api/run/v1"
@@ -129,6 +131,13 @@ func (p *Platform) Deploy(
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
+	// Validate that the Docker image is stored in a GCP registry
+	// It is not possible to deploy to Cloud Run using external container registries
+	err := gcrhelper.ValidateImageName(img.Image, p.config.Project)
+	if err != nil {
+		return nil, err
+	}
+
 	// Start building our deployment since we use this information
 	result := &Deployment{
 		Resource: &Deployment_Resource{
@@ -160,8 +169,8 @@ func (p *Platform) Deploy(
 	// in the middle, we'll just error later.
 	create := false
 	client := run.NewNamespacesServicesService(apiService)
-	log.Trace("checking if service already exists", "service", result.apiName())
-	st.Update("Checking if service is already created")
+	log.Trace("checking if service has already exists", "service", result.apiName())
+	st.Update("Checking if service already exists")
 	service, err := client.Get(result.apiName()).Context(ctx).Do()
 	if err != nil {
 		gerr, ok := err.(*googleapi.Error)
@@ -231,10 +240,15 @@ func (p *Platform) Deploy(
 		// Create the service
 		log.Info("creating the service")
 		st.Update("Creating new Cloud Run service")
+		st := service
 		service, err = client.Create("namespaces/"+result.Resource.Project, service).
 			Context(ctx).Do()
 		if err != nil {
-			return nil, status.Errorf(codes.Aborted, err.Error())
+			gerr, ok := err.(*googleapi.Error)
+			if ok {
+				log.Error("Google Error", "error", pretty.Sprint(gerr), "service", pretty.Sprint(st))
+			}
+			return nil, status.Errorf(codes.Aborted, fmt.Sprintf("Unable to create Cloud Run service: %s", err.Error()))
 		}
 	} else {
 		// Update
