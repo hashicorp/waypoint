@@ -1,0 +1,69 @@
+---
+layout: docs
+page_title: Markdown Examples
+sidebar_title: Examples
+description: |-
+  Write a description here, this appears in search engines and social shares
+---
+
+# Example Page
+
+This is an example of a typical documentation page. Below are demos of various markdown features that are available to docs authors.
+
+### Code Blocks
+
+```shell-session
+$ echo 'shell example'
+```
+
+```hcl
+# These control access to the key/value store.
+key_prefix "" {
+  policy = "read"
+}
+```
+
+### Includes
+
+@include 'example.mdx'
+
+### Anchor Links ((#anchors))
+
+- the following syntax can be used for anchor link aliases: ((#foo))
+- `foo` ((#bar)) - lists that begin with inline code get anchor links
+- normal list items do not though
+
+### Alerts
+
+=> This is a **success** alert
+
+-> This is an **info** alert
+
+~> This is a **warning** alert
+
+!> This is a **danger** alert
+
+### Custom MDX Components
+
+<EnterpriseAlert product="vault" />
+
+<Tabs>
+<Tab heading='Ruby'>
+
+Here's some tabbed content. Make sure to check out the other tab too!
+
+```ruby
+puts 'hello world'
+```
+
+</Tab>
+<Tab heading='Javascript'>
+
+Hi I'm the other tab, nice to meet you!
+
+```js
+console.log('hello world')
+```
+
+</Tab>
+</Tabs>
