@@ -30,20 +30,6 @@ form.login {
     margin-bottom: scale.$lg-2;
   }
 
-  code.copyable {
-    color: color.$white;
-    background: color.$ui-gray-800;
-    font-size: scale.$base;
-    padding: scale.$sm-2 scale.$sm-2;
-    border-radius: 2px;
-
-    &::before {
-      content: '$';
-      opacity: 0.5;
-      margin-right: scale.$sm-2;
-    }
-  }
-
   input {
     font-size: scale.$base;
     padding: scale.$sm-2 scale.$sm-2;
