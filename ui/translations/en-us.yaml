@@ -20,6 +20,8 @@ page:
     title: 'Builds'
   deployments:
     title: 'Deployments'
+  releases:
+    title: 'Releases'
 
 login:
   input:

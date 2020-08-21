@@ -1,2 +1,33 @@
-<h3>Build detail page</h3>
-<p><i>todo(pearkes): need GetBuild API</i></p>
+<PageHeader @iconName="source-file">
+  <div class="title">
+    <h2><code>abcd1234</code></h2>
+    <small>
+      <span>Built with <b>Pack</b> 2 hours ago</span>
+    </small>
+  </div>
+  <div class="actions">
+    <button class="button button--secondary">
+      {{inline-svg "upload" class="icon"}}
+      <span>Deploy</span>
+    </button>
+  </div>
+</PageHeader>
+
+<div class="item-row">
+  <div class="item">
+    <b class="badge badge--success">
+      {{inline-svg "check-plain" class="icon"}}
+      <span>Built in 12 minutes 15 seconds</span>
+    </b>
+  </div>
+</div>
+
+<div class="output-pane">
+  <div class="output">
+    <code>build output row</code>
+    <code>build output row</code>
+    <code>build output row</code>
+    <code>build output row</code>
+    <code>build output row</code>
+  </div>
+</div>

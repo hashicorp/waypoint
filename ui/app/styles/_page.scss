@@ -115,6 +115,10 @@ $glowing-box-shadow:
     .actions {
       display: flex;
       margin-left: auto;
+
+      button {
+        margin-left: scale.$base;
+      }
     }
   }
 

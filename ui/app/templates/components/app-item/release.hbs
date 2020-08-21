@@ -1,0 +1,18 @@
+<li class="app-item">
+  <LinkTo @route="workspace.projects.project.app.release" @models={{array @release.id}}>
+    <p>
+      <b class="badge badge--version">v99</b>
+      <code>abcd1234</code>
+    </p>
+    <small>
+      {{inline-svg "logo-gcp-color" class="icon"}}
+      <span>Released on <b>GCP</b> 2 hours ago</span>
+    </small>
+  </LinkTo>
+  {{#if @isLatest}}
+    <button class="button button--primary">
+      <span>prod.wp-microship.com</span>
+      {{inline-svg "exit" class="icon"}}
+    </button>
+  {{/if}}
+</li>
