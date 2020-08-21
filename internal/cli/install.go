@@ -34,7 +34,6 @@ type InstallCommand struct {
 	contextName       string
 	contextDefault    bool
 	platform          string
-	nomadOpts         serverinstall.NomadInstallOptions
 }
 
 func (c *InstallCommand) InstallKubernetes(
@@ -234,7 +233,7 @@ func (c *InstallCommand) Run(args []string) int {
 
 		// ok, inline below.
 	case "nomad":
-		contextConfig, advertiseAddr, err = serverinstall.InstallNomad(ctx, c.ui, st, &c.config, &c.nomadOpts)
+		contextConfig, advertiseAddr, err = serverinstall.InstallNomad(ctx, c.ui, st, &c.config)
 		if err != nil {
 			c.ui.Output(
 				"Error installing server into Nomad: %s", err.Error(),
@@ -427,27 +426,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Usage:   "Platform to install the server into.",
 		})
 
-		f.StringVar(&flag.StringVar{
-			Name:    "nomad-region",
-			Target:  &c.nomadOpts.Region,
-			Default: "global",
-			Usage:   "Nomad region to install to if using Nomad platform",
-		})
-
-		f.StringSliceVar(&flag.StringSliceVar{
-			Name:    "nomad-dc",
-			Target:  &c.nomadOpts.Datacenters,
-			Default: []string{"dc1"},
-			Usage:   "Nomad datacenters to install to if using Nomad platform",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "nomad-namespace",
-			Target:  &c.nomadOpts.Namespace,
-			Default: "default",
-			Usage:   "Nomad namespace to install to if using Nomad platform",
-		})
-
+		serverinstall.NomadFlags(f)
 	})
 }
 

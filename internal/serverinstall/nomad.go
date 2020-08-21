@@ -8,20 +8,30 @@ import (
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
+var (
+	nomadRegionF      string
+	nomadDatacentersF []string
+	nomadNamespaceF   string
+)
+
+// InstallNomad registers a waypoint-server job with a Nomad cluster
 func InstallNomad(
-	ctx context.Context, ui terminal.UI, st terminal.Status, scfg *Config, opts *NomadInstallOptions) (
+	ctx context.Context, ui terminal.UI, st terminal.Status, scfg *Config) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, error,
 ) {
 
+	// Build api client from environment
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// Check if waypoint-server has already been deployed
 	jobs, _, err := client.Jobs().PrefixList("waypoint-server")
 	if err != nil {
 		return nil, nil, err
@@ -66,7 +76,7 @@ func InstallNomad(
 	}
 
 	st.Update("Installing waypoint server to Nomad")
-	job := waypointNomadJob(opts, scfg)
+	job := waypointNomadJob(scfg)
 
 	resp, _, err := client.Jobs().Register(job, nil)
 	if err != nil {
@@ -148,16 +158,10 @@ EVAL:
 	return &clicfg, &addr, nil
 }
 
-type NomadInstallOptions struct {
-	Namespace   string
-	Region      string
-	Datacenters []string
-}
-
-func waypointNomadJob(opts *NomadInstallOptions, scfg *Config) *api.Job {
-	job := api.NewServiceJob("waypoint-server", "waypoint-server", opts.Region, 50)
-	job.Namespace = &opts.Namespace
-	job.Datacenters = opts.Datacenters
+func waypointNomadJob(scfg *Config) *api.Job {
+	job := api.NewServiceJob("waypoint-server", "waypoint-server", nomadRegionF, 50)
+	job.Namespace = &nomadNamespaceF
+	job.Datacenters = nomadDatacentersF
 	job.Meta = scfg.ServiceAnnotations
 	tg := api.NewTaskGroup("waypoint-server", 1)
 	tg.Networks = []*api.NetworkResource{
@@ -199,4 +203,27 @@ func getAddrFromAllocID(allocID string, client *api.Client) (string, error) {
 	}
 
 	return "", nil
+}
+
+func NomadFlags(f *flag.Set) {
+	f.StringVar(&flag.StringVar{
+		Name:    "nomad-region",
+		Target:  &nomadRegionF,
+		Default: "global",
+		Usage:   "Nomad region to install to if using Nomad platform",
+	})
+
+	f.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-dc",
+		Target:  &nomadDatacentersF,
+		Default: []string{"dc1"},
+		Usage:   "Nomad datacenters to install to if using Nomad platform",
+	})
+
+	f.StringVar(&flag.StringVar{
+		Name:    "nomad-namespace",
+		Target:  &nomadNamespaceF,
+		Default: "default",
+		Usage:   "Nomad namespace to install to if using Nomad platform",
+	})
 }
