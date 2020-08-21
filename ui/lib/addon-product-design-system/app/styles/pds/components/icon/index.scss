@@ -10,9 +10,9 @@
 
   svg {
     fill: $color;
-    height: 1em;
+    height: 1em !important;
     stroke: none;
     vertical-align: bottom;
-    width: 1em;
+    width: 1em !important;
   }
 }

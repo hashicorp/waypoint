@@ -1,6 +1,6 @@
-@use 'cloud-ui/tokens/color';
-@use 'cloud-ui/tokens/scale';
-@use 'cloud-ui/tokens/typography' as Typography;
+@use 'pds/tokens/color';
+@use 'pds/tokens/scale';
+@use 'pds/tokens/typography' as Typography;
 
 form.login {
   display: flex;

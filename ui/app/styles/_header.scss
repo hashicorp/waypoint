@@ -1,11 +1,11 @@
-@use 'cloud-ui/tokens/color';
-@use 'cloud-ui/tokens/scale';
+@use 'pds/tokens/color';
+@use 'pds/tokens/scale';
 
 #header {
   position: sticky;
   top: 0;
   color: color.$white;
-  background-image: linear-gradient(to right, #191A1C 0%, #1B212D 100%);
+  background-image: linear-gradient(to right, #191a1c 0%, #1b212d 100%);
   display: flex;
   align-items: center;
   padding: scale.$base scale.$lg-4;
@@ -44,7 +44,7 @@
   }
 
   .soon {
-    opacity: .4;
+    opacity: 0.4;
     pointer-events: none;
   }
 }

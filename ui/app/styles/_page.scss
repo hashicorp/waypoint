@@ -1,23 +1,15 @@
-@use 'cloud-ui/tokens/color';
-@use 'cloud-ui/tokens/scale';
-@use 'cloud-ui/tokens/typography' as Typography;
+@use 'pds/tokens/color';
+@use 'pds/tokens/scale';
+@use 'pds/tokens/typography' as Typography;
 
-$box-shadow:
-  0 0 0 1px rgba(color.$ui-cool-gray-600, .2),
-  0 2px 1px 1px rgba(color.$ui-cool-gray-600, .1);
-$button-box-shadow:
-  0 3px 2px rgba(color.$ui-cool-gray-600, .2);
-$elevated-box-shadow:
-  0 0 0 1px rgba(color.$ui-cool-gray-600, .1),
-  0 6px 8px 4px rgba(color.$ui-cool-gray-600, .1),
-  0 3px 2px rgba(color.$ui-cool-gray-600, .2);
-$inset-box-shadow:
-  inset 0 0 0 1px rgba(color.$ui-cool-gray-600, .2),
-  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, .1);
-$glowing-box-shadow:
-  inset 0 0 0 1px rgba(color.$blue-500, .8),
-  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, .1),
-  0 0 0 3px rgba(color.$blue-500, .2);
+$box-shadow: 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.2), 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1);
+$button-box-shadow: 0 3px 2px rgba(color.$ui-cool-gray-600, 0.2);
+$elevated-box-shadow: 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.1),
+  0 6px 8px 4px rgba(color.$ui-cool-gray-600, 0.1), 0 3px 2px rgba(color.$ui-cool-gray-600, 0.2);
+$inset-box-shadow: inset 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.2),
+  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1);
+$glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
+  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1), 0 0 0 3px rgba(color.$blue-500, 0.2);
 
 @import './_app-item';
 @import './_app-meta-item';
@@ -43,16 +35,16 @@ $glowing-box-shadow:
     right: 0;
     width: 1200px;
     height: 600px;
-    background:
-      linear-gradient(to right, color.$white, rgba(color.$white, 0)),
+    background: linear-gradient(to right, color.$white, rgba(color.$white, 0)),
       linear-gradient(to left, color.$white, rgba(color.$white, 0)),
-      linear-gradient(to top, color.$white, color.$white, rgba(color.$white, 0)),
-      url(/images/topography.svg);
+      linear-gradient(to top, color.$white, color.$white, rgba(color.$white, 0)), url(/images/topography.svg);
     opacity: 0.2;
     z-index: -2;
   }
 
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     margin: 0 0 scale.$lg-2;
   }
 
@@ -93,7 +85,8 @@ $glowing-box-shadow:
         padding-top: scale.$lg-6;
       }
 
-      h1, h2 {
+      h1,
+      h2 {
         margin: 0;
         padding-bottom: scale.$sm-3;
 
@@ -166,7 +159,6 @@ $glowing-box-shadow:
   }
 
   ul.list {
-
     li {
       margin-bottom: scale.$base;
       padding-bottom: scale.$base;
@@ -218,7 +210,8 @@ $glowing-box-shadow:
       }
     }
 
-    h2, h4 {
+    h2,
+    h4 {
       margin: 0;
     }
 
@@ -253,7 +246,6 @@ $glowing-box-shadow:
   }
 
   .app-decoration {
-
     > small {
       display: block;
       color: color.$ui-cool-gray-600;
@@ -263,7 +255,6 @@ $glowing-box-shadow:
   }
 
   .app-latest {
-
     .app-meta-item {
       padding-top: scale.$sm-1;
       margin-top: scale.$sm-1;
@@ -295,7 +286,6 @@ $glowing-box-shadow:
     @include Typography.Interface(M);
 
     .item {
-
       a {
         text-decoration: none;
 
