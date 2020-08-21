@@ -121,7 +121,7 @@ EVAL:
 		switch allocs[0].ClientStatus {
 		case "running":
 			allocID = allocs[0].ID
-			st.Step(terminal.StatusOK, fmt.Sprintf("Nomad allocation running"))
+			st.Step(terminal.StatusOK, "Nomad allocation running")
 		case "pending":
 			st.Update(fmt.Sprintf("Waiting for allocation %q to start", allocs[0].ID))
 			// retry
