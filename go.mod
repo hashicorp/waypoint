@@ -27,6 +27,7 @@ require (
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/dustin/go-humanize v1.0.0
+	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/fatih/color v1.9.0
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
 	github.com/gliderlabs/ssh v0.2.2

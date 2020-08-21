@@ -86,6 +86,9 @@ type options struct {
 	// AuthChecker, if set, activates authentication checking on the server.
 	AuthChecker AuthChecker
 
+	// BrowserUIEnabled determines if the browser UI should be mounted
+	BrowserUIEnabled bool
+
 	grpcServer *grpc.Server
 }
 
@@ -122,4 +125,9 @@ func WithImpl(impl pb.WaypointServer) Option {
 // WithAuthentication configures the server to require authentication.
 func WithAuthentication(ac AuthChecker) Option {
 	return func(opts *options) { opts.AuthChecker = ac }
+}
+
+// WithBrowserUI configures the server to enable the browser UI.
+func WithBrowserUI(enabled bool) Option {
+	return func(opts *options) { opts.BrowserUIEnabled = enabled }
 }

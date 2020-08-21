@@ -34,6 +34,10 @@ func httpInit(group *run.Group, opts *options) error {
 		},
 	}
 
+	if opts.BrowserUIEnabled {
+		httpSrv.Handler = httpUIHandler(httpSrv.Handler)
+	}
+
 	// Add our gRPC server to the run group
 	group.Add(func() error {
 		// Serve traffic
