@@ -1,1 +1,37 @@
-Release detail page (no data yet, no releases api)
+<PageHeader @iconName="logo-gcp-color">
+  <div class="title">
+    <h2><b class="badge badge--version">v99</b> <code>abcd1234</code></h2>
+    <small>
+      <span>Released on <b>GCP</b> 2 hours ago</span>
+    </small>
+  </div>
+  <div class="actions">
+    {{#if @isLatest}}
+      <button class="button button--primary">
+        <span>prod.wp-microship.com</span>
+        {{inline-svg "exit" class="icon"}}
+      </button>
+    {{/if}}
+  </div>
+</PageHeader>
+
+<div class="item-row">
+  <div class="item">
+    <b class="badge badge--success">Released successfully</b>
+  </div>
+  <div class="item">
+    <small>
+      Released deployment <a href="#"><b class="badge badge--version">#321</b> <code>abcd1234</code></a>
+    </small>
+  </div>
+</div>
+
+<div class="output-pane">
+  <div class="output">
+    <code>release output row</code>
+    <code>release output row</code>
+    <code>release output row</code>
+    <code>release output row</code>
+    <code>release output row</code>
+  </div>
+</div>

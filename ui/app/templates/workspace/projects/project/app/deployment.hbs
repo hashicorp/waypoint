@@ -1,2 +1,36 @@
-<h3>{{@model.id}}</h3>
-<p>Deployment detail page</p>
+<PageHeader @iconName="logo-kubernetes-color">
+  <div class="title">
+    <h2><b class="badge badge--version">#321</b> <code>{{@model.id}}</code></h2>
+    <small>
+      <span>Deployed by <b>{{@model.component.name}}</b> 2 hours ago</span>
+    </small>
+  </div>
+  <div class="actions">
+    <button class="button button--secondary">
+      <span>preview--{{@model.id}}.wpnt.com</span>
+      {{inline-svg "exit" class="icon"}}
+    </button>
+    <Actions::Release />
+  </div>
+</PageHeader>
+
+<div class="item-row">
+  <div class="item">
+    <b class="badge badge--success">Deployed successfully</b>
+  </div>
+  <div class="item">
+    <small>
+      Deployed build <a href="#"><b class="badge badge--version">#419</b> <code>{{@model.id}}</code></a>
+    </small>
+  </div>
+</div>
+
+<div class="output-pane">
+  <div class="output">
+    <code>deployment output row</code>
+    <code>deployment output row</code>
+    <code>deployment output row</code>
+    <code>deployment output row</code>
+    <code>deployment output row</code>
+  </div>
+</div>

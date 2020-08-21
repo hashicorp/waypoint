@@ -1,0 +1,52 @@
+@use 'pds/tokens/color';
+@use 'pds/tokens/scale';
+@use 'pds/tokens/typography' as Typography;
+
+form.login {
+  display: flex;
+  flex-direction: column;
+  padding-top: scale.$base;
+}
+
+.login fieldset {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 0;
+  margin: 0 0 scale.$lg-2;
+  border: none;
+
+  label {
+    @include Typography.Interface(M);
+    padding-bottom: scale.$sm-2;
+  }
+
+  small {
+    text-align: right;
+    padding-top: scale.$sm-2;
+  }
+
+  fieldset {
+    margin-bottom: scale.$lg-2;
+  }
+
+  input {
+    font-size: scale.$base;
+    padding: scale.$sm-2 scale.$sm-2;
+    box-shadow: $inset-box-shadow;
+    border-radius: 2px;
+    border: none;
+    margin: 0;
+    width: 100%;
+    font-family: monospace;
+
+    &::placeholder {
+      color: color.$ui-cool-gray-500;
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: $glowing-box-shadow;
+    }
+  }
+}

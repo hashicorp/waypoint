@@ -1,9 +1,3 @@
-<h1>{{@model.name}}</h1>
-
-<aside>
-  <LinkTo @route="workspace.projects.project.apps" @models={{array "default" @model.name }}>
-      {{t "nav.application_index"}}
-  </LinkTo>
-</aside>
+<AppBreadcrumbs />
 
 {{outlet}}

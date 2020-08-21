@@ -14,6 +14,14 @@ export default class App extends Route {
   @service currentProject!: CurrentProjectService;
   @service currentApplication!: CurrentApplicationService;
 
+  breadcrumbs = [
+    {
+      // todo(pearkes): make the dynamic name work
+      label: this.currentProject.name || 'Project',
+      args: ['workspace.projects.project.apps'],
+    },
+  ];
+
   async model(params: AppModelParams) {
     let app = new Ref.Application();
     let proj = this.currentProject.ref;

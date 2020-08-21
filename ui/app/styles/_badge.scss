@@ -1,0 +1,44 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  @include Typography.Interface(S);
+  padding: scale.$sm-4 scale.$sm-2;
+  color: color.$ui-cool-gray-600;
+  background: color.$ui-cool-gray-100;
+  border-radius: 2px;
+
+  &--version {
+    @include Typography.Interface(M);
+    border-radius: scale.$base;
+  }
+
+  &--success {
+    color: color.$green-700;
+    background: color.$green-050;
+  }
+
+  &--error {
+    color: color.$red-700;
+    background: color.$red-050;
+  }
+
+  &--warning {
+    color: color.$yellow-700;
+    background: color.$yellow-050;
+  }
+
+  .icon {
+    width: scale.$base;
+    height: scale.$base;
+    margin-left: -(scale.$sm-4);
+    margin-right: scale.$sm-4;
+
+    &:only-child {
+      margin-right: -(scale.$sm-4);;
+    }
+  }
+
+  code {
+    font-size: 1.2em;
+  }
+}

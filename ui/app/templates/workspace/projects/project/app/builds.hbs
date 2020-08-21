@@ -2,12 +2,7 @@
 
 <ul data-test-build-list=true class="list">
   {{#each @model as |build|}}
-    <li>
-      <LinkTo @route="workspace.projects.project.app.build" @models={{array build.id}}>
-        {{build.id}}
-      </LinkTo>
-      <span>Built with <b>{{build.component.name}}</b></span>
-    </li>
+    <AppItem::Build @build={{build}} />
   {{/each}}
 </ul>
 

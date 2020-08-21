@@ -1,0 +1,66 @@
+.button {
+  @include Typography.Interface(M);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: scale.$sm-2 scale.$sm-1;
+  border-radius: 2px;
+  text-decoration: none;
+  background: color.$white;
+  cursor: pointer;
+
+  &--compact {
+    padding: scale.$sm-4 scale.$sm-2;
+  }
+
+  &--primary {
+    color: color.$white;
+    background: color.$blue-500;
+    border: 1px solid color.$blue-700;
+    box-shadow: $button-box-shadow;
+    text-shadow: 0 1px 0 rgba(color.$black, 0.3);
+
+    &:hover {
+      background: color.$blue-400;
+    }
+
+    &:active {
+      background: color.$blue-700;
+      box-shadow: none;
+    }
+  }
+
+  &--secondary {
+    color: color.$ui-gray-800;
+    background: color.$ui-gray-050;
+    border: 1px solid color.$ui-gray-300;
+    box-shadow: $button-box-shadow;
+
+    &:hover {
+      background: color.$white;
+    }
+
+    &:active {
+      background: color.$ui-gray-200;
+      box-shadow: none;
+    }
+  }
+
+  .icon {
+    width: scale.$base;
+    height: scale.$base;
+
+    &:first-child {
+      margin-right: scale.$sm-2;
+    }
+
+    &:last-child {
+      margin-left: scale.$sm-2;
+    }
+
+    &:only-child {
+      margin: 0;
+    }
+  }
+}

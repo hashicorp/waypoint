@@ -1,0 +1,430 @@
+@use 'pds/tokens/color';
+@use 'pds/tokens/scale';
+@use 'pds/tokens/typography' as Typography;
+
+$box-shadow: 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.2), 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1);
+$button-box-shadow: 0 3px 2px rgba(color.$ui-cool-gray-600, 0.2);
+$elevated-box-shadow: 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.1),
+  0 6px 8px 4px rgba(color.$ui-cool-gray-600, 0.1), 0 3px 2px rgba(color.$ui-cool-gray-600, 0.2);
+$inset-box-shadow: inset 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.2),
+  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1);
+$glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
+  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1), 0 0 0 3px rgba(color.$blue-500, 0.2);
+
+@import './_app-item';
+@import './_app-meta-item';
+@import './_badge';
+@import './_breadcrumbs';
+@import './_button';
+@import './_icon-tile';
+@import './_login';
+
+#page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  width: 94vw;
+  margin: 0 auto;
+  padding: scale.$lg-3 scale.$lg-4 scale.$lg-6;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1200px;
+    height: 600px;
+    background: linear-gradient(to right, color.$white, rgba(color.$white, 0)),
+      linear-gradient(to left, color.$white, rgba(color.$white, 0)),
+      linear-gradient(to top, color.$white, color.$white, rgba(color.$white, 0)), url(/images/topography.svg);
+    opacity: 0.2;
+    z-index: -2;
+  }
+
+  h1,
+  h2,
+  h3 {
+    margin: 0 0 scale.$lg-2;
+  }
+
+  h1 {
+    @include Typography.Heading(1);
+  }
+
+  h2 {
+    @include Typography.Heading(2);
+  }
+
+  h3 {
+    @include Typography.Heading(3);
+  }
+
+  h4 {
+    @include Typography.Heading(4);
+  }
+
+  aside {
+    padding-top: scale.$lg-6;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    margin-bottom: scale.$lg-3;
+
+    .icon-tile {
+      margin-right: scale.$base;
+    }
+
+    .title {
+      display: flex;
+      flex-direction: column;
+
+      &.projects-title {
+        padding-top: scale.$lg-6;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        padding-bottom: scale.$sm-3;
+
+        code {
+          font-size: 1.2em;
+          font-weight: 500;
+        }
+
+        .badge {
+          position: relative;
+          top: -2px;
+          margin-right: scale.$sm-3;
+        }
+      }
+
+      small {
+        color: color.$ui-cool-gray-600;
+        @include Typography.Interface(M);
+        padding-bottom: scale.$sm-3;
+      }
+    }
+
+    .actions {
+      position: relative;
+      display: flex;
+      margin-left: auto;
+
+      button {
+        margin-left: scale.$base;
+      }
+    }
+  }
+
+  nav {
+    padding-top: scale.$sm-2;
+    margin-bottom: scale.$lg-4;
+
+    ul {
+      display: flex;
+      box-shadow: inset 0 -1px 0 color.$ui-cool-gray-200;
+
+      li {
+        margin-right: scale.$lg-1;
+      }
+
+      a {
+        color: color.$ui-cool-gray-600;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        padding: scale.$sm-2 scale.$sm-2 scale.$base;
+
+        &:hover {
+          color: color.$ui-cool-gray-800;
+          box-shadow: inset 0 -3px 0 color.$ui-cool-gray-300;
+        }
+
+        &.active {
+          color: color.$blue-500;
+          box-shadow: inset 0 -3px 0 color.$blue-500;
+        }
+      }
+
+      .icon {
+        width: scale.$base;
+        height: scale.$base;
+        margin-right: scale.$sm-3;
+      }
+    }
+  }
+
+  ul.list {
+    li {
+      margin-bottom: scale.$base;
+      padding-bottom: scale.$base;
+      border-bottom: 1px solid color.$ui-cool-gray-200;
+
+      &:last-child {
+        border: none;
+      }
+    }
+  }
+
+  .cards {
+    display: flex;
+
+    .card {
+      flex: 1 1 0;
+      margin-right: scale.$lg-2;
+
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+
+  .card {
+    padding: scale.$base;
+    margin-bottom: scale.$lg-2;
+    box-shadow: $box-shadow;
+    background: color.$white;
+
+    &-header {
+      display: flex;
+      align-items: center;
+
+      h4 {
+        display: flex;
+        align-items: center;
+
+        .icon {
+          width: scale.$lg-1;
+          height: scale.$lg-1;
+          margin-right: scale.$sm-3;
+        }
+      }
+
+      a {
+        margin-left: auto;
+        @include Typography.Interface(S);
+      }
+    }
+
+    h2,
+    h4 {
+      margin: 0;
+    }
+
+    h4 {
+      color: color.$ui-cool-gray-600;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    .grid {
+      margin-top: scale.$base;
+      margin-bottom: -(scale.$sm-2);
+      border-top: 1px solid color.$ui-cool-gray-100;
+
+      > div {
+        flex: 1 1 0;
+        padding: scale.$sm-2 scale.$base;
+        border-right: 1px solid color.$ui-cool-gray-100;
+
+        &:first-child {
+          padding-left: 0;
+        }
+
+        &:last-child {
+          border: none;
+          padding-right: 0;
+        }
+      }
+    }
+  }
+
+  .app-decoration {
+    > small {
+      display: block;
+      color: color.$ui-cool-gray-600;
+      @include Typography.Interface(S);
+      padding: scale.$sm-3 0 scale.$sm-2;
+    }
+  }
+
+  .app-latest {
+    .app-meta-item {
+      padding-top: scale.$sm-1;
+      margin-top: scale.$sm-1;
+      border-top: 1px solid color.$ui-cool-gray-100;
+    }
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+
+    .icon-tile {
+      margin-right: scale.$base;
+    }
+
+    .meta small {
+      color: color.$ui-cool-gray-600;
+      @include Typography.Interface(M);
+    }
+  }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: scale.$base 0;
+    border-top: 1px solid color.$ui-cool-gray-100;
+    color: color.$ui-cool-gray-600;
+    @include Typography.Interface(M);
+
+    .item {
+      a {
+        text-decoration: none;
+
+        .badge {
+          margin: 0 scale.$sm-4;
+        }
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        line-height: 1.1rem;
+        padding: scale.$sm-4 scale.$sm-3;
+      }
+
+      code {
+        font-size: 1.3em;
+      }
+    }
+  }
+
+  .output-pane {
+    display: flex;
+    flex-direction: column;
+    background: color.$ui-cool-gray-050;
+    border: 1px solid color.$ui-cool-gray-100;
+    border-radius: 2px;
+    min-height: 480px;
+
+    .output {
+      display: flex;
+      flex-direction: column;
+      padding: scale.$sm-2 scale.$sm-1;
+    }
+
+    code {
+      font-size: 1.1rem;
+    }
+
+    .run-prompt {
+      display: flex;
+      align-items: center;
+      align-self: flex-end;
+      width: 100%;
+      padding: scale.$sm-1 scale.$sm-2;
+      background: color.$white;
+      border-top: 1px solid color.$ui-cool-gray-100;
+      position: sticky;
+      bottom: 0;
+      margin-top: auto;
+
+      .icon {
+        color: color.$ui-cool-gray-600;
+      }
+    }
+  }
+
+  code.cmd {
+    color: color.$white;
+    background: color.$ui-gray-800;
+    font-size: scale.$base;
+    padding: scale.$sm-2 scale.$sm-2;
+    border-radius: 2px;
+
+    &::before {
+      content: '$';
+      opacity: 0.5;
+      margin-right: scale.$sm-2;
+    }
+  }
+
+  .cli-hint {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: scale.$sm-2;
+    width: 300px;
+    background: color.$white;
+    box-shadow: $elevated-box-shadow;
+    border-radius: 2px;
+    padding: scale.$sm-1 scale.$base;
+
+    p {
+      color: color.$ui-cool-gray-600;
+      @include Typography.Interface(M);
+      font-weight: normal;
+      margin-bottom: scale.$sm-1;
+    }
+
+    code {
+      display: block;
+      margin-bottom: scale.$sm-2;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    .dismiss {
+      display: flex;
+      border-top: 1px solid color.$ui-gray-100;
+      padding-top: scale.$sm-1;
+      margin-top: scale.$sm-1;
+
+      button {
+        margin-left: auto;
+      }
+    }
+  }
+
+  .auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    height: 100%;
+
+    .card {
+      text-align: center;
+      padding: scale.$lg-8;
+    }
+
+    .logo {
+      color: color.$black;
+      width: scale.$lg-14;
+      height: scale.$lg-14;
+      padding: scale.$lg-1 scale.$base scale.$base;
+      background: color.$ui-cool-gray-050;
+      box-shadow: 0 0 0 1px color.$ui-cool-gray-100;
+      border-radius: 8px;
+    }
+
+    h1 {
+      margin: scale.$lg-2 auto scale.$sm-2;
+
+      & + p {
+        @include Typography.Interface(L);
+        color: color.$ui-cool-gray-600;
+        margin-bottom: scale.$lg-2;
+      }
+    }
+  }
+}

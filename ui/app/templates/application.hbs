@@ -1,5 +1,8 @@
 <header id="header">
-  <LinkTo @route="application" class="brand">{{t "product.name"}}</LinkTo>
+  <LinkTo @route="application" class="brand">
+    {{inline-svg "waypoint-logo" class="logo"}}
+    <span class="pds--visuallyHidden">{{t "product.name"}}</span>
+  </LinkTo>
   <nav>
     <a href="#" class="soon">Documentation</a>
     <LinkTo @route="auth">{{t "nav.auth"}}</LinkTo>

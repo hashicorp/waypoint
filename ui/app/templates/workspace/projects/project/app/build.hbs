@@ -1,2 +1,30 @@
-<h3><i>todo(pearkes): need GetBuild API</i></h3>
-<p>Build detail page</p>
+<PageHeader @iconName="source-file">
+  <div class="title">
+    <h2><code>abcd1234</code></h2>
+    <small>
+      <span>Built with <b>Pack</b> 2 hours ago</span>
+    </small>
+  </div>
+  <div class="actions">
+    <Actions::Deploy />
+  </div>
+</PageHeader>
+
+<div class="item-row">
+  <div class="item">
+    <b class="badge badge--success">
+      {{inline-svg "check-plain" class="icon"}}
+      <span>Built in 12 minutes 15 seconds</span>
+    </b>
+  </div>
+</div>
+
+<div class="output-pane">
+  <div class="output">
+    <code>build output row</code>
+    <code>build output row</code>
+    <code>build output row</code>
+    <code>build output row</code>
+    <code>build output row</code>
+  </div>
+</div>
