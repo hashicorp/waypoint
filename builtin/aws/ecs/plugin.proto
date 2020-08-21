@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package ecs;
+
+option go_package = "waypoint/builtin/aws/ecs";
+
+message Deployment {
+  string url = 1;
+  string task_arn = 2;
+  string service_arn = 3;
+  string target_group_arn = 4;
+  string load_balancer_arn = 5;
+  string cluster = 6;
+}
+
+message Release {
+  string url = 1;
+  string load_balancer_arn = 2;
+}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/creack/pty"
 	"github.com/lab47/vterm/parser"
 	"github.com/lab47/vterm/screen"
 	"github.com/lab47/vterm/state"
@@ -21,6 +22,7 @@ var spinnerSet = spinner.CharSets[11]
 type DisplayEntry struct {
 	d       *Display
 	line    uint
+	index   int
 	indent  int
 	spinner bool
 	text    string
@@ -55,6 +57,13 @@ func NewDisplay(ctx context.Context, w io.Writer) *Display {
 		newEnt:  make(chan *DisplayEntry),
 	}
 
+	if f, ok := w.(*os.File); ok {
+		_, cols, err := pty.Getsize(f)
+		if err == nil {
+			d.width = cols - 1
+		}
+	}
+
 	d.wg.Add(1)
 	go func() {
 		defer d.wg.Done()
@@ -87,8 +96,25 @@ func (d *Display) renderEntry(ent *DisplayEntry, spin int) {
 
 	text := strings.TrimRight(ent.text, " \t\n")
 
+	var rest []string
+
 	if len(text) >= d.width {
-		text = text[:d.width-1]
+		// meaning the last one
+		if len(d.Entries)-1 == ent.index {
+			left := text[:d.width-1]
+			right := text[d.width-1:]
+
+			for len(right) >= d.width-3 {
+				rest = append(rest, right[:d.width-3])
+				right = right[d.width-3:]
+			}
+
+			rest = append(rest, right)
+
+			text = left
+		} else {
+			text = text[:d.width-1]
+		}
 	}
 
 	prefix := ""
@@ -123,6 +149,20 @@ func (d *Display) renderEntry(ent *DisplayEntry, spin int) {
 		prefix,
 		text,
 	)
+
+	if len(rest) > 0 {
+		for _, part := range rest {
+			line += fmt.Sprintf("  %s%s",
+				b.
+					Down(1).
+					Column(0).
+					EraseLine(aec.EraseModes.All).
+					ANSI,
+				part,
+			)
+		}
+	}
+
 	if statusColor != nil {
 		line = statusColor.ANSI.Apply(line)
 	}

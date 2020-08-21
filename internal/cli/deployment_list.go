@@ -11,6 +11,8 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -77,6 +79,20 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			return err
 		}
 
+		// Get the latest release
+		release, err := client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
+			Application: app.Ref(),
+			Workspace:   c.project.WorkspaceRef(),
+		})
+		if status.Code(err) == codes.NotFound {
+			err = nil
+			release = nil
+		}
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
 		// List builds
 		resp, err := client.ListDeployments(c.Ctx, &pb.ListDeploymentsRequest{
 			Application:   app.Ref(),
@@ -116,6 +132,11 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				case pb.Operation_CREATED:
 					status = "✔"
 					statusColor = terminal.Green
+
+					if release != nil && release.DeploymentId == b.Id {
+						status = "🚀"
+					}
+
 				default:
 					status = "?"
 					statusColor = terminal.Yellow
