@@ -282,6 +282,14 @@ func (p *Platform) Deploy(
 		service.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/maxScale"] = fmt.Sprintf("%d", p.config.AutoScaling.Max)
 	}
 
+	if p.config.Env != nil {
+		env = service.Spec.Template.Spec.Containers[0].Env
+		for k, v := range p.config.Env {
+			env = append(env, &run.EnvVar{Name: k, Value: v})
+		}
+		service.Spec.Template.Spec.Containers[0].Env = env
+	}
+
 	/*
 		// Not yet implemented by Cloud Run
 		if p.config.AutoScaling.Min > 0 {
@@ -385,6 +393,8 @@ type Config struct {
 	// Unauthenticated, if set to true, will allow unauthenticated access
 	// to your deployment. This defaults to true.
 	Unauthenticated *bool `hcl:"unauthenticated,optional"`
+
+	Env map[string]string `hcl:"env,optional"`
 
 	// Capacity details for cloud run container
 	Capacity *Capacity `hcl:"capacity,block"`
