@@ -67,9 +67,7 @@ func (p *Platform) ValidateAuth(
 	dir *datadir.Component,
 	ui terminal.UI,
 ) error {
-	apiService, err := run.NewService(ctx,
-		option.WithEndpoint("https://"+p.config.Region+"-run.googleapis.com"),
-	)
+	apiService, err := getAPIService(ctx, p.config.Region)
 	if err != nil {
 		ui.Output("Error constructing api client: "+err.Error(), terminal.WithErrorStyle())
 		return status.Errorf(codes.Aborted, err.Error())
@@ -131,11 +129,10 @@ func (p *Platform) Deploy(
 	// It is not possible to deploy to Cloud Run using external container registries
 	err := gcrhelper.ValidateImageName(img.Image, p.config.Project)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.FailedPrecondition, err.Error())
 	}
 
-	// create an api service for the region lookup
-	apiService, err := run.NewService(ctx)
+	apiService, err := getAPIService(ctx, "")
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
 	}
@@ -167,13 +164,6 @@ func (p *Platform) Deploy(
 	}
 	result.Id = id
 
-	apiService, err = run.NewService(ctx,
-		option.WithEndpoint("https://"+result.Resource.Location+"-run.googleapis.com"),
-	)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
-	}
-
 	// We'll update the user in real time
 	st := ui.Status()
 	defer st.Close()
@@ -183,22 +173,21 @@ func (p *Platform) Deploy(
 	// but we expect to own this service, so even if we get a delete/create
 	// in the middle, we'll just error later.
 	create := false
-	client := run.NewNamespacesServicesService(apiService)
+	var service *run.Service
+
 	log.Trace("checking if service has already exists", "service", result.apiName())
 	st.Update("Checking if service already exists")
-	service, err := client.Get(result.apiName()).Context(ctx).Do()
+
+	// Is there a deployment for this service
+	services, err := findServices(ctx, result.apiName(), pls.Locations)
 	if err != nil {
-		gerr, ok := err.(*googleapi.Error)
-		if !ok {
-			return nil, err
-		}
-		log.Trace("googleapi.Error value", "error", gerr)
+		return nil, fmt.Errorf("Unable to query existing Cloud Run services: %s", err)
+	}
 
-		// If we have a 404 then we just haven't created it yet.
-		if gerr.Code != 404 {
-			return nil, err
-		}
+	log.Debug("retieved", "services", pretty.Sprint(services))
 
+	// no services found create a new one
+	if len(services) == 0 {
 		create = true
 		service = &run.Service{
 			ApiVersion: "serving.knative.dev/v1",
@@ -208,6 +197,20 @@ func (p *Platform) Deploy(
 			},
 			Spec: &run.ServiceSpec{},
 		}
+	} else if len(services) != 1 {
+		// the service should only exist in a single region
+		return nil, fmt.Errorf("Cloud Run services named '%s' exist in multiple regions. Please remove any manually created services.", src.App)
+	} else {
+		// Loop through the regions which contain services and ensure that
+		// the current deployment is not in a different region to an existing service
+		for k := range services {
+			if k != p.config.Region {
+				// Waypoint can not change the region of a service so return an error.
+				return nil, fmt.Errorf("The Cloud Run service '%s' already exists in the region '%s', Waypoint is unable to change the region of a deployed service", src.App, k)
+			}
+		}
+
+		service = services[p.config.Region]
 	}
 
 	// If we're deploying to the "latest revision" then we want to enforce
@@ -233,6 +236,12 @@ func (p *Platform) Deploy(
 		})
 	}
 
+	// define resources
+	// values must adhere to: https: //github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go
+	resources := &run.ResourceRequirements{
+		Limits: map[string]string{},
+	}
+
 	// Regardless of if we're creating or updating, we update our
 	// spec to force a new revision.
 	service.Spec.Template = &run.RevisionTemplate{
@@ -244,25 +253,45 @@ func (p *Platform) Deploy(
 		Spec: &run.RevisionSpec{
 			Containers: []*run.Container{
 				&run.Container{
-					Image: img.Name(),
-					Env:   env,
+					Image:     img.Name(),
+					Env:       env,
+					Resources: resources,
 				},
 			},
 		},
 	}
 
+	// override the defaults if provided in config
+	if p.config.Capacity.MaxRequestsPerContainer > 0 {
+		service.Spec.Template.Spec.ContainerConcurrency = int64(p.config.Capacity.MaxRequestsPerContainer)
+	}
+
+	if p.config.Capacity.Memory != "" {
+		resources.Limits["memory"] = p.config.Capacity.Memory
+	}
+
+	if p.config.Capacity.CPUCount > 0 {
+		resources.Limits["cpu"] = fmt.Sprintf("%d", p.config.Capacity.CPUCount)
+	}
+
+	if p.config.Capacity.RequestTimeout > 0 {
+		service.Spec.Template.Spec.TimeoutSeconds = int64(p.config.Capacity.RequestTimeout)
+	}
+
+	apiService, err = getAPIService(ctx, p.config.Region)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, err.Error())
+	}
+	client := run.NewNamespacesServicesService(apiService)
+
 	if create {
 		// Create the service
 		log.Info("creating the service")
 		st.Update("Creating new Cloud Run service")
-		st := service
+
 		service, err = client.Create("namespaces/"+result.Resource.Project, service).
 			Context(ctx).Do()
 		if err != nil {
-			gerr, ok := err.(*googleapi.Error)
-			if ok {
-				log.Error("Google Error", "error", pretty.Sprint(gerr), "service", pretty.Sprint(st))
-			}
 			return nil, status.Errorf(codes.Aborted, fmt.Sprintf("Unable to create Cloud Run service: %s", err.Error()))
 		}
 	} else {
@@ -272,6 +301,10 @@ func (p *Platform) Deploy(
 		service, err = client.ReplaceService(result.apiName(), service).
 			Context(ctx).Do()
 		if err != nil {
+			if gerr, ok := err.(*googleapi.Error); ok {
+				log.Debug("Google error", "error", pretty.Sprint(gerr))
+			}
+
 			return nil, status.Errorf(codes.Aborted, err.Error())
 		}
 	}
@@ -330,6 +363,15 @@ type Config struct {
 	// Unauthenticated, if set to true, will allow unauthenticated access
 	// to your deployment. This defaults to true.
 	Unauthenticated *bool `hcl:"unauthenticated,optional"`
+
+	Capacity *Capacity `hcl:"unauthenticated,block"`
+}
+
+type Capacity struct {
+	Memory                  string `hcl:"memory,attr"`
+	CPUCount                int    `hcl:"memory,attr"`
+	RequestTimeout          int    `hcl:"request_timeout,attr"`
+	MaxRequestsPerContainer int    `hcl:"max_requests_per_container,attr"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -347,3 +389,46 @@ var (
 	_ component.Platform     = (*Platform)(nil)
 	_ component.Configurable = (*Platform)(nil)
 )
+
+func getAPIService(ctx context.Context, region string) (*run.APIService, error) {
+	if region != "" {
+		return run.NewService(ctx,
+			option.WithEndpoint("https://"+region+"-run.googleapis.com"),
+		)
+	}
+
+	return run.NewService(ctx)
+}
+
+// findServices finds the Cloud Run services in all regions
+func findServices(ctx context.Context, apiName string, locations []*run.Location) (map[string]*run.Service, error) {
+	services := map[string]*run.Service{}
+
+	for _, l := range locations {
+		apiService, err := getAPIService(ctx, l.LocationId)
+		if err != nil {
+			return nil, err
+		}
+
+		client := run.NewNamespacesServicesService(apiService)
+
+		service, err := client.Get(apiName).Context(ctx).Do()
+		if err != nil {
+			gerr, ok := err.(*googleapi.Error)
+			if !ok {
+				return nil, err
+			}
+
+			// If we have a 404 then we just haven't created it yet.
+			if gerr.Code != 404 {
+				return nil, err
+			}
+		}
+
+		if service != nil {
+			services[l.LocationId] = service
+		}
+	}
+
+	return services, nil
+}
