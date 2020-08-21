@@ -10,17 +10,22 @@ project = "my-project"
 app "web" {
     # Build specifies how an application should be deployed. In this case,
     # we'll build using a Dockerfile and keeping it in a local registry.
-    build "docker" {
-
+    build {
+        use "docker" {}
+        
         # Uncomment below to use a remote docker registry to push your built images.
         #
-        # registry "docker" {
+        # registry {
+        #   use "docker" {
         #     image = "registry.example.com/image"
         #     tag   = "latest"
+        #   }
         # }
 
     }
 
     # Deploy to Docker
-    deploy "docker" {}
+    deploy {
+        use "docker" {}
+    }
 }
