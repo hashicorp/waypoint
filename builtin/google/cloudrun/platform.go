@@ -278,6 +278,17 @@ func (p *Platform) Deploy(
 		service.Spec.Template.Spec.TimeoutSeconds = int64(p.config.Capacity.RequestTimeout)
 	}
 
+	if p.config.AutoScaling.Max > 0 {
+		service.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/maxScale"] = fmt.Sprintf("%d", p.config.AutoScaling.Max)
+	}
+
+	/*
+		// Not yet implemented by Cloud Run
+		if p.config.AutoScaling.Min > 0 {
+			service.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/minScale"] = fmt.Sprintf("%d", p.config.AutoScaling.Min)
+		}
+	*/
+
 	apiService, err = getAPIService(ctx, p.config.Region)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
@@ -353,27 +364,6 @@ func (p *Platform) Destroy(
 	return err
 }
 
-// Config is the configuration structure for the Platform.
-type Config struct {
-	// Project is the project to deploy to.
-	Project string `hcl:"project,attr"`
-	// Region	is the GCP region to deploy to
-	Region string `hcl:"region,attr"`
-
-	// Unauthenticated, if set to true, will allow unauthenticated access
-	// to your deployment. This defaults to true.
-	Unauthenticated *bool `hcl:"unauthenticated,optional"`
-
-	Capacity *Capacity `hcl:"unauthenticated,block"`
-}
-
-type Capacity struct {
-	Memory                  string `hcl:"memory,attr"`
-	CPUCount                int    `hcl:"memory,attr"`
-	RequestTimeout          int    `hcl:"request_timeout,attr"`
-	MaxRequestsPerContainer int    `hcl:"max_requests_per_container,attr"`
-}
-
 func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc, err := docs.New(docs.FromConfig(&Config{}))
 	if err != nil {
@@ -385,50 +375,32 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	return doc, nil
 }
 
-var (
-	_ component.Platform     = (*Platform)(nil)
-	_ component.Configurable = (*Platform)(nil)
-)
+// Config is the configuration structure for the Platform.
+type Config struct {
+	// Project is the project to deploy to.
+	Project string `hcl:"project,attr"`
+	// Region	is the GCP region to deploy to
+	Region string `hcl:"region,attr"`
 
-func getAPIService(ctx context.Context, region string) (*run.APIService, error) {
-	if region != "" {
-		return run.NewService(ctx,
-			option.WithEndpoint("https://"+region+"-run.googleapis.com"),
-		)
-	}
+	// Unauthenticated, if set to true, will allow unauthenticated access
+	// to your deployment. This defaults to true.
+	Unauthenticated *bool `hcl:"unauthenticated,optional"`
 
-	return run.NewService(ctx)
+	// Capacity details for cloud run container
+	Capacity *Capacity `hcl:"capacity,block"`
+
+	// AutoScaling details
+	AutoScaling *AutoScaling `hcl:"auto_scaling,block"`
 }
 
-// findServices finds the Cloud Run services in all regions
-func findServices(ctx context.Context, apiName string, locations []*run.Location) (map[string]*run.Service, error) {
-	services := map[string]*run.Service{}
+type Capacity struct {
+	Memory                  string `hcl:"memory,attr"`
+	CPUCount                int    `hcl:"memory,attr"`
+	RequestTimeout          int    `hcl:"request_timeout,attr"`
+	MaxRequestsPerContainer int    `hcl:"max_requests_per_container,attr"`
+}
 
-	for _, l := range locations {
-		apiService, err := getAPIService(ctx, l.LocationId)
-		if err != nil {
-			return nil, err
-		}
-
-		client := run.NewNamespacesServicesService(apiService)
-
-		service, err := client.Get(apiName).Context(ctx).Do()
-		if err != nil {
-			gerr, ok := err.(*googleapi.Error)
-			if !ok {
-				return nil, err
-			}
-
-			// If we have a 404 then we just haven't created it yet.
-			if gerr.Code != 404 {
-				return nil, err
-			}
-		}
-
-		if service != nil {
-			services[l.LocationId] = service
-		}
-	}
-
-	return services, nil
+type AutoScaling struct {
+	//Min int `hcl:"min,attr"` // not yet supported by cloud run
+	Max int `hcl:"max,attr"`
 }
