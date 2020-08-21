@@ -8,7 +8,3 @@ message Deployment {
   string id = 1;
   string name = 2;
 }
-
-message Release {
-  string Url = 1;
-}

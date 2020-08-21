@@ -61,8 +61,7 @@ type monitor struct {
 }
 
 // newMonitor returns a new monitor. The returned monitor will
-// write output information to the provided ui. The length parameter determines
-// the number of characters for identifiers in the ui.
+// write output information to the provided ui.
 func newMonitor(ui terminal.Status, client *api.Client) *monitor {
 	mon := &monitor{
 		ui:     ui,
@@ -128,8 +127,7 @@ func (m *monitor) update(update *evalState) {
 }
 
 // monitor is used to start monitoring the given evaluation ID. It
-// writes output directly to the monitor's ui, and returns the
-// exit code for the command.
+// writes output directly to the terminal ui, and returns an error.
 func (m *monitor) monitor(evalID string) error {
 	// Track if we encounter a scheduling failure. This can only be
 	// detected while querying allocations, so we use this bool to
