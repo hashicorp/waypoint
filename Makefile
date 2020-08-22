@@ -1,5 +1,6 @@
 # A lot of this Makefile right now is temporary since we have a private
 # repo so that we can more sanely create
+ASSETFS_PATH?=internal/server/bindata_ui.go
 
 # bin creates the binaries for Waypoint
 .PHONY: bin
@@ -66,10 +67,15 @@ gen/ts:
 	@rm -rf ./ui/vendor/vendor
 	@rm -rf ./google
 
+# This currently assumes you have run `ember build` in the ui/ directory
+static-assets:
+	@go-bindata -pkg server -prefix dist -o $(ASSETFS_PATH) ./ui/dist/...
+	@go fmt $(ASSETFS_PATH)
+
 .PHONY: gen/doc
 gen/doc:
 	@rm -rf ./doc/* 2> /dev/null
 	protoc -I=. \
 		-I=./vendor/proto/api-common-protos/ \
 		--doc_out=./doc --doc_opt=html,index.html \
-		./internal/server/proto/server.proto	
+		./internal/server/proto/server.proto
