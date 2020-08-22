@@ -99,8 +99,8 @@ func (r *Runner) executeJob(
 	case *pb.Job_Deploy:
 		return r.executeDeployOp(ctx, job, project)
 
-	case *pb.Job_DestroyDeploy:
-		return r.executeDestroyDeployOp(ctx, job, project)
+	case *pb.Job_Destroy:
+		return r.executeDestroyOp(ctx, job, project)
 
 	case *pb.Job_Release:
 		return r.executeReleaseOp(ctx, log, job, project)

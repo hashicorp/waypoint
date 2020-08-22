@@ -2,12 +2,13 @@ package runner
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func (r *Runner) executeDeployOp(
+func (r *Runner) executeDestroyOp(
 	ctx context.Context,
 	job *pb.Job,
 	project *core.Project,
@@ -17,21 +18,23 @@ func (r *Runner) executeDeployOp(
 		return nil, err
 	}
 
-	op, ok := job.Operation.(*pb.Job_Deploy)
+	op, ok := job.Operation.(*pb.Job_Destroy)
 	if !ok {
 		// this shouldn't happen since the call to this function is gated
 		// on the above type match.
 		panic("operation not expected type")
 	}
 
-	deployment, err := app.Deploy(ctx, op.Deploy.Artifact)
+	switch t := op.Destroy.Target.(type) {
+	case *pb.Job_DestroyOp_Deployment:
+		err = app.DestroyDeploy(ctx, t.Deployment)
+
+	default:
+		err = fmt.Errorf("unknown destruction target: %T", op.Destroy.Target)
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.Job_Result{
-		Deploy: &pb.Job_DeployResult{
-			Deployment: deployment,
-		},
-	}, nil
+	return &pb.Job_Result{}, nil
 }
