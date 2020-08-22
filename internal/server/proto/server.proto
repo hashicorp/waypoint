@@ -493,7 +493,7 @@ message Job {
     BuildOp build = 51;
     PushOp push = 52;
     DeployOp deploy = 53;
-    DestroyDeployOp destroy_deploy = 54;
+    DestroyOp destroy = 54;
     ReleaseOp release = 55;
     ValidateOp validate = 56;
     AuthOp auth = 57;
@@ -667,8 +667,11 @@ message Job {
     Deployment deployment = 1;
   }
 
-  message DestroyDeployOp {
-    Deployment deployment = 1;
+  message DestroyOp {
+    // target is what to destroy in this operation.
+    oneof target {
+      Deployment deployment = 1;
+    }
   }
 
   message ReleaseOp {
