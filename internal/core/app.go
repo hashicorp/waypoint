@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -101,6 +102,13 @@ func newApp(
 		// etc.
 		UI: p.UI,
 	}
+
+	// Determine our path
+	path := p.root
+	if cfg.Path != "" {
+		path = filepath.Join(path, cfg.Path)
+	}
+	app.source.Path = path
 
 	// Setup our directory
 	dir, err := p.dir.App(cfg.Name)

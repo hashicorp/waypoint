@@ -11,6 +11,7 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/hcl/v2"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
@@ -43,7 +44,8 @@ type baseCommand struct {
 	// The fields below are only available after calling Init.
 
 	// cfg is the parsed configuration
-	cfg *config.Config
+	cfg    *config.Config
+	cfgCtx *hcl.EvalContext
 
 	// UI is used to write to the CLI.
 	ui terminal.UI
@@ -68,6 +70,9 @@ type baseCommand struct {
 	// flagRemote is whether to execute using a remote runner or use
 	// a local runner.
 	flagRemote bool
+
+	// flagRemoteSource are the remote data source overrides for jobs.
+	flagRemoteSource map[string]string
 
 	// flagWorkspace is the workspace to work in.
 	flagWorkspace string
@@ -316,6 +321,14 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Default: false,
 			Usage: "True to use a remote runner to execute. This defaults to false \n" +
 				"unless 'runner.default' is set in your configuration.",
+		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "remote-source",
+			Target: &c.flagRemoteSource,
+			Usage: "Override configurations for how remote runners source data. " +
+				"This is specified to the data source type being used in your configuration. " +
+				"This is used for example to set a specific Git ref to run against.",
 		})
 	}
 

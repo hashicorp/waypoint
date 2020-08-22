@@ -64,6 +64,7 @@ require (
 	github.com/mitchellh/go-linereader v0.0.0-20190213213312-1b945b3263eb
 	github.com/mitchellh/go-testing-interface v1.14.0
 	github.com/mitchellh/mapstructure v1.3.3
+	github.com/mitchellh/pointerstructure v1.0.0
 	github.com/mitchellh/protostructure v0.0.0-20200814180458-3cfccdb015ce
 	github.com/morikuni/aec v1.0.0
 	github.com/mr-tron/base58 v1.2.0

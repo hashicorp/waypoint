@@ -19,7 +19,7 @@ import (
 // defaults based on how the client is configured. For example, for local
 // operations, this will already have the targeting for the local runner.
 func (c *Project) job() *pb.Job {
-	return &pb.Job{
+	job := &pb.Job{
 		TargetRunner: c.runner,
 		Labels:       c.labels,
 		Workspace:    c.workspace,
@@ -27,14 +27,25 @@ func (c *Project) job() *pb.Job {
 			Project: c.project.Project,
 		},
 
-		DataSource: &pb.Job_Local_{
-			Local: &pb.Job_Local{},
+		DataSource: &pb.Job_DataSource{
+			Source: &pb.Job_DataSource_Local{
+				Local: &pb.Job_Local{},
+			},
 		},
+		DataSourceOverrides: c.dataSourceOverrides,
 
 		Operation: &pb.Job_Noop_{
 			Noop: &pb.Job_Noop{},
 		},
 	}
+
+	// If we're not local, we set a nil data source so it defaults to
+	// wahtever the project has remotely.
+	if !c.local {
+		job.DataSource = nil
+	}
+
+	return job
 }
 
 // doJob will queue and execute the job. If the client is configured for

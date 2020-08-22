@@ -32,8 +32,10 @@ func TestJobNew(t testing.T, src *pb.Job) *pb.Job {
 				Any: &pb.Ref_RunnerAny{},
 			},
 		},
-		DataSource: &pb.Job_Local_{
-			Local: &pb.Job_Local{},
+		DataSource: &pb.Job_DataSource{
+			Source: &pb.Job_DataSource_Local{
+				Local: &pb.Job_Local{},
+			},
 		},
 		Operation: &pb.Job_Noop_{
 			Noop: &pb.Job_Noop{},
@@ -50,7 +52,6 @@ func ValidateJob(job *pb.Job) error {
 		validation.Field(&job.Application, validation.Required),
 		validation.Field(&job.Workspace, validation.Required),
 		validation.Field(&job.TargetRunner, validation.Required),
-		validation.Field(&job.DataSource, validation.Required),
 		validation.Field(&job.Operation, validation.Required),
 	)
 }

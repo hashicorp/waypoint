@@ -49,10 +49,19 @@ func (c *baseCommand) initConfigPath() (string, error) {
 
 // initConfigLoad loads the configuration at the given path.
 func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
-	configCtx := configpkg.EvalContext(filepath.Dir(path))
+	c.cfgCtx = configpkg.EvalContext(filepath.Dir(path))
 
 	var cfg configpkg.Config
-	return &cfg, hclsimple.DecodeFile(path, configCtx, &cfg)
+	if err := hclsimple.DecodeFile(path, c.cfgCtx, &cfg); err != nil {
+		return nil, err
+	}
+
+	// Set the proper defaults
+	if err := cfg.Default(); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
 }
 
 // initClient initializes the client.
@@ -67,6 +76,7 @@ func (c *baseCommand) initClient() (*clientpkg.Project, error) {
 		clientpkg.WithProjectRef(c.refProject),
 		clientpkg.WithWorkspaceRef(c.refWorkspace),
 		clientpkg.WithLabels(c.flagLabels),
+		clientpkg.WithSourceOverrides(c.flagRemoteSource),
 	}
 	if !c.flagRemote {
 		opts = append(opts, clientpkg.WithLocal())

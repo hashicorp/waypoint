@@ -185,12 +185,32 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		}
 	}()
 
-	// Execute the job. We have to close the UI right afterwards to
-	// ensure that no more output is writting to the client.
-	log.Info("starting job execution")
-	result, err := r.executeJob(ctx, log, ui, assignment.Assignment.Job)
-	if ui, ok := ui.(*runnerUI); ok {
-		ui.Close()
+	// We need to get our data source next prior to executing.
+	var result *pb.Job_Result
+	wd, closer, err := r.downloadJobData(
+		ctx,
+		log,
+		ui,
+		assignment.Assignment.Job.DataSource,
+		assignment.Assignment.Job.DataSourceOverrides,
+	)
+	if err == nil {
+		if closer != nil {
+			defer func() {
+				log.Debug("cleaning up downloaded data")
+				if err := closer(); err != nil {
+					log.Warn("error cleaning up data", "err", err)
+				}
+			}()
+		}
+
+		// Execute the job. We have to close the UI right afterwards to
+		// ensure that no more output is writting to the client.
+		log.Info("starting job execution")
+		result, err = r.executeJob(ctx, log, ui, assignment.Assignment.Job, wd)
+		if ui, ok := ui.(*runnerUI); ok {
+			ui.Close()
+		}
 	}
 
 	// Check if we were force canceled. If so, then just exit now. Realistically

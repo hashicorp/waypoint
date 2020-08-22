@@ -16,13 +16,6 @@ func grpcInit(group *run.Group, opts *options) error {
 
 	var so []grpc.ServerOption
 
-	if opts.AuthChecker != nil {
-		so = append(so,
-			grpc.ChainUnaryInterceptor(authUnaryInterceptor(opts.AuthChecker)),
-			grpc.ChainStreamInterceptor(authStreamInterceptor(opts.AuthChecker)),
-		)
-	}
-
 	so = append(so,
 		grpc.ChainUnaryInterceptor(
 			// Insert our logger and also log req/resp
@@ -33,6 +26,13 @@ func grpcInit(group *run.Group, opts *options) error {
 			logStreamInterceptor(log, false),
 		),
 	)
+
+	if opts.AuthChecker != nil {
+		so = append(so,
+			grpc.ChainUnaryInterceptor(authUnaryInterceptor(opts.AuthChecker)),
+			grpc.ChainStreamInterceptor(authStreamInterceptor(opts.AuthChecker)),
+		)
+	}
 
 	s := grpc.NewServer(so...)
 	opts.grpcServer = s

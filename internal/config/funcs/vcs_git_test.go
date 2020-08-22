@@ -62,6 +62,26 @@ func TestVCSGit(t *testing.T) {
 			cty.StringVal(""),
 			"",
 		},
+
+		{
+			"remote doesn't exist",
+			"git-commits",
+			"",
+			(*VCSGit).remoteUrlFunc,
+			[]cty.Value{cty.StringVal("origin")},
+			cty.UnknownVal(cty.String),
+			"",
+		},
+
+		{
+			"remote exists",
+			"git-remote",
+			"",
+			(*VCSGit).remoteUrlFunc,
+			[]cty.Value{cty.StringVal("origin")},
+			cty.StringVal("https://github.com/hashicorp/example.git"),
+			"",
+		},
 	}
 
 	for _, tt := range cases {

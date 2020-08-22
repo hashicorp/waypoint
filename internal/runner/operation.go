@@ -25,10 +25,14 @@ func (r *Runner) executeJob(
 	log hclog.Logger,
 	ui terminal.UI,
 	job *pb.Job,
+	wd string,
 ) (*pb.Job_Result, error) {
 	// Eventually we'll need to extract the data source. For now we're
 	// just building for local exec so it is the working directory.
 	path := configpkg.Filename
+	if wd != "" {
+		path = filepath.Join(wd, path)
+	}
 
 	// Determine the evaluation context we'll be using
 	configCtx := configpkg.EvalContext(filepath.Dir(path))
@@ -61,6 +65,7 @@ func (r *Runner) executeJob(
 		core.WithConfig(&cfg),
 		core.WithConfigContext(configCtx),
 		core.WithDataDir(projDir),
+		core.WithRootDir(filepath.Dir(path)),
 		core.WithLabels(job.Labels),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),

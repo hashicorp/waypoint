@@ -209,6 +209,18 @@ message Project {
   // The applications cannot be modified in any Project APIs. You must
   // use the dedicated Application APIs.
   repeated Application applications = 2;
+
+  // If true, then the `-remote` flag or the `waypoint build project/app`
+  // syntax can be used with a remote runner. If this is false, then
+  // this is not allowed. This is typically configured using the
+  // `runner {}` block in the waypoint config.
+  bool remote_enabled = 3;
+
+  // Where data is sourced for remote operations. If this isn't set, then
+  // there is no default data source and it will be an error if a job is
+  // queued for this project without a data source set. This is usually
+  // set using the `runner {}` block in the waypoint config.
+  Job.DataSource data_source = 4;
 }
 
 message Workspace {
@@ -428,7 +440,6 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 21 to 49; // future data source range
   reserved 58 to 79; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
@@ -452,13 +463,15 @@ message Job {
 
   // data_source determines where the data to operate on (such as the
   // application source code and Waypoint configuration) comes from.
-  oneof data_source {
-    // local means the runner has access to the data locally and will
-    // know what to do. This is primarily only useful if the target_runner
-    // is a specific runner and should not be used by any runner unless your
-    // runners are configured to have access to the proper data.
-    Local local = 20;
-  }
+  // If this is not set then QueueJob will populate this if a default
+  // data source is configured for the target project.
+  //
+  // The overrides will set overrides of configs for the data source. This is
+  // data source dependent but this allows for example setting the Git ref
+  // without knowing the full data source. Invalid overrides will fail the
+  // job.
+  DataSource data_source = 6;
+  map<string, string> data_source_overrides = 7;
 
   // The operation to execute. See the message docs for details on the operation.
   oneof operation {
@@ -527,7 +540,34 @@ message Job {
     AuthResult auth = 6;
   }
 
+  message DataSource {
+    oneof source {
+      // local means the runner has access to the data locally and will
+      // know what to do. This is primarily only useful if the target_runner
+      // is a specific runner and should not be used by any runner unless your
+      // runners are configured to have access to the proper data.
+      Local local = 1;
+
+      // git will check out the data from a Git repository.
+      Git git = 2;
+    }
+  }
+
   message Local {}
+
+  message Git {
+    // url of the repository to clone. Local paths are not allowed.
+    string url = 1;
+
+    // a ref to checkout. If this isn't specified, then the default
+    // ref that is cloned from the URL above will be used.
+    string ref = 2;
+
+    // path is a subdirectory within the checked out repository to
+    // go into for the configuration. This must be a relative path
+    // and may not contain ".."
+    string path = 3;
+  }
 
   // Noop operations do nothing. This is primarily used for testing.
   // This operation will still download the data from the data source.
