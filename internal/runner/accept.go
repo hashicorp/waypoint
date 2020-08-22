@@ -24,6 +24,18 @@ var heartbeatDuration = 5 * time.Second
 // This is safe to be called concurrently which can be used to execute
 // multiple jobs in parallel as a runner.
 func (r *Runner) Accept(ctx context.Context) error {
+	return r.accept(ctx, "")
+}
+
+// AcceptExact is the same as Accept except that it accepts only
+// a job with exactly the given ID. This is used by Waypoint only in
+// local execution mode as an extra security measure to prevent other
+// jobs from being assigned to the runner.
+func (r *Runner) AcceptExact(ctx context.Context, id string) error {
+	return r.accept(ctx, id)
+}
+
+func (r *Runner) accept(ctx context.Context, id string) error {
 	if r.closed() {
 		return ErrClosed
 	}
@@ -75,6 +87,24 @@ func (r *Runner) Accept(ctx context.Context) error {
 	// and exit here.
 	r.acceptWg.Add(1)
 	defer r.acceptWg.Done()
+
+	// If this isn't the job we expected then we nack and error.
+	if id != "" {
+		if assignment.Assignment.Job.Id != id {
+			log.Warn("unexpected job id for exact match, nacking")
+			if err := client.Send(&pb.RunnerJobStreamRequest{
+				Event: &pb.RunnerJobStreamRequest_Error_{
+					Error: &pb.RunnerJobStreamRequest_Error{},
+				},
+			}); err != nil {
+				return err
+			}
+
+			return status.Errorf(codes.Aborted, "server sent us an invalid job")
+		}
+
+		log.Trace("assigned job matches expected ID for local mode")
+	}
 
 	// Ack the assignment
 	log.Trace("acking job assignment")
