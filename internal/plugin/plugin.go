@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/k8s"
 	"github.com/hashicorp/waypoint/builtin/lambda"
 	"github.com/hashicorp/waypoint/builtin/netlify"
+	"github.com/hashicorp/waypoint/builtin/nomad"
 	"github.com/hashicorp/waypoint/builtin/pack"
 )
 
@@ -32,6 +33,7 @@ var (
 		"kubernetes":       k8s.Options,
 		"lambda":           lambda.Options,
 		"netlify":          netlify.Options,
+		"nomad":            nomad.Options,
 	}
 )
 
@@ -50,6 +52,7 @@ func init() {
 	Platforms.Register("azure-aci", BuiltinFactory("azure-aci", component.PlatformType))
 	Platforms.Register("netlify", BuiltinFactory("netlify", component.PlatformType))
 	Platforms.Register("docker", BuiltinFactory("docker", component.PlatformType))
+	Platforms.Register("nomad", BuiltinFactory("nomad", component.PlatformType))
 
 	Releasers.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.ReleaseManagerType))
 	Releasers.Register("kubernetes", BuiltinFactory("kubernetes", component.ReleaseManagerType))
