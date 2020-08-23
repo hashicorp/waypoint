@@ -10,6 +10,51 @@ func init() {
 	schemas = append(schemas, workspaceIndexSchema)
 }
 
+// WorkspaceList lists all the workspaces.
+func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.Get(
+		workspaceIndexTableName,
+		workspaceIndexIdIndexName+"_prefix",
+		"",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	wsMap := map[string]*pb.Workspace{}
+	for {
+		raw := iter.Next()
+		if raw == nil {
+			break
+		}
+
+		idx := raw.(*workspaceIndexRecord)
+
+		// Get our workspace
+		ws, ok := wsMap[idx.Name]
+		if !ok {
+			ws = &pb.Workspace{Name: idx.Name}
+			wsMap[idx.Name] = ws
+		}
+
+		// Append our apps
+		ws.Applications = append(ws.Applications, &pb.Ref_Application{
+			Project:     idx.Project,
+			Application: idx.App,
+		})
+	}
+
+	result := make([]*pb.Workspace, 0, len(wsMap))
+	for _, v := range wsMap {
+		result = append(result, v)
+	}
+
+	return result, nil
+}
+
 // workspaceInit creates an initial record for the given workspace or
 // returns one if it already exists.
 func (s *State) workspaceInit(

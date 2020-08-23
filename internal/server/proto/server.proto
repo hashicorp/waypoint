@@ -225,6 +225,11 @@ message Project {
 
 message Workspace {
   string name = 1;
+
+  // The list of applications that have executed at least one operation
+  // within the context of this workspace. To determine which operations
+  // you must call the operations respective List API such as ListDeployments.
+  repeated Ref.Application applications = 2;
 }
 
 /********************************************************************
