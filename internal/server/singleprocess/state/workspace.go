@@ -1,7 +1,11 @@
 package state
 
 import (
+	"strings"
+
 	"github.com/hashicorp/go-memdb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -53,6 +57,25 @@ func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
 	}
 
 	return result, nil
+}
+
+// WorkspaceGet gets a workspace with a specific name. If it doesn't exist,
+// this will return an error with codes.NotFound.
+func (s *State) WorkspaceGet(n string) (*pb.Workspace, error) {
+	// We implement this in terms of list for now.
+	wsList, err := s.WorkspaceList()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ws := range wsList {
+		if strings.EqualFold(ws.Name, n) {
+			return ws, nil
+		}
+	}
+
+	return nil, status.Errorf(codes.NotFound,
+		"not found for name: %q", n)
 }
 
 // workspaceInit creates an initial record for the given workspace or
