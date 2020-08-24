@@ -56,6 +56,7 @@ func TestPlatform_optionalInterfaces(t *testing.T) {
 		require := require.New(t)
 
 		mockV := &mockPlatformDestroyer{}
+		mockV.Destroyer.On("DestroyFunc").Return(42)
 
 		plugins := Plugins(WithComponents(mockV), WithMappers(testDefaultMappers(t)...))
 		client, server := plugin.TestPluginGRPCConn(t, plugins[1])
