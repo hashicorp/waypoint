@@ -1451,6 +1451,9 @@ message Release {
   // status of the release operation.
   Status status = 2;
 
+  // The physical state of the release resources.
+  Operation.PhysicalState state = 11;
+
   // component managing the release process.
   Component component = 3;
 
