@@ -17,11 +17,17 @@ app "wpmini" {
       project = "waypoint-286812"
       region = "europe-north1"
 
+      port = 5000
+
       capacity {
-        memory = "256Mi"
-        cpu_count = 2
+        memory = "128Mi"
+        cpu_count = 1
         max_requests_per_container = 10
         request_timeout = 300
+      }
+
+      auto_scaling {
+        max = 10
       }
   }
 }

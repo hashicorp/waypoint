@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/builtin/google/cloudrun/helper"
-	gcrhelper "github.com/hashicorp/waypoint/builtin/google/cloudrun/helper"
 	"github.com/kr/pretty"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
@@ -29,6 +27,18 @@ import (
 // Platform is the Platform implementation for Google Cloud Run.
 type Platform struct {
 	config Config
+}
+
+// ConfigSet is called after a configuration has been decoded
+// we can use this to validate the config
+func (p *Platform) ConfigSet(config interface{}) error {
+	c, ok := config.(*Config)
+	if !ok {
+		// this should never happen
+		return fmt.Errorf("Invalid configuration, expected *cloudrun.Config, got %s", reflect.TypeOf(config))
+	}
+
+	return ValidateConfig(*c)
 }
 
 // Config implements Configurable
@@ -127,7 +137,7 @@ func (p *Platform) Deploy(
 ) (*Deployment, error) {
 	// Validate that the Docker image is stored in a GCP registry
 	// It is not possible to deploy to Cloud Run using external container registries
-	err := gcrhelper.ValidateImageName(img.Image, p.config.Project)
+	err := ValidateImageName(img.Image, p.config.Project)
 	if err != nil {
 		return nil, status.Error(codes.FailedPrecondition, err.Error())
 	}
@@ -145,7 +155,7 @@ func (p *Platform) Deploy(
 	}
 
 	// validate the region defined in the config is available for deployment
-	err = helper.ValidateRegionAvailable(p.config.Region, pls.Locations)
+	err = ValidateRegionAvailable(p.config.Region, pls.Locations)
 	if err != nil {
 		return nil, err
 	}
@@ -262,6 +272,10 @@ func (p *Platform) Deploy(
 	}
 
 	// override the defaults if provided in config
+	if p.config.Port > 0 {
+		service.Spec.Template.Spec.Containers[0].Ports = []*run.ContainerPort{{ContainerPort: int64(p.config.Port)}}
+	}
+
 	if p.config.Capacity.MaxRequestsPerContainer > 0 {
 		service.Spec.Template.Spec.ContainerConcurrency = int64(p.config.Capacity.MaxRequestsPerContainer)
 	}
@@ -384,6 +398,8 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 }
 
 // Config is the configuration structure for the Platform.
+// Validation tags are provided by Go Pkg Validator
+// https://pkg.go.dev/gopkg.in/go-playground/validator.v10?tab=doc
 type Config struct {
 	// Project is the project to deploy to.
 	Project string `hcl:"project,attr"`
@@ -393,6 +409,8 @@ type Config struct {
 	// Unauthenticated, if set to true, will allow unauthenticated access
 	// to your deployment. This defaults to true.
 	Unauthenticated *bool `hcl:"unauthenticated,optional"`
+
+	Port int `hcl:"port,optional"`
 
 	Env map[string]string `hcl:"env,optional"`
 
@@ -404,13 +422,13 @@ type Config struct {
 }
 
 type Capacity struct {
-	Memory                  string `hcl:"memory,attr"`
-	CPUCount                int    `hcl:"memory,attr"`
-	RequestTimeout          int    `hcl:"request_timeout,attr"`
-	MaxRequestsPerContainer int    `hcl:"max_requests_per_container,attr"`
+	Memory                  string `hcl:"memory,attr" validate:"kubernetes-memory"`
+	CPUCount                int    `hcl:"cpu_count,attr" validate:"gte=0,lte=2"`
+	RequestTimeout          int    `hcl:"request_timeout,attr" validate:"gte=0,lte=900"`
+	MaxRequestsPerContainer int    `hcl:"max_requests_per_container,attr" validate:"gte=0"`
 }
 
 type AutoScaling struct {
 	//Min int `hcl:"min,attr"` // not yet supported by cloud run
-	Max int `hcl:"max,attr"`
+	Max int `hcl:"max,attr" validate:"gte=0"`
 }
