@@ -12,9 +12,38 @@ import (
 	"github.com/hashicorp/waypoint/sdk/datadir"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/stretchr/testify/require"
+	"github.com/tj/assert"
 )
 
+// These tests are temporary and just to help speed up the development of the plugin
+// will replace when the SDK testing functionality is ready.
+
 func TestDeployment(t *testing.T) {
+	_, err := deploy(t)
+	require.NoError(t, err)
+}
+
+func TestRelease(t *testing.T) {
+	rc := ReleaserConfig{}
+	r := &Releaser{rc}
+	log := hclog.New(&hclog.LoggerOptions{Level: hclog.Debug})
+	ui := &StubbedUI{log}
+
+	// deploy first
+	d, err := deploy(t)
+	require.NoError(t, err)
+
+	_, err = r.Release(
+		context.Background(),
+		log,
+		ui,
+		d,
+	)
+
+	assert.NoError(t, err)
+}
+
+func deploy(t *testing.T) (*Deployment, error) {
 	c := Config{
 		Project: "waypoint-286812",
 		Region:  "europe-north1",
@@ -53,9 +82,9 @@ func TestDeployment(t *testing.T) {
 
 	dir := &datadir.Component{td}
 	dc := &component.DeploymentConfig{}
-	ui := &StubbedUI{}
+	ui := &StubbedUI{log}
 
-	_, err := p.Deploy(
+	return p.Deploy(
 		context.Background(),
 		log,
 		src,
@@ -64,11 +93,9 @@ func TestDeployment(t *testing.T) {
 		dc,
 		ui,
 	)
-
-	require.NoError(t, err)
 }
 
-type StubbedUI struct{}
+type StubbedUI struct{ hclog.Logger }
 
 func (sui *StubbedUI) Input(*terminal.Input) (string, error) {
 	return "", nil
@@ -91,7 +118,7 @@ func (sui *StubbedUI) OutputWriters() (stdout, stderr io.Writer, err error) {
 }
 
 func (sui *StubbedUI) Status() terminal.Status {
-	return &StubbedStatus{}
+	return &StubbedStatus{sui.Logger}
 }
 
 func (sui *StubbedUI) Table(*terminal.Table, ...terminal.Option) {
@@ -102,10 +129,14 @@ func (sui *StubbedUI) StepGroup() terminal.StepGroup {
 	return nil
 }
 
-type StubbedStatus struct{}
+type StubbedStatus struct{ hclog.Logger }
 
-func (ss *StubbedStatus) Update(msg string)       {}
-func (ss *StubbedStatus) Step(status, msg string) {}
+func (ss *StubbedStatus) Update(msg string) {
+	ss.Logger.Info(msg)
+}
+func (ss *StubbedStatus) Step(status, msg string) {
+	ss.Logger.Info(msg, "status", status)
+}
 func (ss *StubbedStatus) Close() error {
 	return nil
 }

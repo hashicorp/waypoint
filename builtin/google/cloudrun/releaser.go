@@ -52,15 +52,13 @@ func (r *Releaser) Release(
 	client := run.NewNamespacesServicesService(apiService)
 	service, err := client.Get(target.apiName()).Context(ctx).Do()
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Aborted, "Unable to fetch service information from Google Cloud: %s", err.Error())
 	}
 
 	// Update the service with the traffic info. This code is laid out this
 	// way to make it more trivial in the future to add traffic splitting.
 	service.Spec.Traffic = nil
-	log.Debug("setting traffic target",
-		"revision", target.RevisionId,
-		"percent", 100)
+	log.Debug("Setting traffic target", "revision", target.RevisionId, "percent", 100)
 	service.Spec.Traffic = append(service.Spec.Traffic, &run.TrafficTarget{
 		RevisionName: target.RevisionId,
 		Percent:      100,
@@ -68,29 +66,28 @@ func (r *Releaser) Release(
 
 	// Replace the service
 	st.Update("Deploying routing changes")
-	service, err = client.ReplaceService(target.apiName(), service).
-		Context(ctx).Do()
+	service, err = client.ReplaceService(target.apiName(), service).Context(ctx).Do()
 	if err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
+		return nil, status.Errorf(codes.Aborted, "Unable to deploy routing changes: %s", err.Error())
 	}
 
 	// Set the IAM policy so global traffic is allowed
 	if err := r.setNoAuthPolicy(ctx, target, apiService); err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Aborted, "Unable to set no auth policy: %s", err)
 	}
 
 	// Poll the service and wait for completion
 	st.Update("Waiting for revision to be ready")
 	service, err = target.pollServiceReady(ctx, log, apiService)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Aborted, "Timeout waiting for revision to be ready: %s", err)
 	}
 
 	// If we have tracing enabled we just dump the full service as we know it
 	// in case we need to look up what the raw value is.
 	if log.IsTrace() {
 		bs, _ := json.Marshal(service)
-		log.Trace("service JSON", "json", base64.StdEncoding.EncodeToString(bs))
+		log.Trace("Service JSON", "json", base64.StdEncoding.EncodeToString(bs))
 	}
 
 	return &Release{
