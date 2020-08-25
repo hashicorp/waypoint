@@ -1,6 +1,6 @@
 # A lot of this Makefile right now is temporary since we have a private
 # repo so that we can more sanely create
-ASSETFS_PATH?=internal/server/bindata_ui.go
+ASSETFS_PATH?=internal/server/gen/bindata_ui.go
 
 # bin creates the binaries for Waypoint
 .PHONY: bin
@@ -52,11 +52,11 @@ gen/ts:
 	# These issues below will help:
 	#   https://github.com/protocolbuffers/protobuf/issues/5119
 	#   https://github.com/protocolbuffers/protobuf/issues/6341
-	find . -type f -wholename './ui/lib/waypoint-pb/*' | xargs sed -i 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g' 
-	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g' 
-	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/.\/server_pb/waypoint-pb/g' 
-	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/..\/..\/..\/internal\/server\/protwaypoint-pb/waypoint-pb/g' 
-	
+	find . -type f -wholename './ui/lib/waypoint-pb/*' | xargs sed -i 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g'
+	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g'
+	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/.\/server_pb/waypoint-pb/g'
+	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/..\/..\/..\/internal\/server\/protwaypoint-pb/waypoint-pb/g'
+
 	protoc \
 		-I=./vendor/proto/api-common-protos/ \
 		./vendor/proto/api-common-protos/google/**/*.proto \
@@ -69,7 +69,7 @@ gen/ts:
 
 # This currently assumes you have run `ember build` in the ui/ directory
 static-assets:
-	@go-bindata -pkg server -prefix dist -o $(ASSETFS_PATH) ./ui/dist/...
+	@go-bindata -pkg gen -prefix dist -o $(ASSETFS_PATH) ./ui/dist/...
 	@go fmt $(ASSETFS_PATH)
 
 .PHONY: gen/doc

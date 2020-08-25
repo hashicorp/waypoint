@@ -8,6 +8,7 @@ import (
 	"time"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
+	"github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/oklog/run"
 )
@@ -28,9 +29,9 @@ func httpInit(group *run.Group, opts *options) error {
 	)
 
 	uifs := http.FileServer(&assetfs.AssetFS{
-		Asset:     Asset,
-		AssetDir:  AssetDir,
-		AssetInfo: AssetInfo,
+		Asset:     gen.Asset,
+		AssetDir:  gen.AssetDir,
+		AssetInfo: gen.AssetInfo,
 		Prefix:    "ui/dist",
 		Fallback:  "index.html",
 	})
