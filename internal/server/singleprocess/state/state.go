@@ -4,6 +4,7 @@ package state
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-memdb"
@@ -43,6 +44,10 @@ type State struct {
 	// used to determine if we're in a bootstrap state and can create a
 	// bootstrap token.
 	hmacKeyNotEmpty uint32
+
+	// indexers is used to track whether an indexer was called. This is
+	// initialized during New and set to nil at the end of New.
+	indexers map[uintptr]struct{}
 }
 
 // New initializes a new State store.
@@ -60,12 +65,18 @@ func New(db *bolt.DB) (*State, error) {
 
 	s := &State{inmem: inmem, db: db}
 
+	// Initialize our set that'll track what memdb indexers we call.
+	// When we're done we always clear this out since it is never used
+	// again.
+	s.indexers = make(map[uintptr]struct{})
+	defer func() { s.indexers = nil }()
+
 	// Initialize our in-memory indexes
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 	err = s.db.View(func(dbTxn *bolt.Tx) error {
 		for _, indexer := range dbIndexers {
-			if err := indexer(s, dbTxn, memTxn); err != nil {
+			if err := s.callIndexer(indexer, dbTxn, memTxn); err != nil {
 				return err
 			}
 		}
@@ -78,6 +89,19 @@ func New(db *bolt.DB) (*State, error) {
 	memTxn.Commit()
 
 	return s, nil
+}
+
+// callIndexer calls the specified indexer exactly once. If it has been called
+// before this returns no error. This must not be called concurrently. This
+// can be used from indexers to ensure other data is indexed first.
+func (s *State) callIndexer(fn indexFn, dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
+	fnptr := reflect.ValueOf(fn).Pointer()
+	if _, ok := s.indexers[fnptr]; ok {
+		return nil
+	}
+	s.indexers[fnptr] = struct{}{}
+
+	return fn(s, dbTxn, memTxn)
 }
 
 // Close should be called to gracefully close any resources.
