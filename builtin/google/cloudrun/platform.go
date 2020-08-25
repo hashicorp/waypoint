@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/kr/pretty"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	run "google.golang.org/api/run/v1"
@@ -324,20 +323,15 @@ func (p *Platform) Deploy(
 		service, err = client.Create("namespaces/"+result.Resource.Project, service).
 			Context(ctx).Do()
 		if err != nil {
-			return nil, status.Errorf(codes.Aborted, fmt.Sprintf("Unable to create Cloud Run service: %s", err.Error()))
+			return nil, status.Errorf(codes.Aborted, "Unable to create Cloud Run service: %s", err.Error())
 		}
 	} else {
 		// Update
 		log.Info("updating a pre-existing service", "service", result.apiName())
 		st.Update("Deploying new Cloud Run revision")
-		service, err = client.ReplaceService(result.apiName(), service).
-			Context(ctx).Do()
+		service, err = client.ReplaceService(result.apiName(), service).Context(ctx).Do()
 		if err != nil {
-			if gerr, ok := err.(*googleapi.Error); ok {
-				log.Debug("Google error", "error", pretty.Sprint(gerr))
-			}
-
-			return nil, status.Errorf(codes.Aborted, err.Error())
+			return nil, status.Errorf(codes.Aborted, "Unable to deploy new Cloud Run revision: %s", err.Error())
 		}
 	}
 

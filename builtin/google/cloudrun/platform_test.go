@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/waypoint/sdk/datadir"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/stretchr/testify/require"
-	"github.com/tj/assert"
 )
 
 // These tests are temporary and just to help speed up the development of the plugin
@@ -41,7 +40,7 @@ func TestRelease(t *testing.T) {
 		d,
 	)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func deploy(t *testing.T) (*Deployment, error) {
