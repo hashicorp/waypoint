@@ -19,6 +19,10 @@ app "wpmini" {
 
       port = 5000
 
+      env = {
+        "NAME": "Nic"
+      }
+
       capacity {
         memory = "128Mi"
         cpu_count = 1
@@ -30,4 +34,7 @@ app "wpmini" {
         max = 10
       }
   }
+
+  release "google-cloud-run" { }
+  
 }

@@ -77,6 +77,7 @@ func (p *Platform) ValidateAuth(
 	dir *datadir.Component,
 	ui terminal.UI,
 ) error {
+
 	apiService, err := getAPIService(ctx, p.config.Region)
 	if err != nil {
 		ui.Output("Error constructing api client: "+err.Error(), terminal.WithErrorStyle())
@@ -193,8 +194,6 @@ func (p *Platform) Deploy(
 	if err != nil {
 		return nil, fmt.Errorf("Unable to query existing Cloud Run services: %s", err)
 	}
-
-	log.Debug("retieved", "services", pretty.Sprint(services))
 
 	// no services found create a new one
 	if len(services) == 0 {

@@ -52,7 +52,7 @@ func (r *Releaser) Release(
 	client := run.NewNamespacesServicesService(apiService)
 	service, err := client.Get(target.apiName()).Context(ctx).Do()
 	if err != nil {
-		return nil, status.Error(codes.Aborted, "Unable to fetch service information from Google Cloud: %s", err.Error())
+		return nil, status.Errorf(codes.Aborted, "Unable to fetch service information from Google Cloud: %s", err.Error())
 	}
 
 	// Update the service with the traffic info. This code is laid out this
@@ -89,6 +89,9 @@ func (r *Releaser) Release(
 		bs, _ := json.Marshal(service)
 		log.Trace("Service JSON", "json", base64.StdEncoding.EncodeToString(bs))
 	}
+
+	// Note: it is not possible to add custom domain mappings as there are a number of steps
+	// such as adding the DNS record which is out of control of Waypoint
 
 	return &Release{
 		Url: service.Status.Url,

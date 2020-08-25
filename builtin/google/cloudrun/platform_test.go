@@ -25,6 +25,7 @@ func TestDeployment(t *testing.T) {
 
 func TestRelease(t *testing.T) {
 	rc := ReleaserConfig{}
+
 	r := &Releaser{rc}
 	log := hclog.New(&hclog.LoggerOptions{Level: hclog.Debug})
 	ui := &StubbedUI{log}
