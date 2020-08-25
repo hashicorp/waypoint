@@ -4,8 +4,10 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
+	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/oklog/run"
 )
@@ -22,20 +24,35 @@ func httpInit(group *run.Group, opts *options) error {
 	grpcWrapped := grpcweb.WrapServer(opts.grpcServer,
 		grpcweb.WithCorsForRegisteredEndpointsOnly(false),
 		grpcweb.WithOriginFunc(func(string) bool { return true }),
+		grpcweb.WithAllowNonRootResource(true),
 	)
+
+	uifs := http.FileServer(&assetfs.AssetFS{
+		Asset:     Asset,
+		AssetDir:  AssetDir,
+		AssetInfo: AssetInfo,
+		Prefix:    "ui/dist",
+		Fallback:  "index.html",
+	})
+
+	// If the path has a grpc prefix we assume it's a GRPC gateway request,
+	// otherwise fall back to serving the UI from the filesystem
+	rootHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/grpc") {
+			grpcWrapped.ServeHTTP(w, r)
+		} else if opts.BrowserUIEnabled {
+			uifs.ServeHTTP(w, r)
+		}
+	})
 
 	// Create our http server
 	httpSrv := &http.Server{
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       120 * time.Second,
-		Handler:           httpLogHandler(grpcWrapped, log),
+		Handler:           httpLogHandler(rootHandler, log),
 		BaseContext: func(net.Listener) context.Context {
 			return opts.Context
 		},
-	}
-
-	if opts.BrowserUIEnabled {
-		httpSrv.Handler = httpUIHandler(httpSrv.Handler)
 	}
 
 	// Add our gRPC server to the run group
