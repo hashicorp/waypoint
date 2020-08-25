@@ -18,11 +18,13 @@ import (
 // will replace when the SDK testing functionality is ready.
 
 func TestDeployment(t *testing.T) {
+	t.Skip()
 	_, err := deploy(t)
 	require.NoError(t, err)
 }
 
 func TestRelease(t *testing.T) {
+	t.Skip()
 	rc := ReleaserConfig{}
 
 	r := &Releaser{rc}

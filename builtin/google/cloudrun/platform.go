@@ -414,6 +414,7 @@ type Config struct {
 	AutoScaling *AutoScaling `hcl:"auto_scaling,block"`
 }
 
+// Capacity defines configuration for deployed Cloud Run resources
 type Capacity struct {
 	Memory                  string `hcl:"memory,attr" validate:"kubernetes-memory"`
 	CPUCount                int    `hcl:"cpu_count,attr" validate:"gte=0,lte=2"`
@@ -421,6 +422,8 @@ type Capacity struct {
 	MaxRequestsPerContainer int    `hcl:"max_requests_per_container,attr" validate:"gte=0"`
 }
 
+// AutoScaling defines the parameters which the Cloud Run instance can AutoScale.
+// Currently only the maximum bound is supported
 type AutoScaling struct {
 	//Min int `hcl:"min,attr"` // not yet supported by cloud run
 	Max int `hcl:"max,attr" validate:"gte=0"`
