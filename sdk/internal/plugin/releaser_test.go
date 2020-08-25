@@ -22,6 +22,14 @@ func TestReleaseManagerDynamicFunc_auth(t *testing.T) {
 	})
 }
 
+func TestReleaseManagerDynamicFunc_destroy(t *testing.T) {
+	testDynamicFunc(t, "releasemanager", &mockReleaseManagerDestroyer{}, func(v, f interface{}) {
+		v.(*mockReleaseManagerDestroyer).Destroyer.On("DestroyFunc").Return(f)
+	}, func(raw interface{}) interface{} {
+		return raw.(component.Destroyer).DestroyFunc()
+	})
+}
+
 func TestReleaseManagerConfig(t *testing.T) {
 	mockV := &mockReleaseManagerConfigurable{}
 	testConfigurable(t, "releasemanager", mockV, &mockV.Configurable)
@@ -35,4 +43,9 @@ type mockReleaseManagerAuthenticator struct {
 type mockReleaseManagerConfigurable struct {
 	mocks.ReleaseManager
 	mocks.Configurable
+}
+
+type mockReleaseManagerDestroyer struct {
+	mocks.ReleaseManager
+	mocks.Destroyer
 }

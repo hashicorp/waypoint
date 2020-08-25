@@ -104,15 +104,15 @@ func (c *App) Deploy(ctx context.Context, op *pb.Job_DeployOp) (*pb.Job_DeployRe
 	return result.Deploy, nil
 }
 
-func (c *App) DestroyDeploy(ctx context.Context, op *pb.Job_DestroyDeployOp) error {
+func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
 	if op == nil {
-		op = &pb.Job_DestroyDeployOp{}
+		op = &pb.Job_DestroyOp{}
 	}
 
 	// Build our job
 	job := c.job()
-	job.Operation = &pb.Job_DestroyDeploy{
-		DestroyDeploy: op,
+	job.Operation = &pb.Job_Destroy{
+		Destroy: op,
 	}
 
 	// Execute it

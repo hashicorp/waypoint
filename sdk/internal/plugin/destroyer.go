@@ -34,6 +34,14 @@ func (c *destroyerClient) Implements(ctx context.Context) (bool, error) {
 }
 
 func (c *destroyerClient) DestroyFunc() interface{} {
+	impl, err := c.Implements(context.Background())
+	if err != nil {
+		return funcErr(err)
+	}
+	if !impl {
+		return nil
+	}
+
 	// Get the spec
 	spec, err := c.Client.DestroySpec(context.Background(), &empty.Empty{})
 	if err != nil {
@@ -74,8 +82,10 @@ func (s *destroyerServer) IsDestroyer(
 	ctx context.Context,
 	empty *empty.Empty,
 ) (*pb.ImplementsResp, error) {
-	_, ok := s.Impl.(component.Destroyer)
-	return &pb.ImplementsResp{Implements: ok}, nil
+	d, ok := s.Impl.(component.Destroyer)
+	return &pb.ImplementsResp{
+		Implements: ok && d.DestroyFunc() != nil,
+	}, nil
 }
 
 func (s *destroyerServer) DestroySpec(
