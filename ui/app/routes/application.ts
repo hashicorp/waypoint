@@ -8,8 +8,7 @@ export default class Application extends Route {
 
   async beforeModel(transition: Transition) {
     await super.beforeModel(transition);
-
-    if (!this.session.authConfigured) {
+    if (!this.session.authConfigured && !transition.to.name.startsWith('auth')) {
       this.transitionTo('auth');
     }
   }

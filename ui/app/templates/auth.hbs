@@ -3,6 +3,12 @@
     {{inline-svg "waypoint-logo" class="logo"}}
     <h1>Welcome to Waypoint</h1>
     <p>To get started, authenticate via the CLI</p>
-    <Login />
+    <p>
+      <LinkTo @route="auth.invite">Enter Invite</LinkTo>
+    </p>
+    <p>
+      <LinkTo @route="auth.token">Enter Token</LinkTo>
+    </p>
+    {{outlet}}
   </Card>
 </div>

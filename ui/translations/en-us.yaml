@@ -27,5 +27,12 @@ login:
   input:
     placeholder: 'Enter your token from the CLI'
     label: 'Then enter the token below'
-  button: 'Authenticate Waypoint Server'
+  button: 'Authenticate with Token'
+  instruction: 'Run the following command in the CLI to generate a token'
+
+invite_login:
+  input:
+    placeholder: 'Get your invite token from your teammate'
+    label: 'Then enter the invite token below'
+  button: 'Authenticate with Invite'
   instruction: 'Run the following command in the CLI to generate a token'
