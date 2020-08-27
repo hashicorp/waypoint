@@ -6,8 +6,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -91,9 +89,8 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 	// Call the hook
 	d, ok := a.Platform.(component.WorkspaceDestroyer)
 	if !ok || d.DestroyWorkspaceFunc() == nil {
-		return status.Errorf(codes.FailedPrecondition,
-			"Created releases must be destroyed but no release plugin is configured! "+
-				"Please configure a release plugin in your Waypoint configuration.")
+		// Workspace deletion is optional.
+		return nil
 	}
 
 	a.UI.Output("Destroying shared release resources...", terminal.WithHeaderStyle())

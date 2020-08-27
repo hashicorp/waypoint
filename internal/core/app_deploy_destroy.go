@@ -97,9 +97,8 @@ func (a *App) destroyDeployWorkspace(ctx context.Context) error {
 	// Call the hook
 	d, ok := a.Platform.(component.WorkspaceDestroyer)
 	if !ok || d.DestroyWorkspaceFunc() == nil {
-		return status.Errorf(codes.FailedPrecondition,
-			"Created deployments must be destroyed but no deployment plugin is configured! "+
-				"Please configure a deployment plugin in your Waypoint configuration.")
+		// Workspace deletion is optional.
+		return nil
 	}
 
 	a.UI.Output("Destroying shared deploy resources...", terminal.WithHeaderStyle())
