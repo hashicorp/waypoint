@@ -87,7 +87,7 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 	}
 
 	// Call the hook
-	d, ok := a.Platform.(component.WorkspaceDestroyer)
+	d, ok := a.Releaser.(component.WorkspaceDestroyer)
 	if !ok || d.DestroyWorkspaceFunc() == nil {
 		// Workspace deletion is optional.
 		return nil
