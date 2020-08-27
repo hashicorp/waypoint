@@ -93,6 +93,19 @@ type Destroyer interface {
 	DestroyFunc() interface{}
 }
 
+// WorkspaceDestroyer is called when a workspace destroy operation is
+// performed (typically via the "waypoint destroy" CLI). This can be implemented
+// by any plugin.
+type WorkspaceDestroyer interface {
+	// DestroyWorkspaceFunc is called when a workspace destroy operation is performed.
+	//
+	// This will only be called if that plugin had performed some operation
+	// previously on the workspace. This may be called multiple times so it should
+	// be idempotent. This will be called after all individual DestroyFuncs are
+	// complete.
+	DestroyWorkspaceFunc() interface{}
+}
+
 // Authenticator is responsible for authenticating different types of plugins.
 type Authenticator interface {
 	// AuthFunc should return the method for getting credentials for a
