@@ -142,7 +142,17 @@ func (op *releaseDestroyOperation) Upsert(
 }
 
 func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
-	destroyer := app.Releaser.(component.Destroyer)
+	// If we have no releaser then we're done.
+	if app.Releaser == nil {
+		return nil, nil
+	}
+
+	destroyer, ok := app.Releaser.(component.Destroyer)
+
+	// If we don't implement the destroy plugin we just mark it as destroyed.
+	if !ok || destroyer.DestroyFunc() == nil {
+		return nil, nil
+	}
 
 	return app.callDynamicFunc(ctx,
 		log,

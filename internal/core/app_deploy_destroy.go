@@ -148,7 +148,10 @@ func (op *deployDestroyOperation) Upsert(
 }
 
 func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
-	destroyer := app.Platform.(component.Destroyer)
+	destroyer, ok := app.Platform.(component.Destroyer)
+	if !ok || destroyer.DestroyFunc() == nil {
+		return nil, nil
+	}
 
 	return app.callDynamicFunc(ctx,
 		log,
