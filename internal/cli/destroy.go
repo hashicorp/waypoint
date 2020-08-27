@@ -37,6 +37,7 @@ func (c *DestroyCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
+		app.UI.Output("Destroy successful!", terminal.WithSuccessStyle())
 		return nil
 	})
 	if err != nil {
