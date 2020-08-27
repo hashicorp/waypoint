@@ -42,6 +42,10 @@ func (p *PlatformPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) e
 			base: base,
 			Impl: p.Impl,
 		},
+		workspaceDestroyerServer: &workspaceDestroyerServer{
+			base: base,
+			Impl: p.Impl,
+		},
 
 		authenticatorServer: &authenticatorServer{
 			base: base,
@@ -100,6 +104,21 @@ func (p *PlatformPlugin) GRPCClient(
 		destroyer = nil
 	}
 
+	// Compose workspace destroyer
+	wsDestroyer := &workspaceDestroyerClient{
+		Client:  client.client,
+		Logger:  client.logger,
+		Broker:  client.broker,
+		Mappers: client.mappers,
+	}
+	if ok, err := wsDestroyer.Implements(ctx); err != nil {
+		return nil, err
+	} else if ok {
+		p.Logger.Info("platform plugin capable of destroy")
+	} else {
+		wsDestroyer = nil
+	}
+
 	authenticator := &authenticatorClient{
 		Client:  client.client,
 		Logger:  client.logger,
@@ -125,6 +144,7 @@ func (p *PlatformPlugin) GRPCClient(
 			PlatformReleaser:   client,
 			LogPlatform:        logPlatform,
 			Destroyer:          destroyer,
+			WorkspaceDestroyer: wsDestroyer,
 		}
 
 	case logPlatform != nil:
@@ -134,6 +154,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Platform:           client,
 			PlatformReleaser:   client,
 			LogPlatform:        logPlatform,
+			WorkspaceDestroyer: wsDestroyer,
 		}
 
 	case destroyer != nil:
@@ -143,6 +164,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Platform:           client,
 			PlatformReleaser:   client,
 			Destroyer:          destroyer,
+			WorkspaceDestroyer: wsDestroyer,
 		}
 	default:
 		result = &mix_Platform_Authenticator{
@@ -150,6 +172,7 @@ func (p *PlatformPlugin) GRPCClient(
 			ConfigurableNotify: client,
 			Platform:           client,
 			PlatformReleaser:   client,
+			WorkspaceDestroyer: wsDestroyer,
 		}
 	}
 
@@ -266,6 +289,7 @@ func (c *platformClient) defaultReleaser(
 type platformServer struct {
 	*base
 	*destroyerServer
+	*workspaceDestroyerServer
 	*authenticatorServer
 
 	Impl component.Platform
