@@ -670,7 +670,11 @@ message Job {
   message DestroyOp {
     // target is what to destroy in this operation.
     oneof target {
-      Deployment deployment = 1;
+      // workspace will delete the app in the workspace that the job
+      // is targeting.
+      google.protobuf.Empty workspace = 1;
+
+      Deployment deployment = 2;
     }
   }
 
