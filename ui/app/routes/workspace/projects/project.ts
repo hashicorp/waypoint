@@ -1,7 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, GetProjectRequest, Project } from 'waypoint-pb';
+import { Ref, GetProjectRequest } from 'waypoint-pb';
 import CurrentProjectService from 'waypoint/services/current-project';
 
 interface ProjectModelParams {
