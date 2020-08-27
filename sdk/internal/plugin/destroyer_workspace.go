@@ -25,6 +25,10 @@ type workspaceDestroyerClient struct {
 }
 
 func (c *workspaceDestroyerClient) Implements(ctx context.Context) (bool, error) {
+	if c == nil {
+		return false, nil
+	}
+
 	resp, err := c.Client.IsWorkspaceDestroyer(ctx, &empty.Empty{})
 	if err != nil {
 		return false, err
