@@ -117,6 +117,13 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"destroy": func() (cli.Command, error) {
+			return &DestroyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"exec": func() (cli.Command, error) {
 			return &ExecCommand{
 				baseCommand: baseCommand,
