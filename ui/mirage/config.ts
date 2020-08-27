@@ -20,6 +20,7 @@ export default function (this: Server) {
   this.pretender.handledRequest = logRequestConsole;
 
   this.post('/ListBuilds', build.list);
+  this.post('/GetBuild', build.get);
   this.post('/ListDeployments', deployment.list);
   this.post('/GetDeployment', deployment.get);
   this.post('/ListProjects', project.list);

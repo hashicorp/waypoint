@@ -5,11 +5,12 @@
     </p>
     <small>
       {{inline-svg "source-file" class="icon"}}
-      <span>Built with <b>{{@build.component.name}}</b> 2 hours ago</span>
+      <span>Built with <b>{{titleize @build.component.name}}</b>
+        {{date-format-distance-to-now @build.status.startTime.seconds }}</span>
     </small>
   </LinkTo>
   <b class="badge badge--success">
     {{inline-svg "check-plain" class="icon"}}
-    <span>Built in 2 minutes 12 seconds</span>
+    <span>Built in {{date-format-distance @build.status.startTime.seconds @build.status.completeTime.seconds }}</span>
   </b>
 </li>

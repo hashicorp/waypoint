@@ -1,11 +1,13 @@
 import { Build, ListBuildsResponse, Component, Status, Ref } from 'waypoint-pb';
-import { fakeId, fakeComponentForKind } from '../utils';
-import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
-import { subMinutes } from 'date-fns';
+import { fakeId, fakeComponentForKind, statusRandom } from '../utils';
+
+const buildSequence = 0;
 
 function createBuild(): Build {
   let build = new Build();
   build.setId(fakeId());
+
+  build.setSequence(buildSequence + 1);
 
   // todo(pearkes): create util
   let workspace = new Ref.Workspace();
@@ -15,21 +17,8 @@ function createBuild(): Build {
   component.setType(Component.Type.BUILDER);
   component.setName(fakeComponentForKind(Component.Type.BUILDER));
 
-  // todo(pearkes): random state
-  let status = new Status();
-  status.setState(Status.State.SUCCESS);
-
-  // todo(pearkes): helpers
-  let timestamp = new Timestamp();
-  let result = Math.floor(subMinutes(new Date(), 30).getTime() / 1000);
-  timestamp.setSeconds(result);
-
-  // Same thing for now
-  status.setCompleteTime(timestamp);
-  status.setStartTime(timestamp);
-
   build.setComponent(component);
-  build.setStatus(status);
+  build.setStatus(statusRandom());
   build.setWorkspace(workspace);
 
   return build;
@@ -40,4 +29,8 @@ export function list(schema: any, { params, requestHeaders }) {
   let builds = new Array(createBuild(), createBuild(), createBuild(), createBuild());
   resp.setBuildsList(builds);
   return this.serialize(resp, 'application');
+}
+
+export function get(schema: any, { params, requestHeaders }) {
+  return this.serialize(createBuild(), 'application');
 }
