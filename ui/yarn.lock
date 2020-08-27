@@ -13393,10 +13393,10 @@ watchpack@^1.5.0:
     chokidar "^3.4.0"
     watchpack-chokidar2 "^2.0.0"
 
-waypoint-client@./lib/waypoint-client/:
+waypoint-client@./lib/waypoint-client:
   version "1.0.0"
 
-waypoint-pb@./lib/waypoint-pb/:
+waypoint-pb@./lib/waypoint-pb:
   version "1.0.0"
 
 wcwidth@^1.0.1:

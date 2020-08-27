@@ -70,12 +70,12 @@
     "faker": "^4.1.0",
     "loader.js": "^4.7.0",
     "npm-run-all": "^4.1.5",
-    "pretender": "^3.4.3",
     "pds": "./lib/addon-product-design-system/",
+    "pretender": "^3.4.3",
     "qunit-dom": "^1.2.0",
     "sass": "^1.26.10",
     "typescript": "^3.9.6",
-    "waypoint-pb": "./lib/waypoint-pb/",
+    "waypoint-pb": "./lib/waypoint-pb",
     "webpack-bundle-analyzer": "^3.8.0"
   },
   "engines": {
@@ -90,7 +90,7 @@
     "ember-cli-typescript-blueprints": "^3.0.0",
     "google-protobuf": "^3.12.2",
     "grpc-web": "./lib/grpc-web",
-    "waypoint-client": "./lib/waypoint-client/"
+    "waypoint-client": "./lib/waypoint-client"
   },
   "ember-addon": {}
 }
