@@ -30,7 +30,7 @@ export function createDeployment(): Deployment {
 
 export function list(schema: any, { params, requestHeaders }) {
   let resp = new ListDeploymentsResponse();
-  let deploys = new Array(createDeployment(), createDeployment(), createDeployment(), createDeployment());
+  let deploys = new Array(createDeployment(), createDeployment(), createDeployment());
   resp.setDeploymentsList(deploys);
   return this.serialize(resp, 'application');
 }

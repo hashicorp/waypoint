@@ -76,7 +76,7 @@ export function fakeComponentForKind(kind: Component.Type): string {
 export function logRequestConsole(verb: string, path: string, request: FakeXMLHttpRequest) {
   let url = request.responseURL.split('/');
   if (url.length >= 5) {
-    console.groupCollapsed(`Mock: ${url[2]} ${url[3]}/${url[4]}`);
+    console.groupCollapsed(`Mock: ${url[3]} ${url[4]}/${url[5]}`);
   }
   let { requestBody, responseText } = request;
   let loggedRequest: string, loggedResponse: string;

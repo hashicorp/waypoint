@@ -30,7 +30,7 @@ function createApp(): Application {
 function createProject(): Project {
   let proj = new Project();
   proj.setName(projectName);
-  proj.setApplicationsList([createApp(), createApp()]);
+  proj.setApplicationsList([createApp()]);
 
   return proj;
 }

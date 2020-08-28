@@ -1,0 +1,19 @@
+<Card>
+    <Card::Header>
+        <h4>
+            {{inline-svg "upload" class="icon"}}
+            Latest deployments
+        </h4>
+        <LinkTo @route="workspace.projects.project.app.deployments">View all deployments </LinkTo>
+    </Card::Header>
+    {{#if this.firstDeployment}}
+    <AppMetaItem::LatestDeployment @model={{this.firstDeployment }} />
+    {{/if}}
+    <div class="app-meta-item">
+        <ul class="app-meta-item-info">
+            {{#each this.deployments as |deployment|}}
+            <AppMetaItem::Deployment @model={{deployment}} />
+            {{/each}}
+        </ul>
+    </div>
+</Card>

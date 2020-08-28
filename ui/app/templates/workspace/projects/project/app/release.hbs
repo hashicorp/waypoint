@@ -1,37 +1,48 @@
-<PageHeader @iconName="logo-gcp-color">
+<PageHeader @iconName={{icon-for-component @model.component.name}}>
   <div class="title">
-    <h2><b class="badge badge--version">v99</b> <code>abcd1234</code></h2>
+    <h2><b class="badge badge--version">v{{ @model.sequence }}</b> <code>{{ @model.id }}</code></h2>
     <small>
-      <span>Released on <b>GCP</b> 2 hours ago</span>
+      <span>Released on <b>{{component-name @model.component.name}}</b>
+        {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
     </small>
   </div>
   <div class="actions">
     {{#if @isLatest}}
-      <button class="button button--primary">
-        <span>prod.wp-microship.com</span>
-        {{inline-svg "exit" class="icon"}}
-      </button>
+    <button class="button button--primary">
+      <span>{{@model.release.url}}</span>
+      {{inline-svg "exit" class="icon"}}
+    </button>
     {{/if}}
   </div>
 </PageHeader>
 
 <div class="item-row">
   <div class="item">
-    <b class="badge badge--success">Released successfully</b>
+    {{#if (eq @model.state 1)}}
+    <b class="badge">{{t 'state.release.pending'}}</b>
+    {{else if (eq @model.state 3)}}
+    <b class="badge badge--success">{{t 'state.release.success'}}</b>
+    {{else if (eq @model.state 4)}}
+    <b class="badge badge--error">{{t 'state.release.destroy'}}</b>
+    {{/if}}
   </div>
+
+  {{!-- todo(pearkes): API doesn't return this object but just a string of it, so wait for that to be fixed --}}
+  {{#if @model.deployment }}
   <div class="item">
     <small>
-      Released deployment <a href="#"><b class="badge badge--version">#321</b> <code>abcd1234</code></a>
+      Released deployment <LinkTo @route="workspace.projects.project.app.deployment"
+        @models={{array @model.deployment.id}}>
+        <b class="badge badge--version">v{{@model.deployment.sequence}}</b>
+        <code>{{@model.deployment.id}}</code>
+      </LinkTo>
     </small>
   </div>
+  {{/if}}
 </div>
 
 <div class="output-pane">
   <div class="output">
-    <code>release output row</code>
-    <code>release output row</code>
-    <code>release output row</code>
-    <code>release output row</code>
-    <code>release output row</code>
+    <code>No release output available</code>
   </div>
 </div>

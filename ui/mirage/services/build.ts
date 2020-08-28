@@ -27,7 +27,7 @@ export function createBuild(): Build {
 
 export function list(schema: any, { params, requestHeaders }) {
   let resp = new ListBuildsResponse();
-  let builds = new Array(createBuild(), createBuild(), createBuild(), createBuild());
+  let builds = new Array(createBuild(), createBuild(), createBuild());
   resp.setBuildsList(builds);
   return this.serialize(resp, 'application');
 }

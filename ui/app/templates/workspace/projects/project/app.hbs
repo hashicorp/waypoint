@@ -5,67 +5,16 @@
   </div>
   <div class="actions">
     <button class="button button--primary">
-      <span>prod.{{@model.application}}.com</span>
+      <span>todo</span>
       {{inline-svg "exit" class="icon"}}
     </button>
   </div>
 </PageHeader>
 
 <div class="cards app-latest">
-  <Card>
-    <Card::Header>
-      <h4>
-        {{inline-svg "public-default" class="icon"}}
-        Latest releases
-      </h4>
-      <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
-        View all releases
-      </LinkTo>
-    </Card::Header>
-    <AppMetaItem::LatestRelease />
-    <div class="app-meta-item">
-      <ul class="app-meta-item-info">
-        <AppMetaItem::Release />
-        <AppMetaItem::Release />
-      </ul>
-    </div>
-  </Card>
-  <Card>
-    <Card::Header>
-      <h4>
-        {{inline-svg "upload" class="icon"}}
-        Latest deployments
-      </h4>
-      <LinkTo @route="workspace.projects.project.app.deployments" @models={{array @model.project @model.application }}>
-        View all deployments
-      </LinkTo>
-    </Card::Header>
-    <AppMetaItem::LatestDeployment />
-    <div class="app-meta-item">
-      <ul class="app-meta-item-info">
-        <AppMetaItem::Deployment />
-        <AppMetaItem::Deployment />
-      </ul>
-    </div>
-  </Card>
-  <Card>
-    <Card::Header>
-      <h4>
-        {{inline-svg "source-file" class="icon"}}
-        Latest builds
-      </h4>
-      <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
-        View all builds
-      </LinkTo>
-    </Card::Header>
-    <AppMetaItem::LatestBuild />
-    <div class="app-meta-item">
-      <ul class="app-meta-item-info">
-        <AppMetaItem::Build />
-        <AppMetaItem::Build />
-      </ul>
-    </div>
-  </Card>
+  <AppMetaCardReleases @application={{@model}}></AppMetaCardReleases>
+  <AppMetaCardDeployments @application={{@model}}></AppMetaCardDeployments>
+  <AppMetaCardBuilds @application={{@model}}></AppMetaCardBuilds>
 </div>
 
 <nav>
@@ -83,8 +32,7 @@
       </LinkTo>
     </li>
     <li>
-      <LinkTo @route="workspace.projects.project.app.deployments"
-        @models={{array @model.project @model.application }}>
+      <LinkTo @route="workspace.projects.project.app.deployments" @models={{array @model.project @model.application }}>
         {{inline-svg "upload" class="icon"}}
         {{t "nav.deployments"}}
       </LinkTo>

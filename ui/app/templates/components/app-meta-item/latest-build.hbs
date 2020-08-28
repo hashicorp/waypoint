@@ -2,14 +2,25 @@
   <div class="app-meta-item-info">
     <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
       <p>
-        <code>abcd1234</code>
+        <code>{{truncate @model.id 7}}</code>
+        {{#if (eq @model.status.state 1)}}
+        <b class="badge">
+          {{inline-svg "clock-outline" class="icon"}}
+        </b>
+        {{else if (eq @model.status.state 2)}}
         <b class="badge badge--success">
           {{inline-svg "check-plain" class="icon"}}
         </b>
+        {{else if (eq @model.status.state 3)}}
+        <b class="badge badge--error">
+          {{inline-svg "alert-triangle" class="icon"}}
+        </b>
+        {{/if}}
       </p>
       <small>
         {{inline-svg "source-file" class="icon"}}
-        <span>Built with <b>Pack</b> 2 hours ago</span>
+        <span>Built with <b>{{component-name @model.component.name}}</b>
+          {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
       </small>
     </LinkTo>
   </div>

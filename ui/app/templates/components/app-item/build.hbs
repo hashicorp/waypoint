@@ -1,7 +1,7 @@
 <li class="app-item">
   <LinkTo @route="workspace.projects.project.app.build" @models={{array @build.id}}>
     <p>
-      <code>{{@build.id}}</code>
+      <code>v{{@build.sequence}}</code>
     </p>
     <small>
       {{inline-svg "source-file" class="icon"}}

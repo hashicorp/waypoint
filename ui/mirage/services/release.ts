@@ -32,7 +32,7 @@ function createRelease(): Release {
 
 export function list(schema: any, { params, requestHeaders }) {
   let resp = new ListReleasesResponse();
-  let releases = new Array(createRelease(), createRelease(), createRelease(), createRelease());
+  let releases = new Array(createRelease(), createRelease(), createRelease());
   resp.setReleasesList(releases);
   return this.serialize(resp, 'application');
 }
