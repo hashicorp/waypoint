@@ -1,16 +1,17 @@
 <li class="app-item">
   <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @deployment.id}}>
     <p>
-      <b class="badge badge--version">#321</b>
+      <b class="badge badge--version">v{{@deployment.sequence}}</b>
       <code>{{@deployment.id}}</code>
     </p>
     <small>
-      {{inline-svg "logo-kubernetes-color" class="icon"}}
-      <span>Deployed by <b>{{@deployment.component.name}}</b> 2 hours ago</span>
+      {{inline-svg (icon-for-component @deployment.component.name) class="icon"}}
+      <span>Deployed by <b>{{component-name @deployment.component.name}}</b>
+        {{date-format-distance-to-now @deployment.status.startTime.seconds }}</span>
     </small>
   </LinkTo>
   <button class="button button--secondary">
-    <span>preview--{{@deployment.id}}.wpnt.com</span>
+    <span>todo</span>
     {{inline-svg "exit" class="icon"}}
   </button>
 </li>
