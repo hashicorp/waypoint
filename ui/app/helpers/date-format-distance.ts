@@ -3,7 +3,9 @@ import { formatDistance } from 'date-fns';
 
 // dateFormatDistance
 export function dateFormatDistance([date, baseDate]: [number, number]): string {
-  return formatDistance(date * 1000, baseDate * 1000, { includeSeconds: true });
+  let start = new Date(baseDate * 1000);
+  let end = new Date(date * 1000);
+  return formatDistance(end, start, { includeSeconds: true });
 }
 
 export default helper(dateFormatDistance);
