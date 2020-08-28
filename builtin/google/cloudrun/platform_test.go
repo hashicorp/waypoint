@@ -47,18 +47,18 @@ func TestRelease(t *testing.T) {
 
 func deploy(t *testing.T) (*Deployment, error) {
 	c := Config{
-		Project: "waypoint-286812",
-		Region:  "europe-north1",
+		Project:  "waypoint-286812",
+		Location: "europe-north1",
 		Capacity: &Capacity{
-			Memory:                  "512Mi", // max 4Gi
-			CPUCount:                2,       // max 2
-			MaxRequestsPerContainer: 10,      // default 80, max 80
-			RequestTimeout:          500,     // max 900
+			Memory:                  512, // max 4Gi
+			CPUCount:                2,   // max 2
+			MaxRequestsPerContainer: 10,  // default 80, max 80
+			RequestTimeout:          500, // max 900
 		},
 		AutoScaling: &AutoScaling{
 			Max: 10,
 		},
-		Env: map[string]string{
+		StaticEnvVars: map[string]string{
 			"foo": "bar",
 		},
 		Port: 5000,

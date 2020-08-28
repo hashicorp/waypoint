@@ -52,17 +52,27 @@ func TestConfigValidation(t *testing.T) {
 				Project:  "waypoint-286812",
 				Location: "europe-north1",
 				Capacity: &Capacity{
-					Memory: 4, // max 4GB
+					Memory: 128, // max 4GB
 				},
 			},
 			true,
 		},
-		"Invalid Memory Value": {
+		"Invalid Memory Value Too High": {
 			Config{
 				Project:  "waypoint-286812",
 				Location: "europe-north1",
 				Capacity: &Capacity{
-					Memory: 5, // max 4GB
+					Memory: 5000, // max 4GB
+				},
+			},
+			false,
+		},
+		"Invalid Memory Value Too Low": {
+			Config{
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
+				Capacity: &Capacity{
+					Memory: 50, // max 4GB
 				},
 			},
 			false,
@@ -165,10 +175,10 @@ func TestConfigValidation(t *testing.T) {
 
 func TestValidateConfigReturnsPrettyError(t *testing.T) {
 	c := Config{
-		Project: "waypoint-286812",
-		Region:  "europe-north1",
+		Project:  "waypoint-286812",
+		Location: "europe-north1",
 		Capacity: &Capacity{
-			Memory:                  "5Gi", // max 4Gi
+			Memory:                  5000, // max 4GB
 			CPUCount:                4,
 			MaxRequestsPerContainer: -1,
 			RequestTimeout:          1000,
@@ -178,7 +188,7 @@ func TestValidateConfigReturnsPrettyError(t *testing.T) {
 		},
 	}
 
-	err := ValidateConfig(c)
+	err := validateConfig(c)
 
 	require.Error(t, err)
 	require.Contains(t, err.Error(), ErrInvalidMemoryValue.Error())
@@ -190,10 +200,10 @@ func TestValidateConfigReturnsPrettyError(t *testing.T) {
 
 func TestConfigSetReturnsErrorOnInvalidConfig(t *testing.T) {
 	c := Config{
-		Project: "waypoint-286812",
-		Region:  "europe-north1",
+		Project:  "waypoint-286812",
+		Location: "europe-north1",
 		Capacity: &Capacity{
-			Memory: "5Gi", // max 4Gi
+			Memory: 5000, // max 4096 (4GB)
 		},
 	}
 

@@ -422,7 +422,8 @@ type Config struct {
 // Capacity defines configuration for deployed Cloud Run resources
 type Capacity struct {
 	// Memory to allocate to the container specified in MB, min 128, max 4096.
-	Memory int `hcl:"memory,attr" validate:"gte=128,lte=4096"`
+	// Default value of 0 sets memory to 128MB which is default Cloud Run behaviour
+	Memory int `hcl:"memory,attr" validate:"eq=0|gte=128,lte=4096"`
 	// CPUCount is the number CPUs to allocate to a Cloud Run instance.
 	CPUCount int `hcl:"cpu_count,attr" validate:"gte=0,lte=2"`
 	// Maximum request time in seconds, max 900.
