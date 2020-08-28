@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/api/googleapi"
-	"google.golang.org/api/option"
 	run "google.golang.org/api/run/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -37,7 +35,7 @@ func (p *Platform) ConfigSet(config interface{}) error {
 		return fmt.Errorf("Invalid configuration, expected *cloudrun.Config, got %s", reflect.TypeOf(config))
 	}
 
-	return ValidateConfig(*c)
+	return validateConfig(*c)
 }
 
 // Config implements Configurable
@@ -76,8 +74,15 @@ func (p *Platform) ValidateAuth(
 	dir *datadir.Component,
 	ui terminal.UI,
 ) error {
+	deployment := &Deployment{
+		Resource: &Deployment_Resource{
+			Location: p.config.Location,
+			Project:  p.config.Project,
+			Name:     src.App,
+		},
+	}
 
-	apiService, err := getAPIService(ctx, p.config.Region)
+	apiService, err := deployment.apiService(ctx)
 	if err != nil {
 		ui.Output("Error constructing api client: "+err.Error(), terminal.WithErrorStyle())
 		return status.Errorf(codes.Aborted, err.Error())
@@ -105,7 +110,7 @@ func (p *Platform) ValidateAuth(
 	// The resource we are checking permissions on
 	apiResource := fmt.Sprintf("projects/%s/locations/%s/services/%s",
 		p.config.Project,
-		p.config.Region,
+		p.config.Location,
 		src.App,
 	)
 
@@ -135,35 +140,10 @@ func (p *Platform) Deploy(
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
-	// Validate that the Docker image is stored in a GCP registry
-	// It is not possible to deploy to Cloud Run using external container registries
-	err := ValidateImageName(img.Image, p.config.Project)
-	if err != nil {
-		return nil, status.Error(codes.FailedPrecondition, err.Error())
-	}
-
-	apiService, err := getAPIService(ctx, "")
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
-	}
-
-	// Validate that the given region is available
-	pClient := run.NewProjectsLocationsService(apiService)
-	pls, err := pClient.List(fmt.Sprintf("projects/%s", p.config.Project)).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to list regions for project %s: %s", p.config.Project, err)
-	}
-
-	// validate the region defined in the config is available for deployment
-	err = ValidateRegionAvailable(p.config.Region, pls.Locations)
-	if err != nil {
-		return nil, err
-	}
-
 	// Start building our deployment since we use this information
-	result := &Deployment{
+	deployment := &Deployment{
 		Resource: &Deployment_Resource{
-			Location: p.config.Region,
+			Location: p.config.Location,
 			Project:  p.config.Project,
 			Name:     src.App,
 		},
@@ -172,7 +152,28 @@ func (p *Platform) Deploy(
 	if err != nil {
 		return nil, err
 	}
-	result.Id = id
+	deployment.Id = id
+
+	// Validate that the Docker image is stored in a GCP registry
+	// It is not possible to deploy to Cloud Run using external container registries
+	err = validateImageName(img.Image, p.config.Project)
+	if err != nil {
+		return nil, status.Error(codes.FailedPrecondition, err.Error())
+	}
+
+	// Get the Cloud Run Locations available for this project
+	// Cloud Run is only available in a limited number of Locations, this may be further restricted
+	// by the users access
+	pls, err := deployment.getLocationsForProject(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Aborted, err.Error())
+	}
+
+	// Validate that the Location specified for the deployment is available for the project
+	err = validateLocationAvailable(p.config.Location, pls)
+	if err != nil {
+		return nil, err
+	}
 
 	// We'll update the user in real time
 	st := ui.Status()
@@ -185,11 +186,11 @@ func (p *Platform) Deploy(
 	create := false
 	var service *run.Service
 
-	log.Trace("checking if service has already exists", "service", result.apiName())
+	log.Trace("checking if service has already exists", "service", deployment.apiName())
 	st.Update("Checking if service already exists")
 
 	// Is there a deployment for this service
-	services, err := findServices(ctx, result.apiName(), pls.Locations)
+	services, err := deployment.findServicesForLocations(ctx, pls)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to query existing Cloud Run services: %s", err)
 	}
@@ -201,7 +202,7 @@ func (p *Platform) Deploy(
 			ApiVersion: "serving.knative.dev/v1",
 			Kind:       "Service",
 			Metadata: &run.ObjectMeta{
-				Name: result.Resource.Name,
+				Name: deployment.Resource.Name,
 			},
 			Spec: &run.ServiceSpec{},
 		}
@@ -212,13 +213,13 @@ func (p *Platform) Deploy(
 		// Loop through the regions which contain services and ensure that
 		// the current deployment is not in a different region to an existing service
 		for k := range services {
-			if k != p.config.Region {
+			if k != p.config.Location {
 				// Waypoint can not change the region of a service so return an error.
 				return nil, fmt.Errorf("The Cloud Run service '%s' already exists in the region '%s', Waypoint is unable to change the region of a deployed service", src.App, k)
 			}
 		}
 
-		service = services[p.config.Region]
+		service = services[p.config.Location]
 	}
 
 	// If we're deploying to the "latest revision" then we want to enforce
@@ -278,15 +279,19 @@ func (p *Platform) Deploy(
 		service.Spec.Template.Spec.ContainerConcurrency = int64(p.config.Capacity.MaxRequestsPerContainer)
 	}
 
-	if p.config.Capacity.Memory != "" {
-		resources.Limits["memory"] = p.config.Capacity.Memory
+	if p.config.Capacity.Memory > 0 {
+		// Requires value expressed as Kubernetes Quantity
+		// (https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go)
+		resources.Limits["memory"] = fmt.Sprintf("%dMi", p.config.Capacity.Memory)
 	}
 
 	if p.config.Capacity.CPUCount > 0 {
+		// Can only be 1 or 2
 		resources.Limits["cpu"] = fmt.Sprintf("%d", p.config.Capacity.CPUCount)
 	}
 
 	if p.config.Capacity.RequestTimeout > 0 {
+		// Max value of 900
 		service.Spec.Template.Spec.TimeoutSeconds = int64(p.config.Capacity.RequestTimeout)
 	}
 
@@ -294,9 +299,9 @@ func (p *Platform) Deploy(
 		service.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/maxScale"] = fmt.Sprintf("%d", p.config.AutoScaling.Max)
 	}
 
-	if p.config.Env != nil {
+	if p.config.StaticEnvVars != nil {
 		env = service.Spec.Template.Spec.Containers[0].Env
-		for k, v := range p.config.Env {
+		for k, v := range p.config.StaticEnvVars {
 			env = append(env, &run.EnvVar{Name: k, Value: v})
 		}
 		service.Spec.Template.Spec.Containers[0].Env = env
@@ -309,27 +314,20 @@ func (p *Platform) Deploy(
 		}
 	*/
 
-	apiService, err = getAPIService(ctx, p.config.Region)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
-	}
-	client := run.NewNamespacesServicesService(apiService)
-
 	if create {
 		// Create the service
 		log.Info("creating the service")
 		st.Update("Creating new Cloud Run service")
 
-		service, err = client.Create("namespaces/"+result.Resource.Project, service).
-			Context(ctx).Do()
+		service, err = deployment.createService(ctx, service)
 		if err != nil {
 			return nil, status.Errorf(codes.Aborted, "Unable to create Cloud Run service: %s", err.Error())
 		}
 	} else {
 		// Update
-		log.Info("updating a pre-existing service", "service", result.apiName())
+		log.Info("updating a pre-existing service", "service", deployment.apiName())
 		st.Update("Deploying new Cloud Run revision")
-		service, err = client.ReplaceService(result.apiName(), service).Context(ctx).Do()
+
 		if err != nil {
 			return nil, status.Errorf(codes.Aborted, "Unable to deploy new Cloud Run revision: %s", err.Error())
 		}
@@ -337,14 +335,14 @@ func (p *Platform) Deploy(
 
 	// Poll the service and wait for completion
 	st.Update("Waiting for revision to be ready")
-	service, err = result.pollServiceReady(ctx, log, apiService)
+	service, err = deployment.pollServiceReady(ctx, log)
 	if err != nil {
 		return nil, err
 	}
 
 	// Now that the service is ready we can set the latest URL
-	result.RevisionId = service.Status.LatestCreatedRevisionName
-	result.Url = service.Status.Url
+	deployment.RevisionId = service.Status.LatestCreatedRevisionName
+	deployment.Url = service.Status.Url
 
 	// If we have tracing enabled we just dump the full service as we know it
 	// in case we need to look up what the raw value is.
@@ -353,7 +351,7 @@ func (p *Platform) Deploy(
 		log.Trace("service JSON", "json", base64.StdEncoding.EncodeToString(bs))
 	}
 
-	return result, nil
+	return deployment, nil
 }
 
 // Destroy deletes the cloud run revision
@@ -394,32 +392,44 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 // Validation tags are provided by Go Pkg Validator
 // https://pkg.go.dev/gopkg.in/go-playground/validator.v10?tab=doc
 type Config struct {
-	// Project is the project to deploy to.
+	// Project is the project to deploy to
 	Project string `hcl:"project,attr"`
-	// Region	is the GCP region to deploy to
-	Region string `hcl:"region,attr"`
+
+	// Location	represents the Google Cloud location where the application will be deployed
+	// e.g. us-west1
+	Location string `hcl:"location,attr"`
 
 	// Unauthenticated, if set to true, will allow unauthenticated access
 	// to your deployment. This defaults to true.
 	Unauthenticated *bool `hcl:"unauthenticated,optional"`
 
+	// Port the applications is listening on.
 	Port int `hcl:"port,optional"`
 
-	Env map[string]string `hcl:"env,optional"`
+	// Environment variables that are meant to configure the application in a static
+	// way. This might be control an image that has multiple modes of operation,
+	// selected via environment variable. Most configuration should use the waypoint
+	// config commands.
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
-	// Capacity details for cloud run container
+	// Capacity details for cloud run container.
 	Capacity *Capacity `hcl:"capacity,block"`
 
-	// AutoScaling details
+	// AutoScaling details.
 	AutoScaling *AutoScaling `hcl:"auto_scaling,block"`
 }
 
 // Capacity defines configuration for deployed Cloud Run resources
 type Capacity struct {
-	Memory                  string `hcl:"memory,attr" validate:"kubernetes-memory"`
-	CPUCount                int    `hcl:"cpu_count,attr" validate:"gte=0,lte=2"`
-	RequestTimeout          int    `hcl:"request_timeout,attr" validate:"gte=0,lte=900"`
-	MaxRequestsPerContainer int    `hcl:"max_requests_per_container,attr" validate:"gte=0"`
+	// Memory to allocate to the container specified in MB, min 128, max 4096.
+	Memory int `hcl:"memory,attr" validate:"gte=128,lte=4096"`
+	// CPUCount is the number CPUs to allocate to a Cloud Run instance.
+	CPUCount int `hcl:"cpu_count,attr" validate:"gte=0,lte=2"`
+	// Maximum request time in seconds, max 900.
+	RequestTimeout int `hcl:"request_timeout,attr" validate:"gte=0,lte=900"`
+	// Maximum number of concurrent requests per container instance.
+	// When max requests is exceeded Cloud Run will scale the number of containers.
+	MaxRequestsPerContainer int `hcl:"max_requests_per_container,attr" validate:"gte=0"`
 }
 
 // AutoScaling defines the parameters which the Cloud Run instance can AutoScale.
@@ -428,3 +438,8 @@ type AutoScaling struct {
 	//Min int `hcl:"min,attr"` // not yet supported by cloud run
 	Max int `hcl:"max,attr" validate:"gte=0"`
 }
+
+var (
+	_ component.Platform     = (*Platform)(nil)
+	_ component.Configurable = (*Platform)(nil)
+)

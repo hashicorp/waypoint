@@ -8,7 +8,8 @@ message Deployment {
   string url = 1;
   Resource resource = 2;
   string revision_id = 3;
-  string id = 4;
+  string region = 4;
+  string id = 5;
 
   message Resource {
     string location = 1;

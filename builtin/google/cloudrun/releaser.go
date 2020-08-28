@@ -78,7 +78,7 @@ func (r *Releaser) Release(
 
 	// Poll the service and wait for completion
 	st.Update("Waiting for revision to be ready")
-	service, err = target.pollServiceReady(ctx, log, apiService)
+	service, err = target.pollServiceReady(ctx, log)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "Timeout waiting for revision to be ready: %s", err)
 	}

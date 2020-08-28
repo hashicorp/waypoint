@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	run "google.golang.org/api/run/v1"
 	"google.golang.org/grpc/codes"
@@ -52,20 +53,99 @@ func (d *Deployment) apiService(ctx context.Context) (*run.APIService, error) {
 	return result, nil
 }
 
+// getLocationsForProject returns the Cloud Run regions which are usable by this project
+func (d *Deployment) getLocationsForProject(ctx context.Context) ([]*run.Location, error) {
+	apiService, err := run.NewService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate that the given region is available
+	pClient := run.NewProjectsLocationsService(apiService)
+	pls, err := pClient.List(fmt.Sprintf("projects/%s", d.Resource.Project)).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to list regions for project %s: %s", d.Resource.Project, err)
+	}
+
+	return pls.Locations, nil
+}
+
+// findServices finds the Cloud Run services in all regions
+func (d *Deployment) findServicesForLocations(ctx context.Context, locations []*run.Location) (map[string]*run.Service, error) {
+	services := map[string]*run.Service{}
+
+	for _, l := range locations {
+		apiService, err := run.NewService(ctx,
+			option.WithEndpoint("https://"+l.LocationId+"-run.googleapis.com"),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		client := run.NewNamespacesServicesService(apiService)
+
+		service, err := client.Get(d.apiName()).Context(ctx).Do()
+		if err != nil {
+			gerr, ok := err.(*googleapi.Error)
+			if !ok {
+				return nil, err
+			}
+
+			// If we have a 404 then we just haven't created it yet, everything else is an API error
+			if gerr.Code != 404 {
+				return nil, err
+			}
+		}
+
+		if service != nil {
+			services[l.LocationId] = service
+		}
+	}
+
+	return services, nil
+}
+
+func (d *Deployment) replaceService(ctx context.Context, s *run.Service) (*run.Service, error) {
+	apiService, err := d.apiService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	client := run.NewNamespacesServicesService(apiService)
+
+	return client.ReplaceService(d.apiName(), s).Context(ctx).Do()
+}
+
+func (d *Deployment) createService(ctx context.Context, s *run.Service) (*run.Service, error) {
+	apiService, err := d.apiService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	client := run.NewNamespacesServicesService(apiService)
+
+	return client.Create("namespaces/"+d.Resource.Project, s).Context(ctx).Do()
+}
+
 // pollServiceReady waits for the service to become ready.
 func (d *Deployment) pollServiceReady(
 	ctx context.Context,
 	log hclog.Logger,
-	apiService *run.APIService,
 ) (*run.Service, error) {
 	log = log.With("service", d.Resource.Name)
 	log.Info("waiting for cloud run service to be ready")
-	client := run.NewNamespacesServicesService(apiService)
+
+	apiClient, err := d.apiService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	client := run.NewNamespacesServicesService(apiClient)
 	for {
 		log.Trace("querying service")
 		service, err := client.Get(d.apiName()).Context(ctx).Do()
 		if err != nil {
-			return nil, status.Errorf(codes.Aborted, err.Error())
+			return nil, err
 		}
 
 		for _, cond := range service.Status.Conditions {
@@ -80,7 +160,7 @@ func (d *Deployment) pollServiceReady(
 				return service, nil
 
 			case "False":
-				return nil, status.Errorf(codes.Aborted, "service failed to get ready")
+				return nil, fmt.Errorf("service failed to get ready")
 			}
 		}
 

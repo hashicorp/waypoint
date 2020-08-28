@@ -6,12 +6,11 @@ import (
 
 	"github.com/go-playground/validator"
 	run "google.golang.org/api/run/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // ValidateImageName validates that that the specified image is in the gcr Docker Registry for this project
 // Returns an error message when validation fails.
-func ValidateImageName(image string, project string) error {
+func validateImageName(image string, project string) error {
 	// cloud run deployments must come from one of the following image registries
 	var validRegistries = []string{
 		"gcr.io",
@@ -47,31 +46,30 @@ func ValidateImageName(image string, project string) error {
 	return nil
 }
 
-// ValidateRegionAvailable validates that the given GCP region is available for the project
-func ValidateRegionAvailable(region string, gpcLocations []*run.Location) error {
+// validateLocationAvailable validates that the given GCP region is available for the project
+func validateLocationAvailable(location string, gpcLocations []*run.Location) error {
 	// keep a list of the regions so we can return a detailed error message
-	regions := []string{}
-	for _, r := range gpcLocations {
-		if r.LocationId == region {
+	locations := []string{}
+	for _, l := range gpcLocations {
+		if l.LocationId == location {
 			return nil
 		}
 
-		regions = append(regions, r.LocationId)
+		locations = append(locations, l.LocationId)
 	}
 
-	return fmt.Errorf("The region '%s' is not available for this project, available regions are: '%s'", region, strings.Join(regions, ","))
+	return fmt.Errorf("The location '%s' is not available for this project, available locations are: '%s'", location, strings.Join(locations, ","))
 }
 
-var ErrInvalidMemoryValue = fmt.Errorf("Memory must be specified as a Kubernetes Quantity (https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/), and be less than '4Gi\n'")
+var ErrInvalidMemoryValue = fmt.Errorf("Memory allocated to a Cloud run instance must a minimum of 128MB and less than 4096 (4GB)\n'")
 var ErrInvalidCPUCount = fmt.Errorf("Invalid value for CPUCount, it is currently only possible to specify '1' or '2' CPUs\n")
 var ErrInvalidRequestTimetout = fmt.Errorf("RequestTimeout must be greater than 0 and lets than 900\n")
 var ErrInvalidMaxRequests = fmt.Errorf("MaxRequestsPerContainer must be greater than 0\n")
 var ErrInvalidAutoscalingMax = fmt.Errorf("AutoScaling maximum must be larger than 0\n")
 
 // ValidateConfig checks the deployment configuration for errors
-func ValidateConfig(c Config) error {
+func validateConfig(c Config) error {
 	v := validator.New()
-	v.RegisterValidation("kubernetes-memory", validateKubernetesMemory)
 
 	err := v.Struct(c)
 
@@ -99,25 +97,4 @@ func ValidateConfig(c Config) error {
 	}
 
 	return nil
-}
-
-func validateKubernetesMemory(fl validator.FieldLevel) bool {
-	v := fl.Field().String()
-
-	// if empty skip and use default value
-	if v == "" {
-		return true
-	}
-
-	// check that the value for memory is valid
-	q, err := resource.ParseQuantity(v)
-	if err != nil {
-		return false
-	}
-
-	// check that quantity is max 4Gi
-	var maxMemoryBytes int64 = 4294967296
-	mi, _ := q.AsInt64()
-
-	return mi <= maxMemoryBytes
 }

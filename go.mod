@@ -29,6 +29,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/fatih/color v1.9.0
+	github.com/fatih/hclfmt v0.0.0-20181010234132-374cd0fd2a55 // indirect
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
 	github.com/gliderlabs/ssh v0.2.2
 	github.com/go-git/go-git/v5 v5.1.0
@@ -49,7 +50,7 @@ require (
 	github.com/hashicorp/go-plugin v1.1.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/hashicorp/hcl/v2 v2.3.0
+	github.com/hashicorp/hcl/v2 v2.6.0
 	github.com/hashicorp/horizon v0.0.0-20200730033532-a0cec81f4e7a
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2

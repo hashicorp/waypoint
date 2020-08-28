@@ -8,22 +8,22 @@ import (
 )
 
 func TestValidateImageReturnsErrorOnInvalidImageName(t *testing.T) {
-	err := ValidateImageName("foo", "proj")
+	err := validateImageName("foo", "proj")
 	require.Error(t, err)
 }
 
 func TestValidateImageReturnsErrorOnInvalidRegistry(t *testing.T) {
-	err := ValidateImageName("foo/proj/image", "proj")
+	err := validateImageName("foo/proj/image", "proj")
 	require.Error(t, err)
 }
 
 func TestValidateImageReturnsErrorOnInvalidProject(t *testing.T) {
-	err := ValidateImageName("gcr.io/proj2/image", "proj")
+	err := validateImageName("gcr.io/proj2/image", "proj")
 	require.Error(t, err)
 }
 
 func TestValidateImageReturnsNoErrorWhenValid(t *testing.T) {
-	err := ValidateImageName("gcr.io/proj/image:latest", "proj")
+	err := validateImageName("gcr.io/proj/image:latest", "proj")
 	require.NoError(t, err)
 }
 
@@ -32,13 +32,13 @@ var locations = []*run.Location{
 	&run.Location{LocationId: "asia-northeast1"},
 }
 
-func TestValidateRegionAvailableReturnsErrorWhenLocationNotAvailable(t *testing.T) {
-	err := ValidateRegionAvailable("badlocation", locations)
+func TestValidateLocationAvailableReturnsErrorWhenLocationNotAvailable(t *testing.T) {
+	err := validateLocationAvailable("badlocation", locations)
 	require.Error(t, err)
 }
 
-func TestValidateRegionAvailableReturnsNoErrorWhenLocationAvailable(t *testing.T) {
-	err := ValidateRegionAvailable("asia-east1", locations)
+func TestValidateLocationAvailableReturnsNoErrorWhenLocationAvailable(t *testing.T) {
+	err := validateLocationAvailable("asia-east1", locations)
 	require.NoError(t, err)
 }
 
@@ -49,38 +49,28 @@ func TestConfigValidation(t *testing.T) {
 	}{
 		"Valid Memory": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				Capacity: &Capacity{
-					Memory: "4Gi", // max 4Gi
+					Memory: 4, // max 4GB
 				},
 			},
 			true,
 		},
 		"Invalid Memory Value": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				Capacity: &Capacity{
-					Memory: "4df", // max 4Gi
-				},
-			},
-			false,
-		},
-		"Memory Value bigger than 4Gi": {
-			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
-				Capacity: &Capacity{
-					Memory: "5Gi", // max 4Gi
+					Memory: 5, // max 4GB
 				},
 			},
 			false,
 		},
 		"Valid CPU Count": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				Capacity: &Capacity{
 					CPUCount: 2, // max 2
 				},
@@ -89,8 +79,8 @@ func TestConfigValidation(t *testing.T) {
 		},
 		"CPU Count greater than max of 2": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				Capacity: &Capacity{
 					CPUCount: 3, // max 2
 				},
@@ -99,8 +89,8 @@ func TestConfigValidation(t *testing.T) {
 		},
 		"Request Timeout valid": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				Capacity: &Capacity{
 					RequestTimeout: 300,
 				},
@@ -109,8 +99,8 @@ func TestConfigValidation(t *testing.T) {
 		},
 		"Request Timeout greater than max": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				Capacity: &Capacity{
 					RequestTimeout: 901, // max 900
 				},
@@ -119,8 +109,8 @@ func TestConfigValidation(t *testing.T) {
 		},
 		"Max requests per container valid": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				Capacity: &Capacity{
 					MaxRequestsPerContainer: 80,
 				},
@@ -129,8 +119,8 @@ func TestConfigValidation(t *testing.T) {
 		},
 		"Max requests per container less than 0": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				Capacity: &Capacity{
 					MaxRequestsPerContainer: -1,
 				},
@@ -139,8 +129,8 @@ func TestConfigValidation(t *testing.T) {
 		},
 		"Autoscaling max valid": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				AutoScaling: &AutoScaling{
 					Max: 0,
 				},
@@ -149,8 +139,8 @@ func TestConfigValidation(t *testing.T) {
 		},
 		"Autoscaling max invalid": {
 			Config{
-				Project: "waypoint-286812",
-				Region:  "europe-north1",
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
 				AutoScaling: &AutoScaling{
 					Max: -1,
 				},
@@ -161,7 +151,7 @@ func TestConfigValidation(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := ValidateConfig(tc.input)
+			err := validateConfig(tc.input)
 
 			if tc.valid {
 				require.NoError(t, err)
