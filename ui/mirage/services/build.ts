@@ -1,13 +1,11 @@
 import { Build, ListBuildsResponse, Component, Status, Ref } from 'waypoint-pb';
-import { fakeId, fakeComponentForKind, statusRandom } from '../utils';
+import { fakeId, fakeComponentForKind, statusRandom, sequenceRandom } from '../utils';
 
-const buildSequence = 0;
-
-function createBuild(): Build {
+export function createBuild(): Build {
   let build = new Build();
   build.setId(fakeId());
 
-  build.setSequence(buildSequence + 1);
+  build.setSequence(sequenceRandom());
 
   // todo(pearkes): create util
   let workspace = new Ref.Workspace();
@@ -20,6 +18,9 @@ function createBuild(): Build {
   build.setComponent(component);
   build.setStatus(statusRandom());
   build.setWorkspace(workspace);
+
+  build.getLabelsMap().set('common/vcs-ref', '0d56a9f8456b088dd0e4a7b689b842876fd47352');
+  build.getLabelsMap().set('common/vcs-ref-path', 'https://github.com/hashicorp/waypoint/commit/');
 
   return build;
 }

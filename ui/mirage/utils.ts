@@ -9,6 +9,17 @@ import { subMinutes } from 'date-fns';
  * Creates a random status object in a random state and random amount of time
  * passed
  */
+export function sequenceRandom(): number {
+  return faker.random.number({
+    min: 5,
+    max: 800,
+  });
+}
+
+/**
+ * Creates a random status object in a random state and random amount of time
+ * passed
+ */
 export function statusRandom(): Status {
   let status = new Status();
   status.setState(Status.State.SUCCESS);
@@ -45,6 +56,8 @@ export function fakeId(): string {
 export const componentOptions = {
   1: ['pack', 'docker'],
   2: ['docker'],
+  3: ['google-cloud-run', 'kubernetes', 'docker'],
+  4: ['google-cloud-run', 'kubernetes', 'docker'],
 };
 
 /**
