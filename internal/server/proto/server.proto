@@ -1124,6 +1124,10 @@ message ListBuildsRequest {
   // The workspace to list builds for. If this isn't set, then all builds
   // for the other filters are listed.
   Ref.Workspace workspace = 2;
+
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 3;
 }
 
 message ListBuildsResponse {
