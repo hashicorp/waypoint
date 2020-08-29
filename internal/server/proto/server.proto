@@ -238,7 +238,18 @@ message Workspace {
   // The list of applications that have executed at least one operation
   // within the context of this workspace. To determine which operations
   // you must call the operations respective List API such as ListDeployments.
-  repeated Ref.Application applications = 2;
+  repeated Application applications = 2;
+
+  // active_time is the last time that this workspace had activity.
+  google.protobuf.Timestamp active_time = 3;
+
+  message Application {
+    // Application that this is referencing.
+    Ref.Application application = 1;
+
+    // active_time is the last time that this application was active
+    google.protobuf.Timestamp active_time = 2;
+  }
 }
 
 /********************************************************************
