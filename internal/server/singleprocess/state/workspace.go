@@ -1,8 +1,11 @@
 package state
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,6 +32,7 @@ func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
 	}
 
 	wsMap := map[string]*pb.Workspace{}
+	appMap := map[string]*pb.Workspace_Application{}
 	for {
 		raw := iter.Next()
 		if raw == nil {
@@ -44,11 +48,64 @@ func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
 			wsMap[idx.Name] = ws
 		}
 
-		// Append our apps
-		ws.Applications = append(ws.Applications, &pb.Ref_Application{
-			Project:     idx.Project,
-			Application: idx.App,
-		})
+		// Get our application
+		key := fmt.Sprintf("%s/%s/%s",
+			idx.Name,
+			idx.Project,
+			idx.App,
+		)
+
+		// If we don't have the app yet, create it
+		app, ok := appMap[key]
+		if !ok {
+			app = &pb.Workspace_Application{
+				Application: &pb.Ref_Application{
+					Project:     idx.Project,
+					Application: idx.App,
+				},
+			}
+
+			// Append our apps
+			ws.Applications = append(ws.Applications, app)
+
+			// Keep track of it so we can reuse this later
+			appMap[key] = app
+		}
+
+		// Get our current timestamp to compare to this record. We can
+		// make this more efficient by storing this but its not a big deal
+		// right now.
+		var currentActive time.Time
+		if app.ActiveTime != nil {
+			currentActive, err = ptypes.Timestamp(app.ActiveTime)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// If this time is later than our current active, we store it.
+		if idx.LastActiveAt.After(currentActive) {
+			// Set our new current
+			app.ActiveTime, err = ptypes.TimestampProto(idx.LastActiveAt)
+			if err != nil {
+				return nil, err
+			}
+
+			// Get our current workspace time. Similiar to above, can
+			// optimize later by caching this.
+			var currentMax time.Time
+			if ws.ActiveTime != nil {
+				currentMax, err = ptypes.Timestamp(ws.ActiveTime)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			// Set our max value
+			if currentMax.IsZero() || idx.LastActiveAt.After(currentMax) {
+				ws.ActiveTime = app.ActiveTime
+			}
+		}
 	}
 
 	result := make([]*pb.Workspace, 0, len(wsMap))
@@ -78,26 +135,32 @@ func (s *State) WorkspaceGet(n string) (*pb.Workspace, error) {
 		"not found for name: %q", n)
 }
 
-// workspaceInit creates an initial record for the given workspace or
-// returns one if it already exists.
-func (s *State) workspaceInit(
+// workspaceTouch creates an initial record for the given workspace or
+// returns one if it already exists. It also updates the LastActiveAt time
+// for this resource.
+func (s *State) workspaceTouch(
 	memTxn *memdb.Txn,
 	ref *pb.Ref_Workspace,
 	app *pb.Ref_Application,
+	resource string,
 ) (*workspaceIndexRecord, error) {
-	rec, err := s.workspaceGet(memTxn, ref, app)
+	rec, err := s.workspaceGet(memTxn, ref, app, resource)
 	if err != nil {
 		return nil, err
 	}
-	if rec != nil {
-		return rec, nil
+	if rec == nil {
+		rec = &workspaceIndexRecord{
+			Name:     ref.Workspace,
+			Project:  app.Project,
+			App:      app.Application,
+			Resource: resource,
+		}
 	}
 
-	rec = &workspaceIndexRecord{
-		Name:    ref.Workspace,
-		Project: app.Project,
-		App:     app.Application,
-	}
+	// Set the new last active at
+	rec.LastActiveAt = time.Now()
+
+	// Store
 	return rec, s.workspacePut(memTxn, rec)
 }
 
@@ -113,6 +176,7 @@ func (s *State) workspaceGet(
 	memTxn *memdb.Txn,
 	ref *pb.Ref_Workspace,
 	app *pb.Ref_Application,
+	resource string,
 ) (*workspaceIndexRecord, error) {
 	raw, err := memTxn.First(
 		workspaceIndexTableName,
@@ -120,6 +184,7 @@ func (s *State) workspaceGet(
 		ref.Workspace,
 		app.Project,
 		app.Application,
+		resource,
 	)
 	if err != nil {
 		return nil, err
@@ -155,6 +220,11 @@ func workspaceIndexSchema() *memdb.TableSchema {
 							Field:     "App",
 							Lowercase: true,
 						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Resource",
+							Lowercase: true,
+						},
 					},
 				},
 			},
@@ -171,4 +241,15 @@ type workspaceIndexRecord struct {
 	Name    string
 	Project string
 	App     string
+
+	// Resource is the resource that is being managed within this workspace
+	// for a given application. This is chosen by the resource itself but
+	// should be unique. For example, app operations such as build use the
+	// lowercase struct name.
+	Resource string
+
+	// LastActiveAt is a timestamp when a resource of this type was last
+	// "active". The definition of active is typically created or modified
+	// but its up to the resource type.
+	LastActiveAt time.Time
 }

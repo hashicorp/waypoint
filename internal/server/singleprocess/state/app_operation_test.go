@@ -432,6 +432,16 @@ func TestAppOperation_deploy(t *testing.T) {
 	})
 }
 
+func TestAppOperation_workspaceResource(t *testing.T) {
+	op := &appOperation{
+		Struct: (*pb.Build)(nil),
+		Bucket: buildOp.Bucket,
+	}
+
+	actual := op.workspaceResource()
+	require.Equal(t, "Build", actual)
+}
+
 func appOpById(id string) *pb.Ref_Operation {
 	return &pb.Ref_Operation{
 		Target: &pb.Ref_Operation_Id{Id: id},

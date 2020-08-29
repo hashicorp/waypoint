@@ -42,6 +42,11 @@ func TestWorkspace(t *testing.T) {
 			},
 		})))
 
+		// Create some other resources
+		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Id: "1",
+		})))
+
 		// Workspace list should only list one
 		{
 			result, err := s.WorkspaceList()
