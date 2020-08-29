@@ -9,6 +9,13 @@ export default class Logs extends Route {
   @service currentApplication!: CurrentApplicationService;
   @service currentWorkspace!: CurrentWorkspaceService;
 
+  breadcrumbs = [
+    {
+      label: 'Logs',
+      args: ['workspace.projects.project.app.logs'],
+    },
+  ];
+
   async model() {
     // todo(pearkes): construct GetLogStreamRequest
   }

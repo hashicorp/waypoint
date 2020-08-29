@@ -2,7 +2,7 @@ import { Build, Ref, ListProjectsResponse, GetProjectResponse, Project, Applicat
 import { fakeId } from '../utils';
 import faker from '../faker';
 import { dasherize } from '@ember/string';
-import { create } from 'domain';
+import { create } from 'domainx';
 
 const projectName = 'marketing-public';
 

@@ -1,7 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, Application } from 'waypoint-pb';
+import { Ref } from 'waypoint-pb';
 import CurrentProjectService from 'waypoint/services/current-project';
 import CurrentApplicationService from 'waypoint/services/current-application';
 
@@ -14,12 +14,20 @@ export default class App extends Route {
   @service currentProject!: CurrentProjectService;
   @service currentApplication!: CurrentApplicationService;
 
-  breadcrumbs(model: Application.AsObject) {
+  breadcrumbs(model: Ref.Application.AsObject) {
     if (!model) return [];
     return [
       {
         label: model.project!,
         args: ['workspace.projects.project.apps'],
+      },
+      {
+        label: 'Application',
+        args: ['workspace.projects.project.app'],
+      },
+      {
+        label: model.application!,
+        args: ['workspace.projects.project.app'],
       },
     ];
   }
