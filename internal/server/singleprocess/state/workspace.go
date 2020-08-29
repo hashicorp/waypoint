@@ -143,6 +143,7 @@ func (s *State) workspaceTouch(
 	ref *pb.Ref_Workspace,
 	app *pb.Ref_Application,
 	resource string,
+	ts time.Time,
 ) (*workspaceIndexRecord, error) {
 	rec, err := s.workspaceGet(memTxn, ref, app, resource)
 	if err != nil {
@@ -157,8 +158,10 @@ func (s *State) workspaceTouch(
 		}
 	}
 
-	// Set the new last active at
-	rec.LastActiveAt = time.Now()
+	if v := rec.LastActiveAt; v.IsZero() || ts.After(v) {
+		// Set the new last active at
+		rec.LastActiveAt = ts
+	}
 
 	// Store
 	return rec, s.workspacePut(memTxn, rec)

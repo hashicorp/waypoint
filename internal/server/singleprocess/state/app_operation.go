@@ -472,7 +472,11 @@ func (op *appOperation) indexPut(s *State, txn *memdb.Txn, value proto.Message) 
 	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
 
 	// Ensure the workspace index record is created.
-	if _, err := s.workspaceTouch(txn, wsRef, ref, op.workspaceResource()); err != nil {
+	touchTime := startTime
+	if completeTime.After(startTime) {
+		touchTime = completeTime
+	}
+	if _, err := s.workspaceTouch(txn, wsRef, ref, op.workspaceResource(), touchTime); err != nil {
 		return err
 	}
 
