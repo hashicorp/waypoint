@@ -20,7 +20,7 @@ export default class ReleaseDetail extends Route {
     var req = new GetReleaseRequest();
     req.setRef(ref);
 
-    var resp = await this.api.client.getRelease(req, {});
+    var resp = await this.api.client.getRelease(req, this.api.WithMeta());
     let deploy: Release = resp;
     return deploy.toObject();
   }

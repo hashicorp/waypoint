@@ -3,6 +3,10 @@ import { formatDistanceToNow } from 'date-fns';
 
 // dateFormatDistanceToNow
 export function dateFormatDistanceToNow([date]: [number]): string {
+  if (!date) {
+    return 'unknown';
+  }
+
   return formatDistanceToNow(date * 1000, { includeSeconds: true, addSuffix: true });
 }
 

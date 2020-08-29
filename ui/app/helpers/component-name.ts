@@ -5,6 +5,10 @@ const replace = /_+|-+/g;
 
 // componentName
 export function componentName([component]: [string]): string {
+  if (!component) {
+    return 'Unknown';
+  }
+
   // Split into words based on common characters and uppercase
   // the first letter of each word
   let result = component.toLowerCase().replace(wordBreak, function (m) {

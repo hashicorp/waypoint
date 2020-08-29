@@ -4,20 +4,24 @@ import ApiService from 'waypoint/services/api';
 import { ListBuildsRequest, ListBuildsResponse } from 'waypoint-pb';
 import CurrentApplicationService from 'waypoint/services/current-application';
 import CurrentWorkspaceService from 'waypoint/services/current-workspace';
+import BuildCollectionService from 'waypoint/services/build-collection';
 
 export default class Builds extends Route {
   @service api!: ApiService;
   @service currentApplication!: CurrentApplicationService;
   @service currentWorkspace!: CurrentWorkspaceService;
+  @service buildCollection!: BuildCollectionService;
 
+  beforeModel() {
+    this.buildCollection.setup(
+      this.currentWorkspace.ref!.toObject(),
+      this.currentApplication.ref!.toObject(),
+      this
+    );
+  }
   async model() {
-    var req = new ListBuildsRequest();
-    req.setApplication(this.currentApplication.ref);
-    req.setWorkspace(this.currentWorkspace.ref);
+    await this.buildCollection.waitForCollection();
 
-    var resp = await this.api.client.listBuilds(req, this.api.WithMeta());
-    let buildResp: ListBuildsResponse = resp;
-
-    return buildResp.getBuildsList().map((b) => b.toObject());
+    return this.buildCollection.collection;
   }
 }

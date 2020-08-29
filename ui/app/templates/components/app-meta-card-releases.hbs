@@ -11,7 +11,7 @@
     {{/if}}
     <div class="app-meta-item">
         <ul class="app-meta-item-info">
-            {{#each this.releases as |release|}}
+            {{#each this.extraReleases as |release|}}
             <AppMetaItem::Release @model={{release}} />
             {{/each}}
         </ul>

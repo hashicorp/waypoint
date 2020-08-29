@@ -20,7 +20,7 @@ export default class DeploymentDetail extends Route {
     var req = new GetDeploymentRequest();
     req.setRef(ref);
 
-    var resp = await this.api.client.getDeployment(req, {});
+    var resp = await this.api.client.getDeployment(req, this.api.WithMeta());
     let deploy: Deployment = resp;
     return deploy.toObject();
   }

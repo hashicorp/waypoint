@@ -13,7 +13,7 @@
     {{/if}}
     <div class="app-meta-item">
         <ul class="app-meta-item-info">
-            {{#each this.builds as |build|}}
+            {{#each this.extraBuilds as |build|}}
             <AppMetaItem::Build @model={{build}} />
             {{/each}}
         </ul>

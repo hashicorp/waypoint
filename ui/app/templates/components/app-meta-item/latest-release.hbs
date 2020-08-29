@@ -1,6 +1,6 @@
 <div class="app-meta-item app-meta-item--latest">
   <div class="app-meta-item-info">
-    <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
+    <LinkTo @route="workspace.projects.project.app.release" @models={{array @model.id }}>
       <p><b class="badge badge--version">v{{@model.sequence}}</b> <code>{{truncate @model.id 7}}</code></p>
       <small>
         {{inline-svg (icon-for-component @model.component.name) class="icon"}}

@@ -1,6 +1,6 @@
 <div class="app-meta-item app-meta-item--latest">
   <div class="app-meta-item-info">
-    <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
+    <LinkTo @route="workspace.projects.project.app.build" @models={{array @model.id }}>
       <p>
         <code>{{truncate @model.id 7}}</code>
         {{#if (eq @model.status.state 1)}}
