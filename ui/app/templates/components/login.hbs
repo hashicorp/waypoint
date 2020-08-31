@@ -1,7 +1,0 @@
-<form {{action 'login' on='submit'}}>
-    <label>
-        {{t 'login.input.label'}}
-        <Input data-test-login=true @value={{this.token}} placeholder={{t 'login.input.placeholder'}} />
-    </label>
-    <button data-test-login-submit {{action "login"}} type="button">{{t 'login.input.button'}}</button>
-</form>

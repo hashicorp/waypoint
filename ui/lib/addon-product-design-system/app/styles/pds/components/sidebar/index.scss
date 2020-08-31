@@ -1,0 +1,14 @@
+/* ======================================== *\
+ * Component:Sidebar
+\* ======================================== */
+@forward "config";
+
+@use "config";
+
+// height (block dimension) will be determined by parent
+// positioning will be determiend by parent
+.pdsSidebar {
+  background-color: config.$background-color;
+  color: config.$color;
+  width: config.$width;
+}

@@ -1,0 +1,15 @@
+<form {{action 'login' on='submit'}} class="login">
+  <fieldset>
+    <label>{{t 'login.instruction'}}</label>
+    <code class="copyable cmd">waypoint token new</code>
+    <small><a href="#">Read more in our documentation</a></small>
+  </fieldset>
+
+  <fieldset>
+    <label for="token-field">{{t 'login.input.label'}}</label>
+    <Input data-test-login=true @value={{this.token}} id="token-field" placeholder={{t 'login.input.placeholder'}} />
+  </fieldset>
+
+  <button data-test-login-submit {{action "login"}} type="button"
+    class="button button--primary">{{t 'login.button'}}</button>
+</form>

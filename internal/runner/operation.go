@@ -3,8 +3,10 @@ package runner
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/hcl/v2/hclsimple"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -23,17 +25,22 @@ func (r *Runner) executeJob(
 	log hclog.Logger,
 	ui terminal.UI,
 	job *pb.Job,
+	wd string,
 ) (*pb.Job_Result, error) {
 	// Eventually we'll need to extract the data source. For now we're
 	// just building for local exec so it is the working directory.
 	path := configpkg.Filename
+	if wd != "" {
+		path = filepath.Join(wd, path)
+	}
+
+	// Determine the evaluation context we'll be using
+	configCtx := configpkg.EvalContext(filepath.Dir(path))
 
 	// Decode the configuration
 	var cfg configpkg.Config
 	log.Trace("reading configuration", "path", path)
-	// TODO: This also consults env for things like the waypoint url token.
-	// This should instead consult the auth config storage instead when that arrives.
-	if err := cfg.LoadPath(path); err != nil {
+	if err := hclsimple.DecodeFile(path, configCtx, &cfg); err != nil {
 		return nil, err
 	}
 
@@ -56,7 +63,9 @@ func (r *Runner) executeJob(
 		core.WithComponents(r.factories),
 		core.WithClient(r.client),
 		core.WithConfig(&cfg),
+		core.WithConfigContext(configCtx),
 		core.WithDataDir(projDir),
+		core.WithRootDir(filepath.Dir(path)),
 		core.WithLabels(job.Labels),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
@@ -90,8 +99,8 @@ func (r *Runner) executeJob(
 	case *pb.Job_Deploy:
 		return r.executeDeployOp(ctx, job, project)
 
-	case *pb.Job_DestroyDeploy:
-		return r.executeDestroyDeployOp(ctx, job, project)
+	case *pb.Job_Destroy:
+		return r.executeDestroyOp(ctx, job, project)
 
 	case *pb.Job_Release:
 		return r.executeReleaseOp(ctx, log, job, project)

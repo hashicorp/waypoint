@@ -1,0 +1,14 @@
+<div class="app-meta-item app-meta-item--latest">
+  <div class="app-meta-item-info">
+    <LinkTo @route="workspace.projects.project.app.deployments" @models={{array @model.project @model.application }}>
+      <p><b class="badge badge--version">#321</b> <code>abcd1234</code></p>
+      <small>
+        {{inline-svg "logo-kubernetes-color" class="icon"}}
+        <span>Deployed by <b>Docker</b> 2 hours ago</span>
+      </small>
+    </LinkTo>
+  </div>
+  <button class="button button--secondary">
+    {{inline-svg "exit" class="icon"}}
+  </button>
+</div>

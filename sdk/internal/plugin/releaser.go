@@ -41,6 +41,11 @@ func (p *ReleaseManagerPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Ser
 			base: base,
 			Impl: p.Impl,
 		},
+
+		destroyerServer: &destroyerServer{
+			base: base,
+			Impl: p.Impl,
+		},
 	})
 	return nil
 }
@@ -71,10 +76,26 @@ func (p *ReleaseManagerPlugin) GRPCClient(
 		authenticator = nil
 	}
 
+	// Compose destroyer
+	destroyer := &destroyerClient{
+		Client:  client.client,
+		Logger:  client.logger,
+		Broker:  client.broker,
+		Mappers: client.mappers,
+	}
+	if ok, err := destroyer.Implements(ctx); err != nil {
+		return nil, err
+	} else if ok {
+		p.Logger.Info("release plugin capable of destroy")
+	} else {
+		destroyer = nil
+	}
+
 	result := &mix_ReleaseManager_Authenticator{
 		ConfigurableNotify: client,
 		ReleaseManager:     client,
 		Authenticator:      authenticator,
+		Destroyer:          destroyer,
 	}
 
 	return result, nil
@@ -143,6 +164,7 @@ func (c *releaseManagerClient) build(
 type releaseManagerServer struct {
 	*base
 	*authenticatorServer
+	*destroyerServer
 
 	Impl component.ReleaseManager
 }

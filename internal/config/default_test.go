@@ -3,6 +3,7 @@ package config
 import (
 	"testing"
 
+	"github.com/mitchellh/pointerstructure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +14,8 @@ func TestConfigDefault(t *testing.T) {
 	cases := []struct {
 		Name     string
 		Config   *Config
-		Expected *Config
+		Path     string
+		Expected interface{}
 	}{
 		{
 			"app: no URL block set",
@@ -22,12 +24,11 @@ func TestConfigDefault(t *testing.T) {
 					&App{},
 				},
 			},
-			&Config{
-				Apps: []*App{
-					&App{
-						URL: &AppURL{
-							AutoHostname: nil,
-						},
+			"/Apps",
+			[]*App{
+				&App{
+					URL: &AppURL{
+						AutoHostname: nil,
 					},
 				},
 			},
@@ -42,12 +43,11 @@ func TestConfigDefault(t *testing.T) {
 					},
 				},
 			},
-			&Config{
-				Apps: []*App{
-					&App{
-						URL: &AppURL{
-							AutoHostname: nil,
-						},
+			"/Apps",
+			[]*App{
+				&App{
+					URL: &AppURL{
+						AutoHostname: nil,
 					},
 				},
 			},
@@ -64,15 +64,28 @@ func TestConfigDefault(t *testing.T) {
 					},
 				},
 			},
-			&Config{
-				Apps: []*App{
-					&App{
-						URL: &AppURL{
-							AutoHostname: boolPtr(false),
-						},
+			"/Apps",
+			[]*App{
+				&App{
+					URL: &AppURL{
+						AutoHostname: boolPtr(false),
 					},
 				},
 			},
+		},
+
+		{
+			"runner: disabled by default",
+			&Config{},
+			"/Runner/Enabled",
+			false,
+		},
+
+		{
+			"runner: disabled by default",
+			&Config{},
+			"/Runner/Enabled",
+			false,
 		},
 	}
 
@@ -80,7 +93,15 @@ func TestConfigDefault(t *testing.T) {
 		t.Run(tt.Name, func(t *testing.T) {
 			require := require.New(t)
 			require.NoError(tt.Config.Default())
-			require.Equal(tt.Expected, tt.Config)
+
+			var compare interface{} = tt.Config
+			if tt.Path != "" {
+				var err error
+				compare, err = pointerstructure.Get(compare, tt.Path)
+				require.NoError(err)
+			}
+
+			require.Equal(tt.Expected, compare)
 		})
 	}
 }

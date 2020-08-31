@@ -78,6 +78,8 @@ const testProjectConfig = `
 project = "test"
 
 app "test" {
-	build "test" {}
+	build {
+		use "test" {}
+	}
 }
 `

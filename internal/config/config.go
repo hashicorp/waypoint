@@ -6,7 +6,7 @@ import (
 
 // Config is the configuration structure.
 type Config struct {
-	Runner  *Runner           `hcl:"runner,block"`
+	Runner  *Runner           `hcl:"runner,block" default:"{}"`
 	Project string            `hcl:"project,attr"`
 	Apps    []*App            `hcl:"app,block"`
 	Labels  map[string]string `hcl:"labels,optional"`
@@ -30,9 +30,9 @@ type App struct {
 	Labels map[string]string `hcl:"labels,optional"`
 	URL    *AppURL           `hcl:"url,block" default:"{}"`
 
-	Build    *Build     `hcl:"build,block"`
-	Platform *Operation `hcl:"deploy,block"`
-	Release  *Operation `hcl:"release,block"`
+	Build   *Build   `hcl:"build,block"`
+	Deploy  *Deploy  `hcl:"deploy,block"`
+	Release *Release `hcl:"release,block"`
 }
 
 // AppURL configures the App-specific URL settings.
@@ -67,7 +67,16 @@ type Server struct {
 type Runner struct {
 	// Enabled is whether or not runners are enabled. If this is false
 	// then the "-remote" flag will not work.
-	Enabled bool `hcl:"enabled,attr"`
+	Enabled bool `hcl:"enabled,optional"`
+
+	// DataSource is the default data source when a remote job is queued.
+	DataSource *DataSource `hcl:"data_source,block"`
+}
+
+// DataSource configures the data source for the runner.
+type DataSource struct {
+	Type string   `hcl:",label"`
+	Body hcl.Body `hcl:",remain"`
 }
 
 // Hook is the configuration for a hook that runs at specified times.
@@ -83,31 +92,37 @@ func (h *Hook) ContinueOnFailure() bool {
 
 // Build are the build settings.
 type Build struct {
+	Labels   map[string]string `hcl:"labels,optional"`
+	Hooks    []*Hook           `hcl:"hook,block"`
+	Use      *Use              `hcl:"use,block"`
+	Registry *Registry         `hcl:"registry,block"`
+}
+
+// Registry are the registry settings.
+type Registry struct {
+	Labels map[string]string `hcl:"labels,optional"`
+	Hooks  []*Hook           `hcl:"hook,block"`
+	Use    *Use              `hcl:"use,block"`
+}
+
+// Deploy are the deploy settings.
+type Deploy struct {
+	Labels map[string]string `hcl:"labels,optional"`
+	Hooks  []*Hook           `hcl:"hook,block"`
+	Use    *Use              `hcl:"use,block"`
+}
+
+// Release are the release settings.
+type Release struct {
+	Labels map[string]string `hcl:"labels,optional"`
+	Hooks  []*Hook           `hcl:"hook,block"`
+	Use    *Use              `hcl:"use,block"`
+}
+
+// Use is something in the Waypoint configuration that is executed
+// using some underlying plugin. This is a general shared structure that is
+// used by internal/core to initialize all the proper plugins.
+type Use struct {
 	Type string   `hcl:",label"`
 	Body hcl.Body `hcl:",remain"`
-
-	Hooks    []*Hook           `hcl:"hook,block"`
-	Labels   map[string]string `hcl:"labels,optional"`
-	Registry *Operation        `hcl:"registry,block"`
-}
-
-func (b *Build) Operation() *Operation {
-	if b == nil {
-		return nil
-	}
-
-	return &Operation{
-		Type:   b.Type,
-		Body:   b.Body,
-		Labels: b.Labels,
-		Hooks:  b.Hooks,
-	}
-}
-
-func (b *Build) RegistryOperation() *Operation {
-	if b == nil {
-		return nil
-	}
-
-	return b.Registry
 }

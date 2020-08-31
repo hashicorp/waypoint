@@ -232,6 +232,16 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 
 		// ok, inline below.
+	case "nomad":
+		contextConfig, advertiseAddr, err = serverinstall.InstallNomad(ctx, c.ui, st, &c.config)
+		if err != nil {
+			c.ui.Output(
+				"Error installing server into Nomad: %s", err.Error(),
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
 	default:
 		c.ui.Output(
 			"Unknown server platform: %s", c.platform,
@@ -415,6 +425,8 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Default: "kubernetes",
 			Usage:   "Platform to install the server into.",
 		})
+
+		serverinstall.NomadFlags(f)
 	})
 }
 

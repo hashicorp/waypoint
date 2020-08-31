@@ -328,9 +328,6 @@ func (op *appOperation) dbPut(
 	if wsRef == nil {
 		return status.Errorf(codes.Internal, "state: Workspace must be set on value %T", value)
 	}
-	if err := s.workspaceCreateIfNotExist(dbTxn, s.workspaceDefaultForRef(wsRef)); err != nil {
-		return err
-	}
 
 	// Get the global bucket and write the value to it.
 	b := dbTxn.Bucket(op.Bucket)
@@ -379,7 +376,7 @@ func (op *appOperation) dbPut(
 	}
 
 	// Create our index value and write that.
-	return op.indexPut(memTxn, value)
+	return op.indexPut(s, memTxn, value)
 }
 
 // appSeq gets the pointer to the sequence number for the given application.
@@ -418,7 +415,7 @@ func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) e
 		if err := proto.Unmarshal(v, result); err != nil {
 			return err
 		}
-		if err := op.indexPut(memTxn, result); err != nil {
+		if err := op.indexPut(s, memTxn, result); err != nil {
 			return err
 		}
 
@@ -438,7 +435,7 @@ func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) e
 }
 
 // indexPut writes an index record for a single operation record.
-func (op *appOperation) indexPut(txn *memdb.Txn, value proto.Message) error {
+func (op *appOperation) indexPut(s *State, txn *memdb.Txn, value proto.Message) error {
 	var startTime, completeTime time.Time
 
 	statusRaw := op.valueField(value, "Status")
@@ -470,8 +467,15 @@ func (op *appOperation) indexPut(txn *memdb.Txn, value proto.Message) error {
 		sequence = v.(uint64)
 	}
 
+	// Get our refs
 	ref := op.valueField(value, "Application").(*pb.Ref_Application)
 	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
+
+	// Ensure the workspace index record is created.
+	if _, err := s.workspaceInit(txn, wsRef, ref); err != nil {
+		return err
+	}
+
 	return txn.Insert(op.memTableName(), &operationIndexRecord{
 		Id:           op.valueField(value, "Id").(string),
 		Project:      ref.Project,

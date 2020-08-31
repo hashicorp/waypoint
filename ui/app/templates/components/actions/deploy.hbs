@@ -1,0 +1,17 @@
+<button class="button button--secondary" {{on "click" this.showHint}}>
+  {{inline-svg "upload" class="icon"}}
+  <span>Deploy...</span>
+</button>
+
+{{#if hintIsVisible}}
+  <div class="cli-hint">
+    <p>To deploy this build you can run the following command in the CLI</p>
+    <code class="copyable cmd">waypoint deploy abcd1234</code>
+    <small><a href="#">Read more in our documentation</a></small>
+    <div class="dismiss">
+      <button class="button button--secondary button--compact" {{on "click" this.hideHint}}>
+        <span>Dismiss</span>
+      </button>
+    </div>
+  </div>
+{{/if}}

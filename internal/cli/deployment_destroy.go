@@ -68,8 +68,10 @@ func (c *DeploymentDestroyCommand) Run(args []string) int {
 		app := c.project.App(deployment.Application.Application)
 
 		c.ui.Output("Destroying deployment: %s", deployment.Id, terminal.WithInfoStyle())
-		if err := app.DestroyDeploy(ctx, &pb.Job_DestroyDeployOp{
-			Deployment: deployment,
+		if err := app.Destroy(ctx, &pb.Job_DestroyOp{
+			Target: &pb.Job_DestroyOp_Deployment{
+				Deployment: deployment,
+			},
 		}); err != nil {
 			c.ui.Output("Error destroying the deployment: %s", err.Error(), terminal.WithErrorStyle())
 			return 1

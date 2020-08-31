@@ -27,9 +27,11 @@ require (
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
 	github.com/dustin/go-humanize v1.0.0
+	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/fatih/color v1.9.0
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
 	github.com/gliderlabs/ssh v0.2.2
+	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-openapi/runtime v0.19.15
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
@@ -47,10 +49,11 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.3.0
 	github.com/hashicorp/horizon v0.0.0-20200730033532-a0cec81f4e7a
+	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
 	github.com/hashicorp/waypoint-hzn v0.0.0-20200716172850-719df2bafd65
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
-	github.com/imdario/mergo v0.3.8
+	github.com/imdario/mergo v0.3.9
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
 	github.com/lab47/vterm v0.0.0-20200730001001-14f91f37349f
@@ -61,6 +64,7 @@ require (
 	github.com/mitchellh/go-linereader v0.0.0-20190213213312-1b945b3263eb
 	github.com/mitchellh/go-testing-interface v1.14.0
 	github.com/mitchellh/mapstructure v1.3.3
+	github.com/mitchellh/pointerstructure v1.0.0
 	github.com/mitchellh/protostructure v0.0.0-20200814180458-3cfccdb015ce
 	github.com/morikuni/aec v1.0.0
 	github.com/mr-tron/base58 v1.2.0
@@ -75,6 +79,8 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/slack-go/slack v0.6.5
 	github.com/stretchr/testify v1.5.1
+	github.com/zclconf/go-cty v1.5.1
+	github.com/zclconf/go-cty-yaml v1.0.2
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200715011427-11fb19a81f2c

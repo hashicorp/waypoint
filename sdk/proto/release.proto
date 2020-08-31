@@ -20,6 +20,11 @@ service ReleaseManager {
   rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
   rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
 
+  // component.Destroyer optional implementation
+  rpc IsDestroyer(google.protobuf.Empty) returns (ImplementsResp);
+  rpc DestroySpec(google.protobuf.Empty) returns (FuncSpec);
+  rpc Destroy(FuncSpec.Args) returns (google.protobuf.Empty);
+
   rpc ReleaseSpec(Empty) returns (FuncSpec);
   rpc Release(FuncSpec.Args) returns (Release.Resp);
 }

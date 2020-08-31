@@ -8,9 +8,16 @@ interface ProjectModelParams {
   project_id: string;
 }
 
-export default class Project extends Route {
+export default class ProjectDetail extends Route {
   @service api!: ApiService;
   @service currentProject!: CurrentProjectService;
+
+  breadcrumbs = [
+    {
+      label: 'Projects',
+      args: ['workspace.projects'],
+    },
+  ];
 
   async model(params: ProjectModelParams) {
     // Setup the project request

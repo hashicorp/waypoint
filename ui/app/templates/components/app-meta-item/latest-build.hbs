@@ -1,0 +1,16 @@
+<div class="app-meta-item app-meta-item--latest">
+  <div class="app-meta-item-info">
+    <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
+      <p>
+        <code>abcd1234</code>
+        <b class="badge badge--success">
+          {{inline-svg "check-plain" class="icon"}}
+        </b>
+      </p>
+      <small>
+        {{inline-svg "source-file" class="icon"}}
+        <span>Built with <b>Pack</b> 2 hours ago</span>
+      </small>
+    </LinkTo>
+  </div>
+</div>

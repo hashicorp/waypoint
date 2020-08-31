@@ -1,5 +1,31 @@
-@import './vars';
-@import './global';
+@use 'pds';
+@use 'pds/tokens/scale';
+@use 'pds/utils/layout' as Layout;
 
-@import './header';
-@import './page';
+body {
+  @include Layout.stack(0);
+  min-height: 100vh;
+}
+
+// Additional resets
+
+p {
+  margin: 0;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// Waypoint styles
+
+svg.icon {
+  width: scale.$lg-2;
+  height: scale.$lg-2;
+  flex-shrink: 0;
+}
+
+@import './_header';
+@import './_page';

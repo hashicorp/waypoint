@@ -11,6 +11,15 @@ import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
+  // ListWorkspaces returns a list of all workspaces.
+  //
+  // Note that currently this list is never pruned, even if a workspace is
+  // no longer in use. We plan to prune this in a future improvement.
+  rpc ListWorkspaces(google.protobuf.Empty) returns (ListWorkspacesResponse);
+
+  // GetWorkspace returns the workspace.
+  rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceResponse);
+
   // UpsertProject upserts the project.
   rpc UpsertProject(UpsertProjectRequest) returns (UpsertProjectResponse);
 
@@ -209,10 +218,27 @@ message Project {
   // The applications cannot be modified in any Project APIs. You must
   // use the dedicated Application APIs.
   repeated Application applications = 2;
+
+  // If true, then the `-remote` flag or the `waypoint build project/app`
+  // syntax can be used with a remote runner. If this is false, then
+  // this is not allowed. This is typically configured using the
+  // `runner {}` block in the waypoint config.
+  bool remote_enabled = 3;
+
+  // Where data is sourced for remote operations. If this isn't set, then
+  // there is no default data source and it will be an error if a job is
+  // queued for this project without a data source set. This is usually
+  // set using the `runner {}` block in the waypoint config.
+  Job.DataSource data_source = 4;
 }
 
 message Workspace {
   string name = 1;
+
+  // The list of applications that have executed at least one operation
+  // within the context of this workspace. To determine which operations
+  // you must call the operations respective List API such as ListDeployments.
+  repeated Ref.Application applications = 2;
 }
 
 /********************************************************************
@@ -428,7 +454,6 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 21 to 49; // future data source range
   reserved 58 to 79; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
@@ -452,13 +477,15 @@ message Job {
 
   // data_source determines where the data to operate on (such as the
   // application source code and Waypoint configuration) comes from.
-  oneof data_source {
-    // local means the runner has access to the data locally and will
-    // know what to do. This is primarily only useful if the target_runner
-    // is a specific runner and should not be used by any runner unless your
-    // runners are configured to have access to the proper data.
-    Local local = 20;
-  }
+  // If this is not set then QueueJob will populate this if a default
+  // data source is configured for the target project.
+  //
+  // The overrides will set overrides of configs for the data source. This is
+  // data source dependent but this allows for example setting the Git ref
+  // without knowing the full data source. Invalid overrides will fail the
+  // job.
+  DataSource data_source = 6;
+  map<string, string> data_source_overrides = 7;
 
   // The operation to execute. See the message docs for details on the operation.
   oneof operation {
@@ -466,7 +493,7 @@ message Job {
     BuildOp build = 51;
     PushOp push = 52;
     DeployOp deploy = 53;
-    DestroyDeployOp destroy_deploy = 54;
+    DestroyOp destroy = 54;
     ReleaseOp release = 55;
     ValidateOp validate = 56;
     AuthOp auth = 57;
@@ -527,7 +554,34 @@ message Job {
     AuthResult auth = 6;
   }
 
+  message DataSource {
+    oneof source {
+      // local means the runner has access to the data locally and will
+      // know what to do. This is primarily only useful if the target_runner
+      // is a specific runner and should not be used by any runner unless your
+      // runners are configured to have access to the proper data.
+      Local local = 1;
+
+      // git will check out the data from a Git repository.
+      Git git = 2;
+    }
+  }
+
   message Local {}
+
+  message Git {
+    // url of the repository to clone. Local paths are not allowed.
+    string url = 1;
+
+    // a ref to checkout. If this isn't specified, then the default
+    // ref that is cloned from the URL above will be used.
+    string ref = 2;
+
+    // path is a subdirectory within the checked out repository to
+    // go into for the configuration. This must be a relative path
+    // and may not contain ".."
+    string path = 3;
+  }
 
   // Noop operations do nothing. This is primarily used for testing.
   // This operation will still download the data from the data source.
@@ -613,8 +667,11 @@ message Job {
     Deployment deployment = 1;
   }
 
-  message DestroyDeployOp {
-    Deployment deployment = 1;
+  message DestroyOp {
+    // target is what to destroy in this operation.
+    oneof target {
+      Deployment deployment = 1;
+    }
   }
 
   message ReleaseOp {
@@ -993,6 +1050,22 @@ message Hostname {
 }
 
 /********************************************************************
+* Workspaces
+********************************************************************/
+
+message ListWorkspacesResponse {
+  repeated Workspace workspaces = 1;
+}
+
+message GetWorkspaceRequest {
+  Ref.Workspace workspace = 1;
+}
+
+message GetWorkspaceResponse {
+  Workspace workspace = 1;
+}
+
+/********************************************************************
 * Projects & Apps
 ********************************************************************/
 
@@ -1051,6 +1124,10 @@ message ListBuildsRequest {
   // The workspace to list builds for. If this isn't set, then all builds
   // for the other filters are listed.
   Ref.Workspace workspace = 2;
+
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 3;
 }
 
 message ListBuildsResponse {
@@ -1377,6 +1454,9 @@ message Release {
 
   // status of the release operation.
   Status status = 2;
+
+  // The physical state of the release resources.
+  Operation.PhysicalState state = 11;
 
   // component managing the release process.
   Component component = 3;

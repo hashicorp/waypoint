@@ -8,4 +8,5 @@ type mix_ReleaseManager_Authenticator struct {
 	component.Authenticator
 	component.ConfigurableNotify
 	component.ReleaseManager
+	component.Destroyer
 }

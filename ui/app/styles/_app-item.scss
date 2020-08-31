@@ -1,0 +1,56 @@
+.app-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  a {
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+    text-decoration: none;
+    margin-right: auto;
+
+    &:hover code {
+      color: color.$blue-500;
+    }
+  }
+
+  p {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  code {
+    font-size: 1.3rem;
+  }
+
+  .badge {
+    margin-left: scale.$sm-2;
+  }
+
+  .badge--version {
+    margin-left: 0;
+    margin-right: scale.$sm-2;
+  }
+
+  small {
+    display: flex;
+    align-items: center;
+    padding-top: scale.$sm-3;
+    color: color.$ui-cool-gray-600;
+
+    b {
+      text-transform: capitalize;
+    }
+
+    .icon {
+      width: scale.$lg-1;
+      height: scale.$lg-1;
+      margin-right: scale.$sm-3;
+    }
+  }
+
+  .button {
+    margin-left: scale.$base;
+  }
+}

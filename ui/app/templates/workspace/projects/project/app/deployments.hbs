@@ -2,12 +2,7 @@
 
 <ul data-test-deployment-list=true class="list">
   {{#each @model as |deployment|}}
-    <li>
-      <LinkTo @route="workspace.projects.project.app.deployment" @models={{array deployment.id}}>
-        {{deployment.id}}
-      </LinkTo>
-      <span>Deployed by <b>{{deployment.component.name}}</b></span>
-    </li>
+    <AppItem::Deployment @deployment={{deployment}} />
   {{/each}}
 </ul>
 

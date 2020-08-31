@@ -1,0 +1,15 @@
+@use "config" as *;
+
+.pdsErrorMessage {
+  @include reset;
+
+  color: $color;
+  display: flex;
+  font-size: $fontSize;
+  font-weight: $fontWeight;
+  line-height: $lineHeight;
+
+  > * + * {
+    margin-left: $gap;
+  }
+}

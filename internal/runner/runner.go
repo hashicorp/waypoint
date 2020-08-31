@@ -50,6 +50,7 @@ type Runner struct {
 	factories   map[component.Type]*factory.Factory
 	ui          terminal.UI
 	local       bool
+	tempDir     string
 
 	closedVal int32
 	acceptWg  sync.WaitGroup

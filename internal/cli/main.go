@@ -281,6 +281,12 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"ui": func() (cli.Command, error) {
+			return &UICommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases

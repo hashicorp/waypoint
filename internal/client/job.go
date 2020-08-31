@@ -19,7 +19,7 @@ import (
 // defaults based on how the client is configured. For example, for local
 // operations, this will already have the targeting for the local runner.
 func (c *Project) job() *pb.Job {
-	return &pb.Job{
+	job := &pb.Job{
 		TargetRunner: c.runner,
 		Labels:       c.labels,
 		Workspace:    c.workspace,
@@ -27,20 +27,35 @@ func (c *Project) job() *pb.Job {
 			Project: c.project.Project,
 		},
 
-		DataSource: &pb.Job_Local_{
-			Local: &pb.Job_Local{},
+		DataSource: &pb.Job_DataSource{
+			Source: &pb.Job_DataSource_Local{
+				Local: &pb.Job_Local{},
+			},
 		},
+		DataSourceOverrides: c.dataSourceOverrides,
 
 		Operation: &pb.Job_Noop_{
 			Noop: &pb.Job_Noop{},
 		},
 	}
+
+	// If we're not local, we set a nil data source so it defaults to
+	// wahtever the project has remotely.
+	if !c.local {
+		job.DataSource = nil
+	}
+
+	return job
 }
 
 // doJob will queue and execute the job. If the client is configured for
 // local mode, this will start and target the proper runner.
 func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.Job_Result, error) {
 	log := c.logger
+
+	// cb is used in local mode only to get a callback of the job ID
+	// so we can tell our runner what ID to expect.
+	var cb func(string)
 
 	// In local mode we have to start a runner.
 	if c.local {
@@ -57,12 +72,15 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 		// the job is complete.
 		defer r.Close()
 
-		// Accept a job. Our local runners execute exactly one job.
-		go func() {
-			if err := r.Accept(ctx); err != nil {
-				log.Error("runner job accept error", "err", err)
-			}
-		}()
+		// Set our callback up so that we will accept a job once it is queued
+		// so that we can accept exactly this job.
+		cb = func(id string) {
+			go func() {
+				if err := r.AcceptExact(ctx, id); err != nil {
+					log.Error("runner job accept error", "err", err)
+				}
+			}()
+		}
 
 		// Modify the job to target this runner and use the local data source.
 		job.TargetRunner = &pb.Ref_Runner{
@@ -74,7 +92,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 		}
 	}
 
-	return c.queueAndStreamJob(ctx, job, ui)
+	return c.queueAndStreamJob(ctx, job, ui, cb)
 }
 
 // queueAndStreamJob will queue the job. If the client is configured to watch the job,
@@ -83,6 +101,7 @@ func (c *Project) queueAndStreamJob(
 	ctx context.Context,
 	job *pb.Job,
 	ui terminal.UI,
+	jobIdCallback func(string),
 ) (*pb.Job_Result, error) {
 	log := c.logger
 
@@ -104,6 +123,11 @@ func (c *Project) queueAndStreamJob(
 		return nil, err
 	}
 	log = log.With("job_id", queueResp.JobId)
+
+	// Call our callback if it was given
+	if jobIdCallback != nil {
+		jobIdCallback(queueResp.JobId)
+	}
 
 	// Get the stream
 	log.Debug("opening job stream")

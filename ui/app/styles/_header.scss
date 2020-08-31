@@ -1,0 +1,50 @@
+@use 'pds/tokens/color';
+@use 'pds/tokens/scale';
+
+#header {
+  position: sticky;
+  top: 0;
+  color: color.$white;
+  background-image: linear-gradient(to right, #191a1c 0%, #1b212d 100%);
+  display: flex;
+  align-items: center;
+  padding: scale.$base scale.$lg-4;
+  z-index: 2;
+
+  nav {
+    display: flex;
+    margin-left: auto;
+
+    a {
+      margin-left: scale.$lg-2;
+      text-decoration: none;
+    }
+  }
+
+  a {
+    color: inherit;
+  }
+
+  .brand {
+    display: flex;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+
+    .logo {
+      width: auto;
+      height: scale.$lg-3;
+
+      path {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  .soon {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}

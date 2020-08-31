@@ -37,6 +37,7 @@ type ServerCommand struct {
 
 	config          config.ServerConfig
 	flagDisableAuth bool
+	flagDisableUI   bool
 	flagURLInmem    bool
 }
 
@@ -153,6 +154,13 @@ func (c *ServerCommand) Run(args []string) int {
 		auth = true
 	}
 
+	ui := true
+	if !c.flagDisableUI {
+		options = append(options, server.WithBrowserUI(true))
+	} else {
+		ui = false
+	}
+
 	// Output information to the user
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
 	values := []terminal.NamedValue{
@@ -162,6 +170,9 @@ func (c *ServerCommand) Run(args []string) int {
 	}
 	if auth {
 		values = append(values, terminal.NamedValue{Name: "Auth Required", Value: "yes"})
+	}
+	if ui {
+		values = append(values, terminal.NamedValue{Name: "Browser UI Enabled", Value: "yes"})
 	}
 	if !c.config.URL.Enabled {
 		values = append(values, terminal.NamedValue{Name: "URL Service", Value: "disabled"})
@@ -243,6 +254,13 @@ func (c *ServerCommand) Flags() *flag.Sets {
 			Name:    "disable-auth",
 			Target:  &c.flagDisableAuth,
 			Usage:   "Disable auth requirements",
+			Default: false,
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "disable-ui",
+			Target:  &c.flagDisableUI,
+			Usage:   "Disable the embedded web interface",
 			Default: false,
 		})
 
