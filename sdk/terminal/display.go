@@ -59,7 +59,7 @@ func NewDisplay(ctx context.Context, w io.Writer) *Display {
 
 	if f, ok := w.(*os.File); ok {
 		_, cols, err := pty.Getsize(f)
-		if err == nil {
+		if err == nil && cols >= 10 {
 			d.width = cols - 1
 		}
 	}
