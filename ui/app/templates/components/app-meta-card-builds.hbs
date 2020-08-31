@@ -8,6 +8,7 @@
             View all builds
         </LinkTo>
     </Card::Header>
+    {{#if (and this.loaded this.builds) }}
     {{#if this.firstBuild}}
     <AppMetaItem::LatestBuild @model={{this.firstBuild }} />
     {{/if}}
@@ -18,4 +19,7 @@
             {{/each}}
         </ul>
     </div>
+    {{else}}
+    No builds
+    {{/if}}
 </Card>

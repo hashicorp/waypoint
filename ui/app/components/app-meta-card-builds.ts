@@ -1,40 +1,33 @@
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 import ApiService from 'waypoint/services/api';
-import { ListBuildsRequest, ListBuildsResponse, OperationOrder, Ref, Build } from 'waypoint-pb';
+import { Build } from 'waypoint-pb';
 import CurrentWorkspaceService from 'waypoint/services/current-workspace';
-import BuildCollectionService from 'waypoint/services/build-collection';
-import { alias } from '@ember/object/computed';
+import { tracked } from '@glimmer/tracking';
 
 interface AppMetaCardBuildArgs {
-  application: Ref.Application.AsObject;
+  builds: Promise<Build.AsObject[]>;
 }
 
 export default class AppMetaCardBuilds extends Component<AppMetaCardBuildArgs> {
-  @service api!: ApiService;
-  @service currentWorkspace!: CurrentWorkspaceService;
-  @service buildCollection!: BuildCollectionService;
+  @tracked builds!: Build.AsObject[];
+  @tracked loaded!: Boolean;
 
   constructor(owner: any, args: any) {
     super(owner, args);
-    let { application } = this.args;
-
-    this.buildCollection.setup(this.currentWorkspace.ref!.toObject(), application);
+    this.load();
   }
 
-  @alias('buildCollection.collection') collection!: Build.AsObject[];
+  async load() {
+    this.builds = await this.args.builds;
+    this.loaded = true;
+  }
 
   get firstBuild(): Build.AsObject | undefined {
-    if (this.collection) {
-      return this.collection.slice(0, 1)[0];
-    }
-    return;
+    return this.builds.slice(0, 1)[0];
   }
 
   get extraBuilds(): Build.AsObject[] | undefined {
-    if (this.collection) {
-      return this.collection.slice(1, 3);
-    }
-    return;
+    return this.builds.slice(1, 3);
   }
 }

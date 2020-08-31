@@ -2,8 +2,6 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { GetReleaseRequest, Release, Ref } from 'waypoint-pb';
-import CurrentApplicationService from 'waypoint/services/current-application';
-import CurrentWorkspaceService from 'waypoint/services/current-workspace';
 
 interface ReleaseModelParams {
   release_id: string;
@@ -11,8 +9,6 @@ interface ReleaseModelParams {
 
 export default class ReleaseDetail extends Route {
   @service api!: ApiService;
-  @service currentApplication!: CurrentApplicationService;
-  @service currentWorkspace!: CurrentWorkspaceService;
 
   async model(params: ReleaseModelParams) {
     var ref = new Ref.Operation();

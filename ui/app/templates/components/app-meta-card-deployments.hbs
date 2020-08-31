@@ -6,6 +6,7 @@
         </h4>
         <LinkTo @route="workspace.projects.project.app.deployments">View all deployments </LinkTo>
     </Card::Header>
+    {{#if (and this.loaded this.deployments) }}
     {{#if this.firstDeployment}}
     <AppMetaItem::LatestDeployment @model={{this.firstDeployment }} />
     {{/if}}
@@ -16,4 +17,7 @@
             {{/each}}
         </ul>
     </div>
+    {{else}}
+    No deployments
+    {{/if}}
 </Card>

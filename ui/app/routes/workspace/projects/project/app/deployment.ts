@@ -2,8 +2,6 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { GetDeploymentRequest, Deployment, Ref } from 'waypoint-pb';
-import CurrentApplicationService from 'waypoint/services/current-application';
-import CurrentWorkspaceService from 'waypoint/services/current-workspace';
 
 interface DeploymentModelParams {
   deployment_id: string;
@@ -11,8 +9,6 @@ interface DeploymentModelParams {
 
 export default class DeploymentDetail extends Route {
   @service api!: ApiService;
-  @service currentApplication!: CurrentApplicationService;
-  @service currentWorkspace!: CurrentWorkspaceService;
 
   async model(params: DeploymentModelParams) {
     var ref = new Ref.Operation();
