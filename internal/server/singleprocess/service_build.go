@@ -43,6 +43,7 @@ func (s *service) ListBuilds(
 ) (*pb.ListBuildsResponse, error) {
 	result, err := s.state.BuildList(req.Application,
 		state.ListWithWorkspace(req.Workspace),
+		state.ListWithOrder(req.Order),
 	)
 	if err != nil {
 		return nil, err
