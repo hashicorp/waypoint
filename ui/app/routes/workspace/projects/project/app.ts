@@ -2,6 +2,10 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { Ref, Deployment, Build, Release, Project } from 'waypoint-pb';
+import PollModelService from 'waypoint/services/poll-model';
+import ObjectProxy from '@ember/object/proxy';
+import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
+import { resolve } from 'rsvp';
 
 interface AppModelParams {
   app_id: string;
@@ -16,6 +20,7 @@ export interface AppRouteModel {
 
 export default class App extends Route {
   @service api!: ApiService;
+  @service pollModel!: PollModelService;
 
   breadcrumbs(model: AppRouteModel) {
     if (!model) return [];
@@ -47,11 +52,23 @@ export default class App extends Route {
     appRef.setApplication(params.app_id);
     appRef.setProject(proj.name);
 
+    let ObjectPromiseProxy = ObjectProxy.extend(PromiseProxyMixin);
+
     return {
       application: appRef.toObject(),
-      deployments: this.api.listDeployments(wsRef, appRef),
-      releases: this.api.listReleases(wsRef, appRef),
-      builds: this.api.listBuilds(wsRef, appRef),
+      deployments: ObjectPromiseProxy.create({
+        promise: resolve(this.api.listDeployments(wsRef, appRef)),
+      }),
+      releases: ObjectPromiseProxy.create({
+        promise: resolve(this.api.listReleases(wsRef, appRef)),
+      }),
+      builds: ObjectPromiseProxy.create({
+        promise: resolve(this.api.listBuilds(wsRef, appRef)),
+      }),
     };
+  }
+
+  afterModel() {
+    this.pollModel.setup(this);
   }
 }

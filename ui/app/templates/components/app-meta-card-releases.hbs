@@ -6,15 +6,16 @@
         </h4>
         <LinkTo @route="workspace.projects.project.app.releases">View all releases</LinkTo>
     </Card::Header>
-    {{#if (and this.loaded this.releases) }}
-    {{#if this.firstRelease}}
-    <AppMetaItem::LatestRelease @model={{this.firstRelease }} />
-    {{/if}}
+    {{#if @releases}}
+    <AppMetaItem::LatestRelease @model={{@releases.[0] }} />
     <div class="app-meta-item">
         <ul class="app-meta-item-info">
-            {{#each this.extraReleases as |release|}}
-            <AppMetaItem::Release @model={{release}} />
-            {{/each}}
+            {{#if @releases.[1]}}
+            <AppMetaItem::Release @model={{@releases.[1]}} />
+            {{/if}}
+            {{#if @releases.[2]}}
+            <AppMetaItem::Release @model={{@releases.[2]}} />
+            {{/if}}
         </ul>
     </div>
     {{else}}
