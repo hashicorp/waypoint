@@ -1,6 +1,4 @@
 import Route from '@ember/routing/route';
-import { inject as service } from '@ember/service';
-import ApiService from 'waypoint/services/api';
 import { Ref } from 'waypoint-pb';
 
 interface WSModelParams {

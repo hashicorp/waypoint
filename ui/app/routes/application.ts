@@ -17,7 +17,7 @@ export default class Application extends Route {
   }
 
   @action
-  error(error: Error, transition: Transition) {
+  error(error: Error) {
     console.log(error);
 
     if (error.message.includes(ErrInvalidToken)) {

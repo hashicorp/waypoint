@@ -5,4 +5,7 @@ declare global {
   // interface Function extends Ember.FunctionPrototypeExtensions {}
 }
 
+import 'ember-concurrency-async';
+import 'ember-concurrency-ts/async';
+
 export {};

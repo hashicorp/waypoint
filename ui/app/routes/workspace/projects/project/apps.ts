@@ -15,5 +15,6 @@ export default class Apps extends Route {
     if (model.length == 1) {
       return this.transitionTo('workspace.projects.project.app', model[0].name);
     }
+    return;
   }
 }
