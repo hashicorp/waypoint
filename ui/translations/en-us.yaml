@@ -36,3 +36,13 @@ invite_login:
     label: 'Then enter the invite token below'
   button: 'Redeem Invite and Authenticate'
   instruction: 'Run the following command in the CLI to generate an invite token'
+
+state:
+  deployment:
+    success: 'Deployed successfully'
+    destroy: 'Deployment destroyed'
+    pending: 'Deploy pending'
+  release:
+    success: 'Released successfully'
+    destroy: 'Release destroyed'
+    pending: 'Release pending'

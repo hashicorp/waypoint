@@ -1,102 +1,52 @@
 <PageHeader @iconName="git-repository">
   <div class="title">
-    <h1>{{@model.application}}</h1>
+    <h1>{{@model.application.application}}</h1>
     <small>Application metadata</small>
   </div>
   <div class="actions">
-    <button class="button button--primary">
-      <span>prod.{{@model.application}}.com</span>
-      {{inline-svg "exit" class="icon"}}
-    </button>
+    <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
   </div>
 </PageHeader>
 
 <div class="cards app-latest">
-  <Card>
-    <Card::Header>
-      <h4>
-        {{inline-svg "public-default" class="icon"}}
-        Latest releases
-      </h4>
-      <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
-        View all releases
-      </LinkTo>
-    </Card::Header>
-    <AppMetaItem::LatestRelease />
-    <div class="app-meta-item">
-      <ul class="app-meta-item-info">
-        <AppMetaItem::Release />
-        <AppMetaItem::Release />
-      </ul>
-    </div>
-  </Card>
-  <Card>
-    <Card::Header>
-      <h4>
-        {{inline-svg "upload" class="icon"}}
-        Latest deployments
-      </h4>
-      <LinkTo @route="workspace.projects.project.app.deployments" @models={{array @model.project @model.application }}>
-        View all deployments
-      </LinkTo>
-    </Card::Header>
-    <AppMetaItem::LatestDeployment />
-    <div class="app-meta-item">
-      <ul class="app-meta-item-info">
-        <AppMetaItem::Deployment />
-        <AppMetaItem::Deployment />
-      </ul>
-    </div>
-  </Card>
-  <Card>
-    <Card::Header>
-      <h4>
-        {{inline-svg "source-file" class="icon"}}
-        Latest builds
-      </h4>
-      <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
-        View all builds
-      </LinkTo>
-    </Card::Header>
-    <AppMetaItem::LatestBuild />
-    <div class="app-meta-item">
-      <ul class="app-meta-item-info">
-        <AppMetaItem::Build />
-        <AppMetaItem::Build />
-      </ul>
-    </div>
-  </Card>
+  <AppMetaCardReleases @releases={{@model.releases}}></AppMetaCardReleases>
+  <AppMetaCardDeployments @deployments={{model.deployments}}></AppMetaCardDeployments>
+  <AppMetaCardBuilds @builds={{@model.builds}}></AppMetaCardBuilds>
 </div>
 
 <nav>
   <ul>
     <li>
-      <LinkTo @route="workspace.projects.project.app.logs" @models={{array @model.project @model.application }}>
+      <LinkTo @route="workspace.projects.project.app.logs"
+        @models={{array @model.application.project @model.application.application }}>
         {{inline-svg "page-outline" class="icon"}}
         {{t "nav.logs"}}
       </LinkTo>
     </li>
     <li>
-      <LinkTo @route="workspace.projects.project.app.builds" @models={{array @model.project @model.application }}>
+      <LinkTo @route="workspace.projects.project.app.builds"
+        @models={{array @model.application.project @model.application.application }}>
         {{inline-svg "source-file" class="icon"}}
         {{t "nav.builds"}}
       </LinkTo>
     </li>
     <li>
       <LinkTo @route="workspace.projects.project.app.deployments"
-        @models={{array @model.project @model.application }}>
+        @models={{array @model.application.project @model.application.application }}>
         {{inline-svg "upload" class="icon"}}
         {{t "nav.deployments"}}
       </LinkTo>
     </li>
     <li>
-      <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
+      <LinkTo @route="workspace.projects.project.app.releases"
+        @models={{array @model.application.project @model.application.application }}>
         {{inline-svg "public-default" class="icon"}}
         {{t "nav.releases"}}
       </LinkTo>
     </li>
     <li>
-      <LinkTo @route="workspace.projects.project.app.exec" @models={{array @model.project @model.application }}>
+      <LinkTo @route="workspace.projects.project.app.exec"
+        @models={{array @model.application.project @model.application.application }}>
         {{inline-svg "bolt" class="icon"}}
         {{t "nav.exec"}}
       </LinkTo>

@@ -1,12 +1,12 @@
 <li>
-  <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
+  <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @model.id}}>
     <p>
-      <b class="badge badge--version">v98</b>
-      <code>abcd1234</code>
+      <b class="badge badge--version">v{{@model.sequence}}</b>
+      <code>{{truncate @model.id 7}}</code>
     </p>
     <small>
-      {{inline-svg "logo-gcp-color" class="icon"}}
-      <span>2 hours ago</span>
+      {{inline-svg (icon-for-component @model.component.name) class="icon"}}
+      <span>{{date-format-distance-to-now @model.status.startTime.seconds }}</span>
     </small>
   </LinkTo>
 </li>

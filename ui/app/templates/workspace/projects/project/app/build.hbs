@@ -1,12 +1,13 @@
 <PageHeader @iconName="source-file">
   <div class="title">
-    <h2><code>abcd1234</code></h2>
+    <h2><code>{{@model.sequence}}</code></h2>
     <small>
-      <span>Built with <b>Pack</b> 2 hours ago</span>
+      <span>Built with <b>{{titleize @model.component.name}}</b>
+        {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
     </small>
   </div>
   <div class="actions">
-    <Actions::Deploy />
+    <Actions::Deploy @id={{@model.id}} />
   </div>
 </PageHeader>
 
@@ -14,17 +15,13 @@
   <div class="item">
     <b class="badge badge--success">
       {{inline-svg "check-plain" class="icon"}}
-      <span>Built in 12 minutes 15 seconds</span>
+      <span>{{date-format-distance @model.status.startTime.seconds @model.status.completeTime.seconds }}</span>
     </b>
   </div>
 </div>
 
 <div class="output-pane">
   <div class="output">
-    <code>build output row</code>
-    <code>build output row</code>
-    <code>build output row</code>
-    <code>build output row</code>
-    <code>build output row</code>
+    <code>No build output available</code>
   </div>
 </div>

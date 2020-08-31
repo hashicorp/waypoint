@@ -1,0 +1,26 @@
+<Card>
+    <Card::Header>
+        <h4>
+            {{inline-svg "source-file" class="icon"}}
+            Latest builds
+        </h4>
+        <LinkTo @route="workspace.projects.project.app.builds">
+            View all builds
+        </LinkTo>
+    </Card::Header>
+    {{#if @builds}}
+    <AppMetaItem::LatestBuild @model={{@builds.[0] }} />
+    <div class="app-meta-item">
+        <ul class="app-meta-item-info">
+            {{#if @builds.[1]}}
+            <AppMetaItem::Build @model={{@builds.[1]}} />
+            {{/if}}
+            {{#if @builds.[2]}}
+            <AppMetaItem::Build @model={{@builds.[2]}} />
+            {{/if}}
+        </ul>
+    </div>
+    {{else}}
+    No builds
+    {{/if}}
+</Card>

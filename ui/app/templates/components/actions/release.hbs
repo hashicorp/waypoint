@@ -4,14 +4,14 @@
 </button>
 
 {{#if hintIsVisible}}
-  <div class="cli-hint">
-    <p>To release this deployment you can run the following command in the CLI</p>
-    <code class="copyable cmd">waypoint release abcd1234</code>
-    <small><a href="#">Read more in our documentation</a></small>
-    <div class="dismiss">
-      <button class="button button--secondary button--compact" {{on "click" this.hideHint}}>
-        <span>Dismiss</span>
-      </button>
-    </div>
+<div class="cli-hint">
+  <p>To release this deployment you can run the following command in the CLI</p>
+  <code class="copyable cmd">waypoint release {{@id}}</code>
+  <small><a href="#">Read more in our documentation</a></small>
+  <div class="dismiss">
+    <button class="button button--secondary button--compact" {{on "click" this.hideHint}}>
+      <span>Dismiss</span>
+    </button>
   </div>
+</div>
 {{/if}}

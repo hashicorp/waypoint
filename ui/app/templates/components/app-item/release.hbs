@@ -1,18 +1,20 @@
 <li class="app-item">
   <LinkTo @route="workspace.projects.project.app.release" @models={{array @release.id}}>
     <p>
-      <b class="badge badge--version">v99</b>
-      <code>abcd1234</code>
+      <b class="badge badge--version">v{{@release.sequence}}</b>
+      <code>{{@release.id}}</code>
     </p>
     <small>
-      {{inline-svg "logo-gcp-color" class="icon"}}
-      <span>Released on <b>GCP</b> 2 hours ago</span>
+      {{inline-svg (icon-for-component @release.component.name) class="icon"}}
+      <span>Released on <b>{{component-name @release.component.name}}</b>
+        {{date-format-distance-to-now @release.status.startTime.seconds }}</span>
     </small>
   </LinkTo>
+
   {{#if @isLatest}}
-    <button class="button button--primary">
-      <span>prod.wp-microship.com</span>
-      {{inline-svg "exit" class="icon"}}
-    </button>
+  <button class="button button--primary">
+    <ExternalLink href={{@release.url}}>{{@release.url}}</ExternalLink>
+    {{inline-svg "exit" class="icon"}}
+  </button>
   {{/if}}
 </li>

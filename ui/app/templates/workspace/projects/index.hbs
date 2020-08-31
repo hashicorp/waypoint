@@ -13,7 +13,8 @@
         <IconTile @icon="folder-outline" @isSmall={{true}} />
         <div class="meta">
           <h2>{{project.project}}</h2>
-          <small>{{pluralize 99 "application"}}</small>
+          {{!-- todo(pearkes): get full project objects from list api --}}
+          {{!-- <small>{{pluralize project.applicationsList.length "application"}}</small> --}}
         </div>
       </div>
     </LinkTo>

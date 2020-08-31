@@ -1,14 +1,15 @@
 <div class="app-meta-item app-meta-item--latest">
   <div class="app-meta-item-info">
-    <LinkTo @route="workspace.projects.project.app.releases" @models={{array @model.project @model.application }}>
-      <p><b class="badge badge--version">v99</b> <code>abcd1234</code></p>
+    <LinkTo @route="workspace.projects.project.app.release" @models={{array @model.id }}>
+      <p><b class="badge badge--version">v{{@model.sequence}}</b> <code>{{truncate @model.id 7}}</code></p>
       <small>
-        {{inline-svg "logo-gcp-color" class="icon"}}
-        <span>Released on <b>GCP</b> 2 hours ago</span>
+        {{inline-svg (icon-for-component @model.component.name) class="icon"}}
+        <span>Released on <b>{{component-name @model.component.name}}</b>
+          {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
       </small>
     </LinkTo>
   </div>
-  <button class="button button--primary">
+  <ExternalLink href={{@model.url}} class="button button--primary">
     {{inline-svg "exit" class="icon"}}
-  </button>
+  </ExternalLink>
 </div>

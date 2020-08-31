@@ -1,38 +1,74 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref } from 'waypoint-pb';
-import CurrentProjectService from 'waypoint/services/current-project';
-import CurrentApplicationService from 'waypoint/services/current-application';
+import { Ref, Deployment, Build, Release, Project } from 'waypoint-pb';
+import PollModelService from 'waypoint/services/poll-model';
+import ObjectProxy from '@ember/object/proxy';
+import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
+import { resolve } from 'rsvp';
 
 interface AppModelParams {
   app_id: string;
 }
 
+export interface AppRouteModel {
+  application: Ref.Application.AsObject;
+  deployments: Promise<Deployment.AsObject[]>;
+  releases: Promise<Release.AsObject[]>;
+  builds: Promise<Build.AsObject[]>;
+}
+
 export default class App extends Route {
   @service api!: ApiService;
-  @service currentProject!: CurrentProjectService;
-  @service currentApplication!: CurrentApplicationService;
+  @service pollModel!: PollModelService;
 
-  breadcrumbs = [
-    {
-      // todo(pearkes): make the dynamic name work
-      label: this.currentProject.name || 'Project',
-      args: ['workspace.projects.project.apps'],
-    },
-  ];
+  breadcrumbs(model: AppRouteModel) {
+    if (!model) return [];
+    return [
+      {
+        label: model.application.project!,
+        args: ['workspace.projects.project.apps'],
+      },
+      {
+        label: 'Application',
+        args: ['workspace.projects.project.app'],
+      },
+      {
+        label: model.application.application!,
+        args: ['workspace.projects.project.app'],
+      },
+    ];
+  }
 
-  async model(params: AppModelParams) {
-    let app = new Ref.Application();
-    let proj = this.currentProject.ref;
+  async model(params: AppModelParams): Promise<AppRouteModel> {
+    let ws = this.modelFor('workspace') as Ref.Workspace.AsObject;
+    let wsRef = new Ref.Workspace();
+    wsRef.setWorkspace(ws.workspace);
 
+    let proj = this.modelFor('workspace.projects.project') as Project.AsObject;
+
+    let appRef = new Ref.Application();
     // App based on id
-    app.setApplication(params.app_id);
-    app.setProject(proj?.getProject()!);
+    appRef.setApplication(params.app_id);
+    appRef.setProject(proj.name);
 
-    // Set ref on current app
-    this.currentApplication.ref = app;
+    let ObjectPromiseProxy = ObjectProxy.extend(PromiseProxyMixin);
 
-    return app.toObject();
+    return {
+      application: appRef.toObject(),
+      deployments: ObjectPromiseProxy.create({
+        promise: resolve(this.api.listDeployments(wsRef, appRef)),
+      }),
+      releases: ObjectPromiseProxy.create({
+        promise: resolve(this.api.listReleases(wsRef, appRef)),
+      }),
+      builds: ObjectPromiseProxy.create({
+        promise: resolve(this.api.listBuilds(wsRef, appRef)),
+      }),
+    };
+  }
+
+  afterModel() {
+    this.pollModel.setup(this);
   }
 }

@@ -1,14 +1,15 @@
 <div class="app-meta-item app-meta-item--latest">
   <div class="app-meta-item-info">
-    <LinkTo @route="workspace.projects.project.app.deployments" @models={{array @model.project @model.application }}>
-      <p><b class="badge badge--version">#321</b> <code>abcd1234</code></p>
+    <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @model.id }}>
+      <p><b class="badge badge--version">v{{@model.sequence}}</b> <code>{{truncate @model.id 7}}</code></p>
       <small>
-        {{inline-svg "logo-kubernetes-color" class="icon"}}
-        <span>Deployed by <b>Docker</b> 2 hours ago</span>
+        {{inline-svg (icon-for-component @model.component.name) class="icon"}}
+        <span>Deployed by <b>{{component-name @model.component.name}}</b>
+          {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
       </small>
     </LinkTo>
   </div>
-  <button class="button button--secondary">
+  <ExternalLink href="/todo" class="button button--secondary">
     {{inline-svg "exit" class="icon"}}
-  </button>
+  </ExternalLink>
 </div>
