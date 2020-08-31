@@ -62,6 +62,11 @@ func (c *ContextCreateCommand) Flags() *flag.Sets {
 			Target: &c.flagConfig.Server.Address,
 			Usage:  "Address for the server.",
 		})
+		f.StringVar(&flag.StringVar{
+			Name:   "server-auth-token",
+			Target: &c.flagConfig.Server.AuthToken,
+			Usage:  "Authentication token to use to connect to the server.",
+		})
 		f.BoolVar(&flag.BoolVar{
 			Name:    "server-tls",
 			Target:  &c.flagConfig.Server.Tls,
