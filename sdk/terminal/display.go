@@ -96,25 +96,8 @@ func (d *Display) renderEntry(ent *DisplayEntry, spin int) {
 
 	text := strings.TrimRight(ent.text, " \t\n")
 
-	var rest []string
-
 	if len(text) >= d.width {
-		// meaning the last one
-		if len(d.Entries)-1 == ent.index {
-			left := text[:d.width-1]
-			right := text[d.width-1:]
-
-			for len(right) >= d.width-3 {
-				rest = append(rest, right[:d.width-3])
-				right = right[d.width-3:]
-			}
-
-			rest = append(rest, right)
-
-			text = left
-		} else {
-			text = text[:d.width-1]
-		}
+		text = text[:d.width-1]
 	}
 
 	prefix := ""
@@ -149,19 +132,6 @@ func (d *Display) renderEntry(ent *DisplayEntry, spin int) {
 		prefix,
 		text,
 	)
-
-	if len(rest) > 0 {
-		for _, part := range rest {
-			line += fmt.Sprintf("  %s%s",
-				b.
-					Down(1).
-					Column(0).
-					EraseLine(aec.EraseModes.All).
-					ANSI,
-				part,
-			)
-		}
-	}
 
 	if statusColor != nil {
 		line = statusColor.ANSI.Apply(line)
