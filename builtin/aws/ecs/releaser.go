@@ -39,7 +39,7 @@ func (r *Releaser) Release(
 	ui terminal.UI,
 	target *Deployment,
 ) (*Release, error) {
-	sess := session.New(aws.NewConfig().WithRegion("us-west-2"))
+	sess := session.New(aws.NewConfig().WithRegion(r.p.config.Region))
 	elbsrv := elbv2.New(sess)
 
 	lbName := "waypoint-ecs-demo-ruby"
