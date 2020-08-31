@@ -21,7 +21,7 @@ export default class ApiService extends Service {
   @service session!: SessionService;
   meta = { authorization: this.session.token };
 
-  client = new WaypointClient('https://127.0.0.1:1235/grpc', null, null);
+  client = new WaypointClient('/grpc', null, null);
 
   // Merges metadata with required metadata for the request
   WithMeta(meta?: any) {
