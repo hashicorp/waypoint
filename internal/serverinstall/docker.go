@@ -38,7 +38,8 @@ func InstallDocker(
 		return nil, nil, err
 	}
 
-	port := "9701"
+	grpcPort := "9701"
+	httpPort := "9702"
 
 	var (
 		clicfg clicontext.Config
@@ -46,12 +47,12 @@ func InstallDocker(
 	)
 
 	clicfg.Server = configpkg.Server{
-		Address:       "localhost:" + port,
+		Address:       "localhost:" + grpcPort,
 		Tls:           true,
 		TlsSkipVerify: true,
 	}
 
-	addr.Addr = "waypoint-server:" + port
+	addr.Addr = "waypoint-server:" + grpcPort
 	addr.Tls = true
 	addr.TlsSkipVerify = true
 
@@ -88,7 +89,12 @@ func InstallDocker(
 
 	}
 
-	np, err := nat.NewPort("tcp", port)
+	npGRPC, err := nat.NewPort("tcp", grpcPort)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	npHTTP, err := nat.NewPort("tcp", httpPort)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -102,18 +108,22 @@ func InstallDocker(
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Image:        scfg.ServerImage,
-		ExposedPorts: nat.PortSet{np: struct{}{}},
-		Env:          []string{"PORT=" + port},
-		Cmd:          []string{"server", "-vvv", "-db=/data/data.db", "-listen-grpc=0.0.0.0:9701"},
+		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
+		Env:          []string{"PORT=" + grpcPort},
+		Cmd:          []string{"server", "-vvv", "-db=/data/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
 	}
 
 	bindings := nat.PortMap{}
-	bindings[np] = []nat.PortBinding{
+	bindings[npGRPC] = []nat.PortBinding{
 		{
-			HostPort: port,
+			HostPort: grpcPort,
 		},
 	}
-
+	bindings[npHTTP] = []nat.PortBinding{
+		{
+			HostPort: httpPort,
+		},
+	}
 	hostconfig := container.HostConfig{
 		Binds:        []string{"waypoint-server:/data"},
 		PortBindings: bindings,
