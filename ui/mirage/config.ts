@@ -4,6 +4,7 @@ import { Server } from 'miragejs';
 import * as build from './services/build';
 import * as project from './services/project';
 import * as deployment from './services/deployment';
+import * as token from './services/token';
 
 export default function (this: Server) {
   this.namespace = 'hashicorp.waypoint.Waypoint';
@@ -23,6 +24,7 @@ export default function (this: Server) {
   this.post('/GetDeployment', deployment.get);
   this.post('/ListProjects', project.list);
   this.post('/GetProject', project.get);
+  this.post('/ConvertInviteToken', token.create);
 
   // Pass through all other requests
   this.passthrough();

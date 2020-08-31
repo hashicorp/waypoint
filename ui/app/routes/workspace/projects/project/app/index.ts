@@ -1,4 +1,3 @@
-import Transition from '@ember/routing/-private/transition';
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import { Ref } from 'waypoint-pb';
@@ -9,7 +8,7 @@ export default class AppIndex extends Route {
   @service currentProject!: CurrentProjectService;
   @service currentApplication!: CurrentApplicationService;
 
-  redirect(model: Ref.Application.AsObject, transition: Transition) {
+  redirect(model: Ref.Application.AsObject) {
     return this.transitionTo('workspace.projects.project.app.logs', model.application);
   }
 }

@@ -1,4 +1,5 @@
-.button {
+.button,
+a[href].button {
   @include Typography.Interface(M);
   display: inline-flex;
   align-items: center;
