@@ -10,6 +10,8 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -75,7 +77,7 @@ func (p *Platform) Deploy(
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
 
 	cli.NegotiateAPIVersion(ctx)
@@ -97,7 +99,7 @@ func (p *Platform) Deploy(
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to list Docker networks: %s", err)
 	}
 
 	if len(nets) == 0 {
@@ -112,7 +114,7 @@ func (p *Platform) Deploy(
 		})
 
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker network: %s", err)
 		}
 	}
 
@@ -177,13 +179,13 @@ func (p *Platform) Deploy(
 
 	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, name)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to create Docker container: %s", err)
 	}
 
 	s.Update("Starting container")
 	err = cli.ContainerStart(ctx, cr.ID, types.ContainerStartOptions{})
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to start Docker container: %s", err)
 	}
 	s.Done()
 
