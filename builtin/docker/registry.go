@@ -14,6 +14,8 @@ import (
 	"github.com/docker/docker/registry"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/mattn/go-isatty"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Registry represents access to a Docker registry.
@@ -41,21 +43,21 @@ func (r *Registry) Push(
 
 	stdout, stderr, err := ui.OutputWriters()
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create output for logs:%s", err)
 	}
 
 	target := &Image{Image: r.config.Image, Tag: r.config.Tag}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client:%s", err)
 	}
 
 	cli.NegotiateAPIVersion(ctx)
 
 	err = cli.ImageTag(ctx, img.Name(), target.Name())
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to tag image:%s", err)
 	}
 
 	if r.config.Local {
@@ -64,7 +66,7 @@ func (r *Registry) Push(
 
 	ref, err := reference.ParseNormalizedNamed(target.Name())
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
 	}
 
 	encodedAuth := r.config.EncodedAuth
@@ -73,7 +75,7 @@ func (r *Registry) Push(
 		// Resolve the Repository name from fqn to RepositoryInfo
 		repoInfo, err := registry.ParseRepositoryInfo(ref)
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, "unable to parse repository info from image name: %s", err)
 		}
 
 		var server string
@@ -94,7 +96,7 @@ func (r *Registry) Push(
 		authConfig, _ := cf.GetAuthConfig(server)
 		buf, err := json.Marshal(authConfig)
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
 		}
 		encodedAuth = base64.URLEncoding.EncodeToString(buf)
 	}
@@ -105,7 +107,7 @@ func (r *Registry) Push(
 
 	responseBody, err := cli.ImagePush(ctx, reference.FamiliarString(ref), options)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to push image to registry: %s", err)
 	}
 
 	defer responseBody.Close()
@@ -122,7 +124,7 @@ func (r *Registry) Push(
 
 	err = jsonmessage.DisplayJSONMessagesStream(responseBody, stdout, termFd, isTerm, nil)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to stream Docker logs to terminal: %s", err)
 	}
 
 	ui.Output("Docker image pushed: %s:%s", r.config.Image, r.config.Tag)
