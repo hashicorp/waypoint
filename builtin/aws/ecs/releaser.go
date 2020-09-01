@@ -42,9 +42,8 @@ func (r *Releaser) Release(
 	sess := session.New(aws.NewConfig().WithRegion(r.p.config.Region))
 	elbsrv := elbv2.New(sess)
 
-	lbName := "waypoint-ecs-demo-ruby"
 	dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-		Names: []*string{&lbName},
+		LoadBalancerArns: []*string{&target.LoadBalancerArn},
 	})
 	if err != nil {
 		return nil, err
