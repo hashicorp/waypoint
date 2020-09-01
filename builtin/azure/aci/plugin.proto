@@ -12,6 +12,7 @@ message Deployment {
   message ContainerGroup {
     string name = 1;
     string resource_group = 2;
+    string subscription_id = 3;
   }
 }
 

@@ -1,8 +1,8 @@
-project = "wpmini"
+project = "aci"
 
-app "wpmini" {
+app "wpaci" {
   labels = {
-    "service" = "wpmini",
+    "service" = "wpaci",
     "env"     = "dev"
   }
 
@@ -10,7 +10,7 @@ app "wpmini" {
     use "pack" {}
     registry {
       use "docker" {
-        image = "jacksonnic.azurecr.io/wpmini"
+        image = "jacksonnic.azurecr.io/test_pack"
         tag   = "latest"
       }
     }
@@ -19,6 +19,29 @@ app "wpmini" {
   deploy {
     use "azure-aci" {
       resource_group="minecraft"
+      location = "westeurope"
+
+      ports = [8080]
+
+      static_environment = {
+        "NAME": "Nic"
+      }
+
+      capacity {
+        memory = "1024"
+        cpu_count = 4
+      }
+
+      volume {
+        name = "vol1"
+        path = "/consul"
+        read_only = true
+
+        git_repo {
+          repository = "https://github.com/hashicorp/consul"
+          revision = "v1.8.3"
+        }
+      }
     }
   }
 }

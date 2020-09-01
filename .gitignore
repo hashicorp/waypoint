@@ -10,3 +10,6 @@ tmp/
 
 # Default Waypoint database file
 data.db
+
+.envrc
+.vscode
