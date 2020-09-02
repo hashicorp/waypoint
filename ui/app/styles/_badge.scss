@@ -13,17 +13,17 @@
   }
 
   &--success {
-    color: color.$green-700;
+    color: color.$green-600;
     background: color.$green-050;
   }
 
   &--error {
-    color: color.$red-700;
+    color: color.$red-500;
     background: color.$red-050;
   }
 
   &--warning {
-    color: color.$yellow-700;
+    color: color.$yellow-600;
     background: color.$yellow-050;
   }
 
