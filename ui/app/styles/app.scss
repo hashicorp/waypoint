@@ -21,6 +21,11 @@ ul {
 
 // Waypoint styles
 
+code {
+  font-size: 0.8em;
+  font-family: ui-monospace, 'Menlo', monospace;
+}
+
 svg.icon {
   width: scale.$lg-2;
   height: scale.$lg-2;

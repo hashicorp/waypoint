@@ -91,14 +91,15 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
         padding-bottom: scale.$sm-3;
 
         code {
-          font-size: 1.2em;
-          font-weight: 500;
+          font-size: 0.9em;
+          font-weight: 600;
         }
 
         .badge {
+          font-size: 1rem;
           position: relative;
-          top: -2px;
-          margin-right: scale.$sm-3;
+          top: -3px;
+          margin-right: scale.$sm-4;
         }
       }
 
@@ -327,10 +328,6 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
         font-size: 0.75rem;
         padding: scale.$sm-3 scale.$sm-2;
       }
-
-      code {
-        font-size: 1.3em;
-      }
     }
   }
 
@@ -349,10 +346,6 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       flex-grow: 1;
       overflow: auto;
       padding: scale.$sm-2 scale.$sm-1;
-    }
-
-    code {
-      font-size: 1.1rem;
     }
 
     .run-prompt {
@@ -395,8 +388,8 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       }
 
       code {
-        font-size: 1.1rem;
-        padding: scale.$sm-4 scale.$sm-2;
+        font-size: 0.9em;
+        padding: scale.$sm-3 scale.$sm-2;
         margin: 0 scale.$sm-3;
       }
     }
@@ -405,7 +398,6 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   code.cmd {
     color: color.$white;
     background: color.$ui-gray-800;
-    font-size: scale.$base;
     padding: scale.$sm-2 scale.$sm-2;
     border-radius: 2px;
 
