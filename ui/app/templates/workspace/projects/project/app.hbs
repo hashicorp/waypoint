@@ -11,9 +11,9 @@
 </PageHeader>
 
 <div class="cards app-latest">
-  <AppMetaCardReleases @releases={{@model.releases}}></AppMetaCardReleases>
-  <AppMetaCardDeployments @deployments={{model.deployments}}></AppMetaCardDeployments>
   <AppMetaCardBuilds @builds={{@model.builds}}></AppMetaCardBuilds>
+  <AppMetaCardDeployments @deployments={{model.deployments}}></AppMetaCardDeployments>
+  <AppMetaCardReleases @releases={{@model.releases}}></AppMetaCardReleases>
 </div>
 
 <nav>
