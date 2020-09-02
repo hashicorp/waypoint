@@ -1,5 +1,5 @@
-<Card @classNames={{unless @releases 'empty-state'}}>
-  {{#if @releases}}
+<Card @classNames={{unless @releases.length 'empty-state'}}>
+  {{#if @releases.length}}
     <Card::Header>
       <h4>
         {{inline-svg "public-default" class="icon"}}

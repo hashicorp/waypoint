@@ -1,5 +1,5 @@
-<Card @classNames={{unless @deployments 'empty-state'}}>
-  {{#if @deployments}}
+<Card @classNames={{unless @deployments.length 'empty-state'}}>
+  {{#if @deployments.length}}
     <Card::Header>
       <h4>
         {{inline-svg "upload" class="icon"}}

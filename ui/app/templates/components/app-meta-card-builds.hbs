@@ -1,5 +1,5 @@
-<Card @classNames={{unless @builds 'empty-state'}}>
-  {{#if @builds}}
+<Card @classNames={{unless @builds.length 'empty-state'}}>
+  {{#if @builds.length}}
     <Card::Header>
       <h4>
         {{inline-svg "source-file" class="icon"}}

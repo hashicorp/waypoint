@@ -379,6 +379,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    text-align: center;
     background: color.$ui-cool-gray-050;
     border: 1px solid color.$ui-cool-gray-100;
     border-radius: 2px;
