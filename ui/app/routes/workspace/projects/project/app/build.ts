@@ -15,6 +15,7 @@ export default class BuildDetail extends Route {
     return [
       {
         label: model.application.application,
+        icon: 'git-repository',
         args: ['workspace.projects.project.app'],
       },
       {

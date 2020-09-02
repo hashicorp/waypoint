@@ -16,6 +16,7 @@ export default class ReleaseDetail extends Route {
     return [
       {
         label: model.application.application,
+        icon: 'git-repository',
         args: ['workspace.projects.project.app'],
       },
       {
