@@ -6,8 +6,14 @@
     </p>
     <small>
       {{inline-svg (icon-for-component @release.component.name) class="icon"}}
-      <span>Released on <b>{{component-name @release.component.name}}</b>
-        {{date-format-distance-to-now @release.status.startTime.seconds }}</span>
+      <span>{{if (eq @release.status.state 1) 'Releasing' 'Released'}} on
+        <b>{{component-name @release.component.name}}</b>
+        {{#if (eq @release.status.state 1)}}
+          (Started {{date-format-distance-to-now @release.status.startTime.seconds }})
+        {{else}}
+          {{date-format-distance-to-now @release.status.completeTime.seconds }}
+        {{/if}}
+      </span>
     </small>
   </LinkTo>
 

@@ -1,8 +1,9 @@
 <div class="app-meta-item app-meta-item--latest">
   <div class="app-meta-item-info">
-    <LinkTo @route="workspace.projects.project.app.build" @models={{array @model.id }}>
+    <LinkTo @route="workspace.projects.project.app.build" @models={{array @model.id}}>
       <p>
-        <code>{{truncate @model.id 7}}</code>
+        <b class="badge badge--version">#{{@model.sequence}}</b>
+        <code>{{truncate @model.id 8 false}}</code>
         {{#if (eq @model.status.state 1)}}
         <b class="badge">
           {{inline-svg "clock-outline" class="icon"}}
@@ -18,9 +19,14 @@
         {{/if}}
       </p>
       <small>
-        {{inline-svg "source-file" class="icon"}}
-        <span>Built with <b>{{component-name @model.component.name}}</b>
-          {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
+        <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
+          <b>{{component-name @model.component.name}}</b>
+          {{#if (eq @model.status.state 1)}}
+            (Started {{date-format-distance-to-now @model.status.startTime.seconds }})
+          {{else}}
+            {{date-format-distance-to-now @model.status.completeTime.seconds }}
+          {{/if}}
+        </span>
       </small>
     </LinkTo>
   </div>

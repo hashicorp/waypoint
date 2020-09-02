@@ -6,8 +6,14 @@
     </p>
     <small>
       {{inline-svg (icon-for-component @deployment.component.name) class="icon"}}
-      <span>Deployed by <b>{{component-name @deployment.component.name}}</b>
-        {{date-format-distance-to-now @deployment.status.startTime.seconds }}</span>
+      <span>{{if (eq @deployment.status.state 1) 'Deploying' 'Deployed'}} by
+        <b>{{component-name @deployment.component.name}}</b>
+        {{#if (eq @deployment.status.state 1)}}
+          (Started {{date-format-distance-to-now @deployment.status.startTime.seconds }})
+        {{else}}
+          {{date-format-distance-to-now @deployment.status.completeTime.seconds }}
+        {{/if}}
+      </span>
     </small>
   </LinkTo>
   <ExternalLink href="/todo" class="button button--secondary button--compact">
