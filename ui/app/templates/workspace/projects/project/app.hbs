@@ -4,7 +4,9 @@
     <small>Application metadata</small>
   </div>
   <div class="actions">
-    <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
+    {{#if @model.releases}}
+      <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
+    {{/if}}
   </div>
 </PageHeader>
 

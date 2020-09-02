@@ -189,6 +189,27 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     box-shadow: $box-shadow;
     background: color.$white;
 
+    &.empty-state {
+      border: none;
+      border-radius: 0;
+      padding: scale.$base;
+
+      p {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        &:only-child {
+          @include Typography.Interface(S);
+          color: color.$ui-cool-gray-500;
+        }
+
+        .icon {
+          margin-bottom: scale.$sm-2;
+        }
+      }
+    }
+
     &-header {
       display: flex;
       align-items: center;
@@ -309,14 +330,17 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   .output-pane {
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
     background: color.$ui-cool-gray-050;
     border: 1px solid color.$ui-cool-gray-100;
     border-radius: 2px;
-    min-height: 480px;
+    min-height: 340px;
 
     .output {
       display: flex;
       flex-direction: column;
+      flex-grow: 1;
+      overflow: auto;
       padding: scale.$sm-2 scale.$sm-1;
     }
 
@@ -338,6 +362,34 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
 
       .icon {
         color: color.$ui-cool-gray-600;
+      }
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: color.$ui-cool-gray-050;
+    border: 1px solid color.$ui-cool-gray-100;
+    border-radius: 2px;
+    padding: scale.$lg-4;
+
+    p {
+      @include Typography.Interface(M);
+      color: color.$ui-cool-gray-500;
+      margin: scale.$sm-2;
+
+      &:first-child {
+        @include Typography.Interface(L);
+        color: color.$ui-cool-gray-600;
+      }
+
+      code {
+        font-size: 1.1rem;
+        padding: scale.$sm-4 scale.$sm-2;
+        margin: 0 scale.$sm-3;
       }
     }
   }

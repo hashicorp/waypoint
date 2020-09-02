@@ -2,7 +2,12 @@
 
 <ul data-test-build-list=true class="list">
   {{#each @model as |build|}}
-  <AppItem::Build @build={{build}} />
+    <AppItem::Build @build={{build}} />
+  {{else}}
+    <EmptyState>
+      <p>There are no builds to display for this app yet</p>
+      <p>To create your first build, you can run <code class="cmd">waypoint build</code> from the CLI</p>
+    </EmptyState>
   {{/each}}
 </ul>
 
