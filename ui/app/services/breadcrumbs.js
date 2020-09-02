@@ -14,7 +14,7 @@ export default class BreadcrumbsService extends Service {
   @computed('router.{currentURL,currentRouteName}')
   get breadcrumbs() {
     const owner = getOwner(this);
-    const allRoutes = (this.get('router.currentRouteName') || '')
+    const allRoutes = (this.router.currentRouteName || '')
       .split('.')
       .without('')
       .map((segment, index, allSegments) => allSegments.slice(0, index + 1).join('.'));
