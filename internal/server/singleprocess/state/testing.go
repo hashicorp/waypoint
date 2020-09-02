@@ -6,13 +6,14 @@ import (
 	"path/filepath"
 
 	"github.com/boltdb/bolt"
+	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 )
 
 // TestState returns an initialized State for testing.
 func TestState(t testing.T) *State {
-	result, err := New(testDB(t))
+	result, err := New(hclog.L(), testDB(t))
 	require.NoError(t, err)
 	return result
 }
