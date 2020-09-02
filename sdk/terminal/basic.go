@@ -103,8 +103,9 @@ func (ui *basicUI) Output(msg string, raw ...interface{}) {
 
 	st := ui.status
 	if st != nil {
-		st.Pause()
-		defer st.Start()
+		if st.Pause() {
+			defer st.Start()
+		}
 	}
 
 	// Write it

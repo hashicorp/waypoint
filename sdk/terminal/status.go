@@ -120,7 +120,7 @@ func (s *spinnerStatus) Close() error {
 
 	if s.running {
 		s.running = false
-		s.spinner.Stop()
+		s.spinner.Suffix = ""
 	}
 
 	s.spinner.Stop()
@@ -128,14 +128,18 @@ func (s *spinnerStatus) Close() error {
 	return nil
 }
 
-func (s *spinnerStatus) Pause() {
+func (s *spinnerStatus) Pause() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	wasRunning := s.running
 
 	if s.running {
 		s.running = false
 		s.spinner.Stop()
 	}
+
+	return wasRunning
 }
 
 func (s *spinnerStatus) Start() {
