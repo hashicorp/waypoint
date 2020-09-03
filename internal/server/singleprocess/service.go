@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"crypto/tls"
+
 	"github.com/boltdb/bolt"
 
 	grpctoken "github.com/hashicorp/horizon/pkg/grpc/token"
@@ -95,6 +96,24 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		}
 
 		s.urlClient = wphznpb.NewWaypointHznClient(conn)
+	}
+
+	// Set specific server config for the deployment entrypoint binaries
+	if scfg := cfg.serverConfig; scfg != nil && scfg.CEBConfig != nil && scfg.CEBConfig.Addr != "" {
+		// only one advertise address can be configured
+		addr := &pb.ServerConfig_AdvertiseAddr{
+			Addr:          scfg.CEBConfig.Addr,
+			Tls:           scfg.CEBConfig.TLSEnabled,
+			TlsSkipVerify: scfg.CEBConfig.TLSSkipVerify,
+		}
+
+		conf := &pb.ServerConfig{
+			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{addr},
+		}
+
+		if err := s.state.ServerConfigSet(conf); err != nil {
+			return nil, err
+		}
 	}
 
 	return &s, nil
