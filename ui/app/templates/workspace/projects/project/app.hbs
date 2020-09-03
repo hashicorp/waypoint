@@ -9,7 +9,7 @@
       <small>Application metadata</small>
     </div>
     <div class="actions">
-      {{#if @model.releases}}
+      {{#if @model.releases.length}}
         <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
       {{/if}}
     </div>
