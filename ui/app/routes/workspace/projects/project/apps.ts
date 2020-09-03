@@ -8,7 +8,7 @@ export default class Apps extends Route {
 
   async model() {
     let proj = this.modelFor('workspace.projects.project') as Project.AsObject;
-    return proj.applicationsList;
+    return proj;
   }
 
   afterModel(model: Application.AsObject[]) {
