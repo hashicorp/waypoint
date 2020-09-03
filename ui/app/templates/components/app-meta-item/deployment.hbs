@@ -2,11 +2,17 @@
   <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @model.id}}>
     <p>
       <b class="badge badge--version">v{{@model.sequence}}</b>
-      <code>{{truncate @model.id 7}}</code>
+      <code>{{truncate @model.id 8 false}}</code>
     </p>
     <small>
       {{inline-svg (icon-for-component @model.component.name) class="icon"}}
-      <span>{{date-format-distance-to-now @model.status.startTime.seconds }}</span>
+      <span>
+        {{#if (eq @model.status.state 1)}}
+          Started {{date-format-distance-to-now @model.status.startTime.seconds }}
+        {{else}}
+          {{date-format-distance-to-now @model.status.completeTime.seconds }}
+        {{/if}}
+      </span>
     </small>
   </LinkTo>
   <ExternalLink href="/todo" class="button button--secondary button--compact">

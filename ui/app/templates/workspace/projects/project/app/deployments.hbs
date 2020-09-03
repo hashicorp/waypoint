@@ -2,7 +2,12 @@
 
 <ul data-test-deployment-list=true class="list">
   {{#each @model as |deployment|}}
-  <AppItem::Deployment @deployment={{deployment}} />
+    <AppItem::Deployment @deployment={{deployment}} />
+  {{else}}
+    <EmptyState>
+      <p>There are no deployments to display for this app yet</p>
+      <p>To create your first build, you can run <code class="cmd">waypoint deploy</code> from the CLI</p>
+    </EmptyState>
   {{/each}}
 </ul>
 

@@ -27,15 +27,8 @@ export default class App extends Route {
     return [
       {
         label: model.application.project!,
+        icon: "folder-outline",
         args: ['workspace.projects.project.apps'],
-      },
-      {
-        label: 'Application',
-        args: ['workspace.projects.project.app'],
-      },
-      {
-        label: model.application.application!,
-        args: ['workspace.projects.project.app'],
       },
     ];
   }

@@ -1,24 +1,31 @@
-<Card>
+<Card @classNames={{unless @deployments.length 'empty-state'}}>
+  {{#if @deployments.length}}
     <Card::Header>
-        <h4>
-            {{inline-svg "upload" class="icon"}}
-            Latest deployments
-        </h4>
-        <LinkTo @route="workspace.projects.project.app.deployments">View all deployments </LinkTo>
+      <h4>
+        {{inline-svg "upload" class="icon"}}
+        Latest deployments
+      </h4>
+      <LinkTo @route="workspace.projects.project.app.deployments">
+        View all deployments
+      </LinkTo>
     </Card::Header>
-    {{#if @deployments}}
+
     <AppMetaItem::LatestDeployment @model={{@deployments.[0] }} />
+
     <div class="app-meta-item">
-        <ul class="app-meta-item-info">
-            {{#if @deployments.[1]}}
-            <AppMetaItem::Deployment @model={{@deployments.[1]}} />
-            {{/if}}
-            {{#if @deployments.[2]}}
-            <AppMetaItem::Deployment @model={{@deployments.[2]}} />
-            {{/if}}
-        </ul>
+      <ul class="app-meta-item-info">
+        {{#if @deployments.[1]}}
+          <AppMetaItem::Deployment @model={{@deployments.[1]}} />
+        {{/if}}
+        {{#if @deployments.[2]}}
+          <AppMetaItem::Deployment @model={{@deployments.[2]}} />
+        {{/if}}
+      </ul>
     </div>
-    {{else}}
-    No deployments
-    {{/if}}
+  {{else}}
+    <p>
+      {{inline-svg "upload" class="icon"}}
+      <span>There are no deployments to display yet</span>
+    </p>
+  {{/if}}
 </Card>

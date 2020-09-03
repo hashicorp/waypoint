@@ -1,16 +1,35 @@
 <li class="app-item">
   <LinkTo @route="workspace.projects.project.app.build" @models={{array @build.id}}>
     <p>
-      <code>v{{@build.sequence}}</code>
+      <b class="badge badge--version">#{{@build.sequence}}</b>
+      <code>{{@build.id}}</code>
     </p>
     <small>
       {{inline-svg "source-file" class="icon"}}
-      <span>Built with <b>{{titleize @build.component.name}}</b>
-        {{date-format-distance-to-now @build.status.startTime.seconds }}</span>
+      <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
+        <b>{{titleize @build.component.name}}</b>
+        {{#if (eq @build.status.state 1)}}
+          (Started {{date-format-distance-to-now @build.status.startTime.seconds }})
+        {{else}}
+          {{date-format-distance-to-now @build.status.completeTime.seconds }}
+        {{/if}}
+      </span>
     </small>
   </LinkTo>
-  <b class="badge badge--success">
-    {{inline-svg "check-plain" class="icon"}}
-    <span>Built in {{date-format-distance @build.status.startTime.seconds @build.status.completeTime.seconds }}</span>
-  </b>
+  {{#if (eq @build.status.state 1)}}
+    <b class="badge">
+      {{inline-svg "clock-outline" class="icon"}}
+      <span>Building...</span>
+    </b>
+  {{else if (eq @build.status.state 2)}}
+    <b class="badge badge--success">
+      {{inline-svg "check-plain" class="icon"}}
+      <span>Built in {{date-format-distance @build.status.startTime.seconds @build.status.completeTime.seconds }}</span>
+    </b>
+  {{else if (eq @build.status.state 3)}}
+    <b class="badge badge--error">
+      {{inline-svg "alert-triangle" class="icon"}}
+      <span>Build failed</span>
+    </b>
+  {{/if}}
 </li>

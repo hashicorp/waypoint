@@ -1,24 +1,31 @@
-<Card>
+<Card @classNames={{unless @releases.length 'empty-state'}}>
+  {{#if @releases.length}}
     <Card::Header>
-        <h4>
-            {{inline-svg "public-default" class="icon"}}
-            Latest releases
-        </h4>
-        <LinkTo @route="workspace.projects.project.app.releases">View all releases</LinkTo>
+      <h4>
+        {{inline-svg "public-default" class="icon"}}
+        Latest releases
+      </h4>
+      <LinkTo @route="workspace.projects.project.app.releases">
+        View all releases
+      </LinkTo>
     </Card::Header>
-    {{#if @releases}}
+
     <AppMetaItem::LatestRelease @model={{@releases.[0] }} />
+
     <div class="app-meta-item">
-        <ul class="app-meta-item-info">
-            {{#if @releases.[1]}}
-            <AppMetaItem::Release @model={{@releases.[1]}} />
-            {{/if}}
-            {{#if @releases.[2]}}
-            <AppMetaItem::Release @model={{@releases.[2]}} />
-            {{/if}}
-        </ul>
+      <ul class="app-meta-item-info">
+        {{#if @releases.[1]}}
+          <AppMetaItem::Release @model={{@releases.[1]}} />
+        {{/if}}
+        {{#if @releases.[2]}}
+          <AppMetaItem::Release @model={{@releases.[2]}} />
+        {{/if}}
+      </ul>
     </div>
-    {{else}}
-    No releases
-    {{/if}}
+  {{else}}
+    <p>
+      {{inline-svg "public-default" class="icon"}}
+      <span>There are no releases to display yet</span>
+    </p>
+  {{/if}}
 </Card>
