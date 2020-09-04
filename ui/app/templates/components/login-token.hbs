@@ -7,7 +7,7 @@
 
   <fieldset>
     <label for="token-field">{{t 'login.input.label'}}</label>
-    <Input data-test-login=true @value={{this.token}} id="token-field" placeholder={{t 'login.input.placeholder'}} />
+    <Input autofocus data-test-login=true @value={{this.token}} id="token-field" placeholder={{t 'login.input.placeholder'}} />
   </fieldset>
 
   <button data-test-login-submit {{action "login"}} type="button"

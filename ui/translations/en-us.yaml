@@ -28,7 +28,7 @@ login:
     placeholder: 'Enter your token from the CLI'
     label: 'Then enter the token below'
   button: 'Authenticate with Token'
-  instruction: 'Run the following command in the CLI to generate a token'
+  instruction: 'Run this command in the CLI to generate a token'
 
 invite_login:
   input:

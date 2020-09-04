@@ -20,6 +20,6 @@ export default class InviteLoginForm extends Component {
     req.setToken(this.inviteToken);
     var resp = await this.api.client.convertInviteToken(req, this.api.WithMeta());
     await this.session.setToken(resp.getToken());
-    return this.router.transitionTo('workspaces');
+    return this.router.transitionTo('onboarding.install');
   }
 }

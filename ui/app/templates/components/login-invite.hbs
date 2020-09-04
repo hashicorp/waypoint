@@ -1,8 +1,7 @@
 <form {{action 'login' on='submit'}} class="login">
-  <p class="intro">You've been invited to join an existing Waypoint instance</p>
     <fieldset>
         <label for="invite-token-field">{{t 'invite_login.input.label'}}</label>
-        <Input data-test-invite-login=true @value={{this.inviteToken}} id="invite-token-field"
+        <Input autofocus data-test-invite-login=true @value={{this.inviteToken}} id="invite-token-field"
             placeholder={{t 'invite_login.input.placeholder'}} />
     </fieldset>
 

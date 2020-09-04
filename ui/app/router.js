@@ -11,6 +11,11 @@ Router.map(function () {
     this.route('invite');
     this.route('token');
   });
+  this.route('onboarding', function () {
+    this.route('install');
+    this.route('connect');
+    this.route('start');
+  });
   this.route('workspaces', { path: '/' });
   this.route('workspace', { path: '/:workspace_id' }, function () {
     this.route('projects', { path: '/' }, function () {
