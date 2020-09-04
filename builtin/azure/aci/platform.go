@@ -354,7 +354,7 @@ type Config struct {
 	// Azure resources
 	// (https://docs.microsoft.com/en-us/azure/container-instances/container-instances-managed-identity#:~:text=Enable%20a%20managed%20identity&text=Azure%20Container%20Instances%20supports%20both,or%20both%20types%20of%20identities.)
 	// Note: ManagedIdentity can not be used to authorize Container Instances to pull from private Container registries in Azure
-	ManagedIdentity string `hcl:"managed_identity,attr"`
+	ManagedIdentity string `hcl:"managed_identity,optional"`
 
 	// RegistryCredentials allow you to set the username and password
 	// in the instance the image to deploy is in a private repository and
