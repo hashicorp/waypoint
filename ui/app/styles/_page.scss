@@ -16,6 +16,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
 @import './_badge';
 @import './_breadcrumbs';
 @import './_button';
+@import './_input';
 @import './_icon-tile';
 @import './_login';
 
@@ -408,45 +409,6 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     }
   }
 
-  .cli-hint {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: scale.$sm-2;
-    width: 300px;
-    background: color.$white;
-    box-shadow: $elevated-box-shadow;
-    border-radius: 2px;
-    padding: scale.$sm-1 scale.$base;
-
-    p {
-      color: color.$ui-cool-gray-600;
-      @include Typography.Interface(M);
-      font-weight: normal;
-      margin-bottom: scale.$sm-1;
-    }
-
-    code {
-      display: block;
-      margin-bottom: scale.$sm-2;
-    }
-
-    a {
-      text-decoration: none;
-    }
-
-    .dismiss {
-      display: flex;
-      border-top: 1px solid color.$ui-gray-100;
-      padding-top: scale.$sm-1;
-      margin-top: scale.$sm-1;
-
-      button {
-        margin-left: auto;
-      }
-    }
-  }
-
   .auth-page {
     display: flex;
     align-items: center;
@@ -492,5 +454,63 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     .button {
       width: 100%;
     }
+  }
+}
+
+.cli-hint {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: scale.$sm-2;
+  width: 400px;
+  color: color.$ui-cool-gray-600;
+  background: color.$white;
+  box-shadow: $elevated-box-shadow;
+  border-radius: 2px;
+  padding: scale.$sm-1 scale.$base;
+  z-index: 99;
+
+  p {
+    @include Typography.Interface(M);
+    font-weight: normal;
+    margin-bottom: scale.$sm-1;
+  }
+
+  code {
+    display: block;
+    margin-bottom: scale.$sm-2;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  input {
+    margin-bottom: scale.$sm-2;
+  }
+
+  small {
+    font-size: 75%;
+    color: color.$ui-cool-gray-500;
+  }
+
+  .dismiss {
+    display: flex;
+    border-top: 1px solid color.$ui-gray-100;
+    padding-top: scale.$sm-1;
+    margin-top: scale.$sm-1;
+
+    button {
+      margin-left: auto;
+    }
+  }
+
+  &-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 98;
   }
 }

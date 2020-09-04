@@ -1,0 +1,19 @@
+input {
+  font-size: scale.$base;
+  padding: scale.$sm-2 scale.$sm-2;
+  box-shadow: $inset-box-shadow;
+  border-radius: 2px;
+  border: none;
+  margin: 0;
+  width: 100%;
+  font-family: monospace;
+
+  &::placeholder {
+    color: color.$ui-cool-gray-500;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: $glowing-box-shadow;
+  }
+}
