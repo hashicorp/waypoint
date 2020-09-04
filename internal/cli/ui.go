@@ -78,7 +78,7 @@ func (c *UICommand) Run(args []string) int {
 
 	uiAddr := fmt.Sprintf("https://%s:%d", addr, port)
 	if c.flagCreateToken {
-		uiAddr = fmt.Sprintf("%s/auth/invite?token=%s", uiAddr, inviteToken)
+		uiAddr = fmt.Sprintf("%s/auth/invite?token=%s&cli=true", uiAddr, inviteToken)
 	}
 
 	open.Run(uiAddr)
