@@ -33,9 +33,8 @@ login:
 invite_login:
   input:
     placeholder: 'Get your invite token from your teammate'
-    label: 'Then enter the invite token below'
+    label: 'Enter your invite token'
   button: 'Redeem Invite and Authenticate'
-  instruction: 'Run the following command in the CLI to generate an invite token'
 
 state:
   deployment:

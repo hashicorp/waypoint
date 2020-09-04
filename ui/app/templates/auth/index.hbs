@@ -1,7 +1,10 @@
 <p>
-  <LinkTo @route="auth.invite" class="button button--primary">Redeem Invite</LinkTo>
+  <LinkTo @route="auth.token" class="button button--primary">Authenticate...</LinkTo>
 </p>
 <hr />
 <p>
-  <LinkTo @route="auth.token" class="button button--primary">Enter Token</LinkTo>
+  <small>
+    Received an invite?
+    <LinkTo @route="auth.invite">Redeem invite</LinkTo>
+  </small>
 </p>

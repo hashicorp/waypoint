@@ -5,6 +5,13 @@ form.login {
   display: flex;
   flex-direction: column;
   padding-top: scale.$base;
+
+  p.intro {
+    @include Typography.Heading(2);
+    max-width: 320px;
+    margin-top: -(scale.$sm-1);
+    margin-bottom: scale.$lg-3;
+  }
 }
 
 .login fieldset {
