@@ -12,16 +12,18 @@
 
     <AppMetaItem::LatestBuild @model={{@builds.[0] }} />
 
-    <div class="app-meta-item">
-      <ul class="app-meta-item-info">
-        {{#if @builds.[1]}}
-          <AppMetaItem::Build @model={{@builds.[1]}} />
-        {{/if}}
-        {{#if @builds.[2]}}
-          <AppMetaItem::Build @model={{@builds.[2]}} />
-        {{/if}}
-      </ul>
-    </div>
+    {{#if (gt @builds.length '1')}}
+      <div class="app-meta-item">
+        <ul class="app-meta-item-info">
+          {{#if @builds.[1]}}
+            <AppMetaItem::Build @model={{@builds.[1]}} />
+          {{/if}}
+          {{#if @builds.[2]}}
+            <AppMetaItem::Build @model={{@builds.[2]}} />
+          {{/if}}
+        </ul>
+      </div>
+    {{/if}}
   {{else}}
     <p>
       {{inline-svg "source-file" class="icon"}}

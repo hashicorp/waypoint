@@ -12,16 +12,18 @@
 
     <AppMetaItem::LatestRelease @model={{@releases.[0] }} />
 
-    <div class="app-meta-item">
-      <ul class="app-meta-item-info">
-        {{#if @releases.[1]}}
-          <AppMetaItem::Release @model={{@releases.[1]}} />
-        {{/if}}
-        {{#if @releases.[2]}}
-          <AppMetaItem::Release @model={{@releases.[2]}} />
-        {{/if}}
-      </ul>
-    </div>
+    {{#if (gt @releases.length '1')}}
+      <div class="app-meta-item">
+        <ul class="app-meta-item-info">
+          {{#if @releases.[1]}}
+            <AppMetaItem::Release @model={{@releases.[1]}} />
+          {{/if}}
+          {{#if @releases.[2]}}
+            <AppMetaItem::Release @model={{@releases.[2]}} />
+          {{/if}}
+        </ul>
+      </div>
+    {{/if}}
   {{else}}
     <p>
       {{inline-svg "public-default" class="icon"}}

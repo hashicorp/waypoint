@@ -12,16 +12,18 @@
 
     <AppMetaItem::LatestDeployment @model={{@deployments.[0] }} />
 
-    <div class="app-meta-item">
-      <ul class="app-meta-item-info">
-        {{#if @deployments.[1]}}
-          <AppMetaItem::Deployment @model={{@deployments.[1]}} />
-        {{/if}}
-        {{#if @deployments.[2]}}
-          <AppMetaItem::Deployment @model={{@deployments.[2]}} />
-        {{/if}}
-      </ul>
-    </div>
+    {{#if (gt @deployments.length '1')}}
+      <div class="app-meta-item">
+        <ul class="app-meta-item-info">
+          {{#if @deployments.[1]}}
+            <AppMetaItem::Deployment @model={{@deployments.[1]}} />
+          {{/if}}
+          {{#if @deployments.[2]}}
+            <AppMetaItem::Deployment @model={{@deployments.[2]}} />
+          {{/if}}
+        </ul>
+      </div>
+    {{/if}}
   {{else}}
     <p>
       {{inline-svg "upload" class="icon"}}
