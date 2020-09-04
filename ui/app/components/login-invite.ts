@@ -18,15 +18,17 @@ export default class InviteLoginForm extends Component<InviteLoginFormArgs> {
   @service api!: ApiService;
 
   @tracked inviteToken = '';
-  @tracked cli = null;
+  @tracked cli = false;
 
   constructor(owner: any, args: any) {
     super(owner, args);
 
-    let { cli } = this.args;
+    let { cli, inviteToken } = this.args;
+    this.inviteToken = inviteToken;
 
     // If this is a CLI invite login, do it automatically when the component loads
     if (cli) {
+      this.cli = true;
       this.login();
     }
   }
@@ -42,7 +44,8 @@ export default class InviteLoginForm extends Component<InviteLoginFormArgs> {
     // them to the workspaces page with a query parameter to specify it came
     // from the CLI
     if (this.cli) {
-      return this.router.transitionTo('workspaces', { queryParams: { cli: this.cli } });
+      // todo: down the road with more workspaces we'll have to something more sophisticated
+      return this.router.transitionTo('workspace', 'default', { queryParams: { cli: 'true' } });
     } else {
       return this.router.transitionTo('onboarding.install');
     }
