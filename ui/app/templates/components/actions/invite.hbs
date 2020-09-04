@@ -1,0 +1,14 @@
+<span class="invite-link" {{on "click" this.toggleHint}}>
+  Invite
+</span>
+
+{{#if hintIsVisible}}
+  <div class="cli-hint">
+    <p>You can share the following link with anyone you want to give access to this Waypoint instance</p>
+    <input type="text" value="https://waypoint.io/i/abc123" {{did-insert this.selectContents}} />
+    <small>To share a Waypoint instance the server must be run in a location that the users can access. <br />
+      <a href="#">Read more in our documentation</a>
+    </small>
+  </div>
+  <div class="cli-hint-overlay" {{on "click" this.toggleHint}}></div>
+{{/if}}

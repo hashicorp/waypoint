@@ -16,8 +16,22 @@
     margin-left: auto;
 
     a {
-      margin-left: scale.$lg-2;
+      margin-right: scale.$lg-2;
       text-decoration: none;
+    }
+
+    .invite-link {
+      position: relative;
+      cursor: pointer;
+
+      & + .cli-hint {
+        margin-top: -(scale.$sm-2);
+        margin-right: scale.$lg-2;
+
+        a {
+          color: color.$blue-500;
+        }
+      }
     }
   }
 
