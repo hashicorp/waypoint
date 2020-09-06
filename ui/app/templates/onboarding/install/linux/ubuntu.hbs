@@ -1,0 +1,11 @@
+<p>Add the HashiCorp <a href="https://apt.releases.hashicorp.com/gpg">GPG key</a>.</p>
+
+<pre><code class="cmd">curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -</code></pre>
+
+<p>Add the official HashiCorp Linux repository.</p>
+
+<pre><code class="cmd">sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"</code></pre>
+
+<p>Update and install.</p>
+
+<pre><code class="cmd">sudo apt-get update && sudo apt-get install waypoint</code></pre>

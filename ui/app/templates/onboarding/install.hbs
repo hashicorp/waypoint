@@ -1,7 +1,7 @@
 <div class="onboarding-header">
   <IconTile @icon="download" />
   <div class="onboarding-header-content">
-    <h1>Install Waypoint CLI</h1>
+    <h1>Install the Waypoint CLI</h1>
     <p>First, you'll need to install the Waypoint CLI via Homebrew or a manual installation.</p>
   </div>
 </div>
@@ -9,10 +9,37 @@
 <hr />
 
 <div class="onboarding-step">
-  <p>First install the Waypoint binary via Homebrew:</p>
-  <code class="cmd">brew install waypoint</code>
-  <p>Then verify Waypoint was installed successfully with:</p>
-  <code class="cmd">waypoint -help</code>
+  <p>The first thing you need to do in order to use Waypoint is install it. In a production deployment you would install Waypoint on every node where you want to register services, but in this tutorial, you will install it locally so that you can use it to explore Waypoint's core capabilities. Waypoint is distributed as a <a href="#todo">binary</a> or as a package for the major operating systems.</p>
+  <p>If you need to compile Waypoint from source instead, see the <a href="#todo">documentation</a>.</p>
+
+  <h2>Install Waypoint</h2>
+
+  <nav>
+    <ul>
+      <li><LinkTo @route="onboarding.install.manual">Manual installation</LinkTo></li>
+      <li><LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo></li>
+      <li><LinkTo @route="onboarding.install.chocolatey">Chocolatey on Windows</LinkTo></li>
+      <li><LinkTo @route="onboarding.install.linux">Linux</LinkTo></li>
+    </ul>
+  </nav>
+
+  {{outlet}}
+
+  <h2>Verify the installation</h2>
+
+  <p>After installing Waypoint, verify that the installation worked by opening a new terminal session and running the command <code>waypoint</code>.</p>
+
+  <pre><code class="cmd">waypoint</code></pre>
+
+  <pre><code class="output">usage: waypoint [--version] [--help] &lt;command&gt; [&lt;args&gt;]
+
+  Available commands are:
+      agent          Runs a Waypoint agent
+      event          Fire a new event
+
+  ...</code></pre>
+
+  <p>If you get an error that <code>waypoint</code> could not be found, your <code>PATH</code> environment variable was not set up properly. Make sure that your <code>PATH</code> variable contains the directory where you installed Waypoint.</p>
 </div>
 
 <hr />
