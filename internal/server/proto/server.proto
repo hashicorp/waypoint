@@ -1401,12 +1401,20 @@ message Deployment {
     BUILD = 2;
   }
 
-  // Populated when a Deployment is read with LoadDetails set
-  // to ARTIFACT or BUILD
-  PushedArtifact artifact = 11;
+  // This is the populated preload data. Most of this data can be retrieved
+  // through additional API calls or manually computed, but certain API
+  // calls will pre-populate some of these fields for convenience. The exact
+  // pre-populated fields depend on the API.
+  Preload preload = 11;
 
-  // Populated when a Deployment is read with LoadDetails set to BUILD
-  Build build = 12;
+  message Preload {
+    // Populated when a Deployment is read with LoadDetails set
+    // to ARTIFACT or BUILD
+    PushedArtifact artifact = 1;
+
+    // Populated when a Deployment is read with LoadDetails set to BUILD
+    Build build = 2;
+  }
 }
 
 /********************************************************************
