@@ -1414,6 +1414,11 @@ message Deployment {
 
     // Populated when a Deployment is read with LoadDetails set to BUILD
     Build build = 2;
+
+    // The deployment-specific URL from the URL service. This is set on
+    // all deployment API calls. This will be empty if the URL service
+    // is not enabled or there was an error loading this information.
+    string deploy_url = 3;
   }
 }
 
