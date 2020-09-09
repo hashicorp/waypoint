@@ -1,8 +1,12 @@
 <h3>{{t "page.releases.title"}}</h3>
 
 <ul data-test-release-list=true class="list">
-  <AppItem::Release @release={{release}} @isLatest={{true}} />
-  <AppItem::Release @release={{release}} />
-  <AppItem::Release @release={{release}} />
-  <AppItem::Release @release={{release}} />
+  {{#each @model as |release releaseIndex|}}
+    <AppItem::Release @release={{release}} @isLatest={{ eq releaseIndex 0}} />
+  {{else}}
+    <EmptyState>
+      <p>There are no releases to display for this app yet</p>
+      <p>To create your first release, you can run <code class="cmd">waypoint release</code> from the CLI</p>
+    </EmptyState>
+  {{/each}}
 </ul>

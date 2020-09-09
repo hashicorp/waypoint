@@ -151,7 +151,7 @@ var file_release_proto_rawDesc = []byte{
 	0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x06, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12,
 	0x28, 0x0a, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
 	0x32, 0x0e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65,
-	0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x32, 0xd4, 0x05, 0x0a, 0x0e, 0x52, 0x65,
+	0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x32, 0x9e, 0x07, 0x0a, 0x0e, 0x52, 0x65,
 	0x6c, 0x65, 0x61, 0x73, 0x65, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x12, 0x40, 0x0a, 0x0f,
 	0x49, 0x73, 0x41, 0x75, 0x74, 0x68, 0x65, 0x6e, 0x74, 0x69, 0x63, 0x61, 0x74, 0x6f, 0x72, 0x12,
 	0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
@@ -190,15 +190,27 @@ var file_release_proto_rawDesc = []byte{
 	0x70, 0x65, 0x63, 0x12, 0x37, 0x0a, 0x07, 0x44, 0x65, 0x73, 0x74, 0x72, 0x6f, 0x79, 0x12, 0x14,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x46, 0x75, 0x6e, 0x63, 0x53, 0x70, 0x65, 0x63, 0x2e,
 	0x41, 0x72, 0x67, 0x73, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x2c, 0x0a, 0x0b,
-	0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x53, 0x70, 0x65, 0x63, 0x12, 0x0c, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x0f, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x2e, 0x46, 0x75, 0x6e, 0x63, 0x53, 0x70, 0x65, 0x63, 0x12, 0x34, 0x0a, 0x07, 0x52, 0x65,
-	0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x46, 0x75,
-	0x6e, 0x63, 0x53, 0x70, 0x65, 0x63, 0x2e, 0x41, 0x72, 0x67, 0x73, 0x1a, 0x13, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x2e, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x70,
-	0x42, 0x09, 0x5a, 0x07, 0x2e, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x45, 0x0a, 0x14,
+	0x49, 0x73, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x44, 0x65, 0x73, 0x74, 0x72,
+	0x6f, 0x79, 0x65, 0x72, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x15, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x49, 0x6d, 0x70, 0x6c, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x12, 0x3f, 0x0a, 0x14, 0x44, 0x65, 0x73, 0x74, 0x72, 0x6f, 0x79, 0x57, 0x6f,
+	0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x53, 0x70, 0x65, 0x63, 0x12, 0x16, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d,
+	0x70, 0x74, 0x79, 0x1a, 0x0f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x46, 0x75, 0x6e, 0x63,
+	0x53, 0x70, 0x65, 0x63, 0x12, 0x40, 0x0a, 0x10, 0x44, 0x65, 0x73, 0x74, 0x72, 0x6f, 0x79, 0x57,
+	0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x46, 0x75, 0x6e, 0x63, 0x53, 0x70, 0x65, 0x63, 0x2e, 0x41, 0x72, 0x67, 0x73, 0x1a, 0x16,
+	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x2c, 0x0a, 0x0b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73,
+	0x65, 0x53, 0x70, 0x65, 0x63, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x45, 0x6d,
+	0x70, 0x74, 0x79, 0x1a, 0x0f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x46, 0x75, 0x6e, 0x63,
+	0x53, 0x70, 0x65, 0x63, 0x12, 0x34, 0x0a, 0x07, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12,
+	0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x46, 0x75, 0x6e, 0x63, 0x53, 0x70, 0x65, 0x63,
+	0x2e, 0x41, 0x72, 0x67, 0x73, 0x1a, 0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x52, 0x65,
+	0x6c, 0x65, 0x61, 0x73, 0x65, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x42, 0x09, 0x5a, 0x07, 0x2e, 0x3b,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -240,22 +252,28 @@ var file_release_proto_depIdxs = []int32{
 	3,  // 9: proto.ReleaseManager.IsDestroyer:input_type -> google.protobuf.Empty
 	3,  // 10: proto.ReleaseManager.DestroySpec:input_type -> google.protobuf.Empty
 	4,  // 11: proto.ReleaseManager.Destroy:input_type -> proto.FuncSpec.Args
-	6,  // 12: proto.ReleaseManager.ReleaseSpec:input_type -> proto.Empty
-	4,  // 13: proto.ReleaseManager.Release:input_type -> proto.FuncSpec.Args
-	7,  // 14: proto.ReleaseManager.IsAuthenticator:output_type -> proto.ImplementsResp
-	8,  // 15: proto.ReleaseManager.Auth:output_type -> proto.Auth.AuthResponse
-	9,  // 16: proto.ReleaseManager.AuthSpec:output_type -> proto.FuncSpec
-	3,  // 17: proto.ReleaseManager.ValidateAuth:output_type -> google.protobuf.Empty
-	9,  // 18: proto.ReleaseManager.ValidateAuthSpec:output_type -> proto.FuncSpec
-	10, // 19: proto.ReleaseManager.ConfigStruct:output_type -> proto.Config.StructResp
-	3,  // 20: proto.ReleaseManager.Configure:output_type -> google.protobuf.Empty
-	7,  // 21: proto.ReleaseManager.IsDestroyer:output_type -> proto.ImplementsResp
-	9,  // 22: proto.ReleaseManager.DestroySpec:output_type -> proto.FuncSpec
-	3,  // 23: proto.ReleaseManager.Destroy:output_type -> google.protobuf.Empty
-	9,  // 24: proto.ReleaseManager.ReleaseSpec:output_type -> proto.FuncSpec
-	1,  // 25: proto.ReleaseManager.Release:output_type -> proto.Release.Resp
-	14, // [14:26] is the sub-list for method output_type
-	2,  // [2:14] is the sub-list for method input_type
+	3,  // 12: proto.ReleaseManager.IsWorkspaceDestroyer:input_type -> google.protobuf.Empty
+	3,  // 13: proto.ReleaseManager.DestroyWorkspaceSpec:input_type -> google.protobuf.Empty
+	4,  // 14: proto.ReleaseManager.DestroyWorkspace:input_type -> proto.FuncSpec.Args
+	6,  // 15: proto.ReleaseManager.ReleaseSpec:input_type -> proto.Empty
+	4,  // 16: proto.ReleaseManager.Release:input_type -> proto.FuncSpec.Args
+	7,  // 17: proto.ReleaseManager.IsAuthenticator:output_type -> proto.ImplementsResp
+	8,  // 18: proto.ReleaseManager.Auth:output_type -> proto.Auth.AuthResponse
+	9,  // 19: proto.ReleaseManager.AuthSpec:output_type -> proto.FuncSpec
+	3,  // 20: proto.ReleaseManager.ValidateAuth:output_type -> google.protobuf.Empty
+	9,  // 21: proto.ReleaseManager.ValidateAuthSpec:output_type -> proto.FuncSpec
+	10, // 22: proto.ReleaseManager.ConfigStruct:output_type -> proto.Config.StructResp
+	3,  // 23: proto.ReleaseManager.Configure:output_type -> google.protobuf.Empty
+	7,  // 24: proto.ReleaseManager.IsDestroyer:output_type -> proto.ImplementsResp
+	9,  // 25: proto.ReleaseManager.DestroySpec:output_type -> proto.FuncSpec
+	3,  // 26: proto.ReleaseManager.Destroy:output_type -> google.protobuf.Empty
+	7,  // 27: proto.ReleaseManager.IsWorkspaceDestroyer:output_type -> proto.ImplementsResp
+	9,  // 28: proto.ReleaseManager.DestroyWorkspaceSpec:output_type -> proto.FuncSpec
+	3,  // 29: proto.ReleaseManager.DestroyWorkspace:output_type -> google.protobuf.Empty
+	9,  // 30: proto.ReleaseManager.ReleaseSpec:output_type -> proto.FuncSpec
+	1,  // 31: proto.ReleaseManager.Release:output_type -> proto.Release.Resp
+	17, // [17:32] is the sub-list for method output_type
+	2,  // [2:17] is the sub-list for method input_type
 	2,  // [2:2] is the sub-list for extension type_name
 	2,  // [2:2] is the sub-list for extension extendee
 	0,  // [0:2] is the sub-list for field type_name
@@ -336,6 +354,10 @@ type ReleaseManagerClient interface {
 	IsDestroyer(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error)
 	DestroySpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error)
 	Destroy(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error)
+	// component.WorkspaceDestroyer optional implementation
+	IsWorkspaceDestroyer(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error)
+	DestroyWorkspaceSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error)
+	DestroyWorkspace(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error)
 	ReleaseSpec(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FuncSpec, error)
 	Release(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*Release_Resp, error)
 }
@@ -438,6 +460,33 @@ func (c *releaseManagerClient) Destroy(ctx context.Context, in *FuncSpec_Args, o
 	return out, nil
 }
 
+func (c *releaseManagerClient) IsWorkspaceDestroyer(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ImplementsResp, error) {
+	out := new(ImplementsResp)
+	err := c.cc.Invoke(ctx, "/proto.ReleaseManager/IsWorkspaceDestroyer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *releaseManagerClient) DestroyWorkspaceSpec(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*FuncSpec, error) {
+	out := new(FuncSpec)
+	err := c.cc.Invoke(ctx, "/proto.ReleaseManager/DestroyWorkspaceSpec", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *releaseManagerClient) DestroyWorkspace(ctx context.Context, in *FuncSpec_Args, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.ReleaseManager/DestroyWorkspace", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *releaseManagerClient) ReleaseSpec(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FuncSpec, error) {
 	out := new(FuncSpec)
 	err := c.cc.Invoke(ctx, "/proto.ReleaseManager/ReleaseSpec", in, out, opts...)
@@ -469,6 +518,10 @@ type ReleaseManagerServer interface {
 	IsDestroyer(context.Context, *empty.Empty) (*ImplementsResp, error)
 	DestroySpec(context.Context, *empty.Empty) (*FuncSpec, error)
 	Destroy(context.Context, *FuncSpec_Args) (*empty.Empty, error)
+	// component.WorkspaceDestroyer optional implementation
+	IsWorkspaceDestroyer(context.Context, *empty.Empty) (*ImplementsResp, error)
+	DestroyWorkspaceSpec(context.Context, *empty.Empty) (*FuncSpec, error)
+	DestroyWorkspace(context.Context, *FuncSpec_Args) (*empty.Empty, error)
 	ReleaseSpec(context.Context, *Empty) (*FuncSpec, error)
 	Release(context.Context, *FuncSpec_Args) (*Release_Resp, error)
 }
@@ -506,6 +559,15 @@ func (*UnimplementedReleaseManagerServer) DestroySpec(context.Context, *empty.Em
 }
 func (*UnimplementedReleaseManagerServer) Destroy(context.Context, *FuncSpec_Args) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Destroy not implemented")
+}
+func (*UnimplementedReleaseManagerServer) IsWorkspaceDestroyer(context.Context, *empty.Empty) (*ImplementsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsWorkspaceDestroyer not implemented")
+}
+func (*UnimplementedReleaseManagerServer) DestroyWorkspaceSpec(context.Context, *empty.Empty) (*FuncSpec, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DestroyWorkspaceSpec not implemented")
+}
+func (*UnimplementedReleaseManagerServer) DestroyWorkspace(context.Context, *FuncSpec_Args) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DestroyWorkspace not implemented")
 }
 func (*UnimplementedReleaseManagerServer) ReleaseSpec(context.Context, *Empty) (*FuncSpec, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReleaseSpec not implemented")
@@ -698,6 +760,60 @@ func _ReleaseManager_Destroy_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ReleaseManager_IsWorkspaceDestroyer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReleaseManagerServer).IsWorkspaceDestroyer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ReleaseManager/IsWorkspaceDestroyer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReleaseManagerServer).IsWorkspaceDestroyer(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReleaseManager_DestroyWorkspaceSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReleaseManagerServer).DestroyWorkspaceSpec(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ReleaseManager/DestroyWorkspaceSpec",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReleaseManagerServer).DestroyWorkspaceSpec(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReleaseManager_DestroyWorkspace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FuncSpec_Args)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReleaseManagerServer).DestroyWorkspace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ReleaseManager/DestroyWorkspace",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReleaseManagerServer).DestroyWorkspace(ctx, req.(*FuncSpec_Args))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ReleaseManager_ReleaseSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
@@ -777,6 +893,18 @@ var _ReleaseManager_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Destroy",
 			Handler:    _ReleaseManager_Destroy_Handler,
+		},
+		{
+			MethodName: "IsWorkspaceDestroyer",
+			Handler:    _ReleaseManager_IsWorkspaceDestroyer_Handler,
+		},
+		{
+			MethodName: "DestroyWorkspaceSpec",
+			Handler:    _ReleaseManager_DestroyWorkspaceSpec_Handler,
+		},
+		{
+			MethodName: "DestroyWorkspace",
+			Handler:    _ReleaseManager_DestroyWorkspace_Handler,
 		},
 		{
 			MethodName: "ReleaseSpec",

@@ -34,6 +34,21 @@ func (s *service) GetJob(
 	return job.Job, nil
 }
 
+// TODO: test
+func (s *service) XListJobs(
+	ctx context.Context,
+	req *pb.ListJobsRequest,
+) (*pb.ListJobsResponse, error) {
+	jobs, err := s.state.JobList()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.ListJobsResponse{
+		Jobs: jobs,
+	}, nil
+}
+
 func (s *service) CancelJob(
 	ctx context.Context,
 	req *pb.CancelJobRequest,

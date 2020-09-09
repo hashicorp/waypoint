@@ -113,6 +113,10 @@ service Waypoint {
   // GetJob queries a job by ID.
   rpc GetJob(GetJobRequest) returns (Job);
 
+  // INTERNAL: ListJobs lists all the jobs the server has processed. This
+  // is not yet ready for public use.
+  rpc _ListJobs(ListJobsRequest) returns (ListJobsResponse);
+
   // ValidateJob checks if a job appears valid. This will check the job
   // structure itself (i.e. missing fields) and can also check to ensure
   // the job is assignable to a runner.
@@ -238,7 +242,18 @@ message Workspace {
   // The list of applications that have executed at least one operation
   // within the context of this workspace. To determine which operations
   // you must call the operations respective List API such as ListDeployments.
-  repeated Ref.Application applications = 2;
+  repeated Application applications = 2;
+
+  // active_time is the last time that this workspace had activity.
+  google.protobuf.Timestamp active_time = 3;
+
+  message Application {
+    // Application that this is referencing.
+    Ref.Application application = 1;
+
+    // active_time is the last time that this application was active
+    google.protobuf.Timestamp active_time = 2;
+  }
 }
 
 /********************************************************************
@@ -670,7 +685,11 @@ message Job {
   message DestroyOp {
     // target is what to destroy in this operation.
     oneof target {
-      Deployment deployment = 1;
+      // workspace will delete the app in the workspace that the job
+      // is targeting.
+      google.protobuf.Empty workspace = 1;
+
+      Deployment deployment = 2;
     }
   }
 
@@ -690,6 +709,12 @@ message Job {
 message GetJobRequest {
   // ID of the job to request.
   string job_id = 1;
+}
+
+message ListJobsRequest {}
+
+message ListJobsResponse {
+  repeated Job jobs = 1;
 }
 
 message GetJobStreamRequest {

@@ -1,30 +1,47 @@
 <PageHeader @iconName="source-file">
   <div class="title">
-    <h2><code>abcd1234</code></h2>
+    <h1>
+      <b class="badge badge--version">#{{@model.sequence}}</b> <code>{{@model.id}}</code>
+    </h1>
     <small>
-      <span>Built with <b>Pack</b> 2 hours ago</span>
+      <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
+        <b>{{titleize @model.component.name}}</b>
+        {{#if (eq @model.status.state 1)}}
+          (Started {{date-format-distance-to-now @model.status.startTime.seconds }})
+        {{else}}
+          {{date-format-distance-to-now @model.status.completeTime.seconds }}
+        {{/if}}
+      </span>
     </small>
   </div>
   <div class="actions">
-    <Actions::Deploy />
+    <Actions::Deploy @id={{@model.id}} />
   </div>
 </PageHeader>
 
 <div class="item-row">
   <div class="item">
-    <b class="badge badge--success">
-      {{inline-svg "check-plain" class="icon"}}
-      <span>Built in 12 minutes 15 seconds</span>
-    </b>
+    {{#if (eq @model.status.state 1)}}
+      <b class="badge">
+        {{inline-svg "clock-outline" class="icon"}}
+        <span>Build running...</span>
+      </b>
+    {{else if (eq @model.status.state 2)}}
+      <b class="badge badge--success">
+        {{inline-svg "check-plain" class="icon"}}
+        <span>Built in {{date-format-distance @model.status.startTime.seconds @model.status.completeTime.seconds }}</span>
+      </b>
+    {{else if (eq @model.status.state 3)}}
+      <b class="badge badge--error">
+        {{inline-svg "alert-triangle" class="icon"}}
+        <span>Build failed</span>
+      </b>
+    {{/if}}
   </div>
 </div>
 
 <div class="output-pane">
   <div class="output">
-    <code>build output row</code>
-    <code>build output row</code>
-    <code>build output row</code>
-    <code>build output row</code>
-    <code>build output row</code>
+    <code>No build output available</code>
   </div>
 </div>

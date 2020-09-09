@@ -1,15 +1,21 @@
 <li>
-  <LinkTo @route="workspace.projects.project.app.deployments" @models={{array @model.project @model.application }}>
+  <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @model.id}}>
     <p>
-      <b class="badge badge--version">#318</b>
-      <code>abcd1234</code>
+      <b class="badge badge--version">v{{@model.sequence}}</b>
+      <code>{{truncate @model.id 8 false}}</code>
     </p>
     <small>
-      {{inline-svg "logo-kubernetes-color" class="icon"}}
-      <span>2 hours ago</span>
+      {{inline-svg (icon-for-component @model.component.name) class="icon"}}
+      <span>
+        {{#if (eq @model.status.state 1)}}
+          Started {{date-format-distance-to-now @model.status.startTime.seconds }}
+        {{else}}
+          {{date-format-distance-to-now @model.status.completeTime.seconds }}
+        {{/if}}
+      </span>
     </small>
   </LinkTo>
-  <button class="button button--secondary button--compact">
+  <ExternalLink href="/todo" class="button button--secondary button--compact">
     {{inline-svg "exit" class="icon"}}
-  </button>
+  </ExternalLink>
 </li>

@@ -2,7 +2,7 @@ import { Build, Ref, ListProjectsResponse, GetProjectResponse, Project, Applicat
 import { fakeId } from '../utils';
 import faker from '../faker';
 import { dasherize } from '@ember/string';
-import { create } from 'domain';
+import { create } from 'domainx';
 
 const projectName = 'marketing-public';
 
@@ -30,7 +30,7 @@ function createApp(): Application {
 function createProject(): Project {
   let proj = new Project();
   proj.setName(projectName);
-  proj.setApplicationsList([createApp(), createApp()]);
+  proj.setApplicationsList([createApp()]);
 
   return proj;
 }

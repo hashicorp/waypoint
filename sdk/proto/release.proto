@@ -25,6 +25,11 @@ service ReleaseManager {
   rpc DestroySpec(google.protobuf.Empty) returns (FuncSpec);
   rpc Destroy(FuncSpec.Args) returns (google.protobuf.Empty);
 
+  // component.WorkspaceDestroyer optional implementation
+  rpc IsWorkspaceDestroyer(google.protobuf.Empty) returns (ImplementsResp);
+  rpc DestroyWorkspaceSpec(google.protobuf.Empty) returns (FuncSpec);
+  rpc DestroyWorkspace(FuncSpec.Args) returns (google.protobuf.Empty);
+
   rpc ReleaseSpec(Empty) returns (FuncSpec);
   rpc Release(FuncSpec.Args) returns (Release.Resp);
 }

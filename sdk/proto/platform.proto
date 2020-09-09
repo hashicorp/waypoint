@@ -31,6 +31,11 @@ service Platform {
   rpc DestroySpec(google.protobuf.Empty) returns (FuncSpec);
   rpc Destroy(FuncSpec.Args) returns (google.protobuf.Empty);
 
+  // component.WorkspaceDestroyer optional implementation
+  rpc IsWorkspaceDestroyer(google.protobuf.Empty) returns (ImplementsResp);
+  rpc DestroyWorkspaceSpec(google.protobuf.Empty) returns (FuncSpec);
+  rpc DestroyWorkspace(FuncSpec.Args) returns (google.protobuf.Empty);
+
   // IsLogPlatform returns true if this platform also implements LogPlatform.
   rpc IsLogPlatform(google.protobuf.Empty) returns (ImplementsResp);
 }

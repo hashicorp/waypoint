@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/boltdb/bolt"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 )
 
@@ -48,10 +49,13 @@ type State struct {
 	// indexers is used to track whether an indexer was called. This is
 	// initialized during New and set to nil at the end of New.
 	indexers map[uintptr]struct{}
+
+	// Where to log to
+	log hclog.Logger
 }
 
 // New initializes a new State store.
-func New(db *bolt.DB) (*State, error) {
+func New(log hclog.Logger, db *bolt.DB) (*State, error) {
 	// Create the in-memory DB.
 	inmem, err := memdb.NewMemDB(stateStoreSchema())
 	if err != nil {
@@ -63,7 +67,7 @@ func New(db *bolt.DB) (*State, error) {
 		return nil, err
 	}
 
-	s := &State{inmem: inmem, db: db}
+	s := &State{inmem: inmem, db: db, log: log}
 
 	// Initialize our set that'll track what memdb indexers we call.
 	// When we're done we always clear this out since it is never used
@@ -76,7 +80,9 @@ func New(db *bolt.DB) (*State, error) {
 	defer memTxn.Abort()
 	err = s.db.View(func(dbTxn *bolt.Tx) error {
 		for _, indexer := range dbIndexers {
-			if err := s.callIndexer(indexer, dbTxn, memTxn); err != nil {
+			// TODO: this should use callIndexer but it's broken as it prevents the multiple op indexers
+			// from properly running.
+			if err := indexer(s, dbTxn, memTxn); err != nil {
 				return err
 			}
 		}

@@ -2,8 +2,10 @@ package singleprocess
 
 import (
 	"crypto/tls"
+
 	"github.com/boltdb/bolt"
 
+	"github.com/hashicorp/go-hclog"
 	grpctoken "github.com/hashicorp/horizon/pkg/grpc/token"
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	"google.golang.org/grpc"
@@ -43,8 +45,13 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		}
 	}
 
+	log := cfg.log
+	if log == nil {
+		log = hclog.L()
+	}
+
 	// Initialize our state
-	st, err := state.New(cfg.db)
+	st, err := state.New(log, cfg.db)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +110,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 type config struct {
 	db           *bolt.DB
 	serverConfig *configpkg.ServerConfig
+	log          hclog.Logger
 }
 
 type Option func(*service, *config) error
@@ -119,6 +127,14 @@ func WithDB(db *bolt.DB) Option {
 func WithConfig(scfg *configpkg.ServerConfig) Option {
 	return func(s *service, cfg *config) error {
 		cfg.serverConfig = scfg
+		return nil
+	}
+}
+
+// WithLogger sets the logger for use with the server.
+func WithLogger(log hclog.Logger) Option {
+	return func(s *service, cfg *config) error {
+		cfg.log = log
 		return nil
 	}
 }

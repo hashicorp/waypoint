@@ -67,7 +67,8 @@ func (c *UICommand) Run(args []string) int {
 
 	// todo(mitchellh: current default port is hardcoded, cannot configure http address)
 	addr := strings.Split(ctxConfig.Server.Address, ":")[0]
-	port := 1235
+	// Default Docker platform HTTP port, for now
+	port := 9702
 	if err != nil {
 		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1

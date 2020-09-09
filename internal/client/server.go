@@ -96,7 +96,10 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 	closers = append(closers, db)
 
 	// Create our server
-	impl, err := singleprocess.New(singleprocess.WithDB(db))
+	impl, err := singleprocess.New(
+		singleprocess.WithDB(db),
+		singleprocess.WithLogger(log.Named("singleprocess")),
+	)
 	if err != nil {
 		return nil, err
 	}

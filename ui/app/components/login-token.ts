@@ -1,5 +1,5 @@
 import { inject as service } from '@ember/service';
-import Component from '@ember/component';
+import Component from '@glimmer/component';
 import { action } from '@ember/object';
 import SessionService from 'waypoint/services/session';
 import RouterService from '@ember/routing/router-service';

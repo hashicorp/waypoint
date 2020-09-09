@@ -39,6 +39,14 @@ export class Project extends jspb.Message {
   clearApplicationsList(): Project;
   addApplications(value?: Application, index?: number): Application;
 
+  getRemoteEnabled(): boolean;
+  setRemoteEnabled(value: boolean): Project;
+
+  getDataSource(): Job.DataSource | undefined;
+  setDataSource(value?: Job.DataSource): Project;
+  hasDataSource(): boolean;
+  clearDataSource(): Project;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Project.AsObject;
   static toObject(includeInstance: boolean, msg: Project): Project.AsObject;
@@ -51,12 +59,19 @@ export namespace Project {
   export type AsObject = {
     name: string,
     applicationsList: Array<Application.AsObject>,
+    remoteEnabled: boolean,
+    dataSource?: Job.DataSource.AsObject,
   }
 }
 
 export class Workspace extends jspb.Message {
   getName(): string;
   setName(value: string): Workspace;
+
+  getApplicationsList(): Array<Ref.Application>;
+  setApplicationsList(value: Array<Ref.Application>): Workspace;
+  clearApplicationsList(): Workspace;
+  addApplications(value?: Ref.Application, index?: number): Ref.Application;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Workspace.AsObject;
@@ -69,6 +84,7 @@ export class Workspace extends jspb.Message {
 export namespace Workspace {
   export type AsObject = {
     name: string,
+    applicationsList: Array<Ref.Application.AsObject>,
   }
 }
 
@@ -142,6 +158,87 @@ export namespace Ref {
   export namespace Workspace {
     export type AsObject = {
       workspace: string,
+    }
+  }
+
+
+  export class Component extends jspb.Message {
+    getType(): Component.Type;
+    setType(value: Component.Type): Component;
+
+    getName(): string;
+    setName(value: string): Component;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Component.AsObject;
+    static toObject(includeInstance: boolean, msg: Component): Component.AsObject;
+    static serializeBinaryToWriter(message: Component, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Component;
+    static deserializeBinaryFromReader(message: Component, reader: jspb.BinaryReader): Component;
+  }
+
+  export namespace Component {
+    export type AsObject = {
+      type: Component.Type,
+      name: string,
+    }
+  }
+
+
+  export class Operation extends jspb.Message {
+    getId(): string;
+    setId(value: string): Operation;
+
+    getSequence(): Ref.OperationSeq | undefined;
+    setSequence(value?: Ref.OperationSeq): Operation;
+    hasSequence(): boolean;
+    clearSequence(): Operation;
+
+    getTargetCase(): Operation.TargetCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Operation.AsObject;
+    static toObject(includeInstance: boolean, msg: Operation): Operation.AsObject;
+    static serializeBinaryToWriter(message: Operation, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Operation;
+    static deserializeBinaryFromReader(message: Operation, reader: jspb.BinaryReader): Operation;
+  }
+
+  export namespace Operation {
+    export type AsObject = {
+      id: string,
+      sequence?: Ref.OperationSeq.AsObject,
+    }
+
+    export enum TargetCase { 
+      TARGET_NOT_SET = 0,
+      ID = 1,
+      SEQUENCE = 2,
+    }
+  }
+
+
+  export class OperationSeq extends jspb.Message {
+    getApplication(): Ref.Application | undefined;
+    setApplication(value?: Ref.Application): OperationSeq;
+    hasApplication(): boolean;
+    clearApplication(): OperationSeq;
+
+    getNumber(): number;
+    setNumber(value: number): OperationSeq;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): OperationSeq.AsObject;
+    static toObject(includeInstance: boolean, msg: OperationSeq): OperationSeq.AsObject;
+    static serializeBinaryToWriter(message: OperationSeq, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): OperationSeq;
+    static deserializeBinaryFromReader(message: OperationSeq, reader: jspb.BinaryReader): OperationSeq;
+  }
+
+  export namespace OperationSeq {
+    export type AsObject = {
+      application?: Ref.Application.AsObject,
+      number: number,
     }
   }
 
@@ -241,6 +338,8 @@ export namespace Component {
     UNKNOWN = 0,
     BUILDER = 1,
     REGISTRY = 2,
+    PLATFORM = 3,
+    RELEASEMANAGER = 4,
   }
 }
 
@@ -337,6 +436,27 @@ export namespace StatusFilter {
 
 }
 
+export class Operation extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Operation.AsObject;
+  static toObject(includeInstance: boolean, msg: Operation): Operation.AsObject;
+  static serializeBinaryToWriter(message: Operation, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Operation;
+  static deserializeBinaryFromReader(message: Operation, reader: jspb.BinaryReader): Operation;
+}
+
+export namespace Operation {
+  export type AsObject = {
+  }
+
+  export enum PhysicalState { 
+    UNKNOWN = 0,
+    PENDING = 1,
+    CREATED = 3,
+    DESTROYED = 4,
+  }
+}
+
 export class OperationOrder extends jspb.Message {
   getOrder(): OperationOrder.Order;
   setOrder(value: OperationOrder.Order): OperationOrder;
@@ -375,6 +495,9 @@ export class QueueJobRequest extends jspb.Message {
   hasJob(): boolean;
   clearJob(): QueueJobRequest;
 
+  getExpiresIn(): string;
+  setExpiresIn(value: string): QueueJobRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): QueueJobRequest.AsObject;
   static toObject(includeInstance: boolean, msg: QueueJobRequest): QueueJobRequest.AsObject;
@@ -386,6 +509,7 @@ export class QueueJobRequest extends jspb.Message {
 export namespace QueueJobRequest {
   export type AsObject = {
     job?: Job.AsObject,
+    expiresIn: string,
   }
 }
 
@@ -402,6 +526,24 @@ export class QueueJobResponse extends jspb.Message {
 }
 
 export namespace QueueJobResponse {
+  export type AsObject = {
+    jobId: string,
+  }
+}
+
+export class CancelJobRequest extends jspb.Message {
+  getJobId(): string;
+  setJobId(value: string): CancelJobRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CancelJobRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: CancelJobRequest): CancelJobRequest.AsObject;
+  static serializeBinaryToWriter(message: CancelJobRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CancelJobRequest;
+  static deserializeBinaryFromReader(message: CancelJobRequest, reader: jspb.BinaryReader): CancelJobRequest;
+}
+
+export namespace CancelJobRequest {
   export type AsObject = {
     jobId: string,
   }
@@ -481,10 +623,13 @@ export class Job extends jspb.Message {
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): Job;
 
-  getLocal(): Job.Local | undefined;
-  setLocal(value?: Job.Local): Job;
-  hasLocal(): boolean;
-  clearLocal(): Job;
+  getDataSource(): Job.DataSource | undefined;
+  setDataSource(value?: Job.DataSource): Job;
+  hasDataSource(): boolean;
+  clearDataSource(): Job;
+
+  getDataSourceOverridesMap(): jspb.Map<string, string>;
+  clearDataSourceOverridesMap(): Job;
 
   getNoop(): Job.Noop | undefined;
   setNoop(value?: Job.Noop): Job;
@@ -506,10 +651,10 @@ export class Job extends jspb.Message {
   hasDeploy(): boolean;
   clearDeploy(): Job;
 
-  getDestroyDeploy(): Job.DestroyDeployOp | undefined;
-  setDestroyDeploy(value?: Job.DestroyDeployOp): Job;
-  hasDestroyDeploy(): boolean;
-  clearDestroyDeploy(): Job;
+  getDestroy(): Job.DestroyOp | undefined;
+  setDestroy(value?: Job.DestroyOp): Job;
+  hasDestroy(): boolean;
+  clearDestroy(): Job;
 
   getRelease(): Job.ReleaseOp | undefined;
   setRelease(value?: Job.ReleaseOp): Job;
@@ -520,6 +665,11 @@ export class Job extends jspb.Message {
   setValidate(value?: Job.ValidateOp): Job;
   hasValidate(): boolean;
   clearValidate(): Job;
+
+  getAuth(): Job.AuthOp | undefined;
+  setAuth(value?: Job.AuthOp): Job;
+  hasAuth(): boolean;
+  clearAuth(): Job;
 
   getState(): Job.State;
   setState(value: Job.State): Job;
@@ -559,7 +709,15 @@ export class Job extends jspb.Message {
   hasResult(): boolean;
   clearResult(): Job;
 
-  getDataSourceCase(): Job.DataSourceCase;
+  getCancelTime(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setCancelTime(value?: google_protobuf_timestamp_pb.Timestamp): Job;
+  hasCancelTime(): boolean;
+  clearCancelTime(): Job;
+
+  getExpireTime(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setExpireTime(value?: google_protobuf_timestamp_pb.Timestamp): Job;
+  hasExpireTime(): boolean;
+  clearExpireTime(): Job;
 
   getOperationCase(): Job.OperationCase;
 
@@ -578,14 +736,16 @@ export namespace Job {
     workspace?: Ref.Workspace.AsObject,
     targetRunner?: Ref.Runner.AsObject,
     labelsMap: Array<[string, string]>,
-    local?: Job.Local.AsObject,
+    dataSource?: Job.DataSource.AsObject,
+    dataSourceOverridesMap: Array<[string, string]>,
     noop?: Job.Noop.AsObject,
     build?: Job.BuildOp.AsObject,
     push?: Job.PushOp.AsObject,
     deploy?: Job.DeployOp.AsObject,
-    destroyDeploy?: Job.DestroyDeployOp.AsObject,
+    destroy?: Job.DestroyOp.AsObject,
     release?: Job.ReleaseOp.AsObject,
     validate?: Job.ValidateOp.AsObject,
+    auth?: Job.AuthOp.AsObject,
     state: Job.State,
     assignedRunner?: Ref.RunnerId.AsObject,
     queueTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
@@ -594,6 +754,8 @@ export namespace Job {
     completeTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     error?: google_rpc_status_pb.Status.AsObject,
     result?: Job.Result.AsObject,
+    cancelTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    expireTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
   }
 
   export class Result extends jspb.Message {
@@ -622,6 +784,11 @@ export namespace Job {
     hasValidate(): boolean;
     clearValidate(): Result;
 
+    getAuth(): Job.AuthResult | undefined;
+    setAuth(value?: Job.AuthResult): Result;
+    hasAuth(): boolean;
+    clearAuth(): Result;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Result.AsObject;
     static toObject(includeInstance: boolean, msg: Result): Result.AsObject;
@@ -637,6 +804,42 @@ export namespace Job {
       deploy?: Job.DeployResult.AsObject,
       release?: Job.ReleaseResult.AsObject,
       validate?: Job.ValidateResult.AsObject,
+      auth?: Job.AuthResult.AsObject,
+    }
+  }
+
+
+  export class DataSource extends jspb.Message {
+    getLocal(): Job.Local | undefined;
+    setLocal(value?: Job.Local): DataSource;
+    hasLocal(): boolean;
+    clearLocal(): DataSource;
+
+    getGit(): Job.Git | undefined;
+    setGit(value?: Job.Git): DataSource;
+    hasGit(): boolean;
+    clearGit(): DataSource;
+
+    getSourceCase(): DataSource.SourceCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): DataSource.AsObject;
+    static toObject(includeInstance: boolean, msg: DataSource): DataSource.AsObject;
+    static serializeBinaryToWriter(message: DataSource, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): DataSource;
+    static deserializeBinaryFromReader(message: DataSource, reader: jspb.BinaryReader): DataSource;
+  }
+
+  export namespace DataSource {
+    export type AsObject = {
+      local?: Job.Local.AsObject,
+      git?: Job.Git.AsObject,
+    }
+
+    export enum SourceCase { 
+      SOURCE_NOT_SET = 0,
+      LOCAL = 1,
+      GIT = 2,
     }
   }
 
@@ -652,6 +855,33 @@ export namespace Job {
 
   export namespace Local {
     export type AsObject = {
+    }
+  }
+
+
+  export class Git extends jspb.Message {
+    getUrl(): string;
+    setUrl(value: string): Git;
+
+    getRef(): string;
+    setRef(value: string): Git;
+
+    getPath(): string;
+    setPath(value: string): Git;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Git.AsObject;
+    static toObject(includeInstance: boolean, msg: Git): Git.AsObject;
+    static serializeBinaryToWriter(message: Git, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Git;
+    static deserializeBinaryFromReader(message: Git, reader: jspb.BinaryReader): Git;
+  }
+
+  export namespace Git {
+    export type AsObject = {
+      url: string,
+      ref: string,
+      path: string,
     }
   }
 
@@ -698,6 +928,97 @@ export namespace Job {
   export namespace ValidateResult {
     export type AsObject = {
     }
+  }
+
+
+  export class AuthOp extends jspb.Message {
+    getCheckOnly(): boolean;
+    setCheckOnly(value: boolean): AuthOp;
+
+    getComponent(): Ref.Component | undefined;
+    setComponent(value?: Ref.Component): AuthOp;
+    hasComponent(): boolean;
+    clearComponent(): AuthOp;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AuthOp.AsObject;
+    static toObject(includeInstance: boolean, msg: AuthOp): AuthOp.AsObject;
+    static serializeBinaryToWriter(message: AuthOp, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AuthOp;
+    static deserializeBinaryFromReader(message: AuthOp, reader: jspb.BinaryReader): AuthOp;
+  }
+
+  export namespace AuthOp {
+    export type AsObject = {
+      checkOnly: boolean,
+      component?: Ref.Component.AsObject,
+    }
+  }
+
+
+  export class AuthResult extends jspb.Message {
+    getResultsList(): Array<Job.AuthResult.Result>;
+    setResultsList(value: Array<Job.AuthResult.Result>): AuthResult;
+    clearResultsList(): AuthResult;
+    addResults(value?: Job.AuthResult.Result, index?: number): Job.AuthResult.Result;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AuthResult.AsObject;
+    static toObject(includeInstance: boolean, msg: AuthResult): AuthResult.AsObject;
+    static serializeBinaryToWriter(message: AuthResult, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AuthResult;
+    static deserializeBinaryFromReader(message: AuthResult, reader: jspb.BinaryReader): AuthResult;
+  }
+
+  export namespace AuthResult {
+    export type AsObject = {
+      resultsList: Array<Job.AuthResult.Result.AsObject>,
+    }
+
+    export class Result extends jspb.Message {
+      getComponent(): Component | undefined;
+      setComponent(value?: Component): Result;
+      hasComponent(): boolean;
+      clearComponent(): Result;
+
+      getCheckResult(): boolean;
+      setCheckResult(value: boolean): Result;
+
+      getCheckError(): google_rpc_status_pb.Status | undefined;
+      setCheckError(value?: google_rpc_status_pb.Status): Result;
+      hasCheckError(): boolean;
+      clearCheckError(): Result;
+
+      getAuthCompleted(): boolean;
+      setAuthCompleted(value: boolean): Result;
+
+      getAuthError(): google_rpc_status_pb.Status | undefined;
+      setAuthError(value?: google_rpc_status_pb.Status): Result;
+      hasAuthError(): boolean;
+      clearAuthError(): Result;
+
+      getAuthSupported(): boolean;
+      setAuthSupported(value: boolean): Result;
+
+      serializeBinary(): Uint8Array;
+      toObject(includeInstance?: boolean): Result.AsObject;
+      static toObject(includeInstance: boolean, msg: Result): Result.AsObject;
+      static serializeBinaryToWriter(message: Result, writer: jspb.BinaryWriter): void;
+      static deserializeBinary(bytes: Uint8Array): Result;
+      static deserializeBinaryFromReader(message: Result, reader: jspb.BinaryReader): Result;
+    }
+
+    export namespace Result {
+      export type AsObject = {
+        component?: Component.AsObject,
+        checkResult: boolean,
+        checkError?: google_rpc_status_pb.Status.AsObject,
+        authCompleted: boolean,
+        authError?: google_rpc_status_pb.Status.AsObject,
+        authSupported: boolean,
+      }
+    }
+
   }
 
 
@@ -831,32 +1152,42 @@ export namespace Job {
   }
 
 
-  export class DestroyDeployOp extends jspb.Message {
+  export class DestroyOp extends jspb.Message {
     getDeployment(): Deployment | undefined;
-    setDeployment(value?: Deployment): DestroyDeployOp;
+    setDeployment(value?: Deployment): DestroyOp;
     hasDeployment(): boolean;
-    clearDeployment(): DestroyDeployOp;
+    clearDeployment(): DestroyOp;
+
+    getTargetCase(): DestroyOp.TargetCase;
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): DestroyDeployOp.AsObject;
-    static toObject(includeInstance: boolean, msg: DestroyDeployOp): DestroyDeployOp.AsObject;
-    static serializeBinaryToWriter(message: DestroyDeployOp, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): DestroyDeployOp;
-    static deserializeBinaryFromReader(message: DestroyDeployOp, reader: jspb.BinaryReader): DestroyDeployOp;
+    toObject(includeInstance?: boolean): DestroyOp.AsObject;
+    static toObject(includeInstance: boolean, msg: DestroyOp): DestroyOp.AsObject;
+    static serializeBinaryToWriter(message: DestroyOp, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): DestroyOp;
+    static deserializeBinaryFromReader(message: DestroyOp, reader: jspb.BinaryReader): DestroyOp;
   }
 
-  export namespace DestroyDeployOp {
+  export namespace DestroyOp {
     export type AsObject = {
       deployment?: Deployment.AsObject,
+    }
+
+    export enum TargetCase { 
+      TARGET_NOT_SET = 0,
+      DEPLOYMENT = 1,
     }
   }
 
 
   export class ReleaseOp extends jspb.Message {
-    getTrafficSplit(): Release.Split | undefined;
-    setTrafficSplit(value?: Release.Split): ReleaseOp;
-    hasTrafficSplit(): boolean;
-    clearTrafficSplit(): ReleaseOp;
+    getDeployment(): Deployment | undefined;
+    setDeployment(value?: Deployment): ReleaseOp;
+    hasDeployment(): boolean;
+    clearDeployment(): ReleaseOp;
+
+    getPrune(): boolean;
+    setPrune(value: boolean): ReleaseOp;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): ReleaseOp.AsObject;
@@ -868,7 +1199,8 @@ export namespace Job {
 
   export namespace ReleaseOp {
     export type AsObject = {
-      trafficSplit?: Release.Split.AsObject,
+      deployment?: Deployment.AsObject,
+      prune: boolean,
     }
   }
 
@@ -903,20 +1235,16 @@ export namespace Job {
     SUCCESS = 5,
   }
 
-  export enum DataSourceCase { 
-    DATA_SOURCE_NOT_SET = 0,
-    LOCAL = 20,
-  }
-
   export enum OperationCase { 
     OPERATION_NOT_SET = 0,
     NOOP = 50,
     BUILD = 51,
     PUSH = 52,
     DEPLOY = 53,
-    DESTROY_DEPLOY = 54,
+    DESTROY = 54,
     RELEASE = 55,
     VALIDATE = 56,
+    AUTH = 57,
   }
 }
 
@@ -1028,6 +1356,9 @@ export namespace GetJobStreamResponse {
     hasJob(): boolean;
     clearJob(): State;
 
+    getCanceling(): boolean;
+    setCanceling(value: boolean): State;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): State.AsObject;
     static toObject(includeInstance: boolean, msg: State): State.AsObject;
@@ -1041,6 +1372,7 @@ export namespace GetJobStreamResponse {
       previous: Job.State,
       current: Job.State,
       job?: Job.AsObject,
+      canceling: boolean,
     }
   }
 
@@ -1592,6 +1924,11 @@ export class RunnerJobStreamRequest extends jspb.Message {
   hasTerminal(): boolean;
   clearTerminal(): RunnerJobStreamRequest;
 
+  getHeartbeat(): RunnerJobStreamRequest.Heartbeat | undefined;
+  setHeartbeat(value?: RunnerJobStreamRequest.Heartbeat): RunnerJobStreamRequest;
+  hasHeartbeat(): boolean;
+  clearHeartbeat(): RunnerJobStreamRequest;
+
   getEventCase(): RunnerJobStreamRequest.EventCase;
 
   serializeBinary(): Uint8Array;
@@ -1609,6 +1946,7 @@ export namespace RunnerJobStreamRequest {
     complete?: RunnerJobStreamRequest.Complete.AsObject,
     error?: RunnerJobStreamRequest.Error.AsObject,
     terminal?: GetJobStreamResponse.Terminal.AsObject,
+    heartbeat?: RunnerJobStreamRequest.Heartbeat.AsObject,
   }
 
   export class Request extends jspb.Message {
@@ -1687,6 +2025,21 @@ export namespace RunnerJobStreamRequest {
   }
 
 
+  export class Heartbeat extends jspb.Message {
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Heartbeat.AsObject;
+    static toObject(includeInstance: boolean, msg: Heartbeat): Heartbeat.AsObject;
+    static serializeBinaryToWriter(message: Heartbeat, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Heartbeat;
+    static deserializeBinaryFromReader(message: Heartbeat, reader: jspb.BinaryReader): Heartbeat;
+  }
+
+  export namespace Heartbeat {
+    export type AsObject = {
+    }
+  }
+
+
   export enum EventCase { 
     EVENT_NOT_SET = 0,
     REQUEST = 1,
@@ -1694,6 +2047,7 @@ export namespace RunnerJobStreamRequest {
     COMPLETE = 3,
     ERROR = 4,
     TERMINAL = 5,
+    HEARTBEAT = 6,
   }
 }
 
@@ -1702,6 +2056,11 @@ export class RunnerJobStreamResponse extends jspb.Message {
   setAssignment(value?: RunnerJobStreamResponse.JobAssignment): RunnerJobStreamResponse;
   hasAssignment(): boolean;
   clearAssignment(): RunnerJobStreamResponse;
+
+  getCancel(): RunnerJobStreamResponse.JobCancel | undefined;
+  setCancel(value?: RunnerJobStreamResponse.JobCancel): RunnerJobStreamResponse;
+  hasCancel(): boolean;
+  clearCancel(): RunnerJobStreamResponse;
 
   getEventCase(): RunnerJobStreamResponse.EventCase;
 
@@ -1716,6 +2075,7 @@ export class RunnerJobStreamResponse extends jspb.Message {
 export namespace RunnerJobStreamResponse {
   export type AsObject = {
     assignment?: RunnerJobStreamResponse.JobAssignment.AsObject,
+    cancel?: RunnerJobStreamResponse.JobCancel.AsObject,
   }
 
   export class JobAssignment extends jspb.Message {
@@ -1739,9 +2099,29 @@ export namespace RunnerJobStreamResponse {
   }
 
 
+  export class JobCancel extends jspb.Message {
+    getForce(): boolean;
+    setForce(value: boolean): JobCancel;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): JobCancel.AsObject;
+    static toObject(includeInstance: boolean, msg: JobCancel): JobCancel.AsObject;
+    static serializeBinaryToWriter(message: JobCancel, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): JobCancel;
+    static deserializeBinaryFromReader(message: JobCancel, reader: jspb.BinaryReader): JobCancel;
+  }
+
+  export namespace JobCancel {
+    export type AsObject = {
+      force: boolean,
+    }
+  }
+
+
   export enum EventCase { 
     EVENT_NOT_SET = 0,
     ASSIGNMENT = 1,
+    CANCEL = 2,
   }
 }
 
@@ -1763,8 +2143,11 @@ export class RunnerGetDeploymentConfigResponse extends jspb.Message {
   getServerAddr(): string;
   setServerAddr(value: string): RunnerGetDeploymentConfigResponse;
 
-  getServerInsecure(): boolean;
-  setServerInsecure(value: boolean): RunnerGetDeploymentConfigResponse;
+  getServerTls(): boolean;
+  setServerTls(value: boolean): RunnerGetDeploymentConfigResponse;
+
+  getServerTlsSkipVerify(): boolean;
+  setServerTlsSkipVerify(value: boolean): RunnerGetDeploymentConfigResponse;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): RunnerGetDeploymentConfigResponse.AsObject;
@@ -1777,7 +2160,8 @@ export class RunnerGetDeploymentConfigResponse extends jspb.Message {
 export namespace RunnerGetDeploymentConfigResponse {
   export type AsObject = {
     serverAddr: string,
-    serverInsecure: boolean,
+    serverTls: boolean,
+    serverTlsSkipVerify: boolean,
   }
 }
 
@@ -1842,8 +2226,11 @@ export namespace ServerConfig {
     getAddr(): string;
     setAddr(value: string): AdvertiseAddr;
 
-    getInsecure(): boolean;
-    setInsecure(value: boolean): AdvertiseAddr;
+    getTls(): boolean;
+    setTls(value: boolean): AdvertiseAddr;
+
+    getTlsSkipVerify(): boolean;
+    setTlsSkipVerify(value: boolean): AdvertiseAddr;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): AdvertiseAddr.AsObject;
@@ -1856,7 +2243,8 @@ export namespace ServerConfig {
   export namespace AdvertiseAddr {
     export type AsObject = {
       addr: string,
-      insecure: boolean,
+      tls: boolean,
+      tlsSkipVerify: boolean,
     }
   }
 
@@ -1907,6 +2295,11 @@ export namespace CreateHostnameResponse {
 }
 
 export class ListHostnamesRequest extends jspb.Message {
+  getTarget(): Hostname.Target | undefined;
+  setTarget(value?: Hostname.Target): ListHostnamesRequest;
+  hasTarget(): boolean;
+  clearTarget(): ListHostnamesRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListHostnamesRequest.AsObject;
   static toObject(includeInstance: boolean, msg: ListHostnamesRequest): ListHostnamesRequest.AsObject;
@@ -1917,6 +2310,7 @@ export class ListHostnamesRequest extends jspb.Message {
 
 export namespace ListHostnamesRequest {
   export type AsObject = {
+    target?: Hostname.Target.AsObject,
   }
 }
 
@@ -2037,6 +2431,66 @@ export namespace Hostname {
     }
   }
 
+}
+
+export class ListWorkspacesResponse extends jspb.Message {
+  getWorkspacesList(): Array<Workspace>;
+  setWorkspacesList(value: Array<Workspace>): ListWorkspacesResponse;
+  clearWorkspacesList(): ListWorkspacesResponse;
+  addWorkspaces(value?: Workspace, index?: number): Workspace;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListWorkspacesResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListWorkspacesResponse): ListWorkspacesResponse.AsObject;
+  static serializeBinaryToWriter(message: ListWorkspacesResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListWorkspacesResponse;
+  static deserializeBinaryFromReader(message: ListWorkspacesResponse, reader: jspb.BinaryReader): ListWorkspacesResponse;
+}
+
+export namespace ListWorkspacesResponse {
+  export type AsObject = {
+    workspacesList: Array<Workspace.AsObject>,
+  }
+}
+
+export class GetWorkspaceRequest extends jspb.Message {
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): GetWorkspaceRequest;
+  hasWorkspace(): boolean;
+  clearWorkspace(): GetWorkspaceRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetWorkspaceRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetWorkspaceRequest): GetWorkspaceRequest.AsObject;
+  static serializeBinaryToWriter(message: GetWorkspaceRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetWorkspaceRequest;
+  static deserializeBinaryFromReader(message: GetWorkspaceRequest, reader: jspb.BinaryReader): GetWorkspaceRequest;
+}
+
+export namespace GetWorkspaceRequest {
+  export type AsObject = {
+    workspace?: Ref.Workspace.AsObject,
+  }
+}
+
+export class GetWorkspaceResponse extends jspb.Message {
+  getWorkspace(): Workspace | undefined;
+  setWorkspace(value?: Workspace): GetWorkspaceResponse;
+  hasWorkspace(): boolean;
+  clearWorkspace(): GetWorkspaceResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetWorkspaceResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: GetWorkspaceResponse): GetWorkspaceResponse.AsObject;
+  static serializeBinaryToWriter(message: GetWorkspaceResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetWorkspaceResponse;
+  static deserializeBinaryFromReader(message: GetWorkspaceResponse, reader: jspb.BinaryReader): GetWorkspaceResponse;
+}
+
+export namespace GetWorkspaceResponse {
+  export type AsObject = {
+    workspace?: Workspace.AsObject,
+  }
 }
 
 export class UpsertProjectRequest extends jspb.Message {
@@ -2295,6 +2749,26 @@ export namespace GetLatestBuildRequest {
   }
 }
 
+export class GetBuildRequest extends jspb.Message {
+  getRef(): Ref.Operation | undefined;
+  setRef(value?: Ref.Operation): GetBuildRequest;
+  hasRef(): boolean;
+  clearRef(): GetBuildRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetBuildRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetBuildRequest): GetBuildRequest.AsObject;
+  static serializeBinaryToWriter(message: GetBuildRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetBuildRequest;
+  static deserializeBinaryFromReader(message: GetBuildRequest, reader: jspb.BinaryReader): GetBuildRequest;
+}
+
+export namespace GetBuildRequest {
+  export type AsObject = {
+    ref?: Ref.Operation.AsObject,
+  }
+}
+
 export class Build extends jspb.Message {
   getApplication(): Ref.Application | undefined;
   setApplication(value?: Ref.Application): Build;
@@ -2305,6 +2779,9 @@ export class Build extends jspb.Message {
   setWorkspace(value?: Ref.Workspace): Build;
   hasWorkspace(): boolean;
   clearWorkspace(): Build;
+
+  getSequence(): number;
+  setSequence(value: number): Build;
 
   getId(): string;
   setId(value: string): Build;
@@ -2339,6 +2816,7 @@ export namespace Build {
   export type AsObject = {
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
+    sequence: number,
     id: string,
     status?: Status.AsObject,
     component?: Component.AsObject,
@@ -2433,6 +2911,26 @@ export namespace GetLatestPushedArtifactRequest {
   }
 }
 
+export class GetPushedArtifactRequest extends jspb.Message {
+  getRef(): Ref.Operation | undefined;
+  setRef(value?: Ref.Operation): GetPushedArtifactRequest;
+  hasRef(): boolean;
+  clearRef(): GetPushedArtifactRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetPushedArtifactRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetPushedArtifactRequest): GetPushedArtifactRequest.AsObject;
+  static serializeBinaryToWriter(message: GetPushedArtifactRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetPushedArtifactRequest;
+  static deserializeBinaryFromReader(message: GetPushedArtifactRequest, reader: jspb.BinaryReader): GetPushedArtifactRequest;
+}
+
+export namespace GetPushedArtifactRequest {
+  export type AsObject = {
+    ref?: Ref.Operation.AsObject,
+  }
+}
+
 export class ListPushedArtifactsRequest extends jspb.Message {
   getApplication(): Ref.Application | undefined;
   setApplication(value?: Ref.Application): ListPushedArtifactsRequest;
@@ -2454,6 +2952,9 @@ export class ListPushedArtifactsRequest extends jspb.Message {
   hasOrder(): boolean;
   clearOrder(): ListPushedArtifactsRequest;
 
+  getIncludeBuild(): boolean;
+  setIncludeBuild(value: boolean): ListPushedArtifactsRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListPushedArtifactsRequest.AsObject;
   static toObject(includeInstance: boolean, msg: ListPushedArtifactsRequest): ListPushedArtifactsRequest.AsObject;
@@ -2468,6 +2969,7 @@ export namespace ListPushedArtifactsRequest {
     workspace?: Ref.Workspace.AsObject,
     statusList: Array<StatusFilter.AsObject>,
     order?: OperationOrder.AsObject,
+    includeBuild: boolean,
   }
 }
 
@@ -2502,6 +3004,9 @@ export class PushedArtifact extends jspb.Message {
   hasWorkspace(): boolean;
   clearWorkspace(): PushedArtifact;
 
+  getSequence(): number;
+  setSequence(value: number): PushedArtifact;
+
   getId(): string;
   setId(value: string): PushedArtifact;
 
@@ -2526,6 +3031,11 @@ export class PushedArtifact extends jspb.Message {
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): PushedArtifact;
 
+  getBuild(): Build | undefined;
+  setBuild(value?: Build): PushedArtifact;
+  hasBuild(): boolean;
+  clearBuild(): PushedArtifact;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): PushedArtifact.AsObject;
   static toObject(includeInstance: boolean, msg: PushedArtifact): PushedArtifact.AsObject;
@@ -2538,18 +3048,22 @@ export namespace PushedArtifact {
   export type AsObject = {
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
+    sequence: number,
     id: string,
     status?: Status.AsObject,
     component?: Component.AsObject,
     artifact?: Artifact.AsObject,
     buildId: string,
     labelsMap: Array<[string, string]>,
+    build?: Build.AsObject,
   }
 }
 
 export class GetDeploymentRequest extends jspb.Message {
-  getDeploymentId(): string;
-  setDeploymentId(value: string): GetDeploymentRequest;
+  getRef(): Ref.Operation | undefined;
+  setRef(value?: Ref.Operation): GetDeploymentRequest;
+  hasRef(): boolean;
+  clearRef(): GetDeploymentRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetDeploymentRequest.AsObject;
@@ -2561,7 +3075,7 @@ export class GetDeploymentRequest extends jspb.Message {
 
 export namespace GetDeploymentRequest {
   export type AsObject = {
-    deploymentId: string,
+    ref?: Ref.Operation.AsObject,
   }
 }
 
@@ -2570,6 +3084,9 @@ export class UpsertDeploymentRequest extends jspb.Message {
   setDeployment(value?: Deployment): UpsertDeploymentRequest;
   hasDeployment(): boolean;
   clearDeployment(): UpsertDeploymentRequest;
+
+  getAutoHostname(): UpsertDeploymentRequest.Tristate;
+  setAutoHostname(value: UpsertDeploymentRequest.Tristate): UpsertDeploymentRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UpsertDeploymentRequest.AsObject;
@@ -2582,6 +3099,13 @@ export class UpsertDeploymentRequest extends jspb.Message {
 export namespace UpsertDeploymentRequest {
   export type AsObject = {
     deployment?: Deployment.AsObject,
+    autoHostname: UpsertDeploymentRequest.Tristate,
+  }
+
+  export enum Tristate { 
+    UNSET = 0,
+    TRUE = 1,
+    FALSE = 2,
   }
 }
 
@@ -2621,10 +3145,16 @@ export class ListDeploymentsRequest extends jspb.Message {
   clearStatusList(): ListDeploymentsRequest;
   addStatus(value?: StatusFilter, index?: number): StatusFilter;
 
+  getPhysicalState(): Operation.PhysicalState;
+  setPhysicalState(value: Operation.PhysicalState): ListDeploymentsRequest;
+
   getOrder(): OperationOrder | undefined;
   setOrder(value?: OperationOrder): ListDeploymentsRequest;
   hasOrder(): boolean;
   clearOrder(): ListDeploymentsRequest;
+
+  getLoadDetails(): Deployment.LoadDetails;
+  setLoadDetails(value: Deployment.LoadDetails): ListDeploymentsRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListDeploymentsRequest.AsObject;
@@ -2639,7 +3169,9 @@ export namespace ListDeploymentsRequest {
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
     statusList: Array<StatusFilter.AsObject>,
+    physicalState: Operation.PhysicalState,
     order?: OperationOrder.AsObject,
+    loadDetails: Deployment.LoadDetails,
   }
 }
 
@@ -2674,11 +3206,14 @@ export class Deployment extends jspb.Message {
   hasWorkspace(): boolean;
   clearWorkspace(): Deployment;
 
+  getSequence(): number;
+  setSequence(value: number): Deployment;
+
   getId(): string;
   setId(value: string): Deployment;
 
-  getState(): Deployment.State;
-  setState(value: Deployment.State): Deployment;
+  getState(): Operation.PhysicalState;
+  setState(value: Operation.PhysicalState): Deployment;
 
   getStatus(): Status | undefined;
   setStatus(value?: Status): Deployment;
@@ -2701,6 +3236,16 @@ export class Deployment extends jspb.Message {
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): Deployment;
 
+  getArtifact(): PushedArtifact | undefined;
+  setArtifact(value?: PushedArtifact): Deployment;
+  hasArtifact(): boolean;
+  clearArtifact(): Deployment;
+
+  getBuild(): Build | undefined;
+  setBuild(value?: Build): Deployment;
+  hasBuild(): boolean;
+  clearBuild(): Deployment;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Deployment.AsObject;
   static toObject(includeInstance: boolean, msg: Deployment): Deployment.AsObject;
@@ -2713,20 +3258,22 @@ export namespace Deployment {
   export type AsObject = {
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
+    sequence: number,
     id: string,
-    state: Deployment.State,
+    state: Operation.PhysicalState,
     status?: Status.AsObject,
     component?: Component.AsObject,
     artifactId: string,
     deployment?: google_protobuf_any_pb.Any.AsObject,
     labelsMap: Array<[string, string]>,
+    artifact?: PushedArtifact.AsObject,
+    build?: Build.AsObject,
   }
 
-  export enum State { 
-    UNKNOWN = 0,
-    PENDING = 1,
-    DEPLOY = 3,
-    DESTROY = 4,
+  export enum LoadDetails { 
+    NONE = 0,
+    ARTIFACT = 1,
+    BUILD = 2,
   }
 }
 
@@ -2770,6 +3317,114 @@ export namespace UpsertReleaseResponse {
   }
 }
 
+export class GetLatestReleaseRequest extends jspb.Message {
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): GetLatestReleaseRequest;
+  hasApplication(): boolean;
+  clearApplication(): GetLatestReleaseRequest;
+
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): GetLatestReleaseRequest;
+  hasWorkspace(): boolean;
+  clearWorkspace(): GetLatestReleaseRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetLatestReleaseRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetLatestReleaseRequest): GetLatestReleaseRequest.AsObject;
+  static serializeBinaryToWriter(message: GetLatestReleaseRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetLatestReleaseRequest;
+  static deserializeBinaryFromReader(message: GetLatestReleaseRequest, reader: jspb.BinaryReader): GetLatestReleaseRequest;
+}
+
+export namespace GetLatestReleaseRequest {
+  export type AsObject = {
+    application?: Ref.Application.AsObject,
+    workspace?: Ref.Workspace.AsObject,
+  }
+}
+
+export class ListReleasesRequest extends jspb.Message {
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): ListReleasesRequest;
+  hasApplication(): boolean;
+  clearApplication(): ListReleasesRequest;
+
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): ListReleasesRequest;
+  hasWorkspace(): boolean;
+  clearWorkspace(): ListReleasesRequest;
+
+  getStatusList(): Array<StatusFilter>;
+  setStatusList(value: Array<StatusFilter>): ListReleasesRequest;
+  clearStatusList(): ListReleasesRequest;
+  addStatus(value?: StatusFilter, index?: number): StatusFilter;
+
+  getPhysicalState(): Operation.PhysicalState;
+  setPhysicalState(value: Operation.PhysicalState): ListReleasesRequest;
+
+  getOrder(): OperationOrder | undefined;
+  setOrder(value?: OperationOrder): ListReleasesRequest;
+  hasOrder(): boolean;
+  clearOrder(): ListReleasesRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListReleasesRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListReleasesRequest): ListReleasesRequest.AsObject;
+  static serializeBinaryToWriter(message: ListReleasesRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListReleasesRequest;
+  static deserializeBinaryFromReader(message: ListReleasesRequest, reader: jspb.BinaryReader): ListReleasesRequest;
+}
+
+export namespace ListReleasesRequest {
+  export type AsObject = {
+    application?: Ref.Application.AsObject,
+    workspace?: Ref.Workspace.AsObject,
+    statusList: Array<StatusFilter.AsObject>,
+    physicalState: Operation.PhysicalState,
+    order?: OperationOrder.AsObject,
+  }
+}
+
+export class ListReleasesResponse extends jspb.Message {
+  getReleasesList(): Array<Release>;
+  setReleasesList(value: Array<Release>): ListReleasesResponse;
+  clearReleasesList(): ListReleasesResponse;
+  addReleases(value?: Release, index?: number): Release;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListReleasesResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListReleasesResponse): ListReleasesResponse.AsObject;
+  static serializeBinaryToWriter(message: ListReleasesResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListReleasesResponse;
+  static deserializeBinaryFromReader(message: ListReleasesResponse, reader: jspb.BinaryReader): ListReleasesResponse;
+}
+
+export namespace ListReleasesResponse {
+  export type AsObject = {
+    releasesList: Array<Release.AsObject>,
+  }
+}
+
+export class GetReleaseRequest extends jspb.Message {
+  getRef(): Ref.Operation | undefined;
+  setRef(value?: Ref.Operation): GetReleaseRequest;
+  hasRef(): boolean;
+  clearRef(): GetReleaseRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetReleaseRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetReleaseRequest): GetReleaseRequest.AsObject;
+  static serializeBinaryToWriter(message: GetReleaseRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetReleaseRequest;
+  static deserializeBinaryFromReader(message: GetReleaseRequest, reader: jspb.BinaryReader): GetReleaseRequest;
+}
+
+export namespace GetReleaseRequest {
+  export type AsObject = {
+    ref?: Ref.Operation.AsObject,
+  }
+}
+
 export class Release extends jspb.Message {
   getApplication(): Ref.Application | undefined;
   setApplication(value?: Ref.Application): Release;
@@ -2781,6 +3436,9 @@ export class Release extends jspb.Message {
   hasWorkspace(): boolean;
   clearWorkspace(): Release;
 
+  getSequence(): number;
+  setSequence(value: number): Release;
+
   getId(): string;
   setId(value: string): Release;
 
@@ -2788,6 +3446,9 @@ export class Release extends jspb.Message {
   setStatus(value?: Status): Release;
   hasStatus(): boolean;
   clearStatus(): Release;
+
+  getState(): Operation.PhysicalState;
+  setState(value: Operation.PhysicalState): Release;
 
   getComponent(): Component | undefined;
   setComponent(value?: Component): Release;
@@ -2799,10 +3460,8 @@ export class Release extends jspb.Message {
   hasRelease(): boolean;
   clearRelease(): Release;
 
-  getTrafficSplit(): Release.Split | undefined;
-  setTrafficSplit(value?: Release.Split): Release;
-  hasTrafficSplit(): boolean;
-  clearTrafficSplit(): Release;
+  getDeploymentId(): string;
+  setDeploymentId(value: string): Release;
 
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): Release;
@@ -2822,58 +3481,16 @@ export namespace Release {
   export type AsObject = {
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
+    sequence: number,
     id: string,
     status?: Status.AsObject,
+    state: Operation.PhysicalState,
     component?: Component.AsObject,
     release?: google_protobuf_any_pb.Any.AsObject,
-    trafficSplit?: Release.Split.AsObject,
+    deploymentId: string,
     labelsMap: Array<[string, string]>,
     url: string,
   }
-
-  export class Split extends jspb.Message {
-    getTargetsList(): Array<Release.SplitTarget>;
-    setTargetsList(value: Array<Release.SplitTarget>): Split;
-    clearTargetsList(): Split;
-    addTargets(value?: Release.SplitTarget, index?: number): Release.SplitTarget;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): Split.AsObject;
-    static toObject(includeInstance: boolean, msg: Split): Split.AsObject;
-    static serializeBinaryToWriter(message: Split, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): Split;
-    static deserializeBinaryFromReader(message: Split, reader: jspb.BinaryReader): Split;
-  }
-
-  export namespace Split {
-    export type AsObject = {
-      targetsList: Array<Release.SplitTarget.AsObject>,
-    }
-  }
-
-
-  export class SplitTarget extends jspb.Message {
-    getDeploymentId(): string;
-    setDeploymentId(value: string): SplitTarget;
-
-    getPercent(): number;
-    setPercent(value: number): SplitTarget;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): SplitTarget.AsObject;
-    static toObject(includeInstance: boolean, msg: SplitTarget): SplitTarget.AsObject;
-    static serializeBinaryToWriter(message: SplitTarget, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): SplitTarget;
-    static deserializeBinaryFromReader(message: SplitTarget, reader: jspb.BinaryReader): SplitTarget;
-  }
-
-  export namespace SplitTarget {
-    export type AsObject = {
-      deploymentId: string,
-      percent: number,
-    }
-  }
-
 }
 
 export class GetLogStreamRequest extends jspb.Message {
@@ -3723,6 +4340,11 @@ export class Token extends jspb.Message {
   getInvite(): boolean;
   setInvite(value: boolean): Token;
 
+  getEntrypoint(): Token.Entrypoint | undefined;
+  setEntrypoint(value?: Token.Entrypoint): Token;
+  hasEntrypoint(): boolean;
+  clearEntrypoint(): Token;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Token.AsObject;
   static toObject(includeInstance: boolean, msg: Token): Token.AsObject;
@@ -3738,7 +4360,27 @@ export namespace Token {
     validUntil?: google_protobuf_timestamp_pb.Timestamp.AsObject,
     login: boolean,
     invite: boolean,
+    entrypoint?: Token.Entrypoint.AsObject,
   }
+
+  export class Entrypoint extends jspb.Message {
+    getDeploymentId(): string;
+    setDeploymentId(value: string): Entrypoint;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Entrypoint.AsObject;
+    static toObject(includeInstance: boolean, msg: Entrypoint): Entrypoint.AsObject;
+    static serializeBinaryToWriter(message: Entrypoint, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Entrypoint;
+    static deserializeBinaryFromReader(message: Entrypoint, reader: jspb.BinaryReader): Entrypoint;
+  }
+
+  export namespace Entrypoint {
+    export type AsObject = {
+      deploymentId: string,
+    }
+  }
+
 }
 
 export class HMACKey extends jspb.Message {
@@ -3769,6 +4411,11 @@ export class InviteTokenRequest extends jspb.Message {
   getDuration(): string;
   setDuration(value: string): InviteTokenRequest;
 
+  getEntrypoint(): Token.Entrypoint | undefined;
+  setEntrypoint(value?: Token.Entrypoint): InviteTokenRequest;
+  hasEntrypoint(): boolean;
+  clearEntrypoint(): InviteTokenRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): InviteTokenRequest.AsObject;
   static toObject(includeInstance: boolean, msg: InviteTokenRequest): InviteTokenRequest.AsObject;
@@ -3780,6 +4427,7 @@ export class InviteTokenRequest extends jspb.Message {
 export namespace InviteTokenRequest {
   export type AsObject = {
     duration: string,
+    entrypoint?: Token.Entrypoint.AsObject,
   }
 }
 

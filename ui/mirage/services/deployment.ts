@@ -1,9 +1,8 @@
-import { Component, Status, Ref, Deployment, ListDeploymentsResponse } from 'waypoint-pb';
-import { fakeId, fakeComponentForKind } from '../utils';
-import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
-import { subMinutes } from 'date-fns';
+import { Component, Ref, Deployment, ListDeploymentsResponse } from 'waypoint-pb';
+import { fakeId, fakeComponentForKind, statusRandom, sequenceRandom } from '../utils';
+import { createBuild } from './build';
 
-function createDeployment(): Deployment {
+export function createDeployment(): Deployment {
   let deploy = new Deployment();
   deploy.setId(fakeId());
 
@@ -12,32 +11,26 @@ function createDeployment(): Deployment {
   workspace.setWorkspace('default');
 
   let component = new Component();
-  component.setType(Component.Type.REGISTRY);
-  component.setName(fakeComponentForKind(Component.Type.REGISTRY));
+  component.setType(Component.Type.PLATFORM);
+  component.setName(fakeComponentForKind(Component.Type.PLATFORM));
 
-  // todo(pearkes): random state
-  let status = new Status();
-  status.setState(Status.State.SUCCESS);
-
-  // todo(pearkes): helpers
-  let timestamp = new Timestamp();
-  let result = Math.floor(subMinutes(new Date(), 30).getTime() / 1000);
-  timestamp.setSeconds(result);
-
-  // Same thing for now
-  status.setCompleteTime(timestamp);
-  status.setStartTime(timestamp);
-
+  deploy.setSequence(sequenceRandom());
+  deploy.setStatus(statusRandom());
   deploy.setComponent(component);
-  deploy.setStatus(status);
   deploy.setWorkspace(workspace);
+  deploy.setBuild(createBuild());
+
+  deploy.setState(3);
+
+  deploy.getLabelsMap().set('common/vcs-ref', '0d56a9f8456b088dd0e4a7b689b842876fd47352');
+  deploy.getLabelsMap().set('common/vcs-ref-path', 'https://github.com/hashicorp/waypoint/commit/');
 
   return deploy;
 }
 
 export function list(schema: any, { params, requestHeaders }) {
   let resp = new ListDeploymentsResponse();
-  let deploys = new Array(createDeployment(), createDeployment(), createDeployment(), createDeployment());
+  let deploys = new Array(createDeployment(), createDeployment(), createDeployment());
   resp.setDeploymentsList(deploys);
   return this.serialize(resp, 'application');
 }

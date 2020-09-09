@@ -5,6 +5,9 @@ import (
 	"github.com/hashicorp/waypoint/sdk"
 	"github.com/hashicorp/waypoint/sdk/component"
 
+	"github.com/hashicorp/waypoint/builtin/aws/alb"
+	"github.com/hashicorp/waypoint/builtin/aws/ami"
+	"github.com/hashicorp/waypoint/builtin/aws/ec2"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/ecs"
 	"github.com/hashicorp/waypoint/builtin/azure/aci"
@@ -38,6 +41,9 @@ var (
 		"aws-ecs":          ecs.Options,
 		"aws-ecr":          ecr.Options,
 		"nomad":            nomad.Options,
+		"aws-ami":          ami.Options,
+		"aws-ec2":          ec2.Options,
+		"aws-alb":          alb.Options,
 	}
 )
 
@@ -46,6 +52,7 @@ func init() {
 	Builders.Register("files", BuiltinFactory("files", component.BuilderType))
 	Builders.Register("pack", BuiltinFactory("pack", component.BuilderType))
 	Builders.Register("lambda", BuiltinFactory("lambda", component.BuilderType))
+	Builders.Register("aws-ami", BuiltinFactory("aws-ami", component.BuilderType))
 
 	Registries.Register("docker", BuiltinFactory("docker", component.RegistryType))
 	Registries.Register("files", BuiltinFactory("files", component.RegistryType))
@@ -59,9 +66,11 @@ func init() {
 	Platforms.Register("docker", BuiltinFactory("docker", component.PlatformType))
 	Platforms.Register("aws-ecs", BuiltinFactory("aws-ecs", component.PlatformType))
 	Platforms.Register("nomad", BuiltinFactory("nomad", component.PlatformType))
+	Platforms.Register("aws-ec2", BuiltinFactory("aws-ec2", component.PlatformType))
 
 	Releasers.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.ReleaseManagerType))
 	Releasers.Register("kubernetes", BuiltinFactory("kubernetes", component.ReleaseManagerType))
+	Releasers.Register("aws-alb", BuiltinFactory("aws-alb", component.ReleaseManagerType))
 }
 
 func must(err error) {
