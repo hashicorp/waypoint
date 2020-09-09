@@ -89,6 +89,7 @@ require (
 	google.golang.org/genproto v0.0.0-20200715011427-11fb19a81f2c
 	google.golang.org/grpc v1.30.0
 	google.golang.org/protobuf v1.25.0
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	k8s.io/api v0.18.0
 	k8s.io/apimachinery v0.18.0
 	k8s.io/client-go v0.18.0

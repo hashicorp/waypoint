@@ -141,27 +141,14 @@ To update the location you will need to manually destroy and recreate the resour
 		}
 	}
 
-	imageRegistryCredentials := []containerinstance.ImageRegistryCredential{}
-
 	// Set container group properties, doesn't matter whether we are creating or updating
 	// we are forcing a new revision.
 	containerGroup.ContainerGroupProperties = &containerinstance.ContainerGroupProperties{
-		ImageRegistryCredentials: &imageRegistryCredentials,
 		IPAddress: &containerinstance.IPAddress{
 			Type:         containerinstance.Public,
 			DNSNameLabel: &deployment.ContainerGroup.Name,
 		},
 		OsType: containerinstance.Linux,
-		Containers: &[]containerinstance.Container{
-			{
-				Name: &deployment.ContainerGroup.Name,
-				ContainerProperties: &containerinstance.ContainerProperties{
-					Image:                &img.Image,
-					EnvironmentVariables: &env,
-					Resources:            &containerinstance.ResourceRequirements{},
-				},
-			},
-		},
 	}
 
 	// Add the tags
@@ -192,11 +179,23 @@ To update the location you will need to manually destroy and recreate the resour
 	if p.config.RegistryCredentials != nil {
 		server := parseDockerServer(img.Image)
 
-		imageRegistryCredentials = append(imageRegistryCredentials, containerinstance.ImageRegistryCredential{
-			Server:   &server,
-			Username: &p.config.RegistryCredentials.Username,
-			Password: &p.config.RegistryCredentials.Password,
-		})
+		containerGroup.ImageRegistryCredentials = &[]containerinstance.ImageRegistryCredential{
+			containerinstance.ImageRegistryCredential{
+				Server:   &server,
+				Username: &p.config.RegistryCredentials.Username,
+				Password: &p.config.RegistryCredentials.Password,
+			},
+		}
+	}
+
+	// define a container
+	container := containerinstance.Container{
+		Name: &deployment.ContainerGroup.Name,
+		ContainerProperties: &containerinstance.ContainerProperties{
+			Image:                &img.Image,
+			EnvironmentVariables: &env,
+			Resources:            &containerinstance.ResourceRequirements{},
+		},
 	}
 
 	// Add the ports
@@ -221,15 +220,13 @@ To update the location you will need to manually destroy and recreate the resour
 			)
 		}
 
-		containers := containerGroup.ContainerGroupProperties.Containers
-		(*containers)[0].ContainerProperties.Ports = &containerPorts
-
+		// set the ports on the container and the parent container group
+		container.ContainerProperties.Ports = &containerPorts
 		containerGroup.ContainerGroupProperties.IPAddress.Ports = &ports
 	}
 
 	// Set the capacity
 	if p.config.Capacity != nil {
-		containers := containerGroup.ContainerGroupProperties.Containers
 		requests := containerinstance.ResourceRequests{}
 		limits := containerinstance.ResourceLimits{}
 
@@ -237,59 +234,64 @@ To update the location you will need to manually destroy and recreate the resour
 			requests.MemoryInGB = to.Float64Ptr(float64(p.config.Capacity.Memory) / 1024.0) // Azure units are 1GiB, our unit is 1MB
 			limits.MemoryInGB = to.Float64Ptr(float64(p.config.Capacity.Memory) / 1024.0)
 
-			(*containers)[0].ContainerProperties.Resources.Requests = &requests
-			(*containers)[0].ContainerProperties.Resources.Limits = &limits
+			container.ContainerProperties.Resources.Requests = &requests
+			container.ContainerProperties.Resources.Limits = &limits
 		}
 
 		if p.config.Capacity.CPUCount > 0 {
 			requests.CPU = to.Float64Ptr(float64(p.config.Capacity.CPUCount))
 			limits.CPU = to.Float64Ptr(float64(p.config.Capacity.CPUCount))
 
-			(*containers)[0].ContainerProperties.Resources.Requests = &requests
-			(*containers)[0].ContainerProperties.Resources.Limits = &limits
+			container.ContainerProperties.Resources.Requests = &requests
+			container.ContainerProperties.Resources.Limits = &limits
 		}
 	}
 
 	// If we have any volumes, add them
-	volumes := []containerinstance.Volume{}
-	volumeMounts := []containerinstance.VolumeMount{}
+	if len(p.config.Volumes) > 0 {
+		volumes := []containerinstance.Volume{}
+		volumeMounts := []containerinstance.VolumeMount{}
 
-	for _, v := range p.config.Volumes {
-		func(v Volume) {
-			vol := containerinstance.Volume{
-				Name: &v.Name,
-			}
-
-			volMount := containerinstance.VolumeMount{
-				Name:      &v.Name,
-				MountPath: &v.Path,
-				ReadOnly:  &v.ReadOnly,
-			}
-
-			if v.AzureFileShare != nil {
-				vol.AzureFile = &containerinstance.AzureFileVolume{
-					ShareName:          &v.AzureFileShare.Name,
-					ReadOnly:           &v.ReadOnly,
-					StorageAccountName: &v.AzureFileShare.StorageAccountName,
-					StorageAccountKey:  &v.AzureFileShare.StorageAccountKey,
+		for _, v := range p.config.Volumes {
+			func(v Volume) {
+				vol := containerinstance.Volume{
+					Name: &v.Name,
 				}
-			}
 
-			if v.GitRepoVolume != nil {
-				vol.GitRepo = &containerinstance.GitRepoVolume{
-					Repository: &v.GitRepoVolume.Repository,
-					Directory:  &v.GitRepoVolume.Directory,
-					Revision:   &v.GitRepoVolume.Revision,
+				volMount := containerinstance.VolumeMount{
+					Name:      &v.Name,
+					MountPath: &v.Path,
+					ReadOnly:  &v.ReadOnly,
 				}
-			}
 
-			volumes = append(volumes, vol)
-			volumeMounts = append(volumeMounts, volMount)
-		}(v)
+				if v.AzureFileShare != nil {
+					vol.AzureFile = &containerinstance.AzureFileVolume{
+						ShareName:          &v.AzureFileShare.Name,
+						ReadOnly:           &v.ReadOnly,
+						StorageAccountName: &v.AzureFileShare.StorageAccountName,
+						StorageAccountKey:  &v.AzureFileShare.StorageAccountKey,
+					}
+				}
+
+				if v.GitRepoVolume != nil {
+					vol.GitRepo = &containerinstance.GitRepoVolume{
+						Repository: &v.GitRepoVolume.Repository,
+						Directory:  &v.GitRepoVolume.Directory,
+						Revision:   &v.GitRepoVolume.Revision,
+					}
+				}
+
+				volumes = append(volumes, vol)
+				volumeMounts = append(volumeMounts, volMount)
+			}(v)
+		}
+
+		containerGroup.ContainerGroupProperties.Volumes = &volumes
+		container.VolumeMounts = &volumeMounts
 	}
 
-	containerGroup.ContainerGroupProperties.Volumes = &volumes
-	(*containerGroup.Containers)[0].VolumeMounts = &volumeMounts
+	// set the container on the container group
+	containerGroup.Containers = &[]containerinstance.Container{container}
 
 	if create {
 		log.Info("Creating the container group")
