@@ -42,7 +42,7 @@ func TestStateReinit(t testing.T, s *State) *State {
 	t.Cleanup(func() { db.Close() })
 
 	// Init new state
-	result, err := New(db)
+	result, err := New(hclog.L(), db)
 	require.NoError(t, err)
 	return result
 }
