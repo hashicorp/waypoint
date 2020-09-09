@@ -93,7 +93,7 @@ func (s *service) ListDeployments(
 				return nil, err
 			}
 
-			dep.Artifact = pa
+			dep.Preload.Artifact = pa
 
 			if req.LoadDetails == pb.Deployment_BUILD {
 				build, err := s.state.BuildGet(&pb.Ref_Operation{
@@ -106,7 +106,7 @@ func (s *service) ListDeployments(
 					return nil, err
 				}
 
-				dep.Build = build
+				dep.Preload.Build = build
 			}
 		}
 	}
