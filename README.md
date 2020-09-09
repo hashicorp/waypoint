@@ -65,3 +65,28 @@ without always needing to include the full directory path.
 * To determine which shell you use, run `echo $SHELL`
 * If using Bash, use `nano ~/.bash_profile` to edit your Bash profile.
 * If using ZSH, use `nano ~/.zshrc` to edit your ZSH profile.
+
+## Removing Waypoint Server
+
+Waypoint Server creates several resources in Kubernetes and Docker that should be removed to either reinstall Waypoint or to completely remove it from a system.
+
+### Waypoint Server in Kubernetes
+
+`waypoint install` for Kubernetes creates a StatefulSet, Service and PersistentVolumeClaim. These resources should be removed when Waypoint Server is no longer needed. These are some example `kubectl` commands that should clean up after a Waypoint Server installation.
+
+```
+kubectl delete statefulset waypoint-server
+kubectl get pv #note that pv name associated with $NAMESPACE/data-waypoint-server-0
+kubectl delete pv pvc-9063b5f7-dc86-4fa7-b120-bf084bbbbf93 #this id will be different for you
+kubectl delete svc waypoint
+```
+
+### Waypoint Server in Docker
+
+`waypoint install` for Docker creates a container and a volume. These resources should be removed when Waypoint Server is no longer needed. These are some example `docker` commands that should clean up after a Waypoint Server installation.
+
+```
+docker stop waypoint-server
+docker rm waypoint-server
+docker volume prune -f
+```
