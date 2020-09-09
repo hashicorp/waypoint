@@ -395,6 +395,33 @@ func TestAppOperation_deploy(t *testing.T) {
 
 	op.Test(t)
 
+	t.Run("basic put and get", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create with preload set
+		require.NoError(op.Put(s, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Id: "A",
+			Preload: &pb.Deployment_Preload{
+				Build: serverptypes.TestValidBuild(t, nil),
+			},
+		})))
+
+		// Read it back
+		raw, err := op.Get(s, appOpById("A"))
+		require.NoError(err)
+		require.NotNil(raw)
+
+		b, ok := raw.(*pb.Deployment)
+		require.True(ok)
+		require.Equal("A", b.Id)
+		require.Equal(uint64(1), b.Sequence)
+		require.NotNil(b.Preload)
+		require.Nil(b.Preload.Build)
+	})
+
 	t.Run("list with physical state filter supported", func(t *testing.T) {
 		require := require.New(t)
 

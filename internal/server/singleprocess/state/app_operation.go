@@ -31,6 +31,11 @@ type appOperation struct {
 	//   - Status *pb.Status
 	//   - Application *pb.Ref_Application
 	//
+	// It may also have the special field "Preload". If this field exists,
+	// it is automatically set to nil on disk and set to empty on read. This
+	// field is expected to be used for just-in-time data loading that is not
+	// persisted.
+	//
 	Struct interface{}
 
 	// Bucket is the global bucket for all records of this operation.
@@ -123,7 +128,7 @@ func (op *appOperation) Get(s *State, ref *pb.Ref_Operation) (interface{}, error
 				"unknown operation reference type: %T", ref.Target)
 		}
 
-		return dbGet(tx.Bucket(op.Bucket), []byte(id), result)
+		return op.dbGet(tx, []byte(id), result)
 	})
 	if err != nil {
 		return nil, err
@@ -192,8 +197,6 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 
 	var result []interface{}
 	s.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(op.Bucket)
-
 		for {
 			current := iter.Next()
 			if current == nil {
@@ -211,7 +214,7 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 			}
 
 			value := op.newStruct()
-			if err := dbGet(bucket, []byte(record.Id), value); err != nil {
+			if err := op.dbGet(tx, []byte(record.Id), value); err != nil {
 				return err
 			}
 
@@ -305,6 +308,25 @@ func (op *appOperation) Latest(
 	return nil, status.Error(codes.NotFound, "none available")
 }
 
+// dbGet reads the value from the database.
+func (op *appOperation) dbGet(
+	dbTxn *bolt.Tx,
+	id []byte,
+	result proto.Message,
+) error {
+	// Read the value
+	if err := dbGet(dbTxn.Bucket(op.Bucket), []byte(id), result); err != nil {
+		return err
+	}
+
+	// If there is a preload field, we want to set that to non-nil.
+	if f := op.valueFieldReflect(result, "Preload"); f.IsValid() {
+		f.Set(reflect.New(f.Type().Elem()))
+	}
+
+	return nil
+}
+
 // dbPut wites the value to the database and also sets up any index records.
 // It expects to hold a write transaction to both bolt and memdb.
 func (op *appOperation) dbPut(
@@ -337,7 +359,7 @@ func (op *appOperation) dbPut(
 		// Load the value so that we can retain the values that are read-only.
 		// At the same time we verify it exists
 		existing := op.newStruct()
-		err := dbGet(dbTxn.Bucket(op.Bucket), []byte(id), existing)
+		err := op.dbGet(dbTxn, []byte(id), existing)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
 				return status.Errorf(codes.NotFound, "record with ID %q not found for update", string(id))
@@ -369,6 +391,11 @@ func (op *appOperation) dbPut(
 			seq := atomic.AddUint64(op.appSeq(appRef), 1)
 			f.Set(reflect.ValueOf(seq))
 		}
+	}
+
+	// If there is a preload field, we want to set that to nil.
+	if f := op.valueFieldReflect(value, "Preload"); f.IsValid() {
+		f.Set(reflect.New(f.Type()).Elem())
 	}
 
 	if err := dbPut(b, id, value); err != nil {
