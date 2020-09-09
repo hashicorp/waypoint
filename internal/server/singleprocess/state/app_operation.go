@@ -472,7 +472,11 @@ func (op *appOperation) indexPut(s *State, txn *memdb.Txn, value proto.Message) 
 	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
 
 	// Ensure the workspace index record is created.
-	if _, err := s.workspaceInit(txn, wsRef, ref); err != nil {
+	touchTime := startTime
+	if completeTime.After(startTime) {
+		touchTime = completeTime
+	}
+	if _, err := s.workspaceTouch(txn, wsRef, ref, op.workspaceResource(), touchTime); err != nil {
 		return err
 	}
 
@@ -510,6 +514,16 @@ func (op *appOperation) valueFieldReflect(value interface{}, field string) refle
 // is a pointer to a pointer.
 func (op *appOperation) newStruct() proto.Message {
 	return reflect.New(reflect.TypeOf(op.Struct).Elem()).Interface().(proto.Message)
+}
+
+// workspaceResource returns the resource to use for workspaces.
+func (op *appOperation) workspaceResource() string {
+	value := reflect.TypeOf(op.Struct).Elem().String()
+	if idx := strings.Index(value, "."); idx >= 0 {
+		value = value[idx+1:]
+	}
+
+	return value
 }
 
 func (op *appOperation) memTableName() string {
