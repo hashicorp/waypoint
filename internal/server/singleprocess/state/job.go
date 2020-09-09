@@ -832,6 +832,15 @@ func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex
 		})
 	}
 
+	// If this job is running, we need to restart a heartbeat timeout.
+	// This should only happen on reinit. This is tested.
+	if rec.State == pb.Job_RUNNING {
+		rec.StateTimer = time.AfterFunc(jobHeartbeatTimeout, func() {
+			// Force cancel
+			s.JobCancel(rec.Id, true)
+		})
+	}
+
 	// If we have an expiry, we need to set a timer to expire this job.
 	if jobpb.ExpireTime != nil {
 		now := time.Now()
