@@ -29,6 +29,9 @@ func (r *Runner) executeDestroyOp(
 	case *pb.Job_DestroyOp_Deployment:
 		err = app.DestroyDeploy(ctx, t.Deployment)
 
+	case *pb.Job_DestroyOp_Workspace:
+		err = app.Destroy(ctx)
+
 	default:
 		err = fmt.Errorf("unknown destruction target: %T", op.Destroy.Target)
 	}

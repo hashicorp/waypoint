@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 // CanDestroyRelease returns true if this app supports destroying releases.
@@ -29,6 +30,77 @@ func (a *App) DestroyRelease(ctx context.Context, d *pb.Release) error {
 	_, _, err := a.doOperation(ctx, a.logger.Named("release"), &releaseDestroyOperation{
 		Release: d,
 	})
+	return err
+}
+
+// destroyAllReleases will destroy all non-destroyed releases.
+func (a *App) destroyAllReleases(ctx context.Context) error {
+	resp, err := a.client.ListReleases(ctx, &pb.ListReleasesRequest{
+		Application:   a.ref,
+		Workspace:     a.workspace,
+		PhysicalState: pb.Operation_CREATED,
+	})
+	if err != nil {
+		return nil
+	}
+
+	rels := resp.Releases
+	if len(rels) == 0 {
+		return nil
+	}
+
+	a.UI.Output("Destroying releases...", terminal.WithHeaderStyle())
+	for _, rel := range rels {
+		err := a.DestroyRelease(ctx, rel)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// destroyReleaseWorkspace will call the DestroyWorkspace hook if there
+// are any valid operations. This expects all operations of this type to
+// already be destroyed and will error if they are not.
+func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
+	log := a.logger
+
+	// Get the last destroyed value.
+	resp, err := a.client.ListReleases(ctx, &pb.ListReleasesRequest{
+		Application:   a.ref,
+		Workspace:     a.workspace,
+		PhysicalState: pb.Operation_DESTROYED,
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Limit: 1,
+		},
+	})
+	if err != nil {
+		return nil
+	}
+
+	// If we have no opeartions, we don't call the hook.
+	results := resp.Releases
+	if len(results) == 0 {
+		return nil
+	}
+
+	// Call the hook
+	d, ok := a.Releaser.(component.WorkspaceDestroyer)
+	if !ok || d.DestroyWorkspaceFunc() == nil {
+		// Workspace deletion is optional.
+		return nil
+	}
+
+	a.UI.Output("Destroying shared release resources...", terminal.WithHeaderStyle())
+	_, err = a.callDynamicFunc(ctx,
+		log,
+		nil,
+		d,
+		d.DestroyWorkspaceFunc(),
+		argNamedAny("release", results[0].Release),
+	)
 	return err
 }
 
@@ -67,7 +139,17 @@ func (op *releaseDestroyOperation) Upsert(
 }
 
 func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
-	destroyer := app.Releaser.(component.Destroyer)
+	// If we have no releaser then we're done.
+	if app.Releaser == nil {
+		return nil, nil
+	}
+
+	destroyer, ok := app.Releaser.(component.Destroyer)
+
+	// If we don't implement the destroy plugin we just mark it as destroyed.
+	if !ok || destroyer.DestroyFunc() == nil {
+		return nil, nil
+	}
 
 	return app.callDynamicFunc(ctx,
 		log,
