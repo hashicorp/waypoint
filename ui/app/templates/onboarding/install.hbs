@@ -9,17 +9,27 @@
 <hr />
 
 <div class="onboarding-step">
-  <p>The first thing you need to do in order to use Waypoint is install it. In a production deployment you would install Waypoint on every node where you want to register services, but in this tutorial, you will install it locally so that you can use it to explore Waypoint's core capabilities. Waypoint is distributed as a <a href="#todo">binary</a> or as a package for the major operating systems.</p>
+  <p>Anyone using Waypoint to deploy from their workstsation needs to install it locally. The below
+    instructions guide you through that for various operating systems.
+  </p>
   <p>If you need to compile Waypoint from source instead, see the <a href="#todo">documentation</a>.</p>
 
   <h2>Install Waypoint</h2>
 
   <nav>
     <ul>
-      <li><LinkTo @route="onboarding.install.manual">Manual installation</LinkTo></li>
-      <li><LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo></li>
-      <li><LinkTo @route="onboarding.install.chocolatey">Chocolatey on Windows</LinkTo></li>
-      <li><LinkTo @route="onboarding.install.linux">Linux</LinkTo></li>
+      <li>
+        <LinkTo @route="onboarding.install.manual">Manual installation</LinkTo>
+      </li>
+      <li>
+        <LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo>
+      </li>
+      <li>
+        <LinkTo @route="onboarding.install.chocolatey">Chocolatey on Windows</LinkTo>
+      </li>
+      <li>
+        <LinkTo @route="onboarding.install.linux">Linux</LinkTo>
+      </li>
     </ul>
   </nav>
 
@@ -27,19 +37,21 @@
 
   <h2>Verify the installation</h2>
 
-  <p>After installing Waypoint, verify that the installation worked by opening a new terminal session and running the command <code>waypoint</code>.</p>
+  <p>After installing Waypoint, verify that the installation worked by opening a new terminal session and running the
+    command <code>waypoint</code>.</p>
 
   <pre><code class="cmd">waypoint</code></pre>
 
-  <pre><code class="output">usage: waypoint [--version] [--help] &lt;command&gt; [&lt;args&gt;]
+  <pre><code class="output">usage: waypoint [-version] [-help] [-autocomplete-(un)install] &lt;command&gt; [&lt;args&gt;]
 
-  Available commands are:
-      agent          Runs a Waypoint agent
-      event          Fire a new event
-
+Common commands:
+    build        Build a new versioned artifact from source.
+    deploy       Deploy a pushed artifact.
   ...</code></pre>
 
-  <p>If you get an error that <code>waypoint</code> could not be found, your <code>PATH</code> environment variable was not set up properly. Make sure that your <code>PATH</code> variable contains the directory where you installed Waypoint.</p>
+  <p>If you get an error that <code>waypoint</code> could not be found, your <code>PATH</code> environment variable was
+    not set up properly. Make sure that your <code>PATH</code> variable contains the directory where you installed
+    Waypoint.</p>
 </div>
 
 <hr />
