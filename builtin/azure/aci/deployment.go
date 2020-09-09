@@ -17,15 +17,15 @@ func (d *Deployment) containerInstanceGroupsClient() (*containerinstance.Contain
 	// create a container groups client
 	containerGroupsClient := containerinstance.NewContainerGroupsClient(d.ContainerGroup.SubscriptionId)
 
-	// create an authorizer from env vars or Azure Managed Service Idenity
+	// create an authorizer from env vars or Azure Managed Service Identity
 	authorizer, err := auth.NewAuthorizerFromEnvironment()
 	if err != nil {
 		return nil, err
 	}
 
-	// todo: mishra to create an option to set polling time out in the waypoint configuration.
-	// this is to fix long provisioning times for aci.
-	containerGroupsClient.PollingDuration = 60 * time.Minute
+	// setting polling duration to 0 uses the context passed to an client call
+	// for cancellation.
+	containerGroupsClient.PollingDuration = 15 * time.Minute
 	containerGroupsClient.Authorizer = authorizer
 
 	return &containerGroupsClient, nil

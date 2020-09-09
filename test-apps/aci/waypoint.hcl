@@ -10,7 +10,7 @@ app "wpaci" {
     use "pack" {}
     registry {
       use "docker" {
-        image = "jacksonnic.azurecr.io/test_pack"
+        image = "nicholasjackson/test_pack"
         tag   = "latest"
       }
     }
