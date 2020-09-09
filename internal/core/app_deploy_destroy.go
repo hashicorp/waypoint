@@ -29,6 +29,11 @@ func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
 		return nil
 	}
 
+	if d.Deployment == nil {
+		a.logger.Info("no deployment info attached (deployment crashed?)")
+		return nil
+	}
+
 	_, _, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployDestroyOperation{
 		Deployment: d,
 	})

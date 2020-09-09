@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/posener/complete"
@@ -18,7 +19,8 @@ import (
 type ReleaseCreateCommand struct {
 	*baseCommand
 
-	flagRepeat bool
+	flagRepeat     bool
+	flagDeployment string
 }
 
 func (c *ReleaseCreateCommand) Run(args []string) int {
@@ -49,26 +51,59 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		// Get the latest deployment
-		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Application:   app.Ref(),
-			Workspace:     c.project.WorkspaceRef(),
-			PhysicalState: pb.Operation_CREATED,
-			Order: &pb.OperationOrder{
-				Limit: 1,
-				Order: pb.OperationOrder_COMPLETE_TIME,
-				Desc:  true,
-			},
-		})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
+		var deploy *pb.Deployment
+
+		if c.flagDeployment == "" {
+			// Get the latest deployment
+			resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+				Application:   app.Ref(),
+				Workspace:     c.project.WorkspaceRef(),
+				PhysicalState: pb.Operation_CREATED,
+				Order: &pb.OperationOrder{
+					Limit: 1,
+					Order: pb.OperationOrder_COMPLETE_TIME,
+					Desc:  true,
+				},
+			})
+			if err != nil {
+				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
+			if len(resp.Deployments) == 0 {
+				app.UI.Output(strings.TrimSpace(releaseNoDeploys), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
+			deploy = resp.Deployments[0]
+		} else if i, err := strconv.ParseUint(c.flagDeployment, 10, 64); err == nil {
+			deploy, err = client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+				Ref: &pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Sequence{
+						Sequence: &pb.Ref_OperationSeq{
+							Application: app.Ref(),
+							Number:      i,
+						},
+					},
+				},
+			})
+
+			if err != nil {
+				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
+		} else {
+			deploy, err = client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+				Ref: &pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Id{
+						Id: c.flagDeployment,
+					},
+				},
+			})
+
+			if err != nil {
+				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
 		}
-		if len(resp.Deployments) == 0 {
-			app.UI.Output(strings.TrimSpace(releaseNoDeploys), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-		deploy := resp.Deployments[0]
 
 		// If the latest release already deployed this then we're done.
 		if release != nil && release.DeploymentId == deploy.Id {
@@ -81,6 +116,12 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 					terminal.WithSuccessStyle())
 				return nil
 			}
+		}
+
+		if deploy.State != pb.Operation_CREATED {
+			app.UI.Output("Deployment specified is not available (state=%s)", deploy.State,
+				terminal.WithErrorStyle())
+			return ErrSentinel
 		}
 
 		// UI
@@ -122,6 +163,12 @@ func (c *ReleaseCreateCommand) Flags() *flag.Sets {
 			Usage:   "Re-release if deploy is already released.",
 			Default: false,
 		})
+		f.StringVar(&flag.StringVar{
+			Name:    "deployment",
+			Aliases: []string{"d"},
+			Target:  &c.flagDeployment,
+			Usage:   "Release the specified deployment.",
+		})
 	})
 }
 
@@ -141,19 +188,9 @@ func (c *ReleaseCreateCommand) Help() string {
 	helpText := `
 Usage: waypoint release [options]
 
-  Open a deployment to traffic. This will default to shifting traffic
-  100% to the latest deployment. You can specify multiple percentages to
-  split traffic between releases.
-
-Examples:
-
-  "waypoint release" - will send 100% of traffic to the latest deployment.
-
-  "waypoint release 90" - will send 90% of traffic to the latest deployment
-  and 10% of traffic to the prior deployment.
-
-  "waypoint release '+10'" - will send 10% more traffic to the latest deployment.
-
+  Open a deployment to traffic, by default the latest deployment.
+	This shifts all traffic to the specified deployment.
+	The deployment can be specified by sequence id or long id.
 ` + c.Flags().Help()
 
 	return strings.TrimSpace(helpText)

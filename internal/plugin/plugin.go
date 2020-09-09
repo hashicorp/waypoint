@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/alb"
 	"github.com/hashicorp/waypoint/builtin/aws/ami"
 	"github.com/hashicorp/waypoint/builtin/aws/ec2"
+	"github.com/hashicorp/waypoint/builtin/aws/ecr"
+	"github.com/hashicorp/waypoint/builtin/aws/ecs"
 	"github.com/hashicorp/waypoint/builtin/azure/aci"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/builtin/files"
@@ -36,6 +38,8 @@ var (
 		"kubernetes":       k8s.Options,
 		"lambda":           lambda.Options,
 		"netlify":          netlify.Options,
+		"aws-ecs":          ecs.Options,
+		"aws-ecr":          ecr.Options,
 		"nomad":            nomad.Options,
 		"aws-ami":          ami.Options,
 		"aws-ec2":          ec2.Options,
@@ -52,6 +56,7 @@ func init() {
 
 	Registries.Register("docker", BuiltinFactory("docker", component.RegistryType))
 	Registries.Register("files", BuiltinFactory("files", component.RegistryType))
+	Registries.Register("aws-ecr", BuiltinFactory("aws-ecr", component.RegistryType))
 
 	Platforms.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.PlatformType))
 	Platforms.Register("kubernetes", BuiltinFactory("kubernetes", component.PlatformType))
@@ -59,6 +64,7 @@ func init() {
 	Platforms.Register("azure-aci", BuiltinFactory("azure-aci", component.PlatformType))
 	Platforms.Register("netlify", BuiltinFactory("netlify", component.PlatformType))
 	Platforms.Register("docker", BuiltinFactory("docker", component.PlatformType))
+	Platforms.Register("aws-ecs", BuiltinFactory("aws-ecs", component.PlatformType))
 	Platforms.Register("nomad", BuiltinFactory("nomad", component.PlatformType))
 	Platforms.Register("aws-ec2", BuiltinFactory("aws-ec2", component.PlatformType))
 

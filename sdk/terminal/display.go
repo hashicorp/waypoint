@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/creack/pty"
 	"github.com/lab47/vterm/parser"
 	"github.com/lab47/vterm/screen"
 	"github.com/lab47/vterm/state"
@@ -21,6 +22,7 @@ var spinnerSet = spinner.CharSets[11]
 type DisplayEntry struct {
 	d       *Display
 	line    uint
+	index   int
 	indent  int
 	spinner bool
 	text    string
@@ -53,6 +55,13 @@ func NewDisplay(ctx context.Context, w io.Writer) *Display {
 		updates: make(chan *DisplayEntry),
 		resize:  make(chan struct{}),
 		newEnt:  make(chan *DisplayEntry),
+	}
+
+	if f, ok := w.(*os.File); ok {
+		_, cols, err := pty.Getsize(f)
+		if err == nil && cols >= 10 {
+			d.width = cols - 1
+		}
 	}
 
 	d.wg.Add(1)
@@ -123,6 +132,7 @@ func (d *Display) renderEntry(ent *DisplayEntry, spin int) {
 		prefix,
 		text,
 	)
+
 	if statusColor != nil {
 		line = statusColor.ANSI.Apply(line)
 	}
