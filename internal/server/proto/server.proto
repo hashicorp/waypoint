@@ -1450,6 +1450,10 @@ message GetLatestReleaseRequest {
 
   // workspace for the artifact, any workspace if empty
   Ref.Workspace workspace = 2;
+
+  // Load additional details about the release. These will become available
+  // in the Preload section.
+  Release.LoadDetails load_details = 3;
 }
 
 message ListReleasesRequest {
@@ -1471,6 +1475,10 @@ message ListReleasesRequest {
   // Specifies the order of results. If this isn't specified, the results
   // are in an undefined order.
   OperationOrder order = 2;
+
+  // Load additional details about the release. These will become available
+  // in the Preload section.
+  Release.LoadDetails load_details = 6;
 }
 
 message ListReleasesResponse {
@@ -1479,6 +1487,10 @@ message ListReleasesResponse {
 
 message GetReleaseRequest {
   Ref.Operation ref = 1;
+
+  // Load additional details about the release. These will become available
+  // in the Preload section.
+  Release.LoadDetails load_details = 2;
 }
 
 message Release {
@@ -1516,6 +1528,30 @@ message Release {
   // in use. After the release is not in use, this may still be set but
   // may no longer be valid.
   string url = 9;
+
+  // This is the populated preload data. Most of this data can be retrieved
+  // through additional API calls or manually computed, but certain API
+  // calls will pre-populate some of these fields for convenience. The exact
+  // pre-populated fields depend on the API.
+  Preload preload = 12;
+
+  enum LoadDetails {
+    NONE = 0;
+    DEPLOYMENT = 1;
+    ARTIFACT = 2;
+    BUILD = 3;
+  }
+
+  message Preload {
+    // Populated when LoadDetails is set.
+    Deployment deployment = 1;
+
+    // Populated when LoadDetails is set.
+    PushedArtifact artifact = 2;
+
+    // Populated when LoadDetails is set.
+    Build build = 3;
+  }
 }
 
 /********************************************************************
