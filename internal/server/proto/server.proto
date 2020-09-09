@@ -113,6 +113,10 @@ service Waypoint {
   // GetJob queries a job by ID.
   rpc GetJob(GetJobRequest) returns (Job);
 
+  // INTERNAL: ListJobs lists all the jobs the server has processed. This
+  // is not yet ready for public use.
+  rpc _ListJobs(ListJobsRequest) returns (ListJobsResponse);
+
   // ValidateJob checks if a job appears valid. This will check the job
   // structure itself (i.e. missing fields) and can also check to ensure
   // the job is assignable to a runner.
@@ -705,6 +709,12 @@ message Job {
 message GetJobRequest {
   // ID of the job to request.
   string job_id = 1;
+}
+
+message ListJobsRequest {}
+
+message ListJobsResponse {
+  repeated Job jobs = 1;
 }
 
 message GetJobStreamRequest {

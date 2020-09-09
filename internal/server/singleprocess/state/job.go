@@ -168,6 +168,36 @@ func (s *State) JobCreate(jobpb *pb.Job) error {
 	return err
 }
 
+// JobList returns the list of jobs.
+func (s *State) JobList() ([]*pb.Job, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.Get(jobTableName, jobIdIndexName+"_prefix", "")
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pb.Job
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+		idx := next.(*jobIndex)
+
+		var job *pb.Job
+		err = s.db.View(func(dbTxn *bolt.Tx) error {
+			job, err = s.jobById(dbTxn, idx.Id)
+			return err
+		})
+
+		result = append(result, job)
+	}
+
+	return result, nil
+}
+
 // JobById looks up a job by ID. The returned Job will be a deep copy
 // of the job so it is safe to read/write. If the job can't be found,
 // a nil result with no error is returned.
