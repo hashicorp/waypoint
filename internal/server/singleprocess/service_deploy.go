@@ -2,6 +2,8 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -62,6 +64,11 @@ func (s *service) UpsertDeployment(
 			log := hclog.FromContext(ctx)
 			log.Info("error creating default hostname", "err", err)
 		}
+
+		// Populate the URL preload data
+		if err := s.deploymentPreloadUrl(ctx, result); err != nil {
+			return nil, err
+		}
 	}
 
 	return &pb.UpsertDeploymentResponse{Deployment: result}, nil
@@ -81,8 +88,12 @@ func (s *service) ListDeployments(
 		return nil, err
 	}
 
-	if req.LoadDetails == pb.Deployment_ARTIFACT || req.LoadDetails == pb.Deployment_BUILD {
-		for _, dep := range result {
+	for _, dep := range result {
+		if err := s.deploymentPreloadUrl(ctx, dep); err != nil {
+			return nil, err
+		}
+
+		if req.LoadDetails == pb.Deployment_ARTIFACT || req.LoadDetails == pb.Deployment_BUILD {
 			pa, err := s.state.ArtifactGet(&pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{
 					Id: dep.ArtifactId,
@@ -119,5 +130,43 @@ func (s *service) GetDeployment(
 	ctx context.Context,
 	req *pb.GetDeploymentRequest,
 ) (*pb.Deployment, error) {
-	return s.state.DeploymentGet(req.Ref)
+	d, err := s.state.DeploymentGet(req.Ref)
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate the URL preload data
+	if err := s.deploymentPreloadUrl(ctx, d); err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
+func (s *service) deploymentPreloadUrl(
+	ctx context.Context,
+	d *pb.Deployment,
+) error {
+	resp, err := s.ListHostnames(ctx, &pb.ListHostnamesRequest{
+		Target: &pb.Hostname_Target{
+			Target: &pb.Hostname_Target_Application{
+				Application: &pb.Hostname_TargetApp{
+					Application: d.Application,
+					Workspace:   d.Workspace,
+				},
+			},
+		},
+	})
+	if err == nil && len(resp.Hostnames) > 0 {
+		hostname := resp.Hostnames[0]
+
+		d.Preload.DeployUrl = fmt.Sprintf(
+			"%s--%s%s",
+			hostname.Hostname,
+			d.Id,
+			strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
+		)
+	}
+
+	return nil
 }

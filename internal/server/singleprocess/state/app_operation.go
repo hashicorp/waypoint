@@ -395,7 +395,7 @@ func (op *appOperation) dbPut(
 
 	// If there is a preload field, we want to set that to nil.
 	if f := op.valueFieldReflect(value, "Preload"); f.IsValid() {
-		f.Set(reflect.New(f.Type()).Elem())
+		f.Set(reflect.New(f.Type().Elem()))
 	}
 
 	if err := dbPut(b, id, value); err != nil {
