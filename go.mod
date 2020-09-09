@@ -29,7 +29,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/fatih/color v1.9.0
-	github.com/fatih/hclfmt v0.0.0-20181010234132-374cd0fd2a55 // indirect
 	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
 	github.com/gliderlabs/ssh v0.2.2
 	github.com/go-git/go-git/v5 v5.1.0
