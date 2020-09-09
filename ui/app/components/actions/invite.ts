@@ -4,16 +4,20 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { InviteTokenRequest } from 'waypoint-pb';
+import SessionService from 'waypoint/services/session';
 
 export default class ActionsInvite extends Component {
   @service api!: ApiService;
+  @service session!: SessionService;
 
   @tracked token = '';
   @tracked hintIsVisible = false;
 
   constructor(owner: any, args: any) {
     super(owner, args);
-    this.createToken();
+    if (this.session.authConfigured) {
+      this.createToken();
+    }
   }
 
   selectContents(element: any) {

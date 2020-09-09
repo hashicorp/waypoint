@@ -9,7 +9,7 @@ export default class OnboardingInstallIndex extends Route {
       case 'Mac OS':
         return this.transitionTo('onboarding.install.homebrew');
       case 'Windows':
-        return this.transitionTo('onboarding.install.manual');
+        return this.transitionTo('onboarding.install.chocolatey');
       case 'Debian':
       case 'Ubuntu':
         return this.transitionTo('onboarding.install.linux.ubuntu');

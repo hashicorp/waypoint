@@ -47,7 +47,7 @@ export default class InviteLoginForm extends Component<InviteLoginFormArgs> {
       // todo: down the road with more workspaces we'll have to something more sophisticated
       return this.router.transitionTo('workspace', 'default', { queryParams: { cli: 'true' } });
     } else {
-      return this.router.transitionTo('onboarding.install');
+      return this.router.transitionTo('onboarding');
     }
   }
 }
