@@ -111,6 +111,7 @@ func (c *ServerCommand) Run(args []string) int {
 	impl, err := singleprocess.New(
 		singleprocess.WithDB(db),
 		singleprocess.WithConfig(&c.config),
+		singleprocess.WithLogger(log.Named("singleprocess")),
 	)
 	if err != nil {
 		c.ui.Output(

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package ami;
+
+option go_package = "waypoint/builtin/aws/ami";
+
+message Image {
+  string image = 1;
+}

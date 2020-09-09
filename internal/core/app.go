@@ -249,6 +249,10 @@ func (a *App) callDynamicFunc(
 		return nil, fmt.Errorf("component dir not found for: %T", c)
 	}
 
+	// Be sure that the status is closed after every operation so we don't leak
+	// weird output outside the normal execution.
+	defer a.UI.Status().Close()
+
 	// Make sure we have access to our context and logger and default args
 	args = append(args,
 		argmapper.ConverterFunc(a.mappers...),
