@@ -301,6 +301,14 @@ func Commands(
 		commands[from] = commands[to]
 	}
 
+	commands["docs"] = func() (cli.Command, error) {
+		return &DocsCommand{
+			baseCommand: baseCommand,
+			commands:    commands,
+			aliases:     aliases,
+		}, nil
+	}
+
 	return commands
 }
 
