@@ -1300,6 +1300,10 @@ message PushedArtifact {
 
 message GetDeploymentRequest {
   Ref.Operation ref = 1;
+
+  // Inidicate of the fetched deployments should include additional information
+  // about each deployment.
+  Deployment.LoadDetails load_details = 2;
 }
 
 message UpsertDeploymentRequest {

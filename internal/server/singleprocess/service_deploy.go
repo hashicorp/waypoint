@@ -93,32 +93,8 @@ func (s *service) ListDeployments(
 			return nil, err
 		}
 
-		if req.LoadDetails == pb.Deployment_ARTIFACT || req.LoadDetails == pb.Deployment_BUILD {
-			pa, err := s.state.ArtifactGet(&pb.Ref_Operation{
-				Target: &pb.Ref_Operation_Id{
-					Id: dep.ArtifactId,
-				},
-			})
-
-			if err != nil {
-				return nil, err
-			}
-
-			dep.Preload.Artifact = pa
-
-			if req.LoadDetails == pb.Deployment_BUILD {
-				build, err := s.state.BuildGet(&pb.Ref_Operation{
-					Target: &pb.Ref_Operation_Id{
-						Id: pa.BuildId,
-					},
-				})
-
-				if err != nil {
-					return nil, err
-				}
-
-				dep.Preload.Build = build
-			}
+		if err := s.deploymentPreloadDetails(ctx, req.LoadDetails, dep); err != nil {
+			return nil, err
 		}
 	}
 
@@ -137,6 +113,9 @@ func (s *service) GetDeployment(
 
 	// Populate the URL preload data
 	if err := s.deploymentPreloadUrl(ctx, d); err != nil {
+		return nil, err
+	}
+	if err := s.deploymentPreloadDetails(ctx, req.LoadDetails, d); err != nil {
 		return nil, err
 	}
 
@@ -166,6 +145,42 @@ func (s *service) deploymentPreloadUrl(
 			d.Id,
 			strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
 		)
+	}
+
+	return nil
+}
+
+func (s *service) deploymentPreloadDetails(
+	ctx context.Context,
+	req pb.Deployment_LoadDetails,
+	d *pb.Deployment,
+) error {
+	if req <= pb.Deployment_NONE {
+		return nil
+	}
+
+	pa, err := s.state.ArtifactGet(&pb.Ref_Operation{
+		Target: &pb.Ref_Operation_Id{
+			Id: d.ArtifactId,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	d.Preload.Artifact = pa
+
+	if req == pb.Deployment_BUILD {
+		build, err := s.state.BuildGet(&pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: pa.BuildId,
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+		d.Preload.Build = build
 	}
 
 	return nil
