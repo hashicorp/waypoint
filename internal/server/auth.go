@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"path/filepath"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -37,6 +38,10 @@ func authUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (interface{}, error) {
+		// Allow reflection API to be unauthenticated
+		if strings.HasPrefix(info.FullMethod, "/grpc.reflection.v1alpha.ServerReflection/") {
+			return handler(ctx, req)
+		}
 
 		name := filepath.Base(info.FullMethod)
 
@@ -73,6 +78,11 @@ func authStreamInterceptor(checker AuthChecker) grpc.StreamServerInterceptor {
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler) error {
+		// Allow reflection API to be unauthenticated
+		if strings.HasPrefix(info.FullMethod, "/grpc.reflection.v1alpha.ServerReflection/") {
+			return handler(srv, ss)
+		}
+
 		name := filepath.Base(info.FullMethod)
 
 		effects, ok := Effects[name]
