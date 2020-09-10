@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -62,6 +63,23 @@ func (p *Platform) ValidateAuth() error {
 	return nil
 }
 
+// ConfigSet is called after a configuration has been decoded
+// we can use this to validate the config
+func (p *Platform) ConfigSet(config interface{}) error {
+	c, ok := config.(*Config)
+	if !ok {
+		// this should never happen
+		return fmt.Errorf("Invalid configuration, expected *cloudrun.Config, got %s", reflect.TypeOf(config))
+	}
+
+	// set defaults
+	if c.ContainerPort < 0 && c.ContainerPort < 65535 {
+		c.ContainerPort = 3000
+	}
+
+	return nil
+}
+
 // DefaultReleaserFunc implements component.PlatformReleaser
 func (p *Platform) DefaultReleaserFunc() interface{} {
 	return func() *Releaser { return &Releaser{} }
@@ -110,12 +128,7 @@ func (p *Platform) Deploy(
 	}
 
 	// Build our env vars
-	env := []corev1.EnvVar{
-		{
-			Name:  "PORT",
-			Value: "3000",
-		},
-	}
+	env := []corev1.EnvVar{}
 
 	for k, v := range p.config.StaticEnvVars {
 		env = append(env, corev1.EnvVar{
@@ -159,13 +172,13 @@ func (p *Platform) Deploy(
 				Ports: []corev1.ContainerPort{
 					{
 						Name:          "http",
-						ContainerPort: 3000,
+						ContainerPort: int32(p.config.ContainerPort),
 					},
 				},
 				LivenessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(3000),
+							Port: intstr.FromInt(p.config.ContainerPort),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -175,7 +188,7 @@ func (p *Platform) Deploy(
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(3000),
+							Port: intstr.FromInt(p.config.ContainerPort),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -192,7 +205,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(3000),
+					Port: intstr.FromInt(p.config.ContainerPort),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -204,7 +217,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(3000),
+					Port: intstr.FromInt(p.config.ContainerPort),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -351,6 +364,12 @@ type Config struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+
+	// Port that your service is running on within the actual container.
+	// Defaults to port 3000. 
+	// TODO Evaluate if this should remain as a default 3000, should be a required field,
+	// or default to another port. 
+	ContainerPort int `hcl:"container_port,optional"`
 }
 
 var (
