@@ -218,11 +218,12 @@ jobs:
               --secret id=ssh.key,src="${HOME}/.ssh/id_rsa_c6969882dc046c39ddac8305e3151c98" \
               --progress=plain \
               -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest \
+              -t docker.pkg.github.com/hashicorp/waypoint/alpha:$GIT_COMMIT
               .
       - run:
           name: "Docker: Push image"
           command: |
-            docker push docker.pkg.github.com/hashicorp/waypoint/alpha:latest
+            docker push docker.pkg.github.com/hashicorp/waypoint/alpha
 
   # todo: re-enable when we need a UI
   #
