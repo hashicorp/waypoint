@@ -176,14 +176,16 @@ To update the location you will need to manually destroy and recreate the resour
 	}
 
 	// do we need to add registry credentials for auth?
-	if p.config.RegistryCredentials != nil {
+	registryUser := os.Getenv("REGISTRY_USERNAME")
+	registryPass := os.Getenv("REGISTRY_PASSWORD")
+	if registryUser != "" && registryPass != "" {
 		server := parseDockerServer(img.Image)
 
 		containerGroup.ImageRegistryCredentials = &[]containerinstance.ImageRegistryCredential{
 			containerinstance.ImageRegistryCredential{
 				Server:   &server,
-				Username: &p.config.RegistryCredentials.Username,
-				Password: &p.config.RegistryCredentials.Password,
+				Username: &registryUser,
+				Password: &registryPass,
 			},
 		}
 	}
@@ -340,6 +342,11 @@ To update the location you will need to manually destroy and recreate the resour
 }
 
 // Config is the configuration structure for the Platform.
+// In addition to HCL defined configuration the following environment variables
+// are also valid
+// AZURE_SUBSCRIPTION_ID = Subscription ID for your Azure account [required]
+// REGISTRY_USERNAME = Username for container registry, required when using a private registry
+// REGISTRY_PASSWORD = Password for container registry, required when using a private registry
 type Config struct {
 	// ResourceGroup is the resource group to deploy to.
 	ResourceGroup string `hcl:"resource_group,attr"`
@@ -357,11 +364,6 @@ type Config struct {
 	// (https://docs.microsoft.com/en-us/azure/container-instances/container-instances-managed-identity#:~:text=Enable%20a%20managed%20identity&text=Azure%20Container%20Instances%20supports%20both,or%20both%20types%20of%20identities.)
 	// Note: ManagedIdentity can not be used to authorize Container Instances to pull from private Container registries in Azure
 	ManagedIdentity string `hcl:"managed_identity,optional"`
-
-	// RegistryCredentials allow you to set the username and password
-	// in the instance the image to deploy is in a private repository and
-	// requires authentication.
-	RegistryCredentials *RegistryCredentials `hcl:"registry_credentials,block"`
 
 	// Port the applications is listening on.
 	Ports []int `hcl:"ports,optional"`
