@@ -110,7 +110,12 @@ func (p *Platform) Deploy(
 	}
 
 	// Build our env vars
-	env := []corev1.EnvVar{}
+	env := []corev1.EnvVar{
+		{
+			Name:  "PORT",
+			Value: string(p.config.ContainerPort),
+		},
+	}
 
 	for k, v := range p.config.StaticEnvVars {
 		env = append(env, corev1.EnvVar{
