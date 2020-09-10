@@ -130,6 +130,9 @@ service Waypoint {
   // GetRunner gets information about a single runner.
   rpc GetRunner(GetRunnerRequest) returns (Runner);
 
+  // GetServerConfig sets configuration for the Waypoint server.
+  rpc GetServerConfig(google.protobuf.Empty) returns (GetServerConfigResponse);
+
   // SetServerConfig sets configuration for the Waypoint server.
   rpc SetServerConfig(SetServerConfigRequest) returns (google.protobuf.Empty);
 
@@ -996,6 +999,10 @@ message GetRunnerRequest {
 ********************************************************************/
 
 message SetServerConfigRequest {
+  ServerConfig config = 1;
+}
+
+message GetServerConfigResponse {
   ServerConfig config = 1;
 }
 
