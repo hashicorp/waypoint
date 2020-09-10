@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
@@ -60,23 +59,6 @@ func (p *Platform) Auth() error {
 }
 
 func (p *Platform) ValidateAuth() error {
-	return nil
-}
-
-// ConfigSet is called after a configuration has been decoded
-// we can use this to validate the config
-func (p *Platform) ConfigSet(config interface{}) error {
-	c, ok := config.(*Config)
-	if !ok {
-		// this should never happen
-		return fmt.Errorf("Invalid configuration, expected *cloudrun.Config, got %s", reflect.TypeOf(config))
-	}
-
-	// set defaults
-	if c.ContainerPort < 0 && c.ContainerPort < 65535 {
-		c.ContainerPort = 3000
-	}
-
 	return nil
 }
 
@@ -160,6 +142,10 @@ func (p *Platform) Deploy(
 	pullPolicy := corev1.PullIfNotPresent
 	if img.Tag == "latest" {
 		pullPolicy = ""
+	}
+
+	if p.config.ContainerPort == 0 {
+		p.config.ContainerPort = 3000
 	}
 
 	// Update the deployment with our spec
