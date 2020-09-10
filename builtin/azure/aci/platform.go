@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	reflect "reflect"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -33,6 +34,18 @@ func (p *Platform) Config() (interface{}, error) {
 // DeployFunc implements component.Platform
 func (p *Platform) DeployFunc() interface{} {
 	return p.Deploy
+}
+
+// ConfigSet is called after a configuration has been decoded
+// we can use this to validate the config
+func (p *Platform) ConfigSet(config interface{}) error {
+	c, ok := config.(*Config)
+	if !ok {
+		// this should never happen
+		return fmt.Errorf("Invalid configuration, expected *cloudrun.Config, got %s", reflect.TypeOf(config))
+	}
+
+	return validateConfig(*c)
 }
 
 // Deploy deploys an image to ACI.
