@@ -20,7 +20,7 @@
       </p>
       <small>
         <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
-          <b>{{component-name @model.component.name}}</b>
+          <b>{{component-name @model.component.name}} </b>
           {{#if (eq @model.status.state 1)}}
             (Started {{date-format-distance-to-now @model.status.startTime.seconds }})
           {{else}}

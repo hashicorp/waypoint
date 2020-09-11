@@ -12,6 +12,8 @@
   }
 
   .app-meta-item-info {
+    overflow: hidden;
+    padding-right: scale.$sm-1;
     margin-right: auto;
 
     a {
@@ -45,6 +47,12 @@
       align-items: center;
       padding-top: scale.$sm-3;
 
+      span {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
       .icon {
         width: scale.$lg-1;
         height: scale.$lg-1;
@@ -55,6 +63,7 @@
 
   ul.app-meta-item-info {
     margin-right: 0;
+    padding-right: 0;
     width: 100%;
 
     li {
@@ -71,6 +80,9 @@
         display: flex;
         flex-grow: 1;
         align-items: center;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
       }
 
       p {
@@ -84,7 +96,8 @@
       small {
         color: color.$ui-cool-gray-600;
         font-size: 0.8rem;
-        padding: 0;
+        padding: 0 0 0 scale.$sm-2;
+        min-width: 0;
       }
 
       .badge--version {
