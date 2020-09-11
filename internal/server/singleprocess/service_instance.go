@@ -20,6 +20,13 @@ func (s *service) ListInstances(
 	case *pb.ListInstancesRequest_DeploymentId:
 		result, err = s.state.InstancesByDeployment(scope.DeploymentId, nil)
 
+	case *pb.ListInstancesRequest_Application_:
+		result, err = s.state.InstancesByApp(
+			scope.Application.Application,
+			scope.Application.Workspace,
+			nil,
+		)
+
 	default:
 		return nil, status.Errorf(codes.FailedPrecondition,
 			"scope is invalid")
