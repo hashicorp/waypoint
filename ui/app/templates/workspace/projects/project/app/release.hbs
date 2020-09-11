@@ -43,7 +43,15 @@
 </div>
 
 <div class="output-pane">
-  <div class="output">
-    <code>No release output available</code>
-  </div>
+  {{#if hasLogs}}
+    <div class="output">
+      <code>A line of output</code>
+      <code>Another line of output</code>
+    </div>
+  {{else}}
+    <EmptyState>
+      <p>Waiting for release output</p>
+      <p>Release logs will be displayed in a moment</p>
+    </EmptyState>
+  {{/if}}
 </div>
