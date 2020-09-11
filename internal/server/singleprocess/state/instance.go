@@ -5,6 +5,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 )
 
@@ -49,6 +50,13 @@ type Instance struct {
 	Id           string
 	DeploymentId string
 	LogBuffer    *logbuffer.Buffer
+}
+
+func (i *Instance) Proto() *pb.Instance {
+	return &pb.Instance{
+		Id:           i.Id,
+		DeploymentId: i.DeploymentId,
+	}
 }
 
 func (s *State) InstanceCreate(rec *Instance) error {
