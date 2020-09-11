@@ -14,6 +14,7 @@ const (
 	instanceIdIndexName           = "id"
 	instanceDeploymentIdIndexName = "deployment-id"
 	instanceAppIndexName          = "app"
+	instanceAppWorkspaceIndexName = "app-ws"
 )
 
 func init() {
@@ -57,6 +58,30 @@ func instanceSchema() *memdb.TableSchema {
 
 						&memdb.StringFieldIndex{
 							Field:     "Application",
+							Lowercase: true,
+						},
+					},
+				},
+			},
+
+			instanceAppWorkspaceIndexName: &memdb.IndexSchema{
+				Name:         instanceAppWorkspaceIndexName,
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field:     "Project",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Application",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Workspace",
 							Lowercase: true,
 						},
 					},
@@ -150,11 +175,22 @@ func (s *State) InstancesByDeployment(id string, ws memdb.WatchSet) ([]*Instance
 	return result, nil
 }
 
-func (s *State) InstancesByApp(ref *pb.Ref_Application, ws memdb.WatchSet) ([]*Instance, error) {
+func (s *State) InstancesByApp(
+	ref *pb.Ref_Application,
+	refws *pb.Ref_Workspace,
+	ws memdb.WatchSet,
+) ([]*Instance, error) {
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 
-	iter, err := txn.Get(instanceTableName, instanceAppIndexName, ref.Project, ref.Application)
+	var iter memdb.ResultIterator
+	var err error
+	if refws == nil {
+		iter, err = txn.Get(instanceTableName, instanceAppIndexName, ref.Project, ref.Application)
+	} else {
+		iter, err = txn.Get(instanceTableName, instanceAppWorkspaceIndexName,
+			ref.Project, ref.Application, refws.Workspace)
+	}
 	if err != nil {
 		return nil, err
 	}

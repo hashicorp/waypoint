@@ -62,7 +62,7 @@ func TestInstancesByApp(t *testing.T) {
 
 	// Empty with nothing
 	ws := memdb.NewWatchSet()
-	list, err := s.InstancesByApp(ref, ws)
+	list, err := s.InstancesByApp(ref, nil, ws)
 	require.NoError(err)
 	require.Empty(list)
 
@@ -77,14 +77,60 @@ func TestInstancesByApp(t *testing.T) {
 	require.False(ws.Watch(time.After(100 * time.Millisecond)))
 
 	// Should have values
-	list, err = s.InstancesByApp(ref, nil)
+	list, err = s.InstancesByApp(ref, nil, nil)
 	require.NoError(err)
 	require.Len(list, 1)
 
 	// Should not for other app
 	ref2 := *ref
 	ref2.Application = "NO"
-	list, err = s.InstancesByApp(&ref2, nil)
+	list, err = s.InstancesByApp(&ref2, nil, nil)
+	require.NoError(err)
+	require.Empty(list)
+}
+
+func TestInstancesByAppWorkspace(t *testing.T) {
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	// Our ref we'll look for
+	ref := &pb.Ref_Application{
+		Project:     "A",
+		Application: "B",
+	}
+
+	refWs := &pb.Ref_Workspace{
+		Workspace: "C",
+	}
+
+	// Empty with nothing
+	ws := memdb.NewWatchSet()
+	list, err := s.InstancesByApp(ref, refWs, ws)
+	require.NoError(err)
+	require.Empty(list)
+
+	// Watch should block
+	require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+	// Create an instance
+	rec := testInstance(t, &Instance{
+		Project: ref.Project, Application: ref.Application, Workspace: refWs.Workspace})
+	require.NoError(s.InstanceCreate(rec))
+
+	// Should be triggered
+	require.False(ws.Watch(time.After(100 * time.Millisecond)))
+
+	// Should have values
+	list, err = s.InstancesByApp(ref, refWs, nil)
+	require.NoError(err)
+	require.Len(list, 1)
+
+	// Should not for other app
+	ref2 := *refWs
+	ref2.Workspace = "NO"
+	list, err = s.InstancesByApp(ref, &ref2, nil)
 	require.NoError(err)
 	require.Empty(list)
 }
