@@ -24,12 +24,26 @@ func (s *service) EntrypointConfig(
 ) error {
 	log := hclog.FromContext(srv.Context())
 
+	// Fetch the deployment info so we can calculate the config variables to send.
+	// This also verifies this deployment exists.
+	deployment, err := s.GetDeployment(srv.Context(), &pb.GetDeploymentRequest{
+		Ref: &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{Id: req.DeploymentId},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
 	// Create our record
 	log = log.With("deployment_id", req.DeploymentId, "instance_id", req.InstanceId)
 	log.Trace("registering entrypoint")
 	record := &state.Instance{
 		Id:           req.InstanceId,
 		DeploymentId: req.DeploymentId,
+		Project:      deployment.Application.Project,
+		Application:  deployment.Application.Application,
+		Workspace:    deployment.Workspace.Workspace,
 		LogBuffer:    logbuffer.New(),
 	}
 	if err := s.state.InstanceCreate(record); err != nil {
@@ -48,17 +62,6 @@ func (s *service) EntrypointConfig(
 			log.Error("failed to delete instance data. This should not happen.", "err", err)
 		}
 	}()
-
-	// Fetch the deployment info so we can calculate the config variables to send
-	deployment, err := s.GetDeployment(srv.Context(), &pb.GetDeploymentRequest{
-		Ref: &pb.Ref_Operation{
-			Target: &pb.Ref_Operation_Id{Id: req.DeploymentId},
-		},
-	})
-
-	if err != nil {
-		return err
-	}
 
 	// Build our config in a loop.
 	for {
