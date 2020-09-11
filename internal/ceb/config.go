@@ -12,7 +12,7 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
 	// Open our log stream
 	log.Debug("registering instance, requesting config")
 	client, err := ceb.client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
-		DeploymentId: cfg.DeploymentId,
+		DeploymentId: ceb.deploymentId,
 		InstanceId:   ceb.id,
 	})
 	if err != nil {
