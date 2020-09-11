@@ -109,7 +109,7 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	if p.config.ContainerPort <= 1 {
+	if p.config.ContainerPort < 1 {
 		p.config.ContainerPort = 3000
 	}
 
