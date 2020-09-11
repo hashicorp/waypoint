@@ -368,19 +368,37 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       padding: scale.$sm-2 scale.$sm-1;
     }
 
+    .empty-state {
+      background: none;
+      border: none;
+    }
+
     .run-prompt {
+      position: relative;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       align-self: flex-end;
       width: 100%;
-      padding: scale.$sm-1 scale.$sm-2;
+      padding: scale.$sm-2 scale.$sm-2;
       background: color.$white;
       border-top: 1px solid color.$ui-cool-gray-100;
       position: sticky;
       bottom: 0;
       margin-top: auto;
 
-      .icon {
+      input.run-prompt-input {
+        padding: 0 0 scale.$sm-4 scale.$lg-3;
+        margin-right: scale.$sm-2;
+        line-height: 1.8;
+      }
+
+      .prompt-icon {
+        position: absolute;
+        left: scale.$sm-1;
+        top: scale.$sm-1;
+        width: 24px;
+        height: 24px;
+        pointer-events: none;
         color: color.$ui-cool-gray-600;
       }
     }
@@ -392,6 +410,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     justify-content: center;
     align-items: center;
     text-align: center;
+    flex-grow: 1;
     background: color.$ui-cool-gray-050;
     border: 1px solid color.$ui-cool-gray-100;
     border-radius: 2px;
@@ -409,8 +428,17 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
 
       code {
         font-size: 0.9em;
-        padding: scale.$sm-3 scale.$sm-2;
+      }
+
+      code.inline {
+        background: color.$ui-cool-gray-100;
+        padding: scale.$sm-4 scale.$sm-3;
+        border-radius: 2px;
+      }
+
+      code.cmd {
         margin: 0 scale.$sm-3;
+        padding: scale.$sm-3 scale.$sm-2;
       }
     }
   }
