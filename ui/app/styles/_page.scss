@@ -504,6 +504,17 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     text-decoration: none;
   }
 
+  .input-wrap {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: scale.$sm-2;
+
+    input {
+      margin-bottom: 0;
+      margin-right: scale.$sm-2;
+    }
+  }
+
   input {
     margin-bottom: scale.$sm-2;
   }

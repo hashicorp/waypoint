@@ -5,10 +5,12 @@
 {{#if hintIsVisible}}
 <div class="cli-hint">
   <p>You can share the following link with anyone you want to give access to this Waypoint instance</p>
-  <input type="text" value="{{this.hostname}}/auth/invite?token={{this.token}}" {{did-insert this.selectContents}} />
+  <div class="input-wrap">
+    <input type="text" value="{{this.hostname}}/auth/invite?token={{this.token}}" {{did-insert this.selectContents}} {{did-update this.selectContents this.token}} />
+    <button class="button button--secondary button--compact" {{action this.createToken }}>{{inline-svg "refresh-default" class="icon"}}</button>
+  </div>
   <small>To share a Waypoint instance the server must be run in a location that the users can access. <br />
     <a href="#">Read more in our documentation</a>
-    <button {{action this.createToken }}>Generate new invite</button>
   </small>
 </div>
 <div class="cli-hint-overlay" {{on "click" this.toggleHint}}></div>
