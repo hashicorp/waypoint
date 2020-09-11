@@ -6,11 +6,29 @@
   <PageHeader @iconName="git-repository">
     <div class="title">
       <h1>{{@model.application.application}}</h1>
-      <small>Application metadata</small>
+      <small>
+        {{#if @model.releases.length}}
+          {{#if (eq @model.releases.[0].status.state 2)}}
+            Last released {{date-format-distance-to-now @model.releases.[0].status.completeTime.seconds}}
+          {{else}}
+            Release in progress...
+          {{/if}}
+        {{else}}
+          Not released yet
+        {{/if}}
+      </small>
     </div>
     <div class="actions">
       {{#if @model.releases.length}}
         <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
+      {{else}}
+        {{#if (and @model.builds.length @model.deployments.length)}}
+          <p>To create your first release from your latest deployment, run:</p>
+          <code class="cmd">waypoint release</code>
+        {{else}}
+          <p>To create your first release, run the following to create a build, deployment and release:</p>
+          <code class="cmd">waypoint up</code>
+        {{/if}}
       {{/if}}
     </div>
   </PageHeader>

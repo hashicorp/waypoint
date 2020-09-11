@@ -1,7 +1,7 @@
 <PageHeader @iconName="folder-outline">
   <div class="title">
     <h1>{{@model.name}}</h1>
-    <small>Project metadata</small>
+    <small>{{pluralize @model.applicationsList.length "application"}}</small>
   </div>
 </PageHeader>
 
@@ -12,7 +12,6 @@
       <IconTile @icon="git-repository" @isSmall={{true}} />
       <div class="meta">
         <h2>{{app.name}}</h2>
-        <small>Application metadata</small>
       </div>
     </div>
   </LinkTo>

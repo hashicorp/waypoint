@@ -82,6 +82,8 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     .title {
       display: flex;
       flex-direction: column;
+      flex-shrink: 0;
+      padding-right: scale.$lg-2;
 
       &.projects-title {
         padding-top: scale.$lg-6;
@@ -123,10 +125,26 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     .actions {
       position: relative;
       display: flex;
+      align-items: center;
       margin-left: auto;
 
       button {
         margin-left: scale.$base;
+      }
+
+      p {
+        @include Typography.Interface(S);
+        color: color.$ui-cool-gray-500;
+        display: inline-block;
+
+        & + code {
+          font-size: 11px;
+          position: relative;
+          top: 1px;
+          margin-left: scale.$sm-2;
+          padding: scale.$sm-3 scale.$sm-2;
+          flex-shrink: 0;
+        }
       }
     }
   }
