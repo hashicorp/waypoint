@@ -1453,6 +1453,18 @@ message ListInstancesRequest {
   oneof scope {
     // List instances for a specific deployment.
     string deployment_id = 1;
+
+    // Find all instances for an application
+    Application application = 2;
+  }
+
+  message Application {
+    // Application to query. This must have both a project/app set.
+    Ref.Application application = 1;
+
+    // Workspace to filter by. If this isn't set, then all workspaces for
+    // the app are returned.
+    Ref.Workspace workspace = 2;
   }
 }
 
