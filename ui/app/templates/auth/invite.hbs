@@ -1,4 +1,4 @@
-<h1>Welcome to Waypoint</h1>
-<p>You've been invited to join an existing Waypoint instance</p>
+<h1>{{t 'invite_login.title'}}</h1>
+<p>{{if this.cli (t 'invite_login.cli_subtitle') (t 'invite_login.subtitle')}}</p>
 
 <LoginInvite @inviteToken={{this.token}} @cli={{this.cli}} />

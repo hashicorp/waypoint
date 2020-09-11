@@ -23,18 +23,31 @@ page:
   releases:
     title: 'Releases'
 
+auth:
+  title: 'Welcome to Waypoint'
+  subtitle: 'To get started, please authenticate'
+  button: 'Authenticate...'
+
 login:
-  input:
-    placeholder: 'Enter your token from the CLI'
-    label: 'Then enter the token below'
-  button: 'Authenticate with Token'
+  title: 'Authenticate Waypoint'
+  subtitle: 'To get started, authenticate with a token'
   instruction: 'Run this command in the CLI to generate a token'
+  input:
+    label: 'Then enter the token below'
+    placeholder: 'Enter your token from the CLI'
+  button: 'Authenticate with Token'
 
 invite_login:
+  title: 'Welcome to Waypoint'
+  subtitle: 'You’ve been invited to join an existing Waypoint instance'
+  cli_subtitle: 'Authenticating via CLI token'
   input:
-    placeholder: 'Get your invite token from your teammate'
     label: 'Enter your invite token'
+    cli_label: 'Your token'
+    placeholder: 'Get your invite token from your teammate'
+    cli_placeholder: 'Your token'
   button: 'Redeem Invite and Authenticate'
+  cli_button: 'Authenticate with Token'
 
 state:
   deployment:
