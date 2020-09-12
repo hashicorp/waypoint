@@ -4,8 +4,16 @@
     <span class="pds--visuallyHidden">{{t "product.name"}}</span>
   </LinkTo>
   <nav>
-    <a href="#" class="soon">Documentation</a>
+    <a href="#" class="soon">
+      {{inline-svg "docs" class="icon"}}
+      Documentation
+    </a>
     <Actions::Invite />
+    <hr />
+    <button class="logout soon">
+      {{inline-svg "logout" class="icon"}}
+      Logout
+    </button>
   </nav>
 </header>
 
