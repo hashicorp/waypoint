@@ -10,7 +10,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
+func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool) error {
 	log := ceb.logger.Named("config")
 
 	// Open our log stream
@@ -18,8 +18,18 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
 	client, err := ceb.client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
 		DeploymentId: ceb.deploymentId,
 		InstanceId:   ceb.id,
-	}, grpc.WaitForReady(true))
+	}, grpc.WaitForReady(isRetry))
 	if err != nil {
+		// If the server is unavailable and this is our first time, then
+		// we just start this up in the background in retry mode and allow
+		// the startup to continue so we don't block the child process starting.
+		if status.Code(err) == codes.Unavailable {
+			log.Error("error connecting to Waypoint server, will retry but startup " +
+				"child command without initial settings")
+			go ceb.initConfigStream(ctx, cfg, true)
+			return nil
+		}
+
 		return err
 	}
 	ceb.cleanup(func() { client.CloseSend() })
@@ -56,7 +66,7 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
 
 	// Start the goroutine that waits for all other configs
 	go ceb.recvConfig(ctx, client, ch, func() error {
-		return ceb.initConfigStream(ctx, cfg)
+		return ceb.initConfigStream(ctx, cfg, true)
 	})
 
 	return nil
