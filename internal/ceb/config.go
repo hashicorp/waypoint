@@ -18,7 +18,7 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool)
 	client, err := ceb.client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
 		DeploymentId: ceb.deploymentId,
 		InstanceId:   ceb.id,
-	}, grpc.WaitForReady(isRetry))
+	}, grpc.WaitForReady(isRetry || cfg.ServerRequired))
 	if err != nil {
 		// If the server is unavailable and this is our first time, then
 		// we just start this up in the background in retry mode and allow

@@ -149,6 +149,71 @@ func TestRun_serverDown(t *testing.T) {
 	}, 5*time.Second, 10*time.Millisecond)
 }
 
+func TestRun_serverDownRequired(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Start up the server
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := server.TestServer(t, impl,
+		server.TestWithContext(ctx),
+		server.TestWithRestart(restartCh),
+	)
+
+	// Create a deployment
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, nil),
+	})
+	require.NoError(err)
+	dep := resp.Deployment
+
+	// But actually shut it down
+	cancel()
+
+	// Wait to get an unavailable error so we know the server is down
+	require.Eventually(func() bool {
+		_, err := client.ListInstances(context.Background(), &pb.ListInstancesRequest{
+			Scope: &pb.ListInstancesRequest_DeploymentId{
+				DeploymentId: "doesn't matter",
+			},
+		})
+		return status.Code(err) == codes.Unavailable
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Create a temporary directory for our test
+	td, err := ioutil.TempDir("", "test")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+	path := filepath.Join(td, "hello")
+
+	// Start the CEB
+	testRun(t, context.Background(), &testRunOpts{
+		Client:       client,
+		DeploymentId: dep.Id,
+		Helper:       "write-file",
+		HelperEnv: map[string]string{
+			envServerRequired: "1",
+			"HELPER_PATH":     path,
+		},
+	})
+
+	// The child should NOT start up
+	time.Sleep(1 * time.Second)
+	_, err = ioutil.ReadFile(path)
+	require.Error(err)
+
+	// Restart
+	restartCh <- struct{}{}
+
+	// The child should start up
+	require.Eventually(func() bool {
+		_, err := ioutil.ReadFile(path)
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+}
+
 var (
 	testExec      = os.Args[0]
 	envHelperMode = "TEST_HELPER_MODE"
