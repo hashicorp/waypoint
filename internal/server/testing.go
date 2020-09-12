@@ -74,7 +74,7 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 	}
 
 	// Connect, this should retry in the case Run is not going yet
-	conn, err := grpc.DialContext(c.ctx, ln.Addr().String(),
+	conn, err := grpc.DialContext(context.Background(), ln.Addr().String(),
 		grpc.WithBlock(),
 		grpc.WithInsecure(),
 	)
