@@ -2,6 +2,7 @@ package ceb
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -89,6 +90,12 @@ func TestMain(m *testing.M) {
 
 	case "sleep":
 		time.Sleep(10 * time.Minute)
+
+	case "logs-stdout":
+		for {
+			time.Sleep(250 * time.Millisecond)
+			fmt.Println(time.Now().String())
+		}
 
 	default:
 		panic("invalid helperfunc")
