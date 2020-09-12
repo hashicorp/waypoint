@@ -3,6 +3,10 @@ package ceb
 import (
 	"context"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -14,7 +18,7 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
 	client, err := ceb.client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
 		DeploymentId: ceb.deploymentId,
 		InstanceId:   ceb.id,
-	})
+	}, grpc.WaitForReady(true))
 	if err != nil {
 		return err
 	}
@@ -51,7 +55,9 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
 	ch <- resp.Config
 
 	// Start the goroutine that waits for all other configs
-	go ceb.recvConfig(ctx, client, ch)
+	go ceb.recvConfig(ctx, client, ch, func() error {
+		return ceb.initConfigStream(ctx, cfg)
+	})
 
 	return nil
 }
@@ -71,6 +77,7 @@ func (ceb *CEB) recvConfig(
 	ctx context.Context,
 	client pb.Waypoint_EntrypointConfigClient,
 	ch chan<- *pb.EntrypointConfig,
+	reconnect func() error,
 ) {
 	log := ceb.logger.Named("config_recv")
 	defer log.Trace("exiting receive goroutine")
@@ -85,8 +92,22 @@ func (ceb *CEB) recvConfig(
 		// Wait for the next configuration
 		resp, err := client.Recv()
 		if err != nil {
-			log.Error("error receiving configuration, exiting", "err", err)
-			return
+			// If we get the unavailable error then the connection died.
+			// We restablish the connection.
+			if status.Code(err) == codes.Unavailable {
+				log.Error("ceb disconnected from server, attempting reconnect")
+				err = reconnect()
+
+				// If we successfully reconnected, then exit this.
+				if err == nil {
+					return
+				}
+			}
+
+			if err != nil {
+				log.Error("error receiving configuration, exiting", "err", err)
+				return
+			}
 		}
 
 		log.Info("new configuration received")

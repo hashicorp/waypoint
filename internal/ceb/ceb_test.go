@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
+
+	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
@@ -17,8 +20,16 @@ func TestRun(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	client := singleprocess.TestServer(t)
-	ceb := testRun(t, ctx, &testRunOpts{Client: client})
+	// Start up the server
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := server.TestServer(t, impl,
+		server.TestWithContext(ctx),
+		server.TestWithRestart(restartCh),
+	)
+
+	// Start the CEB
+	ceb := testRun(t, context.Background(), &testRunOpts{Client: client})
 
 	// We should get registered
 	require.Eventually(func() bool {
@@ -30,6 +41,36 @@ func TestRun(t *testing.T) {
 		require.NoError(err)
 		return len(resp.Instances) == 1
 	}, 2*time.Second, 10*time.Millisecond)
+
+	// Shut down the server
+	cancel()
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	// We should get deregistered
+	require.Eventually(func() bool {
+		resp, err := impl.ListInstances(ctx, &pb.ListInstancesRequest{
+			Scope: &pb.ListInstancesRequest_DeploymentId{
+				DeploymentId: ceb.DeploymentId(),
+			},
+		})
+		require.NoError(err)
+		return len(resp.Instances) == 0
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Restart
+	restartCh <- struct{}{}
+
+	// We should get re-registered
+	require.Eventually(func() bool {
+		resp, err := impl.ListInstances(ctx, &pb.ListInstancesRequest{
+			Scope: &pb.ListInstancesRequest_DeploymentId{
+				DeploymentId: ceb.DeploymentId(),
+			},
+		})
+		require.NoError(err)
+		return len(resp.Instances) == 1
+	}, 5*time.Second, 10*time.Millisecond)
 }
 
 var (
@@ -40,6 +81,9 @@ var (
 func TestMain(m *testing.M) {
 	switch os.Getenv(envHelperMode) {
 	case "":
+		// Log
+		hclog.L().SetLevel(hclog.Trace)
+
 		// Normal test mode
 		os.Exit(m.Run())
 
