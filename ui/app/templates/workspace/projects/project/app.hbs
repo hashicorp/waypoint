@@ -22,21 +22,27 @@
       {{#if @model.releases.length}}
         <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
       {{else}}
-        {{#if (and @model.builds.length @model.deployments.length)}}
-          <p>To create your first release from your latest deployment, run:</p>
-          <code class="cmd">waypoint release</code>
-        {{else}}
-          <p>To create your first release, run the following to create a build, deployment and release:</p>
-          <code class="cmd">waypoint up</code>
-        {{/if}}
+        <div class="first-run-hint">
+          {{#if (and @model.builds.length @model.deployments.length)}}
+            <p>To create your first release from your latest deployment, run:</p>
+            <code class="cmd">waypoint release</code>
+          {{else}}
+            <p>To create your first release, run the following to create a build, deployment and release:</p>
+            <code class="cmd">waypoint up</code>
+          {{/if}}
+        </div>
       {{/if}}
     </div>
   </PageHeader>
 
   <div class="cards app-latest">
-    <AppMetaCardBuilds @builds={{@model.builds}}></AppMetaCardBuilds>
-    <AppMetaCardDeployments @deployments={{@model.deployments}}></AppMetaCardDeployments>
-    <AppMetaCardReleases @releases={{@model.releases}}></AppMetaCardReleases>
+    <div class="cards-wrap">
+      <div class="cards-inner">
+        <AppMetaCardBuilds @builds={{@model.builds}}></AppMetaCardBuilds>
+        <AppMetaCardDeployments @deployments={{@model.deployments}}></AppMetaCardDeployments>
+        <AppMetaCardReleases @releases={{@model.releases}}></AppMetaCardReleases>
+      </div>
+    </div>
   </div>
 
   <nav>

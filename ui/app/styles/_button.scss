@@ -9,6 +9,7 @@ a[href].button {
   border-radius: 2px;
   text-decoration: none;
   background: color.$white;
+  white-space: nowrap;
   cursor: pointer;
 
   &--compact {
