@@ -109,6 +109,10 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	if p.config.ContainerPort == 0 {
+		p.config.ContainerPort = 3000
+	}
+
 	// Build our env vars
 	env := []corev1.EnvVar{
 		{
@@ -139,9 +143,7 @@ func (p *Platform) Deploy(
 	}
 	
 
-	if p.config.ContainerPort == 0 {
-		p.config.ContainerPort = 3000
-	} 
+ 
 
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
