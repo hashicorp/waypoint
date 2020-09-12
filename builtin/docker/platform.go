@@ -79,7 +79,7 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	if p.config.ContainerPort < 1 {
+	if p.config.ContainerPort == 0 {
 		p.config.ContainerPort = 3000
 	}
 
@@ -250,7 +250,7 @@ type PlatformConfig struct {
 	// Defaults to port 3000. 
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port. 
-	ContainerPort int `hcl:"container_port,optional"`
+	ContainerPort uint `hcl:"container_port,optional"`
 }
 
 var (

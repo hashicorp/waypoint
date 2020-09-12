@@ -85,7 +85,7 @@ func (p *Platform) Deploy(
 	}
 	jobclient := client.Jobs()
 
-	if p.config.ContainerPort < 1 {
+	if p.config.ContainerPort == 0 {
 		p.config.ContainerPort = 3000
 	}
 
@@ -101,7 +101,7 @@ func (p *Platform) Deploy(
 				DynamicPorts: []api.Port{
 					{
 						Label: "waypoint",
-						To:    p.config.ContainerPort,
+						To:    int(p.config.ContainerPort),
 					},
 				},
 			},
@@ -115,10 +115,6 @@ func (p *Platform) Deploy(
 	}
 	if err != nil {
 		return nil, err
-	}
-
-	if p.config.ContainerPort < 1 {
-		p.config.ContainerPort = 3000
 	}
 
 	// Build our env vars
@@ -217,7 +213,7 @@ type Config struct {
 	// Defaults to port 3000. 
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port. 
-	ContainerPort int `hcl:"container_port,optional"`
+	ContainerPort uint `hcl:"container_port,optional"`
 }
 
 var (

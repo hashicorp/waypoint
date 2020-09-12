@@ -109,10 +109,6 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	if p.config.ContainerPort < 1 {
-		p.config.ContainerPort = 3000
-	}
-
 	// Build our env vars
 	env := []corev1.EnvVar{
 		{
@@ -141,6 +137,11 @@ func (p *Platform) Deploy(
 	if p.config.Count > 0 {
 		deployment.Spec.Replicas = &p.config.Count
 	}
+	
+
+	if p.config.ContainerPort == 0 {
+		p.config.ContainerPort = 3000
+	} 
 
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
@@ -169,7 +170,7 @@ func (p *Platform) Deploy(
 				LivenessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(p.config.ContainerPort),
+							Port: intstr.FromInt(int(p.config.ContainerPort)),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -179,7 +180,7 @@ func (p *Platform) Deploy(
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(p.config.ContainerPort),
+							Port: intstr.FromInt(int(p.config.ContainerPort)),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -196,7 +197,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(p.config.ContainerPort),
+					Port: intstr.FromInt(int(p.config.ContainerPort)),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -208,7 +209,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(p.config.ContainerPort),
+					Port: intstr.FromInt(int(p.config.ContainerPort)),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -360,7 +361,7 @@ type Config struct {
 	// Defaults to port 3000. 
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port. 
-	ContainerPort int `hcl:"container_port,optional"`
+	ContainerPort uint `hcl:"container_port,optional"`
 }
 
 var (
