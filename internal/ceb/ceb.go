@@ -97,7 +97,7 @@ func Run(ctx context.Context, os ...Option) error {
 
 	if ceb.client != nil {
 		// Get our configuration and start the long-running stream for it.
-		if err := ceb.initConfigStream(ctx, &cfg); err != nil {
+		if err := ceb.initConfigStream(ctx, &cfg, false); err != nil {
 			return err
 		}
 

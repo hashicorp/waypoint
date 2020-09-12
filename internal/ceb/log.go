@@ -62,10 +62,9 @@ func (ceb *CEB) initLogStream(ctx context.Context, cfg *config) error {
 		}
 	}()
 
-	// Start up our server stream
-	if err := ceb.initLogStreamSender(log, ctx, entryCh); err != nil {
-		return err
-	}
+	// Start up our server stream. We do this in a goroutine cause we don't
+	// want to block the child command startup on it.
+	go ceb.initLogStreamSender(log, ctx, entryCh)
 
 	return nil
 }
