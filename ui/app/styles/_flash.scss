@@ -1,0 +1,20 @@
+.flash {
+  display: flex;
+  align-items: center;
+  @include Typography.Interface(M);
+
+  .icon {
+    width: scale.$lg-1;
+    height: scale.$lg-1;
+    margin-right: scale.$sm-2;
+  }
+
+  &--success {
+    color: color.$green-600;
+    background: color.$green-050;
+    margin-bottom: scale.$lg-2;
+    padding: scale.$sm-1;
+    border-radius: 2px;
+    border: 1px solid color.$green-100;
+  }
+}
