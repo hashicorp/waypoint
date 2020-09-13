@@ -65,6 +65,11 @@ func (a *App) doOperation(
 	// Initialize our labels
 	msgUpdateLabels(a, op.Labels(a), msg, nil)
 
+	// Setup our job id if we have that field.
+	if f := msgField(msg, "JobId"); f.IsValid() {
+		f.Set(reflect.ValueOf(a.jobInfo.Id))
+	}
+
 	// If we have no status pointer, then we just allocate one for this
 	// function. We don't send this anywhere but this just lets us follow
 	// the remaining logic without a bunch of nil checks.

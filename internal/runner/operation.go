@@ -52,6 +52,7 @@ func (r *Runner) executeJob(
 
 	// Build our job info
 	jobInfo := &component.JobInfo{
+		Id:    job.Id,
 		Local: r.local,
 	}
 
