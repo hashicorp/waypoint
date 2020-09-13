@@ -5,7 +5,6 @@
       <code>{{@build.id}}</code>
     </p>
     <small>
-      {{inline-svg "source-file" class="icon"}}
       <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
         <b>{{titleize @build.component.name}}</b>
         {{#if (eq @build.status.state 1)}}

@@ -57,7 +57,7 @@
       <li>
         <LinkTo @route="workspace.projects.project.app.builds"
           @models={{array @model.application.project @model.application.application }}>
-          {{inline-svg "source-file" class="icon"}}
+          {{inline-svg "build" class="icon"}}
           {{t "nav.builds"}}
         </LinkTo>
       </li>
@@ -78,7 +78,7 @@
       <li>
         <LinkTo @route="workspace.projects.project.app.exec"
           @models={{array @model.application.project @model.application.application }}>
-          {{inline-svg "bolt" class="icon"}}
+          {{inline-svg "exec" class="icon"}}
           {{t "nav.exec"}}
         </LinkTo>
       </li>
