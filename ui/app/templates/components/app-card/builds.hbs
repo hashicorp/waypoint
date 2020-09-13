@@ -10,19 +10,17 @@
       </LinkTo>
     </Card::Header>
 
-    <AppMetaItem::LatestBuild @model={{@builds.[0] }} />
+    <AppCard::Build @model={{@builds.[0]}} @isLatest="true" />
 
     {{#if (gt @builds.length '1')}}
-      <div class="app-meta-item">
-        <ul class="app-meta-item-info">
-          {{#if @builds.[1]}}
-            <AppMetaItem::Build @model={{@builds.[1]}} />
-          {{/if}}
-          {{#if @builds.[2]}}
-            <AppMetaItem::Build @model={{@builds.[2]}} />
-          {{/if}}
-        </ul>
-      </div>
+      <ul class="app-card-items">
+        {{#if @builds.[1]}}
+          <AppCard::Build @model={{@builds.[1]}} />
+        {{/if}}
+        {{#if @builds.[2]}}
+          <AppCard::Build @model={{@builds.[2]}} />
+        {{/if}}
+      </ul>
     {{/if}}
   {{else}}
     <p>

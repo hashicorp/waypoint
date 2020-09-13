@@ -11,8 +11,8 @@ $inset-box-shadow: inset 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.2),
 $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1), 0 0 0 3px rgba(color.$blue-500, 0.2);
 
+@import './_app-card';
 @import './_app-item';
-@import './_app-meta-item';
 @import './_badge';
 @import './_breadcrumbs';
 @import './_button';
@@ -31,7 +31,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   width: 100vw;
   max-width: 1600px;
   margin: 0 auto;
-  padding: scale.$lg-3 scale.$lg-4 scale.$lg-6;
+  padding: scale.$lg-3 scale.$lg-4 scale.$lg-5;
 
   &::before {
     content: '';
@@ -231,12 +231,15 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   }
 
   ul.list {
+
     li {
-      margin-bottom: scale.$base;
       padding-bottom: scale.$base;
+      margin-bottom: scale.$base;
       border-bottom: 1px solid color.$ui-cool-gray-200;
 
       &:last-child {
+        padding-bottom: 0;
+        margin-bottom: 0;
         border: none;
       }
     }
@@ -246,41 +249,21 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     position: relative;
     margin: (-(scale.$lg-2)) (-(scale.$lg-2)) 0;
 
-    .cards-wrap::-webkit-scrollbar {
-      height: scale.$sm-3;
-    }
-
-    .cards-wrap::-webkit-scrollbar-track {
-      background: color.$ui-cool-gray-100;
-      border-radius: scale.$sm-3;
-    }
-
-    .cards-wrap::-webkit-scrollbar-thumb {
-      background: color.$ui-cool-gray-300;
-      border-radius: scale.$sm-3;
-    }
-
-    .cards-wrap::-webkit-scrollbar-button {
-      width: scale.$sm-1;
-    }
-
-    &::before {
+    &::before, &::after {
       content: '';
       position: absolute;
-      left: -#{scale.$sm-2};
       top: 0;
       bottom: 0;
       width: scale.$lg-3;
+    }
+
+    &::before {
+      left: -#{scale.$sm-2};
       background: linear-gradient(to right, #fff, #fff, rgba(#fff, 0));
     }
 
     &::after {
-      content: '';
-      position: absolute;
       right: -#{scale.$sm-2};
-      top: 0;
-      bottom: 0;
-      width: scale.$lg-3;
       background: linear-gradient(to left, #fff, #fff, rgba(#fff, 0));
     }
 
@@ -290,7 +273,25 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       padding: scale.$lg-2 scale.$lg-2 0;
       margin-bottom: scale.$sm-2;
       scrollbar-width: thin;
-      scrollbar-color: #000 #999;
+      scrollbar-color: color.$ui-cool-gray-300 color.$ui-cool-gray-100;
+
+      &::-webkit-scrollbar {
+        height: scale.$sm-3;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: color.$ui-cool-gray-100;
+        border-radius: scale.$sm-3;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: color.$ui-cool-gray-300;
+        border-radius: scale.$sm-3;
+      }
+
+      &::-webkit-scrollbar-button {
+        width: scale.$sm-1;
+      }
     }
 
     .cards-inner {
@@ -343,6 +344,9 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     &-header {
       display: flex;
       align-items: center;
+      padding-bottom: scale.$sm-1;
+      margin-bottom: scale.$sm-1;
+      border-bottom: 1px solid color.$ui-cool-gray-100;
 
       h4 {
         display: flex;
@@ -410,14 +414,6 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       color: color.$ui-cool-gray-600;
       @include Typography.Interface(S);
       padding: scale.$sm-3 0 scale.$sm-2;
-    }
-  }
-
-  .app-latest {
-    .app-meta-item {
-      padding-top: scale.$sm-1;
-      margin-top: scale.$sm-1;
-      border-top: 1px solid color.$ui-cool-gray-100;
     }
   }
 
