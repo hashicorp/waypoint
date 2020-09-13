@@ -1,6 +1,8 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
+import { later } from '@ember/runloop';
+
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { InviteTokenRequest } from 'waypoint-pb';
@@ -12,6 +14,7 @@ export default class ActionsInvite extends Component {
 
   @tracked token = '';
   @tracked hintIsVisible = false;
+  @tracked copySuccess = false;
 
   constructor(owner: any, args: any) {
     super(owner, args);
@@ -23,6 +26,15 @@ export default class ActionsInvite extends Component {
   selectContents(element: any) {
     element.focus();
     element.select();
+  }
+
+  @action
+  onSuccess() {
+    this.copySuccess = true;
+
+    later(() => {
+      this.copySuccess = false;
+    }, 2000);
   }
 
   @action

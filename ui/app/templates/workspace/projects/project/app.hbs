@@ -25,10 +25,14 @@
         <div class="first-run-hint">
           {{#if (and @model.builds.length @model.deployments.length)}}
             <p>To create your first release from your latest deployment, run:</p>
-            <code class="cmd">waypoint release</code>
+            <CopyableCode @ref="hint-release" @inline="true">
+              <code id="hint-release">waypoint release</code>
+            </CopyableCode>
           {{else}}
             <p>To create your first release, run the following to create a build, deployment and release:</p>
-            <code class="cmd">waypoint up</code>
+            <CopyableCode @ref="hint-release" @inline="true">
+              <code id="hint-release">waypoint release</code>
+            </CopyableCode>
           {{/if}}
         </div>
       {{/if}}

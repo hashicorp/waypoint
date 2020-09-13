@@ -26,10 +26,10 @@
       text-decoration: none;
     }
 
-    .icon {
+    .nav-icon {
       margin-right: scale.$sm-3;
-      width: 16px;
-      height: 16px;
+      width: scale.$base;
+      height: scale.$base;
     }
 
     .invite-link {
@@ -44,6 +44,7 @@
 
         a {
           color: color.$blue-500;
+          display: inline;
         }
       }
     }

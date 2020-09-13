@@ -1,11 +1,17 @@
 <p>Install <code>yum-config-manager</code> to manage your repositories.</p>
 
-<pre><code class="cmd">sudo yum install -y yum-utils</code></pre>
+<CopyableCode @ref="amazon-yum-install-utils">
+  <pre><code id="amazon-yum-install-utils">sudo yum install -y yum-utils</code></pre>
+</CopyableCode>
 
 <p>Use <code>yum-config-manager</code> to add the official HashiCorp Linux repository.</p>
 
-<pre><code class="cmd">sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo</code></pre>
+<CopyableCode @ref="amazon-yum-config">
+  <pre><code id="amazon-yum-config">sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo</code></pre>
+</CopyableCode>
 
 <p>Install.</p>
 
-<pre><code class="cmd">sudo yum -y install waypoint</code></pre>
+<CopyableCode @ref="amazon-yum-install">
+  <pre><code id="amazon-yum-install">sudo yum -y install waypoint</code></pre>
+</CopyableCode>

@@ -41,16 +41,13 @@
       margin-bottom: scale.$lg-2;
     }
 
-    pre code {
-      display: block;
-      width: 100%;
-    }
-
-    code.cmd {
-      padding: scale.$sm-1;
+    .copyable-code.block {
+      margin-bottom: scale.$lg-2;
     }
 
     code.output {
+      display: block;
+      width: 100%;
       color: color.$ui-gray-800;
       background: color.$ui-gray-050;
       padding: scale.$sm-1;

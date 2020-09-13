@@ -16,6 +16,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
 @import './_badge';
 @import './_breadcrumbs';
 @import './_button';
+@import './_code';
 @import './_flash';
 @import './_input';
 @import './_icon-tile';
@@ -155,14 +156,14 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
           margin-right: scale.$sm-2;
         }
 
-        code {
-          display: inline-flex;
-          font-size: 11px;
-          position: relative;
-          top: -1px;
+        .copyable-code {
           margin: scale.$sm-2 0;
-          padding: scale.$sm-3 scale.$sm-2;
-          flex-shrink: 0;
+
+          code {
+            display: inline-flex;
+            font-size: 11px;
+            flex-shrink: 0;
+          }
         }
       }
     }
@@ -534,32 +535,19 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
         color: color.$ui-cool-gray-600;
       }
 
-      code {
-        font-size: 0.9em;
-        padding: scale.$sm-4 scale.$sm-3;
+      .copyable-code {
+        margin: 0 scale.$sm-4;
+
+        code {
+          font-size: 0.95em;
+        }
       }
 
       code.inline {
+        padding: scale.$sm-4 scale.$sm-3;
         background: color.$ui-cool-gray-100;
         border-radius: 2px;
       }
-
-      code.cmd {
-        margin: 0 scale.$sm-3;
-      }
-    }
-  }
-
-  code.cmd {
-    color: color.$white;
-    background: color.$ui-gray-800;
-    padding: scale.$sm-2 scale.$sm-2;
-    border-radius: 2px;
-
-    &::before {
-      content: '$';
-      opacity: 0.5;
-      margin-right: scale.$sm-2;
     }
   }
 
@@ -616,7 +604,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   top: 100%;
   right: 0;
   margin-top: scale.$sm-2;
-  width: 400px;
+  width: 410px;
   color: color.$ui-cool-gray-600;
   background: color.$white;
   box-shadow: $elevated-box-shadow;
@@ -627,16 +615,15 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   p {
     @include Typography.Interface(M);
     font-weight: normal;
-    margin-bottom: scale.$sm-1;
-  }
-
-  code {
-    display: block;
     margin-bottom: scale.$sm-2;
   }
 
   a {
     text-decoration: none;
+  }
+
+  .copyable-code {
+    margin-bottom: scale.$sm-3;
   }
 
   .input-wrap {
@@ -646,7 +633,10 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
 
     input {
       margin-bottom: 0;
-      margin-right: scale.$sm-2;
+    }
+
+    .button {
+      margin-left: scale.$sm-2;
     }
   }
 

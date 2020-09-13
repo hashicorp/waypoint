@@ -1,5 +1,5 @@
 <span class="invite-link" {{on "click" this.toggleHint}}>
-  {{inline-svg "plus-circle-outline" class="icon"}}
+  {{inline-svg "plus-circle-outline" class="nav-icon"}}
   Invite
 </span>
 
@@ -7,7 +7,14 @@
 <div class="cli-hint">
   <p>You can share the following link with anyone you want to give access to this Waypoint instance</p>
   <div class="input-wrap">
-    <input type="text" value="{{this.hostname}}/auth/invite?token={{this.token}}" {{did-insert this.selectContents}} {{did-update this.selectContents this.token}} />
+    <input type="text" id="invite-token" value="{{this.hostname}}/auth/invite?token={{this.token}}" {{did-insert this.selectContents}} {{did-update this.selectContents this.token}} />
+    <CopyButton
+      class="button button--secondary button--compact"
+      @clipboardTarget="#invite-token"
+      @success={{this.onSuccess}}
+    >
+      {{inline-svg (if copySuccess 'copy-success' 'copy-action') class="icon"}}
+    </CopyButton>
     <button class="button button--secondary button--compact" {{action this.createToken }}>{{inline-svg "refresh-default" class="icon"}}</button>
   </div>
   <small>To share a Waypoint instance the server must be run in a location that the users can access. <br />
