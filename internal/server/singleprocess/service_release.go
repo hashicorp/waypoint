@@ -52,6 +52,12 @@ func (s *service) ListReleases(
 		return nil, err
 	}
 
+	for _, r := range result {
+		if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
+			return nil, err
+		}
+	}
+
 	return &pb.ListReleasesResponse{Releases: result}, nil
 }
 
@@ -60,7 +66,16 @@ func (s *service) GetLatestRelease(
 	ctx context.Context,
 	req *pb.GetLatestReleaseRequest,
 ) (*pb.Release, error) {
-	return s.state.ReleaseLatest(req.Application, req.Workspace)
+	r, err := s.state.ReleaseLatest(req.Application, req.Workspace)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }
 
 // GetRelease returns a Release based on ID
@@ -68,5 +83,61 @@ func (s *service) GetRelease(
 	ctx context.Context,
 	req *pb.GetReleaseRequest,
 ) (*pb.Release, error) {
-	return s.state.ReleaseGet(req.Ref)
+	r, err := s.state.ReleaseGet(req.Ref)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func (s *service) releasePreloadDetails(
+	ctx context.Context,
+	req pb.Release_LoadDetails,
+	d *pb.Release,
+) error {
+	if req <= pb.Release_NONE {
+		return nil
+	}
+
+	pd, err := s.state.DeploymentGet(&pb.Ref_Operation{
+		Target: &pb.Ref_Operation_Id{
+			Id: d.DeploymentId,
+		},
+	})
+	if err != nil {
+		return err
+	}
+	d.Preload.Deployment = pd
+
+	if req > pb.Release_DEPLOYMENT {
+		pa, err := s.state.ArtifactGet(&pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: pd.ArtifactId,
+			},
+		})
+		if err != nil {
+			return err
+		}
+		d.Preload.Artifact = pa
+
+		if req > pb.Release_ARTIFACT {
+			build, err := s.state.BuildGet(&pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: pa.BuildId,
+				},
+			})
+			if err != nil {
+				return err
+			}
+
+			d.Preload.Build = build
+		}
+	}
+
+	return nil
 }

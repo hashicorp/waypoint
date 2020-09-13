@@ -225,9 +225,9 @@ func TestServiceDeployment_ListDeployments(t *testing.T) {
 		require.NoError(err)
 		require.NotEmpty(deployments)
 		require.Equal(deployments.Deployments[0].Id, resp.Deployment.Id)
-		require.NotNil(deployments.Deployments[0].Artifact)
-		require.Nil(deployments.Deployments[0].Build)
-		require.Equal(deployments.Deployments[0].Artifact.Id, artifactresp.Artifact.Id)
+		require.NotNil(deployments.Deployments[0].Preload.Artifact)
+		require.Nil(deployments.Deployments[0].Preload.Build)
+		require.Equal(deployments.Deployments[0].Preload.Artifact.Id, artifactresp.Artifact.Id)
 	})
 
 	t.Run("list with build", func(t *testing.T) {
@@ -241,9 +241,9 @@ func TestServiceDeployment_ListDeployments(t *testing.T) {
 		require.NoError(err)
 		require.NotEmpty(deployments)
 		require.Equal(deployments.Deployments[0].Id, resp.Deployment.Id)
-		require.NotNil(deployments.Deployments[0].Artifact)
-		require.NotNil(deployments.Deployments[0].Build)
-		require.Equal(deployments.Deployments[0].Artifact.Id, artifactresp.Artifact.Id)
-		require.Equal(deployments.Deployments[0].Build.Id, build.Id)
+		require.NotNil(deployments.Deployments[0].Preload.Artifact)
+		require.NotNil(deployments.Deployments[0].Preload.Build)
+		require.Equal(deployments.Deployments[0].Preload.Artifact.Id, artifactresp.Artifact.Id)
+		require.Equal(deployments.Deployments[0].Preload.Build.Id, build.Id)
 	})
 }

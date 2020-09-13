@@ -403,6 +403,58 @@ func (Deployment_LoadDetails) EnumDescriptor() ([]byte, []int) {
 	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{67, 0}
 }
 
+type Release_LoadDetails int32
+
+const (
+	Release_NONE       Release_LoadDetails = 0
+	Release_DEPLOYMENT Release_LoadDetails = 1
+	Release_ARTIFACT   Release_LoadDetails = 2
+	Release_BUILD      Release_LoadDetails = 3
+)
+
+// Enum value maps for Release_LoadDetails.
+var (
+	Release_LoadDetails_name = map[int32]string{
+		0: "NONE",
+		1: "DEPLOYMENT",
+		2: "ARTIFACT",
+		3: "BUILD",
+	}
+	Release_LoadDetails_value = map[string]int32{
+		"NONE":       0,
+		"DEPLOYMENT": 1,
+		"ARTIFACT":   2,
+		"BUILD":      3,
+	}
+)
+
+func (x Release_LoadDetails) Enum() *Release_LoadDetails {
+	p := new(Release_LoadDetails)
+	*p = x
+	return p
+}
+
+func (x Release_LoadDetails) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Release_LoadDetails) Descriptor() protoreflect.EnumDescriptor {
+	return file_internal_server_proto_server_proto_enumTypes[7].Descriptor()
+}
+
+func (Release_LoadDetails) Type() protoreflect.EnumType {
+	return &file_internal_server_proto_server_proto_enumTypes[7]
+}
+
+func (x Release_LoadDetails) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Release_LoadDetails.Descriptor instead.
+func (Release_LoadDetails) EnumDescriptor() ([]byte, []int) {
+	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{74, 0}
+}
+
 type ExecStreamResponse_Output_Channel int32
 
 const (
@@ -436,11 +488,11 @@ func (x ExecStreamResponse_Output_Channel) String() string {
 }
 
 func (ExecStreamResponse_Output_Channel) Descriptor() protoreflect.EnumDescriptor {
-	return file_internal_server_proto_server_proto_enumTypes[7].Descriptor()
+	return file_internal_server_proto_server_proto_enumTypes[8].Descriptor()
 }
 
 func (ExecStreamResponse_Output_Channel) Type() protoreflect.EnumType {
-	return &file_internal_server_proto_server_proto_enumTypes[7]
+	return &file_internal_server_proto_server_proto_enumTypes[8]
 }
 
 func (x ExecStreamResponse_Output_Channel) Number() protoreflect.EnumNumber {
@@ -485,11 +537,11 @@ func (x EntrypointExecRequest_Output_Channel) String() string {
 }
 
 func (EntrypointExecRequest_Output_Channel) Descriptor() protoreflect.EnumDescriptor {
-	return file_internal_server_proto_server_proto_enumTypes[8].Descriptor()
+	return file_internal_server_proto_server_proto_enumTypes[9].Descriptor()
 }
 
 func (EntrypointExecRequest_Output_Channel) Type() protoreflect.EnumType {
-	return &file_internal_server_proto_server_proto_enumTypes[8]
+	return &file_internal_server_proto_server_proto_enumTypes[9]
 }
 
 func (x EntrypointExecRequest_Output_Channel) Number() protoreflect.EnumNumber {
@@ -4471,6 +4523,9 @@ type GetDeploymentRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	Ref *Ref_Operation `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
+	// Inidicate of the fetched deployments should include additional information
+	// about each deployment.
+	LoadDetails Deployment_LoadDetails `protobuf:"varint,2,opt,name=load_details,json=loadDetails,proto3,enum=hashicorp.waypoint.Deployment_LoadDetails" json:"load_details,omitempty"`
 }
 
 func (x *GetDeploymentRequest) Reset() {
@@ -4510,6 +4565,13 @@ func (x *GetDeploymentRequest) GetRef() *Ref_Operation {
 		return x.Ref
 	}
 	return nil
+}
+
+func (x *GetDeploymentRequest) GetLoadDetails() Deployment_LoadDetails {
+	if x != nil {
+		return x.LoadDetails
+	}
+	return Deployment_NONE
 }
 
 type UpsertDeploymentRequest struct {
@@ -4801,11 +4863,11 @@ type Deployment struct {
 	Deployment *any.Any `protobuf:"bytes,6,opt,name=deployment,proto3" json:"deployment,omitempty"`
 	// labels are the set of labels that are present on this build.
 	Labels map[string]string `protobuf:"bytes,7,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// Populated when a Deployment is read with LoadDetails set
-	// to ARTIFACT or BUILD
-	Artifact *PushedArtifact `protobuf:"bytes,11,opt,name=artifact,proto3" json:"artifact,omitempty"`
-	// Populated when a Deployment is read with LoadDetails set to BUILD
-	Build *Build `protobuf:"bytes,12,opt,name=build,proto3" json:"build,omitempty"`
+	// This is the populated preload data. Most of this data can be retrieved
+	// through additional API calls or manually computed, but certain API
+	// calls will pre-populate some of these fields for convenience. The exact
+	// pre-populated fields depend on the API.
+	Preload *Deployment_Preload `protobuf:"bytes,11,opt,name=preload,proto3" json:"preload,omitempty"`
 }
 
 func (x *Deployment) Reset() {
@@ -4910,16 +4972,9 @@ func (x *Deployment) GetLabels() map[string]string {
 	return nil
 }
 
-func (x *Deployment) GetArtifact() *PushedArtifact {
+func (x *Deployment) GetPreload() *Deployment_Preload {
 	if x != nil {
-		return x.Artifact
-	}
-	return nil
-}
-
-func (x *Deployment) GetBuild() *Build {
-	if x != nil {
-		return x.Build
+		return x.Preload
 	}
 	return nil
 }
@@ -5033,6 +5088,9 @@ type GetLatestReleaseRequest struct {
 	Application *Ref_Application `protobuf:"bytes,1,opt,name=application,proto3" json:"application,omitempty"`
 	// workspace for the artifact, any workspace if empty
 	Workspace *Ref_Workspace `protobuf:"bytes,2,opt,name=workspace,proto3" json:"workspace,omitempty"`
+	// Load additional details about the release. These will become available
+	// in the Preload section.
+	LoadDetails Release_LoadDetails `protobuf:"varint,3,opt,name=load_details,json=loadDetails,proto3,enum=hashicorp.waypoint.Release_LoadDetails" json:"load_details,omitempty"`
 }
 
 func (x *GetLatestReleaseRequest) Reset() {
@@ -5081,6 +5139,13 @@ func (x *GetLatestReleaseRequest) GetWorkspace() *Ref_Workspace {
 	return nil
 }
 
+func (x *GetLatestReleaseRequest) GetLoadDetails() Release_LoadDetails {
+	if x != nil {
+		return x.LoadDetails
+	}
+	return Release_NONE
+}
+
 type ListReleasesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5100,6 +5165,9 @@ type ListReleasesRequest struct {
 	// Specifies the order of results. If this isn't specified, the results
 	// are in an undefined order.
 	Order *OperationOrder `protobuf:"bytes,2,opt,name=order,proto3" json:"order,omitempty"`
+	// Load additional details about the release. These will become available
+	// in the Preload section.
+	LoadDetails Release_LoadDetails `protobuf:"varint,6,opt,name=load_details,json=loadDetails,proto3,enum=hashicorp.waypoint.Release_LoadDetails" json:"load_details,omitempty"`
 }
 
 func (x *ListReleasesRequest) Reset() {
@@ -5169,6 +5237,13 @@ func (x *ListReleasesRequest) GetOrder() *OperationOrder {
 	return nil
 }
 
+func (x *ListReleasesRequest) GetLoadDetails() Release_LoadDetails {
+	if x != nil {
+		return x.LoadDetails
+	}
+	return Release_NONE
+}
+
 type ListReleasesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5222,6 +5297,9 @@ type GetReleaseRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	Ref *Ref_Operation `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
+	// Load additional details about the release. These will become available
+	// in the Preload section.
+	LoadDetails Release_LoadDetails `protobuf:"varint,2,opt,name=load_details,json=loadDetails,proto3,enum=hashicorp.waypoint.Release_LoadDetails" json:"load_details,omitempty"`
 }
 
 func (x *GetReleaseRequest) Reset() {
@@ -5263,6 +5341,13 @@ func (x *GetReleaseRequest) GetRef() *Ref_Operation {
 	return nil
 }
 
+func (x *GetReleaseRequest) GetLoadDetails() Release_LoadDetails {
+	if x != nil {
+		return x.LoadDetails
+	}
+	return Release_NONE
+}
+
 type Release struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5292,6 +5377,11 @@ type Release struct {
 	// in use. After the release is not in use, this may still be set but
 	// may no longer be valid.
 	Url string `protobuf:"bytes,9,opt,name=url,proto3" json:"url,omitempty"`
+	// This is the populated preload data. Most of this data can be retrieved
+	// through additional API calls or manually computed, but certain API
+	// calls will pre-populate some of these fields for convenience. The exact
+	// pre-populated fields depend on the API.
+	Preload *Release_Preload `protobuf:"bytes,12,opt,name=preload,proto3" json:"preload,omitempty"`
 }
 
 func (x *Release) Reset() {
@@ -5401,6 +5491,13 @@ func (x *Release) GetUrl() string {
 		return x.Url
 	}
 	return ""
+}
+
+func (x *Release) GetPreload() *Release_Preload {
+	if x != nil {
+		return x.Preload
+	}
+	return nil
 }
 
 type GetLogStreamRequest struct {
@@ -10152,6 +10249,141 @@ func (x *Hostname_TargetApp) GetWorkspace() *Ref_Workspace {
 	return nil
 }
 
+type Deployment_Preload struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Populated when a Deployment is read with LoadDetails set
+	// to ARTIFACT or BUILD
+	Artifact *PushedArtifact `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	// Populated when a Deployment is read with LoadDetails set to BUILD
+	Build *Build `protobuf:"bytes,2,opt,name=build,proto3" json:"build,omitempty"`
+	// The deployment-specific URL from the URL service. This is set on
+	// all deployment API calls. This will be empty if the URL service
+	// is not enabled or there was an error loading this information.
+	DeployUrl string `protobuf:"bytes,3,opt,name=deploy_url,json=deployUrl,proto3" json:"deploy_url,omitempty"`
+}
+
+func (x *Deployment_Preload) Reset() {
+	*x = Deployment_Preload{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_server_proto_server_proto_msgTypes[159]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Deployment_Preload) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Deployment_Preload) ProtoMessage() {}
+
+func (x *Deployment_Preload) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_server_proto_server_proto_msgTypes[159]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Deployment_Preload.ProtoReflect.Descriptor instead.
+func (*Deployment_Preload) Descriptor() ([]byte, []int) {
+	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{67, 1}
+}
+
+func (x *Deployment_Preload) GetArtifact() *PushedArtifact {
+	if x != nil {
+		return x.Artifact
+	}
+	return nil
+}
+
+func (x *Deployment_Preload) GetBuild() *Build {
+	if x != nil {
+		return x.Build
+	}
+	return nil
+}
+
+func (x *Deployment_Preload) GetDeployUrl() string {
+	if x != nil {
+		return x.DeployUrl
+	}
+	return ""
+}
+
+type Release_Preload struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Populated when LoadDetails is set.
+	Deployment *Deployment `protobuf:"bytes,1,opt,name=deployment,proto3" json:"deployment,omitempty"`
+	// Populated when LoadDetails is set.
+	Artifact *PushedArtifact `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	// Populated when LoadDetails is set.
+	Build *Build `protobuf:"bytes,3,opt,name=build,proto3" json:"build,omitempty"`
+}
+
+func (x *Release_Preload) Reset() {
+	*x = Release_Preload{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_server_proto_server_proto_msgTypes[161]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Release_Preload) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Release_Preload) ProtoMessage() {}
+
+func (x *Release_Preload) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_server_proto_server_proto_msgTypes[161]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Release_Preload.ProtoReflect.Descriptor instead.
+func (*Release_Preload) Descriptor() ([]byte, []int) {
+	return file_internal_server_proto_server_proto_rawDescGZIP(), []int{74, 1}
+}
+
+func (x *Release_Preload) GetDeployment() *Deployment {
+	if x != nil {
+		return x.Deployment
+	}
+	return nil
+}
+
+func (x *Release_Preload) GetArtifact() *PushedArtifact {
+	if x != nil {
+		return x.Artifact
+	}
+	return nil
+}
+
+func (x *Release_Preload) GetBuild() *Build {
+	if x != nil {
+		return x.Build
+	}
+	return nil
+}
+
 type LogBatch_Entry struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -10164,7 +10396,7 @@ type LogBatch_Entry struct {
 func (x *LogBatch_Entry) Reset() {
 	*x = LogBatch_Entry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[160]
+		mi := &file_internal_server_proto_server_proto_msgTypes[162]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10177,7 +10409,7 @@ func (x *LogBatch_Entry) String() string {
 func (*LogBatch_Entry) ProtoMessage() {}
 
 func (x *LogBatch_Entry) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[160]
+	mi := &file_internal_server_proto_server_proto_msgTypes[162]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10223,7 +10455,7 @@ type ExecStreamRequest_Start struct {
 func (x *ExecStreamRequest_Start) Reset() {
 	*x = ExecStreamRequest_Start{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[161]
+		mi := &file_internal_server_proto_server_proto_msgTypes[163]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10236,7 +10468,7 @@ func (x *ExecStreamRequest_Start) String() string {
 func (*ExecStreamRequest_Start) ProtoMessage() {}
 
 func (x *ExecStreamRequest_Start) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[161]
+	mi := &file_internal_server_proto_server_proto_msgTypes[163]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10284,7 +10516,7 @@ type ExecStreamRequest_Input struct {
 func (x *ExecStreamRequest_Input) Reset() {
 	*x = ExecStreamRequest_Input{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[162]
+		mi := &file_internal_server_proto_server_proto_msgTypes[164]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10297,7 +10529,7 @@ func (x *ExecStreamRequest_Input) String() string {
 func (*ExecStreamRequest_Input) ProtoMessage() {}
 
 func (x *ExecStreamRequest_Input) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[162]
+	mi := &file_internal_server_proto_server_proto_msgTypes[164]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10335,7 +10567,7 @@ type ExecStreamRequest_PTY struct {
 func (x *ExecStreamRequest_PTY) Reset() {
 	*x = ExecStreamRequest_PTY{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[163]
+		mi := &file_internal_server_proto_server_proto_msgTypes[165]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10348,7 +10580,7 @@ func (x *ExecStreamRequest_PTY) String() string {
 func (*ExecStreamRequest_PTY) ProtoMessage() {}
 
 func (x *ExecStreamRequest_PTY) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[163]
+	mi := &file_internal_server_proto_server_proto_msgTypes[165]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10399,7 +10631,7 @@ type ExecStreamRequest_WindowSize struct {
 func (x *ExecStreamRequest_WindowSize) Reset() {
 	*x = ExecStreamRequest_WindowSize{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[164]
+		mi := &file_internal_server_proto_server_proto_msgTypes[166]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10412,7 +10644,7 @@ func (x *ExecStreamRequest_WindowSize) String() string {
 func (*ExecStreamRequest_WindowSize) ProtoMessage() {}
 
 func (x *ExecStreamRequest_WindowSize) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[164]
+	mi := &file_internal_server_proto_server_proto_msgTypes[166]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10467,7 +10699,7 @@ type ExecStreamResponse_Exit struct {
 func (x *ExecStreamResponse_Exit) Reset() {
 	*x = ExecStreamResponse_Exit{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[165]
+		mi := &file_internal_server_proto_server_proto_msgTypes[167]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10480,7 +10712,7 @@ func (x *ExecStreamResponse_Exit) String() string {
 func (*ExecStreamResponse_Exit) ProtoMessage() {}
 
 func (x *ExecStreamResponse_Exit) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[165]
+	mi := &file_internal_server_proto_server_proto_msgTypes[167]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10515,7 +10747,7 @@ type ExecStreamResponse_Output struct {
 func (x *ExecStreamResponse_Output) Reset() {
 	*x = ExecStreamResponse_Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[166]
+		mi := &file_internal_server_proto_server_proto_msgTypes[168]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10528,7 +10760,7 @@ func (x *ExecStreamResponse_Output) String() string {
 func (*ExecStreamResponse_Output) ProtoMessage() {}
 
 func (x *ExecStreamResponse_Output) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[166]
+	mi := &file_internal_server_proto_server_proto_msgTypes[168]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10571,7 +10803,7 @@ type EntrypointConfig_Exec struct {
 func (x *EntrypointConfig_Exec) Reset() {
 	*x = EntrypointConfig_Exec{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[167]
+		mi := &file_internal_server_proto_server_proto_msgTypes[169]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10584,7 +10816,7 @@ func (x *EntrypointConfig_Exec) String() string {
 func (*EntrypointConfig_Exec) ProtoMessage() {}
 
 func (x *EntrypointConfig_Exec) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[167]
+	mi := &file_internal_server_proto_server_proto_msgTypes[169]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10636,7 +10868,7 @@ type EntrypointConfig_URLService struct {
 func (x *EntrypointConfig_URLService) Reset() {
 	*x = EntrypointConfig_URLService{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[168]
+		mi := &file_internal_server_proto_server_proto_msgTypes[170]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10649,7 +10881,7 @@ func (x *EntrypointConfig_URLService) String() string {
 func (*EntrypointConfig_URLService) ProtoMessage() {}
 
 func (x *EntrypointConfig_URLService) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[168]
+	mi := &file_internal_server_proto_server_proto_msgTypes[170]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10698,7 +10930,7 @@ type EntrypointExecRequest_Open struct {
 func (x *EntrypointExecRequest_Open) Reset() {
 	*x = EntrypointExecRequest_Open{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[169]
+		mi := &file_internal_server_proto_server_proto_msgTypes[171]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10711,7 +10943,7 @@ func (x *EntrypointExecRequest_Open) String() string {
 func (*EntrypointExecRequest_Open) ProtoMessage() {}
 
 func (x *EntrypointExecRequest_Open) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[169]
+	mi := &file_internal_server_proto_server_proto_msgTypes[171]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10752,7 +10984,7 @@ type EntrypointExecRequest_Exit struct {
 func (x *EntrypointExecRequest_Exit) Reset() {
 	*x = EntrypointExecRequest_Exit{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[170]
+		mi := &file_internal_server_proto_server_proto_msgTypes[172]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10765,7 +10997,7 @@ func (x *EntrypointExecRequest_Exit) String() string {
 func (*EntrypointExecRequest_Exit) ProtoMessage() {}
 
 func (x *EntrypointExecRequest_Exit) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[170]
+	mi := &file_internal_server_proto_server_proto_msgTypes[172]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10800,7 +11032,7 @@ type EntrypointExecRequest_Output struct {
 func (x *EntrypointExecRequest_Output) Reset() {
 	*x = EntrypointExecRequest_Output{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[171]
+		mi := &file_internal_server_proto_server_proto_msgTypes[173]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10813,7 +11045,7 @@ func (x *EntrypointExecRequest_Output) String() string {
 func (*EntrypointExecRequest_Output) ProtoMessage() {}
 
 func (x *EntrypointExecRequest_Output) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[171]
+	mi := &file_internal_server_proto_server_proto_msgTypes[173]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10854,7 +11086,7 @@ type EntrypointExecRequest_Error struct {
 func (x *EntrypointExecRequest_Error) Reset() {
 	*x = EntrypointExecRequest_Error{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[172]
+		mi := &file_internal_server_proto_server_proto_msgTypes[174]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10867,7 +11099,7 @@ func (x *EntrypointExecRequest_Error) String() string {
 func (*EntrypointExecRequest_Error) ProtoMessage() {}
 
 func (x *EntrypointExecRequest_Error) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[172]
+	mi := &file_internal_server_proto_server_proto_msgTypes[174]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10902,7 +11134,7 @@ type Token_Entrypoint struct {
 func (x *Token_Entrypoint) Reset() {
 	*x = Token_Entrypoint{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_internal_server_proto_server_proto_msgTypes[174]
+		mi := &file_internal_server_proto_server_proto_msgTypes[176]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -10915,7 +11147,7 @@ func (x *Token_Entrypoint) String() string {
 func (*Token_Entrypoint) ProtoMessage() {}
 
 func (x *Token_Entrypoint) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_server_proto_server_proto_msgTypes[174]
+	mi := &file_internal_server_proto_server_proto_msgTypes[176]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11897,11 +12129,16 @@ var file_internal_server_proto_server_proto_rawDesc = []byte{
 	0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22,
-	0x4b, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x33, 0x0a, 0x03, 0x72, 0x65, 0x66, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
-	0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70,
-	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x03, 0x72, 0x65, 0x66, 0x22, 0xe0, 0x01, 0x0a,
+	0x9a, 0x01, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e,
+	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x33, 0x0a, 0x03, 0x72, 0x65, 0x66, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
+	0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f,
+	0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x03, 0x72, 0x65, 0x66, 0x12, 0x4d, 0x0a,
+	0x0c, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0e, 0x32, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
+	0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d,
+	0x65, 0x6e, 0x74, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x52,
+	0x0b, 0x6c, 0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x22, 0xe0, 0x01, 0x0a,
 	0x17, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e,
 	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3e, 0x0a, 0x0a, 0x64, 0x65, 0x70, 0x6c,
 	0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x68,
@@ -11955,7 +12192,7 @@ var file_internal_server_proto_server_proto_rawDesc = []byte{
 	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
 	0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x44, 0x65, 0x70, 0x6c, 0x6f,
 	0x79, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x0b, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e,
-	0x74, 0x73, 0x22, 0xed, 0x05, 0x0a, 0x0a, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e,
+	0x74, 0x73, 0x22, 0xda, 0x06, 0x0a, 0x0a, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e,
 	0x74, 0x12, 0x45, 0x0a, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e,
 	0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
 	0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e,
@@ -11988,110 +12225,151 @@ var file_internal_server_proto_server_proto_rawDesc = []byte{
 	0x32, 0x2a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79,
 	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74,
 	0x2e, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x06, 0x6c, 0x61,
-	0x62, 0x65, 0x6c, 0x73, 0x12, 0x3e, 0x0a, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74,
-	0x18, 0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
-	0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x50, 0x75, 0x73, 0x68,
-	0x65, 0x64, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69,
-	0x66, 0x61, 0x63, 0x74, 0x12, 0x2f, 0x0a, 0x05, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x18, 0x0c, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
-	0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x42, 0x75, 0x69, 0x6c, 0x64, 0x52, 0x05,
-	0x62, 0x75, 0x69, 0x6c, 0x64, 0x1a, 0x39, 0x0a, 0x0b, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x45,
+	0x62, 0x65, 0x6c, 0x73, 0x12, 0x40, 0x0a, 0x07, 0x70, 0x72, 0x65, 0x6c, 0x6f, 0x61, 0x64, 0x18,
+	0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
+	0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x44, 0x65, 0x70, 0x6c, 0x6f,
+	0x79, 0x6d, 0x65, 0x6e, 0x74, 0x2e, 0x50, 0x72, 0x65, 0x6c, 0x6f, 0x61, 0x64, 0x52, 0x07, 0x70,
+	0x72, 0x65, 0x6c, 0x6f, 0x61, 0x64, 0x1a, 0x39, 0x0a, 0x0b, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73,
+	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38,
+	0x01, 0x1a, 0x99, 0x01, 0x0a, 0x07, 0x50, 0x72, 0x65, 0x6c, 0x6f, 0x61, 0x64, 0x12, 0x3e, 0x0a,
+	0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70,
+	0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x50, 0x75, 0x73, 0x68, 0x65, 0x64, 0x41, 0x72, 0x74, 0x69, 0x66,
+	0x61, 0x63, 0x74, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x12, 0x2f, 0x0a,
+	0x05, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x68,
+	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e,
+	0x74, 0x2e, 0x42, 0x75, 0x69, 0x6c, 0x64, 0x52, 0x05, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x12, 0x1d,
+	0x0a, 0x0a, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x5f, 0x75, 0x72, 0x6c, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x09, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x55, 0x72, 0x6c, 0x22, 0x30, 0x0a,
+	0x0b, 0x4c, 0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x12, 0x08, 0x0a, 0x04,
+	0x4e, 0x4f, 0x4e, 0x45, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x41, 0x52, 0x54, 0x49, 0x46, 0x41,
+	0x43, 0x54, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x42, 0x55, 0x49, 0x4c, 0x44, 0x10, 0x02, 0x22,
+	0x4d, 0x0a, 0x14, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x35, 0x0a, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61,
+	0x73, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
+	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65,
+	0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x22, 0x4e,
+	0x0a, 0x15, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61,
+	0x73, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
+	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65,
+	0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x22, 0xed,
+	0x01, 0x0a, 0x17, 0x47, 0x65, 0x74, 0x4c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x52, 0x65, 0x6c, 0x65,
+	0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x45, 0x0a, 0x0b, 0x61, 0x70,
+	0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x23, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70,
+	0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x41, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x12, 0x3f, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
+	0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x57, 0x6f,
+	0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61,
+	0x63, 0x65, 0x12, 0x4a, 0x0a, 0x0c, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x64, 0x65, 0x74, 0x61, 0x69,
+	0x6c, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
+	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65,
+	0x6c, 0x65, 0x61, 0x73, 0x65, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c,
+	0x73, 0x52, 0x0b, 0x6c, 0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x22, 0xb1,
+	0x03, 0x0a, 0x13, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x45, 0x0a, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x68, 0x61,
+	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x2e, 0x52, 0x65, 0x66, 0x2e, 0x41, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x52, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3f, 0x0a,
+	0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70,
+	0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x38,
+	0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20,
+	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f,
+	0x69, 0x6e, 0x74, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72,
+	0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x52, 0x0a, 0x0e, 0x70, 0x68, 0x79, 0x73,
+	0x69, 0x63, 0x61, 0x6c, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e,
+	0x32, 0x2b, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e,
+	0x50, 0x68, 0x79, 0x73, 0x69, 0x63, 0x61, 0x6c, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x0d, 0x70,
+	0x68, 0x79, 0x73, 0x69, 0x63, 0x61, 0x6c, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x38, 0x0a, 0x05,
+	0x6f, 0x72, 0x64, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61,
+	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x52,
+	0x05, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x12, 0x4a, 0x0a, 0x0c, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x64,
+	0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x27, 0x2e, 0x68,
+	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e,
+	0x74, 0x2e, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x44, 0x65,
+	0x74, 0x61, 0x69, 0x6c, 0x73, 0x52, 0x0b, 0x6c, 0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69,
+	0x6c, 0x73, 0x22, 0x4f, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73,
+	0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a, 0x08, 0x72, 0x65,
+	0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x68,
+	0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e,
+	0x74, 0x2e, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x08, 0x72, 0x65, 0x6c, 0x65, 0x61,
+	0x73, 0x65, 0x73, 0x22, 0x94, 0x01, 0x0a, 0x11, 0x47, 0x65, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61,
+	0x73, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x33, 0x0a, 0x03, 0x72, 0x65, 0x66,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f,
+	0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e,
+	0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x03, 0x72, 0x65, 0x66, 0x12, 0x4a,
+	0x0a, 0x0c, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0e, 0x32, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
+	0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73,
+	0x65, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x52, 0x0b, 0x6c,
+	0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x22, 0x92, 0x07, 0x0a, 0x07, 0x52,
+	0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x45, 0x0a, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x68, 0x61,
+	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x2e, 0x52, 0x65, 0x66, 0x2e, 0x41, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x52, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3f, 0x0a,
+	0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70,
+	0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x1a,
+	0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x32, 0x0a, 0x06, 0x73, 0x74,
+	0x61, 0x74, 0x75, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x68, 0x61, 0x73,
+	0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e,
+	0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x41,
+	0x0a, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x2b, 0x2e,
+	0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69,
+	0x6e, 0x74, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x50, 0x68, 0x79,
+	0x73, 0x69, 0x63, 0x61, 0x6c, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x05, 0x73, 0x74, 0x61, 0x74,
+	0x65, 0x12, 0x3b, 0x0a, 0x09, 0x63, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70,
+	0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x6f, 0x6e,
+	0x65, 0x6e, 0x74, 0x52, 0x09, 0x63, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x12, 0x2e,
+	0x0a, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x23,
+	0x0a, 0x0d, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18,
+	0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e,
+	0x74, 0x49, 0x64, 0x12, 0x3f, 0x0a, 0x06, 0x6c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x18, 0x06, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e,
+	0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65,
+	0x2e, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x06, 0x6c, 0x61,
+	0x62, 0x65, 0x6c, 0x73, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x72, 0x6c, 0x18, 0x09, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x75, 0x72, 0x6c, 0x12, 0x3d, 0x0a, 0x07, 0x70, 0x72, 0x65, 0x6c, 0x6f, 0x61,
+	0x64, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
+	0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x6c,
+	0x65, 0x61, 0x73, 0x65, 0x2e, 0x50, 0x72, 0x65, 0x6c, 0x6f, 0x61, 0x64, 0x52, 0x07, 0x70, 0x72,
+	0x65, 0x6c, 0x6f, 0x61, 0x64, 0x1a, 0x39, 0x0a, 0x0b, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x45,
 	0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
 	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01,
-	0x22, 0x30, 0x0a, 0x0b, 0x4c, 0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x12,
-	0x08, 0x0a, 0x04, 0x4e, 0x4f, 0x4e, 0x45, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x41, 0x52, 0x54,
-	0x49, 0x46, 0x41, 0x43, 0x54, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x42, 0x55, 0x49, 0x4c, 0x44,
-	0x10, 0x02, 0x22, 0x4d, 0x0a, 0x14, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x52, 0x65, 0x6c, 0x65,
-	0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x35, 0x0a, 0x07, 0x72, 0x65,
-	0x6c, 0x65, 0x61, 0x73, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x68, 0x61,
-	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x2e, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73,
-	0x65, 0x22, 0x4e, 0x0a, 0x15, 0x55, 0x70, 0x73, 0x65, 0x72, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61,
-	0x73, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x07, 0x72, 0x65,
-	0x6c, 0x65, 0x61, 0x73, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x68, 0x61,
-	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x2e, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73,
-	0x65, 0x22, 0xa1, 0x01, 0x0a, 0x17, 0x47, 0x65, 0x74, 0x4c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x52,
-	0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x45, 0x0a,
-	0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x23, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77,
-	0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x41, 0x70, 0x70, 0x6c,
-	0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3f, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63,
-	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66,
-	0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b,
-	0x73, 0x70, 0x61, 0x63, 0x65, 0x22, 0xe5, 0x02, 0x0a, 0x13, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65,
-	0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x45, 0x0a,
-	0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x23, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77,
-	0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x41, 0x70, 0x70, 0x6c,
-	0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3f, 0x0a, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63,
-	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66,
-	0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b,
-	0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x38, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18,
-	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72,
-	0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75,
-	0x73, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12,
-	0x52, 0x0a, 0x0e, 0x70, 0x68, 0x79, 0x73, 0x69, 0x63, 0x61, 0x6c, 0x5f, 0x73, 0x74, 0x61, 0x74,
-	0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x2b, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x70, 0x65,
-	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x50, 0x68, 0x79, 0x73, 0x69, 0x63, 0x61, 0x6c, 0x53,
-	0x74, 0x61, 0x74, 0x65, 0x52, 0x0d, 0x70, 0x68, 0x79, 0x73, 0x69, 0x63, 0x61, 0x6c, 0x53, 0x74,
-	0x61, 0x74, 0x65, 0x12, 0x38, 0x0a, 0x05, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x22, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77,
-	0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x52, 0x05, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x22, 0x4f, 0x0a,
-	0x14, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a, 0x08, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63,
-	0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x6c,
-	0x65, 0x61, 0x73, 0x65, 0x52, 0x08, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x22, 0x48,
-	0x0a, 0x11, 0x47, 0x65, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x33, 0x0a, 0x03, 0x72, 0x65, 0x66, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x21, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79,
-	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x52, 0x03, 0x72, 0x65, 0x66, 0x22, 0xd4, 0x04, 0x0a, 0x07, 0x52, 0x65, 0x6c,
-	0x65, 0x61, 0x73, 0x65, 0x12, 0x45, 0x0a, 0x0b, 0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x68, 0x61, 0x73, 0x68,
-	0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52,
-	0x65, 0x66, 0x2e, 0x41, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b,
-	0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3f, 0x0a, 0x09, 0x77,
-	0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21,
+	0x1a, 0xba, 0x01, 0x0a, 0x07, 0x50, 0x72, 0x65, 0x6c, 0x6f, 0x61, 0x64, 0x12, 0x3e, 0x0a, 0x0a,
+	0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x1e, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74,
+	0x52, 0x0a, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x3e, 0x0a, 0x08,
+	0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22,
 	0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f,
-	0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x66, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63,
-	0x65, 0x52, 0x09, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x1a, 0x0a, 0x08,
-	0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08,
-	0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x32, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74,
-	0x75, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69,
-	0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x53, 0x74,
-	0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x41, 0x0a, 0x05,
-	0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x2b, 0x2e, 0x68, 0x61,
+	0x69, 0x6e, 0x74, 0x2e, 0x50, 0x75, 0x73, 0x68, 0x65, 0x64, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61,
+	0x63, 0x74, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x12, 0x2f, 0x0a, 0x05,
+	0x62, 0x75, 0x69, 0x6c, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x68, 0x61,
 	0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x50, 0x68, 0x79, 0x73, 0x69,
-	0x63, 0x61, 0x6c, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x12,
-	0x3b, 0x0a, 0x09, 0x63, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77,
-	0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e,
-	0x74, 0x52, 0x09, 0x63, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x12, 0x2e, 0x0a, 0x07,
-	0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e,
-	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
-	0x41, 0x6e, 0x79, 0x52, 0x07, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x23, 0x0a, 0x0d,
-	0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0c, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x49,
-	0x64, 0x12, 0x3f, 0x0a, 0x06, 0x6c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x27, 0x2e, 0x68, 0x61, 0x73, 0x68, 0x69, 0x63, 0x6f, 0x72, 0x70, 0x2e, 0x77, 0x61,
-	0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x2e, 0x4c,
-	0x61, 0x62, 0x65, 0x6c, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x06, 0x6c, 0x61, 0x62, 0x65,
-	0x6c, 0x73, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x72, 0x6c, 0x18, 0x09, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x03, 0x75, 0x72, 0x6c, 0x1a, 0x39, 0x0a, 0x0b, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x45, 0x6e,
-	0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22,
+	0x2e, 0x42, 0x75, 0x69, 0x6c, 0x64, 0x52, 0x05, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x22, 0x40, 0x0a,
+	0x0b, 0x4c, 0x6f, 0x61, 0x64, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x12, 0x08, 0x0a, 0x04,
+	0x4e, 0x4f, 0x4e, 0x45, 0x10, 0x00, 0x12, 0x0e, 0x0a, 0x0a, 0x44, 0x45, 0x50, 0x4c, 0x4f, 0x59,
+	0x4d, 0x45, 0x4e, 0x54, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x41, 0x52, 0x54, 0x49, 0x46, 0x41,
+	0x43, 0x54, 0x10, 0x02, 0x12, 0x09, 0x0a, 0x05, 0x42, 0x55, 0x49, 0x4c, 0x44, 0x10, 0x03, 0x22,
 	0x3a, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x4c, 0x6f, 0x67, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x52,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x0d, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79,
 	0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x64,
@@ -12655,8 +12933,8 @@ func file_internal_server_proto_server_proto_rawDescGZIP() []byte {
 	return file_internal_server_proto_server_proto_rawDescData
 }
 
-var file_internal_server_proto_server_proto_enumTypes = make([]protoimpl.EnumInfo, 9)
-var file_internal_server_proto_server_proto_msgTypes = make([]protoimpl.MessageInfo, 175)
+var file_internal_server_proto_server_proto_enumTypes = make([]protoimpl.EnumInfo, 10)
+var file_internal_server_proto_server_proto_msgTypes = make([]protoimpl.MessageInfo, 177)
 var file_internal_server_proto_server_proto_goTypes = []interface{}{
 	(Component_Type)(0),                                     // 0: hashicorp.waypoint.Component.Type
 	(Status_State)(0),                                       // 1: hashicorp.waypoint.Status.State
@@ -12665,522 +12943,534 @@ var file_internal_server_proto_server_proto_goTypes = []interface{}{
 	(Job_State)(0),                                          // 4: hashicorp.waypoint.Job.State
 	(UpsertDeploymentRequest_Tristate)(0),                   // 5: hashicorp.waypoint.UpsertDeploymentRequest.Tristate
 	(Deployment_LoadDetails)(0),                             // 6: hashicorp.waypoint.Deployment.LoadDetails
-	(ExecStreamResponse_Output_Channel)(0),                  // 7: hashicorp.waypoint.ExecStreamResponse.Output.Channel
-	(EntrypointExecRequest_Output_Channel)(0),               // 8: hashicorp.waypoint.EntrypointExecRequest.Output.Channel
-	(*Application)(nil),                                     // 9: hashicorp.waypoint.Application
-	(*Project)(nil),                                         // 10: hashicorp.waypoint.Project
-	(*Workspace)(nil),                                       // 11: hashicorp.waypoint.Workspace
-	(*Ref)(nil),                                             // 12: hashicorp.waypoint.Ref
-	(*Component)(nil),                                       // 13: hashicorp.waypoint.Component
-	(*Status)(nil),                                          // 14: hashicorp.waypoint.Status
-	(*StatusFilter)(nil),                                    // 15: hashicorp.waypoint.StatusFilter
-	(*Operation)(nil),                                       // 16: hashicorp.waypoint.Operation
-	(*OperationOrder)(nil),                                  // 17: hashicorp.waypoint.OperationOrder
-	(*QueueJobRequest)(nil),                                 // 18: hashicorp.waypoint.QueueJobRequest
-	(*QueueJobResponse)(nil),                                // 19: hashicorp.waypoint.QueueJobResponse
-	(*CancelJobRequest)(nil),                                // 20: hashicorp.waypoint.CancelJobRequest
-	(*ValidateJobRequest)(nil),                              // 21: hashicorp.waypoint.ValidateJobRequest
-	(*ValidateJobResponse)(nil),                             // 22: hashicorp.waypoint.ValidateJobResponse
-	(*Job)(nil),                                             // 23: hashicorp.waypoint.Job
-	(*GetJobRequest)(nil),                                   // 24: hashicorp.waypoint.GetJobRequest
-	(*ListJobsRequest)(nil),                                 // 25: hashicorp.waypoint.ListJobsRequest
-	(*ListJobsResponse)(nil),                                // 26: hashicorp.waypoint.ListJobsResponse
-	(*GetJobStreamRequest)(nil),                             // 27: hashicorp.waypoint.GetJobStreamRequest
-	(*GetJobStreamResponse)(nil),                            // 28: hashicorp.waypoint.GetJobStreamResponse
-	(*Runner)(nil),                                          // 29: hashicorp.waypoint.Runner
-	(*RunnerConfigRequest)(nil),                             // 30: hashicorp.waypoint.RunnerConfigRequest
-	(*RunnerConfigResponse)(nil),                            // 31: hashicorp.waypoint.RunnerConfigResponse
-	(*RunnerConfig)(nil),                                    // 32: hashicorp.waypoint.RunnerConfig
-	(*RunnerJobStreamRequest)(nil),                          // 33: hashicorp.waypoint.RunnerJobStreamRequest
-	(*RunnerJobStreamResponse)(nil),                         // 34: hashicorp.waypoint.RunnerJobStreamResponse
-	(*RunnerGetDeploymentConfigRequest)(nil),                // 35: hashicorp.waypoint.RunnerGetDeploymentConfigRequest
-	(*RunnerGetDeploymentConfigResponse)(nil),               // 36: hashicorp.waypoint.RunnerGetDeploymentConfigResponse
-	(*GetRunnerRequest)(nil),                                // 37: hashicorp.waypoint.GetRunnerRequest
-	(*SetServerConfigRequest)(nil),                          // 38: hashicorp.waypoint.SetServerConfigRequest
-	(*ServerConfig)(nil),                                    // 39: hashicorp.waypoint.ServerConfig
-	(*CreateHostnameRequest)(nil),                           // 40: hashicorp.waypoint.CreateHostnameRequest
-	(*CreateHostnameResponse)(nil),                          // 41: hashicorp.waypoint.CreateHostnameResponse
-	(*ListHostnamesRequest)(nil),                            // 42: hashicorp.waypoint.ListHostnamesRequest
-	(*ListHostnamesResponse)(nil),                           // 43: hashicorp.waypoint.ListHostnamesResponse
-	(*DeleteHostnameRequest)(nil),                           // 44: hashicorp.waypoint.DeleteHostnameRequest
-	(*Hostname)(nil),                                        // 45: hashicorp.waypoint.Hostname
-	(*ListWorkspacesResponse)(nil),                          // 46: hashicorp.waypoint.ListWorkspacesResponse
-	(*GetWorkspaceRequest)(nil),                             // 47: hashicorp.waypoint.GetWorkspaceRequest
-	(*GetWorkspaceResponse)(nil),                            // 48: hashicorp.waypoint.GetWorkspaceResponse
-	(*UpsertProjectRequest)(nil),                            // 49: hashicorp.waypoint.UpsertProjectRequest
-	(*UpsertProjectResponse)(nil),                           // 50: hashicorp.waypoint.UpsertProjectResponse
-	(*GetProjectRequest)(nil),                               // 51: hashicorp.waypoint.GetProjectRequest
-	(*GetProjectResponse)(nil),                              // 52: hashicorp.waypoint.GetProjectResponse
-	(*ListProjectsResponse)(nil),                            // 53: hashicorp.waypoint.ListProjectsResponse
-	(*UpsertApplicationRequest)(nil),                        // 54: hashicorp.waypoint.UpsertApplicationRequest
-	(*UpsertApplicationResponse)(nil),                       // 55: hashicorp.waypoint.UpsertApplicationResponse
-	(*UpsertBuildRequest)(nil),                              // 56: hashicorp.waypoint.UpsertBuildRequest
-	(*UpsertBuildResponse)(nil),                             // 57: hashicorp.waypoint.UpsertBuildResponse
-	(*ListBuildsRequest)(nil),                               // 58: hashicorp.waypoint.ListBuildsRequest
-	(*ListBuildsResponse)(nil),                              // 59: hashicorp.waypoint.ListBuildsResponse
-	(*GetLatestBuildRequest)(nil),                           // 60: hashicorp.waypoint.GetLatestBuildRequest
-	(*GetBuildRequest)(nil),                                 // 61: hashicorp.waypoint.GetBuildRequest
-	(*Build)(nil),                                           // 62: hashicorp.waypoint.Build
-	(*Artifact)(nil),                                        // 63: hashicorp.waypoint.Artifact
-	(*UpsertPushedArtifactRequest)(nil),                     // 64: hashicorp.waypoint.UpsertPushedArtifactRequest
-	(*UpsertPushedArtifactResponse)(nil),                    // 65: hashicorp.waypoint.UpsertPushedArtifactResponse
-	(*GetLatestPushedArtifactRequest)(nil),                  // 66: hashicorp.waypoint.GetLatestPushedArtifactRequest
-	(*GetPushedArtifactRequest)(nil),                        // 67: hashicorp.waypoint.GetPushedArtifactRequest
-	(*ListPushedArtifactsRequest)(nil),                      // 68: hashicorp.waypoint.ListPushedArtifactsRequest
-	(*ListPushedArtifactsResponse)(nil),                     // 69: hashicorp.waypoint.ListPushedArtifactsResponse
-	(*PushedArtifact)(nil),                                  // 70: hashicorp.waypoint.PushedArtifact
-	(*GetDeploymentRequest)(nil),                            // 71: hashicorp.waypoint.GetDeploymentRequest
-	(*UpsertDeploymentRequest)(nil),                         // 72: hashicorp.waypoint.UpsertDeploymentRequest
-	(*UpsertDeploymentResponse)(nil),                        // 73: hashicorp.waypoint.UpsertDeploymentResponse
-	(*ListDeploymentsRequest)(nil),                          // 74: hashicorp.waypoint.ListDeploymentsRequest
-	(*ListDeploymentsResponse)(nil),                         // 75: hashicorp.waypoint.ListDeploymentsResponse
-	(*Deployment)(nil),                                      // 76: hashicorp.waypoint.Deployment
-	(*UpsertReleaseRequest)(nil),                            // 77: hashicorp.waypoint.UpsertReleaseRequest
-	(*UpsertReleaseResponse)(nil),                           // 78: hashicorp.waypoint.UpsertReleaseResponse
-	(*GetLatestReleaseRequest)(nil),                         // 79: hashicorp.waypoint.GetLatestReleaseRequest
-	(*ListReleasesRequest)(nil),                             // 80: hashicorp.waypoint.ListReleasesRequest
-	(*ListReleasesResponse)(nil),                            // 81: hashicorp.waypoint.ListReleasesResponse
-	(*GetReleaseRequest)(nil),                               // 82: hashicorp.waypoint.GetReleaseRequest
-	(*Release)(nil),                                         // 83: hashicorp.waypoint.Release
-	(*GetLogStreamRequest)(nil),                             // 84: hashicorp.waypoint.GetLogStreamRequest
-	(*LogBatch)(nil),                                        // 85: hashicorp.waypoint.LogBatch
-	(*ConfigVar)(nil),                                       // 86: hashicorp.waypoint.ConfigVar
-	(*ConfigSetRequest)(nil),                                // 87: hashicorp.waypoint.ConfigSetRequest
-	(*ConfigSetResponse)(nil),                               // 88: hashicorp.waypoint.ConfigSetResponse
-	(*ConfigGetRequest)(nil),                                // 89: hashicorp.waypoint.ConfigGetRequest
-	(*ConfigGetResponse)(nil),                               // 90: hashicorp.waypoint.ConfigGetResponse
-	(*ExecStreamRequest)(nil),                               // 91: hashicorp.waypoint.ExecStreamRequest
-	(*ExecStreamResponse)(nil),                              // 92: hashicorp.waypoint.ExecStreamResponse
-	(*EntrypointConfigRequest)(nil),                         // 93: hashicorp.waypoint.EntrypointConfigRequest
-	(*EntrypointConfigResponse)(nil),                        // 94: hashicorp.waypoint.EntrypointConfigResponse
-	(*EntrypointConfig)(nil),                                // 95: hashicorp.waypoint.EntrypointConfig
-	(*EntrypointLogBatch)(nil),                              // 96: hashicorp.waypoint.EntrypointLogBatch
-	(*EntrypointExecRequest)(nil),                           // 97: hashicorp.waypoint.EntrypointExecRequest
-	(*EntrypointExecResponse)(nil),                          // 98: hashicorp.waypoint.EntrypointExecResponse
-	(*TokenTransport)(nil),                                  // 99: hashicorp.waypoint.TokenTransport
-	(*Token)(nil),                                           // 100: hashicorp.waypoint.Token
-	(*HMACKey)(nil),                                         // 101: hashicorp.waypoint.HMACKey
-	(*InviteTokenRequest)(nil),                              // 102: hashicorp.waypoint.InviteTokenRequest
-	(*NewTokenResponse)(nil),                                // 103: hashicorp.waypoint.NewTokenResponse
-	(*ConvertInviteTokenRequest)(nil),                       // 104: hashicorp.waypoint.ConvertInviteTokenRequest
-	(*Workspace_Application)(nil),                           // 105: hashicorp.waypoint.Workspace.Application
-	(*Ref_Application)(nil),                                 // 106: hashicorp.waypoint.Ref.Application
-	(*Ref_Project)(nil),                                     // 107: hashicorp.waypoint.Ref.Project
-	(*Ref_Workspace)(nil),                                   // 108: hashicorp.waypoint.Ref.Workspace
-	(*Ref_Component)(nil),                                   // 109: hashicorp.waypoint.Ref.Component
-	(*Ref_Operation)(nil),                                   // 110: hashicorp.waypoint.Ref.Operation
-	(*Ref_OperationSeq)(nil),                                // 111: hashicorp.waypoint.Ref.OperationSeq
-	(*Ref_Runner)(nil),                                      // 112: hashicorp.waypoint.Ref.Runner
-	(*Ref_RunnerId)(nil),                                    // 113: hashicorp.waypoint.Ref.RunnerId
-	(*Ref_RunnerAny)(nil),                                   // 114: hashicorp.waypoint.Ref.RunnerAny
-	(*StatusFilter_Filter)(nil),                             // 115: hashicorp.waypoint.StatusFilter.Filter
-	nil,                                                     // 116: hashicorp.waypoint.Job.LabelsEntry
-	nil,                                                     // 117: hashicorp.waypoint.Job.DataSourceOverridesEntry
-	(*Job_Result)(nil),                                      // 118: hashicorp.waypoint.Job.Result
-	(*Job_DataSource)(nil),                                  // 119: hashicorp.waypoint.Job.DataSource
-	(*Job_Local)(nil),                                       // 120: hashicorp.waypoint.Job.Local
-	(*Job_Git)(nil),                                         // 121: hashicorp.waypoint.Job.Git
-	(*Job_Noop)(nil),                                        // 122: hashicorp.waypoint.Job.Noop
-	(*Job_ValidateOp)(nil),                                  // 123: hashicorp.waypoint.Job.ValidateOp
-	(*Job_ValidateResult)(nil),                              // 124: hashicorp.waypoint.Job.ValidateResult
-	(*Job_AuthOp)(nil),                                      // 125: hashicorp.waypoint.Job.AuthOp
-	(*Job_AuthResult)(nil),                                  // 126: hashicorp.waypoint.Job.AuthResult
-	(*Job_BuildOp)(nil),                                     // 127: hashicorp.waypoint.Job.BuildOp
-	(*Job_BuildResult)(nil),                                 // 128: hashicorp.waypoint.Job.BuildResult
-	(*Job_PushOp)(nil),                                      // 129: hashicorp.waypoint.Job.PushOp
-	(*Job_PushResult)(nil),                                  // 130: hashicorp.waypoint.Job.PushResult
-	(*Job_DeployOp)(nil),                                    // 131: hashicorp.waypoint.Job.DeployOp
-	(*Job_DeployResult)(nil),                                // 132: hashicorp.waypoint.Job.DeployResult
-	(*Job_DestroyOp)(nil),                                   // 133: hashicorp.waypoint.Job.DestroyOp
-	(*Job_ReleaseOp)(nil),                                   // 134: hashicorp.waypoint.Job.ReleaseOp
-	(*Job_ReleaseResult)(nil),                               // 135: hashicorp.waypoint.Job.ReleaseResult
-	(*Job_AuthResult_Result)(nil),                           // 136: hashicorp.waypoint.Job.AuthResult.Result
-	(*GetJobStreamResponse_Open)(nil),                       // 137: hashicorp.waypoint.GetJobStreamResponse.Open
-	(*GetJobStreamResponse_State)(nil),                      // 138: hashicorp.waypoint.GetJobStreamResponse.State
-	(*GetJobStreamResponse_Terminal)(nil),                   // 139: hashicorp.waypoint.GetJobStreamResponse.Terminal
-	(*GetJobStreamResponse_Error)(nil),                      // 140: hashicorp.waypoint.GetJobStreamResponse.Error
-	(*GetJobStreamResponse_Complete)(nil),                   // 141: hashicorp.waypoint.GetJobStreamResponse.Complete
-	(*GetJobStreamResponse_Terminal_Event)(nil),             // 142: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event
-	(*GetJobStreamResponse_Terminal_Event_Status)(nil),      // 143: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Status
-	(*GetJobStreamResponse_Terminal_Event_Line)(nil),        // 144: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Line
-	(*GetJobStreamResponse_Terminal_Event_Raw)(nil),         // 145: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Raw
-	(*GetJobStreamResponse_Terminal_Event_NamedValue)(nil),  // 146: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValue
-	(*GetJobStreamResponse_Terminal_Event_NamedValues)(nil), // 147: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues
-	(*GetJobStreamResponse_Terminal_Event_TableEntry)(nil),  // 148: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableEntry
-	(*GetJobStreamResponse_Terminal_Event_TableRow)(nil),    // 149: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableRow
-	(*GetJobStreamResponse_Terminal_Event_Table)(nil),       // 150: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Table
-	(*GetJobStreamResponse_Terminal_Event_StepGroup)(nil),   // 151: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.StepGroup
-	(*GetJobStreamResponse_Terminal_Event_Step)(nil),        // 152: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Step
-	(*RunnerConfigRequest_Open)(nil),                        // 153: hashicorp.waypoint.RunnerConfigRequest.Open
-	(*RunnerJobStreamRequest_Request)(nil),                  // 154: hashicorp.waypoint.RunnerJobStreamRequest.Request
-	(*RunnerJobStreamRequest_Ack)(nil),                      // 155: hashicorp.waypoint.RunnerJobStreamRequest.Ack
-	(*RunnerJobStreamRequest_Complete)(nil),                 // 156: hashicorp.waypoint.RunnerJobStreamRequest.Complete
-	(*RunnerJobStreamRequest_Error)(nil),                    // 157: hashicorp.waypoint.RunnerJobStreamRequest.Error
-	(*RunnerJobStreamRequest_Heartbeat)(nil),                // 158: hashicorp.waypoint.RunnerJobStreamRequest.Heartbeat
-	(*RunnerJobStreamResponse_JobAssignment)(nil),           // 159: hashicorp.waypoint.RunnerJobStreamResponse.JobAssignment
-	(*RunnerJobStreamResponse_JobCancel)(nil),               // 160: hashicorp.waypoint.RunnerJobStreamResponse.JobCancel
-	(*ServerConfig_AdvertiseAddr)(nil),                      // 161: hashicorp.waypoint.ServerConfig.AdvertiseAddr
-	nil,                                                     // 162: hashicorp.waypoint.Hostname.TargetLabelsEntry
-	(*Hostname_Target)(nil),                                 // 163: hashicorp.waypoint.Hostname.Target
-	(*Hostname_TargetApp)(nil),                              // 164: hashicorp.waypoint.Hostname.TargetApp
-	nil,                                                     // 165: hashicorp.waypoint.Build.LabelsEntry
-	nil,                                                     // 166: hashicorp.waypoint.PushedArtifact.LabelsEntry
-	nil,                                                     // 167: hashicorp.waypoint.Deployment.LabelsEntry
-	nil,                                                     // 168: hashicorp.waypoint.Release.LabelsEntry
-	(*LogBatch_Entry)(nil),                                  // 169: hashicorp.waypoint.LogBatch.Entry
-	(*ExecStreamRequest_Start)(nil),                         // 170: hashicorp.waypoint.ExecStreamRequest.Start
-	(*ExecStreamRequest_Input)(nil),                         // 171: hashicorp.waypoint.ExecStreamRequest.Input
-	(*ExecStreamRequest_PTY)(nil),                           // 172: hashicorp.waypoint.ExecStreamRequest.PTY
-	(*ExecStreamRequest_WindowSize)(nil),                    // 173: hashicorp.waypoint.ExecStreamRequest.WindowSize
-	(*ExecStreamResponse_Exit)(nil),                         // 174: hashicorp.waypoint.ExecStreamResponse.Exit
-	(*ExecStreamResponse_Output)(nil),                       // 175: hashicorp.waypoint.ExecStreamResponse.Output
-	(*EntrypointConfig_Exec)(nil),                           // 176: hashicorp.waypoint.EntrypointConfig.Exec
-	(*EntrypointConfig_URLService)(nil),                     // 177: hashicorp.waypoint.EntrypointConfig.URLService
-	(*EntrypointExecRequest_Open)(nil),                      // 178: hashicorp.waypoint.EntrypointExecRequest.Open
-	(*EntrypointExecRequest_Exit)(nil),                      // 179: hashicorp.waypoint.EntrypointExecRequest.Exit
-	(*EntrypointExecRequest_Output)(nil),                    // 180: hashicorp.waypoint.EntrypointExecRequest.Output
-	(*EntrypointExecRequest_Error)(nil),                     // 181: hashicorp.waypoint.EntrypointExecRequest.Error
-	nil,                                                     // 182: hashicorp.waypoint.TokenTransport.MetadataEntry
-	(*Token_Entrypoint)(nil),                                // 183: hashicorp.waypoint.Token.Entrypoint
-	(*timestamp.Timestamp)(nil),                             // 184: google.protobuf.Timestamp
-	(*status.Status)(nil),                                   // 185: google.rpc.Status
-	(*any.Any)(nil),                                         // 186: google.protobuf.Any
-	(*empty.Empty)(nil),                                     // 187: google.protobuf.Empty
+	(Release_LoadDetails)(0),                                // 7: hashicorp.waypoint.Release.LoadDetails
+	(ExecStreamResponse_Output_Channel)(0),                  // 8: hashicorp.waypoint.ExecStreamResponse.Output.Channel
+	(EntrypointExecRequest_Output_Channel)(0),               // 9: hashicorp.waypoint.EntrypointExecRequest.Output.Channel
+	(*Application)(nil),                                     // 10: hashicorp.waypoint.Application
+	(*Project)(nil),                                         // 11: hashicorp.waypoint.Project
+	(*Workspace)(nil),                                       // 12: hashicorp.waypoint.Workspace
+	(*Ref)(nil),                                             // 13: hashicorp.waypoint.Ref
+	(*Component)(nil),                                       // 14: hashicorp.waypoint.Component
+	(*Status)(nil),                                          // 15: hashicorp.waypoint.Status
+	(*StatusFilter)(nil),                                    // 16: hashicorp.waypoint.StatusFilter
+	(*Operation)(nil),                                       // 17: hashicorp.waypoint.Operation
+	(*OperationOrder)(nil),                                  // 18: hashicorp.waypoint.OperationOrder
+	(*QueueJobRequest)(nil),                                 // 19: hashicorp.waypoint.QueueJobRequest
+	(*QueueJobResponse)(nil),                                // 20: hashicorp.waypoint.QueueJobResponse
+	(*CancelJobRequest)(nil),                                // 21: hashicorp.waypoint.CancelJobRequest
+	(*ValidateJobRequest)(nil),                              // 22: hashicorp.waypoint.ValidateJobRequest
+	(*ValidateJobResponse)(nil),                             // 23: hashicorp.waypoint.ValidateJobResponse
+	(*Job)(nil),                                             // 24: hashicorp.waypoint.Job
+	(*GetJobRequest)(nil),                                   // 25: hashicorp.waypoint.GetJobRequest
+	(*ListJobsRequest)(nil),                                 // 26: hashicorp.waypoint.ListJobsRequest
+	(*ListJobsResponse)(nil),                                // 27: hashicorp.waypoint.ListJobsResponse
+	(*GetJobStreamRequest)(nil),                             // 28: hashicorp.waypoint.GetJobStreamRequest
+	(*GetJobStreamResponse)(nil),                            // 29: hashicorp.waypoint.GetJobStreamResponse
+	(*Runner)(nil),                                          // 30: hashicorp.waypoint.Runner
+	(*RunnerConfigRequest)(nil),                             // 31: hashicorp.waypoint.RunnerConfigRequest
+	(*RunnerConfigResponse)(nil),                            // 32: hashicorp.waypoint.RunnerConfigResponse
+	(*RunnerConfig)(nil),                                    // 33: hashicorp.waypoint.RunnerConfig
+	(*RunnerJobStreamRequest)(nil),                          // 34: hashicorp.waypoint.RunnerJobStreamRequest
+	(*RunnerJobStreamResponse)(nil),                         // 35: hashicorp.waypoint.RunnerJobStreamResponse
+	(*RunnerGetDeploymentConfigRequest)(nil),                // 36: hashicorp.waypoint.RunnerGetDeploymentConfigRequest
+	(*RunnerGetDeploymentConfigResponse)(nil),               // 37: hashicorp.waypoint.RunnerGetDeploymentConfigResponse
+	(*GetRunnerRequest)(nil),                                // 38: hashicorp.waypoint.GetRunnerRequest
+	(*SetServerConfigRequest)(nil),                          // 39: hashicorp.waypoint.SetServerConfigRequest
+	(*ServerConfig)(nil),                                    // 40: hashicorp.waypoint.ServerConfig
+	(*CreateHostnameRequest)(nil),                           // 41: hashicorp.waypoint.CreateHostnameRequest
+	(*CreateHostnameResponse)(nil),                          // 42: hashicorp.waypoint.CreateHostnameResponse
+	(*ListHostnamesRequest)(nil),                            // 43: hashicorp.waypoint.ListHostnamesRequest
+	(*ListHostnamesResponse)(nil),                           // 44: hashicorp.waypoint.ListHostnamesResponse
+	(*DeleteHostnameRequest)(nil),                           // 45: hashicorp.waypoint.DeleteHostnameRequest
+	(*Hostname)(nil),                                        // 46: hashicorp.waypoint.Hostname
+	(*ListWorkspacesResponse)(nil),                          // 47: hashicorp.waypoint.ListWorkspacesResponse
+	(*GetWorkspaceRequest)(nil),                             // 48: hashicorp.waypoint.GetWorkspaceRequest
+	(*GetWorkspaceResponse)(nil),                            // 49: hashicorp.waypoint.GetWorkspaceResponse
+	(*UpsertProjectRequest)(nil),                            // 50: hashicorp.waypoint.UpsertProjectRequest
+	(*UpsertProjectResponse)(nil),                           // 51: hashicorp.waypoint.UpsertProjectResponse
+	(*GetProjectRequest)(nil),                               // 52: hashicorp.waypoint.GetProjectRequest
+	(*GetProjectResponse)(nil),                              // 53: hashicorp.waypoint.GetProjectResponse
+	(*ListProjectsResponse)(nil),                            // 54: hashicorp.waypoint.ListProjectsResponse
+	(*UpsertApplicationRequest)(nil),                        // 55: hashicorp.waypoint.UpsertApplicationRequest
+	(*UpsertApplicationResponse)(nil),                       // 56: hashicorp.waypoint.UpsertApplicationResponse
+	(*UpsertBuildRequest)(nil),                              // 57: hashicorp.waypoint.UpsertBuildRequest
+	(*UpsertBuildResponse)(nil),                             // 58: hashicorp.waypoint.UpsertBuildResponse
+	(*ListBuildsRequest)(nil),                               // 59: hashicorp.waypoint.ListBuildsRequest
+	(*ListBuildsResponse)(nil),                              // 60: hashicorp.waypoint.ListBuildsResponse
+	(*GetLatestBuildRequest)(nil),                           // 61: hashicorp.waypoint.GetLatestBuildRequest
+	(*GetBuildRequest)(nil),                                 // 62: hashicorp.waypoint.GetBuildRequest
+	(*Build)(nil),                                           // 63: hashicorp.waypoint.Build
+	(*Artifact)(nil),                                        // 64: hashicorp.waypoint.Artifact
+	(*UpsertPushedArtifactRequest)(nil),                     // 65: hashicorp.waypoint.UpsertPushedArtifactRequest
+	(*UpsertPushedArtifactResponse)(nil),                    // 66: hashicorp.waypoint.UpsertPushedArtifactResponse
+	(*GetLatestPushedArtifactRequest)(nil),                  // 67: hashicorp.waypoint.GetLatestPushedArtifactRequest
+	(*GetPushedArtifactRequest)(nil),                        // 68: hashicorp.waypoint.GetPushedArtifactRequest
+	(*ListPushedArtifactsRequest)(nil),                      // 69: hashicorp.waypoint.ListPushedArtifactsRequest
+	(*ListPushedArtifactsResponse)(nil),                     // 70: hashicorp.waypoint.ListPushedArtifactsResponse
+	(*PushedArtifact)(nil),                                  // 71: hashicorp.waypoint.PushedArtifact
+	(*GetDeploymentRequest)(nil),                            // 72: hashicorp.waypoint.GetDeploymentRequest
+	(*UpsertDeploymentRequest)(nil),                         // 73: hashicorp.waypoint.UpsertDeploymentRequest
+	(*UpsertDeploymentResponse)(nil),                        // 74: hashicorp.waypoint.UpsertDeploymentResponse
+	(*ListDeploymentsRequest)(nil),                          // 75: hashicorp.waypoint.ListDeploymentsRequest
+	(*ListDeploymentsResponse)(nil),                         // 76: hashicorp.waypoint.ListDeploymentsResponse
+	(*Deployment)(nil),                                      // 77: hashicorp.waypoint.Deployment
+	(*UpsertReleaseRequest)(nil),                            // 78: hashicorp.waypoint.UpsertReleaseRequest
+	(*UpsertReleaseResponse)(nil),                           // 79: hashicorp.waypoint.UpsertReleaseResponse
+	(*GetLatestReleaseRequest)(nil),                         // 80: hashicorp.waypoint.GetLatestReleaseRequest
+	(*ListReleasesRequest)(nil),                             // 81: hashicorp.waypoint.ListReleasesRequest
+	(*ListReleasesResponse)(nil),                            // 82: hashicorp.waypoint.ListReleasesResponse
+	(*GetReleaseRequest)(nil),                               // 83: hashicorp.waypoint.GetReleaseRequest
+	(*Release)(nil),                                         // 84: hashicorp.waypoint.Release
+	(*GetLogStreamRequest)(nil),                             // 85: hashicorp.waypoint.GetLogStreamRequest
+	(*LogBatch)(nil),                                        // 86: hashicorp.waypoint.LogBatch
+	(*ConfigVar)(nil),                                       // 87: hashicorp.waypoint.ConfigVar
+	(*ConfigSetRequest)(nil),                                // 88: hashicorp.waypoint.ConfigSetRequest
+	(*ConfigSetResponse)(nil),                               // 89: hashicorp.waypoint.ConfigSetResponse
+	(*ConfigGetRequest)(nil),                                // 90: hashicorp.waypoint.ConfigGetRequest
+	(*ConfigGetResponse)(nil),                               // 91: hashicorp.waypoint.ConfigGetResponse
+	(*ExecStreamRequest)(nil),                               // 92: hashicorp.waypoint.ExecStreamRequest
+	(*ExecStreamResponse)(nil),                              // 93: hashicorp.waypoint.ExecStreamResponse
+	(*EntrypointConfigRequest)(nil),                         // 94: hashicorp.waypoint.EntrypointConfigRequest
+	(*EntrypointConfigResponse)(nil),                        // 95: hashicorp.waypoint.EntrypointConfigResponse
+	(*EntrypointConfig)(nil),                                // 96: hashicorp.waypoint.EntrypointConfig
+	(*EntrypointLogBatch)(nil),                              // 97: hashicorp.waypoint.EntrypointLogBatch
+	(*EntrypointExecRequest)(nil),                           // 98: hashicorp.waypoint.EntrypointExecRequest
+	(*EntrypointExecResponse)(nil),                          // 99: hashicorp.waypoint.EntrypointExecResponse
+	(*TokenTransport)(nil),                                  // 100: hashicorp.waypoint.TokenTransport
+	(*Token)(nil),                                           // 101: hashicorp.waypoint.Token
+	(*HMACKey)(nil),                                         // 102: hashicorp.waypoint.HMACKey
+	(*InviteTokenRequest)(nil),                              // 103: hashicorp.waypoint.InviteTokenRequest
+	(*NewTokenResponse)(nil),                                // 104: hashicorp.waypoint.NewTokenResponse
+	(*ConvertInviteTokenRequest)(nil),                       // 105: hashicorp.waypoint.ConvertInviteTokenRequest
+	(*Workspace_Application)(nil),                           // 106: hashicorp.waypoint.Workspace.Application
+	(*Ref_Application)(nil),                                 // 107: hashicorp.waypoint.Ref.Application
+	(*Ref_Project)(nil),                                     // 108: hashicorp.waypoint.Ref.Project
+	(*Ref_Workspace)(nil),                                   // 109: hashicorp.waypoint.Ref.Workspace
+	(*Ref_Component)(nil),                                   // 110: hashicorp.waypoint.Ref.Component
+	(*Ref_Operation)(nil),                                   // 111: hashicorp.waypoint.Ref.Operation
+	(*Ref_OperationSeq)(nil),                                // 112: hashicorp.waypoint.Ref.OperationSeq
+	(*Ref_Runner)(nil),                                      // 113: hashicorp.waypoint.Ref.Runner
+	(*Ref_RunnerId)(nil),                                    // 114: hashicorp.waypoint.Ref.RunnerId
+	(*Ref_RunnerAny)(nil),                                   // 115: hashicorp.waypoint.Ref.RunnerAny
+	(*StatusFilter_Filter)(nil),                             // 116: hashicorp.waypoint.StatusFilter.Filter
+	nil,                                                     // 117: hashicorp.waypoint.Job.LabelsEntry
+	nil,                                                     // 118: hashicorp.waypoint.Job.DataSourceOverridesEntry
+	(*Job_Result)(nil),                                      // 119: hashicorp.waypoint.Job.Result
+	(*Job_DataSource)(nil),                                  // 120: hashicorp.waypoint.Job.DataSource
+	(*Job_Local)(nil),                                       // 121: hashicorp.waypoint.Job.Local
+	(*Job_Git)(nil),                                         // 122: hashicorp.waypoint.Job.Git
+	(*Job_Noop)(nil),                                        // 123: hashicorp.waypoint.Job.Noop
+	(*Job_ValidateOp)(nil),                                  // 124: hashicorp.waypoint.Job.ValidateOp
+	(*Job_ValidateResult)(nil),                              // 125: hashicorp.waypoint.Job.ValidateResult
+	(*Job_AuthOp)(nil),                                      // 126: hashicorp.waypoint.Job.AuthOp
+	(*Job_AuthResult)(nil),                                  // 127: hashicorp.waypoint.Job.AuthResult
+	(*Job_BuildOp)(nil),                                     // 128: hashicorp.waypoint.Job.BuildOp
+	(*Job_BuildResult)(nil),                                 // 129: hashicorp.waypoint.Job.BuildResult
+	(*Job_PushOp)(nil),                                      // 130: hashicorp.waypoint.Job.PushOp
+	(*Job_PushResult)(nil),                                  // 131: hashicorp.waypoint.Job.PushResult
+	(*Job_DeployOp)(nil),                                    // 132: hashicorp.waypoint.Job.DeployOp
+	(*Job_DeployResult)(nil),                                // 133: hashicorp.waypoint.Job.DeployResult
+	(*Job_DestroyOp)(nil),                                   // 134: hashicorp.waypoint.Job.DestroyOp
+	(*Job_ReleaseOp)(nil),                                   // 135: hashicorp.waypoint.Job.ReleaseOp
+	(*Job_ReleaseResult)(nil),                               // 136: hashicorp.waypoint.Job.ReleaseResult
+	(*Job_AuthResult_Result)(nil),                           // 137: hashicorp.waypoint.Job.AuthResult.Result
+	(*GetJobStreamResponse_Open)(nil),                       // 138: hashicorp.waypoint.GetJobStreamResponse.Open
+	(*GetJobStreamResponse_State)(nil),                      // 139: hashicorp.waypoint.GetJobStreamResponse.State
+	(*GetJobStreamResponse_Terminal)(nil),                   // 140: hashicorp.waypoint.GetJobStreamResponse.Terminal
+	(*GetJobStreamResponse_Error)(nil),                      // 141: hashicorp.waypoint.GetJobStreamResponse.Error
+	(*GetJobStreamResponse_Complete)(nil),                   // 142: hashicorp.waypoint.GetJobStreamResponse.Complete
+	(*GetJobStreamResponse_Terminal_Event)(nil),             // 143: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event
+	(*GetJobStreamResponse_Terminal_Event_Status)(nil),      // 144: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Status
+	(*GetJobStreamResponse_Terminal_Event_Line)(nil),        // 145: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Line
+	(*GetJobStreamResponse_Terminal_Event_Raw)(nil),         // 146: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Raw
+	(*GetJobStreamResponse_Terminal_Event_NamedValue)(nil),  // 147: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValue
+	(*GetJobStreamResponse_Terminal_Event_NamedValues)(nil), // 148: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues
+	(*GetJobStreamResponse_Terminal_Event_TableEntry)(nil),  // 149: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableEntry
+	(*GetJobStreamResponse_Terminal_Event_TableRow)(nil),    // 150: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableRow
+	(*GetJobStreamResponse_Terminal_Event_Table)(nil),       // 151: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Table
+	(*GetJobStreamResponse_Terminal_Event_StepGroup)(nil),   // 152: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.StepGroup
+	(*GetJobStreamResponse_Terminal_Event_Step)(nil),        // 153: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Step
+	(*RunnerConfigRequest_Open)(nil),                        // 154: hashicorp.waypoint.RunnerConfigRequest.Open
+	(*RunnerJobStreamRequest_Request)(nil),                  // 155: hashicorp.waypoint.RunnerJobStreamRequest.Request
+	(*RunnerJobStreamRequest_Ack)(nil),                      // 156: hashicorp.waypoint.RunnerJobStreamRequest.Ack
+	(*RunnerJobStreamRequest_Complete)(nil),                 // 157: hashicorp.waypoint.RunnerJobStreamRequest.Complete
+	(*RunnerJobStreamRequest_Error)(nil),                    // 158: hashicorp.waypoint.RunnerJobStreamRequest.Error
+	(*RunnerJobStreamRequest_Heartbeat)(nil),                // 159: hashicorp.waypoint.RunnerJobStreamRequest.Heartbeat
+	(*RunnerJobStreamResponse_JobAssignment)(nil),           // 160: hashicorp.waypoint.RunnerJobStreamResponse.JobAssignment
+	(*RunnerJobStreamResponse_JobCancel)(nil),               // 161: hashicorp.waypoint.RunnerJobStreamResponse.JobCancel
+	(*ServerConfig_AdvertiseAddr)(nil),                      // 162: hashicorp.waypoint.ServerConfig.AdvertiseAddr
+	nil,                                                     // 163: hashicorp.waypoint.Hostname.TargetLabelsEntry
+	(*Hostname_Target)(nil),                                 // 164: hashicorp.waypoint.Hostname.Target
+	(*Hostname_TargetApp)(nil),                              // 165: hashicorp.waypoint.Hostname.TargetApp
+	nil,                                                     // 166: hashicorp.waypoint.Build.LabelsEntry
+	nil,                                                     // 167: hashicorp.waypoint.PushedArtifact.LabelsEntry
+	nil,                                                     // 168: hashicorp.waypoint.Deployment.LabelsEntry
+	(*Deployment_Preload)(nil),                              // 169: hashicorp.waypoint.Deployment.Preload
+	nil,                                                     // 170: hashicorp.waypoint.Release.LabelsEntry
+	(*Release_Preload)(nil),                                 // 171: hashicorp.waypoint.Release.Preload
+	(*LogBatch_Entry)(nil),                                  // 172: hashicorp.waypoint.LogBatch.Entry
+	(*ExecStreamRequest_Start)(nil),                         // 173: hashicorp.waypoint.ExecStreamRequest.Start
+	(*ExecStreamRequest_Input)(nil),                         // 174: hashicorp.waypoint.ExecStreamRequest.Input
+	(*ExecStreamRequest_PTY)(nil),                           // 175: hashicorp.waypoint.ExecStreamRequest.PTY
+	(*ExecStreamRequest_WindowSize)(nil),                    // 176: hashicorp.waypoint.ExecStreamRequest.WindowSize
+	(*ExecStreamResponse_Exit)(nil),                         // 177: hashicorp.waypoint.ExecStreamResponse.Exit
+	(*ExecStreamResponse_Output)(nil),                       // 178: hashicorp.waypoint.ExecStreamResponse.Output
+	(*EntrypointConfig_Exec)(nil),                           // 179: hashicorp.waypoint.EntrypointConfig.Exec
+	(*EntrypointConfig_URLService)(nil),                     // 180: hashicorp.waypoint.EntrypointConfig.URLService
+	(*EntrypointExecRequest_Open)(nil),                      // 181: hashicorp.waypoint.EntrypointExecRequest.Open
+	(*EntrypointExecRequest_Exit)(nil),                      // 182: hashicorp.waypoint.EntrypointExecRequest.Exit
+	(*EntrypointExecRequest_Output)(nil),                    // 183: hashicorp.waypoint.EntrypointExecRequest.Output
+	(*EntrypointExecRequest_Error)(nil),                     // 184: hashicorp.waypoint.EntrypointExecRequest.Error
+	nil,                                                     // 185: hashicorp.waypoint.TokenTransport.MetadataEntry
+	(*Token_Entrypoint)(nil),                                // 186: hashicorp.waypoint.Token.Entrypoint
+	(*timestamp.Timestamp)(nil),                             // 187: google.protobuf.Timestamp
+	(*status.Status)(nil),                                   // 188: google.rpc.Status
+	(*any.Any)(nil),                                         // 189: google.protobuf.Any
+	(*empty.Empty)(nil),                                     // 190: google.protobuf.Empty
 }
 var file_internal_server_proto_server_proto_depIdxs = []int32{
-	107, // 0: hashicorp.waypoint.Application.project:type_name -> hashicorp.waypoint.Ref.Project
-	9,   // 1: hashicorp.waypoint.Project.applications:type_name -> hashicorp.waypoint.Application
-	119, // 2: hashicorp.waypoint.Project.data_source:type_name -> hashicorp.waypoint.Job.DataSource
-	105, // 3: hashicorp.waypoint.Workspace.applications:type_name -> hashicorp.waypoint.Workspace.Application
-	184, // 4: hashicorp.waypoint.Workspace.active_time:type_name -> google.protobuf.Timestamp
+	108, // 0: hashicorp.waypoint.Application.project:type_name -> hashicorp.waypoint.Ref.Project
+	10,  // 1: hashicorp.waypoint.Project.applications:type_name -> hashicorp.waypoint.Application
+	120, // 2: hashicorp.waypoint.Project.data_source:type_name -> hashicorp.waypoint.Job.DataSource
+	106, // 3: hashicorp.waypoint.Workspace.applications:type_name -> hashicorp.waypoint.Workspace.Application
+	187, // 4: hashicorp.waypoint.Workspace.active_time:type_name -> google.protobuf.Timestamp
 	0,   // 5: hashicorp.waypoint.Component.type:type_name -> hashicorp.waypoint.Component.Type
 	1,   // 6: hashicorp.waypoint.Status.state:type_name -> hashicorp.waypoint.Status.State
-	185, // 7: hashicorp.waypoint.Status.error:type_name -> google.rpc.Status
-	184, // 8: hashicorp.waypoint.Status.start_time:type_name -> google.protobuf.Timestamp
-	184, // 9: hashicorp.waypoint.Status.complete_time:type_name -> google.protobuf.Timestamp
-	115, // 10: hashicorp.waypoint.StatusFilter.filters:type_name -> hashicorp.waypoint.StatusFilter.Filter
+	188, // 7: hashicorp.waypoint.Status.error:type_name -> google.rpc.Status
+	187, // 8: hashicorp.waypoint.Status.start_time:type_name -> google.protobuf.Timestamp
+	187, // 9: hashicorp.waypoint.Status.complete_time:type_name -> google.protobuf.Timestamp
+	116, // 10: hashicorp.waypoint.StatusFilter.filters:type_name -> hashicorp.waypoint.StatusFilter.Filter
 	3,   // 11: hashicorp.waypoint.OperationOrder.order:type_name -> hashicorp.waypoint.OperationOrder.Order
-	23,  // 12: hashicorp.waypoint.QueueJobRequest.job:type_name -> hashicorp.waypoint.Job
-	23,  // 13: hashicorp.waypoint.ValidateJobRequest.job:type_name -> hashicorp.waypoint.Job
-	185, // 14: hashicorp.waypoint.ValidateJobResponse.validation_error:type_name -> google.rpc.Status
-	106, // 15: hashicorp.waypoint.Job.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 16: hashicorp.waypoint.Job.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	112, // 17: hashicorp.waypoint.Job.target_runner:type_name -> hashicorp.waypoint.Ref.Runner
-	116, // 18: hashicorp.waypoint.Job.labels:type_name -> hashicorp.waypoint.Job.LabelsEntry
-	119, // 19: hashicorp.waypoint.Job.data_source:type_name -> hashicorp.waypoint.Job.DataSource
-	117, // 20: hashicorp.waypoint.Job.data_source_overrides:type_name -> hashicorp.waypoint.Job.DataSourceOverridesEntry
-	122, // 21: hashicorp.waypoint.Job.noop:type_name -> hashicorp.waypoint.Job.Noop
-	127, // 22: hashicorp.waypoint.Job.build:type_name -> hashicorp.waypoint.Job.BuildOp
-	129, // 23: hashicorp.waypoint.Job.push:type_name -> hashicorp.waypoint.Job.PushOp
-	131, // 24: hashicorp.waypoint.Job.deploy:type_name -> hashicorp.waypoint.Job.DeployOp
-	133, // 25: hashicorp.waypoint.Job.destroy:type_name -> hashicorp.waypoint.Job.DestroyOp
-	134, // 26: hashicorp.waypoint.Job.release:type_name -> hashicorp.waypoint.Job.ReleaseOp
-	123, // 27: hashicorp.waypoint.Job.validate:type_name -> hashicorp.waypoint.Job.ValidateOp
-	125, // 28: hashicorp.waypoint.Job.auth:type_name -> hashicorp.waypoint.Job.AuthOp
+	24,  // 12: hashicorp.waypoint.QueueJobRequest.job:type_name -> hashicorp.waypoint.Job
+	24,  // 13: hashicorp.waypoint.ValidateJobRequest.job:type_name -> hashicorp.waypoint.Job
+	188, // 14: hashicorp.waypoint.ValidateJobResponse.validation_error:type_name -> google.rpc.Status
+	107, // 15: hashicorp.waypoint.Job.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 16: hashicorp.waypoint.Job.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	113, // 17: hashicorp.waypoint.Job.target_runner:type_name -> hashicorp.waypoint.Ref.Runner
+	117, // 18: hashicorp.waypoint.Job.labels:type_name -> hashicorp.waypoint.Job.LabelsEntry
+	120, // 19: hashicorp.waypoint.Job.data_source:type_name -> hashicorp.waypoint.Job.DataSource
+	118, // 20: hashicorp.waypoint.Job.data_source_overrides:type_name -> hashicorp.waypoint.Job.DataSourceOverridesEntry
+	123, // 21: hashicorp.waypoint.Job.noop:type_name -> hashicorp.waypoint.Job.Noop
+	128, // 22: hashicorp.waypoint.Job.build:type_name -> hashicorp.waypoint.Job.BuildOp
+	130, // 23: hashicorp.waypoint.Job.push:type_name -> hashicorp.waypoint.Job.PushOp
+	132, // 24: hashicorp.waypoint.Job.deploy:type_name -> hashicorp.waypoint.Job.DeployOp
+	134, // 25: hashicorp.waypoint.Job.destroy:type_name -> hashicorp.waypoint.Job.DestroyOp
+	135, // 26: hashicorp.waypoint.Job.release:type_name -> hashicorp.waypoint.Job.ReleaseOp
+	124, // 27: hashicorp.waypoint.Job.validate:type_name -> hashicorp.waypoint.Job.ValidateOp
+	126, // 28: hashicorp.waypoint.Job.auth:type_name -> hashicorp.waypoint.Job.AuthOp
 	4,   // 29: hashicorp.waypoint.Job.state:type_name -> hashicorp.waypoint.Job.State
-	113, // 30: hashicorp.waypoint.Job.assigned_runner:type_name -> hashicorp.waypoint.Ref.RunnerId
-	184, // 31: hashicorp.waypoint.Job.queue_time:type_name -> google.protobuf.Timestamp
-	184, // 32: hashicorp.waypoint.Job.assign_time:type_name -> google.protobuf.Timestamp
-	184, // 33: hashicorp.waypoint.Job.ack_time:type_name -> google.protobuf.Timestamp
-	184, // 34: hashicorp.waypoint.Job.complete_time:type_name -> google.protobuf.Timestamp
-	185, // 35: hashicorp.waypoint.Job.error:type_name -> google.rpc.Status
-	118, // 36: hashicorp.waypoint.Job.result:type_name -> hashicorp.waypoint.Job.Result
-	184, // 37: hashicorp.waypoint.Job.cancel_time:type_name -> google.protobuf.Timestamp
-	184, // 38: hashicorp.waypoint.Job.expire_time:type_name -> google.protobuf.Timestamp
-	23,  // 39: hashicorp.waypoint.ListJobsResponse.jobs:type_name -> hashicorp.waypoint.Job
-	137, // 40: hashicorp.waypoint.GetJobStreamResponse.open:type_name -> hashicorp.waypoint.GetJobStreamResponse.Open
-	138, // 41: hashicorp.waypoint.GetJobStreamResponse.state:type_name -> hashicorp.waypoint.GetJobStreamResponse.State
-	139, // 42: hashicorp.waypoint.GetJobStreamResponse.terminal:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal
-	140, // 43: hashicorp.waypoint.GetJobStreamResponse.error:type_name -> hashicorp.waypoint.GetJobStreamResponse.Error
-	141, // 44: hashicorp.waypoint.GetJobStreamResponse.complete:type_name -> hashicorp.waypoint.GetJobStreamResponse.Complete
-	13,  // 45: hashicorp.waypoint.Runner.components:type_name -> hashicorp.waypoint.Component
-	153, // 46: hashicorp.waypoint.RunnerConfigRequest.open:type_name -> hashicorp.waypoint.RunnerConfigRequest.Open
-	32,  // 47: hashicorp.waypoint.RunnerConfigResponse.config:type_name -> hashicorp.waypoint.RunnerConfig
-	86,  // 48: hashicorp.waypoint.RunnerConfig.config_vars:type_name -> hashicorp.waypoint.ConfigVar
-	154, // 49: hashicorp.waypoint.RunnerJobStreamRequest.request:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Request
-	155, // 50: hashicorp.waypoint.RunnerJobStreamRequest.ack:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Ack
-	156, // 51: hashicorp.waypoint.RunnerJobStreamRequest.complete:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Complete
-	157, // 52: hashicorp.waypoint.RunnerJobStreamRequest.error:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Error
-	139, // 53: hashicorp.waypoint.RunnerJobStreamRequest.terminal:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal
-	158, // 54: hashicorp.waypoint.RunnerJobStreamRequest.heartbeat:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Heartbeat
-	159, // 55: hashicorp.waypoint.RunnerJobStreamResponse.assignment:type_name -> hashicorp.waypoint.RunnerJobStreamResponse.JobAssignment
-	160, // 56: hashicorp.waypoint.RunnerJobStreamResponse.cancel:type_name -> hashicorp.waypoint.RunnerJobStreamResponse.JobCancel
-	39,  // 57: hashicorp.waypoint.SetServerConfigRequest.config:type_name -> hashicorp.waypoint.ServerConfig
-	161, // 58: hashicorp.waypoint.ServerConfig.advertise_addrs:type_name -> hashicorp.waypoint.ServerConfig.AdvertiseAddr
-	163, // 59: hashicorp.waypoint.CreateHostnameRequest.target:type_name -> hashicorp.waypoint.Hostname.Target
-	45,  // 60: hashicorp.waypoint.CreateHostnameResponse.hostname:type_name -> hashicorp.waypoint.Hostname
-	163, // 61: hashicorp.waypoint.ListHostnamesRequest.target:type_name -> hashicorp.waypoint.Hostname.Target
-	45,  // 62: hashicorp.waypoint.ListHostnamesResponse.hostnames:type_name -> hashicorp.waypoint.Hostname
-	162, // 63: hashicorp.waypoint.Hostname.target_labels:type_name -> hashicorp.waypoint.Hostname.TargetLabelsEntry
-	11,  // 64: hashicorp.waypoint.ListWorkspacesResponse.workspaces:type_name -> hashicorp.waypoint.Workspace
-	108, // 65: hashicorp.waypoint.GetWorkspaceRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	11,  // 66: hashicorp.waypoint.GetWorkspaceResponse.workspace:type_name -> hashicorp.waypoint.Workspace
-	10,  // 67: hashicorp.waypoint.UpsertProjectRequest.project:type_name -> hashicorp.waypoint.Project
-	10,  // 68: hashicorp.waypoint.UpsertProjectResponse.project:type_name -> hashicorp.waypoint.Project
-	107, // 69: hashicorp.waypoint.GetProjectRequest.project:type_name -> hashicorp.waypoint.Ref.Project
-	10,  // 70: hashicorp.waypoint.GetProjectResponse.project:type_name -> hashicorp.waypoint.Project
-	107, // 71: hashicorp.waypoint.ListProjectsResponse.projects:type_name -> hashicorp.waypoint.Ref.Project
-	107, // 72: hashicorp.waypoint.UpsertApplicationRequest.project:type_name -> hashicorp.waypoint.Ref.Project
-	9,   // 73: hashicorp.waypoint.UpsertApplicationResponse.application:type_name -> hashicorp.waypoint.Application
-	62,  // 74: hashicorp.waypoint.UpsertBuildRequest.build:type_name -> hashicorp.waypoint.Build
-	62,  // 75: hashicorp.waypoint.UpsertBuildResponse.build:type_name -> hashicorp.waypoint.Build
-	106, // 76: hashicorp.waypoint.ListBuildsRequest.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 77: hashicorp.waypoint.ListBuildsRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	17,  // 78: hashicorp.waypoint.ListBuildsRequest.order:type_name -> hashicorp.waypoint.OperationOrder
-	62,  // 79: hashicorp.waypoint.ListBuildsResponse.builds:type_name -> hashicorp.waypoint.Build
-	106, // 80: hashicorp.waypoint.GetLatestBuildRequest.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 81: hashicorp.waypoint.GetLatestBuildRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	110, // 82: hashicorp.waypoint.GetBuildRequest.ref:type_name -> hashicorp.waypoint.Ref.Operation
-	106, // 83: hashicorp.waypoint.Build.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 84: hashicorp.waypoint.Build.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	14,  // 85: hashicorp.waypoint.Build.status:type_name -> hashicorp.waypoint.Status
-	13,  // 86: hashicorp.waypoint.Build.component:type_name -> hashicorp.waypoint.Component
-	63,  // 87: hashicorp.waypoint.Build.artifact:type_name -> hashicorp.waypoint.Artifact
-	165, // 88: hashicorp.waypoint.Build.labels:type_name -> hashicorp.waypoint.Build.LabelsEntry
-	186, // 89: hashicorp.waypoint.Artifact.artifact:type_name -> google.protobuf.Any
-	70,  // 90: hashicorp.waypoint.UpsertPushedArtifactRequest.artifact:type_name -> hashicorp.waypoint.PushedArtifact
-	70,  // 91: hashicorp.waypoint.UpsertPushedArtifactResponse.artifact:type_name -> hashicorp.waypoint.PushedArtifact
-	106, // 92: hashicorp.waypoint.GetLatestPushedArtifactRequest.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 93: hashicorp.waypoint.GetLatestPushedArtifactRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	110, // 94: hashicorp.waypoint.GetPushedArtifactRequest.ref:type_name -> hashicorp.waypoint.Ref.Operation
-	106, // 95: hashicorp.waypoint.ListPushedArtifactsRequest.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 96: hashicorp.waypoint.ListPushedArtifactsRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	15,  // 97: hashicorp.waypoint.ListPushedArtifactsRequest.status:type_name -> hashicorp.waypoint.StatusFilter
-	17,  // 98: hashicorp.waypoint.ListPushedArtifactsRequest.order:type_name -> hashicorp.waypoint.OperationOrder
-	70,  // 99: hashicorp.waypoint.ListPushedArtifactsResponse.artifacts:type_name -> hashicorp.waypoint.PushedArtifact
-	106, // 100: hashicorp.waypoint.PushedArtifact.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 101: hashicorp.waypoint.PushedArtifact.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	14,  // 102: hashicorp.waypoint.PushedArtifact.status:type_name -> hashicorp.waypoint.Status
-	13,  // 103: hashicorp.waypoint.PushedArtifact.component:type_name -> hashicorp.waypoint.Component
-	63,  // 104: hashicorp.waypoint.PushedArtifact.artifact:type_name -> hashicorp.waypoint.Artifact
-	166, // 105: hashicorp.waypoint.PushedArtifact.labels:type_name -> hashicorp.waypoint.PushedArtifact.LabelsEntry
-	62,  // 106: hashicorp.waypoint.PushedArtifact.build:type_name -> hashicorp.waypoint.Build
-	110, // 107: hashicorp.waypoint.GetDeploymentRequest.ref:type_name -> hashicorp.waypoint.Ref.Operation
-	76,  // 108: hashicorp.waypoint.UpsertDeploymentRequest.deployment:type_name -> hashicorp.waypoint.Deployment
-	5,   // 109: hashicorp.waypoint.UpsertDeploymentRequest.auto_hostname:type_name -> hashicorp.waypoint.UpsertDeploymentRequest.Tristate
-	76,  // 110: hashicorp.waypoint.UpsertDeploymentResponse.deployment:type_name -> hashicorp.waypoint.Deployment
-	106, // 111: hashicorp.waypoint.ListDeploymentsRequest.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 112: hashicorp.waypoint.ListDeploymentsRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	15,  // 113: hashicorp.waypoint.ListDeploymentsRequest.status:type_name -> hashicorp.waypoint.StatusFilter
-	2,   // 114: hashicorp.waypoint.ListDeploymentsRequest.physical_state:type_name -> hashicorp.waypoint.Operation.PhysicalState
-	17,  // 115: hashicorp.waypoint.ListDeploymentsRequest.order:type_name -> hashicorp.waypoint.OperationOrder
-	6,   // 116: hashicorp.waypoint.ListDeploymentsRequest.load_details:type_name -> hashicorp.waypoint.Deployment.LoadDetails
-	76,  // 117: hashicorp.waypoint.ListDeploymentsResponse.deployments:type_name -> hashicorp.waypoint.Deployment
-	106, // 118: hashicorp.waypoint.Deployment.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 119: hashicorp.waypoint.Deployment.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	2,   // 120: hashicorp.waypoint.Deployment.state:type_name -> hashicorp.waypoint.Operation.PhysicalState
-	14,  // 121: hashicorp.waypoint.Deployment.status:type_name -> hashicorp.waypoint.Status
-	13,  // 122: hashicorp.waypoint.Deployment.component:type_name -> hashicorp.waypoint.Component
-	186, // 123: hashicorp.waypoint.Deployment.deployment:type_name -> google.protobuf.Any
-	167, // 124: hashicorp.waypoint.Deployment.labels:type_name -> hashicorp.waypoint.Deployment.LabelsEntry
-	70,  // 125: hashicorp.waypoint.Deployment.artifact:type_name -> hashicorp.waypoint.PushedArtifact
-	62,  // 126: hashicorp.waypoint.Deployment.build:type_name -> hashicorp.waypoint.Build
-	83,  // 127: hashicorp.waypoint.UpsertReleaseRequest.release:type_name -> hashicorp.waypoint.Release
-	83,  // 128: hashicorp.waypoint.UpsertReleaseResponse.release:type_name -> hashicorp.waypoint.Release
-	106, // 129: hashicorp.waypoint.GetLatestReleaseRequest.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 130: hashicorp.waypoint.GetLatestReleaseRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	106, // 131: hashicorp.waypoint.ListReleasesRequest.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 132: hashicorp.waypoint.ListReleasesRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	15,  // 133: hashicorp.waypoint.ListReleasesRequest.status:type_name -> hashicorp.waypoint.StatusFilter
-	2,   // 134: hashicorp.waypoint.ListReleasesRequest.physical_state:type_name -> hashicorp.waypoint.Operation.PhysicalState
-	17,  // 135: hashicorp.waypoint.ListReleasesRequest.order:type_name -> hashicorp.waypoint.OperationOrder
-	83,  // 136: hashicorp.waypoint.ListReleasesResponse.releases:type_name -> hashicorp.waypoint.Release
-	110, // 137: hashicorp.waypoint.GetReleaseRequest.ref:type_name -> hashicorp.waypoint.Ref.Operation
-	106, // 138: hashicorp.waypoint.Release.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 139: hashicorp.waypoint.Release.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	14,  // 140: hashicorp.waypoint.Release.status:type_name -> hashicorp.waypoint.Status
-	2,   // 141: hashicorp.waypoint.Release.state:type_name -> hashicorp.waypoint.Operation.PhysicalState
-	13,  // 142: hashicorp.waypoint.Release.component:type_name -> hashicorp.waypoint.Component
-	186, // 143: hashicorp.waypoint.Release.release:type_name -> google.protobuf.Any
-	168, // 144: hashicorp.waypoint.Release.labels:type_name -> hashicorp.waypoint.Release.LabelsEntry
-	169, // 145: hashicorp.waypoint.LogBatch.lines:type_name -> hashicorp.waypoint.LogBatch.Entry
-	106, // 146: hashicorp.waypoint.ConfigVar.application:type_name -> hashicorp.waypoint.Ref.Application
-	107, // 147: hashicorp.waypoint.ConfigVar.project:type_name -> hashicorp.waypoint.Ref.Project
-	112, // 148: hashicorp.waypoint.ConfigVar.runner:type_name -> hashicorp.waypoint.Ref.Runner
-	86,  // 149: hashicorp.waypoint.ConfigSetRequest.variables:type_name -> hashicorp.waypoint.ConfigVar
-	106, // 150: hashicorp.waypoint.ConfigGetRequest.application:type_name -> hashicorp.waypoint.Ref.Application
-	107, // 151: hashicorp.waypoint.ConfigGetRequest.project:type_name -> hashicorp.waypoint.Ref.Project
-	113, // 152: hashicorp.waypoint.ConfigGetRequest.runner:type_name -> hashicorp.waypoint.Ref.RunnerId
-	86,  // 153: hashicorp.waypoint.ConfigGetResponse.variables:type_name -> hashicorp.waypoint.ConfigVar
-	170, // 154: hashicorp.waypoint.ExecStreamRequest.start:type_name -> hashicorp.waypoint.ExecStreamRequest.Start
-	171, // 155: hashicorp.waypoint.ExecStreamRequest.input:type_name -> hashicorp.waypoint.ExecStreamRequest.Input
-	173, // 156: hashicorp.waypoint.ExecStreamRequest.winch:type_name -> hashicorp.waypoint.ExecStreamRequest.WindowSize
-	175, // 157: hashicorp.waypoint.ExecStreamResponse.output:type_name -> hashicorp.waypoint.ExecStreamResponse.Output
-	174, // 158: hashicorp.waypoint.ExecStreamResponse.exit:type_name -> hashicorp.waypoint.ExecStreamResponse.Exit
-	95,  // 159: hashicorp.waypoint.EntrypointConfigResponse.config:type_name -> hashicorp.waypoint.EntrypointConfig
-	176, // 160: hashicorp.waypoint.EntrypointConfig.exec:type_name -> hashicorp.waypoint.EntrypointConfig.Exec
-	86,  // 161: hashicorp.waypoint.EntrypointConfig.env_vars:type_name -> hashicorp.waypoint.ConfigVar
-	177, // 162: hashicorp.waypoint.EntrypointConfig.url_service:type_name -> hashicorp.waypoint.EntrypointConfig.URLService
-	169, // 163: hashicorp.waypoint.EntrypointLogBatch.lines:type_name -> hashicorp.waypoint.LogBatch.Entry
-	178, // 164: hashicorp.waypoint.EntrypointExecRequest.open:type_name -> hashicorp.waypoint.EntrypointExecRequest.Open
-	179, // 165: hashicorp.waypoint.EntrypointExecRequest.exit:type_name -> hashicorp.waypoint.EntrypointExecRequest.Exit
-	180, // 166: hashicorp.waypoint.EntrypointExecRequest.output:type_name -> hashicorp.waypoint.EntrypointExecRequest.Output
-	181, // 167: hashicorp.waypoint.EntrypointExecRequest.error:type_name -> hashicorp.waypoint.EntrypointExecRequest.Error
-	173, // 168: hashicorp.waypoint.EntrypointExecResponse.winch:type_name -> hashicorp.waypoint.ExecStreamRequest.WindowSize
-	182, // 169: hashicorp.waypoint.TokenTransport.metadata:type_name -> hashicorp.waypoint.TokenTransport.MetadataEntry
-	184, // 170: hashicorp.waypoint.Token.valid_until:type_name -> google.protobuf.Timestamp
-	183, // 171: hashicorp.waypoint.Token.entrypoint:type_name -> hashicorp.waypoint.Token.Entrypoint
-	183, // 172: hashicorp.waypoint.InviteTokenRequest.entrypoint:type_name -> hashicorp.waypoint.Token.Entrypoint
-	106, // 173: hashicorp.waypoint.Workspace.Application.application:type_name -> hashicorp.waypoint.Ref.Application
-	184, // 174: hashicorp.waypoint.Workspace.Application.active_time:type_name -> google.protobuf.Timestamp
-	0,   // 175: hashicorp.waypoint.Ref.Component.type:type_name -> hashicorp.waypoint.Component.Type
-	111, // 176: hashicorp.waypoint.Ref.Operation.sequence:type_name -> hashicorp.waypoint.Ref.OperationSeq
-	106, // 177: hashicorp.waypoint.Ref.OperationSeq.application:type_name -> hashicorp.waypoint.Ref.Application
-	114, // 178: hashicorp.waypoint.Ref.Runner.any:type_name -> hashicorp.waypoint.Ref.RunnerAny
-	113, // 179: hashicorp.waypoint.Ref.Runner.id:type_name -> hashicorp.waypoint.Ref.RunnerId
-	1,   // 180: hashicorp.waypoint.StatusFilter.Filter.state:type_name -> hashicorp.waypoint.Status.State
-	128, // 181: hashicorp.waypoint.Job.Result.build:type_name -> hashicorp.waypoint.Job.BuildResult
-	130, // 182: hashicorp.waypoint.Job.Result.push:type_name -> hashicorp.waypoint.Job.PushResult
-	132, // 183: hashicorp.waypoint.Job.Result.deploy:type_name -> hashicorp.waypoint.Job.DeployResult
-	135, // 184: hashicorp.waypoint.Job.Result.release:type_name -> hashicorp.waypoint.Job.ReleaseResult
-	124, // 185: hashicorp.waypoint.Job.Result.validate:type_name -> hashicorp.waypoint.Job.ValidateResult
-	126, // 186: hashicorp.waypoint.Job.Result.auth:type_name -> hashicorp.waypoint.Job.AuthResult
-	120, // 187: hashicorp.waypoint.Job.DataSource.local:type_name -> hashicorp.waypoint.Job.Local
-	121, // 188: hashicorp.waypoint.Job.DataSource.git:type_name -> hashicorp.waypoint.Job.Git
-	109, // 189: hashicorp.waypoint.Job.AuthOp.component:type_name -> hashicorp.waypoint.Ref.Component
-	136, // 190: hashicorp.waypoint.Job.AuthResult.results:type_name -> hashicorp.waypoint.Job.AuthResult.Result
-	62,  // 191: hashicorp.waypoint.Job.BuildResult.build:type_name -> hashicorp.waypoint.Build
-	70,  // 192: hashicorp.waypoint.Job.BuildResult.push:type_name -> hashicorp.waypoint.PushedArtifact
-	62,  // 193: hashicorp.waypoint.Job.PushOp.build:type_name -> hashicorp.waypoint.Build
-	70,  // 194: hashicorp.waypoint.Job.PushResult.artifact:type_name -> hashicorp.waypoint.PushedArtifact
-	70,  // 195: hashicorp.waypoint.Job.DeployOp.artifact:type_name -> hashicorp.waypoint.PushedArtifact
-	76,  // 196: hashicorp.waypoint.Job.DeployResult.deployment:type_name -> hashicorp.waypoint.Deployment
-	187, // 197: hashicorp.waypoint.Job.DestroyOp.workspace:type_name -> google.protobuf.Empty
-	76,  // 198: hashicorp.waypoint.Job.DestroyOp.deployment:type_name -> hashicorp.waypoint.Deployment
-	76,  // 199: hashicorp.waypoint.Job.ReleaseOp.deployment:type_name -> hashicorp.waypoint.Deployment
-	83,  // 200: hashicorp.waypoint.Job.ReleaseResult.release:type_name -> hashicorp.waypoint.Release
-	13,  // 201: hashicorp.waypoint.Job.AuthResult.Result.component:type_name -> hashicorp.waypoint.Component
-	185, // 202: hashicorp.waypoint.Job.AuthResult.Result.check_error:type_name -> google.rpc.Status
-	185, // 203: hashicorp.waypoint.Job.AuthResult.Result.auth_error:type_name -> google.rpc.Status
-	4,   // 204: hashicorp.waypoint.GetJobStreamResponse.State.previous:type_name -> hashicorp.waypoint.Job.State
-	4,   // 205: hashicorp.waypoint.GetJobStreamResponse.State.current:type_name -> hashicorp.waypoint.Job.State
-	23,  // 206: hashicorp.waypoint.GetJobStreamResponse.State.job:type_name -> hashicorp.waypoint.Job
-	142, // 207: hashicorp.waypoint.GetJobStreamResponse.Terminal.events:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event
-	185, // 208: hashicorp.waypoint.GetJobStreamResponse.Error.error:type_name -> google.rpc.Status
-	185, // 209: hashicorp.waypoint.GetJobStreamResponse.Complete.error:type_name -> google.rpc.Status
-	118, // 210: hashicorp.waypoint.GetJobStreamResponse.Complete.result:type_name -> hashicorp.waypoint.Job.Result
-	184, // 211: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.timestamp:type_name -> google.protobuf.Timestamp
-	144, // 212: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.line:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Line
-	143, // 213: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.status:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Status
-	147, // 214: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.named_values:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues
-	145, // 215: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.raw:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Raw
-	150, // 216: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.table:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Table
-	151, // 217: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.step_group:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.StepGroup
-	152, // 218: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.step:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Step
-	146, // 219: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues.values:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValue
-	148, // 220: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableRow.entries:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableEntry
-	149, // 221: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Table.rows:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableRow
-	29,  // 222: hashicorp.waypoint.RunnerConfigRequest.Open.runner:type_name -> hashicorp.waypoint.Runner
-	118, // 223: hashicorp.waypoint.RunnerJobStreamRequest.Complete.result:type_name -> hashicorp.waypoint.Job.Result
-	185, // 224: hashicorp.waypoint.RunnerJobStreamRequest.Error.error:type_name -> google.rpc.Status
-	23,  // 225: hashicorp.waypoint.RunnerJobStreamResponse.JobAssignment.job:type_name -> hashicorp.waypoint.Job
-	164, // 226: hashicorp.waypoint.Hostname.Target.application:type_name -> hashicorp.waypoint.Hostname.TargetApp
-	106, // 227: hashicorp.waypoint.Hostname.TargetApp.application:type_name -> hashicorp.waypoint.Ref.Application
-	108, // 228: hashicorp.waypoint.Hostname.TargetApp.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
-	184, // 229: hashicorp.waypoint.LogBatch.Entry.timestamp:type_name -> google.protobuf.Timestamp
-	172, // 230: hashicorp.waypoint.ExecStreamRequest.Start.pty:type_name -> hashicorp.waypoint.ExecStreamRequest.PTY
-	173, // 231: hashicorp.waypoint.ExecStreamRequest.PTY.window_size:type_name -> hashicorp.waypoint.ExecStreamRequest.WindowSize
-	7,   // 232: hashicorp.waypoint.ExecStreamResponse.Output.channel:type_name -> hashicorp.waypoint.ExecStreamResponse.Output.Channel
-	172, // 233: hashicorp.waypoint.EntrypointConfig.Exec.pty:type_name -> hashicorp.waypoint.ExecStreamRequest.PTY
-	8,   // 234: hashicorp.waypoint.EntrypointExecRequest.Output.channel:type_name -> hashicorp.waypoint.EntrypointExecRequest.Output.Channel
-	185, // 235: hashicorp.waypoint.EntrypointExecRequest.Error.error:type_name -> google.rpc.Status
-	187, // 236: hashicorp.waypoint.Waypoint.ListWorkspaces:input_type -> google.protobuf.Empty
-	47,  // 237: hashicorp.waypoint.Waypoint.GetWorkspace:input_type -> hashicorp.waypoint.GetWorkspaceRequest
-	49,  // 238: hashicorp.waypoint.Waypoint.UpsertProject:input_type -> hashicorp.waypoint.UpsertProjectRequest
-	51,  // 239: hashicorp.waypoint.Waypoint.GetProject:input_type -> hashicorp.waypoint.GetProjectRequest
-	187, // 240: hashicorp.waypoint.Waypoint.ListProjects:input_type -> google.protobuf.Empty
-	54,  // 241: hashicorp.waypoint.Waypoint.UpsertApplication:input_type -> hashicorp.waypoint.UpsertApplicationRequest
-	58,  // 242: hashicorp.waypoint.Waypoint.ListBuilds:input_type -> hashicorp.waypoint.ListBuildsRequest
-	61,  // 243: hashicorp.waypoint.Waypoint.GetBuild:input_type -> hashicorp.waypoint.GetBuildRequest
-	68,  // 244: hashicorp.waypoint.Waypoint.ListPushedArtifacts:input_type -> hashicorp.waypoint.ListPushedArtifactsRequest
-	67,  // 245: hashicorp.waypoint.Waypoint.GetPushedArtifact:input_type -> hashicorp.waypoint.GetPushedArtifactRequest
-	74,  // 246: hashicorp.waypoint.Waypoint.ListDeployments:input_type -> hashicorp.waypoint.ListDeploymentsRequest
-	71,  // 247: hashicorp.waypoint.Waypoint.GetDeployment:input_type -> hashicorp.waypoint.GetDeploymentRequest
-	60,  // 248: hashicorp.waypoint.Waypoint.GetLatestBuild:input_type -> hashicorp.waypoint.GetLatestBuildRequest
-	66,  // 249: hashicorp.waypoint.Waypoint.GetLatestPushedArtifact:input_type -> hashicorp.waypoint.GetLatestPushedArtifactRequest
-	80,  // 250: hashicorp.waypoint.Waypoint.ListReleases:input_type -> hashicorp.waypoint.ListReleasesRequest
-	82,  // 251: hashicorp.waypoint.Waypoint.GetRelease:input_type -> hashicorp.waypoint.GetReleaseRequest
-	79,  // 252: hashicorp.waypoint.Waypoint.GetLatestRelease:input_type -> hashicorp.waypoint.GetLatestReleaseRequest
-	84,  // 253: hashicorp.waypoint.Waypoint.GetLogStream:input_type -> hashicorp.waypoint.GetLogStreamRequest
-	91,  // 254: hashicorp.waypoint.Waypoint.StartExecStream:input_type -> hashicorp.waypoint.ExecStreamRequest
-	87,  // 255: hashicorp.waypoint.Waypoint.SetConfig:input_type -> hashicorp.waypoint.ConfigSetRequest
-	89,  // 256: hashicorp.waypoint.Waypoint.GetConfig:input_type -> hashicorp.waypoint.ConfigGetRequest
-	40,  // 257: hashicorp.waypoint.Waypoint.CreateHostname:input_type -> hashicorp.waypoint.CreateHostnameRequest
-	44,  // 258: hashicorp.waypoint.Waypoint.DeleteHostname:input_type -> hashicorp.waypoint.DeleteHostnameRequest
-	42,  // 259: hashicorp.waypoint.Waypoint.ListHostnames:input_type -> hashicorp.waypoint.ListHostnamesRequest
-	18,  // 260: hashicorp.waypoint.Waypoint.QueueJob:input_type -> hashicorp.waypoint.QueueJobRequest
-	20,  // 261: hashicorp.waypoint.Waypoint.CancelJob:input_type -> hashicorp.waypoint.CancelJobRequest
-	24,  // 262: hashicorp.waypoint.Waypoint.GetJob:input_type -> hashicorp.waypoint.GetJobRequest
-	25,  // 263: hashicorp.waypoint.Waypoint._ListJobs:input_type -> hashicorp.waypoint.ListJobsRequest
-	21,  // 264: hashicorp.waypoint.Waypoint.ValidateJob:input_type -> hashicorp.waypoint.ValidateJobRequest
-	27,  // 265: hashicorp.waypoint.Waypoint.GetJobStream:input_type -> hashicorp.waypoint.GetJobStreamRequest
-	37,  // 266: hashicorp.waypoint.Waypoint.GetRunner:input_type -> hashicorp.waypoint.GetRunnerRequest
-	38,  // 267: hashicorp.waypoint.Waypoint.SetServerConfig:input_type -> hashicorp.waypoint.SetServerConfigRequest
-	187, // 268: hashicorp.waypoint.Waypoint.BootstrapToken:input_type -> google.protobuf.Empty
-	102, // 269: hashicorp.waypoint.Waypoint.GenerateInviteToken:input_type -> hashicorp.waypoint.InviteTokenRequest
-	187, // 270: hashicorp.waypoint.Waypoint.GenerateLoginToken:input_type -> google.protobuf.Empty
-	104, // 271: hashicorp.waypoint.Waypoint.ConvertInviteToken:input_type -> hashicorp.waypoint.ConvertInviteTokenRequest
-	30,  // 272: hashicorp.waypoint.Waypoint.RunnerConfig:input_type -> hashicorp.waypoint.RunnerConfigRequest
-	33,  // 273: hashicorp.waypoint.Waypoint.RunnerJobStream:input_type -> hashicorp.waypoint.RunnerJobStreamRequest
-	35,  // 274: hashicorp.waypoint.Waypoint.RunnerGetDeploymentConfig:input_type -> hashicorp.waypoint.RunnerGetDeploymentConfigRequest
-	93,  // 275: hashicorp.waypoint.Waypoint.EntrypointConfig:input_type -> hashicorp.waypoint.EntrypointConfigRequest
-	96,  // 276: hashicorp.waypoint.Waypoint.EntrypointLogStream:input_type -> hashicorp.waypoint.EntrypointLogBatch
-	97,  // 277: hashicorp.waypoint.Waypoint.EntrypointExecStream:input_type -> hashicorp.waypoint.EntrypointExecRequest
-	56,  // 278: hashicorp.waypoint.Waypoint.UpsertBuild:input_type -> hashicorp.waypoint.UpsertBuildRequest
-	64,  // 279: hashicorp.waypoint.Waypoint.UpsertPushedArtifact:input_type -> hashicorp.waypoint.UpsertPushedArtifactRequest
-	72,  // 280: hashicorp.waypoint.Waypoint.UpsertDeployment:input_type -> hashicorp.waypoint.UpsertDeploymentRequest
-	77,  // 281: hashicorp.waypoint.Waypoint.UpsertRelease:input_type -> hashicorp.waypoint.UpsertReleaseRequest
-	46,  // 282: hashicorp.waypoint.Waypoint.ListWorkspaces:output_type -> hashicorp.waypoint.ListWorkspacesResponse
-	48,  // 283: hashicorp.waypoint.Waypoint.GetWorkspace:output_type -> hashicorp.waypoint.GetWorkspaceResponse
-	50,  // 284: hashicorp.waypoint.Waypoint.UpsertProject:output_type -> hashicorp.waypoint.UpsertProjectResponse
-	52,  // 285: hashicorp.waypoint.Waypoint.GetProject:output_type -> hashicorp.waypoint.GetProjectResponse
-	53,  // 286: hashicorp.waypoint.Waypoint.ListProjects:output_type -> hashicorp.waypoint.ListProjectsResponse
-	55,  // 287: hashicorp.waypoint.Waypoint.UpsertApplication:output_type -> hashicorp.waypoint.UpsertApplicationResponse
-	59,  // 288: hashicorp.waypoint.Waypoint.ListBuilds:output_type -> hashicorp.waypoint.ListBuildsResponse
-	62,  // 289: hashicorp.waypoint.Waypoint.GetBuild:output_type -> hashicorp.waypoint.Build
-	69,  // 290: hashicorp.waypoint.Waypoint.ListPushedArtifacts:output_type -> hashicorp.waypoint.ListPushedArtifactsResponse
-	70,  // 291: hashicorp.waypoint.Waypoint.GetPushedArtifact:output_type -> hashicorp.waypoint.PushedArtifact
-	75,  // 292: hashicorp.waypoint.Waypoint.ListDeployments:output_type -> hashicorp.waypoint.ListDeploymentsResponse
-	76,  // 293: hashicorp.waypoint.Waypoint.GetDeployment:output_type -> hashicorp.waypoint.Deployment
-	62,  // 294: hashicorp.waypoint.Waypoint.GetLatestBuild:output_type -> hashicorp.waypoint.Build
-	70,  // 295: hashicorp.waypoint.Waypoint.GetLatestPushedArtifact:output_type -> hashicorp.waypoint.PushedArtifact
-	81,  // 296: hashicorp.waypoint.Waypoint.ListReleases:output_type -> hashicorp.waypoint.ListReleasesResponse
-	83,  // 297: hashicorp.waypoint.Waypoint.GetRelease:output_type -> hashicorp.waypoint.Release
-	83,  // 298: hashicorp.waypoint.Waypoint.GetLatestRelease:output_type -> hashicorp.waypoint.Release
-	85,  // 299: hashicorp.waypoint.Waypoint.GetLogStream:output_type -> hashicorp.waypoint.LogBatch
-	92,  // 300: hashicorp.waypoint.Waypoint.StartExecStream:output_type -> hashicorp.waypoint.ExecStreamResponse
-	88,  // 301: hashicorp.waypoint.Waypoint.SetConfig:output_type -> hashicorp.waypoint.ConfigSetResponse
-	90,  // 302: hashicorp.waypoint.Waypoint.GetConfig:output_type -> hashicorp.waypoint.ConfigGetResponse
-	41,  // 303: hashicorp.waypoint.Waypoint.CreateHostname:output_type -> hashicorp.waypoint.CreateHostnameResponse
-	187, // 304: hashicorp.waypoint.Waypoint.DeleteHostname:output_type -> google.protobuf.Empty
-	43,  // 305: hashicorp.waypoint.Waypoint.ListHostnames:output_type -> hashicorp.waypoint.ListHostnamesResponse
-	19,  // 306: hashicorp.waypoint.Waypoint.QueueJob:output_type -> hashicorp.waypoint.QueueJobResponse
-	187, // 307: hashicorp.waypoint.Waypoint.CancelJob:output_type -> google.protobuf.Empty
-	23,  // 308: hashicorp.waypoint.Waypoint.GetJob:output_type -> hashicorp.waypoint.Job
-	26,  // 309: hashicorp.waypoint.Waypoint._ListJobs:output_type -> hashicorp.waypoint.ListJobsResponse
-	22,  // 310: hashicorp.waypoint.Waypoint.ValidateJob:output_type -> hashicorp.waypoint.ValidateJobResponse
-	28,  // 311: hashicorp.waypoint.Waypoint.GetJobStream:output_type -> hashicorp.waypoint.GetJobStreamResponse
-	29,  // 312: hashicorp.waypoint.Waypoint.GetRunner:output_type -> hashicorp.waypoint.Runner
-	187, // 313: hashicorp.waypoint.Waypoint.SetServerConfig:output_type -> google.protobuf.Empty
-	103, // 314: hashicorp.waypoint.Waypoint.BootstrapToken:output_type -> hashicorp.waypoint.NewTokenResponse
-	103, // 315: hashicorp.waypoint.Waypoint.GenerateInviteToken:output_type -> hashicorp.waypoint.NewTokenResponse
-	103, // 316: hashicorp.waypoint.Waypoint.GenerateLoginToken:output_type -> hashicorp.waypoint.NewTokenResponse
-	103, // 317: hashicorp.waypoint.Waypoint.ConvertInviteToken:output_type -> hashicorp.waypoint.NewTokenResponse
-	31,  // 318: hashicorp.waypoint.Waypoint.RunnerConfig:output_type -> hashicorp.waypoint.RunnerConfigResponse
-	34,  // 319: hashicorp.waypoint.Waypoint.RunnerJobStream:output_type -> hashicorp.waypoint.RunnerJobStreamResponse
-	36,  // 320: hashicorp.waypoint.Waypoint.RunnerGetDeploymentConfig:output_type -> hashicorp.waypoint.RunnerGetDeploymentConfigResponse
-	94,  // 321: hashicorp.waypoint.Waypoint.EntrypointConfig:output_type -> hashicorp.waypoint.EntrypointConfigResponse
-	187, // 322: hashicorp.waypoint.Waypoint.EntrypointLogStream:output_type -> google.protobuf.Empty
-	98,  // 323: hashicorp.waypoint.Waypoint.EntrypointExecStream:output_type -> hashicorp.waypoint.EntrypointExecResponse
-	57,  // 324: hashicorp.waypoint.Waypoint.UpsertBuild:output_type -> hashicorp.waypoint.UpsertBuildResponse
-	65,  // 325: hashicorp.waypoint.Waypoint.UpsertPushedArtifact:output_type -> hashicorp.waypoint.UpsertPushedArtifactResponse
-	73,  // 326: hashicorp.waypoint.Waypoint.UpsertDeployment:output_type -> hashicorp.waypoint.UpsertDeploymentResponse
-	78,  // 327: hashicorp.waypoint.Waypoint.UpsertRelease:output_type -> hashicorp.waypoint.UpsertReleaseResponse
-	282, // [282:328] is the sub-list for method output_type
-	236, // [236:282] is the sub-list for method input_type
-	236, // [236:236] is the sub-list for extension type_name
-	236, // [236:236] is the sub-list for extension extendee
-	0,   // [0:236] is the sub-list for field type_name
+	114, // 30: hashicorp.waypoint.Job.assigned_runner:type_name -> hashicorp.waypoint.Ref.RunnerId
+	187, // 31: hashicorp.waypoint.Job.queue_time:type_name -> google.protobuf.Timestamp
+	187, // 32: hashicorp.waypoint.Job.assign_time:type_name -> google.protobuf.Timestamp
+	187, // 33: hashicorp.waypoint.Job.ack_time:type_name -> google.protobuf.Timestamp
+	187, // 34: hashicorp.waypoint.Job.complete_time:type_name -> google.protobuf.Timestamp
+	188, // 35: hashicorp.waypoint.Job.error:type_name -> google.rpc.Status
+	119, // 36: hashicorp.waypoint.Job.result:type_name -> hashicorp.waypoint.Job.Result
+	187, // 37: hashicorp.waypoint.Job.cancel_time:type_name -> google.protobuf.Timestamp
+	187, // 38: hashicorp.waypoint.Job.expire_time:type_name -> google.protobuf.Timestamp
+	24,  // 39: hashicorp.waypoint.ListJobsResponse.jobs:type_name -> hashicorp.waypoint.Job
+	138, // 40: hashicorp.waypoint.GetJobStreamResponse.open:type_name -> hashicorp.waypoint.GetJobStreamResponse.Open
+	139, // 41: hashicorp.waypoint.GetJobStreamResponse.state:type_name -> hashicorp.waypoint.GetJobStreamResponse.State
+	140, // 42: hashicorp.waypoint.GetJobStreamResponse.terminal:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal
+	141, // 43: hashicorp.waypoint.GetJobStreamResponse.error:type_name -> hashicorp.waypoint.GetJobStreamResponse.Error
+	142, // 44: hashicorp.waypoint.GetJobStreamResponse.complete:type_name -> hashicorp.waypoint.GetJobStreamResponse.Complete
+	14,  // 45: hashicorp.waypoint.Runner.components:type_name -> hashicorp.waypoint.Component
+	154, // 46: hashicorp.waypoint.RunnerConfigRequest.open:type_name -> hashicorp.waypoint.RunnerConfigRequest.Open
+	33,  // 47: hashicorp.waypoint.RunnerConfigResponse.config:type_name -> hashicorp.waypoint.RunnerConfig
+	87,  // 48: hashicorp.waypoint.RunnerConfig.config_vars:type_name -> hashicorp.waypoint.ConfigVar
+	155, // 49: hashicorp.waypoint.RunnerJobStreamRequest.request:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Request
+	156, // 50: hashicorp.waypoint.RunnerJobStreamRequest.ack:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Ack
+	157, // 51: hashicorp.waypoint.RunnerJobStreamRequest.complete:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Complete
+	158, // 52: hashicorp.waypoint.RunnerJobStreamRequest.error:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Error
+	140, // 53: hashicorp.waypoint.RunnerJobStreamRequest.terminal:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal
+	159, // 54: hashicorp.waypoint.RunnerJobStreamRequest.heartbeat:type_name -> hashicorp.waypoint.RunnerJobStreamRequest.Heartbeat
+	160, // 55: hashicorp.waypoint.RunnerJobStreamResponse.assignment:type_name -> hashicorp.waypoint.RunnerJobStreamResponse.JobAssignment
+	161, // 56: hashicorp.waypoint.RunnerJobStreamResponse.cancel:type_name -> hashicorp.waypoint.RunnerJobStreamResponse.JobCancel
+	40,  // 57: hashicorp.waypoint.SetServerConfigRequest.config:type_name -> hashicorp.waypoint.ServerConfig
+	162, // 58: hashicorp.waypoint.ServerConfig.advertise_addrs:type_name -> hashicorp.waypoint.ServerConfig.AdvertiseAddr
+	164, // 59: hashicorp.waypoint.CreateHostnameRequest.target:type_name -> hashicorp.waypoint.Hostname.Target
+	46,  // 60: hashicorp.waypoint.CreateHostnameResponse.hostname:type_name -> hashicorp.waypoint.Hostname
+	164, // 61: hashicorp.waypoint.ListHostnamesRequest.target:type_name -> hashicorp.waypoint.Hostname.Target
+	46,  // 62: hashicorp.waypoint.ListHostnamesResponse.hostnames:type_name -> hashicorp.waypoint.Hostname
+	163, // 63: hashicorp.waypoint.Hostname.target_labels:type_name -> hashicorp.waypoint.Hostname.TargetLabelsEntry
+	12,  // 64: hashicorp.waypoint.ListWorkspacesResponse.workspaces:type_name -> hashicorp.waypoint.Workspace
+	109, // 65: hashicorp.waypoint.GetWorkspaceRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	12,  // 66: hashicorp.waypoint.GetWorkspaceResponse.workspace:type_name -> hashicorp.waypoint.Workspace
+	11,  // 67: hashicorp.waypoint.UpsertProjectRequest.project:type_name -> hashicorp.waypoint.Project
+	11,  // 68: hashicorp.waypoint.UpsertProjectResponse.project:type_name -> hashicorp.waypoint.Project
+	108, // 69: hashicorp.waypoint.GetProjectRequest.project:type_name -> hashicorp.waypoint.Ref.Project
+	11,  // 70: hashicorp.waypoint.GetProjectResponse.project:type_name -> hashicorp.waypoint.Project
+	108, // 71: hashicorp.waypoint.ListProjectsResponse.projects:type_name -> hashicorp.waypoint.Ref.Project
+	108, // 72: hashicorp.waypoint.UpsertApplicationRequest.project:type_name -> hashicorp.waypoint.Ref.Project
+	10,  // 73: hashicorp.waypoint.UpsertApplicationResponse.application:type_name -> hashicorp.waypoint.Application
+	63,  // 74: hashicorp.waypoint.UpsertBuildRequest.build:type_name -> hashicorp.waypoint.Build
+	63,  // 75: hashicorp.waypoint.UpsertBuildResponse.build:type_name -> hashicorp.waypoint.Build
+	107, // 76: hashicorp.waypoint.ListBuildsRequest.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 77: hashicorp.waypoint.ListBuildsRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	18,  // 78: hashicorp.waypoint.ListBuildsRequest.order:type_name -> hashicorp.waypoint.OperationOrder
+	63,  // 79: hashicorp.waypoint.ListBuildsResponse.builds:type_name -> hashicorp.waypoint.Build
+	107, // 80: hashicorp.waypoint.GetLatestBuildRequest.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 81: hashicorp.waypoint.GetLatestBuildRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	111, // 82: hashicorp.waypoint.GetBuildRequest.ref:type_name -> hashicorp.waypoint.Ref.Operation
+	107, // 83: hashicorp.waypoint.Build.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 84: hashicorp.waypoint.Build.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	15,  // 85: hashicorp.waypoint.Build.status:type_name -> hashicorp.waypoint.Status
+	14,  // 86: hashicorp.waypoint.Build.component:type_name -> hashicorp.waypoint.Component
+	64,  // 87: hashicorp.waypoint.Build.artifact:type_name -> hashicorp.waypoint.Artifact
+	166, // 88: hashicorp.waypoint.Build.labels:type_name -> hashicorp.waypoint.Build.LabelsEntry
+	189, // 89: hashicorp.waypoint.Artifact.artifact:type_name -> google.protobuf.Any
+	71,  // 90: hashicorp.waypoint.UpsertPushedArtifactRequest.artifact:type_name -> hashicorp.waypoint.PushedArtifact
+	71,  // 91: hashicorp.waypoint.UpsertPushedArtifactResponse.artifact:type_name -> hashicorp.waypoint.PushedArtifact
+	107, // 92: hashicorp.waypoint.GetLatestPushedArtifactRequest.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 93: hashicorp.waypoint.GetLatestPushedArtifactRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	111, // 94: hashicorp.waypoint.GetPushedArtifactRequest.ref:type_name -> hashicorp.waypoint.Ref.Operation
+	107, // 95: hashicorp.waypoint.ListPushedArtifactsRequest.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 96: hashicorp.waypoint.ListPushedArtifactsRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	16,  // 97: hashicorp.waypoint.ListPushedArtifactsRequest.status:type_name -> hashicorp.waypoint.StatusFilter
+	18,  // 98: hashicorp.waypoint.ListPushedArtifactsRequest.order:type_name -> hashicorp.waypoint.OperationOrder
+	71,  // 99: hashicorp.waypoint.ListPushedArtifactsResponse.artifacts:type_name -> hashicorp.waypoint.PushedArtifact
+	107, // 100: hashicorp.waypoint.PushedArtifact.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 101: hashicorp.waypoint.PushedArtifact.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	15,  // 102: hashicorp.waypoint.PushedArtifact.status:type_name -> hashicorp.waypoint.Status
+	14,  // 103: hashicorp.waypoint.PushedArtifact.component:type_name -> hashicorp.waypoint.Component
+	64,  // 104: hashicorp.waypoint.PushedArtifact.artifact:type_name -> hashicorp.waypoint.Artifact
+	167, // 105: hashicorp.waypoint.PushedArtifact.labels:type_name -> hashicorp.waypoint.PushedArtifact.LabelsEntry
+	63,  // 106: hashicorp.waypoint.PushedArtifact.build:type_name -> hashicorp.waypoint.Build
+	111, // 107: hashicorp.waypoint.GetDeploymentRequest.ref:type_name -> hashicorp.waypoint.Ref.Operation
+	6,   // 108: hashicorp.waypoint.GetDeploymentRequest.load_details:type_name -> hashicorp.waypoint.Deployment.LoadDetails
+	77,  // 109: hashicorp.waypoint.UpsertDeploymentRequest.deployment:type_name -> hashicorp.waypoint.Deployment
+	5,   // 110: hashicorp.waypoint.UpsertDeploymentRequest.auto_hostname:type_name -> hashicorp.waypoint.UpsertDeploymentRequest.Tristate
+	77,  // 111: hashicorp.waypoint.UpsertDeploymentResponse.deployment:type_name -> hashicorp.waypoint.Deployment
+	107, // 112: hashicorp.waypoint.ListDeploymentsRequest.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 113: hashicorp.waypoint.ListDeploymentsRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	16,  // 114: hashicorp.waypoint.ListDeploymentsRequest.status:type_name -> hashicorp.waypoint.StatusFilter
+	2,   // 115: hashicorp.waypoint.ListDeploymentsRequest.physical_state:type_name -> hashicorp.waypoint.Operation.PhysicalState
+	18,  // 116: hashicorp.waypoint.ListDeploymentsRequest.order:type_name -> hashicorp.waypoint.OperationOrder
+	6,   // 117: hashicorp.waypoint.ListDeploymentsRequest.load_details:type_name -> hashicorp.waypoint.Deployment.LoadDetails
+	77,  // 118: hashicorp.waypoint.ListDeploymentsResponse.deployments:type_name -> hashicorp.waypoint.Deployment
+	107, // 119: hashicorp.waypoint.Deployment.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 120: hashicorp.waypoint.Deployment.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	2,   // 121: hashicorp.waypoint.Deployment.state:type_name -> hashicorp.waypoint.Operation.PhysicalState
+	15,  // 122: hashicorp.waypoint.Deployment.status:type_name -> hashicorp.waypoint.Status
+	14,  // 123: hashicorp.waypoint.Deployment.component:type_name -> hashicorp.waypoint.Component
+	189, // 124: hashicorp.waypoint.Deployment.deployment:type_name -> google.protobuf.Any
+	168, // 125: hashicorp.waypoint.Deployment.labels:type_name -> hashicorp.waypoint.Deployment.LabelsEntry
+	169, // 126: hashicorp.waypoint.Deployment.preload:type_name -> hashicorp.waypoint.Deployment.Preload
+	84,  // 127: hashicorp.waypoint.UpsertReleaseRequest.release:type_name -> hashicorp.waypoint.Release
+	84,  // 128: hashicorp.waypoint.UpsertReleaseResponse.release:type_name -> hashicorp.waypoint.Release
+	107, // 129: hashicorp.waypoint.GetLatestReleaseRequest.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 130: hashicorp.waypoint.GetLatestReleaseRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	7,   // 131: hashicorp.waypoint.GetLatestReleaseRequest.load_details:type_name -> hashicorp.waypoint.Release.LoadDetails
+	107, // 132: hashicorp.waypoint.ListReleasesRequest.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 133: hashicorp.waypoint.ListReleasesRequest.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	16,  // 134: hashicorp.waypoint.ListReleasesRequest.status:type_name -> hashicorp.waypoint.StatusFilter
+	2,   // 135: hashicorp.waypoint.ListReleasesRequest.physical_state:type_name -> hashicorp.waypoint.Operation.PhysicalState
+	18,  // 136: hashicorp.waypoint.ListReleasesRequest.order:type_name -> hashicorp.waypoint.OperationOrder
+	7,   // 137: hashicorp.waypoint.ListReleasesRequest.load_details:type_name -> hashicorp.waypoint.Release.LoadDetails
+	84,  // 138: hashicorp.waypoint.ListReleasesResponse.releases:type_name -> hashicorp.waypoint.Release
+	111, // 139: hashicorp.waypoint.GetReleaseRequest.ref:type_name -> hashicorp.waypoint.Ref.Operation
+	7,   // 140: hashicorp.waypoint.GetReleaseRequest.load_details:type_name -> hashicorp.waypoint.Release.LoadDetails
+	107, // 141: hashicorp.waypoint.Release.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 142: hashicorp.waypoint.Release.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	15,  // 143: hashicorp.waypoint.Release.status:type_name -> hashicorp.waypoint.Status
+	2,   // 144: hashicorp.waypoint.Release.state:type_name -> hashicorp.waypoint.Operation.PhysicalState
+	14,  // 145: hashicorp.waypoint.Release.component:type_name -> hashicorp.waypoint.Component
+	189, // 146: hashicorp.waypoint.Release.release:type_name -> google.protobuf.Any
+	170, // 147: hashicorp.waypoint.Release.labels:type_name -> hashicorp.waypoint.Release.LabelsEntry
+	171, // 148: hashicorp.waypoint.Release.preload:type_name -> hashicorp.waypoint.Release.Preload
+	172, // 149: hashicorp.waypoint.LogBatch.lines:type_name -> hashicorp.waypoint.LogBatch.Entry
+	107, // 150: hashicorp.waypoint.ConfigVar.application:type_name -> hashicorp.waypoint.Ref.Application
+	108, // 151: hashicorp.waypoint.ConfigVar.project:type_name -> hashicorp.waypoint.Ref.Project
+	113, // 152: hashicorp.waypoint.ConfigVar.runner:type_name -> hashicorp.waypoint.Ref.Runner
+	87,  // 153: hashicorp.waypoint.ConfigSetRequest.variables:type_name -> hashicorp.waypoint.ConfigVar
+	107, // 154: hashicorp.waypoint.ConfigGetRequest.application:type_name -> hashicorp.waypoint.Ref.Application
+	108, // 155: hashicorp.waypoint.ConfigGetRequest.project:type_name -> hashicorp.waypoint.Ref.Project
+	114, // 156: hashicorp.waypoint.ConfigGetRequest.runner:type_name -> hashicorp.waypoint.Ref.RunnerId
+	87,  // 157: hashicorp.waypoint.ConfigGetResponse.variables:type_name -> hashicorp.waypoint.ConfigVar
+	173, // 158: hashicorp.waypoint.ExecStreamRequest.start:type_name -> hashicorp.waypoint.ExecStreamRequest.Start
+	174, // 159: hashicorp.waypoint.ExecStreamRequest.input:type_name -> hashicorp.waypoint.ExecStreamRequest.Input
+	176, // 160: hashicorp.waypoint.ExecStreamRequest.winch:type_name -> hashicorp.waypoint.ExecStreamRequest.WindowSize
+	178, // 161: hashicorp.waypoint.ExecStreamResponse.output:type_name -> hashicorp.waypoint.ExecStreamResponse.Output
+	177, // 162: hashicorp.waypoint.ExecStreamResponse.exit:type_name -> hashicorp.waypoint.ExecStreamResponse.Exit
+	96,  // 163: hashicorp.waypoint.EntrypointConfigResponse.config:type_name -> hashicorp.waypoint.EntrypointConfig
+	179, // 164: hashicorp.waypoint.EntrypointConfig.exec:type_name -> hashicorp.waypoint.EntrypointConfig.Exec
+	87,  // 165: hashicorp.waypoint.EntrypointConfig.env_vars:type_name -> hashicorp.waypoint.ConfigVar
+	180, // 166: hashicorp.waypoint.EntrypointConfig.url_service:type_name -> hashicorp.waypoint.EntrypointConfig.URLService
+	172, // 167: hashicorp.waypoint.EntrypointLogBatch.lines:type_name -> hashicorp.waypoint.LogBatch.Entry
+	181, // 168: hashicorp.waypoint.EntrypointExecRequest.open:type_name -> hashicorp.waypoint.EntrypointExecRequest.Open
+	182, // 169: hashicorp.waypoint.EntrypointExecRequest.exit:type_name -> hashicorp.waypoint.EntrypointExecRequest.Exit
+	183, // 170: hashicorp.waypoint.EntrypointExecRequest.output:type_name -> hashicorp.waypoint.EntrypointExecRequest.Output
+	184, // 171: hashicorp.waypoint.EntrypointExecRequest.error:type_name -> hashicorp.waypoint.EntrypointExecRequest.Error
+	176, // 172: hashicorp.waypoint.EntrypointExecResponse.winch:type_name -> hashicorp.waypoint.ExecStreamRequest.WindowSize
+	185, // 173: hashicorp.waypoint.TokenTransport.metadata:type_name -> hashicorp.waypoint.TokenTransport.MetadataEntry
+	187, // 174: hashicorp.waypoint.Token.valid_until:type_name -> google.protobuf.Timestamp
+	186, // 175: hashicorp.waypoint.Token.entrypoint:type_name -> hashicorp.waypoint.Token.Entrypoint
+	186, // 176: hashicorp.waypoint.InviteTokenRequest.entrypoint:type_name -> hashicorp.waypoint.Token.Entrypoint
+	107, // 177: hashicorp.waypoint.Workspace.Application.application:type_name -> hashicorp.waypoint.Ref.Application
+	187, // 178: hashicorp.waypoint.Workspace.Application.active_time:type_name -> google.protobuf.Timestamp
+	0,   // 179: hashicorp.waypoint.Ref.Component.type:type_name -> hashicorp.waypoint.Component.Type
+	112, // 180: hashicorp.waypoint.Ref.Operation.sequence:type_name -> hashicorp.waypoint.Ref.OperationSeq
+	107, // 181: hashicorp.waypoint.Ref.OperationSeq.application:type_name -> hashicorp.waypoint.Ref.Application
+	115, // 182: hashicorp.waypoint.Ref.Runner.any:type_name -> hashicorp.waypoint.Ref.RunnerAny
+	114, // 183: hashicorp.waypoint.Ref.Runner.id:type_name -> hashicorp.waypoint.Ref.RunnerId
+	1,   // 184: hashicorp.waypoint.StatusFilter.Filter.state:type_name -> hashicorp.waypoint.Status.State
+	129, // 185: hashicorp.waypoint.Job.Result.build:type_name -> hashicorp.waypoint.Job.BuildResult
+	131, // 186: hashicorp.waypoint.Job.Result.push:type_name -> hashicorp.waypoint.Job.PushResult
+	133, // 187: hashicorp.waypoint.Job.Result.deploy:type_name -> hashicorp.waypoint.Job.DeployResult
+	136, // 188: hashicorp.waypoint.Job.Result.release:type_name -> hashicorp.waypoint.Job.ReleaseResult
+	125, // 189: hashicorp.waypoint.Job.Result.validate:type_name -> hashicorp.waypoint.Job.ValidateResult
+	127, // 190: hashicorp.waypoint.Job.Result.auth:type_name -> hashicorp.waypoint.Job.AuthResult
+	121, // 191: hashicorp.waypoint.Job.DataSource.local:type_name -> hashicorp.waypoint.Job.Local
+	122, // 192: hashicorp.waypoint.Job.DataSource.git:type_name -> hashicorp.waypoint.Job.Git
+	110, // 193: hashicorp.waypoint.Job.AuthOp.component:type_name -> hashicorp.waypoint.Ref.Component
+	137, // 194: hashicorp.waypoint.Job.AuthResult.results:type_name -> hashicorp.waypoint.Job.AuthResult.Result
+	63,  // 195: hashicorp.waypoint.Job.BuildResult.build:type_name -> hashicorp.waypoint.Build
+	71,  // 196: hashicorp.waypoint.Job.BuildResult.push:type_name -> hashicorp.waypoint.PushedArtifact
+	63,  // 197: hashicorp.waypoint.Job.PushOp.build:type_name -> hashicorp.waypoint.Build
+	71,  // 198: hashicorp.waypoint.Job.PushResult.artifact:type_name -> hashicorp.waypoint.PushedArtifact
+	71,  // 199: hashicorp.waypoint.Job.DeployOp.artifact:type_name -> hashicorp.waypoint.PushedArtifact
+	77,  // 200: hashicorp.waypoint.Job.DeployResult.deployment:type_name -> hashicorp.waypoint.Deployment
+	190, // 201: hashicorp.waypoint.Job.DestroyOp.workspace:type_name -> google.protobuf.Empty
+	77,  // 202: hashicorp.waypoint.Job.DestroyOp.deployment:type_name -> hashicorp.waypoint.Deployment
+	77,  // 203: hashicorp.waypoint.Job.ReleaseOp.deployment:type_name -> hashicorp.waypoint.Deployment
+	84,  // 204: hashicorp.waypoint.Job.ReleaseResult.release:type_name -> hashicorp.waypoint.Release
+	14,  // 205: hashicorp.waypoint.Job.AuthResult.Result.component:type_name -> hashicorp.waypoint.Component
+	188, // 206: hashicorp.waypoint.Job.AuthResult.Result.check_error:type_name -> google.rpc.Status
+	188, // 207: hashicorp.waypoint.Job.AuthResult.Result.auth_error:type_name -> google.rpc.Status
+	4,   // 208: hashicorp.waypoint.GetJobStreamResponse.State.previous:type_name -> hashicorp.waypoint.Job.State
+	4,   // 209: hashicorp.waypoint.GetJobStreamResponse.State.current:type_name -> hashicorp.waypoint.Job.State
+	24,  // 210: hashicorp.waypoint.GetJobStreamResponse.State.job:type_name -> hashicorp.waypoint.Job
+	143, // 211: hashicorp.waypoint.GetJobStreamResponse.Terminal.events:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event
+	188, // 212: hashicorp.waypoint.GetJobStreamResponse.Error.error:type_name -> google.rpc.Status
+	188, // 213: hashicorp.waypoint.GetJobStreamResponse.Complete.error:type_name -> google.rpc.Status
+	119, // 214: hashicorp.waypoint.GetJobStreamResponse.Complete.result:type_name -> hashicorp.waypoint.Job.Result
+	187, // 215: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.timestamp:type_name -> google.protobuf.Timestamp
+	145, // 216: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.line:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Line
+	144, // 217: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.status:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Status
+	148, // 218: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.named_values:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues
+	146, // 219: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.raw:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Raw
+	151, // 220: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.table:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Table
+	152, // 221: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.step_group:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.StepGroup
+	153, // 222: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.step:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Step
+	147, // 223: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValues.values:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.NamedValue
+	149, // 224: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableRow.entries:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableEntry
+	150, // 225: hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.Table.rows:type_name -> hashicorp.waypoint.GetJobStreamResponse.Terminal.Event.TableRow
+	30,  // 226: hashicorp.waypoint.RunnerConfigRequest.Open.runner:type_name -> hashicorp.waypoint.Runner
+	119, // 227: hashicorp.waypoint.RunnerJobStreamRequest.Complete.result:type_name -> hashicorp.waypoint.Job.Result
+	188, // 228: hashicorp.waypoint.RunnerJobStreamRequest.Error.error:type_name -> google.rpc.Status
+	24,  // 229: hashicorp.waypoint.RunnerJobStreamResponse.JobAssignment.job:type_name -> hashicorp.waypoint.Job
+	165, // 230: hashicorp.waypoint.Hostname.Target.application:type_name -> hashicorp.waypoint.Hostname.TargetApp
+	107, // 231: hashicorp.waypoint.Hostname.TargetApp.application:type_name -> hashicorp.waypoint.Ref.Application
+	109, // 232: hashicorp.waypoint.Hostname.TargetApp.workspace:type_name -> hashicorp.waypoint.Ref.Workspace
+	71,  // 233: hashicorp.waypoint.Deployment.Preload.artifact:type_name -> hashicorp.waypoint.PushedArtifact
+	63,  // 234: hashicorp.waypoint.Deployment.Preload.build:type_name -> hashicorp.waypoint.Build
+	77,  // 235: hashicorp.waypoint.Release.Preload.deployment:type_name -> hashicorp.waypoint.Deployment
+	71,  // 236: hashicorp.waypoint.Release.Preload.artifact:type_name -> hashicorp.waypoint.PushedArtifact
+	63,  // 237: hashicorp.waypoint.Release.Preload.build:type_name -> hashicorp.waypoint.Build
+	187, // 238: hashicorp.waypoint.LogBatch.Entry.timestamp:type_name -> google.protobuf.Timestamp
+	175, // 239: hashicorp.waypoint.ExecStreamRequest.Start.pty:type_name -> hashicorp.waypoint.ExecStreamRequest.PTY
+	176, // 240: hashicorp.waypoint.ExecStreamRequest.PTY.window_size:type_name -> hashicorp.waypoint.ExecStreamRequest.WindowSize
+	8,   // 241: hashicorp.waypoint.ExecStreamResponse.Output.channel:type_name -> hashicorp.waypoint.ExecStreamResponse.Output.Channel
+	175, // 242: hashicorp.waypoint.EntrypointConfig.Exec.pty:type_name -> hashicorp.waypoint.ExecStreamRequest.PTY
+	9,   // 243: hashicorp.waypoint.EntrypointExecRequest.Output.channel:type_name -> hashicorp.waypoint.EntrypointExecRequest.Output.Channel
+	188, // 244: hashicorp.waypoint.EntrypointExecRequest.Error.error:type_name -> google.rpc.Status
+	190, // 245: hashicorp.waypoint.Waypoint.ListWorkspaces:input_type -> google.protobuf.Empty
+	48,  // 246: hashicorp.waypoint.Waypoint.GetWorkspace:input_type -> hashicorp.waypoint.GetWorkspaceRequest
+	50,  // 247: hashicorp.waypoint.Waypoint.UpsertProject:input_type -> hashicorp.waypoint.UpsertProjectRequest
+	52,  // 248: hashicorp.waypoint.Waypoint.GetProject:input_type -> hashicorp.waypoint.GetProjectRequest
+	190, // 249: hashicorp.waypoint.Waypoint.ListProjects:input_type -> google.protobuf.Empty
+	55,  // 250: hashicorp.waypoint.Waypoint.UpsertApplication:input_type -> hashicorp.waypoint.UpsertApplicationRequest
+	59,  // 251: hashicorp.waypoint.Waypoint.ListBuilds:input_type -> hashicorp.waypoint.ListBuildsRequest
+	62,  // 252: hashicorp.waypoint.Waypoint.GetBuild:input_type -> hashicorp.waypoint.GetBuildRequest
+	69,  // 253: hashicorp.waypoint.Waypoint.ListPushedArtifacts:input_type -> hashicorp.waypoint.ListPushedArtifactsRequest
+	68,  // 254: hashicorp.waypoint.Waypoint.GetPushedArtifact:input_type -> hashicorp.waypoint.GetPushedArtifactRequest
+	75,  // 255: hashicorp.waypoint.Waypoint.ListDeployments:input_type -> hashicorp.waypoint.ListDeploymentsRequest
+	72,  // 256: hashicorp.waypoint.Waypoint.GetDeployment:input_type -> hashicorp.waypoint.GetDeploymentRequest
+	61,  // 257: hashicorp.waypoint.Waypoint.GetLatestBuild:input_type -> hashicorp.waypoint.GetLatestBuildRequest
+	67,  // 258: hashicorp.waypoint.Waypoint.GetLatestPushedArtifact:input_type -> hashicorp.waypoint.GetLatestPushedArtifactRequest
+	81,  // 259: hashicorp.waypoint.Waypoint.ListReleases:input_type -> hashicorp.waypoint.ListReleasesRequest
+	83,  // 260: hashicorp.waypoint.Waypoint.GetRelease:input_type -> hashicorp.waypoint.GetReleaseRequest
+	80,  // 261: hashicorp.waypoint.Waypoint.GetLatestRelease:input_type -> hashicorp.waypoint.GetLatestReleaseRequest
+	85,  // 262: hashicorp.waypoint.Waypoint.GetLogStream:input_type -> hashicorp.waypoint.GetLogStreamRequest
+	92,  // 263: hashicorp.waypoint.Waypoint.StartExecStream:input_type -> hashicorp.waypoint.ExecStreamRequest
+	88,  // 264: hashicorp.waypoint.Waypoint.SetConfig:input_type -> hashicorp.waypoint.ConfigSetRequest
+	90,  // 265: hashicorp.waypoint.Waypoint.GetConfig:input_type -> hashicorp.waypoint.ConfigGetRequest
+	41,  // 266: hashicorp.waypoint.Waypoint.CreateHostname:input_type -> hashicorp.waypoint.CreateHostnameRequest
+	45,  // 267: hashicorp.waypoint.Waypoint.DeleteHostname:input_type -> hashicorp.waypoint.DeleteHostnameRequest
+	43,  // 268: hashicorp.waypoint.Waypoint.ListHostnames:input_type -> hashicorp.waypoint.ListHostnamesRequest
+	19,  // 269: hashicorp.waypoint.Waypoint.QueueJob:input_type -> hashicorp.waypoint.QueueJobRequest
+	21,  // 270: hashicorp.waypoint.Waypoint.CancelJob:input_type -> hashicorp.waypoint.CancelJobRequest
+	25,  // 271: hashicorp.waypoint.Waypoint.GetJob:input_type -> hashicorp.waypoint.GetJobRequest
+	26,  // 272: hashicorp.waypoint.Waypoint._ListJobs:input_type -> hashicorp.waypoint.ListJobsRequest
+	22,  // 273: hashicorp.waypoint.Waypoint.ValidateJob:input_type -> hashicorp.waypoint.ValidateJobRequest
+	28,  // 274: hashicorp.waypoint.Waypoint.GetJobStream:input_type -> hashicorp.waypoint.GetJobStreamRequest
+	38,  // 275: hashicorp.waypoint.Waypoint.GetRunner:input_type -> hashicorp.waypoint.GetRunnerRequest
+	39,  // 276: hashicorp.waypoint.Waypoint.SetServerConfig:input_type -> hashicorp.waypoint.SetServerConfigRequest
+	190, // 277: hashicorp.waypoint.Waypoint.BootstrapToken:input_type -> google.protobuf.Empty
+	103, // 278: hashicorp.waypoint.Waypoint.GenerateInviteToken:input_type -> hashicorp.waypoint.InviteTokenRequest
+	190, // 279: hashicorp.waypoint.Waypoint.GenerateLoginToken:input_type -> google.protobuf.Empty
+	105, // 280: hashicorp.waypoint.Waypoint.ConvertInviteToken:input_type -> hashicorp.waypoint.ConvertInviteTokenRequest
+	31,  // 281: hashicorp.waypoint.Waypoint.RunnerConfig:input_type -> hashicorp.waypoint.RunnerConfigRequest
+	34,  // 282: hashicorp.waypoint.Waypoint.RunnerJobStream:input_type -> hashicorp.waypoint.RunnerJobStreamRequest
+	36,  // 283: hashicorp.waypoint.Waypoint.RunnerGetDeploymentConfig:input_type -> hashicorp.waypoint.RunnerGetDeploymentConfigRequest
+	94,  // 284: hashicorp.waypoint.Waypoint.EntrypointConfig:input_type -> hashicorp.waypoint.EntrypointConfigRequest
+	97,  // 285: hashicorp.waypoint.Waypoint.EntrypointLogStream:input_type -> hashicorp.waypoint.EntrypointLogBatch
+	98,  // 286: hashicorp.waypoint.Waypoint.EntrypointExecStream:input_type -> hashicorp.waypoint.EntrypointExecRequest
+	57,  // 287: hashicorp.waypoint.Waypoint.UpsertBuild:input_type -> hashicorp.waypoint.UpsertBuildRequest
+	65,  // 288: hashicorp.waypoint.Waypoint.UpsertPushedArtifact:input_type -> hashicorp.waypoint.UpsertPushedArtifactRequest
+	73,  // 289: hashicorp.waypoint.Waypoint.UpsertDeployment:input_type -> hashicorp.waypoint.UpsertDeploymentRequest
+	78,  // 290: hashicorp.waypoint.Waypoint.UpsertRelease:input_type -> hashicorp.waypoint.UpsertReleaseRequest
+	47,  // 291: hashicorp.waypoint.Waypoint.ListWorkspaces:output_type -> hashicorp.waypoint.ListWorkspacesResponse
+	49,  // 292: hashicorp.waypoint.Waypoint.GetWorkspace:output_type -> hashicorp.waypoint.GetWorkspaceResponse
+	51,  // 293: hashicorp.waypoint.Waypoint.UpsertProject:output_type -> hashicorp.waypoint.UpsertProjectResponse
+	53,  // 294: hashicorp.waypoint.Waypoint.GetProject:output_type -> hashicorp.waypoint.GetProjectResponse
+	54,  // 295: hashicorp.waypoint.Waypoint.ListProjects:output_type -> hashicorp.waypoint.ListProjectsResponse
+	56,  // 296: hashicorp.waypoint.Waypoint.UpsertApplication:output_type -> hashicorp.waypoint.UpsertApplicationResponse
+	60,  // 297: hashicorp.waypoint.Waypoint.ListBuilds:output_type -> hashicorp.waypoint.ListBuildsResponse
+	63,  // 298: hashicorp.waypoint.Waypoint.GetBuild:output_type -> hashicorp.waypoint.Build
+	70,  // 299: hashicorp.waypoint.Waypoint.ListPushedArtifacts:output_type -> hashicorp.waypoint.ListPushedArtifactsResponse
+	71,  // 300: hashicorp.waypoint.Waypoint.GetPushedArtifact:output_type -> hashicorp.waypoint.PushedArtifact
+	76,  // 301: hashicorp.waypoint.Waypoint.ListDeployments:output_type -> hashicorp.waypoint.ListDeploymentsResponse
+	77,  // 302: hashicorp.waypoint.Waypoint.GetDeployment:output_type -> hashicorp.waypoint.Deployment
+	63,  // 303: hashicorp.waypoint.Waypoint.GetLatestBuild:output_type -> hashicorp.waypoint.Build
+	71,  // 304: hashicorp.waypoint.Waypoint.GetLatestPushedArtifact:output_type -> hashicorp.waypoint.PushedArtifact
+	82,  // 305: hashicorp.waypoint.Waypoint.ListReleases:output_type -> hashicorp.waypoint.ListReleasesResponse
+	84,  // 306: hashicorp.waypoint.Waypoint.GetRelease:output_type -> hashicorp.waypoint.Release
+	84,  // 307: hashicorp.waypoint.Waypoint.GetLatestRelease:output_type -> hashicorp.waypoint.Release
+	86,  // 308: hashicorp.waypoint.Waypoint.GetLogStream:output_type -> hashicorp.waypoint.LogBatch
+	93,  // 309: hashicorp.waypoint.Waypoint.StartExecStream:output_type -> hashicorp.waypoint.ExecStreamResponse
+	89,  // 310: hashicorp.waypoint.Waypoint.SetConfig:output_type -> hashicorp.waypoint.ConfigSetResponse
+	91,  // 311: hashicorp.waypoint.Waypoint.GetConfig:output_type -> hashicorp.waypoint.ConfigGetResponse
+	42,  // 312: hashicorp.waypoint.Waypoint.CreateHostname:output_type -> hashicorp.waypoint.CreateHostnameResponse
+	190, // 313: hashicorp.waypoint.Waypoint.DeleteHostname:output_type -> google.protobuf.Empty
+	44,  // 314: hashicorp.waypoint.Waypoint.ListHostnames:output_type -> hashicorp.waypoint.ListHostnamesResponse
+	20,  // 315: hashicorp.waypoint.Waypoint.QueueJob:output_type -> hashicorp.waypoint.QueueJobResponse
+	190, // 316: hashicorp.waypoint.Waypoint.CancelJob:output_type -> google.protobuf.Empty
+	24,  // 317: hashicorp.waypoint.Waypoint.GetJob:output_type -> hashicorp.waypoint.Job
+	27,  // 318: hashicorp.waypoint.Waypoint._ListJobs:output_type -> hashicorp.waypoint.ListJobsResponse
+	23,  // 319: hashicorp.waypoint.Waypoint.ValidateJob:output_type -> hashicorp.waypoint.ValidateJobResponse
+	29,  // 320: hashicorp.waypoint.Waypoint.GetJobStream:output_type -> hashicorp.waypoint.GetJobStreamResponse
+	30,  // 321: hashicorp.waypoint.Waypoint.GetRunner:output_type -> hashicorp.waypoint.Runner
+	190, // 322: hashicorp.waypoint.Waypoint.SetServerConfig:output_type -> google.protobuf.Empty
+	104, // 323: hashicorp.waypoint.Waypoint.BootstrapToken:output_type -> hashicorp.waypoint.NewTokenResponse
+	104, // 324: hashicorp.waypoint.Waypoint.GenerateInviteToken:output_type -> hashicorp.waypoint.NewTokenResponse
+	104, // 325: hashicorp.waypoint.Waypoint.GenerateLoginToken:output_type -> hashicorp.waypoint.NewTokenResponse
+	104, // 326: hashicorp.waypoint.Waypoint.ConvertInviteToken:output_type -> hashicorp.waypoint.NewTokenResponse
+	32,  // 327: hashicorp.waypoint.Waypoint.RunnerConfig:output_type -> hashicorp.waypoint.RunnerConfigResponse
+	35,  // 328: hashicorp.waypoint.Waypoint.RunnerJobStream:output_type -> hashicorp.waypoint.RunnerJobStreamResponse
+	37,  // 329: hashicorp.waypoint.Waypoint.RunnerGetDeploymentConfig:output_type -> hashicorp.waypoint.RunnerGetDeploymentConfigResponse
+	95,  // 330: hashicorp.waypoint.Waypoint.EntrypointConfig:output_type -> hashicorp.waypoint.EntrypointConfigResponse
+	190, // 331: hashicorp.waypoint.Waypoint.EntrypointLogStream:output_type -> google.protobuf.Empty
+	99,  // 332: hashicorp.waypoint.Waypoint.EntrypointExecStream:output_type -> hashicorp.waypoint.EntrypointExecResponse
+	58,  // 333: hashicorp.waypoint.Waypoint.UpsertBuild:output_type -> hashicorp.waypoint.UpsertBuildResponse
+	66,  // 334: hashicorp.waypoint.Waypoint.UpsertPushedArtifact:output_type -> hashicorp.waypoint.UpsertPushedArtifactResponse
+	74,  // 335: hashicorp.waypoint.Waypoint.UpsertDeployment:output_type -> hashicorp.waypoint.UpsertDeploymentResponse
+	79,  // 336: hashicorp.waypoint.Waypoint.UpsertRelease:output_type -> hashicorp.waypoint.UpsertReleaseResponse
+	291, // [291:337] is the sub-list for method output_type
+	245, // [245:291] is the sub-list for method input_type
+	245, // [245:245] is the sub-list for extension type_name
+	245, // [245:245] is the sub-list for extension extendee
+	0,   // [0:245] is the sub-list for field type_name
 }
 
 func init() { file_internal_server_proto_server_proto_init() }
@@ -15025,8 +15315,8 @@ func file_internal_server_proto_server_proto_init() {
 				return nil
 			}
 		}
-		file_internal_server_proto_server_proto_msgTypes[160].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*LogBatch_Entry); i {
+		file_internal_server_proto_server_proto_msgTypes[159].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Deployment_Preload); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15038,7 +15328,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[161].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ExecStreamRequest_Start); i {
+			switch v := v.(*Release_Preload); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15050,7 +15340,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[162].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ExecStreamRequest_Input); i {
+			switch v := v.(*LogBatch_Entry); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15062,7 +15352,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[163].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ExecStreamRequest_PTY); i {
+			switch v := v.(*ExecStreamRequest_Start); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15074,7 +15364,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[164].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ExecStreamRequest_WindowSize); i {
+			switch v := v.(*ExecStreamRequest_Input); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15086,7 +15376,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[165].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ExecStreamResponse_Exit); i {
+			switch v := v.(*ExecStreamRequest_PTY); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15098,7 +15388,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[166].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ExecStreamResponse_Output); i {
+			switch v := v.(*ExecStreamRequest_WindowSize); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15110,7 +15400,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[167].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EntrypointConfig_Exec); i {
+			switch v := v.(*ExecStreamResponse_Exit); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15122,7 +15412,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[168].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EntrypointConfig_URLService); i {
+			switch v := v.(*ExecStreamResponse_Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15134,7 +15424,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[169].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EntrypointExecRequest_Open); i {
+			switch v := v.(*EntrypointConfig_Exec); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15146,7 +15436,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[170].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EntrypointExecRequest_Exit); i {
+			switch v := v.(*EntrypointConfig_URLService); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15158,7 +15448,7 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[171].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EntrypointExecRequest_Output); i {
+			switch v := v.(*EntrypointExecRequest_Open); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15170,7 +15460,19 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[172].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EntrypointExecRequest_Error); i {
+			switch v := v.(*EntrypointExecRequest_Exit); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_server_proto_server_proto_msgTypes[173].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EntrypointExecRequest_Output); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15182,6 +15484,18 @@ func file_internal_server_proto_server_proto_init() {
 			}
 		}
 		file_internal_server_proto_server_proto_msgTypes[174].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EntrypointExecRequest_Error); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_server_proto_server_proto_msgTypes[176].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Token_Entrypoint); i {
 			case 0:
 				return &v.state
@@ -15292,8 +15606,8 @@ func file_internal_server_proto_server_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_internal_server_proto_server_proto_rawDesc,
-			NumEnums:      9,
-			NumMessages:   175,
+			NumEnums:      10,
+			NumMessages:   177,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
