@@ -10,7 +10,6 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
@@ -31,38 +30,14 @@ func (c *LogsCommand) Run(args []string) int {
 		return 1
 	}
 
-	client := c.project.Client()
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		// Get the latest deployment
-		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Application: app.Ref(),
-			Order: &pb.OperationOrder{
-				Limit: 1,
-				Order: pb.OperationOrder_COMPLETE_TIME,
-				Desc:  true,
-			},
-			PhysicalState: pb.Operation_CREATED,
-		})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-		if len(resp.Deployments) == 0 {
-			app.UI.Output("No successful deployments found.", terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
-		lv, err := app.Logs(ctx, resp.Deployments[0])
+		lv, err := app.Logs(ctx)
 		if err != nil {
 			if !clierrors.IsCanceled(err) {
 				app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
 			}
 			return ErrSentinel
 		}
-
-		partitionMappings := map[string]struct{}{}
-
-		depId := resp.Deployments[0].Id
 
 		var pv component.PartitionViewer
 		for {
@@ -86,11 +61,6 @@ func (c *LogsCommand) Run(args []string) int {
 				// lined up
 				ts := event.Timestamp.Format("2006-01-02T15:04:05.000Z07:00")
 				short := pv.Short(event.Partition)
-
-				if _, seen := partitionMappings[depId+short]; !seen {
-					c.ui.Output("# Log partition %s is for deployment %s", short, depId)
-					partitionMappings[depId+short] = struct{}{}
-				}
 
 				header := headerColor.Sprintf("%s %s: ", ts, short)
 				if strings.IndexByte(event.Message, '\n') != -1 {
