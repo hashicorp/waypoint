@@ -6,11 +6,11 @@ export function iconForComponent([component]: [string]): string {
     case 'kubernetes':
       return 'logo-kubernetes-color';
     case 'docker':
-      return 'box-outline';
+      return 'logo-docker-color';
     case 'google-cloud-run':
       return 'logo-gcp-color';
     default:
-      return 'source-file';
+      return 'help-circle-outline';
   }
 }
 
