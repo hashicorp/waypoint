@@ -28,6 +28,15 @@ func (s *service) GetLogStream(
 		}
 
 	case *pb.GetLogStreamRequest_Application_:
+		if scope.Application == nil ||
+			scope.Application.Application == nil ||
+			scope.Application.Workspace == nil {
+			return status.Errorf(
+				codes.FailedPrecondition,
+				"application scope requires the application and workspace fields to be set",
+			)
+		}
+
 		log = log.With(
 			"project", scope.Application.Application.Project,
 			"application", scope.Application.Application.Application,
