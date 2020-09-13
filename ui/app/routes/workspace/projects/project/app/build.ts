@@ -20,6 +20,7 @@ export default class BuildDetail extends Route {
       },
       {
         label: 'Builds',
+        icon: 'build',
         args: ['workspace.projects.project.app.builds'],
       },
     ];
