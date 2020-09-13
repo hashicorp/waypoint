@@ -45,7 +45,9 @@ func TestLogs_basic(t *testing.T) {
 
 	// Get the log stream
 	stream, err := client.GetLogStream(ctx, &pb.GetLogStreamRequest{
-		DeploymentId: ceb.DeploymentId(),
+		Scope: &pb.GetLogStreamRequest_DeploymentId{
+			DeploymentId: ceb.DeploymentId(),
+		},
 	})
 	require.NoError(err)
 
@@ -91,7 +93,9 @@ func TestLogs_reconnect(t *testing.T) {
 
 	// Get the log stream
 	stream, err := client.GetLogStream(ctx, &pb.GetLogStreamRequest{
-		DeploymentId: ceb.DeploymentId(),
+		Scope: &pb.GetLogStreamRequest_DeploymentId{
+			DeploymentId: ceb.DeploymentId(),
+		},
 	})
 	require.NoError(err)
 
@@ -123,7 +127,9 @@ func TestLogs_reconnect(t *testing.T) {
 
 	// Get the log stream
 	stream, err = client.GetLogStream(ctx, &pb.GetLogStreamRequest{
-		DeploymentId: ceb.DeploymentId(),
+		Scope: &pb.GetLogStreamRequest_DeploymentId{
+			DeploymentId: ceb.DeploymentId(),
+		},
 	}, grpc.WaitForReady(true))
 	require.NoError(err)
 
