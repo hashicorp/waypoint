@@ -17,6 +17,8 @@ Get started with Waypoint quickly in a [sandbox environment on your computer](ht
 
 This method is not intended for production.
 
+<!-- Commenting out Documentation and Resources until we have the website published
+
 Documentation & Guides
 -------------------------------
 Documentation is available on the Waypoint website [here](https://www.waypointproject.io/docs/index.html).
@@ -24,9 +26,7 @@ Documentation is available on the Waypoint website [here](https://www.waypointpr
 Resources
 -------------------------------
 
-<!-- * Website
-  * [www.waypointproject.io](https://www.waypointproject.io) -->
-* Providing Feedback
-  * Please create a [GitHub Issue](https://github.com/hashicorp/waypoint/issues)
-<!-- * Contributing to Waypoint and Building Plugins
+* Website
+  * [www.waypointproject.io](https://www.waypointproject.io)
+* Contributing to Waypoint and Building Plugins
   * [Waypoint Developer Integration Guide](https://www.waypointproject.io/docs/future-link) -->
