@@ -109,15 +109,15 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	if p.config.ContainerPort == 0 {
-		p.config.ContainerPort = 3000
+	if p.config.ServicePort == 0 {
+		p.config.ServicePort = 3000
 	}
 
 	// Build our env vars
 	env := []corev1.EnvVar{
 		{
 			Name:  "PORT",
-			Value: fmt.Sprint(p.config.ContainerPort),
+			Value: fmt.Sprint(p.config.ServicePort),
 		},
 	}
 
@@ -166,13 +166,13 @@ func (p *Platform) Deploy(
 				Ports: []corev1.ContainerPort{
 					{
 						Name:          "http",
-						ContainerPort: int32(p.config.ContainerPort),
+						ContainerPort: int32(p.config.ServicePort),
 					},
 				},
 				LivenessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(int(p.config.ContainerPort)),
+							Port: intstr.FromInt(int(p.config.ServicePort)),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -182,7 +182,7 @@ func (p *Platform) Deploy(
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(int(p.config.ContainerPort)),
+							Port: intstr.FromInt(int(p.config.ServicePort)),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -199,7 +199,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(int(p.config.ContainerPort)),
+					Port: intstr.FromInt(int(p.config.ServicePort)),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -211,7 +211,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(int(p.config.ContainerPort)),
+					Port: intstr.FromInt(int(p.config.ServicePort)),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -363,7 +363,7 @@ type Config struct {
 	// Defaults to port 3000. 
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port. 
-	ContainerPort uint `hcl:"container_port,optional"`
+	ServicePort uint `hcl:"service_port,optional"`
 }
 
 var (

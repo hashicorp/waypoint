@@ -79,8 +79,8 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	if p.config.ContainerPort == 0 {
-		p.config.ContainerPort = 3000
+	if p.config.ServicePort == 0 {
+		p.config.ServicePort = 3000
 	}
 
 	cli.NegotiateAPIVersion(ctx)
@@ -125,7 +125,7 @@ func (p *Platform) Deploy(
 
 	s = sg.Add("Creating new container")
 
-	port := fmt.Sprint(p.config.ContainerPort)
+	port := fmt.Sprint(p.config.ServicePort)
 	np, err := nat.NewPort("tcp", port)
 	if err != nil {
 		return nil, err
@@ -250,7 +250,7 @@ type PlatformConfig struct {
 	// Defaults to port 3000. 
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port. 
-	ContainerPort uint `hcl:"container_port,optional"`
+	ServicePort uint `hcl:"service_port,optional"`
 }
 
 var (
