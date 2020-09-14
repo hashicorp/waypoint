@@ -13,7 +13,7 @@ Getting Started
 
 <!-- Add the getting started Docs link when the file has been committed to the project -->
 
-Get started with Waypoint quickly in a [sandbox environment on your computer](https://github.com/hashicorp/waypoint-examples).
+Get started with Waypoint quickly in a [sandbox environment on your computer](https://github.com/hashicorp/waypoint-examples/tree/Ruby-README-guide/ruby).
 
 This method is not intended for production.
 
@@ -24,8 +24,8 @@ Documentation is available on the Waypoint website [here](https://www.waypointpr
 Resources
 -------------------------------
 
-* Website
-  * [www.waypointproject.io](https://www.waypointproject.io)
+<!-- * Website
+  * [www.waypointproject.io](https://www.waypointproject.io) -->
 * Providing Feedback
   * Please create a [GitHub Issue](https://github.com/hashicorp/waypoint/issues)
 <!-- * Contributing to Waypoint and Building Plugins
