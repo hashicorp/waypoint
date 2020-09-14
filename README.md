@@ -13,7 +13,9 @@ Getting Started
 
 <!-- Add the getting started Docs link when the file has been committed to the project -->
 
-Get started with Waypoint quickly in a [sandbox environment on your computer](https://github.com/hashicorp/waypoint-examples/tree/Ruby-README-guide/ruby).
+Get started with Waypoint quickly in a sandbox environment on your computer:
+* [Docker and React](https://github.com/hashicorp/waypoint-examples/tree/reactjs-sample/reactjs)
+* [Docker and Ruby](https://github.com/hashicorp/waypoint-examples/tree/Ruby-README-guide/ruby)
 
 This method is not intended for production.
 
