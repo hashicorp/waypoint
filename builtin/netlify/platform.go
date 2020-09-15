@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/files"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -269,6 +270,17 @@ type Config struct {
 	// AccessToken is the access token to use, will
 	// prompt oauth exchange if not specified
 	AccessToken string `hcl:"access_token,optional"`
+}
+
+func (p *Platform) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&Config{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Deploy a site to netlify")
+
+	return doc, nil
 }
 
 var (

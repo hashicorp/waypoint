@@ -96,5 +96,19 @@ func Documentation(c interface{}) (*docs.Documentation, error) {
 		return d.Documentation()
 	}
 
+	if c, ok := c.(Configurable); ok {
+		// Get the configuration value
+		v, err := c.Config()
+
+		// If there is no configuration structure for this component,
+		// then there is really no documentation, so just return an empty
+		// docs structure.
+		if err != nil || v == nil {
+			return docs.New()
+		}
+
+		return docs.New(docs.FromConfig(v))
+	}
+
 	return nil, nil
 }

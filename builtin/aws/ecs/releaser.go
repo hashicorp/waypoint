@@ -9,11 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
-
-// The port that a service will forward to the pod(s)
-const DefaultPort = 80
 
 // Releaser is the ReleaseManager implementation for Google Cloud Run.
 type Releaser struct {
@@ -147,10 +145,17 @@ func (r *Releaser) Release(
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.
-type ReleaserConfig struct {
-	// Port configures the port that is used to access the service.
-	// The default is 80.
-	Port int `hcl:"port,optional"`
+type ReleaserConfig struct{}
+
+func (r *Releaser) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&ReleaserConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Reconfigures the ECS specific ALB to route traffic to new deployments")
+
+	return doc, nil
 }
 
 var (

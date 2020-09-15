@@ -8,4 +8,5 @@ type mix_Registry_Authenticator struct {
 	component.Authenticator
 	component.ConfigurableNotify
 	component.Registry
+	component.Documented
 }

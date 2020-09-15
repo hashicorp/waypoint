@@ -360,6 +360,8 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
+	doc.Description("Deploy the application into a Kubernetes cluster using Deployment objects")
+
 	doc.Example(`
 deploy "kubernetes" {
 	image_secret = "registry_secret"

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -298,6 +299,17 @@ type Config struct {
 	// Unauthenticated, if set to true, will allow unauthenticated access
 	// to your deployment. This defaults to true.
 	Unauthenticated *bool `hcl:"unauthenticated,optional"`
+}
+
+func (p *Platform) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&Config{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Deploy a container to Google Cloud Run")
+
+	return doc, nil
 }
 
 var (

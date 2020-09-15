@@ -57,7 +57,9 @@ func (r *Runner) executeDocsOp(
 		result.Component = info
 
 		var pbdocs pb.Job_DocsResult_Documentation
-		pbdocs.Example = docs.Details().Example
+		dets := docs.Details()
+		pbdocs.Description = dets.Description
+		pbdocs.Example = dets.Example
 		pbdocs.Fields = make(map[string]*pb.Job_DocsResult_FieldDocumentation)
 
 		fields := docs.Fields()
@@ -70,7 +72,7 @@ func (r *Runner) executeDocsOp(
 			pbf.Name = f.Field
 			pbf.Type = f.Type
 			pbf.Optional = f.Optional
-			pbf.Synopsis = f.Synposis
+			pbf.Synopsis = f.Synopsis
 			pbf.Summary = f.Help
 			pbf.Default = f.Default
 			pbf.EnvVar = f.EnvVar

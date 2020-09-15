@@ -732,8 +732,9 @@ message Job {
     }
 
     message Documentation {
-      string example = 1;
-      map<string, FieldDocumentation> fields = 2;
+      string description = 1;
+      string example = 2;
+      map<string, FieldDocumentation> fields = 3;
     }
 
     message Result {

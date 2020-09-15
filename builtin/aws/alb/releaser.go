@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -314,7 +315,78 @@ type ReleaserConfig struct {
 	ListenerARN string `hcl:"listener_arn,optional"`
 }
 
+func (r *Releaser) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&ReleaserConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Release target groups by attaching them to an ALB")
+
+	doc.SetField(
+		"name",
+		"the name to assign the ALB",
+		docs.Summary(
+			"names have to be unique per region",
+		),
+		docs.Default("derived from application name"),
+	)
+
+	doc.SetField(
+		"port",
+		"the TCP port to configure the ALB to listen on",
+		docs.Default("80 for HTTP, 443 for HTTPS"),
+	)
+
+	doc.SetField(
+		"subnets",
+		"the subnet ids to allow the ALB to run in",
+		docs.Default("public subnets in the account default VPC"),
+	)
+
+	doc.SetField(
+		"certificate",
+		"ARN for the certificate to install on the ALB listener",
+		docs.Summary(
+			"when this is set, the port automatically changes to 443 unless",
+			"overriden in this configuration",
+		),
+	)
+
+	doc.SetField(
+		"zone_id",
+		"Route53 ZoneID to create a DNS record into",
+		docs.Summary(
+			"set along with domain_name to have DNS automatically setup for the ALB",
+		),
+	)
+
+	doc.SetField(
+		"domain_name",
+		"Fully qualified domain name to set for the ALB",
+		docs.Summary(
+			"set along with zone_id to have DNS automatically setup for the ALB.",
+			"this value should include the full hostname and domain name, for instance",
+			"app.example.com",
+		),
+	)
+
+	doc.SetField(
+		"listener_arn",
+		"the ARN on an existing ALB to configure",
+		docs.Summary(
+			"when this is set, no ALB or Listener is created. Instead the application is",
+			"configured by manipulating this existing Listener. This allows users to",
+			"configure their ALB outside waypoint but still have waypoint hook the application",
+			"to that ALB",
+		),
+	)
+
+	return doc, nil
+}
+
 var (
 	_ component.ReleaseManager = (*Releaser)(nil)
 	_ component.Configurable   = (*Releaser)(nil)
+	_ component.Documented     = (*Releaser)(nil)
 )

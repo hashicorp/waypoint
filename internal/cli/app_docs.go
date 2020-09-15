@@ -7,17 +7,100 @@ import (
 
 	"github.com/posener/complete"
 
+	"github.com/hashicorp/go-argmapper"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type AppDocsCommand struct {
 	*baseCommand
 
-	flagPush bool
+	flagBuiltin bool
+}
+
+func (c *AppDocsCommand) builtinDocs(args []string) int {
+	factories := []struct {
+		f *factory.Factory
+		t string
+	}{
+		{plugin.Builders, "builders"},
+		{plugin.Registries, "registry"},
+		{plugin.Platforms, "platforms"},
+		{plugin.Releasers, "releasemanagers"},
+	}
+
+	for _, f := range factories {
+		types := f.f.Registered()
+		sort.Strings(types)
+
+		for _, t := range types {
+			fn := f.f.Func(t)
+			res := fn.Call(argmapper.Typed(c.Log))
+			if res.Err() != nil {
+				panic(res.Err())
+			}
+
+			raw := res.Out(0)
+
+			// If we have a plugin.Instance then we can extract other information
+			// from this plugin. We accept pure factories too that don't return
+			// this so we type-check here.
+			if pinst, ok := raw.(*plugin.Instance); ok {
+				raw = pinst.Component
+				defer pinst.Close()
+			}
+
+			docs, err := component.Documentation(raw)
+			if err != nil {
+				panic(err)
+			}
+
+			c.ui.Output("%s (%s)", t, f.t, terminal.WithHeaderStyle())
+
+			dets := docs.Details()
+
+			if dets.Description != "" {
+				c.ui.Output("\n%s\n", dets.Description)
+			}
+
+			for _, f := range docs.Fields() {
+				c.ui.NamedValues([]terminal.NamedValue{
+					{
+						Name:  "Field",
+						Value: f.Field,
+					},
+					{
+						Name:  "Type",
+						Value: f.Type,
+					},
+					{
+						Name:  "Optional",
+						Value: f.Optional,
+					},
+					{
+						Name:  "Synopsis",
+						Value: f.Synopsis,
+					},
+					{
+						Name:  "Default",
+						Value: f.Default,
+					},
+					{
+						Name:  "Help",
+						Value: f.Help,
+					},
+				})
+			}
+		}
+	}
+
+	return 0
 }
 
 func (c *AppDocsCommand) Run(args []string) int {
@@ -25,9 +108,12 @@ func (c *AppDocsCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
-		WithSingleApp(),
 	); err != nil {
 		return 1
+	}
+
+	if c.flagBuiltin {
+		return c.builtinDocs(args)
 	}
 
 	c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
@@ -113,10 +199,9 @@ func (c *AppDocsCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
-			Name:    "push",
-			Target:  &c.flagPush,
-			Default: true,
-			Usage:   "Push the artifact to the configured registry.",
+			Name:   "builtin",
+			Target: &c.flagBuiltin,
+			Usage:  "Show documentation on all builtin plugins",
 		})
 	})
 }

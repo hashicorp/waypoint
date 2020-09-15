@@ -76,6 +76,7 @@ func (p *RegistryPlugin) GRPCClient(
 		ConfigurableNotify: client,
 		Registry:           client,
 		Authenticator:      authenticator,
+		Documented:         client,
 	}
 
 	return result, nil

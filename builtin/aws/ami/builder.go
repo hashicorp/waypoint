@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -34,6 +35,42 @@ type BuilderConfig struct {
 
 	// Specific filters to pass to the DescribeImages filter set
 	Filters map[string]interface{} `hcl:"filters,optional"`
+}
+
+func (b *Builder) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&BuilderConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Search for and return an existing AMI")
+
+	doc.SetField(
+		"region",
+		"the AWS region to search in",
+	)
+
+	doc.SetField(
+		"owners",
+		"the set of AMI owners to restrict the search to",
+	)
+
+	doc.SetField(
+		"name",
+		"the name of the AMI to search for, supports wildcards",
+	)
+
+	doc.SetField(
+		"filters",
+		"DescribeImage specific filters to search with",
+		docs.Summary(
+			"the filters are always name => [value], but this api supports",
+			"the ability to pass a single value as a convience. Non string",
+			"values will be converted to strings",
+		),
+	)
+
+	return doc, nil
 }
 
 // Config implements Configurable

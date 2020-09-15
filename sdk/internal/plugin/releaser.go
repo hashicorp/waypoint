@@ -118,6 +118,7 @@ func (p *ReleaseManagerPlugin) GRPCClient(
 		Authenticator:      authenticator,
 		Destroyer:          destroyer,
 		WorkspaceDestroyer: wsDestroyer,
+		Documented:         client,
 	}
 
 	return result, nil

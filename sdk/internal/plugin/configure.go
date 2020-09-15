@@ -113,16 +113,7 @@ func configureCall(ctx context.Context, c configurableClient, v interface{}) err
 // for components. The logic is the same regardless of component so this can
 // be called instead.
 func documentation(impl interface{}) (*pb.Config_Documentation, error) {
-	c, ok := impl.(component.Documented)
-
-	// If Configurable isn't implemented, we just return an empty response.
-	// The nil struct signals to the receiving side that this component
-	// is not configurable.
-	if !ok {
-		return &pb.Config_Documentation{}, nil
-	}
-
-	d, err := c.Documentation()
+	d, err := component.Documentation(impl)
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +121,9 @@ func documentation(impl interface{}) (*pb.Config_Documentation, error) {
 	dets := d.Details()
 
 	v := &pb.Config_Documentation{
-		Example: dets.Example,
-		Fields:  make(map[string]*pb.Config_FieldDocumentation),
+		Description: dets.Description,
+		Example:     dets.Example,
+		Fields:      make(map[string]*pb.Config_FieldDocumentation),
 	}
 
 	for _, f := range d.Fields() {
@@ -139,7 +131,7 @@ func documentation(impl interface{}) (*pb.Config_Documentation, error) {
 			Name:     f.Field,
 			Type:     f.Type,
 			Default:  f.Default,
-			Synopsis: f.Synposis,
+			Synopsis: f.Synopsis,
 			Summary:  f.Help,
 			EnvVar:   f.EnvVar,
 			Optional: f.Optional,
@@ -163,13 +155,14 @@ func documentationCall(ctx context.Context, c configurableClient) (*docs.Documen
 	}
 
 	d.Example(resp.Example)
+	d.Description(resp.Description)
 
 	for _, f := range resp.Fields {
 		d.OverrideField(&docs.FieldDocs{
 			Field:    f.Name,
 			Type:     f.Type,
 			Default:  f.Default,
-			Synposis: f.Synopsis,
+			Synopsis: f.Synopsis,
 			Help:     f.Summary,
 			Optional: f.Optional,
 			EnvVar:   f.EnvVar,

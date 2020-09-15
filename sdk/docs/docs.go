@@ -8,13 +8,14 @@ import (
 )
 
 type Details struct {
-	Example string
+	Description string
+	Example     string
 }
 
 type FieldDocs struct {
 	Field    string
 	Type     string
-	Synposis string
+	Synopsis string
 	Help     string
 
 	Optional bool
@@ -23,8 +24,9 @@ type FieldDocs struct {
 }
 
 type Documentation struct {
-	example string
-	fields  map[string]*FieldDocs
+	description string
+	example     string
+	fields      map[string]*FieldDocs
 }
 
 type Option func(*Documentation) error
@@ -135,16 +137,20 @@ func (d *Documentation) Example(x string) {
 	d.example = x
 }
 
+func (d *Documentation) Description(x string) {
+	d.description = x
+}
+
 func (d *Documentation) SetField(name, synposis string, opts ...DocOption) error {
 	field, ok := d.fields[name]
 	if !ok {
 		field = &FieldDocs{
 			Field:    name,
-			Synposis: synposis,
+			Synopsis: synposis,
 		}
 		d.fields[name] = field
 	} else {
-		field.Synposis = synposis
+		field.Synopsis = synposis
 	}
 
 	for _, o := range opts {
@@ -168,7 +174,8 @@ func (d *Documentation) OverrideField(f *FieldDocs) error {
 
 func (d *Documentation) Details() *Details {
 	return &Details{
-		Example: d.example,
+		Example:     d.example,
+		Description: d.description,
 	}
 }
 
