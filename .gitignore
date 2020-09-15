@@ -10,3 +10,5 @@ tmp/
 
 # Default Waypoint database file
 data.db
+
+.vscode
