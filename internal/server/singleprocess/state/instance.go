@@ -5,6 +5,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
 )
 
@@ -12,6 +13,8 @@ const (
 	instanceTableName             = "instances"
 	instanceIdIndexName           = "id"
 	instanceDeploymentIdIndexName = "deployment-id"
+	instanceAppIndexName          = "app"
+	instanceAppWorkspaceIndexName = "app-ws"
 )
 
 func init() {
@@ -41,6 +44,49 @@ func instanceSchema() *memdb.TableSchema {
 					Lowercase: true,
 				},
 			},
+
+			instanceAppIndexName: &memdb.IndexSchema{
+				Name:         instanceAppIndexName,
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field:     "Project",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Application",
+							Lowercase: true,
+						},
+					},
+				},
+			},
+
+			instanceAppWorkspaceIndexName: &memdb.IndexSchema{
+				Name:         instanceAppWorkspaceIndexName,
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field:     "Project",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Application",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Workspace",
+							Lowercase: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -48,7 +94,24 @@ func instanceSchema() *memdb.TableSchema {
 type Instance struct {
 	Id           string
 	DeploymentId string
+	Project      string
+	Application  string
+	Workspace    string
 	LogBuffer    *logbuffer.Buffer
+}
+
+func (i *Instance) Proto() *pb.Instance {
+	return &pb.Instance{
+		Id:           i.Id,
+		DeploymentId: i.DeploymentId,
+		Application: &pb.Ref_Application{
+			Project:     i.Project,
+			Application: i.Application,
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: i.Workspace,
+		},
+	}
 }
 
 func (s *State) InstanceCreate(rec *Instance) error {
@@ -99,6 +162,35 @@ func (s *State) InstancesByDeployment(id string, ws memdb.WatchSet) ([]*Instance
 	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 	iter, err := txn.Get(instanceTableName, instanceDeploymentIdIndexName, id)
+	if err != nil {
+		return nil, err
+	}
+	ws.Add(iter.WatchCh())
+
+	var result []*Instance
+	for raw := iter.Next(); raw != nil; raw = iter.Next() {
+		result = append(result, raw.(*Instance))
+	}
+
+	return result, nil
+}
+
+func (s *State) InstancesByApp(
+	ref *pb.Ref_Application,
+	refws *pb.Ref_Workspace,
+	ws memdb.WatchSet,
+) ([]*Instance, error) {
+	txn := s.inmem.Txn(false)
+	defer txn.Abort()
+
+	var iter memdb.ResultIterator
+	var err error
+	if refws == nil {
+		iter, err = txn.Get(instanceTableName, instanceAppIndexName, ref.Project, ref.Application)
+	} else {
+		iter, err = txn.Get(instanceTableName, instanceAppWorkspaceIndexName,
+			ref.Project, ref.Application, refws.Workspace)
+	}
 	if err != nil {
 		return nil, err
 	}
