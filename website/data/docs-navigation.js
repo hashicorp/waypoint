@@ -7,10 +7,14 @@
 //   serve as the category title in the sidebar
 
 export default [
-  'example',
   {
-    category: 'nested',
-    content: ['nested-example'],
+    category: 'getting-started',
+    content: [
+      {
+        category: 'docker-sample-app',
+        content: ['waypoint-intro', 'install-waypoint'],
+      },
+    ],
   },
   '---',
   { title: 'External Link', href: 'https://www.hashicorp.com' },
