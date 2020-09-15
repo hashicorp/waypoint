@@ -18,7 +18,8 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/mattn/go-isatty"
-	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Builder uses `docker build` to build a Docker iamge.
@@ -63,23 +64,23 @@ func (b *Builder) Build(
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
 
 	cli.NegotiateAPIVersion(ctx)
 
 	contextDir, relDockerfile, err := build.GetContextFromLocalDir(src.Path, "")
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker context: %s", err)
 	}
 
 	excludes, err := build.ReadDockerignore(contextDir)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to read .dockerignore: %s", err)
 	}
 
 	if err := build.ValidateContextDirectory(contextDir, excludes); err != nil {
-		return nil, errors.Errorf("error checking context: '%s'.", err)
+		return nil, status.Errorf(codes.Internal, "error checking context: %s", err)
 	}
 
 	// And canonicalize dockerfile name to a platform-independent one
@@ -92,7 +93,7 @@ func (b *Builder) Build(
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to compress context: %s", err)
 	}
 
 	ver := types.BuilderV1
@@ -106,7 +107,7 @@ func (b *Builder) Build(
 		Tags:       []string{result.Name()},
 	})
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "error building image: %s", err)
 	}
 
 	defer resp.Body.Close()
@@ -123,20 +124,20 @@ func (b *Builder) Build(
 
 	err = jsonmessage.DisplayJSONMessagesStream(resp.Body, stdout, termFd, isTerm, nil)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to stream build logs to the terminal: %s", err)
 	}
 
 	if !b.config.DisableCEB {
 		tmpdir, err := ioutil.TempDir("", "waypoint")
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, "unable to create temporary directory: %s", err)
 		}
 
 		defer os.RemoveAll(tmpdir)
 
 		err = assets.RestoreAsset(tmpdir, "ceb/ceb")
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}
 
 		_, err = epinject.AlterEntrypoint(ctx, result.Name(), func(cur []string) (*epinject.NewEntrypoint, error) {
@@ -151,7 +152,7 @@ func (b *Builder) Build(
 		})
 
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, "unable to set modify Docker entrypoint: %s", err)
 		}
 	}
 
