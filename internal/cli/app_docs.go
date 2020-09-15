@@ -104,30 +104,38 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 		panic(err)
 	}
 
-	fmt.Fprintf(w, "## %s (%s)", name, ct)
+	fmt.Fprintf(w, "## %s (%s)\n\n", name, ct)
 
 	dets := doc.Details()
 
 	if dets.Description != "" {
-		fmt.Fprintf(w, "\n%s\n", dets.Description)
+		fmt.Fprintf(w, "%s\n\n", dets.Description)
 	}
 
-	fmt.Fprintf(w, "### Variables")
+	fmt.Fprintf(w, "### Variables\n")
 
 	for _, f := range doc.Fields() {
-		fmt.Fprintf(w, "\n#### %s", f.Field)
+		fmt.Fprintf(w, "\n#### %s\n", f.Field)
 
-		fmt.Fprintf(w, "%s\n%s", f.Synopsis, f.Summary)
+		if f.Summary != "" {
+			fmt.Fprintf(w, "%s\n\n%s\n", f.Synopsis, f.Summary)
+		} else {
+			fmt.Fprintf(w, "%s\n", f.Synopsis)
+		}
 
-		fmt.Fprintf(w, "\n* Type: **%s**", f.Type)
+		fmt.Fprintf(w, "\n* Type: **%s**\n", f.Type)
 
 		if f.Optional {
-			fmt.Fprintf(w, "* __Optional__")
+			fmt.Fprintf(w, "* __Optional__\n")
 
 			if f.Default != "" {
-				fmt.Fprintf(w, "* Default: %s", f.Default)
+				fmt.Fprintf(w, "* Default: %s\n", f.Default)
 			}
 		}
+	}
+
+	if dets.Example != "" {
+		fmt.Fprintf(w, "\n\n### Examples\n%s\n", dets.Example)
 	}
 }
 
@@ -170,7 +178,7 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 		f *factory.Factory
 		t string
 	}{
-		{plugin.Builders, "builders"},
+		{plugin.Builders, "builder"},
 		{plugin.Registries, "registry"},
 		{plugin.Platforms, "platform"},
 		{plugin.Releasers, "releasemanager"},
@@ -226,7 +234,7 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 		f *factory.Factory
 		t string
 	}{
-		{plugin.Builders, "builders"},
+		{plugin.Builders, "builder"},
 		{plugin.Registries, "registry"},
 		{plugin.Platforms, "platform"},
 		{plugin.Releasers, "releasemanager"},
