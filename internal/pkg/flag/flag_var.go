@@ -20,6 +20,8 @@ type VarFlag struct {
 }
 
 func (f *Set) VarFlag(i *VarFlag) {
+	f.vars = append(f.vars, i)
+
 	// If the flag is marked as hidden, just add it to the set and return to
 	// avoid unnecessary computations here. We do not want to add completions or
 	// generate help output for hidden flags.

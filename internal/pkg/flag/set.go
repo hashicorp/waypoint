@@ -100,12 +100,21 @@ func (fs *Sets) Help() string {
 	return strings.TrimRight(out.String(), "\n")
 }
 
+// Help builds custom help for this command, grouping by flag set.
+func (fs *Sets) VisitSets(fn func(name string, set *Set)) {
+	for _, set := range fs.flagSets {
+		fn(set.name, set)
+	}
+}
+
 // Set is a grouped wrapper around a real flag set and a grouped flag set.
 type Set struct {
 	name        string
 	flagSet     *flag.FlagSet
 	unionSet    *flag.FlagSet
 	completions complete.Flags
+
+	vars []*VarFlag
 }
 
 // NewSet creates a new flag set.
@@ -127,6 +136,12 @@ func (f *Set) Visit(fn func(*flag.Flag)) {
 
 func (f *Set) VisitAll(fn func(*flag.Flag)) {
 	f.flagSet.VisitAll(fn)
+}
+
+func (f *Set) VisitVars(fn func(*VarFlag)) {
+	for _, v := range f.vars {
+		fn(v)
+	}
 }
 
 // printFlagTitle prints a consistently-formatted title to the given writer.
