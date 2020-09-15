@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/hashicorp/go-hclog"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -85,7 +86,7 @@ func TestServerConfigWithStartupConfig(t *testing.T) {
 	require.NoError(t, err)
 	_ = server.TestServer(t, impl)
 
-	st, err := state.New(db)
+	st, err := state.New(hclog.L(), db)
 	require.NoError(t, err)
 
 	t.Run("Check config defaults are set", func(t *testing.T) {
@@ -111,7 +112,7 @@ func TestServerConfigWithNoStartupConfig(t *testing.T) {
 	require.NoError(t, err)
 	_ = server.TestServer(t, impl)
 
-	st, err := state.New(db)
+	st, err := state.New(hclog.L(), db)
 	require.NoError(t, err)
 
 	t.Run("Check config defaults are not set", func(t *testing.T) {
