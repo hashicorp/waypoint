@@ -1,0 +1,67 @@
+## aws-alb (releasemanager)
+
+Release target groups by attaching them to an ALB
+
+### Variables
+
+#### certificate
+
+ARN for the certificate to install on the ALB listener
+
+when this is set, the port automatically changes to 443 unless overriden in this configuration
+
+- Type: **string**
+- **Optional**
+
+#### domain_name
+
+Fully qualified domain name to set for the ALB
+
+set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com
+
+- Type: **string**
+- **Optional**
+
+#### listener_arn
+
+the ARN on an existing ALB to configure
+
+when this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB
+
+- Type: **string**
+- **Optional**
+
+#### name
+
+the name to assign the ALB
+
+names have to be unique per region
+
+- Type: **string**
+- **Optional**
+- Default: derived from application name
+
+#### port
+
+the TCP port to configure the ALB to listen on
+
+- Type: **int**
+- **Optional**
+- Default: 80 for HTTP, 443 for HTTPS
+
+#### subnets
+
+the subnet ids to allow the ALB to run in
+
+- Type: **[]string**
+- **Optional**
+- Default: public subnets in the account default VPC
+
+#### zone_id
+
+Route53 ZoneID to create a DNS record into
+
+set along with domain_name to have DNS automatically setup for the ALB
+
+- Type: **string**
+- **Optional**

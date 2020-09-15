@@ -1,0 +1,47 @@
+## kubernetes (releasemanager)
+
+Manipulates the Kubernetes Service activate Deployments
+
+### Variables
+
+#### context
+
+the kubectl context to use, as defined in the kubeconfig file
+
+- Type: **string**
+- **Optional**
+
+#### kubeconfig
+
+path to the kubeconfig file to use
+
+by default uses from current user's home directory
+
+- Type: **string**
+- **Optional**
+
+#### load_balancer
+
+indicates if the Kubernetes Service should LoadBalancer type
+
+if the Kubernetes Service is not a LoadBalancer and node_port is not set, then the Service uses ClusterIP
+
+- Type: **bool**
+- **Optional**
+
+#### node_port
+
+the TCP port that the Service should consume as a NodePort
+
+if this is set but load_balancer is not, the service will be NodePort type, but if load_balancer is also set, it will be LoadBalancer
+
+- Type: **int**
+- **Optional**
+
+#### port
+
+the TCP port that the application is listening on
+
+- Type: **int**
+- **Optional**
+- Default: 80

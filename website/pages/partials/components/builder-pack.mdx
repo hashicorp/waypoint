@@ -1,0 +1,22 @@
+## pack (builder)
+
+Create a Docker image using CloudNative Buildpacks
+
+### Variables
+
+#### builder
+
+The buildpack builder image to use
+
+- Type: **string**
+- **Optional**
+- Default: heroku/buildpacks:18
+
+#### disable_ceb
+
+if set, the entrypoint binary won't be injected into the image
+
+The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it
+
+- Type: **bool**
+- **Optional**

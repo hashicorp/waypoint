@@ -1,0 +1,64 @@
+## aws-ec2 (platform)
+
+Deploy the application into an AutoScaling Group on EC2
+
+### Variables
+
+#### count
+
+how many EC2 instances to configure the ASG with
+
+the fields here (desired, min, max) map directly to the typical ASG configuration
+
+- Type: **\*ec2.countConfig**
+
+#### extra_ports
+
+additional TCP ports to allow into the EC2 instances
+
+these additional ports are usually used to allow secondary services, such as ssh
+
+- Type: **[]int**
+- **Optional**
+
+#### instance_type
+
+the EC2 instance type to deploy
+
+- Type: **string**
+
+#### key
+
+the name of an SSH Key to associate with the instances, as preconfigured in EC2
+
+- Type: **string**
+- **Optional**
+
+#### region
+
+the AWS region to deploy into
+
+- Type: **string**
+
+#### security_groups
+
+additional security groups to attached to the EC2 instances
+
+this plugin creates security groups that match the above ports by default. this field allows additional security groups to be specified for the instances
+
+- Type: **[]string**
+- **Optional**
+
+#### service_port
+
+the TCP port on the instances that the app will be running on
+
+- Type: **int**
+
+#### subnet
+
+the subnet to place the instances into
+
+- Type: **string**
+- **Optional**
+- Default: a public subnet in the dafault VPC

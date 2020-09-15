@@ -1,0 +1,31 @@
+## docker (platform)
+
+Deploy a container to Docker, local or remote
+
+### Variables
+
+#### command
+
+the command to run to start the application in the container
+
+- Type: **string**
+- **Optional**
+- Default: the image entrypoint
+
+#### scratch_path
+
+a path within the container to store temporary data
+
+docker will mount a tmpfs at this path
+
+- Type: **string**
+- **Optional**
+
+#### static_environment
+
+environment variables to expose to the application
+
+these environment variables should not be run of the mill configuration variables, use waypoint config for that. These variables are used to control over all container modes, such as configuring it to start a web app vs a background worker
+
+- Type: **map[string]string**
+- **Optional**
