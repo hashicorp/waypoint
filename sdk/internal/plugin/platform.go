@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
@@ -13,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
@@ -145,6 +147,7 @@ func (p *PlatformPlugin) GRPCClient(
 			LogPlatform:        logPlatform,
 			Destroyer:          destroyer,
 			WorkspaceDestroyer: wsDestroyer,
+			Documented:         client,
 		}
 
 	case logPlatform != nil:
@@ -155,6 +158,7 @@ func (p *PlatformPlugin) GRPCClient(
 			PlatformReleaser:   client,
 			LogPlatform:        logPlatform,
 			WorkspaceDestroyer: wsDestroyer,
+			Documented:         client,
 		}
 
 	case destroyer != nil:
@@ -165,6 +169,7 @@ func (p *PlatformPlugin) GRPCClient(
 			PlatformReleaser:   client,
 			Destroyer:          destroyer,
 			WorkspaceDestroyer: wsDestroyer,
+			Documented:         client,
 		}
 	default:
 		result = &mix_Platform_Authenticator{
@@ -173,6 +178,7 @@ func (p *PlatformPlugin) GRPCClient(
 			Platform:           client,
 			PlatformReleaser:   client,
 			WorkspaceDestroyer: wsDestroyer,
+			Documented:         client,
 		}
 	}
 
@@ -193,6 +199,10 @@ func (c *platformClient) Config() (interface{}, error) {
 
 func (c *platformClient) ConfigSet(v interface{}) error {
 	return configureCall(context.Background(), c.client, v)
+}
+
+func (c *platformClient) Documentation() (*docs.Documentation, error) {
+	return documentationCall(context.Background(), c.client)
 }
 
 func (c *platformClient) DeployFunc() interface{} {
@@ -315,6 +325,19 @@ func (s *platformServer) Configure(
 	req *proto.Config_ConfigureRequest,
 ) (*empty.Empty, error) {
 	return configure(s.Impl, req)
+}
+
+func (s *platformServer) Documentation(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.Config_Documentation, error) {
+	docs, err := documentation(s.Impl)
+
+	if docs != nil {
+		s.Logger.Debug("docs", "docs", spew.Sdump(docs))
+	}
+
+	return docs, err
 }
 
 func (s *platformServer) DeploySpec(

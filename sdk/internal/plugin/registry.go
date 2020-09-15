@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
@@ -96,6 +97,10 @@ func (c *registryClient) ConfigSet(v interface{}) error {
 	return configureCall(context.Background(), c.client, v)
 }
 
+func (c *registryClient) Documentation() (*docs.Documentation, error) {
+	return documentationCall(context.Background(), c.client)
+}
+
 func (c *registryClient) PushFunc() interface{} {
 	// Get the spec
 	spec, err := c.client.PushSpec(context.Background(), &proto.Empty{})
@@ -153,6 +158,13 @@ func (s *registryServer) Configure(
 	return configure(s.Impl, req)
 }
 
+func (s *registryServer) Documentation(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.Config_Documentation, error) {
+	return documentation(s.Impl)
+}
+
 func (s *registryServer) PushSpec(
 	ctx context.Context,
 	args *proto.Empty,
@@ -190,5 +202,6 @@ var (
 	_ proto.RegistryServer         = (*registryServer)(nil)
 	_ component.Registry           = (*registryClient)(nil)
 	_ component.Configurable       = (*registryClient)(nil)
+	_ component.Documented         = (*registryClient)(nil)
 	_ component.ConfigurableNotify = (*registryClient)(nil)
 )

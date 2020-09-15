@@ -119,12 +119,24 @@ func (ui *basicUI) NamedValues(rows []NamedValue, opts ...Option) {
 		opt(cfg)
 	}
 
-	cfg.Writer.Write([]byte{'\n'})
-
 	var buf bytes.Buffer
 	tr := tabwriter.NewWriter(&buf, 1, 8, 0, ' ', tabwriter.AlignRight)
 	for _, row := range rows {
-		fmt.Fprintf(tr, "  %s: \t%s\n", row.Name, row.Value)
+		switch v := row.Value.(type) {
+		case int, uint, int8, uint8, int16, uint16, int32, uint32, int64, uint64:
+			fmt.Fprintf(tr, "  %s: \t%d\n", row.Name, row.Value)
+		case float32, float64:
+			fmt.Fprintf(tr, "  %s: \t%f\n", row.Name, row.Value)
+		case bool:
+			fmt.Fprintf(tr, "  %s: \t%v\n", row.Name, row.Value)
+		case string:
+			if v == "" {
+				continue
+			}
+			fmt.Fprintf(tr, "  %s: \t%s\n", row.Name, row.Value)
+		default:
+			fmt.Fprintf(tr, "  %s: \t%s\n", row.Name, row.Value)
+		}
 	}
 
 	tr.Flush()

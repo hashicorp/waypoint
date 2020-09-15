@@ -296,6 +296,12 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"docs": func() (cli.Command, error) {
+			return &AppDocsCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
@@ -304,7 +310,7 @@ func Commands(
 	}
 
 	if ExposeDocs {
-		commands["docs"] = func() (cli.Command, error) {
+		commands["cli-docs"] = func() (cli.Command, error) {
 			return &DocsCommand{
 				baseCommand: baseCommand,
 				commands:    commands,

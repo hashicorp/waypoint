@@ -8,5 +8,5 @@ import (
 
 func main() {
 	cli.ExposeDocs = true
-	os.Exit(cli.Main([]string{"waypoint", "docs"}))
+	os.Exit(cli.Main([]string{"waypoint", "cli-docs"}))
 }

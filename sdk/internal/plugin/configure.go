@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
 
@@ -108,10 +109,81 @@ func configureCall(ctx context.Context, c configurableClient, v interface{}) err
 	return err
 }
 
+// documentation is the shared helper to implement the Documentation RPC call
+// for components. The logic is the same regardless of component so this can
+// be called instead.
+func documentation(impl interface{}) (*pb.Config_Documentation, error) {
+	c, ok := impl.(component.Documented)
+
+	// If Configurable isn't implemented, we just return an empty response.
+	// The nil struct signals to the receiving side that this component
+	// is not configurable.
+	if !ok {
+		return &pb.Config_Documentation{}, nil
+	}
+
+	d, err := c.Documentation()
+	if err != nil {
+		return nil, err
+	}
+
+	dets := d.Details()
+
+	v := &pb.Config_Documentation{
+		Example: dets.Example,
+		Fields:  make(map[string]*pb.Config_FieldDocumentation),
+	}
+
+	for _, f := range d.Fields() {
+		v.Fields[f.Field] = &pb.Config_FieldDocumentation{
+			Name:     f.Field,
+			Type:     f.Type,
+			Default:  f.Default,
+			Synopsis: f.Synposis,
+			Summary:  f.Help,
+			EnvVar:   f.EnvVar,
+			Optional: f.Optional,
+		}
+	}
+
+	return v, nil
+}
+
+// configStructCall is the shared helper to call the ConfigStruct RPC call
+// and return the proper struct value for decoding configuration.
+func documentationCall(ctx context.Context, c configurableClient) (*docs.Documentation, error) {
+	resp, err := c.Documentation(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+
+	d, err := docs.New()
+	if err != nil {
+		return nil, err
+	}
+
+	d.Example(resp.Example)
+
+	for _, f := range resp.Fields {
+		d.OverrideField(&docs.FieldDocs{
+			Field:    f.Name,
+			Type:     f.Type,
+			Default:  f.Default,
+			Synposis: f.Synopsis,
+			Help:     f.Summary,
+			Optional: f.Optional,
+			EnvVar:   f.EnvVar,
+		})
+	}
+
+	return d, nil
+}
+
 // configurableClient is the interface implemented by all gRPC services that
 // have the configuration RPC methods. We use this with the helpers above
 // to extract shared logic for component configuration.
 type configurableClient interface {
 	ConfigStruct(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.Config_StructResp, error)
 	Configure(context.Context, *pb.Config_ConfigureRequest, ...grpc.CallOption) (*empty.Empty, error)
+	Documentation(context.Context, *empty.Empty, ...grpc.CallOption) (*pb.Config_Documentation, error)
 }

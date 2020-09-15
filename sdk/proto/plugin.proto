@@ -150,6 +150,8 @@ message FuncSpec {
 //   * ConfigStruct - Returns the configuration structure.
 //   * Configure - Sends the configuration data back to the plugin and the
 //       plugin is also expected to perform any validation at this stage.
+//   * Documentation - Returns a Documentation struct that details what configuration
+//       is accepted, with documentation.
 //
 message Config {
   // ConfigureRequest is the request sent once the configuration decoding
@@ -166,6 +168,21 @@ message Config {
     // This struct should have all the proper struct tags for HCL decoding
     // You should do validation on the Configure call.
     protostructure.Struct struct = 1;
+  }
+
+  message FieldDocumentation {
+    string name = 1;
+    string synopsis = 2;
+    string summary = 3;
+    bool optional = 4;
+    string env_var = 5;
+    string type = 6;
+    string default = 7;
+  }
+
+  message Documentation {
+    string example = 1;
+    map<string, FieldDocumentation> fields = 2;
   }
 }
 
