@@ -2,6 +2,8 @@ package cli
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -15,13 +17,152 @@ import (
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 type AppDocsCommand struct {
 	*baseCommand
 
-	flagBuiltin bool
+	flagBuiltin  bool
+	flagMarkdown bool
+	flagType     string
+	flagPlugin   string
+	flagMDX      bool
+}
+
+func (c *AppDocsCommand) basicFormat(name, ct string, doc *docs.Documentation) {
+	c.ui.Output("%s (%s)", name, ct, terminal.WithHeaderStyle())
+
+	dets := doc.Details()
+
+	if dets.Description != "" {
+		c.ui.Output("\n%s\n", dets.Description)
+	}
+
+	for _, f := range doc.Fields() {
+		c.ui.NamedValues([]terminal.NamedValue{
+			{
+				Name:  "Field",
+				Value: f.Field,
+			},
+			{
+				Name:  "Type",
+				Value: f.Type,
+			},
+			{
+				Name:  "Optional",
+				Value: f.Optional,
+			},
+			{
+				Name:  "Synopsis",
+				Value: f.Synopsis,
+			},
+			{
+				Name:  "Default",
+				Value: f.Default,
+			},
+			{
+				Name:  "Help",
+				Value: f.Summary,
+			},
+		})
+	}
+}
+
+func (c *AppDocsCommand) markdownFormat(name, ct string, doc *docs.Documentation) {
+	c.ui.Output("## %s (%s)", name, ct)
+
+	dets := doc.Details()
+
+	if dets.Description != "" {
+		c.ui.Output("\n%s\n", dets.Description)
+	}
+
+	c.ui.Output("### Variables")
+
+	for _, f := range doc.Fields() {
+		c.ui.Output("\n#### %s", f.Field)
+
+		c.ui.Output("%s\n%s", f.Synopsis, f.Summary)
+
+		c.ui.Output("\n* Type: **%s**", f.Type)
+
+		if f.Optional {
+			c.ui.Output("* __Optional__")
+
+			if f.Default != "" {
+				c.ui.Output("* Default: %s", f.Default)
+			}
+		}
+	}
+}
+
+func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
+	w, err := os.Create(fmt.Sprintf("./website/pages/partials/components/%s-%s.mdx", ct, name))
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintf(w, "## %s (%s)", name, ct)
+
+	dets := doc.Details()
+
+	if dets.Description != "" {
+		fmt.Fprintf(w, "\n%s\n", dets.Description)
+	}
+
+	fmt.Fprintf(w, "### Variables")
+
+	for _, f := range doc.Fields() {
+		fmt.Fprintf(w, "\n#### %s", f.Field)
+
+		fmt.Fprintf(w, "%s\n%s", f.Synopsis, f.Summary)
+
+		fmt.Fprintf(w, "\n* Type: **%s**", f.Type)
+
+		if f.Optional {
+			fmt.Fprintf(w, "* __Optional__")
+
+			if f.Default != "" {
+				fmt.Fprintf(w, "* Default: %s", f.Default)
+			}
+		}
+	}
+}
+
+func (c *AppDocsCommand) markdownFormatPB(name, ct string, doc *pb.Job_DocsResult_Documentation) {
+	c.ui.Output("## %s (%s)", name, ct)
+
+	if doc.Description != "" {
+		c.ui.Output("\n%s\n", doc.Description)
+	}
+
+	c.ui.Output("### Variables")
+
+	var keys []string
+	for k := range doc.Fields {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		f := doc.Fields[k]
+		c.ui.Output("\n#### %s", f.Name)
+
+		c.ui.Output("%s\n%s", f.Synopsis, f.Summary)
+
+		c.ui.Output("\n* Type: **%s**", f.Type)
+
+		if f.Optional {
+			c.ui.Output("* __Optional__")
+
+			if f.Default != "" {
+				c.ui.Output("* Default: %s", f.Default)
+			}
+		}
+	}
 }
 
 func (c *AppDocsCommand) builtinDocs(args []string) int {
@@ -31,8 +172,64 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 	}{
 		{plugin.Builders, "builders"},
 		{plugin.Registries, "registry"},
-		{plugin.Platforms, "platforms"},
-		{plugin.Releasers, "releasemanagers"},
+		{plugin.Platforms, "platform"},
+		{plugin.Releasers, "releasemanager"},
+	}
+
+	for _, f := range factories {
+		if c.flagType != "" && c.flagType != f.t {
+			continue
+		}
+
+		types := f.f.Registered()
+		sort.Strings(types)
+
+		for _, t := range types {
+			if c.flagPlugin != "" && c.flagPlugin != t {
+				continue
+			}
+
+			fn := f.f.Func(t)
+			res := fn.Call(argmapper.Typed(c.Log))
+			if res.Err() != nil {
+				panic(res.Err())
+			}
+
+			raw := res.Out(0)
+
+			// If we have a plugin.Instance then we can extract other information
+			// from this plugin. We accept pure factories too that don't return
+			// this so we type-check here.
+			if pinst, ok := raw.(*plugin.Instance); ok {
+				raw = pinst.Component
+				defer pinst.Close()
+			}
+
+			doc, err := component.Documentation(raw)
+			if err != nil {
+				panic(err)
+			}
+
+			if c.flagMarkdown {
+				c.markdownFormat(t, f.t, doc)
+			} else {
+				c.basicFormat(t, f.t, doc)
+			}
+		}
+	}
+
+	return 0
+}
+
+func (c *AppDocsCommand) builtinMDX(args []string) int {
+	factories := []struct {
+		f *factory.Factory
+		t string
+	}{
+		{plugin.Builders, "builders"},
+		{plugin.Registries, "registry"},
+		{plugin.Platforms, "platform"},
+		{plugin.Releasers, "releasemanager"},
 	}
 
 	for _, f := range factories {
@@ -56,47 +253,12 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 				defer pinst.Close()
 			}
 
-			docs, err := component.Documentation(raw)
+			doc, err := component.Documentation(raw)
 			if err != nil {
 				panic(err)
 			}
 
-			c.ui.Output("%s (%s)", t, f.t, terminal.WithHeaderStyle())
-
-			dets := docs.Details()
-
-			if dets.Description != "" {
-				c.ui.Output("\n%s\n", dets.Description)
-			}
-
-			for _, f := range docs.Fields() {
-				c.ui.NamedValues([]terminal.NamedValue{
-					{
-						Name:  "Field",
-						Value: f.Field,
-					},
-					{
-						Name:  "Type",
-						Value: f.Type,
-					},
-					{
-						Name:  "Optional",
-						Value: f.Optional,
-					},
-					{
-						Name:  "Synopsis",
-						Value: f.Synopsis,
-					},
-					{
-						Name:  "Default",
-						Value: f.Default,
-					},
-					{
-						Name:  "Help",
-						Value: f.Help,
-					},
-				})
-			}
+			c.mdxFormat(t, f.t, doc)
 		}
 	}
 
@@ -104,16 +266,39 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 }
 
 func (c *AppDocsCommand) Run(args []string) int {
-	// Initialize. If we fail, we just exit since Init handles the UI.
-	if err := c.Init(
+	opts := []Option{
 		WithArgs(args),
 		WithFlags(c.Flags()),
-	); err != nil {
+	}
+
+	needCfg := true
+
+	for _, s := range args {
+		if s == "-website-mdx" {
+			needCfg = false
+		}
+
+		if s == "-builtin" {
+			needCfg = false
+		}
+	}
+
+	if !needCfg {
+		opts = append(opts, WithNoConfig())
+	}
+
+	// Initialize. If we fail, we just exit since Init handles the UI.
+	err := c.Init(opts...)
+	if err != nil {
 		return 1
 	}
 
 	if c.flagBuiltin {
 		return c.builtinDocs(args)
+	}
+
+	if c.flagMDX {
+		return c.builtinMDX(args)
 	}
 
 	c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
@@ -148,7 +333,26 @@ func (c *AppDocsCommand) Run(args []string) int {
 				continue
 			}
 
-			c.ui.Output("%s (%s)", r.Component.Name, r.Component.Type, terminal.WithHeaderStyle())
+			ct := strings.ToLower(r.Component.Type.String())
+
+			if c.flagType != "" && c.flagType != ct {
+				continue
+			}
+
+			if c.flagPlugin != "" && c.flagPlugin != r.Component.Name {
+				continue
+			}
+
+			if c.flagMarkdown {
+				c.markdownFormatPB(r.Component.Name, ct, r.Docs)
+				continue
+			}
+
+			c.ui.Output("%s (%s)", r.Component.Name, ct, terminal.WithHeaderStyle())
+
+			if r.Docs.Description != "" {
+				c.ui.Output("\n%s\n", r.Docs.Description)
+			}
 
 			var keys []string
 			for k := range r.Docs.Fields {
@@ -203,6 +407,31 @@ func (c *AppDocsCommand) Flags() *flag.Sets {
 			Target: &c.flagBuiltin,
 			Usage:  "Show documentation on all builtin plugins",
 		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "markdown",
+			Target: &c.flagMarkdown,
+			Usage:  "Show documentation in markdown format",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "type",
+			Target: &c.flagType,
+			Usage:  "Only show documentation for this type of plugin",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "plugin",
+			Target: &c.flagPlugin,
+			Usage:  "Only show documentation for plugins with this name",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "website-mdx",
+			Target: &c.flagMDX,
+			Usage:  "Write out builtin docs inclusion on the waypoint website",
+			Hidden: true,
+		})
 	})
 }
 
@@ -220,10 +449,12 @@ func (c *AppDocsCommand) Synopsis() string {
 
 func (c *AppDocsCommand) Help() string {
 	helpText := `
-Usage: waypoint artifact build [options]
-Alias: waypoint build
+Usage: waypoint docs [options]
 
-  Build a new versioned artifact from source.
+  Output documentation about the plugins. By default, it lists the documentation
+	for the plugins configured by this project.
+
+	The flags can change which plugins are listed and in which format.
 
 ` + c.Flags().Help()
 

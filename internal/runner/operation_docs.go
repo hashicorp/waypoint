@@ -73,7 +73,7 @@ func (r *Runner) executeDocsOp(
 			pbf.Type = f.Type
 			pbf.Optional = f.Optional
 			pbf.Synopsis = f.Synopsis
-			pbf.Summary = f.Help
+			pbf.Summary = f.Summary
 			pbf.Default = f.Default
 			pbf.EnvVar = f.EnvVar
 

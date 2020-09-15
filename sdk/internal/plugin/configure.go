@@ -132,7 +132,7 @@ func documentation(impl interface{}) (*pb.Config_Documentation, error) {
 			Type:     f.Type,
 			Default:  f.Default,
 			Synopsis: f.Synopsis,
-			Summary:  f.Help,
+			Summary:  f.Summary,
 			EnvVar:   f.EnvVar,
 			Optional: f.Optional,
 		}
@@ -163,7 +163,7 @@ func documentationCall(ctx context.Context, c configurableClient) (*docs.Documen
 			Type:     f.Type,
 			Default:  f.Default,
 			Synopsis: f.Synopsis,
-			Help:     f.Summary,
+			Summary:  f.Summary,
 			Optional: f.Optional,
 			EnvVar:   f.EnvVar,
 		})

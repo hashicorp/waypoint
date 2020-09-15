@@ -16,7 +16,7 @@ type FieldDocs struct {
 	Field    string
 	Type     string
 	Synopsis string
-	Help     string
+	Summary  string
 
 	Optional bool
 	Default  string
@@ -156,7 +156,7 @@ func (d *Documentation) SetField(name, synposis string, opts ...DocOption) error
 	for _, o := range opts {
 		switch v := o.(type) {
 		case SummaryString:
-			field.Help = string(v)
+			field.Summary = string(v)
 		case Default:
 			field.Default = string(v)
 		case EnvVar:
