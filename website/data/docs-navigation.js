@@ -11,11 +11,32 @@ export default [
     category: 'getting-started',
     content: [
       {
-        category: 'docker-sample-app',
-        content: ['waypoint-intro', 'install-waypoint'],
+        category: 'docker-example-app',
+        content: [
+          'install-prereqs',
+          'install-waypoint',
+          'init-waypoint',
+          'deploy-app',
+          'update-app',
+          'view-exec-app',
+          'summary',
+        ],
+      },
+      {
+        category: 'k8s-example-app',
+        content: [
+          'install-prereqs',
+          'install-waypoint',
+          'init-waypoint',
+          'deploy-app',
+          'update-app',
+          'view-exec-app',
+          'summary',
+        ],
       },
     ],
   },
+  'troubleshooting',
   '---',
   { title: 'External Link', href: 'https://www.hashicorp.com' },
 ]
