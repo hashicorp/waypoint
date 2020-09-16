@@ -1,7 +1,9 @@
-<span class="invite-link" {{on "click" this.toggleHint}}>
-  {{inline-svg "plus-circle-outline" class="nav-icon"}}
-  Invite
-</span>
+{{#if canLogout}}
+  <span class="invite-link" {{on "click" this.toggleHint}}>
+    {{inline-svg "plus-circle-outline" class="nav-icon"}}
+    Invite
+  </span>
+{{/if}}
 
 {{#if hintIsVisible}}
 <div class="cli-hint">

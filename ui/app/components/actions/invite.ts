@@ -16,6 +16,10 @@ export default class ActionsInvite extends Component {
   @tracked hintIsVisible = false;
   @tracked copySuccess = false;
 
+  get canLogout() {
+    return this.session.authConfigured;
+  }
+
   constructor(owner: any, args: any) {
     super(owner, args);
     if (this.session.authConfigured) {

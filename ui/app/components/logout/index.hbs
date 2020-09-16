@@ -1,8 +1,11 @@
 {{#if canLogout}}
-<a href="#" class="logout soon" onclick={{action this.logout}}>
+  <button class="auth-link" onclick={{action this.logout}}>
     {{inline-svg "logout" class="nav-icon"}}
     Logout
-</a>
+  </button>
 {{else}}
-<LinkTo @route="auth">Login</LinkTo>
+  <LinkTo class="auth-link" @route="auth">
+    {{inline-svg "lock-open" class="nav-icon"}}
+    Authenticate
+  </LinkTo>
 {{/if}}

@@ -22,7 +22,7 @@
     a {
       display: flex;
       align-items: center;
-      margin-right: scale.$lg-2;
+      margin-left: scale.$lg-2;
       text-decoration: none;
     }
 
@@ -36,6 +36,7 @@
       display: flex;
       align-items: center;
       position: relative;
+      margin-left: scale.$lg-2;
       cursor: pointer;
 
       & + .cli-hint {
@@ -45,6 +46,7 @@
         a {
           color: color.$blue-500;
           display: inline;
+          margin: 0;
         }
       }
     }
@@ -56,12 +58,13 @@
       margin: 0 scale.$lg-2;
     }
 
-    .logout {
+    .auth-link {
       display: flex;
       align-items: center;
       background: none;
       border: none;
       padding: 0;
+      margin: 0;
       cursor: pointer;
       outline: 0;
       @include Typography.Interface(L);
@@ -94,5 +97,6 @@
 
   .soon {
     opacity: 0.4;
+    cursor: not-allowed;
   }
 }
