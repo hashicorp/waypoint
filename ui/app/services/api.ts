@@ -19,7 +19,7 @@ import {
 
 export default class ApiService extends Service {
   @service session!: SessionService;
-  client = new WaypointClient('https://localhost:9702/grpc', null, null);
+  client = new WaypointClient('/grpc', null, null);
 
   // Merges metadata with required metadata for the request
   WithMeta(meta?: any) {
