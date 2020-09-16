@@ -18,6 +18,7 @@ export default class ActionsInvite extends Component {
 
   constructor(owner: any, args: any) {
     super(owner, args);
+    debugger;
     if (this.session.authConfigured) {
       this.createToken();
     }
