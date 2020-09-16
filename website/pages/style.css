@@ -98,5 +98,5 @@
 }
 
 .g-content {
-  --highlight-color: #14c6cb;
+  --highlight-color: var(--waypoint);
 }
