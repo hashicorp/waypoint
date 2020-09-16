@@ -45,7 +45,7 @@ func (c *VersionCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *VersionCommand) Synopsis() string {
-	return ""
+	return "Prints the version of this Waypoint CLI."
 }
 
 func (c *VersionCommand) Help() string {

@@ -99,9 +99,16 @@ func (c *LogsCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *LogsCommand) Synopsis() string {
-	return ""
+	return "Show log output from the current application deployment."
 }
 
 func (c *LogsCommand) Help() string {
-	return ""
+	helpText := `
+Usage: waypoint logs [options]
+
+  Show log output from the current application deployment.
+
+` + c.Flags().Help()
+
+	return strings.TrimSpace(helpText)
 }

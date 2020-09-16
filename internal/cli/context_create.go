@@ -102,7 +102,7 @@ func (c *ContextCreateCommand) Help() string {
 	helpText := `
 Usage: waypoint context create [options] NAME
 
-  Creates a context.
+  Creates a new context.
 
 ` + c.Flags().Help()
 

@@ -534,7 +534,7 @@ func (c *AppDocsCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *AppDocsCommand) Synopsis() string {
-	return "Build a new versioned artifact from source."
+	return "Show documentation for components."
 }
 
 func (c *AppDocsCommand) Help() string {

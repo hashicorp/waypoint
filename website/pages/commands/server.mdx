@@ -34,5 +34,11 @@ Usage: `waypoint server [options]`
 - `-url-control-addr=<string>` - Address to Waypoint URL service control API
 - `-url-control-token=<string>` - Token for the Waypoint URL server control API.
 - `-url-auto-app-hostname` - Whether apps automatically get a hostname on deploy.
+- `-advertise-addr=<string>` - Address to advertise for the server. This is used by the entrypoints
+  binaries to communicate back to the server. If this is blank, then
+  the entrypoints will not communicate to the server. Features such as
+  logs, exec, etc. will not work.
+- `-advertise-tls` - If true, the advertised address should be connected to with TLS.
+- `-advertise-tls-skip-verify` - Do not verify the TLS certificate presented by the server.
 
 @include "commands/server_more.mdx"
