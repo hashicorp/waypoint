@@ -8,10 +8,10 @@
     </small>
   </div>
   <div class="actions">
-    <button class="button button--secondary">
-      <span>todo</span>
+    <ExternalLink href="https://{{@model.preload.deployUrl}}" class="button button--secondary">
+      <span>{{lowercase @model.preload.deployUrl}}</span>
       {{inline-svg "exit" class="icon"}}
-    </button>
+    </ExternalLink>
     <Actions::Release @id={{@model.id}} />
   </div>
 </PageHeader>
