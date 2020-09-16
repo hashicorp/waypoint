@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/posener/complete"
 
@@ -93,9 +94,16 @@ func (c *ExecCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ExecCommand) Synopsis() string {
-	return ""
+	return "Execute a command in the context of a running application instance."
 }
 
 func (c *ExecCommand) Help() string {
-	return ""
+	helpText := `
+Usage: waypoint exec [options]
+
+  Execute a command in the context of a running application instance.
+
+` + c.Flags().Help()
+
+	return strings.TrimSpace(helpText)
 }
