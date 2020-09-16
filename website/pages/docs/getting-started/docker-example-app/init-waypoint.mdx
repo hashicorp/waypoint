@@ -6,4 +6,49 @@ description: |-
   Placeholder
 ---
 
-# Initailizing Waypoint for the App
+# Initailizing Waypoint for Your App
+
+Before you can deploy your application, you must let Waypoint know about its configuration.
+
+## Waypoint Configuration - waypoint.hcl
+
+The `waypoint.hcl` configuration file provides the instructions to Waypoint for how to build, deploy, and release your application. When you initialize Waypoint for your application, Waypoint will first look for a `waypoint.hcl` file in that directory. If it cannot find the configuration, Waypoint will inspect the application and create a starter `waypoint.hcl` file that you can then customize for your deployment workflow.
+
+**Todo:** Add link here for waypoint.hcl snippets/config
+
+## Initialize Waypoint for the Example App
+
+The remainder of this walkthrough will use an [example application](https://github.com/hashicorp/waypoint-examples/tree/master/ruby) to show how to initialize an app and then build, deploy, and release it with Waypoint.
+
+This example app is written in Ruby and [includes a `waypoint.hcl` file](https://github.com/hashicorp/waypoint-examples/blob/master/ruby/waypoint.hcl) that uses Docker to deploy the application.
+
+```shell
+project = "example-ruby"
+
+app "example-ruby" {
+  labels = {
+    "service" = "example-ruby",
+    "env" = "dev"
+  }
+
+  build {
+    use "pack" {}
+  }
+
+  deploy {
+    use "docker" {}
+  }
+}
+```
+
+The `build` clause defines how Waypoint will build the app. The `pack` option tells Waypoint to use the most relevant Cloud Native buildpack to build the application. Since the example app is authored with Ruby, Waypoint will use the Ruby buildpack.
+
+The `deploy` clause defines how Waypoint will deploy the app. The `docker` option tells Waypoint to deploy the application to Docker for Desktop.
+
+Initalize the application with Waypoint by running the following in the Terminal. With this command, you do not need to have the application's source code stored on your computer.
+
+```bash
+$ waypoint init (TODO - instruction for pointing to sample app)
+```
+
+**Todo:** Add output for successful app init.

@@ -7,3 +7,28 @@ description: |-
 ---
 
 # Update and Redeploy the App
+
+One of the most powerful parts of Waypoint is its ability to iterate on deployments and quickly redeploy the application with your changes in place.
+
+Open the following file in your preferred development editor:
+
+`app/views/welcome/index.erb`.
+
+In the `p` block below the `H1`, update the text to whatever you like and save the file.
+
+```shell
+...
+    <h1>Welcome to Waypoint: <%= @host %></h1>
+    <p> <!-- Edit the text in this block -->
+      Congrats on deploying a ruby app using Waypoint. From here you can edit this project and continue to use it to develop your app, if you so wish.
+    </p>
+...
+```
+
+Back in the Terminal, redeploy the application with your new and improved text.
+
+```shell
+$ waypoint up
+```
+
+Waypoint has now redeployed your application to Docker for Desktop, including using the same preview URL that it previously created when it first deployed your app.
