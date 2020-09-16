@@ -52,9 +52,9 @@ invite_login:
 state:
   deployment:
     success: 'Deployed successfully'
-    destroy: 'Deployment destroyed'
+    error: 'Deployment encountered an error'
     pending: 'Deploy pending'
   release:
     success: 'Released successfully'
-    destroy: 'Release destroyed'
+    error: 'Release encountered an error'
     pending: 'Release pending'

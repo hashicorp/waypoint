@@ -18,12 +18,12 @@
 
 <div class="item-row">
   <div class="item">
-    {{#if (eq @model.state 1)}}
+    {{#if (eq @model.status.state 1)}}
     <b class="badge">{{t 'state.deployment.pending'}}</b>
-    {{else if (eq @model.state 2)}}
+    {{else if (eq @model.status.state 2)}}
     <b class="badge badge--success">{{t 'state.deployment.success'}}</b>
-    {{else if (eq @model.state 3)}}
-    <b class="badge badge--error">{{t 'state.deployment.destroy'}}</b>
+    {{else if (eq @model.status.state 3)}}
+    <b class="badge badge--error">{{t 'state.deployment.error'}}</b>
     {{/if}}
   </div>
 
