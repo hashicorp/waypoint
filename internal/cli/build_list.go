@@ -126,16 +126,13 @@ func (c *BuildListCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *BuildListCommand) Synopsis() string {
-	return "Build a new versioned artifact from source."
+	return "List builds."
 }
 
 func (c *BuildListCommand) Help() string {
 	helpText := `
-Usage: waypoint artifact build [options]
-Alias: waypoint build
-
-  Build a new versioned artifact from source.
-
+Usage: waypoint artifact list-builds [options]
+  List builds.
 ` + c.Flags().Help()
 
 	return strings.TrimSpace(helpText)
