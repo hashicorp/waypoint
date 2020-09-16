@@ -32,14 +32,14 @@ function SignInForm() {
   }, [token])
   return token ? (
     <section className={styles.signInWrapper}>
-      <Form token={token} callbackUrl={window.location.href} />
+      <Form token={token} callbackUrl={window.location.origin} />
     </section>
   ) : null
 }
 
 function Form({ callbackUrl, token }) {
   return (
-    <form action={`${callbackUrl}api/auth/signin/okta`} method="POST">
+    <form action={`${callbackUrl}/api/auth/signin/okta`} method="POST">
       <input type="hidden" name="csrfToken" value={token} />
       <input type="hidden" name="callbackUrl" value={callbackUrl} />
       <Button
