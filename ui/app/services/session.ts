@@ -13,12 +13,11 @@ export default class SessionService extends Service {
   }
 
   async setToken(value: string) {
-    // todo(pearkes): validate this either locally (format) or remotely (rpc)
-    if (value == null) {
-      window.localStorage.removeItem('waypointAuthToken');
-    } else {
-      window.localStorage.waypointAuthToken = value;
-    }
+    window.localStorage.waypointAuthToken = value;
+  }
+
+  async removeToken() {
+    window.localStorage.removeItem('waypointAuthToken');
   }
 }
 
