@@ -7,3 +7,22 @@ description: |-
 ---
 
 # Deploy the App
+
+### "waypoint up" - Deploying the application
+
+This application is configured to use Cloud Native Buildpacks to detect the type of application running and launch it within Docker. This configuration means that the user doesn't need to build a Dockerfile manually, but also accepts the default configurations that the Cloud Native Buildpack leverages. It also uses the local Docker instance to build and store the image. For advanced use cases, see the `registry` stanza which allows you to automatically push your built artifact to a registry. We can deploy our application onto docker with the following command:
+
+```bash
+waypoint up
+```
+
+You should be able to observe waypoint run through the build and deploy process, and ultimately return you URL from Horizon. The response should look something like the below...
+
+```
+The deploy was successful! A Waypoint deployment URL is shown below. This
+can be used internally to check your deployment and is not meant for external
+traffic. You can manage this hostname using "waypoint hostname."
+
+           URL: https://instantly-worthy-shrew.alpha.waypoint.run
+Deployment URL: https://instantly-worthy-shrew--01EJ0F2VYWTNTYJ6FNFNTY44G9.alpha.waypoint.run
+```

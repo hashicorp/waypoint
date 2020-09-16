@@ -7,3 +7,15 @@ description: |-
 ---
 
 # Update and Redeploy the App
+
+### "waypoint up" part 2 - Editing your application and iterating
+
+One of the most powerful parts of Waypoint is the ability to iterate on deployments and quickly redeploy the application with your changes in place. Lets edit our application and show off how Waypoint can manage the lifecycle of a new deployment.
+
+Using your favorite IDE, edit the following file `app/views/welcome/index.erb`.
+
+- On line 8 - Edit this line to include a catchy phrase. I prefer a quote from your favorite Marvel Cinematic Universe movie, but hey, live your dream. This is about you as the application developer!
+
+Save your file, and re-run the `waypoint up` command
+
+Upon completion, you'll note that you're provided the same URL as above. The Waypoint server has handled automatically swithching the URL to use the most recent version of your deployment. You can access this URL and see the new version of your application!

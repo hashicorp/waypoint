@@ -20,63 +20,35 @@ The `waypoint.hcl` configuration file provides the instructions to Waypoint for 
 
 The remainder of this walkthrough will use an [example application](https://github.com/hashicorp/waypoint-examples/tree/master/ruby) to show how to initialize an app and then build, deploy, and release it with Waypoint.
 
-This app is written in Ruby and has a preconfigured
+This example app is written in Ruby and [includes a `waypoint.hcl` file](https://github.com/hashicorp/waypoint-examples/blob/master/ruby/waypoint.hcl) that uses Docker to deploy the application.
 
-Initalize the application by using the Ruby example app.
+```shell
+project = "example-ruby"
+
+app "example-ruby" {
+  labels = {
+    "service" = "example-ruby",
+    "env" = "dev"
+  }
+
+  build {
+    use "pack" {}
+  }
+
+  deploy {
+    use "docker" {}
+  }
+}
+```
+
+The `build` clause defines how Waypoint will build the app. The `pack` option tells Waypoint to use the most relevant Cloud Native buildpack to build the application. Since the example app is authored with Ruby, Waypoint will use the Ruby buildpack.
+
+The `deploy` clause defines how Waypoint will deploy the app. The `docker` option tells Waypoint to deploy the application to Docker for Desktop.
+
+Initalize the application with Waypoint by running the following in the Terminal. With this command, you do not need to have the application's source code stored on your computer.
 
 ```bash
 waypoint init (TODO - instruction for pointing to sample app)
 ```
 
-When you run a deployment workflow in a directory, Waypoint uses the `waypoint.hcl` configuration file in the same folder.
-
-Explain what happens on init and give overview of the waypoint.hcl file
-Point to sample apps React and Ruby that they can select from
-
-1. Get app source
-2.
-
-```bash
-waypoint init
-```
-
-### "waypoint init" - Configuring your repository
-
-Assuming you are in the directory for this project, we can leverage the `waypoint.hcl` file contained in this sample directory to get started. In projects where no `waypoint.hcl` file exists, this can be created by executing the `waypoint init` command which will generate a basic `waypoint.hcl` file that you can customize. In the case of the example already in this directory, it is configured with sane defaults.
-
-With the file in place, execute the following command to initialize your project and the application
-
-```bash
-waypoint init
-```
-
-### "waypoint up" - Deploying the application
-
-This application is configured to use Cloud Native Buildpacks to detect the type of application running and launch it within Docker. This configuration means that the user doesn't need to build a Dockerfile manually, but also accepts the default configurations that the Cloud Native Buildpack leverages. It also uses the local Docker instance to build and store the image. For advanced use cases, see the `registry` stanza which allows you to automatically push your built artifact to a registry. We can deploy our application onto docker with the following command:
-
-```bash
-waypoint up
-```
-
-You should be able to observe waypoint run through the build and deploy process, and ultimately return you URL from Horizon. The response should look something like the below...
-
-```
-The deploy was successful! A Waypoint deployment URL is shown below. This
-can be used internally to check your deployment and is not meant for external
-traffic. You can manage this hostname using "waypoint hostname."
-
-           URL: https://instantly-worthy-shrew.alpha.waypoint.run
-Deployment URL: https://instantly-worthy-shrew--01EJ0F2VYWTNTYJ6FNFNTY44G9.alpha.waypoint.run
-```
-
-### "waypoint up" part 2 - Editing your application and iterating
-
-One of the most powerful parts of Waypoint is the ability to iterate on deployments and quickly redeploy the application with your changes in place. Lets edit our application and show off how Waypoint can manage the lifecycle of a new deployment.
-
-Using your favorite IDE, edit the following file `app/views/welcome/index.erb`.
-
-- On line 8 - Edit this line to include a catchy phrase. I prefer a quote from your favorite Marvel Cinematic Universe movie, but hey, live your dream. This is about you as the application developer!
-
-Save your file, and re-run the `waypoint up` command
-
-Upon completion, you'll note that you're provided the same URL as above. The Waypoint server has handled automatically swithching the URL to use the most recent version of your deployment. You can access this URL and see the new version of your application!
+**Todo:** Add output for successful app init.
