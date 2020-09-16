@@ -159,13 +159,18 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_Releas
 	return result.Release, nil
 }
 
-func (a *App) Logs(ctx context.Context, d *pb.Deployment) (component.LogViewer, error) {
+func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
 	log := a.project.logger.Named("logs")
 
 	// First we attempt to query the server for logs for this deployment.
-	log.Info("requesting log stream", "deployment_id", d.Id)
+	log.Info("requesting log stream")
 	client, err := a.project.client.GetLogStream(ctx, &pb.GetLogStreamRequest{
-		DeploymentId: d.Id,
+		Scope: &pb.GetLogStreamRequest_Application_{
+			Application: &pb.GetLogStreamRequest_Application{
+				Application: a.Ref(),
+				Workspace:   a.project.WorkspaceRef(),
+			},
+		},
 	})
 	if err != nil {
 		return nil, err

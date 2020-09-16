@@ -110,11 +110,15 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	if p.config.ServicePort == 0 {
+		p.config.ServicePort = 3000
+	}
+
 	// Build our env vars
 	env := []corev1.EnvVar{
 		{
 			Name:  "PORT",
-			Value: "3000",
+			Value: fmt.Sprint(p.config.ServicePort),
 		},
 	}
 
@@ -138,6 +142,9 @@ func (p *Platform) Deploy(
 	if p.config.Count > 0 {
 		deployment.Spec.Replicas = &p.config.Count
 	}
+	
+
+ 
 
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
@@ -160,13 +167,13 @@ func (p *Platform) Deploy(
 				Ports: []corev1.ContainerPort{
 					{
 						Name:          "http",
-						ContainerPort: 3000,
+						ContainerPort: int32(p.config.ServicePort),
 					},
 				},
 				LivenessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(3000),
+							Port: intstr.FromInt(int(p.config.ServicePort)),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -176,7 +183,7 @@ func (p *Platform) Deploy(
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(3000),
+							Port: intstr.FromInt(int(p.config.ServicePort)),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -193,7 +200,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(3000),
+					Port: intstr.FromInt(int(p.config.ServicePort)),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -205,7 +212,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(3000),
+					Port: intstr.FromInt(int(p.config.ServicePort)),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -352,6 +359,12 @@ type Config struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+
+	// Port that your service is running on within the actual container.
+	// Defaults to port 3000. 
+	// TODO Evaluate if this should remain as a default 3000, should be a required field,
+	// or default to another port. 
+	ServicePort uint `hcl:"service_port,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {

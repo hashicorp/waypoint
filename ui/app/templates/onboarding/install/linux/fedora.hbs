@@ -1,0 +1,17 @@
+<p>Install <code>dnf config-manager</code> to manage your repositories.</p>
+
+<CopyableCode @ref="fedora-plugins-core">
+  <pre><code id="fedora-plugins-core">sudo dnf install -y dnf-plugins-core</code></pre>
+</CopyableCode>
+
+<p>Use <code>dnf config-manager</code> to add the official HashiCorp Linux repository.</p>
+
+<CopyableCode @ref="fedora-config">
+  <pre><code id="fedora-config">sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/fedora/hashicorp.repo</code></pre>
+</CopyableCode>
+
+<p>Install.</p>
+
+<CopyableCode @ref="fedora-install">
+  <pre><code id="fedora-install">sudo dnf -y install waypoint</code></pre>
+</CopyableCode>

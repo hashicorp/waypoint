@@ -1,5 +1,7 @@
 @use 'pds/tokens/color';
 @use 'pds/tokens/scale';
+@use 'pds/tokens/font';
+@use 'pds/tokens/typography' as Typography;
 
 #header {
   position: sticky;
@@ -13,11 +15,61 @@
 
   nav {
     display: flex;
+    align-items: center;
     margin-left: auto;
+    @include Typography.Interface(L);
 
     a {
+      display: flex;
+      align-items: center;
       margin-left: scale.$lg-2;
       text-decoration: none;
+    }
+
+    .nav-icon {
+      margin-right: scale.$sm-3;
+      width: scale.$base;
+      height: scale.$base;
+    }
+
+    .invite-link {
+      display: flex;
+      align-items: center;
+      position: relative;
+      margin-left: scale.$lg-2;
+      cursor: pointer;
+
+      & + .cli-hint {
+        margin-top: -(scale.$sm-2);
+        margin-right: scale.$lg-2;
+
+        a {
+          color: color.$blue-500;
+          display: inline;
+          margin: 0;
+        }
+      }
+    }
+
+    hr {
+      height: scale.$lg-1;
+      border: none;
+      border-right: 1px solid color.$ui-gray-500;
+      margin: 0 scale.$lg-2;
+    }
+
+    .auth-link {
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      outline: 0;
+      @include Typography.Interface(L);
+      color: color.$white;
+      font-family: font.$family-system-sans;
     }
   }
 
@@ -45,6 +97,6 @@
 
   .soon {
     opacity: 0.4;
-    pointer-events: none;
+    cursor: not-allowed;
   }
 }

@@ -1,0 +1,49 @@
+.flash {
+  display: block;
+  margin-bottom: scale.$lg-2;
+  padding: scale.$sm-1;
+  border-radius: 2px;
+  @include Typography.Interface(M);
+
+  .flash-header {
+    display: flex;
+    align-items: center;
+  }
+
+  hr {
+    background: none;
+    margin: scale.$sm-1 0;
+    border: none;
+    border-bottom: 1px solid;
+  }
+
+  pre {
+    margin-bottom: 0;
+  }
+
+  .icon {
+    width: scale.$lg-1;
+    height: scale.$lg-1;
+    margin-right: scale.$sm-2;
+  }
+
+  &--success {
+    color: color.$green-600;
+    background: color.$green-050;
+    border: 1px solid color.$green-100;
+
+    hr {
+      border-color: color.$green-100;
+    }
+  }
+
+  &--error {
+    color: color.$red-600;
+    background: color.$red-050;
+    border: 1px solid color.$red-100;
+
+    hr {
+      border-color: color.$red-100;
+    }
+  }
+}

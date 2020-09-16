@@ -2,7 +2,8 @@ package docker
 
 import (
 	"context"
-
+	
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -81,6 +82,10 @@ func (p *Platform) Deploy(
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
 
+	if p.config.ServicePort == 0 {
+		p.config.ServicePort = 3000
+	}
+
 	cli.NegotiateAPIVersion(ctx)
 
 	// Create our deployment and set an initial ID
@@ -123,7 +128,7 @@ func (p *Platform) Deploy(
 
 	s = sg.Add("Creating new container")
 
-	port := "3000"
+	port := fmt.Sprint(p.config.ServicePort)
 	np, err := nat.NewPort("tcp", port)
 	if err != nil {
 		return nil, err
@@ -243,6 +248,12 @@ type PlatformConfig struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+
+	// Port that your service is running on within the actual container.
+	// Defaults to port 3000. 
+	// TODO Evaluate if this should remain as a default 3000, should be a required field,
+	// or default to another port. 
+	ServicePort uint `hcl:"service_port,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {

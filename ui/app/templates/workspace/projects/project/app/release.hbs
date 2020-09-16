@@ -21,10 +21,10 @@
   <div class="item">
     {{#if (eq @model.state 1)}}
     <b class="badge">{{t 'state.release.pending'}}</b>
-    {{else if (eq @model.state 3)}}
+    {{else if (eq @model.status.state 2)}}
     <b class="badge badge--success">{{t 'state.release.success'}}</b>
-    {{else if (eq @model.state 4)}}
-    <b class="badge badge--error">{{t 'state.release.destroy'}}</b>
+    {{else if (eq @model.status.state 3)}}
+    <b class="badge badge--error">{{t 'state.release.error'}}</b>
     {{/if}}
   </div>
 
@@ -43,7 +43,5 @@
 </div>
 
 <div class="output-pane">
-  <div class="output">
-    <code>No release output available</code>
-  </div>
+  <OperationLogs @jobId={{@model.jobId}} />
 </div>

@@ -18,11 +18,11 @@ import (
 
 func InstallDocker(
 	ctx context.Context, ui terminal.UI, st terminal.Status, scfg *Config) (
-	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, error,
+	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
 ) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	cli.NegotiateAPIVersion(ctx)
@@ -35,15 +35,16 @@ func InstallDocker(
 	})
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	grpcPort := "9701"
 	httpPort := "9702"
 
 	var (
-		clicfg clicontext.Config
-		addr   pb.ServerConfig_AdvertiseAddr
+		clicfg   clicontext.Config
+		addr     pb.ServerConfig_AdvertiseAddr
+		httpAddr string
 	)
 
 	clicfg.Server = configpkg.Server{
@@ -56,10 +57,12 @@ func InstallDocker(
 	addr.Tls = true
 	addr.TlsSkipVerify = true
 
+	httpAddr = "localhost:" + httpPort
+
 	// If we already have a server, bolt.
 	if len(containers) > 0 {
 		st.Step(terminal.StatusWarn, "Detected existing waypoint server")
-		return &clicfg, &addr, nil
+		return &clicfg, &addr, "", nil
 	}
 
 	st.Update("Creating waypoint network...")
@@ -69,7 +72,7 @@ func InstallDocker(
 	})
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	if len(nets) == 0 {
@@ -84,19 +87,19 @@ func InstallDocker(
 		})
 
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, "", err
 		}
 
 	}
 
 	npGRPC, err := nat.NewPort("tcp", grpcPort)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	npHTTP, err := nat.NewPort("tcp", httpPort)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	st.Update("Installing waypoint server to docker")
@@ -141,12 +144,12 @@ func InstallDocker(
 
 	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, "waypoint-server")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	err = cli.ContainerStart(ctx, cr.ID, types.ContainerStartOptions{})
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	// KLUDGE: There isn't a way to find out if the container is up or not, so we just give it 5 seconds
@@ -155,5 +158,5 @@ func InstallDocker(
 
 	st.Step(terminal.StatusOK, "Server container started")
 
-	return &clicfg, &addr, nil
+	return &clicfg, &addr, httpAddr, nil
 }

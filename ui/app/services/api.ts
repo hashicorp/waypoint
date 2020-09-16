@@ -19,8 +19,6 @@ import {
 
 export default class ApiService extends Service {
   @service session!: SessionService;
-  meta = { authorization: this.session.token };
-
   client = new WaypointClient('/grpc', null, null);
 
   // Merges metadata with required metadata for the request
@@ -29,6 +27,14 @@ export default class ApiService extends Service {
     // helper merges that per-request metadata supplied at the client request
     // with our authentication metadata
     return assign(this.meta, meta!).valueOf();
+  }
+
+  get meta() {
+    if (this.session.authConfigured) {
+      return { authorization: this.session.token };
+    } else {
+      return {};
+    }
   }
 
   async listDeployments(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Deployment.AsObject[]> {

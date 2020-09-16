@@ -4,11 +4,11 @@ a[href].button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: 0;
   padding: scale.$sm-2 scale.$sm-1;
   border-radius: 2px;
   text-decoration: none;
   background: color.$white;
+  white-space: nowrap;
   cursor: pointer;
 
   &--compact {
@@ -46,6 +46,15 @@ a[href].button {
       background: color.$ui-gray-200;
       box-shadow: none;
     }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    color: color.$ui-gray-300;
+    text-shadow: none;
+    background: color.$ui-cool-gray-100;
+    border-color: color.$ui-cool-gray-200;
+    box-shadow: none;
   }
 
   .icon {

@@ -1,22 +1,27 @@
 <PageHeader @iconName="folder-outline">
   <div class="title">
     <h1>{{@model.name}}</h1>
-    <small>Project metadata</small>
+    <small>{{pluralize @model.applicationsList.length "application"}}</small>
   </div>
 </PageHeader>
 
 {{#each @model.applicationsList as |app|}}
-<Card>
-  <LinkTo @route="workspace.projects.project.app" @model={{app.name}}>
-    <div class="row">
-      <IconTile @icon="git-repository" @isSmall={{true}} />
-      <div class="meta">
-        <h2>{{app.name}}</h2>
-        <small>Application metadata</small>
+  <Card>
+    <LinkTo @route="workspace.projects.project.app" @model={{app.name}}>
+      <div class="row">
+        <IconTile @icon="git-repository" @isSmall={{true}} />
+        <div class="meta">
+          <h2>{{app.name}}</h2>
+        </div>
       </div>
-    </div>
-  </LinkTo>
-</Card>
+    </LinkTo>
+  </Card>
+{{else}}
+  <EmptyState>
+    <p>There are no applications in this project yet</p>
+    <p>To create your first application, run <code class="cmd">waypoint init</code> from the CLI</p>
+    <p>For more help getting started, refer to the <a href="#todo" target="_blank">Waypoint documentation</a></p>
+  </EmptyState>
 {{/each}}
 
 {{outlet}}

@@ -11,6 +11,21 @@ Router.map(function () {
     this.route('invite');
     this.route('token');
   });
+  this.route('onboarding', function () {
+    this.route('install', function() {
+      this.route('manual');
+      this.route('homebrew');
+      this.route('chocolatey');
+      this.route('linux', function() {
+        this.route('ubuntu');
+        this.route('centos');
+        this.route('fedora');
+        this.route('amazon');
+      });
+    });
+    this.route('connect');
+    this.route('start');
+  });
   this.route('workspaces', { path: '/' });
   this.route('workspace', { path: '/:workspace_id' }, function () {
     this.route('projects', { path: '/' }, function () {
