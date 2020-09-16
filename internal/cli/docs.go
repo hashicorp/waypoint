@@ -61,6 +61,10 @@ type HasFlags interface {
 }
 
 func (c *DocsCommand) genDocs(name string, cmd cli.Command) error {
+	if name == "cli-docs" {
+		return nil
+	}
+
 	fmt.Printf("=> %s\n", name)
 	goodName := strings.ReplaceAll(name, " ", "-")
 	path := filepath.Join("./website", "pages", "commands", goodName) + ".mdx"
