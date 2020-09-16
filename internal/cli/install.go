@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"strings"
 	"time"
@@ -10,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
 	"google.golang.org/grpc"
+	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -34,11 +37,70 @@ type InstallCommand struct {
 	contextName       string
 	contextDefault    bool
 	platform          string
+	secretFile        string
 }
 
 func (c *InstallCommand) InstallKubernetes(
 	ctx context.Context, st terminal.Status, log hclog.Logger,
 ) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, int) {
+	stdout, stderr, err := c.ui.OutputWriters()
+	if err != nil {
+		panic(err)
+	}
+
+	if c.secretFile != "" {
+		data, err := ioutil.ReadFile(c.secretFile)
+		if err != nil {
+			c.ui.Output(
+				"Error reading Kubernetes secret file: %s", err.Error(),
+				terminal.WithErrorStyle(),
+			)
+			return nil, nil, "", 1
+		}
+
+		var secretData struct {
+			Metadata struct {
+				Name string `yaml:"name"`
+			} `yaml:"metadata"`
+		}
+
+		err = yaml.Unmarshal(data, &secretData)
+		if err != nil {
+			c.ui.Output(
+				"Error reading Kubernetes secret file: %s", err.Error(),
+				terminal.WithErrorStyle(),
+			)
+			return nil, nil, "", 1
+		}
+
+		if secretData.Metadata.Name == "" {
+			c.ui.Output(
+				"Invalid secret, no metadata.name",
+				terminal.WithErrorStyle(),
+			)
+			return nil, nil, "", 1
+		}
+
+		c.config.ImagePullSecret = secretData.Metadata.Name
+
+		c.ui.Output("Installing kubernetes secret...")
+
+		cmd := exec.Command("kubectl", "create", "-f", "-")
+		cmd.Stdin = bytes.NewReader(data)
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+
+		err = cmd.Run()
+		if err != nil {
+			c.ui.Output(
+				"Error executing kubectl to install secret: %s", err.Error(),
+				terminal.WithErrorStyle(),
+			)
+
+			return nil, nil, "", 1
+		}
+	}
+
 	// Decode our configuration
 	output, err := serverinstall.Render(&c.config)
 	if err != nil {
@@ -47,11 +109,6 @@ func (c *InstallCommand) InstallKubernetes(
 			terminal.WithErrorStyle(),
 		)
 		return nil, nil, "", 1
-	}
-
-	stdout, stderr, err := c.ui.OutputWriters()
-	if err != nil {
-		panic(err)
 	}
 
 	if c.showYaml {
@@ -441,6 +498,12 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Target:  &c.platform,
 			Default: "kubernetes",
 			Usage:   "Platform to install the server into.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "secret-file",
+			Target: &c.secretFile,
+			Usage:  "Use the Kubernetes Secret in the given path to access the waypoint server image",
 		})
 
 		serverinstall.NomadFlags(f)
