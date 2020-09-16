@@ -26,6 +26,7 @@
 
 /* Local Components */
 @import '../components/footer/style.css';
+@import '../components/homepage-hero/style.css';
 
 /* Local Pages */
 @import './downloads/style.css';
