@@ -57,6 +57,12 @@ func (ceb *CEB) execChildCmd(ctx context.Context) <-chan error {
 }
 
 func (ceb *CEB) buildCmd(ctx context.Context, args []string) (*exec.Cmd, error) {
+	// Avoid a crash below by verifying we got some arguments.
+	if len(args) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"command was empty")
+	}
+
 	// Exec requires a full path to a binary. If we weren't given an absolute
 	// path then we need to look it up via the PATH.
 	if !filepath.IsAbs(args[0]) {
