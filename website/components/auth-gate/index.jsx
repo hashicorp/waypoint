@@ -39,7 +39,7 @@ function SignInForm() {
 
 function Form({ callbackUrl, token }) {
   return (
-    <form action="http://localhost:3000/api/auth/signin/okta" method="POST">
+    <form action={`${callbackUrl}api/auth/signin/okta`} method="POST">
       <input type="hidden" name="csrfToken" value={token} />
       <input type="hidden" name="callbackUrl" value={callbackUrl} />
       <Button
