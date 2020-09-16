@@ -14,6 +14,8 @@ spec:
   ports:
   - port: 9701
     name: grpc
+  - port: 9702
+    name: http
   selector:
     app: waypoint-server
   type: LoadBalancer
@@ -53,9 +55,15 @@ spec:
         ports:
         - containerPort: 9701
           name: grpc
+        - containerPort: 9702
+          name: http
         livenessProbe:
           tcpSocket:
             port: grpc
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
         resources:
           requests:
             cpu: 100m
