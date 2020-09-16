@@ -721,31 +721,6 @@ message Job {
     // results are the list of components that were checked
     repeated Result results = 1;
 
-    message FieldDocumentation {
-      string name = 1;
-      string synopsis = 2;
-      string summary = 3;
-      bool optional = 4;
-      string env_var = 5;
-      string type = 6;
-      string default = 7;
-    }
-
-    message MapperDocumentation {
-      string input = 1;
-      string output = 2;
-      string description = 3;
-    }
-
-    message Documentation {
-      string description = 1;
-      string example = 2;
-      string input = 3;
-      string output = 4;
-      map<string, FieldDocumentation> fields = 5;
-      repeated MapperDocumentation mappers = 6;
-    }
-
     message Result {
       // component that the docs are for
       Component component = 1;
@@ -753,6 +728,32 @@ message Job {
     }
   }
 }
+    
+message Documentation {
+  string description = 1;
+  string example = 2;
+  string input = 3;
+  string output = 4;
+  map<string, Field> fields = 5;
+  repeated Mapper mappers = 6;
+
+  message Field {
+    string name = 1;
+    string synopsis = 2;
+    string summary = 3;
+    bool optional = 4;
+    string env_var = 5;
+    string type = 6;
+    string default = 7;
+  }
+
+  message Mapper {
+    string input = 1;
+    string output = 2;
+    string description = 3;
+  }
+}
+
 
 message GetJobRequest {
   // ID of the job to request.

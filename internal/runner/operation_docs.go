@@ -56,20 +56,20 @@ func (r *Runner) executeDocsOp(
 		results = append(results, &result)
 		result.Component = info
 
-		var pbdocs pb.Job_DocsResult_Documentation
+		var pbdocs pb.Documentation
 		dets := docs.Details()
 		pbdocs.Description = dets.Description
 		pbdocs.Example = dets.Example
 		pbdocs.Input = dets.Input
 		pbdocs.Output = dets.Output
-		pbdocs.Fields = make(map[string]*pb.Job_DocsResult_FieldDocumentation)
+		pbdocs.Fields = make(map[string]*pb.Documentation_Field)
 
 		fields := docs.Fields()
 
 		L.Debug("docs on component", "fields", len(fields))
 
 		for _, f := range docs.Fields() {
-			var pbf pb.Job_DocsResult_FieldDocumentation
+			var pbf pb.Documentation_Field
 
 			pbf.Name = f.Field
 			pbf.Type = f.Type
@@ -83,7 +83,7 @@ func (r *Runner) executeDocsOp(
 		}
 
 		for _, m := range dets.Mappers {
-			pbdocs.Mappers = append(pbdocs.Mappers, &pb.Job_DocsResult_MapperDocumentation{
+			pbdocs.Mappers = append(pbdocs.Mappers, &pb.Documentation_Mapper{
 				Input:       m.Input,
 				Output:      m.Output,
 				Description: m.Description,

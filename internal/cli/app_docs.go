@@ -221,7 +221,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	}
 }
 
-func (c *AppDocsCommand) markdownFormatPB(name, ct string, doc *pb.Job_DocsResult_Documentation) {
+func (c *AppDocsCommand) markdownFormatPB(name, ct string, doc *pb.Documentation) {
 	c.ui.Output("## %s (%s)", name, ct)
 
 	if doc.Description != "" {
