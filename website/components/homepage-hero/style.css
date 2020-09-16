@@ -9,6 +9,8 @@
 
   & .eyebrow {
     font-family: var(--font-body);
+    text-align: center;
+    display: block;
     font-weight: var(--font-weight-bold);
     font-size: 1.188rem;
     & .red {
