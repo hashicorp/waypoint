@@ -25,14 +25,20 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
 
   async start() {
     const onData = (response: GetJobStreamResponse) => {
-      let terminal = response.getTerminal();
+      let event = response.getEventCase();
 
-      if (!terminal) {
-        this.addLine('Logs are no longer available for this operation');
-      } else {
-        terminal.getEventsList().forEach((event) => {
-          event.getLine();
-        });
+      // We only care about the terminal event
+      if (event == GetJobStreamResponse.EventCase.TERMINAL) {
+        let terminal = response.getTerminal();
+        if (!terminal) {
+          if (this.lines.length === 0) {
+            this.addLine('Logs are no longer available for this operation');
+          }
+        } else {
+          terminal.getEventsList().forEach((event) => {
+            event.getLine();
+          });
+        }
       }
     };
 

@@ -14,8 +14,8 @@ export default class LogStream extends Component<LogStreamArgs> {
 
   constructor(owner: any, args: any) {
     super(owner, args);
-    this.start();
     this.lines = [];
+    this.start();
   }
 
   addLine(line: string) {
