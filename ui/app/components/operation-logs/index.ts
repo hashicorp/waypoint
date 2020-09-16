@@ -26,7 +26,6 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
   async start() {
     const onData = (response: GetJobStreamResponse) => {
       let event = response.getEventCase();
-      console.log(event);
 
       // We only care about the terminal event
       if (event == GetJobStreamResponse.EventCase.TERMINAL) {
