@@ -30,7 +30,6 @@ export default class LogStream extends Component<LogStreamArgs> {
     };
 
     const onStatus = (status: any) => {
-      this.addLine(status.code);
       this.addLine(status.details);
     };
 

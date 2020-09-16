@@ -1,7 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { GetLogStreamRequest } from 'waypoint-pb';
+import { GetLogStreamRequest, Ref } from 'waypoint-pb';
 import { AppRouteModel } from '../app';
 
 export default class Logs extends Route {
@@ -9,10 +9,21 @@ export default class Logs extends Route {
 
   async model() {
     const app = this.modelFor('workspace.projects.project.app') as AppRouteModel;
-    const latestDeployment = (await app.deployments).firstObject;
-    const req = new GetLogStreamRequest();
+    let ws = this.modelFor('workspace') as Ref.Workspace.AsObject;
 
-    req.setDeploymentId(latestDeployment?.id!);
+    const req = new GetLogStreamRequest();
+    const appReq = new GetLogStreamRequest.Application();
+
+    const appRef = new Ref.Application();
+    appRef.setApplication(app.application.application);
+    const wsRef = new Ref.Workspace();
+    wsRef.setWorkspace(ws.workspace);
+
+    appReq.setApplication(appRef);
+    appReq.setWorkspace(wsRef);
+    appReq.setWorkspace(wsRef);
+
+    req.setApplication(appReq);
 
     return req;
   }
