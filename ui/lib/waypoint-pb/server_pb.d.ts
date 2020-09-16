@@ -3813,6 +3813,13 @@ export class GetLogStreamRequest extends jspb.Message {
   getDeploymentId(): string;
   setDeploymentId(value: string): GetLogStreamRequest;
 
+  getApplication(): GetLogStreamRequest.Application | undefined;
+  setApplication(value?: GetLogStreamRequest.Application): GetLogStreamRequest;
+  hasApplication(): boolean;
+  clearApplication(): GetLogStreamRequest;
+
+  getScopeCase(): GetLogStreamRequest.ScopeCase;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetLogStreamRequest.AsObject;
   static toObject(includeInstance: boolean, msg: GetLogStreamRequest): GetLogStreamRequest.AsObject;
@@ -3824,6 +3831,40 @@ export class GetLogStreamRequest extends jspb.Message {
 export namespace GetLogStreamRequest {
   export type AsObject = {
     deploymentId: string,
+    application?: GetLogStreamRequest.Application.AsObject,
+  }
+
+  export class Application extends jspb.Message {
+    getApplication(): Ref.Application | undefined;
+    setApplication(value?: Ref.Application): Application;
+    hasApplication(): boolean;
+    clearApplication(): Application;
+
+    getWorkspace(): Ref.Workspace | undefined;
+    setWorkspace(value?: Ref.Workspace): Application;
+    hasWorkspace(): boolean;
+    clearWorkspace(): Application;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Application.AsObject;
+    static toObject(includeInstance: boolean, msg: Application): Application.AsObject;
+    static serializeBinaryToWriter(message: Application, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Application;
+    static deserializeBinaryFromReader(message: Application, reader: jspb.BinaryReader): Application;
+  }
+
+  export namespace Application {
+    export type AsObject = {
+      application?: Ref.Application.AsObject,
+      workspace?: Ref.Workspace.AsObject,
+    }
+  }
+
+
+  export enum ScopeCase { 
+    SCOPE_NOT_SET = 0,
+    DEPLOYMENT_ID = 1,
+    APPLICATION = 2,
   }
 }
 

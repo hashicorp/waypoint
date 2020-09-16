@@ -13475,6 +13475,9 @@ watchpack@^1.5.0:
 waypoint-client@./lib/waypoint-client:
   version "1.0.0"
 
+waypoint-client@./lib/waypoint-client/:
+  version "1.0.0"
+
 waypoint-pb@./lib/waypoint-pb/:
   version "1.0.0"
 
