@@ -10,6 +10,8 @@ description: |-
 
 <!-- Make this a partial -->
 
+-> Review the [prerequisites for this walkthrough](docs/getting-started/docker-example-app/install-prereqs) before installing Waypoint. You will use the `Ruby` application in the examples for this walkthrough.
+
 Waypoint uses both a client and a server to build, deploy, and release applications.
 
 <!-- Make this a partial -->
@@ -27,7 +29,7 @@ Finally, make sure that the waypoint binary is available on your [PATH](#path).
 In the Waypoint directory, install the Waypoint server to Docker Desktop on your computer.
 
 ```shell
- waypoint install -platform=docker
+ $ waypoint install -platform=docker
 ```
 
 You may also install the server to a Kubernetes cluster. To learn more, see the getting started guide for [deploying an app to Kubernetes](/docs/getting-started/k8s-example-app/install-waypoint) on AWS Elastic Kubernetes Service (EKS). This walkthrough shows you how to deploy the server and an example app to Kubernetes.
