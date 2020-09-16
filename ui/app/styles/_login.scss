@@ -1,4 +1,3 @@
-@use 'pds/tokens/color';
 @use 'pds/tokens/scale';
 @use 'pds/tokens/typography' as Typography;
 
@@ -6,6 +5,13 @@ form.login {
   display: flex;
   flex-direction: column;
   padding-top: scale.$base;
+
+  p.intro {
+    @include Typography.Heading(2);
+    max-width: 320px;
+    margin-top: -(scale.$sm-1);
+    margin-bottom: scale.$lg-3;
+  }
 }
 
 .login fieldset {
@@ -28,25 +34,5 @@ form.login {
 
   fieldset {
     margin-bottom: scale.$lg-2;
-  }
-
-  input {
-    font-size: scale.$base;
-    padding: scale.$sm-2 scale.$sm-2;
-    box-shadow: $inset-box-shadow;
-    border-radius: 2px;
-    border: none;
-    margin: 0;
-    width: 100%;
-    font-family: monospace;
-
-    &::placeholder {
-      color: color.$ui-cool-gray-500;
-    }
-
-    &:focus {
-      outline: none;
-      box-shadow: $glowing-box-shadow;
-    }
   }
 }

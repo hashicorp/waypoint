@@ -1,13 +1,4 @@
-<header id="header">
-  <LinkTo @route="application" class="brand">
-    {{inline-svg "waypoint-logo" class="logo"}}
-    <span class="pds--visuallyHidden">{{t "product.name"}}</span>
-  </LinkTo>
-  <nav>
-    <a href="#" class="soon">Documentation</a>
-    <LinkTo @route="auth">{{t "nav.auth"}}</LinkTo>
-  </nav>
-</header>
+<Header />
 
 <section id="page">
   {{outlet}}

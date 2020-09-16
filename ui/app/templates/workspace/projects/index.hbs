@@ -1,7 +1,22 @@
+{{#if this.cli}}
+<div class="flash flash--success">
+  <div class="flash-header">
+    {{inline-svg "check-circle-fill" class="icon"}}
+    <p>Authenticated succesfully via the Waypoint CLI</p>
+  </div>
+</div>
+{{/if}}
+
 <PageHeader>
   <div class="title projects-title">
     <h1>Projects</h1>
-    <small>{{pluralize @model.length "project"}}</small>
+    <small>
+      {{#if @model.length}}
+      {{pluralize @model.length "project"}}
+      {{else}}
+      No projects created yet
+      {{/if}}
+    </small>
   </div>
 </PageHeader>
 
@@ -19,5 +34,12 @@
       </div>
     </LinkTo>
   </Card>
+  {{else}}
+  <EmptyState>
+    <p>There are no projects to display yet</p>
+    <p>To create your first project, create a new application by running <code class="cmd">waypoint init</code> from the
+      CLI</p>
+    <p>For more help getting started, refer to the <a href="#todo" target="_blank">Waypoint documentation</a></p>
+  </EmptyState>
   {{/each}}
 </div>

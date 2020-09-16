@@ -3,7 +3,7 @@
   align-items: center;
   width: 100%;
 
-  a {
+  a:not(.button) {
     display: flex;
     flex-direction: column;
     color: inherit;

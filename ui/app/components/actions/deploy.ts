@@ -6,12 +6,11 @@ export default class ActionsDeploy extends Component {
   @tracked hintIsVisible = false;
 
   @action
-  showHint() {
-    this.hintIsVisible = true;
-  }
-
-  @action
-  hideHint() {
-    this.hintIsVisible = false;
+  toggleHint() {
+    if (this.hintIsVisible === true) {
+      return this.hintIsVisible = false;
+    } else {
+      return this.hintIsVisible = true;
+    };
   }
 }

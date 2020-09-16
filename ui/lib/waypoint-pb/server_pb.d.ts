@@ -68,10 +68,15 @@ export class Workspace extends jspb.Message {
   getName(): string;
   setName(value: string): Workspace;
 
-  getApplicationsList(): Array<Ref.Application>;
-  setApplicationsList(value: Array<Ref.Application>): Workspace;
+  getApplicationsList(): Array<Workspace.Application>;
+  setApplicationsList(value: Array<Workspace.Application>): Workspace;
   clearApplicationsList(): Workspace;
-  addApplications(value?: Ref.Application, index?: number): Ref.Application;
+  addApplications(value?: Workspace.Application, index?: number): Workspace.Application;
+
+  getActiveTime(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setActiveTime(value?: google_protobuf_timestamp_pb.Timestamp): Workspace;
+  hasActiveTime(): boolean;
+  clearActiveTime(): Workspace;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Workspace.AsObject;
@@ -84,8 +89,36 @@ export class Workspace extends jspb.Message {
 export namespace Workspace {
   export type AsObject = {
     name: string,
-    applicationsList: Array<Ref.Application.AsObject>,
+    applicationsList: Array<Workspace.Application.AsObject>,
+    activeTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
   }
+
+  export class Application extends jspb.Message {
+    getApplication(): Ref.Application | undefined;
+    setApplication(value?: Ref.Application): Application;
+    hasApplication(): boolean;
+    clearApplication(): Application;
+
+    getActiveTime(): google_protobuf_timestamp_pb.Timestamp | undefined;
+    setActiveTime(value?: google_protobuf_timestamp_pb.Timestamp): Application;
+    hasActiveTime(): boolean;
+    clearActiveTime(): Application;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Application.AsObject;
+    static toObject(includeInstance: boolean, msg: Application): Application.AsObject;
+    static serializeBinaryToWriter(message: Application, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Application;
+    static deserializeBinaryFromReader(message: Application, reader: jspb.BinaryReader): Application;
+  }
+
+  export namespace Application {
+    export type AsObject = {
+      application?: Ref.Application.AsObject,
+      activeTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    }
+  }
+
 }
 
 export class Ref extends jspb.Message {
@@ -1153,6 +1186,11 @@ export namespace Job {
 
 
   export class DestroyOp extends jspb.Message {
+    getWorkspace(): google_protobuf_empty_pb.Empty | undefined;
+    setWorkspace(value?: google_protobuf_empty_pb.Empty): DestroyOp;
+    hasWorkspace(): boolean;
+    clearWorkspace(): DestroyOp;
+
     getDeployment(): Deployment | undefined;
     setDeployment(value?: Deployment): DestroyOp;
     hasDeployment(): boolean;
@@ -1170,12 +1208,14 @@ export namespace Job {
 
   export namespace DestroyOp {
     export type AsObject = {
+      workspace?: google_protobuf_empty_pb.Empty.AsObject,
       deployment?: Deployment.AsObject,
     }
 
     export enum TargetCase { 
       TARGET_NOT_SET = 0,
-      DEPLOYMENT = 1,
+      WORKSPACE = 1,
+      DEPLOYMENT = 2,
     }
   }
 
@@ -1263,6 +1303,40 @@ export class GetJobRequest extends jspb.Message {
 export namespace GetJobRequest {
   export type AsObject = {
     jobId: string,
+  }
+}
+
+export class ListJobsRequest extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListJobsRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListJobsRequest): ListJobsRequest.AsObject;
+  static serializeBinaryToWriter(message: ListJobsRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListJobsRequest;
+  static deserializeBinaryFromReader(message: ListJobsRequest, reader: jspb.BinaryReader): ListJobsRequest;
+}
+
+export namespace ListJobsRequest {
+  export type AsObject = {
+  }
+}
+
+export class ListJobsResponse extends jspb.Message {
+  getJobsList(): Array<Job>;
+  setJobsList(value: Array<Job>): ListJobsResponse;
+  clearJobsList(): ListJobsResponse;
+  addJobs(value?: Job, index?: number): Job;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListJobsResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListJobsResponse): ListJobsResponse.AsObject;
+  static serializeBinaryToWriter(message: ListJobsResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListJobsResponse;
+  static deserializeBinaryFromReader(message: ListJobsResponse, reader: jspb.BinaryReader): ListJobsResponse;
+}
+
+export namespace ListJobsResponse {
+  export type AsObject = {
+    jobsList: Array<Job.AsObject>,
   }
 }
 
@@ -2203,6 +2277,26 @@ export namespace SetServerConfigRequest {
   }
 }
 
+export class GetServerConfigResponse extends jspb.Message {
+  getConfig(): ServerConfig | undefined;
+  setConfig(value?: ServerConfig): GetServerConfigResponse;
+  hasConfig(): boolean;
+  clearConfig(): GetServerConfigResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetServerConfigResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: GetServerConfigResponse): GetServerConfigResponse.AsObject;
+  static serializeBinaryToWriter(message: GetServerConfigResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetServerConfigResponse;
+  static deserializeBinaryFromReader(message: GetServerConfigResponse, reader: jspb.BinaryReader): GetServerConfigResponse;
+}
+
+export namespace GetServerConfigResponse {
+  export type AsObject = {
+    config?: ServerConfig.AsObject,
+  }
+}
+
 export class ServerConfig extends jspb.Message {
   getAdvertiseAddrsList(): Array<ServerConfig.AdvertiseAddr>;
   setAdvertiseAddrsList(value: Array<ServerConfig.AdvertiseAddr>): ServerConfig;
@@ -2688,6 +2782,11 @@ export class ListBuildsRequest extends jspb.Message {
   hasWorkspace(): boolean;
   clearWorkspace(): ListBuildsRequest;
 
+  getOrder(): OperationOrder | undefined;
+  setOrder(value?: OperationOrder): ListBuildsRequest;
+  hasOrder(): boolean;
+  clearOrder(): ListBuildsRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListBuildsRequest.AsObject;
   static toObject(includeInstance: boolean, msg: ListBuildsRequest): ListBuildsRequest.AsObject;
@@ -2700,6 +2799,7 @@ export namespace ListBuildsRequest {
   export type AsObject = {
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
+    order?: OperationOrder.AsObject,
   }
 }
 
@@ -2804,6 +2904,9 @@ export class Build extends jspb.Message {
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): Build;
 
+  getJobId(): string;
+  setJobId(value: string): Build;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Build.AsObject;
   static toObject(includeInstance: boolean, msg: Build): Build.AsObject;
@@ -2822,6 +2925,7 @@ export namespace Build {
     component?: Component.AsObject,
     artifact?: Artifact.AsObject,
     labelsMap: Array<[string, string]>,
+    jobId: string,
   }
 }
 
@@ -3036,6 +3140,9 @@ export class PushedArtifact extends jspb.Message {
   hasBuild(): boolean;
   clearBuild(): PushedArtifact;
 
+  getJobId(): string;
+  setJobId(value: string): PushedArtifact;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): PushedArtifact.AsObject;
   static toObject(includeInstance: boolean, msg: PushedArtifact): PushedArtifact.AsObject;
@@ -3056,6 +3163,7 @@ export namespace PushedArtifact {
     buildId: string,
     labelsMap: Array<[string, string]>,
     build?: Build.AsObject,
+    jobId: string,
   }
 }
 
@@ -3064,6 +3172,9 @@ export class GetDeploymentRequest extends jspb.Message {
   setRef(value?: Ref.Operation): GetDeploymentRequest;
   hasRef(): boolean;
   clearRef(): GetDeploymentRequest;
+
+  getLoadDetails(): Deployment.LoadDetails;
+  setLoadDetails(value: Deployment.LoadDetails): GetDeploymentRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetDeploymentRequest.AsObject;
@@ -3076,6 +3187,7 @@ export class GetDeploymentRequest extends jspb.Message {
 export namespace GetDeploymentRequest {
   export type AsObject = {
     ref?: Ref.Operation.AsObject,
+    loadDetails: Deployment.LoadDetails,
   }
 }
 
@@ -3236,15 +3348,13 @@ export class Deployment extends jspb.Message {
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): Deployment;
 
-  getArtifact(): PushedArtifact | undefined;
-  setArtifact(value?: PushedArtifact): Deployment;
-  hasArtifact(): boolean;
-  clearArtifact(): Deployment;
+  getJobId(): string;
+  setJobId(value: string): Deployment;
 
-  getBuild(): Build | undefined;
-  setBuild(value?: Build): Deployment;
-  hasBuild(): boolean;
-  clearBuild(): Deployment;
+  getPreload(): Deployment.Preload | undefined;
+  setPreload(value?: Deployment.Preload): Deployment;
+  hasPreload(): boolean;
+  clearPreload(): Deployment;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Deployment.AsObject;
@@ -3266,14 +3376,158 @@ export namespace Deployment {
     artifactId: string,
     deployment?: google_protobuf_any_pb.Any.AsObject,
     labelsMap: Array<[string, string]>,
-    artifact?: PushedArtifact.AsObject,
-    build?: Build.AsObject,
+    jobId: string,
+    preload?: Deployment.Preload.AsObject,
   }
+
+  export class Preload extends jspb.Message {
+    getArtifact(): PushedArtifact | undefined;
+    setArtifact(value?: PushedArtifact): Preload;
+    hasArtifact(): boolean;
+    clearArtifact(): Preload;
+
+    getBuild(): Build | undefined;
+    setBuild(value?: Build): Preload;
+    hasBuild(): boolean;
+    clearBuild(): Preload;
+
+    getDeployUrl(): string;
+    setDeployUrl(value: string): Preload;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Preload.AsObject;
+    static toObject(includeInstance: boolean, msg: Preload): Preload.AsObject;
+    static serializeBinaryToWriter(message: Preload, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Preload;
+    static deserializeBinaryFromReader(message: Preload, reader: jspb.BinaryReader): Preload;
+  }
+
+  export namespace Preload {
+    export type AsObject = {
+      artifact?: PushedArtifact.AsObject,
+      build?: Build.AsObject,
+      deployUrl: string,
+    }
+  }
+
 
   export enum LoadDetails { 
     NONE = 0,
     ARTIFACT = 1,
     BUILD = 2,
+  }
+}
+
+export class ListInstancesRequest extends jspb.Message {
+  getDeploymentId(): string;
+  setDeploymentId(value: string): ListInstancesRequest;
+
+  getApplication(): ListInstancesRequest.Application | undefined;
+  setApplication(value?: ListInstancesRequest.Application): ListInstancesRequest;
+  hasApplication(): boolean;
+  clearApplication(): ListInstancesRequest;
+
+  getScopeCase(): ListInstancesRequest.ScopeCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListInstancesRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListInstancesRequest): ListInstancesRequest.AsObject;
+  static serializeBinaryToWriter(message: ListInstancesRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListInstancesRequest;
+  static deserializeBinaryFromReader(message: ListInstancesRequest, reader: jspb.BinaryReader): ListInstancesRequest;
+}
+
+export namespace ListInstancesRequest {
+  export type AsObject = {
+    deploymentId: string,
+    application?: ListInstancesRequest.Application.AsObject,
+  }
+
+  export class Application extends jspb.Message {
+    getApplication(): Ref.Application | undefined;
+    setApplication(value?: Ref.Application): Application;
+    hasApplication(): boolean;
+    clearApplication(): Application;
+
+    getWorkspace(): Ref.Workspace | undefined;
+    setWorkspace(value?: Ref.Workspace): Application;
+    hasWorkspace(): boolean;
+    clearWorkspace(): Application;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Application.AsObject;
+    static toObject(includeInstance: boolean, msg: Application): Application.AsObject;
+    static serializeBinaryToWriter(message: Application, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Application;
+    static deserializeBinaryFromReader(message: Application, reader: jspb.BinaryReader): Application;
+  }
+
+  export namespace Application {
+    export type AsObject = {
+      application?: Ref.Application.AsObject,
+      workspace?: Ref.Workspace.AsObject,
+    }
+  }
+
+
+  export enum ScopeCase { 
+    SCOPE_NOT_SET = 0,
+    DEPLOYMENT_ID = 1,
+    APPLICATION = 2,
+  }
+}
+
+export class ListInstancesResponse extends jspb.Message {
+  getInstancesList(): Array<Instance>;
+  setInstancesList(value: Array<Instance>): ListInstancesResponse;
+  clearInstancesList(): ListInstancesResponse;
+  addInstances(value?: Instance, index?: number): Instance;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListInstancesResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListInstancesResponse): ListInstancesResponse.AsObject;
+  static serializeBinaryToWriter(message: ListInstancesResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListInstancesResponse;
+  static deserializeBinaryFromReader(message: ListInstancesResponse, reader: jspb.BinaryReader): ListInstancesResponse;
+}
+
+export namespace ListInstancesResponse {
+  export type AsObject = {
+    instancesList: Array<Instance.AsObject>,
+  }
+}
+
+export class Instance extends jspb.Message {
+  getId(): string;
+  setId(value: string): Instance;
+
+  getDeploymentId(): string;
+  setDeploymentId(value: string): Instance;
+
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): Instance;
+  hasApplication(): boolean;
+  clearApplication(): Instance;
+
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): Instance;
+  hasWorkspace(): boolean;
+  clearWorkspace(): Instance;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Instance.AsObject;
+  static toObject(includeInstance: boolean, msg: Instance): Instance.AsObject;
+  static serializeBinaryToWriter(message: Instance, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Instance;
+  static deserializeBinaryFromReader(message: Instance, reader: jspb.BinaryReader): Instance;
+}
+
+export namespace Instance {
+  export type AsObject = {
+    id: string,
+    deploymentId: string,
+    application?: Ref.Application.AsObject,
+    workspace?: Ref.Workspace.AsObject,
   }
 }
 
@@ -3328,6 +3582,9 @@ export class GetLatestReleaseRequest extends jspb.Message {
   hasWorkspace(): boolean;
   clearWorkspace(): GetLatestReleaseRequest;
 
+  getLoadDetails(): Release.LoadDetails;
+  setLoadDetails(value: Release.LoadDetails): GetLatestReleaseRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetLatestReleaseRequest.AsObject;
   static toObject(includeInstance: boolean, msg: GetLatestReleaseRequest): GetLatestReleaseRequest.AsObject;
@@ -3340,6 +3597,7 @@ export namespace GetLatestReleaseRequest {
   export type AsObject = {
     application?: Ref.Application.AsObject,
     workspace?: Ref.Workspace.AsObject,
+    loadDetails: Release.LoadDetails,
   }
 }
 
@@ -3367,6 +3625,9 @@ export class ListReleasesRequest extends jspb.Message {
   hasOrder(): boolean;
   clearOrder(): ListReleasesRequest;
 
+  getLoadDetails(): Release.LoadDetails;
+  setLoadDetails(value: Release.LoadDetails): ListReleasesRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): ListReleasesRequest.AsObject;
   static toObject(includeInstance: boolean, msg: ListReleasesRequest): ListReleasesRequest.AsObject;
@@ -3382,6 +3643,7 @@ export namespace ListReleasesRequest {
     statusList: Array<StatusFilter.AsObject>,
     physicalState: Operation.PhysicalState,
     order?: OperationOrder.AsObject,
+    loadDetails: Release.LoadDetails,
   }
 }
 
@@ -3411,6 +3673,9 @@ export class GetReleaseRequest extends jspb.Message {
   hasRef(): boolean;
   clearRef(): GetReleaseRequest;
 
+  getLoadDetails(): Release.LoadDetails;
+  setLoadDetails(value: Release.LoadDetails): GetReleaseRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetReleaseRequest.AsObject;
   static toObject(includeInstance: boolean, msg: GetReleaseRequest): GetReleaseRequest.AsObject;
@@ -3422,6 +3687,7 @@ export class GetReleaseRequest extends jspb.Message {
 export namespace GetReleaseRequest {
   export type AsObject = {
     ref?: Ref.Operation.AsObject,
+    loadDetails: Release.LoadDetails,
   }
 }
 
@@ -3469,6 +3735,14 @@ export class Release extends jspb.Message {
   getUrl(): string;
   setUrl(value: string): Release;
 
+  getJobId(): string;
+  setJobId(value: string): Release;
+
+  getPreload(): Release.Preload | undefined;
+  setPreload(value?: Release.Preload): Release;
+  hasPreload(): boolean;
+  clearPreload(): Release;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Release.AsObject;
   static toObject(includeInstance: boolean, msg: Release): Release.AsObject;
@@ -3490,12 +3764,61 @@ export namespace Release {
     deploymentId: string,
     labelsMap: Array<[string, string]>,
     url: string,
+    jobId: string,
+    preload?: Release.Preload.AsObject,
+  }
+
+  export class Preload extends jspb.Message {
+    getDeployment(): Deployment | undefined;
+    setDeployment(value?: Deployment): Preload;
+    hasDeployment(): boolean;
+    clearDeployment(): Preload;
+
+    getArtifact(): PushedArtifact | undefined;
+    setArtifact(value?: PushedArtifact): Preload;
+    hasArtifact(): boolean;
+    clearArtifact(): Preload;
+
+    getBuild(): Build | undefined;
+    setBuild(value?: Build): Preload;
+    hasBuild(): boolean;
+    clearBuild(): Preload;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Preload.AsObject;
+    static toObject(includeInstance: boolean, msg: Preload): Preload.AsObject;
+    static serializeBinaryToWriter(message: Preload, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Preload;
+    static deserializeBinaryFromReader(message: Preload, reader: jspb.BinaryReader): Preload;
+  }
+
+  export namespace Preload {
+    export type AsObject = {
+      deployment?: Deployment.AsObject,
+      artifact?: PushedArtifact.AsObject,
+      build?: Build.AsObject,
+    }
+  }
+
+
+  export enum LoadDetails { 
+    NONE = 0,
+    DEPLOYMENT = 1,
+    ARTIFACT = 2,
+    BUILD = 3,
   }
 }
 
 export class GetLogStreamRequest extends jspb.Message {
   getDeploymentId(): string;
   setDeploymentId(value: string): GetLogStreamRequest;
+
+  getApplication(): GetLogStreamRequest.Application | undefined;
+  setApplication(value?: GetLogStreamRequest.Application): GetLogStreamRequest;
+  hasApplication(): boolean;
+  clearApplication(): GetLogStreamRequest;
+
+  getScopeCase(): GetLogStreamRequest.ScopeCase;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GetLogStreamRequest.AsObject;
@@ -3508,6 +3831,40 @@ export class GetLogStreamRequest extends jspb.Message {
 export namespace GetLogStreamRequest {
   export type AsObject = {
     deploymentId: string,
+    application?: GetLogStreamRequest.Application.AsObject,
+  }
+
+  export class Application extends jspb.Message {
+    getApplication(): Ref.Application | undefined;
+    setApplication(value?: Ref.Application): Application;
+    hasApplication(): boolean;
+    clearApplication(): Application;
+
+    getWorkspace(): Ref.Workspace | undefined;
+    setWorkspace(value?: Ref.Workspace): Application;
+    hasWorkspace(): boolean;
+    clearWorkspace(): Application;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Application.AsObject;
+    static toObject(includeInstance: boolean, msg: Application): Application.AsObject;
+    static serializeBinaryToWriter(message: Application, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Application;
+    static deserializeBinaryFromReader(message: Application, reader: jspb.BinaryReader): Application;
+  }
+
+  export namespace Application {
+    export type AsObject = {
+      application?: Ref.Application.AsObject,
+      workspace?: Ref.Workspace.AsObject,
+    }
+  }
+
+
+  export enum ScopeCase { 
+    SCOPE_NOT_SET = 0,
+    DEPLOYMENT_ID = 1,
+    APPLICATION = 2,
   }
 }
 

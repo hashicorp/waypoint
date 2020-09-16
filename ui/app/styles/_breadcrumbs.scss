@@ -1,20 +1,28 @@
 ul.breadcrumbs {
   display: flex;
-  height: scale.$lg-6;
+  height: scale.$lg-4;
 
   li {
     display: flex;
     align-items: flex-start;
     @include Typography.Interface(M);
+    overflow: hidden;
 
     a {
       color: inherit;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
+      overflow: hidden;
 
       &:hover {
         color: color.$blue-500;
+      }
+
+      span {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
       }
     }
 
@@ -22,6 +30,7 @@ ul.breadcrumbs {
       width: 16px;
       height: 16px;
       margin-right: scale.$sm-3;
+      flex-shrink: 0;
     }
 
     &::after {

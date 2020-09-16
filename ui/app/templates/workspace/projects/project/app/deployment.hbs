@@ -8,22 +8,22 @@
     </small>
   </div>
   <div class="actions">
-    <button class="button button--secondary">
-      <span>todo</span>
+    <ExternalLink href="https://{{@model.preload.deployUrl}}" class="button button--secondary">
+      <span>{{lowercase @model.preload.deployUrl}}</span>
       {{inline-svg "exit" class="icon"}}
-    </button>
+    </ExternalLink>
     <Actions::Release @id={{@model.id}} />
   </div>
 </PageHeader>
 
 <div class="item-row">
   <div class="item">
-    {{#if (eq @model.state 1)}}
+    {{#if (eq @model.status.state 1)}}
     <b class="badge">{{t 'state.deployment.pending'}}</b>
-    {{else if (eq @model.state 3)}}
+    {{else if (eq @model.status.state 2)}}
     <b class="badge badge--success">{{t 'state.deployment.success'}}</b>
-    {{else if (eq @model.state 4)}}
-    <b class="badge badge--error">{{t 'state.deployment.destroy'}}</b>
+    {{else if (eq @model.status.state 3)}}
+    <b class="badge badge--error">{{t 'state.deployment.error'}}</b>
     {{/if}}
   </div>
 
@@ -38,7 +38,5 @@
 </div>
 
 <div class="output-pane">
-  <div class="output">
-    <code>No deployment output available</code>
-  </div>
+  <OperationLogs @jobId={{@model.jobId}} />
 </div>

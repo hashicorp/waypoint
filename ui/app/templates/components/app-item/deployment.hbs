@@ -9,15 +9,15 @@
       <span>{{if (eq @deployment.status.state 1) 'Deploying' 'Deployed'}} by
         <b>{{component-name @deployment.component.name}}</b>
         {{#if (eq @deployment.status.state 1)}}
-          (Started {{date-format-distance-to-now @deployment.status.startTime.seconds }})
+        (Started {{date-format-distance-to-now @deployment.status.startTime.seconds }})
         {{else}}
-          {{date-format-distance-to-now @deployment.status.completeTime.seconds }}
+        {{date-format-distance-to-now @deployment.status.completeTime.seconds }}
         {{/if}}
       </span>
     </small>
   </LinkTo>
-  <ExternalLink href="/todo" class="button button--secondary button--compact">
-    <span>todo</span>
+  <ExternalLink href="https://{{@deployment.preload.deployUrl}}" class="button button--secondary">
+    <span>{{lowercase @deployment.preload.deployUrl}}</span>
     {{inline-svg "exit" class="icon"}}
   </ExternalLink>
 </li>

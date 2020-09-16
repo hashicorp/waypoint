@@ -21,6 +21,7 @@ export default class ReleaseDetail extends Route {
       },
       {
         label: 'Releases',
+        icon: 'public-default',
         args: ['workspace.projects.project.app.releases'],
       },
     ];

@@ -1,0 +1,84 @@
+#page .onboarding-page {
+  display: flex;
+  justify-content: center;
+  padding: scale.$lg-4;
+
+  .card {
+    width: 800px;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .onboarding-header {
+    display: flex;
+    align-items: center;
+    padding: scale.$lg-2 scale.$lg-2;
+
+    .onboarding-header-content {
+      margin-left: scale.$lg-1;
+    }
+
+    h1 {
+      @include Typography.Heading(2);
+      margin: 0 auto scale.$sm-2;
+
+      & + p {
+        @include Typography.Interface(L);
+        color: color.$ui-cool-gray-600;
+      }
+    }
+  }
+
+  nav {
+    padding: 0;
+  }
+
+  .onboarding-step {
+    font-size: 14px;
+    padding: 0 scale.$lg-2;
+
+    h2, h3, p, pre {
+      margin-bottom: scale.$lg-2;
+    }
+
+    .copyable-code.block {
+      margin-bottom: scale.$lg-2;
+    }
+
+    code.output {
+      display: block;
+      width: 100%;
+      color: color.$ui-gray-800;
+      background: color.$ui-gray-050;
+      padding: scale.$sm-1;
+      border-radius: 2px;
+    }
+
+    .onboarding-tip, .onboarding-note {
+      color: color.$blue-800;
+      background: color.$blue-050;
+      margin-bottom: scale.$lg-2;
+      padding: scale.$sm-1;
+      border-radius: 2px;
+
+      p {
+        margin: 0;
+      }
+    }
+
+    .onboarding-note {
+      color: color.$yellow-800;
+      background: color.$yellow-050;
+    }
+  }
+
+  .onboarding-footer {
+    padding: scale.$sm-4 scale.$lg-2 scale.$lg-2;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid color.$ui-cool-gray-200;
+    margin: 0 0 scale.$lg-1;
+  }
+}

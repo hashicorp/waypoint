@@ -1,6 +1,4 @@
-<LoginInvite @inviteToken={{this.token}} />
+<h1>{{t 'invite_login.title'}}</h1>
+<p>{{if this.cli (t 'invite_login.cli_subtitle') (t 'invite_login.subtitle')}}</p>
 
-<hr />
-<small>
-  Invite already redeemed? <LinkTo @route="auth.token">Auth via token</LinkTo>
-</small>
+<LoginInvite @inviteToken={{this.token}} @cli={{this.cli}} />

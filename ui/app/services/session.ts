@@ -1,11 +1,18 @@
 import Service, { inject as service } from '@ember/service';
+import { tracked } from '@glimmer/tracking';
 import ApiService from './api';
 
 export default class SessionService extends Service {
   @service api!: ApiService;
+  @tracked authConfigured: boolean;
 
-  get authConfigured(): Boolean {
-    return Boolean(this.token);
+  constructor(owner: any) {
+    super(owner);
+
+    this.authConfigured = false;
+    if (this.token) {
+      this.authConfigured = true;
+    }
   }
 
   get token(): string {
@@ -13,12 +20,13 @@ export default class SessionService extends Service {
   }
 
   async setToken(value: string) {
-    // todo(pearkes): validate this either locally (format) or remotely (rpc)
-    if (value == null) {
-      window.localStorage.removeItem('waypointAuthToken');
-    } else {
-      window.localStorage.waypointAuthToken = value;
-    }
+    this.authConfigured = true;
+    window.localStorage.waypointAuthToken = value;
+  }
+
+  async removeToken() {
+    this.authConfigured = false;
+    window.localStorage.removeItem('waypointAuthToken');
   }
 }
 

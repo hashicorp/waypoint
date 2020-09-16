@@ -16,7 +16,7 @@ import (
 type UICommand struct {
 	*baseCommand
 
-	flagCreateToken bool
+	flagAuthenticate bool
 }
 
 func (c *UICommand) Run(args []string) int {
@@ -37,7 +37,7 @@ func (c *UICommand) Run(args []string) int {
 	client := c.project.Client()
 
 	var inviteToken string
-	if c.flagCreateToken {
+	if c.flagAuthenticate {
 		c.ui.Output("Creating invite token", terminal.WithStyle(terminal.HeaderStyle))
 		c.ui.Output("This invite token will be exchanged for an authentication \ntoken that your browser stores.")
 
@@ -77,8 +77,8 @@ func (c *UICommand) Run(args []string) int {
 	c.ui.Output("Opening browser", terminal.WithStyle(terminal.HeaderStyle))
 
 	uiAddr := fmt.Sprintf("https://%s:%d", addr, port)
-	if c.flagCreateToken {
-		uiAddr = fmt.Sprintf("%s/auth/invite?token=%s", uiAddr, inviteToken)
+	if c.flagAuthenticate {
+		uiAddr = fmt.Sprintf("%s/auth/invite?token=%s&cli=true", uiAddr, inviteToken)
 	}
 
 	open.Run(uiAddr)
@@ -91,8 +91,8 @@ func (c *UICommand) Flags() *flag.Sets {
 		f := set.NewSet("Command Options")
 
 		f.BoolVar(&flag.BoolVar{
-			Name:    "create-token",
-			Target:  &c.flagCreateToken,
+			Name:    "authenticate",
+			Target:  &c.flagAuthenticate,
 			Default: false,
 			Usage:   "Creates a new invite token and passes it to the UI for authorization",
 		})

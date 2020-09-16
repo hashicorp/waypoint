@@ -5,6 +5,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: scale.$lg-8;
   height: scale.$lg-8;
   background: color.$ui-cool-gray-050;

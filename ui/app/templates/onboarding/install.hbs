@@ -1,0 +1,63 @@
+<div class="onboarding-header">
+  <IconTile @icon="download" />
+  <div class="onboarding-header-content">
+    <h1>Install the Waypoint CLI</h1>
+    <p>First, you'll need to install the Waypoint CLI via Homebrew or a manual installation.</p>
+  </div>
+</div>
+
+<hr />
+
+<div class="onboarding-step">
+  <p>Anyone using Waypoint to deploy from their workstsation needs to install it locally. The below
+    instructions guide you through that for various operating systems.
+  </p>
+  <p>If you need to compile Waypoint from source instead, see the <a href="#todo">documentation</a>.</p>
+
+  <h2>Install Waypoint</h2>
+
+  <nav>
+    <ul>
+      <li>
+        <LinkTo @route="onboarding.install.manual">Manual installation</LinkTo>
+      </li>
+      <li>
+        <LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo>
+      </li>
+      <li>
+        <LinkTo @route="onboarding.install.chocolatey">Chocolatey on Windows</LinkTo>
+      </li>
+      <li>
+        <LinkTo @route="onboarding.install.linux">Linux</LinkTo>
+      </li>
+    </ul>
+  </nav>
+
+  {{outlet}}
+
+  <h2>Verify the installation</h2>
+
+  <p>After installing Waypoint, verify that the installation worked by opening a new terminal session and running the
+    command <code>waypoint</code>.</p>
+
+  <CopyableCode @ref="verify-waypoint">
+    <pre><code id="verify-waypoint">waypoint</code></pre>
+  </CopyableCode>
+
+  <pre><code class="output">usage: waypoint [-version] [-help] [-autocomplete-(un)install] &lt;command&gt; [&lt;args&gt;]
+
+Common commands:
+    build        Build a new versioned artifact from source.
+    deploy       Deploy a pushed artifact.
+  ...</code></pre>
+
+  <p>If you get an error that <code>waypoint</code> could not be found, your <code>PATH</code> environment variable was
+    not set up properly. Make sure that your <code>PATH</code> variable contains the directory where you installed
+    Waypoint.</p>
+</div>
+
+<hr />
+
+<div class="onboarding-footer">
+  <LinkTo @route="onboarding.connect" class="button button--secondary">Continue to Next Step</LinkTo>
+</div>

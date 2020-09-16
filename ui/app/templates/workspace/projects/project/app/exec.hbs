@@ -1,12 +1,24 @@
 <h3>Exec</h3>
 
 <div class="output-pane">
+  {{#if hasExec}}
   <div class="output">
-    <code>exec output row</code>
-    <code>exec output row</code>
+    <code>A line of output</code>
+    <code>Another line of output</code>
   </div>
+  {{else}}
+  <EmptyState>
+    <p>Coming soon</p>
+    <p>Currently under development, check back soon</p>
+  </EmptyState>
+  {{/if}}
 
   <div class="run-prompt">
-    {{inline-svg "chevron-right" class="icon"}}
+    {{inline-svg "chevron-right" class="prompt-icon"}}
+    <input type="text" class="run-prompt-input" disabled />
+    <button class="button button--primary" disabled>
+      {{inline-svg "sub-right" class="icon"}}
+      <span>Run</span>
+    </button>
   </div>
 </div>

@@ -22,8 +22,12 @@ ul {
 // Waypoint styles
 
 code {
-  font-size: 0.8em;
   font-family: ui-monospace, 'Menlo', monospace;
+  white-space: nowrap;
+}
+
+pre code {
+  white-space: pre;
 }
 
 svg.icon {

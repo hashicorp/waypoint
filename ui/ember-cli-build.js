@@ -39,6 +39,7 @@ module.exports = function (defaults) {
       paths: [
         'node_modules/@hashicorp/structure-icons/dist',
         'public/images',
+        'public/images/icons',
       ],
     },
     autoImport: {

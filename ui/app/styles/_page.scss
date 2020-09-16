@@ -11,22 +11,27 @@ $inset-box-shadow: inset 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.2),
 $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1), 0 0 0 3px rgba(color.$blue-500, 0.2);
 
+@import './_app-card';
 @import './_app-item';
-@import './_app-meta-item';
 @import './_badge';
 @import './_breadcrumbs';
 @import './_button';
+@import './_code';
+@import './_flash';
+@import './_input';
 @import './_icon-tile';
 @import './_login';
+@import './_onboarding';
 
 #page {
   position: relative;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  width: 94vw;
+  width: 100vw;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: scale.$lg-3 scale.$lg-4 scale.$lg-6;
+  padding: scale.$lg-3 scale.$lg-4 scale.$lg-5;
 
   &::before {
     content: '';
@@ -71,7 +76,8 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   header {
     display: flex;
     align-items: center;
-    margin-bottom: scale.$lg-3;
+    flex-wrap: wrap;
+    margin-bottom: scale.$base;
 
     .icon-tile {
       margin-right: scale.$base;
@@ -80,9 +86,14 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     .title {
       display: flex;
       flex-direction: column;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: scale.$sm-2 scale.$sm-2 scale.$sm-2 0;
+      margin-right: auto;
+      min-height: 76px;
 
       &.projects-title {
-        padding-top: scale.$lg-6;
+        margin-top: scale.$lg-4;
       }
 
       h1,
@@ -91,14 +102,16 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
         padding-bottom: scale.$sm-3;
 
         code {
-          font-size: 0.9em;
+          font-size: 1em;
           font-weight: 600;
+          margin: scale.$sm-2 0 scale.$sm-4;
+          display: inline-flex;
         }
 
         .badge {
           font-size: 1rem;
           position: relative;
-          top: -3px;
+          top: -2px;
           margin-right: scale.$sm-4;
         }
       }
@@ -121,10 +134,36 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     .actions {
       position: relative;
       display: flex;
-      margin-left: auto;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: scale.$sm-4 0;
 
-      button {
-        margin-left: scale.$base;
+      .button {
+        margin: scale.$sm-3 0;
+
+        & + .button {
+          margin-left: scale.$base;
+        }
+      }
+
+      .first-run-hint {
+
+        p {
+          @include Typography.Interface(S);
+          color: color.$ui-cool-gray-500;
+          display: inline-block;
+          margin-right: scale.$sm-2;
+        }
+
+        .copyable-code {
+          margin: scale.$sm-2 0;
+
+          code {
+            display: inline-flex;
+            font-size: 11px;
+            flex-shrink: 0;
+          }
+        }
       }
     }
   }
@@ -138,7 +177,9 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       box-shadow: inset 0 -1px 0 color.$ui-cool-gray-200;
 
       li {
+        display: flex;
         margin-right: scale.$lg-1;
+        align-items: stretch;
       }
 
       a {
@@ -164,26 +205,106 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
         height: scale.$base;
         margin-right: scale.$sm-3;
       }
+
+      @media only screen and (max-width: 600px) {
+
+        li {
+          margin-right: scale.$sm-3;
+          flex: 1 1 auto;
+
+          &:last-child {
+            margin-right: 0;
+          }
+        }
+
+        a {
+          justify-content: center;
+          padding: scale.$sm-2 scale.$sm-4 scale.$base;
+        }
+
+        .icon {
+          display: none;
+        }
+      }
     }
   }
 
   ul.list {
+
     li {
-      margin-bottom: scale.$base;
       padding-bottom: scale.$base;
-      border-bottom: 1px solid color.$ui-cool-gray-200;
+      margin-bottom: scale.$base;
+      border-bottom: 1px solid color.$ui-cool-gray-100;
 
       &:last-child {
+        padding-bottom: 0;
+        margin-bottom: 0;
         border: none;
       }
     }
   }
 
   .cards {
-    display: flex;
+    position: relative;
+    margin: (-(scale.$lg-2)) (-(scale.$lg-2)) 0;
+
+    &::before, &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: scale.$lg-3;
+    }
+
+    &::before {
+      left: -#{scale.$sm-2};
+      background: linear-gradient(to right, #fff, #fff, rgba(#fff, 0));
+    }
+
+    &::after {
+      right: -#{scale.$sm-2};
+      background: linear-gradient(to left, #fff, #fff, rgba(#fff, 0));
+    }
+
+    .cards-wrap {
+      display: flex;
+      overflow: auto;
+      padding: scale.$lg-2 scale.$lg-2 0;
+      margin-bottom: scale.$sm-2;
+      scrollbar-width: thin;
+      scrollbar-color: color.$ui-cool-gray-300 color.$ui-cool-gray-100;
+
+      &::-webkit-scrollbar {
+        height: scale.$sm-3;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: color.$ui-cool-gray-100;
+        border-radius: scale.$sm-3;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: color.$ui-cool-gray-300;
+        border-radius: scale.$sm-3;
+      }
+
+      &::-webkit-scrollbar-button {
+        width: scale.$sm-1;
+      }
+    }
+
+    .cards-inner {
+      display: flex;
+      justify-content: space-between;
+      flex-grow: 1;
+      padding: scale.$lg-2 scale.$lg-2 scale.$base;
+      margin: (-(scale.$lg-2)) (-(scale.$lg-2)) 0;
+    }
 
     .card {
-      flex: 1 1 0;
+      flex: 1 1 33%;
+      min-width: 0;
+      margin-bottom: 0;
       margin-right: scale.$lg-2;
 
       &:last-child {
@@ -222,10 +343,20 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     &-header {
       display: flex;
       align-items: center;
+      padding-bottom: scale.$sm-1;
+      margin-bottom: scale.$sm-1;
+      border-bottom: 1px solid color.$ui-cool-gray-100;
 
       h4 {
         display: flex;
         align-items: center;
+        overflow: hidden;
+
+        span {
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+        }
 
         .icon {
           width: scale.$lg-1;
@@ -236,6 +367,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
 
       a {
         margin-left: auto;
+        white-space: nowrap;
         @include Typography.Interface(S);
       }
     }
@@ -281,14 +413,6 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       color: color.$ui-cool-gray-600;
       @include Typography.Interface(S);
       padding: scale.$sm-3 0 scale.$sm-2;
-    }
-  }
-
-  .app-latest {
-    .app-meta-item {
-      padding-top: scale.$sm-1;
-      margin-top: scale.$sm-1;
-      border-top: 1px solid color.$ui-cool-gray-100;
     }
   }
 
@@ -346,21 +470,43 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       flex-grow: 1;
       overflow: auto;
       padding: scale.$sm-2 scale.$sm-1;
+
+      code {
+        font-size: 12px;
+      }
+    }
+
+    .empty-state {
+      background: none;
+      border: none;
     }
 
     .run-prompt {
+      position: relative;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       align-self: flex-end;
       width: 100%;
-      padding: scale.$sm-1 scale.$sm-2;
+      padding: scale.$sm-2 scale.$sm-2;
       background: color.$white;
       border-top: 1px solid color.$ui-cool-gray-100;
       position: sticky;
       bottom: 0;
       margin-top: auto;
 
-      .icon {
+      input.run-prompt-input {
+        padding: 0 0 scale.$sm-4 scale.$lg-3;
+        margin-right: scale.$sm-2;
+        line-height: 1.8;
+      }
+
+      .prompt-icon {
+        position: absolute;
+        left: scale.$sm-1;
+        top: scale.$sm-1;
+        width: 24px;
+        height: 24px;
+        pointer-events: none;
         color: color.$ui-cool-gray-600;
       }
     }
@@ -372,6 +518,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     justify-content: center;
     align-items: center;
     text-align: center;
+    flex-grow: 1;
     background: color.$ui-cool-gray-050;
     border: 1px solid color.$ui-cool-gray-100;
     border-radius: 2px;
@@ -387,62 +534,18 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
         color: color.$ui-cool-gray-600;
       }
 
-      code {
-        font-size: 0.9em;
-        padding: scale.$sm-3 scale.$sm-2;
-        margin: 0 scale.$sm-3;
+      .copyable-code {
+        margin: 0 scale.$sm-4;
+
+        code {
+          font-size: 0.95em;
+        }
       }
-    }
-  }
 
-  code.cmd {
-    color: color.$white;
-    background: color.$ui-gray-800;
-    padding: scale.$sm-2 scale.$sm-2;
-    border-radius: 2px;
-
-    &::before {
-      content: '$';
-      opacity: 0.5;
-      margin-right: scale.$sm-2;
-    }
-  }
-
-  .cli-hint {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: scale.$sm-2;
-    width: 300px;
-    background: color.$white;
-    box-shadow: $elevated-box-shadow;
-    border-radius: 2px;
-    padding: scale.$sm-1 scale.$base;
-
-    p {
-      color: color.$ui-cool-gray-600;
-      @include Typography.Interface(M);
-      font-weight: normal;
-      margin-bottom: scale.$sm-1;
-    }
-
-    code {
-      display: block;
-      margin-bottom: scale.$sm-2;
-    }
-
-    a {
-      text-decoration: none;
-    }
-
-    .dismiss {
-      display: flex;
-      border-top: 1px solid color.$ui-gray-100;
-      padding-top: scale.$sm-1;
-      margin-top: scale.$sm-1;
-
-      button {
-        margin-left: auto;
+      code.inline {
+        padding: scale.$sm-4 scale.$sm-3;
+        background: color.$ui-cool-gray-100;
+        border-radius: 2px;
       }
     }
   }
@@ -492,5 +595,76 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     .button {
       width: 100%;
     }
+  }
+}
+
+.cli-hint {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: scale.$sm-2;
+  width: 410px;
+  color: color.$ui-cool-gray-600;
+  background: color.$white;
+  box-shadow: $elevated-box-shadow;
+  border-radius: 2px;
+  padding: scale.$sm-1 scale.$base;
+  z-index: 99;
+
+  p {
+    @include Typography.Interface(M);
+    font-weight: normal;
+    margin-bottom: scale.$sm-2;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  .copyable-code {
+    margin-bottom: scale.$sm-3;
+  }
+
+  .input-wrap {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: scale.$sm-2;
+
+    input {
+      margin-bottom: 0;
+    }
+
+    .button {
+      margin-left: scale.$sm-2;
+    }
+  }
+
+  input {
+    margin-bottom: scale.$sm-2;
+  }
+
+  small {
+    font-size: 75%;
+    color: color.$ui-cool-gray-500;
+  }
+
+  .dismiss {
+    display: flex;
+    border-top: 1px solid color.$ui-gray-100;
+    padding-top: scale.$sm-1;
+    margin-top: scale.$sm-1;
+
+    button {
+      margin-left: auto;
+    }
+  }
+
+  &-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 98;
   }
 }
