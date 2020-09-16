@@ -1,0 +1,25 @@
+.authIndicator {
+  position: absolute;
+  bottom: 0;
+  width: 100vw;
+  z-index: 3;
+  padding: 1rem;
+  text-align: center;
+  background: var(--black);
+  color: var(--white);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  @media (--medium-up) {
+    justify-content: flex-end;
+  }
+}
+
+.loadingIconSpin {
+  transform: translateY(-100px);
+}
+
+.loggedInText {
+  margin: 0 1rem;
+}
