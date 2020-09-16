@@ -1627,8 +1627,18 @@ message Release {
 ********************************************************************/
 
 message GetLogStreamRequest {
-  // Deployment to request logs for.
-  string deployment_id = 1;
+  oneof scope {
+    // Deployment to request logs for.
+    string deployment_id = 1;
+
+    // Logs for a specific application in a workspace.
+    Application application = 2;
+  }
+
+  message Application {
+    Ref.Application application = 1;
+    Ref.Workspace workspace = 2;
+  }
 }
 
 message LogBatch {
