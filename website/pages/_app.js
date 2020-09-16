@@ -34,7 +34,7 @@ function App({ Component, pageProps }) {
               'https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap',
           },
         ]}
-        icon={[{ href: '/favicon.ico' }]}
+        icon={[{ href: '/favicon.svg' }]}
         preload={[
           { href: '/fonts/klavika/medium.woff2', as: 'font' },
           { href: '/fonts/gilmer/light.woff2', as: 'font' },
