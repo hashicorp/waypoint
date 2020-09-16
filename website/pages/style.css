@@ -71,3 +71,32 @@
   font-weight: 700;
   font-style: normal;
 }
+
+/*
+ * TODO, eventually remove:
+ * Temporary Waypoint Branding
+ */
+:root {
+  --waypoint: #14c6cb;
+}
+.g-docs-sidenav {
+  --highlight-color: var(--waypoint);
+}
+
+.g-subnav {
+  & a.variant-primary {
+    border-color: var(--waypoint);
+    background-color: var(--waypoint);
+  }
+  & .g-subnav-inner {
+    & .style-menu-item {
+      & .text::after {
+        background: var(--waypoint);
+      }
+    }
+  }
+}
+
+.g-content {
+  --highlight-color: var(--waypoint);
+}

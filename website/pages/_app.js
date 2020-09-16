@@ -6,7 +6,6 @@ import Router from 'next/router'
 import HashiHead from '@hashicorp/react-head'
 import Head from 'next/head'
 import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
-import MegaNav from '@hashicorp/react-mega-nav'
 import { Provider as NextAuthProvider } from 'next-auth/client'
 import ProductSubnav from 'components/subnav'
 import Footer from 'components/footer'
@@ -49,7 +48,6 @@ function App({ Component, pageProps }) {
         ]}
       />
       <ConditionalAuthProvider session={pageProps.session}>
-        <MegaNav product={productName} />
         <ProductSubnav />
         <div className="content">
           <Component {...pageProps} />
