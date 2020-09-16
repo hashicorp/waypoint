@@ -62,8 +62,7 @@ spec:
           tcpSocket:
             port: grpc
         livenessProbe:
-          httpGet:
-            path: /
+          tcpSocket:
             port: http
         resources:
           requests:
