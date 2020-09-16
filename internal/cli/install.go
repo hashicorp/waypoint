@@ -225,10 +225,11 @@ func (c *InstallCommand) Run(args []string) int {
 	defer st.Close()
 
 	var err error
+	var httpAddr string
 
 	switch c.platform {
 	case "docker":
-		contextConfig, advertiseAddr, err = serverinstall.InstallDocker(ctx, c.ui, st, &c.config)
+		contextConfig, advertiseAddr, httpAddr, err = serverinstall.InstallDocker(ctx, c.ui, st, &c.config)
 		if err != nil {
 			c.ui.Output(
 				"Error installing server into docker: %s", err.Error(),
