@@ -108,6 +108,8 @@ func (c *InstallCommand) InstallKubernetes(
 	var contextConfig clicontext.Config
 	var advertiseAddr pb.ServerConfig_AdvertiseAddr
 	var httpAddr string
+	var grpcAddr string
+
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 		svc, err := clientset.CoreV1().Services(c.config.Namespace).Get(
 			ctx, c.config.ServiceName, metav1.GetOptions{})
@@ -155,7 +157,7 @@ func (c *InstallCommand) InstallKubernetes(
 		}
 
 		// Set the grpc address
-		addr = fmt.Sprintf("%s:%d", addr, grpcPort)
+		grpcAddr = fmt.Sprintf("%s:%d", addr, grpcPort)
 		log.Info("server service ready", "addr", addr)
 
 		// HTTP address to return
@@ -163,14 +165,14 @@ func (c *InstallCommand) InstallKubernetes(
 		log.Info("http server ready", "httpAddr", addr)
 
 		// Set our advertise address
-		advertiseAddr.Addr = addr
+		advertiseAddr.Addr = grpcAddr
 		advertiseAddr.Tls = true
 		advertiseAddr.TlsSkipVerify = true
 
 		// If we want internal or we're a localhost address, we use the internal
 		// address. The "localhost" check is specifically for Docker for Desktop
 		// since pods can't reach this.
-		if c.advertiseInternal || strings.HasPrefix(addr, "localhost:") {
+		if c.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
 				c.config.ServiceName,
 				grpcPort,
@@ -180,7 +182,7 @@ func (c *InstallCommand) InstallKubernetes(
 		// Set our connection information
 		contextConfig = clicontext.Config{
 			Server: configpkg.Server{
-				Address:       addr,
+				Address:       grpcAddr,
 				Tls:           true,
 				TlsSkipVerify: true, // always for now
 			},
