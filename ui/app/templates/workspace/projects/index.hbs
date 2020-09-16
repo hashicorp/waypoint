@@ -1,11 +1,18 @@
+{{#if this.cli}}
+<div class="flash flash--success">
+  {{inline-svg "check-circle-fill" class="icon"}}
+  <p>Authenticated succesfully via the Waypoint CLI</p>
+</div>
+{{/if}}
+
 <PageHeader>
   <div class="title projects-title">
     <h1>Projects</h1>
     <small>
       {{#if @model.length}}
-        {{pluralize @model.length "project"}}
+      {{pluralize @model.length "project"}}
       {{else}}
-        No projects created yet
+      No projects created yet
       {{/if}}
     </small>
   </div>
@@ -13,23 +20,24 @@
 
 <div data-test-project-list=true>
   {{#each @model as |project|}}
-    <Card>
-      <LinkTo @route="workspace.projects.project" @model={{project.project}}>
-        <div class="row">
-          <IconTile @icon="folder-outline" @isSmall={{true}} />
-          <div class="meta">
-            <h2>{{project.project}}</h2>
-            {{!-- todo(pearkes): get full project objects from list api --}}
-            {{!-- <small>{{pluralize project.applicationsList.length "application"}}</small> --}}
-          </div>
+  <Card>
+    <LinkTo @route="workspace.projects.project" @model={{project.project}}>
+      <div class="row">
+        <IconTile @icon="folder-outline" @isSmall={{true}} />
+        <div class="meta">
+          <h2>{{project.project}}</h2>
+          {{!-- todo(pearkes): get full project objects from list api --}}
+          {{!-- <small>{{pluralize project.applicationsList.length "application"}}</small> --}}
         </div>
-      </LinkTo>
-    </Card>
+      </div>
+    </LinkTo>
+  </Card>
   {{else}}
-    <EmptyState>
-      <p>There are no projects to display yet</p>
-      <p>To create your first project, create a new application by running <code class="cmd">waypoint init</code> from the CLI</p>
-      <p>For more help getting started, refer to the <a href="#todo" target="_blank">Waypoint documentation</a></p>
-    </EmptyState>
+  <EmptyState>
+    <p>There are no projects to display yet</p>
+    <p>To create your first project, create a new application by running <code class="cmd">waypoint init</code> from the
+      CLI</p>
+    <p>For more help getting started, refer to the <a href="#todo" target="_blank">Waypoint documentation</a></p>
+  </EmptyState>
   {{/each}}
 </div>

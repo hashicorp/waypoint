@@ -3,6 +3,7 @@ import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import PollModelService from 'waypoint/services/poll-model';
+import ProjectsIndex from 'waypoint/controllers/workspaces/projects';
 
 export default class Index extends Route {
   @service api!: ApiService;
@@ -17,5 +18,10 @@ export default class Index extends Route {
 
   afterModel() {
     this.pollModel.setup(this);
+  }
+
+  resetController(controller: ProjectsIndex) {
+    // Clear the CLI parameter when we leave this route or update the model
+    controller.set('cli', null);
   }
 }
