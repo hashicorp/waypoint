@@ -1,8 +1,6 @@
 import './style.css'
 import '@hashicorp/nextjs-scripts/lib/nprogress/style.css'
-
 import NProgress from '@hashicorp/nextjs-scripts/lib/nprogress'
-import createConsentManager from '@hashicorp/nextjs-scripts/lib/consent-manager'
 import useAnchorLinkAnalytics from '@hashicorp/nextjs-scripts/lib/anchor-link-analytics'
 import Router from 'next/router'
 import HashiHead from '@hashicorp/react-head'
@@ -18,9 +16,6 @@ import Error from './_error'
 import { productName } from '../data/metadata'
 
 NProgress({ Router })
-const { ConsentManager, openConsentManager } = createConsentManager({
-  preset: 'oss',
-})
 
 function App({ Component, pageProps }) {
   useAnchorLinkAnalytics()
@@ -39,7 +34,7 @@ function App({ Component, pageProps }) {
               'https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap',
           },
         ]}
-        icon={[{ href: '/favicon.ico' }]}
+        icon={[{ href: '/favicon.svg' }]}
         preload={[
           { href: '/fonts/klavika/medium.woff2', as: 'font' },
           { href: '/fonts/gilmer/light.woff2', as: 'font' },
@@ -53,31 +48,28 @@ function App({ Component, pageProps }) {
           { href: '/fonts/dejavu/mono.woff2', as: 'font' },
         ]}
       />
-      {process.env.HASHI_ENV === 'production' ? (
-        <NextAuthProvider session={pageProps.session}>
-          <AuthGate>
-            <MegaNav product={productName} />
-            <ProductSubnav />
-            <div className="content">
-              <Component {...pageProps} />
-            </div>
-            <Footer openConsentManager={openConsentManager} />
-            <ConsentManager />
-            <AuthIndicator />
-          </AuthGate>
-        </NextAuthProvider>
-      ) : (
-        <>
-          <MegaNav product={productName} />
-          <ProductSubnav />
-          <div className="content">
-            <Component {...pageProps} />
-          </div>
-          <Footer openConsentManager={openConsentManager} />
-          <ConsentManager />
-        </>
-      )}
+      <ConditionalAuthProvider session={pageProps.session}>
+        <MegaNav product={productName} />
+        <ProductSubnav />
+        <div className="content">
+          <Component {...pageProps} />
+        </div>
+        <Footer />
+      </ConditionalAuthProvider>
     </ErrorBoundary>
+  )
+}
+
+function ConditionalAuthProvider({ children, session }) {
+  return process.env.HASHI_ENV === 'production' ? (
+    <NextAuthProvider session={session}>
+      <AuthGate>
+        {children}
+        <AuthIndicator />
+      </AuthGate>
+    </NextAuthProvider>
+  ) : (
+    <>{children}</>
   )
 }
 

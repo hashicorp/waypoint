@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export default function Footer({ openConsentManager }) {
+export default function Footer() {
   return (
     <footer className="g-footer">
       <div className="g-container">
@@ -8,7 +8,6 @@ export default function Footer({ openConsentManager }) {
           <Link href="/docs">
             <a>Docs</a>
           </Link>
-          <a onClick={openConsentManager}>Consent Manager</a>
         </div>
       </div>
     </footer>
