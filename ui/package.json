@@ -85,7 +85,6 @@
     "sass": "^1.26.10",
     "typescript": "^3.9.6",
     "ua-parser-js": "^0.7.21",
-    "waypoint-pb": "./lib/waypoint-pb",
     "webpack-bundle-analyzer": "^3.8.0"
   },
   "engines": {
@@ -100,6 +99,7 @@
     "ember-cli-typescript-blueprints": "^3.0.0",
     "google-protobuf": "^3.12.2",
     "grpc-web": "./lib/grpc-web",
+    "waypoint-pb": "./lib/waypoint-pb",
     "waypoint-client": "./lib/waypoint-client/"
   },
   "ember-addon": {}
