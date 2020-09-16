@@ -38,7 +38,7 @@ type InstallCommand struct {
 
 func (c *InstallCommand) InstallKubernetes(
 	ctx context.Context, st terminal.Status, log hclog.Logger,
-) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, int) {
+) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, int) {
 	// Decode our configuration
 	output, err := serverinstall.Render(&c.config)
 	if err != nil {
@@ -46,7 +46,7 @@ func (c *InstallCommand) InstallKubernetes(
 			"Error generating configuration: %s", err.Error(),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, 1
+		return nil, nil, "", 1
 	}
 
 	stdout, stderr, err := c.ui.OutputWriters()
@@ -60,7 +60,7 @@ func (c *InstallCommand) InstallKubernetes(
 			fmt.Fprint(stdout, "\n")
 		}
 
-		return nil, nil, 0
+		return nil, nil, "", 0
 	}
 
 	cmd := exec.Command("kubectl", "create", "-f", "-")
@@ -75,7 +75,7 @@ func (c *InstallCommand) InstallKubernetes(
 			terminal.WithErrorStyle(),
 		)
 
-		return nil, nil, 1
+		return nil, nil, "", 1
 	}
 
 	st.Update("Waiting for Kubernetes service to be ready...")
@@ -91,7 +91,7 @@ func (c *InstallCommand) InstallKubernetes(
 			"Error initializing kubernetes client: %s", err.Error(),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, 1
+		return nil, nil, "", 1
 	}
 
 	clientset, err := kubernetes.NewForConfig(clientconfig)
@@ -100,13 +100,16 @@ func (c *InstallCommand) InstallKubernetes(
 			"Error initializing kubernetes client: %s", err.Error(),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, 1
+		return nil, nil, "", 1
 	}
 
 	// Wait for our service to be ready
 	log.Info("waiting for server service to become ready")
 	var contextConfig clicontext.Config
 	var advertiseAddr pb.ServerConfig_AdvertiseAddr
+	var httpAddr string
+	var grpcAddr string
+
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 		svc, err := clientset.CoreV1().Services(c.config.Namespace).Get(
 			ctx, c.config.ServiceName, metav1.GetOptions{})
@@ -131,43 +134,55 @@ func (c *InstallCommand) InstallKubernetes(
 			return false, nil
 		}
 
-		// Get the port
-		var port int32
+		// Get the ports
+		var grpcPort int32
+		var httpPort int32
 		for _, spec := range svc.Spec.Ports {
 			if spec.Name == "grpc" {
-				port = spec.Port
+				grpcPort = spec.Port
+			}
+
+			if spec.Name == "http" {
+				httpPort = spec.Port
+			}
+
+			if httpPort != 0 && grpcPort != 0 {
 				break
 			}
 		}
-		if port == 0 {
+		if grpcPort == 0 || httpPort == 0 {
 			// If we didn't find the port, retry...
 			log.Trace("no port found on service, retrying")
 			return false, nil
 		}
 
-		// Set the address
-		addr = fmt.Sprintf("%s:%d", addr, port)
+		// Set the grpc address
+		grpcAddr = fmt.Sprintf("%s:%d", addr, grpcPort)
 		log.Info("server service ready", "addr", addr)
 
+		// HTTP address to return
+		httpAddr = fmt.Sprintf("%s:%d", addr, httpPort)
+		log.Info("http server ready", "httpAddr", addr)
+
 		// Set our advertise address
-		advertiseAddr.Addr = addr
+		advertiseAddr.Addr = grpcAddr
 		advertiseAddr.Tls = true
 		advertiseAddr.TlsSkipVerify = true
 
 		// If we want internal or we're a localhost address, we use the internal
 		// address. The "localhost" check is specifically for Docker for Desktop
 		// since pods can't reach this.
-		if c.advertiseInternal || strings.HasPrefix(addr, "localhost:") {
+		if c.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
 				c.config.ServiceName,
-				port,
+				grpcPort,
 			)
 		}
 
 		// Set our connection information
 		contextConfig = clicontext.Config{
 			Server: configpkg.Server{
-				Address:       addr,
+				Address:       grpcAddr,
 				Tls:           true,
 				TlsSkipVerify: true, // always for now
 			},
@@ -182,10 +197,10 @@ func (c *InstallCommand) InstallKubernetes(
 			errInstallRunning,
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, 1
+		return nil, nil, "", 1
 	}
 
-	return &contextConfig, &advertiseAddr, 0
+	return &contextConfig, &advertiseAddr, httpAddr, 0
 }
 
 func (c *InstallCommand) Run(args []string) int {
@@ -212,10 +227,11 @@ func (c *InstallCommand) Run(args []string) int {
 	defer st.Close()
 
 	var err error
+	var httpAddr string
 
 	switch c.platform {
 	case "docker":
-		contextConfig, advertiseAddr, err = serverinstall.InstallDocker(ctx, c.ui, st, &c.config)
+		contextConfig, advertiseAddr, httpAddr, err = serverinstall.InstallDocker(ctx, c.ui, st, &c.config)
 		if err != nil {
 			c.ui.Output(
 				"Error installing server into docker: %s", err.Error(),
@@ -226,7 +242,7 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 	case "kubernetes":
 		var code int
-		contextConfig, advertiseAddr, code = c.InstallKubernetes(ctx, st, log)
+		contextConfig, advertiseAddr, httpAddr, code = c.InstallKubernetes(ctx, st, log)
 		if code != 0 || c.showYaml {
 			return code
 		}
@@ -340,6 +356,7 @@ func (c *InstallCommand) Run(args []string) int {
 	c.ui.Output(outInstallSuccess,
 		c.contextName,
 		advertiseAddr.Addr,
+		httpAddr,
 		terminal.WithSuccessStyle(),
 	)
 	return 0
@@ -478,5 +495,6 @@ deployments. If this is incorrect, manually set it using the CLI command
 "waypoint server config-set".
 
 Advertise Address: %[2]s
+HTTP UI Address: %[3]s
 `)
 )
