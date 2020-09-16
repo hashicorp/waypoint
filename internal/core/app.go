@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/serverhistory"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
-	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -392,74 +391,4 @@ func (a *App) initComponent(
 	}
 
 	return nil
-}
-
-// initComponent initializes a component with the given factory and configuration
-// and then sets it on the value pointed to by target.
-func (a *App) componentDocs(
-	ctx context.Context,
-	typ component.Type,
-	target interface{},
-	f *factory.Factory,
-	cfg *config.Operation,
-) (*docs.Documentation, error) {
-	log := a.logger.Named(strings.ToLower(typ.String()))
-
-	// Before we do anything, the target should be a pointer. If so,
-	// then we get the value of the pointer so we can set it later.
-	targetV := reflect.ValueOf(target)
-	if targetV.Kind() != reflect.Ptr {
-		return nil, fmt.Errorf("target value should be a pointer")
-	}
-	targetV = reflect.Indirect(targetV)
-
-	// Get the factory function for this type
-	fn := f.Func(cfg.Use.Type)
-	if fn == nil {
-		return nil, fmt.Errorf("unknown type: %q", cfg.Use.Type)
-	}
-
-	// Create the data directory for this component
-	cdir, err := a.dir.Component(strings.ToLower(typ.String()), cfg.Use.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	// Call the factory to get our raw value (interface{} type)
-	result := fn.Call(argmapper.Typed(ctx, a.source, log, cdir))
-	if err := result.Err(); err != nil {
-		return nil, err
-	}
-	log.Info("initialized component", "type", typ.String())
-	raw := result.Out(0)
-
-	// If we have a plugin.Instance then we can extract other information
-	// from this plugin. We accept pure factories too that don't return
-	// this so we type-check here.
-	if pinst, ok := raw.(*plugin.Instance); ok {
-		raw = pinst.Component
-
-		// Plugins may contain their own dedicated mappers. We want to be
-		// aware of them so that we can map data to/from as necessary.
-		// These mappers become app-specific here so that other apps aren't
-		// affected by other plugins.
-		a.mappers = append(a.mappers, pinst.Mappers...)
-		log.Info("registered component-specific mappers", "len", len(pinst.Mappers))
-
-		// Store the closer
-		a.closers = append(a.closers, func() error {
-			pinst.Close()
-			return nil
-		})
-	}
-
-	// We have our value so let's make sure it is the correct type.
-	rawV := reflect.ValueOf(raw)
-	if !rawV.Type().AssignableTo(targetV.Type()) {
-		return nil, fmt.Errorf("component %s not assigntable to type %s", rawV.Type(), targetV.Type())
-	}
-
-	a.logger.Debug("calling docs on component", "type", hclog.Fmt("%T", raw))
-
-	return component.Documentation(raw)
 }

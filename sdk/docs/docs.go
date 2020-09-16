@@ -10,6 +10,17 @@ import (
 type Details struct {
 	Description string
 	Example     string
+
+	Input  string
+	Output string
+
+	Mappers []Mapper
+}
+
+type Mapper struct {
+	Input       string
+	Output      string
+	Description string
 }
 
 type FieldDocs struct {
@@ -26,7 +37,10 @@ type FieldDocs struct {
 type Documentation struct {
 	description string
 	example     string
+	input       string
+	output      string
 	fields      map[string]*FieldDocs
+	mappers     []Mapper
 }
 
 type Option func(*Documentation) error
@@ -141,6 +155,22 @@ func (d *Documentation) Description(x string) {
 	d.description = x
 }
 
+func (d *Documentation) Input(x string) {
+	d.input = x
+}
+
+func (d *Documentation) Output(x string) {
+	d.output = x
+}
+
+func (d *Documentation) AddMapper(input, output, description string) {
+	d.mappers = append(d.mappers, Mapper{
+		Input:       input,
+		Output:      output,
+		Description: description,
+	})
+}
+
 func (d *Documentation) SetField(name, synposis string, opts ...DocOption) error {
 	field, ok := d.fields[name]
 	if !ok {
@@ -176,6 +206,9 @@ func (d *Documentation) Details() *Details {
 	return &Details{
 		Example:     d.example,
 		Description: d.description,
+		Input:       d.input,
+		Output:      d.output,
+		Mappers:     d.mappers,
 	}
 }
 

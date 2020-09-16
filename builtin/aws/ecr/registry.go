@@ -164,6 +164,9 @@ func (r *Registry) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Store a docker image within an Elastic Container Registry on AWS")
 
+	doc.Input("docker.Image")
+	doc.Output("docker.Image")
+
 	doc.SetField(
 		"region",
 		"the AWS region the ECR repository is in",

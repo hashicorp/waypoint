@@ -45,6 +45,8 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Search for and return an existing AMI")
 
+	doc.Output("ami.Image")
+
 	doc.SetField(
 		"region",
 		"the AWS region to search in",

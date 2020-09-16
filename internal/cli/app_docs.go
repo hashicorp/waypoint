@@ -40,6 +40,28 @@ func (c *AppDocsCommand) basicFormat(name, ct string, doc *docs.Documentation) {
 		c.ui.Output("\n%s\n", dets.Description)
 	}
 
+	c.ui.Output("Interface:")
+
+	if dets.Input != "" {
+		c.ui.Output("  Input: **%s**", dets.Input)
+	}
+
+	if dets.Output != "" {
+		c.ui.Output("  Output: **%s**", dets.Output)
+	}
+
+	mappers := dets.Mappers
+
+	if len(mappers) > 0 {
+		c.ui.Output("Mappers:")
+
+		for _, m := range mappers {
+			c.ui.Output("  %s\n", m.Description)
+			c.ui.Output("  Input: **%s**\n", m.Input)
+			c.ui.Output("  Output: **%s**\n", m.Output)
+		}
+	}
+
 	for _, f := range doc.Fields() {
 		c.ui.NamedValues([]terminal.NamedValue{
 			{
@@ -79,6 +101,29 @@ func (c *AppDocsCommand) markdownFormat(name, ct string, doc *docs.Documentation
 		c.ui.Output("\n%s\n", dets.Description)
 	}
 
+	c.ui.Output("### Interface")
+
+	if dets.Input != "" {
+		c.ui.Output("* Input: **%s**", dets.Input)
+	}
+
+	if dets.Output != "" {
+		c.ui.Output("* Output: **%s**", dets.Output)
+	}
+
+	mappers := dets.Mappers
+
+	if len(mappers) > 0 {
+		c.ui.Output("")
+		c.ui.Output("### Mappers\n\n")
+
+		for _, m := range mappers {
+			c.ui.Output("#### %s\n", m.Description)
+			c.ui.Output("* Input: **%s**\n", m.Input)
+			c.ui.Output("* Output: **%s**\n", m.Output)
+		}
+	}
+
 	c.ui.Output("### Variables")
 
 	for _, f := range doc.Fields() {
@@ -98,6 +143,21 @@ func (c *AppDocsCommand) markdownFormat(name, ct string, doc *docs.Documentation
 	}
 }
 
+func (c *AppDocsCommand) humanize(s string) string {
+	s = strings.TrimLeft(s, " \n\t")
+	s = strings.TrimRight(s, ". \n\t")
+
+	if s == "" {
+		return s
+	}
+
+	s = strings.ToUpper(string(s[0])) + s[1:]
+
+	s += "."
+
+	return s
+}
+
 func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	w, err := os.Create(fmt.Sprintf("./website/pages/partials/components/%s-%s.mdx", ct, name))
 	if err != nil {
@@ -109,18 +169,40 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	dets := doc.Details()
 
 	if dets.Description != "" {
-		fmt.Fprintf(w, "%s\n\n", dets.Description)
+		fmt.Fprintf(w, "%s\n\n", c.humanize(dets.Description))
 	}
 
-	fmt.Fprintf(w, "### Variables\n")
+	fmt.Fprintf(w, "### Interface\n\n")
+
+	if dets.Input != "" {
+		fmt.Fprintf(w, "* Input: **%s**\n", dets.Input)
+	}
+
+	if dets.Output != "" {
+		fmt.Fprintf(w, "* Output: **%s**\n", dets.Output)
+	}
+
+	mappers := dets.Mappers
+
+	if len(mappers) > 0 {
+		fmt.Fprintf(w, "\n### Mappers\n\n")
+
+		for _, m := range mappers {
+			fmt.Fprintf(w, "#### %s\n", m.Description)
+			fmt.Fprintf(w, "* Input: **%s**\n", m.Input)
+			fmt.Fprintf(w, "* Output: **%s**\n", m.Output)
+		}
+	}
+
+	fmt.Fprintf(w, "\n### Variables\n")
 
 	for _, f := range doc.Fields() {
 		fmt.Fprintf(w, "\n#### %s\n", f.Field)
 
 		if f.Summary != "" {
-			fmt.Fprintf(w, "%s\n\n%s\n", f.Synopsis, f.Summary)
+			fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
 		} else {
-			fmt.Fprintf(w, "%s\n", f.Synopsis)
+			fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
 		}
 
 		fmt.Fprintf(w, "\n* Type: **%s**\n", f.Type)
@@ -135,7 +217,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	}
 
 	if dets.Example != "" {
-		fmt.Fprintf(w, "\n\n### Examples\n%s\n", dets.Example)
+		fmt.Fprintf(w, "\n\n### Examples\n%s\n", c.humanize(dets.Example))
 	}
 }
 

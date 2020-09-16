@@ -731,10 +731,19 @@ message Job {
       string default = 7;
     }
 
+    message MapperDocumentation {
+      string input = 1;
+      string output = 2;
+      string description = 3;
+    }
+
     message Documentation {
       string description = 1;
       string example = 2;
-      map<string, FieldDocumentation> fields = 3;
+      string input = 3;
+      string output = 4;
+      map<string, FieldDocumentation> fields = 5;
+      repeated MapperDocumentation mappers = 6;
     }
 
     message Result {

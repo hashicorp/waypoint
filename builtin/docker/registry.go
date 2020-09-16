@@ -156,6 +156,9 @@ func (r *Registry) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Push a Docker image to a Docker compatible registry")
 
+	doc.Input("docker.Image")
+	doc.Output("docker.Image")
+
 	doc.SetField(
 		"image",
 		"the image to push the local image to, fully qualified",

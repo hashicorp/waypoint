@@ -253,6 +253,9 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Deploy a container to Docker, local or remote")
 
+	doc.Input("docker.Image")
+	doc.Output("docker.Deployment")
+
 	doc.SetField(
 		"command",
 		"the command to run to start the application in the container",

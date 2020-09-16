@@ -155,6 +155,9 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Reconfigures the ECS specific ALB to route traffic to new deployments")
 
+	doc.Input("ecs.Deployment")
+	doc.Output("ecs.Release")
+
 	return doc, nil
 }
 

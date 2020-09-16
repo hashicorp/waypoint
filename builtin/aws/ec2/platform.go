@@ -375,6 +375,9 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Deploy the application into an AutoScaling Group on EC2")
 
+	doc.Input("ami.Image")
+	doc.Output("ec2.Deployment")
+
 	doc.SetField(
 		"region",
 		"the AWS region to deploy into",

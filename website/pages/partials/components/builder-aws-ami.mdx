@@ -1,34 +1,38 @@
 ## aws-ami (builder)
 
-Search for and return an existing AMI
+Search for and return an existing AMI.
+
+### Interface
+
+- Output: **ami.Image**
 
 ### Variables
 
 #### filters
 
-DescribeImage specific filters to search with
+DescribeImage specific filters to search with.
 
-the filters are always name => [value], but this api supports the ability to pass a single value as a convience. Non string values will be converted to strings
+The filters are always name => [value], but this api supports the ability to pass a single value as a convience. Non string values will be converted to strings.
 
 - Type: **map[string]interface {}**
 - **Optional**
 
 #### name
 
-the name of the AMI to search for, supports wildcards
+The name of the AMI to search for, supports wildcards.
 
 - Type: **string**
 - **Optional**
 
 #### owners
 
-the set of AMI owners to restrict the search to
+The set of AMI owners to restrict the search to.
 
 - Type: **[]string**
 - **Optional**
 
 #### region
 
-the AWS region to search in
+The AWS region to search in.
 
 - Type: **string**

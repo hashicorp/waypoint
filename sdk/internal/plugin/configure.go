@@ -123,6 +123,8 @@ func documentation(impl interface{}) (*pb.Config_Documentation, error) {
 	v := &pb.Config_Documentation{
 		Description: dets.Description,
 		Example:     dets.Example,
+		Input:       dets.Input,
+		Output:      dets.Output,
 		Fields:      make(map[string]*pb.Config_FieldDocumentation),
 	}
 
@@ -136,6 +138,14 @@ func documentation(impl interface{}) (*pb.Config_Documentation, error) {
 			EnvVar:   f.EnvVar,
 			Optional: f.Optional,
 		}
+	}
+
+	for _, m := range dets.Mappers {
+		v.Mappers = append(v.Mappers, &pb.Config_MapperDocumentation{
+			Input:       m.Input,
+			Output:      m.Output,
+			Description: m.Description,
+		})
 	}
 
 	return v, nil
@@ -156,6 +166,8 @@ func documentationCall(ctx context.Context, c configurableClient) (*docs.Documen
 
 	d.Example(resp.Example)
 	d.Description(resp.Description)
+	d.Input(resp.Input)
+	d.Output(resp.Output)
 
 	for _, f := range resp.Fields {
 		d.OverrideField(&docs.FieldDocs{
@@ -167,6 +179,10 @@ func documentationCall(ctx context.Context, c configurableClient) (*docs.Documen
 			Optional: f.Optional,
 			EnvVar:   f.EnvVar,
 		})
+	}
+
+	for _, m := range resp.Mappers {
+		d.AddMapper(m.Input, m.Output, m.Description)
 	}
 
 	return d, nil

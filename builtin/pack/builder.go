@@ -192,6 +192,14 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Create a Docker image using CloudNative Buildpacks")
 
+	doc.Input("component.Source")
+	doc.Output("pack.Image")
+	doc.AddMapper(
+		"pack.Image",
+		"docker.Image",
+		"Allow pack images to be used as normal docker images",
+	)
+
 	doc.SetField(
 		"disable_ceb",
 		"if set, the entrypoint binary won't be injected into the image",

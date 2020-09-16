@@ -60,6 +60,8 @@ func (r *Runner) executeDocsOp(
 		dets := docs.Details()
 		pbdocs.Description = dets.Description
 		pbdocs.Example = dets.Example
+		pbdocs.Input = dets.Input
+		pbdocs.Output = dets.Output
 		pbdocs.Fields = make(map[string]*pb.Job_DocsResult_FieldDocumentation)
 
 		fields := docs.Fields()
@@ -78,6 +80,14 @@ func (r *Runner) executeDocsOp(
 			pbf.EnvVar = f.EnvVar
 
 			pbdocs.Fields[f.Field] = &pbf
+		}
+
+		for _, m := range dets.Mappers {
+			pbdocs.Mappers = append(pbdocs.Mappers, &pb.Job_DocsResult_MapperDocumentation{
+				Input:       m.Input,
+				Output:      m.Output,
+				Description: m.Description,
+			})
 		}
 
 		result.Docs = &pbdocs

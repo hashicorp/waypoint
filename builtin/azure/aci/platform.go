@@ -455,6 +455,9 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Deploy a container to Azure Container Instances")
 
+	doc.Input("docker.Image")
+	doc.Output("aci.Deployment")
+
 	return doc, nil
 }
 

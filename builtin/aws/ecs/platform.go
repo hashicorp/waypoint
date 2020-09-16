@@ -1146,6 +1146,9 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Deploy the application into an ECS cluster on AWS")
 
+	doc.Input("docker.Image")
+	doc.Output("ecs.Deployment")
+
 	doc.SetField(
 		"region",
 		"the AWS region for the ECS cluster",

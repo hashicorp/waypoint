@@ -323,6 +323,14 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Release target groups by attaching them to an ALB")
 
+	doc.Input("alb.TargetGroup")
+	doc.Output("alb.Release")
+	doc.AddMapper(
+		"ec2.Deployment",
+		"alb.TargetGroup",
+		"Allow EC2 Deployments to be hooked up to an ALB",
+	)
+
 	doc.SetField(
 		"name",
 		"the name to assign the ALB",

@@ -1,74 +1,76 @@
 ## kubernetes (platform)
 
-Deploy the application into a Kubernetes cluster using Deployment objects
+Deploy the application into a Kubernetes cluster using Deployment objects.
+
+### Interface
 
 ### Variables
 
 #### context
 
-the kubectl context to use, as defined in the kubeconfig file
+The kubectl context to use, as defined in the kubeconfig file.
 
 - Type: **string**
 - **Optional**
 
 #### image_secret
 
-name of the Kubernetes secrete to use for the image
+Name of the Kubernetes secrete to use for the image.
 
-this references an existing secret, waypoint does not create this secret
+This references an existing secret, waypoint does not create this secret.
 
 - Type: **string**
 - **Optional**
 
 #### kubeconfig
 
-path to the kubeconfig file to use
+Path to the kubeconfig file to use.
 
-by default uses from current user's home directory
+By default uses from current user's home directory.
 
 - Type: **string**
 - **Optional**
 
 #### probe_path
 
-the HTTP path to request to test that the application is running
+The HTTP path to request to test that the application is running.
 
-without this, the test will simply be that the application has bound to the port
+Without this, the test will simply be that the application has bound to the port.
 
 - Type: **string**
 - **Optional**
 
 #### replicas
 
-the number of replicas to maintain
+The number of replicas to maintain.
 
-if the replica count is maintained outside waypoint, for instance by a pod autoscaler, do not set this variable
+If the replica count is maintained outside waypoint, for instance by a pod autoscaler, do not set this variable.
 
 - Type: **int32**
 - **Optional**
 
 #### scratch_path
 
-a path for the service to store temporary data
+A path for the service to store temporary data.
 
-a path to a directory that will be created for the service to store temporary data using tmpfs
+A path to a directory that will be created for the service to store temporary data using tmpfs.
 
 - Type: **string**
 - **Optional**
 
 #### static_environment
 
-environment variables to control broad modes of the application
+Environment variables to control broad modes of the application.
 
-environment variables that are meant to configure the application in a static way. This might be control an image that has mulitple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands
+Environment variables that are meant to configure the application in a static way. This might be control an image that has mulitple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.
 
 - Type: **map[string]string**
 - **Optional**
 
 ### Examples
 
-deploy "kubernetes" {
+Deploy "kubernetes" {
 image_secret = "registry_secret"
 count = 3
 probe_path = "/\_healthz"
-}
+}.

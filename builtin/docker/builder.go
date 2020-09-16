@@ -50,6 +50,9 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Build a Docker image using the `docker build` protocol")
 
+	doc.Input("component.Source")
+	doc.Output("docker.Image")
+
 	doc.SetField(
 		"disable_ceb",
 		"if set, the entrypoint binary won't be injected into the image",
