@@ -21,6 +21,7 @@ export default class Application extends Route {
     console.log(error);
 
     if (error.message.includes(ErrInvalidToken)) {
+      this.session.removeToken();
       this.transitionTo('auth');
     }
     return true;
