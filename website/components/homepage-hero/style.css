@@ -48,8 +48,8 @@
       margin: 8px;
 
       &.variant-primary {
-        border-color: #14c6cb;
-        background-color: #14c6cb;
+        border-color: var(--waypoint);
+        background-color: var(--waypoint);
       }
     }
   }
