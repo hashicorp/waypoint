@@ -23,6 +23,7 @@ func TestAppBuild_happy(t *testing.T) {
 	app := TestApp(t, TestProject(t,
 		WithConfig(config.TestConfig(t, testBuildConfig)),
 		WithFactory(component.BuilderType, factory),
+		WithJobInfo(&component.JobInfo{Id: "hello"}),
 	), "test")
 
 	// Setup our value
@@ -40,6 +41,9 @@ func TestAppBuild_happy(t *testing.T) {
 		// Verify that we set the status properly
 		require.Equal("foo", build.Labels["foo"])
 		require.Contains(build.Labels, "waypoint/workspace")
+
+		// Verify we have the ID set
+		require.Equal("hello", build.JobId)
 	}
 }
 

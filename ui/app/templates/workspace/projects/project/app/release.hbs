@@ -43,15 +43,5 @@
 </div>
 
 <div class="output-pane">
-  {{#if hasLogs}}
-    <div class="output">
-      <code>A line of output</code>
-      <code>Another line of output</code>
-    </div>
-  {{else}}
-    <EmptyState>
-      <p>Waiting for release output</p>
-      <p>Release logs will be displayed in a moment</p>
-    </EmptyState>
-  {{/if}}
+  <OperationLogs @jobId={{@model.jobId}} />
 </div>

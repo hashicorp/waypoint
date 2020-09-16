@@ -30,7 +30,7 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 	defer s.Close()
 
 	// Create an instance
-	instance := &Instance{Id: "A", DeploymentId: "A"}
+	instance := testInstance(t, nil)
 	require.NoError(s.InstanceCreate(instance))
 
 	{
@@ -69,7 +69,7 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 	require.Len(list, 2)
 
 	// Create another instance
-	instance = &Instance{Id: "B", DeploymentId: "A"}
+	instance = testInstance(t, &Instance{Id: "B", DeploymentId: "A"})
 	require.NoError(s.InstanceCreate(instance))
 
 	{

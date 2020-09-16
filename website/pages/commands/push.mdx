@@ -1,0 +1,31 @@
+---
+layout: commands
+page_title: 'Commands: Push'
+sidebar_title: 'push'
+description: 'Push a build's artifact to a registry'
+---
+
+# Waypoint Push
+
+Command: `waypoint push`
+
+Push a build's artifact to a registry
+
+@include "commands/push_desc.mdx"
+
+## Usage
+
+Usage: `waypoint push [options]`
+
+#### Global Options
+
+- `-workspace=<string>` - Workspace to operate in. Defaults to 'default'.
+
+#### Operation Options
+
+- `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
+- `-remote` - True to use a remote runner to execute. This defaults to false
+  unless 'runner.default' is set in your configuration.
+- `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
+
+@include "commands/push_more.mdx"

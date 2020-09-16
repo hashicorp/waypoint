@@ -92,7 +92,7 @@ Usage: waypoint server config-set [options]
   given via the startup file. This configuration is persisted in the server
   database.
 
-`
+` + c.Flags().Help()
 
 	return strings.TrimSpace(helpText)
 }

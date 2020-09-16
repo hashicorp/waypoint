@@ -86,6 +86,27 @@ func TestValidDeployment(t testing.T, src *pb.Deployment) *pb.Deployment {
 	return src
 }
 
+func TestValidRelease(t testing.T, src *pb.Release) *pb.Release {
+	t.Helper()
+
+	if src == nil {
+		src = &pb.Release{}
+	}
+
+	require.NoError(t, mergo.Merge(src, &pb.Release{
+		Application: &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: "default",
+		},
+		Status: testStatus(t),
+	}))
+
+	return src
+}
+
 func testStatus(t testing.T) *pb.Status {
 	pt, err := ptypes.TimestampProto(time.Now())
 	require.NoError(t, err)

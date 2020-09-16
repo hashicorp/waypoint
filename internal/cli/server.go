@@ -39,6 +39,10 @@ type ServerCommand struct {
 	flagDisableAuth bool
 	flagDisableUI   bool
 	flagURLInmem    bool
+
+	flagAdvertiseAddr          string
+	flagAdvertiseTLSEnabled    bool
+	flagAdvertiseTLSSkipVerify bool
 }
 
 func (c *ServerCommand) Run(args []string) int {
@@ -107,12 +111,20 @@ func (c *ServerCommand) Run(args []string) int {
 		}
 	}
 
+	// Set any server config
+	c.config.CEBConfig = &config.CEBConfig{
+		Addr:          c.flagAdvertiseAddr,
+		TLSEnabled:    c.flagAdvertiseTLSEnabled,
+		TLSSkipVerify: c.flagAdvertiseTLSSkipVerify,
+	}
+
 	// Create our server
 	impl, err := singleprocess.New(
 		singleprocess.WithDB(db),
 		singleprocess.WithConfig(&c.config),
 		singleprocess.WithLogger(log.Named("singleprocess")),
 	)
+
 	if err != nil {
 		c.ui.Output(
 			"Error initializing server: %s", err.Error(),
@@ -313,6 +325,27 @@ func (c *ServerCommand) Flags() *flag.Sets {
 			Target:  &c.config.URL.AutomaticAppHostname,
 			Usage:   "Whether apps automatically get a hostname on deploy.",
 			Default: true,
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "advertise-addr",
+			Target: &c.flagAdvertiseAddr,
+			Usage: "Address to advertise for the server. This is used by the entrypoints\n" +
+				"binaries to communicate back to the server. If this is blank, then\n" +
+				"the entrypoints will not communicate to the server. Features such as\n" +
+				"logs, exec, etc. will not work.",
+		})
+		f.BoolVar(&flag.BoolVar{
+			Name:    "advertise-tls",
+			Target:  &c.flagAdvertiseTLSEnabled,
+			Usage:   "If true, the advertised address should be connected to with TLS.",
+			Default: true,
+		})
+		f.BoolVar(&flag.BoolVar{
+			Name:    "advertise-tls-skip-verify",
+			Target:  &c.flagAdvertiseTLSSkipVerify,
+			Usage:   "Do not verify the TLS certificate presented by the server.",
+			Default: false,
 		})
 	})
 }

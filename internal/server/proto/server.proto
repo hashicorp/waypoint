@@ -50,6 +50,9 @@ service Waypoint {
   // ListDeployments returns the deployments.
   rpc ListDeployments(ListDeploymentsRequest) returns (ListDeploymentsResponse);
 
+  // ListInstances returns the running instances of deployments.
+  rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
+
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
 
@@ -129,6 +132,9 @@ service Waypoint {
 
   // GetRunner gets information about a single runner.
   rpc GetRunner(GetRunnerRequest) returns (Runner);
+
+  // GetServerConfig sets configuration for the Waypoint server.
+  rpc GetServerConfig(google.protobuf.Empty) returns (GetServerConfigResponse);
 
   // SetServerConfig sets configuration for the Waypoint server.
   rpc SetServerConfig(SetServerConfigRequest) returns (google.protobuf.Empty);
@@ -999,6 +1005,10 @@ message SetServerConfigRequest {
   ServerConfig config = 1;
 }
 
+message GetServerConfigResponse {
+  ServerConfig config = 1;
+}
+
 // ServerConfig is the configuration for the server that can be read and
 // set online. This differs from the configuration used to start the server
 // since some settings can only be set via the file vs. the API.
@@ -1195,6 +1205,9 @@ message Build {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 5;
+
+  // ID of the job that created this build. This may be empty.
+  string job_id = 9;
 }
 
 // Artifact is the result of a build or registry. This is the metadata only.
@@ -1292,6 +1305,9 @@ message PushedArtifact {
   // If include_build was set on the list request, this will include
   // the Build value associated with the given build_id.
   Build build = 10;
+
+  // ID of the job that created this. This may be empty.
+  string job_id = 11;
 }
 
 /********************************************************************
@@ -1300,6 +1316,10 @@ message PushedArtifact {
 
 message GetDeploymentRequest {
   Ref.Operation ref = 1;
+
+  // Inidicate of the fetched deployments should include additional information
+  // about each deployment.
+  Deployment.LoadDetails load_details = 2;
 }
 
 message UpsertDeploymentRequest {
@@ -1395,18 +1415,80 @@ message Deployment {
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 7;
 
+  // ID of the job that created this. This may be empty.
+  string job_id = 12;
+
   enum LoadDetails {
     NONE = 0;
     ARTIFACT = 1;
     BUILD = 2;
   }
 
-  // Populated when a Deployment is read with LoadDetails set
-  // to ARTIFACT or BUILD
-  PushedArtifact artifact = 11;
+  // This is the populated preload data. Most of this data can be retrieved
+  // through additional API calls or manually computed, but certain API
+  // calls will pre-populate some of these fields for convenience. The exact
+  // pre-populated fields depend on the API.
+  Preload preload = 11;
 
-  // Populated when a Deployment is read with LoadDetails set to BUILD
-  Build build = 12;
+  message Preload {
+    // Populated when a Deployment is read with LoadDetails set
+    // to ARTIFACT or BUILD
+    PushedArtifact artifact = 1;
+
+    // Populated when a Deployment is read with LoadDetails set to BUILD
+    Build build = 2;
+
+    // The deployment-specific URL from the URL service. This is set on
+    // all deployment API calls. This will be empty if the URL service
+    // is not enabled or there was an error loading this information.
+    string deploy_url = 3;
+  }
+}
+
+/********************************************************************
+* Instances
+********************************************************************/
+
+message ListInstancesRequest {
+  oneof scope {
+    // List instances for a specific deployment.
+    string deployment_id = 1;
+
+    // Find all instances for an application
+    Application application = 2;
+  }
+
+  message Application {
+    // Application to query. This must have both a project/app set.
+    Ref.Application application = 1;
+
+    // Workspace to filter by. If this isn't set, then all workspaces for
+    // the app are returned.
+    Ref.Workspace workspace = 2;
+  }
+}
+
+message ListInstancesResponse {
+  repeated Instance instances = 1;
+}
+
+// An instance is a single running process for a deployment. A deployment
+// may have many instances (for example Kubernetes ReplicaSets spawn many pods).
+// An instance is only represented if you're using the Waypoint Entrypoint.
+// Otherwise, the Waypoint server will never be notified of running instances.
+message Instance {
+  // id of the instance. This should be globally unique to your Waypoint
+  // installation but relies on the entrypoint being well behaved.
+  string id = 1;
+
+  // The ID of the deployment that this instance belongs to.
+  string deployment_id = 2;
+
+  // application that this instance belongs to
+  Ref.Application application = 3;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 4;
 }
 
 /********************************************************************
@@ -1433,6 +1515,10 @@ message GetLatestReleaseRequest {
 
   // workspace for the artifact, any workspace if empty
   Ref.Workspace workspace = 2;
+
+  // Load additional details about the release. These will become available
+  // in the Preload section.
+  Release.LoadDetails load_details = 3;
 }
 
 message ListReleasesRequest {
@@ -1454,6 +1540,10 @@ message ListReleasesRequest {
   // Specifies the order of results. If this isn't specified, the results
   // are in an undefined order.
   OperationOrder order = 2;
+
+  // Load additional details about the release. These will become available
+  // in the Preload section.
+  Release.LoadDetails load_details = 6;
 }
 
 message ListReleasesResponse {
@@ -1462,6 +1552,10 @@ message ListReleasesResponse {
 
 message GetReleaseRequest {
   Ref.Operation ref = 1;
+
+  // Load additional details about the release. These will become available
+  // in the Preload section.
+  Release.LoadDetails load_details = 2;
 }
 
 message Release {
@@ -1499,6 +1593,33 @@ message Release {
   // in use. After the release is not in use, this may still be set but
   // may no longer be valid.
   string url = 9;
+
+  // ID of the job that created this. This may be empty.
+  string job_id = 13;
+
+  // This is the populated preload data. Most of this data can be retrieved
+  // through additional API calls or manually computed, but certain API
+  // calls will pre-populate some of these fields for convenience. The exact
+  // pre-populated fields depend on the API.
+  Preload preload = 12;
+
+  enum LoadDetails {
+    NONE = 0;
+    DEPLOYMENT = 1;
+    ARTIFACT = 2;
+    BUILD = 3;
+  }
+
+  message Preload {
+    // Populated when LoadDetails is set.
+    Deployment deployment = 1;
+
+    // Populated when LoadDetails is set.
+    PushedArtifact artifact = 2;
+
+    // Populated when LoadDetails is set.
+    Build build = 3;
+  }
 }
 
 /********************************************************************
@@ -1506,8 +1627,18 @@ message Release {
 ********************************************************************/
 
 message GetLogStreamRequest {
-  // Deployment to request logs for.
-  string deployment_id = 1;
+  oneof scope {
+    // Deployment to request logs for.
+    string deployment_id = 1;
+
+    // Logs for a specific application in a workspace.
+    Application application = 2;
+  }
+
+  message Application {
+    Ref.Application application = 1;
+    Ref.Workspace workspace = 2;
+  }
 }
 
 message LogBatch {

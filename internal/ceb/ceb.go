@@ -19,6 +19,7 @@ import (
 const (
 	envDeploymentId        = "WAYPOINT_DEPLOYMENT_ID"
 	envServerAddr          = "WAYPOINT_SERVER_ADDR"
+	envServerRequired      = "WAYPOINT_SERVER_REQUIRED"
 	envServerTls           = "WAYPOINT_SERVER_TLS"
 	envServerTlsSkipVerify = "WAYPOINT_SERVER_TLS_SKIP_VERIFY"
 	envCEBToken            = "WAYPOINT_CEB_INVITE_TOKEN"
@@ -30,12 +31,13 @@ const (
 
 // CEB represents the state of a running CEB.
 type CEB struct {
-	id       string
-	logger   hclog.Logger
-	context  context.Context
-	client   pb.WaypointClient
-	childCmd *exec.Cmd
-	execIdx  int64
+	id           string
+	deploymentId string
+	logger       hclog.Logger
+	context      context.Context
+	client       pb.WaypointClient
+	childCmd     *exec.Cmd
+	execIdx      int64
 
 	cleanupFunc func()
 }
@@ -71,7 +73,7 @@ func Run(ctx context.Context, os ...Option) error {
 	}
 
 	ceb.logger.Info("entrypoint starting",
-		"deployment_id", cfg.DeploymentId,
+		"deployment_id", ceb.deploymentId,
 		"instance_id", ceb.id,
 		"args", cfg.ExecArgs,
 	)
@@ -96,7 +98,7 @@ func Run(ctx context.Context, os ...Option) error {
 
 	if ceb.client != nil {
 		// Get our configuration and start the long-running stream for it.
-		if err := ceb.initConfigStream(ctx, &cfg); err != nil {
+		if err := ceb.initConfigStream(ctx, &cfg, false); err != nil {
 			return err
 		}
 
@@ -144,10 +146,16 @@ func (ceb *CEB) cleanup(f func()) {
 	}
 }
 
+// DeploymentId returns the deployment ID that this CEB represents.
+func (ceb *CEB) DeploymentId() string {
+	return ceb.deploymentId
+}
+
 type config struct {
+	cebPtr              *CEB
 	ExecArgs            []string
-	DeploymentId        string
 	ServerAddr          string
+	ServerRequired      bool
 	ServerTls           bool
 	ServerTlsSkipVerify bool
 	InviteToken         string
@@ -177,11 +185,13 @@ func WithEnvDefaults() Option {
 		}
 
 		cfg.URLServicePort = port
-		cfg.DeploymentId = os.Getenv(envDeploymentId)
 		cfg.ServerAddr = os.Getenv(envServerAddr)
+		cfg.ServerRequired = os.Getenv(envServerRequired) != ""
 		cfg.ServerTls = os.Getenv(envServerTls) != ""
 		cfg.ServerTlsSkipVerify = os.Getenv(envServerTlsSkipVerify) != ""
 		cfg.InviteToken = os.Getenv(envCEBToken)
+
+		ceb.deploymentId = os.Getenv(envDeploymentId)
 
 		return nil
 	}
@@ -202,6 +212,15 @@ func WithExec(args []string) Option {
 func WithClient(client pb.WaypointClient) Option {
 	return func(ceb *CEB, cfg *config) error {
 		ceb.client = client
+		return nil
+	}
+}
+
+// withCEBValue is used by tests to get the CEB struct pointer from Run.
+// This is a nasty pattern but its encapsulated behind test helpers.
+func withCEBValue(cebCh chan<- *CEB) Option {
+	return func(ceb *CEB, cfg *config) error {
+		cebCh <- ceb
 		return nil
 	}
 }

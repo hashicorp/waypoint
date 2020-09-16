@@ -2,7 +2,8 @@ package docker
 
 import (
 	"context"
-
+	
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -10,6 +11,8 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/hashicorp/waypoint/sdk/component"
@@ -75,7 +78,11 @@ func (p *Platform) Deploy(
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
+	}
+
+	if p.config.ServicePort == 0 {
+		p.config.ServicePort = 3000
 	}
 
 	cli.NegotiateAPIVersion(ctx)
@@ -97,7 +104,7 @@ func (p *Platform) Deploy(
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to list Docker networks: %s", err)
 	}
 
 	if len(nets) == 0 {
@@ -112,7 +119,7 @@ func (p *Platform) Deploy(
 		})
 
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker network: %s", err)
 		}
 	}
 
@@ -120,7 +127,7 @@ func (p *Platform) Deploy(
 
 	s = sg.Add("Creating new container")
 
-	port := "3000"
+	port := fmt.Sprint(p.config.ServicePort)
 	np, err := nat.NewPort("tcp", port)
 	if err != nil {
 		return nil, err
@@ -177,13 +184,13 @@ func (p *Platform) Deploy(
 
 	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, name)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to create Docker container: %s", err)
 	}
 
 	s.Update("Starting container")
 	err = cli.ContainerStart(ctx, cr.ID, types.ContainerStartOptions{})
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "unable to start Docker container: %s", err)
 	}
 	s.Done()
 
@@ -240,6 +247,12 @@ type PlatformConfig struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+
+	// Port that your service is running on within the actual container.
+	// Defaults to port 3000. 
+	// TODO Evaluate if this should remain as a default 3000, should be a required field,
+	// or default to another port. 
+	ServicePort uint `hcl:"service_port,optional"`
 }
 
 var (

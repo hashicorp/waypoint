@@ -140,6 +140,11 @@ type LabelSet struct {
 // JobInfo is available to plugins to get information about the context
 // in which a job is executing.
 type JobInfo struct {
+	// Id is the ID of the job that is executing this plugin operation.
+	// If this is empty then it means that the execution is happening
+	// outside of a job.
+	Id string
+
 	// Local is true if the operation is running locally on a machine
 	// alongside the invocation. This can be used to determine if you can
 	// do things such as open browser windows, read user files, etc.

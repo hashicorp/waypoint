@@ -1,15 +1,5 @@
 <h3>Application logs</h3>
 
 <div class="output-pane">
-  {{#if hasLogs}}
-    <div class="output">
-      <code>A line of output</code>
-      <code>Another line of output</code>
-    </div>
-  {{else}}
-    <EmptyState>
-      <p>There are no logs to display for this app yet</p>
-      <p>Logs will be displayed when you run actions in the CLI such as <code class="inline">build</code>, <code class="inline">deploy</code> or <code class="inline">release</code></p>
-    </EmptyState>
-  {{/if}}
+  <LogStream @req={{@model}}></LogStream>
 </div>

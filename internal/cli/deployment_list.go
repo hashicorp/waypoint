@@ -162,27 +162,27 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 			if user, ok := b.Labels["common/user"]; ok {
 				details = append(details, "user:"+user)
-			} else if user, ok := b.Build.Labels["common/user"]; ok {
+			} else if user, ok := b.Preload.Build.Labels["common/user"]; ok {
 				details = append(details, "build-user:"+user)
 			}
 
-			if bp, ok := b.Build.Labels["common/languages"]; ok {
+			if bp, ok := b.Preload.Build.Labels["common/languages"]; ok {
 				details = append(details, niceLanguages(bp))
 			}
 
-			if img, ok := b.Build.Labels["common/image-id"]; ok {
+			if img, ok := b.Preload.Build.Labels["common/image-id"]; ok {
 				img = shortImg(img)
 
 				details = append(details, "image:"+img)
 			}
 
-			artdetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(b.Artifact.Sequence, b.Artifact.Id))
+			artdetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(b.Preload.Artifact.Sequence, b.Preload.Artifact.Id))
 			if len(details) == 0 {
 				details = append(details, artdetails)
 			} else if c.flagVerbose {
 				details = append(details,
 					artdetails,
-					fmt.Sprintf("build:%s", c.flagId.FormatId(b.Build.Sequence, b.Build.Id)))
+					fmt.Sprintf("build:%s", c.flagId.FormatId(b.Preload.Build.Sequence, b.Preload.Build.Id)))
 			}
 
 			if c.flagVerbose {
@@ -198,7 +198,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 					extraDetails = append(extraDetails, fmt.Sprintf("deployment.%s:%s", k, val))
 				}
 
-				for k, val := range b.Artifact.Labels {
+				for k, val := range b.Preload.Artifact.Labels {
 					if strings.HasPrefix(k, "waypoint/") {
 						continue
 					}
@@ -210,7 +210,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 					extraDetails = append(extraDetails, fmt.Sprintf("artifact.%s:%s", k, val))
 				}
 
-				for k, val := range b.Build.Labels {
+				for k, val := range b.Preload.Build.Labels {
 					if strings.HasPrefix(k, "waypoint/") {
 						continue
 					}
@@ -279,8 +279,8 @@ func (c *DeploymentListCommand) displayJson(deployments []*pb.Deployment) error 
 		i["physical_state"] = dep.State.String()
 		i["status"] = c.statusJson(dep.Status)
 		i["workspace"] = dep.Workspace.Workspace
-		i["artifact"] = c.artifactJson(dep.Artifact)
-		i["build"] = c.buildJson(dep.Build)
+		i["artifact"] = c.artifactJson(dep.Preload.Artifact)
+		i["build"] = c.buildJson(dep.Preload.Build)
 
 		output = append(output, i)
 	}

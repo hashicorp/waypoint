@@ -28,12 +28,18 @@ import (
 // TestServer starts a singleprocess server and returns the connected client.
 // We use t.Cleanup to ensure resources are automatically cleaned up.
 func TestServer(t testing.T, opts ...Option) pb.WaypointClient {
+	return server.TestServer(t, TestImpl(t, opts...))
+}
+
+// TestImpl returns the waypoint server implementation. This can be used
+// with server.TestServer. It is easier to just use TestServer directly.
+func TestImpl(t testing.T, opts ...Option) pb.WaypointServer {
 	impl, err := New(append(
 		[]Option{WithDB(testDB(t))},
 		opts...,
 	)...)
 	require.NoError(t, err)
-	return server.TestServer(t, impl)
+	return impl
 }
 
 // TestWithURLService is an Option for testing only that creates an

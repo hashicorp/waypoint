@@ -34,7 +34,6 @@ export default class BuildDetail extends Route {
     req.setRef(ref);
 
     let build = await this.api.client.getBuild(req, this.api.WithMeta());
-
     return build.toObject();
   }
 }

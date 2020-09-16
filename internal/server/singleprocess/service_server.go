@@ -25,3 +25,15 @@ func (s *service) SetServerConfig(
 
 	return &empty.Empty{}, nil
 }
+
+func (s *service) GetServerConfig(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.GetServerConfigResponse, error) {
+	cfg, err := s.state.ServerConfigGet()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetServerConfigResponse{Config: cfg}, nil
+}

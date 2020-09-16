@@ -85,6 +85,10 @@ func (p *Platform) Deploy(
 	}
 	jobclient := client.Jobs()
 
+	if p.config.ServicePort == 0 {
+		p.config.ServicePort = 3000
+	}
+
 	// Determine if we have a job that we manage already
 	job, _, err := jobclient.Info(result.Name, &api.QueryOptions{})
 	if strings.Contains(err.Error(), "job not found") {
@@ -97,7 +101,7 @@ func (p *Platform) Deploy(
 				DynamicPorts: []api.Port{
 					{
 						Label: "waypoint",
-						To:    3000,
+						To:    int(p.config.ServicePort),
 					},
 				},
 			},
@@ -115,7 +119,7 @@ func (p *Platform) Deploy(
 
 	// Build our env vars
 	env := map[string]string{
-		"PORT": "3000",
+		"PORT": fmt.Sprint(p.config.ServicePort),
 	}
 
 	for k, v := range p.config.StaticEnvVars {
@@ -204,6 +208,12 @@ type Config struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+
+	// Port that your service is running on within the actual container.
+	// Defaults to port 3000. 
+	// TODO Evaluate if this should remain as a default 3000, should be a required field,
+	// or default to another port. 
+	ServicePort uint `hcl:"service_port,optional"`
 }
 
 var (

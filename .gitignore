@@ -4,9 +4,12 @@ tmp/
 .waypoint/
 /waypoint
 /waypoint-entrypoint
+/pkg
 
 # System-specific
 .DS_Store
 
 # Default Waypoint database file
 data.db
+
+.vscode

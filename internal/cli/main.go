@@ -33,16 +33,18 @@ var (
 	// commonCommands are the commands that are deemed "common" and shown first
 	// in the CLI help output.
 	commonCommands = map[string]struct{}{
-		"build":   struct{}{},
-		"deploy":  struct{}{},
-		"release": struct{}{},
-		"up":      struct{}{},
+		"build":   {},
+		"deploy":  {},
+		"release": {},
+		"up":      {},
 	}
 
 	// hiddenCommands are not shown in CLI help output.
 	hiddenCommands = map[string]struct{}{
-		"plugin": struct{}{},
+		"plugin": {},
 	}
+
+	ExposeDocs bool
 )
 
 // Main runs the CLI with the given arguments and returns the exit code.
@@ -299,6 +301,16 @@ func Commands(
 	// register our aliases
 	for from, to := range aliases {
 		commands[from] = commands[to]
+	}
+
+	if ExposeDocs {
+		commands["docs"] = func() (cli.Command, error) {
+			return &DocsCommand{
+				baseCommand: baseCommand,
+				commands:    commands,
+				aliases:     aliases,
+			}, nil
+		}
 	}
 
 	return commands
