@@ -52,6 +52,7 @@ spec:
         - -vvv
         - -db=/data/data.db
         - -listen-grpc=0.0.0.0:9701
+        - -listen-http=0.0.0.0:9702
         ports:
         - containerPort: 9701
           name: grpc
@@ -79,4 +80,3 @@ spec:
       resources:
         requests:
           storage: 1Gi
-
