@@ -48,6 +48,15 @@ a[href].button {
     }
   }
 
+  &:disabled {
+    cursor: not-allowed;
+    color: color.$ui-gray-300;
+    text-shadow: none;
+    background: color.$ui-cool-gray-100;
+    border-color: color.$ui-cool-gray-200;
+    box-shadow: none;
+  }
+
   .icon {
     width: scale.$base;
     height: scale.$base;

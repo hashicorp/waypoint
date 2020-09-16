@@ -8,16 +8,15 @@
   </div>
   {{else}}
   <EmptyState>
-    <p>Waiting for input</p>
-    <p>You can run commands against the server by typing below</p>
+    <p>Coming soon</p>
+    <p>Currently under development, check back soon</p>
   </EmptyState>
   {{/if}}
 
   <div class="run-prompt">
     {{inline-svg "chevron-right" class="prompt-icon"}}
-    <input type="text" class="run-prompt-input" disabled="disabled"
-      placeholder="Currently under development, come back soon" />
-    <button class="button button--primary" disabled="disabled">
+    <input type="text" class="run-prompt-input" disabled />
+    <button class="button button--primary" disabled>
       {{inline-svg "sub-right" class="icon"}}
       <span>Run</span>
     </button>
