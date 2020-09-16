@@ -20,9 +20,9 @@
   <div class="item">
     {{#if (eq @model.state 1)}}
     <b class="badge">{{t 'state.deployment.pending'}}</b>
-    {{else if (eq @model.state 3)}}
+    {{else if (eq @model.state 2)}}
     <b class="badge badge--success">{{t 'state.deployment.success'}}</b>
-    {{else if (eq @model.state 4)}}
+    {{else if (eq @model.state 3)}}
     <b class="badge badge--error">{{t 'state.deployment.destroy'}}</b>
     {{/if}}
   </div>
