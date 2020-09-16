@@ -133,6 +133,7 @@ func (c *BuildListCommand) Help() string {
 	helpText := `
 Usage: waypoint artifact list-builds [options]
   List builds.
+  
 ` + c.Flags().Help()
 
 	return strings.TrimSpace(helpText)
