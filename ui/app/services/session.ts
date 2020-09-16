@@ -4,20 +4,29 @@ import ApiService from './api';
 
 export default class SessionService extends Service {
   @service api!: ApiService;
-  @tracked authConfigured = false;
+  @tracked authConfigured: boolean;
+
+  constructor(owner: any) {
+    super(owner);
+
+    this.authConfigured = false;
+    if (this.token) {
+      this.authConfigured = true;
+    }
+  }
 
   get token(): string {
     return window.localStorage.waypointAuthToken;
   }
 
   async setToken(value: string) {
-    window.localStorage.waypointAuthToken = value;
     this.authConfigured = true;
+    window.localStorage.waypointAuthToken = value;
   }
 
   async removeToken() {
-    window.localStorage.removeItem('waypointAuthToken');
     this.authConfigured = false;
+    window.localStorage.removeItem('waypointAuthToken');
   }
 }
 
