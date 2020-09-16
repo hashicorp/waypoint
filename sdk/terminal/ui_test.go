@@ -32,7 +32,7 @@ func TestNamedValues(t *testing.T) {
 
 `
 
-	require.Equal(expected, buf.String())
+	require.Equal(strings.TrimLeft(expected, "\n"), buf.String())
 }
 
 func TestNamedValues_server(t *testing.T) {
@@ -52,7 +52,6 @@ func TestNamedValues_server(t *testing.T) {
 
 	expected := `
 ==> Server configuration:
-
        DB Path: data.db
   gRPC Address: 127.0.0.1:1234
   HTTP Address: 127.0.0.1:1235
