@@ -3,7 +3,6 @@ import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
 import { inject as service } from '@ember/service';
 import { GetLogStreamRequest, LogBatch } from 'waypoint-pb';
-import { Status } from 'api-common-protos/google/rpc/status_pb';
 
 interface LogStreamArgs {
   req: GetLogStreamRequest;

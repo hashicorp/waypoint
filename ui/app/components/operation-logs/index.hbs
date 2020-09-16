@@ -1,0 +1,9 @@
+<div class="output">
+    {{#if this.lines}}
+    {{#each this.lines as |line|}}
+    <code>{{line}}</code>
+    {{/each}}
+    {{else}}
+    <code>No log output available</code>
+    {{/if}}
+</div>
