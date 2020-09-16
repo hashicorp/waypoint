@@ -46,7 +46,7 @@ func (c *InstallCommand) InstallKubernetes(
 			"Error generating configuration: %s", err.Error(),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, 1
+		return nil, nil, "", 1
 	}
 
 	stdout, stderr, err := c.ui.OutputWriters()
@@ -60,7 +60,7 @@ func (c *InstallCommand) InstallKubernetes(
 			fmt.Fprint(stdout, "\n")
 		}
 
-		return nil, nil, 0
+		return nil, nil, "", 0
 	}
 
 	cmd := exec.Command("kubectl", "create", "-f", "-")
@@ -75,7 +75,7 @@ func (c *InstallCommand) InstallKubernetes(
 			terminal.WithErrorStyle(),
 		)
 
-		return nil, nil, 1
+		return nil, nil, "", 1
 	}
 
 	st.Update("Waiting for Kubernetes service to be ready...")
@@ -91,7 +91,7 @@ func (c *InstallCommand) InstallKubernetes(
 			"Error initializing kubernetes client: %s", err.Error(),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, 1
+		return nil, nil, "", 1
 	}
 
 	clientset, err := kubernetes.NewForConfig(clientconfig)
@@ -100,7 +100,7 @@ func (c *InstallCommand) InstallKubernetes(
 			"Error initializing kubernetes client: %s", err.Error(),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, 1
+		return nil, nil, "", 1
 	}
 
 	// Wait for our service to be ready
