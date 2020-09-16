@@ -16,6 +16,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -253,6 +254,45 @@ type PlatformConfig struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port. 
 	ServicePort uint `hcl:"service_port,optional"`
+}
+
+func (p *Platform) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Deploy a container to Docker, local or remote")
+
+	doc.Input("docker.Image")
+	doc.Output("docker.Deployment")
+
+	doc.SetField(
+		"command",
+		"the command to run to start the application in the container",
+		docs.Default("the image entrypoint"),
+	)
+
+	doc.SetField(
+		"scratch_path",
+		"a path within the container to store temporary data",
+		docs.Summary(
+			"docker will mount a tmpfs at this path",
+		),
+	)
+
+	doc.SetField(
+		"static_environment",
+		"environment variables to expose to the application",
+		docs.Summary(
+			"these environment variables should not be run of the mill",
+			"configuration variables, use waypoint config for that.",
+			"These variables are used to control over all container modes,",
+			"such as configuring it to start a web app vs a background worker",
+		),
+	)
+
+	return doc, nil
 }
 
 var (

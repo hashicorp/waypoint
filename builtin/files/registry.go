@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/hashicorp/waypoint/internal/pkg/copy"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/oklog/ulid"
 )
@@ -52,4 +53,20 @@ func (r *Registry) Push(
 type Config struct {
 	// Path is the path that files are stored in
 	Path string `hcl:"path,attr"`
+}
+
+func (r *Registry) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&Config{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Copies files to a specific directory")
+
+	doc.SetField(
+		"path",
+		"the filesystem path to store the files into",
+	)
+
+	return doc, nil
 }

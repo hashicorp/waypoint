@@ -76,9 +76,9 @@ func (c *DocsCommand) genDocs(name string, cmd cli.Command) error {
 
 	fmt.Fprintf(w, `---
 layout: commands
-page_title: 'Commands: %s'
-sidebar_title: '%s'
-description: '%s'
+page_title: "Commands: %s"
+sidebar_title: "%s"
+description: "%s"
 ---
 
 `, capital, name, cmd.Synopsis())

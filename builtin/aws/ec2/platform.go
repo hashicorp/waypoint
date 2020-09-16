@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/ami"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -348,7 +349,7 @@ type PlatformConfig struct {
 	Count *countConfig `hcl:"count,block"`
 
 	// The type of instance to create
-	InstanceType string `hcl:"instance_type,optional"`
+	InstanceType string `hcl:"instance_type"`
 
 	// The key to associate with the instance
 	Key string `hcl:"key,optional"`
@@ -364,19 +365,76 @@ type PlatformConfig struct {
 
 	// Subnet to put the instance into. Defaults to a public subnet in the default VPC.
 	Subnet string `hcl:"subnet,optional"`
+}
 
-	// The command to run in the container
-	Command string `hcl:"command,optional"`
+func (p *Platform) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}))
+	if err != nil {
+		return nil, err
+	}
 
-	// Environment variables that are meant to configure the application in a static
-	// way. This might be control an image that has mulitple modes of operation,
-	// selected via environment variable. Most configuration should use the waypoint
-	// config commands.
-	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+	doc.Description("Deploy the application into an AutoScaling Group on EC2")
+
+	doc.Input("ami.Image")
+	doc.Output("ec2.Deployment")
+
+	doc.SetField(
+		"region",
+		"the AWS region to deploy into",
+	)
+
+	doc.SetField(
+		"count",
+		"how many EC2 instances to configure the ASG with",
+		docs.Summary(
+			"the fields here (desired, min, max) map directly to the typical ASG configuration",
+		),
+	)
+
+	doc.SetField(
+		"instance_type",
+		"the EC2 instance type to deploy",
+	)
+
+	doc.SetField(
+		"key",
+		"the name of an SSH Key to associate with the instances, as preconfigured in EC2",
+	)
+
+	doc.SetField(
+		"service_port",
+		"the TCP port on the instances that the app will be running on",
+	)
+
+	doc.SetField(
+		"extra_ports",
+		"additional TCP ports to allow into the EC2 instances",
+		docs.Summary(
+			"these additional ports are usually used to allow secondary services, such as ssh",
+		),
+	)
+
+	doc.SetField(
+		"security_groups",
+		"additional security groups to attached to the EC2 instances",
+		docs.Summary(
+			"this plugin creates security groups that match the above ports by default.",
+			"this field allows additional security groups to be specified for the instances",
+		),
+	)
+
+	doc.SetField(
+		"subnet",
+		"the subnet to place the instances into",
+		docs.Default("a public subnet in the dafault VPC"),
+	)
+
+	return doc, nil
 }
 
 var (
 	_ component.Platform     = (*Platform)(nil)
 	_ component.Configurable = (*Platform)(nil)
 	_ component.Destroyer    = (*Platform)(nil)
+	_ component.Documented   = (*Platform)(nil)
 )

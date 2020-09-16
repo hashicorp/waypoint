@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -214,6 +215,17 @@ type Config struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port. 
 	ServicePort uint `hcl:"service_port,optional"`
+}
+
+func (p *Platform) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&Config{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Deploy to a nomad cluster as a service using docker")
+
+	return doc, nil
 }
 
 var (

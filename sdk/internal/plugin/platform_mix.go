@@ -7,6 +7,7 @@ import (
 type mix_Platform_Authenticator struct {
 	component.Authenticator
 	component.ConfigurableNotify
+	component.Documented
 	component.Platform
 	component.PlatformReleaser
 	component.WorkspaceDestroyer
@@ -15,6 +16,7 @@ type mix_Platform_Authenticator struct {
 type mix_Platform_Destroy struct {
 	component.Authenticator
 	component.ConfigurableNotify
+	component.Documented
 	component.Platform
 	component.PlatformReleaser
 	component.Destroyer
@@ -24,6 +26,7 @@ type mix_Platform_Destroy struct {
 type mix_Platform_Log struct {
 	component.Authenticator
 	component.ConfigurableNotify
+	component.Documented
 	component.Platform
 	component.PlatformReleaser
 	component.LogPlatform
@@ -33,6 +36,7 @@ type mix_Platform_Log struct {
 type mix_Platform_Log_Destroy struct {
 	component.Authenticator
 	component.ConfigurableNotify
+	component.Documented
 	component.Platform
 	component.PlatformReleaser
 	component.LogPlatform

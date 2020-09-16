@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
@@ -117,6 +118,7 @@ func (p *ReleaseManagerPlugin) GRPCClient(
 		Authenticator:      authenticator,
 		Destroyer:          destroyer,
 		WorkspaceDestroyer: wsDestroyer,
+		Documented:         client,
 	}
 
 	return result, nil
@@ -137,6 +139,10 @@ func (c *releaseManagerClient) Config() (interface{}, error) {
 
 func (c *releaseManagerClient) ConfigSet(v interface{}) error {
 	return configureCall(context.Background(), c.client, v)
+}
+
+func (c *releaseManagerClient) Documentation() (*docs.Documentation, error) {
+	return documentationCall(context.Background(), c.client)
 }
 
 func (c *releaseManagerClient) ReleaseFunc() interface{} {
@@ -198,6 +204,13 @@ func (s *releaseManagerServer) ConfigStruct(
 	return configStruct(s.Impl)
 }
 
+func (s *releaseManagerServer) Documentation(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.Config_Documentation, error) {
+	return documentation(s.Impl)
+}
+
 func (s *releaseManagerServer) Configure(
 	ctx context.Context,
 	req *proto.Config_ConfigureRequest,
@@ -252,5 +265,6 @@ var (
 	_ proto.ReleaseManagerServer   = (*releaseManagerServer)(nil)
 	_ component.ReleaseManager     = (*releaseManagerClient)(nil)
 	_ component.Configurable       = (*releaseManagerClient)(nil)
+	_ component.Documented         = (*releaseManagerClient)(nil)
 	_ component.ConfigurableNotify = (*releaseManagerClient)(nil)
 )

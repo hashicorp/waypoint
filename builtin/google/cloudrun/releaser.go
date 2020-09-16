@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -124,6 +125,17 @@ func (r *Releaser) setNoAuthPolicy(
 
 // ReleaserConfig is the configuration structure for the Releaser.
 type ReleaserConfig struct{}
+
+func (r *Releaser) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&ReleaserConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Manipulates the Cloud Run apis to make deployments active")
+
+	return doc, nil
+}
 
 func (r *Release) URL() string { return r.Url }
 

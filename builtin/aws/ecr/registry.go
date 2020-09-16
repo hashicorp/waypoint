@@ -15,6 +15,8 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/hashicorp/waypoint/builtin/docker"
+	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/mattn/go-isatty"
 )
@@ -153,3 +155,39 @@ type Config struct {
 	// Tag is the tag to apply to the image.
 	Tag string `hcl:"tag,attr"`
 }
+
+func (r *Registry) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&Config{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Store a docker image within an Elastic Container Registry on AWS")
+
+	doc.Input("docker.Image")
+	doc.Output("docker.Image")
+
+	doc.SetField(
+		"region",
+		"the AWS region the ECR repository is in",
+	)
+
+	doc.SetField(
+		"repository",
+		"the ECR repository to store the image into",
+		docs.Summary(
+			"this ECR repository must already exist, waypoint will not create it",
+		),
+	)
+
+	doc.SetField(
+		"tag",
+		"the docker tag to assign to the new image",
+	)
+
+	return doc, nil
+}
+
+var (
+	_ component.Documented = (*Registry)(nil)
+)

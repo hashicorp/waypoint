@@ -1,0 +1,42 @@
+## docker (registry)
+
+Push a Docker image to a Docker compatible registry.
+
+### Interface
+
+- Input: **docker.Image**
+- Output: **docker.Image**
+
+### Variables
+
+#### encoded_auth
+
+The authentication information to log into the docker repository.
+
+WARNING: be very careful to not leak the authentication information by hardcoding it here. Use a helper function like `file()` to read the information from a file not stored in VCS.
+
+- Type: **string**
+- **Optional**
+
+#### image
+
+The image to push the local image to, fully qualified.
+
+This value must be the fully qualified name to the image. for example: gcr.io/waypoint-demo/demo.
+
+- Type: **string**
+
+#### local
+
+If set, the image will only be tagged locally and not pushed to a remote repository.
+
+- Type: **bool**
+- **Optional**
+
+#### tag
+
+The tag for the new image.
+
+This is added to image to provide the full image reference.
+
+- Type: **string**

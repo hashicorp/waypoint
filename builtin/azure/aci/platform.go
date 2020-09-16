@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
@@ -446,7 +447,22 @@ type GitRepoVolume struct {
 	Directory string `hcl:"directory,optional"`
 }
 
+func (p *Platform) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&Config{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Deploy a container to Azure Container Instances")
+
+	doc.Input("docker.Image")
+	doc.Output("aci.Deployment")
+
+	return doc, nil
+}
+
 var (
 	_ component.Platform     = (*Platform)(nil)
 	_ component.Configurable = (*Platform)(nil)
+	_ component.Documented   = (*Platform)(nil)
 )

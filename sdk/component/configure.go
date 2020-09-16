@@ -3,6 +3,7 @@ package component
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/waypoint/sdk/docs"
 )
 
 // Configurable can be optionally implemented by any compontent to
@@ -13,6 +14,14 @@ type Configurable interface {
 	// decoded configuration. If this returns nil, then it is as if
 	// Configurable was not implemented.
 	Config() (interface{}, error)
+}
+
+// Documented can be optionally implemented by any component to
+// return documentation about the component.
+type Documented interface {
+	// Documentation() returns a completed docs.Documentation struct
+	// describing the components configuration.
+	Documentation() (*docs.Documentation, error)
 }
 
 // ConfigurableNotify is an optional interface that can be implemented
@@ -77,4 +86,29 @@ func Configure(c interface{}, body hcl.Body, ctx *hcl.EvalContext) hcl.Diagnosti
 	// non-conformant to the schema.
 	_, diag := body.Content(&hcl.BodySchema{})
 	return diag
+}
+
+// Documentation returns the documentation for the given component.
+//
+// If c does not implement Documented, nil is returned.
+func Documentation(c interface{}) (*docs.Documentation, error) {
+	if d, ok := c.(Documented); ok {
+		return d.Documentation()
+	}
+
+	if c, ok := c.(Configurable); ok {
+		// Get the configuration value
+		v, err := c.Config()
+
+		// If there is no configuration structure for this component,
+		// then there is really no documentation, so just return an empty
+		// docs structure.
+		if err != nil || v == nil {
+			return docs.New()
+		}
+
+		return docs.New(docs.FromConfig(v))
+	}
+
+	return nil, nil
 }

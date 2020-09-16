@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/mattn/go-isatty"
 	"google.golang.org/grpc/codes"
@@ -39,6 +40,35 @@ type BuilderConfig struct {
 
 	// Controls whether or not the image should be build with buildkit or docker v1
 	UseBuildKit bool `hcl:"buildkit,optional"`
+}
+
+func (b *Builder) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&BuilderConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Build a Docker image using the `docker build` protocol")
+
+	doc.Input("component.Source")
+	doc.Output("docker.Image")
+
+	doc.SetField(
+		"disable_ceb",
+		"if set, the entrypoint binary won't be injected into the image",
+		docs.Summary(
+			"The entrypoint binary is what provides extended functionality",
+			"such as logs and exec. If it is not injected at build time",
+			"the expectation is that the image already contains it",
+		),
+	)
+
+	doc.SetField(
+		"buildkit",
+		"if set, use the buildkit builder from Docker",
+	)
+
+	return doc, nil
 }
 
 // Config implements Configurable

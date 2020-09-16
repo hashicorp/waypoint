@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/registry"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 	"github.com/mattn/go-isatty"
 	"google.golang.org/grpc/codes"
@@ -145,4 +146,50 @@ type Config struct {
 
 	// The docker specific encoded authentication string to use to talk to the registry.
 	EncodedAuth string `hcl:"encoded_auth,optional"`
+}
+
+func (r *Registry) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&Config{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Push a Docker image to a Docker compatible registry")
+
+	doc.Input("docker.Image")
+	doc.Output("docker.Image")
+
+	doc.SetField(
+		"image",
+		"the image to push the local image to, fully qualified",
+		docs.Summary(
+			"this value must be the fully qualified name to the image.",
+			"for example: gcr.io/waypoint-demo/demo",
+		),
+	)
+
+	doc.SetField(
+		"tag",
+		"the tag for the new image",
+		docs.Summary(
+			"this is added to image to provide the full image reference",
+		),
+	)
+
+	doc.SetField(
+		"local",
+		"if set, the image will only be tagged locally and not pushed to a remote repository",
+	)
+
+	doc.SetField(
+		"encoded_auth",
+		"the authentication information to log into the docker repository",
+		docs.Summary(
+			"WARNING: be very careful to not leak the authentication information",
+			"by hardcoding it here. Use a helper function like `file()` to read",
+			"the information from a file not stored in VCS",
+		),
+	)
+
+	return doc, nil
 }

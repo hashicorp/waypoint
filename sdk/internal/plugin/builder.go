@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/internal/funcspec"
 	"github.com/hashicorp/waypoint/sdk/internal/pluginargs"
 	"github.com/hashicorp/waypoint/sdk/internal/plugincomponent"
@@ -75,6 +76,7 @@ func (p *BuilderPlugin) GRPCClient(
 		ConfigurableNotify: client,
 		Builder:            client,
 		Authenticator:      authenticator,
+		Documented:         client,
 	}
 
 	return result, nil
@@ -95,6 +97,10 @@ func (c *builderClient) Config() (interface{}, error) {
 
 func (c *builderClient) ConfigSet(v interface{}) error {
 	return configureCall(context.Background(), c.client, v)
+}
+
+func (c *builderClient) Documentation() (*docs.Documentation, error) {
+	return documentationCall(context.Background(), c.client)
 }
 
 func (c *builderClient) BuildFunc() interface{} {
@@ -154,6 +160,13 @@ func (s *builderServer) Configure(
 	return configure(s.Impl, req)
 }
 
+func (s *builderServer) Documentation(
+	ctx context.Context,
+	empty *empty.Empty,
+) (*proto.Config_Documentation, error) {
+	return documentation(s.Impl)
+}
+
 func (s *builderServer) BuildSpec(
 	ctx context.Context,
 	args *proto.Empty,
@@ -196,5 +209,6 @@ var (
 	_ proto.BuilderServer          = (*builderServer)(nil)
 	_ component.Builder            = (*builderClient)(nil)
 	_ component.Configurable       = (*builderClient)(nil)
+	_ component.Documented         = (*builderClient)(nil)
 	_ component.ConfigurableNotify = (*builderClient)(nil)
 )

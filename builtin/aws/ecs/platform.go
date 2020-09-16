@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -350,7 +351,7 @@ func init() {
 		fargateResources[i] = append(fargateResources[i], 2048)
 	}
 
-	for i := 8192; i < 30720; i += 1024 {
+	for i := 8192; i <= 30720; i += 1024 {
 		fargateResources[i] = append(fargateResources[i], 4096)
 	}
 }
@@ -1135,4 +1136,142 @@ type Config struct {
 
 	// Configuration options for how the ALB will be configured.
 	ALB *ALBConfig `hcl:"alb,block"`
+}
+
+func (p *Platform) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&Config{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Deploy the application into an ECS cluster on AWS")
+
+	doc.Input("docker.Image")
+	doc.Output("ecs.Deployment")
+
+	doc.SetField(
+		"region",
+		"the AWS region for the ECS cluster",
+	)
+
+	doc.SetField(
+		"log_group",
+		"the CloudWatchLogs log group to store container logs into",
+		docs.Default("derived from the application name"),
+	)
+
+	doc.SetField(
+		"cluster",
+		"the name of the ECS cluster to deploy into",
+		docs.Summary(
+			"the ECS cluster that will run the application as a Service.",
+			"if there is no ECS cluster with this name, the ECS cluster will be",
+			"created and configured to use Fargate to run containers.",
+		),
+	)
+
+	doc.SetField(
+		"role_name",
+		"the name of the IAM role to use for ECS execution",
+		docs.Default("create a new IAM role based on the application name"),
+	)
+
+	doc.SetField(
+		"subnets",
+		"the VPC subnets to use for the application",
+		docs.Default("public subnets in the default VPC"),
+	)
+
+	doc.SetField(
+		"count",
+		"how many instances of the application should run",
+	)
+
+	doc.SetField(
+		"memory",
+		"how much memory to assign to the container running the application",
+		docs.Summary(
+			"when running in Fargate, this must be one of a few values, specified in MB:",
+			"512, 1024, 2048, 3072, 4096, 5120, and up to 16384 in increments of 1024.",
+			"The memory value also controls the possible values for cpu",
+		),
+	)
+
+	doc.SetField(
+		"ec2_cluster",
+		"indicate if the ECS cluster should be EC2 type rather than Fargate",
+		docs.Summary(
+			"this controls if we should verify the ECS cluster in EC2 type. The cluster",
+			"will not be created if it doesn't exist, only that there as existing cluster",
+			"this is using EC2 and not Fargate",
+		),
+	)
+
+	doc.SetField(
+		"alb.certificate",
+		"the ARN of an AWS Certificate Manager cert to associate with the ALB",
+	)
+
+	doc.SetField(
+		"alb.zone_id",
+		"Route53 ZoneID to create a DNS record into",
+		docs.Summary(
+			"set along with alb.domain_name to have DNS automatically setup for the ALB",
+		),
+	)
+
+	doc.SetField(
+		"alb.domain_name",
+		"Fully qualified domain name to set for the ALB",
+		docs.Summary(
+			"set along with zone_id to have DNS automatically setup for the ALB.",
+			"this value should include the full hostname and domain name, for instance",
+			"app.example.com",
+		),
+	)
+
+	doc.SetField(
+		"alb.listener_arn",
+		"the ARN on an existing ALB to configure",
+		docs.Summary(
+			"when this is set, no ALB or Listener is created. Instead the application is",
+			"configured by manipulating this existing Listener. This allows users to",
+			"configure their ALB outside waypoint but still have waypoint hook the application",
+			"to that ALB",
+		),
+	)
+
+	var memvals []int
+
+	for k := range fargateResources {
+		memvals = append(memvals, k)
+	}
+
+	sort.Ints(memvals)
+
+	var sb strings.Builder
+
+	for _, mem := range memvals {
+		cpu := fargateResources[mem]
+
+		var cpuVals []string
+
+		for _, c := range cpu {
+			cpuVals = append(cpuVals, strconv.Itoa(c))
+		}
+
+		fmt.Fprintf(&sb, "%dMB: %s\n", mem, strings.Join(cpuVals, ", "))
+	}
+
+	doc.SetField(
+		"cpu",
+		"how many cpu shares the container running the application is allowed",
+		docs.Summary(
+			"on Fargate, possible values for this are configured by the amount of memory",
+			"the container is using. Here is a complete listing of possible values:\n",
+			sb.String(),
+		),
+	)
+
+	return doc, nil
 }

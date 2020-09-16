@@ -18,6 +18,7 @@ service Platform {
 
   rpc ConfigStruct(google.protobuf.Empty) returns (Config.StructResp);
   rpc Configure(Config.ConfigureRequest) returns (google.protobuf.Empty);
+  rpc Documentation(google.protobuf.Empty) returns (Config.Documentation);
 
   rpc DeploySpec(Empty) returns (FuncSpec);
   rpc Deploy(FuncSpec.Args) returns (Deploy.Resp);

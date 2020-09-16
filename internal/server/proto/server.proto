@@ -475,7 +475,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 58 to 79; // future operation range
+  reserved 59 to 79; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -518,6 +518,7 @@ message Job {
     ReleaseOp release = 55;
     ValidateOp validate = 56;
     AuthOp auth = 57;
+    DocsOp docs = 58;
   }
 
   //-----------------------------------------------------------------
@@ -573,6 +574,7 @@ message Job {
     ReleaseResult release = 4;
     ValidateResult validate = 5;
     AuthResult auth = 6;
+    DocsResult docs = 7;
   }
 
   message DataSource {
@@ -710,7 +712,48 @@ message Job {
   message ReleaseResult {
     Release release = 1;
   }
+
+  message DocsOp {
+
+  }
+
+  message DocsResult {
+    // results are the list of components that were checked
+    repeated Result results = 1;
+
+    message Result {
+      // component that the docs are for
+      Component component = 1;
+      Documentation docs = 2;
+    }
+  }
 }
+    
+message Documentation {
+  string description = 1;
+  string example = 2;
+  string input = 3;
+  string output = 4;
+  map<string, Field> fields = 5;
+  repeated Mapper mappers = 6;
+
+  message Field {
+    string name = 1;
+    string synopsis = 2;
+    string summary = 3;
+    bool optional = 4;
+    string env_var = 5;
+    string type = 6;
+    string default = 7;
+  }
+
+  message Mapper {
+    string input = 1;
+    string output = 2;
+    string description = 3;
+  }
+}
+
 
 message GetJobRequest {
   // ID of the job to request.

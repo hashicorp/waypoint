@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -34,4 +35,15 @@ func (b *Builder) Build(
 	return &Files{
 		Path: src.Path,
 	}, nil
+}
+
+func (b *Builder) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&BuilderConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Simply generates a value representing a path on disk")
+
+	return doc, nil
 }

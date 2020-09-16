@@ -1,0 +1,76 @@
+## kubernetes (platform)
+
+Deploy the application into a Kubernetes cluster using Deployment objects.
+
+### Interface
+
+### Variables
+
+#### context
+
+The kubectl context to use, as defined in the kubeconfig file.
+
+- Type: **string**
+- **Optional**
+
+#### image_secret
+
+Name of the Kubernetes secrete to use for the image.
+
+This references an existing secret, waypoint does not create this secret.
+
+- Type: **string**
+- **Optional**
+
+#### kubeconfig
+
+Path to the kubeconfig file to use.
+
+By default uses from current user's home directory.
+
+- Type: **string**
+- **Optional**
+
+#### probe_path
+
+The HTTP path to request to test that the application is running.
+
+Without this, the test will simply be that the application has bound to the port.
+
+- Type: **string**
+- **Optional**
+
+#### replicas
+
+The number of replicas to maintain.
+
+If the replica count is maintained outside waypoint, for instance by a pod autoscaler, do not set this variable.
+
+- Type: **int32**
+- **Optional**
+
+#### scratch_path
+
+A path for the service to store temporary data.
+
+A path to a directory that will be created for the service to store temporary data using tmpfs.
+
+- Type: **string**
+- **Optional**
+
+#### static_environment
+
+Environment variables to control broad modes of the application.
+
+Environment variables that are meant to configure the application in a static way. This might be control an image that has mulitple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.
+
+- Type: **map[string]string**
+- **Optional**
+
+### Examples
+
+Deploy "kubernetes" {
+image_secret = "registry_secret"
+count = 3
+probe_path = "/\_healthz"
+}.

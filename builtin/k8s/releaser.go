@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -179,7 +180,55 @@ type ReleaserConfig struct {
 	NodePort int `hcl:"node_port,optional"`
 }
 
+func (r *Releaser) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&ReleaserConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Manipulates the Kubernetes Service activate Deployments")
+
+	doc.SetField(
+		"kubeconfig",
+		"path to the kubeconfig file to use",
+		docs.Summary("by default uses from current user's home directory"),
+		docs.EnvVar("KUBECONFIG"),
+	)
+
+	doc.SetField(
+		"context",
+		"the kubectl context to use, as defined in the kubeconfig file",
+	)
+
+	doc.SetField(
+		"load_balancer",
+		"indicates if the Kubernetes Service should LoadBalancer type",
+		docs.Summary(
+			"if the Kubernetes Service is not a LoadBalancer and node_port is not",
+			"set, then the Service uses ClusterIP",
+		),
+	)
+
+	doc.SetField(
+		"node_port",
+		"the TCP port that the Service should consume as a NodePort",
+		docs.Summary(
+			"if this is set but load_balancer is not, the service will be NodePort type,",
+			"but if load_balancer is also set, it will be LoadBalancer",
+		),
+	)
+
+	doc.SetField(
+		"port",
+		"the TCP port that the application is listening on",
+		docs.Default("80"),
+	)
+
+	return doc, nil
+}
+
 var (
 	_ component.ReleaseManager = (*Releaser)(nil)
 	_ component.Configurable   = (*Releaser)(nil)
+	_ component.Documented     = (*Releaser)(nil)
 )

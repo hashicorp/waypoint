@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -366,9 +367,85 @@ type Config struct {
 	ServicePort uint `hcl:"service_port,optional"`
 }
 
+func (p *Platform) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.FromConfig(&Config{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Deploy the application into a Kubernetes cluster using Deployment objects")
+
+	doc.Example(`
+deploy "kubernetes" {
+	image_secret = "registry_secret"
+	count = 3
+	probe_path = "/_healthz"
+}
+`)
+
+	doc.SetField(
+		"kubeconfig",
+		"path to the kubeconfig file to use",
+		docs.Summary("by default uses from current user's home directory"),
+		docs.EnvVar("KUBECONFIG"),
+	)
+
+	doc.SetField(
+		"context",
+		"the kubectl context to use, as defined in the kubeconfig file",
+	)
+
+	doc.SetField(
+		"replicas",
+		"the number of replicas to maintain",
+		docs.Summary(
+			"if the replica count is maintained outside waypoint,",
+			"for instance by a pod autoscaler, do not set this variable",
+		),
+	)
+
+	doc.SetField(
+		"probe_path",
+		"the HTTP path to request to test that the application is running",
+		docs.Summary(
+			"without this, the test will simply be that the application has bound to the port",
+		),
+	)
+
+	doc.SetField(
+		"scratch_path",
+		"a path for the service to store temporary data",
+		docs.Summary(
+			"a path to a directory that will be created for the service to store temporary data using tmpfs",
+		),
+	)
+
+	doc.SetField(
+		"image_secret",
+		"name of the Kubernetes secrete to use for the image",
+		docs.Summary(
+			"this references an existing secret, waypoint does not create this secret",
+		),
+	)
+
+	doc.SetField(
+		"static_environment",
+		"environment variables to control broad modes of the application",
+		docs.Summary(
+			"environment variables that are meant to configure the application in a static",
+			"way. This might be control an image that has mulitple modes of operation,",
+			"selected via environment variable. Most configuration should use the waypoint",
+			"config commands",
+		),
+	)
+
+	return doc, nil
+}
+
 var (
 	_ component.Platform         = (*Platform)(nil)
 	_ component.PlatformReleaser = (*Platform)(nil)
 	_ component.Configurable     = (*Platform)(nil)
+	_ component.Documented       = (*Platform)(nil)
 	_ component.Destroyer        = (*Platform)(nil)
 )
