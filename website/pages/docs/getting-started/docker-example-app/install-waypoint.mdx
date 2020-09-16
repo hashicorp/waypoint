@@ -8,23 +8,50 @@ description: |-
 
 # Install Waypoint
 
-## Precompiled Binaries
+<!-- Make this a partial -->
 
-To install the precompiled binary, download the appropriate package for your system. Waypoint is currently packaged as a zip file.
+Waypoint uses both a client and a server to build, deploy, and release applications.
 
-Once the zip is downloaded, unzip it into any directory. The `waypoint` binary inside is all that is necessary to run Waypoint (or `waypoint.exe` for Windows). No additional files are required to run Waypoint.
+<!-- Make this a partial -->
 
-Copy the binary to anywhere on your system. If you intend to access it from the command-line, make sure to place it somewhere on your [PATH](#path).
+## Download the Precompiled Binary
 
-Continue on to try using Waypoint to deploy an application.
+To install Waypoint, find the appropriate package for your system and download it as a zip archive.
 
-## Add Waypoint to Your Path ((#path))
+After downloading Waypoint, unzip the package into any directory. Waypoint runs as a single binary named `waypoint`. Any other files in the package can be safely removed and Waypoint will still function.
 
-Add Waypoint to your \$PATH to use the `waypoint` command
-without having to include the full directory path to the binary.
+Finally, make sure that the waypoint binary is available on your [PATH](#path).
 
-Run `echo $PATH` to see what is in your current \$PATH definition. If you do not have an entry for the Waypoint binary, add the following line to your shell profile:
+## Install the Waypoint Server
+
+In the Waypoint directory, install the Waypoint server to Docker Desktop on your computer.
+
+```shell
+ waypoint install -platform=docker
+```
+
+You may also install the server to a Kubernetes cluster. To learn more, see the getting started guide for [deploying an app to Kubernetes](docs/getting-started/k8s-example-app/install-waypoint) on AWS Elastic Kubernetes Service (EKS). This walkthrough shows you how to deploy the server and an example app to Kubernetes.
+
+<!-- Make this a partial -->
+
+When you deploy your app with Waypoint, your computer (the Waypoint client) connects to the Waypoint server to initiate the Waypoint workflow. Waypoint runs builds on the client computer and then sends the build artifacts, such as a Docker file, to the artifact registry of your choice. With Waypoint, multiple clients can concurrently connect to a single server to deploy and release applications.
+
+<!-- Make this a partial -->
+
+### How to Add Waypoint to Your Path ((#path))
+
+Add Waypoint to your `$PATH` to use the `waypoint` command without having to include the full directory path to the binary.
+
+See what is in your current `$PATH` definition.
+
+```shell
+$ echo $PATH
+```
+
+If you do not have an entry for the Waypoint binary, add the following line to your shell profile:
+
 `export PATH=$PATH:my-directory-path-to-waypoint-binary`
+
 For example: `export PATH=$PATH:~/enlistments/waypoint`
 
 - To determine your shell, run `echo $SHELL`
