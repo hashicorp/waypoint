@@ -41,6 +41,21 @@
   min-height: calc(100vh - 260px);
 }
 
+/* TODO, eventually remove: Temporary Waypoint Branding */
+.g-subnav {
+  & a.variant-primary {
+    border-color: #14c6cb;
+    background-color: #14c6cb;
+  }
+  & .g-subnav-inner {
+    & .style-menu-item {
+      & .text::after {
+        background: #14c6cb;
+      }
+    }
+  }
+}
+
 /*
  * About this selector:
  * `.g-subnav ~ *` finds all elements after the navigation.
