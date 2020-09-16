@@ -27,35 +27,47 @@ function App({ Component, pageProps }) {
 
   return (
     <ErrorBoundary FallbackComponent={Error}>
-      <NextAuthProvider session={pageProps.session}>
-        <HashiHead
-          is={Head}
-          title={`${productName} by HashiCorp`}
-          siteName={`${productName} by HashiCorp`}
-          description="Write your description here"
-          image="https://www.example.com/img/og-image.png"
-          stylesheet={[
-            {
-              href:
-                'https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap',
-            },
-          ]}
-          icon={[{ href: '/favicon.ico' }]}
-          preload={[
-            { href: '/fonts/klavika/medium.woff2', as: 'font' },
-            { href: '/fonts/gilmer/light.woff2', as: 'font' },
-            { href: '/fonts/gilmer/regular.woff2', as: 'font' },
-            { href: '/fonts/gilmer/medium.woff2', as: 'font' },
-            { href: '/fonts/gilmer/bold.woff2', as: 'font' },
-            { href: '/fonts/metro-sans/book.woff2', as: 'font' },
-            { href: '/fonts/metro-sans/regular.woff2', as: 'font' },
-            { href: '/fonts/metro-sans/semi-bold.woff2', as: 'font' },
-            { href: '/fonts/metro-sans/bold.woff2', as: 'font' },
-            { href: '/fonts/dejavu/mono.woff2', as: 'font' },
-          ]}
-        />
-
-        <AuthGate>
+      <HashiHead
+        is={Head}
+        title={`${productName} by HashiCorp`}
+        siteName={`${productName} by HashiCorp`}
+        description="Write your description here"
+        image="https://www.example.com/img/og-image.png"
+        stylesheet={[
+          {
+            href:
+              'https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap',
+          },
+        ]}
+        icon={[{ href: '/favicon.ico' }]}
+        preload={[
+          { href: '/fonts/klavika/medium.woff2', as: 'font' },
+          { href: '/fonts/gilmer/light.woff2', as: 'font' },
+          { href: '/fonts/gilmer/regular.woff2', as: 'font' },
+          { href: '/fonts/gilmer/medium.woff2', as: 'font' },
+          { href: '/fonts/gilmer/bold.woff2', as: 'font' },
+          { href: '/fonts/metro-sans/book.woff2', as: 'font' },
+          { href: '/fonts/metro-sans/regular.woff2', as: 'font' },
+          { href: '/fonts/metro-sans/semi-bold.woff2', as: 'font' },
+          { href: '/fonts/metro-sans/bold.woff2', as: 'font' },
+          { href: '/fonts/dejavu/mono.woff2', as: 'font' },
+        ]}
+      />
+      {process.env.HASHI_ENV === 'production' ? (
+        <NextAuthProvider session={pageProps.session}>
+          <AuthGate>
+            <MegaNav product={productName} />
+            <ProductSubnav />
+            <div className="content">
+              <Component {...pageProps} />
+            </div>
+            <Footer openConsentManager={openConsentManager} />
+            <ConsentManager />
+            <AuthIndicator />
+          </AuthGate>
+        </NextAuthProvider>
+      ) : (
+        <>
           <MegaNav product={productName} />
           <ProductSubnav />
           <div className="content">
@@ -63,9 +75,8 @@ function App({ Component, pageProps }) {
           </div>
           <Footer openConsentManager={openConsentManager} />
           <ConsentManager />
-          <AuthIndicator />
-        </AuthGate>
-      </NextAuthProvider>
+        </>
+      )}
     </ErrorBoundary>
   )
 }

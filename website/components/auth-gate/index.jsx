@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react'
 
 export default function AuthGate({ children }) {
   const [session, loading] = useSession()
-
   if (loading)
     return <InlineSvg className={styles.loadingIconSpin} src={LoadingIcon} />
   return session ? (
