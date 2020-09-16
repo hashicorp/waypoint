@@ -32,3 +32,4 @@ Resources
   * [www.waypointproject.io](https://www.waypointproject.io)
 * Contributing to Waypoint and Building Plugins
   * [Waypoint Developer Integration Guide](https://www.waypointproject.io/docs/future-link) -->
+
