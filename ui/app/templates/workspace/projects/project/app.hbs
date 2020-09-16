@@ -3,91 +3,91 @@
   (eq target.currentRouteName 'workspace.projects.project.app.deployment')
   (eq target.currentRouteName 'workspace.projects.project.app.release')
 )}}
-  <PageHeader @iconName="git-repository">
-    <div class="title">
-      <h1>{{@model.application.application}}</h1>
-      <small>
-        {{#if @model.releases.length}}
-          {{#if (eq @model.releases.[0].status.state 2)}}
-            Last released {{date-format-distance-to-now @model.releases.[0].status.completeTime.seconds}}
-          {{else}}
-            Release in progress...
-          {{/if}}
-        {{else}}
-          Not released yet
-        {{/if}}
-      </small>
-    </div>
-    <div class="actions">
+<PageHeader @iconName="git-repository">
+  <div class="title">
+    <h1>{{@model.application.application}}</h1>
+    <small>
       {{#if @model.releases.length}}
-        <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
+      {{#if (eq @model.releases.[0].status.state 2)}}
+      Last released {{date-format-distance-to-now @model.releases.[0].status.completeTime.seconds}}
       {{else}}
-        <div class="first-run-hint">
-          {{#if (and @model.builds.length @model.deployments.length)}}
-            <p>To create your first release from your latest deployment, run:</p>
-            <CopyableCode @ref="hint-release" @inline="true">
-              <code id="hint-release">waypoint release</code>
-            </CopyableCode>
-          {{else}}
-            <p>To create your first release, run the following to create a build, deployment and release:</p>
-            <CopyableCode @ref="hint-release" @inline="true">
-              <code id="hint-release">waypoint release</code>
-            </CopyableCode>
-          {{/if}}
-        </div>
+      Release in progress...
+      {{/if}}
+      {{else}}
+      Not released yet
+      {{/if}}
+    </small>
+  </div>
+  <div class="actions">
+    {{#if @model.releases.length}}
+    <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
+    {{else}}
+    <div class="first-run-hint">
+      {{#if (and @model.builds.length @model.deployments.length)}}
+      <p>To create your first release from your latest deployment, run:</p>
+      <CopyableCode @ref="hint-release" @inline="true">
+        <code id="hint-release">waypoint release</code>
+      </CopyableCode>
+      {{else}}
+      <p>To create your first release, run the following to create a build, deployment and release:</p>
+      <CopyableCode @ref="hint-release" @inline="true">
+        <code id="hint-release">waypoint up</code>
+      </CopyableCode>
       {{/if}}
     </div>
-  </PageHeader>
+    {{/if}}
+  </div>
+</PageHeader>
 
-  <div class="cards app-latest">
-    <div class="cards-wrap">
-      <div class="cards-inner">
-        <AppCard::Builds @builds={{@model.builds}} />
-        <AppCard::Deployments @deployments={{@model.deployments}} />
-        <AppCard::Releases @releases={{@model.releases}} />
-      </div>
+<div class="cards app-latest">
+  <div class="cards-wrap">
+    <div class="cards-inner">
+      <AppCard::Builds @builds={{@model.builds}} />
+      <AppCard::Deployments @deployments={{@model.deployments}} />
+      <AppCard::Releases @releases={{@model.releases}} />
     </div>
   </div>
+</div>
 
-  <nav>
-    <ul>
-      <li>
-        <LinkTo @route="workspace.projects.project.app.logs"
-          @models={{array @model.application.project @model.application.application }}>
-          {{inline-svg "page-outline" class="icon"}}
-          {{t "nav.logs"}}
-        </LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="workspace.projects.project.app.builds"
-          @models={{array @model.application.project @model.application.application }}>
-          {{inline-svg "build" class="icon"}}
-          {{t "nav.builds"}}
-        </LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="workspace.projects.project.app.deployments"
-          @models={{array @model.application.project @model.application.application }}>
-          {{inline-svg "upload" class="icon"}}
-          {{t "nav.deployments"}}
-        </LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="workspace.projects.project.app.releases"
-          @models={{array @model.application.project @model.application.application }}>
-          {{inline-svg "public-default" class="icon"}}
-          {{t "nav.releases"}}
-        </LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="workspace.projects.project.app.exec"
-          @models={{array @model.application.project @model.application.application }}>
-          {{inline-svg "exec" class="icon"}}
-          {{t "nav.exec"}}
-        </LinkTo>
-      </li>
-    </ul>
-  </nav>
+<nav>
+  <ul>
+    <li>
+      <LinkTo @route="workspace.projects.project.app.logs"
+        @models={{array @model.application.project @model.application.application }}>
+        {{inline-svg "page-outline" class="icon"}}
+        {{t "nav.logs"}}
+      </LinkTo>
+    </li>
+    <li>
+      <LinkTo @route="workspace.projects.project.app.builds"
+        @models={{array @model.application.project @model.application.application }}>
+        {{inline-svg "build" class="icon"}}
+        {{t "nav.builds"}}
+      </LinkTo>
+    </li>
+    <li>
+      <LinkTo @route="workspace.projects.project.app.deployments"
+        @models={{array @model.application.project @model.application.application }}>
+        {{inline-svg "upload" class="icon"}}
+        {{t "nav.deployments"}}
+      </LinkTo>
+    </li>
+    <li>
+      <LinkTo @route="workspace.projects.project.app.releases"
+        @models={{array @model.application.project @model.application.application }}>
+        {{inline-svg "public-default" class="icon"}}
+        {{t "nav.releases"}}
+      </LinkTo>
+    </li>
+    <li>
+      <LinkTo @route="workspace.projects.project.app.exec"
+        @models={{array @model.application.project @model.application.application }}>
+        {{inline-svg "exec" class="icon"}}
+        {{t "nav.exec"}}
+      </LinkTo>
+    </li>
+  </ul>
+</nav>
 {{/unless}}
 
 {{outlet}}
