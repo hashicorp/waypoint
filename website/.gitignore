@@ -3,3 +3,4 @@ node_modules
 .next
 out
 .mdx-data
+.env*.local

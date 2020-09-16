@@ -9,8 +9,11 @@ import HashiHead from '@hashicorp/react-head'
 import Head from 'next/head'
 import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
 import MegaNav from '@hashicorp/react-mega-nav'
-import ProductSubnav from '../components/subnav'
+import { Provider as NextAuthProvider } from 'next-auth/client'
+import ProductSubnav from 'components/subnav'
 import Footer from 'components/footer'
+import AuthIndicator from 'components/auth-indicator'
+import AuthGate from 'components/auth-gate'
 import Error from './_error'
 import { productName } from '../data/metadata'
 
@@ -24,39 +27,45 @@ function App({ Component, pageProps }) {
 
   return (
     <ErrorBoundary FallbackComponent={Error}>
-      <HashiHead
-        is={Head}
-        title={`${productName} by HashiCorp`}
-        siteName={`${productName} by HashiCorp`}
-        description="Write your description here"
-        image="https://www.example.com/img/og-image.png"
-        stylesheet={[
-          {
-            href:
-              'https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap',
-          },
-        ]}
-        icon={[{ href: '/favicon.ico' }]}
-        preload={[
-          { href: '/fonts/klavika/medium.woff2', as: 'font' },
-          { href: '/fonts/gilmer/light.woff2', as: 'font' },
-          { href: '/fonts/gilmer/regular.woff2', as: 'font' },
-          { href: '/fonts/gilmer/medium.woff2', as: 'font' },
-          { href: '/fonts/gilmer/bold.woff2', as: 'font' },
-          { href: '/fonts/metro-sans/book.woff2', as: 'font' },
-          { href: '/fonts/metro-sans/regular.woff2', as: 'font' },
-          { href: '/fonts/metro-sans/semi-bold.woff2', as: 'font' },
-          { href: '/fonts/metro-sans/bold.woff2', as: 'font' },
-          { href: '/fonts/dejavu/mono.woff2', as: 'font' },
-        ]}
-      />
-      <MegaNav product={productName} />
-      <ProductSubnav />
-      <div className="content">
-        <Component {...pageProps} />
-      </div>
-      <Footer openConsentManager={openConsentManager} />
-      <ConsentManager />
+      <NextAuthProvider session={pageProps.session}>
+        <HashiHead
+          is={Head}
+          title={`${productName} by HashiCorp`}
+          siteName={`${productName} by HashiCorp`}
+          description="Write your description here"
+          image="https://www.example.com/img/og-image.png"
+          stylesheet={[
+            {
+              href:
+                'https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap',
+            },
+          ]}
+          icon={[{ href: '/favicon.ico' }]}
+          preload={[
+            { href: '/fonts/klavika/medium.woff2', as: 'font' },
+            { href: '/fonts/gilmer/light.woff2', as: 'font' },
+            { href: '/fonts/gilmer/regular.woff2', as: 'font' },
+            { href: '/fonts/gilmer/medium.woff2', as: 'font' },
+            { href: '/fonts/gilmer/bold.woff2', as: 'font' },
+            { href: '/fonts/metro-sans/book.woff2', as: 'font' },
+            { href: '/fonts/metro-sans/regular.woff2', as: 'font' },
+            { href: '/fonts/metro-sans/semi-bold.woff2', as: 'font' },
+            { href: '/fonts/metro-sans/bold.woff2', as: 'font' },
+            { href: '/fonts/dejavu/mono.woff2', as: 'font' },
+          ]}
+        />
+
+        <AuthGate>
+          <MegaNav product={productName} />
+          <ProductSubnav />
+          <div className="content">
+            <Component {...pageProps} />
+          </div>
+          <Footer openConsentManager={openConsentManager} />
+          <ConsentManager />
+          <AuthIndicator />
+        </AuthGate>
+      </NextAuthProvider>
     </ErrorBoundary>
   )
 }
