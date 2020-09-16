@@ -16,7 +16,7 @@ export default function ProductSubnav() {
           text: 'GitHub',
           url: `https://www.github.com/hashicorp/${productSlug}`,
         },
-        { text: 'Download', url: '/downloads' },
+        { text: 'Download', url: 'https://go.hashi.co/waypoint-beta-binaries' },
       ]}
       currentPath={router.pathname}
       menuItemsAlign="right"

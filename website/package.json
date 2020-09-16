@@ -5,6 +5,7 @@
   "author": "HashiCorp",
   "dependencies": {
     "@hashicorp/nextjs-scripts": "11.1.1",
+    "@hashicorp/react-button": "^2.2.4",
     "@hashicorp/react-content": "4.0.2",
     "@hashicorp/react-docs-page": "5.0.0",
     "@hashicorp/react-global-styles": "4.4.2",
