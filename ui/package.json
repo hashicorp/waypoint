@@ -81,7 +81,7 @@
     "qunit-dom": "^1.2.0",
     "sass": "^1.26.10",
     "typescript": "^3.9.6",
-    "waypoint-pb": "./lib/waypoint-pb",
+    "waypoint-pb": "./lib/waypoint-pb/",
     "webpack-bundle-analyzer": "^3.8.0"
   },
   "engines": {

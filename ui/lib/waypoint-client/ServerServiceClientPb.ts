@@ -476,6 +476,46 @@ export class WaypointClient {
     this.methodInfoListDeployments);
   }
 
+  methodInfoListInstances = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.ListInstancesResponse,
+    (request: internal_server_proto_server_pb.ListInstancesRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.ListInstancesResponse.deserializeBinary
+  );
+
+  listInstances(
+    request: internal_server_proto_server_pb.ListInstancesRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListInstancesResponse>;
+
+  listInstances(
+    request: internal_server_proto_server_pb.ListInstancesRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.ListInstancesResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListInstancesResponse>;
+
+  listInstances(
+    request: internal_server_proto_server_pb.ListInstancesRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.ListInstancesResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/ListInstances',
+        request,
+        metadata || {},
+        this.methodInfoListInstances,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/ListInstances',
+    request,
+    metadata || {},
+    this.methodInfoListInstances);
+  }
+
   methodInfoGetDeployment = new grpcWeb.AbstractClientBase.MethodInfo(
     internal_server_proto_server_pb.Deployment,
     (request: internal_server_proto_server_pb.GetDeploymentRequest) => {
@@ -1055,6 +1095,46 @@ export class WaypointClient {
     this.methodInfoGetJob);
   }
 
+  methodInfo_ListJobs = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.ListJobsResponse,
+    (request: internal_server_proto_server_pb.ListJobsRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.ListJobsResponse.deserializeBinary
+  );
+
+  _ListJobs(
+    request: internal_server_proto_server_pb.ListJobsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListJobsResponse>;
+
+  _ListJobs(
+    request: internal_server_proto_server_pb.ListJobsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.ListJobsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListJobsResponse>;
+
+  _ListJobs(
+    request: internal_server_proto_server_pb.ListJobsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.ListJobsResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/_ListJobs',
+        request,
+        metadata || {},
+        this.methodInfo_ListJobs,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/_ListJobs',
+    request,
+    metadata || {},
+    this.methodInfo_ListJobs);
+  }
+
   methodInfoValidateJob = new grpcWeb.AbstractClientBase.MethodInfo(
     internal_server_proto_server_pb.ValidateJobResponse,
     (request: internal_server_proto_server_pb.ValidateJobRequest) => {
@@ -1152,6 +1232,46 @@ export class WaypointClient {
     request,
     metadata || {},
     this.methodInfoGetRunner);
+  }
+
+  methodInfoGetServerConfig = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.GetServerConfigResponse,
+    (request: google_protobuf_empty_pb.Empty) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.GetServerConfigResponse.deserializeBinary
+  );
+
+  getServerConfig(
+    request: google_protobuf_empty_pb.Empty,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetServerConfigResponse>;
+
+  getServerConfig(
+    request: google_protobuf_empty_pb.Empty,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.GetServerConfigResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetServerConfigResponse>;
+
+  getServerConfig(
+    request: google_protobuf_empty_pb.Empty,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.GetServerConfigResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetServerConfig',
+        request,
+        metadata || {},
+        this.methodInfoGetServerConfig,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetServerConfig',
+    request,
+    metadata || {},
+    this.methodInfoGetServerConfig);
   }
 
   methodInfoSetServerConfig = new grpcWeb.AbstractClientBase.MethodInfo(
