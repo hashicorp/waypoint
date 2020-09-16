@@ -2,21 +2,22 @@
 
 <div class="output-pane">
   {{#if hasExec}}
-    <div class="output">
-      <code>A line of output</code>
-      <code>Another line of output</code>
-    </div>
+  <div class="output">
+    <code>A line of output</code>
+    <code>Another line of output</code>
+  </div>
   {{else}}
-    <EmptyState>
-      <p>Waiting for input</p>
-      <p>You can run commands against the server by typing below</p>
-    </EmptyState>
+  <EmptyState>
+    <p>Waiting for input</p>
+    <p>You can run commands against the server by typing below</p>
+  </EmptyState>
   {{/if}}
 
   <div class="run-prompt">
     {{inline-svg "chevron-right" class="prompt-icon"}}
-    <input type="text" class="run-prompt-input" />
-    <button class="button button--primary">
+    <input type="text" class="run-prompt-input" disabled="disabled"
+      placeholder="Currently under development, come back soon" />
+    <button class="button button--primary" disabled="disabled">
       {{inline-svg "sub-right" class="icon"}}
       <span>Run</span>
     </button>
