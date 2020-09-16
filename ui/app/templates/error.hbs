@@ -1,3 +1,8 @@
-An error occurred
-
-<pre>{{@model.message}}</pre>
+<div class="flash flash--error">
+  <div class="flash-header">
+    {{inline-svg "alert-triangle" class="icon"}}
+    <p>An error occurred</p>
+  </div>
+  <hr />
+  <pre>{{@model.message}}</pre>
+</div>
