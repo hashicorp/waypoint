@@ -1,0 +1,32 @@
+---
+layout: docs
+page_title: Install Waypoint
+sidebar_title: Install Waypoint
+description: |-
+  How to install Waypoint
+---
+
+# Install Waypoint
+
+## Precompiled Binaries
+
+To install the precompiled binary, download the appropriate package for your system. Waypoint is currently packaged as a zip file.
+
+Once the zip is downloaded, unzip it into any directory. The `waypoint` binary inside is all that is necessary to run Waypoint (or `waypoint.exe` for Windows). No additional files are required to run Waypoint.
+
+Copy the binary to anywhere on your system. If you intend to access it from the command-line, make sure to place it somewhere on your [PATH](#path).
+
+Continue on to try using Waypoint to deploy an application.
+
+## Add Waypoint to Your Path ((#path))
+
+Add Waypoint to your \$PATH to use the `waypoint` command
+without having to include the full directory path to the binary.
+
+Run `echo $PATH` to see what is in your current \$PATH definition. If you do not have an entry for the Waypoint binary, add the following line to your shell profile:
+`export PATH=$PATH:my-directory-path-to-waypoint-binary`
+For example: `export PATH=$PATH:~/enlistments/waypoint`
+
+- To determine your shell, run `echo $SHELL`
+- If using Bash, use `nano ~/.bash_profile` to edit your Bash profile.
+- If using ZSH, use `nano ~/.zshrc` to edit your ZSH profile.
