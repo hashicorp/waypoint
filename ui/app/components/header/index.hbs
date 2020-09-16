@@ -1,0 +1,17 @@
+<header id="header">
+  <LinkTo @route="application" class="brand">
+    {{inline-svg "waypoint-logo" class="logo"}}
+    <span class="pds--visuallyHidden">{{t "product.name"}}</span>
+  </LinkTo>
+  <nav>
+    <a href="#" class="soon">
+      {{inline-svg "docs" class="nav-icon"}}
+      Documentation
+    </a>
+    {{#if canLogout}}
+      <Actions::Invite />
+    {{/if}}
+    <hr />
+    <Logout @canLogout={{canLogout}} />
+  </nav>
+</header>

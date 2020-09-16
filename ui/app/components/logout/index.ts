@@ -8,10 +8,6 @@ export default class Logout extends Component {
   @service session!: SessionService;
   @service router!: RouterService;
 
-  get canLogout() {
-    return this.session.authConfigured;
-  }
-
   @action
   async logout() {
     await this.session.removeToken();
