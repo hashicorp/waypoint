@@ -57,6 +57,8 @@ for the GitHub packages repository that hosts the image.
 
 First, you need to [create a personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) on GitHub.
 
+-> Note: The Personal Access Token must have `read:packages` permissions to be able to access the Docker repository.
+
 Then, save the token to a file named `TOKEN.txt`. We will read this token when creating the Kubernetes secret. Ensure `kubectl`
 is configured to interact with the correct Kubernetes cluster, and then run the following command:
 
