@@ -45,6 +45,7 @@
     "linkcheck": "linkcheck <website url>",
     "lint": "next-hashicorp lint",
     "start": "rm -rf .next/cache/next-babel-loader/ && next dev",
+    "dev:auth": "HASHI_ENV=production npm start",
     "static": "npm run build && npm run export && cp _redirects out/."
   }
 }

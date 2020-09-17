@@ -4,9 +4,14 @@ import InlineSvg from '@hashicorp/react-inline-svg'
 import styles from './auth-gate.module.css'
 import Button from '@hashicorp/react-button'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
+import SigninErrorPage from 'pages/signin-error'
 
 export default function AuthGate({ children }) {
   const [session, loading] = useSession()
+  const { query } = useRouter()
+  if (query.error) return <SigninErrorPage />
+
   if (loading)
     return <InlineSvg className={styles.loadingIconSpin} src={LoadingIcon} />
   return session ? (
