@@ -384,6 +384,122 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Deploy a container to Google Cloud Run")
+	doc.Example(
+		`
+project = "wpmini"
+
+app "wpmini" {
+  labels = {
+    "service" = "wpmini",
+    "env"     = "dev"
+  }
+
+  build {
+    use "pack" {}
+
+    registry {
+      use "docker" {
+        image = "gcr.io/waypoint-project-id/wpmini"
+        tag   = "latest"
+      }
+    }
+  }
+
+  deploy {
+    use "google-cloud-run" {
+      project  = "waypoint-project-id"
+      location = "europe-north1"
+
+      port = 5000
+
+      static_environment = {
+        "NAME" : "World"
+      }
+
+      capacity {
+        memory                     = 128
+        cpu_count                  = 2
+        max_requests_per_container = 10
+        request_timeout            = 300
+      }
+
+      auto_scaling {
+        max = 10
+      }
+    }
+  }
+
+  release {
+    use "google-cloud-run" {}
+  }
+}
+`)
+
+	doc.SetField(
+		"project",
+		"GCP project ID where the Cloud Run instance will be deployed.",
+	)
+
+	doc.SetField(
+		"location",
+		"GCP location, e.g. europe-north-1.",
+	)
+
+	doc.SetField(
+		"unauthenticated",
+		"Is public unauthenticated access allowed for the Cloud Run instance?",
+	)
+
+	doc.SetField(
+		"port",
+		"The port your application listens on.",
+	)
+
+	doc.SetField(
+		"static_environment",
+		"Additional environment variables to be added to the Cloud Run instance.",
+	)
+
+	doc.SetField(
+		"capacity",
+		"CPU, Memory, and resource limits for each Cloud Run instance.",
+	)
+
+	doc.SetField(
+		"capacity.memory",
+		"Memory to allocate the Cloud Run instance specified in MB, min 128, max 4096.",
+		docs.Default("128"),
+	)
+
+	doc.SetField(
+		"capacity.cpu_count",
+		"Number of CPUs to allocate the Cloud Run instance, min 1, max 2.",
+		docs.Default("1"),
+	)
+
+	doc.SetField(
+		"capacity.request_timeout",
+		"Maximum time a request can take before timing out, max 900.",
+		docs.Default("300"),
+	)
+
+	doc.SetField(
+		"capacity.max_requests_per_container",
+		"Maximum number of concurrent requests each instance can handle. When the maximum requests are exceeded, Cloud Run will create an additional instance.",
+		docs.Default("80"),
+	)
+
+	doc.SetField(
+		"auto_scaling",
+		"Configuration to control the auto scaling parameters for Cloud Run.",
+	)
+
+	doc.SetField(
+		"auto_scaling.max",
+		`Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.
+		This parameter controls the maximum number of instances that can be created.`,
+		docs.Default("1000"),
+	)
 
 	return doc, nil
 }
