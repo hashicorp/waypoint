@@ -1,5 +1,5 @@
-import NextAuth from "next-auth";
-import Providers from "next-auth/providers";
+import NextAuth from 'next-auth'
+import Providers from 'next-auth/providers'
 
 const options = {
   // Configure one or more authentication providers
@@ -10,6 +10,9 @@ const options = {
       domain: process.env.OKTA_DOMAIN,
     }),
   ],
-};
+  pages: {
+    error: '/signin-error', // Error code passed in query string as ?error=
+  },
+}
 
-export default (req, res) => NextAuth(req, res, options);
+export default (req, res) => NextAuth(req, res, options)
