@@ -5,6 +5,11 @@ export default [
     type: 'inbound',
   },
   {
+    text: 'CLI',
+    url: '/commands',
+    type: 'inbound',
+  },
+  {
     text: 'Community',
     url: '/community',
     type: 'inbound',

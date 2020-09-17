@@ -8,7 +8,6 @@ import Head from 'next/head'
 import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
 import { Provider as NextAuthProvider } from 'next-auth/client'
 import ProductSubnav from 'components/subnav'
-import Footer from 'components/footer'
 import AuthIndicator from 'components/auth-indicator'
 import AuthGate from 'components/auth-gate'
 import Error from './_error'
@@ -52,7 +51,6 @@ function App({ Component, pageProps }) {
         <div className="content">
           <Component {...pageProps} />
         </div>
-        <Footer />
       </ConditionalAuthProvider>
     </ErrorBoundary>
   )

@@ -1,5 +1,4 @@
 export default [
-  'index',
   'artifact-build',
   'artifact-list-builds',
   'artifact-list',

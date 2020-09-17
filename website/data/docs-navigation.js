@@ -37,6 +37,4 @@ export default [
     ],
   },
   'troubleshooting',
-  '---',
-  { title: 'External Link', href: 'https://www.hashicorp.com' },
 ]
