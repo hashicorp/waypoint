@@ -5,11 +5,12 @@ import * as build from './services/build';
 import * as project from './services/project';
 import * as deployment from './services/deployment';
 import * as token from './services/token';
+import * as inviteToken from './services/invite-token';
 import * as release from './services/release';
 
 export default function (this: Server) {
   this.namespace = 'hashicorp.waypoint.Waypoint';
-  this.urlPrefix = 'http://127.0.0.1:1235/grpc';
+  this.urlPrefix = '/grpc';
   this.timing = 0;
 
   this.pretender.prepareHeaders = (headers) => {
@@ -27,6 +28,7 @@ export default function (this: Server) {
   this.post('/ListProjects', project.list);
   this.post('/GetProject', project.get);
   this.post('/ConvertInviteToken', token.create);
+  this.post('/GenerateInviteToken', inviteToken.create);
   this.post('/ListReleases', release.list);
   this.post('/GetRelease', release.get);
 
