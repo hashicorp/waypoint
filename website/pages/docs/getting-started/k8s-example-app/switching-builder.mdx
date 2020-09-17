@@ -8,7 +8,9 @@ description: |-
 
 In Waypoint we have 2 builder types, the `pack` builder and the `docker` builder. For users who already have a Dockerfile configured to run their application, the Docker builder provides some great flexibility.
 
-In this sample directory we've included 2 files, a default `Dockerfile` and an `nginx/default.conf` that contains the necessary information for NGINX hosting our application. If you inspect these files, you'll note that they are both set to run our application on port 80, which is different than the default of port that the pack builder uses.
+In this sample directory we've included 2 files, a default `Dockerfile` and an `nginx/default.conf` that contains the necessary information for NGINX hosting our application. If you inspect these files,
+you'll note that they are both set to run our application on port 80, which is different than the default of port that the pack builder uses. As part of updating our `build` process, we also need to set the
+necessary changes to the rest of the `waypoint.hcl` file to support the new build.
 
 Access the `waypoint.hcl` file and update it with the following `build` and `deploy` configuration to switch the builder to docker, and update the containers service port to port 80.
 
