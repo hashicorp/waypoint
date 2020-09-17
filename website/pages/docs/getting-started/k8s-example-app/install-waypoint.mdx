@@ -61,7 +61,7 @@ Then, save the token to a file named `TOKEN.txt`. We will read this token when c
 is configured to interact with the correct Kubernetes cluster, and then run the following command:
 
 ```
-$ kubectl create secret docker-registry github --docker-server=https://docker.pkg.github.com --docker-username=GITHUBUSERNAME --docker-password="$(< TOKEN.txt)" --docker-email=GITHUBEMAIL
+$ kubectl create secret docker-registry github --docker-server=docker.pkg.github.com --docker-username=GITHUBUSERNAME --docker-password="$(< TOKEN.txt)" --docker-email=GITHUBEMAIL
 ```
 
 When you run Waypoint install, it defaults to using an image hosted on the GitHub Docker registry.
