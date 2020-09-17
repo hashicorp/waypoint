@@ -512,8 +512,50 @@ deploy "azure-container-instance" {
 	)
 
 	doc.SetField(
+		"capacity.memory",
+		"memory to allocate the container specified in MB, min 1024, max based on resource availability of the region.",
+		docs.Default("1024"),
+	)
+
+	doc.SetField(
+		"capacity.cpu",
+		"number of CPUs to allocate the container, min 1, max based on resource availability of the region.",
+		docs.Default("1"),
+	)
+
+	doc.SetField(
 		"volumes",
 		"the volume details for the container",
+	)
+
+	doc.SetField(
+		"volumes",
+		"the volume details for the container",
+	)
+
+	doc.SetField(
+		"volumes.volume.name",
+		"the name of the volume to mount into the container",
+	)
+
+	doc.SetField(
+		"volumes.volume.path",
+		"the path to mount the volume to in the container",
+	)
+
+	doc.SetField(
+		"volumes.volume.read_only",
+		"specify if the volume is read only",
+	)
+
+	doc.SetField(
+		"volumes.volume.azure_file_share",
+		"the details for the Azure file share volume",
+	)
+
+	doc.SetField(
+		"volumes.volume.git_repo",
+		"the details for GitHub repo to mount as a volume",
 	)
 
 	doc.Input("docker.Image")
