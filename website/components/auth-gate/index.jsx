@@ -30,7 +30,9 @@ function SignInForm() {
         setToken(t)
       }
     }
-    getToken()
+    if (typeof window !== 'undefined') {
+      getToken()
+    }
   }, [token])
   return token ? (
     <section className={styles.signInWrapper}>
