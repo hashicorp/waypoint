@@ -26,11 +26,6 @@ This example app is written in Ruby and [includes a `waypoint.hcl` file](https:/
 project = "example-ruby"
 
 app "example-ruby" {
-  labels = {
-    "service" = "example-ruby",
-    "env" = "dev"
-  }
-
   build {
     use "pack" {}
   }
@@ -41,14 +36,24 @@ app "example-ruby" {
 }
 ```
 
-The `build` clause defines how Waypoint will build the app. The `pack` option tells Waypoint to use the most relevant Cloud Native buildpack to build the application. Since the example app is authored with Ruby, Waypoint will use the Ruby buildpack.
+The `build` clause defines how Waypoint will build the app. The `pack` option tells Waypoint to use Cloud Native Buildpacks to build the application. Since the example app is authored with Ruby, a Ruby buildpack will be used.
 
-The `deploy` clause defines how Waypoint will deploy the app. The `docker` option tells Waypoint to deploy the application to Docker for Desktop.
+The `deploy` clause defines how Waypoint will deploy the app. The `docker` option tells Waypoint to deploy the application to Docker.
 
-Initalize the application with Waypoint by running the following in the Terminal. With this command, you do not need to have the application's source code stored on your computer.
+Initalize the application with Waypoint by running the following in the Terminal. You'll be entered the previously
+cloned waypoint-examples repo.
 
 ```bash
-$ waypoint init (TODO - instruction for pointing to sample app)
-```
+$ cd waypoint-examples/ruby
+$ waypoint init
 
-**Todo:** Add output for successful app init.
+✓ Configuration file appears valid
+✓ Local mode initialized successfully
+✓ Project "example-ruby" and all apps are registered with the server.
+✓ Plugins loaded and configured successfully
+✓ Authentication requirements appear satisfied.
+
+Project initialized!
+You may now call 'waypoint up' to deploy your project or
+commands such as 'waypoint build' to perform steps individually.
+```

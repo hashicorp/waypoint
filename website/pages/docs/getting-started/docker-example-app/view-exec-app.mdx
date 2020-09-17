@@ -7,3 +7,24 @@ description: |-
 ---
 
 # Exec Into the App Container
+
+Now that you have deployed your app, you can use `waypoint exec` to run commands in the context of the most recent deployment. Typcially, `waypoint exec` will be used for running database migrations and debugging; however, you can use it for any purpose.
+
+For example, you can use the command to see what processes the example Ruby app is running.
+
+```shell
+$ waypoint exec ps ax
+```
+
+Your Terminal output will show the processes running in the Ruby app you most recently deployed.
+
+```shell
+# Connected to 01EJCQVA40CG5FC6EGW5PZFC5N
+  PID TTY      STAT   TIME COMMAND
+    1 ?        Ssl    0:00 /bin/wpceb /cnb/lifecycle/launcher
+   14 ?        Sl     0:02 puma 3.11.2 (tcp://0.0.0.0:3000) [workspace]
+   22 ?        Sl     0:00 puma: cluster worker 0: 14 [workspace]
+   24 ?        Sl     0:00 puma: cluster worker 1: 14 [workspace]
+   49 pts/0    Rs+    0:00 /bin/ps ax
+
+```

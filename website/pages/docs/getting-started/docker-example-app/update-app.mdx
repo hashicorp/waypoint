@@ -12,7 +12,7 @@ One of the most powerful parts of Waypoint is its ability to iterate on deployme
 
 Open the following file in your preferred development editor:
 
-`app/views/welcome/index.erb`.
+`app/views/welcome/index.erb`
 
 In the `p` block below the `H1`, update the text to whatever you like and save the file.
 
@@ -31,4 +31,10 @@ Back in the Terminal, redeploy the application with your new and improved text.
 $ waypoint up
 ```
 
-Waypoint has now redeployed your application to Docker for Desktop, including using the same preview URL that it previously created when it first deployed your app.
+Waypoint has now redeployed your application to Docker.
+
+You will notice that the Deployment URL for this second deployment is different from what was created for the first deployment. Waypoint generates unique URLs for each deployment, which means that you can access each deployment by using their unique deployment URLs. This is typically used to preview a deployment before releasing it.
+
+Now you should open up the Deployment URL and verify that you see your modified text. Congrats!
+
+-> At present for Docker deployments, both deploys will be active for the non-Deployment specific URL. As such, accessing that URL will return requests from both deployments.
