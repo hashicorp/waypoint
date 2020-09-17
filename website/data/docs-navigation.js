@@ -29,6 +29,7 @@ export default [
           'install-waypoint',
           'init-waypoint',
           'deploy-app',
+          'switching-builder',
           'update-app',
           'view-exec-app',
           'logging-app',
