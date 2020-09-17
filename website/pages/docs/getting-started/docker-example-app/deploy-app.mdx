@@ -10,7 +10,8 @@ description: |-
 
 ### Deploying the Example Application
 
-This application is configured to use Cloud Native Buildpacks to detect the type of application running and to launch it within Docker. As a result, you do not need to build the Dockerfile manually and that Waypoint will use the default configurations of the relevant Cloud Native Buildpack. Waypoint also uses the local Docker instance to build and store the image.
+This application is configured to use Cloud Native Buildpacks to detect the type of application running and to launch it within Docker. As a result, the application has no Dockerfile because the language specific buildpack handles that.
+The resulting Docker image is stored on the local Docker instance.
 
 Deploy the application to Docker.
 
@@ -33,4 +34,4 @@ traffic. You can manage this hostname using "waypoint hostname."
 Deployment URL: https://instantly-worthy-shrew--01EJ0F2VYWTNTYJ6FNFNTY44G9.alpha.waypoint.run
 ```
 
-~> For the initial release, Waypoint creates the preview URL on a HashiCorp server. Because this preview URL is connected to your application and where it has been deployed, the URL will only show your application when it is running. In this walkthrough, this means that Docker for Desktop and the container for the deployed example Ruby application must both be running for the URL to render your application.
+~> For the initial release, Waypoint creates the preview URL on a HashiCorp service. Because this preview URL is connected to your application and where it has been deployed, the URL will only show your application when it is running. In this walkthrough, this means that Docker for Desktop and the container for the deployed example Ruby application must both be running for the URL to render your application.

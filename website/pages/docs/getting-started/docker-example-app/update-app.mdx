@@ -32,3 +32,11 @@ $ waypoint up
 ```
 
 Waypoint has now redeployed your application to Docker for Desktop, including using the same preview URL that it previously created when it first deployed your app.
+
+You will notice that the Deployment URL for this second deployment is different. This is because Waypoint generates
+unique URLs for each deployment as well, to allow them to be accessed directly. This is typically used to preview
+a deployment before releasing it.
+
+Now you should open up the Deployment URL and verify that you see your modified text. Congrats!
+
+-> At present for Docker deployments, both deploys will be active for the non-Deployment specific URL. As such, accessing that URL will return requests from both deployments.
