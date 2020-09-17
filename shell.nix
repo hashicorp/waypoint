@@ -7,7 +7,7 @@ let
   pkgs = import pkgsPath {
     overlays = [(self: super: {
 
-      go = super.go.overrideAttrs ( old: rec {
+      go = super.go_1_14.overrideAttrs ( old: rec {
         version = "1.14.5";
         src = super.fetchurl {
           url = "https://dl.google.com/go/go${version}.src.tar.gz";
