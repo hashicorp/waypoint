@@ -1,0 +1,26 @@
+---
+layout: docs
+page_title: Access the Browser UI
+sidebar_title: Access the Browser UI
+description: |-
+  Placeholder
+---
+
+# Access the Browser UI
+
+The Waypoint server includes a browser user interface that allows you to view
+builds, deployments, and releases for projects and applications.
+
+### Authenticating
+
+The browser UI requires authentication. Waypoint provides a single
+command to automatically open the browser and authenticate your session:
+
+```bash
+$ waypoint ui -authenticate
+```
+
+-> Waypoint currently utilizes self-signed certificates for TLS. Your browser
+will require you to bypass a certificate warning to use the UI.
+
+[Getting Started: Closing Summary](/docs/getting-started/k8s-example-app/summary)
