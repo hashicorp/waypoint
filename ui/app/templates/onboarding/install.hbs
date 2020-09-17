@@ -2,43 +2,46 @@
   <IconTile @icon="download" />
   <div class="onboarding-header-content">
     <h1>Install the Waypoint CLI</h1>
-    <p>First, you'll need to install the Waypoint CLI via Homebrew or a manual installation.</p>
+    <p>First, you'll need to install the Waypoint CLI.</p>
   </div>
 </div>
 
 <hr />
 
 <div class="onboarding-step">
-  <p>Anyone using Waypoint to deploy from their workstation needs to install it locally. The below
-    instructions guide you through that for various operating systems.
+  <p>Waypoint uses both a client and a server to build, deploy, and release applications. Anyone using Waypoint to deploy from their workstation will need to Waypoint locally.</p>
+
+  <h2>Download the precompiled binary</h2>
+
+  <p>To install Waypoint, find the appropriate package for your system and download it as a zip archive.</p>
+
+  <p>
+    <ExternalLink href="https://go.hashi.co/waypoint-beta-binaries" class="button button--primary">
+      {{inline-svg "download" class="icon"}}
+      <span>Download</span>
+    </ExternalLink>
   </p>
-  <p>If you need to compile Waypoint from source instead, see the <ExternalLink href="https://waypoint.vercel.app/docs">documentation</ExternalLink>.</p>
+
+  <p>After downloading Waypoint, unzip the package into any directory. Waypoint runs as a single binary named waypoint. Any other files in the package can be safely removed and Waypoint will still function.</p>
+
+  <p>Finally, make sure that the waypoint binary is available on your <a href="#path">PATH</a>.</p>
 
   <h2>Install Waypoint</h2>
 
-  <nav>
-    <ul>
-      <li>
-        <LinkTo @route="onboarding.install.manual">Manual installation</LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="onboarding.install.chocolatey">Chocolatey on Windows</LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="onboarding.install.linux">Linux</LinkTo>
-      </li>
-    </ul>
-  </nav>
+  <p>In the Waypoint directory, install the Waypoint server to Docker Desktop on your computer.</p>
 
-  {{outlet}}
+  <CopyableCode @ref="install-waypoint">
+    <pre><code id="install-waypoint">waypoint install -platform=docker</code></pre>
+  </CopyableCode>
+
+  <p>You may also install the server to a Kubernetes cluster. To learn more, see the getting started guide for <ExternalLink href="https://waypoint.vercel.app/docs/getting-started/k8s-example-app/install-waypoint">deploying an app to Kubernetes</ExternalLink> on AWS Elastic Kubernetes Service (EKS). This walkthrough shows you how to deploy the server and an example app to Kubernetes.</p>
+
+  <p>When you deploy your app with Waypoint, your computer (the Waypoint client) connects to the Waypoint server to initiate the Waypoint workflow. Waypoint runs builds on the client computer and then sends the build artifacts, such as a Docker file, to the artifact registry of your choice. With Waypoint, multiple clients can concurrently connect to a single server to deploy and release applications.</p>
 
   <h2>Verify the installation</h2>
 
   <p>After installing Waypoint, verify that the installation worked by opening a new terminal session and running the
-    command <code>waypoint</code>.</p>
+    command <code class="cmd">waypoint</code>.</p>
 
   <CopyableCode @ref="verify-waypoint">
     <pre><code id="verify-waypoint">waypoint</code></pre>
@@ -51,9 +54,29 @@ Common commands:
     deploy       Deploy a pushed artifact.
   ...</code></pre>
 
-  <p>If you get an error that <code>waypoint</code> could not be found, your <code>PATH</code> environment variable was
-    not set up properly. Make sure that your <code>PATH</code> variable contains the directory where you installed
-    Waypoint.</p>
+  <p>If you get an error that <code class="inline">waypoint</code> could not be found, your <code class="inline">PATH</code> environment variable was not set up properly. Make sure that your <code class="inline">PATH</code> variable contains the directory where you installed Waypoint.</p>
+
+  <h2 id="path">How to add Waypoint to your PATH</h2>
+
+  <p>Add Waypoint to your <code class="inline">$PATH</code> to use the <code class="cmd">waypoint</code> command without having to include the full directory path to the binary.</p>
+
+  <p>See what is in your current <code class="inline">$PATH</code> definition.</p>
+
+  <CopyableCode @ref="check-path">
+    <pre><code id="check-path">echo $PATH</code></pre>
+  </CopyableCode>
+
+  <p>If you do not have an entry for the Waypoint binary, add the following line to your shell profile:</p>
+
+  <pre><code class="output">export PATH=$PATH:my-directory-path-to-waypoint-binary</code></pre>
+
+  <p>For example: <code class="inline">export PATH=$PATH:~/enlistments/waypoint</code></p>
+
+  <ul>
+    <li>To determine your shell, run <code class="cmd">echo $SHELL</code></li>
+    <li>If using Bash, use <code class="cmd">nano ~/.bash_profile</code> to edit your Bash profile</li>
+    <li>If using ZSH, use <code class="cmd">nano ~/.zshrc</code> to edit your ZSH profile</li>
+  </ul>
 </div>
 
 <hr />
