@@ -84,16 +84,18 @@ Is public unauthenticated access allowed for the Cloud Run instance?.
 
 ### Examples
 
-Project = "wpmini"
+```
+
+project = "wpmini"
 
 app "wpmini" {
-labels = {
-"service" = "wpmini",
-"env" = "dev"
-}
+  labels = {
+    "service" = "wpmini",
+    "env"     = "dev"
+  }
 
-build {
-use "pack" {}
+  build {
+    use "pack" {}
 
     registry {
       use "docker" {
@@ -101,13 +103,12 @@ use "pack" {}
         tag   = "latest"
       }
     }
+  }
 
-}
-
-deploy {
-use "google-cloud-run" {
-project = "waypoint-project-id"
-location = "europe-north1"
+  deploy {
+    use "google-cloud-run" {
+      project  = "waypoint-project-id"
+      location = "europe-north1"
 
       port = 5000
 
@@ -126,10 +127,11 @@ location = "europe-north1"
         max = 10
       }
     }
+  }
 
+  release {
+    use "google-cloud-run" {}
+  }
 }
 
-release {
-use "google-cloud-run" {}
-}
-}.
+```
