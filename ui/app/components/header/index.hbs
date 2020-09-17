@@ -1,6 +1,5 @@
 <header id="header">
   <LinkTo @route="application" class="brand">
-    {{inline-svg "waypoint-logo" class="logo"}}
     <span class="pds--visuallyHidden">{{t "product.name"}}</span>
   </LinkTo>
   <nav>
@@ -9,7 +8,7 @@
       Documentation
     </ExternalLink>
     {{#if canLogout}}
-      <Actions::Invite />
+    <Actions::Invite />
     {{/if}}
     <hr />
     <Logout @canLogout={{canLogout}} />

@@ -5,4 +5,66 @@ page_title: 'Waypoint Commands (CLI)'
 
 # Waypoint Commands (CLI)
 
-Waypoint is controlled via a very easy to use command-line interface (CLI). Waypoint is only a single command-line application: `waypoint`. This application then takes a subcommand such as "artifact" or "deployment". The complete list of subcommands is in the navigation to the left.
+Waypoint is controlled via a very easy to use command-line interface (CLI). Waypoint is only a single command-line application: `waypoint`. This application then takes a subcommand such as `artifact` or `deployment`. The complete list of subcommands is in the navigation to the left.
+
+The waypoint CLI is a well-behaved command line application. In erroneous cases, a non-zero exit status will be returned. It also responds to -h and --help as you'd most likely expect.
+
+To view a list of the available commands at any time, just run waypoint with no arguments:
+
+```shell-session
+$ waypoint
+Usage: waypoint [-version] [-help] [-autocomplete-(un)install] <command> [args]
+
+Common commands:
+    build        Build a new versioned artifact from source.
+    deploy       Deploy a pushed artifact.
+    release      Release a deployment.
+    up           Perform the build, deploy, and release steps for the app.
+
+Other commands:
+    artifact
+    config
+    context
+    deployment
+    destroy         Delete all the resources created for an app
+    docs            Show documentation for components.
+    exec            Execute a command in the context of a running application instance.
+    hostname
+    init            Initialize and validate a project.
+    install         Output Kubernetes configurations to run a self-hosted server.
+    logs            Show log output from the current application deployment.
+    push            Push a build's artifact to a registry
+    runner
+    server          Run the builtin server.
+    token
+    ui              Request a new invite token.
+    version         Prints the version of this Waypoint CLI.
+```
+
+To get help for any specific command, pass the -h flag to the relevant subcommand. For example, to see help about the up subcommand:
+
+```shell-session
+$ waypoint up -h
+Usage: waypoint up [options]
+
+  Perform the build, deploy, and release steps for the app.
+
+Global Options:
+
+  -workspace=<string>
+      Workspace to operate in. Defaults to 'default'. The default is default.
+
+Operation Options:
+
+  -label=<key=value>
+      Labels to set for this operation. Can be specified multiple times.
+
+  -remote
+      True to use a remote runner to execute. This defaults to false unless
+      'runner.default' is set in your configuration. The default is false.
+
+  -remote-source=<key=value>
+      Override configurations for how remote runners source data. This is
+      specified to the data source type being used in your configuration. This
+      is used for example to set a specific Git ref to run against.
+```

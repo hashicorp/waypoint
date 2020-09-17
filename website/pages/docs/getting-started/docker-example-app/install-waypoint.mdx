@@ -45,9 +45,35 @@ Common commands:
 ...
 ```
 
+## Pull the Server Image
+
+-> Due to Waypoint currently being in a private beta, you need to authenticate
+to access the container image that contains the Waypoint binary for running the
+server. Once public, this step will not be required.
+
+First, you need to authenticate Docker to access GitHub packages. This is described in detail
+[here](https://docs.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-docker-for-use-with-github-packages#authenticating-with-a-personal-access-token).
+
+-> Note: The Personal Access Token must have `read:packages` permissions to be able to access the Docker repository.
+
+Create a new Personal Access Token on GitHub, save it to a file, and then login to Docker.
+
+```
+$ cat ~/TOKEN.txt | docker login https://docker.pkg.github.com -u GITHUBUSERNAME --password-stdin
+```
+
+When you run Waypoint install, it defaults to using an image hosted on the GitHub Docker registry, and this
+secret will be used to authenticate.
+
+Now you need to download the image so that we can start a container with it:
+
+```shell
+$ docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest
+```
+
 ## Install the Waypoint Server
 
-In the Waypoint directory, install the Waypoint server to Docker Desktop on your computer. This
+In the Waypoint directory, install the Waypoint server to Docker for Desktop on your computer. This
 allows you to view the user interface, collaborate on deployments, and more.
 
 ```shell
@@ -58,8 +84,6 @@ You may also install the server to a Kubernetes cluster or a [Nomad cluster](htt
 more about Kubernetes, see the getting started
 guide for [deploying an app to Kubernetes](/docs/getting-started/k8s-example-app/install-waypoint). This walkthrough
 shows you how to deploy the server and an example app to Kubernetes.
-
-<!-- Make this a partial -->
 
 ## About the Server Workflow
 
@@ -98,4 +122,4 @@ For example: `export PATH=$PATH:~/enlistments/waypoint`
 
 ### Next Step
 
-[Getting Started: Initailize Waypoint](/docs/getting-started/docker-example-app/init-waypoint)
+[Getting Started: Initialize Waypoint](/docs/getting-started/docker-example-app/init-waypoint)
