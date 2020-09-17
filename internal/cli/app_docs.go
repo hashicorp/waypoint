@@ -205,7 +205,9 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 			fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
 		}
 
-		fmt.Fprintf(w, "\n* Type: **%s**\n", f.Type)
+		if f.Type != "" {
+			fmt.Fprintf(w, "\n* Type: **%s**\n", f.Type)
+		}
 
 		if f.Optional {
 			fmt.Fprintf(w, "* __Optional__\n")

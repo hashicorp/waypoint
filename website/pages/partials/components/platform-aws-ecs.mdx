@@ -17,15 +17,11 @@ Deploy the application into an ECS cluster on AWS.
 
 The ARN of an AWS Certificate Manager cert to associate with the ALB.
 
-- Type: \*\*\*\*
-
 #### alb.domain_name
 
 Fully qualified domain name to set for the ALB.
 
 Set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com.
-
-- Type: \*\*\*\*
 
 #### alb.listener_arn
 
@@ -33,15 +29,11 @@ The ARN on an existing ALB to configure.
 
 When this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB.
 
-- Type: \*\*\*\*
-
 #### alb.zone_id
 
 Route53 ZoneID to create a DNS record into.
 
 Set along with alb.domain_name to have DNS automatically setup for the ALB.
-
-- Type: \*\*\*\*
 
 #### cluster
 

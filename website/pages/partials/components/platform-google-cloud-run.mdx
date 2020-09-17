@@ -17,8 +17,6 @@ Configuration to control the auto scaling parameters for Cloud Run.
 Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.
 This parameter controls the maximum number of instances that can be created.
 
-- Type: \*\*\*\*
-
 #### capacity
 
 CPU, Memory, and resource limits for each Cloud Run instance.
@@ -29,25 +27,17 @@ CPU, Memory, and resource limits for each Cloud Run instance.
 
 Number of CPUs to allocate the Cloud Run instance, min 1, max 2.
 
-- Type: \*\*\*\*
-
 #### capacity.max_requests_per_container
 
 Maximum number of concurrent requests each instance can handle. When the maximum requests are exceeded, Cloud Run will create an additional instance.
-
-- Type: \*\*\*\*
 
 #### capacity.memory
 
 Memory to allocate the Cloud Run instance specified in MB, min 128, max 4096.
 
-- Type: \*\*\*\*
-
 #### capacity.request_timeout
 
 Maximum time a request can take before timing out, max 900.
-
-- Type: \*\*\*\*
 
 #### location
 

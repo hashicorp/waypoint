@@ -8,15 +8,36 @@ Deploy a site to netlify.
 
 #### access_token
 
+Name of your netlify site, if not specified, will prompt for oauth exchange.
+
 - Type: **string**
 - **Optional**
 
 #### site_id
+
+Id for your netlify site.
 
 - Type: **string**
 - **Optional**
 
 #### site_name
 
+Name of your netlify site.
+
 - Type: **string**
 - **Optional**
+- Default: waypoint application name
+
+### Examples
+
+```
+
+deploy {
+	use "netlify" {
+		site_id = "yourside-id"
+		site_name = "waypoint"
+		access_token = "asb123"
+	}
+}
+
+```
