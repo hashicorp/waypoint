@@ -299,9 +299,9 @@ deploy {
 	doc.SetField(
 		"site_name",
 		"name of your netlify site",
-		docs.Default("waypoint application name")
+		docs.Default("waypoint application name"),
 	)
-	
+
 	doc.SetField(
 		"access_token",
 		"name of your netlify site, if not specified, will prompt for oauth exchange",

@@ -296,7 +296,7 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc.SetField(
 		"service_port",
 		"port that your service is running on in the container",
-		docs.Default("3000")
+		docs.Default("3000"),
 	)
 
 	return doc, nil
