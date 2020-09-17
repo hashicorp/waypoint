@@ -60,12 +60,6 @@ Create a new personal access token on GitHub, save it to a file, and then login 
 $ cat ~/TOKEN.txt | docker login https://docker.pkg.github.com -u GITHUBUSERNAME --password-stdin
 ```
 
-Now pull the image to make it available locally:
-
-```
-$ docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest
-```
-
 When you run Waypoint install, it defaults to using that image.
 
 ## Install the Waypoint Server
