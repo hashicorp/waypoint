@@ -9,14 +9,17 @@ import createConsentManager from '@hashicorp/nextjs-scripts/lib/consent-manager'
 import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
 import { Provider as NextAuthProvider } from 'next-auth/client'
 import ProductSubnav from 'components/subnav'
-import Footer from 'components/footer'
 import AuthIndicator from 'components/auth-indicator'
 import AuthGate from 'components/auth-gate'
 import Error from './_error'
 import { productName } from '../data/metadata'
 
 NProgress({ Router })
-const { ConsentManager, openConsentManager } = createConsentManager({
+const {
+  ConsentManager,
+  // TODO: Add ConsentManager opener for public audiences
+  // openConsentManager
+} = createConsentManager({
   preset: 'oss',
 })
 function App({ Component, pageProps }) {
@@ -55,7 +58,6 @@ function App({ Component, pageProps }) {
         <div className="content">
           <Component {...pageProps} />
         </div>
-        <Footer openConsentManager={openConsentManager} />
         <ConsentManager />
       </ConditionalAuthProvider>
     </ErrorBoundary>
