@@ -6,11 +6,12 @@ description: |-
   Placeholder
 ---
 
-# Initailizing Waypoint for Your App
+# Initializing Waypoint for Your App
 
-Before you can deploy your application, you must let Waypoint know about its configuration.
+Before you can deploy your application, you must let Waypoint know about its configuration and intialize the
+Waypoint Project and plugins.
 
-## Waypoint Configuration - waypoint.hcl
+## Waypoint Configuration
 
 The `waypoint.hcl` configuration file provides the instructions to Waypoint for how to build, deploy, and release your application. When you initialize Waypoint for your application, Waypoint will first look for a `waypoint.hcl` file in that directory. If it cannot find the configuration, Waypoint will inspect the application and create a starter `waypoint.hcl` file that you can then customize for your deployment workflow.
 
@@ -57,3 +58,7 @@ Project initialized!
 You may now call 'waypoint up' to deploy your project or
 commands such as 'waypoint build' to perform steps individually.
 ```
+
+### Next Step
+
+[Getting Started: Building and Deploying](/docs/getting-started/docker-example-app/deploy-app)
