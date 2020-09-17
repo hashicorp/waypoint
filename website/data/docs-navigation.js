@@ -19,6 +19,7 @@ export default [
           'deploy-app',
           'update-app',
           'view-exec-app',
+          'ui',
           'summary',
         ],
       },
