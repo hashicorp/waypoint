@@ -7,3 +7,26 @@ description: |-
 ---
 
 # Exec Into the App Container
+
+In order to provide a simpler operations experience for deployments, Waypoint allows you to execute commands against your deployments.
+You can execute these commands via the `waypoint exec` command. Let's enter a shell prompt on our deployment.
+
+```bash
+waypoint exec /bin/bash
+```
+
+Since we're in our deployment directory, you'll note that Waypoint automatically executes aginst the currently deployed application.
+
+From within, we can validate that this is the actual application by listing out the directory hosting our ReactJS compiled files.
+
+```bash
+ls /usr/share/nginx/html
+```
+
+```shell
+/ # ls /usr/share/nginx/html
+50x.html                                               index.html                                             precache-manifest.5cce187c0f4137cb3c7b6cabe154741b.js
+asset-manifest.json                                    logo192.png                                            robots.txt
+favicon.ico                                            logo512.png                                            service-worker.js
+hashi.png                                              manifest.json                                          static
+```

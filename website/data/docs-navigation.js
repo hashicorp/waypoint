@@ -31,6 +31,7 @@ export default [
           'deploy-app',
           'update-app',
           'view-exec-app',
+          'logging-app',
           'summary',
         ],
       },

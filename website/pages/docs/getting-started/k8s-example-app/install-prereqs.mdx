@@ -6,4 +6,20 @@ description: |-
   Placeholder
 ---
 
-# Prerequisites
+<!-- Make this a partial -->
+
+## Examples Repository
+
+You will need a local clone the source code repository for the [Waypoint Examples applications](https://github.com/hashicorp/waypoint-examples) on your computer. You will use one of these apps to learn how to use Waypoint to deploy an app, update it, and then redeploy.
+
+Clone the repository.
+
+```shell
+$ git clone https://github.com/hashicorp/waypoint-examples.git
+```
+
+## A Kubernetes Environment
+
+Waypoint supports current Kubernetes distributions across multiple environments and is unopinionated about which distribution you should use. You'll also need to ensure you have your KubeConfig set under the `KUBECONFIG` environment variable to allow access to the cluster.
+
+<!-- End partial -->
