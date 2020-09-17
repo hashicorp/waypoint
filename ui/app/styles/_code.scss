@@ -35,7 +35,7 @@
     padding: 4px;
     cursor: pointer;
     outline: none;
-    transition: background ease .2s;
+    transition: background ease 0.2s;
 
     &.copy-success {
       background: color.$green-400;
@@ -81,7 +81,12 @@
   button {
     display: flex;
     color: color.$white;
-    background: linear-gradient(to right, rgba(color.$ui-gray-800, 0), color.$ui-gray-800, color.$ui-gray-800);
+    background: linear-gradient(
+      to right,
+      rgba(color.$ui-gray-800, 0),
+      color.$ui-gray-800,
+      color.$ui-gray-800
+    );
     border: none;
     border-radius: 0 3px 3px 0;
     position: absolute;
@@ -92,7 +97,7 @@
     padding: 6px;
     cursor: pointer;
     outline: none;
-    transition: color ease .2s;
+    transition: color ease 0.2s;
 
     &.copy-success {
       color: color.$green-300;

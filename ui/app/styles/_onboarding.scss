@@ -37,15 +37,45 @@
     font-size: 14px;
     padding: 0 scale.$lg-2;
 
-    h2, h3, p, pre {
-      margin-bottom: scale.$lg-2;
+    h2,
+    h3,
+    p,
+    pre,
+    ul {
+      margin-bottom: scale.$lg-1;
+      line-height: 1.7;
+    }
+
+    ul {
+      list-style: inside;
+    }
+
+    pre {
+      line-height: 1.4;
     }
 
     .copyable-code.block {
       margin-bottom: scale.$lg-2;
     }
 
+    code.cmd {
+      font-size: 12px;
+      color: color.$white;
+      background: color.$ui-gray-800;
+      padding: scale.$sm-3;
+      border-radius: 2px;
+    }
+
+    code.inline {
+      font-size: 12px;
+      color: color.$ui-gray-800;
+      background: color.$ui-gray-050;
+      padding: scale.$sm-3;
+      border-radius: 2px;
+    }
+
     code.output {
+      font-size: 12px;
       display: block;
       width: 100%;
       color: color.$ui-gray-800;
@@ -54,7 +84,8 @@
       border-radius: 2px;
     }
 
-    .onboarding-tip, .onboarding-note {
+    .onboarding-tip,
+    .onboarding-note {
       color: color.$blue-800;
       background: color.$blue-050;
       margin-bottom: scale.$lg-2;
