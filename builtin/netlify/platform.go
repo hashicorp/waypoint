@@ -280,6 +280,33 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Deploy a site to netlify")
 
+	doc.Example(
+		`
+deploy {
+	use "netlify" {
+		site_id = "yourside-id"
+		site_name = "waypoint"
+		access_token = "asb123"
+	}
+}
+`)
+
+	doc.SetField(
+		"site_id",
+		"id for your netlify site",
+	)
+
+	doc.SetField(
+		"site_name",
+		"name of your netlify site",
+		docs.Default("waypoint application name")
+	)
+	
+	doc.SetField(
+		"access_token",
+		"name of your netlify site, if not specified, will prompt for oauth exchange",
+	)
+
 	return doc, nil
 }
 
