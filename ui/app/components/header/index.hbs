@@ -4,10 +4,10 @@
     <span class="pds--visuallyHidden">{{t "product.name"}}</span>
   </LinkTo>
   <nav>
-    <a href="#" class="soon">
+    <ExternalLink href="https://waypoint.vercel.app/docs">
       {{inline-svg "docs" class="nav-icon"}}
       Documentation
-    </a>
+    </ExternalLink>
     {{#if canLogout}}
       <Actions::Invite />
     {{/if}}
