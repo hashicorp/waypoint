@@ -45,6 +45,29 @@ Common commands:
 ...
 ```
 
+## Pull the Server Image
+
+-> Due to Waypoint currently being in a private beta, you need to authenticate
+to access the container image that contains the Waypoint binary for running the
+server. Once public, this step will not be required.
+
+First, you need to authenticate Docker to access GitHub packages. This is described in detail
+[here](https://docs.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-docker-for-use-with-github-packages#authenticating-with-a-personal-access-token).
+
+Create a new personal access token on GitHub, save it to a file, and then login to Docker.
+
+```
+$ cat ~/TOKEN.txt | docker login https://docker.pkg.github.com -u GITHUBUSERNAME --password-stdin
+```
+
+Now pull the image to make it available locally:
+
+```
+$ docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest
+```
+
+When you run Waypoint install, it defaults to using that image.
+
 ## Install the Waypoint Server
 
 In the Waypoint directory, install the Waypoint server to Docker Desktop on your computer. This
