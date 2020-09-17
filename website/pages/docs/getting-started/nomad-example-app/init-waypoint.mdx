@@ -1,0 +1,87 @@
+---
+layout: docs
+page_title: Initialize Waypoint
+sidebar_title: Initialize Waypoint
+description: |-
+  Placeholder
+---
+
+# Initailizing Waypoint for Your App
+
+Before you can deploy your application, you must let Waypoint know about its configuration. This is done through the `waypoint.hcl`
+file that you copied over in the previous steps. We can inspect this `waypoint.hcl` with the following command
+
+```
+cat waypoint.hcl
+```
+
+Which should output the following:
+
+```shell
+project = "example-nodejs"
+
+  app "example-nodejs" {
+
+    build {
+      use "pack" {}
+      registry {
+          use "docker" {
+            image = "waypoint-example.local/nodejs-example"
+            tag = "latest"
+          }
+      }
+  }
+
+    deploy {
+      use "nomad" {
+        datacenter = "dc1"
+      }
+    }
+
+  }
+```
+
+The `build` clause defines how Waypoint will build the app. The `pack` option tells Waypoint to use the most relevant Cloud Native
+Buildpack to build the application. This application is a ReactJS based application, so ultimately NodeJS Buildpacks will be used.
+
+The `deploy` clause defines where Waypoint will deploy the app. In our case, this is going to Nomad. We have a specific Nomad
+`datacenter`configured here.
+
+Since we're working with ReactJS, and our sample `waypoint.hcl` was for NodejS, we need to make a couple of small adjustments to
+our application name and add an environment variable. **Note: You also want to update your docker image and location to a location
+that you have access to, if this is running on an external Kubernetes cluster**.
+
+```shell
+app "reactjs" {
+    build {
+      use "pack" {}
+      registry {
+        use "docker" {
+          image = "waypoint.local/sample/reactjs"
+          tag = "latest"
+        }
+       }
+    }
+
+   deploy {
+      use "nomad" {
+          datacenter="dc1"
+          static_environment = { "CI"="true" }
+      }
+    }
+}
+```
+
+In summary
+
+- Change `app` from `app "nodejs"` to `app "reactjs"`
+- Add `static_environment = { "CI"="true" }` to the `deploy` stanza
+- Update the `registry` stanza with the correct docker image repository for your deployments
+
+With these configurations in place, execute the following command in order to initialize Waypoint with this configuration.
+
+```bash
+$ waypoint init
+```
+
+[Getting Started: Building and Deploying](/docs/getting-started/nomad-example-app/deploy-app)

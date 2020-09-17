@@ -1,0 +1,40 @@
+---
+layout: docs
+page_title: Install Prerequisites
+sidebar_title: Prerequisites
+description: |-
+  Placeholder
+---
+
+<!-- Make this a partial -->
+
+## Examples Repository
+
+This walkthrough will use an [example ReactJS application](https://github.com/hashicorp/waypoint-examples/tree/master/reactjs)
+to show how to build, deploy, and release using Waypoint. This example is part of the [waypoint-samples](https://github.com/hashicorp/waypoint-examples)
+repository. You will need a local clone of this repository in order to leverage this guide.
+
+Clone the repository.
+
+```shell
+$ git clone https://github.com/hashicorp/waypoint-examples.git
+cd waypoint-examples/reactjs
+```
+
+We will also copy over a sample waypoint.hcl file from the examples repository to help you get started quickly.
+
+```bash
+cp ../nomad/nodejs/waypoint.hcl .
+```
+
+## A Nomad Environment
+
+Waypoint supports Nomad both as a location for running the Waypoint server as well as for running application workloads. To get
+started with Nomad we suggest reviewing the [HashiCorp Learn tutorials for Nomad](https://learn.hashicorp.com/nomad)
+
+You will also want to export the `NOMAD_ADDR` environment variable. Waypoint will call this variable for interacting with the Nomad
+environment.
+
+[Getting Started: Install Waypoint](/docs/getting-started/nomad-example-app/install-waypoint)
+
+<!-- End partial -->
