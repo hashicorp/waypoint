@@ -6,7 +6,7 @@ import Router from 'next/router'
 import HashiHead from '@hashicorp/react-head'
 import Head from 'next/head'
 import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
-import { Provider as NextAuthProvider } from 'next-auth/client'
+import { Provider as NextAuthProvider, getSession } from 'next-auth/client'
 import ProductSubnav from 'components/subnav'
 import AuthIndicator from 'components/auth-indicator'
 import AuthGate from 'components/auth-gate'
@@ -71,18 +71,21 @@ function ConditionalAuthProvider({ children, session }) {
 
 App.getInitialProps = async ({ Component, ctx }) => {
   let pageProps = {}
-
+  let session = {}
+  const { req } = ctx
   if (Component.getInitialProps) {
     pageProps = await Component.getInitialProps(ctx)
+    session = await getSession({ req })
   } else if (Component.isMDXComponent) {
     // fix for https://github.com/mdx-js/mdx/issues/382
     const mdxLayoutComponent = Component({}).props.originalType
     if (mdxLayoutComponent.getInitialProps) {
       pageProps = await mdxLayoutComponent.getInitialProps(ctx)
+      session = await getSession({ req })
     }
   }
 
-  return { pageProps }
+  return { pageProps: { ...pageProps, session } }
 }
 
 export default App
