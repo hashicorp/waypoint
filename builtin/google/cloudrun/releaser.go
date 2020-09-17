@@ -132,7 +132,7 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
-	doc.Description("Manipulates the Cloud Run apis to make deployments active")
+	doc.Description("Manipulates the Cloud Run APIs to make deployments active")
 
 	return doc, nil
 }
