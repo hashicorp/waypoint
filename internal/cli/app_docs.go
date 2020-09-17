@@ -217,7 +217,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	}
 
 	if dets.Example != "" {
-		fmt.Fprintf(w, "\n\n### Examples\n%s\n", c.humanize(dets.Example))
+		fmt.Fprintf(w, "\n\n### Examples\n```\n%s\n```\n", dets.Example)
 	}
 }
 
