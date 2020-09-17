@@ -9,4 +9,9 @@ export default [
     url: '/commands',
     type: 'inbound',
   },
+  {
+    text: 'Plugins',
+    url: '/plugins',
+    type: 'inbound',
+  },
 ]

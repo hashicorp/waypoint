@@ -175,11 +175,11 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	fmt.Fprintf(w, "### Interface\n\n")
 
 	if dets.Input != "" {
-		fmt.Fprintf(w, "* Input: **%s**\n", dets.Input)
+		fmt.Fprintf(w, "- Input: **%s**\n", dets.Input)
 	}
 
 	if dets.Output != "" {
-		fmt.Fprintf(w, "* Output: **%s**\n", dets.Output)
+		fmt.Fprintf(w, "- Output: **%s**\n", dets.Output)
 	}
 
 	mappers := dets.Mappers
@@ -205,19 +205,21 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 			fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
 		}
 
-		fmt.Fprintf(w, "\n* Type: **%s**\n", f.Type)
+		if f.Type != "" {
+			fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
+		}
 
 		if f.Optional {
-			fmt.Fprintf(w, "* __Optional__\n")
+			fmt.Fprintf(w, "- __Optional__\n")
 
 			if f.Default != "" {
-				fmt.Fprintf(w, "* Default: %s\n", f.Default)
+				fmt.Fprintf(w, "- Default: %s\n", f.Default)
 			}
 		}
 	}
 
 	if dets.Example != "" {
-		fmt.Fprintf(w, "\n\n### Examples\n%s\n", c.humanize(dets.Example))
+		fmt.Fprintf(w, "\n\n### Examples\n```\n%s\n```\n", dets.Example)
 	}
 }
 

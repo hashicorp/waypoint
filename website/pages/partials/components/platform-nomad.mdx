@@ -8,25 +8,55 @@ Deploy to a nomad cluster as a service using docker.
 
 #### datacenter
 
+The Nomad datacenter to deploy the job to.
+
 - Type: **string**
 - **Optional**
+- Default: dc1
 
 #### namespace
+
+The Nomad namespace to deploy the job to.
 
 - Type: **string**
 - **Optional**
 
 #### region
 
+The Nomad region to deploy the job to.
+
 - Type: **string**
 - **Optional**
+- Default: global
 
 #### replicas
 
+The replica count for the job.
+
 - Type: **int**
+- **Optional**
+- Default: 1
+
+#### service_port
+
+TCP port the job is listening on.
+
+- Type: **uint**
 - **Optional**
 
 #### static_environment
 
+Environment variables to add to the job.
+
 - Type: **map[string]string**
 - **Optional**
+
+### Examples
+
+```
+
+deploy {
+	use "nomad" {}
+}
+
+```
