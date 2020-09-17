@@ -142,9 +142,6 @@ func (p *Platform) Deploy(
 	if p.config.Count > 0 {
 		deployment.Spec.Replicas = &p.config.Count
 	}
-	
-
- 
 
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
@@ -300,7 +297,7 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	st.Step(terminal.StatusOK, "Deployment succesfully rolled out!")
+	st.Step(terminal.StatusOK, "Deployment successfully rolled out!")
 
 	return &result, nil
 }
@@ -361,9 +358,9 @@ type Config struct {
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
 	// Port that your service is running on within the actual container.
-	// Defaults to port 3000. 
+	// Defaults to port 3000.
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
-	// or default to another port. 
+	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
 }
 
@@ -433,10 +430,16 @@ deploy "kubernetes" {
 		"environment variables to control broad modes of the application",
 		docs.Summary(
 			"environment variables that are meant to configure the application in a static",
-			"way. This might be control an image that has mulitple modes of operation,",
+			"way. This might be control an image that has multiple modes of operation,",
 			"selected via environment variable. Most configuration should use the waypoint",
 			"config commands",
 		),
+	)
+
+	doc.SetField(
+		"service_port",
+		"the TCP port that the application is listening on",
+		docs.Default("3000"),
 	)
 
 	return doc, nil

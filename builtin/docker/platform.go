@@ -2,8 +2,9 @@ package docker
 
 import (
 	"context"
-	
+
 	"fmt"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -250,9 +251,9 @@ type PlatformConfig struct {
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
 	// Port that your service is running on within the actual container.
-	// Defaults to port 3000. 
+	// Defaults to port 3000.
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
-	// or default to another port. 
+	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
 }
 
@@ -290,6 +291,12 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 			"These variables are used to control over all container modes,",
 			"such as configuring it to start a web app vs a background worker",
 		),
+	)
+
+	doc.SetField(
+		"service_port",
+		"port that your service is running on in the container",
+		docs.Default("3000"),
 	)
 
 	return doc, nil

@@ -43,7 +43,7 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
-	doc.Description("Simply generates a value representing a path on disk")
+	doc.Description("Generates a value representing a path on disk")
 
 	return doc, nil
 }
