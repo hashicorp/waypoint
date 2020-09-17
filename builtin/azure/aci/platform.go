@@ -455,6 +455,67 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Deploy a container to Azure Container Instances")
 
+	doc.Example(`
+deploy "azure-container-instance" {
+	resource_group = "resource-group-name"
+	location       = "westus"
+	ports          = [8080]
+
+	capacity {
+      memory = "1024"
+      cpu_count = 4
+    }
+}
+`)
+
+	doc.SetField(
+		"resource_group",
+		"the resource group to deploy the container to",
+	)
+
+	doc.SetField(
+		"location",
+		"the resource location to deploy the container instance to",
+	)
+
+	doc.SetField(
+		"subscription_id",
+		"the Azure subscription id",
+		docs.Summary("if not set uses the environment variable AZURE_SUBSCRIPTION_ID"),
+		docs.EnvVar("AZURE_SUBSCRIPTION_ID"),
+	)
+
+	doc.SetField(
+		"managed_identity",
+		"the managed identity assigned to the container group",
+	)
+
+	doc.SetField(
+		"ports",
+		"the ports the container is listening on",
+	)
+
+	doc.SetField(
+		"static_environment",
+		"environment variables to control broad modes of the application",
+		docs.Summary(
+			"environment variables that are meant to configure the application in a static",
+			"way. This might be control an image that has multiple modes of operation,",
+			"selected via environment variable. Most configuration should use the waypoint",
+			"config commands.",
+		),
+	)
+
+	doc.SetField(
+		"capacity",
+		"the capacity details for the container",
+	)
+
+	doc.SetField(
+		"volumes",
+		"the volume details for the container",
+	)
+
 	doc.Input("docker.Image")
 	doc.Output("aci.Deployment")
 

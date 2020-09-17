@@ -17,7 +17,7 @@ app "wpaci" {
   }
 
   deploy {
-    use "azure-aci" {
+    use "azure-container-instance" {
       resource_group="minecraft"
       location = "westeurope"
 
