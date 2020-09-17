@@ -1,5 +1,7 @@
 # Waypoint Documentation Website
 
+test
+
 [![Netlify Status](https://img.shields.io/netlify/<NETLIFY-API-ID>?style=flat-square)](https://app.netlify.com/sites/<NETLIFY-SLUG>/deploys)
 
 This subdirectory contains the entire source for the [Waypoint Website](https://waypoint.io/). This is a [NextJS](https://nextjs.org/) project, which builds a static site from these source files.
