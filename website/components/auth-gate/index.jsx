@@ -5,8 +5,11 @@ import styles from './auth-gate.module.css'
 import Button from '@hashicorp/react-button'
 import { useEffect, useState } from 'react'
 
-export default function AuthGate({ children }) {
+export default function AuthGate({ children, ssrSession }) {
   const [session, loading] = useSession()
+
+  if (Object.keys(ssrSession)?.length) return <>{children}</>
+
   if (loading)
     return <InlineSvg className={styles.loadingIconSpin} src={LoadingIcon} />
   return session ? (

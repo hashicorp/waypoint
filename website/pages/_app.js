@@ -59,7 +59,7 @@ function App({ Component, pageProps }) {
 function ConditionalAuthProvider({ children, session }) {
   return process.env.HASHI_ENV === 'production' ? (
     <NextAuthProvider session={session}>
-      <AuthGate>
+      <AuthGate ssrSession={session}>
         {children}
         <AuthIndicator />
       </AuthGate>
