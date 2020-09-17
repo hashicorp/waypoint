@@ -8,7 +8,7 @@ export default function ProductSubnav() {
   return (
     <Subnav
       titleLink={{
-        text: productSlug,
+        text: 'Waypoint',
         url: '/',
       }}
       ctaLinks={[
