@@ -18,7 +18,7 @@
     font-weight: var(--font-weight-bold);
     font-size: 1.1rem;
     & .red {
-      color: red;
+      color: #ba2226;
     }
   }
 

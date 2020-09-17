@@ -94,3 +94,13 @@
 .g-content {
   --highlight-color: var(--waypoint);
 }
+
+.g-vertical-text-block-list {
+  & .list {
+    & .body-text {
+      & a {
+        color: var(--waypoint) !important;
+      }
+    }
+  }
+}
