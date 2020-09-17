@@ -18,7 +18,7 @@ module.exports = function (defaults) {
       // See the [favicons](https://github.com/itgalaxy/favicons) module for details on the available configuration options.
       faviconsConfig: {
         // these options are passed directly to the favicons module
-        path: 'http://localhost:4200',
+        path: '/',
         appName: 'Waypoint',
         appShortName: 'WP',
         developerName: 'HashiCorp',
@@ -36,11 +36,7 @@ module.exports = function (defaults) {
       },
     },
     svg: {
-      paths: [
-        'node_modules/@hashicorp/structure-icons/dist',
-        'public/images',
-        'public/images/icons',
-      ],
+      paths: ['node_modules/@hashicorp/structure-icons/dist', 'public/images', 'public/images/icons'],
     },
     autoImport: {
       // allows use of a CSP without 'unsafe-eval' directive
