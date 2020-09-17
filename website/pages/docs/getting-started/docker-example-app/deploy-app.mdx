@@ -1,14 +1,14 @@
 ---
 layout: docs
-page_title: Deploy the App
-sidebar_title: Deploy the App
+page_title: Building and Deploying
+sidebar_title: Building and Deploying
 description: |-
   Placeholder
 ---
 
-# Deploy Your App
+# Building and Deploying
 
-### Deploying the Example Application
+### Running Waypoint Up
 
 This application is configured to use Cloud Native Buildpacks to detect the type of application running and to launch it within Docker. As a result, the application has no Dockerfile because the language specific buildpack handles that.
 
@@ -17,7 +17,7 @@ The resulting Docker image is stored on the local Docker instance.
 Deploy the application to Docker.
 
 ```bash
-waypoint up
+$ waypoint up
 ```
 
 Waypoint will show the progressive status of the build, deploy, and release steps in the Terminal output. As part of the deployment workflow, Waypoint creates a preview URL for your application.
@@ -35,4 +35,8 @@ traffic. You can manage this hostname using "waypoint hostname."
 Deployment URL: https://instantly-worthy-shrew--01EJ0F2VYWTNTYJ6FNFNTY44G9.alpha.waypoint.run
 ```
 
-~> For the initial release, Waypoint creates the preview URL on a HashiCorp service. Because this preview URL is connected to your application and where it has been deployed, the URL will only show your application when it is running. In this walkthrough, this means that Docker for Desktop and the container for the deployed example Ruby application must both be running for the URL to render your application.
+~> Waypoint creates the preview URL on a HashiCorp service. Because this preview URL is connected to your application and where it has been deployed, the URL will only show your application when it is running. In this walkthrough, this means that Docker for Desktop and the container for the deployed example Ruby application must both be running for the URL to render your application.
+
+### Next Step
+
+[Getting Started: Update and Redeploy](/docs/getting-started/docker-example-app/update-app)
