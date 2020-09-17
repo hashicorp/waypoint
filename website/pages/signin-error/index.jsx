@@ -9,6 +9,13 @@ export default function SigninErrorPage() {
         It seems you do not have appropriate permissions to view this content.
       </h1>
       <Button url="/" title="Go back" />
+      <div className={styles.logoutCard}>
+        <h4>{`If you'd like to try again with another account, please log out of Okta`}</h4>
+        <Button
+          url={`https://${process.env.NEXT_PUBLIC_OKTA_DOMAIN}`}
+          title={`Go to Okta`}
+        />
+      </div>
     </div>
   )
 }
