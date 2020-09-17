@@ -30,20 +30,20 @@ var (
 	// Builtins is the map of all available builtin plugins and their
 	// options for launching them.
 	Builtins = map[string][]sdk.Option{
-		"files":            files.Options,
-		"pack":             pack.Options,
-		"docker":           docker.Options,
-		"google-cloud-run": cloudrun.Options,
-		"azure-aci":        aci.Options,
-		"kubernetes":       k8s.Options,
-		"lambda":           lambda.Options,
-		"netlify":          netlify.Options,
-		"aws-ecs":          ecs.Options,
-		"aws-ecr":          ecr.Options,
-		"nomad":            nomad.Options,
-		"aws-ami":          ami.Options,
-		"aws-ec2":          ec2.Options,
-		"aws-alb":          alb.Options,
+		"files":                    files.Options,
+		"pack":                     pack.Options,
+		"docker":                   docker.Options,
+		"google-cloud-run":         cloudrun.Options,
+		"azure-container-instance": aci.Options,
+		"kubernetes":               k8s.Options,
+		"lambda":                   lambda.Options,
+		"netlify":                  netlify.Options,
+		"aws-ecs":                  ecs.Options,
+		"aws-ecr":                  ecr.Options,
+		"nomad":                    nomad.Options,
+		"aws-ami":                  ami.Options,
+		"aws-ec2":                  ec2.Options,
+		"aws-alb":                  alb.Options,
 	}
 )
 
@@ -61,7 +61,7 @@ func init() {
 	Platforms.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.PlatformType))
 	Platforms.Register("kubernetes", BuiltinFactory("kubernetes", component.PlatformType))
 	Platforms.Register("lambda", BuiltinFactory("lambda", component.PlatformType))
-	Platforms.Register("azure-aci", BuiltinFactory("azure-aci", component.PlatformType))
+	Platforms.Register("azure-container-instance", BuiltinFactory("azure-container-instance", component.PlatformType))
 	Platforms.Register("netlify", BuiltinFactory("netlify", component.PlatformType))
 	Platforms.Register("docker", BuiltinFactory("docker", component.PlatformType))
 	Platforms.Register("aws-ecs", BuiltinFactory("aws-ecs", component.PlatformType))

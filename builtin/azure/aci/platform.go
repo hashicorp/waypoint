@@ -455,6 +455,109 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Deploy a container to Azure Container Instances")
 
+	doc.Example(`
+deploy "azure-container-instance" {
+	resource_group = "resource-group-name"
+	location       = "westus"
+	ports          = [8080]
+
+	capacity {
+      memory = "1024"
+      cpu_count = 4
+    }
+}
+`)
+
+	doc.SetField(
+		"resource_group",
+		"the resource group to deploy the container to",
+	)
+
+	doc.SetField(
+		"location",
+		"the resource location to deploy the container instance to",
+	)
+
+	doc.SetField(
+		"subscription_id",
+		"the Azure subscription id",
+		docs.Summary("if not set uses the environment variable AZURE_SUBSCRIPTION_ID"),
+		docs.EnvVar("AZURE_SUBSCRIPTION_ID"),
+	)
+
+	doc.SetField(
+		"managed_identity",
+		"the managed identity assigned to the container group",
+	)
+
+	doc.SetField(
+		"ports",
+		"the ports the container is listening on",
+	)
+
+	doc.SetField(
+		"static_environment",
+		"environment variables to control broad modes of the application",
+		docs.Summary(
+			"environment variables that are meant to configure the application in a static",
+			"way. This might be control an image that has multiple modes of operation,",
+			"selected via environment variable. Most configuration should use the waypoint",
+			"config commands.",
+		),
+	)
+
+	doc.SetField(
+		"capacity",
+		"the capacity details for the container",
+	)
+
+	doc.SetField(
+		"capacity.memory",
+		"memory to allocate the container specified in MB, min 1024, max based on resource availability of the region.",
+		docs.Default("1024"),
+	)
+
+	doc.SetField(
+		"capacity.cpu",
+		"number of CPUs to allocate the container, min 1, max based on resource availability of the region.",
+		docs.Default("1"),
+	)
+
+	doc.SetField(
+		"volumes",
+		"the volume details for the container",
+	)
+
+	doc.SetField(
+		"volumes",
+		"the volume details for the container",
+	)
+
+	doc.SetField(
+		"volumes.volume.name",
+		"the name of the volume to mount into the container",
+	)
+
+	doc.SetField(
+		"volumes.volume.path",
+		"the path to mount the volume to in the container",
+	)
+
+	doc.SetField(
+		"volumes.volume.read_only",
+		"specify if the volume is read only",
+	)
+
+	doc.SetField(
+		"volumes.volume.azure_file_share",
+		"the details for the Azure file share volume",
+	)
+
+	doc.SetField(
+		"volumes.volume.git_repo",
+		"the details for GitHub repo to mount as a volume",
+	)
+
 	doc.Input("docker.Image")
 	doc.Output("aci.Deployment")
 
