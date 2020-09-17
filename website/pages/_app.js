@@ -20,33 +20,33 @@ function App({ Component, pageProps }) {
 
   return (
     <ErrorBoundary FallbackComponent={Error}>
-      <HashiHead
-        is={Head}
-        title={`${productName} by HashiCorp`}
-        siteName={`${productName} by HashiCorp`}
-        description="Waypoint allows developers to define their application build, deploy, and release lifecycle as code, with a consistent 'waypoint up' workflow."
-        image="https://www.example.com/img/og-image.png"
-        stylesheet={[
-          {
-            href:
-              'https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap',
-          },
-        ]}
-        icon={[{ href: '/favicon.svg' }]}
-        preload={[
-          { href: '/fonts/klavika/medium.woff2', as: 'font' },
-          { href: '/fonts/gilmer/light.woff2', as: 'font' },
-          { href: '/fonts/gilmer/regular.woff2', as: 'font' },
-          { href: '/fonts/gilmer/medium.woff2', as: 'font' },
-          { href: '/fonts/gilmer/bold.woff2', as: 'font' },
-          { href: '/fonts/metro-sans/book.woff2', as: 'font' },
-          { href: '/fonts/metro-sans/regular.woff2', as: 'font' },
-          { href: '/fonts/metro-sans/semi-bold.woff2', as: 'font' },
-          { href: '/fonts/metro-sans/bold.woff2', as: 'font' },
-          { href: '/fonts/dejavu/mono.woff2', as: 'font' },
-        ]}
-      />
       <ConditionalAuthProvider session={pageProps.session}>
+        <HashiHead
+          is={Head}
+          title={`${productName} by HashiCorp`}
+          siteName={`${productName} by HashiCorp`}
+          description="Waypoint allows developers to define their application build, deploy, and release lifecycle as code, with a consistent 'waypoint up' workflow."
+          image="https://www.example.com/img/og-image.png"
+          stylesheet={[
+            {
+              href:
+                'https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap',
+            },
+          ]}
+          icon={[{ href: '/favicon.svg' }]}
+          preload={[
+            { href: '/fonts/klavika/medium.woff2', as: 'font' },
+            { href: '/fonts/gilmer/light.woff2', as: 'font' },
+            { href: '/fonts/gilmer/regular.woff2', as: 'font' },
+            { href: '/fonts/gilmer/medium.woff2', as: 'font' },
+            { href: '/fonts/gilmer/bold.woff2', as: 'font' },
+            { href: '/fonts/metro-sans/book.woff2', as: 'font' },
+            { href: '/fonts/metro-sans/regular.woff2', as: 'font' },
+            { href: '/fonts/metro-sans/semi-bold.woff2', as: 'font' },
+            { href: '/fonts/metro-sans/bold.woff2', as: 'font' },
+            { href: '/fonts/dejavu/mono.woff2', as: 'font' },
+          ]}
+        />
         <ProductSubnav />
         <div className="content">
           <Component {...pageProps} />
