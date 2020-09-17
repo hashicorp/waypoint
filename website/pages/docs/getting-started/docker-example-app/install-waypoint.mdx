@@ -65,6 +65,12 @@ $ cat ~/TOKEN.txt | docker login https://docker.pkg.github.com -u GITHUBUSERNAME
 When you run Waypoint install, it defaults to using an image hosted on the GitHub Docker registry, and this
 secret will be used to authenticate.
 
+Now you need to download the image so that we can start a container with it:
+
+```shell
+$ docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest
+```
+
 ## Install the Waypoint Server
 
 In the Waypoint directory, install the Waypoint server to Docker for Desktop on your computer. This
