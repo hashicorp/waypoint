@@ -37,4 +37,11 @@ export default [
     ],
   },
   'troubleshooting',
+  '-----------',
+  'logs',
+  '-----------',
+  {
+    category: 'entrypoint',
+    content: ['disable'],
+  },
 ]
