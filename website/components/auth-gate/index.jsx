@@ -10,7 +10,7 @@ import SigninErrorPage from 'pages/signin-error'
 export default function AuthGate({ children }) {
   const [session, loading] = useSession()
   const { query } = useRouter()
-  if (query.error) return <SigninErrorPage />
+  if (query?.error === 'oAuthCallback') return <SigninErrorPage />
 
   if (loading)
     return <InlineSvg className={styles.loadingIconSpin} src={LoadingIcon} />
