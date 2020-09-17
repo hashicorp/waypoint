@@ -52,8 +52,8 @@ Once the Waypoint binary location has been added to your path, execute the follo
  $ waypoint install
 ```
 
-<!-- Make this a partial -->
+### Workflow
 
-When you deploy your app with Waypoint, your computer (the Waypoint client) connects to the Waypoint server to initiate the Waypoint workflow. Waypoint runs builds on the client computer and then sends the build artifacts, such as a Dockerfile, to the artifact registry of your choice. With Waypoint, multiple clients can concurrently connect to a single server to deploy and release applications.
+When you deploy your app with Waypoint, your computer (the Waypoint client) connects to the Waypoint server to initiate the Waypoint workflow. The client then registers itself as a runner, allowing Waypoint to run builds on it.
 
-<!-- Make this a partial -->
+When the build is completed, Waypoint sends the build artifacts, such as a Docker file, to the artifact registry of your choice. With Waypoint, multiple clients can concurrently connect to a single server to deploy and release applications.
