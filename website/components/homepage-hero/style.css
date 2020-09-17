@@ -1,7 +1,7 @@
 .g-homepage-hero {
   min-height: calc(100vh - 62px);
   width: 100%;
-  padding: 250px 0;
+  padding: 150px 0;
   background-repeat: no-repeat;
   background-color: var(--gray-7);
   background-image: url(/img/hero-pattern.svg);
