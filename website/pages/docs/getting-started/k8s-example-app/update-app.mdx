@@ -8,38 +8,8 @@ description: |-
 
 # Update and Redeploy the Application
 
-In Waypoint we have 2 builder types, the `pack` builder and the `docker` builder. For users who already have a Dockerfile configured to run their application, the Docker builder provides some great flexibility.
-
-In this sample directory we've included 2 files, a default `Dockerfile` and an `nginx/default.conf` that contains the necessary information for Nginx hosting our application. If you inspect these files, you'll note that they are both set to run our application on port 80, which is different than the default of port that the pack builder uses.
-
-Access the `waypoint.hcl` file and update it with the following `build` and `deploy` configuration to switch the builder to docker, and update the containers service port to port 80.
-
-```shell
-...
-build {
-      use "docker" {}
-      registry {
-        use "docker" {
-          image = "waypoint.local/sample/reactjs"
-          tag = "latest"
-        }
-       }
-    }
-
-deploy {
-  use "kubernetes" {
-      probe_path = "/"
-      service_port = 80
-      static_environment = { "CI"="true" }
-  }
-}
-...
-```
-
-You'll note that we changed the `use "pack"` to now be `use "docker"` to the `build` configuration, as well as updated the `deploy` configuration
-with a `service_port` configuration. This configuration allows us to set the listening port of the deployed resource.
-
-While, we're here, we can also update a few of the values within our application.
+One of the most powerful workflows that Waypoint enables is the ability to continuously iterate and redeploy changes to you applications in a consistent way. Let's demonstrate
+this by updating a few of the values within the application.
 
 Using your favorite IDE, edit the following file `src/App.js` file within the ReactJS directory. We've included a new image in this directory for your that we'll replace the default ReactJS image with.
 
@@ -52,4 +22,4 @@ Save your file, and re-run the `waypoint up` command
 waypoint up
 ```
 
-You'll note the build process looks a bit different this time as it's building your docker image using the dockerfile. Upon completion you'll once again receive the same Horizon URL, which will now direct you to your application hosted within Nginx instead.
+Access the preview URL and observe that your application changes have been reflected in the new version of the deployment.
