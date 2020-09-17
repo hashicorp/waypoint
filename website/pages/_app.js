@@ -5,6 +5,7 @@ import useAnchorLinkAnalytics from '@hashicorp/nextjs-scripts/lib/anchor-link-an
 import Router from 'next/router'
 import HashiHead from '@hashicorp/react-head'
 import Head from 'next/head'
+import createConsentManager from '@hashicorp/nextjs-scripts/lib/consent-manager'
 import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
 import { Provider as NextAuthProvider } from 'next-auth/client'
 import ProductSubnav from 'components/subnav'
@@ -14,7 +15,13 @@ import Error from './_error'
 import { productName } from '../data/metadata'
 
 NProgress({ Router })
-
+const {
+  ConsentManager,
+  // TODO: Add ConsentManager opener for public audiences
+  // openConsentManager
+} = createConsentManager({
+  preset: 'oss',
+})
 function App({ Component, pageProps }) {
   useAnchorLinkAnalytics()
 
@@ -51,6 +58,7 @@ function App({ Component, pageProps }) {
         <div className="content">
           <Component {...pageProps} />
         </div>
+        <ConsentManager />
       </ConditionalAuthProvider>
     </ErrorBoundary>
   )
