@@ -1,11 +1,12 @@
 import DocsPage from '@hashicorp/react-docs-page'
 import order from '../data/plugins-navigation.js'
+import { productName, productSlug } from 'data/metadata'
 import { frontMatter as data } from '../pages/plugins/**/*.mdx'
 import Head from 'next/head'
 import Link from 'next/link'
 import { createMdxProvider } from '@hashicorp/nextjs-scripts/lib/providers/docs'
 
-const MDXProvider = createMdxProvider({ product: 'consul' })
+const MDXProvider = createMdxProvider({ product: productName })
 
 function PluginsLayoutWrapper(pageMeta) {
   function PluginsLayout(props) {
@@ -13,12 +14,12 @@ function PluginsLayoutWrapper(pageMeta) {
       <MDXProvider>
         <DocsPage
           {...props}
-          product="consul"
+          product={productSlug}
           head={{
             is: Head,
-            title: `${pageMeta.page_title} | Consul by HashiCorp`,
+            title: `${pageMeta.page_title} | ${productName} by HashiCorp`,
             description: pageMeta.description,
-            siteName: 'Consul by HashiCorp',
+            siteName: `${productName} by HashiCorp`,
           }}
           sidenav={{
             Link,
@@ -27,7 +28,7 @@ function PluginsLayoutWrapper(pageMeta) {
             data,
             order,
           }}
-          resourceURL={`https://github.com/hashicorp/consul/blob/master/website/pages/${pageMeta.__resourcePath}`}
+          resourceURL={`https://github.com/hashicorp/${productSlug}/blob/master/website/pages/${pageMeta.__resourcePath}`}
         />
       </MDXProvider>
     )
