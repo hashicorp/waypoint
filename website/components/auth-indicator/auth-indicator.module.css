@@ -1,7 +1,6 @@
 .authIndicator {
   position: fixed;
   bottom: 0;
-  width: 100vw;
   z-index: 3;
   padding: 1rem;
   text-align: center;
