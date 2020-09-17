@@ -71,20 +71,19 @@ function ConditionalAuthProvider({ children, session }) {
 
 App.getInitialProps = async ({ Component, ctx }) => {
   let pageProps = {}
-  let session = {}
+
   const { req } = ctx
+  const session = (await getSession({ req })) || {}
+
   if (Component.getInitialProps) {
     pageProps = await Component.getInitialProps(ctx)
-    session = await getSession({ req })
   } else if (Component.isMDXComponent) {
     // fix for https://github.com/mdx-js/mdx/issues/382
     const mdxLayoutComponent = Component({}).props.originalType
     if (mdxLayoutComponent.getInitialProps) {
       pageProps = await mdxLayoutComponent.getInitialProps(ctx)
-      session = await getSession({ req })
     }
   }
-
   return { pageProps: { ...pageProps, session } }
 }
 
