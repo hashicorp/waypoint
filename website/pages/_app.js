@@ -24,7 +24,7 @@ function App({ Component, pageProps }) {
         is={Head}
         title={`${productName} by HashiCorp`}
         siteName={`${productName} by HashiCorp`}
-        description="Write your description here"
+        description="Waypoint allows developers to define their application build, deploy, and release lifecycle as code, with a consistent 'waypoint up' workflow."
         image="https://www.example.com/img/og-image.png"
         stylesheet={[
           {
