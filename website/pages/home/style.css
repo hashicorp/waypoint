@@ -1,8 +1,0 @@
-p {
-  color: black;
-}
-
-/* Changing content background color to match the hero since we have no body copy for the internal beta */
-.content {
-  background-color: #f7f7f9;
-}

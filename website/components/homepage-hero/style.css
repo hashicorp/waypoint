@@ -1,18 +1,22 @@
 .g-homepage-hero {
+  min-height: calc(100vh - 62px);
+  width: 100%;
+  padding: 250px 0;
   background-repeat: no-repeat;
   background-color: var(--gray-7);
   background-image: url(/img/hero-pattern.svg);
-  width: 100%;
-  background-size: cover;
-  background-position: center;
-  padding: 88px 0;
+  background-size: contain;
+
+  @media (max-width: 758px) {
+    padding: 64px 0;
+  }
 
   & .eyebrow {
     font-family: var(--font-body);
     text-align: center;
     display: block;
     font-weight: var(--font-weight-bold);
-    font-size: 1.188rem;
+    font-size: 1.1rem;
     & .red {
       color: red;
     }
