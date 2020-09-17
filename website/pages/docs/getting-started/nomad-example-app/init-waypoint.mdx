@@ -49,7 +49,7 @@ The `deploy` clause defines where Waypoint will deploy the app. In our case, thi
 
 Since we're working with ReactJS, and our sample `waypoint.hcl` was for NodejS, we need to make a couple of small adjustments to
 our application name and add an environment variable. **Note: You also want to update your docker image and location to a location
-that you have access to, if this is running on an external Kubernetes cluster**.
+that you have access to, if this is running on an external Nomad cluster**.
 
 ```shell
 app "reactjs" {
