@@ -205,15 +205,15 @@ type Config struct {
 	Count int `hcl:"replicas,optional"`
 
 	// Environment variables that are meant to configure the application in a static
-	// way. This might be control an image that has mulitple modes of operation,
+	// way. This might be control an image that has multiple modes of operation,
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
 	// Port that your service is running on within the actual container.
-	// Defaults to port 3000. 
+	// Defaults to port 3000.
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
-	// or default to another port. 
+	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
 }
 
@@ -224,6 +224,46 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Deploy to a nomad cluster as a service using docker")
+
+	doc.Example(
+		`
+deploy {
+	use "nomad" {}
+}
+`)
+
+	doc.SetField(
+		"region",
+		"The Nomad region to deploy the job to.",
+		docs.Default("global"),
+	)
+
+	doc.SetField(
+		"datacenter",
+		"The Nomad datacenter to deploy the job to.",
+		docs.Default("dc1"),
+	)
+
+	doc.SetField(
+		"namespace",
+		"The Nomad namespace to deploy the job to.",
+	)
+
+	doc.SetField(
+		"replicas",
+		"The replica count for the job.",
+		docs.Default("1"),
+	)
+
+	doc.SetField(
+		"static_environment",
+		"Environment variables to add to the job.",
+	)
+
+	doc.SetField(
+		"service_port",
+		"TCP port the job is listening on.",
+	)
 
 	return doc, nil
 }
