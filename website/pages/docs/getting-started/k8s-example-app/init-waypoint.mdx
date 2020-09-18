@@ -9,7 +9,8 @@ description: |-
 # Initailizing Waypoint for Your App
 
 Before you can deploy your application, you must let Waypoint know about its configuration. This is done through the `waypoint.hcl`
-file that you copied over in the previous steps. Ensure you are in the `waypoint-examples/reactjs` directory and we can inspect this `waypoint.hcl` with the following command
+file lives within the application directory. Ensure you are in the `waypoint-examples/kubernetes/nodejs/` directory and we can inspect this
+`waypoint.hcl` with the following command:
 
 ```
 cat waypoint.hcl
@@ -52,24 +53,22 @@ project = "example-nodejs"
 ```
 
 The `build` clause defines how Waypoint will build the app. The `pack` option tells Waypoint to use the most relevant Cloud Native
-Buildpack to build the application. This application is a ReactJS based application, so ultimately NodeJS Buildpacks will be used.
+Buildpack to build the application. This application is a NodeJS based application, so ultimately NodeJS Buildpacks will be used.
 
 The `deploy` clause defines where Waypoint will deploy the app. In our case, this is going to Kubernetes
 
 The `release` stanza defines how our application will be released to our environment, in our case we're using a `load_balanacer`
 on a specific `port`.
 
-Since we're working with ReactJS, and our sample `waypoint.hcl` was for NodejS, we need to make a couple of small adjustments to
-our application name and add an environment variable. **Note: You also want to update your docker image and location to a location
-that you have access to, if this is running on an external Kubernetes cluster**.
+-> Note: You maybe also want to update your docker image and location to a location that you have access to, if this is running on an external Nomad cluster\*\*.
 
 ```shell
-app "reactjs" {
+app "example-nodejs"" {
     build {
       use "pack" {}
       registry {
         use "docker" {
-          image = "waypoint.local/sample/reactjs"
+          image = "waypoint.local/sample/nodejs-example"
           tag = "latest"
         }
        }
@@ -78,7 +77,6 @@ app "reactjs" {
    deploy {
       use "kubernetes" {
           probe_path = "/"
-          static_environment = { "CI"="true" }
       }
     }
 
@@ -90,12 +88,6 @@ app "reactjs" {
     }
 }
 ```
-
-In summary
-
-- Change `app` from `app "nodejs"` to `app "reactjs"`
-- Add `static_environment = { "CI"="true" }` to the `deploy` stanza
-- Update the `registry` stanza with the correct docker image repository for your deployments
 
 With these configurations in place, execute the following command in order to initialize Waypoint with this configuration.
 

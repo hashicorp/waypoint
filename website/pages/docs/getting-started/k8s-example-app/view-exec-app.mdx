@@ -17,19 +17,13 @@ waypoint exec /bin/bash
 
 Since we're in our deployment directory, you'll note that Waypoint automatically executes aginst the currently deployed application.
 
-From within, we can validate that this is the actual application by listing out the directory hosting our ReactJS compiled files.
+From within, we can validate that this is the actual application by listing out the directory hosting our NodeJS compiled files.
 
 ```bash
 ls /usr/share/nginx/html
 ```
 
-```shell
-/ # ls /usr/share/nginx/html
-50x.html                                               index.html                                             precache-manifest.5cce187c0f4137cb3c7b6cabe154741b.js
-asset-manifest.json                                    logo192.png                                            robots.txt
-favicon.ico                                            logo512.png                                            service-worker.js
-hashi.png                                              manifest.json                                          static
-```
+You should see an output that contains the NodeJS static files that were compiled.
 
 ### Next Step
 

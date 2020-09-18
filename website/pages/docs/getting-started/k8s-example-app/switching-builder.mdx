@@ -20,7 +20,7 @@ build {
       use "docker" {}
       registry {
         use "docker" {
-          image = "waypoint.local/sample/reactjs"
+          image = "waypoint.local/sample/example-nodejs"
           tag = "latest"
         }
        }
@@ -45,7 +45,7 @@ Execute a `waypoint up` and observe the build process:
 waypoint up
 ```
 
-You'll note the build process looks a bit different this time as it's building your docker image using the dockerfile. Upon completion you'll once again receive the same Horizon URL,
+You'll note the build process looks a bit different this time as it's building your docker image using the Dockerfile. Upon completion you'll once again receive the same Horizon URL,
 which will now direct you to your application hosted within NGINX instead.
 
 ### Next Step
