@@ -23,7 +23,7 @@ build {
       use "docker" {}
       registry {
         use "docker" {
-          image = "waypoint.local/sample/reactjs"
+          image = "waypoint-example.local/nodejs-example"
           tag = "latest"
         }
        }
@@ -31,9 +31,8 @@ build {
 
 deploy {
   use "nomad" {
-      datacenter="dc1"
-      service_port = 80
-      static_environment = { "CI"="true" }
+    datacenter="dc1"
+    service_port = 80
   }
 }
 ...
