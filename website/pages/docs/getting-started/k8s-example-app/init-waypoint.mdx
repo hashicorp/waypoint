@@ -6,7 +6,7 @@ description: |-
   Placeholder
 ---
 
-# Initailizing Waypoint for Your App
+# Initializing Waypoint for Your App
 
 Before you can deploy your application, you must let Waypoint know about its configuration. This is done through the `waypoint.hcl`
 file lives within the application directory. Ensure you are in the `waypoint-examples/kubernetes/nodejs/` directory and we can inspect this
@@ -60,7 +60,7 @@ The `deploy` clause defines where Waypoint will deploy the app. In our case, thi
 The `release` stanza defines how our application will be released to our environment, in our case we're using a `load_balanacer`
 on a specific `port`.
 
--> Note: You maybe also want to update your docker image and location to a location that you have access to, if this is running on an external Nomad cluster\*\*.
+-> Note: You maybe also want to update your docker image and location to a location that you have access to, if this is running on an external Nomad cluster.
 
 ```shell
 app "example-nodejs"" {

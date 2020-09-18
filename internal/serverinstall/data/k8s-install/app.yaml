@@ -62,8 +62,10 @@ spec:
           tcpSocket:
             port: grpc
         livenessProbe:
-          tcpSocket:
+          httpGet:
+            path: /
             port: http
+            scheme: HTTPS
         resources:
           requests:
             cpu: 100m
