@@ -14,6 +14,7 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.33.6
 	github.com/bgentry/speakeasy v0.1.0
+	github.com/bmatcuk/doublestar v1.1.5
 	github.com/boltdb/bolt v1.3.1
 	github.com/briandowns/spinner v1.8.0
 	github.com/buildpacks/pack v0.11.1
@@ -61,6 +62,7 @@ require (
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.1.0
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.0
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/pointerstructure v1.0.0
