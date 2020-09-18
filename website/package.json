@@ -29,8 +29,8 @@
     "readdirp": "3.4.0"
   },
   "devDependencies": {
-    "dart-linkcheck": "2.0.15",
     "husky": "4.3.0",
+    "next-remote-watch": "^0.2.0",
     "post-npm-install": "^2.0.0",
     "prettier": "2.1.2"
   },
@@ -48,9 +48,8 @@
     "format": "next-hashicorp format",
     "generate:component": "next-hashicorp generate component",
     "generate:readme": "next-hashicorp markdown-blocks README.md",
-    "linkcheck": "linkcheck <website url>",
     "lint": "next-hashicorp lint",
-    "start": "rm -rf .next/cache/next-babel-loader/ && next dev",
+    "start": "next-remote-watch ./content/**/*.mdx",
     "dev:auth": "HASHI_ENV=production npm start",
     "static": "npm run build && npm run export && cp _redirects out/."
   }
