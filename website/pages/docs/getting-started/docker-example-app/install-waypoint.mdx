@@ -84,46 +84,9 @@ more about Kubernetes, see the getting started
 guide for [deploying an app to Kubernetes](/docs/getting-started/k8s-example-app/install-waypoint). This walkthrough
 shows you how to deploy the server and an example app to Kubernetes.
 
-### Context
+@include "getting-started/about-server.mdx"
 
-One of the functions of install is that it creates a context automatically that points to the newly
-created server with authentication. This is how waypoint knows the address of the server when you run
-later waypoint commands.
-
-## About the Server Workflow
-
-When you deploy your app with Waypoint, your computer (the Waypoint client) connects
-to the Waypoint server to initiate the Waypoint workflow. The client then registers
-itself as a runner, allowing Waypoint to run builds on it.
-
-When the build is completed, Waypoint sends the build artifacts, such as a Docker file,
-to the artifact registry of your choice. With Waypoint, multiple clients can concurrently
-connect to a single server to deploy and release applications.
-
-<!-- Make this a partial -->
-
-## Editing your Path (Optional) ((#path))
-
-If you do not want to copy Waypoint into a file already in your path, you
-can edit your `PATH` to include a directory that contains the Waypoint binary.
-This allows you to use the `waypoint` command without having to include the
-full directory path to the binary.
-
-See what is in your current `$PATH` definition.
-
-```shell
-$ echo $PATH
-```
-
-If you do not have an entry for the Waypoint binary, add the following line to your shell profile:
-
-`export PATH=$PATH:my-directory-path-to-waypoint-binary`
-
-For example: `export PATH=$PATH:~/enlistments/waypoint`
-
-- To determine your shell, run `echo $SHELL`
-- If using Bash, use `nano ~/.bash_profile` to edit your Bash profile.
-- If using ZSH, use `nano ~/.zshrc` to edit your ZSH profile.
+@include "getting-started/editing-path.mdx"
 
 ### Next Step
 
