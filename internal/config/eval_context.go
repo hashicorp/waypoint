@@ -29,6 +29,7 @@ func EvalContext(pwd string) *hcl.EvalContext {
 	// Add some of our functions
 	addFuncs(funcs.VCSGitFuncs(pwd))
 	addFuncs(funcs.Filesystem(pwd))
+	addFuncs(funcs.Encoding())
 
 	return &result
 }
