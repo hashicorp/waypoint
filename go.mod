@@ -29,8 +29,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/fatih/color v1.9.0
-	github.com/flynn/noise v0.0.0-20180327030543-2492fe189ae6
-	github.com/gliderlabs/ssh v0.2.2
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-openapi/runtime v0.19.15
 	github.com/go-openapi/strfmt v0.19.5
@@ -47,12 +45,11 @@ require (
 	github.com/hashicorp/go-memdb v1.2.0
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-plugin v1.1.0
-	github.com/hashicorp/go-version v1.2.0
+	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0
 	github.com/hashicorp/horizon v0.0.0-20200730033532-a0cec81f4e7a
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
-	github.com/hashicorp/securetunnel v0.0.0-20200213234122-704adcadd8b2
 	github.com/hashicorp/waypoint-hzn v0.0.0-20200716172850-719df2bafd65
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.9
@@ -64,7 +61,6 @@ require (
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.1.0
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
-	github.com/mitchellh/go-linereader v0.0.0-20190213213312-1b945b3263eb
 	github.com/mitchellh/go-testing-interface v1.14.0
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/pointerstructure v1.0.0
