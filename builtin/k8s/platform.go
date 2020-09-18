@@ -250,6 +250,36 @@ func (p *Platform) Deploy(
 	deployment.Spec.Template.Annotations[labelNonce] =
 		time.Now().UTC().Format(time.RFC3339Nano)
 
+	if deployment.Spec.Template.ObjectMeta.Annotations == nil {
+		deployment.Spec.Template.Annotations = make(map[string]string)
+	}
+
+	deployment.Spec.Template.Annotations = p.config.Annotations
+
+	if p.config.ServiceAccount != "" {
+		deployment.Spec.Template.Spec.ServiceAccountName = p.config.ServiceAccount
+
+		// Determine if we need to make a service account
+		saClient := clientset.CoreV1().ServiceAccounts(ns)
+		saCreate := false
+		serviceAccount, err := saClient.Get(ctx, p.config.ServiceAccount, metav1.GetOptions{})
+		if errors.IsNotFound(err) {
+			serviceAccount = newServiceAccount(p.config.ServiceAccount)
+			saCreate = true
+			err = nil
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		if saCreate {
+			serviceAccount, err = saClient.Create(ctx, serviceAccount, metav1.CreateOptions{})
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	dc := clientset.AppsV1().Deployments(ns)
 
 	// Create/update
@@ -357,6 +387,15 @@ type Config struct {
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
+	// Annotations are added to the pod spec of the deployed application.  This is
+	// useful when using mutating webhook admission controllers to further process
+	// pod events.
+	Annotations map[string]string `hcl:"annotations,optional"`
+
+	// ServiceAccount is the name of the Kubernetes service account to apply to the
+	// application deployment. This is useful to apply Kubernetes RBAC to the pod.
+	ServiceAccount string `hcl:"service_account,optional"`
+
 	// Port that your service is running on within the actual container.
 	// Defaults to port 3000.
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
@@ -440,6 +479,25 @@ deploy "kubernetes" {
 		"service_port",
 		"the TCP port that the application is listening on",
 		docs.Default("3000"),
+	)
+
+	doc.SetField(
+		"annotations",
+		"annotations to be added to the application pod",
+		docs.Summary(
+			"annotations are added to the pod spec of the deployed application. This is",
+			"useful when using mutating webhook admission controllers to further process",
+			"pod events.",
+		),
+	)
+
+	doc.SetField(
+		"service_account",
+		"service account name to be added to the application pod",
+		docs.Summary(
+			"service account is the name of the Kubernetes service account to add to the pod.",
+			"This is useful to apply Kubernetes RBAC to the application.",
+		),
 	)
 
 	return doc, nil
