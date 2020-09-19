@@ -57,6 +57,7 @@ export default [
   'troubleshooting',
   '-----------',
   'logs',
+  'config',
   '-----------',
   {
     category: 'entrypoint',
