@@ -54,6 +54,7 @@ export default [
       },
     ],
   },
+  'glossary',
   'troubleshooting',
   '-----------',
   'logs',
