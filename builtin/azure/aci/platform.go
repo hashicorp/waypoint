@@ -464,6 +464,17 @@ deploy "azure-container-instance" {
 	capacity {
       memory = "1024"
       cpu_count = 4
+	}
+
+	volume {
+      name = "vol1"
+      path = "/consul"
+      read_only = true
+
+      git_repo {
+        repository = "https://github.com/hashicorp/consul"
+        revision = "v1.8.3"
+      }
     }
 }
 `)
@@ -524,37 +535,32 @@ deploy "azure-container-instance" {
 	)
 
 	doc.SetField(
-		"volumes",
-		"the volume details for the container",
+		"volume",
+		"the volume details for a container",
 	)
 
 	doc.SetField(
-		"volumes",
-		"the volume details for the container",
-	)
-
-	doc.SetField(
-		"volumes.volume.name",
+		"volume.name",
 		"the name of the volume to mount into the container",
 	)
 
 	doc.SetField(
-		"volumes.volume.path",
+		"volume.path",
 		"the path to mount the volume to in the container",
 	)
 
 	doc.SetField(
-		"volumes.volume.read_only",
+		"volume.read_only",
 		"specify if the volume is read only",
 	)
 
 	doc.SetField(
-		"volumes.volume.azure_file_share",
+		"volume.azure_file_share",
 		"the details for the Azure file share volume",
 	)
 
 	doc.SetField(
-		"volumes.volume.git_repo",
+		"volume.git_repo",
 		"the details for GitHub repo to mount as a volume",
 	)
 

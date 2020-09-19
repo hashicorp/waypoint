@@ -1,7 +1,7 @@
 export default [
   'aws-ec2',
   'aws-ecs',
-  'azure-aci',
+  'azure-container-instances',
   'docker',
   'google-cloud-run',
   'kubernetes',
