@@ -57,6 +57,7 @@ export default [
   'glossary',
   'troubleshooting',
   '-----------',
+  'url',
   'logs',
   'exec',
   'config',
