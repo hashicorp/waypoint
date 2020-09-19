@@ -1,0 +1,22 @@
+## Editing your Path (Optional) ((#path))
+
+If you do not want to copy Waypoint into a file already in your path, you
+can edit your `PATH` to include a directory that contains the Waypoint binary.
+This allows you to use the `waypoint` command without having to include the
+full directory path to the binary.
+
+See what is in your current `$PATH` definition.
+
+```shell
+$ echo $PATH
+```
+
+If you do not have an entry for the Waypoint binary, add the following line to your shell profile:
+
+`export PATH=$PATH:my-directory-path-to-waypoint-binary`
+
+For example: `export PATH=$PATH:~/enlistments/waypoint`
+
+- To determine your shell, run `echo $SHELL`
+- If using Bash, use `nano ~/.bash_profile` to edit your Bash profile.
+- If using ZSH, use `nano ~/.zshrc` to edit your ZSH profile.
