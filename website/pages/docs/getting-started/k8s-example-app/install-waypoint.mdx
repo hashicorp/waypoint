@@ -76,7 +76,7 @@ In this step we will innstall the Waypoint server onto Kubernetes. This allows y
 containerd rather than DockerD, the Waypoint server install will fail with an ImagePullBackOff error. The team is currently working on resolving this issue.
 
 ```shell
- $ waypoint install 
+ $ waypoint install -platform=kubernetes
 ```
 
 In addition to Kubernetes, the Waypoint server can be installed on Docker or a [Nomad cluster](https://nomadproject.io). 
