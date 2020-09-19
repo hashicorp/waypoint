@@ -58,6 +58,7 @@ export default [
   'troubleshooting',
   '-----------',
   'logs',
+  'exec',
   'config',
   '-----------',
   {

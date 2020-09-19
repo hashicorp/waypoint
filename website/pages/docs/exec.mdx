@@ -1,0 +1,56 @@
+---
+layout: docs
+page_title: Exec
+sidebar_title: Exec
+description: |-
+  Waypoint enables you to execute commands in the context of a deployed application. This can be used to open up a shell for debugging, execute database migrations, and more.
+---
+
+# Exec
+
+Waypoint enables you to execute commands in the context of a deployed application.
+This can be used to open up a shell for debugging, execute database migrations,
+and more.
+
+This functionality requires the [Waypoint entrypoint](/docs/entrypoint).
+
+## Using the CLI
+
+The `waypoint exec` command can be used to execute a command in the context
+of a deployed application. The example below shows exec being used to open a
+shell:
+
+```
+$ waypoint exec bash
+# echo foo
+foo
+```
+
+This is useful for debugging a deployment that may not be behaving as
+expected. You can also run one-off commands that aren't interactive:
+
+```
+$ waypoint exec rake db:migrate
+...
+```
+
+This is useful for executing scripts in the context of the application
+environment. This makes things like environment variables and other secrets
+typically available.
+
+If `waypoint exec` is called in an interactive terminal (versus a script),
+information about your terminal will be sent to the remote end. This enables
+tools like `vim` or other terminal UIs to work as normal. Waypoint also
+sends terminal resize events so everything should behave correctly even as you
+resize your terminal.
+
+## Target Environment
+
+`waypoint exec` works by picking a random running instance of the latest
+deployment and executing within that environment. **Exec does not spin up
+a new dedicated instance.** Please keep this in mind if you need to run
+resource intensive tasks since user traffic may be sharing the same instance.
+
+-> A future version of Waypoint will enable targeting specific deployments
+and instances. We will also enable an option to deploy a special exec-only
+instance so resources aren't shared.
