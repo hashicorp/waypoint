@@ -60,6 +60,7 @@ export default [
   'logs',
   'exec',
   'config',
+  'workspaces',
   '-----------',
   {
     category: 'entrypoint',
