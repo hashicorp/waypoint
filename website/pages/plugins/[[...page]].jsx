@@ -1,10 +1,10 @@
 import { productName, productSlug } from 'data/metadata'
 import order from 'data/plugins-navigation.js'
-import DocsPage from 'components/new-docs-page'
+import DocsPage from 'components/temporary_docs-page'
 import {
   generateStaticPaths,
   generateStaticProps,
-} from 'components/new-docs-page/server'
+} from 'components/temporary_docs-page/server'
 
 const subpath = 'plugins'
 
