@@ -303,7 +303,7 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Name:    "workspace",
 			Target:  &c.flagWorkspace,
 			Default: "default",
-			Usage:   "Workspace to operate in. Defaults to 'default'.",
+			Usage:   "Workspace to operate in.",
 		})
 	}
 
