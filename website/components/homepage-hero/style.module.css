@@ -1,4 +1,4 @@
-.g-homepage-hero {
+.root {
   min-height: calc(100vh - 62px);
   width: 100%;
   padding: 150px 0;
@@ -17,6 +17,7 @@
     display: block;
     font-weight: var(--font-weight-bold);
     font-size: 1.1rem;
+
     & .red {
       color: #ba2226;
     }
@@ -37,7 +38,7 @@
     max-width: 40em;
   }
 
-  & .g-grid-container {
+  & :global(.g-grid-container) {
     max-width: 700px;
   }
 
@@ -51,7 +52,7 @@
     & a {
       margin: 8px;
 
-      &.variant-primary {
+      &:global(.variant-primary) {
         border-color: var(--waypoint);
         background-color: var(--waypoint);
       }

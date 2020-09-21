@@ -1,10 +1,11 @@
+import s from './style.module.css'
 import Link from 'next/link'
 
 export default function Footer({ openConsentManager }) {
   return (
-    <footer className="g-footer">
+    <footer className={s.root}>
       <div className="g-container">
-        <div className="left">
+        <div className={s.left}>
           <Link href="/docs">
             <a>Docs</a>
           </Link>
