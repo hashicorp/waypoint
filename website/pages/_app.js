@@ -7,7 +7,7 @@ import HashiHead from '@hashicorp/react-head'
 import Head from 'next/head'
 import createConsentManager from '@hashicorp/nextjs-scripts/lib/consent-manager'
 import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
-import { Provider as NextAuthProvider } from 'next-auth/client'
+import { Provider as NextAuthProvider, getSession } from 'next-auth/client'
 import ProductSubnav from 'components/subnav'
 import AuthIndicator from 'components/auth-indicator'
 import AuthGate from 'components/auth-gate'
@@ -80,6 +80,9 @@ function ConditionalAuthProvider({ children, session }) {
 App.getInitialProps = async ({ Component, ctx }) => {
   let pageProps = {}
 
+  const { req } = ctx
+  const session = (await getSession({ req })) || {}
+
   if (Component.getInitialProps) {
     pageProps = await Component.getInitialProps(ctx)
   } else if (Component.isMDXComponent) {
@@ -89,8 +92,7 @@ App.getInitialProps = async ({ Component, ctx }) => {
       pageProps = await mdxLayoutComponent.getInitialProps(ctx)
     }
   }
-
-  return { pageProps }
+  return { pageProps: { ...pageProps, session } }
 }
 
 export default App
