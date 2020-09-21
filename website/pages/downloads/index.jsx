@@ -1,4 +1,4 @@
-import s from 'style.module.css'
+import s from './style.module.css'
 import VERSION from 'data/version.js'
 import ProductDownloader from '@hashicorp/react-product-downloader'
 import Head from 'next/head'
