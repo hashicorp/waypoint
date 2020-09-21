@@ -53,7 +53,10 @@
 
 /* Sticky Footer */
 .content {
-  min-height: calc(100vh - 260px);
+  overflow-y: auto;
+
+  /* 100% height - nav - footer */
+  min-height: calc(100vh - (64px + 77px));
 }
 
 /* Custom web font, deprecated */
