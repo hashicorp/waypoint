@@ -1,4 +1,5 @@
 const withHashicorp = require('@hashicorp/nextjs-scripts')
+const redirects = require('./redirects')
 
 // log out our primary environment variables for clarity in build logs
 console.log(`HASHI_ENV: ${process.env.HASHI_ENV}`)
@@ -9,6 +10,9 @@ module.exports = withHashicorp({
   defaultLayout: true,
   transpileModules: ['is-absolute-url', '@hashicorp/react-mega-nav'],
 })({
+  redirects() {
+    return redirects
+  },
   env: {
     HASHI_ENV: process.env.HASHI_ENV || 'development',
     SEGMENT_WRITE_KEY: '9mlIVayJbNtJW2EOdAFKHNKcdLAgEDlV',
