@@ -51,6 +51,14 @@
   scroll-margin-top: calc(64px + 0.5em);
 }
 
+/* Sticky Footer */
+.content {
+  overflow-y: auto;
+
+  /* 100% height - nav - footer */
+  min-height: calc(100vh - (64px + 77px));
+}
+
 /* Custom web font, deprecated */
 @font-face {
   font-family: 'klavika-web';
