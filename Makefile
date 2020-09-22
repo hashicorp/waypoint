@@ -10,11 +10,14 @@ bin:
 	go build -tags assetsembedded -o ./waypoint ./cmd/waypoint
 	go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
+GIT_COMMIT=$$(git rev-parse HEAD)
+GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
+
 .PHONY: dev
 dev:
 	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	cd internal/assets && go generate
-	go build -o ./waypoint ./cmd/waypoint
+	go build -ldflags "-X github.com/hashicorp/waypoint/internal/version.GitCommit=$(GIT_COMMIT)$(GIT_DIRTY)" -o ./waypoint ./cmd/waypoint
 	go build -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
 .PHONY: bin/linux

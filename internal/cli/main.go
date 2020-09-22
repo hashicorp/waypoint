@@ -386,7 +386,7 @@ func GroupedHelpFunc(f cli.HelpFunc) cli.HelpFunc {
 		var b bytes.Buffer
 		tw := tabwriter.NewWriter(&b, 0, 2, 6, ' ', 0)
 
-		fmt.Fprintf(tw, "Usage: %s [-version] [-help] [-autocomplete-(un)install] <command> [args]\n\n", cliName)
+		fmt.Fprintf(tw, "Usage: %s [-help] [-autocomplete-(un)install] <command> [args]\n\n", cliName)
 		fmt.Fprintf(tw, "Common commands:\n")
 		for k := range commonCommands {
 			printCommand(tw, k, commands[k])
