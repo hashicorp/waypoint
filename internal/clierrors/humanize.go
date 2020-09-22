@@ -1,14 +1,19 @@
 package clierrors
 
 import (
+	"github.com/mitchellh/go-wordwrap"
 	"google.golang.org/grpc/status"
 )
 
 func Humanize(err error) string {
-	s, ok := status.FromError(err)
-	if !ok {
-		return err.Error()
+	if err == nil {
+		return ""
 	}
 
-	return s.Message()
+	v := err.Error()
+	if s, ok := status.FromError(err); ok {
+		v = s.Message()
+	}
+
+	return wordwrap.WrapString(v, 80)
 }
