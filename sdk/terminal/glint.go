@@ -51,19 +51,37 @@ func (ui *glintUI) Output(msg string, raw ...interface{}) {
 		cs = append(cs, glint.Bold())
 		msg = "\n» " + msg
 	case ErrorStyle, ErrorBoldStyle:
-		cs = append(cs, glint.Color("red"))
+		cs = append(cs, glint.Color("lightRed"))
 		if style == ErrorBoldStyle {
 			cs = append(cs, glint.Bold())
 		}
 
-	case WarningStyle:
-		cs = append(cs, glint.Color("yellow"))
+		lines := strings.Split(msg, "\n")
+		if len(lines) > 0 {
+			ui.d.Append(glint.Finalize(
+				glint.Style(
+					glint.Text("! "+lines[0]),
+					cs...,
+				),
+			))
+
+			for _, line := range lines[1:] {
+				ui.d.Append(glint.Finalize(
+					glint.Text("  " + line),
+				))
+			}
+		}
+
+		return
+
+	case WarningStyle, WarningBoldStyle:
+		cs = append(cs, glint.Color("lightYellow"))
 		if style == WarningBoldStyle {
 			cs = append(cs, glint.Bold())
 		}
 
-	case SuccessStyle:
-		cs = append(cs, glint.Color("green"))
+	case SuccessStyle, SuccessBoldStyle:
+		cs = append(cs, glint.Color("lightGreen"))
 		if style == SuccessBoldStyle {
 			cs = append(cs, glint.Bold())
 		}

@@ -37,13 +37,13 @@ func (s *glintStatus) Step(status, msg string) {
 	var style []glint.StyleOption
 	switch status {
 	case StatusOK:
-		style = append(style, glint.Color("green"))
+		style = append(style, glint.Color("lightGreen"))
 
 	case StatusError:
-		style = append(style, glint.Color("red"))
+		style = append(style, glint.Color("lightRed"))
 
 	case StatusWarn:
-		style = append(style, glint.Color("yellow"))
+		style = append(style, glint.Color("lightYellow"))
 	}
 
 	// If we have a prefix, set that

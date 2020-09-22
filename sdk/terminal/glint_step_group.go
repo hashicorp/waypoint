@@ -100,7 +100,12 @@ func (f *glintStep) Update(str string, args ...interface{}) {
 	defer f.mu.Unlock()
 	f.msg = fmt.Sprintf(str, args...)
 	f.status.reset()
-	f.status.Update(f.msg)
+
+	if f.statusVal != "" {
+		f.status.Step(f.statusVal, f.msg)
+	} else {
+		f.status.Update(f.msg)
+	}
 }
 
 func (f *glintStep) Status(status string) {
