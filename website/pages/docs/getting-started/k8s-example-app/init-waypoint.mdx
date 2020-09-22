@@ -60,34 +60,8 @@ The `deploy` clause defines where Waypoint will deploy the app. In our case, thi
 The `release` stanza defines how our application will be released to our environment, in our case we're using a `load_balanacer`
 on a specific `port`.
 
--> Note: You maybe also want to update your docker image and location to a location that you have access to, if this is running on an external Kubernetes cluster.
-
-```shell
-app "example-nodejs"" {
-    build {
-      use "pack" {}
-      registry {
-        use "docker" {
-          image = "waypoint.local/sample/nodejs-example"
-          tag = "latest"
-        }
-       }
-    }
-
-   deploy {
-      use "kubernetes" {
-          probe_path = "/"
-      }
-    }
-
-    release {
-        use "kubernetes" {
-            load_balancer = true
-            port = 80
-        }
-    }
-}
-```
+-> Note: You may want to update the `image` entry within the `registry` section to reflect a Docker repository that's externally
+accessible if you are using a non-local Kubernetes cluster.
 
 With these configurations in place, execute the following command in order to initialize Waypoint with this configuration.
 
