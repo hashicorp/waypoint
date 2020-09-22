@@ -1,3 +1,4 @@
+import s from './style.module.css'
 import VERSION from 'data/version.js'
 import ProductDownloader from '@hashicorp/react-product-downloader'
 import Head from 'next/head'
@@ -6,7 +7,7 @@ import { productName, productSlug } from 'data/metadata'
 
 export default function DownloadsPage({ releaseData }) {
   return (
-    <div id="p-downloads" className="g-container">
+    <div className={s.root}>
       <HashiHead is={Head} title={`Downloads | ${productName} by HashiCorp`} />
       <ProductDownloader
         product={productName}

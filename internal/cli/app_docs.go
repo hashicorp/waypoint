@@ -159,7 +159,7 @@ func (c *AppDocsCommand) humanize(s string) string {
 }
 
 func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
-	w, err := os.Create(fmt.Sprintf("./website/pages/partials/components/%s-%s.mdx", ct, name))
+	w, err := os.Create(fmt.Sprintf("./website/content/partials/components/%s-%s.mdx", ct, name))
 	if err != nil {
 		panic(err)
 	}
