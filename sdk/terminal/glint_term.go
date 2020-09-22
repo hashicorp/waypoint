@@ -21,7 +21,8 @@ type glintTerm struct {
 	ctx    context.Context
 	cancel func()
 
-	output [][]rune
+	output        [][]rune
+	height, width int
 
 	wg       sync.WaitGroup
 	parseErr error
@@ -34,7 +35,7 @@ func (t *glintTerm) Body(ctx context.Context) glint.Component {
 	var cs []glint.Component
 	for _, row := range t.output {
 		cs = append(cs, glint.Layout(
-			glint.Text(" | "),
+			glint.Text(" ｜ "),
 			glint.Style(
 				glint.Text(strings.TrimSpace(string(row))),
 				glint.Color("lightBlue"),
@@ -52,6 +53,10 @@ func (t *glintTerm) DamageDone(r state.Rect, cr screen.CellReader) error {
 	for row := r.Start.Row; row <= r.End.Row; row++ {
 		for col := r.Start.Col; col <= r.End.Col; col++ {
 			cell := cr.GetCell(row, col)
+
+			for len(t.output) <= row {
+				t.output = append(t.output, make([]rune, t.width))
+			}
 
 			if cell == nil {
 				t.output[row][col] = ' '
@@ -92,11 +97,8 @@ func (t *glintTerm) StringEvent(kind string, data []byte) error {
 
 func newGlintTerm(ctx context.Context, height, width int) (*glintTerm, error) {
 	term := &glintTerm{
-		output: make([][]rune, height),
-	}
-
-	for i := range term.output {
-		term.output[i] = make([]rune, width)
+		height: height,
+		width:  width,
 	}
 
 	scr, err := screen.NewScreen(height, width, term)
