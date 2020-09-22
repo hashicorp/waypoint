@@ -49,7 +49,7 @@ func (ui *glintUI) Output(msg string, raw ...interface{}) {
 	switch style {
 	case HeaderStyle:
 		cs = append(cs, glint.Bold())
-		msg = "» " + msg
+		msg = "\n» " + msg
 	case ErrorStyle, ErrorBoldStyle:
 		cs = append(cs, glint.Color("red"))
 		if style == ErrorBoldStyle {
