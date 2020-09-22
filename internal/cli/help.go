@@ -41,6 +41,20 @@ func formatHelp(v string) string {
 			continue
 		}
 
+		// Alias: prefix lines
+		prefix = "Alias: "
+		if strings.HasPrefix(line, prefix) {
+			d.Append(glint.Layout(
+				glint.Style(
+					glint.Text(prefix),
+					glint.Color("lightMagenta"),
+				),
+				glint.Text(line[len(prefix):]),
+			).Row())
+
+			continue
+		}
+
 		// A header line
 		if reHelpHeader.MatchString(line) {
 			d.Append(glint.Style(
