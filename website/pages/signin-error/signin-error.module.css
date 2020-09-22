@@ -12,9 +12,18 @@
   margin-top: 3rem;
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  border: 1px solid var(--gray-6);
+}
+
+.authProviderGoBack {
+  display: flex;
+  flex: 0 1 600px;
+  justify-content: center;
   align-items: center;
   text-align: center;
   flex-direction: column;
-  padding: 2rem;
-  border: 1px solid var(--gray-6);
 }
