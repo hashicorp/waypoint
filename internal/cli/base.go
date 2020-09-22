@@ -87,6 +87,12 @@ type baseCommand struct {
 // Close cleans up any resources that the command created. This should be
 // defered by any CLI command that embeds baseCommand in the Run command.
 func (c *baseCommand) Close() error {
+	// Close our UI if it implements it. The glint-based UI does for example
+	// to finish up all the CLI output.
+	if closer, ok := c.ui.(io.Closer); ok && closer != nil {
+		closer.Close()
+	}
+
 	return nil
 }
 

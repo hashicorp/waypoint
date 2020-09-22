@@ -65,11 +65,15 @@ func Main(args []string) int {
 	ctx, closer := signalcontext.WithInterrupt(context.Background(), log)
 	defer closer()
 
+	// Get our base command
+	base, commands := Commands(ctx, log, logOutput)
+	defer base.Close()
+
 	// Build the CLI
 	cli := &cli.CLI{
 		Name:                       args[0],
 		Args:                       args[1:],
-		Commands:                   Commands(ctx, log, logOutput),
+		Commands:                   commands,
 		Autocomplete:               true,
 		AutocompleteNoDefaultFlags: true,
 		HelpFunc:                   GroupedHelpFunc(cli.BasicHelpFunc(cliName)),
@@ -90,7 +94,7 @@ func Commands(
 	log hclog.Logger,
 	logOutput io.Writer,
 	opts ...Option,
-) map[string]cli.CommandFactory {
+) (*baseCommand, map[string]cli.CommandFactory) {
 	baseCommand := &baseCommand{
 		Ctx:           ctx,
 		Log:           log,
@@ -319,7 +323,7 @@ func Commands(
 		}
 	}
 
-	return commands
+	return baseCommand, commands
 }
 
 // logger returns the logger to use for the CLI. Output, level, etc. are
