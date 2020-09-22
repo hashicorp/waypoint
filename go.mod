@@ -65,6 +65,7 @@ require (
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1
+	github.com/mitchellh/go-wordwrap v1.0.0
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/pointerstructure v1.0.0
 	github.com/mitchellh/protostructure v0.0.0-20200814180458-3cfccdb015ce
@@ -84,6 +85,7 @@ require (
 	github.com/zclconf/go-cty v1.5.1
 	github.com/zclconf/go-cty-yaml v1.0.2
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	golang.org/x/sys v0.0.0-20200922070232-aee5d888a860 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20200715011427-11fb19a81f2c
 	google.golang.org/grpc v1.30.0
