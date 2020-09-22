@@ -48,6 +48,10 @@ For example: `export PATH=$PATH:~/enlistments/waypoint`
 
 Once the Waypoint binary location has been added to your path, execute the following command to install the Waypoint server on Nomad.
 
+-> Note: Waypoint automatically creates the Nomad job for the Waypoint server. As this is behind an authenticated image repository
+currently you may experience challenges with this. You may need to issue a `docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest`
+from your Nomad clients in order to locally cache the image, and update the command below to use the `-server-image=` flag to reference the pull
+
 ```shell
  $ waypoint install --platform="nomad" --nomad-dc="dc1"
 ```
