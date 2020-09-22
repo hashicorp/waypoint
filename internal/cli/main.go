@@ -10,12 +10,12 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/mitchellh/cli"
+	"github.com/mitchellh/go-glint"
 
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
 	"github.com/hashicorp/waypoint/internal/version"
@@ -32,11 +32,11 @@ var (
 
 	// commonCommands are the commands that are deemed "common" and shown first
 	// in the CLI help output.
-	commonCommands = map[string]struct{}{
-		"build":   {},
-		"deploy":  {},
-		"release": {},
-		"up":      {},
+	commonCommands = []string{
+		"build",
+		"deploy",
+		"release",
+		"up",
 	}
 
 	// hiddenCommands are not shown in CLI help output.
@@ -387,23 +387,70 @@ func logger(args []string) ([]string, hclog.Logger, io.Writer, error) {
 
 func GroupedHelpFunc(f cli.HelpFunc) cli.HelpFunc {
 	return func(commands map[string]cli.CommandFactory) string {
-		var b bytes.Buffer
-		tw := tabwriter.NewWriter(&b, 0, 2, 6, ' ', 0)
+		var buf bytes.Buffer
+		d := glint.New()
+		d.SetRenderer(&glint.TerminalRenderer{
+			Output: &buf,
 
-		fmt.Fprintf(tw, "Usage: %s [-help] [-autocomplete-(un)install] <command> [args]\n\n", cliName)
-		fmt.Fprintf(tw, "Common commands:\n")
-		for k := range commonCommands {
-			printCommand(tw, k, commands[k])
+			// We set rows/cols here manually. The important bit is the cols
+			// needs to be wide enough so glint doesn't clamp any text and
+			// lets the terminal just autowrap it. Rows doesn't make a big
+			// difference.
+			Rows: 10,
+			Cols: 180,
+		})
+
+		// Header
+		d.Append(glint.Style(
+			glint.Text("Welcome to Waypoint"),
+			glint.Bold(),
+		))
+		d.Append(glint.Layout(
+			glint.Style(
+				glint.Text("Docs:"),
+				glint.Color("lightBlue"),
+			),
+			glint.Text(" "),
+			glint.Text("https://waypointproject.io"),
+		).Row())
+		d.Append(glint.Layout(
+			glint.Style(
+				glint.Text("Version:"),
+				glint.Color("green"),
+			),
+			glint.Text(" "),
+			glint.Text(version.GetVersion().VersionNumber()),
+		).Row())
+		d.Append(glint.Text(""))
+
+		// Usage
+		d.Append(glint.Layout(
+			glint.Style(
+				glint.Text("Usage:"),
+				glint.Color("lightMagenta"),
+			),
+			glint.Text(" "),
+			glint.Text(cliName),
+			glint.Text(" "),
+			glint.Text("[-version] [-help] [-autocomplete-(un)install] <command> [args]"),
+		).Row())
+		d.Append(glint.Text(""))
+
+		// Add common commands
+		helpCommandsSection(d, "Common commands", commonCommands, commands)
+
+		// Make our other commands
+		ignoreMap := map[string]struct{}{}
+		for k := range hiddenCommands {
+			ignoreMap[k] = struct{}{}
+		}
+		for _, k := range commonCommands {
+			ignoreMap[k] = struct{}{}
 		}
 
-		// Filter out common commands and aliased commands from the other
-		// commands output
-		otherCommands := make([]string, 0, len(commands))
+		var otherCommands []string
 		for k := range commands {
-			if _, ok := commonCommands[k]; ok {
-				continue
-			}
-			if _, ok := hiddenCommands[k]; ok {
+			if _, ok := ignoreMap[k]; ok {
 				continue
 			}
 
@@ -411,22 +458,45 @@ func GroupedHelpFunc(f cli.HelpFunc) cli.HelpFunc {
 		}
 		sort.Strings(otherCommands)
 
-		fmt.Fprintf(tw, "\n")
-		fmt.Fprintf(tw, "Other commands:\n")
-		for _, v := range otherCommands {
-			printCommand(tw, v, commands[v])
-		}
+		// Add other commands
+		helpCommandsSection(d, "Other commands", otherCommands, commands)
 
-		tw.Flush()
-
-		return strings.TrimSpace(b.String())
+		d.RenderFrame()
+		return buf.String()
 	}
 }
 
-func printCommand(w io.Writer, name string, cmdFn cli.CommandFactory) {
-	cmd, err := cmdFn()
-	if err != nil {
-		panic(fmt.Sprintf("failed to load %q command: %s", name, err))
+func helpCommandsSection(
+	d *glint.Document,
+	header string,
+	commands []string,
+	factories map[string]cli.CommandFactory,
+) {
+	// Header
+	d.Append(glint.Style(
+		glint.Text(header),
+		glint.Bold(),
+	))
+
+	// Build our commands
+	var b bytes.Buffer
+	tw := tabwriter.NewWriter(&b, 0, 2, 6, ' ', 0)
+	for _, k := range commands {
+		fn, ok := factories[k]
+		if !ok {
+			continue
+		}
+
+		cmd, err := fn()
+		if err != nil {
+			panic(fmt.Sprintf("failed to load %q command: %s", k, err))
+		}
+
+		fmt.Fprintf(tw, "%s\t%s\n", k, cmd.Synopsis())
 	}
-	fmt.Fprintf(w, "    %s\t%s\n", name, cmd.Synopsis())
+	tw.Flush()
+
+	d.Append(glint.Layout(
+		glint.Text(b.String()),
+	).PaddingLeft(2))
 }
