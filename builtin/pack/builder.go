@@ -59,7 +59,7 @@ func (b *Builder) Build(
 		builder = DefaultBuilder
 	}
 
-	ui.Output("Creating new buildpack-based image using builder: %s", builder, terminal.WithInfoStyle())
+	ui.Output("Creating new buildpack-based image using builder: %s", builder)
 
 	sg := ui.StepGroup()
 
