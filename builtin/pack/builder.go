@@ -173,6 +173,7 @@ func (b *Builder) Build(
 
 	sg.Wait()
 
+	ui.Output("")
 	ui.Output("Generated new Docker image: %s:latest", src.App)
 
 	// We don't even need to inspect Docker to verify we have the image.
