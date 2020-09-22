@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -83,7 +81,7 @@ func (c *ServerConfigSetCommand) Synopsis() string {
 }
 
 func (c *ServerConfigSetCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint server config-set [options]
 
   Set the online configuration for a running Waypoint server.
@@ -92,7 +90,5 @@ Usage: waypoint server config-set [options]
   given via the startup file. This configuration is persisted in the server
   database.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

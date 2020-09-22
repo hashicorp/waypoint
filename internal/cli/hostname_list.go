@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/posener/complete"
 
@@ -62,14 +61,12 @@ func (c *HostnameListCommand) Synopsis() string {
 }
 
 func (c *HostnameListCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint hostname delete HOSTNAME
 
   List all registered hostnames.
 
   This will list all the registered hostnames for all applications.
 
-`
-
-	return strings.TrimSpace(helpText)
+`)
 }

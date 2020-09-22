@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -99,12 +97,10 @@ func (c *ContextDeleteCommand) Synopsis() string {
 }
 
 func (c *ContextDeleteCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint context delete [options] NAME
 
   Deletes a context. This will succeed if the context is already deleted.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

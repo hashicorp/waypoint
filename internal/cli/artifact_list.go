@@ -262,13 +262,11 @@ func (c *ArtifactListCommand) Synopsis() string {
 }
 
 func (c *ArtifactListCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint artifact list [options]
 
   Lists the artifacts that are pushed to a registry. This does not
   list the artifacts that are just part of local builds.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

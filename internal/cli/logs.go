@@ -103,12 +103,10 @@ func (c *LogsCommand) Synopsis() string {
 }
 
 func (c *LogsCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint logs [options]
 
   Show log output from the current application deployment.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

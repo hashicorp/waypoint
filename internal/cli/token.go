@@ -68,14 +68,12 @@ func (c *GetInviteCommand) Synopsis() string {
 }
 
 func (c *GetInviteCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint token invite [options]
 
   Request a new invite token. This token can be exchanged for a normal token to login.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }
 
 type ExchangeInviteCommand struct {

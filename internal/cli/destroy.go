@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
@@ -61,7 +60,7 @@ func (c *DestroyCommand) Synopsis() string {
 }
 
 func (c *DestroyCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint destroy [options]
 
   Delete all resources created for an app in the current workspace.
@@ -77,7 +76,5 @@ Usage: waypoint destroy [options]
   This targets one app in one workspace. You must call this for each workspace
   you've used if you want to destroy everything.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

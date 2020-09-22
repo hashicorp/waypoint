@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"strings"
 
 	"github.com/posener/complete"
 
@@ -72,7 +71,7 @@ func (c *ArtifactPushCommand) Synopsis() string {
 }
 
 func (c *ArtifactPushCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint artifact push [options]
 Alias: waypoint push
 
@@ -80,7 +79,5 @@ Alias: waypoint push
   successful local build by default. You can view a list of the recent
   local builds using "artifact list-builds" command.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

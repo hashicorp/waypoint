@@ -523,7 +523,7 @@ func (c *InstallCommand) Synopsis() string {
 }
 
 func (c *InstallCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint install [options]
 
   Installs a Waypoint server to an existing Kubernetes cluster.
@@ -532,9 +532,7 @@ Usage: waypoint install [options]
   (see "waypoint context") so the CLI will be configured to use the newly
   installed server.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }
 
 var (

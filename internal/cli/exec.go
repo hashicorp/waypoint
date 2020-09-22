@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"os"
-	"strings"
 
 	"github.com/posener/complete"
 
@@ -98,12 +97,10 @@ func (c *ExecCommand) Synopsis() string {
 }
 
 func (c *ExecCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint exec [options]
 
   Execute a command in the context of a running application instance.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

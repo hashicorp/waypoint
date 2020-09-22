@@ -588,7 +588,7 @@ func (c *InitCommand) Synopsis() string {
 }
 
 func (c *InitCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint init [options]
 
   Initialize and validate a project.
@@ -600,9 +600,7 @@ Usage: waypoint init [options]
   This command is always safe to run multiple times. This command will never
   delete your configuration or any data in the server.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }
 
 type initStepType uint

@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"strings"
 
 	"github.com/posener/complete"
 
@@ -69,13 +68,11 @@ func (c *ArtifactBuildCommand) Synopsis() string {
 }
 
 func (c *ArtifactBuildCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint artifact build [options]
 Alias: waypoint build
 
   Build a new versioned artifact from source.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }
