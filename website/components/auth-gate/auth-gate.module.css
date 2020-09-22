@@ -9,3 +9,9 @@
 .loadingIconSpin {
   transform: translateY(-100px);
 }
+
+.loginLockup {
+  display: flex;
+  width: 50vw;
+  justify-content: space-around;
+}
