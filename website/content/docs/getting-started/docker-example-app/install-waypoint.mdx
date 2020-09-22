@@ -62,8 +62,7 @@ Create a new Personal Access Token on GitHub, save it to a file, and then login 
 $ cat ~/TOKEN.txt | docker login https://docker.pkg.github.com -u GITHUBUSERNAME --password-stdin
 ```
 
-When you run Waypoint install, it defaults to using an image hosted on the GitHub Docker registry, and this
-secret will be used to authenticate.
+When you run `waypoint install`, Waypoint will uses an image hosted on the GitHub Docker registry by default, and this secret will be used to authenticate to that registry.
 
 Now you need to download the image so that we can start a container with it:
 
@@ -79,10 +78,7 @@ Install the Waypoint server to Docker for Desktop on your computer. This allows 
  $ waypoint install -platform=docker
 ```
 
-You may also install the server to a Kubernetes cluster or a [Nomad cluster](https://nomadproject.io). To learn
-more about Kubernetes, see the getting started
-guide for [deploying an app to Kubernetes](/docs/getting-started/k8s-example-app/install-waypoint). This walkthrough
-shows you how to deploy the server and an example app to Kubernetes.
+You may also install the server to a Kubernetes cluster or a [Nomad cluster](https://nomadproject.io. To learn more about Kubernetes, see the getting started guide for [deploying an app to Kubernetes](/docs/getting-started/k8s-example-app/install-waypoint). The walkthrough shows you how to deploy the server and an example app to Kubernetes.
 
 @include "getting-started/context.mdx"
 
