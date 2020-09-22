@@ -24,7 +24,8 @@ type basicUI struct {
 // Returns a UI which will write to the current processes
 // stdout/stderr.
 func ConsoleUI(ctx context.Context) UI {
-	return &basicUI{ctx: ctx}
+	return GlintUI(ctx)
+	//return &basicUI{ctx: ctx}
 }
 
 // Input implements UI
