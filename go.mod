@@ -103,5 +103,10 @@ require (
 // replace github.com/hashicorp/go-argmapper => ../go-argmapper
 // replace github.com/hashicorp/horizon => ../horizon
 
-// https://github.com/ory/dockertest/issues/208
-replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
+replace (
+	// v0.3.11 panics for some reason on our tests
+	github.com/imdario/mergo => github.com/imdario/mergo v0.3.9
+
+	// https://github.com/ory/dockertest/issues/208
+	golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
+)
