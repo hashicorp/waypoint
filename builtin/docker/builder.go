@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/docs"
 	"github.com/hashicorp/waypoint/sdk/terminal"
-	"github.com/mattn/go-isatty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -87,6 +86,10 @@ func (b *Builder) Build(
 		return nil, err
 	}
 
+	sg := ui.StepGroup()
+	step := sg.Add("Initializing Docker client...")
+	defer step.Abort()
+
 	result := &Image{
 		Image: fmt.Sprintf("waypoint.local/%s", src.App),
 		Tag:   "latest",
@@ -131,6 +134,9 @@ func (b *Builder) Build(
 		ver = types.BuilderBuildKit
 	}
 
+	step.Done()
+	step = sg.Add("Building image...")
+
 	resp, err := cli.ImageBuild(ctx, buildCtx, types.ImageBuildOptions{
 		Version:    ver,
 		Dockerfile: relDockerfile,
@@ -139,20 +145,14 @@ func (b *Builder) Build(
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error building image: %s", err)
 	}
-
 	defer resp.Body.Close()
 
-	var (
-		termFd uintptr
-		isTerm bool
-	)
-
+	var termFd uintptr
 	if f, ok := stdout.(*os.File); ok {
 		termFd = f.Fd()
-		isTerm = isatty.IsTerminal(termFd)
 	}
 
-	err = jsonmessage.DisplayJSONMessagesStream(resp.Body, stdout, termFd, isTerm, nil)
+	err = jsonmessage.DisplayJSONMessagesStream(resp.Body, step.TermOutput(), termFd, true, nil)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unable to stream build logs to the terminal: %s", err)
 	}
@@ -185,6 +185,8 @@ func (b *Builder) Build(
 			return nil, status.Errorf(codes.Internal, "unable to set modify Docker entrypoint: %s", err)
 		}
 	}
+
+	step.Done()
 
 	return result, nil
 }
