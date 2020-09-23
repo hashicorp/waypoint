@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
@@ -86,10 +87,20 @@ func (c *DeploymentDestroyCommand) getDeployments(ctx context.Context, ids []str
 	// Get each deployment
 	client := c.project.Client()
 	for _, id := range ids {
+		ref := &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{Id: id},
+		}
+		if v, err := strconv.ParseInt(id, 10, 64); err == nil {
+			ref.Target = &pb.Ref_Operation_Sequence{
+				Sequence: &pb.Ref_OperationSeq{
+					Application: c.refApp,
+					Number:      uint64(v),
+				},
+			}
+		}
+
 		deployment, err := client.GetDeployment(ctx, &pb.GetDeploymentRequest{
-			Ref: &pb.Ref_Operation{
-				Target: &pb.Ref_Operation_Id{Id: id},
-			},
+			Ref: ref,
 		})
 		if err != nil {
 			return nil, err
