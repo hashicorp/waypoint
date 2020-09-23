@@ -8,41 +8,35 @@ description: |-
 
 # Install Waypoint
 
-<!-- Make this a partial -->
+-> Review this walkthrough's [prerequisites](docs/getting-started/nomad-example-app/install-prereqs) before installing Waypoint.
 
--> Review the [prerequisites for this walkthrough](docs/getting-started/nomad-example-app/install-prereqs) before installing Waypoint.
+Waypoint uses both a client and a server to build, deploy, and release applications. This functionality is all available from a single binary.
 
-Waypoint uses both a client and a server to build, deploy, and release applications.
+## Download the Binary
 
-<!-- Make this a partial -->
+To install Waypoint, find the appropriate package on [the releases site](https://go.hashi.co/waypoint-beta-binaries)
+for your system and download it as a zip archive.
 
-## Download the Precompiled Binary
+After downloading Waypoint, unzip the package. Waypoint runs as a single binary named `waypoint`. Any other files in the package can be safely removed and Waypoint will still function.
 
-To install Waypoint, find the appropriate package for your system and download it as a zip archive.
-
-After downloading Waypoint, unzip the package into any directory. Waypoint runs as a single binary named `waypoint`. Any other files in the package can be safely removed and Waypoint will still function.
-
-Finally, make sure that the waypoint binary is available on your [PATH](#path).
-
-### How to Add Waypoint to Your Path ((#path))
-
-Add Waypoint to your `$PATH` to use the `waypoint` command without having to include the full directory path to the binary.
-
-See what is in your current `$PATH` definition.
+To make the binary available from anywhere on your system, you can either copy it into `/usr/local/bin` or add it to a different directory in your `PATH`. For instructions on how to do that, see [Editing your Path](#path).
 
 ```shell
-$ echo $PATH
+$ cp ~/Downloads/waypoint /usr/local/bin
 ```
 
-If you do not have an entry for the Waypoint binary, add the following line to your shell profile:
+Validate the installation by running the `waypoint` command.
 
-`export PATH=$PATH:my-directory-path-to-waypoint-binary`
+```
+$ waypoint
+Usage: waypoint [-version] [-help] [-autocomplete-(un)install] <command> [args]
 
-For example: `export PATH=$PATH:~/enlistments/waypoint`
-
-- To determine your shell, run `echo $SHELL`
-- If using Bash, use `nano ~/.bash_profile` to edit your Bash profile.
-- If using ZSH, use `nano ~/.zshrc` to edit your ZSH profile.
+Common commands:
+    release      Release a deployment.
+    up           Perform the build, deploy, and release steps for the app.
+    build        Build a new versioned artifact from source.
+...
+```
 
 ## Install the Waypoint Server
 

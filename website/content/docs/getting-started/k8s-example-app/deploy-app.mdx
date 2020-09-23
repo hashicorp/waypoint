@@ -6,17 +6,15 @@ description: |-
   Placeholder
 ---
 
-# Deploy Your App
+# Building and Deploying Your App
 
-### Deploying the Example Application
+### Running Waypoint Up
 
-This application is configured to use Cloud Native Buildpacks to detect the language type of the application running and to
-build the container for running in Kubernetes. As a result, you do not need to build the Dockerfile manually as Waypoint will use
-the default configurations of the relevant Cloud Native Buildpack.
+This application is configured to use Cloud Native Buildpacks to detect the language type of the application and to build the container to be run in Kubernetes. As a result, the application has no Dockerfile because the language specific buildpack handles that.
 
-In our previous step, we configured a remote Docker repository to store our build artifacts in.
+The `registry` entry in the application's `waypoint.hcl` file specifies that the build artifacts will be stored in a remote Docker registry.
 
-With this configuration in place and our application initialized we can issue the following command to build, deploy, and release our application:
+With this configuration in place and the application initialized, we can now use the `waypoint up` command to build, deploy, and release the application to Kubernetes.
 
 ```bash
 waypoint up
@@ -37,10 +35,7 @@ traffic. You can manage this hostname using "waypoint hostname."
 Deployment URL: https://instantly-worthy-shrew--01EJ0F2VYWTNTYJ6FNFNTY44G9.alpha.waypoint.run
 ```
 
-~> For the initial release, Waypoint creates the preview URL on a HashiCorp service. Because this preview URL is connected to your
-application and where it has been deployed, the URL will only show your application when it is running. In this walkthrough,
-this means that the Kubernetes cluster and the container for the deployed example NodeJS application must both be running for the URL
-to render your application.
+~> Waypoint creates the preview URL on a HashiCorp service. Because this preview URL is connected to your application and where it has been deployed, the URL will only show your application when it is running. In this walkthrough, this means that Docker for Desktop and the container for the deployed example Nodejs application must both be running for the URL to render your application.
 
 ### Next Step
 

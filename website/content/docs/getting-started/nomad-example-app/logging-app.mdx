@@ -6,15 +6,23 @@ description: |-
   Placeholder
 ---
 
-# The `waypoint logs` Command
+# Waypoint Logs
 
-From the same application directory, you can execute the `waypoint logs` command to inspect the running logs for your deployment.
+When you include the Waypoint Entrypoint in your application, Waypoint gathers realtime logs for standard output (stdout) and standard error (sterr) for deployed applications.
+
+Waypoint includes the Entrypoint within applications packaged as Docker containers by default.
+
+## Example Log
+
+To see the logs for a running appication, run the following command in the application's directory.
 
 ```bash
 waypoint logs
 ```
 
-You should see an output similar to the below.
+You will see an output similar to the below in your Terminal window.
+
+~>In this output, you will see that Waypoint is showing continuous probe checks for the root location. These probe checks are enabled by the `probe_path` value in the original `waypoint.hcl` file.
 
 ```shell
 2020-09-16T23:52:15.477Z uaubxwa: /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration

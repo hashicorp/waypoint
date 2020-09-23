@@ -6,15 +6,15 @@ description: |-
   Placeholder
 ---
 
-# Building and Deploying
+# Building and Deploying Your App
 
 ### Running Waypoint Up
 
-This application is configured to use Cloud Native Buildpacks to detect the type of application running and to launch it within Docker. As a result, the application has no Dockerfile because the language specific buildpack handles that.
+This application is configured to use Cloud Native Buildpacks to detect the type of application and to build the container to be run in Docker. As a result, the application has no Dockerfile because the language specific buildpack handles that.
 
 The resulting Docker image is stored on the local Docker instance.
 
-Deploy the application to Docker.
+We can now use the `waypoint up` command to build the app and deploy it to Docker for Desktop.
 
 ```bash
 $ waypoint up
