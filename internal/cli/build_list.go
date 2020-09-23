@@ -20,6 +20,7 @@ type BuildListCommand struct {
 	*baseCommand
 
 	flagWorkspaceAll bool
+	flagId           idFormat
 }
 
 func (c *BuildListCommand) Run(args []string) int {
@@ -84,7 +85,7 @@ func (c *BuildListCommand) Run(args []string) int {
 
 			table.Rich([]string{
 				status,
-				b.Id,
+				c.flagId.FormatId(b.Sequence, b.Id),
 				b.Workspace.Workspace,
 				b.Component.Name,
 				startTime,
@@ -113,6 +114,8 @@ func (c *BuildListCommand) Flags() *flag.Sets {
 			Target: &c.flagWorkspaceAll,
 			Usage:  "List builds in all workspaces for this project and application.",
 		})
+
+		initIdFormat(f, &c.flagId)
 	})
 }
 
