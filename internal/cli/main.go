@@ -117,7 +117,6 @@ func Commands(
 	aliases := map[string]string{
 		"build":  "artifact build",
 		"deploy": "deployment deploy",
-		"push":   "artifact push",
 	}
 
 	// start building our commands
