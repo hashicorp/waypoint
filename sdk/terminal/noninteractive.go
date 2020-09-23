@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"text/tabwriter"
@@ -218,7 +219,7 @@ type nonInteractiveStep struct {
 }
 
 func (f *nonInteractiveStep) TermOutput() io.Writer {
-	return color.Output
+	return &stripAnsiWriter{Next: color.Output}
 }
 
 func (f *nonInteractiveStep) Update(str string, args ...interface{}) {
@@ -247,3 +248,13 @@ func (f *nonInteractiveStep) Done() {
 func (f *nonInteractiveStep) Abort() {
 	f.Done()
 }
+
+type stripAnsiWriter struct {
+	Next io.Writer
+}
+
+func (w *stripAnsiWriter) Write(p []byte) (n int, err error) {
+	return w.Next.Write(reAnsi.ReplaceAll(p, []byte{}))
+}
+
+var reAnsi = regexp.MustCompile("[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))")
