@@ -8,11 +8,10 @@ description: |-
 
 # Update and Redeploy the App
 
-One of the most powerful parts of Waypoint is its ability to iterate on deployments and quickly redeploy the application with your changes in place.
+One of the most powerful workflows that Waypoint enables is the ability to continuously iterate and redeploy changes to you applications
+in a consistent way. Let's demonstrate this by updating a few of the values within the application.
 
-Open the following file in your preferred development editor:
-
-`app/views/welcome/index.erb`
+Using your favorite development editor, edit the `app/views/welcome/index.erb` file within the `ruby` directory.
 
 In the `p` block below the `H1`, update the text to whatever you like and save the file.
 
@@ -31,7 +30,7 @@ Back in the Terminal, redeploy the application with your new and improved text.
 $ waypoint up
 ```
 
-Waypoint has now redeployed your application to Docker.
+Waypoint has now deployed a new version of your application to Docker.
 
 You will notice that the Deployment URL for this second deployment is different from what was created for the first deployment. Waypoint generates unique URLs for each deployment, which means that you can access each deployment by using their unique deployment URLs. This is typically used to preview a deployment before releasing it.
 

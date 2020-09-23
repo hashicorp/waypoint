@@ -6,30 +6,35 @@ description: |-
   Placeholder
 ---
 
-<!-- Make this a partial -->
+# Prerequisites
 
 ## Examples Repository
 
-This walkthrough will use an [example NodeJS application](https://github.com/hashicorp/waypoint-examples/tree/master/nomad/nodejs)
-to show how to build, deploy, and release using Waypoint. This example is part of the [waypoint-samples](https://github.com/hashicorp/waypoint-examples)
-repository. You will need a local clone of this repository in order to leverage this guide.
+This walkthrough uses an example Nodejs application to show you how to build, deploy and release using Waypoint.
 
-Clone the repository.
+This example application is part of the [Waypoint Examples applications](https://github.com/hashicorp/waypoint-examples). You will need a local clone of this repository on your computer to complete this walkthrough.
+
+Clone the Waypoint Examples repository and navigate to the Nodejs example directory.
 
 ```shell
 $ git clone https://github.com/hashicorp/waypoint-examples.git
-cd waypoint-examples/nomad/nodejs
+
+$ cd waypoint-examples/nodejs
 ```
 
-## A Nomad Environment
+## A Nomad Requirements
 
-Waypoint supports Nomad both as a location for running the Waypoint server as well as for running application workloads. To get
-started with Nomad we suggest reviewing the [HashiCorp Learn tutorials for Nomad](https://learn.hashicorp.com/nomad)
+To get started with Nomad, review the [HashiCorp Learn tutorials for Nomad](https://learn.hashicorp.com/nomad).
 
-You will also want to export the `NOMAD_ADDR` environment variable. Waypoint will call this variable for interacting with the Nomad
-environment.
+### Nomad Environment
 
-#### Next Step
+Waypoint supports Nomad both as a location for running the Waypoint server and as a runtime platform for application workloads.
+
+### Nomad Environment Variable
+
+Waypoint calls the 'NOMAD_ADDR' variable to interact with the Nomad environment. You will need to export this variable to use it in the Waypoint configuration file.
+
+### Next Step
 
 [Getting Started: Install Waypoint](/docs/getting-started/nomad-example-app/install-waypoint)
 
