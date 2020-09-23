@@ -205,7 +205,7 @@ func (f *nonInteractiveStepGroup) Add(str string, args ...interface{}) Step {
 func (f *nonInteractiveStepGroup) Wait() {
 	f.mu.Lock()
 	f.closed = true
-	wg := f.wg
+	wg := &f.wg
 	f.mu.Unlock()
 
 	wg.Wait()

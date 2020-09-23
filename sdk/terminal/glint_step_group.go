@@ -50,7 +50,7 @@ func (f *glintStepGroup) Wait() {
 	f.mu.Lock()
 	f.closed = true
 	f.cancel()
-	wg := f.wg
+	wg := &f.wg
 	f.mu.Unlock()
 
 	wg.Wait()
