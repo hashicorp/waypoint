@@ -519,7 +519,7 @@ func (c *InstallCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *InstallCommand) Synopsis() string {
-	return "Output Kubernetes configurations to run a self-hosted server."
+	return "Output Kubernetes configurations to run a self-hosted server"
 }
 
 func (c *InstallCommand) Help() string {

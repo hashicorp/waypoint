@@ -64,7 +64,7 @@ func (c *ArtifactBuildCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ArtifactBuildCommand) Synopsis() string {
-	return "Build a new versioned artifact from source."
+	return "Build a new versioned artifact from source"
 }
 
 func (c *ArtifactBuildCommand) Help() string {

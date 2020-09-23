@@ -117,7 +117,6 @@ func Commands(
 	aliases := map[string]string{
 		"build":  "artifact build",
 		"deploy": "deployment deploy",
-		"push":   "artifact push",
 	}
 
 	// start building our commands
@@ -145,6 +144,12 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"config": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["config"][0],
+				HelpText:     helpText["config"][1],
+			}, nil
+		},
 		"config get": func() (cli.Command, error) {
 			return &ConfigGetCommand{
 				baseCommand: baseCommand,
@@ -161,6 +166,12 @@ func Commands(
 			}, nil
 		},
 
+		"artifact": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["artifact"][0],
+				HelpText:     helpText["artifact"][1],
+			}, nil
+		},
 		"artifact build": func() (cli.Command, error) {
 			return &ArtifactBuildCommand{
 				baseCommand: baseCommand,
@@ -182,6 +193,13 @@ func Commands(
 		"artifact push": func() (cli.Command, error) {
 			return &ArtifactPushCommand{
 				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"deployment": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["deployment"][0],
+				HelpText:     helpText["deployment"][1],
 			}, nil
 		},
 
@@ -237,6 +255,14 @@ func Commands(
 				VersionInfo: version.GetVersion(),
 			}, nil
 		},
+
+		"hostname": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["hostname"][0],
+				HelpText:     helpText["hostname"][1],
+			}, nil
+		},
+
 		"hostname register": func() (cli.Command, error) {
 			return &HostnameRegisterCommand{
 				baseCommand: baseCommand,
@@ -250,6 +276,12 @@ func Commands(
 		"hostname delete": func() (cli.Command, error) {
 			return &HostnameDeleteCommand{
 				baseCommand: baseCommand,
+			}, nil
+		},
+		"token": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["token"][0],
+				HelpText:     helpText["token"][1],
 			}, nil
 		},
 		"token new": func() (cli.Command, error) {
@@ -268,12 +300,24 @@ func Commands(
 			}, nil
 		},
 
+		"runner": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["runner"][0],
+				HelpText:     helpText["runner"][1],
+			}, nil
+		},
 		"runner agent": func() (cli.Command, error) {
 			return &RunnerAgentCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
 
+		"context": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["context"][0],
+				HelpText:     helpText["context"][1],
+			}, nil
+		},
 		"context create": func() (cli.Command, error) {
 			return &ContextCreateCommand{
 				baseCommand: baseCommand,
@@ -509,4 +553,87 @@ func helpCommandsSection(
 	d.Append(glint.Layout(
 		glint.Text(b.String()),
 	).PaddingLeft(2))
+}
+
+var helpText = map[string][2]string{
+	"artifact": {
+		"Artifact and build management",
+		`
+Artifact and build management.
+
+The artifact commands can be used to create new builds, push those
+builds to a registry, etc. The result of a build is known as an artifact.
+Waypoint will search for artifacts to pass to the deployment phase.
+`,
+	},
+
+	"config": {
+		"Application configuration management",
+		`
+Manage application configuration.
+
+The config commands can be used to manage the configuration that
+Waypoint will inject into your application via environment variables.
+This can be used to set values such as ports to listen on, database URLs,
+etc.
+
+For more information see: https://waypointproject.io/docs/config
+`,
+	},
+
+	"context": {
+		"Server access configurations",
+		`
+Manage configurations for accessing Waypoint servers.
+
+A context contains all the configuration to connect to a single Waypoint
+server. The Waypoint CLI can have multiple contexts to make it easy to switch
+between different Waypoint servers.
+`,
+	},
+
+	"deployment": {
+		"Deployment creation and management",
+		`
+Create and manage application deployments.
+
+A deployment is the process of taking an artifact and launching it,
+potentially for public access. Waypoint deployment commands let you create
+new deployments, delete existing ones, list previous deployments, and more.
+`,
+	},
+
+	"hostname": {
+		"Application URLs",
+		`
+Create and manage application URLs powered by the Waypoint URL service.
+
+The Waypoint URL service registers publicly routable URLs to access your
+deployments. These can be used to share previews with teammates, see
+unreleased deployments, and more.
+
+For more information see: https://waypointproject.io/docs/url
+`,
+	},
+
+	"runner": {
+		"Runner management",
+		`
+Runner management.
+
+Runners are used to execute remote operations for Waypoint. If you're new
+to Waypoint, you generally *do not need* runners and you can ignore this
+entire section.
+`,
+	},
+
+	"token": {
+		"Authenticate and invite collaborators",
+		`
+Authenticate and invite collaborators.
+
+Tokens are the primary form of authentication to Waypoint. Everyone who
+accesses a Waypoint server requires a token.
+`,
+	},
 }

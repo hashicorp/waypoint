@@ -109,15 +109,15 @@ func (c *UICommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *UICommand) Synopsis() string {
-	return "Request a new invite token."
+	return "Open the web UI"
 }
 
 func (c *UICommand) Help() string {
 	return formatHelp(`
 Usage: waypoint ui [options]
 
-  Opens the new UI. When provided a flag, will automatically open the token invite page with an
-  invite token for authentication.
+  Opens the new UI. When provided a flag, will automatically open the
+  token invite page with an invite token for authentication.
 
 ` + c.Flags().Help())
 }

@@ -536,7 +536,7 @@ func (c *AppDocsCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *AppDocsCommand) Synopsis() string {
-	return "Show documentation for components."
+	return "Show documentation for components"
 }
 
 func (c *AppDocsCommand) Help() string {

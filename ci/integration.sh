@@ -20,8 +20,6 @@ cd ci/sinatra || exit 1
 
 "$WP" build
 
-"$WP" push
-
 "$WP" deploy
 
 "$WP" release

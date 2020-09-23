@@ -53,14 +53,14 @@ require (
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/waypoint-hzn v0.0.0-20200716172850-719df2bafd65
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
-	github.com/imdario/mergo v0.3.9
+	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
 	github.com/lab47/vterm v0.0.0-20200730001001-14f91f37349f
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.7
 	github.com/mattn/go-isatty v0.0.12
-	github.com/mitchellh/cli v1.1.0
+	github.com/mitchellh/cli v1.1.2
 	github.com/mitchellh/go-glint v0.0.0-20200922160842-a2e71408be7d
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
 	github.com/mitchellh/go-homedir v1.1.0
@@ -69,6 +69,7 @@ require (
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/pointerstructure v1.0.0
 	github.com/mitchellh/protostructure v0.0.0-20200814180458-3cfccdb015ce
+	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/morikuni/aec v1.0.0
 	github.com/mr-tron/base58 v1.2.0
 	github.com/netlify/open-api v0.15.0
@@ -102,5 +103,10 @@ require (
 // replace github.com/hashicorp/go-argmapper => ../go-argmapper
 // replace github.com/hashicorp/horizon => ../horizon
 
-// https://github.com/ory/dockertest/issues/208
-replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
+replace (
+	// v0.3.11 panics for some reason on our tests
+	github.com/imdario/mergo => github.com/imdario/mergo v0.3.9
+
+	// https://github.com/ory/dockertest/issues/208
+	golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
+)

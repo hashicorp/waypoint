@@ -133,7 +133,7 @@ func (c *UpCommand) Flags() *flag.Sets {
 }
 
 func (c *UpCommand) Synopsis() string {
-	return "Perform the build, deploy, and release steps for the app."
+	return "Perform the build, deploy, and release steps for the app"
 }
 
 func (c *UpCommand) Help() string {
