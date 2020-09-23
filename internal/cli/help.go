@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mitchellh/cli"
 	"github.com/mitchellh/go-glint"
 )
 
@@ -73,4 +74,41 @@ func formatHelp(v string) string {
 	return buf.String()
 }
 
+type helpCommand struct {
+	SynopsisText string
+	HelpText     string
+}
+
+func (c *helpCommand) Run(args []string) int {
+	return cli.RunResultHelp
+}
+
+func (c *helpCommand) Synopsis() string {
+	return strings.TrimSpace(c.SynopsisText)
+}
+
+func (c *helpCommand) Help() string {
+	if c.HelpText == "" {
+		return c.SynopsisText
+	}
+
+	return c.HelpText
+}
+
+func (c *helpCommand) HelpTemplate() string {
+	return formatHelp(helpTemplate)
+}
+
 var reHelpHeader = regexp.MustCompile(`^[a-zA-Z0-9_-].*:$`)
+
+const helpTemplate = `
+Usage: {{.Name}} {{.SubcommandName}} SUBCOMMAND
+
+{{indent 2 (trim .Help)}}{{if gt (len .Subcommands) 0}}
+
+Subcommands:
+{{- range $value := .Subcommands }}
+    {{ $value.NameAligned }}    {{ $value.Synopsis }}{{ end }}
+
+{{- end }}
+`
