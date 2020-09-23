@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/version"
 )
 
 const (
@@ -76,6 +77,15 @@ func Run(ctx context.Context, os ...Option) error {
 		"deployment_id", ceb.deploymentId,
 		"instance_id", ceb.id,
 		"args", cfg.ExecArgs,
+	)
+
+	vsn := version.GetVersion()
+	ceb.logger.Info("entrypoint version",
+		"full_string", vsn.FullVersionNumber(true),
+		"version", vsn.Version,
+		"prerelease", vsn.VersionPrerelease,
+		"metadata", vsn.VersionMetadata,
+		"revision", vsn.Revision,
 	)
 
 	if ceb.client == nil {

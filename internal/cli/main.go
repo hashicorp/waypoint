@@ -65,6 +65,16 @@ func Main(args []string) int {
 		panic(err)
 	}
 
+	// Log our versions
+	vsn := version.GetVersion()
+	log.Info("waypoint version",
+		"full_string", vsn.FullVersionNumber(true),
+		"version", vsn.Version,
+		"prerelease", vsn.VersionPrerelease,
+		"metadata", vsn.VersionMetadata,
+		"revision", vsn.Revision,
+	)
+
 	// Build our cancellation context
 	ctx, closer := signalcontext.WithInterrupt(context.Background(), log)
 	defer closer()
