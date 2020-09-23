@@ -140,9 +140,9 @@ func (s *service) deploymentPreloadUrl(
 		hostname := resp.Hostnames[0]
 
 		d.Preload.DeployUrl = fmt.Sprintf(
-			"%s--%s%s",
+			"%s--v%d%s",
 			hostname.Hostname,
-			d.Id,
+			d.Sequence,
 			strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
 		)
 	}

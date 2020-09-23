@@ -20,14 +20,15 @@ import (
 )
 
 type Client struct {
-	UI           terminal.UI
-	Context      context.Context
-	Client       pb.WaypointClient
-	DeploymentId string
-	Args         []string
-	Stdin        io.Reader
-	Stdout       io.Writer
-	Stderr       io.Writer
+	UI            terminal.UI
+	Context       context.Context
+	Client        pb.WaypointClient
+	DeploymentId  string
+	DeploymentSeq uint64
+	Args          []string
+	Stdin         io.Reader
+	Stdout        io.Writer
+	Stderr        io.Writer
 }
 
 func (c *Client) Run() (int, error) {
@@ -82,8 +83,15 @@ func (c *Client) Run() (int, error) {
 
 	if ptyF != nil {
 		status.Close()
-		c.UI.Output("# Connected to " + c.DeploymentId)
+		c.UI.Output("Connected to deployment v%d", c.DeploymentSeq, terminal.WithSuccessStyle())
+	}
 
+	// Close our UI if we can
+	if closer, ok := c.UI.(io.Closer); ok {
+		closer.Close()
+	}
+
+	if ptyF != nil {
 		// We need to go into raw mode with stdin
 		if f, ok := c.Stdin.(*os.File); ok {
 			oldState, err := sshterm.MakeRaw(int(f.Fd()))

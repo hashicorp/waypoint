@@ -55,14 +55,15 @@ func (c *ExecCommand) Run(args []string) int {
 		}
 
 		client := &execclient.Client{
-			UI:           c.ui,
-			Context:      ctx,
-			Client:       client,
-			DeploymentId: resp.Deployments[0].Id,
-			Args:         args,
-			Stdin:        os.Stdin,
-			Stdout:       os.Stdout,
-			Stderr:       os.Stderr,
+			UI:            c.ui,
+			Context:       ctx,
+			Client:        client,
+			DeploymentId:  resp.Deployments[0].Id,
+			DeploymentSeq: resp.Deployments[0].Sequence,
+			Args:          args,
+			Stdin:         os.Stdin,
+			Stdout:        os.Stdout,
+			Stderr:        os.Stderr,
 		}
 
 		exitCode, err = client.Run()

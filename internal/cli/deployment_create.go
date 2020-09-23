@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/posener/complete"
@@ -52,11 +51,11 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
+		deployUrl := result.Deployment.Preload.DeployUrl
 		deployment := result.Deployment
 
 		// Try to get the hostname
 		var hostname *pb.Hostname
-		var deployUrl string
 		hostnamesResp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{
 			Target: &pb.Hostname_Target{
 				Target: &pb.Hostname_Target_Application{
@@ -69,13 +68,6 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		})
 		if err == nil && len(hostnamesResp.Hostnames) > 0 {
 			hostname = hostnamesResp.Hostnames[0]
-
-			deployUrl = fmt.Sprintf(
-				"%s--%s%s",
-				hostname.Hostname,
-				deployment.Id,
-				strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
-			)
 		}
 
 		// Release if we're releasing

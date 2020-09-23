@@ -29,6 +29,16 @@ func (r *Runner) executeDeployOp(
 		return nil, err
 	}
 
+	// Update to the latest deployment in order to get all the preload data.
+	deployment, err = r.client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+		Ref: &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{Id: deployment.Id},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.Job_Result{
 		Deploy: &pb.Job_DeployResult{
 			Deployment: deployment,
