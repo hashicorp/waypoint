@@ -1,0 +1,105 @@
+---
+layout: docs
+page_title: Automating Execution of Waypoint
+sidebar_title: Automating Execution
+description: |-
+  An overview of how to automate the execution of Waypoint in remote systems
+---
+
+# Automating Execution of Waypoint
+
+Your team may want to automate the execution of Waypoint as your
+build and deployment tool, based on triggers such as a commit to a VCS
+provider, a chat-based workflow, or on-demand in a specific environment.
+
+This section documents the currently recommended best practices when running
+Waypoint in that way, and in some cases documents examples for popular
+systems or providers where you may run Waypoint.
+
+As a general rule, it is perfectly fine to simply run
+`waypoint` commands in an environment that is not on a developer
+workstation. For example, if you currently have a deployment tool
+or script that runs on a remote machine based on a trigger, you could,
+in place of that, run Waypoint, including by invoking it in
+the existing script or system to gradually adopt it.
+
+## Environment Variables
+
+In a remote execution environment, as with a local workstation, the Waypoint
+binary will need access to the [Waypoint server](#todo). Locally, it is recommended
+that developers create [contexts](#todo) to store information about the remote
+Waypoint server. In a remote environment, this may make less sense given the
+environments are often ephemeral. In this scenario, we recommend using environment variables
+to configure the server.
+
+~> The Waypoint server token is sensitive and should be
+treated as a password and protected accordingly.
+
+Below is a list of commonly used environment variables for remote execution. These variables
+configure the Waypoint CLI for communication with the Waypoint server.
+
+- `WAYPOINT_SERVER_TOKEN`. Must be set to a Waypoint token, created with [`waypoint token new`](/commands/token-new)
+- `WAYPOINT_SERVER_ADDR`. The address to the Waypoint server gRPC address. This must
+  be accessible from the network that the client is running on.
+- `WAYPOINT_SERVER_TLS`. Should be set to `1` to configure the client to use TLS when
+  connecting to the server.
+- `WAYPOINT_SERVER_TLS_SKIP_VERIFY`. Current must be set to `1` to disable TLS verification
+  when communicating with the server.
+
+For a complete list of variables for configuring the client, see [todo](#todo).
+
+## Init
+
+The [`waypoint init` command](/commands/init) is still required in remote environments, and must be
+run in the environment ahead of other Waypoint commands such as `up`. This
+command can be run multiple times safely.
+
+In a scenario where you are running `build`, `deploy`, and `release` in discrete steps,
+it may make sense to run `init` once followed by those commands, or if each of the commands
+are run in ephemeral or potentially ephemeral environments, to ensure `init` is called
+each time. A helpful side-effect of `init` is that it will validate the Waypoint
+configuration, connection to the server, and will ensure that everything is set-up to
+properly execute the operation. Any remote system executing this command should
+make the output easily accessible to users upon failure.
+
+## Output Formatting
+
+If Waypoint detects that the terminal does not support interactivity it will output a
+simpler "non-interactive" output mode. This output is easier to consume in
+a CI/CD systems logging views, or through log archiving systems. This is automatic
+and does not need to be explicitly configured, but can be forced by setting
+the environment variable `WAYPOINT_PLAIN` to `1`.
+
+## Workspaces
+
+When automating Waypoint, it is important to keep in mind that
+all commands will use the default workspace unless otherwise specified.
+
+In a scenario where there are multiple developers triggering remote
+execution of Waypoint, it may be important to consider the effect
+this could have while all working out of the [`default` workspace](/docs/workspaces).
+
+For example, if integrating with a VCS system such as GitHub, an additional
+branch may have a new feature that you would not want released in the default
+workspace, but that same developer will want to validate their work in a
+deployment, and possibly a released deployment, depending on the platform.
+
+In this scenario, it is best to use additional [workspaces](/docs/workspaces). These
+can be configured, as they are locally, at invocation time from the CLI. A common
+pattern for this might be to utilize a git branch in a name of a workspace.
+
+For example:
+
+```
+$ waypoint up -workspace $(git symbolic-ref HEAD)
+```
+
+This would run a build in a new workspace (eg. `refs/heads/f-new-feature`) and
+deploy and release against resources not used in the default workspace.
+
+## Locking
+
+Waypoint does not currently lock workspaces, projects, or applications,
+so there may be safety issues in concurrent deployments. Until these
+safeguards exist in Waypoint itself, it is recommend to avoid
+concurrent execution of Waypoint against the same workspace.
