@@ -10,7 +10,6 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
@@ -39,7 +38,6 @@ func (c *LogsCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
-		var pv component.PartitionViewer
 		for {
 			batch, err := lv.NextLogBatch(ctx)
 			if err != nil {
@@ -60,7 +58,10 @@ func (c *LogsCommand) Run(args []string) int {
 				// instead of .9, which preserves the spacing so the output is always
 				// lined up
 				ts := event.Timestamp.Format("2006-01-02T15:04:05.000Z07:00")
-				short := pv.Short(event.Partition)
+				short := event.Partition
+				if len(short) > 6 {
+					short = short[len(short)-6:]
+				}
 
 				header := headerColor.Sprintf("%s %s: ", ts, short)
 				if strings.IndexByte(event.Message, '\n') != -1 {
@@ -106,7 +107,14 @@ func (c *LogsCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint logs [options]
 
-  Show log output from the current application deployment.
+  Show log output from all current deployments.
+
+  The logs will include output from deployments that aren't released.
+  As new deployments are made, their logs will appear automatically.
+
+  The six character text after the date on a log line is the last six
+  characters of the instance ID. This can be used to trace any logs back
+  to a specific deployment or filter out certain log messages.
 
 ` + c.Flags().Help())
 }
