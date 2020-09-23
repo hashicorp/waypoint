@@ -101,3 +101,6 @@ require (
 // development at the moment it is common to be working on these libs too.
 // replace github.com/hashicorp/go-argmapper => ../go-argmapper
 // replace github.com/hashicorp/horizon => ../horizon
+
+// https://github.com/ory/dockertest/issues/208
+replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
