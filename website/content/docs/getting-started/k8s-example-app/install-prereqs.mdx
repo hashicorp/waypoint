@@ -6,26 +6,29 @@ description: |-
   Placeholder
 ---
 
-<!-- Make this a partial -->
+# Prerequisites
 
 ## Examples Repository
+
+This walkthrough uses an example NodeJS application to show you how to build, deploy and release using Waypoint.
 
 This walkthrough will use an [example NodeJS application](https://github.com/hashicorp/waypoint-examples/tree/master/kubernetes/nodejs) to show how to build, deploy, and release using Waypoint. This example is part
 of the [waypoint-examples](https://github.com/hashicorp/waypoint-examples) repository. You will need a local clone of this repository in order to leverage this guide.
 
-Clone and enter the samples repository.
+Clone the Waypoint Examples repository and navigate to the NodeJS example directory.
 
-```bash
+```shell
 $ git clone https://github.com/hashicorp/waypoint-examples.git
-cd waypoint-examples/kubernetes/nodejs
+
+$ cd waypoint-examples/kubernetes/nodejs
 ```
 
 ## A Kubernetes Environment
 
-Waypoint supports current Kubernetes distributions across multiple environments and is unopinionated about which distribution you should use. You'll also need to ensure you have your KubeConfig set under the `KUBECONFIG` environment variable to allow access to the cluster.
+You can use any current Kubernetes distribution with Waypoint. Set your KubeConfig set with the `KUBECONFIG` environment variable to allow access to the cluster.
+
+<!-- Need to add details about how to set kubeconfig and example -->
 
 ### Next Step
 
 [Getting Started: Install Waypoint](/docs/getting-started/k8s-example-app/install-waypoint)
-
-<!-- End partial -->

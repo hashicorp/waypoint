@@ -8,31 +8,24 @@ description: |-
 
 # Install Waypoint
 
--> Review the [prerequisites walkthrough](/docs/getting-started/k8s-example-app/install-prereqs) before installing
-Waypoint.
+-> Review this walkthrough's [prerequisites](/docs/getting-started/k8s-example-app/install-prereqs) before installing Waypoint.
 
-Waypoint uses both a client and a server to build, deploy, and release applications. This is
-all available from a single binary.
-
-<!-- Make this a partial -->
+Waypoint uses both a client and a server to build, deploy, and release applications. This functionality is all available from a single binary.
 
 ## Download the Binary
 
 To install Waypoint, find the appropriate package on [the releases site](https://go.hashi.co/waypoint-beta-binaries)
 for your system and download it as a zip archive.
 
-After downloading Waypoint, unzip the package. Waypoint runs as a single binary named `waypoint`. Any
-other files in the package can be safely removed and Waypoint will still function.
+After downloading Waypoint, unzip the package. Waypoint runs as a single binary named `waypoint`. Any other files in the package can be safely removed and Waypoint will still function.
 
-To make the binary available from anywhere on your system, you can either
-copy it into `/usr/local/bin` or add it to a different directory in your `PATH`. For
-instructions on how to do that, see [Editing your Path](#path).
+To make the binary available from anywhere on your system, you can either copy it into `/usr/local/bin` or add it to a different directory in your `PATH`. For instructions on how to do that, see [Editing your Path](#path).
 
-```
+```shell
 $ cp ~/Downloads/waypoint /usr/local/bin
 ```
 
-You can validate the installation by running `waypoint`:
+Validate the installation by running the `waypoint` command.
 
 ```
 $ waypoint
@@ -47,9 +40,7 @@ Common commands:
 
 ## Create Kubernetes Secret for Server Image
 
--> Due to Waypoint currently being in a private beta, you need to provide
-authentication details for Kubernetes to access the container image that
-contains the Waypoint binary for running the server. Once public, this step will not be required.
+-> Because Waypoint is currently a pre-release private beta, you need to provide authentication details so that Kubernetes can access the container image containing the binary for running the Waypoint server. Once Waypoint is public, you will not need to do this step.
 
 In order to provide your Kubernetes cluster access to the Waypoint container image during
 the private beta, you need to create a Kubernetes secret that contains authentication information
@@ -62,7 +53,7 @@ First, you need to [create a personal access token](https://docs.github.com/en/g
 Then, save the token to a file named `TOKEN.txt`. We will read this token when creating the Kubernetes secret. Ensure `kubectl`
 is configured to interact with the correct Kubernetes cluster, and then run the following command:
 
-```
+```shell
 $ kubectl create secret docker-registry github --docker-server=docker.pkg.github.com --docker-username=GITHUBUSERNAME --docker-password="$(< TOKEN.txt)" --docker-email=GITHUBEMAIL
 ```
 
@@ -72,14 +63,14 @@ When you run Waypoint install, it defaults to using an image hosted on the GitHu
 
 In this step we will innstall the Waypoint server onto Kubernetes. This allows you to view the user interface, collaborate on deployments, and more.
 
--> Note: Currently the image for the Waypoint server is hosted in GitHub packages which does not support containerd. If you are using Kind, or K3d which uses
-containerd rather than DockerD, the Waypoint server install will fail with an ImagePullBackOff error. The team is currently working on resolving this issue.
+-> Note: Currently the image for the Waypoint server is hosted in GitHub packages, which does not support containerd. If you are using Kind, or K3d, which uses
+containerd rather than DockerD, the Waypoint server install will fail with an ImagePullBackOff error. The Waypoint team is currently working on resolving this issue.
 
 ```shell
  $ waypoint install -platform=kubernetes
 ```
 
-In addition to Kubernetes, the Waypoint server can be installed on Docker or a [Nomad cluster](https://nomadproject.io). 
+In addition to Kubernetes, the Waypoint server can be installed on Docker or a [Nomad cluster](https://nomadproject.io).
 
 @include "getting-started/context.mdx"
 
