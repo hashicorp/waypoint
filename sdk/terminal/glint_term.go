@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/lab47/vterm/parser"
 	"github.com/lab47/vterm/screen"
@@ -37,7 +38,7 @@ func (t *glintTerm) Body(ctx context.Context) glint.Component {
 		cs = append(cs, glint.Layout(
 			glint.Text(" ｜ "),
 			glint.Style(
-				glint.Text(strings.TrimSpace(string(row))),
+				glint.Text(strings.TrimRightFunc(string(row), unicode.IsSpace)),
 				glint.Color("lightBlue"),
 			),
 		).Row())
