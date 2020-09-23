@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -59,7 +57,7 @@ func (c *ContextClearCommand) Synopsis() string {
 }
 
 func (c *ContextClearCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint context clear
 
   This unsets any default context.
@@ -72,7 +70,5 @@ Usage: waypoint context clear
   variable to "-" which will force a local mode operation if supported by
   the project.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

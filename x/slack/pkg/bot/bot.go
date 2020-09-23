@@ -116,7 +116,8 @@ func (b *Bot) handleMessage(ctx context.Context, L hclog.Logger, m *slack.Messag
 	ui.ctx = ctx
 	ui.channel = m.Channel
 
-	commands := cli.Commands(ctx, L, ioutil.Discard, cli.WithUI(&ui))
+	base, commands := cli.Commands(ctx, L, ioutil.Discard, cli.WithUI(&ui))
+	defer base.Close()
 	for _, cmd := range unsupportedCommands {
 		delete(commands, cmd)
 	}

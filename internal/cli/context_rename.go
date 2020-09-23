@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -58,7 +56,7 @@ func (c *ContextRenameCommand) Synopsis() string {
 }
 
 func (c *ContextRenameCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint context rename [options] FROM TO
 
   Rename a context FROM to TO.
@@ -66,7 +64,5 @@ Usage: waypoint context rename [options] FROM TO
   This will error if FROM does not exist. This will overwrite TO if it
   exists. If the current default is FROM, the default will be set to TO.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

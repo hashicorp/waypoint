@@ -64,6 +64,9 @@ type baseCommand struct {
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
 
+	// flagPlain is whether the output should be in plain mode.
+	flagPlain bool
+
 	// flagLabels are set via -label if flagSetOperation is set.
 	flagLabels map[string]string
 
@@ -87,6 +90,12 @@ type baseCommand struct {
 // Close cleans up any resources that the command created. This should be
 // defered by any CLI command that embeds baseCommand in the Run command.
 func (c *baseCommand) Close() error {
+	// Close our UI if it implements it. The glint-based UI does for example
+	// to finish up all the CLI output.
+	if closer, ok := c.ui.(io.Closer); ok && closer != nil {
+		closer.Close()
+	}
+
 	return nil
 }
 
@@ -124,6 +133,11 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 	c.args = baseCfg.Flags.Args()
+
+	// Reset the UI to plain if that was set
+	if c.flagPlain {
+		c.ui = terminal.NonInteractiveUI(c.Ctx)
+	}
 
 	// With the flags we now know what workspace we're targeting
 	c.refWorkspace = &pb.Ref_Workspace{Workspace: c.flagWorkspace}
@@ -299,6 +313,14 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 	set := flag.NewSets()
 	{
 		f := set.NewSet("Global Options")
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "plain",
+			Target:  &c.flagPlain,
+			Default: false,
+			Usage:   "Plain output: no colors, no animation.",
+		})
+
 		f.StringVar(&flag.StringVar{
 			Name:    "workspace",
 			Target:  &c.flagWorkspace,

@@ -367,12 +367,10 @@ func (c *DeploymentListCommand) Synopsis() string {
 }
 
 func (c *DeploymentListCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint deployment list [options]
 
   Lists the deployments that were created.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

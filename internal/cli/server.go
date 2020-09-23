@@ -13,7 +13,6 @@ import (
 	"io/ioutil"
 	"math/big"
 	"net"
-	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -363,14 +362,12 @@ func (c *ServerCommand) Synopsis() string {
 }
 
 func (c *ServerCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint server [options]
 
   Run the builtin server.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }
 
 func (c *ServerCommand) listenerForConfig(log hclog.Logger, cfg *config.Listener) (net.Listener, error) {

@@ -59,7 +59,7 @@ func (b *Builder) Build(
 		builder = DefaultBuilder
 	}
 
-	ui.Output("Creating new buildpack-based image using builder: %s", builder, terminal.WithInfoStyle())
+	ui.Output("Creating new buildpack-based image using builder: %s", builder)
 
 	sg := ui.StepGroup()
 
@@ -173,6 +173,7 @@ func (b *Builder) Build(
 
 	sg.Wait()
 
+	ui.Output("")
 	ui.Output("Generated new Docker image: %s:latest", src.App)
 
 	// We don't even need to inspect Docker to verify we have the image.

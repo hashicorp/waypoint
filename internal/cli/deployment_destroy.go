@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"strings"
 
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
@@ -191,7 +190,7 @@ func (c *DeploymentDestroyCommand) Synopsis() string {
 }
 
 func (c *DeploymentDestroyCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint deployment destroy [options] [id...]
 
   Destroy one or more deployments. This will "undeploy" this specific
@@ -201,7 +200,5 @@ Usage: waypoint deployment destroy [options] [id...]
   deployments. This will require interactive confirmation by the user
   unless the force flag (-force) is specified.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

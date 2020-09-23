@@ -2,7 +2,6 @@ package cli
 
 import (
 	"io/ioutil"
-	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/posener/complete"
@@ -145,12 +144,10 @@ func (c *RunnerAgentCommand) Synopsis() string {
 }
 
 func (c *RunnerAgentCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint runner agent [options]
 
   Run a runner for executing remote operations.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	"github.com/olekukonko/tablewriter"
 	"github.com/posener/complete"
 
@@ -101,12 +99,10 @@ func (c *ContextListCommand) Synopsis() string {
 }
 
 func (c *ContextListCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint context list [options]
 
   Lists the contexts available to the CLI.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

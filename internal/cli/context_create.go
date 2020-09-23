@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -99,12 +97,10 @@ func (c *ContextCreateCommand) Synopsis() string {
 }
 
 func (c *ContextCreateCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint context create [options] NAME
 
   Creates a new context.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

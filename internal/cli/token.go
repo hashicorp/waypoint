@@ -68,14 +68,12 @@ func (c *GetInviteCommand) Synopsis() string {
 }
 
 func (c *GetInviteCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint token invite [options]
 
   Request a new invite token. This token can be exchanged for a normal token to login.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }
 
 type ExchangeInviteCommand struct {
@@ -95,7 +93,9 @@ func (c *ExchangeInviteCommand) Run(args []string) int {
 	}
 
 	if c.token == "" {
-		c.project.UI.Output("An invite token is required", terminal.WithErrorStyle())
+		c.project.UI.Output(
+			"An invite token is required.\n"+
+				"Run `waypoint token invite` to generate an invite token.", terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -139,14 +139,12 @@ func (c *ExchangeInviteCommand) Synopsis() string {
 }
 
 func (c *ExchangeInviteCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint token exchange [options]
 
   Exchange an invite token for a normal token for login.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }
 
 type GetTokenCommand struct {

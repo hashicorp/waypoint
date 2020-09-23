@@ -156,12 +156,11 @@ func (c *InitCommand) Run(args []string) int {
 	for _, step := range steps {
 		if !step() {
 			c.ui.Output("")
-			c.ui.Output("Project had errors during initialization.", terminal.WithStyle(terminal.ErrorBoldStyle))
-			c.ui.Output(
+			c.ui.Output("Project had errors during initialization.\n"+
 				"Waypoint experienced some errors during project initialization. The output\n"+
-					"above should contain the failure messages. Please correct these errors and\n"+
-					"run 'waypoint init' again.",
-				terminal.WithErrorStyle(),
+				"above should contain the failure messages. Please correct these errors and\n"+
+				"run 'waypoint init' again.",
+				terminal.WithStyle(terminal.ErrorBoldStyle),
 			)
 
 			return 1
@@ -170,10 +169,10 @@ func (c *InitCommand) Run(args []string) int {
 
 	c.ui.Output("")
 	c.ui.Output("Project initialized!", terminal.WithStyle(terminal.SuccessBoldStyle))
+	c.ui.Output("")
 	c.ui.Output(
-		"You may now call 'waypoint up' to deploy your project or\n"+
+		"You may now call 'waypoint up' to deploy your project or\n" +
 			"commands such as 'waypoint build' to perform steps individually.",
-		terminal.WithSuccessStyle(),
 	)
 
 	return 0
@@ -588,7 +587,7 @@ func (c *InitCommand) Synopsis() string {
 }
 
 func (c *InitCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint init [options]
 
   Initialize and validate a project.
@@ -600,9 +599,7 @@ Usage: waypoint init [options]
   This command is always safe to run multiple times. This command will never
   delete your configuration or any data in the server.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }
 
 type initStepType uint

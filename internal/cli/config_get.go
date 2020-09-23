@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -163,13 +162,11 @@ func (c *ConfigGetCommand) Synopsis() string {
 }
 
 func (c *ConfigGetCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint config-get [prefix]
 
   Retrieve and print all config variables previously configured that have the given prefix.
 	If no prefix is given, all variables are returned.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

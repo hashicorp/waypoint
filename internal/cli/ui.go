@@ -113,13 +113,11 @@ func (c *UICommand) Synopsis() string {
 }
 
 func (c *UICommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint ui [options]
 
   Opens the new UI. When provided a flag, will automatically open the token invite page with an
   invite token for authentication.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

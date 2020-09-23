@@ -137,12 +137,10 @@ func (c *UpCommand) Synopsis() string {
 }
 
 func (c *UpCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint up [options]
 
   Perform the build, deploy, and release steps for the app.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

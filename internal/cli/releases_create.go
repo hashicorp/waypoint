@@ -185,15 +185,15 @@ func (c *ReleaseCreateCommand) Synopsis() string {
 }
 
 func (c *ReleaseCreateCommand) Help() string {
-	helpText := `
-Usage: waypoint release [options]
+	return formatHelp(`
+Usage: waypoint release [options] [id]
 
-  Open a deployment to traffic, by default the latest deployment.
-	This shifts all traffic to the specified deployment.
-	The deployment can be specified by sequence id or long id.
-` + c.Flags().Help()
+  Open a deployment to traffic.
 
-	return strings.TrimSpace(helpText)
+  This defaults to the latest deployment. Other deployments can be
+  specified by sequence number or long ID.
+
+` + c.Flags().Help())
 }
 
 const (

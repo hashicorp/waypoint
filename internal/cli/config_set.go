@@ -98,12 +98,10 @@ func (c *ConfigSetCommand) Synopsis() string {
 }
 
 func (c *ConfigSetCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint config-set <name> <value>
 
   Set a config variable that will be available to deployments as an environment variable.
 
-`
-
-	return strings.TrimSpace(helpText)
+`)
 }

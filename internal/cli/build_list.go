@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"sort"
-	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/golang/protobuf/ptypes"
@@ -130,11 +129,9 @@ func (c *BuildListCommand) Synopsis() string {
 }
 
 func (c *BuildListCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint artifact list-builds [options]
   List builds.
-  
-` + c.Flags().Help()
 
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

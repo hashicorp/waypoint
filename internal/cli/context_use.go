@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/posener/complete"
 
@@ -68,12 +67,10 @@ func (c *ContextUseCommand) Synopsis() string {
 }
 
 func (c *ContextUseCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint context use [options] NAME
 
   Set the default context for the CLI.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }

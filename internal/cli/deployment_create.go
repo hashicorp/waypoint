@@ -143,16 +143,14 @@ func (c *DeploymentCreateCommand) Synopsis() string {
 }
 
 func (c *DeploymentCreateCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint deployment deploy [options]
 
   Deploy an application. This will deploy the most recent successful
   pushed artifact by default. You can view a list of recent artifacts
   using the "artifact list" command.
 
-` + c.Flags().Help()
-
-	return strings.TrimSpace(helpText)
+` + c.Flags().Help())
 }
 
 const (

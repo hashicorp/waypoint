@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -59,12 +57,10 @@ func (c *HostnameDeleteCommand) Synopsis() string {
 }
 
 func (c *HostnameDeleteCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint hostname delete HOSTNAME
 
   Delete a previously registered hostname.
 
-`
-
-	return strings.TrimSpace(helpText)
+`)
 }

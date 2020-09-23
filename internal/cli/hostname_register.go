@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"strings"
 
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -76,7 +75,7 @@ func (c *HostnameRegisterCommand) Synopsis() string {
 }
 
 func (c *HostnameRegisterCommand) Help() string {
-	helpText := `
+	return formatHelp(`
 Usage: waypoint hostname register [hostname]
 
   Register a hostname with the URL service to route to your apps.
@@ -85,7 +84,5 @@ Usage: waypoint hostname register [hostname]
   This will output the fully qualified domain name that should begin
   routing immediately.
 
-`
-
-	return strings.TrimSpace(helpText)
+`)
 }
