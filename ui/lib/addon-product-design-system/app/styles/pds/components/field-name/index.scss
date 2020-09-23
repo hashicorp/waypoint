@@ -1,7 +1,0 @@
-@use "../../tokens/typography" as Typography;
-@use "../../theme";
-
-.pds-fieldName {
-  @include Typography.Label();
-  color: theme.$color;
-}

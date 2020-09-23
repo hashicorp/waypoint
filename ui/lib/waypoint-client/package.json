@@ -1,8 +1,0 @@
-{
-  "name": "waypoint-client",
-  "version": "1.0.0",
-  "description": "",
-  "main": "ServerServiceClientPb.ts",
-  "typings": "ServerServiceClientPb.ts",
-  "author": ""
-}
