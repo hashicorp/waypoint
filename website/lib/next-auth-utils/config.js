@@ -25,9 +25,7 @@ export const customAuthPages = {
 }
 
 export const siteAuthProviders = {
-  providers: getSiteProvidersForEnvironment().map((ap) =>
-    NextAuthProviders[ap](formatProviderConfig(ap))
-  ),
+  providers: getSiteProvidersForEnvironment().map(formatProviderConfig),
 }
 
 function formatProviderConfig(ap) {
@@ -37,8 +35,7 @@ function formatProviderConfig(ap) {
     clientSecret: process.env[`${apName}_CLIENT_SECRET`],
     domain: process.env[`${apName}_DOMAIN`],
   }
-  console.log(config)
-  return config
+  return NextAuthProviders[ap](config)
 }
 
 export default (req, res) =>
