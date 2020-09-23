@@ -11,8 +11,10 @@ import (
 	"text/tabwriter"
 
 	"github.com/bgentry/speakeasy"
+	"github.com/creack/pty"
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
+	sshterm "golang.org/x/crypto/ssh/terminal"
 )
 
 // basicUI
@@ -24,7 +26,16 @@ type basicUI struct {
 // Returns a UI which will write to the current processes
 // stdout/stderr.
 func ConsoleUI(ctx context.Context) UI {
-	if isatty.IsTerminal(os.Stdout.Fd()) {
+	// We do both of these checks because some sneaky environments fool
+	// one or the other and we really only want the glint-based UI in
+	// truly interactive environments.
+	glint := isatty.IsTerminal(os.Stdout.Fd()) && sshterm.IsTerminal(int(os.Stdout.Fd()))
+	if glint {
+		ws, err := pty.GetsizeFull(os.Stdout)
+		glint = err == nil && ws.Rows > 0 && ws.Cols > 0
+	}
+
+	if glint {
 		return GlintUI(ctx)
 	} else {
 		return NonInteractiveUI(ctx)
