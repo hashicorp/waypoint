@@ -358,7 +358,7 @@ func (c *ServerCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ServerCommand) Synopsis() string {
-	return "Run the builtin server."
+	return "Run the builtin server"
 }
 
 func (c *ServerCommand) Help() string {

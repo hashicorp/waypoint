@@ -187,7 +187,7 @@ func (c *GetTokenCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *GetTokenCommand) Synopsis() string {
-	return "Request a new token to access the server."
+	return "Request a new token to access the server"
 }
 
 func (c *GetTokenCommand) Help() string {

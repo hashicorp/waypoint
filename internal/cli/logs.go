@@ -99,7 +99,7 @@ func (c *LogsCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *LogsCommand) Synopsis() string {
-	return "Show log output from the current application deployment."
+	return "Show log output from the current application deployment"
 }
 
 func (c *LogsCommand) Help() string {

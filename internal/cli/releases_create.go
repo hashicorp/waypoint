@@ -181,7 +181,7 @@ func (c *ReleaseCreateCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ReleaseCreateCommand) Synopsis() string {
-	return "Release a deployment."
+	return "Release a deployment"
 }
 
 func (c *ReleaseCreateCommand) Help() string {

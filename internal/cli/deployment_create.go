@@ -139,7 +139,7 @@ func (c *DeploymentCreateCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *DeploymentCreateCommand) Synopsis() string {
-	return "Deploy a pushed artifact."
+	return "Deploy a pushed artifact"
 }
 
 func (c *DeploymentCreateCommand) Help() string {

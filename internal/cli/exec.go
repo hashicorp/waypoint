@@ -93,7 +93,7 @@ func (c *ExecCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ExecCommand) Synopsis() string {
-	return "Execute a command in the context of a running application instance."
+	return "Execute a command in the context of a running application instance"
 }
 
 func (c *ExecCommand) Help() string {
