@@ -97,6 +97,20 @@ $ waypoint up -workspace $(git symbolic-ref HEAD)
 This would run a build in a new workspace (eg. `refs/heads/f-new-feature`) and
 deploy and release against resources not used in the default workspace.
 
+## Labels
+
+In order to determine the source of a build or other operation, it can be
+very useful to utilize [labels](#todo). Often, these environments might provide
+labels that can be useful to annotate an operation with.
+
+Labels can be specified as arguments to the main operation commands.
+
+For example:
+
+```
+$ waypoint deploy -label git_sha=$GITHUB_SHA build_id=$BUILD_ID build_hostname=$(hostname)
+```
+
 ## Locking
 
 Waypoint does not currently lock workspaces, projects, or applications,
