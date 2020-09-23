@@ -11,4 +11,4 @@ You can also use Waypoint to validate deployments across distinct environments t
 
 ## Documentation & Guides
 
-Documentation is available on the Waypoint website [here](https://waypoint.vercel.app/).
+Documentation is available on the Waypoint website [here](https://waypointproject.io/).
