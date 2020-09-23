@@ -5,7 +5,7 @@ import styles from './auth-gate.module.css'
 import Button from '@hashicorp/react-button'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import SigninErrorPage from 'pages/signin-error'
+import SigninErrorPage from 'components/signin-error-page'
 
 export default function AuthGate({ children }) {
   const [session, loading] = useSession()
