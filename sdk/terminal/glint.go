@@ -9,7 +9,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/mattn/go-isatty"
 	"github.com/mitchellh/go-glint"
 	"github.com/olekukonko/tablewriter"
 )
@@ -33,12 +32,15 @@ func (ui *glintUI) Close() error {
 }
 
 func (ui *glintUI) Input(input *Input) (string, error) {
-	return "", nil
+	return "", ErrNonInteractive
 }
 
 // Interactive implements UI
 func (ui *glintUI) Interactive() bool {
-	return isatty.IsTerminal(os.Stdin.Fd())
+	// TODO(mitchellh): We can make this interactive later but Glint itself
+	// doesn't support input yet. We can pause the document, do some input,
+	// then resume potentially.
+	return false
 }
 
 // Output implements UI
