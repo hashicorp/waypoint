@@ -19,11 +19,15 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
 	"github.com/hashicorp/waypoint/internal/version"
+	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
 const (
 	// EnvLogLevel is the env var to set with the log level.
 	EnvLogLevel = "WAYPOINT_LOG_LEVEL"
+
+	// EnvPlain is the env var that can be set to force plain output mode.
+	EnvPlain = "WAYPOINT_PLAIN"
 )
 
 var (
@@ -100,6 +104,12 @@ func Commands(
 		Log:           log,
 		LogOutput:     logOutput,
 		globalOptions: opts,
+	}
+
+	// Set plain mode if set
+	if os.Getenv(EnvPlain) != "" {
+		baseCommand.globalOptions = append(baseCommand.globalOptions,
+			WithUI(terminal.NonInteractiveUI(ctx)))
 	}
 
 	// aliases is a list of command aliases we have. The key is the CLI
