@@ -84,6 +84,8 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 			log.Warn("error sending error message", "err", err)
 			return
 		}
+
+		return
 	}
 
 	// Create our pipe for stdin so that we can send data
