@@ -11,7 +11,7 @@ description: |-
 In order to provide a simpler operations experience for deployments, Waypoint allows you to execute commands against your deployments.
 You can execute these commands via the `waypoint exec` command. Let's enter a shell prompt on our deployment.
 
-```bash
+```shell-session
 waypoint exec /bin/bash
 ```
 
@@ -19,11 +19,12 @@ Since we're in our deployment directory, you'll note that Waypoint automatically
 
 From within, we can validate that this is the actual application by listing out the directory hosting our NodeJS compiled files.
 
-```bash
-ls /usr/share/nginx/html
+```shell-session
+cd /
+ls
 ```
 
-You should see an output that contains the NodeJS static files that were compiled.
+You should see an output that contains the file structure for the current deployment.
 
 ### Next Step
 
