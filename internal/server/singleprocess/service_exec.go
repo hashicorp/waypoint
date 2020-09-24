@@ -51,6 +51,15 @@ func (s *service) StartExecStream(
 	// Make sure we always deregister it
 	defer s.state.InstanceExecDelete(execRec.Id)
 
+	// Always send the open message. In the future we'll send some metadata here.
+	if err := srv.Send(&pb.ExecStreamResponse{
+		Event: &pb.ExecStreamResponse_Open_{
+			Open: &pb.ExecStreamResponse_Open{},
+		},
+	}); err != nil {
+		return err
+	}
+
 	// Start our receive loop to read data from the client
 	clientCloseCh := make(chan error, 1)
 	go func() {

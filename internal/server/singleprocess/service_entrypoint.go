@@ -58,9 +58,24 @@ func (s *service) EntrypointConfig(
 		// We want to close all our readers at the end of this
 		defer record.LogBuffer.Close()
 
+		// Delete the entrypoint first
 		log.Trace("deleting entrypoint")
 		if err := s.state.InstanceDelete(record.Id); err != nil {
 			log.Error("failed to delete instance data. This should not happen.", "err", err)
+		}
+
+		// Delete any active but unconnected exec requests. This can happen
+		// if the entrypoint crashed after an exec was assigned to the entrypoint.
+		log.Trace("closing any unconnected exec requests")
+		execs, err := s.state.InstanceExecListByInstanceId(record.Id, nil)
+		if err != nil {
+			log.Error("failed to query instance exec list. This should not happen.", "err", err)
+		} else {
+			for _, exec := range execs {
+				if atomic.CompareAndSwapUint32(&exec.Connected, 0, 1) {
+					close(exec.EntrypointEventCh)
+				}
+			}
 		}
 	}()
 

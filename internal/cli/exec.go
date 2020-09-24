@@ -55,6 +55,7 @@ func (c *ExecCommand) Run(args []string) int {
 		}
 
 		client := &execclient.Client{
+			Logger:        c.Log,
 			UI:            c.ui,
 			Context:       ctx,
 			Client:        client,
