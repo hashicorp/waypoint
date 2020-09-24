@@ -12,7 +12,7 @@ Before you can deploy your application, you must let Waypoint know about its con
 file lives within the application directory. Ensure you are in the `waypoint-examples/nomad/nodejs/` directory and we can inspect this
 `waypoint.hcl` with the following command:
 
-```
+```shell-session
 cat waypoint.hcl
 ```
 
@@ -27,8 +27,9 @@ project = "example-nodejs"
       use "pack" {}
       registry {
           use "docker" {
-            image = "waypoint-example.local/nodejs-example"
+            image = "nodejs-example"
             tag = "latest"
+            local = true
           }
       }
   }
@@ -48,31 +49,12 @@ Buildpack to build the application. This application is a NodeJS based applicati
 The `deploy` clause defines where Waypoint will deploy the app. In our case, this is going to Nomad. We have a specific Nomad
 `datacenter`configured here.
 
--> Note: You also want to update your docker image and location to a location that you have access to, if this is running on an external Nomad cluster\*\*.
-
-```shell
-app "example-nodejs" {
-    build {
-      use "pack" {}
-      registry {
-        use "docker" {
-          image = "waypoint.local/sample/nodejs-example""
-          tag = "latest"
-        }
-       }
-    }
-
-   deploy {
-      use "nomad" {
-          datacenter="dc1"
-      }
-    }
-}
-```
+-> Note: You may also want to update your docker `image`,`location`, and remove the `local` configuration if you plan to run this application
+on an external Nomad cluster. The current example uses a local based image.
 
 With this configuration in place, execute the following command in order to initialize Waypoint.
 
-```bash
+```shell-session
 $ waypoint init
 ```
 
