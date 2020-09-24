@@ -35,9 +35,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "next-hashicorp precommit",
-      "post-merge": "post-npm-install",
-      "post-rebase": "post-npm-install"
+      "pre-commit": "next-hashicorp precommit"
     }
   },
   "main": "index.js",
