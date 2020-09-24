@@ -12,14 +12,13 @@ description: |-
 
 This application is configured to use Cloud Native Buildpacks to detect the language type of the application running and to build
 the container for running in a container based environment. As a result, you do not need to build the Dockerfile manually as Waypoint will use the
-default configurations of the relevant Cloud Native Buildpack.
-
-In our previous step, we configured a remote Docker repository to store our build artifacts in.
+default configurations of the relevant Cloud Native Buildpack. In our previous section, you also may have updated Waypoint to push the application
+to a remote registry (assuming you are using an external Nomad cluster).
 
 With this configuration in place and our application initialized we can issue the following command to build, deploy, and release
 our application:
 
-```bash
+```shell-session
 waypoint up
 ```
 
@@ -30,13 +29,13 @@ workflow, Waypoint creates a preview URL for your application.
 
 Waypoint will show the result of your deployment in the Terminal, along with your specific preview URL.
 
-```
+```shell
 The deploy was successful! A Waypoint deployment URL is shown below. This
 can be used internally to check your deployment and is not meant for external
 traffic. You can manage this hostname using "waypoint hostname."
 
            URL: https://instantly-worthy-shrew.alpha.waypoint.run
-Deployment URL: https://instantly-worthy-shrew--01EJ0F2VYWTNTYJ6FNFNTY44G9.alpha.waypoint.run
+Deployment URL: https://instantly-worthy-shrew--v1.alpha.waypoint.run
 ```
 
 ~> For the initial release, Waypoint creates the preview URL on a HashiCorp service. Because this preview URL is connected to your
@@ -46,4 +45,4 @@ to render your application.
 
 #### Next Step
 
-[Getting Started: Switching to Docker Builder](/docs/getting-started/nomad-example-app/switching-builder)
+[Getting Started: Update the App](/docs/getting-started/nomad-example-app/update-app)
