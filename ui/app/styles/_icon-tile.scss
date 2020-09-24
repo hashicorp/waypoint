@@ -16,4 +16,21 @@
     width: scale.$lg-6;
     height: scale.$lg-6;
   }
+
+  &--large {
+    width: scale.$lg-12;
+    height: scale.$lg-12;
+
+    .icon {
+      width: scale.$lg-8;
+      height: scale.$lg-8;
+    }
+  }
+
+  &--bold {
+    color: color.$white;
+    background: color.$black;
+    box-shadow: none;
+    border-radius: 2px;
+  }
 }
