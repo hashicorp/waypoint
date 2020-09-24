@@ -157,7 +157,11 @@ func (b *Builder) Build(
 		return nil, status.Errorf(codes.Internal, "unable to stream build logs to the terminal: %s", err)
 	}
 
+	step.Done()
+
 	if !b.config.DisableCEB {
+		step = sg.Add("Injecting Waypoint Entrypoint...")
+
 		tmpdir, err := ioutil.TempDir("", "waypoint")
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to create temporary directory: %s", err)
@@ -184,9 +188,9 @@ func (b *Builder) Build(
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to set modify Docker entrypoint: %s", err)
 		}
-	}
 
-	step.Done()
+		step.Done()
+	}
 
 	return result, nil
 }
