@@ -10,11 +10,15 @@ description: |-
 
 ### Running Waypoint Up
 
-This application is configured to use Cloud Native Buildpacks to detect the type of application running and to launch it within Docker. As a result, the application has no Dockerfile because the language specific buildpack handles that.
+This application is configured to use Cloud Native Buildpacks to detect the type of application running and to launch it within Docker. Because Waypoint uses the applicable buildpack to create the Dockerfile, you do not need to create the file yourself.
 
-The resulting Docker image is stored on the local Docker instance.
+Once Waypoint completes the build, it stores the artifacts in either a local or remote registry.
 
-Deploy the application to Docker.
+The `registry` clause in the `waypoint.hcl` file specifies where to store the app's artifacts. If the `registry` clause is not present, Waypoint will default to using the local docker instance to store the app's artifacts.
+
+For this example application, Waypoint will store the image on the local Docker instance after it is built.
+
+We can now deploy the application to Docker Desktop by running `waypoint up`.
 
 ```bash
 $ waypoint up

@@ -6,21 +6,31 @@ description: |-
   Placeholder
 ---
 
-# Initializing Waypoint for Your App
+# Initializing and Configuring Waypoint for Your App
 
-Before you can deploy your application, you must let Waypoint know about its configuration and initialize the Waypoint Project and its plugins.
+Before you can build and deploy your application, you must initialize it with Waypoint.
+
+When you initialize Waypoint for your application, Waypoint first looks to see if there is a Waypoint configuration file (`waypoint.hcl`) for the app in the directory.
 
 ## Waypoint Configuration
 
-The `waypoint.hcl` configuration file provides the instructions to Waypoint for how to build, deploy, and release your application. When you initialize Waypoint for your application, Waypoint will first look for a `waypoint.hcl` file in that directory. If it cannot find the configuration, Waypoint will inspect the application and create a starter `waypoint.hcl` file that you can then customize for your deployment workflow.
+The `waypoint.hcl` configuration file gives Waypoint instructions for how to build, deploy, and release your application.
 
-**Todo:** Add link here for waypoint.hcl snippets/config
+If Waypoint cannot find the app's configuration file when you run `waypoint init`, Waypoint will create a starter `waypoint.hcl` file that you can then customize for your application.
 
-## Initialize Waypoint for the Example App
+## Examine the Waypoint.hcl File
 
-The remainder of this walkthrough will use an [example application](https://github.com/hashicorp/waypoint-examples/tree/master/ruby) to show how to initialize an app and then build, deploy, and release it with Waypoint.
+The remainder of this walkthrough uses the example Ruby application to show how to initialize an app and then build, deploy, and release it with Waypoint.
 
-This example app is written in Ruby and [includes a `waypoint.hcl` file](https://github.com/hashicorp/waypoint-examples/blob/master/ruby/waypoint.hcl) that uses Docker to deploy the application.
+We will now view the `waypoint.hcl` file to learn more about the app's configuration.
+
+In the `waypoint-examples/ruby/` directory, run the following command:
+
+```shell
+cat waypoint.hcl
+```
+
+The Terminal will output the contents of the `waypoint.hcl` file.
 
 ```shell
 project = "example-ruby"
@@ -36,16 +46,25 @@ app "example-ruby" {
 }
 ```
 
-The `build` clause defines how Waypoint will build the app. The `pack` option tells Waypoint to use Cloud Native Buildpacks to build the application. Since the example app is authored with Ruby, a Ruby buildpack will be used.
+The `build` clause defines how Waypoint will build the app.
+
+The `pack` option tells Waypoint to use the most relevant Cloud Native Buildpack to build the application. Since the example app is written in Ruby, Waypoint will use Ruby Cloud Native Buildpacks.
 
 The `deploy` clause defines how Waypoint will deploy the app. The `docker` option tells Waypoint to deploy the application to Docker.
 
-Initialize the application with Waypoint by running the following in the Terminal.
+## Initialize Waypoint for the Example App
+
+Let us now prepare to build, deploy, and release the application by initializing it with Waypoint.
+
+In the `waypoint-examples/ruby` directory, run the following command to initialize the application:
 
 ```bash
-$ cd waypoint-examples/ruby
 $ waypoint init
+```
 
+Waypoint will now initialize the application and then output a message in the Terminal window, such as the following.
+
+```bash
 ✓ Configuration file appears valid
 ✓ Local mode initialized successfully
 ✓ Project "example-ruby" and all apps are registered with the server.
@@ -56,6 +75,8 @@ Project initialized!
 You may now call 'waypoint up' to deploy your project or
 commands such as 'waypoint build' to perform steps individually.
 ```
+
+We can now move on to building and deploying the application.
 
 ### Next Step
 

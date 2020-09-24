@@ -38,7 +38,7 @@ Common commands:
 ...
 ```
 
-## Pull the Server Image
+## Pull the Latest Waypoint Server Image
 
 -> Because Waypoint is currently a pre-release private beta, you need to provide authentication details so that Docker can access the container image that contains the binary for running the Waypoint server. Once Waypoint is public, you will not need to do this step.
 
@@ -62,7 +62,9 @@ $ docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest
 
 ## Install the Waypoint Server
 
-Install the Waypoint server to Docker for Desktop on your computer. This allows you to view the user interface, collaborate on deployments, and more.
+Install the Waypoint server to Docker Desktop on your computer. This allows you to view the user interface, collaborate on deployments, and more.
+
+Run the following command to install the Waypoint server.
 
 ```shell
  $ waypoint install -platform=docker

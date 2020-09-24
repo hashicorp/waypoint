@@ -1,29 +1,20 @@
----
-layout: docs
-page_title: Exec Into the App Container
-sidebar_title: Exec Into the App Container
-description: |-
-  Placeholder
----
+Now that you have deployed your app, you can use `waypoint exec` to run commands in the context of the most recent deployment. Typically, `waypoint exec` will be used for running database migrations and debugging; however, you can use it for any purpose.
 
-# Exec Into the App Container
-
-In order to provide a simpler operations experience for deployments, Waypoint allows you to execute commands against your deployments.
-You can execute these commands via the `waypoint exec` command. Let's enter a shell prompt on our deployment.
+For example, you can use the command to open a shell prompt.
 
 ```bash
 waypoint exec /bin/bash
 ```
 
-Since we're in our deployment directory, you'll note that Waypoint automatically executes aginst the currently deployed application.
+Since you are in the deployment directory, you will see that Waypoint automatically executes against the currently deployed application.
 
-From within, we can validate that this is the actual application by listing out the directory hosting our NodeJS compiled files.
+From within, we can validate that this is the actual application by listing out the directory hosting the app's compiled files.
 
 ```bash
 ls /usr/share/nginx/html
 ```
 
-You should see an output that contains the NodeJS static files that were compiled.
+You should see an output that contains the app's static files that were compiled.
 
 #### Next Step
 

@@ -6,17 +6,31 @@ description: |-
   Placeholder
 ---
 
-# Initializing Waypoint for Your App
+# Initializing and Configuring Waypoint for Your App
 
-Before you can deploy your application, you must let Waypoint know about its configuration. This is done through the `waypoint.hcl`
-file lives within the application directory. Ensure you are in the `waypoint-examples/kubernetes/nodejs/` directory and we can inspect this
-`waypoint.hcl` with the following command:
+Before you can build and deploy your application, you must initialize it with Waypoint.
 
-```
+When you initialize Waypoint for your application, Waypoint first looks to see if there is a Waypoint configuration file (`waypoint.hcl`) for the app in the directory.
+
+## Waypoint Configuration
+
+The `waypoint.hcl` configuration file gives Waypoint instructions for how to build, deploy, and release your application.
+
+If Waypoint cannot find the app's configuration file when you run `waypoint init`, Waypoint will create a starter `waypoint.hcl` file that you can then customize for your application.
+
+## Examine the Waypoint.hcl File
+
+The remainder of this walkthrough uses the example NodeJS application to show how to initialize an app and then build, deploy, and release it with Waypoint.
+
+We will now view the `waypoint.hcl` file to learn more about the app's configuration.
+
+In the `/waypoint-examples/kubernetes/nodejs/` directory, run the following command:
+
+```shell
 cat waypoint.hcl
 ```
 
-Which should output the following:
+The Terminal will output the contents of the `waypoint.hcl` file.
 
 ```shell
 project = "example-nodejs"
@@ -52,16 +66,16 @@ project = "example-nodejs"
   }
 ```
 
-The `build` clause defines how Waypoint will build the app. The `pack` option tells Waypoint to use the most relevant Cloud Native
-Buildpack to build the application. This application is a NodeJS based application, so ultimately NodeJS Buildpacks will be used.
+The `build` clause defines how Waypoint will build the app.
 
-The `deploy` clause defines where Waypoint will deploy the app. In our case, this is going to Kubernetes
+The `pack` option tells Waypoint to use the most relevant Cloud Native
+Buildpack to build the application. Since this example app is written for NodeJS, Waypoint will use NodeJS Buildpacks.
 
-The `release` stanza defines how our application will be released to our environment, in our case we're using a `load_balanacer`
-on a specific `port`.
+The `deploy` clause defines where Waypoint will deploy the app. The `kubernetes` option tells Waypoint to deploy the application to Kubernetes.
 
--> Note: You may want to update the `image` entry within the `registry` section to reflect a Docker repository that's externally
-accessible if you are using a non-local Kubernetes cluster.
+The `release` stanza defines how the application will be released to an environment. The `load_balancer` and `port` options in the app's config file tell Waypoint that the app will be released using a load balanacer on a specific port.
+
+-> Note: If you are using a remote Kubernetes cluster, update the `image` entry within the `registry` section to point to a Docker repository that is externally accessible.
 
 With these configurations in place, execute the following command in order to initialize Waypoint with this configuration.
 

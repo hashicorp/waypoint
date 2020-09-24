@@ -6,16 +6,17 @@ description: |-
   Placeholder
 ---
 
-# The `waypoint logs` Command
+# Using Waypoint Application Logs
 
-From the same application directory, you can execute the `waypoint logs` command to inspect the running logs for your deployment.
+In the application's directory, run the following command to see the running logs for your deployment:
 
 ```bash
 waypoint logs
 ```
 
-You should see an output similar to the below. You'll note that we are seeing continuous probe checks against the root location. This is
-from our `probe_path` value in the original `waypoint.hcl` file!
+You will see an output similar to the following.
+
+Because we included a probe check in the app via the `probe_path` value in the `waypoint.hcl` file, Waypoint is logging the continuous probe checks against the root location.
 
 ```shell
 2020-09-16T23:52:15.477Z uaubxwa: /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
