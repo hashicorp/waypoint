@@ -141,7 +141,7 @@ func (p *Platform) Deploy(
 		AttachStdin:  true,
 		OpenStdin:    true,
 		StdinOnce:    true,
-		Image:        img.Image,
+		Image:        img.Image + ":" + img.Tag,
 		ExposedPorts: nat.PortSet{np: struct{}{}},
 		Env:          []string{"PORT=" + port},
 	}
