@@ -306,7 +306,7 @@ func (c *InstallCommand) Run(args []string) int {
 
 		// ok, inline below.
 	case "nomad":
-		contextConfig, advertiseAddr, err = serverinstall.InstallNomad(ctx, c.ui, st, &c.config)
+		contextConfig, advertiseAddr, httpAddr, err = serverinstall.InstallNomad(ctx, c.ui, st, &c.config)
 		if err != nil {
 			c.ui.Output(
 				"Error installing server into Nomad: %s", err.Error(),
