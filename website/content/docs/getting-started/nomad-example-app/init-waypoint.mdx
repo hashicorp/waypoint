@@ -65,7 +65,7 @@ Buildpack to build the application. Since this example app is written for NodeJS
 
 The `deploy` clause defines where Waypoint will deploy the app. The `nomad` and `datacenter` fields tell Waypoint to deploy the application to Nomad to the dc1 datacenter.
 
--> Note: You may also want to update your docker `image`,`location`, and remove the `local` configuration if you plan to run this application
+-> Note: You might also want to update your docker `image`,`location`, and remove the `local` configuration if you plan to run this application
 on an external Nomad cluster. The current example uses a local based image.
 
 With these configurations in place, execute the following command in order to initialize Waypoint with this configuration.
