@@ -70,29 +70,27 @@ If not set uses the environment variable AZURE_SUBSCRIPTION_ID.
 
 #### volume
 
+The volume details for a container.
+
 - Type: **[]aci.Volume**
 
-#### volumes
-
-The volume details for the container.
-
-#### volumes.volume.azure_file_share
+#### volume.azure_file_share
 
 The details for the Azure file share volume.
 
-#### volumes.volume.git_repo
+#### volume.git_repo
 
 The details for GitHub repo to mount as a volume.
 
-#### volumes.volume.name
+#### volume.name
 
 The name of the volume to mount into the container.
 
-#### volumes.volume.path
+#### volume.path
 
 The path to mount the volume to in the container.
 
-#### volumes.volume.read_only
+#### volume.read_only
 
 Specify if the volume is read only.
 
@@ -108,6 +106,17 @@ deploy "azure-container-instance" {
 	capacity {
       memory = "1024"
       cpu_count = 4
+	}
+
+	volume {
+      name = "vol1"
+      path = "/consul"
+      read_only = true
+
+      git_repo {
+        repository = "https://github.com/hashicorp/consul"
+        revision = "v1.8.3"
+      }
     }
 }
 

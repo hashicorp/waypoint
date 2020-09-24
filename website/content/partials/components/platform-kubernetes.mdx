@@ -6,6 +6,15 @@ Deploy the application into a Kubernetes cluster using Deployment objects.
 
 ### Variables
 
+#### annotations
+
+Annotations to be added to the application pod.
+
+Annotations are added to the pod spec of the deployed application. This is useful when using mutating webhook admission controllers to further process pod events.
+
+- Type: **map[string]string**
+- **Optional**
+
 #### context
 
 The kubectl context to use, as defined in the kubeconfig file.
@@ -54,6 +63,15 @@ If the replica count is maintained outside waypoint, for instance by a pod autos
 A path for the service to store temporary data.
 
 A path to a directory that will be created for the service to store temporary data using tmpfs.
+
+- Type: **string**
+- **Optional**
+
+#### service_account
+
+Service account name to be added to the application pod.
+
+Service account is the name of the Kubernetes service account to add to the pod. This is useful to apply Kubernetes RBAC to the application.
 
 - Type: **string**
 - **Optional**
