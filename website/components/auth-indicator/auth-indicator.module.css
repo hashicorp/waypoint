@@ -3,7 +3,7 @@
   bottom: 0;
   width: 100vw;
   z-index: 3;
-  padding: 1rem;
+  padding: 1rem 2rem;
   text-align: center;
   background: var(--black);
   color: var(--white);
@@ -16,10 +16,9 @@
   }
 }
 
-.loadingIconSpin {
-  transform: translateY(-100px);
-}
-
 .loggedInText {
-  margin: 0 1rem;
+  margin: 1rem 1rem;
+  @media (--medium-up) {
+    margin: 0 1rem;
+  }
 }

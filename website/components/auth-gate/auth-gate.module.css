@@ -7,7 +7,18 @@
 }
 
 .loadingIconSpin {
-  transform: translateY(-100px);
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: spin 0.5s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loginLockup {

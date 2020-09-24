@@ -1,13 +1,10 @@
 import { signOut, useSession } from 'next-auth/client'
-import LoadingIcon from './loading.svg?include'
-import InlineSvg from '@hashicorp/react-inline-svg'
 import styles from './auth-indicator.module.css'
 import Button from '@hashicorp/react-button'
 
 export default function AuthIndicator() {
   const [session, loading] = useSession()
-  if (loading)
-    return <InlineSvg className={styles.loadingIconSpin} src={LoadingIcon} />
+  if (loading) return `Loading...`
   return (
     <div className={styles.authIndicator}>
       {session && (
