@@ -673,6 +673,9 @@ func (p *Platform) Launch(
 	if len(p.config.Subnets) == 0 {
 		s.Update("Using default subnets for Service networking")
 		subnets, err = defaultSubnets(ctx, sess)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		for i := range p.config.Subnets {
 			subnets[i] = &p.config.Subnets[i]
