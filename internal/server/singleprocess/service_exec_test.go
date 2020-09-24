@@ -66,6 +66,15 @@ func TestServiceStartExecStream_start(t *testing.T) {
 		},
 	}))
 
+	// Should open
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		open, ok := resp.Event.(*pb.ExecStreamResponse_Open_)
+		require.True(ok, "should be an open")
+		require.NotNil(open)
+	}
+
 	// Get our instance exec value
 	exec := testGetInstanceExec(t, impl, instanceId)
 	require.Equal([]string{"foo", "bar"}, exec.Args)
@@ -109,6 +118,15 @@ func TestServiceStartExecStream_eventExit(t *testing.T) {
 		},
 	}))
 	defer stream.CloseSend()
+
+	// Should open
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		open, ok := resp.Event.(*pb.ExecStreamResponse_Open_)
+		require.True(ok, "should be an open")
+		require.NotNil(open)
+	}
 
 	// Get the record
 	ws := memdb.NewWatchSet()
@@ -174,6 +192,15 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 		},
 	}))
 	defer stream.CloseSend()
+
+	// Should open
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		open, ok := resp.Event.(*pb.ExecStreamResponse_Open_)
+		require.True(ok, "should be an open")
+		require.NotNil(open)
+	}
 
 	// Get the record
 	ws := memdb.NewWatchSet()

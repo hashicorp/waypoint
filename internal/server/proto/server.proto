@@ -728,7 +728,7 @@ message Job {
     }
   }
 }
-    
+
 message Documentation {
   string description = 1;
   string example = 2;
@@ -1783,9 +1783,16 @@ message ExecStreamRequest {
 
 message ExecStreamResponse {
   oneof event {
+    // Open is always sent first no matter what (unless there is an error
+    // in which case the stream will exit). This should be used to validate
+    // that the exec process started properly.
+    Open open = 3;
+
     Output output = 1;
     Exit exit = 2;
   }
+
+  message Open {}
 
   message Exit {
     int32 code = 1;
