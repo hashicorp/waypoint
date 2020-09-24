@@ -47,6 +47,7 @@ export default [
           'update-app',
           'view-exec-app',
           'logging-app',
+          'ui',
           'summary',
         ],
       },

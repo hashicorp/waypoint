@@ -30,6 +30,7 @@ in with pkgs; let
     };
 
     modSha256 = "0lnk1zpl6y9vnq6h3l42ssghq6iqvmixd86g2drpa4z8xxk116wf";
+    vendorSha256 = "04w9vhkrwb2zfqk73xmhignjyvjqmz1j93slkqp7v8jj2dhyla54";
 
     subPackages = [ "protoc-gen-go" ];
   };
@@ -46,6 +47,7 @@ in with pkgs; let
     };
 
     modSha256 = "01wrk2qhrh74nkv6davfifdz7jq6fcl3snn4w2g7vr8p0incdlcf";
+    vendorSha256 = "1hx31gr3l2f0nc8316c9ipmk1xx435g732msr5b344rcfcfrlaxh";
   };
 
   go-tools = buildGoModule rec {
@@ -60,6 +62,7 @@ in with pkgs; let
     };
 
     modSha256 = "1pijbkp7a9n2naicg21ydii6xc0g4jm5bw42lljwaks7211ag8k9";
+    vendorSha256 = "0pplmqxrnc8qnr5708igx4dm7rb0hicvhg6lh5hj8zkx38nb19s0";
 
     subPackages = [ "cmd/stringer" ];
   };
@@ -76,6 +79,7 @@ in with pkgs; let
     };
 
     modSha256 = "0wyzfmhk7plazadbi26rzq3w9cmvqz2dd5jsl6kamw53ps5yh536";
+    vendorSha256 = "0fai4hs3q822dg36a2zrxb191f71xdpafapn6ymi1w9dx68navcb";
 
     subPackages = [ "cmd/mockery" ];
   };

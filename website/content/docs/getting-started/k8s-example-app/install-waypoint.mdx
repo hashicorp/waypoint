@@ -38,13 +38,11 @@ Common commands:
 ...
 ```
 
-## Create Kubernetes Secret for Server Image
+## Pull the Latest Waypoint Server Image
 
 -> Because Waypoint is currently a pre-release private beta, you need to provide authentication details so that Kubernetes can access the container image containing the binary for running the Waypoint server. Once Waypoint is public, you will not need to do this step.
 
-In order to provide your Kubernetes cluster access to the Waypoint container image during
-the private beta, you need to create a Kubernetes secret that contains authentication information
-for the GitHub packages repository that hosts the image.
+In order to provide your Kubernetes cluster access to the Waypoint container image during the private beta, you need to create a Kubernetes secret that contains authentication information for the GitHub packages repository that hosts the image.
 
 First, you need to [create a personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) on GitHub.
 
@@ -61,10 +59,11 @@ When you run Waypoint install, it defaults to using an image hosted on the GitHu
 
 ## Install the Waypoint Server
 
-In this step we will innstall the Waypoint server onto Kubernetes. This allows you to view the user interface, collaborate on deployments, and more.
+In this step we will install the Waypoint server onto Kubernetes. This allows you to view the user interface, collaborate on deployments, and more.
 
--> Note: Currently the image for the Waypoint server is hosted in GitHub packages, which does not support containerd. If you are using Kind, or K3d, which uses
-containerd rather than DockerD, the Waypoint server install will fail with an ImagePullBackOff error. The Waypoint team is currently working on resolving this issue.
+-> Note: The Waypoint server image is currently hosted in GitHub Packages, which does not support containerd. If you are using Kind or K3d (which use containerd rather than DockerD), the Waypoint server install will fail with an ImagePullBackOff error. The Waypoint team is currently working on resolving this issue.
+
+Run the following command to install the Waypoint server.
 
 ```shell-session
  $ waypoint install -platform=kubernetes

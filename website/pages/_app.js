@@ -44,8 +44,11 @@ function App({ Component, pageProps }) {
   )
 }
 
+const shouldApplyAuth =
+  process.env.HASHI_ENV === 'production' || process.env.HASHI_ENV === 'preview'
+
 function ConditionalAuthProvider({ children, session }) {
-  return process.env.HASHI_ENV === 'production' ? (
+  return shouldApplyAuth ? (
     <NextAuthProvider session={session}>
       <AuthGate>
         {children}

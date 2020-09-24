@@ -35,9 +35,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "next-hashicorp precommit",
-      "post-merge": "post-npm-install",
-      "post-rebase": "post-npm-install"
+      "pre-commit": "next-hashicorp precommit"
     }
   },
   "main": "index.js",
@@ -49,7 +47,7 @@
     "generate:readme": "next-hashicorp markdown-blocks README.md",
     "lint": "next-hashicorp lint",
     "start": "next-remote-watch ./content/**/*.mdx",
-    "dev:auth": "HASHI_ENV=production npm start",
+    "dev:auth": "HASHI_ENV=preview npm start",
     "static": "npm run build && npm run export"
   }
 }

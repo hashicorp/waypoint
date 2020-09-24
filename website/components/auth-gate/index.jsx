@@ -1,11 +1,11 @@
-import { useSession, getCsrfToken } from 'next-auth/client'
+import { useSession, getCsrfToken, getProviders } from 'next-auth/client'
 import LoadingIcon from './loading.svg?include'
 import InlineSvg from '@hashicorp/react-inline-svg'
 import styles from './auth-gate.module.css'
 import Button from '@hashicorp/react-button'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import SigninErrorPage from 'pages/signin-error'
+import SigninErrorPage from 'components/signin-error-page'
 
 export default function AuthGate({ children }) {
   const [session, loading] = useSession()
@@ -42,15 +42,42 @@ function SignInForm() {
 }
 
 function Form({ callbackUrl, token }) {
+  const authProviders = useAuthProviders()
+
   return (
-    <form action={`${callbackUrl}/api/auth/signin/okta`} method="POST">
-      <input type="hidden" name="csrfToken" value={token} />
-      <input type="hidden" name="callbackUrl" value={callbackUrl} />
-      <Button
-        type="submit"
-        title={`Sign in with Okta`}
-        theme={{ variant: 'primary', background: 'dark' }}
-      />
-    </form>
+    <div className={styles.loginLockup}>
+      {authProviders &&
+        Object.keys(authProviders).map((ap) => (
+          <form
+            key={ap}
+            action={`${callbackUrl}/api/auth/signin/${ap}`}
+            method="POST"
+          >
+            <input type="hidden" name="csrfToken" value={token} />
+            <input type="hidden" name="callbackUrl" value={callbackUrl} />
+            <Button
+              type="submit"
+              title={`Sign in with ${authProviders[ap].name}`}
+              theme={{ variant: 'primary', background: 'dark' }}
+            />
+          </form>
+        ))}
+    </div>
   )
+}
+
+export function useAuthProviders() {
+  const [authProviders, setAuthProviders] = useState([])
+  async function getProviderList() {
+    const providers = await getProviders()
+    if (providers) {
+      setAuthProviders(providers)
+    }
+  }
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      getProviderList()
+    }
+  }, [])
+  return authProviders
 }

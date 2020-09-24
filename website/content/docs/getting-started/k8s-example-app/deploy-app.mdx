@@ -6,16 +6,20 @@ description: |-
   Placeholder
 ---
 
-# Deploy Your App
+# Building and Deploying
 
-### Deploying the Example Application
+### Running Waypoint Up
 
-This application is configured to use Cloud Native Buildpacks to detect the language type of the application running and to
-build the container for running in Kubernetes. As a result, you do not need to build the Dockerfile manually as Waypoint will use
-the default configurations of the relevant Cloud Native Buildpack. In our previous section, you also may have updated Waypoint to push the application
-to a remote registry (assuming you are using an external Kubernetes cluster).
 
-With this configuration in place and our application initialized we can issue the following command to build, deploy, and release our application:
+This application is configured to use Cloud Native Buildpacks to detect the type of application running and to launch it within Kubernetes. Because Waypoint uses the applicable buildpack to create the Dockerfile, you do not need to create the file yourself.
+
+Once Waypoint completes a build, it stores the artifacts in either a local or remote registry.
+
+The `registry` clause in the `waypoint.hcl` file specifies where to store the app's artifacts. If the `registry` clause is not present, Waypoint will default to using the local docker instance to store the app's artifacts.
+
+For this example application, Waypoint will store the image in a remote Docker repository after the app is built.
+
+We can now deploy the application to Kubernetes by running `waypoint up`.
 
 ```shell-session
 waypoint up
@@ -36,10 +40,7 @@ traffic. You can manage this hostname using "waypoint hostname."
 Deployment URL: https://instantly-worthy-shrew--v1.alpha.waypoint.run
 ```
 
-~> For the initial release, Waypoint creates the preview URL on a HashiCorp service. Because this preview URL is connected to your
-application and where it has been deployed, the URL will only show your application when it is running. In this walkthrough,
-this means that the Kubernetes cluster and the container for the deployed example NodeJS application must both be running for the URL
-to render your application.
+~> Waypoint creates the preview URL on a HashiCorp service. Because this preview URL is connected to your application and where it has been deployed, the URL will only show your application when it is running. In this walkthrough, this means that Docker for Desktop and the container for the deployed example Ruby application must both be running for the URL to render your application.
 
 ### Next Step
 
