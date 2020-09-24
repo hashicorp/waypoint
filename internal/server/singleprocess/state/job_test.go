@@ -41,6 +41,7 @@ func TestJobAssign(t *testing.T) {
 		cancel()
 		job, err = s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
 		require.Error(err)
+		require.Nil(job)
 		require.Equal(ctx.Err(), err)
 	})
 
@@ -403,6 +404,7 @@ func TestJobAssign(t *testing.T) {
 		cancel()
 		job, err := s.JobAssignForRunner(ctx, r)
 		require.Error(err)
+		require.Nil(job)
 		require.Equal(ctx.Err(), err)
 
 		// Create a target

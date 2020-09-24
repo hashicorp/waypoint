@@ -179,6 +179,8 @@ func TestServiceDeployment_ListDeployments(t *testing.T) {
 	buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
 		Build: serverptypes.TestValidBuild(t, nil),
 	})
+	require.NoError(t, err)
+	require.NotNil(t, buildresp)
 
 	build := buildresp.Build
 
@@ -188,6 +190,8 @@ func TestServiceDeployment_ListDeployments(t *testing.T) {
 	artifactresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
 		Artifact: artifact,
 	})
+	require.NoError(t, err)
+	require.NotNil(t, artifactresp)
 
 	dep := serverptypes.TestValidDeployment(t, nil)
 	dep.ArtifactId = artifactresp.Artifact.Id

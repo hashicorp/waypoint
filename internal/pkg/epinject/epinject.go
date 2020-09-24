@@ -108,6 +108,10 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 		tw := tar.NewWriter(&buf)
 
 		fi, err := f.Stat()
+		if err != nil {
+			return "", err
+		}
+
 		hdr, err := tar.FileInfoHeader(fi, "")
 		if err != nil {
 			return "", err
