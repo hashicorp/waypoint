@@ -10,29 +10,19 @@ description: |-
 
 From the same application directory, you can execute the `waypoint logs` command to inspect the running logs for your deployment.
 
-```bash
+```shell-session
 waypoint logs
 ```
 
-You should see an output similar to the below. You'll note that we are seeing continuous probe checks against the root location. This is
-from our `probe_path` value in the original `waypoint.hcl` file!
+You should see an output similar to the below. This is the current logs from our existing
+deployment!
 
 ```shell
-2020-09-16T23:52:15.477Z uaubxwa: /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
-2020-09-16T23:52:15.477Z uaubxwa: /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
-2020-09-16T23:52:15.479Z uaubxwa: /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
-2020-09-16T23:52:15.494Z uaubxwa: 10-listen-on-ipv6-by-default.sh: Getting the checksum of /etc/nginx/conf.d/default.conf
-2020-09-16T23:52:15.512Z uaubxwa: 10-listen-on-ipv6-by-default.sh: error: /etc/nginx/conf.d/default.conf differs from the packages version
-2020-09-16T23:52:15.512Z uaubxwa: /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
-2020-09-16T23:52:15.519Z uaubxwa: /docker-entrypoint.sh: Configuration complete; ready for start up
-2020-09-16T23:52:22.161Z uaubxwa: 192.168.1.159 - - [16/Sep/2020:23:52:22 +0000] "GET / HTTP/1.1" 200 1100 "-" "kube-probe/1.18" "-"
-2020-09-16T23:52:22.536Z uaubxwa: 192.168.1.159 - - [16/Sep/2020:23:52:22 +0000] "GET / HTTP/1.1" 200 1100 "-" "kube-probe/1.18" "-"
-2020-09-16T23:52:32.161Z uaubxwa: 192.168.1.159 - - [16/Sep/2020:23:52:32 +0000] "GET / HTTP/1.1" 200 1100 "-" "kube-probe/1.18" "-"
-2020-09-16T23:52:32.536Z uaubxwa: 192.168.1.159 - - [16/Sep/2020:23:52:32 +0000] "GET / HTTP/1.1" 200 1100 "-" "kube-probe/1.18" "-"
-2020-09-16T23:52:42.161Z uaubxwa: 192.168.1.159 - - [16/Sep/2020:23:52:42 +0000] "GET / HTTP/1.1" 200 1100 "-" "kube-probe/1.18" "-"
-2020-09-16T23:52:42.535Z uaubxwa: 192.168.1.159 - - [16/Sep/2020:23:52:42 +0000] "GET / HTTP/1.1" 200 1100 "-" "kube-probe/1.18" "-"
-2020-09-16T23:52:52.160Z uaubxwa: 192.168.1.159 - - [16/Sep/2020:23:52:52 +0000] "GET / HTTP/1.1" 200 1100 "-" "kube-probe/1.18" "-"
-2020-09-16T23:52:52.536Z uaubxwa: 192.168.1.159 - - [16/Sep/2020:23:52:52 +0000] "GET / HTTP/1.1" 200 1100 "-" "kube-probe/1.18" "-"
+2020-09-24T06:20:18.162Z 2MGFF4:
+2020-09-24T06:20:18.163Z 2MGFF4: > node-js-getting-started@0.3.0 start /workspace
+2020-09-24T06:20:18.163Z 2MGFF4: > node index.js
+2020-09-24T06:20:18.163Z 2MGFF4:
+2020-09-24T06:20:18.383Z 2MGFF4: Listening on 3000
 ```
 
 ### Next Step
