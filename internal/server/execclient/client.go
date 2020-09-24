@@ -11,6 +11,7 @@ import (
 
 	"github.com/creack/pty"
 	"github.com/golang/protobuf/proto"
+	"github.com/hashicorp/go-hclog"
 	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
 	sshterm "golang.org/x/crypto/ssh/terminal"
 
@@ -20,6 +21,7 @@ import (
 )
 
 type Client struct {
+	Logger        hclog.Logger
 	UI            terminal.UI
 	Context       context.Context
 	Client        pb.WaypointClient
@@ -41,7 +43,7 @@ func (c *Client) Run() (int, error) {
 	if f, ok := c.Stdout.(*os.File); ok && sshterm.IsTerminal(int(f.Fd())) {
 		status = c.UI.Status()
 		defer status.Close()
-		status.Update(fmt.Sprintf("Connecting to %s...", c.DeploymentId))
+		status.Update(fmt.Sprintf("Connecting to deployment v%d...", c.DeploymentSeq))
 
 		ptyF = f
 		ws, err := pty.GetsizeFull(ptyF)
@@ -65,7 +67,7 @@ func (c *Client) Run() (int, error) {
 	defer client.CloseSend()
 
 	if status != nil {
-		status.Update(fmt.Sprintf("Initializing session on %s...", c.DeploymentId))
+		status.Update("Initializing session...")
 	}
 
 	// Send the start event
@@ -79,6 +81,19 @@ func (c *Client) Run() (int, error) {
 		},
 	}); err != nil {
 		return 0, err
+	}
+
+	if status != nil {
+		status.Update("Waiting for instance assignment...")
+	}
+
+	// Receive our open message. If this fails then we weren't assigned.
+	resp, err := client.Recv()
+	if err != nil {
+		return 1, err
+	}
+	if _, ok := resp.Event.(*pb.ExecStreamResponse_Open_); !ok {
+		return 1, fmt.Errorf("internal protocol error: unexpected opening message")
 	}
 
 	if ptyF != nil {
@@ -133,7 +148,7 @@ func (c *Client) Run() (int, error) {
 		for {
 			resp, err := client.Recv()
 			if err != nil {
-				// TODO: log
+				c.Logger.Error("receive error", "err", err)
 				return
 			}
 
@@ -158,6 +173,10 @@ func (c *Client) Run() (int, error) {
 
 			case *pb.ExecStreamResponse_Exit_:
 				return int(event.Exit.Code), nil
+
+			default:
+				c.Logger.Warn("unknown event type",
+					"type", fmt.Sprintf("%T", resp.Event))
 			}
 
 		case <-winchCh:
