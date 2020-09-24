@@ -113,7 +113,14 @@ export function fastReadFrontMatter(p) {
               entry.fullPath,
               (line) => {
                 // if it has any content other than `---`, the file doesn't have front matter, so we close
-                if (lineNum === 0 && !line.match(/^---$/)) return false
+                if (lineNum === 0 && !line.match(/^---$/)) {
+                  console.warn(
+                    `WARNING: The file "${entry.path}" is missing front matter. Please add front matter to ensure the file's metadata is properly populated.`
+                  )
+                  content.push('---')
+                  content.push('page_title: "ERROR: Missing Frontmatter"')
+                  return false
+                }
                 // if it's not the first line and we have a bottom delimiter, exit
                 if (lineNum !== 0 && line.match(/^---$/)) return false
                 // now we read lines until we match the bottom delimiters
