@@ -12,7 +12,7 @@ Before you can deploy your application, you must let Waypoint know about its con
 file lives within the application directory. Ensure you are in the `waypoint-examples/kubernetes/nodejs/` directory and we can inspect this
 `waypoint.hcl` with the following command:
 
-```
+```shell-session
 cat waypoint.hcl
 ```
 
@@ -22,17 +22,14 @@ Which should output the following:
 project = "example-nodejs"
 
   app "example-nodejs" {
-    labels = {
-      "service" = "example-nodejs",
-      "env" = "dev"
-    }
 
     build {
       use "pack" {}
       registry {
           use "docker" {
-            image = "waypoint-example.local/nodejs-example"
+            image = "nodejs-example"
             tag = "latest"
+            local = true
           }
       }
    }
@@ -45,8 +42,6 @@ project = "example-nodejs"
 
     release {
       use "kubernetes" {
-        load_balancer = true
-        port = 80
       }
     }
   }
@@ -57,15 +52,15 @@ Buildpack to build the application. This application is a NodeJS based applicati
 
 The `deploy` clause defines where Waypoint will deploy the app. In our case, this is going to Kubernetes
 
-The `release` stanza defines how our application will be released to our environment, in our case we're using a `load_balanacer`
-on a specific `port`.
+The `release` stanza defines how our application will be released to our environment. For example, in the case of external Kubernetes
+clusters this would be where you would configure a `load_balanacer` on a specific `port`.
 
--> Note: You may want to update the `image` entry within the `registry` section to reflect a Docker repository that's externally
-accessible if you are using a non-local Kubernetes cluster.
+-> Note: You may also want to update your `image`,`location`, and remove the `local` configuration if you plan to run this application
+on an external Nomad cluster. The current example uses a local based image.
 
 With these configurations in place, execute the following command in order to initialize Waypoint with this configuration.
 
-```bash
+```shell-session
 $ waypoint init
 ```
 
