@@ -1085,6 +1085,10 @@ func (p *Platform) Destroy(
 		Force:   aws.Bool(true),
 		Service: &deployment.ServiceArn,
 	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
