@@ -6,23 +6,27 @@ description: |-
   Placeholder
 ---
 
-# Update and Redeploy the Application
+# Update and Redeploy the App
 
-One of the most powerful workflows that Waypoint enables is the ability to continuously iterate and redeploy changes to you applications
-in a consistent way. Let's demonstrate this by updating a few of the values within the application.
+One of the most powerful parts of Waypoint is its ability to iterate on deployments and quickly redeploy the application with your changes in place.
 
-Using your favorite IDE, edit the following file `view/index.ejs` file within the NodeJS directory.
+Open the following file in your preferred development editor:
 
-- On line 17 - Edit this line to include a catchy phrase. I prefer a quote from your favorite movie, but hey, live your dream.
-  This is about you as the application developer!
+`view/index.ejs`
 
-Save your file, and re-run the `waypoint up` command
+On `line 17`, change the text to anything that you like and then save the file.
 
-```bash
-waypoint up
+Back in the Terminal, redeploy the application with your new and improved text.
+
+```shell
+$ waypoint up
 ```
 
-Access the preview URL and observe that your application changes have been reflected in the new version of the deployment.
+Waypoint has now redeployed your application.
+
+You will notice that the Deployment URL for this second deployment is different from what was created for the first deployment. Waypoint generates unique URLs for each deployment, which means that you can access each deployment by using their unique deployment URLs. This is typically used to preview a deployment before releasing it.
+
+Now, open the new Deployment URL and verify that you see your modified text in the app. Congrats!
 
 #### Next Step
 

@@ -10,50 +10,51 @@ description: |-
 
 <!-- Make this a partial -->
 
--> Review the [prerequisites for this walkthrough](docs/getting-started/nomad-example-app/install-prereqs) before installing Waypoint.
+-> Review this walkthrough's [prerequisites](docs/getting-started/nomad-example-app/install-prereqs) before installing Waypoint.
 
-Waypoint uses both a client and a server to build, deploy, and release applications.
+Waypoint uses both a client and a server to build, deploy, and release applications. This functionality is all available from a single binary.
 
-<!-- Make this a partial -->
+## Download the Binary
 
-## Download the Precompiled Binary
+To install Waypoint, find the appropriate package on [the releases site](https://go.hashi.co/waypoint-beta-binaries)
+for your system and download it as a zip archive.
 
-To install Waypoint, find the appropriate package for your system and download it as a zip archive.
+After downloading Waypoint, unzip the package. Waypoint runs as a single binary named `waypoint`. Any other files in the package can be safely removed and Waypoint will still function.
 
-After downloading Waypoint, unzip the package into any directory. Waypoint runs as a single binary named `waypoint`. Any other files in the package can be safely removed and Waypoint will still function.
+To make the binary available from anywhere on your system, you can either copy it into `/usr/local/bin` or add it to a different directory in your `PATH`. For instructions on how to do that, see [Editing your Path](#path).
 
-Finally, make sure that the waypoint binary is available on your [PATH](#path).
-
-### How to Add Waypoint to Your Path ((#path))
-
-Add Waypoint to your `$PATH` to use the `waypoint` command without having to include the full directory path to the binary.
-
-See what is in your current `$PATH` definition.
-
-```shell
-$ echo $PATH
+```
+$ cp ~/Downloads/waypoint /usr/local/bin
 ```
 
-If you do not have an entry for the Waypoint binary, add the following line to your shell profile:
+Validate the installation by running the `waypoint` command.
 
-`export PATH=$PATH:my-directory-path-to-waypoint-binary`
+```
+$ waypoint
+Usage: waypoint [-version] [-help] [-autocomplete-(un)install] <command> [args]
 
-For example: `export PATH=$PATH:~/enlistments/waypoint`
+Common commands:
+    release      Release a deployment.
+    up           Perform the build, deploy, and release steps for the app.
+    build        Build a new versioned artifact from source.
+...
+```
 
-- To determine your shell, run `echo $SHELL`
-- If using Bash, use `nano ~/.bash_profile` to edit your Bash profile.
-- If using ZSH, use `nano ~/.zshrc` to edit your ZSH profile.
+## Pull the Latest Waypoint Server Image
+
+<!-- Get instructions for this from eng team -->
 
 ## Install the Waypoint Server
 
-Once the Waypoint binary location has been added to your path, execute the following command to install the Waypoint server on Nomad.
+In this step we will install the Waypoint server onto Nomad. This allows you to view the user interface, collaborate on deployments, and more.
 
--> Note: Waypoint automatically creates the Nomad job for the Waypoint server. As this is behind an authenticated image repository
-currently you may experience challenges with this if you are not using Nomad on your local machine. You may need to issue a `docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest`
-from your Nomad clients in order to locally cache the image, and update the command below to use the `-server-image=` flag to reference this pull
+-> Note: Waypoint automatically creates the Nomad job for the Waypoint server. As this is behind an authenticated image repository currently, you might experience challenges with this if you are not using Nomad on your local machine. You might need to pull the latest Waypoint server image by running `docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest`
+from each of your Nomad clients in order to locally cache the image. You will then also need to update the `waypoint install` command below to use the `-server-image=` flag to reference this image pull.
+
+Run the following command to install the Waypoint server.
 
 ```shell
- $ waypoint install --platform="nomad" --nomad-dc="dc1"
+ $ waypoint install -platform=nomad --nomad-dc=dc1
 ```
 
 @include "getting-started/context.mdx"
