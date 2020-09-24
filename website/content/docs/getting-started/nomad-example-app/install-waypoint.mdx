@@ -30,7 +30,7 @@ Add Waypoint to your `$PATH` to use the `waypoint` command without having to inc
 
 See what is in your current `$PATH` definition.
 
-```shell
+```shell-session
 $ echo $PATH
 ```
 
@@ -52,7 +52,7 @@ Once the Waypoint binary location has been added to your path, execute the follo
 currently you may experience challenges with this if you are not using Nomad on your local machine. You may need to issue a `docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest`
 from your Nomad clients in order to locally cache the image, and update the command below to use the `-server-image=` flag to reference this pull
 
-```shell
+```shell-session
  $ waypoint install --platform="nomad" --nomad-dc="dc1"
 ```
 
