@@ -153,6 +153,7 @@ func TestRunner(t testing.T, client pb.WaypointClient, r *pb.Runner) (string, fu
 		r = &pb.Runner{}
 	}
 	id, err := server.Id()
+	require.NoError(err)
 	require.NoError(mergo.Merge(r, &pb.Runner{Id: id}))
 
 	// Open the config stream

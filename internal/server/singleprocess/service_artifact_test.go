@@ -83,6 +83,8 @@ func TestServiceArtifact_List(t *testing.T) {
 		buildresp, err := client.UpsertBuild(ctx, &pb.UpsertBuildRequest{
 			Build: serverptypes.TestValidBuild(t, nil),
 		})
+		require.NoError(err)
+		require.NotNil(buildresp)
 
 		build := buildresp.Build
 
@@ -92,6 +94,8 @@ func TestServiceArtifact_List(t *testing.T) {
 		resp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
 			Artifact: artifact,
 		})
+		require.NoError(err)
+		require.NotNil(resp)
 
 		artifact = resp.Artifact
 

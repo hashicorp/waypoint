@@ -41,6 +41,9 @@ func credentials(token string) runtime.ClientAuthInfoWriter {
 func persistLocalToken(dir string, token string) error {
 	path := filepath.Join(dir, tokenFilename)
 	tokenFile, err := os.Create(path)
+	if err != nil {
+		return err
+	}
 	defer tokenFile.Close()
 
 	_, err = tokenFile.WriteString(token)
