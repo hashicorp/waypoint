@@ -886,8 +886,8 @@ github.com/mitchellh/cli v1.1.2/go.mod h1:6iaV0fGdElS6dPBx0EApTxHrcWvmJphyh2n8YB
 github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db/go.mod h1:l0dey0ia/Uv7NcFFVbCLtqEBQbrT4OCwCSKTEv6enCw=
 github.com/mitchellh/copystructure v1.0.0 h1:Laisrj+bAB6b/yJwB5Bt3ITZhGJdqmxquMKeZ+mmkFQ=
 github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
-github.com/mitchellh/go-glint v0.0.0-20200924001800-b2a6d8fe7459 h1:bgb25llPhNeB6QMJDuK5T3agel47M1bAhIYSf3l+wpc=
-github.com/mitchellh/go-glint v0.0.0-20200924001800-b2a6d8fe7459/go.mod h1:IA0XVyuSNKN/yeJPBpDvdOHRGRmCJ7skaq4SB6VOohk=
+github.com/mitchellh/go-glint v0.0.0-20200925155317-b2ab0b1e9ceb h1:RtMrOuPrlAV4zufiqFXe7nb2mbs5vai7rn8e4ASViMA=
+github.com/mitchellh/go-glint v0.0.0-20200925155317-b2ab0b1e9ceb/go.mod h1:IA0XVyuSNKN/yeJPBpDvdOHRGRmCJ7skaq4SB6VOohk=
 github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8 h1:vYarZ5R8DcSQ4MayciodsBAPc9pVGnFucqOfd+Rfaxw=
 github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8/go.mod h1:ZCzL0JMR6qfm7VrDC8HGwVtPA8D2Ijc/edUSBw58x94=
 github.com/mitchellh/go-homedir v1.0.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
