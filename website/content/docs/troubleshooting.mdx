@@ -32,3 +32,24 @@ kubectl get pv #note that pv name associated with $NAMESPACE/data-waypoint-serve
 kubectl delete pv pvc-9063b5f7-dc86-4fa7-b120-bf084bbbbf93 #this id will be different for you
 kubectl delete svc waypoint
 ```
+
+## Pack Builder No Such Image
+
+If the `pack` builder exits during build with an error similar to:
+
+```
+» Building...
+Creating new buildpack-based image using builder: heroku/buildpacks:18
+...
+! failed to create 'detector' container: Error response from daemon: No such
+  image: pack.local/builder/6c647962686577687270:latest
+```
+
+You may need to remove the Docker volumes that are responsible for storing cached images for pack.
+
+```
+$ docker volume list
+...
+```
+
+Locate the volumes named starting with `pack-cache-` and remove them with `docker volume rm`.
