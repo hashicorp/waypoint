@@ -5,7 +5,7 @@ export default (req, res) =>
     req,
     res
   )({
-    environments: { production: ['Okta'], preview: ['Auth0', 'Okta'] },
+    environments: { production: ['Okta', 'Auth0'], preview: ['Auth0', 'Okta'] },
     pages: {
       error: '/signin-error', // Error code passed in query string as ?error=
     },
