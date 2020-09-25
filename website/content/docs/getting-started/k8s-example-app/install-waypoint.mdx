@@ -21,13 +21,13 @@ After downloading Waypoint, unzip the package. Waypoint runs as a single binary 
 
 To make the binary available from anywhere on your system, you can either copy it into `/usr/local/bin` or add it to a different directory in your `PATH`. For instructions on how to do that, see [Editing your Path](#path).
 
-```shell
+```shell-session
 $ cp ~/Downloads/waypoint /usr/local/bin
 ```
 
 Validate the installation by running the `waypoint` command.
 
-```
+```shell-session
 $ waypoint
 Usage: waypoint [-version] [-help] [-autocomplete-(un)install] <command> [args]
 
@@ -51,7 +51,7 @@ First, you need to [create a personal access token](https://docs.github.com/en/g
 Then, save the token to a file named `TOKEN.txt`. We will read this token when creating the Kubernetes secret. Ensure `kubectl`
 is configured to interact with the correct Kubernetes cluster, and then run the following command:
 
-```shell
+```shell-session
 $ kubectl create secret docker-registry github --docker-server=docker.pkg.github.com --docker-username=GITHUBUSERNAME --docker-password="$(< TOKEN.txt)" --docker-email=GITHUBEMAIL
 ```
 
@@ -65,7 +65,7 @@ In this step we will install the Waypoint server onto Kubernetes. This allows yo
 
 Run the following command to install the Waypoint server.
 
-```shell
+```shell-session
  $ waypoint install -platform=kubernetes
 ```
 

@@ -10,6 +10,7 @@ description: |-
 
 Before you can build and deploy your application, you must initialize it with Waypoint.
 
+
 When you initialize Waypoint for your application, Waypoint first looks to see if there is a Waypoint configuration file (`waypoint.hcl`) for the app in the directory.
 
 ## Waypoint Configuration
@@ -26,8 +27,8 @@ We will now view the `waypoint.hcl` file to learn more about the app's configura
 
 In the `/waypoint-examples/nomad/nodejs/` directory, run the following command:
 
-```shell
-cat waypoint.hcl
+```shell-session
+$ cat waypoint.hcl
 ```
 
 The Terminal will output the contents of the `waypoint.hcl` file.
@@ -42,7 +43,7 @@ project = "example-nodejs"
       registry {
           use "docker" {
             image = "nodejs-example"
-            tag = "latest"
+            tag = "1"
             local = true
           }
       }
@@ -64,11 +65,12 @@ Buildpack to build the application. Since this example app is written for NodeJS
 
 The `deploy` clause defines where Waypoint will deploy the app. The `nomad` and `datacenter` fields tell Waypoint to deploy the application to Nomad to the dc1 datacenter.
 
--> Note: If you are using an external Nomad cluster,update the `image` entry within the `registry` section to point to a Docker repository that is externally accessible.
+-> Note: You might also want to update your docker `image`,`location`, and remove the `local` configuration if you plan to run this application
+on an external Nomad cluster. The current example uses a local based image.
 
 With these configurations in place, execute the following command in order to initialize Waypoint with this configuration.
 
-```bash
+```shell-session
 $ waypoint init
 ```
 

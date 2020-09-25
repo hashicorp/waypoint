@@ -12,19 +12,20 @@ Now that you have deployed your app, you can use `waypoint exec` to run commands
 
 For example, you can use the command to open a shell prompt.
 
-```bash
-waypoint exec /bin/bash
+```shell-session
+$ waypoint exec /bin/bash
 ```
 
 Since you are in the deployment directory, you will see that Waypoint automatically executes against the currently deployed application.
 
 From within, we can validate that this is the actual application by listing out the directory hosting the app's compiled files.
 
-```bash
-ls /usr/share/nginx/html
+```shell-session
+$ cd /
+$ ls
 ```
 
-You should see an output that contains the app's static files that were compiled.
+You should see an output that contains the file structure for the current deployment.
 
 #### Next Step
 

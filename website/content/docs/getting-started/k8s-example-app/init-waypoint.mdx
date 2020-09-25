@@ -10,6 +10,7 @@ description: |-
 
 Before you can build and deploy your application, you must initialize it with Waypoint.
 
+
 When you initialize Waypoint for your application, Waypoint first looks to see if there is a Waypoint configuration file (`waypoint.hcl`) for the app in the directory.
 
 ## Waypoint Configuration
@@ -26,8 +27,8 @@ We will now view the `waypoint.hcl` file to learn more about the app's configura
 
 In the `/waypoint-examples/kubernetes/nodejs/` directory, run the following command:
 
-```shell
-cat waypoint.hcl
+```shell-session
+$ cat waypoint.hcl
 ```
 
 The Terminal will output the contents of the `waypoint.hcl` file.
@@ -36,10 +37,6 @@ The Terminal will output the contents of the `waypoint.hcl` file.
 project = "example-nodejs"
 
   app "example-nodejs" {
-    labels = {
-      "service" = "example-nodejs",
-      "env" = "dev"
-    }
 
     build {
       use "pack" {}
@@ -60,8 +57,6 @@ project = "example-nodejs"
 
     release {
       use "kubernetes" {
-        load_balancer = true
-        port = 80
       }
     }
   }
@@ -74,13 +69,16 @@ Buildpack to build the application. Since this example app is written for NodeJS
 
 The `deploy` clause defines where Waypoint will deploy the app. The `kubernetes` option tells Waypoint to deploy the application to Kubernetes.
 
-The `release` stanza defines how the application will be released to an environment. The `load_balancer` and `port` options in the app's config file tell Waypoint that the app will be released using a load balanacer on a specific port.
 
--> Note: If you are using a remote Kubernetes cluster, update the `image` entry within the `registry` section to point to a Docker repository that is externally accessible.
+The `release` stanza defines how our application will be released to our environment. For example, in the case of external Kubernetes
+clusters this would be where you would configure a `load_balanacer` on a specific `port`.
+
+-> Note: You may also want to update your `image`,`location`, and remove the `local` configuration if you plan to run this application
+on an external Kubernetes cluster. The current example uses a local based image.
 
 With these configurations in place, execute the following command in order to initialize Waypoint with this configuration.
 
-```bash
+```shell-session
 $ waypoint init
 ```
 

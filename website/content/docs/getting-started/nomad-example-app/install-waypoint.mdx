@@ -23,7 +23,8 @@ After downloading Waypoint, unzip the package. Waypoint runs as a single binary 
 
 To make the binary available from anywhere on your system, you can either copy it into `/usr/local/bin` or add it to a different directory in your `PATH`. For instructions on how to do that, see [Editing your Path](#path).
 
-```
+
+```shell-session
 $ cp ~/Downloads/waypoint /usr/local/bin
 ```
 
@@ -53,7 +54,7 @@ from each of your Nomad clients in order to locally cache the image. You will th
 
 Run the following command to install the Waypoint server.
 
-```shell
+```shell-session
  $ waypoint install -platform=nomad --nomad-dc=dc1
 ```
 
