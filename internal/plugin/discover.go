@@ -1,10 +1,15 @@
 package plugin
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/adrg/xdg"
 
@@ -33,16 +38,30 @@ func Discover(cfg *config.Plugin, paths []string) (*exec.Cmd, error) {
 		path = filepath.Join(path, expected)
 
 		_, err := os.Stat(path)
-		if err == nil {
-			cmd := exec.Command(path)
-			return cmd, nil
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+
+			return nil, err
 		}
 
-		if os.IsNotExist(err) {
-			continue
+		// If the checksum is set we validate it.
+		if cfg.Checksum != "" {
+			actual, err := checksum(path)
+			if err != nil {
+				return nil, err
+			}
+
+			if strings.ToLower(actual) != strings.ToLower(cfg.Checksum) {
+				return nil, fmt.Errorf(
+					"plugin %q checksum mismatch. got: %s",
+					cfg.Name, actual)
+			}
 		}
 
-		return nil, err
+		cmd := exec.Command(path)
+		return cmd, nil
 	}
 
 	return nil, nil
@@ -65,4 +84,19 @@ func DefaultPaths(pwd string) ([]string, error) {
 		filepath.Join(pwd, ".waypoint", "plugins"),
 		filepath.Dir(xdgPath),
 	}, nil
+}
+
+func checksum(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

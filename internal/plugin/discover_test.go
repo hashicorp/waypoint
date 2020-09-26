@@ -64,6 +64,37 @@ func TestDiscover(t *testing.T) {
 				Args: []string{filepath.Join("testdata", "pathA", "waypoint-plugin-a")},
 			},
 		},
+
+		{
+			"Matching checksum",
+			[]string{
+				filepath.Join("testdata", "pathA"),
+				filepath.Join("testdata", "pathB"),
+			},
+			&config.Plugin{
+				Name:     "b",
+				Checksum: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			},
+			"",
+			&exec.Cmd{
+				Path: filepath.Join("testdata", "pathB", "waypoint-plugin-b"),
+				Args: []string{filepath.Join("testdata", "pathB", "waypoint-plugin-b")},
+			},
+		},
+
+		{
+			"Checksum mismatch",
+			[]string{
+				filepath.Join("testdata", "pathA"),
+				filepath.Join("testdata", "pathB"),
+			},
+			&config.Plugin{
+				Name:     "b",
+				Checksum: "f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			},
+			"checksum",
+			nil,
+		},
 	}
 
 	for _, tt := range cases {

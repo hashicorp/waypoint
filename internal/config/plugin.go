@@ -63,6 +63,9 @@ type Plugin struct {
 		Platform bool `hcl:"deploy,optional"`
 		Releaser bool `hcl:"release,optional"`
 	} `hcl:"type,block"`
+
+	// Checksum is the SHA256 checksum to validate this plugin.
+	Checksum string `hcl:"checksum,optional"`
 }
 
 // Types returns the list of types that this plugin implements.
