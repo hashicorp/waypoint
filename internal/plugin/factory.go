@@ -53,12 +53,16 @@ func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 			return nil, err
 		}
 
-		// Request the plugin
-		raw, err := rpcClient.Dispense(strings.ToLower(typ.String()))
-		if err != nil {
-			log.Error("error requesting plugin", "type", typ, "err", err)
-			client.Kill()
-			return nil, err
+		// Request the plugin. We don't request the mapper type because
+		// we handle that below.
+		var raw interface{}
+		if typ != component.MapperType {
+			raw, err = rpcClient.Dispense(strings.ToLower(typ.String()))
+			if err != nil {
+				log.Error("error requesting plugin", "type", typ, "err", err)
+				client.Kill()
+				return nil, err
+			}
 		}
 
 		// Request the mappers

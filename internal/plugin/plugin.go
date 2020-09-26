@@ -43,6 +43,7 @@ var (
 	// built-in or well-known plugins by default. This should be used as the base
 	// for building any set of factories.
 	BaseFactories = map[component.Type]*factory.Factory{
+		component.MapperType:         mustFactory(factory.New((*interface{})(nil))),
 		component.BuilderType:        mustFactory(factory.New(component.TypeMap[component.BuilderType])),
 		component.RegistryType:       mustFactory(factory.New(component.TypeMap[component.RegistryType])),
 		component.PlatformType:       mustFactory(factory.New(component.TypeMap[component.PlatformType])),

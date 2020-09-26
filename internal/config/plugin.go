@@ -58,6 +58,7 @@ type Plugin struct {
 
 	// Type is the type of plugin this is. This can be multiple.
 	Type struct {
+		Mapper   bool `hcl:"mapper,optional"`
 		Builder  bool `hcl:"build,optional"`
 		Registry bool `hcl:"registry,optional"`
 		Platform bool `hcl:"deploy,optional"`
@@ -94,6 +95,7 @@ func (p *Plugin) markType(typ component.Type) {
 
 func (p *Plugin) typeMap() map[component.Type]*bool {
 	return map[component.Type]*bool{
+		component.MapperType:         &p.Type.Mapper,
 		component.BuilderType:        &p.Type.Builder,
 		component.RegistryType:       &p.Type.Registry,
 		component.PlatformType:       &p.Type.Platform,

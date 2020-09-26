@@ -83,6 +83,7 @@ func New(opts ...Option) (*Runner, error) {
 		ctx:    context.Background(),
 		runner: &pb.Runner{Id: id},
 		factories: map[component.Type]*factory.Factory{
+			component.MapperType:         plugin.BaseFactories[component.MapperType],
 			component.BuilderType:        plugin.BaseFactories[component.BuilderType],
 			component.RegistryType:       plugin.BaseFactories[component.RegistryType],
 			component.PlatformType:       plugin.BaseFactories[component.PlatformType],
