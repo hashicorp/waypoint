@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
@@ -165,27 +164,16 @@ func (r *Runner) pluginFactories(
 		// If the plugin was not found, it is only an error if
 		// we don't have it already registered.
 		if cmd == nil {
-			found := true
-			for _, t := range pluginCfg.Types() {
-				if result[t].Func(pluginCfg.Name) == nil {
-					found = false
-					break
-				}
-			}
-
-			if !found {
-				var typeStr []string
-				for _, typ := range pluginCfg.Types() {
-					typeStr = append(typeStr, typ.String())
-				}
-
+			if _, ok := plugin.Builtins[pluginCfg.Name]; !ok {
 				perr = multierror.Append(perr, fmt.Errorf(
-					"plugin %q not found for types: %s",
-					pluginCfg.Name,
-					strings.Join(typeStr, ", ")))
+					"plugin %q not found",
+					pluginCfg.Name))
 				plog.Warn("plugin not found")
 			} else {
 				plog.Debug("plugin found as builtin")
+				for _, t := range pluginCfg.Types() {
+					result[t].Register(pluginCfg.Name, plugin.BuiltinFactory(pluginCfg.Name, t))
+				}
 			}
 
 			continue

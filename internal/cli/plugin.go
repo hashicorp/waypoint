@@ -12,7 +12,7 @@ type PluginCommand struct {
 func (c *PluginCommand) Run(args []string) int {
 	plugin, ok := plugin.Builtins[args[0]]
 	if !ok {
-		panic("no such plugin")
+		panic("no such plugin: " + args[0])
 	}
 
 	// Run the plugin

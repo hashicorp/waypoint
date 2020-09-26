@@ -51,34 +51,6 @@ var (
 	}
 )
 
-func init() {
-	b := BaseFactories[component.BuilderType]
-	b.Register("docker", BuiltinFactory("docker", component.BuilderType))
-	b.Register("files", BuiltinFactory("files", component.BuilderType))
-	b.Register("pack", BuiltinFactory("pack", component.BuilderType))
-	b.Register("aws-ami", BuiltinFactory("aws-ami", component.BuilderType))
-
-	b = BaseFactories[component.RegistryType]
-	b.Register("docker", BuiltinFactory("docker", component.RegistryType))
-	b.Register("files", BuiltinFactory("files", component.RegistryType))
-	b.Register("aws-ecr", BuiltinFactory("aws-ecr", component.RegistryType))
-
-	b = BaseFactories[component.PlatformType]
-	b.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.PlatformType))
-	b.Register("kubernetes", BuiltinFactory("kubernetes", component.PlatformType))
-	b.Register("azure-container-instance", BuiltinFactory("azure-container-instance", component.PlatformType))
-	b.Register("netlify", BuiltinFactory("netlify", component.PlatformType))
-	b.Register("docker", BuiltinFactory("docker", component.PlatformType))
-	b.Register("aws-ecs", BuiltinFactory("aws-ecs", component.PlatformType))
-	b.Register("nomad", BuiltinFactory("nomad", component.PlatformType))
-	b.Register("aws-ec2", BuiltinFactory("aws-ec2", component.PlatformType))
-
-	b = BaseFactories[component.ReleaseManagerType]
-	b.Register("google-cloud-run", BuiltinFactory("google-cloud-run", component.ReleaseManagerType))
-	b.Register("kubernetes", BuiltinFactory("kubernetes", component.ReleaseManagerType))
-	b.Register("aws-alb", BuiltinFactory("aws-alb", component.ReleaseManagerType))
-}
-
 func must(err error) {
 	if err != nil {
 		panic(err)
