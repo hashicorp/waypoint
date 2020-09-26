@@ -262,10 +262,10 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 		f *factory.Factory
 		t string
 	}{
-		{plugin.Builders, "builder"},
-		{plugin.Registries, "registry"},
-		{plugin.Platforms, "platform"},
-		{plugin.Releasers, "releasemanager"},
+		{plugin.BaseFactories[component.BuilderType], "builder"},
+		{plugin.BaseFactories[component.RegistryType], "registry"},
+		{plugin.BaseFactories[component.PlatformType], "platform"},
+		{plugin.BaseFactories[component.ReleaseManagerType], "releasemanager"},
 	}
 
 	for _, f := range factories {
@@ -318,10 +318,10 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 		f *factory.Factory
 		t string
 	}{
-		{plugin.Builders, "builder"},
-		{plugin.Registries, "registry"},
-		{plugin.Platforms, "platform"},
-		{plugin.Releasers, "releasemanager"},
+		{plugin.BaseFactories[component.BuilderType], "builder"},
+		{plugin.BaseFactories[component.RegistryType], "registry"},
+		{plugin.BaseFactories[component.PlatformType], "platform"},
+		{plugin.BaseFactories[component.ReleaseManagerType], "releasemanager"},
 	}
 
 	for _, f := range factories {
