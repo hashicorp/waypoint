@@ -146,7 +146,7 @@ func (r *Runner) pluginFactories(
 	if err != nil {
 		return nil, err
 	}
-	log.Trace("plugin search path", "path", pluginPaths)
+	log.Debug("plugin search path", "path", pluginPaths)
 
 	// Search for all of our plugins
 	var perr error
@@ -165,10 +165,10 @@ func (r *Runner) pluginFactories(
 		// If the plugin was not found, it is only an error if
 		// we don't have it already registered.
 		if cmd == nil {
-			found := false
+			found := true
 			for _, t := range pluginCfg.Types() {
 				if result[t].Func(pluginCfg.Name) == nil {
-					found = true
+					found = false
 					break
 				}
 			}
@@ -185,14 +185,14 @@ func (r *Runner) pluginFactories(
 					strings.Join(typeStr, ", ")))
 				plog.Warn("plugin not found")
 			} else {
-				plog.Trace("plugin found as builtin")
+				plog.Debug("plugin found as builtin")
 			}
 
 			continue
 		}
 
 		// Register the command
-		plog.Trace("plugin found as external binary", "path", cmd.Path)
+		plog.Debug("plugin found as external binary", "path", cmd.Path)
 		for _, t := range pluginCfg.Types() {
 			result[t].Register(pluginCfg.Name, plugin.Factory(cmd, t))
 		}
