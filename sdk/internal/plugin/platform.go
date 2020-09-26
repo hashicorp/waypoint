@@ -344,6 +344,10 @@ func (s *platformServer) DeploySpec(
 	ctx context.Context,
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
+	if s.Impl == nil {
+		return nil, status.Errorf(codes.Unimplemented, "plugin does not implement: platform")
+	}
+
 	return funcspec.Spec(s.Impl.DeployFunc(),
 		argmapper.ConverterFunc(s.Mappers...),
 		argmapper.Logger(s.Logger),
