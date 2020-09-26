@@ -7,8 +7,12 @@ import (
 // Plugins returns all the plugins defined by this configuration. This
 // will include the implicitly defined plugins via `use` statements.
 func (c *Config) Plugins() []*Plugin {
-	var result []*Plugin
+	result := make([]*Plugin, len(c.Plugin))
+	copy(result, c.Plugin)
 	known := map[string]*Plugin{}
+	for _, p := range result {
+		known[p.Name] = p
+	}
 
 	// Collect all the plugins used by all the apps.
 	for _, app := range c.Apps {

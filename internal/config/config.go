@@ -10,6 +10,7 @@ type Config struct {
 	Project string            `hcl:"project,attr"`
 	Apps    []*App            `hcl:"app,block"`
 	Labels  map[string]string `hcl:"labels,optional"`
+	Plugin  []*Plugin         `hcl:"plugin,block"`
 }
 
 // Retrieve the app config for the named application
