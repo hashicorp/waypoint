@@ -4,14 +4,18 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/core"
+	"github.com/hashicorp/waypoint/internal/factory"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/datadir"
@@ -50,6 +54,12 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
+	// Find all our plugins
+	factories, err := r.pluginFactories(log, cfg.Plugins(), wd)
+	if err != nil {
+		return nil, err
+	}
+
 	// Build our job info
 	jobInfo := &component.JobInfo{
 		Id:    job.Id,
@@ -61,7 +71,7 @@ func (r *Runner) executeJob(
 	project, err := core.NewProject(ctx,
 		core.WithLogger(log),
 		core.WithUI(ui),
-		core.WithComponents(r.factories),
+		core.WithComponents(factories),
 		core.WithClient(r.client),
 		core.WithConfig(&cfg),
 		core.WithConfigContext(configCtx),
@@ -118,4 +128,75 @@ func (r *Runner) executeJob(
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)
 	}
+}
+
+func (r *Runner) pluginFactories(
+	log hclog.Logger,
+	plugins []*configpkg.Plugin,
+	wd string,
+) (map[component.Type]*factory.Factory, error) {
+	// Copy all our base factories first
+	result := map[component.Type]*factory.Factory{}
+	for k, f := range r.factories {
+		result[k] = f.Copy()
+	}
+
+	// Get our plugin search paths
+	pluginPaths, err := plugin.DefaultPaths(wd)
+	if err != nil {
+		return nil, err
+	}
+	log.Trace("plugin search path", "path", pluginPaths)
+
+	// Search for all of our plugins
+	var perr error
+	for _, pluginCfg := range plugins {
+		plog := log.With("plugin_name", pluginCfg.Name)
+		plog.Debug("searching for plugin")
+
+		// Find our plugin.
+		cmd, err := plugin.Discover(pluginCfg, pluginPaths)
+		if err != nil {
+			plog.Warn("error searching for plugin", "err", err)
+			perr = multierror.Append(perr, err)
+			continue
+		}
+
+		// If the plugin was not found, it is only an error if
+		// we don't have it already registered.
+		if cmd == nil {
+			found := false
+			for _, t := range pluginCfg.Types() {
+				if result[t].Func(pluginCfg.Name) == nil {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				var typeStr []string
+				for _, typ := range pluginCfg.Types() {
+					typeStr = append(typeStr, typ.String())
+				}
+
+				perr = multierror.Append(perr, fmt.Errorf(
+					"plugin %q not found for types: %s",
+					pluginCfg.Name,
+					strings.Join(typeStr, ", ")))
+				plog.Warn("plugin not found")
+			} else {
+				plog.Trace("plugin found as builtin")
+			}
+
+			continue
+		}
+
+		// Register the command
+		plog.Trace("plugin found as external binary", "path", cmd.Path)
+		for _, t := range pluginCfg.Types() {
+			result[t].Register(pluginCfg.Name, plugin.Factory(cmd, t))
+		}
+	}
+
+	return result, perr
 }

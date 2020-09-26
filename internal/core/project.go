@@ -75,10 +75,10 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		jobInfo:   &component.JobInfo{},
 		root:      ".",
 		factories: map[component.Type]*factory.Factory{
-			component.BuilderType:        plugin.Builders,
-			component.RegistryType:       plugin.Registries,
-			component.PlatformType:       plugin.Platforms,
-			component.ReleaseManagerType: plugin.Releasers,
+			component.BuilderType:        plugin.BaseFactories[component.BuilderType],
+			component.RegistryType:       plugin.BaseFactories[component.RegistryType],
+			component.PlatformType:       plugin.BaseFactories[component.PlatformType],
+			component.ReleaseManagerType: plugin.BaseFactories[component.ReleaseManagerType],
 		},
 	}
 
