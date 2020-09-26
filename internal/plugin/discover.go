@@ -30,7 +30,9 @@ func Discover(cfg *config.Plugin, paths []string) (*exec.Cmd, error) {
 
 	// Search our paths
 	for _, path := range paths {
-		_, err := os.Stat(filepath.Join(path, expected))
+		path = filepath.Join(path, expected)
+
+		_, err := os.Stat(path)
 		if err == nil {
 			cmd := exec.Command(path)
 			return cmd, nil
