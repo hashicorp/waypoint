@@ -2,15 +2,6 @@
 @use 'pds/tokens/scale';
 @use 'pds/tokens/typography' as Typography;
 
-$box-shadow: 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.2), 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1);
-$button-box-shadow: 0 3px 2px rgba(color.$ui-cool-gray-600, 0.2);
-$elevated-box-shadow: 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.1),
-  0 6px 8px 4px rgba(color.$ui-cool-gray-600, 0.1), 0 3px 2px rgba(color.$ui-cool-gray-600, 0.2);
-$inset-box-shadow: inset 0 0 0 1px rgba(color.$ui-cool-gray-600, 0.2),
-  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1);
-$glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
-  inset 0 2px 1px 1px rgba(color.$ui-cool-gray-600, 0.1), 0 0 0 3px rgba(color.$blue-500, 0.2);
-
 @import './_app-card';
 @import './_app-item';
 @import './_badge';
@@ -33,19 +24,19 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   margin: 0 auto;
   padding: scale.$lg-3 scale.$lg-4 scale.$lg-5;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 1200px;
-    height: 600px;
-    background: linear-gradient(to right, color.$white, rgba(color.$white, 0)),
-      linear-gradient(to left, color.$white, rgba(color.$white, 0)),
-      linear-gradient(to top, color.$white, color.$white, rgba(color.$white, 0)), url(/images/topography.svg);
-    opacity: 0.2;
-    z-index: -2;
-  }
+  // &::before {
+  //   content: '';
+  //   position: absolute;
+  //   top: 0;
+  //   right: 0;
+  //   width: 1200px;
+  //   height: 600px;
+  //   background: linear-gradient(to right, color.$white, rgba(color.$white, 0)),
+  //     linear-gradient(to left, color.$white, rgba(color.$white, 0)),
+  //     linear-gradient(to top, color.$white, color.$white, rgba(color.$white, 0)), url(/images/topography.svg);
+  //   opacity: 0.2;
+  //   z-index: -2;
+  // }
 
   h1,
   h2,
@@ -119,7 +110,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       small {
         display: flex;
         align-items: center;
-        color: color.$ui-cool-gray-600;
+        color: rgb(var(--text-muted));
         @include Typography.Interface(M);
         padding-bottom: scale.$sm-3;
 
@@ -147,10 +138,9 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       }
 
       .first-run-hint {
-
         p {
+          color: rgb(var(--text-muted));
           @include Typography.Interface(S);
-          color: color.$ui-cool-gray-500;
           display: inline-block;
           margin-right: scale.$sm-2;
         }
@@ -174,7 +164,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
 
     ul {
       display: flex;
-      box-shadow: inset 0 -1px 0 color.$ui-cool-gray-200;
+      box-shadow: inset 0 -1px 0 rgb(var(--border));
 
       li {
         display: flex;
@@ -183,20 +173,20 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       }
 
       a {
-        color: color.$ui-cool-gray-600;
+        color: rgb(var(--text-muted));
         text-decoration: none;
         display: flex;
         align-items: center;
         padding: scale.$sm-2 scale.$sm-2 scale.$base;
 
         &:hover {
-          color: color.$ui-cool-gray-800;
-          box-shadow: inset 0 -3px 0 color.$ui-cool-gray-300;
+          color: rgb(var(--text));
+          box-shadow: inset 0 -3px 0 rgb(var(--outline));
         }
 
         &.active {
-          color: color.$blue-500;
-          box-shadow: inset 0 -3px 0 color.$blue-500;
+          color: rgb(var(--link));
+          box-shadow: inset 0 -3px 0 rgb(var(--link));
         }
       }
 
@@ -229,11 +219,10 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   }
 
   ul.list {
-
     li {
       padding-bottom: scale.$base;
       margin-bottom: scale.$base;
-      border-bottom: 1px solid color.$ui-cool-gray-100;
+      border-bottom: 1px solid rgb(var(--border));
 
       &:last-child {
         padding-bottom: 0;
@@ -258,12 +247,22 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
 
     &::before {
       left: -#{scale.$sm-2};
-      background: linear-gradient(to right, #fff, #fff, rgba(#fff, 0));
+      background: linear-gradient(
+        to right,
+        rgb(var(--background)),
+        rgb(var(--background)),
+        rgba(var(--background), 0)
+      );
     }
 
     &::after {
       right: -#{scale.$sm-2};
-      background: linear-gradient(to left, #fff, #fff, rgba(#fff, 0));
+      background: linear-gradient(
+        to left,
+        rgb(var(--background)),
+        rgb(var(--background)),
+        rgba(var(--background), 0)
+      );
     }
 
     .cards-wrap {
@@ -272,19 +271,19 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       padding: scale.$lg-2 scale.$lg-2 0;
       margin-bottom: scale.$sm-2;
       scrollbar-width: thin;
-      scrollbar-color: color.$ui-cool-gray-300 color.$ui-cool-gray-100;
+      scrollbar-color: rgb(var(--outline)) rgb(var(--border));
 
       &::-webkit-scrollbar {
         height: scale.$sm-3;
       }
 
       &::-webkit-scrollbar-track {
-        background: color.$ui-cool-gray-100;
+        background: rgb(var(--border));
         border-radius: scale.$sm-3;
       }
 
       &::-webkit-scrollbar-thumb {
-        background: color.$ui-cool-gray-300;
+        background: rgb(var(--outline));
         border-radius: scale.$sm-3;
       }
 
@@ -316,12 +315,12 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   .card {
     padding: scale.$base;
     margin-bottom: scale.$lg-2;
-    box-shadow: $box-shadow;
-    background: color.$white;
+    box-shadow: $shadow;
+    border-radius: 2px;
+    background: rgba(var(--card), 0.75);
 
     &.empty-state {
       border: none;
-      border-radius: 0;
       padding: scale.$base;
 
       p {
@@ -330,8 +329,8 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
         align-items: center;
 
         &:only-child {
+          color: rgb(var(--text-subtle));
           @include Typography.Interface(S);
-          color: color.$ui-cool-gray-500;
         }
 
         .icon {
@@ -345,7 +344,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       align-items: center;
       padding-bottom: scale.$sm-1;
       margin-bottom: scale.$sm-1;
-      border-bottom: 1px solid color.$ui-cool-gray-100;
+      border-bottom: 1px solid rgb(var(--border));
 
       h4 {
         display: flex;
@@ -378,7 +377,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     }
 
     h4 {
-      color: color.$ui-cool-gray-600;
+      color: rgb(var(--text-muted));
     }
 
     a {
@@ -388,12 +387,12 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     .grid {
       margin-top: scale.$base;
       margin-bottom: -(scale.$sm-2);
-      border-top: 1px solid color.$ui-cool-gray-100;
+      border-top: 1px solid rgb(var(--border));
 
       > div {
         flex: 1 1 0;
         padding: scale.$sm-2 scale.$base;
-        border-right: 1px solid color.$ui-cool-gray-100;
+        border-right: 1px solid rgb(var(--border));
 
         &:first-child {
           padding-left: 0;
@@ -410,7 +409,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   .app-decoration {
     > small {
       display: block;
-      color: color.$ui-cool-gray-600;
+      color: rgb(var(--text-muted));
       @include Typography.Interface(S);
       padding: scale.$sm-3 0 scale.$sm-2;
     }
@@ -425,7 +424,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     }
 
     .meta small {
-      color: color.$ui-cool-gray-600;
+      color: rgb(var(--text-muted));
       @include Typography.Interface(M);
     }
   }
@@ -435,8 +434,8 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     align-items: center;
     justify-content: space-between;
     padding: scale.$base 0;
-    border-top: 1px solid color.$ui-cool-gray-100;
-    color: color.$ui-cool-gray-600;
+    border-top: 1px solid rgb(var(--border));
+    color: rgb(var(--text-muted));
     @include Typography.Interface(M);
 
     .item {
@@ -459,8 +458,8 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    background: color.$ui-cool-gray-050;
-    border: 1px solid color.$ui-cool-gray-100;
+    background: rgb(var(--panel));
+    border: 1px solid rgb(var(--border));
     border-radius: 2px;
     min-height: 340px;
 
@@ -489,8 +488,8 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       align-self: flex-end;
       width: 100%;
       padding: scale.$sm-2 scale.$sm-2;
-      background: color.$white;
-      border-top: 1px solid color.$ui-cool-gray-100;
+      background: rgb(var(--background));
+      border-top: 1px solid rgb(var(--border));
       position: sticky;
       bottom: 0;
       margin-top: auto;
@@ -504,11 +503,11 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       .prompt-icon {
         position: absolute;
         left: scale.$sm-1;
-        top: scale.$sm-1;
+        top: 13px;
         width: 24px;
         height: 24px;
         pointer-events: none;
-        color: color.$ui-cool-gray-600;
+        color: rgb(var(--text-muted));
       }
     }
   }
@@ -520,19 +519,19 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
     align-items: center;
     text-align: center;
     flex-grow: 1;
-    background: color.$ui-cool-gray-050;
-    border: 1px solid color.$ui-cool-gray-100;
+    background: rgb(var(--panel));
+    border: 1px solid rgb(var(--border));
     border-radius: 2px;
     padding: scale.$lg-4;
 
     p {
+      color: rgb(var(--text-subtle));
       @include Typography.Interface(M);
-      color: color.$ui-cool-gray-500;
       margin: scale.$sm-2;
 
       &:first-child {
+        color: rgb(var(--text-muted));
         @include Typography.Interface(L);
-        color: color.$ui-cool-gray-600;
       }
 
       .copyable-code {
@@ -544,8 +543,10 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       }
 
       code.inline {
+        font-size: 0.95em;
+        color: rgb(var(--text-muted));
         padding: scale.$sm-4 scale.$sm-3;
-        background: color.$ui-cool-gray-100;
+        background: rgb(var(--badge));
         border-radius: 2px;
       }
     }
@@ -563,34 +564,24 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
       padding: scale.$lg-8;
     }
 
-    .logo {
-      color: color.$black;
-      width: scale.$lg-14;
-      height: scale.$lg-14;
-      padding: scale.$lg-1 scale.$base scale.$base;
-      background: color.$ui-cool-gray-050;
-      box-shadow: 0 0 0 1px color.$ui-cool-gray-100;
-      border-radius: 8px;
-    }
-
     h1 {
       margin: scale.$lg-2 auto scale.$sm-2;
 
       & + p {
+        color: rgb(var(--text-muted));
         @include Typography.Interface(L);
-        color: color.$ui-cool-gray-600;
         margin-bottom: scale.$lg-2;
       }
     }
 
     hr {
       border: none;
-      border-top: 1px solid color.$ui-cool-gray-200;
+      border-top: 1px solid rgb(var(--border));
       margin: scale.$lg-3 0 scale.$lg-2;
     }
 
     small {
-      color: color.$ui-cool-gray-400;
+      color: rgb(var(--text-muted));
     }
 
     .button {
@@ -605,12 +596,16 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
   right: 0;
   margin-top: scale.$sm-2;
   width: 410px;
-  color: color.$ui-cool-gray-600;
-  background: color.$white;
-  box-shadow: $elevated-box-shadow;
+  color: rgb(var(--text-muted));
+  background: rgb(var(--card));
+  box-shadow: $elevated-shadow;
   border-radius: 2px;
   padding: scale.$sm-1 scale.$base;
   z-index: 99;
+
+  @media (prefers-color-scheme: dark) {
+    border: 1px solid rgb(var(--outline));
+  }
 
   p {
     @include Typography.Interface(M);
@@ -646,18 +641,7 @@ $glowing-box-shadow: inset 0 0 0 1px rgba(color.$blue-500, 0.8),
 
   small {
     font-size: 75%;
-    color: color.$ui-cool-gray-500;
-  }
-
-  .dismiss {
-    display: flex;
-    border-top: 1px solid color.$ui-gray-100;
-    padding-top: scale.$sm-1;
-    margin-top: scale.$sm-1;
-
-    button {
-      margin-left: auto;
-    }
+    color: rgb(var(--text-muted));
   }
 
   &-overlay {

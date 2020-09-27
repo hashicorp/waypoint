@@ -1,6 +1,18 @@
 @use 'pds/tokens/color';
 @use 'pds/tokens/scale';
 
+:root {
+  --tile: #{dehex(color.$black)};
+  --tile-icon: #{dehex($brand-color)};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tile: #{dehex($brand-color)};
+    --tile-icon: #{dehex(color.$black)};
+  }
+}
+
 .icon-tile {
   display: inline-flex;
   align-items: center;
@@ -8,9 +20,9 @@
   flex-shrink: 0;
   width: scale.$lg-8;
   height: scale.$lg-8;
-  background: color.$ui-cool-gray-050;
-  box-shadow: 0 0 0 1px color.$ui-cool-gray-100;
-  border-radius: 1px;
+  color: rgb(var(--tile-icon));
+  background: rgb(var(--tile));
+  border-radius: 2px;
 
   &--small {
     width: scale.$lg-6;
@@ -25,12 +37,5 @@
       width: scale.$lg-8;
       height: scale.$lg-8;
     }
-  }
-
-  &--bold {
-    color: color.$white;
-    background: color.$black;
-    box-shadow: none;
-    border-radius: 2px;
   }
 }

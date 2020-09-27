@@ -2,17 +2,16 @@
   width: 100%;
   padding-top: scale.$sm-1;
   margin-top: scale.$sm-1;
-  border-top: 1px solid color.$ui-cool-gray-100;
+  border-top: 1px solid rgb(var(--border));
   overflow: hidden;
 }
 
 .app-card-item {
-
   a {
     color: inherit;
 
     &:hover code {
-      color: color.$blue-500;
+      color: rgb(var(--link));
     }
   }
 
@@ -82,7 +81,7 @@ li.app-card-item {
   }
 
   small {
-    color: color.$ui-cool-gray-600;
+    color: rgb(var(--text-muted));
     font-size: 0.8rem;
     padding: 0 0 0 scale.$sm-2;
     min-width: 0;
@@ -106,8 +105,8 @@ div.app-card-item {
   width: 100%;
 
   .badge--version {
-    color: color.$blue-500;
-    background: color.$blue-050;
+    color: rgb(var(--info-text));
+    background: rgb(var(--info));
   }
 
   > a:not(.button) {

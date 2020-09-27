@@ -16,7 +16,7 @@ ul.breadcrumbs {
       overflow: hidden;
 
       &:hover {
-        color: color.$blue-500;
+        color: rgb(var(--link));
       }
 
       span {
@@ -35,7 +35,8 @@ ul.breadcrumbs {
 
     &::after {
       content: '/';
-      color: color.$ui-cool-gray-500;
+      color: rgb(var(--outline));
+      font-weight: normal;
       margin-left: scale.$sm-2;
       margin-right: scale.$sm-2;
     }

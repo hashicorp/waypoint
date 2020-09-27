@@ -3,15 +3,33 @@
 @use 'pds/tokens/font';
 @use 'pds/tokens/typography' as Typography;
 
+:root {
+  --header: #{dehex(color.$black)};
+  --header-text: #{dehex(color.$white)};
+  --header-border: #{dehex(color.$ui-cool-gray-700)};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --header: #{dehex(color.$black)};
+    --header-text: #{dehex(color.$white)};
+    --header-border: #{dehex(color.$ui-cool-gray-700)};
+  }
+}
+
 #header {
   position: sticky;
   top: 0;
-  color: color.$white;
-  background-image: linear-gradient(to right, #191a1c 0%, #1b212d 100%);
   display: flex;
   align-items: center;
+  color: rgb(var(--header-text));
+  background: rgb(var(--header));
   padding: scale.$base scale.$lg-4;
   z-index: 2;
+
+  @media (prefers-color-scheme: dark) {
+    box-shadow: 0 1px 0 rgb(var(--header-border));
+  }
 
   nav {
     display: flex;
@@ -44,7 +62,7 @@
         margin-right: scale.$lg-2;
 
         a {
-          color: color.$blue-500;
+          color: rgb(var(--link));
           display: inline;
           margin: 0;
         }
@@ -54,7 +72,7 @@
     hr {
       height: scale.$lg-1;
       border: none;
-      border-right: 1px solid color.$ui-gray-500;
+      border-right: 1px solid rgb(var(--header-border));
       margin: 0 scale.$lg-2;
     }
 
@@ -68,7 +86,7 @@
       cursor: pointer;
       outline: 0;
       @include Typography.Interface(L);
-      color: color.$white;
+      color: rgb(var(--header-text));
       font-family: font.$family-system-sans;
     }
   }
@@ -78,6 +96,7 @@
   }
 
   .brand {
+    color: rgb(var(--brand));
     display: flex;
     font-weight: 800;
     text-transform: uppercase;
@@ -93,10 +112,5 @@
         height: 100%;
       }
     }
-  }
-
-  .soon {
-    opacity: 0.4;
-    cursor: not-allowed;
   }
 }
