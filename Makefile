@@ -7,8 +7,8 @@ ASSETFS_PATH?=internal/server/gen/bindata_ui.go
 bin:
 	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
-	go build -tags assetsembedded -o ./waypoint ./cmd/waypoint
-	go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
+	CGO_ENABLED=0 go build -tags assetsembedded -o ./waypoint ./cmd/waypoint
+	CGO_ENABLED=0 go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
 GIT_COMMIT=$$(git rev-parse HEAD)
 GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
