@@ -1,0 +1,98 @@
+---
+layout: docs
+page_title: 'Lifecycle: Hooks'
+sidebar_title: Hooks
+description: |-
+  TODO
+---
+
+# Hooks
+
+Hooks can be used to execute commands before or after any lifecycle operation.
+This can be useful to do things such as perform a security scan on an image,
+run database migrations on a deploy, etc.
+
+Hooks enable these custom lifecycle operations to be performed while
+retaining the standard Waypoint workflow of `up` or dedicated commands
+`build`, `deploy`, `release`.
+
+Hooks can be configured for `build`, `registry`, `deploy`, and `release`
+operations.
+
+## Configuration
+
+Hooks are configured in the stanza of the operation they should run
+before or after. Hooks are supported in `build`, `registry`, `deploy`,
+and `release` stanzas. Example:
+
+```
+app "my-app" {
+  build {
+    use "docker" {}
+
+    hook {
+        when    = "after"
+        command = ["container-scanner", "my-image"]
+    }
+
+    hook {
+        when    = "after"
+        command = ["python", "notify-slack.py"]
+        on_failure = "continue"
+    }
+  }
+}
+```
+
+Hook configuration has the following elements:
+
+- `when` (string) - When the hook should be executed. Either "before" or "after".
+
+- `command` (list of strings) - The command to execute. The first element of
+  the list is the command to execute and each remainder is an argument. By
+  specifying this as a list of strings, you do not need to worry about
+  escaping arguments.
+
+- `on_failure` (string, optional) - Behavior if the hook fails. This
+  must be either blank or "continue".
+
+## Execution Environment
+
+Hooks are executed alongside the Waypoint operation, such as directly
+from the Waypoint CLI.
+
+Hooks are _not executed in the deployment platform_. Therefore, operations
+such as database migrations or scripts that must be run within the context
+of a deploy should use some other mechanism for execution.
+
+-> **Note:** `waypoint exec` will not operate on the current deployment
+within a hook, because the deployment is not successful until the hook
+itself is successful. `waypoint exec` from a hook will instead execute in the context of the
+_previous deployment_. We will look at ways in the future to enable this sort
+of behavior.
+
+## Execution Order
+
+Hooks are excuted in the order they're defined in the configuration
+file for the `when` value they match. For example: all "before" hooks will be executed in order that they are
+defined.
+
+Hooks are executed when the operation they're defined in is executed.
+For example, a registry hook will not be executed during a `waypoint build -push=false`
+command because `-push=false` configures Waypoint to not execute the
+registry push operation.
+
+## Failure Behavior
+
+When a hook fails, it will fail its associated operation by default.
+This behavior can be configured with the `on_failure` option.
+
+This has the often desired effect of making the result of that operation
+unusable by other operations. For example, an "after" hook failing for a
+"build" will make that artifact unavailable for future deployment operations
+even if the build itself succeeded.
+
+If `on_failure` is set to "continue," then hook failure is ignored
+and does not affect the overall success or failure of the associated operation.
+
+Examples of this are shown in the configuration section above.
