@@ -3,8 +3,8 @@
   align-items: center;
   @include Typography.Interface(S);
   padding: scale.$sm-4 scale.$sm-2;
-  color: color.$ui-cool-gray-600;
-  background: color.$ui-cool-gray-100;
+  color: rgb(var(--badge-text));
+  background: rgb(var(--badge));
   border-radius: 2px;
 
   &--version {
@@ -13,18 +13,18 @@
   }
 
   &--success {
-    color: color.$green-600;
-    background: color.$green-050;
+    color: rgb(var(--success-text));
+    background: rgb(var(--success));
   }
 
   &--error {
-    color: color.$red-500;
-    background: color.$red-050;
+    color: rgb(var(--error-text));
+    background: rgb(var(--error));
   }
 
   &--warning {
-    color: color.$yellow-600;
-    background: color.$yellow-050;
+    color: rgb(var(--warning-text));
+    background: rgb(var(--warning));
   }
 
   .icon {
@@ -34,7 +34,7 @@
     margin-right: scale.$sm-4;
 
     &:only-child {
-      margin-right: -(scale.$sm-4);;
+      margin-right: -(scale.$sm-4);
     }
   }
 }

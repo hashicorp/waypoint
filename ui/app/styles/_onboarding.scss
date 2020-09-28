@@ -24,7 +24,7 @@
 
       & + p {
         @include Typography.Interface(L);
-        color: color.$ui-cool-gray-600;
+        color: rgb(var(--text-muted));
       }
     }
   }
@@ -78,18 +78,19 @@
       font-size: 12px;
       display: block;
       width: 100%;
-      color: color.$ui-gray-800;
-      background: color.$ui-gray-050;
+      color: rgb(var(--text-muted));
+      background: rgb(var(--panel));
       padding: scale.$sm-1;
       border-radius: 2px;
     }
 
     .onboarding-tip,
     .onboarding-note {
-      color: color.$blue-800;
-      background: color.$blue-050;
+      font-size: 0.8rem;
+      color: rgb(var(--info-text));
+      background: rgb(var(--info));
       margin-bottom: scale.$lg-2;
-      padding: scale.$sm-1;
+      padding: scale.$sm-2 scale.$sm-1;
       border-radius: 2px;
 
       p {
@@ -98,8 +99,8 @@
     }
 
     .onboarding-note {
-      color: color.$yellow-800;
-      background: color.$yellow-050;
+      color: rgb(var(--warning-text));
+      background: rgb(var(--warning));
     }
   }
 
@@ -109,7 +110,7 @@
 
   hr {
     border: none;
-    border-top: 1px solid color.$ui-cool-gray-200;
+    border-top: 1px solid rgb(var(--border));
     margin: 0 0 scale.$lg-1;
   }
 }

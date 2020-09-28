@@ -28,22 +28,22 @@
   }
 
   &--success {
-    color: color.$green-600;
-    background: color.$green-050;
-    border: 1px solid color.$green-100;
+    color: rgb(var(--success-text));
+    background: rgb(var(--success));
+    border: 1px solid rgb(var(--success-border));
 
     hr {
-      border-color: color.$green-100;
+      border-color: rgb(var(--success-border));
     }
   }
 
   &--error {
-    color: color.$red-600;
-    background: color.$red-050;
-    border: 1px solid color.$red-100;
+    color: rgb(var(--error-text));
+    background: rgb(var(--error));
+    border: 1px solid rgb(var(--error-border));
 
     hr {
-      border-color: color.$red-100;
+      border-color: rgb(var(--error-border));
     }
   }
 }
