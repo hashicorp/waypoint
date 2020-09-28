@@ -24,20 +24,6 @@
   margin: 0 auto;
   padding: scale.$lg-3 scale.$lg-4 scale.$lg-5;
 
-  // &::before {
-  //   content: '';
-  //   position: absolute;
-  //   top: 0;
-  //   right: 0;
-  //   width: 1200px;
-  //   height: 600px;
-  //   background: linear-gradient(to right, color.$white, rgba(color.$white, 0)),
-  //     linear-gradient(to left, color.$white, rgba(color.$white, 0)),
-  //     linear-gradient(to top, color.$white, color.$white, rgba(color.$white, 0)), url(/images/topography.svg);
-  //   opacity: 0.2;
-  //   z-index: -2;
-  // }
-
   h1,
   h2,
   h3 {
