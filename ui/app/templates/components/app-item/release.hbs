@@ -17,7 +17,7 @@
     </small>
   </LinkTo>
 
-  {{#if @isLatest}}
+  {{#if (and @isLatest @release.url)}}
     <ExternalLink href={{@release.url}} class="button button--primary">
       <span>{{@release.url}}</span>
       {{inline-svg "exit" class="icon"}}
