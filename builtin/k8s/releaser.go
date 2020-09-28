@@ -130,7 +130,7 @@ func (r *Releaser) Release(
 		return nil, err
 	}
 
-	st.Step(terminal.StatusOK, "Service succesfully configured!")
+	st.Step(terminal.StatusOK, "Service successfully configured!")
 
 	if r.config.LoadBalancer {
 		ingress := service.Status.LoadBalancer.Ingress[0]
