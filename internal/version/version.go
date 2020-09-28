@@ -29,6 +29,8 @@ func GetVersion() *VersionInfo {
 	md := VersionMetadata
 	if GitDescribe != "" {
 		ver = GitDescribe
+	} else {
+		ver = fmt.Sprintf("v%s", ver)
 	}
 	if GitDescribe == "" && rel == "" && VersionPrerelease != "" {
 		rel = "dev"
@@ -67,7 +69,7 @@ func (c *VersionInfo) FullVersionNumber(rev bool) string {
 		return "Waypoint (version unknown)"
 	}
 
-	fmt.Fprintf(&versionString, "Waypoint v%s", c.Version)
+	fmt.Fprintf(&versionString, "Waypoint %s", c.Version)
 	if c.VersionPrerelease != "" {
 		fmt.Fprintf(&versionString, "-%s", c.VersionPrerelease)
 	}
