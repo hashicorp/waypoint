@@ -56,6 +56,10 @@ export default [
   'glossary',
   'troubleshooting',
   '-----------',
+  {
+    category: 'lifecycle',
+    content: ['build', 'deploy', 'release', 'hooks'],
+  },
   'url',
   'logs',
   'exec',

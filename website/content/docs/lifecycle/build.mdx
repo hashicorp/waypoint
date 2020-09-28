@@ -1,0 +1,72 @@
+---
+layout: docs
+page_title: 'Lifecycle: Build'
+sidebar_title: Build
+description: |-
+  TODO
+---
+
+# Build
+
+A **build** takes application source and converts it to an _artifact_.
+
+An artifact is the packaged form of an application required for deployment on
+your target platform: a container image, VM image, or maybe a simple zip file.
+The build process may also include an optional **push** operation to push
+the built artifact to a registry so that it is available for the deployment
+platform.
+
+A build is triggered during a `waypoint up` or using the dedicated
+`waypoint build` command.
+
+## Configuration
+
+The build is configured using the `build` stanza within an `app`:
+
+```
+app "my-app" {
+  build {
+    use "docker" {}
+  }
+}
+```
+
+## Registry
+
+A build may optionally specify a registry to push the built artifact to.
+This is sometimes required so that the build artifact is accessible to the
+deployment platform.
+
+If a registry is specified, the deployment step will use the artifact
+in the registry. If a registry is not specified, the deployment step will
+use the artifact that is the result of the build.
+
+### Situations for a Registry
+
+**An example of a situation requiring a registry:** Kubernetes deployments
+need access to the Docker image that is built, but a Docker build process often
+produces a local Docker image. The registry configuration is used to push
+the locally built Docker image to the remote registry.
+
+**An example of a situation that does not require a registry:** AMIs (Amazon
+Machine Images) are registered directly with Amazon and are never local
+artifacts. Therefore, a separate registry configuration is not required since
+the build/registry phases are one and the same.
+
+### Registry Configuration
+
+Registries are configured in the `registry` stanza within a build. These
+must specify a plugin that is capable of providing registry capabilities.
+
+```
+build {
+  use "docker" {}
+
+  registry {
+    use "docker" {
+      image = "example.com/my-app"
+      tag   = gitrefpretty()
+    }
+  }
+}
+```

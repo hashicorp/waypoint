@@ -1,0 +1,61 @@
+---
+layout: docs
+page_title: 'Lifecycle: Release'
+sidebar_title: Release
+description: |-
+  A release activates a previously staged deployment and opens it to general traffic. This step may involve adding a deployment to a load balancer, updating DNS, configuring a service mesh, etc.
+---
+
+# Release
+
+A release activates a previously staged
+[deployment](/docs/lifecycle/deploy)
+and opens it
+to general traffic. This step may involve adding a deployment to a load balancer,
+updating DNS, configuring a service mesh, etc.
+
+**The release stage is optional.** See [default behavior](/docs/lifecycle/release#default-behavior)
+for more information.
+
+## Configuration
+
+The release is configured using the `release` stanza within an `app`.
+This section is optional. If it isn't specified, each deployment is assumed
+to be released.
+
+```
+app "my-app" {
+  release {
+    use "aws-alb" {}
+  }
+}
+```
+
+## Default Behavior
+
+If the release stage is not specified,
+two different behaviors may occur depending on if the deployment platform
+being used supports a default releaser.
+
+### Platform Default Releaser
+
+The deployment platform being used may support what is called a "default
+releaser". This means the deployment platform has default release behavior
+if an explicit release stage isn't specified. For example, the Kubernetes
+platform supports a default releaser that creates a `Service` resource.
+
+In this case, the default releaser will be used automatically if no
+`release` configuration is explicitly available in the Waypoint project
+configuration file.
+
+### No Releaser
+
+If no default releaser exists for the deployment platform and no
+release is configured in the Waypoint project configuration, then each
+deploy is expected to already be released.
+
+This behavior matches how deploys may have been considered in the past:
+you deploy and it is immediately available to consumers of your application.
+
+In this scenario, it is expected that either the deployment platform makes
+the deployments available to traffic or this is handled externally.
