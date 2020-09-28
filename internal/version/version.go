@@ -21,18 +21,20 @@ type VersionInfo struct {
 	Version           string
 	VersionPrerelease string
 	VersionMetadata   string
+	GitDescribe       string
 }
 
 func GetVersion() *VersionInfo {
 	ver := Version
 	rel := VersionPrerelease
 	md := VersionMetadata
-	if GitDescribe != "" {
-		ver = GitDescribe
+	desc := GitDescribe
+	if desc != "" {
+		ver = desc
 	} else {
 		ver = fmt.Sprintf("v%s", ver)
 	}
-	if GitDescribe == "" && rel == "" && VersionPrerelease != "" {
+	if desc == "" && rel == "" && VersionPrerelease != "" {
 		rel = "dev"
 	}
 
@@ -41,6 +43,7 @@ func GetVersion() *VersionInfo {
 		Version:           ver,
 		VersionPrerelease: rel,
 		VersionMetadata:   md,
+		GitDescribe:       desc,
 	}
 }
 
@@ -51,7 +54,7 @@ func (c *VersionInfo) VersionNumber() string {
 
 	version := c.Version
 
-	if c.VersionPrerelease != "" {
+	if c.VersionPrerelease != "" && c.GitDescribe == "" {
 		version = fmt.Sprintf("%s-%s", c.Version, c.VersionPrerelease)
 	}
 
