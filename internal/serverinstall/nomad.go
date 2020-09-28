@@ -22,19 +22,19 @@ var (
 // InstallNomad registers a waypoint-server job with a Nomad cluster
 func InstallNomad(
 	ctx context.Context, ui terminal.UI, st terminal.Status, scfg *Config) (
-	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, error,
+	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
 ) {
 
 	// Build api client from environment
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	// Check if waypoint-server has already been deployed
 	jobs, _, err := client.Jobs().PrefixList("waypoint-server")
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 	var serverDetected bool
 	for _, j := range jobs {
@@ -47,6 +47,7 @@ func InstallNomad(
 	var (
 		clicfg clicontext.Config
 		addr   pb.ServerConfig_AdvertiseAddr
+		httpAddr string
 	)
 
 	clicfg.Server = configpkg.Server{
@@ -60,19 +61,20 @@ func InstallNomad(
 	if serverDetected {
 		allocs, _, err := client.Jobs().Allocations("waypoint-server", false, nil)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, "", err
 		}
 		if len(allocs) == 0 {
-			return nil, nil, fmt.Errorf("waypoint-server job found but no running allocations available")
+			return nil, nil, "", fmt.Errorf("waypoint-server job found but no running allocations available")
 		}
 		serverAddr, err := getAddrFromAllocID(allocs[0].ID, client)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, "", err
 		}
 		st.Step(terminal.StatusWarn, "Detected existing waypoint server")
 		clicfg.Server.Address = serverAddr
 		addr.Addr = serverAddr
-		return &clicfg, &addr, nil
+		httpAddr = serverAddr
+		return &clicfg, &addr, httpAddr, nil
 	}
 
 	st.Update("Installing waypoint server to Nomad")
@@ -80,7 +82,7 @@ func InstallNomad(
 
 	resp, _, err := client.Jobs().Register(job, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	st.Update("Waiting for allocation to be scheduled")
@@ -91,7 +93,7 @@ EVAL:
 
 	eval, meta, err := client.Evaluations().Info(resp.EvalID, qopts)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 	qopts.WaitIndex = meta.LastIndex
 	switch eval.Status {
@@ -101,9 +103,9 @@ EVAL:
 		st.Step(terminal.StatusOK, "Nomad allocation created")
 	case "failed", "canceled", "blocked":
 		st.Step(terminal.StatusError, "Nomad failed to schedule the waypoint-server")
-		return nil, nil, fmt.Errorf("nomad evaluation did not transition to 'complete'")
+		return nil, nil, "", fmt.Errorf("nomad evaluation did not transition to 'complete'")
 	default:
-		return nil, nil, fmt.Errorf("unknown eval status: %q", eval.Status)
+		return nil, nil, "", fmt.Errorf("unknown eval status: %q", eval.Status)
 	}
 
 	var allocID string
@@ -111,11 +113,11 @@ EVAL:
 	for {
 		allocs, qmeta, err := client.Evaluations().Allocations(eval.ID, qopts)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, "", err
 		}
 		qopts.WaitIndex = qmeta.LastIndex
 		if len(allocs) == 0 {
-			return nil, nil, fmt.Errorf("no allocations found after evaluation completed")
+			return nil, nil, "", fmt.Errorf("no allocations found after evaluation completed")
 		}
 
 		switch allocs[0].ClientStatus {
@@ -126,7 +128,7 @@ EVAL:
 			st.Update(fmt.Sprintf("Waiting for allocation %q to start", allocs[0].ID))
 			// retry
 		default:
-			return nil, nil, fmt.Errorf("allocation failed")
+			return nil, nil, "", fmt.Errorf("allocation failed")
 
 		}
 
@@ -137,15 +139,19 @@ EVAL:
 		select {
 		case <-time.After(500 * time.Millisecond):
 		case <-ctx.Done():
-			return nil, nil, ctx.Err()
+			return nil, nil, "", ctx.Err()
 		}
 	}
 
 	serverAddr, err := getAddrFromAllocID(allocID, client)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
-
+	hAddr, err := getHTTPFromAllocID(allocID, client)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	httpAddr = hAddr
 	addr.Addr = serverAddr
 	clicfg = clicontext.Config{
 		Server: configpkg.Server{
@@ -155,7 +161,8 @@ EVAL:
 		},
 	}
 
-	return &clicfg, &addr, nil
+
+	return &clicfg, &addr, httpAddr, nil
 }
 
 func waypointNomadJob(scfg *Config) *api.Job {
@@ -173,6 +180,14 @@ func waypointNomadJob(scfg *Config) *api.Job {
 					To:    9701,
 				},
 			},
+// currently set to static; when ui command can be dynamic - update this
+			ReservedPorts: []api.Port{
+				{
+					Label: "ui",
+					Value: 9702,
+					To: 9702,
+				},
+			},
 		},
 	}
 	job.AddTaskGroup(tg)
@@ -180,7 +195,7 @@ func waypointNomadJob(scfg *Config) *api.Job {
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
 		"image": scfg.ServerImage,
-		"args":  []string{"server", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701"},
+		"args":  []string{"server", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
 	}
 	task.Env = map[string]string{
 		"PORT": "9701",
@@ -205,6 +220,22 @@ func getAddrFromAllocID(allocID string, client *api.Client) (string, error) {
 	return "", nil
 }
 
+func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
+	alloc, _, err := client.Allocations().Info(allocID, nil)
+	if err != nil {
+		return "", err
+	}
+
+	for _, port := range alloc.AllocatedResources.Shared.Ports {
+		if port.Label == "ui" {
+			return fmt.Sprintf(port.HostIP+":9702"), nil
+		}
+	}
+
+	return "", nil
+}
+
+// NomadFlags config values for Nomad
 func NomadFlags(f *flag.Set) {
 	f.StringVar(&flag.StringVar{
 		Name:    "nomad-region",
