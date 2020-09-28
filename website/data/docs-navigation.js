@@ -70,4 +70,8 @@ export default [
     category: 'entrypoint',
     content: ['disable'],
   },
+  {
+    category: 'automating-execution',
+    content: ['github-actions', 'circle-ci'],
+  },
 ]

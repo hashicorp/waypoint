@@ -1,0 +1,98 @@
+---
+layout: docs
+page_title: Integrating Waypoint with GitHub Actions
+sidebar_title: GitHub Actions
+description: |-
+  How to utilize Waypoint in a GitHub development workflow and
+  with GitHub Actions
+---
+
+# Integrating Waypoint with GitHub Actions
+
+Running Waypoint and GitHub Actions takes minimal setup and configuration due to
+a set of GitHub Actions provided to automatically install and run Waypoint. Waypoint
+can also be configured via these actions to automatically annotate pull requests
+and commits with relevant statuses of builds, deploys, and releases.
+
+There are two options for utilizing Waypoint and GitHub actions.
+
+## hashicorp/action-setup-waypoint
+
+This action sets up Waypoint based on version. This action can be
+composed with other steps to run Waypoint, and is currently
+the recommended approach.
+
+For example, a cloud provider credentials or tooling can be installed or configured before
+running Waypoint, ensuring it has the appropriate credentials in the environment to run.
+
+The source is available on GitHub at [hashicorp/action-waypoint](https://github.com/hashicorp/action-setup-waypoint).
+
+### Example
+
+```yaml
+env:
+  WAYPOINT_SERVER_TOKEN: ${{ secrets.WAYPOINT_SERVER_TOKEN }}
+  WAYPOINT_SERVER_ADDR: waypoint.example.com:9701
+  WAYPOINT_SERVER_TLS: 1
+  WAYPOINT_SERVER_TLS_SKIP_VERIFY: 1
+
+steps:
+  - uses: actions/checkout@v2
+  - uses: hashicorp/actions-setup-waypoint
+    with:
+      version: '0.1.0'
+- run: waypoint init
+- run: waypoint build
+```
+
+## hashicorp/action-waypoint
+
+This action provides an abstraction for working with Waypoint and the GitHub releases and commit
+statuses APIs. It is intended to be the easiest way to automatically deploy applications
+with GitHub and Waypoint, only requiring that you are running a Waypoint server and have
+configured actions as in the below example.
+
+This results in an experience in a pull request similar to the below screenshot.
+
+![GitHub Action screenshot](/img/github-action.png)
+
+The source is available on GitHub at [hashicorp/action-waypoint](https://github.com/hashicorp/action-waypoint) and
+a demo is available at [hashicorp/action-waypoint-demo](https://github.com/hashicorp/action-waypoint-demo)
+
+### Example
+
+```yaml
+steps:
+  - uses: actions/checkout@v2
+  - uses: hashicorp/action-waypoint
+    name: Setup
+    with:
+      version: '0.0.1-beta1'
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      waypoint_server_address: 'waypoint.example.com:9701'
+      waypoint_server_ui: 'https://waypoint.example.com:9702'
+      waypoint_server_token: ${{ secrets.WAYPOINT_SERVER_TOKEN }}
+      workspace: default
+  - uses: ./.github/actions/action-waypoint
+    name: Build
+    with:
+      operation: build
+      version: '0.0.1-beta1'
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      workspace: default
+  - uses: ./.github/actions/action-waypoint
+    name: Deploy
+    with:
+      operation: deploy
+      version: '0.0.1-beta1'
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      workspace: default
+  - uses: ./.github/actions/action-waypoint
+    name: Release
+    if: ${{ github.ref == 'refs/heads/master' }}
+    with:
+      operation: release
+      version: '0.0.1-beta1'
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      workspace: default
+```
