@@ -46,6 +46,7 @@ func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 		Workspace:    app.workspace,
 		DeploymentId: op.Target.Id,
 		State:        pb.Operation_CREATED,
+		Component:    op.Target.Component,
 	}
 
 	if app.Releaser != nil {
