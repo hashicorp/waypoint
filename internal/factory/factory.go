@@ -85,4 +85,19 @@ func (f *Factory) Registered() []string {
 	return result
 }
 
+// Copy returns a copy of Factory. Any registrations on the copy will not
+// reflect the original and vice versa.
+func (f *Factory) Copy() *Factory {
+	// Copy
+	f2 := *f
+
+	// Build new funcs
+	f2.funcs = map[string]*argmapper.Func{}
+	for k, v := range f.funcs {
+		f2.funcs[k] = v
+	}
+
+	return &f2
+}
+
 var ifaceType = reflect.TypeOf((*interface{})(nil)).Elem()

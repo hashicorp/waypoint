@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/sdk/component"
 	"github.com/hashicorp/waypoint/sdk/docs"
@@ -171,6 +173,10 @@ func (s *builderServer) BuildSpec(
 	ctx context.Context,
 	args *proto.Empty,
 ) (*proto.FuncSpec, error) {
+	if s.Impl == nil {
+		return nil, status.Errorf(codes.Unimplemented, "plugin does not implement: builder")
+	}
+
 	return funcspec.Spec(s.Impl.BuildFunc(),
 		argmapper.Logger(s.Logger),
 		argmapper.ConverterFunc(s.Mappers...),

@@ -27,6 +27,7 @@ const (
 	LogPlatformType                // LogPlatform
 	LogViewerType                  // LogViewer
 	AuthenticatorType              // Authenticator
+	MapperType                     // Mapper
 	maxType
 )
 

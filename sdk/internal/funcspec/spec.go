@@ -6,6 +6,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-argmapper"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/sdk/proto"
 )
@@ -14,6 +16,10 @@ import (
 // function must only take arguments that are proto.Message implementations
 // or have a chain of converters that directly convert to a proto.Message.
 func Spec(fn interface{}, args ...argmapper.Arg) (*pb.FuncSpec, error) {
+	if fn == nil {
+		return nil, status.Errorf(codes.Unimplemented, "required plugin type not implemented")
+	}
+
 	filterProto := argmapper.FilterType(protoMessageType)
 
 	// Copy our args cause we're going to use append() and we don't

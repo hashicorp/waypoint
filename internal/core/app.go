@@ -140,6 +140,14 @@ func newApp(
 		}
 	}
 
+	// Initialize mappers if we have those
+	if f, ok := p.factories[component.MapperType]; ok {
+		err = app.initMappers(ctx, f)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// If we don't have a releaser but our platform implements release then
 	// we use that.
 	if app.Releaser == nil && app.Platform != nil {
@@ -388,6 +396,54 @@ func (a *App) initComponent(
 		Dir:    cdir,
 		Hooks:  hooks,
 		Labels: labels,
+	}
+
+	return nil
+}
+
+// initMappers initializes plugins that are just mappers.
+func (a *App) initMappers(
+	ctx context.Context,
+	f *factory.Factory,
+) error {
+	log := a.logger
+
+	for _, name := range f.Registered() {
+		log.Debug("loading mapper plugin", "name", name)
+
+		// Get the factory function for this type
+		fn := f.Func(name)
+		if fn == nil {
+			panic(name + " is not a registered plugin, but factory claims it is")
+		}
+
+		// Call the factory to get our raw value (interface{} type)
+		result := fn.Call(argmapper.Typed(ctx, log))
+		if err := result.Err(); err != nil {
+			return err
+		}
+		log.Info("initialized mapper plugin", "name", name)
+		raw := result.Out(0)
+
+		// If we have a plugin.Instance then we can extract other information
+		// from this plugin. We accept pure factories too that don't return
+		// this so we type-check here.
+		if pinst, ok := raw.(*plugin.Instance); ok {
+			raw = pinst.Component
+
+			// Plugins may contain their own dedicated mappers. We want to be
+			// aware of them so that we can map data to/from as necessary.
+			// These mappers become app-specific here so that other apps aren't
+			// affected by other plugins.
+			a.mappers = append(a.mappers, pinst.Mappers...)
+			log.Info("registered component-specific mappers", "len", len(pinst.Mappers))
+
+			// Store the closer
+			a.closers = append(a.closers, func() error {
+				pinst.Close()
+				return nil
+			})
+		}
 	}
 
 	return nil

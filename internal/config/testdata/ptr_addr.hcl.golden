@@ -14,5 +14,6 @@
    Release: (*config.Release)(<nil>)
   })
  },
- Labels: (map[string]string) <nil>
+ Labels: (map[string]string) <nil>,
+ Plugin: ([]*config.Plugin) <nil>
 }
