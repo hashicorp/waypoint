@@ -2,22 +2,26 @@
 # repo so that we can more sanely create
 ASSETFS_PATH?=internal/server/gen/bindata_ui.go
 
+GIT_COMMIT=$$(git rev-parse --short HEAD)
+GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
+GIT_DESCRIBE=$$(git describe --tags --always --match "v*")
+GIT_IMPORT="github.com/hashicorp/waypoint/internal/version"
+GOLDFLAGS="-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)"
+CGO_ENABLED?=0
+
 # bin creates the binaries for Waypoint
 .PHONY: bin
 bin:
 	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
-	CGO_ENABLED=0 go build -tags assetsembedded -o ./waypoint ./cmd/waypoint
-	CGO_ENABLED=0 go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
-
-GIT_COMMIT=$$(git rev-parse HEAD)
-GIT_DIRTY=$$(test -n "`git status --porcelain`" && echo "+CHANGES" || true)
+	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
+	go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
 .PHONY: dev
 dev:
 	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	cd internal/assets && go generate
-	go build -ldflags "-X github.com/hashicorp/waypoint/internal/version.GitCommit=$(GIT_COMMIT)$(GIT_DIRTY)" -o ./waypoint ./cmd/waypoint
+	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -o ./waypoint ./cmd/waypoint
 	go build -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
 .PHONY: bin/linux
