@@ -73,7 +73,7 @@ func (c *VersionInfo) FullVersionNumber(rev bool) string {
 	}
 
 	fmt.Fprintf(&versionString, "Waypoint %s", c.Version)
-	if c.VersionPrerelease != "" {
+	if c.VersionPrerelease != "" && c.GitDescribe == "" {
 		fmt.Fprintf(&versionString, "-%s", c.VersionPrerelease)
 	}
 
