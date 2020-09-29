@@ -544,10 +544,39 @@
     justify-content: center;
     flex-grow: 1;
     height: 100%;
+    padding-top: scale.$lg-2;
 
     .card {
       text-align: center;
       padding: scale.$lg-8;
+    }
+
+    .auth-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: scale.$lg-14;
+      padding-bottom: scale.$base;
+      color: $brand-color;
+      margin: (-(scale.$lg-8)) (-(scale.$lg-8)) scale.$lg-6;
+      box-shadow: 0 0 0 1px color.$black;
+      border-radius: 2px 2px 0 0;
+      background: url(/images/pattern.svg) no-repeat top center color.$black;
+
+      @media (prefers-color-scheme: dark) {
+        background-color: rgba(color.$black, .5);
+        box-shadow: 0 0 0 1px rgb(var(--outline));
+      }
+
+      .icon.brand {
+        width: scale.$lg-14;
+        height: scale.$lg-14;
+
+        path {
+          fill: color.$black;
+          stroke: $brand-color;
+        }
+      }
     }
 
     h1 {

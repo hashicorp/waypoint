@@ -1,0 +1,292 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="292" height="142" viewBox="0 0 292 142">
+  <defs>
+    <linearGradient id="pattern-alt-a" x1="-1.283%" x2="101.283%" y1="50%" y2="50%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-b" x1="-1.283%" x2="101.283%" y1="50%" y2="50%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-c" x1="-.7%" x2="100.7%" y1="50%" y2="50%">
+      <stop offset="33%" stop-color="#14C6CB"/>
+      <stop offset="40%" stop-color="#13BFC4"/>
+      <stop offset="49%" stop-color="#11ADB1"/>
+      <stop offset="60%" stop-color="#0E8E91"/>
+      <stop offset="72%" stop-color="#0A6366"/>
+      <stop offset="86%" stop-color="#052D2E"/>
+      <stop offset="96%"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-d" x1="-.641%" x2="100.641%" y1="50%" y2="50%">
+      <stop offset="33%" stop-color="#14C6CB"/>
+      <stop offset="40%" stop-color="#13BFC4"/>
+      <stop offset="49%" stop-color="#11ADB1"/>
+      <stop offset="60%" stop-color="#0E8E91"/>
+      <stop offset="72%" stop-color="#0A6366"/>
+      <stop offset="86%" stop-color="#052D2E"/>
+      <stop offset="96%"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-e" x1="-.855%" x2="100.855%" y1="50%" y2="50%">
+      <stop offset="33%" stop-color="#14C6CB"/>
+      <stop offset="40%" stop-color="#13BFC4"/>
+      <stop offset="49%" stop-color="#11ADB1"/>
+      <stop offset="60%" stop-color="#0E8E91"/>
+      <stop offset="72%" stop-color="#0A6366"/>
+      <stop offset="86%" stop-color="#052D2E"/>
+      <stop offset="96%"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-f" x1="-.77%" x2="100.77%" y1="50%" y2="50%">
+      <stop offset="33%" stop-color="#14C6CB"/>
+      <stop offset="40%" stop-color="#13BFC4"/>
+      <stop offset="49%" stop-color="#11ADB1"/>
+      <stop offset="60%" stop-color="#0E8E91"/>
+      <stop offset="72%" stop-color="#0A6366"/>
+      <stop offset="86%" stop-color="#052D2E"/>
+      <stop offset="96%"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-g" x1="-.592%" x2="100.592%" y1="50%" y2="50%">
+      <stop offset="33%" stop-color="#14C6CB"/>
+      <stop offset="40%" stop-color="#13BFC4"/>
+      <stop offset="49%" stop-color="#11ADB1"/>
+      <stop offset="60%" stop-color="#0E8E91"/>
+      <stop offset="72%" stop-color="#0A6366"/>
+      <stop offset="86%" stop-color="#052D2E"/>
+      <stop offset="96%"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-h" x1="-.287%" x2="100.287%" y1="49.999%" y2="49.999%">
+      <stop offset="20%" stop-color="#14C6CB"/>
+      <stop offset="24%" stop-color="#11A5A9"/>
+      <stop offset="30%" stop-color="#0D7B7D"/>
+      <stop offset="36%" stop-color="#095759"/>
+      <stop offset="42%" stop-color="#063C3D"/>
+      <stop offset="48%" stop-color="#052929"/>
+      <stop offset="53%" stop-color="#031D1D"/>
+      <stop offset="59%" stop-color="#031919"/>
+      <stop offset="79%" stop-color="#031616"/>
+      <stop offset="90%" stop-color="#020E0E"/>
+      <stop offset="100%"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-i" x1="-.257%" x2="100.257%" y1="50%" y2="50%">
+      <stop offset="20%" stop-color="#14C6CB"/>
+      <stop offset="24%" stop-color="#11A5A9"/>
+      <stop offset="30%" stop-color="#0D7B7D"/>
+      <stop offset="36%" stop-color="#095759"/>
+      <stop offset="42%" stop-color="#063C3D"/>
+      <stop offset="48%" stop-color="#052929"/>
+      <stop offset="53%" stop-color="#031D1D"/>
+      <stop offset="59%" stop-color="#031919"/>
+      <stop offset="79%" stop-color="#031616"/>
+      <stop offset="90%" stop-color="#020E0E"/>
+      <stop offset="100%"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-j" x1="-.267%" x2="-412.896%" y1="50%" y2="50%">
+      <stop offset="20%" stop-color="#14C6CB"/>
+      <stop offset="24%" stop-color="#11A5A9"/>
+      <stop offset="30%" stop-color="#0D7B7D"/>
+      <stop offset="36%" stop-color="#095759"/>
+      <stop offset="42%" stop-color="#063C3D"/>
+      <stop offset="48%" stop-color="#052929"/>
+      <stop offset="53%" stop-color="#031D1D"/>
+      <stop offset="59%" stop-color="#031919"/>
+      <stop offset="79%" stop-color="#031616"/>
+      <stop offset="90%" stop-color="#020E0E"/>
+      <stop offset="100%"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-k" x1="-1.924%" x2="101.924%" y1="50%" y2="50%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="51%" stop-color="#109EA2"/>
+      <stop offset="79%" stop-color="#0E8588"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-l" x1="-1.925%" x2="101.925%" y1="50%" y2="50%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="51%" stop-color="#109EA2"/>
+      <stop offset="79%" stop-color="#0E8588"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-m" x1="-.601%" x2="100.601%" y1="50.002%" y2="50.002%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="34%" stop-color="#13BCC1"/>
+      <stop offset="65%" stop-color="#11A2A6"/>
+      <stop offset="100%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-n" x1="-2.747%" x2="-5171.978%" y1="50%" y2="50%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="34%" stop-color="#13BCC1"/>
+      <stop offset="65%" stop-color="#11A2A6"/>
+      <stop offset="100%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-o" x1="-1.603%" x2="-2976.307%" y1="50%" y2="50%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="34%" stop-color="#13BCC1"/>
+      <stop offset="65%" stop-color="#11A2A6"/>
+      <stop offset="100%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-p" x1="-.713%" x2="-1267.588%" y1="50.002%" y2="50.002%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="34%" stop-color="#13BCC1"/>
+      <stop offset="65%" stop-color="#11A2A6"/>
+      <stop offset="100%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-q" x1="-1.132%" x2="-2071.797%" y1="50.003%" y2="50.003%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="34%" stop-color="#13BCC1"/>
+      <stop offset="65%" stop-color="#11A2A6"/>
+      <stop offset="100%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-r" x1="-.875%" x2="-1578.328%" y1="50.003%" y2="50.003%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="34%" stop-color="#13BCC1"/>
+      <stop offset="65%" stop-color="#11A2A6"/>
+      <stop offset="100%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-s" x1="-.592%" x2="100.592%" y1="50%" y2="50%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="34%" stop-color="#13BCC1"/>
+      <stop offset="65%" stop-color="#11A2A6"/>
+      <stop offset="100%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-t" x1="-9.597%" x2="-18316.507%" y1="50%" y2="50%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="34%" stop-color="#13BCC1"/>
+      <stop offset="65%" stop-color="#11A2A6"/>
+      <stop offset="100%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-u" x1="-.987%" x2="100.987%" y1="50.003%" y2="50.003%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="17%" stop-color="#14C5C9"/>
+      <stop offset="47%" stop-color="#109DA1"/>
+      <stop offset="71%" stop-color="#0E8588"/>
+      <stop offset="86%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-v" x1="-1.327%" x2="-2446.106%" y1="50.004%" y2="50.004%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="17%" stop-color="#14C5C9"/>
+      <stop offset="47%" stop-color="#109DA1"/>
+      <stop offset="71%" stop-color="#0E8588"/>
+      <stop offset="86%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-w" x1="-4.272%" x2="-8097.352%" y1="50.012%" y2="50.012%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="17%" stop-color="#14C5C9"/>
+      <stop offset="47%" stop-color="#109DA1"/>
+      <stop offset="71%" stop-color="#0E8588"/>
+      <stop offset="86%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-x" x1="-.785%" x2="-1407.108%" y1="50.002%" y2="50.002%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="17%" stop-color="#14C5C9"/>
+      <stop offset="47%" stop-color="#109DA1"/>
+      <stop offset="71%" stop-color="#0E8588"/>
+      <stop offset="86%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-y" x1="-.652%" x2="-1151.712%" y1="50.002%" y2="50.002%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="17%" stop-color="#14C5C9"/>
+      <stop offset="47%" stop-color="#109DA1"/>
+      <stop offset="71%" stop-color="#0E8588"/>
+      <stop offset="86%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-z" x1="-2.025%" x2="-3785.402%" y1="50.006%" y2="50.006%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="17%" stop-color="#14C5C9"/>
+      <stop offset="47%" stop-color="#109DA1"/>
+      <stop offset="71%" stop-color="#0E8588"/>
+      <stop offset="86%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-A" x1="-.77%" x2="100.77%" y1="50%" y2="50%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="51%" stop-color="#109EA2"/>
+      <stop offset="79%" stop-color="#0E8588"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-B" x1="-.785%" x2="100.785%" y1="49.998%" y2="49.998%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="51%" stop-color="#109EA2"/>
+      <stop offset="79%" stop-color="#0E8588"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-C" x1="-2.025%" x2="102.025%" y1="49.994%" y2="49.994%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="51%" stop-color="#109EA2"/>
+      <stop offset="79%" stop-color="#0E8588"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-D" x1="-1.327%" x2="101.327%" y1="49.996%" y2="49.996%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="51%" stop-color="#109EA2"/>
+      <stop offset="79%" stop-color="#0E8588"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-E" x1="-.987%" x2="100.987%" y1="49.997%" y2="49.997%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="51%" stop-color="#109EA2"/>
+      <stop offset="79%" stop-color="#0E8588"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+    <linearGradient id="pattern-alt-F" x1="-4.272%" x2="104.272%" y1="49.988%" y2="49.988%">
+      <stop offset="16%" stop-color="#14C6CB"/>
+      <stop offset="51%" stop-color="#109EA2"/>
+      <stop offset="79%" stop-color="#0E8588"/>
+      <stop offset="96%" stop-color="#0D7C7F"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd" stroke-linecap="round" opacity=".704" transform="matrix(0 1 1 0 -8 0)">
+    <line x1="8.64" x2="34.559" y1="300" y2="255" stroke="url(#pattern-alt-a)"/>
+    <line x1="17.279" x2="43.199" y1="300" y2="255" stroke="url(#pattern-alt-a)"/>
+    <line x1="25.919" x2="51.838" y1="300" y2="255" stroke="url(#pattern-alt-a)"/>
+    <line x1="34.559" x2="60.478" y1="300" y2="255" stroke="url(#pattern-alt-a)"/>
+    <line x1="43.199" x2="69.118" y1="300" y2="255" stroke="url(#pattern-alt-a)"/>
+    <line x1="51.838" x2="77.757" y1="300" y2="255" stroke="url(#pattern-alt-a)"/>
+    <line x1="60.478" x2="86.401" y1="300" y2="255" stroke="url(#pattern-alt-b)"/>
+    <line x2="25.919" y1="300" y2="255" stroke="url(#pattern-alt-a)"/>
+    <line x1="99.36" x2="51.838" y1="142.5" y2="225" stroke="url(#pattern-alt-c)"/>
+    <line x1="95.04" x2="43.199" y1="135" y2="225" stroke="url(#pattern-alt-d)"/>
+    <line x1="108" x2="69.118" y1="157.5" y2="225" stroke="url(#pattern-alt-e)"/>
+    <line x1="103.68" x2="60.478" y1="150" y2="225" stroke="url(#pattern-alt-f)"/>
+    <line x1="90.72" x2="34.559" y1="127.5" y2="225" stroke="url(#pattern-alt-g)"/>
+    <line x1="141.704" x2="25.919" y1="23.983" y2="225" stroke="url(#pattern-alt-h)"/>
+    <line x1="138.239" x2="8.64" y2="225" stroke="url(#pattern-alt-i)"/>
+    <line x1="141.704" x2="17.279" y1="8.987" y2="225" stroke="url(#pattern-alt-j)"/>
+    <line x1="69.118" x2="86.401" y1="225" y2="255" stroke="url(#pattern-alt-k)"/>
+    <line x1="60.478" x2="77.757" y1="225" y2="255" stroke="url(#pattern-alt-l)"/>
+    <line x1="51.838" x2="69.118" y1="225" y2="255" stroke="url(#pattern-alt-l)"/>
+    <line x1="43.199" x2="60.478" y1="225" y2="255" stroke="url(#pattern-alt-l)"/>
+    <line x1="25.919" x2="43.199" y1="225" y2="255" stroke="url(#pattern-alt-l)"/>
+    <line x1="8.64" x2="25.919" y1="225" y2="255" stroke="url(#pattern-alt-l)"/>
+    <line x1="17.279" x2="34.559" y1="225" y2="255" stroke="url(#pattern-alt-l)"/>
+    <line x1="34.559" x2="51.838" y1="225" y2="255" stroke="url(#pattern-alt-l)"/>
+    <line x1="86.401" x2="141.704" y1="300" y2="203.983" stroke="url(#pattern-alt-m)"/>
+    <line x1="129.599" x2="141.704" y1="300" y2="278.987" stroke="url(#pattern-alt-n)"/>
+    <line x1="120.959" x2="141.704" y1="300" y2="263.987" stroke="url(#pattern-alt-o)"/>
+    <line x1="95.04" x2="141.704" y1="300" y2="218.983" stroke="url(#pattern-alt-p)"/>
+    <line x1="112.32" x2="141.704" y1="300" y2="248.983" stroke="url(#pattern-alt-q)"/>
+    <line x1="103.68" x2="141.704" y1="300" y2="233.983" stroke="url(#pattern-alt-r)"/>
+    <line x1="133.919" x2="77.761" y1="202.5" y2="300" stroke="url(#pattern-alt-s)"/>
+    <line x1="138.239" x2="141.704" y1="300" y2="293.987" stroke="url(#pattern-alt-t)"/>
+    <line x1="141.704" x2="108" y1="68.983" y2="127.5" stroke="url(#pattern-alt-u)"/>
+    <line x1="116.64" x2="116.64" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="108" x2="108" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="125.279" x2="125.279" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="133.919" x2="133.919" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="141.704" x2="116.64" y1="83.983" y2="127.5" stroke="url(#pattern-alt-v)"/>
+    <line x1="141.704" x2="133.919" y1="113.983" y2="127.5" stroke="url(#pattern-alt-w)"/>
+    <line x1="141.704" x2="99.36" y1="53.983" y2="127.5" stroke="url(#pattern-alt-x)"/>
+    <line x1="90.72" x2="141.704" y1="127.5" y2="38.983" stroke="url(#pattern-alt-y)"/>
+    <line x1="141.704" x2="125.279" y1="98.983" y2="127.5" stroke="url(#pattern-alt-z)"/>
+    <line x1="90.72" x2="90.72" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="99.36" x2="99.36" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="99.36" x2="99.36" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="125.279" x2="125.279" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="90.72" x2="133.919" y1="127.5" y2="202.5" stroke="url(#pattern-alt-A)"/>
+    <line x1="108" x2="108" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="116.64" x2="116.64" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="133.919" x2="133.919" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="99.36" x2="141.704" y1="127.5" y2="201.017" stroke="url(#pattern-alt-B)"/>
+    <line x1="125.279" x2="141.704" y1="127.5" y2="156.017" stroke="url(#pattern-alt-C)"/>
+    <line x1="116.64" x2="141.704" y1="127.5" y2="171.017" stroke="url(#pattern-alt-D)"/>
+    <line x1="108" x2="141.704" y1="127.5" y2="186.017" stroke="url(#pattern-alt-E)"/>
+    <line x1="90.72" x2="90.72" y1="127.5" y2="127.5" stroke="#14C6CB"/>
+    <line x1="141.704" x2="133.919" y1="141.017" y2="127.5" stroke="url(#pattern-alt-F)"/>
+  </g>
+</svg>
