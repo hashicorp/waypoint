@@ -3,75 +3,17 @@ layout: docs
 page_title: 'waypoint.hcl'
 sidebar_title: 'waypoint.hcl'
 description: |-
-  TODO
+  The `waypoint.hcl` file is used to configure each Waypoint project. It defines how Waypoint build, deploys, and releases a project.
 ---
 
-# Application Lifecycle
+# Project Configuration: `waypoint.hcl`
 
-Waypoint has an opinionated view on the minimum application lifecycle:
-build, deploy, and release. These are the core elements that Waypoint
-orchestrates during a `waypoint up`.
+The `waypoint.hcl` file is used to configure each Waypoint project. It defines
+how Waypoint build, deploys, and releases a project. The `waypoint.hcl` file is
+written in [HCL](https://github.com/hashicorp/hcl) or JSON, allowing both human
+and machine friendly formats.
 
-These stages can also be broken down to the individual commands
-`waypoint build`, `waypoint deploy`, and `waypoint release`. This allows
-customization of the application lifecycle by inserting your own phases
-into the Waypoint workflow.
-
-## Overview
-
-- A **build** takes application source and converts it to an _artifact_.
-  The build process may also include an optional **push** operation to push
-  the built artifact to a registry so that it is available for the deployment
-  platform.
-
-- A **deploy** takes a previously built _artifact_ and stages it onto the target
-  deployment platform and is available via [deployment URLs](/docs/url#deployment-urls)
-  or other internal means.
-
-- A **release** activates a previously staged _deployment_ and opens it
-  to general traffic.
-
-## History
-
-Waypoint maintains a history of all operations. You can view this history
-in the UI as well as the CLI. The operation history shows when it was
-requested, whether it succeeded or failed, the output of its run, and more.
-An example of the UI is shown below:
-
-TODO: Image
-
-History in the CLI is done via the various subcommands beneath
-`waypoint artifact` and `waypoint deployment`. The CLI has less listing
-capabilities than the UI. All of this information is also available via
-the API.
-
-## Build
-
-A **build** takes application source and converts it to an _artifact_.
-An artifact is the packaged form of an application required for deployment on
-your target platform: a container image, VM image, or maybe a simple zip file.
-The build process may also include an optional **push** operation to push
-the built artifact to a registry so that it is available for the deployment
-platform.
-
-## Deploy
-
-A **deploy** takes a previously built _artifact_ and stages it onto the target
-deployment platform and is available via [deployment URLs](/docs/url#deployment-urls)
-or other internal means.
-
-"Stage" in this context means that the application should be ready to receive
-traffic, but is not yet open to public traffic. For example, the application
-should not be added to the load balancer, DNS should not be updated, etc.
-
-Not all platforms support the concept of "staging" a deployment or this
-behavior may not be desirable. Waypoint does not enforce this requirement
-and some deployment plugins may not support it.
-
-## Release
-
-A **release** activates a previously staged _deployment_ and opens it
-to general traffic.
-
-This step may involve adding a deployment to a load balancer, updating
-DNS, configuring a service mesh, etc.
+Waypoint expects one `waypoint.hcl` per [project](/docs/glossary#project) or
+version control repository. The `waypoint.hcl` file is supposed to be committed
+to version control. This allows multiple team members to share the same Waypoint
+behavior and also provides a history of change in how an application is deployed.

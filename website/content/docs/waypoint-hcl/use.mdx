@@ -1,0 +1,55 @@
+---
+layout: docs
+page_title: use - waypoint.hcl
+sidebar_title: <code>use</code>
+description: |-
+  TODO
+---
+
+# `use` Stanza
+
+<Placement
+  groups={[
+    ['app', 'build', 'use'],
+    ['app', 'build', 'registry', 'use'],
+    ['app', 'deploy', 'use'],
+    ['app', 'release', 'use'],
+  ]}
+/>
+
+The `use` stanza specifies the name and configuration of a plugin to use for
+an operation. The type of plugin depends on the context of the `use` stanza.
+For example: a `use` stanza within a `build` configures the builder plugin
+to use.
+
+```hcl
+app "frontend" {
+  build {
+    use "docker" {
+      buildkit = true
+    }
+  }
+
+  # ...
+}
+```
+
+## `use` Parameters
+
+### Label
+
+The `use` stanza takes a label. The label of the stanza is the name
+of the plugin to use.
+
+The plugin name must match the name of a [built-in plugin](/plugins)
+or an [external plugin](#TODO). The plugin will be validated as part of
+the `waypoint init` process.
+
+### Parameters
+
+The parameters of a `use` stanza are defined by the plugin being used.
+You must look at the documentation of the plugin you're using to determine
+the available configuration options.
+
+As an example, if you were using the Docker builder you could find
+the available parameters [documented here](/plugins/docker#docker-builder).
