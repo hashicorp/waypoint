@@ -86,15 +86,13 @@ func (p *Platform) Deploy(
 	result.Id = id
 	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
 
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-
 	// Get our client
-	clientset, ns, err := clientset(p.config.KubeconfigPath, p.config.Context)
+	clientset, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
 	}
+
+	ui.Output("Configuring %s in namespace %s", config.Host, ns, terminal.WithHeaderStyle())
 
 	deployclient := clientset.AppsV1().Deployments(ns)
 
@@ -282,11 +280,17 @@ func (p *Platform) Deploy(
 
 	dc := clientset.AppsV1().Deployments(ns)
 
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
 	// Create/update
 	if create {
+		log.Debug("no existing deployment, creating a new one")
 		st.Update("Creating deployment...")
 		deployment, err = dc.Create(ctx, deployment, metav1.CreateOptions{})
 	} else {
+		log.Debug("updating deployment")
 		st.Update("Updating deployment...")
 		deployment, err = dc.Update(ctx, deployment, metav1.UpdateOptions{})
 	}
@@ -339,14 +343,16 @@ func (p *Platform) Destroy(
 	deployment *Deployment,
 	ui terminal.UI,
 ) error {
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-
-	clientset, ns, err := clientset(p.config.KubeconfigPath, p.config.Context)
+	clientset, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return err
 	}
+
+	ui.Output("Configuring %s in namespace %s", config.Host, ns, terminal.WithHeaderStyle())
+
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
 
 	st.Update("Deleting deployment...")
 	deployclient := clientset.AppsV1().Deployments(ns)

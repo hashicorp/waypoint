@@ -49,10 +49,13 @@ func (r *Releaser) Release(
 	defer st.Close()
 
 	// Get our clientset
-	clientset, ns, err := clientset(r.config.KubeconfigPath, r.config.Context)
+	clientset, ns, config, err := clientset(r.config.KubeconfigPath, r.config.Context)
 	if err != nil {
 		return nil, err
 	}
+
+	ui.Output("Configuring %s in namespace %s", config.Host, ns, terminal.WithHeaderStyle())
+
 	serviceclient := clientset.CoreV1().Services(ns)
 
 	// Determine if we have a deployment that we manage already
