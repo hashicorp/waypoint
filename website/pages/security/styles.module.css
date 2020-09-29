@@ -1,0 +1,10 @@
+.securityPage {
+  & .longformWrapper {
+    @media (min-width: 800px) {
+      margin-top: 80px;
+      max-width: 70%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+}
