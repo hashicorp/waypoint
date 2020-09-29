@@ -1,0 +1,9 @@
+.root {
+  composes: g-grid-container from global;
+
+  & :global(.g-content) {
+    padding: 0;
+    margin: 50px 0 0 0;
+    max-width: 960px;
+  }
+}
