@@ -11,6 +11,13 @@
 
 import defaultMdxComponents from '@hashicorp/nextjs-scripts/lib/providers/docs'
 
+// TODO: Jeff needs to make this reusable in some form and goes against his
+// code lock above. I'm very sorry but needed this in the short term.
+import Placement from '../placement-table'
+
 export default function generateComponents(productName) {
-  return defaultMdxComponents({ product: productName })
+  return defaultMdxComponents({
+    product: productName,
+    additionalComponents: { Placement },
+  })
 }

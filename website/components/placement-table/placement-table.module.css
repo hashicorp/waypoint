@@ -1,0 +1,14 @@
+.placementTable {
+  box-sizing: border-box;
+}
+
+.placementHead {
+  font-weight: bold;
+  padding: 8px 20px;
+  border-right: 1px solid #ddd;
+}
+
+.placementGroup {
+  padding: 8px 20px;
+  border-right: 1px solid #ddd;
+}

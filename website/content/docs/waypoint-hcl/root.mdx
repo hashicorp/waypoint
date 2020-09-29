@@ -1,0 +1,50 @@
+---
+layout: docs
+page_title: Top-Level - waypoint.hcl
+sidebar_title: Top-Level
+description: |-
+  Top-level fields for the waypoint.hcl file that do not reside in any specific stanza.
+---
+
+# Top-Level
+
+This page describes the top-level fields and stanzas that can be set
+in a `waypoint.hcl` file. The "top-level" refers to the fact that these
+are the first fields and stanzas used in a Waypoint project configuration
+and aren't nested in some other configuration.
+
+```hcl
+project = "my-website"
+
+app "frontend" {
+  # ...
+}
+
+# ...
+```
+
+## Parameters
+
+### Required
+
+- `app` <code>([app][app])</code> - One or more applications to build, deploy,
+  and release with Waypoint.
+
+- `project` `(string)` - The name of the project. This should be unique
+  for the Waypoint server and must not be changed later. This is used to
+  organize information on the server.
+
+~> **Warning: the project name can not be changed.** Changing the project
+name is not currently supported. If you change the name, the history,
+deployments, etc. of the previous project name will not be migrated or destroyed.
+A future version of Waypoint will enable renaming projects.
+
+### Optional
+
+- `plugin` <code>([plugin][plugin])</code> - External plugins that may be
+  used in this configuration. Plugins are implicitly defined with
+  [`use`](/docs/waypoint-hcl/use) stanzas so this is only required if you
+  need to additionally configure a plugin.
+
+[app]: /docs/waypoint-hcl/app 'App Stanza'
+[plugin]: /docs/waypoint-hcl/plugin 'Plugin Stanza'

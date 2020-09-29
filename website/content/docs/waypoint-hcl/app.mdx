@@ -1,0 +1,83 @@
+---
+layout: docs
+page_title: app - waypoint.hcl
+sidebar_title: <code>app</code>
+description: |-
+  TODO
+---
+
+# `app` Stanza
+
+<Placement groups={[['app']]} />
+
+The `app` stanza describes a single deployable application within a project.
+
+A minimum of one `app` stanza is required in your project configuration.
+
+Multiple `app` stanzas can be specified if Waypoint should deploy multiple
+applications in your project. An example where this might be useful is
+separate backend and frontend processes.
+
+```hcl
+app "frontend" {
+  build {
+    # ...
+  }
+
+  deploy {
+    # ...
+  }
+
+  release {
+    # ...
+  }
+}
+```
+
+## `app` Parameters
+
+### Label
+
+The `app` stanza takes a label. The label of the stanza is the name
+of the application.
+
+The application name is used by Waypoint for organizational purposes.
+It is listed in the UI, annotates logs, and more. The application name is
+accessible to plugins and is used for defaults in many cases.
+
+~> **Warning: the application name cannot be changed.** Changing the
+application name will cause Waypoint to treat it as a _new_ application.
+History from the prior name will be preserved but under the prior name.
+We will provide a path to rename applications in a future version.
+
+### Required
+
+- `build` <code>([build][build])</code> - Describes how to build this
+  application during `waypoint up` or `waypoint build`.
+
+- `deploy` <code>([deploy][deploy])</code> - Describes how to deploy
+  this application during `waypoint up` or `waypoint deploy`.
+
+### Optional
+
+- `labels` `(map<string>string: {})` - A set of labels to apply to all
+  operations for this application. All builds, deploys, etc. will have these
+  labels applied.
+
+- `path` `(string: "")` - The path to the application source. This defaults
+  to the directory alongside the project configuration file. This is used by
+  builders to determine the root path for the source to build.
+
+- `release` <code>([release][release]: nil)</code> - Describes how to release
+  this application during `waypoint up` or `waypoint release`. See
+  [default behavior](/docs/lifecycle/release#default-behavior) for how
+  releases are handled if release configuration is not specified.
+
+- `url` <code>([url][url]: nil)</code> - Describes the [URL service](/docs/url)
+  behavior for this application. If this isn't specified, the default settings
+  configured on the Waypoint server will be used.
+
+[build]: /docs/waypoint-hcl/build 'Build Stanza'
+[deploy]: /docs/waypoint-hcl/deploy 'Deploy Stanza'
+[release]: /docs/waypoint-hcl/release 'Release Stanza'
+[url]: /docs/waypoint-hcl/url 'url Stanza'

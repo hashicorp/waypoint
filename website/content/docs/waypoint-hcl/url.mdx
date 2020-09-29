@@ -1,0 +1,41 @@
+---
+layout: docs
+page_title: url - waypoint.hcl
+sidebar_title: <code>url</code>
+description: |-
+  The `url` stanza configures the behavior of the [URL service](/docs/url) for the given application. This allows for certain applications to opt-out of the URL service, opt-in, etc.
+---
+
+# `url` Stanza
+
+<Placement groups={[['app', 'url']]} />
+
+The `url` stanza configures the behavior of the [URL service](/docs/url)
+for the given application. This allows for certain applications to opt-out
+of the URL service, opt-in, etc.
+
+The `url` stanza is **optional.** If it is not specified, the default
+URL settings configured with the Waypoint server will be used.
+
+If the URL service is not enabled on the server, then the settings specified
+here have no effect.
+
+```hcl
+app "frontend" {
+  url {
+    auto_hostname = false
+  }
+
+  # ...
+}
+```
+
+## `url` Parameters
+
+### Optional
+
+- `auto_hostname` `(bool: <server configuration>)` - Whether to automatically
+  generate a hostname for the application (and deployments) with the URL service.
+  If this is disabled, you can manually use the `waypoint hostname` CLI to manage
+  hostnames. If this is not specified, the default setting set at the server level
+  will be used.
