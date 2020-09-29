@@ -57,13 +57,17 @@ export default [
   'troubleshooting',
   '-----------',
   {
+    category: 'waypoint-hcl',
+    content: ['app'],
+  },
+  {
     category: 'lifecycle',
     content: ['build', 'deploy', 'release', 'hooks'],
   },
   'url',
   'logs',
   'exec',
-  'config',
+  'app-config',
   'workspaces',
   '-----------',
   {
