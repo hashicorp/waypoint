@@ -17,3 +17,41 @@ Waypoint expects one `waypoint.hcl` per [project](/docs/glossary#project) or
 version control repository. The `waypoint.hcl` file is supposed to be committed
 to version control. This allows multiple team members to share the same Waypoint
 behavior and also provides a history of change in how an application is deployed.
+
+Begin with the [top-level documentation](/docs/waypoint-hcl/root) if you're new
+to Waypoint configuration.
+
+## File Location
+
+The `waypoint.hcl` file is typically placed at the root of a version control
+repository. Multiple applications are defined using [`app`][app] stanzas and
+may live in subdirectories of the project.
+
+When executing the `waypoint` CLI, it'll search for the `waypoint.hcl` file
+in the current directory followed by each subsequent parent directory.
+
+## Stanzas and Parameters
+
+The configuration is documented in terms of "stanzas" and "parameters". All
+of the available stanzas for a Waypoint configuration are linked in the left
+side navigation.
+
+A "stanza" is the term used to describe a parameter in a Waypoint configuration
+that opens and closes with braces `{ }` and may contain more configuration.
+A "parameter" is the term used to describe any configuration within a stanza.
+
+In the example below, `app` and `build` are stanzas. All elements are
+"parameters" but of different elements: the `build` is a parameter of an `app`,
+`app` is a parameter of the top-level, etc.
+
+```hcl
+app {
+  path = "./src"
+
+  build {
+    # ...
+  }
+}
+```
+
+[app]: /docs/waypoint-hcl/app 'App Stanza'
