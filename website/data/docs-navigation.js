@@ -58,7 +58,18 @@ export default [
   '-----------',
   {
     category: 'waypoint-hcl',
-    content: ['app', 'build', 'deploy', 'registry', 'release', 'use'],
+    content: [
+      'root',
+      'app',
+      'build',
+      'deploy',
+      'hook',
+      'plugin',
+      'registry',
+      'release',
+      'url',
+      'use',
+    ],
   },
   {
     category: 'lifecycle',

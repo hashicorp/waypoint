@@ -44,17 +44,8 @@ app "my-app" {
 }
 ```
 
-Hook configuration has the following elements:
-
-- `when` (string) - When the hook should be executed. Either "before" or "after".
-
-- `command` (list of strings) - The command to execute. The first element of
-  the list is the command to execute and each remainder is an argument. By
-  specifying this as a list of strings, you do not need to worry about
-  escaping arguments.
-
-- `on_failure` (string, optional) - Behavior if the hook fails. This
-  must be either blank or "continue".
+See the [`hook` configuration stanza documentation](/docs/waypoint-hcl/hook)
+for details on all the fields a hook has and which are required.
 
 ## Execution Environment
 
