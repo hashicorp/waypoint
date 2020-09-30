@@ -1,0 +1,115 @@
+---
+layout: docs
+page_title: Upgrading
+sidebar_title: Upgrading
+description: |-
+  Waypoint is designed to be flexible and resilient when upgrading from one version to the next. We've carefully thought out an upgrade process so you can predict what will be involved when upgrading Waypoint.
+---
+
+# Upgrading Waypoint
+
+Waypoint is designed to be flexible and resilient when upgrading from
+one version to the next. We've carefully thought out an upgrade process
+so you can predict what will be involved when upgrading Waypoint.
+
+Waypoint is composed of many components which each have their own upgrade
+considerations:
+
+- **Client** (such as the CLI or UI) - Users of Waypoint are not expected
+  to exactly match the Waypoint server version. The Waypoint upgrade process
+  and compatibility promise allows for clients with differing versions from
+  a Waypoint server.
+
+- **Entrypoint** - The [entrypoint](/docs/entrypoint) is built and run
+  directly on the deployment artifact. Users of Waypoint cannot be expected
+  to rebuild and redeploy all applications. The Waypoint upgrade process
+  and compatibility promise is designed so that entrypoints retain compatibility
+  as long as possible.
+
+- **Server** - The server component of Waypoint must remain compatible
+  with all actively used clients and entrypoints. The Waypoint upgrade process
+  is designed for you to know when and how to safely upgrade the server.
+
+Please see our [compatibility promise](/docs/upgrading/compatibility)
+for details on how to determine compatbility. This page will focus on
+how to upgrade components in both compatible and incompatible scenarios.
+
+## Standard Upgrade
+
+A standard upgrade is one where the [protocol version](/docs/upgrading/compatibility)
+remains compatible for all components from one upgrade to another. In other
+words, this is an upgrade with no backwards incompatibilities.
+
+Unless otherwise noted by the release notes, you can upgrade the server,
+client, and entrypoints in any order for a standard, backwards compatible upgrade.
+
+### Server Upgrade
+
+1. Check any upgrade notes for the version you're upgrading to and verify
+   there are no issues that will affect your upgrade.
+
+2. Shut down the previous server version A.
+
+3. Start the new server version B.
+
+-> **Note:** There is no way today to avoid a small amount of downtime
+when upgrading from version A to version B. In practice this should be
+okay since all components continue to gracefully work while the server
+is down, and the downtime should be short. We plan on improving this
+in the future.
+
+### Client Upgrade
+
+1. Check any upgrade notes for the version you're upgrading to and verify
+   there are no issues that will affect your upgrade.
+
+2. Replace the client with the new version.
+
+### Entrypoint Upgrade
+
+1. Check any upgrade notes for the version you're upgrading to and verify
+   there are no issues that will affect your upgrade.
+
+2. Upgrade the client first. The client generally embeds the new entrypoint.
+   If you're installing the entrypoint from an external source this step can
+   be skipped.
+
+3. Rebuild and redeploy your application with the new entrypoint.
+
+## Backwards Incompatible Upgrade
+
+A backwards incompatible upgrade is one where the
+[protocol version](/docs/upgrading/compatibility)
+becomes incompatible from one version to another.
+
+1. For backwards incompatible upgrades, you must first upgrade the
+   server to the version that will remain compatible with both the old
+   and new protocol version you're attempting to upgrade to.
+
+2. Upgrade incompatible clients next by following the standard
+   [client upgrade process](#client-upgrade) but ensure the version being
+   upgraded to is compatible with the server version.
+
+3. Upgrade incompatible entrypoints by following the standard
+   [entrypoint upgrade process](#entrypoint-upgrade) and ensuring the
+   entrypoints being used are compatible with the server version.
+
+4. _Optional:_ Upgrade to the next version of the server which was
+   incompatible with your prior set of components. This often better prepares
+   you for future changes. This step was impossible at step (1) since either
+   clients or entrypoints were incompatible prior to steps (2) and (3).
+
+## Future Upgrade Improvements
+
+We have plans in the future to introduce tooling to make it much easier to
+confidently upgrade your Waypoint installations. Some of our roadmap plans
+include:
+
+- Built-in tooling to list all protocol versions currently in use.
+
+- Built-in tooling to propose a step-by-step upgrade guide for a version
+  that takes into account target and current protocol versions. This will let
+  you know what needs upgrading and what doesn't.
+
+- An `upgrade` subcommand to help upgrade server installations that were
+  setup with `waypoint install`.
