@@ -53,8 +53,10 @@ export default [
       },
     ],
   },
-  'glossary',
-  'troubleshooting',
+  {
+    category: 'upgrading',
+    content: ['compatibility', 'protocol-table'],
+  },
   '-----------',
   {
     category: 'waypoint-hcl',
@@ -89,4 +91,6 @@ export default [
     category: 'automating-execution',
     content: ['github-actions', 'circle-ci'],
   },
+  'troubleshooting',
+  'glossary',
 ]

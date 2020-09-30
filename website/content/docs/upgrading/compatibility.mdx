@@ -1,0 +1,128 @@
+---
+layout: docs
+page_title: Compatibility Promise
+sidebar_title: Compatibility Promise
+description: |-
+  TODO
+---
+
+# Compatibility Promise
+
+Waypoint has multiple components that need to interact with each other:
+the clients, the server, entrypoints, etc. Due to the diverse nature of these
+components, Waypoint has a protocol versioning system designed to minimize
+breaking changes and allow users to predictably run differing versions of
+each component.
+
+-> **Waypoint version compatibility is determined based on the
+[protocol version](#protocol-versions) and not the release version such
+as "1.2.3".** Two different Waypoint release versions are compatible so
+long as their protocol versions are compatible. This allows for multiple
+simultaneous Waypoint versions to be in use, which is expected.
+
+Our promises:
+
+1. We promise that two Waypoint versions can interoperate with each other if their
+   [protocol versions](#protocol-versions) overlap.
+
+2. We promise that there will always be a release with overlapping protocol
+   versions to allow all Waypoint components to safely upgrade.
+
+3. For Waypoint servers, we promise that each subsequent release will be compatible with the
+   prior release for upgrades. Concretely: 0.4 can upgrade to 0.5 but
+   may not be able to safely upgrade to 0.6 directly. You often will be
+   able to upgrade multiple versions at once but you must verify with the
+   upgrade guides first.
+
+Note that point #3 is only applicable to servers since they are the only
+component that stores state. For all other components (CLI, UI, entrypoints,
+etc.), compatibility promise #1 is most important.
+
+## Protocol Versions
+
+Waypoint advertises _protocol versions_ which can be used to determine
+if differing release versions are compatible with each other. Protocol
+versions are integers that are greater than or equal to 1.
+
+For each advertised protocol version, Waypoint advertises a _minimum_
+compatible version along with the _current_ compatible version. A client
+may communicate with a Waypoint server so long as the current protocol
+versions are within the range advertised.
+
+Finally, Waypoint advertises two types of protocol versions: one for
+the API, and one exclusively for the [entrypoint](/docs/entrypoint) protocol.
+This allows Waypoint to iterate on the API in potentially backwards
+incompatible ways without breaking entrypoints, and vice versa.
+
+### Current Protocol Version Table
+
+The current protocol version table can be viewed [here](/docs/upgrading/protocol-table).
+
+### Example
+
+The following is a concrete example of using the protocol versions to
+determine compatibility. The Waypoint versions and their advertised protocol
+versions are examples and not real, current Waypoint versions.
+
+The scenario of the _currently deployed_ Waypoint components is:
+
+| Component  | Version | Protocol Min | Protocol Current |
+| ---------- | ------- | ------------ | ---------------- |
+| Server     | 5.1.0   | 3            | 5                |
+| CLI        | 5.3.2   | 4            | 5                |
+| Entrypoint | 4.1.0   | 1            | 3                |
+| Entrypoint | 3.3.0   | 1            | 2                |
+
+In this scenario, there is a diverse set of Waypoint components currently
+deployed. Each has differing versions and its own set of protocol compatibilities.
+This is expected and normal. For example, developers will often use newer
+CLIs than what the server may be running and deployments will often run older
+(sometimes much older) entrypoint versions if they haven't been rebuilt and
+redeployed recently.
+
+In this scenario, a new version of Waypoint comes out with the following compatibility:
+
+| Component | Version | Protocol Min  | Protocol Current |
+| --------- | ------- | ------------- | ---------------- |
+| Server    | 6.0.0   | API: 5        | API: 6           |
+|           |         | Entrypoint: 3 | Entrypoint: 4    |
+
+Going through the list of components, we can see:
+
+- **The CLI is compatible.** It speaks protocols 4 to 5, inclusive, and the
+  API protocol for the new server would be 5 to 6. We should consider
+  upgrading the CLI eventually but we don't need to immediately.
+
+- **Entrypoint v4.1.0 is compatible, but v3.3.0 is not.** The slightly
+  newer (but still very outdated) entrypoint is still compatible so there
+  are no problems there. But the deployments running entrypoint v3.3.0
+  need to be upgraded before the server is since they're incompatible.
+  The entrypoint protocol for v3.3.0 was 1 to 2, and the new server
+  only speaks 3 to 4.
+
+To safely perform the upgrades required, please read the
+[upgrade guide](/docs/upgrading).
+
+## Frequency of Protocol Version Change
+
+Protocol versions exist so that we can introduce breaking changes safely,
+but that doesn't mean that we will do so frequently. We recognize that protocol
+version changes can be _very_ disruptive, and therefore aim to minimize
+the frequency of these changes.
+
+At the time of writing, Waypoint is a relatively new project. Based on
+prior experience with other projects, we expect some protocol version changes
+during early releases (0.x) but for the frequency to quickly dissipate as
+the project matures.
+
+We can look to [Consul](https://www.consul.io) as an example, since they use
+a similar protocol versioning feature. By
+[looking at their protocol version history](https://www.consul.io/docs/upgrading/compatibility),
+we can see that we introduced a new protocol version in the first 6 months
+of the project but retained compatibility for 2 years (until version 0.7).
+And while we introduced more protocol versions we continue to be compatible
+with versions over 4 years old.
+
+With Waypoint, we hope to achieve something similar: we may iterate on the
+protocol quickly as a new project, but will aim to maintain compatibility
+for as long as possible.
