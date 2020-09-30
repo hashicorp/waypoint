@@ -7,14 +7,14 @@ import (
 type contextKeyType string
 
 // WithContext stores the protocol version in the context.
-func WithContext(ctx context.Context, typ Type, vsn uint32) context.Context {
-	return context.WithValue(ctx, contextKeyType(typ.String()), vsn)
+func WithContext(ctx context.Context, vsn uint32) context.Context {
+	return context.WithValue(ctx, contextKeyType("version"), vsn)
 }
 
 // FromContext retrieves the protocol version from the context, or returns
 // zero if no version was present.
-func FromContext(ctx context.Context, typ Type) uint32 {
-	v, ok := ctx.Value(contextKeyType(typ.String())).(uint32)
+func FromContext(ctx context.Context) uint32 {
+	v, ok := ctx.Value(contextKeyType("version")).(uint32)
 	if !ok {
 		v = 0
 	}

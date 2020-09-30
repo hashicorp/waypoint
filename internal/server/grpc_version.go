@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -23,12 +24,12 @@ func versionUnaryInterceptor(serverInfo *pb.VersionInfo) grpc.UnaryServerInterce
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (interface{}, error) {
-		ctx, err := versionContext(ctx, protocolversion.Api, serverInfo)
-		if err != nil {
-			return nil, err
+		typ, ok := versionType(info.FullMethod)
+		if !ok {
+			return handler(ctx, req)
 		}
 
-		ctx, err = versionContext(ctx, protocolversion.Entrypoint, serverInfo)
+		ctx, err := versionContext(ctx, typ, serverInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -48,14 +49,13 @@ func versionStreamInterceptor(serverInfo *pb.VersionInfo) grpc.StreamServerInter
 		ss grpc.ServerStream,
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler) error {
-		ctx := ss.Context()
-
-		ctx, err := versionContext(ctx, protocolversion.Api, serverInfo)
-		if err != nil {
-			return err
+		typ, ok := versionType(info.FullMethod)
+		if !ok {
+			return handler(srv, ss)
 		}
 
-		ctx, err = versionContext(ctx, protocolversion.Entrypoint, serverInfo)
+		ctx := ss.Context()
+		ctx, err := versionContext(ctx, typ, serverInfo)
 		if err != nil {
 			return err
 		}
@@ -66,6 +66,34 @@ func versionStreamInterceptor(serverInfo *pb.VersionInfo) grpc.StreamServerInter
 			context:      ctx,
 		})
 	}
+}
+
+// versionType returns the type of protocol version we should negotiate.
+func versionType(fullMethod string) (protocolversion.Type, bool) {
+	// Only care about waypoint APIs and ignore the version info call.
+	if !strings.HasPrefix(fullMethod, "/hashicorp.waypoint.Waypoint/") {
+		return protocolversion.Invalid, false
+	}
+
+	// Get the method
+	idx := strings.LastIndex(fullMethod, "/")
+	if idx == -1 {
+		return protocolversion.Invalid, false
+	}
+	method := fullMethod[idx+1:]
+
+	// If it is a version method we don't negotiate versions at all.
+	if method == "GetVersionInfo" {
+		return protocolversion.Invalid, false
+	}
+
+	// Determine what API is being called
+	typ := protocolversion.Api
+	if strings.HasPrefix(method, "Entrypoint") {
+		typ = protocolversion.Entrypoint
+	}
+
+	return typ, true
 }
 
 // versionContext
@@ -112,9 +140,13 @@ func versionContext(
 		Current: current,
 		Minimum: min,
 	}, server)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument,
+			"header %q: %s", header, err)
+	}
 
 	// Invoke the handler.
-	return protocolversion.WithContext(ctx, typ, version), nil
+	return protocolversion.WithContext(ctx, version), nil
 }
 
 type versionStream struct {
