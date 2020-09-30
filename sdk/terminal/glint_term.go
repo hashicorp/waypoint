@@ -30,7 +30,7 @@ type glintTerm struct {
 
 	scrollback [][]rune
 
-	aborted bool
+	full bool
 }
 
 func (t *glintTerm) Body(ctx context.Context) glint.Component {
@@ -39,7 +39,7 @@ func (t *glintTerm) Body(ctx context.Context) glint.Component {
 
 	var cs []glint.Component
 
-	if t.aborted {
+	if t.full {
 		for _, row := range t.scrollback {
 			s := strings.TrimRightFunc(string(row), unicode.IsSpace)
 			cs = append(cs, glint.Layout(glint.Text(" │ "), glint.Text(s)).Row())
@@ -158,8 +158,18 @@ func (t *glintTerm) Write(b []byte) (int, error) {
 }
 
 func (t *glintTerm) AddScrollBack(line []rune) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	t.scrollback = append(t.scrollback, line)
 	return nil
+}
+
+func (t *glintTerm) showFull() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	t.full = true
 }
 
 var _ screen.ScrollBack = (*glintTerm)(nil)

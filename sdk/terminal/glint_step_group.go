@@ -149,7 +149,7 @@ func (f *glintStep) Abort() {
 
 	// This will cause the term to render the full scrollback from now on
 	if f.term != nil {
-		f.term.aborted = true
+		f.term.showFull()
 	}
 
 	f.status.Step(StatusError, f.msg)
