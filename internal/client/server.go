@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/internal/protocolversion"
@@ -165,4 +166,32 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 	_ = cancel // pacify vet lostcancel
 
 	return conn, nil
+}
+
+// negotiateApiVersion negotiates the API version to use and validates
+// that we are compatible to talk to the server.
+func (c *Project) negotiateApiVersion(ctx context.Context) error {
+	log := c.logger
+
+	log.Trace("requesting version info from server")
+	resp, err := c.client.GetVersionInfo(ctx, &empty.Empty{})
+	if err != nil {
+		return err
+	}
+
+	log.Info("server version info",
+		"version", resp.Info.Version,
+		"api_min", resp.Info.Api.Minimum,
+		"api_current", resp.Info.Api.Current,
+		"entrypoint_min", resp.Info.Entrypoint.Minimum,
+		"entrypoint_current", resp.Info.Entrypoint.Current,
+	)
+
+	vsn, err := protocolversion.Negotiate(protocolversion.Current().Api, resp.Info.Api)
+	if err != nil {
+		return err
+	}
+
+	log.Info("negotiated api version", "version", vsn)
+	return nil
 }

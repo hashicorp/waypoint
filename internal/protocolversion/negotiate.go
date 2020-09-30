@@ -2,13 +2,29 @@ package protocolversion
 
 import (
 	"errors"
+	"strings"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 var (
-	ErrClientOutdated = errors.New("client protocol version is too outdated for the server")
-	ErrServerOutdated = errors.New("server minimum protocol version is too outdated for the client")
+	ErrClientOutdated = errors.New(strings.TrimSpace(`
+The client's supported protocol version is not understood by the server.
+
+This means that the client is too outdated for the server. To solve this,
+the client must be upgraded to a newer version.
+`))
+
+	ErrServerOutdated = errors.New(strings.TrimSpace(`
+The server's minimum advertised protocol version is too outdated for the client.
+
+This means that the client being run is newer than the server and the
+API has changed significantly enough that this client can no longer communicate
+to this server.
+
+To solve this, either downgrade the client or upgrade the server. Please read
+any upgrade guides prior to doing this to ensure a safe transition.
+`))
 )
 
 // Negotiate takes two protocol versions and determines the value to use.
