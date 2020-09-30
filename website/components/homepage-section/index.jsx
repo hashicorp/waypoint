@@ -11,7 +11,7 @@ export default function HomepageSection({ title, theme, children }) {
       })}
     >
       <div className={styles.gridContainer}>
-        <h2>{title}</h2>
+        {title && <h2>{title}</h2>}
         {children}
       </div>
     </section>
