@@ -20,10 +20,7 @@ export default function HomePage() {
         ]}
       />
 
-      <HomepageSection
-        title="TODO, Interactive Code Here"
-        theme="light"
-      ></HomepageSection>
+      <HomepageSection theme="light"></HomepageSection>
 
       <HomepageSection title="Features" theme="gray"></HomepageSection>
 
