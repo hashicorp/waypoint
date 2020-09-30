@@ -9,27 +9,9 @@ export default function HomePage() {
     <div className={styles.homePage}>
       <HomepageHero
         title="Build. Deploy. Release."
-        description={
-          <>
-            <p>
-              Waypoint allows developers to define their application build,
-              deploy, and release lifecycle as code, reducing the time to
-              deliver deployments through a consistent and repeatable workflow.
-            </p>
-            <br />
-            <p>
-              As we prepare for the 0.1 release at HashiConf in October - we
-              invite you to take it for a test drive by exploring the links
-              below.
-            </p>
-          </>
-        }
+        subtitle="Waypoint provides a modern workflow for deploying your development code on your development platform."
+        description="Waypoint does not run your software. It provides a single configuration file and API to manage and observe deployments across environments and platforms, from your local workstation to your CI environment."
         links={[
-          {
-            text: 'Download',
-            url: 'https://go.hashi.co/waypoint-beta-binaries',
-            type: 'download',
-          },
           {
             text: 'Get Started',
             url: '/docs/getting-started',
