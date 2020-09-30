@@ -1,10 +1,6 @@
-package singleprocess
+package protocolversion
 
 import (
-	"context"
-
-	"github.com/golang/protobuf/ptypes/empty"
-
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
 )
@@ -25,23 +21,19 @@ const (
 	protocolVersionEntrypointMin            = 1
 )
 
-func (s *service) GetVersionInfo(
-	ctx context.Context,
-	req *empty.Empty,
-) (*pb.GetVersionInfoResponse, error) {
-	return &pb.GetVersionInfoResponse{
-		Info: &pb.VersionInfo{
-			Api: &pb.VersionInfo_ProtocolVersion{
-				Current: protocolVersionApiCurrent,
-				Minimum: protocolVersionApiMin,
-			},
-
-			Entrypoint: &pb.VersionInfo_ProtocolVersion{
-				Current: protocolVersionEntrypointCurrent,
-				Minimum: protocolVersionEntrypointMin,
-			},
-
-			Version: version.GetVersion().VersionNumber(),
+// Current returns the current protocol version information.
+func Current() *pb.VersionInfo {
+	return &pb.VersionInfo{
+		Api: &pb.VersionInfo_ProtocolVersion{
+			Current: protocolVersionApiCurrent,
+			Minimum: protocolVersionApiMin,
 		},
-	}, nil
+
+		Entrypoint: &pb.VersionInfo_ProtocolVersion{
+			Current: protocolVersionEntrypointCurrent,
+			Minimum: protocolVersionEntrypointMin,
+		},
+
+		Version: version.GetVersion().VersionNumber(),
+	}
 }

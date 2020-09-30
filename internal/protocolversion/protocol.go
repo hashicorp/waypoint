@@ -1,7 +1,8 @@
-package protocol
+package protocolversion
 
 //go:generate stringer -type=Type -linecomment
 
+// Type is the enum of protocol version types.
 type Type uint8
 
 const (

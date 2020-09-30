@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/protocol"
 )
 
 // versionUnaryInterceptor returns a gRPC unary interceptor that inserts a hclog.Logger
@@ -23,12 +23,12 @@ func versionUnaryInterceptor(serverInfo *pb.VersionInfo) grpc.UnaryServerInterce
 		req interface{},
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (interface{}, error) {
-		ctx, err := versionContext(ctx, protocol.Api, serverInfo)
+		ctx, err := versionContext(ctx, protocolversion.Api, serverInfo)
 		if err != nil {
 			return nil, err
 		}
 
-		ctx, err = versionContext(ctx, protocol.Entrypoint, serverInfo)
+		ctx, err = versionContext(ctx, protocolversion.Entrypoint, serverInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -50,12 +50,12 @@ func versionStreamInterceptor(serverInfo *pb.VersionInfo) grpc.StreamServerInter
 		handler grpc.StreamHandler) error {
 		ctx := ss.Context()
 
-		ctx, err := versionContext(ctx, protocol.Api, serverInfo)
+		ctx, err := versionContext(ctx, protocolversion.Api, serverInfo)
 		if err != nil {
 			return err
 		}
 
-		ctx, err = versionContext(ctx, protocol.Entrypoint, serverInfo)
+		ctx, err = versionContext(ctx, protocolversion.Entrypoint, serverInfo)
 		if err != nil {
 			return err
 		}
@@ -71,18 +71,18 @@ func versionStreamInterceptor(serverInfo *pb.VersionInfo) grpc.StreamServerInter
 // versionContext
 func versionContext(
 	ctx context.Context,
-	typ protocol.Type,
+	typ protocolversion.Type,
 	info *pb.VersionInfo,
 ) (context.Context, error) {
 	var header string
 	var server *pb.VersionInfo_ProtocolVersion
 	switch typ {
-	case protocol.Api:
-		header = protocol.HeaderClientApiProtocol
+	case protocolversion.Api:
+		header = protocolversion.HeaderClientApiProtocol
 		server = info.Api
 
-	case protocol.Entrypoint:
-		header = protocol.HeaderClientEntrypointProtocol
+	case protocolversion.Entrypoint:
+		header = protocolversion.HeaderClientEntrypointProtocol
 		server = info.Entrypoint
 
 	default:
@@ -101,20 +101,20 @@ func versionContext(
 		return nil, status.Errorf(codes.InvalidArgument,
 			"required header %s is not set", header)
 	}
-	min, current, err := protocol.ParseHeader(vs[0])
+	min, current, err := protocolversion.ParseHeader(vs[0])
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument,
 			"header %q: %s", header, err)
 	}
 
 	// Negotiate the version to use
-	version, err := protocol.Negotiate(&pb.VersionInfo_ProtocolVersion{
+	version, err := protocolversion.Negotiate(&pb.VersionInfo_ProtocolVersion{
 		Current: current,
 		Minimum: min,
 	}, server)
 
 	// Invoke the handler.
-	return protocol.WithContext(ctx, typ, version), nil
+	return protocolversion.WithContext(ctx, typ, version), nil
 }
 
 type versionStream struct {

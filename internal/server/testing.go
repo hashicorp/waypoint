@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
+	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/protocol"
 )
 
 // TestServer starts a server and returns a gRPC client to that server.
@@ -81,8 +81,8 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 	conn, err := grpc.DialContext(context.Background(), ln.Addr().String(),
 		grpc.WithBlock(),
 		grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(protocol.UnaryClientInterceptor(vsnInfo)),
-		grpc.WithStreamInterceptor(protocol.StreamClientInterceptor(vsnInfo)),
+		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(vsnInfo)),
+		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(vsnInfo)),
 	)
 	require.NoError(err)
 	t.Cleanup(func() { conn.Close() })
