@@ -18,6 +18,7 @@ const (
 	StatusError   = "error"
 	StatusWarn    = "warn"
 	StatusTimeout = "timeout"
+	StatusAbort   = "abort"
 )
 
 var emojiStatus = map[string]string{

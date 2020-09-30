@@ -56,12 +56,12 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
-	github.com/lab47/vterm v0.0.0-20200730001001-14f91f37349f
+	github.com/lab47/vterm v0.0.0-20200929232620-91ef4fcb0027
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.7
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.1.2
-	github.com/mitchellh/go-glint v0.0.0-20200925195304-7d256a0f0fd7
+	github.com/mitchellh/go-glint v0.0.0-20200930000256-df5e721f3258
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1

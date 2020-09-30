@@ -27,6 +27,10 @@ type glintTerm struct {
 
 	wg       sync.WaitGroup
 	parseErr error
+
+	scrollback [][]rune
+
+	full bool
 }
 
 func (t *glintTerm) Body(ctx context.Context) glint.Component {
@@ -34,9 +38,17 @@ func (t *glintTerm) Body(ctx context.Context) glint.Component {
 	defer t.mu.Unlock()
 
 	var cs []glint.Component
+
+	if t.full {
+		for _, row := range t.scrollback {
+			s := strings.TrimRightFunc(string(row), unicode.IsSpace)
+			cs = append(cs, glint.Layout(glint.Text(" │ "), glint.Text(s)).Row())
+		}
+	}
+
 	for _, row := range t.output {
 		cs = append(cs, glint.Layout(
-			glint.Text(" ｜ "),
+			glint.Text(" │ "),
 			glint.Style(
 				glint.Text(strings.TrimRightFunc(string(row), unicode.IsSpace)),
 				glint.Color("lightBlue"),
@@ -144,6 +156,23 @@ func newGlintTerm(ctx context.Context, height, width int) (*glintTerm, error) {
 func (t *glintTerm) Write(b []byte) (int, error) {
 	return t.w.Write(b)
 }
+
+func (t *glintTerm) AddScrollBack(line []rune) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	t.scrollback = append(t.scrollback, line)
+	return nil
+}
+
+func (t *glintTerm) showFull() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	t.full = true
+}
+
+var _ screen.ScrollBack = (*glintTerm)(nil)
 
 func (t *glintTerm) Close() error {
 	t.cancel()

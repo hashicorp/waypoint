@@ -511,7 +511,7 @@ func (u *runnerUISGStep) Abort() {
 								Step: &pb.GetJobStreamResponse_Terminal_Event_Step{
 									Id:     u.id,
 									Close:  true,
-									Status: terminal.ErrorStyle,
+									Status: terminal.StatusAbort,
 								},
 							},
 						},

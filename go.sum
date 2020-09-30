@@ -816,8 +816,8 @@ github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348 h1:MtvEpTB6LX3v
 github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348/go.mod h1:B69LEHPfb2qLo0BaaOLcbitczOKLWTsrBG9LczfCD4k=
 github.com/kyoh86/richgo v0.3.3/go.mod h1:S65jllVRxBm59fqIXfCa3cPxQYRT9u9v45EPQVeuoH0=
 github.com/kyoh86/xdg v0.0.0-20171007020617-d28e4c5d7b81/go.mod h1:Z5mDqe0fxyxn3W2yTxsBAOQqIrXADQIh02wrTnaRM38=
-github.com/lab47/vterm v0.0.0-20200730001001-14f91f37349f h1:0tOqaVi9zXA24bIKmcND+ZDu0b0Lq89rVztyj4im5U0=
-github.com/lab47/vterm v0.0.0-20200730001001-14f91f37349f/go.mod h1:IODMeTGM8OBitkNwP3bvFuccNVzo1gIevvC3dM6MujU=
+github.com/lab47/vterm v0.0.0-20200929232620-91ef4fcb0027 h1:eqUcyQhjIQiGxRgqFiJ2Z3VmlyEifa49I0Fx16N7oMg=
+github.com/lab47/vterm v0.0.0-20200929232620-91ef4fcb0027/go.mod h1:IODMeTGM8OBitkNwP3bvFuccNVzo1gIevvC3dM6MujU=
 github.com/labbsr0x/bindman-dns-webhook v1.0.2/go.mod h1:p6b+VCXIR8NYKpDr8/dg1HKfQoRHCdcsROXKvmoehKA=
 github.com/labbsr0x/goh v1.0.1/go.mod h1:8K2UhVoaWXcCU7Lxoa2omWnC8gyW8px7/lmO61c027w=
 github.com/leodido/go-urn v1.2.0 h1:hpXL4XnriNwQ/ABnpepYM/1vCLWNDfUNts8dX3xTG6Y=
@@ -886,8 +886,8 @@ github.com/mitchellh/cli v1.1.2/go.mod h1:6iaV0fGdElS6dPBx0EApTxHrcWvmJphyh2n8YB
 github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db/go.mod h1:l0dey0ia/Uv7NcFFVbCLtqEBQbrT4OCwCSKTEv6enCw=
 github.com/mitchellh/copystructure v1.0.0 h1:Laisrj+bAB6b/yJwB5Bt3ITZhGJdqmxquMKeZ+mmkFQ=
 github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
-github.com/mitchellh/go-glint v0.0.0-20200925195304-7d256a0f0fd7 h1:6bP9QjzcFUgp43jotMHfoIx3f1dwBsgp/gjcqS2KJA4=
-github.com/mitchellh/go-glint v0.0.0-20200925195304-7d256a0f0fd7/go.mod h1:NrJbv11op7A0gjSLtfvzm74YkVKRS24KxucwneYUX4M=
+github.com/mitchellh/go-glint v0.0.0-20200930000256-df5e721f3258 h1:x7Z92EayV/P8BlKJnZpij7MUcqcCBah0YauEKyOIxow=
+github.com/mitchellh/go-glint v0.0.0-20200930000256-df5e721f3258/go.mod h1:NrJbv11op7A0gjSLtfvzm74YkVKRS24KxucwneYUX4M=
 github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8 h1:vYarZ5R8DcSQ4MayciodsBAPc9pVGnFucqOfd+Rfaxw=
 github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8/go.mod h1:ZCzL0JMR6qfm7VrDC8HGwVtPA8D2Ijc/edUSBw58x94=
 github.com/mitchellh/go-homedir v1.0.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=

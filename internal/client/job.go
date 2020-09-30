@@ -307,7 +307,11 @@ func (c *Project) queueAndStreamJob(
 					}
 
 					if ev.Step.Status != "" {
-						step.Status(ev.Step.Status)
+						if ev.Step.Status == terminal.StatusAbort {
+							step.Abort()
+						} else {
+							step.Status(ev.Step.Status)
+						}
 					}
 
 					if len(ev.Step.Output) > 0 {

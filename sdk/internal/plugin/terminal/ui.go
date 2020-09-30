@@ -203,7 +203,11 @@ func (s *uiServer) Events(stream pb.TerminalUIService_EventsServer) error {
 			}
 
 			if ev.Step.Status != "" {
-				step.Status(ev.Step.Status)
+				if ev.Step.Status == terminal.StatusAbort {
+					step.Abort()
+				} else {
+					step.Status(ev.Step.Status)
+				}
 			}
 
 			if len(ev.Step.Output) > 0 {
@@ -617,7 +621,7 @@ func (u *uiBridgeSGStep) Abort() {
 				Step: &pb.TerminalUI_Event_Step{
 					Id:     u.id,
 					Close:  true,
-					Status: terminal.ErrorStyle,
+					Status: terminal.StatusAbort,
 				},
 			},
 		})

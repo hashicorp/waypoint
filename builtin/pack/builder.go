@@ -84,11 +84,11 @@ func (b *Builder) Build(
 		AppPath: src.Path,
 	})
 
-	build.Done()
-
 	if err != nil {
 		return nil, err
 	}
+
+	build.Done()
 
 	info, err := client.InspectImage(src.App, true)
 	if err != nil {
