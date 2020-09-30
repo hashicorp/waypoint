@@ -124,6 +124,8 @@ func (c *Client) Run() (int, error) {
 	ctx, cancel := context.WithCancel(c.Context)
 	defer cancel()
 
+	input := &EscapeWatcher{Cancel: cancel, Input: c.Stdin}
+
 	// Build our connection. We only build the stdin sending side because
 	// we can receive other message types from our recv.
 	go io.Copy(&grpc_net_conn.Conn{
@@ -139,7 +141,7 @@ func (c *Client) Run() (int, error) {
 
 			return &req.Event.(*pb.ExecStreamRequest_Input_).Input.Data
 		}),
-	}, c.Stdin)
+	}, input)
 
 	// Add our recv blocker that sends data
 	recvCh := make(chan *pb.ExecStreamResponse)
