@@ -62,32 +62,22 @@
 }
 
 /*
- * TODO, eventually remove:
- * Temporary Waypoint Branding
+ * TODO, this will be removed ~Oct 13.
+ *
+ * We have a PR ready to roll, which a simple version upgrade to the subnav
+ * will enable the colors & logos. We're holding off on releasing this work
+ * as it exposes the product name & logos to the world as it's a public NPM
+ * module.  This will be updated right before we go live.
  */
-:root {
-  --waypoint: #14c6cb;
-}
-
 .g-subnav {
   & a.variant-primary {
-    border-color: var(--waypoint);
-    background-color: var(--waypoint);
+    border-color: var(--blue);
+    background-color: var(--blue);
   }
   & .g-subnav-inner {
     & .style-menu-item {
       & .text::after {
-        background: var(--waypoint);
-      }
-    }
-  }
-}
-
-.g-vertical-text-block-list {
-  & .list {
-    & .body-text {
-      & a {
-        color: var(--waypoint) !important;
+        background: var(--blue);
       }
     }
   }
