@@ -1,4 +1,5 @@
 import HomepageHero from 'components/homepage-hero'
+import BrandedCta from 'components/branded-cta'
 
 export default function HomePage() {
   return (
@@ -31,6 +32,15 @@ export default function HomePage() {
             url: '/docs/getting-started',
             type: 'inbound',
           },
+        ]}
+      />
+
+      <BrandedCta
+        heading="Ready to get started?"
+        content="TODO: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+        links={[
+          { text: 'Download', url: '/download', type: 'download' },
+          { text: 'Explore documentation', url: '/docs' },
         ]}
       />
     </div>
