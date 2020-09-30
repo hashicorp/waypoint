@@ -37,6 +37,13 @@ export default function HomePage() {
         ]}
       />
 
+      <HomepageSection
+        title="TODO, Interactive Code Here"
+        theme="light"
+      ></HomepageSection>
+
+      <HomepageSection title="Features" theme="gray"></HomepageSection>
+
       <HomepageSection title="Why Waypoint" theme="light"></HomepageSection>
 
       <BrandedCta
