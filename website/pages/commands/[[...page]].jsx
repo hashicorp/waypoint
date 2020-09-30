@@ -1,4 +1,4 @@
-import { productName, productSlug } from 'data/metadata'
+import { productName } from 'data/metadata'
 import order from 'data/commands-navigation.js'
 import DocsPage from 'components/temporary_docs-page'
 import {
@@ -12,7 +12,7 @@ function DocsLayout(props) {
   return (
     <DocsPage
       productName={productName}
-      productSlug={productSlug}
+      productSlug='blue'
       subpath={subpath}
       order={order}
       staticProps={props}
