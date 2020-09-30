@@ -7,45 +7,63 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2015-11-01/subscriptions"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/hashicorp/waypoint/sdk/component"
 )
 
 var _ component.Deployment = (*Deployment)(nil)
+var locations []string // accessible locations for the current account
 
-func (d *Deployment) containerInstanceGroupsClient() (*containerinstance.ContainerGroupsClient, error) {
+func (d *Deployment) containerInstanceGroupsClient(auth autorest.Authorizer) (*containerinstance.ContainerGroupsClient, error) {
 	// create a container groups client
 	containerGroupsClient := containerinstance.NewContainerGroupsClient(d.ContainerGroup.SubscriptionId)
-
-	// create an authorizer from env vars or Azure Managed Service Identity
-	authorizer, err := auth.NewAuthorizerFromEnvironment()
-	if err != nil {
-		return nil, err
-	}
-
-	// setting polling duration to 0 uses the context passed to an client call
-	// for cancellation.
-	containerGroupsClient.PollingDuration = 15 * time.Minute
-	containerGroupsClient.Authorizer = authorizer
+	containerGroupsClient.Authorizer = auth
 
 	return &containerGroupsClient, nil
 }
 
-func (d *Deployment) getLocations(ctx context.Context) ([]string, error) {
-	// create a account client
-	subscriptionClient := subscriptions.NewClient()
+// init sets up the authorizer and fetches the locations
+func (d *Deployment) authenticate(ctx context.Context) (autorest.Authorizer, error) {
+	// create an authorizer from env vars or Azure Managed Service Identity
+	//authorizer, err := auth.NewAuthorizerFromCLI()
 
-	// create an authorizer from env vars or Azure Managed Service Idenity
+	// first try and create an environment
 	authorizer, err := auth.NewAuthorizerFromEnvironment()
-	if err != nil {
-		return nil, err
-	}
-
-	subscriptionClient.PollingDuration = 60 * time.Minute
-	subscriptionClient.Authorizer = authorizer
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create subscriptions client: %s", err)
 	}
+
+	// we need to timeout this request as this request never fails when we have
+	// invalid credentials
+	timeoutContext, cf := context.WithTimeout(ctx, 15*time.Second)
+	defer cf()
+
+	_, err = d.getLocations(timeoutContext, authorizer)
+	if err == nil {
+		return authorizer, nil
+	}
+
+	timeoutContext, cf2 := context.WithTimeout(ctx, 15*time.Second)
+	defer cf2()
+
+	// the environment variable auth has failed fall back to CLI auth
+	authorizer, err = auth.NewAuthorizerFromCLI()
+	_, err = d.getLocations(timeoutContext, authorizer)
+	if err == nil {
+		return authorizer, nil
+	}
+
+	return nil, fmt.Errorf(
+		"Unable to authenticate with the Azure API, ensure you have your credentials set as environment variables, " +
+			"or you have logged in using the 'az' command line tool",
+	)
+}
+
+func (d *Deployment) getLocations(ctx context.Context, auth autorest.Authorizer) ([]string, error) {
+	// create a account client
+	subscriptionClient := subscriptions.NewClient()
+	subscriptionClient.Authorizer = auth
 
 	llr, err := subscriptionClient.ListLocations(ctx, d.ContainerGroup.SubscriptionId)
 	if err != nil {
@@ -53,15 +71,15 @@ func (d *Deployment) getLocations(ctx context.Context) ([]string, error) {
 	}
 
 	locs := []string{}
-	for _, l := range *llr.Value {
-		locs = append(locs, *l.Name)
+	for _, v := range *llr.Value {
+		locs = append(locs, *v.Name)
 	}
 
 	return locs, nil
 }
 
-func (d *Deployment) getContainerGroup(ctx context.Context) (containerinstance.ContainerGroup, error) {
-	c, err := d.containerInstanceGroupsClient()
+func (d *Deployment) getContainerGroup(ctx context.Context, auth autorest.Authorizer) (containerinstance.ContainerGroup, error) {
+	c, err := d.containerInstanceGroupsClient(auth)
 	if err != nil {
 		return containerinstance.ContainerGroup{}, fmt.Errorf("Unable to create Container Groups client: %s", err)
 	}
@@ -69,8 +87,8 @@ func (d *Deployment) getContainerGroup(ctx context.Context) (containerinstance.C
 	return c.Get(ctx, d.ContainerGroup.ResourceGroup, d.ContainerGroup.Name)
 }
 
-func (d *Deployment) createOrUpdate(ctx context.Context, cg containerinstance.ContainerGroup) (containerinstance.ContainerGroup, error) {
-	c, err := d.containerInstanceGroupsClient()
+func (d *Deployment) createOrUpdate(ctx context.Context, auth autorest.Authorizer, cg containerinstance.ContainerGroup) (containerinstance.ContainerGroup, error) {
+	c, err := d.containerInstanceGroupsClient(auth)
 	if err != nil {
 		return containerinstance.ContainerGroup{}, fmt.Errorf("Unable to create Container Groups client: %s", err)
 	}
