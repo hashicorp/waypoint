@@ -1,0 +1,48 @@
+.homepageHero {
+  min-height: min(45vw, 750px);
+  background-image: url(/img/hero-pattern.svg);
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  background-position: center top;
+  padding: 141px 0;
+
+  @media (max-width: 800px) {
+    padding: 88px 0;
+  }
+
+  & .content {
+    max-width: 500px;
+
+    & > h1 {
+      margin-top: 0;
+    }
+
+    & > p {
+      background: var(--white);
+      color: var(--gray-2);
+      &.subtitle {
+        font-size: 17px;
+        line-height: 25px;
+      }
+      &.description {
+        font-size: 15px;
+        line-height: 28px;
+      }
+    }
+
+    & .links {
+      flex-wrap: wrap;
+      margin-top: calc(32px - 8px);
+      margin-bottom: -8px;
+      margin-left: -8px;
+
+      & a {
+        margin: 8px;
+      }
+    }
+  }
+}
+
+.gridContainer {
+  composes: g-grid-container from global;
+}
