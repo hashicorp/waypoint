@@ -1,0 +1,43 @@
+.infoGrid {
+  --gutter: 16px;
+  @media (max-width: 900px) {
+    --gutter: 12px;
+  }
+
+  display: flex;
+  & ul {
+    list-style: none;
+    padding: 0;
+    margin: calc(-1 * var(--gutter));
+    width: 100%;
+    display: flex;
+
+    @media (max-width: 900px) {
+      flex-direction: column;
+      & li {
+        width: 100%;
+      }
+    }
+
+    & li {
+      border: 1px solid #dcdde0;
+      padding: 30px;
+      margin: var(--gutter);
+      flex-basis: calc(33.33% - var(--gutter));
+
+      & img {
+        margin-bottom: 16px;
+      }
+
+      & h4 {
+        margin-top: 0;
+        margin-bottom: 8px;
+      }
+
+      & p {
+        margin: 0;
+        color: var(--gray-2);
+      }
+    }
+  }
+}

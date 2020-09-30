@@ -18,6 +18,16 @@
   & .gridContainer {
     & > h2:first-of-type {
       margin-top: 0;
+      margin-bottom: 48px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    padding: 88px 0;
+    & .gridContainer {
+      & > h2:first-of-type {
+        margin-bottom: 32px;
+      }
     }
   }
 }
