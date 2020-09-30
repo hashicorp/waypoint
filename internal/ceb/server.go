@@ -5,9 +5,11 @@ import (
 	"crypto/tls"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -17,6 +19,8 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config) error {
 	grpcOpts := []grpc.DialOption{
 		grpc.WithBlock(),
 		grpc.WithTimeout(5 * time.Second),
+		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
+		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(protocolversion.Current())),
 	}
 	if !cfg.ServerTls {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
@@ -71,6 +75,27 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config) error {
 		return err
 	}
 	ceb.client = pb.NewWaypointClient(conn)
+
+	// Negotiate API version
+	ceb.logger.Trace("requesting version info from server")
+	vsnResp, err := ceb.client.GetVersionInfo(ctx, &empty.Empty{})
+	if err != nil {
+		return err
+	}
+
+	ceb.logger.Info("server version info",
+		"version", vsnResp.Info.Version,
+		"api_min", vsnResp.Info.Api.Minimum,
+		"api_current", vsnResp.Info.Api.Current,
+		"entrypoint_min", vsnResp.Info.Entrypoint.Minimum,
+		"entrypoint_current", vsnResp.Info.Entrypoint.Current,
+	)
+
+	vsn, err := protocolversion.Negotiate(protocolversion.Current().Entrypoint, vsnResp.Info.Entrypoint)
+	if err != nil {
+		return err
+	}
+	ceb.logger.Info("negotiated entrypoint protocol version", "version", vsn)
 
 	return nil
 }
