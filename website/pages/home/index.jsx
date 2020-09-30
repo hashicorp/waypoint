@@ -1,9 +1,11 @@
+import styles from './HomePage.module.css'
+import HomepageSection from 'components/homepage-section'
 import HomepageHero from 'components/homepage-hero'
 import BrandedCta from 'components/branded-cta'
 
 export default function HomePage() {
   return (
-    <div className="p-home">
+    <div className={styles.homePage}>
       <HomepageHero
         title="Build. Deploy. Release."
         description={
@@ -34,6 +36,8 @@ export default function HomePage() {
           },
         ]}
       />
+
+      <HomepageSection title="Why Waypoint" theme="light"></HomepageSection>
 
       <BrandedCta
         heading="Ready to get started?"
