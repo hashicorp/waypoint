@@ -1,5 +1,6 @@
 import styles from './HomePage.module.css'
 import InfoGrid from 'components/info-grid'
+import StepsList from 'components/steps-list'
 import HomepageSection from 'components/homepage-section'
 import HomepageHero from 'components/homepage-hero'
 import BrandedCta from 'components/branded-cta'
@@ -20,7 +21,68 @@ export default function HomePage() {
         ]}
       />
 
-      <HomepageSection theme="light"></HomepageSection>
+      <HomepageSection theme="light">
+        <StepsList
+          steps={[
+            {
+              name: 'Build',
+              description: (
+                <>
+                  <p>
+                    Waypoint builds applications for your language or framework,
+                    from default compilation for common frameworks using
+                    Buildpacks to fine grained control with custom Dockerfiles.
+                  </p>
+                  <p>
+                    The build step is where your application and assets are
+                    compiled, validated, and an artifact is created.
+                  </p>
+                  <p>
+                    This artifact can be published to a remote registry or
+                    simply passed to the deploy step.
+                  </p>
+                </>
+              ),
+              logos: require('./img/step-logos/build.svg'),
+            },
+            {
+              name: 'Deploy',
+              description: (
+                <>
+                  <p>
+                    Waypoint deploys artifacts created by the build step to a
+                    variety of platforms, from Kubernetes to static site hosts.
+                  </p>
+                  <p>
+                    It configures your target platform to be accessible and
+                    starts the service, making it available for traffic at the
+                    release stage.
+                  </p>
+                </>
+              ),
+              logos: require('./img/step-logos/deploy.svg'),
+            },
+            {
+              name: 'Release',
+              description: (
+                <>
+                  <p>
+                    Your deployment, a running copy of the application you built
+                    and stored the artifact for, is released with a deployment
+                    specific routable URL for previews.
+                  </p>
+                  <p>
+                    In addition, if your application is configured with a
+                    release step, it will automatically graduate or make the
+                    release available based on an extensible plugin interface.
+                  </p>
+                </>
+              ),
+              logos: require('./img/step-logos/release.svg'),
+            },
+          ]}
+        />
+      </HomepageSection>
 
       <HomepageSection title="Features" theme="gray"></HomepageSection>
 
