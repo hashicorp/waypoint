@@ -113,6 +113,15 @@ func (p *Platform) Deploy(
 		})
 	}
 
+	// if we have a port we need to set the PORT env var so that the CEB binary can direct
+	// traffic to the correct service
+	if len(p.config.Ports) > 0 {
+		env = append(env, containerinstance.EnvironmentVariable{
+			Name:  to.StringPtr("PORT"),
+			Value: to.StringPtr(fmt.Sprintf("%d", p.config.Ports[0])),
+		})
+	}
+
 	log.Info("Checking if container group already exists", "containergroup", deployment.ContainerGroup.Name)
 	st.Update("Checking if container group is already created")
 	containerGroup, err := deployment.getContainerGroup(ctx)
@@ -503,7 +512,7 @@ deploy "azure-container-instance" {
 
 	doc.SetField(
 		"ports",
-		"the ports the container is listening on",
+		"the ports the container is listening on, the first port in this list will be used by the entrypoint binary to direct traffic to your application",
 	)
 
 	doc.SetField(
