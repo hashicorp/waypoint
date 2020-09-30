@@ -1,0 +1,6 @@
+.homePage {
+  & .whyWaypointDiagram {
+    margin-top: 72px;
+    width: 100%;
+  }
+}
