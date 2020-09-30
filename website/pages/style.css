@@ -68,9 +68,6 @@
 :root {
   --waypoint: #14c6cb;
 }
-.g-docs-sidenav {
-  --highlight-color: var(--waypoint);
-}
 
 .g-subnav {
   & a.variant-primary {
@@ -84,10 +81,6 @@
       }
     }
   }
-}
-
-.g-content {
-  --highlight-color: var(--waypoint);
 }
 
 .g-vertical-text-block-list {
