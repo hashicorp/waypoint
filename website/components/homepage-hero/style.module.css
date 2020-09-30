@@ -1,5 +1,5 @@
 .root {
-  min-height: calc(100vh - 62px);
+  min-height: 650px;
   width: 100%;
   padding: 150px 0;
   background-repeat: no-repeat;
