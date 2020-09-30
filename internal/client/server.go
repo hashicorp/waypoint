@@ -10,6 +10,7 @@ import (
 	"github.com/boltdb/bolt"
 	"google.golang.org/grpc"
 
+	"github.com/hashicorp/waypoint/internal/protocolversion"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
@@ -127,6 +128,8 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 	conn, err := grpc.DialContext(ctx, ln.Addr().String(),
 		grpc.WithBlock(),
 		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
+		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(protocolversion.Current())),
 	)
 	if err != nil {
 		cancel()
