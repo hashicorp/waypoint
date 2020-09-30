@@ -1,14 +1,16 @@
 import styles from './StepsList.module.css'
+import Step from './step'
 
 export default function StepsList({ steps }) {
   return (
     <ul className={styles.stepsList}>
       {steps.map((step) => (
-        <li key={step.name}>
-          <h4>{step.name}</h4>
-          <div className={styles.description}>{step.description}</div>
-          <img src={step.logos} />
-        </li>
+        <Step
+          key={step.name}
+          name={step.name}
+          description={step.description}
+          logos={step.logos}
+        />
       ))}
     </ul>
   )
