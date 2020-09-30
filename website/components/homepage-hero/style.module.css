@@ -53,8 +53,8 @@
       margin: 8px;
 
       &:global(.variant-primary) {
-        border-color: var(--waypoint);
-        background-color: var(--waypoint);
+        border-color: var(--blue);
+        background-color: var(--blue);
       }
     }
   }
