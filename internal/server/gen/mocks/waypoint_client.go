@@ -738,8 +738,8 @@ func (_m *WaypointClient) GetServerConfig(ctx context.Context, in *emptypb.Empty
 	return r0, r1
 }
 
-// GetServerInfo provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) GetServerInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.GetServerInfoResponse, error) {
+// GetVersionInfo provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetVersionInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.GetVersionInfoResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -749,12 +749,12 @@ func (_m *WaypointClient) GetServerInfo(ctx context.Context, in *emptypb.Empty, 
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *gen.GetServerInfoResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.GetServerInfoResponse); ok {
+	var r0 *gen.GetVersionInfoResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.GetVersionInfoResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.GetServerInfoResponse)
+			r0 = ret.Get(0).(*gen.GetVersionInfoResponse)
 		}
 	}
 

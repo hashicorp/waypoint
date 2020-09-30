@@ -11,10 +11,10 @@ import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
-  // GetServerInfo returns information about the server. This RPC call does
+  // GetVersionInfo returns information about the server. This RPC call does
   // NOT require authentication. It can be used by clients to determine if they
   // are capable of talking to this server.
-  rpc GetServerInfo(google.protobuf.Empty) returns (GetServerInfoResponse);
+  rpc GetVersionInfo(google.protobuf.Empty) returns (GetVersionInfoResponse);
 
   // ListWorkspaces returns a list of all workspaces.
   //
@@ -221,11 +221,11 @@ service Waypoint {
 * Server Info
 ********************************************************************/
 
-message GetServerInfoResponse {
-  ServerInfo info = 1;
+message GetVersionInfoResponse {
+  VersionInfo info = 1;
 }
 
-message ServerInfo {
+message VersionInfo {
   ProtocolVersion api = 1;
   ProtocolVersion entrypoint = 2;
 
