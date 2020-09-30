@@ -25,18 +25,18 @@ const (
 	protocolVersionEntrypointMin            = 1
 )
 
-func (s *service) GetServerInfo(
+func (s *service) GetVersionInfo(
 	ctx context.Context,
 	req *empty.Empty,
-) (*pb.GetServerInfoResponse, error) {
-	return &pb.GetServerInfoResponse{
-		Info: &pb.ServerInfo{
-			Api: &pb.ServerInfo_ProtocolVersion{
+) (*pb.GetVersionInfoResponse, error) {
+	return &pb.GetVersionInfoResponse{
+		Info: &pb.VersionInfo{
+			Api: &pb.VersionInfo_ProtocolVersion{
 				Current: protocolVersionApiCurrent,
 				Minimum: protocolVersionApiMin,
 			},
 
-			Entrypoint: &pb.ServerInfo_ProtocolVersion{
+			Entrypoint: &pb.VersionInfo_ProtocolVersion{
 				Current: protocolVersionEntrypointCurrent,
 				Minimum: protocolVersionEntrypointMin,
 			},

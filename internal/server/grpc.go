@@ -3,6 +3,7 @@ package server
 import (
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -14,16 +15,27 @@ import (
 func grpcInit(group *run.Group, opts *options) error {
 	log := opts.Logger.Named("grpc")
 
-	var so []grpc.ServerOption
+	// Get our server info immediately
+	resp, err := opts.Service.GetVersionInfo(opts.Context, &empty.Empty{})
+	if err != nil {
+		return err
+	}
 
+	var so []grpc.ServerOption
 	so = append(so,
 		grpc.ChainUnaryInterceptor(
 			// Insert our logger and also log req/resp
 			logUnaryInterceptor(log, false),
+
+			// Protocol version negotiation
+			versionUnaryInterceptor(resp.Info),
 		),
 		grpc.ChainStreamInterceptor(
 			// Insert our logger and log
 			logStreamInterceptor(log, false),
+
+			// Protocol version negotiation
+			versionStreamInterceptor(resp.Info),
 		),
 	)
 
