@@ -10,14 +10,14 @@
 @import '~@hashicorp/nextjs-scripts/prism/style.css';
 
 /* Global Components */
-@import '~@hashicorp/react-button/dist/style.css';
+@import '~@hashicorp/react-button/styles/index.css';
 @import '~@hashicorp/react-consent-manager/dist/style.css';
 @import '~@hashicorp/react-toggle/dist/style.css';
 @import '~@hashicorp/react-section-header/dist/style.css';
 @import '~@hashicorp/react-product-downloader/dist/style.css';
 @import '~@hashicorp/react-vertical-text-block-list/dist/style.css';
-@import '~@hashicorp/react-docs-sidenav/dist/style.css';
-@import '~@hashicorp/react-content/dist/style.css';
+@import '~@hashicorp/react-docs-sidenav/style.css';
+@import '~@hashicorp/react-content/style.css';
 @import '~@hashicorp/react-subnav/dist/style.css';
 @import '~@hashicorp/react-tabs/dist/style.css';
 @import '~@hashicorp/react-enterprise-alert/dist/style.css';
@@ -62,39 +62,22 @@
 }
 
 /*
- * TODO, eventually remove:
- * Temporary Waypoint Branding
+ * TODO, this will be removed ~Oct 13.
+ *
+ * We have a PR ready to roll, which a simple version upgrade to the subnav
+ * will enable the colors & logos. We're holding off on releasing this work
+ * as it exposes the product name & logos to the world as it's a public NPM
+ * module.  This will be updated right before we go live.
  */
-:root {
-  --waypoint: #14c6cb;
-}
-.g-docs-sidenav {
-  --highlight-color: var(--waypoint);
-}
-
 .g-subnav {
   & a.variant-primary {
-    border-color: var(--waypoint);
-    background-color: var(--waypoint);
+    border-color: var(--blue);
+    background-color: var(--blue);
   }
   & .g-subnav-inner {
     & .style-menu-item {
       & .text::after {
-        background: var(--waypoint);
-      }
-    }
-  }
-}
-
-.g-content {
-  --highlight-color: var(--waypoint);
-}
-
-.g-vertical-text-block-list {
-  & .list {
-    & .body-text {
-      & a {
-        color: var(--waypoint) !important;
+        background: var(--blue);
       }
     }
   }
