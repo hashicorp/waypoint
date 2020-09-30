@@ -523,6 +523,29 @@ func (_m *WaypointServer) GetServerConfig(_a0 context.Context, _a1 *emptypb.Empt
 	return r0, r1
 }
 
+// GetServerInfo provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetServerInfo(_a0 context.Context, _a1 *emptypb.Empty) (*gen.GetServerInfoResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetServerInfoResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.GetServerInfoResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetServerInfoResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetWorkspace provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetWorkspace(_a0 context.Context, _a1 *gen.GetWorkspaceRequest) (*gen.GetWorkspaceResponse, error) {
 	ret := _m.Called(_a0, _a1)
