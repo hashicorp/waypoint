@@ -37,6 +37,7 @@ module.exports = function (defaults) {
     },
     svg: {
       paths: ['node_modules/@hashicorp/structure-icons/dist', 'public/images', 'public/images/icons'],
+      optimize: false,
     },
     autoImport: {
       // allows use of a CSP without 'unsafe-eval' directive

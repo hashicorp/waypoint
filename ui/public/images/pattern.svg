@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="278" height="82" viewBox="0 0 278 82">
+  <defs>
+    <linearGradient id="pattern-a" x1="-.263%" x2="100.263%" y1="50%" y2="50%">
+      <stop offset="0%" stop-color="#0D7C7F"/>
+      <stop offset="70%" stop-color="#14C6CB" stop-opacity=".8"/>
+    </linearGradient>
+    <linearGradient id="pattern-b" x1="41.164%" x2="56.435%" y1="53.968%" y2="42.234%">
+      <stop offset="14%" stop-color="#14C6CB" stop-opacity=".5"/>
+      <stop offset="57%" stop-color="#14C6CB" stop-opacity=".71"/>
+      <stop offset="80%" stop-color="#14C6CB" stop-opacity=".8"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd" stroke-linecap="round" transform="translate(1 1)">
+    <path stroke="url(#pattern-a)" d="M276.258182,0 L138.181818,79.7163636 M259.894545,0 L138.181818,70.2690909 M243.530909,0 L138.181818,60.8218182 M227.167273,0 L138.181818,51.3745455 M210.803636,0 L138.181818,41.9272727"/>
+    <line x1="138.182" x2=".105" y1="79.716" stroke="#14C6CB"/>
+    <line x1="138.182" x2="16.469" y1="70.269" stroke="#14C6CB"/>
+    <line x1="138.182" x2="32.833" y1="60.822" stroke="#14C6CB"/>
+    <line x1="138.182" x2="49.196" y1="51.375" stroke="#14C6CB"/>
+    <line x1="138.182" x2="65.56" y1="41.927" stroke="#14C6CB"/>
+    <path stroke="url(#pattern-b)" d="M146.847273,27.4509091 L138.665455,22.7236364 M155.029091,22.7236364 L138.665455,13.2690909 M163.210909,17.9963636 L138.665455,3.81454545 M171.392727,13.2690909 L148.392727,0 M179.574545,8.55272727 L164.756364,0 M187.756364,3.82909091 L181.123636,0 M138.665455,22.7272727 L130.487273,27.4545455 M138.665455,13.2727273 L122.301818,22.7272727 M138.665455,3.83636364 L114.123636,18.0181818 M128.938182,0 L105.941818,13.2763636 M112.574545,0 L97.76,8.55272727 M96.2109091,0 L89.5781818,3.82909091"/>
+  </g>
+</svg>
