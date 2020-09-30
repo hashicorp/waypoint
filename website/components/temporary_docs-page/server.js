@@ -36,7 +36,7 @@ export async function generateStaticProps(subpath, productName, params) {
   const allFrontMatter = await fastReadFrontMatter(docsPath)
 
   // render the current page path markdown
-  const { mdxSource, frontMatter } = await renderPageMdx(
+  const { mdxSource, frontMatter, filePath } = await renderPageMdx(
     docsPath,
     pagePath,
     generateComponents(productName)
@@ -50,6 +50,7 @@ export async function generateStaticProps(subpath, productName, params) {
       }),
       mdxSource,
       frontMatter,
+      filePath,
       pagePath: `/docs/${pagePath}`,
     },
   }
@@ -75,12 +76,14 @@ export async function renderPageMdx(root, pagePath, components) {
   // prefer leaf if both are present
   const leafPath = path.join(root, `${pagePath}.mdx`)
   const indexPath = path.join(root, `${pagePath}/index.mdx`)
-  let page
+  let page, filePath
 
   if (existsSync(leafPath)) {
     page = fs.readFileSync(leafPath, 'utf8')
+    filePath = leafPath
   } else if (existsSync(indexPath)) {
     page = fs.readFileSync(indexPath, 'utf8')
+    filePath = indexPath
   } else {
     // NOTE: if we decide to let docs pages render dynamically, we should replace this
     // error with a straight 404, at least in production.
@@ -97,7 +100,11 @@ export async function renderPageMdx(root, pagePath, components) {
     components,
   })
 
-  return { mdxSource, frontMatter }
+  return {
+    mdxSource,
+    frontMatter,
+    filePath: filePath.replace(`${root}/`, ''),
+  }
 }
 
 export function fastReadFrontMatter(p) {

@@ -20,7 +20,7 @@ export default function DocsPage({
   productSlug,
   subpath,
   order,
-  staticProps: { mdxSource, data, frontMatter, pagePath },
+  staticProps: { mdxSource, data, frontMatter, pagePath, filePath },
 }) {
   const content = hydrate(mdxSource, {
     components: generateComponents(productName),
@@ -43,7 +43,7 @@ export default function DocsPage({
           data: data,
           order,
         }}
-        resourceURL={`https://github.com/hashicorp/${productSlug}/blob/master/website/content/docs/${frontMatter.__resourcePath}`}
+        resourceURL={`https://github.com/hashicorp/${productSlug}/blob/master/website/content/docs/${filePath}`}
       >
         {content}
       </DocsPageComponent>
