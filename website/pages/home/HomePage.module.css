@@ -1,3 +1,6 @@
 .homePage {
-  /* TODO */
+  & .whyWaypointDiagram {
+    margin-top: 72px;
+    width: 100%;
+  }
 }

@@ -68,6 +68,10 @@ export default function HomePage() {
             },
           ]}
         />
+        <img
+          className={styles.whyWaypointDiagram}
+          src={require('./img/why-waypoint-diagram.svg')}
+        />
       </HomepageSection>
 
       <BrandedCta

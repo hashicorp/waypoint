@@ -9,11 +9,11 @@
     list-style: none;
     padding: 0;
     margin: calc(-1 * var(--gutter));
-    width: 100%;
     display: flex;
 
     @media (max-width: 900px) {
       flex-direction: column;
+      width: 100%;
       & li {
         width: 100%;
       }
