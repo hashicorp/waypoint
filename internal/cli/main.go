@@ -243,6 +243,12 @@ func Commands(
 			}, nil
 		},
 
+		"server": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["server"][0],
+				HelpText:     helpText["server"][1],
+			}, nil
+		},
 		"server run": func() (cli.Command, error) {
 			return &ServerRunCommand{
 				baseCommand: baseCommand,
@@ -634,6 +640,19 @@ Runner management.
 Runners are used to execute remote operations for Waypoint. If you're new
 to Waypoint, you generally *do not need* runners and you can ignore this
 entire section.
+`,
+	},
+
+	"server": {
+		"Server management",
+		`
+Server management.
+
+The CLI, UI, and entrypoints all communicate to a Waypoint server. A
+Waypoint server is required for logs, exec, config, and more to work.
+The recommended way to run a server is "waypoint install."
+
+This command contains further subcommands to work with servers.
 `,
 	},
 
