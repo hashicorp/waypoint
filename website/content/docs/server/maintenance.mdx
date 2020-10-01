@@ -1,0 +1,46 @@
+---
+layout: docs
+page_title: Server Maintenance
+sidebar_title: Maintenance
+description: |-
+  A Waypoint server needs to be maintained to ensure smooth operation and to protect against unexpected events such as server crashes. This page outlines various maintenance-related topics for smooth operation of a Waypoint server.
+---
+
+# Server Maintenance
+
+A Waypoint server needs to be maintained to ensure smooth operation and
+to protect against unexpected events such as server crashes. This page
+outlines various maintenance-related topics for smooth operation of a
+Waypoint server.
+
+## Logs
+
+Server logs are output to `stderr`.
+
+For `waypoint install`-based servers, logs are always very verbose (`-vvv`).
+For manually run servers, you can control log level using multiple `-v` flags
+or by setting `WAYPOINT_LOG_LEVEL` to one of "trace", "debug", "info", "warn",
+or "error".
+
+## Database
+
+The Waypoint server stores data into a single `data.db` file.
+
+### Path to Database
+
+For `waypoint install`-based servers:
+
+- **Docker** - `/data/data.db`
+- **Kubernetes** - `/data/data.db`
+- **Nomad** - `/alloc/data.db`
+
+For manually run servers, it is dependent on the value of the `-db` flag.
+
+### Backup / Restore
+
+Backup and restore currently require that the server is not running.
+
+While the server is offline, you can copy or replace the database file
+to perform a backup and restore.
+
+-> Online backup and restore will be supported in a future release.

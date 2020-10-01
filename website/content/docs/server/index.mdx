@@ -1,0 +1,77 @@
+---
+layout: docs
+page_title: Server
+sidebar_title: Server
+description: |-
+  TODO
+---
+
+# Waypoint Server
+
+Waypoint utilizes a server for storing operation history and coordinating
+with the [entrypoint](/docs/entrypoint) to enable functionality such as
+logs, exec, and more. The server is expected to be always-running and
+accessible by both your deployments as well as any users of Waypoint.
+
+-> **Note:** Only _one_ Waypoint server needs to be installed and run
+for any group of people using Waypoint together. If you are a day-to-day
+user of Waypoint with a group of people you may be able to skip this section.
+
+We've made it as easy as possible to install and run a Waypoint server
+using a single command: [`waypoint install`](/commands/install). This
+automatically installs and configures the UI and local CLI to access the
+server and lets you start working with Waypoint immediately.
+
+## Installation
+
+The recommended way to install the server is using the
+[`waypoint install`](/commands/install) command.
+This command will install a server into Docker, Kubernetes, or Nomad,
+bootstrap the server, and configure your local CLI to access that server.
+It is a single command to get up and running with Waypoint.
+
+You can also run and configure the server manually using the
+[`waypoint server run`](#TODO) command. This is meant for more advanced
+users who want to run Waypoint in a platform that the `install` command doesn't support
+or to fine-tune the configuration of the server.
+
+### Upgrading
+
+For details on upgrading the server, please see the
+[general Waypoint upgrade documentation](/docs/upgrading).
+
+## Security
+
+The Waypoint server must be secured accordingly. This section will outline
+the risks (and explicit non-risks) of a Waypoint server and mitigations the
+server may have towards these. This is not an explicit threat model; we plan on
+refining and publishing a threat model in the near future.
+
+The Waypoint server supports TLS for all inbound connections, and we recommend
+always using this. The Waypoint server also requires authentication for all
+connections, and multiple authentication tokens can be created and revoked.
+Authentication is not optional.
+
+The Waypoint server doesn't yet support fine-grained authorization. Anyone
+with an authentication token can access any part of the system. Note though
+that the Waypoint server _does not_ execute operations (as noted later). One
+exception to this is the [entrypoint](/docs/entrypoint), which uses a special
+authentication token that can only access entrypoint-related APIs.
+
+The state stored by Waypoint in-memory and on-disk is not encrypted. We
+cannot always detect tampering of the data. The state stored is primarily
+metadata that does not impact runtime behavior of Waypoint, with the exception
+of [application configuration](/docs/app-config).
+
+The Waypoint server _does not_ require access to credentials or platforms
+for builds, deploys, etc. The Waypoint server _does not_ run these operations.
+These operations are coordinated with the server but executed locally in
+the CLI. The server does store metadata about operations such as time of
+execution, logs, etc.
+
+The Waypoint server maintains long-running inbound connections from
+any [entrypoints](/docs/entrypoint). These can be used to trigger an
+[exec session](/docs/exec) if exec is enabled.
+
+The Waypoint server stores any static [application configuration](/docs/app-config).
+This may contain secrets.

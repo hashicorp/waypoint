@@ -88,9 +88,18 @@ export default [
     content: ['disable'],
   },
   {
+    category: 'server',
+    content: ['maintenance'],
+  },
+  {
     category: 'automating-execution',
     content: ['github-actions', 'circle-ci'],
   },
   'troubleshooting',
   'glossary',
+  '-----------',
+  {
+    category: 'internals',
+    content: ['architecture'],
+  },
 ]

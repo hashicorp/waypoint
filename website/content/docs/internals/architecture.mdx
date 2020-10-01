@@ -1,0 +1,23 @@
+---
+layout: docs
+page_title: Architecture
+sidebar_title: Architecture
+description: |-
+  Waypoint has many different components that interact with each other. This page documents all of these components: what they do, how they work with each other, when they're required, etc.
+---
+
+# Waypoint Architecture
+
+Waypoint has many different components that interact with each other.
+This page documents all of these components: what they do, how they
+work with each other, when they're required, etc.
+
+## High-Level Overview
+
+The diagram below shows a typical single-platform deployment of Waypoint.
+
+![Architecture Overview](/img/architecture.png)
+
+-> Note: some of the components are optional by sacrificing functionality.
+It is possible to operate Waypoint without entrypoints, but you'll lose
+all [entrypoint-required functionality](/docs/entrypoint#functionality).
