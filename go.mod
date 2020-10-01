@@ -56,7 +56,7 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
-	github.com/lab47/vterm v0.0.0-20200929232620-91ef4fcb0027
+	github.com/lab47/vterm v0.0.0-20201001232628-a9dd795f94c2
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.7
 	github.com/mattn/go-isatty v0.0.12
