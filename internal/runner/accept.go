@@ -211,6 +211,8 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		if ui, ok := ui.(*runnerUI); ok {
 			ui.Close()
 		}
+
+		log.Debug("job finished", "error", err)
 	}
 
 	// Check if we were force canceled. If so, then just exit now. Realistically
@@ -234,6 +236,11 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	sendMutex.Lock()
 	defer sendMutex.Unlock()
 
+	if err == nil && ctx.Err() != nil {
+		log.Debug("no job error, but detected context error, so using that")
+		err = ctx.Err()
+	}
+
 	// Handle job execution errors
 	if err != nil {
 		st, _ := status.FromError(err)
@@ -252,6 +259,8 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		return nil
 	}
 
+	log.Debug("sending job completion")
+
 	// Complete the job
 	if err := client.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Complete_{
@@ -260,6 +269,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			},
 		},
 	}); err != nil {
+		log.Error("error sending job complete message", "error", err)
 		return err
 	}
 
