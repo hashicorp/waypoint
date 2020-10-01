@@ -211,7 +211,6 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		if ui, ok := ui.(*runnerUI); ok {
 			ui.Close()
 		}
-
 		log.Debug("job finished", "error", err)
 	}
 
@@ -236,11 +235,6 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	sendMutex.Lock()
 	defer sendMutex.Unlock()
 
-	if err == nil && ctx.Err() != nil {
-		log.Debug("no job error, but detected context error, so using that")
-		err = ctx.Err()
-	}
-
 	// Handle job execution errors
 	if err != nil {
 		st, _ := status.FromError(err)
@@ -259,9 +253,8 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		return nil
 	}
 
-	log.Debug("sending job completion")
-
 	// Complete the job
+	log.Debug("sending job completion")
 	if err := client.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Complete_{
 			Complete: &pb.RunnerJobStreamRequest_Complete{
