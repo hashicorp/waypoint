@@ -2,21 +2,24 @@
   display: flex;
 
   & .indicatorWrapper {
-    margin-right: 115px;
-
     & > ul {
       position: sticky;
       top: 200px;
-      padding-bottom: 292px;
+      padding-bottom: 395px;
     }
   }
 
+  & .stepsList {
+    margin-left: 115px;
+    margin-bottom: 46px;
+  }
+
   & .terminalWrapper {
-    & .testingTerminal {
-      box-shadow: rgb(0 0 0 / 0.35) 7px 10px 25px;
+    margin-left: 150px;
+    & > * {
       position: sticky;
       top: 140px;
-      margin-left: 150px;
+      box-shadow: rgb(0 0 0 / 0.35) 7px 10px 25px;
       margin-top: -800px;
     }
   }

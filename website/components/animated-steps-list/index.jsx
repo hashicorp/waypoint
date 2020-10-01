@@ -11,14 +11,17 @@ export default function AnimatedStepsList({ steps }) {
       <div className={styles.indicatorWrapper}>
         <StepsIndicator steps={steps} activeIndex={indicatorIndex} />
       </div>
+
       <StepsList
+        className={styles.stepsList}
         steps={steps}
         onFocusedIndexChanged={(newStep) => {
           setIndicatorIndex(newStep)
         }}
       />
+
       <div className={styles.terminalWrapper}>
-        <Terminal className={styles.testingTerminal} code="$ waypoint up |" />
+        <Terminal code="$ waypoint up |" />
       </div>
     </div>
   )
