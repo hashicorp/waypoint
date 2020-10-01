@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/waypoint/sdk/terminal"
 )
 
-type ServerCommand struct {
+type ServerRunCommand struct {
 	*baseCommand
 
 	config          config.ServerConfig
@@ -44,7 +44,7 @@ type ServerCommand struct {
 	flagAdvertiseTLSSkipVerify bool
 }
 
-func (c *ServerCommand) Run(args []string) int {
+func (c *ServerRunCommand) Run(args []string) int {
 	defer c.Close()
 	log := c.Log.Named("server")
 
@@ -234,7 +234,7 @@ func (c *ServerCommand) Run(args []string) int {
 	return 0
 }
 
-func (c *ServerCommand) Flags() *flag.Sets {
+func (c *ServerRunCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		if c.config.URL == nil {
 			c.config.URL = &config.URL{}
@@ -349,28 +349,32 @@ func (c *ServerCommand) Flags() *flag.Sets {
 	})
 }
 
-func (c *ServerCommand) AutocompleteArgs() complete.Predictor {
+func (c *ServerRunCommand) AutocompleteArgs() complete.Predictor {
 	return complete.PredictNothing
 }
 
-func (c *ServerCommand) AutocompleteFlags() complete.Flags {
+func (c *ServerRunCommand) AutocompleteFlags() complete.Flags {
 	return c.Flags().Completions()
 }
 
-func (c *ServerCommand) Synopsis() string {
+func (c *ServerRunCommand) Synopsis() string {
 	return "Run the builtin server"
 }
 
-func (c *ServerCommand) Help() string {
+func (c *ServerRunCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint server [options]
+Usage: waypoint server run [options]
 
   Run the builtin server.
+
+  The easier way to run a server is to use the "waypoint install" command.
+  This command is for people who are manually running the server in any
+  environment.
 
 ` + c.Flags().Help())
 }
 
-func (c *ServerCommand) listenerForConfig(log hclog.Logger, cfg *config.Listener) (net.Listener, error) {
+func (c *ServerRunCommand) listenerForConfig(log hclog.Logger, cfg *config.Listener) (net.Listener, error) {
 	// Start our bare listener
 	log.Debug("starting listener", "addr", cfg.Addr)
 	ln, err := net.Listen("tcp", cfg.Addr)

@@ -243,8 +243,8 @@ func Commands(
 			}, nil
 		},
 
-		"server": func() (cli.Command, error) {
-			return &ServerCommand{
+		"server run": func() (cli.Command, error) {
+			return &ServerRunCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
