@@ -38,6 +38,12 @@ The primary components of Waypoint are:
   service, and more. It creates an outbound connection to the server to
   enable this functionality.
 
+- **Runner** - A Waypoint runner executes operations such as build,
+  deploy, etc. Most commonly, the
+  [CLI acts as a runner](/docs/internals/execution#most-common-cli-and-a-remote-server),
+  but it is possible to run dedicated runners. This isn't shown in the diagram
+  above.
+
 ## Failure Behavior
 
 The components of Waypoint are designed to be resilient to failures
@@ -69,6 +75,16 @@ The entrypoint is designed to not affect the child process during failures.
 Any failures in the entrypoint will be logged but will not cause the
 entrypoint to exit. Errors such as failure to connect to a Waypoint server
 will retry in the background.
+
+### Runner
+
+If a dedicated runner is down, then the capacity of the server to execute
+remote operations will be diminished. If no runners exist, jobs will queue.
+Operations include build, deploy, release, etc.
+
+This is only an issue if _remote runners_ are being used. In the most common
+case, the [CLI acts as a runner](/docs/internals/execution#most-common-cli-and-a-remote-server)
+and this is not a possible failure mode.
 
 ### CLI
 
