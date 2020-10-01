@@ -1,7 +1,7 @@
 import styles from './AnimatedStepsList.module.css'
 import StepsList from './steps-list'
 import StepsIndicator from './steps-indicator'
-import Terminal from 'components/terminal'
+import Terminal from 'components/simple-animated-terminal'
 import { useState } from 'react'
 
 export default function AnimatedStepsList({ steps }) {
@@ -45,9 +45,7 @@ export default function AnimatedStepsList({ steps }) {
               color: 'white',
               code: '⠴ Building image',
             },
-            {
-              code: '',
-            },
+            { code: '' },
             {
               color: 'gray',
               code: 'Generated new Docker image: example-ruby:latest',
@@ -62,6 +60,16 @@ export default function AnimatedStepsList({ steps }) {
               code:
                 'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
             },
+            { code: '' },
+            { code: '' },
+            { code: '' },
+            { code: '' },
+            { code: '' },
+            { code: '' },
+            { code: '' },
+            { code: '' },
+            { code: '' },
+            { code: '' },
           ]}
         />
       </div>
