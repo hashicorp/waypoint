@@ -34,6 +34,7 @@ func TestRun_reconnect(t *testing.T) {
 	defer cancel()
 
 	m := &pbmocks.WaypointServer{}
+	m.On("GetVersionInfo", mock.Anything, mock.Anything).Return(testVersionInfoResponse(), nil)
 	m.On("GetWorkspace", mock.Anything, mock.Anything).Return(&pb.GetWorkspaceResponse{}, nil)
 
 	// Create the server

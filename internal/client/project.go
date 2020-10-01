@@ -65,6 +65,11 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 		client.client = pb.NewWaypointClient(conn)
 	}
 
+	// Negotiate the version
+	if err := client.negotiateApiVersion(ctx); err != nil {
+		return nil, err
+	}
+
 	// Default workspace if not specified
 	if client.workspace == nil {
 		client.workspace = &pb.Ref_Workspace{Workspace: "default"}

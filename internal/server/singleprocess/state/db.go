@@ -1,6 +1,9 @@
 package state
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc/codes"
@@ -14,6 +17,18 @@ var (
 	// sysVersionKey stores the version of the data that is stored.
 	// This is used for data migration.
 	sysVersionKey = []byte("version")
+)
+
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//
+// DB Version
+//
+// THIS SHOULD BE CHANGED WITH EXTREME CAUTION. Changing this will force users
+// to perform a db upgrade when they upgrade their Waypoint version.
+//
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const (
+	dbVersion int64 = 1
 )
 
 func init() {
@@ -33,14 +48,35 @@ func dbInit(db *bolt.DB) error {
 		}
 
 		// Check our data version
-		// TODO(mitchellh): make this work
 		sys := tx.Bucket(sysBucket)
 		vsnRaw := sys.Get(sysVersionKey)
-		if len(vsnRaw) > 0 {
-			return status.Errorf(
-				codes.FailedPrecondition,
-				"system version is set, shouldn't be yet",
-			)
+
+		// Initialize the version with our current version if it isn't set.
+		if len(vsnRaw) == 0 {
+			if err := sys.Put(sysVersionKey, []byte(strconv.FormatInt(dbVersion, 10))); err != nil {
+				return status.Errorf(codes.Internal,
+					"failed to write initial database version: %s", err)
+			}
+		} else {
+			vsn, err := strconv.ParseInt(string(vsnRaw), 10, 64)
+			if err != nil {
+				return status.Errorf(codes.Internal,
+					"failed to read database version: %s", err)
+			}
+
+			if vsn != dbVersion {
+				return status.Errorf(codes.FailedPrecondition, strings.TrimSpace(`
+The database version on disk does not match the server version.
+
+The server cannot safely read this data. Please upgrade or downgrade your server
+to a version that is capable of reading this data version. You can find this
+information on the Waypoint website.
+
+On-disk data version: %d
+ Server data version: %d
+
+`), vsn, dbVersion)
+			}
 		}
 
 		return nil

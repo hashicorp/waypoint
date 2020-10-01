@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
+	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -73,10 +74,15 @@ func TestServer(t testing.T, impl pb.WaypointServer, opts ...TestOption) pb.Wayp
 		}()
 	}
 
+	// Get our version info we'll set on the client
+	vsnInfo := testVersionInfoResponse().Info
+
 	// Connect, this should retry in the case Run is not going yet
 	conn, err := grpc.DialContext(context.Background(), ln.Addr().String(),
 		grpc.WithBlock(),
 		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(vsnInfo)),
+		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(vsnInfo)),
 	)
 	require.NoError(err)
 	t.Cleanup(func() { conn.Close() })
@@ -107,5 +113,21 @@ func TestWithContext(ctx context.Context) TestOption {
 func TestWithRestart(ch <-chan struct{}) TestOption {
 	return func(c *testConfig) {
 		c.restartCh = ch
+	}
+}
+
+func testVersionInfoResponse() *pb.GetVersionInfoResponse {
+	return &pb.GetVersionInfoResponse{
+		Info: &pb.VersionInfo{
+			Api: &pb.VersionInfo_ProtocolVersion{
+				Current: 10,
+				Minimum: 1,
+			},
+
+			Entrypoint: &pb.VersionInfo_ProtocolVersion{
+				Current: 10,
+				Minimum: 1,
+			},
+		},
 	}
 }

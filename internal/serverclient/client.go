@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/protocolversion"
 )
 
 // ConnectOption is used to configure how Waypoint server connection
@@ -45,6 +46,8 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 	grpcOpts := []grpc.DialOption{
 		grpc.WithBlock(),
 		grpc.WithTimeout(cfg.Timeout),
+		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
+		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(protocolversion.Current())),
 	}
 	if !cfg.Tls {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())

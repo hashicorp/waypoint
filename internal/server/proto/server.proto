@@ -11,6 +11,11 @@ import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
+  // GetVersionInfo returns information about the server. This RPC call does
+  // NOT require authentication. It can be used by clients to determine if they
+  // are capable of talking to this server.
+  rpc GetVersionInfo(google.protobuf.Empty) returns (GetVersionInfoResponse);
+
   // ListWorkspaces returns a list of all workspaces.
   //
   // Note that currently this list is never pruned, even if a workspace is
@@ -211,6 +216,32 @@ service Waypoint {
   // UpsertRelease updates or inserts a release.
   rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
 }
+
+/********************************************************************
+* Server Info
+********************************************************************/
+
+message GetVersionInfoResponse {
+  VersionInfo info = 1;
+}
+
+message VersionInfo {
+  ProtocolVersion api = 1;
+  ProtocolVersion entrypoint = 2;
+
+  // Full version string (semver-syntax). This may be hidden/blank for
+  // security purposes so clients should gracefully handle blank values.
+  string version = 3;
+
+  message ProtocolVersion {
+    uint32 current = 1;
+    uint32 minimum = 2;
+  }
+}
+
+/********************************************************************
+* Basic Data Model
+********************************************************************/
 
 message Application {
   Ref.Project project = 2;
