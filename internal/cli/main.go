@@ -249,6 +249,11 @@ func Commands(
 				HelpText:     helpText["server"][1],
 			}, nil
 		},
+		"server bootstrap": func() (cli.Command, error) {
+			return &ServerBootstrapCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"server run": func() (cli.Command, error) {
 			return &ServerRunCommand{
 				baseCommand: baseCommand,
