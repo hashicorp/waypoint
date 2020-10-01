@@ -20,6 +20,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -52,7 +53,7 @@ func (c *InstallCommand) InstallKubernetes(
 		data, err := ioutil.ReadFile(c.secretFile)
 		if err != nil {
 			c.ui.Output(
-				"Error reading Kubernetes secret file: %s", err.Error(),
+				"Error reading Kubernetes secret file: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
 			return nil, nil, "", 1
@@ -67,7 +68,7 @@ func (c *InstallCommand) InstallKubernetes(
 		err = yaml.Unmarshal(data, &secretData)
 		if err != nil {
 			c.ui.Output(
-				"Error reading Kubernetes secret file: %s", err.Error(),
+				"Error reading Kubernetes secret file: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
 			return nil, nil, "", 1
@@ -93,7 +94,7 @@ func (c *InstallCommand) InstallKubernetes(
 		err = cmd.Run()
 		if err != nil {
 			c.ui.Output(
-				"Error executing kubectl to install secret: %s", err.Error(),
+				"Error executing kubectl to install secret: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
 
@@ -105,7 +106,7 @@ func (c *InstallCommand) InstallKubernetes(
 	output, err := serverinstall.Render(&c.config)
 	if err != nil {
 		c.ui.Output(
-			"Error generating configuration: %s", err.Error(),
+			"Error generating configuration: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return nil, nil, "", 1
@@ -128,7 +129,7 @@ func (c *InstallCommand) InstallKubernetes(
 	err = cmd.Run()
 	if err != nil {
 		c.ui.Output(
-			"Error executing kubectl: %s", err.Error(),
+			"Error executing kubectl: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 
@@ -145,7 +146,7 @@ func (c *InstallCommand) InstallKubernetes(
 	clientconfig, err := config.ClientConfig()
 	if err != nil {
 		c.ui.Output(
-			"Error initializing kubernetes client: %s", err.Error(),
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return nil, nil, "", 1
@@ -154,7 +155,7 @@ func (c *InstallCommand) InstallKubernetes(
 	clientset, err := kubernetes.NewForConfig(clientconfig)
 	if err != nil {
 		c.ui.Output(
-			"Error initializing kubernetes client: %s", err.Error(),
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return nil, nil, "", 1
@@ -250,7 +251,7 @@ func (c *InstallCommand) InstallKubernetes(
 	if err != nil {
 		c.ui.Output(
 			"Error waiting for service ready: %s\n\n%s",
-			err.Error(),
+			clierrors.Humanize(err),
 			errInstallRunning,
 			terminal.WithErrorStyle(),
 		)
@@ -291,7 +292,7 @@ func (c *InstallCommand) Run(args []string) int {
 		contextConfig, advertiseAddr, httpAddr, err = serverinstall.InstallDocker(ctx, c.ui, st, &c.config)
 		if err != nil {
 			c.ui.Output(
-				"Error installing server into docker: %s", err.Error(),
+				"Error installing server into docker: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
 
@@ -309,7 +310,7 @@ func (c *InstallCommand) Run(args []string) int {
 		contextConfig, advertiseAddr, httpAddr, err = serverinstall.InstallNomad(ctx, c.ui, st, &c.config)
 		if err != nil {
 			c.ui.Output(
-				"Error installing server into Nomad: %s", err.Error(),
+				"Error installing server into Nomad: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
 
@@ -334,7 +335,7 @@ func (c *InstallCommand) Run(args []string) int {
 	if err != nil {
 		c.ui.Output(
 			"Error connecting to server: %s\n\n%s",
-			err.Error(),
+			clierrors.Humanize(err),
 			errInstallRunning,
 			terminal.WithErrorStyle(),
 		)
@@ -349,7 +350,7 @@ func (c *InstallCommand) Run(args []string) int {
 	if err != nil {
 		c.ui.Output(
 			"Error getting the initial token: %s\n\n%s",
-			err.Error(),
+			clierrors.Humanize(err),
 			errInstallRunning,
 			terminal.WithErrorStyle(),
 		)
@@ -369,7 +370,7 @@ func (c *InstallCommand) Run(args []string) int {
 		if err := c.contextStorage.Set(c.contextName, contextConfig); err != nil {
 			c.ui.Output(
 				"Error setting the CLI context: %s\n\n%s",
-				err.Error(),
+				clierrors.Humanize(err),
 				errInstallRunning,
 				terminal.WithErrorStyle(),
 			)
@@ -379,7 +380,7 @@ func (c *InstallCommand) Run(args []string) int {
 			if err := c.contextStorage.SetDefault(c.contextName); err != nil {
 				c.ui.Output(
 					"Error setting the CLI context: %s\n\n%s",
-					err.Error(),
+					clierrors.Humanize(err),
 					errInstallRunning,
 					terminal.WithErrorStyle(),
 				)
@@ -401,7 +402,7 @@ func (c *InstallCommand) Run(args []string) int {
 	if err != nil {
 		c.ui.Output(
 			"Error setting the advertise address: %s\n\n%s",
-			err.Error(),
+			clierrors.Humanize(err),
 			errInstallRunning,
 			terminal.WithErrorStyle(),
 		)
@@ -519,12 +520,13 @@ func (c *InstallCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *InstallCommand) Synopsis() string {
-	return "Output Kubernetes configurations to run a self-hosted server"
+	return "Install the Waypoint server to Kubernetes, Nomad, or Docker"
 }
 
 func (c *InstallCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint install [options]
+Usage: waypoint server install [options]
+Alias: waypoint install
 
   Installs a Waypoint server to an existing Kubernetes cluster.
 

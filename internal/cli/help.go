@@ -66,6 +66,33 @@ func formatHelp(v string) string {
 			continue
 		}
 
+		// If we have a command in the line, then highlight that.
+		if matches := reCommand.FindAllStringIndex(line, -1); len(matches) > 0 {
+			var cs []glint.Component
+			idx := 0
+			for _, match := range matches {
+				start := match[0] + 1
+				end := match[1] - 1
+
+				cs = append(
+					cs,
+					glint.Text(line[idx:start]),
+					glint.Style(
+						glint.Text(line[start:end]),
+						glint.Color("lightMagenta"),
+					),
+				)
+
+				idx = end
+			}
+
+			// Add the rest of the text
+			cs = append(cs, glint.Text(line[idx:]))
+
+			d.Append(glint.Layout(cs...).Row())
+			continue
+		}
+
 		// Normal line
 		d.Append(glint.Text(line))
 	}
@@ -92,14 +119,17 @@ func (c *helpCommand) Help() string {
 		return c.SynopsisText
 	}
 
-	return c.HelpText
+	return formatHelp(c.HelpText)
 }
 
 func (c *helpCommand) HelpTemplate() string {
 	return formatHelp(helpTemplate)
 }
 
-var reHelpHeader = regexp.MustCompile(`^[a-zA-Z0-9_-].*:$`)
+var (
+	reHelpHeader = regexp.MustCompile(`^[a-zA-Z0-9_-].*:$`)
+	reCommand    = regexp.MustCompile(`"waypoint \w+"`)
+)
 
 const helpTemplate = `
 Usage: {{.Name}} {{.SubcommandName}} SUBCOMMAND

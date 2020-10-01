@@ -49,6 +49,7 @@ spec:
         - "waypoint"
         args:
         - server
+        - run
         - -vvv
         - -db=/data/data.db
         - -listen-grpc=0.0.0.0:9701

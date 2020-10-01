@@ -583,7 +583,7 @@ func (c *InitCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *InitCommand) Synopsis() string {
-	return "Initialize and validate a project."
+	return "Initialize and validate a project"
 }
 
 func (c *InitCommand) Help() string {
