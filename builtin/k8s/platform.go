@@ -371,6 +371,9 @@ func (p *Platform) Deploy(
 		return false, nil
 	})
 	if err != nil {
+		if err == wait.ErrWaitTimeout {
+			err = fmt.Errorf("Deployment was not able to start pods after %s", timeout)
+		}
 		return nil, err
 	}
 
