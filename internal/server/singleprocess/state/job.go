@@ -594,6 +594,15 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 		}
 	}
 
+	s.log.Debug("changing job state for cancel", "old-state", oldState.String(), "new-state", job.State.String(), "job", job.Id, "force", force)
+
+	if force && job.State == pb.Job_ERROR {
+		// Update our assigned state to unblock future jobs
+		if err := s.jobAssignedSet(txn, job, false); err != nil {
+			return err
+		}
+	}
+
 	// Persist the on-disk data
 	_, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
 		var err error
