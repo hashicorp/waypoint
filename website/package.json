@@ -25,6 +25,7 @@
     "next-mdx-remote": "^1.0.0",
     "react": "16.13.1",
     "react-dom": "16.13.1",
+    "react-intersection-observer": "^8.29.0",
     "readdirp": "3.4.0"
   },
   "devDependencies": {
