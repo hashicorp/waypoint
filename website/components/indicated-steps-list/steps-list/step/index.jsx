@@ -6,6 +6,7 @@ export default function Step({
   name,
   description,
   logos,
+  logosAlt,
   onInViewStatusChanged,
 }) {
   const [ref, inView] = useInView({ threshold: 0.4 })
@@ -18,7 +19,7 @@ export default function Step({
     <li className={styles.step} ref={ref}>
       <h4>{name}</h4>
       <div className={styles.description}>{description}</div>
-      <img src={logos} />
+      <img src={logos} alt={logosAlt} />
     </li>
   )
 }

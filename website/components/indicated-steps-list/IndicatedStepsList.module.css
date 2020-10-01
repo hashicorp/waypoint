@@ -1,0 +1,28 @@
+.indicatedStepsList {
+  display: flex;
+
+  & .indicatorWrapper {
+    margin-right: 115px;
+
+    & .indicator {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      position: sticky;
+      top: calc(50vh - 174px);
+      padding-bottom: 292px;
+
+      & li {
+        font-size: 17px;
+        line-height: 28px;
+        color: var(--gray-4);
+        margin-bottom: 16px;
+
+        &.active {
+          font-weight: 600;
+          color: var(--gray-1);
+        }
+      }
+    }
+  }
+}
