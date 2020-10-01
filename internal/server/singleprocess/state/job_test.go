@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
@@ -789,6 +790,51 @@ func TestJobCancel(t *testing.T) {
 		require.NoError(err)
 		require.Equal(pb.Job_ERROR, job.Job.State)
 		require.NotEmpty(job.CancelTime)
+	})
+
+	t.Run("assigned with force clears assignedSet", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "A",
+			Operation: &pb.Job_Deploy{},
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+		require.Equal(pb.Job_WAITING, job.State)
+
+		// Cancel it
+		require.NoError(s.JobCancel("A", true))
+
+		// Verify it is canceled
+		job, err = s.JobById("A", nil)
+		require.NoError(err)
+		require.Equal(pb.Job_ERROR, job.Job.State)
+		require.NotEmpty(job.CancelTime)
+
+		// Create a another job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:        "B",
+			Operation: &pb.Job_Deploy{},
+		})))
+
+		ws := memdb.NewWatchSet()
+
+		// Read it back to check the blocked status
+		job2, err := s.JobById("B", ws)
+		require.NoError(err)
+		require.NotNil(job2)
+		require.Equal("B", job2.Id)
+		require.Equal(pb.Job_QUEUED, job2.State)
+		require.False(job2.Blocked)
 	})
 
 	t.Run("completed", func(t *testing.T) {

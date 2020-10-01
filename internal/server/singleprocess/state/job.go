@@ -368,6 +368,7 @@ RETRY_ASSIGN:
 
 		// Create our timer to requeue this if it isn't acked
 		job.StateTimer = time.AfterFunc(jobWaitingTimeout, func() {
+			s.log.Info("job ack timer expired", "job", job.Id, "timeout", jobWaitingTimeout)
 			s.JobAck(job.Id, false)
 		})
 
@@ -450,9 +451,15 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 	// Create a new timer that we'll use for our heartbeat. After this
 	// timer expires, the job will immediately move to an error state.
 	job.StateTimer = time.AfterFunc(jobHeartbeatTimeout, func() {
+		s.log.Info("canceling job due to heartbeat timeout", "job", job.Id)
 		// Force cancel
-		s.JobCancel(job.Id, true)
+		err := s.JobCancel(job.Id, true)
+		if err != nil {
+			s.log.Error("error canceling job due to heartbeat failure", "error", err, "job", job.Id)
+		}
 	})
+
+	s.log.Debug("heartbeat timer set", "job", job.Id, "timeout", jobHeartbeatTimeout)
 
 	// Insert to update
 	if err := txn.Insert(jobTableName, job); err != nil {
@@ -562,9 +569,12 @@ func (s *State) JobCancel(id string, force bool) error {
 }
 
 func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
+	oldState := job.State
+
 	// How we handle cancel depends on the state
 	switch job.State {
 	case pb.Job_ERROR, pb.Job_SUCCESS:
+		s.log.Debug("attempted to cancel completed job", "state", job.State.String(), "job", job.Id)
 		// Jobs that are already completed do nothing for cancellation.
 		// We do not mark that they were requested as cancelled since they
 		// completed fine.
@@ -581,6 +591,15 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 		if force {
 			job.State = pb.Job_ERROR
 			job.End()
+		}
+	}
+
+	s.log.Debug("changing job state for cancel", "old-state", oldState.String(), "new-state", job.State.String(), "job", job.Id, "force", force)
+
+	if force && job.State == pb.Job_ERROR {
+		// Update our assigned state to unblock future jobs
+		if err := s.jobAssignedSet(txn, job, false); err != nil {
+			return err
 		}
 	}
 
@@ -608,6 +627,9 @@ func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
 	}
 
 	// Store the inmem data
+	// This will be seen by a currently running RunnerJobStream goroutine, which
+	// will then see that the job has been canceled and send the request to cancel
+	// down to the runner.
 	if err := txn.Insert(jobTableName, job); err != nil {
 		return err
 	}
@@ -650,6 +672,7 @@ func (s *State) jobHeartbeat(txn *memdb.Txn, id string) error {
 	// It is up to other parts of the job system to ensure a running
 	// job has a heartbeat timer.
 	if job.StateTimer == nil {
+		s.log.Info("job with no start timer detected", "job", id)
 		return nil
 	}
 
