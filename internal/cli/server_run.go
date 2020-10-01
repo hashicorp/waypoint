@@ -34,10 +34,9 @@ import (
 type ServerRunCommand struct {
 	*baseCommand
 
-	config          config.ServerConfig
-	flagDisableAuth bool
-	flagDisableUI   bool
-	flagURLInmem    bool
+	config        config.ServerConfig
+	flagDisableUI bool
+	flagURLInmem  bool
 
 	flagAdvertiseAddr          string
 	flagAdvertiseTLSEnabled    bool
@@ -161,7 +160,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		server.WithImpl(impl),
 	}
 	auth := false
-	if ac, ok := impl.(server.AuthChecker); ok && !c.flagDisableAuth {
+	if ac, ok := impl.(server.AuthChecker); ok {
 		options = append(options, server.WithAuthentication(ac))
 		auth = true
 	}
@@ -260,13 +259,6 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Target:  &c.config.HTTP.Addr,
 			Usage:   "Address to bind to for HTTP connections. Required for the UI.",
 			Default: "127.0.0.1:1235", // TODO(mitchellh: change default
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:    "disable-auth",
-			Target:  &c.flagDisableAuth,
-			Usage:   "Disable auth requirements",
-			Default: false,
 		})
 
 		f.BoolVar(&flag.BoolVar{
