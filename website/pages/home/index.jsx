@@ -1,6 +1,6 @@
 import styles from './HomePage.module.css'
 import InfoGrid from 'components/info-grid'
-import StepsList from 'components/steps-list'
+import IndicatedStepsList from 'components/indicated-steps-list'
 import HomepageSection from 'components/homepage-section'
 import HomepageHero from 'components/homepage-hero'
 import BrandedCta from 'components/branded-cta'
@@ -22,7 +22,7 @@ export default function HomePage() {
       />
 
       <HomepageSection theme="light">
-        <StepsList
+        <IndicatedStepsList
           steps={[
             {
               name: 'Build',
@@ -112,6 +112,7 @@ export default function HomePage() {
         <img
           className={styles.whyWaypointDiagram}
           src={require('./img/why-waypoint-diagram.svg')}
+          alt="Waypoint Diagram"
         />
       </HomepageSection>
 
