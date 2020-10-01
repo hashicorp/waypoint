@@ -211,6 +211,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		if ui, ok := ui.(*runnerUI); ok {
 			ui.Close()
 		}
+		log.Debug("job finished", "error", err)
 	}
 
 	// Check if we were force canceled. If so, then just exit now. Realistically
@@ -253,6 +254,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	}
 
 	// Complete the job
+	log.Debug("sending job completion")
 	if err := client.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Complete_{
 			Complete: &pb.RunnerJobStreamRequest_Complete{
@@ -260,6 +262,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			},
 		},
 	}); err != nil {
+		log.Error("error sending job complete message", "error", err)
 		return err
 	}
 

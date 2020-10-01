@@ -72,10 +72,22 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 		// the job is complete.
 		defer r.Close()
 
+		var jobCh chan struct{}
+
+		defer func() {
+			if jobCh != nil {
+				log.Info("waiting for accept to finish")
+				<-jobCh
+				log.Debug("finished waiting for job accept")
+			}
+		}()
+
 		// Set our callback up so that we will accept a job once it is queued
 		// so that we can accept exactly this job.
 		cb = func(id string) {
+			jobCh = make(chan struct{})
 			go func() {
+				defer close(jobCh)
 				if err := r.AcceptExact(ctx, id); err != nil {
 					log.Error("runner job accept error", "err", err)
 				}
