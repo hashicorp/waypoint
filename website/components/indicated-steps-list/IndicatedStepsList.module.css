@@ -6,8 +6,18 @@
 
     & > ul {
       position: sticky;
-      top: calc(50vh - 174px);
+      top: 200px;
       padding-bottom: 292px;
+    }
+  }
+
+  & .terminalWrapper {
+    & .testingTerminal {
+      box-shadow: rgb(0 0 0 / 0.35) 7px 10px 25px;
+      position: sticky;
+      top: 140px;
+      margin-left: 150px;
+      margin-top: -800px;
     }
   }
 }
