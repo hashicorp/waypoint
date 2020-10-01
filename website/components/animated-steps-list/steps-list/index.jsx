@@ -1,14 +1,15 @@
 import styles from './StepsList.module.css'
+import classNames from 'classnames'
 import Step from './step'
 import { useState } from 'react'
 
-export default function StepsList({ steps, onFocusedIndexChanged }) {
+export default function StepsList({ steps, className, onFocusedIndexChanged }) {
   const [viewportStatus, setViewportStatus] = useState(
     new Array(steps.length).fill(false)
   )
   const [focusedStepIndex, setFocusedStepIndex] = useState(0)
   return (
-    <ul className={styles.stepsList}>
+    <ul className={classNames(styles.stepsList, className)}>
       {steps.map((step, index) => (
         <Step
           key={step.name}
