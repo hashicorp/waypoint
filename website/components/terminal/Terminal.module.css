@@ -40,11 +40,20 @@
     & code {
       width: 100%;
       height: 100%;
-      color: var(--blue);
       font-style: normal;
       font-weight: normal;
       font-size: 13.5px;
       line-height: 26px;
+      color: var(--blue);
+      &.navy {
+        color: var(--vagrant-l1);
+      }
+      &.gray {
+        color: var(--gray-5);
+      }
+      &.white {
+        color: var(--white);
+      }
     }
   }
 }

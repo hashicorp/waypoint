@@ -1,0 +1,38 @@
+.animatedStepsList {
+  display: flex;
+
+  & .indicatorWrapper {
+    & > ul {
+      position: sticky;
+      top: 200px;
+      padding-bottom: 395px;
+    }
+  }
+
+  & .stepsList {
+    margin-left: 115px;
+    margin-bottom: 46px;
+
+    @media (max-width: 1300px) {
+      margin-left: 75px;
+    }
+    @media (max-width: 1100px) {
+      margin-left: 50px;
+    }
+  }
+
+  & .terminalWrapper {
+    margin-left: 150px;
+
+    @media (max-width: 1300px) {
+      margin-left: 100px;
+    }
+
+    & > * {
+      position: sticky;
+      top: 140px;
+      box-shadow: rgb(0 0 0 / 0.35) 7px 10px 25px;
+      margin-top: -800px;
+    }
+  }
+}
