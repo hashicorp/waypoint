@@ -1,5 +1,6 @@
 import styles from './HomePage.module.css'
 import InfoGrid from 'components/info-grid'
+import Terminal from 'components/terminal'
 import IndicatedStepsList from 'components/indicated-steps-list'
 import HomepageSection from 'components/homepage-section'
 import HomepageHero from 'components/homepage-hero'
@@ -20,6 +21,8 @@ export default function HomePage() {
           },
         ]}
       />
+
+      <Terminal className={styles.testingTerminal} code="$ waypoint up |" />
 
       <HomepageSection theme="light">
         <IndicatedStepsList
