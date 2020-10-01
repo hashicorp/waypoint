@@ -519,12 +519,13 @@ func (c *InstallCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *InstallCommand) Synopsis() string {
-	return "Output Kubernetes configurations to run a self-hosted server"
+	return "Install the Waypoint server to Kubernetes, Nomad, or Docker"
 }
 
 func (c *InstallCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint install [options]
+Usage: waypoint server install [options]
+Alias: waypoint install
 
   Installs a Waypoint server to an existing Kubernetes cluster.
 

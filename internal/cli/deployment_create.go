@@ -137,6 +137,7 @@ func (c *DeploymentCreateCommand) Synopsis() string {
 func (c *DeploymentCreateCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint deployment deploy [options]
+Alias: waypoint deploy
 
   Deploy an application. This will deploy the most recent successful
   pushed artifact by default. You can view a list of recent artifacts

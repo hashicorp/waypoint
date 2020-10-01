@@ -125,8 +125,9 @@ func Commands(
 	// aliases is a list of command aliases we have. The key is the CLI
 	// command (the alias) and the value is the existing target command.
 	aliases := map[string]string{
-		"build":  "artifact build",
-		"deploy": "deployment deploy",
+		"build":   "artifact build",
+		"deploy":  "deployment deploy",
+		"install": "server install",
 	}
 
 	// start building our commands
@@ -231,12 +232,6 @@ func Commands(
 			}, nil
 		},
 
-		"install": func() (cli.Command, error) {
-			return &InstallCommand{
-				baseCommand: baseCommand,
-			}, nil
-		},
-
 		"release": func() (cli.Command, error) {
 			return &ReleaseCreateCommand{
 				baseCommand: baseCommand,
@@ -251,6 +246,11 @@ func Commands(
 		},
 		"server bootstrap": func() (cli.Command, error) {
 			return &ServerBootstrapCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"server install": func() (cli.Command, error) {
+			return &InstallCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
