@@ -113,7 +113,7 @@ func InstallDocker(
 		Image:        scfg.ServerImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
-		Cmd:          []string{"server", "-vvv", "-db=/data/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
+		Cmd:          []string{"server", "run", "-vvv", "-db=/data/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
 	}
 
 	bindings := nat.PortMap{}

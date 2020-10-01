@@ -45,8 +45,8 @@ func InstallNomad(
 	}
 
 	var (
-		clicfg clicontext.Config
-		addr   pb.ServerConfig_AdvertiseAddr
+		clicfg   clicontext.Config
+		addr     pb.ServerConfig_AdvertiseAddr
 		httpAddr string
 	)
 
@@ -161,7 +161,6 @@ EVAL:
 		},
 	}
 
-
 	return &clicfg, &addr, httpAddr, nil
 }
 
@@ -180,12 +179,12 @@ func waypointNomadJob(scfg *Config) *api.Job {
 					To:    9701,
 				},
 			},
-// currently set to static; when ui command can be dynamic - update this
+			// currently set to static; when ui command can be dynamic - update this
 			ReservedPorts: []api.Port{
 				{
 					Label: "ui",
 					Value: 9702,
-					To: 9702,
+					To:    9702,
 				},
 			},
 		},
@@ -195,7 +194,7 @@ func waypointNomadJob(scfg *Config) *api.Job {
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
 		"image": scfg.ServerImage,
-		"args":  []string{"server", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
+		"args":  []string{"server", "run", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
 	}
 	task.Env = map[string]string{
 		"PORT": "9701",
@@ -228,7 +227,7 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 
 	for _, port := range alloc.AllocatedResources.Shared.Ports {
 		if port.Label == "ui" {
-			return fmt.Sprintf(port.HostIP+":9702"), nil
+			return fmt.Sprintf(port.HostIP + ":9702"), nil
 		}
 	}
 
