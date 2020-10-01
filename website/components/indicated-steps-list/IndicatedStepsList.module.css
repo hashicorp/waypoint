@@ -1,0 +1,13 @@
+.indicatedStepsList {
+  display: flex;
+
+  & .indicatorWrapper {
+    margin-right: 115px;
+
+    & > ul {
+      position: sticky;
+      top: calc(50vh - 174px);
+      padding-bottom: 292px;
+    }
+  }
+}
