@@ -298,10 +298,20 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	var lastStatus time.Time
+	ps := clientset.CoreV1().Pods(ns)
+	podLabelId := fmt.Sprintf("%s=%s", labelId, result.Id)
+
+	var (
+		lastStatus    time.Time
+		detectedError string
+		k8error       string
+		reportedError bool
+	)
+
+	timeout := 10 * time.Minute
 
 	// Wait on the Pod to start
-	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+	err = wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
 		dep, err := dc.Get(ctx, result.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -319,6 +329,39 @@ func (p *Platform) Deploy(
 
 		if dep.Status.AvailableReplicas > 0 {
 			return true, nil
+		}
+
+		pods, err := ps.List(ctx, metav1.ListOptions{
+			LabelSelector: podLabelId,
+		})
+
+		if err != nil {
+			return false, nil
+		}
+
+		for _, p := range pods.Items {
+			for _, cs := range p.Status.ContainerStatuses {
+				if cs.Ready {
+					continue
+				}
+
+				if cs.State.Waiting != nil {
+					if cs.State.Waiting.Reason == "ImagePullBackOff" {
+						detectedError = "Pod unable to access Docker image"
+						k8error = cs.State.Waiting.Message
+					}
+				}
+			}
+		}
+
+		if detectedError != "" && !reportedError {
+			st.Step(terminal.StatusWarn, fmt.Sprintf(
+				"Detected pods having an issue starting - %s: %s", detectedError, k8error),
+			)
+			reportedError = true
+
+			// force a faster rerender
+			lastStatus = time.Time{}
 		}
 
 		// TODO: Report the statuses and events of the pods that are starting
