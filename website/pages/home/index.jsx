@@ -23,6 +23,9 @@ export default function HomePage() {
 
       <HomepageSection theme="light">
         <StepsList
+          onFocusedIndexChanged={(newStep) => {
+            console.log(newStep)
+          }}
           steps={[
             {
               name: 'Build',
