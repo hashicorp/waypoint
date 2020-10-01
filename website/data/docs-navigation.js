@@ -77,6 +77,16 @@ export default [
     category: 'lifecycle',
     content: ['build', 'deploy', 'release', 'hooks'],
   },
+  {
+    category: 'server',
+    content: [
+      'auth',
+      {
+        category: 'run',
+        content: ['maintenance', 'security'],
+      },
+    ],
+  },
   'url',
   'logs',
   'exec',
@@ -86,10 +96,6 @@ export default [
   {
     category: 'entrypoint',
     content: ['disable'],
-  },
-  {
-    category: 'server',
-    content: ['maintenance'],
   },
   {
     category: 'automating-execution',

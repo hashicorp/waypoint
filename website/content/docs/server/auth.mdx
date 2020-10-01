@@ -1,0 +1,63 @@
+---
+layout: docs
+page_title: Server Authentication
+sidebar_title: Authentication
+description: |-
+  TODO
+---
+
+# Server Authentication
+
+All connections to the Waypoint server via the CLI or UI require an
+auth token to authenticate.
+
+If you're a new user that ran `waypoint install`, the auth token was automatically
+configured for your local CLI.
+
+## Using Your Token
+
+### CLI
+
+To use the token with the CLI, the preferred way is to persist it with
+a context using `waypoint context create`. This will store the token in
+your home directory and make it always available when using Waypoint.
+
+You may also set the token at any time using the `WAYPOINT_TOKEN`
+environment variable. This will override any context settings.
+
+### UI
+
+When you first visit the Waypoint UI, you will be asked to enter a token.
+Enter your token to authenticate. The UI will save this token in your browser's
+local storage.
+
+## Invite
+
+If you're inviting other users to access your Waypoint server, you should
+generate an invite token. An invite token is a special type of token that
+can be exchanged exactly once for a real auth token. To generate an invite
+token, you can use the "Invite" link in the UI or the CLI;
+
+```sh
+$ waypoint token invite
+svESKuVYKeLkgFP3heNanrhvwiMfxfM7q7d3m8UTU3fTDwetfq9vMsBtdqeRmKakXZXJjLDinApxkDcVe594vR2FfVeF3m6gupZ8NVcSC
+```
+
+The receiving user can exchange this token using the UI or using
+`waypoint token exchange`.
+
+## Generate
+
+If you're creating a new token for yourself, you can generate a new
+auth token directly:
+
+```sh
+$ waypoint token new
+svESKuVYKeLkgFP3heNanrhvwiMfxfM7q7d3m8UTU3fTDwetfq9vMsBtdqeRmKakXZXJjLDinApxkDcVe594vR2FfVeF3m6gupZ8NVcSC
+```
+
+## Revoke, Inspect, etc.
+
+Waypoint currently doesn't have any mechanism to revoke tokens,
+audit token usage, inspect an existing token, etc. We plan on expanding
+our token system to support this in the future.

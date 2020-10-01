@@ -3,75 +3,67 @@ layout: docs
 page_title: Server
 sidebar_title: Server
 description: |-
-  TODO
+  Waypoint utilizes a server to enable collaboration with other team members, storing operation history, and enabling functionality such as logs, exec, and more.
 ---
 
 # Waypoint Server
 
-Waypoint utilizes a server for storing operation history and coordinating
-with the [entrypoint](/docs/entrypoint) to enable functionality such as
-logs, exec, and more. The server is expected to be always-running and
-accessible by both your deployments as well as any users of Waypoint.
-
--> **Note:** Only _one_ Waypoint server needs to be installed and run
-for any group of people using Waypoint together. If you are a day-to-day
-user of Waypoint with a group of people you may be able to skip this section.
+Waypoint utilizes a server to enable collaboration with other team members,
+storing operation history, and enabling functionality such as
+logs, exec, and more.
 
 We've made it as easy as possible to install and run a Waypoint server
 using a single command: [`waypoint install`](/commands/install). This
 automatically installs and configures the UI and local CLI to access the
 server and lets you start working with Waypoint immediately.
 
-## Installation
+-> **Note:** Only _one_ Waypoint server needs to be installed and run
+for any group of people using Waypoint together. If you are a day-to-day
+user of Waypoint with a group of people you may not need to install a server.
+In this case, see the documentation on
+[connecting to a server](/docs/server#connecting).
 
-The recommended way to install the server is using the
-[`waypoint install`](/commands/install) command.
-This command will install a server into Docker, Kubernetes, or Nomad,
-bootstrap the server, and configure your local CLI to access that server.
-It is a single command to get up and running with Waypoint.
+## Connecting
 
-You can also run and configure the server manually using the
-[`waypoint server run`](#TODO) command. This is meant for more advanced
-users who want to run Waypoint in a platform that the `install` command doesn't support
-or to fine-tune the configuration of the server.
+To use the `waypoint` CLI, you must configure connection information.
 
-### Upgrading
+-> **Note:** If you ran `waypoint install` to setup a server, the install
+command automatically configured the CLI for you to access the new server.
 
-For details on upgrading the server, please see the
-[general Waypoint upgrade documentation](/docs/upgrading).
+Waypoint uses something called a "context" to store server configuration
+information. The Waypoint CLI can be configured with multiple contexts to
+easily switch between multiple Waypoint servers (such as for work use, personal
+use, testing, etc.).
 
-## Security
+To create a context, use the `waypoint context create` command. This takes
+a set of flags to configure how to connect to the server. The example
+below configures a context:
 
-The Waypoint server must be secured accordingly. This section will outline
-the risks (and explicit non-risks) of a Waypoint server and mitigations the
-server may have towards these. This is not an explicit threat model; we plan on
-refining and publishing a threat model in the near future.
+```
+$ waypoint context create my-server \
+    -server-addr=localhost:9701 \
+    -server-auth-token=abcd1234 \
+    -server-tls \
+    -set-default
+```
 
-The Waypoint server supports TLS for all inbound connections, and we recommend
-always using this. The Waypoint server also requires authentication for all
-connections, and multiple authentication tokens can be created and revoked.
-Authentication is not optional.
+The `-set-default` flag will set this as the default connection information.
+You can always switch contexts using `waypoint context use` or the
+`WAYPOINT_CONTEXT` environment variable.
 
-The Waypoint server doesn't yet support fine-grained authorization. Anyone
-with an authentication token can access any part of the system. Note though
-that the Waypoint server _does not_ execute operations (as noted later). One
-exception to this is the [entrypoint](/docs/entrypoint), which uses a special
-authentication token that can only access entrypoint-related APIs.
+### Verifying the Connection
 
-The state stored by Waypoint in-memory and on-disk is not encrypted. We
-cannot always detect tampering of the data. The state stored is primarily
-metadata that does not impact runtime behavior of Waypoint, with the exception
-of [application configuration](/docs/app-config).
+To verify your CLI is connecting properly, use the `waypoint context verify`
+command. This will test that the default context can connect properly. It
+will output both the context tested and a success message if successful.
 
-The Waypoint server _does not_ require access to credentials or platforms
-for builds, deploys, etc. The Waypoint server _does not_ run these operations.
-These operations are coordinated with the server but executed locally in
-the CLI. The server does store metadata about operations such as time of
-execution, logs, etc.
+```sh
+$ waypoint context verify
+Successfully connected to the server using the "my-server" context.
+```
 
-The Waypoint server maintains long-running inbound connections from
-any [entrypoints](/docs/entrypoint). These can be used to trigger an
-[exec session](/docs/exec) if exec is enabled.
+You can also specify a context name to test a specific context that isn't the default.
 
-The Waypoint server stores any static [application configuration](/docs/app-config).
-This may contain secrets.
+## Authentication and Invites
+
+All Waypoint servers require an authentication token for access.
