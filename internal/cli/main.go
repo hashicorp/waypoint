@@ -655,7 +655,7 @@ Server management.
 
 The CLI, UI, and entrypoints all communicate to a Waypoint server. A
 Waypoint server is required for logs, exec, config, and more to work.
-The recommended way to run a server is "waypoint install."
+The recommended way to run a server is "waypoint install".
 
 This command contains further subcommands to work with servers.
 `,
