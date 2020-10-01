@@ -106,6 +106,6 @@ export default [
   '-----------',
   {
     category: 'internals',
-    content: ['architecture'],
+    content: ['architecture', 'execution'],
   },
 ]
