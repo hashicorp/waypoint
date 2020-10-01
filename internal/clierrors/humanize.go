@@ -10,6 +10,10 @@ func Humanize(err error) string {
 		return ""
 	}
 
+	if IsCanceled(err) {
+		return "operation canceled"
+	}
+
 	v := err.Error()
 	if s, ok := status.FromError(err); ok {
 		v = s.Message()

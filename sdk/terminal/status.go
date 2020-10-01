@@ -107,12 +107,16 @@ func (s *spinnerStatus) Step(status, msg string) {
 	s.spinner.Stop()
 	s.running = false
 
+	pad := ""
+
 	statusIcon := emojiStatus[status]
 	if statusIcon == "" {
 		statusIcon = status
+	} else if status == StatusWarn {
+		pad = " "
 	}
 
-	fmt.Fprintf(color.Output, "%s %s\n", statusIcon, msg)
+	fmt.Fprintf(color.Output, "%s%s %s\n", statusIcon, pad, msg)
 }
 
 func (s *spinnerStatus) Close() error {
