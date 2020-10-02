@@ -20,10 +20,10 @@ import (
 const (
 	envDeploymentId        = "WAYPOINT_DEPLOYMENT_ID"
 	envServerAddr          = "WAYPOINT_SERVER_ADDR"
-	envServerRequired      = "WAYPOINT_SERVER_REQUIRED"
 	envServerTls           = "WAYPOINT_SERVER_TLS"
 	envServerTlsSkipVerify = "WAYPOINT_SERVER_TLS_SKIP_VERIFY"
 	envCEBDisable          = "WAYPOINT_CEB_DISABLE"
+	envCEBServerRequired   = "WAYPOINT_CEB_SERVER_REQUIRED"
 	envCEBToken            = "WAYPOINT_CEB_INVITE_TOKEN"
 )
 
@@ -200,7 +200,7 @@ func WithEnvDefaults() Option {
 
 		cfg.URLServicePort = port
 		cfg.ServerAddr = os.Getenv(envServerAddr)
-		cfg.ServerRequired = os.Getenv(envServerRequired) != ""
+		cfg.ServerRequired = os.Getenv(envCEBServerRequired) != ""
 		cfg.ServerTls = os.Getenv(envServerTls) != ""
 		cfg.ServerTlsSkipVerify = os.Getenv(envServerTlsSkipVerify) != ""
 		cfg.InviteToken = os.Getenv(envCEBToken)

@@ -194,8 +194,8 @@ func TestRun_serverDownRequired(t *testing.T) {
 		DeploymentId: dep.Id,
 		Helper:       "write-file",
 		HelperEnv: map[string]string{
-			envServerRequired: "1",
-			"HELPER_PATH":     path,
+			envCEBServerRequired: "1",
+			"HELPER_PATH":        path,
 		},
 	})
 
