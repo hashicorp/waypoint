@@ -445,7 +445,8 @@
     flex-direction: column;
     flex-grow: 1;
     background: rgb(var(--panel));
-    border: 1px solid rgb(var(--border));
+    border: 1px solid;
+    border-color: rgb(var(--border));
     border-radius: 2px;
     min-height: 340px;
 
@@ -506,7 +507,8 @@
     text-align: center;
     flex-grow: 1;
     background: rgb(var(--panel));
-    border: 1px solid rgb(var(--border));
+    border: 1px solid;
+    border-color: rgb(var(--border));
     border-radius: 2px;
     padding: scale.$lg-4;
 
@@ -619,7 +621,8 @@
   z-index: 99;
 
   @media (prefers-color-scheme: dark) {
-    border: 1px solid rgb(var(--outline));
+    border: 1px solid;
+    border-color: rgb(var(--outline));
   }
 
   p {

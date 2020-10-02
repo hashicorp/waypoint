@@ -31,7 +31,8 @@ input {
   padding: scale.$sm-2 scale.$sm-2;
   box-shadow: $input-shadow;
   border-radius: 2px;
-  border: 1px solid rgb(var(--input-border));
+  border: 1px solid;
+  border-color: rgb(var(--input-border));
   margin: 0;
   width: 100%;
   font-family: monospace;
@@ -44,13 +45,15 @@ input {
   &:focus {
     outline: none;
     box-shadow: $input-focus;
-    border: 1px solid rgb(var(--input-border-focus));
+    border: 1px solid;
+    border-color: rgb(var(--input-border-focus));
   }
 
   &:disabled {
     cursor: not-allowed;
     color: rgb(var(--input-disable-text));
     background: rgb(var(--input-disabled));
-    border: 1px solid rgb(var(--input-disabled-border));
+    border: 1px solid;
+    border-color: rgb(var(--input-disabled-border));
   }
 }
