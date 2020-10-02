@@ -17,6 +17,16 @@ import {
   ListReleasesResponse,
 } from 'waypoint-pb';
 
+const protocolVersions = {
+  // These map to upstream protocol versions
+  'client-api-protocol': '1,1',
+  'client-entrypoint-protocol': '1,1',
+  // This is defined by the UI and can be
+  // later used to identify different versions of the UI
+  // todo: policy for when we change this..
+  'client-version': 'ui-0.0.1',
+};
+
 export default class ApiService extends Service {
   @service session!: SessionService;
   client = new WaypointClient('/grpc', null, null);
@@ -31,9 +41,9 @@ export default class ApiService extends Service {
 
   get meta() {
     if (this.session.authConfigured) {
-      return { authorization: this.session.token };
+      return { ...protocolVersions, authorization: this.session.token };
     } else {
-      return {};
+      return { ...protocolVersions };
     }
   }
 
