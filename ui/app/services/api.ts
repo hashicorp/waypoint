@@ -24,7 +24,7 @@ const protocolVersions = {
   // This is defined by the UI and can be
   // later used to identify different versions of the UI
   // todo: policy for when we change this..
-  'client-version': '1.0.0',
+  'client-version': 'ui-0.0.1',
 };
 
 export default class ApiService extends Service {
