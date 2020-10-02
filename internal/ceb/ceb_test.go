@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -79,7 +80,7 @@ func TestRun(t *testing.T) {
 }
 
 // Test how the CEB behaves when the server is down on startup.
-func TestRun_serverDown(t *testing.T) {
+func TestRun_serverDownBasic(t *testing.T) {
 	require := require.New(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -194,8 +195,8 @@ func TestRun_serverDownRequired(t *testing.T) {
 		DeploymentId: dep.Id,
 		Helper:       "write-file",
 		HelperEnv: map[string]string{
-			envServerRequired: "1",
-			"HELPER_PATH":     path,
+			envCEBServerRequired: "1",
+			"HELPER_PATH":        path,
 		},
 	})
 
@@ -212,6 +213,98 @@ func TestRun_serverDownRequired(t *testing.T) {
 		_, err := ioutil.ReadFile(path)
 		return err == nil
 	}, 5*time.Second, 10*time.Millisecond)
+}
+
+// Test how the CEB behaves when the server is down on startup.
+func TestRun_serverDownNoConnect(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Start a listener that will refuse connections
+	ln, err := net.Listen("tcp", "127.0.0.1:")
+	require.NoError(err)
+	ln.Close()
+
+	// Create a temporary directory for our test
+	td, err := ioutil.TempDir("", "test")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+	path := filepath.Join(td, "hello")
+
+	// Start the CEB
+	testRun(t, ctx, &testRunOpts{
+		ClientDisable: true,
+		DeploymentId:  "ABCD1234",
+		Helper:        "write-file",
+		HelperEnv: map[string]string{
+			envServerAddr: ln.Addr().String(),
+			"HELPER_PATH": path,
+		},
+	})
+
+	// The child should still start up
+	require.Eventually(func() bool {
+		_, err := ioutil.ReadFile(path)
+		return err == nil
+	}, 10*time.Second, 10*time.Millisecond)
+}
+
+// Test CEB disabled with server up. Shouldn't connect at all.
+func TestRun_disabledUp(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Start up the server
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := server.TestServer(t, impl,
+		server.TestWithContext(ctx),
+		server.TestWithRestart(restartCh),
+	)
+
+	// Create a deployment
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, nil),
+	})
+	require.NoError(err)
+	dep := resp.Deployment
+
+	// Create a temporary directory for our test
+	td, err := ioutil.TempDir("", "test")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+	path := filepath.Join(td, "hello")
+
+	// Start the CEB
+	ceb := testRun(t, ctx, &testRunOpts{
+		Client:       client,
+		DeploymentId: dep.Id,
+		Helper:       "write-file",
+		HelperEnv: map[string]string{
+			envCEBDisable: "1",
+			"HELPER_PATH": path,
+		},
+	})
+
+	// The child should start up
+	require.Eventually(func() bool {
+		_, err := ioutil.ReadFile(path)
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// We should NOT get registered
+	{
+		time.Sleep(500 * time.Millisecond)
+		resp, err := client.ListInstances(ctx, &pb.ListInstancesRequest{
+			Scope: &pb.ListInstancesRequest_DeploymentId{
+				DeploymentId: ceb.DeploymentId(),
+			},
+		})
+		require.NoError(err)
+		require.Empty(resp.Instances)
+	}
 }
 
 var (
@@ -256,7 +349,7 @@ func testRun(t *testing.T, ctx context.Context, opts *testRunOpts) *CEB {
 		opts = &testRunOpts{}
 	}
 
-	if opts.Client == nil {
+	if opts.Client == nil && !opts.ClientDisable {
 		opts.Client = singleprocess.TestServer(t)
 	}
 
@@ -302,8 +395,9 @@ func testRun(t *testing.T, ctx context.Context, opts *testRunOpts) *CEB {
 }
 
 type testRunOpts struct {
-	Client       pb.WaypointClient
-	Helper       string
-	HelperEnv    map[string]string
-	DeploymentId string
+	Client        pb.WaypointClient
+	ClientDisable bool
+	Helper        string
+	HelperEnv     map[string]string
+	DeploymentId  string
 }

@@ -7,17 +7,19 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // dialServer connects to the server.
-func (ceb *CEB) dialServer(ctx context.Context, cfg *config) error {
+func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error {
 	// Build our options
 	grpcOpts := []grpc.DialOption{
-		grpc.WithBlock(),
 		grpc.WithTimeout(5 * time.Second),
 		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
 		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(protocolversion.Current())),
@@ -40,45 +42,74 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config) error {
 	)
 	conn, err := grpc.DialContext(ctx, cfg.ServerAddr, grpcOpts...)
 	if err != nil {
+		ceb.logger.Warn("failed to connect to server", "err", err)
 		return err
 	}
-	ceb.logger.Trace("server connection successful")
-	ceb.cleanup(func() { conn.Close() })
+
+	// When we commit to keeping conn, we should set it to nil.
+	defer func() {
+		if conn != nil {
+			conn.Close()
+			ceb.client = nil
+		}
+	}()
+
+	// Verify we're connected. We do this loop so that we can
+	// fail fast in the non-isRetry case.
+	ceb.logger.Debug("waiting on server connection state to become ready")
+	for {
+		s := conn.GetState()
+		ceb.logger.Trace("connection state", "state", s.String())
+
+		// If we're ready then we're done!
+		if s == connectivity.Ready {
+			ceb.logger.Info("connection is ready")
+			break
+		}
+
+		// If we have a transient error and we're not retrying, then we're done.
+		if s == connectivity.TransientFailure && !isRetry {
+			ceb.logger.Warn("failed to connect to the server, temporary network error")
+			conn.Close()
+			return status.Errorf(codes.Unavailable, "server is unavailable")
+		}
+
+		if !conn.WaitForStateChange(ctx, s) {
+			return ctx.Err()
+		}
+	}
 
 	// Init our client
-	ceb.client = pb.NewWaypointClient(conn)
+	client := pb.NewWaypointClient(conn)
 
 	// If we have an invite token, we have to exchange that and re-establish
 	// the connection with the auth setup. If we have no token, we're done.
-	if cfg.InviteToken == "" {
-		ceb.logger.Warn("no auth token given, will use unauthenticated connection")
-		return nil
-	}
+	if cfg.InviteToken != "" {
+		// Exchange
+		ceb.logger.Info("converting invite token to login token")
+		resp, err := client.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
+			Token: cfg.InviteToken,
+		}, grpc.WaitForReady(isRetry))
+		if err != nil {
+			return err
+		}
 
-	// Exchange
-	ceb.logger.Info("converting invite token to login token")
-	resp, err := ceb.client.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
-		Token: cfg.InviteToken,
-	})
-	if err != nil {
-		return err
-	}
+		// We have our token, setup that usage
+		grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(staticToken(resp.Token)))
 
-	// We have our token, setup that usage
-	grpcOpts = append(grpcOpts, grpc.WithPerRPCCredentials(staticToken(resp.Token)))
-
-	// Reconnect and return
-	conn.Close()
-	ceb.logger.Info("reconnecting to server with authentication")
-	conn, err = grpc.DialContext(ctx, cfg.ServerAddr, grpcOpts...)
-	if err != nil {
-		return err
+		// Reconnect and return
+		conn.Close()
+		ceb.logger.Info("reconnecting to server with authentication")
+		conn, err = grpc.DialContext(ctx, cfg.ServerAddr, grpcOpts...)
+		if err != nil {
+			return err
+		}
+		client = pb.NewWaypointClient(conn)
 	}
-	ceb.client = pb.NewWaypointClient(conn)
 
 	// Negotiate API version
 	ceb.logger.Trace("requesting version info from server")
-	vsnResp, err := ceb.client.GetVersionInfo(ctx, &empty.Empty{})
+	vsnResp, err := client.GetVersionInfo(ctx, &empty.Empty{}, grpc.WaitForReady(isRetry))
 	if err != nil {
 		return err
 	}
@@ -96,6 +127,12 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config) error {
 		return err
 	}
 	ceb.logger.Info("negotiated entrypoint protocol version", "version", vsn)
+
+	// Commit to using this client
+	ceb.client = client
+	connCopy := conn
+	conn = nil
+	ceb.cleanup(func() { connCopy.Close() })
 
 	return nil
 }
