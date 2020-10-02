@@ -17,7 +17,11 @@ export default function ProductSubnav() {
           text: 'GitHub',
           url: `https://www.github.com/hashicorp/${productSlug}`,
         },
-        { text: 'Download', url: 'https://go.hashi.co/waypoint-beta-binaries' },
+        {
+          text: 'Download',
+          url:
+            'http://ihngtake2gyn8nbyfgtgvu449dnsbrgopvukjdbntyndmlv7tb.s3-website-us-east-1.amazonaws.com/waypoint/',
+        },
       ]}
       currentPath={router.pathname}
       menuItemsAlign="right"

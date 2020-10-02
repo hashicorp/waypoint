@@ -23,7 +23,8 @@ export default function HomePage() {
         links={[
           {
             text: 'Download',
-            url: 'https://go.hashi.co/waypoint-beta-binaries',
+            url:
+              'http://ihngtake2gyn8nbyfgtgvu449dnsbrgopvukjdbntyndmlv7tb.s3-website-us-east-1.amazonaws.com/waypoint/',
             type: 'download',
           },
           {
