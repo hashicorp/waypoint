@@ -23,6 +23,7 @@ const (
 	envServerRequired      = "WAYPOINT_SERVER_REQUIRED"
 	envServerTls           = "WAYPOINT_SERVER_TLS"
 	envServerTlsSkipVerify = "WAYPOINT_SERVER_TLS_SKIP_VERIFY"
+	envCEBDisable          = "WAYPOINT_CEB_DISABLE"
 	envCEBToken            = "WAYPOINT_CEB_INVITE_TOKEN"
 )
 
@@ -88,35 +89,37 @@ func Run(ctx context.Context, os ...Option) error {
 		"revision", vsn.Revision,
 	)
 
-	if ceb.client == nil {
-		if cfg.ServerAddr == "" {
-			ceb.logger.Info("no waypoint server configured, disabled management")
-		} else {
-			// Initialize our server connection
-			if err := ceb.dialServer(ctx, &cfg); err != nil {
-				return status.Errorf(codes.Aborted,
-					"failed to connect to server: %s", err)
-			}
-		}
-	}
-
 	// Initialize our command
 	if err := ceb.initChildCmd(ctx, &cfg); err != nil {
 		return status.Errorf(codes.Aborted,
 			"failed to connect to server: %s", err)
 	}
 
-	if ceb.client != nil {
-		// Get our configuration and start the long-running stream for it.
-		if err := ceb.initConfigStream(ctx, &cfg, false); err != nil {
-			return err
+	if !cfg.disable {
+		if ceb.client == nil {
+			if cfg.ServerAddr == "" {
+				ceb.logger.Info("no waypoint server configured, disabled management")
+			} else {
+				// Initialize our server connection
+				if err := ceb.dialServer(ctx, &cfg); err != nil {
+					return status.Errorf(codes.Aborted,
+						"failed to connect to server: %s", err)
+				}
+			}
 		}
 
-		// Initialize our log stream
-		// NOTE(mitchellh): at some point we want this to be configurable
-		// but for now we're just going for it.
-		if err := ceb.initLogStream(ctx, &cfg); err != nil {
-			return err
+		if ceb.client != nil {
+			// Get our configuration and start the long-running stream for it.
+			if err := ceb.initConfigStream(ctx, &cfg, false); err != nil {
+				return err
+			}
+
+			// Initialize our log stream
+			// NOTE(mitchellh): at some point we want this to be configurable
+			// but for now we're just going for it.
+			if err := ceb.initLogStream(ctx, &cfg); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -162,6 +165,7 @@ func (ceb *CEB) DeploymentId() string {
 }
 
 type config struct {
+	disable             bool
 	cebPtr              *CEB
 	ExecArgs            []string
 	ServerAddr          string
@@ -200,6 +204,7 @@ func WithEnvDefaults() Option {
 		cfg.ServerTls = os.Getenv(envServerTls) != ""
 		cfg.ServerTlsSkipVerify = os.Getenv(envServerTlsSkipVerify) != ""
 		cfg.InviteToken = os.Getenv(envCEBToken)
+		cfg.disable = os.Getenv(envCEBDisable) != ""
 
 		ceb.deploymentId = os.Getenv(envDeploymentId)
 

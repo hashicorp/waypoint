@@ -214,6 +214,63 @@ func TestRun_serverDownRequired(t *testing.T) {
 	}, 5*time.Second, 10*time.Millisecond)
 }
 
+// Test CEB disabled with server up. Shouldn't connect at all.
+func TestRun_disabledUp(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Start up the server
+	restartCh := make(chan struct{})
+	impl := singleprocess.TestImpl(t)
+	client := server.TestServer(t, impl,
+		server.TestWithContext(ctx),
+		server.TestWithRestart(restartCh),
+	)
+
+	// Create a deployment
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, nil),
+	})
+	require.NoError(err)
+	dep := resp.Deployment
+
+	// Create a temporary directory for our test
+	td, err := ioutil.TempDir("", "test")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+	path := filepath.Join(td, "hello")
+
+	// Start the CEB
+	ceb := testRun(t, ctx, &testRunOpts{
+		Client:       client,
+		DeploymentId: dep.Id,
+		Helper:       "write-file",
+		HelperEnv: map[string]string{
+			envCEBDisable: "1",
+			"HELPER_PATH": path,
+		},
+	})
+
+	// The child should start up
+	require.Eventually(func() bool {
+		_, err := ioutil.ReadFile(path)
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// We should NOT get registered
+	{
+		time.Sleep(500 * time.Millisecond)
+		resp, err := client.ListInstances(ctx, &pb.ListInstancesRequest{
+			Scope: &pb.ListInstancesRequest_DeploymentId{
+				DeploymentId: ceb.DeploymentId(),
+			},
+		})
+		require.NoError(err)
+		require.Empty(resp.Instances)
+	}
+}
+
 var (
 	testExec      = os.Args[0]
 	envHelperMode = "TEST_HELPER_MODE"
