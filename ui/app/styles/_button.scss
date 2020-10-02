@@ -53,7 +53,8 @@ a[href].button {
   &--primary {
     color: rgb(var(--button-primary-text));
     background: rgb(var(--button-primary));
-    border: 1px solid rgb(var(--button-primary-border));
+    border: 1px solid;
+    border-color: rgb(var(--button-primary-border));
     box-shadow: $button-shadow;
     text-shadow: 0 1px 0 rgba(var(--shadow), 0.3);
 
@@ -70,7 +71,8 @@ a[href].button {
   &--secondary {
     color: rgb(var(--button-secondary-text));
     background: rgb(var(--button-secondary));
-    border: 1px solid rgb(var(--button-secondary-border));
+    border: 1px solid;
+    border-color: rgb(var(--button-secondary-border));
     box-shadow: $button-shadow;
 
     &:hover {
