@@ -59,27 +59,34 @@ func (p *Platform) Deploy(
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
-	// Start building our deployment since we use this information
-	deployment := &Deployment{
-		ContainerGroup: &Deployment_ContainerGroup{
-			ResourceGroup: p.config.ResourceGroup,
-			Name:          src.App,
-		},
-	}
 
 	// if there is no subscription id in the deployment config try and fetch it from the environment
-	if p.config.SubscriptionID != "" {
-		deployment.ContainerGroup.SubscriptionId = p.config.SubscriptionID
-	} else {
-		// try and fetch from environment vars
-		deployment.ContainerGroup.SubscriptionId = os.Getenv("AZURE_SUBSCRIPTION_ID")
+	if p.config.SubscriptionID == "" {
+		p.config.SubscriptionID = os.Getenv("AZURE_SUBSCRIPTION_ID")
 	}
 
 	// if we do not have a subscription id, return an error
-	if deployment.ContainerGroup.SubscriptionId == "" {
+	if p.config.SubscriptionID == "" {
 		return nil, status.Error(
-			codes.Aborted,
+			codes.FailedPrecondition,
 			"Please set either your Azure subscription ID in the deployment config, or set the environment variable 'AZURE_SUBSCRIPTION_ID'",
+		)
+	}
+
+	// Start building our deployment since we use this information
+	deployment := &Deployment{
+		ContainerGroup: &Deployment_ContainerGroup{
+			ResourceGroup:  p.config.ResourceGroup,
+			Name:           src.App,
+			SubscriptionId: p.config.SubscriptionID,
+		},
+	}
+
+	auth, err := deployment.authenticate(ctx)
+	if err != nil {
+		return nil, status.Error(
+			codes.Unauthenticated,
+			err.Error(),
 		)
 	}
 
@@ -94,7 +101,7 @@ func (p *Platform) Deploy(
 	}
 
 	// validate that the region for the deployment is valid
-	l, err := deployment.getLocations(ctx)
+	l, err := deployment.getLocations(ctx, auth)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Unable to list locations for subscription: %s", err)
 	}
@@ -113,9 +120,18 @@ func (p *Platform) Deploy(
 		})
 	}
 
+	// if we have a port we need to set the PORT env var so that the CEB binary can direct
+	// traffic to the correct service
+	if len(p.config.Ports) > 0 {
+		env = append(env, containerinstance.EnvironmentVariable{
+			Name:  to.StringPtr("PORT"),
+			Value: to.StringPtr(fmt.Sprintf("%d", p.config.Ports[0])),
+		})
+	}
+
 	log.Info("Checking if container group already exists", "containergroup", deployment.ContainerGroup.Name)
 	st.Update("Checking if container group is already created")
-	containerGroup, err := deployment.getContainerGroup(ctx)
+	containerGroup, err := deployment.getContainerGroup(ctx, auth)
 	if err != nil {
 		if containerGroup.StatusCode != 404 {
 			return nil, status.Errorf(codes.Internal, "Unable to check if container group already exists: %s", err)
@@ -317,7 +333,7 @@ To update the location you will need to manually destroy and recreate the resour
 		st.Update("Updating the container group")
 	}
 
-	containerGroupResult, err := deployment.createOrUpdate(ctx, containerGroup)
+	containerGroupResult, err := deployment.createOrUpdate(ctx, auth, containerGroup)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Unable to create or update container instance: %s", err)
 	}
@@ -503,7 +519,7 @@ deploy "azure-container-instance" {
 
 	doc.SetField(
 		"ports",
-		"the ports the container is listening on",
+		"the ports the container is listening on, the first port in this list will be used by the entrypoint binary to direct traffic to your application",
 	)
 
 	doc.SetField(
