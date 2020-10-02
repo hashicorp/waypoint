@@ -37,8 +37,11 @@
   {{else}}
   <EmptyState>
     <p>There are no projects to display yet</p>
-    <p>To create your first project, create a new application by running <code class="cmd">waypoint init</code> from the
-      CLI</p>
+    <p>To create your first project, create a new application by running
+      <CopyableCode @ref="empty-init" @inline="true">
+        <code id="empty-init">waypoint init</code>
+      </CopyableCode>
+      from the CLI</p>
     <p>For more help getting started, refer to the <ExternalLink href="https://waypointproject.io/docs/getting-started">Waypoint documentation</ExternalLink></p>
   </EmptyState>
   {{/each}}
