@@ -92,6 +92,7 @@ export default [
   'exec',
   'app-config',
   'workspaces',
+  'plugins',
   '-----------',
   {
     category: 'entrypoint',

@@ -1,0 +1,94 @@
+---
+layout: docs
+page_title: Plugins
+sidebar_title: Plugins
+description: |-
+  Waypoint can be extended using custom plugins. Waypoint supports custom builders, deployment platforms, registries, release managers, and more.
+---
+
+# Plugins
+
+Waypoint can be extended using custom plugins. Waypoint supports
+custom builders, deployment platforms, registries, release managers,
+and more. This allows you to extend the Waypoint workflow and featureset
+anywhere. This page will focus on _using_ plugins. We will publish more
+documentation on writing plugins later.
+
+Waypoint ships with dozens of built-in plugins. These plugins are available
+out-of-the-box with Waypoint and are built directly on the same plugin system
+as external plugins. To see a list of supported plugins, see the
+[plugin documentation](/docs/plugins).
+
+Anywhere you see a [`use` stanza](/docs/waypoint-hcl/use) is a place where
+a plugin is used.
+
+## Available Plugins
+
+You can see a list of [all built-in plugins here](/docs/plugins).
+
+We do not maintain a list of external plugins currently.
+
+## Using an External Plugin
+
+External plugins are distributed as executable binaries. To use an external
+plugin, you must download the correct binary for your operating system,
+place it at the correct location, and use it within your
+[waypoint configuration](/docs/waypoint-hcl/use).
+
+### Installing an External Plugin
+
+To install an external plugin, the binary must first be named
+`waypoint-plugin-<name>` where `<name>` is the same label that is used
+with the [`use` stanza](/docs/waypoint-hcl/use) in your Waypoint configuration.
+For the example below, our binary must be named `waypoint-plugin-hashicloud`.
+If you're on Windows, the binary must end in ".exe".
+
+```hcl
+app {
+  # ...
+
+  deploy {
+    use "hashicloud" {}
+  }
+}
+```
+
+Once the plugin is named, it must be copied into the correct location. Waypoint
+will look for plugins in the following locations in the following order:
+
+1. In the same directory as the `waypoint.hcl` file.
+2. In `./.waypoint/plugins/` relative to the `waypoint.hcl` file.
+3. In `$XDG_CONFIG_DIR/waypoint/plugins`
+
+Once a plugin is found, it will not search the later paths.
+
+### Using the External Plugin
+
+The external plugin is used in the same manner as a built-in plugin.
+Continuing our example above, you can use an external plugin with a
+`use` stanza. The existence of a `use` stanza with a plugin name will
+notify Waypoint that it requires that plugin.
+
+```hcl
+app {
+  # ...
+
+  deploy {
+    use "hashicloud" {}
+  }
+}
+```
+
+#### Checksumming
+
+You can also use the explicit [`plugin` stanza](/docs/waypoint-hcl/plugin)
+to define plugins.
+
+This stanza provides additional functionality when loading plugins.
+The most important is that you can specify a SHA-256 checksum for the
+plugin binary which helps prevent tampering with the plugin binary.
+
+### Verify
+
+To verify the plugin works, run `waypoint init` against your project.
+This will find the plugin, load it, and also validate any configuration.
