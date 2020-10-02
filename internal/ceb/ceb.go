@@ -95,31 +95,10 @@ func Run(ctx context.Context, os ...Option) error {
 			"failed to connect to server: %s", err)
 	}
 
+	// If we are enabled, initialize the CEB feature set.
 	if !cfg.disable {
-		if ceb.client == nil {
-			if cfg.ServerAddr == "" {
-				ceb.logger.Info("no waypoint server configured, disabled management")
-			} else {
-				// Initialize our server connection
-				if err := ceb.dialServer(ctx, &cfg); err != nil {
-					return status.Errorf(codes.Aborted,
-						"failed to connect to server: %s", err)
-				}
-			}
-		}
-
-		if ceb.client != nil {
-			// Get our configuration and start the long-running stream for it.
-			if err := ceb.initConfigStream(ctx, &cfg, false); err != nil {
-				return err
-			}
-
-			// Initialize our log stream
-			// NOTE(mitchellh): at some point we want this to be configurable
-			// but for now we're just going for it.
-			if err := ceb.initLogStream(ctx, &cfg); err != nil {
-				return err
-			}
+		if err := ceb.init(ctx, &cfg, false); err != nil {
+			return err
 		}
 	}
 
