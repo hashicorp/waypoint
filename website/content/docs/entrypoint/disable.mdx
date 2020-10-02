@@ -3,10 +3,56 @@ layout: docs
 page_title: Disable the Entrypoint
 sidebar_title: Disable
 description: |-
-  The Waypoint entrypoint can be disabled on a per-app, per-project basis.
+  The entrypoint can be disabled by disabling build-time injection or by setting a runtime variable in already-built artifacts.
 ---
 
 # Disable the Waypoint Entrypoint
 
-~> **Coming soon.** During the internal beta, entrypoint disabling is not yet
-complete.
+The entrypoint can be disabled by disabling build-time injection or
+by setting a runtime variable in already-built artifacts. The former can
+be used to prevent the Waypoint from ever being used by a deployment. The
+latter can be used to disable the entrypoint in deployments that already
+have it installed.
+
+If the entrypoint is disabled, all
+[functionality that requires the entrypoint](/docs/entrypoint#functionality)
+will stop functioning for that deployment. If other deployments, apps, etc.
+use the entrypoint, the entrypoint functionality will work for those
+deployments and apps.
+
+## Disable at Runtime
+
+You can disable the entrypoint at runtime by setting the `WAYPOINT_CEB_DISABLE`
+environment variable to any non-empty value.
+
+This environment variable is checked immediately on entrypoint startup. If
+it is present and non-empty then the entrypoint will immediately execute the
+child process. The entrypoint **will not** attempt to even connect to the
+server and will not use any network or disk resources.
+
+This approach allows you to always inject the entrypoint in case you
+want to use it in the future, but to disable it completely until then.
+
+## Disable at Build
+
+The entrypoint can be disabled by preventing it from being installed or
+injected in the first place.
+
+For builders that support automatic injection, they should offer some
+configuration to disable this behavior. For example, if you're using the
+"docker" builder you can set the `disable_entrypoint` configuration:
+
+```hcl
+app "my-app" {
+  build {
+    use "docker" {
+      disable_entrypoint = true
+    }
+  }
+
+  # ...
+}
+```
+
+For builders that do not support automatic injection, you must manually
+alter your build scripts to prevent entrypoint installation.

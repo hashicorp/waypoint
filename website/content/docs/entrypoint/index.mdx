@@ -18,7 +18,7 @@ a Docker image.
 
 ~> The entrypoint binary injection and usage is **not required** and can be
 disabled. This will also disable features such as logs, exec, etc. for that
-application. See [disabling the entrypoint](#) for more information.
+application. See [disabling the entrypoint](/docs/entrypoint/disable) for more information.
 
 ## Installation
 
@@ -73,6 +73,40 @@ will only "wake up" from blocking on network traffic when it receives new
 application configuration, a request for `exec`, an inbound request from the
 URL service, etc.
 
+## Failure Behavior
+
+The Waypoint entrypoint is designed to be resilient to failure scenarios
+that it introduces.
+
+### Server Unavailable on Startup
+
+If the Waypoint server connection cannot be established on startup
+within 5 seconds, Waypoint will "fail open" by starting the child
+process immediately. Waypoint will continue to retry to connect to the
+server in the background.
+
+This behavior allows Waypoint to start the child process no matter what.
+
+If you're using [application configuration](/docs/config), the configuration
+will not be available to the application in this failure case. This may
+cause the application startup to fail.
+
+### Server Connection Lost
+
+If the Waypoint server connection is lost at any point during runtime,
+the child process is unaffected. Waypoint will retry to establish a
+connection in the background.
+
+While the connection is lost, any entrypoint related functionality will
+stop working. Initial application configuration will be retained, but
+further application configuration changes will have no effect until the
+connection can be reestablished.
+
+During this time, logs will be dropped. The application logs during the period
+when the connection was lost will not become available again. Once the
+connection is re-estalished, new logs from that point forward will be sent
+to the server.
+
 ## Security
 
 The Waypoint entrypoint _does not_ open any network listeners. It _does not_
@@ -96,6 +130,3 @@ in any way, it poses a minimal risk to Waypoint as a whole.
 -> Many improvements are planned to improve the security of the entrypoint.
 We plan on restricting the commands that can be used with `exec`, we plan
 on supporting more fine-grained feature enable/disable flags, etc.
-
-~> **Internal beta:** we will be building more security configurations
-prior to public release.
