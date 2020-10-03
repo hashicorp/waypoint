@@ -12,6 +12,7 @@ export default [
   'context-list',
   'context-rename',
   'context-use',
+  'context-verify',
   'deploy',
   'deployment-deploy',
   'deployment-destroy',
