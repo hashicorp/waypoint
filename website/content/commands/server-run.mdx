@@ -1,24 +1,25 @@
 ---
 layout: commands
-page_title: 'Commands: Server'
-sidebar_title: 'server'
-description: 'Run the builtin server.'
+page_title: 'Commands: Server run'
+sidebar_title: 'server run'
+description: 'Manually run the builtin server'
 ---
 
-# Waypoint Server
+# Waypoint Server run
 
-Command: `waypoint server`
+Command: `waypoint server run`
 
-Run the builtin server.
+Manually run the builtin server
 
-@include "commands/server_desc.mdx"
+@include "commands/server-run_desc.mdx"
 
 ## Usage
 
-Usage: `waypoint server [options]`
+Usage: `waypoint server run [options]`
 
 #### Global Options
 
+- `-plain` - Plain output: no colors, no animation.
 - `-workspace=<string>` - Workspace to operate in.
 
 #### Command Options
@@ -26,7 +27,6 @@ Usage: `waypoint server [options]`
 - `-db=<string>` - Path to the database file.
 - `-listen-grpc=<string>` - Address to bind to for gRPC connections.
 - `-listen-http=<string>` - Address to bind to for HTTP connections. Required for the UI.
-- `-disable-auth` - Disable auth requirements
 - `-disable-ui` - Disable the embedded web interface
 - `-url-enabled` - Enable the URL service.
 - `-url-api-addr=<string>` - Address to Waypoint URL service API
@@ -41,4 +41,4 @@ Usage: `waypoint server [options]`
 - `-advertise-tls` - If true, the advertised address should be connected to with TLS.
 - `-advertise-tls-skip-verify` - Do not verify the TLS certificate presented by the server.
 
-@include "commands/server_more.mdx"
+@include "commands/server-run_more.mdx"

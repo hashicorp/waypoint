@@ -1,21 +1,21 @@
 ---
 layout: commands
-page_title: 'Commands: Install'
-sidebar_title: 'install'
+page_title: 'Commands: Server install'
+sidebar_title: 'server install'
 description: 'Install the Waypoint server to Kubernetes, Nomad, or Docker'
 ---
 
-# Waypoint Install
+# Waypoint Server install
 
-Command: `waypoint install`
+Command: `waypoint server install`
 
 Install the Waypoint server to Kubernetes, Nomad, or Docker
 
-@include "commands/install_desc.mdx"
+@include "commands/server-install_desc.mdx"
 
 ## Usage
 
-Usage: `waypoint install [options]`
+Usage: `waypoint server install [options]`
 
 #### Global Options
 
@@ -40,4 +40,4 @@ Usage: `waypoint install [options]`
 - `-nomad-dc=<string>` - Nomad datacenters to install to if using Nomad platform
 - `-nomad-namespace=<string>` - Nomad namespace to install to if using Nomad platform
 
-@include "commands/install_more.mdx"
+@include "commands/server-install_more.mdx"
