@@ -278,14 +278,14 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Name:    "listen-grpc",
 			Target:  &c.config.GRPC.Addr,
 			Usage:   "Address to bind to for gRPC connections.",
-			Default: "127.0.0.1:1234", // TODO(mitchellh: change default
+			Default: "127.0.0.1:9701",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "listen-http",
 			Target:  &c.config.HTTP.Addr,
 			Usage:   "Address to bind to for HTTP connections. Required for the UI.",
-			Default: "127.0.0.1:1235", // TODO(mitchellh: change default
+			Default: "127.0.0.1:9702",
 		})
 
 		f.BoolVar(&flag.BoolVar{
