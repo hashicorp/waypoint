@@ -10,6 +10,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/big"
 	"net"
@@ -200,6 +201,12 @@ func (c *ServerRunCommand) Run(args []string) int {
 	c.ui.NamedValues(values)
 	c.ui.Output("Server logs:", terminal.WithHeaderStyle())
 	c.ui.Output("")
+
+	// Close our UI. If we're using the interactive UI we need to end the
+	// output right now so we don't redraw over our logs.
+	if closer, ok := c.ui.(io.Closer); ok && closer != nil {
+		closer.Close()
+	}
 
 	// Set our log output higher if its not already so that it begins showing.
 	if !log.IsInfo() {
