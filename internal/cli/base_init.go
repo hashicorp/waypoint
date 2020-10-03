@@ -73,14 +73,22 @@ func (c *baseCommand) initClient() (*clientpkg.Project, error) {
 		flagConnection = &v
 	}
 
+	// Get the context we'll use.
+	var err error
+	connectOpts := []serverclient.ConnectOption{
+		serverclient.FromContextConfig(flagConnection),
+		serverclient.FromContext(c.contextStorage, ""),
+		serverclient.FromEnv(),
+	}
+	c.clientContext, err = serverclient.ContextConfig(connectOpts...)
+	if err != nil {
+		return nil, err
+	}
+
 	// Start building our client options
 	opts := []clientpkg.Option{
 		clientpkg.WithLogger(c.Log),
-		clientpkg.WithClientConnect(
-			serverclient.FromContextConfig(flagConnection),
-			serverclient.FromContext(c.contextStorage, ""),
-			serverclient.FromEnv(),
-		),
+		clientpkg.WithClientConnect(connectOpts...),
 		clientpkg.WithProjectRef(c.refProject),
 		clientpkg.WithWorkspaceRef(c.refWorkspace),
 		clientpkg.WithLabels(c.flagLabels),

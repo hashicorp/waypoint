@@ -1,6 +1,10 @@
 package cli
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
 
@@ -11,6 +15,9 @@ import (
 
 type ServerBootstrapCommand struct {
 	*baseCommand
+
+	flagContext        string
+	flagContextDefault bool
 }
 
 func (c *ServerBootstrapCommand) Run(args []string) int {
@@ -36,12 +43,64 @@ func (c *ServerBootstrapCommand) Run(args []string) int {
 		return 1
 	}
 
+	// Output our token
 	c.ui.Output(resp.Token)
+
+	// If we aren't storing a context, we're done
+	if c.flagContext == "" {
+		return 0
+	}
+
+	// Get our current context config and set our new token
+	config := *c.clientContext
+	config.Server.RequireAuth = true
+	config.Server.AuthToken = resp.Token
+
+	// Store it
+	if err := c.contextStorage.Set(c.flagContext, &config); err != nil {
+		c.ui.Output(
+			"Error setting the CLI context: %s\n\n%s",
+			clierrors.Humanize(err),
+			errBootstrapContext,
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+	if c.flagContextDefault {
+		if err := c.contextStorage.SetDefault(c.flagContext); err != nil {
+			c.ui.Output(
+				"Error setting the CLI context: %s\n\n%s",
+				clierrors.Humanize(err),
+				errBootstrapContext,
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+	}
+
 	return 0
 }
 
 func (c *ServerBootstrapCommand) Flags() *flag.Sets {
-	return c.flagSet(flagSetConnection, nil)
+	return c.flagSet(flagSetConnection, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.StringVar(&flag.StringVar{
+			Name:   "context-create",
+			Target: &c.flagContext,
+			Usage: "Create a CLI context for this bootstrapped server. The context name " +
+				"will be the value of this flag. If this is an empty string, a context will " +
+				"not be created",
+			Default: fmt.Sprintf("bootstrap-%d", time.Now().Unix()),
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "context-set-default",
+			Target:  &c.flagContextDefault,
+			Default: true,
+			Usage: "Set the newly bootstrapped server as the default CLI context. This " +
+				"only has an effect if -context-create is non-empty.",
+		})
+	})
 }
 
 func (c *ServerBootstrapCommand) AutocompleteArgs() complete.Predictor {
@@ -71,5 +130,19 @@ Usage: waypoint server bootstrap [options]
   installed with "waypoint install", the bootstrap is done automatically
   during the install process.
 
+  The easiest way to run this command against a new server is by using
+  flags to specify server connection information. This command will setup
+  a CLI context by default.
+
 ` + c.Flags().Help())
 }
+
+var (
+	errBootstrapContext = strings.TrimSpace(`
+The Waypoint server successfully bootstrapped, but creating the context failed.
+
+The bootstrap token is available above. The context could not be created
+so the CLI is not configured to connect to the server. Please try to manually
+recreate the context.
+`)
+)

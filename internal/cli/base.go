@@ -53,6 +53,11 @@ type baseCommand struct {
 	// client for performing operations
 	project *clientpkg.Project
 
+	// clientContext is set to the context information for the current
+	// connection. This might not exist in the contextStorage yet if this
+	// is from an env var or flags.
+	clientContext *clicontext.Config
+
 	// contextStorage is for CLI contexts.
 	contextStorage *clicontext.Storage
 
