@@ -41,7 +41,7 @@ func (c *ServerBootstrapCommand) Run(args []string) int {
 }
 
 func (c *ServerBootstrapCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetConnection, nil)
 }
 
 func (c *ServerBootstrapCommand) AutocompleteArgs() complete.Predictor {

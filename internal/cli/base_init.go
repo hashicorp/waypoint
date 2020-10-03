@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
 
+	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/serverclient"
@@ -66,10 +67,17 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 
 // initClient initializes the client.
 func (c *baseCommand) initClient() (*clientpkg.Project, error) {
+	// We use our flag-based connection info if the user set an addr.
+	var flagConnection *clicontext.Config
+	if v := c.flagConnection; v.Server.Address != "" {
+		flagConnection = &v
+	}
+
 	// Start building our client options
 	opts := []clientpkg.Option{
 		clientpkg.WithLogger(c.Log),
 		clientpkg.WithClientConnect(
+			serverclient.FromContextConfig(flagConnection),
 			serverclient.FromContext(c.contextStorage, ""),
 			serverclient.FromEnv(),
 		),
