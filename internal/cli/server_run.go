@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -200,6 +201,24 @@ func (c *ServerRunCommand) Run(args []string) int {
 		values = append(values, terminal.NamedValue{Name: "URL Service", Value: value})
 	}
 	c.ui.NamedValues(values)
+
+	// If we aren't bootstrapped, let the user know
+	if bs, ok := impl.(interface {
+		Bootstrapped() bool
+	}); ok && auth && !bs.Bootstrapped() {
+		c.ui.Output("Server requires bootstrapping!", terminal.WithHeaderStyle())
+		c.ui.Output("")
+		c.ui.Output(strings.TrimSpace(`
+New servers must be bootstrapped to retrieve the initial auth token for
+connections. To bootstrap this server, run the following command in your
+terminal once the server is up and running.
+
+  waypoint server bootstrap -server-addr=%s -server-tls-skip-verify
+
+This command will bootstrap the server and setup a CLI context.
+`), ln.Addr().String(), terminal.WithInfoStyle())
+	}
+
 	c.ui.Output("Server logs:", terminal.WithHeaderStyle())
 	c.ui.Output("")
 
