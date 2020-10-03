@@ -175,6 +175,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 
 	// Output information to the user
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
+	c.ui.Output("")
 	values := []terminal.NamedValue{
 		{Name: "DB Path", Value: path},
 		{Name: "gRPC Address", Value: ln.Addr().String()},
