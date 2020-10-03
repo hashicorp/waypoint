@@ -33,6 +33,10 @@ func (c *DocsCommand) Run(args []string) int {
 			return 1
 		}
 
+		if _, ok := cmd.(*helpCommand); ok {
+			continue
+		}
+
 		err = c.genDocs(k, cmd)
 		if err != nil {
 			c.Log.Error("error generating docs", "error", err, "command", k)
