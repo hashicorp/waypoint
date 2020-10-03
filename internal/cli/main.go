@@ -369,6 +369,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"context verify": func() (cli.Command, error) {
+			return &ContextVerifyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 
 		"ui": func() (cli.Command, error) {
 			return &UICommand{

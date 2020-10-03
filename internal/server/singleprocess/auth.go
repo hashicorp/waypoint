@@ -287,3 +287,7 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 
 	return &pb.NewTokenResponse{Token: token}, nil
 }
+
+func (s *service) Bootstrapped() bool {
+	return !s.state.HMACKeyEmpty()
+}

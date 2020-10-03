@@ -10,9 +10,11 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/big"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -174,6 +176,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 
 	// Output information to the user
 	c.ui.Output("Server configuration:", terminal.WithHeaderStyle())
+	c.ui.Output("")
 	values := []terminal.NamedValue{
 		{Name: "DB Path", Value: path},
 		{Name: "gRPC Address", Value: ln.Addr().String()},
@@ -198,8 +201,32 @@ func (c *ServerRunCommand) Run(args []string) int {
 		values = append(values, terminal.NamedValue{Name: "URL Service", Value: value})
 	}
 	c.ui.NamedValues(values)
+
+	// If we aren't bootstrapped, let the user know
+	if bs, ok := impl.(interface {
+		Bootstrapped() bool
+	}); ok && auth && !bs.Bootstrapped() {
+		c.ui.Output("Server requires bootstrapping!", terminal.WithHeaderStyle())
+		c.ui.Output("")
+		c.ui.Output(strings.TrimSpace(`
+New servers must be bootstrapped to retrieve the initial auth token for
+connections. To bootstrap this server, run the following command in your
+terminal once the server is up and running.
+
+  waypoint server bootstrap -server-addr=%s -server-tls-skip-verify
+
+This command will bootstrap the server and setup a CLI context.
+`), ln.Addr().String(), terminal.WithInfoStyle())
+	}
+
 	c.ui.Output("Server logs:", terminal.WithHeaderStyle())
 	c.ui.Output("")
+
+	// Close our UI. If we're using the interactive UI we need to end the
+	// output right now so we don't redraw over our logs.
+	if closer, ok := c.ui.(io.Closer); ok && closer != nil {
+		closer.Close()
+	}
 
 	// Set our log output higher if its not already so that it begins showing.
 	if !log.IsInfo() {
@@ -251,14 +278,14 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Name:    "listen-grpc",
 			Target:  &c.config.GRPC.Addr,
 			Usage:   "Address to bind to for gRPC connections.",
-			Default: "127.0.0.1:1234", // TODO(mitchellh: change default
+			Default: "127.0.0.1:9701",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "listen-http",
 			Target:  &c.config.HTTP.Addr,
 			Usage:   "Address to bind to for HTTP connections. Required for the UI.",
-			Default: "127.0.0.1:1235", // TODO(mitchellh: change default
+			Default: "127.0.0.1:9702",
 		})
 
 		f.BoolVar(&flag.BoolVar{

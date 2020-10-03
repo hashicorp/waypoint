@@ -29,3 +29,82 @@ In this case, see the documentation on
 
 For details on upgrading the server, please see the
 [general Waypoint upgrade documentation](/docs/upgrading).
+
+## Manually Running the Server
+
+`waypoint install` is built to help you setup a Waypoint server, but
+we understand there are going to be many cases where you'll want to run
+Waypoint manually. To run a Waypoint server manually, you'll use the
+[`waypoint server run` command](/commands/server-run).
+
+**The instructions below are only if you're manually running a server
+with `waypoint server run`.**
+
+### Start the Server
+
+First, start the server:
+
+```sh
+$ waypoint server run -db=data.db
+
+» Server configuration:
+
+             DB Path: data.db
+        gRPC Address: 127.0.0.1:9701
+        HTTP Address: 127.0.0.1:9702
+       Auth Required: yes
+  Browser UI Enabled: yes
+         URL Service: api.waypoint.run:443 (account: token)
+
+...
+```
+
+The `waypoint server run` command takes a variety of flags for configuration.
+See the CLI help output for more information.
+
+-> **Note:** At the time of writing, Waypoint is limited to using self-signed
+TLS certificates and does not accept file-based configuration. This limitation
+will be fixed very soon.
+
+-> If you're manually running the server, we will assume that you know how
+to use a scheduler such as Nomad or service manager such as systemd to
+run this command in a production environment.
+
+### Bootstrap the Server
+
+If this is your first time starting the server against the configured
+database path, then you will be required to bootstrap the server to
+retrieve the initial auth token.
+
+The `waypoint server run` output should contain instructions on how to do
+this, including a CLI command you can copy and paste. The output should
+look like the following:
+
+```
+$ waypoint server run
+...
+
+» Server requires bootstrapping!
+
+  New servers must be bootstrapped to retrieve the initial auth token for
+  connections. To bootstrap this server, run the following command in your
+  terminal once the server is up and running.
+
+    waypoint server bootstrap -server-addr=127.0.0.1:9701 -server-tls-skip-verify
+
+  This command will bootstrap the server and setup a CLI context.
+```
+
+Copy and paste that command to bootstrap:
+
+```sh
+$ waypoint server bootstrap -server-addr=127.0.0.1:9701 -server-tls-skip-verify
+```
+
+This will output the bootstrap token but more importantly this will configure
+a [CLI context](/docs/server/auth#cli) automatically. You can now verify
+the connection using `waypoint context verify`.
+
+### Ready!
+
+At this point, the running server is ready for use!

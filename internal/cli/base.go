@@ -53,6 +53,11 @@ type baseCommand struct {
 	// client for performing operations
 	project *clientpkg.Project
 
+	// clientContext is set to the context information for the current
+	// connection. This might not exist in the contextStorage yet if this
+	// is from an env var or flags.
+	clientContext *clicontext.Config
+
 	// contextStorage is for CLI contexts.
 	contextStorage *clicontext.Storage
 
@@ -79,6 +84,9 @@ type baseCommand struct {
 
 	// flagWorkspace is the workspace to work in.
 	flagWorkspace string
+
+	// flagConnection contains manual flag-based connection info.
+	flagConnection clicontext.Config
 
 	// args that were present after parsing flags
 	args []string
@@ -354,6 +362,29 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		})
 	}
 
+	if bit&flagSetConnection != 0 {
+		f := set.NewSet("Connection Options")
+		f.StringVar(&flag.StringVar{
+			Name:   "server-addr",
+			Target: &c.flagConnection.Server.Address,
+			Usage:  "Address for the server.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "server-tls",
+			Target:  &c.flagConnection.Server.Tls,
+			Default: true,
+			Usage:   "True if the server should be connected to via TLS.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "server-tls-skip-verify",
+			Target:  &c.flagConnection.Server.TlsSkipVerify,
+			Default: false,
+			Usage:   "True to skip verification of the TLS certificate advertised by the server.",
+		})
+	}
+
 	if f != nil {
 		// Configure our values
 		f(set)
@@ -366,8 +397,9 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 type flagSetBit uint
 
 const (
-	flagSetNone      flagSetBit = 1 << iota
-	flagSetOperation            // shared flags for operations (build, deploy, etc)
+	flagSetNone       flagSetBit = 1 << iota
+	flagSetOperation             // shared flags for operations (build, deploy, etc)
+	flagSetConnection            // shared flags for server connections
 )
 
 var (

@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 )
 
@@ -73,6 +74,29 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 
 	// Connect to this server
 	return grpc.DialContext(ctx, cfg.Addr, grpcOpts...)
+}
+
+// ContextConfig will return the context configuration for the given connection
+// options.
+func ContextConfig(opts ...ConnectOption) (*clicontext.Config, error) {
+	// Setup config
+	var cfg connectConfig
+	for _, opt := range opts {
+		if err := opt(&cfg); err != nil {
+			return nil, err
+		}
+	}
+
+	// Build it
+	return &clicontext.Config{
+		Server: config.Server{
+			Address:       cfg.Addr,
+			Tls:           cfg.Tls,
+			TlsSkipVerify: cfg.TlsSkipVerify,
+			RequireAuth:   cfg.Token != "",
+			AuthToken:     cfg.Token,
+		},
+	}, nil
 }
 
 type connectConfig struct {

@@ -133,10 +133,15 @@ func (ui *glintUI) NamedValues(rows []NamedValue, opts ...Option) {
 			fmt.Fprintf(tr, "  %s: \t%s\n", row.Name, row.Value)
 		}
 	}
-
 	tr.Flush()
 
-	ui.d.Append(glint.Finalize(glint.Text(buf.String())))
+	// We want to trim the trailing newline
+	text := buf.String()
+	if len(text) > 0 && text[len(text)-1] == '\n' {
+		text = text[:len(text)-1]
+	}
+
+	ui.d.Append(glint.Finalize(glint.Text(text)))
 }
 
 // OutputWriters implements UI
