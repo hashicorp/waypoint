@@ -60,6 +60,73 @@ export default function AnimatedStepsList({ steps }) {
               code:
                 'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
             },
+
+            {
+              color: 'gray',
+              code:
+                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+            {
+              color: 'white',
+              code:
+                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+
+            {
+              color: 'gray',
+              code:
+                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+            {
+              color: 'white',
+              code:
+                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+
+            {
+              color: 'gray',
+              code:
+                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+            {
+              color: 'white',
+              code:
+                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+
+            {
+              color: 'gray',
+              code:
+                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+            {
+              color: 'white',
+              code:
+                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+
+            {
+              color: 'gray',
+              code:
+                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+            {
+              color: 'white',
+              code:
+                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+
+            {
+              color: 'gray',
+              code:
+                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+            {
+              color: 'white',
+              code:
+                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
+            },
+
             { code: '' },
             { code: '' },
             { code: '' },

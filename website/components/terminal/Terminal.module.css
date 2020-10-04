@@ -36,23 +36,35 @@
     background: var(--gray-1);
     border-radius: 0 0 var(--terminal-radius) var(--terminal-radius);
     padding: 24px 32px;
-
-    & code {
+    & .overflowWrapper {
       width: 100%;
       height: 100%;
-      font-style: normal;
-      font-weight: normal;
-      font-size: 13.5px;
-      line-height: 26px;
-      color: var(--blue);
-      &.navy {
-        color: var(--vagrant-l1);
-      }
-      &.gray {
-        color: var(--gray-5);
-      }
-      &.white {
-        color: var(--white);
+      position: relative;
+      overflow: scroll;
+
+      & .codeWrapper {
+        bottom: 0;
+        position: absolute;
+        min-height: 100%;
+
+        & code {
+          width: 100%;
+          height: 100%;
+          font-style: normal;
+          font-weight: normal;
+          font-size: 13.5px;
+          line-height: 26px;
+          color: var(--blue);
+          &.navy {
+            color: var(--vagrant-l1);
+          }
+          &.gray {
+            color: var(--gray-5);
+          }
+          &.white {
+            color: var(--white);
+          }
+        }
       }
     }
   }
