@@ -12,23 +12,29 @@ export default function Terminal({ lines, className }) {
         </ul>
       </div>
       <div className={styles.content}>
-        {lines &&
-          lines.map((line) => (
-            <>
-              <code
-                className={classNames({
-                  [styles.navy]: line.color === 'navy',
-                  [styles.gray]: line.color === 'gray',
-                  [styles.white]: line.color === 'white',
-                })}
-              >
-                {line.indent &&
-                  new Array(line.indent * 2).fill({}).map(() => <>&nbsp;</>)}
-                {line.code}
-              </code>
-              <br />
-            </>
-          ))}
+        <div className={styles.overflowWrapper}>
+          <div className={styles.codeWrapper}>
+            {lines &&
+              lines.map((line) => (
+                <>
+                  <code
+                    className={classNames({
+                      [styles.navy]: line.color === 'navy',
+                      [styles.gray]: line.color === 'gray',
+                      [styles.white]: line.color === 'white',
+                    })}
+                  >
+                    {line.indent &&
+                      new Array(line.indent * 2)
+                        .fill({})
+                        .map(() => <>&nbsp;</>)}
+                    {line.code}
+                  </code>
+                  <br />
+                </>
+              ))}
+          </div>
+        </div>
       </div>
     </div>
   )
