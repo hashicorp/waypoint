@@ -1,7 +1,7 @@
 .step {
   max-width: 344px;
-  @media (max-width: 700px) {
-    max-width: inherit;
+  @media (max-width: 850px) {
+    max-width: unset;
   }
 
   & h4 {

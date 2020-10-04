@@ -5,9 +5,9 @@
 
   & > li {
     &:not(:last-of-type) {
-      margin-bottom: 400px;
+      margin-bottom: 600px;
 
-      @media (max-width: 700px) {
+      @media (max-width: 850px) {
         margin-bottom: 88px;
       }
     }
