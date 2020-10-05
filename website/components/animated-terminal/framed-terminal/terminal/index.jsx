@@ -1,9 +1,46 @@
 import classNames from 'classnames'
 import styles from './Terminal.module.css'
 
-export default function Terminal({ lines, className }) {
+/**
+ * A Terminal is a simple component representing the presentation
+ * of a terminal in a static state.
+ *
+ * Animated versions of the terminal are available in higher order components,
+ * but they work by manipulating the passed props down to this terminal to
+ * represent the active state in a given frame.
+ *
+ * Example Usage:
+ *
+ *  <Terminal
+ *    lines={[
+ *      {
+ *        code: '» Building . . . . . . . . . . . . .',
+ *      },
+ *      {
+ *        color: 'gray',
+ *        code: 'Creating new buildpack-based image using builder:',
+ *        indent: 1,
+ *      },
+ *      {
+ *        color: 'gray',
+ *        code: 'heroku/buildpacks:18',
+ *        indent: 1,
+ *      },
+ *      {
+ *        color: 'navy',
+ *        code: '✓ Creating pack client',
+ *        indent: 1,
+ *      },
+ *      {
+ *        color: 'white',
+ *        code: '⠴ Building image',
+ *      },
+ *    ]}
+ *  />
+ */
+export default function Terminal({ lines }) {
   return (
-    <div className={classNames(styles.terminal, className)}>
+    <div className={styles.terminal}>
       <div className={styles.titleBar}>
         <ul className={styles.windowControls}>
           <li></li>
