@@ -1,13 +1,16 @@
 import styles from './AnimatedStepsList.module.css'
 import StepsList from './steps-list'
 import StepsIndicator from './steps-indicator'
-import AnimatedTerminal from 'components/animated-terminal'
+import useScrollPosition from 'lib/hooks/useScrollPosition'
+import SteppedAnimatedTerminal from './stepped-animated-terminal'
+
 import { useState } from 'react'
 
 export default function AnimatedStepsList({ terminalHeroState, steps }) {
+  const scrollPosition = useScrollPosition()
   const [indicatorIndex, setIndicatorIndex] = useState(0)
-
-  const activeTerminalState = terminalHeroState
+  const activeTerminalStateIndex =
+    scrollPosition <= 350 ? 0 : indicatorIndex + 1
 
   return (
     <div className={styles.animatedStepsList}>
@@ -24,10 +27,9 @@ export default function AnimatedStepsList({ terminalHeroState, steps }) {
       />
 
       <div className={styles.terminalWrapper}>
-        <AnimatedTerminal
-          frameLength={activeTerminalState.frameLength}
-          loop={activeTerminalState.loop}
-          lines={activeTerminalState.lines}
+        <SteppedAnimatedTerminal
+          activeIndex={activeTerminalStateIndex}
+          steps={[terminalHeroState].concat(steps.map((step) => step.terminal))}
         />
       </div>
     </div>

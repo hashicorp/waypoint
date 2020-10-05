@@ -30,5 +30,10 @@ export default function AnimatedTerminal({ lines, frameLength, loop, paused }) {
     return () => clearInterval(interval)
   }, [frame])
 
+  // Reset Frames if our lines change
+  useEffect(() => {
+    setFrame(0)
+  }, [lines])
+
   return <FramedTerminal frame={frame} lines={lines} />
 }
