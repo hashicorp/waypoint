@@ -82,6 +82,9 @@ type baseCommand struct {
 	// flagRemoteSource are the remote data source overrides for jobs.
 	flagRemoteSource map[string]string
 
+	// flagApp is the app to target.
+	flagApp string
+
 	// flagWorkspace is the workspace to work in.
 	flagWorkspace string
 
@@ -210,6 +213,19 @@ func (c *baseCommand) Init(opts ...Option) error {
 		c.cfg = cfg
 		if cfg != nil {
 			c.refProject = &pb.Ref_Project{Project: cfg.Project}
+
+			// If we require an app target and we still haven't set it,
+			// and the user provided it via the CLI, set it now. This code
+			// path is only reached if it wasn't set via the args either
+			// above.
+			if baseCfg.AppTargetRequired &&
+				c.refApp == nil &&
+				c.flagApp != "" {
+				c.refApp = &pb.Ref_Application{
+					Project:     cfg.Project,
+					Application: c.flagApp,
+				}
+			}
 		}
 	}
 
@@ -327,6 +343,15 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Target:  &c.flagPlain,
 			Default: false,
 			Usage:   "Plain output: no colors, no animation.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "app",
+			Target:  &c.flagApp,
+			Default: "",
+			Usage: "App to target. Certain commands require a single app target for " +
+				"Waypoint configurations with multiple apps. If you have a single app, " +
+				"then this can be ignored.",
 		})
 
 		f.StringVar(&flag.StringVar{
