@@ -13,10 +13,8 @@ require (
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.33.6
-	github.com/bgentry/speakeasy v0.1.0
 	github.com/bmatcuk/doublestar v1.1.5
 	github.com/boltdb/bolt v1.3.1
-	github.com/briandowns/spinner v1.8.0
 	github.com/buildpacks/pack v0.11.1
 	github.com/creack/pty v1.1.11
 	github.com/davecgh/go-spew v1.1.1
@@ -40,25 +38,24 @@ require (
 	github.com/google/renameio v0.1.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/handlers v1.4.2
-	github.com/hashicorp/go-argmapper v0.0.0-20200617185818-77662eabd58a
+	github.com/hashicorp/go-argmapper v0.0.0-20200721221215-04ae500ede3b
 	github.com/hashicorp/go-getter v1.4.1
 	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/go-memdb v1.2.0
 	github.com/hashicorp/go-multierror v1.1.0
-	github.com/hashicorp/go-plugin v1.1.0
+	github.com/hashicorp/go-plugin v1.3.0
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0
 	github.com/hashicorp/horizon v0.0.0-20200730033532-a0cec81f4e7a
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/waypoint-hzn v0.0.0-20200716172850-719df2bafd65
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201005213545-e3b1030a40f8
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
-	github.com/lab47/vterm v0.0.0-20201001232628-a9dd795f94c2
 	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/mattn/go-colorable v0.1.7
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.1.2
 	github.com/mitchellh/go-glint v0.0.0-20200930000256-df5e721f3258
@@ -68,9 +65,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/pointerstructure v1.0.0
-	github.com/mitchellh/protostructure v0.0.0-20200814180458-3cfccdb015ce
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
-	github.com/morikuni/aec v1.0.0
 	github.com/mr-tron/base58 v1.2.0
 	github.com/netlify/open-api v0.15.0
 	github.com/oklog/run v1.1.0
@@ -85,11 +80,11 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/zclconf/go-cty v1.5.1
 	github.com/zclconf/go-cty-yaml v1.0.2
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 	golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d // indirect
 	google.golang.org/api v0.20.0
-	google.golang.org/genproto v0.0.0-20200715011427-11fb19a81f2c
-	google.golang.org/grpc v1.30.0
+	google.golang.org/genproto v0.0.0-20201002142447-3860012362da
+	google.golang.org/grpc v1.32.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0

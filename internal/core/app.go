@@ -13,14 +13,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/serverhistory"
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // App represents a single application and exposes all the operations
@@ -272,7 +271,6 @@ func (a *App) callDynamicFunc(
 			a.dir,
 			componentData.Dir,
 			a.UI,
-			&serverhistory.Client{APIClient: a.client, MapperSet: a.mappers},
 		),
 
 		argmapper.Named("labels", &component.LabelSet{Labels: componentData.Labels}),
