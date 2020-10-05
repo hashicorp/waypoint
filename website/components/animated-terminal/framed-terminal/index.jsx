@@ -65,9 +65,10 @@ export default function FramedTerminal({ frame, lines }) {
       totalFrames += frames
     }
   })
-  // Determine the actual realFrame to handle when the number
+
+  // Determine the actual activeFrame to handle when the number
   // of frames passed in exceeds our totalFrames
-  const realFrame = frame % totalFrames
+  const activeFrame = frame % totalFrames
 
   // Calculate the lines that should actively be displayed
   // and passed down to our terminal
@@ -75,7 +76,7 @@ export default function FramedTerminal({ frame, lines }) {
   const terminalLines = lines
     .map((line) => {
       // Determine how many frames left we have here
-      var remainingFrames = realFrame - previousFrames
+      var remainingFrames = activeFrame - previousFrames
 
       // Calculate our result for this line that will be passed down
       // to our <Terminal />
@@ -88,9 +89,10 @@ export default function FramedTerminal({ frame, lines }) {
             indent: line.indent,
           }
         } else {
+          var lineFrame = Math.floor(remainingFrames / line.frames)
           result = {
             color: line.color,
-            code: line.code.slice(0, remainingFrames + 1).splice(-1, 1),
+            code: line.code.slice(0, lineFrame + 1).splice(-1, 1),
             indent: line.indent,
           }
         }
