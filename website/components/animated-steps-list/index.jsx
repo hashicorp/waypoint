@@ -1,11 +1,17 @@
 import styles from './AnimatedStepsList.module.css'
 import StepsList from './steps-list'
 import StepsIndicator from './steps-indicator'
-import Terminal from 'components/simple-animated-terminal'
+import useScrollPosition from 'lib/hooks/useScrollPosition'
+import SteppedAnimatedTerminal from './stepped-animated-terminal'
+
 import { useState } from 'react'
 
-export default function AnimatedStepsList({ steps }) {
+export default function AnimatedStepsList({ terminalHeroState, steps }) {
+  const scrollPosition = useScrollPosition()
   const [indicatorIndex, setIndicatorIndex] = useState(0)
+  const activeTerminalStateIndex =
+    scrollPosition <= 350 ? 0 : indicatorIndex + 1
+
   return (
     <div className={styles.animatedStepsList}>
       <div className={styles.indicatorWrapper}>
@@ -21,123 +27,9 @@ export default function AnimatedStepsList({ steps }) {
       />
 
       <div className={styles.terminalWrapper}>
-        <Terminal
-          lines={[
-            {
-              code: '» Building . . . . . . . . . . . . .',
-            },
-            {
-              color: 'gray',
-              code: 'Creating new buildpack-based image using builder:',
-              indent: 1,
-            },
-            {
-              color: 'gray',
-              code: 'heroku/buildpacks:18',
-              indent: 1,
-            },
-            {
-              color: 'navy',
-              code: '✓ Creating pack client',
-              indent: 1,
-            },
-            {
-              color: 'white',
-              code: '⠴ Building image',
-            },
-            { code: '' },
-            {
-              color: 'gray',
-              code: 'Generated new Docker image: example-ruby:latest',
-            },
-            {
-              color: 'gray',
-              code:
-                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-            {
-              color: 'white',
-              code:
-                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-
-            {
-              color: 'gray',
-              code:
-                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-            {
-              color: 'white',
-              code:
-                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-
-            {
-              color: 'gray',
-              code:
-                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-            {
-              color: 'white',
-              code:
-                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-
-            {
-              color: 'gray',
-              code:
-                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-            {
-              color: 'white',
-              code:
-                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-
-            {
-              color: 'gray',
-              code:
-                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-            {
-              color: 'white',
-              code:
-                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-
-            {
-              color: 'gray',
-              code:
-                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-            {
-              color: 'white',
-              code:
-                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-
-            {
-              color: 'gray',
-              code:
-                'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-            {
-              color: 'white',
-              code:
-                'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
-            },
-
-            { code: '' },
-            { code: '' },
-            { code: '' },
-            { code: '' },
-            { code: '' },
-            { code: '' },
-            { code: '' },
-            { code: '' },
-            { code: '' },
-            { code: '' },
-          ]}
+        <SteppedAnimatedTerminal
+          activeIndex={activeTerminalStateIndex}
+          steps={[terminalHeroState].concat(steps.map((step) => step.terminal))}
         />
       </div>
     </div>
