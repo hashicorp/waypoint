@@ -8,9 +8,9 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/docker"
-	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/datadir"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/stretchr/testify/require"
 )
 

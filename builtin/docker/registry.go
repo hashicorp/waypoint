@@ -14,8 +14,8 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/registry"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/sdk/docs"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

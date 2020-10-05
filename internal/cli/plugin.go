@@ -2,7 +2,7 @@ package cli
 
 import (
 	"github.com/hashicorp/waypoint/internal/plugin"
-	"github.com/hashicorp/waypoint/sdk"
+	"github.com/hashicorp/waypoint-plugin-sdk"
 )
 
 type PluginCommand struct {

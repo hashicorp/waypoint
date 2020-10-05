@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
 // CanAuth returns true if the provided component supports authenticating and

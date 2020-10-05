@@ -1,7 +1,7 @@
 package alb
 
 import (
-	"github.com/hashicorp/waypoint/sdk"
+	"github.com/hashicorp/waypoint-plugin-sdk"
 )
 
 //go:generate protoc -I ../../../.. --go_opt=plugins=grpc --go_out=../../../.. waypoint/builtin/aws/alb/plugin.proto

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // Sourcer is implemented by all data sourcers and is responsible for

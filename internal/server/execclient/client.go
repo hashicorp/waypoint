@@ -17,7 +17,7 @@ import (
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	internalptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type Client struct {

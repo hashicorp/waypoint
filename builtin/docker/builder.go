@@ -15,9 +15,9 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
-	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/docs"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

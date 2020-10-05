@@ -12,9 +12,9 @@ import (
 	"github.com/buildpacks/pack/logging"
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
-	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/docs"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
