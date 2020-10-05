@@ -12,10 +12,10 @@ import (
 	"github.com/skratchdot/open-golang/open"
 
 	"github.com/hashicorp/waypoint/builtin/files"
-	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/datadir"
-	"github.com/hashicorp/waypoint/sdk/docs"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // Platform is the Platform implementation for Google Cloud Run.

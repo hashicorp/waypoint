@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/datadir"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // executeJob executes an assigned job. This will source the data (if necessary),

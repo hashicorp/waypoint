@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
 // Release releases a set of deploys.

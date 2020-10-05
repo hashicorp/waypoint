@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 var testHasGit bool

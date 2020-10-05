@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/internal/config"
-	"github.com/hashicorp/waypoint/sdk/component"
-	componentmocks "github.com/hashicorp/waypoint/sdk/component/mocks"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
 )
 
 func TestAppBuild_happy(t *testing.T) {

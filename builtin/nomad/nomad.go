@@ -1,6 +1,6 @@
 package nomad
 
-import "github.com/hashicorp/waypoint/sdk"
+import "github.com/hashicorp/waypoint-plugin-sdk"
 
 //go:generate protoc -I ../../.. --go_opt=plugins=grpc --go_out=../../.. waypoint/builtin/nomad/plugin.proto
 

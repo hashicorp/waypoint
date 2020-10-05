@@ -9,7 +9,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2015-11-01/subscriptions"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
 var _ component.Deployment = (*Deployment)(nil)

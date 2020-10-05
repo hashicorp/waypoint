@@ -10,7 +10,7 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type LogsCommand struct {

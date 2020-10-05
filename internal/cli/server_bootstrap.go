@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type ServerBootstrapCommand struct {

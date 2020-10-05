@@ -18,9 +18,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverhistory"
-	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/datadir"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // App represents a single application and exposes all the operations

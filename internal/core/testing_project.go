@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
-	"github.com/hashicorp/waypoint/sdk/component"
-	componentmocks "github.com/hashicorp/waypoint/sdk/component/mocks"
-	"github.com/hashicorp/waypoint/sdk/datadir"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
+	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 )
 
 // TestProject returns a fully in-memory and side-effect free Project that

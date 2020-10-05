@@ -2,7 +2,7 @@ package cli
 
 import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // Option is used to configure Init on baseCommand.

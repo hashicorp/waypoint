@@ -16,9 +16,9 @@ import (
 
 	"github.com/hashicorp/waypoint/builtin/aws/ami"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
-	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/docs"
-	"github.com/hashicorp/waypoint/sdk/terminal"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 const (

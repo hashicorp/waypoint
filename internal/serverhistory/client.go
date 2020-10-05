@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/go-argmapper"
 	servercomponent "github.com/hashicorp/waypoint/internal/server/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/sdk/component"
-	"github.com/hashicorp/waypoint/sdk/history"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/history"
 )
 
 // Client implements history.Client and provides history using a backend server.

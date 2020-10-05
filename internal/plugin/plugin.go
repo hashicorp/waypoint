@@ -2,8 +2,8 @@ package plugin
 
 import (
 	"github.com/hashicorp/waypoint/internal/factory"
-	"github.com/hashicorp/waypoint/sdk"
-	"github.com/hashicorp/waypoint/sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 
 	"github.com/hashicorp/waypoint/builtin/aws/alb"
 	"github.com/hashicorp/waypoint/builtin/aws/ami"
