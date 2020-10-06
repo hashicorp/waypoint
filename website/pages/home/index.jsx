@@ -307,9 +307,14 @@ export default function HomePage() {
 
       <BrandedCta
         heading="Ready to get started?"
-        content="TODO: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+        content="Explore Waypoint documentation to deploy a simple application."
         links={[
-          { text: 'Download', url: '/download', type: 'download' },
+          {
+            text: 'Get Started',
+            url:
+              'https://learn.hashicorp.com/collections/waypoint/getting-started',
+            type: 'outbound',
+          },
           { text: 'Explore documentation', url: '/docs' },
         ]}
       />
