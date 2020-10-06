@@ -1,18 +1,82 @@
-import s from './style.module.css'
+import { useMemo, useState, useEffect } from 'react'
 import VERSION from 'data/version.js'
-import ProductDownloader from '@hashicorp/react-product-downloader'
 import Head from 'next/head'
 import HashiHead from '@hashicorp/react-head'
-import { productName, productSlug } from 'data/metadata'
 
-export default function DownloadsPage({ releaseData }) {
+import { productName, productSlug } from 'data/metadata'
+import {
+  packageManagers,
+  tutorials,
+  containers,
+  packageManagersByOs,
+  getStartedLinks,
+} from 'data/downloads'
+import ReleaseInformation from 'components/downloader/release-information'
+import { sortPlatforms, detectOs } from 'components/downloader/utils/downloader'
+import DownloadCards from 'components/downloader/cards'
+import styles from './style.module.css'
+
+export default function DownloadsPage({ releaseData, previousVersions }) {
+  const sortedDownloads = useMemo(() => sortPlatforms(releaseData), [
+    releaseData,
+  ])
+  const osKeys = Object.keys(sortedDownloads)
+  const [osIndex, setSelectedOsIndex] = useState()
+
+  const tabData = Object.keys(sortedDownloads).map((osKey) => ({
+    os: osKey,
+    packageManagers: packageManagersByOs[osKey] || null,
+  }))
+
+  useEffect(() => {
+    // if we're on the client side, detect the default platform only on initial render
+    const index = osKeys.indexOf(detectOs(window.navigator.platform))
+    setSelectedOsIndex(index)
+  }, [])
+
   return (
-    <div className={s.root}>
+    <div className={styles.root}>
+      <h1>Download {productName}</h1>
       <HashiHead is={Head} title={`Downloads | ${productName} by HashiCorp`} />
-      <ProductDownloader
-        product={productName}
+      <DownloadCards
+        brand="blue"
+        defaultTabIdx={osIndex}
+        tabData={tabData}
+        downloads={sortedDownloads}
         version={VERSION}
-        releaseData={releaseData}
+        logo={<div className={styles.logo}>{productName}</div>}
+        // TODO: Placeholder content
+        tutorialLink={{ href: '#', label: 'View Tutorial on HashiCorp Learn' }}
+        merchandisingSlot={
+          <div className={styles.hosting}>
+            {/* TODO: Placeholder content */}
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          </div>
+        }
+      />
+
+      <div className="g-container">
+        <div className={styles.gettingStarted}>
+          <h2>Getting Started</h2>
+          <div className={styles.links}>
+            {getStartedLinks.map((link) => (
+              <a href={link.href} key={link.href}>
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <ReleaseInformation
+        brand="blue"
+        productId={productSlug}
+        productName={productName}
+        releases={previousVersions}
+        latestVersion={releaseData.version}
+        packageManagers={Object.values(packageManagers)}
+        containers={containers}
+        tutorials={tutorials}
       />
     </div>
   )
