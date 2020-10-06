@@ -19,7 +19,7 @@ env:
 
 branches:
   only:
-    - master
+    - main
 
 script:
   - npm test
