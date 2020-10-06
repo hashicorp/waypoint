@@ -11,7 +11,7 @@ references:
     test-results: &TEST_RESULTS_DIR /tmp/test-results
 
   cache:
-    yarn: &YARN_CACHE_KEY waypoint-ui-{{ checksum "ui/yarn.lock" }}
+    yarn: &YARN_CACHE_KEY waypoint-ui-{{ .Environment.CACHE_VERSION }}-{{ checksum "ui/yarn.lock" }}
     rubygem: &RUBYGEM_CACHE_KEY static-site-gems-v1-{{ checksum "Gemfile.lock" }}
 
   environment: &ENVIRONMENT
@@ -22,6 +22,7 @@ references:
     GIT_COMMITTER_NAME: circleci-waypoint
     BASH_ENV: .circleci/bash_env.sh
     DOCKER_BUILDKIT: 1
+    CACHE_VERSION: v1 # for manually updating yarn cache as-needed
 
 jobs:
   # Runs Go linters
@@ -225,30 +226,26 @@ jobs:
           command: |
             docker push docker.pkg.github.com/hashicorp/waypoint/alpha
 
-  # todo: re-enable when we need a UI
-  #
   # build frontend yarn cache
-  # frontend-cache:
-  #   docker:
-  #     - image: *EMBER_IMAGE
-  #   steps:
-  #     - checkout
-
-  #     # cache yarn deps
-  #     - restore_cache:
-  #         key: *YARN_CACHE_KEY
-
-  #     - run:
-  #         name: install yarn packages
-  #         command: cd ui && yarn install
-
-  #     - save_cache:
-  #         key: *YARN_CACHE_KEY
-  #         paths:
-  #           - ui/node_modules
+  frontend-cache:
+    docker:
+      - image: *EMBER_IMAGE
+    steps:
+      - checkout
+      # cache yarn deps
+      - restore_cache:
+          key: *YARN_CACHE_KEY
+      - run:
+          name: install yarn packages
+          command: cd ui && yarn install
+      - save_cache:
+          key: *YARN_CACHE_KEY
+          paths:
+            - ui/node_modules
+            - ui/lib/node_modules
 
   # build ember so frontend tests run faster
-  # ember-build:
+  # ember-build-tests:
   #   docker:
   #     - image: *EMBER_IMAGE
   #   environment:
@@ -265,23 +262,68 @@ jobs:
   #         paths:
   #           - dist
 
-  # # rebuild UI for packaging
-  # ember-build-prod:
-  #   docker:
-  #     - image: *EMBER_IMAGE
-  #   environment:
-  #     JOBS: 2 # limit parallelism for broccoli-babel-transpiler
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         key: *YARN_CACHE_KEY
-  #     - run: cd ui && make
+  # rebuild UI for packaging
+  ember-build-prod:
+    docker:
+      - image: *EMBER_IMAGE
+    environment:
+      JOBS: 2 # limit parallelism for broccoli-babel-transpiler
+    steps:
+      - checkout
+      - restore_cache:
+          key: *YARN_CACHE_KEY
+      - run: cd ui && make
+      # saves the build to a workspace to be passed to a downstream job
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ui/dist
 
-  #     # saves the build to a workspace to be passed to a downstream job
-  #     - persist_to_workspace:
-  #         root: ui
-  #         paths:
-  #           - dist
+  # build static-assets file
+  build-static-assets:
+    docker:
+      - image: *GOLANG_IMAGE
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+      - attach_workspace:
+          at: .
+      - run: go get github.com/kevinburke/go-bindata/...
+      - run: make static-assets
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./internal/server/gen/bindata_ui.go
+
+  publish-static-assets:
+    docker:
+      - image: *GOLANG_IMAGE
+    steps:
+      - checkout
+      - add_ssh_keys: # needs a key to push updated static asset commit back to github
+          fingerprints:
+            - "c9:04:b7:85:bf:0e:ce:93:5f:b8:0e:68:8e:16:f3:71"
+      - attach_workspace:
+          at: .
+      - run:
+          name: commit internal/server/gen/bindata_ui.go if there are UI changes
+          command: |
+            # check if there are any changes in ui/
+            # if there are, we commit the ui static asset file
+            # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
+            if ! git diff --quiet --exit-code HEAD^! ui/; then
+              echo "===> WIP; Commented out committing bindata to main"
+              # git config --local user.email "hashicorp-ci@users.noreply.github.com"
+              # git config --local user.name "hashicorp-ci"
+              # short_sha=$(git rev-parse --short HEAD)
+              # git add internal/server/gen/bindata_ui.go
+              # git commit -m "auto-updated internal/server/gen/bindata_ui.go from commit ${short_sha}"
+              # git push origin main
+            else
+              echo "no UI changes so no static assets to publish"
+            fi
 
   # # run ember frontend tests
   # ember-test:
@@ -321,8 +363,30 @@ workflows:
     jobs:
       - check-vendor
       - lint
-      - dev-build
       - go-test
+      # - dev-build: # dev-build builds on its own for every non-main branch; on main, builds with UI below
+      #     filters:
+      #       branches:
+      #         ignore:
+      #           - main
+      - frontend-cache
+      # - frontend-cache: # check every commit on main for UI changes to build
+      #     filters:
+      #       branches:
+      #         only:
+      #           - main
+      - ember-build-prod:
+          requires:
+            - frontend-cache
+      - build-static-assets:
+          requires:
+            - ember-build-prod
+      - publish-static-assets:
+          requires:
+            - build-static-assets
+      - dev-build:
+          requires:
+            - build-static-assets
 
   integration:
     jobs:
