@@ -282,22 +282,22 @@ export default function HomePage() {
         <InfoGrid
           items={[
             {
-              icon: require('./img/info.svg'),
-              title: 'Confidence in deployments',
-              description:
-                'Validate deployments across distinct and complex environments with common tooling',
-            },
-            {
-              icon: require('./img/info.svg'),
+              icon: require('./img/why-waypoint/workflow-consistency.svg'),
               title: 'Consistency of workflows',
               description:
-                'A consistent workflow for build, deploy, and release across common developer platforms',
+                'Consistent workflow for build, deploy, and release across platforms',
             },
             {
-              icon: require('./img/info.svg'),
+              icon: require('./img/why-waypoint/deployment-confidence.svg'),
+              title: 'Confidence in deployments',
+              description:
+                'Validate deployments across environments with common tooling',
+            },
+            {
+              icon: require('./img/why-waypoint/ecosystem-extensibility.svg'),
               title: 'Extensibility with the ecosystem',
               description:
-                'Extend workflows across the ecosystem via built-in plugins and an extensible interface',
+                'Extend workflows via built-in plugins and an extensible interface',
             },
           ]}
         />

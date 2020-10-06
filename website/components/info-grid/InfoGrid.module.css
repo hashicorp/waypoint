@@ -26,6 +26,8 @@
       flex-basis: calc(33.33% - var(--gutter));
 
       & img {
+        max-height: 56px;
+        max-width: 56px;
         margin-bottom: 16px;
       }
 
