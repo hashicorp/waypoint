@@ -8,10 +8,10 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
-	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/docker"
 )
 
 const (
@@ -228,7 +228,16 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc.Example(
 		`
 deploy {
-	use "nomad" {}
+	use "nomad" {
+	  region = "global"
+	  datacenter = "dc1"
+	  static_environment = {
+	    "environment": "production",
+	    "LOG_LEVEL": "debug"
+	  }
+	  service_port = 3000
+	  replicas = 1
+	}
 }
 `)
 

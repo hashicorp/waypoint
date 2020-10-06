@@ -265,6 +265,19 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Deploy a container to Docker, local or remote")
 
+	doc.Example(`
+deploy {
+  use "docker" {
+	command      = "ps"
+	service_port = 3000
+	static_environment = {
+	  "environment": "production",
+	  "LOG_LEVEL": "debug"
+	}
+  }
+}
+`)
+
 	doc.Input("docker.Image")
 	doc.Output("docker.Deployment")
 

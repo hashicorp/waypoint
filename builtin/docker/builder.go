@@ -13,11 +13,11 @@ import (
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/hashicorp/waypoint/internal/assets"
-	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/assets"
+	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -48,6 +48,15 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Build a Docker image using the `docker build` protocol")
+
+	doc.Example(`
+build {
+  use "docker" {
+	buildkit    = false
+	disable_ceb = false
+  }
+}
+`)
 
 	doc.Input("component.Source")
 	doc.Output("docker.Image")

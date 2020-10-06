@@ -166,6 +166,18 @@ func (r *Registry) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Push a Docker image to a Docker compatible registry")
 
+	doc.Example(`
+build {
+  use "docker" {}
+  registry {
+    use "docker" {
+      image = "hashicorp/http-echo"
+      tag   = "latest"
+    }
+  }
+}
+`)
+
 	doc.Input("docker.Image")
 	doc.Output("docker.Image")
 

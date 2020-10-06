@@ -45,5 +45,11 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 
 	doc.Description("Generates a value representing a path on disk")
 
+	doc.Example(`
+build {
+  use "files" {}
+}
+`)
+
 	return doc, nil
 }
