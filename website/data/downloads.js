@@ -4,7 +4,7 @@ export const packageManagers = {
   homebrew: {
     label: 'Homebrew',
     url: '#',
-    commands: ['brew install hashicorp/tap/waypoint'],
+    commands: ['brew tap hashicorp/tap', 'brew install hashicorp/tap/waypoint'],
   },
   chocolatey: {
     label: 'Chocolatey',
