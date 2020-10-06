@@ -19,8 +19,7 @@ export default function ProductSubnav() {
         },
         {
           text: 'Download',
-          url:
-            'http://ihngtake2gyn8nbyfgtgvu449dnsbrgopvukjdbntyndmlv7tb.s3-website-us-east-1.amazonaws.com/waypoint/',
+          url: '/downloads',
         },
       ]}
       currentPath={router.pathname}

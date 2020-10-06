@@ -6,7 +6,7 @@
   "dependencies": {
     "@hashicorp/nextjs-scripts": "13.0.0-canary.1",
     "@hashicorp/react-alert-banner": "^4.1.0",
-    "@hashicorp/react-button": "^3.0.1",
+    "@hashicorp/react-button": "^3.0.2",
     "@hashicorp/react-content": "5.1.0",
     "@hashicorp/react-docs-page": "6.2.0",
     "@hashicorp/react-global-styles": "4.5.0",
@@ -16,6 +16,7 @@
     "@hashicorp/react-product-downloader": "4.1.3",
     "@hashicorp/react-section-header": "2.0.2",
     "@hashicorp/react-subnav": "3.3.1",
+    "@hashicorp/react-tabs": "^0.6.1",
     "@hashicorp/react-vertical-text-block-list": "2.0.3",
     "fs-exists-sync": "^0.1.0",
     "gray-matter": "4.0.2",
@@ -27,7 +28,8 @@
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-intersection-observer": "^8.29.0",
-    "readdirp": "3.4.0"
+    "readdirp": "3.4.0",
+    "semver": "^7.3.2"
   },
   "devDependencies": {
     "husky": "4.3.0",
