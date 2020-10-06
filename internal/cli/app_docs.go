@@ -10,15 +10,15 @@ import (
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/go-argmapper"
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	"github.com/hashicorp/waypoint-plugin-sdk/docs"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type AppDocsCommand struct {
@@ -188,16 +188,16 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 		fmt.Fprintf(w, "\n### Mappers\n\n")
 
 		for _, m := range mappers {
-			fmt.Fprintf(w, "#### %s\n", m.Description)
-			fmt.Fprintf(w, "* Input: **%s**\n", m.Input)
-			fmt.Fprintf(w, "* Output: **%s**\n", m.Output)
+			fmt.Fprintf(w, "#### %s\n\n", m.Description)
+			fmt.Fprintf(w, "- Input: **%s**\n", m.Input)
+			fmt.Fprintf(w, "- Output: **%s**\n", m.Output)
 		}
 	}
 
 	fmt.Fprintf(w, "\n### Variables\n")
 
 	for _, f := range doc.Fields() {
-		fmt.Fprintf(w, "\n#### %s\n", f.Field)
+		fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
 
 		if f.Summary != "" {
 			fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
@@ -210,7 +210,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 		}
 
 		if f.Optional {
-			fmt.Fprintf(w, "- __Optional__\n")
+			fmt.Fprintf(w, "- **Optional**\n")
 
 			if f.Default != "" {
 				fmt.Fprintf(w, "- Default: %s\n", f.Default)
@@ -219,7 +219,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	}
 
 	if dets.Example != "" {
-		fmt.Fprintf(w, "\n\n### Examples\n```\n%s\n```\n", dets.Example)
+		fmt.Fprintf(w, "\n\n### Examples\n\n```\n%s\n```\n", dets.Example)
 	}
 }
 
@@ -258,14 +258,39 @@ func (c *AppDocsCommand) markdownFormatPB(name, ct string, doc *pb.Documentation
 }
 
 func (c *AppDocsCommand) builtinDocs(args []string) int {
+	types := []component.Type{
+		component.BuilderType,
+		component.RegistryType,
+		component.PlatformType,
+		component.ReleaseManagerType,
+	}
+
+	docfactories := map[component.Type]*factory.Factory{}
+
+	for _, t := range types {
+		fact, err := factory.New(component.TypeMap[t])
+		if err != nil {
+			panic(err)
+		}
+
+		docfactories[t] = fact
+	}
+
+	for name := range plugin.Builtins {
+		for _, t := range types {
+			f := plugin.BuiltinFactory(name, t)
+			docfactories[t].Register(name, f)
+		}
+	}
+
 	factories := []struct {
 		f *factory.Factory
 		t string
 	}{
-		{plugin.BaseFactories[component.BuilderType], "builder"},
-		{plugin.BaseFactories[component.RegistryType], "registry"},
-		{plugin.BaseFactories[component.PlatformType], "platform"},
-		{plugin.BaseFactories[component.ReleaseManagerType], "releasemanager"},
+		{docfactories[component.BuilderType], "builder"},
+		{docfactories[component.RegistryType], "registry"},
+		{docfactories[component.PlatformType], "platform"},
+		{docfactories[component.ReleaseManagerType], "releasemanager"},
 	}
 
 	for _, f := range factories {
@@ -299,7 +324,7 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 
 			doc, err := component.Documentation(raw)
 			if err != nil {
-				panic(err)
+				continue
 			}
 
 			if c.flagMarkdown {
@@ -314,14 +339,39 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 }
 
 func (c *AppDocsCommand) builtinMDX(args []string) int {
+	types := []component.Type{
+		component.BuilderType,
+		component.RegistryType,
+		component.PlatformType,
+		component.ReleaseManagerType,
+	}
+
+	docfactories := map[component.Type]*factory.Factory{}
+
+	for _, t := range types {
+		fact, err := factory.New(component.TypeMap[t])
+		if err != nil {
+			panic(err)
+		}
+
+		docfactories[t] = fact
+	}
+
+	for name := range plugin.Builtins {
+		for _, t := range types {
+			f := plugin.BuiltinFactory(name, t)
+			docfactories[t].Register(name, f)
+		}
+	}
+
 	factories := []struct {
 		f *factory.Factory
 		t string
 	}{
-		{plugin.BaseFactories[component.BuilderType], "builder"},
-		{plugin.BaseFactories[component.RegistryType], "registry"},
-		{plugin.BaseFactories[component.PlatformType], "platform"},
-		{plugin.BaseFactories[component.ReleaseManagerType], "releasemanager"},
+		{docfactories[component.BuilderType], "builder"},
+		{docfactories[component.RegistryType], "registry"},
+		{docfactories[component.PlatformType], "platform"},
+		{docfactories[component.ReleaseManagerType], "releasemanager"},
 	}
 
 	for _, f := range factories {
@@ -347,7 +397,7 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 
 			doc, err := component.Documentation(raw)
 			if err != nil {
-				panic(err)
+				continue
 			}
 
 			c.mdxFormat(t, f.t, doc)
