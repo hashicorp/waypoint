@@ -31,6 +31,51 @@ app "my-app" {
 }
 ```
 
+### Build Methods
+
+Waypoint includes these builtin plugins to build a Docker container for your app.
+
+- Docker Build
+- Cloud Native Buildpacks
+
+You can also create a [plugin](https://waypointproject.io/plugins) to extend Waypoint with your own builder.
+
+### Choosing How to Build Your App
+
+While both Docker Build and Cloud Native Buildpacks create Docker containers, each creates those images in different ways.
+
+#### Docker Build
+
+**Example configuration**
+
+```
+app "my-app" {
+  build {
+    use "docker" {}
+  }
+}
+```
+
+Most developers using Waypoint for current applications will likely want to use Docker Build (`docker build`) for creating their applications' Docker containers. When you use the `docker build` method in your Waypoint Confg file (waypoint.hcl), Waypoint will instruct Docker to create the container using the `docker build` [Docker command](https://docs.docker.com/engine/reference/commandline/build/).
+
+When building your app's container, Docker will use a [Dockerfile](https://docs.docker.com/engine/reference/builder/) as a set of instructions for how to configure the container. Dockerfiles may include information such as which base operating system to use in the container, directory structure, etc.
+
+[Learn how to use Docker Build in your app](https://waypointproject.io/plugins/docker)
+
+#### Cloud Native Buildpacks
+
+**Example configuration**
+
+```
+app "my-app" {
+  build {
+    use "pack" {}
+  }
+}
+```
+
+Cloud Native Buildpacks are a very quick and easy way to get started creating a containerized application. Cloud Native Buildpacks are a good option for when you do not need to use fine-grained settings for the container or if you want to quickly try out Waypoint and learn how it works.
+
 ## Registry
 
 A build may optionally specify a registry to push the built artifact to.

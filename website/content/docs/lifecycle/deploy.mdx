@@ -8,11 +8,7 @@ description: |-
 
 # Deploy
 
-A deploy takes a previously
-[built artifact](/docs/lifecycle/build)
-and stages it onto the target
-deployment platform. The target deployment platform is pluggable and can be
-Docker, Kubernetes, Nomad, EC2, and more.
+A deploy takes a previously [built artifact](/docs/lifecycle/build) and stages it onto the target deployment platform. The [target deployment platform]() is pluggable and can be Docker, Kubernetes, Nomad, EC2, and more.
 
 "Stage" in this context means that the application should be ready to receive
 traffic, but is not yet open to public traffic. For example, the application
@@ -38,6 +34,26 @@ app "my-app" {
   }
 }
 ```
+
+### Target Deployment Platforms
+
+To deploy your app with Waypoint, you will need to select which platform to use. A deployment platform is a runtime for your app. For example, for an application designed to for container orchestration, you could choose to deploy the app to platforms like Google Cloud Run, Kubernetes running in the public cloud, HashiCorp Nomad, Azure ACI, Digital Ocean, and others. Conversely, if your app is designed to run in a virtual machine, you could choose to use AWS EC2 to deploy your app as an AMI.
+
+You can currently use Waypoint to deploy your app to any of these platforms.
+
+- [Kubernetes](https://waypointproject.io/plugins/kubernetes)
+- [HashiCorp Nomad](https://waypointproject.io/plugins/nomad)
+- [AWS EC2](https://waypointproject.io/plugins/aws-ec2)
+- [AWS ECS](https://waypointproject.io/plugins/aws-ecs)
+- [Google Cloud Run](https://waypointproject.io/plugins/google-cloud-run)
+- [Azure Container Instances](https://waypointproject.io/plugins/azure-container-instances)
+- [Netlify](https://waypointproject.io/plugins/netlify)
+
+~> You may use the Kuberenetes plugin to target any Kubernetes instance. For example, AWS EKS, Azure AKS, Google GKE, and Kuberenetes for Docker Desktop.
+
+#### How to Add a Deployment Platform to Waypoint
+
+You can also create a [plugin](https://waypointproject.io/plugins) to extend Waypoint with your own deployment platform. If you would like to add a plugin for a platform currently not in Waypoint, please file a [GitHub Issue for the project](https://github.com/hashicorp/waypoint/issues).
 
 ## Automatic Release
 
