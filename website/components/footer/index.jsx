@@ -12,10 +12,12 @@ export default function Footer({ openConsentManager }) {
           <Link href="/cli">
             <a>CLI</a>
           </Link>
+          <a href="https://learn.hashicorp.com/waypoint">Learn</a>
           <a href="https://hashicorp.com/privacy">Privacy</a>
           <Link href="/security">
             <a>Security</a>
           </Link>
+          <a href="/files/press-kit.zip">Press Kit</a>
           <a onClick={openConsentManager}>Consent Manager</a>
         </div>
       </div>
