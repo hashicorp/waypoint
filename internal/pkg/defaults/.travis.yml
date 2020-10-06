@@ -3,7 +3,7 @@ go:       1.13
 
 branches:
   only:
-    - master
+    - main
 
 env:
   global:
