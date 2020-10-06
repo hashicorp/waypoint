@@ -8,6 +8,7 @@ export default config;
  * since different ember addons can materialize new entries.
  */
 declare const config: {
+  apiAddress: string;
   environment: any;
   modulePrefix: string;
   podModulePrefix: string;

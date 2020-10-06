@@ -16,6 +16,7 @@ import {
   ListReleasesRequest,
   ListReleasesResponse,
 } from 'waypoint-pb';
+import config from 'waypoint/config/environment';
 
 const protocolVersions = {
   // These map to upstream protocol versions
@@ -29,7 +30,9 @@ const protocolVersions = {
 
 export default class ApiService extends Service {
   @service session!: SessionService;
-  client = new WaypointClient('/grpc', null, null);
+  // If the the apiAddress is not set, this will use the /grpc prefix on the
+  // same host as the UI is being served from
+  client = new WaypointClient(`${config.apiAddress}/grpc`, null, null);
 
   // Merges metadata with required metadata for the request
   WithMeta(meta?: any) {

@@ -2,6 +2,7 @@
 
 module.exports = function (environment) {
   let ENV = {
+    apiAddress: '',
     modulePrefix: 'waypoint',
     environment,
     rootURL: '/',
@@ -33,6 +34,14 @@ module.exports = function (environment) {
       // Allows for `ember serve no-mirage`
       enabled: process.argv.includes('no-mirage') ? false : true,
     };
+
+    if (process.argv.includes('local')) {
+      // Default Docker server address
+      ENV.apiAddress = 'https://localhost:9702';
+      ENV['ember-cli-mirage'] = {
+        enabled: false,
+      };
+    }
   }
 
   if (environment === 'test') {
