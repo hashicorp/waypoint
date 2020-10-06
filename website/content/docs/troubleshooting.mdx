@@ -28,8 +28,9 @@ docker volume prune -f
 
 ```
 kubectl delete statefulset waypoint-server
-kubectl get pv #note that pv name associated with $NAMESPACE/data-waypoint-server-0
-kubectl delete pv pvc-9063b5f7-dc86-4fa7-b120-bf084bbbbf93 #this id will be different for you
+kubectl get pvc #note that pv name is likely something like pvc-914da879-bb48-4785-a42e-8e525fcd70eb
+kubectl delete pvc data-waypoint-server-0
+kubectl get pv #the pv associated with pvc data-waypoint-server-0 should not longer be there
 kubectl delete svc waypoint
 ```
 
