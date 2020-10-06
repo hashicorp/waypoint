@@ -1,5 +1,16 @@
 export default [
   {
+    text: 'Overview',
+    url: '/',
+    type: 'inbound',
+  },
+  'divider',
+  {
+    text: 'Tutorials',
+    url: 'https://learn.hashicorp.com/waypoint',
+    type: 'inbound',
+  },
+  {
     text: 'Docs',
     url: '/docs',
     type: 'inbound',
