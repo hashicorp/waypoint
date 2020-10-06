@@ -4,6 +4,7 @@ import AnimatedStepsList from 'components/animated-steps-list'
 import HomepageSection from 'components/homepage-section'
 import HomepageHero from 'components/homepage-hero'
 import BrandedCta from 'components/branded-cta'
+import WaypointDiagram from 'components/waypoint-diagram'
 
 export default function HomePage() {
   return (
@@ -301,11 +302,7 @@ export default function HomePage() {
             },
           ]}
         />
-        <img
-          className={styles.whyWaypointDiagram}
-          src={require('./img/why-waypoint-diagram.svg')}
-          alt="Waypoint Diagram"
-        />
+        <WaypointDiagram className={styles.whyWaypointDiagram} />
       </HomepageSection>
 
       <BrandedCta
