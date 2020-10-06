@@ -11,13 +11,14 @@ export default function HomePage() {
     <div className={styles.homePage}>
       <HomepageHero
         title="Build. Deploy. Release."
-        subtitle="Waypoint provides a modern workflow for deploying your development code on your development platform."
-        description="Waypoint does not run your software. It provides a single configuration file and API to manage and observe deployments across environments and platforms, from your local workstation to your CI environment."
+        subtitle="Waypoint provides a modern workflow for build, deploy, and release across platforms."
+        description="Waypoint does not run your software. It provides you a single configuration file and API to manage and observe deployments across environments and platforms, from your local workstation to your CI environment."
         links={[
           {
             text: 'Get Started',
-            url: '/docs/getting-started',
-            type: 'inbound',
+            url:
+              'https://learn.hashicorp.com/collections/waypoint/getting-started',
+            type: 'outbound',
           },
         ]}
       />
@@ -70,15 +71,10 @@ export default function HomePage() {
                     ],
                   },
                   {
-                    frames: 0,
-                    indent: 1,
-                    code: 'Creating new buildpack-based image using builder:',
-                    color: 'gray',
-                  },
-                  {
                     frames: 10,
                     indent: 1,
-                    code: 'heroku/buildpacks:18',
+                    code:
+                      'Creating new buildpack-based image using builder: heroku/buildpacks:18',
                     color: 'gray',
                   },
                   {
@@ -228,6 +224,16 @@ export default function HomePage() {
                 loop: false,
                 lines: [
                   {
+                    frames: 4,
+                    code: [
+                      '» Releasing',
+                      '» Releasing . . .',
+                      '» Releasing . . . . . .',
+                      '» Releasing . . . . . . . . .',
+                      '» Releasing . . . . . . . . . . . .',
+                    ],
+                  },
+                  {
                     frames: 5,
                     code: '✓ Service successfully configured!',
                     color: 'navy',
@@ -253,7 +259,7 @@ export default function HomePage() {
                   {
                     frames: 5,
                     code:
-                      'The deploy was successful! A Waypoint deployment URL is shown below. This can be used internally to check your deployment and is not traffic. You can manage this hostname using "waypoint hostname"',
+                      'The deploy was successful! A Waypoint deployment URL is shown below. This can be used internally to check your deployment and is not meant for external traffic. You can manage this hostname using "waypoint hostname"',
                     color: 'gray',
                   },
                   { code: '' },
