@@ -43,7 +43,7 @@ export default function DocsPage({
           data: data,
           order,
         }}
-        resourceURL={`https://github.com/hashicorp/${productSlug}/blob/main/website/content/docs/${filePath}`}
+        resourceURL={`https://github.com/hashicorp/${productSlug}/blob/master/website/content/docs/${filePath}`}
       >
         {content}
       </DocsPageComponent>
