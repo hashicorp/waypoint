@@ -56,7 +56,16 @@ Environment variables to add to the job.
 ```
 
 deploy {
-	use "nomad" {}
+	use "nomad" {
+	  region = "global"
+	  datacenter = "dc1"
+	  static_environment = {
+	    "environment": "production",
+	    "LOG_LEVEL": "debug"
+	  }
+	  service_port = 3000
+	  replicas = 1
+	}
 }
 
 ```

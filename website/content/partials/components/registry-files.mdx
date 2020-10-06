@@ -11,3 +11,18 @@ Copies files to a specific directory.
 The filesystem path to store the files into.
 
 - Type: **string**
+
+### Examples
+
+```
+
+build {
+  use "files" {}
+  registry {
+	use "files" {
+	  path = "/path/to/file"
+	}
+  }
+}
+
+```

@@ -40,3 +40,19 @@ The tag for the new image.
 This is added to image to provide the full image reference.
 
 - Type: **string**
+
+### Examples
+
+```
+
+build {
+  use "docker" {}
+  registry {
+    use "docker" {
+      image = "hashicorp/http-echo"
+      tag   = "latest"
+    }
+  }
+}
+
+```

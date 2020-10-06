@@ -18,10 +18,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/docker"
 )
 
 type Platform struct {
@@ -1152,6 +1152,16 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Deploy the application into an ECS cluster on AWS")
+
+	doc.Example(
+		`
+deploy {
+  use "aws-ecs" {
+    region = "us-east-1"
+    memory = "512"
+  }
+}
+`)
 
 	doc.Input("docker.Image")
 	doc.Output("ecs.Deployment")

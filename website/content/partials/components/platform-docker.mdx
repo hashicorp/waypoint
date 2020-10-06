@@ -42,3 +42,20 @@ These environment variables should not be run of the mill configuration variable
 
 - Type: **map[string]string**
 - **Optional**
+
+### Examples
+
+```
+
+deploy {
+  use "docker" {
+	command      = "ps"
+	service_port = 3000
+	static_environment = {
+	  "environment": "production",
+	  "LOG_LEVEL": "debug"
+	}
+  }
+}
+
+```
