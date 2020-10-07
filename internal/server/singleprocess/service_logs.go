@@ -88,7 +88,7 @@ func (s *service) GetLogStream(
 			}
 
 			// Start our reader up
-			r := record.LogBuffer.Reader()
+			r := record.LogBuffer.Reader(-1)
 			instanceLog := log.With("instance_id", instanceId)
 			instanceLog.Trace("instance log stream starting")
 			go r.CloseContext(srv.Context())
