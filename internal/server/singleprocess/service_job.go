@@ -318,7 +318,7 @@ func (s *service) getJobStreamOutputInit(
 	server pb.Waypoint_GetJobStreamServer,
 ) (<-chan []*pb.GetJobStreamResponse_Terminal_Event, error) {
 	// Send down all our buffered lines.
-	outputR := job.OutputBuffer.Reader()
+	outputR := job.OutputBuffer.Reader(-1)
 	go outputR.CloseContext(ctx)
 	for {
 		events := s.readJobLogBatch(outputR, false)

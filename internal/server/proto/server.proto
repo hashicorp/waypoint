@@ -1709,6 +1709,16 @@ message GetLogStreamRequest {
     Application application = 2;
   }
 
+  // limit_backlog sets the maximum backlog lines to return on the initial
+  // connection. This setting is per instance, not global. The maximum
+  // backlog to expect is `n * limit_backlog` where n is the number of
+  // instances.
+  //
+  // A negative value will not limit the backlog.
+  //
+  // A value of zero will default to a value of 50.
+  int32 limit_backlog = 3;
+
   message Application {
     Ref.Application application = 1;
     Ref.Workspace workspace = 2;
