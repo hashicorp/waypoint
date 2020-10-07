@@ -19,6 +19,11 @@ func (s *service) GetLogStream(
 ) error {
 	log := hclog.FromContext(srv.Context())
 
+	// Default the limit
+	if req.LimitBacklog == 0 {
+		req.LimitBacklog = 50
+	}
+
 	var instanceFunc func(ws memdb.WatchSet) ([]*state.Instance, error)
 	switch scope := req.Scope.(type) {
 	case *pb.GetLogStreamRequest_DeploymentId:
@@ -88,7 +93,7 @@ func (s *service) GetLogStream(
 			}
 
 			// Start our reader up
-			r := record.LogBuffer.Reader(-1)
+			r := record.LogBuffer.Reader(req.LimitBacklog)
 			instanceLog := log.With("instance_id", instanceId)
 			instanceLog.Trace("instance log stream starting")
 			go r.CloseContext(srv.Context())
