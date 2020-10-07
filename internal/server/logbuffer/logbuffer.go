@@ -15,7 +15,7 @@ type Entry interface{}
 
 var (
 	chunkCount = 32
-	chunkSize  = 512
+	chunkSize  = 164
 )
 
 // Buffer is a data structure for buffering logs with concurrent read/write access.
