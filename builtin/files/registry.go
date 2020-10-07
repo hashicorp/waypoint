@@ -5,9 +5,9 @@ import (
 	"crypto/rand"
 	"path"
 
-	"github.com/hashicorp/waypoint/internal/pkg/copy"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/pkg/copy"
 	"github.com/oklog/ulid"
 )
 
@@ -62,6 +62,17 @@ func (r *Registry) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Copies files to a specific directory")
+
+	doc.Example(`
+build {
+  use "files" {}
+  registry {
+	use "files" {
+	  path = "/path/to/file"
+	}
+  }
+}
+`)
 
 	doc.SetField(
 		"path",

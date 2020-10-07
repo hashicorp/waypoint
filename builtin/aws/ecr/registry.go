@@ -14,10 +14,10 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/mattn/go-isatty"
 )
 
@@ -163,6 +163,17 @@ func (r *Registry) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Store a docker image within an Elastic Container Registry on AWS")
+
+	doc.Example(
+		`
+registry {
+    use "aws-ecr" {
+      region = "us-east-1"
+      repository = "waypoint-example"
+      tag = "latest"
+    }
+}
+`)
 
 	doc.Input("docker.Image")
 	doc.Output("docker.Image")

@@ -10,11 +10,11 @@ import (
 
 	"github.com/buildpacks/pack"
 	"github.com/buildpacks/pack/logging"
-	"github.com/hashicorp/waypoint/internal/assets"
-	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/assets"
+	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
@@ -192,6 +192,15 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 	}
 
 	doc.Description("Create a Docker image using CloudNative Buildpacks")
+
+	doc.Example(`
+build {
+  use "pack" {
+	builder     = "heroku/buildpacks:18"
+	disable_ceb = false
+  }
+}
+`)
 
 	doc.Input("component.Source")
 	doc.Output("pack.Image")

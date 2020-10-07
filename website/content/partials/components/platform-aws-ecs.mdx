@@ -136,3 +136,16 @@ The VPC subnets to use for the application.
 - Type: **[]string**
 - **Optional**
 - Default: public subnets in the default VPC
+
+### Examples
+
+```
+
+deploy {
+  use "aws-ecs" {
+    region = "us-east-1"
+    memory = "512"
+  }
+}
+
+```
