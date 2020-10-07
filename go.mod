@@ -49,7 +49,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.6.0
 	github.com/hashicorp/horizon v0.0.0-20201007004454-9a8803766c64
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
-	github.com/hashicorp/waypoint-hzn v0.0.0-20200716172850-719df2bafd65
+	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
 	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201007005325-1401c8a8bd44
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.11

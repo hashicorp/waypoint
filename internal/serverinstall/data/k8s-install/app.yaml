@@ -50,6 +50,7 @@ spec:
         args:
         - server
         - run
+        - -accept-tos
         - -vvv
         - -db=/data/data.db
         - -listen-grpc=0.0.0.0:9701

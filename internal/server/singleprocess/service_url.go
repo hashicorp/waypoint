@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func (s *service) initURLGuestAccount() error {
+func (s *service) initURLGuestAccount(acceptURLTerms bool) error {
 	// Connect without auth to our API client
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(10*time.Second))
@@ -31,7 +31,8 @@ func (s *service) initURLGuestAccount() error {
 	accountResp, err := client.RegisterGuestAccount(
 		context.Background(),
 		&wphznpb.RegisterGuestAccountRequest{
-			ServerId: s.id,
+			ServerId:  s.id,
+			AcceptTos: acceptURLTerms,
 		},
 	)
 	if err != nil {

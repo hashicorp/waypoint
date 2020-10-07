@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/nomad/api"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 var (
@@ -194,7 +194,7 @@ func waypointNomadJob(scfg *Config) *api.Job {
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
 		"image": scfg.ServerImage,
-		"args":  []string{"server", "run", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
+		"args":  []string{"server", "run", "-accept-tos", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
 	}
 	task.Env = map[string]string{
 		"PORT": "9701",
