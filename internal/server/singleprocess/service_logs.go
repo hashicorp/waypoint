@@ -12,6 +12,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
+// defaultLogLimitBacklog is the default backlog amount to send down.
+const defaultLogLimitBacklog = 100
+
 // TODO: test
 func (s *service) GetLogStream(
 	req *pb.GetLogStreamRequest,
@@ -21,7 +24,7 @@ func (s *service) GetLogStream(
 
 	// Default the limit
 	if req.LimitBacklog == 0 {
-		req.LimitBacklog = 50
+		req.LimitBacklog = defaultLogLimitBacklog
 	}
 
 	var instanceFunc func(ws memdb.WatchSet) ([]*state.Instance, error)
