@@ -103,11 +103,47 @@ func (b *Buffer) Write(entries ...Entry) {
 
 // Reader returns a shared reader for this buffer. The Reader provides
 // an easy-to-use API to read log entries.
-func (b *Buffer) Reader() *Reader {
+//
+// maxHistory limits the number of elements in the backlog. maxHistory of
+// zero will move the cursur to the latest entry. maxHistory less than
+// zero will not limit history at all and the full backlog will be
+// available to read.
+func (b *Buffer) Reader(maxHistory int32) *Reader {
 	b.cond.L.Lock()
 	defer b.cond.L.Unlock()
 
-	result := &Reader{b: b, chunks: b.chunks, closeCh: make(chan struct{})}
+	// Default to full history, all chunks and zero index.
+	var cursor uint32
+	chunks := b.chunks
+
+	// If we have a max history set then we have to setup the cursor/chunks.
+	if maxHistory >= 0 {
+		if maxHistory == 0 {
+			// If we are requesting no history, then we move to the latest
+			// point in the chunk.
+			chunks = b.chunks[b.current:]
+			cursor = chunks[0].size()
+		} else {
+			// We have a set amount of history we'd like to have at most.
+			var size int32
+			for i := b.current; i >= 0; i-- {
+				// Add the size of this chunk to our total size
+				size += int32(chunks[i].size())
+
+				// If we passed our maximum size, then trim it here. We
+				// don't worry about getting an exact amount of history so
+				// we don't set cursor. maxHistory is documented as "at most"
+				// and may be missing some available back log.
+				if size > maxHistory {
+					chunks = b.chunks[i:]
+					cursor = uint32(size - maxHistory)
+				}
+			}
+		}
+	}
+
+	// Build our initial reader
+	result := &Reader{b: b, chunks: chunks, cursor: cursor, closeCh: make(chan struct{})}
 
 	// Track our reader
 	if b.readers == nil {
@@ -180,7 +216,7 @@ func (r *Reader) Read(max int, block bool) []Entry {
 
 	// If we're at the end of our chunk list, get the next set
 	if r.idx >= len(r.chunks) {
-		r.chunks = r.b.Reader().chunks
+		r.chunks = r.b.Reader(-1).chunks
 		r.idx = 0
 	}
 
@@ -238,6 +274,11 @@ func (w *chunk) atEnd(cursor uint32) bool {
 // calls to write will return with 0.
 func (w *chunk) full() bool {
 	return w.atEnd(atomic.LoadUint32(&w.idx))
+}
+
+// size returns the current size of the chunk
+func (w *chunk) size() uint32 {
+	return atomic.LoadUint32(&w.idx)
 }
 
 // read reads up to max number of elements from the chunk from the current
