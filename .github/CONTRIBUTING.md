@@ -41,6 +41,10 @@ reported previously.
 then it dramatically lowers the chances it'll get fixed. If we can't reproduce
 an issue long enough, we are usually forced to close the issue.
 
+* As part of the test case, please include any Waypoint configurations
+(`waypoint.hcl`), build configs such as Dockerfiles, etc. Log output with
+log level set with verbose flags (at least `-vv`) is helpful too.
+
 * Aim to respond promptly to any questions made by the Waypoint team on your
 issue. Stale issues will be closed.
 
