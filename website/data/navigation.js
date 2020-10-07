@@ -25,4 +25,9 @@ export default [
     url: '/plugins',
     type: 'inbound',
   },
+  {
+    text: 'Community',
+    url: '/community',
+    type: 'inbound',
+  },
 ]
