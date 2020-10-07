@@ -14,6 +14,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # temporarily bring in a GitHub token so we can clone private dependencies during analysis
+    - name: Configure GitHub PAT
+      env:
+        GITHUB_TOKEN: ${{ secrets.HASHIBOT_PRODSEC_GITHUB_TOKEN }}
+      run: |
+        git config --global url."https://$GITHUB_TOKEN:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
