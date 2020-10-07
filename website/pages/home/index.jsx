@@ -73,7 +73,7 @@ export default function HomePage() {
                   {
                     frames: 10,
                     code:
-                      'Creating new buildpack-based image using builder: heroku/buildpacks:18',
+                      'Creating new buildpack-based image using builder: buildpacks:18',
                     color: 'gray',
                   },
                   {
