@@ -4,6 +4,7 @@ import NProgress from '@hashicorp/nextjs-scripts/lib/nprogress'
 import useAnchorLinkAnalytics from '@hashicorp/nextjs-scripts/lib/anchor-link-analytics'
 import Router from 'next/router'
 import HashiHead from '@hashicorp/react-head'
+import HashiStackMenu from '@hashicorp/react-hashi-stack-menu'
 import Head from 'next/head'
 import AlertBanner from '@hashicorp/react-alert-banner'
 import createConsentManager from '@hashicorp/nextjs-scripts/lib/consent-manager'
@@ -38,6 +39,7 @@ function App({ Component, pageProps }) {
         {ALERT_BANNER_ACTIVE && (
           <AlertBanner {...alertBannerData} theme="blue" />
         )}
+        <HashiStackMenu />
         <ProductSubnav />
         <div className="content">
           <Component {...pageProps} />

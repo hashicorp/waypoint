@@ -10,6 +10,7 @@
     "@hashicorp/react-content": "5.1.0",
     "@hashicorp/react-docs-page": "6.2.0",
     "@hashicorp/react-global-styles": "4.5.0",
+    "@hashicorp/react-hashi-stack-menu": "^1.0.1",
     "@hashicorp/react-head": "1.1.3",
     "@hashicorp/react-image": "3.0.1",
     "@hashicorp/react-mega-nav": "4.0.1-2",
