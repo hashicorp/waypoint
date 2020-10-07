@@ -11,10 +11,10 @@ import (
 	mockpkg "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/internal/config"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
+	"github.com/hashicorp/waypoint/internal/config"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func TestAppCanDestroyDeploy(t *testing.T) {
@@ -146,6 +146,10 @@ const testPlatformConfig = `
 project = "test"
 
 app "test" {
+	build {
+		use "test" {}
+	}
+
 	deploy {
 		use "test" {}
 	}

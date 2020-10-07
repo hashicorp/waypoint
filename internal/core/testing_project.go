@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/internal/config"
-	"github.com/hashicorp/waypoint/internal/factory"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
+	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/factory"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 )
 
 // TestProject returns a fully in-memory and side-effect free Project that
@@ -79,6 +79,10 @@ project = "test"
 
 app "test" {
 	build {
+		use "test" {}
+	}
+
+	deploy {
 		use "test" {}
 	}
 }

@@ -55,6 +55,16 @@ func (app *App) Validate() error {
 		}
 	}
 
+	// Build and deploy are currently required.
+	if app.Build == nil {
+		result = multierror.Append(result, fmt.Errorf(
+			"build: a builder must be configured"))
+	}
+	if app.Deploy == nil {
+		result = multierror.Append(result, fmt.Errorf(
+			"deploy: a deployment platform must be configured"))
+	}
+
 	for k, v := range app.validatorChildren() {
 		if v != nil {
 			if err := v.validate(k); err != nil {
@@ -102,6 +112,12 @@ func (c *Operation) validate(key string) error {
 	}
 
 	var result error
+
+	if c.required && c.Use == nil {
+		result = multierror.Append(result, fmt.Errorf(
+			"a `use` statement is required"))
+	}
+
 	if errs := ValidateLabels(c.Labels); len(errs) > 0 {
 		result = multierror.Append(result, errs...)
 	}

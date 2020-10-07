@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
+	"github.com/hashicorp/waypoint/internal/config"
 )
 
 func TestAppAuthenticate(t *testing.T) {
@@ -83,6 +83,10 @@ const testAuthPlatformConfig = `
 project = "test"
 
 app "test" {
+	build {
+		use "test" {}
+	}
+
 	deploy {
 		use "test" {}
 	}
@@ -94,6 +98,10 @@ project = "test"
 
 app "test" {
 	build {
+		use "test" {}
+	}
+
+	deploy {
 		use "test" {}
 	}
 }
