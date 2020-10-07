@@ -61,30 +61,27 @@ export default function HomePage() {
                 loop: false,
                 lines: [
                   {
+                    color: 'white',
                     frames: 4,
                     code: [
                       '» Building',
+                      '» Building .',
+                      '» Building . .',
                       '» Building . . .',
-                      '» Building . . . . . .',
-                      '» Building . . . . . . . . .',
-                      '» Building . . . . . . . . . . . .',
                     ],
                   },
                   {
                     frames: 10,
-                    indent: 1,
                     code:
                       'Creating new buildpack-based image using builder: heroku/buildpacks:18',
                     color: 'gray',
                   },
                   {
                     frames: 5,
-                    indent: 1,
                     code: '✓ Creating pack client',
-                    color: 'navy',
                   },
                   {
-                    frames: 1,
+                    frames: 2,
                     code: [
                       '⠋ Building image',
                       '⠙ Building image',
@@ -106,15 +103,67 @@ export default function HomePage() {
                       '⠧ Building image',
                       '⠇ Building image',
                       '⠏ Building image',
-                      '✓ Building image',
+                      '  Building image',
                     ],
-                    color: 'white',
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code: "│ [exporter] Adding layer 'ruby:ruby'",
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code: '│ [exporter] Adding 1/1 app layer(s)',
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code: "│ [exporter] Reusing layer 'launcher'",
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code: "│ [exporter] Reusing layer 'config'",
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code:
+                      "│ [exporter] Adding label 'io.buildpacks.lifecycle.metadata'",
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code:
+                      "│ [exporter] Adding label 'io.buildpacks.build.metadata'",
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code:
+                      "│ [exporter] Adding label 'io.buildpacks.project.metadata'",
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code: '│ [exporter] *** Images (512c587cc97c):',
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code:
+                      '│ [exporter]       index.docker.io/library/example-ruby:latest',
+                  },
+                  {
+                    frames: 5,
+                    color: 'navy',
+                    code: "│ [exporter] Reusing cache layer 'ruby:gems'",
                   },
                   { code: '' },
                   {
                     frames: 5,
                     code: '✓ Injecting entrypoint binary to image',
-                    color: 'navy',
                   },
                   { code: '' },
                   {
@@ -158,17 +207,23 @@ export default function HomePage() {
                 loop: false,
                 lines: [
                   {
+                    color: 'white',
                     frames: 4,
                     code: [
                       '» Deploying',
+                      '» Deploying .',
+                      '» Deploying . .',
                       '» Deploying . . .',
-                      '» Deploying . . . . . .',
-                      '» Deploying . . . . . . . . .',
-                      '» Deploying . . . . . . . . . . . .',
                     ],
                   },
                   {
-                    frames: 1,
+                    frames: 5,
+                    color: 'white',
+                    code:
+                      '» Configuring https://kubernetes.docker.internal:6443 in namespace default',
+                  },
+                  {
+                    frames: 2,
                     code: [
                       '⠋ Waiting on deployment to become available: 1/1/0',
                       '⠙ Waiting on deployment to become available: 1/1/0',
@@ -192,12 +247,10 @@ export default function HomePage() {
                       '⠏ Waiting on deployment to become available: 1/1/0',
                       '✓ Waiting on deployment to become available: 1/1/0',
                     ],
-                    color: 'white',
                   },
                   {
-                    frames: 5,
+                    frames: 10,
                     code: '✓ Deployment successfully rolled out!',
-                    color: 'navy',
                   },
                 ],
               },
@@ -225,35 +278,33 @@ export default function HomePage() {
                 lines: [
                   {
                     frames: 4,
+                    color: 'white',
                     code: [
                       '» Releasing',
+                      '» Releasing .',
+                      '» Releasing . .',
                       '» Releasing . . .',
-                      '» Releasing . . . . . .',
-                      '» Releasing . . . . . . . . .',
-                      '» Releasing . . . . . . . . . . . .',
                     ],
                   },
                   {
                     frames: 5,
                     code: '✓ Service successfully configured!',
-                    color: 'navy',
                   },
                   { code: '' },
                   {
                     frames: 4,
+                    color: 'white',
                     code: [
                       '» Pruning old deployments',
+                      '» Pruning old deployments .',
+                      '» Pruning old deployments . .',
                       '» Pruning old deployments . . .',
-                      '» Pruning old deployments . . . . . .',
-                      '» Pruning old deployments . . . . . . . . .',
-                      '» Pruning old deployments . . . . . . . . . . . .',
                     ],
                   },
                   {
                     frames: 5,
-                    indent: 1,
                     code: 'Deployment: 01EJCSFNDDD15P2BXBW2KCYVB2',
-                    color: 'white',
+                    color: 'navy',
                   },
                   { code: '' },
                   {
@@ -265,13 +316,11 @@ export default function HomePage() {
                   { code: '' },
                   {
                     frames: 1,
-                    indent: 1,
                     code: 'Release URL: https://www.example.com',
                     color: 'white',
                   },
                   {
                     frames: 1,
-                    indent: 1,
                     code:
                       'Deployment URL: https://immensely-guided-stag-5.alpha.waypoint.run',
                     color: 'white',
