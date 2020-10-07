@@ -254,7 +254,7 @@
     .cards-wrap {
       display: flex;
       overflow: auto;
-      padding: scale.$lg-2 scale.$lg-2 0;
+      padding: scale.$sm-1 0 0;
       margin-bottom: scale.$sm-2;
       scrollbar-width: thin;
       scrollbar-color: rgb(var(--outline)) rgb(var(--border));
@@ -280,21 +280,32 @@
 
     .cards-inner {
       display: flex;
-      justify-content: space-between;
-      flex-grow: 1;
-      padding: scale.$lg-2 scale.$lg-2 scale.$base;
-      margin: (-(scale.$lg-2)) (-(scale.$lg-2)) 0;
+      width: 100%;
+    }
+
+    .card-outer {
+      box-sizing: content-box;
+      flex: 1;
+      padding: scale.$sm-1;
+      margin: 0 -24px;
+      min-width: 300px;
+
+      &:first-child {
+        padding-left: scale.$lg-2;
+        margin-right: 24px;
+        margin-left: 0;
+      }
+
+      &:last-child {
+        padding-right: scale.$lg-2;
+        margin-left: 24px;
+        margin-right: 0;
+      }
     }
 
     .card {
-      flex: 1 1 33%;
-      min-width: 0;
+      flex: 1;
       margin-bottom: 0;
-      margin-right: scale.$lg-2;
-
-      &:last-child {
-        margin-right: 0;
-      }
     }
   }
 
