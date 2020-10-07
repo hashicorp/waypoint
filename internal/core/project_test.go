@@ -29,5 +29,9 @@ app "test" {
 	build {
 		use "test" {}
 	}
+
+	deploy {
+		use "test" {}
+	}
 }
 `
