@@ -1,0 +1,21 @@
+.communityPage {
+  max-width: var(--site-max-width);
+  margin: 72px auto;
+
+  & .sectionHeaderWrapper {
+    margin-bottom: 100px;
+  }
+
+  & :global(.g-vertical-text-block-list) {
+    & :global(.list) {
+      & :global(.body-text) {
+        & a {
+          color: var(--blue) !important;
+          &::after {
+            background-color: var(--blue) !important;
+          }
+        }
+      }
+    }
+  }
+}
