@@ -1,10 +1,6 @@
 name: "Code scanning - scheduled (weekly)"
 
 on:
-  push:
-    branches: [ sec/enable_code_scanning ]
-  pull_request:
-    branches: [ sec/enable_code_scanning ]
   schedule:
     - cron: '0 17 * * 0'
 
