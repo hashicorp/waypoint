@@ -79,11 +79,19 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 }
 
 func (op *deployOperation) Hooks(app *App) map[string][]*config.Hook {
-	return app.components[app.Platform].Hooks
+	platform, ok := app.components[app.Platform]
+	if !ok {
+		return nil
+	}
+	return platform.Hooks
 }
 
 func (op *deployOperation) Labels(app *App) map[string]string {
-	return app.components[app.Platform].Labels
+	platform, ok := app.components[app.Platform]
+	if !ok {
+		return nil
+	}
+	return platform.Labels
 }
 
 func (op *deployOperation) Upsert(

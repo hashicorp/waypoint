@@ -6,6 +6,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -84,19 +86,32 @@ type buildOperation struct {
 }
 
 func (op *buildOperation) Init(app *App) (proto.Message, error) {
+	builder, ok := app.components[app.Builder]
+	if !ok {
+		return nil, status.Error(codes.NotFound, "no builder configured")
+	}
+
 	return &pb.Build{
 		Application: app.ref,
 		Workspace:   app.workspace,
-		Component:   app.components[app.Builder].Info,
+		Component:   builder.Info,
 	}, nil
 }
 
 func (op *buildOperation) Hooks(app *App) map[string][]*config.Hook {
-	return app.components[app.Builder].Hooks
+	builder, ok := app.components[app.Builder]
+	if !ok {
+		return nil
+	}
+	return builder.Hooks
 }
 
 func (op *buildOperation) Labels(app *App) map[string]string {
-	return app.components[app.Builder].Labels
+	builder, ok := app.components[app.Builder]
+	if !ok {
+		return nil
+	}
+	return builder.Labels
 }
 
 func (op *buildOperation) Upsert(
