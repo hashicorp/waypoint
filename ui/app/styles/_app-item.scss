@@ -1,6 +1,8 @@
 .app-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   width: 100%;
 
   a:not(.button) {
@@ -8,7 +10,7 @@
     flex-direction: column;
     color: inherit;
     text-decoration: none;
-    margin-right: auto;
+    margin-right: scale.$base;
 
     &:hover code {
       color: rgb(var(--link));
@@ -24,12 +26,7 @@
     font-size: 1rem;
   }
 
-  .badge {
-    margin-left: scale.$sm-2;
-  }
-
   .badge--version {
-    margin-left: 0;
     margin-right: scale.$sm-2;
   }
 
@@ -51,6 +48,12 @@
   }
 
   .button {
-    margin-left: scale.$base;
+    max-width: 100%;
+
+    span {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
   }
 }

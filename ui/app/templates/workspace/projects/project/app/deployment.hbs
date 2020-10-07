@@ -8,11 +8,13 @@
     </small>
   </div>
   <div class="actions">
-    <ExternalLink href="https://{{@model.preload.deployUrl}}" class="button button--secondary">
-      <span>{{lowercase @model.preload.deployUrl}}</span>
-      {{inline-svg "exit" class="icon"}}
-    </ExternalLink>
-    <Actions::Release @id={{@model.id}} />
+    <div class="button-group">
+      <ExternalLink href="https://{{@model.preload.deployUrl}}" class="button button--secondary">
+        <span>{{lowercase @model.preload.deployUrl}}</span>
+        {{inline-svg "exit" class="icon"}}
+      </ExternalLink>
+      <Actions::Release @id={{@model.id}} />
+    </div>
   </div>
 </PageHeader>
 

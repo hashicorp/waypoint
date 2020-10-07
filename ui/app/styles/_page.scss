@@ -68,6 +68,7 @@
       padding: scale.$sm-2 scale.$sm-2 scale.$sm-2 0;
       margin-right: auto;
       min-height: 76px;
+      max-width: 100%;
 
       &.projects-title {
         margin-top: scale.$lg-4;
@@ -77,12 +78,14 @@
       h2 {
         margin: 0;
         padding-bottom: scale.$sm-3;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
 
         code {
           font-size: 1em;
           font-weight: 600;
           margin: scale.$sm-2 0 scale.$sm-4;
-          display: inline-flex;
         }
 
         .badge {
@@ -113,10 +116,28 @@
       display: flex;
       align-items: center;
       flex-wrap: wrap;
+      max-width: 100%;
       margin: scale.$sm-4 0;
+
+      .button-group {
+        display: flex;
+        max-width: 100%;
+
+        .button:first-child {
+          flex-shrink: 1;
+          overflow: hidden;
+        }
+      }
 
       .button {
         margin: scale.$sm-3 0;
+
+        span {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          min-width: 0;
+        }
 
         & + .button {
           margin-left: scale.$base;
@@ -184,6 +205,7 @@
 
       @media only screen and (max-width: 600px) {
         li {
+          font-size: 14px;
           margin-right: scale.$sm-3;
           flex: 1 1 auto;
 
@@ -193,6 +215,7 @@
         }
 
         a {
+          width: 100%;
           justify-content: center;
           padding: scale.$sm-2 scale.$sm-4 scale.$base;
         }
@@ -634,6 +657,11 @@
   @media (prefers-color-scheme: dark) {
     border: 1px solid;
     border-color: rgb(var(--outline));
+  }
+
+  @media only screen and (max-width: 600px) {
+    max-width: calc(100vw - 48px);
+    margin-left: scale.$lg-2;
   }
 
   p {
