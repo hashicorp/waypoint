@@ -32,7 +32,7 @@ app "my-app" {
 
     hook {
         when    = "after"
-        command = ["container-scanner", "my-image"]
+        command = ["./container-scanner.sh", "my-image"]
     }
 
     hook {
@@ -49,10 +49,10 @@ for details on all the fields a hook has and which are required.
 
 ## Execution Environment
 
-Hooks are executed alongside the Waypoint operation, such as directly
-from the Waypoint CLI.
+Hooks are executed alongside the Waypoint operation, most commonly [where the Waypoint CLI is running](/docs/internals/execution#most-common-cli-and-a-remote-server).
+See the [Operation Exeuction](/docs/internals/execution) for more options for execution including Remote Runners.
 
-Hooks are _not executed in the deployment platform_. Therefore, operations
+Hooks are _not executed in the app deployment platform_. Therefore, operations
 such as database migrations or scripts that must be run within the context
 of a deploy should use some other mechanism for execution.
 
