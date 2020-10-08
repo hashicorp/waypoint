@@ -1,5 +1,5 @@
 ---
-version: 2
+version: 2.1
 
 references:
   images:
@@ -11,7 +11,7 @@ references:
     test-results: &TEST_RESULTS_DIR /tmp/test-results
 
   cache:
-    yarn: &YARN_CACHE_KEY waypoint-ui-{{ .Environment.CACHE_VERSION }}-{{ checksum "ui/yarn.lock" }}
+    yarn: &YARN_CACHE_KEY waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}
     rubygem: &RUBYGEM_CACHE_KEY static-site-gems-v1-{{ checksum "Gemfile.lock" }}
 
   environment: &ENVIRONMENT
@@ -20,10 +20,10 @@ references:
     EMAIL: noreply@hashicorp.com
     GIT_AUTHOR_NAME: circleci-waypoint
     GIT_COMMITTER_NAME: circleci-waypoint
-    BASH_ENV: .circleci/bash_env.sh
+    BASH_ENV: /home/circleci/project/.circleci/bash_env.sh
     DOCKER_BUILDKIT: 1
-    CACHE_VERSION: v1 # for manually updating yarn cache as-needed
-
+    REBUILD_UI: &REBUILD_UI 1
+    
 jobs:
   # Runs Go linters
   lint:
@@ -167,7 +167,6 @@ jobs:
   integration:
     machine:
       image: circleci/classic:201808-01
-
     steps:
       - checkout
       - run:
@@ -238,6 +237,15 @@ jobs:
       - run:
           name: install yarn packages
           command: cd ui && yarn install
+      - run:
+          name: set REBUILD_UI for downstream jobs
+          command: |
+            # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
+            if ! git diff --quiet --exit-code HEAD^! ui/; then
+              echo "export REBUILD_UI=1" >> $BASH_ENV
+            else
+              echo "unset REBUILD_UI" >> $BASH_ENV
+            fi
       - save_cache:
           key: *YARN_CACHE_KEY
           paths:
@@ -270,16 +278,24 @@ jobs:
       JOBS: 2 # limit parallelism for broccoli-babel-transpiler
     steps:
       - checkout
-      - restore_cache:
-          key: *YARN_CACHE_KEY
-      - run: cd ui && make
-      # saves the build to a workspace to be passed to a downstream job
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ui/dist
+      - when:
+          condition: *REBUILD_UI
+          steps:
+            - restore_cache:
+                key: *YARN_CACHE_KEY
+            - run: cd ui && make
+            # saves the build to a workspace to be passed to a downstream job
+            - persist_to_workspace:
+                root: .
+                paths:
+                  - ./ui/dist
+      - when:
+          condition:
+            not: *REBUILD_UI
+          steps:
+            - run: echo "UI is current; not rebuilding"
 
-  # build static-assets file
+  # build static-assets file and commit
   build-static-assets:
     docker:
       - image: *GOLANG_IMAGE
@@ -290,30 +306,36 @@ jobs:
             - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
       - attach_workspace:
           at: .
-      - run: go get github.com/kevinburke/go-bindata/...
-      - run: make static-assets
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./internal/server/gen/bindata_ui.go
+      - when:
+          condition: *REBUILD_UI
+          steps:
+            - run: go get github.com/kevinburke/go-bindata/...
+            - run: make static-assets
+            - persist_to_workspace:
+                root: .
+                paths:
+                  - ./internal/server/gen/bindata_ui.go
+      - when:
+          condition:
+            not: *REBUILD_UI
+          steps:
+            - run: echo "UI is current; not compiling"
 
+  # build static-assets file and commit
   publish-static-assets:
     docker:
       - image: *GOLANG_IMAGE
     steps:
       - checkout
-      - add_ssh_keys: # needs a key to push updated static asset commit back to github
+      - add_ssh_keys:
           fingerprints:
-            - "c9:04:b7:85:bf:0e:ce:93:5f:b8:0e:68:8e:16:f3:71"
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
       - attach_workspace:
           at: .
       - run:
-          name: commit internal/server/gen/bindata_ui.go if there are UI changes
+          name: commit internal/server/gen/bindata_ui.go
           command: |
-            # check if there are any changes in ui/
-            # if there are, we commit the ui static asset file
-            # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
-            if ! git diff --quiet --exit-code HEAD^! ui/; then
+            if [[ -n "${REBUILD_UI}" ]]; then
               echo "===> WIP; Commented out committing bindata to main"
               # git config --local user.email "hashicorp-ci@users.noreply.github.com"
               # git config --local user.name "hashicorp-ci"
@@ -322,7 +344,7 @@ jobs:
               # git commit -m "auto-updated internal/server/gen/bindata_ui.go from commit ${short_sha}"
               # git push origin main
             else
-              echo "no UI changes so no static assets to publish"
+              echo "UI is current; not committing"
             fi
 
   # # run ember frontend tests
@@ -364,40 +386,33 @@ workflows:
       - check-vendor
       - lint
       - go-test
-      # - dev-build: # dev-build builds on its own for every non-main branch; on main, builds with UI below
-      #     filters:
-      #       branches:
-      #         ignore:
-      #           - main
+      - dev-build
+
+  integration:
+    jobs:
       - frontend-cache
-      # - frontend-cache: # check every commit on main for UI changes to build
-      #     filters:
-      #       branches:
-      #         only:
-      #           - main
       - ember-build-prod:
           requires:
             - frontend-cache
       - build-static-assets:
           requires:
             - ember-build-prod
-      - publish-static-assets:
-          requires:
-            - build-static-assets
       - dev-build:
           requires:
             - build-static-assets
-
-  integration:
-    jobs:
-      - dev-build
+      - publish-static-assets:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - ember-build-prod
       - integration:
           requires:
             - dev-build
       - image-release:
           requires:
             - integration
-            - dev-build
           filters:
             branches:
               only:
