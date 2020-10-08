@@ -279,7 +279,7 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 
 	if !c.flagAcceptTOS {
-		c.ui.Output(strings.TrimSpace(tosStatement))
+		c.ui.Output(strings.TrimSpace(tosStatement), terminal.WithErrorStyle())
 		return 1
 	}
 

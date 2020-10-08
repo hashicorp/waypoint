@@ -34,15 +34,19 @@ import (
 )
 
 const tosStatement = `
-The "-accept-tos" flag must be provided to use the Waypoint URL service. Please review the Terms of Service and Privacy Policy links below, then rerun this command using the "-accept-tos" flag.
+The "-accept-tos" flag must be provided to use the Waypoint URL service.
+Please review the Terms of Service and Privacy Policy links below, then rerun
+this command using the "-accept-tos" flag.
 
-If you do not feel comfortable accepting the terms, you may disable the URL service or self-host the URL service. Learn more about this at: https://waypointproject.io/docs/url
+If you do not feel comfortable accepting the terms, you may disable the URL
+service or self-host the URL service. Learn more about this at:
+https://waypointproject.io/docs/url
 
 Privacy Policy: https://hashicorp.com/privacy
 Terms of Service: https://waypointproject.io/terms
 `
 
-const acceptTOSHelp = `Pass to accept the End User License Agreement to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting.`
+const acceptTOSHelp = `Pass to accept the Terms of Service and Privacy Policy to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting. See the privacy policy at https://hashicorp.com/privacy and the ToS at https://waypointproject.io/terms`
 
 const DefaultURLControlAddress = "https://control.hzn.network"
 
@@ -76,7 +80,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 	if c.config.URL.Enabled &&
 		c.config.URL.ControlAddress == DefaultURLControlAddress &&
 		!c.flagAcceptTOS {
-		c.ui.Output(strings.TrimSpace(tosStatement))
+		c.ui.Output(strings.TrimSpace(tosStatement), terminal.WithErrorStyle())
 		return 1
 	}
 
