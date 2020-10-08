@@ -119,10 +119,11 @@ export default function FeaturesList() {
       <ul className={styles.options}>
         {features.map((feature) => (
           <Feature
+            id={feature.id}
             key={feature.id}
             title={feature.title}
             active={feature.id === activeFeature}
-            onClick={() => setActiveFeature(feature.id)}
+            onClick={setActiveFeature}
             learnMoreLink={feature.learnMoreLink}
           >
             {feature.description}
@@ -136,13 +137,18 @@ export default function FeaturesList() {
   )
 }
 
-function Feature({ children, title, active, onClick, learnMoreLink }) {
+function Feature({ children, title, active, onClick, learnMoreLink, id }) {
   return (
     <li className={active ? styles.activeFeature : styles.feature}>
-      <button className={styles.heading} onClick={onClick}>
+      <button
+        className={styles.heading}
+        onClick={() => onClick(id)}
+        aria-expanded={active}
+        aria-controls={`feature-${id}`}
+      >
         {title}
       </button>
-      <div className={styles.body}>
+      <div className={styles.body} id={`feature-${id}`} aria-hidden={!active}>
         <p>{children}</p>
         {learnMoreLink && (
           <Button
