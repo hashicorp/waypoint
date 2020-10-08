@@ -1,4 +1,4 @@
-import Terminal from './terminal'
+import Terminal from 'components/terminal'
 
 /**
  * A FramedTerminal is a simple component which is responsible for determining

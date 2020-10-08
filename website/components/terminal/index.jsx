@@ -38,7 +38,7 @@ import styles from './Terminal.module.css'
  *    ]}
  *  />
  */
-export default function Terminal({ lines }) {
+export default function Terminal({ lines, title }) {
   return (
     <div className={styles.terminal}>
       <div className={styles.titleBar}>
@@ -47,6 +47,7 @@ export default function Terminal({ lines }) {
           <li></li>
           <li></li>
         </ul>
+        {title && <div className={styles.title}>{title}</div>}
       </div>
       <div className={styles.content}>
         <div className={styles.overflowWrapper}>
