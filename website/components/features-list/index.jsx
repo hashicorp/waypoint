@@ -7,12 +7,12 @@ export default function FeaturesList({ features }) {
   return (
     <div className={styles.features}>
       <ul className={styles.options}>
-        {features.map((feature) => (
+        {features.map((feature, stableIdx) => (
           <Feature
-            id={feature.id}
-            key={feature.id}
+            id={stableIdx}
+            key={stableIdx}
             title={feature.title}
-            active={feature.id === activeFeature}
+            active={stableIdx === activeFeature}
             onClick={setActiveFeature}
             learnMoreLink={feature.learnMoreLink}
           >

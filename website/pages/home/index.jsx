@@ -338,7 +338,6 @@ export default function HomePage() {
         <FeaturesList
           features={[
             {
-              id: 0,
               title: 'Preview Urls',
               description:
                 'Get publicly accessible preview URLs per-development',
@@ -386,7 +385,6 @@ export default function HomePage() {
               ),
             },
             {
-              id: 1,
               title: 'Live Exec',
               description:
                 'Execute a command in the context of a running application',
@@ -403,7 +401,6 @@ export default function HomePage() {
               ),
             },
             {
-              id: 2,
               title: 'Application Logs',
               description:
                 'View log output for running applications and deployments',
@@ -437,7 +434,6 @@ export default function HomePage() {
               ),
             },
             {
-              id: 3,
               title: 'Web UI',
               description:
                 'View projects and applications being deployed by Waypoint in a web interface',
@@ -446,14 +442,12 @@ export default function HomePage() {
               ),
             },
             {
-              id: 4,
               title: 'CI/CD and Version Control Integration',
               description:
                 'Integrate easily with existing CI/CD providers and version control providers like GitHub',
               content: <Terminal lines={[{ code: '' }]} />,
             },
             {
-              id: 5,
               title: 'Extensible Plugin Interface',
               description:
                 'Easily extend Waypoint with custom support for platforms, build processes, and release systems.',
