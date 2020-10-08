@@ -411,23 +411,28 @@ export default function HomePage() {
                     { code: '$ waypoint logs' },
                     {
                       code: '[11] Puma starting in cluster mode...',
-                      color: 'white',
+                      color: 'gray',
                     },
                     {
                       code:
                         '[11] * Version 3.11.2 (ruby 2.6.6-p146), codename: Love Song',
-                      color: 'white',
+                      color: 'gray',
                     },
                     {
                       code: '[11] * Min threads: 5, max threads: 5',
-                      color: 'white',
+                      color: 'gray',
                     },
-                    { code: '[11] * Environment: production', color: 'white' },
-                    { code: '[11] * Process workers: 2', color: 'white' },
-                    { code: '[11] * Preloading application', color: 'white' },
+                    { code: '[11] * Environment: production', color: 'gray' },
+                    { code: '[11] * Process workers: 2', color: 'gray' },
+                    { code: '[11] * Preloading application', color: 'gray' },
                     {
                       code: '[11] * Listening on tcp://0.0.0.0:3000',
-                      color: 'white',
+                      color: 'gray',
+                    },
+                    {
+                      code:
+                        'I, [2020-09-23T19:38:59.250971 #17] INFO -- : [936a952c-76b1-41f0-a4fe-ae2b77afc398] Started GET "/" for 10.36.5.1 at 2020-09-23 19:38:59 +0000',
+                      color: 'gray',
                     },
                   ]}
                 />
@@ -438,20 +443,67 @@ export default function HomePage() {
               description:
                 'View projects and applications being deployed by Waypoint in a web interface',
               content: (
-                <img src="https://placehold.it/500x500" alt="placeholder" />
+                <img
+                  style={{ border: '1px solid rgba(174,176,183,.45)' }}
+                  src={require('./img/web-ui.png')}
+                  alt="Web UI"
+                />
               ),
             },
             {
               title: 'CI/CD and Version Control Integration',
               description:
                 'Integrate easily with existing CI/CD providers and version control providers like GitHub',
-              content: <Terminal lines={[{ code: '' }]} />,
+              content: (
+                <Terminal
+                  title="config.yaml"
+                  lines={[
+                    {
+                      code: 'env:',
+                    },
+                    {
+                      indent: 1,
+                      code:
+                        'WAYPOINT_SERVER_TOKEN: ${{ secrets.WAYPOINT_SERVER_TOKEN }}',
+                    },
+                    {
+                      indent: 1,
+                      code: 'WAYPOINT_SERVER_ADDR: waypoint.example.com:9701',
+                    },
+                    {
+                      code: 'steps:',
+                    },
+                    {
+                      indent: 1,
+                      code: '- uses: actions/checkout@v2',
+                    },
+                    {
+                      indent: 1,
+                      code: '- uses: hashicorp/actions-setup-waypoint',
+                    },
+                    {
+                      indent: 1,
+                      code: 'with:',
+                    },
+                    {
+                      indent: 2,
+                      code: "version: '0.1.0'",
+                    },
+                    {
+                      code: '- run: waypoint init',
+                    },
+                    {
+                      code: '- run: waypoint up',
+                    },
+                  ]}
+                />
+              ),
             },
             {
               title: 'Extensible Plugin Interface',
               description:
                 'Easily extend Waypoint with custom support for platforms, build processes, and release systems.',
-              content: <Terminal lines={[{ code: '' }]} />,
+              content: <Terminal lines={[{ code: '#TODO' }]} />,
             },
           ]}
         />
