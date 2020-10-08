@@ -345,7 +345,6 @@ export default function HomePage() {
               learnMoreLink: 'https://waypointproject.io/docs/url',
               content: (
                 <Terminal
-                  title="waypoint-up.txt"
                   lines={[
                     { code: '$ waypoint deploy' },
                     { code: '' },
@@ -393,7 +392,6 @@ export default function HomePage() {
                 'Execute a command in the context of a running application',
               content: (
                 <Terminal
-                  title="waypoint-up.txt"
                   lines={[
                     { code: '$ waypoint exec' },
                     {
@@ -412,7 +410,6 @@ export default function HomePage() {
               learnMoreLink: 'https://waypointproject.io/docs/logs',
               content: (
                 <Terminal
-                  title="waypoint-up.txt"
                   lines={[
                     { code: '$ waypoint logs' },
                     {
@@ -453,18 +450,14 @@ export default function HomePage() {
               title: 'CI/CD and Version Control Integration',
               description:
                 'Integrate easily with existing CI/CD providers and version control providers like GitHub',
-              content: (
-                <Terminal title="waypoint-up.txt" lines={[{ code: '' }]} />
-              ),
+              content: <Terminal lines={[{ code: '' }]} />,
             },
             {
               id: 5,
               title: 'Extensible Plugin Interface',
               description:
                 'Easily extend Waypoint with custom support for platforms, build processes, and release systems.',
-              content: (
-                <Terminal title="waypoint-up.txt" lines={[{ code: '' }]} />
-              ),
+              content: <Terminal lines={[{ code: '' }]} />,
             },
           ]}
         />
