@@ -1,0 +1,225 @@
+---
+layout: docs
+page_title: 'Creating a Waypoint Plugin'
+sidebar_title: 'Creating a Waypoint Plugin'
+description: |-
+  How Waypoint plugins work
+---
+
+# Creating a Waypoint Plugin
+
+In this section, you will learn how to create a simple plugin that can build Go applications, we will walk through
+all the steps needed to create this simple plugin. The source code for this example can be found at
+https://github.com/hashicorp/waypoint-plugin-examples/tree/main/golang
+
+This plugin is going to be able to compile Go applications from source and create a compiled binary. To do this you
+need to create a Builder component, the most basic aspect of a Builder component is to satisfy the Builder interface.
+You also need to think about configuration for the build process and also being able to pass information about the built
+binary to a later phase in the Waypoint lifecycle.
+
+In addition to implementing Builder, you will see how to implement optional Configurable and also ConfigurableNotify interfaces
+and also how to define output values which can be used in other phases of the life cycle.
+
+## Creating the Component
+
+A Component in Waypoint is Struct which implements one or more Waypoint interfaces. If you take a look at the file builder.go
+you will see that the Build struct is defined and that it has a single field config which is of type BuildConfig.
+
+```go
+type Builder struct {
+  config BuildConfig
+}
+```
+
+Since the plugin is going to be building a Go application at a bare minimum it will need to know the name of the binary which
+will be created and the location of the source code. Waypoint allows you to define custom configuration which can be passed
+to your components. The following example shows the configuration for a Waypoint application.
+
+The use stanza is where configuration is defined for the build component this contains
+two parameters output_name and source.
+
+```go
+project = "guides"
+
+app "example" {
+
+  build {
+    use "golang" {
+      output_name = "server"
+      source = "./"
+    }
+  }
+
+}
+```
+
+Configuration files are defined as HCL and parsed by the waypoint binary, so that it can convert the HCL configuration
+and pass it to your application, you define a Struct, adding tags for each of the fields which you would like to serialize
+from the config.
+
+Let’s create a struct called `BuildConfig` which contains the fields which will be serialized from the use stanza.
+Since the configuration fields are optional, you can use the HCL annotation optional, to tell the HCL parser to skip validation
+for the presence of this field.
+
+```go
+type BuildConfig struct {
+  OutputName string `hcl:"output_name,optional"`
+  Source     string `hcl:"source,optional"`
+}
+```
+
+When Waypoint parses the configuration step for the application it looks to see if your component has implemented the
+Configurable interface and if so calls the Config method. In your implementation of Config, you return a reference to your
+BuildConfig struct. Waypoint uses the reference you return and attempts to serialize the application configuration to it.
+
+To implement Configurable you add the Config method to your Struct and return a reference to the BuildConfig struct which
+is defined as a field on the Builder.
+
+```go
+func (b *Builder) Config() (interface{}, error) {
+  return &b.config, nil
+}
+```
+
+This handles receiving the configuration, however you should also validate that the configuration is correct before using
+it in the build process.
+
+## Validating Configuration
+
+To validate configuration Waypoint components can use the ConfigurableNotify interface. ConfigurableNotify defines the
+method ConfigSet which is called after Waypoint has read the HCL config file and serialized it to the Struct you returned
+from Config.
+
+```go
+type ConfigurableNotify interface {
+  Configurable
+
+  // ConfigSet is called with the value of the configuration after
+  // decoding is complete successfully.
+  ConfigSet(interface{}) error
+}
+```
+
+ConfigSet is called before the Component specific interface methods like BuildFunc are called. It allows you to validate
+any provided configuration and if necessary return an error message to the user. The following code snippet shows a simple
+implementation of ConfigurableNotify. The source location provided in the config is checked to see that the location referenced
+exists on the local disk. This is a simple example however it is good practice that you perform any necessary validation
+and return
+
+```go
+func (b *Builder) ConfigurableNotify(config interface{}) error {
+  c, ok := config.(*BuildConfig)
+  if !ok {
+    return fmt.Errorf("Expected type BuildConfig")
+  }
+
+  // validate the config
+  _, err := os.Stat(c.Source)
+  if err != nil {
+    return fmt.Errorf("Source folder does not exist")
+  }
+
+  // config validated ok
+  return nil
+}
+```
+
+Once the optional configuration has been completed you can then implement the BuildFunc method as defined on the Builder
+interface. BuildFunc has a single return parameter which is expected to be a function.
+
+```go
+BuildFunc() interface{}
+```
+
+The function to be called does not strictly correspond to any signature for the input parameters, Waypoint automatically
+inject the ones you specify. It does however require that you have a specify Output Values.
+
+These return parameters must be proto.Message, and error. The proto.Message is a struct which implements the Protocol Buffers Message
+interface (github.com/golang/protobuf/proto), Waypoint uses Protocol Buffers to pass messages between the different stages
+of the workflow and for serializing data to the internal data store. The error which is the second part of the tuple determines
+if your build stage has succeeded or failed.
+
+The below function definition makes up the build function, this has three parameters:
+
+- context.Context - Used to check if the server has cancelled the build.
+- terminal.UI - Used to write output and request input from the Waypoint CLI.
+- component.Source - Provides the runtime location of the Waypoint application invoking this plugin.
+
+```go
+func (b *Builder) build(
+  ctx context.Context,
+  ui terminal.UI,
+  src *component.Source
+  ) (*Binary, error) {
+
+  return &Binary{}, nil
+}
+```
+
+With this scaffolded out, let’s look at the implementation for the build function. The first thing to do is to set up
+the status output. Full details on how to interact with the Terminal using the SDK can be found in the Handling Terminal
+Interactions section.
+
+```go
+  ) (*Binary, error) {
+  st := ui.Status()
+  defer st.Close()
+
+  st.Update("Building application")
+```
+
+Since the two configuration fields defined earlier were anonymous you need to set the defaults if they are not set.
+
+```go
+  // setup the defaults
+  if b.config.OutputName == "" {
+    b.config.OutputName = src.App
+  }
+
+  if b.config.Source == "" {
+    b.config.Source = "./"
+  }
+```
+
+Now all the defaults are set up you can build the application, to build the application you can use the Go standard library
+exec package to shell out a process.
+
+```go
+c := exec.Command(
+     "go",
+     "build",
+     "-o",
+     b.config.OutputName,
+     b.config.Source,
+)
+
+err := c.Run()
+```
+
+If an error occurs during the build process you can update the terminal output to show a failure message. The error returned
+from the function will also be output terminal by Waypoint.
+
+```go
+if err != nil {
+  st.Step(terminal.StatusError, "Build failed")
+
+  return nil, err
+}
+```
+
+If the build succeeded then you can update the status and return the proto.Message which will be passed to the next step of
+the process.
+
+```go
+  st.Step(terminal.StatusOK, "Application built successfully")
+
+  return &Binary{
+    Path: path.Join(b.config.Source, b.config.OutputName),
+  }, ni
+```
+
+You can then build and test the plugin....
+
+## Implementing the entrypoint
+
+## Building Plugins

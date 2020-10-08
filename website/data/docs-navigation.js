@@ -108,4 +108,26 @@ export default [
     category: 'internals',
     content: ['architecture', 'execution'],
   },
+  {
+    category: 'extending-waypoint',
+    content: [
+      'entrypoint',
+      'example-plugin',
+      {
+        category: 'plugin-components',
+        content: [
+          'authenticator',
+          'configurable',
+          'configurable-notify',
+          'builder',
+          'registry',
+          'platform',
+          'release-manager',
+          'destroy',
+          'default-parameters',
+          'passing-values',
+        ],
+      },
+    ],
+  },
 ]

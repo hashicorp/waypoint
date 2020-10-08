@@ -1,0 +1,70 @@
+---
+layout: docs
+page_title: 'Configurable'
+sidebar_title: 'Configurable'
+description: |-
+  How Waypoint plugins work
+---
+
+# Configurable
+
+All plugins can receive the configuration from the Waypoint file by implementing the Configurable interface.
+Configurable is always called before the main component methods and is available for any component which has a
+definable config block, build, registry, deploy, and release.
+
+![Build Lifecycle](/img/extending-waypoint/build.png)
+
+To implement configuration for your plugins you implement the Configurable interface on your component. This has a
+single method Config which has two return parameters, interface{} and error. The first parameter is a reference
+to a Go struct which you would like Waypoint to populate with the details from a configuration stanza.
+
+```go
+type Configurable interface {
+  Config() (interface{}, error)
+}
+```
+
+The caller of Config expects that you return a Go Struct which has been annotated with HCL tags. For example, if you
+look at the following configuration there are two parameters defined output_name and source.
+
+```hcl
+ build {
+    use "golang" {
+      output_name = "server"
+      source = "./"
+    }
+}
+```
+
+To receive this information in your plugin you need to create a struct which is annotated with HCL tags as shown below.
+
+```go
+type BuildConfig struct {
+  OutputName string `hcl:"output_name,optional"`
+  Source     string `hcl:"source,optional"`
+}
+```
+
+You can then return a reference to an instance of this Struct from the Config function. The Waypoint SDK will call the
+Config function on your component and will set the configuration parameters to the fields on the returned struct based
+on the tag specified.
+
+```go
+type Builder struct {
+  config BuildConfig
+}
+
+// Config ensures that Builder implements the method from the Configurable interface
+func (b *Builder) Config() (interface{}, error) {
+  return &b.config, nil
+}
+```
+
+This process uses the standard HCL2 decoder and it is possible to create complex configuration which contains nested child
+blocks. An example showing more complex nested configuration blocks can be seen in the Google Cloud Run plugin.
+
+https://github.com/hashicorp/waypoint/blob/a3eb9e6872a80ed9f3e5a650fda13bd46f592c99/builtin/google/cloudrun/platform.go#L510
+
+For a general overview of HCL2 configuration please see the HCL github repo and documentation.
+
+https://github.com/hashicorp/hcl

@@ -1,0 +1,14 @@
+---
+layout: docs
+page_title: Extending Waypoint
+sidebar_title: Extending Waypoint
+description: |-
+  Waypoint utilizes a server to enable collaboration with other team members, storing operation history, and enabling functionality such as logs, exec, and more.
+---
+
+# How Waypoint Plugins Work
+
+Plugins in Waypoint are separate binaries which communicate with the Waypoint application, the plugin communicates
+using gRPC and while it is theoretically possible to build a plugin in any language supported by the gRPC framework.
+We recommend that the developers leverage the [Waypoint SDK](https://github.com/hashicorp/waypoint-plugin-sdk).
+Leveraging the SDK developers can create plugins which cover the full Waypoint lifecycle.

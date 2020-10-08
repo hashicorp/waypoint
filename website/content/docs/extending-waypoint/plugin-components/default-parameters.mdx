@@ -1,0 +1,174 @@
+---
+layout: docs
+page_title: 'Default Parameters'
+sidebar_title: 'Default Parameters'
+description: |-
+  How Waypoint plugins work
+---
+
+# Default Parameters
+
+In addition to user defined return values you can also request waypoint injects default parameters.
+At present there are 11 possible parameters which you can inject, these are:
+
+- context.Context
+- \*component.Source
+- \*component.JobInfo
+- \*component.DeploymentConfig
+- \*datadir.Project
+- \*datadir.App
+- \*datadir.Component
+- hclog.Logger
+- terminal.UI
+- \*component.LabelSet
+
+## context.Context (https://golang.org/pkg/context/)
+
+Context is a default parameter and is used by Waypoint to notify you when the work that component is
+performing should be cancelled. As with any Go code calling the Err() function on the Context will return
+an error if the Context has already been cancelled, you can also use the channel returned by the Done() function
+to notify you when Waypoint cancels the current operation.
+
+```go
+if ctx.Err() != nil {
+  return nil, status.Error(codes.Internal, "Context cancelled error message")
+}
+```
+
+## \*component.Source (https://golang.org/pkg/context/)
+
+Source is a data struct which provides the current application name `App`, and `Path` which is the directory
+containing the current Waypoint file.
+
+```go
+type Source struct {
+  App  string
+  Path string
+}
+```
+
+## \*component.JobInfo (https://golang.org/pkg/context/)
+
+JobInfo is a data struct which provides details related to the current Job.
+
+```go
+type JobInfo struct {
+  // Id is the ID of the job that is executing this plugin operation.
+  // If this is empty then it means that the execution is happening
+  // outside of a job.
+  Id string
+
+  // Local is true if the operation is running locally on a machine
+  // alongside the invocation. This can be used to determine if you can
+  // do things such as open browser windows, read user files, etc.
+  Local bool
+
+  // Workspace is the workspace that this job is executing in. This should
+  // be used by plugins to properly isolate resources from each other.
+  Workspace string
+}
+```
+
+## \*component.DeploymentConfig (https://golang.org/pkg/context/)
+
+DeploymentConfig contains configuration which the entrypoint binary requires in order to run correctly.
+For example if you deploy an application to Google Cloud Run which is using the builtin Docker builder,
+the entrypoint is automatically bundled into the container. In order for the entrypoint to function correctly
+it needs to be configured correctly.
+
+```go
+type DeploymentConfig struct {
+  Id                    string
+  ServerAddr            string
+  ServerTls             bool
+  ServerTlsSkipVerify   bool
+  EntrypointInviteToken string
+}
+```
+
+To simplify the configuration of the entrypoint environment variables DeploymentConfig also has a function which
+returns a map of the correct environment variables and their values.
+
+```go
+func (c *DeploymentConfig) Env() map[string]string
+```
+
+## \*datadir.Project
+
+Project exposes information regarding data and cache directories for the current project, Project implements the
+Dir interface which has the following two methods.
+
+`CacheDir` returns the absolute path of the project directory which can be used to store assets like built applications
+between operations.
+
+```go
+CacheDir() string
+```
+
+`DataDir` returns the absolute path of the project directory which can be used to persist data between operations.
+
+```go
+DataDir() string
+```
+
+To obtain the specific folders related to an individual application in the project you can use the `App` function.
+App which is returned from this function also implements the Dir interface and has the CacheDir and DataDir methods.
+
+```go
+func (p *Project) App(name string) (*App, error)
+```
+
+## \*datadir.App
+
+App exposes information regarding data and cache directories for the current application within the project.
+App implements the Dir interface.
+
+## \*datadir.Component
+
+Component exposes information regarding data and cache directories which are scoped to the individual component.
+
+## hclog.Logger (https://godoc.org/github.com/hashicorp/go-hclog)
+
+Logger provides you with the ability to write to the Waypoint standard logger using different log levels such as
+Info, Debug, Trace, etc. By default log output is disable when running a waypoint command. The environment variable
+`WAYPOINT_LOG_LEVEL=[debug, trace, info, warning]` can be set to enable log output in the CLI.
+
+```go
+  log.Info(
+    "Start build",
+    "src", src,
+    "job", job,
+    "projectDataDir", projectDir.DataDir(),
+    "projectCacheDir", projectDir.CacheDir(),
+    "appDataDir", appDir.DataDir(),
+    "appCacheDir", appDir.CacheDir(),
+    "componentDataDir", componentDir.DataDir(),
+    "componentCacheDir", componentDir.CacheDir(),
+    "labels", labels,
+  )
+```
+
+## terminal.UI
+
+UI allows you to build rich output for your plugin, more details on using terminal.UI can be found in the
+Interacting with the UI section.
+
+## \*component.LabelSet
+
+LabelSet allows you to read the labels defined at an app level on your Waypoint configuration.
+
+```go
+app "wpmini" {
+  labels = {
+    "service" = "wpmini",
+    "env"     = "dev"
+  }
+#...
+```
+
+The LabelSet struct exposes a single field Labels which is of type `map[string]string`, this collection contains
+all the labels defined in the configuration.
+
+```go
+Labels map[string]string
+```
