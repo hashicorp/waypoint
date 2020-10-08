@@ -45,7 +45,7 @@
     {{/if}}
 
     {{#if (eq line.type this.typeStatus)}}
-    <code>{{strip-ansi line.logLine.msg}}</code>
+    <code>{{line.logLine.msg}}</code>
     {{/if}}
 
     {{/each}}
