@@ -279,7 +279,7 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 
 	if !c.flagAcceptTOS {
-		c.ui.Output(strings.TrimSpace(acceptTOS))
+		c.ui.Output(strings.TrimSpace(tosStatement))
 		return 1
 	}
 
@@ -517,7 +517,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:    "accept-tos",
 			Target:  &c.flagAcceptTOS,
-			Usage:   "Pass to accept the End User License Agreement to use the Waypoint URL Service",
+			Usage:   acceptTOSHelp,
 			Default: false,
 		})
 
