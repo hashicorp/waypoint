@@ -16,9 +16,8 @@ export default function HomePage() {
         links={[
           {
             text: 'Get Started',
-            url:
-              'https://learn.hashicorp.com/collections/waypoint/getting-started',
-            type: 'outbound',
+            url: '/docs/getting-started',
+            type: 'inbound',
           },
         ]}
       />
@@ -366,9 +365,8 @@ export default function HomePage() {
         links={[
           {
             text: 'Get Started',
-            url:
-              'https://learn.hashicorp.com/collections/waypoint/getting-started',
-            type: 'outbound',
+            url: '/docs/getting-started',
+            type: 'inbound',
           },
           { text: 'Explore documentation', url: '/docs' },
         ]}
