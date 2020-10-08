@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
 // Deploy deploys the given artifact.
@@ -75,6 +75,8 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 		Labels:      app.components[app.Platform].Labels,
 		ArtifactId:  op.Push.Id,
 		State:       pb.Operation_CREATED,
+		HasEntrypointConfig: op.DeploymentConfig != nil &&
+			op.DeploymentConfig.ServerAddr != "",
 	}, nil
 }
 
