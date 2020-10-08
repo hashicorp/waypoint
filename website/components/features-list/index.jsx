@@ -47,6 +47,7 @@ function FeaturesCarousel({ features }) {
         defaultControlsConfig={{
           pagingDotsContainerClassName: styles.pagingDots,
         }}
+        cellSpacing={40}
         getControlsContainerStyles={(key) => {
           switch (key) {
             case 'BottomCenter':

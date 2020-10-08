@@ -88,22 +88,22 @@
 }
 
 .terminalWrapper {
+  & > div {
+    max-width: 100%;
+    height: 100%;
+  }
+
+  & > img {
+    width: 100%;
+    height: auto;
+  }
+
   @media (--medium-up) {
     width: 400px;
   }
 
   @media (min-width: 900px) {
     width: 600px;
-  }
-
-  & > div {
-    max-width: 100%;
-    height: 100vh;
-  }
-
-  & > img {
-    width: 100%;
-    height: auto;
   }
 }
 
