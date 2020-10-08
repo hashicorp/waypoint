@@ -4,7 +4,9 @@ import NProgress from '@hashicorp/nextjs-scripts/lib/nprogress'
 import useAnchorLinkAnalytics from '@hashicorp/nextjs-scripts/lib/anchor-link-analytics'
 import Router from 'next/router'
 import HashiHead from '@hashicorp/react-head'
+import HashiStackMenu from '@hashicorp/react-hashi-stack-menu'
 import Head from 'next/head'
+import AlertBanner from '@hashicorp/react-alert-banner'
 import createConsentManager from '@hashicorp/nextjs-scripts/lib/consent-manager'
 import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
 import { Provider as NextAuthProvider } from 'next-auth/client'
@@ -14,6 +16,7 @@ import AuthIndicator from 'components/auth-indicator'
 import AuthGate from 'components/auth-gate'
 import Error from './_error'
 import { productName } from '../data/metadata'
+import alertBannerData, { ALERT_BANNER_ACTIVE } from 'data/alert-banner'
 
 NProgress({ Router })
 const { ConsentManager, openConsentManager } = createConsentManager({
@@ -29,10 +32,11 @@ function App({ Component, pageProps }) {
           is={Head}
           title={`${productName} by HashiCorp`}
           siteName={`${productName} by HashiCorp`}
-          description="Waypoint allows developers to define their application build, deploy, and release lifecycle as code, with a consistent 'waypoint up' workflow."
-          image="https://www.waypointproject.io/img/og-image.png"
-          icon={[{ href: '/favicon.svg' }]}
         />
+        {ALERT_BANNER_ACTIVE && (
+          <AlertBanner {...alertBannerData} theme="blue" />
+        )}
+        <HashiStackMenu />
         <ProductSubnav />
         <div className="content">
           <Component {...pageProps} />

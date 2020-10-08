@@ -6,11 +6,11 @@ import (
 
 	"github.com/posener/complete"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type DeploymentCreateCommand struct {
@@ -155,5 +155,10 @@ traffic. You can manage this hostname using "waypoint hostname."
 
 	deployNoURL = `
 The deploy was successful!
+
+The release did not provide a URL and the URL service is disabled on the
+server, so no further URL information can be automatically provided. If
+this is unexpected, please ensure the Waypoint server has both the URL service
+enabled and advertise addresses set.
 `
 )

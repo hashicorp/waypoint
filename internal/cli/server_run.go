@@ -42,7 +42,7 @@ Privacy Policy: https://hashicorp.com/privacy
 Terms of Service: https://waypointproject.io/terms
 `
 
-const DefaultURLControlAddress = "https://control.alpha.hzn.network"
+const DefaultURLControlAddress = "https://control.hzn.network"
 
 type ServerRunCommand struct {
 	*baseCommand
@@ -334,7 +334,7 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Name:    "url-api-addr",
 			Target:  &c.config.URL.APIAddress,
 			Usage:   "Address to Waypoint URL service API",
-			Default: "api.alpha.waypoint.run:443", // TODO(mitchellh: change default
+			Default: "api.waypoint.run:443",
 		})
 
 		f.BoolVar(&flag.BoolVar{

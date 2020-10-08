@@ -259,9 +259,9 @@ func TestServiceRunnerGetDeploymentConfig(t *testing.T) {
 		client := server.TestServer(t, impl)
 
 		// Request deployment config
-		_, err = client.RunnerGetDeploymentConfig(ctx, &pb.RunnerGetDeploymentConfigRequest{})
-		require.Error(err)
-		require.Equal(codes.Aborted, status.Code(err))
+		resp, err := client.RunnerGetDeploymentConfig(ctx, &pb.RunnerGetDeploymentConfigRequest{})
+		require.NoError(err)
+		require.Empty(resp.ServerAddr)
 	})
 
 	t.Run("with server config", func(t *testing.T) {

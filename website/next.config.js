@@ -10,11 +10,12 @@ console.log(`AUTH0_DOMAIN: ${process.env.AUTH0_DOMAIN}`)
 
 module.exports = withHashicorp({
   defaultLayout: true,
-  transpileModules: ['is-absolute-url', '@hashicorp/react-mega-nav'],
+  transpileModules: ['is-absolute-url', '@hashicorp/react-.*'],
 })({
   redirects() {
     return redirects
   },
+  svgo: { plugins: [{ removeViewBox: false }] },
   env: {
     HASHI_ENV: process.env.HASHI_ENV || 'development',
     SEGMENT_WRITE_KEY: '9mlIVayJbNtJW2EOdAFKHNKcdLAgEDlV',

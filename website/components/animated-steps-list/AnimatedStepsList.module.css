@@ -1,0 +1,111 @@
+.animatedStepsList {
+  display: flex;
+
+  & .indicatorWrapper {
+    & > ul {
+      position: sticky;
+      top: 200px;
+      padding-bottom: 395px;
+    }
+
+    margin-right: 115px;
+    @media (max-width: 1119px) {
+      display: none;
+    }
+  }
+
+  & .stepsList {
+    margin-bottom: 46px;
+  }
+
+  & .terminalWrapper {
+    margin-left: 150px;
+
+    @media (max-width: 1119px) {
+      margin-left: 75px;
+    }
+
+    @media (max-width: 850px) {
+      display: none;
+    }
+
+    & > * {
+      position: sticky;
+      top: 140px;
+      box-shadow: rgb(0 0 0 / 0.35) 7px 10px 25px;
+      margin-top: -800px;
+
+      @media (min-width: 850px) {
+        max-width: 450px;
+      }
+
+      @media (min-width: 875px) {
+        max-width: 475px;
+      }
+
+      @media (min-width: 900px) {
+        max-width: 520px;
+      }
+
+      @media (min-width: 950px) {
+        max-width: 545px;
+      }
+
+      @media (min-width: 1000px) {
+        max-width: 570px;
+      }
+
+      @media (min-width: 1050px) {
+        max-width: 605px;
+      }
+
+      @media (min-width: 1120px) {
+        max-width: 465px;
+      }
+
+      @media (min-width: 1150px) {
+        max-width: 515px;
+      }
+
+      @media (min-width: 1200px) {
+        max-width: 565px;
+      }
+
+      @media (min-width: 1250px) {
+        max-width: 615px;
+      }
+
+      @media (min-width: 1300px) {
+        max-width: 645px;
+      }
+
+      @media (min-width: 1350px) {
+        max-width: 670px;
+      }
+
+      @media (min-width: 1400px) {
+        max-width: 695px;
+      }
+
+      @media (min-width: 1450px) {
+        max-width: 720px;
+      }
+
+      @media (min-width: 1500px) {
+        max-width: 745px;
+      }
+
+      @media (min-width: 1550px) {
+        max-width: 770px;
+      }
+
+      @media (min-width: 1600px) {
+        max-width: 795px;
+      }
+
+      @media (min-width: 1650px) {
+        max-width: unset;
+      }
+    }
+  }
+}

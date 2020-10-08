@@ -14,11 +14,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/docker"
 )
 
 // Platform is the Platform implementation for Google Cloud Run.
@@ -328,6 +328,7 @@ func (p *Platform) Deploy(
 		log.Info("updating a pre-existing service", "service", deployment.apiName())
 		st.Update("Deploying new Cloud Run revision")
 
+		service, err = deployment.replaceService(ctx, service)
 		if err != nil {
 			return nil, status.Errorf(codes.Aborted, "Unable to deploy new Cloud Run revision: %s", err.Error())
 		}

@@ -9,24 +9,20 @@ GIT_IMPORT="github.com/hashicorp/waypoint/internal/version"
 GOLDFLAGS="-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)"
 CGO_ENABLED?=0
 
-# bin creates the binaries for Waypoint
 .PHONY: bin
-bin:
+bin: # bin creates the binaries for Waypoint for the current platform
 	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 	go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
-.PHONY: dev
-dev:
-	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
-	cd internal/assets && go generate
-	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -o ./waypoint ./cmd/waypoint
-	go build -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
-
 .PHONY: bin/linux
 bin/linux: # create Linux binaries
 	GOOS=linux GOARCH=amd64 $(MAKE) bin
+
+.PHONY: test
+test: # run tests
+	go test ./...
 
 .PHONY: docker/mitchellh
 docker/mitchellh:

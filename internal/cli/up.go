@@ -4,11 +4,11 @@ import (
 	"context"
 	"strings"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type UpCommand struct {
@@ -94,9 +94,11 @@ func (c *UpCommand) Run(args []string) int {
 		case releaseUrl != "":
 			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
 			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
-			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			if deployUrl != "" {
+				app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			}
 
-		case hostname != nil:
+		case hostname != nil && deployUrl != "":
 			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
 			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())
 			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())

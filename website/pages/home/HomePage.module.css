@@ -1,0 +1,12 @@
+.homePage {
+  & .testingTerminal {
+    position: absolute;
+    top: 110px;
+    right: -40px;
+  }
+
+  & .whyWaypointDiagram {
+    margin-top: 72px;
+    width: 100%;
+  }
+}

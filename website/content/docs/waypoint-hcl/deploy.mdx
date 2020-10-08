@@ -13,12 +13,21 @@ description: |-
 The `deploy` stanza describes how an application is deployed.
 A deploy takes a previously built artifact and stages it onto the target
 deployment platform. The target deployment platform is pluggable and can be
-Docker, Kubernetes, Nomad, EC2, and more.
+Docker, Kubernetes, Nomad, EC2, and more. Read more about the
+[deploy phase of the application lifecycle here](/docs/lifecycle/deploy).
 
-Exactly one `deploy` stanza is required within an application.
+Exactly one `deploy` stanza is required within an application stanza.
 
 ```hcl
 app "frontend" {
+  build {
+    use "docker" {}
+
+    registry {
+      # ...
+    }
+  }
+
   deploy {
     use "kubernetes" {}
 
@@ -27,7 +36,7 @@ app "frontend" {
     }
   }
 
-  # ...
+# ...
 }
 ```
 

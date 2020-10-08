@@ -22,7 +22,6 @@ func (s *service) GetRunner(
 	return s.state.RunnerById(req.RunnerId)
 }
 
-// TODO: test
 func (s *service) RunnerGetDeploymentConfig(
 	ctx context.Context,
 	req *pb.RunnerGetDeploymentConfigRequest,
@@ -39,10 +38,10 @@ func (s *service) RunnerGetDeploymentConfig(
 			"server configuration for deployment information not yet set.")
 	}
 
-	// If we have no advertise addresses, then it is an error
+	// If we have no advertise addresses, then we just send back empty values.
+	// This disables any entrypoint settings.
 	if len(cfg.AdvertiseAddrs) == 0 {
-		return nil, status.Errorf(codes.Aborted,
-			"server configuration has no advertise addresses")
+		return &pb.RunnerGetDeploymentConfigResponse{}, nil
 	}
 
 	// Our addr for now is just the first one since we don't support

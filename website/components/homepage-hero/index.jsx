@@ -1,21 +1,17 @@
-import s from './style.module.css'
+import styles from './HomepageHero.module.css'
 import Button from '@hashicorp/react-button'
 
-export default function HomepageHero({ title, description, links }) {
+export default function HomepageHero({ title, description, subtitle, links }) {
   return (
-    <div className={s.root}>
-      <div className="g-grid-container">
-        <span className={s.eyebrow}>
-          Welcome to the <span className={s.red}>INTERNAL BETA</span> for
-          HashiCorp Waypoint! This is a confidential internal only beta. No
-          details should be shared externally.
-        </span>
-        <h1 className="g-type-display-1">{title}</h1>
-        <div className={s.contentAndLinks}>
-          <p className="g-type-body-large">{description}</p>
-          <div className={s.links}>
+    <div className={styles.homepageHero}>
+      <div className={styles.gridContainer}>
+        <div className={styles.content}>
+          <h1>{title}</h1>
+          <p className={styles.subtitle}>{subtitle}</p>
+          <p className={styles.description}>{description}</p>
+          <div className={styles.links}>
             {links.map((link, index) => {
-              const brand = index === 0 ? 'hashicorp' : 'neutral'
+              const brand = index === 0 ? 'blue' : 'neutral'
               const variant = index === 0 ? 'primary' : 'secondary'
               return (
                 <Button

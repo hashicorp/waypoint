@@ -126,6 +126,11 @@ func (s *service) deploymentPreloadUrl(
 	ctx context.Context,
 	d *pb.Deployment,
 ) error {
+	// If we had no entrypoint config it is not possible for the preload URL to work.
+	if !d.HasEntrypointConfig {
+		return nil
+	}
+
 	resp, err := s.ListHostnames(ctx, &pb.ListHostnamesRequest{
 		Target: &pb.Hostname_Target{
 			Target: &pb.Hostname_Target_Application{

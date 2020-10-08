@@ -1,0 +1,89 @@
+.terminal {
+  --terminal-radius: 2px;
+  --terminal-title-color: var(--gray-2);
+  --terminal-body-color: var(--gray-1);
+
+  width: 837px;
+
+  & .titleBar {
+    display: flex;
+    align-items: center;
+    background: var(--terminal-title-color);
+    width: 100%;
+    height: 46px;
+    border-radius: var(--terminal-radius) var(--terminal-radius) 0 0;
+
+    & .title {
+      color: var(--gray-4);
+      font-family: var(--font-monospace);
+      font-size: 13.5px;
+      margin: 0 auto;
+    }
+
+    & .windowControls {
+      position: absolute;
+      display: block;
+      list-style: none;
+      margin-left: 16px;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding: 0;
+
+      & li {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        background: var(--gray-1);
+        border-radius: 12px;
+        margin-right: 7px;
+      }
+    }
+  }
+
+  & .content {
+    width: 100%;
+    height: 525px;
+    background: var(--terminal-body-color);
+    border-radius: 0 0 var(--terminal-radius) var(--terminal-radius);
+    padding: 24px 32px;
+    & .overflowWrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: scroll;
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none; /* Firefox */
+      &::-webkit-scrollbar {
+        /* Safari */
+        -webkit-appearance: none;
+        width: 0;
+        height: 0;
+      }
+
+      & .codeWrapper {
+        bottom: 0;
+        position: absolute;
+        min-height: 100%;
+
+        & code {
+          width: 100%;
+          height: 100%;
+          font-style: normal;
+          font-weight: normal;
+          font-size: 13.5px;
+          line-height: 26px;
+          color: var(--blue);
+          &.navy {
+            color: var(--vagrant-l1);
+          }
+          &.gray {
+            color: var(--gray-5);
+          }
+          &.white {
+            color: var(--white);
+          }
+        }
+      }
+    }
+  }
+}

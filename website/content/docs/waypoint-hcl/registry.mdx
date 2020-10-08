@@ -22,16 +22,19 @@ without a registry specified.
 ```hcl
 app "frontend" {
   build {
+    use "docker" {}
+
     registry {
-      use "docker" {}
+      use "docker" {
+        image = "example.com/my-app"
+        tag   = gitrefpretty()
+      }
 
       hook {
         # ...
       }
     }
   }
-
-  # ...
 }
 ```
 
