@@ -1,0 +1,15 @@
+.stepsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  & > li {
+    &:not(:last-of-type) {
+      margin-bottom: 600px;
+
+      @media (max-width: 850px) {
+        margin-bottom: 88px;
+      }
+    }
+  }
+}
