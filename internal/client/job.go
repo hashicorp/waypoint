@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/finalcontext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // job returns the basic job skeleton prepoulated with the correct
@@ -235,6 +235,11 @@ func (c *Project) queueAndStreamJob(
 			return nil, st.Err()
 
 		case *pb.GetJobStreamResponse_Terminal_:
+			// Ignore this for local jobs since we're using our UI directly.
+			if c.local {
+				continue
+			}
+
 			for _, ev := range event.Terminal.Events {
 				log.Trace("job terminal output", "event", ev)
 
