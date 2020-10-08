@@ -1,8 +1,18 @@
 import { useState } from 'react'
 import styles from './FeaturesList.module.css'
 import Button from '@hashicorp/react-button'
+import Carousel from 'nuka-carousel'
 
-export default function FeaturesList({ features }) {
+export default function Features({ features }) {
+  return (
+    <>
+      <FeaturesCarousel features={features} />
+      <FeaturesList features={features} />
+    </>
+  )
+}
+
+function FeaturesList({ features }) {
   const [activeFeature, setActiveFeature] = useState(0)
   return (
     <div className={styles.features}>
@@ -27,9 +37,57 @@ export default function FeaturesList({ features }) {
   )
 }
 
-function Feature({ children, title, active, onClick, learnMoreLink, id }) {
+function FeaturesCarousel({ features }) {
   return (
-    <li className={active ? styles.activeFeature : styles.feature}>
+    <div className={styles.featuresCarousel}>
+      <Carousel
+        renderCenterRightControls={() => null}
+        renderCenterLeftControls={() => null}
+        slideWidth={1.0}
+        defaultControlsConfig={{
+          pagingDotsContainerClassName: styles.pagingDots,
+        }}
+        getControlsContainerStyles={(key) => {
+          switch (key) {
+            case 'BottomCenter':
+              return {
+                top: 0,
+              }
+          }
+        }}
+      >
+        {features.map((feature, stableIdx) => (
+          <div key={stableIdx}>
+            <Feature
+              Element="div"
+              id={stableIdx}
+              title={feature.title}
+              active
+              learnMoreLink={feature.learnMoreLink}
+            >
+              {feature.description}
+            </Feature>
+            <div className={styles.terminalWrapper}>
+              {features[stableIdx].content}
+            </div>
+          </div>
+        ))}
+      </Carousel>
+    </div>
+  )
+}
+
+function Feature({
+  children,
+  title,
+  active,
+  onClick = () => {},
+  learnMoreLink,
+  id,
+  Element = 'li',
+}) {
+  return (
+    <Element className={active ? styles.activeFeature : styles.feature}>
       <button
         className={styles.heading}
         onClick={() => onClick(id)}
@@ -43,6 +101,7 @@ function Feature({ children, title, active, onClick, learnMoreLink, id }) {
         {learnMoreLink && (
           <Button
             url={learnMoreLink}
+            className={styles.learnMoreLink}
             title="Learn more"
             linkType="inbound"
             theme={{
@@ -52,6 +111,6 @@ function Feature({ children, title, active, onClick, learnMoreLink, id }) {
           />
         )}
       </div>
-    </li>
+    </Element>
   )
 }

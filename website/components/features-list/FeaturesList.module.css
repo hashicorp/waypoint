@@ -1,9 +1,42 @@
+.featuresCarousel {
+  @media (--medium-up) {
+    display: none;
+  }
+
+  & .feature {
+    border-left: none;
+    padding-left: 0;
+    margin: 40px 0 17px;
+
+    & p {
+      margin: 8px 0 0;
+    }
+  }
+
+  & .body {
+    opacity: 1;
+    max-height: unset;
+  }
+
+  & .pagingDots {
+    & :global(.paging-item:not(.active) > button) {
+      /* need to override nuka-carousel active dot style, which is set inline and thus requires !important */
+      opacity: 1 !important;
+      fill: var(--gray-6) !important;
+    }
+  }
+}
+
 .features {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-column-gap: 40px;
-  min-height: auto;
-  overflow-anchor: none;
+  display: none;
+
+  @media (--medium-up) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-column-gap: 40px;
+    min-height: auto;
+    overflow-anchor: none;
+  }
 }
 
 .feature {
@@ -43,6 +76,7 @@
 }
 
 .heading {
+  text-align: left;
   background: none;
   border: none;
   padding: 0;
@@ -54,7 +88,22 @@
 }
 
 .terminalWrapper {
-  & > * {
-    max-width: 650px;
+  & > div {
+    max-width: 100%;
+    height: 100vh;
+  }
+
+  & > img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.learnMoreLink {
+  display: none;
+  text-align: left;
+
+  @media (--medium-up) {
+    display: block;
   }
 }

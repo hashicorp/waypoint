@@ -26,6 +26,7 @@
     "next": "9.5.3",
     "next-auth": "3.1.0",
     "next-mdx-remote": "^1.0.0",
+    "nuka-carousel": "^4.7.1",
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-intersection-observer": "^8.29.0",
