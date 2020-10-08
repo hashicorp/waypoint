@@ -477,7 +477,6 @@
   .output-pane {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
     background: rgb(var(--panel));
     border: 1px solid;
     border-color: rgb(var(--border));
@@ -600,7 +599,7 @@
       background: url(/images/pattern.svg) no-repeat top center color.$black;
 
       @media (prefers-color-scheme: dark) {
-        background-color: rgba(color.$black, .5);
+        background-color: rgba(color.$black, 0.5);
         box-shadow: 0 0 0 1px rgb(var(--outline));
       }
 
