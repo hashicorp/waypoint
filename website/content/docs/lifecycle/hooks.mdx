@@ -23,34 +23,55 @@ operations.
 
 Hooks are configured in the stanza of the operation they should run
 before or after. Hooks are supported in `build`, `registry`, `deploy`,
-and `release` stanzas. Example:
+and `release` stanzas.
 
-```
-app "my-app" {
-  build {
-    use "docker" {}
+Example `waypoint.hcl`:
 
-    hook {
-        when    = "after"
-        command = ["./container-scanner.sh", "my-image"]
+```hcl
+project = "hooks-example"
+
+app "hooks-example" {
+    build {
+        use "pack" {}
+        hook {
+            when = "before"
+            command = ["./audit-log.sh", "build starting"]
+            on_failure = "continue"
+        }
+        hook {
+            when = "after"
+            command = ["./audit-log.sh", "build finished"]
+        }
     }
-
-    hook {
-        when    = "after"
-        command = ["python", "notify-slack.py"]
-        on_failure = "continue"
+    deploy {
+        use "docker" {}
+        hook {
+            when = "before"
+            command = ["./audit-log.sh", "deploy starting"]
+            on_failure = "fail"
+        }
+        hook {
+            when = "after"
+            command = ["./audit-log.sh", "deploy finished"]
+        }
     }
-  }
 }
 ```
 
-See the [`hook` configuration stanza documentation](/docs/waypoint-hcl/hook)
+Example `audit-log.sh`:
+
+```shell
+#!/bin/bash
+echo `date` $1 >> audit-log.txt
+```
+
+See the `hook` [configuration stanza documentation](/docs/waypoint-hcl/hook)
 for details on all the fields a hook has and which are required.
 
 ## Execution Environment
 
 Hooks are executed alongside the Waypoint operation, most commonly [where the Waypoint CLI is running](/docs/internals/execution#most-common-cli-and-a-remote-server).
-See the [Operation Exeuction](/docs/internals/execution) for more options for execution including Remote Runners.
+Reference [Operation Execution](/docs/internals/execution) for more execution options including Remote Runners.
 
 Hooks are _not executed in the app deployment platform_. Therefore, operations
 such as database migrations or scripts that must be run within the context
