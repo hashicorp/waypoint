@@ -337,7 +337,7 @@ export default function HomePage() {
         <FeaturesList
           features={[
             {
-              title: 'Preview Urls',
+              title: 'Preview URLs',
               description:
                 'Get publicly accessible preview URLs per-deployment',
               learnMoreLink: 'https://waypointproject.io/docs/url',
@@ -390,9 +390,9 @@ export default function HomePage() {
               content: (
                 <Terminal
                   lines={[
-                    { code: '$ waypoint exec' },
+                    { code: '$ waypoint exec bash' },
                     {
-                      code: '# Connected to 01EJY7JXPX1DZF36FMNJHQS8MH',
+                      code: 'Connected to deployment v1',
                       color: 'white',
                     },
                   ]}
@@ -453,46 +453,57 @@ export default function HomePage() {
               title: 'CI/CD and Version Control Integration',
               description:
                 'Integrate easily with existing CI/CD providers and version control providers like GitHub',
+              learnMoreLink: '/docs/automating-execution/github-actions',
               content: (
                 <Terminal
                   title="config.yaml"
                   lines={[
                     {
                       code: 'env:',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code:
                         'WAYPOINT_SERVER_TOKEN: ${{ secrets.WAYPOINT_SERVER_TOKEN }}',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code: 'WAYPOINT_SERVER_ADDR: waypoint.example.com:9701',
+                      color: 'white',
                     },
                     {
                       code: 'steps:',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code: '- uses: actions/checkout@v2',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code: '- uses: hashicorp/actions-setup-waypoint',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code: 'with:',
+                      color: 'white',
                     },
                     {
                       indent: 2,
                       code: "version: '0.1.0'",
+                      color: 'white',
                     },
                     {
                       code: '- run: waypoint init',
+                      color: 'white',
                     },
                     {
                       code: '- run: waypoint up',
+                      color: 'white',
                     },
                   ]}
                 />
