@@ -96,9 +96,6 @@
     width: 600px;
   }
 
-  @media (--large) {
-    width: auto;
-  }
   & > div {
     max-width: 100%;
     height: 100vh;
