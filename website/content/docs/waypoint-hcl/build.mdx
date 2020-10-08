@@ -10,12 +10,12 @@ description: |-
 
 <Placement groups={[['app', 'build']]} />
 
-The `build` stanza describes how an application is built. During the
-build operation, Waypoint converts application source into an artifact
-and optionally pushes it to a remote registry. Read more about the
+The `build` stanza describes how an application is built. Waypoint converts
+application source code into an artifact. Waypoint can store the image locally,
+or push it to a remote registry. Read more about the
 [build phase of the application lifecycle here](/docs/lifecycle/build).
 
-Exactly one `build` stanza is required within an application.
+Exactly one `build` stanza is required within an `app` stanza.
 
 ```hcl
 app "frontend" {

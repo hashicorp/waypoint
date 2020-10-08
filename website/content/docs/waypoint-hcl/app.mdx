@@ -11,6 +11,7 @@ description: |-
 <Placement groups={[['app']]} />
 
 The `app` stanza describes a single deployable application within a project.
+A majority of the configuration of your project will be done in this stanza.
 
 A minimum of one `app` stanza is required in your project configuration.
 
@@ -38,8 +39,8 @@ app "frontend" {
 
 ### Label
 
-The `app` stanza takes a label. The label of the stanza is the name
-of the application.
+The `app` stanza takes a "label", which is "frontend" above. The label of the
+stanza is the name of the application.
 
 The application name is used by Waypoint for organizational purposes.
 It is listed in the UI, annotates logs, and more. The application name is
@@ -49,6 +50,9 @@ accessible to plugins and is used for defaults in many cases.
 application name will cause Waypoint to treat it as a _new_ application.
 History from the prior name will be preserved but under the prior name.
 We will provide a path to rename applications in a future version.
+
+The `app` stanza is composed of other stanzas and parameters, namely `build`,
+`deploy`, and optionally, `release` stanzas.
 
 ### Required
 

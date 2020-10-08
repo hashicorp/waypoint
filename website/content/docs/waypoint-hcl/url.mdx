@@ -22,11 +22,22 @@ here have no effect.
 
 ```hcl
 app "frontend" {
+  build {
+    # ...
+  }
+
+  deploy {
+    # ...
+  }
+
+  release {
+    # ...
+  }
+
   url {
     auto_hostname = false
   }
 
-  # ...
 }
 ```
 
