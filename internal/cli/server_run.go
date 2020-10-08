@@ -26,11 +26,11 @@ import (
 	"github.com/posener/complete"
 	"github.com/stretchr/testify/require"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type ServerRunCommand struct {
@@ -314,7 +314,7 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Name:    "url-api-addr",
 			Target:  &c.config.URL.APIAddress,
 			Usage:   "Address to Waypoint URL service API",
-			Default: "api.alpha.waypoint.run:443", // TODO(mitchellh: change default
+			Default: "api.waypoint.run:443",
 		})
 
 		f.BoolVar(&flag.BoolVar{
@@ -328,7 +328,7 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Name:    "url-control-addr",
 			Target:  &c.config.URL.ControlAddress,
 			Usage:   "Address to Waypoint URL service control API",
-			Default: "https://control.alpha.hzn.network",
+			Default: "https://control.hzn.network",
 		})
 
 		f.StringVar(&flag.StringVar{
