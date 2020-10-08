@@ -5,6 +5,7 @@ import HomepageSection from 'components/homepage-section'
 import HomepageHero from 'components/homepage-hero'
 import BrandedCta from 'components/branded-cta'
 import WaypointDiagram from 'components/waypoint-diagram'
+import FeaturesList from 'components/features-list'
 
 export default function HomePage() {
   return (
@@ -332,7 +333,9 @@ export default function HomePage() {
         />
       </HomepageSection>
 
-      <HomepageSection title="Features" theme="gray"></HomepageSection>
+      <HomepageSection title="Features" theme="gray">
+        <FeaturesList />
+      </HomepageSection>
 
       <HomepageSection title="Why Waypoint" theme="light">
         <InfoGrid

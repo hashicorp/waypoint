@@ -1,17 +1,27 @@
 .terminal {
   --terminal-radius: 2px;
+  --terminal-title-color: var(--gray-2);
+  --terminal-body-color: var(--gray-1);
 
   width: 837px;
 
   & .titleBar {
     display: flex;
     align-items: center;
-    background: var(--gray-2);
+    background: var(--terminal-title-color);
     width: 100%;
     height: 46px;
     border-radius: var(--terminal-radius) var(--terminal-radius) 0 0;
 
+    & .title {
+      color: var(--gray-4);
+      font-family: var(--font-monospace);
+      font-size: 13.5px;
+      margin: 0 auto;
+    }
+
     & .windowControls {
+      position: absolute;
       display: block;
       list-style: none;
       margin-left: 16px;
@@ -33,7 +43,7 @@
   & .content {
     width: 100%;
     height: 525px;
-    background: var(--gray-1);
+    background: var(--terminal-body-color);
     border-radius: 0 0 var(--terminal-radius) var(--terminal-radius);
     padding: 24px 32px;
     & .overflowWrapper {
@@ -68,4 +78,11 @@
       }
     }
   }
+}
+
+.darkTerminal {
+  composes: terminal;
+
+  --terminal-title-color: var(--black);
+  --terminal-body-color: #16171b;
 }

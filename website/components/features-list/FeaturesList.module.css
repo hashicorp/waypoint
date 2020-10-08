@@ -1,0 +1,60 @@
+.features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-column-gap: 40px;
+  min-height: auto;
+  overflow-anchor: none;
+}
+
+.feature {
+  border-left: 2px solid;
+  border-color: var(--gray-6);
+  padding-left: 44px;
+  margin: 25px 0;
+  min-height: auto;
+}
+
+.activeFeature {
+  composes: feature;
+  border-color: var(--blue);
+
+  & .body {
+    opacity: 1;
+    max-height: 200px;
+  }
+
+  & .heading {
+    color: var(--black);
+  }
+}
+
+.body {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  font-size: 15px;
+  transition: opacity 0.3s, max-height 0.3s;
+}
+
+.options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.heading {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 18px;
+  font-family: var(--font-display);
+  font-weight: bold;
+  color: var(--gray-4);
+  cursor: pointer;
+}
+
+.terminalWrapper {
+  & > * {
+    max-width: 650px;
+  }
+}

@@ -38,15 +38,16 @@ import styles from './Terminal.module.css'
  *    ]}
  *  />
  */
-export default function Terminal({ lines }) {
+export default function Terminal({ lines, title, theme }) {
   return (
-    <div className={styles.terminal}>
+    <div className={theme === 'dark' ? styles.darkTerminal : styles.terminal}>
       <div className={styles.titleBar}>
         <ul className={styles.windowControls}>
           <li></li>
           <li></li>
           <li></li>
         </ul>
+        {title && <div className={styles.title}>{title}</div>}
       </div>
       <div className={styles.content}>
         <div className={styles.overflowWrapper}>
