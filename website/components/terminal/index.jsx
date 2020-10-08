@@ -38,9 +38,9 @@ import styles from './Terminal.module.css'
  *    ]}
  *  />
  */
-export default function Terminal({ lines, title, theme }) {
+export default function Terminal({ lines, title }) {
   return (
-    <div className={theme === 'dark' ? styles.darkTerminal : styles.terminal}>
+    <div className={styles.terminal}>
       <div className={styles.titleBar}>
         <ul className={styles.windowControls}>
           <li></li>

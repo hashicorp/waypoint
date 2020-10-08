@@ -11,7 +11,6 @@ const features = [
     learnMoreLink: 'https://waypointproject.io/docs/url',
     content: (
       <Terminal
-        theme="dark"
         title="waypoint-up.txt"
         lines={[
           { code: '$ waypoint deploy' },
@@ -50,7 +49,6 @@ const features = [
     description: 'Execute a command in the context of a running application',
     content: (
       <Terminal
-        theme="dark"
         title="waypoint-up.txt"
         lines={[
           { code: '$ waypoint exec' },
@@ -66,7 +64,6 @@ const features = [
     learnMoreLink: 'https://waypointproject.io/docs/logs',
     content: (
       <Terminal
-        theme="dark"
         title="waypoint-up.txt"
         lines={[
           { code: '$ waypoint logs' },
@@ -97,18 +94,14 @@ const features = [
     title: 'CI/CD and Version Control Integration',
     description:
       'Integrate easily with existing CI/CD providers and version control providers like GitHub',
-    content: (
-      <Terminal theme="dark" title="waypoint-up.txt" lines={[{ code: '' }]} />
-    ),
+    content: <Terminal title="waypoint-up.txt" lines={[{ code: '' }]} />,
   },
   {
     id: 5,
     title: 'Extensible Plugin Interface',
     description:
       'Easily extend Waypoint with custom support for platforms, build processes, and release systems.',
-    content: (
-      <Terminal theme="dark" title="waypoint-up.txt" lines={[{ code: '' }]} />
-    ),
+    content: <Terminal title="waypoint-up.txt" lines={[{ code: '' }]} />,
   },
 ]
 

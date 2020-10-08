@@ -79,10 +79,3 @@
     }
   }
 }
-
-.darkTerminal {
-  composes: terminal;
-
-  --terminal-title-color: var(--black);
-  --terminal-body-color: #16171b;
-}
