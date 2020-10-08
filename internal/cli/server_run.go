@@ -33,6 +33,19 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 )
 
+const tosStatement = `
+The "-accept-tos" flag must be provided to use the Waypoint URL service. Please review the Terms of Service and Privacy Policy links below, then rerun this command using the "-accept-tos" flag.
+
+If you do not feel comfortable accepting the terms, you may disable the URL service or self-host the URL service. Learn more about this at: https://waypointproject.io/docs/url
+
+Privacy Policy: https://hashicorp.com/privacy
+Terms of Service: https://waypointproject.io/terms
+`
+
+const acceptTOSHelp = `Pass to accept the End User License Agreement to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting.`
+
+const DefaultURLControlAddress = "https://control.hzn.network"
+
 type ServerRunCommand struct {
 	*baseCommand
 
@@ -43,6 +56,7 @@ type ServerRunCommand struct {
 	flagAdvertiseAddr          string
 	flagAdvertiseTLSEnabled    bool
 	flagAdvertiseTLSSkipVerify bool
+	flagAcceptTOS              bool
 }
 
 func (c *ServerRunCommand) Run(args []string) int {
@@ -56,6 +70,13 @@ func (c *ServerRunCommand) Run(args []string) int {
 		WithNoConfig(),
 		WithClient(false),
 	); err != nil {
+		return 1
+	}
+
+	if c.config.URL.Enabled &&
+		c.config.URL.ControlAddress == DefaultURLControlAddress &&
+		!c.flagAcceptTOS {
+		c.ui.Output(strings.TrimSpace(tosStatement))
 		return 1
 	}
 
@@ -123,6 +144,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		singleprocess.WithDB(db),
 		singleprocess.WithConfig(&c.config),
 		singleprocess.WithLogger(log.Named("singleprocess")),
+		singleprocess.WithAcceptURLTerms(c.flagAcceptTOS),
 	)
 
 	if err != nil {
@@ -328,7 +350,7 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Name:    "url-control-addr",
 			Target:  &c.config.URL.ControlAddress,
 			Usage:   "Address to Waypoint URL service control API",
-			Default: "https://control.hzn.network",
+			Default: DefaultURLControlAddress,
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -363,6 +385,12 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Name:    "advertise-tls-skip-verify",
 			Target:  &c.flagAdvertiseTLSSkipVerify,
 			Usage:   "Do not verify the TLS certificate presented by the server.",
+			Default: false,
+		})
+		f.BoolVar(&flag.BoolVar{
+			Name:    "accept-tos",
+			Target:  &c.flagAcceptTOS,
+			Usage:   acceptTOSHelp,
 			Default: false,
 		})
 	})

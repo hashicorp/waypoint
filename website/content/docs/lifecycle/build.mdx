@@ -77,9 +77,9 @@ app "my-app" {
 
 [Cloud Native Buildpacks](https://buildpacks.io/) are a fast way to get started
 creating a containerized application without writing a `Dockerfile`. Buildpacks
-take application source and build a container for you if there are matching 
-buildpacks. By default Waypoint uses Heroku Buildpacks with a builder image 
-located on Docker Hub at 
+take application source and build a container for you if there are matching
+buildpacks. By default Waypoint uses Heroku Buildpacks with a builder image
+located on Docker Hub at
 [heroku/buildpacks:18](https://hub.docker.com/r/heroku/buildpacks/tags).
 
 #### Configuring Waypoint for [Cloud Foundry Paketo Buildpacks](https://paketo.io/docs/).
@@ -87,11 +87,11 @@ located on Docker Hub at
 There are several `waypoint.hcl` adjustments to enable Cloud Foundry Paketo
 Buildpacks.
 
-1. The `builder` variable of the `pack` build plugin should specify the a 
-  Paketo buildpacks builder image like `paketobuildpacks/builder:base`.
-1. The `service_port` variable of the deploy plugin should specify the 
-  Paketo buildpacks port `8080` which is commonly used by Paketo buildpacks.
-  The default Waypoint `service_port` is `3000`.
+1. The `builder` variable of the `pack` build plugin should specify the a
+   Paketo buildpacks builder image like `paketobuildpacks/builder:base`.
+1. The `service_port` variable of the deploy plugin should specify the
+   Paketo buildpacks port `8080` which is commonly used by Paketo buildpacks.
+   The default Waypoint `service_port` is `3000`.
 
 Here is a full `waypoint.hcl` example that works with Paketo buildpacks.
 
@@ -115,7 +115,7 @@ app "example-java" {
 #### Buildpack Troubleshooting
 
 If you have a problem using Cloud Native Buildpacks, try using the `pack` CLI
-directly with Docker 
+directly with Docker
 [similar to this example](https://buildpacks.io/docs/app-journey/).
 
 ## Registry
