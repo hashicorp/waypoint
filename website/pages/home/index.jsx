@@ -339,7 +339,7 @@ export default function HomePage() {
             {
               title: 'Preview Urls',
               description:
-                'Get publicly accessible preview URLs per-development',
+                'Get publicly accessible preview URLs per-deployment',
               learnMoreLink: 'https://waypointproject.io/docs/url',
               content: (
                 <Terminal
