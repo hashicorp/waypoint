@@ -502,7 +502,93 @@ export default function HomePage() {
               title: 'Extensible Plugin Interface',
               description:
                 'Easily extend Waypoint with custom support for platforms, build processes, and release systems.',
-              content: <Terminal lines={[{ code: '#TODO' }]} />,
+              content: (
+                <Terminal
+                  title="plugin.go"
+                  lines={[
+                    {
+                      code: '// Destroy deletes the Nomad job.',
+                    },
+                    {
+                      code: 'func (p *Platform) Destroy(',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'ctx context.Context,',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'log hclog.Logger,',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'deployment *Deployment,',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'ui terminal.UI,',
+                      color: 'white',
+                    },
+                    {
+                      code: ') error {',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: '',
+                    },
+                    {
+                      indent: 1,
+                      code: 'client, err := api.NewClient(api.DefaultConfig())',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'if err != nil {',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 2,
+                      code: 'return err',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 1,
+                      code: '}',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 1,
+                      code: '',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 1,
+                      code: 'st.Update("Deleting job...")',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 1,
+                      code:
+                        '_, _, err = client.Jobs().Deregister(deployment.Id, true, nil)',
+                      color: 'navy',
+                    },
+                    {
+                      indent: 1,
+                      code: 'return err',
+                      color: 'gray',
+                    },
+                    {
+                      code: '}',
+                      color: 'white',
+                    },
+                  ]}
+                />
+              ),
             },
           ]}
         />
