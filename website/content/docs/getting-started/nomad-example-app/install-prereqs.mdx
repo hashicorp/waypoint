@@ -25,12 +25,15 @@ $ cd waypoint-examples/nomad/nodejs
 
 ## A Nomad Environment
 
-Waypoint supports Nomad both as a location for running the Waypoint server and for running application workloads.
+Waypoint supports Nomad both as a location for running the Waypoint server and as a target to deploy and run application workloads on.
 
-To get started with Nomad, review the [HashiCorp Learn Nomad tutorials](https://learn.hashicorp.com/nomad).
+To get started with Nomad, review the [HashiCorp Learn Nomad tutorials](https://learn.hashicorp.com/nomad). For the purposes of this guide, it is assumed that you will be running a nomad deployment using `nomad agent -dev -network-interface="en0"` where `en0` is the primary network interface on your local system.
 
-You will also want to export the `NOMAD_ADDR` environment variable. Waypoint will call this variable for interacting with the Nomad
-environment.
+You will also want to export the `NOMAD_ADDR` environment variable. Waypoint will call this variable for interacting with the Nomad environment. In the case of a local environment as described above, you should execute the following command
+
+```shell-session
+$ export NOMAD_ADDR='localhost:4646'
+```
 
 #### Next Step
 

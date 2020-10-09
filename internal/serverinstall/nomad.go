@@ -172,7 +172,7 @@ func waypointNomadJob(scfg *Config) *api.Job {
 	tg := api.NewTaskGroup("waypoint-server", 1)
 	tg.Networks = []*api.NetworkResource{
 		{
-			Mode: "bridge",
+			Mode: "host",
 			DynamicPorts: []api.Port{
 				{
 					Label: "server",
@@ -194,6 +194,7 @@ func waypointNomadJob(scfg *Config) *api.Job {
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
 		"image": scfg.ServerImage,
+		"ports": []string{"server", "ui"},
 		"args":  []string{"server", "run", "-accept-tos", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
 	}
 	task.Env = map[string]string{

@@ -23,7 +23,6 @@ After downloading Waypoint, unzip the package. Waypoint runs as a single binary 
 
 To make the binary available from anywhere on your system, you can either copy it into `/usr/local/bin` or add it to a different directory in your `PATH`. For instructions on how to do that, see [Editing your Path](#path).
 
-
 ```shell-session
 $ cp ~/Downloads/waypoint /usr/local/bin
 ```
@@ -49,13 +48,20 @@ Common commands:
 
 In this step we will install the Waypoint server onto Nomad. This allows you to view the user interface, collaborate on deployments, and more.
 
--> Note: Waypoint automatically creates the Nomad job for the Waypoint server. As this is behind an authenticated image repository currently, you might experience challenges with this if you are not using Nomad on your local machine. You might need to pull the latest Waypoint server image by running `docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest`
-from each of your Nomad clients in order to locally cache the image. You will then also need to update the `waypoint install` command below to use the `-server-image=` flag to reference this image pull.
-
-Run the following command to install the Waypoint server.
+Waypoint automatically creates the Nomad job for the Waypoint server. As this is behind an authenticated image repository currently, you should pull the latest Waypoint server image, and tag it locally by running the following commands:
 
 ```shell-session
- $ waypoint install -platform=nomad --nomad-dc=dc1
+$ docker login docker.pkg.github.com
+$ docker pull docker.pkg.github.com/hashicorp/waypoint/alpha:latest
+$ docker tag docker.pkg.github.com/hashicorp/waypoint/alpha:latest waypoint/server:local
+```
+
+This step will not be required once the beta completes.
+
+After tagging the image locally, run the following command to install the Waypoint server.
+
+```shell-session
+ $ waypoint install -server-image=waypoint/server:local -platform=nomad --nomad-dc=dc1 -accept-tos
 ```
 
 @include "getting-started/context.mdx"
