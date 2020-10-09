@@ -35,15 +35,20 @@ import (
 
 const tosStatement = `
 The "-accept-tos" flag must be provided to use the Waypoint URL service.
-Please review the Terms of Service and Privacy Policy links below, then rerun
-this command using the "-accept-tos" flag.
+The Waypoint URL service is the free service run by HashiCorp that provides
+an automatic "waypoint.run" URL for each application and deployment. You can use
+this URL to quickly view your deployed applications and share your applications
+with others.
 
-If you do not feel comfortable accepting the terms, you may disable the URL
-service or self-host the URL service. Learn more about this at:
-https://waypointproject.io/docs/url
+Usage of this service requires accepting the Terms of Service and a Privacy
+Policy at the URLs below. If you do not feel comfortable accepting the terms,
+you may disable the URL service or self-host the URL service.
+Learn more about this at: https://waypointproject.io/docs/url
 
 Privacy Policy: https://hashicorp.com/privacy
 Terms of Service: https://waypointproject.io/terms
+
+Please rerun this command using the "-accept-tos" flag to accept the terms above.
 `
 
 const acceptTOSHelp = `Pass to accept the Terms of Service and Privacy Policy to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting. See the privacy policy at https://hashicorp.com/privacy and the ToS at https://waypointproject.io/terms`
