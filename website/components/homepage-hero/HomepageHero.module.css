@@ -4,6 +4,7 @@
   background-size: 100% auto;
   background-repeat: no-repeat;
   background-position: center top;
+  background-color: var(--blue-l3);
   padding: 141px 0;
 
   @media (max-width: 850px) {
@@ -29,7 +30,7 @@
     }
 
     & > p {
-      background: var(--white);
+      background-color: var(--blue-l3);
       color: var(--gray-2);
       &.subtitle {
         font-size: 17px;
