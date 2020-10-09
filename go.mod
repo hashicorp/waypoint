@@ -16,6 +16,7 @@ require (
 	github.com/bmatcuk/doublestar v1.1.5
 	github.com/boltdb/bolt v1.3.1
 	github.com/buildpacks/pack v0.11.1
+	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
 	github.com/creack/pty v1.1.11
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
@@ -47,7 +48,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0
-	github.com/hashicorp/horizon v0.0.0-20201007004454-9a8803766c64
+	github.com/hashicorp/horizon v0.0.0-20201009172236-66fd2d9af591
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
 	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201007005325-1401c8a8bd44
