@@ -1,37 +1,45 @@
-// TODO: This file is entirely placeholder content
-
 export const packageManagers = {
   homebrew: {
     label: 'Homebrew',
     url: '#',
     commands: ['brew tap hashicorp/tap', 'brew install hashicorp/tap/waypoint'],
   },
-  chocolatey: {
-    label: 'Chocolatey',
-    url: '#',
-    commands: ['choco install waypoint'],
-  },
   ubuntu: {
     label: 'Ubuntu/Debian',
-    commands: ['command one', 'command two'],
+    commands: [
+      'curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -',
+      'sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"',
+      'sudo apt-get update && sudo apt-get install waypoint',
+    ],
   },
   centos: {
     label: 'CentOS/RHEL',
-    commands: ['command one', 'command two'],
+    commands: [
+      'sudo yum install -y yum-utils',
+      'sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo',
+      'sudo yum -y install waypoint',
+    ],
   },
   fedora: {
     label: 'Fedora',
-    commands: ['command one'],
+    commands: [
+      'sudo dnf install -y dnf-plugins-core',
+      'sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/fedora/hashicorp.repo',
+      'sudo dnf -y install waypoint',
+    ],
   },
   amazonLinux: {
     label: 'Amazon Linux',
-    commands: ['command one', 'command two'],
+    commands: [
+      'sudo yum install -y yum-utils',
+      'sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo',
+      'sudo yum -y install waypoint',
+    ],
   },
 }
 
 export const packageManagersByOs = {
   darwin: packageManagers.homebrew,
-  windows: packageManagers.chocolatey,
   linux: [
     packageManagers.ubuntu,
     packageManagers.centos,
@@ -40,39 +48,17 @@ export const packageManagersByOs = {
   ],
 }
 
-export const containers = [
-  {
-    label: 'Docker',
-    url: '#',
-  },
-]
-
-export const tutorials = [
-  {
-    label: 'Windows',
-    url: '#',
-  },
-  {
-    label: 'macOS',
-    url: '#',
-  },
-  {
-    label: 'Linux',
-    url: '#',
-  },
-]
-
 export const getStartedLinks = [
   {
-    label: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-    href: '#1',
+    label: 'Deploy an Example Application with Docker',
+    href: '/docs/getting-started/docker-example-app',
   },
   {
-    label: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-    href: '#2',
+    label: 'Deploy an Example Application to Kubernetes',
+    href: '/docs/getting-started/k8s-example-app',
   },
   {
-    label: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-    href: '#3',
+    label: 'Deploy an Example Application to Nomad',
+    href: '/docs/getting-started/nomad-example-app',
   },
 ]
