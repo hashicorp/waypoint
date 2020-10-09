@@ -190,7 +190,7 @@ func (b *Builder) Build(
 		})
 
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "unable to set modify Docker entrypoint: %s", err)
+			return nil, status.Errorf(codes.Internal, "unable to modify Docker entrypoint: %s", err)
 		}
 
 		step.Done()
