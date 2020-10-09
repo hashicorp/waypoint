@@ -7,8 +7,8 @@ import (
 	"os"
 	"sync"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // runnerUI Implements terminal.UI and is created by a runner and passed into
@@ -466,6 +466,9 @@ func (u *runnerUISGStep) Done() {
 	u.sg.ui.mu.Lock()
 	defer u.sg.ui.mu.Unlock()
 
+	if u.done {
+		return
+	}
 	u.done = true
 
 	if u.sg.ui.evc != nil {
@@ -493,13 +496,13 @@ func (u *runnerUISGStep) Done() {
 }
 
 func (u *runnerUISGStep) Abort() {
-	if u.done {
-		u.sg.wg.Done()
-		return
-	}
-
 	u.sg.ui.mu.Lock()
 	defer u.sg.ui.mu.Unlock()
+
+	if u.done {
+		return
+	}
+	u.done = true
 
 	if u.sg.ui.evc != nil {
 		ev := &pb.RunnerJobStreamRequest{
