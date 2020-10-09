@@ -1492,6 +1492,13 @@ message Deployment {
   // ID of the job that created this. This may be empty.
   string job_id = 12;
 
+  // True if this deployment had the environment variables available
+  // for the entrypoint to talk to. If this is false, this deployment
+  // should not be able to communicate back to the server even if it
+  // has the entrypoint available. This means this deployment will not
+  // support logs, exec, etc.
+  bool has_entrypoint_config = 13;
+
   enum LoadDetails {
     NONE = 0;
     ARTIFACT = 1;

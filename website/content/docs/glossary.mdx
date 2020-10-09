@@ -31,13 +31,43 @@ the project scope, such as setting [application configuration](/docs/config).
 An application is defined using the `app` stanza in a "waypoint.hcl" and
 represents a unit that is deployed. Multiple applications may exist in
 a single project, which may represent a project that is comprised of
-separate depoloyable units. For example: a backend, a frontend, a service
+separate deployable units. For example: a backend, a frontend, a service
 worker, etc. may each be a separate application.
+
+## Parameter
+
+A "parameter" is the term used to describe any configuration object.
+
+## Stanza
+
+A "stanza" is an block of code that opens and closes with braces `{ }`
+and may contain more configuration parameters. Below, `app "label-name" {}` is
+the `app` stanza.
+
+```
+app "label-name" {
+  #...
+}
+```
+
+A stanza is a parameter, but not all parameters are stanzas.
+
+## Label
+
+A label for a stanza is identified by the quotation marks `""`.
+The `app` stanza takes a label named "label-name".
+
+```
+app "label-name" {
+  #...
+}
+```
 
 ## Entrypoint
 
-The Waypoint Entrypoint is a special binary (named `waypoint-entrypoint`) that launches your application and is
-used to enable a lot of [Waypoint functionality](/docs/entrypoint#functionality).
+The Waypoint Entrypoint is a special binary (named `waypoint-entrypoint`) that
+launches your application and is used to enable a lot of
+[Waypoint functionality](/docs/entrypoint#functionality).
 The entrypoint is sometimes referred to as the "CEB" which stands for
 "custom entrypoint binary."
 

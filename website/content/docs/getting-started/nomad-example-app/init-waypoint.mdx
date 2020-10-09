@@ -10,7 +10,6 @@ description: |-
 
 Before you can build and deploy your application, you must initialize it with Waypoint.
 
-
 When you initialize Waypoint for your application, Waypoint first looks to see if there is a Waypoint configuration file (`waypoint.hcl`) for the app in the directory.
 
 ## Waypoint Configuration
@@ -58,12 +57,14 @@ project = "example-nodejs"
   }
 ```
 
-The `build` clause defines how Waypoint will build the app.
+The `build` clause defines how Waypoint will build the app. The `pack` option
+tells Waypoint to use the most relevant Cloud Native Buildpack to build the
+application. Since this example app is written for NodeJS, Waypoint will use
+NodeJS Buildpacks.
 
-The `pack` option tells Waypoint to use the most relevant Cloud Native
-Buildpack to build the application. Since this example app is written for NodeJS, Waypoint will use NodeJS Buildpacks.
-
-The `deploy` clause defines where Waypoint will deploy the app. The `nomad` and `datacenter` fields tell Waypoint to deploy the application to Nomad to the dc1 datacenter.
+The `deploy` clause defines where Waypoint will deploy the app. The `nomad` and
+`datacenter` fields tell Waypoint to deploy the application to Nomad to the dc1
+datacenter.
 
 -> Note: You might also want to update your docker `image`,`location`, and remove the `local` configuration if you plan to run this application
 on an external Nomad cluster. The current example uses a local based image.

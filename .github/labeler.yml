@@ -1,0 +1,32 @@
+core:
+  - internal/**/*
+
+plugin:
+  - builtin/**/*
+
+plugin/aws:
+  - builtin/aws/**/*
+
+plugin/azure:
+  - builtin/azure/**/*
+
+plugin/docker:
+  - builtin/docker/**/*
+
+plugin/google:
+  - builtin/google/**/*
+
+plugin/k8s:
+  - builtin/k8s/**/*
+
+plugin/nomad:
+  - builtin/nomad/**/*
+
+plugin/pack:
+  - builtin/pack/**/*
+
+ui:
+  - ui/**/*
+
+website:
+  - website/**/*

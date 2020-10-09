@@ -42,9 +42,9 @@
 <div class="cards app-latest">
   <div class="cards-wrap">
     <div class="cards-inner">
-      <AppCard::Builds @builds={{@model.builds}} />
-      <AppCard::Deployments @deployments={{@model.deployments}} />
-      <AppCard::Releases @releases={{@model.releases}} />
+      <div class="card-outer"><AppCard::Builds @builds={{@model.builds}} /></div>
+      <div class="card-outer"><AppCard::Deployments @deployments={{@model.deployments}} /></div>
+      <div class="card-outer"><AppCard::Releases @releases={{@model.releases}} /></div>
     </div>
   </div>
 </div>

@@ -21,7 +21,7 @@ A build is triggered during a `waypoint up` or using the dedicated
 
 ## Configuration
 
-The build is configured using the `build` stanza within an `app`:
+The build is configured using the `build` stanza within an `app` stanza:
 
 ```
 app "my-app" {
@@ -30,6 +30,93 @@ app "my-app" {
   }
 }
 ```
+
+### Build Methods
+
+Waypoint includes these builtin plugins to build a Docker image for your app.
+
+- [Docker Build](/plugins/docker#docker-builder)
+- [Cloud Native Buildpacks](/plugins/pack)
+
+You can also create a [plugin](/plugins) to extend Waypoint with your own builder.
+
+### Choosing How to Build Your App
+
+While both Docker Build and Cloud Native Buildpacks create Docker containers, each creates those images in different ways.
+
+#### Docker Build
+
+**Example configuration**
+
+```
+app "my-app" {
+  build {
+    use "docker" {}
+  }
+}
+```
+
+The Docker plugin leverages the application `Dockerfile` to create a container
+image. If you application works with the `docker build`
+[Docker command](https://docs.docker.com/engine/reference/commandline/build/)
+it should work well the Waypoint Docker plugin.
+
+[Learn how to use Docker Build in your app](/plugins/docker)
+
+#### Cloud Native Buildpacks
+
+**Example configuration**
+
+```
+app "my-app" {
+  build {
+    use "pack" {}
+  }
+}
+```
+
+[Cloud Native Buildpacks](https://buildpacks.io/) are a fast way to get started
+creating a containerized application without writing a `Dockerfile`. Buildpacks
+take application source and build a container for you if there are matching
+buildpacks. By default Waypoint uses Heroku Buildpacks with a builder image
+located on Docker Hub at
+[heroku/buildpacks:18](https://hub.docker.com/r/heroku/buildpacks/tags).
+
+#### Configuring Waypoint for [Cloud Foundry Paketo Buildpacks](https://paketo.io/docs/).
+
+There are several `waypoint.hcl` adjustments to enable Cloud Foundry Paketo
+Buildpacks.
+
+1. The `builder` variable of the `pack` build plugin should specify the a
+   Paketo buildpacks builder image like `paketobuildpacks/builder:base`.
+1. The `service_port` variable of the deploy plugin should specify the
+   Paketo buildpacks port `8080` which is commonly used by Paketo buildpacks.
+   The default Waypoint `service_port` is `3000`.
+
+Here is a full `waypoint.hcl` example that works with Paketo buildpacks.
+
+```
+project = "example-java"
+
+app "example-java" {
+    build {
+        use "pack" {
+            builder="paketobuildpacks/builder:base"
+        }
+    }
+    deploy {
+        use "docker" {
+            service_port=8080
+        }
+    }
+}
+```
+
+#### Buildpack Troubleshooting
+
+If you have a problem using Cloud Native Buildpacks, try using the `pack` CLI
+directly with Docker
+[similar to this example](https://buildpacks.io/docs/app-journey/).
 
 ## Registry
 
@@ -52,21 +139,3 @@ the locally built Docker image to the remote registry.
 Machine Images) are registered directly with Amazon and are never local
 artifacts. Therefore, a separate registry configuration is not required since
 the build/registry phases are one and the same.
-
-### Registry Configuration
-
-Registries are configured in the `registry` stanza within a build. These
-must specify a plugin that is capable of providing registry capabilities.
-
-```
-build {
-  use "docker" {}
-
-  registry {
-    use "docker" {
-      image = "example.com/my-app"
-      tag   = gitrefpretty()
-    }
-  }
-}
-```

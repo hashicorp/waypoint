@@ -46,11 +46,13 @@ app "example-ruby" {
 }
 ```
 
-The `build` clause defines how Waypoint will build the app.
+The `build` clause defines how Waypoint will build the app. The `pack` option
+tells Waypoint to use the most relevant Cloud Native Buildpack to build the
+application. Since the example app is written in Ruby, Waypoint will use Ruby
+Cloud Native Buildpacks.
 
-The `pack` option tells Waypoint to use the most relevant Cloud Native Buildpack to build the application. Since the example app is written in Ruby, Waypoint will use Ruby Cloud Native Buildpacks.
-
-The `deploy` clause defines how Waypoint will deploy the app. The `docker` option tells Waypoint to deploy the application to Docker.
+The `deploy` clause defines how Waypoint will deploy the app. The `docker`
+option tells Waypoint to deploy the application to Docker.
 
 ## Initialize Waypoint for the Example App
 

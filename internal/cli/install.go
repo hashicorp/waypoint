@@ -19,6 +19,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
@@ -26,7 +27,6 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type InstallCommand struct {
@@ -39,6 +39,8 @@ type InstallCommand struct {
 	contextDefault    bool
 	platform          string
 	secretFile        string
+
+	flagAcceptTOS bool
 }
 
 func (c *InstallCommand) InstallKubernetes(
@@ -276,6 +278,11 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
+	if !c.flagAcceptTOS {
+		c.ui.Output(strings.TrimSpace(tosStatement), terminal.WithErrorStyle())
+		return 1
+	}
+
 	var (
 		contextConfig *clicontext.Config
 		advertiseAddr *pb.ServerConfig_AdvertiseAddr
@@ -507,6 +514,13 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Usage:  "Use the Kubernetes Secret in the given path to access the waypoint server image",
 		})
 
+		f.BoolVar(&flag.BoolVar{
+			Name:    "accept-tos",
+			Target:  &c.flagAcceptTOS,
+			Usage:   acceptTOSHelp,
+			Default: false,
+		})
+
 		serverinstall.NomadFlags(f)
 	})
 }
@@ -533,6 +547,12 @@ Alias: waypoint install
   By default, this will also automatically create a new default CLI context
   (see "waypoint context") so the CLI will be configured to use the newly
   installed server.
+
+  This command will require you to accept the Waypoint Terms of Service
+  and Privacy Policy for the Waypoint URL service by specifying the "-accept-tos"
+  flag. This only applies to the Waypoint URL service. You may disable the
+  URL service by manually running the server. If you disable the URL service,
+  you do not need to accept any terms.
 
 ` + c.Flags().Help())
 }

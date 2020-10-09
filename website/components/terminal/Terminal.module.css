@@ -51,6 +51,14 @@
       height: 100%;
       position: relative;
       overflow: scroll;
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none; /* Firefox */
+      &::-webkit-scrollbar {
+        /* Safari */
+        -webkit-appearance: none;
+        width: 0;
+        height: 0;
+      }
 
       & .codeWrapper {
         bottom: 0;

@@ -8,11 +8,7 @@ description: |-
 
 # Deploy
 
-A deploy takes a previously
-[built artifact](/docs/lifecycle/build)
-and stages it onto the target
-deployment platform. The target deployment platform is pluggable and can be
-Docker, Kubernetes, Nomad, EC2, and more.
+A deploy takes a previously [built artifact](/docs/lifecycle/build) and stages it onto the target deployment platform. The [target deployment platform](#target-deployment-platforms) is pluggable and can be Docker, Kubernetes, Nomad, EC2, and more.
 
 "Stage" in this context means that the application should be ready to receive
 traffic, but is not yet open to public traffic. For example, the application
@@ -39,6 +35,29 @@ app "my-app" {
 }
 ```
 
+### Target Deployment Platforms
+
+To deploy your app with Waypoint, you will need to select which platform to use.
+A deployment platform is a runtime for your app. It could be a container runtime
+capable of running a docker image or it could be a virtual machine platform.
+The deployment platform must be compatible with the app artifact output format from [build](/docs/lifecycle/).
+
+You can currently use Waypoint to deploy your app to any of these platforms.
+
+- [Kubernetes](/plugins/kubernetes)
+- [HashiCorp Nomad](/plugins/nomad)
+- [AWS EC2](/plugins/aws-ec2)
+- [AWS ECS](/plugins/aws-ecs)
+- [Google Cloud Run](/plugins/google-cloud-run)
+- [Azure Container Instances](/plugins/azure-container-instances)
+- [Netlify](/plugins/netlify)
+
+~> You may use the Kuberenetes plugin to target any Kubernetes instance. For example, AWS EKS, Azure AKS, Google GKE, and Kuberenetes for Docker Desktop.
+
+#### How to Add a Deployment Platform to Waypoint
+
+You can also create a [plugin](/plugins) to extend Waypoint with your own deployment platform. If you would like to add a plugin for a platform currently not in Waypoint, please file a [GitHub Issue for the project](https://github.com/hashicorp/waypoint/issues).
+
 ## Automatic Release
 
 By default, `waypoint deploy` automatically performs a
@@ -46,7 +65,7 @@ By default, `waypoint deploy` automatically performs a
 
 This is because this is often the most expected behavior of a deploy
 since traditionally deploy and release were inseparable. We consider
-separating deploy and release a best practice so we encourage
+separating deploy and release steps a best practice so we encourage
 Waypoint users to disable this behavior as soon as they're comfortable.
 
 This behavior can be disabled by using the `-release=false` flag

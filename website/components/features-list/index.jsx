@@ -59,13 +59,7 @@ function FeaturesCarousel({ features }) {
       >
         {features.map((feature, stableIdx) => (
           <div key={stableIdx}>
-            <Feature
-              Element="div"
-              id={stableIdx}
-              title={feature.title}
-              active
-              learnMoreLink={feature.learnMoreLink}
-            >
+            <Feature Element="div" id={stableIdx} title={feature.title} active>
               {feature.description}
             </Feature>
             <div className={styles.terminalWrapper}>
@@ -82,21 +76,25 @@ function Feature({
   children,
   title,
   active,
-  onClick = () => {},
+  onClick,
   learnMoreLink,
   id,
   Element = 'li',
 }) {
   return (
     <Element className={active ? styles.activeFeature : styles.feature}>
-      <button
-        className={styles.heading}
-        onClick={() => onClick(id)}
-        aria-expanded={active}
-        aria-controls={`feature-${id}`}
-      >
-        {title}
-      </button>
+      {onClick ? (
+        <button
+          className={styles.heading}
+          onClick={() => onClick(id)}
+          aria-expanded={active}
+          aria-controls={`feature-${id}`}
+        >
+          {title}
+        </button>
+      ) : (
+        <span className={styles.heading}>{title}</span>
+      )}
       <div className={styles.body} id={`feature-${id}`} aria-hidden={!active}>
         <p>{children}</p>
         {learnMoreLink && (

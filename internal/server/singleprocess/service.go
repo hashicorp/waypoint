@@ -81,7 +81,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 		// If we have no API token, get our guest account token.
 		if scfg.URL.APIToken == "" {
-			if err := s.initURLGuestAccount(); err != nil {
+			if err := s.initURLGuestAccount(cfg.acceptUrlTerms); err != nil {
 				return nil, err
 			}
 		}
@@ -129,6 +129,8 @@ type config struct {
 	db           *bolt.DB
 	serverConfig *configpkg.ServerConfig
 	log          hclog.Logger
+
+	acceptUrlTerms bool
 }
 
 type Option func(*service, *config) error
@@ -153,6 +155,13 @@ func WithConfig(scfg *configpkg.ServerConfig) Option {
 func WithLogger(log hclog.Logger) Option {
 	return func(s *service, cfg *config) error {
 		cfg.log = log
+		return nil
+	}
+}
+
+func WithAcceptURLTerms(accept bool) Option {
+	return func(s *service, cfg *config) error {
+		cfg.acceptUrlTerms = true
 		return nil
 	}
 }

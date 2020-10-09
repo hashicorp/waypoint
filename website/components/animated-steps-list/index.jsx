@@ -10,14 +10,14 @@ import { useState } from 'react'
 const breakpoints = [0, 350, 1258, 2309, 2880]
 
 // The number of pixels before the next breakpoint that the animation should complete
-const animationBottomPadding = 100
+const animationBottomPadding = [0, 400, 250, 0]
 
 function calculateCurrentFrame(terminalSteps, currentIndex, scrollPosition) {
   const percentage = Math.min(
     (scrollPosition - breakpoints[currentIndex]) /
       (breakpoints[currentIndex + 1] -
         breakpoints[currentIndex] -
-        animationBottomPadding),
+        animationBottomPadding[currentIndex]),
     1
   )
   const currentLines = terminalSteps[currentIndex].lines

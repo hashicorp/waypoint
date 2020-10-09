@@ -1,14 +1,45 @@
-## Overview
+![Image](website/public/img/logo-fullcolor-rgb.png)
 
-HashiCorp Waypoint is an easy to use tool that standardizes application build, deploy, and release workflows as code. It focuses on delivering applications in a consistent and repeatable way, reducing time to deploy and allowing developers to ship applications across common developer platforms.
+----------------------------------------
 
-Waypoint uses:
+# Waypoint
 
-- One configuration file, one common language, as code
-- An end-to-end workflow to build, deploy, and release for applications
+* Website: https://www.waypointproject.io
+* Tutorials: [HashiCorp Learn](https://learn.hashicorp.com/waypoint)
+* Forum: [Discuss](https://discuss.hashicorp.com/c/waypoint)
 
-You can also use Waypoint to validate deployments across distinct environments through common execution and logging.
+Waypoint allows developers to define their application build, deploy, and release lifecycle as code, reducing the time to deliver deployments through a consistent and repeatable workflow.
 
-## Documentation & Guides
+Waypoint supports a number of build methods and target platforms out of the box
+and more can be easily added via plugins:
 
-Documentation is available on the Waypoint website [here](https://waypointproject.io/).
+* Cloud Native Buildpacks
+* Docker
+* Kubernetes
+* AWS EC2 and ECS
+* Azure Container Instances
+* Google Cloud Run
+* Netlify
+* And many more...
+
+Waypoint runs on Linux, Mac OS X, and Windows.
+
+**Please note**: We take Waypoint's security and our users' trust very seriously. If you
+believe you have found a security issue in Waypoint, please [responsibly disclose](https://www.hashicorp.com/security#vulnerability-reporting) by
+contacting us at security@hashicorp.com.
+
+## Quick Start
+
+A few quick start guides are available on the Waypoint website:
+
+TODO
+
+## Documentation
+
+Full, comprehensive documentation is available on the Waypoint website:
+
+https://www.waypointproject.io/docs
+
+## Contributing
+
+Thank you for your interest in contributing! Please refer to [CONTRIBUTING.md](https://github.com/hashicorp/waypoint/blob/master/.github/CONTRIBUTING.md) for guidance.

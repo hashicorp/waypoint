@@ -18,40 +18,81 @@ version control repository. The `waypoint.hcl` file is supposed to be committed
 to version control. This allows multiple team members to share the same Waypoint
 behavior and also provides a history of change in how an application is deployed.
 
-Begin with the [top-level documentation](/docs/waypoint-hcl/root) if you're new
-to Waypoint configuration.
-
-## File Location
-
 The `waypoint.hcl` file is typically placed at the root of a version control
-repository. Multiple applications are defined using [`app`][app] stanzas and
-may live in subdirectories of the project.
+repository. To deploy multiple applications, defined each with an [`app`][app]
+stanza. Each application should live in subdirectories of the project.
 
-When executing the `waypoint` CLI, it'll search for the `waypoint.hcl` file
-in the current directory followed by each subsequent parent directory.
+When executing the `waypoint` CLI, it will search for the `waypoint.hcl` file
+in the current directory, followed by each subsequent parent directory.
 
-## Stanzas and Parameters
-
-The configuration is documented in terms of "stanzas" and "parameters". All
-of the available stanzas for a Waypoint configuration are linked in the left
-side navigation.
-
-A "stanza" is the term used to describe a parameter in a Waypoint configuration
-that opens and closes with braces `{ }` and may contain more configuration.
-A "parameter" is the term used to describe any configuration within a stanza.
-
-In the example below, `app` and `build` are stanzas. All elements are
-"parameters" but of different elements: the `build` is a parameter of an `app`,
-`app` is a parameter of the top-level, etc.
+## Template `waypoint.hcl`
 
 ```hcl
-app {
+project = "project-name"
+
+app "app-name" {
   path = "./src"
 
   build {
     # ...
   }
+
+  deploy {
+    # ...
+  }
+
+  release {
+    # ...
+  }
+
+plugin "plugin-name" {
+
 }
 ```
 
+## Top-level
+
+The "top-level" refers to the objects that are not nested in any other
+configuration. The top-level is made of "stanzas" and "parameters".
+
+## Stanzas and Parameters
+
+A "stanza" is an block of code that opens and closes with braces `{ }`
+and may contain more configuration parameters. Above, `app "app-name" {}` is
+the `app` stanza.
+
+A "parameter" is the term used to describe any configuration object. `build`
+and `path` are parameters of `app`. `project`, `app "app-name"`, and `plugin`
+are parameters of the top-level.
+
+Several "common" parameters can be used in stanzas. These are `use` and `hook`.
+These can not be top-level parameters, but are available in `build`, `deploy`,
+and `release`. These are documented further in their respective pages.
+
+A stanza is a parameter, but not all parameters are stanzas.
+
+## Top-level Parameters
+
+### Required
+
+- `app` <code>([app][app])</code> - One or more applications to build, deploy,
+  and release with Waypoint.
+
+- `project` `(string)` - The name of the project. This should be unique
+  for the Waypoint server and must not be changed later. This is used to
+  organize information on the server.
+
+~> **Warning: the project name can not be changed.** Changing the project
+name is not currently supported. If you change the name, the history,
+deployments, etc. of the previous project name will not be migrated or destroyed.
+A future version of Waypoint will enable renaming projects.
+
+### Optional
+
+- `plugin` <code>([plugin][plugin])</code> - External plugins that may be
+  used in this configuration. Plugins are implicitly defined with
+  [`use`](/docs/waypoint-hcl/use) stanzas so this is only required if you
+  need to additionally configure a plugin.
+
 [app]: /docs/waypoint-hcl/app 'App Stanza'
+[plugin]: /docs/waypoint-hcl/plugin 'Plugin Stanza'

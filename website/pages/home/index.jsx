@@ -337,9 +337,9 @@ export default function HomePage() {
         <FeaturesList
           features={[
             {
-              title: 'Preview Urls',
+              title: 'Preview URLs',
               description:
-                'Get publicly accessible preview URLs per-development',
+                'Get publicly accessible preview URLs per-deployment',
               learnMoreLink: 'https://waypointproject.io/docs/url',
               content: (
                 <Terminal
@@ -390,9 +390,9 @@ export default function HomePage() {
               content: (
                 <Terminal
                   lines={[
-                    { code: '$ waypoint exec' },
+                    { code: '$ waypoint exec bash' },
                     {
-                      code: '# Connected to 01EJY7JXPX1DZF36FMNJHQS8MH',
+                      code: 'Connected to deployment v1',
                       color: 'white',
                     },
                   ]}
@@ -453,46 +453,57 @@ export default function HomePage() {
               title: 'CI/CD and Version Control Integration',
               description:
                 'Integrate easily with existing CI/CD providers and version control providers like GitHub',
+              learnMoreLink: '/docs/automating-execution/github-actions',
               content: (
                 <Terminal
                   title="config.yaml"
                   lines={[
                     {
                       code: 'env:',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code:
                         'WAYPOINT_SERVER_TOKEN: ${{ secrets.WAYPOINT_SERVER_TOKEN }}',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code: 'WAYPOINT_SERVER_ADDR: waypoint.example.com:9701',
+                      color: 'white',
                     },
                     {
                       code: 'steps:',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code: '- uses: actions/checkout@v2',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code: '- uses: hashicorp/actions-setup-waypoint',
+                      color: 'white',
                     },
                     {
                       indent: 1,
                       code: 'with:',
+                      color: 'white',
                     },
                     {
                       indent: 2,
                       code: "version: '0.1.0'",
+                      color: 'white',
                     },
                     {
                       code: '- run: waypoint init',
+                      color: 'white',
                     },
                     {
                       code: '- run: waypoint up',
+                      color: 'white',
                     },
                   ]}
                 />
@@ -502,7 +513,93 @@ export default function HomePage() {
               title: 'Extensible Plugin Interface',
               description:
                 'Easily extend Waypoint with custom support for platforms, build processes, and release systems.',
-              content: <Terminal lines={[{ code: '#TODO' }]} />,
+              content: (
+                <Terminal
+                  title="plugin.go"
+                  lines={[
+                    {
+                      code: '// Destroy deletes the Nomad job.',
+                    },
+                    {
+                      code: 'func (p *Platform) Destroy(',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'ctx context.Context,',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'log hclog.Logger,',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'deployment *Deployment,',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'ui terminal.UI,',
+                      color: 'white',
+                    },
+                    {
+                      code: ') error {',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: '',
+                    },
+                    {
+                      indent: 1,
+                      code: 'client, err := api.NewClient(api.DefaultConfig())',
+                      color: 'white',
+                    },
+                    {
+                      indent: 1,
+                      code: 'if err != nil {',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 2,
+                      code: 'return err',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 1,
+                      code: '}',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 1,
+                      code: '',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 1,
+                      code: 'st.Update("Deleting job...")',
+                      color: 'gray',
+                    },
+                    {
+                      indent: 1,
+                      code:
+                        '_, _, err = client.Jobs().Deregister(deployment.Id, true, nil)',
+                      color: 'navy',
+                    },
+                    {
+                      indent: 1,
+                      code: 'return err',
+                      color: 'gray',
+                    },
+                    {
+                      code: '}',
+                      color: 'white',
+                    },
+                  ]}
+                />
+              ),
             },
           ]}
         />

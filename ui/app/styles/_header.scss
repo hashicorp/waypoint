@@ -31,6 +31,11 @@
     box-shadow: 0 1px 0 rgb(var(--header-border));
   }
 
+  @media only screen and (max-width: 600px) {
+    flex-direction: column;
+    padding: scale.$base;
+  }
+
   nav {
     display: flex;
     align-items: center;
@@ -88,6 +93,19 @@
       @include Typography.Interface(L);
       color: rgb(var(--header-text));
       font-family: font.$family-system-sans;
+    }
+
+    @media only screen and (max-width: 600px) {
+      margin-left: 0;
+      margin: scale.$base 0 0;
+
+      hr, > a, .invite-link {
+        margin: 0 scale.$sm-2;
+      }
+
+      hr {
+        margin-right: scale.$sm-1;
+      }
     }
   }
 

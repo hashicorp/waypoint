@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -123,15 +124,17 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// We need a mutex to protect against simultaneous sends to the client.
 	var sendMutex sync.Mutex
 
-	// For our UI, we will use a manually set UI if available. Otherwise,
-	// we setup the runner UI which streams the output to the server.
-	ui := r.ui
-	if ui == nil {
-		ui = &runnerUI{
-			ctx:    ctx,
-			cancel: cancel,
-			evc:    client,
-			mu:     &sendMutex,
+	// For our UI, we always send output to the server. If we have a local UI
+	// set, we mirror to that as well.
+	var ui terminal.UI = &runnerUI{
+		ctx:    ctx,
+		cancel: cancel,
+		evc:    client,
+		mu:     &sendMutex,
+	}
+	if r.ui != nil {
+		ui = &multiUI{
+			UIs: []terminal.UI{r.ui, ui},
 		}
 	}
 
