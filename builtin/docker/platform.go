@@ -146,8 +146,8 @@ func (p *Platform) Deploy(
 		Env:          []string{"PORT=" + port},
 	}
 
-	if p.config.Command != "" {
-		cfg.Cmd = append(cfg.Cmd, "/bin/sh", "-c", p.config.Command)
+	if c := p.config.Command; len(c) > 0 {
+		cfg.Cmd = c
 	}
 
 	bindings := nat.PortMap{}
@@ -237,8 +237,10 @@ func (p *Platform) Destroy(
 
 // Config is the configuration structure for the Platform.
 type PlatformConfig struct {
-	// The command to run in the container
-	Command string `hcl:"command,optional"`
+	// The command to run in the container. This is an array of arguments
+	// that are executed directly. These are not executed in the context of
+	// a shell. If you want to use a shell, add that to this command manually.
+	Command []string `hcl:"command,optional"`
 
 	// A path to a directory that will be created for the service to store
 	// temporary data.
