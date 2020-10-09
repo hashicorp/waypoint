@@ -98,7 +98,7 @@ func (p *Platform) Deploy(
 		tg := api.NewTaskGroup(result.Name, 1)
 		tg.Networks = []*api.NetworkResource{
 			{
-				Mode: "bridge",
+				Mode: "host",
 				DynamicPorts: []api.Port{
 					{
 						Label: "waypoint",
@@ -144,6 +144,7 @@ func (p *Platform) Deploy(
 
 	job.TaskGroups[0].Tasks[0].Config = map[string]interface{}{
 		"image": img.Name(),
+		"ports": []string{"waypoint"},
 	}
 	job.TaskGroups[0].Tasks[0].Env = env
 
