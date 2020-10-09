@@ -5,7 +5,7 @@ import HomepageSection from 'components/homepage-section'
 import HomepageHero from 'components/homepage-hero'
 import BrandedCta from 'components/branded-cta'
 import WaypointDiagram from 'components/waypoint-diagram'
-import FeaturesList from 'components/features-list'
+import Features from 'components/features'
 import Terminal from 'components/terminal'
 
 export default function HomePage() {
@@ -334,7 +334,7 @@ export default function HomePage() {
       </HomepageSection>
 
       <HomepageSection title="Features" theme="gray">
-        <FeaturesList
+        <Features
           features={[
             {
               title: 'Preview URLs',

@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import classNames from 'classnames'
 import styles from './Terminal.module.css'
 
@@ -53,8 +54,8 @@ export default function Terminal({ lines, title }) {
         <div className={styles.overflowWrapper}>
           <div className={styles.codeWrapper}>
             {lines &&
-              lines.map((line) => (
-                <>
+              lines.map((line, index) => (
+                <Fragment key={index}>
                   <code
                     className={classNames({
                       [styles.navy]: line.color === 'navy',
@@ -65,11 +66,13 @@ export default function Terminal({ lines, title }) {
                     {line.indent &&
                       new Array(line.indent * 2)
                         .fill({})
-                        .map(() => <>&nbsp;</>)}
+                        .map((_, index) => (
+                          <Fragment key={index}>&nbsp;</Fragment>
+                        ))}
                     {line.code}
                   </code>
                   <br />
-                </>
+                </Fragment>
               ))}
           </div>
         </div>
