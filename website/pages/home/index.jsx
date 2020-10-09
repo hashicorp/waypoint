@@ -337,6 +337,60 @@ export default function HomePage() {
         <Features
           features={[
             {
+              title: 'Application Logs',
+              description:
+                'View log output for running applications and deployments',
+              learnMoreLink: 'https://waypointproject.io/docs/logs',
+              content: (
+                <Terminal
+                  lines={[
+                    { code: '$ waypoint logs' },
+                    {
+                      code: '[11] Puma starting in cluster mode...',
+                      color: 'gray',
+                    },
+                    {
+                      code:
+                        '[11] * Version 3.11.2 (ruby 2.6.6-p146), codename: Love Song',
+                      color: 'gray',
+                    },
+                    {
+                      code: '[11] * Min threads: 5, max threads: 5',
+                      color: 'gray',
+                    },
+                    { code: '[11] * Environment: production', color: 'gray' },
+                    { code: '[11] * Process workers: 2', color: 'gray' },
+                    { code: '[11] * Preloading application', color: 'gray' },
+                    {
+                      code: '[11] * Listening on tcp://0.0.0.0:3000',
+                      color: 'gray',
+                    },
+                    {
+                      code:
+                        'I, [2020-09-23T19:38:59.250971 #17] INFO -- : [936a952c-76b1-41f0-a4fe-ae2b77afc398] Started GET "/" for 10.36.5.1 at 2020-09-23 19:38:59 +0000',
+                      color: 'gray',
+                    },
+                  ]}
+                />
+              ),
+            },
+            {
+              title: 'Live Exec',
+              description:
+                'Execute a command in the context of a running application',
+              content: (
+                <Terminal
+                  lines={[
+                    { code: '$ waypoint exec bash' },
+                    {
+                      code: 'Connected to deployment v1',
+                      color: 'white',
+                    },
+                  ]}
+                />
+              ),
+            },
+            {
               title: 'Preview URLs',
               description:
                 'Get publicly accessible preview URLs per-deployment',
@@ -383,60 +437,7 @@ export default function HomePage() {
                 />
               ),
             },
-            {
-              title: 'Live Exec',
-              description:
-                'Execute a command in the context of a running application',
-              content: (
-                <Terminal
-                  lines={[
-                    { code: '$ waypoint exec bash' },
-                    {
-                      code: 'Connected to deployment v1',
-                      color: 'white',
-                    },
-                  ]}
-                />
-              ),
-            },
-            {
-              title: 'Application Logs',
-              description:
-                'View log output for running applications and deployments',
-              learnMoreLink: 'https://waypointproject.io/docs/logs',
-              content: (
-                <Terminal
-                  lines={[
-                    { code: '$ waypoint logs' },
-                    {
-                      code: '[11] Puma starting in cluster mode...',
-                      color: 'gray',
-                    },
-                    {
-                      code:
-                        '[11] * Version 3.11.2 (ruby 2.6.6-p146), codename: Love Song',
-                      color: 'gray',
-                    },
-                    {
-                      code: '[11] * Min threads: 5, max threads: 5',
-                      color: 'gray',
-                    },
-                    { code: '[11] * Environment: production', color: 'gray' },
-                    { code: '[11] * Process workers: 2', color: 'gray' },
-                    { code: '[11] * Preloading application', color: 'gray' },
-                    {
-                      code: '[11] * Listening on tcp://0.0.0.0:3000',
-                      color: 'gray',
-                    },
-                    {
-                      code:
-                        'I, [2020-09-23T19:38:59.250971 #17] INFO -- : [936a952c-76b1-41f0-a4fe-ae2b77afc398] Started GET "/" for 10.36.5.1 at 2020-09-23 19:38:59 +0000',
-                      color: 'gray',
-                    },
-                  ]}
-                />
-              ),
-            },
+
             {
               title: 'Web UI',
               description:
