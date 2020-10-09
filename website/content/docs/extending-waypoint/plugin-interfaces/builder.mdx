@@ -1,0 +1,47 @@
+---
+layout: docs
+page_title: 'Builder'
+sidebar_title: 'Builder'
+description: |-
+  How Waypoint plugins work
+---
+
+# Builder
+
+The builder component is responsible for building your application code, this may be the execution of
+Docker build, build packs, or running language specific tools such as go build. This plugin is called
+when running the waypoint build command.
+
+![Authenticator](/img/extending-waypoint/build.png)
+
+To implement the build component you implement the Builder interface, Builder has a single method BuildFunc
+that returns the function to be called by Waypoint.
+
+```go
+// Builder is responsible for building an artifact from source.
+type Builder interface {
+  // BuildFunc should return the method handle for the "build" operation.
+  // The build function has access to a *Source and should return an Artifact.
+  BuildFunc() interface{}
+}
+```
+
+The signature of the function you return from `BuildFunc` can accept parameters from the list of Default Parameters are
+required. The output parameters are a Go struct which is serializable to Protocol Buffers binary format and an error.
+In the example below the function returns an instance of the struct Binary, returning this type makes it available
+to be injected into the next phase which is the Registry plugin. If an error is returned Waypoint would stop execution
+and return the error message to the user.
+
+```go
+func (b *Builder) build(
+  ctx context.Context,
+  src *component.Source,
+  job *component.JobInfo,
+  projectDir *datadir.Project,
+  appDir *datadir.App,
+  componentDir *datadir.Component,
+  log hclog.Logger,
+  ui terminal.UI,
+  labels *component.LabelSet,
+) (*Binary, error) {
+```

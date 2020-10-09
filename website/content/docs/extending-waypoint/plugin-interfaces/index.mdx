@@ -1,0 +1,63 @@
+---
+layout: docs
+page_title: 'Plugin Interfaces'
+sidebar_title: 'Plugin Interfaces'
+description: |-
+  How Waypoint plugins work
+---
+
+# Plugin Interfaces and Components
+
+A Waypoint plugin is a binary which implements one or more of Waypoint components each which are related
+to a different part of the lifecycle. There are 6 different components which can implement, these are shown below along
+with the waypoint command which triggers them.
+
+![Plugin Components](/img/extending-waypoint/components.png)
+
+# Implementing Components
+
+To extend a particular part of the Waypoint application lifecycle, you create a component which is a Go
+struct which implements the correct component interface.
+
+For example if you would like to create a plugin which responds to build commands then you would create a
+component that implement the Builder interface.
+
+```go
+type Builder interface {
+  BuildFunc() interface{}
+}
+```
+
+The Builder interface has a single method BuildFunc which has the return type of an interface. All of the plugin interfaces
+in the Waypoint SDK are not called directly, instead they require that you return a function. The following example shows
+how the Builder interface could be implemented on a component.
+
+```go
+type Builder struct {}
+
+func (b *Builder) BuildFunc() interface{} {
+  return b.build
+}
+
+func (b *Builder) build(
+  ctx context.Context,
+  log hclog.Logger,
+  ui terminal.UI,
+) (*Binary, error) {
+  return nil, nil
+}
+```
+
+There is no specific signature for the function which you return from `BuildFunc`, the Waypoint SDK automatically injects the
+specified parameters. In the previous example the signature defines three input parameters and two return parameters.
+As a plugin author you determine which parameters you would like the Waypoint SDK to inject for you. These are made up of
+the Default Parameters and also custom Output Values which are returned from other components.
+
+The output parameters, for each of the component interfaces is more strict and differs from interface to interface.
+In this example for `BuildFunc` you are required to return an `Output Value` which is a Go struct serializable to a Protocol
+Buffer binary object and an `error`. The `Output Values` you return from one lifecycle function can be used
+by the next in the chain. In the instance that error is not nil then the plugin execution will stop and the error will be
+returned to the user.
+
+More details on `Output Values`, `Default Parameters` and the specific details for each interface component can be found
+in the respective documentation.

@@ -1,0 +1,113 @@
+---
+layout: docs
+page_title: 'Passing Values'
+sidebar_title: 'Passing Values between components'
+description: |-
+  How Waypoint plugins work
+---
+
+To pass values between components, you can ask Waypoint to inject a previous component's Output Value. For example, the
+next component after the `Builder` is the `Registry` component. The following code snippet shows that by defining a
+parameter for the `Binary` type, Waypoint automatically injects the reference to the `Binary` type that was output from
+the `Builder` component.
+
+```go
+func (r *Registry) PushFunc() interface{} {
+  return r.push
+}
+
+func (r *Registry) push(
+  ctx context.Context,
+  log hclog.Logger,
+  ui terminal.UI,
+  b *build.Binary,
+) (*Artifact, error) {
+  return nil, nil
+}
+```
+
+Output Values like `build.Binary` returned by the `push` function need to be serializable to the Protocol Buffer binary
+format. To enable this, rather than define data models as structs in Go, you create Protocol Buffer definitions and
+generate the Go code using the `protoc` tool.
+
+Let’s look at `build.Binary` and see how it is defined. Protocol Buffer files are commonly defined in files with the
+extension `.proto`.
+
+The first line in a Protocol Buffer file is the `syntax` definition; this is set to `proto3` to use the Protocol Buffers
+version three.
+
+```go
+syntax = "proto3";
+```
+
+Then you define the Protocol Buffers `package`; in this example, the package is set to `builder`, which is the same package
+as the component.
+
+```go
+package builder;
+```
+
+You can then specify the `go_package`; this again is set to the same package where the component is defined but uses the
+full go package reference.
+
+```go
+option go_package = "github.com/hashicorp/waypoint-plugin-examples/golang/builder";
+```
+
+Finally, you can define the message, if you have not used Protocol Buffers before, conceptually a struct in Go is a
+message in Protocol Buffers. Defining the `build.Binary` Output Value looks like the following. A message `Binary` is
+defined, which has a single field `path`.
+
+```go
+message Binary {
+  string path = 1;
+}
+```
+
+When the Go code a generated, the previous message will create a Go struct, which looks like the following.
+
+```go
+type Binary struct {
+  Path string
+}
+```
+
+The full example can be seen below.
+
+```go
+syntax = "proto3";
+
+package builder;
+
+option go_package = "github.com/hashicorp/waypoint-plugin-examples/golang/builder";
+
+message Binary {
+  string path = 1;
+}
+```
+
+To generate the Go code you use the protoc command setting the correct flags. The `--go_opt=plugins=grpc` flag specifies
+that you want to use the Go gRPC plugin to generate the code.
+
+Then the `--go_out=../../../../` flag is specified. The `go_package` option specified in the Protocol Buffer definition
+file has the path of the go package defined; if you set the flag `--go_out=./` then the resulting go code would be
+output in the path `./github.com/hashicorp/waypoint-plugin-examples/golang/builder`, since the path for the plugin is
+already `github.com/hashicorp/waypoint-plugin-examples/golang/builder` you can set `go_out` to use parent paths, which
+results in the go code being generated in the current folder.
+
+Finally, you specify the proto files you would like to generate code for; this is the `plugin.proto` file in the current
+directory.
+
+```shell
+protoc --go_opt=plugins=grpc --go_out=../../../../ ./plugin.proto
+```
+
+If successful, the command will not output any text but generates a file called `plugin.pb.go` in the current directory.
+
+This file will contain the struct definition for the `Binary` message and the code that enables the serialization of
+the model to the Protocol Buffer binary format. This file should `never` be manually edited, if you need to make changes
+to your Output Type, you should always modify the `.proto` file and regenerate the Go code using the protoc command.
+
+Full information on defining messages using Protocol Buffers can be found in the following document.
+
+https://developers.google.com/protocol-buffers/docs/proto3
