@@ -1,4 +1,4 @@
-.securityPage {
+.longformPage {
   & .longformWrapper {
     @media (min-width: 800px) {
       margin-top: 80px;
