@@ -6,24 +6,134 @@ description: |-
   How Waypoint plugins work
 ---
 
-# Creating a Waypoint Plugin
+# Creating Waypoint Plugins
 
-In this section, you will learn how to create a simple plugin that can build Go applications, we will walk through
-all the steps needed to create this simple plugin. The source code for this example can be found at
-https://github.com/hashicorp/waypoint-plugin-examples/tree/main/golang
+In this guide, you will learn how to create a simple plugin that can build Go applications, we will walk through
+all the steps needed to create this simple plugin.
 
-This plugin is going to be able to compile Go applications from source and create a compiled binary. To do this you
-need to create a Builder component, the most basic aspect of a Builder component is to satisfy the Builder interface.
-You also need to think about configuration for the build process and also being able to pass information about the built
-binary to a later phase in the Waypoint lifecycle.
+## Requirements
 
-In addition to implementing Builder, you will see how to implement optional Configurable and also ConfigurableNotify interfaces
-and also how to define output values which can be used in other phases of the life cycle.
+In order to follow this guide you will need the following tools:
 
-## Creating the Component
+- [Go version 1.14+](https://golang.org/doc/install)
+- [Protocol Buffer Compiler](https://grpc.io/docs/protoc-installation/)
+- [Protocol Buffer compile plugin for Go](https://grpc.io/docs/languages/go/quickstart/)
+- [Example Code](https://github.com/hashicorp/waypoint-plugin-examples)
 
-A Component in Waypoint is Struct which implements one or more Waypoint interfaces. If you take a look at the file builder.go
-you will see that the Build struct is defined and that it has a single field config which is of type BuildConfig.
+This plugin you are going create will implement the `Builder` component and will be able to compile Go applications from source
+and create a compiled binary. In addition to implementing Builder, you will see how to implement optional Configurable and also
+ConfigurableNotify interfaces and also how to define output values which can be used in other phases of the life cycle.
+
+## Setting up the project
+
+To scaffold the new plugin you can use the `template` in the example code repository. If open your terminal at this folder you
+will see the following structure.
+
+```shell
+├── Makefile
+├── README.md
+├── bin
+│   └── waypoint-plugin-template
+├── builder
+│   ├── builder.go
+│   ├── output.pb.go
+│   └── output.proto
+├── clone.sh
+├── go.mod
+├── go.sum
+├── main.go
+├── platform
+│   ├── auth.go
+│   ├── deploy.go
+│   ├── destroy.go
+│   ├── output.pb.go
+│   └── output.proto
+├── registry
+│   ├── auth.go
+│   ├── output.pb.go
+│   ├── output.proto
+│   └── registry.go
+└── release
+    ├── destroy.go
+    ├── output.pb.go
+    ├── output.proto
+    └── release.go
+```
+
+The template implements all components and interfaces for Waypoint plugins, it creates a vanilla base from which you can build
+your own plugins. Let's copy this template and create a new plugin, to do that you can use the `clone.sh` script in the template folder.
+
+`clone.sh` requires you provide it two parameters the destination for the new plugin and the Go module name, let`s create a new plugin called `gobuilder` in the current repo.
+
+```shell
+./clone.sh ../gobuilder github.com/hashicorp/waypoint-plugin-examples/gobuilder
+
+Created new pluging in ../gobuilder
+You can build this plugin by running the following command
+
+cd ../gobuilder && make
+```
+
+The clone script will create the new plugin at the requested path `../gobuilder`, let's change to this path so we can build the plugin.
+
+```shell
+cd ../gobuilder
+```
+
+The `gobuilder` folder is an exact copy of the `template` but all the Go module paths have been setup correctly, before starting to modify
+the plugin, let's check that it can be build. If you run the command `make` the various Protocol Buffers which are used to exchange
+values between plugin components and the main plugin binary will be compiled.
+
+```shell
+Build Protos
+protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./registry/output.proto
+protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./platform/output.proto
+protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./release/output.proto
+
+Compile Plugin
+go build -o ./bin/waypoint-plugin-template ./main.go
+```
+
+If you received an error when trying to build your plugin, double check that you have all the required pre-requistes installed.
+
+## Plugin `main` function
+
+A Waypoint plugin is just a Go binary, if you look at `main.go` you will see the `main` function for the Plugin. The `sdk.Main`
+function sets up the Waypoint SDK and registers the interfaces for the go-plugin system for you. All you need to do is to pass
+it the components which your Plugin registers using the `sdk.WithComponents` function. Since this is the default template
+all the different plugin components are registered. The plugin you are going to build in this guide only implements the `Builder`
+component so you can remove the other compoonents.
+
+```go
+func main() {
+	// sdk.Main allows you to register the components which should
+	// be included in your plugin
+	// Main sets up all the go-plugin requirements
+
+	sdk.Main(sdk.WithComponents(
+		// Comment out any components which are not
+		// required for your plugin
+		&builder.Builder{},
+		&registry.Registry{},
+		&platform.Platform{},
+		&release.ReleaseManager{},
+	))
+}
+```
+
+Your final `Main` block should look like the following:
+
+```go
+	sdk.Main(sdk.WithComponents(
+		&builder.Builder{},
+	))
+```
+
+## Handling Configuration
+
+A component in Waypoint is a Struct which implements one or more Waypoint interfaces. If you take a look at the file `builder/builder.go`
+you will see that the Build struct is defined and that it has a single field `config` which is of type `BuildConfig`.
 
 ```go
 type Builder struct {
@@ -31,11 +141,11 @@ type Builder struct {
 }
 ```
 
-Since the plugin is going to be building a Go application at a bare minimum it will need to know the name of the binary which
-will be created and the location of the source code. Waypoint allows you to define custom configuration which can be passed
+Since the plugin is going to be building a Go application, at a bare minimum it will need to know the name of the binary which
+will be created, and the location of the source code. Waypoint allows you to define custom configuration which can be passed
 to your components. The following example shows the configuration for a Waypoint application.
 
-The use stanza is where configuration is defined for the build component this contains
+The `use` stanza is where configuration is defined for the build component this contains
 two parameters output_name and source.
 
 ```go
@@ -53,13 +163,15 @@ app "example" {
 }
 ```
 
-Configuration files are defined as HCL and parsed by the waypoint binary, so that it can convert the HCL configuration
-and pass it to your application, you define a Struct, adding tags for each of the fields which you would like to serialize
+Configuration files are defined as `HCL` and parsed by the Waypoint application, so that it can convert the `HCL` configuration
+and pass it to your plugin, you define a Struct, adding tags for each of the fields which you would like to serialize
 from the config.
 
-Let’s create a struct called `BuildConfig` which contains the fields which will be serialized from the use stanza.
-Since the configuration fields are optional, you can use the HCL annotation optional, to tell the HCL parser to skip validation
+Let’s modify the struct called `BuildConfig` in the templated code, adding the fields which will be serialized from the configuration.
+Since the configuration fields are optional, you can use the `HCL` annotation optional, to tell the `HCL` parser to skip validation
 for the presence of this field.
+
+Modify the `BuildConfig` struct in the `builder/builder.go` file so that it looks like the following example:
 
 ```go
 type BuildConfig struct {
@@ -69,11 +181,10 @@ type BuildConfig struct {
 ```
 
 When Waypoint parses the configuration step for the application it looks to see if your component has implemented the
-Configurable interface and if so calls the Config method. In your implementation of Config, you return a reference to your
-BuildConfig struct. Waypoint uses the reference you return and attempts to serialize the application configuration to it.
+`Configurable` interface and if so calls the `Config` method. In your implementation of `Config`, you return a reference to your
+`BuildConfig` struct. Waypoint uses the reference you return and attempts to serialize the application configuration to it.
 
-To implement Configurable you add the Config method to your Struct and return a reference to the BuildConfig struct which
-is defined as a field on the Builder.
+If you look at the `builder.go` file you will see that this has already been implemented by the template.
 
 ```go
 func (b *Builder) Config() (interface{}, error) {
@@ -86,9 +197,9 @@ it in the build process.
 
 ## Validating Configuration
 
-To validate configuration Waypoint components can use the ConfigurableNotify interface. ConfigurableNotify defines the
-method ConfigSet which is called after Waypoint has read the HCL config file and serialized it to the Struct you returned
-from Config.
+To validate configuration Waypoint components can use the `ConfigurableNotify` interface. `ConfigurableNotify` defines the
+method `ConfigSet` which is called after Waypoint has read the `HCL` config file and serialized it to the struct you returned
+from `Config`.
 
 ```go
 type ConfigurableNotify interface {
@@ -100,11 +211,15 @@ type ConfigurableNotify interface {
 }
 ```
 
-ConfigSet is called before the Component specific interface methods like BuildFunc are called. It allows you to validate
-any provided configuration and if necessary return an error message to the user. The following code snippet shows a simple
-implementation of ConfigurableNotify. The source location provided in the config is checked to see that the location referenced
-exists on the local disk. This is a simple example however it is good practice that you perform any necessary validation
-and return
+`ConfigSet` is always called before the Component specific interface methods like `BuildFunc` are called. It allows you to validate
+any provided configuration and if necessary return an error message to the user.
+
+The template has already implemented the `ConfigSet` method on the `Builder` for you, however, let's modify it to validate
+the Source folder exists.
+
+Modify the `ConfigSet` function in the `builder.go` folder so that it looks like the following example. The new implementation
+uses `os.Stat` to check that the directory defined in the config exists. If it does not then you return an error which Waypoint
+will present to the user.
 
 ```go
 func (b *Builder) ConfigurableNotify(config interface{}) error {
@@ -124,56 +239,98 @@ func (b *Builder) ConfigurableNotify(config interface{}) error {
 }
 ```
 
-Once the optional configuration has been completed you can then implement the BuildFunc method as defined on the Builder
-interface. BuildFunc has a single return parameter which is expected to be a function.
+## Implementing the `Builder` Interface
+
+Once the optional configuration has been completed you can then implement the `BuildFunc` method as defined on the `Builder`
+interface. `BuildFunc` has a single return parameter which is expected to be a function which will be called by Waypoint when
+the `waypoint build` command is run.
 
 ```go
 BuildFunc() interface{}
 ```
 
-The function to be called does not strictly correspond to any signature for the input parameters, Waypoint automatically
-inject the ones you specify. It does however require that you have a specify Output Values.
+The function to be called does not strictly correspond to any signature for the input parameters, Waypoint functions have their parameters
+dynamically injected at runtime. The list of available parameters can be found in the [Default Parameters](docs/extending-waypoint/plugin-components/default-parameters)
+documentation.
 
-These return parameters must be proto.Message, and error. The proto.Message is a struct which implements the Protocol Buffers Message
-interface (github.com/golang/protobuf/proto), Waypoint uses Protocol Buffers to pass messages between the different stages
+While you can choose the input parameters for your `BuildFunc` Waypoint enforces specific output parameters. These return parameters must
+be of types `proto.Message`, and `error`. The `proto.Message` is a struct which implements the Protocol Buffers `Message`
+interface (github.com/golang/protobuf/proto). Waypoint uses Protocol Buffers to pass messages between the different stages
 of the workflow and for serializing data to the internal data store. The error which is the second part of the tuple determines
 if your build stage has succeeded or failed.
 
-The below function definition makes up the build function, this has three parameters:
-
-- context.Context - Used to check if the server has cancelled the build.
-- terminal.UI - Used to write output and request input from the Waypoint CLI.
-- component.Source - Provides the runtime location of the Waypoint application invoking this plugin.
+The default function created by the template, has created a `BuildFunc` which looks like the following example:
 
 ```go
-func (b *Builder) build(
-  ctx context.Context,
-  ui terminal.UI,
-  src *component.Source
-  ) (*Binary, error) {
+func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
+	u := ui.Status()
+	defer u.Close()
+	u.Update("Building application")
 
-  return &Binary{}, nil
+	return &Binary{}, nil
 }
 ```
 
-With this scaffolded out, let’s look at the implementation for the build function. The first thing to do is to set up
-the status output. Full details on how to interact with the Terminal using the SDK can be found in the Handling Terminal
-Interactions section.
+This function contains the following input parameters:
+
+- `context.Context` - Used to check if the server has cancelled the build.
+- `terminal.UI` - Used to write output and request input from the Waypoint CLI.
+
+The output parameters are defined as:
+
+- `*Binary` - Generated struct from `output.proto`
+- `error` - Returning a non nil error terminates execution and presents the error to the user.
+
+## Output Values
+
+Output Values such as `Binary` in Waypoint plugins need to be serializable to Protocol Buffer binary format. To enable this you do not
+directly define the Go struct. Instead you define this as a Protocol Buffer message and use the `protoc` command to generate the code.
+If you take a look at the `output.proto` file you will see the following message defined.
 
 ```go
-  ) (*Binary, error) {
-  st := ui.Status()
-  defer st.Close()
-
-  st.Update("Building application")
+message Binary {
+  string location = 1;
+}
 ```
 
-Since the two configuration fields defined earlier were anonymous you need to set the defaults if they are not set.
+When the `protoc` command is run it generates Go code from this Protocol Buffer definition. You can see the output of this in the `output.pb.go` file:
+
+```go
+type Binary struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+}
+```
+
+For the purpose of this guide you do not need to change `Binary` however, if you would like to learn more about Passing Values Between components,
+please see the [specific documentation](http://localhost:3000/docs/extending-waypoint/plugin-components/passing-values).
+
+## Implementing the Build Process
+
+Let’s look at the implementation for the `build` method. You will need to provide status updates to the user of your plugin, to do this you can
+use `terminal.UI`, this allows you to write output to the terminal using a common UX across all Waypoint plugins.
+
+The method `ui.Status()` requests a live updating status, you use this to write updates to the Waypoint terminal output. When finished with `Status`
+you should always close it, this is done with the `defer st.Close()` call. Finally in the example the Status is updated with the message
+"Building application". Unlike a scrolling log output Waypoint allows the user to focus on the information which is important at the current time.
+the `terminal.Status` allows you to replace content already written to the terminal.
+
+```go
+  u := ui.Status()
+  defer st.Close()
+
+  u.Update("Building application")
+```
+
+After the `Update` call let's add some code to the `build` method which will set the defaults for the configuration if they are not set.
 
 ```go
   // setup the defaults
   if b.config.OutputName == "" {
-    b.config.OutputName = src.App
+    b.config.OutputName = "app"
   }
 
   if b.config.Source == "" {
@@ -181,8 +338,9 @@ Since the two configuration fields defined earlier were anonymous you need to se
   }
 ```
 
-Now all the defaults are set up you can build the application, to build the application you can use the Go standard library
-exec package to shell out a process.
+Now all the defaults are set up you can add the code which will build the application. Because the plugin is running in your current user space,
+you can use the Go standard library exec package to shell out a process and run `go build`. Set the values from the config for the source and
+the application name, and finally run the command.
 
 ```go
 c := exec.Command(
@@ -197,29 +355,238 @@ err := c.Run()
 ```
 
 If an error occurs during the build process you can update the terminal output to show a failure message. The error returned
-from the function will also be output terminal by Waypoint.
+from the function will also be output terminal by Waypoint. The `Step` command can be used to write the status of the current component, if an
+error occurs during the build command, calling the `Step` method:
+
+```go
+u.Step(terminal.StatusError, "Build failed")
+```
+
+Would result in terminal output shown to the user like:
+
+```shell
+» Building...
+x Application built successfully server
+```
+
+Add the following code to your `build` function after the `Run` method.
 
 ```go
 if err != nil {
-  st.Step(terminal.StatusError, "Build failed")
+  u.Step(terminal.StatusError, "Build failed")
 
   return nil, err
 }
 ```
 
-If the build succeeded then you can update the status and return the proto.Message which will be passed to the next step of
-the process.
+Finally, if the build succeeded then you can update the status and return the `proto.Message` which can be passed to the next step of
+the process. Add the following code to your `build` function after the error check.
 
 ```go
-  st.Step(terminal.StatusOK, "Application built successfully")
+  u.Step(terminal.StatusOK, "Application built successfully")
 
   return &Binary{
-    Path: path.Join(b.config.Source, b.config.OutputName),
-  }, ni
+    Location: path.Join(b.config.Source, b.config.OutputName),
+  }, nil
 ```
 
-You can then build and test the plugin....
+The code for the plugin is now complete let's see how to build and test it.
 
-## Implementing the entrypoint
+## Building the plugin
 
-## Building Plugins
+To build the plugin you can use the `Makefile` that the template generated for you. The contents of this file looks like:
+
+```makefile
+PLUGIN_NAME=template
+
+all: protos build
+
+protos:
+	@echo ""
+	@echo "Build Protos"
+
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./registry/output.proto
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./platform/output.proto
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./release/output.proto
+
+build:
+	@echo ""
+	@echo "Compile Plugin"
+
+	go build -o ./bin/waypoint-plugin-${PLUGIN_NAME} ./main.go
+```
+
+Let's modify it a little. Edit the `Makefile` and change the `PLUGIN_NAME` to your plugin name `gobuilder`
+
+```makefile
+PLUGIN_NAME=gobuilder
+```
+
+By default the templated plugin will generate the Go code for all the different components, since your plugin only implements
+the `Builder` component you can remove all the `protoc` commands other than the first one.
+
+```
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+```
+
+Your `Makefile` should now look like:
+
+```makefile
+PLUGIN_NAME=gobuilder
+
+all: protos build
+
+protos:
+	@echo ""
+	@echo "Build Protos"
+
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+
+build:
+	@echo ""
+	@echo "Compile Plugin"
+
+	go build -o ./bin/waypoint-plugin-${PLUGIN_NAME} ./main.go
+```
+
+With the `Makefile` change you can now run `make` to build the plugin.
+
+```shell
+make
+
+Build Protos
+protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+
+Compile Plugin
+go build -o ./bin/waypoint-plugin-gobuilder ./main.go
+```
+
+If you look in the ./bin folder you will see your compile plugin
+
+```shell
+ls ./bin
+waypoint-plugin-gobuilder
+```
+
+Let's now install the plugin so that it can be used by Waypoint.
+
+## Installing the plugin
+
+You can install your plugin using the `make install` command. Waypoint will automatically
+load plugins from certain know locations, these are:
+
+- \$HOME/.config/waypoint/plugins/
+- <waypoint_app_folder>/.waypoint/plugins/
+
+The `make install` command will copy the plugin to the Waypoint config in your `$HOME` folder.
+
+```shell
+➜ make install
+
+Installing Plugin
+cp ./bin/waypoint-plugin-gobuilder /home/nicj/.config/waypoint/plugins/
+```
+
+Now the plugin has been installed, let's create an example application which uses your new plugin.
+
+## Creating the example application
+
+Create a new folder called `example_app` in your `$HOME` folder, there is no restriction on the location of Waypoint apps,
+`$HOME` is just used for the purposes of the guide.
+
+```shell
+mkdir $HOME/example_app
+```
+
+If you look at the following example configuration you will see that the `use` block for the `build` has a value `gobuilder` which
+is the name of the plugin to be loaded for build component. Waypoint defines the convention that plugins are always called `waypoint-plugin-<name>`.
+When you run the `waypoint build` command, Waypoint will search the known plugin folders for a file called `waypoint-plugin-gobuilder` it will
+then use that plugin for the `build` component.
+
+The configuration also has the values `app` for the `output_name` and the source as `./`, we can put our Go application in the same location
+as the plugin config. First create a file `waypoint.hcl` in the folder `$HOME/example_app/` with the following contents.
+
+```javascript
+project = "guides"
+
+app "example" {
+
+  build {
+    use "gobuilder" {
+      output_name = "app"
+      source = "./"
+    }
+  }
+
+  deploy {
+    use "gobuilder" {}
+  }
+}
+```
+
+Now you can create the source for the example application, let's create the most simple Go application we can. Create a new file `main.go` in your
+Waypoint application folder and copy the following to it.
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("Hello Waypoint")
+}
+```
+
+You should now have two files in your application folder `waypoint.hcl` and `main.go`, let`s test your new plugin.
+
+## Testing the application
+
+Let's build our example application, first we need to run `waypoint init` to set up the application.
+
+```shell
+➜ waypoint init
+✓ Configuration file appears valid
+✓ Local mode initialized successfully
+✓ Project "guides" and all apps are registered with the server.
+✓ Plugins loaded and configured successfully
+✓ Authentication requirements appear satisfied.
+
+Project initialized!
+
+You may now call 'waypoint up' to deploy your project or
+commands such as 'waypoint build' to perform steps individually.
+```
+
+```shell
+➜ waypoint build
+✓ Application built successfully
+```
+
+If you look in the application folder you will see a new binary called `app` which is the product of your plugin.
+
+```shell
+➜ tree .
+.
+├── app
+├── data.db
+├── main.go
+└── waypoint.hcl
+```
+
+Let's run this, you will see the message "Hello Waypoint" that you wrote in the `main.go`.
+
+```shell
+./app
+Hello Waypoint
+```
+
+## Summary
+
+You have now successfully created a simple `Build` plugin for Waypoint. Creating other plugin types for `ReleaseManager`, or `Platform` follow
+similar concepts. Details on the interfaces for implementing these other plugins can be found in the [Plugin Components](/docs/extending-waypoint/plugin-components)
+section of the documentation. The Extending Waypoint section also contains other reference documentation related to plugin
+creation.
+
+A full example of the plugin created in this guide can be found at the following location:
+[https://github.com/hashicorp/waypoint-plugin-examples/tree/main/gobuilder_final](https://github.com/hashicorp/waypoint-plugin-examples/tree/main/gobuilder_final_)

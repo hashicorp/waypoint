@@ -111,10 +111,10 @@ export default [
   {
     category: 'extending-waypoint',
     content: [
-      'entrypoint',
-      'example-plugin',
+      'main-func',
+      'passing-values',
       {
-        category: 'plugin-components',
+        category: 'plugin-interfaces',
         content: [
           'authenticator',
           'configurable',
@@ -125,9 +125,9 @@ export default [
           'release-manager',
           'destroy',
           'default-parameters',
-          'passing-values',
         ],
       },
+      'example-plugin',
     ],
   },
 ]

@@ -10,5 +10,18 @@ description: |-
 
 Plugins in Waypoint are separate binaries which communicate with the Waypoint application, the plugin communicates
 using gRPC and while it is theoretically possible to build a plugin in any language supported by the gRPC framework.
-We recommend that the developers leverage the [Waypoint SDK](https://github.com/hashicorp/waypoint-plugin-sdk).
-Leveraging the SDK developers can create plugins which cover the full Waypoint lifecycle.
+We recommend that the developers leverage the [Waypoint SDK](https://github.com/hashicorp/waypoint-plugin-sdk) for Go to
+peform this task.
+
+In this section you will find reference documentation for creating plugins, if you would like to jump straight in and
+start creating a plugin, please checkout the [Creating Waypoint Plugins Guide](/docs/extending-waypoint/example-plugin).
+
+## Concepts
+
+Conceptually Waypoint Plugins can be defined using the following terms:
+
+- `Plugin` - A Plugin is a compiled binary containing one or more Components which are executed by the Waypoint application
+- `Component` - A Component handles part of the Waypoint application lifecycle, i.e Build, Deploy, etc. Components are created by implementing
+  various interfaces
+- `Interface` - An interface implements specific behaviour in a Component, i.e. Configurable, ReleaseManager
+- `Output Value` - A Protocol Buffer serializable type which can be passed between components.
