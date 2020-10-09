@@ -27,7 +27,7 @@ export default function ReleaseInformation({
 
   useEffect(() => {
     // lazy load all release versions to populate dropdown & releases section
-    fetch(`https://releases.hashicorp.com/vault/index.json`)
+    fetch(`https://releases.hashicorp.com/${productId}/index.json`)
       .then((res) => res.json())
       .then((data) => {
         const latestReleases = sortAndFilterReleases(Object.keys(data.versions))

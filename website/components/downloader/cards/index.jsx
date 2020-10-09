@@ -102,7 +102,7 @@ function Cards({
         )}
         <div className={hasPackageManager ? styles.card : styles.soloCard}>
           <span className={styles.cardTitle}>Binary Download</span>
-          <div>
+          <div className={styles.logoDownloadWrapper}>
             <div className={styles.logoWrapper}>
               {logo}
               <span className={styles.version}>{version}</span>

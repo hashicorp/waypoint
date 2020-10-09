@@ -14,9 +14,7 @@
 }
 
 .logo {
-  font-weight: 700;
-  font-size: 1.25rem;
-  margin-bottom: 4px;
+  max-width: 140px;
 }
 
 .hosting {

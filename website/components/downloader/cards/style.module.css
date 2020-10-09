@@ -7,6 +7,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 10px;
+}
+
+.logoDownloadWrapper {
+  width: 100%;
 }
 
 .version {
