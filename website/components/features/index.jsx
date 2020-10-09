@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import styles from './FeaturesList.module.css'
+import styles from './Features.module.css'
 import Button from '@hashicorp/react-button'
 import Carousel from 'nuka-carousel'
 
 export default function Features({ features }) {
   return (
     <>
+      {/* carousel rendered at smaller breakpoints */}
       <FeaturesCarousel features={features} />
       <FeaturesList features={features} />
     </>
@@ -43,7 +44,6 @@ function FeaturesCarousel({ features }) {
       <Carousel
         renderCenterRightControls={() => null}
         renderCenterLeftControls={() => null}
-        slideWidth={1.0}
         defaultControlsConfig={{
           pagingDotsContainerClassName: styles.pagingDots,
         }}

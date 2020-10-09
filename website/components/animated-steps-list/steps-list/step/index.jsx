@@ -1,5 +1,5 @@
 import styles from './Step.module.css'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useInView } from 'react-intersection-observer'
 
 export default function Step({
@@ -11,10 +11,14 @@ export default function Step({
 }) {
   const [ref, inView] = useInView({ threshold: 0.4 })
   const [inViewStatus, setInViewStatus] = useState(false)
-  if (inView != inViewStatus) {
-    setInViewStatus(inView)
-    onInViewStatusChanged(inView)
-  }
+
+  useEffect(() => {
+    if (inView !== inViewStatus) {
+      setInViewStatus(inView)
+      onInViewStatusChanged(inView)
+    }
+  }, [inView, inViewStatus])
+
   return (
     <li className={styles.step} ref={ref}>
       <h4>{name}</h4>
