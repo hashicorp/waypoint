@@ -1,9 +1,9 @@
 package plugin
 
 import (
-	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint-plugin-sdk"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint/internal/factory"
 
 	"github.com/hashicorp/waypoint/builtin/aws/alb"
 	"github.com/hashicorp/waypoint/builtin/aws/ami"
@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/ecs"
 	"github.com/hashicorp/waypoint/builtin/azure/aci"
 	"github.com/hashicorp/waypoint/builtin/docker"
+	dockerpull "github.com/hashicorp/waypoint/builtin/docker/pull"
 	"github.com/hashicorp/waypoint/builtin/files"
 	"github.com/hashicorp/waypoint/builtin/google/cloudrun"
 	"github.com/hashicorp/waypoint/builtin/k8s"
@@ -27,6 +28,7 @@ var (
 		"files":                    files.Options,
 		"pack":                     pack.Options,
 		"docker":                   docker.Options,
+		"docker-pull":              dockerpull.Options,
 		"google-cloud-run":         cloudrun.Options,
 		"azure-container-instance": aci.Options,
 		"kubernetes":               k8s.Options,
