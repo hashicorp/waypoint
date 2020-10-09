@@ -10,6 +10,10 @@
   margin-bottom: 10px;
 }
 
+.logoDownloadWrapper {
+  width: 100%;
+}
+
 .version {
   margin-left: 8px;
 }
