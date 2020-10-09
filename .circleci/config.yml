@@ -229,6 +229,8 @@ jobs:
   frontend-cache:
     docker:
       - image: *EMBER_IMAGE
+    environment:
+      <<: *ENVIRONMENT
     steps:
       - checkout
       # cache yarn deps
@@ -251,6 +253,10 @@ jobs:
           paths:
             - ui/node_modules
             - ui/lib/node_modules
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./.circleci/bash_env.sh
 
   # build ember so frontend tests run faster
   # ember-build-tests:
@@ -275,9 +281,12 @@ jobs:
     docker:
       - image: *EMBER_IMAGE
     environment:
+      <<: *ENVIRONMENT
       JOBS: 2 # limit parallelism for broccoli-babel-transpiler
     steps:
       - checkout
+      - attach_workspace:
+          at: .
       - when:
           condition: *REBUILD_UI
           steps:
@@ -299,8 +308,12 @@ jobs:
   build-static-assets:
     docker:
       - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
     steps:
       - checkout
+      - attach_workspace:
+          at: .
       - add_ssh_keys:
           fingerprints:
             - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
@@ -325,6 +338,8 @@ jobs:
   publish-static-assets:
     docker:
       - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
     steps:
       - checkout
       - add_ssh_keys:
@@ -336,13 +351,12 @@ jobs:
           name: commit internal/server/gen/bindata_ui.go
           command: |
             if [[ -n "${REBUILD_UI}" ]]; then
-              echo "===> WIP; Commented out committing bindata to main"
-              # git config --local user.email "hashicorp-ci@users.noreply.github.com"
-              # git config --local user.name "hashicorp-ci"
-              # short_sha=$(git rev-parse --short HEAD)
-              # git add internal/server/gen/bindata_ui.go
-              # git commit -m "auto-updated internal/server/gen/bindata_ui.go from commit ${short_sha}"
-              # git push origin main
+              git config --local user.email "hashicorp-ci@users.noreply.github.com"
+              git config --local user.name "hashicorp-ci"
+              short_sha=$(git rev-parse --short HEAD)
+              git add internal/server/gen/bindata_ui.go
+              git commit -m "auto-updated internal/server/gen/bindata_ui.go from commit ${short_sha}"
+              git push origin main
             else
               echo "UI is current; not committing"
             fi
