@@ -18,9 +18,16 @@
     max-height: unset;
   }
 
+  /* nuka-carousel overrides */
+  & :global {
+    & .slider-frame,
+    & .slider-slide:focus {
+      outline: none !important;
+    }
+  }
+
   & .pagingDots {
     & :global(.paging-item:not(.active) > button) {
-      /* need to override nuka-carousel active dot style, which is set inline and thus requires !important */
       opacity: 1 !important;
       fill: var(--gray-6) !important;
     }
