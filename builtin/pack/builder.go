@@ -153,9 +153,9 @@ func (b *Builder) Build(
 
 		imageId, err := epinject.AlterEntrypoint(ctx, src.App+":latest", func(cur []string) (*epinject.NewEntrypoint, error) {
 			ep := &epinject.NewEntrypoint{
-				Entrypoint: append([]string{"/bin/wpceb"}, cur...),
+				Entrypoint: append([]string{"/waypoint-entrypoint"}, cur...),
 				InjectFiles: map[string]string{
-					filepath.Join(tmpdir, "ceb/ceb"): "/bin/wpceb",
+					filepath.Join(tmpdir, "ceb/ceb"): "/waypoint-entrypoint",
 				},
 			}
 
