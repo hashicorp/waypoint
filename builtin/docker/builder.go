@@ -35,7 +35,7 @@ func (b *Builder) BuildFunc() interface{} {
 // Config is the configuration structure for the registry.
 type BuilderConfig struct {
 	// Control whether or not to inject the entrypoint binary into the resulting image
-	DisableCEB bool `hcl:"disable_ceb,optional"`
+	DisableCEB bool `hcl:"disable_entrypoint,optional"`
 
 	// Controls whether or not the image should be build with buildkit or docker v1
 	UseBuildKit bool `hcl:"buildkit,optional"`
@@ -53,7 +53,7 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 build {
   use "docker" {
 	buildkit    = false
-	disable_ceb = false
+	disable_entrypoint = false
   }
 }
 `)
@@ -62,7 +62,7 @@ build {
 	doc.Output("docker.Image")
 
 	doc.SetField(
-		"disable_ceb",
+		"disable_entrypoint",
 		"if set, the entrypoint binary won't be injected into the image",
 		docs.Summary(
 			"The entrypoint binary is what provides extended functionality",

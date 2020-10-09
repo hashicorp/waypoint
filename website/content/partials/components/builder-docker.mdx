@@ -16,7 +16,7 @@ If set, use the buildkit builder from Docker.
 - Type: **bool**
 - **Optional**
 
-#### disable_ceb
+#### disable_entrypoint
 
 If set, the entrypoint binary won't be injected into the image.
 
@@ -32,7 +32,7 @@ The entrypoint binary is what provides extended functionality such as logs and e
 build {
   use "docker" {
 	buildkit    = false
-	disable_ceb = false
+	disable_entrypoint = false
   }
 }
 
