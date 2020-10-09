@@ -548,6 +548,12 @@ Alias: waypoint install
   (see "waypoint context") so the CLI will be configured to use the newly
   installed server.
 
+  This command will require you to accept the Waypoint Terms of Service
+  and Privacy Policy for the Waypoint URL service by specifying the "-accept-tos"
+  flag. This only applies to the Waypoint URL service. You may disable the
+  URL service by manually running the server. If you disable the URL service,
+  you do not need to accept any terms.
+
 ` + c.Flags().Help())
 }
 
