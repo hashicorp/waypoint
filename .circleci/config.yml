@@ -1,5 +1,5 @@
 ---
-version: 2
+version: 2.1
 
 references:
   images:
@@ -11,7 +11,7 @@ references:
     test-results: &TEST_RESULTS_DIR /tmp/test-results
 
   cache:
-    yarn: &YARN_CACHE_KEY waypoint-ui-{{ checksum "ui/yarn.lock" }}
+    yarn: &YARN_CACHE_KEY waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}
     rubygem: &RUBYGEM_CACHE_KEY static-site-gems-v1-{{ checksum "Gemfile.lock" }}
 
   environment: &ENVIRONMENT
@@ -20,9 +20,10 @@ references:
     EMAIL: noreply@hashicorp.com
     GIT_AUTHOR_NAME: circleci-waypoint
     GIT_COMMITTER_NAME: circleci-waypoint
-    BASH_ENV: .circleci/bash_env.sh
+    BASH_ENV: /home/circleci/project/.circleci/bash_env.sh
     DOCKER_BUILDKIT: 1
-
+    REBUILD_UI: &REBUILD_UI 1
+    
 jobs:
   # Runs Go linters
   lint:
@@ -166,7 +167,6 @@ jobs:
   integration:
     machine:
       image: circleci/classic:201808-01
-
     steps:
       - checkout
       - run:
@@ -225,30 +225,35 @@ jobs:
           command: |
             docker push docker.pkg.github.com/hashicorp/waypoint/alpha
 
-  # todo: re-enable when we need a UI
-  #
   # build frontend yarn cache
-  # frontend-cache:
-  #   docker:
-  #     - image: *EMBER_IMAGE
-  #   steps:
-  #     - checkout
-
-  #     # cache yarn deps
-  #     - restore_cache:
-  #         key: *YARN_CACHE_KEY
-
-  #     - run:
-  #         name: install yarn packages
-  #         command: cd ui && yarn install
-
-  #     - save_cache:
-  #         key: *YARN_CACHE_KEY
-  #         paths:
-  #           - ui/node_modules
+  frontend-cache:
+    docker:
+      - image: *EMBER_IMAGE
+    steps:
+      - checkout
+      # cache yarn deps
+      - restore_cache:
+          key: *YARN_CACHE_KEY
+      - run:
+          name: install yarn packages
+          command: cd ui && yarn install
+      - run:
+          name: set REBUILD_UI for downstream jobs
+          command: |
+            # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
+            if ! git diff --quiet --exit-code HEAD^! ui/; then
+              echo "export REBUILD_UI=1" >> $BASH_ENV
+            else
+              echo "unset REBUILD_UI" >> $BASH_ENV
+            fi
+      - save_cache:
+          key: *YARN_CACHE_KEY
+          paths:
+            - ui/node_modules
+            - ui/lib/node_modules
 
   # build ember so frontend tests run faster
-  # ember-build:
+  # ember-build-tests:
   #   docker:
   #     - image: *EMBER_IMAGE
   #   environment:
@@ -265,23 +270,82 @@ jobs:
   #         paths:
   #           - dist
 
-  # # rebuild UI for packaging
-  # ember-build-prod:
-  #   docker:
-  #     - image: *EMBER_IMAGE
-  #   environment:
-  #     JOBS: 2 # limit parallelism for broccoli-babel-transpiler
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         key: *YARN_CACHE_KEY
-  #     - run: cd ui && make
+  # rebuild UI for packaging
+  ember-build-prod:
+    docker:
+      - image: *EMBER_IMAGE
+    environment:
+      JOBS: 2 # limit parallelism for broccoli-babel-transpiler
+    steps:
+      - checkout
+      - when:
+          condition: *REBUILD_UI
+          steps:
+            - restore_cache:
+                key: *YARN_CACHE_KEY
+            - run: cd ui && make
+            # saves the build to a workspace to be passed to a downstream job
+            - persist_to_workspace:
+                root: .
+                paths:
+                  - ./ui/dist
+      - when:
+          condition:
+            not: *REBUILD_UI
+          steps:
+            - run: echo "UI is current; not rebuilding"
 
-  #     # saves the build to a workspace to be passed to a downstream job
-  #     - persist_to_workspace:
-  #         root: ui
-  #         paths:
-  #           - dist
+  # build static-assets file and commit
+  build-static-assets:
+    docker:
+      - image: *GOLANG_IMAGE
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+      - attach_workspace:
+          at: .
+      - when:
+          condition: *REBUILD_UI
+          steps:
+            - run: go get github.com/kevinburke/go-bindata/...
+            - run: make static-assets
+            - persist_to_workspace:
+                root: .
+                paths:
+                  - ./internal/server/gen/bindata_ui.go
+      - when:
+          condition:
+            not: *REBUILD_UI
+          steps:
+            - run: echo "UI is current; not compiling"
+
+  # build static-assets file and commit
+  publish-static-assets:
+    docker:
+      - image: *GOLANG_IMAGE
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+      - attach_workspace:
+          at: .
+      - run:
+          name: commit internal/server/gen/bindata_ui.go
+          command: |
+            if [[ -n "${REBUILD_UI}" ]]; then
+              echo "===> WIP; Commented out committing bindata to main"
+              # git config --local user.email "hashicorp-ci@users.noreply.github.com"
+              # git config --local user.name "hashicorp-ci"
+              # short_sha=$(git rev-parse --short HEAD)
+              # git add internal/server/gen/bindata_ui.go
+              # git commit -m "auto-updated internal/server/gen/bindata_ui.go from commit ${short_sha}"
+              # git push origin main
+            else
+              echo "UI is current; not committing"
+            fi
 
   # # run ember frontend tests
   # ember-test:
@@ -321,19 +385,34 @@ workflows:
     jobs:
       - check-vendor
       - lint
-      - dev-build
       - go-test
+      - dev-build
 
   integration:
     jobs:
-      - dev-build
+      - frontend-cache
+      - ember-build-prod:
+          requires:
+            - frontend-cache
+      - build-static-assets:
+          requires:
+            - ember-build-prod
+      - dev-build:
+          requires:
+            - build-static-assets
+      - publish-static-assets:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - ember-build-prod
       - integration:
           requires:
             - dev-build
       - image-release:
           requires:
             - integration
-            - dev-build
           filters:
             branches:
               only:
