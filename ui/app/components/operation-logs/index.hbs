@@ -1,12 +1,56 @@
-<div class="output">
-    {{#if this.lines}}
-    {{#each this.lines as |line|}}
-    <code>{{line}}</code>
+<div {{did-update this.setScrollPosition }} class="output">
+    {{#if this.logLines}}
+
+    {{#each this.logLines as |line|}}
+
+    {{!-- Line object --}}
+    {{#if (eq line.type this.typeLine)}}
+    {{#if (eq line.logLine.style this.headerStyle)}}
+    <code class="header"><strong>{{line.logLine.msg}}</strong></code>
+    {{/if}}
+    {{#if (eq line.logLine.style this.errorStyle)}}
+    <code class="error">{{line.logLine.msg}}</code>
+    {{/if}}
+    {{#if (eq line.logLine.style this.errorBoldStyle)}}
+    <code class="error-bold">{{line.logLine.msg}}</code>
+    {{/if}}
+    {{#if (eq line.logLine.style this.infoStyle)}}
+    <code class="info">{{line.logLine.msg}}</code>
+    {{/if}}
+    {{#if (eq line.logLine.style this.warningStyle)}}
+    <code class="warning">{{line.logLine.msg}}</code>
+    {{/if}}
+    {{#if (eq line.logLine.style this.warningBoldStyle)}}
+    <code class="warning-bold">{{line.logLine.msg}}</code>
+    {{/if}}
+    {{#if (eq line.logLine.style this.successStyle)}}
+    <code class="success">{{line.logLine.msg}}</code>
+    {{/if}}
+    {{#if (eq line.logLine.style this.successBoldStyle)}}
+    <code class="success-bold">{{line.logLine.msg}}</code>
+    {{/if}}
+    {{#if (eq line.logLine.style "")}}
+    <code><strong>{{line.logLine.msg}}</strong></code>
+    {{/if}}
+
+    {{/if}}
+
+    {{!-- Step object --}}
+    {{#if (eq line.type this.typeStep)}}
+    <code>{{{ansi-to-html line.logLine.output}}}</code>
+    {{/if}}
+
+    {{!-- status --}}
+    {{#if (eq line.type this.typeStatus)}}
+    <code>{{line.logLine.msg}}</code>
+    {{/if}}
+
     {{/each}}
+
     {{else}}
     <EmptyState>
-        <p>Waiting for output</p>
-        <p>Logs will be displayed in a moment</p>
+        <p>No output available</p>
+        <p>This could be because the operation did not render any output, or because it is no longer available</p>
     </EmptyState>
     {{/if}}
 </div>

@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
 import { inject as service } from '@ember/service';
 import { GetLogStreamRequest, LogBatch } from 'waypoint-pb';
+import { formatRFC3339 } from 'date-fns';
 
 interface LogStreamArgs {
   req: GetLogStreamRequest;
@@ -25,7 +26,8 @@ export default class LogStream extends Component<LogStreamArgs> {
   async start() {
     const onData = (response: LogBatch) => {
       response.getLinesList().forEach((entry) => {
-        this.addLine(entry.getLine());
+        const prefix = formatRFC3339(entry.getTimestamp()!.toDate());
+        this.addLine(`${prefix}: ${entry.getLine()}`);
       });
     };
 

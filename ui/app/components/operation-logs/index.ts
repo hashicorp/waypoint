@@ -11,16 +11,31 @@ interface OperationLogsArgs {
 export default class OperationLogs extends Component<OperationLogsArgs> {
   @service api!: ApiService;
 
-  @tracked lines: string[];
+  @tracked logLines: object[];
+
+  // https://github.com/hashicorp/waypoint-plugin-sdk/blob/baf566811af680c5df138f9915d756f67d271b1a/terminal/ui.go#L126-L135
+  headerStyle = 'header';
+  errorStyle = 'error';
+  errorBoldStyle = 'error-bold';
+  warningStyle = 'warning';
+  warningBoldStyle = 'warning-bold';
+  infoStyle = 'info';
+  successStyle = 'success';
+  successBoldStyle = 'success-bold';
+
+  typeLine = 'line';
+  typeStep = 'step';
+  typeStepGroup = 'step-group';
+  typeStatus = 'status';
 
   constructor(owner: any, args: any) {
     super(owner, args);
-    this.lines = [];
+    this.logLines = [];
     this.start();
   }
 
-  addLine(line: string) {
-    this.lines = [...this.lines, line];
+  addLogLine(t: string, logLine: object) {
+    this.logLines = [...this.logLines, { type: t, logLine: logLine }];
   }
 
   async start() {
@@ -31,19 +46,38 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
       if (event == GetJobStreamResponse.EventCase.TERMINAL) {
         let terminal = response.getTerminal();
         if (!terminal) {
-          if (this.lines.length === 0) {
-            this.addLine('Logs are no longer available for this operation');
+          if (this.logLines.length === 0) {
+            this.addLogLine(this.typeStatus, { msg: 'Logs are no longer available for this operation' });
           }
         } else {
           terminal.getEventsList().forEach((event) => {
-            event.getLine();
+            const line = event.getLine();
+            const step = event.getStep();
+
+            if (line && line.getMsg()) {
+              console.log(line);
+              this.addLogLine(this.typeLine, line.toObject());
+            }
+
+            if (step && step.getOutput()) {
+              console.log(step);
+              const newStep = step.toObject();
+
+              if (step.getOutput_asU8().length > 0) {
+                newStep.output = new TextDecoder().decode(step.getOutput_asU8());
+              }
+
+              this.addLogLine(this.typeStep, newStep);
+            }
           });
         }
       }
     };
 
     const onStatus = (status: any) => {
-      this.addLine(status.details);
+      if (status.details) {
+        this.addLogLine(this.typeStatus, { msg: status.details });
+      }
     };
 
     let req = new GetJobStreamRequest();
