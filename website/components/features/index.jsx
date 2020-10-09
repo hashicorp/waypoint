@@ -44,6 +44,7 @@ function FeaturesCarousel({ features }) {
       <Carousel
         renderCenterRightControls={() => null}
         renderCenterLeftControls={() => null}
+        wrapAround
         defaultControlsConfig={{
           pagingDotsContainerClassName: styles.pagingDots,
         }}

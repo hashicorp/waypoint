@@ -109,5 +109,5 @@ export default function FramedTerminal({ frame, lines }) {
     })
     .filter((el) => el != null)
 
-  return <Terminal lines={terminalLines} />
+  return <Terminal lines={terminalLines} noScroll />
 }

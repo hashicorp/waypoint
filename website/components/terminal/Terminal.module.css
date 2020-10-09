@@ -42,48 +42,65 @@
 
   & .content {
     width: 100%;
-    height: 525px;
+    min-height: 525px;
+    height: 100%;
     background: var(--terminal-body-color);
     border-radius: 0 0 var(--terminal-radius) var(--terminal-radius);
     padding: 24px 32px;
-    & .overflowWrapper {
+
+    @media (--medium-up) {
+      height: 525px;
+    }
+  }
+}
+
+.overflowWrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: scroll;
+
+  & .codeWrapper {
+    & code {
       width: 100%;
       height: 100%;
-      position: relative;
-      overflow: scroll;
-      -ms-overflow-style: none; /* IE and Edge */
-      scrollbar-width: none; /* Firefox */
-      &::-webkit-scrollbar {
-        /* Safari */
-        -webkit-appearance: none;
-        width: 0;
-        height: 0;
+      font-style: normal;
+      font-weight: normal;
+      font-size: 12px;
+      line-height: 20px;
+      color: var(--blue);
+      &.navy {
+        color: var(--vagrant-l1);
+      }
+      &.gray {
+        color: var(--gray-5);
+      }
+      &.white {
+        color: var(--white);
       }
 
-      & .codeWrapper {
-        bottom: 0;
-        position: absolute;
-        min-height: 100%;
-
-        & code {
-          width: 100%;
-          height: 100%;
-          font-style: normal;
-          font-weight: normal;
-          font-size: 13.5px;
-          line-height: 26px;
-          color: var(--blue);
-          &.navy {
-            color: var(--vagrant-l1);
-          }
-          &.gray {
-            color: var(--gray-5);
-          }
-          &.white {
-            color: var(--white);
-          }
-        }
+      @media (--medium-up) {
+        font-size: 13.5px;
+        line-height: 26px;
       }
     }
+  }
+}
+
+.noScrollOverflowWrapper {
+  composes: overflowWrapper;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    /* Safari */
+    -webkit-appearance: none;
+    width: 0;
+    height: 0;
+  }
+
+  & .codeWrapper {
+    bottom: 0;
+    position: absolute;
+    min-height: 100%;
   }
 }
