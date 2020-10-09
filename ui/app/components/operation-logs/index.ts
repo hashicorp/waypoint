@@ -52,17 +52,15 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
         } else {
           terminal.getEventsList().forEach((event) => {
             const line = event.getLine();
-            const sg = event.getStepGroup();
             const step = event.getStep();
 
-            if (line) {
+            if (line && line.getMsg()) {
+              console.log(line);
               this.addLogLine(this.typeLine, line.toObject());
             }
-            if (sg) {
-              this.addLogLine(this.typeStepGroup, sg.toObject());
-            }
 
-            if (step) {
+            if (step && step.getOutput()) {
+              console.log(step);
               const newStep = step.toObject();
 
               if (step.getOutput_asU8().length > 0) {
@@ -77,7 +75,9 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
     };
 
     const onStatus = (status: any) => {
-      this.addLogLine(this.typeStatus, { msg: status.details });
+      if (status.details) {
+        this.addLogLine(this.typeStatus, { msg: status.details });
+      }
     };
 
     let req = new GetJobStreamRequest();

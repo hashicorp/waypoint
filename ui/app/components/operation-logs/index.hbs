@@ -30,20 +30,17 @@
     <code class="success-bold">{{line.logLine.msg}}</code>
     {{/if}}
     {{#if (eq line.logLine.style "")}}
-    <code>{{line.logLine.msg}}</code>
+    <code><strong>{{line.logLine.msg}}</strong></code>
     {{/if}}
 
     {{/if}}
 
     {{!-- Step object --}}
-    {{#if (eq line.type this.typeStepGroup)}}
-    <code>{{line.logLine.msg}}</code>
-    {{/if}}
-
     {{#if (eq line.type this.typeStep)}}
-    <code>{{strip-ansi line.logLine.output}}</code>
+    <code>{{{ansi-to-html line.logLine.output}}}</code>
     {{/if}}
 
+    {{!-- status --}}
     {{#if (eq line.type this.typeStatus)}}
     <code>{{line.logLine.msg}}</code>
     {{/if}}
@@ -52,8 +49,8 @@
 
     {{else}}
     <EmptyState>
-        <p>Waiting for output</p>
-        <p>Logs will be displayed in a moment</p>
+        <p>No output available</p>
+        <p>This could be because the operation did not render any output, or because it is no longer available</p>
     </EmptyState>
     {{/if}}
 </div>
