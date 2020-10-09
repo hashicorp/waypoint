@@ -239,24 +239,11 @@ jobs:
       - run:
           name: install yarn packages
           command: cd ui && yarn install
-      - run:
-          name: set REBUILD_UI for downstream jobs
-          command: |
-            # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
-            if ! git diff --quiet --exit-code HEAD^! ui/; then
-              echo "export REBUILD_UI=1" >> $BASH_ENV
-            else
-              echo "unset REBUILD_UI" >> $BASH_ENV
-            fi
       - save_cache:
           key: *YARN_CACHE_KEY
           paths:
             - ui/node_modules
             - ui/lib/node_modules
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./.circleci/bash_env.sh
 
   # build ember so frontend tests run faster
   # ember-build-tests:
@@ -285,24 +272,14 @@ jobs:
       JOBS: 2 # limit parallelism for broccoli-babel-transpiler
     steps:
       - checkout
-      - attach_workspace:
-          at: .
-      - when:
-          condition: *REBUILD_UI
-          steps:
-            - restore_cache:
-                key: *YARN_CACHE_KEY
-            - run: cd ui && make
-            # saves the build to a workspace to be passed to a downstream job
-            - persist_to_workspace:
-                root: .
-                paths:
-                  - ./ui/dist
-      - when:
-          condition:
-            not: *REBUILD_UI
-          steps:
-            - run: echo "UI is current; not rebuilding"
+      - restore_cache:
+          key: *YARN_CACHE_KEY
+      - run: cd ui && make
+      # saves the build to a workspace to be passed to a downstream job
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./ui/dist
 
   # build static-assets file and commit
   build-static-assets:
@@ -317,22 +294,12 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
-      - attach_workspace:
-          at: .
-      - when:
-          condition: *REBUILD_UI
-          steps:
-            - run: go get github.com/kevinburke/go-bindata/...
-            - run: make static-assets
-            - persist_to_workspace:
-                root: .
-                paths:
-                  - ./internal/server/gen/bindata_ui.go
-      - when:
-          condition:
-            not: *REBUILD_UI
-          steps:
-            - run: echo "UI is current; not compiling"
+      - run: go get github.com/kevinburke/go-bindata/...
+      - run: make static-assets
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./internal/server/gen/bindata_ui.go
 
   # build static-assets file and commit
   publish-static-assets:
@@ -350,7 +317,10 @@ jobs:
       - run:
           name: commit internal/server/gen/bindata_ui.go
           command: |
-            if [[ -n "${REBUILD_UI}" ]]; then
+            # check if there are any changes in ui/
+            # if there are, we commit the ui static asset file
+            # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
+            if ! git diff --quiet --exit-code HEAD^! ui/; then
               git config --local user.email "hashicorp-ci@users.noreply.github.com"
               git config --local user.name "hashicorp-ci"
               short_sha=$(git rev-parse --short HEAD)
@@ -358,7 +328,7 @@ jobs:
               git commit -m "auto-updated internal/server/gen/bindata_ui.go from commit ${short_sha}"
               git push origin main
             else
-              echo "UI is current; not committing"
+              echo "no UI changes so no static assets to publish"
             fi
 
   # # run ember frontend tests
@@ -420,7 +390,7 @@ workflows:
               only:
                 - main
           requires:
-            - ember-build-prod
+            - build-static-assets
       - integration:
           requires:
             - dev-build
