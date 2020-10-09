@@ -64,7 +64,7 @@ push it to the specified registry.
 build {
   use "docker-pull" {
     image = "gcr.io/my-project/my-image"
-	tag   = "abcd1234"
+    tag   = "abcd1234"
   }
 }
 `)
