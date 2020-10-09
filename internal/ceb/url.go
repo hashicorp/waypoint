@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/certifi/gocertifi"
 	"github.com/hashicorp/horizon/pkg/agent"
 	"github.com/hashicorp/horizon/pkg/discovery"
 	hznpb "github.com/hashicorp/horizon/pkg/pb"
@@ -30,6 +31,7 @@ func (ceb *CEB) initURLService(ctx context.Context, port int, cfg *pb.Entrypoint
 	if err != nil {
 		return errors.Wrapf(err, "error configuring agent")
 	}
+	g.RootCAs, _ = gocertifi.CACerts()
 
 	g.Token = cfg.Token
 	target := fmt.Sprintf(":%d", port)
