@@ -37,7 +37,7 @@ type BuilderConfig struct {
 	Tag   string `hcl:"tag,attr"`
 
 	// Control whether or not to inject the entrypoint binary into the resulting image
-	DisableCEB bool `hcl:"disable_ceb,optional"`
+	DisableCEB bool `hcl:"disable_entrypoint,optional"`
 
 	// The docker specific encoded authentication string to use to talk to the registry.
 	EncodedAuth string `hcl:"encoded_auth,optional"`
@@ -53,7 +53,7 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 Use an existing, pre-built Docker image
 
 This builder will automatically inject the Waypoint entrypoint. You
-can disable this with the "disable_ceb" configuration.
+can disable this with the "disable_entrypoint" configuration.
 
 If you wish to rename or retag an image, use this along with the
 "docker" registry option which will rename/retag the image and then
@@ -87,7 +87,7 @@ build {
 	)
 
 	doc.SetField(
-		"disable_ceb",
+		"disable_entrypoint",
 		"if set, the entrypoint binary won't be injected into the image",
 		docs.Summary(
 			"The entrypoint binary is what provides extended functionality",

@@ -24,7 +24,7 @@ The buildpack builder image to use.
 - **Optional**
 - Default: heroku/buildpacks:18
 
-#### disable_ceb
+#### disable_entrypoint
 
 If set, the entrypoint binary won't be injected into the image.
 
@@ -40,7 +40,7 @@ The entrypoint binary is what provides extended functionality such as logs and e
 build {
   use "pack" {
 	builder     = "heroku/buildpacks:18"
-	disable_ceb = false
+	disable_entrypoint = false
   }
 }
 

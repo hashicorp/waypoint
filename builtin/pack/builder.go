@@ -31,7 +31,7 @@ func (b *Builder) BuildFunc() interface{} {
 // Config is the configuration structure for the registry.
 type BuilderConfig struct {
 	// Control whether or not to inject the entrypoint binary into the resulting image
-	DisableCEB bool `hcl:"disable_ceb,optional"`
+	DisableCEB bool `hcl:"disable_entrypoint,optional"`
 
 	// The Buildpack builder image to use, defaults to the standard heroku one.
 	Builder string `hcl:"builder,optional"`
@@ -197,7 +197,7 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 build {
   use "pack" {
 	builder     = "heroku/buildpacks:18"
-	disable_ceb = false
+	disable_entrypoint = false
   }
 }
 `)
@@ -211,7 +211,7 @@ build {
 	)
 
 	doc.SetField(
-		"disable_ceb",
+		"disable_entrypoint",
 		"if set, the entrypoint binary won't be injected into the image",
 		docs.Summary(
 			"The entrypoint binary is what provides extended functionality",
