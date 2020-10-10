@@ -1,4 +1,4 @@
-.securityPage {
+.longformPage {
   & .longformWrapper {
     @media (min-width: 800px) {
       margin-top: 80px;
@@ -6,6 +6,14 @@
       max-width: 70%;
       margin-left: auto;
       margin-right: auto;
+    }
+
+    & .alert {
+      color: #416f8c;
+      padding: 1em;
+      background-color: var(--brand-l3);
+      border: 1px solid var(--brand-l2);
+      border-radius: 3px;
     }
 
     & a {
