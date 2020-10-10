@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="352px" height="695px" viewBox="0 0 352 695" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
+    <title>hero-pattern</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <rect id="path-1" x="0" y="0" width="355" height="702.409"></rect>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="hero-pattern" transform="translate(-3.000000, 0.000000)">
+            <mask id="mask-2" fill="white">
+                <use xlink:href="#path-1"></use>
+            </mask>
+            <g id="Rectangle"></g>
+            <g id="Group" opacity="0.7" mask="url(#mask-2)" stroke="#14C6CB" stroke-linecap="round" stroke-width="2.25">
+                <g transform="translate(-1389.000000, -235.000000)" id="Path">
+                    <path d="M1718.1,658.6 L1744,703.6"></path>
+                    <path d="M1692.1,658.6 L1744,748.6"></path>
+                    <path d="M1666.1,658.6 L1744,793.6"></path>
+                    <path d="M1640.1,658.6 L1744,838.6"></path>
+                    <path d="M1614.1,658.6 L1744,883.6"></path>
+                    <path d="M1588.2,658.6 L1744,928.6"></path>
+                    <path d="M1653.1,96.1 L1744,253.6001"></path>
+                    <path d="M1627.1,96.1 L1744,298.6001"></path>
+                    <path d="M1601.1,96.1 L1744,343.6"></path>
+                    <path d="M1744,388.6 L1575.2,96.1"></path>
+                    <path d="M1744,433.6 L1549.2,96.1"></path>
+                    <path d="M1718.1,433.6 L1665.5,342.7"></path>
+                    <path d="M1523.2,96.1 L1665.5,342.7"></path>
+                    <path d="M1601.1,276.1001 L1575.2,321.1001"></path>
+                    <path d="M1679.1,456.1 L1601.1,321.1001"></path>
+                    <path d="M1588.2,253.6001 L1549.2,321.1001"></path>
+                    <path d="M1536.2,163.6001 L1445.3,321.1001"></path>
+                    <path d="M1549.2,186.1001 L1471.3,321.1001"></path>
+                    <path d="M1523.2,141.1001 L1419.3,321.1001"></path>
+                    <path d="M1692.1,433.6 L1627.1,321.1001"></path>
+                    <path d="M1614.1,298.6001 L1601.1,321.1001"></path>
+                    <path d="M1562.2,208.6001 L1497.2,321.1001"></path>
+                    <path d="M1575.2,231.1001 L1523.2,321.1001"></path>
+                    <path d="M1627.1,546.1 L1497.2,321.1001"></path>
+                    <polyline points="1575.2 636.1 1393.3 321.1001 1510.2 118.6"></polyline>
+                    <path d="M1588.2,613.6 L1419.3,321.1001"></path>
+                    <path d="M1614.1,568.6 L1471.2,321.1001"></path>
+                    <path d="M1640.1,523.6 L1523.2,321.1001"></path>
+                    <path d="M1601.1,591.1 L1445.3,321.1001"></path>
+                    <path d="M1653.1,501.1 L1549.2,321.1001"></path>
+                    <path d="M1666.1,478.6 L1575.2,321.1001"></path>
+                    <path d="M1718.1,658.6 L1744,613.6"></path>
+                    <path d="M1744,568.6 L1692.1,658.6"></path>
+                    <path d="M1744,523.6 L1666.1,658.6"></path>
+                    <path d="M1744,478.6 L1640.1,658.6"></path>
+                    <path d="M1744,433.6 L1614.1,658.6"></path>
+                    <path d="M1588.2,658.6 L1718.1,433.6"></path>
+                    <path d="M1666.1,343.6 L1665.5,342.7"></path>
+                    <path d="M1653.1,321.1001 L1665.5,342.7"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

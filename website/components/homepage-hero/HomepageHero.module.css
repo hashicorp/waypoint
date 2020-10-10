@@ -1,9 +1,13 @@
 .homepageHero {
   min-height: min(45vw, 750px);
-  background-image: url(/img/hero-pattern.svg);
-  background-size: 100% auto;
-  background-repeat: no-repeat;
-  background-position: center top;
+  background-image: url(/img/hero-left.svg), url(/img/hero-right.svg);
+  background-position: top left, top right;
+  background-size: auto 100%, auto 100%;
+  background-repeat: no-repeat, no-repeat;
+  @media (max-width: 600px) {
+    background-size: auto 70%, auto 70%;
+  }
+
   padding: 141px 0;
 
   @media (max-width: 850px) {
