@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="136px" height="702px" viewBox="0 0 136 702" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
+    <title>hero-pattern</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <rect id="path-1" x="0" y="0" width="137" height="702.409"></rect>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="hero-pattern">
+            <mask id="mask-2" fill="white">
+                <use xlink:href="#path-1"></use>
+            </mask>
+            <g id="Rectangle"></g>
+            <g id="Group" opacity="0.7" mask="url(#mask-2)" stroke="#14C6CB" stroke-linecap="round" stroke-width="2.25">
+                <g transform="translate(-145.000000, -235.000000)" id="Path">
+                    <path d="M156.0194,370.679 L369.467,0.951"></path>
+                    <path d="M178.5057,409.598 L414.44,0.951"></path>
+                    <path d="M111.1345,292.8416 L279.609,0.951"></path>
+                    <path d="M133.533,331.7603 L324.581,0.951"></path>
+                    <path d="M391.953,0.951 L167.2626,390.138"></path>
+                    <path d="M144.776184,351.22 L347.067,0.951"></path>
+                    <path d="M122.2899,312.301 L302.094,0.951"></path>
+                    <path d="M99.8913,273.3823 L257.123,0.951"></path>
+                    <path d="M9.946,273.3823 L167.2639,0.951"></path>
+                    <path d="M32.432,273.3823 L189.7503,0.951"></path>
+                    <path d="M77.405,273.3823 L234.723,0.951"></path>
+                    <path d="M54.9186,273.3823 L212.2366,0.951"></path>
+                    <path d="M189.7516,467.976 L0.953,794.979"></path>
+                    <path d="M0.953,756.061 L167.2652,467.976"></path>
+                    <path d="M189.7503,467.976 L77.405,273.3823"></path>
+                    <path d="M54.9186,273.3823 L167.2639,467.976"></path>
+                    <path d="M245.878,720.947 L156.0194,565.272"></path>
+                    <path d="M268.365,720.947 L144.776184,935"></path>
+                    <path d="M156.0207,720.947 L32.432,935"></path>
+                    <path d="M223.4798,720.947 L99.8913,935"></path>
+                    <path d="M200.9934,720.947 L77.405,935"></path>
+                    <path d="M178.5071,720.947 L54.9186,935"></path>
+                    <path d="M245.878,720.947 L122.2899,935"></path>
+                    <path d="M167.2626,545.813 L268.365,720.947"></path>
+                    <path d="M144.776184,584.732 L223.4784,720.947"></path>
+                    <path d="M133.533,604.191 L200.9921,720.947"></path>
+                    <path d="M122.2899,623.651 L178.5057,720.947"></path>
+                    <path d="M111.1345,643.11 L156.0207,720.947"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
