@@ -109,55 +109,65 @@ export default function HomePage() {
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code: "│ [exporter] Adding layer 'ruby:ruby'",
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code: '│ [exporter] Adding 1/1 app layer(s)',
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code: "│ [exporter] Reusing layer 'launcher'",
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code: "│ [exporter] Reusing layer 'config'",
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code:
                       "│ [exporter] Adding label 'io.buildpacks.lifecycle.metadata'",
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code:
                       "│ [exporter] Adding label 'io.buildpacks.build.metadata'",
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code:
                       "│ [exporter] Adding label 'io.buildpacks.project.metadata'",
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code: '│ [exporter] *** Images (512c587cc97c):',
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code:
                       '│ [exporter]       index.docker.io/library/example-ruby:latest',
                   },
                   {
                     frames: 5,
+                    short: true,
                     color: 'navy',
                     code: "│ [exporter] Reusing cache layer 'ruby:gems'",
                   },

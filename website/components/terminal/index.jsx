@@ -60,8 +60,9 @@ export default function Terminal({ lines, title, noScroll }) {
             {lines &&
               lines.map((line, index) => (
                 <Fragment key={index}>
-                  <code
+                  <pre
                     className={classNames({
+                      [styles.short]: line.short,
                       [styles.navy]: line.color === 'navy',
                       [styles.gray]: line.color === 'gray',
                       [styles.white]: line.color === 'white',
@@ -74,8 +75,7 @@ export default function Terminal({ lines, title, noScroll }) {
                           <Fragment key={index}>&nbsp;</Fragment>
                         ))}
                     {line.code}
-                  </code>
-                  <br />
+                  </pre>
                 </Fragment>
               ))}
           </div>
