@@ -169,14 +169,32 @@ If a registry is specified, the deployment step will use the artifact
 in the registry. If a registry is not specified, the deployment step will
 use the artifact that is the result of the build.
 
-### Situations for a Registry
+Example Docker Registry Configuration
 
-**An example of a situation requiring a registry:** Kubernetes deployments
+```hcl
+...
+    build {
+        use "docker" {}
+        registry {
+          use "docker" {
+            image = "registry.example.com/image"
+            tag   = "latest"
+          }
+        }
+    }
+...
+```
+
+Reference `aws-ecs` plugin documentation for an [AWS Elastic Container Registry example](/plugins/aws-ecs#examples).
+
+### Sceanrios for a Registry
+
+**An example of a scenario requiring a registry:** Kubernetes deployments
 need access to the Docker image that is built, but a Docker build process often
 produces a local Docker image. The registry configuration is used to push
 the locally built Docker image to the remote registry.
 
-**An example of a situation that does not require a registry:** AMIs (Amazon
+**An example of a scenario that does not require a registry:** AMIs (Amazon
 Machine Images) are registered directly with Amazon and are never local
 artifacts. Therefore, a separate registry configuration is not required since
 the build/registry phases are one and the same.
