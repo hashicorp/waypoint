@@ -8,6 +8,14 @@
       margin-right: auto;
     }
 
+    & .alert {
+      color: #416f8c;
+      padding: 1em;
+      background-color: var(--brand-l3);
+      border: 1px solid var(--brand-l2);
+      border-radius: 3px;
+    }
+
     & a {
       color: var(--blue);
     }
