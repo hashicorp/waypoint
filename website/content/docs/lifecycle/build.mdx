@@ -3,7 +3,7 @@ layout: docs
 page_title: 'Lifecycle: Build'
 sidebar_title: Build
 description: |-
-  TODO
+  Waypoint build lifecycle documentation
 ---
 
 # Build
@@ -23,7 +23,7 @@ A build is triggered during a `waypoint up` or using the dedicated
 
 The build is configured using the `build` stanza within an `app` stanza:
 
-```
+```hcl
 app "my-app" {
   build {
     use "docker" {}
@@ -36,19 +36,18 @@ app "my-app" {
 Waypoint includes these builtin plugins to build a Docker image for your app.
 
 - [Docker Build](/plugins/docker#docker-builder)
+- Docker Pull Build
 - [Cloud Native Buildpacks](/plugins/pack)
 
 You can also create a [plugin](/plugins) to extend Waypoint with your own builder.
 
 ### Choosing How to Build Your App
 
-While both Docker Build and Cloud Native Buildpacks create Docker containers, each creates those images in different ways.
-
 #### Docker Build
 
 **Example configuration**
 
-```
+```hcl
 app "my-app" {
   build {
     use "docker" {}
@@ -61,13 +60,36 @@ image. If you application works with the `docker build`
 [Docker command](https://docs.docker.com/engine/reference/commandline/build/)
 it should work well the Waypoint Docker plugin.
 
-[Learn how to use Docker Build in your app](/plugins/docker)
+Reference the [Docker plugin](/plugins/docker) for all configuration options.
+
+#### Docker Pull Build
+
+**Example configuration**
+
+```hcl
+app "my-app" {
+  build {
+    use "docker-pull" {
+      image = "hashicorp/http-echo"
+      tag   = "latest"
+    }
+  }
+  deploy {
+    use "docker" {
+      command = ["-listen", ":3000","-text", "hello"]
+    }
+  }
+}
+```
+
+The Docker Pull plugin is ideal when you prefer to use an existing Docker image as-is without rebuilding it.
+This plugin performs a `docker pull`. The plugin injects the Waypoint Entrypoint by default, which can be disabled.
 
 #### Cloud Native Buildpacks
 
 **Example configuration**
 
-```
+```hcl
 app "my-app" {
   build {
     use "pack" {}
@@ -78,24 +100,26 @@ app "my-app" {
 [Cloud Native Buildpacks](https://buildpacks.io/) are a fast way to get started
 creating a containerized application without writing a `Dockerfile`. Buildpacks
 take application source and build a container for you if there are matching
-buildpacks. By default Waypoint uses Heroku Buildpacks with a builder image
+buildpacks. The "pack" plugin defaults to Heroku Buildpacks with a builder image
 located on Docker Hub at
 [heroku/buildpacks:18](https://hub.docker.com/r/heroku/buildpacks/tags).
 
-#### Configuring Waypoint for [Cloud Foundry Paketo Buildpacks](https://paketo.io/docs/).
+#### Configuring an Alternative Buildpack Provider
 
-There are several `waypoint.hcl` adjustments to enable Cloud Foundry Paketo
-Buildpacks.
+| Provider              | Builder Image                 |
+| --------------------- | ----------------------------- |
+| Heroku                | heroku/buildpacks:18          |
+| Cloud Foundry Paketo  | paketobuildpacks/builder:base |
+| Google Cloud Platform | gcr.io/buildpacks/builder:v1  |
 
-1. The `builder` variable of the `pack` build plugin should specify the a
-   Paketo buildpacks builder image like `paketobuildpacks/builder:base`.
-1. The `service_port` variable of the deploy plugin should specify the
-   Paketo buildpacks port `8080` which is commonly used by Paketo buildpacks.
-   The default Waypoint `service_port` is `3000`.
+Several `waypoint.hcl` adjustments may be required to enable alternative builders.
 
-Here is a full `waypoint.hcl` example that works with Paketo buildpacks.
+1. The `builder` variable of the `pack` build plugin should explicitly specify the buildpacks builder image like `paketobuildpacks/builder:base`.
+1. The `service_port` variable of the deploy plugin must match the buildpacks port. Paketo buildpacks commonly use `8080` and the default Waypoint `service_port` is `3000`.
 
-```
+Paketo buildpacks example `waypoint.hcl`:
+
+```hcl
 project = "example-java"
 
 app "example-java" {
@@ -108,6 +132,23 @@ app "example-java" {
         use "docker" {
             service_port=8080
         }
+    }
+}
+```
+
+GCP buildpacks example `waypoint.hcl`:
+
+```hcl
+project = "example-java"
+
+app "example-java" {
+    build {
+        use "pack" {
+            builder="gcr.io/buildpacks/builder:v1"
+        }
+    }
+    deploy {
+        use "docker" {}
     }
 }
 ```
@@ -128,14 +169,32 @@ If a registry is specified, the deployment step will use the artifact
 in the registry. If a registry is not specified, the deployment step will
 use the artifact that is the result of the build.
 
-### Situations for a Registry
+Example Docker Registry Configuration
 
-**An example of a situation requiring a registry:** Kubernetes deployments
+```hcl
+...
+    build {
+        use "docker" {}
+        registry {
+          use "docker" {
+            image = "registry.example.com/image"
+            tag   = "latest"
+          }
+        }
+    }
+...
+```
+
+Reference `aws-ecs` plugin documentation for an [AWS Elastic Container Registry example](/plugins/aws-ecs#examples).
+
+### Sceanrios for a Registry
+
+**An example of a scenario requiring a registry:** Kubernetes deployments
 need access to the Docker image that is built, but a Docker build process often
 produces a local Docker image. The registry configuration is used to push
 the locally built Docker image to the remote registry.
 
-**An example of a situation that does not require a registry:** AMIs (Amazon
+**An example of a scenario that does not require a registry:** AMIs (Amazon
 Machine Images) are registered directly with Amazon and are never local
 artifacts. Therefore, a separate registry configuration is not required since
 the build/registry phases are one and the same.
