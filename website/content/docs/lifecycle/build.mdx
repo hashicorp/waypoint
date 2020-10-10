@@ -100,22 +100,24 @@ app "my-app" {
 [Cloud Native Buildpacks](https://buildpacks.io/) are a fast way to get started
 creating a containerized application without writing a `Dockerfile`. Buildpacks
 take application source and build a container for you if there are matching
-buildpacks. By default Waypoint uses Heroku Buildpacks with a builder image
+buildpacks. The "pack" plugin defaults to Heroku Buildpacks with a builder image
 located on Docker Hub at
 [heroku/buildpacks:18](https://hub.docker.com/r/heroku/buildpacks/tags).
 
-#### Configuring Waypoint for [Cloud Foundry Paketo Buildpacks](https://paketo.io/docs/).
+#### Configuring an Alternative Buildpack Provider
 
-There are several `waypoint.hcl` adjustments to enable Cloud Foundry Paketo
-Buildpacks.
+| Provider              | Builder Image                 |
+|-----------------------|-------------------------------|
+| Heroku                | heroku/buildpacks:18          |
+| Cloud Foundry Paketo  | paketobuildpacks/builder:base |
+| Google Cloud Platform | gcr.io/buildpacks/builder:v1  |
 
-1. The `builder` variable of the `pack` build plugin should specify the a
-   Paketo buildpacks builder image like `paketobuildpacks/builder:base`.
-1. The `service_port` variable of the deploy plugin should specify the
-   Paketo buildpacks port `8080` which is commonly used by Paketo buildpacks.
-   The default Waypoint `service_port` is `3000`.
+Several `waypoint.hcl` adjustments may be required to enable alternative builders.
 
-Here is a full `waypoint.hcl` example that works with Paketo buildpacks.
+1. The `builder` variable of the `pack` build plugin should explicitly specify the buildpacks builder image like `paketobuildpacks/builder:base`.
+1. The `service_port` variable of the deploy plugin must match the buildpacks port. Paketo buildpacks commonly use `8080` and the default Waypoint `service_port` is `3000`.
+
+Paketo buildpacks example `waypoint.hcl`:
 
 ```hcl
 project = "example-java"
@@ -130,6 +132,23 @@ app "example-java" {
         use "docker" {
             service_port=8080
         }
+    }
+}
+```
+
+GCP buildpacks example `waypoint.hcl`:
+
+```hcl
+project = "example-java"
+
+app "example-java" {
+    build {
+        use "pack" {
+            builder="gcr.io/buildpacks/builder:v1"
+        }
+    }
+    deploy {
+        use "docker" {}
     }
 }
 ```
