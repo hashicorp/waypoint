@@ -36,6 +36,7 @@ app "my-app" {
 Waypoint includes these builtin plugins to build a Docker image for your app.
 
 - [Docker Build](/plugins/docker#docker-builder)
+- Docker Pull Build
 - [Cloud Native Buildpacks](/plugins/pack)
 
 You can also create a [plugin](/plugins) to extend Waypoint with your own builder.
@@ -60,6 +61,29 @@ image. If you application works with the `docker build`
 it should work well the Waypoint Docker plugin.
 
 [Learn how to use Docker Build in your app](/plugins/docker)
+
+#### Docker Pull Build
+
+**Example configuration**
+
+```hcl
+app "my-app" {
+  build {
+    use "docker-pull" {
+      image = "hashicorp/http-echo"
+      tag   = "latest"
+    }
+  }
+  deploy {
+    use "docker" {
+      command = ["-listen", ":3000","-text", "hello"]
+    }
+  }
+}
+```
+
+The Docker Pull plugin is ideal when you prefer to use an existing Docker image as-is without rebuilding it.
+This plugin performs a `docker pull`. The plugin injects the Waypoint Entrypoint by default, which can be disabled.
 
 #### Cloud Native Buildpacks
 
