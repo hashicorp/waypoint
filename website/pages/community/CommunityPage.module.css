@@ -10,9 +10,9 @@
     & :global(.list) {
       & :global(.body-text) {
         & a {
-          color: var(--blue) !important;
+          color: var(--link-color) !important;
           &::after {
-            background-color: var(--blue) !important;
+            background-color: var(--link-color) !important;
           }
         }
       }
