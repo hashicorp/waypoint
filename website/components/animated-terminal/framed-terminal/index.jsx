@@ -87,6 +87,7 @@ export default function FramedTerminal({ frame, lines }) {
             color: line.color,
             code: line.code,
             indent: line.indent,
+            short: line.short,
           }
         } else {
           var lineFrame = Math.floor(remainingFrames / line.frames)

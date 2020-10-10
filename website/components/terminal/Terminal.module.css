@@ -71,6 +71,9 @@
       font-size: 12px;
       line-height: 27px;
       color: var(--blue);
+      &.short {
+        line-height: 16px;
+      }
       &.navy {
         color: var(--vagrant-l1);
       }

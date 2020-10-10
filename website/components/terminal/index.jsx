@@ -62,6 +62,7 @@ export default function Terminal({ lines, title, noScroll }) {
                 <Fragment key={index}>
                   <pre
                     className={classNames({
+                      [styles.short]: line.short,
                       [styles.navy]: line.color === 'navy',
                       [styles.gray]: line.color === 'gray',
                       [styles.white]: line.color === 'white',
