@@ -23,7 +23,7 @@ A build is triggered during a `waypoint up` or using the dedicated
 
 The build is configured using the `build` stanza within an `app` stanza:
 
-```
+```hcl
 app "my-app" {
   build {
     use "docker" {}
@@ -48,7 +48,7 @@ While both Docker Build and Cloud Native Buildpacks create Docker containers, ea
 
 **Example configuration**
 
-```
+```hcl
 app "my-app" {
   build {
     use "docker" {}
@@ -67,7 +67,7 @@ it should work well the Waypoint Docker plugin.
 
 **Example configuration**
 
-```
+```hcl
 app "my-app" {
   build {
     use "pack" {}
@@ -95,7 +95,7 @@ Buildpacks.
 
 Here is a full `waypoint.hcl` example that works with Paketo buildpacks.
 
-```
+```hcl
 project = "example-java"
 
 app "example-java" {
