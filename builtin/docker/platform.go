@@ -196,7 +196,7 @@ func (p *Platform) Deploy(
 	}
 	s.Done()
 
-	s = sg.Add("App deployed as container container: " + name)
+	s = sg.Add("App deployed as container: " + name)
 	s.Done()
 
 	result.Container = cr.ID
