@@ -8,6 +8,15 @@
 
 export default [
   {
+    category: 'intro',
+    content: [
+      {
+        category: 'vs',
+        content: ['helm', 'paas', 'kubernetes'],
+      },
+    ],
+  },
+  {
     category: 'getting-started',
     content: [
       {
