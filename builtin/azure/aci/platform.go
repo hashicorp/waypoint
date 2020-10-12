@@ -12,11 +12,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/docker"
 
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
 	"github.com/Azure/go-autorest/autorest/to"
@@ -160,9 +160,9 @@ func (p *Platform) Deploy(
 		if *containerGroup.Location != p.config.Location {
 			return nil, status.Errorf(
 				codes.InvalidArgument,
-				`Waypoint is unable to change the location of an existing container instance as Azure does not allow the location of 
+				`Waypoint is unable to change the location of an existing container instance as Azure does not allow the location of
 existing container instances to be changed.
-The container instance '%s' is currently deployed to the location '%s', but your configuration sets a location of '%s'. 
+The container instance '%s' is currently deployed to the location '%s', but your configuration sets a location of '%s'.
 To update the location you will need to manually destroy and recreate the resource.`,
 				src.App,
 				*containerGroup.Location,
@@ -472,17 +472,18 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc.Description("Deploy a container to Azure Container Instances")
 
 	doc.Example(`
-deploy "azure-container-instance" {
-	resource_group = "resource-group-name"
-	location       = "westus"
-	ports          = [8080]
+deploy {
+  use "azure-container-instance" {
+    resource_group = "resource-group-name"
+    location       = "westus"
+    ports          = [8080]
 
-	capacity {
+    capacity {
       memory = "1024"
       cpu_count = 4
-	}
+    }
 
-	volume {
+    volume {
       name = "vol1"
       path = "/consul"
       read_only = true
@@ -492,6 +493,7 @@ deploy "azure-container-instance" {
         revision = "v1.8.3"
       }
     }
+  }
 }
 `)
 
