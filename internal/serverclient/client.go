@@ -117,6 +117,7 @@ func FromEnv() ConnectOption {
 			c.Addr = v
 			c.Tls = os.Getenv(EnvServerTls) != ""
 			c.TlsSkipVerify = os.Getenv(EnvServerTlsSkipVerify) != ""
+			c.Auth = os.Getenv(EnvServerToken) != ""
 		}
 
 		return nil
