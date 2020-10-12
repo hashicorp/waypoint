@@ -333,7 +333,7 @@ export default function HomePage() {
                   {
                     frames: 1,
                     code:
-                      'Deployment URL: https://immensely-guided-stag-5.alpha.waypoint.run',
+                      'Deployment URL: https://immensely-guided-stag--v5.waypoint.run',
                     color: 'white',
                   },
                 ],
@@ -393,7 +393,7 @@ export default function HomePage() {
                   lines={[
                     { code: '$ waypoint exec bash' },
                     {
-                      code: 'Connected to deployment v1',
+                      code: 'Connected to deployment v18',
                       color: 'white',
                     },
                   ]}
@@ -435,12 +435,13 @@ export default function HomePage() {
                     },
                     { code: '' },
                     {
-                      code: 'Release URL: http://35.230.13.162:8080',
+                      code:
+                        'Release URL: https://admittedly-poetic-joey.waypoint.run',
                       color: 'white',
                     },
                     {
                       code:
-                        'Deployment URL: https://immensely-guided-stag--v18.alpha.waypoint.run',
+                        'Deployment URL: https://admittedly-poetic-joey--v18.waypoint.run',
                       color: 'white',
                     },
                   ]}
