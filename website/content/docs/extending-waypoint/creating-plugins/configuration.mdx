@@ -1,0 +1,120 @@
+---
+layout: docs
+page_title: 'Handling Configuration'
+sidebar_title: 'Handling Configuration'
+description: |-
+  How Waypoint plugins work
+---
+
+# Handling Configuration
+
+A component in Waypoint is a Struct that implements one or more Waypoint interfaces. If you take a look at the file
+`builder/builder.go` you will see that the Build struct is defined and that it has a single field `config` which is of
+type `BuildConfig`.
+
+```go
+type Builder struct {
+  config BuildConfig
+}
+```
+
+Since the plugin will be building a Go application, at a bare minimum, it will need to know the name of the binary which
+will be created and the source code's location. Waypoint allows you to define a custom configuration that can be passed
+to your components. The following example shows the configuration for a Waypoint application that uses your new plugin.
+
+The `use` stanza is where the configuration is defined for the build component; this contains two parameters
+`output_name` and `source`.
+
+```go
+project = "guides"
+
+app "example" {
+
+  build {
+    use "gobuilder" {
+      output_name = "server"
+      source = "./"
+    }
+  }
+
+}
+```
+
+Configuration files are defined as `HCL` and parsed by the Waypoint application. It converts the `HCL` configuration and
+passes it to your plugin. So that Waypoint knows how the configuration parameters map to your internal structures. You
+define a Struct, adding tags for each of the fields which you would like to serialize from the config.
+
+Let's modify the struct `BuildConfig`, which the plugin uses to store the config. In the templated code, adding the
+fields, we would like serialized from the configuration.
+
+Since the configuration fields are optional, you can use the `HCL` annotation `optional` to tell the `HCL` parser to
+skip validation for the presence of this field.
+
+Modify the `BuildConfig` struct in the `builder/builder.go` file so that it looks like the following example:
+
+```go
+type BuildConfig struct {
+  OutputName string `hcl:"output_name,optional"`
+  Source     string `hcl:"source,optional"`
+}
+```
+
+When Waypoint parses the configuration step for the application, it looks to see if your component has implemented the
+`Configurable` interface and, if so, calls the `Config` method from which a reference to your config struct is returned.
+Waypoint uses the reference and attempts to serialize the application configuration to it.
+
+If you look at the `builder.go` file, you will see that the template has already implemented this.
+
+```go
+func (b *Builder) Config() (interface{}, error) {
+  return &b.config, nil
+}
+```
+
+Let's see how you can validate that the configuration is correct before using it in the build process.
+
+## Validating Configuration
+
+To validate configuration, Waypoint components can use the `ConfigurableNotify` interface. `ConfigurableNotify` defines
+the method `ConfigSet` called after Waypoint has read the `HCL` config file and serialized it to the struct you returned
+from `Config`.
+
+```go
+type ConfigurableNotify interface {
+  Configurable
+
+  // ConfigSet is called with the value of the configuration after
+  // decoding is complete successfully.
+  ConfigSet(interface{}) error
+}
+```
+
+`ConfigSet` is always called before the Component specific interface methods like `BuildFunc` are called. It allows you
+to validate any provided configuration, and if necessary, return an error message to the user.
+
+The template has already implemented the `ConfigSet` method on the `Builder` for you; however, let's modify it to
+validate the Source folder exists.
+
+Modify the `ConfigSet` function in the `builder.go` folder to look like the following example. The new implementation
+uses `os.Stat` to check that the directory defined in the config exists. If it does not, then you return an error that
+Waypoint will present to the user.
+
+```go
+func (b *Builder) ConfigurableNotify(config interface{}) error {
+  c, ok := config.(*BuildConfig)
+  if !ok {
+    return fmt.Errorf("Expected type BuildConfig")
+  }
+
+  // validate the config
+  _, err := os.Stat(c.Source)
+  if err != nil {
+    return fmt.Errorf("Source folder does not exist")
+  }
+
+  // config validated ok
+  return nil
+}
+```
+
+[Next - Implementing the Builder interface](/docs/extending-waypoint/creating-plugins/build-interface)

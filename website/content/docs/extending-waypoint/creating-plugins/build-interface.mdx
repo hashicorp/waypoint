@@ -1,0 +1,170 @@
+---
+layout: docs
+page_title: 'Implementing the Builder Interface'
+sidebar_title: 'Implementing the Builder Interface'
+description: |-
+  How Waypoint plugins work
+---
+
+# Implementing the `Builder` Interface
+
+Once the optional configuration has been completed, you can then implement the `BuildFunc` method as defined on the
+`Builder` interface. `BuildFunc` has a single return parameter which is an interface representing a function called by
+Waypoint when running the `waypoint build` command.
+
+```go
+BuildFunc() interface{}
+```
+
+The function to be called does not strictly correspond to any signature for the input parameters. Waypoint functions
+have their parameters dynamically injected at runtime. The list of available parameters can be found in the
+[Default Parameters](docs/extending-waypoint/plugin-components/default-parameters) documentation.
+
+While you can choose the input parameters for your `BuildFunc`, Waypoint enforces specific output parameters. These
+return parameters must be of types `proto.Message`, and `error`. The `proto.Message` is a struct which implements the
+Protocol Buffers `Message` interface (github.com/golang/protobuf/proto). Waypoint uses Protocol Buffers to pass messages
+between the different stages of the workflow and serialize data to the internal data store. The error, which is the
+second part of the tuple, determines if your build stage has succeeded or failed.
+
+The default function created by the template, has created a `BuildFunc` which looks like the following example:
+
+```go
+func (b *Builder) build(ctx context.Context, ui terminal.UI) (*Binary, error) {
+	u := ui.Status()
+	defer u.Close()
+	u.Update("Building application")
+
+	return &Binary{}, nil
+}
+```
+
+This function contains the following input parameters:
+
+- `context.Context` - Used to check if the server has canceled the build.
+- `terminal.UI` - Used to write output and request input from the Waypoint CLI.
+
+The output parameters are defined as:
+
+- `*Binary` - Generated struct from `output.proto`
+- `error` - Returning a non-nil error terminates execution and presents the error to the user.
+
+## Output Values
+
+Output Values such as `Binary` in Waypoint plugins need to be serializable to Protocol Buffer binary format. To enable
+this, you do not directly define the Go struct. Instead, you describe this as a Protocol Buffer message and use the
+`protoc` command to generate the code. If you take a look at the `output.proto` file, you will see the following message
+defined.
+
+```go
+message Binary {
+  string location = 1;
+}
+```
+
+When the `protoc` command runs, it generates Go code from this Protocol Buffer definition. You can see the output of
+this in the `output.pb.go` file:
+
+```go
+type Binary struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+}
+```
+
+For this guide, you do not need to change `Binary`; however, if you would like to learn more about Passing Values
+Between components, please see the
+[specific documentation](/docs/extending-waypoint/plugin-components/passing-values).
+
+## Creating the Build Process
+
+Let’s look at the implementation of the `build` method. You will need to provide status updates to the user of your
+plugin. To do this, you can use `terminal.UI`; this allows you to write output to the terminal using a common UX across
+all Waypoint plugins.
+
+The method `ui.Status()` requests a live updating status; you use this to write updates to the Waypoint terminal output.
+When finished with `Status` you should always close a Status, using`st.Close()`; this ensures that the status is updated
+correctly in the terminal. Finally, in the example, the Status is updated with the message "Building application".
+Unlike a scrolling log output, Waypoint allows the user to focus on the critical information at the current time. The
+`terminal.Status` allows you to replace content already written to the terminal, which may no longer be relevant.
+
+```go
+  u := ui.Status()
+  defer st.Close()
+
+  u.Update("Building application")
+```
+
+After the `Update` call, let's add some code to the `build` method, which will set the configuration's defaults if they
+are not set.
+
+```go
+  // setup the defaults
+  if b.config.OutputName == "" {
+    b.config.OutputName = "app"
+  }
+
+  if b.config.Source == "" {
+    b.config.Source = "./"
+  }
+```
+
+Now all the defaults are set up; you can add the code which will build the application. Because the plugin runs in your
+current user space, you can use the Go standard library exec package to shell out a process and run `go build`. Set the
+values from the config for the source and the application name, and finally, run the command.
+
+```go
+c := exec.Command(
+     "go",
+     "build",
+     "-o",
+     b.config.OutputName,
+     b.config.Source,
+)
+
+err := c.Run()
+```
+
+## Writing to the Terminal Output
+
+If an error occurs during the build process, you can update the terminal output to show a failure message. The error
+returned from the function will also be output terminal by Waypoint. The `Step` command can be used to write the status
+of the current component if an an error occurs during the build command, calling the `Step` method:
+
+```go
+u.Step(terminal.StatusError, "Build failed")
+```
+
+Would result in the terminal output shown to the user like:
+
+```shell
+» Building...
+x Application built successfully server
+```
+
+Add the following code to your `build` function after the `Run` method.
+
+```go
+if err != nil {
+  u.Step(terminal.StatusError, "Build failed")
+
+  return nil, err
+}
+```
+
+Finally, if the build succeeds, you can update the status and return the `proto.Message` that can be passed to the next
+step. Add the following code to your `build` function after the error check.
+
+```go
+  u.Step(terminal.StatusOK, "Application built successfully")
+
+  return &Binary{
+    Location: path.Join(b.config.Source, b.config.OutputName),
+  }, nil
+```
+
+The code for the plugin is now complete; let's see how to build and test it.
+
+[Next - Compiling the Plugin](/docs/extending-waypoint/creating-plugins/compiling)

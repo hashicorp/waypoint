@@ -1,0 +1,58 @@
+---
+layout: docs
+page_title: 'Testing the Plugin'
+sidebar_title: 'Testing the Plugin'
+description: |-
+  How Waypoint plugins work
+---
+
+# Testing the Plugin
+
+Let's build our example application; first, we need to run `waypoint init` to set up the application.
+
+```shell
+➜ waypoint init
+✓ Configuration file appears valid
+✓ Local mode initialized successfully
+✓ Project "guides" and all apps are registered with the server.
+✓ Plugins loaded and configured successfully
+✓ Authentication requirements appear satisfied.
+
+Project initialized!
+
+You may now call 'waypoint up' to deploy your project or
+commands such as 'waypoint build' to perform steps individually.
+```
+
+```shell
+➜ waypoint build
+✓ Application built successfully
+```
+
+If you look in the application folder, you will see a new binary called `app` which is the product of your plugin.
+
+```shell
+➜ tree .
+.
+├── app
+├── data.db
+├── main.go
+└── waypoint.hcl
+```
+
+Let's run this; you will see the message "Hello Waypoint" that you wrote in the `main.go`.
+
+```shell
+./app
+Hello Waypoint
+```
+
+## Summary
+
+You have now successfully created a simple `Build` plugin for Waypoint. Creating other plugin types for
+`ReleaseManager`, or `Platform` follow similar concepts. Details on the interfaces for implementing these other plugins
+can be found in the [Plugin Components](/docs/extending-waypoint/plugin-components) section of the documentation. The
+Extending Waypoint section also contains other reference documentation related to plugin creation.
+
+A full example of the plugin created in this guide can be found at the following location:
+[https://github.com/hashicorp/waypoint-plugin-examples/tree/main/gobuilder_final](https://github.com/hashicorp/waypoint-plugin-examples/tree/main/gobuilder_final_)

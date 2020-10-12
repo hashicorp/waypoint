@@ -1,0 +1,107 @@
+---
+layout: docs
+page_title: 'Compiling the Plugin'
+sidebar_title: 'Compiling the Plugin'
+description: |-
+  How Waypoint plugins work
+---
+
+# Compiling the plugin
+
+To compile the plugin, you can use the `Makefile` that the template generated for you. The contents of this file look like:
+
+```makefile
+PLUGIN_NAME=template
+
+all: protos build
+
+protos:
+	@echo ""
+	@echo "Build Protos"
+
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./registry/output.proto
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./platform/output.proto
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./release/output.proto
+
+build:
+	@echo ""
+	@echo "Compile Plugin"
+
+	go build -o ./bin/waypoint-plugin-${PLUGIN_NAME} ./main.go
+```
+
+Let's modify it a little. Edit the `Makefile` and change the `PLUGIN_NAME` to your plugin name `gobuilder`
+
+```makefile
+PLUGIN_NAME=gobuilder
+```
+
+By default, the templated plugin will generate the Go code for all the different components, since your plugin only
+implements the `Builder` component, you can remove all the other `protoc` commands.
+
+```
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+```
+
+Your `Makefile` should now look like:
+
+```makefile
+PLUGIN_NAME=gobuilder
+
+all: protos build
+
+protos:
+	@echo ""
+	@echo "Build Protos"
+
+	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+
+build:
+	@echo ""
+	@echo "Compile Plugin"
+
+	go build -o ./bin/waypoint-plugin-${PLUGIN_NAME} ./main.go
+```
+
+With the `Makefile` changed, you can now run `make` to build the plugin.
+
+```shell
+make
+
+Build Protos
+protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+
+Compile Plugin
+go build -o ./bin/waypoint-plugin-gobuilder ./main.go
+```
+
+If you look in the ./bin folder, you will see your compile plugin.
+
+```shell
+ls ./bin
+waypoint-plugin-gobuilder
+```
+
+Let's now install the plugin so that it can be used by the Waypoint CLI.
+
+## Installing the plugin
+
+You can install your plugin using the `make install` command. Waypoint will automatically
+load plugins from certain know locations, these are:
+
+- \$HOME/.config/waypoint/plugins/
+- <waypoint_app_folder>/.waypoint/plugins/
+
+The `make install` command will copy the plugin to the Waypoint config in your `$HOME` folder.
+
+```shell
+➜ make install
+
+Installing Plugin
+cp ./bin/waypoint-plugin-gobuilder /home/nicj/.config/waypoint/plugins/
+```
+
+Now the plugin has been installed, let's create an example application which uses your new plugin.
+
+[Next - Creating an Example Application](/docs/extending-waypoint/creating-plugins/example-application)
