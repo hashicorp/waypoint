@@ -333,7 +333,7 @@ export default function HomePage() {
                   {
                     frames: 1,
                     code:
-                      'Deployment URL: https://immensely-guided-stag-5.waypoint.run',
+                      'Deployment URL: https://immensely-guided-stag--v5.waypoint.run',
                     color: 'white',
                   },
                 ],
