@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package exec;
+
+option go_package = "waypoint/builtin/exec";
+
+// Input is the input type used for the exec plugin.
+message Input {
+  map<string, Value> data = 1;
+
+  message Value {
+    oneof value {
+      string text = 1;
+    }
+  }
+}
+
+message Deployment {}
