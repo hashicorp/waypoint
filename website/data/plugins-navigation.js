@@ -3,6 +3,7 @@ export default [
   'aws-ecs',
   'azure-container-instances',
   'docker',
+  'exec',
   'google-cloud-run',
   'kubernetes',
   'netlify',

@@ -1,0 +1,62 @@
+## docker-pull (builder)
+
+Use an existing, pre-built Docker image
+
+This builder will automatically inject the Waypoint entrypoint. You
+can disable this with the "disable_entrypoint" configuration.
+
+If you wish to rename or retag an image, use this along with the
+"docker" registry option which will rename/retag the image and then
+push it to the specified registry.
+
+### Interface
+
+- Input: **component.Source**
+- Output: **docker.Image**
+
+### Variables
+
+#### disable_entrypoint
+
+If set, the entrypoint binary won't be injected into the image.
+
+The entrypoint binary is what provides extended functionality such as logs and exec. If it is not injected at build time the expectation is that the image already contains it.
+
+- Type: **bool**
+- **Optional**
+
+#### encoded_auth
+
+The authentication information to log into the docker repository.
+
+WARNING: be very careful to not leak the authentication information by hardcoding it here. Use a helper function like `file()` to read the information from a file not stored in VCS.
+
+- Type: **string**
+- **Optional**
+
+#### image
+
+The image to pull.
+
+This should NOT include the tag (the value following the ':' in a Docker image). Use `tag` to define the image tag.
+
+- Type: **string**
+
+#### tag
+
+The tag of the image to pull.
+
+- Type: **string**
+
+### Examples
+
+```
+
+build {
+  use "docker-pull" {
+    image = "gcr.io/my-project/my-image"
+    tag   = "abcd1234"
+  }
+}
+
+```

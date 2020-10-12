@@ -97,6 +97,7 @@ Specify if the volume is read only.
 ### Examples
 
 ```
+
 deploy {
   use "azure-container-instance" {
     resource_group = "resource-group-name"
@@ -104,20 +105,21 @@ deploy {
     ports          = [8080]
 
     capacity {
-      memory    = "1024"
+      memory = "1024"
       cpu_count = 4
     }
 
     volume {
-      name      = "vol1"
-      path      = "/consul"
+      name = "vol1"
+      path = "/consul"
       read_only = true
 
       git_repo {
         repository = "https://github.com/hashicorp/consul"
-        revision   = "v1.8.3"
+        revision = "v1.8.3"
       }
     }
   }
 }
+
 ```
