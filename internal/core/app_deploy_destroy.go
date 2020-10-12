@@ -9,10 +9,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint/internal/config"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/config"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // CanDestroyDeploy returns true if this app supports destroying deployments.
@@ -26,11 +26,6 @@ func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
 	// If the deploy is destroyed already then do nothing.
 	if d.State == pb.Operation_DESTROYED {
 		a.logger.Info("deployment already destroyed, doing nothing", "id", d.Id)
-		return nil
-	}
-
-	if d.Deployment == nil {
-		a.logger.Info("no deployment info attached (deployment crashed?)")
 		return nil
 	}
 
