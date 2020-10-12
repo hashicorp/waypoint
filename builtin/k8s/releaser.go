@@ -35,6 +35,11 @@ func (r *Releaser) ReleaseFunc() interface{} {
 	return r.Release
 }
 
+// DestroyFunc implements component.Destroyer
+func (r *Releaser) DestroyFunc() interface{} {
+	return r.Destroy
+}
+
 // Release creates a Kubernetes service configured for the deployment
 func (r *Releaser) Release(
 	ctx context.Context,
@@ -44,6 +49,7 @@ func (r *Releaser) Release(
 	target *Deployment,
 ) (*Release, error) {
 	var result Release
+	result.ServiceName = src.App
 
 	sg := ui.StepGroup()
 	step := sg.Add("Initializing Kubernetes client...")
@@ -64,9 +70,9 @@ func (r *Releaser) Release(
 
 	// Determine if we have a deployment that we manage already
 	create := false
-	service, err := serviceclient.Get(ctx, src.App, metav1.GetOptions{})
+	service, err := serviceclient.Get(ctx, result.ServiceName, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
-		service = result.newService(src.App)
+		service = result.newService(result.ServiceName)
 		create = true
 		err = nil
 	}
@@ -125,7 +131,7 @@ func (r *Releaser) Release(
 
 	// Wait on the IP
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		service, err = serviceclient.Get(ctx, src.App, metav1.GetOptions{})
+		service, err = serviceclient.Get(ctx, result.ServiceName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -167,6 +173,44 @@ func (r *Releaser) Release(
 	}
 
 	return &result, nil
+}
+
+// Destroy deletes the K8S deployment.
+func (r *Releaser) Destroy(
+	ctx context.Context,
+	log hclog.Logger,
+	release *Release,
+	ui terminal.UI,
+) error {
+	// This is possible if an older version of the Kubernetes plugin was used
+	// prior to service name existing. This was only in pre-0.1 releases so
+	// we just return nil and pretend the destroy succeeded. We can probably
+	// remove this very quickly post-release.
+	if release.ServiceName == "" {
+		return nil
+	}
+
+	sg := ui.StepGroup()
+	step := sg.Add("Initializing Kubernetes client...")
+	defer step.Abort()
+
+	// Get our client
+	clientset, ns, config, err := clientset(r.config.KubeconfigPath, r.config.Context)
+	if err != nil {
+		return err
+	}
+
+	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
+	step.Done()
+	step = sg.Add("Deleting service...")
+
+	serviceclient := clientset.CoreV1().Services(ns)
+	if err := serviceclient.Delete(ctx, release.ServiceName, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+
+	step.Done()
+	return nil
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.
@@ -240,6 +284,7 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 
 var (
 	_ component.ReleaseManager = (*Releaser)(nil)
+	_ component.Destroyer      = (*Releaser)(nil)
 	_ component.Configurable   = (*Releaser)(nil)
 	_ component.Documented     = (*Releaser)(nil)
 )
