@@ -29,7 +29,7 @@ function App({ Component, pageProps }) {
         title={`${productName} by HashiCorp`}
         siteName={`${productName} by HashiCorp`}
         description="Waypoint is an open source solution that provides a modern workflow for build, deploy, and release across platforms."
-        image="https://waypointproject.io/img/og-image.png"
+        image="https://www.waypointproject.io/img/og-image.png"
         icon={[{ href: '/favicon.ico' }]}
       />
       {ALERT_BANNER_ACTIVE && <AlertBanner {...alertBannerData} theme="blue" />}
