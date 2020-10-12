@@ -103,21 +103,6 @@ export default [
   'plugins',
   '-----------',
   {
-    category: 'entrypoint',
-    content: ['disable'],
-  },
-  {
-    category: 'automating-execution',
-    content: ['github-actions', 'circle-ci'],
-  },
-  'troubleshooting',
-  'glossary',
-  '-----------',
-  {
-    category: 'internals',
-    content: ['architecture', 'execution'],
-  },
-  {
     category: 'extending-waypoint',
     content: [
       'main-func',
@@ -138,5 +123,20 @@ export default [
       },
       'example-plugin',
     ],
+  },
+  {
+    category: 'entrypoint',
+    content: ['disable'],
+  },
+  {
+    category: 'automating-execution',
+    content: ['github-actions', 'circle-ci'],
+  },
+  'troubleshooting',
+  'glossary',
+  '-----------',
+  {
+    category: 'internals',
+    content: ['architecture', 'execution'],
   },
 ]

@@ -11,16 +11,13 @@ description: |-
 Waypoint can be extended using custom plugins. Waypoint supports
 custom builders, deployment platforms, registries, release managers,
 and more. This allows you to extend the Waypoint workflow and featureset
-anywhere. This page will focus on _using_ plugins. We will publish more
-documentation on writing plugins later.
+anywhere. This page will focus on _using_ plugins. To learn more about
+how to write plugins, see the [Extending Waypoint guide](/docs/extending-waypoint).
 
 Waypoint ships with dozens of built-in plugins. These plugins are available
 out-of-the-box with Waypoint and are built directly on the same plugin system
 as external plugins. To see a list of supported plugins, see the
 [plugin documentation](/plugins).
-
-Anywhere you see a [`use` stanza](/docs/waypoint-hcl/use) is a place where
-a plugin is used.
 
 ## Available Plugins
 
@@ -92,3 +89,7 @@ plugin binary which helps prevent tampering with the plugin binary.
 
 To verify the plugin works, run `waypoint init` against your project.
 This will find the plugin, load it, and also validate any configuration.
+
+## Authoring a Plugin
+
+To write a plugin, see the [Extending Waypoint guide](/docs/extending-waypoint).
