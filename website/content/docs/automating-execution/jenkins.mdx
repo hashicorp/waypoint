@@ -36,7 +36,7 @@ something like the [git parameter](https://plugins.jenkins.io/git-parameter/) pl
 ```groovy
 stage('waypoint build') {
     steps {
-        sh 'waypoint build -workspace'
+        sh 'waypoint build -workspace "${params.BRANCH}"'
     }
 }
 ```
