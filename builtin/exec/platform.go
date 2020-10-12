@@ -67,6 +67,8 @@ func (p *Platform) Deploy(
 
 	// Build our template data
 	var data tplData
+	data.Env = deployConfig.Env()
+	data.Workspace = job.Workspace
 	data.Populate(input)
 
 	if tpl := p.config.Template; tpl != nil {

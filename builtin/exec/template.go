@@ -5,6 +5,13 @@ package exec
 type tplData struct {
 	// Input comes from the function input.
 	Input map[string]interface{}
+
+	// Env are environment variables that should be set. These MUST be
+	// set for the entrypoint to work properly.
+	Env map[string]string
+
+	// Workspace is the workspace that this execution is running in.
+	Workspace string
 }
 
 func (d *tplData) Populate(input *Input) {
