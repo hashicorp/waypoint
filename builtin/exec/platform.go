@@ -1,10 +1,14 @@
 package exec
 
 import (
+	"bytes"
 	"context"
+	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -50,14 +54,51 @@ func (p *Platform) Deploy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Rendering templates...")
-	defer func() { s.Abort() }()
+	// If we have a step set, abort it on exit
+	var s terminal.Step
+	defer func() {
+		if s != nil {
+			s.Abort()
+		}
+	}()
+
+	// Render templates if set
+	s = sg.Add("Rendering templates...")
+
+	// Build our template data
+	var data tplData
+	data.Populate(input)
+
+	if tpl := p.config.Template; tpl != nil {
+		// Render our template
+		path, closer, err := p.renderTemplate(tpl, &data)
+		if closer != nil {
+			defer closer()
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		// Replace the template path in the arguments list
+		for i, v := range args {
+			args[i] = strings.ReplaceAll(v, "<TPL>", path)
+		}
+	}
+
+	// Render our arguments
+	for i, v := range args {
+		v, err := p.renderTemplateString(v, &data)
+		if err != nil {
+			return nil, err
+		}
+
+		args[i] = v
+	}
 
 	s.Done()
-
 	s = sg.Add("Executing command: %s", strings.Join(args, " "))
 
-	// Setup our arguments
+	// Ensure we're executing a binary
 	if !filepath.IsAbs(args[0]) {
 		log.Debug("command is not absolute, will look up on PATH", "command", args[0])
 		path, err := exec.LookPath(args[0])
@@ -89,6 +130,69 @@ func (p *Platform) Deploy(
 	s.Done()
 
 	return &Deployment{}, nil
+}
+
+func (p *Platform) renderTemplate(tpl *ConfigTemplate, data *tplData) (string, func(), error) {
+	fi, err := os.Stat(tpl.Path)
+	if err != nil {
+		return "", nil, err
+	}
+
+	// Create a temporary directory to store our renders
+	td, err := ioutil.TempDir("", "waypoint-exec")
+	if err != nil {
+		return "", nil, err
+	}
+	closer := func() { os.RemoveAll(td) }
+
+	// Render
+	var path string
+	if fi.IsDir() {
+		path, err = p.renderTemplateDir(tpl, data, td)
+	} else {
+		path, err = p.renderTemplateFile(tpl, data, td)
+	}
+
+	return path, closer, err
+}
+
+func (p *Platform) renderTemplateString(v string, data *tplData) (string, error) {
+	// Build our template
+	tpl, err := template.New("tpl").Parse(v)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	if err := tpl.Execute(&buf, data); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
+func (p *Platform) renderTemplateFile(tplconfig *ConfigTemplate, data *tplData, td string) (string, error) {
+	// We'll copy the file into the temporary directory
+	path := filepath.Join(td, filepath.Base(tplconfig.Path))
+
+	// Build our template
+	tpl, err := template.New("tpl").ParseFiles(tplconfig.Path)
+	if err != nil {
+		return "", err
+	}
+
+	// Create our target path
+	f, err := os.Create(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	return path, tpl.Execute(f, data)
+}
+
+func (p *Platform) renderTemplateDir(tpl *ConfigTemplate, data *tplData, td string) (string, error) {
+	return "", nil
 }
 
 // PlatformConfig is the configuration structure for the Platform.
