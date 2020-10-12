@@ -10,5 +10,7 @@ message Deployment {
 }
 
 message Release {
+  // service_name is the name of the service in Kubernetes
+  string service_name = 2;
   string Url = 1;
 }
