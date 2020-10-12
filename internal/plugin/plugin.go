@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/azure/aci"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	dockerpull "github.com/hashicorp/waypoint/builtin/docker/pull"
+	"github.com/hashicorp/waypoint/builtin/exec"
 	"github.com/hashicorp/waypoint/builtin/files"
 	"github.com/hashicorp/waypoint/builtin/google/cloudrun"
 	"github.com/hashicorp/waypoint/builtin/k8s"
@@ -29,6 +30,7 @@ var (
 		"pack":                     pack.Options,
 		"docker":                   docker.Options,
 		"docker-pull":              dockerpull.Options,
+		"exec":                     exec.Options,
 		"google-cloud-run":         cloudrun.Options,
 		"azure-container-instance": aci.Options,
 		"kubernetes":               k8s.Options,
