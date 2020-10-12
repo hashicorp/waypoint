@@ -26,40 +26,42 @@ to work.
 do not want the public to view your application, disable the URL for your
 app or keep the URL secret.
 
--> **Development Only!** Waypoint URLs are only meant for development usage
-only. In the future we plan on supporting production-level traffic
-but this is not a supported use case today and any production traffic will
-likely hit usage limits.
+-> **Development Only!** Waypoint URLs do not currently support production-level traffic and should be used for development purposes only.
 
 ## App URLs
 
-Waypoint will register a unique URL per application per workspace.
+When you first deploy an application, the Waypoint server registers it a unique URL per-application. Waypoint also registers unique URLs for each [workspace](/docs/workspaces).
 
-The app URL will route to the released deployments only.
-
-~> Internal beta: A bug currently routes the app URL to all deployments.
+By default, Waypoint routes an app's URL only to released deployments.
 
 ### Deployment URLs
 
-A special syntax can be used to route to a specific deployment (even if
-that deployment is not released). You can append `--<deployment id>` to your
-generated hostname to route only to that deployment.
+You can route an app's URL to a specific deployment, even if
+that deployment is not released. Waypoint applies a deployment version number to your application each time that you deploy it.
 
-For example, if your app URL is `outspoken-laughing-duck.waypoint.run`,
-and you have a deployment with an ID of `ABCD1234`, you can route directly to
-that deployment via `outspoken-laughing-duck--ABCD1234.waypoint.run`
+For example, if your app has been deployed three times, Waypoint will associate the version of `v3` to the app.
+
+You can route directly to a version of the deployed app by appending the version number to the deployment URL. For example, to route directly to the v2 deployment of the app, append the version number to the URL by using this format: `--v2`.
+
+Here's an example URL that routes to v2 of the app's deployment: `outspoken-laughing-duck--v2.waypoint.run`
 (note the **double hyphen**).
 
 ## Configuration
 
 The URL service is configured in two places: the server and by project.
 
-The server configuration is set directly via `waypoint server` command-line
-flags. This determines whether the URL service is enabled at all and what
-address to use for the service. The service is **enabled by default** and
-points to the public Waypoint URL service.
+**Server Configuration**
 
-Within each project and application, the URL service can further be configured.
+The Waypoint server configuration specifies whether the URL service is enabled and what address is used for the service.
+
+The URL service is **enabled by default** and points to the public Waypoint URL service. If you want to use the URL service for any of your app's deployed with Waypoint, you must enable the service on the server.
+
+-> To use the hosted Waypoint URL Service, you must accept the Waypoint Terms of Service and Privacy Policy by specifying the "-accept-tos" flag when you install Waypoint with `waypoint install`. To opt-out of the using the hosted URL service, you must manually run the Waypoint server. To configure the URL service on the server, use the `waypoint server` command.
+
+** Project and App-Level Configuration **
+
+You can also configure whether the URL service is enabled for each project and app.
+
 A project or app can opt-out of a generated URL. This has no effect if the
 URL service is disabled at the server level. Reference
 [`waypoint.hcl` URL stanza](/docs/waypoint-hcl/url) for details.
