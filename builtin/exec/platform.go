@@ -143,7 +143,7 @@ func (p *Platform) renderTemplate(tpl *ConfigTemplate, data *tplData) (string, f
 	if err != nil {
 		return "", nil, err
 	}
-	closer := func() { os.RemoveAll(td) }
+	closer := func() {} //os.RemoveAll(td) }
 
 	// Render
 	var path string
@@ -176,7 +176,7 @@ func (p *Platform) renderTemplateFile(tplconfig *ConfigTemplate, data *tplData, 
 	path := filepath.Join(td, filepath.Base(tplconfig.Path))
 
 	// Build our template
-	tpl, err := template.New("tpl").ParseFiles(tplconfig.Path)
+	tpl, err := template.New(filepath.Base(path)).ParseFiles(tplconfig.Path)
 	if err != nil {
 		return "", err
 	}
@@ -192,7 +192,38 @@ func (p *Platform) renderTemplateFile(tplconfig *ConfigTemplate, data *tplData, 
 }
 
 func (p *Platform) renderTemplateDir(tpl *ConfigTemplate, data *tplData, td string) (string, error) {
-	return "", nil
+	return td, filepath.Walk(tpl.Path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		dir := td
+
+		// Determine if we have any directory
+		stripped := strings.TrimPrefix(path, tpl.Path)
+		if len(stripped) == 0 {
+			panic("empty path") // should never happen
+		}
+		if stripped[0] == '/' || stripped[0] == '\\' {
+			// Get rid of any prefix '/' which could happen if tpl.Path doesn't
+			// end in a directory sep.
+			stripped = stripped[1:]
+		}
+		if v := filepath.Dir(stripped); v != "." {
+			dir = filepath.Join(dir, v)
+			if err := os.MkdirAll(dir, 0700); err != nil {
+				return err
+			}
+		}
+
+		// Render
+		_, err = p.renderTemplateFile(&ConfigTemplate{Path: path}, data, dir)
+		return err
+	})
 }
 
 // PlatformConfig is the configuration structure for the Platform.
