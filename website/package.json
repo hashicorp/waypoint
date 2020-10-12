@@ -23,7 +23,6 @@
     "js-yaml": "^3.14.0",
     "line-reader": "^0.4.0",
     "next": "9.5.3",
-    "next-auth": "3.1.0",
     "next-mdx-remote": "^1.0.0",
     "nuka-carousel": "^4.7.1",
     "react": "16.13.1",
@@ -52,7 +51,6 @@
     "generate:readme": "next-hashicorp markdown-blocks README.md",
     "lint": "next-hashicorp lint",
     "start": "next-remote-watch ./content/**/*.mdx",
-    "dev:auth": "HASHI_ENV=preview npm start",
     "static": "npm run build && npm run export"
   }
 }
