@@ -9,11 +9,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type ReleaseCreateCommand struct {
@@ -144,7 +144,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			return nil
 		}
 
-		app.UI.Output("\nURL: https://%s", result.Release.Url, terminal.WithSuccessStyle())
+		app.UI.Output("\nRelease URL: %s", result.Release.Url, terminal.WithSuccessStyle())
 		return nil
 	})
 	if err != nil {
