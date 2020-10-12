@@ -14,10 +14,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/docker"
 )
 
 const (
@@ -86,13 +86,20 @@ func (p *Platform) Deploy(
 	result.Id = id
 	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
 
+	sg := ui.StepGroup()
+	step := sg.Add("Initializing Kubernetes client...")
+	defer step.Abort()
+
 	// Get our client
 	clientset, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
 	}
 
-	ui.Output("Configuring %s in namespace %s", config.Host, ns, terminal.WithHeaderStyle())
+	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
+	step.Done()
+
+	step = sg.Add("Preparing deployment...")
 
 	deployclient := clientset.AppsV1().Deployments(ns)
 
@@ -280,23 +287,22 @@ func (p *Platform) Deploy(
 
 	dc := clientset.AppsV1().Deployments(ns)
 
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-
 	// Create/update
 	if create {
 		log.Debug("no existing deployment, creating a new one")
-		st.Update("Creating deployment...")
+		step.Update("Creating deployment...")
 		deployment, err = dc.Create(ctx, deployment, metav1.CreateOptions{})
 	} else {
 		log.Debug("updating deployment")
-		st.Update("Updating deployment...")
+		step.Update("Updating deployment...")
 		deployment, err = dc.Update(ctx, deployment, metav1.UpdateOptions{})
 	}
 	if err != nil {
 		return nil, err
 	}
+
+	step.Done()
+	step = sg.Add("Waiting for deployment...")
 
 	ps := clientset.CoreV1().Pods(ns)
 	podLabelId := fmt.Sprintf("%s=%s", labelId, result.Id)
@@ -318,7 +324,7 @@ func (p *Platform) Deploy(
 		}
 
 		if time.Since(lastStatus) > 10*time.Second {
-			st.Update(fmt.Sprintf(
+			step.Update(fmt.Sprintf(
 				"Waiting on deployment to become available: %d/%d/%d",
 				*dep.Spec.Replicas,
 				dep.Status.UnavailableReplicas,
@@ -355,9 +361,8 @@ func (p *Platform) Deploy(
 		}
 
 		if detectedError != "" && !reportedError {
-			st.Step(terminal.StatusWarn, fmt.Sprintf(
-				"Detected pods having an issue starting - %s: %s", detectedError, k8error),
-			)
+			step.Update("Detected pods having an issue starting - %s: %s", detectedError, k8error)
+			step.Status(terminal.StatusWarn)
 			reportedError = true
 
 			// force a faster rerender
@@ -377,7 +382,8 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	st.Step(terminal.StatusOK, "Deployment successfully rolled out!")
+	step.Update("Deployment successfully rolled out!")
+	step.Done()
 
 	return &result, nil
 }
@@ -389,20 +395,27 @@ func (p *Platform) Destroy(
 	deployment *Deployment,
 	ui terminal.UI,
 ) error {
+	sg := ui.StepGroup()
+	step := sg.Add("Initializing Kubernetes client...")
+	defer step.Abort()
+
+	// Get our client
 	clientset, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return err
 	}
 
-	ui.Output("Configuring %s in namespace %s", config.Host, ns, terminal.WithHeaderStyle())
+	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
+	step.Done()
+	step = sg.Add("Deleting deployment...")
 
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-
-	st.Update("Deleting deployment...")
 	deployclient := clientset.AppsV1().Deployments(ns)
-	return deployclient.Delete(ctx, deployment.Name, metav1.DeleteOptions{})
+	if err := deployclient.Delete(ctx, deployment.Name, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+
+	step.Done()
+	return nil
 }
 
 // Config is the configuration structure for the Platform.

@@ -45,8 +45,9 @@ func (r *Releaser) Release(
 ) (*Release, error) {
 	var result Release
 
-	st := ui.Status()
-	defer st.Close()
+	sg := ui.StepGroup()
+	step := sg.Add("Initializing Kubernetes client...")
+	defer step.Abort()
 
 	// Get our clientset
 	clientset, ns, config, err := clientset(r.config.KubeconfigPath, r.config.Context)
@@ -54,7 +55,10 @@ func (r *Releaser) Release(
 		return nil, err
 	}
 
-	ui.Output("Configuring %s in namespace %s", config.Host, ns, terminal.WithHeaderStyle())
+	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
+	step.Done()
+
+	step = sg.Add("Preparing service...")
 
 	serviceclient := clientset.CoreV1().Services(ns)
 
@@ -106,15 +110,18 @@ func (r *Releaser) Release(
 
 	// Create/update
 	if create {
-		st.Update("Creating service...")
+		step.Update("Creating service...")
 		service, err = serviceclient.Create(ctx, service, metav1.CreateOptions{})
 	} else {
-		st.Update("Updating service...")
+		step.Update("Updating service...")
 		service, err = serviceclient.Update(ctx, service, metav1.UpdateOptions{})
 	}
 	if err != nil {
 		return nil, err
 	}
+
+	step.Done()
+	step = sg.Add("Waiting for service to become ready...")
 
 	// Wait on the IP
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
@@ -133,7 +140,8 @@ func (r *Releaser) Release(
 		return nil, err
 	}
 
-	st.Step(terminal.StatusOK, "Service successfully configured!")
+	step.Update("Service is ready!")
+	step.Done()
 
 	if r.config.LoadBalancer {
 		ingress := service.Status.LoadBalancer.Ingress[0]
