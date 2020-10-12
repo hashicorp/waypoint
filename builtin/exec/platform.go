@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
-// Platform is the Platform implementation for Kubernetes.
+// Platform is the Platform implementation for exec.
 type Platform struct {
 	config PlatformConfig
 }
@@ -34,7 +34,7 @@ func (p *Platform) DeployFunc() interface{} {
 	return p.Deploy
 }
 
-// Deploy deploys an image to Kubernetes.
+// Deploy deploys an image to exec.
 func (p *Platform) Deploy(
 	ctx context.Context,
 	log hclog.Logger,
