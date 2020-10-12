@@ -254,53 +254,66 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
-	doc.Description("Deploy a container to Docker, local or remote")
+	doc.Description(`
+Execute any command to perform a deploy.
+
+This plugin lets you use almost any pre-existing deployment tool for the
+deploy step of Waypoint. This is a great way to take a pre-existing application
+and begin using Waypoint. For example, you can wrap "kubectl" calls if you
+already have Kubernetes configurations, or "helm" if you use Helm, and so on.
+
+The "exec" plugin is meant to be an escape hatch from Waypoint. In working
+this way, you will lose many Waypoint benefits. For example, "waypoint destroy"
+functionality will not work with deploys created with the exec plugin.
+`)
 
 	doc.Example(`
 deploy {
-  use "docker" {
-	command      = "ps"
-	service_port = 3000
-	static_environment = {
-	  "environment": "production",
-	  "LOG_LEVEL": "debug"
-	}
+  use "exec" {
+    command = ["kubectl", "apply", "-f", "myapp.yml"]
+
+    template {
+      path = "myapp.yml"
+    }
   }
 }
 `)
 
-	doc.Input("docker.Image")
-	doc.Output("docker.Deployment")
+	doc.Input("exec.Input")
+	doc.Output("exec.Deployment")
 
 	doc.SetField(
 		"command",
-		"the command to run to start the application in the container",
-		docs.Default("the image entrypoint"),
-	)
-
-	doc.SetField(
-		"scratch_path",
-		"a path within the container to store temporary data",
+		"The command to execute for the deploy as a list of strings.",
 		docs.Summary(
-			"docker will mount a tmpfs at this path",
+			"Each value in the list will be rendered as a template, so it",
+			"may contain template directives. Additionally, the special string",
+			"`<TPL>` will be replaced with the path to the rendered file-based",
+			"templates. If your template path was to a file, this will be a path",
+			"a file. Otherwise, it will be a path to a directory.",
 		),
 	)
 
 	doc.SetField(
-		"static_environment",
-		"environment variables to expose to the application",
+		"dir",
+		"The working directory to use while executing the command.",
 		docs.Summary(
-			"these environment variables should not be run of the mill",
-			"configuration variables, use waypoint config for that.",
-			"These variables are used to control over all container modes,",
-			"such as configuring it to start a web app vs a background worker",
+			"This will default to the same working directory as the Waypoint execution.",
 		),
 	)
 
 	doc.SetField(
-		"service_port",
-		"port that your service is running on in the container",
-		docs.Default("3000"),
+		"template",
+		"A stanza that declares that a file or directory should be template-rendered.",
+	)
+
+	doc.SetField(
+		"template.path",
+		"The path to the file or directory to render as a template.",
+		docs.Summary(
+			"Templating uses the following format: https://golang.org/pkg/text/template/",
+			"Available template variables depends on the input artifact.",
+		),
 	)
 
 	return doc, nil
