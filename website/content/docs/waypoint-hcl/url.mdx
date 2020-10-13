@@ -12,10 +12,13 @@ description: |-
 
 The `url` stanza configures the behavior of the [URL service](/docs/url)
 for the given application. This allows for certain applications to opt-out
-of the URL service, opt-in, etc.
+of automatic hostname registration with the URL service, opt-in, etc.
 
 The `url` stanza is **optional.** If it is not specified, the default
-URL settings configured with the Waypoint server will be used.
+URL settings configured with the Waypoint server will be used. The "default
+settings" are the URL settings for the running Waypoint server. These settings
+determine if the URL service is enabled at all along with whether apps
+get a hostname by default.
 
 If the URL service is not enabled on the server, then the settings specified
 here have no effect.
@@ -40,6 +43,49 @@ app "frontend" {
 
 }
 ```
+
+## Opt-Out and Opt-in
+
+This stanza allows applications to opt-out or opt-in to automatic hostname
+registration with the URL service.
+
+Hostname registration is what makes an app routable with the URL service.
+If an app has no registered hostname, it can't be routed to. The default value
+of whether an app gets a registered hostname is determined based on the
+server configuration.
+
+### Opt-Out
+
+To opt-out of hostname registration, specify `auto_hostname = false`:
+
+```hcl
+app "frontend" {
+  url {
+    auto_hostname = false
+  }
+}
+```
+
+If you're using the entrypoint, the entrypoint will still connect to the
+URL service, but routing will be disabled until a hostname is registered.
+There is no way currently to prevent the entrypoint from connecting to the
+URL service altogether.
+
+### Opt-In
+
+To opt-in to hostname registration, specify `auto_hostname = true`:
+
+```hcl
+app "frontend" {
+  url {
+    auto_hostname = true
+  }
+}
+```
+
+If the URL service is enabled on the server and the default behavior
+configured on the server is for apps to not have a hostname registered, this
+will opt the application in to getting a hostname by default.
 
 ## `url` Parameters
 
