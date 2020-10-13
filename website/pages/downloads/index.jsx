@@ -45,15 +45,17 @@ export default function DownloadsPage({ releaseData, previousVersions }) {
           />
         }
         tutorialLink={{
-          label: 'View Tutorial on HashiCorp Learn',
-          href:
-            'https://learn.hashicorp.com/tutorials/waypoint/get-started-install',
+          label: 'View Tutorials at HashiCorp Learn',
+          href: 'https://learn.hashicorp.com/waypoint',
         }}
       />
 
       <div className="g-container">
         <div className={styles.gettingStarted}>
-          <h2>Getting Started</h2>
+          <h2>Get Started</h2>
+          <p>
+            Follow step-by-step tutorials on AWS, Azure, GCP, and localhost.
+          </p>
           <div className={styles.links}>
             {getStartedLinks.map((link) => (
               <a href={link.href} key={link.href}>

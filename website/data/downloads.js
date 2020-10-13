@@ -50,15 +50,20 @@ export const packageManagersByOs = {
 
 export const getStartedLinks = [
   {
-    label: 'Deploy an Example Application with Docker',
-    href: '/docs/getting-started/docker-example-app',
+    label: 'Deploy to Docker',
+    href: 'https://learn.hashicorp.com/collections/waypoint/get-started',
   },
   {
-    label: 'Deploy an Example Application to Kubernetes',
-    href: '/docs/getting-started/k8s-example-app',
+    label: 'Deploy to Kubernetes',
+    href:
+      'https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes',
   },
   {
-    label: 'Deploy an Example Application to Nomad',
-    href: '/docs/getting-started/nomad-example-app',
+    label: 'Deploy to AWS',
+    href: 'https://learn.hashicorp.com/collections/waypoint/aws',
+  },
+  {
+    label: 'View all Waypoint tutorials',
+    href: 'https://learn.hashicorp.com/waypoint',
   },
 ]
