@@ -448,7 +448,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Name:    "server-image",
 			Target:  &c.config.ServerImage,
 			Usage:   "Docker image for the server image.",
-			Default: "docker.pkg.github.com/hashicorp/waypoint/alpha:latest",
+			Default: "hashicorp/waypoint:latest",
 		})
 
 		f.StringMapVar(&flag.StringMapVar{
