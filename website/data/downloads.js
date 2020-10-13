@@ -63,7 +63,7 @@ export const getStartedLinks = [
     href: 'https://learn.hashicorp.com/collections/waypoint/aws',
   },
   {
-    label: 'Follow along with other tutorials',
+    label: 'View all Waypoint tutorials',
     href: 'https://learn.hashicorp.com/waypoint',
   },
 ]
