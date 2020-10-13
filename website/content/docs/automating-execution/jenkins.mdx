@@ -1,0 +1,87 @@
+---
+layout: docs
+page_title: Integrating Waypoint with Jenkins
+sidebar_title: Jenkins
+description: |-
+  How to utilize Waypoint with Jenkins as the service to run
+  Waypoint to build and deploy applications
+---
+
+# Integrating Waypoint with Jenkins
+
+Using Waypoint to deploy an application from within Jenkins
+is similar to how you might deploy an application from your own
+workspace.
+
+Your Jenkins runner must have Waypoint installed to execute it in a step.
+This can be accomplished by installing Waypoint on the runner
+using the standard installation instructions such as from the Waypoint
+`apt` repository. In addition, any dependencies such as authentication details or anything
+else required by Waypoint plugins must be avaiable in the
+execution environment.
+
+Note that this example assumes use of
+a [declarative pipeline](https://www.jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline).
+
+~> Note: The Waypoint server authentication variables here are inlined but it is recommended to set the secret
+environment variables in a secure fashion such as [credentials binding](https://www.jenkins.io/doc/pipeline/steps/credentials-binding/)
+
+## Workspaces
+
+This example assumes the use of a single default workspace. If this was in a job triggered
+by a GitHub commit or pull request and may be an ephemeral development environment, you may
+want to interpolate the relevant Git ref for the workspace parameter using
+something like the [git parameter](https://plugins.jenkins.io/git-parameter/) plugin, as demonstrated below:
+
+```groovy
+stage('waypoint build') {
+    steps {
+        sh 'waypoint build -workspace "${params.BRANCH}"'
+    }
+}
+```
+
+## Example
+
+```groovy
+pipeline {
+    agent any
+
+    // Assumes you are deploying a Node.js application
+    tools { nodejs "default" }
+
+    environment {
+        WAYPOINT_VERSION = '0.1.0'
+        WAYPOINT_SERVER_ADDR = ''
+        WAYPOINT_SERVER_TOKEN = ''
+        WAYPOINT_SERVER_TLS = '1'
+        WAYPOINT_SERVER_TLS_SKIP_VERIFY = '1'
+    }
+
+    stages {
+        stage('waypoint init') {
+            steps {
+                sh 'waypoint init'
+            }
+        }
+
+        stage('waypoint build') {
+            steps {
+                sh 'waypoint build'
+            }
+        }
+
+        stage('waypoint deploy') {
+            steps {
+                sh 'waypoint deploy'
+            }
+        }
+
+        stage('waypoint release') {
+            steps {
+                sh 'waypoint release'
+            }
+        }
+    }
+}
+```

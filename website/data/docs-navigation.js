@@ -130,7 +130,7 @@ export default [
   },
   {
     category: 'automating-execution',
-    content: ['github-actions', 'circle-ci'],
+    content: ['github-actions', 'circle-ci', 'jenkins'],
   },
   'troubleshooting',
   'glossary',
