@@ -7,10 +7,10 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
 
-	"github.com/hashicorp/waypoint/internal/config"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/config"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // CanDestroyRelease returns true if this app supports destroying releases.
@@ -149,6 +149,11 @@ func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app
 	// If we don't implement the destroy plugin we just mark it as destroyed.
 	if !ok || destroyer.DestroyFunc() == nil {
 		return nil, nil
+	}
+
+	if op.Release.Release == nil {
+		log.Error("Unable to destroy the Release as the proto message Release returned from the plugin's ReleaseFunc is nil. This situation occurs when the release process is interupted by the user.", "release", op.Release)
+		return nil, nil // Fail silently for now, this will be fixed in v0.2
 	}
 
 	return app.callDynamicFunc(ctx,

@@ -152,6 +152,11 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 		return nil, nil
 	}
 
+	if op.Deployment.Deployment == nil {
+		log.Error("Unable to destroy the Deployment as the proto message Deployment returned from the plugin's DeployFunc is nil. This situation occurs when the deployment process is interupted by the user.", "deployment", op.Deployment)
+		return nil, nil // Fail silently for now, this will be fixed in v0.2
+	}
+
 	return app.callDynamicFunc(ctx,
 		log,
 		nil,
