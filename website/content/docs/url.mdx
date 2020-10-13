@@ -8,7 +8,7 @@ description: |-
 
 # Waypoint URL Service
 
-The URL service is a free, public service hosted by HashiCorp. When you deploy your app with Waypoint, you will receive a public `waypoint.run` URL with a valid TLS certificate automatically generated via [Let's Encrypt](https://letsencrypt.org/).You can use this URL to quickly view your deployed applications and to share your applications with others.
+The Waypoint URL service is a free, public service hosted by HashiCorp. When you deploy your app with Waypoint, you will receive a public `waypoint.run` URL with a valid TLS certificate automatically generated via [Let's Encrypt](https://letsencrypt.org/).You can use this URL to quickly view your deployed applications and to share your applications with others.
 
 The URL service is open source, and you can choose to host it yourself, if you choose.
 
@@ -20,7 +20,9 @@ The URL service is open source, and you can choose to host it yourself, if you c
 
 ## App URLs
 
-When you first deploy an application, the Waypoint server registers it a unique URL per-application. Waypoint also registers unique URLs for each [workspace](/docs/workspaces). By default, Waypoint routes an app's URL only to released deployments.
+When you first deploy an application, the Waypoint server registers it a unique URL per-application. Waypoint also registers unique URLs for each [workspace](/docs/workspaces).
+
+By default, Waypoint routes an app's URL only to released deployments.
 
 ### URL Format
 
