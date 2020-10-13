@@ -38,6 +38,20 @@ Note that point #3 is only applicable to servers since they are the only
 component that stores state. For all other components (CLI, UI, entrypoints,
 etc.), compatibility promise #1 is most important.
 
+## Scope of Compatibility
+
+The usage of the term "compatibility" describes the ability for two
+separate Waypoint processes to interoperate by API. Compatibility does
+not cover CLI commands or flags, the Waypoint configuration file, or UI
+layout.
+
+We will make our best effort to keep these compatible across versions
+but they are not covered by the protocol version or the compatibility
+promise outlined on this page.
+
+You may learn of any backwards incompatibilities in these sections
+in the upgrade guide for a specific version.
+
 ## Protocol Versions
 
 Waypoint advertises _protocol versions_ which can be used to determine
