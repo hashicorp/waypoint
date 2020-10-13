@@ -51,6 +51,7 @@ jobs:
               --timeout 10m \
               --enable gosimple \
               --enable govet
+      - notify_main_failure
 
   # checks vendor directory is correct
   check-vendor:
@@ -70,6 +71,7 @@ jobs:
             echo "Git directory has vendor changes"
             exit 1
           fi
+      - notify_main_failure
 
   go-test:
     docker:
@@ -138,7 +140,7 @@ jobs:
           path: *TEST_RESULTS_DIR
       - store_artifacts:
           path: *TEST_RESULTS_DIR
-      - notify_slack_on_fail
+      - notify_main_failure
   
   # create a development build
   dev-build:
@@ -163,7 +165,7 @@ jobs:
           root: /go/bin
           paths:
             - waypoint
-      - notify_slack_on_fail
+      - notify_main_failure
 
   integration:
     machine:
@@ -184,7 +186,7 @@ jobs:
       - run:
           name: Execute Integration Tests
           command: ./ci/integration.sh
-      - notify_slack_on_fail
+      - notify_main_failure
 
   image-release:
     docker:
@@ -226,7 +228,7 @@ jobs:
           name: "Docker: Push image"
           command: |
             docker push docker.pkg.github.com/hashicorp/waypoint/alpha
-      - notify_slack_on_fail
+      - notify_main_failure
 
   # build frontend yarn cache
   frontend-cache:
@@ -247,6 +249,7 @@ jobs:
           paths:
             - ui/node_modules
             - ui/lib/node_modules
+      - notify_main_failure
 
   # build ember so frontend tests run faster
   # ember-build-tests:
@@ -265,6 +268,7 @@ jobs:
   #         root: ui
   #         paths:
   #           - dist
+      # - notify_main_failure
 
   # rebuild UI for packaging
   ember-build-prod:
@@ -283,6 +287,7 @@ jobs:
           root: .
           paths:
             - ./ui/dist
+      - notify_main_failure
 
   # build static-assets file and commit
   build-static-assets:
@@ -303,6 +308,7 @@ jobs:
           root: .
           paths:
             - ./internal/server/gen/bindata_ui.go
+      - notify_main_failure
 
   # build static-assets file and commit
   publish-static-assets:
@@ -333,7 +339,7 @@ jobs:
             else
               echo "no UI changes so no static assets to publish"
             fi
-      - notify_slack_on_fail
+      - notify_main_failure
 
   # # run ember frontend tests
   # ember-test:
@@ -434,7 +440,7 @@ workflows:
   #           - ember-build
 
 commands:
-  notify_slack_on_fail:
+  notify_main_failure:
     steps:
       - run:
           name: Notify failures on main branch
