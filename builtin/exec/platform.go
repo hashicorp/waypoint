@@ -276,7 +276,7 @@ artifact. There are two mechanisms for templates:
 1. Any argument in "command" is processed as a template.
 
 2. You may specify a file or directory to be processed for templating
-using the "template" stanza. Any argument with the value "<TPL>" in it
+using the "template" stanza. Any argument with the value ` + "`<TPL>`" + ` in it
 will be replaced with the path to the template.
 
 Templating follows the format of a Go [text/template](https://golang.org/pkg/text/template/)
