@@ -21,9 +21,12 @@ Waypoint requires two different ports:
   the web UI API client. If the web UI is not used, this port can be blocked
   or disabled.
 
-- \*gRPC API (Default 9701, TCP)\*\* - This is used for the gRPC API. This is
+- **gRPC API (Default 9701, TCP)** - This is used for the gRPC API. This is
   consumed by the CLI, Entrypoint, and Runners. This port must be reachable
   by all deployments using the Entrypoint.
+
+Both of these ports require TCP, but the connections are always TLS
+protected. Non-TLS connections are not allowed on either port.
 
 ## Network Toplogy
 
