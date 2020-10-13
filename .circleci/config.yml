@@ -21,6 +21,7 @@ references:
     GIT_AUTHOR_NAME: circleci-waypoint
     GIT_COMMITTER_NAME: circleci-waypoint
     BASH_ENV: /home/circleci/project/.circleci/bash_env.sh
+    CIRCLE_BASE_URL: "https://circleci.com/workflow-run"
     DOCKER_BUILDKIT: 1
     REBUILD_UI: &REBUILD_UI 1
     
@@ -85,7 +86,6 @@ jobs:
           POSTGRES_DB: waypoint_test
       - image: vault
         command: ["server", "-dev", "-dev-root-token-id=hznroot"]
-
     parallelism: 4
     environment:
       <<: *ENVIRONMENT
@@ -134,11 +134,12 @@ jobs:
               -tags="$GOTAGS" -p 2 \
               -cover -coverprofile=coverage.txt \
               $PACKAGE_NAMES
-
       - store_test_results:
           path: *TEST_RESULTS_DIR
       - store_artifacts:
           path: *TEST_RESULTS_DIR
+      - notify_slack_on_fail
+  
   # create a development build
   dev-build:
     docker:
@@ -157,12 +158,12 @@ jobs:
             go get github.com/kevinburke/go-bindata/...
             PATH=/go/bin:$PATH make bin
             cp waypoint /go/bin
-
       # save dev build to pass to downstream jobs
       - persist_to_workspace:
           root: /go/bin
           paths:
             - waypoint
+      - notify_slack_on_fail
 
   integration:
     machine:
@@ -183,6 +184,7 @@ jobs:
       - run:
           name: Execute Integration Tests
           command: ./ci/integration.sh
+      - notify_slack_on_fail
 
   image-release:
     docker:
@@ -224,6 +226,7 @@ jobs:
           name: "Docker: Push image"
           command: |
             docker push docker.pkg.github.com/hashicorp/waypoint/alpha
+      - notify_slack_on_fail
 
   # build frontend yarn cache
   frontend-cache:
@@ -330,6 +333,7 @@ jobs:
             else
               echo "no UI changes so no static assets to publish"
             fi
+      - notify_slack_on_fail
 
   # # run ember frontend tests
   # ember-test:
@@ -350,6 +354,7 @@ jobs:
   #         command: node_modules/.bin/ember exam --split=$CIRCLE_NODE_TOTAL --partition=`expr $CIRCLE_NODE_INDEX + 1` --path dist --silent -r xunit
   #     - store_test_results:
   #         path: ui/test-results
+
   # ember-coverage:
   #   docker:
   #     - image: *EMBER_IMAGE
@@ -427,3 +432,47 @@ workflows:
   #     - ember-coverage:
   #         requires:
   #           - ember-build
+
+commands:
+  notify_slack_on_fail:
+    steps:
+      - run:
+          name: Notify failures on main branch
+          when: on_fail
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "main" ]; then
+              curl -X POST -H 'Content-type: application/json' \
+              --data \
+              "{ \
+                \"text\": \":warning: Failed job on branch _${CIRCLE_BRANCH}_\", \
+                \"attachments\": [ \
+                  { \
+                    \"fallback\": \":warning: Failed job on branch _${CIRCLE_BRANCH}_\", \
+                    \"fields\": [ \
+                        { \
+                            \"title\": \"User\", \
+                            \"value\": \"${CIRCLE_USERNAME}\", \
+                            \"short\": \"true\" \
+                        }, \
+                        { \
+                            \"title\": \"Merge commit\", \
+                            \"value\": \"<https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/commit/${CIRCLE_SHA1}|$(echo ${CIRCLE_SHA1} | cut -c1-10)>\", \
+                            \"short\": \"true\" \
+                        }, \
+                        { \
+                            \"title\": \"Failed job\", \
+                            \"value\": \"<${CIRCLE_BUILD_URL}|${CIRCLE_JOB}>\", \
+                            \"short\": \"true\" \
+                        }, \
+                        { \
+                            \"title\": \"Full Workflow\", \
+                            \"value\": \"<${CIRCLE_BASE_URL}/${CIRCLE_WORKFLOW_ID}|${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}>\", \
+                            \"short\": \"true\" \
+                        } \
+                    ], \
+                    \"ts\": \"$(date +%s)\", \
+                    \"color\": \"danger\" \
+                  } \
+                ] \
+              }" ${SLACK_WEBHOOK}
+            fi
