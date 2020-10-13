@@ -82,8 +82,10 @@ app "my-app" {
 }
 ```
 
-The Docker Pull plugin is ideal when you prefer to use an existing Docker image as-is without rebuilding it.
-This plugin performs a `docker pull`. The plugin injects the Waypoint Entrypoint by default, which can be disabled.
+The Docker Pull plugin is ideal when you prefer to use an existing Docker image as-is
+without rebuilding it.
+This plugin performs a `docker pull`. The plugin injects the Waypoint Entrypoint by
+default, which can be disabled.
 
 #### Cloud Native Buildpacks
 
@@ -104,6 +106,32 @@ buildpacks. The "pack" plugin defaults to Heroku Buildpacks with a builder image
 located on Docker Hub at
 [heroku/buildpacks:18](https://hub.docker.com/r/heroku/buildpacks/tags).
 
+#### Customizing the Buildpack Launch Command
+
+When using the default Heroku Buildpack, you can customize the command that
+starts your server process within the workload. This is done by using
+adding a `Procfile` to the project directory.
+
+An example of this model in practice would be the build process generating
+the static binaries for your web service within your application image, and
+then executing the necessary commands to start ExpressJS to host those static files.
+
+See the [waypoint-examples](https://github.com/hashicorp/waypoint-examples)
+repository for more examples of this model.The `Procfile` syntax
+is `web: <server process> <server file>`. A sample Procfile with this syntax is below:
+
+```bash
+web: node server.js
+```
+
+You will need to include a file that can be executed by a server
+process (`server.js` above) in order to use this capability.
+
+The ability to use a Procfile is dependent on the Buildpack provider. This capability
+can be added to alternative buildpack providers, however you will need to build your
+own builder image and store it in an accessible repository. Please see the Buildpack
+provider's documentation for further details around this capability.
+
 #### Configuring an Alternative Buildpack Provider
 
 | Provider              | Builder Image                 |
@@ -114,8 +142,10 @@ located on Docker Hub at
 
 Several `waypoint.hcl` adjustments may be required to enable alternative builders.
 
-1. The `builder` variable of the `pack` build plugin should explicitly specify the buildpacks builder image like `paketobuildpacks/builder:base`.
-1. The `service_port` variable of the deploy plugin must match the buildpacks port. Paketo buildpacks commonly use `8080` and the default Waypoint `service_port` is `3000`.
+1. The `builder` variable of the `pack` build plugin should explicitly specify the
+   buildpacks builder image like `paketobuildpacks/builder:base`.
+1. The `service_port` variable of the deploy plugin must match the buildpacks port.
+   Paketo buildpacks commonly use `8080` and the default Waypoint `service_port` is `3000`.
 
 Paketo buildpacks example `waypoint.hcl`:
 
