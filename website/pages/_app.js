@@ -12,13 +12,17 @@ import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
 import ProductSubnav from 'components/subnav'
 import Footer from '../components/footer'
 import Error from './_error'
-import { productName } from '../data/metadata'
 import alertBannerData, { ALERT_BANNER_ACTIVE } from 'data/alert-banner'
 
 NProgress({ Router })
 const { ConsentManager, openConsentManager } = createConsentManager({
   preset: 'oss',
 })
+
+const title = 'Waypoint by HashiCorp'
+const description =
+  'Waypoint is an open source solution that provides a modern workflow for build, deploy, and release across platforms.'
+
 function App({ Component, pageProps }) {
   useAnchorLinkAnalytics()
 
@@ -26,12 +30,19 @@ function App({ Component, pageProps }) {
     <ErrorBoundary FallbackComponent={Error}>
       <HashiHead
         is={Head}
-        title={`${productName} by HashiCorp`}
-        siteName={`${productName} by HashiCorp`}
-        description="Waypoint is an open source solution that provides a modern workflow for build, deploy, and release across platforms."
+        title={title}
+        siteName={title}
+        description={description}
         image="https://www.waypointproject.io/img/og-image.png"
         icon={[{ href: '/favicon.ico' }]}
-      />
+      >
+        <meta name="og:title" property="og:title" content={title} />
+        <meta
+          name="og:description"
+          property="og:title"
+          content={description}
+        />
+      </HashiHead>
       {ALERT_BANNER_ACTIVE && <AlertBanner {...alertBannerData} theme="blue" />}
       <HashiStackMenu />
       <ProductSubnav />
