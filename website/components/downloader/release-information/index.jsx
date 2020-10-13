@@ -4,6 +4,7 @@ import Dropdown from 'components/downloader/dropdown'
 import {
   prettyArch,
   prettyOs,
+  trackDownload,
   sortPlatforms,
   getVersionLabel,
   sortAndFilterReleases,
@@ -85,7 +86,13 @@ export default function ReleaseInformation({
                   <div className={styles.os}>{prettyOs(os)}</div>
                   <div>
                     {Object.entries(release).map(([arch, file]) => (
-                      <a href={file} key={arch}>
+                      <a
+                        href={file}
+                        key={arch}
+                        onClick={() =>
+                          trackDownload('waypoint', version, os, arch)
+                        }
+                      >
                         {prettyArch(arch)}
                       </a>
                     ))}

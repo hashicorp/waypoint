@@ -121,3 +121,19 @@ export function sortPlatforms(releaseData) {
       }, {})
   )
 }
+
+export function trackDownload(product, version, _os, _arch) {
+  const os = prettyOs(_os)
+  const arch = prettyArch(_arch)
+
+  if (window.analytics) {
+    window.analytics.track('Download', {
+      category: 'Button',
+      label: `${product} | v${version} | ${os} | ${arch}`,
+      version,
+      os,
+      architecture: arch,
+      product,
+    })
+  }
+}

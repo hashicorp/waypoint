@@ -1,6 +1,9 @@
 import Tabs from '@hashicorp/react-tabs'
-
-import { prettyOs, prettyArch } from 'components/downloader/utils/downloader'
+import {
+  prettyOs,
+  prettyArch,
+  trackDownload,
+} from 'components/downloader/utils/downloader'
 import styles from './style.module.css'
 
 export default function DownloadTabs({
@@ -58,6 +61,10 @@ function Cards({
   const hasPackageManager = Boolean(packageManagers)
   const hasMultiplePackageManagers = Array.isArray(packageManagers)
 
+  function handleArchClick(arch) {
+    return () => trackDownload('waypoint', version, os, arch)
+  }
+
   return (
     <>
       <div
@@ -108,7 +115,12 @@ function Cards({
               <span className={styles.version}>{version}</span>
             </div>
             {Object.entries(arches).map(([arch, url]) => (
-              <a href={url} key={arch} className={styles.downloadLink}>
+              <a
+                href={url}
+                key={arch}
+                className={styles.downloadLink}
+                onClick={handleArchClick(arch)}
+              >
                 {prettyArch(arch)}
               </a>
             ))}
