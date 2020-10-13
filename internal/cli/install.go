@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os/exec"
 	"strings"
 	"time"
@@ -138,8 +139,6 @@ func (c *InstallCommand) InstallKubernetes(
 		return nil, nil, "", 1
 	}
 
-	st.Update("Waiting for Kubernetes service to be ready...")
-
 	// Build our K8S client.
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
@@ -162,6 +161,34 @@ func (c *InstallCommand) InstallKubernetes(
 		)
 		return nil, nil, "", 1
 	}
+
+	st.Update("Waiting for Kubernetes StatefulSet to be ready...")
+	log.Info("waiting for server statefulset to become ready")
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		ss, err := clientset.AppsV1().StatefulSets(c.config.Namespace).Get(
+			ctx, "waypoint-server", metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		if ss.Status.ReadyReplicas != ss.Status.Replicas {
+			log.Trace("statefulset not ready, waiting")
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		c.ui.Output(
+			"Error waiting for statefulset ready: %s\n\n%s",
+			clierrors.Humanize(err),
+			errInstallRunning,
+			terminal.WithErrorStyle(),
+		)
+		return nil, nil, "", 1
+	}
+
+	st.Update("Waiting for Kubernetes service to be ready...")
 
 	// Wait for our service to be ready
 	log.Info("waiting for server service to become ready")
@@ -194,6 +221,17 @@ func (c *InstallCommand) InstallKubernetes(
 			return false, nil
 		}
 
+		endpoints, err := clientset.CoreV1().Endpoints(c.config.Namespace).Get(
+			ctx, c.config.ServiceName, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		if len(endpoints.Subsets) == 0 {
+			log.Trace("endpoints are empty, waiting")
+			return false, nil
+		}
+
 		// Get the ports
 		var grpcPort int32
 		var httpPort int32
@@ -222,6 +260,12 @@ func (c *InstallCommand) InstallKubernetes(
 
 		// HTTP address to return
 		httpAddr = fmt.Sprintf("%s:%d", addr, httpPort)
+
+		// Ensure the service is ready to use before returning
+		_, err = net.DialTimeout("tcp", httpAddr, 1*time.Second)
+		if err != nil {
+			return false, nil
+		}
 		log.Info("http server ready", "httpAddr", addr)
 
 		// Set our advertise address
