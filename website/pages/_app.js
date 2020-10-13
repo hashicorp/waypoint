@@ -9,11 +9,8 @@ import Head from 'next/head'
 import AlertBanner from '@hashicorp/react-alert-banner'
 import createConsentManager from '@hashicorp/nextjs-scripts/lib/consent-manager'
 import { ErrorBoundary } from '@hashicorp/nextjs-scripts/lib/bugsnag'
-import { Provider as NextAuthProvider } from 'next-auth/client'
 import ProductSubnav from 'components/subnav'
 import Footer from '../components/footer'
-import AuthIndicator from 'components/auth-indicator'
-import AuthGate from 'components/auth-gate'
 import Error from './_error'
 import { productName } from '../data/metadata'
 import alertBannerData, { ALERT_BANNER_ACTIVE } from 'data/alert-banner'
@@ -27,40 +24,23 @@ function App({ Component, pageProps }) {
 
   return (
     <ErrorBoundary FallbackComponent={Error}>
-      <ConditionalAuthProvider session={pageProps.session}>
-        <HashiHead
-          is={Head}
-          title={`${productName} by HashiCorp`}
-          siteName={`${productName} by HashiCorp`}
-        />
-        {ALERT_BANNER_ACTIVE && (
-          <AlertBanner {...alertBannerData} theme="blue" />
-        )}
-        <HashiStackMenu />
-        <ProductSubnav />
-        <div className="content">
-          <Component {...pageProps} />
-        </div>
-        <Footer openConsentManager={openConsentManager} />
-        <ConsentManager />
-      </ConditionalAuthProvider>
+      <HashiHead
+        is={Head}
+        title={`${productName} by HashiCorp`}
+        siteName={`${productName} by HashiCorp`}
+        description="Waypoint is an open source solution that provides a modern workflow for build, deploy, and release across platforms."
+        image="https://www.waypointproject.io/img/og-image.png"
+        icon={[{ href: '/favicon.ico' }]}
+      />
+      {ALERT_BANNER_ACTIVE && <AlertBanner {...alertBannerData} theme="blue" />}
+      <HashiStackMenu />
+      <ProductSubnav />
+      <div className="content">
+        <Component {...pageProps} />
+      </div>
+      <Footer openConsentManager={openConsentManager} />
+      <ConsentManager />
     </ErrorBoundary>
-  )
-}
-
-const shouldApplyAuth =
-  process.env.HASHI_ENV === 'production' || process.env.HASHI_ENV === 'preview'
-
-function ConditionalAuthProvider({ children, session }) {
-  return shouldApplyAuth ? (
-    <NextAuthProvider session={session}>
-      <AuthGate>
-        {children}
-        <AuthIndicator />
-      </AuthGate>
-    </NextAuthProvider>
-  ) : (
-    <>{children}</>
   )
 }
 
