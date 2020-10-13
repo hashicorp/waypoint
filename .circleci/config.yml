@@ -381,7 +381,11 @@ workflows:
       - check-vendor
       - lint
       - go-test
-      - dev-build
+      - dev-build:
+          filters:
+            branches:
+              ignore:
+                - main
 
   integration:
     jobs:
