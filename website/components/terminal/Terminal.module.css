@@ -60,6 +60,16 @@
   position: relative;
   overflow: scroll;
 
+  /* Hides the scrollbars */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    /* Safari */
+    -webkit-appearance: none;
+    width: 0;
+    height: 0;
+  }
+
   & .codeWrapper {
     & pre {
       padding: 0;
@@ -95,14 +105,6 @@
 
 .noScrollOverflowWrapper {
   composes: overflowWrapper;
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-  &::-webkit-scrollbar {
-    /* Safari */
-    -webkit-appearance: none;
-    width: 0;
-    height: 0;
-  }
 
   & .codeWrapper {
     bottom: 0;
