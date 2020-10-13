@@ -1,7 +1,7 @@
 .step {
-  max-width: 344px;
+  width: 314px;
   @media (max-width: 850px) {
-    max-width: unset;
+    width: unset;
   }
 
   & h4 {
@@ -18,7 +18,7 @@
     }
   }
 
-  & > img {
-    margin-top: 16px;
+  & > .logoList {
+    margin-top: 38px;
   }
 }
