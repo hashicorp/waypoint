@@ -52,7 +52,7 @@ jobs:
     docker:
       - image: cimg/base:2020.01
     environment:
-      WAYPOINT_VERSION: 0.0.1-beta1
+      WAYPOINT_VERSION: ${WAYPOINT_VERSION}
       WAYPOINT_SERVER_ADDR: ''
       WAYPOINT_SERVER_TOKEN: ''
       WAYPOINT_SERVER_TLS: '1'

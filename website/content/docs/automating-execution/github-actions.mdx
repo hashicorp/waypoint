@@ -40,7 +40,7 @@ steps:
   - uses: actions/checkout@v2
   - uses: hashicorp/actions-setup-waypoint
     with:
-      version: '0.1.0'
+      version: '${WAYPOINT_VERSION}'
 - run: waypoint init
 - run: waypoint build
 ```
@@ -67,7 +67,7 @@ steps:
   - uses: hashicorp/action-waypoint
     name: Setup
     with:
-      version: '0.0.1-beta1'
+      version: '${WAYPOINT_VERSION}'
       github_token: ${{ secrets.GITHUB_TOKEN }}
       waypoint_server_address: 'waypoint.example.com:9701'
       waypoint_server_ui: 'https://waypoint.example.com:9702'
@@ -77,14 +77,14 @@ steps:
     name: Build
     with:
       operation: build
-      version: '0.0.1-beta1'
+      version: '${WAYPOINT_VERSION}'
       github_token: ${{ secrets.GITHUB_TOKEN }}
       workspace: default
   - uses: ./.github/actions/action-waypoint
     name: Deploy
     with:
       operation: deploy
-      version: '0.0.1-beta1'
+      version: '${WAYPOINT_VERSION}'
       github_token: ${{ secrets.GITHUB_TOKEN }}
       workspace: default
   - uses: ./.github/actions/action-waypoint
@@ -92,7 +92,7 @@ steps:
     if: ${{ github.ref == 'refs/heads/main' }}
     with:
       operation: release
-      version: '0.0.1-beta1'
+      version: '${WAYPOINT_VERSION}'
       github_token: ${{ secrets.GITHUB_TOKEN }}
       workspace: default
 ```
