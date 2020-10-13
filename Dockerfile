@@ -27,14 +27,13 @@ RUN --mount=type=cache,target=/root/.cache/go-build make bin
 
 FROM alpine
 
-RUN addgroup waypoint && \
-    adduser -S -G waypoint waypoint
-
 COPY --from=builder /tmp/wp-src/waypoint /usr/bin/waypoint
 
 VOLUME ["/data"]
 
-RUN mkdir /data && \
+RUN addgroup waypoint && \
+    adduser -S -G waypoint waypoint && \
+    mkdir /data/ && \
     chown -R waypoint:waypoint /data
 
 USER waypoint
