@@ -3,22 +3,36 @@ layout: docs
 page_title: Documentation
 sidebar_title: Waypoint Overview
 description: |-
-  View a list of hands-on tutorials and resources for learning to deploy with Waypoint.
+  View a list of step-by-step tutorials for learning to deploy with Waypoint.
 ---
 
 # Waypoint
 
-## Get Started with Waypoint
+Learn and develop your knowledge of Waypoint with these tutorials and code resources.
 
-All of these walkthroughs use example applications and are designed to help you quickly try out the Waypoint deployment workflow.
+## Get Started
 
-### Start Here
+- Begin with this brief [quick start tutorial](/docs/getting-started).
+- Continue with an introductory tutorial on [Docker](https://learn.hashicorp.com/collections/waypoint/get-started), [Kubernetes](https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes), or [Nomad](https://learn.hashicorp.com/collections/waypoint/get-started-nomad).
 
-[Deploy an example app with Docker](https://learn.hashicorp.com/collections/waypoint/get-started).
+## Deploy to the cloud
 
-If you're new to Waypoint, we recommend you start with the Docker walkthrough. This walkthrough will take about 10 minutes and uses an example app and Docker Desktop to illustrate the Waypoint workflow.
+Take Waypoint to the cloud with tutorials that deploy to public cloud infrastructure.
 
-Once you have mastered the basics of Waypoint, try deploying an example app to Kubernetes or Nomad.
+- AWS - Visit the [Elastic Container Service tutorial](https://learn.hashicorp.com/tutorials/waypoint/aws-ecs?in=waypoint/aws) or the Elastic Kubernetes Service tabs in the [Kubernetes tutorial](https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes).
+- Azure - Deploy to [Azure Container Instances](https://learn.hashicorp.com/tutorials/waypoint/azure-container-instance?in=waypoint/azure).
+- Google Cloud - Learn from the [Google Cloud Run tutorial](https://learn.hashicorp.com/tutorials/waypoint/google-cloud-run?in=waypoint/google-cloud) or the Google Kubernetes Engine tabs in the [Kubernetes tutorial](https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes).
 
-- [Kubernetes](https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes)
-- [Nomad](https://learn.hashicorp.com/collections/waypoint/get-started-nomad)
+## Explore code samples
+
+A growing number of code samples is available in the [hashicorp/waypoint-examples](https://github.com/hashicorp/waypoint-examples) repository at GitHub. Use these examples or contribute your own.
+
+```shell-session
+git clone https://github.com/hashicorp/waypoint-examples.git
+```
+
+## Extend
+
+The [plugin documentation](/plugins) describes more resources available to use in your Waypoint configuration. Contribute by writing your own plugin with this [plugin tutorial](/docs/extending-waypoint/example-plugin).
+
+Integrate Waypoint into your continuous delivery workflow with examples for [GitHub Actions](docs/automating-execution/github-actions), [CircleCI](/docs/automating-execution/circle-ci), or [Jenkins](/docs/automating-execution/jenkins).
