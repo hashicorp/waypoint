@@ -75,6 +75,8 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /data
+      securityContext:
+        fsGroup: 1000
   volumeClaimTemplates:
   - metadata:
       name: data
