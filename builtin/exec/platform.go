@@ -267,16 +267,63 @@ already have Kubernetes configurations, or "helm" if you use Helm, and so on.
 The "exec" plugin is meant to be an escape hatch from Waypoint. In working
 this way, you will lose many Waypoint benefits. For example, "waypoint destroy"
 functionality will not work with deploys created with the exec plugin.
+
+### Templates
+
+The exec plugin supports templating to access input information about the
+artifact. There are two mechanisms for templates:
+
+1. Any argument in "command" is processed as a template.
+
+2. You may specify a file or directory to be processed for templating
+using the "template" stanza. Any argument with the value "<TPL>" in it
+will be replaced with the path to the template.
+
+Templating follows the format of a Go [text/template](https://golang.org/pkg/text/template/)
+template. The top of the documentation there has details on the format.
+
+#### Common Values
+
+The following template values are always available:
+
+  - ".Env" (map<string>string) - These are environment variables that should
+    be set on the deployed workload. These enable the entrypoint to work so
+    you should set these if able.
+
+
+  - ".Workspace" (string) - The workspace name that the Waypoint deploy is
+    running in. This lets you potentially deploy to different clusters based
+    on this value.
+
+#### Docker Image Input
+
+If the build step creates a Docker image, the following template variables
+are available:
+
+  - ".Input.DockerImageFull" (string) - The full Docker image name and tag.
+
+  - ".Input.DockerImageName" (string) - The Docker image name, without the tag.
+
+  - ".Input.DockerImageTag" (string) - The Docker image tag, such as "latest".
+
 `)
 
 	doc.Example(`
 deploy {
   use "exec" {
-    command = ["kubectl", "apply", "-f", "myapp.yml"]
+    command = ["kubectl", "apply", "-f", "<TPL>"]
 
     template {
       path = "myapp.yml"
     }
+  }
+}
+`)
+
+	doc.Example(`
+deploy {
+  use "exec" {
+    command = ["docker", "run", "{{.Input.DockerImageFull}}"]
   }
 }
 `)
