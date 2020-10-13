@@ -218,13 +218,13 @@ export default function HomePage() {
                   {
                     frames: 5,
                     code:
-                      'Tagging Docker image: example-ruby:latest => gcr.io/wp-dev-277323/example-ruby:latest',
+                      'Tagging Docker image: example-ruby:latest => gcr.io/example/example-ruby:latest',
                     color: 'gray',
                   },
                   {
                     frames: 5,
                     code:
-                      'Docker image pushed: gcr.io/wp-dev-277323/example-ruby:latest',
+                      'Docker image pushed: gcr.io/example/example-ruby:latest',
                     color: 'white',
                   },
                 ],
@@ -295,12 +295,39 @@ export default function HomePage() {
                   },
                   {
                     frames: 5,
-                    color: 'white',
                     code:
-                      '» Configuring https://kubernetes.docker.internal:6443 in namespace default',
+                      '✓ Kubernetes client connected to https://kubernetes.example.com:6443',
                   },
                   {
                     frames: 2,
+                    color: 'gray',
+                    code: [
+                      '⠋ Preparing deployment',
+                      '⠙ Preparing deployment',
+                      '⠹ Preparing deployment',
+                      '⠸ Preparing deployment',
+                      '⠼ Preparing deployment',
+                      '⠴ Preparing deployment',
+                      '⠦ Preparing deployment',
+                      '⠧ Preparing deployment',
+                      '⠇ Preparing deployment',
+                      '⠏ Preparing deployment',
+                      '⠋ Preparing deployment',
+                      '⠙ Preparing deployment',
+                      '⠹ Preparing deployment',
+                      '⠸ Preparing deployment',
+                      '⠼ Preparing deployment',
+                      '⠴ Preparing deployment',
+                      '⠦ Preparing deployment',
+                      '⠧ Preparing deployment',
+                      '⠇ Preparing deployment',
+                      '⠏ Preparing deployment',
+                      '✓ Created deployment',
+                    ],
+                  },
+                  {
+                    frames: 2,
+                    color: 'gray',
                     code: [
                       '⠋ Waiting on deployment to become available: 1/1/0',
                       '⠙ Waiting on deployment to become available: 1/1/0',
@@ -322,12 +349,8 @@ export default function HomePage() {
                       '⠧ Waiting on deployment to become available: 1/1/0',
                       '⠇ Waiting on deployment to become available: 1/1/0',
                       '⠏ Waiting on deployment to become available: 1/1/0',
-                      '✓ Waiting on deployment to become available: 1/1/0',
+                      '✓ Deployment successfully rolled out!',
                     ],
-                  },
-                  {
-                    frames: 10,
-                    code: '✓ Deployment successfully rolled out!',
                   },
                 ],
               },
@@ -398,7 +421,35 @@ export default function HomePage() {
                   },
                   {
                     frames: 5,
-                    code: '✓ Service successfully configured!',
+                    code:
+                      '✓ Kubernetes client connected to https://kubernetes.example.com:6443',
+                  },
+                  {
+                    frames: 2,
+                    color: 'gray',
+                    code: [
+                      '⠋ Preparing service',
+                      '⠙ Preparing service',
+                      '⠹ Preparing service',
+                      '⠸ Preparing service',
+                      '⠼ Preparing service',
+                      '⠴ Preparing service',
+                      '⠦ Preparing service',
+                      '⠧ Preparing service',
+                      '⠇ Preparing service',
+                      '⠏ Preparing service',
+                      '⠋ Preparing service',
+                      '⠙ Preparing service',
+                      '⠹ Preparing service',
+                      '⠸ Preparing service',
+                      '⠼ Preparing service',
+                      '⠴ Preparing service',
+                      '⠦ Preparing service',
+                      '⠧ Preparing service',
+                      '⠇ Preparing service',
+                      '⠏ Preparing service',
+                      '✓ Service is ready!',
+                    ],
                   },
                   { code: '' },
                   {
@@ -413,20 +464,20 @@ export default function HomePage() {
                   },
                   {
                     frames: 5,
-                    code: 'Deployment: 01EJCSFNDDD15P2BXBW2KCYVB2',
+                    code: '  Deployment: 01EJCSFNDDD15P2BXBW2KCYVB2',
                     color: 'navy',
                   },
                   { code: '' },
                   {
                     frames: 5,
                     code:
-                      'The deploy was successful! A Waypoint deployment URL is shown below. This can be used internally to check your deployment and is not meant for external traffic. You can manage this hostname using "waypoint hostname"',
+                      '\nThe deploy was successful! A Waypoint deployment URL is shown below. This can be used internally to check your deployment and is not meant for external traffic. You can manage this hostname using "waypoint hostname"',
                     color: 'gray',
                   },
                   { code: '' },
                   {
                     frames: 1,
-                    code: 'Release URL: https://www.example.com',
+                    code: '\n   Release URL: https://www.example.com',
                     color: 'white',
                   },
                   {
