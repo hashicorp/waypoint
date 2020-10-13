@@ -1,0 +1,123 @@
+---
+layout: docs
+page_title: Roadmap
+sidebar_title: Roadmap
+description: |-
+  This page will outline some of the ideas we have for future versions of Waypoint. This is not an exhaustive list nor is it a promise that these features will be built, but it gives a glimpse in the vision we have for this project.
+---
+
+# Waypoint Roadmap
+
+Waypoint is a new project and we have a lot we want to achieve with it.
+This page will outline some of the ideas we have for future versions of Waypoint.
+This is not an exhaustive list nor is it a promise that these features will
+be built, but it gives a glimpse in the vision we have for this project.
+
+For a finer-grained view into our roadmap and what is being worked on for
+a release, please refer to the [GitHub Issue Tracker](https://github.com/hashicorp/waypoint/issues).
+This is a more manual approach to reading our roadmap and includes small details
+such as bug fixes, but is much more accurate to what we're working on.
+
+### Server Production Readiness Improvements
+
+The initial Waypoint releases have a minimal featureset around running the Waypoint server.
+We plan to improve the `waypoint install` and `waypoint server run` interfaces
+to support more options, such as custom TLS certs.
+
+### Config and Secrets
+
+Waypoint has the ability to manage [application configuration](/docs/app-config)
+via the `waypoint config` CLI. This allows you to set static environment variables.
+We plan on making a few major improvements to application config:
+
+- **Config syncing** will allow configuration keys and values to sync from
+  an external source, such as Consul, Vault, etcd, and other sources. This will
+  be a pluggable system in time but may be hardcoded initially. This can also
+  be used for secrets since the syncing will happen at the entrypoint and not the
+  server.
+
+- **Writing config to files instead of environment variables** will enable
+  Waypoint application configuration management to manage a wider array of
+  applications that expect their config in files.
+
+- **App restarts on config change** will restart the application gracefully
+  when any configuration changes.
+
+### Access Control
+
+The initial Waypoint release has a minimal token system that is used as a
+blanket authorization mechanism. In the future we will add a more fine-grained
+access control mechanism to Waypoint.
+
+### Service Brokering (Databases, Queues, etc.)
+
+We plan on having some mechanism by which applications can request services
+such as databases, queues, and so on. These services must be satisfied by
+some external system such as Amazon RDS. Waypoint will be able to request
+the service, connect the configuration, and destroy it when its no longer
+in use.
+
+A design goal of Waypoint is explicitly to _not do automated infrastructure
+management_, so this feature will still put the burden of managing these
+services onto the user. However, Waypoint can help orchestrate initializing
+them and configuring applications.
+
+We will likely integrate with [Terraform](https://terraform.io) in some way.
+
+### App Promotion
+
+Waypoint initially has the [workspaces](/docs/workspaces) feature for
+isolating different environments. This is a working but minimal feature
+targeted towards this use case.
+
+We plan on building on this feature to enable workspaces that may target
+different infrastructures (such as a dev vs. production cluster) and we
+want to build features so applications can be easily "promoted" from
+one stage to another.
+
+### Exec Improvements
+
+We're really excited about [`waypoint exec`](/docs/exec) but there
+are a lot of improvements we want to make here:
+
+- **New deployment targeting.** - We want exec to be able to spin up
+  new exec-focused deployments so that your exec sessions aren't shared with
+  deployments that might be receiving user traffic. Additionally, this will
+  let us harden security by disabling exec in most deployments.
+
+- **Better security, specifically around disabling.** - We want exec to
+  be safe. One mechanism towards that is making is to that exec is disabled
+  as often as possible but can still easily be used. We think having exec
+  disabled by default paired with the above deployment targeting feature makes
+  this a reality.
+
+- **Native exec.** - If a platform provides a native `exec` feature, we
+  want to provide that as an option to users. This is always likely to not
+  be a default because we want the consistent option as the default.
+
+### Remote Runners
+
+We will enable the ability for operation execution (build, deploy, etc.)
+to happen remotely. The CLI can still kick off operations but operations will
+happen on a remote machine.
+
+The foundation for this and initially implementations are actually already
+in the initial versions of Waypoint. But we didn't feel confident in the
+implementation yet and we didn't feel we completed the story here to properly
+document and advertise this functionality.
+
+Remote runners will enable more advanced workflows and improve security
+since access credentials can be encapsulated onto remote machines. The runners
+are expected to be run by the individual (not a hosted service). Runners also
+better enable Slack and other integrations.
+
+We will continue building on this and release this in the future.
+
+### Slack
+
+We want to enable a "ChatOps" style interface to Waypoint. We spiked
+an experiment where we got this working and it is committed to the source
+currently under the `x/` directory (for "experimental").
+
+In the end, we felt this experience wasn't quite ready for the initial Waypoint
+release but we will enable this workflow.

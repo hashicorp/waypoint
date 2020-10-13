@@ -139,4 +139,5 @@ export default [
     category: 'internals',
     content: ['architecture', 'execution'],
   },
+  'roadmap',
 ]
