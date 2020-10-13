@@ -30,7 +30,7 @@
 
       @media (min-width: 900px) {
         & .logoList {
-          max-width: 390px;
+          max-width: 400px;
         }
 
         /* Float this one right w/ RTL behaviors */
@@ -39,10 +39,6 @@
           text-align: right;
           & ul {
             flex-direction: row-reverse;
-            & > li {
-              margin-right: 0;
-              margin-left: 34px;
-            }
           }
         }
       }

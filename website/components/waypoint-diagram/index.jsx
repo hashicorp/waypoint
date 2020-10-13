@@ -64,12 +64,12 @@ export default function WaypointDiagram({ className }) {
               className={styles.logoList}
               logos={[
                 {
-                  alt: 'Cloud Deploy',
-                  url: require('./img/logos/cloud-deploy.svg'),
+                  alt: 'Azure Container Service',
+                  url: require('./img/logos/azure-container-service.svg'),
                 },
                 {
-                  alt: 'Amazon EC2',
-                  url: require('./img/logos/ec2.svg'),
+                  alt: 'Amazon ECS',
+                  url: require('./img/logos/amazon-ecs.svg'),
                 },
                 {
                   alt: 'Netlify',

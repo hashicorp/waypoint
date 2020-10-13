@@ -56,7 +56,40 @@ export default function HomePage() {
                   </p>
                 </>
               ),
-              logos: require('./img/step-logos/build.svg'),
+              logos: [
+                {
+                  url: require('./img/step-logos/angular.svg'),
+                  alt: 'Angular',
+                },
+                {
+                  url: require('./img/step-logos/react.svg'),
+                  alt: 'React',
+                },
+                {
+                  url: require('./img/step-logos/ruby.svg'),
+                  alt: 'Ruby',
+                },
+                {
+                  url: require('./img/step-logos/python.svg'),
+                  alt: 'Python',
+                },
+                {
+                  url: require('./img/step-logos/go.svg'),
+                  alt: 'Go',
+                },
+                {
+                  url: require('./img/step-logos/nodejs.svg'),
+                  alt: 'Node.js',
+                },
+                {
+                  url: require('./img/step-logos/nextjs.svg'),
+                  alt: 'Next.js',
+                },
+                {
+                  url: require('./img/step-logos/and-more.svg'),
+                  alt: 'and More',
+                },
+              ],
               terminal: {
                 frameLength: 100,
                 loop: false,
@@ -212,7 +245,40 @@ export default function HomePage() {
                   </p>
                 </>
               ),
-              logos: require('./img/step-logos/deploy.svg'),
+              logos: [
+                {
+                  url: require('./img/step-logos/kubernetes.svg'),
+                  alt: 'Kubernetes',
+                },
+                {
+                  url: require('./img/step-logos/nomad.svg'),
+                  alt: 'Nomad',
+                },
+                {
+                  url: require('./img/step-logos/netlify.svg'),
+                  alt: 'Netlify',
+                },
+                {
+                  url: require('./img/step-logos/amazon-ecs.svg'),
+                  alt: 'Amazon ECS',
+                },
+                {
+                  url: require('./img/step-logos/azure-container-service.svg'),
+                  alt: 'Azure Container Service',
+                },
+                {
+                  url: require('./img/step-logos/docker.svg'),
+                  alt: 'Docker',
+                },
+                {
+                  url: require('./img/step-logos/cloud-run.svg'),
+                  alt: 'Google Cloud Run',
+                },
+                {
+                  url: require('./img/step-logos/and-more.svg'),
+                  alt: 'and More',
+                },
+              ],
               terminal: {
                 frameLength: 100,
                 loop: false,
@@ -282,7 +348,40 @@ export default function HomePage() {
                   </p>
                 </>
               ),
-              logos: require('./img/step-logos/release.svg'),
+              logos: [
+                {
+                  url: require('./img/step-logos/aws.svg'),
+                  alt: 'Amazon Web Services',
+                },
+                {
+                  url: require('./img/step-logos/azure.svg'),
+                  alt: 'Microsoft Azure',
+                },
+                {
+                  url: require('./img/step-logos/gcp.svg'),
+                  alt: 'Google Cloud Platform',
+                },
+                {
+                  url: require('./img/step-logos/terraform.svg'),
+                  alt: 'Terraform',
+                },
+                {
+                  url: require('./img/step-logos/circleci.svg'),
+                  alt: 'CircleCI',
+                },
+                {
+                  url: require('./img/step-logos/slack.svg'),
+                  alt: 'Slack',
+                },
+                {
+                  url: require('./img/step-logos/github.svg'),
+                  alt: 'Github',
+                },
+                {
+                  url: require('./img/step-logos/and-more.svg'),
+                  alt: 'and More',
+                },
+              ],
               terminal: {
                 frameLength: 100,
                 loop: false,
