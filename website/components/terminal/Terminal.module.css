@@ -70,6 +70,7 @@
       font-weight: normal;
       font-size: 12px;
       line-height: 27px;
+      white-space: pre-wrap;
       color: var(--blue);
       &.short {
         line-height: 16px;
