@@ -105,6 +105,17 @@ export default [
   {
     category: 'extending-waypoint',
     content: [
+      {
+        category: 'creating-plugins',
+        content: [
+          'main',
+          'configuration',
+          'build-interface',
+          'compiling',
+          'example-application',
+          'testing',
+        ],
+      },
       'main-func',
       'passing-values',
       {
@@ -121,7 +132,6 @@ export default [
           'default-parameters',
         ],
       },
-      'example-plugin',
     ],
   },
   {

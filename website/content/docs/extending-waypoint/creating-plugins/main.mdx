@@ -1,0 +1,51 @@
+---
+layout: docs
+page_title: 'Registering Plugin Components'
+sidebar_title: 'Registering Plugin Components'
+description: |-
+  How Waypoint plugins work
+---
+
+## Registering Plugin Components
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/4zwZCpqo0j8?start=145&end=200"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+></iframe>
+
+A Waypoint plugin is just a Go binary; if you look at `main.go` you will see the `main` function. The `sdk.Main`
+function sets up the Waypoint SDK and registers the interfaces for the go-plugin system for you. All you need to do is
+pass `Main` the components your Plugin implements using the `sdk.WithComponents` function. Since this is the default
+template, all the different plugin components are registered.
+
+```go
+func main() {
+	// sdk.Main allows you to register the components which should
+	// be included in your plugin
+	// Main sets up all the go-plugin requirements
+
+	sdk.Main(sdk.WithComponents(
+		// Comment out any components which are not
+		// required for your plugin
+		&builder.Builder{},
+		&registry.Registry{},
+		&platform.Platform{},
+		&release.ReleaseManager{},
+	))
+}
+```
+
+The plugin you will build in this guide only implements the `Builder` component so you can remove the other components.
+Your final `Main` block should look like the following:
+
+```go
+	sdk.Main(sdk.WithComponents(
+		&builder.Builder{},
+	))
+```
+
+[Next - Handling Configuration](/docs/extending-waypoint/creating-plugins/configuration)
