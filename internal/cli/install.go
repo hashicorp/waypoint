@@ -337,7 +337,7 @@ func (c *InstallCommand) Run(args []string) int {
 	log.Info("connecting to the server so we can set the server config", "addr", contextConfig.Server.Address)
 	conn, err := serverclient.Connect(ctx,
 		serverclient.FromContextConfig(contextConfig),
-		serverclient.Timeout(2*time.Minute),
+		serverclient.Timeout(5*time.Minute),
 	)
 	if err != nil {
 		c.ui.Output(
