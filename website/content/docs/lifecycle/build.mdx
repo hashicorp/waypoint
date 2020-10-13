@@ -104,6 +104,20 @@ buildpacks. The "pack" plugin defaults to Heroku Buildpacks with a builder image
 located on Docker Hub at
 [heroku/buildpacks:18](https://hub.docker.com/r/heroku/buildpacks/tags).
 
+#### Customizing the Buildpack Launch Command
+
+When using the default Heroku Buildpack, you have the ability to customize the command that starts your server process within the container workload. This is done by using adding a `Procfile` to the project directory. An example of this model in practice would be the build process generating the static binaries for your web service within your application image, and then executing the necessary commands to start ExpressJS to host those static files. See the [waypoint-examples](https://github.com/hashicorp/waypoint-examples) repository for more examples of this model.
+
+The `Procfile` syntax is `web: <server process> <server file>`. See the sample Procfile below:
+
+```bash
+web: node server.js
+```
+
+You will need to include a file that can be executed by a server process (`server.js` above) in order to use this capability.
+
+The ability to use a Procfile is dependent on the Buildpack provider. This capability can be added to alternative buildpack providers, however you will need to build your own builder image and store it in an accessible repository. Please see the Buildpack provider's documentation for further details around this capability.
+
 #### Configuring an Alternative Buildpack Provider
 
 | Provider              | Builder Image                 |
