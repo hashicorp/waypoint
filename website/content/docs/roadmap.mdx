@@ -49,6 +49,12 @@ The initial Waypoint release has a minimal token system that is used as a
 blanket authorization mechanism. In the future we will add a more fine-grained
 access control mechanism to Waypoint.
 
+One exception to this today are Entrypoint tokens. The Entrypoint uses
+a special fine-grained token that allows it to only access entrypoint-related
+functionality for the specific deployment it represents. This was built as
+a special security mechanism however and isn't generally available to limit
+access for other tokens.
+
 ### Service Brokering (Databases, Queues, etc.)
 
 We plan on having some mechanism by which applications can request services
