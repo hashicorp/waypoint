@@ -91,7 +91,7 @@ export default [
       'auth',
       {
         category: 'run',
-        content: ['maintenance', 'security'],
+        content: ['maintenance', 'production', 'security'],
       },
     ],
   },
