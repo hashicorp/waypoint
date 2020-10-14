@@ -13,8 +13,8 @@ export default function HomePage() {
     <div className={styles.homePage}>
       <HomepageHero
         title="Build. Deploy. Release."
-        subtitle="Waypoint provides a modern workflow for build, deploy, and release across platforms."
-        description="Waypoint does not run your software. It provides you a single configuration file and API to manage and observe deployments across environments and platforms, from your local workstation to your CI environment."
+        subtitle="Waypoint provides a modern workflow to build, deploy, and release across platforms."
+        description="Waypoint uses a single configuration file and common workflow to manage and observe deployments across platforms such as Kubernetes, Nomad, EC2, Google Cloud Run, and more."
         links={[
           {
             text: 'Get Started',
@@ -42,9 +42,10 @@ export default function HomePage() {
               description: (
                 <>
                   <p>
-                    Waypoint builds applications for your language or framework,
-                    from default compilation for common frameworks using
-                    Buildpacks to fine grained control with custom Dockerfiles.
+                    Waypoint builds applications for any language or framework.
+                    You can use Buildpacks for automatically building common
+                    frameworks or custom Dockerfiles or other build tools for
+                    more fine-grained control.
                   </p>
                   <p>
                     The build step is where your application and assets are
@@ -236,12 +237,13 @@ export default function HomePage() {
                 <>
                   <p>
                     Waypoint deploys artifacts created by the build step to a
-                    variety of platforms, from Kubernetes to static site hosts.
+                    variety of platforms, from Kubernetes to EC2 to static site
+                    hosts.
                   </p>
                   <p>
-                    It configures your target platform to be accessible and
-                    starts the service, making it available for traffic at the
-                    release stage.
+                    It configures your target platform and prepares the new
+                    application version to be publicly accessible. Deployments
+                    are accessible via a preview URL prior to release.
                   </p>
                 </>
               ),
@@ -352,6 +354,20 @@ export default function HomePage() {
                       '✓ Deployment successfully rolled out!',
                     ],
                   },
+                  { code: '' },
+                  {
+                    frames: 2,
+                    code:
+                      '\nThe deploy was successful! A Waypoint deployment URL is shown below. This can be used internally to check your deployment and is not meant for external traffic. You can manage this hostname using "waypoint hostname"',
+                    color: 'gray',
+                  },
+                  { code: '' },
+                  {
+                    frames: 1,
+                    code:
+                      '\nDeployment URL: https://immensely-guided-stag--v5.waypoint.run',
+                    color: 'green',
+                  },
                 ],
               },
             },
@@ -360,14 +376,15 @@ export default function HomePage() {
               description: (
                 <>
                   <p>
-                    Your deployment, a running copy of the application you built
-                    and stored the artifact for, is released with a deployment
-                    specific routable URL for previews.
+                    Waypoint releases your staged deployments and makes them
+                    accessible to the public. This works by updating load
+                    balancers, configuring DNS, etc. The exact behavior depends
+                    on your target platform.
                   </p>
                   <p>
-                    In addition, if your application is configured with a
-                    release step, it will automatically graduate or make the
-                    release available based on an extensible plugin interface.
+                    The release step is pluggable, enabling you to drop in
+                    custom release logic such as blue/green, service mesh usage,
+                    and more.
                   </p>
                 </>
               ),
@@ -470,21 +487,14 @@ export default function HomePage() {
                   { code: '' },
                   {
                     frames: 5,
-                    code:
-                      '\nThe deploy was successful! A Waypoint deployment URL is shown below. This can be used internally to check your deployment and is not meant for external traffic. You can manage this hostname using "waypoint hostname"',
-                    color: 'gray',
+                    code: '\nThe release was successful!',
+                    color: 'green',
                   },
                   { code: '' },
                   {
                     frames: 1,
-                    code: '\n   Release URL: https://www.example.com',
-                    color: 'white',
-                  },
-                  {
-                    frames: 1,
-                    code:
-                      'Deployment URL: https://immensely-guided-stag--v5.waypoint.run',
-                    color: 'white',
+                    code: '\nRelease URL: https://www.example.com',
+                    color: 'green',
                   },
                 ],
               },
@@ -545,6 +555,10 @@ export default function HomePage() {
                     { code: '$ waypoint exec bash' },
                     {
                       code: 'Connected to deployment v18',
+                      color: 'gray',
+                    },
+                    {
+                      code: '$ rake db:migrate',
                       color: 'white',
                     },
                   ]}
@@ -566,28 +580,22 @@ export default function HomePage() {
                       code: '✓ Deployment successfully rolled out!',
                       color: 'navy',
                     },
-                    { code: '' },
+                    { code: '\n' },
                     { code: '» Releasing...', color: 'white' },
                     {
                       code: '✓ Service successfully configured!',
                       color: 'navy',
                     },
-                    { code: '' },
-                    { code: '» Pruning old deployments...', color: 'white' },
-                    {
-                      code: 'Deployment: 01EJYN2P2FG4N9CTXAYGGZW9W0',
-                      color: 'white',
-                    },
-                    { code: '' },
+                    { code: '\n' },
                     {
                       code:
-                        'The deploy was successful! A Waypoint deployment URL is shown below.',
+                        'The deploy was successful! A Waypoint URL is shown below.',
                       color: 'white',
                     },
-                    { code: '' },
+                    { code: '\n' },
                     {
                       code:
-                        'Release URL: https://admittedly-poetic-joey.waypoint.run',
+                        '   Release URL: https://admittedly-poetic-joey.waypoint.run',
                       color: 'white',
                     },
                     {
@@ -615,7 +623,7 @@ export default function HomePage() {
             {
               title: 'CI/CD and Version Control Integration',
               description:
-                'Integrate easily with existing CI/CD providers and version control providers like GitHub',
+                'Integrate with existing CI/CD providers and version control providers like GitHub, CircleCI, Jenksins, and more',
               learnMoreLink: '/docs/automating-execution',
               content: (
                 <Terminal
@@ -714,10 +722,6 @@ export default function HomePage() {
                     },
                     {
                       indent: 1,
-                      code: '',
-                    },
-                    {
-                      indent: 1,
                       code: 'client, err := api.NewClient(api.DefaultConfig())',
                       color: 'white',
                     },
@@ -797,7 +801,7 @@ export default function HomePage() {
 
       <BrandedCta
         heading="Ready to get started?"
-        content="Explore Waypoint documentation to deploy a simple application."
+        content="Start by following a tutorial to deploy a simple application with Waypoint or learn about how the project works by exploring the documentation."
         links={[
           {
             text: 'Get Started',
