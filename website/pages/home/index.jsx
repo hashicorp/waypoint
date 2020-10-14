@@ -801,7 +801,7 @@ export default function HomePage() {
 
       <BrandedCta
         heading="Ready to get started?"
-        content="Explore Waypoint documentation to deploy your first application."
+        content="Start by following a tutorial to deploy a simple application with Waypoint or learn about how the project works by exploring the documentation."
         links={[
           {
             text: 'Get Started',
