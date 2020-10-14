@@ -29,7 +29,7 @@ Install the Waypoint server to Docker with the `install` command. The
 `-accept-tos` flag is required to use the `waypoint.run` URL publishing service.
 
 ```shell-session
-waypoint install --platform=docker -accept-tos
+$ waypoint install --platform=docker -accept-tos
 ```
 
 ## Initialize Waypoint
@@ -38,13 +38,13 @@ Clone the git repository with Waypoint application examples, or [download the
 code](https://github.com/hashicorp/waypoint-examples) directly from GitHub.
 
 ```shell-session
-git clone https://github.com/hashicorp/waypoint-examples.git
+$ git clone https://github.com/hashicorp/waypoint-examples.git
 ```
 
 Navigate to the `docker/nodejs` directory.
 
 ```shell-session
-cd docker/nodejs
+$ cd docker/nodejs
 ```
 
 All the code you need is provided in this directory, including a `waypoint.hcl`
@@ -53,7 +53,7 @@ configuration file that will deploy the application to Docker.
 Run `init` to set up the project.
 
 ```shell-session
-waypoint init
+$ waypoint init
 ```
 
 ## Deploy
@@ -61,7 +61,7 @@ waypoint init
 Now, run `waypoint up` to build, deploy, and release the application.
 
 ```shell-session
-waypoint up
+$ waypoint up
 ```
 
 It may take a minute or two. Visit the URL shown in the output. You will see a
@@ -75,7 +75,7 @@ Change any part of the file at `docker/nodejs/views/pages/index.ejs`. Run `up`
 again to deploy a new version of the application.
 
 ```shell-session
-waypoint up
+$ waypoint up
 ```
 
 ## Destroy
@@ -83,7 +83,7 @@ waypoint up
 When you are done, run `destroy` to remove the application from Docker.
 
 ```shell-session
-waypoint destroy
+$ waypoint destroy
 ```
 
 ## Next Steps

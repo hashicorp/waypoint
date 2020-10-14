@@ -11,8 +11,8 @@ description: |-
 Create a new folder called `example_app` in your `$HOME` folder; there is no restriction on the location of Waypoint apps,
 `$HOME` is just used for the guide.
 
-```shell
-mkdir $HOME/example_app
+```shell-session
+$ mkdir $HOME/example_app
 ```
 
 If you look at the following example configuration, you will see that the `use` block for the `build` has a value
@@ -25,7 +25,7 @@ The configuration also has the values `app` for the `output_name` and the source
 in the same location as the plugin config. First, create a file `waypoint.hcl` in the folder `$HOME/example_app/` with
 the following contents.
 
-```javascript
+```hcl
 project = "guides"
 
 app "example" {

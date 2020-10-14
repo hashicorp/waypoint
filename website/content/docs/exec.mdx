@@ -20,7 +20,7 @@ The `waypoint exec` command can be used to execute a command in the context
 of a deployed application. The example below shows exec being used to open a
 shell:
 
-```
+```shell-session
 $ waypoint exec bash
 # echo foo
 foo
@@ -29,7 +29,7 @@ foo
 This is useful for debugging a deployment that may not be behaving as
 expected. You can also run one-off commands that aren't interactive:
 
-```
+```shell-session
 $ waypoint exec rake db:migrate
 ...
 ```

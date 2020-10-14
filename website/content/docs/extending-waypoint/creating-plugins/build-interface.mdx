@@ -8,6 +8,8 @@ description: |-
 
 # Implementing the `Builder` Interface
 
+Video tutorial below:
+
 <iframe
   width="560"
   height="315"
@@ -27,7 +29,7 @@ BuildFunc() interface{}
 
 The function to be called does not strictly correspond to any signature for the input parameters. Waypoint functions
 have their parameters dynamically injected at runtime. The list of available parameters can be found in the
-[Default Parameters](docs/extending-waypoint/plugin-components/default-parameters) documentation.
+[Default Parameters](/docs/extending-waypoint/plugin-interfaces/default-parameters) documentation.
 
 While you can choose the input parameters for your `BuildFunc`, Waypoint enforces specific output parameters. These
 return parameters must be of types `proto.Message`, and `error`. The `proto.Message` is a struct which implements the
@@ -85,7 +87,7 @@ type Binary struct {
 
 For this guide, you do not need to change `Binary`; however, if you would like to learn more about passing values
 between components, please see the
-[specific documentation](/docs/extending-waypoint/plugin-components/passing-values).
+[specific documentation](/docs/extending-waypoint/passing-values).
 
 ## Creating the Build Process
 
