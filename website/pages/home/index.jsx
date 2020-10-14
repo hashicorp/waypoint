@@ -359,7 +359,7 @@ export default function HomePage() {
                     frames: 2,
                     code:
                       '\nThe deploy was successful! A Waypoint deployment URL is shown below. This can be used internally to check your deployment and is not meant for external traffic. You can manage this hostname using "waypoint hostname"',
-                    color: 'green',
+                    color: 'gray',
                   },
                   { code: '' },
                   {
