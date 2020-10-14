@@ -24,7 +24,7 @@ be comprised of one or more applications.
 
 The purpose of the "project" is to give Waypoint a single name to refer
 to a repository or collection of applications. Some features are used at
-the project scope, such as setting [application configuration](/docs/config).
+the project scope, such as setting [application configuration](/docs/app-config).
 
 ## Application (or "App")
 
@@ -44,7 +44,7 @@ A "stanza" is an block of code that opens and closes with braces `{ }`
 and may contain more configuration parameters. Below, `app "label-name" {}` is
 the `app` stanza.
 
-```
+```hcl
 app "label-name" {
   #...
 }
@@ -57,7 +57,7 @@ A stanza is a parameter, but not all parameters are stanzas.
 A label for a stanza is identified by the quotation marks `""`.
 The `app` stanza takes a label named "label-name".
 
-```
+```hcl
 app "label-name" {
   #...
 }

@@ -14,7 +14,7 @@ A deploy takes a previously [built artifact](/docs/lifecycle/build) and stages i
 traffic, but is not yet open to public traffic. For example, the application
 should not be added to the load balancer, DNS should not be updated, etc.
 While it is staged, the deployment is accessible via the
-[deployment URL](/docs/url#deployment-urls) or other internal means.
+[deployment URL](/docs/url#per-deployment-urls) or other internal means.
 
 -> **Note:** Not all platforms support the concept of "staging" a deployment or this
 behavior may not be desirable. Waypoint does not enforce this requirement
@@ -27,7 +27,7 @@ A deploy is triggered during a `waypoint up` or using the dedicated
 
 The deploy is configured using the `deploy` stanza within an `app`:
 
-```
+```hcl
 app "my-app" {
   deploy {
     use "kubernetes" {}
@@ -71,7 +71,7 @@ Waypoint users to disable this behavior as soon as they're comfortable.
 This behavior can be disabled by using the `-release=false` flag
 with `waypoint deploy`:
 
-```
+```shell-session
 $ waypoint deploy -release=false
 ...
 ```

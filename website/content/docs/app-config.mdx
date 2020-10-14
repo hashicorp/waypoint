@@ -22,7 +22,7 @@ This functionality requires the [Waypoint entrypoint](/docs/entrypoint).
 
 Configuration can be set using `waypoint config set`.
 
-```
+```shell-session
 $ waypoint config set DATABASE_URL="postgresql://example.com:5432"
 ```
 
@@ -46,7 +46,7 @@ You may use the `-app` flag to scope a variable to a specific application.
 For this scope, only a specific application in the project will have the
 configuration set.
 
-```
+```shell-session
 $ waypoint config set -app web PORT=8080
 ```
 

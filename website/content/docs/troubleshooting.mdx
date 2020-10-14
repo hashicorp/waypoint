@@ -16,20 +16,20 @@ The Waypoint Server creates several resources in Docker and Kubernetes that shou
 
 `waypoint install` for Docker creates a container and a volume. These resources should be removed when Waypoint Server is no longer needed. These are some example `docker` commands that should clean up after a Waypoint Server installation.
 
-```
-docker stop waypoint-server
-docker rm waypoint-server
-docker volume prune -f
+```shell-session
+$ docker stop waypoint-server
+$ docker rm waypoint-server
+$ docker volume prune -f
 ```
 
 ### Waypoint Server in Kubernetes
 
 `waypoint install` for Kubernetes creates a StatefulSet, Service and PersistentVolumeClaim. These resources should be removed when Waypoint Server is no longer needed. These are some example `kubectl` commands that should clean up after a Waypoint Server installation.
 
-```
-kubectl delete statefulset waypoint-server
-kubectl delete pvc data-waypoint-server-0
-kubectl delete svc waypoint
+```shell-session
+$ kubectl delete statefulset waypoint-server
+$ kubectl delete pvc data-waypoint-server-0
+$ kubectl delete svc waypoint
 ```
 
 ## Pack Builder No Such Image
@@ -46,7 +46,7 @@ Creating new buildpack-based image using builder: heroku/buildpacks:18
 
 You may need to remove the Docker volumes that are responsible for storing cached images for pack.
 
-```
+```shell-session
 $ docker volume list
 ...
 ```

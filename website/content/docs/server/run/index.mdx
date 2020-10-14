@@ -44,7 +44,7 @@ with `waypoint server run`.**
 
 First, start the server:
 
-```sh
+```shell-session
 $ waypoint server run -db=data.db
 
 » Server configuration:
@@ -80,7 +80,7 @@ The `waypoint server run` output should contain instructions on how to do
 this, including a CLI command you can copy and paste. The output should
 look like the following:
 
-```
+```shell-session
 $ waypoint server run
 ...
 
@@ -97,7 +97,7 @@ $ waypoint server run
 
 Copy and paste that command to bootstrap:
 
-```sh
+```shell-session
 $ waypoint server bootstrap -server-addr=127.0.0.1:9701 -server-tls-skip-verify
 ```
 

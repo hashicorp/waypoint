@@ -39,7 +39,7 @@ To create a context, use the `waypoint context create` command. This takes
 a set of flags to configure how to connect to the server. The example
 below configures a context:
 
-```
+```shell-session
 $ waypoint context create my-server \
     -server-addr=localhost:9701 \
     -server-auth-token=abcd1234 \
@@ -57,7 +57,7 @@ To verify your CLI is connecting properly, use the `waypoint context verify`
 command. This will test that the default context can connect properly. It
 will output both the context tested and a success message if successful.
 
-```sh
+```shell-session
 $ waypoint context verify
 Successfully connected to the server using the "my-server" context.
 ```

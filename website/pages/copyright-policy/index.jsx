@@ -7,7 +7,7 @@ export default function CopyrightPolicyPage() {
         HashiCorp, Inc. (Company) has adopted the following general policy
         toward copyright infringement in accordance with the Digital Millennium
         Copyright Act or DMCA (posted at 
-        <a href="www.copyright.gov/legislation/dmca.pdf">
+        <a href="http://www.copyright.gov/legislation/dmca.pdf">
           www.copyright.gov/legislation/dmca.pdf
         </a>
         ). The address of Company’s Designated Agent to Receive Notification of

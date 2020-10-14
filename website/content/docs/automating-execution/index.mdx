@@ -88,7 +88,7 @@ pattern for this might be to utilize a git branch in a name of a workspace.
 
 For example:
 
-```
+```shell-session
 $ waypoint up -workspace $(git symbolic-ref HEAD)
 ```
 
@@ -105,7 +105,7 @@ Labels can be specified as arguments to the main operation commands.
 
 For example:
 
-```
+```shell-session
 $ waypoint deploy -label git_sha=$GITHUB_SHA -label build_id=$BUILD_ID -label build_hostname=$(hostname)
 ```
 
