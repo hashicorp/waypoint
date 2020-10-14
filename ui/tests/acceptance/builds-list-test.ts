@@ -5,7 +5,7 @@ import { setupMirage } from 'ember-cli-mirage/test-support';
 import { visitable, create, collection } from 'ember-cli-page-object';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
 
-const buildsUrl = '/default/projects/microchip/app/wp-bandwidth/builds';
+const buildsUrl = '/default/microchip/app/wp-bandwidth/builds';
 
 const page = create({
   // todo(pearkes): seeds inline tests
@@ -17,7 +17,7 @@ module('Acceptance | builds list', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
 
-  test('visiting /builds', async function (assert) {
+  test('visiting builds page', async function (assert) {
     // todo(pearkes): generalize login
     window.localStorage.waypointAuthToken = 'foo';
 

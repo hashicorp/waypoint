@@ -1,3 +1,4 @@
+import Ember from 'ember';
 import Service from '@ember/service';
 import Route from '@ember/routing/route';
 import { task } from 'ember-concurrency-decorators';
@@ -40,6 +41,10 @@ export default class PollModelService extends Service {
   })
   async poll() {
     while (true) {
+      if (Ember.testing) {
+        return;
+      }
+
       await timeout(INTERVAL);
 
       try {
