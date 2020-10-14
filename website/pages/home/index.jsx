@@ -500,7 +500,7 @@ export default function HomePage() {
               title: 'Application Logs',
               description:
                 'View log output for running applications and deployments',
-              learnMoreLink: 'https://waypointproject.io/docs/logs',
+              learnMoreLink: '/docs/logs',
               content: (
                 <Terminal
                   lines={[
@@ -538,6 +538,7 @@ export default function HomePage() {
               title: 'Live Exec',
               description:
                 'Execute a command in the context of a running application',
+              learnMoreLink: '/docs/exec',
               content: (
                 <Terminal
                   lines={[
@@ -554,7 +555,7 @@ export default function HomePage() {
               title: 'Preview URLs',
               description:
                 'Get publicly accessible preview URLs per-deployment',
-              learnMoreLink: 'https://waypointproject.io/docs/url',
+              learnMoreLink: '/docs/url',
               content: (
                 <Terminal
                   lines={[
@@ -615,7 +616,7 @@ export default function HomePage() {
               title: 'CI/CD and Version Control Integration',
               description:
                 'Integrate easily with existing CI/CD providers and version control providers like GitHub',
-              learnMoreLink: '/docs/automating-execution/github-actions',
+              learnMoreLink: '/docs/automating-execution',
               content: (
                 <Terminal
                   title="config.yaml"
@@ -675,6 +676,7 @@ export default function HomePage() {
               title: 'Extensible Plugin Interface',
               description:
                 'Easily extend Waypoint with custom support for platforms, build processes, and release systems.',
+              learnMoreLink: '/docs/extending-waypoint',
               content: (
                 <Terminal
                   title="plugin.go"
