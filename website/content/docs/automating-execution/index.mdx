@@ -26,8 +26,8 @@ the existing script or system to gradually adopt it.
 ## Environment Variables
 
 In a remote execution environment, as with a local workstation, the Waypoint
-binary will need access to the [Waypoint server](#todo). Locally, it is recommended
-that developers create [contexts](#todo) to store information about the remote
+binary will need access to the [Waypoint server](/docs/server). Locally, it is recommended
+that developers create [contexts](/docs/server#connecting) to store information about the remote
 Waypoint server. In a remote environment, this may make less sense given the
 environments are often ephemeral. In this scenario, we recommend using environment variables
 to configure the server.
@@ -45,8 +45,6 @@ configure the Waypoint CLI for communication with the Waypoint server.
   connecting to the server.
 - `WAYPOINT_SERVER_TLS_SKIP_VERIFY`. Current must be set to `1` to disable TLS verification
   when communicating with the server.
-
-For a complete list of variables for configuring the client, see [todo](#todo).
 
 ## Init
 
@@ -100,7 +98,7 @@ deploy and release against resources not used in the default workspace.
 ## Labels
 
 In order to determine the source of a build or other operation, it can be
-very useful to utilize [labels](#todo). Often, these environments might provide
+very useful to utilize labels. Often, these environments might provide
 labels that can be useful to annotate an operation with.
 
 Labels can be specified as arguments to the main operation commands.
