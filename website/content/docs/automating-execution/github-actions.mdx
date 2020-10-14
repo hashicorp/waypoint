@@ -38,7 +38,7 @@ env:
 
 steps:
   - uses: actions/checkout@v2
-  - uses: hashicorp/actions-setup-waypoint
+  - uses: hashicorp/action-setup-waypoint
     with:
       version: '0.1.0'
 - run: waypoint init
@@ -73,21 +73,21 @@ steps:
       waypoint_server_ui: 'https://waypoint.example.com:9702'
       waypoint_server_token: ${{ secrets.WAYPOINT_SERVER_TOKEN }}
       workspace: default
-  - uses: ./.github/actions/action-waypoint
+  - uses: hashicorp/action-waypoint
     name: Build
     with:
       operation: build
       version: '0.0.1-beta1'
       github_token: ${{ secrets.GITHUB_TOKEN }}
       workspace: default
-  - uses: ./.github/actions/action-waypoint
+  - uses: hashicorp/action-waypoint
     name: Deploy
     with:
       operation: deploy
       version: '0.0.1-beta1'
       github_token: ${{ secrets.GITHUB_TOKEN }}
       workspace: default
-  - uses: ./.github/actions/action-waypoint
+  - uses: hashicorp/action-waypoint
     name: Release
     if: ${{ github.ref == 'refs/heads/main' }}
     with:

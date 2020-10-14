@@ -646,7 +646,7 @@ export default function HomePage() {
                     },
                     {
                       indent: 1,
-                      code: '- uses: hashicorp/actions-setup-waypoint',
+                      code: '- uses: hashicorp/action-setup-waypoint',
                       color: 'white',
                     },
                     {
