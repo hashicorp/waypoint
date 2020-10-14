@@ -51,7 +51,7 @@ export const packageManagersByOs = {
 export const getStartedLinks = [
   {
     label: 'Deploy to Docker',
-    href: 'https://learn.hashicorp.com/collections/waypoint/get-started',
+    href: 'https://learn.hashicorp.com/collections/waypoint/get-started-docker',
   },
   {
     label: 'Deploy to Kubernetes',
@@ -60,7 +60,7 @@ export const getStartedLinks = [
   },
   {
     label: 'Deploy to AWS',
-    href: 'https://learn.hashicorp.com/collections/waypoint/aws',
+    href: 'https://learn.hashicorp.com/collections/waypoint/deploy-aws',
   },
   {
     label: 'View all Waypoint tutorials',
