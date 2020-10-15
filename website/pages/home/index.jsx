@@ -87,6 +87,10 @@ export default function HomePage() {
                   alt: 'Next.js',
                 },
                 {
+                  url: require('./img/step-logos/dotnet.svg'),
+                  alt: '.NET',
+                },
+                {
                   url: require('./img/step-logos/and-more.svg'),
                   alt: 'and More',
                 },
