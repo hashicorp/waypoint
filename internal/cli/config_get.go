@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/posener/complete"
 )
 
@@ -17,7 +17,6 @@ type ConfigGetCommand struct {
 
 	json bool
 	raw  bool
-	app  string
 }
 
 func (c *ConfigGetCommand) Run(args []string) int {
@@ -48,11 +47,11 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		Scope:  &pb.ConfigGetRequest_Project{Project: c.project.Ref()},
 		Prefix: prefix,
 	}
-	if c.app != "" {
+	if c.flagApp != "" {
 		req.Scope = &pb.ConfigGetRequest_Application{
 			Application: &pb.Ref_Application{
 				Project:     c.project.Ref().Project,
-				Application: c.app,
+				Application: c.flagApp,
 			},
 		}
 	}
@@ -140,12 +139,6 @@ func (c *ConfigGetCommand) Flags() *flag.Sets {
 			Target: &c.raw,
 			Usage:  "Output the value for the named variable only (disables prefix matching)",
 		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "app",
-			Target: &c.app,
-			Usage:  "Scope the variables to a specific app.",
-		})
 	})
 }
 
@@ -165,8 +158,11 @@ func (c *ConfigGetCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint config-get [prefix]
 
-  Retrieve and print all config variables previously configured that have the given prefix.
-	If no prefix is given, all variables are returned.
+  Retrieve and print all config variables previously configured that have
+  the given prefix. If no prefix is given, all variables are returned.
+
+  By specifying the "-app" flag you can look at config variables for
+  a specific application rather than the project.
 
 ` + c.Flags().Help())
 }
