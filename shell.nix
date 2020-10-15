@@ -1,22 +1,8 @@
-{ pkgsPath ? <nixpkgs> }:
-
 let
   # First we setup our overlays. These are overrides of the official nix packages.
   # We do this to pin the versions we want to use of the software that is in
   # the official nixpkgs repo.
-  pkgs = import pkgsPath {
-    overlays = [(self: super: {
-
-      go = super.go_1_14.overrideAttrs ( old: rec {
-        version = "1.14.5";
-        src = super.fetchurl {
-          url = "https://dl.google.com/go/go${version}.src.tar.gz";
-          sha256 = "0p1i80j3dk597ph5h6mvvv8p7rbzwmxdfb6558amcpkkj060hk6a";
-        };
-      });
-
-    })];
-  };
+  pkgs = import ./nix;
 in with pkgs; let
   go-protobuf = buildGoModule rec {
     pname = "go-protobuf";
@@ -90,6 +76,7 @@ in pkgs.mkShell rec {
   buildInputs = [
     pkgs.go
     pkgs.go-bindata
+    pkgs.niv
     pkgs.nodejs-12_x
     pkgs.protobuf3_11
     pkgs.postgresql_12
