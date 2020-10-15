@@ -4,6 +4,7 @@ import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
 import { visitable, create, collection } from 'ember-cli-page-object';
 import a11yAudit from 'ember-a11y-testing/test-support/audit';
+import login from '../helpers/login';
 
 const buildsUrl = '/default/microchip/app/wp-bandwidth/builds';
 
@@ -16,16 +17,13 @@ const page = create({
 module('Acceptance | builds list', function (hooks) {
   setupApplicationTest(hooks);
   setupMirage(hooks);
+  login();
 
   test('visiting builds page', async function (assert) {
-    // todo(pearkes): generalize login
-    window.localStorage.waypointAuthToken = 'foo';
-
     await page.visit();
     await a11yAudit();
 
     // Currently no way to seed past the default in mirage/services/builds.ts
-
     assert.equal(page.buildList.length, 4);
     assert.equal(currentURL(), buildsUrl);
   });
