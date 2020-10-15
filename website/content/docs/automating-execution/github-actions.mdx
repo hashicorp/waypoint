@@ -25,7 +25,7 @@ the recommended approach.
 For example, a cloud provider credentials or tooling can be installed or configured before
 running Waypoint, ensuring it has the appropriate credentials in the environment to run.
 
-The source is available on GitHub at [hashicorp/action-waypoint](https://github.com/hashicorp/action-setup-waypoint).
+The source is available on GitHub at [hashicorp/action-setup-waypoint](https://github.com/hashicorp/action-setup-waypoint).
 
 ### Example
 
@@ -46,6 +46,9 @@ steps:
 ```
 
 ## hashicorp/action-waypoint
+
+~> Note: This is an experiment and isn't recommended for consistent usage.
+For anything beyond experimental, we recommend using action-setup-waypoint.
 
 This action provides an abstraction for working with Waypoint and the GitHub releases and commit
 statuses APIs. It is intended to be the easiest way to automatically deploy applications
