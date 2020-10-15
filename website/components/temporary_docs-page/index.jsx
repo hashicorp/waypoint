@@ -29,7 +29,7 @@ export default function DocsPage({
   return (
     <>
       <DocsPageComponent
-        product={productSlug}
+        product="blue"
         head={{
           is: Head,
           title: `${frontMatter.page_title} | ${productName} by HashiCorp`,
