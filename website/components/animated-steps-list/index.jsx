@@ -7,10 +7,10 @@ import FramedTerminal from 'components/animated-terminal/framed-terminal'
 import { useState } from 'react'
 
 // The breakpoints where the next step of each animation triggers
-const breakpoints = [0, 350, 1258, 2309, 2880]
+const breakpoints = [0, 350, 1400, 2450, 2880]
 
 // The number of pixels before the next breakpoint that the animation should complete
-const animationBottomPadding = [0, 400, 250, 0]
+const animationBottomPadding = [0, 620, 575, -50]
 
 function calculateCurrentFrame(terminalSteps, currentIndex, scrollPosition) {
   const percentage = Math.min(

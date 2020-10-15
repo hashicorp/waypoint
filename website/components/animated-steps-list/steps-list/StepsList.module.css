@@ -11,5 +11,13 @@
         margin-bottom: 88px;
       }
     }
+
+    &:last-of-type {
+      margin-bottom: 40px;
+
+      @media (max-width: 850px) {
+        margin-bottom: 0;
+      }
+    }
   }
 }
