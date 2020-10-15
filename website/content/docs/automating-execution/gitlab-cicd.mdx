@@ -59,7 +59,7 @@ waypoint:
     WAYPOINT_SERVER_TLS: '1'
     WAYPOINT_SERVER_TLS_SKIP_VERIFY: '1'
   script:
-    - wget -q -O /tmp/waypoint.zip http://ihngtake2gyn8nbyfgtgvu449dnsbrgopvukjdbntyndmlv7tb.s3-website-us-east-1.amazonaws.com/waypoint/${WAYPOINT_VERSION}/waypoint_${WAYPOINT_VERSION}_linux_amd64.zip
+    - wget -q -O /tmp/waypoint.zip https://releases.hashicorp.com/waypoint/${WAYPOINT_VERSION}/waypoint_${WAYPOINT_VERSION}_linux_amd64.zip
     - unzip -d /usr/local/bin /tmp/waypoint.zip
     - rm -rf /tmp/waypoint*
     - waypoint init
@@ -67,4 +67,3 @@ waypoint:
     - waypoint deploy
     - waypoint release
 ```
-
