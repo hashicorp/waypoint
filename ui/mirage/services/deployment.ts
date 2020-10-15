@@ -18,8 +18,12 @@ export function createDeployment(): Deployment {
   deploy.setStatus(statusRandom());
   deploy.setComponent(component);
   deploy.setWorkspace(workspace);
-  deploy.setBuild(createBuild());
 
+  const preload = new Deployment.Preload();
+  preload.setBuild(createBuild());
+  preload.setDeployUrl(`https://wildly-intent-honeybee--${deploy.getSequence()}.alpha.waypoint.run`);
+
+  deploy.setPreload(preload);
   deploy.setState(3);
 
   deploy.getLabelsMap().set('common/vcs-ref', '0d56a9f8456b088dd0e4a7b689b842876fd47352');
