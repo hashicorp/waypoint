@@ -1,7 +1,7 @@
 export default [
   'aws-ec2',
   'aws-ecs',
-  'azure-container-instances',
+  'azure-container-instance',
   'docker',
   'exec',
   'google-cloud-run',
