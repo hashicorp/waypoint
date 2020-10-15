@@ -1,3 +1,11 @@
-## 0.1.0 (October 15, 2020)
+## UNRELEASED
 
-Initial Release
+FEATURES:
+
+IMPROVEMENTS:
+
+BUG FIXES:
+
+## 0.1.1 (October 15, 2020)
+
+Initial Public Release
