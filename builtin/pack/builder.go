@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"runtime"
 	"strings"
 
 	"github.com/buildpacks/pack"
@@ -53,6 +52,7 @@ var skipBuildPacks = map[string]struct{}{
 func (b *Builder) Build(
 	ctx context.Context,
 	ui terminal.UI,
+	jobInfo *component.JobInfo,
 	src *component.Source,
 ) (*DockerImage, error) {
 	builder := b.config.Builder
@@ -87,10 +87,7 @@ func (b *Builder) Build(
 			// Do not include the bolt.db or bolt.db.lock
 			// These files hold the local state when Waypoint is running without a server
 			// on Windows it will not be possible to copy these files due to a file lock.
-			//
-			// This needs handled correctly as there may be a legitimate reason why you would
-			// want to include data.db in your application
-			if runtime.GOOS == "windows" {
+			if jobInfo.Local {
 				if strings.HasSuffix(file, "data.db") || strings.HasSuffix(file, "data.db.lock") {
 					return false
 				}
