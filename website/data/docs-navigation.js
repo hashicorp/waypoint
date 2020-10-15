@@ -95,7 +95,7 @@ export default [
   },
   {
     category: 'automating-execution',
-    content: ['github-actions', 'circle-ci', 'jenkins'],
+    content: ['github-actions', 'gitlab-cicd', 'circle-ci', 'jenkins'],
   },
   'troubleshooting',
   'glossary',
