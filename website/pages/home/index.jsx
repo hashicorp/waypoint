@@ -631,7 +631,7 @@ export default function HomePage() {
             {
               title: 'CI/CD and Version Control Integration',
               description:
-                'Integrate with existing CI/CD providers and version control providers like GitHub, CircleCI, Jenkins, and more',
+                'Integrate with existing CI/CD providers and version control providers like GitHub, CircleCI, Jenkins, GitLab, and more',
               learnMoreLink: '/docs/automating-execution',
               content: (
                 <Terminal
