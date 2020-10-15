@@ -52,6 +52,7 @@ var skipBuildPacks = map[string]struct{}{
 func (b *Builder) Build(
 	ctx context.Context,
 	ui terminal.UI,
+	jobInfo *component.JobInfo,
 	src *component.Source,
 ) (*DockerImage, error) {
 	builder := b.config.Builder
@@ -82,6 +83,18 @@ func (b *Builder) Build(
 		Image:   src.App,
 		Builder: builder,
 		AppPath: src.Path,
+		FileFilter: func(file string) bool {
+			// Do not include the bolt.db or bolt.db.lock
+			// These files hold the local state when Waypoint is running without a server
+			// on Windows it will not be possible to copy these files due to a file lock.
+			if jobInfo.Local {
+				if strings.HasSuffix(file, "data.db") || strings.HasSuffix(file, "data.db.lock") {
+					return false
+				}
+			}
+
+			return true
+		},
 	})
 
 	if err != nil {
