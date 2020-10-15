@@ -18,7 +18,7 @@
 @import '~@hashicorp/react-vertical-text-block-list/dist/style.css';
 @import '~@hashicorp/react-docs-sidenav/style.css';
 @import '~@hashicorp/react-content/style.css';
-@import '~@hashicorp/react-subnav/dist/style.css';
+@import '~@hashicorp/react-subnav/style.css';
 @import '~@hashicorp/react-tabs/dist/style.css';
 @import '~@hashicorp/react-enterprise-alert/dist/style.css';
 @import '~@hashicorp/react-docs-page/style.css';
