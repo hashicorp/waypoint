@@ -8,12 +8,14 @@ description: |-
 
 # Destroy
 
-The `Destroy` component is responsible for removing any resources which have been created by the waypoint deploy
-and release phase.
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#Destroyer
+
+The `Destroyer` interface is responsible for removing any resources which have been created by the waypoint `deploy`
+and `release` phase.
 
 ![Platform](/img/extending-waypoint/destroy.png)
 
-Destroy can only be implemented in Platform and ReleaseManager components and is implemented through the following interface.
+Destroy can only be implemented in `Platform` and `ReleaseManager` components and is implemented through the following interface.
 
 ```go
 type Destroyer interface {
@@ -22,10 +24,10 @@ type Destroyer interface {
 }
 ```
 
-DestroyFunc requires you return a function, like other interface functions Waypoint will automatically inject any of the
-standard parameters. In addition you can specify the output value returned from the DeployFunc, or from ReleaseFunc,
+`DestroyFunc` requires you return a function, like other interface functions Waypoint will automatically inject any of the
+standard parameters. In addition you can specify the output value returned from the `DeployFunc`, or from `ReleaseFunc`,
 the details of which you can use to clean up any deployments. As shown in the example below, the function signature for
-a DestroyFunc function only has a single output parameter which is an error used to signal if the destroy operation succeeded.
+a `DestroyFunc` function only has a single output parameter which is an error used to signal if the destroy operation succeeded.
 
 ```go
 func (d *Deploy) DestroyFunc() interface{} {
