@@ -529,7 +529,7 @@ export default function HomePage() {
                     },
                     {
                       code:
-                        '[11] * Version 3.11.2 (ruby 2.6.6-p146), codename: Love Song',
+                        '[11] * Version 5.0.2 (ruby 2.7.1-p83), codename: Spoony Bard',
                       color: 'gray',
                     },
                     {
