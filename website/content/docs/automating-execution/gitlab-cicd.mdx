@@ -52,8 +52,9 @@ waypoint:
   stage: build
   services:
     - docker:dind
+  # Define environment variables, e.g. `WAYPOINT_VERSION: '0.1.1'`
   variables:
-    WAYPOINT_VERSION: 0.0.1-beta1
+    WAYPOINT_VERSION: ''
     WAYPOINT_SERVER_ADDR: ''
     WAYPOINT_SERVER_TOKEN: ''
     WAYPOINT_SERVER_TLS: '1'
