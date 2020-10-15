@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/google/renameio"
 )
 
 // Storage is the primary struct for interacting with stored CLI contexts.
@@ -155,7 +153,7 @@ func (m *Storage) SetDefault(n string) error {
 		return err
 	}
 
-	return renameio.Symlink(src, m.defaultPath())
+	return m.createSymlink(src, m.defaultPath())
 }
 
 // UnsetDefault unsets the default context.
@@ -180,6 +178,32 @@ func (m *Storage) Default() (string, error) {
 	}
 
 	return m.nameFromPath(path), nil
+}
+
+func (m *Storage) createSymlink(src, dst string) error {
+	// delete the old symlink
+	err := os.Remove(dst)
+	if err != nil {
+		return err
+	}
+
+	err = os.Symlink(src, dst)
+
+	// On Windows when creating a symlink the Windows API can incorrectly
+	// return an error message when not running as Administrator even when the symlink
+	// is correctly created.
+	// Manually validate the symlink was correctly created before returning an error
+	ln, ferr := os.Readlink(dst)
+	if ferr != nil {
+		// symlink has not been created return the original error
+		return err
+	}
+
+	if ln != src {
+		return err
+	}
+
+	return nil
 }
 
 // nameFromPath returns the context name given a path to a context
