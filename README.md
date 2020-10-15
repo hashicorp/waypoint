@@ -38,7 +38,7 @@ and on [HashiCorp Learn](https://learn.hashicorp.com/waypoint):
 * [Installation](https://learn.hashicorp.com/tutorials/waypoint/get-started-install)
 * [Docker](https://learn.hashicorp.com/tutorials/waypoint/get-started-docker)
 * [Kubernetes](https://learn.hashicorp.com/tutorials/waypoint/get-started-kubernetes)
-* [Nomad](https://learn.hashicorp.com/waypoint/tutorials/waypoint/get-started-nomad)
+* [Nomad](https://learn.hashicorp.com/tutorials/waypoint/get-started-nomad)
 * [Waypoint UI](https://learn.hashicorp.com/tutorials/waypoint/get-started-ui)
 * [AWS ECS](https://learn.hashicorp.com/tutorials/waypoint/aws-ecs)
 * [Azure Container Instance](https://learn.hashicorp.com/tutorials/waypoint/azure-container-instance)
