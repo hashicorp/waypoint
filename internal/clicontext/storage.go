@@ -183,7 +183,7 @@ func (m *Storage) Default() (string, error) {
 func (m *Storage) createSymlink(src, dst string) error {
 	// delete the old symlink
 	err := os.Remove(dst)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
 
