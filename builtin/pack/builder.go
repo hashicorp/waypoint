@@ -1,11 +1,9 @@
 package pack
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/buildpacks/pack"
@@ -15,6 +13,8 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
@@ -139,23 +139,24 @@ func (b *Builder) Build(
 		inject := sg.Add("Injecting entrypoint binary to image")
 		defer inject.Abort()
 
-		tmpdir, err := ioutil.TempDir("", "waypoint")
+		asset, err := assets.Asset("ceb/ceb")
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}
 
-		defer os.RemoveAll(tmpdir)
-
-		err = assets.RestoreAsset(tmpdir, "ceb/ceb")
+		assetInfo, err := assets.AssetInfo("ceb/ceb")
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}
 
 		imageId, err := epinject.AlterEntrypoint(ctx, src.App+":latest", func(cur []string) (*epinject.NewEntrypoint, error) {
 			ep := &epinject.NewEntrypoint{
 				Entrypoint: append([]string{"/waypoint-entrypoint"}, cur...),
-				InjectFiles: map[string]string{
-					filepath.Join(tmpdir, "ceb/ceb"): "/waypoint-entrypoint",
+				InjectFiles: map[string]epinject.InjectFile{
+					"/waypoint-entrypoint": epinject.InjectFile{
+						Reader: bytes.NewReader(asset),
+						Info:   assetInfo,
+					},
 				},
 			}
 

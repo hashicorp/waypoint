@@ -1,11 +1,10 @@
 package docker
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/docker/api/types"
@@ -171,14 +170,12 @@ func (b *Builder) Build(
 	if !b.config.DisableCEB {
 		step = sg.Add("Injecting Waypoint Entrypoint...")
 
-		tmpdir, err := ioutil.TempDir("", "waypoint")
+		asset, err := assets.Asset("ceb/ceb")
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "unable to create temporary directory: %s", err)
+			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}
 
-		defer os.RemoveAll(tmpdir)
-
-		err = assets.RestoreAsset(tmpdir, "ceb/ceb")
+		assetInfo, err := assets.AssetInfo("ceb/ceb")
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "unable to restore custom entry point binary: %s", err)
 		}
@@ -186,8 +183,11 @@ func (b *Builder) Build(
 		_, err = epinject.AlterEntrypoint(ctx, result.Name(), func(cur []string) (*epinject.NewEntrypoint, error) {
 			ep := &epinject.NewEntrypoint{
 				Entrypoint: append([]string{"/waypoint-entrypoint"}, cur...),
-				InjectFiles: map[string]string{
-					filepath.Join(tmpdir, "ceb/ceb"): "/waypoint-entrypoint",
+				InjectFiles: map[string]epinject.InjectFile{
+					"/waypoint-entrypoint": epinject.InjectFile{
+						Reader: bytes.NewReader(asset),
+						Info:   assetInfo,
+					},
 				},
 			}
 
