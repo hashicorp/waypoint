@@ -52,7 +52,8 @@ jobs:
     docker:
       - image: cimg/base:2020.01
     environment:
-      WAYPOINT_VERSION: 0.0.1-beta1
+      # Use the appropriate version such as '0.1.1'
+      WAYPOINT_VERSION: WAYPOINT_VERSION_HERE
       WAYPOINT_SERVER_ADDR: ''
       WAYPOINT_SERVER_TOKEN: ''
       WAYPOINT_SERVER_TLS: '1'
@@ -65,7 +66,7 @@ jobs:
       - run:
           name: Install Waypoint
           command: |
-            wget -q -O /tmp/waypoint.zip http://ihngtake2gyn8nbyfgtgvu449dnsbrgopvukjdbntyndmlv7tb.s3-website-us-east-1.amazonaws.com/waypoint/${WAYPOINT_VERSION}/waypoint_${WAYPOINT_VERSION}_linux_amd64.zip
+            wget -q -O /tmp/waypoint.zip https://releases.hashicorp.com/waypoint/${WAYPOINT_VERSION}/waypoint_${WAYPOINT_VERSION}_linux_amd64.zip
             sudo unzip -d /usr/local/bin /tmp/waypoint.zip
             rm -rf /tmp/waypoint*
       - run: waypoint init
