@@ -37,7 +37,12 @@ var DockerDefaultEntrypoint = []string{""}
 type NewEntrypoint struct {
 	NewImage    string
 	Entrypoint  []string
-	InjectFiles map[string]string
+	InjectFiles map[string]InjectFile
+}
+
+type InjectFile struct {
+	Reader io.Reader
+	Info   os.FileInfo
 }
 
 func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*NewEntrypoint, error)) (string, error) {
@@ -95,24 +100,12 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 
 	var buf bytes.Buffer
 
-	for host, container := range newEp.InjectFiles {
+	for container, f := range newEp.InjectFiles {
 		buf.Reset()
-
-		f, err := os.Open(host)
-		if err != nil {
-			return "", err
-		}
-
-		defer f.Close()
 
 		tw := tar.NewWriter(&buf)
 
-		fi, err := f.Stat()
-		if err != nil {
-			return "", err
-		}
-
-		hdr, err := tar.FileInfoHeader(fi, "")
+		hdr, err := tar.FileInfoHeader(f.Info, "")
 		if err != nil {
 			return "", err
 		}
@@ -120,14 +113,14 @@ func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*N
 		hdr.Name = filepath.Base(container)
 
 		tw.WriteHeader(hdr)
-		io.Copy(tw, f)
+		io.Copy(tw, f.Reader)
 
 		err = dc.CopyToContainer(ctx, body.ID, filepath.Dir(container), &buf, types.CopyToContainerOptions{})
 		if err != nil {
 			return "", err
 		}
 
-		L.Debug("injected file into new image", "host", host, "container", container)
+		L.Debug("injected file into new image", "container", container)
 	}
 
 	if newEp.NewImage == image {

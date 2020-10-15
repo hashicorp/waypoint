@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/json"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -54,14 +55,23 @@ func TestEPInject(t *testing.T) {
 
 		ctx = hclog.WithContext(ctx, L)
 
+		injectF, err := os.Open("./testdata/cowsay")
+		require.NoError(t, err)
+		defer injectF.Close()
+		injectFI, err := injectF.Stat()
+		require.NoError(t, err)
+
 		_, err = AlterEntrypoint(ctx, "nginx:latest", func(cur []string) (*NewEntrypoint, error) {
 			assert.Equal(t, origEp, cur)
 
 			ep := &NewEntrypoint{
 				NewImage:   testImage,
 				Entrypoint: append([]string{"/bin/cowsay"}, cur...),
-				InjectFiles: map[string]string{
-					"./testdata/cowsay": "/bin/cowsay",
+				InjectFiles: map[string]InjectFile{
+					"/bin/cowsay": InjectFile{
+						Reader: injectF,
+						Info:   injectFI,
+					},
 				},
 			}
 

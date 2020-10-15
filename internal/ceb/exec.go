@@ -15,7 +15,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	internalptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func (ceb *CEB) startExecGroup(es []*pb.EntrypointConfig_Exec) {
@@ -133,7 +132,12 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 		}
 
 		// Start with a pty
-		ptyFile, err = pty.StartWithSize(cmd, internalptypes.Winsize(ptyReq.WindowSize))
+		ptyFile, err = pty.StartWithSize(cmd, &pty.Winsize{
+			Rows: uint16(ptyReq.WindowSize.Rows),
+			Cols: uint16(ptyReq.WindowSize.Cols),
+			X:    uint16(ptyReq.WindowSize.Width),
+			Y:    uint16(ptyReq.WindowSize.Height),
+		})
 		if err != nil {
 			log.Warn("error building exec command", "err", err)
 			st, ok := status.FromError(err)
@@ -196,7 +200,14 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 
 			case *pb.EntrypointExecResponse_Winch:
 				log.Debug("window size change event, changing")
-				if err := pty.Setsize(ptyFile, internalptypes.Winsize(event.Winch)); err != nil {
+
+				sz := pty.Winsize{
+					Rows: uint16(event.Winch.Rows),
+					Cols: uint16(event.Winch.Cols),
+					X:    uint16(event.Winch.Width),
+					Y:    uint16(event.Winch.Height),
+				}
+				if err := pty.Setsize(ptyFile, &sz); err != nil {
 					log.Warn("error changing window size, this doesn't quit the stream",
 						"err", err)
 				}
