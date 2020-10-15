@@ -7,17 +7,15 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"syscall"
 
-	"github.com/creack/pty"
+	"github.com/containerd/console"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
 	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
 	sshterm "golang.org/x/crypto/ssh/terminal"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	internalptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 type Client struct {
@@ -46,15 +44,26 @@ func (c *Client) Run() (int, error) {
 		status.Update(fmt.Sprintf("Connecting to deployment v%d...", c.DeploymentSeq))
 
 		ptyF = f
-		ws, err := pty.GetsizeFull(ptyF)
+		c, err := console.ConsoleFromFile(ptyF)
+		if err != nil {
+			return 0, err
+		}
+
+		sz, err := c.Size()
+		c = nil
 		if err != nil {
 			return 0, err
 		}
 
 		ptyReq = &pb.ExecStreamRequest_PTY{
-			Enable:     true,
-			Term:       os.Getenv("TERM"),
-			WindowSize: internalptypes.WinsizeProto(ws),
+			Enable: true,
+			Term:   os.Getenv("TERM"),
+			WindowSize: &pb.ExecStreamRequest_WindowSize{
+				Rows:   int32(sz.Height),
+				Cols:   int32(sz.Width),
+				Height: int32(sz.Height),
+				Width:  int32(sz.Width),
+			},
 		}
 	}
 
@@ -160,7 +169,7 @@ func (c *Client) Run() (int, error) {
 
 	// Listen for window change events
 	winchCh := make(chan os.Signal, 1)
-	signal.Notify(winchCh, syscall.SIGWINCH)
+	registerSigwinch(winchCh)
 	defer signal.Stop(winchCh)
 
 	// Loop for data
@@ -183,16 +192,25 @@ func (c *Client) Run() (int, error) {
 
 		case <-winchCh:
 			// Window change, send new size
-			ws, err := pty.GetsizeFull(ptyF)
+			c, err := console.ConsoleFromFile(ptyF)
 			if err != nil {
-				// Ignore errors
+				continue
+			}
+
+			sz, err := c.Size()
+			if err != nil {
 				continue
 			}
 
 			// Send the new window size
 			if err := client.Send(&pb.ExecStreamRequest{
 				Event: &pb.ExecStreamRequest_Winch{
-					Winch: internalptypes.WinsizeProto(ws),
+					Winch: &pb.ExecStreamRequest_WindowSize{
+						Rows:   int32(sz.Height),
+						Cols:   int32(sz.Width),
+						Height: int32(sz.Height),
+						Width:  int32(sz.Width),
+					},
 				},
 			}); err != nil {
 				// Ignore this error
