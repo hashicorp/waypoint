@@ -480,7 +480,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:   "advertise-internal",
 			Target: &c.advertiseInternal,
-			Usage: "Advertise the internal servivce address rather than the external. " +
+			Usage: "Advertise the internal service address rather than the external. " +
 				"This is useful if all your deployments will be able to access the private " +
 				"service address. This will default to false but will be automatically set to " +
 				"true if the external host is detected to be localhost.",
