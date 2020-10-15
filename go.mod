@@ -17,6 +17,7 @@ require (
 	github.com/boltdb/bolt v1.3.1
 	github.com/buildpacks/pack v0.11.1
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
+	github.com/containerd/console v1.0.1
 	github.com/creack/pty v1.1.11
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
@@ -51,7 +52,7 @@ require (
 	github.com/hashicorp/horizon v0.0.0-20201009172236-66fd2d9af591
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201007005325-1401c8a8bd44
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201015054652-b6e7328fff27
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
@@ -59,7 +60,7 @@ require (
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.1.2
-	github.com/mitchellh/go-glint v0.0.0-20200930000256-df5e721f3258
+	github.com/mitchellh/go-glint v0.0.0-20201015034436-f80573c636de
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1
@@ -82,7 +83,7 @@ require (
 	github.com/zclconf/go-cty v1.5.1
 	github.com/zclconf/go-cty-yaml v1.0.2
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
-	golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d // indirect
+	golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20201002142447-3860012362da
 	google.golang.org/grpc v1.32.0
