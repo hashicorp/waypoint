@@ -22,11 +22,13 @@ At present there are 11 possible parameters which you can inject, these are:
 - terminal.UI
 - \*component.LabelSet
 
-## context.Context (https://golang.org/pkg/context/)
+## context.Context
+
+https://pkg.go.dev/context#Context
 
 Context is a default parameter and is used by Waypoint to notify you when the work that component is
-performing should be cancelled. As with any Go code calling the Err() function on the Context will return
-an error if the Context has already been cancelled, you can also use the channel returned by the Done() function
+performing should be cancelled. As with any Go code calling the `Err()` function on the Context will return
+an error if the Context has already been cancelled, you can also use the channel returned by the `Done()` function
 to notify you when Waypoint cancels the current operation.
 
 ```go
@@ -35,7 +37,9 @@ if ctx.Err() != nil {
 }
 ```
 
-## \*component.Source (https://golang.org/pkg/context/)
+## \*component.Source
+
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#Source
 
 Source is a data struct which provides the current application name `App`, and `Path` which is the directory
 containing the current Waypoint file.
@@ -47,7 +51,9 @@ type Source struct {
 }
 ```
 
-## \*component.JobInfo (https://golang.org/pkg/context/)
+## \*component.JobInfo
+
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#JobInfo
 
 JobInfo is a data struct which provides details related to the current Job.
 
@@ -69,7 +75,9 @@ type JobInfo struct {
 }
 ```
 
-## \*component.DeploymentConfig (https://golang.org/pkg/context/)
+## \*component.DeploymentConfig
+
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#DeploymentConfig
 
 DeploymentConfig contains configuration which the entrypoint binary requires in order to run correctly.
 For example if you deploy an application to Google Cloud Run which is using the builtin Docker builder,
@@ -94,6 +102,8 @@ func (c *DeploymentConfig) Env() map[string]string
 ```
 
 ## \*datadir.Project
+
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/datadir#Project
 
 Project exposes information regarding data and cache directories for the current project, Project implements the
 Dir interface which has the following two methods.
@@ -120,14 +130,20 @@ func (p *Project) App(name string) (*App, error)
 
 ## \*datadir.App
 
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/datadir#App
+
 App exposes information regarding data and cache directories for the current application within the project.
 App implements the Dir interface.
 
 ## \*datadir.Component
 
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/datadir#Component
+
 Component exposes information regarding data and cache directories which are scoped to the individual component.
 
-## hclog.Logger (https://godoc.org/github.com/hashicorp/go-hclog)
+## hclog.Logger
+
+https://pkg.go.dev/github.com/hashicorp/go-hclog#Logger
 
 Logger provides you with the ability to write to the Waypoint standard logger using different log levels such as
 Info, Debug, Trace, etc. By default, log output is disabled when running a waypoint command. The environment variable
@@ -150,10 +166,14 @@ Info, Debug, Trace, etc. By default, log output is disabled when running a waypo
 
 ## terminal.UI
 
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/terminal#UI
+
 UI allows you to build rich output for your plugin, more details on using terminal.UI can be found in the
 Interacting with the UI section.
 
 ## \*component.LabelSet
+
+https://pkg.go.dev/github.com/hashicorp/waypoint-plugin-sdk/component#LabelSet
 
 LabelSet allows you to read the labels defined at an app level on your Waypoint configuration.
 
