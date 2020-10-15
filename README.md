@@ -30,9 +30,19 @@ contacting us at security@hashicorp.com.
 
 ## Quick Start
 
-A few quick start guides are available on the Waypoint website:
+A few quick start guides are available on the [Waypoint website](https://www.waypointproject.io/docs/getting-started)
+and on [HashiCorp Learn](https://learn.hashicorp.com/waypoint):
 
-TODO
+* [Getting Started](https://www.waypointproject.io/docs/getting-started)
+* [Introduction](https://learn.hashicorp.com/tutorials/waypoint/get-started-intro)
+* [Installation](https://learn.hashicorp.com/tutorials/waypoint/get-started-install)
+* [Docker](https://learn.hashicorp.com/tutorials/waypoint/get-started-docker)
+* [Kubernetes](https://learn.hashicorp.com/tutorials/waypoint/get-started-kubernetes)
+* [Nomad](https://learn.hashicorp.com/waypoint/tutorials/waypoint/get-started-nomad)
+* [Waypoint UI](https://learn.hashicorp.com/tutorials/waypoint/get-started-ui)
+* [AWS ECS](https://learn.hashicorp.com/tutorials/waypoint/aws-ecs)
+* [Azure Container Instance](https://learn.hashicorp.com/tutorials/waypoint/azure-container-instance)
+* [Google Cloud Run](https://learn.hashicorp.com/tutorials/waypoint/google-cloud-run)
 
 ## Documentation
 
