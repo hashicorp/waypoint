@@ -418,6 +418,10 @@ export default function HomePage() {
                   alt: 'Github',
                 },
                 {
+                  url: require('./img/step-logos/gitlab.svg'),
+                  alt: 'Gitlab',
+                },
+                {
                   url: require('./img/step-logos/and-more.svg'),
                   alt: 'and More',
                 },
