@@ -49,6 +49,9 @@ func (d *Deployment) authenticate(ctx context.Context) (autorest.Authorizer, err
 
 	// the environment variable auth has failed fall back to CLI auth
 	authorizer, err = auth.NewAuthorizerFromCLI()
+	if err != nil {
+		return authorizer, err
+	}
 	_, err = d.getLocations(timeoutContext, authorizer)
 	if err == nil {
 		return authorizer, nil
