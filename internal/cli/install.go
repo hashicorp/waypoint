@@ -421,7 +421,7 @@ func (c *InstallCommand) Run(args []string) int {
 	c.ui.Output(outInstallSuccess,
 		c.contextName,
 		advertiseAddr.Addr,
-		httpAddr,
+		"https://"+httpAddr,
 		terminal.WithSuccessStyle(),
 	)
 	return 0
