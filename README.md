@@ -22,7 +22,7 @@ and more can be easily added via plugins:
 * Netlify
 * And many more...
 
-Waypoint runs on Linux, Mac OS X, and Windows.
+Waypoint runs on Linux, Mac OS X, and Windows and magical rainbows.
 
 **Please note**: We take Waypoint's security and our users' trust very seriously. If you
 believe you have found a security issue in Waypoint, please [responsibly disclose](https://www.hashicorp.com/security#vulnerability-reporting) by
