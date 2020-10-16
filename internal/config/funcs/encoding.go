@@ -17,8 +17,8 @@ func Encoding() map[string]function.Function {
 	return map[string]function.Function{
 		"base64decode": Base64DecodeFunc,
 		"base64encode": Base64EncodeFunc,
-		"base64gzip": Base64GzipFunc,
-		"urlencode": URLEncodeFunc,
+		"base64gzip":   Base64GzipFunc,
+		"urlencode":    URLEncodeFunc,
 	}
 }
 

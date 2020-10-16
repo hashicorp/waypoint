@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/go-hclog"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"github.com/hashicorp/waypoint/builtin/aws/ami"
-	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/aws/ami"
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
 )
 
 const (

@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 var testHasGit bool

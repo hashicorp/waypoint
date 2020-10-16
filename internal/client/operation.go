@@ -3,9 +3,9 @@ package client
 import (
 	"context"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logviewer"
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
 func (c *Project) Validate(ctx context.Context, op *pb.Job_ValidateOp) (*pb.Job_ValidateResult, error) {

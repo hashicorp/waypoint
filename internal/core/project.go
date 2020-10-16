@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 
-	"github.com/hashicorp/waypoint/internal/config"
-	"github.com/hashicorp/waypoint/internal/factory"
-	"github.com/hashicorp/waypoint/internal/plugin"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/internal-shared/protomappers"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/factory"
+	"github.com/hashicorp/waypoint/internal/plugin"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // Project represents a project with one or more applications.

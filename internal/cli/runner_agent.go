@@ -6,11 +6,11 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/posener/complete"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	runnerpkg "github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 type RunnerAgentCommand struct {

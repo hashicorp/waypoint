@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 type LocalSource struct{}

@@ -16,8 +16,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 type GitSource struct{}

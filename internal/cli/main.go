@@ -17,9 +17,9 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/mitchellh/go-glint"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
 	"github.com/hashicorp/waypoint/internal/version"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 const (

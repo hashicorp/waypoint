@@ -3,8 +3,8 @@ package client
 import (
 	"context"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // App is used for application-specific operations.
