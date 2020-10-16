@@ -3,11 +3,17 @@ package dockerpull
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"os"
 
+	"github.com/docker/cli/cli/config"
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/registry"
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -118,6 +124,7 @@ func (b *Builder) Build(
 	ctx context.Context,
 	ui terminal.UI,
 	src *component.Source,
+	log hclog.Logger,
 ) (*wpdocker.Image, error) {
 	stdout, _, err := ui.OutputWriters()
 	if err != nil {
@@ -140,10 +147,52 @@ func (b *Builder) Build(
 	cli.NegotiateAPIVersion(ctx)
 
 	step.Done()
+
+	ref, err := reference.ParseNormalizedNamed(result.Name())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to parse image name: %s", err)
+	}
+
+	encodedAuth := b.config.EncodedAuth
+	if encodedAuth == "" {
+		// Resolve the Repository name from fqn to RepositoryInfo
+		repoInfo, err := registry.ParseRepositoryInfo(ref)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "unable to parse repository info from image name: %s", err)
+		}
+
+		var server string
+
+		if repoInfo.Index.Official {
+			info, err := cli.Info(ctx)
+			if err != nil || info.IndexServerAddress == "" {
+				server = registry.IndexServer
+			} else {
+				server = info.IndexServerAddress
+			}
+		} else {
+			server = repoInfo.Index.Name
+		}
+
+		var errBuf bytes.Buffer
+		cf := config.LoadDefaultConfigFile(&errBuf)
+		if errBuf.Len() > 0 {
+			// NOTE(mitchellh): I don't know why we ignore this, but we always have.
+			log.Warn("error loading Docker config file", "err", err)
+		}
+
+		authConfig, _ := cf.GetAuthConfig(server)
+		buf, err := json.Marshal(authConfig)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
+		}
+		encodedAuth = base64.URLEncoding.EncodeToString(buf)
+	}
+
 	step = sg.Add("Pulling image...")
 
-	resp, err := cli.ImagePull(ctx, result.Name(), types.ImagePullOptions{
-		RegistryAuth: b.config.EncodedAuth,
+	resp, err := cli.ImagePull(ctx, reference.FamiliarString(ref), types.ImagePullOptions{
+		RegistryAuth: encodedAuth,
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error pulling image: %s", err)
