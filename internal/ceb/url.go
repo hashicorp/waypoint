@@ -29,34 +29,37 @@ func (ceb *CEB) initURLService(ctx context.Context, port int, cfg *pb.Entrypoint
 
 	g, err := agent.NewAgent(L.Named("agent"))
 	if err != nil {
+		// NewAgent should never fail, this just sets some fields and returns
+		// a struct. Therefore, we won't ever retry on this.
 		return errors.Wrapf(err, "error configuring agent")
 	}
+	g.Token = cfg.Token
+
+	// Setup the Mozilla CA cert bundle. We can ignore the error because
+	// this never fails, it only returns an error for backwards compat reasons.
 	g.RootCAs, _ = gocertifi.CACerts()
 
-	g.Token = cfg.Token
-	target := fmt.Sprintf(":%d", port)
-
+	// Add our service to route to.
 	labels := hznpb.ParseLabelSet(cfg.Labels)
-
+	target := fmt.Sprintf(":%d", port)
 	_, err = g.AddService(&agent.Service{
 		Type:    "http",
 		Labels:  labels,
 		Handler: agent.HTTPHandler("http://" + target),
 	})
-
 	if err != nil {
+		// This can also never fail.
 		return errors.Wrapf(err, "error registering service")
 	}
 
 	L.Debug("discovering hubs")
-
 	dc, err := discovery.NewClient(cfg.ControlAddr)
 	if err != nil {
+		// This shouldn't fail so we don't have to retry at the time of writing.
 		return errors.Wrapf(err, "error conecting to waypoint control service")
 	}
 
 	L.Debug("refreshing data")
-
 	err = dc.Refresh(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "error discovering network endpoints")

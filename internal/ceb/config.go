@@ -48,11 +48,14 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool)
 		ceb.childCmd.Env = append(ceb.childCmd.Env, cv.Name+"="+cv.Value)
 	}
 
-	// If we have URL service configuration, start it.
+	// If we have URL service configuration, start it. We start this in a goroutine
+	// since we don't need to block starting up our application on this.
 	if url := resp.Config.UrlService; url != nil {
-		if err := ceb.initURLService(ctx, cfg.URLServicePort, url); err != nil {
-			return err
-		}
+		go func() {
+			if err := ceb.initURLService(ctx, cfg.URLServicePort, url); err != nil {
+				log.Warn("error starting URL service", "err", err)
+			}
+		}()
 	} else {
 		log.Debug("no URL service configuration, will not register with URL service")
 	}
