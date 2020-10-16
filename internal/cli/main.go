@@ -424,7 +424,7 @@ func logger(args []string) ([]string, hclog.Logger, io.Writer, error) {
 	// This overrides whatever the env var set.
 	var outArgs []string
 	for _, arg := range args {
-		if arg[0] != '-' {
+		if len(arg) != 0 && arg[0] != '-' {
 			outArgs = append(outArgs, arg)
 			continue
 		}
