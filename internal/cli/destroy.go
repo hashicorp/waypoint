@@ -27,6 +27,21 @@ func (c *DestroyCommand) Run(args []string) int {
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+		if !c.flagAutoApprove {
+			// show confirmation dialog asking user for approval
+			choice, err := app.UI.Input(&terminal.Input{
+				Prompt: "Are you sure you want to destroy this app? Type 'yes' to confirm.",
+				Style:  terminal.WarningStyle,
+			})
+			if err != nil {
+				return err
+			}
+			if choice != "yes" {
+				app.UI.Output("Aborting destroy.")
+				return nil
+			}
+		}
+
 		if err := app.Destroy(ctx, &pb.Job_DestroyOp{
 			Target: &pb.Job_DestroyOp_Workspace{
 				Workspace: &empty.Empty{},
