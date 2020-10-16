@@ -30,6 +30,10 @@ bin/linux: # create Linux binaries
 test: # run tests
 	go test ./...
 
+.PHONY: format
+format: # format go code
+	go fmt ./...
+
 .PHONY: docker/mitchellh
 docker/mitchellh:
 	DOCKER_BUILDKIT=1 docker build \
