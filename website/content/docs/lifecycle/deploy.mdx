@@ -40,7 +40,7 @@ app "my-app" {
 To deploy your app with Waypoint, you will need to select which platform to use.
 A deployment platform is a runtime for your app. It could be a container runtime
 capable of running a docker image or it could be a virtual machine platform.
-The deployment platform must be compatible with the app artifact output format from [build](/docs/lifecycle/).
+The deployment platform must be compatible with the app artifact output format from [build](/docs/lifecycle/build).
 
 You can currently use Waypoint to deploy your app to any of these platforms.
 
@@ -61,7 +61,7 @@ You can also create a [plugin](/plugins) to extend Waypoint with your own deploy
 ## Automatic Release
 
 By default, `waypoint deploy` automatically performs a
-[release](/docs/lifecycle/deploy).
+[release](/docs/lifecycle/release).
 
 This is because this is often the most expected behavior of a deploy
 since traditionally deploy and release were inseparable. We consider
