@@ -21,15 +21,22 @@ var (
 
 // InstallNomad registers a waypoint-server job with a Nomad cluster
 func InstallNomad(
-	ctx context.Context, ui terminal.UI, st terminal.Status, scfg *Config) (
+	ctx context.Context, ui terminal.UI, scfg *Config) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
 ) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Nomad client...")
+	defer func() { s.Abort() }()
 
 	// Build api client from environment
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return nil, nil, "", err
 	}
+
+	s.Update("Checking for existing Waypoint server...")
 
 	// Check if waypoint-server has already been deployed
 	jobs, _, err := client.Jobs().PrefixList("waypoint-server")
@@ -70,14 +77,18 @@ func InstallNomad(
 		if err != nil {
 			return nil, nil, "", err
 		}
-		st.Step(terminal.StatusWarn, "Detected existing waypoint server")
+
+		s.Update("Detected existing Waypoint server")
+		s.Status(terminal.StatusWarn)
+		s.Done()
+
 		clicfg.Server.Address = serverAddr
 		addr.Addr = serverAddr
 		httpAddr = serverAddr
 		return &clicfg, &addr, httpAddr, nil
 	}
 
-	st.Update("Installing waypoint server to Nomad")
+	s.Update("Installing Waypoint server to Nomad")
 	job := waypointNomadJob(scfg)
 
 	resp, _, err := client.Jobs().Register(job, nil)
@@ -85,7 +96,7 @@ func InstallNomad(
 		return nil, nil, "", err
 	}
 
-	st.Update("Waiting for allocation to be scheduled")
+	s.Update("Waiting for allocation to be scheduled")
 EVAL:
 	qopts := &api.QueryOptions{
 		WaitIndex: resp.EvalCreateIndex,
@@ -100,9 +111,10 @@ EVAL:
 	case "pending":
 		goto EVAL
 	case "complete":
-		st.Step(terminal.StatusOK, "Nomad allocation created")
+		s.Update("Nomad allocation created")
 	case "failed", "canceled", "blocked":
-		st.Step(terminal.StatusError, "Nomad failed to schedule the waypoint-server")
+		s.Update("Nomad failed to schedule the waypoint-server")
+		s.Status(terminal.StatusError)
 		return nil, nil, "", fmt.Errorf("nomad evaluation did not transition to 'complete'")
 	default:
 		return nil, nil, "", fmt.Errorf("unknown eval status: %q", eval.Status)
@@ -123,9 +135,9 @@ EVAL:
 		switch allocs[0].ClientStatus {
 		case "running":
 			allocID = allocs[0].ID
-			st.Step(terminal.StatusOK, "Nomad allocation running")
+			s.Update("Nomad allocation running")
 		case "pending":
-			st.Update(fmt.Sprintf("Waiting for allocation %q to start", allocs[0].ID))
+			s.Update(fmt.Sprintf("Waiting for allocation %q to start", allocs[0].ID))
 			// retry
 		default:
 			return nil, nil, "", fmt.Errorf("allocation failed")
@@ -160,6 +172,9 @@ EVAL:
 			TlsSkipVerify: true, // always for now
 		},
 	}
+
+	s.Update("Nomad allocation ready")
+	s.Done()
 
 	return &clicfg, &addr, httpAddr, nil
 }

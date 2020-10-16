@@ -341,9 +341,6 @@ func (c *InstallCommand) Run(args []string) int {
 		advertiseAddr *pb.ServerConfig_AdvertiseAddr
 	)
 
-	st := c.ui.Status()
-	defer st.Close()
-
 	var err error
 	var httpAddr string
 
@@ -367,7 +364,7 @@ func (c *InstallCommand) Run(args []string) int {
 
 		// ok, inline below.
 	case "nomad":
-		contextConfig, advertiseAddr, httpAddr, err = serverinstall.InstallNomad(ctx, c.ui, st, &c.config)
+		contextConfig, advertiseAddr, httpAddr, err = serverinstall.InstallNomad(ctx, c.ui, &c.config)
 		if err != nil {
 			c.ui.Output(
 				"Error installing server into Nomad: %s", clierrors.Humanize(err),
@@ -384,8 +381,6 @@ func (c *InstallCommand) Run(args []string) int {
 
 		return 1
 	}
-
-	st.Close()
 
 	sg := c.ui.StepGroup()
 	defer sg.Wait()
