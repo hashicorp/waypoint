@@ -297,7 +297,7 @@ func (p *Platform) SetupCluster(ctx context.Context, s LifecycleStatus, sess *se
 		return "", err
 	}
 
-	if len(desc.Clusters) > 1 {
+	if len(desc.Clusters) >= 1 {
 		s.Status("Found existing ECS cluster: %s", cluster)
 		return cluster, nil
 	}
