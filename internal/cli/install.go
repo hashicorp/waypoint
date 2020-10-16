@@ -349,7 +349,7 @@ func (c *InstallCommand) Run(args []string) int {
 
 	switch c.platform {
 	case "docker":
-		contextConfig, advertiseAddr, httpAddr, err = serverinstall.InstallDocker(ctx, c.ui, st, &c.config)
+		contextConfig, advertiseAddr, httpAddr, err = serverinstall.InstallDocker(ctx, c.ui, &c.config)
 		if err != nil {
 			c.ui.Output(
 				"Error installing server into docker: %s", clierrors.Humanize(err),
@@ -410,8 +410,7 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 	client := pb.NewWaypointClient(conn)
 
-	s.Done()
-	s = sg.Add("Retrieving initial auth token...")
+	s.Update("Retrieving initial auth token...")
 
 	// We need our bootstrap token immediately
 	var callOpts []grpc.CallOption
@@ -433,8 +432,6 @@ func (c *InstallCommand) Run(args []string) int {
 		callOpts = append(callOpts, grpc.PerRPCCredentials(
 			serverclient.StaticToken(tokenResp.Token)))
 	}
-
-	s.Done()
 
 	// If we connected successfully, lets immediately setup our context.
 	if c.contextName != "" {
@@ -461,7 +458,7 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 
 	// Set the config
-	s = sg.Add("Configuring server...")
+	s.Update("Configuring server...")
 	log.Debug("setting the advertise address", "addr", fmt.Sprintf("%#v", advertiseAddr))
 	_, err = client.SetServerConfig(ctx, &pb.SetServerConfigRequest{
 		Config: &pb.ServerConfig{
