@@ -12,6 +12,7 @@ BUG FIXES:
 * cli: fix compatibility with Windows versions prior to 1809 [GH-515]
 * cli: `waypoint config` no longer crashes [GH-473]
 * cli: autocomplete in bash no longer crashes [GH-540]
+* cli: fix crash for some invalid configurations [GH-553]
 * entrypoint: do not block child process startup on URL service connection [GH-544]
 * plugin/aws-ecs: Use an existing cluster when there is only one cluster [GH-514]
 
