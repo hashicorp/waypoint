@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/docker/api/types"
@@ -38,6 +39,9 @@ type BuilderConfig struct {
 
 	// Controls whether or not the image should be build with buildkit or docker v1
 	UseBuildKit bool `hcl:"buildkit,optional"`
+
+	// The name/path to the Dockerfile if it is not the root of the project
+	Dockerfile string `hcl:"dockerfile,optional"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -110,7 +114,12 @@ func (b *Builder) Build(
 
 	cli.NegotiateAPIVersion(ctx)
 
-	contextDir, relDockerfile, err := build.GetContextFromLocalDir(src.Path, "")
+	dockerfile := b.config.Dockerfile
+	if dockerfile != "" {
+		dockerfile = path.Join(src.Path, dockerfile)
+	}
+
+	contextDir, relDockerfile, err := build.GetContextFromLocalDir(src.Path, dockerfile)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker context: %s", err)
 	}
