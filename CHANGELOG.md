@@ -1,6 +1,4 @@
-## UNRELEASED
-
-FEATURES:
+## 0.1.2 (October 16, 2020)
 
 IMPROVEMENTS:
 
