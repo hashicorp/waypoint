@@ -155,7 +155,6 @@ func (c *InitCommand) Run(args []string) int {
 	}
 	for _, step := range steps {
 		if !step() {
-			c.ui.Output("")
 			c.ui.Output("Project had errors during initialization.\n"+
 				"Waypoint experienced some errors during project initialization. The output\n"+
 				"above should contain the failure messages. Please correct these errors and\n"+
