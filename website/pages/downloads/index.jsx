@@ -115,13 +115,6 @@ function fetchAllReleases() {
 
 export async function getStaticProps() {
   return Promise.all([fetchVersionRelease(VERSION), fetchAllReleases()])
-    .then(function (responses) {
-      return Promise.all(
-        responses.map(function (response) {
-          return response
-        })
-      )
-    })
     .then((result) => {
       return {
         props: {
