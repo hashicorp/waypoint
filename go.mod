@@ -51,7 +51,7 @@ require (
 	github.com/hashicorp/horizon v0.0.0-20201009172236-66fd2d9af591
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201015055750-7833de86f9fa
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201016002013-59421183d54f
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
