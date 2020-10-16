@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	pbmocks "github.com/hashicorp/waypoint/internal/server/gen/mocks"
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
 func TestComponentEnum(t *testing.T) {

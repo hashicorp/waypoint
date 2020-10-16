@@ -5,8 +5,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // Viewer implements component.LogViewer over the server-side log stream endpoint.

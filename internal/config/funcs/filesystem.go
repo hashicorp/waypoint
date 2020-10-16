@@ -18,13 +18,13 @@ import (
 
 func Filesystem(pwd string) map[string]function.Function {
 	funcs := map[string]function.Function{
-		"file": MakeFileFunc(pwd, false),
+		"file":       MakeFileFunc(pwd, false),
 		"filebase64": MakeFileFunc(pwd, true),
 		"fileexists": MakeFileExistsFunc(pwd),
-		"fileset": MakeFileSetFunc(pwd),
-		"basename": BasenameFunc,
-		"dirname": DirnameFunc,
-		"abspath": AbsPathFunc,
+		"fileset":    MakeFileSetFunc(pwd),
+		"basename":   BasenameFunc,
+		"dirname":    DirnameFunc,
+		"abspath":    AbsPathFunc,
 		"pathexpand": PathExpandFunc,
 	}
 
