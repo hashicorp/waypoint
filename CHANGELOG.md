@@ -5,6 +5,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * plugin/docker: can specify alternate Dockerfile path [GH-539]
+* plugin/docker-pull: support registry auth [GH-545]
 
 BUG FIXES:
 
