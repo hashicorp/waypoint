@@ -97,7 +97,11 @@ function fetchVersionRelease(version) {
 }
 
 function fetchAllReleases() {
-  return fetch(`https://releases.hashicorp.com/waypoint/index.json`)
+  return fetch(`https://releases.hashicorp.com/waypoint/index.json`, {
+    headers: {
+      'Cache-Control': 'no-cache',
+    },
+  })
     .then((res) => res.json())
     .then((data) => {
       const latestReleases = sortAndFilterReleases(Object.keys(data.versions))
