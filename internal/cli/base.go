@@ -13,13 +13,13 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 // baseCommand is embedded in all commands to provide common logic and data.
@@ -90,6 +90,9 @@ type baseCommand struct {
 
 	// flagConnection contains manual flag-based connection info.
 	flagConnection clicontext.Config
+
+	// flagAutoApprove is whether to run an action automatically
+	flagAutoApprove bool
 
 	// args that were present after parsing flags
 	args []string
@@ -384,6 +387,13 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Usage: "Override configurations for how remote runners source data. " +
 				"This is specified to the data source type being used in your configuration. " +
 				"This is used for example to set a specific Git ref to run against.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "auto-approve",
+			Target:  &c.flagAutoApprove,
+			Default: false,
+			Usage:   "True to disable interactive destroy approval.",
 		})
 	}
 
