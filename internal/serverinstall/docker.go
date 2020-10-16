@@ -17,15 +17,22 @@ import (
 )
 
 func InstallDocker(
-	ctx context.Context, ui terminal.UI, st terminal.Status, scfg *Config) (
+	ctx context.Context, ui terminal.UI, scfg *Config) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
 ) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Docker client...")
+	defer func() { s.Abort() }()
+
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, nil, "", err
 	}
-
 	cli.NegotiateAPIVersion(ctx)
+
+	s.Update("Checking for existing installation...")
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
@@ -33,7 +40,6 @@ func InstallDocker(
 			Value: "waypoint-type=server",
 		}),
 	})
-
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -61,16 +67,17 @@ func InstallDocker(
 
 	// If we already have a server, bolt.
 	if len(containers) > 0 {
-		st.Step(terminal.StatusWarn, "Detected existing waypoint server")
+		s.Update("Detected existing Waypoint server.")
+		s.Status(terminal.StatusWarn)
+		s.Done()
 		return &clicfg, &addr, "", nil
 	}
 
-	st.Update("Creating waypoint network...")
+	s.Update("Creating waypoint network...")
 
 	nets, err := cli.NetworkList(ctx, types.NetworkListOptions{
 		Filters: filters.NewArgs(filters.Arg("label", "use=waypoint")),
 	})
-
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -102,7 +109,7 @@ func InstallDocker(
 		return nil, nil, "", err
 	}
 
-	st.Update("Installing waypoint server to docker")
+	s.Update("Installing Waypoint server to docker")
 
 	cfg := container.Config{
 		AttachStdout: true,
@@ -152,11 +159,13 @@ func InstallDocker(
 		return nil, nil, "", err
 	}
 
-	// KLUDGE: There isn't a way to find out if the container is up or not, so we just give it 5 seconds
-	// to normalize before trying to use it.
+	// KLUDGE: There isn't a way to find out if the container is up or not,
+	// so we just give it 5 seconds to normalize before trying to use it.
 	time.Sleep(5 * time.Second)
 
-	st.Step(terminal.StatusOK, "Server container started")
+	s.Done()
+	s = sg.Add("Server container started!")
+	s.Done()
 
 	return &clicfg, &addr, httpAddr, nil
 }
