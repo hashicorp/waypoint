@@ -8,6 +8,9 @@ import WaypointDiagram from 'components/waypoint-diagram'
 import Features from 'components/features'
 import Terminal from 'components/terminal'
 
+const loadingDots = ['', '.', '. .', '. . .']
+const spinner = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+
 export default function HomePage() {
   return (
     <div className={styles.homePage}>
@@ -102,12 +105,7 @@ export default function HomePage() {
                   {
                     color: 'white',
                     frames: 4,
-                    code: [
-                      '» Building',
-                      '» Building .',
-                      '» Building . .',
-                      '» Building . . .',
-                    ],
+                    code: loadingDots.map((dots) => `» Building ${dots}`),
                   },
                   {
                     frames: 10,
@@ -121,29 +119,10 @@ export default function HomePage() {
                   },
                   {
                     frames: 2,
-                    code: [
-                      '⠋ Building image',
-                      '⠙ Building image',
-                      '⠹ Building image',
-                      '⠸ Building image',
-                      '⠼ Building image',
-                      '⠴ Building image',
-                      '⠦ Building image',
-                      '⠧ Building image',
-                      '⠇ Building image',
-                      '⠏ Building image',
-                      '⠋ Building image',
-                      '⠙ Building image',
-                      '⠹ Building image',
-                      '⠸ Building image',
-                      '⠼ Building image',
-                      '⠴ Building image',
-                      '⠦ Building image',
-                      '⠧ Building image',
-                      '⠇ Building image',
-                      '⠏ Building image',
-                      '  Building image',
-                    ],
+                    code: spinner
+                      .concat(spinner)
+                      .map((step) => `${step} Building image`)
+                      .concat('  Building image'),
                   },
                   {
                     frames: 5,
@@ -292,12 +271,7 @@ export default function HomePage() {
                   {
                     color: 'white',
                     frames: 4,
-                    code: [
-                      '» Deploying',
-                      '» Deploying .',
-                      '» Deploying . .',
-                      '» Deploying . . .',
-                    ],
+                    code: loadingDots.map((dots) => `» Deploying ${dots}`),
                   },
                   {
                     frames: 5,
@@ -307,56 +281,21 @@ export default function HomePage() {
                   {
                     frames: 2,
                     color: 'gray',
-                    code: [
-                      '⠋ Preparing deployment',
-                      '⠙ Preparing deployment',
-                      '⠹ Preparing deployment',
-                      '⠸ Preparing deployment',
-                      '⠼ Preparing deployment',
-                      '⠴ Preparing deployment',
-                      '⠦ Preparing deployment',
-                      '⠧ Preparing deployment',
-                      '⠇ Preparing deployment',
-                      '⠏ Preparing deployment',
-                      '⠋ Preparing deployment',
-                      '⠙ Preparing deployment',
-                      '⠹ Preparing deployment',
-                      '⠸ Preparing deployment',
-                      '⠼ Preparing deployment',
-                      '⠴ Preparing deployment',
-                      '⠦ Preparing deployment',
-                      '⠧ Preparing deployment',
-                      '⠇ Preparing deployment',
-                      '⠏ Preparing deployment',
-                      '✓ Created deployment',
-                    ],
+                    code: spinner
+                      .concat(spinner)
+                      .map((step) => `${step} Preparing deployment`)
+                      .concat('✓ Created deployment'),
                   },
                   {
                     frames: 2,
                     color: 'gray',
-                    code: [
-                      '⠋ Waiting on deployment to become available: 1/1/0',
-                      '⠙ Waiting on deployment to become available: 1/1/0',
-                      '⠹ Waiting on deployment to become available: 1/1/0',
-                      '⠸ Waiting on deployment to become available: 1/1/0',
-                      '⠼ Waiting on deployment to become available: 1/1/0',
-                      '⠴ Waiting on deployment to become available: 1/1/0',
-                      '⠦ Waiting on deployment to become available: 1/1/0',
-                      '⠧ Waiting on deployment to become available: 1/1/0',
-                      '⠇ Waiting on deployment to become available: 1/1/0',
-                      '⠏ Waiting on deployment to become available: 1/1/0',
-                      '⠋ Waiting on deployment to become available: 1/1/0',
-                      '⠙ Waiting on deployment to become available: 1/1/0',
-                      '⠹ Waiting on deployment to become available: 1/1/0',
-                      '⠸ Waiting on deployment to become available: 1/1/0',
-                      '⠼ Waiting on deployment to become available: 1/1/0',
-                      '⠴ Waiting on deployment to become available: 1/1/0',
-                      '⠦ Waiting on deployment to become available: 1/1/0',
-                      '⠧ Waiting on deployment to become available: 1/1/0',
-                      '⠇ Waiting on deployment to become available: 1/1/0',
-                      '⠏ Waiting on deployment to become available: 1/1/0',
-                      '✓ Deployment successfully rolled out!',
-                    ],
+                    code: spinner
+                      .concat(spinner)
+                      .map(
+                        (step) =>
+                          `${step} Waiting on deployment to become available: 1/1/0`
+                      )
+                      .concat('✓ Deployment successfully rolled out!'),
                   },
                   { code: '' },
                   {
@@ -437,12 +376,7 @@ export default function HomePage() {
                   {
                     frames: 4,
                     color: 'white',
-                    code: [
-                      '» Releasing',
-                      '» Releasing .',
-                      '» Releasing . .',
-                      '» Releasing . . .',
-                    ],
+                    code: loadingDots.map((dots) => `» Releasing ${dots}`),
                   },
                   {
                     frames: 5,
@@ -452,40 +386,18 @@ export default function HomePage() {
                   {
                     frames: 2,
                     color: 'gray',
-                    code: [
-                      '⠋ Preparing service',
-                      '⠙ Preparing service',
-                      '⠹ Preparing service',
-                      '⠸ Preparing service',
-                      '⠼ Preparing service',
-                      '⠴ Preparing service',
-                      '⠦ Preparing service',
-                      '⠧ Preparing service',
-                      '⠇ Preparing service',
-                      '⠏ Preparing service',
-                      '⠋ Preparing service',
-                      '⠙ Preparing service',
-                      '⠹ Preparing service',
-                      '⠸ Preparing service',
-                      '⠼ Preparing service',
-                      '⠴ Preparing service',
-                      '⠦ Preparing service',
-                      '⠧ Preparing service',
-                      '⠇ Preparing service',
-                      '⠏ Preparing service',
-                      '✓ Service is ready!',
-                    ],
+                    code: spinner
+                      .concat(spinner)
+                      .map((step) => `${step} Preparing service`)
+                      .concat('✓ Service is ready!'),
                   },
                   { code: '' },
                   {
                     frames: 4,
                     color: 'white',
-                    code: [
-                      '» Pruning old deployments',
-                      '» Pruning old deployments .',
-                      '» Pruning old deployments . .',
-                      '» Pruning old deployments . . .',
-                    ],
+                    code: loadingDots.map(
+                      (dots) => `» Pruning old deployments ${dots}`
+                    ),
                   },
                   {
                     frames: 5,
