@@ -78,7 +78,14 @@ export default function DownloadsPage({ releaseData, previousVersions }) {
 }
 
 export async function getStaticProps() {
-  return fetch(`https://releases.hashicorp.com/waypoint/${VERSION}/index.json`)
+  return fetch(
+    `https://releases.hashicorp.com/waypoint/${VERSION}/index.json`,
+    {
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    }
+  )
     .then((r) => r.json())
     .then((releaseData) => ({ props: { releaseData } }))
     .catch(() => {
