@@ -45,14 +45,17 @@ type InstallCommand struct {
 }
 
 func (c *InstallCommand) InstallKubernetes(
-	ctx context.Context, st terminal.Status, log hclog.Logger,
+	ctx context.Context, ui terminal.UI, log hclog.Logger,
 ) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, int) {
-	stdout, stderr, err := c.ui.OutputWriters()
-	if err != nil {
-		panic(err)
-	}
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("")
+	defer func() { s.Abort() }()
 
 	if c.secretFile != "" {
+		s.Update("Initializing Kubernetes secret")
+
 		data, err := ioutil.ReadFile(c.secretFile)
 		if err != nil {
 			c.ui.Output(
@@ -91,11 +94,10 @@ func (c *InstallCommand) InstallKubernetes(
 
 		cmd := exec.Command("kubectl", "create", "-f", "-")
 		cmd.Stdin = bytes.NewReader(data)
-		cmd.Stdout = stdout
-		cmd.Stderr = stderr
+		cmd.Stdout = s.TermOutput()
+		cmd.Stderr = cmd.Stdout
 
-		err = cmd.Run()
-		if err != nil {
+		if err = cmd.Run(); err != nil {
 			c.ui.Output(
 				"Error executing kubectl to install secret: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
@@ -103,6 +105,9 @@ func (c *InstallCommand) InstallKubernetes(
 
 			return nil, nil, "", 1
 		}
+
+		s.Done()
+		s = sg.Add("")
 	}
 
 	// Decode our configuration
@@ -116,21 +121,17 @@ func (c *InstallCommand) InstallKubernetes(
 	}
 
 	if c.showYaml {
-		fmt.Fprint(stdout, output)
-		if output[:len(output)-1] != "\n" {
-			fmt.Fprint(stdout, "\n")
-		}
-
+		ui.Output(output)
 		return nil, nil, "", 0
 	}
 
+	s.Update("Creating Kubernetes resources...")
+
 	cmd := exec.Command("kubectl", "create", "-f", "-")
 	cmd.Stdin = strings.NewReader(output)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-
-	err = cmd.Run()
-	if err != nil {
+	cmd.Stdout = s.TermOutput()
+	cmd.Stderr = cmd.Stdout
+	if err = cmd.Run(); err != nil {
 		c.ui.Output(
 			"Error executing kubectl: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
@@ -138,6 +139,9 @@ func (c *InstallCommand) InstallKubernetes(
 
 		return nil, nil, "", 1
 	}
+
+	s.Done()
+	s = sg.Add("Initializing Kubernetes client...")
 
 	// Build our K8S client.
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -162,7 +166,7 @@ func (c *InstallCommand) InstallKubernetes(
 		return nil, nil, "", 1
 	}
 
-	st.Update("Waiting for Kubernetes StatefulSet to be ready...")
+	s.Update("Waiting for Kubernetes StatefulSet to be ready...")
 	log.Info("waiting for server statefulset to become ready")
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 		ss, err := clientset.AppsV1().StatefulSets(c.config.Namespace).Get(
@@ -188,7 +192,10 @@ func (c *InstallCommand) InstallKubernetes(
 		return nil, nil, "", 1
 	}
 
-	st.Update("Waiting for Kubernetes service to be ready...")
+	s.Update("Kubernetes StatefulSet reporting ready")
+	s.Done()
+
+	s = sg.Add("Waiting for Kubernetes service to become ready..")
 
 	// Wait for our service to be ready
 	log.Info("waiting for server service to become ready")
@@ -304,6 +311,8 @@ func (c *InstallCommand) InstallKubernetes(
 		return nil, nil, "", 1
 	}
 
+	s.Done()
+
 	return &contextConfig, &advertiseAddr, httpAddr, 0
 }
 
@@ -351,7 +360,7 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 	case "kubernetes":
 		var code int
-		contextConfig, advertiseAddr, httpAddr, code = c.InstallKubernetes(ctx, st, log)
+		contextConfig, advertiseAddr, httpAddr, code = c.InstallKubernetes(ctx, c.ui, log)
 		if code != 0 || c.showYaml {
 			return code
 		}
@@ -376,8 +385,15 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
+	st.Close()
+
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Connecting to: %s", contextConfig.Server.Address)
+	defer func() { s.Abort() }()
+
 	// Connect
-	st.Update(fmt.Sprintf("Service ready. Connecting to: %s", contextConfig.Server.Address))
 	log.Info("connecting to the server so we can set the server config", "addr", contextConfig.Server.Address)
 	conn, err := serverclient.Connect(ctx,
 		serverclient.FromContextConfig(contextConfig),
@@ -394,9 +410,11 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 	client := pb.NewWaypointClient(conn)
 
+	s.Done()
+	s = sg.Add("Retrieving initial auth token...")
+
 	// We need our bootstrap token immediately
 	var callOpts []grpc.CallOption
-	st.Update("Retrieving initial auth token...")
 	tokenResp, err := client.BootstrapToken(ctx, &empty.Empty{})
 	if err != nil {
 		c.ui.Output(
@@ -415,6 +433,8 @@ func (c *InstallCommand) Run(args []string) int {
 		callOpts = append(callOpts, grpc.PerRPCCredentials(
 			serverclient.StaticToken(tokenResp.Token)))
 	}
+
+	s.Done()
 
 	// If we connected successfully, lets immediately setup our context.
 	if c.contextName != "" {
@@ -441,7 +461,7 @@ func (c *InstallCommand) Run(args []string) int {
 	}
 
 	// Set the config
-	st.Update("Configuring server...")
+	s = sg.Add("Configuring server...")
 	log.Debug("setting the advertise address", "addr", fmt.Sprintf("%#v", advertiseAddr))
 	_, err = client.SetServerConfig(ctx, &pb.SetServerConfigRequest{
 		Config: &pb.ServerConfig{
@@ -460,8 +480,9 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
+	s.Done()
+
 	// Close and success
-	st.Close()
 	c.ui.Output(outInstallSuccess,
 		c.contextName,
 		advertiseAddr.Addr,
