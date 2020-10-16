@@ -13,20 +13,25 @@ import {
 import DownloadCards from 'components/downloader/cards'
 import styles from './style.module.css'
 
-export default function DownloadsPage({
-  currentVersionReleaseData,
-  allVersionsReleaseData,
-}) {
-  const sortedDownloads = useMemo(
-    () => sortPlatforms(currentVersionReleaseData),
-    [currentVersionReleaseData]
-  )
+export default function DownloadsPage({ releases }) {
+  // Sort our downloads for the DownloadCards
+  const currentRelease = releases.versions[VERSION]
+  const sortedDownloads = useMemo(() => sortPlatforms(currentRelease), [
+    currentRelease,
+  ])
   const osKeys = Object.keys(sortedDownloads)
   const [osIndex, setSelectedOsIndex] = useState()
 
   const tabData = Object.keys(sortedDownloads).map((osKey) => ({
     os: osKey,
     packageManagers: packageManagersByOs[osKey] || null,
+  }))
+
+  // Sort our releases for our ReleaseInformation section
+  const latestReleases = sortAndFilterReleases(Object.keys(releases.versions))
+  const sortedReleases = latestReleases.map((releaseVersion) => ({
+    ...sortPlatforms(releases.versions[releaseVersion]),
+    version: releaseVersion,
   }))
 
   useEffect(() => {
@@ -78,48 +83,24 @@ export default function DownloadsPage({
         brand="blue"
         productId="waypoint"
         productName={productName}
-        releases={allVersionsReleaseData}
-        latestVersion={currentVersionReleaseData.version}
+        releases={sortedReleases}
+        latestVersion={VERSION}
       />
     </div>
   )
 }
 
-function fetchVersionRelease(version) {
-  return fetch(
-    `https://releases.hashicorp.com/waypoint/${version}/index.json`,
-    {
-      headers: {
-        'Cache-Control': 'no-cache',
-      },
-    }
-  ).then((r) => r.json())
-}
-
-function fetchAllReleases() {
+export async function getStaticProps() {
   return fetch(`https://releases.hashicorp.com/waypoint/index.json`, {
     headers: {
       'Cache-Control': 'no-cache',
     },
   })
     .then((res) => res.json())
-    .then((data) => {
-      const latestReleases = sortAndFilterReleases(Object.keys(data.versions))
-      const releases = latestReleases.map((releaseVersion) => ({
-        ...sortPlatforms(data.versions[releaseVersion]),
-        version: releaseVersion,
-      }))
-      return releases
-    })
-}
-
-export async function getStaticProps() {
-  return Promise.all([fetchVersionRelease(VERSION), fetchAllReleases()])
     .then((result) => {
       return {
         props: {
-          currentVersionReleaseData: result[0],
-          allVersionsReleaseData: result[1],
+          releases: result,
         },
       }
     })
