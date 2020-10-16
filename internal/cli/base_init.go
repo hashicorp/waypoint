@@ -62,6 +62,11 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 		return nil, err
 	}
 
+	// Validate
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
 	return &cfg, nil
 }
 
