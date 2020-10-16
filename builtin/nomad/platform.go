@@ -186,7 +186,7 @@ func (p *Platform) Destroy(
 	}
 
 	st.Update("Deleting job...")
-	_, _, err = client.Jobs().Deregister(deployment.Id, true, nil)
+	_, _, err = client.Jobs().Deregister(deployment.Name, true, nil)
 	return err
 }
 
