@@ -4,6 +4,8 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* install/k8s: improve stability of install process by verifying stateful set, waiting for service endpoints, etc. [GH-435]
+
 BUG FIXES:
 
 ## 0.1.2 (October 16, 2020)
