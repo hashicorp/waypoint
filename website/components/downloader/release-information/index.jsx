@@ -1,18 +1,17 @@
-import { useState, Fragment, useEffect } from 'react'
+import { useState, Fragment } from 'react'
 
 import Dropdown from 'components/downloader/dropdown'
 import {
   prettyArch,
   prettyOs,
   trackDownload,
-  sortPlatforms,
   getVersionLabel,
-  sortAndFilterReleases,
 } from 'components/downloader/utils/downloader'
 import styles from './style.module.css'
 
 export default function ReleaseInformation({
   productId,
+  releases,
   productName,
   latestVersion,
   packageManagers,
@@ -22,24 +21,8 @@ export default function ReleaseInformation({
   brand,
 }) {
   const [selectedVersionId, setSelectedVersionId] = useState(latestVersion)
-  const [releases, setReleases] = useState([])
   const { version, ...selectedVersion } =
     releases.find((release) => release.version === selectedVersionId) || {}
-
-  useEffect(() => {
-    // lazy load all release versions to populate dropdown & releases section
-    fetch(`https://releases.hashicorp.com/${productId}/index.json`)
-      .then((res) => res.json())
-      .then((data) => {
-        const latestReleases = sortAndFilterReleases(Object.keys(data.versions))
-
-        const releases = latestReleases.map((releaseVersion) => ({
-          ...sortPlatforms(data.versions[releaseVersion]),
-          version: releaseVersion,
-        }))
-        setReleases(releases)
-      })
-  }, [])
 
   return (
     <div className={styles.root}>
