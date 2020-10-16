@@ -8,6 +8,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* plugin/nomad: destroy works [GH-571]
+
 ## 0.1.2 (October 16, 2020)
 
 IMPROVEMENTS:
