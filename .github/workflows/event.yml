@@ -1,0 +1,18 @@
+---
+name: Inspect GITHUB_EVENT_PATH
+    
+on:
+  pull_request:
+    types:
+      - closed
+    
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    container: alpine:3.12.0
+    steps:
+      - run: |
+          echo "This is a job inside a container."
+          echo "The ${GITHUB_EVENT_NAME} event is located at: ${GITHUB_EVENT_PATH}"
+          cat "$GITHUB_EVENT_PATH"
+        name: Inspect GITHUB_EVENT_PATH
