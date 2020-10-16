@@ -19,7 +19,7 @@ export default [
   'getting-started',
   {
     category: 'upgrading',
-    content: ['compatibility', 'protocol-table'],
+    content: ['compatibility', 'protocol-table', 'release-notifications'],
   },
   '-----------',
   {
