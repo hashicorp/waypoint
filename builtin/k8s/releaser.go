@@ -20,7 +20,7 @@ import (
 // The port that a service will forward to the pod(s)
 const DefaultPort = 80
 
-// Releaser is the ReleaseManager implementation for Google Cloud Run.
+// Releaser is the ReleaseManager implementation for Kubernetes.
 type Releaser struct {
 	config ReleaserConfig
 }

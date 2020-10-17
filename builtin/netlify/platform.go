@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/files"
 )
 
-// Platform is the Platform implementation for Google Cloud Run.
+// Platform is the Platform implementation for Netlify.
 type Platform struct {
 	config Config
 }
