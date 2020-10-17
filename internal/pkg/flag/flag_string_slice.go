@@ -48,6 +48,7 @@ func (f *Set) StringSliceVar(i *StringSliceVar) {
 type stringSliceValue struct {
 	hidden bool
 	target *[]string
+	set    bool
 }
 
 func newStringSliceValue(def []string, target *[]string, hidden bool) *stringSliceValue {
@@ -59,6 +60,11 @@ func newStringSliceValue(def []string, target *[]string, hidden bool) *stringSli
 }
 
 func (s *stringSliceValue) Set(val string) error {
+	if !s.set {
+		s.set = true
+		*s.target = nil
+	}
+
 	*s.target = append(*s.target, strings.TrimSpace(val))
 	return nil
 }
