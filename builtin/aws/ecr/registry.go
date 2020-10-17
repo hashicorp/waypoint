@@ -21,7 +21,7 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-// Registry represents access to a Docker registry.
+// Registry represents access to an AWS registry.
 type Registry struct {
 	config Config
 }

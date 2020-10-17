@@ -26,7 +26,7 @@ const (
 	labelNonce = "waypoint.hashicorp.com/nonce"
 )
 
-// Platform is the Platform implementation for Kubernetes.
+// Platform is the Platform implementation for Docker.
 type Platform struct {
 	config PlatformConfig
 }
@@ -64,7 +64,7 @@ func (p *Platform) ValidateAuth() error {
 	return nil
 }
 
-// Deploy deploys an image to Kubernetes.
+// Deploy deploys an image to Docker.
 func (p *Platform) Deploy(
 	ctx context.Context,
 	log hclog.Logger,

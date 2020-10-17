@@ -26,7 +26,7 @@ const (
 	labelNonce = "waypoint.hashicorp.com/nonce"
 )
 
-// Platform is the Platform implementation for Kubernetes.
+// Platform is the Platform implementation for Amazon EC2.
 type Platform struct {
 	config PlatformConfig
 }
@@ -69,7 +69,7 @@ func (p *Platform) ValidateAuth() error {
 // return func() *Releaser { return &Releaser{p: p} }
 // }
 
-// Deploy deploys an image to Kubernetes.
+// Deploy deploys an image to Amazon EC2.
 func (p *Platform) Deploy(
 	ctx context.Context,
 	log hclog.Logger,
@@ -295,7 +295,7 @@ func (p *Platform) Deploy(
 	return result, nil
 }
 
-// Destroy deletes the K8S deployment.
+// Destroy deletes the EC2 deployment.
 func (p *Platform) Destroy(
 	ctx context.Context,
 	log hclog.Logger,

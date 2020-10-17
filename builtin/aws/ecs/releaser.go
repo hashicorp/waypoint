@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
-// Releaser is the ReleaseManager implementation for Google Cloud Run.
+// Releaser is the ReleaseManager implementation for Amazon ECS.
 type Releaser struct {
 	p      *Platform
 	config ReleaserConfig
