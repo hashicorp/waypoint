@@ -21,8 +21,8 @@ work on an issue, comment on it first and tell us the approach you want to take.
 * Report potential bugs.
 * Suggest product enhancements.
 * Increase our test coverage.
-* Fix a [bug](https://github.com/hashicorp/waypoint/labels/type/bug).
-* Implement a requested [enhancement](https://github.com/hashicorp/waypoint/labels/type/enhancement).
+* Fix a [bug](https://github.com/hashicorp/waypoint/labels/bug).
+* Implement a requested [enhancement](https://github.com/hashicorp/waypoint/labels/enhancement).
 * Improve our guides and documentation.
 
 ### Reporting an Issue:
