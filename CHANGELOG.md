@@ -12,6 +12,7 @@ BUG FIXES:
 * entrypoint: ensure binary is statically linked on all systems [GH-586]
 * plugin/nomad: destroy works [GH-571]
 * plugin/aws-ecs: Allow `cpu` parameter for to be optional for EC2 clusters [GH-576]
+* install/nomad: if `-nomad-dc` flag is set, `dc1` won't be set [GH-603]
 
 ## 0.1.2 (October 16, 2020)
 
