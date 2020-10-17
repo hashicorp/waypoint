@@ -39,7 +39,10 @@ func (r *Releaser) Release(
 	ui terminal.UI,
 	target *TargetGroup,
 ) (*Release, error) {
-	sess := session.New(aws.NewConfig().WithRegion(target.Region))
+	sess, err := session.NewSession(aws.NewConfig().WithRegion(target.Region))
+	if err != nil {
+		return nil, err
+	}
 	elbsrv := elbv2.New(sess)
 
 	lbName := r.config.Name
