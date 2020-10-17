@@ -54,8 +54,10 @@ func (r *Registry) Push(
 
 	cli.NegotiateAPIVersion(ctx)
 
-	sess := session.New(aws.NewConfig().WithRegion(r.config.Region))
-
+	sess, err := session.NewSession(aws.NewConfig().WithRegion(r.config.Region))
+	if err != nil {
+		return nil, err
+	}
 	svc := ecr.New(sess)
 
 	repOut, err := svc.DescribeRepositories(&ecr.DescribeRepositoriesInput{
