@@ -581,6 +581,7 @@ func (p *Platform) Launch(
 	runtime := aws.String("FARGATE")
 	if p.config.EC2Cluster {
 		runtime = aws.String("EC2")
+		cpuShares = p.config.CPU
 	} else {
 		if p.config.Memory == 0 {
 			return nil, fmt.Errorf("Memory value required for fargate")
@@ -631,7 +632,11 @@ func (p *Platform) Launch(
 		}
 	}
 
-	cpus := strconv.Itoa(cpuShares)
+	cpus := aws.String(strconv.Itoa(cpuShares))
+	// on EC2 launch type, `Cpu` is an optional field, so we leave it nil if it is 0
+	if p.config.EC2Cluster && cpuShares == 0 {
+		cpus = nil
+	}
 	mems := strconv.Itoa(p.config.Memory)
 
 	family := "waypoint-" + app.App
@@ -642,7 +647,7 @@ func (p *Platform) Launch(
 		ContainerDefinitions: []*ecs.ContainerDefinition{&def},
 
 		ExecutionRoleArn: aws.String(roleArn),
-		Cpu:              aws.String(cpus),
+		Cpu:              cpus,
 		Memory:           aws.String(mems),
 		Family:           aws.String(family),
 
