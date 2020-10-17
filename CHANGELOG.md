@@ -5,6 +5,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * install/k8s: improve stability of install process by verifying stateful set, waiting for service endpoints, etc. [GH-435]
+* plugin/pack: can set environment variables [GH-581]
 
 BUG FIXES:
 
