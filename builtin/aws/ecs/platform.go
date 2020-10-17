@@ -547,6 +547,21 @@ func (p *Platform) Launch(
 		},
 	}
 
+	for k, v := range p.config.Environment {
+		env = append(env, &ecs.KeyValuePair{
+			Name:  aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+
+	var secrets []*ecs.Secret
+	for k, v := range p.config.Secrets {
+		secrets = append(secrets, &ecs.Secret{
+			Name:      aws.String(k),
+			ValueFrom: aws.String(v),
+		})
+	}
+
 	for k, v := range deployConfig.Env() {
 		env = append(env, &ecs.KeyValuePair{
 			Name:  aws.String(k),
@@ -564,6 +579,7 @@ func (p *Platform) Launch(
 			},
 		},
 		Environment: env,
+		Secrets:     secrets,
 		LogConfiguration: &ecs.LogConfiguration{
 			LogDriver: aws.String("awslogs"),
 			Options: map[string]*string{
@@ -1136,6 +1152,12 @@ type Config struct {
 
 	// How much CPU to assign to the containers
 	CPU int `hcl:"cpu,optional"`
+
+	// The environment variables to pass to the main container
+	Environment map[string]string `hcl:"environment,optional"`
+
+	// The secrets to pass to to the main container
+	Secrets map[string]string `hcl:"secrets,optional"`
 
 	// Assign each task a public IP. Default false.
 	// TODO to access ECR you need a nat gateway or a public address and so if you
