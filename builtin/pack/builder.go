@@ -35,6 +35,12 @@ type BuilderConfig struct {
 
 	// The Buildpack builder image to use, defaults to the standard heroku one.
 	Builder string `hcl:"builder,optional"`
+
+	// Environment variables that are meant to configure the application in a static
+	// way. This might be control an image that has mulitple modes of operation,
+	// selected via environment variable. Most configuration should use the waypoint
+	// config commands.
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 const DefaultBuilder = "heroku/buildpacks:18"
@@ -83,6 +89,7 @@ func (b *Builder) Build(
 		Image:   src.App,
 		Builder: builder,
 		AppPath: src.Path,
+		Env:     b.config.StaticEnvVars,
 		FileFilter: func(file string) bool {
 			// Do not include the bolt.db or bolt.db.lock
 			// These files hold the local state when Waypoint is running without a server
@@ -238,6 +245,17 @@ build {
 		"builder",
 		"The buildpack builder image to use",
 		docs.Default(DefaultBuilder),
+	)
+
+	doc.SetField(
+		"static_environment",
+		"environment variables to expose to the buildpack",
+		docs.Summary(
+			"these environment variables should not be run of the mill",
+			"configuration variables, use waypoint config for that.",
+			"These variables are used to control over all container modes,",
+			"such as configuring it to start a web app vs a background worker",
+		),
 	)
 
 	return doc, nil
