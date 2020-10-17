@@ -40,11 +40,11 @@ a set of flags to configure how to connect to the server. The example
 below configures a context:
 
 ```shell-session
-$ waypoint context create my-server \
+$ waypoint context create \
     -server-addr=localhost:9701 \
     -server-auth-token=abcd1234 \
     -server-tls \
-    -set-default
+    -set-default my-server
 ```
 
 The `-set-default` flag will set this as the default connection information.
