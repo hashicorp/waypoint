@@ -90,8 +90,10 @@ func (p *Platform) Deploy(
 
 	st.Update("Creating EC2 instances in ASG...")
 
-	sess := session.New(aws.NewConfig().WithRegion(p.config.Region))
-
+	sess, err := session.NewSession(aws.NewConfig().WithRegion(p.config.Region))
+	if err != nil {
+		return nil, err
+	}
 	e := ec2.New(sess)
 
 	var (
@@ -300,11 +302,13 @@ func (p *Platform) Destroy(
 	deployment *Deployment,
 	ui terminal.UI,
 ) error {
-	sess := session.New(aws.NewConfig().WithRegion(p.config.Region))
-
+	sess, err := session.NewSession(aws.NewConfig().WithRegion(p.config.Region))
+	if err != nil {
+		return err
+	}
 	as := autoscaling.New(sess)
 
-	_, err := as.DeleteAutoScalingGroup(&autoscaling.DeleteAutoScalingGroupInput{
+	_, err = as.DeleteAutoScalingGroup(&autoscaling.DeleteAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(deployment.ServiceName),
 		ForceDelete:          aws.Bool(true),
 	})

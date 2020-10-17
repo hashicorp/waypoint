@@ -86,8 +86,10 @@ func (b *Builder) Build(
 	ui terminal.UI,
 	src *component.Source,
 ) (*Image, error) {
-	sess := session.New(aws.NewConfig().WithRegion(b.config.Region))
-
+	sess, err := session.NewSession(aws.NewConfig().WithRegion(b.config.Region))
+	if err != nil {
+		return nil, err
+	}
 	e := ec2.New(sess)
 
 	var (
