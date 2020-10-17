@@ -249,7 +249,7 @@ build {
 
 	doc.SetField(
 		"static_environment",
-		"environment variables to expose to the application",
+		"environment variables to expose to the buildpack",
 		docs.Summary(
 			"these environment variables should not be run of the mill",
 			"configuration variables, use waypoint config for that.",
