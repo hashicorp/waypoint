@@ -75,7 +75,7 @@ There are several custom markdown plugins that are available by default that enh
 - If you see `# Headline ((#slug))`, this is an example of an [anchor link alias](https://github.com/hashicorp/remark-plugins/tree/je.anchor-link-adjustments/plugins/anchor-links#anchor-link-aliases). It adds an extra permalink to a headline for compatibility and is removed from the output.
 - Due to [automatically generated permalinks](https://github.com/hashicorp/remark-plugins/tree/je.anchor-link-adjustments/plugins/anchor-links#anchor-links), any text changes to _headlines_ or _list items that begin with inline code_ can and will break existing permalinks. Be very cautious when changing either of these two text items.
 
-  Headlines are fairly self-explanitory, but here's an example of how list items that begin with inline code look.
+  Headlines are fairly self-explanatory, but here's an example of how to list items that begin with inline code look.
 
   ```markdown
   - this is a normal list item
@@ -285,7 +285,7 @@ The addition of the `name` property to a category object is all it takes to be a
 
 ### Custom or External Links
 
-Sometimes you may have a need to include a link that is not directly to a file within the docs hierarchy. This can also be supported using a different pattern. For example:
+Sometimes you may have a need to include a link that is not directed to a file within the docs hierarchy. This can also be supported using a different pattern. For example:
 
 ```js
 export default {
@@ -352,7 +352,7 @@ One more example - let's say that content is being moved to an external website.
 }
 ```
 
-If we no longer want the link to be in the side nav, we can simply remove it. If we do still want the link in the side nav, but pointing to an external destnation, we need to slightly change the structure as such:
+If we no longer want the link to be in the side nav, we can simply remove it. If we do still want the link in the side nav, but pointing to an external destination, we need to slightly change the structure as such:
 
 ```js
 {
