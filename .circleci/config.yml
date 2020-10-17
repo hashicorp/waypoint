@@ -3,7 +3,7 @@ version: 2.1
 
 references:
   images:
-    go: &GOLANG_IMAGE circleci/golang:1.14.3
+    go: &GOLANG_IMAGE circleci/golang:1.15.3
     middleman: &MIDDLEMAN_IMAGE hashicorp/middleman-hashicorp:0.3.44
     ember: &EMBER_IMAGE circleci/node:12-browsers
 
@@ -24,7 +24,7 @@ references:
     CIRCLE_BASE_URL: "https://circleci.com/workflow-run"
     DOCKER_BUILDKIT: 1
     REBUILD_UI: &REBUILD_UI 1
-    
+
 jobs:
   # Runs Go linters
   lint:
@@ -141,7 +141,7 @@ jobs:
       - store_artifacts:
           path: *TEST_RESULTS_DIR
       - notify_main_failure
-  
+
   # create a development build
   dev-build:
     docker:
