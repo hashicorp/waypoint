@@ -101,10 +101,13 @@ Let's now install the plugin so that it can be used by the Waypoint CLI.
 You can install your plugin using the `make install` command. Waypoint will automatically
 load plugins from certain know locations, these are:
 
-- \$HOME/.config/waypoint/plugins/
+- Same directory as any `waypoint.hcl`
 - <waypoint_app_folder>/.waypoint/plugins/
+- \$XDG_CONFIG_HOME/waypoint/plugins/
 
-The `make install` command will copy the plugin to the Waypoint config in your `$HOME` folder.
+The `make install` command will copy the plugin to the Waypoint config in your
+`$HOME` folder. Note that this may not match your `$XDG_CONFIG_HOME` value so
+please double check this is correct for you.
 
 ```shell
 ➜ make install

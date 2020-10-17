@@ -55,9 +55,24 @@ will look for plugins in the following locations in the following order:
 
 1. In the same directory as the `waypoint.hcl` file.
 2. In `./.waypoint/plugins/` relative to the `waypoint.hcl` file.
-3. In `$XDG_CONFIG_DIR/waypoint/plugins`
+3. In `$XDG_CONFIG_HOME/waypoint/plugins`
 
 Once a plugin is found, it will not search the later paths.
+
+#### Troubleshooting
+
+If you're seeing `waypoint init` errors that a plugin cannot be found,
+run `waypoint init` with the `-vv` flag and look for the line that says
+"plugin search path". This will list the search path that Waypoint is
+using for finding your plugins.
+
+If the path isn't correct, this is usually due to unset environment variables
+(typically `XDG_CONFIG_HOME`). Please verify these are set properly and
+try again.
+
+```
+2020-10-17T11:32:12.743-0700 [DEBUG] waypoint.runner: plugin search path: job_id=01EMVXARPMVCPYWE4FPECZY30B path=[, .waypoint/plugins, /Users/mitchellh/.config/waypoint/plugins]
+```
 
 ### Using the External Plugin
 
