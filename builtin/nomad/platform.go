@@ -3,6 +3,7 @@ package nomad
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -90,52 +91,66 @@ func (p *Platform) Deploy(
 		p.config.ServicePort = 3000
 	}
 
-	// Determine if we have a job that we manage already
-	job, _, err := jobclient.Info(result.Name, &api.QueryOptions{})
-	if strings.Contains(err.Error(), "job not found") {
-		job = api.NewServiceJob(result.Name, result.Name, p.config.Region, 10)
-		job.Datacenters = []string{p.config.Datacenter}
-		tg := api.NewTaskGroup(result.Name, 1)
-		tg.Networks = []*api.NetworkResource{
-			{
-				Mode: "host",
-				DynamicPorts: []api.Port{
-					{
-						Label: "waypoint",
-						To:    int(p.config.ServicePort),
+	var job *api.Job
+	if p.config.JobSpecPath != "" {
+		// Read nomad file if it was provided
+		f, err := ioutil.ReadFile(p.config.JobSpecPath)
+		if err != nil {
+			return nil, err
+		}
+		job, err = jobclient.ParseHCL(string(f), true)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Determine if we have a job that we manage already
+		job, _, err = jobclient.Info(result.Name, &api.QueryOptions{})
+		if strings.Contains(err.Error(), "job not found") {
+			job = api.NewServiceJob(result.Name, result.Name, p.config.Region, 10)
+			job.Datacenters = []string{p.config.Datacenter}
+			tg := api.NewTaskGroup(result.Name, 1)
+			tg.Networks = []*api.NetworkResource{
+				{
+					Mode: "host",
+					DynamicPorts: []api.Port{
+						{
+							Label: "waypoint",
+							To:    int(p.config.ServicePort),
+						},
 					},
 				},
-			},
+			}
+			job.AddTaskGroup(tg)
+			tg.AddTask(&api.Task{
+				Name:   result.Name,
+				Driver: "docker",
+			})
+			err = nil
 		}
-		job.AddTaskGroup(tg)
-		tg.AddTask(&api.Task{
-			Name:   result.Name,
-			Driver: "docker",
-		})
-		err = nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	// Build our env vars
-	env := map[string]string{
-		"PORT": fmt.Sprint(p.config.ServicePort),
-	}
-
-	for k, v := range p.config.StaticEnvVars {
-		env[k] = v
-	}
-
-	for k, v := range deployConfig.Env() {
-		env[k] = v
-	}
-
-	// If no count is specified, presume that the user is managing the replica
-	// count some other way (perhaps manual scaling, perhaps a pod autoscaler).
-	// Either way if they don't specify a count, we should be sure we don't send one.
-	if p.config.Count > 0 {
-		job.TaskGroups[0].Count = &p.config.Count
+		if err != nil {
+			return nil, err
+		}
+	
+		// Build our env vars
+		env := map[string]string{
+			"PORT": fmt.Sprint(p.config.ServicePort),
+		}
+		job.TaskGroups[0].Tasks[0].Env = env
+	
+		for k, v := range p.config.StaticEnvVars {
+			env[k] = v
+		}
+	
+		for k, v := range deployConfig.Env() {
+			env[k] = v
+		}
+	
+		// If no count is specified, presume that the user is managing the replica
+		// count some other way (perhaps manual scaling, perhaps a pod autoscaler).
+		// Either way if they don't specify a count, we should be sure we don't send one.
+		if p.config.Count > 0 {
+			job.TaskGroups[0].Count = &p.config.Count
+		}
 	}
 
 	// Set our ID on the meta.
@@ -146,7 +161,6 @@ func (p *Platform) Deploy(
 		"image": img.Name(),
 		"ports": []string{"waypoint"},
 	}
-	job.TaskGroups[0].Tasks[0].Env = env
 
 	// Register job
 	st.Update("Registering job...")
@@ -216,6 +230,9 @@ type Config struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
+
+	// Path to nomad file defining job specification
+	JobSpecPath string `hcl:"jobspec,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
