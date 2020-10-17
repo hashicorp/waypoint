@@ -221,8 +221,10 @@ func (p *Platform) Deploy(
 
 	lf := &Lifecycle{
 		Init: func(s LifecycleStatus) error {
-			sess = session.New(aws.NewConfig().WithRegion(p.config.Region))
-
+			sess, err = session.NewSession(aws.NewConfig().WithRegion(p.config.Region))
+			if err != nil {
+				return err
+			}
 			cluster, err = p.SetupCluster(ctx, s, sess)
 			if err != nil {
 				return err
@@ -1015,7 +1017,10 @@ func (p *Platform) Destroy(
 ) error {
 	log.Debug("removing deployment target group from load balancer")
 
-	sess := session.New(aws.NewConfig().WithRegion(p.config.Region))
+	sess, err := session.NewSession(aws.NewConfig().WithRegion(p.config.Region))
+	if err != nil {
+		return err
+	}
 	elbsrv := elbv2.New(sess)
 
 	listeners, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
