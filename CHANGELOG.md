@@ -9,6 +9,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* entrypoint: ensure binary is statically linked on all systems [GH-586]
 * plugin/nomad: destroy works [GH-571]
 * plugin/aws-ecs: Allow `cpu` parameter for to be optional for EC2 clusters [GH-576]
 
