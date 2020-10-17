@@ -9,6 +9,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * plugin/nomad: destroy works [GH-571]
+* plugin/aws-ecs: Allow `cpu` parameter for to be optional for EC2 clusters [GH-576]
 
 ## 0.1.2 (October 16, 2020)
 
@@ -25,7 +26,6 @@ BUG FIXES:
 * cli: fix crash for some invalid configurations [GH-553]
 * entrypoint: do not block child process startup on URL service connection [GH-544]
 * plugin/aws-ecs: Use an existing cluster when there is only one cluster [GH-514]
-* plugin/aws-ecs: Allow `cpu` parameter for to be optional for EC2 clusters [GH-576]
 
 ## 0.1.1 (October 15, 2020)
 
