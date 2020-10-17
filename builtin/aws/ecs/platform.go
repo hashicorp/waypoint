@@ -631,7 +631,11 @@ func (p *Platform) Launch(
 		}
 	}
 
-	cpus := strconv.Itoa(cpuShares)
+	cpus := aws.String(strconv.Itoa(cpuShares))
+	if p.config.EC2Cluster && cpuShares == 0 {
+		s.Status("debug: leaving cpu unset")
+		cpus = nil
+	}
 	mems := strconv.Itoa(p.config.Memory)
 
 	family := "waypoint-" + app.App
@@ -642,7 +646,7 @@ func (p *Platform) Launch(
 		ContainerDefinitions: []*ecs.ContainerDefinition{&def},
 
 		ExecutionRoleArn: aws.String(roleArn),
-		Cpu:              aws.String(cpus),
+		Cpu:              cpus,
 		Memory:           aws.String(mems),
 		Family:           aws.String(family),
 
