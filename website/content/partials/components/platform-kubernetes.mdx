@@ -99,7 +99,7 @@ Environment variables that are meant to configure the application in a static wa
 
 deploy "kubernetes" {
 	image_secret = "registry_secret"
-	count = 3
+	replicas = 3
 	probe_path = "/_healthz"
 }
 
