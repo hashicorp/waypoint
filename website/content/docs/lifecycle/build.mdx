@@ -228,3 +228,58 @@ the locally built Docker image to the remote registry.
 Machine Images) are registered directly with Amazon and are never local
 artifacts. Therefore, a separate registry configuration is not required since
 the build/registry phases are one and the same.
+
+### Private Registries
+
+When using the docker plugin to push images to private container registries, the
+registry authentication is configured "out of band" from Waypoint. For example
+your `waypoint.hcl` may have a `build` stanza with a `registry` section pointing
+to a private registry:
+
+```hcl
+...
+    build {
+        use "docker" {}
+        registry {
+          use "docker" {
+            image = "registry.example.com/image"
+            tag = "latest"
+          }
+        }
+    }
+...
+```
+
+You should configure docker authentication to push to the private registry with
+something like:
+
+```shell
+cat /tmp/mysecret | docker login registry.example.com -u USERNAME
+--password-stdin
+```
+
+`/tmp/mysecret` is a file with your secret as contents and
+`USERNAME` is replaced with your actual registry username. Therefore Waypoint
+does not need to know the private registry credentials since it calls the
+Docker API, which is configured with the private registry credentials.
+
+For Docker, Kubernetes or Nomad deployments that pull the app container image
+from the private registry, you need to configure those platforms to authenticate
+to the private registry.
+
+For Kubernetes, you can see how to [authenticate to private container registries
+with a kubernetes
+secret](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/).
+If you named the secret `example-registry-secret`, then you can [reference the
+secret in
+Waypoint](https://www.waypointproject.io/plugins/kubernetes#image_secret) like:
+
+```hcl
+...
+  deploy {
+    use "kubernetes" {
+      image_secret = "example-registry-secret"
+    }
+  }
+...
+```
