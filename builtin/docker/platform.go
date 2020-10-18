@@ -270,7 +270,7 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc.Example(`
 deploy {
   use "docker" {
-	command      = "ps"
+	command      = ["ps"]
 	service_port = 3000
 	static_environment = {
 	  "environment": "production",
