@@ -635,6 +635,6 @@ deployments. If this is incorrect, manually set it using the CLI command
 "waypoint server config-set".
 
 Advertise Address: %[2]s
-HTTP UI Address: %[3]s
+Web UI Address: %[3]s
 `)
 )
