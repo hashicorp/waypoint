@@ -299,9 +299,11 @@ func (p *Platform) SetupCluster(ctx context.Context, s LifecycleStatus, sess *se
 		return "", err
 	}
 
-	if len(desc.Clusters) >= 1 {
-		s.Status("Found existing ECS cluster: %s", cluster)
-		return cluster, nil
+	for _, c := range desc.Clusters {
+		if *c.ClusterName == cluster && strings.ToLower(*c.Status) == "active" {
+			s.Status("Found existing ECS cluster: %s", cluster)
+			return cluster, nil
+		}
 	}
 
 	if p.config.EC2Cluster {
