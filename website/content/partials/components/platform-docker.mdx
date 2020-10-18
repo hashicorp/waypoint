@@ -49,7 +49,7 @@ These environment variables should not be run of the mill configuration variable
 
 deploy {
   use "docker" {
-	command      = "ps"
+	command      = ["ps"]
 	service_port = 3000
 	static_environment = {
 	  "environment": "production",
