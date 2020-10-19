@@ -1243,7 +1243,7 @@ type ContainerConfig struct {
 	HealthCheck *HealthCheckConfig `hcl:"health_check,block"`
 
 	// The environment variables to pass to a container
-	Environment map[string]string `hcl:"environment,optional"`
+	Environment map[string]string `hcl:"static_environment,optional"`
 
 	// The secrets to pass to a container
 	Secrets map[string]string `hcl:"secrets,optional"`
@@ -1275,7 +1275,7 @@ type Config struct {
 	CPU int `hcl:"cpu,optional"`
 
 	// The environment variables to pass to the main container
-	Environment map[string]string `hcl:"environment,optional"`
+	Environment map[string]string `hcl:"static_environment,optional"`
 
 	// The secrets to pass to to the main container
 	Secrets map[string]string `hcl:"secrets,optional"`
@@ -1293,7 +1293,7 @@ type Config struct {
 	ALB *ALBConfig `hcl:"alb,block"`
 
 	// Configuration options for additional containers
-	ContainersConfig []*ContainerConfig `hcl:"containers,block"`
+	ContainersConfig []*ContainerConfig `hcl:"sidecar,block"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -1376,6 +1376,16 @@ deploy {
 	)
 
 	doc.SetField(
+		"static_environment",
+		"static environment variables to make available",
+	)
+
+	doc.SetField(
+		"secrets",
+		"secret key/values to pass to the ECS container",
+	)
+
+	doc.SetField(
 		"alb.certificate",
 		"the ARN of an AWS Certificate Manager cert to associate with the ALB",
 	)
@@ -1407,6 +1417,60 @@ deploy {
 			"configure their ALB outside waypoint but still have waypoint hook the application",
 			"to that ALB",
 		),
+	)
+
+	doc.SetField(
+		"sidecar",
+		"Additional container to run as a sidecar.",
+		docs.Summary(
+			"This runs additional containers in addition to the main container that",
+			"comes from the build phase.",
+		),
+	)
+
+	doc.SetField(
+		"sidecar.name",
+		"Name of the container",
+	)
+
+	doc.SetField(
+		"sidecar.image",
+		"Image of the sidecar container",
+	)
+
+	doc.SetField(
+		"sidecar.memory",
+		"The amount (in MiB) of memory to present to the container",
+	)
+
+	doc.SetField(
+		"sidecar.memory_reservation",
+		"The soft limit (in MiB) of memory to reserve for the container",
+	)
+
+	doc.SetField(
+		"sidecar.container_port",
+		"The port number for the container",
+	)
+
+	doc.SetField(
+		"sidecar.host_port",
+		"The port number on the host to reserve for the container",
+	)
+
+	doc.SetField(
+		"sidecar.protocol",
+		"The protocol used for port mapping.",
+	)
+
+	doc.SetField(
+		"sidecar.static_environment",
+		"Environment variables to expose to this container",
+	)
+
+	doc.SetField(
+		"sidecar.secrets",
+		"Secrets to expose to this container",
 	)
 
 	var memvals []int
