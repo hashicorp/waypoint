@@ -48,10 +48,45 @@ func (c *InstallCommand) InstallKubernetes(
 	ctx context.Context, ui terminal.UI, log hclog.Logger,
 ) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, int) {
 	sg := ui.StepGroup()
-	defer sg.Wait()
+	defer func() { sg.Wait() }()
 
-	s := sg.Add("")
+	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
+
+	// Build our K8S client.
+	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{},
+	)
+	clientconfig, err := config.ClientConfig()
+	if err != nil {
+		c.ui.Output(
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, nil, "", 1
+	}
+
+	clientset, err := kubernetes.NewForConfig(clientconfig)
+	if err != nil {
+		c.ui.Output(
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, nil, "", 1
+	}
+
+	// If this is kind, then we want to warn the user that they need
+	// to have some loadbalancer system setup or this will not work.
+	_, err = clientset.AppsV1().DaemonSets("kube-system").Get(
+		ctx, "kindnet", metav1.GetOptions{})
+	isKind := err == nil
+	if isKind {
+		s.Update(warnK8SKind)
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		s = sg.Add("")
+	}
 
 	if c.secretFile != "" {
 		s.Update("Initializing Kubernetes secret")
@@ -141,32 +176,7 @@ func (c *InstallCommand) InstallKubernetes(
 	}
 
 	s.Done()
-	s = sg.Add("Initializing Kubernetes client...")
-
-	// Build our K8S client.
-	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		&clientcmd.ConfigOverrides{},
-	)
-	clientconfig, err := config.ClientConfig()
-	if err != nil {
-		c.ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, nil, "", 1
-	}
-
-	clientset, err := kubernetes.NewForConfig(clientconfig)
-	if err != nil {
-		c.ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, nil, "", 1
-	}
-
-	s.Update("Waiting for Kubernetes StatefulSet to be ready...")
+	s = sg.Add("Waiting for Kubernetes StatefulSet to be ready...")
 	log.Info("waiting for server statefulset to become ready")
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 		ss, err := clientset.AppsV1().StatefulSets(c.config.Namespace).Get(
@@ -615,6 +625,14 @@ Alias: waypoint install
 }
 
 var (
+	warnK8SKind = strings.TrimSpace(`
+Kind cluster detected!
+
+Installing Waypoint to a Kind cluster requires that the cluster has
+LoadBalancer capabilities (such as metallb). If Kind isn't configured
+in this way, then the install may hang. If this happens, please delete
+all the Waypoint resources and try again.
+`)
 	errInstallRunning = strings.TrimSpace(`
 The Waypoint server has been deployed, but due to this error we were
 unable to automatically configure the local CLI or the Waypoint server
