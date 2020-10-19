@@ -1170,7 +1170,7 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 deploy {
   use "aws-ecs" {
     region = "us-east-1"
-    memory = "512"
+    memory = 512
   }
 }
 `)
