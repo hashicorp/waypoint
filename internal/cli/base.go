@@ -90,8 +90,8 @@ type baseCommand struct {
 	// flagConnection contains manual flag-based connection info.
 	flagConnection clicontext.Config
 
-	// flagAutoApprove is whether to run an action automatically
-	flagAutoApprove bool
+	// flagForce is whether to run an action automatically
+	flagForce bool
 
 	// args that were present after parsing flags
 	args []string
@@ -406,10 +406,10 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:    "auto-approve",
-			Target:  &c.flagAutoApprove,
+			Name:    "force",
+			Target:  &c.flagForce,
 			Default: false,
-			Usage:   "True to disable interactive destroy approval.",
+			Usage:   "True to disable interactive approval.",
 		})
 	}
 
