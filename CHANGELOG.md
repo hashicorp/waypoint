@@ -11,6 +11,7 @@ IMPROVEMENTS:
 * plugin/aws-ecs: support for configuring sidecar containers [GH-583]
 * plugin/pack: can set environment variables [GH-581]
 * plugin/docker: ability to target remote docker engine for deploys, automatically pull images [GH-631]
+* ui: onboarding flow after redeeming an invite token is enabled and uses public release URLs [GH-635]
 
 BUG FIXES:
 
