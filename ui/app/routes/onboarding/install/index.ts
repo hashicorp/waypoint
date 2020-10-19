@@ -8,8 +8,9 @@ export default class OnboardingInstallIndex extends Route {
     switch (parser.getResult().os.name) {
       case 'Mac OS':
         return this.transitionTo('onboarding.install.homebrew');
-      case 'Windows':
-        return this.transitionTo('onboarding.install.chocolatey');
+      // There isn't yet a chocolatey package for Waypoint
+      // case 'Windows':
+      //   return this.transitionTo('onboarding.install.chocolatey');
       case 'Debian':
       case 'Ubuntu':
         return this.transitionTo('onboarding.install.linux.ubuntu');

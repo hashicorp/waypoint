@@ -25,13 +25,11 @@ module('Acceptance | onboarding index', function (hooks) {
     setUa(userAgent.valueOf());
   });
 
-  test('visiting as windows', async function (assert) {
-    setUa(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246'
-    );
+  test('visiting as ubuntu', async function (assert) {
+    setUa('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1');
     await page.visit();
 
-    assert.equal(currentURL(), `${onboardingUrl}/install/chocolatey`);
+    assert.equal(currentURL(), `${onboardingUrl}/install/linux/ubuntu`);
   });
 
   test('advances to connect', async function (assert) {
