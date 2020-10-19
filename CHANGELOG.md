@@ -13,6 +13,7 @@ BUG FIXES:
 
 * entrypoint: ensure binary is statically linked on all systems [GH-586]
 * plugin/nomad: destroy works [GH-571]
+* plugin/aws: load `~/.aws/config` if available and use that for auth [GH-621]
 * plugin/aws-ecs: Allow `cpu` parameter for to be optional for EC2 clusters [GH-576]
 * plugin/aws-ecs: don't detect inactive cluster as existing [GH-605]
 * plugin/aws-ecs: fix crash if subnets are specified [GH-636]
