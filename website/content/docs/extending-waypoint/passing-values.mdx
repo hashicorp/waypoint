@@ -88,25 +88,24 @@ message Binary {
 }
 ```
 
-To generate the Go code you use the protoc command setting the correct flags. The `--go_opt=plugins=grpc` flag specifies
-that you want to use the Go gRPC plugin to generate the code.
+To generate the Go code you use the protoc command setting the correct flags. The `--go_opt=plugins=grpc:./` flag specifies
+that you want to use the Go gRPC plugin to generate the code, and that the output directory for the generated code will be `.`
 
-Then the `--go_out=../../../../` flag is specified. The `go_package` option specified in the Protocol Buffer definition
-file has the path of the go package defined; if you set the flag `--go_out=./` then the resulting go code would be
-output in the path `./github.com/hashicorp/waypoint-plugin-examples/golang/builder`, since the path for the plugin is
-already `github.com/hashicorp/waypoint-plugin-examples/golang/builder` you can set `go_out` to use parent paths, which
-results in the go code being generated in the current folder.
+By default the go plugin for gRPC uses the `go_package` path and the output directory specfied in the
+`-go_opt` flag as the location for the generated code. You can change this behaviour by setting the flag
+`--go_opt=paths=source_relative`. The generated code will now be created at a path relative to the intput proto file.
 
 Finally, you specify the proto files you would like to generate code for; this is the `plugin.proto` file in the current
 directory.
 
 ```shell
-protoc --go_opt=plugins=grpc --go_out=../../../../ ./plugin.proto
+protoc -I . --go_out=plugins=grpc:. --go_opt=paths=source_relative ./output.proto
 ```
 
-If successful, the command will not output any text but generates a file called `plugin.pb.go` in the current directory.
+If successful, the command will not output any text but generates a file called `output.pb.go` in the same directory as
+the `output.proto` file.
 
-This file will contain the struct definition for the `Binary` message and the code that enables the serialization of
+The `output.proto` file contains the struct definition for the `Binary` message and the code that enables the serialization of
 the model to the Protocol Buffer binary format. This file should `never` be manually edited, if you need to make changes
 to your Output Type, you should always modify the `.proto` file and regenerate the Go code using the protoc command.
 

@@ -30,10 +30,10 @@ protos:
 	@echo ""
 	@echo "Build Protos"
 
-	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
-	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./registry/output.proto
-	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./platform/output.proto
-	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./release/output.proto
+  protoc -I . --go_out=plugins=grpc:builder --go_opt=paths=source_relative ./builder/output.proto
+  protoc -I . --go_out=plugins=grpc:registry --go_opt=paths=source_relative ./registry/output.proto
+  protoc -I . --go_out=plugins=grpc:platform --go_opt=paths=source_relative ./platform/output.proto
+  protoc -I . --go_out=plugins=grpc:release --go_opt=paths=source_relative ./release/output.proto
 
 build:
 	@echo ""
@@ -52,7 +52,7 @@ By default, the templated plugin will generate the Go code for all the different
 implements the `Builder` component, you can remove all the other `protoc` commands.
 
 ```
-	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+  protoc -I . --go_out=plugins=grpc:builder --go_opt=paths=source_relative ./builder/output.proto
 ```
 
 Your `Makefile` should now look like:
@@ -66,7 +66,7 @@ protos:
 	@echo ""
 	@echo "Build Protos"
 
-	protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+  protoc -I . --go_out=plugins=grpc:builder --go_opt=paths=source_relative ./builder/output.proto
 
 build:
 	@echo ""
@@ -81,7 +81,8 @@ With the `Makefile` changed, you can now run `make` to build the plugin.
 make
 
 Build Protos
-protoc -I . --go_opt=plugins=grpc --go_out=../../../../ ./builder/output.proto
+
+protoc -I . --go_out=plugins=grpc:builder --go_opt=paths=source_relative ./builder/output.proto
 
 Compile Plugin
 go build -o ./bin/waypoint-plugin-gobuilder ./main.go
