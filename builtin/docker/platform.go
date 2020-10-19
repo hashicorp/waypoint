@@ -391,7 +391,7 @@ type ClientConfig struct {
 	CertPath string `hcl:"cert_path,optional"`
 
 	// Docker API version to use for connection
-	APIVersion string `hcl:"api_Version,optional"`
+	APIVersion string `hcl:"api_version,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
