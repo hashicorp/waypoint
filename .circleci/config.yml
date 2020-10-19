@@ -49,6 +49,7 @@ jobs:
             golangci-lint run --build-tags="$GOTAGS" -v --concurrency 2 \
               --disable-all \
               --timeout 10m \
+              --enable gofmt \
               --enable gosimple \
               --enable govet
       - notify_main_failure
