@@ -173,7 +173,7 @@ func (b *Builder) Build(
 			ep := &epinject.NewEntrypoint{
 				Entrypoint: append([]string{"/waypoint-entrypoint"}, cur...),
 				InjectFiles: map[string]epinject.InjectFile{
-					"/waypoint-entrypoint": epinject.InjectFile{
+					"/waypoint-entrypoint": {
 						Reader: bytes.NewReader(asset),
 						Info:   assetInfo,
 					},

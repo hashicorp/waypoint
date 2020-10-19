@@ -302,10 +302,10 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"dir": &bintree{nil, map[string]*bintree{
-		"hello.txt": &bintree{dirHelloTxt, map[string]*bintree{}},
-		"subdir": &bintree{nil, map[string]*bintree{
-			"child.txt": &bintree{dirSubdirChildTxt, map[string]*bintree{}},
+	"dir": {nil, map[string]*bintree{
+		"hello.txt": {dirHelloTxt, map[string]*bintree{}},
+		"subdir": {nil, map[string]*bintree{
+			"child.txt": {dirSubdirChildTxt, map[string]*bintree{}},
 		}},
 	}},
 }}

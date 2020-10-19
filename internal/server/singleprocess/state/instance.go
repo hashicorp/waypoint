@@ -25,7 +25,7 @@ func instanceSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: instanceTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			instanceIdIndexName: &memdb.IndexSchema{
+			instanceIdIndexName: {
 				Name:         instanceIdIndexName,
 				AllowMissing: false,
 				Unique:       true,
@@ -35,7 +35,7 @@ func instanceSchema() *memdb.TableSchema {
 				},
 			},
 
-			instanceDeploymentIdIndexName: &memdb.IndexSchema{
+			instanceDeploymentIdIndexName: {
 				Name:         instanceDeploymentIdIndexName,
 				AllowMissing: false,
 				Unique:       false,
@@ -45,7 +45,7 @@ func instanceSchema() *memdb.TableSchema {
 				},
 			},
 
-			instanceAppIndexName: &memdb.IndexSchema{
+			instanceAppIndexName: {
 				Name:         instanceAppIndexName,
 				AllowMissing: false,
 				Unique:       false,
@@ -64,7 +64,7 @@ func instanceSchema() *memdb.TableSchema {
 				},
 			},
 
-			instanceAppWorkspaceIndexName: &memdb.IndexSchema{
+			instanceAppWorkspaceIndexName: {
 				Name:         instanceAppWorkspaceIndexName,
 				AllowMissing: false,
 				Unique:       false,

@@ -370,7 +370,7 @@ func configIndexSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: configIndexTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			configIndexIdIndexName: &memdb.IndexSchema{
+			configIndexIdIndexName: {
 				Name:         configIndexIdIndexName,
 				AllowMissing: false,
 				Unique:       true,
@@ -380,7 +380,7 @@ func configIndexSchema() *memdb.TableSchema {
 				},
 			},
 
-			configIndexProjectIndexName: &memdb.IndexSchema{
+			configIndexProjectIndexName: {
 				Name:         configIndexProjectIndexName,
 				AllowMissing: true,
 				Unique:       false,
@@ -399,7 +399,7 @@ func configIndexSchema() *memdb.TableSchema {
 				},
 			},
 
-			configIndexApplicationIndexName: &memdb.IndexSchema{
+			configIndexApplicationIndexName: {
 				Name:         configIndexApplicationIndexName,
 				AllowMissing: true,
 				Unique:       false,
@@ -423,7 +423,7 @@ func configIndexSchema() *memdb.TableSchema {
 				},
 			},
 
-			configIndexRunnerIndexName: &memdb.IndexSchema{
+			configIndexRunnerIndexName: {
 				Name:         configIndexRunnerIndexName,
 				AllowMissing: true,
 				Unique:       false,

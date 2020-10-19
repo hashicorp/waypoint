@@ -251,9 +251,9 @@ func TestAppOperation(t *testing.T) {
 		results, err := op.List(s, &listOperationsOptions{
 			Application: ref,
 			Status: []*pb.StatusFilter{
-				&pb.StatusFilter{
+				{
 					Filters: []*pb.StatusFilter_Filter{
-						&pb.StatusFilter_Filter{
+						{
 							Filter: &pb.StatusFilter_Filter_State{
 								State: pb.Status_ERROR,
 							},

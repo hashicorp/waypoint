@@ -223,7 +223,7 @@ func projectIndexSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: projectIndexTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			projectIndexIdIndexName: &memdb.IndexSchema{
+			projectIndexIdIndexName: {
 				Name:         projectIndexIdIndexName,
 				AllowMissing: false,
 				Unique:       true,

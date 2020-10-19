@@ -229,7 +229,7 @@ func (p *Platform) Deploy(
 	// it defaults to latest revision.
 	if len(service.Spec.Traffic) > 0 && service.Spec.Traffic[0].LatestRevision {
 		service.Spec.Traffic = []*run.TrafficTarget{
-			&run.TrafficTarget{
+			{
 				RevisionName: service.Status.LatestCreatedRevisionName,
 				Percent:      100,
 			},
@@ -261,7 +261,7 @@ func (p *Platform) Deploy(
 		},
 		Spec: &run.RevisionSpec{
 			Containers: []*run.Container{
-				&run.Container{
+				{
 					Image:     img.Name(),
 					Env:       env,
 					Resources: resources,

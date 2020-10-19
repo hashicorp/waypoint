@@ -28,8 +28,8 @@ func TestValidateImageReturnsNoErrorWhenValid(t *testing.T) {
 }
 
 var locations = []*run.Location{
-	&run.Location{LocationId: "asia-east1"},
-	&run.Location{LocationId: "asia-northeast1"},
+	{LocationId: "asia-east1"},
+	{LocationId: "asia-northeast1"},
 }
 
 func TestValidateLocationAvailableReturnsErrorWhenLocationNotAvailable(t *testing.T) {

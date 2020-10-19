@@ -152,7 +152,7 @@ func hmacKeyIndexSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: hmacKeyIndexTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			hmacKeyIndexIdIndexName: &memdb.IndexSchema{
+			hmacKeyIndexIdIndexName: {
 				Name:         hmacKeyIndexIdIndexName,
 				AllowMissing: false,
 				Unique:       true,

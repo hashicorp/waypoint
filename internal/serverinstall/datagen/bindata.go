@@ -193,8 +193,8 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"k8s-install": &bintree{nil, map[string]*bintree{
-		"app.yaml": &bintree{k8sInstallAppYaml, map[string]*bintree{}},
+	"k8s-install": {nil, map[string]*bintree{
+		"app.yaml": {k8sInstallAppYaml, map[string]*bintree{}},
 	}},
 }}
 

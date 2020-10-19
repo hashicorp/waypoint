@@ -32,7 +32,7 @@ test: # run tests
 
 .PHONY: format
 format: # format go code
-	go fmt ./...
+	gofmt -s -w ./
 
 .PHONY: docker/mitchellh
 docker/mitchellh:

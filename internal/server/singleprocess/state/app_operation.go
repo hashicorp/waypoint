@@ -562,7 +562,7 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: op.memTableName(),
 		Indexes: map[string]*memdb.IndexSchema{
-			opIdIndexName: &memdb.IndexSchema{
+			opIdIndexName: {
 				Name:         opIdIndexName,
 				AllowMissing: false,
 				Unique:       true,
@@ -571,7 +571,7 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 				},
 			},
 
-			opStartTimeIndexName: &memdb.IndexSchema{
+			opStartTimeIndexName: {
 				Name:         opStartTimeIndexName,
 				AllowMissing: false,
 				Unique:       false,
@@ -594,7 +594,7 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 				},
 			},
 
-			opCompleteTimeIndexName: &memdb.IndexSchema{
+			opCompleteTimeIndexName: {
 				Name:         opCompleteTimeIndexName,
 				AllowMissing: false,
 				Unique:       false,
@@ -617,7 +617,7 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 				},
 			},
 
-			opSeqIndexName: &memdb.IndexSchema{
+			opSeqIndexName: {
 				Name:         opSeqIndexName,
 				AllowMissing: false,
 				Unique:       false,

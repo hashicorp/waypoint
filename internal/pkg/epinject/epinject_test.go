@@ -68,7 +68,7 @@ func TestEPInject(t *testing.T) {
 				NewImage:   testImage,
 				Entrypoint: append([]string{"/bin/cowsay"}, cur...),
 				InjectFiles: map[string]InjectFile{
-					"/bin/cowsay": InjectFile{
+					"/bin/cowsay": {
 						Reader: injectF,
 						Info:   injectFI,
 					},

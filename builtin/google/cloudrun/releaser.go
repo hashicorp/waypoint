@@ -109,7 +109,7 @@ func (r *Releaser) setNoAuthPolicy(
 	_, err := client.SetIamPolicy(deployment.apiResource(), &run.SetIamPolicyRequest{
 		Policy: &run.Policy{
 			Bindings: []*run.Binding{
-				&run.Binding{
+				{
 					Role:    "roles/run.invoker",
 					Members: []string{"allUsers"},
 				},

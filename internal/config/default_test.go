@@ -21,12 +21,12 @@ func TestConfigDefault(t *testing.T) {
 			"app: no URL block set",
 			&Config{
 				Apps: []*App{
-					&App{},
+					{},
 				},
 			},
 			"/Apps",
 			[]*App{
-				&App{
+				{
 					URL: &AppURL{
 						AutoHostname: nil,
 					},
@@ -38,14 +38,14 @@ func TestConfigDefault(t *testing.T) {
 			"app: URL block with no hostname",
 			&Config{
 				Apps: []*App{
-					&App{
+					{
 						URL: &AppURL{},
 					},
 				},
 			},
 			"/Apps",
 			[]*App{
-				&App{
+				{
 					URL: &AppURL{
 						AutoHostname: nil,
 					},
@@ -57,7 +57,7 @@ func TestConfigDefault(t *testing.T) {
 			"app: URL block with hostname set",
 			&Config{
 				Apps: []*App{
-					&App{
+					{
 						URL: &AppURL{
 							AutoHostname: boolPtr(false),
 						},
@@ -66,7 +66,7 @@ func TestConfigDefault(t *testing.T) {
 			},
 			"/Apps",
 			[]*App{
-				&App{
+				{
 					URL: &AppURL{
 						AutoHostname: boolPtr(false),
 					},

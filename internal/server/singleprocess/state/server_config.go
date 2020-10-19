@@ -117,7 +117,7 @@ func serverConfigIndexSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: serverConfigIndexTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			serverConfigIndexIdIndexName: &memdb.IndexSchema{
+			serverConfigIndexIdIndexName: {
 				Name:         serverConfigIndexIdIndexName,
 				AllowMissing: false,
 				Unique:       true,

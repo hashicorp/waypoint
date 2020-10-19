@@ -21,7 +21,7 @@ func runnerSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: runnerTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			runnerIdIndexName: &memdb.IndexSchema{
+			runnerIdIndexName: {
 				Name:         runnerIdIndexName,
 				AllowMissing: false,
 				Unique:       true,

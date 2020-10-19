@@ -26,7 +26,7 @@ func instanceExecSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: instanceExecTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			instanceExecIdIndexName: &memdb.IndexSchema{
+			instanceExecIdIndexName: {
 				Name:         instanceExecIdIndexName,
 				AllowMissing: false,
 				Unique:       true,
@@ -35,7 +35,7 @@ func instanceExecSchema() *memdb.TableSchema {
 				},
 			},
 
-			instanceExecInstanceIdIndexName: &memdb.IndexSchema{
+			instanceExecInstanceIdIndexName: {
 				Name:         instanceExecInstanceIdIndexName,
 				AllowMissing: false,
 				Unique:       false,

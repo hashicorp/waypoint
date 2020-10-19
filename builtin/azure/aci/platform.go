@@ -200,7 +200,7 @@ To update the location you will need to manually destroy and recreate the resour
 		containerGroup.Identity = &containerinstance.ContainerGroupIdentity{
 			Type: containerinstance.UserAssigned,
 			UserAssignedIdentities: map[string]*containerinstance.ContainerGroupIdentityUserAssignedIdentitiesValue{
-				p.config.ManagedIdentity: &containerinstance.ContainerGroupIdentityUserAssignedIdentitiesValue{},
+				p.config.ManagedIdentity: {},
 			},
 		}
 	}
@@ -212,7 +212,7 @@ To update the location you will need to manually destroy and recreate the resour
 		server := parseDockerServer(img.Image)
 
 		containerGroup.ImageRegistryCredentials = &[]containerinstance.ImageRegistryCredential{
-			containerinstance.ImageRegistryCredential{
+			{
 				Server:   &server,
 				Username: &registryUser,
 				Password: &registryPass,

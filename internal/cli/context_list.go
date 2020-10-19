@@ -72,9 +72,9 @@ func (c *ContextListCommand) Run(args []string) int {
 			name,
 			ctxConfig.Server.Address,
 		}, []tablewriter.Colors{
-			tablewriter.Colors{},
-			tablewriter.Colors{},
-			tablewriter.Colors{},
+			{},
+			{},
+			{},
 		})
 	}
 	table.Render()

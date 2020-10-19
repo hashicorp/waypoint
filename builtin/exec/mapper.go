@@ -8,17 +8,17 @@ import (
 func DockerImageMapper(src *docker.Image) *Input {
 	return &Input{
 		Data: map[string]*Input_Value{
-			"DockerImageFull": &Input_Value{
+			"DockerImageFull": {
 				Value: &Input_Value_Text{
 					Text: src.Name(),
 				},
 			},
-			"DockerImageName": &Input_Value{
+			"DockerImageName": {
 				Value: &Input_Value_Text{
 					Text: src.Image,
 				},
 			},
-			"DockerImageTag": &Input_Value{
+			"DockerImageTag": {
 				Value: &Input_Value_Text{
 					Text: src.Tag,
 				},

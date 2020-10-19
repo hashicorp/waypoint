@@ -44,7 +44,7 @@ func jobSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: jobTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			jobIdIndexName: &memdb.IndexSchema{
+			jobIdIndexName: {
 				Name:         jobIdIndexName,
 				AllowMissing: false,
 				Unique:       true,
@@ -53,7 +53,7 @@ func jobSchema() *memdb.TableSchema {
 				},
 			},
 
-			jobStateIndexName: &memdb.IndexSchema{
+			jobStateIndexName: {
 				Name:         jobStateIndexName,
 				AllowMissing: true,
 				Unique:       false,
@@ -62,7 +62,7 @@ func jobSchema() *memdb.TableSchema {
 				},
 			},
 
-			jobQueueTimeIndexName: &memdb.IndexSchema{
+			jobQueueTimeIndexName: {
 				Name:         jobQueueTimeIndexName,
 				AllowMissing: true,
 				Unique:       false,
@@ -80,7 +80,7 @@ func jobSchema() *memdb.TableSchema {
 				},
 			},
 
-			jobTargetIdIndexName: &memdb.IndexSchema{
+			jobTargetIdIndexName: {
 				Name:         jobTargetIdIndexName,
 				AllowMissing: true,
 				Unique:       true,

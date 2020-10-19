@@ -15,9 +15,9 @@ import (
 // in this list will block if any other operation in this list is running
 // for the app and workspace.
 var blockOps = map[reflect.Type]struct{}{
-	reflect.TypeOf((*pb.Job_Deploy)(nil)):  struct{}{},
-	reflect.TypeOf((*pb.Job_Destroy)(nil)): struct{}{},
-	reflect.TypeOf((*pb.Job_Release)(nil)): struct{}{},
+	reflect.TypeOf((*pb.Job_Deploy)(nil)):  {},
+	reflect.TypeOf((*pb.Job_Destroy)(nil)): {},
+	reflect.TypeOf((*pb.Job_Release)(nil)): {},
 }
 
 func init() {
@@ -33,7 +33,7 @@ func jobAssignedSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: jobAssignedTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			jobAssignedIdIndexName: &memdb.IndexSchema{
+			jobAssignedIdIndexName: {
 				Name:         jobAssignedIdIndexName,
 				AllowMissing: false,
 				Unique:       true,

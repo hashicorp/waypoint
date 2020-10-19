@@ -184,7 +184,7 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"init.tpl.hcl": &bintree{initTplHcl, map[string]*bintree{}},
+	"init.tpl.hcl": {initTplHcl, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

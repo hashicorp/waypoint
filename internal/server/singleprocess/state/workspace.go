@@ -203,7 +203,7 @@ func workspaceIndexSchema() *memdb.TableSchema {
 	return &memdb.TableSchema{
 		Name: workspaceIndexTableName,
 		Indexes: map[string]*memdb.IndexSchema{
-			workspaceIndexIdIndexName: &memdb.IndexSchema{
+			workspaceIndexIdIndexName: {
 				Name:         workspaceIndexIdIndexName,
 				AllowMissing: false,
 				Unique:       true,
