@@ -29,6 +29,7 @@ export default function (this: Server) {
   this.post('/GetProject', project.get);
   this.post('/ConvertInviteToken', token.create);
   this.post('/GenerateInviteToken', inviteToken.create);
+  this.post('/GenerateLoginToken', token.create);
   this.post('/ListReleases', release.list);
   this.post('/GetRelease', release.get);
 
