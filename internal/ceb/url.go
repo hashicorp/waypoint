@@ -11,9 +11,15 @@ import (
 	"github.com/pkg/errors"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/version"
 )
 
 var ErrURLSetup = errors.New("error configuring url service")
+
+const (
+	urlLabelVersion  = "waypoint.hashicorp.com/ceb-version"
+	urlLabelRevision = "waypoint.hashicorp.com/ceb-revision"
+)
 
 func (ceb *CEB) initURLService(ctx context.Context, port int, cfg *pb.EntrypointConfig_URLService) error {
 	if cfg == nil || len(cfg.Labels) == 0 {
@@ -39,8 +45,13 @@ func (ceb *CEB) initURLService(ctx context.Context, port int, cfg *pb.Entrypoint
 	// this never fails, it only returns an error for backwards compat reasons.
 	g.RootCAs, _ = gocertifi.CACerts()
 
+	// Parse our labels and add some additional labels using local data
+	vsn := version.GetVersion()
+	labels := hznpb.ParseLabelSet(cfg.Labels).
+		Add(urlLabelVersion, vsn.FullVersionNumber(true)).
+		Add(urlLabelRevision, vsn.Revision)
+
 	// Add our service to route to.
-	labels := hznpb.ParseLabelSet(cfg.Labels)
 	target := fmt.Sprintf(":%d", port)
 	_, err = g.AddService(&agent.Service{
 		Type:    "http",
