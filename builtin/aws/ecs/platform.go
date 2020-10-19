@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/builtin/docker"
 )
 
@@ -221,7 +222,9 @@ func (p *Platform) Deploy(
 
 	lf := &Lifecycle{
 		Init: func(s LifecycleStatus) error {
-			sess, err = session.NewSession(aws.NewConfig().WithRegion(p.config.Region))
+			sess, err = utils.GetSession(&utils.SessionConfig{
+				Region: p.config.Region,
+			})
 			if err != nil {
 				return err
 			}
@@ -1019,7 +1022,9 @@ func (p *Platform) Destroy(
 ) error {
 	log.Debug("removing deployment target group from load balancer")
 
-	sess, err := session.NewSession(aws.NewConfig().WithRegion(p.config.Region))
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: p.config.Region,
+	})
 	if err != nil {
 		return err
 	}
