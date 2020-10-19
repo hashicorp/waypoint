@@ -15,6 +15,7 @@ BUG FIXES:
 * plugin/nomad: destroy works [GH-571]
 * plugin/aws-ecs: Allow `cpu` parameter for to be optional for EC2 clusters [GH-576]
 * plugin/aws-ecs: don't detect inactive cluster as existing [GH-605]
+* plugin/aws-ecs: fix crash if subnets are specified [GH-636]
 * plugin/google-cloud-run: Don't crash if capacity or autoscaling settings are nil [GH-620]
 * install/nomad: if `-nomad-dc` flag is set, `dc1` won't be set [GH-603]
 * cli: contexts will fall back to not using symlinks if symlinks aren't available [GH-633]
