@@ -554,6 +554,21 @@ func (p *Platform) Launch(
 		},
 	}
 
+	for k, v := range p.config.Environment {
+		env = append(env, &ecs.KeyValuePair{
+			Name:  aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+
+	var secrets []*ecs.Secret
+	for k, v := range p.config.Secrets {
+		secrets = append(secrets, &ecs.Secret{
+			Name:      aws.String(k),
+			ValueFrom: aws.String(v),
+		})
+	}
+
 	for k, v := range deployConfig.Env() {
 		env = append(env, &ecs.KeyValuePair{
 			Name:  aws.String(k),
@@ -571,6 +586,7 @@ func (p *Platform) Launch(
 			},
 		},
 		Environment: env,
+		Secrets:     secrets,
 		LogConfiguration: &ecs.LogConfiguration{
 			LogDriver: aws.String("awslogs"),
 			Options: map[string]*string{
@@ -579,6 +595,49 @@ func (p *Platform) Launch(
 				"awslogs-stream-prefix": aws.String(streamPrefix),
 			},
 		},
+	}
+
+	var additionalContainers []*ecs.ContainerDefinition
+	for _, container := range p.config.ContainersConfig {
+		var secrets []*ecs.Secret
+		for k, v := range container.Secrets {
+			secrets = append(secrets, &ecs.Secret{
+				Name:      aws.String(k),
+				ValueFrom: aws.String(v),
+			})
+		}
+
+		var env []*ecs.KeyValuePair
+		for k, v := range container.Environment {
+			env = append(env, &ecs.KeyValuePair{
+				Name:  aws.String(k),
+				Value: aws.String(v),
+			})
+		}
+
+		c := &ecs.ContainerDefinition{
+			Essential: aws.Bool(false),
+			Name:      aws.String(container.Name),
+			Image:     aws.String(container.Image),
+			PortMappings: []*ecs.PortMapping{
+				{
+					ContainerPort: aws.Int64(container.ContainerPort),
+					HostPort:      aws.Int64(container.HostPort),
+					Protocol:      aws.String(container.Protocol),
+				},
+			},
+			HealthCheck: &ecs.HealthCheck{
+				Command:     aws.StringSlice(container.HealthCheck.Command),
+				Interval:    aws.Int64(container.HealthCheck.Interval),
+				Timeout:     aws.Int64(container.HealthCheck.Timeout),
+				Retries:     aws.Int64(container.HealthCheck.Retries),
+				StartPeriod: aws.Int64(container.HealthCheck.StartPeriod),
+			},
+			Secrets:     secrets,
+			Environment: env,
+		}
+
+		additionalContainers = append(additionalContainers, c)
 	}
 
 	L.Debug("registring task definition", "id", id)
@@ -650,8 +709,10 @@ func (p *Platform) Launch(
 
 	s.Status("Registering Task definition: %s", family)
 
+	containerDefinitions := append([]*ecs.ContainerDefinition{&def}, additionalContainers...)
+
 	taskOut, err := ecsSvc.RegisterTaskDefinition(&ecs.RegisterTaskDefinitionInput{
-		ContainerDefinitions: []*ecs.ContainerDefinition{&def},
+		ContainerDefinitions: containerDefinitions,
 
 		ExecutionRoleArn: aws.String(roleArn),
 		Cpu:              cpus,
@@ -1139,6 +1200,55 @@ type ALBConfig struct {
 	ListenerARN string `hcl:"listener_arn,optional"`
 }
 
+type HealthCheckConfig struct {
+	// A string array representing the command that the container runs to determine if it is healthy
+	Command []string `hcl:"command"`
+
+	// The time period in seconds between each health check execution
+	Interval int64 `hcl:"interval,optional"`
+
+	// The time period in seconds to wait for a health check to succeed before it is considered a failure
+	Timeout int64 `hcl:"timeout,optional"`
+
+	// The number of times to retry a failed health check before the container is considered unhealthy
+	Retries int64 `hcl:"retries,optional"`
+
+	// The optional grace period within which to provide containers time to bootstrap before failed health checks count towards the maximum number of retries
+	StartPeriod int64 `hcl:"start_period,optional"`
+}
+
+type ContainerConfig struct {
+	// The name of a container
+	Name string `hcl:"name"`
+
+	// The image used to start a container
+	Image string `hcl:"image"`
+
+	// The amount (in MiB) of memory to present to the container
+	Memory string `hcl:"memory,optional"`
+
+	// The soft limit (in MiB) of memory to reserve for the container
+	MemoryReservation string `hcl:"memory_reservation,optional"`
+
+	// The port number on the container
+	ContainerPort int64 `hcl:"container_port,optional"`
+
+	// The port number on the container instance to reserve for your container
+	HostPort int64 `hcl:"host_port,optional"`
+
+	// The protocol used for the port mapping
+	Protocol string `hcl:"protocol,optional"`
+
+	// The container health check command
+	HealthCheck *HealthCheckConfig `hcl:"health_check,block"`
+
+	// The environment variables to pass to a container
+	Environment map[string]string `hcl:"environment,optional"`
+
+	// The secrets to pass to a container
+	Secrets map[string]string `hcl:"secrets,optional"`
+}
+
 type Config struct {
 	// AWS Region to deploy into
 	Region string `hcl:"region"`
@@ -1164,6 +1274,12 @@ type Config struct {
 	// How much CPU to assign to the containers
 	CPU int `hcl:"cpu,optional"`
 
+	// The environment variables to pass to the main container
+	Environment map[string]string `hcl:"environment,optional"`
+
+	// The secrets to pass to to the main container
+	Secrets map[string]string `hcl:"secrets,optional"`
+
 	// Assign each task a public IP. Default false.
 	// TODO to access ECR you need a nat gateway or a public address and so if you
 	// set this to false in the default subnets, ECS can't pull the image. Leaving
@@ -1175,6 +1291,9 @@ type Config struct {
 
 	// Configuration options for how the ALB will be configured.
 	ALB *ALBConfig `hcl:"alb,block"`
+
+	// Configuration options for additional containers
+	ContainersConfig []*ContainerConfig `hcl:"containers,block"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
