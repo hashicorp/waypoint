@@ -678,7 +678,6 @@ func (p *Platform) Launch(
 	taskArn := *taskOut.TaskDefinition.TaskDefinitionArn
 
 	var subnets []*string
-
 	if len(p.config.Subnets) == 0 {
 		s.Update("Using default subnets for Service networking")
 		subnets, err = defaultSubnets(ctx, sess)
@@ -686,6 +685,7 @@ func (p *Platform) Launch(
 			return nil, err
 		}
 	} else {
+		subnets = make([]*string, len(p.config.Subnets))
 		for i := range p.config.Subnets {
 			subnets[i] = &p.config.Subnets[i]
 		}
