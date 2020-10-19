@@ -1,21 +1,12 @@
-<p>To install Waypoint, find the <ExternalLink href="https://go.hashi.co/waypoint-beta-binaries">appropriate package</ExternalLink> for your system and download it. Waypoint is packaged as a zip archive.</p>
+<p>
+  To install Waypoint manually, find the
+  <ExternalLink href="https://releases.hashicorp.com/waypoint/">appropriate package </ExternalLink>
+  for your system and download it. Waypoint is packaged as a zip archive. After downloading Waypoint,
+  unzip the downloaded archive. It is recommended that you move Waypoint to a directory in your <code>PATH</code>
+  to allow you to execute it from any directory.
+</p>
 
-<p>After downloading Waypoint, unzip the package. Waypoint runs as a single binary named <code>waypoint</code>. Any other files in the package can be safely removed and Waypoint will still function.</p>
-
-<p>Make sure that the <code>waypoint</code> binary is available on your <code>PATH</code>. You can check the locations available on your path by running this command.</p>
-
-<CopyableCode @ref="echo-path">
-  <pre><code id="echo-path">echo $PATH</code></pre>
-</CopyableCode>
-
-<pre><code class="output">/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</code></pre>
-
-<p>The output is a list of locations separated by colons. You can make Waypoint available by moving the binary to one of the listed locations, or by adding Waypoint's location to your <code>PATH</code>.</p>
-
-<div class="onboarding-tip">
-  <p><b>Tip (Linux-based or Mac):</b> Permanently add a new location to your path by editing your shell's settings file (usually called something like <code>~/.bashrc</code>, where the part of the file name after the <code>.</code> and before <code>rc</code> is the name of your shell). In that file you will see a line that starts with export <code>PATH=</code>, followed by a colon-separated list of locations. Add the location of the Waypoint binary to that list and save the file. Then reload your shell's configuration with the command source <code>~/.bashrc</code>, replacing <code>bash</code> with the name of your shell.</p>
-</div>
-
-<div class="onboarding-tip">
-  <p><b>Tip (Windows):</b> Add a location to your path via the GUI by navigating to <code>Environment Variables</code> in your system settings, and looking for the variable called <code>PATH</code>. You will see a semicolon-separated list of locations. Add the Waypoint binary's location to that list and then launch a new console window.</p>
-</div>
+<p>For example:</p>
+<p>
+  <code class="output">$ mv ~/Downloads/waypoint /usr/local/bin/</code>
+</p>
