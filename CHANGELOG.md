@@ -1,4 +1,12 @@
-## unreleased changes
+## unreleased
+
+FEATURES:
+
+IMPROVEMENTS:
+
+BUG FIXES:
+
+## 0.1.3 (October 19, 2020)
 
 FEATURES:
 
