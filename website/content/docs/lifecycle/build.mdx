@@ -235,7 +235,7 @@ When using the docker plugin to push images to private container registries, the
 registry authentication may either be configured explicitly or "out of band"
 from Waypoint.
 
-_Explicit Authentication_
+#### Explicit Authentication
 
 Create a file with the registry authentication:
 
@@ -265,7 +265,7 @@ Reference the file in `waypoint.hcl`:
 ...
 ```
 
-_Out of Band Authentication_
+#### Out of Band Authentication
 
 Waypoint invokes Docker APIs, so if you have authentication configured with
 `docker login` or similar, then Waypoint does not need to authenticate directly
@@ -295,7 +295,7 @@ is configured with the private registry credentials. Here is an example
 ...
 ```
 
-_Platforms and Private Registries_
+#### Platforms and Private Registries
 
 Reference [Deploy Private Registry
 documentation](/docs/lifecycle/deploy#private-registries) for details on how to
