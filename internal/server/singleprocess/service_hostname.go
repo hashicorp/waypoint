@@ -17,6 +17,7 @@ const (
 	hznLabelApp       = "waypoint.hashicorp.com/app"
 	hznLabelProject   = "waypoint.hashicorp.com/project"
 	hznLabelWorkspace = "waypoint.hashicorp.com/workspace"
+	hznLabelInstance  = "waypoint.hashicorp.com/instance-id"
 )
 
 func (s *service) CreateHostname(

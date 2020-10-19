@@ -119,6 +119,7 @@ func (s *service) EntrypointConfig(
 				hznLabelApp+"="+deployment.Application.Application,
 				hznLabelProject+"="+deployment.Application.Project,
 				hznLabelWorkspace+"="+deployment.Workspace.Workspace,
+				hznLabelInstance+"="+record.Id,
 
 				":deployment=v"+strconv.FormatUint(deployment.Sequence, 10),
 				":deployment-order="+strings.ToLower(deployment.Id),
