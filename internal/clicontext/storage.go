@@ -2,6 +2,7 @@ package clicontext
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -9,7 +10,8 @@ import (
 // Storage is the primary struct for interacting with stored CLI contexts.
 // Contexts are always stored directly on disk with one set as the default.
 type Storage struct {
-	dir string
+	dir       string
+	noSymlink bool
 }
 
 // NewStorage initializes context storage.
@@ -153,7 +155,19 @@ func (m *Storage) SetDefault(n string) error {
 		return err
 	}
 
-	return m.createSymlink(src, m.defaultPath())
+	// Attempt to create a symlink
+	defaultPath := m.defaultPath()
+	if !m.noSymlink {
+		err := m.createSymlink(src, defaultPath)
+		if err == nil {
+			return nil
+		}
+	}
+
+	// If the symlink fails, then we use a plain file approach. The downside
+	// of this approach is that it is not atomic (on Windows it is impossible
+	// to have atomic writes) so we only do it on error cases.
+	return ioutil.WriteFile(defaultPath, []byte(n), 0644)
 }
 
 // UnsetDefault unsets the default context.
@@ -168,7 +182,8 @@ func (m *Storage) UnsetDefault() error {
 
 // Default returns the name of the default context.
 func (m *Storage) Default() (string, error) {
-	path, err := os.Readlink(m.defaultPath())
+	path := m.defaultPath()
+	fi, err := os.Lstat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			err = nil
@@ -177,7 +192,23 @@ func (m *Storage) Default() (string, error) {
 		return "", err
 	}
 
-	return m.nameFromPath(path), nil
+	// Symlinks are based on the resulting symlink path
+	if fi.Mode()&os.ModeSymlink != 0 {
+		path, err := os.Readlink(path)
+		if err != nil {
+			return "", err
+		}
+
+		return m.nameFromPath(path), nil
+	}
+
+	// If this is a regular file then we just read it cause it a non-symlink mode.
+	contents, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	return string(contents), nil
 }
 
 func (m *Storage) createSymlink(src, dst string) error {
@@ -235,6 +266,15 @@ type Option func(*Storage) error
 func WithDir(d string) Option {
 	return func(m *Storage) error {
 		m.dir = d
+		return nil
+	}
+}
+
+// WithNoSymlink disables all symlink usage in the Storage. If symlinks were
+// used previously then they'll still work.
+func WithNoSymlink() Option {
+	return func(m *Storage) error {
+		m.noSymlink = true
 		return nil
 	}
 }
