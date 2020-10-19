@@ -6,6 +6,7 @@ IMPROVEMENTS:
 
 * install/k8s: improve stability of install process by verifying stateful set, waiting for service endpoints, etc. [GH-435]
 * plugin/pack: can set environment variables [GH-581]
+* plugin/docker: ability to target remote docker engine for deploys, automatically pull images [GH-631]
 
 BUG FIXES:
 
