@@ -275,28 +275,26 @@ func (p *Platform) Deploy(
 		service.Spec.Template.Spec.Containers[0].Ports = []*run.ContainerPort{{ContainerPort: int64(p.config.Port)}}
 	}
 
-	if p.config.Capacity.MaxRequestsPerContainer > 0 {
-		service.Spec.Template.Spec.ContainerConcurrency = int64(p.config.Capacity.MaxRequestsPerContainer)
-	}
+	if p.config.Capacity != nil {
+		if p.config.Capacity.MaxRequestsPerContainer > 0 {
+			service.Spec.Template.Spec.ContainerConcurrency = int64(p.config.Capacity.MaxRequestsPerContainer)
+		}
 
-	if p.config.Capacity.Memory > 0 {
-		// Requires value expressed as Kubernetes Quantity
-		// (https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go)
-		resources.Limits["memory"] = fmt.Sprintf("%dMi", p.config.Capacity.Memory)
-	}
+		if p.config.Capacity.Memory > 0 {
+			// Requires value expressed as Kubernetes Quantity
+			// (https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go)
+			resources.Limits["memory"] = fmt.Sprintf("%dMi", p.config.Capacity.Memory)
+		}
 
-	if p.config.Capacity.CPUCount > 0 {
-		// Can only be 1 or 2
-		resources.Limits["cpu"] = fmt.Sprintf("%d", p.config.Capacity.CPUCount)
-	}
+		if p.config.Capacity.CPUCount > 0 {
+			// Can only be 1 or 2
+			resources.Limits["cpu"] = fmt.Sprintf("%d", p.config.Capacity.CPUCount)
+		}
 
-	if p.config.Capacity.RequestTimeout > 0 {
-		// Max value of 900
-		service.Spec.Template.Spec.TimeoutSeconds = int64(p.config.Capacity.RequestTimeout)
-	}
-
-	if p.config.AutoScaling.Max > 0 {
-		service.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/maxScale"] = fmt.Sprintf("%d", p.config.AutoScaling.Max)
+		if p.config.Capacity.RequestTimeout > 0 {
+			// Max value of 900
+			service.Spec.Template.Spec.TimeoutSeconds = int64(p.config.Capacity.RequestTimeout)
+		}
 	}
 
 	if p.config.StaticEnvVars != nil {
@@ -307,12 +305,18 @@ func (p *Platform) Deploy(
 		service.Spec.Template.Spec.Containers[0].Env = env
 	}
 
-	/*
-		// Not yet implemented by Cloud Run
-		if p.config.AutoScaling.Min > 0 {
-			service.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/minScale"] = fmt.Sprintf("%d", p.config.AutoScaling.Min)
+	if p.config.AutoScaling != nil {
+		if p.config.AutoScaling.Max > 0 {
+			service.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/maxScale"] = fmt.Sprintf("%d", p.config.AutoScaling.Max)
 		}
-	*/
+
+		/*
+			// Not yet implemented by Cloud Run
+			if p.config.AutoScaling.Min > 0 {
+				service.Spec.Template.Metadata.Annotations["autoscaling.knative.dev/minScale"] = fmt.Sprintf("%d", p.config.AutoScaling.Min)
+			}
+		*/
+	}
 
 	if create {
 		// Create the service
