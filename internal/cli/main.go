@@ -603,7 +603,7 @@ Waypoint will inject into your application via environment variables.
 This can be used to set values such as ports to listen on, database URLs,
 etc.
 
-For more information see: https://waypointproject.io/docs/config
+For more information see: https://waypointproject.io/docs/app-config
 `,
 	},
 
