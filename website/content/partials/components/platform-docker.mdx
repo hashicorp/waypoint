@@ -9,6 +9,14 @@ Deploy a container to Docker, local or remote.
 
 ### Variables
 
+#### client_config
+
+Client config for remote Docker engine.
+
+This config block can be used to configure a remote Docker engine. by default Waypoint will attempt to discover this configuration using the environment variables: DOCKER_HOST to set the url to the docker server. DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest. DOCKER_CERT_PATH to load the TLS certificates from. DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
+
+- Type: **\*docker.ClientConfig**
+
 #### command
 
 The command to run to start the application in the container.
@@ -16,6 +24,14 @@ The command to run to start the application in the container.
 - Type: **[]string**
 - **Optional**
 - Default: the image entrypoint
+
+#### force_pull
+
+Always pull the docker container from the registry.
+
+- Type: **bool**
+- **Optional**
+- Default: false
 
 #### scratch_path
 

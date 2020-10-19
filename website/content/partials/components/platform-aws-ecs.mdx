@@ -129,6 +129,64 @@ The name of the IAM role to use for ECS execution.
 - **Optional**
 - Default: create a new IAM role based on the application name
 
+#### secrets
+
+Secret key/values to pass to the ECS container.
+
+- Type: **map[string]string**
+- **Optional**
+
+#### sidecar
+
+Additional container to run as a sidecar.
+
+This runs additional containers in addition to the main container that comes from the build phase.
+
+- Type: **[]\*ecs.ContainerConfig**
+
+#### sidecar.container_port
+
+The port number for the container.
+
+#### sidecar.host_port
+
+The port number on the host to reserve for the container.
+
+#### sidecar.image
+
+Image of the sidecar container.
+
+#### sidecar.memory
+
+The amount (in MiB) of memory to present to the container.
+
+#### sidecar.memory_reservation
+
+The soft limit (in MiB) of memory to reserve for the container.
+
+#### sidecar.name
+
+Name of the container.
+
+#### sidecar.protocol
+
+The protocol used for port mapping.
+
+#### sidecar.secrets
+
+Secrets to expose to this container.
+
+#### sidecar.static_environment
+
+Environment variables to expose to this container.
+
+#### static_environment
+
+Static environment variables to make available.
+
+- Type: **map[string]string**
+- **Optional**
+
 #### subnets
 
 The VPC subnets to use for the application.
