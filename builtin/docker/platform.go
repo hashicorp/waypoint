@@ -2,6 +2,9 @@ package docker
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"fmt"
 
@@ -10,6 +13,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -78,16 +82,22 @@ func (p *Platform) Deploy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
-	}
-
 	if p.config.ServicePort == 0 {
 		p.config.ServicePort = 3000
 	}
 
+	cli, err := p.getDockerClient()
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
+	}
+
 	cli.NegotiateAPIVersion(ctx)
+
+	// Pull the image
+	err = p.pullImage(cli, log, ui, img, p.config.ForcePull)
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to pull image from Docker registry: %s", err)
+	}
 
 	// Create our deployment and set an initial ID
 	var result Deployment
@@ -211,9 +221,9 @@ func (p *Platform) Destroy(
 	deployment *Deployment,
 	ui terminal.UI,
 ) error {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := p.getDockerClient()
 	if err != nil {
-		return err
+		return status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
 
 	cli.NegotiateAPIVersion(ctx)
@@ -233,6 +243,108 @@ func (p *Platform) Destroy(
 	return cli.ContainerRemove(ctx, deployment.Container, types.ContainerRemoveOptions{
 		Force: true,
 	})
+}
+
+func (p *Platform) getDockerClient() (*client.Client, error) {
+	if p.config.ClientConfig == nil {
+		return client.NewClientWithOpts(client.FromEnv)
+	}
+
+	opts := []client.Opt{}
+
+	if host := p.config.ClientConfig.Host; host != "" {
+		opts = append(opts, client.WithHost(host))
+	}
+
+	if path := p.config.ClientConfig.CertPath; path != "" {
+		opts = append(opts, client.WithTLSClientConfig(
+			filepath.Join(path, "ca.pem"),
+			filepath.Join(path, "cert.pem"),
+			filepath.Join(path, "key.pem"),
+		))
+	}
+
+	if version := p.config.ClientConfig.APIVersion; version != "" {
+		opts = append(opts, client.WithVersion(version))
+	}
+
+	return client.NewClientWithOpts(opts...)
+}
+
+func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.UI, img *Image, force bool) error {
+	in := fmt.Sprintf("%s:%s", img.Image, img.Tag)
+	args := filters.NewArgs()
+	args.Add("reference", in)
+
+	sg := ui.StepGroup()
+
+	// only pull if image is not in current registry so check to see if the image is present
+	// if force then skip this check
+	if force == false {
+		sg.Add("Checking Docker image cache for Image " + in)
+
+		sum, err := cli.ImageList(context.Background(), types.ImageListOptions{Filters: args})
+		if err != nil {
+			return fmt.Errorf("unable to list images in local Docker cache: %w", err)
+		}
+
+		// if we have images do not pull
+		if len(sum) > 0 {
+			return nil
+		}
+	}
+
+	step := sg.Add("Pulling Docker Image " + in)
+	defer step.Abort()
+
+	ipo := types.ImagePullOptions{}
+
+	// if the username and password is not null make an authenticated
+	// image pull
+	/*
+		if image.Username != "" && image.Password != "" {
+			ipo.RegistryAuth = createRegistryAuth(image.Username, image.Password)
+		}
+	*/
+
+	in = makeImageCanonical(in)
+	log.Debug("pulling image", "image", in)
+
+	out, err := cli.ImagePull(context.Background(), in, ipo)
+	if err != nil {
+		return fmt.Errorf("unable to pull image: %w", err)
+	}
+
+	stdout, _, err := ui.OutputWriters()
+	if err != nil {
+		return fmt.Errorf("unable to get output writers: %s", err)
+	}
+
+	var termFd uintptr
+	if f, ok := stdout.(*os.File); ok {
+		termFd = f.Fd()
+	}
+
+	err = jsonmessage.DisplayJSONMessagesStream(out, step.TermOutput(), termFd, true, nil)
+	if err != nil {
+		return status.Errorf(codes.Internal, "unable to stream build logs to the terminal: %s", err)
+	}
+
+	return nil
+}
+
+// makeImageCanonical makes sure the image reference uses full canonical name i.e.
+// consul:1.6.1 -> docker.io/library/consul:1.6.1
+func makeImageCanonical(image string) string {
+	imageParts := strings.Split(image, "/")
+	switch len(imageParts) {
+	case 1:
+		return fmt.Sprintf("docker.io/library/%s", imageParts[0])
+	case 2:
+		return fmt.Sprintf("docker.io/%s/%s", imageParts[0], imageParts[1])
+	}
+
+	return image
 }
 
 // Config is the configuration structure for the Platform.
@@ -257,6 +369,29 @@ type PlatformConfig struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
+
+	// Force pull the image from the remote repository
+	ForcePull bool `hcl:"force_pull,optional"`
+
+	// ClientConfig allow the user to specify the connection to the Docker
+	// engine. By default we try to load this from env vars:
+	// DOCKER_HOST to set the url to the docker server.
+	// DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
+	// DOCKER_CERT_PATH to load the TLS certificates from.
+	// DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
+	ClientConfig *ClientConfig `hcl:"client_config,block"`
+}
+
+type ClientConfig struct {
+	// Host to use when connecting to Docker
+	// This can be used to connect to remote Docker instances
+	Host string `hcl:"host,optional"`
+
+	// Path to load the certificates for the Docker Engine
+	CertPath string `hcl:"cert_path,optional"`
+
+	// Docker API version to use for connection
+	APIVersion string `hcl:"api_version,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -312,6 +447,27 @@ deploy {
 		"service_port",
 		"port that your service is running on in the container",
 		docs.Default("3000"),
+	)
+
+	doc.SetField(
+		"force_pull",
+		"always pull the docker container from the registry",
+		docs.Default("false"),
+	)
+
+	doc.SetField(
+		"client_config",
+		"client config for remote Docker engine",
+		docs.Summary(
+			"this config block can be used to configure",
+			"a remote Docker engine.",
+			"by default Waypoint will attempt to discover this configuration",
+			"using the environment variables:",
+			"DOCKER_HOST to set the url to the docker server.",
+			"DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.",
+			"DOCKER_CERT_PATH to load the TLS certificates from.",
+			"DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.",
+		),
 	)
 
 	return doc, nil
