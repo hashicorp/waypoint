@@ -1030,6 +1030,8 @@ func (p *Platform) Destroy(
 	}
 	elbsrv := elbv2.New(sess)
 
+	log.Debug("load balancer arn", "arn", deployment.LoadBalancerArn)
+
 	listeners, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
 		LoadBalancerArn: &deployment.LoadBalancerArn,
 	})
@@ -1042,11 +1044,24 @@ func (p *Platform) Destroy(
 	if len(listeners.Listeners) > 0 {
 		listener = listeners.Listeners[0]
 
+		log.Debug("listener arn", "arn", *listener.ListenerArn)
+
 		def := listener.DefaultActions
 
 		var tgs []*elbv2.TargetGroupTuple
 
-		if len(def) > 0 && def[0].ForwardConfig != nil {
+		// If there is only 1 target group, delete the listener
+		if len(def) == 1 {
+			log.Debug("only 1 target group, deleting listener")
+			_, err = elbsrv.DeleteListener(&elbv2.DeleteListenerInput{
+				ListenerArn: listener.ListenerArn,
+			})
+
+			if err != nil {
+				return err
+			}
+		} else if len(def) > 1 && def[0].ForwardConfig != nil {
+			// Multiple target groups means we can keep the listener
 			var active bool
 
 			for _, tg := range def[0].ForwardConfig.TargetGroups {
