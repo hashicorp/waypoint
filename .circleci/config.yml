@@ -21,7 +21,6 @@ references:
     GIT_AUTHOR_NAME: circleci-waypoint
     GIT_COMMITTER_NAME: circleci-waypoint
     BASH_ENV: /home/circleci/project/.circleci/bash_env.sh
-    CIRCLE_BASE_URL: "https://circleci.com/workflow-run"
     DOCKER_BUILDKIT: 1
     REBUILD_UI: &REBUILD_UI 1
 
@@ -477,7 +476,7 @@ commands:
                         }, \
                         { \
                             \"title\": \"Full Workflow\", \
-                            \"value\": \"<${CIRCLE_BASE_URL}/${CIRCLE_WORKFLOW_ID}|${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}>\", \
+                            \"value\": \"<https://circleci.com/workflow-run/${CIRCLE_WORKFLOW_ID}|${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}>\", \
                             \"short\": \"true\" \
                         } \
                     ], \
