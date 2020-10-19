@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
 )
 
 // Releaser is the ReleaseManager implementation for Amazon ECS.
@@ -37,7 +37,9 @@ func (r *Releaser) Release(
 	ui terminal.UI,
 	target *Deployment,
 ) (*Release, error) {
-	sess, err := session.NewSession(aws.NewConfig().WithRegion(r.p.config.Region))
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: r.p.config.Region,
+	})
 	if err != nil {
 		return nil, err
 	}

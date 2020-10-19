@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -90,7 +89,9 @@ func (p *Platform) Deploy(
 
 	st.Update("Creating EC2 instances in ASG...")
 
-	sess, err := session.NewSession(aws.NewConfig().WithRegion(p.config.Region))
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: p.config.Region,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +303,9 @@ func (p *Platform) Destroy(
 	deployment *Deployment,
 	ui terminal.UI,
 ) error {
-	sess, err := session.NewSession(aws.NewConfig().WithRegion(p.config.Region))
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: p.config.Region,
+	})
 	if err != nil {
 		return err
 	}

@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/mattn/go-isatty"
 )
@@ -54,7 +54,9 @@ func (r *Registry) Push(
 
 	cli.NegotiateAPIVersion(ctx)
 
-	sess, err := session.NewSession(aws.NewConfig().WithRegion(r.config.Region))
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: r.config.Region,
+	})
 	if err != nil {
 		return nil, err
 	}

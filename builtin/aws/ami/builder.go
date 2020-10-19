@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/builtin/aws/utils"
 )
 
 // Builder uses `docker build` to build a Docker iamge.
@@ -86,7 +86,9 @@ func (b *Builder) Build(
 	ui terminal.UI,
 	src *component.Source,
 ) (*Image, error) {
-	sess, err := session.NewSession(aws.NewConfig().WithRegion(b.config.Region))
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: b.config.Region,
+	})
 	if err != nil {
 		return nil, err
 	}
