@@ -479,7 +479,7 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc.Example(`
 deploy "kubernetes" {
 	image_secret = "registry_secret"
-	count = 3
+	replicas = 3
 	probe_path = "/_healthz"
 }
 `)
