@@ -6,37 +6,58 @@
   </div>
 </div>
 
+<hr />
+
 <div class="onboarding-step">
-  <p>Waypoint uses both a client and a server to build, deploy, and release applications. Anyone using Waypoint to
-    deploy from their workstation will need to install Waypoint locally.</p>
-
-  <h2>Download the binary</h2>
-
-  <p>To install Waypoint, find the appropriate package for your system and download the zip archive.</p>
-
-  <p>
-    <ExternalLink href="https://go.hashi.co/waypoint-beta-binaries" class="button button--primary">
-      {{inline-svg "download" class="icon"}}
-      <span>Download</span>
-    </ExternalLink>
+  <p>Anyone using Waypoint to deploy from their workstation needs to install it locally. The below
+    instructions guide you through that for various operating systems.
   </p>
 
-  <p>After downloading Waypoint, unzip the downloaded archive. Waypoint runs as a single binary named
-    <code>waypoint</code>. It is recommended that you move it to a directory in your <code>PATH</code>
-    to allow you to execute it from any directory.
-  </p>
+  <h2>Install Waypoint</h2>
 
-  <p>For example:</p>
-  <p>
-    <code class="output">$ mv ~/Downloads/waypoint /usr/local/bin/</code>
-  </p>
-  <p><strong>Note:</strong> Due to the Waypoint beta currently being private, Homebrew, Linux packages, and Chocolatey
-    installation methods are not yet available.
-  </p>
+  <nav>
+    <ul>
+      <li>
+        <LinkTo @route="onboarding.install.manual">Manual installation</LinkTo>
+      </li>
+      <li>
+        <LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo>
+      </li>
+      <li>
+        <LinkTo @route="onboarding.install.chocolatey">Chocolatey on Windows</LinkTo>
+      </li>
+      <li>
+        <LinkTo @route="onboarding.install.linux">Linux</LinkTo>
+      </li>
+    </ul>
+  </nav>
+
+  {{outlet}}
+
+  <h2>Verify the installation</h2>
+
+  <p>After installing Waypoint, verify that the installation worked by opening a new terminal session and running the
+    command <code>waypoint</code>.</p>
+
+  <CopyableCode @ref="verify-waypoint">
+    <pre><code id="verify-waypoint">waypoint</code></pre>
+  </CopyableCode>
+
+  <pre><code class="output">usage: waypoint [-version] [-help] [-autocomplete-(un)install] &lt;command&gt; [&lt;args&gt;]
+
+Common commands:
+    build        Build a new versioned artifact from source.
+    deploy       Deploy a pushed artifact.
+  ...</code></pre>
+
+  <p>If you get an error that <code>waypoint</code> could not be found, your <code>PATH</code> environment variable was
+    not set up properly. Make sure that your <code>PATH</code> variable contains the directory where you installed
+    Waypoint.</p>
 </div>
 
 <hr />
 
 <div class="onboarding-footer">
-  <LinkTo @route="onboarding.connect" class="button button--secondary">Continue to Next Step</LinkTo>
+  <LinkTo @route="onboarding.connect" data-test-next-step=true class="button button--secondary">Continue to Next Step
+  </LinkTo>
 </div>

@@ -1,7 +1,7 @@
 <CopyableCode @ref="context-create">
   <pre><code id="context-create">waypoint context create \
     -server-addr={{this.hostname}} \
-    -server-auth-token={{this.token}} \
+    -server-auth-token=<span data-test-token=true>{{this.token}}</span> \
     -server-require-auth=true \
     -set-default {{this.contextName}}</code></pre>
 </CopyableCode>
