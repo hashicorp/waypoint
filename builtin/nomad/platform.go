@@ -90,6 +90,10 @@ func (p *Platform) Deploy(
 		p.config.ServicePort = 3000
 	}
 
+	if p.config.Datacenter == "" {
+		p.config.Datacenter = "dc1"
+	}
+
 	// Determine if we have a job that we manage already
 	job, _, err := jobclient.Info(result.Name, &api.QueryOptions{})
 	if strings.Contains(err.Error(), "job not found") {
@@ -148,20 +152,9 @@ func (p *Platform) Deploy(
 	}
 
 	if p.config.Auth != nil {
-		var (
-			username string
-			password string
-			ok       bool
-		)
-		if username, ok = p.config.Auth["username"]; !ok {
-			return nil, fmt.Errorf("auth is defined but not found username")
-		}
-		if password, ok = p.config.Auth["password"]; !ok {
-			return nil, fmt.Errorf("auth is defined but not found password")
-		}
 		config["auth"] = map[string]interface{}{
-			"username": username,
-			"password": password,
+			"username": p.config.Auth.Username,
+			"password": p.config.Auth.Password,
 		}
 	}
 
@@ -226,7 +219,7 @@ type Config struct {
 	Count int `hcl:"replicas,optional"`
 
 	// The credential of docker registry.
-	Auth map[string]string `hcl:"auth,optional"`
+	Auth *AuthConfig `hcl:"auth,block"`
 
 	// Environment variables that are meant to configure the application in a static
 	// way. This might be control an image that has multiple modes of operation,
@@ -239,6 +232,13 @@ type Config struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
+}
+
+// AuthConfig maps the the Nomad Docker driver 'auth' config block
+// and is used to set credentials for pulling images from the registry
+type AuthConfig struct {
+	Username string `hcl:"username"`
+	Password string `hcl:"password"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -256,8 +256,8 @@ deploy {
           region = "global"
           datacenter = "dc1"
           auth = {
-                "username": "username",
-            "password": "password"
+            username = "username"
+            password = "password"
           }
           static_environment = {
             "environment": "production",
@@ -294,7 +294,7 @@ deploy {
 
 	doc.SetField(
 		"auth",
-		"The credential of docker registry.",
+		"The credentials for docker registry.",
 	)
 
 	doc.SetField(
