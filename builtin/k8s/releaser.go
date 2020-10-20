@@ -61,6 +61,11 @@ func (r *Releaser) Release(
 		return nil, err
 	}
 
+	// Override namespace if set
+	if r.config.Namespace != "" {
+		ns = r.config.Namespace
+	}
+
 	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
 	step.Done()
 
@@ -200,6 +205,11 @@ func (r *Releaser) Destroy(
 		return err
 	}
 
+	// Override namespace if set
+	if r.config.Namespace != "" {
+		ns = r.config.Namespace
+	}
+
 	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
 	step.Done()
 	step = sg.Add("Deleting service...")
@@ -233,6 +243,9 @@ type ReleaserConfig struct {
 	// NodePort configures a port to access the service on whichever node
 	// is running service.
 	NodePort int `hcl:"node_port,optional"`
+
+	// Namespace is the Kubernetes namespace to target the deployment to.
+	Namespace string `hcl:"namespace,optional"`
 }
 
 func (r *Releaser) Documentation() (*docs.Documentation, error) {
@@ -277,6 +290,15 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 		"port",
 		"the TCP port that the application is listening on",
 		docs.Default("80"),
+	)
+
+	doc.SetField(
+		"namespace",
+		"namespace to create Service in",
+		docs.Summary(
+			"namespace is the name of the Kubernetes namespace to create the deployment in",
+			"This is useful to create Services in non-default namespaces without creating kubeconfig contexts for each",
+		),
 	)
 
 	return doc, nil

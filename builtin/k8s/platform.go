@@ -96,6 +96,11 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	// Override namespace if set
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
+	}
+
 	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
 	step.Done()
 
@@ -405,6 +410,11 @@ func (p *Platform) Destroy(
 		return err
 	}
 
+	// Override namespace if set
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
+	}
+
 	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
 	step.Done()
 	step = sg.Add("Deleting deployment...")
@@ -466,6 +476,9 @@ type Config struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
+
+	// Namespace is the Kubernetes namespace to target the deployment to.
+	Namespace string `hcl:"namespace,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -562,6 +575,15 @@ deploy "kubernetes" {
 		docs.Summary(
 			"service account is the name of the Kubernetes service account to add to the pod.",
 			"This is useful to apply Kubernetes RBAC to the application.",
+		),
+	)
+
+	doc.SetField(
+		"namespace",
+		"namespace to target deployment into",
+		docs.Summary(
+			"namespace is the name of the Kubernetes namespace to apply the deployment in",
+			"This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each",
 		),
 	)
 
