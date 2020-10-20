@@ -17,9 +17,9 @@ import (
 	"github.com/mitchellh/cli"
 	"github.com/mitchellh/go-glint"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
 	"github.com/hashicorp/waypoint/internal/version"
-	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
 const (
@@ -261,6 +261,11 @@ func Commands(
 		},
 		"server config-set": func() (cli.Command, error) {
 			return &ServerConfigSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"server docker stop": func() (cli.Command, error) {
+			return &ServerDockerStopCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
