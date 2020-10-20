@@ -78,3 +78,45 @@ $ waypoint deploy -release=false
 
 -> A future Waypoint version will allow this to be disabled in the project
 configuration file.
+
+## Private Registries
+
+Deployment platforms that pull an app container image
+from a private registry need configuration to authenticate
+to a private registry.
+
+### Kubernetes with a Private Registry
+
+For Kubernetes, reference [authenticate to private container registries
+with a kubernetes
+secret](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/).
+If you named the secret `example-registry-secret`, then you can [reference the
+secret in
+Waypoint](https://www.waypointproject.io/plugins/kubernetes#image_secret) like:
+
+```hcl
+...
+  deploy {
+    use "kubernetes" {
+      image_secret = "example-registry-secret"
+    }
+  }
+...
+```
+
+### Docker with a Private Registry
+
+When deploying to Docker with a private image, Waypoint will [use authentication
+from the registry stanza](/docs/lifecycle/build#private-registries) or "out
+of band" Docker authenication configured directly with Docker.
+
+### Nomad with a Private Registry
+
+The Waypoint Nomad plugin does not currently support [configuring the `auth`
+stanza](https://www.nomadproject.io/docs/drivers/docker#authentication) in the
+Nomad task configuration.
+
+### Other Platforms with a Private Registry
+
+Platform plugins such as AWS ECS, Azure ACI, and GCP Cloud Run often inherently
+support private registries.
