@@ -4,6 +4,8 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* plugin/k8s: support for manually specifying the namespace to use [GH-648]
+
 BUG FIXES:
 
 ## 0.1.3 (October 19, 2020)
