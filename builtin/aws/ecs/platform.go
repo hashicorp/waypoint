@@ -1311,5 +1311,11 @@ deploy {
 		),
 	)
 
+	doc.SetField(
+		"service_port",
+		"the TCP port that the application is listening on",
+		docs.Default("3000"),
+	)
+
 	return doc, nil
 }
