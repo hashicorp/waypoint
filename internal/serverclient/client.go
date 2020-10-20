@@ -43,22 +43,24 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		return nil, fmt.Errorf("no server credentials found")
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
+	defer cancel()
+
 	// Build our options
 	grpcOpts := []grpc.DialOption{
 		grpc.WithBlock(),
-		grpc.WithTimeout(cfg.Timeout),
 		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
 		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(protocolversion.Current())),
 	}
+
 	if !cfg.Tls {
 		grpcOpts = append(grpcOpts, grpc.WithInsecure())
-	} else {
-		if cfg.TlsSkipVerify {
-			grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(
-				credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}),
-			))
-		}
+	} else if cfg.TlsSkipVerify {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(
+			credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}),
+		))
 	}
+
 	if cfg.Auth {
 		token := cfg.Token
 		if v := os.Getenv(EnvServerToken); v != "" {
