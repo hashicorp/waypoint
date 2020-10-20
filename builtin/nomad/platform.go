@@ -296,6 +296,7 @@ deploy {
 		"auth",
 		"The credential of docker registry.",
 	)
+
 	doc.SetField(
 		"static_environment",
 		"Environment variables to add to the job.",
