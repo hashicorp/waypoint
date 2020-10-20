@@ -8,6 +8,12 @@ description: |-
 
 # Upgrading Waypoint
 
+~> **Note:** `waypoint install` and `waypoint server install` do not support an
+upgrade. A `waypoint upgrade` command is under consideration for Waypoint 0.2.
+One way to use the latest server is to [remove the existing
+server](/docs/troubleshooting#remove-the-waypoint-server) and then reinstall
+with `waypoint install`. Consider backing up `data.db` with `docker cp waypoint-server:/data/data.db ./data.db`, `kubectl cp waypoint-server-0:/data/data.db ./data.db` or similar.
+
 Waypoint is designed to be flexible and resilient when upgrading from
 one version to the next. We've carefully thought out an upgrade process
 so you can predict what will be involved when upgrading Waypoint.
