@@ -142,10 +142,30 @@ func (p *Platform) Deploy(
 	job.SetMeta(metaId, result.Id)
 	job.SetMeta(metaNonce, time.Now().UTC().Format(time.RFC3339Nano))
 
-	job.TaskGroups[0].Tasks[0].Config = map[string]interface{}{
+	config := map[string]interface{}{
 		"image": img.Name(),
 		"ports": []string{"waypoint"},
 	}
+
+	if p.config.Auth != nil {
+		var (
+			username string
+			password string
+			ok       bool
+		)
+		if username, ok = p.config.Auth["username"]; !ok {
+			return nil, fmt.Errorf("auth is defined but not found username")
+		}
+		if password, ok = p.config.Auth["password"]; !ok {
+			return nil, fmt.Errorf("auth is defined but not found password")
+		}
+		config["auth"] = map[string]interface{}{
+			"username": username,
+			"password": password,
+		}
+	}
+
+	job.TaskGroups[0].Tasks[0].Config = config
 	job.TaskGroups[0].Tasks[0].Env = env
 
 	// Register job
@@ -205,6 +225,9 @@ type Config struct {
 	// outside waypoint, do not set this variable.
 	Count int `hcl:"replicas,optional"`
 
+	// The credential of docker registry.
+	Auth map[string]string `hcl:"auth,optional"`
+
 	// Environment variables that are meant to configure the application in a static
 	// way. This might be control an image that has multiple modes of operation,
 	// selected via environment variable. Most configuration should use the waypoint
@@ -229,16 +252,20 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 	doc.Example(
 		`
 deploy {
-	use "nomad" {
-	  region = "global"
-	  datacenter = "dc1"
-	  static_environment = {
-	    "environment": "production",
-	    "LOG_LEVEL": "debug"
-	  }
-	  service_port = 3000
-	  replicas = 1
-	}
+        use "nomad" {
+          region = "global"
+          datacenter = "dc1"
+          auth = {
+                "username": "username",
+            "password": "password"
+          }
+          static_environment = {
+            "environment": "production",
+            "LOG_LEVEL": "debug"
+          }
+          service_port = 3000
+          replicas = 1
+        }
 }
 `)
 
@@ -265,6 +292,10 @@ deploy {
 		docs.Default("1"),
 	)
 
+	doc.SetField(
+		"auth",
+		"The credential of docker registry.",
+	)
 	doc.SetField(
 		"static_environment",
 		"Environment variables to add to the job.",
