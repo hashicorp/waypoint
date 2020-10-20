@@ -5,6 +5,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * plugin/k8s: support for manually specifying the namespace to use [GH-648]
+* plugins/nomad: support for setting docker auth credentials [GH-646]
 
 BUG FIXES:
 
