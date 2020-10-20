@@ -936,7 +936,7 @@ func (p *Platform) Launch(
 			tgs[0].Weight = aws.Int64(100)
 		}
 
-		s.Update("Modifing ALB Listener to introduce target group")
+		s.Update("Modifying ALB Listener to introduce target group")
 
 		_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
 			ListenerArn:  listener.ListenerArn,
