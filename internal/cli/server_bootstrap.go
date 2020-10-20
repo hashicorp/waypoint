@@ -32,6 +32,15 @@ func (c *ServerBootstrapCommand) Run(args []string) int {
 		return 1
 	}
 
+	// If we're running a local in-memory server, bootstrapping is not useful.
+	if c.project.Local() {
+		c.ui.Output(
+			errBootstrapLocal,
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+
 	client := c.project.Client()
 	resp, err := client.BootstrapToken(ctx, &empty.Empty{})
 	if err != nil {
@@ -144,5 +153,13 @@ The Waypoint server successfully bootstrapped, but creating the context failed.
 The bootstrap token is available above. The context could not be created
 so the CLI is not configured to connect to the server. Please try to manually
 recreate the context.
+`)
+
+	errBootstrapLocal = strings.TrimSpace(`
+No running server detected.
+
+Bootstrapping is only required for running servers. This error may happen
+if you didn't specify a "-server-addr" or the server at that address has shut
+down. Please start a server with "waypoint server run" and try again.
 `)
 )
