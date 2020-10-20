@@ -8,6 +8,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* cli: `server bootstrap` shows an error if a server is running in-memory [GH-651]
+
 ## 0.1.3 (October 19, 2020)
 
 FEATURES:
