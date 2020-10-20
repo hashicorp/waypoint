@@ -75,9 +75,9 @@ If you wish to work on Waypoint itself, you'll first need [Go](https://golang.or
 installed (version 1.14+ is _required_).
 
 [go-bindata](https://github.com/go-bindata/go-bindata) is a binary dependency
-that must be on your PATH to build Waypoint. The 
-[HashiCorp copy](https://github.com/go-bindata/go-bindata) may be installed with:
-`go get -u github.com/hashicorp/go-bindata/...`
+that must be on your PATH to build Waypoint. This 
+[repository version](https://github.com/kevinburke/go-bindata/) may be installed with:
+`go get -u github.com/kevinburke/go-bindata/...`
 
 Next, clone this repository and then run `make bin`. In a few moments, you'll have a working
 `waypoint` executable in the Waypoint repository root and `$GOPATH/bin`:
