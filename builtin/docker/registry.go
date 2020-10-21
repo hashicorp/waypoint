@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -51,7 +52,7 @@ func (r *Registry) Push(
 	step := sg.Add("Initializing Docker client...")
 	defer func() { step.Abort() }()
 
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client:%s", err)
 	}

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/builtin/docker"
+	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 	"github.com/mattn/go-isatty"
 )
 
@@ -47,7 +48,7 @@ func (r *Registry) Push(
 		return nil, err
 	}
 
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}

@@ -8,13 +8,16 @@ import (
 
 	"github.com/buildpacks/pack"
 	"github.com/buildpacks/pack/logging"
+	"github.com/docker/docker/client"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/assets"
-	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
+	"github.com/hashicorp/waypoint/internal/assets"
+	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 )
 
 // Builder uses `pack` -- the frontend for CloudNative Buildpacks -- to build
@@ -78,7 +81,23 @@ func (b *Builder) Build(
 
 	log := logging.New(build.TermOutput())
 
-	client, err := pack.NewClient(pack.WithLogger(log))
+	dockerClient, err := wpdockerclient.NewClientWithOpts(
+		client.FromEnv,
+		// If we don't specify a version, the client will use too new an API, and users
+		// will get and error of the form shown below. Note that when you don't pass a
+		// client 'pack' does the same thing we're doing here:
+		//
+		// client version X.XX is too new. Maximum supported API
+		client.WithVersion("1.38"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := pack.NewClient(
+		pack.WithLogger(log),
+		pack.WithDockerClient(dockerClient),
+	)
 	if err != nil {
 		return nil, err
 	}
