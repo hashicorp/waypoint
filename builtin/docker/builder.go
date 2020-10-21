@@ -158,6 +158,7 @@ func (b *Builder) Build(
 		Version:    ver,
 		Dockerfile: relDockerfile,
 		Tags:       []string{result.Name()},
+		Remove:     true,
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "error building image: %s", err)
