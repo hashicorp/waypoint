@@ -220,6 +220,10 @@ func (p *Platform) Deploy(
 		}
 	}
 
+	if p.config.ServicePort == 0 {
+		p.config.ServicePort = 3000
+	}
+
 	lf := &Lifecycle{
 		Init: func(s LifecycleStatus) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
@@ -550,7 +554,7 @@ func (p *Platform) Launch(
 	env := []*ecs.KeyValuePair{
 		{
 			Name:  aws.String("PORT"),
-			Value: aws.String("3000"),
+			Value: aws.String(fmt.Sprint(p.config.ServicePort)),
 		},
 	}
 
@@ -582,7 +586,7 @@ func (p *Platform) Launch(
 		Image:     aws.String(img.Name()),
 		PortMappings: []*ecs.PortMapping{
 			{
-				ContainerPort: aws.Int64(3000),
+				ContainerPort: aws.Int64(p.config.ServicePort),
 			},
 		},
 		Environment: env,
@@ -773,7 +777,7 @@ func (p *Platform) Launch(
 	ctg, err := elbsrv.CreateTargetGroup(&elbv2.CreateTargetGroupInput{
 		HealthCheckEnabled: aws.Bool(true),
 		Name:               aws.String(serviceName),
-		Port:               aws.Int64(3000),
+		Port:               aws.Int64(p.config.ServicePort),
 		Protocol:           aws.String("HTTP"),
 		TargetType:         aws.String("ip"),
 		VpcId:              vpcId,
@@ -1021,7 +1025,7 @@ func (p *Platform) Launch(
 	// Create the service
 
 	L.Debug("creating service", "arn", *taskOut.TaskDefinition.TaskDefinitionArn)
-	sg3000, err := createSG(ctx, s, sess, fmt.Sprintf("%s-inbound-internal", app.App), vpcId, 3000)
+	sgecsport, err := createSG(ctx, s, sess, fmt.Sprintf("%s-inbound-internal", app.App), vpcId, int(p.config.ServicePort))
 	if err != nil {
 		return nil, err
 	}
@@ -1033,7 +1037,7 @@ func (p *Platform) Launch(
 
 	netCfg := &ecs.AwsVpcConfiguration{
 		Subnets:        subnets,
-		SecurityGroups: []*string{sg3000},
+		SecurityGroups: []*string{sgecsport},
 	}
 
 	netCfg.AssignPublicIp = aws.String("ENABLED")
@@ -1051,7 +1055,7 @@ func (p *Platform) Launch(
 		LoadBalancers: []*ecs.LoadBalancer{
 			{
 				ContainerName:  aws.String(app.App),
-				ContainerPort:  aws.Int64(3000),
+				ContainerPort:  aws.Int64(p.config.ServicePort),
 				TargetGroupArn: tgArn,
 			},
 		},
@@ -1286,6 +1290,11 @@ type Config struct {
 	// it disabled until we figure out how to handle that onramp case.
 	// AssignPublicIp bool `hcl:"assign_public_ip,optional"`
 
+
+	// Port that your service is running on within the actual container.
+	// Defaults to port 3000.
+	ServicePort int64 `hcl:"service_port,optional"`
+
 	// Indicate that service should be deployed on an EC2 cluster.
 	EC2Cluster bool `hcl:"ec2_cluster,optional"`
 
@@ -1503,6 +1512,12 @@ deploy {
 			"the container is using. Here is a complete listing of possible values:\n",
 			sb.String(),
 		),
+	)
+
+	doc.SetField(
+		"service_port",
+		"the TCP port that the application is listening on",
+		docs.Default("3000"),
 	)
 
 	return doc, nil
