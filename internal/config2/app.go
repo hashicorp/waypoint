@@ -15,9 +15,9 @@ type App struct {
 	Labels map[string]string `hcl:"labels,optional"`
 	URL    *AppURL           `hcl:"url,block" default:"{}"`
 
-	Build   *Build   `hcl:"build,block"`
-	Deploy  *Deploy  `hcl:"deploy,block"`
-	Release *Release `hcl:"release,block"`
+	BuildRaw   *hclStage `hcl:"build,block"`
+	DeployRaw  *hclStage `hcl:"deploy,block"`
+	ReleaseRaw *hclStage `hcl:"release,block"`
 
 	ctx    *hcl.EvalContext
 	config *Config
@@ -34,14 +34,24 @@ type hclApp struct {
 	Body hcl.Body `hcl:",remain"`
 }
 
+// Apps returns the names of all the apps.
+func (c *Config) Apps() []string {
+	var result []string
+	for _, app := range c.hclConfig.Apps {
+		result = append(result, app.Name)
+	}
+
+	return result
+}
+
 // App returns the configured app named n. If the app doesn't exist, this
 // will return (nil, nil).
 func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
-	ctx = c.ctx
+	ctx = appendContext(c.ctx, ctx)
 
 	// Find the app by progressively decoding
 	var rawApp *hclApp
-	for _, app := range c.raw.Apps {
+	for _, app := range c.hclConfig.Apps {
 		if app.Name == n {
 			rawApp = app
 			break
@@ -77,4 +87,40 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	app.config = c
 
 	return &app, nil
+}
+
+// Build loads the Build section of the configuration.
+func (c *App) Build(ctx *hcl.EvalContext) (*Build, error) {
+	ctx = appendContext(c.ctx, ctx)
+
+	var b Build
+	if diag := gohcl.DecodeBody(c.BuildRaw.Body, ctx, &b); diag.HasErrors() {
+		return nil, diag
+	}
+
+	return &b, nil
+}
+
+// Deploy loads the associated section of the configuration.
+func (c *App) Deploy(ctx *hcl.EvalContext) (*Deploy, error) {
+	ctx = appendContext(c.ctx, ctx)
+
+	var b Deploy
+	if diag := gohcl.DecodeBody(c.DeployRaw.Body, ctx, &b); diag.HasErrors() {
+		return nil, diag
+	}
+
+	return &b, nil
+}
+
+// Release loads the associated section of the configuration.
+func (c *App) Release(ctx *hcl.EvalContext) (*Release, error) {
+	ctx = appendContext(c.ctx, ctx)
+
+	var b Release
+	if diag := gohcl.DecodeBody(c.ReleaseRaw.Body, ctx, &b); diag.HasErrors() {
+		return nil, diag
+	}
+
+	return &b, nil
 }

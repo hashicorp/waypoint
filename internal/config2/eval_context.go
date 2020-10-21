@@ -37,6 +37,19 @@ func EvalContext(parent *hcl.EvalContext, pwd string) *hcl.EvalContext {
 	return result
 }
 
+// appendContext makes child a child of parent and returns the new context.
+// If child is nil this returns parent.
+func appendContext(parent, child *hcl.EvalContext) *hcl.EvalContext {
+	if child == nil {
+		return parent
+	}
+
+	newChild := parent.NewChild()
+	newChild.Variables = child.Variables
+	newChild.Functions = child.Functions
+	return newChild
+}
+
 // addPathValue adds the "path" variable to the context.
 func addPathValue(ctx *hcl.EvalContext, v map[string]string) {
 	value, err := gocty.ToCtyValue(v, cty.Map(cty.String))

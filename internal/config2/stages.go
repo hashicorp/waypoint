@@ -4,12 +4,16 @@ import (
 	"github.com/hashicorp/hcl/v2"
 )
 
+type hclStage struct {
+	Body hcl.Body `hcl:",remain"`
+}
+
 // Build are the build settings.
 type Build struct {
 	Labels   map[string]string `hcl:"labels,optional"`
 	Hooks    []*Hook           `hcl:"hook,block"`
 	Use      *Use              `hcl:"use,block"`
-	Registry *Registry         `hcl:"registry,block"`
+	Registry *hclStage         `hcl:"registry,block"`
 }
 
 // Registry are the registry settings.

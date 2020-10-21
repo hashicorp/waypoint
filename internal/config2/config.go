@@ -10,10 +10,9 @@ import (
 )
 
 type Config struct {
-	Project string
+	*hclConfig
 
 	ctx      *hcl.EvalContext
-	raw      *hclConfig
 	pathData map[string]string
 }
 
@@ -86,9 +85,8 @@ func Load(path string, pwd string) (*Config, error) {
 	}
 
 	return &Config{
-		Project:  cfg.Project,
-		ctx:      ctx,
-		raw:      &cfg,
-		pathData: pathData,
+		hclConfig: &cfg,
+		ctx:       ctx,
+		pathData:  pathData,
 	}, nil
 }

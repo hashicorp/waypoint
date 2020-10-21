@@ -61,6 +61,16 @@ func TestConfigApp_compare(t *testing.T) {
 				require.Equal(filepath.Join(expected, "bar"), c.Labels["app"])
 			},
 		},
+
+		{
+			"build.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				b, err := c.Build(nil)
+				require.NoError(t, err)
+				require.Equal(t, "bar", b.Labels["foo"])
+			},
+		},
 	}
 
 	for _, tt := range cases {
