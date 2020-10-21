@@ -58,6 +58,7 @@ require (
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.1.2
+	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-glint v0.0.0-20201015034436-f80573c636de
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
 	github.com/mitchellh/go-homedir v1.1.0

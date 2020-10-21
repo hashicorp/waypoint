@@ -12,6 +12,7 @@ import (
 type Config struct {
 	Project string
 
+	ctx      *hcl.EvalContext
 	raw      *hclConfig
 	pathData map[string]string
 }
@@ -21,7 +22,7 @@ type hclConfig struct {
 	Runner  *Runner           `hcl:"runner,block" default:"{}"`
 	Labels  map[string]string `hcl:"labels,optional"`
 	Plugin  []*Plugin         `hcl:"plugin,block"`
-	Apps    []*hcl.Block      `hcl:"app,block"`
+	Apps    []*hclApp         `hcl:"app,block"`
 }
 
 // Runner is the configuration for supporting runners in this project.
@@ -86,6 +87,7 @@ func Load(path string, pwd string) (*Config, error) {
 
 	return &Config{
 		Project:  cfg.Project,
+		ctx:      ctx,
 		raw:      &cfg,
 		pathData: pathData,
 	}, nil
