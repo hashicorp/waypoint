@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/go-hclog"
-	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 func TestServiceConfig(t *testing.T) {
@@ -69,8 +69,8 @@ func TestServiceConfig(t *testing.T) {
 
 func TestServerConfigWithStartupConfig(t *testing.T) {
 
-	cfg := &configpkg.ServerConfig{
-		CEBConfig: &configpkg.CEBConfig{
+	cfg := &serverconfig.Config{
+		CEBConfig: &serverconfig.CEBConfig{
 			Addr:          "myendpoint",
 			TLSEnabled:    false,
 			TLSSkipVerify: true,
