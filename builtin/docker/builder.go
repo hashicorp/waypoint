@@ -83,8 +83,7 @@ build {
 		"dockerfile",
 		"The path to the Dockerfile.",
 		docs.Summary(
-			"Set this when the Dockerfile is not located in the top-level",
-			"project directory.",
+			"Set this when the Dockerfile is not APP-PATH/Dockerfile",
 		),
 	)
 
