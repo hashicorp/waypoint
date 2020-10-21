@@ -79,6 +79,15 @@ build {
 		"if set, use the buildkit builder from Docker",
 	)
 
+	doc.SetField(
+		"dockerfile",
+		"The path to the Dockerfile.",
+		docs.Summary(
+			"Set this when the Dockerfile is not located in the top-level",
+			"project directory.",
+		),
+	)
+
 	return doc, nil
 }
 
