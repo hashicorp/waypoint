@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
-	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/protocolversion"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 // ConnectOption is used to configure how Waypoint server connection
@@ -91,7 +91,7 @@ func ContextConfig(opts ...ConnectOption) (*clicontext.Config, error) {
 
 	// Build it
 	return &clicontext.Config{
-		Server: config.Server{
+		Server: serverconfig.Client{
 			Address:       cfg.Addr,
 			Tls:           cfg.Tls,
 			TlsSkipVerify: cfg.TlsSkipVerify,

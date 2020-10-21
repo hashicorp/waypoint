@@ -15,6 +15,10 @@ type App struct {
 	Labels map[string]string `hcl:"labels,optional"`
 	URL    *AppURL           `hcl:"url,block" default:"{}"`
 
+	Build   *Build   `hcl:"build,block"`
+	Deploy  *Deploy  `hcl:"deploy,block"`
+	Release *Release `hcl:"release,block"`
+
 	ctx    *hcl.EvalContext
 	config *Config
 }

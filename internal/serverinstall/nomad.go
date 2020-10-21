@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
-	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 var (
@@ -58,7 +58,7 @@ func InstallNomad(
 		httpAddr string
 	)
 
-	clicfg.Server = configpkg.Server{
+	clicfg.Server = serverconfig.Client{
 		Tls:           true,
 		TlsSkipVerify: true,
 	}
@@ -170,7 +170,7 @@ EVAL:
 	httpAddr = hAddr
 	addr.Addr = serverAddr
 	clicfg = clicontext.Config{
-		Server: configpkg.Server{
+		Server: serverconfig.Client{
 			Address:       addr.Addr,
 			Tls:           true,
 			TlsSkipVerify: true, // always for now
