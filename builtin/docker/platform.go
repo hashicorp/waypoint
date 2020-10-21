@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 )
 
 const (
@@ -247,7 +248,7 @@ func (p *Platform) Destroy(
 
 func (p *Platform) getDockerClient() (*client.Client, error) {
 	if p.config.ClientConfig == nil {
-		return client.NewClientWithOpts(client.FromEnv)
+		return wpdockerclient.NewClientWithOpts(client.FromEnv)
 	}
 
 	opts := []client.Opt{}
@@ -268,7 +269,7 @@ func (p *Platform) getDockerClient() (*client.Client, error) {
 		opts = append(opts, client.WithVersion(version))
 	}
 
-	return client.NewClientWithOpts(opts...)
+	return wpdockerclient.NewClientWithOpts(opts...)
 }
 
 func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.UI, img *Image, force bool) error {

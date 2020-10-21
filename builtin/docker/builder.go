@@ -16,10 +16,12 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/assets"
-	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
+	"github.com/hashicorp/waypoint/internal/assets"
+	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 )
 
 // Builder uses `docker build` to build a Docker iamge.
@@ -115,7 +117,7 @@ func (b *Builder) Build(
 		Tag:   "latest",
 	}
 
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}

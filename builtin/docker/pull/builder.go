@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdocker "github.com/hashicorp/waypoint/builtin/docker"
+	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 	"github.com/hashicorp/waypoint/internal/assets"
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 )
@@ -140,7 +141,7 @@ func (b *Builder) Build(
 		Tag:   b.config.Tag,
 	}
 
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
