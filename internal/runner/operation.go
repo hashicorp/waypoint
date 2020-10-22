@@ -70,7 +70,6 @@ func (r *Runner) executeJob(
 		core.WithClient(r.client),
 		core.WithConfig(cfg),
 		core.WithDataDir(projDir),
-		core.WithRootDir(filepath.Dir(path)),
 		core.WithLabels(job.Labels),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),

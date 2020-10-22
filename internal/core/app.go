@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -74,7 +73,7 @@ func newApp(
 	app := &App{
 		project: p,
 		client:  p.client,
-		source:  &component.Source{App: cfg.Name, Path: "."},
+		source:  &component.Source{App: cfg.Name, Path: cfg.Path},
 		jobInfo: p.jobInfo,
 		logger:  p.logger.Named("app").Named(cfg.Name),
 		ref: &pb.Ref_Application{
@@ -92,13 +91,6 @@ func newApp(
 		// etc.
 		UI: p.UI,
 	}
-
-	// Determine our path
-	path := p.root
-	if cfg.Path != "" {
-		path = filepath.Join(path, cfg.Path)
-	}
-	app.source.Path = path
 
 	// Setup our directory
 	dir, err := p.dir.App(cfg.Name)
@@ -181,7 +173,9 @@ func (a *App) Components(ctx context.Context) ([]*Component, error) {
 			return nil, err
 		}
 
-		results = append(results, c)
+		if c != nil {
+			results = append(results, c)
+		}
 	}
 
 	return results, nil
