@@ -114,8 +114,7 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 	// Start the plugin
 	c, err := componentCreatorMap[component.ReleaseManagerType].Create(ctx, a, nil)
 	if status.Code(err) == codes.Unimplemented {
-		c = nil
-		err = nil
+		return nil
 	}
 	if err != nil {
 		return err
