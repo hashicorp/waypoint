@@ -69,6 +69,21 @@ func TestConfigApp_compare(t *testing.T) {
 				b, err := c.Build(nil)
 				require.NoError(t, err)
 				require.Equal(t, "bar", b.Labels["foo"])
+
+				r, err := c.Registry(nil)
+				require.NoError(t, err)
+				require.Nil(t, r)
+			},
+		},
+
+		{
+			"build_registry.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				r, err := c.Registry(nil)
+				require.NoError(t, err)
+				require.NotNil(t, r)
+				require.Equal(t, "docker", r.Use.Type)
 			},
 		},
 	}
