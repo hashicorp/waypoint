@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsimple"
+
+	"github.com/hashicorp/waypoint/internal/pkg/defaults"
 )
 
 type Config struct {
@@ -81,6 +83,9 @@ func Load(path string, pwd string) (*Config, error) {
 	// Decode
 	var cfg hclConfig
 	if err := hclsimple.DecodeFile(path, ctx, &cfg); err != nil {
+		return nil, err
+	}
+	if err := defaults.Set(&cfg); err != nil {
 		return nil, err
 	}
 
