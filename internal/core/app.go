@@ -161,28 +161,31 @@ func (a *App) Ref() *pb.Ref_Application {
 	return a.ref
 }
 
-/* TODO(config2)
-// Components returns the list of components that were initilized for this app.
-func (a *App) Components() []interface{} {
-	var result []interface{}
-	for c := range a.components {
-		result = append(result, c)
+// Components initializes and returns all the components that are defined
+// for this app across all stages. The caller must call close on all the
+// components to clean up resources properly.
+func (a *App) Components(ctx context.Context) ([]*Component, error) {
+	var results []*Component
+	for _, cc := range componentCreatorMap {
+		c, err := cc.Create(ctx, a, nil)
+		if status.Code(err) == codes.Unimplemented {
+			c = nil
+			err = nil
+		}
+		if err != nil {
+			// Make sure we clean ourselves up in an error case.
+			for _, r := range results {
+				r.Close()
+			}
+
+			return nil, err
+		}
+
+		results = append(results, c)
 	}
 
-	return result
+	return results, nil
 }
-
-// ComponentProto returns the proto info for a component. The passed component
-// must be part of the app or nil will be returned.
-func (a *App) ComponentProto(c interface{}) *pb.Component {
-	info, ok := a.components[c]
-	if !ok {
-		return nil
-	}
-
-	return info.Info
-}
-*/
 
 // mergeLabels merges the set of labels given. See project.mergeLabels.
 // This is the app-specific version that adds the proper app-specific labels
