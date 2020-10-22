@@ -83,7 +83,7 @@ gen/ts:
 # This currently assumes you have run `ember build` in the ui/ directory
 static-assets:
 	@go-bindata -pkg gen -prefix dist -o $(ASSETFS_PATH) ./ui/dist/...
-	@go fmt $(ASSETFS_PATH)
+	@gofmt -s -w $(ASSETFS_PATH)
 
 .PHONY: gen/doc
 gen/doc:
