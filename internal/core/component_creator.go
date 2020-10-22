@@ -62,28 +62,28 @@ type componentCreator struct {
 // componentCreatorMap contains all the components that can be initialized
 // for an app.
 var componentCreatorMap = map[component.Type]*componentCreator{
-	component.BuilderType: &componentCreator{
+	component.BuilderType: {
 		Type: component.BuilderType,
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Build(ctx)
 		},
 	},
 
-	component.RegistryType: &componentCreator{
+	component.RegistryType: {
 		Type: component.RegistryType,
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Registry(ctx)
 		},
 	},
 
-	component.PlatformType: &componentCreator{
+	component.PlatformType: {
 		Type: component.PlatformType,
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Deploy(ctx)
 		},
 	},
 
-	component.ReleaseManagerType: &componentCreator{
+	component.ReleaseManagerType: {
 		Type: component.ReleaseManagerType,
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Release(ctx)
