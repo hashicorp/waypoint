@@ -287,9 +287,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 	if c.refApp != nil {
 		appTargets = []string{c.refApp.Application}
 	} else if c.cfg != nil {
-		for _, name := range c.cfg.Apps() {
-			appTargets = append(appTargets, name)
-		}
+		appTargets = append(appTargets, c.cfg.Apps()...)
 	}
 
 	var apps []*clientpkg.App
