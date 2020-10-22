@@ -9,15 +9,15 @@ import (
 
 // CanAuth returns true if the provided component supports authenticating and
 // validating authentication for plugins
-func (a *App) CanAuth(comp interface{}) bool {
-	_, ok := comp.(component.Authenticator)
+func (a *App) CanAuth(comp *Component) bool {
+	_, ok := comp.Value.(component.Authenticator)
 	return ok
 }
 
 // ValidateAuth validates if the component is properly authenticated. This
 // will always return nil if the component doesn't support auth.
-func (a *App) ValidateAuth(ctx context.Context, c interface{}) error {
-	auth, ok := c.(component.Authenticator)
+func (a *App) ValidateAuth(ctx context.Context, c *Component) error {
+	auth, ok := c.Value.(component.Authenticator)
 	if !ok {
 		return nil
 	}
@@ -25,7 +25,7 @@ func (a *App) ValidateAuth(ctx context.Context, c interface{}) error {
 	_, err := a.callDynamicFunc(ctx,
 		a.logger.Named("validate_auth"),
 		nil,
-		auth,
+		c,
 		auth.ValidateAuthFunc(),
 	)
 	return err
@@ -35,8 +35,8 @@ func (a *App) ValidateAuth(ctx context.Context, c interface{}) error {
 // doesn't support auth. If this returns nil, then the auth function succeeded
 // but the component itself may still not be authenticated. You must check
 // again with ValidateAuth.
-func (a *App) Auth(ctx context.Context, c interface{}) (*component.AuthResult, error) {
-	auth, ok := c.(component.Authenticator)
+func (a *App) Auth(ctx context.Context, c *Component) (*component.AuthResult, error) {
+	auth, ok := c.Value.(component.Authenticator)
 	if !ok {
 		return nil, fmt.Errorf("does not implement authenticator")
 	}
@@ -44,7 +44,7 @@ func (a *App) Auth(ctx context.Context, c interface{}) (*component.AuthResult, e
 	result, err := a.callDynamicFunc(ctx,
 		a.logger.Named("auth"),
 		nil,
-		auth,
+		c,
 		auth.AuthFunc(),
 	)
 	if result == nil || err != nil {

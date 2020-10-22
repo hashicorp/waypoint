@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
-	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config2"
 )
 
 func TestAppAuthenticate(t *testing.T) {
@@ -46,7 +46,7 @@ func TestAppAuthenticate(t *testing.T) {
 
 	{
 		// Authenticate
-		_, err := app.Auth(context.Background(), mock)
+		_, err := app.Auth(context.Background(), &Component{Value: mock})
 		require.Contains(err.Error(), "foo")
 	}
 }
@@ -73,7 +73,7 @@ func TestAppAuthenticate_noAuth(t *testing.T) {
 
 	{
 		// Authenticate and should not err
-		_, err := app.Auth(context.Background(), mock.Builder)
+		_, err := app.Auth(context.Background(), &Component{Value: mock.Builder})
 		require.Error(err)
 		require.Contains(err.Error(), "does not implement")
 	}

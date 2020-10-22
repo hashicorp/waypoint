@@ -9,17 +9,14 @@ import (
 // destroy is in a partial state.
 func (a *App) Destroy(ctx context.Context) error {
 	destroyers := []struct {
-		Plugin               interface{}
 		DestroyFunc          func(context.Context) error
 		DestroyWorkspaceFunc func(context.Context) error
 	}{
 		{
-			a.Releaser,
 			a.destroyAllReleases,
 			a.destroyReleaseWorkspace,
 		},
 		{
-			a.Platform,
 			a.destroyAllDeploys,
 			a.destroyDeployWorkspace,
 		},

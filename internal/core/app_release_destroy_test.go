@@ -13,7 +13,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
-	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config2"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 

@@ -8,12 +8,16 @@ type hclStage struct {
 	Body hcl.Body `hcl:",remain"`
 }
 
+type hclBuild struct {
+	Registry *hclStage `hcl:"registry,block"`
+	Body     hcl.Body  `hcl:",remain"`
+}
+
 // Build are the build settings.
 type Build struct {
-	Labels   map[string]string `hcl:"labels,optional"`
-	Hooks    []*Hook           `hcl:"hook,block"`
-	Use      *Use              `hcl:"use,block"`
-	Registry *hclStage         `hcl:"registry,block"`
+	Labels map[string]string `hcl:"labels,optional"`
+	Hooks  []*Hook           `hcl:"hook,block"`
+	Use    *Use              `hcl:"use,block"`
 }
 
 // Registry are the registry settings.

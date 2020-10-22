@@ -15,7 +15,7 @@ type App struct {
 	Labels map[string]string `hcl:"labels,optional"`
 	URL    *AppURL           `hcl:"url,block" default:"{}"`
 
-	BuildRaw   *hclStage `hcl:"build,block"`
+	BuildRaw   *hclBuild `hcl:"build,block"`
 	DeployRaw  *hclStage `hcl:"deploy,block"`
 	ReleaseRaw *hclStage `hcl:"release,block"`
 
@@ -101,6 +101,22 @@ func (c *App) Build(ctx *hcl.EvalContext) (*Build, error) {
 	return &b, nil
 }
 
+// Registry loads the Registry section of the configuration.
+func (c *App) Registry(ctx *hcl.EvalContext) (*Registry, error) {
+	// Registry is optional
+	if c.BuildRaw == nil || c.BuildRaw.Registry == nil {
+		return nil, nil
+	}
+
+	var b Registry
+	ctx = appendContext(c.ctx, ctx)
+	if diag := gohcl.DecodeBody(c.BuildRaw.Registry.Body, ctx, &b); diag.HasErrors() {
+		return nil, diag
+	}
+
+	return &b, nil
+}
+
 // Deploy loads the associated section of the configuration.
 func (c *App) Deploy(ctx *hcl.EvalContext) (*Deploy, error) {
 	ctx = appendContext(c.ctx, ctx)
@@ -115,9 +131,12 @@ func (c *App) Deploy(ctx *hcl.EvalContext) (*Deploy, error) {
 
 // Release loads the associated section of the configuration.
 func (c *App) Release(ctx *hcl.EvalContext) (*Release, error) {
-	ctx = appendContext(c.ctx, ctx)
+	if c.ReleaseRaw == nil {
+		return nil, nil
+	}
 
 	var b Release
+	ctx = appendContext(c.ctx, ctx)
 	if diag := gohcl.DecodeBody(c.ReleaseRaw.Body, ctx, &b); diag.HasErrors() {
 		return nil, diag
 	}

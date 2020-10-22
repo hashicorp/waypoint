@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/internal-shared/protomappers"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config2"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -127,8 +127,13 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	p.jobInfo.Workspace = p.workspace
 
 	// Initialize all the applications and load all their components.
-	for _, appConfig := range opts.Config.Apps {
-		app, err := newApp(ctx, p, appConfig, opts.ConfigContext)
+	for _, name := range opts.Config.Apps() {
+		appConfig, err := opts.Config.App(name, nil)
+		if err != nil {
+			return nil, fmt.Errorf("error loading app %q: %w", name, err)
+		}
+
+		app, err := newApp(ctx, p, appConfig)
 		if err != nil {
 			return nil, err
 		}
