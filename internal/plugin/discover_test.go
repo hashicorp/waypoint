@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config2"
 )
 
 func TestDiscover(t *testing.T) {
