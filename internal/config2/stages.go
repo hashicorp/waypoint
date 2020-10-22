@@ -41,14 +41,6 @@ type Release struct {
 	Use    *Use              `hcl:"use,block"`
 }
 
-// Use is something in the Waypoint configuration that is executed
-// using some underlying plugin. This is a general shared structure that is
-// used by internal/core to initialize all the proper plugins.
-type Use struct {
-	Type string   `hcl:",label"`
-	Body hcl.Body `hcl:",remain"`
-}
-
 // Hook is the configuration for a hook that runs at specified times.
 type Hook struct {
 	When      string   `hcl:"when,attr"`

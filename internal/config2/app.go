@@ -29,9 +29,12 @@ type AppURL struct {
 }
 
 type hclApp struct {
-	Name string   `hcl:",label"`
-	Path string   `hcl:"path,optional"`
-	Body hcl.Body `hcl:",remain"`
+	Name       string    `hcl:",label"`
+	Path       string    `hcl:"path,optional"`
+	BuildRaw   *hclBuild `hcl:"build,block"`
+	DeployRaw  *hclStage `hcl:"deploy,block"`
+	ReleaseRaw *hclStage `hcl:"release,block"`
+	Body       hcl.Body  `hcl:",remain"`
 }
 
 // Apps returns the names of all the apps.
@@ -77,8 +80,11 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 
 	// Full decode
 	app := App{
-		Name: rawApp.Name,
-		Path: appPath,
+		Name:       rawApp.Name,
+		Path:       appPath,
+		BuildRaw:   rawApp.BuildRaw,
+		DeployRaw:  rawApp.DeployRaw,
+		ReleaseRaw: rawApp.ReleaseRaw,
 	}
 	if diag := gohcl.DecodeBody(rawApp.Body, ctx, &app); diag.HasErrors() {
 		return nil, diag

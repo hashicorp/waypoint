@@ -1,6 +1,8 @@
 package config
 
 import (
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
@@ -21,6 +23,64 @@ type Plugin struct {
 
 	// Checksum is the SHA256 checksum to validate this plugin.
 	Checksum string `hcl:"checksum,optional"`
+}
+
+// Plugins returns all the plugins defined by this configuration. This
+// will include the implicitly defined plugins via `use` statements.
+func (c *Config) Plugins() []*Plugin {
+	result := make([]*Plugin, len(c.Plugin))
+	copy(result, c.Plugin)
+	known := map[string]*Plugin{}
+	for _, p := range result {
+		known[p.Name] = p
+	}
+
+	// Collect all the plugins used by all the apps.
+	for _, app := range c.hclConfig.Apps {
+		// Get all the implied stage plugins: build, deploy, etc.
+		if v := app.BuildRaw; v != nil {
+			result = trackPlugin(result, known, v.useContainer(), component.BuilderType)
+			if v := v.Registry; v != nil {
+				result = trackPlugin(result, known, v.useContainer(), component.RegistryType)
+			}
+		}
+		if v := app.DeployRaw; v != nil {
+			result = trackPlugin(result, known, v.useContainer(), component.PlatformType)
+		}
+		if v := app.ReleaseRaw; v != nil {
+			result = trackPlugin(result, known, v.useContainer(), component.ReleaseManagerType)
+		}
+	}
+
+	return result
+}
+
+// trackPlugin adds the plugin implied by the use statements to result if
+// it hasn't been seen before (known via the "known" variable). This will
+// modify the values result and known in-place.
+func trackPlugin(
+	result []*Plugin,
+	known map[string]*Plugin,
+	useBody hcl.Body,
+	typ component.Type,
+) []*Plugin {
+	// Decode into a minimal use representation
+	var useWrapper hclUse
+	if diag := gohcl.DecodeBody(useBody, nil, &useWrapper); diag.HasErrors() {
+		// This should never fail because we validate in Validate.
+		panic(diag.Error())
+	}
+	use := useWrapper.Use
+
+	p, ok := known[use.Type]
+	if !ok {
+		p = &Plugin{Name: use.Type}
+		result = append(result, p)
+		known[use.Type] = p
+	}
+
+	p.markType(typ)
+	return result
 }
 
 // Types returns the list of types that this plugin implements.
