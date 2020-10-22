@@ -11,7 +11,6 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -44,8 +43,7 @@ type baseCommand struct {
 	// The fields below are only available after calling Init.
 
 	// cfg is the parsed configuration
-	cfg    *config.Config
-	cfgCtx *hcl.EvalContext
+	cfg *config.Config
 
 	// UI is used to write to the CLI.
 	ui terminal.UI

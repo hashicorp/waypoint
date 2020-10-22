@@ -38,6 +38,14 @@ func TestLoad_compare(t *testing.T) {
 				require.Equal(t, expected, c.Project)
 			},
 		},
+
+		{
+			"project_function.hcl",
+			"",
+			func(t *testing.T, c *Config) {
+				require.Equal(t, "HELLO", c.Project)
+			},
+		},
 	}
 
 	for _, tt := range cases {

@@ -90,3 +90,8 @@ func Load(path string, pwd string) (*Config, error) {
 		pathData:  pathData,
 	}, nil
 }
+
+// HCLContext returns the eval context for this configuration.
+func (c *Config) HCLContext() *hcl.EvalContext {
+	return c.ctx.NewChild()
+}

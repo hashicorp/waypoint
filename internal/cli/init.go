@@ -292,7 +292,7 @@ func (c *InitCommand) validateProject() bool {
 			}
 
 			source := factory()
-			ds, err = source.ProjectSource(dscfg.Body, c.cfgCtx)
+			ds, err = source.ProjectSource(dscfg.Body, c.cfg.HCLContext())
 			if err != nil {
 				c.stepError(s, initStepProject, err)
 				return false
