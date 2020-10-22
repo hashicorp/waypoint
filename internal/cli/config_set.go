@@ -26,8 +26,6 @@ func (c *ConfigSetCommand) Run(args []string) int {
 		return 1
 	}
 
-	var configArgs []string
-
 	// If there are no command arguments, check if the command has
 	// been invoked with a pipe like `cat .env | waypoint config set`.
 	if len(c.args) == 0 {
@@ -45,11 +43,8 @@ func (c *ConfigSetCommand) Run(args []string) int {
 
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
-			configArgs = append(configArgs, scanner.Text())
+			c.args = append(c.args, scanner.Text())
 		}
-	} else {
-		// Otherwise, just use the given command arguments.
-		configArgs = c.args
 	}
 
 	// Get our API client
@@ -57,7 +52,7 @@ func (c *ConfigSetCommand) Run(args []string) int {
 
 	var req pb.ConfigSetRequest
 
-	for _, arg := range configArgs {
+	for _, arg := range c.args {
 		idx := strings.IndexByte(arg, '=')
 		if idx == -1 || idx == 0 {
 			fmt.Fprintf(os.Stderr, "variables must be in the form key=value")
