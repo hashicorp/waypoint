@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -25,9 +26,30 @@ func (c *ConfigSetCommand) Run(args []string) int {
 		return 1
 	}
 
+	var configArgs []string
+
+	// If there are no command arguments, check if the command has
+	// been invoked with a pipe like `cat .env | waypoint config set`.
 	if len(c.args) == 0 {
-		fmt.Fprintf(os.Stderr, "config-set requires at least one key=value entry")
-		return 1
+		info, err := os.Stdin.Stat()
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to get console mode for stdin")
+			return 1
+		}
+
+		// If there's no pipe, there are no arguments. Fail.
+		if info.Mode()&os.ModeNamedPipe == 0 {
+			_, _ = fmt.Fprintf(os.Stderr, "config set requires at least one key=value entry")
+			return 1
+		}
+
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			configArgs = append(configArgs, scanner.Text())
+		}
+	} else {
+		// Otherwise, just use the given command arguments.
+		configArgs = c.args
 	}
 
 	// Get our API client
@@ -35,7 +57,7 @@ func (c *ConfigSetCommand) Run(args []string) int {
 
 	var req pb.ConfigSetRequest
 
-	for _, arg := range c.args {
+	for _, arg := range configArgs {
 		idx := strings.IndexByte(arg, '=')
 		if idx == -1 || idx == 0 {
 			fmt.Fprintf(os.Stderr, "variables must be in the form key=value")
@@ -90,7 +112,7 @@ func (c *ConfigSetCommand) Synopsis() string {
 
 func (c *ConfigSetCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint config-set <name> <value>
+Usage: waypoint config set <name>=<value>
 
   Set a config variable that will be available to deployments as an
   environment variable.
