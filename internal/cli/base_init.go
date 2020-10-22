@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/hashicorp/hcl/v2/hclsimple"
-
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
-	configpkg "github.com/hashicorp/waypoint/internal/config"
+	configpkg "github.com/hashicorp/waypoint/internal/config2"
 	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
@@ -50,15 +48,8 @@ func (c *baseCommand) initConfigPath() (string, error) {
 
 // initConfigLoad loads the configuration at the given path.
 func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
-	c.cfgCtx = configpkg.EvalContext(filepath.Dir(path))
-
-	var cfg configpkg.Config
-	if err := hclsimple.DecodeFile(path, c.cfgCtx, &cfg); err != nil {
-		return nil, err
-	}
-
-	// Set the proper defaults
-	if err := cfg.Default(); err != nil {
+	cfg, err := configpkg.Load(path, filepath.Dir(path))
+	if err != nil {
 		return nil, err
 	}
 
@@ -67,7 +58,7 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 		return nil, err
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }
 
 // initClient initializes the client.

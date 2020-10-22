@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config2"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -256,14 +256,14 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// one app or that we have an app target.
 	if baseCfg.AppTargetRequired {
 		if c.refApp == nil {
-			if len(c.cfg.Apps) != 1 {
+			if len(c.cfg.Apps()) != 1 {
 				c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 				return ErrSentinel
 			}
 
 			c.refApp = &pb.Ref_Application{
 				Project:     c.cfg.Project,
-				Application: c.cfg.Apps[0].Name,
+				Application: c.cfg.Apps()[0],
 			}
 		}
 	}
@@ -287,8 +287,8 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 	if c.refApp != nil {
 		appTargets = []string{c.refApp.Application}
 	} else if c.cfg != nil {
-		for _, appCfg := range c.cfg.Apps {
-			appTargets = append(appTargets, appCfg.Name)
+		for _, name := range c.cfg.Apps() {
+			appTargets = append(appTargets, name)
 		}
 	}
 
