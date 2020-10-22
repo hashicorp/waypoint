@@ -48,11 +48,13 @@ func TestConfigAppPlugins(t *testing.T) {
 				"docker": func(t *testing.T, p *Plugin) {
 					require.True(t, p.Type.Builder)
 					require.False(t, p.Type.Platform)
+					require.True(t, p.Type.Mapper)
 				},
 
 				"nomad": func(t *testing.T, p *Plugin) {
 					require.False(t, p.Type.Builder)
 					require.True(t, p.Type.Platform)
+					require.True(t, p.Type.Mapper)
 				},
 			},
 		},

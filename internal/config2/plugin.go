@@ -79,7 +79,13 @@ func trackPlugin(
 		known[use.Type] = p
 	}
 
+	// Mark the type this is used for
 	p.markType(typ)
+
+	// Mark the plugin for mappers. Anything that is in a `use` anywhere
+	// is always loaded for mappers.
+	p.markType(component.MapperType)
+
 	return result
 }
 
