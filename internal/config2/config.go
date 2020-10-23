@@ -15,6 +15,7 @@ type Config struct {
 	*hclConfig
 
 	ctx      *hcl.EvalContext
+	path     string
 	pathData map[string]string
 }
 
@@ -24,6 +25,7 @@ type hclConfig struct {
 	Labels  map[string]string `hcl:"labels,optional"`
 	Plugin  []*Plugin         `hcl:"plugin,block"`
 	Apps    []*hclApp         `hcl:"app,block"`
+	Body    hcl.Body          `hcl:",body"`
 }
 
 // Runner is the configuration for supporting runners in this project.
@@ -92,6 +94,7 @@ func Load(path string, pwd string) (*Config, error) {
 	return &Config{
 		hclConfig: &cfg,
 		ctx:       ctx,
+		path:      filepath.Dir(path),
 		pathData:  pathData,
 	}, nil
 }

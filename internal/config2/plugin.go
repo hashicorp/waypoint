@@ -1,8 +1,6 @@
 package config
 
 import (
-	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
@@ -39,16 +37,16 @@ func (c *Config) Plugins() []*Plugin {
 	for _, app := range c.hclConfig.Apps {
 		// Get all the implied stage plugins: build, deploy, etc.
 		if v := app.BuildRaw; v != nil {
-			result = trackPlugin(result, known, v.useContainer(), component.BuilderType)
+			result = trackPlugin(result, known, v.Use, component.BuilderType)
 			if v := v.Registry; v != nil {
-				result = trackPlugin(result, known, v.useContainer(), component.RegistryType)
+				result = trackPlugin(result, known, v.Use, component.RegistryType)
 			}
 		}
 		if v := app.DeployRaw; v != nil {
-			result = trackPlugin(result, known, v.useContainer(), component.PlatformType)
+			result = trackPlugin(result, known, v.Use, component.PlatformType)
 		}
 		if v := app.ReleaseRaw; v != nil {
-			result = trackPlugin(result, known, v.useContainer(), component.ReleaseManagerType)
+			result = trackPlugin(result, known, v.Use, component.ReleaseManagerType)
 		}
 	}
 
@@ -61,16 +59,14 @@ func (c *Config) Plugins() []*Plugin {
 func trackPlugin(
 	result []*Plugin,
 	known map[string]*Plugin,
-	useBody hcl.Body,
+	use *Use,
 	typ component.Type,
 ) []*Plugin {
-	// Decode into a minimal use representation
-	var useWrapper hclUse
-	if diag := gohcl.DecodeBody(useBody, nil, &useWrapper); diag.HasErrors() {
-		// This should never fail because we validate in Validate.
-		panic(diag.Error())
+	// If we don't have a plugin defined then just return, we'll validate
+	// this during validation phases.
+	if use == nil || use.Type == "" {
+		return result
 	}
-	use := useWrapper.Use
 
 	p, ok := known[use.Type]
 	if !ok {

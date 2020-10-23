@@ -126,6 +126,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error loading app %q: %w", name, err)
 		}
+		if err := appConfig.Validate(); err != nil {
+			return nil, fmt.Errorf("error loading app %q: %w", name, err)
+		}
 
 		app, err := newApp(ctx, p, appConfig)
 		if err != nil {

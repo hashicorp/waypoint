@@ -102,3 +102,51 @@ func TestConfigApp_compare(t *testing.T) {
 		})
 	}
 }
+
+func TestAppValidate(t *testing.T) {
+	cases := []struct {
+		File string
+		App  string
+		Err  string
+	}{
+		{
+			"app.hcl",
+			"foo",
+			"",
+		},
+
+		{
+			"app.hcl",
+			"relative_above_root",
+			"must be a child",
+		},
+
+		{
+			"app.hcl",
+			"system_label",
+			"reserved for system",
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.File, func(t *testing.T) {
+			require := require.New(t)
+
+			cfg, err := Load(filepath.Join("testdata", "validate", tt.File), "")
+			require.NoError(err)
+
+			app, err := cfg.App(tt.App, nil)
+			require.NoError(err)
+			require.NotNil(app)
+
+			err = app.Validate()
+			if tt.Err == "" {
+				require.NoError(err)
+				return
+			}
+
+			require.Error(err)
+			require.Contains(err.Error(), tt.Err)
+		})
+	}
+}

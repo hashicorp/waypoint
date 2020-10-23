@@ -19,6 +19,8 @@ type App struct {
 	DeployRaw  *hclStage `hcl:"deploy,block"`
 	ReleaseRaw *hclStage `hcl:"release,block"`
 
+	Body hcl.Body `hcl:",body"`
+
 	ctx    *hcl.EvalContext
 	config *Config
 }
@@ -29,12 +31,16 @@ type AppURL struct {
 }
 
 type hclApp struct {
-	Name       string    `hcl:",label"`
-	Path       string    `hcl:"path,optional"`
+	Name string `hcl:",label"`
+	Path string `hcl:"path,optional"`
+
+	// We need these raw values to determine the plugins need to be used.
 	BuildRaw   *hclBuild `hcl:"build,block"`
 	DeployRaw  *hclStage `hcl:"deploy,block"`
 	ReleaseRaw *hclStage `hcl:"release,block"`
-	Body       hcl.Body  `hcl:",remain"`
+
+	Body   hcl.Body `hcl:",body"`
+	Remain hcl.Body `hcl:",remain"`
 }
 
 // Apps returns the names of all the apps.
@@ -79,16 +85,12 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	addPathValue(ctx, pathData)
 
 	// Full decode
-	app := App{
-		Name:       rawApp.Name,
-		Path:       appPath,
-		BuildRaw:   rawApp.BuildRaw,
-		DeployRaw:  rawApp.DeployRaw,
-		ReleaseRaw: rawApp.ReleaseRaw,
-	}
+	var app App
 	if diag := gohcl.DecodeBody(rawApp.Body, ctx, &app); diag.HasErrors() {
 		return nil, diag
 	}
+	app.Name = rawApp.Name
+	app.Path = appPath
 	app.ctx = ctx
 	app.config = c
 
