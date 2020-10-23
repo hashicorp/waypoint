@@ -4,6 +4,7 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* install/nomad: added `-nomad-policy-override` flag to allow sentinel policy override on Nomad enterprise [GH-671]
 * plugin/ecs: ability to specify `service_port` rather than port 3000 [GH-661]
 * plugin/k8s: support for manually specifying the namespace to use [GH-648]
 * plugins/nomad: support for setting docker auth credentials [GH-646]
