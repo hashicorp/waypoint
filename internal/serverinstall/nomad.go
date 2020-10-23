@@ -261,4 +261,11 @@ func NomadFlags(f *flag.Set) {
 		Default: "default",
 		Usage:   "Nomad namespace to install to if using Nomad platform",
 	})
+
+	f.BoolVar(&flag.BoolVar{
+		Name:    "nomad-policy-override",
+		Target:  &nomadPolicyOverrideF,
+		Default: false,
+		Usage:   "Override the Nomad sentinel policy if using enterprise Nomad platform",
+	})
 }
