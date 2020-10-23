@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	nomadRegionF      string
-	nomadDatacentersF []string
-	nomadNamespaceF   string
+	nomadRegionF         string
+	nomadDatacentersF    []string
+	nomadNamespaceF      string
+	nomadPolicyOverrideF bool
 )
 
 // InstallNomad registers a waypoint-server job with a Nomad cluster
@@ -90,8 +91,11 @@ func InstallNomad(
 
 	s.Update("Installing Waypoint server to Nomad")
 	job := waypointNomadJob(scfg)
+	jobOpts := &api.RegisterOptions{
+		PolicyOverride: nomadPolicyOverrideF,
+	}
 
-	resp, _, err := client.Jobs().Register(job, nil)
+	resp, _, err := client.Jobs().RegisterOpts(job, jobOpts, nil)
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -271,5 +275,12 @@ func NomadFlags(f *flag.Set) {
 		Target:  &nomadNamespaceF,
 		Default: "default",
 		Usage:   "Nomad namespace to install to if using Nomad platform",
+	})
+
+	f.BoolVar(&flag.BoolVar{
+		Name:    "nomad-policy-override",
+		Target:  &nomadPolicyOverrideF,
+		Default: false,
+		Usage:   "Override the Nomad sentinel policy if using enterprise Nomad platform",
 	})
 }
