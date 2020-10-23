@@ -7,7 +7,7 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 
-	configpkg "github.com/hashicorp/waypoint/internal/config2"
+	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
 )
 

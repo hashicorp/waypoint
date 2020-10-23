@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
-	configpkg "github.com/hashicorp/waypoint/internal/config2"
+	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 

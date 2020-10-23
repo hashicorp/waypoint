@@ -2,11 +2,11 @@ package config
 
 import (
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
-
-	"github.com/hashicorp/hcl/v2/hclsimple"
 )
 
 // TestConfig returns a Config from a string source and fails the test if
@@ -14,9 +14,18 @@ import (
 func TestConfig(t testing.T, src string) *Config {
 	t.Helper()
 
-	var result Config
-	require.NoError(t, hclsimple.Decode("test.hcl", []byte(src), nil, &result))
-	return &result
+	// Write our test config to a temp location
+	td, err := ioutil.TempDir("", "waypoint")
+	require.NoError(t, err)
+	t.Cleanup(func() { os.RemoveAll(td) })
+
+	path := filepath.Join(td, "waypoint.hcl")
+	require.NoError(t, ioutil.WriteFile(path, []byte(src), 0644))
+
+	result, err := Load(path, "")
+	require.NoError(t, err)
+
+	return result
 }
 
 // TestSource returns valid configuration.
