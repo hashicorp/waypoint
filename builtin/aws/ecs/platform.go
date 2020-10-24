@@ -1352,6 +1352,9 @@ type Config struct {
 	// Indicate that service should be deployed on an EC2 cluster.
 	EC2Cluster bool `hcl:"ec2_cluster,optional"`
 
+	// If set to true, do not create a load balancer assigned to the service
+	DisableALB bool `hcl:"disable_alb,optional"`
+
 	// Configuration options for how the ALB will be configured.
 	ALB *ALBConfig `hcl:"alb,block"`
 
