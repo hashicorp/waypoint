@@ -1165,20 +1165,14 @@ func (p *Platform) Launch(
 	return dep, nil
 }
 
-func (p *Platform) Destroy(
+func destroyALB(
 	ctx context.Context,
 	log hclog.Logger,
+	sess *session.Session,
 	deployment *Deployment,
-	ui terminal.UI,
 ) error {
 	log.Debug("removing deployment target group from load balancer")
 
-	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: p.config.Region,
-	})
-	if err != nil {
-		return err
-	}
 	elbsrv := elbv2.New(sess)
 
 	log.Debug("load balancer arn", "arn", deployment.LoadBalancerArn)
@@ -1259,6 +1253,29 @@ func (p *Platform) Destroy(
 	})
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (p *Platform) Destroy(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) error {
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: p.config.Region,
+	})
+	if err != nil {
+		return err
+	}
+
+	if deployment.TargetGroupArn != "" && deployment.LoadBalancerArn != "" {
+		err = destroyALB(ctx, log, sess, deployment)
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Debug("deleting ecs service", "arn", deployment.ServiceArn)
