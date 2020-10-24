@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 )
 
+const currentDirectory = "." + string(filepath.Separator)
+
 // Discover finds the given plugin and returns the command for it. The command
 // can subsequently be used with Factory to build a factory for a specific
 // plugin type. If the plugin is not found `(nil, nil)` is returned.
@@ -35,7 +37,13 @@ func Discover(cfg *config.Plugin, paths []string) (*exec.Cmd, error) {
 
 	// Search our paths
 	for _, path := range paths {
-		path = filepath.Join(path, expected)
+		// If the plugin is found in the current directory, use ./ (or .\ on Windows) to ensure the command
+		// we generate is interpreted as a file, and not searched for in $PATH
+		if path == "" {
+			path = currentDirectory + expected
+		} else {
+			path = filepath.Join(path, expected)
+		}
 
 		_, err := os.Stat(path)
 		if err != nil {

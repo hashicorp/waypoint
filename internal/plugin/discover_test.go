@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -15,6 +16,7 @@ func TestDiscover(t *testing.T) {
 		Name   string
 		Paths  []string
 		Plugin *config.Plugin
+		WorkDir string
 		Err    string
 		Result *exec.Cmd
 	}{
@@ -22,6 +24,7 @@ func TestDiscover(t *testing.T) {
 			"No paths",
 			nil,
 			&config.Plugin{Name: "foo"},
+			"",
 			"",
 			nil,
 		},
@@ -34,6 +37,7 @@ func TestDiscover(t *testing.T) {
 			},
 			&config.Plugin{Name: "foo"},
 			"",
+			"",
 			nil,
 		},
 
@@ -44,6 +48,7 @@ func TestDiscover(t *testing.T) {
 				filepath.Join("testdata", "pathB"),
 			},
 			&config.Plugin{Name: "b"},
+			"",
 			"",
 			&exec.Cmd{
 				Path: filepath.Join("testdata", "pathB", "waypoint-plugin-b"),
@@ -58,6 +63,7 @@ func TestDiscover(t *testing.T) {
 				filepath.Join("testdata", "pathB"),
 			},
 			&config.Plugin{Name: "a"},
+			"",
 			"",
 			&exec.Cmd{
 				Path: filepath.Join("testdata", "pathA", "waypoint-plugin-a"),
@@ -76,6 +82,7 @@ func TestDiscover(t *testing.T) {
 				Checksum: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 			},
 			"",
+			"",
 			&exec.Cmd{
 				Path: filepath.Join("testdata", "pathB", "waypoint-plugin-b"),
 				Args: []string{filepath.Join("testdata", "pathB", "waypoint-plugin-b")},
@@ -92,14 +99,32 @@ func TestDiscover(t *testing.T) {
 				Name:     "b",
 				Checksum: "f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 			},
+			"",
 			"checksum",
 			nil,
+		},
+		{
+			"Found in current directory",
+			[]string{
+				"",
+				filepath.Join("..", "pathB"),
+			},
+			&config.Plugin{Name: "a"},
+			filepath.Join("testdata", "pathA"),
+			"",
+			&exec.Cmd{
+				Path: currentDirectory + "waypoint-plugin-a",
+				Args: []string{currentDirectory + "waypoint-plugin-a"},
+			},
 		},
 	}
 
 	for _, tt := range cases {
 		t.Run(tt.Name, func(t *testing.T) {
 			require := require.New(t)
+			if tt.WorkDir != "" {
+				os.Chdir(tt.WorkDir)
+			}
 
 			result, err := Discover(tt.Plugin, tt.Paths)
 			if tt.Err != "" {
