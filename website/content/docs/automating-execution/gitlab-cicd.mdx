@@ -48,21 +48,17 @@ See the GitLab CI/CD [predefined environment variables](https://docs.gitlab.com/
 
 ```yaml
 waypoint:
-  image: docker:latest
+  # Image bootstraps the latest version of Waypoint, See https://gitlab.com/gitlab-org/waypoint-images/container_registry for more details.
+  image: registry.gitlab.com/gitlab-org/waypoint-images:latest
   stage: build
   services:
     - docker:dind
-  # Define environment variables, e.g. `WAYPOINT_VERSION: '0.1.1'`
   variables:
-    WAYPOINT_VERSION: ''
     WAYPOINT_SERVER_ADDR: ''
     WAYPOINT_SERVER_TOKEN: ''
     WAYPOINT_SERVER_TLS: '1'
     WAYPOINT_SERVER_TLS_SKIP_VERIFY: '1'
   script:
-    - wget -q -O /tmp/waypoint.zip https://releases.hashicorp.com/waypoint/${WAYPOINT_VERSION}/waypoint_${WAYPOINT_VERSION}_linux_amd64.zip
-    - unzip -d /usr/local/bin /tmp/waypoint.zip
-    - rm -rf /tmp/waypoint*
     - waypoint init
     - waypoint build
     - waypoint deploy
