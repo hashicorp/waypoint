@@ -13,12 +13,12 @@ import (
 
 func TestDiscover(t *testing.T) {
 	cases := []struct {
-		Name   string
-		Paths  []string
-		Plugin *config.Plugin
+		Name    string
+		Paths   []string
+		Plugin  *config.Plugin
 		WorkDir string
-		Err    string
-		Result *exec.Cmd
+		Err     string
+		Result  *exec.Cmd
 	}{
 		{
 			"No paths",
