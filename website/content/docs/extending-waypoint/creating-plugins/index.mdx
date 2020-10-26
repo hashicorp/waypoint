@@ -73,11 +73,11 @@ The template implements all components and interfaces for Waypoint plugins; it c
 build your plugins. Let's copy this template and create a new plugin. To do that, you can use the `clone.sh` script in
 the template folder.
 
-`clone.sh` requires you to provide two parameters the destination for the new plugin and the Go module name; let's
+`clone.sh` requires you to provide three parameters: the name of the new plugin, the destination and the Go module name; let's
 create a new plugin called `gobuilder` in the current repo.
 
 ```shell
-./clone.sh ../gobuilder github.com/hashicorp/waypoint-plugin-examples/gobuilder
+./clone.sh gobuilder ../gobuilder github.com/hashicorp/waypoint-plugin-examples/gobuilder
 
 Created new plugin in ../gobuilder
 You can build this plugin by running the following command
