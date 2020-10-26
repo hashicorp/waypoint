@@ -14,6 +14,7 @@ BUG FIXES:
 
 * cli: `server bootstrap` shows an error if a server is running in-memory [GH-651]
 * cli: server connection flags take precedence over context data [GH-703]
+* cli: plugins loaded in pwd work properly and don't give `PATH` errors [GH-699]
 * plugin/docker: remove intermediate containers on build [GH-667]
 * plugin/docker, plugin/pack: support ssh accessible docker hosts [GH-664]
 
