@@ -5,6 +5,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * cli/config: you can pipe in a KEY=VALUE line-delimited file via stdin to `config set` [GH-674]
+* install/docker: pull server image if it doesn't exist in local Docker daemon [GH-700]
 * install/nomad: added `-nomad-policy-override` flag to allow sentinel policy override on Nomad enterprise [GH-671]
 * plugin/ecs: ability to specify `service_port` rather than port 3000 [GH-661]
 * plugin/k8s: support for manually specifying the namespace to use [GH-648]
