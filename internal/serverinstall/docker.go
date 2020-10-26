@@ -2,13 +2,17 @@ package serverinstall
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"time"
 
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -71,6 +75,51 @@ func InstallDocker(
 		s.Status(terminal.StatusWarn)
 		s.Done()
 		return &clicfg, &addr, "", nil
+	}
+
+	s.Update("Checking for Docker image: %s", scfg.ServerImage)
+
+	imageRef, err := reference.ParseNormalizedNamed(scfg.ServerImage)
+	if err != nil {
+		return nil, nil, "", fmt.Errorf("Error parsing Docker image: %s", err)
+	}
+
+	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "reference",
+			Value: reference.FamiliarString(imageRef),
+		}),
+	})
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	if len(imageList) == 0 {
+		s.Update("Pulling image: %s", scfg.ServerImage)
+
+		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
+		if err != nil {
+			return nil, nil, "", err
+		}
+		defer resp.Close()
+
+		stdout, _, err := ui.OutputWriters()
+		if err != nil {
+			return nil, nil, "", err
+		}
+
+		var termFd uintptr
+		if f, ok := stdout.(*os.File); ok {
+			termFd = f.Fd()
+		}
+
+		err = jsonmessage.DisplayJSONMessagesStream(resp, s.TermOutput(), termFd, true, nil)
+		if err != nil {
+			return nil, nil, "", fmt.Errorf("unable to stream pull logs to the terminal: %s", err)
+		}
+
+		s.Done()
+		s = sg.Add("")
 	}
 
 	s.Update("Creating waypoint network...")
