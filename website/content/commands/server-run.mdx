@@ -20,6 +20,7 @@ Usage: `waypoint server run [options]`
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-workspace=<string>` - Workspace to operate in.
 
 #### Command Options
@@ -40,5 +41,6 @@ Usage: `waypoint server run [options]`
   logs, exec, etc. will not work.
 - `-advertise-tls` - If true, the advertised address should be connected to with TLS.
 - `-advertise-tls-skip-verify` - Do not verify the TLS certificate presented by the server.
+- `-accept-tos` - Pass to accept the Terms of Service and Privacy Policy to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting. See the privacy policy at https://hashicorp.com/privacy and the ToS at https://waypointproject.io/terms
 
 @include "commands/server-run_more.mdx"
