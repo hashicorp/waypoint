@@ -3,6 +3,8 @@ package datasource
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
@@ -39,7 +41,15 @@ func (s *LocalSource) Get(
 	raw *pb.Job_DataSource,
 	baseDir string,
 ) (string, func() error, error) {
-	return "", nil, nil
+	pwd, err := os.Getwd()
+	if err == nil && !filepath.IsAbs(pwd) {
+		// This should never happen because os.Getwd I believe always
+		// returns an absolute path but we want to be absolutely sure
+		// so we'll make it abs here.
+		pwd, err = filepath.Abs(pwd)
+	}
+
+	return pwd, nil, err
 }
 
 var _ Sourcer = (*LocalSource)(nil)
