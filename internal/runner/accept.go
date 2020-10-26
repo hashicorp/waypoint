@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"io"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -198,6 +199,8 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		assignment.Assignment.Job.DataSourceOverrides,
 	)
 	if err == nil {
+		log.Debug("job data downloaded (or local)", "pwd", wd)
+
 		if closer != nil {
 			defer func() {
 				log.Debug("cleaning up downloaded data")
@@ -207,14 +210,22 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			}()
 		}
 
-		// Execute the job. We have to close the UI right afterwards to
-		// ensure that no more output is writting to the client.
-		log.Info("starting job execution")
-		result, err = r.executeJob(ctx, log, ui, assignment.Assignment.Job, wd)
-		if ui, ok := ui.(*runnerUI); ok {
-			ui.Close()
+		// We want the working directory to always be absolute.
+		if !filepath.IsAbs(wd) {
+			err = status.Errorf(codes.Internal,
+				"data working directory should be absolute. This is a bug, please report it.")
 		}
-		log.Debug("job finished", "error", err)
+
+		if err == nil {
+			// Execute the job. We have to close the UI right afterwards to
+			// ensure that no more output is writting to the client.
+			log.Info("starting job execution")
+			result, err = r.executeJob(ctx, log, ui, assignment.Assignment.Job, wd)
+			if ui, ok := ui.(*runnerUI); ok {
+				ui.Close()
+			}
+			log.Debug("job finished", "error", err)
+		}
 	}
 
 	// Check if we were force canceled. If so, then just exit now. Realistically
