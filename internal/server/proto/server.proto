@@ -144,6 +144,9 @@ service Waypoint {
   // SetServerConfig sets configuration for the Waypoint server.
   rpc SetServerConfig(SetServerConfigRequest) returns (google.protobuf.Empty);
 
+  // CreateSnapshot creates a new database snapshot.
+  rpc CreateSnapshot(google.protobuf.Empty) returns (stream CreateSnapshotResponse);
+
   // BootstrapToken returns the initial token for the server. This can only
   // be requested once on first startup. After initial request this will
   // always return a PermissionDenied error.
@@ -2048,4 +2051,23 @@ message NewTokenResponse {
 message ConvertInviteTokenRequest {
   // A token previous returned by GenerateInviteToken.
   string token = 1;
+}
+
+/********************************************************************
+* Snapshot/Restore
+********************************************************************/
+
+message CreateSnapshotResponse {
+  oneof event {
+    // Open is sent as the opening message with information about the
+    // snapshot. This is always sent first (before any data).
+    Open open = 1;
+
+    // Chunk is a next chunk of data. You should continue to expect
+    // data until an EOF is received on the stream.
+    bytes chunk = 2;
+  }
+
+  // One day we may add information here. For now we are reserving this.
+  message Open {}
 }
