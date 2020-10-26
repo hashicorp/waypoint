@@ -20,12 +20,12 @@ Usage: `waypoint config get [options]`
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-workspace=<string>` - Workspace to operate in.
 
 #### Command Options
 
 - `-json` - Output in JSON
 - `-raw` - Output the value for the named variable only (disables prefix matching)
-- `-app=<string>` - Scope the variables to a specific app.
 
 @include "commands/config-get_more.mdx"
