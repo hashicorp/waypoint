@@ -13,6 +13,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * cli: `server bootstrap` shows an error if a server is running in-memory [GH-651]
+* cli: server connection flags take precedence over context data [GH-703]
 * plugin/docker: remove intermediate containers on build [GH-667]
 * plugin/docker, plugin/pack: support ssh accessible docker hosts [GH-664]
 
