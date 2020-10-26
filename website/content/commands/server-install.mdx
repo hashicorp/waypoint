@@ -20,6 +20,7 @@ Usage: `waypoint server install [options]`
 #### Global Options
 
 - `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-workspace=<string>` - Workspace to operate in.
 
 #### Command Options
@@ -36,8 +37,10 @@ Usage: `waypoint server install [options]`
 - `-context-set-default` - Set the newly installed server as the default CLI context.
 - `-platform=<string>` - Platform to install the server into.
 - `-secret-file=<string>` - Use the Kubernetes Secret in the given path to access the waypoint server image
+- `-accept-tos` - Pass to accept the Terms of Service and Privacy Policy to use the Waypoint URL Service. This is required if the URL service is enabled and you're using the HashiCorp-provided URL service rather than self-hosting. See the privacy policy at https://hashicorp.com/privacy and the ToS at https://waypointproject.io/terms
 - `-nomad-region=<string>` - Nomad region to install to if using Nomad platform
 - `-nomad-dc=<string>` - Nomad datacenters to install to if using Nomad platform
 - `-nomad-namespace=<string>` - Nomad namespace to install to if using Nomad platform
+- `-nomad-policy-override` - Override the Nomad sentinel policy if using enterprise Nomad platform
 
 @include "commands/server-install_more.mdx"
