@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/adrg/xdg"
+	"github.com/mitchellh/go-homedir"
 
 	"github.com/hashicorp/waypoint/internal/config"
 )
@@ -79,10 +80,20 @@ func DefaultPaths(pwd string) ([]string, error) {
 		return nil, err
 	}
 
+	// We also allow plugins in $HOME/.config/waypoint/plugins. This is
+	// usually the same as xdgPath but on some systems (macOS) without
+	// XDG env vars set, it defaults to a ~/Library path which can be weird.
+	// We just hardcode this path as well.
+	hd, err := homedir.Dir()
+	if err != nil {
+		return nil, err
+	}
+
 	return []string{
 		pwd,
 		filepath.Join(pwd, ".waypoint", "plugins"),
 		filepath.Dir(xdgPath),
+		filepath.Join(hd, ".config", ".waypoint", "plugins"),
 	}, nil
 }
 
