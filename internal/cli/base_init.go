@@ -78,12 +78,14 @@ func (c *baseCommand) initClient() (*clientpkg.Project, error) {
 		flagConnection = &v
 	}
 
-	// Get the context we'll use.
+	// Get the context we'll use. The ordering here is purposeful and creates
+	// the following precedence: (1) context (2) env (3) flags where the
+	// later values override the former.
 	var err error
 	connectOpts := []serverclient.ConnectOption{
-		serverclient.FromContextConfig(flagConnection),
 		serverclient.FromContext(c.contextStorage, ""),
 		serverclient.FromEnv(),
+		serverclient.FromContextConfig(flagConnection),
 	}
 	c.clientContext, err = serverclient.ContextConfig(connectOpts...)
 	if err != nil {
