@@ -35,6 +35,7 @@ require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible
+	github.com/gofrs/flock v0.8.0
 	github.com/golang/protobuf v1.4.2
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/handlers v1.4.2
@@ -67,6 +68,7 @@ require (
 	github.com/mitchellh/pointerstructure v1.0.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/mr-tron/base58 v1.2.0
+	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
 	github.com/netlify/open-api v0.15.0
 	github.com/oklog/run v1.1.0
 	github.com/oklog/ulid v1.3.1
