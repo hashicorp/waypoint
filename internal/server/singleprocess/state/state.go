@@ -118,8 +118,7 @@ func (s *State) callIndexer(fn indexFn, dbTxn *bolt.Tx, memTxn *memdb.Txn) error
 
 // Close should be called to gracefully close any resources.
 func (s *State) Close() error {
-	// Nothing for now, but we expect to do things one day.
-	return nil
+	return s.db.Close()
 }
 
 // schemaFn is an interface function used to create and return new memdb schema

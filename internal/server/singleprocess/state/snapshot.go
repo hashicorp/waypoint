@@ -27,7 +27,7 @@ func (s *State) CreateSnapshot(w io.Writer) error {
 // write access to the directory containing the database.
 func (s *State) StageRestoreSnapshot(r io.Reader) error {
 	log := s.log.Named("restore")
-	log.Warn("beginning snapshot restore")
+	log.Warn("beginning to stage snapshot restore")
 
 	ri := newRestoreInfo(log, s.db)
 	if err := ri.Lock(); err != nil {
@@ -112,6 +112,7 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 	}
 
 	// Reopen the DB
+	log.Info("reopening database", "path", ri.DBPath)
 	db, err = bolt.Open(ri.DBPath, mode, &bolt.Options{
 		Timeout: 2 * time.Second,
 	})
@@ -120,6 +121,7 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 		return db, err
 	}
 
+	log.Warn("database restore successful")
 	return db, nil
 }
 
@@ -166,7 +168,7 @@ func newRestoreInfo(log hclog.Logger, db *bolt.DB) *restoreInfo {
 // If the return value is nil, then Unlock must be called to unlock.
 func (r *restoreInfo) Lock() error {
 	// Create a file lock to ensure only one restore is happening at a time
-	r.log.Info("acquiring file lock for restore", "path", r.fl.String())
+	r.log.Trace("acquiring file lock for restore", "path", r.fl.String())
 	locked, err := r.fl.TryLock()
 	if err != nil {
 		r.log.Error("error acquiring file lock", "err", err)
@@ -184,5 +186,6 @@ func (r *restoreInfo) Lock() error {
 // Unlock unlocks the file lock. This is only safe to call if a lock
 // was successfully acquired.
 func (r *restoreInfo) Unlock() error {
+	r.log.Trace("releasing file lock for restore", "path", r.fl.String())
 	return r.fl.Unlock()
 }
