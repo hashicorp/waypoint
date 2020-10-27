@@ -62,6 +62,32 @@ func TestSnapshotRestore(t *testing.T) {
 		require.Error(err)
 		require.Equal(codes.NotFound, status.Code(err))
 	}
+
+	// Create more data
+	err = s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+		Name: "B",
+	}))
+	require.NoError(err)
+
+	// Reboot again, should not restore again
+	s, err = TestStateRestart(t, s)
+	require.NoError(err)
+
+	// Should find both records
+	{
+		resp, err := s.ProjectGet(&pb.Ref_Project{
+			Project: "A",
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+	}
+	{
+		resp, err := s.ProjectGet(&pb.Ref_Project{
+			Project: "B",
+		})
+		require.NoError(err)
+		require.NotNil(resp)
+	}
 }
 
 func TestSnapshotRestore_corrupt(t *testing.T) {
