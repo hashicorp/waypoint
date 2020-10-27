@@ -56,6 +56,12 @@ type State struct {
 
 // New initializes a new State store.
 func New(log hclog.Logger, db *bolt.DB) (*State, error) {
+	// Restore DB if necessary
+	db, err := finalizeRestore(log, db)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create the in-memory DB.
 	inmem, err := memdb.NewMemDB(stateStoreSchema())
 	if err != nil {
