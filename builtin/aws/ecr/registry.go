@@ -13,6 +13,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -40,8 +41,10 @@ func (r *Registry) PushFunc() interface{} {
 // Push pushes an image to the registry.
 func (r *Registry) Push(
 	ctx context.Context,
+	log hclog.Logger,
 	img *docker.Image,
 	ui terminal.UI,
+	src *component.Source,
 ) (*docker.Image, error) {
 	stdout, _, err := ui.OutputWriters()
 	if err != nil {
@@ -63,18 +66,48 @@ func (r *Registry) Push(
 	}
 	svc := ecr.New(sess)
 
+	repoName := r.config.Repository
+
+	if repoName == "" {
+		log.Info("infering ECR repo name from app name")
+		repoName = "waypoint-" + src.App
+	}
+
 	repOut, err := svc.DescribeRepositories(&ecr.DescribeRepositoriesInput{
-		RepositoryNames: []*string{aws.String(r.config.Repository)},
+		RepositoryNames: []*string{aws.String(repoName)},
 	})
 	if err != nil {
-		return nil, err
+		_, ok := err.(*ecr.RepositoryNotFoundException)
+		if !ok {
+			return nil, err
+		}
 	}
 
-	if len(repOut.Repositories) == 0 {
-		return nil, fmt.Errorf("Unknown repository requested: %s", r.config.Repository)
+	var repo *ecr.Repository
+
+	if repOut == nil || len(repOut.Repositories) == 0 {
+		log.Info("no ECR repository detected, creating", "name", repoName)
+
+		out, err := svc.CreateRepository(&ecr.CreateRepositoryInput{
+			RepositoryName: aws.String(repoName),
+			Tags: []*ecr.Tag{
+				{
+					Key:   aws.String("waypoint-app"),
+					Value: aws.String(src.App),
+				},
+			},
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("Unable to create repository: %w", err)
+		}
+
+		repo = out.Repository
+	} else {
+		repo = repOut.Repositories[0]
 	}
 
-	uri := repOut.Repositories[0].RepositoryUri
+	uri := repo.RepositoryUri
 
 	target := &docker.Image{Image: *uri, Tag: r.config.Tag}
 
@@ -155,7 +188,7 @@ type Config struct {
 	Region string `hcl:"region,attr"`
 
 	// Repository to store the image into
-	Repository string `hcl:"repository,attr"`
+	Repository string `hcl:"repository,optional"`
 
 	// Tag is the tag to apply to the image.
 	Tag string `hcl:"tag,attr"`
@@ -174,7 +207,6 @@ func (r *Registry) Documentation() (*docs.Documentation, error) {
 registry {
     use "aws-ecr" {
       region = "us-east-1"
-      repository = "waypoint-example"
       tag = "latest"
     }
 }
@@ -192,7 +224,7 @@ registry {
 		"repository",
 		"the ECR repository to store the image into",
 		docs.Summary(
-			"this ECR repository must already exist, waypoint will not create it",
+			"This defaults to waypoint- then the application name. The repository will be automatically created if needed",
 		),
 	)
 
