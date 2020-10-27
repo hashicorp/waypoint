@@ -1,6 +1,7 @@
 package state
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -55,6 +56,18 @@ func (s *State) StageRestoreSnapshot(r io.Reader) error {
 		return err
 	}
 
+	// We do want to check that this appears valid because if we can't open
+	// the file then the server will never start again until it is cleaned up.
+	log.Info("validating restore file")
+	dbChk, err := bolt.Open(ri.StageTempPath, fi.Mode(), &bolt.Options{Timeout: 2 * time.Second})
+	if err == nil {
+		err = dbChk.Close()
+	}
+	if err != nil {
+		log.Error("error while validating restore file", "err", err)
+		return fmt.Errorf("error validating restore data: %s", err)
+	}
+
 	// Replace our file
 	log.Info("atomically replacing file", "src", ri.StageTempPath, "dest", ri.StagePath)
 	if err := atomic.ReplaceFile(ri.StageTempPath, ri.StagePath); err != nil {
@@ -89,6 +102,17 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 	}
 
 	log.Warn("restore file found, will initiate database restore")
+
+	log.Info("validating restore file")
+	dbChk, err := bolt.Open(ri.StagePath, 0600, &bolt.Options{Timeout: 2 * time.Second})
+	if err != nil {
+		log.Error("error while validating restore file", "err", err)
+		return db, err
+	}
+	if err := dbChk.Close(); err != nil {
+		log.Error("error while validating restore file", "err", err)
+		return db, err
+	}
 
 	// Close our DB, we will reopen with the new one
 	if err := db.Close(); err != nil {

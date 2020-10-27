@@ -50,7 +50,7 @@ func TestStateReinit(t testing.T, s *State) *State {
 // TestStateRestart closes the given state and restarts it against the
 // same DB file. Unlike TestStateReinit, this does not copy the data and
 // the old state is no longer usable.
-func TestStateRestart(t testing.T, s *State) *State {
+func TestStateRestart(t testing.T, s *State) (*State, error) {
 	path := s.db.Path()
 	require.NoError(t, s.Close())
 
@@ -60,9 +60,7 @@ func TestStateRestart(t testing.T, s *State) *State {
 	t.Cleanup(func() { db.Close() })
 
 	// Init new state
-	result, err := New(hclog.L(), db)
-	require.NoError(t, err)
-	return result
+	return New(hclog.L(), db)
 }
 
 func testDB(t testing.T) *bolt.DB {

@@ -2,6 +2,7 @@ package state
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -43,7 +44,8 @@ func TestSnapshotRestore(t *testing.T) {
 	require.NoError(s.StageRestoreSnapshot(bytes.NewReader(buf.Bytes())))
 
 	// Reboot!
-	s = TestStateRestart(t, s)
+	s, err = TestStateRestart(t, s)
+	require.NoError(err)
 
 	// Should find first record and not the second
 	{
@@ -60,4 +62,19 @@ func TestSnapshotRestore(t *testing.T) {
 		require.Error(err)
 		require.Equal(codes.NotFound, status.Code(err))
 	}
+}
+
+func TestSnapshotRestore_corrupt(t *testing.T) {
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	// Restore with garbage data
+	require.Error(s.StageRestoreSnapshot(strings.NewReader(
+		"I am probably not a valid BoltDB file.")))
+
+	// Reboot!
+	s, err := TestStateRestart(t, s)
+	require.NoError(err)
 }
