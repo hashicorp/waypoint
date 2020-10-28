@@ -12,10 +12,17 @@
       runs-on: ubuntu-latest
       container: hashicorpdev/backport-assistant:0.2.1
       steps:
-        - name: Run Backport Assistant
+        - name: Run Backport Assistant for stable-website
           run: |
             backport-assistant backport -automerge
           env:
             BACKPORT_LABEL_REGEXP: "(?P<target>website)/cherrypick"
             BACKPORT_TARGET_TEMPLATE: "stable-{{.target}}"
+            GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+        - name: Run Backport Assistant for release branches
+          run: |
+            backport-assistant backport -automerge
+          env:
+            BACKPORT_LABEL_REGEXP: "backport/(?P<target>\\d\\.\\d\\.\\w)"
+            BACKPORT_TARGET_TEMPLATE: "release/{{.target}}"
             GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
