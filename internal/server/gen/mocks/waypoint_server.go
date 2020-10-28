@@ -790,6 +790,20 @@ func (_m *WaypointServer) QueueJob(_a0 context.Context, _a1 *gen.QueueJobRequest
 	return r0, r1
 }
 
+// RestoreSnapshot provides a mock function with given fields: _a0
+func (_m *WaypointServer) RestoreSnapshot(_a0 gen.Waypoint_RestoreSnapshotServer) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(gen.Waypoint_RestoreSnapshotServer) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RunnerConfig provides a mock function with given fields: _a0
 func (_m *WaypointServer) RunnerConfig(_a0 gen.Waypoint_RunnerConfigServer) error {
 	ret := _m.Called(_a0)

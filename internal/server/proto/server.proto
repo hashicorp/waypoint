@@ -147,6 +147,12 @@ service Waypoint {
   // CreateSnapshot creates a new database snapshot.
   rpc CreateSnapshot(google.protobuf.Empty) returns (stream CreateSnapshotResponse);
 
+  // RestoreSnapshot performs a database restore with the given snapshot.
+  // This API doesn't do a full online restore, it only stages the restore
+  // for the next server start to finalize the restore. See the arguments for
+  // more information.
+  rpc RestoreSnapshot(stream RestoreSnapshotRequest) returns (google.protobuf.Empty);
+
   // BootstrapToken returns the initial token for the server. This can only
   // be requested once on first startup. After initial request this will
   // always return a PermissionDenied error.
@@ -2069,6 +2075,21 @@ message CreateSnapshotResponse {
   }
 
   // One day we may add information here. For now we are reserving this.
+  message Open {}
+}
+
+message RestoreSnapshotRequest {
+  oneof event {
+    // Open MUST be sent as the first message and sent exactly once.
+    // This sets the settings for the restore.
+    Open open = 1;
+
+    // Chunk is a chunk of restore data. The restore snapshot API will
+    // continue reading data until an EOF is received (the write end is
+    // closed).
+    bytes chunk = 2;
+  }
+
   message Open {}
 }
 

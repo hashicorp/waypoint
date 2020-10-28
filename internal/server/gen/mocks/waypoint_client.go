@@ -1098,6 +1098,36 @@ func (_m *WaypointClient) QueueJob(ctx context.Context, in *gen.QueueJobRequest,
 	return r0, r1
 }
 
+// RestoreSnapshot provides a mock function with given fields: ctx, opts
+func (_m *WaypointClient) RestoreSnapshot(ctx context.Context, opts ...grpc.CallOption) (gen.Waypoint_RestoreSnapshotClient, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 gen.Waypoint_RestoreSnapshotClient
+	if rf, ok := ret.Get(0).(func(context.Context, ...grpc.CallOption) gen.Waypoint_RestoreSnapshotClient); ok {
+		r0 = rf(ctx, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(gen.Waypoint_RestoreSnapshotClient)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RunnerConfig provides a mock function with given fields: ctx, opts
 func (_m *WaypointClient) RunnerConfig(ctx context.Context, opts ...grpc.CallOption) (gen.Waypoint_RunnerConfigClient, error) {
 	_va := make([]interface{}, len(opts))
