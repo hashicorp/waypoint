@@ -552,21 +552,21 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "cpu-request",
+			Name:    "k8s-cpu-request",
 			Target:  &c.config.CPURequest,
 			Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
 			Default: "100m",
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "mem-request",
+			Name:    "k8s-mem-request",
 			Target:  &c.config.MemRequest,
 			Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
 			Default: "256Mi",
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "storage-request",
+			Name:    "k8s-storage-request",
 			Target:  &c.config.StorageRequest,
 			Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
 			Default: "1Gi",
@@ -581,7 +581,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "server-name",
 			Target:  &c.config.ServerName,
-			Usage:   "Name of the Kubernetes Statefulset for the server.",
+			Usage:   "Name of the Waypoint server.",
 			Default: "waypoint-server",
 		})
 
