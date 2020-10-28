@@ -57,6 +57,22 @@ func (c *InstallCommand) InstallKubernetes(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
 	)
+
+	// Discover the current target namespace in the user's config so if they
+	// run kubectl commands waypoint will show up. If we use the default namespace
+	// they might not see the objects we've created.
+	if c.config.Namespace == "" {
+		namespace, _, err := config.Namespace()
+		if err != nil {
+			c.ui.Output(
+				"Error getting namespace from client config: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return nil, nil, "", 1
+		}
+		c.config.Namespace = namespace
+	}
+
 	clientconfig, err := config.ClientConfig()
 	if err != nil {
 		c.ui.Output(
@@ -142,6 +158,22 @@ func (c *InstallCommand) InstallKubernetes(
 
 		s.Done()
 		s = sg.Add("")
+	}
+
+	// Do some probing to see if this is OpenShift. If so, we'll switch the config for the user.
+	// Setting the OpenShift flag will short circuit this.
+	if !c.config.OpenShift {
+		s.Update("Gathering information about the Kubernetes cluster...")
+		namespaceClient := clientset.CoreV1().Namespaces()
+		_, err := namespaceClient.Get(context.TODO(), "openshift", metav1.GetOptions{})
+		isOpenShift := err == nil
+
+		// Default namespace in OpenShift acts like a regular K8s namespace, so we don't want
+		// to remove fsGroup in this case.
+		if isOpenShift && c.config.Namespace != "default" {
+			s.Update("OpenShift detected. Switching configuration...")
+			c.config.OpenShift = true
+		}
 	}
 
 	// Decode our configuration
@@ -509,7 +541,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Name:    "namespace",
 			Target:  &c.config.Namespace,
 			Usage:   "Kubernetes namespace install into.",
-			Default: "default",
+			Default: "",
 		})
 
 		f.StringVar(&flag.StringVar{
