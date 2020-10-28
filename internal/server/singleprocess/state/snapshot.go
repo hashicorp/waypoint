@@ -358,8 +358,9 @@ func snapshotReader(path string, h hash.Hash) (protowriter.Reader, func() error,
 			return err
 		}
 
-		// We do not close the gzr because the way protowriter's delimited
-		// reader works is that it takes ownership over close currently.
+		if err := gzr.Close(); err != nil {
+			return err
+		}
 
 		return f.Close()
 	}, nil
