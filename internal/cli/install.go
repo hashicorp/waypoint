@@ -34,7 +34,6 @@ type InstallCommand struct {
 	*baseCommand
 
 	config            serverinstall.Config
-	showYaml          bool
 	advertiseInternal bool
 	contextName       string
 	contextDefault    bool
@@ -146,33 +145,42 @@ func (c *InstallCommand) InstallKubernetes(
 	}
 
 	// Decode our configuration
-	output, err := serverinstall.Render(&c.config)
+	statefulset, err := c.config.NewStatefulSet()
 	if err != nil {
 		c.ui.Output(
-			"Error generating configuration: %s", clierrors.Humanize(err),
+			"Error generating statefulset configuration: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return nil, nil, "", 1
 	}
 
-	if c.showYaml {
-		ui.Output(output)
-		return nil, nil, "", 0
+	service, err := c.config.NewService()
+	if err != nil {
+		c.ui.Output(
+			"Error generating service configuration: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, nil, "", 1
 	}
 
 	s.Update("Creating Kubernetes resources...")
 
-	cmd := exec.Command("kubectl", "create", "-f", "-")
-	cmd.Stdin = strings.NewReader(output)
-	cmd.Stdout = s.TermOutput()
-	cmd.Stderr = cmd.Stdout
-	if err = cmd.Run(); err != nil {
+	serviceClient := clientset.CoreV1().Services(c.config.Namespace)
+	_, err = serviceClient.Create(context.TODO(), service, metav1.CreateOptions{})
+	if err != nil {
 		c.ui.Output(
-			"Error executing kubectl: %s", clierrors.Humanize(err),
+			"Error creating service %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
+	}
 
-		return nil, nil, "", 1
+	statefulSetClient := clientset.AppsV1().StatefulSets(c.config.Namespace)
+	_, err = statefulSetClient.Create(context.TODO(), statefulset, metav1.CreateOptions{})
+	if err != nil {
+		c.ui.Output(
+			"Error creating statefulset %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
 	}
 
 	s.Done()
@@ -368,7 +376,7 @@ func (c *InstallCommand) Run(args []string) int {
 	case "kubernetes":
 		var code int
 		contextConfig, advertiseAddr, httpAddr, code = c.InstallKubernetes(ctx, c.ui, log)
-		if code != 0 || c.showYaml {
+		if code != 0 {
 			return code
 		}
 
@@ -512,6 +520,40 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
+			Name:    "cpu-request",
+			Target:  &c.config.CPURequest,
+			Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
+			Default: "100m",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "mem-request",
+			Target:  &c.config.MemRequest,
+			Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
+			Default: "256Mi",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "storage-request",
+			Target:  &c.config.StorageRequest,
+			Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
+			Default: "1Gi",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "openshift",
+			Target: &c.config.OpenShift,
+			Usage:  "Set to true if installing on Red Hat OpenShift.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "server-name",
+			Target:  &c.config.ServerName,
+			Usage:   "Name of the Kubernetes Statefulset for the server.",
+			Default: "waypoint-server",
+		})
+
+		f.StringVar(&flag.StringVar{
 			Name:    "server-image",
 			Target:  &c.config.ServerImage,
 			Usage:   "Docker image for the server image.",
@@ -536,12 +578,6 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Target:  &c.config.ImagePullPolicy,
 			Usage:   "",
 			Default: "Always",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:   "show-yaml",
-			Target: &c.showYaml,
-			Usage:  "Show the YAML to be send to the cluster.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
