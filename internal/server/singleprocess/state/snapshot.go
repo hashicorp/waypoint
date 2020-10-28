@@ -1,6 +1,7 @@
 package state
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
@@ -13,13 +14,65 @@ import (
 	"github.com/natefinch/atomic"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/hashicorp/waypoint/internal/pkg/protowriter"
+	"github.com/hashicorp/waypoint/internal/protocolversion"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // CreateSnapshot creates a database snapshot and writes it to the given writer.
 func (s *State) CreateSnapshot(w io.Writer) error {
-	return s.db.View(func(dbTxn *bolt.Tx) error {
-		_, err := dbTxn.WriteTo(w)
+	gzw := gzip.NewWriter(w)
+	defer gzw.Close()
+	dw := protowriter.NewDelimitedWriter(gzw)
+	defer dw.Close()
+
+	// Write our header
+	if err := dw.WriteMsg(&pb.Snapshot_Header{
+		Version: protocolversion.Current(),
+		Format:  pb.Snapshot_Header_BOLT,
+	}); err != nil {
 		return err
+	}
+
+	return s.db.View(func(dbTxn *bolt.Tx) error {
+		return dbTxn.ForEach(func(name []byte, b *bolt.Bucket) error {
+			const chunkLenMax = 1024 * 1024 // 1 MB
+			chunkLen := 0
+			chunkItems := map[string][]byte{}
+
+			// flushChunk is a function to flush the current chunk of data
+			flushChunk := func() error {
+				if err := dw.WriteMsg(&pb.Snapshot_BoltChunk{
+					Bucket: string(name),
+					Items:  chunkItems,
+				}); err != nil {
+					return err
+				}
+
+				chunkItems = map[string][]byte{}
+				chunkLen = 0
+				return nil
+			}
+
+			// Iterate and write the data
+			if err := b.ForEach(func(k, v []byte) error {
+				if len(v)+chunkLen > chunkLenMax {
+					if err := flushChunk(); err != nil {
+						return err
+					}
+				}
+
+				chunkLen += len(v)
+				chunkItems[string(k)] = v
+				return nil
+			}); err != nil {
+				return err
+			}
+
+			// Write any final values
+			return flushChunk()
+		})
 	})
 }
 
@@ -59,9 +112,16 @@ func (s *State) StageRestoreSnapshot(r io.Reader) error {
 	// We do want to check that this appears valid because if we can't open
 	// the file then the server will never start again until it is cleaned up.
 	log.Info("validating restore file")
-	dbChk, err := bolt.Open(ri.StageTempPath, fi.Mode(), &bolt.Options{Timeout: 2 * time.Second})
-	if err == nil {
-		err = dbChk.Close()
+	sr, closer, err := snapshotReader(ri.StageTempPath)
+	if err != nil {
+		log.Error("error while validating restore file", "err", err)
+		return fmt.Errorf("error validating restore data: %s", err)
+	}
+
+	var header pb.Snapshot_Header
+	err = sr.ReadMsg(&header)
+	if cerr := closer(); cerr != nil {
+		err = cerr
 	}
 	if err != nil {
 		log.Error("error while validating restore file", "err", err)
@@ -103,14 +163,63 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 
 	log.Warn("restore file found, will initiate database restore")
 
-	log.Info("validating restore file")
-	dbChk, err := bolt.Open(ri.StagePath, 0600, &bolt.Options{Timeout: 2 * time.Second})
+	// The file on disk should be in the form of pb.Snapshot. So what we need
+	// to do next is parse out the header to determine the format, and then
+	// based on the format, write the correct data to disk.
+	log.Info("inspecting restore file to determine header")
+	sr, closer, err := snapshotReader(ri.StagePath)
 	if err != nil {
-		log.Error("error while validating restore file", "err", err)
+		log.Error("error while opening restore file", "err", err)
 		return db, err
 	}
-	if err := dbChk.Close(); err != nil {
-		log.Error("error while validating restore file", "err", err)
+	defer closer()
+
+	// Get our header first, guaranteed first message
+	var header pb.Snapshot_Header
+	if err := sr.ReadMsg(&header); err != nil {
+		log.Error("error while parsing restore header", "err", err)
+		return db, fmt.Errorf("error reading restore header data: %s", err)
+	}
+	log.Info("snapshot header info",
+		"created_by", header.Version.Version,
+		"format", header.Format.String(),
+	)
+
+	// We currently only support bolt
+	if header.Format != pb.Snapshot_Header_BOLT {
+		return db, fmt.Errorf("invalid snapshot format (got code: %d)", header.Format)
+	}
+
+	// Open a temporary file to write our raw bolt data
+	log.Info("reading bolt information and writing it into a new bolt db")
+	tempDb, err := bolt.Open(ri.StageTempPath, 0600, &bolt.Options{Timeout: 2 * time.Second})
+	if err != nil {
+		return db, err
+	}
+	err = tempDb.Update(func(dbTxn *bolt.Tx) error {
+		for {
+			var chunk pb.Snapshot_BoltChunk
+			err := sr.ReadMsg(&chunk)
+			if err == io.EOF {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+
+			b, err := dbTxn.CreateBucketIfNotExists([]byte(chunk.Bucket))
+			if err != nil {
+				return err
+			}
+			for k, v := range chunk.Items {
+				if err := b.Put([]byte(k), v); err != nil {
+					return err
+				}
+			}
+		}
+	})
+	tempDb.Close()
+	if err != nil {
 		return db, err
 	}
 
@@ -130,8 +239,15 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 
 	// Replace our file
 	log.Info("atomically replacing db file", "src", ri.StagePath, "dest", ri.DBPath)
-	if err := atomic.ReplaceFile(ri.StagePath, ri.DBPath); err != nil {
+	if err := atomic.ReplaceFile(ri.StageTempPath, ri.DBPath); err != nil {
 		log.Error("error replacing file", "err", err)
+		return db, err
+	}
+
+	// Delete our restore data
+	log.Info("removing restore data since we're done reading it")
+	if err := os.Remove(ri.StagePath); err != nil {
+		log.Error("error removing restore data", "err", err)
 		return db, err
 	}
 
@@ -147,6 +263,34 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 
 	log.Warn("database restore successful")
 	return db, nil
+}
+
+// snapshotReader opens the delimited reader for a snapshot.
+func snapshotReader(path string) (protowriter.Reader, func() error, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	gzr, err := gzip.NewReader(f)
+	if err != nil {
+		f.Close()
+		return nil, nil, err
+	}
+
+	const maxSize = 4096 * 1024 // 4MB
+	dr := protowriter.NewDelimitedReader(gzr, maxSize)
+
+	return dr, func() error {
+		if err := dr.Close(); err != nil {
+			return err
+		}
+
+		// We do not close the gzr because the way protowriter's delimited
+		// reader works is that it takes ownership over close currently.
+
+		return f.Close()
+	}, nil
 }
 
 type restoreInfo struct {

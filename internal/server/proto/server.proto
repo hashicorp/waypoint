@@ -2071,3 +2071,45 @@ message CreateSnapshotResponse {
   // One day we may add information here. For now we are reserving this.
   message Open {}
 }
+
+// Snapshot is the encoding of the snapshot for all snapshot APIs.
+// The encoding is proto.Message delimited data. This is also the encoding
+// expected if the waypoint-restore.db file is copied manually from the
+// snapshot data.
+//
+// For snapshots, the Header message is always guaranteed first. After that,
+// it is NOT guaranteed that only data chunks are sent. It is only guaranteed
+// that the data chunks are over at EOF. Unknown messages can probably be
+// ignored.
+//
+// It is HIGHLY RECOMMENDED you do not modify snapshots, but these messages
+// are publicly exported so that you can try to inspect snapshots.
+message Snapshot {
+  // Header is _always_ the first message encoded into a snapshot. If
+  // this isn't present, the entire snapshot can be considered corrupt.
+  message Header {
+    // version is the version of Waypoint that generated this snapshot.
+    VersionInfo version = 1;
+
+    // format is the format of the remaining messages. This can be used
+    // to determine what messages to expect following the header.
+    Format format = 2;
+
+    enum Format {
+      UNKNOWN = 0;
+      BOLT = 1; // Expect a series of BoltChunk messages
+    }
+  }
+
+  // BoltChunk is a single chunk of data for BoltDB if the snapshot format
+  // is BOLT. A chunk will always contain items designated for a single bucket,
+  // but a bucket may be repeated multiple time across chunks if there are
+  // too many items in the bucket.
+  message BoltChunk {
+    // bucket is the name of the bucket
+    string bucket = 1;
+
+    // items is a id/value mapping of all this chunk of items in this bucket
+    map<string, bytes> items = 2;
+  }
+}
