@@ -2,6 +2,8 @@ package state
 
 import (
 	"compress/gzip"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -22,9 +24,14 @@ import (
 
 // CreateSnapshot creates a database snapshot and writes it to the given writer.
 func (s *State) CreateSnapshot(w io.Writer) error {
+	// We build up the checksum using a multiwriter from the protowriter.
+	// This lets us figure out the checksum after the proto bytes are marshalled
+	// but before gzip.
+	checksum := sha256.New()
+
 	gzw := gzip.NewWriter(w)
 	defer gzw.Close()
-	dw := protowriter.NewDelimitedWriter(gzw)
+	dw := protowriter.NewDelimitedWriter(io.MultiWriter(gzw, checksum))
 	defer dw.Close()
 
 	// Write our header
@@ -36,7 +43,7 @@ func (s *State) CreateSnapshot(w io.Writer) error {
 	}
 
 	return s.db.View(func(dbTxn *bolt.Tx) error {
-		return dbTxn.ForEach(func(name []byte, b *bolt.Bucket) error {
+		if err := dbTxn.ForEach(func(name []byte, b *bolt.Bucket) error {
 			const chunkLenMax = 1024 * 1024 // 1 MB
 			chunkLen := 0
 			chunkItems := map[string][]byte{}
@@ -72,7 +79,25 @@ func (s *State) CreateSnapshot(w io.Writer) error {
 
 			// Write any final values
 			return flushChunk()
-		})
+		}); err != nil {
+			return err
+		}
+
+		// Write our footer chunk
+		if err := dw.WriteMsg(&pb.Snapshot_BoltChunk{Trailer: true}); err != nil {
+			return err
+		}
+
+		// Write our trailer
+		if err := dw.WriteMsg(&pb.Snapshot_Trailer{
+			Checksum: &pb.Snapshot_Trailer_Sha256{
+				Sha256: hex.EncodeToString(checksum.Sum(nil)),
+			},
+		}); err != nil {
+			return err
+		}
+
+		return nil
 	})
 }
 
@@ -207,14 +232,20 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 				return err
 			}
 
-			b, err := dbTxn.CreateBucketIfNotExists([]byte(chunk.Bucket))
-			if err != nil {
-				return err
-			}
-			for k, v := range chunk.Items {
-				if err := b.Put([]byte(k), v); err != nil {
+			if len(chunk.Bucket) > 0 && len(chunk.Items) > 0 {
+				b, err := dbTxn.CreateBucketIfNotExists([]byte(chunk.Bucket))
+				if err != nil {
 					return err
 				}
+				for k, v := range chunk.Items {
+					if err := b.Put([]byte(k), v); err != nil {
+						return err
+					}
+				}
+			}
+
+			if chunk.Trailer {
+				return nil
 			}
 		}
 	})
