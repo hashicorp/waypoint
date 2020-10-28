@@ -569,7 +569,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "pull-secret",
 			Target:  &c.config.ImagePullSecret,
-			Usage:   "Secret to use to access the waypoint server image",
+			Usage:   "Secret to use to access the waypoint server image.",
 			Default: "github",
 		})
 
