@@ -203,7 +203,7 @@ func (p *Platform) Deploy(
 		sess *session.Session
 		dep  *Deployment
 
-		role, cluster, logGroup string
+		executionRole, taskRole, cluster, logGroup string
 
 		err error
 	)
@@ -237,7 +237,12 @@ func (p *Platform) Deploy(
 				return err
 			}
 
-			role, err = p.SetupRole(ctx, s, log, sess, src)
+			executionRole, err = p.SetupExecutionRole(ctx, s, log, sess, src)
+			if err != nil {
+				return err
+			}
+
+			taskRole, err = p.SetupTaskRole(ctx, s, log, sess, src)
 			if err != nil {
 				return err
 			}
@@ -251,7 +256,7 @@ func (p *Platform) Deploy(
 		},
 
 		Run: func(s LifecycleStatus) error {
-			dep, err = p.Launch(ctx, s, log, ui, sess, src, img, deployConfig, role, cluster, logGroup)
+			dep, err = p.Launch(ctx, s, log, ui, sess, src, img, deployConfig, executionRole, taskRole, cluster, logGroup)
 			return err
 		},
 
@@ -367,10 +372,31 @@ func init() {
 	}
 }
 
-func (p *Platform) SetupRole(ctx context.Context, s LifecycleStatus, L hclog.Logger, sess *session.Session, app *component.Source) (string, error) {
+func (p *Platform) SetupTaskRole(ctx context.Context, s LifecycleStatus, L hclog.Logger, sess *session.Session, app *component.Source) (string, error) {
 	svc := iam.New(sess)
 
-	roleName := p.config.RoleName
+	roleName := p.config.TaskRoleName
+
+	L.Debug("attempting to retrieve existing role", "role-name", roleName)
+
+	queryInput := &iam.GetRoleInput{
+		RoleName: aws.String(roleName),
+	}
+
+	getOut, err := svc.GetRole(queryInput)
+	if err != nil {
+		s.Status("IAM role not found: %s", roleName)
+		return "", err
+	}
+
+	s.Status("Found task IAM role to use: %s", roleName)
+	return *getOut.Role.Arn, nil
+}
+
+func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L hclog.Logger, sess *session.Session, app *component.Source) (string, error) {
+	svc := iam.New(sess)
+
+	roleName := p.config.ExecutionRoleName
 
 	if roleName == "" {
 		roleName = "ecr-" + app.App
@@ -540,7 +566,7 @@ func (p *Platform) Launch(
 	app *component.Source,
 	img *docker.Image,
 	deployConfig *component.DeploymentConfig,
-	roleArn, clusterName, logGroup string,
+	executionRoleArn, taskRoleArn, clusterName, logGroup string,
 ) (*Deployment, error) {
 	id, err := component.Id()
 	if err != nil {
@@ -718,7 +744,8 @@ func (p *Platform) Launch(
 	taskOut, err := ecsSvc.RegisterTaskDefinition(&ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: containerDefinitions,
 
-		ExecutionRoleArn: aws.String(roleArn),
+		ExecutionRoleArn: aws.String(executionRoleArn),
+		TaskRoleArn:      aws.String(taskRoleArn),
 		Cpu:              cpus,
 		Memory:           aws.String(mems),
 		Family:           aws.String(family),
@@ -1263,8 +1290,11 @@ type Config struct {
 	// Name of the ECS cluster to install the service into
 	Cluster string `hcl:"cluster,optional"`
 
-	// Name of the IAM Role to associate with the ECS Service
-	RoleName string `hcl:"role_name,optional"`
+	// Name of the execution task IAM Role to associate with the ECS Service
+	ExecutionRoleName string `hcl:"execution_role_name,optional"`
+
+	// Name of the task IAM role to associate with the ECS service
+	TaskRoleName string `hcl:"task_role_name,optional"`
 
 	// Subnets to place the service into. Defaults to the subnets in the default VPC.
 	Subnets []string `hcl:"subnets,optional"`
@@ -1289,7 +1319,6 @@ type Config struct {
 	// set this to false in the default subnets, ECS can't pull the image. Leaving
 	// it disabled until we figure out how to handle that onramp case.
 	// AssignPublicIp bool `hcl:"assign_public_ip,optional"`
-
 
 	// Port that your service is running on within the actual container.
 	// Defaults to port 3000.
@@ -1348,9 +1377,14 @@ deploy {
 	)
 
 	doc.SetField(
-		"role_name",
+		"execution_role_name",
 		"the name of the IAM role to use for ECS execution",
-		docs.Default("create a new IAM role based on the application name"),
+		docs.Default("create a new exeuction IAM role based on the application name"),
+	)
+
+	doc.SetField(
+		"task_role_name",
+		"the name of the task IAM role to assign",
 	)
 
 	doc.SetField(
