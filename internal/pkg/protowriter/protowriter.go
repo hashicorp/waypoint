@@ -29,7 +29,6 @@
 package protowriter
 
 import (
-	"bufio"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -74,19 +73,14 @@ func (this *varintWriter) Close() error {
 	return nil
 }
 
-func NewDelimitedReader(r io.Reader, maxSize int) ReadCloser {
-	var closer io.Closer
-	if c, ok := r.(io.Closer); ok {
-		closer = c
-	}
-	return &varintReader{bufio.NewReader(r), nil, maxSize, closer}
+func NewDelimitedReader(r ByteReader, maxSize int) ReadCloser {
+	return &varintReader{r, nil, maxSize}
 }
 
 type varintReader struct {
-	r       *bufio.Reader
+	r       ByteReader
 	buf     []byte
 	maxSize int
-	closer  io.Closer
 }
 
 func (this *varintReader) ReadMsg(msg proto.Message) error {
@@ -109,9 +103,6 @@ func (this *varintReader) ReadMsg(msg proto.Message) error {
 }
 
 func (this *varintReader) Close() error {
-	if this.closer != nil {
-		return this.closer.Close()
-	}
 	return nil
 }
 
@@ -131,4 +122,9 @@ type Reader interface {
 type ReadCloser interface {
 	Reader
 	io.Closer
+}
+
+type ByteReader interface {
+	io.ByteReader
+	io.Reader
 }

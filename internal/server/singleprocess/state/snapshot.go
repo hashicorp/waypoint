@@ -1,13 +1,16 @@
 package state
 
 import (
+	"bufio"
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -137,7 +140,7 @@ func (s *State) StageRestoreSnapshot(r io.Reader) error {
 	// We do want to check that this appears valid because if we can't open
 	// the file then the server will never start again until it is cleaned up.
 	log.Info("validating restore file")
-	sr, closer, err := snapshotReader(ri.StageTempPath)
+	sr, closer, err := snapshotReader(ri.StageTempPath, nil)
 	if err != nil {
 		log.Error("error while validating restore file", "err", err)
 		return fmt.Errorf("error validating restore data: %s", err)
@@ -192,7 +195,8 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 	// to do next is parse out the header to determine the format, and then
 	// based on the format, write the correct data to disk.
 	log.Info("inspecting restore file to determine header")
-	sr, closer, err := snapshotReader(ri.StagePath)
+	checksum := sha256.New()
+	sr, closer, err := snapshotReader(ri.StagePath, checksum)
 	if err != nil {
 		log.Error("error while opening restore file", "err", err)
 		return db, err
@@ -254,6 +258,34 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 		return db, err
 	}
 
+	// Determine our checksum. It is very important to do this here before
+	// we read the trailer because the checksum is up to but not including
+	// the trailer.
+	finalChecksum := hex.EncodeToString(checksum.Sum(nil))
+
+	// Read the trailer
+	var trailer pb.Snapshot_Trailer
+	if err := sr.ReadMsg(&trailer); err != nil {
+		log.Error("error while parsing restore trailer", "err", err)
+		return db, fmt.Errorf("error reading restore trailer data: %s", err)
+	}
+
+	// Validate the checksum
+	switch v := trailer.Checksum.(type) {
+	case *pb.Snapshot_Trailer_Sha256:
+		if strings.ToLower(finalChecksum) != strings.ToLower(v.Sha256) {
+			log.Error("checksum mismatch",
+				"expected", v.Sha256,
+				"actual", finalChecksum,
+			)
+			return db, fmt.Errorf("checksum mismatch, expected %s got %s", v.Sha256, finalChecksum)
+		}
+
+	default:
+		log.Error("unknown checksum type", "type", fmt.Sprintf("%T", trailer.Checksum))
+		return db, fmt.Errorf("error reading restore trailer data: unknown checksum type")
+	}
+
 	// Close our DB, we will reopen with the new one
 	if err := db.Close(); err != nil {
 		log.Error("failed to close db for restore", "err", err)
@@ -297,7 +329,7 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 }
 
 // snapshotReader opens the delimited reader for a snapshot.
-func snapshotReader(path string) (protowriter.Reader, func() error, error) {
+func snapshotReader(path string, h hash.Hash) (protowriter.Reader, func() error, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, nil, err
@@ -309,8 +341,17 @@ func snapshotReader(path string) (protowriter.Reader, func() error, error) {
 		return nil, nil, err
 	}
 
+	if h == nil {
+		h = sha256.New()
+	}
+
+	hbr := &hashedBufferedReader{
+		R: bufio.NewReader(gzr),
+		H: h,
+	}
+
 	const maxSize = 4096 * 1024 // 4MB
-	dr := protowriter.NewDelimitedReader(gzr, maxSize)
+	dr := protowriter.NewDelimitedReader(hbr, maxSize)
 
 	return dr, func() error {
 		if err := dr.Close(); err != nil {
@@ -387,4 +428,27 @@ func (r *restoreInfo) Lock() error {
 func (r *restoreInfo) Unlock() error {
 	r.log.Trace("releasing file lock for restore", "path", r.fl.String())
 	return r.fl.Unlock()
+}
+
+// hashedBufferReader implements io.Reader and io.ByteReader for use
+// with protowriter.Reader, and allows a checksum to be calculated
+// as part of the read process.
+type hashedBufferedReader struct {
+	R *bufio.Reader
+	H hash.Hash
+}
+
+func (r *hashedBufferedReader) ReadByte() (b byte, err error) {
+	b, err = r.R.ReadByte()
+	r.H.Write([]byte{b})
+	return
+}
+
+func (r *hashedBufferedReader) Read(p []byte) (n int, err error) {
+	n, err = r.R.Read(p)
+	if n > 0 {
+		r.H.Write(p[:n])
+	}
+
+	return
 }
