@@ -30,6 +30,7 @@ type InitCommand struct {
 	fromProject string
 	into        string
 	update      bool
+	from        string
 
 	project *clientpkg.Project
 	cfg     *configpkg.Config
@@ -130,7 +131,7 @@ func (c *InitCommand) Run(args []string) int {
 		return 0
 	}
 
-	path, err := c.initConfigPath()
+	path, err := c.initConfigPath(c.from)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
@@ -572,6 +573,13 @@ func (c *InitCommand) Flags() *flag.Sets {
 			Default: false,
 			Usage: "Update the project configuration if it already exists. This can be used " +
 				"to update settings such as the remote runner data source.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "from",
+			Target:  &c.from,
+			Default: configpkg.Filename,
+			Usage:   "Initialize a new project using the specified HCL file.",
 		})
 	})
 }
