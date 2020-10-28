@@ -225,18 +225,19 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 	if err != nil {
 		return db, err
 	}
-	err = tempDb.Update(func(dbTxn *bolt.Tx) error {
-		for {
-			var chunk pb.Snapshot_BoltChunk
-			err := sr.ReadMsg(&chunk)
-			if err == io.EOF {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
+	for {
+		var chunk pb.Snapshot_BoltChunk
+		err := sr.ReadMsg(&chunk)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			tempDb.Close()
+			return db, err
+		}
 
-			if len(chunk.Bucket) > 0 && len(chunk.Items) > 0 {
+		if len(chunk.Bucket) > 0 && len(chunk.Items) > 0 {
+			if err := tempDb.Update(func(dbTxn *bolt.Tx) error {
 				b, err := dbTxn.CreateBucketIfNotExists([]byte(chunk.Bucket))
 				if err != nil {
 					return err
@@ -246,16 +247,18 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 						return err
 					}
 				}
-			}
 
-			if chunk.Trailer {
 				return nil
+			}); err != nil {
+				tempDb.Close()
+				return db, err
 			}
 		}
-	})
-	tempDb.Close()
-	if err != nil {
-		return db, err
+
+		if chunk.Trailer {
+			tempDb.Close()
+			break
+		}
 	}
 
 	// Determine our checksum. It is very important to do this here before
