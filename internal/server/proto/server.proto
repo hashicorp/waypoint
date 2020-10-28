@@ -2101,15 +2101,32 @@ message Snapshot {
     }
   }
 
+  // Trailer is sent as the final message encoded into a snapshot. Detecting
+  // when the trailer is is dependent on the format.
+  message Trailer {
+    // checksum is the checksum of all the bytes up to but not including
+    // this proto message. The checksum is for the raw uncompressed bytes.
+    oneof checksum {
+      string sha256 = 1; // SHA-256 checksum
+    }
+  }
+
   // BoltChunk is a single chunk of data for BoltDB if the snapshot format
   // is BOLT. A chunk will always contain items designated for a single bucket,
   // but a bucket may be repeated multiple time across chunks if there are
   // too many items in the bucket.
+  //
+  // The final BoltChunk will have trailer set to true. Immediaetly following
+  // that chunk will be the Trailer message.
   message BoltChunk {
-    // bucket is the name of the bucket
+    // bucket is the name of the bucket. This may be empty. If this is empty,
+    // then this chunk should be ignored.
     string bucket = 1;
 
     // items is a id/value mapping of all this chunk of items in this bucket
     map<string, bytes> items = 2;
+
+    // trailer is true if this is the last bolt chunk being written.
+    bool trailer = 3;
   }
 }
