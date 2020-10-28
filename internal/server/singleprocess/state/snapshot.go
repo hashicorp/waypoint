@@ -26,6 +26,9 @@ import (
 )
 
 // CreateSnapshot creates a database snapshot and writes it to the given writer.
+//
+// This will NOT buffer data to w, so you should wrap w in a bufio.Writer
+// if you want buffering.
 func (s *State) CreateSnapshot(w io.Writer) error {
 	// We build up the checksum using a multiwriter from the protowriter.
 	// This lets us figure out the checksum after the proto bytes are marshalled
