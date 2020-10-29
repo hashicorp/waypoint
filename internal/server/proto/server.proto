@@ -2090,7 +2090,14 @@ message RestoreSnapshotRequest {
     bytes chunk = 2;
   }
 
-  message Open {}
+  message Open {
+    // If true, the server will exit after the restore is staged. This will
+    // SHUT DOWN the server and some external process you created is expected
+    // to bring it back. The Waypoint server on its own WILL NOT automatically
+    // restart. You should only set this if you have some operation to
+    // automate restart such as running in Nomad or Kubernetes.
+    bool exit = 1;
+  }
 }
 
 // Snapshot is the encoding of the snapshot for all snapshot APIs.

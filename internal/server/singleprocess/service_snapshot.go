@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
@@ -52,7 +53,6 @@ func (s *service) RestoreSnapshot(
 		return status.Errorf(codes.FailedPrecondition,
 			"first message must be Open type")
 	}
-	_ = open // todo: we will use this
 
 	// Start our receive loop to read data from the client
 	clientEventCh := make(chan *pb.RestoreSnapshotRequest)
@@ -114,6 +114,13 @@ func (s *service) RestoreSnapshot(
 			// The restore ended
 			if err != nil {
 				return err
+			}
+
+			// Restore was successful.
+			if open.Open.Exit {
+				log.Warn("restore requested exit, closing database and exiting NOW")
+				s.state.Close()
+				os.Exit(2) // kind of a weird exit code to not this was manufactured
 			}
 
 			return srv.SendAndClose(&empty.Empty{})
