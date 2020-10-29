@@ -29,7 +29,7 @@ func (r *Releaser) ReleaseFunc() interface{} {
 	return r.Release
 }
 
-// Release creates a Kubernetes service configured for the deployment
+// Release updates the load balancer for the ECS deployment
 func (r *Releaser) Release(
 	ctx context.Context,
 	log hclog.Logger,
