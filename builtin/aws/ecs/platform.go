@@ -1067,7 +1067,7 @@ func (p *Platform) Launch(
 		SecurityGroups: []*string{sgecsport},
 	}
 
-	if p.config.EC2Cluster == false {
+	if !p.config.EC2Cluster {
 		netCfg.AssignPublicIp = aws.String("ENABLED")
 	}
 
