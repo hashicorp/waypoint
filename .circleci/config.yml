@@ -76,17 +76,17 @@ jobs:
   go-test:
     docker:
       - image: *GOLANG_IMAGE
-      - image: localstack/localstack:latest
-      - image: letsencrypt/pebble
+      - image: docker.mirror.hashicorp.services/localstack/localstack:latest
+      - image: docker.mirror.hashicorp.services/letsencrypt/pebble
         command: ["pebble"]
         environment:
           PEBBLE_VA_NOSLEEP: 1
           PEBBLE_VA_ALWAYS_VALID: 1
-      - image: circleci/postgres:11-alpine
+      - image: docker.mirror.hashicorp.services/circleci/postgres:11-alpine
         environment:
           POSTGRES_USER: postgres
           POSTGRES_DB: waypoint_test
-      - image: vault
+      - image: docker.mirror.hashicorp.services/vault
         command: ["server", "-dev", "-dev-root-token-id=hznroot"]
     parallelism: 4
     environment:
@@ -191,7 +191,7 @@ jobs:
   image-release:
     docker:
       # Use a modern Circle image as we just need up-to-date Docker here
-      - image: cimg/base:2020.07-20.04
+      - image: docker.mirror.hashicorp.services/cimg/base:2020.07-20.04
     environment:
       <<: *ENVIRONMENT
     shell: /usr/bin/env bash -euo pipefail -c
