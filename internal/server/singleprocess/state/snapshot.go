@@ -133,7 +133,8 @@ func (s *State) StageRestoreSnapshot(r io.Reader) error {
 		log.Error("error creating temporary path", "err", err)
 		return err
 	}
-	_, err = io.Copy(tempF, r)
+	n, err := io.Copy(tempF, r)
+	log.Info("copied snapshot data", "len", n)
 	tempF.Close()
 	if err != nil {
 		log.Error("error copying snapshot data", "err", err)

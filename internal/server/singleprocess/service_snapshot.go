@@ -14,7 +14,6 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// TODO: test
 func (s *service) CreateSnapshot(
 	req *empty.Empty,
 	srv pb.Waypoint_CreateSnapshotServer,
@@ -29,13 +28,12 @@ func (s *service) CreateSnapshot(
 	}
 
 	// Create the snapshot and write the data
-	if err := s.state.CreateSnapshot(bufio.NewWriter(&snapshotWriter{
-		srv: srv,
-	})); err != nil {
+	bw := bufio.NewWriter(&snapshotWriter{srv: srv})
+	if err := s.state.CreateSnapshot(bw); err != nil {
 		return err
 	}
 
-	return nil
+	return bw.Flush()
 }
 
 func (s *service) RestoreSnapshot(
@@ -106,11 +104,19 @@ func (s *service) RestoreSnapshot(
 
 		case err := <-clientCloseCh:
 			// The client closed the connection so we want to exit the stream.
-			return err
+			if err != nil {
+				return err
+			}
+
+			return srv.SendAndClose(&empty.Empty{})
 
 		case err := <-restoreCloseCh:
 			// The restore ended
-			return err
+			if err != nil {
+				return err
+			}
+
+			return srv.SendAndClose(&empty.Empty{})
 
 		case req, active := <-clientEventCh:
 			// If we aren't active anymore, then the client closed the connection
