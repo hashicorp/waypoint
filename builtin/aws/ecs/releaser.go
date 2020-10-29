@@ -37,6 +37,11 @@ func (r *Releaser) Release(
 	ui terminal.UI,
 	target *Deployment,
 ) (*Release, error) {
+	if target.LoadBalancerArn == "" && target.TargetGroupArn == "" {
+		log.Info("No load-balancer configured")
+		return &Release{}, nil
+	}
+
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: r.p.config.Region,
 	})
