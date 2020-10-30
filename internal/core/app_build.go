@@ -6,8 +6,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
@@ -26,8 +24,17 @@ func (a *App) Build(ctx context.Context, optFuncs ...BuildOption) (
 		return nil, nil, err
 	}
 
+	// Render the config
+	c, err := componentCreatorMap[component.BuilderType].Create(ctx, a, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer c.Close()
+
 	// First we do the build
-	_, msg, err := a.doOperation(ctx, a.logger.Named("build"), &buildOperation{})
+	_, msg, err := a.doOperation(ctx, a.logger.Named("build"), &buildOperation{
+		Component: c,
+	})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -82,36 +89,24 @@ func (opts *buildOptions) Validate() error {
 
 // buildOperation implements the operation interface.
 type buildOperation struct {
-	Build *pb.Build
+	Component *Component
+	Build     *pb.Build
 }
 
 func (op *buildOperation) Init(app *App) (proto.Message, error) {
-	builder, ok := app.components[app.Builder]
-	if !ok {
-		return nil, status.Error(codes.NotFound, "no builder configured")
-	}
-
 	return &pb.Build{
 		Application: app.ref,
 		Workspace:   app.workspace,
-		Component:   builder.Info,
+		Component:   op.Component.Info,
 	}, nil
 }
 
 func (op *buildOperation) Hooks(app *App) map[string][]*config.Hook {
-	builder, ok := app.components[app.Builder]
-	if !ok {
-		return nil
-	}
-	return builder.Hooks
+	return op.Component.hooks
 }
 
 func (op *buildOperation) Labels(app *App) map[string]string {
-	builder, ok := app.components[app.Builder]
-	if !ok {
-		return nil
-	}
-	return builder.Labels
+	return op.Component.labels
 }
 
 func (op *buildOperation) Upsert(
@@ -133,8 +128,8 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 	return app.callDynamicFunc(ctx,
 		log,
 		(*component.Artifact)(nil),
-		app.Builder,
-		app.Builder.BuildFunc(),
+		op.Component,
+		op.Component.Value.(component.Builder).BuildFunc(),
 	)
 }
 

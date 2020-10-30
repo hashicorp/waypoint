@@ -292,7 +292,7 @@ func (c *InitCommand) validateProject() bool {
 			}
 
 			source := factory()
-			ds, err = source.ProjectSource(dscfg.Body, c.cfgCtx)
+			ds, err = source.ProjectSource(dscfg.Body, c.cfg.HCLContext())
 			if err != nil {
 				c.stepError(s, initStepProject, err)
 				return false
@@ -316,18 +316,18 @@ func (c *InitCommand) validateProject() bool {
 	}
 
 	pt := &serverptypes.Project{Project: project}
-	for _, app := range c.cfg.Apps {
-		if pt.App(app.Name) >= 0 {
+	for _, name := range c.cfg.Apps() {
+		if pt.App(name) >= 0 {
 			continue
 		}
 
 		// Missing an application, register it.
 		s.Status(terminal.StatusWarn)
-		s.Update("Application %q is not registered with the server. Registering...", app.Name)
+		s.Update("Application %q is not registered with the server. Registering...", name)
 
 		_, err := client.UpsertApplication(c.Ctx, &pb.UpsertApplicationRequest{
 			Project: ref,
-			Name:    app.Name,
+			Name:    name,
 		})
 		if err != nil {
 			c.stepError(s, initStepProject, err)
@@ -367,8 +367,8 @@ func (c *InitCommand) validateAuth() bool {
 	s := sg.Add("Checking auth for the configured components...")
 
 	failures := false
-	for _, appcfg := range c.cfg.Apps {
-		app := c.project.App(appcfg.Name)
+	for _, name := range c.cfg.Apps() {
+		app := c.project.App(name)
 
 		ref := app.Ref()
 		s.Update("Checking auth for app: %q", ref.Application)

@@ -27,10 +27,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/server"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 const tosStatement = `
@@ -58,7 +58,7 @@ const DefaultURLControlAddress = "https://control.hzn.network"
 type ServerRunCommand struct {
 	*baseCommand
 
-	config        config.ServerConfig
+	config        serverconfig.Config
 	flagDisableUI bool
 	flagURLInmem  bool
 
@@ -133,7 +133,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 		wphzndata := wphzn.TestServer(t)
 
 		// Configure
-		c.config.URL = &config.URL{
+		c.config.URL = &serverconfig.URL{
 			Enabled:        true,
 			APIAddress:     wphzndata.Addr,
 			APIInsecure:    true,
@@ -142,7 +142,7 @@ func (c *ServerRunCommand) Run(args []string) int {
 	}
 
 	// Set any server config
-	c.config.CEBConfig = &config.CEBConfig{
+	c.config.CEBConfig = &serverconfig.CEBConfig{
 		Addr:          c.flagAdvertiseAddr,
 		TLSEnabled:    c.flagAdvertiseTLSEnabled,
 		TLSSkipVerify: c.flagAdvertiseTLSSkipVerify,
@@ -294,7 +294,7 @@ This command will bootstrap the server and setup a CLI context.
 func (c *ServerRunCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		if c.config.URL == nil {
-			c.config.URL = &config.URL{}
+			c.config.URL = &serverconfig.URL{}
 		}
 
 		f := set.NewSet("Command Options")
@@ -430,7 +430,7 @@ Usage: waypoint server run [options]
 ` + c.Flags().Help())
 }
 
-func (c *ServerRunCommand) listenerForConfig(log hclog.Logger, cfg *config.Listener) (net.Listener, error) {
+func (c *ServerRunCommand) listenerForConfig(log hclog.Logger, cfg *serverconfig.Listener) (net.Listener, error) {
 	// Start our bare listener
 	log.Debug("starting listener", "addr", cfg.Addr)
 	ln, err := net.Listen("tcp", cfg.Addr)

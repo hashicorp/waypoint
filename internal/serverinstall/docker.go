@@ -16,8 +16,8 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
-	configpkg "github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 func InstallDocker(
@@ -57,7 +57,7 @@ func InstallDocker(
 		httpAddr string
 	)
 
-	clicfg.Server = configpkg.Server{
+	clicfg.Server = serverconfig.Client{
 		Address:       "localhost:" + grpcPort,
 		Tls:           true,
 		TlsSkipVerify: true,

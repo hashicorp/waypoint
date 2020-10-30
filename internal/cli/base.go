@@ -11,7 +11,6 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -44,8 +43,7 @@ type baseCommand struct {
 	// The fields below are only available after calling Init.
 
 	// cfg is the parsed configuration
-	cfg    *config.Config
-	cfgCtx *hcl.EvalContext
+	cfg *config.Config
 
 	// UI is used to write to the CLI.
 	ui terminal.UI
@@ -256,14 +254,14 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// one app or that we have an app target.
 	if baseCfg.AppTargetRequired {
 		if c.refApp == nil {
-			if len(c.cfg.Apps) != 1 {
+			if len(c.cfg.Apps()) != 1 {
 				c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 				return ErrSentinel
 			}
 
 			c.refApp = &pb.Ref_Application{
 				Project:     c.cfg.Project,
-				Application: c.cfg.Apps[0].Name,
+				Application: c.cfg.Apps()[0],
 			}
 		}
 	}
@@ -287,9 +285,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 	if c.refApp != nil {
 		appTargets = []string{c.refApp.Application}
 	} else if c.cfg != nil {
-		for _, appCfg := range c.cfg.Apps {
-			appTargets = append(appTargets, appCfg.Name)
-		}
+		appTargets = append(appTargets, c.cfg.Apps()...)
 	}
 
 	var apps []*clientpkg.App

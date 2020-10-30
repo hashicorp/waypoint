@@ -11,10 +11,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 //go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:gen/"
@@ -30,7 +30,7 @@ type service struct {
 
 	// urlConfig is not nil if the URL service is enabled. This is guaranteed
 	// to have the configs set.
-	urlConfig *configpkg.URL
+	urlConfig *serverconfig.URL
 	urlClient wphznpb.WaypointHznClient
 }
 
@@ -127,7 +127,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 type config struct {
 	db           *bolt.DB
-	serverConfig *configpkg.ServerConfig
+	serverConfig *serverconfig.Config
 	log          hclog.Logger
 
 	acceptUrlTerms bool
@@ -144,7 +144,7 @@ func WithDB(db *bolt.DB) Option {
 }
 
 // WithConfig sets the server config in use with this server.
-func WithConfig(scfg *configpkg.ServerConfig) Option {
+func WithConfig(scfg *serverconfig.Config) Option {
 	return func(s *service, cfg *config) error {
 		cfg.serverConfig = scfg
 		return nil

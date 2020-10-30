@@ -23,10 +23,10 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
-	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
 )
 
@@ -302,7 +302,7 @@ func (c *InstallCommand) InstallKubernetes(
 
 		// Set our connection information
 		contextConfig = clicontext.Config{
-			Server: configpkg.Server{
+			Server: serverconfig.Client{
 				Address:       grpcAddr,
 				Tls:           true,
 				TlsSkipVerify: true, // always for now

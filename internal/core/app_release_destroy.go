@@ -6,6 +6,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -15,7 +17,19 @@ import (
 
 // CanDestroyRelease returns true if this app supports destroying releases.
 func (a *App) CanDestroyRelease() bool {
-	d, ok := a.Releaser.(component.Destroyer)
+	c, err := componentCreatorMap[component.ReleaseManagerType].Create(context.Background(), a, nil)
+	if status.Code(err) == codes.Unimplemented {
+		// The if statement below catches this too but I want to just explicitly
+		// state that we want to ensure this is false in case we ever refactor
+		// the below to return an error.
+		return false
+	}
+	if err != nil {
+		return false
+	}
+	defer c.Close()
+
+	d, ok := c.Value.(component.Destroyer)
 	return ok && d.DestroyFunc() != nil
 }
 
@@ -27,8 +41,19 @@ func (a *App) DestroyRelease(ctx context.Context, d *pb.Release) error {
 		return nil
 	}
 
-	_, _, err := a.doOperation(ctx, a.logger.Named("release"), &releaseDestroyOperation{
-		Release: d,
+	c, err := componentCreatorMap[component.ReleaseManagerType].Create(context.Background(), a, nil)
+	if status.Code(err) == codes.Unimplemented {
+		c = nil
+		err = nil
+	}
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
+	_, _, err = a.doOperation(ctx, a.logger.Named("release"), &releaseDestroyOperation{
+		Component: c,
+		Release:   d,
 	})
 	return err
 }
@@ -86,8 +111,18 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 		return nil
 	}
 
+	// Start the plugin
+	c, err := componentCreatorMap[component.ReleaseManagerType].Create(ctx, a, nil)
+	if status.Code(err) == codes.Unimplemented {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
 	// Call the hook
-	d, ok := a.Releaser.(component.WorkspaceDestroyer)
+	d, ok := c.Value.(component.WorkspaceDestroyer)
 	if !ok || d.DestroyWorkspaceFunc() == nil {
 		// Workspace deletion is optional.
 		return nil
@@ -97,7 +132,7 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 	_, err = a.callDynamicFunc(ctx,
 		log,
 		nil,
-		d,
+		c,
 		d.DestroyWorkspaceFunc(),
 		argNamedAny("release", results[0].Release),
 	)
@@ -105,7 +140,8 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 }
 
 type releaseDestroyOperation struct {
-	Release *pb.Release
+	Component *Component
+	Release   *pb.Release
 }
 
 func (op *releaseDestroyOperation) Init(app *App) (proto.Message, error) {
@@ -140,13 +176,12 @@ func (op *releaseDestroyOperation) Upsert(
 
 func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	// If we have no releaser then we're done.
-	if app.Releaser == nil {
+	if op.Component == nil {
 		return nil, nil
 	}
 
-	destroyer, ok := app.Releaser.(component.Destroyer)
-
 	// If we don't implement the destroy plugin we just mark it as destroyed.
+	destroyer, ok := op.Component.Value.(component.Destroyer)
 	if !ok || destroyer.DestroyFunc() == nil {
 		return nil, nil
 	}
@@ -159,7 +194,7 @@ func (op *releaseDestroyOperation) Do(ctx context.Context, log hclog.Logger, app
 	return app.callDynamicFunc(ctx,
 		log,
 		nil,
-		destroyer,
+		op.Component,
 		destroyer.DestroyFunc(),
 		argNamedAny("release", op.Release.Release),
 	)

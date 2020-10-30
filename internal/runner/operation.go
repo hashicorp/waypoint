@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2/hclsimple"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -38,12 +37,9 @@ func (r *Runner) executeJob(
 	}
 
 	// Determine the evaluation context we'll be using
-	configCtx := configpkg.EvalContext(filepath.Dir(path))
-
-	// Decode the configuration
-	var cfg configpkg.Config
 	log.Trace("reading configuration", "path", path)
-	if err := hclsimple.DecodeFile(path, configCtx, &cfg); err != nil {
+	cfg, err := configpkg.Load(path, filepath.Dir(path))
+	if err != nil {
 		return nil, err
 	}
 
@@ -72,10 +68,8 @@ func (r *Runner) executeJob(
 		core.WithUI(ui),
 		core.WithComponents(factories),
 		core.WithClient(r.client),
-		core.WithConfig(&cfg),
-		core.WithConfigContext(configCtx),
+		core.WithConfig(cfg),
 		core.WithDataDir(projDir),
-		core.WithRootDir(filepath.Dir(path)),
 		core.WithLabels(job.Labels),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),

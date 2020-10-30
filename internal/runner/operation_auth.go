@@ -30,9 +30,17 @@ func (r *Runner) executeAuthOp(
 		return nil, err
 	}
 
+	cs, err := app.Components(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range cs {
+		defer c.Close()
+	}
+
 	var results []*pb.Job_AuthResult_Result
-	for _, c := range app.Components() {
-		info := app.ComponentProto(c)
+	for _, c := range cs {
+		info := c.Info
 		if info == nil {
 			// Should never happen
 			continue

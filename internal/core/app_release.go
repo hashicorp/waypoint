@@ -6,6 +6,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
@@ -19,8 +21,19 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 	component.Release,
 	error,
 ) {
+	c, err := componentCreatorMap[component.ReleaseManagerType].Create(ctx, a, nil)
+	if status.Code(err) == codes.Unimplemented {
+		c = nil
+		err = nil
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+	defer c.Close()
+
 	result, releasepb, err := a.doOperation(ctx, a.logger.Named("release"), &releaseOperation{
-		Target: target,
+		Component: c,
+		Target:    target,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -35,7 +48,8 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 }
 
 type releaseOperation struct {
-	Target *pb.Deployment
+	Component *Component
+	Target    *pb.Deployment
 
 	result component.Release
 }
@@ -49,9 +63,9 @@ func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 		Component:    op.Target.Component,
 	}
 
-	if app.Releaser != nil {
-		release.Component = app.components[app.Releaser].Info
-		release.Labels = app.components[app.Releaser].Labels
+	if v := op.Component; v != nil {
+		release.Component = v.Info
+		release.Labels = v.labels
 	}
 
 	if op.result != nil {
@@ -62,19 +76,19 @@ func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 }
 
 func (op *releaseOperation) Hooks(app *App) map[string][]*config.Hook {
-	if app.Releaser == nil {
+	if op.Component == nil {
 		return nil
 	}
 
-	return app.components[app.Releaser].Hooks
+	return op.Component.hooks
 }
 
 func (op *releaseOperation) Labels(app *App) map[string]string {
-	if app.Releaser == nil {
+	if op.Component == nil {
 		return nil
 	}
 
-	return app.components[app.Releaser].Labels
+	return op.Component.labels
 }
 
 func (op *releaseOperation) Upsert(
@@ -95,15 +109,15 @@ func (op *releaseOperation) Upsert(
 func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
 	// If we have no releaser, we do nothing since we just update the
 	// blank release metadata.
-	if app.Releaser == nil {
+	if op.Component == nil {
 		return nil, nil
 	}
 
 	result, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Release)(nil),
-		app.Releaser,
-		app.Releaser.ReleaseFunc(),
+		op.Component,
+		op.Component.Value.(component.ReleaseManager).ReleaseFunc(),
 		argNamedAny("target", op.Target.Deployment),
 	)
 	if err != nil {

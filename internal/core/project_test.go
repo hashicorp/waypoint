@@ -3,7 +3,6 @@ package core
 import (
 	"testing"
 
-	//"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/internal/config"
@@ -18,8 +17,7 @@ func TestNewProject(t *testing.T) {
 
 	app, err := p.App("test")
 	require.NoError(err)
-	require.NotNil(app.Builder)
-	require.Nil(app.Registry)
+	require.NotNil(app)
 }
 
 const testNewProjectConfig = `

@@ -17,7 +17,13 @@ import (
 
 // CanDestroyDeploy returns true if this app supports destroying deployments.
 func (a *App) CanDestroyDeploy() bool {
-	_, ok := a.Platform.(component.Destroyer)
+	c, err := componentCreatorMap[component.PlatformType].Create(context.Background(), a, nil)
+	if err != nil {
+		return false
+	}
+	defer c.Close()
+
+	_, ok := c.Value.(component.Destroyer)
 	return ok
 }
 
@@ -29,7 +35,15 @@ func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
 		return nil
 	}
 
-	_, _, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployDestroyOperation{
+	// Start the plugin
+	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, nil)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
+	_, _, err = a.doOperation(ctx, a.logger.Named("deploy"), &deployDestroyOperation{
+		Component:  c,
 		Deployment: d,
 	})
 	return err
@@ -51,11 +65,16 @@ func (a *App) destroyAllDeploys(ctx context.Context) error {
 		return nil
 	}
 
-	if a.Platform == nil {
+	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, nil)
+	if status.Code(err) == codes.Unimplemented {
 		return status.Errorf(codes.FailedPrecondition,
 			"Created deployments must be destroyed but no deployment plugin is configured! "+
 				"Please configure a deployment plugin in your Waypoint configuration.")
 	}
+	if err != nil {
+		return err
+	}
+	defer c.Close()
 
 	a.UI.Output("Destroying deployments...", terminal.WithHeaderStyle())
 	for _, v := range results {
@@ -88,14 +107,21 @@ func (a *App) destroyDeployWorkspace(ctx context.Context) error {
 		return nil
 	}
 
-	// If we have no opeartions, we don't call the hook.
+	// If we have no operations, we don't call the hook.
 	results := resp.Deployments
 	if len(results) == 0 {
 		return nil
 	}
 
+	// Start the plugin
+	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, nil)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
 	// Call the hook
-	d, ok := a.Platform.(component.WorkspaceDestroyer)
+	d, ok := c.Value.(component.WorkspaceDestroyer)
 	if !ok || d.DestroyWorkspaceFunc() == nil {
 		// Workspace deletion is optional.
 		return nil
@@ -105,7 +131,7 @@ func (a *App) destroyDeployWorkspace(ctx context.Context) error {
 	_, err = a.callDynamicFunc(ctx,
 		log,
 		nil,
-		d,
+		c,
 		d.DestroyWorkspaceFunc(),
 		argNamedAny("deployment", results[0].Deployment),
 	)
@@ -113,6 +139,7 @@ func (a *App) destroyDeployWorkspace(ctx context.Context) error {
 }
 
 type deployDestroyOperation struct {
+	Component  *Component
 	Deployment *pb.Deployment
 }
 
@@ -147,7 +174,7 @@ func (op *deployDestroyOperation) Upsert(
 }
 
 func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
-	destroyer, ok := app.Platform.(component.Destroyer)
+	destroyer, ok := op.Component.Value.(component.Destroyer)
 	if !ok || destroyer.DestroyFunc() == nil {
 		return nil, nil
 	}
@@ -160,7 +187,7 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 	return app.callDynamicFunc(ctx,
 		log,
 		nil,
-		destroyer,
+		op.Component,
 		destroyer.DestroyFunc(),
 		argNamedAny("deployment", op.Deployment.Deployment),
 	)

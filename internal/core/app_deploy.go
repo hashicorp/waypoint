@@ -7,8 +7,6 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
@@ -24,8 +22,16 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 		return nil, err
 	}
 
+	// Render the config
+	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+
 	_, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployOperation{
-		Push: push,
+		Component: c,
+		Push:      push,
 		DeploymentConfig: &component.DeploymentConfig{
 			ServerAddr:          resp.ServerAddr,
 			ServerTls:           resp.ServerTls,
@@ -40,6 +46,7 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 }
 
 type deployOperation struct {
+	Component        *Component
 	Push             *pb.PushedArtifact
 	DeploymentConfig *component.DeploymentConfig
 
@@ -54,10 +61,6 @@ type deployOperation struct {
 }
 
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
-	if app.components[app.Platform] == nil {
-		return nil, status.Error(codes.NotFound, "no deployment configured")
-	}
-
 	if v := app.config.URL; v != nil {
 		if v.AutoHostname != nil {
 			if *v.AutoHostname {
@@ -71,8 +74,8 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 	return &pb.Deployment{
 		Application: app.ref,
 		Workspace:   app.workspace,
-		Component:   app.components[app.Platform].Info,
-		Labels:      app.components[app.Platform].Labels,
+		Component:   op.Component.Info,
+		Labels:      op.Component.labels,
 		ArtifactId:  op.Push.Id,
 		State:       pb.Operation_CREATED,
 		HasEntrypointConfig: op.DeploymentConfig != nil &&
@@ -81,19 +84,11 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 }
 
 func (op *deployOperation) Hooks(app *App) map[string][]*config.Hook {
-	platform, ok := app.components[app.Platform]
-	if !ok {
-		return nil
-	}
-	return platform.Hooks
+	return op.Component.hooks
 }
 
 func (op *deployOperation) Labels(app *App) map[string]string {
-	platform, ok := app.components[app.Platform]
-	if !ok {
-		return nil
-	}
-	return platform.Labels
+	return op.Component.labels
 }
 
 func (op *deployOperation) Upsert(
@@ -143,8 +138,8 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, _
 	return app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
-		app.Platform,
-		app.Platform.DeployFunc(),
+		op.Component,
+		op.Component.Value.(component.Platform).DeployFunc(),
 		argNamedAny("artifact", op.Push.Artifact.Artifact),
 		argmapper.Typed(&dconfig),
 	)

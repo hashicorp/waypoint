@@ -7,6 +7,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
@@ -26,8 +28,27 @@ func (a *App) PushBuild(ctx context.Context, optFuncs ...PushBuildOption) (*pb.P
 		return nil, err
 	}
 
+	// Make our registry
+	cr, err := componentCreatorMap[component.RegistryType].Create(ctx, a, nil)
+	if status.Code(err) == codes.Unimplemented {
+		cr = nil
+		err = nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer cr.Close()
+
+	cb, err := componentCreatorMap[component.BuilderType].Create(ctx, a, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer cb.Close()
+
 	_, msg, err := a.doOperation(ctx, a.logger.Named("push"), &pushBuildOperation{
-		Build: opts.Build,
+		ComponentRegistry: cr,
+		ComponentBuilder:  cb,
+		Build:             opts.Build,
 	})
 	if err != nil {
 		return nil, err
@@ -64,7 +85,9 @@ func newPushBuildOptions(opts ...PushBuildOption) (*pushBuildOptions, error) {
 }
 
 type pushBuildOperation struct {
-	Build *pb.Build
+	ComponentRegistry *Component
+	ComponentBuilder  *Component
+	Build             *pb.Build
 }
 
 func (opts *pushBuildOptions) Validate() error {
@@ -77,34 +100,34 @@ func (op *pushBuildOperation) Init(app *App) (proto.Message, error) {
 	// Our component is typically the registry but if we don't have
 	// one configured, then we specify the component as our builder since
 	// that is what is creating the pushed artifact.
-	var component interface{} = app.Registry
+	component := op.ComponentRegistry
 	if component == nil {
-		component = app.Builder
+		component = op.ComponentBuilder
 	}
 
 	return &pb.PushedArtifact{
 		Application: app.ref,
 		Workspace:   app.workspace,
-		Component:   app.components[component].Info,
-		Labels:      app.components[component].Labels,
+		Component:   component.Info,
+		Labels:      component.labels,
 		BuildId:     op.Build.Id,
 	}, nil
 }
 
 func (op *pushBuildOperation) Hooks(app *App) map[string][]*config.Hook {
-	if app.Registry == nil {
+	if op.ComponentRegistry == nil {
 		return nil
 	}
 
-	return app.components[app.Registry].Hooks
+	return op.ComponentRegistry.hooks
 }
 
 func (op *pushBuildOperation) Labels(app *App) map[string]string {
-	if app.Registry == nil {
+	if op.ComponentRegistry == nil {
 		return nil
 	}
 
-	return app.components[app.Registry].Labels
+	return op.ComponentRegistry.labels
 }
 
 func (op *pushBuildOperation) Upsert(
@@ -124,15 +147,15 @@ func (op *pushBuildOperation) Upsert(
 
 func (op *pushBuildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	// If we have no registry, we just push the local build.
-	if app.Registry == nil {
+	if op.ComponentRegistry == nil {
 		return op.Build.Artifact.Artifact, nil
 	}
 
 	return app.callDynamicFunc(ctx,
 		log,
 		(*component.Artifact)(nil),
-		app.Registry,
-		app.Registry.PushFunc(),
+		op.ComponentRegistry,
+		op.ComponentRegistry.Value.(component.Registry).PushFunc(),
 		argNamedAny("artifact", op.Build.Artifact.Artifact),
 	)
 }

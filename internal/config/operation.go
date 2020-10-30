@@ -4,7 +4,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// Operation is something in the Waypoint configuraiton that is executed
+// Operation is something in the Waypoint configuration that is executed
 // using some underlying plugin. This is a general shared structure that is
 // used by internal/core to initialize all the proper plugins.
 type Operation struct {
@@ -18,14 +18,6 @@ type Operation struct {
 
 func (b *Build) Operation() *Operation {
 	return mapoperation(b, true)
-}
-
-func (b *Build) RegistryOperation() *Operation {
-	if b == nil {
-		return nil
-	}
-
-	return b.Registry.Operation()
 }
 
 func (b *Registry) Operation() *Operation {

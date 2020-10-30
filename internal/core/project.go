@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
@@ -32,10 +31,6 @@ type Project struct {
 	dir       *datadir.Project
 	mappers   []*argmapper.Func
 	client    pb.WaypointClient
-
-	// root is the root directory for this project (typically where
-	// the waypoint.hcl file is).
-	root string
 
 	// name is the name of the project
 	name string
@@ -73,7 +68,6 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 		workspace: "default",
 		apps:      make(map[string]*App),
 		jobInfo:   &component.JobInfo{},
-		root:      ".",
 		factories: map[component.Type]*factory.Factory{
 			component.BuilderType:        plugin.BaseFactories[component.BuilderType],
 			component.RegistryType:       plugin.BaseFactories[component.RegistryType],
@@ -127,8 +121,16 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	p.jobInfo.Workspace = p.workspace
 
 	// Initialize all the applications and load all their components.
-	for _, appConfig := range opts.Config.Apps {
-		app, err := newApp(ctx, p, appConfig, opts.ConfigContext)
+	for _, name := range opts.Config.Apps() {
+		appConfig, err := opts.Config.App(name, nil)
+		if err != nil {
+			return nil, fmt.Errorf("error loading app %q: %w", name, err)
+		}
+		if err := appConfig.Validate(); err != nil {
+			return nil, fmt.Errorf("error loading app %q: %w", name, err)
+		}
+
+		app, err := newApp(ctx, p, appConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -211,8 +213,7 @@ func (p *Project) mergeLabels(ls ...map[string]string) map[string]string {
 // intermediate values that need to be processed further before initializing
 // the project.
 type options struct {
-	Config        *config.Config
-	ConfigContext *hcl.EvalContext
+	Config *config.Config
 }
 
 // Option is used to set options for NewProject.
@@ -235,15 +236,6 @@ func WithConfig(c *config.Config) Option {
 	}
 }
 
-// WithConfigContext sets an eval context to use for parsing plugin-specific
-// config. It is useful to reuse the same context that was used in parsing
-// the original config here so behavior doesn't change.
-func WithConfigContext(ctx *hcl.EvalContext) Option {
-	return func(p *Project, opts *options) {
-		opts.ConfigContext = ctx
-	}
-}
-
 // WithDataDir sets the datadir that will be used for this project.
 func WithDataDir(dir *datadir.Project) Option {
 	return func(p *Project, opts *options) { p.dir = dir }
@@ -253,12 +245,6 @@ func WithDataDir(dir *datadir.Project) Option {
 // is not provided, a default logger will be used (`hclog.L()`).
 func WithLogger(log hclog.Logger) Option {
 	return func(p *Project, opts *options) { p.logger = log }
-}
-
-// WithRootDir sets the root directory for the project. This is where
-// the root configuration is.
-func WithRootDir(dir string) Option {
-	return func(p *Project, opts *options) { p.root = dir }
 }
 
 // WithFactory sets a factory for a component type. If this isn't set for
