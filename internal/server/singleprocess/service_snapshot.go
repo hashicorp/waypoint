@@ -120,7 +120,7 @@ func (s *service) RestoreSnapshot(
 			if open.Open.Exit {
 				log.Warn("restore requested exit, closing database and exiting NOW")
 				s.state.Close()
-				os.Exit(2) // kind of a weird exit code to not this was manufactured
+				os.Exit(2) // kind of a weird exit code to note this was manufactured
 			}
 
 			return srv.SendAndClose(&empty.Empty{})
