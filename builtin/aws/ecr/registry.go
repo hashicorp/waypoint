@@ -13,13 +13,13 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
-	"github.com/mattn/go-isatty"
 )
 
 // Registry represents access to an AWS registry.
@@ -40,13 +40,24 @@ func (r *Registry) PushFunc() interface{} {
 // Push pushes an image to the registry.
 func (r *Registry) Push(
 	ctx context.Context,
+	log hclog.Logger,
 	img *docker.Image,
 	ui terminal.UI,
+	src *component.Source,
 ) (*docker.Image, error) {
-	stdout, _, err := ui.OutputWriters()
-	if err != nil {
-		return nil, err
-	}
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	// stdout, _, err := ui.OutputWriters()
+	// if err != nil {
+	// return nil, err
+	// }
+
+	step := sg.Add("Connecting to docker")
+
+	defer func() {
+		step.Abort()
+	}()
 
 	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
 	if err != nil {
@@ -55,6 +66,7 @@ func (r *Registry) Push(
 
 	cli.NegotiateAPIVersion(ctx)
 
+	step.Update("Connecting to AWS")
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: r.config.Region,
 	})
@@ -63,22 +75,75 @@ func (r *Registry) Push(
 	}
 	svc := ecr.New(sess)
 
-	repOut, err := svc.DescribeRepositories(&ecr.DescribeRepositoriesInput{
-		RepositoryNames: []*string{aws.String(r.config.Repository)},
-	})
+	step.Update("Getting ECR Authentication token...")
+
+	gat, err := svc.GetAuthorizationToken(&ecr.GetAuthorizationTokenInput{})
 	if err != nil {
 		return nil, err
 	}
 
-	if len(repOut.Repositories) == 0 {
-		return nil, fmt.Errorf("Unknown repository requested: %s", r.config.Repository)
+	if len(gat.AuthorizationData) == 0 {
+		return nil, fmt.Errorf("No authorization tokens provided")
 	}
 
-	uri := repOut.Repositories[0].RepositoryUri
+	step.Update("All services available.")
+	step.Done()
+
+	step = sg.Add("Calculating repository name")
+
+	repoName := r.config.Repository
+
+	if repoName == "" {
+		log.Info("infering ECR repo name from app name")
+		repoName = "waypoint-" + src.App
+	}
+
+	step.Update("Set ECR Repository name to '%s'", repoName)
+
+	step.Done()
+
+	repOut, err := svc.DescribeRepositories(&ecr.DescribeRepositoriesInput{
+		RepositoryNames: []*string{aws.String(repoName)},
+	})
+	if err != nil {
+		_, ok := err.(*ecr.RepositoryNotFoundException)
+		if !ok {
+			return nil, err
+		}
+	}
+
+	var repo *ecr.Repository
+
+	if repOut == nil || len(repOut.Repositories) == 0 {
+		log.Info("no ECR repository detected, creating", "name", repoName)
+
+		step = sg.Add("Creating new repository: %s", repoName)
+		out, err := svc.CreateRepository(&ecr.CreateRepositoryInput{
+			RepositoryName: aws.String(repoName),
+			Tags: []*ecr.Tag{
+				{
+					Key:   aws.String("waypoint-app"),
+					Value: aws.String(src.App),
+				},
+			},
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("Unable to create repository: %w", err)
+		}
+
+		step.Done()
+
+		repo = out.Repository
+	} else {
+		repo = repOut.Repositories[0]
+	}
+
+	uri := repo.RepositoryUri
 
 	target := &docker.Image{Image: *uri, Tag: r.config.Tag}
 
-	ui.Output("Tagging Docker image: %s => %s", img.Name(), target.Name())
+	step = sg.Add("Tagging Docker image: %s => %s", img.Name(), target.Name())
 
 	err = cli.ImageTag(ctx, img.Name(), target.Name())
 	if err != nil {
@@ -90,14 +155,7 @@ func (r *Registry) Push(
 		return nil, err
 	}
 
-	gat, err := svc.GetAuthorizationToken(&ecr.GetAuthorizationTokenInput{})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(gat.AuthorizationData) == 0 {
-		return nil, fmt.Errorf("No authorization tokens provided")
-	}
+	step.Done()
 
 	uptoken := *gat.AuthorizationData[0].AuthorizationToken
 
@@ -122,12 +180,18 @@ func (r *Registry) Push(
 		RegistryAuth: encodedAuth,
 	}
 
+	step.Done()
+
+	step = sg.Add("Pushing image...")
+
 	responseBody, err := cli.ImagePush(ctx, reference.FamiliarString(ref), options)
 	if err != nil {
 		return nil, err
 	}
 
 	defer responseBody.Close()
+
+	stdout := step.TermOutput()
 
 	var (
 		termFd uintptr
@@ -136,13 +200,15 @@ func (r *Registry) Push(
 
 	if f, ok := stdout.(*os.File); ok {
 		termFd = f.Fd()
-		isTerm = isatty.IsTerminal(termFd)
+		isTerm = true
 	}
 
 	err = jsonmessage.DisplayJSONMessagesStream(responseBody, stdout, termFd, isTerm, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	step.Done()
 
 	ui.Output("Docker image pushed: %s", target.Name())
 
@@ -155,7 +221,7 @@ type Config struct {
 	Region string `hcl:"region,attr"`
 
 	// Repository to store the image into
-	Repository string `hcl:"repository,attr"`
+	Repository string `hcl:"repository,optional"`
 
 	// Tag is the tag to apply to the image.
 	Tag string `hcl:"tag,attr"`
@@ -174,7 +240,6 @@ func (r *Registry) Documentation() (*docs.Documentation, error) {
 registry {
     use "aws-ecr" {
       region = "us-east-1"
-      repository = "waypoint-example"
       tag = "latest"
     }
 }
@@ -192,7 +257,7 @@ registry {
 		"repository",
 		"the ECR repository to store the image into",
 		docs.Summary(
-			"this ECR repository must already exist, waypoint will not create it",
+			"This defaults to waypoint- then the application name. The repository will be automatically created if needed",
 		),
 	)
 

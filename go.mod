@@ -56,7 +56,6 @@ require (
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kr/text v0.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.1.2
 	github.com/mitchellh/go-glint v0.0.0-20201015034436-f80573c636de
 	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8

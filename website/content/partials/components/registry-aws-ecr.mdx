@@ -19,9 +19,10 @@ The AWS region the ECR repository is in.
 
 The ECR repository to store the image into.
 
-This ECR repository must already exist, waypoint will not create it.
+This defaults to waypoint- then the application name. The repository will be automatically created if needed.
 
 - Type: **string**
+- **Optional**
 
 #### tag
 
@@ -36,7 +37,6 @@ The docker tag to assign to the new image.
 registry {
     use "aws-ecr" {
       region = "us-east-1"
-      repository = "waypoint-example"
       tag = "latest"
     }
 }
