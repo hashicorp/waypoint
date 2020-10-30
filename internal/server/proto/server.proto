@@ -2154,7 +2154,7 @@ message Snapshot {
     // items is a id/value mapping of all this chunk of items in this bucket
     map<string, bytes> items = 2;
 
-    // trailer is true if this is the last bolt chunk being written.
-    bool trailer = 3;
+    // final is true if this is the last bolt chunk being written.
+    bool final = 3;
   }
 }

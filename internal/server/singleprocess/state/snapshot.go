@@ -90,7 +90,7 @@ func (s *State) CreateSnapshot(w io.Writer) error {
 		}
 
 		// Write our footer chunk
-		if err := dw.WriteMsg(&pb.Snapshot_BoltChunk{Trailer: true}); err != nil {
+		if err := dw.WriteMsg(&pb.Snapshot_BoltChunk{Final: true}); err != nil {
 			return err
 		}
 
@@ -259,7 +259,7 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 			}
 		}
 
-		if chunk.Trailer {
+		if chunk.Final {
 			tempDb.Close()
 			break
 		}
