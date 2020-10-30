@@ -309,7 +309,8 @@ func (a *App) initMappers(
 	log := a.logger
 
 	for _, name := range f.Registered() {
-		log.Debug("loading mapper plugin", "name", name)
+		plog := log.With("name", name)
+		plog.Debug("loading mapper plugin")
 
 		// Start the component
 		pinst, err := a.startPlugin(ctx, component.MapperType, f, name)
@@ -317,7 +318,17 @@ func (a *App) initMappers(
 			return err
 		}
 
+		// If we have no mappers in this plugin, then exit the plugin and
+		// continue. This will keep us from having non-mapper plugins just
+		// running in memory.
+		if len(pinst.Mappers) == 0 {
+			plog.Debug("no mappers advertised by plugin, closing")
+			pinst.Close()
+			continue
+		}
+
 		// We store the mappers
+		plog.Debug("registered mappers", "len", len(pinst.Mappers))
 		a.mappers = append(a.mappers, pinst.Mappers...)
 
 		// Add this to our closer list
