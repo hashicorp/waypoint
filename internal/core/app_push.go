@@ -31,7 +31,7 @@ func (a *App) PushBuild(ctx context.Context, optFuncs ...PushBuildOption) (*pb.P
 
 	// Add our build to our config
 	var evalCtx hcl.EvalContext
-	if err := evalCtxTemplateProto(&evalCtx, "build", opts.Build); err != nil {
+	if err := evalCtxTemplateProto(&evalCtx, "artifact", opts.Build); err != nil {
 		a.logger.Warn("failed to prepare template variables, will not be available",
 			"err", err)
 	}
