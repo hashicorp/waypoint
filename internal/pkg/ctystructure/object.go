@@ -39,6 +39,9 @@ func toValue(val reflect.Value, path cty.Path) (cty.Value, error) {
 	case reflect.Map:
 		return toValueObject(val, path)
 
+	case reflect.Invalid:
+		return cty.NilVal, nil
+
 	default:
 		return cty.NilVal, path.NewErrorf(
 			"unknown kind: %s", val.Kind().String())
