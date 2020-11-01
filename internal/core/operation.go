@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -127,6 +128,12 @@ func (a *App) doOperation(
 			// Set our labels if we can
 			msgUpdateLabels(a, op.Labels(a), msg, result)
 
+			// Set our template data. Any errors here are logged but ignored
+			// since we don't want to leave dangling physical resources.
+			if err := msgUpdateTemplateData(msg, result); err != nil {
+				log.Warn("error encoding template data, will not be stored", "err", err)
+			}
+
 			// No error, our state is success
 			server.StatusSetSuccess(*statusPtr)
 
@@ -208,6 +215,34 @@ func msgUpdateLabels(
 
 	// Merge them
 	val.Set(reflect.ValueOf(app.mergeLabels(base, resultLabels)))
+}
+
+func msgUpdateTemplateData(
+	msg proto.Message,
+	result interface{},
+) error {
+	// Get our template data field in our proto message. If we don't have one
+	// then we don't bother doing anything.
+	val := msgField(msg, "TemplateData")
+	if !val.IsValid() {
+		return nil
+	}
+
+	// Determine if we have template data
+	tpl, ok := result.(component.Template)
+	if !ok {
+		return nil
+	}
+
+	// Marshal it
+	tplData, err := json.Marshal(tpl.TemplateData())
+	if err != nil {
+		return err
+	}
+
+	// Merge them
+	val.Set(reflect.ValueOf(tplData))
+	return nil
 }
 
 // msgId gets the id of the message by looking for the "Id" field. This

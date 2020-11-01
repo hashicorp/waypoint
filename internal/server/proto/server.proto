@@ -1289,6 +1289,9 @@ message Build {
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 5;
 
+  // template data for HCL variables and template functions, json-encoded
+  bytes template_data = 10;
+
   // ID of the job that created this build. This may be empty.
   string job_id = 9;
 }
