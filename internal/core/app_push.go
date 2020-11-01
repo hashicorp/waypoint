@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/hcl/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -28,8 +29,12 @@ func (a *App) PushBuild(ctx context.Context, optFuncs ...PushBuildOption) (*pb.P
 		return nil, err
 	}
 
+	// Add our build to our config
+	var evalCtx hcl.EvalContext
+	evalCtxTemplateProto(&evalCtx, "build", opts.Build)
+
 	// Make our registry
-	cr, err := componentCreatorMap[component.RegistryType].Create(ctx, a, nil)
+	cr, err := componentCreatorMap[component.RegistryType].Create(ctx, a, &evalCtx)
 	if status.Code(err) == codes.Unimplemented {
 		cr = nil
 		err = nil
