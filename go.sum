@@ -736,6 +736,8 @@ github.com/hashicorp/vault/sdk v0.1.14-0.20190909201848-e0fbf9b652e2 h1:b65cSyZq
 github.com/hashicorp/vault/sdk v0.1.14-0.20190909201848-e0fbf9b652e2/go.mod h1:B+hVj7TpuQY1Y/GPbCpffmgd+tSEwvhkWnjtSYCaS2M=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9 h1:i9hzlv2SpmaNcQ8ZLGn01fp2Gqyejj0juVs7rYDgecE=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9/go.mod h1:ObgQSWSX9rsNofh16kctm6XxLW2QW1Ay6/9ris6T6DU=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201101231154-3fec08c10845 h1:I74TfOmuvD6B6S5enkzCYPSDcR96/nJICVsVcJU1c0o=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201101231154-3fec08c10845/go.mod h1:/TtZN4o0eunv4v50BF8kEVDnADsk8v8a12e8Y8SE+K8=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20190923154419-df201c70410d h1:W+SIwDdl3+jXWeidYySAgzytE3piq6GumXeBjFBG67c=
@@ -748,6 +750,8 @@ github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/huandu/xstrings v1.3.2 h1:L18LIDzqlW6xN2rEkpdV8+oL/IXWJ1APd+vsdYy4Wdw=
 github.com/huandu/xstrings v1.3.2/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq4ovT0aE=
+github.com/iancoleman/strcase v0.1.2 h1:gnomlvw9tnV3ITTAxzKSgTF+8kFWcU/f+TgttpXGz1U=
+github.com/iancoleman/strcase v0.1.2/go.mod h1:SK73tn/9oHe+/Y0h39VT4UCxmurVJkR5NA7kMEAOgSE=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/iij/doapi v0.0.0-20190504054126-0bbf12d6d7df/go.mod h1:QMZY7/J/KSQEhKWFeDesPjMj+wCHReeknARU3wqlyN4=
 github.com/imdario/mergo v0.3.9 h1:UauaLniWCFHWd+Jp9oCEkTBj8VO/9DKg3PV3VCNMDIg=

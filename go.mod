@@ -50,7 +50,7 @@ require (
 	github.com/hashicorp/horizon v0.0.0-20201027182500-45298493f49e
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201016002013-59421183d54f
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201101231154-3fec08c10845
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
@@ -96,7 +96,7 @@ require (
 // development at the moment it is common to be working on these libs too.
 // replace github.com/hashicorp/go-argmapper => ../go-argmapper
 // replace github.com/hashicorp/horizon => ../horizon
-replace github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
+// replace github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
 
 replace (
 	// v0.3.11 panics for some reason on our tests
