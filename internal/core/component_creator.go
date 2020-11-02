@@ -54,9 +54,8 @@ func (c *Component) Close() error {
 // componentCreator represents the configuration to initialize the component
 // for a given application.
 type componentCreator struct {
-	Type         component.Type
-	ConfigFunc   func(*App, *hcl.EvalContext) (interface{}, error)
-	EmptyContext *hcl.EvalContext
+	Type       component.Type
+	ConfigFunc func(*App, *hcl.EvalContext) (interface{}, error)
 }
 
 // componentCreatorMap contains all the components that can be initialized
