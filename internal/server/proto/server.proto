@@ -144,6 +144,15 @@ service Waypoint {
   // SetServerConfig sets configuration for the Waypoint server.
   rpc SetServerConfig(SetServerConfigRequest) returns (google.protobuf.Empty);
 
+  // CreateSnapshot creates a new database snapshot.
+  rpc CreateSnapshot(google.protobuf.Empty) returns (stream CreateSnapshotResponse);
+
+  // RestoreSnapshot performs a database restore with the given snapshot.
+  // This API doesn't do a full online restore, it only stages the restore
+  // for the next server start to finalize the restore. See the arguments for
+  // more information.
+  rpc RestoreSnapshot(stream RestoreSnapshotRequest) returns (google.protobuf.Empty);
+
   // BootstrapToken returns the initial token for the server. This can only
   // be requested once on first startup. After initial request this will
   // always return a PermissionDenied error.
@@ -2048,4 +2057,104 @@ message NewTokenResponse {
 message ConvertInviteTokenRequest {
   // A token previous returned by GenerateInviteToken.
   string token = 1;
+}
+
+/********************************************************************
+* Snapshot/Restore
+********************************************************************/
+
+message CreateSnapshotResponse {
+  oneof event {
+    // Open is sent as the opening message with information about the
+    // snapshot. This is always sent first (before any data).
+    Open open = 1;
+
+    // Chunk is a next chunk of data. You should continue to expect
+    // data until an EOF is received on the stream.
+    bytes chunk = 2;
+  }
+
+  // One day we may add information here. For now we are reserving this.
+  message Open {}
+}
+
+message RestoreSnapshotRequest {
+  oneof event {
+    // Open MUST be sent as the first message and sent exactly once.
+    // This sets the settings for the restore.
+    Open open = 1;
+
+    // Chunk is a chunk of restore data. The restore snapshot API will
+    // continue reading data until an EOF is received (the write end is
+    // closed).
+    bytes chunk = 2;
+  }
+
+  message Open {
+    // If true, the server will exit after the restore is staged. This will
+    // SHUT DOWN the server and some external process you created is expected
+    // to bring it back. The Waypoint server on its own WILL NOT automatically
+    // restart. You should only set this if you have some operation to
+    // automate restart such as running in Nomad or Kubernetes.
+    bool exit = 1;
+  }
+}
+
+// Snapshot is the encoding of the snapshot for all snapshot APIs.
+// The encoding is proto.Message delimited data. This is also the encoding
+// expected if the waypoint-restore.db file is copied manually from the
+// snapshot data.
+//
+// For snapshots, the Header message is always guaranteed first. After that,
+// it is NOT guaranteed that only data chunks are sent. It is only guaranteed
+// that the data chunks are over at EOF. Unknown messages can probably be
+// ignored.
+//
+// It is HIGHLY RECOMMENDED you do not modify snapshots, but these messages
+// are publicly exported so that you can try to inspect snapshots.
+message Snapshot {
+  // Header is _always_ the first message encoded into a snapshot. If
+  // this isn't present, the entire snapshot can be considered corrupt.
+  message Header {
+    // version is the version of Waypoint that generated this snapshot.
+    VersionInfo version = 1;
+
+    // format is the format of the remaining messages. This can be used
+    // to determine what messages to expect following the header.
+    Format format = 2;
+
+    enum Format {
+      UNKNOWN = 0;
+      BOLT = 1; // Expect a series of BoltChunk messages
+    }
+  }
+
+  // Trailer is sent as the final message encoded into a snapshot. Detecting
+  // when the trailer is is dependent on the format.
+  message Trailer {
+    // checksum is the checksum of all the bytes up to but not including
+    // this proto message. The checksum is for the raw uncompressed bytes.
+    oneof checksum {
+      string sha256 = 1; // SHA-256 checksum
+    }
+  }
+
+  // BoltChunk is a single chunk of data for BoltDB if the snapshot format
+  // is BOLT. A chunk will always contain items designated for a single bucket,
+  // but a bucket may be repeated multiple time across chunks if there are
+  // too many items in the bucket.
+  //
+  // The final BoltChunk will have trailer set to true. Immediaetly following
+  // that chunk will be the Trailer message.
+  message BoltChunk {
+    // bucket is the name of the bucket. This may be empty. If this is empty,
+    // then this chunk should be ignored.
+    string bucket = 1;
+
+    // items is a id/value mapping of all this chunk of items in this bucket
+    map<string, bytes> items = 2;
+
+    // final is true if this is the last bolt chunk being written.
+    bool final = 3;
+  }
 }

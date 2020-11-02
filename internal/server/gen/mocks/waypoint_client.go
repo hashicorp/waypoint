@@ -138,6 +138,36 @@ func (_m *WaypointClient) CreateHostname(ctx context.Context, in *gen.CreateHost
 	return r0, r1
 }
 
+// CreateSnapshot provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) CreateSnapshot(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (gen.Waypoint_CreateSnapshotClient, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 gen.Waypoint_CreateSnapshotClient
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) gen.Waypoint_CreateSnapshotClient); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(gen.Waypoint_CreateSnapshotClient)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteHostname provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) DeleteHostname(ctx context.Context, in *gen.DeleteHostnameRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	_va := make([]interface{}, len(opts))
@@ -1061,6 +1091,36 @@ func (_m *WaypointClient) QueueJob(ctx context.Context, in *gen.QueueJobRequest,
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.QueueJobRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RestoreSnapshot provides a mock function with given fields: ctx, opts
+func (_m *WaypointClient) RestoreSnapshot(ctx context.Context, opts ...grpc.CallOption) (gen.Waypoint_RestoreSnapshotClient, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 gen.Waypoint_RestoreSnapshotClient
+	if rf, ok := ret.Get(0).(func(context.Context, ...grpc.CallOption) gen.Waypoint_RestoreSnapshotClient); ok {
+		r0 = rf(ctx, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(gen.Waypoint_RestoreSnapshotClient)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}

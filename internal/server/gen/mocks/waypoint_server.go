@@ -108,6 +108,20 @@ func (_m *WaypointServer) CreateHostname(_a0 context.Context, _a1 *gen.CreateHos
 	return r0, r1
 }
 
+// CreateSnapshot provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) CreateSnapshot(_a0 *emptypb.Empty, _a1 gen.Waypoint_CreateSnapshotServer) error {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*emptypb.Empty, gen.Waypoint_CreateSnapshotServer) error); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteHostname provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) DeleteHostname(_a0 context.Context, _a1 *gen.DeleteHostnameRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
@@ -774,6 +788,20 @@ func (_m *WaypointServer) QueueJob(_a0 context.Context, _a1 *gen.QueueJobRequest
 	}
 
 	return r0, r1
+}
+
+// RestoreSnapshot provides a mock function with given fields: _a0
+func (_m *WaypointServer) RestoreSnapshot(_a0 gen.Waypoint_RestoreSnapshotServer) error {
+	ret := _m.Called(_a0)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(gen.Waypoint_RestoreSnapshotServer) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // RunnerConfig provides a mock function with given fields: _a0
