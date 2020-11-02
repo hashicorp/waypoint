@@ -56,9 +56,7 @@ func (p *Platform) Auth(
 	// just output some help text to the user.
 	if !info.Local {
 		ui.Output(
-			"Jack Pearkes needs to do this but he'll tell you to open a URL to\n" +
-				"some place and copy some token to some other place and then after\n" +
-				"all that we should be good to go.")
+			"access_token must to be set to the value of a Netlify authentication token")
 		return nil, nil
 	}
 
@@ -127,15 +125,19 @@ func (p *Platform) ValidateAuth(
 
 	st.Update("Validating credentials...")
 
-	// If the user configured a token, just stop and use that
+	var token string
+
+	// If the user configured a token, just stop and use that, otherwise,
+	// we'll use the saved token from the authentication flow
 	if p.config.AccessToken != "" {
 		log.Debug("user configured token in access_token config, not authenticating")
 		st.Update("Using configured token")
+		token = p.config.AccessToken
 		return nil
+	} else {
+		// Will retrive local token it if exists
+		token = retrieveLocalToken(dir.DataDir())
 	}
-
-	// Will retrive local token it if exists
-	token := retrieveLocalToken(dir.DataDir())
 
 	clientContext := apiContext(token)
 	client := netlify.Default
@@ -166,9 +168,10 @@ func (p *Platform) Deploy(
 	// If the user configured a token, just use that, otherwise
 	// get the token that should exist because of auth calls
 	var token string
-	if p.config.AccessToken == "" {
-		localToken := retrieveLocalToken(dir.DataDir())
-		token = localToken
+	if p.config.AccessToken != "" {
+		token = p.config.AccessToken
+	} else {
+		token = retrieveLocalToken(dir.DataDir())
 	}
 
 	// Setup API content for netlify
