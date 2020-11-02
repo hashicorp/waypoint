@@ -193,7 +193,7 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 		return db, err
 	}
 
-	log.Warn("restore file found, will initiate database restore")
+	log.Warn("restore file found, will initiate database restore", "path", ri.StagePath)
 
 	// The file on disk should be in the form of pb.Snapshot. So what we need
 	// to do next is parse out the header to determine the format, and then
