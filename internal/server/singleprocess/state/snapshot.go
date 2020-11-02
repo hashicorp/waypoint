@@ -315,7 +315,7 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 	}
 
 	// Delete our restore data
-	log.Info("removing restore data since we're done reading it")
+	log.Info("finished reading restore data, removing now")
 	if err := os.Remove(ri.StagePath); err != nil {
 		log.Error("error removing restore data", "err", err)
 		return db, err
