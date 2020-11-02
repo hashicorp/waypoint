@@ -224,7 +224,7 @@ func finalizeRestore(log hclog.Logger, db *bolt.DB) (*bolt.DB, error) {
 	}
 
 	// Open a temporary file to write our raw bolt data
-	log.Info("reading bolt information and writing it into a new bolt db")
+	log.Info("reading bolt information and writing it into a new bolt db", "path", ri.StageTempPath)
 	tempDb, err := bolt.Open(ri.StageTempPath, 0600, &bolt.Options{Timeout: 2 * time.Second})
 	if err != nil {
 		return db, err
