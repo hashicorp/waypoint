@@ -151,3 +151,39 @@ func (c *App) Release(ctx *hcl.EvalContext) (*Release, error) {
 
 	return &b, nil
 }
+
+// BuildUse returns the plugin "use" value.
+func (c *App) BuildUse() string {
+	if c.BuildRaw == nil {
+		return ""
+	}
+
+	return c.BuildRaw.Use.Type
+}
+
+// RegistryUse returns the plugin "use" value.
+func (c *App) RegistryUse() string {
+	if c.BuildRaw == nil || c.BuildRaw.Registry == nil {
+		return ""
+	}
+
+	return c.BuildRaw.Registry.Use.Type
+}
+
+// DeployUse returns the plugin "use" value.
+func (c *App) DeployUse() string {
+	if c.DeployRaw == nil {
+		return ""
+	}
+
+	return c.DeployRaw.Use.Type
+}
+
+// ReleaseUse returns the plugin "use" value.
+func (c *App) ReleaseUse() string {
+	if c.ReleaseRaw == nil {
+		return ""
+	}
+
+	return c.ReleaseRaw.Use.Type
+}

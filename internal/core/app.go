@@ -159,7 +159,7 @@ func (a *App) Ref() *pb.Ref_Application {
 func (a *App) Components(ctx context.Context) ([]*Component, error) {
 	var results []*Component
 	for _, cc := range componentCreatorMap {
-		c, err := cc.Create(ctx, a, nil)
+		c, err := cc.CreateNoConfig(ctx, a)
 		if status.Code(err) == codes.Unimplemented {
 			c = nil
 			err = nil
