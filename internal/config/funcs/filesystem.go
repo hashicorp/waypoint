@@ -16,23 +16,17 @@ import (
 	"github.com/zclconf/go-cty/cty/function"
 )
 
-func Filesystem(pwd string) map[string]function.Function {
+func Filesystem() map[string]function.Function {
 	funcs := map[string]function.Function{
-		"file":       MakeFileFunc(pwd, false),
-		"filebase64": MakeFileFunc(pwd, true),
-		"fileexists": MakeFileExistsFunc(pwd),
-		"fileset":    MakeFileSetFunc(pwd),
+		"file":       MakeFileFunc(false),
+		"filebase64": MakeFileFunc(true),
+		"fileexists": MakeFileExistsFunc(),
+		"fileset":    MakeFileSetFunc(),
 		"basename":   BasenameFunc,
 		"dirname":    DirnameFunc,
 		"abspath":    AbsPathFunc,
 		"pathexpand": PathExpandFunc,
 	}
-
-	funcs["templatefile"] = MakeTemplateFileFunc(pwd, func() map[string]function.Function {
-		// The templatefile function prevents recursive calls to itself
-		// by copying this map and overwriting the "templatefile" entry.
-		return funcs
-	})
 
 	return funcs
 }
@@ -40,7 +34,7 @@ func Filesystem(pwd string) map[string]function.Function {
 // MakeFileFunc constructs a function that takes a file path and returns the
 // contents of that file, either directly as a string (where valid UTF-8 is
 // required) or as a string containing base64 bytes.
-func MakeFileFunc(baseDir string, encBase64 bool) function.Function {
+func MakeFileFunc(encBase64 bool) function.Function {
 	return function.New(&function.Spec{
 		Params: []function.Parameter{
 			{
@@ -51,7 +45,7 @@ func MakeFileFunc(baseDir string, encBase64 bool) function.Function {
 		Type: function.StaticReturnType(cty.String),
 		Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 			path := args[0].AsString()
-			src, err := readFileBytes(baseDir, path)
+			src, err := readFileBytes(path)
 			if err != nil {
 				err = function.NewArgError(0, err)
 				return cty.UnknownVal(cty.String), err
@@ -100,7 +94,7 @@ func MakeTemplateFileFunc(baseDir string, funcsCb func() map[string]function.Fun
 	loadTmpl := func(fn string) (hcl.Expression, error) {
 		// We re-use File here to ensure the same filename interpretation
 		// as it does, along with its other safety checks.
-		tmplVal, err := File(baseDir, cty.StringVal(fn))
+		tmplVal, err := File(cty.StringVal(fn))
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +197,7 @@ func MakeTemplateFileFunc(baseDir string, funcsCb func() map[string]function.Fun
 
 // MakeFileExistsFunc constructs a function that takes a path
 // and determines whether a file exists at that path
-func MakeFileExistsFunc(baseDir string) function.Function {
+func MakeFileExistsFunc() function.Function {
 	return function.New(&function.Spec{
 		Params: []function.Parameter{
 			{
@@ -220,7 +214,8 @@ func MakeFileExistsFunc(baseDir string) function.Function {
 			}
 
 			if !filepath.IsAbs(path) {
-				path = filepath.Join(baseDir, path)
+				return cty.UnknownVal(cty.Bool), fmt.Errorf(
+					"filepath must be absolute; use `path.*` variables to make the path absolute")
 			}
 
 			// Ensure that the path is canonical for the host OS
@@ -246,7 +241,7 @@ func MakeFileExistsFunc(baseDir string) function.Function {
 
 // MakeFileSetFunc constructs a function that takes a glob pattern
 // and enumerates a file set from that pattern
-func MakeFileSetFunc(baseDir string) function.Function {
+func MakeFileSetFunc() function.Function {
 	return function.New(&function.Spec{
 		Params: []function.Parameter{
 			{
@@ -264,7 +259,8 @@ func MakeFileSetFunc(baseDir string) function.Function {
 			pattern := args[1].AsString()
 
 			if !filepath.IsAbs(path) {
-				path = filepath.Join(baseDir, path)
+				return cty.UnknownVal(cty.Set(cty.String)), fmt.Errorf(
+					"filepath must be absolute; use `path.*` variables to make the path absolute")
 			}
 
 			// Join the path to the glob pattern, while ensuring the full
@@ -373,14 +369,15 @@ var PathExpandFunc = function.New(&function.Spec{
 	},
 })
 
-func readFileBytes(baseDir, path string) ([]byte, error) {
+func readFileBytes(path string) ([]byte, error) {
 	path, err := homedir.Expand(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to expand ~: %s", err)
 	}
 
 	if !filepath.IsAbs(path) {
-		path = filepath.Join(baseDir, path)
+		return nil, fmt.Errorf(
+			"filepath must be absolute; use `path.*` variables to make the path absolute")
 	}
 
 	// Ensure that the path is canonical for the host OS
@@ -406,8 +403,8 @@ func readFileBytes(baseDir, path string) ([]byte, error) {
 // The underlying function implementation works relative to a particular base
 // directory, so this wrapper takes a base directory string and uses it to
 // construct the underlying function before calling it.
-func File(baseDir string, path cty.Value) (cty.Value, error) {
-	fn := MakeFileFunc(baseDir, false)
+func File(path cty.Value) (cty.Value, error) {
+	fn := MakeFileFunc(false)
 	return fn.Call([]cty.Value{path})
 }
 
@@ -416,8 +413,8 @@ func File(baseDir string, path cty.Value) (cty.Value, error) {
 // The underlying function implementation works relative to a particular base
 // directory, so this wrapper takes a base directory string and uses it to
 // construct the underlying function before calling it.
-func FileExists(baseDir string, path cty.Value) (cty.Value, error) {
-	fn := MakeFileExistsFunc(baseDir)
+func FileExists(path cty.Value) (cty.Value, error) {
+	fn := MakeFileExistsFunc()
 	return fn.Call([]cty.Value{path})
 }
 
@@ -426,8 +423,8 @@ func FileExists(baseDir string, path cty.Value) (cty.Value, error) {
 // The underlying function implementation works relative to a particular base
 // directory, so this wrapper takes a base directory string and uses it to
 // construct the underlying function before calling it.
-func FileSet(baseDir string, path, pattern cty.Value) (cty.Value, error) {
-	fn := MakeFileSetFunc(baseDir)
+func FileSet(path, pattern cty.Value) (cty.Value, error) {
+	fn := MakeFileSetFunc()
 	return fn.Call([]cty.Value{path, pattern})
 }
 
@@ -438,8 +435,8 @@ func FileSet(baseDir string, path, pattern cty.Value) (cty.Value, error) {
 // The underlying function implementation works relative to a particular base
 // directory, so this wrapper takes a base directory string and uses it to
 // construct the underlying function before calling it.
-func FileBase64(baseDir string, path cty.Value) (cty.Value, error) {
-	fn := MakeFileFunc(baseDir, true)
+func FileBase64(path cty.Value) (cty.Value, error) {
+	fn := MakeFileFunc(true)
 	return fn.Call([]cty.Value{path})
 }
 
