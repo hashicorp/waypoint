@@ -151,7 +151,10 @@ func (c *InitCommand) Run(args []string) int {
 		c.validateServer,
 		c.validateProject,
 		c.validatePlugins,
-		c.validateAuth,
+		// NOTE(mitchellh): this is disabled as of 0.2 since we can't load
+		// config anymore. We're keeping the code around so that we can migrate
+		// it in the future.
+		// c.validateAuth,
 	}
 	for _, step := range steps {
 		if !step() {
