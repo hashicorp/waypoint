@@ -3,7 +3,9 @@ package funcs
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -24,6 +26,7 @@ func MakeTemplateFuncs(hclCtx *hcl.EvalContext) map[string]function.Function {
 	specs := map[string]*function.Spec{
 		"templatestring": makeTemplateString(hclCtx),
 		"templatefile":   makeTemplateFile(hclCtx),
+		"templatedir":    makeTemplateDir(hclCtx),
 	}
 
 	// Override each to prevent template calls within template calls, for now.
@@ -170,6 +173,109 @@ func makeTemplateFile(hclCtx *hcl.EvalContext) *function.Spec {
 			path := filepath.Join(td, filepath.Base(args[0].AsString()))
 
 			return cty.StringVal(path), ioutil.WriteFile(path, []byte(val.AsString()), 0600)
+		},
+	}
+}
+
+func makeTemplateDir(hclCtx *hcl.EvalContext) *function.Spec {
+	loadTmpl := func(fn string) (hcl.Expression, error) {
+		// We re-use File here to ensure the same filename interpretation
+		// as it does, along with its other safety checks.
+		tmplVal, err := File(cty.StringVal(fn))
+		if err != nil {
+			return nil, err
+		}
+
+		expr, diags := hclsyntax.ParseTemplate([]byte(tmplVal.AsString()), fn, hcl.Pos{Line: 1, Column: 1})
+		if diags.HasErrors() {
+			return nil, diags
+		}
+
+		return expr, nil
+	}
+
+	return &function.Spec{
+		Params: []function.Parameter{
+			{
+				Name: "dir",
+				Type: cty.String,
+			},
+		},
+		VarParam: &function.Parameter{
+			Name: "vars",
+			Type: cty.DynamicPseudoType,
+		},
+		Type: func(args []cty.Value) (cty.Type, error) {
+			for _, arg := range args {
+				if !arg.IsKnown() {
+					return cty.DynamicPseudoType, nil
+				}
+			}
+
+			return cty.String, nil
+		},
+		Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
+			td, err := ioutil.TempDir("", "waypoint")
+			if err != nil {
+				return cty.DynamicVal, err
+			}
+
+			root := args[0].AsString()
+			err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				if info.IsDir() {
+					return nil
+				}
+
+				dir := td
+
+				// Determine if we have any directory
+				stripped := strings.TrimPrefix(path, root)
+				if len(stripped) == 0 {
+					panic("empty path") // should never happen
+				}
+				if stripped[0] == '/' || stripped[0] == '\\' {
+					// Get rid of any prefix '/' which could happen if tpl.Path doesn't
+					// end in a directory sep.
+					stripped = stripped[1:]
+				}
+				if v := filepath.Dir(stripped); v != "." {
+					dir = filepath.Join(dir, v)
+					if err := os.MkdirAll(dir, 0700); err != nil {
+						return err
+					}
+				}
+
+				// Render
+				expr, err := loadTmpl(path)
+				if err != nil {
+					return err
+				}
+
+				val, err := renderTmpl(expr, hclCtx, args[1:]...)
+				if err != nil {
+					return err
+				}
+
+				if val.Type() != cty.String {
+					val, err = ctyconvert.Convert(val, cty.String)
+					if err != nil {
+						return err
+					}
+				}
+
+				// We'll copy the file into the temporary directory
+				path = filepath.Join(dir, filepath.Base(path))
+				return ioutil.WriteFile(path, []byte(val.AsString()), 0600)
+			})
+			if err != nil {
+				return cty.DynamicVal, err
+			}
+
+			return cty.StringVal(td), nil
 		},
 	}
 }
