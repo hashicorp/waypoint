@@ -84,7 +84,7 @@ func Load(path string, pwd string) (*Config, error) {
 
 	// Decode
 	var cfg hclConfig
-	if err := hclsimple.DecodeFile(path, ctx, &cfg); err != nil {
+	if err := hclsimple.DecodeFile(path, finalizeContext(ctx), &cfg); err != nil {
 		return nil, err
 	}
 	if err := defaults.Set(&cfg); err != nil {
