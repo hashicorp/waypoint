@@ -2,10 +2,13 @@ package funcs
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
+	ctyconvert "github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
 )
 
@@ -20,6 +23,7 @@ func MakeTemplateFuncs(hclCtx *hcl.EvalContext) map[string]function.Function {
 	// Get all our specs
 	specs := map[string]*function.Spec{
 		"templatestring": makeTemplateString(hclCtx),
+		"templatefile":   makeTemplateFile(hclCtx),
 	}
 
 	// Override each to prevent template calls within template calls, for now.
@@ -92,6 +96,80 @@ func makeTemplateString(hclCtx *hcl.EvalContext) *function.Spec {
 			}
 
 			return renderTmpl(expr, hclCtx, args[1:]...)
+		},
+	}
+}
+
+func makeTemplateFile(hclCtx *hcl.EvalContext) *function.Spec {
+	loadTmpl := func(fn string) (hcl.Expression, error) {
+		// We re-use File here to ensure the same filename interpretation
+		// as it does, along with its other safety checks.
+		tmplVal, err := File(cty.StringVal(fn))
+		if err != nil {
+			return nil, err
+		}
+
+		expr, diags := hclsyntax.ParseTemplate([]byte(tmplVal.AsString()), fn, hcl.Pos{Line: 1, Column: 1})
+		if diags.HasErrors() {
+			return nil, diags
+		}
+
+		return expr, nil
+	}
+
+	return &function.Spec{
+		Params: []function.Parameter{
+			{
+				Name: "template_path",
+				Type: cty.String,
+			},
+		},
+		VarParam: &function.Parameter{
+			Name: "vars",
+			Type: cty.DynamicPseudoType,
+		},
+		Type: func(args []cty.Value) (cty.Type, error) {
+			for _, arg := range args {
+				if !arg.IsKnown() {
+					return cty.DynamicPseudoType, nil
+				}
+			}
+
+			// We'll render our template now to see what result type it produces.
+			// A template consisting only of a single interpolation an potentially
+			// return any type.
+			_, err := loadTmpl(args[0].AsString())
+			if err != nil {
+				return cty.DynamicPseudoType, err
+			}
+
+			return cty.String, nil
+		},
+		Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
+			expr, err := loadTmpl(args[0].AsString())
+			if err != nil {
+				return cty.DynamicVal, err
+			}
+
+			val, err := renderTmpl(expr, hclCtx, args[1:]...)
+			if err != nil {
+				return cty.DynamicVal, err
+			}
+
+			if val.Type() != cty.String {
+				val, err = ctyconvert.Convert(val, cty.String)
+				if err != nil {
+					return cty.DynamicVal, err
+				}
+			}
+
+			td, err := ioutil.TempDir("", "waypoint")
+			if err != nil {
+				return cty.DynamicVal, err
+			}
+			path := filepath.Join(td, filepath.Base(args[0].AsString()))
+
+			return cty.StringVal(path), ioutil.WriteFile(path, []byte(val.AsString()), 0600)
 		},
 	}
 }
