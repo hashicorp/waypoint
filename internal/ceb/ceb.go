@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -42,6 +43,10 @@ type CEB struct {
 	execIdx      int64
 
 	cleanupFunc func()
+
+	mu             sync.Mutex
+	urlAgentCtx    context.Context
+	urlAgentCancel func()
 }
 
 // Run runs a CEB with the given options.
