@@ -57,7 +57,7 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 			"err", err)
 	}
 
-	c, err := componentCreatorMap[component.ReleaseManagerType].Create(ctx, a, &evalCtx)
+	c, err := a.createReleaser(ctx, &evalCtx)
 	if status.Code(err) == codes.Unimplemented {
 		c = nil
 		err = nil
@@ -81,6 +81,65 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 	}
 
 	return releasepb.(*pb.Release), release, nil
+}
+
+// createReleaser creates the releaser component instance by trying to
+// first load the explicit releaser, but falling back to the default releaser
+// if available.
+func (a *App) createReleaser(ctx context.Context, hclCtx *hcl.EvalContext) (*Component, error) {
+	log := a.logger
+
+	log.Debug("initializing release manager plugin")
+	c, err := componentCreatorMap[component.ReleaseManagerType].Create(ctx, a, hclCtx)
+	if err == nil {
+		// We have a releaser configured, use that.
+		return c, nil
+	}
+
+	// If we received Unimplemented, we just don't have a releaser. Otherwise
+	// we want to return the error we got.
+	if status.Code(err) != codes.Unimplemented {
+		return nil, err
+	}
+
+	// No releaser. Let's try a default releaser if we can. We first
+	// initialize the platform.
+	log.Debug("no release manager plugin, initializing platform to check for default releaser")
+	platformC, err := componentCreatorMap[component.PlatformType].Create(ctx, a, hclCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Then check if the platform has a default releaser.
+	pr, ok := platformC.Value.(component.PlatformReleaser)
+	if !ok || pr.DefaultReleaserFunc() == nil {
+		log.Debug("default releaser not supported by platform, stopping")
+		platformC.Close()
+		return nil, status.Errorf(codes.Unimplemented, "")
+	}
+
+	// It does! Initialize it.
+	log.Debug("default releaser supported! initializing...")
+	raw, err := a.callDynamicFunc(
+		ctx,
+		log,
+		(*component.ReleaseManager)(nil),
+		platformC,
+		pr.DefaultReleaserFunc(),
+	)
+	if err != nil {
+		platformC.Close()
+		return nil, err
+	}
+
+	// Set the value
+	platformC.Value = raw
+
+	// Do NOT close the platformC here, since the platform component
+	// is the plugin instance that also is holding our default releaser.
+	// Return to the user and let them close it.
+
+	return platformC, nil
 }
 
 type releaseOperation struct {
