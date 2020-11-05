@@ -4,8 +4,11 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* plugin/google-cloud-run: set a default releaser so you don't need a `release` block [GH-756]
+
 BUG FIXES:
 
+* plugin/ecs: do not assign public IP on EC2 cluster [GH-758]
 
 ## 0.1.4 (October 26, 2020)
 
