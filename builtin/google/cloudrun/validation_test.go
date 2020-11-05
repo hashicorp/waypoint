@@ -17,16 +17,6 @@ func TestValidateImageReturnsErrorOnInvalidRegistry(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestValidateImageReturnsErrorOnInvalidProject(t *testing.T) {
-	err := validateImageName("gcr.io/proj2/image", "proj")
-	require.Error(t, err)
-}
-
-func TestValidateImageReturnsNoErrorWhenValid(t *testing.T) {
-	err := validateImageName("gcr.io/proj/image:latest", "proj")
-	require.NoError(t, err)
-}
-
 var locations = []*run.Location{
 	{LocationId: "asia-east1"},
 	{LocationId: "asia-northeast1"},
