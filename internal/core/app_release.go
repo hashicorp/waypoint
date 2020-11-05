@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/hcl/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -21,7 +22,42 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 	component.Release,
 	error,
 ) {
-	c, err := componentCreatorMap[component.ReleaseManagerType].Create(ctx, a, nil)
+	// Query the artifact
+	var artifact *pb.PushedArtifact
+	if target.Preload != nil && target.Preload.Artifact != nil {
+		artifact = target.Preload.Artifact
+	}
+	if artifact == nil {
+		a.logger.Debug("querying artifact", "artifact_id", target.ArtifactId)
+		resp, err := a.client.GetPushedArtifact(ctx, &pb.GetPushedArtifactRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: target.ArtifactId,
+				},
+			},
+		})
+		if err != nil {
+			a.logger.Error("error querying artifact",
+				"artifact_id", target.ArtifactId,
+				"error", err)
+			return nil, nil, err
+		}
+
+		artifact = resp
+	}
+
+	// Add our config
+	var evalCtx hcl.EvalContext
+	if err := evalCtxTemplateProto(&evalCtx, "artifact", artifact); err != nil {
+		a.logger.Warn("failed to prepare template variables, will not be available",
+			"err", err)
+	}
+	if err := evalCtxTemplateProto(&evalCtx, "deploy", target); err != nil {
+		a.logger.Warn("failed to prepare template variables, will not be available",
+			"err", err)
+	}
+
+	c, err := componentCreatorMap[component.ReleaseManagerType].Create(ctx, a, &evalCtx)
 	if status.Code(err) == codes.Unimplemented {
 		c = nil
 		err = nil
