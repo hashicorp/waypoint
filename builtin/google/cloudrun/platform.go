@@ -67,6 +67,11 @@ func (p *Platform) Auth() error {
 	return nil
 }
 
+// DefaultReleaserFunc implements component.PlatformReleaser
+func (p *Platform) DefaultReleaserFunc() interface{} {
+	return func() *Releaser { return &Releaser{} }
+}
+
 func (p *Platform) ValidateAuth(
 	ctx context.Context,
 	log hclog.Logger,
