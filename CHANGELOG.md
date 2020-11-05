@@ -9,6 +9,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * plugin/ecs: do not assign public IP on EC2 cluster [GH-758]
+* entrypoint: be careful to not spawn multiple url agents [GH-752]
 
 ## 0.1.4 (October 26, 2020)
 
