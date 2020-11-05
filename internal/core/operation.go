@@ -264,6 +264,12 @@ func msgField(msg proto.Message, f string) reflect.Value {
 		val = val.Elem()
 	}
 
+	// If the value is invalid then we don't do anything. This could be because
+	// msg is nil.
+	if !val.IsValid() {
+		return val
+	}
+
 	// Get the Id field
 	return val.FieldByName(f)
 }
