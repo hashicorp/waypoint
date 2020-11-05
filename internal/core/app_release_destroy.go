@@ -80,7 +80,7 @@ func (a *App) DestroyRelease(ctx context.Context, d *pb.Release) error {
 		}
 	}
 
-	c, err := componentCreatorMap[component.ReleaseManagerType].Create(context.Background(), a, &evalCtx)
+	c, err := a.createReleaser(ctx, &evalCtx)
 	if status.Code(err) == codes.Unimplemented {
 		c = nil
 		err = nil
@@ -151,7 +151,7 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 	}
 
 	// Start the plugin
-	c, err := componentCreatorMap[component.ReleaseManagerType].Create(ctx, a, nil)
+	c, err := a.createReleaser(ctx, nil)
 	if status.Code(err) == codes.Unimplemented {
 		return nil
 	}
