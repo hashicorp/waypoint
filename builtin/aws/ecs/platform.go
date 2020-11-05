@@ -1067,7 +1067,9 @@ func (p *Platform) Launch(
 		SecurityGroups: []*string{sgecsport},
 	}
 
-	netCfg.AssignPublicIp = aws.String("ENABLED")
+	if !p.config.EC2Cluster {
+		netCfg.AssignPublicIp = aws.String("ENABLED")
+	}
 
 	s.Status("Creating ECS Service (%s, cluster-name: %s)", serviceName, clusterName)
 	servOut, err := ecsSvc.CreateService(&ecs.CreateServiceInput{
