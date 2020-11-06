@@ -28,7 +28,7 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 
 	client := c.project.Client()
 
-	c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the most recent build
 		build, err := client.GetLatestBuild(ctx, &pb.GetLatestBuildRequest{
 			Application: app.Ref(),
@@ -50,6 +50,9 @@ func (c *ArtifactPushCommand) Run(args []string) int {
 
 		return nil
 	})
+	if err != nil {
+		return 1
+	}
 
 	return 0
 }
