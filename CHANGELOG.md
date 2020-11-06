@@ -4,6 +4,8 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* install/k8s: support for OpenShift [GH-715]
+
 BUG FIXES:
 
 
