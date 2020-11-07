@@ -77,6 +77,26 @@ func TestConfigApp_compare(t *testing.T) {
 		},
 
 		{
+			"build_use.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				b, err := c.Build(nil)
+				require.NoError(t, err)
+
+				op := b.Operation()
+				require.NotNil(t, op)
+
+				var p testPluginBuildConfig
+				diag := op.Configure(&p, nil)
+				if diag.HasErrors() {
+					t.Fatal(diag.Error())
+				}
+
+				require.NotEmpty(t, p.config.Foo)
+			},
+		},
+
+		{
 			"build_registry.hcl",
 			"test",
 			func(t *testing.T, c *App) {
@@ -149,4 +169,16 @@ func TestAppValidate(t *testing.T) {
 			require.Contains(err.Error(), tt.Err)
 		})
 	}
+}
+
+// testPluginBuildConfig implements component.Configurable to test that we
+// decode HCL properly.
+type testPluginBuildConfig struct {
+	config struct {
+		Foo string `hcl:"foo,attr"`
+	}
+}
+
+func (p *testPluginBuildConfig) Config() (interface{}, error) {
+	return &p.config, nil
 }

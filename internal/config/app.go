@@ -105,6 +105,7 @@ func (c *App) Build(ctx *hcl.EvalContext) (*Build, error) {
 	if diag := gohcl.DecodeBody(c.BuildRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
+	b.ctx = ctx
 
 	return &b, nil
 }
@@ -121,6 +122,7 @@ func (c *App) Registry(ctx *hcl.EvalContext) (*Registry, error) {
 	if diag := gohcl.DecodeBody(c.BuildRaw.Registry.Body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
+	b.ctx = ctx
 
 	return &b, nil
 }
@@ -133,6 +135,7 @@ func (c *App) Deploy(ctx *hcl.EvalContext) (*Deploy, error) {
 	if diag := gohcl.DecodeBody(c.DeployRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
+	b.ctx = ctx
 
 	return &b, nil
 }
@@ -148,6 +151,7 @@ func (c *App) Release(ctx *hcl.EvalContext) (*Release, error) {
 	if diag := gohcl.DecodeBody(c.ReleaseRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
+	b.ctx = ctx
 
 	return &b, nil
 }

@@ -72,3 +72,10 @@ func finalizeContext(ctx *hcl.EvalContext) *hcl.EvalContext {
 	ctx.Functions = funcs.MakeTemplateFuncs(ctx)
 	return ctx
 }
+
+// hclContextContainer is an interface that config structs that have an HCL
+// context may implement. We use this for certain things such as mapoperation()
+// to set the proper context.
+type hclContextContainer interface {
+	hclContext() *hcl.EvalContext
+}

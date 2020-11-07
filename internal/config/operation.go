@@ -1,7 +1,10 @@
 package config
 
 import (
+	"github.com/hashicorp/hcl/v2"
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
 )
 
 // Operation is something in the Waypoint configuration that is executed
@@ -14,6 +17,16 @@ type Operation struct {
 
 	// set internally to note an operation is required for validation
 	required bool
+
+	ctx *hcl.EvalContext
+}
+
+// Configure configures the plugin with the use body of this operation.
+func (op *Operation) Configure(plugin interface{}, ctx *hcl.EvalContext) hcl.Diagnostics {
+	ctx = appendContext(op.ctx, ctx)
+	ctx = finalizeContext(ctx)
+
+	return component.Configure(plugin, op.Use.Body, ctx)
 }
 
 func (b *Build) Operation() *Operation {
@@ -44,6 +57,11 @@ func mapoperation(input interface{}, req bool) *Operation {
 		panic(err)
 	}
 	op.required = req
+
+	// Carry through our HCL context so we configure properly.
+	if c, ok := input.(hclContextContainer); ok {
+		op.ctx = c.hclContext()
+	}
 
 	return &op
 }
