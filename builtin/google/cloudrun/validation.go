@@ -19,28 +19,17 @@ func validateImageName(image string, project string) error {
 		"asia.gcr.io",
 	}
 
-	// check the image name has the valid parts
-	parts := strings.Split(image, "/")
-	if len(parts) != 3 {
-		return fmt.Errorf("Invalid container image '%s'. Container images should be hosted in a Google Cloud registry for your project, i.e. 'gcr.io/%s/helloworld'", image, project)
-	}
-
 	//check the registry is one which can be used with cloud run
 	registryValid := false
 	for _, r := range validRegistries {
-		if r == parts[0] {
+		if strings.HasPrefix(image, r+"/") {
 			registryValid = true
 			break
 		}
 	}
 
 	if !registryValid {
-		return fmt.Errorf("Invalid container registry '%s'. Container images should be hosted in a valid Google Cloud registry e.g. '%s'", parts[0], strings.Join(parts, ","))
-	}
-
-	// check the project
-	if parts[1] != project {
-		return fmt.Errorf("Invalid container registry project '%s'. Container images should be hosted in Google Cloud registry for your project e.g. '%s/%s/%s'", parts[1], parts[0], project, parts[2])
+		return fmt.Errorf("Invalid container registry '%s'. Container images should be hosted in a valid Google Cloud registry.", image)
 	}
 
 	return nil
