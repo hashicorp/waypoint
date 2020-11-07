@@ -184,7 +184,7 @@ func (cc *componentCreator) create(
 		// If we have a config, configure
 		// Configure the component. This will handle all the cases where no
 		// config is given but required, vice versa, and everything in between.
-		diag := component.Configure(pinst.Component, opCfg.Use.Body, hclCtx)
+		diag := opCfg.Configure(pinst.Component, hclCtx)
 		if diag.HasErrors() {
 			pinst.Close()
 			return nil, diag
