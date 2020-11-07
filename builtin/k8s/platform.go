@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/mitchellh/mapstructure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -65,7 +66,17 @@ func (p *Platform) ValidateAuth() error {
 
 // DefaultReleaserFunc implements component.PlatformReleaser
 func (p *Platform) DefaultReleaserFunc() interface{} {
-	return func() *Releaser { return &Releaser{} }
+	var rc ReleaserConfig
+	if err := mapstructure.Decode(p.config, &rc); err != nil {
+		// shouldn't happen
+		panic("error decoding config: " + err.Error())
+	}
+
+	return func() *Releaser {
+		return &Releaser{
+			config: rc,
+		}
+	}
 }
 
 // Deploy deploys an image to Kubernetes.
