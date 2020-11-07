@@ -388,7 +388,7 @@ func readFileBytes(path string) ([]byte, error) {
 		// ReadFile does not return Waypoint-user-friendly error
 		// messages, so we'll provide our own.
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("no file exists at %s; this function works only with files that are distributed as part of the configuration source code, so if this file will be created by a resource in this configuration you must instead obtain this result from an attribute of that resource", path)
+			return nil, fmt.Errorf("no file exists at %s", path)
 		}
 		return nil, fmt.Errorf("failed to read %s", path)
 	}
