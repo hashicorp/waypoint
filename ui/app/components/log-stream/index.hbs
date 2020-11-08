@@ -1,13 +1,30 @@
-<div class="output">
-    {{#if this.lines}}
-    {{#each this.lines as |line|}}
-    <code>{{line}}</code>
-    {{/each}}
-    {{else}}
+<div class="output-pane">
+  {{#if this.lines}}
+    <div class="output-scroll-y">
+      {{#unless isFollowingLogs}}
+        <button class="follow-logs" {{on "click" this.followLogs}}>
+          {{inline-svg "arrow-down" class="icon"}}
+          {{#if (gt this.badgeCount 0)}}
+            <div class="badge">{{this.badgeCount}}</div>
+          {{/if}}
+        </button>
+      {{/unless}}
+      <div class="output-scroll-x">
+        {{#each this.lines as |line|}}
+          <div class="log-line">
+            <code>{{line}}</code>
+          </div>
+        {{/each}}
+        <div class="output-end" {{in-viewport
+          onEnter=(action (mut isFollowingLogs) true)
+          onExit=(action (mut isFollowingLogs) false)}} {{did-update this.updateScroll this.logLines.length}}></div>
+      </div>
+    </div>
+  {{else}}
     <EmptyState>
-        <p>There are no logs to display for this app yet</p>
-        <p>Logs will be displayed when you run actions in the CLI such as <code class="inline">build</code>, <code
-                class="inline">deploy</code> or <code class="inline">release</code></p>
+      <p>There are no logs to display for this app yet</p>
+      <p>Logs will be displayed when you run actions in the CLI such as <code class="inline">build</code>,
+        <code class="inline">deploy</code> or <code class="inline">release</code></p>
     </EmptyState>
-    {{/if}}
+  {{/if}}
 </div>

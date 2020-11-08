@@ -1,5 +1,7 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+import { action } from '@ember/object';
+
 import ApiService from 'waypoint/services/api';
 import { inject as service } from '@ember/service';
 import { GetJobStreamRequest, GetJobStreamResponse } from 'waypoint-pb';
@@ -12,6 +14,8 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
   @service api!: ApiService;
 
   @tracked logLines: object[];
+  @tracked isFollowingLogs = true;
+  @tracked badgeCount = 0;
 
   // https://github.com/hashicorp/waypoint-plugin-sdk/blob/baf566811af680c5df138f9915d756f67d271b1a/terminal/ui.go#L126-L135
   headerStyle = 'header';
@@ -36,6 +40,22 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
 
   addLogLine(t: string, logLine: object) {
     this.logLines = [...this.logLines, { type: t, logLine: logLine }];
+    if (this.isFollowingLogs === false) {
+      this.badgeCount = this.badgeCount + 1;
+    }
+  }
+
+  @action
+  followLogs(element: any) {
+    element.target.parentElement.scroll(0, element.target.parentElement.scrollHeight);
+  }
+
+  @action
+  updateScroll(element: any) {
+    if (this.isFollowingLogs === true) {
+      element.scrollIntoView(false);
+      this.badgeCount = 0;
+    }
   }
 
   async start() {
