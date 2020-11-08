@@ -14,6 +14,7 @@ type App struct {
 	Path   string            `hcl:"path,optional"`
 	Labels map[string]string `hcl:"labels,optional"`
 	URL    *AppURL           `hcl:"url,block" default:"{}"`
+	Config *AppConfig        `hcl:"config,block"`
 
 	BuildRaw   *hclBuild `hcl:"build,block"`
 	DeployRaw  *hclStage `hcl:"deploy,block"`
@@ -93,6 +94,9 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	app.Path = appPath
 	app.ctx = ctx
 	app.config = c
+	if app.Config != nil {
+		app.Config.app = &app
+	}
 
 	return &app, nil
 }

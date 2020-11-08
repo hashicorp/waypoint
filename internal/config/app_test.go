@@ -106,6 +106,25 @@ func TestConfigApp_compare(t *testing.T) {
 				require.Equal(t, "docker", r.Use.Type)
 			},
 		},
+
+		{
+			"config_env.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				env, err := c.Config.Env()
+				require.NoError(err)
+
+				// test the static value
+				val, ok := env["static"]
+				require.True(ok)
+				require.Equal("static", val.From)
+				require.Equal(map[string]interface{}{
+					"value": "hello",
+				}, val.Config)
+			},
+		},
 	}
 
 	for _, tt := range cases {
