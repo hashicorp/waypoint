@@ -2,6 +2,7 @@ package ceb
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 	"reflect"
 	"sort"
@@ -121,7 +122,14 @@ func (ceb *CEB) handleChildCmdConfig(
 	env := make([]string, len(base.Env), len(last.Env))
 	copy(env, base.Env)
 	for _, cv := range config.EnvVars {
-		env = append(env, cv.Name+"="+cv.Value)
+		static, ok := cv.Value.(*pb.ConfigVar_Static)
+		if !ok {
+			log.Warn("unknown config value type received, ignoring",
+				"type", fmt.Sprintf("%T", cv.Value))
+			continue
+		}
+
+		env = append(env, cv.Name+"="+static.Static)
 	}
 	sort.Strings(env)
 
