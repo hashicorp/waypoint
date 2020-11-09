@@ -18,11 +18,11 @@ The example demonstrates the main steps:
 1. **Set-up the dependencies Waypoint might use.** This could be
    a Kubernetes context for a more advanced application, or in the
    below example, a Docker daemon to run applications on.
-2. **Install and Initalize Waypoint with `waypoint/init`.** If you are
-   using a Docker custom image executor with your other deploy
-   dependencies, you could utilize the public Docker image in a multi-stage build.
-4. **Run the build, deploy, and release.** We can leverage the orb's `up` command
-   to do so
+2. **Install and Initalize Waypoint with `waypoint/init`.** This command will 
+   install the waypoint CLI, start up a remote docker instance and run 
+   `waypoint init`.
+4. **Run the build, deploy, and release.** We can leverage the orb's `up` 
+   command to do so
 
 ## Workspaces
 
@@ -31,7 +31,9 @@ by a GitHub commit or pull request and may be an ephemeral development environme
 want to interpolate the relevant Git ref for the workspace parameter, as demonstrated below:
 
 ```yaml
-run: waypoint build -workspace $CIRCLE_BRANCH
+steps:
+  - waypoint/up:
+      workspace: $CIRCLE_BRANCH
 ```
 
 See the CircleCI [built-in environment variables](https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables) page
