@@ -146,6 +146,18 @@ func TestConfigApp_compare(t *testing.T) {
 				}, val.Dynamic.Config)
 			},
 		},
+
+		{
+			"config_env_merge.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				vars, err := c.ConfigVars()
+				require.NoError(err)
+				require.Len(vars, 2)
+			},
+		},
 	}
 
 	for _, tt := range cases {

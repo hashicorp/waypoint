@@ -12,25 +12,21 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// AppConfig has the app configuration settings such as env vars.
-type AppConfig struct {
+// genericConfig represents the `config` stanza that can be placed
+// both in the app and at the project level.
+type genericConfig struct {
 	EnvRaw hcl.Expression `hcl:"env,optional"`
 
-	app *App
+	ctx       *hcl.EvalContext    // ctx is the context to use when evaluating
+	scopeFunc func(*pb.ConfigVar) // scopeFunc should set the scope for the config var
 }
 
-type AppConfigValue struct {
-	Key    string
-	From   string
-	Config map[string]string
-}
-
-func (c *AppConfig) ConfigVars() ([]*pb.ConfigVar, error) {
+func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
 	return c.envVars()
 }
 
-func (c *AppConfig) envVars() ([]*pb.ConfigVar, error) {
-	ctx := c.app.ctx
+func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
+	ctx := c.ctx
 	ctx = appendContext(ctx, &hcl.EvalContext{
 		Functions: map[string]function.Function{
 			"configdynamic": configDynamicFunc,
@@ -63,13 +59,9 @@ func (c *AppConfig) envVars() ([]*pb.ConfigVar, error) {
 		key := val.AsString()
 
 		// Start building our var
-		newVar := &pb.ConfigVar{
-			Scope: &pb.ConfigVar_Application{
-				Application: c.app.Ref(),
-			},
-
-			Name: key,
-		}
+		var newVar pb.ConfigVar
+		c.scopeFunc(&newVar)
+		newVar.Name = key
 
 		// Decode the value
 		val, diags = pair.Value.Value(ctx)
@@ -97,7 +89,7 @@ func (c *AppConfig) envVars() ([]*pb.ConfigVar, error) {
 			}
 		}
 
-		result = append(result, newVar)
+		result = append(result, &newVar)
 	}
 
 	return result, nil
