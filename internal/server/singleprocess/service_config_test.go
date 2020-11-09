@@ -36,7 +36,7 @@ func TestServiceConfig(t *testing.T) {
 		},
 
 		Name:  "DATABASE_URL",
-		Value: "postgresql:///",
+		Value: &pb.ConfigVar_Static{Static: "postgresql:///"},
 	}
 
 	t.Run("set and get", func(t *testing.T) {
