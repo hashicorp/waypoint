@@ -7,6 +7,8 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
@@ -77,6 +79,14 @@ func (s *State) configSet(
 			return err
 		}
 	} else {
+		// If this is a runner, we don't support dynamic values currently.
+		if _, ok := value.Scope.(*pb.ConfigVar_Runner); ok {
+			if _, ok := value.Value.(*pb.ConfigVar_Static); !ok {
+				return status.Errorf(codes.FailedPrecondition,
+					"runner-scoped configuration must be static")
+			}
+		}
+
 		if err := dbPut(b, id, value); err != nil {
 			return err
 		}
