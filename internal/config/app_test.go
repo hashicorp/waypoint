@@ -120,8 +120,27 @@ func TestConfigApp_compare(t *testing.T) {
 				val, ok := env["static"]
 				require.True(ok)
 				require.Equal("static", val.From)
-				require.Equal(map[string]interface{}{
+				require.Equal(map[string]string{
 					"value": "hello",
+				}, val.Config)
+			},
+		},
+
+		{
+			"config_env_dynamic.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				env, err := c.Config.Env()
+				require.NoError(err)
+
+				// test the static value
+				val, ok := env["DATABASE_URL"]
+				require.True(ok)
+				require.Equal("vault", val.From)
+				require.Equal(map[string]string{
+					"path": "foo/",
 				}, val.Config)
 			},
 		},
