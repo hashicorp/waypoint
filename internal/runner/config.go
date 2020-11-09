@@ -70,6 +70,7 @@ func (r *Runner) handleConfig(c *pb.RunnerConfig) {
 			if !ok {
 				r.logger.Warn("unknown value type for config var, ignoring",
 					"type", fmt.Sprintf("%T", v.Value))
+				continue
 			}
 
 			env[v.Name] = static.Static
