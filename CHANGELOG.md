@@ -8,6 +8,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* cli: return error for ErrSentinel types to signal exit codes [GH-768]
 
 ## 0.1.4 (October 26, 2020)
 
