@@ -6,6 +6,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/mitchellh/copystructure"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // App represents a single application.
@@ -99,6 +101,14 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	}
 
 	return &app, nil
+}
+
+// Ref returns the ref for this app.
+func (c *App) Ref() *pb.Ref_Application {
+	return &pb.Ref_Application{
+		Application: c.Name,
+		Project:     c.config.Project,
+	}
 }
 
 // Build loads the Build section of the configuration.

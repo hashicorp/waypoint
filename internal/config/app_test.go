@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func TestConfigApp_compare(t *testing.T) {
@@ -113,16 +115,14 @@ func TestConfigApp_compare(t *testing.T) {
 			func(t *testing.T, c *App) {
 				require := require.New(t)
 
-				env, err := c.Config.Env()
+				vars, err := c.Config.ConfigVars()
 				require.NoError(err)
 
 				// test the static value
-				val, ok := env["static"]
+				require.Len(vars, 1)
+				static, ok := vars[0].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
-				require.Equal("static", val.From)
-				require.Equal(map[string]string{
-					"value": "hello",
-				}, val.Config)
+				require.Equal("hello", static.Static)
 			},
 		},
 
@@ -132,16 +132,18 @@ func TestConfigApp_compare(t *testing.T) {
 			func(t *testing.T, c *App) {
 				require := require.New(t)
 
-				env, err := c.Config.Env()
+				vars, err := c.Config.ConfigVars()
 				require.NoError(err)
 
 				// test the static value
-				val, ok := env["DATABASE_URL"]
+				require.Len(vars, 1)
+				val, ok := vars[0].Value.(*pb.ConfigVar_Dynamic)
 				require.True(ok)
-				require.Equal("vault", val.From)
+				require.Equal("DATABASE_URL", vars[0].Name)
+				require.Equal("vault", val.Dynamic.From)
 				require.Equal(map[string]string{
 					"path": "foo/",
-				}, val.Config)
+				}, val.Dynamic.Config)
 			},
 		},
 	}
