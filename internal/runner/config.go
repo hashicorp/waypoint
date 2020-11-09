@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -37,7 +38,7 @@ func (r *Runner) handleConfig(c *pb.RunnerConfig) {
 
 			r.originalEnv = append(r.originalEnv, &pb.ConfigVar{
 				Name:  str[:idx],
-				Value: str[idx+1:],
+				Value: &pb.ConfigVar_Static{Static: str[idx+1:]},
 			})
 		}
 	}
@@ -48,7 +49,7 @@ func (r *Runner) handleConfig(c *pb.RunnerConfig) {
 		// variable if it becomes unset.
 		env := map[string]string{}
 		for _, v := range r.originalEnv {
-			env[v.Name] = v.Value
+			env[v.Name] = v.Value.(*pb.ConfigVar_Static).Static
 		}
 
 		if old != nil {
@@ -65,7 +66,13 @@ func (r *Runner) handleConfig(c *pb.RunnerConfig) {
 
 		// Set the config variables
 		for _, v := range c.ConfigVars {
-			env[v.Name] = v.Value
+			static, ok := v.Value.(*pb.ConfigVar_Static)
+			if !ok {
+				r.logger.Warn("unknown value type for config var, ignoring",
+					"type", fmt.Sprintf("%T", v.Value))
+			}
+
+			env[v.Name] = static.Static
 		}
 
 		// Set them all
