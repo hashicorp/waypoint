@@ -8,6 +8,8 @@ import (
 	"github.com/zclconf/go-cty/cty/convert"
 	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/gocty"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // AppConfig has the app configuration settings such as env vars.
@@ -23,7 +25,11 @@ type AppConfigValue struct {
 	Config map[string]string
 }
 
-func (c *AppConfig) Env() (map[string]*AppConfigValue, error) {
+func (c *AppConfig) ConfigVars() ([]*pb.ConfigVar, error) {
+	return c.envVars()
+}
+
+func (c *AppConfig) envVars() ([]*pb.ConfigVar, error) {
 	ctx := c.app.ctx
 	ctx = appendContext(ctx, &hcl.EvalContext{
 		Functions: map[string]function.Function{
@@ -37,7 +43,7 @@ func (c *AppConfig) Env() (map[string]*AppConfigValue, error) {
 		return nil, diags
 	}
 
-	result := map[string]*AppConfigValue{}
+	var result []*pb.ConfigVar
 	for _, pair := range pairs {
 		// Decode the key. The key must be a string.
 		val, diags := pair.Key.Value(ctx)
@@ -56,6 +62,15 @@ func (c *AppConfig) Env() (map[string]*AppConfigValue, error) {
 		}
 		key := val.AsString()
 
+		// Start building our var
+		newVar := &pb.ConfigVar{
+			Scope: &pb.ConfigVar_Application{
+				Application: c.app.Ref(),
+			},
+
+			Name: key,
+		}
+
 		// Decode the value
 		val, diags = pair.Value.Value(ctx)
 		if diags.HasErrors() {
@@ -64,7 +79,9 @@ func (c *AppConfig) Env() (map[string]*AppConfigValue, error) {
 
 		switch val.Type() {
 		case typeDynamicConfig:
-			// Good
+			newVar.Value = &pb.ConfigVar_Dynamic{
+				Dynamic: val.EncapsulatedValue().(*pb.ConfigVar_DynamicVal),
+			}
 
 		default:
 			// For non-config val types we try to convert it to a string
@@ -75,33 +92,20 @@ func (c *AppConfig) Env() (map[string]*AppConfigValue, error) {
 				return nil, err
 			}
 
-			val = cty.CapsuleVal(typeDynamicConfig, &appConfigVal{
-				From:   "static",
-				Config: map[string]string{"value": val.AsString()},
-			})
+			newVar.Value = &pb.ConfigVar_Static{
+				Static: val.AsString(),
+			}
 		}
 
-		configVal := val.EncapsulatedValue().(*appConfigVal)
-		result[key] = &AppConfigValue{
-			Key:    key,
-			From:   configVal.From,
-			Config: configVal.Config,
-		}
+		result = append(result, newVar)
 	}
 
 	return result, nil
 }
 
-// appConfigVal is the type that config* functions decode into
-// as part of a cty.Capsule type when decoding.
-type appConfigVal struct {
-	From   string
-	Config map[string]string
-}
-
 var (
 	typeDynamicConfig = cty.Capsule("configval",
-		reflect.TypeOf((*appConfigVal)(nil)).Elem())
+		reflect.TypeOf((*pb.ConfigVar_DynamicVal)(nil)).Elem())
 
 	// configDynamicFunc implements the configdynamic() HCL function.
 	configDynamicFunc = function.New(&function.Spec{
@@ -123,7 +127,7 @@ var (
 				return cty.NilVal, err
 			}
 
-			return cty.CapsuleVal(typeDynamicConfig, &appConfigVal{
+			return cty.CapsuleVal(typeDynamicConfig, &pb.ConfigVar_DynamicVal{
 				From:   args[0].AsString(),
 				Config: config,
 			}), nil
