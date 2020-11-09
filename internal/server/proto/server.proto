@@ -1779,8 +1779,31 @@ message ConfigVar {
     Ref.Runner runner = 5;
   }
 
+  // name is the name of the environment variable that this config var is setting
   string name = 1;
-  string value = 2;
+
+  oneof value {
+    // unset, if set, unsets this value. For historical reasons, empty static
+    // values also unset the value.
+    google.protobuf.Empty unset = 7;
+
+    // static, direct value.
+    string static = 2;
+
+    // dynamically sourced value
+    DynamicVal dynamic = 6;
+  }
+
+  // DynamicVal is the configuration for dynamic values for configuration.
+  message DynamicVal {
+    // from is the config source plugin to use
+    string from = 1;
+
+    // config is the configuration for the config source plugin that
+    // defines how the value is read. For example, for a "Vault" config
+    // source this may contain the path in the KV store to read the value.
+    map<string, string> config = 2;
+  }
 }
 
 message ConfigSetRequest {
