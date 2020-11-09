@@ -31,7 +31,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 	client := c.project.Client()
 
-	c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		// Get the most recent pushed artifact
 		push, err := client.GetLatestPushedArtifact(ctx, &pb.GetLatestPushedArtifactRequest{
 			Application: app.Ref(),
@@ -106,6 +106,9 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 		return nil
 	})
+	if err != nil {
+		return 1
+	}
 
 	return 0
 }
