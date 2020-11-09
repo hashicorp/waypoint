@@ -8,6 +8,21 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.1.5 (November 09, 2020)
+
+FEATURES:
+
+IMPROVEMENTS:
+
+* plugin/google-cloud-run: set a default releaser so you don't need a `release` block [GH-756]
+
+BUG FIXES:
+
+* plugin/ecs: do not assign public IP on EC2 cluster [GH-758]
+* plugin/google-cloud-run: less strict image validation to allow projects with slashes [GH-760]
+* plugin/k8s: default releaser should create service with correct namespace [GH-759]
+* entrypoint: be careful to not spawn multiple url agents [GH-752]
+* cli: return error for ErrSentinel types to signal exit codes [GH-768]
 
 ## 0.1.4 (October 26, 2020)
 
