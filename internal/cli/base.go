@@ -301,6 +301,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 
 	// Just a serialize loop for now, one day we'll parallelize.
 	var finalErr error
+	var didErrSentinel bool
 	for _, app := range apps {
 		// Support cancellation
 		if err := ctx.Err(); err != nil {
@@ -311,10 +312,12 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 			if err != ErrSentinel {
 				finalErr = multierror.Append(finalErr, err)
 			} else {
-				// if we have an ErrSentinel here, we've already output info to the UI
-				return err
+				didErrSentinel = true
 			}
 		}
+	}
+	if finalErr == nil && didErrSentinel {
+		finalErr = ErrSentinel
 	}
 
 	return finalErr
