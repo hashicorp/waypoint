@@ -443,7 +443,7 @@ func (c *AppDocsCommand) Run(args []string) int {
 		return c.builtinMDX(args)
 	}
 
-	c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
+	err = c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		docs, err := app.Docs(ctx, &pb.Job_DocsOp{})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -537,6 +537,9 @@ func (c *AppDocsCommand) Run(args []string) int {
 
 		return nil
 	})
+	if err != nil {
+		return 1
+	}
 
 	return 0
 }

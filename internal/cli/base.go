@@ -277,7 +277,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 // thread-safe.
 //
 // If any error is returned, the caller should just exit. The error handling
-// including messaging to the user is handling by this function call.
+// including messaging to the user is handled by this function call.
 //
 // If you want to early exit all the running functions, you should use
 // the callback closure properties to cancel the passed in context. This
@@ -301,6 +301,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 
 	// Just a serialize loop for now, one day we'll parallelize.
 	var finalErr error
+	var didErrSentinel bool
 	for _, app := range apps {
 		// Support cancellation
 		if err := ctx.Err(); err != nil {
@@ -310,8 +311,13 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 		if err := f(ctx, app); err != nil {
 			if err != ErrSentinel {
 				finalErr = multierror.Append(finalErr, err)
+			} else {
+				didErrSentinel = true
 			}
 		}
+	}
+	if finalErr == nil && didErrSentinel {
+		finalErr = ErrSentinel
 	}
 
 	return finalErr
