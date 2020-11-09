@@ -9,9 +9,8 @@ description: |-
 
 # Integrating Waypoint with CircleCI
 
-Currently, using Waypoint to deploy an application from within Circle
-is similar to how you might deploy an application from your own
-workspace.
+We can leverage CircleCI's [orb](https://circleci.com/orbs/) concept to simplify
+configuring the deployment of applications.
 
 The example demonstrates the main steps:
 
@@ -61,3 +60,5 @@ jobs:
       - waypoint/init
       - waypoint/up
 ```
+
+[Orb registry page](https://circleci.com/developer/orbs/orb/circleci/waypoint)
