@@ -12,6 +12,7 @@ BUG FIXES:
 * plugin/google-cloud-run: less strict image validation to allow projects with slashes [GH-760]
 * plugin/k8s: default releaser should create service with correct namespace [GH-759]
 * entrypoint: be careful to not spawn multiple url agents [GH-752]
+* cli: return error for ErrSentinel types to signal exit codes [GH-768]
 
 ## 0.1.4 (October 26, 2020)
 
