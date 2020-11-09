@@ -74,7 +74,16 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		vars := map[string]string{}
 
 		for _, cv := range resp.Variables {
-			vars[cv.Name] = cv.Value
+			value := ""
+			switch v := cv.Value.(type) {
+			case *pb.ConfigVar_Static:
+				value = v.Static
+
+			case *pb.ConfigVar_Dynamic:
+				value = fmt.Sprintf("<dynamic via %s>", v.Dynamic.From)
+			}
+
+			vars[cv.Name] = value
 		}
 
 		json.NewEncoder(out).Encode(vars)
@@ -109,10 +118,19 @@ func (c *ConfigGetCommand) Run(args []string) int {
 			app = scope.Application.Application
 		}
 
+		value := ""
+		switch v := v.Value.(type) {
+		case *pb.ConfigVar_Static:
+			value = v.Static
+
+		case *pb.ConfigVar_Dynamic:
+			value = fmt.Sprintf("<dynamic via %s>", v.Dynamic.From)
+		}
+
 		table.Rich([]string{
 			app,
 			v.Name,
-			v.Value,
+			value,
 		}, []string{
 			"",
 			terminal.Green,
