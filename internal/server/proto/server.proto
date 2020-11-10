@@ -1929,6 +1929,10 @@ message EntrypointConfig {
   // then the URL service is disabled.
   URLService url_service = 3;
 
+  // Deployment is the deployment information for this instance. This may
+  // be nil if the user is running an old enough server so always nil-check this.
+  DeploymentInfo deployment = 4;
+
   message Exec {
     int64 index = 1;
     repeated string args = 2;
@@ -1942,6 +1946,14 @@ message EntrypointConfig {
 
     // labels to register this instance under
     string labels = 3;
+  }
+
+  message DeploymentInfo {
+    // component is the deployment plugin information that launched this instance.
+    Component component = 1;
+
+    // labels are the set of labels that are present on the deployment.
+    map<string,string> labels = 2;
   }
 }
 

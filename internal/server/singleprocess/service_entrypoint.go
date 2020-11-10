@@ -97,6 +97,12 @@ func (s *service) EntrypointConfig(
 			})
 		}
 
+		// Write our deployment info
+		config.Deployment = &pb.EntrypointConfig_DeploymentInfo{
+			Component: deployment.Component,
+			Labels:    deployment.Labels,
+		}
+
 		vars, err := s.state.ConfigGetWatch(&pb.ConfigGetRequest{
 			Scope: &pb.ConfigGetRequest_Application{
 				Application: deployment.Application,
