@@ -139,10 +139,14 @@ func (op *deployOperation) Upsert(
 }
 
 func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
+	// Sync our config first
+	if err := app.ConfigSync(ctx); err != nil {
+		return nil, err
+	}
+
 	dconfig := *op.DeploymentConfig
 	dconfig.Id = op.id
 	dconfig.EntrypointInviteToken = op.cebToken
-
 	return app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
