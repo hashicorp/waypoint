@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/hcl/v2"
@@ -27,7 +28,7 @@ func evalCtxTemplateProto(ctx *hcl.EvalContext, key string, tpl proto.Message) e
 
 	var raw map[string]interface{}
 	if err := json.Unmarshal(valBytes, &raw); err != nil {
-		return err
+		return fmt.Errorf("Error decoding template data for %T: %w", tpl, err)
 	}
 
 	ctyVal, err := ctystructure.Object(raw)
