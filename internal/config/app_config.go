@@ -22,6 +22,10 @@ type genericConfig struct {
 }
 
 func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
+	if c == nil {
+		return nil, nil
+	}
+
 	return c.envVars()
 }
 
