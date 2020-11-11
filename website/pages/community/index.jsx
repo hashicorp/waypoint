@@ -1,4 +1,4 @@
-import styles from './CommunityPage.module.css'
+import styles from './style.module.css'
 import classNames from 'classnames'
 import VerticalTextBlockList from '@hashicorp/react-vertical-text-block-list'
 import SectionHeader from '@hashicorp/react-section-header'
