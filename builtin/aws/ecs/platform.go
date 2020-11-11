@@ -1135,62 +1135,61 @@ func (p *Platform) Destroy(
 
 	var listener *elbv2.Listener
 
+	// search all listeners for the deployments TargetGroupArn
 	if len(listeners.Listeners) > 0 {
-		listener = listeners.Listeners[0]
+		for _, listener := range listeners.Listeners {
+			log.Debug("listener arn", "arn", *listener.ListenerArn)
 
-		log.Debug("listener arn", "arn", *listener.ListenerArn)
+			def := listener.DefaultActions
 
-		def := listener.DefaultActions
+			var tgs []*elbv2.TargetGroupTuple
 
-		var tgs []*elbv2.TargetGroupTuple
+			if def[0].ForwardConfig != nil {
+				if len(def) == 1 && def[0].ForwardConfig.TargetGroups[0].TargetGroupArn == deployment.TargetGroupArn {
+					log.Debug("only 1 target group, deleting listener")
+					_, err = elbsrv.DeleteListener(&elbv2.DeleteListenerInput{
+						ListenerArn: listener.ListenerArn,
+					})
 
-		// If there is only 1 target group, delete the listener
-		if len(def) == 1 {
-			log.Debug("only 1 target group, deleting listener")
-			_, err = elbsrv.DeleteListener(&elbv2.DeleteListenerInput{
-				ListenerArn: listener.ListenerArn,
-			})
+					if err != nil {
+						return err
+					}
+				} else if len(def) >= 1 {
+					for _, tg := range def[0].ForwardConfig.TargetGroups {
+						if *tg.TargetGroupArn != deployment.TargetGroupArn {
+							tgs = append(tgs, tg)
+							if *tg.Weight > 0 {
+								active = true
+							}
+						}
+					}
 
-			if err != nil {
-				return err
-			}
-		} else if len(def) > 1 && def[0].ForwardConfig != nil {
-			// Multiple target groups means we can keep the listener
-			var active bool
+					// If there are no target groups active, then we just activate the first
+					// one, otherwise we can't modify the listener.
+					if !active && len(tgs) > 0 {
+						tgs[0].Weight = aws.Int64(100)
+					}
 
-			for _, tg := range def[0].ForwardConfig.TargetGroups {
-				if *tg.TargetGroupArn != deployment.TargetGroupArn {
-					tgs = append(tgs, tg)
-					if *tg.Weight > 0 {
-						active = true
+					log.Debug("modifying listener to remove target group", "target-groups", len(tgs))
+
+					_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
+						ListenerArn: listener.ListenerArn,
+						Port:        listener.Port,
+						Protocol:    listener.Protocol,
+						DefaultActions: []*elbv2.Action{
+							{
+								ForwardConfig: &elbv2.ForwardActionConfig{
+									TargetGroups: tgs,
+								},
+								Type: aws.String("forward"),
+							},
+						},
+					})
+
+					if err != nil {
+						return err
 					}
 				}
-			}
-
-			// If there are no target groups active, then we just activate the first
-			// one, otherwise we can't modify the listener.
-			if !active && len(tgs) > 0 {
-				tgs[0].Weight = aws.Int64(100)
-			}
-
-			log.Debug("modifying listener to remove target group", "target-groups", len(tgs))
-
-			_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
-				ListenerArn: listener.ListenerArn,
-				Port:        listener.Port,
-				Protocol:    listener.Protocol,
-				DefaultActions: []*elbv2.Action{
-					{
-						ForwardConfig: &elbv2.ForwardActionConfig{
-							TargetGroups: tgs,
-						},
-						Type: aws.String("forward"),
-					},
-				},
-			})
-
-			if err != nil {
-				return err
 			}
 		}
 	}
