@@ -1,4 +1,4 @@
-import styles from './HomePage.module.css'
+import styles from './style.module.css'
 import InfoGrid from 'components/info-grid'
 import AnimatedStepsList from 'components/animated-steps-list'
 import HomepageSection from 'components/homepage-section'
