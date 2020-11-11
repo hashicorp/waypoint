@@ -1133,8 +1133,6 @@ func (p *Platform) Destroy(
 		return err
 	}
 
-	var listener *elbv2.Listener
-
 	// search all listeners for the deployments TargetGroupArn
 	if len(listeners.Listeners) > 0 {
 		for _, listener := range listeners.Listeners {
@@ -1145,7 +1143,7 @@ func (p *Platform) Destroy(
 			var tgs []*elbv2.TargetGroupTuple
 
 			if def[0].ForwardConfig != nil {
-				if len(def) == 1 && def[0].ForwardConfig.TargetGroups[0].TargetGroupArn == deployment.TargetGroupArn {
+				if len(def) == 1 && def[0].ForwardConfig.TargetGroups[0].TargetGroupArn == &deployment.TargetGroupArn {
 					log.Debug("only 1 target group, deleting listener")
 					_, err = elbsrv.DeleteListener(&elbv2.DeleteListenerInput{
 						ListenerArn: listener.ListenerArn,
@@ -1155,6 +1153,9 @@ func (p *Platform) Destroy(
 						return err
 					}
 				} else if len(def) >= 1 {
+					// Multiple target groups means we can keep the listener
+					var active bool
+
 					for _, tg := range def[0].ForwardConfig.TargetGroups {
 						if *tg.TargetGroupArn != deployment.TargetGroupArn {
 							tgs = append(tgs, tg)
