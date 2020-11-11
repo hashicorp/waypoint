@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
+	vaultapi "github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
