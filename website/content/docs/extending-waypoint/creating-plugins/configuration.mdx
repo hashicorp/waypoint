@@ -111,7 +111,7 @@ uses `os.Stat` to check that the directory defined in the config exists. If it d
 Waypoint will present to the user.
 
 ```go
-func (b *Builder) ConfigurableNotify(config interface{}) error {
+func (b *Builder) ConfigSet(config interface{}) error {
   c, ok := config.(*BuildConfig)
   if !ok {
     return fmt.Errorf("Expected type BuildConfig")
