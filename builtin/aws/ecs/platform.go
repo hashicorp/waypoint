@@ -63,9 +63,9 @@ func (p *Platform) ValidateAuth() error {
 }
 
 // DefaultReleaserFunc implements component.PlatformReleaser
-func (p *Platform) DefaultReleaserFunc() interface{} {
-	return func() *Releaser { return &Releaser{p: p} }
-}
+//func (p *Platform) DefaultReleaserFunc() interface{} {
+//	return func() *Releaser { return &Releaser{p: p} }
+//}
 
 type Lifecycle struct {
 	Init    func(LifecycleStatus) error

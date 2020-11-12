@@ -15,7 +15,6 @@ import (
 
 // Releaser is the ReleaseManager implementation for Amazon ECS.
 type Releaser struct {
-	p      *Platform
 	config ReleaserConfig
 }
 
@@ -37,8 +36,10 @@ func (r *Releaser) Release(
 	ui terminal.UI,
 	target *Deployment,
 ) (*Release, error) {
+	log.Debug("releasing deployment target group in to load balancer")
+
 	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: r.p.config.Region,
+		Region: r.config.Region,
 	})
 	if err != nil {
 		return nil, err
@@ -67,8 +68,6 @@ func (r *Releaser) Release(
 		return nil, err
 	}
 
-	var listener *elbv2.Listener
-
 	tgs := []*elbv2.TargetGroupTuple{
 		{
 			TargetGroupArn: &target.TargetGroupArn,
@@ -78,45 +77,51 @@ func (r *Releaser) Release(
 
 	log.Debug("configuring weight 100 for target group", "arn", target.TargetGroupArn)
 
+	scheme := "http"
+
 	if len(listeners.Listeners) > 0 {
-		listener = listeners.Listeners[0]
+		for _, listener := range listeners.Listeners {
+			def := listener.DefaultActions
 
-		def := listener.DefaultActions
-
-		if len(def) > 0 && def[0].ForwardConfig != nil {
-			for _, tg := range def[0].ForwardConfig.TargetGroups {
-				// Drain any target groups to 0 but leave them registered.
-				// This loop also inherently removes any target groups already
-				// set to 0 that ARE NOT the one we're releasing.
-				if *tg.Weight > 0 && *tg.TargetGroupArn != target.TargetGroupArn {
-					tg.Weight = aws.Int64(0)
-					tgs = append(tgs, tg)
-					log.Debug("previous target group", "arn", *tg.TargetGroupArn)
+			if len(def) > 0 && def[0].ForwardConfig != nil {
+				for _, tg := range def[0].ForwardConfig.TargetGroups {
+					// Drain any target groups to 0 but leave them registered.
+					// This loop also inherently removes any target groups already
+					// set to 0 that ARE NOT the one we're releasing.
+					if *tg.Weight > 0 && *tg.TargetGroupArn != target.TargetGroupArn {
+						tg.Weight = aws.Int64(0)
+						tgs = append(tgs, tg)
+						log.Debug("previous target group", "arn", *tg.TargetGroupArn)
+					}
 				}
 			}
-		}
 
-		log.Debug("modifying load balancer", "tgs", len(tgs))
-		_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
-			ListenerArn: listener.ListenerArn,
-			Port:        listener.Port,
-			Protocol:    listener.Protocol,
-			DefaultActions: []*elbv2.Action{
-				{
-					ForwardConfig: &elbv2.ForwardActionConfig{
-						TargetGroups: tgs,
+			log.Debug("modifying listener", "tgs", len(tgs))
+			_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
+				ListenerArn: listener.ListenerArn,
+				Port:        listener.Port,
+				Protocol:    listener.Protocol,
+				DefaultActions: []*elbv2.Action{
+					{
+						ForwardConfig: &elbv2.ForwardActionConfig{
+							TargetGroups: tgs,
+						},
+						Type: aws.String("forward"),
 					},
-					Type: aws.String("forward"),
 				},
-			},
-		})
-		if err != nil {
-			return nil, err
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			if listener.Port == aws.Int64(443) {
+				scheme = "https"
+			}
 		}
 	} else {
 		log.Info("load-balancer defined", "dns-name", *lb.DNSName)
 
-		lo, err := elbsrv.CreateListener(&elbv2.CreateListenerInput{
+		_, err := elbsrv.CreateListener(&elbv2.CreateListenerInput{
 			LoadBalancerArn: lb.LoadBalancerArn,
 			Port:            aws.Int64(80),
 			Protocol:        aws.String("HTTP"),
@@ -133,24 +138,22 @@ func (r *Releaser) Release(
 		if err != nil {
 			return nil, err
 		}
-
-		listener = lo.Listeners[0]
 	}
 
 	hostname := *lb.DNSName
-
-	if r.p.config.ALB != nil && r.p.config.ALB.FQDN != "" {
-		hostname = r.p.config.ALB.FQDN
-	}
+	log.Debug("ALB hostname", hostname)
 
 	return &Release{
-		Url:             "http://" + hostname,
+		Url:             scheme + "://" + hostname,
 		LoadBalancerArn: *lb.LoadBalancerArn,
 	}, nil
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.
-type ReleaserConfig struct{}
+type ReleaserConfig struct {
+	// AWS Region to deploy into
+	Region string `hcl:"region"`
+}
 
 func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	doc, err := docs.New(docs.FromConfig(&ReleaserConfig{}))
@@ -162,6 +165,11 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 
 	doc.Input("ecs.Deployment")
 	doc.Output("ecs.Release")
+
+	doc.SetField(
+		"region",
+		"the AWS region for the ECS cluster",
+	)
 
 	return doc, nil
 }
