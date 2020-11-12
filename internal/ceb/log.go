@@ -26,8 +26,8 @@ func (ceb *CEB) initLogStream(ctx context.Context, cfg *config) error {
 	// Set our output for the command. We use a multiwriter so that we
 	// can always send the out/err back to the normal channels so that
 	// users can see it.
-	ceb.childCmd.Stdout = io.MultiWriter(w, ceb.childCmd.Stdout)
-	ceb.childCmd.Stderr = io.MultiWriter(w, ceb.childCmd.Stderr)
+	ceb.childCmdBase.Stdout = io.MultiWriter(w, ceb.childCmdBase.Stdout)
+	ceb.childCmdBase.Stderr = io.MultiWriter(w, ceb.childCmdBase.Stderr)
 
 	// We need to start a goroutine to read from our pipe. If we don't
 	// read from the pipe the child command will get a SIGPIPE and could
@@ -74,9 +74,15 @@ func (ceb *CEB) initLogStreamSender(
 	ctx context.Context,
 	entryCh <-chan *pb.LogBatch_Entry,
 ) error {
+	// wait for initial server connection
+	serverClient := ceb.waitClient()
+	if serverClient == nil {
+		return ctx.Err()
+	}
+
 	// Open our log stream
 	log.Debug("connecting to log stream")
-	client, err := ceb.client.EntrypointLogStream(ctx, grpc.WaitForReady(true))
+	client, err := serverClient.EntrypointLogStream(ctx, grpc.WaitForReady(true))
 	if err != nil {
 		return status.Errorf(codes.Aborted,
 			"failed to open a log stream: %s", err)

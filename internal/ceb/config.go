@@ -2,7 +2,11 @@ package ceb
 
 import (
 	"context"
+	"os/exec"
+	"reflect"
+	"sort"
 
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,9 +17,15 @@ import (
 func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool) error {
 	log := ceb.logger.Named("config")
 
+	// wait for initial server connection
+	serverClient := ceb.waitClient()
+	if serverClient == nil {
+		return ctx.Err()
+	}
+
 	// Open our log stream
 	log.Debug("registering instance, requesting config")
-	client, err := ceb.client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
+	client, err := serverClient.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
 		DeploymentId: ceb.deploymentId,
 		InstanceId:   ceb.id,
 	}, grpc.WaitForReady(isRetry || cfg.ServerRequired))
@@ -26,46 +36,20 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool)
 		if status.Code(err) == codes.Unavailable {
 			log.Error("error connecting to Waypoint server, will retry but startup " +
 				"child command without initial settings")
+
 			go ceb.initConfigStream(ctx, cfg, true)
 			return nil
 		}
 
 		return err
 	}
-	ceb.cleanup(func() { client.CloseSend() })
 
-	// Receive our first configuration which marks that we've registered,
-	// plus we need the config for behavior.
-	log.Trace("config stream connected, waiting for first config")
-	resp, err := client.Recv()
-	if err != nil {
-		return err
-	}
-	log.Trace("first config received")
-
-	// Modify childCmd to contain any passed variables as environment variables
-	for _, cv := range resp.Config.EnvVars {
-		ceb.childCmd.Env = append(ceb.childCmd.Env, cv.Name+"="+cv.Value)
-	}
-
-	// If we have URL service configuration, start it. We start this in a goroutine
-	// since we don't need to block starting up our application on this.
-	if url := resp.Config.UrlService; url != nil {
-		go func() {
-			if err := ceb.initURLService(ctx, cfg.URLServicePort, url); err != nil {
-				log.Warn("error starting URL service", "err", err)
-			}
-		}()
-	} else {
-		log.Debug("no URL service configuration, will not register with URL service")
-	}
+	// We never send anything
+	client.CloseSend()
 
 	// Start the watcher
 	ch := make(chan *pb.EntrypointConfig)
-	go ceb.watchConfig(ch)
-
-	// Send the first config which will trigger setup
-	ch <- resp.Config
+	go ceb.watchConfig(log, ch, ctx, cfg)
 
 	// Start the goroutine that waits for all other configs
 	go ceb.recvConfig(ctx, client, ch, func() error {
@@ -77,13 +61,71 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool)
 
 // watchConfig sits in a goroutine receiving the new configurations from the
 // server.
-func (ceb *CEB) watchConfig(ch <-chan *pb.EntrypointConfig) {
+func (ceb *CEB) watchConfig(
+	log hclog.Logger,
+	ch <-chan *pb.EntrypointConfig,
+	ctx context.Context,
+	cfg *config,
+) {
+	// Keep track of our currently executing command information so that
+	// we can diff properly to determine if we need to restart.
+	currentCmd := ceb.childCmdBase
+
+	// We only init the URL service once. In the future, we can do diffing
+	// and support automatically reinitializing if the URL service changes.
+	didInitURL := false
+
 	for config := range ch {
+		if !didInitURL {
+			didInitURL = true
+
+			// If we have URL service configuration, start it. We start this in a goroutine
+			// since we don't need to block starting up our application on this.
+			if url := config.UrlService; url != nil {
+				go func() {
+					if err := ceb.initURLService(ctx, cfg.URLServicePort, url); err != nil {
+						log.Warn("error starting URL service", "err", err)
+					}
+				}()
+			} else {
+				log.Debug("no URL service configuration, will not register with URL service")
+			}
+		}
+
 		// Start the exec sessions if we have any
 		if len(config.Exec) > 0 {
 			ceb.startExecGroup(config.Exec)
 		}
+
+		// Configure our env vars for the child command.
+		ceb.handleChildCmdConfig(log, config, currentCmd)
 	}
+}
+
+func (ceb *CEB) handleChildCmdConfig(
+	log hclog.Logger,
+	config *pb.EntrypointConfig,
+	last *exec.Cmd,
+) {
+	// Build up our env vars
+	env := make([]string, len(last.Env), len(last.Env)*2)
+	copy(env, last.Env)
+	for _, cv := range config.EnvVars {
+		env = append(env, cv.Name+"="+cv.Value)
+	}
+	sort.Strings(env)
+
+	// If the env vars have not changed, we haven't changed.
+	if reflect.DeepEqual(last.Env, env) {
+		return
+	}
+	log.Info("env vars changed, sending new child command")
+
+	// Update the env vars
+	last.Env = env
+
+	// Send the new command
+	ceb.childCmdCh <- ceb.copyCmd(last)
 }
 
 func (ceb *CEB) recvConfig(

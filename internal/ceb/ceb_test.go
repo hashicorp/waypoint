@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRun(t *testing.T) {
+func TestRun_reconnect(t *testing.T) {
 	require := require.New(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -337,6 +337,15 @@ func TestMain(m *testing.M) {
 		}
 
 		ioutil.WriteFile(path, []byte("hello"), 0600)
+		time.Sleep(10 * time.Minute)
+
+	case "write-env":
+		path := os.Getenv("HELPER_PATH")
+		if path == "" {
+			panic("bad")
+		}
+
+		ioutil.WriteFile(path, []byte("value: "+os.Getenv("TEST_VALUE")), 0600)
 		time.Sleep(10 * time.Minute)
 
 	default:

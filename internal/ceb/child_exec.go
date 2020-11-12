@@ -5,7 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"syscall"
+	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -14,23 +17,127 @@ import (
 // we run. This just sets the `childCmd` field on the CEB structure. This
 // does not have any side effecting behavior.
 func (ceb *CEB) initChildCmd(ctx context.Context, cfg *config) error {
+	// Prepare our base command. This validates that the path and everything is found.
 	cmd, err := ceb.buildCmd(ctx, cfg.ExecArgs)
 	if err != nil {
 		return err
 	}
+	ceb.childCmdBase = cmd
 
-	ceb.childCmd = cmd
+	// Setup our channels and goroutine to prepare to execute this. This
+	// won't actually start any child commands, but it starts the watcher
+	// goroutine that will eventually run them.
+	childCmdCh := make(chan *exec.Cmd, 5)
+	doneCh := make(chan error, 1)
+	go ceb.watchChildCmd(ctx, childCmdCh, doneCh)
+	ceb.childCmdCh = childCmdCh
+	ceb.childDoneCh = doneCh
+
 	return nil
 }
 
-// execChildCmd starts the child process, and waits for completion by sending an
+// watchChildCmd should be started in a goroutine. This will run the child
+// command sent on the channel. This ensures only one child command is run
+// at a time.
+func (ceb *CEB) watchChildCmd(
+	ctx context.Context,
+	cmdCh <-chan *exec.Cmd,
+	doneCh chan<- error,
+) {
+	// We always close the done channel when we exit so that callers can
+	// detect this and also exit.
+	defer close(doneCh)
+
+	log := ceb.logger.Named("watchChildCmd")
+	log.Debug("starting child command watch loop")
+
+	var currentCh <-chan error
+	var currentCmd *exec.Cmd
+	for {
+		select {
+		case <-ctx.Done():
+			log.Warn("request to exit")
+
+			// If we have a child, we need to exit that first.
+			if currentCh != nil {
+				log.Info("terminating current child process")
+				err := ceb.termChildCmd(log, currentCmd, currentCh, false)
+				log.Info("child process termination result", "err", err)
+			}
+
+			return
+
+		case cmd := <-cmdCh:
+			log.Info("child command received")
+
+			if currentCh == nil {
+				// First client is always the default, so let's wait for
+				// the second one if it gets sent down.
+				log.Debug("first command, waiting an extended period for config establishment")
+				select {
+				case cmd = <-cmdCh:
+				case <-time.After(2 * time.Second):
+				}
+			}
+
+			// If we have an existing process, we need to exit that first.
+			if currentCh != nil {
+				log.Info("terminating current child process")
+				err := ceb.termChildCmd(log, currentCmd, currentCh, false)
+				if err != nil {
+					// In the event terminating the child fails, we exit
+					// the whole CEB because we can't be sure we're not just
+					// going to fork bomb ourselves.
+					log.Info("child process termination error", "err", err)
+					doneCh <- err
+					return
+				}
+
+				// Coalesce any command changes within milliseconds since the
+				// previous child termination process might take seconds. We also
+				// do this on first run always because we send our default command
+				// first, followed by any initially configured commands.
+				waitCtx, waitCancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+				for {
+					select {
+					case cmd = <-cmdCh:
+					case <-waitCtx.Done():
+					}
+
+					if err := waitCtx.Err(); err != nil {
+						break
+					}
+				}
+				waitCancel()
+			}
+
+			// Start our new command.
+			log.Info("starting new child process")
+			currentCh = ceb.startChildCmd(log, cmd)
+			currentCmd = cmd
+
+		case err := <-currentCh:
+			// Our child process exited, we're done. This function does not
+			// restart any crashing child process, it only restarts if there
+			// are changes to configuration. We assume a higher level process
+			// such as a scheduler handles full crash restarts.
+			log.Info("child process exited on its own", "err", err)
+			doneCh <- err
+			return
+		}
+	}
+}
+
+// startChildCmd starts the child process, and waits for completion by sending an
 // error along the channel.
-func (ceb *CEB) execChildCmd(ctx context.Context) <-chan error {
+func (ceb *CEB) startChildCmd(
+	log hclog.Logger,
+	cmd *exec.Cmd,
+) <-chan error {
 	ch := make(chan error, 1)
-	cmd := ceb.childCmd
 
 	// Start our subprocess
-	log := ceb.logger.With(
+	log = log.With(
 		"cmd", cmd.Path,
 		"args", cmd.Args,
 	)
@@ -54,6 +161,66 @@ func (ceb *CEB) execChildCmd(ctx context.Context) <-chan error {
 	}()
 
 	return ch
+}
+
+// termChildCmd terminates the child command.
+//
+// If force is set to true, this will send a SIGKILL.
+//
+// If force is false, this will send a SIGTERM and wait up to 30 seconds
+// for the child process to gracefully exit. If the process does not gracefully
+// exit in 30 seconds, we will send a SIGKILL.
+func (ceb *CEB) termChildCmd(
+	log hclog.Logger,
+	cmd *exec.Cmd,
+	childErrCh <-chan error, // error channel from startChildCmd
+	force bool,
+) error {
+	log = log.With("pid", cmd.Process.Pid)
+
+	// If we're not forcing, try a SIGTERM first.
+	if !force {
+		log.Info("sending SIGTERM")
+		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+			log.Warn("error sending SIGTERM, will proceed to SIGKILL", "err", err)
+		} else {
+			log.Debug("SIGTERM sent, waiting for child process to end or timeout")
+			select {
+			case err := <-childErrCh:
+				// If we got an exit error then everything worked propertly so
+				// we just set error to nil.
+				if _, ok := err.(*exec.ExitError); ok {
+					err = nil
+				}
+
+				// Child successfully exited.
+				log.Info("child process exited", "wait_err", err)
+				return err
+
+			case <-time.After(30 * time.Second):
+				// Timeout, fall through to SIGKILL
+				log.Warn("graceful termination failed, will send SIGKILL")
+			}
+		}
+	}
+
+	// SIGKILL
+	log.Info("sending SIGKILL")
+	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
+		log.Warn("error sending SIGKILL", "err", err)
+		return err
+	}
+
+	// Wait for the process to die
+	log.Debug("waiting for child process to end")
+	err := <-childErrCh
+	if _, ok := err.(*exec.ExitError); ok {
+		// If we got an exit error then everything worked propertly so
+		// we just set error to nil.
+		err = nil
+	}
+	log.Info("child process exited", "wait_err", err)
+	return err
 }
 
 func (ceb *CEB) buildCmd(ctx context.Context, args []string) (*exec.Cmd, error) {
@@ -82,5 +249,22 @@ func (ceb *CEB) buildCmd(ctx context.Context, args []string) (*exec.Cmd, error) 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
+	// Create a new process group so we can kill this child and all its
+	// grandchildren when the time comes.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
 	return cmd, nil
+}
+
+// copyCmd creates a new copy of the given command.
+func (ceb *CEB) copyCmd(cmd *exec.Cmd) *exec.Cmd {
+	var new exec.Cmd
+	new.Path = cmd.Path
+	new.Args = cmd.Args // not a deep copy
+	new.Env = cmd.Env   //not a deep copy
+	new.Dir = cmd.Dir
+	new.Stdin = cmd.Stdin
+	new.Stdout = cmd.Stdout
+	new.Stderr = cmd.Stderr
+	return &new
 }

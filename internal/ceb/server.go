@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
@@ -15,6 +16,57 @@ import (
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+// client returns the Waypoint client or blocks until it is set or the
+// ceb is exiting. Once this returns, users should ALWAYS check if an exit
+// condition was triggered to avoid nil panics.
+func (ceb *CEB) waitClient() pb.WaypointClient {
+	ceb.clientMu.Lock()
+	defer ceb.clientMu.Unlock()
+
+	for ceb.client == nil {
+		ceb.clientCond.Wait()
+	}
+
+	return ceb.client
+}
+
+// initClient initializes the client connection to the server. This will
+// attempt to synchronously connect once, and then reattempt connection in
+// the background.
+//
+// Users of the client should use the waitClient() function to wait
+// for the client to be set.
+func (ceb *CEB) initClient(ctx context.Context, log hclog.Logger, cfg *config, retry bool) error {
+	if ceb.client != nil {
+		return nil
+	}
+
+	if cfg.ServerAddr == "" {
+		log.Info("no waypoint server configured, disabled entrypoint")
+		return nil
+	}
+
+RETRY_INIT:
+	err := ceb.dialServer(ctx, cfg, retry)
+	if status.Code(err) == codes.Unavailable {
+		// If we require a server connection, then just retry.
+		if cfg.ServerRequired {
+			log.Warn("server unavailable but ceb configured to require it, retrying synchronously")
+			retry = true
+			goto RETRY_INIT
+		}
+
+		// If we don't require a server connection, then we start a
+		// goroutine to retry and eventually connect (hopefully).
+		log.Warn("server unavailable, will retry in the background")
+		go ceb.initClient(ctx, log, cfg, true)
+
+		return nil
+	}
+
+	return err
+}
 
 // dialServer connects to the server.
 func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error {
@@ -129,7 +181,10 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	ceb.logger.Info("negotiated entrypoint protocol version", "version", vsn)
 
 	// Commit to using this client
+	ceb.clientMu.Lock()
+	defer ceb.clientMu.Unlock()
 	ceb.client = client
+	ceb.clientCond.Broadcast()
 	connCopy := conn
 	conn = nil
 	ceb.cleanup(func() { connCopy.Close() })
