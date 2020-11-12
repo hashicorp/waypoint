@@ -13,7 +13,6 @@ import ProductSubnav from 'components/subnav'
 import Footer from '../components/footer'
 import Error from './_error'
 import alertBannerData, { ALERT_BANNER_ACTIVE } from 'data/alert-banner'
-import useWaypointServiceStatus from 'lib/hooks/useWaypointServiceStatus'
 
 NProgress({ Router })
 const { ConsentManager, openConsentManager } = createConsentManager({
@@ -26,7 +25,6 @@ const description =
 
 function App({ Component, pageProps }) {
   useAnchorLinkAnalytics()
-  const waypointServiceOK = useWaypointServiceStatus()
 
   return (
     <ErrorBoundary FallbackComponent={Error}>
@@ -41,17 +39,7 @@ function App({ Component, pageProps }) {
         <meta name="og:title" property="og:title" content={title} />
         <meta name="og:description" property="og:title" content={description} />
       </HashiHead>
-      {ALERT_BANNER_ACTIVE && waypointServiceOK && (
-        <AlertBanner {...alertBannerData} theme="blue" />
-      )}
-      {!waypointServiceOK && (
-        <AlertBanner
-          tag="SERVICE ALERT"
-          text="Waypoint URL Service is running in a degraded state.  Click here for more details."
-          url="https://status.hashicorp.com/"
-          theme="blue"
-        />
-      )}
+      {ALERT_BANNER_ACTIVE && <AlertBanner {...alertBannerData} theme="blue" />}
       <HashiStackMenu />
       <ProductSubnav />
       <div className="content">
