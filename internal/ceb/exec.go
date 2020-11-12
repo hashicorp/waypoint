@@ -41,9 +41,15 @@ func (ceb *CEB) startExecGroup(es []*pb.EntrypointConfig_Exec) {
 func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 	log := ceb.logger.Named("exec").With("index", execConfig.Index)
 
+	// wait for initial server connection
+	serverClient := ceb.waitClient()
+	if serverClient == nil {
+		log.Warn("nil client, can't execute")
+	}
+
 	// Open the stream
 	log.Info("starting exec stream", "args", execConfig.Args)
-	client, err := ceb.client.EntrypointExecStream(ceb.context)
+	client, err := serverClient.EntrypointExecStream(ceb.context)
 	if err != nil {
 		log.Warn("error opening exec stream", "err", err)
 		return

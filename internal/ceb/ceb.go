@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -38,10 +39,36 @@ type CEB struct {
 	deploymentId string
 	logger       hclog.Logger
 	context      context.Context
-	client       pb.WaypointClient
-	childCmd     *exec.Cmd
 	execIdx      int64
 
+	// clientMu must be held anytime reading/writing client. internally
+	// you probably want to use waitClient() instead of this directly.
+	clientMu   sync.Mutex
+	clientCond *sync.Cond
+	client     pb.WaypointClient
+
+	// childDoneCh is sent a value (incl. nil) when the child process exits.
+	// This is not sent anything for restarts.
+	childDoneCh <-chan error
+
+	// childCmdCh can be sent new commands to restart the child process. New
+	// commands will stop the old command first. Values sent here are coalesced
+	// in case many changes are sent in a row.
+	childCmdCh chan<- *exec.Cmd
+	childInit  uint32
+
+	// childReadyCh should be closed exactly once (and set to nil) when the
+	// FIRST child command is ready to be started. This can be closed before
+	// any command is sent to childCmdCh. It indicates that the child process
+	// watcher can begin executing.
+	childReadyCh chan struct{}
+
+	// childCmdBase is the base command to use for making any changes to the
+	// child; use the copyCmd() function to copy this safetly to make changes.
+	// Do not write to this directly.
+	childCmdBase *exec.Cmd
+
+	closedVal   uint32
 	cleanupFunc func()
 
 	urlAgentMu     sync.Mutex
@@ -68,6 +95,7 @@ func Run(ctx context.Context, os ...Option) error {
 		logger:  hclog.L(),
 		context: ctx,
 	}
+	ceb.clientCond = sync.NewCond(&ceb.clientMu)
 	defer ceb.Close()
 
 	// Set our options
@@ -78,6 +106,10 @@ func Run(ctx context.Context, os ...Option) error {
 			return err
 		}
 	}
+
+	// We're disabled also if we have no client set and the server address is empty.
+	// This means we have nothing to connect to.
+	cfg.disable = cfg.disable || (ceb.client == nil && cfg.ServerAddr == "")
 
 	ceb.logger.Info("entrypoint starting",
 		"deployment_id", ceb.deploymentId,
@@ -94,29 +126,26 @@ func Run(ctx context.Context, os ...Option) error {
 		"revision", vsn.Revision,
 	)
 
-	// Initialize our command
+	// Initialize our base child command. We do this before any server
+	// connections and so on because if this fails we just want to fail fast
+	// before any network activity.
 	if err := ceb.initChildCmd(ctx, &cfg); err != nil {
-		return status.Errorf(codes.Aborted,
-			"failed to connect to server: %s", err)
+		return err
 	}
 
 	// If we are enabled, initialize the CEB feature set.
-	if !cfg.disable {
-		if err := ceb.init(ctx, &cfg, false); err != nil {
-			return err
-		}
+	if err := ceb.init(ctx, &cfg, false); err != nil {
+		return err
 	}
 
 	// Run our subprocess
-	errCh := ceb.execChildCmd(ctx)
 	select {
-	case err := <-errCh:
+	case err := <-ceb.childDoneCh:
 		return err
 
 	case <-ctx.Done():
-		ceb.logger.Info("received cancellation request, gracefully exiting")
-		ceb.childCmd.Process.Kill()
-		<-errCh
+		ceb.logger.Info("received cancellation request, waiting for child to exit")
+		<-ceb.childDoneCh
 	}
 
 	return nil
@@ -125,11 +154,21 @@ func Run(ctx context.Context, os ...Option) error {
 // Close cleans up any resources created by the CEB and should be called
 // to gracefully exit.
 func (ceb *CEB) Close() error {
+	// Only close ones
+	if !atomic.CompareAndSwapUint32(&ceb.closedVal, 0, 1) {
+		return nil
+	}
+
 	if f := ceb.cleanupFunc; f != nil {
 		f()
 	}
 
 	return nil
+}
+
+// closed returns true if Close was called
+func (ceb *CEB) closed() bool {
+	return atomic.LoadUint32(&ceb.closedVal) != 0
 }
 
 // cleanup stacks cleanup functions to call when Close is called.
