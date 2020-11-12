@@ -107,6 +107,10 @@ func Run(ctx context.Context, os ...Option) error {
 		}
 	}
 
+	// We're disabled also if we have no client set and the server address is empty.
+	// This means we have nothing to connect to.
+	cfg.disable = cfg.disable || (ceb.client == nil && cfg.ServerAddr == "")
+
 	ceb.logger.Info("entrypoint starting",
 		"deployment_id", ceb.deploymentId,
 		"instance_id", ceb.id,

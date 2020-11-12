@@ -307,6 +307,36 @@ func TestRun_disabledUp(t *testing.T) {
 	}
 }
 
+// Test CEB disabled via no server addr being set.
+func TestRun_disabledNoServerAddr(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Create a temporary directory for our test
+	td, err := ioutil.TempDir("", "test")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+	path := filepath.Join(td, "hello")
+
+	// Start the CEB
+	testRun(t, ctx, &testRunOpts{
+		ClientDisable: true,
+		DeploymentId:  "who cares",
+		Helper:        "write-file",
+		HelperEnv: map[string]string{
+			envServerAddr: "",
+			"HELPER_PATH": path,
+		},
+	})
+
+	// The child should start up
+	require.Eventually(func() bool {
+		_, err := ioutil.ReadFile(path)
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+}
+
 var (
 	testExec      = os.Args[0]
 	envHelperMode = "TEST_HELPER_MODE"
