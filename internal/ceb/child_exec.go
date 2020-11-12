@@ -29,11 +29,22 @@ func (ceb *CEB) initChildCmd(ctx context.Context, cfg *config) error {
 	// goroutine that will eventually run them.
 	childCmdCh := make(chan *exec.Cmd, 5)
 	doneCh := make(chan error, 1)
-	go ceb.watchChildCmd(ctx, childCmdCh, doneCh)
+	readyCh := make(chan struct{})
+	go ceb.watchChildCmd(ctx, readyCh, childCmdCh, doneCh)
 	ceb.childCmdCh = childCmdCh
 	ceb.childDoneCh = doneCh
+	ceb.childReadyCh = readyCh
 
 	return nil
+}
+
+// markChildCmdReady will allow watchChildCmd to begin executing commands.
+// This should be called once and should not be called concurrently.
+func (ceb *CEB) markChildCmdReady() {
+	if ceb.childReadyCh != nil {
+		close(ceb.childReadyCh)
+		ceb.childReadyCh = nil
+	}
 }
 
 // watchChildCmd should be started in a goroutine. This will run the child
@@ -41,6 +52,7 @@ func (ceb *CEB) initChildCmd(ctx context.Context, cfg *config) error {
 // at a time.
 func (ceb *CEB) watchChildCmd(
 	ctx context.Context,
+	readyCh <-chan struct{},
 	cmdCh <-chan *exec.Cmd,
 	doneCh chan<- error,
 ) {
@@ -49,8 +61,16 @@ func (ceb *CEB) watchChildCmd(
 	defer close(doneCh)
 
 	log := ceb.logger.Named("watchChildCmd")
-	log.Debug("starting child command watch loop")
 
+	// We need to wait for readyCh. readyCh is closed by ceb/init.go
+	// or ceb/config.go when we're ready to begin processing. We have to do
+	// this because we want to try to connect to the server to get our initial
+	// config values before executing our child command. But if that fails, we
+	// execute the child command anyways.
+	log.Debug("waiting for child watch loop readyCh to close")
+	<-readyCh
+
+	log.Debug("starting child command watch loop")
 	var currentCh <-chan error
 	var currentCmd *exec.Cmd
 	for {
@@ -70,16 +90,6 @@ func (ceb *CEB) watchChildCmd(
 		case cmd := <-cmdCh:
 			log.Info("child command received")
 
-			if currentCh == nil {
-				// First client is always the default, so let's wait for
-				// the second one if it gets sent down.
-				log.Debug("first command, waiting an extended period for config establishment")
-				select {
-				case cmd = <-cmdCh:
-				case <-time.After(2 * time.Second):
-				}
-			}
-
 			// If we have an existing process, we need to exit that first.
 			if currentCh != nil {
 				log.Info("terminating current child process")
@@ -92,24 +102,24 @@ func (ceb *CEB) watchChildCmd(
 					doneCh <- err
 					return
 				}
-
-				// Coalesce any command changes within milliseconds since the
-				// previous child termination process might take seconds. We also
-				// do this on first run always because we send our default command
-				// first, followed by any initially configured commands.
-				waitCtx, waitCancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
-				for {
-					select {
-					case cmd = <-cmdCh:
-					case <-waitCtx.Done():
-					}
-
-					if err := waitCtx.Err(); err != nil {
-						break
-					}
-				}
-				waitCancel()
 			}
+
+			// Coalesce any command changes within milliseconds since the
+			// previous child termination process might take seconds. We also
+			// do this on first run always because we send our default command
+			// first, followed by any initially configured commands.
+			waitCtx, waitCancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+			for {
+				select {
+				case cmd = <-cmdCh:
+				case <-waitCtx.Done():
+				}
+
+				if err := waitCtx.Err(); err != nil {
+					break
+				}
+			}
+			waitCancel()
 
 			// Start our new command.
 			log.Info("starting new child process")
@@ -204,7 +214,9 @@ func (ceb *CEB) termChildCmd(
 		}
 	}
 
-	// SIGKILL
+	// SIGKILL. We send the signal to the negative value of the pid so
+	// that it goes to the entire process group, therefore killing all
+	// grandchildren of our child process as well.
 	log.Info("sending SIGKILL")
 	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
 		log.Warn("error sending SIGKILL", "err", err)

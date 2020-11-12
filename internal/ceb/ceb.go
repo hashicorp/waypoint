@@ -55,6 +55,13 @@ type CEB struct {
 	// commands will stop the old command first. Values sent here are coalesced
 	// in case many changes are sent in a row.
 	childCmdCh chan<- *exec.Cmd
+	childInit  uint32
+
+	// childReadyCh should be closed exactly once (and set to nil) when the
+	// FIRST child command is ready to be started. This can be closed before
+	// any command is sent to childCmdCh. It indicates that the child process
+	// watcher can begin executing.
+	childReadyCh chan struct{}
 
 	// childCmdBase is the base command to use for making any changes to the
 	// child; use the copyCmd() function to copy this safetly to make changes.

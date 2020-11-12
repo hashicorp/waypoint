@@ -62,6 +62,11 @@ RETRY_INIT:
 		log.Warn("server unavailable, will retry in the background")
 		go ceb.initClient(ctx, log, cfg, true)
 
+		// We also mark that we can begin executing the child command.
+		// We usually don't do this because we wait for initial config, but
+		// if we fail to connect to the client, we can just start it.
+		ceb.markChildCmdReady()
+
 		return nil
 	}
 

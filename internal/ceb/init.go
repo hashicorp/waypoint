@@ -11,6 +11,7 @@ func (ceb *CEB) init(ctx context.Context, cfg *config, retry bool) error {
 	if cfg.disable {
 		// Send our initial child command down.
 		ceb.childCmdCh <- ceb.copyCmd(ceb.childCmdBase)
+		ceb.markChildCmdReady()
 		return nil
 	}
 

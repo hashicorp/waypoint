@@ -17,6 +17,13 @@ import (
 func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool) error {
 	log := ceb.logger.Named("config")
 
+	// On retry we always mark the child process ready so we can begin executing
+	// any staged child command. We don't do this on non-retries because we
+	// still have hope that we can talk to the server and get our initial config.
+	if isRetry {
+		ceb.markChildCmdReady()
+	}
+
 	// wait for initial server connection
 	serverClient := ceb.waitClient()
 	if serverClient == nil {
@@ -36,7 +43,6 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool)
 		if status.Code(err) == codes.Unavailable {
 			log.Error("error connecting to Waypoint server, will retry but startup " +
 				"child command without initial settings")
-
 			go ceb.initConfigStream(ctx, cfg, true)
 			return nil
 		}
@@ -99,6 +105,7 @@ func (ceb *CEB) watchConfig(
 
 		// Configure our env vars for the child command.
 		ceb.handleChildCmdConfig(log, config, currentCmd)
+		ceb.markChildCmdReady()
 	}
 }
 
