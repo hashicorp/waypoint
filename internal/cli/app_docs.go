@@ -7,7 +7,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/posener/complete"
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/function"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/config/funcs"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/plugin"
@@ -401,6 +405,80 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 			}
 
 			c.mdxFormat(t, f.t, doc)
+		}
+	}
+
+	return c.funcsMDX()
+}
+
+func (c *AppDocsCommand) funcsMDX() int {
+	// Start with our HCL stdlib
+	all := funcs.Stdlib()
+
+	// add functions to our context
+	addFuncs := func(fs map[string]function.Function) {
+		for k, v := range fs {
+			all[k] = v
+		}
+	}
+
+	// Add some of our functions
+	addFuncs(funcs.VCSGitFuncs("."))
+	addFuncs(funcs.Filesystem("."))
+	addFuncs(funcs.Encoding())
+
+	docs := funcs.Docs()
+
+	var keys []string
+
+	for k := range all {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	w, err := os.Create("./website/content/partials/funcs.mdx")
+	if err != nil {
+		panic(err)
+	}
+
+	defer w.Close()
+
+	for _, k := range keys {
+		fn := all[k]
+
+		fmt.Fprintf(w, "# `%s` Function\n\n", k)
+
+		var (
+			args     []string
+			argTypes []cty.Type
+		)
+
+		for _, p := range fn.Params() {
+			if p.Name != "" {
+				args = append(args, p.Name)
+			} else {
+				args = append(args, p.Type.FriendlyName())
+			}
+
+			argTypes = append(argTypes, p.Type)
+		}
+
+		if v := fn.VarParam(); v != nil {
+			args = append(args, v.Name)
+			argTypes = append(argTypes, v.Type)
+		}
+
+		rt, err := fn.ReturnType(argTypes)
+		if err != nil {
+			spew.Dump(argTypes)
+			spew.Dump(fn)
+			panic(err)
+		}
+
+		fmt.Fprintf(w, "```hcl\n%s(%s) %s\n```\n\n", k, strings.Join(args, ", "), rt.FriendlyName())
+		if d, ok := docs[k]; ok {
+			fmt.Fprintf(w, "`%s`: %s\n\n", k, d)
 		}
 	}
 
