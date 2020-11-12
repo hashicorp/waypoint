@@ -104,22 +104,17 @@ func (ceb *CEB) watchChildCmd(
 				}
 			}
 
-			// Coalesce any command changes within milliseconds since the
-			// previous child termination process might take seconds. We also
-			// do this on first run always because we send our default command
-			// first, followed by any initially configured commands.
-			waitCtx, waitCancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+			// Drain the cmdCh. During graceful termination as well as initial
+			// readyCh waiting, we may accumulate a small buffer of command
+			// changes. Let's drain that.
+		CMD_DRAIN:
 			for {
 				select {
 				case cmd = <-cmdCh:
-				case <-waitCtx.Done():
-				}
-
-				if err := waitCtx.Err(); err != nil {
-					break
+				default:
+					break CMD_DRAIN
 				}
 			}
-			waitCancel()
 
 			// Start our new command.
 			log.Info("starting new child process")
