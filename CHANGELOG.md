@@ -4,6 +4,7 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* core: application config changes (i.e. `waypoint config set`) will now restart running applications [GH-791]
 * install/k8s: support for OpenShift [GH-715]
 
 BUG FIXES:
