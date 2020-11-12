@@ -2,6 +2,17 @@
 
 FEATURES:
 
+* **Access to Artifact, Deploy Metadata**: `registry` and `deploy` configuration can use 
+`artifact.*` variable syntax to access metadata from the results of those stages. 
+The `release` configuration can use `artifact.*` and `deploy.*` to access metadata.
+For example: `image = artifact.image` for Docker-based builds. [GH-757]
+* **`template` Functions**: `templatefile`, `templatedir`, and `templatestring` functions
+allow you to template files, directories, and strings with the variables and functions
+available to your Waypoint configuration. 
+* **`path` Variables**: you can now use `path.project`, `path.app`, and `path.pwd` as
+variables in your Waypoint file to specify paths as relative to the project (waypoint.hcl
+file), app, or pwd of the CLI invocation.
+
 IMPROVEMENTS:
 
 * core: application config changes (i.e. `waypoint config set`) will now restart running applications [GH-791]
