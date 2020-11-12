@@ -1289,6 +1289,9 @@ message Build {
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 5;
 
+  // template data for HCL variables and template functions, json-encoded
+  bytes template_data = 10;
+
   // ID of the job that created this build. This may be empty.
   string job_id = 9;
 }
@@ -1384,6 +1387,9 @@ message PushedArtifact {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 6;
+
+  // template data for HCL variables and template functions, json-encoded
+  bytes template_data = 12;
 
   // If include_build was set on the list request, this will include
   // the Build value associated with the given build_id.
@@ -1497,6 +1503,9 @@ message Deployment {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 7;
+
+  // template data for HCL variables and template functions, json-encoded
+  bytes template_data = 14;
 
   // ID of the job that created this. This may be empty.
   string job_id = 12;
@@ -1678,6 +1687,9 @@ message Release {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 6;
+
+  // template data for HCL variables and template functions, json-encoded
+  bytes template_data = 14;
 
   // URL for this release. This is valid while the release is still
   // in use. After the release is not in use, this may still be set but

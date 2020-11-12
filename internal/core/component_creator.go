@@ -54,9 +54,9 @@ func (c *Component) Close() error {
 // componentCreator represents the configuration to initialize the component
 // for a given application.
 type componentCreator struct {
-	Type         component.Type
-	ConfigFunc   func(*App, *hcl.EvalContext) (interface{}, error)
-	EmptyContext *hcl.EvalContext
+	Type       component.Type
+	UseType    func(*App) (string, error)
+	ConfigFunc func(*App, *hcl.EvalContext) (interface{}, error)
 }
 
 // componentCreatorMap contains all the components that can be initialized
@@ -64,6 +64,9 @@ type componentCreator struct {
 var componentCreatorMap = map[component.Type]*componentCreator{
 	component.BuilderType: {
 		Type: component.BuilderType,
+		UseType: func(a *App) (string, error) {
+			return a.config.BuildUse(), nil
+		},
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Build(ctx)
 		},
@@ -71,6 +74,9 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 
 	component.RegistryType: {
 		Type: component.RegistryType,
+		UseType: func(a *App) (string, error) {
+			return a.config.RegistryUse(), nil
+		},
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Registry(ctx)
 		},
@@ -78,6 +84,9 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 
 	component.PlatformType: {
 		Type: component.PlatformType,
+		UseType: func(a *App) (string, error) {
+			return a.config.DeployUse(), nil
+		},
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Deploy(ctx)
 		},
@@ -85,6 +94,9 @@ var componentCreatorMap = map[component.Type]*componentCreator{
 
 	component.ReleaseManagerType: {
 		Type: component.ReleaseManagerType,
+		UseType: func(a *App) (string, error) {
+			return a.config.ReleaseUse(), nil
+		},
 		ConfigFunc: func(a *App, ctx *hcl.EvalContext) (interface{}, error) {
 			return a.config.Release(ctx)
 		},
@@ -97,64 +109,96 @@ func (cc *componentCreator) Create(
 	app *App,
 	hclCtx *hcl.EvalContext,
 ) (*Component, error) {
-	cfg, err := cc.ConfigFunc(app, hclCtx)
+	return cc.create(ctx, app, true, hclCtx)
+}
+
+// CreateNoConfig creates a component with no config loaded. This means
+// hooks also won't be available.
+func (cc *componentCreator) CreateNoConfig(
+	ctx context.Context,
+	app *App,
+) (*Component, error) {
+	return cc.create(ctx, app, false, nil)
+}
+
+func (cc *componentCreator) create(
+	ctx context.Context,
+	app *App,
+	loadConfig bool,
+	hclCtx *hcl.EvalContext,
+) (*Component, error) {
+	useType, err := cc.UseType(app)
 	if err != nil {
 		return nil, err
 	}
-
-	// If we have no configuration or the use is nil or type is empty then
-	// we return an error. We have to use the reflect trick here because we
-	// may get a non-nil interface but nil value.
-	if cfg == nil || !reflect.Indirect(reflect.ValueOf(cfg)).IsValid() {
+	if useType == "" {
 		return nil, status.Errorf(codes.Unimplemented,
-			"component type %s is not configured", cc.Type)
+			"no plugin type declared for type: %s", cc.Type.String())
 	}
-
-	// This should represent an operartion otherwise we have nothing to do.
-	opCfger, ok := cfg.(interface {
-		Operation() *config.Operation
-	})
-	if !ok {
-		panic(fmt.Sprintf("config %T should turn into operation", cfg))
-	}
-	opCfg := opCfger.Operation()
 
 	// Start the plugin
 	pinst, err := app.startPlugin(
 		ctx,
 		cc.Type,
 		app.project.factories[cc.Type],
-		opCfg.Use.Type,
+		useType,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	// If we have a config, configure
-	// Configure the component. This will handle all the cases where no
-	// config is given but required, vice versa, and everything in between.
-	diag := component.Configure(pinst.Component, opCfg.Use.Body, hclCtx)
-	if diag.HasErrors() {
-		pinst.Close()
-		return nil, diag
-	}
-
-	// Setup hooks
-	hooks := map[string][]*config.Hook{}
-	for _, h := range opCfg.Hooks {
-		hooks[h.When] = append(hooks[h.When], h)
-	}
-
-	return &Component{
+	result := &Component{
 		Value: pinst.Component,
 		Info: &pb.Component{
 			Type: pb.Component_Type(cc.Type),
-			Name: opCfg.Use.Type,
+			Name: useType,
 		},
 
-		hooks:   hooks,
-		labels:  opCfg.Labels,
 		mappers: pinst.Mappers,
 		plugin:  pinst,
-	}, nil
+	}
+
+	if loadConfig {
+		cfg, err := cc.ConfigFunc(app, hclCtx)
+		if err != nil {
+			return nil, err
+		}
+
+		// If we have no configuration or the use is nil or type is empty then
+		// we return an error. We have to use the reflect trick here because we
+		// may get a non-nil interface but nil value.
+		if cfg == nil || !reflect.Indirect(reflect.ValueOf(cfg)).IsValid() {
+			return nil, status.Errorf(codes.Unimplemented,
+				"component type %s is not configured", cc.Type)
+		}
+
+		// This should represent an operartion otherwise we have nothing to do.
+		opCfger, ok := cfg.(interface {
+			Operation() *config.Operation
+		})
+		if !ok {
+			panic(fmt.Sprintf("config %T should turn into operation", cfg))
+		}
+		opCfg := opCfger.Operation()
+
+		// If we have a config, configure
+		// Configure the component. This will handle all the cases where no
+		// config is given but required, vice versa, and everything in between.
+		diag := opCfg.Configure(pinst.Component, hclCtx)
+		if diag.HasErrors() {
+			pinst.Close()
+			return nil, diag
+		}
+
+		// Setup hooks
+		hooks := map[string][]*config.Hook{}
+		for _, h := range opCfg.Hooks {
+			hooks[h.When] = append(hooks[h.When], h)
+		}
+
+		result.hooks = hooks
+		result.labels = opCfg.Labels
+	}
+
+	return result, nil
 }

@@ -31,7 +31,7 @@ func EvalContext(parent *hcl.EvalContext, pwd string) *hcl.EvalContext {
 
 	// Add some of our functions
 	addFuncs(funcs.VCSGitFuncs(pwd))
-	addFuncs(funcs.Filesystem(pwd))
+	addFuncs(funcs.Filesystem())
 	addFuncs(funcs.Encoding())
 
 	return result
@@ -63,4 +63,19 @@ func addPathValue(ctx *hcl.EvalContext, v map[string]string) {
 	}
 
 	ctx.Variables["path"] = value
+}
+
+// finalizeContext should be called whenever an HCL context is being used
+// as the final call.
+func finalizeContext(ctx *hcl.EvalContext) *hcl.EvalContext {
+	ctx = ctx.NewChild()
+	ctx.Functions = funcs.MakeTemplateFuncs(ctx)
+	return ctx
+}
+
+// hclContextContainer is an interface that config structs that have an HCL
+// context may implement. We use this for certain things such as mapoperation()
+// to set the proper context.
+type hclContextContainer interface {
+	hclContext() *hcl.EvalContext
 }

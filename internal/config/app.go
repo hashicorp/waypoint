@@ -86,7 +86,7 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 
 	// Full decode
 	var app App
-	if diag := gohcl.DecodeBody(rawApp.Body, ctx, &app); diag.HasErrors() {
+	if diag := gohcl.DecodeBody(rawApp.Body, finalizeContext(ctx), &app); diag.HasErrors() {
 		return nil, diag
 	}
 	app.Name = rawApp.Name
@@ -102,9 +102,10 @@ func (c *App) Build(ctx *hcl.EvalContext) (*Build, error) {
 	ctx = appendContext(c.ctx, ctx)
 
 	var b Build
-	if diag := gohcl.DecodeBody(c.BuildRaw.Body, ctx, &b); diag.HasErrors() {
+	if diag := gohcl.DecodeBody(c.BuildRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
+	b.ctx = ctx
 
 	return &b, nil
 }
@@ -118,9 +119,10 @@ func (c *App) Registry(ctx *hcl.EvalContext) (*Registry, error) {
 
 	var b Registry
 	ctx = appendContext(c.ctx, ctx)
-	if diag := gohcl.DecodeBody(c.BuildRaw.Registry.Body, ctx, &b); diag.HasErrors() {
+	if diag := gohcl.DecodeBody(c.BuildRaw.Registry.Body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
+	b.ctx = ctx
 
 	return &b, nil
 }
@@ -130,9 +132,10 @@ func (c *App) Deploy(ctx *hcl.EvalContext) (*Deploy, error) {
 	ctx = appendContext(c.ctx, ctx)
 
 	var b Deploy
-	if diag := gohcl.DecodeBody(c.DeployRaw.Body, ctx, &b); diag.HasErrors() {
+	if diag := gohcl.DecodeBody(c.DeployRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
+	b.ctx = ctx
 
 	return &b, nil
 }
@@ -145,9 +148,46 @@ func (c *App) Release(ctx *hcl.EvalContext) (*Release, error) {
 
 	var b Release
 	ctx = appendContext(c.ctx, ctx)
-	if diag := gohcl.DecodeBody(c.ReleaseRaw.Body, ctx, &b); diag.HasErrors() {
+	if diag := gohcl.DecodeBody(c.ReleaseRaw.Body, finalizeContext(ctx), &b); diag.HasErrors() {
 		return nil, diag
 	}
+	b.ctx = ctx
 
 	return &b, nil
+}
+
+// BuildUse returns the plugin "use" value.
+func (c *App) BuildUse() string {
+	if c.BuildRaw == nil {
+		return ""
+	}
+
+	return c.BuildRaw.Use.Type
+}
+
+// RegistryUse returns the plugin "use" value.
+func (c *App) RegistryUse() string {
+	if c.BuildRaw == nil || c.BuildRaw.Registry == nil {
+		return ""
+	}
+
+	return c.BuildRaw.Registry.Use.Type
+}
+
+// DeployUse returns the plugin "use" value.
+func (c *App) DeployUse() string {
+	if c.DeployRaw == nil {
+		return ""
+	}
+
+	return c.DeployRaw.Use.Type
+}
+
+// ReleaseUse returns the plugin "use" value.
+func (c *App) ReleaseUse() string {
+	if c.ReleaseRaw == nil {
+		return ""
+	}
+
+	return c.ReleaseRaw.Use.Type
 }

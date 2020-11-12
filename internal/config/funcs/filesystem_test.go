@@ -7,8 +7,6 @@ import (
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/function"
-	"github.com/zclconf/go-cty/cty/function/stdlib"
 )
 
 func TestFile(t *testing.T) {
@@ -36,150 +34,17 @@ func TestFile(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("File(\".\", %#v)", test.Path), func(t *testing.T) {
-			got, err := File(".", test.Path)
+			abs, err := filepath.Abs(test.Path.AsString())
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			test.Path = cty.StringVal(abs)
+
+			got, err := File(test.Path)
 
 			if test.Err {
 				if err == nil {
 					t.Fatal("succeeded; want error")
-				}
-				return
-			} else if err != nil {
-				t.Fatalf("unexpected error: %s", err)
-			}
-
-			if !got.RawEquals(test.Want) {
-				t.Errorf("wrong result\ngot:  %#v\nwant: %#v", got, test.Want)
-			}
-		})
-	}
-}
-
-func TestTemplateFile(t *testing.T) {
-	tests := []struct {
-		Path cty.Value
-		Vars cty.Value
-		Want cty.Value
-		Err  string
-	}{
-		{
-			cty.StringVal("testdata/filesystem/hello.txt"),
-			cty.EmptyObjectVal,
-			cty.StringVal("Hello World"),
-			``,
-		},
-		{
-			cty.StringVal("testdata/filesystem/icon.png"),
-			cty.EmptyObjectVal,
-			cty.NilVal,
-			`contents of testdata/filesystem/icon.png are not valid UTF-8; use the filebase64 function to obtain the Base64 encoded contents or the other file functions (e.g. filemd5, filesha256) to obtain file hashing results instead`,
-		},
-		{
-			cty.StringVal("testdata/filesystem/missing"),
-			cty.EmptyObjectVal,
-			cty.NilVal,
-			`no file exists at testdata/filesystem/missing; this function works only with files that are distributed as part of the configuration source code, so if this file will be created by a resource in this configuration you must instead obtain this result from an attribute of that resource`,
-		},
-		{
-			cty.StringVal("testdata/filesystem/hello.tmpl"),
-			cty.MapVal(map[string]cty.Value{
-				"name": cty.StringVal("Jodie"),
-			}),
-			cty.StringVal("Hello, Jodie!"),
-			``,
-		},
-		{
-			cty.StringVal("testdata/filesystem/hello.tmpl"),
-			cty.MapVal(map[string]cty.Value{
-				"name!": cty.StringVal("Jodie"),
-			}),
-			cty.NilVal,
-			`invalid template variable name "name!": must start with a letter, followed by zero or more letters, digits, and underscores`,
-		},
-		{
-			cty.StringVal("testdata/filesystem/hello.tmpl"),
-			cty.ObjectVal(map[string]cty.Value{
-				"name": cty.StringVal("Jimbo"),
-			}),
-			cty.StringVal("Hello, Jimbo!"),
-			``,
-		},
-		{
-			cty.StringVal("testdata/filesystem/hello.tmpl"),
-			cty.EmptyObjectVal,
-			cty.NilVal,
-			`vars map does not contain key "name", referenced at testdata/filesystem/hello.tmpl:1,10-14`,
-		},
-		{
-			cty.StringVal("testdata/filesystem/func.tmpl"),
-			cty.ObjectVal(map[string]cty.Value{
-				"list": cty.ListVal([]cty.Value{
-					cty.StringVal("a"),
-					cty.StringVal("b"),
-					cty.StringVal("c"),
-				}),
-			}),
-			cty.StringVal("The items are a, b, c"),
-			``,
-		},
-		{
-			cty.StringVal("testdata/filesystem/recursive.tmpl"),
-			cty.MapValEmpty(cty.String),
-			cty.NilVal,
-			`testdata/filesystem/recursive.tmpl:1,3-16: Error in function call; Call to function "templatefile" failed: cannot recursively call templatefile from inside templatefile call.`,
-		},
-		{
-			cty.StringVal("testdata/filesystem/list.tmpl"),
-			cty.ObjectVal(map[string]cty.Value{
-				"list": cty.ListVal([]cty.Value{
-					cty.StringVal("a"),
-					cty.StringVal("b"),
-					cty.StringVal("c"),
-				}),
-			}),
-			cty.StringVal("- a\n- b\n- c\n"),
-			``,
-		},
-		{
-			cty.StringVal("testdata/filesystem/list.tmpl"),
-			cty.ObjectVal(map[string]cty.Value{
-				"list": cty.True,
-			}),
-			cty.NilVal,
-			`testdata/filesystem/list.tmpl:1,13-17: Iteration over non-iterable value; A value of type bool cannot be used as the collection in a 'for' expression.`,
-		},
-		{
-			cty.StringVal("testdata/filesystem/bare.tmpl"),
-			cty.ObjectVal(map[string]cty.Value{
-				"val": cty.True,
-			}),
-			cty.True, // since this template contains only an interpolation, its true value shines through
-			``,
-		},
-	}
-
-	templateFileFn := MakeTemplateFileFunc(".", func() map[string]function.Function {
-		return map[string]function.Function{
-			"join":         stdlib.JoinFunc,
-			"templatefile": MakeFileFunc(".", false), // just a placeholder, since templatefile itself overrides this
-		}
-	})
-
-	for _, test := range tests {
-		t.Run(fmt.Sprintf("TemplateFile(%#v, %#v)", test.Path, test.Vars), func(t *testing.T) {
-			got, err := templateFileFn.Call([]cty.Value{test.Path, test.Vars})
-
-			if argErr, ok := err.(function.ArgError); ok {
-				if argErr.Index < 0 || argErr.Index > 1 {
-					t.Errorf("ArgError index %d is out of range for templatefile (must be 0 or 1)", argErr.Index)
-				}
-			}
-
-			if test.Err != "" {
-				if err == nil {
-					t.Fatal("succeeded; want error")
-				}
-				if got, want := err.Error(), test.Err; got != want {
-					t.Errorf("wrong error\ngot:  %s\nwant: %s", got, want)
 				}
 				return
 			} else if err != nil {
@@ -218,7 +83,13 @@ func TestFileExists(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("FileExists(\".\", %#v)", test.Path), func(t *testing.T) {
-			got, err := FileExists(".", test.Path)
+			abs, err := filepath.Abs(test.Path.AsString())
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			test.Path = cty.StringVal(abs)
+
+			got, err := FileExists(test.Path)
 
 			if test.Err {
 				if err == nil {
@@ -430,7 +301,13 @@ func TestFileSet(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("FileSet(\".\", %#v, %#v)", test.Path, test.Pattern), func(t *testing.T) {
-			got, err := FileSet(".", test.Path, test.Pattern)
+			abs, err := filepath.Abs(test.Path.AsString())
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			test.Path = cty.StringVal(abs)
+
+			got, err := FileSet(test.Path, test.Pattern)
 
 			if test.Err {
 				if err == nil {
@@ -473,8 +350,13 @@ func TestFileBase64(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("FileBase64(\".\", %#v)", test.Path), func(t *testing.T) {
-			got, err := FileBase64(".", test.Path)
+			abs, err := filepath.Abs(test.Path.AsString())
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			test.Path = cty.StringVal(abs)
 
+			got, err := FileBase64(test.Path)
 			if test.Err {
 				if err == nil {
 					t.Fatal("succeeded; want error")
