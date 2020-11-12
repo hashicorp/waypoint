@@ -1144,7 +1144,7 @@ func (p *Platform) Destroy(
 
 			if def[0].ForwardConfig != nil {
 				if len(def) == 1 && def[0].ForwardConfig.TargetGroups[0].TargetGroupArn == &deployment.TargetGroupArn {
-					log.Debug("only 1 target group, deleting listener")
+					log.Debug("matched single target group, deleting listener", "listener_arn", listener.ListenerArn, "tg_arn", &deployment.TargetGroupArn)
 					_, err = elbsrv.DeleteListener(&elbv2.DeleteListenerInput{
 						ListenerArn: listener.ListenerArn,
 					})
