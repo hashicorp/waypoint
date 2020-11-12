@@ -345,7 +345,7 @@ func TestMain(m *testing.M) {
 			panic("bad")
 		}
 
-		ioutil.WriteFile(path, []byte("value: "+os.Getenv("TEST_VALUE")), 0600)
+		ioutil.WriteFile(path, []byte(fmt.Sprintf("%d,%s", os.Getpid(), os.Getenv("TEST_VALUE"))), 0600)
 		time.Sleep(10 * time.Minute)
 
 	default:

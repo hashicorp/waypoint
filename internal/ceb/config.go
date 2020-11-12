@@ -69,7 +69,7 @@ func (ceb *CEB) watchConfig(
 ) {
 	// Keep track of our currently executing command information so that
 	// we can diff properly to determine if we need to restart.
-	currentCmd := ceb.childCmdBase
+	currentCmd := ceb.copyCmd(ceb.childCmdBase)
 
 	// We only init the URL service once. In the future, we can do diffing
 	// and support automatically reinitializing if the URL service changes.
@@ -107,18 +107,23 @@ func (ceb *CEB) handleChildCmdConfig(
 	config *pb.EntrypointConfig,
 	last *exec.Cmd,
 ) {
-	// Build up our env vars
-	env := make([]string, len(last.Env), len(last.Env)*2)
-	copy(env, last.Env)
+	// Build up our env vars. We append to our base command. We purposely
+	// make a capacity of our _last_ command to try to avoid allocations
+	// in the command case (same env).
+	base := ceb.childCmdBase
+	env := make([]string, len(base.Env), len(last.Env))
+	copy(env, base.Env)
 	for _, cv := range config.EnvVars {
 		env = append(env, cv.Name+"="+cv.Value)
 	}
 	sort.Strings(env)
 
-	// If the env vars have not changed, we haven't changed.
+	// If the env vars have not changed, we haven't changed. We do this
+	// using basic DeepEqual since we always sort the strings here.
 	if reflect.DeepEqual(last.Env, env) {
 		return
 	}
+
 	log.Info("env vars changed, sending new child command")
 
 	// Update the env vars

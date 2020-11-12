@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -76,8 +77,30 @@ func TestConfig_envVarChange(t *testing.T) {
 	require.NoError(err)
 
 	// The child should still start up
+	var data []byte
 	require.Eventually(func() bool {
-		data, err := ioutil.ReadFile(path)
-		return err == nil && string(data) == "value: hello"
+		var err error
+		data, err = ioutil.ReadFile(path)
+		return err == nil && strings.Contains(string(data), "hello")
 	}, 5*time.Second, 10*time.Millisecond)
+
+	// Set our config again but to the same value
+	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
+		Variables: []*pb.ConfigVar{
+			{
+				Scope: &pb.ConfigVar_Application{
+					Application: deployment.Application,
+				},
+				Name:  "TEST_VALUE",
+				Value: "hello",
+			},
+		},
+	})
+	require.NoError(err)
+
+	// The child should still start up
+	time.Sleep(1 * time.Second)
+	data2, err := ioutil.ReadFile(path)
+	require.NoError(err)
+	require.Equal(data, data2)
 }
