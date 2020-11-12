@@ -121,13 +121,20 @@ The AWS region for the ECS cluster.
 
 - Type: **string**
 
-#### role_name
+#### execution_role_name
 
 The name of the IAM role to use for ECS execution.
 
 - Type: **string**
 - **Optional**
 - Default: create a new IAM role based on the application name
+
+#### task_role_name
+
+The name of the task IAM role to assign.
+
+- Type: **string**
+- **Optional**
 
 #### secrets
 
