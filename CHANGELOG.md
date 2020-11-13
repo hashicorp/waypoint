@@ -17,6 +17,7 @@ IMPROVEMENTS:
 
 * core: application config changes (i.e. `waypoint config set`) will now restart running applications [GH-791]
 * install/k8s: support for OpenShift [GH-715]
+* server: APIs for Waypoint database snapshot/restore [GH-723]
 
 BUG FIXES:
 
