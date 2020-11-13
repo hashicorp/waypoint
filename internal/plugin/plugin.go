@@ -52,6 +52,7 @@ var (
 		component.RegistryType:       mustFactory(factory.New(component.TypeMap[component.RegistryType])),
 		component.PlatformType:       mustFactory(factory.New(component.TypeMap[component.PlatformType])),
 		component.ReleaseManagerType: mustFactory(factory.New(component.TypeMap[component.ReleaseManagerType])),
+		component.ConfigSourcerType:  mustFactory(factory.New(component.TypeMap[component.ConfigSourcerType])),
 	}
 )
 

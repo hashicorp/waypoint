@@ -33,7 +33,9 @@ func (ceb *CEB) init(ctx context.Context, cfg *config, retry bool) error {
 
 	// Get our configuration and start the long-running stream for it.
 	// Goroutine since this requires the client and will wait for it.
-	go ceb.initConfigStream(ctx, cfg, retry)
+	if err := ceb.initConfigStream(ctx, cfg); err != nil {
+		return err
+	}
 
 	return nil
 }

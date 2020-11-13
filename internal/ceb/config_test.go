@@ -70,7 +70,7 @@ func TestConfig_envVarChange(t *testing.T) {
 					Application: deployment.Application,
 				},
 				Name:  "TEST_VALUE",
-				Value: "hello",
+				Value: &pb.ConfigVar_Static{Static: "hello"},
 			},
 		},
 	})
@@ -92,7 +92,7 @@ func TestConfig_envVarChange(t *testing.T) {
 					Application: deployment.Application,
 				},
 				Name:  "TEST_VALUE",
-				Value: "hello",
+				Value: &pb.ConfigVar_Static{Static: "hello"},
 			},
 		},
 	})

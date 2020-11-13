@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
@@ -74,6 +75,12 @@ type CEB struct {
 	urlAgentMu     sync.Mutex
 	urlAgentCtx    context.Context
 	urlAgentCancel func()
+
+	//---------------------------------------------------------------
+	// Config sourcing
+
+	// configPlugins is the mapping of config source type to launched plugin.
+	configPlugins map[string]*plugin.Instance
 }
 
 // Run runs a CEB with the given options.
