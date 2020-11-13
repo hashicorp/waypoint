@@ -98,9 +98,10 @@ func Run(ctx context.Context, os ...Option) error {
 
 	// Defaults, initialization
 	ceb := &CEB{
-		id:      id,
-		logger:  hclog.L(),
-		context: ctx,
+		id:            id,
+		logger:        hclog.L(),
+		context:       ctx,
+		configPlugins: map[string]*plugin.Instance{},
 	}
 	ceb.clientCond = sync.NewCond(&ceb.clientMu)
 	defer ceb.Close()
