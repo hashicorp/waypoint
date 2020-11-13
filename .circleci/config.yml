@@ -378,10 +378,16 @@ workflows:
   version: 2
   go-tests:
     jobs:
-      - check-vendor
       - lint
-      - go-test
+      - check-vendor:
+          requires:
+            - lint
+      - go-test:
+          requires:
+            - lint
       - dev-build:
+          requires:
+            - lint
           filters:
             branches:
               ignore:
@@ -389,7 +395,10 @@ workflows:
 
   integration:
     jobs:
-      - frontend-cache
+      - lint
+      - frontend-cache:
+          requires:
+            - lint
       - ember-build-prod:
           requires:
             - frontend-cache
