@@ -2,19 +2,12 @@ package ceb
 
 import (
 	"context"
-	"fmt"
-	"os/exec"
-	"reflect"
-	"sort"
 
-	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	sdkpb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -95,13 +88,16 @@ func (ceb *CEB) watchConfig(
 ) {
 	log = log.Named("watcher")
 
-	// Keep track of our currently executing command information so that
-	// we can diff properly to determine if we need to restart.
-	currentCmd := ceb.copyCmd(ceb.childCmdBase)
-
 	// We only init the URL service once. In the future, we can do diffing
 	// and support automatically reinitializing if the URL service changes.
 	didInitURL := false
+
+	// Start the app config watcher. This runs in its own goroutine so that
+	// stuff like dynamic config fetching doesn't block starting things like
+	// exec sessions.
+	varCh := make(chan []*pb.ConfigVar)
+	envCh := make(chan []string)
+	go ceb.watchAppConfig(ctx, log, varCh, envCh)
 
 	for {
 		select {
@@ -131,188 +127,32 @@ func (ceb *CEB) watchConfig(
 				ceb.startExecGroup(config.Exec)
 			}
 
-			// Configure our env vars for the child command.
-			ceb.handleChildCmdConfig(log, config, currentCmd)
+			// Configure our env vars for the child command. We always send
+			// these even if they're nil since the app config watcher will
+			// de-dup and we want to handle removing env vars.
+			select {
+			case varCh <- config.EnvVars:
+			case <-ctx.Done():
+			}
+
+		case env := <-envCh:
+			// Set our new env vars
+			newCmd := ceb.copyCmd(ceb.childCmdBase)
+			newCmd.Env = append(newCmd.Env, env...)
+
+			// Restart
+			log.Info("env vars changed, sending new child command")
+			select {
+			case ceb.childCmdCh <- newCmd:
+			case <-ctx.Done():
+			}
+
+			// Always mark the child command ready at this point. This is
+			// a noop if its already done. If its not, then we're ready now
+			// because readiness is waiting for that initial set of config.
 			ceb.markChildCmdReady()
 		}
 	}
-}
-
-func (ceb *CEB) tickChildCmdConfig(
-	log hclog.Logger,
-	last *exec.Cmd,
-	vars []*pb.ConfigVar,
-) {
-	// Build up our env vars. We append to our base command. We purposely
-	// make a capacity of our _last_ command to try to avoid allocations
-	// in the common case (same env).
-	base := ceb.childCmdBase
-	env := make([]string, len(base.Env), len(last.Env))
-	copy(env, base.Env)
-
-	// We want to accumulate the static vars directly on the env and then
-	// store the dynamic ones in a mapping of source to vars so we can more
-	// easily process those.
-	dynamic := map[string][]*component.ConfigRequest{}
-	for _, cv := range vars {
-		switch v := cv.Value.(type) {
-		case *pb.ConfigVar_Static:
-			env = append(env, cv.Name+"="+v.Static)
-
-		case *pb.ConfigVar_Dynamic:
-			from := v.Dynamic.From
-			dynamic[from] = append(dynamic[from], &component.ConfigRequest{
-				Name:   cv.Name,
-				Config: v.Dynamic.Config,
-			})
-
-		default:
-			log.Warn("unknown config value type received, ignoring",
-				"type", fmt.Sprintf("%T", cv.Value))
-		}
-	}
-
-	// Determine if there are any config changes and mark which are changed.
-	changed := map[string]struct{}{}
-	// TODO
-
-	// For each dynamic config, we need to launch that plugin if we
-	// haven't already.
-	for k, _ := range dynamic {
-		if _, ok := ceb.configPlugins[k]; ok {
-			continue
-		}
-
-		// NOTE(mitchellh): For the initial version, we hardcode all our
-		// config sourcers directly so there is no actual plugin loading
-		// happening. Instead, we're just validating that the plugin is known.
-		// In the future, this is roughly where we should hook up plugin loading.
-		log.Warn("unknown config source plugin requested", "name", k)
-	}
-
-	// Go through each and read our configurations. Note that ConfigSourcers
-	// are documented to note that Read will be called frequently so caching
-	// is expected within the sourcer itself.
-	for k, reqs := range dynamic {
-		L := log.With("source", k)
-		s := ceb.configPlugins[k].Component.(component.ConfigSourcer)
-
-		// If the configuration has changed for this plugin, we call Stop.
-		if _, ok := changed[k]; ok {
-			_, err := ceb.callDynamicFunc(L, s.StopFunc())
-			if err != nil {
-				// We just continue on error but warn the user. We continue
-				// because stop really shouldn't do much here on the plugin
-				// side except maybe clear some caches, so errors are unlikely.
-				L.Warn("error stopping config source", "err", err)
-			}
-		}
-
-		// Next, call Read
-		result, err := ceb.callDynamicFunc(L, s.ReadFunc(),
-			argmapper.Typed(reqs),
-		)
-		if err != nil {
-			L.Warn("error reading configuration values, all will be dropped", "err", err)
-			continue
-		}
-
-		// Get the result
-		if result.Len() != 1 {
-			L.Warn("config source should've returned one result, dropping results", "got", result.Len())
-			continue
-		}
-		values, ok := result.Out(0).([]*sdkpb.ConfigSource_Value)
-		if !ok {
-			L.Warn("config should returned invalid type, dropping",
-				"got", fmt.Sprintf("%T", result.Out(0)))
-			continue
-		}
-
-		// Build a map so that we only include values we care about.
-		valueMap := map[string]*sdkpb.ConfigSource_Value{}
-		for _, v := range values {
-			valueMap[v.Name] = v
-		}
-		for _, req := range reqs {
-			value, ok := valueMap[req.Name]
-			if !ok {
-				L.Warn("config source didn't populate expected value", "key", req.Name)
-				continue
-			}
-
-			switch r := value.Result.(type) {
-			case *sdkpb.ConfigSource_Value_Value:
-				env = append(env, req.Name+"="+r.Value)
-
-			case *sdkpb.ConfigSource_Value_Error:
-				st := status.FromProto(r.Error)
-				L.Warn("error retrieving config value",
-					"key", req.Name,
-					"err", st.Err().Error())
-
-			default:
-				L.Warn("config value had unknown result type, ignoring",
-					"key", req.Name,
-					"type", fmt.Sprintf("%T", value.Result))
-			}
-		}
-	}
-
-	// Sort the env vars we have so that we can compare reliably
-	sort.Strings(env)
-
-	// If the env vars have not changed, we haven't changed. We do this
-	// using basic DeepEqual since we always sort the strings here.
-	if reflect.DeepEqual(last.Env, env) {
-		return
-	}
-
-	log.Info("env vars changed, sending new child command")
-
-	// Update the env vars
-	last.Env = env
-
-	// Send the new command
-	ceb.childCmdCh <- ceb.copyCmd(last)
-}
-
-func (ceb *CEB) handleChildCmdConfig(
-	log hclog.Logger,
-	config *pb.EntrypointConfig,
-	last *exec.Cmd,
-) {
-	// Build up our env vars. We append to our base command. We purposely
-	// make a capacity of our _last_ command to try to avoid allocations
-	// in the command case (same env).
-	base := ceb.childCmdBase
-	env := make([]string, len(base.Env), len(last.Env))
-	copy(env, base.Env)
-	for _, cv := range config.EnvVars {
-		static, ok := cv.Value.(*pb.ConfigVar_Static)
-		if !ok {
-			log.Warn("unknown config value type received, ignoring",
-				"type", fmt.Sprintf("%T", cv.Value))
-			continue
-		}
-
-		env = append(env, cv.Name+"="+static.Static)
-	}
-	sort.Strings(env)
-
-	// If the env vars have not changed, we haven't changed. We do this
-	// using basic DeepEqual since we always sort the strings here.
-	if reflect.DeepEqual(last.Env, env) {
-		return
-	}
-
-	log.Info("env vars changed, sending new child command")
-
-	// Update the env vars
-	last.Env = env
-
-	// Send the new command
-	ceb.childCmdCh <- ceb.copyCmd(last)
 }
 
 func (ceb *CEB) recvConfig(

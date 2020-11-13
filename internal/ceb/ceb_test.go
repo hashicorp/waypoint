@@ -346,7 +346,7 @@ func TestMain(m *testing.M) {
 	switch os.Getenv(envHelperMode) {
 	case "":
 		// Log
-		hclog.L().SetLevel(hclog.Trace)
+		hclog.L().SetLevel(hclog.Debug)
 
 		// Normal test mode
 		os.Exit(m.Run())
