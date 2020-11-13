@@ -251,6 +251,13 @@ func (ceb *CEB) buildAppConfig(
 		}
 
 		// Next, call Read
+		if L.IsTrace() {
+			var keys []string
+			for _, req := range reqs {
+				keys = append(keys, req.Name)
+			}
+			L.Trace("reading values for keys", "keys", keys)
+		}
 		result, err := ceb.callDynamicFunc(L, s.ReadFunc(),
 			argmapper.Typed(reqs),
 		)

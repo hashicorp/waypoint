@@ -109,8 +109,9 @@ func Run(ctx context.Context, os ...Option) error {
 
 	// Defaults, initialization
 	ceb := &CEB{
-		id:      id,
-		context: ctx,
+		id:            id,
+		context:       ctx,
+		configPlugins: map[string]*plugin.Instance{},
 
 		// for our atomic ops, we just use new() rather than addr operators (&)
 		// so that we can be sure that the 64-bit alignment requirement is correct
