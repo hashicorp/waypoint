@@ -424,7 +424,7 @@ func (c *AppDocsCommand) funcsMDX() int {
 
 	// Add some of our functions
 	addFuncs(funcs.VCSGitFuncs("."))
-	addFuncs(funcs.Filesystem("."))
+	addFuncs(funcs.Filesystem())
 	addFuncs(funcs.Encoding())
 
 	docs := funcs.Docs()
