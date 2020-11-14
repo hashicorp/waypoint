@@ -257,7 +257,7 @@ func (ceb *CEB) buildAppConfig(
 ) []string {
 	// For each dynamic config, we need to launch that plugin if we
 	// haven't already.
-	for k, _ := range dynamic {
+	for k := range dynamic {
 		if _, ok := ceb.configPlugins[k]; ok {
 			continue
 		}
