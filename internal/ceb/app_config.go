@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"github.com/r3labs/diff"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -40,7 +41,7 @@ func (ceb *CEB) watchAppConfig(
 	// We do some diffing to prevent unnecessary config fetching or command
 	// restarting and this is how we account for that.
 	var prevVars []*pb.ConfigVar
-	prevVarsChanged := false
+	var prevVarsChanged map[string]bool
 
 	// prevEnv keeps track of the last set of env vars we computed. We do
 	// this to compare and prevent unnecessarilly restarting the command.
@@ -78,14 +79,17 @@ func (ceb *CEB) watchAppConfig(
 			// New variables, track it and immediately trigger a refresh
 			log.Debug("new config variables received, scheduling refresh")
 			prevVars = newVars
-			prevVarsChanged = true
 			refreshChNow := make(chan time.Time)
 			close(refreshChNow)
 			refreshCh = refreshChNow
 
 			// Split the static and dynamic out here since this is something
 			// we're going to need often so we precompute it once.
+			dynamicOld := dynamic
 			static, dynamic = ceb.splitAppConfig(log, newVars)
+
+			// We need to do a diff of if any dynamic var config changed.
+			prevVarsChanged = ceb.diffDynamicAppConfig(log, dynamicOld, dynamic)
 
 		// Case: timer fires to refresh our dynamic variable sources
 		case <-refreshCh:
@@ -101,7 +105,7 @@ func (ceb *CEB) watchAppConfig(
 			// Mark that we aren't seeing any new vars anymore. This speeds up
 			// future buildAppConfig calls since it prevents all the diff logic
 			// from happening to detect what plugins need to call Stop.
-			prevVarsChanged = false
+			prevVarsChanged = nil
 
 			// Setup our next refresh. This "leaks" timers in the scenario
 			// we get a lot of variable changes but that is an unlikely case.
@@ -193,13 +197,59 @@ func (ceb *CEB) splitAppConfig(
 	return
 }
 
+// diffDynamicAppConfig determines what config source plugins had any
+// changes occur between them. These need to be known so that Stop
+// can be called and the plugin potentially stopped.
+//
+// The return value are all the plugins with changes, and the bool value
+// is true if the plugin process should also be killed.
+func (ceb *CEB) diffDynamicAppConfig(
+	log hclog.Logger,
+	dynamicOld, dynamicNew map[string][]*component.ConfigRequest,
+) map[string]bool {
+	changed := map[string]bool{}
+
+	// Anything in the old and not in the new needs to be stopped.
+	for k := range dynamicOld {
+		if _, ok := dynamicNew[k]; !ok {
+			changed[k] = true
+		}
+	}
+
+	// Go through new. Anything in new and not in old is a change. If
+	// it is in both, we have to do a comparison by requests.
+	for k := range dynamicNew {
+		if _, ok := dynamicOld[k]; !ok {
+			changed[k] = false
+			continue
+		}
+
+		reqsOld := map[string]*component.ConfigRequest{}
+		for _, req := range dynamicOld[k] {
+			reqsOld[req.Name] = req
+		}
+
+		reqsNew := map[string]*component.ConfigRequest{}
+		for _, req := range dynamicNew[k] {
+			reqsNew[req.Name] = req
+		}
+
+		changes, _ := diff.Diff(reqsOld, reqsNew)
+		if len(changes) > 0 {
+			changed[k] = false
+		}
+	}
+
+	return changed
+}
+
 // buildAppConfig takes the static and dynamic variables and builds up the
 // full list of actual env variable values.
 func (ceb *CEB) buildAppConfig(
 	log hclog.Logger,
 	static []string,
 	dynamic map[string][]*component.ConfigRequest,
-	newVars bool,
+	changed map[string]bool,
 ) []string {
 	// If we have no dynamic values, then we just return the static ones.
 	if len(dynamic) == 0 {
@@ -209,14 +259,6 @@ func (ceb *CEB) buildAppConfig(
 	// Ininitialize our result with the static values
 	env := make([]string, len(static), len(static)*2)
 	copy(env, static)
-
-	// Determine if there are any config changes and mark which are changed.
-	// We only have to do change detection if there are new vars. This avoids
-	// potentially expensive operations.
-	changed := map[string]struct{}{}
-	if newVars {
-		// TODO
-	}
 
 	// For each dynamic config, we need to launch that plugin if we
 	// haven't already.
@@ -232,23 +274,44 @@ func (ceb *CEB) buildAppConfig(
 		log.Warn("unknown config source plugin requested", "name", k)
 	}
 
+	// Go through the changed plugins first and call Stop.
+	for k, kill := range changed {
+		raw, ok := ceb.configPlugins[k]
+		if !ok {
+			continue
+		}
+
+		L := log.With("source", k)
+		L.Debug("config variables changed, calling Stop")
+		s := raw.Component.(component.ConfigSourcer)
+		_, err := ceb.callDynamicFunc(L, s.StopFunc())
+		if err != nil {
+			// We just continue on error but warn the user. We continue
+			// because stop really shouldn't do much here on the plugin
+			// side except maybe clear some caches, so errors are unlikely.
+			L.Warn("error stopping config source", "err", err)
+		}
+
+		if kill {
+			L.Debug("config variables no longer using this source, killing")
+
+			// End it
+			if raw.Close != nil {
+				raw.Close()
+			}
+
+			// Delete it from our plugins map
+			// NOTE(mitchellh): we don't do this right now because we don't
+			// actually load plugins yet.
+		}
+	}
+
 	// Go through each and read our configurations. Note that ConfigSourcers
 	// are documented to note that Read will be called frequently so caching
 	// is expected within the sourcer itself.
 	for k, reqs := range dynamic {
 		L := log.With("source", k)
 		s := ceb.configPlugins[k].Component.(component.ConfigSourcer)
-
-		// If the configuration has changed for this plugin, we call Stop.
-		if _, ok := changed[k]; ok {
-			_, err := ceb.callDynamicFunc(L, s.StopFunc())
-			if err != nil {
-				// We just continue on error but warn the user. We continue
-				// because stop really shouldn't do much here on the plugin
-				// side except maybe clear some caches, so errors are unlikely.
-				L.Warn("error stopping config source", "err", err)
-			}
-		}
 
 		// Next, call Read
 		if L.IsTrace() {
