@@ -207,11 +207,13 @@ func (ceb *CEB) diffDynamicAppConfig(
 	log hclog.Logger,
 	dynamicOld, dynamicNew map[string][]*component.ConfigRequest,
 ) map[string]bool {
+	log.Trace("calculating changes between old and new config")
 	changed := map[string]bool{}
 
 	// Anything in the old and not in the new needs to be stopped.
 	for k := range dynamicOld {
 		if _, ok := dynamicNew[k]; !ok {
+			log.Trace("config source longer in use", "source", k)
 			changed[k] = true
 		}
 	}
@@ -220,6 +222,7 @@ func (ceb *CEB) diffDynamicAppConfig(
 	// it is in both, we have to do a comparison by requests.
 	for k := range dynamicNew {
 		if _, ok := dynamicOld[k]; !ok {
+			log.Trace("config source is new", "source", k)
 			changed[k] = false
 			continue
 		}
@@ -236,6 +239,7 @@ func (ceb *CEB) diffDynamicAppConfig(
 
 		changes, _ := diff.Diff(reqsOld, reqsNew)
 		if len(changes) > 0 {
+			log.Trace("config source changed", "source", k)
 			changed[k] = false
 		}
 	}
@@ -251,15 +255,6 @@ func (ceb *CEB) buildAppConfig(
 	dynamic map[string][]*component.ConfigRequest,
 	changed map[string]bool,
 ) []string {
-	// If we have no dynamic values, then we just return the static ones.
-	if len(dynamic) == 0 {
-		return static
-	}
-
-	// Ininitialize our result with the static values
-	env := make([]string, len(static), len(static)*2)
-	copy(env, static)
-
 	// For each dynamic config, we need to launch that plugin if we
 	// haven't already.
 	for k, _ := range dynamic {
@@ -305,6 +300,15 @@ func (ceb *CEB) buildAppConfig(
 			// actually load plugins yet.
 		}
 	}
+
+	// If we have no dynamic values, then we just return the static ones.
+	if len(dynamic) == 0 {
+		return static
+	}
+
+	// Ininitialize our result with the static values
+	env := make([]string, len(static), len(static)*2)
+	copy(env, static)
 
 	// Go through each and read our configurations. Note that ConfigSourcers
 	// are documented to note that Read will be called frequently so caching

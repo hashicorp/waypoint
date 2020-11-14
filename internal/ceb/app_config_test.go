@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -114,6 +115,9 @@ func TestConfig_dynamicSuccess(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// Short refresh so we can test changing values
+	testChConfigRefresh(t, 100*time.Millisecond)
+
 	// Create our test config source
 	testSource := &testConfigSourcer{
 		readValue: map[string]string{"key": "hello"},
@@ -137,7 +141,7 @@ func TestConfig_dynamicSuccess(t *testing.T) {
 		Helper: "write-env",
 		HelperEnv: map[string]string{
 			"HELPER_PATH": path,
-			"TEST_VALUE":  "",
+			"TEST_VALUE":  "original",
 		},
 		ConfigPlugins: map[string]component.ConfigSourcer{
 			"cloud": testSource,
@@ -189,11 +193,60 @@ func TestConfig_dynamicSuccess(t *testing.T) {
 		return err == nil && strings.Contains(string(data), "hello")
 	}, 5*time.Second, 10*time.Millisecond)
 
+	// Change the value and make sure we get it
+	testSource.Lock()
+	testSource.readValue["key"] = "goodbye"
+	testSource.Unlock()
+
+	// The child should change
+	require.Eventually(func() bool {
+		var err error
+		data, err = ioutil.ReadFile(path)
+		return err == nil && strings.Contains(string(data), "goodbye")
+	}, 5*time.Second, 10*time.Millisecond)
+
 	// We should've called Stop once: exactly for the first read
 	testSource.Lock()
 	val := testSource.stopCount
 	testSource.Unlock()
 	require.Equal(1, val)
+
+	// Unset our dynamic config
+	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
+		Variables: []*pb.ConfigVar{
+			{
+				Scope: &pb.ConfigVar_Application{
+					Application: deployment.Application,
+				},
+				Name: "TEST_VALUE",
+				Value: &pb.ConfigVar_Unset{
+					Unset: &empty.Empty{},
+				},
+			},
+		},
+	})
+	require.NoError(err)
+
+	// The child should change
+	require.Eventually(func() bool {
+		var err error
+		data, err = ioutil.ReadFile(path)
+		return err == nil && strings.Contains(string(data), "original")
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// We should call stop once more to end the previous run
+	testSource.Lock()
+	val = testSource.stopCount
+	testSource.Unlock()
+	require.Equal(2, val)
+}
+
+// testChConfigRefresh changes the amount of time between config refreshes.
+// A test cleanup function is automatically registered to revert.
+func testChConfigRefresh(t *testing.T, d time.Duration) {
+	old := appConfigRefreshPeriod
+	appConfigRefreshPeriod = d
+	t.Cleanup(func() { appConfigRefreshPeriod = old })
 }
 
 type testConfigSourcer struct {
