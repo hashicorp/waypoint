@@ -33,7 +33,7 @@ func TestConfigSourcer(t *testing.T) {
 
 	// Read
 	result, err := cs.read(ctx, log, []*component.ConfigRequest{
-		&component.ConfigRequest{
+		{
 			Name: "HELLO",
 			Config: map[string]string{
 				"path": "secret/data/my-secret",
