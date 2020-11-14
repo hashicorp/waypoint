@@ -22,6 +22,11 @@ import (
 // The returned func() should be called to shut down the Vault server and
 // perform any additional cleanup.
 func TestVault(t testing.T) (*api.Client, func()) {
+	if _, err := exec.LookPath("vault"); err != nil {
+		t.Skip("vault not on path")
+		return nil, nil
+	}
+
 	tv := newTestVault(t)
 	return tv.client, tv.Stop
 }
