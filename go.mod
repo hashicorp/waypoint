@@ -50,8 +50,9 @@ require (
 	github.com/hashicorp/hcl/v2 v2.7.1-0.20201023000745-3de61ecba298
 	github.com/hashicorp/horizon v0.0.0-20201027182500-45298493f49e
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
+	github.com/hashicorp/vault/api v1.0.5-0.20190909201928-35325e2c3262
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201107013852-c3b6eb26185d
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201114233152-4d5f1989133b
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
@@ -65,6 +66,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/mitchellh/mapstructure v1.3.3
+	github.com/mitchellh/pointerstructure v1.0.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/mr-tron/base58 v1.2.0
 	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
@@ -75,6 +77,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete v1.2.3
+	github.com/r3labs/diff v1.1.0
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/slack-go/slack v0.6.5
