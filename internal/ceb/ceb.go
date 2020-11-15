@@ -18,6 +18,9 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
+
+	pluginK8s "github.com/hashicorp/waypoint/builtin/k8s"
+	pluginVault "github.com/hashicorp/waypoint/builtin/vault"
 )
 
 const (
@@ -98,13 +101,24 @@ func Run(ctx context.Context, os ...Option) error {
 
 	// Defaults, initialization
 	ceb := &CEB{
-		id:            id,
-		logger:        hclog.L(),
-		context:       ctx,
-		configPlugins: map[string]*plugin.Instance{},
+		id:      id,
+		logger:  hclog.L(),
+		context: ctx,
 	}
 	ceb.clientCond = sync.NewCond(&ceb.clientMu)
 	defer ceb.Close()
+
+	// Setup our default config sourcers.
+	// NOTE(mitchellh): In the future, we will dynamically load these via
+	// a plugin system, Initially, we hardcode what we support.
+	ceb.configPlugins = map[string]*plugin.Instance{
+		"kubernetes": {
+			Component: &pluginK8s.ConfigSourcer{},
+		},
+		"vault": {
+			Component: &pluginVault.ConfigSourcer{},
+		},
+	}
 
 	// Set our options
 	var cfg config
