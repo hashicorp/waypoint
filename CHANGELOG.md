@@ -4,8 +4,9 @@ FEATURES:
 
 IMPROVEMENTS:
 
-BUG FIXES:
+* plugin/google-cloud-run: allow images from Google Artifact Registry [GH-804]
 
+BUG FIXES:
 
 ## 0.1.5 (November 09, 2020)
 
