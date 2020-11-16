@@ -99,7 +99,7 @@ func (ceb *CEB) watchAppConfig(
 
 			// Get our new env vars
 			log.Trace("refreshing app configuration")
-			newEnv := ceb.buildAppConfig(log, static, dynamic, prevVarsChanged)
+			newEnv := ceb.buildAppConfig(ctx, log, static, dynamic, prevVarsChanged)
 			sort.Strings(newEnv)
 
 			// Mark that we aren't seeing any new vars anymore. This speeds up
@@ -250,6 +250,7 @@ func (ceb *CEB) diffDynamicAppConfig(
 // buildAppConfig takes the static and dynamic variables and builds up the
 // full list of actual env variable values.
 func (ceb *CEB) buildAppConfig(
+	ctx context.Context,
 	log hclog.Logger,
 	static []string,
 	dynamic map[string][]*component.ConfigRequest,
@@ -279,7 +280,9 @@ func (ceb *CEB) buildAppConfig(
 		L := log.With("source", k)
 		L.Debug("config variables changed, calling Stop")
 		s := raw.Component.(component.ConfigSourcer)
-		_, err := ceb.callDynamicFunc(L, s.StopFunc())
+		_, err := ceb.callDynamicFunc(L, s.StopFunc(),
+			argmapper.Typed(ctx),
+		)
 		if err != nil {
 			// We just continue on error but warn the user. We continue
 			// because stop really shouldn't do much here on the plugin
@@ -326,6 +329,7 @@ func (ceb *CEB) buildAppConfig(
 			L.Trace("reading values for keys", "keys", keys)
 		}
 		result, err := ceb.callDynamicFunc(L, s.ReadFunc(),
+			argmapper.Typed(ctx),
 			argmapper.Typed(reqs),
 		)
 		if err != nil {
