@@ -18,12 +18,12 @@ func TestValidateImageReturnsErrorOnInvalidRegistry(t *testing.T) {
 }
 
 func TestValidateImageReturnsErrorOnInvalidArtifactRegistry(t *testing.T) {
-	err := validateImageName("FOO-docker.pkg.dev")
+	err := validateImageName("FOO-docker.pkg.dev/waypoint-286812/foo/bar")
 	require.Error(t, err)
 }
 
 func TestValidateImageReturnsNoErrorOnValidArtifactRegistry(t *testing.T) {
-	err := validateImageName("europe-north1-docker.pkg.dev")
+	err := validateImageName("europe-north1-docker.pkg.dev/waypoint-286812/foo/bar")
 	require.NoError(t, err)
 }
 
