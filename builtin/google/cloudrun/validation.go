@@ -2,6 +2,7 @@ package cloudrun
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/go-playground/validator"
@@ -10,7 +11,7 @@ import (
 
 // ValidateImageName validates that that the specified image is in the gcr Docker Registry for this project
 // Returns an error message when validation fails.
-func validateImageName(image string, project string) error {
+func validateImageName(image string) error {
 	// cloud run deployments must come from one of the following image registries
 	var validRegistries = []string{
 		"gcr.io",
@@ -26,6 +27,15 @@ func validateImageName(image string, project string) error {
 			registryValid = true
 			break
 		}
+
+		// Also check if a valid Artifact Registry was supplied which is LOCATION-docker.pkg.dev
+		parts := regexp.MustCompile(`([a-z0-9-]*)-docker\.pkg\.dev`).FindStringSubmatch(image)
+		if len(parts) > 1 {
+			if parts[1] != "" {
+				registryValid = true
+			}
+		}
+
 	}
 
 	if !registryValid {

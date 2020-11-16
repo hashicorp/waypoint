@@ -161,7 +161,7 @@ func (p *Platform) Deploy(
 
 	// Validate that the Docker image is stored in a GCP registry
 	// It is not possible to deploy to Cloud Run using external container registries
-	err = validateImageName(img.Image, p.config.Project)
+	err = validateImageName(img.Image)
 	if err != nil {
 		return nil, status.Error(codes.FailedPrecondition, err.Error())
 	}
