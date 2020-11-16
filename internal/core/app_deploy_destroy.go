@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
@@ -114,7 +115,7 @@ func (a *App) destroyAllDeploys(ctx context.Context) error {
 	}
 	defer c.Close()
 
-	a.UI.Output("Destroying deployments...", terminal.WithHeaderStyle())
+	a.UI.Output(fmt.Sprintf("Destroying deployments for application '%s'...", a.config.Name), terminal.WithHeaderStyle())
 	for _, v := range results {
 		err := a.DestroyDeploy(ctx, v)
 		if err != nil {
@@ -165,7 +166,7 @@ func (a *App) destroyDeployWorkspace(ctx context.Context) error {
 		return nil
 	}
 
-	a.UI.Output("Destroying shared deploy resources...", terminal.WithHeaderStyle())
+	a.UI.Output(fmt.Sprintf("Destroying shared deploy resources for application '%s'...", a.config.Name), terminal.WithHeaderStyle())
 	_, err = a.callDynamicFunc(ctx,
 		log,
 		nil,
