@@ -128,8 +128,14 @@ func (b *Builder) Build(
 	cli.NegotiateAPIVersion(ctx)
 
 	dockerfile := b.config.Dockerfile
+
 	if !filepath.IsAbs(dockerfile) {
-		dockerfile = filepath.Join(src.Path, dockerfile)
+		//if no dockerfile is provided take common default and look for Dockerfile in src.Path
+		if dockerfile == "" {
+			dockerfile = filepath.Join(src.Path, "Dockerfile")
+		} else {
+			dockerfile = filepath.Join(src.Path, dockerfile)
+		}
 	}
 
 	// If the dockerfile is outside of our build context, then we copy it
