@@ -2,6 +2,8 @@ package k8s
 
 import (
 	"context"
+	"math"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -183,12 +185,22 @@ func (cs *ConfigSourcer) startRefresher(
 	// use actual long-polling APIs that K8S provides currently, we can do
 	// that in the future as an improvement.
 	go func() {
+		// Calculate a sleep period with a 30% jitter added to it.
+		const factor = 0.5
+		min := int64(math.Floor(float64(refreshPeriod) * (1 - factor)))
+		max := int64(math.Ceil(float64(refreshPeriod) * (1 + factor)))
+
 		for {
+			// Calculate our sleep period. We add a jitter to it to prevent
+			// applications that all started at the same time to stampede
+			// dynamic sources.
+			refreshDur := time.Duration(rand.Int63n(max-min) + min)
+
 			select {
 			case <-ctx.Done():
 				return
 
-			case <-time.After(30 * time.Second):
+			case <-time.After(refreshDur):
 			}
 
 			// Read our value
