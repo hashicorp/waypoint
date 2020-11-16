@@ -128,6 +128,9 @@ func (b *Builder) Build(
 	cli.NegotiateAPIVersion(ctx)
 
 	dockerfile := b.config.Dockerfile
+	if dockerfile == "" {
+		dockerfile = "Dockerfile"
+	}
 	if !filepath.IsAbs(dockerfile) {
 		dockerfile = filepath.Join(src.Path, dockerfile)
 	}
