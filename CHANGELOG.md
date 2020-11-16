@@ -16,6 +16,7 @@ file), app, or pwd of the CLI invocation.
 IMPROVEMENTS:
 
 * core: application config changes (i.e. `waypoint config set`) will now restart running applications [GH-791]
+* core: add more descriptive text to include app name in `waypoint destroy` [GH-807]
 * install/k8s: support for OpenShift [GH-715]
 * server: APIs for Waypoint database snapshot/restore [GH-723]
 
