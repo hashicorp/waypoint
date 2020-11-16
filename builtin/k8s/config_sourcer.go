@@ -59,6 +59,11 @@ func (cs *ConfigSourcer) read(
 	cs.cacheMu.Lock()
 	defer cs.cacheMu.Unlock()
 
+	// Create our cache if this is our first time
+	if cs.secretCache == nil {
+		cs.secretCache = map[string]*cachedSecret{}
+	}
+
 	clientset, ns, err := clientsetInCluster()
 	if err != nil {
 		return nil, err
