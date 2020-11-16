@@ -34,7 +34,7 @@ export default function Footer({ openConsentManager }) {
             {waypointServiceOK ? (
               <a className={s.normal}>All systems normal</a>
             ) : (
-              <a className={s.degraded}>Degraded service</a>
+              <a className={s.degraded}>Degraded URL service</a>
             )}
           </Link>
         </div>
