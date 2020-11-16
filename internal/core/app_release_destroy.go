@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
@@ -113,7 +114,7 @@ func (a *App) destroyAllReleases(ctx context.Context) error {
 		return nil
 	}
 
-	a.UI.Output("Destroying releases...", terminal.WithHeaderStyle())
+	a.UI.Output(fmt.Sprintf("Destroying releases for application '%s'...", a.config.Name), terminal.WithHeaderStyle())
 	for _, rel := range rels {
 		err := a.DestroyRelease(ctx, rel)
 		if err != nil {
@@ -167,7 +168,7 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 		return nil
 	}
 
-	a.UI.Output("Destroying shared release resources...", terminal.WithHeaderStyle())
+	a.UI.Output(fmt.Sprintf("Destroying shared release resources for application '%s'...", a.config.Name), terminal.WithHeaderStyle())
 	_, err = a.callDynamicFunc(ctx,
 		log,
 		nil,
