@@ -31,6 +31,7 @@ type validateApp struct {
 	Build   *Build            `hcl:"build,block"`
 	Deploy  *Deploy           `hcl:"deploy,block"`
 	Release *Release          `hcl:"release,block"`
+	Config  *genericConfig    `hcl:"config,block"`
 }
 
 // Validate the structure of the configuration.
