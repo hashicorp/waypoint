@@ -177,3 +177,22 @@ func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) 
 	// Build our log viewer
 	return client, nil
 }
+
+func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_ConfigSyncResult, error) {
+	if op == nil {
+		op = &pb.Job_ConfigSyncOp{}
+	}
+
+	job := c.job()
+	job.Operation = &pb.Job_ConfigSync{
+		ConfigSync: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.ConfigSync, nil
+}
