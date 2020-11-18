@@ -8,6 +8,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* cli: `server config-set` doesn't require a Waypoint configuration file. [GH-819]
+
 ## 0.1.5 (November 09, 2020)
 
 FEATURES:
