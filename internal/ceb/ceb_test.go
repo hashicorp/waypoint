@@ -433,8 +433,8 @@ func testRun(t *testing.T, ctx context.Context, opts *testRunOpts) *CEB {
 	)
 	ceb := <-cebCh
 
-	// Register our config plugins. This is nasty cause we're just poking
-	// at internal state, so we should clean this up one day.
+	// Register our config plugins. NOTE(mitchellh): This is nasty cause we're
+	// just poking at internal state, so we should clean this up one day.
 	for k, v := range opts.ConfigPlugins {
 		ceb.configPlugins[k] = &plugin.Instance{
 			Component: v,
