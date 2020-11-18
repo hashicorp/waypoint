@@ -90,11 +90,18 @@ func (c *ConfigGetCommand) Run(args []string) int {
 			return 1
 		}
 
+		if prefix == "" {
+			fmt.Fprintf(os.Stderr, "flag '-raw' requires a named variable argument to be given")
+			return 1
+		}
+
 		if len(resp.Variables) == 0 {
+			fmt.Fprintf(os.Stderr, "named variable '%s' was not found in config", prefix)
 			return 1
 		}
 
 		if resp.Variables[0].Name != prefix {
+			fmt.Fprintf(os.Stderr, "name '%s' doesn't match prefix: %s", resp.Variables[0].Name, prefix)
 			return 1
 		}
 
