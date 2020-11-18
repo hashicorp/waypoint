@@ -29,7 +29,7 @@ var (
 	refreshPeriod = 30 * time.Second
 )
 
-// ConfigSourcer implements component.ConfigSourcer for Vault
+// ConfigSourcer implements component.ConfigSourcer for K8s
 type ConfigSourcer struct {
 	cacheMu     sync.Mutex
 	secretCache map[string]*cachedSecret
