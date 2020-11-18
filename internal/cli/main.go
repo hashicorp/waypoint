@@ -171,6 +171,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"config sync": func() (cli.Command, error) {
+			return &ConfigSyncCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"logs": func() (cli.Command, error) {
 			return &LogsCommand{
 				baseCommand: baseCommand,
