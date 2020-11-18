@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -13,16 +14,13 @@ import (
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
-var (
-	nomadRegionF         string
-	nomadDatacentersF    []string
-	nomadNamespaceF      string
-	nomadPolicyOverrideF bool
-)
+type PlatformNomad struct {
+	config *Config
+}
 
 // InstallNomad registers a waypoint-server job with a Nomad cluster
-func InstallNomad(
-	ctx context.Context, ui terminal.UI, scfg *Config) (
+func (p *PlatformNomad) Install(
+	ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
 ) {
 	sg := ui.StepGroup()
@@ -90,9 +88,9 @@ func InstallNomad(
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
-	job := waypointNomadJob(scfg)
+	job := waypointNomadJob(p.config)
 	jobOpts := &api.RegisterOptions{
-		PolicyOverride: nomadPolicyOverrideF,
+		PolicyOverride: p.config.PolicyOverrideF,
 	}
 
 	resp, _, err := client.Jobs().RegisterOpts(job, jobOpts, nil)
@@ -184,9 +182,9 @@ EVAL:
 }
 
 func waypointNomadJob(scfg *Config) *api.Job {
-	job := api.NewServiceJob("waypoint-server", "waypoint-server", nomadRegionF, 50)
-	job.Namespace = &nomadNamespaceF
-	job.Datacenters = nomadDatacentersF
+	job := api.NewServiceJob("waypoint-server", "waypoint-server", scfg.RegionF, 50)
+	job.Namespace = &scfg.NamespaceF
+	job.Datacenters = scfg.DatacentersF
 	job.Meta = scfg.ServiceAnnotations
 	tg := api.NewTaskGroup("waypoint-server", 1)
 	tg.Networks = []*api.NetworkResource{
@@ -255,31 +253,31 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 }
 
 // NomadFlags config values for Nomad
-func NomadFlags(f *flag.Set) {
+func NomadFlags(f *flag.Set, c *Config) {
 	f.StringVar(&flag.StringVar{
 		Name:    "nomad-region",
-		Target:  &nomadRegionF,
+		Target:  &c.RegionF,
 		Default: "global",
 		Usage:   "Nomad region to install to if using Nomad platform",
 	})
 
 	f.StringSliceVar(&flag.StringSliceVar{
 		Name:    "nomad-dc",
-		Target:  &nomadDatacentersF,
+		Target:  &c.DatacentersF,
 		Default: []string{"dc1"},
 		Usage:   "Nomad datacenters to install to if using Nomad platform",
 	})
 
 	f.StringVar(&flag.StringVar{
 		Name:    "nomad-namespace",
-		Target:  &nomadNamespaceF,
+		Target:  &c.NamespaceF,
 		Default: "default",
 		Usage:   "Nomad namespace to install to if using Nomad platform",
 	})
 
 	f.BoolVar(&flag.BoolVar{
 		Name:    "nomad-policy-override",
-		Target:  &nomadPolicyOverrideF,
+		Target:  &c.PolicyOverrideF,
 		Default: false,
 		Usage:   "Override the Nomad sentinel policy if using enterprise Nomad platform",
 	})
