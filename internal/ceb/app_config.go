@@ -344,7 +344,7 @@ func (ceb *CEB) buildAppConfig(
 		}
 		values, ok := result.Out(0).([]*sdkpb.ConfigSource_Value)
 		if !ok {
-			L.Warn("config should returned invalid type, dropping",
+			L.Warn("config source returned invalid type, dropping",
 				"got", fmt.Sprintf("%T", result.Out(0)))
 			continue
 		}
