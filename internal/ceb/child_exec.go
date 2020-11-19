@@ -81,7 +81,7 @@ func (ceb *CEB) watchChildCmd(
 			// If we have a child, we need to exit that first.
 			if currentCh != nil {
 				log.Info("terminating current child process")
-				err := ceb.termChildCmd(log, currentCmd, currentCh, false)
+				err := ceb.termChildCmd(log, currentCmd, currentCh, false, false)
 				log.Info("child process termination result", "err", err)
 			}
 
@@ -93,7 +93,7 @@ func (ceb *CEB) watchChildCmd(
 			// If we have an existing process, we need to exit that first.
 			if currentCh != nil {
 				log.Info("terminating current child process")
-				err := ceb.termChildCmd(log, currentCmd, currentCh, false)
+				err := ceb.termChildCmd(log, currentCmd, currentCh, false, false)
 				if err != nil {
 					// In the event terminating the child fails, we exit
 					// the whole CEB because we can't be sure we're not just
@@ -180,6 +180,7 @@ func (ceb *CEB) termChildCmd(
 	cmd *exec.Cmd,
 	childErrCh <-chan error, // error channel from startChildCmd
 	force bool,
+	returnExitErr bool, // if true, doesn't treat exec.ExitError as nil
 ) error {
 	log = log.With("pid", cmd.Process.Pid)
 
@@ -194,7 +195,7 @@ func (ceb *CEB) termChildCmd(
 			case err := <-childErrCh:
 				// If we got an exit error then everything worked propertly so
 				// we just set error to nil.
-				if _, ok := err.(*exec.ExitError); ok {
+				if _, ok := err.(*exec.ExitError); ok && !returnExitErr {
 					err = nil
 				}
 
@@ -221,7 +222,7 @@ func (ceb *CEB) termChildCmd(
 	// Wait for the process to die
 	log.Debug("waiting for child process to end")
 	err := <-childErrCh
-	if _, ok := err.(*exec.ExitError); ok {
+	if _, ok := err.(*exec.ExitError); ok && !returnExitErr {
 		// If we got an exit error then everything worked propertly so
 		// we just set error to nil.
 		err = nil

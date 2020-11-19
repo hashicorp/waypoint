@@ -9,6 +9,7 @@ import (
 
 	"github.com/creack/pty"
 	"github.com/golang/protobuf/proto"
+	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -100,6 +101,8 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 	// Start our receive data loop
 	respCh := make(chan *pb.EntrypointExecResponse)
 	go func() {
+		defer close(respCh)
+
 		for {
 			resp, err := client.Recv()
 			if err != nil {
@@ -205,7 +208,21 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 
 	for {
 		select {
-		case resp := <-respCh:
+		case resp, ok := <-respCh:
+			if !ok {
+				// channel is closed, we should terminate our child process.
+				log.Info("exec recv stream closed, killing child")
+
+				// terminate the child process first, the last "true" argument
+				// ensures we get the ExitError result back rather than nil.
+				// We need that to set the proper exec session state.
+				err := ceb.termChildCmd(log, cmd, cmdExitCh, true, true)
+
+				// send final exec session updates. This will log if any errors occur.
+				ceb.handleExecProcessExit(log, client, err)
+				return
+			}
+
 			switch event := resp.Event.(type) {
 			case *pb.EntrypointExecResponse_Input:
 				// Copy the input to stdin
@@ -228,34 +245,49 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 			}
 
 		case err := <-cmdExitCh:
-			var exitCode int
-			if err != nil {
-				if exiterr, ok := err.(*exec.ExitError); ok {
-					if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-						exitCode = status.ExitStatus()
-					}
-				} else {
-					exitCode = 1
-				}
-			}
-
-			// Send our exit code
-			log.Info("exec stream exited", "code", exitCode)
-			if err := client.Send(&pb.EntrypointExecRequest{
-				Event: &pb.EntrypointExecRequest_Exit_{
-					Exit: &pb.EntrypointExecRequest_Exit{
-						Code: int32(exitCode),
-					},
-				},
-			}); err != nil {
-				log.Warn("error sending exit message", "err", err)
-			}
+			ceb.handleExecProcessExit(log, client, err)
 
 			// Exit!
 			return
 		}
 	}
 
+}
+
+// handleExecProcessExit sends the final update to the server with the
+// exec process exit information (such as exit code). This will log any
+// errors rather than return since there is no reasonable way to handle them.
+func (ceb *CEB) handleExecProcessExit(
+	log hclog.Logger,
+	client pb.Waypoint_EntrypointExecStreamClient,
+	err error,
+) {
+	var exitCode int
+	if err != nil {
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				exitCode = status.ExitStatus()
+			}
+		} else {
+			log.Warn("non ExitError from Wait, process may be dangling",
+				"err", err)
+
+			// For the client, treat it as an erroneous exit.
+			exitCode = 1
+		}
+	}
+
+	// Send our exit code
+	log.Info("exec stream exited", "code", exitCode)
+	if err := client.Send(&pb.EntrypointExecRequest{
+		Event: &pb.EntrypointExecRequest_Exit_{
+			Exit: &pb.EntrypointExecRequest_Exit{
+				Code: int32(exitCode),
+			},
+		},
+	}); err != nil {
+		log.Warn("error sending exit message", "err", err)
+	}
 }
 
 func (ceb *CEB) execOutputWriter(
