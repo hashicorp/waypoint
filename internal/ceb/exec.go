@@ -103,7 +103,7 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 		for {
 			resp, err := client.Recv()
 			if err != nil {
-				// TODO
+				log.Warn("error receiving from server stream", "err", err)
 				return
 			}
 
@@ -153,7 +153,7 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 			Y:    uint16(ptyReq.WindowSize.Height),
 		})
 		if err != nil {
-			log.Warn("error building exec command", "err", err)
+			log.Warn("error starting pty", "err", err)
 			st, ok := status.FromError(err)
 			if !ok {
 				st = status.New(codes.Unknown, err.Error())
@@ -177,7 +177,7 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 		go io.Copy(stdout, ptyFile)
 	} else {
 		if err := cmd.Start(); err != nil {
-			log.Warn("error building exec command", "err", err)
+			log.Warn("error starting exec command", "err", err)
 			st, ok := status.FromError(err)
 			if !ok {
 				st = status.New(codes.Unknown, err.Error())
