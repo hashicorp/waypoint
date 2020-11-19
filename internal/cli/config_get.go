@@ -91,8 +91,10 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		}
 
 		if prefix == "" {
-			fmt.Fprintf(os.Stderr, "flag '-raw' requires a named variable argument to be given")
-			return 1
+			for _, cv := range resp.Variables {
+				fmt.Printf("%s=%s\n", cv.Name, cv.Value)
+			}
+			return 0
 		}
 
 		if len(resp.Variables) == 0 {
