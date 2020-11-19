@@ -23,6 +23,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* core: force killed `waypoint exec` sessions won't leave the remote process running [GH-827]
+
 ## 0.1.5 (November 09, 2020)
 
 FEATURES:
