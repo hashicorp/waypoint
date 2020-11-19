@@ -137,6 +137,14 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 			cmd.Env = append(cmd.Env, "TERM="+ptyReq.Term)
 		}
 
+		// pty.StartWithSize sets "setsid" which is mutually exclusive to
+		// Setpgid. They both result in a new process group being created with
+		// the process group ID equal to the PID, which is the behavior we
+		// expect when terminating processes.
+		if cmd.SysProcAttr != nil {
+			cmd.SysProcAttr.Setpgid = false
+		}
+
 		// Start with a pty
 		ptyFile, err = pty.StartWithSize(cmd, &pty.Winsize{
 			Rows: uint16(ptyReq.WindowSize.Rows),
