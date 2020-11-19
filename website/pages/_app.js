@@ -37,11 +37,7 @@ function App({ Component, pageProps }) {
         icon={[{ href: '/favicon.ico' }]}
       >
         <meta name="og:title" property="og:title" content={title} />
-        <meta
-          name="og:description"
-          property="og:title"
-          content={description}
-        />
+        <meta name="og:description" property="og:title" content={description} />
       </HashiHead>
       {ALERT_BANNER_ACTIVE && <AlertBanner {...alertBannerData} theme="blue" />}
       <HashiStackMenu />

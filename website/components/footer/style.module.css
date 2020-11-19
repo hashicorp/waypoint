@@ -1,23 +1,40 @@
 .root {
   padding: 25px 0 17px 0;
   flex-shrink: 0;
-  display: flex;
-
-  & .g-container {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
 
   & a {
-    color: black;
-    opacity: 0.5;
-    transition: opacity 0.25s ease;
+    color: var(--gray-4);
+    transition: color 0.25s ease;
     cursor: pointer;
     display: inline-block;
 
     &:hover {
+      color: var(--black);
       opacity: 1;
+    }
+  }
+
+  & .status {
+    white-space: nowrap;
+    margin-left: auto;
+    padding-left: 20px;
+
+    & a.normal {
+      padding-left: 20px;
+      background: url(/img/status-normal.svg) no-repeat left center;
+    }
+
+    & a.degraded {
+      color: var(--warning-d1);
+      margin: -4px 0;
+      padding: 4px 10px 4px 32px;
+      border-radius: 2px;
+      background: url(/img/status-degraded.svg) no-repeat 10px center;
+      background-color: var(--warning-l2);
+
+      &:hover {
+        background-color: var(--warning-l1);
+      }
     }
   }
 
@@ -29,4 +46,31 @@
       margin-right: 0;
     }
   }
+}
+
+.statusBanner {
+  display: block;
+  position: sticky;
+  bottom: 0;
+  color: var(--warning-d1);
+  text-align: center;
+  padding: 16px 32px 20px;
+  border-top: 1px solid var(--warning-l1);
+  background-color: var(--warning-l2);
+  transition: background-color 0.25s ease;
+
+  & span {
+    padding-left: 24px;
+    background: url(/img/status-degraded.svg) no-repeat left center;
+  }
+
+  &:hover {
+    background-color: var(--warning-l1);
+  }
+}
+
+.container {
+  composes: g-grid-container constrain-width-wrapper from global;
+  position: static;
+  display: flex;
 }
