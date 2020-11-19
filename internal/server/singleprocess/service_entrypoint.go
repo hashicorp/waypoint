@@ -199,7 +199,6 @@ func (s *service) EntrypointLogStream(
 	}
 }
 
-// TODO: test
 func (s *service) EntrypointExecStream(
 	server pb.Waypoint_EntrypointExecStreamServer,
 ) error {
