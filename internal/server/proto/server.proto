@@ -96,6 +96,16 @@ service Waypoint {
   // each variable.
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 
+  // Set the configuration for a dynamic configuration source. If you're looking
+  // to set application configuration, you probably want SetConfig instead.
+  rpc SetConfigSource(SetConfigSourceRequest) returns (google.protobuf.Empty);
+
+  // Get the matching configuration source for the request. This will return
+  // the most specific matching config source given the scope in the request.
+  // For example, if you search for an app-specific config source and only
+  // a global config exists, the global config will be returned.
+  rpc GetConfigSource(GetConfigSourceRequest) returns (GetConfigSourceResponse);
+
   // Create a hostname with the URL service.
   rpc CreateHostname(CreateHostnameRequest) returns (CreateHostnameResponse);
 
@@ -310,6 +320,10 @@ message Workspace {
 //
 // Refs should be used when the full type shouldn't be embedded in the message.
 message Ref {
+  // Global references the entire server. This is used in some APIs
+  // as a way to read/write values that are server-global.
+  message Global {}
+
   // Application references an application. To uniquely identify an
   // application, this must encapsulate the full hierarchy to the application.
   message Application {
@@ -1844,6 +1858,62 @@ message ConfigGetResponse {
 }
 
 /********************************************************************
+* Config Sources
+********************************************************************/
+
+message ConfigSource {
+  // delete may be set to true on SetConfigSource to delete this config source.
+  // This is a field on ConfigSource since there are a variety of ways to
+  // identify a ConfigSource. Therefore, the recommend deletion process is
+  // to query the ConfigSource using GetConfigSource and then set delete
+  // on a return value to ensure the correct value is deleted.
+  bool delete = 3;
+
+  // Scope that this configuration is valid. Note that this doesn't
+  // prevent a config source from being used in other scopes, it only
+  // prevents this configuration. Configuration sources used in other
+  // scopes will use a default configuration set by the plugin.
+  oneof scope {
+    Ref.Global global = 50;
+  }
+
+  // type of the config source. This should match the plugin name.
+  string type = 1;
+
+  // config is the configuration for the config source.
+  map<string, string> config = 2;
+
+  // hash is set automatically on write and available on read and is a
+  // content hash of the configuration. This can be used to determine
+  // uniqueness or changes in the configuration. Setting this value with
+  // SetConfigSource has no effect and will be overwritten. Note that this
+  // hash may take more into account than just "config" as other fields
+  // are introduced to this message type.
+  uint64 hash = 4;
+}
+
+message SetConfigSourceRequest {
+  ConfigSource config_source = 1;
+}
+
+message GetConfigSourceRequest {
+  // scope is the scoping for the config source.
+  oneof scope {
+    Ref.Global global = 50;
+  }
+
+  // config source type. This is optional. If this is omitted, all
+  // config source types matching the above scoping will be returned.
+  // This is a prefix-search. All config sources with this type prefix
+  // will be returned.
+  string type = 1;
+}
+
+message GetConfigSourceResponse {
+  repeated ConfigSource config_sources = 1;
+}
+
+/********************************************************************
 * Exec
 ********************************************************************/
 
@@ -1943,7 +2013,14 @@ message EntrypointConfig {
   // Exec are requested exec sessions for this instance.
   repeated Exec exec = 1;
 
+  // The environment variables to set in the entrypoint.
   repeated ConfigVar env_vars = 2;
+
+  // The configuration for any config sources that may be used in the
+  // config vars sent down. The server may send down extra configs that
+  // aren't used so consumers should filter these based on what env vars
+  // are actually in use.
+  repeated ConfigSource config_sources = 5;
 
   // The URL service configuration. This might be nil. If this is nil,
   // then the URL service is disabled.
