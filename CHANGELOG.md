@@ -10,6 +10,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * cli: `server config-set` doesn't require a Waypoint configuration file. [GH-819]
+* plugin/aws-ecs: `task_role_name` is optional [GH-824]
 
 ## 0.1.5 (November 09, 2020)
 
