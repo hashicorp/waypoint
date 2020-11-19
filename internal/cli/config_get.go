@@ -107,7 +107,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 			return 1
 		}
 
-		fmt.Fprintln(out, resp.Variables[0].Value)
+		fmt.Fprintln(out, fmt.Sprintf("%s=%s", resp.Variables[0].Name, resp.Variables[0].Value))
 		return 0
 	}
 
@@ -146,7 +146,7 @@ func (c *ConfigGetCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:   "raw",
 			Target: &c.raw,
-			Usage:  "Output the value for the named variable only (disables prefix matching)",
+			Usage:  "Output in key=val",
 		})
 	})
 }
