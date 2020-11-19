@@ -107,7 +107,7 @@ func (c *ConfigGetCommand) Run(args []string) int {
 			return 1
 		}
 
-		fmt.Fprintln(out, fmt.Sprintf("%s=%s", resp.Variables[0].Name, resp.Variables[0].Value))
+		fmt.Fprintf(out, "%s=%s\n", resp.Variables[0].Name, resp.Variables[0].Value)
 		return 0
 	}
 
