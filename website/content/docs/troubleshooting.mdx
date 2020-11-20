@@ -58,3 +58,110 @@ $ docker volume list
 ```
 
 Locate the volumes named starting with `pack-cache-` and remove them with `docker volume rm`.
+
+# Investigating deployed applications
+
+Waypoint includes several commands to support debugging and monitoring while
+developing your application.
+
+## Exec into the application container
+
+After deploying your application, you can use `waypoint exec` to run
+commands in the context of the most recent deployment. Typically, `waypoint
+exec` will be used for running database migrations and debugging. However, you
+can use it for any purpose.
+
+Use the `exec` command to open a shell prompt.
+
+```shell-session
+$ waypoint exec /bin/bash
+```
+
+Since you are in the deployment directory, you will observe that Waypoint
+automatically executes against the currently deployed application.
+
+From within the Docker container, validate that this is the actual application
+by listing out the directory hosting the application's compiled files. For example, if you used the `pack` builder this directory will be `/workspace`.
+
+```shell-session
+$ cd / && ls
+```
+
+You should observe an output that contains the file structure for the current
+deployment.
+
+List the processes that are running in the container.
+
+```shell-session
+$ ps aux
+```
+
+Type `exit` to leave the interactive Docker session.
+
+```shell-session
+$ exit
+```
+
+## View Waypoint application logs
+
+In the application's directory, run the `logs` command to observe the running
+logs for your deployment.
+
+```shell-session
+$ waypoint logs
+```
+
+You will observe output similar to the following. These logs are from the
+existing deployment.
+
+```plaintext
+2020-09-24T06:20:18.162Z 2MGFF4:
+2020-09-24T06:20:18.163Z 2MGFF4: > node-js-getting-started@0.3.0 start /workspace
+2020-09-24T06:20:18.163Z 2MGFF4: > node index.js
+2020-09-24T06:20:18.163Z 2MGFF4:
+2020-09-24T06:20:18.383Z 2MGFF4: Listening on 3000
+```
+
+Press `Ctrl-C` to exit the `logs` command.
+
+## Access the Waypoint web UI
+
+The Waypoint server includes a web-based user interface that you can use to view
+builds, deployments, and releases for projects and applications.
+
+<Tabs>
+<Tab heading="Local">
+
+The web UI requires authentication. Run a single command to automatically open
+the browser and authenticate your session. This command will work if a graphical
+web browser is available on the machine where the command is being run.
+
+```shell-session
+$ waypoint ui -authenticate
+```
+
+</Tab>
+<Tab heading="Remote">
+
+If you are running commands on a remote server or within a virtual environment
+like WSL2 for Windows, you must generate a token that can be used to
+authenticate to the Waypoint web UI.
+
+```shell-session
+$ waypoint token new
+```
+
+~> **NOTE**: The token is approximately 100 characters long and will not wrap if
+your terminal window is smaller than the length of the token. If authentication
+fails, expand your terminal window until you can view the entire token.
+
+Visit the Waypoint UI at port `9702` on the URL of the machine where you are
+running the Waypoint server. Paste the token into the authentication field.
+
+</Tab>
+</Tabs>
+
+~> **NOTE**: Waypoint currently uses self-signed certificates for TLS. Your web
+browser will require you to bypass a certificate warning to use the UI.
+
+Review the application metadata and associated operations and logs in the browser.
