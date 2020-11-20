@@ -1,5 +1,8 @@
 /* Global Styles */
 @import '~@hashicorp/mktg-global-styles/style.css';
+@import '~@hashicorp/mktg-global-styles/font.css';
+@import '~@hashicorp/mktg-global-styles/custom-properties/color.css';
+@import '~@hashicorp/mktg-global-styles/custom-properties/font.css';
 @import '~@hashicorp/mktg-global-styles/_temporary-to-remove/layout.css';
 @import '~@hashicorp/mktg-global-styles/_temporary-to-remove/tables.css';
 

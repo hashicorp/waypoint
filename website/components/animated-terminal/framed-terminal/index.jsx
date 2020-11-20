@@ -1,4 +1,4 @@
-import Terminal from 'components/terminal'
+import Terminal from '@hashicorp/react-command-line-terminal'
 
 /**
  * A FramedTerminal is a simple component which is responsible for determining
@@ -110,5 +110,5 @@ export default function FramedTerminal({ frame, lines }) {
     })
     .filter((el) => el != null)
 
-  return <Terminal lines={terminalLines} noScroll />
+  return <Terminal lines={terminalLines} noScroll theme="waypoint" />
 }
