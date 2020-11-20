@@ -5,11 +5,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
+	"sync"
 
 	"github.com/containerd/console"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
 	sshterm "golang.org/x/crypto/ssh/terminal"
@@ -133,24 +136,71 @@ func (c *Client) Run() (int, error) {
 	ctx, cancel := context.WithCancel(c.Context)
 	defer cancel()
 
-	input := &EscapeWatcher{Cancel: cancel, Input: c.Stdin}
+	// If we have interactive stdin WITHOUT a tty output, we treat stdin
+	// as if its closed. This allows commands such as "ls" to work without
+	// a terminal otherwise they'll hang open forever on stdin. Conversely,
+	// we allow interactive stdin with a TTY, and we also allow non-interactive
+	// stdin always since that'll end in an EOF at some point.
+	copyStdin := true
+	if stdinF, ok := c.Stdin.(*os.File); ok {
+		fi, err := stdinF.Stat()
+		if err != nil {
+			return 0, err
+		}
+
+		if fi.Mode()&os.ModeCharDevice != 0 && ptyF == nil {
+			// Stdin is from a terminal but we don't have a pty output.
+			// In this case, we treat stdin as if its closed.
+			c.Logger.Info("terminal stdin without a pty, not using input for command")
+			copyStdin = false
+		}
+	}
+
+	// We need to lock access to our stream writer since it is unsafe in
+	// gRPC to concurrently send data.
+	var streamLock sync.Mutex
 
 	// Build our connection. We only build the stdin sending side because
 	// we can receive other message types from our recv.
-	go io.Copy(&grpc_net_conn.Conn{
-		Stream:  client,
-		Request: &pb.ExecStreamRequest{},
-		Encode: grpc_net_conn.SimpleEncoder(func(msg proto.Message) *[]byte {
-			req := msg.(*pb.ExecStreamRequest)
-			if req.Event == nil {
-				req.Event = &pb.ExecStreamRequest_Input_{
-					Input: &pb.ExecStreamRequest_Input{},
-				}
-			}
+	go func() {
+		input := &EscapeWatcher{Cancel: cancel, Input: c.Stdin}
 
-			return &req.Event.(*pb.ExecStreamRequest_Input_).Input.Data
-		}),
-	}, input)
+		// If we're copying stdin then start that copy process.
+		if copyStdin {
+			io.Copy(&grpc_net_conn.Conn{
+				Stream:       client,
+				Request:      &pb.ExecStreamRequest{},
+				ResponseLock: &streamLock,
+				Encode: grpc_net_conn.SimpleEncoder(func(msg proto.Message) *[]byte {
+					req := msg.(*pb.ExecStreamRequest)
+					if req.Event == nil {
+						req.Event = &pb.ExecStreamRequest_Input_{
+							Input: &pb.ExecStreamRequest_Input{},
+						}
+					}
+
+					return &req.Event.(*pb.ExecStreamRequest_Input_).Input.Data
+				}),
+			}, input)
+		} else {
+			// If we're NOT copying, we still start a copy to discard
+			// in the background so that we still handle escape sequences.
+			go io.Copy(ioutil.Discard, input)
+		}
+
+		// After the copy ends, no matter what we send an EOF to the
+		// remote end because there will be no more input.
+		c.Logger.Debug("stdin closed, sending input EOF event")
+		streamLock.Lock()
+		defer streamLock.Unlock()
+		if err := client.Send(&pb.ExecStreamRequest{
+			Event: &pb.ExecStreamRequest_InputEof{
+				InputEof: &empty.Empty{},
+			},
+		}); err != nil {
+			c.Logger.Warn("error sending InputEOF event", "err", err)
+		}
+	}()
 
 	// Add our recv blocker that sends data
 	recvCh := make(chan *pb.ExecStreamResponse)
@@ -203,7 +253,8 @@ func (c *Client) Run() (int, error) {
 			}
 
 			// Send the new window size
-			if err := client.Send(&pb.ExecStreamRequest{
+			streamLock.Lock()
+			err = client.Send(&pb.ExecStreamRequest{
 				Event: &pb.ExecStreamRequest_Winch{
 					Winch: &pb.ExecStreamRequest_WindowSize{
 						Rows:   int32(sz.Height),
@@ -212,7 +263,9 @@ func (c *Client) Run() (int, error) {
 						Width:  int32(sz.Width),
 					},
 				},
-			}); err != nil {
+			})
+			streamLock.Unlock()
+			if err != nil {
 				// Ignore this error
 				continue
 			}
