@@ -8,6 +8,7 @@
     "@hashicorp/nextjs-scripts": "13.0.0-canary.1",
     "@hashicorp/react-alert-banner": "^5.0.0",
     "@hashicorp/react-button": "^4.0.0",
+    "@hashicorp/react-command-line-terminal": "^1.0.0",
     "@hashicorp/react-content": "6.0.0",
     "@hashicorp/react-docs-page": "^8.0.0-canary.2",
     "@hashicorp/react-hashi-stack-menu": "^1.0.10",
