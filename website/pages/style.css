@@ -1,10 +1,10 @@
 /* Global Styles */
-@import '~@hashicorp/mktg-global-styles/style.css';
-@import '~@hashicorp/mktg-global-styles/font.css';
-@import '~@hashicorp/mktg-global-styles/custom-properties/color.css';
-@import '~@hashicorp/mktg-global-styles/custom-properties/font.css';
-@import '~@hashicorp/mktg-global-styles/_temporary-to-remove/layout.css';
-@import '~@hashicorp/mktg-global-styles/_temporary-to-remove/tables.css';
+@import '~@hashicorp/react-global-styles/style.css';
+@import '~@hashicorp/react-global-styles/font.css';
+@import '~@hashicorp/react-global-styles/custom-properties/color.css';
+@import '~@hashicorp/react-global-styles/custom-properties/font.css';
+@import '~@hashicorp/react-global-styles/_temporary-to-remove/layout.css';
+@import '~@hashicorp/react-global-styles/_temporary-to-remove/tables.css';
 
 /* Code Highlighting */
 @import '~@hashicorp/nextjs-scripts/prism/style.css';
