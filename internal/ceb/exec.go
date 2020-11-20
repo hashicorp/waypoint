@@ -198,6 +198,10 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 				log.Trace("input received", "data", event.Input)
 				io.Copy(stdinW, bytes.NewReader(event.Input))
 
+			case *pb.EntrypointExecResponse_InputEof:
+				log.Trace("input EOF, closing stdin")
+				stdinW.Close()
+
 			case *pb.EntrypointExecResponse_Winch:
 				log.Debug("window size change event, changing")
 

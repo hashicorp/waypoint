@@ -59,7 +59,7 @@ require (
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mitchellh/cli v1.1.2
 	github.com/mitchellh/go-glint v0.0.0-20201015034436-f80573c636de
-	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8
+	github.com/mitchellh/go-grpc-net-conn v0.0.0-20200427190222-eb030e4876f0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/mitchellh/go-wordwrap v1.0.1

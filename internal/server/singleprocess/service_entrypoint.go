@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
@@ -325,6 +326,13 @@ func (s *service) handleClientExecRequest(
 		send = &pb.EntrypointExecResponse{
 			Event: &pb.EntrypointExecResponse_Input{
 				Input: event.Input.Data,
+			},
+		}
+
+	case *pb.ExecStreamRequest_InputEof:
+		send = &pb.EntrypointExecResponse{
+			Event: &pb.EntrypointExecResponse_InputEof{
+				InputEof: &empty.Empty{},
 			},
 		}
 

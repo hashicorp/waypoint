@@ -1794,6 +1794,12 @@ message ExecStreamRequest {
     Start start = 1;
     Input input = 2;
     WindowSize winch = 3;
+
+    // input_eof should be sent as an event when the input stream is
+    // closed. After this, no more Input messages can be sent. Any Input
+    // messages sent will be ignored. This will send an EOF on the remote
+    // end as well to close stdin for the exec process.
+    google.protobuf.Empty input_eof = 4;
   }
 
   message Start {
@@ -1957,6 +1963,9 @@ message EntrypointExecResponse {
   oneof event {
     // input is raw stdin input from the client
     bytes input = 1;
+
+    // input_eof means that stdin is now closed
+    google.protobuf.Empty input_eof = 4;
 
     // winch is SIGWNCH information for window sizing
     ExecStreamRequest.WindowSize winch = 2;

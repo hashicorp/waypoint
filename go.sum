@@ -921,8 +921,8 @@ github.com/mitchellh/go-glint v0.0.0-20200930000256-df5e721f3258 h1:x7Z92EayV/P8
 github.com/mitchellh/go-glint v0.0.0-20200930000256-df5e721f3258/go.mod h1:NrJbv11op7A0gjSLtfvzm74YkVKRS24KxucwneYUX4M=
 github.com/mitchellh/go-glint v0.0.0-20201015034436-f80573c636de h1:zEtM2uLDYhUgehFO/lhsepZLz5TZpysDuwrezt+/w4k=
 github.com/mitchellh/go-glint v0.0.0-20201015034436-f80573c636de/go.mod h1:9X3rpO+I3yuihb6p8ktF8qWxROGwij9DBW/czUsMlhk=
-github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8 h1:vYarZ5R8DcSQ4MayciodsBAPc9pVGnFucqOfd+Rfaxw=
-github.com/mitchellh/go-grpc-net-conn v0.0.0-20200407005438-c00174eff6c8/go.mod h1:ZCzL0JMR6qfm7VrDC8HGwVtPA8D2Ijc/edUSBw58x94=
+github.com/mitchellh/go-grpc-net-conn v0.0.0-20200427190222-eb030e4876f0 h1:oZuel4h7224ILBLg2SlTxdaMYXDyqcVfL4Cg1PJQHZs=
+github.com/mitchellh/go-grpc-net-conn v0.0.0-20200427190222-eb030e4876f0/go.mod h1:ZCzL0JMR6qfm7VrDC8HGwVtPA8D2Ijc/edUSBw58x94=
 github.com/mitchellh/go-homedir v1.0.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
