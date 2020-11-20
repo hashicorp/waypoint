@@ -24,7 +24,6 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * core: force killed `waypoint exec` sessions won't leave the remote process running [GH-827]
-* core: `waypoint exec` with no TTY won't hang open until a ctrl-c [GH-830]
 
 ## 0.1.5 (November 09, 2020)
 
