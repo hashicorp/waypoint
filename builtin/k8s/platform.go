@@ -132,15 +132,22 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	if p.config.ServicePort == 0 {
-		p.config.ServicePort = 3000
+	// Determine service ports for container
+	if len(p.config.ServicePorts) == 0 {
+		p.config.ServicePorts = []uint{3000}
+		if sp := p.config.ServicePort; sp != 0 {
+			p.config.ServicePorts[0] = sp
+		}
+	} else if p.config.ServicePort != 0 {
+		err := fmt.Errorf("Cannot specify both service_port and service_ports")
+		return nil, err
 	}
 
 	// Build our env vars
 	env := []corev1.EnvVar{
 		{
 			Name:  "PORT",
-			Value: fmt.Sprint(p.config.ServicePort),
+			Value: fmt.Sprint(p.config.ServicePorts[0]),
 		},
 	}
 
@@ -209,6 +216,18 @@ func (p *Platform) Deploy(
 		Requests: resourceRequests,
 	}
 
+	// Collect ServicePorts and name them "port0", "port1", etc
+	ports := make([]corev1.ContainerPort, len(p.config.ServicePorts))
+	for i, sp := range p.config.ServicePorts {
+		ports[i] = corev1.ContainerPort{
+			Name:          fmt.Sprintf("port%d", i),
+			ContainerPort: int32(sp),
+		}
+	}
+
+	// Only use the first port for liveness
+	probePort := int(p.config.ServicePorts[0])
+
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{
@@ -216,16 +235,11 @@ func (p *Platform) Deploy(
 				Name:            result.Name,
 				Image:           img.Name(),
 				ImagePullPolicy: pullPolicy,
-				Ports: []corev1.ContainerPort{
-					{
-						Name:          "http",
-						ContainerPort: int32(p.config.ServicePort),
-					},
-				},
+				Ports:           ports,
 				LivenessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(int(p.config.ServicePort)),
+							Port: intstr.FromInt(probePort),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -235,7 +249,7 @@ func (p *Platform) Deploy(
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(int(p.config.ServicePort)),
+							Port: intstr.FromInt(probePort),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -253,7 +267,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(int(p.config.ServicePort)),
+					Port: intstr.FromInt(probePort),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -265,7 +279,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(int(p.config.ServicePort)),
+					Port: intstr.FromInt(probePort),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -523,6 +537,10 @@ type Config struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
+
+	// Allows opening multiple ports for a service. Only the first port will
+	// be tested by the probe for connectivity and/or probe_path
+	ServicePorts []uint `hcl:"service_ports,optional"`
 
 	// Environment variables that are meant to configure the application in a static
 	// way. This might be control an image that has mulitple modes of operation,
