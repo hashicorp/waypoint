@@ -118,6 +118,93 @@ func TestConfigSource(t *testing.T) {
 			require.Len(vs, 0)
 		}
 	})
+
+	t.Run("hash", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create
+		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type:   "vault",
+			Config: map[string]string{},
+		}))
+
+		var hash uint64
+
+		// Get it exactly
+		{
+			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+
+				Type: "vault",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+
+			hash = vs[0].Hash
+			require.NotEmpty(hash)
+		}
+
+		// Modify without change
+		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type:   "vault",
+			Config: map[string]string{},
+		}))
+
+		// Get it exactly
+		{
+			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+
+				Type: "vault",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+
+			// Hash should NOT change
+			require.Equal(hash, vs[0].Hash)
+		}
+
+		// Modify
+		require.NoError(s.ConfigSourceSet(&pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type:   "vault",
+			Config: map[string]string{"a": "b"},
+		}))
+
+		// Get it exactly
+		{
+			vs, err := s.ConfigSourceGet(&pb.GetConfigSourceRequest{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+
+				Type: "vault",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+
+			// Hash should change
+			require.NotEqual(hash, vs[0].Hash)
+		}
+	})
 }
 
 func TestConfigSourceWatch(t *testing.T) {

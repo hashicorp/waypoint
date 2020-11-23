@@ -6,6 +6,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
+	"github.com/mitchellh/hashstructure/v2"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -67,6 +68,16 @@ func (s *State) configSourceSet(
 	value *pb.ConfigSource,
 ) error {
 	id := s.configSourceId(value)
+
+	// Write the hashed value of the config source. We use a map here so
+	// that it is easy for us to add more keys to the hash.
+	var err error
+	value.Hash, err = hashstructure.Hash(map[string]interface{}{
+		"config": value.Config,
+	}, hashstructure.FormatV2, nil)
+	if err != nil {
+		return err
+	}
 
 	// Get the global bucket and write the value to it.
 	b := dbTxn.Bucket(configSourceBucket)
