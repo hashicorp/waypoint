@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,6 +48,21 @@ func (r *Registry) Push(
 	stdout, _, err := ui.OutputWriters()
 	if err != nil {
 		return nil, err
+	}
+
+	// If there is no region setup.  Try and load it from environment variables.
+	if r.config.Region == "" {
+		r.config.Region = os.Getenv("AWS_REGION")
+
+		if r.config.Region == "" {
+			r.config.Region = os.Getenv("AWS_REGION_DEFAULT")
+		}
+	}
+
+	if r.config.Region == "" {
+		return nil, status.Error(
+			codes.FailedPrecondition,
+			"Please set your aws region in the deployment config, or set the environment variable 'AWS_REGION' or 'AWS_DEFAULT_REGION'")
 	}
 
 	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
@@ -152,7 +169,7 @@ func (r *Registry) Push(
 // Config is the configuration structure for the registry.
 type Config struct {
 	// AWS Region to access ECR in
-	Region string `hcl:"region,attr"`
+	Region string `hcl:"region,optional"`
 
 	// Repository to store the image into
 	Repository string `hcl:"repository,attr"`
@@ -186,6 +203,9 @@ registry {
 	doc.SetField(
 		"region",
 		"the AWS region the ECR repository is in",
+		docs.Summary("if not set uses the environment variable AWS_REGION or AWS_REGION_DEFAULT"),
+		docs.EnvVar("AWS_REGION"),
+		docs.EnvVar("AWS_REGION_DEFAULT"),
 	)
 
 	doc.SetField(
