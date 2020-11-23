@@ -515,7 +515,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 59 to 79; // future operation range
+  reserved 60 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -559,6 +559,7 @@ message Job {
     ValidateOp validate = 56;
     AuthOp auth = 57;
     DocsOp docs = 58;
+    ConfigSyncOp config_sync = 59;
   }
 
   //-----------------------------------------------------------------
@@ -615,6 +616,7 @@ message Job {
     ValidateResult validate = 5;
     AuthResult auth = 6;
     DocsResult docs = 7;
+    ConfigSyncResult config_sync = 8;
   }
 
   message DataSource {
@@ -753,9 +755,7 @@ message Job {
     Release release = 1;
   }
 
-  message DocsOp {
-
-  }
+  message DocsOp {}
 
   message DocsResult {
     // results are the list of components that were checked
@@ -767,6 +767,10 @@ message Job {
       Documentation docs = 2;
     }
   }
+
+  message ConfigSyncOp {}
+
+  message ConfigSyncResult {}
 }
 
 message Documentation {

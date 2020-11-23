@@ -118,6 +118,9 @@ func (r *Runner) executeJob(
 	case *pb.Job_Docs:
 		return r.executeDocsOp(ctx, log, job, project)
 
+	case *pb.Job_ConfigSync:
+		return r.executeConfigSyncOp(ctx, log, job, project)
+
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)
 	}
