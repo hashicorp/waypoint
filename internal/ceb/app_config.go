@@ -11,6 +11,8 @@ import (
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/hcl/v2"
+	hcljson "github.com/hashicorp/hcl/v2/json"
 	"github.com/r3labs/diff"
 	"google.golang.org/grpc/status"
 
@@ -194,7 +196,7 @@ func (ceb *CEB) watchAppConfig(
 
 			// Get our new env vars
 			log.Trace("refreshing app configuration")
-			newEnv := ceb.buildAppConfig(ctx, log, static, dynamic, prevVarsChanged)
+			newEnv := ceb.buildAppConfig(ctx, log, static, dynamic, dynamicSources, prevVarsChanged)
 			sort.Strings(newEnv)
 
 			// Mark that we aren't seeing any new vars anymore. This speeds up
@@ -349,6 +351,7 @@ func (ceb *CEB) buildAppConfig(
 	log hclog.Logger,
 	static []string,
 	dynamic map[string][]*component.ConfigRequest,
+	dynamicSources map[string]*pb.ConfigSource,
 	changed map[string]bool,
 ) []string {
 	// For each dynamic config, we need to launch that plugin if we
@@ -364,6 +367,10 @@ func (ceb *CEB) buildAppConfig(
 		// In the future, this is roughly where we should hook up plugin loading.
 		log.Warn("unknown config source plugin requested", "name", k)
 	}
+
+	// erroredSources keeps track of sources that had errors during configuration.
+	// If a source is here, we won't load any configs for it.
+	erroredSources := map[string]struct{}{}
 
 	// Go through the changed plugins first and call Stop.
 	for k, kill := range changed {
@@ -396,6 +403,32 @@ func (ceb *CEB) buildAppConfig(
 			// Delete it from our plugins map
 			// NOTE(mitchellh): we don't do this right now because we don't
 			// actually load plugins yet.
+			continue
+		}
+
+		// Configure the plugin if we have configuration
+		configBody := hcl.EmptyBody()
+		if s, ok := dynamicSources[k]; ok {
+			// We create an hcl.Body by converting the config to JSON first
+			// and then using the hcl JSON format. This should always work
+			// because our input is a simple map[string]string.
+			jsonBytes, err := json.Marshal(s.Config)
+			if err != nil {
+				panic(err)
+			}
+
+			file, diag := hcljson.Parse(jsonBytes, "<config>")
+			if diag.HasErrors() {
+				panic(diag.Error())
+			}
+
+			configBody = file.Body
+		}
+
+		diag := component.Configure(raw.Component, configBody, nil)
+		if diag.HasErrors() {
+			L.Warn("error configuring config source", "err", diag.Error())
+			erroredSources[k] = struct{}{}
 		}
 	}
 
@@ -413,6 +446,12 @@ func (ceb *CEB) buildAppConfig(
 	// is expected within the sourcer itself.
 	for k, reqs := range dynamic {
 		L := log.With("source", k)
+
+		if _, ok := erroredSources[k]; ok {
+			L.Warn("ignoring variables for this source since configuration failed")
+			continue
+		}
+
 		s := ceb.configPlugins[k].Component.(component.ConfigSourcer)
 
 		// Next, call Read
