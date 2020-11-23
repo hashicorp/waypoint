@@ -34,6 +34,7 @@ var (
 func (ceb *CEB) watchAppConfig(
 	ctx context.Context,
 	log hclog.Logger,
+	inSourceCh <-chan []*pb.ConfigSource,
 	inCh <-chan []*pb.ConfigVar,
 	outCh chan<- []string,
 ) {
@@ -41,7 +42,7 @@ func (ceb *CEB) watchAppConfig(
 	// We do some diffing to prevent unnecessary config fetching or command
 	// restarting and this is how we account for that.
 	var prevVars []*pb.ConfigVar
-	var prevVarsChanged map[string]bool
+	prevVarsChanged := map[string]bool{}
 
 	// prevEnv keeps track of the last set of env vars we computed. We do
 	// this to compare and prevent unnecessarilly restarting the command.
@@ -51,11 +52,28 @@ func (ceb *CEB) watchAppConfig(
 	// keeps track of all the dynamic configurations that we have.
 	var static []string
 	var dynamic map[string][]*component.ConfigRequest
+	var dynamicSources map[string]*pb.ConfigSource
 
 	// refreshCh will be sent a message when we want to refresh our
 	// configuration. We default to nil so that we do nothing until
 	// we receive our first set of variables (the <-inCh case below).
-	var refreshCh <-chan time.Time
+	//
+	// coalesceCh is used when we want to refresh, but allow some time
+	// for coalescing of the source/variable channels to occur.
+	var refreshCh, coalesceCh <-chan time.Time
+	refreshTick := func() {
+		// If we haven't scheduled a forced refresh, then schedule that.
+		// We will refresh NO MATTER WHAT on this timer and prevents a
+		// flurry of config updates from preventing variable refresh.
+		if refreshCh == nil {
+			refreshCh = time.After(5 * time.Second)
+		}
+
+		// Reset our coalesce channel. Using "time.After" here "leaks"
+		// timers if we're calling this enough but they're a bunch of timers
+		// that reset relatively quickly so let's just let it happen for now.
+		coalesceCh = time.After(500 * time.Millisecond)
+	}
 
 	// prevSent is flipped to true once we send our first set of compiled
 	// env vars to the outCh. We have to keep track of this because there is
@@ -68,6 +86,66 @@ func (ceb *CEB) watchAppConfig(
 		case <-ctx.Done():
 			return
 
+		// Case: caller sends us a new set of config source settings
+		case newSources := <-inSourceCh:
+			// Our first pass here is a quick high-level pass to determine if
+			// anything is possibly different at all. If it isn't, we just
+			// continue on.
+			set := map[string]struct{}{}
+			diff := map[string]*pb.ConfigSource{}
+			for _, source := range newSources {
+				set[source.Type] = struct{}{}
+				prev, ok := dynamicSources[source.Type]
+
+				// If we haven't seen this before ever, there is a diff.
+				// If we have seen this before but the configurations are
+				// different then there is also a diff.
+				if !ok || prev.Hash != source.Hash {
+					diff[source.Type] = source
+					continue
+				}
+			}
+			for k := range dynamicSources {
+				// Detect if we _removed_ any configurations.
+				if _, ok := set[k]; !ok {
+					diff[k] = nil
+				}
+			}
+			if len(diff) == 0 {
+				log.Trace("got source config update but ignoring since there is no diff")
+				continue
+			}
+
+			// We have a difference, we now go through and more carefully
+			// determine if the difference matters. By "matters" we mean:
+			// does it impact dynamic variables we have already fetched? If not,
+			// then we just store the config cause when we first fetch we'll
+			// grab em. If it does, we have to notify and schedule a refresh
+			// because we need to stop and refetch.
+			dynamicSources = map[string]*pb.ConfigSource{}
+			for k, source := range diff {
+				// If we have variables dependent on this config, then
+				// we need to mark this as changed. If we don't, then ignore
+				// it.
+				if len(dynamic[k]) > 0 {
+					log.Trace("change in source config, scheduling refresh", "source", k)
+					prevVarsChanged[k] = false
+				}
+
+				// Ignore nil sources. A nil source means we removed the
+				// configuration. We need that so that the above can detect
+				// if we have dynamic vars dependent on that but we don't
+				// want to store it.
+				if source != nil {
+					dynamicSources[k] = source
+				}
+			}
+
+			// If we have changes, schedule a refresh
+			if len(prevVarsChanged) > 0 {
+				refreshTick()
+			}
+
 		// Case: caller sends us a new set of variables
 		case newVars := <-inCh:
 			// If the variables are the same as the last set, then we do nothing.
@@ -79,9 +157,7 @@ func (ceb *CEB) watchAppConfig(
 			// New variables, track it and immediately trigger a refresh
 			log.Debug("new config variables received, scheduling refresh")
 			prevVars = newVars
-			refreshChNow := make(chan time.Time)
-			close(refreshChNow)
-			refreshCh = refreshChNow
+			refreshTick()
 
 			// Split the static and dynamic out here since this is something
 			// we're going to need often so we precompute it once.
@@ -89,13 +165,32 @@ func (ceb *CEB) watchAppConfig(
 			static, dynamic = ceb.splitAppConfig(log, newVars)
 
 			// We need to do a diff of if any dynamic var config changed.
-			prevVarsChanged = ceb.diffDynamicAppConfig(log, dynamicOld, dynamic)
+			// We loop through the result here and set values to true so
+			// that we don't clobber changes that inSourceCh receiving may have
+			// set. On refresh, we always reset prevVarsChanged to empty.
+			for k, v := range ceb.diffDynamicAppConfig(log, dynamicOld, dynamic) {
+				// If it is false, we override it with whatever v we have.
+				if !prevVarsChanged[k] {
+					prevVarsChanged[k] = v
+				}
+			}
+
+		// Case: timer fires after a period of time where we have received
+		// no other messages and we can now force a refresh.
+		case <-coalesceCh:
+			coalesceCh = nil
+			refreshNowCh := make(chan time.Time)
+			close(refreshNowCh)
+			refreshCh = refreshNowCh
 
 		// Case: timer fires to refresh our dynamic variable sources
 		case <-refreshCh:
 			// Set the refreshCh to nil immediately so we never get in an
 			// infinite refresh situation on a closed channel.
 			refreshCh = nil
+
+			// Set the coalesceCh to nil since we are processing.
+			coalesceCh = nil
 
 			// Get our new env vars
 			log.Trace("refreshing app configuration")
@@ -105,7 +200,7 @@ func (ceb *CEB) watchAppConfig(
 			// Mark that we aren't seeing any new vars anymore. This speeds up
 			// future buildAppConfig calls since it prevents all the diff logic
 			// from happening to detect what plugins need to call Stop.
-			prevVarsChanged = nil
+			prevVarsChanged = map[string]bool{}
 
 			// Setup our next refresh. This "leaks" timers in the scenario
 			// we get a lot of variable changes but that is an unlikely case.

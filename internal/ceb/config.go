@@ -95,9 +95,10 @@ func (ceb *CEB) watchConfig(
 	// Start the app config watcher. This runs in its own goroutine so that
 	// stuff like dynamic config fetching doesn't block starting things like
 	// exec sessions.
+	sourceCh := make(chan []*pb.ConfigSource)
 	varCh := make(chan []*pb.ConfigVar)
 	envCh := make(chan []string)
-	go ceb.watchAppConfig(ctx, log, varCh, envCh)
+	go ceb.watchAppConfig(ctx, log, sourceCh, varCh, envCh)
 
 	for {
 		select {
@@ -130,6 +131,10 @@ func (ceb *CEB) watchConfig(
 			// Configure our env vars for the child command. We always send
 			// these even if they're nil since the app config watcher will
 			// de-dup and we want to handle removing env vars.
+			select {
+			case sourceCh <- config.ConfigSources:
+			case <-ctx.Done():
+			}
 			select {
 			case varCh <- config.EnvVars:
 			case <-ctx.Done():
