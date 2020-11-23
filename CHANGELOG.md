@@ -6,6 +6,7 @@ IMPROVEMENTS:
 
 * core: add better error messaging when prefix is missing from the -raw flag in waypoint config set [GH-815]
 * core: align `-raw` flag to behave like `-json` flag with `waypoint config set` [GH-828]
+* plugin/aws-ecr: environment variables to be used instead of 'region' property for aws-ecr registry [GH-841]
 * plugin/google-cloud-run: allow images from Google Artifact Registry [GH-804]
 
 BUG FIXES:
