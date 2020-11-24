@@ -67,12 +67,6 @@ _this section is a work in progress_
   container IP Address was `172.18.0.4` for example, you might set the range to `172.18.0.20-172.18.0.50`.
 6) kubectl apply -f configs/metallb-config.yaml
 
-### Optional steps??
-
-7) clone demo app `codyde/hashi-demo-app`
-8) kubectl apply -f namespace.yaml
-9) kubectl apply -f kubernetes-demoapp.yaml
-
 ### Setup waypoint
 
 Now you are ready to install the waypoint server to your local kind k8s cluster
