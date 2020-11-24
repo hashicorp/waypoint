@@ -24,7 +24,7 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  return generateStaticProps(subpath, productName, params)
+  return generateStaticProps({ subpath, productName, params })
 }
 
 export default CommandsLayout

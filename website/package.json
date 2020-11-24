@@ -9,7 +9,7 @@
     "@hashicorp/react-alert-banner": "^5.0.0",
     "@hashicorp/react-button": "^4.0.0",
     "@hashicorp/react-content": "6.0.0",
-    "@hashicorp/react-docs-page": "^8.0.0-canary.2",
+    "@hashicorp/react-docs-page": "^10.0.0",
     "@hashicorp/react-hashi-stack-menu": "^1.0.10",
     "@hashicorp/react-head": "1.1.6",
     "@hashicorp/react-image": "3.0.3",
@@ -27,7 +27,7 @@
     "nuka-carousel": "^4.7.2",
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "react-intersection-observer": "^8.30.3",
+    "react-intersection-observer": "^8.31.0",
     "readdirp": "3.5.0",
     "semver": "^7.3.2"
   },
@@ -35,7 +35,7 @@
     "husky": "4.3.0",
     "next-remote-watch": "^0.2.0",
     "post-npm-install": "^2.0.0",
-    "prettier": "2.1.2"
+    "prettier": "2.2.0"
   },
   "husky": {
     "hooks": {
