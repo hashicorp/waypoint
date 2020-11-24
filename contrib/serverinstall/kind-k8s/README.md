@@ -1,4 +1,12 @@
-# Kubernetes
+# Setting up Kind and Kubernetes
+
+## What is this?
+
+This folder contains a helper script to help users get started with setting up
+`kind` and `kubernetes` locally. Because Waypoint requires a kubernetes (k8s) cluster
+with a load balancer configured, and because setting this up is a bit non-trivial,
+this folder exists to ease the pain of bringing up a kubernetes cluster locally
+so users can get started quickly without figuring all of this out on their own.
 
 ## The Plan
 
