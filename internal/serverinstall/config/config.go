@@ -1,14 +1,15 @@
-package serverinstall
+package config
 
-// Config is the configuration for the Kubernetes installation template.
-type Config struct {
+// Config is the configuration for the installation template.
+type BaseConfig struct {
 	ServerImage        string
 	ImagePullPolicy    string
 	AdvertiseInternal  bool
 	ServiceAnnotations map[string]string
+	ProviderConfig     struct{}
+	Namespace          string
 
-	// K8s config
-	Namespace       string
+	// K8s-specific
 	ServerName      string
 	ServiceName     string
 	OpenShift       bool
@@ -21,10 +22,8 @@ type Config struct {
 	SecretFile      string
 	ImagePullSecret string
 
-	// NomadConfig
+	// Nomad-specific
 	RegionF         string
 	DatacentersF    []string
-	NamespaceF      string
 	PolicyOverrideF bool
 }
-

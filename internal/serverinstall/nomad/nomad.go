@@ -1,4 +1,4 @@
-package serverinstall
+package nomad
 
 import (
 	"context"
@@ -9,17 +9,17 @@ import (
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
-	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/hashicorp/waypoint/internal/serverinstall/config"
 )
 
-type PlatformNomad struct {
-	config *Config
+type Platform struct {
+	Config *config.BaseConfig
 }
 
 // InstallNomad registers a waypoint-server job with a Nomad cluster
-func (p *PlatformNomad) Install(
+func (p *Platform) Install(
 	ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
 ) {
@@ -88,9 +88,9 @@ func (p *PlatformNomad) Install(
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
-	job := waypointNomadJob(p.config)
+	job := waypointNomadJob(p.Config)
 	jobOpts := &api.RegisterOptions{
-		PolicyOverride: p.config.PolicyOverrideF,
+		PolicyOverride: p.Config.PolicyOverrideF,
 	}
 
 	resp, _, err := client.Jobs().RegisterOpts(job, jobOpts, nil)
@@ -181,11 +181,11 @@ EVAL:
 	return &clicfg, &addr, httpAddr, nil
 }
 
-func waypointNomadJob(scfg *Config) *api.Job {
-	job := api.NewServiceJob("waypoint-server", "waypoint-server", scfg.RegionF, 50)
-	job.Namespace = &scfg.NamespaceF
-	job.Datacenters = scfg.DatacentersF
-	job.Meta = scfg.ServiceAnnotations
+func waypointNomadJob(c *config.BaseConfig) *api.Job {
+	job := api.NewServiceJob("waypoint-server", "waypoint-server", c.RegionF, 50)
+	job.Namespace = &c.Namespace
+	job.Datacenters = c.DatacentersF
+	job.Meta = c.ServiceAnnotations
 	tg := api.NewTaskGroup("waypoint-server", 1)
 	tg.Networks = []*api.NetworkResource{
 		{
@@ -210,7 +210,7 @@ func waypointNomadJob(scfg *Config) *api.Job {
 
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
-		"image": scfg.ServerImage,
+		"image": c.ServerImage,
 		"ports": []string{"server", "ui"},
 		"args":  []string{"server", "run", "-accept-tos", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
 	}
@@ -250,35 +250,4 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 	}
 
 	return "", nil
-}
-
-// NomadFlags config values for Nomad
-func NomadFlags(f *flag.Set, c *Config) {
-	f.StringVar(&flag.StringVar{
-		Name:    "nomad-region",
-		Target:  &c.RegionF,
-		Default: "global",
-		Usage:   "Nomad region to install to if using Nomad platform",
-	})
-
-	f.StringSliceVar(&flag.StringSliceVar{
-		Name:    "nomad-dc",
-		Target:  &c.DatacentersF,
-		Default: []string{"dc1"},
-		Usage:   "Nomad datacenters to install to if using Nomad platform",
-	})
-
-	f.StringVar(&flag.StringVar{
-		Name:    "nomad-namespace",
-		Target:  &c.NamespaceF,
-		Default: "default",
-		Usage:   "Nomad namespace to install to if using Nomad platform",
-	})
-
-	f.BoolVar(&flag.BoolVar{
-		Name:    "nomad-policy-override",
-		Target:  &c.PolicyOverrideF,
-		Default: false,
-		Usage:   "Override the Nomad sentinel policy if using enterprise Nomad platform",
-	})
 }

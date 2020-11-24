@@ -1,4 +1,4 @@
-package serverinstall
+package docker
 
 import (
 	"context"
@@ -19,13 +19,14 @@ import (
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/hashicorp/waypoint/internal/serverinstall/config"
 )
 
-type PlatformDocker struct {
-	config	*Config
+type Platform struct {
+	Config *config.BaseConfig
 }
 
-func (p *PlatformDocker) Install(
+func (p *Platform) Install(
 	ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
 ) {
@@ -82,9 +83,9 @@ func (p *PlatformDocker) Install(
 		return &clicfg, &addr, "", nil
 	}
 
-	s.Update("Checking for Docker image: %s", p.config.ServerImage)
+	s.Update("Checking for Docker image: %s", p.Config.ServerImage)
 
-	imageRef, err := reference.ParseNormalizedNamed(p.config.ServerImage)
+	imageRef, err := reference.ParseNormalizedNamed(p.Config.ServerImage)
 	if err != nil {
 		return nil, nil, "", fmt.Errorf("Error parsing Docker image: %s", err)
 	}
@@ -100,7 +101,7 @@ func (p *PlatformDocker) Install(
 	}
 
 	if len(imageList) == 0 {
-		s.Update("Pulling image: %s", p.config.ServerImage)
+		s.Update("Pulling image: %s", p.Config.ServerImage)
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
 		if err != nil {
@@ -171,7 +172,7 @@ func (p *PlatformDocker) Install(
 		AttachStdin:  true,
 		OpenStdin:    true,
 		StdinOnce:    true,
-		Image:        p.config.ServerImage,
+		Image:        p.Config.ServerImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
 		Cmd:          []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},

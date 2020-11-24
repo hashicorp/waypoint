@@ -1,4 +1,4 @@
-package serverinstall
+package k8s
 
 import (
 	"bytes"
@@ -26,16 +26,16 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
-	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/hashicorp/waypoint/internal/serverinstall/config"
 )
 
-type PlatformKubernetes struct {
-	Config *Config
+type Platform struct {
+	Config *config.BaseConfig
 }
 
-func (p *PlatformKubernetes) Install(
+func (p *Platform) Install(
 	ctx context.Context, ui terminal.UI, log hclog.Logger,
 ) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error) {
 	sg := ui.StepGroup()
@@ -169,7 +169,7 @@ func (p *PlatformKubernetes) Install(
 	}
 
 	// Decode our configuration
-	statefulset, err := p.NewStatefulSet()
+	statefulset, err := newStatefulSet(p.Config)
 	if err != nil {
 		ui.Output(
 			"Error generating statefulset configuration: %s", clierrors.Humanize(err),
@@ -178,7 +178,7 @@ func (p *PlatformKubernetes) Install(
 		return nil, nil, "", err
 	}
 
-	service, err := p.NewService()
+	service, err := newService(p.Config)
 	if err != nil {
 		ui.Output(
 			"Error generating service configuration: %s", clierrors.Humanize(err),
@@ -353,60 +353,60 @@ func (p *PlatformKubernetes) Install(
 }
 
 // NewStatefulSet creates a new Waypoint Statefulset for deployment in Kubernetes.
-func (p *PlatformKubernetes) NewStatefulSet() (*appsv1.StatefulSet, error) {
-	cpuRequest, err := resource.ParseQuantity(p.Config.CPURequest)
+func newStatefulSet(c *config.BaseConfig) (*appsv1.StatefulSet, error) {
+	cpuRequest, err := resource.ParseQuantity(c.CPURequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", p.Config.CPURequest, err)
+		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.CPURequest, err)
 	}
 
-	memRequest, err := resource.ParseQuantity(p.Config.MemRequest)
+	memRequest, err := resource.ParseQuantity(c.MemRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse memory request resource %s: %s", p.Config.MemRequest, err)
+		return nil, fmt.Errorf("could not parse memory request resource %s: %s", c.MemRequest, err)
 	}
 
-	storageRequest, err := resource.ParseQuantity(p.Config.StorageRequest)
+	storageRequest, err := resource.ParseQuantity(c.StorageRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse storage request resource %s: %s", p.Config.StorageRequest, err)
+		return nil, fmt.Errorf("could not parse storage request resource %s: %s", c.StorageRequest, err)
 	}
 
 	securityContext := &apiv1.PodSecurityContext{}
-	if !p.Config.OpenShift {
+	if !c.OpenShift {
 		securityContext.FSGroup = int64Ptr(1000)
 	}
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      p.Config.ServerName,
-			Namespace: p.Config.Namespace,
+			Name:      c.ServerName,
+			Namespace: c.Namespace,
 			Labels: map[string]string{
-				"app": p.Config.ServerName,
+				"app": c.ServerName,
 			},
 		},
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: int32Ptr(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": p.Config.ServerName,
+					"app": c.ServerName,
 				},
 			},
-			ServiceName: p.Config.ServiceName,
+			ServiceName: c.ServiceName,
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": p.Config.ServerName,
+						"app": c.ServerName,
 					},
 				},
 				Spec: apiv1.PodSpec{
 					ImagePullSecrets: []apiv1.LocalObjectReference{
 						{
-							Name: p.Config.ImagePullSecret,
+							Name: c.ImagePullSecret,
 						},
 					},
 					SecurityContext: securityContext,
 					Containers: []apiv1.Container{
 						{
 							Name:            "server",
-							Image:           p.Config.ServerImage,
+							Image:           c.ServerImage,
 							ImagePullPolicy: apiv1.PullAlways,
 							Env: []apiv1.EnvVar{
 								{
@@ -481,15 +481,15 @@ func (p *PlatformKubernetes) NewStatefulSet() (*appsv1.StatefulSet, error) {
 }
 
 // NewService creates a new Waypoint LoadBalancer for deployment in Kubernetes.
-func (p *PlatformKubernetes) NewService() (*apiv1.Service, error) {
+func newService(c *config.BaseConfig) (*apiv1.Service, error) {
 	return &apiv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      p.Config.ServiceName,
-			Namespace: p.Config.Namespace,
+			Name:      c.ServiceName,
+			Namespace: c.Namespace,
 			Labels: map[string]string{
-				"app": p.Config.ServerName,
+				"app": c.ServerName,
 			},
-			Annotations: p.Config.ServiceAnnotations,
+			Annotations: c.ServiceAnnotations,
 		},
 		Spec: apiv1.ServiceSpec{
 			Ports: []apiv1.ServicePort{
@@ -503,75 +503,11 @@ func (p *PlatformKubernetes) NewService() (*apiv1.Service, error) {
 				},
 			},
 			Selector: map[string]string{
-				"app": p.Config.ServerName,
+				"app": c.ServerName,
 			},
 			Type: apiv1.ServiceTypeLoadBalancer,
 		},
 	}, nil
-}
-
-// K8sFlags config values for K8s
-func K8sFlags(f *flag.Set, c *Config) {
-	f.StringVar(&flag.StringVar{
-		Name:    "namespace",
-		Target:  &c.Namespace,
-		Usage:   "Kubernetes namespace install into.",
-		Default: "",
-	})
-
-	f.StringVar(&flag.StringVar{
-		Name:    "server-name",
-		Target:  &c.ServerName,
-		Usage:   "Name of the Waypoint server for Kubernetes.",
-		Default: "waypoint-server",
-	})
-
-	f.StringVar(&flag.StringVar{
-		Name:    "service",
-		Target:  &c.ServiceName,
-		Usage:   "Name of the Kubernetes service for the server.",
-		Default: "waypoint",
-	})
-
-	f.StringVar(&flag.StringVar{
-		Name:    "k8s-cpu-request",
-		Target:  &c.CPURequest,
-		Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
-		Default: "100m",
-	})
-
-	f.StringVar(&flag.StringVar{
-		Name:    "k8s-mem-request",
-		Target:  &c.MemRequest,
-		Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
-		Default: "256Mi",
-	})
-
-	f.StringVar(&flag.StringVar{
-		Name:    "k8s-storage-request",
-		Target:  &c.StorageRequest,
-		Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
-		Default: "1Gi",
-	})
-
-	f.BoolVar(&flag.BoolVar{
-		Name:   "openshift",
-		Target: &c.OpenShift,
-		Usage:  "Set to true if installing K8s on Red Hat OpenShift.",
-	})
-
-	f.StringVar(&flag.StringVar{
-		Name:   "secret-file",
-		Target: &c.SecretFile,
-		Usage:  "Use the Kubernetes Secret in the given path to access the waypoint server image",
-	})
-
-	f.StringVar(&flag.StringVar{
-		Name:    "pull-secret",
-		Target:  &c.ImagePullSecret,
-		Usage:   "Secret to use to access the waypoint server image on Kubernetes.",
-		Default: "github",
-	})
 }
 
 func int32Ptr(i int32) *int32 {
