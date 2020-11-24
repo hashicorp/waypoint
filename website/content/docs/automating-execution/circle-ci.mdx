@@ -9,24 +9,19 @@ description: |-
 
 # Integrating Waypoint with CircleCI
 
-Currently, using Waypoint to deploy an application from within Circle
-is similar to how you might deploy an application from your own
-workspace.
+We can leverage CircleCI's [orb](https://circleci.com/orbs/) concept to simplify
+configuring the deployment of applications.
 
 The example demonstrates the main steps:
 
 1. **Set-up the dependencies Waypoint might use.** This could be
    a Kubernetes context for a more advanced application, or in the
    below example, a Docker daemon to run applications on.
-2. **Install Waypoint from the official source.** If you are
-   using a Docker custom image executor with your other deploy
-   dependencies, you could utilize the public Docker image in a multi-stage build.
-3. **Run `waypoint init`.** This depends on the environment variables listed
-   below and documented in the [Automating Execution](/docs/automating-execution#init)
-   overview.
-4. **Run the build, deploy, and release.** In this case, instead of using `waypoint up`,
-   it breaks out each stage as a separate command to be easier to read and
-   filter through in the CircleCI UI.
+2. **Install and Initalize Waypoint with `waypoint/init`.** This command will 
+   install the waypoint CLI, start up a remote docker instance and run 
+   `waypoint init`.
+4. **Run the build, deploy, and release.** We can leverage the orb's `up` 
+   command to do so
 
 ## Workspaces
 
@@ -35,7 +30,9 @@ by a GitHub commit or pull request and may be an ephemeral development environme
 want to interpolate the relevant Git ref for the workspace parameter, as demonstrated below:
 
 ```yaml
-run: waypoint build -workspace $CIRCLE_BRANCH
+steps:
+  - waypoint/up:
+      workspace: $CIRCLE_BRANCH
 ```
 
 See the CircleCI [built-in environment variables](https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables) page
@@ -47,30 +44,21 @@ for a full list of variables that could be utilized in this way.
 ---
 version: 2.1
 
+orbs:
+  waypoint: circleci/waypoint@1.0.0
+
 jobs:
   build:
-    docker:
-      - image: cimg/base:2020.01
+    executor: waypoint/default
     environment:
-      # Use the appropriate version such as '0.1.1'
-      WAYPOINT_VERSION: WAYPOINT_VERSION_HERE
       WAYPOINT_SERVER_ADDR: ''
       WAYPOINT_SERVER_TOKEN: ''
       WAYPOINT_SERVER_TLS: '1'
       WAYPOINT_SERVER_TLS_SKIP_VERIFY: '1'
     steps:
-      # We're deploying to Docker for this example app,
-      # so we need to setup a remote Docker instance
-      - setup_remote_docker
       - checkout
-      - run:
-          name: Install Waypoint
-          command: |
-            wget -q -O /tmp/waypoint.zip https://releases.hashicorp.com/waypoint/${WAYPOINT_VERSION}/waypoint_${WAYPOINT_VERSION}_linux_amd64.zip
-            sudo unzip -d /usr/local/bin /tmp/waypoint.zip
-            rm -rf /tmp/waypoint*
-      - run: waypoint init
-      - run: waypoint build
-      - run: waypoint deploy
-      - run: waypoint release
+      - waypoint/init
+      - waypoint/up
 ```
+
+[Orb registry page](https://circleci.com/developer/orbs/orb/circleci/waypoint)
