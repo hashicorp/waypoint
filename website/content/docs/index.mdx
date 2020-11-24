@@ -31,6 +31,21 @@ A growing number of code samples is available in the [hashicorp/waypoint-example
 git clone https://github.com/hashicorp/waypoint-examples.git
 ```
 
+## contrib Tools and Helpers
+
+Some services and tools that Waypoint use involve some additional setup to run
+and manage locally.
+
+The `contrib` folder aims to help users reduce friction around getting started
+using these tools locally to explore Waypoint. You can find these optional tools
+and content on the [Waypoint GitHub repository](https://github.com/hashicorp/waypoint/tree/main/contrib).
+
+An example of this is leveraging [kind](https://kind.sigs.k8s.io/) to setup a
+local kubernetnes cluster to install Waypoint server: [kind+k8s](https://github.com/hashicorp/waypoint/tree/main/contrib/serverinstall/kind-k8s).
+
+Don't see a tool here that you need to get started? Feel free to open a new
+enhancement request issue on GitHub, or contribute your own!
+
 ## Extending
 
 The [plugin documentation](/plugins) describes more resources available to use
