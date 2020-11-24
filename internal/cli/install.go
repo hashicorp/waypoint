@@ -183,29 +183,49 @@ func (c *InstallCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
-			Name:    "server-image",
+			Name:    "docker-server-image",
+			Target:  &c.Config.ServerImage,
+			Usage:   "Docker image for the server.",
+			Default: "hashicorp/waypoint:latest",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "k8s-server-image",
+			Target:  &c.Config.ServerImage,
+			Usage:   "Docker image for the server image.",
+			Default: "hashicorp/waypoint:latest",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "nomad-server-image",
 			Target:  &c.Config.ServerImage,
 			Usage:   "Docker image for the server image.",
 			Default: "hashicorp/waypoint:latest",
 		})
 
 		f.StringMapVar(&flag.StringMapVar{
-			Name:   "annotate-service",
+			Name:   "k8s-annotate-service",
 			Target: &c.Config.ServiceAnnotations,
-			Usage:  "Annotations for the Service generated.",
+			Usage:  "Annotations for the Service generated on Kubernetes.",
+		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "nomad-annotate-service",
+			Target: &c.Config.ServiceAnnotations,
+			Usage:  "Annotations for the Service generated on Nomad.",
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "pull-policy",
+			Name:    "k8s-pull-policy",
 			Target:  &c.Config.ImagePullPolicy,
 			Usage:   "",
 			Default: "Always",
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:   "advertise-internal",
+			Name:   "k8s-advertise-internal",
 			Target: &c.Config.AdvertiseInternal,
-			Usage: "Advertise the internal service address rather than the external. " +
+			Usage: "Advertise the internal service address rather than the external on Kubernetes. " +
 				"This is useful if all your deployments will be able to access the private " +
 				"service address. This will default to false but will be automatically set to " +
 				"true if the external host is detected to be localhost.",
@@ -229,7 +249,7 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "platform",
 			Target:  &c.platform,
-			Default: "kubernetes",
+			Default: "",
 			Usage:   "Platform to install the Waypoint server into.",
 		})
 
@@ -241,9 +261,9 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "namespace",
+			Name:    "k8s-namespace",
 			Target:  &c.Config.Namespace,
-			Usage:   "Namespace to install the Waypoint server into for Nomad or Kubernetes.",
+			Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
 			Default: "",
 		})
 
@@ -283,20 +303,20 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:   "openshift",
+			Name:   "k8s-openshift",
 			Target: &c.Config.OpenShift,
 			Default: false,
 			Usage:  "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift.",
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:   "secret-file",
+			Name:   "k8s-secret-file",
 			Target: &c.Config.SecretFile,
 			Usage:  "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "pull-secret",
+			Name:    "k8s-pull-secret",
 			Target:  &c.Config.ImagePullSecret,
 			Usage:   "Secret to use to access the Waypoint server image on Kubernetes.",
 			Default: "github",
@@ -321,6 +341,13 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Target:  &c.Config.PolicyOverrideF,
 			Default: false,
 			Usage:   "Override the Nomad sentinel policy on enterprise Nomad platform.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "nomad-namespace",
+			Target:  &c.Config.Namespace,
+			Usage:   "Namespace to install the Waypoint server into for Nomad.",
+			Default: "",
 		})
 	})
 }
