@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -241,6 +242,261 @@ func TestConfig_dynamicSuccess(t *testing.T) {
 	require.Equal(2, val)
 }
 
+// Test that we read dynamic config variables where the source
+// takes a configuration.
+func TestConfig_dynamicConfigurable(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Short refresh so we can test changing values
+	testChConfigRefresh(t, 100*time.Millisecond)
+
+	// Create our test config source
+	testSource := &testConfigSourcerWithConfig{}
+
+	// Start up the server
+	impl := singleprocess.TestImpl(t)
+	client := server.TestServer(t, impl,
+		server.TestWithContext(ctx),
+	)
+
+	// Create a temporary directory for our test
+	td, err := ioutil.TempDir("", "test")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+	path := filepath.Join(td, "hello")
+
+	// Start the CEB
+	ceb := testRun(t, context.Background(), &testRunOpts{
+		Client: client,
+		Helper: "write-env",
+		HelperEnv: map[string]string{
+			"HELPER_PATH": path,
+			"TEST_VALUE":  "original",
+		},
+		ConfigPlugins: map[string]component.ConfigSourcer{
+			"cloud": testSource,
+		},
+	})
+
+	// The child should still start up
+	require.Eventually(func() bool {
+		_, err := ioutil.ReadFile(path)
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Get our deployment
+	deployment, err := client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+		Ref: &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: ceb.DeploymentId(),
+			},
+		},
+	})
+	require.NoError(err)
+
+	// Set the config for our source
+	_, err = client.SetConfigSource(ctx, &pb.SetConfigSourceRequest{
+		ConfigSource: &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type: "cloud",
+
+			Config: map[string]string{
+				"value": "flower",
+			},
+		},
+	})
+
+	// Change our config
+	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
+		Variables: []*pb.ConfigVar{
+			{
+				Scope: &pb.ConfigVar_Application{
+					Application: deployment.Application,
+				},
+				Name: "TEST_VALUE",
+				Value: &pb.ConfigVar_Dynamic{
+					Dynamic: &pb.ConfigVar_DynamicVal{
+						From: "cloud",
+					},
+				},
+			},
+		},
+	})
+	require.NoError(err)
+
+	// The child should still start up
+	var data []byte
+	require.Eventually(func() bool {
+		var err error
+		data, err = ioutil.ReadFile(path)
+		return err == nil && strings.Contains(string(data), "flower")
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Change the value and make sure we get it
+	_, err = client.SetConfigSource(ctx, &pb.SetConfigSourceRequest{
+		ConfigSource: &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type: "cloud",
+
+			Config: map[string]string{
+				"value": "leaf",
+			},
+		},
+	})
+
+	// The child should change
+	require.Eventually(func() bool {
+		var err error
+		data, err = ioutil.ReadFile(path)
+		return err == nil && strings.Contains(string(data), "leaf")
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// We should've called Stop twice: once for the first read and
+	// then again when we changed the configuration.
+	require.Equal(uint32(2), testSource.StopCount())
+
+	// Unset our dynamic config
+	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
+		Variables: []*pb.ConfigVar{
+			{
+				Scope: &pb.ConfigVar_Application{
+					Application: deployment.Application,
+				},
+				Name: "TEST_VALUE",
+				Value: &pb.ConfigVar_Unset{
+					Unset: &empty.Empty{},
+				},
+			},
+		},
+	})
+	require.NoError(err)
+
+	// The child should change
+	require.Eventually(func() bool {
+		var err error
+		data, err = ioutil.ReadFile(path)
+		return err == nil && strings.Contains(string(data), "original")
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// We should call stop once more to end the previous run
+	require.Equal(uint32(3), testSource.StopCount())
+}
+
+// When a dynamic source is unused and we set a configuration,
+// it should not impact our process.
+func TestConfig_dynamicConfigurableUnused(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Short refresh so we can test changing values
+	testChConfigRefresh(t, 100*time.Millisecond)
+
+	// Create our test config source
+	testSource := &testConfigSourcerWithConfig{}
+
+	// Start up the server
+	impl := singleprocess.TestImpl(t)
+	client := server.TestServer(t, impl,
+		server.TestWithContext(ctx),
+	)
+
+	// Create a temporary directory for our test
+	td, err := ioutil.TempDir("", "test")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+	path := filepath.Join(td, "hello")
+
+	// Start the CEB
+	ceb := testRun(t, context.Background(), &testRunOpts{
+		Client: client,
+		Helper: "write-env",
+		HelperEnv: map[string]string{
+			"HELPER_PATH": path,
+			"TEST_VALUE":  "original",
+		},
+		ConfigPlugins: map[string]component.ConfigSourcer{
+			"cloud": testSource,
+		},
+	})
+
+	// The child should still start up
+	require.Eventually(func() bool {
+		_, err := ioutil.ReadFile(path)
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Get our deployment
+	_, err = client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+		Ref: &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: ceb.DeploymentId(),
+			},
+		},
+	})
+	require.NoError(err)
+
+	// Set the config for our source
+	_, err = client.SetConfigSource(ctx, &pb.SetConfigSourceRequest{
+		ConfigSource: &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type: "cloud",
+
+			Config: map[string]string{
+				"value": "flower",
+			},
+		},
+	})
+
+	// The child should start up
+	var pid string
+	require.Eventually(func() bool {
+		var err error
+		data, err := ioutil.ReadFile(path)
+		if err == nil && strings.Contains(string(data), "original") {
+			parts := strings.Split(string(data), ",")
+			pid = parts[0]
+			return true
+		}
+
+		return false
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// Change the value
+	_, err = client.SetConfigSource(ctx, &pb.SetConfigSourceRequest{
+		ConfigSource: &pb.ConfigSource{
+			Scope: &pb.ConfigSource_Global{
+				Global: &pb.Ref_Global{},
+			},
+
+			Type: "cloud",
+
+			Config: map[string]string{
+				"value": "leaf",
+			},
+		},
+	})
+
+	// Sleep for a bit and ensure we have the same value
+	{
+		time.Sleep(1 * time.Second)
+		data, err := ioutil.ReadFile(path)
+		require.NoError(err)
+		require.True(strings.HasPrefix(string(data), pid))
+	}
+}
+
 // testChConfigRefresh changes the amount of time between config refreshes.
 // A test cleanup function is automatically registered to revert.
 func testChConfigRefresh(t *testing.T, d time.Duration) {
@@ -282,4 +538,44 @@ func (s *testConfigSourcer) StopFunc() interface{} {
 		s.stopCount++
 		return nil
 	}
+}
+
+// ConfigSourcer that implements Configurable
+type testConfigSourcerWithConfig struct {
+	config struct {
+		Value string `hcl:"value,attr"`
+	}
+
+	stopCount uint32
+}
+
+func (s *testConfigSourcerWithConfig) Config() (interface{}, error) {
+	return &s.config, nil
+}
+
+func (s *testConfigSourcerWithConfig) ReadFunc() interface{} {
+	return func(reqs []*component.ConfigRequest) ([]*sdkpb.ConfigSource_Value, error) {
+		var result []*sdkpb.ConfigSource_Value
+		for _, req := range reqs {
+			result = append(result, &sdkpb.ConfigSource_Value{
+				Name: req.Name,
+				Result: &sdkpb.ConfigSource_Value_Value{
+					Value: s.config.Value,
+				},
+			})
+		}
+
+		return result, nil
+	}
+}
+
+func (s *testConfigSourcerWithConfig) StopFunc() interface{} {
+	return func() error {
+		atomic.AddUint32(&s.stopCount, 1)
+		return nil
+	}
+}
+
+func (s *testConfigSourcerWithConfig) StopCount() uint32 {
+	return atomic.LoadUint32(&s.stopCount)
 }
