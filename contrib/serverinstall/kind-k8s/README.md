@@ -52,7 +52,19 @@ _this section is a work in progress_
 2) kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
 3) kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
 4) kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
-5) Get docker subnet from networked container `docker ps -a`, then `docker inspect <container_id>`, and update metallb addresses in `configs/metallb-config.yaml` to represent your local docker subnet
+5) Get docker subnet from networked container `docker ps -a`, then `docker inspect <container_id>`, and update metallb addresses range in `configs/metallb-config.yaml` to represent your local docker subnet
+  * `docker ps -a`
+  ```
+  CONTAINER ID        IMAGE                  COMMAND                  CREATED             STATUS              PORTS                       NAMES
+  2f7d413cfc88        kindest/node:v1.19.1   "/usr/local/bin/entr…"   2 minutes ago       Up 2 minutes                                    kind-worker2
+  be01d16cd27d        kindest/node:v1.19.1   "/usr/local/bin/entr…"   2 minutes ago       Up 2 minutes                                    kind-worker
+  f5336320a8a3        kindest/node:v1.19.1   "/usr/local/bin/entr…"   2 minutes ago       Up 2 minutes        127.0.0.1:39077->6443/tcp   kind-control-plane
+  ```
+  * Grab container id for container named `kind-control-plane`, which is `f5336320a8a3` in this case,
+  to find its IP Address
+  * `docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' CONTAINER_ID_GOES_HERE`
+  * Update the range inside the `configs/metallb-config.yaml` file. If your
+  container IP Address was `172.18.0.4` for example, you might set the range to `172.18.0.20-172.18.0.50`.
 6) kubectl apply -f configs/metallb-config.yaml
 
 ### Optional steps??
@@ -81,5 +93,5 @@ kubectl get all
 Inspect a deployed application in a pod
 
 ```
-kubectl describe pod/example-nodejs-01eqxfhphddst35xb04pp4m2gs-6f559cb4bd-gcfp5  
+kubectl describe pod/example-nodejs-01eqxfhphddst35xb04pp4m2gs-6f559cb4bd-gcfp5
 ```
