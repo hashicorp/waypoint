@@ -40,18 +40,18 @@ the kubernetes platform!
 
 _this section is a work in progress_
 
-1) kind create cluster --config cluster-config.yaml
+1) kind create cluster --config configs/cluster-config.yaml
 2) kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
 3) kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
 4) kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
-5) Get docker subnet, and update metallb values to represent your local docker subnet
-5) kubectl apply -f metallb-config.yaml
+5) Get docker subnet from networked container `docker ps -a`, then `docker inspect <container_id>`, and update metallb addresses in `configs/metallb-config.yaml` to represent your local docker subnet
+6) kubectl apply -f configs/metallb-config.yaml
 
 ### Optional steps??
 
-6) clone demo app `codyde/hashi-demo-app`
-7) kubectl apply -f namespace.yaml
-8) kubectl apply -f kubernetes-demoapp.yaml
+7) clone demo app `codyde/hashi-demo-app`
+8) kubectl apply -f namespace.yaml
+9) kubectl apply -f kubernetes-demoapp.yaml
 
 ### Setup waypoint
 
