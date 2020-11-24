@@ -303,10 +303,10 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:   "k8s-openshift",
-			Target: &c.Config.OpenShift,
+			Name:    "k8s-openshift",
+			Target:  &c.Config.OpenShift,
 			Default: false,
-			Usage:  "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift.",
+			Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift.",
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -328,14 +328,14 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Default: "global",
 			Usage:   "Region to install the Waypoint server to on Nomad.",
 		})
-	
+
 		f.StringSliceVar(&flag.StringSliceVar{
 			Name:    "nomad-dc",
 			Target:  &c.Config.DatacentersF,
 			Default: []string{"dc1"},
 			Usage:   "Datacenters to install to on Nomad platform.",
 		})
-	
+
 		f.BoolVar(&flag.BoolVar{
 			Name:    "nomad-policy-override",
 			Target:  &c.Config.PolicyOverrideF,
