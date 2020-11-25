@@ -171,6 +171,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"config source-set": func() (cli.Command, error) {
+			return &ConfigSourceSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"config sync": func() (cli.Command, error) {
 			return &ConfigSyncCommand{
 				baseCommand: baseCommand,
