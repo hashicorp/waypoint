@@ -1,9 +1,9 @@
-<button class="button button--secondary" {{on "click" this.toggleHint}}>
+<button class="button button--secondary" type="button" {{on "click" this.toggleHint}}>
   {{inline-svg "upload" class="icon"}}
   <span>Deploy...</span>
 </button>
 
-{{#if hintIsVisible}}
+{{#if this.hintIsVisible}}
   <div class="cli-hint">
     <p>To deploy this build you can run the following command in the CLI</p>
     <CopyableCode @ref="deploy-cli-hint">

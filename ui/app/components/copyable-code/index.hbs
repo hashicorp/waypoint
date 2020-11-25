@@ -4,8 +4,8 @@
    @clipboardTarget="#{{@ref}}"
    @success={{this.onSuccess}}
    @error={{this.onError}}
-   class={{if copySuccess 'copy-success'}}
+   class={{if this.copySuccess 'copy-success'}}
   >
-    {{inline-svg (if copySuccess 'copy-success' 'copy-action') class="icon"}}
+    {{inline-svg (if this.copySuccess 'copy-success' 'copy-action') class="icon"}}
   </CopyButton>
 </span>
