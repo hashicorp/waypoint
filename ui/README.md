@@ -35,7 +35,9 @@ that are static and are re-loaded on page refresh.
 ### Running with a local Waypoint Server
 
 This option assumes there is a Waypoint server running
-at `https://localhost:9702`.
+at `https://localhost:9702`. If you need to make any API changes to go along
+with frontend changes, or just wish to run the server locally, you can follow
+the instructions to run [Waypoint server locally](https://www.waypointproject.io/docs/server/run).
 
 Note: You'll need to visit the above address in the same browser session to
 accept the invalid certificate warning in your browser for this to work.
