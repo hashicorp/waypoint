@@ -5,7 +5,10 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/distribution/reference"
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -98,19 +102,46 @@ func (r *Registry) Push(
 			server = repoInfo.Index.Name
 		}
 
-		var errBuf bytes.Buffer
-		cf := config.LoadDefaultConfigFile(&errBuf)
-		if errBuf.Len() > 0 {
-			// NOTE(mitchellh): I don't know why we ignore this, but we always have.
-			log.Warn("error loading Docker config file", "err", err)
-		}
+		if r.config.GoogleAuth {
+			// Check if the supplied registry ref belongs to GCR/AR
+			err := validateImageName(ref.Name())
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "You can't specify google_auth = true with a non Google Cloud Image Registry.")
+			}
+			defaultTS, err := google.DefaultTokenSource(ctx)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "unable to acquire a Google Token Source %s", err)
+			}
 
-		authConfig, _ := cf.GetAuthConfig(server)
-		buf, err := json.Marshal(authConfig)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
+			token, _ := defaultTS.Token()
+			log.Warn("Current Token: ", token.AccessToken)
+
+			authConfig := types.AuthConfig{
+				Username: "oauth2accesstoken",
+				Password: token.AccessToken,
+			}
+
+			buf, err := json.Marshal(authConfig)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
+			}
+
+			encodedAuth = base64.URLEncoding.EncodeToString(buf)
+		} else {
+			var errBuf bytes.Buffer
+			cf := config.LoadDefaultConfigFile(&errBuf)
+			if errBuf.Len() > 0 {
+				// NOTE(mitchellh): I don't know why we ignore this, but we always have.
+				log.Warn("error loading Docker config file", "err", err)
+			}
+
+			authConfig, _ := cf.GetAuthConfig(server)
+			buf, err := json.Marshal(authConfig)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "unable to generate authentication info for registry: %s", err)
+			}
+			encodedAuth = base64.URLEncoding.EncodeToString(buf)
 		}
-		encodedAuth = base64.URLEncoding.EncodeToString(buf)
 	}
 
 	step = sg.Add("Pushing Docker image...")
@@ -157,6 +188,9 @@ type Config struct {
 
 	// The docker specific encoded authentication string to use to talk to the registry.
 	EncodedAuth string `hcl:"encoded_auth,optional"`
+
+	// Set this field to leverage Google Access Tokens to push to GCR/AR.
+	GoogleAuth bool `hcl:"google_auth,optional"`
 }
 
 func (r *Registry) Documentation() (*docs.Documentation, error) {
@@ -205,6 +239,11 @@ build {
 	)
 
 	doc.SetField(
+		"google_auth",
+		"Set this to true if you want Waypoint to leverage [Access Token authentication](https://cloud.google.com/artifact-registry/docs/docker/authentication#token) for images pushed to Google Cloud Artifact/Container Registry. If this is not set, you need to use other credential helpers on that page.",
+	)
+
+	doc.SetField(
 		"encoded_auth",
 		"the authentication information to log into the docker repository",
 		docs.Summary(
@@ -215,4 +254,41 @@ build {
 	)
 
 	return doc, nil
+}
+
+// NOTE: I was unable to import the cloudrun package in builtin/google/cloudrun.
+// ValidateImageName validates that that the specified image is in the gcr Docker Registry for this project
+// Returns an error message when validation fails.
+func validateImageName(image string) error {
+	// cloud run deployments must come from one of the following image registries
+	var validRegistries = []string{
+		"gcr.io",
+		"us.gcr.io",
+		"eu.gcr.io",
+		"asia.gcr.io",
+	}
+
+	//check the registry is one which can be used with cloud run
+	registryValid := false
+	for _, r := range validRegistries {
+		if strings.HasPrefix(image, r+"/") {
+			registryValid = true
+			break
+		}
+
+		// Also check if a valid Artifact Registry was supplied which is LOCATION-docker.pkg.dev
+		parts := regexp.MustCompile(`([a-z0-9-]*)-docker\.pkg\.dev`).FindStringSubmatch(image)
+		if len(parts) > 1 {
+			if parts[1] != "" {
+				registryValid = true
+			}
+		}
+
+	}
+
+	if !registryValid {
+		return fmt.Errorf("Invalid container registry '%s'. Container images should be hosted in a valid Google Cloud registry.", image)
+	}
+
+	return nil
 }

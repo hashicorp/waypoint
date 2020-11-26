@@ -20,6 +20,7 @@ IMPROVEMENTS:
 * core: add better error messaging when prefix is missing from the `-raw` flag in `waypoint config set` [GH-815]
 * install/k8s: support for OpenShift [GH-715]
 * server: APIs for Waypoint database snapshot/restore [GH-723]
+* plugin/google-cloud-run: Waypoint now uses Access Token authentication to Google Cloud Artifact Registry which means you can use Waypoint without configuring a gcloud credential helper as long as a valid google ADC credential is available. [GH-851]
 
 BUG FIXES:
 

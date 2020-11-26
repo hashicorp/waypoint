@@ -82,6 +82,7 @@ require (
 	github.com/zclconf/go-cty v1.5.1
 	github.com/zclconf/go-cty-yaml v1.0.2
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200923182605-d9f96fdee20d
 	google.golang.org/api v0.20.0
 	google.golang.org/genproto v0.0.0-20201002142447-3860012362da
