@@ -20,6 +20,8 @@ IMPROVEMENTS:
 * core: add better error messaging when prefix is missing from the `-raw` flag in `waypoint config set` [GH-815]
 * install/k8s: support for OpenShift [GH-715]
 * server: APIs for Waypoint database snapshot/restore [GH-723]
+* plugin/google-cloud-run: added service account name field [GH-850]
+
 
 BUG FIXES:
 
