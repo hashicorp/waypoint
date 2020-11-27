@@ -1,7 +1,7 @@
 <div class="output-pane">
   {{#if this.lines}}
     <div class="output-scroll-y">
-      {{#unless isFollowingLogs}}
+      {{#unless this.isFollowingLogs}}
         <button class="follow-logs" {{on "click" this.followLogs}}>
           {{inline-svg "arrow-down" class="icon"}}
           {{#if (gt this.badgeCount 0)}}
@@ -16,8 +16,8 @@
           </div>
         {{/each}}
         <div class="output-end" {{in-viewport
-          onEnter=(action (mut isFollowingLogs) true)
-          onExit=(action (mut isFollowingLogs) false)}} {{did-update this.updateScroll this.logLines.length}}></div>
+          onEnter=(action (mut this.isFollowingLogs) true)
+          onExit=(action (mut this.isFollowingLogs) false)}} {{did-update this.updateScroll this.logLines.length}}></div>
       </div>
     </div>
   {{else}}
