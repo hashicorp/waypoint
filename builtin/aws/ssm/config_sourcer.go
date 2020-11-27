@@ -59,6 +59,7 @@ func (cs *ConfigSourcer) read(
 
 	// If we have cached values just return those
 	if cs.values != nil {
+		log.Trace("returning cached values", "len", len(cs.values))
 		result := make([]*pb.ConfigSource_Value, 0, len(cs.values))
 		for _, v := range cs.values {
 			result = append(result, v)
@@ -77,12 +78,14 @@ func (cs *ConfigSourcer) read(
 	awsConfig.CallerDocumentationURL = "https://www.waypointproject.io/"
 
 	// Get our session
+	log.Debug("retrieving AWS session")
 	sess, err := awsbase.GetSession(&awsConfig)
 	if err != nil {
 		log.Warn("error initializing AWS session", "err", err)
 		return nil, err
 	}
 	ssmsvc := ssm.New(sess)
+	log.Debug("AWS session initialized")
 
 	// If this is our first read after a stop, then we need to populate
 	// the requests we want to get. This doesn't actually fetch anything yet.
@@ -106,18 +109,25 @@ func (cs *ConfigSourcer) read(
 		requests = append(requests, &decodedReq)
 	}
 
-	// Start the refresher
+	// Start the refresher. Note for the log parameter we can't use "log"
+	// because that is only alive for the duration of the plugin RPC call.
+	// Once the RPC completes we'll get errors. So we instantiate a new
+	// logger here which will go to the plugin process stderr.
 	refreshCtx, cancel := context.WithCancel(context.Background())
 	cs.refreshCancel = cancel
 	initCh := make(chan struct{})
-	go cs.startRefresher(refreshCtx, initCh, requests, cs.values, ssmsvc)
+	go cs.startRefresher(refreshCtx,
+		hclog.L().Named("ssm-refresher"),
+		initCh, requests, cs.values, ssmsvc)
 
 	// Unlock so that the refresher can populate.
+	log.Debug("waiting for first set of values")
 	cs.cacheMu.Unlock()
 	<-initCh
 	cs.cacheMu.Lock()
 
 	// Return our results
+	log.Debug("first set of values received, returning")
 	result := make([]*pb.ConfigSource_Value, 0, len(cs.values))
 	for _, v := range cs.values {
 		result = append(result, v)
@@ -138,6 +148,7 @@ func (cs *ConfigSourcer) stop() error {
 
 func (cs *ConfigSourcer) startRefresher(
 	ctx context.Context,
+	log hclog.Logger,
 	initCh chan<- struct{},
 	wpreqs []*reqConfig,
 	values map[string]*pb.ConfigSource_Value,
@@ -159,12 +170,15 @@ func (cs *ConfigSourcer) startRefresher(
 
 	for {
 		// Read our value
+		log.Trace("querying parameters")
 		resp, err := client.GetParameters(req)
 		if err != nil {
 			// Just skip these errors and reuse the last known values for
 			// all requests that we have.
+			log.Warn("error querying parameters", "err", err)
 			continue
 		}
+		log.Trace("parameters received", "len", len(resp.Parameters))
 
 		// Update our values
 		cs.cacheMu.Lock()
@@ -186,6 +200,7 @@ func (cs *ConfigSourcer) startRefresher(
 
 		// For our first request, we close the init channel.
 		if initCh != nil {
+			log.Trace("closing init channel")
 			close(initCh)
 			initCh = nil
 		}
