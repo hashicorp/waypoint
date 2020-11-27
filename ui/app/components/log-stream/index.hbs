@@ -9,7 +9,7 @@
           {{/if}}
         </button>
       {{/unless}}
-      <div class="output-scroll-x">
+      <div class="output-scroll-x" {{did-insert this.followLogs}}>
         {{#each this.lines as |line|}}
           <div class="log-line">
             <code>{{line}}</code>

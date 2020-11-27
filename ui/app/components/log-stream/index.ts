@@ -33,7 +33,11 @@ export default class LogStream extends Component<LogStreamArgs> {
 
   @action
   followLogs(element: any) {
-    element.target.parentElement.scroll(0, element.target.parentElement.scrollHeight);
+    if (element.target) {
+      element.target.parentElement.scroll(0, element.target.parentElement.scrollHeight);
+    } else {
+      element.parentElement.scroll(0, element.parentElement.scrollHeight);
+    }
   }
 
   @action
