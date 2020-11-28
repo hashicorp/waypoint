@@ -90,7 +90,7 @@ func (cs *ConfigSourcer) read(
 	// If this is our first read after a stop, then we need to populate
 	// the requests we want to get. This doesn't actually fetch anything yet.
 	cs.values = map[string]*pb.ConfigSource_Value{}
-	requests := make([]*reqConfig, 0, len(reqs))
+	requests := map[string]*reqConfig{}
 	for _, req := range reqs {
 		result := &pb.ConfigSource_Value{Name: req.Name}
 		cs.values[req.Name] = result
@@ -106,7 +106,7 @@ func (cs *ConfigSourcer) read(
 		}
 
 		// Store our request
-		requests = append(requests, &decodedReq)
+		requests[req.Name] = &decodedReq
 	}
 
 	// Start the refresher. Note for the log parameter we can't use "log"
@@ -150,17 +150,22 @@ func (cs *ConfigSourcer) startRefresher(
 	ctx context.Context,
 	log hclog.Logger,
 	initCh chan<- struct{},
-	wpreqs []*reqConfig,
+	wpreqs map[string]*reqConfig,
 	values map[string]*pb.ConfigSource_Value,
 	client *ssm.SSM,
 ) {
+	// We need to keep a map of our parameter names to the
+	// value keys that require it.
+	paramToReq := map[string][]string{}
+
 	// Build our actual request parameter. This remains constant so
 	// we calculate this once.
 	req := &ssm.GetParametersInput{}
 	req.SetWithDecryption(true)
-	for _, wpreq := range wpreqs {
+	for k, wpreq := range wpreqs {
 		name := wpreq.Path
 		req.Names = append(req.Names, &name)
+		paramToReq[name] = append(paramToReq[name], k)
 	}
 
 	// Calculate a sleep period with a 30% jitter added to it.
@@ -185,16 +190,21 @@ func (cs *ConfigSourcer) startRefresher(
 		for _, param := range resp.Parameters {
 			if param.Name == nil || param.Value == nil {
 				// should never happen
+				log.Warn("param name or value is nil", "param", param)
 				continue
 			}
 
-			v, ok := values[*param.Name]
-			if !ok {
-				// skip params we don't know, since we should prepopulate it all.
-				continue
-			}
+			for _, k := range paramToReq[*param.Name] {
+				v, ok := values[k]
+				if !ok {
+					// skip params we don't know, since we should prepopulate it all.
+					log.Warn("param not found in values map, should never happen",
+						"key", *param.Name)
+					continue
+				}
 
-			v.Result = &pb.ConfigSource_Value_Value{Value: *param.Value}
+				v.Result = &pb.ConfigSource_Value_Value{Value: *param.Value}
+			}
 		}
 		cs.cacheMu.Unlock()
 
