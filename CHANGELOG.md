@@ -8,6 +8,7 @@ IMPROVEMENTS:
 * core: align `-raw` flag to behave like `-json` flag with `waypoint config set` [GH-828]
 * plugin/aws-ecr: environment variables to be used instead of 'region' property for aws-ecr registry [GH-841]
 * plugin/google-cloud-run: allow images from Google Artifact Registry [GH-804]
+* plugin/google-cloud-run: added service account name field [GH-850]
 
 BUG FIXES:
 
