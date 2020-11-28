@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/api/iam/v1"
 	run "google.golang.org/api/run/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -119,10 +120,10 @@ func (p *Platform) ValidateAuth(
 		src.App,
 	)
 
-	st.Update("Testing IAM permissions...")
+	st.Update("Testing Cloud Run IAM permissions...")
 	result, err := client.TestIamPermissions(apiResource, &testReq).Do()
 	if err != nil {
-		st.Step(terminal.StatusError, "Error testing IAM permissions: "+err.Error())
+		st.Step(terminal.StatusError, "Error testing Cloud Run IAM permissions: "+err.Error())
 		return err
 	}
 
@@ -132,10 +133,48 @@ func (p *Platform) ValidateAuth(
 		return fmt.Errorf("incorrect IAM permissions, received %s", strings.Join(result.Permissions, ", "))
 	}
 
+	// Validate if user has access to the service account specified
+	if p.config.ServiceAccountName != "" {
+
+		iamAPIService, err := deployment.iamAPIService(ctx)
+		if err != nil {
+			ui.Output("Error constructing api client: "+err.Error(), terminal.WithErrorStyle())
+			return status.Errorf(codes.Aborted, err.Error())
+		}
+
+		client := iam.NewProjectsServiceAccountsService(iamAPIService)
+
+		expectedPermissions := []string{
+			"iam.serviceAccounts.actAs",
+		}
+
+		// We need to ensure that the service creator has Service Account User role.
+		testReq := iam.TestIamPermissionsRequest{
+			Permissions: expectedPermissions,
+		}
+
+		apiResource := fmt.Sprintf("projects/%s/serviceAccounts/%s",
+			p.config.Project,
+			p.config.ServiceAccountName,
+		)
+
+		st.Update("Testing IAM permissions on the supplied service account...")
+		result, err := client.TestIamPermissions(apiResource, &testReq).Do()
+		if err != nil {
+			st.Step(terminal.StatusError, "Error testing IAM permissions of the Service Account: "+err.Error())
+			return err
+		}
+
+		// If our resulting permissions do not equal our expected permissions, auth does not validate
+		if !reflect.DeepEqual(result.Permissions, expectedPermissions) {
+			st.Step(terminal.StatusError, "Incorrect IAM permissions on the Service Account, received "+strings.Join(result.Permissions, ", "))
+			return fmt.Errorf("Incorrect IAM permissions on the Service Account, received %s", strings.Join(result.Permissions, ", "))
+		}
+	}
 	return nil
 }
 
-// Deploy deploys an image to GCR.
+// Deploy deploys an image to Cloud Run.
 func (p *Platform) Deploy(
 	ctx context.Context,
 	log hclog.Logger,
@@ -323,6 +362,10 @@ func (p *Platform) Deploy(
 		*/
 	}
 
+	if p.config.ServiceAccountName != "" {
+		service.Spec.Template.Spec.ServiceAccountName = p.config.ServiceAccountName
+	}
+
 	if create {
 		// Create the service
 		log.Info("creating the service")
@@ -433,6 +476,8 @@ app "wpmini" {
         request_timeout            = 300
       }
 
+	  service_account_name = "cloudrun@waypoint-project-id.iam.gserviceaccount.com"
+
       auto_scaling {
         max = 10
       }
@@ -505,6 +550,11 @@ app "wpmini" {
 	)
 
 	doc.SetField(
+		"service_account_name",
+		"Specify a service account email that Cloud Run will use to run the service. You must have the `iam.serviceAccounts.actAs` permission on the service account.",
+	)
+
+	doc.SetField(
 		"auto_scaling.max",
 		`Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.
 		This parameter controls the maximum number of instances that can be created.`,
@@ -543,6 +593,9 @@ type Config struct {
 
 	// AutoScaling details.
 	AutoScaling *AutoScaling `hcl:"auto_scaling,block"`
+
+	// Service Account details
+	ServiceAccountName string `hcl:"service_account_name,optional"`
 }
 
 // Capacity defines configuration for deployed Cloud Run resources
