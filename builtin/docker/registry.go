@@ -114,7 +114,6 @@ func (r *Registry) Push(
 			}
 
 			token, _ := defaultTS.Token()
-			log.Warn("Current Token: ", token.AccessToken)
 
 			authConfig := types.AuthConfig{
 				Username: "oauth2accesstoken",
