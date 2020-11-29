@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/pkg/gatedwriter"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
@@ -37,9 +38,19 @@ const (
 type CEB struct {
 	id           string
 	deploymentId string
-	logger       hclog.Logger
 	context      context.Context
 	execIdx      int64
+
+	// logger is the logger that should be used internally. Log messages
+	// sent here with the proper log level (Info or higher) will also be
+	// streamed to the server.
+	logger hclog.Logger
+
+	// logCh can be sent entries that will be sent to the server. If the
+	// server connection is severed or too many entries are sent, some may
+	// be dropped but the channel should always be consumed.
+	logCh          chan *pb.LogBatch_Entry
+	logGatedWriter *gatedwriter.Writer
 
 	// clientMu must be held anytime reading/writing client. internally
 	// you probably want to use waitClient() instead of this directly.
@@ -92,7 +103,6 @@ func Run(ctx context.Context, os ...Option) error {
 	// Defaults, initialization
 	ceb := &CEB{
 		id:      id,
-		logger:  hclog.L(),
 		context: ctx,
 	}
 	ceb.clientCond = sync.NewCond(&ceb.clientMu)
@@ -106,6 +116,9 @@ func Run(ctx context.Context, os ...Option) error {
 			return err
 		}
 	}
+
+	// Setup our system logger
+	ceb.initSystemLogger()
 
 	// We're disabled also if we have no client set and the server address is empty.
 	// This means we have nothing to connect to.
