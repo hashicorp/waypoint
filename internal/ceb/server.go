@@ -92,7 +92,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	}
 
 	// Connect to this server
-	ceb.logger.Info("connecting to server",
+	ceb.logger.Debug("connecting to server",
 		"addr", cfg.ServerAddr,
 		"tls", cfg.ServerTls,
 		"tls_skip_verify", cfg.ServerTlsSkipVerify,
@@ -120,7 +120,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 
 		// If we're ready then we're done!
 		if s == connectivity.Ready {
-			ceb.logger.Info("connection is ready")
+			ceb.logger.Debug("connection is ready")
 			break
 		}
 
@@ -143,7 +143,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	// the connection with the auth setup. If we have no token, we're done.
 	if cfg.InviteToken != "" {
 		// Exchange
-		ceb.logger.Info("converting invite token to login token")
+		ceb.logger.Debug("converting invite token to login token")
 		resp, err := client.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
 			Token: cfg.InviteToken,
 		}, grpc.WaitForReady(isRetry))
@@ -156,7 +156,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 
 		// Reconnect and return
 		conn.Close()
-		ceb.logger.Info("reconnecting to server with authentication")
+		ceb.logger.Debug("reconnecting to server with authentication")
 		conn, err = grpc.DialContext(ctx, cfg.ServerAddr, grpcOpts...)
 		if err != nil {
 			return err
@@ -183,7 +183,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	if err != nil {
 		return err
 	}
-	ceb.logger.Info("negotiated entrypoint protocol version", "version", vsn)
+	ceb.logger.Debug("negotiated entrypoint protocol version", "version", vsn)
 
 	// Commit to using this client
 	ceb.clientMu.Lock()

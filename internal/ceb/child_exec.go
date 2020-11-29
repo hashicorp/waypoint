@@ -60,7 +60,7 @@ func (ceb *CEB) watchChildCmd(
 	// detect this and also exit.
 	defer close(doneCh)
 
-	log := ceb.logger.Named("watchChildCmd")
+	log := ceb.logger.Named("child")
 
 	// We need to wait for readyCh. readyCh is closed by ceb/init.go
 	// or ceb/config.go when we're ready to begin processing. We have to do
@@ -117,7 +117,6 @@ func (ceb *CEB) watchChildCmd(
 			}
 
 			// Start our new command.
-			log.Info("starting new child process")
 			currentCh = ceb.startChildCmd(log, cmd)
 			currentCmd = cmd
 
@@ -186,7 +185,7 @@ func (ceb *CEB) termChildCmd(
 
 	// If we're not forcing, try a SIGTERM first.
 	if !force {
-		log.Info("sending SIGTERM")
+		log.Debug("sending SIGTERM")
 		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
 			log.Warn("error sending SIGTERM, will proceed to SIGKILL", "err", err)
 		} else {
@@ -213,7 +212,7 @@ func (ceb *CEB) termChildCmd(
 	// SIGKILL. We send the signal to the negative value of the pid so
 	// that it goes to the entire process group, therefore killing all
 	// grandchildren of our child process as well.
-	log.Info("sending SIGKILL")
+	log.Debug("sending SIGKILL")
 	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
 		log.Warn("error sending SIGKILL", "err", err)
 		return err
@@ -227,7 +226,7 @@ func (ceb *CEB) termChildCmd(
 		// we just set error to nil.
 		err = nil
 	}
-	log.Info("child process exited", "wait_err", err)
+	log.Debug("child process exited", "wait_err", err)
 	return err
 }
 

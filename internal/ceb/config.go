@@ -131,7 +131,10 @@ func (ceb *CEB) handleChildCmdConfig(
 		return
 	}
 
-	log.Info("env vars changed, sending new child command")
+	// We don't want to log on the first load.
+	if len(env) > len(base.Env) || len(last.Env) > len(base.Env) {
+		log.Info("env vars changed, sending new child command")
+	}
 
 	// Update the env vars
 	last.Env = env
@@ -177,7 +180,7 @@ func (ceb *CEB) recvConfig(
 			}
 		}
 
-		log.Info("new configuration received")
+		log.Debug("new configuration received")
 		ch <- resp.Config
 	}
 }

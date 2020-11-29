@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
@@ -24,6 +25,7 @@ func (ceb *CEB) initSystemLogger() {
 	// and let us register additional sinks for streaming and so on.
 	opts := *hclog.DefaultOptions
 	opts.Name = "entrypoint"
+	opts.Level = hclog.Trace
 	intercept := hclog.NewInterceptLogger(&opts)
 	nonintercept := hclog.New(&opts)
 	ceb.logger = intercept
@@ -45,11 +47,25 @@ func (ceb *CEB) initSystemLogger() {
 
 	// Register a sink that will go to the log stream.
 	intercept.RegisterSink(hclog.NewSinkAdapter(&hclog.LoggerOptions{
-		Name:   "entrypoint",
-		Level:  hclog.Info,
-		Output: ceb.logGatedWriter,
-		Color:  hclog.ColorOff,
+		Name:        "entrypoint",
+		Level:       hclog.Info,
+		Output:      ceb.logGatedWriter,
+		Color:       hclog.ColorOff,
+		DisableTime: true, // because we calculate it ourselves for streaming
+		Exclude:     ceb.logStreamExclude,
 	}))
+}
+
+func (ceb *CEB) logStreamExclude(level hclog.Level, msg string, args ...interface{}) bool {
+	if level == hclog.Info {
+		// We want to exclude some Horizon logs. We don't set the level lower
+		// because we want the root logs to show up fine we just don't want
+		// to stream them.
+		return strings.Contains(msg, "request started") ||
+			strings.Contains(msg, "request ended")
+	}
+
+	return false
 }
 
 func (ceb *CEB) initLogStream(ctx context.Context, cfg *config) error {
@@ -103,6 +119,11 @@ func (ceb *CEB) initLogStreamSender(
 	//   - we can coalesce channel receives to send less log updates
 	//   - during reconnect we can buffer channel receives
 	go func() {
+		// Wait for the first notice that the child is ready. This will
+		// allow us to wait to send any logs until we likely called
+		// EntrypointConfig.
+		<-ceb.childReadyCh
+
 		for {
 			var entry *pb.LogBatch_Entry
 			select {
@@ -117,7 +138,8 @@ func (ceb *CEB) initLogStreamSender(
 				Lines:      []*pb.LogBatch_Entry{entry},
 			})
 			if err == io.EOF || status.Code(err) == codes.Unavailable {
-				log.Error("log stream disconnected from server, attempting reconnect")
+				log.Error("log stream disconnected from server, attempting reconnect",
+					"err", err)
 				err = ceb.initLogStreamSender(log, ctx)
 				if err == nil {
 					return
