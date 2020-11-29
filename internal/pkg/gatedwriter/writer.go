@@ -26,6 +26,11 @@ func (w *Writer) Flush() error {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
+	// If we already flushed then do nothing.
+	if w.flush {
+		return nil
+	}
+
 	w.flush = true
 	_, err := w.buf.WriteTo(w.writer)
 	return err

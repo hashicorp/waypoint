@@ -21,6 +21,7 @@ func TestWriter(t *testing.T) {
 	}
 
 	w.Flush()
+	w.Flush() // double flush should do nothing
 
 	if buf.String() != "foo\nbar\n" {
 		t.Fatalf("bad: %s", buf.String())
