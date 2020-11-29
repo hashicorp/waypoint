@@ -88,11 +88,11 @@ func (ceb *CEB) watchChildCmd(
 			return
 
 		case cmd := <-cmdCh:
-			log.Info("child command received")
+			log.Debug("child command received")
 
 			// If we have an existing process, we need to exit that first.
 			if currentCh != nil {
-				log.Info("terminating current child process")
+				log.Info("terminating current child process for restart")
 				err := ceb.termChildCmd(log, currentCmd, currentCh, false, false)
 				if err != nil {
 					// In the event terminating the child fails, we exit
