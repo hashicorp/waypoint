@@ -43,7 +43,11 @@ func (ceb *CEB) initSystemLogger() {
 	// send them to our channel that will eventually get flushed to the server.
 	entryCh := make(chan *pb.LogBatch_Entry, 30)
 	ceb.logCh = entryCh
-	go ceb.logReader(nonintercept.Named("system_log_streamer"), r)
+	go ceb.logReader(
+		nonintercept.Named("system_log_streamer"),
+		r,
+		pb.LogBatch_Entry_ENTRYPOINT,
+	)
 
 	// Register a sink that will go to the log stream.
 	intercept.RegisterSink(hclog.NewSinkAdapter(&hclog.LoggerOptions{
@@ -86,7 +90,7 @@ func (ceb *CEB) initLogStream(ctx context.Context, cfg *config) error {
 	// read from the pipe the child command will get a SIGPIPE and could
 	// exit/crash if it doesn't handle it. So even if we don't have a
 	// connection to the server, we need to be draining the pipe.
-	go ceb.logReader(log, r)
+	go ceb.logReader(log, r, pb.LogBatch_Entry_APP)
 
 	// Start up our server stream. We do this in a goroutine cause we don't
 	// want to block the child command startup on it.
@@ -160,7 +164,11 @@ func (ceb *CEB) initLogStreamSender(
 
 // logReader reads lines from r and sends them to ceb.logCh with the
 // proper envelope (pb.LogBatch_Entry). This should be started in a goroutine.
-func (ceb *CEB) logReader(log hclog.Logger, r io.ReadCloser) {
+func (ceb *CEB) logReader(
+	log hclog.Logger,
+	r io.ReadCloser,
+	src pb.LogBatch_Entry_Source,
+) {
 	defer r.Close()
 	br := bufio.NewReader(r)
 	for {
@@ -174,6 +182,7 @@ func (ceb *CEB) logReader(log hclog.Logger, r io.ReadCloser) {
 			log.Trace("sending line", "line", line[:len(line)-1])
 		}
 		entry := &pb.LogBatch_Entry{
+			Source:    src,
 			Timestamp: ptypes.TimestampNow(),
 			Line:      line,
 		}

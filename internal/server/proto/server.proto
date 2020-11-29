@@ -1759,8 +1759,18 @@ message LogBatch {
   repeated Entry lines = 3;
 
   message Entry {
+    Source source = 3;
     google.protobuf.Timestamp timestamp = 1;
     string line = 2;
+
+    enum Source {
+      // App is zero for backwards compatibility since Source was
+      // added later this allows the default to just work.
+      APP = 0;
+
+      // Entrypoint logs.
+      ENTRYPOINT = 1;
+    }
   }
 }
 
