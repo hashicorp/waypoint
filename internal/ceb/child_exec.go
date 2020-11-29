@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -41,9 +42,8 @@ func (ceb *CEB) initChildCmd(ctx context.Context, cfg *config) error {
 // markChildCmdReady will allow watchChildCmd to begin executing commands.
 // This should be called once and should not be called concurrently.
 func (ceb *CEB) markChildCmdReady() {
-	if ceb.childReadyCh != nil {
+	if atomic.CompareAndSwapUint32(&ceb.childReadySent, 0, 1) {
 		close(ceb.childReadyCh)
-		ceb.childReadyCh = nil
 	}
 }
 

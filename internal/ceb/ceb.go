@@ -72,7 +72,8 @@ type CEB struct {
 	// FIRST child command is ready to be started. This can be closed before
 	// any command is sent to childCmdCh. It indicates that the child process
 	// watcher can begin executing.
-	childReadyCh chan struct{}
+	childReadySent uint32
+	childReadyCh   chan struct{}
 
 	// childCmdBase is the base command to use for making any changes to the
 	// child; use the copyCmd() function to copy this safetly to make changes.
