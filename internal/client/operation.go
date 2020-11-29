@@ -3,9 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/logviewer"
 )
 
 func (c *Project) Validate(ctx context.Context, op *pb.Job_ValidateOp) (*pb.Job_ValidateResult, error) {
@@ -159,7 +157,7 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_Releas
 	return result.Release, nil
 }
 
-func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
+func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) {
 	log := a.project.logger.Named("logs")
 
 	// First we attempt to query the server for logs for this deployment.
@@ -177,5 +175,5 @@ func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
 	}
 
 	// Build our log viewer
-	return &logviewer.Viewer{Stream: client}, nil
+	return client, nil
 }

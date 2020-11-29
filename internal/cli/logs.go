@@ -5,19 +5,24 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/posener/complete"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 type LogsCommand struct {
 	*baseCommand
 }
 
-var headerColor = color.New(color.FgCyan)
+var logColors = map[pb.LogBatch_Entry_Source]*color.Color{
+	pb.LogBatch_Entry_APP:        color.New(color.FgGreen),
+	pb.LogBatch_Entry_ENTRYPOINT: color.New(color.FgCyan),
+}
 
 func (c *LogsCommand) Run(args []string) int {
 	// Initialize. If we fail, we just exit since Init handles the UI.
@@ -30,7 +35,7 @@ func (c *LogsCommand) Run(args []string) int {
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		lv, err := app.Logs(ctx)
+		stream, err := app.Logs(ctx)
 		if err != nil {
 			if !clierrors.IsCanceled(err) {
 				app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
@@ -39,40 +44,47 @@ func (c *LogsCommand) Run(args []string) int {
 		}
 
 		for {
-			batch, err := lv.NextLogBatch(ctx)
+			batch, err := stream.Recv()
 			if err != nil {
 				if !clierrors.IsCanceled(err) {
 					app.UI.Output("Error reading logs: %s", err, terminal.WithErrorStyle())
 				}
+
 				return ErrSentinel
 			}
 
-			if len(batch) == 0 {
+			if len(batch.Lines) == 0 {
 				break
 			}
 
-			for _, event := range batch {
-				event.Message = strings.TrimSuffix(event.Message, "\n")
+			for _, event := range batch.Lines {
+				event.Line = strings.TrimSuffix(event.Line, "\n")
 
 				// We use this format rather than regular RFC3339Nano because we use .0
 				// instead of .9, which preserves the spacing so the output is always
 				// lined up
-				ts := event.Timestamp.Format("2006-01-02T15:04:05.000Z07:00")
-				short := event.Partition
+				tsRaw, _ := ptypes.Timestamp(event.Timestamp)
+				ts := tsRaw.Format("2006-01-02T15:04:05.000Z07:00")
+				short := batch.InstanceId
 				if len(short) > 6 {
 					short = short[len(short)-6:]
 				}
 
-				header := headerColor.Sprintf("%s %s: ", ts, short)
-				if strings.IndexByte(event.Message, '\n') != -1 {
-					parts := strings.Split(event.Message, "\n")
+				color, ok := logColors[event.Source]
+				if !ok {
+					color = logColors[pb.LogBatch_Entry_APP]
+				}
+
+				header := color.Sprintf("%s %s: ", ts, short)
+				if strings.IndexByte(event.Line, '\n') != -1 {
+					parts := strings.Split(event.Line, "\n")
 
 					for _, part := range parts {
 						m := header + part
 						c.ui.Output(m)
 					}
 				} else {
-					m := header + event.Message
+					m := header + event.Line
 					c.ui.Output(m)
 				}
 			}
