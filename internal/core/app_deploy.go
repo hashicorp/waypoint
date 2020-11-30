@@ -26,6 +26,7 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 
 	// Add our build to our config
 	var evalCtx hcl.EvalContext
+	evalCtx.Variables = map[string]cty.Value{}
 	if err := evalCtxTemplateProto(&evalCtx, "artifact", push); err != nil {
 		a.logger.Warn("failed to prepare template variables, will not be available",
 			"err", err)
