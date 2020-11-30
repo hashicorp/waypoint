@@ -77,6 +77,12 @@ func (ceb *CEB) watchAppConfig(
 		coalesceCh = time.After(500 * time.Millisecond)
 	}
 
+	// refreshNowCh is just a closed time channel that will trigger
+	// a receive immediately. This can be assigned to coalesce or refresh
+	// channels to trigger them.
+	refreshNowCh := make(chan time.Time)
+	close(refreshNowCh)
+
 	// prevSent is flipped to true once we send our first set of compiled
 	// env vars to the outCh. We have to keep track of this because there is
 	// an expectation that we will always send an initial set of configs.
@@ -180,9 +186,10 @@ func (ceb *CEB) watchAppConfig(
 		// Case: timer fires after a period of time where we have received
 		// no other messages and we can now force a refresh.
 		case <-coalesceCh:
+			// nil the coalesceCh so it isn't called again (until reset)
 			coalesceCh = nil
-			refreshNowCh := make(chan time.Time)
-			close(refreshNowCh)
+
+			// set the refreshCh to a closed channel so it triggers ASAP
 			refreshCh = refreshNowCh
 
 		// Case: timer fires to refresh our dynamic variable sources
