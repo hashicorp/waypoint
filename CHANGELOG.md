@@ -12,12 +12,10 @@ available to your Waypoint configuration.
 * **`path` Variables**: you can now use `path.project`, `path.app`, and `path.pwd` as
 variables in your Waypoint file to specify paths as relative to the project (waypoint.hcl
 file), app, or pwd of the CLI invocation.
-* **Entrypoint logs are now visible in `waypoint logs`.** You can see the logs colorized
-in blue with `waypoint logs` or via the API, making it easier to debug entrypoint features
-such as application configuration, the URL service, etc.
 
 IMPROVEMENTS:
 
+* cli/logs: entrypoint logs can now be seen alongside app logs and are colored differently [GH-855]
 * contrib/serverinstall: Automate setup of kind+k8s with metallb [GH-845]
 * core: application config changes (i.e. `waypoint config set`) will now restart running applications [GH-791]
 * core: add more descriptive text to include app name in `waypoint destroy` [GH-807]
