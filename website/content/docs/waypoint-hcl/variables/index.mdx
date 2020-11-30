@@ -1,0 +1,39 @@
+---
+layout: docs
+page_title: Variables - waypoint.hcl
+sidebar_title: Variables
+description: |-
+  The `waypoint.hcl` file uses HCL which is able to reference predefined variables. This section will document the list of available variables within the `waypoint.hcl`.
+---
+
+# Variables in `waypoint.hcl`
+
+The `waypoint.hcl` file uses [HCL](https://github.com/hashicorp/hcl) which
+is able to reference predefined variables. This section will document the
+list of available variables within the `waypoint.hcl`. Variable documentation
+pages use [placement tables](/docs/waypoint-hcl#placement-tables)
+to document where variables are valid.
+
+## Using Variables
+
+Variable usage is similar to many mainstream programming languages such
+as Javascript, Ruby, or Python. Variables can be used directly, such as
+in the example below where `path.app` is assigned to `dockerfile`.
+
+```hcl
+dockerfile = path.app
+```
+
+Variables can also be interpolated in strings to concatenate multiple
+values together:
+
+```hcl
+dockerfile = "${path.app}/Dockerfile"
+```
+
+## Custom Variables
+
+Waypoint currently only supports predefined variables plus the dynamic
+variables introduced by plugins, such as [`artifact`](artifact). A future version
+of Waypoint will enable a mechanism for custom variables that can be populated
+by user input.

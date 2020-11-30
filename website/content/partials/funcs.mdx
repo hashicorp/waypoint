@@ -1,559 +1,551 @@
-# `abs` Function
+## `abs`
 
 ```hcl
 abs(num) number
 ```
 
-`abs`: return the absolute value of the given number
+return the absolute value of the given number
 
-# `abspath` Function
+## `abspath`
 
 ```hcl
 abspath(path) string
 ```
 
-`abspath`: convert the path into an absolute path
+convert the path into an absolute path
 
-# `base64decode` Function
+## `base64decode`
 
 ```hcl
 base64decode(str) string
 ```
 
-`base64decode`: decode the given string in base64 encoding back to binary
+decode the given string in base64 encoding back to binary
 
-# `base64encode` Function
+## `base64encode`
 
 ```hcl
 base64encode(str) string
 ```
 
-`base64encode`: encode the given string to base64 encoding
+encode the given string to base64 encoding
 
-# `base64gzip` Function
+## `base64gzip`
 
 ```hcl
 base64gzip(str) string
 ```
 
-`base64gzip`: gzip the given string and encode the compressed body as base64
+gzip the given string and encode the compressed body as base64
 
-# `basename` Function
+## `basename`
 
 ```hcl
 basename(path) string
 ```
 
-`basename`: return the last component of the string interpreted as a filesystem path
+return the last component of the string interpreted as a filesystem path
 
-# `ceil` Function
+## `ceil`
 
 ```hcl
 ceil(num) number
 ```
 
-`ceil`: round the given number to the next integer
+round the given number to the next integer
 
-# `chomp` Function
+## `chomp`
 
 ```hcl
 chomp(str) string
 ```
 
-`chomp`: remove white space from the start and end of the given string
+remove white space from the start and end of the given string
 
-# `chunklist` Function
+## `chunklist`
 
 ```hcl
 chunklist(list, size) list of list of dynamic
 ```
 
-`chunklist`: a single list into fixed-size chunks, returning a list of lists
+a single list into fixed-size chunks, returning a list of lists
 
-# `coalescelist` Function
+## `coalescelist`
 
 ```hcl
 coalescelist(vals) dynamic
 ```
 
-`coalescelist`: take any number of list arguments and returns the first one that isn't empty
+take any number of list arguments and returns the first one that isn't empty
 
-# `compact` Function
+## `compact`
 
 ```hcl
 compact(list) list of string
 ```
 
-`compact`: remove empty strings from a list
+remove empty strings from a list
 
-# `concat` Function
+## `concat`
 
 ```hcl
 concat(seqs) dynamic
 ```
 
-`concat`: combine 2 or more lists into a single list
+combine 2 or more lists into a single list
 
-# `contains` Function
+## `contains`
 
 ```hcl
 contains(list, value) dynamic
 ```
 
-`contains`: determines whether a given list or set contains a given single value as one of its elements
+determines whether a given list or set contains a given single value as one of its elements
 
-# `csvdecode` Function
+## `csvdecode`
 
 ```hcl
 csvdecode(str) dynamic
 ```
 
-`csvdecode`: decodes a string containing CSV-formatted data and produces a list of maps representing that data
+decodes a string containing CSV-formatted data and produces a list of maps representing that data
 
-# `dirname` Function
+## `dirname`
 
 ```hcl
 dirname(path) string
 ```
 
-`dirname`: return all except the last component of the string interpreted as a filesystem path
+return all except the last component of the string interpreted as a filesystem path
 
-# `distinct` Function
+## `distinct`
 
 ```hcl
 distinct(list) list of dynamic
 ```
 
-`distinct`: removes any duplicate elements from a list
+removes any duplicate elements from a list
 
-# `element` Function
+## `element`
 
 ```hcl
 element(list, index) dynamic
 ```
 
-`element`: return the value at given numeric index in the list
+return the value at given numeric index in the list
 
-# `file` Function
+## `file`
 
 ```hcl
 file(path) string
 ```
 
-`file`: return the data in the file located at the given path
+return the data in the file located at the given path
 
-# `filebase64` Function
+## `filebase64`
 
 ```hcl
 filebase64(path) string
 ```
 
-`filebase64`: return the data in the file located at the given path after base64 decoding it
+return the data in the file located at the given path after base64 decoding it
 
-# `fileexists` Function
+## `fileexists`
 
 ```hcl
 fileexists(path) bool
 ```
 
-`fileexists`: indicate if a file exists at the given path
+indicate if a file exists at the given path
 
-# `fileset` Function
+## `fileset`
 
 ```hcl
 fileset(path, pattern) set of string
 ```
 
-`fileset`: gather a list of paths that match the given pattern under the given directory
+gather a list of paths that match the given pattern under the given directory
 
-# `flatten` Function
+## `flatten`
 
 ```hcl
 flatten(list) dynamic
 ```
 
-`flatten`: remove any embedded lists by moving the contents to the outer list
+remove any embedded lists by moving the contents to the outer list
 
-# `floor` Function
+## `floor`
 
 ```hcl
 floor(num) number
 ```
 
-`floor`: round the given number to the lowest next integer
+round the given number to the lowest next integer
 
-# `format` Function
+## `format`
 
 ```hcl
 format(format, args) dynamic
 ```
 
-`format`: format a string according to the given parameters
+format a string according to the given parameters
 
-# `formatdate` Function
+## `formatdate`
 
 ```hcl
 formatdate(format, time) string
 ```
 
-`formatdate`: format the current date as a string according to the given parameters
+format the current date as a string according to the given parameters
 
-# `formatlist` Function
+## `formatlist`
 
 ```hcl
 formatlist(format, args) dynamic
 ```
 
-`formatlist`: apply the format() function across all values in the given lists
+apply the format() function across all values in the given lists
 
-# `gitrefhash` Function
+## `gitrefhash`
 
 ```hcl
 gitrefhash() string
 ```
 
-`gitrefhash`: return the full git hash for the HEAD ref
+return the full git hash for the HEAD ref
 
-# `gitrefpretty` Function
+## `gitrefpretty`
 
 ```hcl
 gitrefpretty() string
 ```
 
-`gitrefpretty`: return a humanized version of the git hash, taking into account tags and changes
+return a humanized version of the git hash, taking into account tags and changes
 
-# `gitreftag` Function
+## `gitreftag`
 
 ```hcl
 gitreftag() string
 ```
 
-`gitreftag`: return the tag name that points to the HEAD ref
+return the tag name that points to the HEAD ref
 
-# `gitremoteurl` Function
+## `gitremoteurl`
 
 ```hcl
 gitremoteurl(name) string
 ```
 
-`gitremoteurl`: return the remote url of the git repo
+return the remote url of the git repo
 
-# `indent` Function
+## `indent`
 
 ```hcl
 indent(spaces, str) string
 ```
 
-`indent`: indent each line of the given string
+indent each line of the given string
 
-# `join` Function
+## `join`
 
 ```hcl
 join(separator, lists) string
 ```
 
-`join`: create a string by joining each list element with the given separator
+create a string by joining each list element with the given separator
 
-# `jsondecode` Function
+## `jsondecode`
 
 ```hcl
 jsondecode(str) dynamic
 ```
 
-`jsondecode`: decode the given string as json into HCL values
+decode the given string as json into HCL values
 
-# `jsonencode` Function
+## `jsonencode`
 
 ```hcl
 jsonencode(val) string
 ```
 
-`jsonencode`: encode the given HCL value as json
+encode the given HCL value as json
 
-# `keys` Function
+## `keys`
 
 ```hcl
 keys(inputMap) dynamic
 ```
 
-`keys`: return a list of the keys present in the given map
+return a list of the keys present in the given map
 
-# `log` Function
+## `log`
 
 ```hcl
 log(num, base) number
 ```
 
-`log`: returns the logarithm of a given number in a given base
+returns the logarithm of a given number in a given base
 
-# `lower` Function
+## `lower`
 
 ```hcl
 lower(str) string
 ```
 
-`lower`: convert the given string to lower case according the unicode rules
+convert the given string to lower case according the unicode rules
 
-# `max` Function
+## `max`
 
 ```hcl
 max(numbers) number
 ```
 
-`max`: return the largest number present in the list
+return the largest number present in the list
 
-# `merge` Function
+## `merge`
 
 ```hcl
 merge(maps) dynamic
 ```
 
-`merge`: combine a set of map or objects together as one map
+combine a set of map or objects together as one map
 
-# `min` Function
+## `min`
 
 ```hcl
 min(numbers) number
 ```
 
-`min`: return the smallest number present in the list
+return the smallest number present in the list
 
-# `parseint` Function
+## `parseint`
 
 ```hcl
 parseint(number, base) dynamic
 ```
 
-`parseint`: parse the string as a number of the given base and return an HCL number value
+parse the string as a number of the given base and return an HCL number value
 
-# `pathexpand` Function
+## `pathexpand`
 
 ```hcl
 pathexpand(path) string
 ```
 
-`pathexpand`: expand any tildes in the given path
+expand any tildes in the given path
 
-# `pow` Function
+## `pow`
 
 ```hcl
 pow(num, power) number
 ```
 
-`pow`: raise the given number to the given power
+raise the given number to the given power
 
-# `range` Function
+## `range`
 
 ```hcl
 range(params) list of number
 ```
 
-`range`: generate a list of numbers
+generate a list of numbers
 
-# `regex` Function
+## `regex`
 
 ```hcl
 regex(pattern, string) dynamic
 ```
 
-`regex`: match the given string against the given regular expression pattern, returning captures if defined
+match the given string against the given regular expression pattern, returning captures if defined
 
-# `regexall` Function
+## `regexall`
 
 ```hcl
 regexall(pattern, string) list of dynamic
 ```
 
-`regexall`: same as regex but look for all matches of the given pattern rather than just the first
+same as regex but look for all matches of the given pattern rather than just the first
 
-# `reverse` Function
+## `reverse`
 
 ```hcl
 reverse(list) dynamic
 ```
 
-`reverse`: reverse the order of the elements in the list
+reverse the order of the elements in the list
 
-# `setintersection` Function
+## `setintersection`
 
 ```hcl
 setintersection(first_set, other_sets) set of dynamic
 ```
 
-`setintersection`: takes multiple sets and produces a single set containing only the elements that all of the given sets have in common. In other words, it computes the intersection of the sets
+takes multiple sets and produces a single set containing only the elements that all of the given sets have in common. In other words, it computes the intersection of the sets
 
-# `setproduct` Function
+## `setproduct`
 
 ```hcl
 setproduct(sets) dynamic
 ```
 
-`setproduct`: finds all of the possible combinations of elements from all of the given sets by computing the Cartesian product
+finds all of the possible combinations of elements from all of the given sets by computing the Cartesian product
 
-# `setsubtract` Function
+## `setsubtract`
 
 ```hcl
 setsubtract(a, b) set of dynamic
 ```
 
-`setsubtract`: returns a new set containing the elements from the first set that are not present in the second set. In other words, it computes the relative complement of the first set in the second set
+returns a new set containing the elements from the first set that are not present in the second set. In other words, it computes the relative complement of the first set in the second set
 
-# `setunion` Function
+## `setunion`
 
 ```hcl
 setunion(first_set, other_sets) set of dynamic
 ```
 
-`setunion`: takes multiple sets and produces a single set containing the elements from all of the given sets. In other words, it computes the union of the sets
+takes multiple sets and produces a single set containing the elements from all of the given sets. In other words, it computes the union of the sets
 
-# `signum` Function
+## `signum`
 
 ```hcl
 signum(num) number
 ```
 
-`signum`: indicates the sign of the given number by -1, 0, or 1
+indicates the sign of the given number by -1, 0, or 1
 
-# `slice` Function
+## `slice`
 
 ```hcl
 slice(list, start_index, end_index) dynamic
 ```
 
-`slice`: return a subset of the given list
+return a subset of the given list
 
-# `sort` Function
+## `sort`
 
 ```hcl
 sort(list) list of string
 ```
 
-`sort`: reorder the given elements according to their sorting order
+reorder the given elements according to their sorting order
 
-# `split` Function
+## `split`
 
 ```hcl
 split(separator, str) list of string
 ```
 
-`split`: break the given string up into substrings
+break the given string up into substrings
 
-# `strrev` Function
+## `strrev`
 
 ```hcl
 strrev(str) string
 ```
 
-`strrev`: reverse the characters in the given string
+reverse the characters in the given string
 
-# `substr` Function
+## `substr`
 
 ```hcl
 substr(str, offset, length) string
 ```
 
-`substr`: return a subset of the given string
+return a subset of the given string
 
-# `templatefile` Function
-
-```hcl
-templatefile(path, vars) dynamic
-```
-
-`templatefile`: expand the template defined at the given file path and return the result
-
-# `timeadd` Function
+## `timeadd`
 
 ```hcl
 timeadd(timestamp, duration) string
 ```
 
-`timeadd`: add a quantum of time to the given timestamp to calculate a new timestamp
+add a quantum of time to the given timestamp to calculate a new timestamp
 
-# `title` Function
+## `title`
 
 ```hcl
 title(str) string
 ```
 
-`title`: upper case each character on each word in the given string
+upper case each character on each word in the given string
 
-# `trim` Function
+## `trim`
 
 ```hcl
 trim(str, cutset) string
 ```
 
-`trim`: remove characters present in the cutset from the given string from the head and tail of the string
+remove characters present in the cutset from the given string from the head and tail of the string
 
-# `trimprefix` Function
+## `trimprefix`
 
 ```hcl
 trimprefix(str, prefix) string
 ```
 
-`trimprefix`: remove the given prefix from the string
+remove the given prefix from the string
 
-# `trimspace` Function
+## `trimspace`
 
 ```hcl
 trimspace(str) string
 ```
 
-`trimspace`: remove space charaters from the head and tail of the string
+remove space charaters from the head and tail of the string
 
-# `trimsuffix` Function
+## `trimsuffix`
 
 ```hcl
 trimsuffix(str, suffix) string
 ```
 
-`trimsuffix`: remove the given suffix from the string
+remove the given suffix from the string
 
-# `upper` Function
+## `upper`
 
 ```hcl
 upper(str) string
 ```
 
-`upper`: convert each character to upper case according to the unicode rules
+convert each character to upper case according to the unicode rules
 
-# `urlencode` Function
+## `urlencode`
 
 ```hcl
 urlencode(str) string
 ```
 
-`urlencode`: encode the given string according to the url encoding rules
+encode the given string according to the url encoding rules
 
-# `values` Function
+## `values`
 
 ```hcl
 values(values) dynamic
 ```
 
-`values`: return the list of values in the given map or object
+return the list of values in the given map or object
 
-# `yamldecode` Function
+## `yamldecode`
 
 ```hcl
 yamldecode(src) dynamic
 ```
 
-`yamldecode`: decode the string as YAML and return the equiv HCL values
+decode the string as YAML and return the equiv HCL values
 
-# `yamlencode` Function
+## `yamlencode`
 
 ```hcl
 yamlencode(value) string
 ```
 
-`yamlencode`: convert the given HCL values to YAML
+convert the given HCL values to YAML
 
-# `zipmap` Function
+## `zipmap`
 
 ```hcl
 zipmap(keys, values) dynamic
 ```
 
-`zipmap`: construct a map from a list of keys and a corresponding list of values
+construct a map from a list of keys and a corresponding list of values

@@ -1,0 +1,46 @@
+---
+layout: docs
+page_title: deploy - Variables - waypoint.hcl
+sidebar_title: <code>deploy</code>
+description: |-
+  The `deploy` variable can be used to reference information about the deployment within a release. This can be used to access information such as the resulting instance ID, IP address, etc.
+---
+
+# `deploy` Variable
+
+<Placement groups={[['app', 'release']]} />
+
+The `deploy` variable can be used to reference information about
+the deployment within a release. This can be used to access information
+such as the resulting instance ID, IP address, etc.
+
+The exact fields within a `deploy` variable are dependent on the
+[plugin used for the build](/plugins) and the available fields are
+documented alongside plugins.
+
+## Example: AWS ECS
+
+The example below uses the `deploy` variable to store the ECS Task ARN
+as a label as part of the release operation. While Waypoint keeps track
+of the backlinks of what deployment created a release, this information
+may be useful to have directly in a label:
+
+```hcl
+app "web" {
+  deploy {
+    use "aws-ecs" {
+      # ...
+    }
+  }
+
+  release {
+    labels = {
+      "example.com/task-arn": deploy.task_arn,
+    }
+
+    use "aws-ecs" {
+      # ...
+    }
+  }
+}
+```
