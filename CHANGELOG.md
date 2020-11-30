@@ -15,6 +15,7 @@ file), app, or pwd of the CLI invocation.
 
 IMPROVEMENTS:
 
+* contrib/serverinstall: Automate setup of kind+k8s with metallb [GH-845]
 * core: application config changes (i.e. `waypoint config set`) will now restart running applications [GH-791]
 * core: add more descriptive text to include app name in `waypoint destroy` [GH-807]
 * core: add better error messaging when prefix is missing from the `-raw` flag in `waypoint config set` [GH-815]
