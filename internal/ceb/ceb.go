@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/pkg/gatedwriter"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
@@ -37,9 +38,19 @@ const (
 type CEB struct {
 	id           string
 	deploymentId string
-	logger       hclog.Logger
 	context      context.Context
 	execIdx      int64
+
+	// logger is the logger that should be used internally. Log messages
+	// sent here with the proper log level (Info or higher) will also be
+	// streamed to the server.
+	logger hclog.Logger
+
+	// logCh can be sent entries that will be sent to the server. If the
+	// server connection is severed or too many entries are sent, some may
+	// be dropped but the channel should always be consumed.
+	logCh          chan *pb.LogBatch_Entry
+	logGatedWriter *gatedwriter.Writer
 
 	// clientMu must be held anytime reading/writing client. internally
 	// you probably want to use waitClient() instead of this directly.
@@ -55,20 +66,20 @@ type CEB struct {
 	// commands will stop the old command first. Values sent here are coalesced
 	// in case many changes are sent in a row.
 	childCmdCh chan<- *exec.Cmd
-	childInit  uint32
 
 	// childReadyCh should be closed exactly once (and set to nil) when the
 	// FIRST child command is ready to be started. This can be closed before
 	// any command is sent to childCmdCh. It indicates that the child process
 	// watcher can begin executing.
-	childReadyCh chan struct{}
+	childReadySent *uint32
+	childReadyCh   chan struct{}
 
 	// childCmdBase is the base command to use for making any changes to the
 	// child; use the copyCmd() function to copy this safetly to make changes.
 	// Do not write to this directly.
 	childCmdBase *exec.Cmd
 
-	closedVal   uint32
+	closedVal   *uint32
 	cleanupFunc func()
 
 	urlAgentMu     sync.Mutex
@@ -92,8 +103,12 @@ func Run(ctx context.Context, os ...Option) error {
 	// Defaults, initialization
 	ceb := &CEB{
 		id:      id,
-		logger:  hclog.L(),
 		context: ctx,
+
+		// for our atomic ops, we just use new() rather than addr operators (&)
+		// so that we can be sure that the 64-bit alignment requirement is correct
+		childReadySent: new(uint32),
+		closedVal:      new(uint32),
 	}
 	ceb.clientCond = sync.NewCond(&ceb.clientMu)
 	defer ceb.Close()
@@ -106,6 +121,9 @@ func Run(ctx context.Context, os ...Option) error {
 			return err
 		}
 	}
+
+	// Setup our system logger
+	ceb.initSystemLogger()
 
 	// We're disabled also if we have no client set and the server address is empty.
 	// This means we have nothing to connect to.
@@ -155,7 +173,7 @@ func Run(ctx context.Context, os ...Option) error {
 // to gracefully exit.
 func (ceb *CEB) Close() error {
 	// Only close ones
-	if !atomic.CompareAndSwapUint32(&ceb.closedVal, 0, 1) {
+	if !atomic.CompareAndSwapUint32(ceb.closedVal, 0, 1) {
 		return nil
 	}
 
@@ -168,7 +186,7 @@ func (ceb *CEB) Close() error {
 
 // closed returns true if Close was called
 func (ceb *CEB) closed() bool {
-	return atomic.LoadUint32(&ceb.closedVal) != 0
+	return atomic.LoadUint32(ceb.closedVal) != 0
 }
 
 // cleanup stacks cleanup functions to call when Close is called.

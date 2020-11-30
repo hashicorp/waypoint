@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
@@ -12,8 +13,64 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/pkg/gatedwriter"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+// initSystemLogger initializes ceb.logger and sets up all the fields
+// for streaming system logs to the Waypoint server.
+func (ceb *CEB) initSystemLogger() {
+	// Create an intercept logger with our default options. This will
+	// behave just like hclog.L() (which we use at the time of writing)
+	// and let us register additional sinks for streaming and so on.
+	opts := *hclog.DefaultOptions
+	opts.Name = "entrypoint"
+	opts.Level = hclog.Trace
+	intercept := hclog.NewInterceptLogger(&opts)
+	nonintercept := hclog.New(&opts)
+	ceb.logger = intercept
+
+	// Create our reader/writer that will send to the server log stream.
+	r, w := io.Pipe()
+
+	// We set the writer as a gated writer so that we can buffer all our
+	// log messages prior to attempting a log stream connection. Once we
+	// attempt a log stream connection we flush.
+	ceb.logGatedWriter = gatedwriter.NewWriter(w)
+
+	// Create our channel where we can send logs to. We allow some buffering.
+	// We then start a goroutine that'll read the logs from this pipe and
+	// send them to our channel that will eventually get flushed to the server.
+	entryCh := make(chan *pb.LogBatch_Entry, 30)
+	ceb.logCh = entryCh
+	go ceb.logReader(
+		nonintercept.Named("system_log_streamer"),
+		r,
+		pb.LogBatch_Entry_ENTRYPOINT,
+	)
+
+	// Register a sink that will go to the log stream.
+	intercept.RegisterSink(hclog.NewSinkAdapter(&hclog.LoggerOptions{
+		Name:        "entrypoint",
+		Level:       hclog.Info,
+		Output:      ceb.logGatedWriter,
+		Color:       hclog.ColorOff,
+		DisableTime: true, // because we calculate it ourselves for streaming
+		Exclude:     ceb.logStreamExclude,
+	}))
+}
+
+func (ceb *CEB) logStreamExclude(level hclog.Level, msg string, args ...interface{}) bool {
+	if level == hclog.Info {
+		// We want to exclude some Horizon logs. We don't set the level lower
+		// because we want the root logs to show up fine we just don't want
+		// to stream them.
+		return strings.Contains(msg, "request started") ||
+			strings.Contains(msg, "request ended")
+	}
+
+	return false
+}
 
 func (ceb *CEB) initLogStream(ctx context.Context, cfg *config) error {
 	log := ceb.logger.Named("log")
@@ -33,38 +90,11 @@ func (ceb *CEB) initLogStream(ctx context.Context, cfg *config) error {
 	// read from the pipe the child command will get a SIGPIPE and could
 	// exit/crash if it doesn't handle it. So even if we don't have a
 	// connection to the server, we need to be draining the pipe.
-	entryCh := make(chan *pb.LogBatch_Entry, 30)
-	go func() {
-		defer r.Close()
-		br := bufio.NewReader(r)
-		for {
-			line, err := br.ReadString('\n')
-			if err != nil {
-				log.Error("error reading logs", "error", err)
-				return
-			}
-
-			if log.IsTrace() {
-				log.Trace("sending line", "line", line[:len(line)-1])
-			}
-
-			entry := &pb.LogBatch_Entry{
-				Timestamp: ptypes.TimestampNow(),
-				Line:      line,
-			}
-
-			// Send the entry. We never block here because blocking the
-			// pipe is worse. The channel is buffered to help with this.
-			select {
-			case entryCh <- entry:
-			default:
-			}
-		}
-	}()
+	go ceb.logReader(log, r, pb.LogBatch_Entry_APP)
 
 	// Start up our server stream. We do this in a goroutine cause we don't
 	// want to block the child command startup on it.
-	go ceb.initLogStreamSender(log, ctx, entryCh)
+	go ceb.initLogStreamSender(log, ctx)
 
 	return nil
 }
@@ -72,7 +102,6 @@ func (ceb *CEB) initLogStream(ctx context.Context, cfg *config) error {
 func (ceb *CEB) initLogStreamSender(
 	log hclog.Logger,
 	ctx context.Context,
-	entryCh <-chan *pb.LogBatch_Entry,
 ) error {
 	// wait for initial server connection
 	serverClient := ceb.waitClient()
@@ -91,16 +120,21 @@ func (ceb *CEB) initLogStreamSender(
 	log.Trace("log stream connected")
 
 	// NOTE(mitchellh): Lots of improvements we can make here one day:
-	//   - we can coalesce entryCh receives to send less log updates
-	//   - during reconnect we can buffer entryCh receives
+	//   - we can coalesce channel receives to send less log updates
+	//   - during reconnect we can buffer channel receives
 	go func() {
+		// Wait for the first notice that the child is ready. This will
+		// allow us to wait to send any logs until we likely called
+		// EntrypointConfig.
+		<-ceb.childReadyCh
+
 		for {
 			var entry *pb.LogBatch_Entry
 			select {
 			case <-ctx.Done():
 				return
 
-			case entry = <-entryCh:
+			case entry = <-ceb.logCh:
 			}
 
 			err := client.Send(&pb.EntrypointLogBatch{
@@ -108,8 +142,9 @@ func (ceb *CEB) initLogStreamSender(
 				Lines:      []*pb.LogBatch_Entry{entry},
 			})
 			if err == io.EOF || status.Code(err) == codes.Unavailable {
-				log.Error("log stream disconnected from server, attempting reconnect")
-				err = ceb.initLogStreamSender(log, ctx, entryCh)
+				log.Error("log stream disconnected from server, attempting reconnect",
+					"err", err)
+				err = ceb.initLogStreamSender(log, ctx)
 				if err == nil {
 					return
 				}
@@ -121,5 +156,42 @@ func (ceb *CEB) initLogStreamSender(
 		}
 	}()
 
+	// Open the gated writer since we should now start consuming logs.
+	ceb.logGatedWriter.Flush()
+
 	return nil
+}
+
+// logReader reads lines from r and sends them to ceb.logCh with the
+// proper envelope (pb.LogBatch_Entry). This should be started in a goroutine.
+func (ceb *CEB) logReader(
+	log hclog.Logger,
+	r io.ReadCloser,
+	src pb.LogBatch_Entry_Source,
+) {
+	defer r.Close()
+	br := bufio.NewReader(r)
+	for {
+		line, err := br.ReadString('\n')
+		if err != nil {
+			log.Error("error reading logs", "error", err)
+			return
+		}
+
+		if log.IsTrace() {
+			log.Trace("sending line", "line", line[:len(line)-1])
+		}
+		entry := &pb.LogBatch_Entry{
+			Source:    src,
+			Timestamp: ptypes.TimestampNow(),
+			Line:      line,
+		}
+
+		// Send the entry. We never block here because blocking the
+		// pipe is worse. The channel is buffered to help with this.
+		select {
+		case ceb.logCh <- entry:
+		default:
+		}
+	}
 }
