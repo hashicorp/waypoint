@@ -33,6 +33,10 @@ export default [
         category: 'variables',
         content: ['artifact', 'deploy', 'entrypoint', 'path'],
       },
+      {
+        category: 'functions',
+        content: ['all', 'template'],
+      },
       'app',
       'build',
       'deploy',
