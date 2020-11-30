@@ -1583,6 +1583,9 @@ message ListInstancesRequest {
     // the app are returned.
     Ref.Workspace workspace = 2;
   }
+
+  // Time to wait before retrying a request to connect to requested instance
+  string connect_timeout = 3;
 }
 
 message ListInstancesResponse {
