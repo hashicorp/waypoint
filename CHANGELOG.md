@@ -12,6 +12,9 @@ available to your Waypoint configuration.
 * **`path` Variables**: you can now use `path.project`, `path.app`, and `path.pwd` as
 variables in your Waypoint file to specify paths as relative to the project (waypoint.hcl
 file), app, or pwd of the CLI invocation.
+* **Entrypoint logs are now visible in `waypoint logs`.** You can see the logs colorized
+in blue with `waypoint logs` or via the API, making it easier to debug entrypoint features
+such as application configuration, the URL service, etc.
 
 IMPROVEMENTS:
 
