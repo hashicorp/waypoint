@@ -961,6 +961,11 @@ func (p *Platform) Launch(
 	if !newListener {
 		def := listener.DefaultActions
 
+		// Direct all traffic to the new target group;
+		// effectively, removing traffic from any pre-existing
+		// forwarding default actions
+		tgs[0].Weight = aws.Int64(100)
+
 		if len(def) > 0 && def[0].ForwardConfig != nil {
 			for _, tg := range def[0].ForwardConfig.TargetGroups {
 				if *tg.Weight > 0 {
@@ -968,10 +973,6 @@ func (p *Platform) Launch(
 					L.Debug("previous target group", "arn", *tg.TargetGroupArn)
 				}
 			}
-		}
-
-		if len(tgs) == 0 {
-			tgs[0].Weight = aws.Int64(100)
 		}
 
 		s.Update("Modifying ALB Listener to introduce target group")
@@ -1105,11 +1106,21 @@ func (p *Platform) Launch(
 	L.Debug("service started", "arn", servOut.Service.ServiceArn)
 
 	dep := &Deployment{
-		Cluster:         clusterName,
-		TaskArn:         taskArn,
-		ServiceArn:      *servOut.Service.ServiceArn,
-		TargetGroupArn:  *tgArn,
-		LoadBalancerArn: *lb.LoadBalancerArn,
+		Cluster:        clusterName,
+		TaskArn:        taskArn,
+		ServiceArn:     *servOut.Service.ServiceArn,
+		TargetGroupArn: *tgArn,
+	}
+
+	// For deployments without a pre-existing ALB Listener,
+	// we set the LoadBalancerArn directly from the lb found or created.
+	// While for deployments with a pre-existing ALB Listener,
+	// we determine the associated LoadBalancer from the listener
+	// returned from the elbv2.DescribeListeners API response
+	if newListener {
+		dep.LoadBalancerArn = aws.StringValue(lb.LoadBalancerArn)
+	} else {
+		dep.LoadBalancerArn = aws.StringValue(listener.LoadBalancerArn)
 	}
 
 	return dep, nil
