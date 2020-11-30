@@ -824,6 +824,37 @@ func createALB(
 	return lbArn, tgArn, err
 }
 
+func buildLoggingOptions(conf *Logging, region string, logGroup string, defaultStreamPrefix string) map[string]*string {
+
+	var streamPrefix = conf.StreamPrefix
+	if streamPrefix == "" {
+		streamPrefix = defaultStreamPrefix
+	}
+
+	result := map[string]*string {
+		"awslogs-region": aws.String(region),
+		"awslogs-group": aws.String(logGroup),
+		"awslogs-endpoint": aws.String(conf.Endpoint),
+		"awslogs-stream-prefix": aws.String(streamPrefix),
+		"awslogs-datetime-format": aws.String(conf.DateTimeFormat),
+		"awslogs-multiline-pattern": aws.String(conf.MultilinePattern),
+		"mode": aws.String(conf.Mode),
+		"max-buffer-size": aws.String(conf.MaxBufferSize),
+	}
+
+	if conf.CreateGroup {
+		result["awslogs-create-group"] = aws.String("true")
+	}
+
+	for k,v := range result {
+		if *v == "" {
+			delete(result, k)
+		}
+	}
+
+	return result
+}
+
 func (p *Platform) Launch(
 	ctx context.Context,
 	s LifecycleStatus,
@@ -842,7 +873,7 @@ func (p *Platform) Launch(
 
 	ecsSvc := ecs.New(sess)
 
-	streamPrefix := fmt.Sprintf("waypoint-%d", time.Now().Nanosecond())
+	defaultStreamPrefix := fmt.Sprintf("waypoint-%d", time.Now().Nanosecond())
 
 	env := []*ecs.KeyValuePair{
 		{
@@ -873,6 +904,8 @@ func (p *Platform) Launch(
 		})
 	}
 
+	logOptions := buildLoggingOptions(p.config.Logging, p.config.Region, logGroup, defaultStreamPrefix)
+
 	def := ecs.ContainerDefinition{
 		Essential: aws.Bool(true),
 		Name:      aws.String(app.App),
@@ -886,11 +919,7 @@ func (p *Platform) Launch(
 		Secrets:     secrets,
 		LogConfiguration: &ecs.LogConfiguration{
 			LogDriver: aws.String("awslogs"),
-			Options: map[string]*string{
-				"awslogs-group":         aws.String(logGroup),
-				"awslogs-region":        aws.String(p.config.Region),
-				"awslogs-stream-prefix": aws.String(streamPrefix),
-			},
+			Options: logOptions,
 		},
 	}
 
@@ -1326,6 +1355,22 @@ type HealthCheckConfig struct {
 	StartPeriod int64 `hcl:"start_period,optional"`
 }
 
+type Logging struct {
+	CreateGroup bool `hcl:"create_group,optional"`
+
+	Endpoint string `hcl:"endpoint,optional"`
+
+	StreamPrefix string `hcl:"stream_prefix,optional"`
+
+	DateTimeFormat string `hcl:"datetime_format,optional"`
+
+	MultilinePattern string `hcl:"multiline_pattern,optional"`
+
+	Mode string `hcl:"mode,optional"`
+
+	MaxBufferSize string `hcl:"max_buffer_size,optional"`
+}
+
 type ContainerConfig struct {
 	// The name of a container
 	Name string `hcl:"name"`
@@ -1413,6 +1458,8 @@ type Config struct {
 
 	// Configuration options for additional containers
 	ContainersConfig []*ContainerConfig `hcl:"sidecar,block"`
+
+	Logging *Logging `hcl:"logging,block"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -1546,6 +1593,48 @@ deploy {
 			"configure their ALB outside waypoint but still have waypoint hook the application",
 			"to that ALB",
 		),
+	)
+
+	doc.SetField(
+		"logging",
+		"Provides additional configuration for logging flags for ECS.",
+		docs.Summary("Part of the ecs task definition.  These configuration flags help",
+			"control how the awslogs log driver is configured."),
+	)
+
+	doc.SetField(
+		"logging.create_group",
+		"Should the task attempt to create the aws logs group if not present?",
+	)
+
+	doc.SetField(
+		"logging.region",
+		"The region the logs are to be shipped to.",
+		docs.Default("The same region the task is to be running."),
+	)
+
+	doc.SetField(
+		"logging.endpoint",
+		"Override the endpoint the logs are shipped to",
+	)
+
+	doc.SetField(
+		"logging.stream_prefix",
+		"prefix for application in cloudwatch logs path",
+		docs.Default("Generated based off timestamp"),
+	)
+
+	doc.SetField(
+		"logging.datetime_format",
+		"Defines the pattern multiline start pattern in Python strftime format",
+	)
+	doc.SetField(
+		"logging.mode",
+		"Delivery method for log messages, either 'blocking' or 'non-blocking'",
+	)
+	doc.SetField(
+		"logging.max_buffer_size",
+		"When using non-blocking logging mode, this is the buffer size for message storage",
 	)
 
 	doc.SetField(
