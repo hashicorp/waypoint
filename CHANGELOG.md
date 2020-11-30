@@ -2,6 +2,9 @@
 
 FEATURES:
 
+* **Application config syncing with Kubernetes (ConfigMaps), Vault, Consul, and AWS SSM**;
+Automatically sync environment variable values with remote sources and restart your
+application when those values change. [GH-810]
 * **Access to Artifact, Deploy Metadata**: `registry` and `deploy` configuration can use 
 `artifact.*` variable syntax to access metadata from the results of those stages. 
 The `release` configuration can use `artifact.*` and `deploy.*` to access metadata.
