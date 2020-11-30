@@ -66,13 +66,12 @@ type CEB struct {
 	// commands will stop the old command first. Values sent here are coalesced
 	// in case many changes are sent in a row.
 	childCmdCh chan<- *exec.Cmd
-	childInit  uint32
 
 	// childReadyCh should be closed exactly once (and set to nil) when the
 	// FIRST child command is ready to be started. This can be closed before
 	// any command is sent to childCmdCh. It indicates that the child process
 	// watcher can begin executing.
-	childReadySent uint32
+	childReadySent *uint32
 	childReadyCh   chan struct{}
 
 	// childCmdBase is the base command to use for making any changes to the
@@ -80,7 +79,7 @@ type CEB struct {
 	// Do not write to this directly.
 	childCmdBase *exec.Cmd
 
-	closedVal   uint32
+	closedVal   *uint32
 	cleanupFunc func()
 
 	urlAgentMu     sync.Mutex
@@ -105,6 +104,11 @@ func Run(ctx context.Context, os ...Option) error {
 	ceb := &CEB{
 		id:      id,
 		context: ctx,
+
+		// for our atomic ops, we just use new() rather than addr operators (&)
+		// so that we can be sure that the 64-bit alignment requirement is correct
+		childReadySent: new(uint32),
+		closedVal:      new(uint32),
 	}
 	ceb.clientCond = sync.NewCond(&ceb.clientMu)
 	defer ceb.Close()
@@ -169,7 +173,7 @@ func Run(ctx context.Context, os ...Option) error {
 // to gracefully exit.
 func (ceb *CEB) Close() error {
 	// Only close ones
-	if !atomic.CompareAndSwapUint32(&ceb.closedVal, 0, 1) {
+	if !atomic.CompareAndSwapUint32(ceb.closedVal, 0, 1) {
 		return nil
 	}
 
@@ -182,7 +186,7 @@ func (ceb *CEB) Close() error {
 
 // closed returns true if Close was called
 func (ceb *CEB) closed() bool {
-	return atomic.LoadUint32(&ceb.closedVal) != 0
+	return atomic.LoadUint32(ceb.closedVal) != 0
 }
 
 // cleanup stacks cleanup functions to call when Close is called.
