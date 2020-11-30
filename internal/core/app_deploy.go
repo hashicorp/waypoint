@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
@@ -30,6 +31,18 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 			"err", err)
 	}
 
+	// Build our deployment config and expose the env we need to the config
+	deployConfig := &component.DeploymentConfig{
+		ServerAddr:          resp.ServerAddr,
+		ServerTls:           resp.ServerTls,
+		ServerTlsSkipVerify: resp.ServerTlsSkipVerify,
+	}
+	deployEnv := map[string]cty.Value{}
+	for k, v := range deployConfig.Env() {
+		deployEnv[k] = cty.StringVal(v)
+	}
+	evalCtx.Variables["entrypoint_env"] = cty.MapVal(deployEnv)
+
 	// Render the config
 	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, &evalCtx)
 	if err != nil {
@@ -38,13 +51,9 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 	defer c.Close()
 
 	_, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployOperation{
-		Component: c,
-		Push:      push,
-		DeploymentConfig: &component.DeploymentConfig{
-			ServerAddr:          resp.ServerAddr,
-			ServerTls:           resp.ServerTls,
-			ServerTlsSkipVerify: resp.ServerTlsSkipVerify,
-		},
+		Component:        c,
+		Push:             push,
+		DeploymentConfig: deployConfig,
 	})
 	if err != nil {
 		return nil, err
