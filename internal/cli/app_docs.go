@@ -447,7 +447,7 @@ func (c *AppDocsCommand) funcsMDX() int {
 	for _, k := range keys {
 		fn := all[k]
 
-		fmt.Fprintf(w, "# `%s` Function\n\n", k)
+		fmt.Fprintf(w, "## `%s`\n\n", k)
 
 		var (
 			args     []string
@@ -478,7 +478,7 @@ func (c *AppDocsCommand) funcsMDX() int {
 
 		fmt.Fprintf(w, "```hcl\n%s(%s) %s\n```\n\n", k, strings.Join(args, ", "), rt.FriendlyName())
 		if d, ok := docs[k]; ok {
-			fmt.Fprintf(w, "`%s`: %s\n\n", k, d)
+			fmt.Fprintf(w, "%s\n\n", d)
 		}
 	}
 
