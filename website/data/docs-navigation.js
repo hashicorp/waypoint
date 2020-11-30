@@ -29,6 +29,10 @@ export default [
   {
     category: 'waypoint-hcl',
     content: [
+      {
+        category: 'variables',
+        content: ['artifact', 'deploy', 'entrypoint', 'path'],
+      },
       'app',
       'build',
       'deploy',

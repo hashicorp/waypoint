@@ -50,6 +50,19 @@ plugin "plugin-name" {
 }
 ```
 
+## Placement Tables
+
+Many pages within the `waypoint.hcl` documentation section will have
+a _placement table_ just beneath the header. This table documents where
+a configuration, function, or variable may be used. An example placement
+table is shown below.
+
+If the example below were present on the documentation page, the documented
+feature is only valid within the context of an `app` stanza. It is not valid
+at the top-level, or any further nested locations.
+
+<Placement groups={[['app', 'build']]} />
+
 ## Top-level
 
 The "top-level" refers to the objects that are not nested in any other
