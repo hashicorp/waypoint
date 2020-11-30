@@ -41,7 +41,9 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 	for k, v := range deployConfig.Env() {
 		deployEnv[k] = cty.StringVal(v)
 	}
-	evalCtx.Variables["entrypoint_env"] = cty.MapVal(deployEnv)
+	evalCtx.Variables["entrypoint"] = cty.ObjectVal(map[string]cty.Value{
+		"env": cty.MapVal(deployEnv),
+	})
 
 	// Render the config
 	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, &evalCtx)
