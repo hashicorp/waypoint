@@ -98,6 +98,13 @@ func (s *service) EntrypointConfig(
 			})
 		}
 
+		// Write our deployment info
+		config.Deployment = &pb.EntrypointConfig_DeploymentInfo{
+			Component: deployment.Component,
+			Labels:    deployment.Labels,
+		}
+
+		// Get the config vars in use
 		vars, err := s.state.ConfigGetWatch(&pb.ConfigGetRequest{
 			Scope: &pb.ConfigGetRequest_Application{
 				Application: deployment.Application,
@@ -107,6 +114,24 @@ func (s *service) EntrypointConfig(
 			return err
 		}
 		config.EnvVars = vars
+
+		// Get the config sources we need for our vars. We only do this if
+		// at least one var has a dynamic value.
+		if varContainsDynamic(vars) {
+			// NOTE(mitchellh): For now we query all the types and always send it
+			// all down. In the future we may want to consider filtering this
+			// by only the types we actually need above.
+			sources, err := s.state.ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+			}, ws)
+			if err != nil {
+				return err
+			}
+
+			config.ConfigSources = sources
+		}
 
 		// If we have the URL service setup, note that
 		if v := s.urlConfig; v != nil {
@@ -352,4 +377,15 @@ func (s *service) handleClientExecRequest(
 	}
 
 	return nil
+}
+
+// varContainsDynamic returns true if there are any dynamic values in the list.
+func varContainsDynamic(vars []*pb.ConfigVar) bool {
+	for _, v := range vars {
+		if _, ok := v.Value.(*pb.ConfigVar_Dynamic); ok {
+			return true
+		}
+	}
+
+	return false
 }

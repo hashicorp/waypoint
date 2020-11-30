@@ -15,9 +15,13 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/pkg/gatedwriter"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
+
+	pluginK8s "github.com/hashicorp/waypoint/builtin/k8s"
+	pluginVault "github.com/hashicorp/waypoint/builtin/vault"
 )
 
 const (
@@ -85,6 +89,12 @@ type CEB struct {
 	urlAgentMu     sync.Mutex
 	urlAgentCtx    context.Context
 	urlAgentCancel func()
+
+	//---------------------------------------------------------------
+	// Config sourcing
+
+	// configPlugins is the mapping of config source type to launched plugin.
+	configPlugins map[string]*plugin.Instance
 }
 
 // Run runs a CEB with the given options.
@@ -102,8 +112,9 @@ func Run(ctx context.Context, os ...Option) error {
 
 	// Defaults, initialization
 	ceb := &CEB{
-		id:      id,
-		context: ctx,
+		id:            id,
+		context:       ctx,
+		configPlugins: map[string]*plugin.Instance{},
 
 		// for our atomic ops, we just use new() rather than addr operators (&)
 		// so that we can be sure that the 64-bit alignment requirement is correct
@@ -112,6 +123,18 @@ func Run(ctx context.Context, os ...Option) error {
 	}
 	ceb.clientCond = sync.NewCond(&ceb.clientMu)
 	defer ceb.Close()
+
+	// Setup our default config sourcers.
+	// NOTE(mitchellh): In the future, we will dynamically load these via
+	// a plugin system, Initially, we hardcode what we support.
+	ceb.configPlugins = map[string]*plugin.Instance{
+		"kubernetes": {
+			Component: &pluginK8s.ConfigSourcer{},
+		},
+		"vault": {
+			Component: &pluginVault.ConfigSourcer{},
+		},
+	}
 
 	// Set our options
 	var cfg config

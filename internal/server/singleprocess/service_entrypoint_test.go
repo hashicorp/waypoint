@@ -20,6 +20,43 @@ import (
 func TestServiceEntrypointConfig(t *testing.T) {
 	ctx := context.Background()
 
+	t.Run("deployment info", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Create a deployment
+		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+			Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+				Component: &pb.Component{
+					Name: "testapp",
+				},
+			}),
+		})
+		require.NoError(err)
+		dep := resp.Deployment
+
+		// Create the config
+		instanceId, err := server.Id()
+		require.NoError(err)
+		stream, err := client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
+			InstanceId:   instanceId,
+			DeploymentId: dep.Id,
+		})
+		require.NoError(err)
+
+		// Wait for the first config so that we know we're registered
+		cfgResp, err := stream.Recv()
+		require.NoError(err)
+
+		// Validate config
+		require.NotNil(cfgResp.Config.Deployment)
+		require.Equal("testapp", cfgResp.Config.Deployment.Component.Name)
+	})
+
 	t.Run("no URL service", func(t *testing.T) {
 		require := require.New(t)
 
@@ -95,6 +132,110 @@ func TestServiceEntrypointConfig(t *testing.T) {
 		// Validate config
 		require.NotNil(cfgResp.Config.UrlService)
 		require.NotEmpty(cfgResp.Config.UrlService.Labels)
+	})
+
+	t.Run("config sources", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Create a deployment
+		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+			Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+				Component: &pb.Component{
+					Name: "testapp",
+				},
+			}),
+		})
+		require.NoError(err)
+		dep := resp.Deployment
+
+		// Create a config source
+		{
+			_, err := client.SetConfigSource(ctx, &pb.SetConfigSourceRequest{
+				ConfigSource: &pb.ConfigSource{
+					Scope: &pb.ConfigSource_Global{
+						Global: &pb.Ref_Global{},
+					},
+
+					Type: "foo",
+					Config: map[string]string{
+						"value": "42",
+					},
+				},
+			})
+			require.NoError(err)
+		}
+
+		// Create a static config
+		{
+			_, err := client.SetConfig(ctx, &pb.ConfigSetRequest{
+				Variables: []*pb.ConfigVar{
+					{
+						Scope: &pb.ConfigVar_Application{
+							Application: dep.Application,
+						},
+
+						Name:  "DATABASE_URL",
+						Value: &pb.ConfigVar_Static{Static: "postgresql:///"},
+					},
+				},
+			})
+			require.NoError(err)
+		}
+
+		// Create the config
+		instanceId, err := server.Id()
+		require.NoError(err)
+		stream, err := client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
+			InstanceId:   instanceId,
+			DeploymentId: dep.Id,
+		})
+		require.NoError(err)
+
+		{
+			// Wait for the first config so that we know we're registered
+			cfgResp, err := stream.Recv()
+			require.NoError(err)
+
+			// Validate config
+			require.NotEmpty(cfgResp.Config.EnvVars)
+			require.Empty(cfgResp.Config.ConfigSources)
+		}
+
+		// Create a dynamic config
+		{
+			_, err := client.SetConfig(ctx, &pb.ConfigSetRequest{
+				Variables: []*pb.ConfigVar{
+					{
+						Scope: &pb.ConfigVar_Application{
+							Application: dep.Application,
+						},
+
+						Name: "DATABASE_URL",
+						Value: &pb.ConfigVar_Dynamic{
+							Dynamic: &pb.ConfigVar_DynamicVal{
+								From: "foo",
+							},
+						},
+					},
+				},
+			})
+			require.NoError(err)
+		}
+
+		{
+			// Next config
+			cfgResp, err := stream.Recv()
+			require.NoError(err)
+
+			// Validate config
+			require.NotEmpty(cfgResp.Config.EnvVars)
+			require.NotEmpty(cfgResp.Config.ConfigSources)
+		}
 	})
 }
 

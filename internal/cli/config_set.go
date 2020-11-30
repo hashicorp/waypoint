@@ -60,8 +60,10 @@ func (c *ConfigSetCommand) Run(args []string) int {
 		}
 
 		configVar := &pb.ConfigVar{
-			Name:  arg[:idx],
-			Value: arg[idx+1:],
+			Name: arg[:idx],
+			Value: &pb.ConfigVar_Static{
+				Static: arg[idx+1:],
+			},
 		}
 
 		if c.flagApp == "" {

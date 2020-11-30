@@ -36,7 +36,7 @@ func TestServiceConfig(t *testing.T) {
 		},
 
 		Name:  "DATABASE_URL",
-		Value: "postgresql:///",
+		Value: &pb.ConfigVar_Static{Static: "postgresql:///"},
 	}
 
 	t.Run("set and get", func(t *testing.T) {
@@ -67,8 +67,57 @@ func TestServiceConfig(t *testing.T) {
 	})
 }
 
-func TestServerConfigWithStartupConfig(t *testing.T) {
+func TestServiceConfigSource(t *testing.T) {
+	ctx := context.Background()
 
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(t, err)
+	client := server.TestServer(t, impl)
+
+	// Simplify writing tests
+	type (
+		SReq = pb.SetConfigSourceRequest
+		GReq = pb.GetConfigSourceRequest
+	)
+
+	v := &pb.ConfigSource{
+		Scope: &pb.ConfigSource_Global{
+			Global: &pb.Ref_Global{},
+		},
+
+		Type: "foo",
+
+		Config: map[string]string{
+			"value": "42",
+		},
+	}
+
+	t.Run("set and get", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create
+		resp, err := client.SetConfigSource(ctx, &SReq{ConfigSource: v})
+		require.NoError(err)
+		require.NotNil(resp)
+
+		// Read
+		{
+			resp, err := client.GetConfigSource(ctx, &GReq{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+
+				Type: "foo",
+			})
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(1, len(resp.ConfigSources))
+		}
+	})
+}
+
+func TestServerConfigWithStartupConfig(t *testing.T) {
 	cfg := &serverconfig.Config{
 		CEBConfig: &serverconfig.CEBConfig{
 			Addr:          "myendpoint",
@@ -102,8 +151,8 @@ func TestServerConfigWithStartupConfig(t *testing.T) {
 		require.Equal(cfg.CEBConfig.TLSSkipVerify, addr.TlsSkipVerify)
 	})
 }
-func TestServerConfigWithNoStartupConfig(t *testing.T) {
 
+func TestServerConfigWithNoStartupConfig(t *testing.T) {
 	db := testDB(t)
 	// Create our server
 	impl, err := New(

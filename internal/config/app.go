@@ -6,6 +6,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/mitchellh/copystructure"
+
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 // App represents a single application.
@@ -14,6 +16,7 @@ type App struct {
 	Path   string            `hcl:"path,optional"`
 	Labels map[string]string `hcl:"labels,optional"`
 	URL    *AppURL           `hcl:"url,block" default:"{}"`
+	Config *genericConfig    `hcl:"config,block"`
 
 	BuildRaw   *hclBuild `hcl:"build,block"`
 	DeployRaw  *hclStage `hcl:"deploy,block"`
@@ -93,8 +96,42 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	app.Path = appPath
 	app.ctx = ctx
 	app.config = c
+	if app.Config != nil {
+		app.Config.ctx = ctx
+		app.Config.scopeFunc = func(cv *pb.ConfigVar) {
+			cv.Scope = &pb.ConfigVar_Application{
+				Application: app.Ref(),
+			}
+		}
+	}
 
 	return &app, nil
+}
+
+// Ref returns the ref for this app.
+func (c *App) Ref() *pb.Ref_Application {
+	return &pb.Ref_Application{
+		Application: c.Name,
+		Project:     c.config.Project,
+	}
+}
+
+// ConfigVars returns the configuration variables for the app, including
+// merging the configuration variables from the project level.
+//
+// For access to only the app-level config vars, use the Config attribute directly.
+func (c *App) ConfigVars() ([]*pb.ConfigVar, error) {
+	vars, err := c.config.Config.ConfigVars()
+	if err != nil {
+		return nil, err
+	}
+
+	appVars, err := c.Config.ConfigVars()
+	if err != nil {
+		return nil, err
+	}
+
+	return append(vars, appVars...), nil
 }
 
 // Build loads the Build section of the configuration.

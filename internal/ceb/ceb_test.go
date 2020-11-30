@@ -14,6 +14,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
@@ -346,7 +348,7 @@ func TestMain(m *testing.M) {
 	switch os.Getenv(envHelperMode) {
 	case "":
 		// Log
-		hclog.L().SetLevel(hclog.Trace)
+		hclog.L().SetLevel(hclog.Debug)
 
 		// Normal test mode
 		os.Exit(m.Run())
@@ -429,8 +431,17 @@ func testRun(t *testing.T, ctx context.Context, opts *testRunOpts) *CEB {
 		WithEnvDefaults(),
 		withCEBValue(cebCh),
 	)
+	ceb := <-cebCh
 
-	return <-cebCh
+	// Register our config plugins. NOTE(mitchellh): This is nasty cause we're
+	// just poking at internal state, so we should clean this up one day.
+	for k, v := range opts.ConfigPlugins {
+		ceb.configPlugins[k] = &plugin.Instance{
+			Component: v,
+		}
+	}
+
+	return ceb
 }
 
 type testRunOpts struct {
@@ -439,4 +450,5 @@ type testRunOpts struct {
 	Helper        string
 	HelperEnv     map[string]string
 	DeploymentId  string
+	ConfigPlugins map[string]component.ConfigSourcer
 }
