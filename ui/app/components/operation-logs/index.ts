@@ -47,11 +47,11 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
 
   @action
   followLogs(element: any) {
-    if (element.target) {
-      element.target.parentElement.scroll(0, element.target.parentElement.scrollHeight);
-    } else {
-      element.parentElement.scroll(0, element.parentElement.scrollHeight);
-    }
+    let scrollableElement = element.target ?
+      element.target.closest('.output-scroll-y') :
+      element.closest('.output-scroll-y');
+
+    scrollableElement.scroll(0, scrollableElement.scrollHeight);
   }
 
   @action
