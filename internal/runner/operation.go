@@ -31,9 +31,9 @@ func (r *Runner) executeJob(
 ) (*pb.Job_Result, error) {
 	// Eventually we'll need to extract the data source. For now we're
 	// just building for local exec so it is the working directory.
-	path := configpkg.Filename
-	if wd != "" {
-		path = filepath.Join(wd, path)
+	path, err := configpkg.FindPath(wd, "", false)
+	if err != nil {
+		return nil, err
 	}
 
 	// Determine the evaluation context we'll be using
