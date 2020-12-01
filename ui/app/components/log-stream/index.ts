@@ -1,5 +1,7 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+import { action } from '@ember/object';
+
 import ApiService from 'waypoint/services/api';
 import { inject as service } from '@ember/service';
 import { GetLogStreamRequest, LogBatch } from 'waypoint-pb';
@@ -11,7 +13,10 @@ interface LogStreamArgs {
 
 export default class LogStream extends Component<LogStreamArgs> {
   @service api!: ApiService;
+
   @tracked lines: string[];
+  @tracked isFollowingLogs = true;
+  @tracked badgeCount = 0;
 
   constructor(owner: any, args: any) {
     super(owner, args);
@@ -21,6 +26,26 @@ export default class LogStream extends Component<LogStreamArgs> {
 
   addLine(line: string) {
     this.lines = [...this.lines, line];
+    if (this.isFollowingLogs === false) {
+      this.badgeCount = this.badgeCount + 1;
+    }
+  }
+
+  @action
+  followLogs(element: any) {
+    let scrollableElement = element.target ?
+      element.target.closest('.output-scroll-y') :
+      element.closest('.output-scroll-y');
+
+    scrollableElement.scroll(0, scrollableElement.scrollHeight);
+  }
+
+  @action
+  updateScroll(element: any) {
+    if (this.isFollowingLogs === true) {
+      element.scrollIntoView(false);
+      this.badgeCount = 0;
+    }
   }
 
   async start() {
