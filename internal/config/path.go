@@ -15,7 +15,11 @@ const Filename = "waypoint.hcl"
 //
 // If start is empty, start will be the current working directory. If
 // filename is empty, it will default to the Filename constant.
-func FindPath(start, filename string) (string, error) {
+//
+// If searchParent is false, then we will not search parent directories
+// and require the Waypoint configuration file be directly in the "start"
+// directory.
+func FindPath(start, filename string, searchParent bool) (string, error) {
 	var err error
 	if start == "" {
 		start, err = os.Getwd()
@@ -29,11 +33,24 @@ func FindPath(start, filename string) (string, error) {
 	}
 
 	for {
+		// Look for HCL syntax
 		path := filepath.Join(start, filename)
 		if _, err := os.Stat(path); err == nil {
 			return path, nil
 		} else if !os.IsNotExist(err) {
 			return "", err
+		}
+
+		// Look for JSON
+		path += ".json"
+		if _, err := os.Stat(path); err == nil {
+			return path, nil
+		} else if !os.IsNotExist(err) {
+			return "", err
+		}
+
+		if !searchParent {
+			return "", nil
 		}
 
 		next := filepath.Dir(start)
