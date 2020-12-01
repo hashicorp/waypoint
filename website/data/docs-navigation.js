@@ -37,6 +37,10 @@ export default [
         category: 'functions',
         content: ['all', 'template'],
       },
+      {
+        category: 'syntax',
+        content: ['expressions', 'json'],
+      },
       'app',
       'build',
       'deploy',
