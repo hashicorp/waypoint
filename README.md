@@ -58,5 +58,5 @@ Thank you for your interest in contributing! Please refer to [CONTRIBUTING.md](h
 
 This repository contains a couple of different ways to automate installing the
 required golang packages needed to build waypoint locally. You can either use
-[NixOS](https://nixos.wiki/wiki/Main_Page), or run `make tools` to setup the
+[NixOS](https://nixos.org/), or run `make tools` to setup the
 required packages.
