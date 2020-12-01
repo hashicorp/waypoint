@@ -14,7 +14,8 @@ also supports JSON. This syntax is useful when generating configurations program
 since existing JSON libraries can be used to prepare the generated configuration files.
 
 Waypoint expects HCL syntax to be in `waypoint.hcl` and JSON syntax to
-be in a `waypoint.hcl.json`.
+be in `waypoint.hcl.json`. If both files exist, `waypoint.hcl` will be
+be loaded instead of the JSON version.
 
 -> **You can see below that the JSON syntax is heavy on brackets.** We expect
 the HCL syntax to be used primarily for humans and the JSON syntax to be used
