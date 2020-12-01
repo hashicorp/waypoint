@@ -233,7 +233,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 		}
 	}
 	if !hasRequired {
-		fmt.Fprintf(w, "\nThis plugin has no required variables.\n")
+		fmt.Fprintf(w, "\nThis plugin has no required parameters.\n")
 	}
 
 	hasOptional := false
@@ -268,7 +268,7 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 		}
 	}
 	if !hasOptional {
-		fmt.Fprintf(w, "\nThis plugin has no optional variables.\n")
+		fmt.Fprintf(w, "\nThis plugin has no optional parameters.\n")
 	}
 
 	if fields := doc.TemplateFields(); len(fields) > 0 {
