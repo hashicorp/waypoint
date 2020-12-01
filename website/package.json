@@ -44,7 +44,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "prebuild": "git rev-parse --abbrev-ref HEAD",
+    "prebuild": "git name-rev --name-only $VERCEL_GIT_COMMIT_SHA",
     "build": "node --max-old-space-size=2048 ./node_modules/.bin/next build",
     "export": "node --max-old-space-size=2048 ./node_modules/.bin/next export",
     "format": "next-hashicorp format",
