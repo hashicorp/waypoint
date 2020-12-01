@@ -14,6 +14,7 @@ TOOLS=\
 			github.com/hashicorp/go-bindata/... \
 			github.com/golang/protobuf/proto \
 			github.com/golang/protobuf/protoc-gen-go \
+			github.com/grpc-ecosystem/grpc-gateway \
 			github.com/mitchellh/protoc-gen-go-json \
 			github.com/vektra/mockery/.../
 
