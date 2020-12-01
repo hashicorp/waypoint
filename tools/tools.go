@@ -23,4 +23,4 @@ import _ "github.com/grpc-ecosystem/grpc-gateway"
 import _ "github.com/mitchellh/protoc-gen-go-json"
 
 //go:generate go install github.com/vektra/mockery
-import _ "github.com/vektra/mockery/v2"
+import _ "github.com/vektra/mockery"
