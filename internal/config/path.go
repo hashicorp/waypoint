@@ -29,7 +29,16 @@ func FindPath(start, filename string) (string, error) {
 	}
 
 	for {
+		// Look for HCL syntax
 		path := filepath.Join(start, filename)
+		if _, err := os.Stat(path); err == nil {
+			return path, nil
+		} else if !os.IsNotExist(err) {
+			return "", err
+		}
+
+		// Look for JSON
+		path += ".json"
 		if _, err := os.Stat(path); err == nil {
 			return path, nil
 		} else if !os.IsNotExist(err) {
