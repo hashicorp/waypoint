@@ -16,9 +16,6 @@ import _ "github.com/golang/protobuf/proto"
 //go:generate go install github.com/golang/protobuf/protoc-gen-go
 import _ "github.com/golang/protobuf/protoc-gen-go"
 
-//go:generate go install github.com/grpc-ecosystem/grpc-gateway
-import _ "github.com/grpc-ecosystem/grpc-gateway"
-
 //go:generate go install github.com/mitchellh/protoc-gen-go-json
 import _ "github.com/mitchellh/protoc-gen-go-json"
 
