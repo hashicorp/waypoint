@@ -1,5 +1,5 @@
 {{#if @canLogout}}
-  <button class="auth-link" onclick={{action this.logout}}>
+  <button class="auth-link" type="button" {{on "click" this.logout}}>
     {{inline-svg "logout" class="nav-icon"}}
     Logout
   </button>

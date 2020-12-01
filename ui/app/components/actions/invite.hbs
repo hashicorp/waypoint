@@ -3,7 +3,7 @@
   Invite
 </span>
 
-{{#if hintIsVisible}}
+{{#if this.hintIsVisible}}
 <div class="cli-hint">
   <p>You can share the following link with anyone you want to give access to this Waypoint instance</p>
   <div class="input-wrap">
@@ -13,9 +13,9 @@
       @clipboardTarget="#invite-token"
       @success={{this.onSuccess}}
     >
-      {{inline-svg (if copySuccess 'copy-success' 'copy-action') class="icon"}}
+      {{inline-svg (if this.copySuccess 'copy-success' 'copy-action') class="icon"}}
     </CopyButton>
-    <button class="button button--secondary button--compact" {{action this.createToken }}>{{inline-svg "refresh-default" class="icon"}}</button>
+    <button class="button button--secondary button--compact" type="button" {{on "click" this.createToken}}>{{inline-svg "refresh-default" class="icon"}}</button>
   </div>
   <small>To share a Waypoint instance the server must be run in a location that the users can access. <br />
     <ExternalLink href="https://waypointproject.io/docs">Read more in our documentation</ExternalLink>
