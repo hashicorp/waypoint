@@ -25,6 +25,7 @@ IMPROVEMENTS:
 * core: add better error messaging when prefix is missing from the `-raw` flag in `waypoint config set` [GH-815]
 * install/k8s: support for OpenShift [GH-715]
 * server: APIs for Waypoint database snapshot/restore [GH-723]
+* website: many minor improvements were made in our plugin documentation section for this release
 
 BUG FIXES:
 
