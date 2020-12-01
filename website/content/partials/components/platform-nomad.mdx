@@ -4,7 +4,40 @@ Deploy to a nomad cluster as a service using docker.
 
 ### Interface
 
-### Variables
+### Examples
+
+```hcl
+deploy {
+        use "nomad" {
+          region = "global"
+          datacenter = "dc1"
+          auth = {
+            username = "username"
+            password = "password"
+          }
+          static_environment = {
+            "environment": "production",
+            "LOG_LEVEL": "debug"
+          }
+          service_port = 3000
+          replicas = 1
+        }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### auth
+
+The credentials for docker registry.
+
+- Type: **\*nomad.AuthConfig**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### datacenter
 
@@ -51,21 +84,14 @@ Environment variables to add to the job.
 - Type: **map[string]string**
 - **Optional**
 
-### Examples
+### Output Attributes
 
-```
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
 
-deploy {
-	use "nomad" {
-	  region = "global"
-	  datacenter = "dc1"
-	  static_environment = {
-	    "environment": "production",
-	    "LOG_LEVEL": "debug"
-	  }
-	  service_port = 3000
-	  replicas = 1
-	}
-}
+#### id
 
-```
+- Type: **string**
+
+#### name
+
+- Type: **string**

@@ -744,8 +744,8 @@ github.com/hashicorp/vault/sdk v0.1.14-0.20190909201848-e0fbf9b652e2 h1:b65cSyZq
 github.com/hashicorp/vault/sdk v0.1.14-0.20190909201848-e0fbf9b652e2/go.mod h1:B+hVj7TpuQY1Y/GPbCpffmgd+tSEwvhkWnjtSYCaS2M=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9 h1:i9hzlv2SpmaNcQ8ZLGn01fp2Gqyejj0juVs7rYDgecE=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9/go.mod h1:ObgQSWSX9rsNofh16kctm6XxLW2QW1Ay6/9ris6T6DU=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201114234355-ae0a7cdaa129 h1:/uyU8vcqF2eit1wyqUUhjYLANV1IJ7HCZfGxx+dum10=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201114234355-ae0a7cdaa129/go.mod h1:/TtZN4o0eunv4v50BF8kEVDnADsk8v8a12e8Y8SE+K8=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201201173616-e7b892b19c32 h1:kAHmq49dSAb9tqTqC6PKq+fCf61OQWW4KYGnvFCJK40=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201201173616-e7b892b19c32/go.mod h1:+T5ugu6Dxv3uSe3EM5xBQ7u4Y1Em6zhHC0KTutBst84=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20190923154419-df201c70410d h1:W+SIwDdl3+jXWeidYySAgzytE3piq6GumXeBjFBG67c=
@@ -934,8 +934,6 @@ github.com/mitchellh/cli v1.1.2/go.mod h1:6iaV0fGdElS6dPBx0EApTxHrcWvmJphyh2n8YB
 github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db/go.mod h1:l0dey0ia/Uv7NcFFVbCLtqEBQbrT4OCwCSKTEv6enCw=
 github.com/mitchellh/copystructure v1.0.0 h1:Laisrj+bAB6b/yJwB5Bt3ITZhGJdqmxquMKeZ+mmkFQ=
 github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
-github.com/mitchellh/go-glint v0.0.0-20200930000256-df5e721f3258 h1:x7Z92EayV/P8BlKJnZpij7MUcqcCBah0YauEKyOIxow=
-github.com/mitchellh/go-glint v0.0.0-20200930000256-df5e721f3258/go.mod h1:NrJbv11op7A0gjSLtfvzm74YkVKRS24KxucwneYUX4M=
 github.com/mitchellh/go-glint v0.0.0-20201015034436-f80573c636de h1:zEtM2uLDYhUgehFO/lhsepZLz5TZpysDuwrezt+/w4k=
 github.com/mitchellh/go-glint v0.0.0-20201015034436-f80573c636de/go.mod h1:9X3rpO+I3yuihb6p8ktF8qWxROGwij9DBW/czUsMlhk=
 github.com/mitchellh/go-grpc-net-conn v0.0.0-20200427190222-eb030e4876f0 h1:oZuel4h7224ILBLg2SlTxdaMYXDyqcVfL4Cg1PJQHZs=

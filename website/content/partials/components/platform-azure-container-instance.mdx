@@ -7,7 +7,37 @@ Deploy a container to Azure Container Instances.
 - Input: **docker.Image**
 - Output: **aci.Deployment**
 
-### Variables
+### Examples
+
+```hcl
+deploy {
+  use "azure-container-instance" {
+    resource_group = "resource-group-name"
+    location       = "westus"
+    ports          = [8080]
+
+    capacity {
+      memory = "1024"
+      cpu_count = 4
+    }
+
+    volume {
+      name = "vol1"
+      path = "/consul"
+      read_only = true
+
+      git_repo {
+        repository = "https://github.com/hashicorp/consul"
+        revision = "v1.8.3"
+      }
+    }
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### capacity
 
@@ -23,50 +53,11 @@ Number of CPUs to allocate the container, min 1, max based on resource availabil
 
 Memory to allocate the container specified in MB, min 1024, max based on resource availability of the region.
 
-#### location
-
-The resource location to deploy the container instance to.
-
-- Type: **string**
-- **Optional**
-
-#### managed_identity
-
-The managed identity assigned to the container group.
-
-- Type: **string**
-- **Optional**
-
-#### ports
-
-The ports the container is listening on, the first port in this list will be used by the entrypoint binary to direct traffic to your application.
-
-- Type: **[]int**
-- **Optional**
-
 #### resource_group
 
 The resource group to deploy the container to.
 
 - Type: **string**
-
-#### static_environment
-
-Environment variables to control broad modes of the application.
-
-Environment variables that are meant to configure the application in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.
-
-- Type: **map[string]string**
-- **Optional**
-
-#### subscription_id
-
-The Azure subscription id.
-
-If not set uses the environment variable AZURE_SUBSCRIPTION_ID.
-
-- Type: **string**
-- **Optional**
 
 #### volume
 
@@ -94,32 +85,61 @@ The path to mount the volume to in the container.
 
 Specify if the volume is read only.
 
-### Examples
+### Optional Parameters
 
-```
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
-deploy {
-  use "azure-container-instance" {
-    resource_group = "resource-group-name"
-    location       = "westus"
-    ports          = [8080]
+#### location
 
-    capacity {
-      memory = "1024"
-      cpu_count = 4
-    }
+The resource location to deploy the container instance to.
 
-    volume {
-      name = "vol1"
-      path = "/consul"
-      read_only = true
+- Type: **string**
+- **Optional**
 
-      git_repo {
-        repository = "https://github.com/hashicorp/consul"
-        revision = "v1.8.3"
-      }
-    }
-  }
-}
+#### managed_identity
 
-```
+The managed identity assigned to the container group.
+
+- Type: **string**
+- **Optional**
+
+#### ports
+
+The ports the container is listening on, the first port in this list will be used by the entrypoint binary to direct traffic to your application.
+
+- Type: **[]int**
+- **Optional**
+
+#### static_environment
+
+Environment variables to control broad modes of the application.
+
+Environment variables that are meant to configure the application in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.
+
+- Type: **map[string]string**
+- **Optional**
+
+#### subscription_id
+
+The Azure subscription id.
+
+If not set uses the environment variable AZURE_SUBSCRIPTION_ID.
+
+- Type: **string**
+- **Optional**
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### container_group
+
+- Type: **\*aci.Deployment_ContainerGroup**
+
+#### id
+
+- Type: **string**
+
+#### url
+
+- Type: **string**

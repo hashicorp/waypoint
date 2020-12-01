@@ -53,7 +53,35 @@ are available:
 - Input: **exec.Input**
 - Output: **exec.Deployment**
 
-### Variables
+### Examples
+
+```hcl
+deploy {
+  use "exec" {
+    command = ["docker", "run", "{{.Input.DockerImageFull}}"]
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### template
+
+A stanza that declares that a file or directory should be template-rendered.
+
+- Type: **\*exec.ConfigTemplate**
+
+#### template.path
+
+The path to the file or directory to render as a template.
+
+Templating uses the following format: https://golang.org/pkg/text/template/ Available template variables depends on the input artifact.
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### command
 
@@ -72,27 +100,3 @@ This will default to the same working directory as the Waypoint execution.
 
 - Type: **string**
 - **Optional**
-
-#### template
-
-A stanza that declares that a file or directory should be template-rendered.
-
-- Type: **\*exec.ConfigTemplate**
-
-#### template.path
-
-The path to the file or directory to render as a template.
-
-Templating uses the following format: https://golang.org/pkg/text/template/ Available template variables depends on the input artifact.
-
-### Examples
-
-```
-
-deploy {
-  use "exec" {
-    command = ["docker", "run", "{{.Input.DockerImageFull}}"]
-  }
-}
-
-```

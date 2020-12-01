@@ -160,7 +160,7 @@ type Config struct {
 }
 
 func (r *Registry) Documentation() (*docs.Documentation, error) {
-	doc, err := docs.New(docs.FromConfig(&Config{}))
+	doc, err := docs.New(docs.FromConfig(&Config{}), docs.FromFunc(r.PushFunc()))
 	if err != nil {
 		return nil, err
 	}

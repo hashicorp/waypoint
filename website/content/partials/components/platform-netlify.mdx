@@ -4,7 +4,25 @@ Deploy a site to netlify.
 
 ### Interface
 
-### Variables
+### Examples
+
+```hcl
+deploy {
+	use "netlify" {
+		site_id = "yourside-id"
+		site_name = "waypoint"
+		access_token = "asb123"
+	}
+}
+```
+
+### Required Parameters
+
+This plugin has no required parameters.
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### access_token
 
@@ -28,16 +46,14 @@ Name of your netlify site.
 - **Optional**
 - Default: waypoint application name
 
-### Examples
+### Output Attributes
 
-```
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
 
-deploy {
-	use "netlify" {
-		site_id = "yourside-id"
-		site_name = "waypoint"
-		access_token = "asb123"
-	}
-}
+#### site_id
 
-```
+- Type: **string**
+
+#### url
+
+- Type: **string**

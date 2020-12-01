@@ -7,7 +7,20 @@ Deploy the application into an ECS cluster on AWS.
 - Input: **docker.Image**
 - Output: **ecs.Deployment**
 
-### Variables
+### Examples
+
+```hcl
+deploy {
+  use "aws-ecs" {
+    region = "us-east-1"
+    memory = 512
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### alb
 
@@ -34,6 +47,68 @@ When this is set, no ALB or Listener is created. Instead the application is conf
 Route53 ZoneID to create a DNS record into.
 
 Set along with alb.domain_name to have DNS automatically setup for the ALB.
+
+#### memory
+
+How much memory to assign to the container running the application.
+
+When running in Fargate, this must be one of a few values, specified in MB: 512, 1024, 2048, 3072, 4096, 5120, and up to 16384 in increments of 1024. The memory value also controls the possible values for cpu.
+
+- Type: **int**
+
+#### region
+
+The AWS region for the ECS cluster.
+
+- Type: **string**
+
+#### sidecar
+
+Additional container to run as a sidecar.
+
+This runs additional containers in addition to the main container that comes from the build phase.
+
+- Type: **[]\*ecs.ContainerConfig**
+
+#### sidecar.container_port
+
+The port number for the container.
+
+#### sidecar.host_port
+
+The port number on the host to reserve for the container.
+
+#### sidecar.image
+
+Image of the sidecar container.
+
+#### sidecar.memory
+
+The amount (in MiB) of memory to present to the container.
+
+#### sidecar.memory_reservation
+
+The soft limit (in MiB) of memory to reserve for the container.
+
+#### sidecar.name
+
+Name of the container.
+
+#### sidecar.protocol
+
+The protocol used for port mapping.
+
+#### sidecar.secrets
+
+Secrets to expose to this container.
+
+#### sidecar.static_environment
+
+Environment variables to expose to this container.
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### cluster
 
@@ -99,6 +174,14 @@ This controls if we should verify the ECS cluster in EC2 type. The cluster will 
 - Type: **bool**
 - **Optional**
 
+#### execution_role_name
+
+The name of the IAM role to use for ECS execution.
+
+- Type: **string**
+- **Optional**
+- Default: create a new exeuction IAM role based on the application name
+
 #### log_group
 
 The CloudWatchLogs log group to store container logs into.
@@ -107,35 +190,6 @@ The CloudWatchLogs log group to store container logs into.
 - **Optional**
 - Default: derived from the application name
 
-#### memory
-
-How much memory to assign to the container running the application.
-
-When running in Fargate, this must be one of a few values, specified in MB: 512, 1024, 2048, 3072, 4096, 5120, and up to 16384 in increments of 1024. The memory value also controls the possible values for cpu.
-
-- Type: **int**
-
-#### region
-
-The AWS region for the ECS cluster.
-
-- Type: **string**
-
-#### execution_role_name
-
-The name of the IAM role to use for ECS execution.
-
-- Type: **string**
-- **Optional**
-- Default: create a new IAM role based on the application name
-
-#### task_role_name
-
-The name of the task IAM role to assign.
-
-- Type: **string**
-- **Optional**
-
 #### secrets
 
 Secret key/values to pass to the ECS container.
@@ -143,49 +197,13 @@ Secret key/values to pass to the ECS container.
 - Type: **map[string]string**
 - **Optional**
 
-#### sidecar
+#### service_port
 
-Additional container to run as a sidecar.
+The TCP port that the application is listening on.
 
-This runs additional containers in addition to the main container that comes from the build phase.
-
-- Type: **[]\*ecs.ContainerConfig**
-
-#### sidecar.container_port
-
-The port number for the container.
-
-#### sidecar.host_port
-
-The port number on the host to reserve for the container.
-
-#### sidecar.image
-
-Image of the sidecar container.
-
-#### sidecar.memory
-
-The amount (in MiB) of memory to present to the container.
-
-#### sidecar.memory_reservation
-
-The soft limit (in MiB) of memory to reserve for the container.
-
-#### sidecar.name
-
-Name of the container.
-
-#### sidecar.protocol
-
-The protocol used for port mapping.
-
-#### sidecar.secrets
-
-Secrets to expose to this container.
-
-#### sidecar.static_environment
-
-Environment variables to expose to this container.
+- Type: **int64**
+- **Optional**
+- Default: 3000
 
 #### static_environment
 
@@ -202,15 +220,37 @@ The VPC subnets to use for the application.
 - **Optional**
 - Default: public subnets in the default VPC
 
-### Examples
+#### task_role_name
 
-```
+The name of the task IAM role to assign.
 
-deploy {
-  use "aws-ecs" {
-    region = "us-east-1"
-    memory = 512
-  }
-}
+- Type: **string**
+- **Optional**
 
-```
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### cluster
+
+- Type: **string**
+
+#### load_balancer_arn
+
+- Type: **string**
+
+#### service_arn
+
+- Type: **string**
+
+#### target_group_arn
+
+- Type: **string**
+
+#### task_arn
+
+- Type: **string**
+
+#### url
+
+- Type: **string**

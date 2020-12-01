@@ -4,7 +4,23 @@ Deploy the application into a Kubernetes cluster using Deployment objects.
 
 ### Interface
 
-### Variables
+### Examples
+
+```hcl
+deploy "kubernetes" {
+	image_secret = "registry_secret"
+	replicas = 3
+	probe_path = "/_healthz"
+}
+```
+
+### Required Parameters
+
+This plugin has no required parameters.
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### annotations
 
@@ -24,7 +40,7 @@ The kubectl context to use, as defined in the kubeconfig file.
 
 #### image_secret
 
-Name of the Kubernetes secret to use for the image.
+Name of the Kubernetes secrete to use for the image.
 
 This references an existing secret, waypoint does not create this secret.
 
@@ -36,6 +52,15 @@ This references an existing secret, waypoint does not create this secret.
 Path to the kubeconfig file to use.
 
 By default uses from current user's home directory.
+
+- Type: **string**
+- **Optional**
+
+#### namespace
+
+Namespace to target deployment into.
+
+Namespace is the name of the Kubernetes namespace to apply the deployment in This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each.
 
 - Type: **string**
 - **Optional**
@@ -93,20 +118,14 @@ Environment variables that are meant to configure the application in a static wa
 - Type: **map[string]string**
 - **Optional**
 
-#### namespace
+### Output Attributes
 
-Namespace is the Kubernetes namespace for the deployment to target
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### id
+
 - Type: **string**
-- **Optional**
 
-### Examples
+#### name
 
-```
-
-deploy "kubernetes" {
-	image_secret = "registry_secret"
-	replicas = 3
-	probe_path = "/_healthz"
-}
-
-```
+- Type: **string**

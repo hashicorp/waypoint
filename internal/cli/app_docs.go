@@ -186,8 +186,11 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 		fmt.Fprintf(w, "- Output: **%s**\n", dets.Output)
 	}
 
-	mappers := dets.Mappers
+	if dets.Example != "" {
+		fmt.Fprintf(w, "\n\n### Examples\n\n```hcl\n%s\n```\n", strings.TrimSpace(dets.Example))
+	}
 
+	mappers := dets.Mappers
 	if len(mappers) > 0 {
 		fmt.Fprintf(w, "\n### Mappers\n\n")
 
@@ -198,9 +201,17 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 		}
 	}
 
-	fmt.Fprintf(w, "\n### Variables\n")
-
+	hasRequired := false
+	fmt.Fprintf(w, "\n### Required Parameters\n")
 	for _, f := range doc.Fields() {
+		if f.Optional {
+			continue
+		}
+		if !hasRequired {
+			hasRequired = true
+			fmt.Fprintf(w, "\nThese parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.\n")
+		}
+
 		fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
 
 		if f.Summary != "" {
@@ -221,9 +232,69 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 			}
 		}
 	}
+	if !hasRequired {
+		fmt.Fprintf(w, "\nThis plugin has no required parameters.\n")
+	}
 
-	if dets.Example != "" {
-		fmt.Fprintf(w, "\n\n### Examples\n\n```\n%s\n```\n", dets.Example)
+	hasOptional := false
+	fmt.Fprintf(w, "\n### Optional Parameters\n")
+	for _, f := range doc.Fields() {
+		if !f.Optional {
+			continue
+		}
+		if !hasOptional {
+			hasOptional = true
+			fmt.Fprintf(w, "\nThese parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.\n")
+		}
+
+		fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
+
+		if f.Summary != "" {
+			fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
+		} else {
+			fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
+		}
+
+		if f.Type != "" {
+			fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
+		}
+
+		if f.Optional {
+			fmt.Fprintf(w, "- **Optional**\n")
+
+			if f.Default != "" {
+				fmt.Fprintf(w, "- Default: %s\n", f.Default)
+			}
+		}
+	}
+	if !hasOptional {
+		fmt.Fprintf(w, "\nThis plugin has no optional parameters.\n")
+	}
+
+	if fields := doc.TemplateFields(); len(fields) > 0 {
+		fmt.Fprintf(w, "\n### Output Attributes\n")
+		fmt.Fprintf(w, "\nOutput attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).\n")
+		for _, f := range fields {
+			fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
+
+			if f.Summary != "" {
+				fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
+			} else {
+				fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
+			}
+
+			if f.Type != "" {
+				fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
+			}
+
+			if f.Optional {
+				fmt.Fprintf(w, "- **Optional**\n")
+
+				if f.Default != "" {
+					fmt.Fprintf(w, "- Default: %s\n", f.Default)
+				}
+			}
+		}
 	}
 }
 
