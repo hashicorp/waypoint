@@ -7,7 +7,9 @@ Deploy the application into an AutoScaling Group on EC2.
 - Input: **ami.Image**
 - Output: **ec2.Deployment**
 
-### Required Variables
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### count
 
@@ -35,7 +37,9 @@ The TCP port on the instances that the app will be running on.
 
 - Type: **int**
 
-### Optional Variables
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### extra_ports
 
