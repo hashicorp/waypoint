@@ -375,7 +375,7 @@ type PlatformConfig struct {
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
-	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}))
+	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}), docs.FromFunc(p.DeployFunc()))
 	if err != nil {
 		return nil, err
 	}

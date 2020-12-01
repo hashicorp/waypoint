@@ -396,7 +396,7 @@ type ClientConfig struct {
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
-	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}))
+	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}), docs.FromFunc(p.DeployFunc()))
 	if err != nil {
 		return nil, err
 	}
@@ -462,12 +462,12 @@ deploy {
 		docs.Summary(
 			"this config block can be used to configure",
 			"a remote Docker engine.",
-			"by default Waypoint will attempt to discover this configuration",
+			"By default Waypoint will attempt to discover this configuration",
 			"using the environment variables:",
-			"DOCKER_HOST to set the url to the docker server.",
-			"DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.",
-			"DOCKER_CERT_PATH to load the TLS certificates from.",
-			"DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.",
+			"`DOCKER_HOST` to set the url to the docker server.",
+			"`DOCKER_API_VERSION` to set the version of the API to reach, leave empty for latest.",
+			"`DOCKER_CERT_PATH` to load the TLS certificates from.",
+			"`DOCKER_TLS_VERIFY` to enable or disable TLS verification, off by default.",
 		),
 	)
 
