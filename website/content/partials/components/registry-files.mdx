@@ -4,18 +4,9 @@ Copies files to a specific directory.
 
 ### Interface
 
-### Variables
-
-#### path
-
-The filesystem path to store the files into.
-
-- Type: **string**
-
 ### Examples
 
-```
-
+```hcl
 build {
   use "files" {}
   registry {
@@ -24,5 +15,24 @@ build {
 	}
   }
 }
-
 ```
+
+### Required Variables
+
+#### path
+
+The filesystem path to store the files into.
+
+- Type: **string**
+
+### Optional Variables
+
+This plugin has no optional variables.
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### path
+
+- Type: **string**

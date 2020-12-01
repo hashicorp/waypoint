@@ -6,7 +6,15 @@ Search for and return an existing AMI.
 
 - Output: **ami.Image**
 
-### Variables
+### Required Variables
+
+#### region
+
+The AWS region to search in.
+
+- Type: **string**
+
+### Optional Variables
 
 #### filters
 
@@ -31,8 +39,10 @@ The set of AMI owners to restrict the search to.
 - Type: **[]string**
 - **Optional**
 
-#### region
+### Output Attributes
 
-The AWS region to search in.
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### image
 
 - Type: **string**
