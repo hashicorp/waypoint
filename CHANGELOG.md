@@ -23,6 +23,7 @@ IMPROVEMENTS:
 * core: application config changes (i.e. `waypoint config set`) will now restart running applications [GH-791]
 * core: add more descriptive text to include app name in `waypoint destroy` [GH-807]
 * core: add better error messaging when prefix is missing from the `-raw` flag in `waypoint config set` [GH-815]
+* core: `waypoint.hcl` can be named `waypoint.hcl.json` and use JSON syntax [GH-867]
 * install/k8s: support for OpenShift [GH-715]
 * server: APIs for Waypoint database snapshot/restore [GH-723]
 * website: many minor improvements were made in our plugin documentation section for this release
