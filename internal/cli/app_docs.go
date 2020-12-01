@@ -202,12 +202,15 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	}
 
 	hasRequired := false
-	fmt.Fprintf(w, "\n### Required Variables\n")
+	fmt.Fprintf(w, "\n### Required Parameters\n")
 	for _, f := range doc.Fields() {
 		if f.Optional {
 			continue
 		}
-		hasRequired = true
+		if !hasRequired {
+			hasRequired = true
+			fmt.Fprintf(w, "\nThese parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.\n")
+		}
 
 		fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
 
@@ -234,12 +237,15 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	}
 
 	hasOptional := false
-	fmt.Fprintf(w, "\n### Optional Variables\n")
+	fmt.Fprintf(w, "\n### Optional Parameters\n")
 	for _, f := range doc.Fields() {
 		if !f.Optional {
 			continue
 		}
-		hasOptional = true
+		if !hasOptional {
+			hasOptional = true
+			fmt.Fprintf(w, "\nThese parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.\n")
+		}
 
 		fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
 
