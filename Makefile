@@ -110,5 +110,5 @@ tools: # install dependencies and tools required to build
 	done
 	@echo
 	@echo "Loading tools..."
-	GO111MODULE=off $(GO_CMD) generate -tags tools tools/tools.go
+	$(GO_CMD) generate -tags tools tools/tools.go
 	@echo "Done!"
