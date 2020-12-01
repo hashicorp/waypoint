@@ -8,6 +8,14 @@ GIT_DESCRIBE=$$(git describe --tags --always --match "v*")
 GIT_IMPORT="github.com/hashicorp/waypoint/internal/version"
 GOLDFLAGS="-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)"
 CGO_ENABLED?=0
+GO_CMD?=go
+
+TOOLS=\
+			github.com/hashicorp/go-bindata/... \
+			github.com/golang/protobuf/proto \
+			github.com/golang/protobuf/protoc-gen-go \
+			github.com/mitchellh/protoc-gen-go-json \
+			github.com/vektra/mockery/.../
 
 .PHONY: bin
 bin: # bin creates the binaries for Waypoint for the current platform
@@ -92,3 +100,15 @@ gen/doc:
 		-I=./vendor/proto/api-common-protos/ \
 		--doc_out=./doc --doc_opt=html,index.html \
 		./internal/server/proto/server.proto
+
+.PHONY: tools
+tools: # install dependencies and tools required to build
+	@echo "Fetching tools..."
+	@for tool in  $(TOOLS) ; do \
+		echo "==> $$tool" ; \
+		GO111MODULE=off $(GO_CMD) get -u $$tool; \
+	done
+	@echo
+	@echo "Loading tools..."
+	GO111MODULE=off $(GO_CMD) generate -tags tools tools/tools.go
+	@echo "Done!"
