@@ -744,12 +744,8 @@ github.com/hashicorp/vault/sdk v0.1.14-0.20190909201848-e0fbf9b652e2 h1:b65cSyZq
 github.com/hashicorp/vault/sdk v0.1.14-0.20190909201848-e0fbf9b652e2/go.mod h1:B+hVj7TpuQY1Y/GPbCpffmgd+tSEwvhkWnjtSYCaS2M=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9 h1:i9hzlv2SpmaNcQ8ZLGn01fp2Gqyejj0juVs7rYDgecE=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9/go.mod h1:ObgQSWSX9rsNofh16kctm6XxLW2QW1Ay6/9ris6T6DU=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201201173616-e7b892b19c32 h1:kAHmq49dSAb9tqTqC6PKq+fCf61OQWW4KYGnvFCJK40=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201201173616-e7b892b19c32/go.mod h1:+T5ugu6Dxv3uSe3EM5xBQ7u4Y1Em6zhHC0KTutBst84=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201202041128-ec87af216f91 h1:DisK94Fs433lmEdxMss6JavJBs7LKcArg7S8Z5BIHJI=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201202041128-ec87af216f91/go.mod h1:+T5ugu6Dxv3uSe3EM5xBQ7u4Y1Em6zhHC0KTutBst84=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201202041738-b8a21b9895e3 h1:0pmh43X23jzaKsKhor5hhT+rsNFeHztgBigOw+nackA=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201202041738-b8a21b9895e3/go.mod h1:+T5ugu6Dxv3uSe3EM5xBQ7u4Y1Em6zhHC0KTutBst84=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201202045322-bff1cf5addb7 h1:qqd/4mdJl7VCDCfWNtX656STM/md59a0KHoCRhXfECc=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20201202045322-bff1cf5addb7/go.mod h1:+T5ugu6Dxv3uSe3EM5xBQ7u4Y1Em6zhHC0KTutBst84=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20190923154419-df201c70410d h1:W+SIwDdl3+jXWeidYySAgzytE3piq6GumXeBjFBG67c=
