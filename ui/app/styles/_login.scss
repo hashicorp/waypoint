@@ -1,5 +1,5 @@
 @use 'pds/tokens/scale';
-@use 'pds/tokens/typography' as Typography;
+@use 'pds/core/typography/config' as Typography;
 
 form.login {
   display: flex;

@@ -1,7 +1,7 @@
 @use 'pds/tokens/color';
 @use 'pds/tokens/scale';
 @use 'pds/tokens/font';
-@use 'pds/tokens/typography' as Typography;
+@use 'pds/core/typography/config' as Typography;
 
 :root {
   --header: #{dehex(color.$black)};
