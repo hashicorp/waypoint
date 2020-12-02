@@ -43,6 +43,7 @@ export default [
       },
       'app',
       'build',
+      'config',
       'deploy',
       'hook',
       'plugin',
