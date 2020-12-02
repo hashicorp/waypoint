@@ -40,7 +40,6 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/go-argmapper v0.0.0-20200721221215-04ae500ede3b
-	github.com/hashicorp/go-bindata v3.0.7+incompatible
 	github.com/hashicorp/go-getter v1.4.1
 	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/go-memdb v1.2.0
@@ -57,7 +56,7 @@ require (
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
-	github.com/kevinburke/go-bindata v3.22.0+incompatible // indirect
+	github.com/kevinburke/go-bindata v3.22.0+incompatible
 	github.com/kr/text v0.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mitchellh/cli v1.1.2
