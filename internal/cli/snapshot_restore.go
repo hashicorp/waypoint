@@ -160,7 +160,7 @@ Usage: waypoint server restore [-exit] [<filename>]
 	If -exit is passed, the server process will exit after staging the data. This allows a process
 	monitor to restart the server, where it will see the staged snapshot and restore the data.
 
-	If -exit is not passed, an operator much restart the server manually to finish the restoration
+	If -exit is not passed, an operator must restart the server manually to finish the restoration
 	process.
 
 	The argument should be to a file written previously by 'waypoint server snapshot'.
