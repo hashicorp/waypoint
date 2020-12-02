@@ -1,0 +1,223 @@
+---
+layout: docs
+page_title: JSON Syntax - waypoint.hcl
+sidebar_title: JSON Syntax
+description: |-
+  Waypoint configuration is usually written in [HCL syntax](/docs/waypoint-hcl/syntax) which is designed to be relatively easy for humans to read and update. Waypoint also supports JSON. This syntax is useful when generating configurations programmatically, since existing JSON libraries can be used to prepare the generated configuration files.
+---
+
+# JSON Configuration Syntax
+
+Waypoint configuration is usually written in [HCL syntax](/docs/waypoint-hcl/syntax)
+which is designed to be relatively easy for humans to read and update. Waypoint
+also supports JSON. This syntax is useful when generating configurations programmatically,
+since existing JSON libraries can be used to prepare the generated configuration files.
+
+Waypoint expects HCL syntax to be in `waypoint.hcl` and JSON syntax to
+be in `waypoint.hcl.json`. If both files exist, `waypoint.hcl` will be
+be loaded instead of the JSON version.
+
+-> **You can see below that the JSON syntax is heavy on brackets.** We expect
+the HCL syntax to be used primarily for humans and the JSON syntax to be used
+primarily for machines, so readability is not a priority.
+
+## JSON File Structure
+
+At the root of any JSON-based Waypoint configuration is a JSON object. The
+properties of this object correspond to the top-level [stanza types](/docs/waypoint-hcl/syntax#stanzas).
+For example:
+
+```json
+{
+  "app": {
+    "web": {
+      "build": {
+        "use": {
+          "docker": {
+            "dockerfile" = "${path.app}/Dockerfile"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Each top-level object property must match the name of one of the expected
+top-level stanza types. Stanza types that expect labels, such as `variable`
+shown above, are represented by one nested object value for each level
+of label.
+
+After any nested objects representing the labels, finally one more nested
+object represents the body of the stanza itself. In the above examples,
+the `dockerfile` parameter is specified.
+
+Taken together, the above configuration file is equivalent to the following in HCL:
+
+```hcl
+app "web" {
+  build {
+    use "docker" {
+      dockerfile = "${path.app}/Dockerfile"
+    }
+  }
+}
+```
+
+## Expression Mapping
+
+Since JSON grammar is not able to represent all of the HCL language
+[expression syntax](/docs/configuration/expressions/index.html), JSON values
+interpreted as expressions are mapped as follows:
+
+| JSON    | Waypoint HCL Syntax Interpretation                                                                            |
+| ------- | ------------------------------------------------------------------------------------------------------------- |
+| Boolean | A literal `bool` value.                                                                                       |
+| Number  | A literal `number` value.                                                                                     |
+| String  | Parsed as a [string template][] and then evaluated as described below.                                        |
+| Object  | Each property value is mapped per this table, producing an `object(...)` value with suitable attribute types. |
+| Array   | Each element is mapped per this table, producing a `tuple(...)` value with suitable element types.            |
+| Null    | A literal `null`.                                                                                             |
+
+[string template]: /docs/configuration/expressions/strings.html#string-templates
+
+When a JSON string is encountered in a location where arbitrary expressions are
+expected, its value is first parsed as a [string template][]
+and then it is evaluated to produce the final result.
+
+If the given template consists _only_ of a single interpolation sequence,
+the result of its expression is taken directly, without first converting it
+to a string. This allows non-string expressions to be used within the
+JSON syntax:
+
+```json
+{
+  "output": {
+    "example": {
+      "value": "${aws_instance.example}"
+    }
+  }
+}
+```
+
+The `output "example"` declared above has the object value representing the
+given `aws_instance` resource stanza as its value, rather than a string value.
+This special behavior does not apply if any literal or control sequences appear
+in the template; in these other situations, a string value is always produced.
+
+## Comments
+
+Although we do not recommend hand-editing of JSON syntax configuration files
+-- this format is primarily intended for programmatic generation and consumption --
+a limited form of _comments_ are allowed inside JSON objects that represent
+stanza bodies using a special property name:
+
+```json
+{
+  "app": {
+    "web": {
+      "//": "This app is our main frontend.",
+
+      "build": {}
+    }
+  }
+}
+```
+
+In any object that represents a stanza body, properties named `"//"` are
+ignored by Waypoint entirely. This exception does _not_ apply to objects
+that are being [interpreted as expressions](#expression-mapping), where this
+would be interpreted as an object type attribute named `"//"`.
+
+This special property name can also be used at the root of a JSON-based
+configuration file. This can be useful to note which program created the file.
+
+```json
+{
+  "//": "This file is generated by generate-waypoint.py. DO NOT HAND-EDIT!",
+
+  "app": {
+    "web": {
+      "build": {}
+    }
+  }
+}
+```
+
+## Nested Stanza Mapping
+
+When a JSON object property is named after a nested stanza type, the value
+of this property represents one or more stanzas of that type. The value of
+the property must be either a JSON object or a JSON array.
+
+The simplest situation is representing only a single stanza of the given type
+when that type expects no labels, as with the `build` nested stanza used
+within `app` stanzas:
+
+```json
+{
+  "app": {
+    "web": {
+      "build": {}
+    }
+  }
+}
+```
+
+The above is equivalent to the following native syntax configuration:
+
+```hcl
+app "web" {
+  build {}
+}
+```
+
+When the nested stanza type requires one or more labels, or when multiple
+stanzas of the same type can be given, the mapping gets a little more
+complicated. For example, the `hook` nested stanza type used
+within the `build` stanza can be repeated and the ordering of hook stanzas is
+significant to decide the order of operations.
+
+The following native syntax example shows a `hook` stanza with a number
+of invocations:
+
+```hcl
+app "web" {
+  build {
+    hook {
+      when    = "before"
+      command = ["./validate-creds.sh"]
+    }
+
+    hook {
+      when    = "before"
+      command = ["./prepare-files.sh"]
+    }
+  }
+}
+```
+
+In order to preserve the order of these stanzas, you must use a JSON array
+as the direct value of the property representing this stanza type, as in
+this JSON equivalent of the above:
+
+```json
+{
+  "app": {
+    "web": {
+      "build": {
+        "hook": [
+          {
+            "when": "before",
+            "command": ["./validate-creds.sh"]
+          },
+          {
+            "when": "before",
+            "command": ["./prepare-files.sh"]
+          }
+        ]
+      }
+    }
+  }
+}
+```
