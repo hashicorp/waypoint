@@ -8,6 +8,7 @@ GIT_DESCRIBE=$$(git describe --tags --always --match "v*")
 GIT_IMPORT="github.com/hashicorp/waypoint/internal/version"
 GOLDFLAGS="-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT).GitDescribe=$(GIT_DESCRIBE)"
 CGO_ENABLED?=0
+GO_CMD?=go
 
 .PHONY: bin
 bin: # bin creates the binaries for Waypoint for the current platform
@@ -92,3 +93,10 @@ gen/doc:
 		-I=./vendor/proto/api-common-protos/ \
 		--doc_out=./doc --doc_opt=html,index.html \
 		./internal/server/proto/server.proto
+
+.PHONY: tools
+tools: # install dependencies and tools required to build
+	@echo "Fetching tools..."
+	$(GO_CMD) generate -tags tools tools/tools.go
+	@echo
+	@echo "Done!"

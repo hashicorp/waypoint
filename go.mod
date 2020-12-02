@@ -40,6 +40,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/go-argmapper v0.0.0-20200721221215-04ae500ede3b
+	github.com/hashicorp/go-bindata v3.0.7+incompatible
 	github.com/hashicorp/go-getter v1.4.1
 	github.com/hashicorp/go-hclog v0.14.1
 	github.com/hashicorp/go-memdb v1.2.0
@@ -56,6 +57,7 @@ require (
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
+	github.com/kevinburke/go-bindata v3.22.0+incompatible // indirect
 	github.com/kr/text v0.2.0
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/mitchellh/cli v1.1.2
@@ -68,6 +70,7 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.1
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/pointerstructure v1.0.0
+	github.com/mitchellh/protoc-gen-go-json v0.0.0-20200917194518-364b693410ae
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/mr-tron/base58 v1.2.0
 	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
@@ -83,6 +86,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/slack-go/slack v0.6.5
 	github.com/stretchr/testify v1.6.1
+	github.com/vektra/mockery v1.1.2
 	github.com/zclconf/go-cty v1.5.1
 	github.com/zclconf/go-cty-yaml v1.0.2
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0

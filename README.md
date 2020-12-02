@@ -53,3 +53,10 @@ https://www.waypointproject.io/docs
 ## Contributing
 
 Thank you for your interest in contributing! Please refer to [CONTRIBUTING.md](https://github.com/hashicorp/waypoint/blob/master/.github/CONTRIBUTING.md) for guidance.
+
+### Installing Dependencies
+
+This repository contains a couple of different ways to automate installing the
+required Golang packages needed to build Waypoint locally. You can either use
+[NixOS](https://nixos.org/), or run `make tools` to setup the
+required packages.
