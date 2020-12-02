@@ -1,0 +1,49 @@
+## vault (configsourcer)
+
+Read configuration values from Vault.
+
+### Examples
+
+```hcl
+config {
+  env = {
+    "DATABASE_USERNAME" = configdynamic("vault", {
+      path = "database/creds/my-role"
+      key = "username"
+    })
+
+    "DATABASE_PASSWORD" = configdynamic("vault", {
+      path = "database/creds/my-role"
+      key = "password"
+    })
+
+    "DATABASE_HOST" = configdynamic("vault", {
+      path = "kv/database-host"
+    })
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in `configdynamic` for [dynamic configuration syncing](/docs/app-config/dynamic).
+
+#### key
+
+The key in the structured response from the secret to read the value.
+
+This value can be a direct key such as `password` or it can be a [JSON pointer](https://tools.ietf.org/html/rfc6901) string to retrieve a nested value. This is because Vault secrets can be any arbitrary structure, not just simple key/value mappings. An example of a JSON pointer value would be `/data/username/`.
+
+- Type: **string**
+
+#### path
+
+The Vault path to read the secret.
+
+Within a single application, multiple dynamic values that use the same path will only read the value once. This allows multiple keys from a single secret to be extracted into multiple values. The example above shows this functionality by reading the username and password into separate values.
+
+- Type: **string**
+
+### Optional Parameters
+
+This plugin has no optional parameters.

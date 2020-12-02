@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	pb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 )
 
@@ -220,11 +221,69 @@ func (cs *ConfigSourcer) startRefresher(
 	}()
 }
 
+func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.RequestFromStruct(&reqConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Read configuration values from Kubernetes ConfigMap or Secret resources.")
+
+	doc.Example(`
+config {
+  env = {
+    PORT = configdynamic("kubernetes", {
+	  name = "my-config-map"
+	  key = "port"
+	})
+
+    DATABASE_PASSWORD = configdynamic("kubernetes", {
+	  name = "database-creds"
+	  key = "password"
+	  secret = true
+	})
+  }
+}
+`)
+
+	doc.SetRequestField(
+		"name",
+		"the name of the ConfigMap of Secret",
+	)
+
+	doc.SetRequestField(
+		"namespace",
+		"the namespace to load the ConfigMap or Secret from.",
+		docs.Summary(
+			"by default this will use the namespace of the running pod.",
+			"If this config source is used outside of a pod, this will use the",
+			"namespace from the kubeconfig.",
+		),
+	)
+
+	doc.SetRequestField(
+		"key",
+		"the key in the ConfigMap or Secret to read the value from",
+		docs.Summary(
+			"ConfigMaps and Secrets store data in key/value format. This specifies",
+			"the key to read from the resource. If you want multiple values you must",
+			"specify multiple dynamic values.",
+		),
+	)
+
+	doc.SetRequestField(
+		"secret",
+		"This must be set to true to read from a Secret. If it is false we read from a ConfigMap.",
+	)
+
+	return doc, nil
+}
+
 type reqConfig struct {
-	Name      string // config map name
-	Namespace string // namespace for the config
-	Key       string // key in the config map to read
-	Secret    bool   // true if this is a secret (not a configmap)
+	Name      string `hcl:"name,attr"`          // config map name
+	Namespace string `hcl:"namespace,optional"` // namespace for the config
+	Key       string `hcl:"key,attr"`           // key in the config map to read
+	Secret    bool   `hcl:"secret,optional"`    // true if this is a secret (not a configmap)
 }
 
 func (c *reqConfig) Get(ctx context.Context, clientset *kubernetes.Clientset) (interface{}, error) {
