@@ -13,6 +13,9 @@ import (
 
 type SnapshotRestoreCommand struct {
 	*baseCommand
+
+	// set via -exit, indicates we should tell the server to exit now to be restarted.
+	flagExit bool
 }
 
 // initWriter inspects args to figure out where the snapshot will be read from. It
@@ -52,7 +55,7 @@ func (c *SnapshotRestoreCommand) Run(args []string) int {
 
 	client := c.project.Client()
 
-	r, closer, err := c.initReader(args)
+	r, closer, err := c.initReader(c.args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to open output: %s", err)
 		return 1
@@ -70,7 +73,9 @@ func (c *SnapshotRestoreCommand) Run(args []string) int {
 
 	err = stream.Send(&pb.RestoreSnapshotRequest{
 		Event: &pb.RestoreSnapshotRequest_Open_{
-			Open: &pb.RestoreSnapshotRequest_Open{},
+			Open: &pb.RestoreSnapshotRequest_Open{
+				Exit: c.flagExit,
+			},
 		},
 	})
 	if err != nil {
@@ -107,22 +112,30 @@ func (c *SnapshotRestoreCommand) Run(args []string) int {
 	}
 
 	_, err = stream.CloseAndRecv()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to receive snapshot start message: %s", err)
+	if err != nil && !c.flagExit {
+		fmt.Fprintf(os.Stderr, "failed to receive snapshot close message: %s", err)
 		return 1
 	}
 
 	if r == os.Stdin {
 		c.ui.Output("Server data restored.")
 	} else {
-		c.ui.Output("Server data restored from '%s'.", args[0])
+		c.ui.Output("Server data restored from '%s'.", c.args[0])
 	}
 
 	return 0
 }
 
 func (c *SnapshotRestoreCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(0, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:    "exit",
+			Target:  &c.flagExit,
+			Usage:   "After restoring, the server should exit so it can be restarted.",
+			Default: false,
+		})
+	})
 }
 
 func (c *SnapshotRestoreCommand) AutocompleteArgs() complete.Predictor {
@@ -134,14 +147,21 @@ func (c *SnapshotRestoreCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *SnapshotRestoreCommand) Synopsis() string {
-	return "Restore the state of the current server using a snapshot."
+	return "Stage a snapshot on the current server for data restoration."
 }
 
 func (c *SnapshotRestoreCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint server restore [<filenamp>]
+Usage: waypoint server restore [-exit] [<filename>]
 
-	Restore the state of the current server using a snapshot.
+	Stage a backup snapshot within the current server. The data in the snapshot is not restored
+	immediately, but rather staged such that on the next server start, it will be restored.
+
+	If -exit is passed, the server process will exit after staging the data. This allows a process
+	monitor to restart the server, where it will see the staged snapshot and restore the data.
+
+	If -exit is not passed, an operator much restart the server manually to finish the restoration
+	process.
 
 	The argument should be to a file written previously by 'waypoint server snapshot'.
 	If no name is specified and standard input is not a terminal, the backup will read from
