@@ -6581,7 +6581,7 @@ ember-cli-babel@^6.0.0-beta.4, ember-cli-babel@^6.12.0, ember-cli-babel@^6.16.0,
     ember-cli-version-checker "^2.1.2"
     semver "^5.5.0"
 
-ember-cli-babel@^7.1.3, ember-cli-babel@^7.10.0, ember-cli-babel@^7.11.1, ember-cli-babel@^7.17.2, ember-cli-babel@^7.18.0, ember-cli-babel@^7.19.0, ember-cli-babel@^7.20.2, ember-cli-babel@^7.7.3:
+ember-cli-babel@^7.1.3, ember-cli-babel@^7.10.0, ember-cli-babel@^7.11.1, ember-cli-babel@^7.18.0, ember-cli-babel@^7.19.0, ember-cli-babel@^7.20.2, ember-cli-babel@^7.7.3:
   version "7.22.1"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-7.22.1.tgz#cad28b89cf0e184c93b863d09bc5ba4ce1d2e453"
   integrity sha512-kCT8WbC1AYFtyOpU23ESm22a+gL6fWv8Nzwe8QFQ5u0piJzM9MEudfbjADEaoyKTrjMQTDsrWwEf3yjggDsOng==
@@ -6732,7 +6732,7 @@ ember-cli-htmlbars@^4.0.0:
     strip-bom "^4.0.0"
     walk-sync "^2.0.2"
 
-ember-cli-htmlbars@^4.2.2, ember-cli-htmlbars@^4.2.3, ember-cli-htmlbars@^4.3.1:
+ember-cli-htmlbars@^4.2.3, ember-cli-htmlbars@^4.3.1:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/ember-cli-htmlbars/-/ember-cli-htmlbars-4.4.0.tgz#7ca17d5ca8f7550984346d9e6e93da0c3323f8d9"
   integrity sha512-ohgctqk7dXIZR4TgN0xRoUYltWhghFJgqmtuswQTpZ7p74RxI9PKx+E8WV/95mGcPzraesvMNBg5utQNvcqgNg==
@@ -7454,36 +7454,6 @@ ember-source-channel-url@^2.0.1:
   integrity sha512-YlLUHW9gNvxEaohIj5exykoTZb4xj9ZRTcR4J3svv9S8rjAHJUnHmqC5Fd9onCs+NGxHo7KwR/fDwsfadbDu5Q==
   dependencies:
     got "^8.0.1"
-
-ember-source@~3.16.0:
-  version "3.16.10"
-  resolved "https://registry.yarnpkg.com/ember-source/-/ember-source-3.16.10.tgz#1a81006cb5f2e1b192f47c8ef4c5cd6336691e14"
-  integrity sha512-Vh+J1RWntKdovnjBJCwTJyrNDbj0UQ95geQRBk3tA6HCinnqRIAMxj1I2yF8aY19w/ljpsUOdog0RSjEm5oLDg==
-  dependencies:
-    "@babel/helper-module-imports" "^7.8.3"
-    "@babel/plugin-transform-block-scoping" "^7.8.3"
-    "@babel/plugin-transform-object-assign" "^7.8.3"
-    "@ember/edition-utils" "^1.2.0"
-    babel-plugin-debug-macros "^0.3.3"
-    babel-plugin-filter-imports "^3.0.0"
-    broccoli-concat "^3.7.4"
-    broccoli-debug "^0.6.4"
-    broccoli-funnel "^2.0.2"
-    broccoli-merge-trees "^3.0.2"
-    chalk "^2.4.2"
-    ember-cli-babel "^7.18.0"
-    ember-cli-get-component-path-option "^1.0.0"
-    ember-cli-is-package-missing "^1.0.0"
-    ember-cli-normalize-entity-name "^1.0.0"
-    ember-cli-path-utils "^1.0.0"
-    ember-cli-string-utils "^1.1.0"
-    ember-cli-version-checker "^3.1.3"
-    ember-router-generator "^2.0.0"
-    inflection "^1.12.0"
-    jquery "^3.4.1"
-    resolve "^1.11.1"
-    semver "^6.1.1"
-    silent-error "^1.1.1"
 
 ember-source@~3.20.0:
   version "3.20.4"
@@ -11925,23 +11895,6 @@ pbkdf2@^3.0.3:
     ripemd160 "^2.0.1"
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
-
-pds@./lib/addon-product-design-system/:
-  version "0.0.0"
-  dependencies:
-    broccoli-funnel "^3.0.3"
-    broccoli-merge-trees "^4.2.0"
-    chalk "^4.1.0"
-    ember-cli-babel "^7.17.2"
-    ember-cli-get-component-path-option "^1.0.0"
-    ember-cli-htmlbars "^4.2.2"
-    ember-cli-normalize-entity-name "^1.0.0"
-    ember-cli-path-utils "^1.0.0"
-    ember-cli-sass "^10.0.1"
-    ember-cli-string-utils "^1.1.0"
-    ember-source "~3.16.0"
-    ember-svg-jar "^2.2.3"
-    sass "^1.26.10"
 
 pend@~1.2.0:
   version "1.2.0"

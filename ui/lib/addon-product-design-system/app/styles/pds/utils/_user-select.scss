@@ -1,7 +1,0 @@
-// https://developer.mozilla.org/en-US/docs/Web/CSS/user-select#Browser_compatibility
-@mixin set($value) {
-  -webkit-user-select: $value; // Edge, Opera?, Firefox (49-68), Safari
-     -moz-user-select: $value; // Firefox (<49)
-      -ms-user-select: $value; // Edge, IE
-          user-select: $value; // Chromium (54+)
-}

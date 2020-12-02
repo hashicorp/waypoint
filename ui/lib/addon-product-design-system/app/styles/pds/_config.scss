@@ -1,9 +1,0 @@
-// Module Usage:
-//
-// @use "pds/config" with (...);
-// @use "pds";
-// ...
-
-$env: PROD !default;
-
-@forward "./theme";
