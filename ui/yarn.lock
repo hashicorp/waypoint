@@ -1942,20 +1942,6 @@
   dependencies:
     tslib "^2.0.1"
 
-"@formatjs/intl-numberformat@^5.3.2":
-  version "5.3.2"
-  resolved "https://registry.yarnpkg.com/@formatjs/intl-numberformat/-/intl-numberformat-5.3.2.tgz#c781aaec87819edbb15d8509d22ab875ec609d01"
-  integrity sha512-0M5KM9rxzHWBgkwofN0UPqaXaHKJe4fB3rDvNSay4+bjrkEe8a6ERIGhwAOZ9dgpOEt10RLNNc7MKsLJu7OvIg==
-  dependencies:
-    "@formatjs/intl-utils" "^3.8.1"
-
-"@formatjs/intl-utils@^3.8.1":
-  version "3.8.1"
-  resolved "https://registry.yarnpkg.com/@formatjs/intl-utils/-/intl-utils-3.8.1.tgz#e9bf5b7705dd9653d33f2f7af575d92bdb280b7c"
-  integrity sha512-Vm7WRiokXWdu4iWVAQ+omDVWRt4ImUzgfKJAWocz3m1h6/ftgc+YuIcL4RDE6TH3jYben7exTREWHXIwWnx4YA==
-  dependencies:
-    emojis-list "^3.0.0"
-
 "@glimmer/component@^1.0.0":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@glimmer/component/-/component-1.0.1.tgz#f304b2f9cf4f2762396abed2b8962486767e0b2e"
@@ -7298,35 +7284,6 @@ ember-inline-svg@^1.0.0:
     svgo "~1.2.2"
     walk-sync "~2.0.2"
 
-ember-intl@^5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/ember-intl/-/ember-intl-5.3.1.tgz#d401de4c0851da96b25029c8049925df5cd78cff"
-  integrity sha512-JtYx+wuCqFT7a+nB44Z9nI255hpjYxtSxQkmuh5T1i4XbRyZsTWIrMs8xF+YWTjmELiQESsFkYejvkehUWJmaA==
-  dependencies:
-    broccoli-caching-writer "^3.0.3"
-    broccoli-funnel "^3.0.3"
-    broccoli-merge-files "^0.8.0"
-    broccoli-merge-trees "^4.2.0"
-    broccoli-source "^3.0.0"
-    broccoli-stew "^3.0.0"
-    calculate-cache-key-for-tree "^2.0.0"
-    cldr-core "^36.0.0"
-    ember-auto-import "^1.5.3"
-    ember-cli-babel "^7.18.0"
-    extend "^3.0.2"
-    fast-memoize "^2.5.2"
-    has-unicode "^2.0.1"
-    intl-messageformat "^8.3.9"
-    intl-messageformat-parser "^5.0.2"
-    js-yaml "^3.13.1"
-    json-stable-stringify "^1.0.1"
-    locale-emoji "^0.3.0"
-    lodash.castarray "^4.4.0"
-    lodash.last "^3.0.0"
-    lodash.omit "^4.5.0"
-    mkdirp "^1.0.4"
-    silent-error "^1.1.1"
-
 ember-intl@^5.5.0:
   version "5.5.1"
   resolved "https://registry.yarnpkg.com/ember-intl/-/ember-intl-5.5.1.tgz#a6c951ae1a87791bca9f0028d20521d2cb583ccf"
@@ -9482,11 +9439,6 @@ intersection-observer-admin@~0.2.12:
   resolved "https://registry.yarnpkg.com/intersection-observer-admin/-/intersection-observer-admin-0.2.12.tgz#046b208afc8cbf626943d61688d5a779c5831275"
   integrity sha512-97+A29MV0kp6Xzkb4CxBNxxDU4qldyVFNzvZIiLMYqIZFutT2DJCzE1TEv0hXdmFQfAIY4KhNhL6L1BEEU0J8w==
 
-intl-format-cache@^4.2.43:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/intl-format-cache/-/intl-format-cache-4.3.0.tgz#09bb93a06d9774bb35e5a7117c0f047475cd5f1c"
-  integrity sha512-kGumT8fncIYMXb+YiWJKJ0t8n1tjSGrysZ+IFvXJc8oGT9U9PzH8DY2pFd0OY8L8RId6uNk2AiAFGP6bBHFSTg==
-
 intl-messageformat-parser@6.0.18, intl-messageformat-parser@^6.0.5:
   version "6.0.18"
   resolved "https://registry.yarnpkg.com/intl-messageformat-parser/-/intl-messageformat-parser-6.0.18.tgz#bf2855b82b0749e1f34e452f0a15d08d3277c8c7"
@@ -9494,21 +9446,6 @@ intl-messageformat-parser@6.0.18, intl-messageformat-parser@^6.0.5:
   dependencies:
     "@formatjs/ecma402-abstract" "1.5.0"
     tslib "^2.0.1"
-
-intl-messageformat-parser@^5.0.2, intl-messageformat-parser@^5.2.1:
-  version "5.3.6"
-  resolved "https://registry.yarnpkg.com/intl-messageformat-parser/-/intl-messageformat-parser-5.3.6.tgz#b44a5825a5f808d8422b7be173dd5f7b3e6ac5f0"
-  integrity sha512-ghIc5YOWzeCpNqDNXxYWYe1rCK+nIgfenNy5WLUi99PPII+WPKq0ds0epcjWtFdVaOs24C/J2HKxgCVLvq5RZw==
-  dependencies:
-    "@formatjs/intl-numberformat" "^5.3.2"
-
-intl-messageformat@^8.3.9:
-  version "8.4.1"
-  resolved "https://registry.yarnpkg.com/intl-messageformat/-/intl-messageformat-8.4.1.tgz#f31c811efc561700b61ab4ee4716b870787c0fe5"
-  integrity sha512-N4jLt0KebfqXZZZQRwBwZMrqwccHzZnN6KSeUsfidIoHMPIlLIgq08KcYsn7bZS6adh1KKH4/99VODWDDDu85Q==
-  dependencies:
-    intl-format-cache "^4.2.43"
-    intl-messageformat-parser "^5.2.1"
 
 intl-messageformat@^9.3.6:
   version "9.3.20"
