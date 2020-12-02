@@ -17,6 +17,8 @@
     background: none;
     padding: 0 scale.$sm-2;
     border-radius: 0;
+    color: inherit;
+    border: none;
 
     &::before {
       content: '$';
