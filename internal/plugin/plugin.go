@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/netlify"
 	"github.com/hashicorp/waypoint/builtin/nomad"
 	"github.com/hashicorp/waypoint/builtin/pack"
+	"github.com/hashicorp/waypoint/builtin/vault"
 )
 
 var (
@@ -41,6 +42,7 @@ var (
 		"aws-ami":                  ami.Options,
 		"aws-ec2":                  ec2.Options,
 		"aws-alb":                  alb.Options,
+		"vault":                    vault.Options,
 	}
 
 	// BaseFactories is the set of base plugin factories. This will include any
