@@ -44,6 +44,7 @@
   },
   "main": "index.js",
   "scripts": {
+    "prebuild": "if [[ $VERCEL_GIT_COMMIT_REF = 'main' ]]; then echo 'User-agent: * Disallow: /' >> './public/robots.txt'; fi",
     "build": "node --max-old-space-size=2048 ./node_modules/.bin/next build",
     "export": "node --max-old-space-size=2048 ./node_modules/.bin/next export",
     "format": "next-hashicorp format",
