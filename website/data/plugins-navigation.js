@@ -9,4 +9,5 @@ export default [
   'netlify',
   'nomad',
   'pack',
+  'vault',
 ]
