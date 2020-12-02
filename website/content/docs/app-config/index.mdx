@@ -1,0 +1,162 @@
+---
+layout: docs
+page_title: Application Configuration
+sidebar_title: Configuration
+description: |-
+  Waypoint can configure your application via environment variables that are either set via static values or synced with an external system such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon Parameter Store, etc.
+---
+
+# Application Configuration
+
+Waypoint can configure your application via environment variables
+that are either set via static values or synced with an external
+system such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon
+Parameter Store, etc.
+
+Applications often take configuration such as database URLs, ports to
+listen on, etc. in the form of environment variables. Waypoint can set
+these variables and make them available to your application. These values
+can be set via the `waypoint.hcl` file or using the `waypoint config`
+CLI.
+
+When configuration values change, Waypoint will automatically
+[restart your application](#application-restart-behavior).
+
+This functionality requires the [Waypoint entrypoint](/docs/entrypoint).
+
+## Setting Configuration via the CLI
+
+Static configuration are values that are set directly using `waypoint config set`.
+They are "static" because they are set with a predetermined value directly on the Waypoint
+server.
+
+```shell-session
+$ waypoint config set DATABASE_URL="postgresql://example.com:5432"
+```
+
+This will make the `DATABASE_URL` environment variable present with the
+given value for all deployed applications. For already-deployed applications,
+Waypoint will [restart running applications](#application-restart-behavior)
+when configuration changes.
+
+### Project Scope
+
+`waypoint config set` will set variables by default scoped to the _project_.
+This means that all applications within your project will have the environment
+variable set.
+
+### Application Scope
+
+You may use the `-app` flag to scope a variable to a specific application.
+For this scope, only a specific application in the project will have the
+configuration set.
+
+```shell-session
+$ waypoint config set -app web PORT=8080
+```
+
+## Setting Configuration via `waypoint.hcl`
+
+Configuration can also be set directly in the `waypoint.hcl` file using
+the [`config` stanza](/docs/waypoint-hcl/config). The example below achieves
+the same thing as the `waypoint config set` example in the section above.
+
+```hcl
+config {
+  env = {
+    DATABASE_URL = "postgresql://example.com:5432"
+  }
+}
+```
+
+Configuration specified in the `waypoint.hcl` file has a number of benefits:
+
+- The configuration is made available immediately during all `waypoint up`.
+
+- The configuration is persisted as code and can be committed to version control.
+
+- The configuration can make use of
+  [functions](/docs/waypoint-hcl/functions) and
+  [variables](/docs/waypoint-hcl/variables) to compute the keys and values.
+
+### Configuration Syncing
+
+Configuration set via the `waypoint.hcl` file must be _synced_ to take
+effect with the application. This happens automatically during any
+`waypoint up` or `waypoint deploy`, but can also be triggered manually
+using the `waypoint config sync` CLI command.
+
+When configuration is synced, any changes will affect
+_all deployments_ of that project or application. Practically, this
+means if you change a configuration value in the `waypoint.hcl` file
+and run `waypoint up`, the new deployment as well as any previous deployments
+that are still running will be updated with the new configuration value.
+This behavior is true for all methods of syncing.
+
+### Project vs. Application Scope
+
+The `config` stanza is valid at the project level and within `app`
+stanzas. This can be used to specify whether a configuration is at the
+project or application scope. You can also mix both together and they will be
+merged. The example below will set `THEME` for all apps and set `PORT`
+only for the "frontend" app.
+
+```hcl
+config {
+  env = {
+    THEME = "rainbow"
+  }
+}
+
+app "frontend" {
+  config {
+    env = {
+      PORT = 8080
+    }
+  }
+
+  # ...
+}
+```
+
+For conflicting keys, the app-scope value will be used. If in the above
+example the `app`-scoped `config` set a `THEME` value, that value would
+be used instead of the project-scoped value.
+
+## Unsetting Configuration
+
+To delete a configuration variable, use the CLI to set it to an empty string:
+
+```shell-session
+$ waypoint config set DATABASE_URL=
+```
+
+This works for configuration set via the CLI as well as `waypoint.hcl`.
+This also works for static as well as dynamic configuration values.
+
+-> For configuration set using a `config` stanza in a `waypoint.hcl` file,
+deleting the configuration will not currently unset the configuration. This
+will be fixed in a future version.
+
+## Syncing with External Systems
+
+Waypoint can sync application configuration values with external systems
+such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon Parameter Store,
+and more. To learn more about this, see the documentation page on
+[dynamic configuration values](/docs/app-config/dynamic).
+
+## Application Restart Behavior
+
+Waypoint will automatically restart your running applications whenever
+a configuration change is detected for that application. Waypoint restarts
+your application with the following steps:
+
+1. The `SIGTERM` signal is sent to your application process. This signal
+   can be trapped to perform last minute cleanup and shutdown.
+
+2. Waypoint will wait up to 30 seconds for your application to gracefully exit.
+
+3. After 30 seconds, Waypoint will send the `SIGKILL` signal to your
+   application process group. This will kill the application process as well
+   as any subprocesses it may have started. This signal is not able to be trapped
+   and your application will be killed immediately.

@@ -1,0 +1,85 @@
+---
+layout: docs
+page_title: Dynamic Values - Application Configuration
+sidebar_title: Dynamic Values
+description: |-
+  TODO
+---
+
+# Dynamic, Synced Configuration
+
+Waypoint can sync application configuration values with external systems
+such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon Parameter Store,
+and more. These are known as _dynamic configuration values_. As the values change,
+Waypoint will automatically update your deployments and restart your application.
+
+Dynamic values make it easy to utilize external configuration stores
+and the functionality they provide, such as automatic credential rotation
+in systems such as Vault or Amazon Parameter Store.
+
+This functionality requires the [Waypoint entrypoint](/docs/entrypoint).
+
+-> **Basic application configuration knowledge required.** This
+page assumes you know the basics of how to
+[set static application configuration](/docs/app-config). This page will
+not thoroughly explain the config setting CLI or `waypoint.hcl` stanzas.
+
+## Setting Dynamic Values via `waypoint.hcl`
+
+Dynamic configuration values are set in the `waypoint.hcl` file using
+the `configdynamic` function within the same `config` stanza as
+static configurations. This specifies that a configuration value is
+synced with an external system dynamically.
+
+```hcl
+config {
+  env = {
+    PORT = configdynamic("kubernetes", {
+      name = "my-config-map" # ConfigMap name
+      key  = "port"
+    })
+  }
+}
+```
+
+The example above syncs the `PORT` environment variable with the "port"
+key in the "my-config-map" Kubernetes ConfigMap. The "sync" actively watches
+the defined source, updates the environment variable whenever the value
+changes, and [restarts your application](/docs/app-config#application-restart-behavior).
+
+The `configdynamic` function has the following signature:
+
+```
+configdynamic(SOURCE, PARAMS)
+```
+
+The `SOURCE` parameter is a string specifying the config source to sync
+with and `PARAMS` is a map of parameters for that config source. The set
+of parameters is dependent on the source being used.
+
+## Unsetting Dynamic Values
+
+To unset a dynamic configuration value, delete it from the `waypoint.hcl`
+file and then use the CLI to set it to an empty string as shown below.
+Deleting the key from the Waypoint file and [syncing](/docs/app-config#configuration-syncing)
+it will not be enough.
+
+```shell-session
+$ waypoint config set PORT=
+```
+
+## Application Restart Behavior
+
+Waypoint will automatically restart your running applications whenever
+a configuration change is detected for that application. Waypoint restarts
+your application with the following steps:
+
+1. The `SIGTERM` signal is sent to your application process. This signal
+   can be trapped to perform last minute cleanup and shutdown.
+
+2. Waypoint will wait up to 30 seconds for your application to gracefully exit.
+
+3. After 30 seconds, Waypoint will send the `SIGKILL` signal to your
+   application process group. This will kill the application process as well
+   as any subprocesses it may have started. This signal is not able to be trapped
+   and your application will be killed immediately.

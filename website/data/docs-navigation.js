@@ -66,7 +66,10 @@ export default [
   'url',
   'logs',
   'exec',
-  'app-config',
+  {
+    category: 'app-config',
+    content: ['dynamic'],
+  },
   'workspaces',
   'plugins',
   '-----------',
