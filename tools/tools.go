@@ -7,8 +7,8 @@
 
 package tools
 
-//go:generate go install github.com/hashicorp/go-bindata
-import _ "github.com/hashicorp/go-bindata"
+//go:generate go install github.com/kevinburke/go-bindata
+import _ "github.com/kevinburke/go-bindata"
 
 //go:generate go install github.com/golang/protobuf/proto
 import _ "github.com/golang/protobuf/proto"
