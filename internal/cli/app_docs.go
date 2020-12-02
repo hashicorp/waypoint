@@ -419,6 +419,7 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 		component.RegistryType,
 		component.PlatformType,
 		component.ReleaseManagerType,
+		component.ConfigSourcerType,
 	}
 
 	docfactories := map[component.Type]*factory.Factory{}
@@ -447,6 +448,7 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 		{docfactories[component.RegistryType], "registry"},
 		{docfactories[component.PlatformType], "platform"},
 		{docfactories[component.ReleaseManagerType], "releasemanager"},
+		{docfactories[component.ConfigSourcerType], "configsourcer"},
 	}
 
 	for _, f := range factories {
