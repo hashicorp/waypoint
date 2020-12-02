@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	pb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 )
 
@@ -284,7 +285,61 @@ func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *v
 	}()
 }
 
+func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(docs.RequestFromStruct(&reqConfig{}))
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Read configuration values from Vault.")
+
+	doc.Example(`
+config {
+  env = {
+    "DATABASE_USERNAME" = configdynamic("vault", {
+      path = "database/creds/my-role"
+      key = "username"
+    })
+
+    "DATABASE_PASSWORD" = configdynamic("vault", {
+      path = "database/creds/my-role"
+      key = "password"
+    })
+
+    "DATABASE_HOST" = configdynamic("vault", {
+      path = "kv/database-host"
+    })
+  }
+}
+`)
+
+	doc.SetRequestField(
+		"path",
+		"the Vault path to read the secret",
+		docs.Summary(
+			"within a single application, multiple dynamic values that use the same",
+			"path will only read the value once. This allows multiple keys from a single",
+			"secret to be extracted into multiple values. The example above shows",
+			"this functionality by reading the username and password into separate values.",
+		),
+	)
+
+	doc.SetRequestField(
+		"key",
+		"The key in the structured response from the secret to read the value.",
+		docs.Summary(
+			"This value can be a direct key such as `password` or it can be a",
+			"[JSON pointer](https://tools.ietf.org/html/rfc6901) string to retrieve",
+			"a nested value. This is because Vault secrets can be any arbitrary",
+			"structure, not just simple key/value mappings. An example of a JSON pointer",
+			"value would be `/data/username/`.",
+		),
+	)
+
+	return doc, nil
+}
+
 type reqConfig struct {
-	Path string
-	Key  string
+	Path string `hcl:"path,attr"`
+	Key  string `hcl:"key,attr"`
 }
