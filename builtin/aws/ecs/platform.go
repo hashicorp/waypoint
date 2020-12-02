@@ -672,7 +672,7 @@ func (p *Platform) Launch(
 		additionalContainers = append(additionalContainers, c)
 	}
 
-	L.Debug("registring task definition", "id", id)
+	L.Debug("registering task definition", "id", id)
 
 	var cpuShares int
 
