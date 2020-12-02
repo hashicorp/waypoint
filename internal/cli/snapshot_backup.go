@@ -35,7 +35,7 @@ func (c *SnapshotBackupCommand) initWriter(args []string) (io.Writer, io.Closer,
 	f := os.Stdout
 
 	if sshterm.IsTerminal(int(f.Fd())) {
-		return nil, nil, fmt.Errorf("stdout is a terminal, refusing to polute (use '-' to force)")
+		return nil, nil, fmt.Errorf("stdout is a terminal, refusing to pollute (use '-' to force)")
 	}
 
 	return f, nil, nil
