@@ -10,13 +10,6 @@ GOLDFLAGS="-X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_IMPORT)
 CGO_ENABLED?=0
 GO_CMD?=go
 
-TOOLS=\
-			github.com/hashicorp/go-bindata/... \
-			github.com/golang/protobuf/proto \
-			github.com/golang/protobuf/protoc-gen-go \
-			github.com/mitchellh/protoc-gen-go-json \
-			github.com/vektra/mockery/.../
-
 .PHONY: bin
 bin: # bin creates the binaries for Waypoint for the current platform
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
@@ -104,11 +97,6 @@ gen/doc:
 .PHONY: tools
 tools: # install dependencies and tools required to build
 	@echo "Fetching tools..."
-	@for tool in  $(TOOLS) ; do \
-		echo "==> $$tool" ; \
-		GO111MODULE=off $(GO_CMD) get -u $$tool; \
-	done
-	@echo
-	@echo "Loading tools..."
 	$(GO_CMD) generate -tags tools tools/tools.go
+	@echo
 	@echo "Done!"
