@@ -127,7 +127,7 @@ cmd=/usr/local/bin/docker-entrypoint.sh
 
 You can see the first line has an error reading configuration value. If
 you keep scrolling right, you can see the `source` is `kubernetes` and the
-`err` is shown. In this case, its telling us that it couldn't load any
+`err` is shown. In this case, it's telling us that it couldn't load any
 in-cluster configuration. Upon thinking about this, we can realize that
 we didn't deploy to a Kubernetes cluster so this error makes sense, and perhaps
 we need to do something else to enable out-of-cluster authentication.
