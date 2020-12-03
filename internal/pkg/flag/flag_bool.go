@@ -10,7 +10,6 @@ import (
 // -- BoolVar  and boolValue
 type BoolVar struct {
 	Name         string
-	PlatformName string
 	Aliases      []string
 	Usage        string
 	Default      bool
@@ -29,13 +28,8 @@ func (f *Set) BoolVar(i *BoolVar) {
 		}
 	}
 
-	name := i.Name
-	if i.PlatformName != "" {
-		name = i.PlatformName + "-" + name
-	}
-
 	f.VarFlag(&VarFlag{
-		Name:       name,
+		Name:       i.Name,
 		Aliases:    i.Aliases,
 		Usage:      i.Usage,
 		Default:    strconv.FormatBool(i.Default),

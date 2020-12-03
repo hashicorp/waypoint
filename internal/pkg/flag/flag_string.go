@@ -9,7 +9,6 @@ import (
 // -- StringVar and stringValue
 type StringVar struct {
 	Name         string
-	PlatformName string
 	Aliases      []string
 	Usage        string
 	Default      string
@@ -31,13 +30,8 @@ func (f *Set) StringVar(i *StringVar) {
 		def = i.Default
 	}
 
-	name := i.Name
-	if i.PlatformName != "" {
-		name = i.PlatformName + "-" + name
-	}
-
 	f.VarFlag(&VarFlag{
-		Name:       name,
+		Name:       i.Name,
 		Aliases:    i.Aliases,
 		Usage:      i.Usage,
 		Default:    def,

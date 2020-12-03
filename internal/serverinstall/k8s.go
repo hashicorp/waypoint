@@ -529,102 +529,89 @@ func newService(c K8sConfig) (*apiv1.Service, error) {
 
 func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
-		Name:         "server-image",
-		PlatformName: "k8s",
+		Name:         "k8s-server-image",
 		Target:       &i.Config.ServerImage,
 		Usage:        "Docker image for the server.",
 		Default:      "hashicorp/waypoint:latest",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "namespace",
-		PlatformName: "k8s",
+		Name:         "k8s-namespace",
 		Target:       &i.Config.Namespace,
 		Usage:        "Namespace to install the Waypoint server into for Kubernetes.",
 		Default:      "",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "server-name",
-		PlatformName: "k8s",
+		Name:         "k8s-server-name",
 		Target:       &i.Config.ServerName,
 		Usage:        "Name of the Waypoint server for Kubernetes.",
 		Default:      "waypoint-server",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "service-name",
-		PlatformName: "k8s",
+		Name:         "k8s-service-name",
 		Target:       &i.Config.ServiceName,
 		Usage:        "Name of the Kubernetes service for the Waypoint server.",
 		Default:      "waypoint",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "cpu-request",
-		PlatformName: "k8s",
+		Name:         "k8s-cpu-request",
 		Target:       &i.Config.CPURequest,
 		Usage:        "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
 		Default:      "100m",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "mem-request",
-		PlatformName: "k8s",
+		Name:         "k8s-mem-request",
 		Target:       &i.Config.MemRequest,
 		Usage:        "Configures the requested memory amount for the Waypoint server in Kubernetes.",
 		Default:      "256Mi",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "storage-request",
-		PlatformName: "k8s",
+		Name:         "k8s-storage-request",
 		Target:       &i.Config.StorageRequest,
 		Usage:        "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
 		Default:      "1Gi",
 	})
 
 	set.BoolVar(&flag.BoolVar{
-		Name:         "openshift",
-		PlatformName: "k8s",
+		Name:         "k8s-openshift",
 		Target:       &i.Config.OpenShift,
 		Default:      false,
 		Usage:        "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift.",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "secret-file",
-		PlatformName: "k8s",
+		Name:         "k8s-secret-file",
 		Target:       &i.Config.SecretFile,
 		Usage:        "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "pull-secret",
-		PlatformName: "k8s",
+		Name:         "k8s-pull-secret",
 		Target:       &i.Config.ImagePullSecret,
 		Usage:        "Secret to use to access the Waypoint server image on Kubernetes.",
 		Default:      "github",
 	})
 
 	set.StringMapVar(&flag.StringMapVar{
-		Name:         "annotate-service",
-		PlatformName: "k8s",
+		Name:         "k8s-annotate-service",
 		Target:       &i.Config.ServiceAnnotations,
 		Usage:        "Annotations for the Service generated.",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "pull-policy",
-		PlatformName: "k8s",
+		Name:         "k8s-pull-policy",
 		Target:       &i.Config.ImagePullPolicy,
 		Usage:        "Set the pull policy ",
 		Default:      "Always",
 	})
 
 	set.BoolVar(&flag.BoolVar{
-		Name:         "advertise-internal",
-		PlatformName: "k8s",
+		Name:         "k8s-advertise-internal",
 		Target:       &i.Config.AdvertiseInternal,
 		Usage: "Advertise the internal service address rather than the external. " +
 			"This is useful if all your deployments will be able to access the private " +

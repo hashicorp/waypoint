@@ -35,13 +35,8 @@ func (f *Set) StringSliceVar(i *StringSliceVar) {
 		def = strings.Join(i.Default, ",")
 	}
 
-	name := i.Name
-	if i.PlatformName != "" {
-		name = i.PlatformName + "-" + name
-	}
-
 	f.VarFlag(&VarFlag{
-		Name:       name,
+		Name:       i.Name,
 		Aliases:    i.Aliases,
 		Usage:      i.Usage,
 		Default:    def,
