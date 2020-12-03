@@ -36,20 +36,20 @@ type K8sInstaller struct {
 }
 
 type K8sConfig struct {
-	ServerImage        string
+	serverImage        string
 	ImagePullPolicy    string
-	AdvertiseInternal  bool
-	ServiceAnnotations map[string]string
-	Namespace          string
+	advertiseInternal  bool
+	serviceAnnotations map[string]string
+	namespace          string
 
-	ServerName      string
-	ServiceName     string
-	OpenShift       bool
-	CPURequest      string
-	MemRequest      string
-	StorageRequest  string
-	SecretFile      string
-	ImagePullSecret string
+	serverName      string
+	serviceName     string
+	openShift       bool
+	cpuRequest      string
+	memRequest      string
+	storageRequest  string
+	secretFile      string
+	imagePullSecret string
 }
 
 func (i *K8sInstaller) Install(
@@ -70,7 +70,7 @@ func (i *K8sInstaller) Install(
 	// Discover the current target namespace in the user's config so if they
 	// run kubectl commands waypoint will show up. If we use the default namespace
 	// they might not see the objects we've created.
-	if i.Config.Namespace == "" {
+	if i.Config.namespace == "" {
 		namespace, _, err := newCmdConfig.Namespace()
 		if err != nil {
 			ui.Output(
@@ -79,7 +79,7 @@ func (i *K8sInstaller) Install(
 			)
 			return nil, nil, "", err
 		}
-		i.Config.Namespace = namespace
+		i.Config.namespace = namespace
 	}
 
 	clientconfig, err := newCmdConfig.ClientConfig()
@@ -112,10 +112,10 @@ func (i *K8sInstaller) Install(
 		s = sg.Add("")
 	}
 
-	if i.Config.SecretFile != "" {
+	if i.Config.secretFile != "" {
 		s.Update("Initializing Kubernetes secret")
 
-		data, err := ioutil.ReadFile(i.Config.SecretFile)
+		data, err := ioutil.ReadFile(i.Config.secretFile)
 		if err != nil {
 			ui.Output(
 				"Error reading Kubernetes secret file: %s", clierrors.Humanize(err),
@@ -147,7 +147,7 @@ func (i *K8sInstaller) Install(
 			return nil, nil, "", err
 		}
 
-		i.Config.ImagePullSecret = secretData.Metadata.Name
+		i.Config.imagePullSecret = secretData.Metadata.Name
 
 		ui.Output("Installing kubernetes secret...")
 
@@ -171,7 +171,7 @@ func (i *K8sInstaller) Install(
 
 	// Do some probing to see if this is OpenShift. If so, we'll switch the config for the user.
 	// Setting the OpenShift flag will short circuit this.
-	if !i.Config.OpenShift {
+	if !i.Config.openShift {
 		s.Update("Gathering information about the Kubernetes cluster...")
 		namespaceClient := clientset.CoreV1().Namespaces()
 		_, err := namespaceClient.Get(context.TODO(), "openshift", metav1.GetOptions{})
@@ -179,9 +179,9 @@ func (i *K8sInstaller) Install(
 
 		// Default namespace in OpenShift acts like a regular K8s namespace, so we don't want
 		// to remove fsGroup in this case.
-		if isOpenShift && i.Config.Namespace != "default" {
+		if isOpenShift && i.Config.namespace != "default" {
 			s.Update("OpenShift detected. Switching configuration...")
-			i.Config.OpenShift = true
+			i.Config.openShift = true
 		}
 	}
 
@@ -206,7 +206,7 @@ func (i *K8sInstaller) Install(
 
 	s.Update("Creating Kubernetes resources...")
 
-	serviceClient := clientset.CoreV1().Services(i.Config.Namespace)
+	serviceClient := clientset.CoreV1().Services(i.Config.namespace)
 	_, err = serviceClient.Create(context.TODO(), service, metav1.CreateOptions{})
 	if err != nil {
 		ui.Output(
@@ -215,7 +215,7 @@ func (i *K8sInstaller) Install(
 		)
 	}
 
-	statefulSetClient := clientset.AppsV1().StatefulSets(i.Config.Namespace)
+	statefulSetClient := clientset.AppsV1().StatefulSets(i.Config.namespace)
 	_, err = statefulSetClient.Create(context.TODO(), statefulset, metav1.CreateOptions{})
 	if err != nil {
 		ui.Output(
@@ -228,7 +228,7 @@ func (i *K8sInstaller) Install(
 	s = sg.Add("Waiting for Kubernetes StatefulSet to be ready...")
 	log.Info("waiting for server statefulset to become ready")
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		ss, err := clientset.AppsV1().StatefulSets(i.Config.Namespace).Get(
+		ss, err := clientset.AppsV1().StatefulSets(i.Config.namespace).Get(
 			ctx, "waypoint-server", metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -261,8 +261,8 @@ func (i *K8sInstaller) Install(
 	var grpcAddr string
 
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		svc, err := clientset.CoreV1().Services(i.Config.Namespace).Get(
-			ctx, i.Config.ServiceName, metav1.GetOptions{})
+		svc, err := clientset.CoreV1().Services(i.Config.namespace).Get(
+			ctx, i.Config.serviceName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -284,8 +284,8 @@ func (i *K8sInstaller) Install(
 			return false, nil
 		}
 
-		endpoints, err := clientset.CoreV1().Endpoints(i.Config.Namespace).Get(
-			ctx, i.Config.ServiceName, metav1.GetOptions{})
+		endpoints, err := clientset.CoreV1().Endpoints(i.Config.namespace).Get(
+			ctx, i.Config.serviceName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -339,9 +339,9 @@ func (i *K8sInstaller) Install(
 		// If we want internal or we're a localhost address, we use the internal
 		// address. The "localhost" check is specifically for Docker for Desktop
 		// since pods can't reach this.
-		if i.Config.AdvertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
+		if i.Config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
-				i.Config.ServiceName,
+				i.Config.serviceName,
 				grpcPort,
 			)
 		}
@@ -371,59 +371,59 @@ func (i *K8sInstaller) Install(
 
 // NewStatefulSet creates a new Waypoint Statefulset for deployment in Kubernetes.
 func newStatefulSet(c K8sConfig) (*appsv1.StatefulSet, error) {
-	cpuRequest, err := resource.ParseQuantity(c.CPURequest)
+	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.CPURequest, err)
+		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.cpuRequest, err)
 	}
 
-	memRequest, err := resource.ParseQuantity(c.MemRequest)
+	memRequest, err := resource.ParseQuantity(c.memRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse memory request resource %s: %s", c.MemRequest, err)
+		return nil, fmt.Errorf("could not parse memory request resource %s: %s", c.memRequest, err)
 	}
 
-	storageRequest, err := resource.ParseQuantity(c.StorageRequest)
+	storageRequest, err := resource.ParseQuantity(c.storageRequest)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse storage request resource %s: %s", c.StorageRequest, err)
+		return nil, fmt.Errorf("could not parse storage request resource %s: %s", c.storageRequest, err)
 	}
 
 	securityContext := &apiv1.PodSecurityContext{}
-	if !c.OpenShift {
+	if !c.openShift {
 		securityContext.FSGroup = int64Ptr(1000)
 	}
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.ServerName,
-			Namespace: c.Namespace,
+			Name:      c.serverName,
+			Namespace: c.namespace,
 			Labels: map[string]string{
-				"app": c.ServerName,
+				"app": c.serverName,
 			},
 		},
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: int32Ptr(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": c.ServerName,
+					"app": c.serverName,
 				},
 			},
-			ServiceName: c.ServiceName,
+			ServiceName: c.serviceName,
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": c.ServerName,
+						"app": c.serverName,
 					},
 				},
 				Spec: apiv1.PodSpec{
 					ImagePullSecrets: []apiv1.LocalObjectReference{
 						{
-							Name: c.ImagePullSecret,
+							Name: c.imagePullSecret,
 						},
 					},
 					SecurityContext: securityContext,
 					Containers: []apiv1.Container{
 						{
 							Name:            "server",
-							Image:           c.ServerImage,
+							Image:           c.serverImage,
 							ImagePullPolicy: apiv1.PullPolicy(c.ImagePullPolicy),
 							Env: []apiv1.EnvVar{
 								{
@@ -501,12 +501,12 @@ func newStatefulSet(c K8sConfig) (*appsv1.StatefulSet, error) {
 func newService(c K8sConfig) (*apiv1.Service, error) {
 	return &apiv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.ServiceName,
-			Namespace: c.Namespace,
+			Name:      c.serviceName,
+			Namespace: c.namespace,
 			Labels: map[string]string{
-				"app": c.ServerName,
+				"app": c.serverName,
 			},
-			Annotations: c.ServiceAnnotations,
+			Annotations: c.serviceAnnotations,
 		},
 		Spec: apiv1.ServiceSpec{
 			Ports: []apiv1.ServicePort{
@@ -520,7 +520,7 @@ func newService(c K8sConfig) (*apiv1.Service, error) {
 				},
 			},
 			Selector: map[string]string{
-				"app": c.ServerName,
+				"app": c.serverName,
 			},
 			Type: apiv1.ServiceTypeLoadBalancer,
 		},
@@ -530,76 +530,76 @@ func newService(c K8sConfig) (*apiv1.Service, error) {
 func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-server-image",
-		Target:  &i.Config.ServerImage,
+		Target:  &i.Config.serverImage,
 		Usage:   "Docker image for the server.",
 		Default: "hashicorp/waypoint:latest",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-namespace",
-		Target:  &i.Config.Namespace,
+		Target:  &i.Config.namespace,
 		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
 		Default: "",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-server-name",
-		Target:  &i.Config.ServerName,
+		Target:  &i.Config.serverName,
 		Usage:   "Name of the Waypoint server for Kubernetes.",
 		Default: "waypoint-server",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-service-name",
-		Target:  &i.Config.ServiceName,
+		Target:  &i.Config.serviceName,
 		Usage:   "Name of the Kubernetes service for the Waypoint server.",
 		Default: "waypoint",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-request",
-		Target:  &i.Config.CPURequest,
+		Target:  &i.Config.cpuRequest,
 		Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
 		Default: "100m",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-mem-request",
-		Target:  &i.Config.MemRequest,
+		Target:  &i.Config.memRequest,
 		Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
 		Default: "256Mi",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-storage-request",
-		Target:  &i.Config.StorageRequest,
+		Target:  &i.Config.storageRequest,
 		Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
 		Default: "1Gi",
 	})
 
 	set.BoolVar(&flag.BoolVar{
 		Name:    "k8s-openshift",
-		Target:  &i.Config.OpenShift,
+		Target:  &i.Config.openShift,
 		Default: false,
 		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-secret-file",
-		Target: &i.Config.SecretFile,
+		Target: &i.Config.secretFile,
 		Usage:  "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-pull-secret",
-		Target:  &i.Config.ImagePullSecret,
+		Target:  &i.Config.imagePullSecret,
 		Usage:   "Secret to use to access the Waypoint server image on Kubernetes.",
 		Default: "github",
 	})
 
 	set.StringMapVar(&flag.StringMapVar{
 		Name:   "k8s-annotate-service",
-		Target: &i.Config.ServiceAnnotations,
+		Target: &i.Config.serviceAnnotations,
 		Usage:  "Annotations for the Service generated.",
 	})
 
@@ -612,7 +612,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 
 	set.BoolVar(&flag.BoolVar{
 		Name:   "k8s-advertise-internal",
-		Target: &i.Config.AdvertiseInternal,
+		Target: &i.Config.advertiseInternal,
 		Usage: "Advertise the internal service address rather than the external. " +
 			"This is useful if all your deployments will be able to access the private " +
 			"service address. This will default to false but will be automatically set to " +

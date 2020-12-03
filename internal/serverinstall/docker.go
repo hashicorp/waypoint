@@ -27,7 +27,7 @@ type DockerInstaller struct {
 }
 
 type DockerConfig struct {
-	ServerImage string
+	serverImage string
 }
 
 func (i *DockerInstaller) Install(
@@ -87,9 +87,9 @@ func (i *DockerInstaller) Install(
 		return &clicfg, &addr, "", nil
 	}
 
-	s.Update("Checking for Docker image: %s", i.Config.ServerImage)
+	s.Update("Checking for Docker image: %s", i.Config.serverImage)
 
-	imageRef, err := reference.ParseNormalizedNamed(i.Config.ServerImage)
+	imageRef, err := reference.ParseNormalizedNamed(i.Config.serverImage)
 	if err != nil {
 		return nil, nil, "", fmt.Errorf("Error parsing Docker image: %s", err)
 	}
@@ -105,7 +105,7 @@ func (i *DockerInstaller) Install(
 	}
 
 	if len(imageList) == 0 {
-		s.Update("Pulling image: %s", i.Config.ServerImage)
+		s.Update("Pulling image: %s", i.Config.serverImage)
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
 		if err != nil {
@@ -176,7 +176,7 @@ func (i *DockerInstaller) Install(
 		AttachStdin:  true,
 		OpenStdin:    true,
 		StdinOnce:    true,
-		Image:        i.Config.ServerImage,
+		Image:        i.Config.serverImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
 		Cmd:          []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
@@ -232,7 +232,7 @@ func (i *DockerInstaller) Install(
 func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "docker-server-image",
-		Target:  &i.Config.ServerImage,
+		Target:  &i.Config.serverImage,
 		Usage:   "Docker image for the server.",
 		Default: "hashicorp/waypoint:latest",
 	})

@@ -19,13 +19,13 @@ type NomadInstaller struct {
 }
 
 type NomadConfig struct {
-	ServerImage        string
-	ServiceAnnotations map[string]string
-	Namespace          string
+	serverImage        string
+	serviceAnnotations map[string]string
+	namespace          string
 
-	Region         string
-	Datacenters    []string
-	PolicyOverride bool
+	region         string
+	datacenters    []string
+	policyOverride bool
 }
 
 // InstallNomad registers a waypoint-server job with a Nomad cluster
@@ -100,7 +100,7 @@ func (i *NomadInstaller) Install(
 	s.Update("Installing Waypoint server to Nomad")
 	job := waypointNomadJob(i.Config)
 	jobOpts := &api.RegisterOptions{
-		PolicyOverride: i.Config.PolicyOverride,
+		PolicyOverride: i.Config.policyOverride,
 	}
 
 	resp, _, err := client.Jobs().RegisterOpts(job, jobOpts, nil)
@@ -192,10 +192,10 @@ EVAL:
 }
 
 func waypointNomadJob(c NomadConfig) *api.Job {
-	job := api.NewServiceJob("waypoint-server", "waypoint-server", c.Region, 50)
-	job.Namespace = &c.Namespace
-	job.Datacenters = c.Datacenters
-	job.Meta = c.ServiceAnnotations
+	job := api.NewServiceJob("waypoint-server", "waypoint-server", c.region, 50)
+	job.Namespace = &c.namespace
+	job.Datacenters = c.datacenters
+	job.Meta = c.serviceAnnotations
 	tg := api.NewTaskGroup("waypoint-server", 1)
 	tg.Networks = []*api.NetworkResource{
 		{
@@ -220,7 +220,7 @@ func waypointNomadJob(c NomadConfig) *api.Job {
 
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
-		"image": c.ServerImage,
+		"image": c.serverImage,
 		"ports": []string{"server", "ui"},
 		"args":  []string{"server", "run", "-accept-tos", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
 	}
@@ -265,42 +265,42 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-server-image",
-		Target:  &i.Config.ServerImage,
+		Target:  &i.Config.serverImage,
 		Usage:   "Docker image for the server.",
 		Default: "hashicorp/waypoint:latest",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-nomad-region",
-		Target:  &i.Config.Region,
+		Target:  &i.Config.region,
 		Default: "global",
 		Usage:   "Region to install to for Nomad.",
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
 		Name:    "nomad-datacenters",
-		Target:  &i.Config.Datacenters,
+		Target:  &i.Config.datacenters,
 		Default: []string{"dc1"},
 		Usage:   "Datacenters to install to for Nomad.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-namespace",
-		Target:  &i.Config.Namespace,
+		Target:  &i.Config.namespace,
 		Default: "default",
 		Usage:   "Namespace to install the Waypoint server into for Nomad.",
 	})
 
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-policy-override",
-		Target:  &i.Config.PolicyOverride,
+		Target:  &i.Config.policyOverride,
 		Default: false,
 		Usage:   "Override the Nomad sentinel policy for enterprise Nomad.",
 	})
 
 	set.StringMapVar(&flag.StringMapVar{
 		Name:   "nomad-annotate-service",
-		Target: &i.Config.ServiceAnnotations,
+		Target: &i.Config.serviceAnnotations,
 		Usage:  "Annotations for the Service generated.",
 	})
 }
