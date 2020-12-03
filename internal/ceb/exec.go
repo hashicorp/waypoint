@@ -109,7 +109,11 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec, env []string) {
 		for {
 			resp, err := client.Recv()
 			if err != nil {
-				log.Warn("error receiving from server stream", "err", err)
+				if err == io.EOF {
+					log.Info("exec stream ended by client")
+				} else {
+					log.Warn("error receiving from server stream", "err", err)
+				}
 				return
 			}
 
