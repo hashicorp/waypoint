@@ -9,14 +9,15 @@ import (
 
 // -- StringSliceVar and stringSliceValue
 type StringSliceVar struct {
-	Name       string
-	Aliases    []string
-	Usage      string
-	Default    []string
-	Hidden     bool
-	EnvVar     string
-	Target     *[]string
-	Completion complete.Predictor
+	Name         string
+	PlatformName string
+	Aliases      []string
+	Usage        string
+	Default      []string
+	Hidden       bool
+	EnvVar       string
+	Target       *[]string
+	Completion   complete.Predictor
 }
 
 func (f *Set) StringSliceVar(i *StringSliceVar) {
@@ -34,8 +35,13 @@ func (f *Set) StringSliceVar(i *StringSliceVar) {
 		def = strings.Join(i.Default, ",")
 	}
 
+	name := i.Name
+	if i.PlatformName != "" {
+		name = i.PlatformName + "-" + name
+	}
+
 	f.VarFlag(&VarFlag{
-		Name:       i.Name,
+		Name:       name,
 		Aliases:    i.Aliases,
 		Usage:      i.Usage,
 		Default:    def,

@@ -1,4 +1,4 @@
-package docker
+package serverinstall
 
 import (
 	"context"
@@ -17,16 +17,20 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
-	"github.com/hashicorp/waypoint/internal/serverinstall/config"
 )
 
-type Platform struct {
-	Config *config.BaseConfig
+type DockerInstaller struct {
+	Config DockerConfig
 }
 
-func (p *Platform) Install(
+type DockerConfig struct {
+	ServerImage string
+}
+
+func (i *DockerInstaller) Install(
 	ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
 ) {
@@ -83,9 +87,9 @@ func (p *Platform) Install(
 		return &clicfg, &addr, "", nil
 	}
 
-	s.Update("Checking for Docker image: %s", p.Config.ServerImage)
+	s.Update("Checking for Docker image: %s", i.Config.ServerImage)
 
-	imageRef, err := reference.ParseNormalizedNamed(p.Config.ServerImage)
+	imageRef, err := reference.ParseNormalizedNamed(i.Config.ServerImage)
 	if err != nil {
 		return nil, nil, "", fmt.Errorf("Error parsing Docker image: %s", err)
 	}
@@ -101,7 +105,7 @@ func (p *Platform) Install(
 	}
 
 	if len(imageList) == 0 {
-		s.Update("Pulling image: %s", p.Config.ServerImage)
+		s.Update("Pulling image: %s", i.Config.ServerImage)
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
 		if err != nil {
@@ -172,7 +176,7 @@ func (p *Platform) Install(
 		AttachStdin:  true,
 		OpenStdin:    true,
 		StdinOnce:    true,
-		Image:        p.Config.ServerImage,
+		Image:        i.Config.ServerImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
 		Cmd:          []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
@@ -223,4 +227,14 @@ func (p *Platform) Install(
 	s.Done()
 
 	return &clicfg, &addr, httpAddr, nil
+}
+
+func (i *DockerInstaller) InstallFlags(set *flag.Set) {
+	set.StringVar(&flag.StringVar{
+		Name:         "server-image",
+		PlatformName: "docker",
+		Target:       &i.Config.ServerImage,
+		Usage:        "Docker image for the server.",
+		Default:      "hashicorp/waypoint:latest",
+	})
 }

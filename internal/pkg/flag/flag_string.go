@@ -8,15 +8,16 @@ import (
 
 // -- StringVar and stringValue
 type StringVar struct {
-	Name       string
-	Aliases    []string
-	Usage      string
-	Default    string
-	Hidden     bool
-	EnvVar     string
-	Target     *string
-	Completion complete.Predictor
-	SetHook    func(val string)
+	Name         string
+	PlatformName string
+	Aliases      []string
+	Usage        string
+	Default      string
+	Hidden       bool
+	EnvVar       string
+	Target       *string
+	Completion   complete.Predictor
+	SetHook      func(val string)
 }
 
 func (f *Set) StringVar(i *StringVar) {
@@ -30,8 +31,13 @@ func (f *Set) StringVar(i *StringVar) {
 		def = i.Default
 	}
 
+	name := i.Name
+	if i.PlatformName != "" {
+		name = i.PlatformName + "-" + name
+	}
+
 	f.VarFlag(&VarFlag{
-		Name:       i.Name,
+		Name:       name,
 		Aliases:    i.Aliases,
 		Usage:      i.Usage,
 		Default:    def,

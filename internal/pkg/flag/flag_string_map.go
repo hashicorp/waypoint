@@ -10,13 +10,14 @@ import (
 
 // -- StringMapVar and stringMapValue
 type StringMapVar struct {
-	Name       string
-	Aliases    []string
-	Usage      string
-	Default    map[string]string
-	Hidden     bool
-	Target     *map[string]string
-	Completion complete.Predictor
+	Name         string
+	PlatformName string
+	Aliases      []string
+	Usage        string
+	Default      map[string]string
+	Hidden       bool
+	Target       *map[string]string
+	Completion   complete.Predictor
 }
 
 func (f *Set) StringMapVar(i *StringMapVar) {
@@ -25,8 +26,13 @@ func (f *Set) StringMapVar(i *StringMapVar) {
 		def = mapToKV(i.Default)
 	}
 
+	name := i.Name
+	if i.PlatformName != "" {
+		name = i.PlatformName + "-" + name
+	}
+
 	f.VarFlag(&VarFlag{
-		Name:       i.Name,
+		Name:       name,
 		Aliases:    i.Aliases,
 		Usage:      i.Usage,
 		Default:    def,

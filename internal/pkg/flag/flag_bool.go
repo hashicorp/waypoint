@@ -9,15 +9,16 @@ import (
 
 // -- BoolVar  and boolValue
 type BoolVar struct {
-	Name       string
-	Aliases    []string
-	Usage      string
-	Default    bool
-	Hidden     bool
-	EnvVar     string
-	Target     *bool
-	Completion complete.Predictor
-	SetHook    func(val bool)
+	Name         string
+	PlatformName string
+	Aliases      []string
+	Usage        string
+	Default      bool
+	Hidden       bool
+	EnvVar       string
+	Target       *bool
+	Completion   complete.Predictor
+	SetHook      func(val bool)
 }
 
 func (f *Set) BoolVar(i *BoolVar) {
@@ -28,8 +29,13 @@ func (f *Set) BoolVar(i *BoolVar) {
 		}
 	}
 
+	name := i.Name
+	if i.PlatformName != "" {
+		name = i.PlatformName + "-" + name
+	}
+
 	f.VarFlag(&VarFlag{
-		Name:       i.Name,
+		Name:       name,
 		Aliases:    i.Aliases,
 		Usage:      i.Usage,
 		Default:    strconv.FormatBool(i.Default),

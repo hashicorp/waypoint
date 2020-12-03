@@ -16,13 +16,11 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
-	"github.com/hashicorp/waypoint/internal/serverinstall/config"
 )
 
 type InstallCommand struct {
 	*baseCommand
 
-	Config         config.BaseConfig
 	platform       string
 	contextName    string
 	contextDefault bool
@@ -58,12 +56,14 @@ func (c *InstallCommand) Run(args []string) int {
 	var err error
 	var httpAddr string
 
-	p, err := serverinstall.NewServerPlatformInstaller(&c.Config, c.platform)
-	if err != nil {
+	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
+	if !ok {
 		c.ui.Output(
-			"Error during server install: ", err,
+			"Error installing server into %s: invalid platform",
+			c.platform,
 			terminal.WithErrorStyle(),
 		)
+
 		return 1
 	}
 
@@ -183,55 +183,6 @@ func (c *InstallCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.StringVar(&flag.StringVar{
-			Name:    "docker-server-image",
-			Target:  &c.Config.ServerImage,
-			Usage:   "Docker image for the server.",
-			Default: "hashicorp/waypoint:latest",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "k8s-server-image",
-			Target:  &c.Config.ServerImage,
-			Usage:   "Docker image for the server image.",
-			Default: "hashicorp/waypoint:latest",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "nomad-server-image",
-			Target:  &c.Config.ServerImage,
-			Usage:   "Docker image for the server image.",
-			Default: "hashicorp/waypoint:latest",
-		})
-
-		f.StringMapVar(&flag.StringMapVar{
-			Name:   "k8s-annotate-service",
-			Target: &c.Config.ServiceAnnotations,
-			Usage:  "Annotations for the Service generated on Kubernetes.",
-		})
-
-		f.StringMapVar(&flag.StringMapVar{
-			Name:   "nomad-annotate-service",
-			Target: &c.Config.ServiceAnnotations,
-			Usage:  "Annotations for the Service generated on Nomad.",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "k8s-pull-policy",
-			Target:  &c.Config.ImagePullPolicy,
-			Usage:   "",
-			Default: "Always",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:   "k8s-advertise-internal",
-			Target: &c.Config.AdvertiseInternal,
-			Usage: "Advertise the internal service address rather than the external on Kubernetes. " +
-				"This is useful if all your deployments will be able to access the private " +
-				"service address. This will default to false but will be automatically set to " +
-				"true if the external host is detected to be localhost.",
-		})
-
-		f.StringVar(&flag.StringVar{
 			Name:    "context-create",
 			Target:  &c.contextName,
 			Default: fmt.Sprintf("install-%d", time.Now().Unix()),
@@ -259,96 +210,10 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Usage:   acceptTOSHelp,
 			Default: false,
 		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "k8s-namespace",
-			Target:  &c.Config.Namespace,
-			Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
-			Default: "",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "k8s-server-name",
-			Target:  &c.Config.ServerName,
-			Usage:   "Name of the Waypoint server for Kubernetes.",
-			Default: "waypoint-server",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "k8s-service",
-			Target:  &c.Config.ServiceName,
-			Usage:   "Name of the Kubernetes service for the server.",
-			Default: "waypoint",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "k8s-cpu-request",
-			Target:  &c.Config.CPURequest,
-			Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes",
-			Default: "100m",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "k8s-mem-request",
-			Target:  &c.Config.MemRequest,
-			Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes",
-			Default: "256Mi",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "k8s-storage-request",
-			Target:  &c.Config.StorageRequest,
-			Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
-			Default: "1Gi",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:    "k8s-openshift",
-			Target:  &c.Config.OpenShift,
-			Default: false,
-			Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift.",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "k8s-secret-file",
-			Target: &c.Config.SecretFile,
-			Usage:  "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "k8s-pull-secret",
-			Target:  &c.Config.ImagePullSecret,
-			Usage:   "Secret to use to access the Waypoint server image on Kubernetes.",
-			Default: "github",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "nomad-region",
-			Target:  &c.Config.RegionF,
-			Default: "global",
-			Usage:   "Region to install the Waypoint server to on Nomad.",
-		})
-
-		f.StringSliceVar(&flag.StringSliceVar{
-			Name:    "nomad-dc",
-			Target:  &c.Config.DatacentersF,
-			Default: []string{"dc1"},
-			Usage:   "Datacenters to install to on Nomad platform.",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:    "nomad-policy-override",
-			Target:  &c.Config.PolicyOverrideF,
-			Default: false,
-			Usage:   "Override the Nomad sentinel policy on enterprise Nomad platform.",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "nomad-namespace",
-			Target:  &c.Config.Namespace,
-			Usage:   "Namespace to install the Waypoint server into for Nomad.",
-			Default: "",
-		})
+		for name, platform := range serverinstall.Platforms {
+			platformSet := set.NewSet(name + " Options")
+			platform.InstallFlags(platformSet)
+		}
 	})
 }
 
