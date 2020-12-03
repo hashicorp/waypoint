@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/hashicorp/go-memdb"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
