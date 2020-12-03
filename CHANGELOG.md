@@ -15,6 +15,9 @@ available to your Waypoint configuration.
 * **`path` Variables**: you can now use `path.project`, `path.app`, and `path.pwd` as
 variables in your Waypoint file to specify paths as relative to the project (waypoint.hcl
 file), app, or pwd of the CLI invocation.
+* **Server snapshot/restore**: you can now use the CLI or API to take and restore online
+snapshots. Restoring snapshot data requires a server restart but the restore operation 
+can be staged online. [GH-870]
 
 IMPROVEMENTS:
 
