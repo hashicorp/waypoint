@@ -279,7 +279,16 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-
+		"server snapshot": func() (cli.Command, error) {
+			return &SnapshotBackupCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"server restore": func() (cli.Command, error) {
+			return &SnapshotRestoreCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
 				baseCommand: baseCommand,
