@@ -21,6 +21,7 @@ type validateStruct struct {
 	Labels  map[string]string `hcl:"labels,optional"`
 	Plugin  []*Plugin         `hcl:"plugin,block"`
 	Apps    []*validateApp    `hcl:"app,block"`
+	Config  *genericConfig    `hcl:"config,block"`
 }
 
 type validateApp struct {
