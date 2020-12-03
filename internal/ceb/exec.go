@@ -18,7 +18,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func (ceb *CEB) startExecGroup(es []*pb.EntrypointConfig_Exec) {
+func (ceb *CEB) startExecGroup(es []*pb.EntrypointConfig_Exec, env []string) {
 	idx := ceb.execIdx
 	for _, exec := range es {
 		// Ignore exec sessions we already have
@@ -32,14 +32,14 @@ func (ceb *CEB) startExecGroup(es []*pb.EntrypointConfig_Exec) {
 		}
 
 		// Start our session
-		go ceb.startExec(exec)
+		go ceb.startExec(exec, env)
 	}
 
 	// Store our exec index
 	ceb.execIdx = idx
 }
 
-func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
+func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec, env []string) {
 	log := ceb.logger.Named("exec").With("index", execConfig.Index)
 
 	// wait for initial server connection
@@ -93,6 +93,9 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec) {
 
 		return
 	}
+
+	// Set our environment variables from our `waypoint config` settings.
+	cmd.Env = append(cmd.Env, env...)
 
 	// Create our pipe for stdin so that we can send data
 	stdinR, stdinW := io.Pipe()

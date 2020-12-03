@@ -92,6 +92,11 @@ func (ceb *CEB) watchConfig(
 	// and support automatically reinitializing if the URL service changes.
 	didInitURL := false
 
+	// env stores the currently known list of environment vars we set on the
+	// child. We need to store this since we want to launch all exec sessions
+	// with the latest/current view on env vars too.
+	var env []string
+
 	// Start the app config watcher. This runs in its own goroutine so that
 	// stuff like dynamic config fetching doesn't block starting things like
 	// exec sessions.
@@ -125,7 +130,7 @@ func (ceb *CEB) watchConfig(
 
 			// Start the exec sessions if we have any
 			if len(config.Exec) > 0 {
-				ceb.startExecGroup(config.Exec)
+				ceb.startExecGroup(config.Exec, env)
 			}
 
 			// Configure our env vars for the child command. We always send
@@ -140,7 +145,12 @@ func (ceb *CEB) watchConfig(
 			case <-ctx.Done():
 			}
 
-		case env := <-envCh:
+		case newEnv := <-envCh:
+			// Store the new env vars. We could just do `env = <-envCh` above
+			// but in my experience its super easy in the future for someone
+			// to put a `:=` there and break things. This makes it more explicit.
+			env = newEnv
+
 			// Set our new env vars
 			newCmd := ceb.copyCmd(ceb.childCmdBase)
 			newCmd.Env = append(newCmd.Env, env...)
