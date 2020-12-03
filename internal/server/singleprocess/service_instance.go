@@ -26,17 +26,14 @@ func (s *service) ListInstances(
 		//
 		// The default case is no timeout, no blocking. Make a request and return
 
-		timeout := "0"
-		if req.ConnectTimeout != "" {
-			timeout = req.ConnectTimeout
-		}
-		connectTimeout, err := time.ParseDuration(timeout)
-		if err != nil {
-			return nil, err
-		}
+		if req.WaitTimeout != "" {
+			connectTimeout, err := time.ParseDuration(req.WaitTimeout)
+			if err != nil {
+				return nil, err
+			}
 
-		if connectTimeout > 0 {
-			_, cancel := context.WithTimeout(ctx, connectTimeout)
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, connectTimeout)
 			defer cancel()
 		}
 
@@ -48,7 +45,7 @@ func (s *service) ListInstances(
 				return nil, err
 			}
 
-			if len(result) > 0 || connectTimeout == 0 {
+			if len(result) > 0 || req.WaitTimeout == "" {
 				break
 			}
 

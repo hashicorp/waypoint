@@ -39,7 +39,6 @@ func TestListInstances(t *testing.T) {
 				Scope: &pb.ListInstancesRequest_DeploymentId{
 					DeploymentId: dep.Id,
 				},
-				ConnectTimeout: "0s",
 			})
 			require.NoError(err)
 			require.Len(resp.Instances, 0)
@@ -64,7 +63,6 @@ func TestListInstances(t *testing.T) {
 				Scope: &pb.ListInstancesRequest_DeploymentId{
 					DeploymentId: dep.Id,
 				},
-				ConnectTimeout: "0s",
 			})
 			require.NoError(err)
 			require.Len(resp.Instances, 1)
