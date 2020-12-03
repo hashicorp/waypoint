@@ -152,6 +152,11 @@ func Run(ctx context.Context, os ...Option) error {
 	// Setup our system logger
 	ceb.initSystemLogger()
 
+	// We replace the default hclog logger with our own so that all those
+	// logs also appear in the log streaming output. We don't expect anything
+	// to be using hclog.L() but this is there just in case it does.
+	hclog.SetDefault(ceb.logger)
+
 	// We're disabled also if we have no client set and the server address is empty.
 	// This means we have nothing to connect to.
 	cfg.disable = cfg.disable || (ceb.client == nil && cfg.ServerAddr == "")
