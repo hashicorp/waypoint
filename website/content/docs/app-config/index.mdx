@@ -79,19 +79,18 @@ Configuration specified in the `waypoint.hcl` file has a number of benefits:
   [functions](/docs/waypoint-hcl/functions) and
   [variables](/docs/waypoint-hcl/variables) to compute the keys and values.
 
-### Configuration Syncing
+### Updating the Configuration of Existing Deployments
 
-Configuration set via the `waypoint.hcl` file must be _synced_ to take
-effect with the application. This happens automatically during any
-`waypoint up` or `waypoint deploy`, but can also be triggered manually
-using the `waypoint config sync` CLI command.
+Changes to configuration within the `waypoint.hcl` file take effect
+whenever a new deploy occurs (such as via a `waypoint up` or `waypoint deploy`).
+Existing deployments can be updated without
+a new deploy by using the `waypoint config sync` CLI command.
 
-When configuration is synced, any changes will affect
+When configuration changes take effect, any changes will affect
 _all deployments_ of that project or application. Practically, this
 means if you change a configuration value in the `waypoint.hcl` file
 and run `waypoint up`, the new deployment as well as any previous deployments
 that are still running will be updated with the new configuration value.
-This behavior is true for all methods of syncing.
 
 ### Project vs. Application Scope
 
