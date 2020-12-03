@@ -29,7 +29,7 @@ func (s *service) ListInstances(
 		if req.WaitTimeout != "" {
 			connectTimeout, err := time.ParseDuration(req.WaitTimeout)
 			if err != nil {
-				return nil, err
+				return nil, status.Errorf(codes.FailedPrecondition, "Error parsing wait_timeout: %s", err)
 			}
 
 			var cancel context.CancelFunc
