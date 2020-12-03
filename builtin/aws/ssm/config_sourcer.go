@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	pb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 )
 
@@ -229,8 +230,124 @@ func (cs *ConfigSourcer) startRefresher(
 	}
 }
 
+func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
+	doc, err := docs.New(
+		docs.FromConfig(&sourceConfig{}),
+		docs.RequestFromStruct(&reqConfig{}),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	doc.Description("Read configuration values from AWS SSM Parameter Store.")
+
+	doc.Example(`
+config {
+  env = {
+    PORT = configdynamic("aws-ssm", {
+	  path = "port"
+	})
+  }
+}
+`)
+
+	doc.SetRequestField(
+		"path",
+		"the path for the parameter to read from the parameter store.",
+	)
+
+	doc.SetField(
+		"access_key",
+		"This is the AWS access key. It must be provided, but it can also be sourced from the `AWS_ACCESS_KEY_ID` environment variable, or via a shared credentials file if `profile` is specified",
+	)
+
+	doc.SetField(
+		"assume_role_arn",
+		"Amazon Resource Name (ARN) of the IAM Role to assume.",
+	)
+
+	doc.SetField(
+		"assume_role_duration_seconds",
+		"Number of seconds to restrict the assume role session duration.",
+	)
+
+	doc.SetField(
+		"assume_role_external_id",
+		"External identifier to use when assuming the role.",
+	)
+
+	doc.SetField(
+		"assume_role_policy",
+		"IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+	)
+
+	doc.SetField(
+		"assume_role_session_name",
+		"Session name to use when assuming the role.",
+	)
+
+	doc.SetField(
+		"shared_credentials_file",
+		"This is the path to the shared credentials file. If this is not set and a profile is specified, `~/.aws/credentials` will be used.",
+	)
+
+	doc.SetField(
+		"iam_endpoint",
+		"Custom endpoint address for the IAM service.",
+	)
+
+	doc.SetField(
+		"insecure",
+		"Explicitly allow the provider to perform \"insecure\" SSL requests.",
+		docs.Default("false"),
+	)
+
+	doc.SetField(
+		"max_retries",
+		"This is the maximum number of times an API call is retried, in the case where requests are being throttled or experiencing transient failures. The delay between the subsequent API calls increases exponentially.",
+		docs.Default("25"),
+	)
+
+	doc.SetField(
+		"profile",
+		"This is the AWS profile name as set in the shared credentials file.",
+	)
+
+	doc.SetField(
+		"region",
+		"This is the AWS region. It must be provided, but it can also be sourced from the `AWS_DEFAULT_REGION` environment variables, or via a shared credentials file if profile is specified.",
+	)
+
+	doc.SetField(
+		"secret_key",
+		"This is the AWS secret key. It must be provided, but it can also be sourced from the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared credentials file if `profile` is specified.",
+	)
+
+	doc.SetField(
+		"skip_credentials_validation",
+		"Skip the credentials validation via the STS API. Useful for AWS API implementations that do not have STS available or implemented.",
+	)
+
+	doc.SetField(
+		"skip_metadata_api_check",
+		"Skip the AWS Metadata API check. Useful for AWS API implementations that do not have a metadata API endpoint. Setting to true prevents Terraform from authenticating via the Metadata API. You may need to use other authentication methods like static credentials, configuration variables, or environment variables.",
+	)
+
+	doc.SetField(
+		"skip_requesting_account_id",
+		"Skip requesting the account ID. Useful for AWS API implementations that do not have the IAM, STS API, or metadata API.",
+	)
+
+	doc.SetField(
+		"sts_endpoint",
+		"Custom endpoint for the STS service.",
+	)
+
+	return doc, nil
+}
+
 type reqConfig struct {
-	Path string // parameter path
+	Path string `hcl:"path,attr"` // parameter path
 }
 
 func (c *reqConfig) CacheKey() string {
@@ -251,14 +368,14 @@ type sourceConfig struct {
 	AssumeRoleSessionName string `hcl:"assume_role_session_name,optional"`
 	//AssumeRoleTags              map[string]string `hcl:"assume_role_tags,optional"`
 	//AssumeRoleTransitiveTagKeys []string          `hcl:"assume_role_transitive_tag_keys,optional"`
-	CredsFilename           string `hcl:"creds_filename,optional"`
+	CredsFilename           string `hcl:"shared_credentials_file,optional"`
 	IamEndpoint             string `hcl:"iam_endpoint,optional"`
 	Insecure                bool   `hcl:"insecure,optional"`
 	MaxRetries              int    `hcl:"max_retries,optional"`
 	Profile                 string `hcl:"profile,optional"`
 	Region                  string `hcl:"region,optional"`
 	SecretKey               string `hcl:"secret_key,optional"`
-	SkipCredsValidation     bool   `hcl:"skip_creds_validation,optional"`
+	SkipCredsValidation     bool   `hcl:"skip_credentials_validation,optional"`
 	SkipMetadataApiCheck    bool   `hcl:"skip_metadata_api_check,optional"`
 	SkipRequestingAccountId bool   `hcl:"skip_requesting_account_id,optional"`
 	StsEndpoint             string `hcl:"sts_endpoint,optional"`
