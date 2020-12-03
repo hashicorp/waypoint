@@ -1585,7 +1585,7 @@ message ListInstancesRequest {
   }
 
   // Time to wait before retrying a request to connect to requested instance
-  string connect_timeout = 3;
+  string wait_timeout = 3;
 }
 
 message ListInstancesResponse {
