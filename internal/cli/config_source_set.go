@@ -105,5 +105,5 @@ Usage: waypoint config source-set [options]
   "-config" values. Please see the documentation for the config source type
   you're configuring for details on what configuration fields are available.
 
-`)
+` + c.Flags().Help())
 }
