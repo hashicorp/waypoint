@@ -264,6 +264,10 @@ func (s *service) EntrypointExecStream(
 	errCh := make(chan error, 1)
 	go func() {
 		defer cancel()
+
+		// Close the event channel we send to. This signals to the receiving
+		// side in StartExecStream (service_exec.go) that the entrypoint
+		// exited and it should also exit the client stream.
 		defer close(exec.EntrypointEventCh)
 
 		for {
