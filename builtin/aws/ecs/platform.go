@@ -773,7 +773,7 @@ func (p *Platform) Launch(
 	}
 
 	s.Update("Registered Task definition: %s", family)
-	rand := id[len(id)-(31-len(app.App)):]
+	rand = id[:len(id)-len(app.App)]
 
 	serviceName := fmt.Sprintf("%s-%s", app.App, rand)
 
