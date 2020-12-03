@@ -105,5 +105,5 @@ Usage: waypoint config source-get [options]
 
   To use this command, you must specify a "-type" flag.
 
-`)
+` + c.Flags().Help())
 }
