@@ -8,15 +8,15 @@ import (
 
 // -- StringVar and stringValue
 type StringVar struct {
-	Name         string
-	Aliases      []string
-	Usage        string
-	Default      string
-	Hidden       bool
-	EnvVar       string
-	Target       *string
-	Completion   complete.Predictor
-	SetHook      func(val string)
+	Name       string
+	Aliases    []string
+	Usage      string
+	Default    string
+	Hidden     bool
+	EnvVar     string
+	Target     *string
+	Completion complete.Predictor
+	SetHook    func(val string)
 }
 
 func (f *Set) StringVar(i *StringVar) {

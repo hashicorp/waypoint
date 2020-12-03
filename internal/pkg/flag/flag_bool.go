@@ -9,15 +9,15 @@ import (
 
 // -- BoolVar  and boolValue
 type BoolVar struct {
-	Name         string
-	Aliases      []string
-	Usage        string
-	Default      bool
-	Hidden       bool
-	EnvVar       string
-	Target       *bool
-	Completion   complete.Predictor
-	SetHook      func(val bool)
+	Name       string
+	Aliases    []string
+	Usage      string
+	Default    bool
+	Hidden     bool
+	EnvVar     string
+	Target     *bool
+	Completion complete.Predictor
+	SetHook    func(val bool)
 }
 
 func (f *Set) BoolVar(i *BoolVar) {

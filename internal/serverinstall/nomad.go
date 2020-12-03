@@ -264,43 +264,43 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 
 func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
-		Name:         "nomad-server-image",
-		Target:       &i.Config.ServerImage,
-		Usage:        "Docker image for the server.",
-		Default:      "hashicorp/waypoint:latest",
+		Name:    "nomad-server-image",
+		Target:  &i.Config.ServerImage,
+		Usage:   "Docker image for the server.",
+		Default: "hashicorp/waypoint:latest",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "nomad-nomad-region",
-		Target:       &i.Config.Region,
-		Default:      "global",
-		Usage:        "Region to install to for Nomad.",
+		Name:    "nomad-nomad-region",
+		Target:  &i.Config.Region,
+		Default: "global",
+		Usage:   "Region to install to for Nomad.",
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
-		Name:         "nomad-datacenters",
-		Target:       &i.Config.Datacenters,
-		Default:      []string{"dc1"},
-		Usage:        "Datacenters to install to for Nomad.",
+		Name:    "nomad-datacenters",
+		Target:  &i.Config.Datacenters,
+		Default: []string{"dc1"},
+		Usage:   "Datacenters to install to for Nomad.",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:         "nomad-namespace",
-		Target:       &i.Config.Namespace,
-		Default:      "default",
-		Usage:        "Namespace to install the Waypoint server into for Nomad.",
+		Name:    "nomad-namespace",
+		Target:  &i.Config.Namespace,
+		Default: "default",
+		Usage:   "Namespace to install the Waypoint server into for Nomad.",
 	})
 
 	set.BoolVar(&flag.BoolVar{
-		Name:         "nomad-policy-override",
-		Target:       &i.Config.PolicyOverride,
-		Default:      false,
-		Usage:        "Override the Nomad sentinel policy for enterprise Nomad.",
+		Name:    "nomad-policy-override",
+		Target:  &i.Config.PolicyOverride,
+		Default: false,
+		Usage:   "Override the Nomad sentinel policy for enterprise Nomad.",
 	})
 
 	set.StringMapVar(&flag.StringMapVar{
-		Name:         "nomad-annotate-service",
-		Target:       &i.Config.ServiceAnnotations,
-		Usage:        "Annotations for the Service generated.",
+		Name:   "nomad-annotate-service",
+		Target: &i.Config.ServiceAnnotations,
+		Usage:  "Annotations for the Service generated.",
 	})
 }

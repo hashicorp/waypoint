@@ -10,13 +10,13 @@ import (
 
 // -- StringMapVar and stringMapValue
 type StringMapVar struct {
-	Name         string
-	Aliases      []string
-	Usage        string
-	Default      map[string]string
-	Hidden       bool
-	Target       *map[string]string
-	Completion   complete.Predictor
+	Name       string
+	Aliases    []string
+	Usage      string
+	Default    map[string]string
+	Hidden     bool
+	Target     *map[string]string
+	Completion complete.Predictor
 }
 
 func (f *Set) StringMapVar(i *StringMapVar) {
