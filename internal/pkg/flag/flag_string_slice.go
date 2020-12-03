@@ -9,15 +9,14 @@ import (
 
 // -- StringSliceVar and stringSliceValue
 type StringSliceVar struct {
-	Name         string
-	PlatformName string
-	Aliases      []string
-	Usage        string
-	Default      []string
-	Hidden       bool
-	EnvVar       string
-	Target       *[]string
-	Completion   complete.Predictor
+	Name       string
+	Aliases    []string
+	Usage      string
+	Default    []string
+	Hidden     bool
+	EnvVar     string
+	Target     *[]string
+	Completion complete.Predictor
 }
 
 func (f *Set) StringSliceVar(i *StringSliceVar) {
