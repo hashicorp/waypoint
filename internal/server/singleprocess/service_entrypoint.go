@@ -255,19 +255,6 @@ func (s *service) EntrypointExecStream(
 	}
 	log.Debug("exec stream open")
 
-	// Always close the event channel which signals to the reader end that
-	// we are done.
-	defer close(exec.EntrypointEventCh)
-
-	// Note to the caller that we're opened
-	if err := server.Send(&pb.EntrypointExecResponse{
-		Event: &pb.EntrypointExecResponse_Opened{
-			Opened: true,
-		},
-	}); err != nil {
-		return err
-	}
-
 	// Create a context we can use to cancel
 	ctx, cancel := context.WithCancel(server.Context())
 	defer cancel()
@@ -277,6 +264,7 @@ func (s *service) EntrypointExecStream(
 	errCh := make(chan error, 1)
 	go func() {
 		defer cancel()
+		defer close(exec.EntrypointEventCh)
 
 		for {
 			log.Trace("waiting for entrypoint exec event")
@@ -315,6 +303,19 @@ func (s *service) EntrypointExecStream(
 			}
 		}
 	}()
+
+	// Note to the caller that we're opened. It is very important that
+	// we call this AFTER the goroutine is started above so that we
+	// properly close the exec.EntrypointEventCh channel. This channel has
+	// to be closed when this function exits so that the client side properly
+	// exits.
+	if err := server.Send(&pb.EntrypointExecResponse{
+		Event: &pb.EntrypointExecResponse_Opened{
+			Opened: true,
+		},
+	}); err != nil {
+		return err
+	}
 
 	// Loop through our receive loop
 	for {
