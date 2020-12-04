@@ -30,10 +30,12 @@ var (
 
 // ConfigSourcer implements component.ConfigSourcer for Vault
 type ConfigSourcer struct {
+
 	// Client, if set, will be used as the client instead of initializing
 	// based on the config. This is only used for tests.
 	Client *vaultapi.Client
 
+	config      sourceConfig
 	cacheMu     sync.Mutex
 	secretCache map[string]*cachedSecret
 	lastRead    time.Time
@@ -43,6 +45,11 @@ type cachedSecret struct {
 	Secret *vaultapi.Secret // The secret itself
 	Cancel func()           // Non-nil to cancel the renewer
 	Err    error            // Error on last renew
+}
+
+// Config implements component.Configurable
+func (cs *ConfigSourcer) Config() (interface{}, error) {
+	return &cs.config, nil
 }
 
 // ReadFunc implements component.ConfigSourcer
@@ -286,7 +293,10 @@ func (cs *ConfigSourcer) startRenewer(client *vaultapi.Client, path string, s *v
 }
 
 func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
-	doc, err := docs.New(docs.RequestFromStruct(&reqConfig{}))
+	doc, err := docs.New(
+		docs.FromConfig(&sourceConfig{}),
+		docs.RequestFromStruct(&reqConfig{}),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -336,10 +346,108 @@ config {
 		),
 	)
 
+	doc.SetField(
+		"auth_method",
+		"The authentication method to use for Vault.",
+		docs.Summary(
+			"This can be one of: `aws`, `kubernetes`.\n\n",
+			"When this is set, configuration fields prefixed with the auth method",
+			"type should be set, if required. Configuration fields prefixed with",
+			"non-matching auth method types will be ignored (except for type validation).",
+			"\n\n",
+			"If no auth method is set, Vault assumes proper environment variables",
+			"are set for Vault to find and connect to the Vault server.",
+		),
+	)
+
+	doc.SetField(
+		"kubernetes_role",
+		"The role to use for Kubernetes authentication.",
+		docs.Summary(
+			"This is required for the `kubernetes` auth method.\n\n",
+			"This is a role that is setup with the [Kubernetes Auth Method in Vault](https://www.vaultproject.io/docs/auth/kubernetes).",
+		),
+	)
+
+	doc.SetField(
+		"kubernetes_token_path",
+		"The path to the Kubernetes service account token.",
+		docs.Summary(
+			"In standard Kubernetes environments, this doesn't have to be set.",
+		),
+		docs.Default("/var/run/secrets/kubernetes.io/serviceaccount/token"),
+	)
+
+	doc.SetField(
+		"aws_type",
+		"The type of authentication to use for AWS: either `iam` or `ec2`.",
+		docs.Summary(
+			"This is required for the `aws` auth method.\n\n",
+			"This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).",
+		),
+	)
+
+	doc.SetField(
+		"aws_role",
+		"The role to use for AWS authentication.",
+		docs.Summary(
+			"This is required for the `aws` auth method.\n\n",
+			"This depends on how you configured the Vault [AWS Auth Method](https://www.vaultproject.io/docs/auth/aws).",
+		),
+	)
+
+	doc.SetField(
+		"aws_credential_poll_interval",
+		"The interval in seconds to wait before checking for new credentials.",
+		docs.Default("60"),
+	)
+
+	doc.SetField(
+		"aws_access_key",
+		"The access key to use for authentication to the IAM service, if needed.",
+		docs.Summary(
+			"This usually isn't needed since IAM instance profiles are used.",
+		),
+	)
+
+	doc.SetField(
+		"aws_secret_key",
+		"The secret key to use for authentication to the IAM service, if needed.",
+		docs.Summary(
+			"This usually isn't needed since IAM instance profiles are used.",
+		),
+	)
+
+	doc.SetField(
+		"aws_region",
+		"The region for the STS endpoint when using that method of auth.",
+		docs.Default("us-east-1"),
+	)
+
+	doc.SetField(
+		"aws_header_value",
+		"The value to match the [`iam_server_id_header_value`](https://www.vaultproject.io/api/auth/aws#iam_server_id_header_value) if set.",
+	)
+
 	return doc, nil
 }
 
 type reqConfig struct {
 	Path string `hcl:"path,attr"`
 	Key  string `hcl:"key,attr"`
+}
+
+type sourceConfig struct {
+	AuthMethod string `hcl:"auth_method,optional"`
+
+	K8SRole      string `hcl:"kubernetes_role,optional"`
+	K8STokenPath string `hcl:"kubernetes_token_path,optional"`
+
+	AWSType             string `hcl:"aws_type,optional"`
+	AWSRole             string `hcl:"aws_role,optional"`
+	AWSCredPollInterval string `hcl:"aws_credential_poll_interval,optional"`
+	AWSAccessKey        string `hcl:"aws_access_key,optional"`
+	AWSSecretKey        string `hcl:"aws_secret_key,optional"`
+	AWSRegion           string `hcl:"aws_region,optional"`
+	AWSHeaderValue      string `hcl:"aws_header_value,optional"`
 }
