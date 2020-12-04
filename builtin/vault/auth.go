@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint/builtin/vault/internal/auth"
 	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/aws"
+	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/gcp"
 	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/kubernetes"
 )
 
@@ -46,6 +47,8 @@ func (cs *ConfigSourcer) initAuthMethod(
 	switch cs.config.AuthMethod {
 	case "aws":
 		method, err = aws.NewAWSAuthMethod(authConfig)
+	case "gcp":
+		method, err = gcp.NewGCPAuthMethod(authConfig)
 	case "kubernetes":
 		method, err = kubernetes.NewKubernetesAuthMethod(authConfig)
 	default:

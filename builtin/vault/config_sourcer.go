@@ -461,6 +461,45 @@ config {
 		"The value to match the [`iam_server_id_header_value`](https://www.vaultproject.io/api/auth/aws#iam_server_id_header_value) if set.",
 	)
 
+	doc.SetField(
+		"gcp_type",
+		"The type of authentication; must be `gce` or `iam`.",
+		docs.Summary(
+			"This is required for the `gcp` auth method.\n\n",
+			"This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).",
+		),
+	)
+
+	doc.SetField(
+		"gcp_role",
+		"The role to use for GCP authentication.",
+		docs.Summary(
+			"This is required for the `gcp` auth method.\n\n",
+			"This depends on how you configured the Vault [GCP Auth Method](https://www.vaultproject.io/docs/auth/gcp).",
+		),
+	)
+
+	doc.SetField(
+		"gcp_credentials",
+		"When using static credentials, the contents of the JSON credentials file.",
+	)
+
+	doc.SetField(
+		"gcp_service_account",
+		"The service account to use, only if it cannot be automatically determined.",
+	)
+
+	doc.SetField(
+		"gcp_project",
+		"The project to use, only if it cannot be automatically determined.",
+	)
+
+	doc.SetField(
+		"gcp_jwt_exp",
+		"The number of minutes a generated JWT should be valid for when using the iam method.",
+		docs.Default("15"),
+	)
+
 	return doc, nil
 }
 
@@ -483,4 +522,11 @@ type sourceConfig struct {
 	AWSSecretKey        string `hcl:"aws_secret_key,optional"`
 	AWSRegion           string `hcl:"aws_region,optional"`
 	AWSHeaderValue      string `hcl:"aws_header_value,optional"`
+
+	GCPType           string `hcl:"gcp_type,optional"`
+	GCPRole           string `hcl:"gcp_role,optional"`
+	GCPCreds          string `hcl:"gcp_credentials,optional"`
+	GCPServiceAccount string `hcl:"gcp_service_account,optional"`
+	GCPProject        string `hcl:"gcp_project,optional"`
+	GCPJWTExp         int    `hcl:"gcp_jwt_exp,optional"`
 }
