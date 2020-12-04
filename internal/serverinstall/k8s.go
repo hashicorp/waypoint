@@ -579,7 +579,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Name:    "k8s-openshift",
 		Target:  &i.Config.openshift,
 		Default: false,
-		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift.",
+		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.",
 	})
 
 	set.StringVar(&flag.StringVar{
