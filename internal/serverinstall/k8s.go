@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
-// 
+//
 type K8sInstaller struct {
 	config k8sConfig
 }
@@ -370,7 +370,7 @@ func (i *K8sInstaller) Install(
 	return &contextConfig, &advertiseAddr, httpAddr, err
 }
 
-// newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset 
+// newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset
 // for deployment in Kubernetes.
 func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
@@ -499,7 +499,7 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 	}, nil
 }
 
-// newService takes in a k8sConfig and creates a new Waypoint LoadBalancer 
+// newService takes in a k8sConfig and creates a new Waypoint LoadBalancer
 // for deployment in Kubernetes.
 func newService(c k8sConfig) (*apiv1.Service, error) {
 	return &apiv1.Service{
