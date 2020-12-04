@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -39,7 +40,9 @@ func (c *GetInviteCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.project.UI.Output(resp.Token)
+	// We use fmt here and not the UI helpers because UI helpers will
+	// trim tokens horizontally on terminals that are narrow.
+	fmt.Println(resp.Token)
 	return 0
 }
 
@@ -111,7 +114,9 @@ func (c *ExchangeInviteCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.project.UI.Output(resp.Token)
+	// We use fmt here and not the UI helpers because UI helpers will
+	// trim tokens horizontally on terminals that are narrow.
+	fmt.Println(resp.Token)
 	return 0
 }
 
@@ -170,7 +175,9 @@ func (c *GetTokenCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.project.UI.Output(resp.Token)
+	// We use fmt here and not the UI helpers because UI helpers will
+	// trim tokens horizontally on terminals that are narrow.
+	fmt.Println(resp.Token)
 	return 0
 }
 
