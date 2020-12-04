@@ -28,6 +28,7 @@ IMPROVEMENTS:
 * core: add better error messaging when prefix is missing from the `-raw` flag in `waypoint config set` [GH-815]
 * core: `waypoint.hcl` can be named `waypoint.hcl.json` and use JSON syntax [GH-867]
 * install/k8s: support for OpenShift [GH-715]
+* internal/server: Block on instance deployment becoming available [GH-881]
 * server: APIs for Waypoint database snapshot/restore [GH-723]
 * tools: Add tools.go and `make tools` for bootstrapping local dev for build  [GH-863]
 * website: many minor improvements were made in our plugin documentation section for this release
