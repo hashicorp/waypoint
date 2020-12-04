@@ -36,6 +36,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * core: force killed `waypoint exec` sessions won't leave the remote process running [GH-827]
+* cli/token: fix issue where tokens could be cut off on narrow terminals [GH-885]
 
 ## 0.1.5 (November 09, 2020)
 
