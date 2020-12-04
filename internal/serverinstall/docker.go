@@ -14,14 +14,27 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
+
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
-func InstallDocker(
-	ctx context.Context, ui terminal.UI, scfg *Config) (
+type DockerInstaller struct {
+	config dockerConfig
+}
+
+type dockerConfig struct {
+	serverImage string `hcl:"server_image,optional"`
+}
+
+// Install is a method of DockerInstaller and implements the Installer interface to
+// create a waypoint-server as a Docker container
+func (i *DockerInstaller) Install(
+	ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
 ) {
 	sg := ui.StepGroup()
@@ -77,9 +90,9 @@ func InstallDocker(
 		return &clicfg, &addr, "", nil
 	}
 
-	s.Update("Checking for Docker image: %s", scfg.ServerImage)
+	s.Update("Checking for Docker image: %s", i.config.serverImage)
 
-	imageRef, err := reference.ParseNormalizedNamed(scfg.ServerImage)
+	imageRef, err := reference.ParseNormalizedNamed(i.config.serverImage)
 	if err != nil {
 		return nil, nil, "", fmt.Errorf("Error parsing Docker image: %s", err)
 	}
@@ -95,7 +108,7 @@ func InstallDocker(
 	}
 
 	if len(imageList) == 0 {
-		s.Update("Pulling image: %s", scfg.ServerImage)
+		s.Update("Pulling image: %s", i.config.serverImage)
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
 		if err != nil {
@@ -166,7 +179,7 @@ func InstallDocker(
 		AttachStdin:  true,
 		OpenStdin:    true,
 		StdinOnce:    true,
-		Image:        scfg.ServerImage,
+		Image:        i.config.serverImage,
 		ExposedPorts: nat.PortSet{npGRPC: struct{}{}, npHTTP: struct{}{}},
 		Env:          []string{"PORT=" + grpcPort},
 		Cmd:          []string{"server", "run", "-accept-tos", "-vvv", "-db=/data/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
@@ -217,4 +230,13 @@ func InstallDocker(
 	s.Done()
 
 	return &clicfg, &addr, httpAddr, nil
+}
+
+func (i *DockerInstaller) InstallFlags(set *flag.Set) {
+	set.StringVar(&flag.StringVar{
+		Name:    "docker-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: "hashicorp/waypoint:latest",
+	})
 }
