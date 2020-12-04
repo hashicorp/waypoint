@@ -51,7 +51,8 @@ type k8sConfig struct {
 	imagePullSecret   string `hcl:"image_pull_secret,optional"`
 }
 
-// 
+// Install is a method of K8sInstaller and implements the Installer interface to
+// register a waypoint-server in a Kubernetes cluster
 func (i *K8sInstaller) Install(
 	ctx context.Context, ui terminal.UI, log hclog.Logger,
 ) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error) {
@@ -369,7 +370,8 @@ func (i *K8sInstaller) Install(
 	return &contextConfig, &advertiseAddr, httpAddr, err
 }
 
-// NewStatefulSet creates a new Waypoint Statefulset for deployment in Kubernetes.
+// newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset 
+// for deployment in Kubernetes.
 func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
 	if err != nil {
@@ -497,7 +499,8 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 	}, nil
 }
 
-// NewService creates a new Waypoint LoadBalancer for deployment in Kubernetes.
+// newService takes in a k8sConfig and creates a new Waypoint LoadBalancer 
+// for deployment in Kubernetes.
 func newService(c k8sConfig) (*apiv1.Service, error) {
 	return &apiv1.Service{
 		ObjectMeta: metav1.ObjectMeta{

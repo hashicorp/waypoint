@@ -28,7 +28,8 @@ type nomadConfig struct {
 	policyOverride bool     `hcl:"policy_override,optional"`
 }
 
-// InstallNomad registers a waypoint-server job with a Nomad cluster
+// Install is a method of NomadInstaller and implements the Installer interface to
+// register a waypoint-server job with a Nomad cluster
 func (i *NomadInstaller) Install(
 	ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
@@ -191,6 +192,8 @@ EVAL:
 	return &clicfg, &addr, httpAddr, nil
 }
 
+// waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
+// Nomad API
 func waypointNomadJob(c nomadConfig) *api.Job {
 	job := api.NewServiceJob("waypoint-server", "waypoint-server", c.region, 50)
 	job.Namespace = &c.namespace
@@ -232,6 +235,8 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	return job
 }
 
+// getAddrFromAllocID takes in an allocID and a Nomad Client and returns
+// the address for the server
 func getAddrFromAllocID(allocID string, client *api.Client) (string, error) {
 	alloc, _, err := client.Allocations().Info(allocID, nil)
 	if err != nil {
@@ -247,6 +252,8 @@ func getAddrFromAllocID(allocID string, client *api.Client) (string, error) {
 	return "", nil
 }
 
+// getHTTPFromAllocID takes in an allocID and a Nomad Client and returns
+// the http address
 func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 	alloc, _, err := client.Allocations().Info(allocID, nil)
 	if err != nil {

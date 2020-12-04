@@ -31,6 +31,8 @@ type dockerConfig struct {
 	serverImage string `hcl:"server_image,optional"`
 }
 
+// Install is a method of DockerInstaller and implements the Installer interface to
+// create a waypoint-server as a Docker container
 func (i *DockerInstaller) Install(
 	ctx context.Context, ui terminal.UI, log hclog.Logger) (
 	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
