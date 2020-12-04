@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/vault/command/agent/auth"
-	"github.com/hashicorp/vault/command/agent/auth/aws"
-	"github.com/hashicorp/vault/command/agent/auth/kubernetes"
+
+	"github.com/hashicorp/waypoint/builtin/vault/internal/auth"
+	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/aws"
+	"github.com/hashicorp/waypoint/builtin/vault/internal/auth/kubernetes"
 )
 
 // initAuthMethod initializes a goroutine that grabs a Vault token
