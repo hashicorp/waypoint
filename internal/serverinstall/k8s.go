@@ -529,7 +529,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-server-image",
 		Target:  &i.Config.serverImage,
-		Usage:   "Docker image for the server.",
+		Usage:   "Docker image for the Waypoint server.",
 		Default: "hashicorp/waypoint:latest",
 	})
 
@@ -605,7 +605,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Name:    "k8s-pull-policy",
 		Target:  &i.Config.imagePullPolicy,
 		Usage:   "Set the pull policy ",
-		Default: "Always",
+		Default: "IfNotPresent",
 	})
 
 	set.BoolVar(&flag.BoolVar{

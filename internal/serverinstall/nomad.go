@@ -266,12 +266,12 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-server-image",
 		Target:  &i.Config.serverImage,
-		Usage:   "Docker image for the server.",
+		Usage:   "Docker image for the Waypoint server.",
 		Default: "hashicorp/waypoint:latest",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "nomad-nomad-region",
+		Name:    "nomad-region",
 		Target:  &i.Config.region,
 		Default: "global",
 		Usage:   "Region to install to for Nomad.",

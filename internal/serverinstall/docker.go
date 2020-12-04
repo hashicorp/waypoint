@@ -234,7 +234,7 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "docker-server-image",
 		Target:  &i.Config.serverImage,
-		Usage:   "Docker image for the server.",
+		Usage:   "Docker image for the Waypoint server.",
 		Default: "hashicorp/waypoint:latest",
 	})
 }
