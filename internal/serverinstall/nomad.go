@@ -19,13 +19,13 @@ type NomadInstaller struct {
 }
 
 type NomadConfig struct {
-	serverImage        string            `hcl:server_image,optional`
-	namespace          string            `hcl:namespace,optional`
-	serviceAnnotations map[string]string `hcl:service_annotations,optional`
+	serverImage        string            `hcl:"server_image,optional"`
+	namespace          string            `hcl:"namespace,optional"`
+	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
-	region         string   `hcl:namespace,optional`
-	datacenters    []string `hcl:datacenters,optional`
-	policyOverride bool     `policy_override,optional`
+	region         string   `hcl:"namespace,optional"`
+	datacenters    []string `hcl:"datacenters,optional"`
+	policyOverride bool     `hcl:"policy_override,optional"`
 }
 
 // InstallNomad registers a waypoint-server job with a Nomad cluster

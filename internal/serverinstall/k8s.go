@@ -34,20 +34,20 @@ type K8sInstaller struct {
 }
 
 type K8sConfig struct {
-	serverImage        string            `hcl:server_image,optional`
-	namespace          string            `hcl:namespace,optional`
-	serviceAnnotations map[string]string `hcl:service_annotations,optional`
+	serverImage        string            `hcl:"server_image,optional"`
+	namespace          string            `hcl:"namespace,optional"`
+	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
 
-	advertiseInternal bool   `hcl:advertise_internal,optional`
-	imagePullPolicy   string `hcl:image_pull_policy,optional`
-	serverName        string `hcl:server_name,optional`
-	serviceName       string `hcl:service_name,optional`
-	openshift         bool   `hcl:openshft,optional`
-	cpuRequest        string `hcl:cpu_request,optional`
-	memRequest        string `hcl:mem_request,optional`
-	storageRequest    string `hcl:storage_request,optional`
-	secretFile        string `hcl:secret_file,optional`
-	imagePullSecret   string `hcl:image_pull_secret,optional`
+	advertiseInternal bool   `hcl:"advertise_internal,optional"`
+	imagePullPolicy   string `hcl:"image_pull_policy,optional"`
+	serverName        string `hcl:"server_name,optional"`
+	serviceName       string `hcl:"service_name,optional"`
+	openshift         bool   `hcl:"openshft,optional"`
+	cpuRequest        string `hcl:"cpu_request,optional"`
+	memRequest        string `hcl:"mem_request,optional"`
+	storageRequest    string `hcl:"storage_request,optional"`
+	secretFile        string `hcl:"secret_file,optional"`
+	imagePullSecret   string `hcl:"image_pull_secret,optional"`
 }
 
 func (i *K8sInstaller) Install(

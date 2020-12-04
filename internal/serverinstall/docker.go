@@ -28,7 +28,7 @@ type DockerInstaller struct {
 }
 
 type DockerConfig struct {
-	serverImage string `hcl:"server_image,optional`
+	serverImage string `hcl:"server_image,optional"`
 }
 
 func (i *DockerInstaller) Install(
