@@ -15,10 +15,10 @@ import (
 )
 
 type NomadInstaller struct {
-	Config NomadConfig
+	config nomadConfig
 }
 
-type NomadConfig struct {
+type nomadConfig struct {
 	serverImage        string            `hcl:"server_image,optional"`
 	namespace          string            `hcl:"namespace,optional"`
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
@@ -98,9 +98,9 @@ func (i *NomadInstaller) Install(
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
-	job := waypointNomadJob(i.Config)
+	job := waypointNomadJob(i.config)
 	jobOpts := &api.RegisterOptions{
-		PolicyOverride: i.Config.policyOverride,
+		PolicyOverride: i.config.policyOverride,
 	}
 
 	resp, _, err := client.Jobs().RegisterOpts(job, jobOpts, nil)
@@ -191,7 +191,7 @@ EVAL:
 	return &clicfg, &addr, httpAddr, nil
 }
 
-func waypointNomadJob(c NomadConfig) *api.Job {
+func waypointNomadJob(c nomadConfig) *api.Job {
 	job := api.NewServiceJob("waypoint-server", "waypoint-server", c.region, 50)
 	job.Namespace = &c.namespace
 	job.Datacenters = c.datacenters
@@ -265,42 +265,42 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-server-image",
-		Target:  &i.Config.serverImage,
+		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: "hashicorp/waypoint:latest",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-region",
-		Target:  &i.Config.region,
+		Target:  &i.config.region,
 		Default: "global",
 		Usage:   "Region to install to for Nomad.",
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
 		Name:    "nomad-dc",
-		Target:  &i.Config.datacenters,
+		Target:  &i.config.datacenters,
 		Default: []string{"dc1"},
 		Usage:   "Datacenters to install to for Nomad.",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-namespace",
-		Target:  &i.Config.namespace,
+		Target:  &i.config.namespace,
 		Default: "default",
 		Usage:   "Namespace to install the Waypoint server into for Nomad.",
 	})
 
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-policy-override",
-		Target:  &i.Config.policyOverride,
+		Target:  &i.config.policyOverride,
 		Default: false,
 		Usage:   "Override the Nomad sentinel policy for enterprise Nomad.",
 	})
 
 	set.StringMapVar(&flag.StringMapVar{
 		Name:   "nomad-annotate-service",
-		Target: &i.Config.serviceAnnotations,
+		Target: &i.config.serviceAnnotations,
 		Usage:  "Annotations for the Service generated.",
 	})
 }

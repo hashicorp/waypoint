@@ -15,7 +15,7 @@ type Installer interface {
 	InstallFlags(*flag.Set)
 }
 
-var Platforms map[string]Installer = map[string]Installer{
+var Platforms = map[string]Installer{
 	"kubernetes": &K8sInstaller{},
 	"nomad":      &NomadInstaller{},
 	"docker":     &DockerInstaller{},
