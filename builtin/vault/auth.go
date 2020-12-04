@@ -12,6 +12,13 @@ import (
 	"github.com/hashicorp/vault/command/agent/auth/kubernetes"
 )
 
+// initAuthMethod initializes a goroutine that grabs a Vault token
+// using the configured auth method and continues to update that Vault
+// token as it changes.
+//
+// If no auth method is configured, this does nothing.
+//
+// This method expects the cacheMu lock to be held.
 func (cs *ConfigSourcer) initAuthMethod(
 	log hclog.Logger,
 ) error {
@@ -84,6 +91,7 @@ func (cs *ConfigSourcer) initAuthMethod(
 				}
 				cs.cacheMu.Unlock()
 
+				// We close initCh exactly once to note that we got our first token
 				if initCh != nil {
 					close(initCh)
 					initCh = nil
@@ -100,6 +108,9 @@ func (cs *ConfigSourcer) initAuthMethod(
 	return nil
 }
 
+// authMethodConfig builds the configuration map that we need to send in
+// to the Vault auth method library. The second return value is true if
+// the given auth method was valid and found in the config.
 func authMethodConfig(config *sourceConfig) (map[string]interface{}, bool) {
 	// we'll accumulate our result here
 	result := map[string]interface{}{}
