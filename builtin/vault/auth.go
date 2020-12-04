@@ -1,0 +1,142 @@
+package vault
+
+import (
+	"context"
+	"fmt"
+	"reflect"
+	"strings"
+
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/vault/command/agent/auth"
+	"github.com/hashicorp/vault/command/agent/auth/aws"
+	"github.com/hashicorp/vault/command/agent/auth/kubernetes"
+)
+
+func (cs *ConfigSourcer) initAuthMethod(
+	log hclog.Logger,
+) error {
+	// If we have no auth method, ensure our token is set to nothing.
+	if cs.config.AuthMethod == "" {
+		return nil
+	}
+
+	// Get the config
+	config, ok := authMethodConfig(&cs.config)
+	if !ok {
+		return fmt.Errorf("unknown auth method: %s", cs.config.AuthMethod)
+	}
+	mountPath := cs.config.AuthMethodMountPath
+
+	// Build our auth method
+	var method auth.AuthMethod
+	var err error
+	authConfig := &auth.AuthConfig{
+		Logger:    log.Named("auth"),
+		MountPath: mountPath,
+		Config:    config,
+	}
+	switch cs.config.AuthMethod {
+	case "aws":
+		method, err = aws.NewAWSAuthMethod(authConfig)
+	case "kubernetes":
+		method, err = kubernetes.NewKubernetesAuthMethod(authConfig)
+	default:
+		return fmt.Errorf("unknown auth method: %s", cs.config.AuthMethod)
+	}
+	if err != nil {
+		return err
+	}
+
+	// Create our auth handler
+	ah := auth.NewAuthHandler(&auth.AuthHandlerConfig{
+		Logger: log.Named("auth.handler"),
+		Client: cs.client,
+	})
+
+	// Create the context we'll use to cancel this
+	ctx, cancel := context.WithCancel(context.Background())
+	cs.authCancel = cancel
+
+	// Start the auth handler
+	go func() {
+		err := ah.Run(ctx, method)
+		if err == nil {
+			log.Debug("auth handler stopped")
+		} else {
+			log.Warn("auth handler stopped with error", "err", err)
+		}
+	}()
+
+	// Start a goroutine that waits for token updates and stores them.
+	firstTokenCh := make(chan struct{})
+	go func(initCh chan<- struct{}) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case token := <-ah.OutputCh:
+				log.Trace("new Vault token received")
+
+				cs.cacheMu.Lock()
+				if cs.client != nil {
+					cs.client.SetToken(token)
+				}
+				cs.cacheMu.Unlock()
+
+				if initCh != nil {
+					close(initCh)
+					initCh = nil
+				}
+			}
+		}
+	}(firstTokenCh)
+
+	// Wait for our first token to be set on the client before returning
+	log.Debug("waiting for Vault token from auth method")
+	<-firstTokenCh
+	log.Debug("first auth token received and set")
+
+	return nil
+}
+
+func authMethodConfig(config *sourceConfig) (map[string]interface{}, bool) {
+	// we'll accumulate our result here
+	result := map[string]interface{}{}
+
+	// tagPrefix is the prefix that the struct tag should have
+	tagPrefix := config.AuthMethod + "_"
+
+	// found is set to true when we find a field that is part of the
+	// set auth method. We use this to determine if the auth method doesn't exist.
+	found := false
+
+	// We use reflection to look up all the fields that have the same
+	// prefix as the auth method in use to build up our config.
+	v := reflect.ValueOf(config).Elem()
+	vt := v.Type()
+	for i := 0; i < vt.NumField(); i++ {
+		f := vt.Field(i)
+		tag := f.Tag.Get("hcl")
+		if !strings.HasPrefix(tag, tagPrefix) {
+			// Ignore fields that don't have the prefix
+			continue
+		}
+		found = true
+
+		// Remove our prefix
+		tag = strings.TrimPrefix(tag, tagPrefix)
+
+		// If we have a , for an attribute, we have to trim up to that
+		if idx := strings.Index(tag, ","); idx != -1 {
+			tag = tag[:idx]
+		}
+
+		// We only record the config if it isn't the zero value
+		if v := v.Field(i); !v.IsZero() {
+			result[tag] = v.Interface()
+		}
+	}
+
+	return result, found
+}

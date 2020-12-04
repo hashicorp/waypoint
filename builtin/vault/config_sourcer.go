@@ -30,7 +30,6 @@ var (
 
 // ConfigSourcer implements component.ConfigSourcer for Vault
 type ConfigSourcer struct {
-
 	// Client, if set, will be used as the client instead of initializing
 	// based on the config. This is only used for tests.
 	Client *vaultapi.Client
@@ -39,6 +38,8 @@ type ConfigSourcer struct {
 	cacheMu     sync.Mutex
 	secretCache map[string]*cachedSecret
 	lastRead    time.Time
+	authCancel  func()
+	client      *vaultapi.Client
 }
 
 type cachedSecret struct {
@@ -59,7 +60,7 @@ func (cs *ConfigSourcer) ReadFunc() interface{} {
 
 // StopFunc implements component.ConfigSourcer
 func (cs *ConfigSourcer) StopFunc() interface{} {
-	return nil
+	return cs.stop
 }
 
 func (cs *ConfigSourcer) read(
@@ -92,21 +93,37 @@ func (cs *ConfigSourcer) read(
 	}
 
 	// Initialize our Vault client
-	client := cs.Client
-	if client == nil {
-		log.Debug("initializing the Vault client")
-		clientConfig := vaultapi.DefaultConfig()
-		err := clientConfig.ReadEnvironment()
-		if err != nil {
-			return nil, err
-		}
+	if cs.client == nil {
+		cs.client = cs.Client // set to user-settable value first
+		if cs.client == nil {
+			log.Debug("initializing the Vault client")
+			clientConfig := vaultapi.DefaultConfig()
+			err := clientConfig.ReadEnvironment()
+			if err != nil {
+				return nil, err
+			}
 
-		client, err = vaultapi.NewClient(clientConfig)
-		if err != nil {
+			client, err := vaultapi.NewClient(clientConfig)
+			if err != nil {
+				return nil, err
+			}
+
+			cs.client = client
+		} else {
+			log.Debug("using preconfigured client on struct")
+		}
+	}
+	client := cs.client
+
+	// Initialize our auth method watcher if we have one configured.
+	if cs.config.AuthMethod != "" && cs.authCancel == nil {
+		// Note we have to use hclog.L() here because our logging lives
+		// beyond the lifetime of this method and we don't want to crash
+		// once the RPC ends.
+		if err := cs.initAuthMethod(hclog.L().Named("vault")); err != nil {
+			// If we can't initialize the auth method, its a full error.
 			return nil, err
 		}
-	} else {
-		log.Debug("using preconfigured client on struct")
 	}
 
 	// Go through each request and read it. The way this generally works:
@@ -214,11 +231,17 @@ func (cs *ConfigSourcer) stop() error {
 		}
 	}
 
+	// Cancel our auth method
+	if cs.authCancel != nil {
+		cs.authCancel()
+	}
+
 	// Reset our results tracking to empty. This will force the next call
 	// to rebuild all our secret values.
 	var zeroTime time.Time
 	cs.lastRead = zeroTime
 	cs.secretCache = nil
+	cs.client = nil
 
 	return nil
 }
@@ -356,7 +379,16 @@ config {
 			"non-matching auth method types will be ignored (except for type validation).",
 			"\n\n",
 			"If no auth method is set, Vault assumes proper environment variables",
-			"are set for Vault to find and connect to the Vault server.",
+			"are set for Vault to find and connect to the Vault server.\n\n",
+			"When this is set, `auth_method_mount_path` is required.",
+		),
+	)
+
+	doc.SetField(
+		"auth_method_mount_path",
+		"The path where the configured auth method is mounted in Vault.",
+		docs.Summary(
+			"This is required when `auth_method` is set.",
 		),
 	)
 
@@ -438,14 +470,15 @@ type reqConfig struct {
 }
 
 type sourceConfig struct {
-	AuthMethod string `hcl:"auth_method,optional"`
+	AuthMethod          string `hcl:"auth_method,optional"`
+	AuthMethodMountPath string `hcl:"auth_method_mount_path,optional"`
 
 	K8SRole      string `hcl:"kubernetes_role,optional"`
 	K8STokenPath string `hcl:"kubernetes_token_path,optional"`
 
 	AWSType             string `hcl:"aws_type,optional"`
 	AWSRole             string `hcl:"aws_role,optional"`
-	AWSCredPollInterval string `hcl:"aws_credential_poll_interval,optional"`
+	AWSCredPollInterval int    `hcl:"aws_credential_poll_interval,optional"`
 	AWSAccessKey        string `hcl:"aws_access_key,optional"`
 	AWSSecretKey        string `hcl:"aws_secret_key,optional"`
 	AWSRegion           string `hcl:"aws_region,optional"`
