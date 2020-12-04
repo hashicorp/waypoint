@@ -10,17 +10,15 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"gopkg.in/yaml.v2"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -36,20 +34,20 @@ type K8sInstaller struct {
 }
 
 type K8sConfig struct {
-	serverImage        string
-	ImagePullPolicy    string
-	advertiseInternal  bool
-	serviceAnnotations map[string]string
-	namespace          string
+	serverImage        string            `hcl:server_image,optional`
+	namespace          string            `hcl:namespace,optional`
+	serviceAnnotations map[string]string `hcl:service_annotations,optional`
 
-	serverName      string
-	serviceName     string
-	openShift       bool
-	cpuRequest      string
-	memRequest      string
-	storageRequest  string
-	secretFile      string
-	imagePullSecret string
+	advertiseInternal bool   `hcl:advertise_internal,optional`
+	imagePullPolicy   string `hcl:image_pull_policy,optional`
+	serverName        string `hcl:server_name,optional`
+	serviceName       string `hcl:service_name,optional`
+	openshift         bool   `hcl:openshft,optional`
+	cpuRequest        string `hcl:cpu_request,optional`
+	memRequest        string `hcl:mem_request,optional`
+	storageRequest    string `hcl:storage_request,optional`
+	secretFile        string `hcl:secret_file,optional`
+	imagePullSecret   string `hcl:image_pull_secret,optional`
 }
 
 func (i *K8sInstaller) Install(
@@ -171,7 +169,7 @@ func (i *K8sInstaller) Install(
 
 	// Do some probing to see if this is OpenShift. If so, we'll switch the config for the user.
 	// Setting the OpenShift flag will short circuit this.
-	if !i.Config.openShift {
+	if !i.Config.openshift {
 		s.Update("Gathering information about the Kubernetes cluster...")
 		namespaceClient := clientset.CoreV1().Namespaces()
 		_, err := namespaceClient.Get(context.TODO(), "openshift", metav1.GetOptions{})
@@ -181,7 +179,7 @@ func (i *K8sInstaller) Install(
 		// to remove fsGroup in this case.
 		if isOpenShift && i.Config.namespace != "default" {
 			s.Update("OpenShift detected. Switching configuration...")
-			i.Config.openShift = true
+			i.Config.openshift = true
 		}
 	}
 
@@ -387,7 +385,7 @@ func newStatefulSet(c K8sConfig) (*appsv1.StatefulSet, error) {
 	}
 
 	securityContext := &apiv1.PodSecurityContext{}
-	if !c.openShift {
+	if !c.openshift {
 		securityContext.FSGroup = int64Ptr(1000)
 	}
 
@@ -424,7 +422,7 @@ func newStatefulSet(c K8sConfig) (*appsv1.StatefulSet, error) {
 						{
 							Name:            "server",
 							Image:           c.serverImage,
-							ImagePullPolicy: apiv1.PullPolicy(c.ImagePullPolicy),
+							ImagePullPolicy: apiv1.PullPolicy(c.imagePullPolicy),
 							Env: []apiv1.EnvVar{
 								{
 									Name:  "HOME",
@@ -579,7 +577,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 
 	set.BoolVar(&flag.BoolVar{
 		Name:    "k8s-openshift",
-		Target:  &i.Config.openShift,
+		Target:  &i.Config.openshift,
 		Default: false,
 		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift.",
 	})
@@ -605,7 +603,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-pull-policy",
-		Target:  &i.Config.ImagePullPolicy,
+		Target:  &i.Config.imagePullPolicy,
 		Usage:   "Set the pull policy ",
 		Default: "Always",
 	})

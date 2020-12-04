@@ -19,13 +19,13 @@ type NomadInstaller struct {
 }
 
 type NomadConfig struct {
-	serverImage        string
-	serviceAnnotations map[string]string
-	namespace          string
+	serverImage        string            `hcl:server_image,optional`
+	namespace          string            `hcl:namespace,optional`
+	serviceAnnotations map[string]string `hcl:service_annotations,optional`
 
-	region         string
-	datacenters    []string
-	policyOverride bool
+	region         string   `hcl:namespace,optional`
+	datacenters    []string `hcl:datacenters,optional`
+	policyOverride bool     `policy_override,optional`
 }
 
 // InstallNomad registers a waypoint-server job with a Nomad cluster
@@ -278,7 +278,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
-		Name:    "nomad-datacenters",
+		Name:    "nomad-dc",
 		Target:  &i.Config.datacenters,
 		Default: []string{"dc1"},
 		Usage:   "Datacenters to install to for Nomad.",

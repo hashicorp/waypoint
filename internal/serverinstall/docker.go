@@ -14,6 +14,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
+
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -27,7 +28,7 @@ type DockerInstaller struct {
 }
 
 type DockerConfig struct {
-	serverImage string
+	serverImage string `hcl:"server_image,optional`
 }
 
 func (i *DockerInstaller) Install(
