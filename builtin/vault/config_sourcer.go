@@ -2,7 +2,6 @@ package vault
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
