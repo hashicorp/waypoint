@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 
@@ -89,11 +90,19 @@ func (cs *ConfigSourcer) initAuthMethod(
 			case token := <-ah.OutputCh:
 				log.Trace("new Vault token received")
 
-				cs.cacheMu.Lock()
+				// We usually lock cacheMu but on first run we have to lock
+				// a blank mutex since we block waiting for the first token
+				// on a goroutine that already holds the lock.
+				mu := &cs.cacheMu
+				if initCh != nil {
+					mu = &sync.Mutex{}
+				}
+
+				mu.Lock()
 				if cs.client != nil {
 					cs.client.SetToken(token)
 				}
-				cs.cacheMu.Unlock()
+				mu.Unlock()
 
 				// We close initCh exactly once to note that we got our first token
 				if initCh != nil {

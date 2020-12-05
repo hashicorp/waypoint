@@ -219,6 +219,7 @@ func (cs *ConfigSourcer) stop() error {
 	// Cancel our auth method
 	if cs.authCancel != nil {
 		cs.authCancel()
+		cs.authCancel = nil
 	}
 
 	// Reset our results tracking to empty. This will force the next call
