@@ -94,23 +94,8 @@ func (cs *ConfigSourcer) read(
 
 	// Initialize our Vault client
 	if cs.client == nil {
-		cs.client = cs.Client // set to user-settable value first
-		if cs.client == nil {
-			log.Debug("initializing the Vault client")
-			clientConfig := vaultapi.DefaultConfig()
-			err := clientConfig.ReadEnvironment()
-			if err != nil {
-				return nil, err
-			}
-
-			client, err := vaultapi.NewClient(clientConfig)
-			if err != nil {
-				return nil, err
-			}
-
-			cs.client = client
-		} else {
-			log.Debug("using preconfigured client on struct")
+		if err := cs.initClient(log); err != nil {
+			return nil, err
 		}
 	}
 	client := cs.client
@@ -370,6 +355,87 @@ config {
 	)
 
 	doc.SetField(
+		"addr",
+		"The address to the Vault server.",
+		docs.Summary(
+			"If this is not set, the VAULT_ADDR environment variable will be read.",
+		),
+		docs.EnvVar("VAULT_ADDR"),
+	)
+
+	doc.SetField(
+		"agent_addr",
+		"The address to the Vault agent.",
+		docs.Summary(
+			"If this is not set, Vault agent will not be used. This should only be",
+			"set if you're deploying to an environment with a Vault agent.",
+		),
+		docs.EnvVar("VAULT_AGENT_ADDR"),
+	)
+
+	doc.SetField(
+		"ca_cert",
+		"The path to a PEM-encoded CA cert file to use to verify the Vault server SSL certificate.",
+		docs.EnvVar("VAULT_CACERT"),
+	)
+
+	doc.SetField(
+		"ca_path",
+		"The path to a directory of PEM-encoded CA cert files to verify the Vault server SSL certificate.",
+		docs.EnvVar("VAULT_CAPATH"),
+	)
+
+	doc.SetField(
+		"client_cert",
+		"The path to a PEM-encoded certificate to present as a client certificate.",
+		docs.Summary(
+			"This only needs to be set if Vault is configured to expect a client cert.",
+		),
+		docs.EnvVar("VAULT_CLIENT_CERT"),
+	)
+
+	doc.SetField(
+		"client_key",
+		"The path to a private key for the client cert.",
+		docs.Summary(
+			"This only needs to be set if Vault is configured to expect a client cert.",
+		),
+		docs.EnvVar("VAULT_CLIENT_KEY"),
+	)
+
+	doc.SetField(
+		"skip_verify",
+		"Do not validate the TLS cert presented by the Vault server.",
+		docs.Summary(
+			"This is not recommended unless absolutely necessary.",
+		),
+		docs.EnvVar("VAULT_SKIP_VERIFY"),
+	)
+
+	doc.SetField(
+		"namespace",
+		"Default namespace to operate in if you're using Vault namespaces.",
+		docs.EnvVar("VAULT_NAMESPACE"),
+	)
+
+	doc.SetField(
+		"tls_server_name",
+		"The TLS server name to verify with the Vault server.",
+		docs.EnvVar("VAULT_TLS_SERVER_NAME"),
+	)
+
+	doc.SetField(
+		"token",
+		"The token to use for communicating to Vault.",
+		docs.Summary(
+			"If you're using a Vault Agent or an `auth_method`, this may not be necessary.",
+			"If you're using an `auth_method`, this may still be necessary as a minimal",
+			"token with access to the auth method, but usually these are not protected.",
+		),
+		docs.EnvVar("VAULT_TOKEN"),
+	)
+
+	doc.SetField(
 		"auth_method",
 		"The authentication method to use for Vault.",
 		docs.Summary(
@@ -509,6 +575,17 @@ type reqConfig struct {
 }
 
 type sourceConfig struct {
+	Address       string `hcl:"addr,optional"`
+	AgentAddress  string `hcl:"agent_addr,optional"`
+	CACert        string `hcl:"ca_cert,optional"`
+	CAPath        string `hcl:"ca_path,optional"`
+	ClientCert    string `hcl:"client_cert,optional"`
+	ClientKey     string `hcl:"client_key,optional"`
+	SkipVerify    bool   `hcl:"skip_verify,optional"`
+	Namespace     string `hcl:"namespace,optional"`
+	TLSServerName string `hcl:"tls_server_name,optional"`
+	Token         string `hcl:"token,optional"`
+
 	AuthMethod          string `hcl:"auth_method,optional"`
 	AuthMethodMountPath string `hcl:"auth_method_mount_path,optional"`
 
