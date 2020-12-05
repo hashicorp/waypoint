@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 
@@ -73,7 +74,6 @@ func (cs *ConfigSourcer) initAuthMethod(
 
 	// Create the context we'll use to cancel this
 	ctx, cancel := context.WithCancel(context.Background())
-	cs.authCancel = cancel
 
 	// Start the auth handler
 	go func() {
@@ -121,8 +121,21 @@ func (cs *ConfigSourcer) initAuthMethod(
 
 	// Wait for our first token to be set on the client before returning
 	log.Debug("waiting for Vault token from auth method")
-	<-firstTokenCh
-	log.Debug("first auth token received and set")
+	select {
+	case <-firstTokenCh:
+		log.Debug("first auth token received and set")
+
+	case <-time.After(10 * time.Second):
+		// We do a 10 second timeout because the auth handler could get
+		// stuck in a failure loop on the first token request if it is
+		// misconfigured. This ensures that we don't block forever on
+		// auth that is never going to succeed.
+		cancel()
+		return fmt.Errorf("timeout waiting for Vault token via auth method")
+	}
+
+	// Set our cancel
+	cs.authCancel = cancel
 
 	return nil
 }

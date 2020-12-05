@@ -107,6 +107,7 @@ func (cs *ConfigSourcer) read(
 		// once the RPC ends.
 		if err := cs.initAuthMethod(hclog.L().Named("vault")); err != nil {
 			// If we can't initialize the auth method, its a full error.
+			log.Warn("error initializing auth method", "err", err)
 			return nil, err
 		}
 	}
