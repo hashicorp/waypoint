@@ -123,10 +123,13 @@ func (ceb *CEB) initLogStreamSender(
 	//   - we can coalesce channel receives to send less log updates
 	//   - during reconnect we can buffer channel receives
 	go func() {
-		// Wait for the first notice that the child is ready. This will
-		// allow us to wait to send any logs until we likely called
-		// EntrypointConfig.
-		<-ceb.childReadyCh
+		// Wait for the state that our config stream is connected. Logs are
+		// not allowed (and dropped by the server) until we're connected so
+		// this lets us get all our startup logs in safely.
+		if ceb.waitState(&ceb.stateConfig, true) {
+			// Early exit request
+			return
+		}
 
 		for {
 			var entry *pb.LogBatch_Entry

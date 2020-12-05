@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -30,11 +29,9 @@ func (ceb *CEB) initChildCmd(ctx context.Context, cfg *config) error {
 	// goroutine that will eventually run them.
 	childCmdCh := make(chan *exec.Cmd, 5)
 	doneCh := make(chan error, 1)
-	readyCh := make(chan struct{})
-	go ceb.watchChildCmd(ctx, readyCh, childCmdCh, doneCh)
+	go ceb.watchChildCmd(ctx, childCmdCh, doneCh)
 	ceb.childCmdCh = childCmdCh
 	ceb.childDoneCh = doneCh
-	ceb.childReadyCh = readyCh
 
 	return nil
 }
@@ -42,9 +39,7 @@ func (ceb *CEB) initChildCmd(ctx context.Context, cfg *config) error {
 // markChildCmdReady will allow watchChildCmd to begin executing commands.
 // This should be called once and should not be called concurrently.
 func (ceb *CEB) markChildCmdReady() {
-	if atomic.CompareAndSwapUint32(ceb.childReadySent, 0, 1) {
-		close(ceb.childReadyCh)
-	}
+	ceb.setState(&ceb.stateChildReady, true)
 }
 
 // watchChildCmd should be started in a goroutine. This will run the child
@@ -52,7 +47,6 @@ func (ceb *CEB) markChildCmdReady() {
 // at a time.
 func (ceb *CEB) watchChildCmd(
 	ctx context.Context,
-	readyCh <-chan struct{},
 	cmdCh <-chan *exec.Cmd,
 	doneCh chan<- error,
 ) {
@@ -62,13 +56,17 @@ func (ceb *CEB) watchChildCmd(
 
 	log := ceb.logger.Named("child")
 
-	// We need to wait for readyCh. readyCh is closed by ceb/init.go
+	// We need to wait for stateChildReady. This is set by ceb/init.go
 	// or ceb/config.go when we're ready to begin processing. We have to do
 	// this because we want to try to connect to the server to get our initial
 	// config values before executing our child command. But if that fails, we
 	// execute the child command anyways.
-	log.Debug("waiting for child watch loop readyCh to close")
-	<-readyCh
+	log.Debug("waiting for stateChildReady to flip to true")
+	if ceb.waitState(&ceb.stateChildReady, true) {
+		// Early exit request
+		log.Warn("exit state received before child was ready to start")
+		return
+	}
 
 	log.Debug("starting child command watch loop")
 	var currentCh <-chan error
@@ -105,7 +103,7 @@ func (ceb *CEB) watchChildCmd(
 			}
 
 			// Drain the cmdCh. During graceful termination as well as initial
-			// readyCh waiting, we may accumulate a small buffer of command
+			// ready state waiting, we may accumulate a small buffer of command
 			// changes. Let's drain that.
 		CMD_DRAIN:
 			for {
