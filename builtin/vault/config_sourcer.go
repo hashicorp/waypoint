@@ -340,6 +340,11 @@ config {
 			"path will only read the value once. This allows multiple keys from a single",
 			"secret to be extracted into multiple values. The example above shows",
 			"this functionality by reading the username and password into separate values.",
+			"\n\nWhen using the Vault KV secret backend, the path is usually",
+			"`<mount>/data/<key>`. For example, if you wrote data with",
+			"`vault kv put secret/myapp` then the key for Waypoint must be",
+			"`secret/data/myapp`. This can be confusing but is caused by the fact that",
+			"the Vault API is what Waypoint uses and the Vault CLI does this automatically for KV.",
 		),
 	)
 
@@ -352,6 +357,9 @@ config {
 			"a nested value. This is because Vault secrets can be any arbitrary",
 			"structure, not just simple key/value mappings. An example of a JSON pointer",
 			"value would be `/data/username/`.",
+			"\n\nWhen using the Vault KV secret backend, the key typically has to be",
+			"prefixed with `/data` because the Vault KV API returns the data nested under",
+			"the `data` key. For example: `/data/username`.",
 		),
 	)
 
