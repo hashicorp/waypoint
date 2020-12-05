@@ -40,7 +40,7 @@ docker/mitchellh:
 					--ssh default \
 					--secret id=ssh.config,src="${HOME}/.ssh/config" \
 					--secret id=ssh.key,src="${HOME}/.ssh/config" \
-					-t waypoint:latest \
+					-t waypoint:dev \
 					.
 
 .PHONY: docker/evanphx
