@@ -179,6 +179,9 @@ func (ceb *CEB) recvConfig(
 	log := ceb.logger.Named("config_recv")
 	defer log.Trace("exiting receive goroutine")
 
+	// Keep track of our first receive
+	first := true
+
 	for {
 		// If the context is closed, exit
 		if ctx.Err() != nil {
@@ -188,6 +191,9 @@ func (ceb *CEB) recvConfig(
 		// Wait for the next configuration
 		resp, err := client.Recv()
 		if err != nil {
+			// We're disconnected
+			ceb.setState(&ceb.stateConfig, false)
+
 			// If we get the unavailable error then the connection died.
 			// We restablish the connection.
 			if status.Code(err) == codes.Unavailable {
@@ -200,10 +206,15 @@ func (ceb *CEB) recvConfig(
 				}
 			}
 
-			if err != nil {
-				log.Error("error receiving configuration, exiting", "err", err)
-				return
-			}
+			log.Error("error receiving configuration, exiting", "err", err)
+			return
+		}
+
+		// If this is our first receive, then mark that we're connected.
+		if first {
+			log.Debug("first config received, switching config state to true")
+			first = false
+			ceb.setState(&ceb.stateConfig, true)
 		}
 
 		log.Debug("new configuration received")

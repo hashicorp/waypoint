@@ -46,6 +46,16 @@ type CEB struct {
 	context      context.Context
 	execIdx      int64
 
+	// stateCond and its associated locker are used to protect all the
+	// state-prefixed fields. These state fields can be watched using this
+	// cond for state changes in the CEB. Anyone waiting on stateCond should
+	// also verify the context didn't cancel. The stateCond will be broadcasted
+	// when the root context cancels.
+	stateCond       *sync.Cond
+	stateConfig     bool // config stream is connected
+	stateChildReady bool // ready to start child command
+	stateExit       bool // true when exiting
+
 	// logger is the logger that should be used internally. Log messages
 	// sent here with the proper log level (Info or higher) will also be
 	// streamed to the server.
@@ -71,13 +81,6 @@ type CEB struct {
 	// commands will stop the old command first. Values sent here are coalesced
 	// in case many changes are sent in a row.
 	childCmdCh chan<- *exec.Cmd
-
-	// childReadyCh should be closed exactly once (and set to nil) when the
-	// FIRST child command is ready to be started. This can be closed before
-	// any command is sent to childCmdCh. It indicates that the child process
-	// watcher can begin executing.
-	childReadySent *uint32
-	childReadyCh   chan struct{}
 
 	// childCmdBase is the base command to use for making any changes to the
 	// child; use the copyCmd() function to copy this safetly to make changes.
@@ -116,11 +119,11 @@ func Run(ctx context.Context, os ...Option) error {
 		id:            id,
 		context:       ctx,
 		configPlugins: map[string]*plugin.Instance{},
+		stateCond:     sync.NewCond(&sync.Mutex{}),
 
 		// for our atomic ops, we just use new() rather than addr operators (&)
 		// so that we can be sure that the 64-bit alignment requirement is correct
-		childReadySent: new(uint32),
-		closedVal:      new(uint32),
+		closedVal: new(uint32),
 	}
 	ceb.clientCond = sync.NewCond(&ceb.clientMu)
 	defer ceb.Close()
@@ -195,10 +198,38 @@ func Run(ctx context.Context, os ...Option) error {
 
 	case <-ctx.Done():
 		ceb.logger.Info("received cancellation request, waiting for child to exit")
+
+		// Perform a state condition broadcast. Everyone blocking on state
+		// changes should also be watching for stateExit or context cancellation.
+		ceb.setState(&ceb.stateExit, true)
+
+		// Wait for the child to end
 		<-ceb.childDoneCh
 	}
 
 	return nil
+}
+
+// waitState waits for the given state boolean to go true. This boolean
+// must be a pointer to a state field on ceb. This will also return if
+// stateExit flips true. The return value notes whether we should exit.
+func (ceb *CEB) waitState(state *bool, v bool) (exit bool) {
+	ceb.stateCond.L.Lock()
+	defer ceb.stateCond.L.Unlock()
+	for *state != v && !ceb.stateExit {
+		ceb.stateCond.Wait()
+	}
+
+	return ceb.stateExit
+}
+
+// setState sets the value of a state var on the ceb struct and broadcasts
+// the condition variable.
+func (ceb *CEB) setState(state *bool, v bool) {
+	ceb.stateCond.L.Lock()
+	defer ceb.stateCond.L.Unlock()
+	*state = v
+	ceb.stateCond.Broadcast()
 }
 
 // Close cleans up any resources created by the CEB and should be called
