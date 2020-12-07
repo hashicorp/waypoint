@@ -22,9 +22,9 @@ bin/windows: # create windows binaries
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint.exe ./cmd/waypoint
 
-.PHONY: bin/linux
-bin/linux: # create Linux binaries
-	GOOS=linux GOARCH=amd64 $(MAKE) bin
+.PHONY: bin/entrypoint
+bin/entrypoint: # create the entrypoint for the current platform
+	CGO_ENABLED=0 go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
 .PHONY: test
 test: # run tests
