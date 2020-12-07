@@ -1,0 +1,32 @@
+---
+layout: commands
+page_title: 'Commands: Config source-set'
+sidebar_title: 'config source-set'
+description: 'Set the configuration for a dynamic source plugin'
+---
+
+# Waypoint Config source-set
+
+Command: `waypoint config source-set`
+
+Set the configuration for a dynamic source plugin
+
+@include "commands/config-source-set_desc.mdx"
+
+## Usage
+
+Usage: `waypoint config source-set [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-type=<string>` - Dynamic source type to configure, such as 'vault'.
+- `-config=<key=value>` - Configuration for the dynamic source type. This may be repeated. The fields available are dependent on the dynamic source type, so please check the documentation for that specific type for more information.
+- `-delete` - Delete the configuration for this source type. If this is set then the -config flag is ignored.
+
+@include "commands/config-source-set_more.mdx"
