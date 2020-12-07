@@ -166,5 +166,6 @@ Usage: waypoint server restore [-exit] [<filename>]
 	The argument should be to a file written previously by 'waypoint server snapshot'.
 	If no name is specified and standard input is not a terminal, the backup will read from
 	standard input. Using a name of '-' will force reading from standard input.
-`)
+
+` + c.Flags().Help())
 }

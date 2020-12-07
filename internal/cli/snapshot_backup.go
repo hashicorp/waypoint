@@ -135,5 +135,6 @@ Usage: waypoint server snapshot [<filenamp>]
 	by the given name. If no name is specified and standard out is not a terminal,
 	the backup will written to standard out. Using a name of '-' will force writing
 	to standard out.
-`)
+
+` + c.Flags().Help())
 }
