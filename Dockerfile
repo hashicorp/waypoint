@@ -24,10 +24,12 @@ WORKDIR /tmp/wp-src
 RUN apk add --no-cache make
 RUN go get github.com/kevinburke/go-bindata/...
 RUN --mount=type=cache,target=/root/.cache/go-build make bin
+RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 
 FROM hashicorp.jfrog.io/docker/alpine
 
 COPY --from=builder /tmp/wp-src/waypoint /usr/bin/waypoint
+COPY --from=builder /tmp/wp-src/waypoint-entrypoint /usr/bin/waypoint-entrypoint
 
 VOLUME ["/data"]
 
