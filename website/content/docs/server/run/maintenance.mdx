@@ -38,9 +38,74 @@ For manually run servers, it is dependent on the value of the `-db` flag.
 
 ### Backup / Restore
 
-Backup and restore currently require that the server is not running.
+The Waypoint server supports both an online and offline backup and restore.
 
-While the server is offline, you can copy or replace the database file
-to perform a backup and restore.
+#### Online Backup and Restore
 
--> Online backup and restore will be supported in a future release.
+To backup the database, use the [`waypoint server snapshot`](/commands/server-snapshot)
+command. This command will take an online snapshot of the database and
+write it to a local gzip-compressed file. In the example below, we take
+a snapshot and save it as a `backup.snap`:
+
+```shell-session
+$ waypoint server snapshot backup.snap
+```
+
+~> **Warning!** The snapshot data contains secret and sensitive information
+(such as auth tokens) _unencrypted_. Snapshots are highly sensitive and should
+be carefully protected.
+
+You can then restore this snapshot using [`waypoint server restore`](/commands/server-restore).
+This command _stages_ the restore but _does not_ activate the restore. This means
+that the old data (prior to the restore) will continue to be the live data
+until the restore is activated. To activate the restore, you must restart the server. You may call restore
+multiple times to stage different backups; each call will overwrite the last
+staged restore.
+
+```shell-session
+$ waypoint server restore backup.snap
+```
+
+If you are running the Waypoint server in an environment that will automatically
+restart it for you (such as Kubernetes or Nomad), then you may pass the
+`-exit` flag to `waypoint server restore`. This will cause the Waypoint server
+to abruptly exit after staging the restore. This expects that the underlying
+platform will restart the process after noticing it has died.
+
+#### Offline Restore with a Snapshot
+
+You can restore a server with a snapshot taken when the server was online
+via `waypoint server snapshot`.
+
+In the server data directory (where the `data.db` file would normally be),
+copy the snapshot data and name the file `waypoint-restore.db`. For example,
+if you normally run the Waypoint server as `waypoint server -db=/data/data.db`
+then you should copy the snapshot data to `/data/waypoint-restore.db`.
+
+The real database doesn't need to exist; the restore process also works with
+new, fresh servers. However, the snapshot data must still be named `waypoint-restore.db`.
+
+Start or restart the server. On boot, it will notice the existence of a
+restore snapshot and attempt to restore. The logs should contain information
+about the restore. If the restore fails, the server will not start.
+
+#### Snapshot Version Compatibility
+
+Online snapshots are safe to restore against any version of Waypoint.
+
+If a snapshot is incompatible, an error will be shown on start and no existing
+data will be corrupted. We intend for snapshots to remain compatible with
+all future versions of Waypoint. If there are any exceptions, it'll be noted
+in the upgrade guide. Please always read the upgrade guide for all versions
+leading up to the version you're installing.
+
+#### Offline Backup
+
+In an emergency, you may perform an offline backup by copying the database file
+directly. In this case, you may restore the backup offline by replacing the
+database file.
+
+~> **This method of backup is not recommneded.** The raw database file
+compatibility is not guaranteed across versions. It is highly recommended
+you perform online snapshots with online _or_ offline restores using that
+snapshot data.
