@@ -11,11 +11,21 @@
   color: rgb(var(--footer-text));
   display: flex;
   align-items: center;
+  font-size: 0.75rem;
   margin: 0 auto;
   width: 100vw;
   max-width: 1600px;
   padding: scale.$lg-3 scale.$lg-4 scale.$lg-5;
   .icon {
       fill: rgb(var(--footer-text));
+      margin: 0 scale.$sm-1 0 0;
+  }
+
+  .version-info-list {
+    display: flex;
+    justify-content: space-between;
+    li {
+      padding: 0 scale.$sm-1;
+    }
   }
 }
