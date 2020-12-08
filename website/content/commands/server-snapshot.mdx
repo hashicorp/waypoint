@@ -1,0 +1,26 @@
+---
+layout: commands
+page_title: 'Commands: Server snapshot'
+sidebar_title: 'server snapshot'
+description: 'Write a backup of the server data.'
+---
+
+# Waypoint Server snapshot
+
+Command: `waypoint server snapshot`
+
+Write a backup of the server data.
+
+@include "commands/server-snapshot_desc.mdx"
+
+## Usage
+
+Usage: `waypoint server snapshot [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+@include "commands/server-snapshot_more.mdx"

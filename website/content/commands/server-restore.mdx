@@ -1,0 +1,30 @@
+---
+layout: commands
+page_title: 'Commands: Server restore'
+sidebar_title: 'server restore'
+description: 'Stage a snapshot on the current server for data restoration.'
+---
+
+# Waypoint Server restore
+
+Command: `waypoint server restore`
+
+Stage a snapshot on the current server for data restoration.
+
+@include "commands/server-restore_desc.mdx"
+
+## Usage
+
+Usage: `waypoint server restore [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-exit` - After restoring, the server should exit so it can be restarted.
+
+@include "commands/server-restore_more.mdx"

@@ -1,0 +1,26 @@
+---
+layout: commands
+page_title: 'Commands: Config sync'
+sidebar_title: 'config sync'
+description: 'Synchronize declared variables in waypoint.hcl'
+---
+
+# Waypoint Config sync
+
+Command: `waypoint config sync`
+
+Synchronize declared variables in waypoint.hcl
+
+@include "commands/config-sync_desc.mdx"
+
+## Usage
+
+Usage: `waypoint config sync [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+@include "commands/config-sync_more.mdx"
