@@ -24,25 +24,6 @@ The initial Waypoint releases have a minimal featureset around running the Waypo
 We plan to improve the `waypoint install` and `waypoint server run` interfaces
 to support more options, such as custom TLS certs.
 
-### Config and Secrets
-
-Waypoint has the ability to manage [application configuration](/docs/app-config)
-via the `waypoint config` CLI. This allows you to set static environment variables.
-We plan on making a few major improvements to application config:
-
-- **Config syncing** will allow configuration keys and values to sync from
-  an external source, such as Consul, Vault, etcd, and other sources. This will
-  be a pluggable system in time but may be hardcoded initially. This can also
-  be used for secrets since the syncing will happen at the entrypoint and not the
-  server.
-
-- **Writing config to files instead of environment variables** will enable
-  Waypoint application configuration management to manage a wider array of
-  applications that expect their config in files.
-
-- **App restarts on config change** will restart the application gracefully
-  when any configuration changes.
-
 ### Access Control
 
 The initial Waypoint release has a minimal token system that is used as a
