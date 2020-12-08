@@ -811,6 +811,254 @@ func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
 	// Purposely empty, no flags
 }
 
+// Upgrade is a method of K8sInstaller and implements the Installer interface to
+// upgrade a waypoint-server in a Kubernetes cluster
+func (i *K8sInstaller) Upgrade(
+	ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (
+	*InstallResults, error,
+) {
+	ui := opts.UI
+	log := opts.Log
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Inspecting Kubernetes cluster...")
+	defer s.Abort()
+
+	// Build our K8S client.
+	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{},
+	)
+
+	// Discover the current target namespace in the user's config so if they
+	// run kubectl commands waypoint will show up. If we use the default namespace
+	// they might not see the objects we've created.
+	if i.config.namespace == "" {
+		namespace, _, err := newCmdConfig.Namespace()
+		if err != nil {
+			ui.Output(
+				"Error getting namespace from client config: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return nil, err
+		}
+		i.config.namespace = namespace
+	}
+
+	clientconfig, err := newCmdConfig.ClientConfig()
+	if err != nil {
+		ui.Output(
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, err
+	}
+
+	clientset, err := kubernetes.NewForConfig(clientconfig)
+	if err != nil {
+		ui.Output(
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, err
+	}
+
+	s.Update("Gathering information about the Kubernetes cluster...")
+
+	// Do some probing to see if this is OpenShift. If so, we'll switch the config for the user.
+	// Setting the OpenShift flag will short circuit this.
+	if !i.config.openshift {
+		namespaceClient := clientset.CoreV1().Namespaces()
+		_, err := namespaceClient.Get(context.TODO(), "openshift", metav1.GetOptions{})
+		isOpenShift := err == nil
+
+		// Default namespace in OpenShift acts like a regular K8s namespace, so we don't want
+		// to remove fsGroup in this case.
+		if isOpenShift && i.config.namespace != "default" {
+			s.Update("OpenShift detected. Switching configuration...")
+			i.config.openshift = true
+		}
+	}
+
+	// TODO(briancain): k8s pod UpdateStrategy
+	// note that by default, a statefulset updatestrategy is RollingUpdate
+	//
+	// $ kubectl set image statefulset waypoint-server server=hashicorp/waypoint:latest
+	//
+	// 1. Determine pods configured UpdateStrategy DONE
+	// 2. Set image on pod to i.config.serverImage
+	// 3a. If RollingUpdate, then do nothing
+	// 3b. If OnDelete, delete pod
+	// 4. Watch for pod as it gets recreated
+
+	statefulSetClient := clientset.AppsV1().StatefulSets(i.config.namespace)
+	waypointStatefulSet, err := statefulSetClient.Get(ctx, "waypoint-server", metav1.GetOptions{})
+	if err != nil {
+		ui.Output(
+			"Error obtaining waypoint statefulset: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, err
+	}
+
+	s = sg.Add("Upgrading server to %q", i.config.serverImage) // TODO include version from and to
+	// Update waypoint-server pod image to requested i.config.serverImage
+	//podClient, err := clientset.CoreV1().Pods(i.config.namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		ui.Output(
+			"Error obtaining pod list: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, err
+	}
+
+	// TODO: Build out a Patch by appending server image to container Image, then
+	// apply patch directly
+	//
+	// https://github.com/kubernetes/kubectl/blob/master/pkg/cmd/set/set_image.go#L231
+
+	if waypointStatefulSet.Spec.UpdateStrategy.Type == "OnDelete" {
+		log.Info("Update Strategy is 'OnDelete', deleting pod to refresh image")
+		// delete pod
+	} else if waypointStatefulSet.Spec.UpdateStrategy.Type == "RollingUpdate" {
+		log.Info("Update Strategy is 'RollingUpdate', no further action required")
+	} else {
+		log.Warn("Update Strategy is not recognized", "UpdateStrategy",
+			waypointStatefulSet.Spec.UpdateStrategy.Type)
+	}
+
+	s.Update("Image refreshed!")
+	s.Done()
+
+	s = sg.Add("Waiting for server to be ready...")
+	log.Info("waiting for waypoint-server to become ready after image refresh")
+
+	var contextConfig clicontext.Config
+	var advertiseAddr pb.ServerConfig_AdvertiseAddr
+	var httpAddr string
+	var grpcAddr string
+
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		svc, err := clientset.CoreV1().Services(i.config.namespace).Get(
+			ctx, serviceName, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		ingress := svc.Status.LoadBalancer.Ingress
+		if len(ingress) == 0 {
+			log.Trace("ingress list is empty, waiting")
+			return false, nil
+		}
+
+		addr := ingress[0].IP
+		if addr == "" {
+			addr = ingress[0].Hostname
+		}
+
+		// No address, still not ready
+		if addr == "" {
+			log.Trace("address is empty, waiting")
+			return false, nil
+		}
+
+		endpoints, err := clientset.CoreV1().Endpoints(i.config.namespace).Get(
+			ctx, serviceName, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		if len(endpoints.Subsets) == 0 {
+			log.Trace("endpoints are empty, waiting")
+			return false, nil
+		}
+
+		// Get the ports
+		var grpcPort int32
+		var httpPort int32
+		for _, spec := range svc.Spec.Ports {
+			if spec.Name == "grpc" {
+				grpcPort = spec.Port
+			}
+
+			if spec.Name == "http" {
+				httpPort = spec.Port
+			}
+
+			if httpPort != 0 && grpcPort != 0 {
+				break
+			}
+		}
+		if grpcPort == 0 || httpPort == 0 {
+			// If we didn't find the port, retry...
+			log.Trace("no port found on service, retrying")
+			return false, nil
+		}
+
+		// Set the grpc address
+		grpcAddr = fmt.Sprintf("%s:%d", addr, grpcPort)
+		log.Info("server service ready", "addr", addr)
+
+		// HTTP address to return
+		httpAddr = fmt.Sprintf("%s:%d", addr, httpPort)
+
+		// Ensure the service is ready to use before returning
+		_, err = net.DialTimeout("tcp", httpAddr, 1*time.Second)
+		if err != nil {
+			return false, nil
+		}
+		log.Info("http server ready", "httpAddr", addr)
+
+		// Set our advertise address
+		advertiseAddr.Addr = grpcAddr
+		advertiseAddr.Tls = true
+		advertiseAddr.TlsSkipVerify = true
+
+		// If we want internal or we're a localhost address, we use the internal
+		// address. The "localhost" check is specifically for Docker for Desktop
+		// since pods can't reach this.
+		if i.config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
+			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
+				serviceName,
+				grpcPort,
+			)
+		}
+
+		// Set our connection information
+		contextConfig = clicontext.Config{
+			Server: serverconfig.Client{
+				Address:       grpcAddr,
+				Tls:           true,
+				TlsSkipVerify: true, // always for now
+			},
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	s.Done()
+
+	return &InstallResults{
+		Context:       &contextConfig,
+		AdvertiseAddr: &advertiseAddr,
+		HTTPAddr:      httpAddr,
+	}, nil
+}
+
+func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: "hashicorp/waypoint:latest",
+	})
+}
+
 func int32Ptr(i int32) *int32 {
 	return &i
 }
