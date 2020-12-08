@@ -3,6 +3,7 @@ package serverinstall
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/nomad/api"
@@ -211,6 +212,182 @@ EVAL:
 	}, nil
 }
 
+// Upgrade is a method of NomadInstaller and implements the Installer interface to
+// upgrade a waypoint-server in a Nomad cluster
+func (i *NomadInstaller) Upgrade(
+	ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (
+	*InstallResults, error,
+) {
+	ui := opts.UI
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Nomad client...")
+	defer func() { s.Abort() }()
+
+	// Build api client from environment
+	client, err := api.NewClient(api.DefaultConfig())
+	if err != nil {
+		return nil, err
+	}
+
+	s.Update("Checking for existing Waypoint server...")
+
+	// Check if waypoint-server has already been deployed
+	jobs, _, err := client.Jobs().PrefixList("waypoint-server")
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		serverDetected bool
+
+		clicfg   clicontext.Config
+		addr     pb.ServerConfig_AdvertiseAddr
+		httpAddr string
+	)
+
+	for _, j := range jobs {
+		if j.Name == "waypoint-server" {
+			serverDetected = true
+			break
+		}
+	}
+
+	clicfg.Server = serverconfig.Client{
+		Tls:           true,
+		TlsSkipVerify: true,
+	}
+
+	addr.Tls = true
+	addr.TlsSkipVerify = true
+
+	if !serverDetected {
+		s.Update("No existing Waypoint server detected")
+		s.Status(terminal.StatusError)
+		s.Done()
+		return nil, fmt.Errorf("No waypoint-server job detected in Nomad")
+	} else {
+		allocs, _, err := client.Jobs().Allocations("waypoint-server", false, nil)
+		if err != nil {
+			return nil, err
+		}
+		if len(allocs) == 0 {
+			return nil, fmt.Errorf("waypoint-server job found but no running allocations available")
+		}
+		serverAddr, err := getAddrFromAllocID(allocs[0].ID, client)
+		if err != nil {
+			return nil, err
+		}
+
+		s.Update("Detected existing Waypoint server")
+		s.Done()
+
+		clicfg.Server.Address = serverAddr
+		addr.Addr = serverAddr
+		httpAddr = serverAddr
+	}
+
+	// TODO get curent iamge
+	s = sg.Add("Upgrading Waypoint server on Nomad to %q", i.config.serverImage)
+	job := waypointNomadJob(i.config)
+	jobOpts := &api.RegisterOptions{
+		PolicyOverride: i.config.policyOverride,
+	}
+
+	resp, _, err := client.Jobs().RegisterOpts(job, jobOpts, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Update("Waiting for allocation to be scheduled")
+EVAL:
+	qopts := &api.QueryOptions{
+		WaitIndex: resp.EvalCreateIndex,
+	}
+
+	eval, meta, err := client.Evaluations().Info(resp.EvalID, qopts)
+	if err != nil {
+		return nil, err
+	}
+	qopts.WaitIndex = meta.LastIndex
+	switch eval.Status {
+	case "pending":
+		goto EVAL
+	case "complete":
+		s.Update("Nomad allocation created")
+	case "failed", "canceled", "blocked":
+		s.Update("Nomad failed to schedule the waypoint-server")
+		s.Status(terminal.StatusError)
+		return nil, fmt.Errorf("nomad evaluation did not transition to 'complete'")
+	default:
+		return nil, fmt.Errorf("unknown eval status: %q", eval.Status)
+	}
+
+	var allocID string
+
+	for {
+		allocs, qmeta, err := client.Evaluations().Allocations(eval.ID, qopts)
+		if err != nil {
+			return nil, err
+		}
+		qopts.WaitIndex = qmeta.LastIndex
+		if len(allocs) == 0 {
+			return nil, fmt.Errorf("no allocations found after evaluation completed")
+		}
+
+		switch allocs[0].ClientStatus {
+		case "running":
+			allocID = allocs[0].ID
+			s.Update("Nomad allocation running")
+		case "pending":
+			s.Update(fmt.Sprintf("Waiting for allocation %q to start", allocs[0].ID))
+			// retry
+		default:
+			return nil, fmt.Errorf("allocation failed")
+
+		}
+
+		if allocID != "" {
+			break
+		}
+
+		select {
+		case <-time.After(500 * time.Millisecond):
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+
+	serverAddr, err := getAddrFromAllocID(allocID, client)
+	if err != nil {
+		return nil, err
+	}
+	hAddr, err := getHTTPFromAllocID(allocID, client)
+	if err != nil {
+		return nil, err
+	}
+	httpAddr = hAddr
+	addr.Addr = serverAddr
+	clicfg = clicontext.Config{
+		Server: serverconfig.Client{
+			Address:       addr.Addr,
+			Tls:           true,
+			TlsSkipVerify: true, // always for now
+		},
+	}
+
+	s.Update("Upgrade of Waypoint server on Nomad complete!")
+	s.Done()
+
+	return &InstallResults{
+		Context:       &clicfg,
+		AdvertiseAddr: &addr,
+		HTTPAddr:      httpAddr,
+	}, nil
+}
+
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
 func waypointNomadJob(c nomadConfig) *api.Job {
@@ -219,24 +396,34 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	job.Datacenters = c.datacenters
 	job.Meta = c.serviceAnnotations
 	tg := api.NewTaskGroup(serverName, 1)
+
+	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
+	httpPort, _ := strconv.Atoi(defaultHttpPort)
+
 	tg.Networks = []*api.NetworkResource{
 		{
 			Mode: "host",
 			DynamicPorts: []api.Port{
 				{
 					Label: "server",
-					To:    9701,
+					To:    grpcPort,
 				},
 			},
 			// currently set to static; when ui command can be dynamic - update this
 			ReservedPorts: []api.Port{
 				{
 					Label: "ui",
-					Value: 9702,
-					To:    9702,
+					Value: httpPort,
+					To:    httpPort,
 				},
 			},
 		},
+	}
+	// Preserve disk, otherwise upgrades will destroy previous allocation and the
+	// disk along with it
+	tg.EphemeralDisk = &api.EphemeralDisk{
+		Sticky:  &[]bool{true}[0],
+		Migrate: &[]bool{true}[0],
 	}
 	job.AddTaskGroup(tg)
 
@@ -244,10 +431,10 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	task.Config = map[string]interface{}{
 		"image": c.serverImage,
 		"ports": []string{"server", "ui"},
-		"args":  []string{"server", "run", "-accept-tos", "-vvv", "-db=/alloc/data.db", "-listen-grpc=0.0.0.0:9701", "-listen-http=0.0.0.0:9702"},
+		"args":  []string{"server", "run", "-accept-tos", "-vvv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
 	}
 	task.Env = map[string]string{
-		"PORT": "9701",
+		"PORT": defaultGrpcPort,
 	}
 	tg.AddTask(task)
 
@@ -401,5 +588,48 @@ func (i *NomadInstaller) UninstallFlags(set *flag.Set) {
 		Name:   "nomad-purge",
 		Target: &i.config.serverPurge,
 		Usage:  "Purge the Waypoint server job after deregistering as part of uninstall.",
+	})
+}
+
+func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "nomad-annotate-service",
+		Target: &i.config.serviceAnnotations,
+		Usage:  "Annotations for the Service generated.",
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-dc",
+		Target:  &i.config.datacenters,
+		Default: []string{"dc1"},
+		Usage:   "Datacenters to install to for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-namespace",
+		Target:  &i.config.namespace,
+		Default: "default",
+		Usage:   "Namespace to install the Waypoint server into for Nomad.",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "nomad-policy-override",
+		Target:  &i.config.policyOverride,
+		Default: false,
+		Usage:   "Override the Nomad sentinel policy for enterprise Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-region",
+		Target:  &i.config.region,
+		Default: "global",
+		Usage:   "Region to install to for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: "hashicorp/waypoint:latest",
 	})
 }
