@@ -72,12 +72,6 @@
           margin: 0;
         }
       }
-
-      &.connect-link {
-        @media only screen and (max-width: 600px) {
-          display: none;
-        }
-      }
     }
 
     hr {
@@ -105,7 +99,9 @@
       margin-left: 0;
       margin: scale.$base 0 0;
 
-      hr, > a, .invite-link {
+      hr,
+      > a,
+      .invite-link {
         margin: 0 scale.$sm-2;
       }
 
