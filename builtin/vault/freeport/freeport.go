@@ -133,6 +133,10 @@ func checkFreedPortsOnce() {
 	mu.Lock()
 	defer mu.Unlock()
 
+	if pendingPorts == nil {
+		return
+	}
+
 	pending := pendingPorts.Len()
 	remove := make([]*list.Element, 0, pending)
 	for elem := pendingPorts.Front(); elem != nil; elem = elem.Next() {
