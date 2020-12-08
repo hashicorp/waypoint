@@ -15,9 +15,8 @@
   margin: 0 auto;
   width: 100vw;
   max-width: 1600px;
-  padding: scale.$lg-3 scale.$lg-4 scale.$lg-5;
+  padding: scale.$sm-4 scale.$lg-4 scale.$lg-5;
   .icon {
-      fill: rgb(var(--footer-text));
       margin: 0 scale.$sm-1 0 0;
   }
 
