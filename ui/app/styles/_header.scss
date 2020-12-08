@@ -45,7 +45,7 @@
     a {
       display: flex;
       align-items: center;
-      margin-left: scale.$lg-2;
+      margin: 0 scale.$sm-2;
       text-decoration: none;
     }
 
@@ -55,11 +55,11 @@
       height: scale.$base;
     }
 
-    .invite-link {
+    .hint-link {
       display: flex;
       align-items: center;
       position: relative;
-      margin-left: scale.$lg-2;
+      margin: 0 scale.$sm-2;
       cursor: pointer;
 
       & + .cli-hint {
@@ -78,7 +78,7 @@
       height: scale.$lg-1;
       border: none;
       border-right: 1px solid rgb(var(--header-border));
-      margin: 0 scale.$lg-2;
+      margin: 0 scale.$sm-2;
     }
 
     .auth-link {
@@ -87,7 +87,7 @@
       background: none;
       border: none;
       padding: 0;
-      margin: 0;
+      margin: 0 0 0 scale.$sm-2;
       cursor: pointer;
       outline: 0;
       @include Typography.Interface(L);
@@ -99,7 +99,9 @@
       margin-left: 0;
       margin: scale.$base 0 0;
 
-      hr, > a, .invite-link {
+      hr,
+      > a,
+      .invite-link {
         margin: 0 scale.$sm-2;
       }
 

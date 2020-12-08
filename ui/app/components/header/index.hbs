@@ -9,7 +9,9 @@
       Documentation
     </ExternalLink>
     {{#if this.canLogout}}
-    <Actions::Invite />
+      <hr />
+      <Actions::Context />
+      <Actions::Invite />
     {{/if}}
     <hr />
     <Logout @canLogout={{this.canLogout}} />
