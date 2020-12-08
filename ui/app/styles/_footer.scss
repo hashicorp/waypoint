@@ -13,8 +13,6 @@
   align-items: center;
   font-size: 0.75rem;
   margin: 0 auto;
-  width: 100vw;
-  max-width: 1600px;
   padding: scale.$sm-4 scale.$lg-4 scale.$lg-5;
   .icon {
       margin: 0 scale.$sm-1 0 0;
@@ -23,6 +21,7 @@
   .version-info-list {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     li {
       padding: 0 scale.$sm-1;
     }
