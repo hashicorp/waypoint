@@ -27,6 +27,7 @@ IMPROVEMENTS:
 * core: add more descriptive text to include app name in `waypoint destroy` [GH-807]
 * core: add better error messaging when prefix is missing from the `-raw` flag in `waypoint config set` [GH-815]
 * core: `waypoint.hcl` can be named `waypoint.hcl.json` and use JSON syntax [GH-867]
+* install: Update flags used on server install per-platform [GH-882]
 * install/k8s: support for OpenShift [GH-715]
 * internal/server: Block on instance deployment becoming available [GH-881]
 * server: APIs for Waypoint database snapshot/restore [GH-723]
