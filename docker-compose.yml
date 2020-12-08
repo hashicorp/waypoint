@@ -1,18 +1,18 @@
-version: '3'
+version: "3"
 
 services:
   pebble:
-   image: letsencrypt/pebble
-   command: pebble
-   ports:
-     - 14000:14000  # ACME port
-     - 15000:15000  # Management port
-   environment:
-     - PEBBLE_VA_NOSLEEP=1
-     - PEBBLE_VA_ALWAYS_VALID=1
+    image: docker.mirror.hashicorp.services/letsencrypt/pebble
+    command: pebble
+    ports:
+      - 14000:14000 # ACME port
+      - 15000:15000 # Management port
+    environment:
+      - PEBBLE_VA_NOSLEEP=1
+      - PEBBLE_VA_ALWAYS_VALID=1
 
   localstack:
-    image: localstack/localstack
+    image: docker.mirror.hashicorp.services/localstack/localstack
     ports:
       - "4566-4599:4566-4599"
       - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
@@ -29,7 +29,7 @@ services:
       - "${PWD}/tmp/localstack:/tmp/localstack"
 
   postgres:
-    image: "postgres:12.3"
+    image: "docker.mirror.hashicorp.services/postgres:12.3"
     ports:
       - "5432:5432"
     environment:
@@ -37,9 +37,15 @@ services:
       - POSTGRES_PASSWORD=postgres
 
   vault:
-    image: vault
+    image: docker.mirror.hashicorp.services/vault
     ports:
       - 8200:8200
     command: vault server -dev -dev-root-token-id=hznroot
     environment:
       - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+
+  consul:
+    image: docker.mirror.hashicorp.services/consul
+    ports:
+      - 8500:8500
+    command: consul agent -dev -client=0.0.0.0
