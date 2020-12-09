@@ -31,6 +31,15 @@ type dockerConfig struct {
 	serverImage string `hcl:"server_image,optional"`
 }
 
+var (
+	grpcPort       = "9701"
+	httpPort       = "9702"
+	containerLabel = "waypoint-type=server"
+	containerKey   = "waypoint-type"
+	containerValue = "server"
+	containerName  = "waypoint-server"
+)
+
 // Install is a method of DockerInstaller and implements the Installer interface to
 // create a waypoint-server as a Docker container
 func (i *DockerInstaller) Install(
@@ -54,15 +63,12 @@ func (i *DockerInstaller) Install(
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
-			Value: "waypoint-type=server",
+			Value: containerLabel,
 		}),
 	})
 	if err != nil {
 		return nil, nil, "", err
 	}
-
-	grpcPort := "9701"
-	httpPort := "9702"
 
 	var (
 		clicfg   clicontext.Config
@@ -76,7 +82,7 @@ func (i *DockerInstaller) Install(
 		TlsSkipVerify: true,
 	}
 
-	addr.Addr = "waypoint-server:" + grpcPort
+	addr.Addr = containerName + ":" + grpcPort
 	addr.Tls = true
 	addr.TlsSkipVerify = true
 
@@ -197,7 +203,7 @@ func (i *DockerInstaller) Install(
 		},
 	}
 	hostconfig := container.HostConfig{
-		Binds:        []string{"waypoint-server:/data"},
+		Binds:        []string{containerName + ":/data"},
 		PortBindings: bindings,
 	}
 
@@ -208,10 +214,10 @@ func (i *DockerInstaller) Install(
 	}
 
 	cfg.Labels = map[string]string{
-		"waypoint-type": "server",
+		containerKey: containerValue,
 	}
 
-	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, "waypoint-server")
+	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, containerName)
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -241,16 +247,84 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
-func (i *DockerInstaller) Uninstall(ctx context.Context, ui terminal.UI, log hclog.Logger) error {
-	// sg := ui.StepGroup()
-	// dockerCli, err := client.NewClientWithOpts(client.FromEnv)
-	// if err != nil {
-	// 	return err
-	// }
+func (i *DockerInstaller) Uninstall(
+	ctx context.Context, ui terminal.UI, log hclog.Logger,
+) error {
+	sg := ui.StepGroup()
+	defer sg.Wait()
 
-	// stop server
-	// rm server
-	// prune volumes
+	// bulk of this copied from PR#660
+	s := sg.Add("Initializing Docker client...")
+	defer s.Abort()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return err
+	}
+
+	// TODO do we need this?
+	// defer func() {
+	// 	_ = cli.Close()
+	// }()
+
+	cli.NegotiateAPIVersion(ctx)
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "label",
+			Value: containerLabel,
+		}),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if len(containers) < 1 {
+		return fmt.Errorf("cannot find a Waypoint Docker container")
+	}
+
+	// Pick the first container, as there should be only one.
+	containerId := containers[0].ID
+
+	s.Update("Stopping Waypoint Docker container...")
+
+	// Stop the container gracefully, respecting the Engine's default timeout.
+	if err := cli.ContainerStop(ctx, containerId, nil); err != nil {
+		return err
+	}
+
+	removeOptions := types.ContainerRemoveOptions{
+		RemoveVolumes: true,
+		Force:         true,
+	}
+
+	if err := cli.ContainerRemove(ctx, containerId, removeOptions); err != nil {
+		return err
+	}
+	s.Update("Docker container %q removed", containerName)
+	s.Done()
+	s = sg.Add("")
+
+	volumeExists, err := volumeExists(ctx, cli)
+	if err != nil {
+		return err
+	}
+
+	s.Update("Removing Waypoint Docker volume...")
+	// If the Waypoint Docker volume does not exist, return
+	if !volumeExists {
+		s.Update("Couldn't find Waypoint Docker volume %q; not removing", containerName)
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		return nil
+	}
+
+	if err := cli.VolumeRemove(ctx, containerName, true); err != nil {
+		return err
+	}
+	s.Update("Docker volume %q removed", containerName)
+	s.Done()
 
 	return nil
 }
@@ -262,4 +336,20 @@ func (i *DockerInstaller) UninstallFlags(set *flag.Set) {
 		Usage:   "Docker image for the Waypoint server.",
 		Default: "hashicorp/waypoint:latest",
 	})
+}
+
+// volumeExists determines whether the Waypoint Docker volume exists.
+func volumeExists(ctx context.Context, cli *client.Client) (bool, error) {
+	listBody, err := cli.VolumeList(ctx, filters.NewArgs(filters.KeyValuePair{
+		Key:   "name",
+		Value: containerName,
+	}))
+
+	if err != nil {
+		return false, err
+	}
+
+	exists := len(listBody.Volumes) > 0
+
+	return exists, nil
 }
