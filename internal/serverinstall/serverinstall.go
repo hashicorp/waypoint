@@ -15,6 +15,8 @@ import (
 type Installer interface {
 	Install(ctx context.Context, ui terminal.UI, log hclog.Logger) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error)
 	InstallFlags(*flag.Set)
+	Uninstall(context.Context, terminal.UI, hclog.Logger) error
+	UninstallFlags(*flag.Set)
 }
 
 var Platforms = map[string]Installer{
