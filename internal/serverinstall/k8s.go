@@ -20,7 +20,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -56,8 +55,12 @@ const (
 // Install is a method of K8sInstaller and implements the Installer interface to
 // register a waypoint-server in a Kubernetes cluster
 func (i *K8sInstaller) Install(
-	ctx context.Context, ui terminal.UI, log hclog.Logger,
-) (*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error) {
+	ctx context.Context,
+	opts *InstallOpts,
+) (*InstallResults, error) {
+	ui := opts.UI
+	log := opts.Log
+
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -80,7 +83,7 @@ func (i *K8sInstaller) Install(
 				"Error getting namespace from client config: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-			return nil, nil, "", err
+			return nil, err
 		}
 		i.config.namespace = namespace
 	}
@@ -91,7 +94,7 @@ func (i *K8sInstaller) Install(
 			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	clientset, err := kubernetes.NewForConfig(clientconfig)
@@ -100,7 +103,7 @@ func (i *K8sInstaller) Install(
 			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	// If this is kind, then we want to warn the user that they need
@@ -124,7 +127,7 @@ func (i *K8sInstaller) Install(
 				"Error reading Kubernetes secret file: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-			return nil, nil, "", err
+			return nil, err
 		}
 
 		var secretData struct {
@@ -139,7 +142,7 @@ func (i *K8sInstaller) Install(
 				"Error reading Kubernetes secret file: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-			return nil, nil, "", err
+			return nil, err
 		}
 
 		if secretData.Metadata.Name == "" {
@@ -147,7 +150,7 @@ func (i *K8sInstaller) Install(
 				"Invalid secret, no metadata.name",
 				terminal.WithErrorStyle(),
 			)
-			return nil, nil, "", err
+			return nil, err
 		}
 
 		i.config.imagePullSecret = secretData.Metadata.Name
@@ -165,7 +168,7 @@ func (i *K8sInstaller) Install(
 				terminal.WithErrorStyle(),
 			)
 
-			return nil, nil, "", err
+			return nil, err
 		}
 
 		s.Done()
@@ -195,7 +198,7 @@ func (i *K8sInstaller) Install(
 			"Error generating statefulset configuration: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	service, err := newService(i.config)
@@ -204,7 +207,7 @@ func (i *K8sInstaller) Install(
 			"Error generating service configuration: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	s.Update("Creating Kubernetes resources...")
@@ -245,10 +248,7 @@ func (i *K8sInstaller) Install(
 		return true, nil
 	})
 	if err != nil {
-		return nil, nil, "", fmt.Errorf(
-			"error waiting for statefulset ready: %s",
-			err,
-		)
+		return nil, err
 	}
 
 	s.Update("Kubernetes StatefulSet reporting ready")
@@ -361,15 +361,16 @@ func (i *K8sInstaller) Install(
 		return true, nil
 	})
 	if err != nil {
-		return nil, nil, "", fmt.Errorf(
-			"error waiting for service ready: %s",
-			err,
-		)
+		return nil, err
 	}
 
 	s.Done()
 
-	return &contextConfig, &advertiseAddr, httpAddr, err
+	return &InstallResults{
+		Context:       &contextConfig,
+		AdvertiseAddr: &advertiseAddr,
+		HTTPAddr:      httpAddr,
+	}, nil
 }
 
 // newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset
