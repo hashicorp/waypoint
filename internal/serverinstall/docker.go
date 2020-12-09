@@ -15,7 +15,6 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -42,9 +41,11 @@ var (
 // Install is a method of DockerInstaller and implements the Installer interface to
 // create a waypoint-server as a Docker container
 func (i *DockerInstaller) Install(
-	ctx context.Context, ui terminal.UI, log hclog.Logger) (
-	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
-) {
+	ctx context.Context,
+	opts *InstallOpts,
+) (*InstallResults, error) {
+	ui := opts.UI
+
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -53,7 +54,7 @@ func (i *DockerInstaller) Install(
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	cli.NegotiateAPIVersion(ctx)
 
@@ -66,7 +67,7 @@ func (i *DockerInstaller) Install(
 		}),
 	})
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	var (
@@ -92,14 +93,17 @@ func (i *DockerInstaller) Install(
 		s.Update("Detected existing Waypoint server.")
 		s.Status(terminal.StatusWarn)
 		s.Done()
-		return &clicfg, &addr, "", nil
+		return &InstallResults{
+			Context:       &clicfg,
+			AdvertiseAddr: &addr,
+		}, nil
 	}
 
 	s.Update("Checking for Docker image: %s", i.config.serverImage)
 
 	imageRef, err := reference.ParseNormalizedNamed(i.config.serverImage)
 	if err != nil {
-		return nil, nil, "", fmt.Errorf("Error parsing Docker image: %s", err)
+		return nil, fmt.Errorf("Error parsing Docker image: %s", err)
 	}
 
 	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
@@ -109,7 +113,7 @@ func (i *DockerInstaller) Install(
 		}),
 	})
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	if len(imageList) == 0 {
@@ -117,13 +121,13 @@ func (i *DockerInstaller) Install(
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 		defer resp.Close()
 
 		stdout, _, err := ui.OutputWriters()
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 
 		var termFd uintptr
@@ -133,7 +137,7 @@ func (i *DockerInstaller) Install(
 
 		err = jsonmessage.DisplayJSONMessagesStream(resp, s.TermOutput(), termFd, true, nil)
 		if err != nil {
-			return nil, nil, "", fmt.Errorf("unable to stream pull logs to the terminal: %s", err)
+			return nil, fmt.Errorf("unable to stream pull logs to the terminal: %s", err)
 		}
 
 		s.Done()
@@ -146,7 +150,7 @@ func (i *DockerInstaller) Install(
 		Filters: filters.NewArgs(filters.Arg("label", "use=waypoint")),
 	})
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	if len(nets) == 0 {
@@ -161,19 +165,19 @@ func (i *DockerInstaller) Install(
 		})
 
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 
 	}
 
 	npGRPC, err := nat.NewPort("tcp", grpcPort)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	npHTTP, err := nat.NewPort("tcp", httpPort)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	s.Update("Installing Waypoint server to docker")
@@ -218,12 +222,12 @@ func (i *DockerInstaller) Install(
 
 	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, serverName)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	err = cli.ContainerStart(ctx, cr.ID, types.ContainerStartOptions{})
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	// KLUDGE: There isn't a way to find out if the container is up or not,
@@ -234,7 +238,11 @@ func (i *DockerInstaller) Install(
 	s = sg.Add("Server container started!")
 	s.Done()
 
-	return &clicfg, &addr, httpAddr, nil
+	return &InstallResults{
+		Context:       &clicfg,
+		AdvertiseAddr: &addr,
+		HTTPAddr:      httpAddr,
+	}, nil
 }
 
 func (i *DockerInstaller) InstallFlags(set *flag.Set) {
