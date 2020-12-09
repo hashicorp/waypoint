@@ -60,7 +60,7 @@ func (c *UninstallCommand) Run(args []string) int {
 	s = sg.Add("")
 	s.Update("Uninstalling Waypoint server using context %q...", contextDefault)
 	s.Done()
-	
+
 	s = sg.Add("")
 	// Generate a snapshot
 	if !c.skipSnapshot {
@@ -103,7 +103,7 @@ func (c *UninstallCommand) Run(args []string) int {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
-	
+
 	c.ui.Output("Waypoint server successfully uninstalled for %s platform", c.platform, terminal.WithSuccessStyle())
 
 	return 0
