@@ -311,3 +311,17 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Default: "hashicorp/waypoint:latest",
 	})
 }
+
+func (i *NomadInstaller) Uninstall(ctx context.Context, ui terminal.UI, log hclog.Logger) error {
+	return nil
+}
+
+func (i *NomadInstaller) UninstallFlags(set *flag.Set) {
+	// don't need this; we know what the name is if it's already installed
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: "hashicorp/waypoint:latest",
+	})
+}
