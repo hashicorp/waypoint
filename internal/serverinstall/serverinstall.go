@@ -24,6 +24,8 @@ type Installer interface {
 	// specify flags for the install CLI. The flags should be prefixed with
 	// the platform name to avoid conflicts with other flags.
 	InstallFlags(*flag.Set)
+	Uninstall(context.Context, terminal.UI, hclog.Logger) error
+	UninstallFlags(*flag.Set)
 }
 
 // InstallOpts are the options sent to Installer.Install.

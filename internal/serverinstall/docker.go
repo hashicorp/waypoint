@@ -319,3 +319,26 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 		Default: "hashicorp/waypoint:latest",
 	})
 }
+
+func (i *DockerInstaller) Uninstall(ctx context.Context, ui terminal.UI, log hclog.Logger) error {
+	// sg := ui.StepGroup()
+	// dockerCli, err := client.NewClientWithOpts(client.FromEnv)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// stop server
+	// rm server
+	// prune volumes
+
+	return nil
+}
+
+func (i *DockerInstaller) UninstallFlags(set *flag.Set) {
+	set.StringVar(&flag.StringVar{
+		Name:    "docker-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: "hashicorp/waypoint:latest",
+	})
+}

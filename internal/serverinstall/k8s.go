@@ -633,6 +633,28 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
+func (i *K8sInstaller) Uninstall(ctx context.Context, ui terminal.UI, log hclog.Logger) error {
+
+	// deleteStatefulSet()
+	// delete pvc
+	// delete svc
+
+	return nil
+}
+
+func deleteStatefulSet() (*metav1.DeleteOptions, error) {
+	return &metav1.DeleteOptions{}, nil
+}
+
+func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: "hashicorp/waypoint:latest",
+	})
+}
+
 func int32Ptr(i int32) *int32 {
 	return &i
 }
