@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -31,9 +30,11 @@ type nomadConfig struct {
 // Install is a method of NomadInstaller and implements the Installer interface to
 // register a waypoint-server job with a Nomad cluster
 func (i *NomadInstaller) Install(
-	ctx context.Context, ui terminal.UI, log hclog.Logger) (
-	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
-) {
+	ctx context.Context,
+	opts *InstallOpts,
+) (*InstallResults, error) {
+	ui := opts.UI
+
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -43,7 +44,7 @@ func (i *NomadInstaller) Install(
 	// Build api client from environment
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	s.Update("Checking for existing Waypoint server...")
@@ -51,7 +52,7 @@ func (i *NomadInstaller) Install(
 	// Check if waypoint-server has already been deployed
 	jobs, _, err := client.Jobs().PrefixList("waypoint-server")
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	var serverDetected bool
 	for _, j := range jobs {
@@ -78,14 +79,14 @@ func (i *NomadInstaller) Install(
 	if serverDetected {
 		allocs, _, err := client.Jobs().Allocations("waypoint-server", false, nil)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 		if len(allocs) == 0 {
-			return nil, nil, "", fmt.Errorf("waypoint-server job found but no running allocations available")
+			return nil, fmt.Errorf("waypoint-server job found but no running allocations available")
 		}
 		serverAddr, err := getAddrFromAllocID(allocs[0].ID, client)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 
 		s.Update("Detected existing Waypoint server")
@@ -95,7 +96,11 @@ func (i *NomadInstaller) Install(
 		clicfg.Server.Address = serverAddr
 		addr.Addr = serverAddr
 		httpAddr = serverAddr
-		return &clicfg, &addr, httpAddr, nil
+		return &InstallResults{
+			Context:       &clicfg,
+			AdvertiseAddr: &addr,
+			HTTPAddr:      httpAddr,
+		}, nil
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
@@ -106,7 +111,7 @@ func (i *NomadInstaller) Install(
 
 	resp, _, err := client.Jobs().RegisterOpts(job, jobOpts, nil)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	s.Update("Waiting for allocation to be scheduled")
@@ -117,7 +122,7 @@ EVAL:
 
 	eval, meta, err := client.Evaluations().Info(resp.EvalID, qopts)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	qopts.WaitIndex = meta.LastIndex
 	switch eval.Status {
@@ -128,9 +133,9 @@ EVAL:
 	case "failed", "canceled", "blocked":
 		s.Update("Nomad failed to schedule the waypoint-server")
 		s.Status(terminal.StatusError)
-		return nil, nil, "", fmt.Errorf("nomad evaluation did not transition to 'complete'")
+		return nil, fmt.Errorf("nomad evaluation did not transition to 'complete'")
 	default:
-		return nil, nil, "", fmt.Errorf("unknown eval status: %q", eval.Status)
+		return nil, fmt.Errorf("unknown eval status: %q", eval.Status)
 	}
 
 	var allocID string
@@ -138,11 +143,11 @@ EVAL:
 	for {
 		allocs, qmeta, err := client.Evaluations().Allocations(eval.ID, qopts)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 		qopts.WaitIndex = qmeta.LastIndex
 		if len(allocs) == 0 {
-			return nil, nil, "", fmt.Errorf("no allocations found after evaluation completed")
+			return nil, fmt.Errorf("no allocations found after evaluation completed")
 		}
 
 		switch allocs[0].ClientStatus {
@@ -153,7 +158,7 @@ EVAL:
 			s.Update(fmt.Sprintf("Waiting for allocation %q to start", allocs[0].ID))
 			// retry
 		default:
-			return nil, nil, "", fmt.Errorf("allocation failed")
+			return nil, fmt.Errorf("allocation failed")
 
 		}
 
@@ -164,17 +169,17 @@ EVAL:
 		select {
 		case <-time.After(500 * time.Millisecond):
 		case <-ctx.Done():
-			return nil, nil, "", ctx.Err()
+			return nil, ctx.Err()
 		}
 	}
 
 	serverAddr, err := getAddrFromAllocID(allocID, client)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	hAddr, err := getHTTPFromAllocID(allocID, client)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	httpAddr = hAddr
 	addr.Addr = serverAddr
@@ -189,7 +194,11 @@ EVAL:
 	s.Update("Nomad allocation ready")
 	s.Done()
 
-	return &clicfg, &addr, httpAddr, nil
+	return &InstallResults{
+		Context:       &clicfg,
+		AdvertiseAddr: &addr,
+		HTTPAddr:      httpAddr,
+	}, nil
 }
 
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
