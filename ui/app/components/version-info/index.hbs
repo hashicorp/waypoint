@@ -1,8 +1,8 @@
 <div class="version-info">
   <ul class="version-info-list">
     <li>Waypoint {{this.versionInfo.version}}</li>
-    <li>API version: {{this.versionInfo.api.current}}</li>
-    <li>Entrypoint version: {{this.versionInfo.entrypoint.current}}</li>
+    <li>API: v{{this.versionInfo.api.current}}</li>
+    <li>Entrypoint: v{{this.versionInfo.entrypoint.current}}</li>
     {{#if
       (or
         (gt this.versionInfo.api.minimum this.versionInfo.api.current)
