@@ -1,0 +1,17 @@
+<div class="version-info">
+  <ul class="version-info-list">
+    <li>Waypoint {{this.versionInfo.version}}</li>
+    <li>API: v{{this.versionInfo.api.current}}</li>
+    <li>Entrypoint: v{{this.versionInfo.entrypoint.current}}</li>
+    {{#if
+      (or
+        (gt this.versionInfo.api.minimum this.versionInfo.api.current)
+        (gt this.versionInfo.entrypoint.minimum this.versionInfo.entrypoint.current)
+      )}}
+      <b class="badge badge--error">
+        {{inline-svg "alert-triangle" class="icon"}}
+        Update available
+      </b>
+    {{/if}}
+  </ul>
+</div>
