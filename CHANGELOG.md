@@ -26,10 +26,14 @@ IMPROVEMENTS:
 * core: application config changes (i.e. `waypoint config set`) will now restart running applications [GH-791]
 * core: add more descriptive text to include app name in `waypoint destroy` [GH-807]
 * core: add better error messaging when prefix is missing from the `-raw` flag in `waypoint config set` [GH-815]
+* core: align -raw flag to behave like -json flag with waypoint config set [GH-828]
 * core: `waypoint.hcl` can be named `waypoint.hcl.json` and use JSON syntax [GH-867]
 * install: Update flags used on server install per-platform [GH-882]
 * install/k8s: support for OpenShift [GH-715]
 * internal/server: Block on instance deployment becoming available [GH-881]
+* plugin/aws-ecr: environment variables to be used instead of 'region' property for aws-ecr registry [GH-841]
+* plugin/google-cloud-run: allow images from Google Artifact Registry [GH-804]
+* plugin/google-cloud-run: added service account name field [GH-850]
 * server: APIs for Waypoint database snapshot/restore [GH-723]
 * tools: Add tools.go and `make tools` for bootstrapping local dev for build  [GH-863]
 * website: many minor improvements were made in our plugin documentation section for this release
@@ -37,7 +41,11 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * core: force killed `waypoint exec` sessions won't leave the remote process running [GH-827]
+* core: waypoint exec with no TTY won't hang open until a ctrl-c [GH-830]
+* cli: server config-set doesn't require a Waypoint configuration file. [GH-819]
 * cli/token: fix issue where tokens could be cut off on narrow terminals [GH-885]
+* plugin/aws-ecs: task_role_name is optional [GH-824]
+
 
 ## 0.1.5 (November 09, 2020)
 
