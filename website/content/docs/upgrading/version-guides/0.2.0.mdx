@@ -25,6 +25,16 @@ Kubernetes and Nomad both specify an "always pull" policy for `:latest` images
 so restarting the Deployment or Job should pull the latest released version.
 Docker may require an explicit `docker pull` and container recreate.
 
+#### Verifying the Server Version with the UI
+
+You can verify the server version by loading the UI and looking at the footer.
+You should see a version starting with `v0.2`. If you see an earlier version,
+your platform may be using an old cached image.
+
+![Server Version in the UI](/img/upgrade-0.2.0/version.png)
+
+#### Verifying the Server Version with the CLI
+
 You can verify the server version using the following CLI command and inspecting
 the log output in the CLI. This command is not a mistake, we don't have a better
 way in Waypoint 0.1.x or 0.2.0 to describe the server version. Therefore, we
