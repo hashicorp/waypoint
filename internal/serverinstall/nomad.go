@@ -270,18 +270,10 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 }
 
 func (i *NomadInstaller) InstallFlags(set *flag.Set) {
-	set.StringVar(&flag.StringVar{
-		Name:    "nomad-server-image",
-		Target:  &i.config.serverImage,
-		Usage:   "Docker image for the Waypoint server.",
-		Default: "hashicorp/waypoint:latest",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "nomad-region",
-		Target:  &i.config.region,
-		Default: "global",
-		Usage:   "Region to install to for Nomad.",
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "nomad-annotate-service",
+		Target: &i.config.serviceAnnotations,
+		Usage:  "Annotations for the Service generated.",
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
@@ -305,9 +297,17 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Override the Nomad sentinel policy for enterprise Nomad.",
 	})
 
-	set.StringMapVar(&flag.StringMapVar{
-		Name:   "nomad-annotate-service",
-		Target: &i.config.serviceAnnotations,
-		Usage:  "Annotations for the Service generated.",
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-region",
+		Target:  &i.config.region,
+		Default: "global",
+		Usage:   "Region to install to for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: "hashicorp/waypoint:latest",
 	})
 }
