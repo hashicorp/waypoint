@@ -182,6 +182,13 @@ func (c *InstallCommand) Run(args []string) int {
 func (c *InstallCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:    "accept-tos",
+			Target:  &c.flagAcceptTOS,
+			Usage:   acceptTOSHelp,
+			Default: false,
+		})
+
 		f.StringVar(&flag.StringVar{
 			Name:    "context-create",
 			Target:  &c.contextName,
@@ -204,12 +211,6 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Usage:   "Platform to install the Waypoint server into.",
 		})
 
-		f.BoolVar(&flag.BoolVar{
-			Name:    "accept-tos",
-			Target:  &c.flagAcceptTOS,
-			Usage:   acceptTOSHelp,
-			Default: false,
-		})
 		for name, platform := range serverinstall.Platforms {
 			platformSet := set.NewSet(name + " Options")
 			platform.InstallFlags(platformSet)

@@ -531,32 +531,19 @@ func newService(c k8sConfig) (*apiv1.Service, error) {
 }
 
 func (i *K8sInstaller) InstallFlags(set *flag.Set) {
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-server-image",
-		Target:  &i.config.serverImage,
-		Usage:   "Docker image for the Waypoint server.",
-		Default: "hashicorp/waypoint:latest",
+	set.BoolVar(&flag.BoolVar{
+		Name:   "k8s-advertise-internal",
+		Target: &i.config.advertiseInternal,
+		Usage: "Advertise the internal service address rather than the external. " +
+			"This is useful if all your deployments will be able to access the private " +
+			"service address. This will default to false but will be automatically set to " +
+			"true if the external host is detected to be localhost.",
 	})
 
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-namespace",
-		Target:  &i.config.namespace,
-		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
-		Default: "",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-server-name",
-		Target:  &i.config.serverName,
-		Usage:   "Name of the Waypoint server for Kubernetes.",
-		Default: "waypoint-server",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-service-name",
-		Target:  &i.config.serviceName,
-		Usage:   "Name of the Kubernetes service for the Waypoint server.",
-		Default: "waypoint",
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "k8s-annotate-service",
+		Target: &i.config.serviceAnnotations,
+		Usage:  "Annotations for the Service generated.",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -574,10 +561,10 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "k8s-storage-request",
-		Target:  &i.config.storageRequest,
-		Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
-		Default: "1Gi",
+		Name:    "k8s-namespace",
+		Target:  &i.config.namespace,
+		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
+		Default: "",
 	})
 
 	set.BoolVar(&flag.BoolVar{
@@ -588,9 +575,10 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:   "k8s-secret-file",
-		Target: &i.config.secretFile,
-		Usage:  "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
+		Name:    "k8s-pull-policy",
+		Target:  &i.config.imagePullPolicy,
+		Usage:   "Set the pull policy ",
+		Default: "IfNotPresent",
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -600,26 +588,38 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Default: "github",
 	})
 
-	set.StringMapVar(&flag.StringMapVar{
-		Name:   "k8s-annotate-service",
-		Target: &i.config.serviceAnnotations,
-		Usage:  "Annotations for the Service generated.",
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-secret-file",
+		Target: &i.config.secretFile,
+		Usage:  "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "k8s-pull-policy",
-		Target:  &i.config.imagePullPolicy,
-		Usage:   "Set the pull policy ",
-		Default: "IfNotPresent",
+		Name:    "k8s-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: "hashicorp/waypoint:latest",
 	})
 
-	set.BoolVar(&flag.BoolVar{
-		Name:   "k8s-advertise-internal",
-		Target: &i.config.advertiseInternal,
-		Usage: "Advertise the internal service address rather than the external. " +
-			"This is useful if all your deployments will be able to access the private " +
-			"service address. This will default to false but will be automatically set to " +
-			"true if the external host is detected to be localhost.",
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-server-name",
+		Target:  &i.config.serverName,
+		Usage:   "Name of the Waypoint server for Kubernetes.",
+		Default: "waypoint-server",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-service-name",
+		Target:  &i.config.serviceName,
+		Usage:   "Name of the Kubernetes service for the Waypoint server.",
+		Default: "waypoint",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-storage-request",
+		Target:  &i.config.storageRequest,
+		Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
+		Default: "1Gi",
 	})
 }
 
