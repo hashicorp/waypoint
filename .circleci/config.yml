@@ -11,7 +11,7 @@ references:
     test-results: &TEST_RESULTS_DIR /tmp/test-results
 
   cache:
-    yarn: &YARN_CACHE_KEY waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}
+    yarn: &YARN_CACHE_KEY waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
     rubygem: &RUBYGEM_CACHE_KEY static-site-gems-v1-{{ checksum "Gemfile.lock" }}
 
   environment: &ENVIRONMENT
@@ -238,6 +238,7 @@ jobs:
       <<: *ENVIRONMENT
     steps:
       - checkout
+      - md5uilib
       # cache yarn deps
       - restore_cache:
           key: *YARN_CACHE_KEY
@@ -279,6 +280,7 @@ jobs:
       JOBS: 2 # limit parallelism for broccoli-babel-transpiler
     steps:
       - checkout
+      - md5uilib
       - restore_cache:
           key: *YARN_CACHE_KEY
       - run: cd ui && make
@@ -453,6 +455,10 @@ workflows:
   #           - ember-build
 
 commands:
+  md5uilib:
+    description: "md5 hash of ui/lib directory"
+    steps:
+      - run: find ui/lib -type f | sort | xargs md5sum > uilib.md5
   notify_main_failure:
     steps:
       - run:
