@@ -4,38 +4,38 @@
   "version": "1.0.0",
   "author": "HashiCorp",
   "dependencies": {
-    "@hashicorp/mktg-global-styles": "^2.0.0",
+    "@hashicorp/mktg-global-styles": "^2.1.0",
     "@hashicorp/nextjs-scripts": "13.0.0-canary.1",
     "@hashicorp/react-alert-banner": "^5.0.0",
     "@hashicorp/react-button": "^4.0.0",
     "@hashicorp/react-content": "6.0.0",
-    "@hashicorp/react-docs-page": "^10.0.0",
+    "@hashicorp/react-docs-page": "^10.1.0",
     "@hashicorp/react-hashi-stack-menu": "^1.0.10",
     "@hashicorp/react-head": "1.1.6",
     "@hashicorp/react-image": "3.0.3",
     "@hashicorp/react-product-downloader": "^7.0.0",
     "@hashicorp/react-section-header": "^3.0.1",
-    "@hashicorp/react-subnav": "7.0.0",
+    "@hashicorp/react-subnav": "7.1.0",
     "@hashicorp/react-tabs": "^2.0.0",
     "@hashicorp/react-vertical-text-block-list": "^3.0.1",
     "fs-exists-sync": "^0.1.0",
     "gray-matter": "4.0.2",
-    "js-yaml": "^3.14.0",
+    "js-yaml": "^3.14.1",
     "line-reader": "^0.4.0",
     "next": "9.5.3",
-    "next-mdx-remote": "^1.0.0",
-    "nuka-carousel": "^4.7.2",
+    "next-mdx-remote": "^1.0.1",
+    "nuka-carousel": "^4.7.4",
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-intersection-observer": "^8.31.0",
     "readdirp": "3.5.0",
-    "semver": "^7.3.2"
+    "semver": "^7.3.4"
   },
   "devDependencies": {
-    "husky": "4.3.0",
-    "next-remote-watch": "^0.2.0",
+    "husky": "4.3.5",
+    "next-remote-watch": "^0.3.0",
     "post-npm-install": "^2.0.0",
-    "prettier": "2.2.0"
+    "prettier": "2.2.1"
   },
   "husky": {
     "hooks": {
