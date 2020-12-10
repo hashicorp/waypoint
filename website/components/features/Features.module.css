@@ -61,7 +61,7 @@
 
 .activeFeature {
   composes: feature;
-  border-color: var(--blue);
+  border-color: var(--waypoint);
 
   & .body {
     opacity: 1;

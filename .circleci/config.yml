@@ -340,6 +340,18 @@ jobs:
               echo "no UI changes so no static assets to publish"
             fi
       - notify_main_failure
+  
+  algolia-index:
+    docker:
+      - image: docker.mirror.hashicorp.services/node:12
+    steps:
+      - checkout
+      - run:
+          name: Push content to Algolia Index
+          command: |
+            cd website/
+            npm install
+            node scripts/index_search_content.js
 
   # # run ember frontend tests
   # ember-test:
@@ -425,6 +437,11 @@ workflows:
             branches:
               only:
                 - main
+      - algolia-index:
+          filters:
+              branches:
+                only:
+                  - stable-website
 
   # website:
   #   jobs:
