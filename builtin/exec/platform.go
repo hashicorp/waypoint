@@ -120,7 +120,11 @@ func (p *Platform) Deploy(
 	var cmd exec.Cmd
 	cmd.Path = args[0]
 	cmd.Args = args
-	cmd.Dir = src.Path
+	if p.config.Dir != "" {
+		cmd.Dir = p.config.Dir
+	} else {
+		cmd.Dir = src.Path
+	}
 	cmd.Stdout = s.TermOutput()
 	cmd.Stderr = cmd.Stdout
 
