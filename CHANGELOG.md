@@ -35,7 +35,6 @@ IMPROVEMENTS:
 * plugin/google-cloud-run: allow images from Google Artifact Registry [GH-804]
 * plugin/google-cloud-run: added service account name field [GH-850]
 * server: APIs for Waypoint database snapshot/restore [GH-723]
-* tools: Add tools.go and `make tools` for bootstrapping local dev for build  [GH-863]
 * website: many minor improvements were made in our plugin documentation section for this release
 
 BUG FIXES:
