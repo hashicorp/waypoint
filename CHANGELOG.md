@@ -12,6 +12,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* builtin/exec: Respect `dir` if defined for deploy command [GH-904]
 * cli: `server config-set` doesn't require a Waypoint configuration file. [GH-819]
 * core: `waypoint exec` with no TTY won't hang open until a ctrl-c [GH-830]
 * plugin/aws-ecs: `task_role_name` is optional [GH-824]
