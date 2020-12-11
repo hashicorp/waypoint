@@ -14,6 +14,10 @@ One way to use the latest server is to [remove the existing
 server](/docs/troubleshooting#remove-the-waypoint-server) and then reinstall
 with `waypoint install`. Consider backing up `data.db` with `docker cp waypoint-server:/data/data.db ./data.db`, `kubectl cp waypoint-server-0:/data/data.db ./data.db` or similar.
 
+~> **Note:** Upgrading on a k8s cluster requires using the flag
+`-k8s-pull-policy=Always` when rerunning `waypoint install`. There is a known
+issue that will be resolved in 0.2.1.
+
 Waypoint is designed to be flexible and resilient when upgrading from
 one version to the next. We've carefully thought out an upgrade process
 so you can predict what will be involved when upgrading Waypoint.
