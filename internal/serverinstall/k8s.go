@@ -577,7 +577,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-pull-policy",
 		Target:  &i.config.imagePullPolicy,
-		Usage:   "Set the pull policy ",
+		Usage:   "Set the pull policy for the Waypoint server image.",
 		Default: "",
 	})
 
