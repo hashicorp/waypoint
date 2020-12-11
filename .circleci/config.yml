@@ -440,8 +440,8 @@ workflows:
               only:
                 - main
   website:
-      jobs:
-        - algolia-index:
+    jobs:
+      - algolia-index:
           filters:
             branches:
               only:
