@@ -439,7 +439,9 @@ workflows:
             branches:
               only:
                 - main
-      - algolia-index:
+  website:
+      jobs:
+        - algolia-index:
           filters:
             branches:
               only:
