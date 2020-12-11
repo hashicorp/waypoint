@@ -156,6 +156,25 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 	}
 
+	// Reconnect with the token set. The `contextConfig` has the token set on
+	// it now so we can just reconnect with the same context.
+	log.Info("reconnecting with our bootstrap token", "addr", contextConfig.Server.Address)
+	conn.Close()
+	conn, err = serverclient.Connect(ctx,
+		serverclient.FromContextConfig(contextConfig),
+		serverclient.Timeout(5*time.Minute),
+	)
+	if err != nil {
+		c.ui.Output(
+			"Error connecting to server with bootstrap token: %s\n\n%s",
+			clierrors.Humanize(err),
+			errInstallRunning,
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+	client = pb.NewWaypointClient(conn)
+
 	// Set the config
 	s.Update("Configuring server...")
 	log.Debug("setting the advertise address", "addr", fmt.Sprintf("%#v", advertiseAddr))
