@@ -61,7 +61,7 @@
 
 .activeFeature {
   composes: feature;
-  border-color: var(--blue);
+  border-color: var(--waypoint);
 
   & .body {
     opacity: 1;
@@ -101,10 +101,7 @@
 }
 
 .terminalWrapper {
-  & > div {
-    max-width: 100%;
-    height: 660px;
-  }
+  height: 560px;
 
   & > img {
     width: 100%;
@@ -113,10 +110,6 @@
 
   @media (--medium-up) {
     width: 400px;
-
-    & > div {
-      height: auto;
-    }
   }
 
   @media (min-width: 900px) {

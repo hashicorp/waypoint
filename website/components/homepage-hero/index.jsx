@@ -11,7 +11,7 @@ export default function HomepageHero({ title, description, subtitle, links }) {
           <p className={styles.description}>{description}</p>
           <div className={styles.links}>
             {links.map((link, index) => {
-              const brand = index === 0 ? 'blue' : 'neutral'
+              const brand = index === 0 ? 'waypoint' : 'neutral'
               const variant = index === 0 ? 'primary' : 'secondary'
               return (
                 <Button
