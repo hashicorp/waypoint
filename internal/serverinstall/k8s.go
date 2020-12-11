@@ -531,6 +531,15 @@ func newService(c k8sConfig) (*apiv1.Service, error) {
 	}, nil
 }
 
+// InstallRunner implements Installer.
+func (i *K8sInstaller) InstallRunner(
+	ctx context.Context,
+	opts *InstallRunnerOpts,
+) error {
+	// TODO
+	return nil
+}
+
 func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	set.BoolVar(&flag.BoolVar{
 		Name:   "k8s-advertise-internal",

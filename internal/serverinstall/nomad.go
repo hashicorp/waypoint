@@ -278,6 +278,15 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 	return "", nil
 }
 
+// InstallRunner implements Installer.
+func (i *NomadInstaller) InstallRunner(
+	ctx context.Context,
+	opts *InstallRunnerOpts,
+) error {
+	// TODO
+	return nil
+}
+
 func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringMapVar(&flag.StringMapVar{
 		Name:   "nomad-annotate-service",

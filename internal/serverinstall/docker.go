@@ -240,6 +240,77 @@ func (i *DockerInstaller) Install(
 	}, nil
 }
 
+// InstallRunner implements Installer by starting a single runner container.
+func (i *DockerInstaller) InstallRunner(
+	ctx context.Context,
+	opts *InstallRunnerOpts,
+) error {
+	ui := opts.UI
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Docker client...")
+	defer func() { s.Abort() }()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return err
+	}
+	cli.NegotiateAPIVersion(ctx)
+
+	s.Update("Checking for an existing runner...")
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "label",
+			Value: "waypoint-type=runner",
+		}),
+	})
+	if err != nil {
+		return err
+	}
+	if len(containers) > 0 {
+		s.Update("Detected existing Waypoint runner.")
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		return nil
+	}
+
+	// The key thing in the container creation below is that the environment
+	// variables are set to the advertised address env vars which will
+	// allow our runner to connect.
+	cr, err := cli.ContainerCreate(ctx, &container.Config{
+		AttachStdout: true,
+		AttachStderr: true,
+		AttachStdin:  true,
+		OpenStdin:    true,
+		StdinOnce:    true,
+		Image:        i.config.serverImage,
+		Env:          opts.AdvertiseClient.Env(),
+		Cmd:          []string{"runner", "agent", "-vvv"},
+		Labels: map[string]string{
+			"waypoint-type": "runner",
+		},
+	}, nil, &network.NetworkingConfig{
+		EndpointsConfig: map[string]*network.EndpointSettings{
+			"waypoint": {},
+		},
+	}, "waypoint-runner")
+	if err != nil {
+		return err
+	}
+
+	err = cli.ContainerStart(ctx, cr.ID, types.ContainerStartOptions{})
+	if err != nil {
+		return err
+	}
+
+	s.Update("Waypoint runner installed and started!")
+	s.Done()
+
+	return nil
+}
+
 func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "docker-server-image",
