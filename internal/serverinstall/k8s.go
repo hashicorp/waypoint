@@ -578,7 +578,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Name:    "k8s-pull-policy",
 		Target:  &i.config.imagePullPolicy,
 		Usage:   "Set the pull policy ",
-		Default: "IfNotPresent",
+		Default: "",
 	})
 
 	set.StringVar(&flag.StringVar{
