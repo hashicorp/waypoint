@@ -441,9 +441,9 @@ workflows:
                 - main
       - algolia-index:
           filters:
-              branches:
-                only:
-                  - stable-website
+            branches:
+              only:
+                - stable-website
 
   # website:
   #   jobs:
