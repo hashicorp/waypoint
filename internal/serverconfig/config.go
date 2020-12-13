@@ -29,7 +29,6 @@ type Client struct {
 
 // Env returns a slice of environment variables in key=value settings
 // that will authenticate to the server without a context set.
-// TODO: test
 func (c *Client) Env() []string {
 	result := []string{
 		"WAYPOINT_SERVER_ADDR=" + c.Address,
