@@ -3,4 +3,3 @@ node_modules
 .next
 out
 .env*.local
-public/robots.txt
