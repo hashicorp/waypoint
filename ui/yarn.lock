@@ -2016,10 +2016,10 @@
   resolved "https://registry.yarnpkg.com/@glimmer/validator/-/validator-0.44.0.tgz#03d127097dc9cb23052cdb7fcae59d0a9dca53e1"
   integrity sha512-i01plR0EgFVz69GDrEuFgq1NheIjZcyTy3c7q+w7d096ddPVeVcRzU3LKaqCfovvLJ+6lJx40j45ecycASUUyw==
 
-"@hashicorp/pds-ember@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@hashicorp/pds-ember/-/pds-ember-0.2.1.tgz#b3edd156cf026b995fe9b4b7479ad2a27278f29b"
-  integrity sha512-G3Ypen8QIgq7zqwhDuEW6wflxUcUfe6ffDkq46y4HmE9kHsM5UP0kg6rh2sNu8CqOKbQkZj7DTmeDc5NCgX0ng==
+"@hashicorp/pds-ember@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@hashicorp/pds-ember/-/pds-ember-0.3.0.tgz#790d53ed42851ad3b030e85106babfe8fcbcdb49"
+  integrity sha512-3o4TEtmukRmeBwnGOpca8sj2Izkz0UV/dVSmo/NQM/aozwNPJAeccK5HxBpiVq0+8T+xVnAnSEfx8nw8/FllWQ==
   dependencies:
     "@ember/render-modifiers" "^1.0.2"
     "@hashicorp/structure-icons" "1.9.0-0"
