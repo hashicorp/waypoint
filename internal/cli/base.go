@@ -94,6 +94,10 @@ type baseCommand struct {
 
 	// options passed in at the global level
 	globalOptions []Option
+
+	// autoServer will be set to true if an automatic in-memory server
+	// is allowd.
+	autoServer bool
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -127,6 +131,9 @@ func (c *baseCommand) Init(opts ...Option) error {
 	for _, opt := range opts {
 		opt(&baseCfg)
 	}
+
+	// Set some basic internal fields
+	c.autoServer = !baseCfg.NoAutoServer
 
 	// Init our UI first so we can write output to the user immediately.
 	ui := baseCfg.UI

@@ -1,5 +1,9 @@
 package serverconfig
 
+import (
+	"strconv"
+)
+
 // Client configures a client to connect to a server.
 type Client struct {
 	Address string `hcl:"address,attr"`
@@ -21,6 +25,22 @@ type Client struct {
 	// Note this will be stored plaintext on disk. You can also use the
 	// WAYPOINT_SERVER_TOKEN env var.
 	AuthToken string `hcl:"auth_token,optional"`
+}
+
+// Env returns a slice of environment variables in key=value settings
+// that will authenticate to the server without a context set.
+func (c *Client) Env() []string {
+	result := []string{
+		"WAYPOINT_SERVER_ADDR=" + c.Address,
+		"WAYPOINT_SERVER_TLS=" + strconv.FormatBool(c.Tls),
+		"WAYPOINT_SERVER_TLS_SKIP_VERIFY=" + strconv.FormatBool(c.TlsSkipVerify),
+	}
+
+	if c.RequireAuth {
+		result = append(result, "WAYPOINT_SERVER_TOKEN="+c.AuthToken)
+	}
+
+	return result
 }
 
 // Config is the configuration for the built-in server.

@@ -65,6 +65,14 @@ func WithUI(ui terminal.UI) Option {
 	}
 }
 
+// WithNoAutoServer configures the CLI to not automatically spin up
+// an in-memory server for this command.
+func WithNoAutoServer() Option {
+	return func(c *baseConfig) {
+		c.NoAutoServer = true
+	}
+}
+
 type baseConfig struct {
 	Args              []string
 	Flags             *flag.Sets
@@ -73,4 +81,7 @@ type baseConfig struct {
 	Client            bool
 	AppTargetRequired bool
 	UI                terminal.UI
+
+	// NoAutoServer is true if an in-memory server is not allowed.
+	NoAutoServer bool
 }
