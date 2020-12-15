@@ -11,6 +11,16 @@ import (
 )
 
 func (s *service) initURLGuestAccount(acceptURLTerms bool) error {
+	// Check if API Token already exists, if so, no reason to
+	// re-register and generate a new hostname
+	apiToken, err := s.state.ServerAPITokenGet()
+	if err != nil {
+		return err
+	} else if apiToken != "" {
+		// token already set, guest account already exists
+		return nil
+	}
+
 	// Connect without auth to our API client
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithBlock(), grpc.WithTimeout(10*time.Second))
@@ -40,5 +50,9 @@ func (s *service) initURLGuestAccount(acceptURLTerms bool) error {
 	}
 
 	s.urlConfig.APIToken = accountResp.Token
+	if err := s.state.ServerAPITokenSet(accountResp.Token); err != nil {
+		return err
+	}
+
 	return nil
 }
