@@ -312,7 +312,8 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
-func (i *NomadInstaller) Uninstall(ctx context.Context, ui terminal.UI, log hclog.Logger) error {
+func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
+	// TODO
 	return nil
 }
 
