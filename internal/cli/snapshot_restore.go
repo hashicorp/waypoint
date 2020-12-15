@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/clisnapshot"
+	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/posener/complete"
 	sshterm "golang.org/x/crypto/ssh/terminal"
 )
