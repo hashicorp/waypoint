@@ -633,8 +633,8 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
-func (i *K8sInstaller) Uninstall(ctx context.Context, ui terminal.UI, log hclog.Logger) error {
-
+func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
+	// TODO
 	// deleteStatefulSet()
 	// delete pvc
 	// delete svc

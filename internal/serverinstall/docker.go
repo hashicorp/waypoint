@@ -327,9 +327,10 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *DockerInstaller) Uninstall(
-	ctx context.Context, ui terminal.UI, log hclog.Logger,
+	ctx context.Context,
+	opts *InstallOpts,
 ) error {
-	sg := ui.StepGroup()
+	sg := opts.UI.StepGroup()
 	defer sg.Wait()
 
 	// bulk of this copied from PR#660
