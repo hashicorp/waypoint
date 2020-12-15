@@ -1,7 +1,6 @@
-package clisnapshot
-
-// Package clisnapshot provides access to our CLI commands to create and
+// Package clisnapshot provides access for our CLI commands to create and
 // restore snapshots
+package clisnapshot
 
 import (
 	"context"
@@ -13,9 +12,9 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// WriteSnapshot accepts a context, WaypointClient, and io.Writer, and returns
-// an error. It uses the Client to create a snapshot and write it to the
-// provided writer.
+// WriteSnapshot requests a snapshot from the client and writes it to the
+// provided writer. Cancelling the context will prematurely cancel the snapshot.
+// This may result in partial writes to the writer.
 func WriteSnapshot(ctx context.Context, client pb.WaypointClient, w io.Writer) error {
 	stream, err := client.CreateSnapshot(ctx, &emptypb.Empty{})
 	if err != nil {
@@ -53,9 +52,10 @@ func WriteSnapshot(ctx context.Context, client pb.WaypointClient, w io.Writer) e
 	return nil
 }
 
-// ReadSnapshot accepts a context, WaypointClient, io.Reader, and an exit value,
-// and returns an error. It uses the Client to restore a snapshot from the
-// provided reader, and sends an exit signal to the server if 'exit' is true.
+// ReadSnapshot stages a snapshot for restore from the provided reader, and
+// sends an exit signal to the server if 'exit' is true. Cancelling the context
+// will prematurely cancel the snapshot restore. This may result in a partial
+// restore from the reader being staged.
 func ReadSnapshot(ctx context.Context, client pb.WaypointClient, r io.Reader, exit bool) error {
 	stream, err := client.RestoreSnapshot(ctx)
 	if err != nil {
