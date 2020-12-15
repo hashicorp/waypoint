@@ -14,10 +14,11 @@ import (
 type UninstallCommand struct {
 	*baseCommand
 
-	platform     string
-	snapshotName string
-	skipSnapshot bool
-	flagConfirm  bool
+	platform      string
+	snapshotPath  string
+	skipSnapshot  bool
+	flagConfirm   bool
+	deleteContext bool
 }
 
 func (c *UninstallCommand) Run(args []string) int {
@@ -66,7 +67,7 @@ func (c *UninstallCommand) Run(args []string) int {
 	if !c.skipSnapshot {
 		s.Update("Generating server snapshot...")
 		defer s.Abort()
-		// sn := fmt.Sprintf("%s-%d", c.snapshotName, time.Now().Unix())
+		// sn := fmt.Sprintf("%s-%d", c.snapshotPath, time.Now().Unix())
 		// generate snapshot
 		// s.Update("Snapshot %q generated", sn")
 	} else {
@@ -99,9 +100,11 @@ func (c *UninstallCommand) Run(args []string) int {
 	}
 
 	// Post-uninstall cleanup of context
-	if err := c.contextStorage.Delete(contextDefault); err != nil {
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-		return 1
+	if c.deleteContext {
+		if err := c.contextStorage.Delete(contextDefault); err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
 	}
 
 	c.ui.Output("Waypoint server successfully uninstalled for %s platform", c.platform, terminal.WithSuccessStyle())
@@ -139,6 +142,13 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 			Usage:   "Confirm server uninstallation.",
 		})
 
+		f.BoolVar(&flag.BoolVar{
+			Name:    "delete-context",
+			Target:  &c.deleteContext,
+			Default: false,
+			Usage:   "Delete the context for the server once it's uninstalled.",
+		})
+
 		f.StringVar(&flag.StringVar{
 			Name:    "platform",
 			Target:  &c.platform,
@@ -147,10 +157,10 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "snapshot-name",
-			Target:  &c.snapshotName,
+			Name:    "snapshot-path",
+			Target:  &c.snapshotPath,
 			Default: "",
-			Usage:   "Name to use for the created.",
+			Usage:   "Path of the file to write the snapshot to.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
