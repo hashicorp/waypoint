@@ -1,4 +1,5 @@
 package clisnapshot
+
 // Package clisnapshot provides access to our CLI commands to create and
 // restore snapshots
 
@@ -13,7 +14,7 @@ import (
 )
 
 // WriteSnapshot accepts a context, WaypointClient, and io.Writer, and returns
-// an error. It uses the Client to create a snapshot and write it to the 
+// an error. It uses the Client to create a snapshot and write it to the
 // provided writer.
 func WriteSnapshot(ctx context.Context, client pb.WaypointClient, w io.Writer) error {
 	stream, err := client.CreateSnapshot(ctx, &emptypb.Empty{})
@@ -53,7 +54,7 @@ func WriteSnapshot(ctx context.Context, client pb.WaypointClient, w io.Writer) e
 }
 
 // ReadSnapshot accepts a context, WaypointClient, io.Reader, and an exit value,
-// and returns an error. It uses the Client to restore a snapshot from the 
+// and returns an error. It uses the Client to restore a snapshot from the
 // provided reader, and sends an exit signal to the server if 'exit' is true.
 func ReadSnapshot(ctx context.Context, client pb.WaypointClient, r io.Reader, exit bool) error {
 	stream, err := client.RestoreSnapshot(ctx)
