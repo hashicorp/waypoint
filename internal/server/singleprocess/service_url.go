@@ -11,13 +11,13 @@ import (
 )
 
 func (s *service) initURLGuestAccount(acceptURLTerms bool) error {
-	// Check if API Token already exists, if so, no reason to
+	// Check if URL Token already exists, if so, no reason to
 	// re-register and generate a new hostname
-	apiToken, err := s.state.ServerAPITokenGet()
+	urlToken, err := s.state.ServerURLTokenGet()
 	if err != nil {
 		return err
-	} else if apiToken != "" {
-		// token already set, guest account already exists
+	} else if urlToken != "" {
+		// url token already set, guest account already exists
 		return nil
 	}
 
@@ -50,7 +50,7 @@ func (s *service) initURLGuestAccount(acceptURLTerms bool) error {
 	}
 
 	s.urlConfig.APIToken = accountResp.Token
-	if err := s.state.ServerAPITokenSet(accountResp.Token); err != nil {
+	if err := s.state.ServerURLTokenSet(accountResp.Token); err != nil {
 		return err
 	}
 
