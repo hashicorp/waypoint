@@ -8,11 +8,18 @@ console.log(`NODE_ENV: ${process.env.NODE_ENV}`)
 // add a X-Robots-Tag noindex HTTP header
 // prevent indexing for tip.waypointproject.io
 let customHeaders = []
+const robotsHeader = { key: 'X-Robots-Tag', value: 'noindex' }
 if (process.env.VERCEL_GIT_COMMIT_REF == 'main') {
-  customHeaders.push({
-    source: '/:all*',
-    headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
-  })
+  customHeaders.push(
+    {
+      source: '/',
+      headers: [robotsHeader],
+    },
+    {
+      source: '/:all*',
+      headers: [robotsHeader],
+    }
+  )
 }
 
 module.exports = withHashicorp({
