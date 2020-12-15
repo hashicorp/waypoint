@@ -5,17 +5,17 @@ import (
 )
 
 var (
-	serverAPIToken = []byte("token")
+	serverAPIToken = []byte("api_token")
 )
 
-// ServerAPITokenSet writes the server ID.
-func (s *State) ServerAPITokenSet(id string) error {
+// ServerAPITokenSet writes the server API token.
+func (s *State) ServerAPITokenSet(token string) error {
 	return s.db.Update(func(dbTxn *bolt.Tx) error {
-		return dbTxn.Bucket(serverConfigBucket).Put(serverAPIToken, []byte(id))
+		return dbTxn.Bucket(serverConfigBucket).Put(serverAPIToken, []byte(token))
 	})
 }
 
-// ServerAPITokenGet gets the server ID.
+// ServerAPITokenGet gets the server API token.
 func (s *State) ServerAPITokenGet() (string, error) {
 	var result string
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
