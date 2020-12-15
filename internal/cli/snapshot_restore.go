@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
-	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/clisnapshot"
 	"github.com/posener/complete"
 	sshterm "golang.org/x/crypto/ssh/terminal"
 )
@@ -53,8 +53,6 @@ func (c *SnapshotRestoreCommand) Run(args []string) int {
 		return 1
 	}
 
-	client := c.project.Client()
-
 	r, closer, err := c.initReader(c.args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to open output: %s", err)
@@ -65,55 +63,11 @@ func (c *SnapshotRestoreCommand) Run(args []string) int {
 		defer closer.Close()
 	}
 
-	stream, err := client.RestoreSnapshot(c.Ctx)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to restore snapshot: %s", err)
-		return 1
+	config := snapshot.Config{
+		Client: c.project.Client(),
 	}
-
-	err = stream.Send(&pb.RestoreSnapshotRequest{
-		Event: &pb.RestoreSnapshotRequest_Open_{
-			Open: &pb.RestoreSnapshotRequest_Open{
-				Exit: c.flagExit,
-			},
-		},
-	})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to send start message: %s", err)
-		return 1
-	}
-
-	// Write the data in smaller chunks so we don't overwhelm the grpc stream
-	// processing machinary.
-	var buf [1024]byte
-
-	for {
-		// use ReadFull here because if r is an OS pipe, each bare call to Read()
-		// can result in just one or two bytes per call, so we want to batch those
-		// up before sending them off for better performance.
-		n, err := io.ReadFull(r, buf[:])
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			err = nil
-		}
-
-		if n == 0 {
-			break
-		}
-
-		err = stream.Send(&pb.RestoreSnapshotRequest{
-			Event: &pb.RestoreSnapshotRequest_Chunk{
-				Chunk: buf[:n],
-			},
-		})
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to write snapshot data: %s", err)
-			return 1
-		}
-	}
-
-	_, err = stream.CloseAndRecv()
-	if err != nil && !c.flagExit {
-		fmt.Fprintf(os.Stderr, "failed to receive snapshot close message: %s", err)
+	if err := config.ReadSnapshot(c.Ctx, r, c.flagExit); err != nil {
+		fmt.Fprintf(os.Stderr, "Error restoring Snapshot: %s", err)
 		return 1
 	}
 
@@ -147,7 +101,7 @@ func (c *SnapshotRestoreCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *SnapshotRestoreCommand) Synopsis() string {
-	return "Stage a snapshot on the current server for data restoration."
+	return "Stage a snapshot on the current server for data restoration"
 }
 
 func (c *SnapshotRestoreCommand) Help() string {
