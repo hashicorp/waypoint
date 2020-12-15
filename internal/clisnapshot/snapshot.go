@@ -1,4 +1,6 @@
-package snapshot
+package clisnapshot
+// Package clisnapshot provides access to our CLI commands to create and
+// restore snapshots
 
 import (
 	"context"
@@ -10,13 +12,11 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-type Config struct {
-	// This Client points to a project's client, as set in the baseCommand
-	Client pb.WaypointClient
-}
-
-func (c *Config) WriteSnapshot(ctx context.Context, w io.Writer) error {
-	stream, err := c.Client.CreateSnapshot(ctx, &emptypb.Empty{})
+// WriteSnapshot accepts a context, WaypointClient, and io.Writer, and returns
+// an error. It uses the Client to create a snapshot and write it to the 
+// provided writer.
+func WriteSnapshot(ctx context.Context, client pb.WaypointClient, w io.Writer) error {
+	stream, err := client.CreateSnapshot(ctx, &emptypb.Empty{})
 	if err != nil {
 		return fmt.Errorf("failed to generate snapshot: %s", err)
 	}
@@ -52,8 +52,11 @@ func (c *Config) WriteSnapshot(ctx context.Context, w io.Writer) error {
 	return nil
 }
 
-func (c *Config) ReadSnapshot(ctx context.Context, r io.Reader, exit bool) error {
-	stream, err := c.Client.RestoreSnapshot(ctx)
+// ReadSnapshot accepts a context, WaypointClient, io.Reader, and an exit value,
+// and returns an error. It uses the Client to restore a snapshot from the 
+// provided reader, and sends an exit signal to the server if 'exit' is true.
+func ReadSnapshot(ctx context.Context, client pb.WaypointClient, r io.Reader, exit bool) error {
+	stream, err := client.RestoreSnapshot(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to restore snapshot: %s", err)
 	}

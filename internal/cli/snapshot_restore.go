@@ -63,10 +63,7 @@ func (c *SnapshotRestoreCommand) Run(args []string) int {
 		defer closer.Close()
 	}
 
-	config := snapshot.Config{
-		Client: c.project.Client(),
-	}
-	if err := config.ReadSnapshot(c.Ctx, r, c.flagExit); err != nil {
+	if err := clisnapshot.ReadSnapshot(c.Ctx, c.project.Client(), r, c.flagExit); err != nil {
 		fmt.Fprintf(os.Stderr, "Error restoring Snapshot: %s", err)
 		return 1
 	}

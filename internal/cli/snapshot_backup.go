@@ -61,10 +61,7 @@ func (c *SnapshotBackupCommand) Run(args []string) int {
 		defer closer.Close()
 	}
 
-	config := snapshot.Config{
-		Client: c.project.Client(),
-	}
-	if err = config.WriteSnapshot(c.Ctx, w); err != nil {
+	if err = clisnapshot.WriteSnapshot(c.Ctx, c.project.Client(), w); err != nil {
 		fmt.Fprintf(os.Stderr, "Error generating Snapshot: %s", err)
 		return 1
 	}
