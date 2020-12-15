@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/posener/complete"
 
@@ -14,16 +16,16 @@ import (
 type UninstallCommand struct {
 	*baseCommand
 
-	platform      string
-	snapshotPath  string
-	skipSnapshot  bool
-	flagConfirm   bool
-	deleteContext bool
+	platform         string
+	snapshotFilename string
+	skipSnapshot     bool
+	flagConfirm      bool
+	deleteContext    bool
 }
 
 func (c *UninstallCommand) Run(args []string) int {
 	ctx := c.Ctx
-	log := c.Log.Named("install")
+	log := c.Log.Named("uninstall")
 	defer c.Close()
 
 	// Initialize. If we fail, we just exit since Init handles the UI.
@@ -67,9 +69,16 @@ func (c *UninstallCommand) Run(args []string) int {
 	if !c.skipSnapshot {
 		s.Update("Generating server snapshot...")
 		defer s.Abort()
-		// sn := fmt.Sprintf("%s-%d", c.snapshotPath, time.Now().Unix())
 		// generate snapshot
-		// s.Update("Snapshot %q generated", sn")
+		// config := snapshot.Config{
+		// 	Client: c.project.Client(),
+		// }
+		// w, err := os.Create(c.snapshotFilename)
+		// if err = config.WriteSnapshot(ctx, w); err != nil {
+		// 	fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
+		// 	return 1
+		// }
+		// s.Update("Snapshot %q generated", c.snapshotFilename)
 	} else {
 		s.Update("skip-snapshot set; not generating server snapshot")
 		s.Status(terminal.StatusWarn)
@@ -88,7 +97,10 @@ func (c *UninstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	err = p.Uninstall(ctx, c.ui, log)
+	err = p.Uninstall(ctx, &serverinstall.InstallOpts{
+		Log: log,
+		UI:  c.ui,
+	})
 	if err != nil {
 		// point to current docs on manual server cleanup
 		c.ui.Output(
@@ -157,10 +169,10 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "snapshot-path",
-			Target:  &c.snapshotPath,
-			Default: "",
-			Usage:   "Path of the file to write the snapshot to.",
+			Name:    "snapshot-filename",
+			Target:  &c.snapshotFilename,
+			Default: fmt.Sprintf("sever-snapshot-%d", time.Now().Unix()),
+			Usage:   "Filename to write the snapshot to.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
