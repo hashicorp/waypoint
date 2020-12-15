@@ -1,4 +1,4 @@
-package snapshot
+package clisnapshot
 
 import (
 	"context"
@@ -17,9 +17,6 @@ func TestServerSnapshot(t *testing.T) {
 	require := require.New(t)
 	// create our server
 	client := singleprocess.TestServer(t)
-	config := Config{
-		Client: client,
-	}
 
 	// Create a temporary directory for our test
 	td, err := ioutil.TempDir("", "test")
@@ -28,16 +25,18 @@ func TestServerSnapshot(t *testing.T) {
 	path := filepath.Join(td, "fancyserver")
 
 	w, err := os.Create(path)
+	defer w.Close()
 	require.NoError(err)
 
-	err = config.WriteSnapshot(ctx, w)
+	err = WriteSnapshot(ctx, client, w)
 	require.NoError(err)
 
 	require.FileExists(path)
 
 	r, err := os.Open(path)
+	defer r.Close()
 	require.NoError(err)
 
-	err = config.ReadSnapshot(ctx, r, false)
+	err = ReadSnapshot(ctx, client, r, false)
 	require.NoError(err)
 }
