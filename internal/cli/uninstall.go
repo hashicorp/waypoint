@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	"github.com/hashicorp/waypoint/internal/clisnapshot"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
 )
@@ -19,7 +21,7 @@ type UninstallCommand struct {
 	platform         string
 	snapshotFilename string
 	skipSnapshot     bool
-	flagConfirm      bool
+	autoApprove      bool
 	deleteContext    bool
 }
 
@@ -38,8 +40,8 @@ func (c *UninstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	if !c.flagConfirm {
-		c.ui.Output(strings.TrimSpace(confirmReqMsg), terminal.WithErrorStyle())
+	if !c.autoApprove {
+		c.ui.Output(strings.TrimSpace(autoApproveMsg), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -70,15 +72,15 @@ func (c *UninstallCommand) Run(args []string) int {
 		s.Update("Generating server snapshot...")
 		defer s.Abort()
 		// generate snapshot
-		// config := snapshot.Config{
-		// 	Client: c.project.Client(),
-		// }
-		// w, err := os.Create(c.snapshotFilename)
-		// if err = config.WriteSnapshot(ctx, w); err != nil {
-		// 	fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
-		// 	return 1
-		// }
-		// s.Update("Snapshot %q generated", c.snapshotFilename)
+		config := clisnapshot.Config{
+			Client: c.project.Client(),
+		}
+		w, err := os.Create(c.snapshotFilename)
+		if err = config.WriteSnapshot(ctx, w); err != nil {
+			fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
+			return 1
+		}
+		s.Update("Snapshot %q generated", c.snapshotFilename)
 	} else {
 		s.Update("skip-snapshot set; not generating server snapshot")
 		s.Status(terminal.StatusWarn)
@@ -148,10 +150,10 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
-			Name:    "confirm",
-			Target:  &c.flagConfirm,
+			Name:    "auto-approve",
+			Target:  &c.autoApprove,
 			Default: false,
-			Usage:   "Confirm server uninstallation.",
+			Usage:   "Auto-approve server uninstallation.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
@@ -185,8 +187,8 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 }
 
 var (
-	confirmReqMsg = strings.TrimSpace(`
-Uninstalling Waypoint server requires confirmation. 
-Rerun the command with ‘-confirm’ to continue with the uninstall.
+	autoApproveMsg = strings.TrimSpace(`
+Uninstalling Waypoint server requires approval. 
+Rerun the command with -auto-approve to continue with the uninstall.
 `)
 )
