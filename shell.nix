@@ -79,6 +79,7 @@ in pkgs.mkShell rec {
 
   # The packages in the `buildInputs` list will be added to the PATH in our shell
   buildInputs = [
+    pkgs.docker-compose
     pkgs.go
     pkgs.go-bindata
     pkgs.niv
