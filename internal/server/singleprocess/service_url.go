@@ -18,6 +18,7 @@ func (s *service) initURLGuestAccount(acceptURLTerms bool) error {
 		return err
 	} else if urlToken != "" {
 		// url token already set, guest account already exists
+		s.urlConfig.APIToken = urlToken
 		return nil
 	}
 
