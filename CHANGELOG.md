@@ -41,6 +41,7 @@ BUG FIXES:
 
 * core: force killed `waypoint exec` sessions won't leave the remote process running [GH-827]
 * core: waypoint exec with no TTY won't hang open until a ctrl-c [GH-830]
+* core: prevent waypoint server from re-registering guest account horizon URL service [GH-922]
 * cli: server config-set doesn't require a Waypoint configuration file. [GH-819]
 * cli/token: fix issue where tokens could be cut off on narrow terminals [GH-885]
 * plugin/aws-ecs: task_role_name is optional [GH-824]
