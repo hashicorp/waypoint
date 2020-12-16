@@ -78,7 +78,7 @@ func (c *ServerConfigSetCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ServerConfigSetCommand) Synopsis() string {
-	return "Set the server online configuration."
+	return "Set the server online configuration"
 }
 
 func (c *ServerConfigSetCommand) Help() string {
