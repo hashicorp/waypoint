@@ -15,9 +15,6 @@ A majority of the configuration of your project will be done in this stanza.
 
 A minimum of one `app` stanza is required in your project configuration.
 
-Multiple `app` stanzas can be specified if Waypoint should deploy multiple
-applications in your project. An example where this might be useful is
-separate backend and frontend processes.
 
 ```hcl
 app "frontend" {
@@ -34,6 +31,48 @@ app "frontend" {
   }
 }
 ```
+
+Multiple `app` stanzas can be specified if Waypoint should deploy multiple
+applications in your project. An example where this might be useful is
+separate backend and frontend processes or your project is monorepo.
+
+
+```hcl
+project = "monorepo-project"
+
+app "frontend" {
+  build {
+    # ...
+  }
+
+  deploy {
+    # ...
+  }
+
+  release {
+    # ...
+  }
+}
+
+app "backend" {
+  build {
+    # ...
+  }
+
+  deploy {
+    # ...
+  }
+
+  release {
+    # ...
+  }
+}
+```
+
+And then we can select specified `app` with paramater `-app <app-label>` . 
+An example we want deploy frontend `app` on monorepo project, we can run 
+`waypoint deploy -app frontend` for deploying frontend `app`.
+Also can be used in `waypoint build` , `deploy` , `release` and `up`
 
 ## `app` Parameters
 
