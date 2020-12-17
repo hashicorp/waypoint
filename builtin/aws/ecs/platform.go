@@ -404,6 +404,11 @@ func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L 
 		roleName = "ecr-" + app.App
 	}
 
+	// role names have to be 64 characters or less, and the client side doesn't validate this.
+	if len(roleName) > 64 {
+		roleName = roleName[:64]
+	}
+
 	// p.updateStatus("setting up IAM role")
 	L.Debug("attempting to retrieve existing role", "role-name", roleName)
 
@@ -418,7 +423,7 @@ func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L 
 	}
 
 	L.Debug("creating new role")
-	s.Status("Creating IAM role: %s (%s)", roleName)
+	s.Status("Creating IAM role: %s", roleName)
 
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(rolePolicy),
@@ -773,9 +778,14 @@ func (p *Platform) Launch(
 	}
 
 	s.Update("Registered Task definition: %s", family)
-	rand := id[len(id)-(31-len(app.App)):]
 
-	serviceName := fmt.Sprintf("%s-%s", app.App, rand)
+	serviceName := fmt.Sprintf("%s-%s", app.App, id)
+
+	// We have to clamp at a length of 32 because the Name field to CreateTargetGroup
+	// requires that the name is 32 characters or less.
+	if len(serviceName) > 32 {
+		serviceName = serviceName[:32]
+	}
 
 	taskArn := *taskOut.TaskDefinition.TaskDefinitionArn
 
@@ -879,6 +889,12 @@ func (p *Platform) Launch(
 			*listener.ListenerArn, *listener.LoadBalancerArn)
 	} else {
 		lbName := "waypoint-ecs-" + app.App
+
+		// Names have to be 32 characters or less, so clamp it here.
+		if len(lbName) > 32 {
+			lbName = lbName[:32]
+		}
+
 		dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
 			Names: []*string{&lbName},
 		})
