@@ -404,6 +404,11 @@ func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L 
 		roleName = "ecr-" + app.App
 	}
 
+	// role names have to be 64 characters or less, and the client side doesn't validate this.
+	if len(roleName) > 64 {
+		roleName = roleName[:64]
+	}
+
 	// p.updateStatus("setting up IAM role")
 	L.Debug("attempting to retrieve existing role", "role-name", roleName)
 
@@ -418,7 +423,7 @@ func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L 
 	}
 
 	L.Debug("creating new role")
-	s.Status("Creating IAM role: %s (%s)", roleName)
+	s.Status("Creating IAM role: %s", roleName)
 
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(rolePolicy),
