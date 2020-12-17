@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
-	"github.com/hashicorp/waypoint/internal/serverconfig"
 	"github.com/hashicorp/waypoint/internal/serverinstall"
 )
 
@@ -27,7 +26,6 @@ type InstallCommand struct {
 	contextDefault bool
 
 	flagAcceptTOS bool
-	flagRunner    bool
 }
 
 func (c *InstallCommand) Run(args []string) int {
@@ -69,10 +67,7 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	result, err := p.Install(ctx, &serverinstall.InstallOpts{
-		Log: log,
-		UI:  c.ui,
-	})
+	contextConfig, advertiseAddr, httpAddr, err = p.Install(ctx, c.ui, log)
 	if err != nil {
 		c.ui.Output(
 			"Error installing server into %s: %s", c.platform, clierrors.Humanize(err),
@@ -81,10 +76,6 @@ func (c *InstallCommand) Run(args []string) int {
 
 		return 1
 	}
-
-	contextConfig = result.Context
-	advertiseAddr = result.AdvertiseAddr
-	httpAddr = result.HTTPAddr
 
 	sg := c.ui.StepGroup()
 	defer sg.Wait()
@@ -156,25 +147,6 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 	}
 
-	// Reconnect with the token set. The `contextConfig` has the token set on
-	// it now so we can just reconnect with the same context.
-	log.Info("reconnecting with our bootstrap token", "addr", contextConfig.Server.Address)
-	conn.Close()
-	conn, err = serverclient.Connect(ctx,
-		serverclient.FromContextConfig(contextConfig),
-		serverclient.Timeout(5*time.Minute),
-	)
-	if err != nil {
-		c.ui.Output(
-			"Error connecting to server with bootstrap token: %s\n\n%s",
-			clierrors.Humanize(err),
-			errInstallRunning,
-			terminal.WithErrorStyle(),
-		)
-		return 1
-	}
-	client = pb.NewWaypointClient(conn)
-
 	// Set the config
 	s.Update("Configuring server...")
 	log.Debug("setting the advertise address", "addr", fmt.Sprintf("%#v", advertiseAddr))
@@ -195,58 +167,7 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	s.Update("Server installed and configured!")
 	s.Done()
-
-	if c.flagRunner {
-		s = sg.Add("")
-
-		// We need a new auth token for the runner so that the runner
-		// can connect to the server. We don't want to reuse the bootstrap
-		// token that is shared with the CLI cause that can be revoked.
-		s.Update("Retrieving new auth token for runner...")
-		resp, err := client.GenerateLoginToken(c.Ctx, &empty.Empty{})
-		if err != nil {
-			c.ui.Output(
-				"Error retrieving auth token for runner: %s\n\n%s",
-				clierrors.Humanize(err),
-				errInstallRunner,
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-
-		// Build a serverconfig that uses the advertise addr and includes
-		// the token we just requested.
-		connConfig := &serverconfig.Client{
-			Address:       advertiseAddr.Addr,
-			Tls:           advertiseAddr.Tls,
-			TlsSkipVerify: advertiseAddr.TlsSkipVerify,
-			RequireAuth:   true,
-			AuthToken:     resp.Token,
-		}
-
-		// Install!
-		s.Update("Installing runner...")
-		err = p.InstallRunner(ctx, &serverinstall.InstallRunnerOpts{
-			Log:             log,
-			UI:              c.ui,
-			AuthToken:       resp.Token,
-			AdvertiseAddr:   advertiseAddr,
-			AdvertiseClient: connConfig,
-		})
-		if err != nil {
-			c.ui.Output(
-				"Error installing the runner: %s\n\n%s",
-				clierrors.Humanize(err),
-				errInstallRunner,
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-
-		s.Done()
-	}
 
 	// Close and success
 	c.ui.Output(outInstallSuccess,
@@ -290,14 +211,6 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Usage:   "Platform to install the Waypoint server into.",
 		})
 
-		f.BoolVar(&flag.BoolVar{
-			Name:    "x-runner",
-			Target:  &c.flagRunner,
-			Usage:   "Install a runner in addition to the server",
-			Default: false,
-			Hidden:  true,
-		})
-
 		for name, platform := range serverinstall.Platforms {
 			platformSet := set.NewSet(name + " Options")
 			platform.InstallFlags(platformSet)
@@ -322,7 +235,7 @@ func (c *InstallCommand) Help() string {
 Usage: waypoint server install [options]
 Alias: waypoint install
 
-	Installs a Waypoint server to an existing platform. The platform should be
+	Installs a Waypoint server to an existing platform. The platform should be 
 	specified as kubernetes, nomad, or docker.
 
   By default, this will also automatically create a new default CLI context
@@ -344,13 +257,6 @@ The Waypoint server has been deployed, but due to this error we were
 unable to automatically configure the local CLI or the Waypoint server
 advertise address. You must do this manually using "waypoint context"
 and "waypoint server config-set".
-`)
-
-	errInstallRunner = strings.TrimSpace(`
-The Waypoint runner failed to install. This error occurred after the
-Waypoint server was successfully installed. Your CLI is configured to
-use the installed server. If you want to retry, you must uninstall the
-server first.
 `)
 
 	outInstallSuccess = strings.TrimSpace(`

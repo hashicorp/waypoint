@@ -92,7 +92,7 @@ func (c *baseCommand) initClient() (*clientpkg.Project, error) {
 		clientpkg.WithLabels(c.flagLabels),
 		clientpkg.WithSourceOverrides(c.flagRemoteSource),
 	}
-	if !c.flagRemote && c.autoServer {
+	if !c.flagRemote {
 		opts = append(opts, clientpkg.WithLocal())
 	}
 
