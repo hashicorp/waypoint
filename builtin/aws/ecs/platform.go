@@ -773,9 +773,14 @@ func (p *Platform) Launch(
 	}
 
 	s.Update("Registered Task definition: %s", family)
-	rand := id[len(id)-(31-len(app.App)):]
 
-	serviceName := fmt.Sprintf("%s-%s", app.App, rand)
+	serviceName := fmt.Sprintf("%s-%s", app.App, id)
+
+	// We have to clamp at a length of 32 because the Name field to CreateTargetGroup
+	// requires that the name is 32 characters or less.
+	if len(serviceName) > 32 {
+		serviceName = serviceName[:32]
+	}
 
 	taskArn := *taskOut.TaskDefinition.TaskDefinitionArn
 
