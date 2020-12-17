@@ -889,6 +889,12 @@ func (p *Platform) Launch(
 			*listener.ListenerArn, *listener.LoadBalancerArn)
 	} else {
 		lbName := "waypoint-ecs-" + app.App
+
+		// Names have to be 32 characters or less, so clamp it here.
+		if len(lbName) > 32 {
+			lbName = lbName[:32]
+		}
+
 		dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
 			Names: []*string{&lbName},
 		})
