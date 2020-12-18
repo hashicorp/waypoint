@@ -90,7 +90,10 @@ in pkgs.mkShell rec {
     go-protobuf-json
     go-tools
     go-mockery
-  ];
+  ] ++ (with pkgs; [
+    # Needed for website/
+    pkgconfig autoconf automake libtool nasm autogen zlib libpng
+  ]);
 
   # Extra env vars
   PGHOST = "localhost";
