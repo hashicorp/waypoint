@@ -406,6 +406,42 @@ func (i *DockerInstaller) Uninstall(
 	s.Update("Docker volume %q removed", containerName)
 	s.Done()
 
+	s = sg.Add("")
+
+	imageRef, err := reference.ParseNormalizedNamed(i.config.serverImage)
+	if err != nil {
+		return fmt.Errorf("Error parsing Docker image: %s", err)
+	}
+
+	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "reference",
+			Value: reference.FamiliarString(imageRef),
+		}),
+	})
+	if err != nil {
+		return err
+	}
+	if len(imageList) < 1 {
+		s.Update("Could not find image %q, not removing", imageRef.Name())
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		return nil
+	}
+
+	// Pick the first image, as there should be only one.
+	imageId := imageList[0].ID
+	_, err = cli.ImageRemove(ctx, imageId, types.ImageRemoveOptions{})
+	if err != nil {
+		s.Update("Could not find image %q, not removing", imageRef.Name())
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		return nil
+	}
+
+	s.Update("Docker image %q removed", imageRef.Name())
+	s.Done()
+
 	return nil
 }
 
