@@ -35,7 +35,6 @@ func (c *UninstallCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
-		WithClient(false),
 	); err != nil {
 		return 1
 	}
@@ -54,6 +53,8 @@ func (c *UninstallCommand) Run(args []string) int {
 	// - name the context we'll be uninstalling
 	// - generate a snapshot of the current install
 	s := sg.Add("")
+	defer func() { s.Abort() }()
+
 	contextDefault, err := c.contextStorage.Default()
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -72,11 +73,8 @@ func (c *UninstallCommand) Run(args []string) int {
 		s.Update("Generating server snapshot...")
 		defer s.Abort()
 		// generate snapshot
-		config := clisnapshot.Config{
-			Client: c.project.Client(),
-		}
 		w, err := os.Create(c.snapshotFilename)
-		if err = config.WriteSnapshot(ctx, w); err != nil {
+		if err = clisnapshot.WriteSnapshot(ctx, c.project.Client(), w); err != nil {
 			fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
 			return 1
 		}
@@ -86,6 +84,9 @@ func (c *UninstallCommand) Run(args []string) int {
 		s.Status(terminal.StatusWarn)
 	}
 	s.Done()
+
+	// TODO: should we check if any deployments are running, and exit with 
+	// a warning to run `waypoint destroy` before proceeding?
 
 	// Uninstall
 	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
@@ -173,7 +174,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "snapshot-filename",
 			Target:  &c.snapshotFilename,
-			Default: fmt.Sprintf("sever-snapshot-%d", time.Now().Unix()),
+			Default: fmt.Sprintf("waypoint-sever-snapshot-%d", time.Now().Unix()),
 			Usage:   "Filename to write the snapshot to.",
 		})
 
@@ -183,6 +184,11 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 			Default: false,
 			Usage:   "Skip creating a snapshot of the Waypoint server.",
 		})
+
+		for name, platform := range serverinstall.Platforms {
+			platformSet := set.NewSet(name + " Options")
+			platform.UninstallFlags(platformSet)
+		}
 	})
 }
 
