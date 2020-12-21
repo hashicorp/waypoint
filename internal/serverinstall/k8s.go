@@ -217,6 +217,7 @@ func (i *K8sInstaller) Install(
 			"Error creating service %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
+		return nil, err
 	}
 
 	statefulSetClient := clientset.AppsV1().StatefulSets(i.config.namespace)
@@ -226,6 +227,7 @@ func (i *K8sInstaller) Install(
 			"Error creating statefulset %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
+		return nil, err
 	}
 
 	s.Done()
