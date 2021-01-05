@@ -45,6 +45,21 @@ accept the invalid certificate warning in your browser for this to work.
 - `ember serve local`
 - The app will be available at [http://localhost:4200](http://localhost:4200).
 
+If you need to build the server and run it locally, you'll want to stop the existing instance, build and reinstall it in docker:
+
+- `docker stop waypoint-server; docker rm waypoint-server; docker volume prune -f`
+- `make docker/server`
+- `waypoint install -platform=docker -server-image=waypoint -accept-tos`
+
+Then run the authentication steps above again.
+
+### Generating Type Definitions after making api changes
+
+if you've made API changes in `/internal/server` and want to use those on the frontend, you'll need to generate the type definitions again: 
+
+- `go generate ./internal/server`
+- `make gen/ts`
+
 ### Code Generators
 
 Make use of the many generators for code, try `ember help generate` for more details
