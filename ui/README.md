@@ -49,7 +49,7 @@ If you need to build the server and run it locally, you'll want to stop the exis
 
 - `docker stop waypoint-server; docker rm waypoint-server; docker volume prune -f`
 - `make docker/server`
-- `waypoint install -platform=docker -server-image=waypoint -accept-tos`
+- `waypoint install -platform=docker -docker-server-image="waypoint:dev" -accept-tos`
 
 Then run the authentication steps above again.
 
