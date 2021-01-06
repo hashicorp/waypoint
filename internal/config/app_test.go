@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -10,6 +11,9 @@ import (
 )
 
 func TestConfigApp_compare(t *testing.T) {
+	envVar := "test"
+	os.Setenv("APP_ENV", envVar)
+
 	cases := []struct {
 		File string
 		App  string
@@ -156,6 +160,15 @@ func TestConfigApp_compare(t *testing.T) {
 				vars, err := c.ConfigVars()
 				require.NoError(err)
 				require.Len(vars, 2)
+			},
+		},
+
+		{
+			"app_env.hcl",
+			"bar",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+				require.Equal(c.Labels["env"], envVar)
 			},
 		},
 	}

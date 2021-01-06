@@ -82,7 +82,9 @@ func Load(path string, pwd string) (*Config, error) {
 
 	// Build our context
 	ctx := EvalContext(nil, pwd).NewChild()
+
 	addPathValue(ctx, pathData)
+	addEnvVars(ctx)
 
 	// Decode
 	var cfg hclConfig

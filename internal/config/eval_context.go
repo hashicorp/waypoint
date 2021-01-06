@@ -1,6 +1,9 @@
 package config
 
 import (
+	"os"
+	"strings"
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
@@ -63,6 +66,19 @@ func addPathValue(ctx *hcl.EvalContext, v map[string]string) {
 	}
 
 	ctx.Variables["path"] = value
+}
+
+func addEnvVars(ctx *hcl.EvalContext) {
+	ctx.Variables = make(map[string]cty.Value)
+	env := make(map[string]cty.Value)
+
+	for _, e := range os.Environ() {
+		pair := strings.Split(e, "=")
+		k, v := pair[0], pair[1]
+		env[k] = cty.StringVal(v)
+	}
+
+	ctx.Variables["env"] = cty.MapVal(env)
 }
 
 // finalizeContext should be called whenever an HCL context is being used
