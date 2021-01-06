@@ -96,11 +96,20 @@ ul {
   padding: 0;
 }
 
+:any-link {
+  border-bottom: none;
+}
+
 // Waypoint styles
 
 code {
   font-family: ui-monospace, 'Menlo', monospace;
   white-space: nowrap;
+  color: rgb(var(--text));
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 
 pre code {
