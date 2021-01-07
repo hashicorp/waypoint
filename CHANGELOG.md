@@ -2,9 +2,11 @@
 
 IMPROVEMENTS:
 
+* cli: `server run` accepts flags for specifying a custom TLS cert to serve [GH-950]
+
 BUG FIXES:
 
-* cli: `server run` accepts flags for specifying a custom TLS cert to serve
+* entrypoint: log disconnect messages will now only be emitted at the ERROR level if reconnection fails [GH-930]
 
 ## 0.2.0 (December 10, 2020)
 
