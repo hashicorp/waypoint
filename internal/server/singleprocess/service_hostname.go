@@ -24,7 +24,8 @@ func (s *service) CreateHostname(
 	ctx context.Context,
 	req *pb.CreateHostnameRequest,
 ) (*pb.CreateHostnameResponse, error) {
-	if s.urlClient == nil {
+	urlClient := s.urlClient()
+	if urlClient == nil {
 		return nil, status.Errorf(codes.FailedPrecondition,
 			"server doesn't have the URL service enabled")
 	}
@@ -53,7 +54,7 @@ func (s *service) CreateHostname(
 	}
 
 	// Make the request
-	resp, err := s.urlClient.RegisterHostname(ctx, hostnameReq)
+	resp, err := urlClient.RegisterHostname(ctx, hostnameReq)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +78,8 @@ func (s *service) ListHostnames(
 	ctx context.Context,
 	req *pb.ListHostnamesRequest,
 ) (*pb.ListHostnamesResponse, error) {
-	if s.urlClient == nil {
+	urlClient := s.urlClient()
+	if urlClient == nil {
 		return nil, status.Errorf(codes.FailedPrecondition,
 			"server doesn't have the URL service enabled")
 	}
@@ -94,7 +96,7 @@ func (s *service) ListHostnames(
 		targetMap = s.hostnameLabelSetToMap(labels)
 	}
 
-	resp, err := s.urlClient.ListHostnames(ctx, &wphznpb.ListHostnamesRequest{})
+	resp, err := urlClient.ListHostnames(ctx, &wphznpb.ListHostnamesRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -124,12 +126,13 @@ func (s *service) DeleteHostname(
 	ctx context.Context,
 	req *pb.DeleteHostnameRequest,
 ) (*empty.Empty, error) {
-	if s.urlClient == nil {
+	urlClient := s.urlClient()
+	if urlClient == nil {
 		return nil, status.Errorf(codes.FailedPrecondition,
 			"server doesn't have the URL service enabled")
 	}
 
-	_, err := s.urlClient.DeleteHostname(ctx, &wphznpb.DeleteHostnameRequest{
+	_, err := urlClient.DeleteHostname(ctx, &wphznpb.DeleteHostnameRequest{
 		Hostname: req.Hostname,
 	})
 	if err != nil {
