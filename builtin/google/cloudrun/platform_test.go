@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	"github.com/stretchr/testify/require"
@@ -77,12 +76,6 @@ func deploy(t *testing.T) (*Deployment, error) {
 		App: "wpmini",
 	}
 
-	td, rf := datadir.TestDir(t)
-	t.Cleanup(func() {
-		rf()
-	})
-
-	dir := &datadir.Component{td}
 	dc := &component.DeploymentConfig{}
 	ui := &StubbedUI{log}
 
@@ -91,7 +84,6 @@ func deploy(t *testing.T) (*Deployment, error) {
 		log,
 		src,
 		img,
-		dir,
 		dc,
 		ui,
 	)

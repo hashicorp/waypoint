@@ -16,7 +16,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
@@ -77,7 +76,6 @@ func (p *Platform) ValidateAuth(
 	ctx context.Context,
 	log hclog.Logger,
 	src *component.Source,
-	dir *datadir.Component,
 	ui terminal.UI,
 ) error {
 	deployment := &Deployment{
@@ -180,7 +178,6 @@ func (p *Platform) Deploy(
 	log hclog.Logger,
 	src *component.Source,
 	img *docker.Image,
-	dir *datadir.Component,
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
