@@ -1,3 +1,11 @@
+## unreleased
+
+IMPROVEMENTS:
+
+BUG FIXES:
+
+* cli: `server run` accepts flags for specifying a custom TLS cert to serve
+
 ## 0.2.0 (December 10, 2020)
 
 FEATURES:
