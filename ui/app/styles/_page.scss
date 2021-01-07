@@ -175,8 +175,12 @@
       margin-right: scale.$sm-3;
     }
     a {
+      color: rgb(var(--text-muted));
       display: flex;
       align-items: center;
+      &:hover {
+        color: rgb(var(--text));
+      }
     }
   }
 
