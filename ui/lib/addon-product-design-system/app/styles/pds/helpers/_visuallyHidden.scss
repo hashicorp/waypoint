@@ -1,5 +1,0 @@
-@use "../utils/a11y";
-
-.pds--visuallyHidden {
-  @include a11y.visuallyHidden;
-}

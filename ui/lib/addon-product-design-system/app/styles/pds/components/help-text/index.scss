@@ -1,7 +1,0 @@
-@use "../../tokens/color";
-@use "../../tokens/typography" as Typography;
-
-.pds-helpText {
-  @include Typography.Interface(S);
-  color: color.$ui-gray-500;
-}

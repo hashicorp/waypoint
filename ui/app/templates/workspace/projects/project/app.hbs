@@ -49,45 +49,34 @@
   </div>
 </div>
 
-<nav>
-  <ul>
-    <li>
-      <LinkTo @route="workspace.projects.project.app.logs"
-        @models={{array @model.application.project @model.application.application }}>
-        {{inline-svg "page-outline" class="icon"}}
-        {{t "nav.logs"}}
-      </LinkTo>
-    </li>
-    <li>
-      <LinkTo @route="workspace.projects.project.app.builds"
-        @models={{array @model.application.project @model.application.application }}>
-        {{inline-svg "build" class="icon"}}
-        {{t "nav.builds"}}
-      </LinkTo>
-    </li>
-    <li>
-      <LinkTo @route="workspace.projects.project.app.deployments"
-        @models={{array @model.application.project @model.application.application }}>
-        {{inline-svg "upload" class="icon"}}
-        {{t "nav.deployments"}}
-      </LinkTo>
-    </li>
-    <li>
-      <LinkTo @route="workspace.projects.project.app.releases"
-        @models={{array @model.application.project @model.application.application }}>
-        {{inline-svg "public-default" class="icon"}}
-        {{t "nav.releases"}}
-      </LinkTo>
-    </li>
-    <li>
-      <LinkTo @route="workspace.projects.project.app.exec"
-        @models={{array @model.application.project @model.application.application }}>
-        {{inline-svg "exec" class="icon"}}
-        {{t "nav.exec"}}
-      </LinkTo>
-    </li>
-  </ul>
-</nav>
+
+<Pds::TabNav>
+  <LinkTo @route="workspace.projects.project.app.logs"
+    @models={{array @model.application.project @model.application.application }}>
+    {{inline-svg "page-outline" class="icon"}}
+    {{t "nav.logs"}}
+  </LinkTo>
+  <LinkTo @route="workspace.projects.project.app.builds"
+    @models={{array @model.application.project @model.application.application }}>
+    {{inline-svg "build" class="icon"}}
+    {{t "nav.builds"}}
+  </LinkTo>
+  <LinkTo @route="workspace.projects.project.app.deployments"
+    @models={{array @model.application.project @model.application.application }}>
+    {{inline-svg "upload" class="icon"}}
+    {{t "nav.deployments"}}
+  </LinkTo>
+  <LinkTo @route="workspace.projects.project.app.releases"
+    @models={{array @model.application.project @model.application.application }}>
+    {{inline-svg "public-default" class="icon"}}
+    {{t "nav.releases"}}
+  </LinkTo>
+  <LinkTo @route="workspace.projects.project.app.exec"
+    @models={{array @model.application.project @model.application.application }}>
+    {{inline-svg "exec" class="icon"}}
+    {{t "nav.exec"}}
+  </LinkTo>
+</Pds::TabNav>
 {{/unless}}
 
 {{outlet}}

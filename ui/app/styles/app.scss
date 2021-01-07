@@ -96,8 +96,8 @@ ul {
   padding: 0;
 }
 
-a[href] {
-  color: rgb(var(--link));
+:any-link {
+  border-bottom: none;
 }
 
 // Waypoint styles
@@ -105,6 +105,11 @@ a[href] {
 code {
   font-family: ui-monospace, 'Menlo', monospace;
   white-space: nowrap;
+  color: rgb(var(--text));
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 
 pre code {
