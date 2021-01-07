@@ -7,6 +7,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * entrypoint: log disconnect messages will now only be emitted at the ERROR level if reconnection fails [GH-930]
+* plugin/google-cloud-run: fix error on deploys about missing type [GH-955]
 
 ## 0.2.0 (December 10, 2020)
 
