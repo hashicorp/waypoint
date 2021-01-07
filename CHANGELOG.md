@@ -2,10 +2,9 @@
 
 IMPROVEMENTS:
 
-* cli: `server run` accepts flags for specifying a custom TLS cert to serve [GH-950]
-
 BUG FIXES:
 
+* server: don't block startup on URL service being unavailable [GH-950]
 * entrypoint: log disconnect messages will now only be emitted at the ERROR level if reconnection fails [GH-930]
 * plugin/google-cloud-run: fix error on deploys about missing type [GH-955]
 
