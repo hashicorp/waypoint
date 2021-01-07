@@ -145,12 +145,15 @@ func (ceb *CEB) initLogStreamSender(
 				Lines:      []*pb.LogBatch_Entry{entry},
 			})
 			if err == io.EOF || status.Code(err) == codes.Unavailable {
-				log.Error("log stream disconnected from server, attempting reconnect",
+				log.Debug("log stream disconnected from server, attempting reconnect",
 					"err", err)
 				err = ceb.initLogStreamSender(log, ctx)
 				if err == nil {
 					return
 				}
+
+				log.Error("log stream disconnected from server, reconnect failed",
+					"err", err)
 			}
 			if err != nil {
 				log.Warn("error sending logs", "error", err)
