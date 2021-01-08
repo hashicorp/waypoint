@@ -2,6 +2,8 @@
 
 IMPROVEMENTS:
 
+* cli: `server run` supports specifying a custom TLS certificate [GH-951]
+
 BUG FIXES:
 
 * server: don't block startup on URL service being unavailable [GH-950]
