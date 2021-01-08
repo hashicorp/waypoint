@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -100,7 +101,7 @@ func (s *GitSource) Get(
 
 	// Clone
 	var output bytes.Buffer
-	_, err = git.PlainCloneContext(ctx, td, false, &git.CloneOptions{
+	repo, err := git.PlainCloneContext(ctx, td, false, &git.CloneOptions{
 		URL:      source.Git.Url,
 		Progress: &output,
 	})
@@ -113,16 +114,40 @@ func (s *GitSource) Get(
 	// Checkout if we have a ref. If we don't have a ref we use the
 	// default of whatever we got.
 	if ref := source.Git.Ref; ref != "" {
-		output.Reset()
-		cmd := exec.CommandContext(ctx, "git", "checkout", ref)
-		cmd.Dir = td
-		cmd.Stdout = &output
-		cmd.Stderr = &output
-		cmd.Stdin = nil
-		if err := cmd.Run(); err != nil {
+		// We have to fetch all the refs so that ResolveRevisoin can find them.
+		err = repo.Fetch(&git.FetchOptions{
+			RefSpecs: []config.RefSpec{"refs/*:refs/*", "HEAD:refs/heads/HEAD"},
+		})
+		if err != nil {
 			closer()
 			return "", nil, status.Errorf(codes.Aborted,
-				"Git checkout failed: %s", output.String())
+				"Failed to fetch refspecs: %s", err)
+		}
+
+		// ResolveRevision will determine the hash of a short-hash, branch,
+		// tag, etc. etc. basically anything "git checkout" accepts.
+		hash, err := repo.ResolveRevision(plumbing.Revision(ref))
+		if err != nil {
+			closer()
+			return "", nil, status.Errorf(codes.Aborted,
+				"Failed to resolve revision for checkout: %s", err)
+		} else if hash == nil {
+			// should never happen but we don't want to panic if it does
+			closer()
+			return "", nil, status.Errorf(codes.Aborted,
+				"Failed to resolve revision for checkout: nil hash")
+		}
+
+		wt, err := repo.Worktree()
+		if err != nil {
+			closer()
+			return "", nil, status.Errorf(codes.Aborted,
+				"Failed to load Git working tree: %s", err)
+		}
+		if err := wt.Checkout(&git.CheckoutOptions{Hash: *hash}); err != nil {
+			closer()
+			return "", nil, status.Errorf(codes.Aborted,
+				"Git checkout failed: %s", err)
 		}
 	}
 
