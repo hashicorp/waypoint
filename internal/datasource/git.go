@@ -51,6 +51,15 @@ func (s *GitSource) ProjectSource(body hcl.Body, ctx *hcl.EvalContext) (*pb.Job_
 		}
 
 	case cfg.SSHKey != "":
+		// Validate the key
+		if _, err := ssh.NewPublicKeys(
+			"git",
+			[]byte(cfg.SSHKey),
+			cfg.SSHKeyPassword,
+		); err != nil {
+			return nil, fmt.Errorf("failed to load specified Git SSH key: %s", err)
+		}
+
 		result.Auth = &pb.Job_Git_Ssh{
 			Ssh: &pb.Job_Git_SSH{
 				PrivateKeyPem: []byte(cfg.SSHKey),
