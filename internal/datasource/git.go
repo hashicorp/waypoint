@@ -36,19 +36,65 @@ func (s *GitSource) ProjectSource(body hcl.Body, ctx *hcl.EvalContext) (*pb.Job_
 		return nil, diag
 	}
 
+	// Start building the result
+	result := &pb.Job_Git{
+		Url:  cfg.Url,
+		Path: cfg.Path,
+	}
+	switch {
+	case cfg.Username != "":
+		result.Auth = &pb.Job_Git_Basic_{
+			Basic: &pb.Job_Git_Basic{
+				Username: cfg.Username,
+				Password: cfg.Password,
+			},
+		}
+
+	case cfg.SSHKey != "":
+		result.Auth = &pb.Job_Git_Ssh{
+			Ssh: &pb.Job_Git_SSH{
+				PrivateKeyPem: []byte(cfg.SSHKey),
+				Password:      cfg.SSHKeyPassword,
+			},
+		}
+	}
+
 	// Return the data source
 	return &pb.Job_DataSource{
 		Source: &pb.Job_DataSource_Git{
-			Git: &pb.Job_Git{
-				Url:  cfg.Url,
-				Path: cfg.Path,
-			},
+			Git: result,
 		},
 	}, nil
 }
 
 func (s *GitSource) Override(raw *pb.Job_DataSource, m map[string]string) error {
 	src := raw.Source.(*pb.Job_DataSource_Git).Git
+
+	// If we have a username set, then switch auth to basic auth
+	if _, ok := m["username"]; ok {
+		src.Auth = &pb.Job_Git_Basic_{
+			Basic: &pb.Job_Git_Basic{
+				Username: m["username"],
+				Password: m["password"],
+			},
+		}
+
+		delete(m, "username")
+		delete(m, "password")
+	}
+
+	// If we have SSH key set, then change auth to SSH.
+	if _, ok := m["key"]; ok {
+		src.Auth = &pb.Job_Git_Ssh{
+			Ssh: &pb.Job_Git_SSH{
+				PrivateKeyPem: []byte(m["key"]),
+				Password:      m["key_password"],
+			},
+		}
+
+		delete(m, "key")
+		delete(m, "key_password")
+	}
 
 	var md mapstructure.Metadata
 	if err := mapstructure.DecodeMetadata(m, src, &md); err != nil {
@@ -194,8 +240,12 @@ func (s *GitSource) Get(
 }
 
 type gitConfig struct {
-	Url  string `hcl:"url,attr"`
-	Path string `hcl:"path,optional"`
+	Url            string `hcl:"url,attr"`
+	Path           string `hcl:"path,optional"`
+	Username       string `hcl:"username,optional"`
+	Password       string `hcl:"password,optional"`
+	SSHKey         string `hcl:"key,optional"`
+	SSHKeyPassword string `hcl:"key_password,optional"`
 }
 
 var _ Sourcer = (*GitSource)(nil)

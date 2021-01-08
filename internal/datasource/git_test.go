@@ -7,11 +7,66 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+func TestGitProjectSource(t *testing.T) {
+	cases := []struct {
+		Name     string
+		Input    string
+		Expected *pb.Job_Git
+	}{
+		{
+			"minimum",
+			`
+url = "foo"
+`,
+			&pb.Job_Git{
+				Url: "foo",
+			},
+		},
+
+		{
+			"basic auth",
+			`
+url = "foo"
+username = "alice"
+password = "giraffe"
+`,
+			&pb.Job_Git{
+				Url: "foo",
+				Auth: &pb.Job_Git_Basic_{
+					Basic: &pb.Job_Git_Basic{
+						Username: "alice",
+						Password: "giraffe",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.Name, func(t *testing.T) {
+			require := require.New(t)
+
+			// Parse the input
+			f, diag := hclsyntax.ParseConfig([]byte(tt.Input), "<test>", hcl.Pos{})
+			require.False(diag.HasErrors())
+
+			// Get the project source value
+			var s GitSource
+			result, err := s.ProjectSource(f.Body, &hcl.EvalContext{})
+			require.NoError(err)
+			actual := result.Source.(*pb.Job_DataSource_Git).Git
+			require.Equal(actual, tt.Expected)
+		})
+	}
+}
 
 func TestGitSourceOverride(t *testing.T) {
 	cases := []struct {
