@@ -3,7 +3,6 @@ package datasource
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -13,14 +12,6 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
-
-var testHasGit bool
-
-func init() {
-	if _, err := exec.LookPath("git"); err == nil {
-		testHasGit = true
-	}
-}
 
 func TestGitSourceOverride(t *testing.T) {
 	cases := []struct {
@@ -105,11 +96,6 @@ func TestGitSourceOverride(t *testing.T) {
 }
 
 func TestGitSourceGet(t *testing.T) {
-	if !testHasGit {
-		t.Skip("git not installed")
-		return
-	}
-
 	t.Run("basic clone", func(t *testing.T) {
 		require := require.New(t)
 
