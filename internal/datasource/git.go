@@ -11,6 +11,9 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -99,10 +102,40 @@ func (s *GitSource) Get(
 		ui.Output("Ref: %s", source.Git.Ref, terminal.WithInfoStyle())
 	}
 
+	// Setup auth information
+	var auth transport.AuthMethod
+	switch authcfg := source.Git.Auth.(type) {
+	case *pb.Job_Git_Basic_:
+		ui.Output("Auth: username/password", terminal.WithInfoStyle())
+		auth = &http.BasicAuth{
+			Username: authcfg.Basic.Username,
+			Password: authcfg.Basic.Password,
+		}
+
+	case *pb.Job_Git_Ssh:
+		ui.Output("Auth: ssh", terminal.WithInfoStyle())
+		auth, err = ssh.NewPublicKeys(
+			authcfg.Ssh.User,
+			authcfg.Ssh.PrivateKeyPem,
+			authcfg.Ssh.Password,
+		)
+		if err != nil {
+			return "", nil, status.Errorf(codes.FailedPrecondition,
+				"Failed to load private key for Git auth: %s", err)
+		}
+
+	case nil:
+		// Do nothing
+
+	default:
+		log.Warn("unknown auth configuration, ignoring: %T", source.Git.Auth)
+	}
+
 	// Clone
 	var output bytes.Buffer
 	repo, err := git.PlainCloneContext(ctx, td, false, &git.CloneOptions{
 		URL:      source.Git.Url,
+		Auth:     auth,
 		Progress: &output,
 	})
 	if err != nil {
