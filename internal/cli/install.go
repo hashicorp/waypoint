@@ -490,7 +490,10 @@ entrypoint communications. This must be a reachable address for all your
 deployments. If this is incorrect, manually set it using the CLI command
 "waypoint server config-set".
 
+To launch and authenticate into the Web UI, run:
+waypoint ui -authenticate
+
 Advertise Address: %[2]s
-   Web UI Address: %[3]s
+Web UI Address: %[3]s
 `)
 )
