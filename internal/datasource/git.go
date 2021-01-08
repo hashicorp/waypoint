@@ -3,12 +3,14 @@ package datasource
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -99,11 +101,11 @@ func (s *GitSource) Get(
 
 	// Clone
 	var output bytes.Buffer
-	cmd := exec.CommandContext(ctx, "git", "clone", source.Git.Url, td)
-	cmd.Stdout = &output
-	cmd.Stderr = &output
-	cmd.Stdin = nil
-	if err := cmd.Run(); err != nil {
+	repo, err := git.PlainCloneContext(ctx, td, false, &git.CloneOptions{
+		URL:      source.Git.Url,
+		Progress: &output,
+	})
+	if err != nil {
 		closer()
 		return "", nil, status.Errorf(codes.Aborted,
 			"Git clone failed: %s", output.String())
@@ -112,16 +114,24 @@ func (s *GitSource) Get(
 	// Checkout if we have a ref. If we don't have a ref we use the
 	// default of whatever we got.
 	if ref := source.Git.Ref; ref != "" {
-		output.Reset()
-		cmd := exec.CommandContext(ctx, "git", "checkout", ref)
-		cmd.Dir = td
-		cmd.Stdout = &output
-		cmd.Stderr = &output
-		cmd.Stdin = nil
-		if err := cmd.Run(); err != nil {
+		wt, err := repo.Worktree()
+		if err != nil {
 			closer()
 			return "", nil, status.Errorf(codes.Aborted,
-				"Git checkout failed: %s", output.String())
+				"Failed to load Git working tree: %s", err)
+		}
+
+		var opts git.CheckoutOptions
+		if _, err := hex.DecodeString(ref); err == nil {
+			opts.Hash = plumbing.NewHash(ref)
+		} else {
+			opts.Branch = plumbing.ReferenceName(ref)
+		}
+
+		if err := wt.Checkout(&opts); err != nil {
+			closer()
+			return "", nil, status.Errorf(codes.Aborted,
+				"Git checkout failed: %s", err)
 		}
 	}
 
