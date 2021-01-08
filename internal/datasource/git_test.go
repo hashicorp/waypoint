@@ -110,30 +110,92 @@ func TestGitSourceGet(t *testing.T) {
 		return
 	}
 
-	require := require.New(t)
+	t.Run("basic clone", func(t *testing.T) {
+		require := require.New(t)
 
-	var s GitSource
-	dir, closer, err := s.Get(
-		context.Background(),
-		hclog.L(),
-		terminal.ConsoleUI(context.Background()),
-		&pb.Job_DataSource{
-			Source: &pb.Job_DataSource_Git{
-				Git: &pb.Job_Git{
-					Url: testGitFixture(t, "git-noop"),
+		var s GitSource
+		dir, closer, err := s.Get(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: testGitFixture(t, "git-noop"),
+					},
 				},
 			},
-		},
-		"",
-	)
-	require.NoError(err)
-	if closer != nil {
-		defer closer()
-	}
+			"",
+		)
+		require.NoError(err)
+		if closer != nil {
+			defer closer()
+		}
 
-	// Verify files
-	_, err = os.Stat(filepath.Join(dir, "waypoint.hcl"))
-	require.NoError(err)
+		// Verify files
+		_, err = os.Stat(filepath.Join(dir, "waypoint.hcl"))
+		require.NoError(err)
+	})
+
+	t.Run("branch ref", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		dir, closer, err := s.Get(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: testGitFixture(t, "git-refs"),
+						Ref: "branch",
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		if closer != nil {
+			defer closer()
+		}
+
+		// Verify files
+		_, err = os.Stat(filepath.Join(dir, "waypoint.hcl"))
+		require.NoError(err)
+		_, err = os.Stat(filepath.Join(dir, "branchfile"))
+		require.NoError(err)
+	})
+
+	t.Run("commit", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		dir, closer, err := s.Get(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: testGitFixture(t, "git-refs"),
+						Ref: "29758b9",
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		if closer != nil {
+			defer closer()
+		}
+
+		// Verify files
+		_, err = os.Stat(filepath.Join(dir, "waypoint.hcl"))
+		require.NoError(err)
+		_, err = os.Stat(filepath.Join(dir, "two"))
+		require.Error(err)
+	})
 }
 
 // testGitFixture MUST be called before TestRunner since TestRunner
