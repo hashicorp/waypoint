@@ -26,6 +26,10 @@ bin/windows: # create windows binaries
 bin/entrypoint: # create the entrypoint for the current platform
 	CGO_ENABLED=0 go build -tags assetsembedded -o ./waypoint-entrypoint ./cmd/waypoint-entrypoint
 
+.PHONY: install
+install: bin # build and copy binaries to $GOPATH/bin/waypoint
+	cp ./waypoint $(GOPATH)/bin/waypoint
+
 .PHONY: test
 test: # run tests
 	go test ./...
@@ -36,15 +40,6 @@ format: # format go code
 
 .PHONY: docker/server
 docker/server:
-	DOCKER_BUILDKIT=1 docker build \
-					--ssh default \
-					--secret id=ssh.config,src="${HOME}/.ssh/config" \
-					--secret id=ssh.key,src="${HOME}/.ssh/config" \
-					-t waypoint:dev \
-					.
-
-.PHONY: docker/mitchellh
-docker/mitchellh:
 	DOCKER_BUILDKIT=1 docker build \
 					--ssh default \
 					--secret id=ssh.config,src="${HOME}/.ssh/config" \
