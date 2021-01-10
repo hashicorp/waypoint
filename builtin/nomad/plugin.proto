@@ -8,3 +8,11 @@ message Deployment {
   string id = 1;
   string name = 2;
 }
+
+message NomadSpec {
+  string driver = 1;
+  string image = 2;
+  string tag = 3;
+  string command = 4;
+  string artifact = 5;
+}
