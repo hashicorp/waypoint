@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	"github.com/hashicorp/waypoint/builtin/docker"
 )
 
 const (
@@ -62,10 +61,11 @@ func (p *Platform) Deploy(
 	ctx context.Context,
 	log hclog.Logger,
 	src *component.Source,
-	img *docker.Image,
+	spec *NomadSpec,
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
+
 	// Create our deployment and set an initial ID
 	var result Deployment
 	id, err := component.Id()
@@ -114,7 +114,7 @@ func (p *Platform) Deploy(
 		job.AddTaskGroup(tg)
 		tg.AddTask(&api.Task{
 			Name:   result.Name,
-			Driver: "docker",
+			Driver: spec.Driver,
 		})
 		err = nil
 	}
@@ -146,9 +146,17 @@ func (p *Platform) Deploy(
 	job.SetMeta(metaId, result.Id)
 	job.SetMeta(metaNonce, time.Now().UTC().Format(time.RFC3339Nano))
 
-	config := map[string]interface{}{
-		"image": img.Name(),
-		"ports": []string{"waypoint"},
+	var config map[string]interface{}
+
+	if spec.Driver == "docker" {
+		config = map[string]interface{}{
+			"image": spec.Image + ":" + spec.Tag,
+			"ports": []string{"waypoint"},
+		}
+	} else if spec.Driver == "exec" {
+		config = map[string]interface{}{
+			"command": spec.Command,
+		}
 	}
 
 	if p.config.Auth != nil {
@@ -160,6 +168,12 @@ func (p *Platform) Deploy(
 
 	job.TaskGroups[0].Tasks[0].Config = config
 	job.TaskGroups[0].Tasks[0].Env = env
+
+	if spec.Driver == "exec" {
+		job.TaskGroups[0].Tasks[0].Artifacts = append(job.TaskGroups[0].Tasks[0].Artifacts, &api.TaskArtifact{
+			GetterSource: &spec.Artifact,
+		})
+	}
 
 	// Register job
 	st.Update("Registering job...")
