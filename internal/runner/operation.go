@@ -44,7 +44,7 @@ func (r *Runner) executeJob(
 	}
 
 	// Setup our project data directory.
-	projDir, err := datadir.NewProject(".waypoint")
+	projDir, err := datadir.NewProject(filepath.Join(wd, ".waypoint"))
 	if err != nil {
 		return nil, err
 	}

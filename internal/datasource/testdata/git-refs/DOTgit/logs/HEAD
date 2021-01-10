@@ -1,0 +1,8 @@
+0000000000000000000000000000000000000000 29758b9c967019a414ace75a45801a03a55e39b4 Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1610076329 -0800	commit (initial): waypoint file
+29758b9c967019a414ace75a45801a03a55e39b4 a8984eddc90167fe12f93de968e32572b6afbb8d Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1610076367 -0800	commit: two
+a8984eddc90167fe12f93de968e32572b6afbb8d a8984eddc90167fe12f93de968e32572b6afbb8d Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1610076383 -0800	checkout: moving from master to branch
+a8984eddc90167fe12f93de968e32572b6afbb8d 4aed7379b057021cc200ee8c150879020acd743d Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1610076392 -0800	commit: delete two
+4aed7379b057021cc200ee8c150879020acd743d a8984eddc90167fe12f93de968e32572b6afbb8d Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1610076396 -0800	checkout: moving from branch to master
+a8984eddc90167fe12f93de968e32572b6afbb8d 4aed7379b057021cc200ee8c150879020acd743d Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1610076478 -0800	checkout: moving from master to branch
+4aed7379b057021cc200ee8c150879020acd743d 84ef3038ec2f2b024cd51f761f11d7dc499e443f Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1610076485 -0800	commit: branchfile
+84ef3038ec2f2b024cd51f761f11d7dc499e443f a8984eddc90167fe12f93de968e32572b6afbb8d Mitchell Hashimoto <mitchell.hashimoto@gmail.com> 1610076489 -0800	checkout: moving from branch to master

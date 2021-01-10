@@ -660,6 +660,43 @@ message Job {
     // go into for the configuration. This must be a relative path
     // and may not contain ".."
     string path = 3;
+
+    // auth is the auth mechanism to use for this data source. This is optional.
+    // If this isn't set, then the data source will attempt to clone
+    // without setting any explicit auth. This usually picks up machine
+    // settings like ssh config files and so on if they exist.
+    //
+    // Note that any auth settings set here are stored in the server and
+    // may NOT be encrypted. If you want increased security, we recommend
+    // using auth baked into the machine running Waypoint.
+    oneof auth {
+      Basic basic = 4;
+      SSH ssh = 5;
+    }
+
+    // Basic auth
+    message Basic {
+      // username for authentication. If using access token based auth
+      // for something like GitHub, this can be any non-empty string.
+      string username = 1;
+
+      // password for authentication. If using access token based auth
+      // for GitHub, this should be the access token.
+      string password = 2;
+    }
+
+    // SSH private key auth
+    message SSH {
+      // private_key_pem is a PEM-encoded private key.
+      bytes private_key_pem = 1;
+
+      // password is an optional password for decoding the private key.
+      string password = 2;
+
+      // user is the SSH user to use when cloning. This will default to
+      // "git" if not specified.
+      string user = 3;
+    }
   }
 
   // Noop operations do nothing. This is primarily used for testing.
