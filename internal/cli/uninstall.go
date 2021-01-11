@@ -85,7 +85,7 @@ func (c *UninstallCommand) Run(args []string) int {
 	}
 	s.Done()
 
-	// TODO: should we check if any deployments are running, and exit with 
+	// TODO: should we check if any deployments are running, and exit with
 	// a warning to run `waypoint destroy` before proceeding?
 
 	// Uninstall
@@ -143,6 +143,10 @@ func (c *UninstallCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint server uninstall [options]
 	Uninstall the Waypoint server.
+
+	This command does not destroy Waypoint resources,
+	such as deployments and releases. Clear your workspaces
+	prior to uninstall to prevent hanging resources.
 
 ` + c.Flags().Help())
 }
