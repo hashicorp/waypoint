@@ -1,5 +1,3 @@
-# A lot of this Makefile right now is temporary since we have a private
-# repo so that we can more sanely create
 ASSETFS_PATH?=internal/server/gen/bindata_ui.go
 
 GIT_COMMIT=$$(git rev-parse --short HEAD)
