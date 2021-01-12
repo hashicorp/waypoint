@@ -34,6 +34,25 @@ RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 # imgbase builds the "img" tool and all of its dependencies
 #--------------------------------------------------------------------
 
+# We build a fork of img for now so we can get the `img inspect` CLI
+# Watch this PR: https://github.com/genuinetools/img/pull/324
+FROM hashicorp.jfrog.io/docker/golang:alpine AS imgbuilder
+
+RUN apk add --no-cache \
+	bash \
+	build-base \
+	gcc \
+	git \
+	libseccomp-dev \
+	linux-headers \
+	make
+
+RUN git clone https://github.com/mitchellh/img.git /img
+WORKDIR /img
+RUN git checkout inspect
+RUN go get github.com/go-bindata/go-bindata/go-bindata
+RUN make static && mv img /usr/bin/img
+
 # Copied from img repo, see notes for specific reasons:
 # https://github.com/genuinetools/img/blob/d858ac71f93cc5084edd2ba2d425b90234cf2ead/Dockerfile
 FROM hashicorp.jfrog.io/docker/alpine AS imgbase
@@ -65,7 +84,7 @@ RUN ./autogen.sh --disable-nls --disable-man --without-audit \
 
 FROM hashicorp.jfrog.io/docker/alpine
 
-COPY --from=imgbase /usr/bin/img /usr/bin/img
+COPY --from=imgbuilder /usr/bin/img /usr/bin/img
 COPY --from=imgbase /usr/bin/runc /usr/bin/runc
 COPY --from=imgbase /usr/bin/newuidmap /usr/bin/newuidmap
 COPY --from=imgbase /usr/bin/newgidmap /usr/bin/newgidmap
