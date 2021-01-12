@@ -168,7 +168,10 @@ func (p *Platform) Deploy(
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
 	deployment.Spec.Template.Labels[labelId] = result.Id
-
+	//Set app label
+	deployment.ObjectMeta.Labels = make(map[string]string)
+	deployment.ObjectMeta.Labels["app"] = src.App
+	deployment.Spec.Template.Labels["app"] = src.App
 	// Adding labels to the pod and deployment labels
 	// exclude name from the pod spec as that is set in newDeployment
 	for k, v := range labels.Labels {
