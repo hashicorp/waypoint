@@ -31,6 +31,7 @@ func (b *Builder) buildWithImg(
 		}
 	}()
 
+	// NOTE(mitchellh): we can probably use the img Go pkg directly one day.
 	cmd := exec.CommandContext(ctx,
 		"img",
 		"build",

@@ -182,7 +182,6 @@ func (b *Builder) Build(
 		// don't have "img" available, we continue to try to use Docker. We'll
 		// fail but that error message should help the user.
 		step.Update("Docker isn't available. Falling back to daemonless image build...")
-		step.Status(terminal.StatusWarn)
 		step.Done()
 		step = nil
 		b.buildWithImg(ctx, ui, sg, relDockerfile, contextDir, result.Name())
