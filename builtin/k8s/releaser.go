@@ -47,6 +47,7 @@ func (r *Releaser) Release(
 	src *component.Source,
 	ui terminal.UI,
 	target *Deployment,
+	labels *component.LabelSet,
 ) (*Release, error) {
 	var result Release
 	result.ServiceName = src.App
@@ -89,6 +90,11 @@ func (r *Releaser) Release(
 	service.Spec.Selector = map[string]string{
 		"name":  target.Name,
 		labelId: target.Id,
+	}
+
+	//Add labels to the k8s service from the app stanza
+	for k, v := range labels.Labels {
+		service.ObjectMeta.Labels[k] = v
 	}
 
 	var checkLB bool

@@ -87,6 +87,7 @@ func (p *Platform) Deploy(
 	img *docker.Image,
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
+	labels *component.LabelSet,
 ) (*Deployment, error) {
 	// Create our deployment and set an initial ID
 	var result Deployment
@@ -167,6 +168,15 @@ func (p *Platform) Deploy(
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
 	deployment.Spec.Template.Labels[labelId] = result.Id
+
+	// Adding labels to the pod and deployment labels
+	// exclude name from the pod spec as that is set in newDeployment
+	for k, v := range labels.Labels {
+		deployment.ObjectMeta.Labels[k] = v
+		if k != "name" {
+			deployment.Spec.Template.Labels[k] = v
+		}
+	}
 
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
 	// This by default means kubernetes will always pull so that latest is useful.
