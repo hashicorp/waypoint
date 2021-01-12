@@ -38,7 +38,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 # https://github.com/genuinetools/img/blob/d858ac71f93cc5084edd2ba2d425b90234cf2ead/Dockerfile
 FROM hashicorp.jfrog.io/docker/alpine AS imgbase
 RUN apk add --no-cache autoconf automake build-base byacc gettext gettext-dev \
-    gcc git libcap-dev libtool libxslt img
+    gcc git libcap-dev libtool libxslt img runc
 RUN git clone https://github.com/shadow-maint/shadow.git /shadow
 WORKDIR /shadow
 RUN git checkout 59c2dabb264ef7b3137f5edb52c0b31d5af0cf76
@@ -52,11 +52,26 @@ RUN ./autogen.sh --disable-nls --disable-man --without-audit \
 # final image
 #--------------------------------------------------------------------
 
+# Notes on img and what is required to make it work, since there's a lot
+# of small details below that are absolutely required for everything to
+# come together:
+#
+#  - img, runc, newuidmap, newgidmap need to be installed
+#  - libseccomp-dev must be installed for runc
+#  - newuidmap/newgidmap need to have suid set (u+s)
+#  - /etc/subuid and /etc/subgid need to have an entry for the user
+#  - USER, HOME, and XDG_RUNTIME_DIR all need to be set
+#
+
 FROM hashicorp.jfrog.io/docker/alpine
 
 COPY --from=imgbase /usr/bin/img /usr/bin/img
+COPY --from=imgbase /usr/bin/runc /usr/bin/runc
 COPY --from=imgbase /usr/bin/newuidmap /usr/bin/newuidmap
 COPY --from=imgbase /usr/bin/newgidmap /usr/bin/newgidmap
+
+# required for runc
+RUN apk add --no-cache libseccomp-dev
 
 COPY --from=builder /tmp/wp-src/waypoint /usr/bin/waypoint
 COPY --from=builder /tmp/wp-src/waypoint-entrypoint /usr/bin/waypoint-entrypoint
@@ -64,10 +79,19 @@ COPY --from=builder /tmp/wp-src/waypoint-entrypoint /usr/bin/waypoint-entrypoint
 VOLUME ["/data"]
 
 RUN addgroup waypoint && \
-    adduser -S -G waypoint waypoint && \
+    adduser -S -u 1000 -G waypoint waypoint && \
     mkdir /data/ && \
     chown -R waypoint:waypoint /data
 
+# configure newuidmap/newgidmap to work with our waypoint user
+RUN chmod u+s /usr/bin/newuidmap /usr/bin/newgidmap \
+  && mkdir -p /run/user/1000 \
+  && chown -R waypoint /run/user/1000 /home/waypoint \
+  && echo waypoint:100000:65536 | tee /etc/subuid | tee /etc/subgid
+
 USER waypoint
+ENV USER waypoint
+ENV HOME /home/waypoint
+ENV XDG_RUNTIME_DIR=/run/user/1000
 
 ENTRYPOINT ["/usr/bin/waypoint"]
