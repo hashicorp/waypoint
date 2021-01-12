@@ -686,12 +686,11 @@ func (i *K8sInstaller) Upgrade(
 		)
 		return nil, err
 	}
-
-	s.Update("Gathering information about the Kubernetes cluster...")
-
 	// Do some probing to see if this is OpenShift. If so, we'll switch the config for the user.
 	// Setting the OpenShift flag will short circuit this.
 	if !i.config.openshift {
+		s.Update("Gathering information about the Kubernetes cluster...")
+
 		namespaceClient := clientset.CoreV1().Namespaces()
 		_, err := namespaceClient.Get(context.TODO(), "openshift", metav1.GetOptions{})
 		isOpenShift := err == nil
@@ -704,13 +703,17 @@ func (i *K8sInstaller) Upgrade(
 		}
 	}
 
+	s.Done()
+
 	// TODO(briancain): k8s pod UpdateStrategy
 	// note that by default, a statefulset updatestrategy is RollingUpdate
+
+	// Maybe literally use kubectl to set image. We already do this on install for creating statefulsets
 	//
 	// $ kubectl set image statefulset waypoint-server server=hashicorp/waypoint:latest
 	//
 	// 1. Determine pods configured UpdateStrategy DONE
-	// 2. Set image on pod to i.config.serverImage
+	// 2. Set image on pod to i.config.serverImage DONE
 	// 3a. If RollingUpdate, then do nothing
 	// 3b. If OnDelete, delete pod
 	// 4. Watch for pod as it gets recreated
@@ -727,27 +730,28 @@ func (i *K8sInstaller) Upgrade(
 
 	s = sg.Add("Upgrading server to %q", i.config.serverImage) // TODO include version from and to
 	// Update waypoint-server pod image to requested i.config.serverImage
-	//podClient, err := clientset.CoreV1().Pods(i.config.namespace).List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
+
+	cmd := exec.Command("kubectl", "set", "image", "statefulset", "waypoint-server", fmt.Sprintf("server=%s", i.config.serverImage))
+	cmd.Stdout = s.TermOutput()
+	cmd.Stderr = cmd.Stdout
+
+	if err = cmd.Run(); err != nil {
 		ui.Output(
-			"Error obtaining pod list: %s", clierrors.Humanize(err),
+			"Error executing kubectl to update server image in pod: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
+
 		return nil, err
 	}
 
-	// TODO: Build out a Patch by appending server image to container Image, then
-	// apply patch directly
-	//
-	// https://github.com/kubernetes/kubectl/blob/master/pkg/cmd/set/set_image.go#L231
-
 	if waypointStatefulSet.Spec.UpdateStrategy.Type == "OnDelete" {
+		s.Update("Deleting pod to refresh image")
 		log.Info("Update Strategy is 'OnDelete', deleting pod to refresh image")
-		// delete pod
+		// TODO: delete pod use pod client
 	} else if waypointStatefulSet.Spec.UpdateStrategy.Type == "RollingUpdate" {
 		log.Info("Update Strategy is 'RollingUpdate', no further action required")
 	} else {
-		log.Warn("Update Strategy is not recognized", "UpdateStrategy",
+		log.Warn("Update Strategy is not recognized, so no action is taken", "UpdateStrategy",
 			waypointStatefulSet.Spec.UpdateStrategy.Type)
 	}
 
@@ -762,7 +766,7 @@ func (i *K8sInstaller) Upgrade(
 	var httpAddr string
 	var grpcAddr string
 
-	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+	err = wait.PollImmediate(2*time.Second, 1*time.Minute, func() (bool, error) {
 		svc, err := clientset.CoreV1().Services(i.config.namespace).Get(
 			ctx, i.config.serviceName, metav1.GetOptions{})
 		if err != nil {
@@ -863,6 +867,7 @@ func (i *K8sInstaller) Upgrade(
 		return nil, err
 	}
 
+	s.Update("Upgrade complete!")
 	s.Done()
 
 	return &InstallResults{
@@ -873,11 +878,95 @@ func (i *K8sInstaller) Upgrade(
 }
 
 func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
+	set.BoolVar(&flag.BoolVar{
+		Name:   "k8s-advertise-internal",
+		Target: &i.config.advertiseInternal,
+		Usage: "Advertise the internal service address rather than the external. " +
+			"This is useful if all your deployments will be able to access the private " +
+			"service address. This will default to false but will be automatically set to " +
+			"true if the external host is detected to be localhost.",
+	})
+
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "k8s-annotate-service",
+		Target: &i.config.serviceAnnotations,
+		Usage:  "Annotations for the Service generated.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-cpu-request",
+		Target:  &i.config.cpuRequest,
+		Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
+		Default: "100m",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-mem-request",
+		Target:  &i.config.memRequest,
+		Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
+		Default: "256Mi",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-namespace",
+		Target:  &i.config.namespace,
+		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
+		Default: "",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-openshift",
+		Target:  &i.config.openshift,
+		Default: false,
+		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-pull-policy",
+		Target:  &i.config.imagePullPolicy,
+		Usage:   "Set the pull policy for the Waypoint server image.",
+		Default: "",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-pull-secret",
+		Target:  &i.config.imagePullSecret,
+		Usage:   "Secret to use to access the Waypoint server image on Kubernetes.",
+		Default: "github",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-secret-file",
+		Target: &i.config.secretFile,
+		Usage:  "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
+	})
+
 	set.StringVar(&flag.StringVar{
 		Name:    "k8s-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: "hashicorp/waypoint:latest",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-server-name",
+		Target:  &i.config.serverName,
+		Usage:   "Name of the Waypoint server for Kubernetes.",
+		Default: "waypoint-server",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-service-name",
+		Target:  &i.config.serviceName,
+		Usage:   "Name of the Kubernetes service for the Waypoint server.",
+		Default: "waypoint",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-storage-request",
+		Target:  &i.config.storageRequest,
+		Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
+		Default: "1Gi",
 	})
 }
 
