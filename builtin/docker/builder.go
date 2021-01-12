@@ -111,8 +111,13 @@ func (b *Builder) Build(
 	log hclog.Logger,
 ) (*Image, error) {
 	sg := ui.StepGroup()
+	defer sg.Wait()
 	step := sg.Add("Initializing Docker client...")
-	defer step.Abort()
+	defer func() {
+		if step != nil {
+			step.Abort()
+		}
+	}()
 
 	result := &Image{
 		Image: fmt.Sprintf("waypoint.local/%s", src.App),
@@ -124,18 +129,6 @@ func (b *Builder) Build(
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
 	cli.NegotiateAPIVersion(ctx)
-
-	log.Debug("testing if we should use a Docker fallback")
-	if fallback, err := wpdockerclient.Fallback(ctx, log, cli); err != nil {
-		log.Warn("error during check if we should use Docker fallback", "err", err)
-		return nil, status.Errorf(codes.Internal,
-			"error validating Docker connection: %s", err)
-	} else if fallback {
-		step.Update("Docker isn't available. Falling back to daemonless image build...")
-		step.Status(terminal.StatusWarn)
-		step.Done()
-		step = sg.Add("Building Docker image with img...")
-	}
 
 	dockerfile := b.config.Dockerfile
 	if dockerfile == "" {
@@ -175,6 +168,25 @@ func (b *Builder) Build(
 
 	if err := build.ValidateContextDirectory(contextDir, excludes); err != nil {
 		return nil, status.Errorf(codes.Internal, "error checking context: %s", err)
+	}
+
+	// We now test if Docker is actually functional. We do this here because we
+	// need all of the above to complete the actual build.
+	log.Debug("testing if we should use a Docker fallback")
+	if fallback, err := wpdockerclient.Fallback(ctx, log, cli); err != nil {
+		log.Warn("error during check if we should use Docker fallback", "err", err)
+		return nil, status.Errorf(codes.Internal,
+			"error validating Docker connection: %s", err)
+	} else if fallback && hasImg() {
+		// If we're falling back and have "img" available, use that. If we
+		// don't have "img" available, we continue to try to use Docker. We'll
+		// fail but that error message should help the user.
+		step.Update("Docker isn't available. Falling back to daemonless image build...")
+		step.Status(terminal.StatusWarn)
+		step.Done()
+		step = nil
+		b.buildWithImg(ctx, ui, sg, relDockerfile, contextDir, result.Name())
+		return result, nil
 	}
 
 	// And canonicalize dockerfile name to a platform-independent one
