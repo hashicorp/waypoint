@@ -15,6 +15,7 @@ import (
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -107,12 +108,8 @@ func (b *Builder) Build(
 	ctx context.Context,
 	ui terminal.UI,
 	src *component.Source,
+	log hclog.Logger,
 ) (*Image, error) {
-	stdout, _, err := ui.OutputWriters()
-	if err != nil {
-		return nil, err
-	}
-
 	sg := ui.StepGroup()
 	step := sg.Add("Initializing Docker client...")
 	defer step.Abort()
@@ -126,8 +123,19 @@ func (b *Builder) Build(
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
-
 	cli.NegotiateAPIVersion(ctx)
+
+	log.Debug("testing if we should use a Docker fallback")
+	if fallback, err := wpdockerclient.Fallback(ctx, log, cli); err != nil {
+		log.Warn("error during check if we should use Docker fallback", "err", err)
+		return nil, status.Errorf(codes.Internal,
+			"error validating Docker connection: %s", err)
+	} else if fallback {
+		step.Update("Docker isn't available. Falling back to daemonless image build...")
+		step.Status(terminal.StatusWarn)
+		step.Done()
+		step = sg.Add("Building Docker image with img...")
+	}
 
 	dockerfile := b.config.Dockerfile
 	if dockerfile == "" {
@@ -190,6 +198,11 @@ func (b *Builder) Build(
 	step.Done()
 	step = sg.Add("Building image...")
 
+	stdout, _, err := ui.OutputWriters()
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := cli.ImageBuild(ctx, buildCtx, types.ImageBuildOptions{
 		Version:    ver,
 		Dockerfile: relDockerfile,
@@ -197,6 +210,7 @@ func (b *Builder) Build(
 		Remove:     true,
 	})
 	if err != nil {
+		log.Warn("failed to initialize docker client", "err", err, "errval", fmt.Sprintf("%#v", err))
 		return nil, status.Errorf(codes.Internal, "error building image: %s", err)
 	}
 	defer resp.Body.Close()
