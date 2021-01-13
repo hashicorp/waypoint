@@ -40,12 +40,25 @@ func (s *service) StartExecStream(
 		Pty:               start.Start.Pty,
 		ClientEventCh:     clientEventCh,
 		EntrypointEventCh: eventCh,
+		InstanceId:        start.Start.TargetInstanceId,
 	}
 
 	// Register the exec session
-	err = s.state.InstanceExecCreateByDeployment(start.Start.DeploymentId, execRec)
-	if err != nil {
-		return err
+	if start.Start.TargetInstanceId != "" {
+		err = s.state.InstanceExecCreateByTargetedInstance(execRec)
+		if err != nil {
+			return err
+		}
+	} else if start.Start.DeploymentId != "" {
+		err = s.state.InstanceExecCreateByDeployment(start.Start.DeploymentId, execRec)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Error("exec request sent neither instance id nor deployment id")
+
+		return status.Errorf(codes.FailedPrecondition,
+			"request sent neither instance id nor deployment id")
 	}
 
 	// Make sure we always deregister it

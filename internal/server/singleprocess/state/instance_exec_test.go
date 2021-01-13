@@ -82,4 +82,19 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 		// Should be able to delete
 		require.NoError(s.InstanceExecDelete(rec.Id))
 	}
+
+	{
+		// Create an instance exec targetting the specific instance
+		rec := &InstanceExec{
+			InstanceId: instance.Id,
+		}
+		require.NoError(s.InstanceExecCreateByTargetedInstance(rec))
+		require.NotEmpty(rec.Id)
+		require.Equal(instance.Id, rec.InstanceId)
+
+		// Test single get
+		found, err := s.InstanceExecById(rec.Id)
+		require.NoError(err)
+		require.Equal(rec, found)
+	}
 }
