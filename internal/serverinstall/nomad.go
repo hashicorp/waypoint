@@ -322,6 +322,8 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
+// Unnstall is a method of NomadInstaller and implements the Installer interface to
+// stop, and optionally purge, the waypoint-server job on a Nomad cluster
 func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	ui := opts.UI
 
