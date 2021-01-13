@@ -471,9 +471,7 @@ func (i *DockerInstaller) Upgrade(
 		return nil, fmt.Errorf("No waypoint server container detected")
 	}
 
-	// TODO: find waypoint server container
-	// Assume there's only one
-
+	// Assume waypoint-server is the first container with the waypoint-type label
 	waypointServerContainer := containers[0]
 
 	s.Update("Checking for Docker image: %s", i.config.serverImage)
