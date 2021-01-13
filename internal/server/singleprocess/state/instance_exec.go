@@ -60,26 +60,27 @@ type InstanceExec struct {
 	Connected         uint32
 }
 
-func (s *State) InstanceExecCreateByTargetedInstance(exec *InstanceExec) error {
+func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceExec) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
 	// If the caller specified an instance id already, then just validate it.
-	if exec.InstanceId == "" {
+	if id == "" {
 		return status.Errorf(codes.NotFound, "No instance id given")
 	}
 
-	raw, err := txn.First(instanceTableName, instanceIdIndexName, exec.InstanceId)
+	raw, err := txn.First(instanceTableName, instanceIdIndexName, id)
 	if err != nil {
 		return err
 	}
 
 	if raw == nil {
-		return status.Errorf(codes.NotFound, "No instance by given id: %s", exec.InstanceId)
+		return status.Errorf(codes.NotFound, "No instance by given id: %s", id)
 	}
 
 	// Set our ID
 	exec.Id = atomic.AddInt64(&instanceExecId, 1)
+	exec.InstanceId = id
 
 	// Insert
 	if err := txn.Insert(instanceExecTableName, exec); err != nil {

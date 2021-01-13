@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-memdb"
+	"github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -88,7 +89,44 @@ func TestInstanceExecCreateByDeploymentId_valid(t *testing.T) {
 		rec := &InstanceExec{
 			InstanceId: instance.Id,
 		}
-		require.NoError(s.InstanceExecCreateByTargetedInstance(rec))
+		require.NoError(s.InstanceExecCreateByTargetedInstance(instance.Id, rec))
+		require.NotEmpty(rec.Id)
+		require.Equal(instance.Id, rec.InstanceId)
+
+		// Test single get
+		found, err := s.InstanceExecById(rec.Id)
+		require.NoError(err)
+		require.Equal(rec, found)
+	}
+}
+
+func TestInstanceExecCreateByDeploymentId_longrunningonly(t *testing.T) {
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	// Create an instance
+	instance := testInstance(t, nil)
+	require.NoError(s.InstanceCreate(instance))
+
+	// Create a ondemand instance
+	od := testInstance(t, nil)
+	od.Id = "A2"
+	od.Type = gen.Instance_ON_DEMAND
+	require.NoError(s.InstanceCreate(od))
+
+	// Create a virtual instance
+	virt := testInstance(t, nil)
+	virt.Id = "A3"
+	virt.Type = gen.Instance_VIRTUAL
+	require.NoError(s.InstanceCreate(virt))
+
+	// We'll create 3 instance exec and make sure they all go to instance only
+	for i := 0; i < 3; i++ {
+		// Create an instance exec
+		rec := &InstanceExec{}
+		require.NoError(s.InstanceExecCreateByDeployment(instance.DeploymentId, rec))
 		require.NotEmpty(rec.Id)
 		require.Equal(instance.Id, rec.InstanceId)
 
