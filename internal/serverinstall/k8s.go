@@ -443,19 +443,6 @@ func (i *K8sInstaller) Upgrade(
 
 	s.Done()
 
-	// TODO(briancain): k8s pod UpdateStrategy
-	// note that by default, a statefulset updatestrategy is RollingUpdate
-
-	// Maybe literally use kubectl to set image. We already do this on install for creating statefulsets
-	//
-	// $ kubectl set image statefulset waypoint-server server=hashicorp/waypoint:latest
-	//
-	// 1. Determine pods configured UpdateStrategy DONE
-	// 2. Set image on pod to i.config.serverImage DONE
-	// 3a. If RollingUpdate, then do nothing
-	// 3b. If OnDelete, delete pod
-	// 4. Watch for pod as it gets recreated
-
 	statefulSetClient := clientset.AppsV1().StatefulSets(i.config.namespace)
 	waypointStatefulSet, err := statefulSetClient.Get(ctx, "waypoint-server", metav1.GetOptions{})
 	if err != nil {
@@ -485,7 +472,29 @@ func (i *K8sInstaller) Upgrade(
 	if waypointStatefulSet.Spec.UpdateStrategy.Type == "OnDelete" {
 		s.Update("Deleting pod to refresh image")
 		log.Info("Update Strategy is 'OnDelete', deleting pod to refresh image")
-		// TODO: delete pod use pod client
+
+		podClient := clientset.CoreV1().Pods(i.config.namespace)
+		if podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: "app=waypoint-server"}); err != nil {
+			ui.Output(
+				"Error listing pods: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return nil, err
+		} else {
+			for _, pod := range podList.Items {
+				if err := podClient.Delete(ctx, pod.Name, metav1.DeleteOptions{}); err != nil {
+					s.Update("Pod deletion failed", terminal.WithErrorStyle)
+					s.Done()
+					ui.Output(
+						"Error deleting pod %q: %s", pod.Name, clierrors.Humanize(err),
+						terminal.WithErrorStyle(),
+					)
+					return nil, err
+				}
+			}
+		}
+
+		log.Info("Pod(s) deleted, k8s will now restart waypoint-server with updated image")
 	} else if waypointStatefulSet.Spec.UpdateStrategy.Type == "RollingUpdate" {
 		log.Info("Update Strategy is 'RollingUpdate', no further action required")
 	} else {
@@ -493,7 +502,7 @@ func (i *K8sInstaller) Upgrade(
 			waypointStatefulSet.Spec.UpdateStrategy.Type)
 	}
 
-	s.Update("Image refreshed!")
+	s.Update("Image set to update!")
 	s.Done()
 
 	s = sg.Add("Waiting for server to be ready...")
