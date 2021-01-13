@@ -82,3 +82,7 @@ var Platforms = map[string]Installer{
 	"nomad":      &NomadInstaller{},
 	"docker":     &DockerInstaller{},
 }
+
+const (
+	serverName  = "waypoint-server"
+)
