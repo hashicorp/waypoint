@@ -32,6 +32,10 @@ type Client struct {
 	Stdin         io.Reader
 	Stdout        io.Writer
 	Stderr        io.Writer
+
+	// If set, will cause the server to connect to this specific
+	// instance.
+	InstanceId string
 }
 
 func (c *Client) Run() (int, error) {
@@ -89,6 +93,10 @@ func (c *Client) Run() (int, error) {
 				DeploymentId: c.DeploymentId,
 				Args:         c.Args,
 				Pty:          ptyReq,
+
+				// We don't need to validate this because if it's empty,
+				// the remote side will ignore it.
+				TargetInstanceId: c.InstanceId,
 			},
 		},
 	}); err != nil {
