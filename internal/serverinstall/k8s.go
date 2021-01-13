@@ -616,6 +616,10 @@ func (i *K8sInstaller) Upgrade(
 		return nil, err
 	}
 
+	if waypointStatefulSet.Spec.UpdateStrategy.Type == "RollingUpdate" {
+		ui.Output("\nKuberntes will automatically upgrade waypoint-server image with\n" +
+			"its 'RollingUpdate' strategy. This means the pod might not be updated immediately.\n")
+	}
 	s.Update("Upgrade complete!")
 	s.Done()
 
