@@ -304,25 +304,29 @@ func (i *DockerInstaller) Uninstall(
 	s.Done()
 	s = sg.Add("")
 
-	volumeExists, err := volumeExists(ctx, cli)
+	s.Update("Removing Waypoint Docker volume...")
+	// Find volume of the server
+	vl, err := cli.VolumeList(ctx, filters.NewArgs(filters.KeyValuePair{
+		Key:   "name",
+		Value: serverName,
+	}))
 	if err != nil {
 		return err
 	}
+	volumeExists := len(vl.Volumes) > 0
 
-	s.Update("Removing Waypoint Docker volume...")
-	// If the Waypoint Docker volume does not exist, return
+	// If the Waypoint Docker volume does not exist, we keep going and just warn
 	if !volumeExists {
 		s.Update("Couldn't find Waypoint Docker volume %q; not removing", serverName)
 		s.Status(terminal.StatusWarn)
 		s.Done()
-		return nil
+	} else {
+		if err := cli.VolumeRemove(ctx, serverName, true); err != nil {
+			return err
+		}
+		s.Update("Docker volume %q removed", serverName)
+		s.Done()
 	}
-
-	if err := cli.VolumeRemove(ctx, serverName, true); err != nil {
-		return err
-	}
-	s.Update("Docker volume %q removed", serverName)
-	s.Done()
 
 	s = sg.Add("")
 
@@ -350,8 +354,9 @@ func (i *DockerInstaller) Uninstall(
 	// Pick the first image, as there should be only one.
 	imageId := imageList[0].ID
 	_, err = cli.ImageRemove(ctx, imageId, types.ImageRemoveOptions{})
+	// If we can't remove the image, we keep going and just warn
 	if err != nil {
-		s.Update("Could not find image %q, not removing", imageRef.Name())
+		s.Update("Could not remove image %q: %s", imageRef.Name(), err)
 		s.Status(terminal.StatusWarn)
 		s.Done()
 		return nil
@@ -364,20 +369,4 @@ func (i *DockerInstaller) Uninstall(
 }
 
 func (i *DockerInstaller) UninstallFlags(set *flag.Set) {
-}
-
-// volumeExists determines whether the Waypoint Docker volume exists.
-func volumeExists(ctx context.Context, cli *client.Client) (bool, error) {
-	listBody, err := cli.VolumeList(ctx, filters.NewArgs(filters.KeyValuePair{
-		Key:   "name",
-		Value: serverName,
-	}))
-
-	if err != nil {
-		return false, err
-	}
-
-	exists := len(listBody.Volumes) > 0
-
-	return exists, nil
 }

@@ -44,12 +44,10 @@ func (c *UninstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	var err error
-
 	sg := c.ui.StepGroup()
 	defer sg.Wait()
 
-	// Pre-install work
+	// Pre-uninstall work
 	// - name the context we'll be uninstalling
 	// - generate a snapshot of the current install
 	s := sg.Add("")
@@ -67,8 +65,11 @@ func (c *UninstallCommand) Run(args []string) int {
 	s = sg.Add("")
 	if !c.skipSnapshot {
 		s.Update("Generating server snapshot...")
-		defer s.Abort()
 		w, err := os.Create(c.snapshotFilename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating snapshot file: %s", err)
+			return 1
+		}
 		if err = clisnapshot.WriteSnapshot(ctx, c.project.Client(), w); err != nil {
 			fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
 			return 1
@@ -134,11 +135,16 @@ func (c *UninstallCommand) Synopsis() string {
 func (c *UninstallCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint server uninstall [options]
-	Uninstall the Waypoint server.
+	Uninstall the Waypoint server. The platform should be
+	specified as kubernetes, nomad, or docker. '-auto-approve'
+	is required.
 
-	This command does not destroy Waypoint resources,
-	such as deployments and releases. Clear your workspaces
-	prior to uninstall to prevent hanging resources.
+  By default, this command deletes the default server's
+  context.
+
+  This command does not destroy Waypoint resources,
+  such as deployments and releases. Clear all workspaces
+  prior to uninstall to prevent hanging resources.
 
 ` + c.Flags().Help())
 }
@@ -150,14 +156,15 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 			Name:    "auto-approve",
 			Target:  &c.autoApprove,
 			Default: false,
-			Usage:   "Auto-approve server uninstallation.",
+			Usage:   "Auto-approve server uninstallation. Default is false.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:    "delete-context",
 			Target:  &c.deleteContext,
 			Default: true,
-			Usage:   "Delete the context for the server once it's uninstalled.",
+			Usage: "Delete the context for the server once it's uninstalled. " +
+				"Default is true.",
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -178,7 +185,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 			Name:    "skip-snapshot",
 			Target:  &c.skipSnapshot,
 			Default: false,
-			Usage:   "Skip creating a snapshot of the Waypoint server.",
+			Usage:   "Skip creating a snapshot of the Waypoint server. Default is false.",
 		})
 
 		for name, platform := range serverinstall.Platforms {

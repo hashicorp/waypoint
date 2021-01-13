@@ -32,5 +32,5 @@ var Platforms = map[string]Installer{
 }
 
 const (
-	serverName  = "waypoint-server"
+	serverName = "waypoint-server"
 )

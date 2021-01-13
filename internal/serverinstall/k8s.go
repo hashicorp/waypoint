@@ -113,7 +113,6 @@ func (i *K8sInstaller) Install(
 		s.Status(terminal.StatusWarn)
 		s.Done()
 		s = sg.Add("")
-		defer s.Abort()
 	}
 
 	if i.config.secretFile != "" {
@@ -171,7 +170,6 @@ func (i *K8sInstaller) Install(
 
 		s.Done()
 		s = sg.Add("")
-		defer s.Abort()
 	}
 
 	// Do some probing to see if this is OpenShift. If so, we'll switch the config for the user.
@@ -209,7 +207,6 @@ func (i *K8sInstaller) Install(
 		return nil, nil, "", err
 	}
 
-	defer s.Abort()
 	s.Update("Creating Kubernetes resources...")
 
 	serviceClient := clientset.CoreV1().Services(i.config.namespace)
@@ -232,7 +229,6 @@ func (i *K8sInstaller) Install(
 
 	s.Done()
 	s = sg.Add("Waiting for Kubernetes StatefulSet to be ready...")
-	defer s.Abort()
 	log.Info("waiting for server statefulset to become ready")
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 		ss, err := clientset.AppsV1().StatefulSets(i.config.namespace).Get(
@@ -259,7 +255,6 @@ func (i *K8sInstaller) Install(
 	s.Done()
 
 	s = sg.Add("Waiting for Kubernetes service to become ready..")
-	defer s.Abort()
 
 	// Wait for our service to be ready
 	log.Info("waiting for server service to become ready")
@@ -406,7 +401,6 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 			Namespace: c.namespace,
 			Labels: map[string]string{
 				"app": serverName,
-
 			},
 		},
 		Spec: appsv1.StatefulSetSpec{
@@ -633,10 +627,9 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 		&clientcmd.ConfigOverrides{},
 	)
 
-	// Discover the current target namespace in the user's config so that we target
-	// the current active kubectl target for the waypoint uninstall. Since we
-	// target the default naemspace for Install, we shouldn't target it for
-	// Uninstall either
+	// Discover the current target namespace in the user's config so that we use
+	// the active kubectl target for the waypoint uninstall, mirroring what
+	// we do in Install.
 	if i.config.namespace == "" {
 		namespace, _, err := newCmdConfig.Namespace()
 		if err != nil {
@@ -668,8 +661,6 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 		return err
 	}
 
-	// delete statefulset and pods
-	// TOOD - DeleteCollection or no?
 	s.Update("Deleting statefulset and pods...")
 
 	// create our wait channel to later poll for statefulset+pod deletion
@@ -680,7 +671,7 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 		},
 	)
 
-	// send DELETE to statefulset and pods, including any waypoint deployments
+	// send DELETE to statefulset collection
 	if err = clientset.AppsV1().StatefulSets(i.config.namespace).DeleteCollection(
 		ctx,
 		metav1.DeleteOptions{},
