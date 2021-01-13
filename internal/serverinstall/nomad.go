@@ -94,7 +94,6 @@ func (i *NomadInstaller) Install(
 		if len(allocs) == 0 || len(activeAllocs) == 0 {
 			return nil, fmt.Errorf("waypoint-server job found but no running allocations available")
 		}
-
 		serverAddr, err := getAddrFromAllocID(allocs[0].ID, client)
 		if err != nil {
 			return nil, nil, "", err
@@ -340,7 +339,7 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 
 	s.Update("Checking for existing Waypoint server...")
 
-	// Check if waypoint-server has already been deployed
+	// Find waypoint-server job
 	jobs, _, err := client.Jobs().PrefixList(serverName)
 	if err != nil {
 		return err
@@ -352,10 +351,10 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 			break
 		}
 	}
-
 	if !serverDetected {
 		return fmt.Errorf("No job with server name %q found; cannot uninstall", serverName)
 	}
+
 	s.Update("Removing Waypoint server from Nomad...")
 
 	_, _, err = client.Jobs().Deregister(serverName, i.config.serverPurge, &api.WriteOptions{})
