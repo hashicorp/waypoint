@@ -15,6 +15,7 @@ import (
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -120,8 +121,9 @@ func (b *Builder) Build(
 	}()
 
 	result := &Image{
-		Image: fmt.Sprintf("waypoint.local/%s", src.App),
-		Tag:   "latest",
+		Image:    fmt.Sprintf("waypoint.local/%s", src.App),
+		Tag:      "latest",
+		Location: &Image_Docker{Docker: &empty.Empty{}},
 	}
 
 	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
@@ -181,6 +183,10 @@ func (b *Builder) Build(
 		); err != nil {
 			return nil, err
 		}
+
+		// Our image is in the img registry now. We set this so that
+		// future users of this result type know where to look.
+		result.Location = &Image_Img{Img: &empty.Empty{}}
 
 		// We set this to true so we use the img-based injector later
 		useImg = true
