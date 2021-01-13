@@ -77,6 +77,13 @@ func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) e
 	for raw := iter.Next(); raw != nil; raw = iter.Next() {
 		rec := raw.(*Instance)
 
+		// When looking through all the instances for an exec capable instance
+		// we only consider LONG_RUNNING type instances. These are the only ones
+		// that it makes sense to send random exec sessions to.
+		if rec.Type != pb.Instance_LONG_RUNNING {
+			continue
+		}
+
 		execs, err := s.instanceExecListByInstanceId(txn, rec.Id, nil)
 		if err != nil {
 			return err
