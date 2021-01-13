@@ -64,6 +64,12 @@ func (r *Registry) pushWithImg(
 	}
 
 	step.Done()
+
+	// If we're a local image, then we don't want to push, just tag.
+	if r.config.Local {
+		return nil
+	}
+
 	step = sg.Add("Pushing image...")
 
 	// Push the image
