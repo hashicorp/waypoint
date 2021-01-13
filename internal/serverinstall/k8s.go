@@ -453,9 +453,9 @@ func (i *K8sInstaller) Upgrade(
 		return nil, err
 	}
 
-	s = sg.Add("Upgrading server to %q", i.config.serverImage) // TODO include version from and to
-	// Update waypoint-server pod image to requested i.config.serverImage
+	s = sg.Add("Upgrading server to %q", i.config.serverImage)
 
+	// Update pod image to requested serverImage
 	cmd := exec.Command("kubectl", "set", "image", "statefulset", "waypoint-server", fmt.Sprintf("server=%s", i.config.serverImage))
 	cmd.Stdout = s.TermOutput()
 	cmd.Stderr = cmd.Stdout
