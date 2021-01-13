@@ -29,6 +29,7 @@ func (r *Registry) pushWithImg(
 	target *Image,
 ) error {
 	sg := ui.StepGroup()
+	defer sg.Wait()
 	var step terminal.Step
 	defer func() {
 		if step != nil {

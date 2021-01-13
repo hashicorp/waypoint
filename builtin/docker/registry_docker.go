@@ -34,6 +34,7 @@ func (r *Registry) pushWithDocker(
 	}
 
 	sg := ui.StepGroup()
+	defer sg.Wait()
 	step := sg.Add("Initializing Docker client...")
 	defer func() { step.Abort() }()
 
