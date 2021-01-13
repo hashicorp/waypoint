@@ -275,11 +275,6 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	return 0
 }
 
-func (c *ServerUpgradeCommand) validateContext() bool {
-	// TODO
-	return true
-}
-
 func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
