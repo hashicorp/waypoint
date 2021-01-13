@@ -212,7 +212,6 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		UI:  c.ui,
 	}, originalCfg.Server)
 	if err != nil {
-		// TODO(briancain): Add a bunch of help text on how to restore backup
 		c.ui.Output(
 			"Error upgrading server on %s: %s", c.platform, clierrors.Humanize(err),
 			terminal.WithErrorStyle())
