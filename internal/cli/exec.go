@@ -20,67 +20,71 @@ type ExecCommand struct {
 	flagInstanceId string
 }
 
-func (c *ExecCommand) targeted(args []string) int {
-	var exitCode int
-
-	client := c.project.Client()
-
-	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		// We validate the users instance id first, since they're easy to mistype
-		// and we can give them quicker and better feedback by doing this up front.
-
-		resp, err := client.ListInstances(ctx, &pb.ListInstancesRequest{
-			Scope: &pb.ListInstancesRequest_Application_{
-				Application: &pb.ListInstancesRequest_Application{
-					Application: app.Ref(),
-				},
+func (c *ExecCommand) targeted(
+	ctx context.Context,
+	app *clientpkg.App,
+	client pb.WaypointClient,
+	ec *execclient.Client,
+) error {
+	resp, err := client.ListInstances(ctx, &pb.ListInstancesRequest{
+		Scope: &pb.ListInstancesRequest_Application_{
+			Application: &pb.ListInstancesRequest_Application{
+				Application: app.Ref(),
 			},
-		})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
-		var found bool
-		for _, i := range resp.Instances {
-			if i.Id == c.flagInstanceId {
-				found = true
-			}
-		}
-
-		if !found {
-			app.UI.Output("Unable to find instance: %s", c.flagInstanceId, terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
-		// Ok, the instance id is fine, let's go ahead and have execclient do it's thing.
-
-		client := &execclient.Client{
-			Logger:     c.Log,
-			UI:         c.ui,
-			Context:    ctx,
-			Client:     client,
-			InstanceId: c.flagInstanceId,
-			Args:       args,
-			Stdin:      os.Stdin,
-			Stdout:     os.Stdout,
-			Stderr:     os.Stderr,
-		}
-
-		exitCode, err = client.Run()
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
-		return nil
+		},
 	})
-
 	if err != nil {
-		return 1
+		app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return ErrSentinel
 	}
 
-	return exitCode
+	var found bool
+	for _, i := range resp.Instances {
+		if i.Id == c.flagInstanceId {
+			found = true
+		}
+	}
+
+	if !found {
+		app.UI.Output("Unable to find instance: %s", c.flagInstanceId, terminal.WithErrorStyle())
+		return ErrSentinel
+	}
+
+	// Ok, the instance id is fine, let's go ahead and have execclient do it's thing.
+	ec.InstanceId = c.flagInstanceId
+
+	return nil
+}
+
+func (c *ExecCommand) searchDeployments(
+	ctx context.Context,
+	app *clientpkg.App,
+	client pb.WaypointClient,
+	ec *execclient.Client,
+) error {
+	// Get the latest deployment
+	resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+		Application: app.Ref(),
+		Order: &pb.OperationOrder{
+			Limit: 1,
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Desc:  true,
+		},
+		PhysicalState: pb.Operation_CREATED,
+	})
+	if err != nil {
+		app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return ErrSentinel
+	}
+	if len(resp.Deployments) == 0 {
+		app.UI.Output("No successful deployments found.", terminal.WithErrorStyle())
+		return ErrSentinel
+	}
+
+	ec.DeploymentId = resp.Deployments[0].Id
+	ec.DeploymentSeq = resp.Deployments[0].Sequence
+
+	return nil
 }
 
 func (c *ExecCommand) Run(args []string) int {
@@ -97,46 +101,32 @@ func (c *ExecCommand) Run(args []string) int {
 
 	args = flagSet.Args()
 
-	if c.flagInstanceId != "" {
-		return c.targeted(args)
-	}
-
 	var exitCode int
 	client := c.project.Client()
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		// Get the latest deployment
-		resp, err := client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-			Application: app.Ref(),
-			Order: &pb.OperationOrder{
-				Limit: 1,
-				Order: pb.OperationOrder_COMPLETE_TIME,
-				Desc:  true,
-			},
-			PhysicalState: pb.Operation_CREATED,
-		})
+		ec := &execclient.Client{
+			Logger:  c.Log,
+			UI:      c.ui,
+			Context: ctx,
+			Client:  client,
+			Args:    args,
+			Stdin:   os.Stdin,
+			Stdout:  os.Stdout,
+			Stderr:  os.Stderr,
+		}
+
+		var err error
+
+		if c.flagInstanceId != "" {
+			err = c.targeted(ctx, app, client, ec)
+		} else {
+			err = c.searchDeployments(ctx, app, client, ec)
+		}
 		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-		if len(resp.Deployments) == 0 {
-			app.UI.Output("No successful deployments found.", terminal.WithErrorStyle())
-			return ErrSentinel
+			return err
 		}
 
-		client := &execclient.Client{
-			Logger:        c.Log,
-			UI:            c.ui,
-			Context:       ctx,
-			Client:        client,
-			DeploymentId:  resp.Deployments[0].Id,
-			DeploymentSeq: resp.Deployments[0].Sequence,
-			Args:          args,
-			Stdin:         os.Stdin,
-			Stdout:        os.Stdout,
-			Stderr:        os.Stderr,
-		}
-
-		exitCode, err = client.Run()
+		exitCode, err = ec.Run()
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
