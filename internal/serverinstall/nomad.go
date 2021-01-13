@@ -290,7 +290,6 @@ func (i *NomadInstaller) Upgrade(
 		httpAddr = serverAddr
 	}
 
-	// TODO get curent iamge
 	s = sg.Add("Upgrading Waypoint server on Nomad to %q", i.config.serverImage)
 	job := waypointNomadJob(i.config)
 	jobOpts := &api.RegisterOptions{
