@@ -337,10 +337,10 @@ func (c *ServerUpgradeCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint server upgrade [options]
 
-	Upgrade Waypoint server in the current context to the latest version. This
-	command will first take a snapshot of the running server, uninstall it, then
-	install the new version using the restored snapshot. By default, Waypoint
-	will upgrade to server version "hashicorp/waypoint:latest".
+	Upgrade Waypoint server in the current context to the latest version or the
+	server image version specified. By default, Waypoint will upgrade to server
+	version "hashicorp/waypoint:latest". Before upgrading, a snapshot of the
+	servers database will be taken in case of any upgrade failures.
 
 ` + c.Flags().Help())
 }
