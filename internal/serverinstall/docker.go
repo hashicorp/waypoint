@@ -37,7 +37,6 @@ var (
 	containerLabel = "waypoint-type=server"
 	containerKey   = "waypoint-type"
 	containerValue = "server"
-	containerName  = "waypoint-server"
 )
 
 // Install is a method of DockerInstaller and implements the Installer interface to
@@ -82,7 +81,7 @@ func (i *DockerInstaller) Install(
 		TlsSkipVerify: true,
 	}
 
-	addr.Addr = containerName + ":" + grpcPort
+	addr.Addr = serverName + ":" + grpcPort
 	addr.Tls = true
 	addr.TlsSkipVerify = true
 
@@ -203,7 +202,7 @@ func (i *DockerInstaller) Install(
 		},
 	}
 	hostconfig := container.HostConfig{
-		Binds:        []string{containerName + ":/data"},
+		Binds:        []string{serverName + ":/data"},
 		PortBindings: bindings,
 	}
 
@@ -217,7 +216,7 @@ func (i *DockerInstaller) Install(
 		containerKey: containerValue,
 	}
 
-	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, containerName)
+	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, serverName)
 	if err != nil {
 		return nil, nil, "", err
 	}
@@ -254,7 +253,7 @@ func (i *DockerInstaller) Uninstall(
 	sg := opts.UI.StepGroup()
 	defer sg.Wait()
 
-	// bulk of this copied from PR#660
+	// used base functionality from PR#660
 	s := sg.Add("Initializing Docker client...")
 	defer s.Abort()
 
@@ -263,10 +262,7 @@ func (i *DockerInstaller) Uninstall(
 		return err
 	}
 
-	// TODO do we need this?
-	// defer func() {
-	// 	_ = cli.Close()
-	// }()
+	defer func() { _ = cli.Close() }()
 
 	cli.NegotiateAPIVersion(ctx)
 
@@ -287,6 +283,7 @@ func (i *DockerInstaller) Uninstall(
 
 	// Pick the first container, as there should be only one.
 	containerId := containers[0].ID
+	image := containers[0].Image
 
 	s.Update("Stopping Waypoint Docker container...")
 
@@ -303,7 +300,7 @@ func (i *DockerInstaller) Uninstall(
 	if err := cli.ContainerRemove(ctx, containerId, removeOptions); err != nil {
 		return err
 	}
-	s.Update("Docker container %q removed", containerName)
+	s.Update("Docker container %q removed", serverName)
 	s.Done()
 	s = sg.Add("")
 
@@ -315,21 +312,21 @@ func (i *DockerInstaller) Uninstall(
 	s.Update("Removing Waypoint Docker volume...")
 	// If the Waypoint Docker volume does not exist, return
 	if !volumeExists {
-		s.Update("Couldn't find Waypoint Docker volume %q; not removing", containerName)
+		s.Update("Couldn't find Waypoint Docker volume %q; not removing", serverName)
 		s.Status(terminal.StatusWarn)
 		s.Done()
 		return nil
 	}
 
-	if err := cli.VolumeRemove(ctx, containerName, true); err != nil {
+	if err := cli.VolumeRemove(ctx, serverName, true); err != nil {
 		return err
 	}
-	s.Update("Docker volume %q removed", containerName)
+	s.Update("Docker volume %q removed", serverName)
 	s.Done()
 
 	s = sg.Add("")
 
-	imageRef, err := reference.ParseNormalizedNamed(i.config.serverImage)
+	imageRef, err := reference.ParseNormalizedNamed(image)
 	if err != nil {
 		return fmt.Errorf("Error parsing Docker image: %s", err)
 	}
@@ -367,19 +364,13 @@ func (i *DockerInstaller) Uninstall(
 }
 
 func (i *DockerInstaller) UninstallFlags(set *flag.Set) {
-	set.StringVar(&flag.StringVar{
-		Name:    "docker-server-image",
-		Target:  &i.config.serverImage,
-		Usage:   "Docker image for the Waypoint server.",
-		Default: "hashicorp/waypoint:latest",
-	})
 }
 
 // volumeExists determines whether the Waypoint Docker volume exists.
 func volumeExists(ctx context.Context, cli *client.Client) (bool, error) {
 	listBody, err := cli.VolumeList(ctx, filters.NewArgs(filters.KeyValuePair{
 		Key:   "name",
-		Value: containerName,
+		Value: serverName,
 	}))
 
 	if err != nil {

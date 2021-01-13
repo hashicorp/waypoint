@@ -30,10 +30,6 @@ type nomadConfig struct {
 	serverPurge bool `hcl:"serverPurge,optional"`
 }
 
-const (
-	serverName = "waypoint-server"
-)
-
 // Install is a method of NomadInstaller and implements the Installer interface to
 // register a waypoint-server job with a Nomad cluster
 func (i *NomadInstaller) Install(
@@ -328,7 +324,6 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 }
 
 func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	// TODO
 	ui := opts.UI
 
 	sg := ui.StepGroup()
@@ -392,28 +387,6 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 }
 
 func (i *NomadInstaller) UninstallFlags(set *flag.Set) {
-	// TOOD: save all this info on Install
-	set.StringVar(&flag.StringVar{
-		Name:    "nomad-namespace",
-		Target:  &i.config.namespace,
-		Default: "default",
-		Usage:   "Namespace to uninstall the Waypoint server from for Nomad.",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "nomad-region",
-		Target:  &i.config.region,
-		Default: "global",
-		Usage:   "Region to install to for Nomad.",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "nomad-server-image",
-		Target:  &i.config.serverImage,
-		Usage:   "Docker image for the Waypoint server.",
-		Default: "hashicorp/waypoint:latest",
-	})
-
 	set.BoolVar(&flag.BoolVar{
 		Name:   "nomad-purge",
 		Target: &i.config.serverPurge,
