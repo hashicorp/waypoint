@@ -27,8 +27,6 @@ func (s *service) StartExecStream(
 		return status.Errorf(codes.FailedPrecondition,
 			"first message must be start type")
 	}
-	log = log.With("deployment_id", start.Start.DeploymentId)
-	log.Debug("exec requested", "args", start.Start.Args)
 
 	// Create our exec. We have to populate everything here first because
 	// once we register, this will trigger any watchers to be notified of
@@ -40,26 +38,30 @@ func (s *service) StartExecStream(
 		Pty:               start.Start.Pty,
 		ClientEventCh:     clientEventCh,
 		EntrypointEventCh: eventCh,
-		InstanceId:        start.Start.TargetInstanceId,
 	}
 
 	// Register the exec session
-	if start.Start.TargetInstanceId != "" {
-		err = s.state.InstanceExecCreateByTargetedInstance(execRec)
+	switch t := start.Start.Target.(type) {
+	case *pb.ExecStreamRequest_Start_InstanceId:
+		log = log.With("instance_id", t.InstanceId)
+		err = s.state.InstanceExecCreateByTargetedInstance(t.InstanceId, execRec)
 		if err != nil {
 			return err
 		}
-	} else if start.Start.DeploymentId != "" {
-		err = s.state.InstanceExecCreateByDeployment(start.Start.DeploymentId, execRec)
+	case *pb.ExecStreamRequest_Start_DeploymentId:
+		log = log.With("deployment_id", t.DeploymentId)
+		err = s.state.InstanceExecCreateByDeployment(t.DeploymentId, execRec)
 		if err != nil {
 			return err
 		}
-	} else {
+	default:
 		log.Error("exec request sent neither instance id nor deployment id")
 
 		return status.Errorf(codes.FailedPrecondition,
 			"request sent neither instance id nor deployment id")
 	}
+
+	log.Debug("exec requested", "args", start.Start.Args)
 
 	// Make sure we always deregister it
 	defer s.state.InstanceExecDelete(execRec.Id)

@@ -1990,20 +1990,22 @@ message ExecStreamRequest {
   }
 
   message Start {
-    // Deployment to exec into
-    string deployment_id = 1;
+    oneof target {
+      // Deployment to exec into
+      string deployment_id = 1;
+
+      // Instance to send the exec request to. This is indicates that
+      // the client wants an exec session to this specific instance,
+      // rather than one the server picks. Targetted instances can be
+      // any instance type, where as untargeted have to be LONG_RUNNING.
+      string instance_id = 4;
+    }
 
     // Args including the command at args[0] to execute.
     repeated string args = 2;
 
     // Pty is set if we should allocate a PTY for this exec stream.
     PTY pty = 3;
-
-    // Instance to send the exec request to. This is indicates that
-    // the client wants an exec session to this specific instance,
-    // rather than one the server picks. Targetted instances can be
-    // any instance type, where as untargeted have to be LONG_RUNNING.
-    string target_instance_id = 4;
   }
 
   message Input {

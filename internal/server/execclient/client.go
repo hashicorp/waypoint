@@ -93,18 +93,25 @@ func (c *Client) Run() (int, error) {
 		status.Update("Initializing session...")
 	}
 
+	start := &pb.ExecStreamRequest_Start{
+		Args: c.Args,
+		Pty:  ptyReq,
+	}
+
+	if c.InstanceId != "" {
+		start.Target = &pb.ExecStreamRequest_Start_InstanceId{
+			InstanceId: c.InstanceId,
+		}
+	} else {
+		start.Target = &pb.ExecStreamRequest_Start_DeploymentId{
+			DeploymentId: c.DeploymentId,
+		}
+	}
+
 	// Send the start event
 	if err := client.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
-			Start: &pb.ExecStreamRequest_Start{
-				DeploymentId: c.DeploymentId,
-				Args:         c.Args,
-				Pty:          ptyReq,
-
-				// We don't need to validate this because if it's empty,
-				// the remote side will ignore it.
-				TargetInstanceId: c.InstanceId,
-			},
+			Start: start,
 		},
 	}); err != nil {
 		return 0, err
