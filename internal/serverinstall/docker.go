@@ -536,8 +536,6 @@ func (i *DockerInstaller) Upgrade(
 		return nil, err
 	}
 
-	// start new container
-	// TODO(briancain): Anyway to grab this existing info from waypointServerContainer??
 	npGRPC, err := nat.NewPort("tcp", grpcPort)
 	if err != nil {
 		return nil, err
