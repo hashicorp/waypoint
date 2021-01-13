@@ -621,6 +621,9 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
+// Uninstall is a method of K8sInstaller and implements the Installer interface to
+// remove a waypoint-server statefulset and the associated PVC and service from
+// a Kubernetes cluster
 func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	ui := opts.UI
 	log := opts.Log

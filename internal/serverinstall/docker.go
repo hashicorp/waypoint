@@ -325,6 +325,8 @@ func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
+// Install is a method of DockerInstaller and implements the Installer interface to
+// remove the waypoint-server Docker container and associated image and volume
 func (i *DockerInstaller) Uninstall(
 	ctx context.Context,
 	opts *InstallOpts,
