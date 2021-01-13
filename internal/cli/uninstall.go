@@ -60,19 +60,14 @@ func (c *UninstallCommand) Run(args []string) int {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
-	s.Update("Default Waypoint server detected as context %q", contextDefault)
-	s.Status(terminal.StatusWarn)
-	s.Done()
-	s = sg.Add("")
-	s.Update("Uninstalling Waypoint server using context %q...", contextDefault)
+	s.Update("Uninstalling Waypoint server with context %q", contextDefault)
 	s.Done()
 
-	s = sg.Add("")
 	// Generate a snapshot
+	s = sg.Add("")
 	if !c.skipSnapshot {
 		s.Update("Generating server snapshot...")
 		defer s.Abort()
-		// generate snapshot
 		w, err := os.Create(c.snapshotFilename)
 		if err = clisnapshot.WriteSnapshot(ctx, c.project.Client(), w); err != nil {
 			fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
@@ -84,9 +79,6 @@ func (c *UninstallCommand) Run(args []string) int {
 		s.Status(terminal.StatusWarn)
 	}
 	s.Done()
-
-	// TODO: should we check if any deployments are running, and exit with
-	// a warning to run `waypoint destroy` before proceeding?
 
 	// Uninstall
 	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
@@ -164,7 +156,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:    "delete-context",
 			Target:  &c.deleteContext,
-			Default: false,
+			Default: true,
 			Usage:   "Delete the context for the server once it's uninstalled.",
 		})
 
