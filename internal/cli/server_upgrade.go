@@ -351,7 +351,6 @@ var (
 Upgrading Waypoint server requires confirmation.
 Rerun the command with '-auto-approve' to continue with the upgrade.
 `)
-
 	upgradeFailHelp = strings.TrimSpace(`
 Upgrading Waypoint server has failed. To restore from a snapshot, use the command:
 
@@ -363,7 +362,6 @@ More information can be found by runninng 'waypoint server restore -help' or
 following the server maintenence guide for backups and restores:
 https://www.waypointproject.io/docs/server/run/maintenance#backup-restore
 `)
-
 	addrSuccess = strings.TrimSpace(`
 Advertise Address: %[1]s
    Web UI Address: %[2]s
