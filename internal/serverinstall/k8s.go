@@ -508,7 +508,7 @@ func (i *K8sInstaller) Upgrade(
 
 	err = wait.PollImmediate(2*time.Second, 1*time.Minute, func() (bool, error) {
 		svc, err := clientset.CoreV1().Services(i.config.namespace).Get(
-			ctx, i.config.serviceName, metav1.GetOptions{})
+			ctx, "waypoint", metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -531,7 +531,7 @@ func (i *K8sInstaller) Upgrade(
 		}
 
 		endpoints, err := clientset.CoreV1().Endpoints(i.config.namespace).Get(
-			ctx, i.config.serviceName, metav1.GetOptions{})
+			ctx, "waypoint", metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -587,7 +587,7 @@ func (i *K8sInstaller) Upgrade(
 		// since pods can't reach this.
 		if i.config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
-				i.config.serviceName,
+				"waypoint",
 				grpcPort,
 			)
 		}
