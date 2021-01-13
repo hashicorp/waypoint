@@ -157,9 +157,11 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	s.Update("Context %q validated and connected successfully.", ctxName)
 	s.Done()
 
+	s = sg.Add("Starting server snapshots")
+
 	// Snapshot server before upgrade
 	if !c.skipSnapshot {
-		s = sg.Add("Taking server snapshot before upgrading")
+		s.Update("Taking server snapshot before upgrading")
 
 		snapshotName := fmt.Sprintf("%s-%d", defaultSnapshotName, time.Now().Unix())
 		if c.snapshotName != "" {
@@ -193,7 +195,10 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		s.Update("Snapshot of server written to: '%s'", snapshotName)
 		s.Done()
 	} else {
-		log.Info("Server snapshot disabled on request from user, skipping")
+		s.Update("Server snapshot disabled on request, this means no snapshot will be taken before upgrades")
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		log.Warn("Server snapshot disabled on request from user, skipping")
 	}
 
 	c.ui.Output("Waypoint server will now upgrade from version %q",
@@ -211,6 +216,8 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		c.ui.Output(
 			"Error upgrading server on %s: %s", c.platform, clierrors.Humanize(err),
 			terminal.WithErrorStyle())
+
+		c.ui.Output(upgradeFailHelp)
 
 		return 1
 	}
@@ -343,6 +350,18 @@ var (
 	confirmReqMsg       = strings.TrimSpace(`
 Upgrading Waypoint server requires confirmation.
 Rerun the command with '-auto-approve' to continue with the upgrade.
+`)
+
+	upgradeFailHelp = strings.TrimSpace(`
+Upgrading Waypoint server has failed. To restore from a snapshot, use the command:
+
+waypoint server restore [snapshot-name]
+
+Where 'snapshot-name' is the name of the snapshot taken prior to the upgrade.
+
+More information can be found by runninng 'waypoint server restore -help' or
+following the server maintenence guide for backups and restores:
+https://www.waypointproject.io/docs/server/run/maintenance#backup-restore
 `)
 
 	addrSuccess = strings.TrimSpace(`
