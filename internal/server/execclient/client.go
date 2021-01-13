@@ -22,16 +22,23 @@ import (
 )
 
 type Client struct {
-	Logger        hclog.Logger
-	UI            terminal.UI
-	Context       context.Context
-	Client        pb.WaypointClient
+	Logger  hclog.Logger
+	UI      terminal.UI
+	Context context.Context
+	Client  pb.WaypointClient
+	Args    []string
+	Stdin   io.Reader
+	Stdout  io.Writer
+	Stderr  io.Writer
+
+	// Either DeploymentId or InstanceId have to be set. If both are set, then
+	// InstanceId takes priority.
+	//
+	// These identify a deployment that is used to search for an instance on
+	// server side. We target a specific deployment so that the exec session
+	// enters the correct application code.
 	DeploymentId  string
 	DeploymentSeq uint64
-	Args          []string
-	Stdin         io.Reader
-	Stdout        io.Writer
-	Stderr        io.Writer
 
 	// If set, will cause the server to connect to this specific
 	// instance.
