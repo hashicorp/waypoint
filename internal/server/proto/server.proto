@@ -1162,10 +1162,6 @@ message ServerConfig {
     bool tls = 2;
     bool tls_skip_verify = 3;
   }
-
-  // A stream of bytes for a platform to write relevant metadata to. This will
-  // be different per-platform.
-  bytes platform_data = 4;
 }
 
 /********************************************************************
