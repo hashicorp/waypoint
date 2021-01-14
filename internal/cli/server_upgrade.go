@@ -61,7 +61,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
 	if !ok {
 		c.ui.Output(
-			"Error upgrading server on %s: invalid platform",
+			"Error upgrading server on %s: unsupported platform",
 			c.platform,
 			terminal.WithErrorStyle(),
 		)
