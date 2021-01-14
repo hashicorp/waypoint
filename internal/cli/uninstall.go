@@ -18,11 +18,11 @@ import (
 type UninstallCommand struct {
 	*baseCommand
 
-	platform         string
-	snapshotFilename string
-	skipSnapshot     bool
-	autoApprove      bool
-	deleteContext    bool
+	platform      string
+	snapshotName  string
+	skipSnapshot  bool
+	autoApprove   bool
+	deleteContext bool
 }
 
 func (c *UninstallCommand) Run(args []string) int {
@@ -67,7 +67,7 @@ func (c *UninstallCommand) Run(args []string) int {
 	// Generate a snapshot
 	if !c.skipSnapshot {
 		s.Update("Generating server snapshot...")
-		w, err := os.Create(c.snapshotFilename)
+		w, err := os.Create(c.snapshotName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating snapshot file: %s", err)
 			return 1
@@ -76,7 +76,7 @@ func (c *UninstallCommand) Run(args []string) int {
 			fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
 			return 1
 		}
-		s.Update("Snapshot %q generated", c.snapshotFilename)
+		s.Update("Snapshot %q generated", c.snapshotName)
 	} else {
 		s.Update("skip-snapshot set; not generating server snapshot")
 		s.Status(terminal.StatusWarn)
@@ -176,8 +176,8 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "snapshot-filename",
-			Target:  &c.snapshotFilename,
+			Name:    "snapshot-name",
+			Target:  &c.snapshotName,
 			Default: fmt.Sprintf("waypoint-sever-snapshot-%d", time.Now().Unix()),
 			Usage:   "Filename to write the snapshot to.",
 		})
