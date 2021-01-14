@@ -467,6 +467,7 @@ func (i *DockerInstaller) Upgrade(
 	}
 
 	if len(imageList) == 0 || i.config.serverImage == defaultServerImage {
+		s.Done()
 		s = sg.Add("Pulling image: %s", i.config.serverImage)
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
@@ -493,8 +494,11 @@ func (i *DockerInstaller) Upgrade(
 		s = sg.Add("")
 	}
 
-	s.Update("Upgrading Waypoint server image from %q to %q",
-		waypointServerContainer.Image, i.config.serverImage)
+	s.Update(
+		"Upgrading Waypoint server image from %q to %q",
+		waypointServerContainer.Image,
+		i.config.serverImage,
+	)
 	s.Done()
 
 	s = sg.Add("Removing and restarting current server container")
