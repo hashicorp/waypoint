@@ -63,10 +63,10 @@ the manual upgrade guide in this case.
 
 When the upgrade command is executed, Waypoint does the following:
 
-- Takes a snapshot of the current server database and save snapshot locally. The
-  snapshot file can be saved elsewhere if a new name is passed in through using
-  `-snapshot-name`, or optionally skipped all together
-- Run the upgrade for the requested platform:
+- Takes a snapshot of the current server database and saves snapshot locally. The
+  snapshot file can be saved elsewhere if a new name is passed in using the flag
+  `-snapshot-name`, or optionally skipped all together.
+- Runs the upgrade for the requested platform:
   - `docker` - This platform will force pull the image requested to update the
     container in docker.
   - `kubernetes` - This platform will use `kubectl` to set the image requested on
