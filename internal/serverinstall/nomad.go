@@ -514,7 +514,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Name:    "nomad-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: "hashicorp/waypoint:latest",
+		Default: defaultServerImage,
 	})
 }
 
@@ -630,6 +630,6 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Name:    "nomad-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: "hashicorp/waypoint:latest",
+		Default: defaultServerImage,
 	})
 }
