@@ -214,7 +214,27 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	advertiseAddr := result.AdvertiseAddr
 	httpAddr := result.HTTPAddr
 
-	originalCfg.Server.Address = contextConfig.Server.Address
+	// We update the context config if the server addr has changed between upgrades
+	if originalCfg.Server.Address != contextConfig.Server.Address {
+		originalCfg.Server.Address = contextConfig.Server.Address
+
+		if err := c.contextStorage.Set(ctxName, originalCfg); err != nil {
+			c.ui.Output(
+				"Error setting the CLI context: %s\n\n%s",
+				clierrors.Humanize(err),
+				errInstallRunning,
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+
+		c.ui.Output("Server address has changed after upgrade. This client will "+
+			"update its context with the new address, however any other clients "+
+			"using this server must manually update their server address listed below "+
+			"or find the address from `waypoint context list` which lists context %q address",
+			ctxName,
+			terminal.WithWarningStyle())
+	}
 
 	// Connect
 	log.Info("connecting to the server so we can verify the server upgrade", "addr", originalCfg.Server.Address)
@@ -238,16 +258,6 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		c.ui.Output(
 			"Error retrieving server version info: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle())
-		return 1
-	}
-
-	if err := c.contextStorage.Set(ctxName, originalCfg); err != nil {
-		c.ui.Output(
-			"Error setting the CLI context: %s\n\n%s",
-			clierrors.Humanize(err),
-			errInstallRunning,
-			terminal.WithErrorStyle(),
-		)
 		return 1
 	}
 
