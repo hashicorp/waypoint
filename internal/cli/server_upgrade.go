@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"time"
@@ -28,16 +27,6 @@ type ServerUpgradeCommand struct {
 	snapshotName string
 	skipSnapshot bool
 	confirm      bool
-}
-
-func (c *ServerUpgradeCommand) initWriter(fileName string) (io.Writer, io.Closer, error) {
-	f, err := os.Create(fileName)
-
-	if err != nil {
-		return nil, nil, err
-	} else {
-		return f, f, nil
-	}
 }
 
 func (c *ServerUpgradeCommand) Run(args []string) int {
@@ -169,7 +158,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		}
 
 		s.Update("Taking snapshot of server with name: '%s'", snapshotName)
-		w, closer, err := c.initWriter(snapshotName)
+		writer, err := os.Create(snapshotName)
 		if err != nil {
 			s.Update("Failed to take server snapshot")
 			s.Status(terminal.StatusError)
@@ -179,11 +168,10 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 			return 1
 		}
 
-		if closer != nil {
-			defer closer.Close()
-		}
+		err = clisnapshot.WriteSnapshot(c.Ctx, c.project.Client(), writer)
+		writer.Close()
 
-		if err = clisnapshot.WriteSnapshot(c.Ctx, c.project.Client(), w); err != nil {
+		if err != nil {
 			s.Update("Failed to take server snapshot")
 			s.Status(terminal.StatusError)
 			s.Done()
