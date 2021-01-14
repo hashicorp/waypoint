@@ -60,8 +60,10 @@ func TestServiceStartExecStream_start(t *testing.T) {
 	require.NoError(stream.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
 			Start: &pb.ExecStreamRequest_Start{
-				DeploymentId: deploymentId,
-				Args:         []string{"foo", "bar"},
+				Target: &pb.ExecStreamRequest_Start_DeploymentId{
+					DeploymentId: deploymentId,
+				},
+				Args: []string{"foo", "bar"},
 			},
 		},
 	}))
@@ -112,8 +114,10 @@ func TestServiceStartExecStream_eventExit(t *testing.T) {
 	require.NoError(stream.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
 			Start: &pb.ExecStreamRequest_Start{
-				DeploymentId: deploymentId,
-				Args:         []string{"foo", "bar"},
+				Target: &pb.ExecStreamRequest_Start_DeploymentId{
+					DeploymentId: deploymentId,
+				},
+				Args: []string{"foo", "bar"},
 			},
 		},
 	}))
@@ -186,8 +190,10 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 	require.NoError(stream.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
 			Start: &pb.ExecStreamRequest_Start{
-				DeploymentId: deploymentId,
-				Args:         []string{"foo", "bar"},
+				Target: &pb.ExecStreamRequest_Start_DeploymentId{
+					DeploymentId: deploymentId,
+				},
+				Args: []string{"foo", "bar"},
 			},
 		},
 	}))
@@ -261,8 +267,10 @@ func TestServiceStartExecStream_targeted(t *testing.T) {
 	require.NoError(stream.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
 			Start: &pb.ExecStreamRequest_Start{
-				TargetInstanceId: instanceId,
-				Args:             []string{"foo", "bar"},
+				Target: &pb.ExecStreamRequest_Start_InstanceId{
+					InstanceId: instanceId,
+				},
+				Args: []string{"foo", "bar"},
 			},
 		},
 	}))
