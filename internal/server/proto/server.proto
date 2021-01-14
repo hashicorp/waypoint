@@ -1656,7 +1656,7 @@ message Instance {
     // constantly for a long period of time.
     LONG_RUNNING = 0;
 
-    // An instance that was launched in responce to a request and will
+    // An instance that was launched in response to a request and will
     // disappear quickly.
     ON_DEMAND = 1;
 
