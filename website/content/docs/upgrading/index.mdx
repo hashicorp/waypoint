@@ -70,7 +70,7 @@ When the upgrade command is executed, Waypoint does the following:
   - `docker` - This platform will force pull the image requested to update the
     container in docker.
   - `kubernetes` - This platform will use `kubectl` to set the image requested on
-    the waypoint-server pod. By default, Waypoints StatefulSet is configured to
+    the waypoint-server pod. By default, Waypoint's StatefulSet is configured to
     `RollingUpdate`, so the pod will pull the requested version shortly after
     running the Waypoint upgrade command.
   - `nomad` - This platform will update the waypoint server job with the server
