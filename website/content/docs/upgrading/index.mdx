@@ -54,7 +54,7 @@ how to upgrade components in both compatible and incompatible scenarios.
 As of 0.2.1, Waypoint provides a command for users to upgrade the
 Waypoint server in place. For each platform, Waypoint attempts to
 update the server image in place to latest by default, or to the server image
-requested from the passed in flag to the upgrade command.
+specified via a flag passed in to the upgrade command.
 
 ~> **Note:** Due to where Waypoint server stored its database in Nomad at `/alloc`,
 the automated upgrade command cannot migrate the old servers database to a new one.
