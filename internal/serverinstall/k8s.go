@@ -516,7 +516,7 @@ func (i *K8sInstaller) Upgrade(
 	var httpAddr string
 	var grpcAddr string
 
-	err = wait.PollImmediate(2*time.Second, 1*time.Minute, func() (bool, error) {
+	err = wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
 		svc, err := clientset.CoreV1().Services(i.config.namespace).Get(
 			ctx, serviceName, metav1.GetOptions{})
 		if err != nil {
