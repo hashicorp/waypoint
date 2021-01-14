@@ -1660,7 +1660,7 @@ message Instance {
     // disappear quickly.
     ON_DEMAND = 1;
 
-    // An instance that is not actually running an code, but registers
+    // An instance that is not actually running any code, but registers
     // itself as an instance for the purposes of interacting with the 
     // exec and logs functionality
     VIRTUAL = 2;
