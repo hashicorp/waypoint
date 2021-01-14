@@ -89,8 +89,9 @@ COPY --from=imgbase /usr/bin/runc /usr/bin/runc
 COPY --from=imgbase /usr/bin/newuidmap /usr/bin/newuidmap
 COPY --from=imgbase /usr/bin/newgidmap /usr/bin/newgidmap
 
-# required for runc
-RUN apk add --no-cache libseccomp-dev
+# libseccomp-dev is required for runc
+# git is for gitrefpretty() and other calls for Waypoint
+RUN apk add --no-cache libseccomp-dev git
 
 COPY --from=builder /tmp/wp-src/waypoint /usr/bin/waypoint
 COPY --from=builder /tmp/wp-src/waypoint-entrypoint /usr/bin/waypoint-entrypoint
