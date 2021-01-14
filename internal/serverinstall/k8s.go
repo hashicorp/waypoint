@@ -869,7 +869,7 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Name:    "k8s-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: "hashicorp/waypoint:latest",
+		Default: defaultServerImage,
 	})
 
 	set.StringVar(&flag.StringVar{
@@ -908,7 +908,7 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 		Name:    "k8s-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
-		Default: "hashicorp/waypoint:latest",
+		Default: defaultServerImage,
 	})
 }
 
