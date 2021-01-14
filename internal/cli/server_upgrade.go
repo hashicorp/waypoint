@@ -298,7 +298,7 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 			Name:    "snapshot-name",
 			Target:  &c.snapshotName,
 			Default: "",
-			Usage:   "Platform to upgrade the Waypoint server from.",
+			Usage:   "Filename to write the snapshot to.",
 		})
 		f.BoolVar(&flag.BoolVar{
 			Name:    "skip-snapshot",
