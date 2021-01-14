@@ -51,13 +51,13 @@ func (i *NomadInstaller) Install(
 	s.Update("Checking for existing Waypoint server...")
 
 	// Check if waypoint-server has already been deployed
-	jobs, _, err := client.Jobs().PrefixList("waypoint-server")
+	jobs, _, err := client.Jobs().PrefixList(serverName)
 	if err != nil {
 		return nil, err
 	}
 	var serverDetected bool
 	for _, j := range jobs {
-		if j.Name == "waypoint-server" {
+		if j.Name == serverName {
 			serverDetected = true
 			break
 		}
@@ -78,12 +78,12 @@ func (i *NomadInstaller) Install(
 	addr.TlsSkipVerify = true
 
 	if serverDetected {
-		allocs, _, err := client.Jobs().Allocations("waypoint-server", false, nil)
+		allocs, _, err := client.Jobs().Allocations(serverName, false, nil)
 		if err != nil {
 			return nil, err
 		}
 		if len(allocs) == 0 {
-			return nil, fmt.Errorf("waypoint-server job found but no running allocations available")
+			return nil, fmt.Errorf("waypoint-server job named %q found but no running allocations available", serverName)
 		}
 		serverAddr, err := getAddrFromAllocID(allocs[0].ID, client)
 		if err != nil {
@@ -132,7 +132,7 @@ EVAL:
 	case "complete":
 		s.Update("Nomad allocation created")
 	case "failed", "canceled", "blocked":
-		s.Update("Nomad failed to schedule the waypoint-server")
+		s.Update("Nomad failed to schedule the waypoint server ", serverName)
 		s.Status(terminal.StatusError)
 		return nil, fmt.Errorf("nomad evaluation did not transition to 'complete'")
 	default:
@@ -225,7 +225,7 @@ func (i *NomadInstaller) Upgrade(
 	s.Update("Checking for existing Waypoint server...")
 
 	// Check if waypoint-server has already been deployed
-	jobs, _, err := client.Jobs().PrefixList("waypoint-server")
+	jobs, _, err := client.Jobs().PrefixList(serverName)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func (i *NomadInstaller) Upgrade(
 	)
 
 	for _, j := range jobs {
-		if j.Name == "waypoint-server" {
+		if j.Name == serverName {
 			serverDetected = true
 			break
 		}
@@ -257,14 +257,14 @@ func (i *NomadInstaller) Upgrade(
 		s.Update("No existing Waypoint server detected")
 		s.Status(terminal.StatusError)
 		s.Done()
-		return nil, fmt.Errorf("No waypoint-server job detected in Nomad")
+		return nil, fmt.Errorf("No waypoint server job named %q detected in Nomad", serverName)
 	} else {
-		allocs, _, err := client.Jobs().Allocations("waypoint-server", false, nil)
+		allocs, _, err := client.Jobs().Allocations(serverName, false, nil)
 		if err != nil {
 			return nil, err
 		}
 		if len(allocs) == 0 {
-			return nil, fmt.Errorf("waypoint-server job found but no running allocations available")
+			return nil, fmt.Errorf("waypoint server job %q found but no running allocations available", serverName)
 		}
 		serverAddr, err := getAddrFromAllocID(allocs[0].ID, client)
 		if err != nil {
@@ -307,7 +307,7 @@ EVAL:
 	case "complete":
 		s.Update("Nomad allocation created")
 	case "failed", "canceled", "blocked":
-		s.Update("Nomad failed to schedule the waypoint-server")
+		s.Update("Nomad failed to schedule the waypoint server ", serverName)
 		s.Status(terminal.StatusError)
 		return nil, fmt.Errorf("nomad evaluation did not transition to 'complete'")
 	default:
@@ -380,11 +380,11 @@ EVAL:
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
 func waypointNomadJob(c nomadConfig) *api.Job {
-	job := api.NewServiceJob("waypoint-server", "waypoint-server", c.region, 50)
+	job := api.NewServiceJob(serverName, serverName, c.region, 50)
 	job.Namespace = &c.namespace
 	job.Datacenters = c.datacenters
 	job.Meta = c.serviceAnnotations
-	tg := api.NewTaskGroup("waypoint-server", 1)
+	tg := api.NewTaskGroup(serverName, 1)
 
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)

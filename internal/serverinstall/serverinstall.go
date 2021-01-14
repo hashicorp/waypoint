@@ -83,6 +83,10 @@ var Platforms = map[string]Installer{
 	"docker":     &DockerInstaller{},
 }
 
+const (
+	serverName = "waypoint-server"
+)
+
 // Default server ports to use
 var (
 	defaultGrpcPort = "9701"
