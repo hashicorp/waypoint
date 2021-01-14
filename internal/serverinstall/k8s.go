@@ -447,7 +447,7 @@ func (i *K8sInstaller) Upgrade(
 	s.Done()
 
 	statefulSetClient := clientset.AppsV1().StatefulSets(i.config.namespace)
-	waypointStatefulSet, err := statefulSetClient.Get(ctx, "waypoint-server", metav1.GetOptions{})
+	waypointStatefulSet, err := statefulSetClient.Get(ctx, serverName, metav1.GetOptions{})
 	if err != nil {
 		ui.Output(
 			"Error obtaining waypoint statefulset: %s", clierrors.Humanize(err),
@@ -459,7 +459,7 @@ func (i *K8sInstaller) Upgrade(
 	s = sg.Add("Upgrading server to %q", i.config.serverImage)
 
 	// Update pod image to requested serverImage
-	cmd := exec.Command("kubectl", "set", "image", "statefulset", "waypoint-server", fmt.Sprintf("server=%s", i.config.serverImage))
+	cmd := exec.Command("kubectl", "set", "image", "statefulset", serverName, fmt.Sprintf("server=%s", i.config.serverImage))
 	cmd.Stdout = s.TermOutput()
 	cmd.Stderr = cmd.Stdout
 
@@ -477,7 +477,7 @@ func (i *K8sInstaller) Upgrade(
 		log.Info("Update Strategy is 'OnDelete', deleting pod to refresh image")
 
 		podClient := clientset.CoreV1().Pods(i.config.namespace)
-		if podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: "app=waypoint-server"}); err != nil {
+		if podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", serverName)}); err != nil {
 			ui.Output(
 				"Error listing pods: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
@@ -497,7 +497,7 @@ func (i *K8sInstaller) Upgrade(
 			}
 		}
 
-		log.Info("Pod(s) deleted, k8s will now restart waypoint-server with updated image")
+		log.Info("Pod(s) deleted, k8s will now restart waypoint server ", serverName)
 	} else if waypointStatefulSet.Spec.UpdateStrategy.Type == "RollingUpdate" {
 		log.Info("Update Strategy is 'RollingUpdate', no further action required")
 	} else {
@@ -509,7 +509,7 @@ func (i *K8sInstaller) Upgrade(
 	s.Done()
 
 	s = sg.Add("Waiting for server to be ready...")
-	log.Info("waiting for waypoint-server to become ready after image refresh")
+	log.Info("waiting for waypoint server to become ready after image refresh")
 
 	var contextConfig clicontext.Config
 	var advertiseAddr pb.ServerConfig_AdvertiseAddr
@@ -518,7 +518,7 @@ func (i *K8sInstaller) Upgrade(
 
 	err = wait.PollImmediate(2*time.Second, 1*time.Minute, func() (bool, error) {
 		svc, err := clientset.CoreV1().Services(i.config.namespace).Get(
-			ctx, "waypoint", metav1.GetOptions{})
+			ctx, serviceName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -541,7 +541,7 @@ func (i *K8sInstaller) Upgrade(
 		}
 
 		endpoints, err := clientset.CoreV1().Endpoints(i.config.namespace).Get(
-			ctx, "waypoint", metav1.GetOptions{})
+			ctx, serviceName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -597,7 +597,7 @@ func (i *K8sInstaller) Upgrade(
 		// since pods can't reach this.
 		if i.config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
-				"waypoint",
+				serviceName,
 				grpcPort,
 			)
 		}
@@ -618,7 +618,7 @@ func (i *K8sInstaller) Upgrade(
 	}
 
 	if waypointStatefulSet.Spec.UpdateStrategy.Type == "RollingUpdate" {
-		ui.Output("\nKuberntes is now set to upgrade waypoint-server image with its\n" +
+		ui.Output("\nKuberntes is now set to upgrade waypoint server image with its\n" +
 			"'RollingUpdate' strategy. This means the pod might not be updated immediately.")
 	}
 	s.Update("Upgrade complete!")
@@ -694,7 +694,7 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 									Value: "/data",
 								},
 							},
-							Command: []string{"waypoint"},
+							Command: []string{serviceName},
 							Args: []string{
 								"server",
 								"run",

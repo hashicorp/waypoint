@@ -234,7 +234,7 @@ func (i *DockerInstaller) Install(
 		},
 	}
 	hostconfig := container.HostConfig{
-		Binds:        []string{serverName + ":/data"},
+		Binds:        []string{fmt.Sprintf("%s:/data", serverName)},
 		PortBindings: bindings,
 	}
 
@@ -458,7 +458,7 @@ func (i *DockerInstaller) Upgrade(
 		TlsSkipVerify: true,
 	}
 
-	addr.Addr = "waypoint-server:" + grpcPort
+	addr.Addr = serverName + ":" + grpcPort
 	addr.Tls = true
 	addr.TlsSkipVerify = true
 
@@ -569,7 +569,7 @@ func (i *DockerInstaller) Upgrade(
 		},
 	}
 	hostconfig := container.HostConfig{
-		Binds:        []string{"waypoint-server:/data"},
+		Binds:        []string{fmt.Sprintf("%s:/data", serverName)},
 		PortBindings: bindings,
 	}
 
@@ -584,7 +584,7 @@ func (i *DockerInstaller) Upgrade(
 	}
 	s.Update("Creating and starting container")
 	//
-	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, "waypoint-server")
+	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, serverName)
 	if err != nil {
 		return nil, err
 	}
