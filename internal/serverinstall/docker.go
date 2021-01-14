@@ -144,7 +144,7 @@ func (i *DockerInstaller) Install(
 		return nil, err
 	}
 
-	if len(imageList) == 0 {
+	if len(imageList) == 0 || i.config.serverImage == defaultServerImage {
 		s.Update("Pulling image: %s", i.config.serverImage)
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
@@ -491,7 +491,7 @@ func (i *DockerInstaller) Upgrade(
 		return nil, err
 	}
 
-	if len(imageList) == 0 {
+	if len(imageList) == 0 || i.config.serverImage == defaultServerImage {
 		s = sg.Add("Pulling image: %s", i.config.serverImage)
 
 		resp, err := cli.ImagePull(ctx, reference.FamiliarString(imageRef), types.ImagePullOptions{})
