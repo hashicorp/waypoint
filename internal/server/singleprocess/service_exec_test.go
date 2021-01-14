@@ -60,8 +60,10 @@ func TestServiceStartExecStream_start(t *testing.T) {
 	require.NoError(stream.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
 			Start: &pb.ExecStreamRequest_Start{
-				DeploymentId: deploymentId,
-				Args:         []string{"foo", "bar"},
+				Target: &pb.ExecStreamRequest_Start_DeploymentId{
+					DeploymentId: deploymentId,
+				},
+				Args: []string{"foo", "bar"},
 			},
 		},
 	}))
@@ -112,8 +114,10 @@ func TestServiceStartExecStream_eventExit(t *testing.T) {
 	require.NoError(stream.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
 			Start: &pb.ExecStreamRequest_Start{
-				DeploymentId: deploymentId,
-				Args:         []string{"foo", "bar"},
+				Target: &pb.ExecStreamRequest_Start_DeploymentId{
+					DeploymentId: deploymentId,
+				},
+				Args: []string{"foo", "bar"},
 			},
 		},
 	}))
@@ -186,8 +190,10 @@ func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 	require.NoError(stream.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
 			Start: &pb.ExecStreamRequest_Start{
-				DeploymentId: deploymentId,
-				Args:         []string{"foo", "bar"},
+				Target: &pb.ExecStreamRequest_Start_DeploymentId{
+					DeploymentId: deploymentId,
+				},
+				Args: []string{"foo", "bar"},
 			},
 		},
 	}))
@@ -240,4 +246,58 @@ func testGetInstanceExec(t *testing.T, impl pb.WaypointServer, instanceId string
 	require.Len(t, list, 1)
 
 	return list[0]
+}
+
+func TestServiceStartExecStream_targeted(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Create an instance
+	instanceId, _, closer := TestEntrypoint(t, client)
+	defer closer()
+
+	// Start exec with a bad starting message
+	stream, err := client.StartExecStream(ctx)
+	require.NoError(err)
+	require.NoError(stream.Send(&pb.ExecStreamRequest{
+		Event: &pb.ExecStreamRequest_Start_{
+			Start: &pb.ExecStreamRequest_Start{
+				Target: &pb.ExecStreamRequest_Start_InstanceId{
+					InstanceId: instanceId,
+				},
+				Args: []string{"foo", "bar"},
+			},
+		},
+	}))
+
+	// Should open
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		open, ok := resp.Event.(*pb.ExecStreamResponse_Open_)
+		require.True(ok, "should be an open")
+		require.NotNil(open)
+	}
+
+	// Get our instance exec value
+	exec := testGetInstanceExec(t, impl, instanceId)
+	require.Equal([]string{"foo", "bar"}, exec.Args)
+
+	// Close send
+	require.NoError(stream.CloseSend())
+
+	// The above close send should trigger the stream to end.
+	resp, err := stream.Recv()
+	require.Error(err)
+	require.Equal(io.EOF, err)
+	require.Nil(resp)
+
+	// The event channel should be closed
+	_, active := <-exec.ClientEventCh
+	require.False(active)
 }

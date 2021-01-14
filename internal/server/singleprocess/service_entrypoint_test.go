@@ -419,8 +419,10 @@ func testRegisterExec(t *testing.T, client pb.WaypointClient, impl pb.WaypointSe
 	require.NoError(t, stream.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
 			Start: &pb.ExecStreamRequest_Start{
-				DeploymentId: deploymentId,
-				Args:         []string{"foo", "bar"},
+				Target: &pb.ExecStreamRequest_Start_DeploymentId{
+					DeploymentId: deploymentId,
+				},
+				Args: []string{"foo", "bar"},
 			},
 		},
 	}))
