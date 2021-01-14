@@ -120,6 +120,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	s.Update("Verifying connection is valid for context %q...", ctxName)
 
 	client := pb.NewWaypointClient(conn)
+	// validate API compat here with new clientpkg
 	if _, err := clientpkg.New(ctx,
 		clientpkg.WithLogger(c.Log),
 		clientpkg.WithClient(client),
@@ -189,10 +190,10 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		log.Warn("Server snapshot disabled on request from user, skipping")
 	}
 
-	c.ui.Output("Waypoint server will now upgrade from version %q",
-		initServerVersion)
-
 	c.ui.Output("Upgrading...", terminal.WithHeaderStyle())
+
+	c.ui.Output("Waypoint server will now upgrade from version %q",
+		initServerVersion, terminal.WithInfoStyle())
 
 	// Upgrade in place
 	result, err := p.Upgrade(ctx, &serverinstall.InstallOpts{
