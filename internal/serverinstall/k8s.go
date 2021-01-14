@@ -617,7 +617,7 @@ func (i *K8sInstaller) Upgrade(
 	}
 
 	if waypointStatefulSet.Spec.UpdateStrategy.Type == "RollingUpdate" {
-		ui.Output("\nKuberntes is now set to upgrade waypoint server image with its\n" +
+		ui.Output("\nKubernetes is now set to upgrade waypoint server image with its\n" +
 			"'RollingUpdate' strategy. This means the pod might not be updated immediately.")
 	}
 	s.Update("Upgrade complete!")
