@@ -44,25 +44,27 @@ func (c *UninstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	sg := c.ui.StepGroup()
-	defer sg.Wait()
-
-	// Pre-uninstall work
-	// - name the context we'll be uninstalling
-	// - generate a snapshot of the current install
-	s := sg.Add("")
-	defer func() { s.Abort() }()
-
+	// output the context we'll be uninstalling
 	contextDefault, err := c.contextStorage.Default()
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
-	s.Update("Uninstalling Waypoint server with context %q", contextDefault)
-	s.Done()
+	c.ui.Output(
+		"Uninstalling Waypoint server with context %q",
+		contextDefault,
+		terminal.WithSuccessStyle(),
+	)
+
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
+	// Pre-uninstall work
+	// - generate a snapshot of the current install
+	s := sg.Add("")
+	defer func() { s.Abort() }()
 
 	// Generate a snapshot
-	s = sg.Add("")
 	if !c.skipSnapshot {
 		s.Update("Generating server snapshot...")
 		w, err := os.Create(c.snapshotFilename)
@@ -98,9 +100,11 @@ func (c *UninstallCommand) Run(args []string) int {
 		UI:  c.ui,
 	})
 	if err != nil {
-		// point to current docs on manual server cleanup
 		c.ui.Output(
-			"Error uninstalling server from %s: %s", c.platform, clierrors.Humanize(err),
+			"Error uninstalling server from %s: %s\nSee Troubleshooting docs "+
+				"for guidance on manual uninstall: https://www.waypointproject.io/docs/troubleshooting",
+			c.platform,
+			clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 
@@ -135,16 +139,14 @@ func (c *UninstallCommand) Synopsis() string {
 func (c *UninstallCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint server uninstall [options]
-	Uninstall the Waypoint server. The platform should be
-	specified as kubernetes, nomad, or docker. '-auto-approve'
-	is required.
 
-  By default, this command deletes the default server's
-  context.
+	Uninstall the Waypoint server. The platform should be specified as kubernetes,
+	nomad, or docker. '-auto-approve'	is required.
 
-  This command does not destroy Waypoint resources,
-  such as deployments and releases. Clear all workspaces
-  prior to uninstall to prevent hanging resources.
+  By default, this command deletes the default server's context.
+
+	This command does not destroy Waypoint resources, such as deployments and	
+	releases. Clear all workspaces prior to uninstall to prevent hanging resources.
 
 ` + c.Flags().Help())
 }
@@ -156,15 +158,14 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 			Name:    "auto-approve",
 			Target:  &c.autoApprove,
 			Default: false,
-			Usage:   "Auto-approve server uninstallation. Default is false.",
+			Usage:   "Auto-approve server uninstallation.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
 			Name:    "delete-context",
 			Target:  &c.deleteContext,
 			Default: true,
-			Usage: "Delete the context for the server once it's uninstalled. " +
-				"Default is true.",
+			Usage:   "Delete the context for the server once it's uninstalled.",
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -185,7 +186,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 			Name:    "skip-snapshot",
 			Target:  &c.skipSnapshot,
 			Default: false,
-			Usage:   "Skip creating a snapshot of the Waypoint server. Default is false.",
+			Usage:   "Skip creating a snapshot of the Waypoint server.",
 		})
 
 		for name, platform := range serverinstall.Platforms {

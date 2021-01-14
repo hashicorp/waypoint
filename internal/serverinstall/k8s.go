@@ -65,7 +65,7 @@ func (i *K8sInstaller) Install(
 	defer sg.Wait()
 
 	s := sg.Add("Inspecting Kubernetes cluster...")
-	defer s.Abort()
+	defer func() { s.Abort() }()
 
 	// Build our K8S client.
 	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -632,7 +632,7 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	defer sg.Wait()
 
 	s := sg.Add("Inspecting Kubernetes cluster...")
-	defer s.Abort()
+	defer func() { s.Abort() }()
 
 	// Build our k8s client
 	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -816,6 +816,7 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 }
 
 func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
+	// Purposely empty, no flags
 }
 
 func int32Ptr(i int32) *int32 {

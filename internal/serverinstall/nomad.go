@@ -115,7 +115,7 @@ func (i *NomadInstaller) Install(
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
-	job := newWaypointNomadJob(i.config)
+	job := waypointNomadJob(i.config)
 	jobOpts := &api.RegisterOptions{
 		PolicyOverride: i.config.policyOverride,
 	}
@@ -211,9 +211,9 @@ EVAL:
 	}, nil
 }
 
-// newWaypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
+// waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
-func newWaypointNomadJob(c nomadConfig) *api.Job {
+func waypointNomadJob(c nomadConfig) *api.Job {
 	job := api.NewServiceJob(serverName, serverName, c.region, 50)
 	job.Namespace = &c.namespace
 	job.Datacenters = c.datacenters

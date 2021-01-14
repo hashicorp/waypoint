@@ -336,14 +336,14 @@ func (i *DockerInstaller) Uninstall(
 
 	// used base functionality from PR#660
 	s := sg.Add("Initializing Docker client...")
-	defer s.Abort()
+	defer func() { s.Abort() }()
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return err
 	}
 
-	defer func() { _ = cli.Close() }()
+	defer cli.Close()
 
 	cli.NegotiateAPIVersion(ctx)
 
@@ -359,12 +359,19 @@ func (i *DockerInstaller) Uninstall(
 	}
 
 	if len(containers) < 1 {
-		return fmt.Errorf("cannot find a Waypoint Docker container")
+		return fmt.Errorf(
+			"cannot find a Waypoint Docker container; Waypoint may already be uninstalled.",
+		)
 	}
 
 	// Pick the first container, as there should be only one.
 	containerId := containers[0].ID
 	image := containers[0].Image
+
+	imageRef, err := reference.ParseNormalizedNamed(image)
+	if err != nil {
+		return fmt.Errorf("Error parsing Docker image: %s", err)
+	}
 
 	s.Update("Stopping Waypoint Docker container...")
 
@@ -411,11 +418,6 @@ func (i *DockerInstaller) Uninstall(
 
 	s = sg.Add("")
 
-	imageRef, err := reference.ParseNormalizedNamed(image)
-	if err != nil {
-		return fmt.Errorf("Error parsing Docker image: %s", err)
-	}
-
 	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "reference",
@@ -450,4 +452,5 @@ func (i *DockerInstaller) Uninstall(
 }
 
 func (i *DockerInstaller) UninstallFlags(set *flag.Set) {
+	// Purposely empty, no flags
 }
