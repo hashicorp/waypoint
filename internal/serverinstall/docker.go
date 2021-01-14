@@ -291,7 +291,14 @@ func (i *DockerInstaller) InstallRunner(
 		Labels: map[string]string{
 			"waypoint-type": "runner",
 		},
-	}, nil, &network.NetworkingConfig{
+	}, &container.HostConfig{
+		// These security options are required for the runner so that
+		// Docker daemonless image building works properly.
+		SecurityOpt: []string{
+			"seccomp=unconfined",
+			"apparmor=unconfined",
+		},
+	}, &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
 			"waypoint": {},
 		},
