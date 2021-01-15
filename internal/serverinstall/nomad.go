@@ -88,6 +88,7 @@ func (i *NomadInstaller) Install(
 		if err != nil {
 			return nil, err
 		}
+
 		var activeAllocs []*api.AllocationListStub
 		for _, alloc := range allocs {
 			if alloc.DesiredStatus == "run" {
@@ -476,6 +477,49 @@ func getHTTPFromAllocID(allocID string, client *api.Client) (string, error) {
 }
 
 func (i *NomadInstaller) InstallFlags(set *flag.Set) {
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "nomad-annotate-service",
+		Target: &i.config.serviceAnnotations,
+		Usage:  "Annotations for the Service generated.",
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:    "nomad-dc",
+		Target:  &i.config.datacenters,
+		Default: []string{"dc1"},
+		Usage:   "Datacenters to install to for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-namespace",
+		Target:  &i.config.namespace,
+		Default: "default",
+		Usage:   "Namespace to install the Waypoint server into for Nomad.",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "nomad-policy-override",
+		Target:  &i.config.policyOverride,
+		Default: false,
+		Usage:   "Override the Nomad sentinel policy for enterprise Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-region",
+		Target:  &i.config.region,
+		Default: "global",
+		Usage:   "Region to install to for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: defaultServerImage,
+	})
+}
+
+func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	set.StringMapVar(&flag.StringMapVar{
 		Name:   "nomad-annotate-service",
 		Target: &i.config.serviceAnnotations,

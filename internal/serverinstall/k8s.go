@@ -891,6 +891,38 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 }
 
+func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
+	set.BoolVar(&flag.BoolVar{
+		Name:   "k8s-advertise-internal",
+		Target: &i.config.advertiseInternal,
+		Usage: "Advertise the internal service address rather than the external. " +
+			"This is useful if all your deployments will be able to access the private " +
+			"service address. This will default to false but will be automatically set to " +
+			"true if the external host is detected to be localhost.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-namespace",
+		Target:  &i.config.namespace,
+		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
+		Default: "",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-openshift",
+		Target:  &i.config.openshift,
+		Default: false,
+		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: defaultServerImage,
+	})
+}
+
 // Uninstall is a method of K8sInstaller and implements the Installer interface to
 // remove a waypoint-server statefulset and the associated PVC and service from
 // a Kubernetes cluster
