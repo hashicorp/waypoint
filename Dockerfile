@@ -49,7 +49,7 @@ RUN apk add --no-cache \
 
 RUN git clone https://github.com/mitchellh/img.git /img
 WORKDIR /img
-RUN git checkout inspect
+RUN git checkout pull-config
 RUN go get github.com/go-bindata/go-bindata/go-bindata
 RUN make static && mv img /usr/bin/img
 
