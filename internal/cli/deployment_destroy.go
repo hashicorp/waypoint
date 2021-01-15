@@ -208,8 +208,8 @@ Usage: waypoint deployment destroy [options] [id...]
   instance of an application.
 
   When no arguments are given, this will default to destroying ALL
-  deployments. This will require interactive confirmation by the user
-  unless the force flag (-force) is specified.
+  unreleased deployments. This will require interactive confirmation
+  by the user unless the force flag (-force) is specified.
 
 ` + c.Flags().Help())
 }

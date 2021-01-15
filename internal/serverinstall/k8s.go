@@ -40,8 +40,6 @@ type k8sConfig struct {
 
 	advertiseInternal bool   `hcl:"advertise_internal,optional"`
 	imagePullPolicy   string `hcl:"image_pull_policy,optional"`
-	serverName        string `hcl:"server_name,optional"`
-	serviceName       string `hcl:"service_name,optional"`
 	openshift         bool   `hcl:"openshft,optional"`
 	cpuRequest        string `hcl:"cpu_request,optional"`
 	memRequest        string `hcl:"mem_request,optional"`
@@ -49,6 +47,10 @@ type k8sConfig struct {
 	secretFile        string `hcl:"secret_file,optional"`
 	imagePullSecret   string `hcl:"image_pull_secret,optional"`
 }
+
+const (
+	serviceName = "waypoint"
+)
 
 // Install is a method of K8sInstaller and implements the Installer interface to
 // register a waypoint-server in a Kubernetes cluster
@@ -63,7 +65,7 @@ func (i *K8sInstaller) Install(
 	defer sg.Wait()
 
 	s := sg.Add("Inspecting Kubernetes cluster...")
-	defer s.Abort()
+	defer func() { s.Abort() }()
 
 	// Build our K8S client.
 	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -233,7 +235,7 @@ func (i *K8sInstaller) Install(
 	log.Info("waiting for server statefulset to become ready")
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 		ss, err := clientset.AppsV1().StatefulSets(i.config.namespace).Get(
-			ctx, "waypoint-server", metav1.GetOptions{})
+			ctx, serverName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -263,7 +265,7 @@ func (i *K8sInstaller) Install(
 
 	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
 		svc, err := clientset.CoreV1().Services(i.config.namespace).Get(
-			ctx, i.config.serviceName, metav1.GetOptions{})
+			ctx, serviceName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -286,7 +288,7 @@ func (i *K8sInstaller) Install(
 		}
 
 		endpoints, err := clientset.CoreV1().Endpoints(i.config.namespace).Get(
-			ctx, i.config.serviceName, metav1.GetOptions{})
+			ctx, serviceName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -342,7 +344,7 @@ func (i *K8sInstaller) Install(
 		// since pods can't reach this.
 		if i.config.advertiseInternal || strings.HasPrefix(grpcAddr, "localhost:") {
 			advertiseAddr.Addr = fmt.Sprintf("%s:%d",
-				i.config.serviceName,
+				serviceName,
 				grpcPort,
 			)
 		}
@@ -396,24 +398,24 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.serverName,
+			Name:      serverName,
 			Namespace: c.namespace,
 			Labels: map[string]string{
-				"app": c.serverName,
+				"app": serverName,
 			},
 		},
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: int32Ptr(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": c.serverName,
+					"app": serverName,
 				},
 			},
-			ServiceName: c.serviceName,
+			ServiceName: serviceName,
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": c.serverName,
+						"app": serverName,
 					},
 				},
 				Spec: apiv1.PodSpec{
@@ -505,10 +507,10 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 func newService(c k8sConfig) (*apiv1.Service, error) {
 	return &apiv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.serviceName,
+			Name:      serviceName,
 			Namespace: c.namespace,
 			Labels: map[string]string{
-				"app": c.serverName,
+				"app": serverName,
 			},
 			Annotations: c.serviceAnnotations,
 		},
@@ -524,7 +526,7 @@ func newService(c k8sConfig) (*apiv1.Service, error) {
 				},
 			},
 			Selector: map[string]string{
-				"app": c.serverName,
+				"app": serverName,
 			},
 			Type: apiv1.ServiceTypeLoadBalancer,
 		},
@@ -612,25 +614,209 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
-		Name:    "k8s-server-name",
-		Target:  &i.config.serverName,
-		Usage:   "Name of the Waypoint server for Kubernetes.",
-		Default: "waypoint-server",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-service-name",
-		Target:  &i.config.serviceName,
-		Usage:   "Name of the Kubernetes service for the Waypoint server.",
-		Default: "waypoint",
-	})
-
-	set.StringVar(&flag.StringVar{
 		Name:    "k8s-storage-request",
 		Target:  &i.config.storageRequest,
 		Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
 		Default: "1Gi",
 	})
+}
+
+// Uninstall is a method of K8sInstaller and implements the Installer interface to
+// remove a waypoint-server statefulset and the associated PVC and service from
+// a Kubernetes cluster
+func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
+	ui := opts.UI
+	log := opts.Log
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Inspecting Kubernetes cluster...")
+	defer func() { s.Abort() }()
+
+	// Build our k8s client
+	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{},
+	)
+
+	// Discover the current target namespace in the user's config so that we use
+	// the active kubectl target for the waypoint uninstall, mirroring what
+	// we do in Install.
+	if i.config.namespace == "" {
+		namespace, _, err := newCmdConfig.Namespace()
+		if err != nil {
+			ui.Output(
+				"Error getting namespace from client config: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+		}
+		i.config.namespace = namespace
+	}
+
+	// initialize the k8s client
+	clientconfig, err := newCmdConfig.ClientConfig()
+	if err != nil {
+		ui.Output(
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	// init new clientset
+	clientset, err := kubernetes.NewForConfig(clientconfig)
+	if err != nil {
+		ui.Output(
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	s.Update("Deleting statefulset and pods...")
+
+	// create our wait channel to later poll for statefulset+pod deletion
+	w, err := clientset.AppsV1().StatefulSets(i.config.namespace).Watch(
+		ctx,
+		metav1.ListOptions{
+			LabelSelector: "app=" + serverName,
+		},
+	)
+
+	// send DELETE to statefulset collection
+	if err = clientset.AppsV1().StatefulSets(i.config.namespace).DeleteCollection(
+		ctx,
+		metav1.DeleteOptions{},
+		metav1.ListOptions{
+			LabelSelector: "app=" + serverName,
+		},
+	); err != nil {
+		ui.Output(
+			"Error deleting Waypoint statefulset: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	// wait for deletion to complete
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		select {
+		case wCh := <-w.ResultChan():
+			if wCh.Type == "DELETED" {
+				w.Stop()
+				return true, nil
+			}
+			log.Trace("statefulset collection not fully removed, waiting")
+			return false, nil
+		default:
+			log.Trace("no message received on watch.ResultChan(), waiting for Event")
+			return false, nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	s.Update("Statefulset and pods deleted")
+	s.Done()
+
+	s = sg.Add("")
+	s.Update("Deleting Persistent Volume Claim...")
+
+	// create our wait channel to later poll for pvc deletion
+	w, err = clientset.CoreV1().PersistentVolumeClaims(i.config.namespace).Watch(
+		ctx,
+		metav1.ListOptions{
+			LabelSelector: "app=" + serverName,
+		},
+	)
+
+	// delete persistent volume claims
+	if err = clientset.CoreV1().PersistentVolumeClaims(i.config.namespace).DeleteCollection(
+		ctx,
+		metav1.DeleteOptions{},
+		metav1.ListOptions{
+			LabelSelector: "app=" + serverName,
+		},
+	); err != nil {
+		ui.Output(
+			"Error deleting Waypoint pvc: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+	// wait for deletion to complete
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		select {
+		case wCh := <-w.ResultChan():
+			if wCh.Type == "DELETED" {
+				w.Stop()
+				return true, nil
+			}
+			log.Trace("persistent volume claims collection not fully removed, waiting")
+			return false, nil
+		default:
+			log.Trace("no message received on watch.ResultChan(), waiting for Event")
+			return false, nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+
+	s.Update("Persistent Volume Claim deleted")
+	s.Done()
+
+	s = sg.Add("")
+	s.Update("Deleting service...")
+
+	// create our wait channel to later poll for service deletion
+	w, err = clientset.CoreV1().Services(i.config.namespace).Watch(
+		ctx,
+		metav1.ListOptions{
+			LabelSelector: "app=" + serverName,
+		},
+	)
+
+	// delete waypoint service
+	if err = clientset.CoreV1().Services(i.config.namespace).Delete(
+		ctx,
+		serviceName,
+		metav1.DeleteOptions{},
+	); err != nil {
+		ui.Output(
+			"Error deleting Waypoint service: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+	// wait for deletion to complete
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		select {
+		case wCh := <-w.ResultChan():
+			if wCh.Type == "DELETED" {
+				w.Stop()
+				return true, nil
+			}
+			log.Trace("no message received on watch.ResultChan(), waiting for Event")
+			return false, nil
+		default:
+			log.Trace("persistent volume claims not fully removed, waiting")
+			return false, nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+
+	s.Update("Service deleted")
+	s.Done()
+
+	return nil
+}
+
+func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
+	// Purposely empty, no flags
 }
 
 func int32Ptr(i int32) *int32 {

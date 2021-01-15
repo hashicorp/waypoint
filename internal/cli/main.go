@@ -269,6 +269,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"server uninstall": func() (cli.Command, error) {
+			return &UninstallCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"server run": func() (cli.Command, error) {
 			return &ServerRunCommand{
 				baseCommand: baseCommand,

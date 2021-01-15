@@ -24,6 +24,14 @@ type Installer interface {
 	// specify flags for the install CLI. The flags should be prefixed with
 	// the platform name to avoid conflicts with other flags.
 	InstallFlags(*flag.Set)
+
+	// Uninstall expects the Waypoint server to be uninstalled.
+	Uninstall(context.Context, *InstallOpts) error
+
+	// UninstallFlags is called prior to Uninstall and allows the Uninstaller to
+	// specify flags for the uninstall CLI. The flags should be prefixed with the
+	// platform name to avoid conflicts with other flags.
+	UninstallFlags(*flag.Set)
 }
 
 // InstallOpts are the options sent to Installer.Install.
@@ -74,3 +82,7 @@ var Platforms = map[string]Installer{
 	"nomad":      &NomadInstaller{},
 	"docker":     &DockerInstaller{},
 }
+
+const (
+	serverName = "waypoint-server"
+)
