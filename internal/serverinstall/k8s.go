@@ -651,286 +651,6 @@ func (i *K8sInstaller) Upgrade(
 	}, nil
 }
 
-// newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset
-// for deployment in Kubernetes.
-func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
-	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.cpuRequest, err)
-	}
-
-	memRequest, err := resource.ParseQuantity(c.memRequest)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse memory request resource %s: %s", c.memRequest, err)
-	}
-
-	storageRequest, err := resource.ParseQuantity(c.storageRequest)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse storage request resource %s: %s", c.storageRequest, err)
-	}
-
-	securityContext := &apiv1.PodSecurityContext{}
-	if !c.openshift {
-		securityContext.FSGroup = int64Ptr(1000)
-	}
-
-	return &appsv1.StatefulSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      serverName,
-			Namespace: c.namespace,
-			Labels: map[string]string{
-				"app": serverName,
-			},
-		},
-		Spec: appsv1.StatefulSetSpec{
-			Replicas: int32Ptr(1),
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app": serverName,
-				},
-			},
-			ServiceName: serviceName,
-			Template: apiv1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"app": serverName,
-					},
-				},
-				Spec: apiv1.PodSpec{
-					ImagePullSecrets: []apiv1.LocalObjectReference{
-						{
-							Name: c.imagePullSecret,
-						},
-					},
-					SecurityContext: securityContext,
-					Containers: []apiv1.Container{
-						{
-							Name:            "server",
-							Image:           c.serverImage,
-							ImagePullPolicy: apiv1.PullPolicy(c.imagePullPolicy),
-							Env: []apiv1.EnvVar{
-								{
-									Name:  "HOME",
-									Value: "/data",
-								},
-							},
-							Command: []string{serviceName},
-							Args: []string{
-								"server",
-								"run",
-								"-accept-tos",
-								"-vvv",
-								"-db=/data/data.db",
-								"-listen-grpc=0.0.0.0:9701",
-								"-listen-http=0.0.0.0:9702",
-							},
-							Ports: []apiv1.ContainerPort{
-								{
-									Name:          "grpc",
-									Protocol:      apiv1.ProtocolTCP,
-									ContainerPort: 9701,
-								},
-								{
-									Name:          "http",
-									Protocol:      apiv1.ProtocolTCP,
-									ContainerPort: 9702,
-								},
-							},
-							LivenessProbe: &apiv1.Probe{
-								Handler: apiv1.Handler{
-									HTTPGet: &apiv1.HTTPGetAction{
-										Path:   "/",
-										Port:   intstr.FromString("http"),
-										Scheme: "HTTPS",
-									},
-								},
-							},
-							Resources: apiv1.ResourceRequirements{
-								Requests: apiv1.ResourceList{
-									apiv1.ResourceMemory: memRequest,
-									apiv1.ResourceCPU:    cpuRequest,
-								},
-							},
-							VolumeMounts: []apiv1.VolumeMount{
-								{
-									Name:      "data",
-									MountPath: "/data",
-								},
-							},
-						},
-					},
-				},
-			},
-			VolumeClaimTemplates: []apiv1.PersistentVolumeClaim{
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "data",
-					},
-					Spec: apiv1.PersistentVolumeClaimSpec{
-						AccessModes: []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
-						Resources: apiv1.ResourceRequirements{
-							Requests: apiv1.ResourceList{
-								apiv1.ResourceStorage: storageRequest,
-							},
-						},
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-// newService takes in a k8sConfig and creates a new Waypoint LoadBalancer
-// for deployment in Kubernetes.
-func newService(c k8sConfig) (*apiv1.Service, error) {
-	return &apiv1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceName,
-			Namespace: c.namespace,
-			Labels: map[string]string{
-				"app": serverName,
-			},
-			Annotations: c.serviceAnnotations,
-		},
-		Spec: apiv1.ServiceSpec{
-			Ports: []apiv1.ServicePort{
-				{
-					Port: 9701,
-					Name: "grpc",
-				},
-				{
-					Port: 9702,
-					Name: "http",
-				},
-			},
-			Selector: map[string]string{
-				"app": serverName,
-			},
-			Type: apiv1.ServiceTypeLoadBalancer,
-		},
-	}, nil
-}
-
-// InstallRunner implements Installer.
-func (i *K8sInstaller) InstallRunner(
-	ctx context.Context,
-	opts *InstallRunnerOpts,
-) error {
-	// TODO
-	return nil
-}
-
-func (i *K8sInstaller) InstallFlags(set *flag.Set) {
-	set.BoolVar(&flag.BoolVar{
-		Name:   "k8s-advertise-internal",
-		Target: &i.config.advertiseInternal,
-		Usage: "Advertise the internal service address rather than the external. " +
-			"This is useful if all your deployments will be able to access the private " +
-			"service address. This will default to false but will be automatically set to " +
-			"true if the external host is detected to be localhost.",
-	})
-
-	set.StringMapVar(&flag.StringMapVar{
-		Name:   "k8s-annotate-service",
-		Target: &i.config.serviceAnnotations,
-		Usage:  "Annotations for the Service generated.",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-cpu-request",
-		Target:  &i.config.cpuRequest,
-		Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
-		Default: "100m",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-mem-request",
-		Target:  &i.config.memRequest,
-		Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
-		Default: "256Mi",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-namespace",
-		Target:  &i.config.namespace,
-		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
-		Default: "",
-	})
-
-	set.BoolVar(&flag.BoolVar{
-		Name:    "k8s-openshift",
-		Target:  &i.config.openshift,
-		Default: false,
-		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-pull-policy",
-		Target:  &i.config.imagePullPolicy,
-		Usage:   "Set the pull policy for the Waypoint server image.",
-		Default: "",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-pull-secret",
-		Target:  &i.config.imagePullSecret,
-		Usage:   "Secret to use to access the Waypoint server image on Kubernetes.",
-		Default: "github",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:   "k8s-secret-file",
-		Target: &i.config.secretFile,
-		Usage:  "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-server-image",
-		Target:  &i.config.serverImage,
-		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-storage-request",
-		Target:  &i.config.storageRequest,
-		Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
-		Default: "1Gi",
-	})
-}
-
-func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
-	set.BoolVar(&flag.BoolVar{
-		Name:   "k8s-advertise-internal",
-		Target: &i.config.advertiseInternal,
-		Usage: "Advertise the internal service address rather than the external. " +
-			"This is useful if all your deployments will be able to access the private " +
-			"service address. This will default to false but will be automatically set to " +
-			"true if the external host is detected to be localhost.",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-namespace",
-		Target:  &i.config.namespace,
-		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
-		Default: "",
-	})
-
-	set.BoolVar(&flag.BoolVar{
-		Name:    "k8s-openshift",
-		Target:  &i.config.openshift,
-		Default: false,
-		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.",
-	})
-
-	set.StringVar(&flag.StringVar{
-		Name:    "k8s-server-image",
-		Target:  &i.config.serverImage,
-		Usage:   "Docker image for the Waypoint server.",
-		Default: defaultServerImage,
-	})
-}
-
 // Uninstall is a method of K8sInstaller and implements the Installer interface to
 // remove a waypoint-server statefulset and the associated PVC and service from
 // a Kubernetes cluster
@@ -1123,6 +843,286 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	s.Done()
 
 	return nil
+}
+
+// InstallRunner implements Installer.
+func (i *K8sInstaller) InstallRunner(
+	ctx context.Context,
+	opts *InstallRunnerOpts,
+) error {
+	// TODO
+	return nil
+}
+
+// newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset
+// for deployment in Kubernetes.
+func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
+	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.cpuRequest, err)
+	}
+
+	memRequest, err := resource.ParseQuantity(c.memRequest)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse memory request resource %s: %s", c.memRequest, err)
+	}
+
+	storageRequest, err := resource.ParseQuantity(c.storageRequest)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse storage request resource %s: %s", c.storageRequest, err)
+	}
+
+	securityContext := &apiv1.PodSecurityContext{}
+	if !c.openshift {
+		securityContext.FSGroup = int64Ptr(1000)
+	}
+
+	return &appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serverName,
+			Namespace: c.namespace,
+			Labels: map[string]string{
+				"app": serverName,
+			},
+		},
+		Spec: appsv1.StatefulSetSpec{
+			Replicas: int32Ptr(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": serverName,
+				},
+			},
+			ServiceName: serviceName,
+			Template: apiv1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": serverName,
+					},
+				},
+				Spec: apiv1.PodSpec{
+					ImagePullSecrets: []apiv1.LocalObjectReference{
+						{
+							Name: c.imagePullSecret,
+						},
+					},
+					SecurityContext: securityContext,
+					Containers: []apiv1.Container{
+						{
+							Name:            "server",
+							Image:           c.serverImage,
+							ImagePullPolicy: apiv1.PullPolicy(c.imagePullPolicy),
+							Env: []apiv1.EnvVar{
+								{
+									Name:  "HOME",
+									Value: "/data",
+								},
+							},
+							Command: []string{serviceName},
+							Args: []string{
+								"server",
+								"run",
+								"-accept-tos",
+								"-vvv",
+								"-db=/data/data.db",
+								"-listen-grpc=0.0.0.0:9701",
+								"-listen-http=0.0.0.0:9702",
+							},
+							Ports: []apiv1.ContainerPort{
+								{
+									Name:          "grpc",
+									Protocol:      apiv1.ProtocolTCP,
+									ContainerPort: 9701,
+								},
+								{
+									Name:          "http",
+									Protocol:      apiv1.ProtocolTCP,
+									ContainerPort: 9702,
+								},
+							},
+							LivenessProbe: &apiv1.Probe{
+								Handler: apiv1.Handler{
+									HTTPGet: &apiv1.HTTPGetAction{
+										Path:   "/",
+										Port:   intstr.FromString("http"),
+										Scheme: "HTTPS",
+									},
+								},
+							},
+							Resources: apiv1.ResourceRequirements{
+								Requests: apiv1.ResourceList{
+									apiv1.ResourceMemory: memRequest,
+									apiv1.ResourceCPU:    cpuRequest,
+								},
+							},
+							VolumeMounts: []apiv1.VolumeMount{
+								{
+									Name:      "data",
+									MountPath: "/data",
+								},
+							},
+						},
+					},
+				},
+			},
+			VolumeClaimTemplates: []apiv1.PersistentVolumeClaim{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "data",
+					},
+					Spec: apiv1.PersistentVolumeClaimSpec{
+						AccessModes: []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
+						Resources: apiv1.ResourceRequirements{
+							Requests: apiv1.ResourceList{
+								apiv1.ResourceStorage: storageRequest,
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil
+}
+
+// newService takes in a k8sConfig and creates a new Waypoint LoadBalancer
+// for deployment in Kubernetes.
+func newService(c k8sConfig) (*apiv1.Service, error) {
+	return &apiv1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      serviceName,
+			Namespace: c.namespace,
+			Labels: map[string]string{
+				"app": serverName,
+			},
+			Annotations: c.serviceAnnotations,
+		},
+		Spec: apiv1.ServiceSpec{
+			Ports: []apiv1.ServicePort{
+				{
+					Port: 9701,
+					Name: "grpc",
+				},
+				{
+					Port: 9702,
+					Name: "http",
+				},
+			},
+			Selector: map[string]string{
+				"app": serverName,
+			},
+			Type: apiv1.ServiceTypeLoadBalancer,
+		},
+	}, nil
+}
+
+func (i *K8sInstaller) InstallFlags(set *flag.Set) {
+	set.BoolVar(&flag.BoolVar{
+		Name:   "k8s-advertise-internal",
+		Target: &i.config.advertiseInternal,
+		Usage: "Advertise the internal service address rather than the external. " +
+			"This is useful if all your deployments will be able to access the private " +
+			"service address. This will default to false but will be automatically set to " +
+			"true if the external host is detected to be localhost.",
+	})
+
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "k8s-annotate-service",
+		Target: &i.config.serviceAnnotations,
+		Usage:  "Annotations for the Service generated.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-cpu-request",
+		Target:  &i.config.cpuRequest,
+		Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
+		Default: "100m",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-mem-request",
+		Target:  &i.config.memRequest,
+		Usage:   "Configures the requested memory amount for the Waypoint server in Kubernetes.",
+		Default: "256Mi",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-namespace",
+		Target:  &i.config.namespace,
+		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
+		Default: "",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-openshift",
+		Target:  &i.config.openshift,
+		Default: false,
+		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-pull-policy",
+		Target:  &i.config.imagePullPolicy,
+		Usage:   "Set the pull policy for the Waypoint server image.",
+		Default: "",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-pull-secret",
+		Target:  &i.config.imagePullSecret,
+		Usage:   "Secret to use to access the Waypoint server image on Kubernetes.",
+		Default: "github",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-secret-file",
+		Target: &i.config.secretFile,
+		Usage:  "Use the Kubernetes Secret in the given path to access the Waypoint server image.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: defaultServerImage,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-storage-request",
+		Target:  &i.config.storageRequest,
+		Usage:   "Configures the requested persistent volume size for the Waypoint server in Kubernetes.",
+		Default: "1Gi",
+	})
+}
+
+func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
+	set.BoolVar(&flag.BoolVar{
+		Name:   "k8s-advertise-internal",
+		Target: &i.config.advertiseInternal,
+		Usage: "Advertise the internal service address rather than the external. " +
+			"This is useful if all your deployments will be able to access the private " +
+			"service address. This will default to false but will be automatically set to " +
+			"true if the external host is detected to be localhost.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-namespace",
+		Target:  &i.config.namespace,
+		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
+		Default: "",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "k8s-openshift",
+		Target:  &i.config.openshift,
+		Default: false,
+		Usage:   "Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-server-image",
+		Target:  &i.config.serverImage,
+		Usage:   "Docker image for the Waypoint server.",
+		Default: defaultServerImage,
+	})
 }
 
 func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
