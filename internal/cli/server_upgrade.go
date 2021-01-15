@@ -153,8 +153,9 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	if !c.skipSnapshot {
 		s.Update("Taking server snapshot before upgrading")
 
-		snapshotName := fmt.Sprintf("%s-%d", defaultSnapshotName, time.Now().Unix())
-		if c.snapshotName != "" {
+		snapshotName := c.snapshotName
+		if c.snapshotName == defaultSnapshotName {
+			// Append timestamps on default snapshot names
 			snapshotName = fmt.Sprintf("%s-%d", c.snapshotName, time.Now().Unix())
 		}
 
@@ -297,8 +298,9 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "snapshot-name",
 			Target:  &c.snapshotName,
-			Default: "",
-			Usage:   "Filename to write the snapshot to.",
+			Default: defaultSnapshotName,
+			Usage: "Filename to write the snapshot to. If no name is specified, by" +
+				"default a timestamp will be appended to the default snapshot name.",
 		})
 		f.BoolVar(&flag.BoolVar{
 			Name:    "skip-snapshot",
