@@ -67,13 +67,13 @@ func (c *UninstallCommand) Run(args []string) int {
 	// Generate a snapshot
 	if !c.skipSnapshot {
 		s.Update("Generating server snapshot...")
-		
+
 		// set config snapshot name with default or flag value + timestamp
 		if c.snapshotName == "" {
 			c.snapshotName = uninstallSnapshotName
 		}
 		c.snapshotName = fmt.Sprintf("%s-%d", c.snapshotName, time.Now().Unix())
-		
+
 		// take the snapshot
 		w, err := os.Create(c.snapshotName)
 		if err != nil {
@@ -206,7 +206,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 
 var (
 	uninstallSnapshotName = "waypoint-server-snapshot"
-	autoApproveMsg = strings.TrimSpace(`
+	autoApproveMsg        = strings.TrimSpace(`
 Uninstalling Waypoint server requires approval. 
 Rerun the command with -auto-approve to continue with the uninstall.
 `)
