@@ -171,7 +171,7 @@ func (b *Builder) Build(
 		log.Warn("error during check if we should use Docker fallback", "err", err)
 		return nil, status.Errorf(codes.Internal,
 			"error validating Docker connection: %s", err)
-	} else if fallback && hasImg() {
+	} else if fallback && HasImg() {
 		// If we're falling back and have "img" available, use that. If we
 		// don't have "img" available, we continue to try to use Docker. We'll
 		// fail but that error message should help the user.

@@ -7,11 +7,11 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
-// hasImg returns true if "img" is available on the PATH.
+// HasImg returns true if "img" is available on the PATH.
 //
 // This doesn't do any fancy checking that "img" is the "img" we expect.
 // We can make the checking here more advanced later.
-func hasImg() bool {
+func HasImg() bool {
 	_, err := exec.LookPath("img")
 	return err == nil
 }
