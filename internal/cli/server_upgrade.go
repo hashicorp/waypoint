@@ -300,7 +300,7 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 			Target:  &c.snapshotName,
 			Default: defaultSnapshotName,
 			Usage: "Filename to write the snapshot to. If no name is specified, by" +
-				"default a timestamp will be appended to the default snapshot name.",
+				" default a timestamp will be appended to the default snapshot name.",
 		})
 		f.BoolVar(&flag.BoolVar{
 			Name:    "skip-snapshot",
