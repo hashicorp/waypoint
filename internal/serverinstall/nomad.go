@@ -388,6 +388,80 @@ EVAL:
 	}, nil
 }
 
+// Unnstall is a method of NomadInstaller and implements the Installer interface to
+// stop, and optionally purge, the waypoint-server job on a Nomad cluster
+func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
+	ui := opts.UI
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Nomad client...")
+	defer func() { s.Abort() }()
+
+	// Build api client from environment
+	client, err := api.NewClient(api.DefaultConfig())
+	if err != nil {
+		return err
+	}
+
+	s.Update("Checking for existing Waypoint server...")
+
+	// Find waypoint-server job
+	jobs, _, err := client.Jobs().PrefixList(serverName)
+	if err != nil {
+		return err
+	}
+	var serverDetected bool
+	for _, j := range jobs {
+		if j.Name == serverName {
+			serverDetected = true
+			break
+		}
+	}
+	if !serverDetected {
+		return fmt.Errorf("No job with server name %q found; cannot uninstall", serverName)
+	}
+
+	s.Update("Removing Waypoint server from Nomad...")
+
+	_, _, err = client.Jobs().Deregister(serverName, i.config.serverPurge, &api.WriteOptions{})
+	allocs, _, err := client.Jobs().Allocations(serverName, true, nil)
+	if err != nil {
+		return err
+	}
+	for _, alloc := range allocs {
+		if alloc.DesiredStatus != "stop" {
+			a, _, err := client.Allocations().Info(alloc.ID, &api.QueryOptions{})
+			if err != nil {
+				return err
+			}
+			_, err = client.Allocations().Stop(a, &api.QueryOptions{})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if i.config.serverPurge {
+		s.Update("Waypoint job and allocations purged")
+	} else {
+		s.Update("Waypoint job and allocations stopped")
+	}
+	s.Done()
+
+	return nil
+}
+
+// InstallRunner implements Installer.
+func (i *NomadInstaller) InstallRunner(
+	ctx context.Context,
+	opts *InstallRunnerOpts,
+) error {
+	// TODO
+	return nil
+}
+
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
 func waypointNomadJob(c nomadConfig) *api.Job {
@@ -559,71 +633,6 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
-}
-
-// Unnstall is a method of NomadInstaller and implements the Installer interface to
-// stop, and optionally purge, the waypoint-server job on a Nomad cluster
-func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
-	ui := opts.UI
-
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Initializing Nomad client...")
-	defer func() { s.Abort() }()
-
-	// Build api client from environment
-	client, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		return err
-	}
-
-	s.Update("Checking for existing Waypoint server...")
-
-	// Find waypoint-server job
-	jobs, _, err := client.Jobs().PrefixList(serverName)
-	if err != nil {
-		return err
-	}
-	var serverDetected bool
-	for _, j := range jobs {
-		if j.Name == serverName {
-			serverDetected = true
-			break
-		}
-	}
-	if !serverDetected {
-		return fmt.Errorf("No job with server name %q found; cannot uninstall", serverName)
-	}
-
-	s.Update("Removing Waypoint server from Nomad...")
-
-	_, _, err = client.Jobs().Deregister(serverName, i.config.serverPurge, &api.WriteOptions{})
-	allocs, _, err := client.Jobs().Allocations(serverName, true, nil)
-	if err != nil {
-		return err
-	}
-	for _, alloc := range allocs {
-		if alloc.DesiredStatus != "stop" {
-			a, _, err := client.Allocations().Info(alloc.ID, &api.QueryOptions{})
-			if err != nil {
-				return err
-			}
-			_, err = client.Allocations().Stop(a, &api.QueryOptions{})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if i.config.serverPurge {
-		s.Update("Waypoint job and allocations purged")
-	} else {
-		s.Update("Waypoint job and allocations stopped")
-	}
-	s.Done()
-
-	return nil
 }
 
 func (i *NomadInstaller) UninstallFlags(set *flag.Set) {
