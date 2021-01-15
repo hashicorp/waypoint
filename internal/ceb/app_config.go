@@ -18,6 +18,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	sdkpb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -170,7 +171,7 @@ func (ceb *CEB) watchAppConfig(
 			// Split the static and dynamic out here since this is something
 			// we're going to need often so we precompute it once.
 			dynamicOld := dynamic
-			static, dynamic = ceb.splitAppConfig(log, newVars)
+			static, dynamic = splitAppConfig(log, newVars)
 
 			// We need to do a diff of if any dynamic var config changed.
 			// We loop through the result here and set values to true so
@@ -203,7 +204,9 @@ func (ceb *CEB) watchAppConfig(
 
 			// Get our new env vars
 			log.Trace("refreshing app configuration")
-			newEnv := ceb.buildAppConfig(ctx, log, static, dynamic, dynamicSources, prevVarsChanged)
+			newEnv := buildAppConfig(ctx, log,
+				ceb.configPlugins, static, dynamic, dynamicSources, prevVarsChanged)
+
 			sort.Strings(newEnv)
 
 			// Mark that we aren't seeing any new vars anymore. This speeds up
@@ -274,7 +277,7 @@ func configVarSortFunc(vars []*pb.ConfigVar) func(i, j int) bool {
 // splitAppConfig takes a list of config variables as sent on the wire
 // and splits them into a set of static env vars (in KEY=VALUE format already),
 // and a map of dynamic config requests keyed by plugin type.
-func (ceb *CEB) splitAppConfig(
+func splitAppConfig(
 	log hclog.Logger,
 	vars []*pb.ConfigVar,
 ) (static []string, dynamic map[string][]*component.ConfigRequest) {
@@ -353,9 +356,10 @@ func (ceb *CEB) diffDynamicAppConfig(
 
 // buildAppConfig takes the static and dynamic variables and builds up the
 // full list of actual env variable values.
-func (ceb *CEB) buildAppConfig(
+func buildAppConfig(
 	ctx context.Context,
 	log hclog.Logger,
+	configPlugins map[string]*plugin.Instance,
 	static []string,
 	dynamic map[string][]*component.ConfigRequest,
 	dynamicSources map[string]*pb.ConfigSource,
@@ -364,7 +368,7 @@ func (ceb *CEB) buildAppConfig(
 	// For each dynamic config, we need to launch that plugin if we
 	// haven't already.
 	for k := range dynamic {
-		if _, ok := ceb.configPlugins[k]; ok {
+		if _, ok := configPlugins[k]; ok {
 			continue
 		}
 
@@ -381,7 +385,7 @@ func (ceb *CEB) buildAppConfig(
 
 	// Go through the changed plugins first and call Stop.
 	for k, kill := range changed {
-		raw, ok := ceb.configPlugins[k]
+		raw, ok := configPlugins[k]
 		if !ok {
 			continue
 		}
@@ -389,7 +393,7 @@ func (ceb *CEB) buildAppConfig(
 		L := log.With("source", k)
 		L.Debug("config variables changed, calling Stop")
 		s := raw.Component.(component.ConfigSourcer)
-		_, err := ceb.callDynamicFunc(L, s.StopFunc(),
+		_, err := callDynamicFunc(L, s.StopFunc(),
 			argmapper.Typed(ctx),
 		)
 		if err != nil {
@@ -459,7 +463,7 @@ func (ceb *CEB) buildAppConfig(
 			continue
 		}
 
-		s := ceb.configPlugins[k].Component.(component.ConfigSourcer)
+		s := configPlugins[k].Component.(component.ConfigSourcer)
 
 		// Next, call Read
 		if L.IsTrace() {
@@ -469,7 +473,7 @@ func (ceb *CEB) buildAppConfig(
 			}
 			L.Trace("reading values for keys", "keys", keys)
 		}
-		result, err := ceb.callDynamicFunc(L, s.ReadFunc(),
+		result, err := callDynamicFunc(L, s.ReadFunc(),
 			argmapper.Typed(ctx),
 			argmapper.Typed(reqs),
 		)

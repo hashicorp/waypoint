@@ -11,7 +11,7 @@ import (
 //
 // If error is nil, then the result is guaranteed to not be erroneous. Callers
 // do NOT need to check result.Err().
-func (ceb *CEB) callDynamicFunc(
+func callDynamicFunc(
 	log hclog.Logger,
 	f interface{},
 	args ...argmapper.Arg,
