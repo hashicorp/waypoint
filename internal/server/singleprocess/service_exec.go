@@ -38,6 +38,7 @@ func (s *service) StartExecStream(
 		Pty:               start.Start.Pty,
 		ClientEventCh:     clientEventCh,
 		EntrypointEventCh: eventCh,
+		Context:           srv.Context(),
 	}
 
 	// Register the exec session

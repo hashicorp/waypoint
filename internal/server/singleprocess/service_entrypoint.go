@@ -266,10 +266,54 @@ func (s *service) EntrypointExecStream(
 	go func() {
 		defer cancel()
 
+		// backgroundRetry indicates that we detected a context cancellation
+		// while holding a message and are handling that message in another
+		// goroutine first.
+		//
+		// sawExit indicates that we observed either an Exit or Error message
+		// flow through. We use this to control if we should synthesizes a Error
+		// message about an improper closure.
+		var backgroundRetry, sawExit bool
+
+		// Pulled out to a closure because we call it in the "proper" shutdown path
+		// as well as the case where we're doing one last message send in the background.
+		sendExit := func() {
+			// If we observed a Exit or Error event, we don't need to do this.
+			if sawExit {
+				return
+			}
+
+			req := &pb.EntrypointExecRequest{
+				Event: &pb.EntrypointExecRequest_Error_{
+					Error: &pb.EntrypointExecRequest_Error{
+						Error: status.New(codes.Aborted, "server side exitted unexpectedly").Proto(),
+					},
+				},
+			}
+
+			// We're again careful here to not block forever, but depend on the
+			// client's context to decide if we should give up.
+			select {
+			case exec.EntrypointEventCh <- req:
+				log.Info("entrypoint event dispatched")
+			case <-exec.Context.Done():
+			}
+		}
+
 		// Close the event channel we send to. This signals to the receiving
 		// side in StartExecStream (service_exec.go) that the entrypoint
 		// exited and it should also exit the client stream.
-		defer close(exec.EntrypointEventCh)
+		defer func() {
+			// If there is a background retry, it will handle the cleanup, so we shouldn't
+			if backgroundRetry {
+				return
+			}
+
+			// We defer the close again here so that if sendExit fails, we always
+			// manage to get the channel closed.
+			defer close(exec.EntrypointEventCh)
+			sendExit()
+		}()
 
 		for {
 			log.Trace("waiting for entrypoint exec event")
@@ -287,12 +331,45 @@ func (s *service) EntrypointExecStream(
 				errCh <- err
 				return
 			}
-			log.Trace("entrypoint event received", "event", req.Event)
+			log.Trace("entrypoint event received", "event", hclog.Fmt("%#v", req.Event))
+
+			// If this is an exit or error event track that so we don't synthesize one.
+			// We synthesize an Error value if this loop is going to returning without
+			// having sent one of these types to tell the client that something happened.
+			switch req.Event.(type) {
+			case *pb.EntrypointExecRequest_Exit_, *pb.EntrypointExecRequest_Error_:
+				sawExit = true
+			}
 
 			// Send the event along
 			select {
 			case exec.EntrypointEventCh <- req:
+				// ok
 			case <-ctx.Done():
+				// The situation here is that we have a message in `req` but we also
+				// detected that the context has been canceled. This happens because of
+				// the way events flow through gRPC and arrive at the server stream handler
+				// when the client has canceled the context right after sending a message.
+				//
+				// We are disabling direct cleanup by setting backgroundRetry.
+				backgroundRetry = true
+
+				// Rather than block the server stream handler, we spawn off a goroutine
+				// to try and deliver `req`. This also then cleans up the activities of
+				// this stream handler function.
+				go func() {
+					defer close(exec.EntrypointEventCh)
+
+					select {
+					case exec.EntrypointEventCh <- req:
+						// ok
+					case <-exec.Context.Done():
+						// ok
+					}
+
+					sendExit()
+				}()
+
 				return
 			}
 
