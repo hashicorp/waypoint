@@ -499,7 +499,7 @@ func (c *ServerRunCommand) listenerForConfig(log hclog.Logger, cfg *serverconfig
 		}
 
 		template := x509.Certificate{
-			SerialNumber: big.NewInt(1),
+			SerialNumber: big.NewInt(time.Now().Unix()),
 			Subject: pkix.Name{
 				Organization: []string{"Waypoint"},
 			},
