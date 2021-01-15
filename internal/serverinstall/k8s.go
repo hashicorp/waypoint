@@ -3,6 +3,7 @@ package serverinstall
 import (
 	"bytes"
 	"context"
+	json "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -15,6 +16,7 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -460,24 +462,43 @@ func (i *K8sInstaller) Upgrade(
 	s = sg.Add("Upgrading server to %q", i.config.serverImage)
 
 	// Update pod image to requested serverImage
-	cmd := exec.Command("kubectl", "set", "image", "statefulset", serverName, fmt.Sprintf("server=%s", i.config.serverImage))
-	cmd.Stdout = s.TermOutput()
-	cmd.Stderr = cmd.Stdout
-
-	if err = cmd.Run(); err != nil {
+	podClient := clientset.CoreV1().Pods(i.config.namespace)
+	if podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", serverName)}); err != nil {
 		ui.Output(
-			"Error executing kubectl to update server image in pod: %s", clierrors.Humanize(err),
+			"Error listing pods: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
-
 		return nil, err
+	} else {
+		for _, pod := range podList.Items {
+			// patch the pod containers with the new i.config.serverImage
+			// Payload should be the updated server config image with the podspec
+			for j, _ := range pod.Spec.Containers {
+				pod.Spec.Containers[j].Image = i.config.serverImage
+			}
+
+			jsonPayload, err := json.Marshal(pod)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = podClient.Patch(ctx, pod.Name, types.MergePatchType, jsonPayload, metav1.PatchOptions{})
+			if err != nil {
+				ui.Output(
+					"Error submitting patch to update container image: %s", clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+				return nil, err
+			}
+		}
 	}
+
+	s.Update("Patch update sent to waypoint server pod(s)")
 
 	if waypointStatefulSet.Spec.UpdateStrategy.Type == "OnDelete" {
 		s.Update("Deleting pod to refresh image")
 		log.Info("Update Strategy is 'OnDelete', deleting pod to refresh image")
 
-		podClient := clientset.CoreV1().Pods(i.config.namespace)
 		if podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", serverName)}); err != nil {
 			ui.Output(
 				"Error listing pods: %s", clierrors.Humanize(err),
