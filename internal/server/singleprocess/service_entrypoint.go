@@ -47,6 +47,7 @@ func (s *service) EntrypointConfig(
 		Application:  deployment.Application.Application,
 		Workspace:    deployment.Workspace.Workspace,
 		LogBuffer:    logbuffer.New(),
+		Type:         req.Type,
 	}
 	if err := s.state.InstanceCreate(record); err != nil {
 		return err

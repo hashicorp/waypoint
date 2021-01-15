@@ -60,6 +60,37 @@ type InstanceExec struct {
 	Connected         uint32
 }
 
+func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceExec) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	// If the caller specified an instance id already, then just validate it.
+	if id == "" {
+		return status.Errorf(codes.NotFound, "No instance id given")
+	}
+
+	raw, err := txn.First(instanceTableName, instanceIdIndexName, id)
+	if err != nil {
+		return err
+	}
+
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "No instance by given id: %s", id)
+	}
+
+	// Set our ID
+	exec.Id = atomic.AddInt64(&instanceExecId, 1)
+	exec.InstanceId = id
+
+	// Insert
+	if err := txn.Insert(instanceExecTableName, exec); err != nil {
+		return status.Errorf(codes.Aborted, err.Error())
+	}
+	txn.Commit()
+
+	return nil
+}
+
 func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
@@ -76,6 +107,13 @@ func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) e
 	minCount := 0
 	for raw := iter.Next(); raw != nil; raw = iter.Next() {
 		rec := raw.(*Instance)
+
+		// When looking through all the instances for an exec capable instance
+		// we only consider LONG_RUNNING type instances. These are the only ones
+		// that it makes sense to send random exec sessions to.
+		if rec.Type != pb.Instance_LONG_RUNNING {
+			continue
+		}
 
 		execs, err := s.instanceExecListByInstanceId(txn, rec.Id, nil)
 		if err != nil {

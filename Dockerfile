@@ -1,5 +1,9 @@
 # syntax = hashicorp.jfrog.io/docker/docker/dockerfile:experimental
 
+#--------------------------------------------------------------------
+# builder builds the Waypoint binaries
+#--------------------------------------------------------------------
+
 FROM hashicorp.jfrog.io/docker/golang:alpine AS builder
 
 RUN apk add --no-cache git gcc libc-dev openssh
@@ -26,7 +30,68 @@ RUN go get github.com/kevinburke/go-bindata/...
 RUN --mount=type=cache,target=/root/.cache/go-build make bin
 RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 
+#--------------------------------------------------------------------
+# imgbase builds the "img" tool and all of its dependencies
+#--------------------------------------------------------------------
+
+# We build a fork of img for now so we can get the `img inspect` CLI
+# Watch this PR: https://github.com/genuinetools/img/pull/324
+FROM hashicorp.jfrog.io/docker/golang:alpine AS imgbuilder
+
+RUN apk add --no-cache \
+	bash \
+	build-base \
+	gcc \
+	git \
+	libseccomp-dev \
+	linux-headers \
+	make
+
+RUN git clone https://github.com/mitchellh/img.git /img
+WORKDIR /img
+RUN git checkout pull-config
+RUN go get github.com/go-bindata/go-bindata/go-bindata
+RUN make static && mv img /usr/bin/img
+
+# Copied from img repo, see notes for specific reasons:
+# https://github.com/genuinetools/img/blob/d858ac71f93cc5084edd2ba2d425b90234cf2ead/Dockerfile
+FROM hashicorp.jfrog.io/docker/alpine AS imgbase
+RUN apk add --no-cache autoconf automake build-base byacc gettext gettext-dev \
+    gcc git libcap-dev libtool libxslt img runc
+RUN git clone https://github.com/shadow-maint/shadow.git /shadow
+WORKDIR /shadow
+RUN git checkout 59c2dabb264ef7b3137f5edb52c0b31d5af0cf76
+RUN ./autogen.sh --disable-nls --disable-man --without-audit \
+    --without-selinux --without-acl --without-attr --without-tcb \
+    --without-nscd \
+    && make \
+    && cp src/newuidmap src/newgidmap /usr/bin
+
+#--------------------------------------------------------------------
+# final image
+#--------------------------------------------------------------------
+
+# Notes on img and what is required to make it work, since there's a lot
+# of small details below that are absolutely required for everything to
+# come together:
+#
+#  - img, runc, newuidmap, newgidmap need to be installed
+#  - libseccomp-dev must be installed for runc
+#  - newuidmap/newgidmap need to have suid set (u+s)
+#  - /etc/subuid and /etc/subgid need to have an entry for the user
+#  - USER, HOME, and XDG_RUNTIME_DIR all need to be set
+#
+
 FROM hashicorp.jfrog.io/docker/alpine
+
+COPY --from=imgbuilder /usr/bin/img /usr/bin/img
+COPY --from=imgbase /usr/bin/runc /usr/bin/runc
+COPY --from=imgbase /usr/bin/newuidmap /usr/bin/newuidmap
+COPY --from=imgbase /usr/bin/newgidmap /usr/bin/newgidmap
+
+# libseccomp-dev is required for runc
+# git is for gitrefpretty() and other calls for Waypoint
+RUN apk add --no-cache libseccomp-dev git
 
 COPY --from=builder /tmp/wp-src/waypoint /usr/bin/waypoint
 COPY --from=builder /tmp/wp-src/waypoint-entrypoint /usr/bin/waypoint-entrypoint
@@ -34,10 +99,19 @@ COPY --from=builder /tmp/wp-src/waypoint-entrypoint /usr/bin/waypoint-entrypoint
 VOLUME ["/data"]
 
 RUN addgroup waypoint && \
-    adduser -S -G waypoint waypoint && \
+    adduser -S -u 1000 -G waypoint waypoint && \
     mkdir /data/ && \
     chown -R waypoint:waypoint /data
 
+# configure newuidmap/newgidmap to work with our waypoint user
+RUN chmod u+s /usr/bin/newuidmap /usr/bin/newgidmap \
+  && mkdir -p /run/user/1000 \
+  && chown -R waypoint /run/user/1000 /home/waypoint \
+  && echo waypoint:100000:65536 | tee /etc/subuid | tee /etc/subgid
+
 USER waypoint
+ENV USER waypoint
+ENV HOME /home/waypoint
+ENV XDG_RUNTIME_DIR=/run/user/1000
 
 ENTRYPOINT ["/usr/bin/waypoint"]

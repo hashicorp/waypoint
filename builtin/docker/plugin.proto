@@ -4,10 +4,30 @@ package docker;
 
 option go_package = "waypoint/builtin/docker";
 
+import "google/protobuf/empty.proto";
+
 // Image is the artifact type for the registry.
 message Image {
   string image = 1;
   string tag = 2;
+
+  // location is where this image is currently. This can be used to
+  // determine if the image is pulled or not based on this proto rather
+  // than environment inspection.
+  //
+  // If this is not set, it will be assumed that the image is in a local
+  // Docker daemon registry for backwards compatiblity reasons.
+  oneof location {
+    // registry is set if the image is in a remote registry.
+    google.protobuf.Empty registry = 3;
+
+    // docker is set if the image is in a local Docker daemon registry.
+    google.protobuf.Empty docker = 4;
+
+    // img is set if the image is in a local img content store directory.
+    // img: https://github.com/genuinetools/img
+    google.protobuf.Empty img = 5;
+  }
 }
 
 message Deployment {

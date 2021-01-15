@@ -12,7 +12,28 @@ description: |-
 
 The Waypoint Server creates several resources in Docker and Kubernetes that should be removed to either reinstall Waypoint or to completely remove it from a system.
 
-### Waypoint Server in Docker
+Run `waypoint destroy` on your workspaces prior to removing the server to prevent hanging resources.
+
+### Uninstall
+
+Starting in 0.2.1, the `server uninstall` command will remove the server and supporting
+containers and services that are created via `install`. By default, it also creates
+a snapshot and deletes the server context.
+
+For Docker, `uninstall` removes the Waypoint server-specific volumes, but refrains from
+doing a global volume prune. If you created deployments with Waypoint, there will likely
+be volumes left over from those deployments. You can remove these volumes individually,
+or globally via:
+
+```shell-session
+$ docker volume prune -f
+```
+
+If the uninstall fails, see below for manual removal.
+
+### Manual removal
+
+#### Waypoint Server in Docker
 
 Ensure that you have the latest `hashicorp/waypoint` Docker image.
 
@@ -28,7 +49,7 @@ $ docker rm waypoint-server
 $ docker volume prune -f
 ```
 
-### Waypoint Server in Kubernetes
+#### Waypoint Server in Kubernetes
 
 `waypoint install` for Kubernetes creates a StatefulSet, Service and PersistentVolumeClaim. These resources should be removed when Waypoint Server is no longer needed. These are some example `kubectl` commands that should clean up after a Waypoint Server installation.
 
@@ -67,8 +88,7 @@ developing your application.
 ## Exec into the application container
 
 After deploying your application, you can use `waypoint exec` to run
-commands in the context of the most recent deployment. Typically, `waypoint
-exec` will be used for running database migrations and debugging. However, you
+commands in the context of the most recent deployment. Typically, `waypoint exec` will be used for running database migrations and debugging. However, you
 can use it for any purpose.
 
 Use the `exec` command to open a shell prompt.

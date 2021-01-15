@@ -45,7 +45,11 @@ type InjectFile struct {
 	Info   os.FileInfo
 }
 
-func AlterEntrypoint(ctx context.Context, image string, f func(cur []string) (*NewEntrypoint, error)) (string, error) {
+func AlterEntrypoint(
+	ctx context.Context,
+	image string,
+	f func(cur []string) (*NewEntrypoint, error),
+) (string, error) {
 	dc, err := dockerClient(ctx)
 	if err != nil {
 		return "", err

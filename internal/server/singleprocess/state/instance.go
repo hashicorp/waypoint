@@ -98,12 +98,14 @@ type Instance struct {
 	Application  string
 	Workspace    string
 	LogBuffer    *logbuffer.Buffer
+	Type         pb.Instance_Type
 }
 
 func (i *Instance) Proto() *pb.Instance {
 	return &pb.Instance{
 		Id:           i.Id,
 		DeploymentId: i.DeploymentId,
+		Type:         i.Type,
 		Application: &pb.Ref_Application{
 			Project:     i.Project,
 			Application: i.Application,

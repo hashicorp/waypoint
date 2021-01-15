@@ -20,6 +20,11 @@ type runnerUI struct {
 	mu     *sync.Mutex
 	evc    pb.Waypoint_RunnerJobStreamClient
 
+	// stepIdx keeps track of the current step "ID" used when talking to
+	// the server. Each new stepgroup step gets a new monotonically increasing
+	// ID. You must never reuse an old ID.
+	stepIdx int32
+
 	stdSetup       sync.Once
 	stdout, stderr io.Writer
 }
@@ -548,9 +553,12 @@ func (u *runnerUISG) Add(str string, args ...interface{}) terminal.Step {
 
 	u.wg.Add(1)
 
+	stepIdx := u.ui.stepIdx
+	u.ui.stepIdx++
+
 	step := &runnerUISGStep{
 		sg: u,
-		id: int32(len(u.steps)),
+		id: stepIdx,
 	}
 
 	u.steps = append(u.steps, step)
@@ -601,6 +609,9 @@ func (u *runnerUISG) Wait() {
 }
 
 func (u *runnerUI) StepGroup() terminal.StepGroup {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
 	ctx, cancel := context.WithCancel(u.ctx)
 
 	sg := &runnerUISG{

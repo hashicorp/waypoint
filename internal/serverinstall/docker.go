@@ -30,6 +30,14 @@ type dockerConfig struct {
 	serverImage string `hcl:"server_image,optional"`
 }
 
+var (
+  grpcPort       = defaultGrpcPort
+	httpPort       = defaultHttpPort
+	containerLabel = "waypoint-type=server"
+	containerKey   = "waypoint-type"
+	containerValue = "server"
+)
+
 // Install is a method of DockerInstaller and implements the Installer interface to
 // create a waypoint-server as a Docker container
 func (i *DockerInstaller) Install(
@@ -55,15 +63,12 @@ func (i *DockerInstaller) Install(
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
-			Value: "waypoint-type=server",
+			Value: containerLabel,
 		}),
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	grpcPort := defaultGrpcPort
-	httpPort := defaultHttpPort
 
 	var (
 		clicfg   clicontext.Config
@@ -212,7 +217,7 @@ func (i *DockerInstaller) Install(
 	}
 
 	cfg.Labels = map[string]string{
-		"waypoint-type": "server",
+		containerKey: containerValue,
 	}
 
 	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, serverName)
@@ -490,7 +495,14 @@ func (i *DockerInstaller) InstallRunner(
 		Labels: map[string]string{
 			"waypoint-type": "runner",
 		},
-	}, nil, &network.NetworkingConfig{
+	}, &container.HostConfig{
+		// These security options are required for the runner so that
+		// Docker daemonless image building works properly.
+		SecurityOpt: []string{
+			"seccomp=unconfined",
+			"apparmor=unconfined",
+		},
+	}, &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
 			"waypoint": {},
 		},
@@ -526,4 +538,134 @@ func (i *DockerInstaller) UpgradeFlags(set *flag.Set) {
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
+}
+
+// Install is a method of DockerInstaller and implements the Installer interface to
+// remove the waypoint-server Docker container and associated image and volume
+func (i *DockerInstaller) Uninstall(
+	ctx context.Context,
+	opts *InstallOpts,
+) error {
+	sg := opts.UI.StepGroup()
+	defer sg.Wait()
+
+	// used base functionality from PR#660
+	s := sg.Add("Initializing Docker client...")
+	defer func() { s.Abort() }()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return err
+	}
+
+	defer cli.Close()
+
+	cli.NegotiateAPIVersion(ctx)
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "label",
+			Value: containerLabel,
+		}),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if len(containers) < 1 {
+		return fmt.Errorf(
+			"cannot find a Waypoint Docker container; Waypoint may already be uninstalled.",
+		)
+	}
+
+	// Pick the first container, as there should be only one.
+	containerId := containers[0].ID
+	image := containers[0].Image
+
+	imageRef, err := reference.ParseNormalizedNamed(image)
+	if err != nil {
+		return fmt.Errorf("Error parsing Docker image: %s", err)
+	}
+
+	s.Update("Stopping Waypoint Docker container...")
+
+	// Stop the container gracefully, respecting the Engine's default timeout.
+	if err := cli.ContainerStop(ctx, containerId, nil); err != nil {
+		return err
+	}
+
+	removeOptions := types.ContainerRemoveOptions{
+		RemoveVolumes: true,
+		Force:         true,
+	}
+
+	if err := cli.ContainerRemove(ctx, containerId, removeOptions); err != nil {
+		return err
+	}
+	s.Update("Docker container %q removed", serverName)
+	s.Done()
+	s = sg.Add("")
+
+	s.Update("Removing Waypoint Docker volume...")
+	// Find volume of the server
+	vl, err := cli.VolumeList(ctx, filters.NewArgs(filters.KeyValuePair{
+		Key:   "name",
+		Value: serverName,
+	}))
+	if err != nil {
+		return err
+	}
+	volumeExists := len(vl.Volumes) > 0
+
+	// If the Waypoint Docker volume does not exist, we keep going and just warn
+	if !volumeExists {
+		s.Update("Couldn't find Waypoint Docker volume %q; not removing", serverName)
+		s.Status(terminal.StatusWarn)
+		s.Done()
+	} else {
+		if err := cli.VolumeRemove(ctx, serverName, true); err != nil {
+			return err
+		}
+		s.Update("Docker volume %q removed", serverName)
+		s.Done()
+	}
+
+	s = sg.Add("")
+
+	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "reference",
+			Value: reference.FamiliarString(imageRef),
+		}),
+	})
+	if err != nil {
+		return err
+	}
+	if len(imageList) < 1 {
+		s.Update("Could not find image %q, not removing", imageRef.Name())
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		return nil
+	}
+
+	// Pick the first image, as there should be only one.
+	imageId := imageList[0].ID
+	_, err = cli.ImageRemove(ctx, imageId, types.ImageRemoveOptions{})
+	// If we can't remove the image, we keep going and just warn
+	if err != nil {
+		s.Update("Could not remove image %q: %s", imageRef.Name(), err)
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		return nil
+	}
+
+	s.Update("Docker image %q removed", imageRef.Name())
+	s.Done()
+
+	return nil
+}
+
+func (i *DockerInstaller) UninstallFlags(set *flag.Set) {
+	// Purposely empty, no flags
 }
