@@ -250,10 +250,12 @@ func (c *Client) Run() (int, error) {
 		case resp := <-recvCh:
 			switch event := resp.Event.(type) {
 			case *pb.ExecStreamResponse_Output_:
-				// TODO: stderr
-				out := c.Stdout
-				io.Copy(out, bytes.NewReader(event.Output.Data))
-
+				switch event.Output.Channel {
+				case pb.ExecStreamResponse_Output_STDOUT:
+					io.Copy(c.Stdout, bytes.NewReader(event.Output.Data))
+				case pb.ExecStreamResponse_Output_STDERR:
+					io.Copy(c.Stderr, bytes.NewReader(event.Output.Data))
+				}
 			case *pb.ExecStreamResponse_Exit_:
 				return int(event.Exit.Code), nil
 
