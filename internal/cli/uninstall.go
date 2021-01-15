@@ -178,7 +178,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "snapshot-name",
 			Target:  &c.snapshotName,
-			Default: fmt.Sprintf("waypoint-sever-snapshot-%d", time.Now().Unix()),
+			Default: fmt.Sprintf("waypoint-server-snapshot-%d", time.Now().Unix()),
 			Usage:   "Filename to write the snapshot to.",
 		})
 
