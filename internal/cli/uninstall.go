@@ -67,6 +67,14 @@ func (c *UninstallCommand) Run(args []string) int {
 	// Generate a snapshot
 	if !c.skipSnapshot {
 		s.Update("Generating server snapshot...")
+		
+		// set config snapshot name with default or flag value + timestamp
+		if c.snapshotName == "" {
+			c.snapshotName = defaultSnapshotName
+		}
+		c.snapshotName = fmt.Sprintf("%s-%d", c.snapshotName, time.Now().Unix())
+		
+		// take the snapshot
 		w, err := os.Create(c.snapshotName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating snapshot file: %s", err)
@@ -178,7 +186,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "snapshot-name",
 			Target:  &c.snapshotName,
-			Default: fmt.Sprintf("waypoint-sever-snapshot-%d", time.Now().Unix()),
+			Default: "",
 			Usage:   "Filename to write the snapshot to.",
 		})
 
@@ -197,6 +205,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 }
 
 var (
+	defaultSnapshotName = "waypoint-server-snapshot"
 	autoApproveMsg = strings.TrimSpace(`
 Uninstalling Waypoint server requires approval. 
 Rerun the command with -auto-approve to continue with the uninstall.
