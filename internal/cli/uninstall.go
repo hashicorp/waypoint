@@ -70,7 +70,7 @@ func (c *UninstallCommand) Run(args []string) int {
 		
 		// set config snapshot name with default or flag value + timestamp
 		if c.snapshotName == "" {
-			c.snapshotName = defaultSnapshotName
+			c.snapshotName = uninstallSnapshotName
 		}
 		c.snapshotName = fmt.Sprintf("%s-%d", c.snapshotName, time.Now().Unix())
 		
@@ -205,7 +205,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 }
 
 var (
-	defaultSnapshotName = "waypoint-server-snapshot"
+	uninstallSnapshotName = "waypoint-server-snapshot"
 	autoApproveMsg = strings.TrimSpace(`
 Uninstalling Waypoint server requires approval. 
 Rerun the command with -auto-approve to continue with the uninstall.
