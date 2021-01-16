@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -26,14 +25,18 @@ type nomadConfig struct {
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
 	policyOverride bool     `hcl:"policy_override,optional"`
+
+	serverPurge bool `hcl:"serverPurge,optional"`
 }
 
 // Install is a method of NomadInstaller and implements the Installer interface to
 // register a waypoint-server job with a Nomad cluster
 func (i *NomadInstaller) Install(
-	ctx context.Context, ui terminal.UI, log hclog.Logger) (
-	*clicontext.Config, *pb.ServerConfig_AdvertiseAddr, string, error,
-) {
+	ctx context.Context,
+	opts *InstallOpts,
+) (*InstallResults, error) {
+	ui := opts.UI
+
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
@@ -43,19 +46,22 @@ func (i *NomadInstaller) Install(
 	// Build api client from environment
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	s.Update("Checking for existing Waypoint server...")
 
 	// Check if waypoint-server has already been deployed
-	jobs, _, err := client.Jobs().PrefixList("waypoint-server")
+	jobs, _, err := client.Jobs().PrefixList(serverName)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	var serverDetected bool
 	for _, j := range jobs {
-		if j.Name == "waypoint-server" {
+		if j.Name == serverName {
+			if j.Status != "running" {
+				return nil, fmt.Errorf("waypoint-server job found but not running")
+			}
 			serverDetected = true
 			break
 		}
@@ -76,16 +82,22 @@ func (i *NomadInstaller) Install(
 	addr.TlsSkipVerify = true
 
 	if serverDetected {
-		allocs, _, err := client.Jobs().Allocations("waypoint-server", false, nil)
+		allocs, _, err := client.Jobs().Allocations(serverName, false, nil)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
-		if len(allocs) == 0 {
-			return nil, nil, "", fmt.Errorf("waypoint-server job found but no running allocations available")
+		var activeAllocs []*api.AllocationListStub
+		for _, alloc := range allocs {
+			if alloc.DesiredStatus == "run" {
+				activeAllocs = append(activeAllocs, alloc)
+			}
+		}
+		if len(allocs) == 0 || len(activeAllocs) == 0 {
+			return nil, fmt.Errorf("waypoint-server job found but no running allocations available")
 		}
 		serverAddr, err := getAddrFromAllocID(allocs[0].ID, client)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 
 		s.Update("Detected existing Waypoint server")
@@ -95,7 +107,11 @@ func (i *NomadInstaller) Install(
 		clicfg.Server.Address = serverAddr
 		addr.Addr = serverAddr
 		httpAddr = serverAddr
-		return &clicfg, &addr, httpAddr, nil
+		return &InstallResults{
+			Context:       &clicfg,
+			AdvertiseAddr: &addr,
+			HTTPAddr:      httpAddr,
+		}, nil
 	}
 
 	s.Update("Installing Waypoint server to Nomad")
@@ -106,7 +122,7 @@ func (i *NomadInstaller) Install(
 
 	resp, _, err := client.Jobs().RegisterOpts(job, jobOpts, nil)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 
 	s.Update("Waiting for allocation to be scheduled")
@@ -117,7 +133,7 @@ EVAL:
 
 	eval, meta, err := client.Evaluations().Info(resp.EvalID, qopts)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	qopts.WaitIndex = meta.LastIndex
 	switch eval.Status {
@@ -128,9 +144,9 @@ EVAL:
 	case "failed", "canceled", "blocked":
 		s.Update("Nomad failed to schedule the waypoint-server")
 		s.Status(terminal.StatusError)
-		return nil, nil, "", fmt.Errorf("nomad evaluation did not transition to 'complete'")
+		return nil, fmt.Errorf("nomad evaluation did not transition to 'complete'")
 	default:
-		return nil, nil, "", fmt.Errorf("unknown eval status: %q", eval.Status)
+		return nil, fmt.Errorf("unknown eval status: %q", eval.Status)
 	}
 
 	var allocID string
@@ -138,11 +154,11 @@ EVAL:
 	for {
 		allocs, qmeta, err := client.Evaluations().Allocations(eval.ID, qopts)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, err
 		}
 		qopts.WaitIndex = qmeta.LastIndex
 		if len(allocs) == 0 {
-			return nil, nil, "", fmt.Errorf("no allocations found after evaluation completed")
+			return nil, fmt.Errorf("no allocations found after evaluation completed")
 		}
 
 		switch allocs[0].ClientStatus {
@@ -153,8 +169,7 @@ EVAL:
 			s.Update(fmt.Sprintf("Waiting for allocation %q to start", allocs[0].ID))
 			// retry
 		default:
-			return nil, nil, "", fmt.Errorf("allocation failed")
-
+			return nil, fmt.Errorf("allocation failed")
 		}
 
 		if allocID != "" {
@@ -164,17 +179,17 @@ EVAL:
 		select {
 		case <-time.After(500 * time.Millisecond):
 		case <-ctx.Done():
-			return nil, nil, "", ctx.Err()
+			return nil, ctx.Err()
 		}
 	}
 
 	serverAddr, err := getAddrFromAllocID(allocID, client)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	hAddr, err := getHTTPFromAllocID(allocID, client)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, err
 	}
 	httpAddr = hAddr
 	addr.Addr = serverAddr
@@ -189,17 +204,21 @@ EVAL:
 	s.Update("Nomad allocation ready")
 	s.Done()
 
-	return &clicfg, &addr, httpAddr, nil
+	return &InstallResults{
+		Context:       &clicfg,
+		AdvertiseAddr: &addr,
+		HTTPAddr:      httpAddr,
+	}, nil
 }
 
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
 func waypointNomadJob(c nomadConfig) *api.Job {
-	job := api.NewServiceJob("waypoint-server", "waypoint-server", c.region, 50)
+	job := api.NewServiceJob(serverName, serverName, c.region, 50)
 	job.Namespace = &c.namespace
 	job.Datacenters = c.datacenters
 	job.Meta = c.serviceAnnotations
-	tg := api.NewTaskGroup("waypoint-server", 1)
+	tg := api.NewTaskGroup(serverName, 1)
 	tg.Networks = []*api.NetworkResource{
 		{
 			Mode: "host",
@@ -309,5 +328,78 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: "hashicorp/waypoint:latest",
+	})
+}
+
+// Unnstall is a method of NomadInstaller and implements the Installer interface to
+// stop, and optionally purge, the waypoint-server job on a Nomad cluster
+func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
+	ui := opts.UI
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Nomad client...")
+	defer func() { s.Abort() }()
+
+	// Build api client from environment
+	client, err := api.NewClient(api.DefaultConfig())
+	if err != nil {
+		return err
+	}
+
+	s.Update("Checking for existing Waypoint server...")
+
+	// Find waypoint-server job
+	jobs, _, err := client.Jobs().PrefixList(serverName)
+	if err != nil {
+		return err
+	}
+	var serverDetected bool
+	for _, j := range jobs {
+		if j.Name == serverName {
+			serverDetected = true
+			break
+		}
+	}
+	if !serverDetected {
+		return fmt.Errorf("No job with server name %q found; cannot uninstall", serverName)
+	}
+
+	s.Update("Removing Waypoint server from Nomad...")
+
+	_, _, err = client.Jobs().Deregister(serverName, i.config.serverPurge, &api.WriteOptions{})
+	allocs, _, err := client.Jobs().Allocations(serverName, true, nil)
+	if err != nil {
+		return err
+	}
+	for _, alloc := range allocs {
+		if alloc.DesiredStatus != "stop" {
+			a, _, err := client.Allocations().Info(alloc.ID, &api.QueryOptions{})
+			if err != nil {
+				return err
+			}
+			_, err = client.Allocations().Stop(a, &api.QueryOptions{})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if i.config.serverPurge {
+		s.Update("Waypoint job and allocations purged")
+	} else {
+		s.Update("Waypoint job and allocations stopped")
+	}
+	s.Done()
+
+	return nil
+}
+
+func (i *NomadInstaller) UninstallFlags(set *flag.Set) {
+	set.BoolVar(&flag.BoolVar{
+		Name:   "nomad-purge",
+		Target: &i.config.serverPurge,
+		Usage:  "Purge the Waypoint server job after deregistering as part of uninstall.",
 	})
 }
