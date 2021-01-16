@@ -1,0 +1,130 @@
+package core
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/internal/server/execclient"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
+	"github.com/hashicorp/waypoint/internal/config"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
+)
+
+func TestAppExec_happy(t *testing.T) {
+	require := require.New(t)
+	assert := assert.New(t)
+
+	// Our mock platform, which must also implement Destroyer
+	mock := struct {
+		*componentmocks.Platform
+		*componentmocks.Execer
+	}{
+		&componentmocks.Platform{},
+		&componentmocks.Execer{},
+	}
+
+	// Make our factory for platforms
+	factory := TestFactory(t, component.PlatformType)
+	TestFactoryRegister(t, factory, "test", mock)
+
+	// Make our app
+	app := TestApp(t, TestProject(t,
+		WithConfig(config.TestConfig(t, testPlatformConfig)),
+		WithFactory(component.PlatformType, factory),
+	), "test")
+
+	app.logger.SetLevel(hclog.Trace)
+
+	client := app.client
+
+	ctx := context.Background()
+
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, nil),
+	})
+	require.NoError(err)
+
+	var stdin bytes.Buffer
+
+	// Expect to have the destroy function called
+	require.NoError(err)
+	mock.Execer.On("ExecFunc").Return(func(d *pb.Deployment, esi *component.ExecSessionInfo) error {
+		app.logger.Info("called mock ExecFunc")
+
+		if d == nil || d != resp.Deployment {
+			return fmt.Errorf("value didn't match")
+		}
+
+		io.Copy(&stdin, esi.Input)
+
+		fmt.Fprintf(esi.Output, "from the mock\n")
+
+		return nil
+	})
+
+	instanceId := "A"
+
+	// Exec
+	go func() {
+		app.Exec(context.Background(), instanceId, resp.Deployment)
+	}()
+
+	// We should get registered
+	require.Eventually(func() bool {
+		resp, err := client.ListInstances(ctx, &pb.ListInstancesRequest{
+			Scope: &pb.ListInstancesRequest_DeploymentId{
+				DeploymentId: resp.Deployment.Id,
+			},
+		})
+		require.NoError(err)
+		return len(resp.Instances) == 1
+	}, 2*time.Second, 25*time.Millisecond)
+
+	var stderr, stdout bytes.Buffer
+
+	ec := &execclient.Client{
+		Logger:  app.logger,
+		Context: ctx,
+		Client:  client,
+		Args:    []string{"date"},
+		Stdin:   ioutil.NopCloser(strings.NewReader("input data\n")),
+		Stdout:  &stdout,
+		Stderr:  &stderr,
+
+		InstanceId: "A",
+	}
+
+	app.logger.Info("connecting execclient")
+
+	code, err := ec.Run()
+	require.NoError(err)
+
+	assert.Equal(0, code)
+
+	assert.Equal("from the mock\n", stdout.String())
+	assert.Equal("input data\n", stdin.String())
+
+	// We should get deregistered
+	require.Eventually(func() bool {
+		resp, err := client.ListInstances(ctx, &pb.ListInstancesRequest{
+			Scope: &pb.ListInstancesRequest_DeploymentId{
+				DeploymentId: resp.Deployment.Id,
+			},
+		})
+		require.NoError(err)
+		return len(resp.Instances) == 0
+	}, time.Second, 100*time.Millisecond)
+
+}
