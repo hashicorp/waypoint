@@ -6,16 +6,14 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/netlify/open-api/go/models"
-	"github.com/netlify/open-api/go/plumbing/operations"
-	netlify "github.com/netlify/open-api/go/porcelain"
-	"github.com/skratchdot/open-golang/open"
-
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/files"
+	"github.com/netlify/open-api/go/models"
+	"github.com/netlify/open-api/go/plumbing/operations"
+	netlify "github.com/netlify/open-api/go/porcelain"
 )
 
 // Platform is the Platform implementation for Netlify.
@@ -76,34 +74,10 @@ func (p *Platform) Auth(
 		return nil, nil
 	}
 
-	client := netlify.Default
-
-	// Create a ticket to exchange for a secret token
-	ticket, err := client.CreateTicket(clientContext, clientID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Authorize in the users browser
-	url := fmt.Sprintf("%s/authorize?response_type=ticket&ticket=%s", netlifyUI, ticket.ID)
-	if err := open.Start(url); err != nil {
-		err = fmt.Errorf("Error opening URL: %s", err)
-		return nil, err
-	}
-
-	// Blocks until the user proceeds in the browser
-	client.WaitUntilTicketAuthorized(clientContext, ticket)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := client.ExchangeTicket(clientContext, ticket.ID)
-	if err != nil {
-		return nil, err
-	}
+	accessToken, err := Authenticate(clientContext, p.config, log)
 
 	// Persist the token for future runs
-	err = persistLocalToken(dir.DataDir(), token.AccessToken)
+	err = persistLocalToken(dir.DataDir(), accessToken)
 	if err != nil {
 		return nil, err
 	}
@@ -262,6 +236,8 @@ func (p *Platform) Deploy(
 
 // Config is the configuration structure for the Platform.
 type Config struct {
+	// ClientID is the OAuth client id
+	ClientID string `hcl:"client_id,optional"`
 	// SiteID is the site to deploy to
 	SiteID string `hcl:"site_id,optional"`
 	// SiteName is the name of the site we create. Defaults
@@ -284,12 +260,18 @@ func (p *Platform) Documentation() (*docs.Documentation, error) {
 		`
 deploy {
 	use "netlify" {
+		client_id = "oauthclient-id"
 		site_id = "yourside-id"
 		site_name = "waypoint"
 		access_token = "asb123"
 	}
 }
 `)
+
+	doc.SetField(
+		"client_id",
+		"id for your netlify oauth client",
+	)
 
 	doc.SetField(
 		"site_id",

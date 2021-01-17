@@ -9,6 +9,7 @@ Deploy a site to netlify.
 ```hcl
 deploy {
 	use "netlify" {
+	  client_id = "oauthclient-id"
 		site_id = "yourside-id"
 		site_name = "waypoint"
 		access_token = "asb123"
@@ -27,6 +28,13 @@ These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this
 #### access_token
 
 Name of your netlify site, if not specified, will prompt for oauth exchange.
+
+- Type: **string**
+- **Optional**
+
+#### client_id
+
+Id for your netlify oauth client.
 
 - Type: **string**
 - **Optional**
