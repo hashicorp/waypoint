@@ -415,6 +415,12 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"project list": func() (cli.Command, error) {
+			return &ProjectListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
