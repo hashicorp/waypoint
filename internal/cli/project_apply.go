@@ -41,7 +41,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 	ctx := c.Ctx
 
 	if len(args) != 1 {
-		c.ui.Output(c.Flags().Help(), terminal.WithErrorStyle())
+		c.ui.Output("Single argument required.\n\n"+c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
@@ -302,5 +302,6 @@ Usage: waypoint project apply [OPTIONS] NAME
   the same name already exists, this will update the existing project using
   the fields that are set.
 
-`)
+
+` + c.Flags().Help())
 }
