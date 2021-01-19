@@ -68,14 +68,16 @@ func (c *UninstallCommand) Run(args []string) int {
 	if !c.skipSnapshot {
 		s.Update("Generating server snapshot...")
 
-		// set config snapshot name with default or flag value + timestamp
-		if c.snapshotName == "" {
-			c.snapshotName = uninstallSnapshotName
+		// set config snapshot name with default + timestamp or flag value
+		snapshotName := c.snapshotName
+		if c.snapshotName == defaultSnapshotName {
+			// Append timestamps on default snapshot names
+			snapshotName = fmt.Sprintf("%s-%d", c.snapshotName, time.Now().Unix())
 		}
-		c.snapshotName = fmt.Sprintf("%s-%d", c.snapshotName, time.Now().Unix())
 
 		// take the snapshot
-		w, err := os.Create(c.snapshotName)
+		s.Update("Taking snapshot of server with name: '%s'", snapshotName)
+		w, err := os.Create(snapshotName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating snapshot file: %s", err)
 			return 1
@@ -84,7 +86,7 @@ func (c *UninstallCommand) Run(args []string) int {
 			fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
 			return 1
 		}
-		s.Update("Snapshot %q generated", c.snapshotName)
+		s.Update("Snapshot %q generated", snapshotName)
 	} else {
 		s.Update("skip-snapshot set; not generating server snapshot")
 		s.Status(terminal.StatusWarn)
@@ -186,8 +188,9 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:    "snapshot-name",
 			Target:  &c.snapshotName,
-			Default: "",
-			Usage:   "Filename to write the snapshot to.",
+			Default: defaultSnapshotName,
+			Usage: "Filename to write the snapshot to. If no name is specified, by" +
+				" default a timestamp will be appended to the default snapshot name.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
