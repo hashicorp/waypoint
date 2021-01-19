@@ -27,6 +27,9 @@ func formatHelp(v string) string {
 		Cols: 180,
 	})
 
+	// seenHeader is flipped to true once we see any reHelpHeader match.
+	seenHeader := false
+
 	for _, line := range strings.Split(v, "\n") {
 		// Usage: prefix lines
 		prefix := "Usage: "
@@ -58,6 +61,8 @@ func formatHelp(v string) string {
 
 		// A header line
 		if reHelpHeader.MatchString(line) {
+			seenHeader = true
+
 			d.Append(glint.Style(
 				glint.Text(line),
 				glint.Bold(),
@@ -91,6 +96,38 @@ func formatHelp(v string) string {
 
 			d.Append(glint.Layout(cs...).Row())
 			continue
+		}
+
+		// The styles in this block we only want to apply before any headers.
+		if !seenHeader {
+			// If we have a flag in the line, then highlight that.
+			if matches := reFlag.FindAllStringSubmatchIndex(line, -1); len(matches) > 0 {
+				const matchGroup = 2 // the subgroup that has the actual flag
+
+				var cs []glint.Component
+				idx := 0
+				for _, match := range matches {
+					start := match[matchGroup*2]
+					end := match[matchGroup*2+1]
+
+					cs = append(
+						cs,
+						glint.Text(line[idx:start]),
+						glint.Style(
+							glint.Text(line[start:end]),
+							glint.Color("lightMagenta"),
+						),
+					)
+
+					idx = end
+				}
+
+				// Add the rest of the text
+				cs = append(cs, glint.Text(line[idx:]))
+
+				d.Append(glint.Layout(cs...).Row())
+				continue
+			}
 		}
 
 		// Normal line
@@ -128,7 +165,8 @@ func (c *helpCommand) HelpTemplate() string {
 
 var (
 	reHelpHeader = regexp.MustCompile(`^[a-zA-Z0-9_-].*:$`)
-	reCommand    = regexp.MustCompile(`"waypoint \w+"`)
+	reCommand    = regexp.MustCompile(`"waypoint (\w\s?)+"`)
+	reFlag       = regexp.MustCompile(`(\s|^|")(-[\w-]+)(\s|$|")`)
 )
 
 const helpTemplate = `
