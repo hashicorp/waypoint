@@ -1,5 +1,11 @@
 ## unreleased
 
+FEATURES:
+
+* **Uninstall command for all server platforms**:
+Use `server uninstall` to remove the Waypoint server and artifacts from the
+specified `-platform` for the active server installation. [GH-972]
+
 IMPROVEMENTS:
 
 * cli: `server run` supports specifying a custom TLS certificate [GH-951]
@@ -15,7 +21,7 @@ BUG FIXES:
 
 FEATURES:
 
-* **Application config syncing with Kubernetes (ConfigMaps), Vault, Consul, and AWS SSM**;
+* **Application config syncing with Kubernetes (ConfigMaps), Vault, Consul, and AWS SSM**:
 Automatically sync environment variable values with remote sources and restart your
 application when those values change. [GH-810]
 * **Access to Artifact, Deploy Metadata**: `registry` and `deploy` configuration can use 
