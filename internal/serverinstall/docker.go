@@ -36,7 +36,7 @@ var (
 	containerLabel       = "waypoint-type=server"
 	containerKey         = "waypoint-type"
 	containerValue       = "server"
-  containerValueRunner = "runner"
+	containerValueRunner = "runner"
 )
 
 // Install is a method of DockerInstaller and implements the Installer interface to
