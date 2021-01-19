@@ -31,11 +31,12 @@ type dockerConfig struct {
 }
 
 var (
-	grpcPort       = defaultGrpcPort
-	httpPort       = defaultHttpPort
-	containerLabel = "waypoint-type=server"
-	containerKey   = "waypoint-type"
-	containerValue = "server"
+	grpcPort             = defaultGrpcPort
+	httpPort             = defaultHttpPort
+	containerLabel       = "waypoint-type=server"
+	containerKey         = "waypoint-type"
+	containerValue       = "server"
+  containerValueRunner = "runner"
 )
 
 // Install is a method of DockerInstaller and implements the Installer interface to
@@ -561,6 +562,47 @@ func (i *DockerInstaller) Uninstall(
 		}
 		s.Update("Docker volume %q removed", serverName)
 		s.Done()
+	}
+
+	// Find and delete any runners. There could be zero, 1, or more.
+	{
+		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+			Filters: filters.NewArgs(filters.KeyValuePair{
+				Key:   "label",
+				Value: containerKey + "=" + containerValueRunner,
+			}),
+		})
+		if err != nil {
+			return err
+		}
+
+		// It is not an error for there to be zero or more than one containers
+		// since runners are optional.
+		if len(containers) >= 1 {
+			s = sg.Add("Uninstalling runners...")
+
+			// There should only be one but let's just delete any that exist.
+			for _, c := range containers {
+				containerId := c.ID
+
+				s.Update("Stopping container: %s", containerId)
+
+				// Stop the container gracefully, respecting the Engine's default timeout.
+				if err := cli.ContainerStop(ctx, containerId, nil); err != nil {
+					return err
+				}
+
+				removeOptions := types.ContainerRemoveOptions{
+					RemoveVolumes: true,
+					Force:         true,
+				}
+				if err := cli.ContainerRemove(ctx, containerId, removeOptions); err != nil {
+					return err
+				}
+			}
+			s.Update("%d runner(s) uninstalled", len(containers))
+			s.Done()
+		}
 	}
 
 	s = sg.Add("")
