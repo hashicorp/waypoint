@@ -1,6 +1,7 @@
 package state
 
 import (
+	"context"
 	"sync/atomic"
 
 	"github.com/hashicorp/go-memdb"
@@ -58,6 +59,11 @@ type InstanceExec struct {
 	ClientEventCh     <-chan *pb.ExecStreamRequest
 	EntrypointEventCh chan<- *pb.EntrypointExecRequest
 	Connected         uint32
+
+	// This is the context that the client side is running inside.
+	// It is used by the entrypoint side to detect if the client is still
+	// around or not.
+	Context context.Context
 }
 
 func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceExec) error {

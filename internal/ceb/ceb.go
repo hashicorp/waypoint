@@ -129,19 +129,7 @@ func Run(ctx context.Context, os ...Option) error {
 	defer ceb.Close()
 
 	// Setup our default config sourcers.
-	// NOTE(mitchellh): In the future, we will dynamically load these via
-	// a plugin system, Initially, we hardcode what we support.
-	ceb.configPlugins = map[string]*plugin.Instance{
-		"aws-ssm": {
-			Component: &pluginAWSSSM.ConfigSourcer{},
-		},
-		"kubernetes": {
-			Component: &pluginK8s.ConfigSourcer{},
-		},
-		"vault": {
-			Component: &pluginVault.ConfigSourcer{},
-		},
-	}
+	ceb.configPlugins = loadPlugins()
 
 	// Set our options
 	var cfg config
@@ -208,6 +196,22 @@ func Run(ctx context.Context, os ...Option) error {
 	}
 
 	return nil
+}
+
+// In the future, this will load plugins from disk as true plugin instances,
+// but for now, they're hard coded.
+func loadPlugins() map[string]*plugin.Instance {
+	return map[string]*plugin.Instance{
+		"aws-ssm": {
+			Component: &pluginAWSSSM.ConfigSourcer{},
+		},
+		"kubernetes": {
+			Component: &pluginK8s.ConfigSourcer{},
+		},
+		"vault": {
+			Component: &pluginVault.ConfigSourcer{},
+		},
+	}
 }
 
 // waitState waits for the given state boolean to go true. This boolean

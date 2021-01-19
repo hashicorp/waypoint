@@ -10,7 +10,7 @@ import (
 	"github.com/creack/pty"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
-	"github.com/mitchellh/go-grpc-net-conn"
+	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -123,8 +123,8 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec, env []string) {
 
 	// We need to modify our command so the input/output is all over gRPC
 	cmd.Stdin = stdinR
-	cmd.Stdout = ceb.execOutputWriter(client, pb.EntrypointExecRequest_Output_STDOUT)
-	cmd.Stderr = ceb.execOutputWriter(client, pb.EntrypointExecRequest_Output_STDERR)
+	cmd.Stdout = execOutputWriter(client, pb.EntrypointExecRequest_Output_STDOUT)
+	cmd.Stderr = execOutputWriter(client, pb.EntrypointExecRequest_Output_STDERR)
 
 	// PTY
 	var ptyFile *os.File
@@ -301,7 +301,7 @@ func (ceb *CEB) handleExecProcessExit(
 	}
 }
 
-func (ceb *CEB) execOutputWriter(
+func execOutputWriter(
 	client grpc.ClientStream,
 	channel pb.EntrypointExecRequest_Output_Channel,
 ) io.Writer {
