@@ -70,7 +70,7 @@ Usage: waypoint project list
   exactly one "waypoint.hcl" configuration. A project may contain multiple
   applications.
 
-  A project is registered either via the web UI, "waypoint project apply",
+  A project is registered via the web UI, "waypoint project apply",
   or "waypoint init".
 
 `)
