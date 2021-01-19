@@ -58,7 +58,7 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 	// package or spinning up an in-process server.
 	if client.client == nil {
 		client.logger.Trace("no API client provided, initializing connection if possible")
-		conn, err := client.initServerClient(context.Background(), &cfg)
+		conn, err := client.initServerClient(ctx, &cfg)
 		if err != nil {
 			return nil, err
 		}
