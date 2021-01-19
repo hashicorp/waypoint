@@ -166,7 +166,7 @@ func (c *helpCommand) HelpTemplate() string {
 var (
 	reHelpHeader = regexp.MustCompile(`^[a-zA-Z0-9_-].*:$`)
 	reCommand    = regexp.MustCompile(`"waypoint (\w\s?)+"`)
-	reFlag       = regexp.MustCompile(`(\s|^)(-[\w-]+)(\s|$)`)
+	reFlag       = regexp.MustCompile(`(\s|^|")(-[\w-]+)(\s|$|")`)
 )
 
 const helpTemplate = `
