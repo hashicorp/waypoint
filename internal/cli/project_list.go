@@ -66,7 +66,7 @@ Usage: waypoint project list
 
   List all registered projects.
 
-  Projects usually a single version control repository and contain
+  Projects usually map to a single version control repository and contain
   exactly one "waypoint.hcl" configuration. A project may contain multiple
   applications.
 
