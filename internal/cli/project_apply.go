@@ -2,6 +2,7 @@ package cli
 
 import (
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	"github.com/posener/complete"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
+	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/datasource"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -25,6 +28,7 @@ type ProjectApplyCommand struct {
 	flagGitPassword    string
 	flagGitKeyPath     string
 	flagGitKeyPassword string
+	flagWaypointHcl    string
 }
 
 func (c *ProjectApplyCommand) Run(args []string) int {
@@ -81,6 +85,63 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 	} else {
 		s.Update("Creating project %q...", name)
 		proj = &pb.Project{Name: name}
+	}
+
+	// If we were specified a file then we're going to load that up.
+	if c.flagWaypointHcl != "" {
+		path, err := filepath.Abs(c.flagWaypointHcl)
+		if err != nil {
+			c.ui.Output(
+				"Error loading HCL file specified with the -waypoint-hcl flag: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
+		cfg, err := configpkg.Load(path, filepath.Dir(path))
+		if err != nil {
+			c.ui.Output(
+				"Error loading HCL file specified with the -waypoint-hcl flag: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
+		// Load the data source configuration
+		if dscfg := cfg.Runner.DataSource; dscfg != nil {
+			factory, ok := datasource.FromString[dscfg.Type]
+			if !ok {
+				c.ui.Output(
+					"Data source type specified in the HCL file is unknown: %q", dscfg.Type,
+					terminal.WithErrorStyle(),
+				)
+
+				return 1
+			}
+
+			source := factory()
+			ds, err := source.ProjectSource(dscfg.Body, cfg.HCLContext())
+			if err != nil {
+				c.ui.Output(
+					"Error loading HCL file specified with the -waypoint-hcl flag: %s", clierrors.Humanize(err),
+					terminal.WithErrorStyle(),
+				)
+
+				return 1
+			}
+
+			// Override the project data source with this configuration.
+			proj.DataSource = ds
+
+			// If the data source flag is not set, set it to our type. This
+			// lets users override datasource values without specifying the
+			// type flag since it is specified in the HCL file.
+			if c.flagDataSource == "" {
+				c.flagDataSource = dscfg.Type
+			}
+		}
 	}
 
 	// The logic throughout below has a ton of if checks cause we want to
@@ -214,10 +275,22 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 		f := sets.NewSet("Command Options")
 
 		f.StringVar(&flag.StringVar{
+			Name:    "waypoint-hcl",
+			Target:  &c.flagWaypointHcl,
+			Default: "",
+			Usage: "waypoint.hcl formatted file to load settings from. This can be used " +
+				"to read settings from a file. Additional flags will override values found " +
+				"in the file. Note that any settings in the file will NOT be merged with " +
+				"what is already in the server; they will overwrite the server.",
+		})
+
+		f.StringVar(&flag.StringVar{
 			Name:    "data-source",
 			Target:  &c.flagDataSource,
 			Default: "",
-			Usage:   "The data source type to use (currently only supports 'git' or 'local').",
+			Usage: "The data source type to use (currently only supports 'git' or 'local'). " +
+				"Associated data source settings (such as flags starting with '-git') will not " +
+				"take effect unless the appropriate data source is set with this flag.",
 		})
 
 		f.StringVar(&flag.StringVar{
@@ -294,14 +367,16 @@ Usage: waypoint project apply [OPTIONS] NAME
 
   Create or update a project.
 
-  This command should be used to create a new project pointing to a VCS
-  repo. If you have a "waypoint.hcl" file and a local repository, you can
-  also use "waypoint init" in the directory of the project.
-
   This will create a new project with the given options. If a project with
   the same name already exists, this will update the existing project using
   the fields that are set.
 
+  This command should be used to create a new project pointing to a VCS
+  repo. If you have a "waypoint.hcl" file and a local repository, you can
+  also use "waypoint init" in the directory of the project.
+
+  You may create a project from a waypoint.hcl file and optionally overwrite
+  some fields using flags by specifying the -waypoint-hcl flag.
 
 ` + c.Flags().Help())
 }
