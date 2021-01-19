@@ -56,6 +56,27 @@ func (c *UninstallCommand) Run(args []string) int {
 		terminal.WithSuccessStyle(),
 	)
 
+	// Get the platform early so we can validate it.
+	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
+	if !ok {
+		if c.platform == "" {
+			c.ui.Output(
+				"The -platform flag is required.",
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
+		c.ui.Output(
+			"Error uninstalling server from %s: invalid platform",
+			c.platform,
+			terminal.WithErrorStyle(),
+		)
+
+		return 1
+	}
+
 	sg := c.ui.StepGroup()
 	defer sg.Wait()
 
@@ -90,18 +111,6 @@ func (c *UninstallCommand) Run(args []string) int {
 		s.Status(terminal.StatusWarn)
 	}
 	s.Done()
-
-	// Uninstall
-	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
-	if !ok {
-		c.ui.Output(
-			"Error uninstalling server from %s: invalid platform",
-			c.platform,
-			terminal.WithErrorStyle(),
-		)
-
-		return 1
-	}
 
 	err = p.Uninstall(ctx, &serverinstall.InstallOpts{
 		Log: log,
@@ -153,7 +162,7 @@ Usage: waypoint server uninstall [options]
 
   By default, this command deletes the default server's context.
 
-  This command does not destroy Waypoint resources, such as deployments and 
+  This command does not destroy Waypoint resources, such as deployments and
   releases. Clear all workspaces prior to uninstall to prevent hanging resources.
 
 ` + c.Flags().Help())
@@ -207,7 +216,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 var (
 	uninstallSnapshotName = "waypoint-server-snapshot"
 	autoApproveMsg        = strings.TrimSpace(`
-Uninstalling Waypoint server requires approval. 
+Uninstalling Waypoint server requires approval.
 Rerun the command with -auto-approve to continue with the uninstall.
 `)
 )
