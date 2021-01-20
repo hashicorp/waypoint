@@ -6,7 +6,7 @@
 
 FROM hashicorp.jfrog.io/docker/golang:alpine AS builder
 
-RUN apk add --no-cache git gcc libc-dev openssh
+RUN apk add --no-cache git gcc libc-dev openssh make
 
 RUN mkdir -p /tmp/wp-prime
 COPY go.sum /tmp/wp-prime
@@ -20,13 +20,11 @@ RUN git config --global url.ssh://git@github.com/.insteadOf https://github.com/
 RUN --mount=type=ssh --mount=type=secret,id=ssh.config --mount=type=secret,id=ssh.key \
     GIT_SSH_COMMAND="ssh -o \"ControlMaster auto\" -F \"/run/secrets/ssh.config\"" \
     go mod download
+RUN go get github.com/kevinburke/go-bindata/...
 
 COPY . /tmp/wp-src
-
 WORKDIR /tmp/wp-src
 
-RUN apk add --no-cache make
-RUN go get github.com/kevinburke/go-bindata/...
 RUN --mount=type=cache,target=/root/.cache/go-build make bin
 RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 
