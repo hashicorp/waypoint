@@ -36,6 +36,10 @@ func (c *ProjectListCommand) Run(args []string) int {
 		result = append(result, p.Project)
 	}
 
+	if len(result) == 0 {
+		c.ui.Output("No projects found.")
+		return 0
+	}
 	sort.Strings(result)
 	for _, p := range result {
 		c.ui.Output(p)
