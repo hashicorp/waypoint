@@ -248,7 +248,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	conn, err = serverclient.Connect(ctx,
 		serverclient.FromContextConfig(originalCfg),
-		serverclient.Timeout(1*time.Minute),
+		serverclient.Timeout(3*time.Minute),
 	)
 	if err != nil {
 		s2.Update("Client failed to connect to server")
