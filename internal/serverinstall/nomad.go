@@ -329,7 +329,11 @@ EVAL:
 	var allocID string
 
 	for {
-		allocs, qmeta, err := client.Evaluations().Allocations(eval.ID, qopts)
+		// We look for allocations by serverName here instead of the recent
+		// evaluations ID from eval, because if the upgrade job is identical to what is
+		// currently running, we won't get back a list of allocations, which will
+		// fail the upgrade with no allocations running
+		allocs, qmeta, err := client.Jobs().Allocations(serverName, false, qopts)
 		if err != nil {
 			return nil, err
 		}
