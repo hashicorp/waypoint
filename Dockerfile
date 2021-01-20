@@ -6,7 +6,7 @@
 
 FROM hashicorp.jfrog.io/docker/golang:alpine AS builder
 
-RUN apk add --no-cache git gcc libc-dev openssh
+RUN apk add --no-cache git gcc libc-dev openssh make
 
 RUN mkdir -p /tmp/wp-prime
 COPY go.sum /tmp/wp-prime
@@ -20,13 +20,11 @@ RUN git config --global url.ssh://git@github.com/.insteadOf https://github.com/
 RUN --mount=type=ssh --mount=type=secret,id=ssh.config --mount=type=secret,id=ssh.key \
     GIT_SSH_COMMAND="ssh -o \"ControlMaster auto\" -F \"/run/secrets/ssh.config\"" \
     go mod download
+RUN go get github.com/kevinburke/go-bindata/...
 
 COPY . /tmp/wp-src
-
 WORKDIR /tmp/wp-src
 
-RUN apk add --no-cache make
-RUN go get github.com/kevinburke/go-bindata/...
 RUN --mount=type=cache,target=/root/.cache/go-build make bin
 RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 
@@ -51,7 +49,7 @@ RUN git clone https://github.com/mitchellh/img.git /img
 WORKDIR /img
 RUN git checkout pull-config
 RUN go get github.com/go-bindata/go-bindata/go-bindata
-RUN make static && mv img /usr/bin/img
+RUN make BUILDTAGS="seccomp noembed" && mv img /usr/bin/img
 
 # Copied from img repo, see notes for specific reasons:
 # https://github.com/genuinetools/img/blob/d858ac71f93cc5084edd2ba2d425b90234cf2ead/Dockerfile
