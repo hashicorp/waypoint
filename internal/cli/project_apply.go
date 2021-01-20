@@ -79,9 +79,10 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 	// Setup our project that we're going to override
 	var proj *pb.Project
+	var updated bool
 	if resp != nil {
 		s.Update("Updating project %q...", name)
-		proj = resp.Project
+		updated = true
 	} else {
 		s.Update("Creating project %q...", name)
 		proj = &pb.Project{Name: name}
