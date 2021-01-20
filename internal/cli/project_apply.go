@@ -266,6 +266,11 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 		return 1
 	}
 
+	if updated {
+		s.Update("Project %q updated", name)
+	} else {
+		s.Update("Project %q created", name)
+	}
 	s.Done()
 
 	return 0
