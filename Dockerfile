@@ -44,8 +44,6 @@ RUN apk add --no-cache \
 	gcc \
 	git \
 	libseccomp-dev \
-	libseccomp-static \
-	pkgconfig \
 	linux-headers \
 	make
 
