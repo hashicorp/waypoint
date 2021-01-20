@@ -62,11 +62,6 @@ Waypoint server in place. For each platform, Waypoint attempts to
 update the server image in place to latest by default, or to the server image
 specified via a flag passed in to the upgrade command.
 
-~> **Note:** Due to where Waypoint server stored its database in Nomad at `/alloc`,
-the automated upgrade command cannot migrate the old servers database to a new one.
-This is only an issue if running Waypoint server 0.2.0 and older. Please follow
-the manual upgrade guide in this case.
-
 When the upgrade command is executed, Waypoint does the following:
 
 - Takes a snapshot of the current server database and saves snapshot locally. The
