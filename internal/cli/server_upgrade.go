@@ -248,7 +248,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	conn, err = serverclient.Connect(ctx,
 		serverclient.FromContextConfig(originalCfg),
-		serverclient.Timeout(5*time.Minute),
+		serverclient.Timeout(1*time.Minute),
 	)
 	if err != nil {
 		s2.Update("Client failed to connect to server")
@@ -258,9 +258,11 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		c.ui.Output(
 			"Error connecting to server: %s\n\n%s",
 			clierrors.Humanize(err),
-			errInstallRunning,
+			"Check the waypoint server container logs for more information on "+
+				"why it could have failed.",
 			terminal.WithErrorStyle(),
 		)
+
 		return 1
 	}
 	client = pb.NewWaypointClient(conn)
