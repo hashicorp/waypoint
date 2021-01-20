@@ -96,20 +96,22 @@ COPY --from=builder /tmp/wp-src/waypoint-entrypoint /usr/bin/waypoint-entrypoint
 
 VOLUME ["/data"]
 
+# NOTE: userid must be 100 here. Otherwise upgrades will fail due to user not
+# having the proper permissions to read the server db due to a different userid
 RUN addgroup waypoint && \
-    adduser -S -u 1000 -G waypoint waypoint && \
+    adduser -S -u 100 -G waypoint waypoint && \
     mkdir /data/ && \
     chown -R waypoint:waypoint /data
 
 # configure newuidmap/newgidmap to work with our waypoint user
 RUN chmod u+s /usr/bin/newuidmap /usr/bin/newgidmap \
-  && mkdir -p /run/user/1000 \
-  && chown -R waypoint /run/user/1000 /home/waypoint \
+  && mkdir -p /run/user/100 \
+  && chown -R waypoint /run/user/100 /home/waypoint \
   && echo waypoint:100000:65536 | tee /etc/subuid | tee /etc/subgid
 
 USER waypoint
 ENV USER waypoint
 ENV HOME /home/waypoint
-ENV XDG_RUNTIME_DIR=/run/user/1000
+ENV XDG_RUNTIME_DIR=/run/user/100
 
 ENTRYPOINT ["/usr/bin/waypoint"]
