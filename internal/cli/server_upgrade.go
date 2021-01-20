@@ -238,12 +238,23 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	}
 
 	// Connect
-	log.Info("connecting to the server so we can verify the server upgrade", "addr", originalCfg.Server.Address)
+	c.ui.Output("Verifying upgrade...", terminal.WithHeaderStyle())
+	// New stepgroup to ensure output is after upgrade output
+	sg2 := c.ui.StepGroup()
+	defer sg2.Wait()
+
+	s2 := sg2.Add("Client attempting to connect to server...")
+	defer func() { s2.Abort() }()
+
 	conn, err = serverclient.Connect(ctx,
 		serverclient.FromContextConfig(originalCfg),
 		serverclient.Timeout(5*time.Minute),
 	)
 	if err != nil {
+		s2.Update("Client failed to connect to server")
+		s2.Status(terminal.StatusError)
+		s2.Done()
+
 		c.ui.Output(
 			"Error connecting to server: %s\n\n%s",
 			clierrors.Humanize(err),
@@ -256,11 +267,18 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	resp, err = client.GetVersionInfo(ctx, &empty.Empty{})
 	if err != nil {
+		s2.Update("Client failed to connect to server")
+		s2.Status(terminal.StatusError)
+		s2.Done()
+
 		c.ui.Output(
 			"Error retrieving server version info: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle())
 		return 1
 	}
+
+	s2.Update("Server connection verified!")
+	s2.Done()
 
 	c.ui.Output("\nServer upgrade for platform %q context %q complete!",
 		c.platform, ctxName, terminal.WithSuccessStyle())
