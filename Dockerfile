@@ -96,9 +96,8 @@ COPY --from=builder /tmp/wp-src/waypoint-entrypoint /usr/bin/waypoint-entrypoint
 
 VOLUME ["/data"]
 
-# NOTE: userid must be 100 here. Otherwise upgrades prior to 0.2.1 will fail
-# due to user not having the proper permissions to read the server db due to
-# a different userid
+# NOTE: userid must be 100 here. Otherwise upgrades will fail due to user not
+# having the proper permissions to read the server db due to a different userid
 RUN addgroup waypoint && \
     adduser -S -u 100 -G waypoint waypoint && \
     mkdir /data/ && \
