@@ -80,6 +80,7 @@ func (i *DockerInstaller) Install(
 		Address:       "localhost:" + grpcPort,
 		Tls:           true,
 		TlsSkipVerify: true,
+		Platform:      "docker",
 	}
 
 	addr.Addr = serverName + ":" + grpcPort
