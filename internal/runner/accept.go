@@ -214,10 +214,23 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			}()
 		}
 
-		// TODO(mitchellh): we need to send the ref to the server here
+		// Send our download info
+		if ref != nil {
+			log.Debug("sending download event")
+
+			sendMutex.Lock()
+			err = client.Send(&pb.RunnerJobStreamRequest{
+				Event: &pb.RunnerJobStreamRequest_Download_{
+					Download: &pb.RunnerJobStreamRequest_Download{
+						DataSourceRef: ref,
+					},
+				},
+			})
+			sendMutex.Unlock()
+		}
 
 		// We want the working directory to always be absolute.
-		if !filepath.IsAbs(wd) {
+		if err == nil && !filepath.IsAbs(wd) {
 			err = status.Errorf(codes.Internal,
 				"data working directory should be absolute. This is a bug, please report it.")
 		}

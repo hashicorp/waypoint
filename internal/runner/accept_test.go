@@ -174,6 +174,7 @@ func TestRunnerAccept_gitData(t *testing.T) {
 	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
+	require.NotNil(job.DataSourceRef)
 }
 
 // testGitFixture MUST be called before TestRunner since TestRunner
