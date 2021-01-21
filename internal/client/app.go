@@ -41,6 +41,6 @@ func (c *App) job() *pb.Job {
 }
 
 // doJob is the same as Project.doJob except we set the proper app-specific UI.
-func (c *App) doJob(ctx context.Context, job *pb.Job) (*pb.Job_Result, error) {
-	return c.project.doJob(ctx, job, c.UI)
+func (c *App) doJob(ctx context.Context, job *pb.Job, mon chan pb.Job_State) (*pb.Job_Result, error) {
+	return c.project.doJob(ctx, job, c.UI, mon)
 }

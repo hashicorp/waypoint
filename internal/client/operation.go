@@ -18,7 +18,7 @@ func (c *Project) Validate(ctx context.Context, op *pb.Job_ValidateOp) (*pb.Job_
 	}
 
 	// Execute it
-	result, err := c.doJob(ctx, job, c.UI)
+	result, err := c.doJob(ctx, job, c.UI, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c *App) Auth(ctx context.Context, op *pb.Job_AuthOp) (*pb.Job_AuthResult, 
 	}
 
 	// Execute it
-	result, err := c.doJob(ctx, job)
+	result, err := c.doJob(ctx, job, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *App) Docs(ctx context.Context, op *pb.Job_DocsOp) (*pb.Job_DocsResult, 
 	}
 
 	// Execute it
-	result, err := c.doJob(ctx, job)
+	result, err := c.doJob(ctx, job, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c *App) Build(ctx context.Context, op *pb.Job_BuildOp) (*pb.Job_BuildResul
 	}
 
 	// Execute it
-	result, err := c.doJob(ctx, job)
+	result, err := c.doJob(ctx, job, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (c *App) PushBuild(ctx context.Context, op *pb.Job_PushOp) error {
 	}
 
 	// Execute it
-	_, err := c.doJob(ctx, job)
+	_, err := c.doJob(ctx, job, nil)
 	return err
 }
 
@@ -113,7 +113,7 @@ func (c *App) Deploy(ctx context.Context, op *pb.Job_DeployOp) (*pb.Job_DeployRe
 	}
 
 	// Execute it
-	result, err := c.doJob(ctx, job)
+	result, err := c.doJob(ctx, job, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,23 @@ func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
 	}
 
 	// Execute it
-	_, err := c.doJob(ctx, job)
+	_, err := c.doJob(ctx, job, nil)
+	return err
+}
+
+func (c *App) Exec(ctx context.Context, op *pb.Job_ExecOp, mon chan pb.Job_State) error {
+	if op == nil {
+		op = &pb.Job_ExecOp{}
+	}
+
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_Exec{
+		Exec: op,
+	}
+
+	// Execute it
+	_, err := c.doJob(ctx, job, mon)
 	return err
 }
 
@@ -149,7 +165,7 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_Releas
 	}
 
 	// Execute it
-	result, err := c.doJob(ctx, job)
+	result, err := c.doJob(ctx, job, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +205,7 @@ func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_
 	}
 
 	// Execute it
-	result, err := c.doJob(ctx, job)
+	result, err := c.doJob(ctx, job, nil)
 	if err != nil {
 		return nil, err
 	}
