@@ -3156,7 +3156,9 @@ type ServerConfig struct {
 	// EXACTLY ONE address. In the future, we'll support multiple advertise
 	// addrs and more controls over which are advertised when.
 	AdvertiseAddrs []*ServerConfig_AdvertiseAddr `protobuf:"bytes,1,rep,name=advertise_addrs,json=advertiseAddrs,proto3" json:"advertise_addrs,omitempty"`
-	Platform       string                        `protobuf:"bytes,4,opt,name=platform,proto3" json:"platform,omitempty"`
+	// The platform that the server is currently installed to. This is set
+	// through the CLI flag '-platform' on installation.
+	Platform string `protobuf:"bytes,4,opt,name=platform,proto3" json:"platform,omitempty"`
 }
 
 func (x *ServerConfig) Reset() {
