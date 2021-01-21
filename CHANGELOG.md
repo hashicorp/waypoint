@@ -9,6 +9,7 @@ specified `-platform` for the active server installation. [GH-972]
 IMPROVEMENTS:
 
 * cli: `server run` supports specifying a custom TLS certificate [GH-951]
+* server: store platform where server is installed to in server config [GH-1000]
 
 BUG FIXES:
 
