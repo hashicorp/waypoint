@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/internal/server/execclient"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/stretchr/testify/assert"
@@ -44,8 +43,6 @@ func TestAppExec_happy(t *testing.T) {
 		WithConfig(config.TestConfig(t, testPlatformConfig)),
 		WithFactory(component.PlatformType, factory),
 	), "test")
-
-	app.logger.SetLevel(hclog.Trace)
 
 	client := app.client
 

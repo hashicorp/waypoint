@@ -61,9 +61,12 @@ func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment) error {
 	// Start the plugin
 	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, &evalCtx)
 	if err != nil {
+		a.logger.Error("error creating component in platform", "error", err)
 		return err
 	}
 	defer c.Close()
+
+	a.logger.Debug("spooling exec operation")
 
 	_, _, err = a.doOperation(ctx, a.logger.Named("exec"), &execOperation{
 		InstanceId: id,
@@ -212,6 +215,7 @@ func (p *pluginExecVirtHandler) PTYResize(winch *pb.ExecStreamRequest_WindowSize
 func (op *execOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
 	execer, ok := op.Component.Value.(component.Execer)
 	if !ok || execer.ExecFunc() == nil {
+		log.Debug("component is not an Execer or has no ExecFunc()")
 		return nil, nil
 	}
 
