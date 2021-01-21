@@ -183,6 +183,7 @@ func (c *InstallCommand) Run(args []string) int {
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{
 				advertiseAddr,
 			},
+			Platform: contextConfig.Server.Platform,
 		},
 	}, callOpts...)
 	if err != nil {

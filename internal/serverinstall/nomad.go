@@ -76,6 +76,7 @@ func (i *NomadInstaller) Install(
 	clicfg.Server = serverconfig.Client{
 		Tls:           true,
 		TlsSkipVerify: true,
+		Platform:      "Nomad",
 	}
 
 	addr.Tls = true

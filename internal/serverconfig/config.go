@@ -25,6 +25,11 @@ type Client struct {
 	// Note this will be stored plaintext on disk. You can also use the
 	// WAYPOINT_SERVER_TOKEN env var.
 	AuthToken string `hcl:"auth_token,optional"`
+
+	// The platform for where the server is running. Although this option should
+	// be required, it's optional to support previously set contexts that did
+	// not have a platform.
+	Platform string `hcl:"platform,optional"`
 }
 
 // Env returns a slice of environment variables in key=value settings

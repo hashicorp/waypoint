@@ -355,6 +355,7 @@ func (i *K8sInstaller) Install(
 				Address:       grpcAddr,
 				Tls:           true,
 				TlsSkipVerify: true, // always for now
+				Platform:      "kubernetes",
 			},
 		}
 
