@@ -34,7 +34,7 @@ type Sourcer interface {
 		ui terminal.UI,
 		source *pb.Job_DataSource,
 		baseDir string,
-	) (string, func() error, error)
+	) (string, *pb.Job_DataSource_Ref, func() error, error)
 }
 
 var (

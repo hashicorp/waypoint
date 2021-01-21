@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -155,7 +156,7 @@ func TestGitSourceGet(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		dir, closer, err := s.Get(
+		dir, refRaw, closer, err := s.Get(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
@@ -176,13 +177,21 @@ func TestGitSourceGet(t *testing.T) {
 		// Verify files
 		_, err = os.Stat(filepath.Join(dir, "waypoint.hcl"))
 		require.NoError(err)
+
+		// Verify ref
+		ref := refRaw.Ref.(*pb.Job_DataSource_Ref_Git).Git
+		require.Equal("b6bf15100c570f2be6a231a095d395ed16dfed81", ref.Commit)
+
+		ts, err := ptypes.Timestamp(ref.Timestamp)
+		require.NoError(err)
+		require.False(ts.IsZero())
 	})
 
 	t.Run("branch ref", func(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		dir, closer, err := s.Get(
+		dir, _, closer, err := s.Get(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
@@ -212,7 +221,7 @@ func TestGitSourceGet(t *testing.T) {
 		require := require.New(t)
 
 		var s GitSource
-		dir, closer, err := s.Get(
+		dir, _, closer, err := s.Get(
 			context.Background(),
 			hclog.L(),
 			terminal.ConsoleUI(context.Background()),
