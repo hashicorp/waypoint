@@ -177,7 +177,7 @@ func (p *pluginExecVirtHandler) Run(ctx context.Context) error {
 		nil,
 		p.op.Component,
 		p.execer.ExecFunc(),
-		argmapper.Named("deployment", p.op.Deployment),
+		argNamedAny("deployment", p.op.Deployment.Deployment),
 		argmapper.Named("exec_info", esi),
 	)
 	if err != nil {
