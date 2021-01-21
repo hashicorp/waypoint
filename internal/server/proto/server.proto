@@ -1125,6 +1125,8 @@ message ServerConfig {
     bool tls = 2;
     bool tls_skip_verify = 3;
   }
+
+  string platform = 4;
 }
 
 /********************************************************************
