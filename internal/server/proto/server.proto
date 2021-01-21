@@ -1162,6 +1162,10 @@ message ServerConfig {
     bool tls = 2;
     bool tls_skip_verify = 3;
   }
+
+  // The platform that the server is currently installed to. This is set
+  // through the CLI flag '-platform' on installation.
+  string platform = 4;
 }
 
 /********************************************************************

@@ -52,7 +52,7 @@ func (c *ContextListCommand) Run(args []string) int {
 	}
 
 	table := tablewriter.NewWriter(out)
-	table.SetHeader([]string{"", "Name", "Server Address"})
+	table.SetHeader([]string{"", "Name", "Platform", "Server Address"})
 	table.SetBorder(false)
 	for _, name := range names {
 		ctxConfig, err := c.contextStorage.Load(name)
@@ -67,9 +67,15 @@ func (c *ContextListCommand) Run(args []string) int {
 			defStatus = "*"
 		}
 
+		platform := ctxConfig.Server.Platform
+		if ctxConfig.Server.Platform == "" {
+			platform = "n/a"
+		}
+
 		table.Rich([]string{
 			defStatus,
 			name,
+			platform,
 			ctxConfig.Server.Address,
 		}, []tablewriter.Colors{
 			{},
