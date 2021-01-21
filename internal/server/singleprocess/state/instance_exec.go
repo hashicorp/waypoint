@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"math/rand"
 	"sync/atomic"
 
 	"github.com/hashicorp/go-memdb"
@@ -95,6 +96,71 @@ func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceEx
 	txn.Commit()
 
 	return nil
+}
+
+// CalculateInstanceExecByDeployment considers all the instances registered
+// to the given deployment and finds the one that is least loaded. If there
+// are no instances, returns a ResourceExhausted error. Calls to this
+// function in quick succession will return could return the same instance,
+// which is why a simple random sampling is done on all prospective instances.
+func (s *State) CalculateInstanceExecByDeployment(did string) (*Instance, error) {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	// Find all the instances by deployment
+	iter, err := txn.Get(instanceTableName, instanceDeploymentIdIndexName, did)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, err.Error())
+	}
+
+	// Go through each to try to find the least loaded. Most likely there
+	// will be an instance with no exec sessions and we prefer that.
+	var min []*Instance
+	minCount := 0
+	for raw := iter.Next(); raw != nil; raw = iter.Next() {
+		rec := raw.(*Instance)
+
+		// When looking through all the instances for an exec capable instance
+		// we only consider LONG_RUNNING type instances. These are the only ones
+		// that it makes sense to send random exec sessions to.
+		if rec.Type != pb.Instance_LONG_RUNNING {
+			continue
+		}
+
+		execs, err := s.instanceExecListByInstanceId(txn, rec.Id, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		// Zero length exec means we take it right away
+		if len(execs) == 0 {
+			min = append(min, rec)
+			break
+		}
+
+		// Otherwise we keep track of the lowest "load" exec which we just
+		// choose by the minimum number of registered sessions.
+		if min == nil || len(execs) < minCount {
+			min = append(min, rec)
+			minCount = len(execs)
+		}
+	}
+
+	if min == nil {
+		return nil, status.Errorf(codes.ResourceExhausted,
+			"No available instances for exec.")
+	}
+
+	if len(min) == 1 {
+		return min[0], nil
+	}
+
+	// To avoid callers always picking the first one if there are multiple
+	// canditates, pick a random one. This helps even out the load.
+
+	tgt := rand.Intn(len(min))
+
+	return min[tgt], nil
 }
 
 func (s *State) InstanceExecCreateByDeployment(did string, exec *InstanceExec) error {

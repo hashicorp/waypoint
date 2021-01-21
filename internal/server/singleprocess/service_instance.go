@@ -76,3 +76,19 @@ func (s *service) ListInstances(
 
 	return &pb.ListInstancesResponse{Instances: final}, nil
 }
+
+// FindExecInstance considers the instances available for the given deployment
+// and finds an instance to use for exec. Returns codes.ResourceExhausted if
+// there are no instances available for exec.
+func (s *service) FindExecInstance(
+	ctx context.Context,
+	req *pb.FindExecInstanceRequest,
+) (*pb.FindExecInstanceResponse, error) {
+
+	result, err := s.state.CalculateInstanceExecByDeployment(req.DeploymentId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.FindExecInstanceResponse{Instance: result.Proto()}, nil
+}
