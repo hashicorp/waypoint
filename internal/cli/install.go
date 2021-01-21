@@ -58,8 +58,17 @@ func (c *InstallCommand) Run(args []string) int {
 
 	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
 	if !ok {
+		if c.platform == "" {
+			c.ui.Output(
+				"The -platform flag is required.",
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
 		c.ui.Output(
-			"Error installing server into %s: invalid platform",
+			"Error installing server into %q: invalid platform",
 			c.platform,
 			terminal.WithErrorStyle(),
 		)
