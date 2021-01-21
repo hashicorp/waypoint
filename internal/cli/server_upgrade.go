@@ -25,7 +25,7 @@ type ServerUpgradeCommand struct {
 	platform     string
 	contextName  string
 	snapshotName string
-	skipSnapshot bool
+	flagSnapshot bool
 	confirm      bool
 }
 
@@ -150,7 +150,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	s = sg.Add("Starting server snapshots")
 
 	// Snapshot server before upgrade
-	if !c.skipSnapshot {
+	if c.flagSnapshot {
 		s.Update("Taking server snapshot before upgrading")
 
 		snapshotName := c.snapshotName
@@ -323,10 +323,10 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 				" default a timestamp will be appended to the default snapshot name.",
 		})
 		f.BoolVar(&flag.BoolVar{
-			Name:    "skip-snapshot",
-			Target:  &c.skipSnapshot,
-			Default: false,
-			Usage:   "Skip creating a snapshot of the Waypoint server.",
+			Name:    "snapshot",
+			Target:  &c.flagSnapshot,
+			Default: true,
+			Usage:   "Enable or disable taking a snapshot of Waypoint server prior to upgrades.",
 		})
 
 		for name, platform := range serverinstall.Platforms {

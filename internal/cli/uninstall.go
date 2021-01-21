@@ -20,7 +20,7 @@ type UninstallCommand struct {
 
 	platform      string
 	snapshotName  string
-	skipSnapshot  bool
+	flagSnapshot  bool
 	autoApprove   bool
 	deleteContext bool
 }
@@ -86,7 +86,7 @@ func (c *UninstallCommand) Run(args []string) int {
 	defer func() { s.Abort() }()
 
 	// Generate a snapshot
-	if !c.skipSnapshot {
+	if c.flagSnapshot {
 		s.Update("Generating server snapshot...")
 
 		// set config snapshot name with default + timestamp or flag value
@@ -203,10 +203,10 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:    "skip-snapshot",
-			Target:  &c.skipSnapshot,
-			Default: false,
-			Usage:   "Skip creating a snapshot of the Waypoint server.",
+			Name:    "snapshot",
+			Target:  &c.flagSnapshot,
+			Default: true,
+			Usage:   "Enable or disable taking a snapshot of Waypoint server prior to uninstall.",
 		})
 
 		for name, platform := range serverinstall.Platforms {
