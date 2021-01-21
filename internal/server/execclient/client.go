@@ -142,7 +142,7 @@ func (c *Client) Run() (int, error) {
 
 	if ptyF != nil {
 		// We need to go into raw mode with stdin
-		if f, ok := c.Stdin.(*os.File); ok {
+		if f, ok := c.Stdout.(*os.File); ok {
 			oldState, err := sshterm.MakeRaw(int(f.Fd()))
 			if err != nil {
 				return 0, err
