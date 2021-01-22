@@ -96,12 +96,13 @@ func (i *DockerInstaller) Install(
 		s.Status(terminal.StatusWarn)
 		s.Done()
 
+		// In the case where waypoint server container isn't running, the installer
+		// will attempt to start the container. It does this for all containers
+		// that match the 'containerLabel'. In the future case where we support
+		// running multiple waypoint server containers, this loop will try to start
+		// each container.
 		for _, container := range containers {
-			if container.State == "running" {
-				s = sg.Add("Existing Waypoint server container is already running.")
-				s.Status(terminal.StatusWarn)
-				s.Done()
-			} else {
+			if container.State != "running" {
 				s = sg.Add("Attempting to start container...")
 
 				err = cli.ContainerStart(ctx, container.ID, types.ContainerStartOptions{})
