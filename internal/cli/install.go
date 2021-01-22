@@ -70,7 +70,7 @@ func (c *InstallCommand) Run(args []string) int {
 		}
 
 		c.ui.Output(
-			"Error installing server into %q: invalid platform",
+			"Error installing server into %q: unsupported platform",
 			c.platform,
 			terminal.WithErrorStyle(),
 		)
