@@ -41,6 +41,7 @@ Router.map(function () {
           this.route('logs');
           this.route('exec');
         });
+        this.route('settings');
       });
     });
   });

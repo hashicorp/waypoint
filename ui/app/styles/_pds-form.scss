@@ -1,0 +1,24 @@
+.pds-form {
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    max-width: 800px;
+  }
+
+  .pds-formField {
+    margin-bottom: scale.$lg-1;
+  }
+
+  .pds-formFieldToggle {
+    display: flex;
+    flex-direction: row;
+    .x-toggle-container {
+      padding-left: 0;
+    }
+  }
+
+  .pds-toggleLabel {
+    padding-left: scale.$sm-1;;
+  }
+}
