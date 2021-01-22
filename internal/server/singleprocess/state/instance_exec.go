@@ -104,7 +104,7 @@ func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceEx
 // function in quick succession will return could return the same instance,
 // which is why a simple random sampling is done on all prospective instances.
 func (s *State) CalculateInstanceExecByDeployment(did string) (*Instance, error) {
-	txn := s.inmem.Txn(true)
+	txn := s.inmem.Txn(false)
 	defer txn.Abort()
 
 	// Find all the instances by deployment
@@ -132,15 +132,9 @@ func (s *State) CalculateInstanceExecByDeployment(did string) (*Instance, error)
 			return nil, err
 		}
 
-		// Zero length exec means we take it right away
-		if len(execs) == 0 {
-			min = append(min, rec)
-			break
-		}
-
 		// Otherwise we keep track of the lowest "load" exec which we just
 		// choose by the minimum number of registered sessions.
-		if min == nil || len(execs) < minCount {
+		if min == nil || len(execs) <= minCount {
 			min = append(min, rec)
 			minCount = len(execs)
 		}
