@@ -10,6 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/waypoint/internal/server/execclient"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/stretchr/testify/assert"
@@ -55,12 +58,15 @@ func TestAppExec_happy(t *testing.T) {
 
 	var stdin bytes.Buffer
 
+	anyd, err := ptypes.MarshalAny(&empty.Empty{})
+	require.NoError(err)
+
 	// Expect to have the destroy function called
 	require.NoError(err)
-	mock.Execer.On("ExecFunc").Return(func(d *pb.Deployment, esi *component.ExecSessionInfo) error {
+	mock.Execer.On("ExecFunc").Return(func(d *any.Any, esi *component.ExecSessionInfo) error {
 		app.logger.Info("called mock ExecFunc")
 
-		if d == nil || d != resp.Deployment {
+		if d == nil || d != anyd {
 			return fmt.Errorf("value didn't match")
 		}
 
@@ -72,6 +78,8 @@ func TestAppExec_happy(t *testing.T) {
 	})
 
 	instanceId := "A"
+
+	resp.Deployment.Deployment = anyd
 
 	// Exec
 	go func() {
