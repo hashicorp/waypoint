@@ -11,6 +11,7 @@ IMPROVEMENTS:
 * cli: `server run` supports specifying a custom TLS certificate [GH-951]
 * server: store platform where server is installed to in server config [GH-1000]
 * serverinstall/docker: Start waypoint server container if stopped on install [GH-1009]
+* cli: more informative error messages on `install` [GH-1004]
 
 BUG FIXES:
 
