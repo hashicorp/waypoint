@@ -30,7 +30,7 @@ module.exports = withHashicorp({
     return redirects
   },
   headers() {
-    return customHeaders
+    return Promise.resolve(customHeaders)
   },
   svgo: { plugins: [{ removeViewBox: false }] },
   env: {
