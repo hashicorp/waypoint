@@ -2,10 +2,7 @@ package core
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
@@ -14,15 +11,20 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/ceb"
-	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// Exec launches an exec plugin
+// Exec launches an exec plugin. Exec plugins are only used if the plugin's
+// platforms plugin wishes to implement the ExecFunc protocol. And even then, we
+// only trigger this code path if there are no long running instances associated
+// with the given Deployment.
+// Under traditional platform scenarios, we don't need to run a exec plugin, instead
+// the exec command can connect directly to a long running instance to provide the
+// exec session.
+// The result of running this task is that the platform plugin is called
+// and made available as a virtual instance with the given id.
 func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment) error {
 	// We need to get the pushed artifact if it isn't loaded.
-	// TODO(evanphx) I don't understand why we do this. We're mimicing what the
-	// deploy destroy code does and they load this, so we do to?
 	var artifact *pb.PushedArtifact
 	if d.Preload != nil && d.Preload.Artifact != nil {
 		artifact = d.Preload.Artifact
@@ -68,53 +70,41 @@ func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment) error {
 
 	a.logger.Debug("spooling exec operation")
 
-	_, _, err = a.doOperation(ctx, a.logger.Named("exec"), &execOperation{
-		InstanceId: id,
-		Component:  c,
-		Deployment: d,
-		Client:     a.client,
+	execer, ok := c.Value.(component.Execer)
+	if !ok || execer.ExecFunc() == nil {
+		a.logger.Debug("component is not an Execer or has no ExecFunc()")
+		return nil
+	}
+
+	a.logger.Debug("spawn virtual ceb to handle exec")
+
+	virt, err := ceb.NewVirtual(a.logger, ceb.VirtualConfig{
+		DeploymentId: d.Id,
+		InstanceId:   id,
+		Client:       a.client,
 	})
-	return err
-}
 
-// execOperation is a simple barebones operation value to conform to the
-// doOperation doOperation interface.
-type execOperation struct {
-	Log        hclog.Logger
-	InstanceId string
-	Component  *Component
-	Deployment *pb.Deployment
-	Client     pb.WaypointClient
-}
+	if err != nil {
+		return err
+	}
 
-func (op *execOperation) Init(app *App) (proto.Message, error) {
-	return op.Deployment, nil
-}
-
-func (op *execOperation) Hooks(app *App) map[string][]*config.Hook {
-	return nil
-}
-
-func (op *execOperation) Labels(app *App) map[string]string {
-	return op.Deployment.Labels
-}
-
-func (op *execOperation) Upsert(
-	ctx context.Context,
-	client pb.WaypointClient,
-	msg proto.Message,
-) (proto.Message, error) {
-	return msg, nil
+	return virt.RunExec(ctx, &pluginExecVirtHandler{
+		app:        a,
+		log:        a.logger,
+		component:  c,
+		deployment: d,
+		execer:     execer,
+	}, 1)
 }
 
 // pluginExecVirtHandler is an implementation of ceb.VirtualExecHandler
 // that hands off the exec session info to the plugin's Exec function.
 type pluginExecVirtHandler struct {
-	app    *App
-	log    hclog.Logger
-	op     *execOperation
-	execer component.Execer
-	value  *interface{}
+	app        *App
+	log        hclog.Logger
+	component  *Component
+	deployment *pb.Deployment
+	execer     component.Execer
 
 	// Set in CreateSession
 	info *ceb.VirtualExecInfo
@@ -172,21 +162,19 @@ func (p *pluginExecVirtHandler) Run(ctx context.Context) error {
 
 	p.log.Debug("calling plugin with session-info", "arguments", esi.Arguments)
 
-	val, err := p.app.callDynamicFunc(ctx,
+	_, err := p.app.callDynamicFunc(ctx,
 		p.log,
 		nil,
-		p.op.Component,
+		p.component,
 		p.execer.ExecFunc(),
-		argNamedAny("deployment", p.op.Deployment.Deployment),
-		argmapper.Named("exec_info", esi),
+		argNamedAny("deployment", p.deployment.Deployment),
+		argmapper.Typed(esi),
 	)
 	if err != nil {
 		p.log.Error("error executing plugin function", "error", err)
 		return err
 	}
 
-	// This is to shuffle the actual return value back for app.Exec()
-	*p.value = val
 	return nil
 }
 
@@ -211,47 +199,3 @@ func (p *pluginExecVirtHandler) PTYResize(winch *pb.ExecStreamRequest_WindowSize
 
 	return nil
 }
-
-func (op *execOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
-	execer, ok := op.Component.Value.(component.Execer)
-	if !ok || execer.ExecFunc() == nil {
-		log.Debug("component is not an Execer or has no ExecFunc()")
-		return nil, nil
-	}
-
-	if op.Deployment == nil {
-		return nil, fmt.Errorf("no deployment given to exec operation")
-	}
-
-	log.Debug("spawn virtual ceb to handle exec")
-
-	virt, err := ceb.NewVirtual(log, ceb.VirtualConfig{
-		DeploymentId: op.Deployment.Id,
-		InstanceId:   op.InstanceId,
-		Client:       op.Client,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	var value interface{}
-
-	return value, virt.RunExec(ctx, &pluginExecVirtHandler{
-		app:    app,
-		log:    log,
-		op:     op,
-		execer: execer,
-		value:  &value,
-	}, 1)
-}
-
-func (op *execOperation) StatusPtr(msg proto.Message) **pb.Status {
-	return nil
-}
-
-func (op *execOperation) ValuePtr(msg proto.Message) **any.Any {
-	return nil
-}
-
-var _ operation = (*execOperation)(nil)
