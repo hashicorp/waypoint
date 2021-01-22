@@ -66,6 +66,7 @@ func (i *DockerInstaller) Install(
 			Key:   "label",
 			Value: containerLabel,
 		}),
+		All: true,
 	})
 	if err != nil {
 		return nil, err
@@ -95,6 +96,28 @@ func (i *DockerInstaller) Install(
 		s.Update("Detected existing Waypoint server.")
 		s.Status(terminal.StatusWarn)
 		s.Done()
+
+		for _, container := range containers {
+			if container.State == "running" {
+				s = sg.Add("Existing Waypoint server container is already running.")
+				s.Status(terminal.StatusWarn)
+				s.Done()
+			} else {
+				s = sg.Add("Attempting to start container...")
+
+				err = cli.ContainerStart(ctx, container.ID, types.ContainerStartOptions{})
+				if err != nil {
+					s.Update("Failed to start container %q", container.Names[0])
+					s.Status(terminal.StatusError)
+					s.Done()
+					return nil, err
+				}
+
+				s.Update("Container %q started!", container.Names[0])
+				s.Done()
+			}
+		}
+
 		return &InstallResults{
 			Context:       &clicfg,
 			AdvertiseAddr: &addr,
