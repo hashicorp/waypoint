@@ -22,6 +22,11 @@ module.exports = function (environment) {
       // Here you can pass flags/options to your application instance
       // when it is created
     },
+
+    'ember-toggle': {
+      includedThemes: ['light'],
+      defaultTheme: 'light',
+    }
   };
 
   if (environment === 'development') {
