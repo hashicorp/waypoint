@@ -394,7 +394,7 @@ func (s *service) handleJobStreamRequest(
 	case *pb.RunnerJobStreamRequest_Heartbeat_:
 		return s.state.JobHeartbeat(job.Id)
 
-	case *pb.RunnerJobStreamRequest_Download_:
+	case *pb.RunnerJobStreamRequest_Download:
 		return s.state.JobUpdateRef(job.Id, event.Download.DataSourceRef)
 
 	case *pb.RunnerJobStreamRequest_Terminal:

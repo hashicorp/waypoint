@@ -65,8 +65,8 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 
 	// Send download info
 	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
-		Event: &pb.RunnerJobStreamRequest_Download_{
-			Download: &pb.RunnerJobStreamRequest_Download{
+		Event: &pb.RunnerJobStreamRequest_Download{
+			Download: &pb.GetJobStreamResponse_Download{
 				DataSourceRef: &pb.Job_DataSource_Ref{
 					Ref: &pb.Job_DataSource_Ref_Git{
 						Git: &pb.Job_Git_Ref{

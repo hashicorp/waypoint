@@ -220,8 +220,8 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 
 			sendMutex.Lock()
 			err = client.Send(&pb.RunnerJobStreamRequest{
-				Event: &pb.RunnerJobStreamRequest_Download_{
-					Download: &pb.RunnerJobStreamRequest_Download{
+				Event: &pb.RunnerJobStreamRequest_Download{
+					Download: &pb.GetJobStreamResponse_Download{
 						DataSourceRef: ref,
 					},
 				},
