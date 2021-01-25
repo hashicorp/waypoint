@@ -31,8 +31,8 @@ type dockerConfig struct {
 }
 
 var (
-	grpcPort       = "9701"
-	httpPort       = "9702"
+	grpcPort       = defaultGrpcPort
+	httpPort       = defaultHttpPort
 	containerLabel = "waypoint-type=server"
 	containerKey   = "waypoint-type"
 	containerValue = "server"
