@@ -17,11 +17,13 @@ type Installer interface {
 	// Install expects the Waypoint server to be installed.
 	Install(context.Context, *InstallOpts) (*InstallResults, error)
 
+	// InstallRunner expects a Waypoint runner to be installed.
+	InstallRunner(context.Context, *InstallRunnerOpts) error
+
 	// InstallFlags is called prior to Install and allows the installer to
 	// specify flags for the install CLI. The flags should be prefixed with
 	// the platform name to avoid conflicts with other flags.
 	InstallFlags(*flag.Set)
-
 
 	// Upgrade expects the Waypoint server to be upgraded from a previous install
 	Upgrade(ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (*InstallResults, error)
@@ -38,14 +40,6 @@ type Installer interface {
 	// specify flags for the uninstall CLI. The flags should be prefixed with the
 	// platform name to avoid conflicts with other flags.
 	UninstallFlags(*flag.Set)
-
-	// Upgrade expects the Waypoint server to be upgraded from a previous install
-	Upgrade(ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (*InstallResults, error)
-
-	// UpgradeFlags is called prior to Upgrade and allows the upgrader to
-	// specify flags for the upgrade CLI. The flags should be prefixed with
-	// the platform name to avoid conflicts with other flags.
-	UpgradeFlags(*flag.Set)
 }
 
 // InstallOpts are the options sent to Installer.Install.
@@ -69,6 +63,26 @@ type InstallResults struct {
 	// HTTPAddr is the address to the HTTP listener on the server. This generally
 	// is reachable from the CLI immediately and not a private address.
 	HTTPAddr string
+}
+
+// InstallRunnerOpts are the options sent to Installer.InstallRunner.
+type InstallRunnerOpts struct {
+	Log hclog.Logger
+	UI  terminal.UI
+
+	// AuthToken is an auth token that can be used for this runner.
+	AuthToken string
+
+	// AdvertiseAddr is the advertised address configuration currently set
+	// for the server. This is likely the same information you want to use
+	// for the runner to connect to the server, but doesn't have to be.
+	AdvertiseAddr *pb.ServerConfig_AdvertiseAddr
+
+	// AdvertiseClient is the serverconfig.Client information for connecting
+	// to the server via the AdvertiseAddr information. This also has the auth
+	// token already set. This is provided as a convenience since it is common
+	// to build this immediately.
+	AdvertiseClient *serverconfig.Client
 }
 
 var Platforms = map[string]Installer{
