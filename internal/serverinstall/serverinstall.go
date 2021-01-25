@@ -25,7 +25,6 @@ type Installer interface {
 	// the platform name to avoid conflicts with other flags.
 	InstallFlags(*flag.Set)
 
-
 	// Upgrade expects the Waypoint server to be upgraded from a previous install
 	Upgrade(ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (*InstallResults, error)
 
