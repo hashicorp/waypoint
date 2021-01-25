@@ -122,14 +122,72 @@ func (c *InstallCommand) Run(args []string) int {
 	var callOpts []grpc.CallOption
 	tokenResp, err := client.BootstrapToken(ctx, &empty.Empty{})
 	if err != nil {
-		c.ui.Output(
-			"Error getting the initial token: %s\n\n%s",
-			clierrors.Humanize(err),
-			errInstallRunning,
-			terminal.WithErrorStyle(),
-		)
-		return 1
+		// try default context in case server was started again from install
+		defaultCtx, err := c.contextStorage.Default()
+		if err != nil {
+			c.ui.Output(
+				"Error getting default context to use existing auth token: %s\n%s",
+				clierrors.Humanize(err),
+				errInstallRunning,
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		if defaultCtx != "" {
+			defaultCtxConfig, err := c.contextStorage.Load(defaultCtx)
+			if err != nil {
+				c.ui.Output(
+					"Error loading the context %q to use existing auth token: %s\n%s",
+					defaultCtx,
+					clierrors.Humanize(err),
+					errInstallRunning,
+					terminal.WithErrorStyle(),
+				)
+				return 1
+			}
+
+			conn, err := serverclient.Connect(ctx,
+				serverclient.FromContextConfig(defaultCtxConfig),
+				serverclient.Timeout(5*time.Minute),
+			)
+			if err != nil {
+				c.ui.Output(
+					"Error connecting to server using existing auth token: %s\n\n%s",
+					clierrors.Humanize(err),
+					errInstallRunning,
+					terminal.WithErrorStyle(),
+				)
+				return 1
+			}
+			client := pb.NewWaypointClient(conn)
+			// TODO: ideally we need a `GetVersionInfo` with auth for this, but for
+			// now we use this func as it requires authentication
+			_, err = client.GetServerConfig(ctx, &empty.Empty{})
+			if err != nil {
+				c.ui.Output(
+					"Error validating default context token to server: %s\n\n%s",
+					clierrors.Humanize(err),
+					errInstallRunning,
+					terminal.WithErrorStyle(),
+				)
+				return 1
+			} else {
+				// token is valid
+				log.Info("Updating context to use default context, token is valid")
+				contextConfig = defaultCtxConfig
+			}
+		} else {
+			// no context token and bootstrap token failed
+			c.ui.Output(
+				"Error getting the initial token from bootstrap: %s\n\n%s",
+				clierrors.Humanize(err),
+				errInstallRunning,
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
 	}
+
 	if tokenResp != nil {
 		log.Debug("token received, setting on context")
 		contextConfig.Server.RequireAuth = true
