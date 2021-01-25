@@ -124,6 +124,7 @@ func (i *DockerInstaller) Install(
 		return &InstallResults{
 			Context:       &clicfg,
 			AdvertiseAddr: &addr,
+			HTTPAddr:      httpAddr,
 		}, nil
 	}
 
