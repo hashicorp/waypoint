@@ -205,7 +205,7 @@ func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_
 	}
 
 	// Execute it
-	result, err := c.doJob(ctx, job, nil)
+	result, err := c.doJob(ctx, job)
 	if err != nil {
 		return nil, err
 	}
