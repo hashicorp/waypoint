@@ -28,6 +28,8 @@ Usage: `waypoint server run [options]`
 - `-db=<string>` - Path to the database file.
 - `-listen-grpc=<string>` - Address to bind to for gRPC connections.
 - `-listen-http=<string>` - Address to bind to for HTTP connections. Required for the UI.
+- `-tls-cert-file=<string>` - Path to a PEM-encoded certificate file for TLS. If this isn't set, a self-signed certificate will be generated. This file will be read once at startup and will not be monitored for changes.
+- `-tls-key-file=<string>` - Path to a PEM-encoded private key file for the TLS certificate specified with -tls-cert-file. This is required if -tls-cert-file is set.
 - `-disable-ui` - Disable the embedded web interface
 - `-url-enabled` - Enable the URL service.
 - `-url-api-addr=<string>` - Address to Waypoint URL service API

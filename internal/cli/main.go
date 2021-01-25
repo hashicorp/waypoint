@@ -294,6 +294,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"server upgrade": func() (cli.Command, error) {
+			return &ServerUpgradeCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
 				baseCommand: baseCommand,
