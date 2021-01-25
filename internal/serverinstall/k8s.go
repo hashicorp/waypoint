@@ -846,15 +846,6 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	return nil
 }
 
-// InstallRunner implements Installer.
-func (i *K8sInstaller) InstallRunner(
-	ctx context.Context,
-	opts *InstallRunnerOpts,
-) error {
-	// TODO
-	return nil
-}
-
 // newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset
 // for deployment in Kubernetes.
 func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {

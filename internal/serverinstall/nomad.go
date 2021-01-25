@@ -458,15 +458,6 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 	return nil
 }
 
-// InstallRunner implements Installer.
-func (i *NomadInstaller) InstallRunner(
-	ctx context.Context,
-	opts *InstallRunnerOpts,
-) error {
-	// TODO
-	return nil
-}
-
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
 func waypointNomadJob(c nomadConfig) *api.Job {
