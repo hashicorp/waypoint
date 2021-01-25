@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // VirtualExecInfo contains values to run an exec session.
@@ -238,7 +240,7 @@ func (v *Virtual) startExec(
 		for {
 			resp, err := client.Recv()
 			if err != nil {
-				if err == io.EOF || err == context.Canceled {
+				if err == io.EOF || err == context.Canceled || status.Code(err) == codes.Canceled {
 					v.log.Info("exec stream ended by client")
 				} else {
 					v.log.Warn("error receiving from server stream", "err", err)
@@ -276,7 +278,11 @@ func (v *Virtual) startExec(
 			}); err != nil {
 				v.log.Warn("error sending exit message", "err", err)
 			}
-			return err
+
+			// We don't return here, instead we wait for the remote side to see
+			// our exit message and close the stream. That will be observed
+			// as the above go routine closing respCh and the below case
+			// seeing ok = false.
 
 		// The server sent new info
 		case resp, ok := <-respCh:
