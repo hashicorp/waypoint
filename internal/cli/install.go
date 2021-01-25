@@ -126,8 +126,9 @@ func (c *InstallCommand) Run(args []string) int {
 		defaultCtx, err := c.contextStorage.Default()
 		if err != nil {
 			c.ui.Output(
-				"Error getting default context to use existing auth token: %s\n%s",
+				"Error getting default context to use existing auth token: %s\n\n%s\n\n%s",
 				clierrors.Humanize(err),
+				errInstallToken,
 				errInstallRunning,
 				terminal.WithErrorStyle(),
 			)
@@ -137,9 +138,10 @@ func (c *InstallCommand) Run(args []string) int {
 			defaultCtxConfig, err := c.contextStorage.Load(defaultCtx)
 			if err != nil {
 				c.ui.Output(
-					"Error loading the context %q to use existing auth token: %s\n%s",
+					"Error loading the context %q to use existing auth token: %s\n\n%s\n\n%s",
 					defaultCtx,
 					clierrors.Humanize(err),
+					errInstallToken,
 					errInstallRunning,
 					terminal.WithErrorStyle(),
 				)
@@ -152,8 +154,9 @@ func (c *InstallCommand) Run(args []string) int {
 			)
 			if err != nil {
 				c.ui.Output(
-					"Error connecting to server using existing auth token: %s\n\n%s",
+					"Error connecting to server using existing auth token: %s\n\n%s\n\n%s",
 					clierrors.Humanize(err),
+					errInstallToken,
 					errInstallRunning,
 					terminal.WithErrorStyle(),
 				)
@@ -165,8 +168,9 @@ func (c *InstallCommand) Run(args []string) int {
 			_, err = client.GetServerConfig(ctx, &empty.Empty{})
 			if err != nil {
 				c.ui.Output(
-					"Error validating default context token to server: %s\n\n%s",
+					"Error validating default context token to server: %s\n\n%s\n\n%s",
 					clierrors.Humanize(err),
+					errInstallToken,
 					errInstallRunning,
 					terminal.WithErrorStyle(),
 				)
@@ -332,6 +336,18 @@ The Waypoint server has been deployed, but due to this error we were
 unable to automatically configure the local CLI or the Waypoint server
 advertise address. You must do this manually using "waypoint context"
 and "waypoint server config-set".
+`)
+
+	errInstallToken = strings.TrimSpace(`
+Waypoint CLI attempted to use the default context auth token to connect
+to Waypoint Server due to the server token bootstrap step failing.
+`)
+
+	errInstallRunner = strings.TrimSpace(`
+The Waypoint runner failed to install. This error occurred after the
+Waypoint server was successfully installed. Your CLI is configured to
+use the installed server. If you want to retry, you must uninstall the
+server first.
 `)
 
 	outInstallSuccess = strings.TrimSpace(`
