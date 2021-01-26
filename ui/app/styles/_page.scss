@@ -714,6 +714,16 @@
       width: 100%;
     }
   }
+
+  .destroyed-deployments-filter {
+    display: block;
+    float: right;
+    text-align: right;
+    margin-bottom: scale.$sm-1;
+    input {
+      width: auto;
+    }
+  }
 }
 
 .cli-hint {

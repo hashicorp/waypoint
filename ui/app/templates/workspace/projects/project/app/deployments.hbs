@@ -1,7 +1,17 @@
-<h3>{{t "page.deployments.title"}}</h3>
+<h3>
+  {{t "page.deployments.title"}}
+</h3>
+<label for="show-destroyed" class="destroyed-deployments-filter">
+  <Input
+    @id="show-destroyed"
+    @type="checkbox"
+    @checked={{this.destroyed}}
+    {{on "input" (mut this.destroyed)}}/>
+    Show destroyed resources
+</label>
 
 <ul data-test-deployment-list=true class="list">
-  {{#each @model as |deployment|}}
+  {{#each this.deployments as |deployment|}}
     <AppItem::Deployment @deployment={{deployment}} />
   {{else}}
     <EmptyState>
