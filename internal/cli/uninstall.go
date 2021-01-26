@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -104,6 +106,10 @@ func (c *UninstallCommand) Run(args []string) int {
 			return 1
 		}
 		if err = clisnapshot.WriteSnapshot(ctx, c.project.Client(), w); err != nil {
+			if status.Code(err) == codes.Unimplemented {
+				c.ui.Output(snapshotUnimplementedErr, terminal.WithErrorStyle())
+			}
+
 			fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
 			return 1
 		}
@@ -217,8 +223,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 }
 
 var (
-	uninstallSnapshotName = "waypoint-server-snapshot"
-	autoApproveMsg        = strings.TrimSpace(`
+	autoApproveMsg = strings.TrimSpace(`
 Uninstalling Waypoint server requires approval.
 Rerun the command with -auto-approve to continue with the uninstall.
 `)

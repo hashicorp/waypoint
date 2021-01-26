@@ -383,12 +383,6 @@ More information can be found by runninng 'waypoint server restore -help' or
 following the server maintenence guide for backups and restores:
 https://www.waypointproject.io/docs/server/run/maintenance#backup-restore
 `)
-
-	snapshotUnimplementedErr = strings.TrimSpace(`
-The server you are upgrading from does not support snapshots. Rerunning the
-upgrade command with '-snapshot=false' is required, and there will be no automatic
-data backups for the server.
-`)
 	addrSuccess = strings.TrimSpace(`
 Advertise Address: %[1]s
    Web UI Address: %[2]s
