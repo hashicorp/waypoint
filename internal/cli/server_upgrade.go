@@ -169,6 +169,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 			s.Done()
 
 			c.ui.Output(fmt.Sprintf("Error opening output: %s", err), terminal.WithErrorStyle())
+			os.Remove(snapshotName)
 			return 1
 		}
 
@@ -185,6 +186,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 			}
 
 			c.ui.Output(fmt.Sprintf("Error generating Snapshot: %s", err), terminal.WithErrorStyle())
+			os.Remove(snapshotName)
 			return 1
 		}
 

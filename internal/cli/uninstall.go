@@ -107,6 +107,7 @@ func (c *UninstallCommand) Run(args []string) int {
 			s.Done()
 
 			c.ui.Output("Error creating snapshot file: %s", err, terminal.WithErrorStyle())
+			os.Remove(snapshotName)
 			return 1
 		}
 		if err = clisnapshot.WriteSnapshot(ctx, c.project.Client(), w); err != nil {
@@ -119,6 +120,7 @@ func (c *UninstallCommand) Run(args []string) int {
 			}
 
 			c.ui.Output("Error generating snapshot: %s", err, terminal.WithErrorStyle())
+			os.Remove(snapshotName)
 			return 1
 		}
 		s.Update("Snapshot %q generated", snapshotName)
