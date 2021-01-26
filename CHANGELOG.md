@@ -5,6 +5,9 @@ FEATURES:
 * **Uninstall command for all server platforms**:
 Use `server uninstall` to remove the Waypoint server and artifacts from the
 specified `-platform` for the active server installation. [GH-972]
+* **Upgrade command for all server platforms**:
+Use `server upgrade` to upgrade the Waypoint server for the
+specified `-platform` for the active server installation. [GH-976]
 
 IMPROVEMENTS:
 
