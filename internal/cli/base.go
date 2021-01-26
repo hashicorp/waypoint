@@ -448,8 +448,8 @@ so you can specify the app to target using the "-app" flag.
 	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
 
 	snapshotUnimplementedErr = strings.TrimSpace(`
-The server you are upgrading from does not support snapshots. Rerunning the
-upgrade command with '-snapshot=false' is required, and there will be no automatic
-data backups for the server.
+The current Waypoint server does not support snapshots. Rerunning the command
+with '-snapshot=false' is required, and there will be no automatic data backups
+for the server.
 `)
 )
