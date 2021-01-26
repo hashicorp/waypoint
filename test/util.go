@@ -28,6 +28,7 @@ func (b *binary) NewCmd(args ...string) *exec.Cmd {
 	return cmd
 }
 
+// Runs a command with the arguments specified
 func (b *binary) Run(args ...string) (stdout, stderr string, err error) {
 	cmd := b.NewCmd(args...)
 	cmd.Stdin = nil
