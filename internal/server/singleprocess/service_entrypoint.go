@@ -327,6 +327,7 @@ func (s *service) EntrypointExecStream(
 				errCh <- err
 				return
 			}
+			log.Trace("entrypoint event received", "event", hclog.Fmt("%#v", req.Event))
 
 			// If this is an exit or error event track that so we don't synthesize one.
 			// We synthesize an Error value if this loop is going to returning without

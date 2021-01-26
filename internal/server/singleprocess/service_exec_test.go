@@ -170,6 +170,81 @@ func TestServiceStartExecStream_eventExit(t *testing.T) {
 	require.False(active)
 }
 
+func TestServiceStartExecStream_eventError(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Create an instance
+	instanceId, deploymentId, closer := TestEntrypoint(t, client)
+	defer closer()
+
+	// Start stream
+	stream, err := client.StartExecStream(ctx)
+	require.NoError(err)
+	require.NoError(stream.Send(&pb.ExecStreamRequest{
+		Event: &pb.ExecStreamRequest_Start_{
+			Start: &pb.ExecStreamRequest_Start{
+				Target: &pb.ExecStreamRequest_Start_DeploymentId{
+					DeploymentId: deploymentId,
+				},
+				Args: []string{"foo", "bar"},
+			},
+		},
+	}))
+	defer stream.CloseSend()
+
+	// Should open
+	{
+		resp, err := stream.Recv()
+		require.NoError(err)
+		open, ok := resp.Event.(*pb.ExecStreamResponse_Open_)
+		require.True(ok, "should be an open")
+		require.NotNil(open)
+	}
+
+	// Get the record
+	ws := memdb.NewWatchSet()
+	list, err := testServiceImpl(impl).state.InstanceExecListByInstanceId(instanceId, ws)
+	require.NoError(err)
+	if len(list) == 0 {
+		ws.Watch(time.After(1 * time.Second))
+		list, err = impl.(*service).state.InstanceExecListByInstanceId(instanceId, ws)
+		require.NoError(err)
+	}
+	require.Len(list, 1)
+	exec := list[0]
+
+	// Send an exit event
+	exec.EntrypointEventCh <- &pb.EntrypointExecRequest{
+		Event: &pb.EntrypointExecRequest_Error_{
+			Error: &pb.EntrypointExecRequest_Error{
+				Error: status.New(codes.DataLoss, "this is a bad thing").Proto(),
+			},
+		},
+	}
+
+	// The above should trigger an exit event
+	resp, err := stream.Recv()
+	require.NoError(err)
+	exitResp, ok := resp.Event.(*pb.ExecStreamResponse_Exit_)
+	require.True(ok)
+	require.Equal(int32(1), exitResp.Exit.Code)
+
+	// Then we should get a close
+	_, err = stream.Recv()
+	require.Error(err)
+	require.Equal(io.EOF, err)
+
+	// The event channel should be closed
+	_, active := <-exec.ClientEventCh
+	require.False(active)
+}
+
 // When the InstanceExec EntrypointEventCh closes, we should exit.
 func TestServiceStartExecStream_entrypointEventChClose(t *testing.T) {
 	ctx := context.Background()
