@@ -8,6 +8,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -121,7 +123,21 @@ func (c *InstallCommand) Run(args []string) int {
 	// We need our bootstrap token immediately
 	var callOpts []grpc.CallOption
 	tokenResp, err := client.BootstrapToken(ctx, &empty.Empty{})
-	if err != nil {
+	if err != nil && status.Code(err) != codes.PermissionDenied {
+		c.ui.Output(
+			"Error getting the initial token: %s\n\n%s",
+			clierrors.Humanize(err),
+			errInstallRunning,
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+
+	if tokenResp != nil {
+		log.Debug("token received, setting on context")
+		contextConfig.Server.RequireAuth = true
+		contextConfig.Server.AuthToken = tokenResp.Token
+	} else {
 		// try default context in case server was started again from install
 		defaultCtx, err := c.contextStorage.Default()
 		if err != nil {
@@ -134,6 +150,7 @@ func (c *InstallCommand) Run(args []string) int {
 			)
 			return 1
 		}
+
 		if defaultCtx != "" {
 			defaultCtxConfig, err := c.contextStorage.Load(defaultCtx)
 			if err != nil {
@@ -180,26 +197,11 @@ func (c *InstallCommand) Run(args []string) int {
 				log.Info("Updating context to use default context, token is valid")
 				contextConfig = defaultCtxConfig
 			}
-		} else {
-			// no context token and bootstrap token failed
-			c.ui.Output(
-				"Error getting the initial token from bootstrap: %s\n\n%s",
-				clierrors.Humanize(err),
-				errInstallRunning,
-				terminal.WithErrorStyle(),
-			)
-			return 1
 		}
 	}
 
-	if tokenResp != nil {
-		log.Debug("token received, setting on context")
-		contextConfig.Server.RequireAuth = true
-		contextConfig.Server.AuthToken = tokenResp.Token
-
-		callOpts = append(callOpts, grpc.PerRPCCredentials(
-			serverclient.StaticToken(tokenResp.Token)))
-	}
+	callOpts = append(callOpts, grpc.PerRPCCredentials(
+		serverclient.StaticToken(contextConfig.Server.AuthToken)))
 
 	// If we connected successfully, lets immediately setup our context.
 	if c.contextName != "" {
