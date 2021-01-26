@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -100,11 +102,25 @@ func (c *UninstallCommand) Run(args []string) int {
 		s.Update("Taking snapshot of server with name: '%s'", snapshotName)
 		w, err := os.Create(snapshotName)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating snapshot file: %s", err)
+			s.Update("Failed to take server snapshot\n")
+			s.Status(terminal.StatusError)
+			s.Done()
+
+			c.ui.Output("Error creating snapshot file: %s", err, terminal.WithErrorStyle())
+			os.Remove(snapshotName)
 			return 1
 		}
 		if err = clisnapshot.WriteSnapshot(ctx, c.project.Client(), w); err != nil {
-			fmt.Fprintf(os.Stderr, "Error generating snapshot: %s", err)
+			s.Update("Failed to take server snapshot\n")
+			s.Status(terminal.StatusError)
+			s.Done()
+
+			if status.Code(err) == codes.Unimplemented {
+				c.ui.Output(snapshotUnimplementedErr, terminal.WithErrorStyle())
+			}
+
+			c.ui.Output("Error generating snapshot: %s", err, terminal.WithErrorStyle())
+			os.Remove(snapshotName)
 			return 1
 		}
 		s.Update("Snapshot %q generated", snapshotName)
@@ -217,8 +233,7 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 }
 
 var (
-	uninstallSnapshotName = "waypoint-server-snapshot"
-	autoApproveMsg        = strings.TrimSpace(`
+	autoApproveMsg = strings.TrimSpace(`
 Uninstalling Waypoint server requires approval.
 Rerun the command with -auto-approve to continue with the uninstall.
 `)
