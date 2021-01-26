@@ -471,7 +471,7 @@ func (i *K8sInstaller) Upgrade(
 		for _, pod := range podList.Items {
 			// patch the pod containers with the new i.config.serverImage
 			// Payload should be the updated server config image with the podspec
-			for j, _ := range pod.Spec.Containers {
+			for j := range pod.Spec.Containers {
 				pod.Spec.Containers[j].Image = i.config.serverImage
 			}
 
