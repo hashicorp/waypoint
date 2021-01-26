@@ -8,6 +8,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
@@ -167,6 +169,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 			s.Done()
 
 			c.ui.Output(fmt.Sprintf("Error opening output: %s", err), terminal.WithErrorStyle())
+			os.Remove(snapshotName)
 			return 1
 		}
 
@@ -174,11 +177,16 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		writer.Close()
 
 		if err != nil {
-			s.Update("Failed to take server snapshot")
+			s.Update("Failed to take server snapshot\n")
 			s.Status(terminal.StatusError)
 			s.Done()
 
+			if status.Code(err) == codes.Unimplemented {
+				c.ui.Output(snapshotUnimplementedErr, terminal.WithErrorStyle())
+			}
+
 			c.ui.Output(fmt.Sprintf("Error generating Snapshot: %s", err), terminal.WithErrorStyle())
+			os.Remove(snapshotName)
 			return 1
 		}
 
