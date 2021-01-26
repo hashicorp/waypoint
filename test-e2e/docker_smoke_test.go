@@ -5,10 +5,16 @@ import (
 	"testing"
 )
 
-const testDir = "waypoint-examples/docker/go"
+const (
+	testDir = "waypoint-examples/docker/go"
+)
+
+var (
+	wpBinary = getenv("WP_BINARY", "waypoint")
+)
 
 func TestWaypointInstall(t *testing.T) {
-	wp := NewBinary("waypoint", ".")
+	wp := NewBinary(wpBinary, ".")
 	stdout, stderr, err := wp.Run("version")
 	if err != nil {
 		t.Errorf("unexpected error getting version: %s", err)
@@ -24,7 +30,7 @@ func TestWaypointInstall(t *testing.T) {
 }
 
 func TestWaypointDockerInstall(t *testing.T) {
-	wp := NewBinary("waypoint", testDir)
+	wp := NewBinary(wpBinary, testDir)
 	stdout, stderr, err := wp.Run("install", "-platform=docker", "-accept-tos", "-docker-server-image=hashicorp/waypoint:latest")
 
 	if err != nil {
@@ -41,7 +47,7 @@ func TestWaypointDockerInstall(t *testing.T) {
 }
 
 func TestWaypointDockerUp(t *testing.T) {
-	wp := NewBinary("waypoint", testDir)
+	wp := NewBinary(wpBinary, testDir)
 	stdout, stderr, err := wp.Run("init")
 
 	if err != nil {
@@ -72,7 +78,7 @@ func TestWaypointDockerUp(t *testing.T) {
 }
 
 func TestWaypointDockerUpgrade(t *testing.T) {
-	wp := NewBinary("waypoint", testDir)
+	wp := NewBinary(wpBinary, testDir)
 	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=docker", "-auto-approve", "-docker-server-image=hashicorp/waypoint:latest", "-snapshot=false")
 
 	if err != nil {
@@ -89,7 +95,7 @@ func TestWaypointDockerUpgrade(t *testing.T) {
 }
 
 func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
-	wp := NewBinary("waypoint", testDir)
+	wp := NewBinary(wpBinary, testDir)
 	stdout, stderr, err := wp.Run("up")
 
 	if err != nil {
@@ -106,7 +112,7 @@ func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
 }
 
 func TestWaypointDockerDestroy(t *testing.T) {
-	wp := NewBinary("waypoint", testDir)
+	wp := NewBinary(wpBinary, testDir)
 	stdout, stderr, err := wp.Run("destroy")
 
 	if err != nil {
@@ -123,7 +129,7 @@ func TestWaypointDockerDestroy(t *testing.T) {
 }
 
 func TestWaypointDockerUninstall(t *testing.T) {
-	wp := NewBinary("waypoint", testDir)
+	wp := NewBinary(wpBinary, testDir)
 	stdout, stderr, err := wp.Run("server", "uninstall", "-platform=docker", "-auto-approve", "-snapshot=false")
 
 	if err != nil {

@@ -39,3 +39,12 @@ func (b *binary) Run(args ...string) (stdout, stderr string, err error) {
 	stderr = cmd.Stderr.(*bytes.Buffer).String()
 	return
 }
+
+// Obtains the env var key. If unset, it returns the default
+func getenv(key, def string) string {
+	result := os.Getenv(key)
+	if result == "" {
+		return def
+	}
+	return result
+}

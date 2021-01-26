@@ -7,6 +7,9 @@ GOARCH="$(go env GOARCH)"
 GOEXE="$(go env GOEXE)"
 OUTDIR="build/${GOOS}_${GOARCH}"
 
+# Test env vars
+export WP_BINARY="waypoint"
+
 echo "Starting Waypoint end-to-end tests..."
 echo
 
