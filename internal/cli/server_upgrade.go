@@ -8,6 +8,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
@@ -174,9 +176,13 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		writer.Close()
 
 		if err != nil {
-			s.Update("Failed to take server snapshot")
+			s.Update("Failed to take server snapshot\n")
 			s.Status(terminal.StatusError)
 			s.Done()
+
+			if status.Code(err) == codes.Unimplemented {
+				c.ui.Output(snapshotUnimplementedErr, terminal.WithErrorStyle())
+			}
 
 			c.ui.Output(fmt.Sprintf("Error generating Snapshot: %s", err), terminal.WithErrorStyle())
 			return 1
@@ -376,6 +382,12 @@ Where 'snapshot-name' is the name of the snapshot taken prior to the upgrade.
 More information can be found by runninng 'waypoint server restore -help' or
 following the server maintenence guide for backups and restores:
 https://www.waypointproject.io/docs/server/run/maintenance#backup-restore
+`)
+
+	snapshotUnimplementedErr = strings.TrimSpace(`
+The server you are upgrading from does not support snapshots. Rerunning the
+upgrade command with '-snapshot=false' is required, and there will be no automatic
+data backups for the server.
 `)
 	addrSuccess = strings.TrimSpace(`
 Advertise Address: %[1]s
