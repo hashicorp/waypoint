@@ -137,6 +137,22 @@ func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
 	return err
 }
 
+func (c *App) Exec(ctx context.Context, op *pb.Job_ExecOp, mon chan pb.Job_State) error {
+	if op == nil {
+		op = &pb.Job_ExecOp{}
+	}
+
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_Exec{
+		Exec: op,
+	}
+
+	// Execute it
+	_, err := c.doJobMonitored(ctx, job, mon)
+	return err
+}
+
 func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_ReleaseResult, error) {
 	if op == nil {
 		op = &pb.Job_ReleaseOp{}

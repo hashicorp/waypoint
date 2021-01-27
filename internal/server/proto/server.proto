@@ -58,6 +58,12 @@ service Waypoint {
   // ListInstances returns the running instances of deployments.
   rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
+  // FindExecInstance returns an instance that can be used for an exec session.
+  // This is used by the exec cli command to detect if there is a long running
+  // instance to connect to or if a virtual instance should be created by running
+  // the plugins exec function.
+  rpc FindExecInstance(FindExecInstanceRequest) returns (FindExecInstanceResponse);
+
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
 
@@ -537,7 +543,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 60 to 99; // future operation range
+  reserved 61 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -582,6 +588,7 @@ message Job {
     AuthOp auth = 57;
     DocsOp docs = 58;
     ConfigSyncOp config_sync = 59;
+    ExecOp exec = 60;
   }
 
   //-----------------------------------------------------------------
@@ -817,6 +824,20 @@ message Job {
   message DeployResult {
     Deployment deployment = 1;
   }
+
+  // Used to start a platform's exec function within a runner. This is only used
+  // there are no long running instances for a deployment and can fail if the
+  // platform plugin does not provide an exec function.
+  message ExecOp {
+    // Id to assign the virtual instance created
+    string instance_id = 1;
+
+    // The deployment to create the exec session context. Ie, what
+    // application code will be available within the exec session.
+    Deployment deployment = 2;
+  }
+
+  message ExecResult {}
 
   message DestroyOp {
     // target is what to destroy in this operation.
@@ -1725,6 +1746,18 @@ message Instance {
     // exec and logs functionality
     VIRTUAL = 2;
   }
+}
+
+message FindExecInstanceRequest {
+  // List instances for a specific deployment.
+  string deployment_id = 1;
+
+  // Time to wait before retrying a request to connect to requested instance
+  string wait_timeout = 3;
+}
+
+message FindExecInstanceResponse {
+  Instance instance = 1;
 }
 
 /********************************************************************

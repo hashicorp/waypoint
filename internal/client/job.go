@@ -51,7 +51,21 @@ func (c *Project) job() *pb.Job {
 // doJob will queue and execute the job. If the client is configured for
 // local mode, this will start and target the proper runner.
 func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.Job_Result, error) {
+	return c.doJobMonitored(ctx, job, ui, nil)
+}
+
+// Same as doJob, but with the addition of a  mon channel that can be used
+// to monitor the job status as it changes.
+// The receiver must be careful to not block sending to mon as it will block
+// the job state processing loop.
+func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
 	log := c.logger
+
+	// Be sure that the monitor is closed so the reciever knows for sure the job isn't going
+	// anymore.
+	if monCh != nil {
+		defer close(monCh)
+	}
 
 	// cb is used in local mode only to get a callback of the job ID
 	// so we can tell our runner what ID to expect.
@@ -104,7 +118,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 		}
 	}
 
-	return c.queueAndStreamJob(ctx, job, ui, cb)
+	return c.queueAndStreamJob(ctx, job, ui, cb, monCh)
 }
 
 // queueAndStreamJob will queue the job. If the client is configured to watch the job,
@@ -114,6 +128,7 @@ func (c *Project) queueAndStreamJob(
 	job *pb.Job,
 	ui terminal.UI,
 	jobIdCallback func(string),
+	monCh chan pb.Job_State,
 ) (*pb.Job_Result, error) {
 	log := c.logger
 
@@ -372,6 +387,15 @@ func (c *Project) queueAndStreamJob(
 					ui.Output("If you interrupt this command, the job will still run in the background.",
 						terminal.WithInfoStyle())
 				})
+			}
+
+			if monCh != nil {
+				select {
+				case <-ctx.Done():
+					break
+				case monCh <- event.State.Current:
+					// ok
+				}
 			}
 
 		default:

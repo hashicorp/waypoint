@@ -44,3 +44,9 @@ func (c *App) job() *pb.Job {
 func (c *App) doJob(ctx context.Context, job *pb.Job) (*pb.Job_Result, error) {
 	return c.project.doJob(ctx, job, c.UI)
 }
+
+// doJob is the same as Project.doJob except we set the proper app-specific UI and can
+// monitor the job status.
+func (c *App) doJobMonitored(ctx context.Context, job *pb.Job, monCh chan pb.Job_State) (*pb.Job_Result, error) {
+	return c.project.doJobMonitored(ctx, job, c.UI, monCh)
+}

@@ -155,6 +155,18 @@ func (s *service) handleEntrypointExecRequest(
 				},
 			},
 		}
+	case *pb.EntrypointExecRequest_Error_:
+		log.Warn("error observed processing entrypoint exec stream", "error", event.Error.Error)
+		exit = true
+		send = &pb.ExecStreamResponse{
+			Event: &pb.ExecStreamResponse_Exit_{
+				Exit: &pb.ExecStreamResponse_Exit{
+					Code: 1,
+				},
+			},
+		}
+	default:
+		log.Warn("unimplemented exec entrypoint message seen", "event", hclog.Fmt("%T", event))
 	}
 
 	// Send our response
