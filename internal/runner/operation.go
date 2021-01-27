@@ -71,7 +71,8 @@ func (r *Runner) executeJob(
 	if path == "" {
 		// No waypoint.hcl file is found.
 		return nil, status.Errorf(codes.FailedPrecondition,
-			"A waypoint.hcl was not found.")
+			"A waypoint.hcl was not found. Please either add a waypoint.hcl to "+
+				"the project source or in the project settings in the Waypoint UI.")
 	}
 
 	// Determine the evaluation context we'll be using
