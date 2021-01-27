@@ -222,9 +222,14 @@ func (s *service) GetJobStream(
 		}
 	}()
 
+	// Track that we only send these events once. We could use a bitmask for
+	// this if we cared about that level of optimization but it hurts readability
+	// and we don't need the performance yet.
+	var cancelSent bool
+	var downloadSent bool
+
 	// Enter the event loop
 	var lastState pb.Job_State
-	var cancelSent bool
 	var eventsCh <-chan []*pb.GetJobStreamResponse_Terminal_Event
 	for {
 		select {
@@ -256,6 +261,21 @@ func (s *service) GetJobStream(
 
 				lastState = job.State
 				cancelSent = canceling
+			}
+
+			// If we have a data source ref set, then we need to send the download event.
+			if !downloadSent && job.DataSourceRef != nil {
+				if err := server.Send(&pb.GetJobStreamResponse{
+					Event: &pb.GetJobStreamResponse_Download_{
+						Download: &pb.GetJobStreamResponse_Download{
+							DataSourceRef: job.DataSourceRef,
+						},
+					},
+				}); err != nil {
+					return err
+				}
+
+				downloadSent = true
 			}
 
 			// If we haven't initialized output streaming and the output buffer

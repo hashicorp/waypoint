@@ -63,6 +63,21 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 		}))
 	}
 
+	// Send download info
+	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Download{
+			Download: &pb.GetJobStreamResponse_Download{
+				DataSourceRef: &pb.Job_DataSource_Ref{
+					Ref: &pb.Job_DataSource_Ref_Git{
+						Git: &pb.Job_Git_Ref{
+							Commit: "hello",
+						},
+					},
+				},
+			},
+		},
+	}))
+
 	// Complete the job
 	require.NoError(stream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Complete_{
@@ -79,6 +94,11 @@ func TestServiceRunnerJobStream_complete(t *testing.T) {
 	job, err := testServiceImpl(impl).state.JobById(queueResp.JobId, nil)
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
+
+	// It should store the state
+	require.NotNil(job.DataSourceRef)
+	ref := job.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git
+	require.Equal("hello", ref.Commit)
 }
 
 func TestServiceRunnerJobStream_badOpen(t *testing.T) {

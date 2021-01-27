@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"path/filepath"
 	"sync"
@@ -191,7 +192,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 
 	// We need to get our data source next prior to executing.
 	var result *pb.Job_Result
-	wd, closer, err := r.downloadJobData(
+	wd, ref, closer, err := r.downloadJobData(
 		ctx,
 		log,
 		ui,
@@ -199,7 +200,10 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		assignment.Assignment.Job.DataSourceOverrides,
 	)
 	if err == nil {
-		log.Debug("job data downloaded (or local)", "pwd", wd)
+		log.Debug("job data downloaded (or local)",
+			"pwd", wd,
+			"ref", fmt.Sprintf("%#v", ref),
+		)
 
 		if closer != nil {
 			defer func() {
@@ -210,8 +214,23 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			}()
 		}
 
+		// Send our download info
+		if ref != nil {
+			log.Debug("sending download event")
+
+			sendMutex.Lock()
+			err = client.Send(&pb.RunnerJobStreamRequest{
+				Event: &pb.RunnerJobStreamRequest_Download{
+					Download: &pb.GetJobStreamResponse_Download{
+						DataSourceRef: ref,
+					},
+				},
+			})
+			sendMutex.Unlock()
+		}
+
 		// We want the working directory to always be absolute.
-		if !filepath.IsAbs(wd) {
+		if err == nil && !filepath.IsAbs(wd) {
 			err = status.Errorf(codes.Internal,
 				"data working directory should be absolute. This is a bug, please report it.")
 		}

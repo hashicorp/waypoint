@@ -477,6 +477,39 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 	return job.Job(result), nil
 }
 
+// JobUpdateRef sets the data_source_ref field for a job. This job can be
+// in any state.
+func (s *State) JobUpdateRef(id string, ref *pb.Job_DataSource_Ref) error {
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	// Get the job
+	raw, err := txn.First(jobTableName, jobIdIndexName, id)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return status.Errorf(codes.NotFound, "job not found: %s", id)
+	}
+	job := raw.(*jobIndex)
+
+	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
+		jobpb.DataSourceRef = ref
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Insert to update
+	if err := txn.Insert(jobTableName, job); err != nil {
+		return err
+	}
+
+	txn.Commit()
+	return nil
+}
+
 // JobComplete marks a running job as complete. If an error is given,
 // the job is marked as failed (a completed state). If no error is given,
 // the job is marked as successful.
