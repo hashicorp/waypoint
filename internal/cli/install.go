@@ -199,6 +199,13 @@ func (c *InstallCommand) Run(args []string) int {
 				log.Info("Updating context to use default context, token is valid")
 				contextConfig = defaultCtxConfig
 			}
+		} else {
+			c.ui.Output(
+				"Error attempting to authenticate to bootstrapped server:\n\n%s",
+				errNoValidContext,
+				terminal.WithErrorStyle(),
+			)
+			return 1
 		}
 	}
 
@@ -430,6 +437,13 @@ The Waypoint runner failed to install. This error occurred after the
 Waypoint server was successfully installed. Your CLI is configured to
 use the installed server. If you want to retry, you must uninstall the
 server first.
+`)
+
+	errNoValidContext = strings.TrimSpace(`
+Waypoint has detected that the server has already been deployed and bootstrapped.
+However, the current context used to restart the server is not configured
+to authenticate to the current server. If there is a valid context, switch
+to it using "waypoint context use".
 `)
 
 	outInstallSuccess = strings.TrimSpace(`
