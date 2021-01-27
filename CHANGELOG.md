@@ -12,9 +12,10 @@ specified `-platform` for the active server installation. [GH-976]
 IMPROVEMENTS:
 
 * cli: `server run` supports specifying a custom TLS certificate [GH-951]
+* cli: more informative error messages on `install` [GH-1004]
 * server: store platform where server is installed to in server config [GH-1000]
 * serverinstall/docker: Start waypoint server container if stopped on install [GH-1009]
-* cli: more informative error messages on `install` [GH-1004]
+* serverinstall/k8s: Allow using k8s context [GH-1028]
 
 BUG FIXES:
 
