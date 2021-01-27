@@ -17,6 +17,7 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/goleak"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	componentmocks "github.com/hashicorp/waypoint-plugin-sdk/component/mocks"
@@ -96,6 +97,10 @@ func TestAppExec_happy(t *testing.T) {
 		require.NoError(err)
 		return len(resp.Instances) == 1
 	}, 2*time.Second, 25*time.Millisecond)
+
+	// Make sure that with all the exec stream tracking we don't leak
+	// goroutines
+	defer goleak.VerifyNone(t, goleak.IgnoreCurrent())
 
 	var stderr, stdout bytes.Buffer
 
