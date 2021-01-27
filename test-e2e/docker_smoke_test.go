@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -10,9 +11,9 @@ const (
 )
 
 var (
-	wpBinary            = getenv("WP_BINARY", "waypoint")
-	wpServerImage       = getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
-	wpServerImageUpdate = getenv("WP_SERVERIMAGE_UPGRADE", "hashicorp/waypoint:latest")
+	wpBinary             = getenv("WP_BINARY", "waypoint")
+	wpServerImage        = getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
+	wpServerImageUpgrade = getenv("WP_SERVERIMAGE_UPGRADE", "hashicorp/waypoint:latest")
 )
 
 func TestWaypointInstall(t *testing.T) {
@@ -33,7 +34,7 @@ func TestWaypointInstall(t *testing.T) {
 
 func TestWaypointDockerInstall(t *testing.T) {
 	wp := NewBinary(wpBinary, testDir)
-	stdout, stderr, err := wp.Run("install", "-platform=docker", "-accept-tos", "-docker-server-image=hashicorp/waypoint:latest")
+	stdout, stderr, err := wp.Run("install", "-platform=docker", "-accept-tos", fmt.Sprintf("-docker-server-image=%s", wpServerImage))
 
 	if err != nil {
 		t.Errorf("unexpected error installing server to docker: %s", err)
@@ -81,7 +82,7 @@ func TestWaypointDockerUp(t *testing.T) {
 
 func TestWaypointDockerUpgrade(t *testing.T) {
 	wp := NewBinary(wpBinary, testDir)
-	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=docker", "-auto-approve", "-docker-server-image=hashicorp/waypoint:latest", "-snapshot=false")
+	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=docker", "-auto-approve", fmt.Sprintf("-docker-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error upgrading server in docker: %s", err)
