@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
@@ -175,6 +177,41 @@ func TestRunnerAccept_gitData(t *testing.T) {
 	require.NoError(err)
 	require.Equal(pb.Job_SUCCESS, job.State)
 	require.NotNil(job.DataSourceRef)
+}
+
+func TestRunnerAccept_noConfig(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Setup our runner
+	client := singleprocess.TestServer(t)
+	runner := TestRunner(t, WithClient(client))
+	require.NoError(runner.Start())
+
+	// Change our directory to a new temp directory with no config file.
+	testChdir(t, testTempDir(t))
+
+	// Initialize our app
+	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Queue a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(err)
+	jobId := queueResp.JobId
+
+	// Accept should complete
+	require.NoError(runner.Accept(ctx))
+
+	// Verify that the job is completed
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
+	require.NoError(err)
+	require.Equal(pb.Job_ERROR, job.State)
+	require.NotNil(job.Error)
+
+	st := status.FromProto(job.Error)
+	require.Equal(codes.FailedPrecondition, st.Code())
 }
 
 // testGitFixture MUST be called before TestRunner since TestRunner
