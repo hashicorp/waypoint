@@ -281,6 +281,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			},
 		}); rpcerr != nil {
 			log.Warn("error sending error event, job may be dangling", "err", rpcerr)
+			return rpcerr
 		}
 	} else {
 		// Complete the job
