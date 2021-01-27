@@ -2,6 +2,7 @@
 
 # Waypoint end to end test runner
 
+# shell spinner: https://www.shellscript.sh/tips/spinner/
 spin()
 {
   spinner="/|\\-/|\\-"
