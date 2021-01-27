@@ -11,6 +11,7 @@ const (
 )
 
 func TestWaypointInstall(t *testing.T) {
+	t.Logf("Testing waypoint is available...")
 	wp := NewBinary(wpBinary, ".")
 	stdout, stderr, err := wp.Run("version")
 	if err != nil {

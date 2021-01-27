@@ -6,12 +6,14 @@ import (
 	"os/exec"
 )
 
+// Test config settings used by the tests
 var (
-	wpBinary             = getenv("WP_BINARY", "waypoint")
-	wpServerImage        = getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
-	wpServerImageUpgrade = getenv("WP_SERVERIMAGE_UPGRADE", "hashicorp/waypoint:latest")
+	wpBinary             = Getenv("WP_BINARY", "waypoint")
+	wpServerImage        = Getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
+	wpServerImageUpgrade = Getenv("WP_SERVERIMAGE_UPGRADE", "hashicorp/waypoint:latest")
 )
 
+// A struct representation of the waypoint binary
 type binary struct {
 	binaryPath string
 	workingDir string
@@ -47,7 +49,7 @@ func (b *binary) Run(args ...string) (stdout, stderr string, err error) {
 }
 
 // Obtains the env var key. If unset, it returns the default
-func getenv(key, def string) string {
+func Getenv(key, def string) string {
 	result := os.Getenv(key)
 	if result == "" {
 		result = def
