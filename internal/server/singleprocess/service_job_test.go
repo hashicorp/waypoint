@@ -217,6 +217,32 @@ func TestServiceGetJobStream_complete(t *testing.T) {
 
 	}
 
+	// Send the download event. This realistically could happen after
+	// output like above since data sources like Git will output download
+	// progress to the UI first before the download is complete.
+	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
+		Event: &pb.RunnerJobStreamRequest_Download{
+			Download: &pb.GetJobStreamResponse_Download{
+				DataSourceRef: &pb.Job_DataSource_Ref{
+					Ref: &pb.Job_DataSource_Ref_Git{
+						Git: &pb.Job_Git_Ref{
+							Commit: "hello",
+						},
+					},
+				},
+			},
+		},
+	}))
+
+	// Wait for download info
+	{
+		resp := jobStreamRecv(t, stream, (*pb.GetJobStreamResponse_Download_)(nil))
+		event := resp.Event.(*pb.GetJobStreamResponse_Download_)
+		require.NotNil(event)
+		require.NotNil(event.Download.DataSourceRef)
+
+	}
+
 	// Complete the job
 	require.NoError(runnerStream.Send(&pb.RunnerJobStreamRequest{
 		Event: &pb.RunnerJobStreamRequest_Complete_{

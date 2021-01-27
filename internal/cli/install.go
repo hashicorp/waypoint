@@ -60,8 +60,17 @@ func (c *InstallCommand) Run(args []string) int {
 
 	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
 	if !ok {
+		if c.platform == "" {
+			c.ui.Output(
+				"The -platform flag is required.",
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
 		c.ui.Output(
-			"Error installing server into %s: invalid platform",
+			"Error installing server into %q: unsupported platform",
 			c.platform,
 			terminal.WithErrorStyle(),
 		)
@@ -183,6 +192,7 @@ func (c *InstallCommand) Run(args []string) int {
 			AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{
 				advertiseAddr,
 			},
+			Platform: contextConfig.Server.Platform,
 		},
 	}, callOpts...)
 	if err != nil {
@@ -366,6 +376,6 @@ deployments. If this is incorrect, manually set it using the CLI command
 "waypoint server config-set".
 
 Advertise Address: %[2]s
-Web UI Address: %[3]s
+   Web UI Address: %[3]s
 `)
 )

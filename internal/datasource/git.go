@@ -14,6 +14,8 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -123,19 +125,19 @@ func (s *GitSource) Get(
 	ui terminal.UI,
 	raw *pb.Job_DataSource,
 	baseDir string,
-) (string, func() error, error) {
+) (string, *pb.Job_DataSource_Ref, func() error, error) {
 	source := raw.Source.(*pb.Job_DataSource_Git)
 
 	// Some quick validation
 	if p := source.Git.Path; p != "" {
 		if filepath.IsAbs(p) {
-			return "", nil, status.Errorf(codes.FailedPrecondition,
+			return "", nil, nil, status.Errorf(codes.FailedPrecondition,
 				"git path must be relative")
 		}
 
 		for _, part := range filepath.SplitList(p) {
 			if part == ".." {
-				return "", nil, status.Errorf(codes.FailedPrecondition,
+				return "", nil, nil, status.Errorf(codes.FailedPrecondition,
 					"git path may not contain '..'")
 			}
 		}
@@ -144,7 +146,7 @@ func (s *GitSource) Get(
 	// Create a temporary directory where we will store the cloned data.
 	td, err := ioutil.TempDir(baseDir, "waypoint")
 	if err != nil {
-		return "", nil, err
+		return "", nil, nil, err
 	}
 	closer := func() error {
 		return os.RemoveAll(td)
@@ -175,7 +177,7 @@ func (s *GitSource) Get(
 			authcfg.Ssh.Password,
 		)
 		if err != nil {
-			return "", nil, status.Errorf(codes.FailedPrecondition,
+			return "", nil, nil, status.Errorf(codes.FailedPrecondition,
 				"Failed to load private key for Git auth: %s", err)
 		}
 
@@ -195,7 +197,7 @@ func (s *GitSource) Get(
 	})
 	if err != nil {
 		closer()
-		return "", nil, status.Errorf(codes.Aborted,
+		return "", nil, nil, status.Errorf(codes.Aborted,
 			"Git clone failed: %s", output.String())
 	}
 
@@ -208,7 +210,7 @@ func (s *GitSource) Get(
 		})
 		if err != nil {
 			closer()
-			return "", nil, status.Errorf(codes.Aborted,
+			return "", nil, nil, status.Errorf(codes.Aborted,
 				"Failed to fetch refspecs: %s", err)
 		}
 
@@ -217,25 +219,48 @@ func (s *GitSource) Get(
 		hash, err := repo.ResolveRevision(plumbing.Revision(ref))
 		if err != nil {
 			closer()
-			return "", nil, status.Errorf(codes.Aborted,
+			return "", nil, nil, status.Errorf(codes.Aborted,
 				"Failed to resolve revision for checkout: %s", err)
 		} else if hash == nil {
 			// should never happen but we don't want to panic if it does
 			closer()
-			return "", nil, status.Errorf(codes.Aborted,
+			return "", nil, nil, status.Errorf(codes.Aborted,
 				"Failed to resolve revision for checkout: nil hash")
 		}
 
 		wt, err := repo.Worktree()
 		if err != nil {
 			closer()
-			return "", nil, status.Errorf(codes.Aborted,
+			return "", nil, nil, status.Errorf(codes.Aborted,
 				"Failed to load Git working tree: %s", err)
 		}
 		if err := wt.Checkout(&git.CheckoutOptions{Hash: *hash}); err != nil {
 			closer()
-			return "", nil, status.Errorf(codes.Aborted,
+			return "", nil, nil, status.Errorf(codes.Aborted,
 				"Git checkout failed: %s", err)
+		}
+	}
+
+	// Get our ref
+	ref, err := repo.Head()
+	if err != nil {
+		closer()
+		return "", nil, nil, status.Errorf(codes.Aborted,
+			"Failed to determine Git HEAD: %s", err)
+	}
+	commit, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		closer()
+		return "", nil, nil, status.Errorf(codes.Aborted,
+			"Failed to inspect commit information: %s", err)
+	}
+	var commitTs *timestamp.Timestamp
+	if v := commit.Author.When; !v.IsZero() {
+		commitTs, err = ptypes.TimestampProto(v)
+		if err != nil {
+			closer()
+			return "", nil, nil, status.Errorf(codes.Aborted,
+				"Failed to inspect commit information: %s", err)
 		}
 	}
 
@@ -245,7 +270,14 @@ func (s *GitSource) Get(
 		result = filepath.Join(result, p)
 	}
 
-	return result, closer, nil
+	return result, &pb.Job_DataSource_Ref{
+		Ref: &pb.Job_DataSource_Ref_Git{
+			Git: &pb.Job_Git_Ref{
+				Commit:    commit.Hash.String(),
+				Timestamp: commitTs,
+			},
+		},
+	}, closer, nil
 }
 
 type gitConfig struct {

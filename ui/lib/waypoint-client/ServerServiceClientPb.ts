@@ -895,6 +895,86 @@ export class WaypointClient {
     this.methodInfoGetConfig);
   }
 
+  methodInfoSetConfigSource = new grpcWeb.AbstractClientBase.MethodInfo(
+    google_protobuf_empty_pb.Empty,
+    (request: internal_server_proto_server_pb.SetConfigSourceRequest) => {
+      return request.serializeBinary();
+    },
+    google_protobuf_empty_pb.Empty.deserializeBinary
+  );
+
+  setConfigSource(
+    request: internal_server_proto_server_pb.SetConfigSourceRequest,
+    metadata: grpcWeb.Metadata | null): Promise<google_protobuf_empty_pb.Empty>;
+
+  setConfigSource(
+    request: internal_server_proto_server_pb.SetConfigSourceRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: google_protobuf_empty_pb.Empty) => void): grpcWeb.ClientReadableStream<google_protobuf_empty_pb.Empty>;
+
+  setConfigSource(
+    request: internal_server_proto_server_pb.SetConfigSourceRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: google_protobuf_empty_pb.Empty) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/SetConfigSource',
+        request,
+        metadata || {},
+        this.methodInfoSetConfigSource,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/SetConfigSource',
+    request,
+    metadata || {},
+    this.methodInfoSetConfigSource);
+  }
+
+  methodInfoGetConfigSource = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.GetConfigSourceResponse,
+    (request: internal_server_proto_server_pb.GetConfigSourceRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.GetConfigSourceResponse.deserializeBinary
+  );
+
+  getConfigSource(
+    request: internal_server_proto_server_pb.GetConfigSourceRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.GetConfigSourceResponse>;
+
+  getConfigSource(
+    request: internal_server_proto_server_pb.GetConfigSourceRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.GetConfigSourceResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.GetConfigSourceResponse>;
+
+  getConfigSource(
+    request: internal_server_proto_server_pb.GetConfigSourceRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.GetConfigSourceResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetConfigSource',
+        request,
+        metadata || {},
+        this.methodInfoGetConfigSource,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetConfigSource',
+    request,
+    metadata || {},
+    this.methodInfoGetConfigSource);
+  }
+
   methodInfoCreateHostname = new grpcWeb.AbstractClientBase.MethodInfo(
     internal_server_proto_server_pb.CreateHostnameResponse,
     (request: internal_server_proto_server_pb.CreateHostnameRequest) => {

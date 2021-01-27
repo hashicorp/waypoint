@@ -8,15 +8,20 @@ description: |-
 
 # Upgrading Waypoint
 
-~> **Note:** `waypoint install` and `waypoint server install` do not support an
-upgrade. A `waypoint upgrade` command is under consideration for Waypoint 0.2.
-One way to use the latest server is to [remove the existing
+~> **Note:** As of Waypoint 0.2.1, `waypoint install` and `waypoint server install`
+do support an upgrade. If you choose not to use the automated upgrade command,
+another way to upgrade to the latest server is to [remove the existing
 server](/docs/troubleshooting#remove-the-waypoint-server) and then reinstall
-with `waypoint install`. Consider backing up `data.db` with `docker cp waypoint-server:/data/data.db ./data.db`, `kubectl cp waypoint-server-0:/data/data.db ./data.db` or similar.
+with `waypoint install`. Consider backing up `data.db` with
+`docker cp waypoint-server:/data/data.db ./data.db`,
+`kubectl cp waypoint-server-0:/data/data.db ./data.db` or similar.
 
 ~> **Note:** Upgrading on a k8s cluster requires using the flag
 `-k8s-pull-policy=Always` when rerunning `waypoint install`. There is a known
 issue that will be resolved in 0.2.1.
+
+~> **Note:** If you are currently running Waypoint before 0.2.0, you will not
+be able to take snapshots prior to upgrading your server.
 
 Waypoint is designed to be flexible and resilient when upgrading from
 one version to the next. We've carefully thought out an upgrade process
@@ -41,8 +46,40 @@ considerations:
   is designed for you to know when and how to safely upgrade the server.
 
 Please see our [compatibility promise](/docs/upgrading/compatibility)
-for details on how to determine compatbility. This page will focus on
+for details on how to determine compatibility. This page will focus on
 how to upgrade components in both compatible and incompatible scenarios.
+
+#### URL Service
+
+If you are upgrading from Waypoint server version `0.2.0` and older, Waypoint
+will register a new URL for your deployments after upgrading. Going forward,
+as of `0.2.1`, this should no longer be an issue when upgrading Waypoint server.
+
+### Server Upgrade Command
+
+As of 0.2.1, Waypoint provides a command for users to upgrade the
+Waypoint server in place. For each platform, Waypoint attempts to
+update the server image in place to latest by default, or to the server image
+specified via a flag passed in to the upgrade command.
+
+When the upgrade command is executed, Waypoint does the following:
+
+- Takes a snapshot of the current server database and saves snapshot locally. The
+  snapshot file can be saved elsewhere if a new name is passed in using the flag
+  `-snapshot-name`, or optionally skipped all together.
+- Runs the upgrade for the requested platform:
+  - `docker` - This platform will force pull the image requested to update the
+    container in docker.
+  - `kubernetes` - This platform will submit a patch request to kubernetes to
+    set the image requested on the waypoint-server pod. By default, Waypoint's
+    StatefulSet is configured to `RollingUpdate`, so the pod will pull the
+    requested version shortly after running the Waypoint upgrade command.
+  - `nomad` - This platform will update the waypoint server job with the server
+    image requested.
+- Verifies that waypoint CLI can still connected and speak to Waypoint server
+
+If you wish to use the automated upgrade command line approach, follow the
+Standard Upgrade guide using the _Automated Upgrade_ Server Upgrade subsection.
 
 ## Standard Upgrade
 
@@ -54,6 +91,8 @@ Unless otherwise noted by the release notes, you can upgrade the server,
 client, and entrypoints in any order for a standard, backwards compatible upgrade.
 
 ### Server Upgrade
+
+#### Manual Upgrade
 
 1. Check any upgrade notes for the version you're upgrading to and verify
    there are no issues that will affect your upgrade.
@@ -67,6 +106,25 @@ when upgrading from version A to version B. In practice this should be
 okay since all components continue to gracefully work while the server
 is down, and the downtime should be short. We plan on improving this
 in the future.
+
+#### Automated Upgrade
+
+1. Check any upgrade notes for the version you're upgrading to and verify
+   there are no issues that will affect your upgrade.
+
+2. Check the help text from running `waypoint server upgrade -help`.
+
+3. Ensure you are in the right server context before upgrading. This can be
+   verified through `waypoint context`.
+
+4. When ready, run the upgrade command for your given platform. For example:
+
+```shell
+waypoint server upgrade -platform=kubernetes -auto-approve
+```
+
+This will automatically save a snapshot of the server in your current directory
+prior to upgrading.
 
 ### Client Upgrade
 
@@ -120,6 +178,3 @@ include:
 - Built-in tooling to propose a step-by-step upgrade guide for a version
   that takes into account target and current protocol versions. This will let
   you know what needs upgrading and what doesn't.
-
-- An `upgrade` subcommand to help upgrade server installations that were
-  setup with `waypoint install`.

@@ -269,6 +269,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"server uninstall": func() (cli.Command, error) {
+			return &UninstallCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"server run": func() (cli.Command, error) {
 			return &ServerRunCommand{
 				baseCommand: baseCommand,
@@ -286,6 +291,11 @@ func Commands(
 		},
 		"server restore": func() (cli.Command, error) {
 			return &SnapshotRestoreCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"server upgrade": func() (cli.Command, error) {
+			return &ServerUpgradeCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
@@ -407,6 +417,17 @@ func Commands(
 
 		"docs": func() (cli.Command, error) {
 			return &AppDocsCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"project list": func() (cli.Command, error) {
+			return &ProjectListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"project apply": func() (cli.Command, error) {
+			return &ProjectApplyCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

@@ -1113,3 +1113,59 @@ func TestJobHeartbeat(t *testing.T) {
 		}, 2*time.Second, 10*time.Millisecond)
 	})
 }
+
+func TestJobUpdateRef(t *testing.T) {
+	t.Run("running", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id: "A",
+		})))
+
+		// Assign it, we should get this build
+		job, err := s.JobAssignForRunner(context.Background(), &pb.Runner{Id: "R_A"})
+		require.NoError(err)
+		require.NotNil(job)
+		require.Equal("A", job.Id)
+
+		// Ack it
+		_, err = s.JobAck(job.Id, true)
+		require.NoError(err)
+
+		// Create a watchset on the job
+		ws := memdb.NewWatchSet()
+
+		// Verify it was changed
+		job, err = s.JobById(job.Id, ws)
+		require.NoError(err)
+		require.Nil(job.DataSourceRef)
+
+		// Watch should block
+		require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+		// Update the ref
+		require.NoError(s.JobUpdateRef(job.Id, &pb.Job_DataSource_Ref{
+			Ref: &pb.Job_DataSource_Ref_Git{
+				Git: &pb.Job_Git_Ref{
+					Commit: "hello",
+				},
+			},
+		}))
+
+		// Should be triggered. This is a very important test because
+		// we need to ensure that the watchers can detect ref changes.
+		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+
+		// Verify it was changed
+		job, err = s.JobById(job.Id, nil)
+		require.NoError(err)
+		require.NotNil(job.DataSourceRef)
+
+		ref := job.DataSourceRef.Ref.(*pb.Job_DataSource_Ref_Git).Git
+		require.Equal(ref.Commit, "hello")
+	})
+}

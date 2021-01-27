@@ -24,6 +24,22 @@ type Installer interface {
 	// specify flags for the install CLI. The flags should be prefixed with
 	// the platform name to avoid conflicts with other flags.
 	InstallFlags(*flag.Set)
+
+	// Upgrade expects the Waypoint server to be upgraded from a previous install
+	Upgrade(ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (*InstallResults, error)
+
+	// UpgradeFlags is called prior to Upgrade and allows the upgrader to
+	// specify flags for the upgrade CLI. The flags should be prefixed with
+	// the platform name to avoid conflicts with other flags.
+	UpgradeFlags(*flag.Set)
+
+	// Uninstall expects the Waypoint server to be uninstalled.
+	Uninstall(context.Context, *InstallOpts) error
+
+	// UninstallFlags is called prior to Uninstall and allows the Uninstaller to
+	// specify flags for the uninstall CLI. The flags should be prefixed with the
+	// platform name to avoid conflicts with other flags.
+	UninstallFlags(*flag.Set)
 }
 
 // InstallOpts are the options sent to Installer.Install.
@@ -74,3 +90,15 @@ var Platforms = map[string]Installer{
 	"nomad":      &NomadInstaller{},
 	"docker":     &DockerInstaller{},
 }
+
+const (
+	serverName = "waypoint-server"
+
+	defaultServerImage = "hashicorp/waypoint:latest"
+)
+
+// Default server ports to use
+var (
+	defaultGrpcPort = "9701"
+	defaultHttpPort = "9702"
+)

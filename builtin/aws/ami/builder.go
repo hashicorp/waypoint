@@ -34,7 +34,7 @@ type BuilderConfig struct {
 	Name string `hcl:"name,optional"`
 
 	// Specific filters to pass to the DescribeImages filter set
-	Filters map[string]interface{} `hcl:"filters,optional"`
+	Filters map[string][]string `hcl:"filters,optional"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -66,9 +66,7 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 		"filters",
 		"DescribeImage specific filters to search with",
 		docs.Summary(
-			"the filters are always name => [value], but this api supports",
-			"the ability to pass a single value as a convience. Non string",
-			"values will be converted to strings",
+			"the filters are always name => [value]",
 		),
 	)
 
@@ -113,14 +111,7 @@ func (b *Builder) Build(
 	for k, v := range b.config.Filters {
 		var values []*string
 
-		switch sv := v.(type) {
-		case string:
-			values = append(values, aws.String(sv))
-		case []interface{}:
-			for _, iv := range sv {
-				values = append(values, aws.String(fmt.Sprintf("%s", iv)))
-			}
-		default:
+		for _, sv := range v {
 			values = append(values, aws.String(fmt.Sprintf("%s", sv)))
 		}
 

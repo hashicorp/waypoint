@@ -26,9 +26,9 @@ func (r *Runner) downloadJobData(
 	ui terminal.UI,
 	source *pb.Job_DataSource,
 	overrides map[string]string,
-) (string, func() error, error) {
+) (string, *pb.Job_DataSource_Ref, func() error, error) {
 	if source == nil {
-		return "", nil, status.Errorf(codes.Internal,
+		return "", nil, nil, status.Errorf(codes.Internal,
 			"data source not set for job")
 	}
 
@@ -36,7 +36,7 @@ func (r *Runner) downloadJobData(
 	typ := reflect.TypeOf(source.Source)
 	factory, ok := datasource.FromType[typ]
 	if !ok {
-		return "", nil, status.Errorf(codes.FailedPrecondition,
+		return "", nil, nil, status.Errorf(codes.FailedPrecondition,
 			"invalid data source type: %s", typ.String())
 	}
 	sourcer := factory()
@@ -44,7 +44,7 @@ func (r *Runner) downloadJobData(
 	// Apply any overrides
 	if len(overrides) > 0 {
 		if err := sourcer.Override(source, overrides); err != nil {
-			return "", nil, status.Errorf(codes.FailedPrecondition,
+			return "", nil, nil, status.Errorf(codes.FailedPrecondition,
 				"error with data source overrides: %s", err)
 		}
 	}

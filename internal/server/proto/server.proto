@@ -296,6 +296,14 @@ message Project {
   // queued for this project without a data source set. This is usually
   // set using the `runner {}` block in the waypoint config.
   Job.DataSource data_source = 4;
+
+  // The contents of a default waypoint.hcl file. This will be used ONLY IF
+  // this project does not have a waypoint.hcl file when an operation is
+  // executed. When this is used, local operations can't be run any more
+  // since the CLI usually determines the project based on the waypoint.hcl
+  // file. The CLI may still be used for remote operations by executing
+  // i.e. waypoint up <project>
+  bytes waypoint_hcl = 5;
 }
 
 message Workspace {
@@ -601,6 +609,12 @@ message Job {
   google.protobuf.Timestamp ack_time = 104;
   google.protobuf.Timestamp complete_time = 105;
 
+  // Ref of the data was fetched for this job. This is available after
+  // the Ref event is sent down by GetJobStream. This is NOT used to specify
+  // the ref that should be downloaded. That level of configuration should be
+  // exposed via the data_source parameter itself.
+  DataSource.Ref data_source_ref = 110;
+
   // error is set if state == ERROR
   google.rpc.Status error = 106;
 
@@ -650,6 +664,18 @@ message Job {
 
       // git will check out the data from a Git repository.
       Git git = 2;
+    }
+
+    // Ref is a reference to the exact set of data used by a data source.
+    message Ref {
+      oneof ref {
+        // unknown is set if the ref is not known or not supported, such
+        // as for local data sources where we have no way to uniquely identify.
+        google.protobuf.Empty unknown = 1;
+
+        // git commit
+        Git.Ref git = 2;
+      }
     }
   }
 
@@ -703,6 +729,15 @@ message Job {
       // user is the SSH user to use when cloning. This will default to
       // "git" if not specified.
       string user = 3;
+    }
+
+    // Ref is used to populate DataSource.Ref
+    message Ref {
+      // commit is the full commit hash
+      string commit = 1;
+
+      // timestamp is the timestamp of the commit
+      google.protobuf.Timestamp timestamp = 2;
     }
   }
 
@@ -900,7 +935,9 @@ message GetJobStreamResponse {
     // sent first followed immediately by a Complete.
     Open open = 1;
 
-    // state is sent when there is a job state change event.
+    // state is sent when there is a job state change event. This event is
+    // also used if there is job metadata changes. In this case, the state
+    // may be the same but the job is different.
     State state = 2;
 
     // terminal output. On initial connection, the server may send buffered
@@ -908,6 +945,13 @@ message GetJobStreamResponse {
     // and getting its first byte output. You can determine this based on the
     // flag on Terminal.
     Terminal terminal = 3;
+
+    // data downloaded for the job. This is sent after the state is RUNNING
+    // when the runner has cloned any data (if necessary) containing information
+    // about the data. This is an optional event and may not be sent, indicating
+    // that the runner is either older and doesn't support this event or that
+    // there was no data download necessary and it is using local data.
+    Download download = 6;
 
     // an error regarding the stream itself, rather than the executing job.
     // For example, if you request a job stream for an invalid job ID,
@@ -937,6 +981,13 @@ message GetJobStreamResponse {
 
     // canceling is true if the job was requested to be canceled.
     bool canceling = 4;
+  }
+
+  message Download {
+    // The ref for the data that was downloaded. This can be nil if no
+    // data was downloaded (though it'd be more reasonable to just not
+    // send a download event in that case).
+    Job.DataSource.Ref data_source_ref = 1;
   }
 
   message Terminal {
@@ -1103,6 +1154,11 @@ message RunnerJobStreamRequest {
     // terminal output from the job.
     GetJobStreamResponse.Terminal terminal = 5;
 
+    // download event is sent after the data is downloaded. This is optional.
+    // If this isn't sent the job will still remain in the "running" state but
+    // download details will not be available.
+    GetJobStreamResponse.Download download = 7;
+
     // heartbeat that the job is still running.
     Heartbeat heartbeat = 6;
   }
@@ -1183,6 +1239,10 @@ message ServerConfig {
     bool tls = 2;
     bool tls_skip_verify = 3;
   }
+
+  // The platform that the server is currently installed to. This is set
+  // through the CLI flag '-platform' on installation.
+  string platform = 4;
 }
 
 /********************************************************************
@@ -1682,7 +1742,7 @@ message Instance {
     ON_DEMAND = 1;
 
     // An instance that is not actually running any code, but registers
-    // itself as an instance for the purposes of interacting with the 
+    // itself as an instance for the purposes of interacting with the
     // exec and logs functionality
     VIRTUAL = 2;
   }
