@@ -21,11 +21,25 @@ func init() {
 }
 
 // ProjectPut creates or updates the given project.
+//
+// Application changes will be ignored, you must use the Application APIs.
 func (s *State) ProjectPut(p *pb.Project) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		prev, err := s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
+			Project: p.Name,
+		})
+		if err != nil && status.Code(err) != codes.NotFound {
+			// We ignore NotFound since this function is used to create projects.
+			return err
+		}
+		if err == nil {
+			// If we have a previous project, preserve the applications.
+			p.Applications = prev.Applications
+		}
+
 		return s.projectPut(dbTxn, memTxn, p)
 	})
 	if err == nil {
@@ -239,6 +253,8 @@ func projectIndexSchema() *memdb.TableSchema {
 const (
 	projectIndexTableName   = "project-index"
 	projectIndexIdIndexName = "id"
+
+	projectWaypointHclMaxSize = 5 * 1024 // 5 MB
 )
 
 type projectIndexRecord struct {
