@@ -20,15 +20,16 @@ import (
 type ProjectApplyCommand struct {
 	*baseCommand
 
-	flagDataSource     string
-	flagGitURL         string
-	flagGitRef         string
-	flagGitAuthType    string
-	flagGitUsername    string
-	flagGitPassword    string
-	flagGitKeyPath     string
-	flagGitKeyPassword string
-	flagWaypointHcl    string
+	flagDataSource      string
+	flagGitURL          string
+	flagGitRef          string
+	flagGitAuthType     string
+	flagGitUsername     string
+	flagGitPassword     string
+	flagGitKeyPath      string
+	flagGitKeyPassword  string
+	flagFromWaypointHcl string
+	flagWaypointHcl     string
 }
 
 func (c *ProjectApplyCommand) Run(args []string) int {
@@ -89,11 +90,11 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 	}
 
 	// If we were specified a file then we're going to load that up.
-	if c.flagWaypointHcl != "" {
-		path, err := filepath.Abs(c.flagWaypointHcl)
+	if c.flagFromWaypointHcl != "" {
+		path, err := filepath.Abs(c.flagFromWaypointHcl)
 		if err != nil {
 			c.ui.Output(
-				"Error loading HCL file specified with the -waypoint-hcl flag: %s", clierrors.Humanize(err),
+				"Error loading HCL file specified with the -from-waypoint-hcl flag: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
 
@@ -103,7 +104,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 		cfg, err := configpkg.Load(path, filepath.Dir(path))
 		if err != nil {
 			c.ui.Output(
-				"Error loading HCL file specified with the -waypoint-hcl flag: %s", clierrors.Humanize(err),
+				"Error loading HCL file specified with the -from-waypoint-hcl flag: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
 
@@ -126,7 +127,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 			ds, err := source.ProjectSource(dscfg.Body, cfg.HCLContext())
 			if err != nil {
 				c.ui.Output(
-					"Error loading HCL file specified with the -waypoint-hcl flag: %s", clierrors.Humanize(err),
+					"Error loading HCL file specified with the -from-waypoint-hcl flag: %s", clierrors.Humanize(err),
 					terminal.WithErrorStyle(),
 				)
 
@@ -254,6 +255,22 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 		)
 	}
 
+	// Setup our default waypoint.hcl if it was given
+	if v := c.flagWaypointHcl; v != "" {
+		bs, err := ioutil.ReadFile(v)
+		if err != nil {
+			c.ui.Output(
+				"Error reading HCL file specified with the -waypoint-hcl flag: %s",
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
+		proj.WaypointHcl = bs
+	}
+
 	// Upsert
 	_, err = c.project.Client().UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: proj,
@@ -281,13 +298,25 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 		f := sets.NewSet("Command Options")
 
 		f.StringVar(&flag.StringVar{
-			Name:    "waypoint-hcl",
-			Target:  &c.flagWaypointHcl,
+			Name:    "from-waypoint-hcl",
+			Target:  &c.flagFromWaypointHcl,
 			Default: "",
 			Usage: "waypoint.hcl formatted file to load settings from. This can be used " +
 				"to read settings from a file. Additional flags will override values found " +
 				"in the file. Note that any settings in the file will NOT be merged with " +
 				"what is already in the server; they will overwrite the server.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "waypoint-hcl",
+			Target:  &c.flagWaypointHcl,
+			Default: "",
+			Usage: "Path to a waypoint.hcl file to associate with this project. This " +
+				"is only necessary if a waypoint.hcl is not committed alongside the project " +
+				"source code. If a waypoint.hcl file does not exist in the project source " +
+				"then this waypoint.hcl file will be used. This file will not be validated " +
+				"until an operation is run against the project; this is done on purpose since " +
+				"the waypoint.hcl file may depend on files in the source repository.",
 		})
 
 		f.StringVar(&flag.StringVar{
