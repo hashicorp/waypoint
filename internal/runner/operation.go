@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
@@ -38,6 +39,37 @@ func (r *Runner) executeJob(
 	path, err := configpkg.FindPath(wd, "", false)
 	if err != nil {
 		return nil, err
+	}
+
+	if path == "" {
+		// If no waypoint.hcl file is found in the downloaded data, look for
+		// a default waypoint HCL.
+		//
+		// NOTE(mitchellh): For now, we query the project directly here
+		// since we don't need it for anything else. I can see us moving this
+		// to accept() eventually though if other data is used.
+		log.Trace("waypoint.hcl not found in downloaded data, looking for default in server")
+		resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
+			Project: &pb.Ref_Project{
+				Project: job.Application.Project,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if v := resp.Project.WaypointHcl; len(v) > 0 {
+			log.Debug("using waypoint.hcl associated with the project in the server")
+
+			// We just write this into the working directory.
+			path = filepath.Join(wd, configpkg.Filename)
+			if err := ioutil.WriteFile(path, v, 0644); err != nil {
+				return nil, status.Errorf(codes.Internal,
+					"Failed to write waypoint.hcl from server: %s", err)
+			}
+		} else {
+			log.Trace("waypoint.hcl not found in server data")
+		}
 	}
 
 	if path == "" {
