@@ -282,21 +282,19 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		}); rpcerr != nil {
 			log.Warn("error sending error event, job may be dangling", "err", rpcerr)
 		}
-
-		return nil
-	}
-
-	// Complete the job
-	log.Debug("sending job completion")
-	if err := client.Send(&pb.RunnerJobStreamRequest{
-		Event: &pb.RunnerJobStreamRequest_Complete_{
-			Complete: &pb.RunnerJobStreamRequest_Complete{
-				Result: result,
+	} else {
+		// Complete the job
+		log.Debug("sending job completion")
+		if err := client.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Complete_{
+				Complete: &pb.RunnerJobStreamRequest_Complete{
+					Result: result,
+				},
 			},
-		},
-	}); err != nil {
-		log.Error("error sending job complete message", "error", err)
-		return err
+		}); err != nil {
+			log.Error("error sending job complete message", "error", err)
+			return err
+		}
 	}
 
 	// Wait for the connection to close. We do this because this ensures
