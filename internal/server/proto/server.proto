@@ -290,6 +290,14 @@ message Project {
   // queued for this project without a data source set. This is usually
   // set using the `runner {}` block in the waypoint config.
   Job.DataSource data_source = 4;
+
+  // The contents of a default waypoint.hcl file. This will be used ONLY IF
+  // this project does not have a waypoint.hcl file when an operation is
+  // executed. When this is used, local operations can't be run any more
+  // since the CLI usually determines the project based on the waypoint.hcl
+  // file. The CLI may still be used for remote operations by executing
+  // i.e. waypoint up <project>
+  bytes waypoint_hcl = 5;
 }
 
 message Workspace {
