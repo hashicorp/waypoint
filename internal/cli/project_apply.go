@@ -5,6 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
+	hcljson "github.com/hashicorp/hcl/v2/json"
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -262,6 +265,40 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 			c.ui.Output(
 				"Error reading HCL file specified with the -waypoint-hcl flag: %s",
 				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
+		switch filepath.Ext(v) {
+		case ".hcl":
+			_, diag := hclsyntax.ParseConfig(bs, "<waypoint-hcl>", hcl.Pos{})
+			if diag.HasErrors() {
+				c.ui.Output(
+					"Syntax errors in file specified with -waypoint-hcl: %s",
+					clierrors.Humanize(diag),
+					terminal.WithErrorStyle(),
+				)
+
+				return 1
+			}
+
+		case ".json":
+			_, diag := hcljson.Parse(bs, "<waypoint-hcl>")
+			if diag.HasErrors() {
+				c.ui.Output(
+					"Syntax errors in file specified with -waypoint-hcl: %s",
+					clierrors.Humanize(diag),
+					terminal.WithErrorStyle(),
+				)
+
+				return 1
+			}
+
+		default:
+			c.ui.Output(
+				"File specified via -waypoint-hcl must end in '.hcl' or '.json'",
 				terminal.WithErrorStyle(),
 			)
 
