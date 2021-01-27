@@ -6,6 +6,12 @@ import (
 	"os/exec"
 )
 
+var (
+	wpBinary             = getenv("WP_BINARY", "waypoint")
+	wpServerImage        = getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
+	wpServerImageUpgrade = getenv("WP_SERVERIMAGE_UPGRADE", "hashicorp/waypoint:latest")
+)
+
 type binary struct {
 	binaryPath string
 	workingDir string

@@ -10,12 +10,6 @@ const (
 	testDir = "waypoint-examples/docker/go"
 )
 
-var (
-	wpBinary             = getenv("WP_BINARY", "waypoint")
-	wpServerImage        = getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
-	wpServerImageUpgrade = getenv("WP_SERVERIMAGE_UPGRADE", "hashicorp/waypoint:latest")
-)
-
 func TestWaypointInstall(t *testing.T) {
 	wp := NewBinary(wpBinary, ".")
 	stdout, stderr, err := wp.Run("version")
