@@ -23,6 +23,7 @@ echo
 
 # build waypoint OR download a package, add a switch for this
 #   - add param for installing a certain waypoint server
+#   - export proper vars for binary path and server image later on
 
 # make tools
 # git submodule update for grpc status from api common
@@ -30,6 +31,7 @@ echo
 
 echo "Pulling in waypoint-examples for test..."
 echo
+
 # Bring in test apps
 # clone waypoint-examples
 
