@@ -10,8 +10,9 @@ const (
 )
 
 var (
-	wpBinary      = getenv("WP_BINARY", "waypoint")
-	wpServerImage = getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
+	wpBinary            = getenv("WP_BINARY", "waypoint")
+	wpServerImage       = getenv("WP_SERVERIMAGE", "hashicorp/waypoint:latest")
+	wpServerImageUpdate = getenv("WP_SERVERIMAGE_UPGRADE", "hashicorp/waypoint:latest")
 )
 
 func TestWaypointInstall(t *testing.T) {
