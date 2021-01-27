@@ -42,6 +42,7 @@ type k8sConfig struct {
 
 	advertiseInternal bool   `hcl:"advertise_internal,optional"`
 	imagePullPolicy   string `hcl:"image_pull_policy,optional"`
+	k8sContext        string `hcl:"k8s_context,optional"`
 	openshift         bool   `hcl:"openshft,optional"`
 	cpuRequest        string `hcl:"cpu_request,optional"`
 	memRequest        string `hcl:"mem_request,optional"`
@@ -70,9 +71,16 @@ func (i *K8sInstaller) Install(
 	defer func() { s.Abort() }()
 
 	// Build our K8S client.
+	configOverrides := &clientcmd.ConfigOverrides{}
+	if i.config.k8sContext != "" {
+		configOverrides = &clientcmd.ConfigOverrides{
+			CurrentContext: i.config.k8sContext,
+		}
+	}
+
 	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
-		&clientcmd.ConfigOverrides{},
+		configOverrides,
 	)
 
 	// Discover the current target namespace in the user's config so if they
@@ -392,9 +400,16 @@ func (i *K8sInstaller) Upgrade(
 	defer s.Abort()
 
 	// Build our K8S client.
+	configOverrides := &clientcmd.ConfigOverrides{}
+	if i.config.k8sContext != "" {
+		configOverrides = &clientcmd.ConfigOverrides{
+			CurrentContext: i.config.k8sContext,
+		}
+	}
+
 	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
-		&clientcmd.ConfigOverrides{},
+		configOverrides,
 	)
 
 	// Discover the current target namespace in the user's config so if they
@@ -666,9 +681,16 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	defer func() { s.Abort() }()
 
 	// Build our k8s client
+	configOverrides := &clientcmd.ConfigOverrides{}
+	if i.config.k8sContext != "" {
+		configOverrides = &clientcmd.ConfigOverrides{
+			CurrentContext: i.config.k8sContext,
+		}
+	}
+
 	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
-		&clientcmd.ConfigOverrides{},
+		configOverrides,
 	)
 
 	// Discover the current target namespace in the user's config so that we use
@@ -1032,6 +1054,14 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:   "k8s-context",
+		Target: &i.config.k8sContext,
+		Usage: "The Kubernetes context to install the Waypoint server to. If left" +
+			" unset, Waypoint will use the current Kubernetes context.",
+		Default: "",
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:    "k8s-cpu-request",
 		Target:  &i.config.cpuRequest,
 		Usage:   "Configures the requested CPU amount for the Waypoint server in Kubernetes.",
@@ -1105,6 +1135,14 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:   "k8s-context",
+		Target: &i.config.k8sContext,
+		Usage: "The Kubernetes context to upgrade the Waypoint server to. If left" +
+			" unset, Waypoint will use the current Kubernetes context.",
+		Default: "",
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:    "k8s-namespace",
 		Target:  &i.config.namespace,
 		Usage:   "Namespace to install the Waypoint server into for Kubernetes.",
@@ -1127,7 +1165,13 @@ func (i *K8sInstaller) UpgradeFlags(set *flag.Set) {
 }
 
 func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
-	// Purposely empty, no flags
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-context",
+		Target: &i.config.k8sContext,
+		Usage: "The Kubernetes context to unisntall the Waypoint server from. If left" +
+			" unset, Waypoint will use the current Kubernetes context.",
+		Default: "",
+	})
 }
 
 func int32Ptr(i int32) *int32 {
