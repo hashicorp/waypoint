@@ -44,7 +44,7 @@ func (b *binary) Run(args ...string) (stdout, stderr string, err error) {
 func getenv(key, def string) string {
 	result := os.Getenv(key)
 	if result == "" {
-		return def
+		result = def
 	}
 	return result
 }
