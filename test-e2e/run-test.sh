@@ -35,6 +35,7 @@ echo
 
 # Test env vars
 export WP_BINARY="waypoint"
+export WP_SERVERIMAGE="hashicorp/waypoint:latest"
 
 echo "Starting Waypoint end-to-end tests..."
 echo
