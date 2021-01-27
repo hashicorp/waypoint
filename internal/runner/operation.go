@@ -21,10 +21,6 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func init() {
-	hclog.L().SetLevel(hclog.Trace)
-}
-
 // executeJob executes an assigned job. This will source the data (if necessary),
 // setup the project, execute the job, and return the outcome.
 func (r *Runner) executeJob(
