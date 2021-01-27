@@ -53,21 +53,24 @@ echo
 # git submodule update for grpc status from api common
 # make
 
-echo "==> Pulling in waypoint-examples for test..."
-echo
-
-echo "Skipping for now"
-echo "Assuming 'waypoint-examples' repo has already been cloned into this folder"
-echo
-
 # Bring in test apps (potentially at a certain sha rather than `main`?)
-# git clone git@github.com:hashicorp/waypoint-examples.git
+# git clone --depth 1 git@github.com:hashicorp/waypoint-examples.git
+if [[ ! -v WP_EXAMPLES_PATH ]]; then
+  echo "==> Pulling in waypoint-examples for test..."
+  echo
+
+  git clone --depth 1 git@github.com:hashicorp/waypoint-examples.git
+else
+  echo "==> Using existing waypoint-examples repo for test..."
+  echo
+fi
 
 # Test env vars
 export WP_BINARY="waypoint"
 export WP_SERVERIMAGE="hashicorp/waypoint:latest"
 export WP_SERVERIMAGE_UPGRADE="hashicorp/waypoint:latest"
 
+echo
 echo "==> Running Waypoint end-to-end tests..."
 echo
 
@@ -75,14 +78,25 @@ echo
 
 # only spin for local devs running on machine to show tests aren't frozen
 if [[ ! -v CI_ENV ]]; then
-  # shell spinner: https://www.shellscript.sh/tips/spinner/
   spin &
   SPIN_PID=$!
   trap "kill -9 $SPIN_PID" `seq 0 15`
 fi
 
 go test .
+testResult=$?
 
+if [[ ! -v WP_EXAMPLES_PATH ]]; then
+  if [[ "$testResult" -eq 0 ]]; then
+    echo
+    echo "==> Cleaning up 'waypoint-examples'"
+    echo
+
+    rm -rf waypoint-examples
+  fi
+fi
+
+# must be at end of script
 if [[ ! -v CI_ENV ]]; then
   kill -9 $SPIN_PID
 fi

@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-const (
-	testDir = "waypoint-examples/docker/go"
+var (
+	dockerTestDir = fmt.Sprintf("%s/docker/go", examplesRootDir)
 )
 
 func TestWaypointInstall(t *testing.T) {
@@ -28,7 +28,7 @@ func TestWaypointInstall(t *testing.T) {
 }
 
 func TestWaypointDockerInstall(t *testing.T) {
-	wp := NewBinary(wpBinary, testDir)
+	wp := NewBinary(wpBinary, dockerTestDir)
 	stdout, stderr, err := wp.Run("install", "-platform=docker", "-accept-tos", fmt.Sprintf("-docker-server-image=%s", wpServerImage))
 
 	if err != nil {
@@ -45,7 +45,7 @@ func TestWaypointDockerInstall(t *testing.T) {
 }
 
 func TestWaypointDockerUp(t *testing.T) {
-	wp := NewBinary(wpBinary, testDir)
+	wp := NewBinary(wpBinary, dockerTestDir)
 	stdout, stderr, err := wp.Run("init")
 
 	if err != nil {
@@ -76,7 +76,7 @@ func TestWaypointDockerUp(t *testing.T) {
 }
 
 func TestWaypointDockerUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, testDir)
+	wp := NewBinary(wpBinary, dockerTestDir)
 	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=docker", "-auto-approve", fmt.Sprintf("-docker-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
 
 	if err != nil {
@@ -93,7 +93,7 @@ func TestWaypointDockerUpgrade(t *testing.T) {
 }
 
 func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, testDir)
+	wp := NewBinary(wpBinary, dockerTestDir)
 	stdout, stderr, err := wp.Run("up")
 
 	if err != nil {
@@ -110,7 +110,7 @@ func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
 }
 
 func TestWaypointDockerDestroy(t *testing.T) {
-	wp := NewBinary(wpBinary, testDir)
+	wp := NewBinary(wpBinary, dockerTestDir)
 	stdout, stderr, err := wp.Run("destroy")
 
 	if err != nil {
@@ -127,7 +127,7 @@ func TestWaypointDockerDestroy(t *testing.T) {
 }
 
 func TestWaypointDockerUninstall(t *testing.T) {
-	wp := NewBinary(wpBinary, testDir)
+	wp := NewBinary(wpBinary, dockerTestDir)
 	stdout, stderr, err := wp.Run("server", "uninstall", "-platform=docker", "-auto-approve", "-snapshot=false")
 
 	if err != nil {
