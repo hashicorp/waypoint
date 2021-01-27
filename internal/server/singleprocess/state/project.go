@@ -100,6 +100,15 @@ func (s *State) projectPut(
 	memTxn *memdb.Txn,
 	value *pb.Project,
 ) error {
+	// This is to prevent mistakes or abuse. Realistically a waypoint.hcl
+	// file should be MUCH smaller than this so this catches the really big
+	// mistakes.
+	if len(value.WaypointHcl) > projectWaypointHclMaxSize {
+		return status.Errorf(codes.FailedPrecondition,
+			"project 'waypoint_hcl' exceeds maximum size (5MB)",
+		)
+	}
+
 	id := s.projectId(value)
 
 	// Get the global bucket and write the value to it.
@@ -239,6 +248,8 @@ func projectIndexSchema() *memdb.TableSchema {
 const (
 	projectIndexTableName   = "project-index"
 	projectIndexIdIndexName = "id"
+
+	projectWaypointHclMaxSize = 5 * 1024 // 5 MB
 )
 
 type projectIndexRecord struct {
