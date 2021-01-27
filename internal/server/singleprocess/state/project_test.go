@@ -78,6 +78,12 @@ func TestProject(t *testing.T) {
 		err := s.ProjectPut(proj)
 		require.NoError(err)
 		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Name:    "test",
+			Project: ref,
+		}))
+		require.NoError(err)
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Name:    "test2",
 			Project: ref,
 		}))
 		require.NoError(err)
@@ -90,7 +96,7 @@ func TestProject(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(resp)
 			require.False(resp.RemoteEnabled)
-			require.Len(resp.Applications, 1)
+			require.Len(resp.Applications, 2)
 		}
 
 		// Update the project
@@ -105,7 +111,7 @@ func TestProject(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(resp)
 			require.True(resp.RemoteEnabled)
-			require.Len(resp.Applications, 1)
+			require.Len(resp.Applications, 2)
 		}
 	})
 
