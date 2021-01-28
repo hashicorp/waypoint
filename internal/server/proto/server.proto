@@ -304,6 +304,12 @@ message Project {
   // file. The CLI may still be used for remote operations by executing
   // i.e. waypoint up <project>
   bytes waypoint_hcl = 5;
+  Format waypoint_hcl_format = 6;
+
+  enum Format {
+    HCL = 0; // We assume HCL by default
+    JSON = 1;
+  }
 }
 
 message Workspace {

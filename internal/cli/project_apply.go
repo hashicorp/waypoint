@@ -271,8 +271,10 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 			return 1
 		}
 
+		var format pb.Project_Format
 		switch filepath.Ext(v) {
 		case ".hcl":
+			format = pb.Project_HCL
 			_, diag := hclsyntax.ParseConfig(bs, "<waypoint-hcl>", hcl.Pos{})
 			if diag.HasErrors() {
 				c.ui.Output(
@@ -285,6 +287,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 			}
 
 		case ".json":
+			format = pb.Project_HCL
 			_, diag := hcljson.Parse(bs, "<waypoint-hcl>")
 			if diag.HasErrors() {
 				c.ui.Output(
@@ -306,6 +309,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 		}
 
 		proj.WaypointHcl = bs
+		proj.WaypointHclFormat = format
 	}
 
 	// Upsert

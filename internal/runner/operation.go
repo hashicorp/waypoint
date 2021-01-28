@@ -57,8 +57,15 @@ func (r *Runner) executeJob(
 		if v := resp.Project.WaypointHcl; len(v) > 0 {
 			log.Debug("using waypoint.hcl associated with the project in the server")
 
+			// ext has the extra extension information for the file. We add
+			// ".json" if this is JSON-formatted.
+			ext := ""
+			if resp.Project.WaypointHclFormat == pb.Project_JSON {
+				ext = ".json"
+			}
+
 			// We just write this into the working directory.
-			path = filepath.Join(wd, configpkg.Filename)
+			path = filepath.Join(wd, configpkg.Filename+ext)
 			if err := ioutil.WriteFile(path, v, 0644); err != nil {
 				return nil, status.Errorf(codes.Internal,
 					"Failed to write waypoint.hcl from server: %s", err)
