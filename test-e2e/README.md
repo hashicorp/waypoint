@@ -61,10 +61,3 @@ func TestWaypointAvailable(t *testing.T) {
 
 The `util.go` file inside this directory offers a simple way to execute any
 binary.
-
-## TODO
-
-Include additional tests for the following supported server platforms:
-
-- Nomad
-- Kubernetes
