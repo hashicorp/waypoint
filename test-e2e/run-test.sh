@@ -87,7 +87,7 @@ if [[ ! -v CI_ENV ]]; then
   trap "kill -9 $SPIN_PID" `seq 0 15`
 fi
 
-go test "github.com/hashicorp/waypoint/test-e2e"
+go test -v "github.com/hashicorp/waypoint/test-e2e"
 testResult=$?
 
 if [[ "$testResult" -eq 0 ]]; then
