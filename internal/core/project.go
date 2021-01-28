@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
@@ -142,9 +144,18 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	return p, nil
 }
 
-// App initializes and returns the app with the given name.
+// App initializes and returns the app with the given name. This
+// returns an error with codes.NotFound if the app is not found.
 func (p *Project) App(name string) (*App, error) {
-	return p.apps[name], nil
+	if v, ok := p.apps[name]; ok {
+		return v, nil
+	}
+
+	return nil, status.Errorf(codes.NotFound,
+		"Application %q was not found in this project. Please ensure that "+
+			"you've created this project in the waypoint.hcl configuration.",
+		name,
+	)
 }
 
 // Client returns the API client for the backend server.
