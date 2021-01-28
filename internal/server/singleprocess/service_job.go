@@ -74,18 +74,6 @@ func (s *service) QueueJob(
 		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 	}
 
-	// Validate the project/app pair exists.
-	if job.Application.Application != "" {
-		_, err := s.state.AppGet(job.Application)
-		if status.Code(err) == codes.NotFound {
-			return nil, status.Errorf(codes.NotFound,
-				"Application %s/%s was not found! Please ensure that 'waypoint init' was run with this project.",
-				job.Application.Project,
-				job.Application.Application,
-			)
-		}
-	}
-
 	// Verify the project exists and use that to set the default data source
 	project, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
