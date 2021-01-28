@@ -157,6 +157,7 @@ func TestCalculateInstanceExecByDeployment(t *testing.T) {
 	virt.Type = gen.Instance_VIRTUAL
 	require.NoError(s.InstanceCreate(virt))
 
+	// Should get an error because there are no long running instances
 	_, err := s.CalculateInstanceExecByDeployment(od.DeploymentId)
 	require.Error(err)
 
@@ -177,6 +178,7 @@ func TestCalculateInstanceExecByDeployment(t *testing.T) {
 	lr.Type = gen.Instance_LONG_RUNNING
 	require.NoError(s.InstanceCreate(lr))
 
+	// Get an instance, it should be one of the long running ones
 	reserve, err := s.CalculateInstanceExecByDeployment(instance.DeploymentId)
 	require.NoError(err)
 
@@ -184,9 +186,7 @@ func TestCalculateInstanceExecByDeployment(t *testing.T) {
 	require.NoError(s.InstanceExecCreateByTargetedInstance(reserve.Id, &exec))
 
 	// ok, now see that on the next time, we get the other long running instance
-
 	reserve2, err := s.CalculateInstanceExecByDeployment(instance.DeploymentId)
 	require.NoError(err)
-
 	assert.NotEqual(reserve.Id, reserve2.Id)
 }

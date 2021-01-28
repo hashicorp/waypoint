@@ -134,6 +134,12 @@ func (s *State) CalculateInstanceExecByDeployment(did string) (*Instance, error)
 
 		// Otherwise we keep track of the lowest "load" exec which we just
 		// choose by the minimum number of registered sessions.
+		if len(execs) < minCount {
+			// If we're less than the min count we've seen before, then
+			// we reset the slice of candidates because we only want
+			// candidates with this count.
+			min = nil
+		}
 		if min == nil || len(execs) <= minCount {
 			min = append(min, rec)
 			minCount = len(execs)
