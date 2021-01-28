@@ -431,6 +431,12 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"fmt": func() (cli.Command, error) {
+			return &FmtCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
