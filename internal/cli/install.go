@@ -8,6 +8,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/posener/complete"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -123,7 +125,7 @@ func (c *InstallCommand) Run(args []string) int {
 	// We need our bootstrap token immediately
 	var callOpts []grpc.CallOption
 	tokenResp, err := client.BootstrapToken(ctx, &empty.Empty{})
-	if err != nil {
+	if err != nil && status.Code(err) != codes.PermissionDenied {
 		c.ui.Output(
 			"Error getting the initial token: %s\n\n%s",
 			clierrors.Humanize(err),
@@ -132,14 +134,83 @@ func (c *InstallCommand) Run(args []string) int {
 		)
 		return 1
 	}
+
 	if tokenResp != nil {
 		log.Debug("token received, setting on context")
 		contextConfig.Server.RequireAuth = true
 		contextConfig.Server.AuthToken = tokenResp.Token
+	} else {
+		// try default context in case server was started again from install
+		defaultCtx, err := c.contextStorage.Default()
+		if err != nil {
+			c.ui.Output(
+				"Error getting default context to use existing auth token: %s\n\n%s\n\n%s",
+				clierrors.Humanize(err),
+				errInstallToken,
+				errInstallRunning,
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
 
-		callOpts = append(callOpts, grpc.PerRPCCredentials(
-			serverclient.StaticToken(tokenResp.Token)))
+		if defaultCtx != "" {
+			defaultCtxConfig, err := c.contextStorage.Load(defaultCtx)
+			if err != nil {
+				c.ui.Output(
+					"Error loading the context %q to use existing auth token: %s\n\n%s\n\n%s",
+					defaultCtx,
+					clierrors.Humanize(err),
+					errInstallToken,
+					errInstallRunning,
+					terminal.WithErrorStyle(),
+				)
+				return 1
+			}
+
+			conn, err := serverclient.Connect(ctx,
+				serverclient.FromContextConfig(defaultCtxConfig),
+				serverclient.Timeout(5*time.Minute),
+			)
+			if err != nil {
+				c.ui.Output(
+					"Error connecting to server using existing auth token: %s\n\n%s\n\n%s",
+					clierrors.Humanize(err),
+					errInstallToken,
+					errInstallRunning,
+					terminal.WithErrorStyle(),
+				)
+				return 1
+			}
+			client := pb.NewWaypointClient(conn)
+			// TODO: ideally we need a `GetVersionInfo` with auth for this, but for
+			// now we use this func as it requires authentication
+			_, err = client.GetServerConfig(ctx, &empty.Empty{})
+			if err != nil {
+				c.ui.Output(
+					"Error validating default context token to server: %s\n\n%s\n\n%s",
+					clierrors.Humanize(err),
+					errInstallToken,
+					errInstallRunning,
+					terminal.WithErrorStyle(),
+				)
+				return 1
+			} else {
+				// token is valid
+				log.Info("Updating context to use default context, token is valid")
+				contextConfig = defaultCtxConfig
+			}
+		} else {
+			c.ui.Output(
+				"Error attempting to authenticate to bootstrapped server:\n\n%s",
+				errNoValidContext,
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
 	}
+
+	callOpts = append(callOpts, grpc.PerRPCCredentials(
+		serverclient.StaticToken(contextConfig.Server.AuthToken)))
 
 	// If we connected successfully, lets immediately setup our context.
 	if c.contextName != "" {
@@ -356,11 +427,23 @@ advertise address. You must do this manually using "waypoint context"
 and "waypoint server config-set".
 `)
 
+	errInstallToken = strings.TrimSpace(`
+Waypoint CLI attempted to use the default context auth token to connect
+to Waypoint Server due to the server token bootstrap step failing.
+`)
+
 	errInstallRunner = strings.TrimSpace(`
 The Waypoint runner failed to install. This error occurred after the
 Waypoint server was successfully installed. Your CLI is configured to
 use the installed server. If you want to retry, you must uninstall the
 server first.
+`)
+
+	errNoValidContext = strings.TrimSpace(`
+Waypoint has detected that the server has already been deployed and bootstrapped.
+However, the current context used to restart the server is not configured
+to authenticate to the current server. If there is a valid context, switch
+to it using "waypoint context use".
 `)
 
 	outInstallSuccess = strings.TrimSpace(`
