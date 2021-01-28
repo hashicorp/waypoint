@@ -33,6 +33,11 @@ func TestSource(t testing.T) string {
 	return testSourceVal
 }
 
+// TestSourceJSON returns valid configuration in JSON format.
+func TestSourceJSON(t testing.T) string {
+	return testSourceValJson
+}
+
 // TestConfigFile writes the default Waypoint configuration file with
 // the given contents.
 func TestConfigFile(t testing.T, src string) {
@@ -42,3 +47,7 @@ func TestConfigFile(t testing.T, src string) {
 const testSourceVal = `
 project = "test"
 `
+
+const testSourceValJson = `{
+  "project": "test"
+}`
