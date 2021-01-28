@@ -8,7 +8,19 @@ set these up in a CI environment.
 
 ## How to run
 
-Simply execute the shell runner with `./run-tests.sh`.
+The easiest way to run these tests is to use the shell runner with `./run-tests.sh`.
+
+If you wish to run the script outside of this test directory, the following
+environment variable must be set so that it knows where the `test-e2e` directory
+is at:
+
+* `WP_TESTE2E_DIR` (string) - Path to `test-e2e`.
+
+For example, running these tests from the Waypoint root directory:
+
+```
+WP_TESTE2E_DIR="test-e2e" ./test-e2e/run-tests.sh
+```
 
 ## How to write a new test
 

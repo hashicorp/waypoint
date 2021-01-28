@@ -20,13 +20,16 @@ spin()
 echo "Beginning Waypoint end-to-end tests..."
 echo
 
+# For running script outside of `test-e2e` folder
+TESTDIR="${WP_TESTE2E_DIR:-"."}"
+
 echo "==> Installing dependencies..."
 echo
 
 echo "Skipping for now"
 echo
 
-# install packages for building waypoint and running supported platforms:
+# TODO: install packages for building waypoint and running supported platforms:
 # - git, curl, (probably more)
 # - golang
 # - docker
@@ -46,7 +49,7 @@ echo "Skipping for now"
 echo "Assuming waypoint is available on the path"
 echo
 
-# build waypoint OR download a package, add a switch for this
+# TODO: build waypoint OR download a package, add a switch for this
 #   - add param for installing a certain waypoint server, allow install from alpha package
 #   - export proper vars for binary path and server image later on
 
@@ -60,7 +63,7 @@ if [[ ! -v WP_EXAMPLES_PATH ]]; then
   echo "==> Pulling in waypoint-examples for test..."
   echo
 
-  git clone --depth 1 git@github.com:hashicorp/waypoint-examples.git
+  git clone --depth 1 git@github.com:hashicorp/waypoint-examples.git "$TESTDIR/waypoint-examples"
 else
   echo "==> Using existing waypoint-examples repo for test..."
   echo
@@ -84,16 +87,21 @@ if [[ ! -v CI_ENV ]]; then
   trap "kill -9 $SPIN_PID" `seq 0 15`
 fi
 
-go test .
+go test "github.com/hashicorp/waypoint/test-e2e"
 testResult=$?
 
-if [[ ! -v WP_EXAMPLES_PATH ]]; then
-  if [[ "$testResult" -eq 0 ]]; then
+if [[ "$testResult" -eq 0 ]]; then
+  echo
+  echo "==> Cleaning up after finishing tests..."
+  echo
+
+  if [[ ! -v WP_EXAMPLES_PATH ]]; then
+    # Test clean up
     echo
-    echo "==> Cleaning up 'waypoint-examples'"
+    echo "* Cleaning up 'waypoint-examples'"
     echo
 
-    rm -rf waypoint-examples
+    rm -rf "$TESTDIR/waypoint-examples"
   fi
 fi
 
