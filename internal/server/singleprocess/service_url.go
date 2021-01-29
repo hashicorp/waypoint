@@ -57,7 +57,12 @@ func (s *service) initURLClient(
 		return nil
 	}
 
-	log.Warn("failed to initialize URL service", "err", err)
+	if err != nil {
+		log.Warn("failed to initialize URL service", "err", err)
+	} else {
+		log.Info("URL service client successfully initialized")
+	}
+
 	return err
 }
 
@@ -70,6 +75,7 @@ func (s *service) initURLClientBlocking(
 ) error {
 	// If we have no API token, get our guest account token.
 	if cfg.APIToken == "" {
+		log.Debug("API token not set in config, initializing guest account")
 		token, err := s.initURLGuestAccount(ctx, log, isRetry, acceptURLTerms, cfg)
 		if err != nil {
 			return err
@@ -125,6 +131,7 @@ func (s *service) initURLGuestAccount(
 	if err != nil {
 		return "", err
 	} else if urlToken != "" {
+		log.Debug("using saved URL guest token")
 		return urlToken, nil
 	}
 
