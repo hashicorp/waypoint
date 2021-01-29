@@ -108,6 +108,18 @@ func TestWithURLService(t testing.T, out *hzntest.DevSetup) Option {
 	}
 }
 
+// TestWithURLServiceGuestAccount sets the API token to empty to force
+// getting a guest account with the URL service. This can ONLY be set if
+// TestWithURLService is set before this.
+func TestWithURLServiceGuestAccount(t testing.T) Option {
+	return func(s *service, cfg *config) error {
+		// Set the API token to empty which will force a guest account registration.
+		cfg.serverConfig.URL.APIToken = ""
+
+		return nil
+	}
+}
+
 func TestEntrypoint(t testing.T, client pb.WaypointClient) (string, string, func()) {
 	instanceId, err := server.Id()
 	require.NoError(t, err)

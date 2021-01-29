@@ -131,6 +131,53 @@ func TestServiceEntrypointConfig(t *testing.T) {
 
 		// Validate config
 		require.NotNil(cfgResp.Config.UrlService)
+		require.NotEmpty(cfgResp.Config.UrlService.Token)
+		require.NotEmpty(cfgResp.Config.UrlService.Labels)
+	})
+
+	t.Run("URL service with guest account", func(t *testing.T) {
+		require := require.New(t)
+
+		// Create our server
+		impl, err := New(
+			WithDB(testDB(t)),
+			TestWithURLService(t, nil),
+			TestWithURLServiceGuestAccount(t),
+		)
+		require.NoError(err)
+		client := server.TestServer(t, impl)
+
+		// Create a deployment
+		resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+			Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+				Component: &pb.Component{
+					Name: "testapp",
+				},
+
+				Labels: map[string]string{
+					"hello": "world",
+				},
+			}),
+		})
+		require.NoError(err)
+		dep := resp.Deployment
+
+		// Create the config
+		instanceId, err := server.Id()
+		require.NoError(err)
+		stream, err := client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
+			InstanceId:   instanceId,
+			DeploymentId: dep.Id,
+		})
+		require.NoError(err)
+
+		// Wait for the first config so that we know we're registered
+		cfgResp, err := stream.Recv()
+		require.NoError(err)
+
+		// Validate config
+		require.NotNil(cfgResp.Config.UrlService)
+		require.NotEmpty(cfgResp.Config.UrlService.Token)
 		require.NotEmpty(cfgResp.Config.UrlService.Labels)
 	})
 
