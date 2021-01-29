@@ -1608,6 +1608,36 @@ func (_m *WaypointClient) ValidateJob(ctx context.Context, in *gen.ValidateJobRe
 	return r0, r1
 }
 
+// WaypointHclFmt provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) WaypointHclFmt(ctx context.Context, in *gen.WaypointHclFmtRequest, opts ...grpc.CallOption) (*gen.WaypointHclFmtResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.WaypointHclFmtResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.WaypointHclFmtRequest, ...grpc.CallOption) *gen.WaypointHclFmtResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.WaypointHclFmtResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.WaypointHclFmtRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // XListJobs provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) XListJobs(ctx context.Context, in *gen.ListJobsRequest, opts ...grpc.CallOption) (*gen.ListJobsResponse, error) {
 	_va := make([]interface{}, len(opts))
