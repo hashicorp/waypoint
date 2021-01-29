@@ -55,7 +55,7 @@ func (s *service) UpsertDeployment(
 		}
 
 		// Create a context that will timeout relatively quickly
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 
 		// Create the hostname. We ignore errors.
