@@ -569,6 +569,16 @@ deploy "kubernetes" {
 	)
 
 	doc.SetField(
+		"resources",
+		"a map of resource limits and requests to apply to a pod on deploy",
+		docs.Summary(
+			"resource limits and requests for a pod. limits and requests options "+
+				"must start with either 'limits_' or 'requests_'. Any other options "+
+				"will be ignored.",
+		),
+	)
+
+	doc.SetField(
 		"probe_path",
 		"the HTTP path to request to test that the application is running",
 		docs.Summary(
