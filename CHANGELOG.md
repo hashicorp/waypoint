@@ -22,6 +22,7 @@ BUG FIXES:
 * cli: ctrl-c now interrupts server connection attempts [GH-989]
 * server: don't block startup on URL service being unavailable [GH-950]
 * server: `UpsertProject` will not delete all application metadata [GH-1027]
+* server: increase timeout for hostname registration [GH-1040]
 * entrypoint: log disconnect messages will now only be emitted at the ERROR level if reconnection fails [GH-930]
 * plugin/google-cloud-run: fix error on deploys about missing type [GH-955]
 * builtin/aws/ami: require []string for aws-ami filters to avoid panic [GH-1010]
@@ -33,18 +34,18 @@ FEATURES:
 * **Application config syncing with Kubernetes (ConfigMaps), Vault, Consul, and AWS SSM**:
 Automatically sync environment variable values with remote sources and restart your
 application when those values change. [GH-810]
-* **Access to Artifact, Deploy Metadata**: `registry` and `deploy` configuration can use 
-`artifact.*` variable syntax to access metadata from the results of those stages. 
+* **Access to Artifact, Deploy Metadata**: `registry` and `deploy` configuration can use
+`artifact.*` variable syntax to access metadata from the results of those stages.
 The `release` configuration can use `artifact.*` and `deploy.*` to access metadata.
 For example: `image = artifact.image` for Docker-based builds. [GH-757]
 * **`template` Functions**: `templatefile`, `templatedir`, and `templatestring` functions
 allow you to template files, directories, and strings with the variables and functions
-available to your Waypoint configuration. 
+available to your Waypoint configuration.
 * **`path` Variables**: you can now use `path.project`, `path.app`, and `path.pwd` as
 variables in your Waypoint file to specify paths as relative to the project (waypoint.hcl
 file), app, or pwd of the CLI invocation.
 * **Server snapshot/restore**: you can now use the CLI or API to take and restore online
-snapshots. Restoring snapshot data requires a server restart but the restore operation 
+snapshots. Restoring snapshot data requires a server restart but the restore operation
 can be staged online. [GH-870]
 
 IMPROVEMENTS:
