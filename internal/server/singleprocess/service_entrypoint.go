@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -136,6 +137,12 @@ func (s *service) EntrypointConfig(
 
 		// If we have the URL service setup, note that
 		if v := s.urlConfig; v != nil {
+			// Get our base config
+			s.urlCEBMu.RLock()
+			pbVal := proto.Clone(s.urlCEB).(*pb.EntrypointConfig_URLService)
+			ws.Add(s.urlCEBWatchCh) // Watch for changes
+			s.urlCEBMu.RUnlock()
+
 			var flatLabels []string
 			for k, v := range deployment.Labels {
 				flatLabels = append(flatLabels, fmt.Sprintf("%s=%s", k, v))
@@ -151,11 +158,14 @@ func (s *service) EntrypointConfig(
 				":deployment=v"+strconv.FormatUint(deployment.Sequence, 10),
 				":deployment-order="+strings.ToLower(deployment.Id),
 			)
+			pbVal.Labels = strings.Join(flatLabels, ",")
 
-			config.UrlService = &pb.EntrypointConfig_URLService{
-				ControlAddr: v.ControlAddress,
-				Token:       v.APIToken,
-				Labels:      strings.Join(flatLabels, ","),
+			// If the token is empty, don't send anything down to the
+			// entrypoint yet since the entrypoint doesn't yet handle changes
+			// to the URL config.
+			// NOTE(mitchellh): when ceb supports changes to URL config, remove this
+			if pbVal.Token != "" {
+				config.UrlService = pbVal
 			}
 		}
 

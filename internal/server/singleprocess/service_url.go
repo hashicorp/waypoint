@@ -57,7 +57,12 @@ func (s *service) initURLClient(
 		return nil
 	}
 
-	log.Warn("failed to initialize URL service", "err", err)
+	if err != nil {
+		log.Warn("failed to initialize URL service", "err", err)
+	} else {
+		log.Info("URL service client successfully initialized")
+	}
+
 	return err
 }
 
@@ -70,6 +75,7 @@ func (s *service) initURLClientBlocking(
 ) error {
 	// If we have no API token, get our guest account token.
 	if cfg.APIToken == "" {
+		log.Debug("API token not set in config, initializing guest account")
 		token, err := s.initURLGuestAccount(ctx, log, isRetry, acceptURLTerms, cfg)
 		if err != nil {
 			return err
@@ -78,6 +84,14 @@ func (s *service) initURLClientBlocking(
 		// Set the API token, if logic later in this func fails and we retry
 		// we will reuse the API token we already have.
 		cfg.APIToken = token
+
+		// Set our URL CEB settings. It is always initialized with the API
+		// token if it is set so we only have to do this on this code path.
+		s.urlCEBMu.Lock()
+		s.urlCEB.Token = token
+		close(s.urlCEBWatchCh) // notify any watchers we have changes
+		s.urlCEBWatchCh = make(chan struct{})
+		s.urlCEBMu.Unlock()
 	}
 
 	// Now that we have a token, connect to the API service with that token.
@@ -117,6 +131,7 @@ func (s *service) initURLGuestAccount(
 	if err != nil {
 		return "", err
 	} else if urlToken != "" {
+		log.Debug("using saved URL guest token")
 		return urlToken, nil
 	}
 
