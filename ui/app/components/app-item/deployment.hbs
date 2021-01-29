@@ -1,8 +1,13 @@
-<li class="app-item">
+<li class={{if (eq @deployment.state 4) "app-item app-item--destroyed" "app-item"}}>
   <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @deployment.id}}>
     <p>
       <b class="badge badge--version">v{{@deployment.sequence}}</b>
       <code>{{@deployment.id}}</code>
+      {{#if (eq @deployment.state 4)}}
+        <b class="badge badge--destroyed">
+          {{inline-svg "trash" class="icon"}}&nbsp;Destroyed
+        </b>
+      {{/if}}
     </p>
     <small>
       {{inline-svg (icon-for-component @deployment.component.name) class="icon"}}
@@ -16,10 +21,10 @@
       </span>
     </small>
   </LinkTo>
-  {{#if @deployment.preload.deployUrl}}
-  <ExternalLink href="https://{{@deployment.preload.deployUrl}}" class="button button--secondary">
-    <span>{{lowercase @deployment.preload.deployUrl}}</span>
-    {{inline-svg "exit" class="icon"}}
-  </ExternalLink>
+  {{#if (and @deployment.preload.deployUrl (not-eq @deployment.state 4))}}
+    <ExternalLink href="https://{{@deployment.preload.deployUrl}}" class="button button--secondary">
+      <span>{{lowercase @deployment.preload.deployUrl}}</span>
+      {{inline-svg "exit" class="icon"}}
+    </ExternalLink>
   {{/if}}
 </li>
