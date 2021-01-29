@@ -78,6 +78,14 @@ func (s *service) initURLClientBlocking(
 		// Set the API token, if logic later in this func fails and we retry
 		// we will reuse the API token we already have.
 		cfg.APIToken = token
+
+		// Set our URL CEB settings. It is always initialized with the API
+		// token if it is set so we only have to do this on this code path.
+		s.urlCEBMu.Lock()
+		s.urlCEB.Token = token
+		close(s.urlCEBWatchCh) // notify any watchers we have changes
+		s.urlCEBWatchCh = make(chan struct{})
+		s.urlCEBMu.Unlock()
 	}
 
 	// Now that we have a token, connect to the API service with that token.

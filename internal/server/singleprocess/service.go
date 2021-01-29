@@ -29,6 +29,13 @@ type service struct {
 	urlConfig    *serverconfig.URL
 	urlClientMu  sync.Mutex
 	urlClientVal wphznpb.WaypointHznClient
+
+	// urlCEB has the configuration for the entrypoint. If this is nil,
+	// then the configuration is not ready. The urlCEBWatchCh can be used
+	// to watch for changes. All fields protected with urlCEBMu.
+	urlCEBMu      sync.RWMutex
+	urlCEB        *pb.EntrypointConfig_URLService
+	urlCEBWatchCh chan struct{}
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -79,6 +86,15 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		// Create a copy of the config that we use for initialization so
 		// that we don't create races with s.urlConfig if this retries.
 		cfgCopy := *scfg.URL
+
+		// Initialize our CEB settings.
+		s.urlCEBMu.Lock()
+		s.urlCEB = &pb.EntrypointConfig_URLService{
+			ControlAddr: cfgCopy.ControlAddress,
+			Token:       cfgCopy.APIToken,
+		}
+		s.urlCEBWatchCh = make(chan struct{})
+		s.urlCEBMu.Unlock()
 
 		if err := s.initURLClient(
 			log.Named("url_service"),

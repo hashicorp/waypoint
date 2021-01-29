@@ -112,6 +112,8 @@ func (ceb *CEB) watchConfig(
 			return
 
 		case config := <-ch:
+			// TODO(mitchellh): we need to handle changes to the URL settings
+			// and stop/restart the URL service gracefully.
 			if !didInitURL {
 				didInitURL = true
 
