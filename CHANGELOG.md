@@ -11,6 +11,7 @@ specified `-platform` for the active server installation. [GH-976]
 
 IMPROVEMENTS:
 
+* builtin/k8s: Allow for defined resource limits for pods [GH-1041]
 * cli: `server run` supports specifying a custom TLS certificate [GH-951]
 * cli: more informative error messages on `install` [GH-1004]
 * server: store platform where server is installed to in server config [GH-1000]
@@ -19,13 +20,13 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* builtin/aws/ami: require []string for aws-ami filters to avoid panic [GH-1010]
 * cli: ctrl-c now interrupts server connection attempts [GH-989]
+* entrypoint: log disconnect messages will now only be emitted at the ERROR level if reconnection fails [GH-930]
 * server: don't block startup on URL service being unavailable [GH-950]
 * server: `UpsertProject` will not delete all application metadata [GH-1027]
 * server: increase timeout for hostname registration [GH-1040]
-* entrypoint: log disconnect messages will now only be emitted at the ERROR level if reconnection fails [GH-930]
 * plugin/google-cloud-run: fix error on deploys about missing type [GH-955]
-* builtin/aws/ami: require []string for aws-ami filters to avoid panic [GH-1010]
 
 ## 0.2.0 (December 10, 2020)
 
