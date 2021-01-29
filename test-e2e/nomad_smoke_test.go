@@ -7,28 +7,28 @@ import (
 )
 
 var (
-	dockerTestDir = fmt.Sprintf("%s/docker/go", examplesRootDir)
+	nomadTestDir = fmt.Sprintf("%s/nomad/nodejs", examplesRootDir)
 )
 
-func TestWaypointDockerInstall(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.Run("install", "-platform=docker", "-accept-tos", fmt.Sprintf("-docker-server-image=%s", wpServerImage))
+func TestWaypointNomadInstall(t *testing.T) {
+	wp := NewBinary(wpBinary, nomadTestDir)
+	stdout, stderr, err := wp.Run("install", "-platform=nomad", "-accept-tos", fmt.Sprintf("-nomad-server-image=%s", wpServerImage))
 
 	if err != nil {
-		t.Errorf("unexpected error installing server to docker: %s", err)
+		t.Errorf("unexpected error installing server to nomad: %s", err)
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output installing server to docker: %s", err)
+		t.Errorf("unexpected stderr output installing server to nomad: %s", err)
 	}
 
 	if !strings.Contains(stdout, "Waypoint server successfully installed and configured!") {
-		t.Errorf("No success message detected after docker server install:\n%s", stdout)
+		t.Errorf("No success message detected after nomad server install:\n%s", stdout)
 	}
 }
 
-func TestWaypointDockerUp(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
+func TestWaypointNomadUp(t *testing.T) {
+	wp := NewBinary(wpBinary, nomadTestDir)
 	stdout, stderr, err := wp.Run("init")
 
 	if err != nil {
@@ -58,25 +58,25 @@ func TestWaypointDockerUp(t *testing.T) {
 	}
 }
 
-func TestWaypointDockerUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=docker", "-auto-approve", fmt.Sprintf("-docker-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
+func TestWaypointNomadUpgrade(t *testing.T) {
+	wp := NewBinary(wpBinary, nomadTestDir)
+	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=nomad", "-auto-approve", fmt.Sprintf("-nomad-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
 
 	if err != nil {
-		t.Errorf("unexpected error upgrading server in docker: %s", err)
+		t.Errorf("unexpected error upgrading server in nomad: %s", err)
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output upgrading server in docker: %s", err)
+		t.Errorf("unexpected stderr output upgrading server in nomad: %s", err)
 	}
 
 	if !strings.Contains(stdout, "Waypoint has finished upgrading the server") {
-		t.Errorf("No success message detected after docker server install:\n%s", stdout)
+		t.Errorf("No success message detected after nomad server install:\n%s", stdout)
 	}
 }
 
-func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
+func TestWaypointNomadUpAfterUpgrade(t *testing.T) {
+	wp := NewBinary(wpBinary, nomadTestDir)
 	stdout, stderr, err := wp.Run("up")
 
 	if err != nil {
@@ -92,8 +92,8 @@ func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
 	}
 }
 
-func TestWaypointDockerDestroy(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
+func TestWaypointNomadDestroy(t *testing.T) {
+	wp := NewBinary(wpBinary, nomadTestDir)
 	stdout, stderr, err := wp.Run("destroy")
 
 	if err != nil {
@@ -109,9 +109,9 @@ func TestWaypointDockerDestroy(t *testing.T) {
 	}
 }
 
-func TestWaypointDockerUninstall(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.Run("server", "uninstall", "-platform=docker", "-auto-approve", "-snapshot=false")
+func TestWaypointNomadUninstall(t *testing.T) {
+	wp := NewBinary(wpBinary, nomadTestDir)
+	stdout, stderr, err := wp.Run("server", "uninstall", "-platform=nomad", "-auto-approve", "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error uninstalling waypoint server: %s", err)

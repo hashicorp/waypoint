@@ -3,8 +3,8 @@
 ## Requirements
 
 For now, these tests assume that you already have Waypoint available on the path,
-as well as Docker installed. In the future, the `run-tests.sh` script will
-set these up in a CI environment.
+as well as Docker, K8s, and Nomad  installed and running. In the future, the
+`run-tests.sh` script will set these up in a CI environment.
 
 ## How to run
 
@@ -61,10 +61,3 @@ func TestWaypointAvailable(t *testing.T) {
 
 The `util.go` file inside this directory offers a simple way to execute any
 binary.
-
-## TODO
-
-Include additional tests for the following supported server platforms:
-
-- Nomad
-- Kubernetes

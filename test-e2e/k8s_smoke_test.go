@@ -7,28 +7,28 @@ import (
 )
 
 var (
-	dockerTestDir = fmt.Sprintf("%s/docker/go", examplesRootDir)
+	kubernetesTestDir = fmt.Sprintf("%s/kubernetes/nodejs", examplesRootDir)
 )
 
-func TestWaypointDockerInstall(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.Run("install", "-platform=docker", "-accept-tos", fmt.Sprintf("-docker-server-image=%s", wpServerImage))
+func TestWaypointKubernetesInstall(t *testing.T) {
+	wp := NewBinary(wpBinary, kubernetesTestDir)
+	stdout, stderr, err := wp.Run("install", "-platform=kubernetes", "-accept-tos", fmt.Sprintf("-k8s-server-image=%s", wpServerImage))
 
 	if err != nil {
-		t.Errorf("unexpected error installing server to docker: %s", err)
+		t.Errorf("unexpected error installing server to kubernetes: %s", err)
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output installing server to docker: %s", err)
+		t.Errorf("unexpected stderr output installing server to kubernetes: %s", err)
 	}
 
 	if !strings.Contains(stdout, "Waypoint server successfully installed and configured!") {
-		t.Errorf("No success message detected after docker server install:\n%s", stdout)
+		t.Errorf("No success message detected after kubernetes server install:\n%s", stdout)
 	}
 }
 
-func TestWaypointDockerUp(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
+func TestWaypointKubernetesUp(t *testing.T) {
+	wp := NewBinary(wpBinary, kubernetesTestDir)
 	stdout, stderr, err := wp.Run("init")
 
 	if err != nil {
@@ -58,25 +58,25 @@ func TestWaypointDockerUp(t *testing.T) {
 	}
 }
 
-func TestWaypointDockerUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=docker", "-auto-approve", fmt.Sprintf("-docker-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
+func TestWaypointKubernetesUpgrade(t *testing.T) {
+	wp := NewBinary(wpBinary, kubernetesTestDir)
+	stdout, stderr, err := wp.Run("server", "upgrade", "-platform=kubernetes", "-auto-approve", fmt.Sprintf("-k8s-server-image=%s", wpServerImageUpgrade), "-snapshot=false")
 
 	if err != nil {
-		t.Errorf("unexpected error upgrading server in docker: %s", err)
+		t.Errorf("unexpected error upgrading server in kubernetes: %s", err)
 	}
 
 	if stderr != "" {
-		t.Errorf("unexpected stderr output upgrading server in docker: %s", err)
+		t.Errorf("unexpected stderr output upgrading server in kubernetes: %s", err)
 	}
 
 	if !strings.Contains(stdout, "Waypoint has finished upgrading the server") {
-		t.Errorf("No success message detected after docker server install:\n%s", stdout)
+		t.Errorf("No success message detected after kubernetes server install:\n%s", stdout)
 	}
 }
 
-func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
+func TestWaypointKubernetesUpAfterUpgrade(t *testing.T) {
+	wp := NewBinary(wpBinary, kubernetesTestDir)
 	stdout, stderr, err := wp.Run("up")
 
 	if err != nil {
@@ -92,8 +92,8 @@ func TestWaypointDockerUpAfterUpgrade(t *testing.T) {
 	}
 }
 
-func TestWaypointDockerDestroy(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
+func TestWaypointKubernetesDestroy(t *testing.T) {
+	wp := NewBinary(wpBinary, kubernetesTestDir)
 	stdout, stderr, err := wp.Run("destroy")
 
 	if err != nil {
@@ -109,9 +109,9 @@ func TestWaypointDockerDestroy(t *testing.T) {
 	}
 }
 
-func TestWaypointDockerUninstall(t *testing.T) {
-	wp := NewBinary(wpBinary, dockerTestDir)
-	stdout, stderr, err := wp.Run("server", "uninstall", "-platform=docker", "-auto-approve", "-snapshot=false")
+func TestWaypointKubernetesUninstall(t *testing.T) {
+	wp := NewBinary(wpBinary, kubernetesTestDir)
+	stdout, stderr, err := wp.Run("server", "uninstall", "-platform=kubernetes", "-auto-approve", "-snapshot=false")
 
 	if err != nil {
 		t.Errorf("unexpected error uninstalling waypoint server: %s", err)
