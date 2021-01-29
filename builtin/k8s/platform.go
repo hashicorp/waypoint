@@ -10,6 +10,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -175,6 +176,39 @@ func (p *Platform) Deploy(
 		pullPolicy = ""
 	}
 
+	// Get container resource limits and requests
+	var resourceLimits = make(map[corev1.ResourceName]resource.Quantity)
+	var resourceRequests = make(map[corev1.ResourceName]resource.Quantity)
+
+	for k, v := range p.config.Resources {
+		if strings.HasPrefix(k, "limits_") {
+			limitKey := strings.Split(k, "_")
+			resourceName := corev1.ResourceName(limitKey[1])
+
+			quantity, err := resource.ParseQuantity(v)
+			if err != nil {
+				return nil, err
+			}
+			resourceLimits[resourceName] = quantity
+		} else if strings.HasPrefix(k, "requests_") {
+			reqKey := strings.Split(k, "_")
+			resourceName := corev1.ResourceName(reqKey[1])
+
+			quantity, err := resource.ParseQuantity(v)
+			if err != nil {
+				return nil, err
+			}
+			resourceRequests[resourceName] = quantity
+		} else {
+			log.Warn("ignoring unrecognized k8s resources key: %q", k)
+		}
+	}
+
+	resourceRequirements := corev1.ResourceRequirements{
+		Limits:   resourceLimits,
+		Requests: resourceRequests,
+	}
+
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{
@@ -207,7 +241,8 @@ func (p *Platform) Deploy(
 					InitialDelaySeconds: 5,
 					TimeoutSeconds:      5,
 				},
-				Env: env,
+				Env:       env,
+				Resources: resourceRequirements,
 			},
 		},
 	}
@@ -441,9 +476,10 @@ func (p *Platform) Destroy(
 
 // Config is the configuration structure for the Platform.
 type Config struct {
-	// KubeconfigPath is the path to the kubeconfig file. If this is
-	// blank then we default to the home directory.
-	KubeconfigPath string `hcl:"kubeconfig,optional"`
+	// Annotations are added to the pod spec of the deployed application.  This is
+	// useful when using mutating webhook admission controllers to further process
+	// pod events.
+	Annotations map[string]string `hcl:"annotations,optional"`
 
 	// Context specifies the kube context to use.
 	Context string `hcl:"context,optional"`
@@ -452,31 +488,31 @@ type Config struct {
 	// outside waypoint, for instance by a pod autoscaler, do not set this variable.
 	Count int32 `hcl:"replicas,optional"`
 
-	// If set, this is the HTTP path to request to test that the application
-	// is up and running. Without this, we only test that a connection can be
-	// made to the port.
-	ProbePath string `hcl:"probe_path,optional"`
-
-	// A path to a directory that will be created for the service to store
-	// temporary data.
-	ScratchSpace string `hcl:"scratch_path,optional"`
-
 	// The name of the Kubernetes secret to use to pull the image stored
 	// in the registry.
 	// TODO This maybe should be required because the vast majority of deployments
 	// will be against private images.
 	ImageSecret string `hcl:"image_secret,optional"`
 
-	// Environment variables that are meant to configure the application in a static
-	// way. This might be control an image that has mulitple modes of operation,
-	// selected via environment variable. Most configuration should use the waypoint
-	// config commands.
-	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+	// KubeconfigPath is the path to the kubeconfig file. If this is
+	// blank then we default to the home directory.
+	KubeconfigPath string `hcl:"kubeconfig,optional"`
 
-	// Annotations are added to the pod spec of the deployed application.  This is
-	// useful when using mutating webhook admission controllers to further process
-	// pod events.
-	Annotations map[string]string `hcl:"annotations,optional"`
+	// Namespace is the Kubernetes namespace to target the deployment to.
+	Namespace string `hcl:"namespace,optional"`
+
+	// If set, this is the HTTP path to request to test that the application
+	// is up and running. Without this, we only test that a connection can be
+	// made to the port.
+	ProbePath string `hcl:"probe_path,optional"`
+
+	// Optionally define various resources limits for kubernetes pod containers
+	// such as memory and cpu.
+	Resources map[string]string `hcl:"resources,optional"`
+
+	// A path to a directory that will be created for the service to store
+	// temporary data.
+	ScratchSpace string `hcl:"scratch_path,optional"`
 
 	// ServiceAccount is the name of the Kubernetes service account to apply to the
 	// application deployment. This is useful to apply Kubernetes RBAC to the pod.
@@ -488,8 +524,11 @@ type Config struct {
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
 
-	// Namespace is the Kubernetes namespace to target the deployment to.
-	Namespace string `hcl:"namespace,optional"`
+	// Environment variables that are meant to configure the application in a static
+	// way. This might be control an image that has mulitple modes of operation,
+	// selected via environment variable. Most configuration should use the waypoint
+	// config commands.
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -526,6 +565,16 @@ deploy "kubernetes" {
 		docs.Summary(
 			"if the replica count is maintained outside waypoint,",
 			"for instance by a pod autoscaler, do not set this variable",
+		),
+	)
+
+	doc.SetField(
+		"resources",
+		"a map of resource limits and requests to apply to a pod on deploy",
+		docs.Summary(
+			"resource limits and requests for a pod. limits and requests options "+
+				"must start with either 'limits_' or 'requests_'. Any other options "+
+				"will be ignored.",
 		),
 	)
 
