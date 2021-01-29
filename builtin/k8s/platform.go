@@ -10,6 +10,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -175,6 +176,39 @@ func (p *Platform) Deploy(
 		pullPolicy = ""
 	}
 
+	// Get container resource limits and requests
+	var resourceLimits = make(map[corev1.ResourceName]resource.Quantity)
+	var resourceRequests = make(map[corev1.ResourceName]resource.Quantity)
+
+	for k, v := range p.config.Resources {
+		if strings.HasPrefix(k, "limits_") {
+			limitKey := strings.Split(k, "_")
+			resourceName := corev1.ResourceName(limitKey[1])
+
+			quantity, err := resource.ParseQuantity(v)
+			if err != nil {
+				return nil, err
+			}
+			resourceLimits[resourceName] = quantity
+		} else if strings.HasPrefix(k, "requests_") {
+			reqKey := strings.Split(k, "_")
+			resourceName := corev1.ResourceName(reqKey[1])
+
+			quantity, err := resource.ParseQuantity(v)
+			if err != nil {
+				return nil, err
+			}
+			resourceRequests[resourceName] = quantity
+		} else {
+			log.Warn("ignoring unrecognized k8s resources key: %q", k)
+		}
+	}
+
+	resourceRequirements := corev1.ResourceRequirements{
+		Limits:   resourceLimits,
+		Requests: resourceRequests,
+	}
+
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{
@@ -207,7 +241,8 @@ func (p *Platform) Deploy(
 					InitialDelaySeconds: 5,
 					TimeoutSeconds:      5,
 				},
-				Env: env,
+				Env:       env,
+				Resources: resourceRequirements,
 			},
 		},
 	}
@@ -470,6 +505,10 @@ type Config struct {
 	// is up and running. Without this, we only test that a connection can be
 	// made to the port.
 	ProbePath string `hcl:"probe_path,optional"`
+
+	// Optionally define various resources limits for kubernetes pod containers
+	// such as memory and cpu.
+	Resources map[string]string `hcl:"resources,optional"`
 
 	// A path to a directory that will be created for the service to store
 	// temporary data.
