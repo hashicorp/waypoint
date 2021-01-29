@@ -1,4 +1,4 @@
-<li class="app-item">
+<li class={{if (eq @deployment.state 4) "app-item app-item--destroyed" "app-item"}}>
   <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @deployment.id}}>
     <p>
       <b class="badge badge--version">v{{@deployment.sequence}}</b>
