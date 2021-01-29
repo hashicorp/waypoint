@@ -441,9 +441,10 @@ func (p *Platform) Destroy(
 
 // Config is the configuration structure for the Platform.
 type Config struct {
-	// KubeconfigPath is the path to the kubeconfig file. If this is
-	// blank then we default to the home directory.
-	KubeconfigPath string `hcl:"kubeconfig,optional"`
+	// Annotations are added to the pod spec of the deployed application.  This is
+	// useful when using mutating webhook admission controllers to further process
+	// pod events.
+	Annotations map[string]string `hcl:"annotations,optional"`
 
 	// Context specifies the kube context to use.
 	Context string `hcl:"context,optional"`
@@ -451,6 +452,19 @@ type Config struct {
 	// The number of replicas of the service to maintain. If this number is maintained
 	// outside waypoint, for instance by a pod autoscaler, do not set this variable.
 	Count int32 `hcl:"replicas,optional"`
+
+	// The name of the Kubernetes secret to use to pull the image stored
+	// in the registry.
+	// TODO This maybe should be required because the vast majority of deployments
+	// will be against private images.
+	ImageSecret string `hcl:"image_secret,optional"`
+
+	// KubeconfigPath is the path to the kubeconfig file. If this is
+	// blank then we default to the home directory.
+	KubeconfigPath string `hcl:"kubeconfig,optional"`
+
+	// Namespace is the Kubernetes namespace to target the deployment to.
+	Namespace string `hcl:"namespace,optional"`
 
 	// If set, this is the HTTP path to request to test that the application
 	// is up and running. Without this, we only test that a connection can be
@@ -460,23 +474,6 @@ type Config struct {
 	// A path to a directory that will be created for the service to store
 	// temporary data.
 	ScratchSpace string `hcl:"scratch_path,optional"`
-
-	// The name of the Kubernetes secret to use to pull the image stored
-	// in the registry.
-	// TODO This maybe should be required because the vast majority of deployments
-	// will be against private images.
-	ImageSecret string `hcl:"image_secret,optional"`
-
-	// Environment variables that are meant to configure the application in a static
-	// way. This might be control an image that has mulitple modes of operation,
-	// selected via environment variable. Most configuration should use the waypoint
-	// config commands.
-	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
-
-	// Annotations are added to the pod spec of the deployed application.  This is
-	// useful when using mutating webhook admission controllers to further process
-	// pod events.
-	Annotations map[string]string `hcl:"annotations,optional"`
 
 	// ServiceAccount is the name of the Kubernetes service account to apply to the
 	// application deployment. This is useful to apply Kubernetes RBAC to the pod.
@@ -488,8 +485,11 @@ type Config struct {
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
 
-	// Namespace is the Kubernetes namespace to target the deployment to.
-	Namespace string `hcl:"namespace,optional"`
+	// Environment variables that are meant to configure the application in a static
+	// way. This might be control an image that has mulitple modes of operation,
+	// selected via environment variable. Most configuration should use the waypoint
+	// config commands.
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
