@@ -22,11 +22,11 @@ func (c *HostnameDeleteCommand) Run(args []string) int {
 		return 1
 	}
 
-	hostname := c.args[0]
 	if len(c.args) == 0 {
 		c.ui.Output("hostname required for deletion", terminal.WithErrorStyle())
 		return 1
 	}
+	hostname := c.args[0]
 
 	_, err := c.project.Client().DeleteHostname(c.Ctx, &pb.DeleteHostnameRequest{
 		Hostname: hostname,
