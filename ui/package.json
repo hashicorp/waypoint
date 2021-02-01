@@ -30,7 +30,7 @@
     "@glimmer/component": "^1.0.3",
     "@glimmer/tracking": "^1.0.3",
     "@hashicorp/pds-ember": "^0.4.2",
-    "@hashicorp/structure-icons": "^1.8.1",
+    "@hashicorp/structure-icons": "1.9.0-0",
     "@types/ember": "^3.16.0",
     "@types/ember-qunit": "^3.4.9",
     "@types/ember__test-helpers": "^1.7.0",

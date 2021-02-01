@@ -2541,11 +2541,6 @@
   resolved "https://registry.yarnpkg.com/@hashicorp/structure-icons/-/structure-icons-1.9.0-0.tgz#7bd2f4a61d2dd81247090d2cfb86f1f89d4ea22a"
   integrity sha512-khvUS/zThfR6pLW4hGVRpcGY2Ta5azeS/Vzb9iCfr3A8OhSZFdnrlkqjYknpBg4RwrQDBpWTzZhe/Z35Ne4Wxg==
 
-"@hashicorp/structure-icons@^1.8.1":
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/@hashicorp/structure-icons/-/structure-icons-1.8.1.tgz#d29945df2b41dcb317b141e51a26bd4be796a164"
-  integrity sha512-XFYdCIshmaR3Igc8eWpOZ2Gr3IR/0TogXZ4PQ9bz1E9cLzF3njBcs3tCpJUOwRwe/wMI5YTlL/sOGvcZ77AB/Q==
-
 "@jimp/bmp@^0.5.4":
   version "0.5.4"
   resolved "https://registry.yarnpkg.com/@jimp/bmp/-/bmp-0.5.4.tgz#b7b375aa774f26154912569864d5466e71333ef1"
