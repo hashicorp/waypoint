@@ -52,6 +52,8 @@ type Runner struct {
 	local       bool
 	tempDir     string
 
+	enableDynConfig bool
+
 	closedVal int32
 	acceptWg  sync.WaitGroup
 
@@ -241,6 +243,13 @@ func WithLocal(ui terminal.UI) Option {
 func ByIdOnly() Option {
 	return func(r *Runner, cfg *config) error {
 		r.runner.ByIdOnly = true
+		return nil
+	}
+}
+
+func WithDynamicConfig(set bool) Option {
+	return func(r *Runner, cfg *config) error {
+		r.enableDynConfig = set
 		return nil
 	}
 }

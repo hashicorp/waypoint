@@ -23,7 +23,9 @@ import (
 // exec session.
 // The result of running this task is that the platform plugin is called
 // and made available as a virtual instance with the given id.
-func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment) error {
+// enableDynConfig controls if exec jobs will attempt to read from any dynamic config sources.
+// Reading from those sources requires the runner to have credentials to those sources.
+func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment, enableDynConfig bool) error {
 	// We need to get the pushed artifact if it isn't loaded.
 	var artifact *pb.PushedArtifact
 	if d.Preload != nil && d.Preload.Artifact != nil {
@@ -79,9 +81,10 @@ func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment) error {
 	a.logger.Debug("spawn virtual ceb to handle exec")
 
 	virt, err := ceb.NewVirtual(a.logger, ceb.VirtualConfig{
-		DeploymentId: d.Id,
-		InstanceId:   id,
-		Client:       a.client,
+		DeploymentId:        d.Id,
+		InstanceId:          id,
+		Client:              a.client,
+		EnableDynamicConfig: enableDynConfig,
 	})
 
 	if err != nil {
@@ -142,10 +145,11 @@ func (p *pluginExecVirtHandler) Run(ctx context.Context) error {
 	}()
 
 	esi := &component.ExecSessionInfo{
-		Input:     p.info.Input,
-		Output:    p.info.Output,
-		Error:     p.info.Error,
-		Arguments: p.info.Arguments,
+		Input:       p.info.Input,
+		Output:      p.info.Output,
+		Error:       p.info.Error,
+		Arguments:   p.info.Arguments,
+		Environment: p.info.Environment,
 	}
 
 	if p.info.PTY != nil && p.info.PTY.Enable {

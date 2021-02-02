@@ -25,6 +25,6 @@ func (r *Runner) executeExecOp(
 		panic("operation not expected type")
 	}
 
-	err = app.Exec(ctx, op.Exec.InstanceId, op.Exec.Deployment)
+	err = app.Exec(ctx, op.Exec.InstanceId, op.Exec.Deployment, r.enableDynConfig)
 	return nil, err
 }
