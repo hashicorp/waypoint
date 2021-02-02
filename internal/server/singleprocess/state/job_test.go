@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,6 +15,193 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
+
+func TestJobCreate_singleton(t *testing.T) {
+	t.Run("create with no existing", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "A",
+			SingletonId: "1",
+		})))
+
+		// Exactly one job should exist
+		jobs, err := s.JobList()
+		require.NoError(err)
+		require.Len(jobs, 1)
+	})
+
+	t.Run("create with an existing queued", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "A",
+			SingletonId: "1",
+		})))
+
+		// Create a different job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "B",
+			SingletonId: "1",
+		})))
+
+		// Should have both jobs
+		jobs, err := s.JobList()
+		require.NoError(err)
+		require.Len(jobs, 2)
+
+		// Job "A" should be canceled
+		var oldQueueTime time.Time
+		{
+			job, err := s.JobById("A", nil)
+			require.NoError(err)
+			require.Equal(pb.Job_ERROR, job.State)
+
+			oldQueueTime, err = ptypes.Timestamp(job.QueueTime)
+			require.NoError(err)
+		}
+
+		// Job "B" should be queued
+		{
+			job, err := s.JobById("B", nil)
+			require.NoError(err)
+			require.Equal(pb.Job_QUEUED, job.State)
+
+			// The queue time should be that of the old job, so that
+			// we retain our position in the queue
+			queueTime, err := ptypes.Timestamp(job.QueueTime)
+			require.NoError(err)
+			require.False(oldQueueTime.IsZero())
+			require.True(oldQueueTime.Equal(queueTime))
+		}
+	})
+
+	t.Run("create with an existing complete", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "A",
+			SingletonId: "1",
+		})))
+
+		// Assign and complete A
+		{
+			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+			require.NoError(err)
+			require.NotNil(job)
+			require.Equal("A", job.Id)
+			_, err = s.JobAck(job.Id, true)
+			require.NoError(err)
+			require.NoError(s.JobComplete(job.Id, nil, nil))
+		}
+
+		// Create a different job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "B",
+			SingletonId: "1",
+		})))
+
+		// Should have both jobs
+		jobs, err := s.JobList()
+		require.NoError(err)
+		require.Len(jobs, 2)
+
+		// Job "A" should be done
+		var oldQueueTime time.Time
+		{
+			job, err := s.JobById("A", nil)
+			require.NoError(err)
+			require.Equal(pb.Job_SUCCESS, job.State)
+
+			oldQueueTime, err = ptypes.Timestamp(job.QueueTime)
+			require.NoError(err)
+		}
+
+		// Job "B" should be queued
+		{
+			job, err := s.JobById("B", nil)
+			require.NoError(err)
+			require.Equal(pb.Job_QUEUED, job.State)
+
+			// The queue time should NOT be equal
+			queueTime, err := ptypes.Timestamp(job.QueueTime)
+			require.NoError(err)
+			require.False(queueTime.IsZero())
+			require.False(oldQueueTime.Equal(queueTime))
+		}
+	})
+
+	t.Run("create with an existing assigned", func(t *testing.T) {
+		require := require.New(t)
+		ctx := context.Background()
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "A",
+			SingletonId: "1",
+		})))
+
+		// Assign and complete A
+		{
+			job, err := s.JobAssignForRunner(ctx, &pb.Runner{Id: "R_A"})
+			require.NoError(err)
+			require.NotNil(job)
+
+			// Do NOT ack, do not complete, etc.
+		}
+
+		// Create a different job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "B",
+			SingletonId: "1",
+		})))
+
+		// Should have both jobs
+		jobs, err := s.JobList()
+		require.NoError(err)
+		require.Len(jobs, 2)
+
+		// Job "A" should be done
+		var oldQueueTime time.Time
+		{
+			job, err := s.JobById("A", nil)
+			require.NoError(err)
+			require.Equal(pb.Job_WAITING, job.State)
+
+			oldQueueTime, err = ptypes.Timestamp(job.QueueTime)
+			require.NoError(err)
+		}
+
+		// Job "B" should be queued
+		{
+			job, err := s.JobById("B", nil)
+			require.NoError(err)
+			require.Equal(pb.Job_QUEUED, job.State)
+
+			// The queue time should NOT be equal
+			queueTime, err := ptypes.Timestamp(job.QueueTime)
+			require.NoError(err)
+			require.False(queueTime.IsZero())
+			require.False(oldQueueTime.Equal(queueTime))
+		}
+	})
+}
 
 func TestJobAssign(t *testing.T) {
 	t.Run("basic assignment with one", func(t *testing.T) {
