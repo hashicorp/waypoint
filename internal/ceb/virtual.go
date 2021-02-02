@@ -278,7 +278,14 @@ func (v *Virtual) startExec(
 			v.log.Info("command has finished", "error", err)
 			exitCode := 0
 			if err != nil {
-				exitCode = 1
+				// Following in the path of exec.Command and ssh.ExitError, try to
+				// detect if the error has a exit status associated with it and pass
+				// it back to the client.
+				if es, ok := err.(interface{ ExitStatus() int }); ok {
+					exitCode = es.ExitStatus()
+				} else {
+					exitCode = 1
+				}
 			}
 
 			if err := client.Send(&pb.EntrypointExecRequest{
