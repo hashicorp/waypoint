@@ -153,12 +153,15 @@ func (s *VCSGit) refTagFunc(args []cty.Value, retType cty.Type) (cty.Value, erro
 	}
 
 	var tagRefStr string
-	_ = iter.ForEach(func(t *plumbing.Reference) error {
+	err = iter.ForEach(func(t *plumbing.Reference) error {
 		if t.Hash() == ref.Hash() {
 			tagRefStr = t.Name().Short()
 		}
 		return nil
 	})
+	if err != nil {
+		return cty.UnknownVal(cty.String), err
+	}
 
 	if tagRefStr != "" {
 		return cty.StringVal(tagRefStr), nil
