@@ -5,9 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -46,7 +47,7 @@ func (r *Registry) Push(
 	img *docker.Image,
 	ui terminal.UI,
 	src *component.Source,
-) (*docker.Image, error) {
+) (*Image, error) {
 
 	// If there is no region setup.  Try and load it from environment variables.
 	if r.config.Region == "" {
@@ -159,7 +160,7 @@ func (r *Registry) Push(
 
 	uri := repo.RepositoryUri
 
-	target := &docker.Image{Image: *uri, Tag: r.config.Tag}
+	target := &Image{Image: *uri, Tag: r.config.Tag}
 
 	step = sg.Add("Tagging Docker image: %s => %s", img.Name(), target.Name())
 
