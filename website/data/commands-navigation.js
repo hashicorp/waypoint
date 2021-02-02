@@ -40,6 +40,8 @@ export default [
   'server-restore',
   'server-run',
   'server-snapshot',
+  'server-uninstall',
+  'server-upgrade',
   'token-exchange',
   'token-invite',
   'token-new',
