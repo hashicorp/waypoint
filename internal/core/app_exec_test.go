@@ -84,7 +84,7 @@ func TestAppExec_happy(t *testing.T) {
 
 	// Exec
 	go func() {
-		app.Exec(context.Background(), instanceId, resp.Deployment)
+		app.Exec(context.Background(), instanceId, resp.Deployment, true)
 	}()
 
 	// We should get registered

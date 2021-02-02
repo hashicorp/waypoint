@@ -58,6 +58,8 @@ type Runner struct {
 	runningCtx    context.Context
 	runningCancel func()
 
+	enableDynConfig bool
+
 	// config is the current runner config.
 	config      *pb.RunnerConfig
 	originalEnv []*pb.ConfigVar
@@ -250,6 +252,13 @@ func WithLocal(ui terminal.UI) Option {
 func ByIdOnly() Option {
 	return func(r *Runner, cfg *config) error {
 		r.runner.ByIdOnly = true
+		return nil
+	}
+}
+
+func WithDynamicConfig(set bool) Option {
+	return func(r *Runner, cfg *config) error {
+		r.enableDynConfig = set
 		return nil
 	}
 }
