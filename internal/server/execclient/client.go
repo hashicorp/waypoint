@@ -231,7 +231,9 @@ func (c *Client) Run() (int, error) {
 		for {
 			resp, err := client.Recv()
 			if err != nil {
-				c.Logger.Error("receive error", "err", err)
+				if err != io.EOF {
+					c.Logger.Error("receive error", "err", err)
+				}
 				return
 			}
 
