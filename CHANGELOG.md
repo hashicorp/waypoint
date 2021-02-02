@@ -4,6 +4,8 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* cli/main: Add -version flag for CLI version [GH-1049]
+
 BUG FIXES:
 
 
