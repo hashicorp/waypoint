@@ -67,7 +67,10 @@ func (c *InstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	contextConfig, advertiseAddr, httpAddr, err = p.Install(ctx, c.ui, log)
+	result, err := p.Install(ctx, &serverinstall.InstallOpts{
+		Log: log,
+		UI:  c.ui,
+	})
 	if err != nil {
 		c.ui.Output(
 			"Error installing server into %s: %s", c.platform, clierrors.Humanize(err),
@@ -76,6 +79,10 @@ func (c *InstallCommand) Run(args []string) int {
 
 		return 1
 	}
+
+	contextConfig = result.Context
+	advertiseAddr = result.AdvertiseAddr
+	httpAddr = result.HTTPAddr
 
 	sg := c.ui.StepGroup()
 	defer sg.Wait()
@@ -235,7 +242,7 @@ func (c *InstallCommand) Help() string {
 Usage: waypoint server install [options]
 Alias: waypoint install
 
-	Installs a Waypoint server to an existing platform. The platform should be 
+	Installs a Waypoint server to an existing platform. The platform should be
 	specified as kubernetes, nomad, or docker.
 
   By default, this will also automatically create a new default CLI context
@@ -272,6 +279,6 @@ deployments. If this is incorrect, manually set it using the CLI command
 "waypoint server config-set".
 
 Advertise Address: %[2]s
-Web UI Address: %[3]s
+   Web UI Address: %[3]s
 `)
 )

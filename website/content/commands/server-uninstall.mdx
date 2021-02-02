@@ -1,0 +1,44 @@
+---
+layout: commands
+page_title: 'Commands: Server uninstall'
+sidebar_title: 'server uninstall'
+description: 'Uninstall the Waypoint server'
+---
+
+# Waypoint Server uninstall
+
+Command: `waypoint server uninstall`
+
+Uninstall the Waypoint server
+
+@include "commands/server-uninstall_desc.mdx"
+
+## Usage
+
+Usage: `waypoint server uninstall [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-auto-approve` - Auto-approve server uninstallation.
+- `-delete-context` - Delete the context for the server once it's uninstalled.
+- `-platform=<string>` - Platform to uninstall the Waypoint server from.
+- `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.
+- `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to uninstall.
+
+#### kubernetes Options
+
+- `-k8s-context=<string>` - The Kubernetes context to unisntall the Waypoint server from. If left unset, Waypoint will use the current Kubernetes context.
+
+#### nomad Options
+
+- `-nomad-purge` - Purge the Waypoint server job after deregistering as part of uninstall.
+
+#### docker Options
+
+@include "commands/server-uninstall_more.mdx"

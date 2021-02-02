@@ -66,6 +66,8 @@ type ServerRunCommand struct {
 	flagAdvertiseTLSEnabled    bool
 	flagAdvertiseTLSSkipVerify bool
 	flagAcceptTOS              bool
+	flagTLSCertFile            string
+	flagTLSKeyFile             string
 }
 
 func (c *ServerRunCommand) Run(args []string) int {
@@ -319,6 +321,24 @@ func (c *ServerRunCommand) Flags() *flag.Sets {
 			Default: "127.0.0.1:9702",
 		})
 
+		f.StringVar(&flag.StringVar{
+			Name:   "tls-cert-file",
+			Target: &c.flagTLSCertFile,
+			Usage: "Path to a PEM-encoded certificate file for TLS. If this " +
+				"isn't set, a self-signed certificate will be generated. This file " +
+				"will be read once at startup and will not be monitored for changes.",
+			Default: "",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "tls-key-file",
+			Target: &c.flagTLSKeyFile,
+			Usage: "Path to a PEM-encoded private key file for the TLS certificate " +
+				"specified with -tls-cert-file. This is required if -tls-cert-file " +
+				"is set.",
+			Default: "",
+		})
+
 		f.BoolVar(&flag.BoolVar{
 			Name:    "disable-ui",
 			Target:  &c.flagDisableUI,
@@ -444,23 +464,32 @@ func (c *ServerRunCommand) listenerForConfig(log hclog.Logger, cfg *serverconfig
 		return ln, nil
 	}
 
-	// If we don't have a cert then we self-sign.
+	// Use the TLS cert/key specified in the config. If one isn't specified,
+	// default to any set via the TLS flags.
+	certFile := cfg.TLSCertFile
+	keyFile := cfg.TLSKeyFile
+	if certFile == "" {
+		certFile = c.flagTLSCertFile
+		keyFile = c.flagTLSKeyFile
+	}
+
 	var certPEM, keyPEM []byte
-	if cfg.TLSCertFile != "" {
-		certPEM, err = ioutil.ReadFile(cfg.TLSCertFile)
+	if certFile != "" {
+		certPEM, err = ioutil.ReadFile(certFile)
 		if err != nil {
 			return nil, err
 		}
-		keyPEM, err = ioutil.ReadFile(cfg.TLSKeyFile)
+		keyPEM, err = ioutil.ReadFile(keyFile)
 		if err != nil {
 			return nil, err
 		}
 
 		log.Info("TLS certs loaded from specified files",
-			"cert", cfg.TLSCertFile,
-			"key", cfg.TLSKeyFile)
+			"cert", certFile,
+			"key", keyFile)
 	}
 
+	// If we don't have a cert then we self-sign.
 	if certPEM == nil {
 		log.Info("TLS cert wasn't specified, a self-signed certificate will be created")
 
