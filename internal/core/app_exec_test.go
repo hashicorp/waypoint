@@ -52,8 +52,26 @@ func TestAppExec_happy(t *testing.T) {
 
 	ctx := context.Background()
 
+	// We're using GetVersionInfoResponse here just because it is a proto message
+	// that can be converted to an any.Any easily. We never use it, it's just to keep
+	// the tests from blowing up with a nil reference.
+	mockPluginArtifact := &pb.GetVersionInfoResponse{}
+
+	anyval, err := ptypes.MarshalAny(mockPluginArtifact)
+
+	aresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
+		Artifact: serverptypes.TestValidArtifact(t, &pb.PushedArtifact{
+			Artifact: &pb.Artifact{
+				Artifact: anyval,
+			},
+		}),
+	})
+	require.NoError(err)
+
 	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
-		Deployment: serverptypes.TestValidDeployment(t, nil),
+		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+			ArtifactId: aresp.Artifact.Id,
+		}),
 	})
 	require.NoError(err)
 
