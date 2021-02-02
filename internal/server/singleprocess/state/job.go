@@ -27,11 +27,12 @@ var (
 )
 
 const (
-	jobTableName          = "jobs"
-	jobIdIndexName        = "id"
-	jobStateIndexName     = "state"
-	jobQueueTimeIndexName = "queue-time"
-	jobTargetIdIndexName  = "target-id"
+	jobTableName            = "jobs"
+	jobIdIndexName          = "id"
+	jobStateIndexName       = "state"
+	jobQueueTimeIndexName   = "queue-time"
+	jobTargetIdIndexName    = "target-id"
+	jobSingletonIdIndexName = "singleton-id"
 )
 
 func init() {
@@ -102,12 +103,33 @@ func jobSchema() *memdb.TableSchema {
 					},
 				},
 			},
+
+			jobSingletonIdIndexName: {
+				Name:         jobSingletonIdIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field:     "SingletonId",
+							Lowercase: true,
+						},
+
+						&memdb.IntFieldIndex{
+							Field: "State",
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 type jobIndex struct {
 	Id string
+
+	// SingletonId matches singleton_id if set on the job.
+	SingletonId string
 
 	// OpType is the operation type for the job.
 	OpType reflect.Type
@@ -350,6 +372,9 @@ RETRY_ASSIGN:
 			return nil, err
 		}
 
+		// We're now modifying this job, so perform a copy
+		job = job.Copy()
+
 		// Update our state and update our on-disk job
 		job.State = pb.Job_WAITING
 		result, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
@@ -414,6 +439,9 @@ func (s *State) JobAck(id string, ack bool) (*Job, error) {
 			"job can't be acked from state: %s",
 			job.State.String())
 	}
+
+	// We're now modifying this job, so perform a copy
+	job = job.Copy()
 
 	result, err := s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
 		if ack {
@@ -539,6 +567,9 @@ func (s *State) JobComplete(id string, result *pb.Job_Result, cerr error) error 
 			job.State.String())
 	}
 
+	// We're now modifying this job, so perform a copy
+	job = job.Copy()
+
 	_, err = s.jobReadAndUpdate(job.Id, func(jobpb *pb.Job) error {
 		// Set to complete, assume success for now
 		job.State = pb.Job_SUCCESS
@@ -602,6 +633,7 @@ func (s *State) JobCancel(id string, force bool) error {
 }
 
 func (s *State) jobCancel(txn *memdb.Txn, job *jobIndex, force bool) error {
+	job = job.Copy()
 	oldState := job.State
 
 	// How we handle cancel depends on the state
@@ -842,6 +874,7 @@ func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 func (s *State) jobIndexSet(txn *memdb.Txn, id []byte, jobpb *pb.Job) (*jobIndex, error) {
 	rec := &jobIndex{
 		Id:          jobpb.Id,
+		SingletonId: jobpb.SingletonId,
 		State:       jobpb.State,
 		Application: jobpb.Application,
 		Workspace:   jobpb.Workspace,
@@ -928,6 +961,49 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 	}
 
 	id := []byte(jobpb.Id)
+	bucket := dbTxn.Bucket(jobBucket)
+
+	// If singleton ID is set, we need to delete (cancel) any previous job
+	// with the same singleton ID if it is still queued.
+	if jobpb.SingletonId != "" {
+		result, err := memTxn.First(
+			jobTableName,
+			jobSingletonIdIndexName,
+			jobpb.SingletonId,
+			pb.Job_QUEUED,
+		)
+		if err != nil {
+			return err
+		}
+
+		if result != nil {
+			// Note we don't have to worry about jobAssignedSet here because
+			// we only run this block of code if the job is in the QUEUED state.
+
+			// Note we don't need to Copy here like other places because
+			// we never modify this old jobIndex in-place.
+			old := result.(*jobIndex)
+
+			oldpb, err := s.jobById(dbTxn, old.Id)
+			if err != nil {
+				return err
+			}
+			oldpb.State = pb.Job_ERROR
+			oldpb.Error = status.Newf(codes.Canceled,
+				"replaced by job %s", id).Proto()
+
+			// Update the index and data
+			if err := dbPut(bucket, []byte(old.Id), oldpb); err != nil {
+				return err
+			}
+			if _, err = s.jobIndexSet(memTxn, []byte(old.Id), oldpb); err != nil {
+				return err
+			}
+
+			// Copy the queue time from the old one so we retain our position
+			jobpb.QueueTime = oldpb.QueueTime
+		}
+	}
 
 	// Insert into bolt
 	if err := dbPut(dbTxn.Bucket(jobBucket), id, jobpb); err != nil {
@@ -1036,6 +1112,13 @@ func (s *State) jobCandidateAny(memTxn *memdb.Txn, ws memdb.WatchSet, r *runnerR
 	}
 
 	return nil, nil
+}
+
+// Copy should be called prior to any modifications to an existing jobIndex.
+func (idx *jobIndex) Copy() *jobIndex {
+	// A shallow copy is good enough since we only modify top-level fields.
+	copy := *idx
+	return &copy
 }
 
 // Job returns the Job for an index.
