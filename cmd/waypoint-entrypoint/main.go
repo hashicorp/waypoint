@@ -23,12 +23,6 @@ func realMain() int {
 	flag.Usage = usage
 	flag.Parse()
 
-	args := flag.Args()
-	if len(args) == 0 {
-		usage()
-		return 1
-	}
-
 	// TODO(mitchellh): proper log setup
 	log := hclog.L()
 	hclog.L().SetLevel(hclog.Trace)
@@ -36,6 +30,26 @@ func realMain() int {
 	// Create a context that is cancelled on interrupt
 	ctx, closer := signalcontext.WithInterrupt(context.Background(), log)
 	defer closer()
+
+	if port := os.Getenv("WAYPOINT_EXEC_PLUGIN_SSH"); port != "" {
+		key := os.Getenv("WAYPOINT_EXEC_PLUGIN_SSH_KEY")
+		hostKey := os.Getenv("WAYPOINT_EXEC_PLUGIN_SSH_HOST_KEY")
+
+		// Run our core logic
+		err := ceb.RunExecSSHServer(ctx, log, port, hostKey, key)
+		if err != nil {
+			fmt.Fprintf(flag.CommandLine.Output(),
+				"Error initializing Waypoint entrypoint: %s\n", formatError(err))
+			return 1
+		}
+		return 0
+	}
+
+	args := flag.Args()
+	if len(args) == 0 {
+		usage()
+		return 1
+	}
 
 	// Run our core logic
 	err := ceb.Run(ctx,
