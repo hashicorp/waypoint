@@ -555,6 +555,12 @@ message Job {
   // you are queueing a job, this must be empty or unset.
   string id = 1;
 
+  // If this is set, then only one job with this singleton_id may exist
+  // at any point in the QUEUED state. If QueueJob is called with this set
+  // and an existing job is already queued with a matching singleton_id,
+  // that job will be overwritten with this job.
+  string singleton_id = 8;
+
   // The application to target for the operation. Some operations may allow
   // certain fields of this to be empty, so check with the operation
   // documentation to determine what needs to be set. Generally, project
