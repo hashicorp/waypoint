@@ -102,27 +102,32 @@ func (c *ExecCommand) searchDeployments(
 		return nil, err
 	}
 
+	ec.DeploymentId = deployment.Id
+	ec.DeploymentSeq = deployment.Sequence
+
 	c.Log.Debug("looking for instances of deployment to exec into")
 	resp, err := client.FindExecInstance(ctx, &pb.FindExecInstanceRequest{
 		DeploymentId: deployment.Id,
 	})
 	if err != nil {
+		st, ok := status.FromError(err)
 		// If the server says there are no available instances, try to generate one
 		// via the exec plugin. If the app's deployment plugin doesn't have an exec
 		// plugin, this will generate an error that we will show to the user as meaning
 		// there is no way to start an exec session.
-		if st, ok := status.FromError(err); ok && st.Code() == codes.ResourceExhausted {
+		if ok && st.Code() == codes.ResourceExhausted {
 			c.Log.Debug("no instances found, trying exec via plugin")
 			return c.viaPlugin(ctx, app, client, ec, deployment)
+		} else if ok && st.Code() == codes.Unimplemented {
+			c.Log.Debug("old server detected, using old deployment target")
+			return nil, nil
+		} else {
+			return nil, err // unhandled error
 		}
-		return nil, err
 	}
 
 	c.Log.Debug("found instance to exec into", "instance-id", resp.Instance.Id)
-
 	ec.InstanceId = resp.Instance.Id
-	ec.DeploymentId = deployment.Id
-	ec.DeploymentSeq = deployment.Sequence
 
 	return nil, nil
 }
@@ -281,7 +286,8 @@ func (c *ExecCommand) Run(args []string) int {
 			done, err = c.searchDeployments(ctx, app, client, ec)
 		}
 		if err != nil {
-			return err
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
 		}
 
 		exitCode, err = ec.Run()
