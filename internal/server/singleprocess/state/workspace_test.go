@@ -54,7 +54,9 @@ func TestWorkspace(t *testing.T) {
 			require.Len(result, 1)
 
 			ws := result[0]
-			require.Len(ws.Applications, 2)
+			require.Len(ws.Projects, 2)
+			require.Len(ws.Projects[0].Applications, 1)
+			require.Len(ws.Projects[1].Applications, 1)
 		}
 
 		// Create a new workspace
