@@ -138,6 +138,52 @@ func (s *State) workspaceTouchApp(
 	return err
 }
 
+// workspaceUpdateProjectDataRef updates the latest data ref used for a project.
+func (s *State) workspaceUpdateProjectDataRef(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Workspace,
+	project *pb.Ref_Project,
+	dataRef *pb.Job_DataSource_Ref,
+) error {
+	id := strings.ToLower(ref.Workspace)
+
+	// Look up the workspace
+	raw, err := memTxn.First(workspaceTableName, workspaceIdIndexName, id)
+	if err != nil {
+		return err
+	}
+
+	var ws *pb.Workspace
+	if raw != nil {
+		// If we have a previous record, load it.
+		ws, err = s.workspaceFromDB(dbTxn, id)
+		if err != nil {
+			return err
+		}
+	}
+	if ws == nil {
+		// If we have no workspace, create a new one.
+		ws = &pb.Workspace{Name: ref.Workspace}
+	}
+
+	// Initialize the project
+	wsP, err := s.workspaceInitProject(ws, project)
+	if err != nil {
+		return err
+	}
+
+	// Set the project data ref
+	wsP.DataSourceRef = dataRef
+
+	// Store and update index
+	if err := dbPut(dbTxn.Bucket(workspaceBucket), []byte(id), ws); err != nil {
+		return err
+	}
+	_, err = s.workspaceIndexSet(memTxn, []byte(id), ws)
+	return err
+}
+
 // workspaceFromDB loads the Workspace structure from disk.
 func (s *State) workspaceFromDB(dbTxn *bolt.Tx, id string) (*pb.Workspace, error) {
 	var result pb.Workspace
