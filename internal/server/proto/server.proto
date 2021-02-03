@@ -322,15 +322,36 @@ message Project {
 }
 
 message Workspace {
+  // Old fields that were removed.
+  reserved 2;
+  reserved "applications";
+
   string name = 1;
 
-  // The list of applications that have executed at least one operation
-  // within the context of this workspace. To determine which operations
-  // you must call the operations respective List API such as ListDeployments.
-  repeated Application applications = 2;
+  // The list of projects that have executed at least one operation within
+  // the context of this workspace.
+  repeated Project projects = 4;
 
   // active_time is the last time that this workspace had activity.
   google.protobuf.Timestamp active_time = 3;
+
+  message Project {
+    // Project that this is referencing.
+    Ref.Project project = 1;
+
+    // The last non-local ref that was used for any operation.
+    Job.DataSource.Ref data_source_ref = 2;
+
+    // active_time is the last time that this project had activity in
+    // this workspace.
+    google.protobuf.Timestamp active_time = 3;
+
+    // The list of applications that have executed at least one operation
+    // within the context of this workspace. To determine which operations
+    // you must call the respect list API for that operation, such as
+    // ListDeployments.
+    repeated Application applications = 4;
+  }
 
   message Application {
     // Application that this is referencing.
