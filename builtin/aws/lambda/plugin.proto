@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package aws.lambda;
+
+option go_package = "waypoint/builtin/aws/lambda";
+
+message Deployment {
+  string id = 1;
+  string url = 2;
+  string region = 3;
+  string func_arn = 4;
+  string ver_arn = 5;
+  string target_group_arn = 6;
+  string version = 7;
+}
