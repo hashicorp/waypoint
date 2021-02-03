@@ -29,7 +29,7 @@ func (a *App) CanDestroyDeploy() bool {
 	return ok
 }
 
-// DestroyDeploy destroyes a specific deployment.
+// DestroyDeploy destroys a specific deployment.
 func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
 	// If the deploy is destroyed already then do nothing.
 	if d.State == pb.Operation_DESTROYED {
@@ -219,7 +219,7 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 	}
 
 	if op.Deployment.Deployment == nil {
-		log.Error("Unable to destroy the Deployment as the proto message Deployment returned from the plugin's DeployFunc is nil. This situation occurs when the deployment process is interupted by the user.", "deployment", op.Deployment)
+		log.Error("Unable to destroy the Deployment as the proto message Deployment returned from the plugin's DeployFunc is nil. This situation occurs when the deployment process is interrupted by the user.", "deployment", op.Deployment)
 		return nil, nil // Fail silently for now, this will be fixed in v0.2
 	}
 

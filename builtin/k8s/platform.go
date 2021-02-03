@@ -367,6 +367,26 @@ func (p *Platform) Deploy(
 
 	timeout := 10 * time.Minute
 
+	// Setup a reusable rollback function. Could potentially become a top level plugin abstraction (e.g. RollbackFunc)
+	rollbackMessage := "Deployment cancelled by user - attempting rollback..."
+	rollback := func() {
+		// If the request gets cancelled, rollback
+		step.Update(rollbackMessage)
+		destroyErr := p.Destroy(context.Background(), log, &result, ui)
+		if destroyErr != nil {
+			step.Update(fmt.Sprintf("Deployment rollback failed with err: %+v", destroyErr))
+		}
+		// This never prints - feels like this whole thing must be racy and not dependable, but it hasn't failed yet.
+		step.Update("Rollback successful")
+	}
+
+	// Setup a cancellation func to receive done signal and rollback if user cancels
+	// TODO: This prints multiple time. Does this fire multiple times?
+	go func() {
+		<-ctx.Done()
+		rollback()
+	}()
+
 	// Wait on the Pod to start
 	err = wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
 		dep, err := dc.Get(ctx, result.Name, metav1.GetOptions{})
@@ -426,9 +446,12 @@ func (p *Platform) Deploy(
 
 		return false, nil
 	})
+
 	if err != nil {
 		if err == wait.ErrWaitTimeout {
 			err = fmt.Errorf("Deployment was not able to start pods after %s", timeout)
+			rollbackMessage = "Deployment timed out - attempting rollback..."
+			rollback()
 		}
 		return nil, err
 	}

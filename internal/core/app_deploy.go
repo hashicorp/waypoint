@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
@@ -150,9 +151,18 @@ func (op *deployOperation) Upsert(
 	return resp.Deployment, nil
 }
 
-func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
+func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
 	// Sync our config first
 	if err := app.ConfigSync(ctx); err != nil {
+		return nil, err
+	}
+	// Upsert immediately so that if deployment fails we still have a reference to it in the db.
+	// TODO: Review this with the team. The rest of the solution seems to prevent this from happening, but it still seems
+	// like it might be useful to have the record. For instance, if we somehow do end up with a failed deployment, say
+	// on k8s, we could use pod metadata to delete the deployment even if we don't have the k8s deployment id. Perhaps
+	// we should add our own internal id as metadata to the pod so that we can cross reference ids. Maybe we are already.
+	if msg, err := op.Upsert(ctx, app.client, msg); err != nil {
+		log.Warn(fmt.Sprintf("Error with upsert: %+v \n%+v", msg, err))
 		return nil, err
 	}
 
