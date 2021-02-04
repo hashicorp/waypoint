@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/mitchellh/mapstructure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -132,22 +134,17 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
-	// Determine service ports for container
-	if len(p.config.ServicePorts) == 0 {
-		p.config.ServicePorts = []uint{3000}
-		if sp := p.config.ServicePort; sp != 0 {
-			p.config.ServicePorts[0] = sp
-		}
-	} else if p.config.ServicePort != 0 {
-		err := fmt.Errorf("Cannot specify both service_port and service_ports")
-		return nil, err
+	// Determine service port(s) for container
+	servicePorts, err := coerceConfigPortArray(p.config.ServicePort, 3000)
+	if err != nil {
+		return nil, fmt.Errorf("service_port error: %w", err)
 	}
 
 	// Build our env vars
 	env := []corev1.EnvVar{
 		{
 			Name:  "PORT",
-			Value: fmt.Sprint(p.config.ServicePorts[0]),
+			Value: fmt.Sprint(servicePorts[0]),
 		},
 	}
 
@@ -216,17 +213,14 @@ func (p *Platform) Deploy(
 		Requests: resourceRequests,
 	}
 
-	// Collect ServicePorts and name them "port0", "port1", etc
-	ports := make([]corev1.ContainerPort, len(p.config.ServicePorts))
-	for i, sp := range p.config.ServicePorts {
+	// Collect servicePorts and name them "port0", "port1", etc
+	ports := make([]corev1.ContainerPort, len(servicePorts))
+	for i, sp := range servicePorts {
 		ports[i] = corev1.ContainerPort{
 			Name:          fmt.Sprintf("port%d", i),
 			ContainerPort: int32(sp),
 		}
 	}
-
-	// Only use the first port for liveness
-	probePort := int(p.config.ServicePorts[0])
 
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
@@ -239,7 +233,7 @@ func (p *Platform) Deploy(
 				LivenessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(probePort),
+							Port: intstr.FromInt(int(servicePorts[0])),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -249,7 +243,7 @@ func (p *Platform) Deploy(
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
 						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(probePort),
+							Port: intstr.FromInt(int(servicePorts[0])),
 						},
 					},
 					InitialDelaySeconds: 5,
@@ -267,7 +261,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(probePort),
+					Port: intstr.FromInt(int(servicePorts[0])),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -279,7 +273,7 @@ func (p *Platform) Deploy(
 			Handler: corev1.Handler{
 				HTTPGet: &corev1.HTTPGetAction{
 					Path: p.config.ProbePath,
-					Port: intstr.FromInt(probePort),
+					Port: intstr.FromInt(int(servicePorts[0])),
 				},
 			},
 			InitialDelaySeconds: 5,
@@ -453,6 +447,43 @@ func (p *Platform) Deploy(
 	return &result, nil
 }
 
+// Recognize either a single port value, or an array of ports from a config interface{}
+// Allows a nil or empty value without an error, and will return []uint{defaultPort}
+func coerceConfigPortArray(hclValue interface{}, defaultPort uint) ([]uint, error) {
+	var ports []uint
+
+	if hclValue != nil {
+
+		var exp hcl.Expression
+
+		switch val := hclValue.(type) {
+		case hcl.Expression:
+			exp = val
+		case *hcl.Attribute:
+			exp = val.Expr
+		default:
+			panic("Unrecognized expression type")
+		}
+
+		// Note: Casting to array will work for unspecified values
+		if d := gohcl.DecodeExpression(exp, nil, &ports); d.HasErrors() {
+			var port uint
+			if d := gohcl.DecodeExpression(exp, nil, &port); !d.HasErrors() {
+				ports = []uint{port}
+			} else {
+				return nil, fmt.Errorf("must be an integer or array of integers")
+			}
+		}
+
+	}
+
+	if len(ports) == 0 {
+		ports = []uint{defaultPort}
+	}
+
+	return ports, nil
+}
+
 // Destroy deletes the K8S deployment.
 func (p *Platform) Destroy(
 	ctx context.Context,
@@ -532,15 +563,11 @@ type Config struct {
 	// application deployment. This is useful to apply Kubernetes RBAC to the pod.
 	ServiceAccount string `hcl:"service_account,optional"`
 
-	// Port that your service is running on within the actual container.
+	// Port(s) that your service is running on within the actual container.
 	// Defaults to port 3000.
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
-	ServicePort uint `hcl:"service_port,optional"`
-
-	// Allows opening multiple ports for a service. Only the first port will
-	// be tested by the probe for connectivity and/or probe_path
-	ServicePorts []uint `hcl:"service_ports,optional"`
+	ServicePort interface{} `hcl:"service_port,optional"`
 
 	// Environment variables that are meant to configure the application in a static
 	// way. This might be control an image that has mulitple modes of operation,
