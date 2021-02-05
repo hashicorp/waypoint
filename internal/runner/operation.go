@@ -141,7 +141,7 @@ func (r *Runner) executeJob(
 		return nil, nil
 
 	case *pb.Job_Up:
-		return r.executeUpOp(ctx, job, project)
+		return r.executeUpOp(ctx, log, job, project)
 
 	case *pb.Job_Build:
 		return r.executeBuildOp(ctx, job, project)

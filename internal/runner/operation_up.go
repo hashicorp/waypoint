@@ -3,6 +3,8 @@ package runner
 import (
 	"context"
 
+	"github.com/hashicorp/go-hclog"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -10,6 +12,7 @@ import (
 
 func (r *Runner) executeUpOp(
 	ctx context.Context,
+	log hclog.Logger,
 	job *pb.Job,
 	project *core.Project,
 ) (*pb.Job_Result, error) {
@@ -48,7 +51,7 @@ func (r *Runner) executeUpOp(
 
 	// We're releasing, do that too.
 	app.UI.Output("Releasing...", terminal.WithHeaderStyle())
-	result, err = r.executeDeployOp(ctx, &pb.Job{
+	result, err = r.executeReleaseOp(ctx, log, &pb.Job{
 		Application: job.Application,
 		Operation: &pb.Job_Release{
 			Release: &pb.Job_ReleaseOp{
