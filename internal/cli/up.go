@@ -25,68 +25,17 @@ func (c *UpCommand) Run(args []string) int {
 		return 1
 	}
 
-	client := c.project.Client()
-
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		// Build it
-		app.UI.Output("Building...", terminal.WithHeaderStyle())
-
-		_, err := app.Build(ctx, &pb.Job_BuildOp{})
+		result, err := app.Up(ctx, &pb.Job_UpOp{})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
 
-		// Get the most recent pushed artifact
-		push, err := client.GetLatestPushedArtifact(ctx, &pb.GetLatestPushedArtifactRequest{
-			Application: app.Ref(),
-			Workspace:   c.project.WorkspaceRef(),
-		})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
-		// Push it
-		app.UI.Output("Deploying...", terminal.WithHeaderStyle())
-
-		result, err := app.Deploy(ctx, &pb.Job_DeployOp{
-			Artifact: push,
-		})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-		deployUrl := result.Deployment.Preload.DeployUrl
-
-		// Try to get the hostname
-		var hostname *pb.Hostname
-		hostnamesResp, err := client.ListHostnames(ctx, &pb.ListHostnamesRequest{
-			Target: &pb.Hostname_Target{
-				Target: &pb.Hostname_Target_Application{
-					Application: &pb.Hostname_TargetApp{
-						Application: result.Deployment.Application,
-						Workspace:   result.Deployment.Workspace,
-					},
-				},
-			},
-		})
-		if err == nil && len(hostnamesResp.Hostnames) > 0 {
-			hostname = hostnamesResp.Hostnames[0]
-		}
-
-		// We're releasing, do that too.
-		app.UI.Output("Releasing...", terminal.WithHeaderStyle())
-		releaseResult, err := app.Release(ctx, &pb.Job_ReleaseOp{
-			Deployment: result.Deployment,
-			Prune:      true,
-		})
-		if err != nil {
-			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-			return ErrSentinel
-		}
-
-		releaseUrl := releaseResult.Release.Url
+		// Common reused values
+		releaseUrl := result.Up.ReleaseUrl
+		appUrl := result.Up.AppUrl
+		deployUrl := result.Up.DeployUrl
 
 		// Output
 		app.UI.Output("")
@@ -95,13 +44,13 @@ func (c *UpCommand) Run(args []string) int {
 			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
 			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
 			if deployUrl != "" {
-				app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+				app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 			}
 
-		case hostname != nil && deployUrl != "":
+		case appUrl != "" && deployUrl != "":
 			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
-			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())
-			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
+			app.UI.Output("           URL: %s", appUrl, terminal.WithSuccessStyle())
+			app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 
 		default:
 			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
