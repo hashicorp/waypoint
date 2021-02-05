@@ -1,0 +1,68 @@
+<form class="pds-form">
+  <div part="fields">
+    <fieldset class="pds-formFieldSet">
+      <div class="pds-formField">
+        <label for="git-source-url" class="pds-fieldName">
+          Git Source URL
+        </label>
+        <Pds::Input
+          @type="text"
+          aria-describedby="{HELP_ID} {ERROR_ID}"
+          id="git-source-url"
+          placeholder="https://github.com/mycompany/awesome-project"
+          value={{this.git.url}}
+          {{on "change" this.setGitUrl value="target.value"}}
+        />
+      </div>
+      <div class="pds-formField">
+        <label for="git-source-ref" class="pds-fieldName">
+          Git Ref
+        </label>
+        <Pds::Input
+          @type="text"
+          aria-describedby="{HELP_ID} {ERROR_ID}"
+          id="git-source-ref"
+          placeholder="main"
+          value={{this.git.ref}}
+          {{on "change" this.setGitRef value="target.value"}}
+        />
+      </div>
+      <div class="pds-formField">
+        <label for="git-source-path" class="pds-fieldName">
+          Git Source Path
+        </label>
+        <Pds::Input
+          @type="text"
+          aria-describedby="{HELP_ID} {ERROR_ID}"
+          id="git-source-path"
+          placeholder="/my-project-path"
+          value={{this.git.path}}
+          {{on "change" this.setGitPath value="target.value"}}
+        />
+      </div>
+      <div class="pds-formField">
+         <label class="pds-fieldName">
+          Automated Sync
+        </label>
+        <div class="pds-formFieldToggle">
+          <XToggle
+            @showLabels={{true}}
+            @name="git-sync-enabled"
+            @value={{@project.remoteEnabled}}
+            @onToggle={{fn (mut @project.remoteEnabled)}} as |toggle|>
+            <toggle.switch/>
+
+            <toggle.label for="git-sync-enabled">
+              <span class="pds-toggleLabel">
+                Enable automated deployment on changes
+              </span>
+            </toggle.label>
+          </XToggle>
+
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
+  <Pds::Button @variant="primary" {{on "click" this.saveSettings}}>Apply</Pds::Button>
+</form>
