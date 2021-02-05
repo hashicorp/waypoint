@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -365,26 +366,23 @@ func (p *Platform) Deploy(
 		reportedError bool
 	)
 
-	timeout := 10 * time.Minute
+	timeout := 30 * time.Second
 
-	// Setup a reusable rollback function. Could potentially become a top level plugin abstraction (e.g. RollbackFunc)
-	rollbackMessage := "Deployment cancelled by user - attempting rollback..."
-	rollback := func() {
-		// If the request gets cancelled, rollback
-		step.Update(rollbackMessage)
-		destroyErr := p.Destroy(context.Background(), log, &result, ui)
-		if destroyErr != nil {
-			step.Update(fmt.Sprintf("Deployment rollback failed with err: %+v", destroyErr))
-		}
-		// This never prints - feels like this whole thing must be racy and not dependable, but it hasn't failed yet.
-		step.Update("Rollback successful")
-	}
-
-	// Setup a cancellation func to receive done signal and rollback if user cancels
-	// TODO: This prints multiple time. Does this fire multiple times?
+	cancelMu := &sync.Mutex{}
+	pollingComplete := false
 	go func() {
 		<-ctx.Done()
-		rollback()
+		// Only rollback if polling didn't complete which indicates a user cancellation.
+		cancelMu.Lock()
+		if !pollingComplete {
+			log.Warn("deployment cancelled by user - attempting rollback...")
+			err = p.Rollback(context.Background(), log, &result, ui)
+			if err != nil {
+				log.Error(fmt.Sprintf("deployment rollback failed with err: %s", err.Error()))
+			}
+			log.Warn("deployment rollback successful")
+		}
+		cancelMu.Unlock()
 	}()
 
 	// Wait on the Pod to start
@@ -396,7 +394,7 @@ func (p *Platform) Deploy(
 
 		if time.Since(lastStatus) > 10*time.Second {
 			step.Update(fmt.Sprintf(
-				"Waiting on deployment to become available: %d/%d/%d",
+				"Waiting on deployment to become available: %d/%d/%d\n",
 				*dep.Spec.Replicas,
 				dep.Status.UnavailableReplicas,
 				dep.Status.AvailableReplicas,
@@ -447,11 +445,20 @@ func (p *Platform) Deploy(
 		return false, nil
 	})
 
+	// Set flag that polling finished
+	cancelMu.Lock()
+	pollingComplete = true
+	cancelMu.Unlock()
+
 	if err != nil {
 		if err == wait.ErrWaitTimeout {
-			err = fmt.Errorf("Deployment was not able to start pods after %s", timeout)
-			rollbackMessage = "Deployment timed out - attempting rollback..."
-			rollback()
+			err = fmt.Errorf("deployment was not able to start pods after %s", timeout)
+			log.Warn("deployment timed out - attempting rollback...")
+			rollbackErr := p.Rollback(context.Background(), log, &result, ui)
+			if rollbackErr != nil {
+				log.Error(fmt.Sprintf("deployment rollback failed with with error: %s", rollbackErr.Error()))
+			}
+			log.Warn("deployment rollback successful")
 		}
 		return nil, err
 	}
@@ -494,6 +501,23 @@ func (p *Platform) Destroy(
 	}
 
 	step.Done()
+	return nil
+}
+
+func (p *Platform) Rollback(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) error {
+	log.Warn("rollback attempting to destroy deployment...")
+
+	destroyErr := p.Destroy(ctx, log, deployment, ui)
+	if destroyErr != nil {
+		log.Error(fmt.Sprintf("rollback destroy failed with err: %+v", destroyErr))
+	}
+
+	log.Warn("rollback destroy successful")
 	return nil
 }
 
