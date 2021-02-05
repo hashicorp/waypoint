@@ -46,13 +46,13 @@ the kubernetes platform!
 
 #### Manual
 
-_this section is a work in progress_
-
-1) kind create cluster --config configs/cluster-config.yaml
-2) kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
-3) kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
-4) kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
-5) Get docker subnet from networked container `docker ps -a`, then `docker inspect <container_id>`, and update metallb addresses range in `configs/metallb-config.yaml` to represent your local docker subnet
+1) docker run -d --restart=always -p "127.0.0.1:5000:5000" --name "kind-registry"
+2) kind create cluster --config configs/cluster-config.yaml
+3) docker network connect "kind" "kind-registry"
+4) kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
+5) kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+6) kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+7) Get docker subnet from networked container `docker ps -a`, then `docker inspect <container_id>`, and update metallb addresses range in `configs/metallb-config.yaml` to represent your local docker subnet
   * `docker ps -a`
   ```
   CONTAINER ID        IMAGE                  COMMAND                  CREATED             STATUS              PORTS                       NAMES
@@ -65,7 +65,7 @@ _this section is a work in progress_
   * `docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' CONTAINER_ID_GOES_HERE`
   * Update the range inside the `configs/metallb-config.yaml` file. If your
   container IP Address was `172.18.0.4` for example, you might set the range to `172.18.0.20-172.18.0.50`.
-6) kubectl apply -f configs/metallb-config.yaml
+8) kubectl apply -f configs/metallb-config.yaml
 
 ### Setup waypoint
 
