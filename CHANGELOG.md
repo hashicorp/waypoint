@@ -1,3 +1,15 @@
+## unreleased
+
+FEATURES:
+
+* cli: New `waypoint fmt` command will autoformat your `waypoint.hcl` files [GH-1037]
+
+IMPROVEMENTS:
+
+* plugin/docker: support for building, pulling, and pushing Docker images without a Docker daemon available. [GH-970]
+
+BUG FIXES:
+
 ## 0.2.1 (February 02, 2021)
 
 FEATURES:
