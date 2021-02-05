@@ -21,4 +21,13 @@
   .pds-toggleLabel {
     padding-left: scale.$sm-1;;
   }
+
+  .pds-formRadioWrapper {
+    display: flex;
+    flex-direction: row;
+
+    .pds-radioField {
+      margin-right: scale.$lg-1;
+    }
+  }
 }

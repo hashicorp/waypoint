@@ -35,6 +35,13 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     return this.project.dataSource;
   }
 
+  get authCase() {
+    return this.project.dataSource?.git?.authCase;
+  }
+
+  set authCase(val) {
+    this.project.dataSource['git']['authCase'] = val
+  }
 
   get git() {
     return this.dataSource?.git || {};
@@ -42,7 +49,6 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
 
   set git(args) {
     this.project.dataSource.git = args
-    debugger;
   }
 
   setGitData(prop: string, value: any) {
@@ -65,6 +71,11 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   @action
   setGitRef(e: any) {
     this.setGitData('ref', e.target.value)
+  }
+
+  @action
+  setAuthCase(val:any) {
+    this.authCase = val;
   }
 
   @action
