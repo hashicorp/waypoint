@@ -8,6 +8,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* cli/hostname: fix panic with no hostname arg specified [GH-1044]
+
 
 ## 0.2.1 (February 02, 2021)
 
