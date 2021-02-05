@@ -366,7 +366,7 @@ func (p *Platform) Deploy(
 		reportedError bool
 	)
 
-	timeout := 30 * time.Second
+	timeout := 10 * time.Minute
 
 	cancelMu := &sync.Mutex{}
 	pollingComplete := false
