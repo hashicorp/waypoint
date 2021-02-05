@@ -221,6 +221,15 @@ service Waypoint {
   rpc EntrypointExecStream(stream EntrypointExecRequest) returns (stream EntrypointExecResponse);
 
   //----------------------------------------------------------------------
+  // Waypoint.hcl functions. These endpoints don't modify any server state,
+  // they're conveniences to build tools on top of Waypoint.
+  //----------------------------------------------------------------------
+
+  // WaypointHclFmt formats a waypoint.hcl file. This must be in HCL format.
+  // JSON formatting is not supported.
+  rpc WaypointHclFmt(WaypointHclFmtRequest) returns (WaypointHclFmtResponse);
+
+  //----------------------------------------------------------------------
   // Internal metadata endpoints. The endpoints below are expected to be
   // called for internal bookkeeping only. They should be avoided for general
   // API clients since they can be used to damage internal state.
@@ -2474,4 +2483,16 @@ message Snapshot {
     // final is true if this is the last bolt chunk being written.
     bool final = 3;
   }
+}
+
+/********************************************************************
+* Waypoint.hcl Helpers
+********************************************************************/
+
+message WaypointHclFmtRequest {
+  bytes waypoint_hcl = 1;
+}
+
+message WaypointHclFmtResponse {
+  bytes waypoint_hcl = 1;
 }

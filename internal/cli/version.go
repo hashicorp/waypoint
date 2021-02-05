@@ -51,6 +51,7 @@ func (c *VersionCommand) Synopsis() string {
 func (c *VersionCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint version
+
   Prints the version of this Waypoint CLI.
 
   There are no arguments or flags to this command. Any additional arguments or
