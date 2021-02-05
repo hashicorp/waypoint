@@ -3,7 +3,7 @@
     <h1>{{@model.name}}</h1>
     <small>{{pluralize @model.applicationsList.length "application"}}</small>
   </div>
-  <LinkTo @route="workspace.projects.project.settings" @model={{@model}}><Pds::Icon @type="settings"/>Settings </LinkTo>
+  <LinkTo @route="workspace.projects.project.settings" @model={{@model}}><Pds::Icon @type="settings"/> Settings </LinkTo>
 </PageHeader>
 
 {{#each @model.applicationsList as |app|}}

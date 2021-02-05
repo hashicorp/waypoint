@@ -5,67 +5,6 @@
 </PageHeader>
 
 <h2>Git settings</h2>
-<form class="pds-form">
-  <div part="fields">
-    <fieldset class="pds-formFieldSet">
-      <div class="pds-formField">
-        <label for="git-source-url" class="pds-fieldName">
-          Git Source URL
-        </label>
-        <Pds::Input
-          @type="text"
-          aria-describedby="{HELP_ID} {ERROR_ID}"
-          id="git-source-url"
-          placeholder="https://github.com/mycompany/awesome-project"
-        />
-      </div>
-      <div class="pds-formField">
-        <label for="git-source-ref" class="pds-fieldName">
-          Git Ref
-        </label>
-        <Pds::Input
-          @type="text"
-          aria-describedby="{HELP_ID} {ERROR_ID}"
-          id="git-source-ref"
-          placeholder="main"
-        />
-      </div>
-      <div class="pds-formField">
-        <label for="git-source-path" class="pds-fieldName">
-          Git Source Path
-        </label>
-        <Pds::Input
-          @type="text"
-          aria-describedby="{HELP_ID} {ERROR_ID}"
-          id="git-source-path"
-          placeholder="/my-project-path"
-        />
-      </div>
-      <div class="pds-formField">
-         <label class="pds-fieldName">
-          Automated Sync
-        </label>
-        <div class="pds-formFieldToggle">
-          <XToggle
-            @showLabels={{true}}
-            @name="git-sync-enabled"
-            @value={{this.syncEnabled}}
-            @onToggle={{fn (mut this.syncEnabled)}} as |toggle|>
-            <toggle.switch/>
-
-            <toggle.label for="git-sync-enabled">
-              <span class="pds-toggleLabel">
-                Enable automated deployment on changes
-              </span>
-            </toggle.label>
-          </XToggle>
-
-        </div>
-      </div>
-    </fieldset>
-  </div>
-
-  <Pds::Button @variant="primary">Apply</Pds::Button>
-</form>
+<AppForm::ProjectSettings @project={{this.model}}/>
 
 {{outlet}}
