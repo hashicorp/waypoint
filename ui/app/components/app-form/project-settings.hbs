@@ -41,6 +41,27 @@
         />
       </div>
       <div class="pds-formField">
+        <label for="git-auth-type" class="pds-fieldName">
+          Authentication
+        </label>
+        <div class="pds-formRadioWrapper">
+          <Pds::RadioField
+            @id="git-auth-ssh"
+            name="git-auth-type"
+            {{on "input" (fn this.setAuthCase 5)}}
+          >
+            SSH
+          </Pds::RadioField>
+          <Pds::RadioField
+            @id="git-auth-basic"
+            name="git-auth-type"
+            {{on "input" (fn this.setAuthCase 4)}}
+          >
+            Username &amp; Password
+          </Pds::RadioField>
+        </div>
+      </div>
+      <div class="pds-formField">
          <label class="pds-fieldName">
           Automated Sync
         </label>
