@@ -187,11 +187,21 @@ func (p *Platform) Deploy(
 		cfg.Env = append(cfg.Env, k+"="+v)
 	}
 
-	cfg.Labels = map[string]string{
+	defaultLabels := map[string]string{
 		labelId:     result.Id,
 		"app":       src.App,
 		"workspace": job.Workspace,
 	}
+
+	if p.config.Labels != nil {
+		for k, v := range defaultLabels {
+			p.config.Labels[k] = v
+		}
+	} else {
+		p.config.Labels = defaultLabels
+	}
+
+	cfg.Labels = p.config.Labels
 
 	name := src.App + "-" + id
 
@@ -366,6 +376,12 @@ type PlatformConfig struct {
 	// Force pull the image from the remote repository
 	ForcePull bool `hcl:"force_pull,optional"`
 
+	// A map of key/value pairs, stored in docker as a string. Each key/value pair must
+	// be unique. Validiation occurs at the docker layer, not in Waypoint. Label
+	// keys are alphanumeric strings which may contain periods (.) and hyphens (-).
+	// See the docker docs for more info: https://docs.docker.com/config/labels-custom-metadata/
+	Labels map[string]string `hcl:"labels,optional"`
+
 	// A path to a directory that will be created for the service to store
 	// temporary data.
 	ScratchSpace string `hcl:"scratch_path,optional"`
@@ -423,6 +439,16 @@ deploy {
 		"command",
 		"the command to run to start the application in the container",
 		docs.Default("the image entrypoint"),
+	)
+
+	doc.SetField(
+		"labels",
+		"A map of key/value pairs to label the docker container with.",
+		docs.Summary(
+			"A map of key/value pair(s), stored in docker as a string. Each key/value pair must",
+			"be unique. Validiation occurs at the docker layer, not in Waypoint. Label",
+			"keys are alphanumeric strings which may contain periods (.) and hyphens (-).",
+		),
 	)
 
 	doc.SetField(
