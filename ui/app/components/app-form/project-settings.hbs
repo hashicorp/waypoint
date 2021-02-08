@@ -48,6 +48,8 @@
           <Pds::RadioField
             @id="git-auth-ssh"
             name="git-auth-type"
+            value={{5}}
+            checked={{eq this.authCase 5}}
             {{on "input" (fn this.setAuthCase 5)}}
           >
             SSH
@@ -55,22 +57,66 @@
           <Pds::RadioField
             @id="git-auth-basic"
             name="git-auth-type"
+            value={{4}}
+            checked={{eq this.authCase 4}}
             {{on "input" (fn this.setAuthCase 4)}}
           >
             Username &amp; Password
           </Pds::RadioField>
         </div>
       </div>
+      {{#if this.authSSH}}
+        <div class="pds-formField">
+          <label for="git-source-ssh" class="pds-fieldName">
+            SSH Key
+          </label>
+          <Pds::Textarea
+            aria-describedby="{HELP_ID} {ERROR_ID}"
+            id="git-source-ssh"
+            placeholder="*****************"
+            value={{this.git.ssh.privateKeyPem}}
+            {{on "change" this.setGitSSH value="target.value"}}
+          />
+        </div>
+      {{else if this.authBasic}}
+        <div class="pds-formField">
+          <label for="git-source-username" class="pds-fieldName">
+            Username
+          </label>
+          <Pds::Input
+            @type="text"
+            aria-describedby="{HELP_ID} {ERROR_ID}"
+            id="git-source-user"
+            placeholder="mitchellh"
+            value={{this.git.basic.username}}
+            {{on "change" this.setGitUsername value="target.value"}}
+          />
+        </div>
+        <div class="pds-formField">
+          <label for="git-source-password" class="pds-fieldName">
+            Password
+          </label>
+          <Pds::Input
+            @type="password"
+            aria-describedby="{HELP_ID} {ERROR_ID}"
+            id="git-source-password"
+            placeholder="**********"
+            value={{this.git.basic.password}}
+            {{on "change" this.setGitPassword value="target.value"}}
+          />
+        </div>
+      {{/if}}
+
       <div class="pds-formField">
-         <label class="pds-fieldName">
+        <label class="pds-fieldName">
           Automated Sync
         </label>
         <div class="pds-formFieldToggle">
           <XToggle
             @showLabels={{true}}
             @name="git-sync-enabled"
-            @value={{@project.remoteEnabled}}
-            @onToggle={{fn (mut @project.remoteEnabled)}} as |toggle|>
+            @value={{this.project.remoteEnabled}}
+            @onToggle={{fn (mut this.project.remoteEnabled)}} as |toggle|>
             <toggle.switch/>
 
             <toggle.label for="git-sync-enabled">
