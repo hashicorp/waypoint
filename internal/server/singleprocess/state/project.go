@@ -89,6 +89,27 @@ func (s *State) ProjectList() ([]*pb.Ref_Project, error) {
 	return s.projectList(memTxn)
 }
 
+// ProjectUpdateDataRef updates the latest data ref used for a project.
+// This data is available via the APIs for querying workspaces.
+func (s *State) ProjectUpdateDataRef(
+	ref *pb.Ref_Project,
+	ws *pb.Ref_Workspace,
+	dataRef *pb.Job_DataSource_Ref,
+) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	err := s.db.Update(func(dbTxn *bolt.Tx) error {
+		return s.workspaceUpdateProjectDataRef(dbTxn, memTxn, ws, ref, dataRef)
+	})
+	if err != nil {
+		return err
+	}
+
+	memTxn.Commit()
+	return nil
+}
+
 func (s *State) projectGetOrCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, ref *pb.Ref_Project) (*pb.Project, error) {
 	result, err := s.projectGet(dbTxn, memTxn, ref)
 	if status.Code(err) == codes.NotFound {
