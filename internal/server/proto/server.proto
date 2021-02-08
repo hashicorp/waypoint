@@ -579,7 +579,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 61 to 99; // future operation range
+  reserved 62 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -631,6 +631,7 @@ message Job {
     DocsOp docs = 58;
     ConfigSyncOp config_sync = 59;
     ExecOp exec = 60;
+    UpOp up = 61;
   }
 
   //-----------------------------------------------------------------
@@ -694,6 +695,7 @@ message Job {
     AuthResult auth = 6;
     DocsResult docs = 7;
     ConfigSyncResult config_sync = 8;
+    UpResult up = 9;
   }
 
   message DataSource {
@@ -788,6 +790,39 @@ message Job {
   // A noop may be useful outside of testing to verify a runner is
   // executing properly or can access data properly.
   message Noop {}
+
+  // UpOp runs the "waypoint up" logic: it does a build (with push),
+  // deploy, and release all in one. The results for each child operation
+  // will be set directly on the Release message (i.e. "build" will be
+  // populated in addition to "up").
+  message UpOp {}
+
+  // UpResult is the result of an UpOp. Because "up" calls other operations,
+  // the Result message will set the build, deploy, push, and release results.
+  message UpResult {
+    // release_url is the equivalent of Release.Url. This is the URL that
+    // the release plugin generates directly from the platform. For example,
+    // on AWS this might be an ALB addr, on K8S this might be a load balancer
+    // addr, etc.
+    //
+    // This can be empty if the release plugin does not support getting a URL.
+    string release_url = 1;
+
+    // app_url is the HashiCorp URL service URL for the entire application.
+    // Example: mistakenly-crucial-malamute.waypoint.run. If there are multiple
+    // hostnames registered for the application, this always picks the first one.
+    //
+    // This can be blank if the URL service is disabled or errored.
+    string app_url = 2;
+
+    // deploy_url is the HashiCorp URL service URL for this specific deploy.
+    // Example: mistakenly-crucial-malamute--v1.waypoint.run. Similar to app_url,
+    // if there are multiple registered hostnames for the application, this
+    // always picks the first one.
+    //
+    // This can be blank if the URL service is disabled or errored.
+    string deploy_url = 3;
+  }
 
   // ValidateOp validates various aspects of a configuration.
   message ValidateOp {}

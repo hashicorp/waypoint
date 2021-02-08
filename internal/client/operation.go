@@ -65,6 +65,27 @@ func (c *App) Docs(ctx context.Context, op *pb.Job_DocsOp) (*pb.Job_DocsResult, 
 	return result.Docs, nil
 }
 
+func (c *App) Up(ctx context.Context, op *pb.Job_UpOp) (*pb.Job_Result, error) {
+	if op == nil {
+		op = &pb.Job_UpOp{}
+	}
+
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_Up{
+		Up: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the full result struct since Up populates multiple fields.
+	return result, nil
+}
+
 func (c *App) Build(ctx context.Context, op *pb.Job_BuildOp) (*pb.Job_BuildResult, error) {
 	if op == nil {
 		op = &pb.Job_BuildOp{}
