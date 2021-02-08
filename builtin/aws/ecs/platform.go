@@ -1138,7 +1138,7 @@ func (p *Platform) Destroy(
 		for _, listener := range listeners.Listeners {
 			log.Debug("listener arn", "arn", *listener.ListenerArn)
 
-			if listener.DefaultActions == nil || listener.DefaultActions[0].ForwardConfig == nil {
+			if len(listener.DefaultActions) == 0 || listener.DefaultActions[0].ForwardConfig == nil {
 				continue
 			}
 
