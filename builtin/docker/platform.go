@@ -173,6 +173,9 @@ func (p *Platform) Deploy(
 		PortBindings: bindings,
 	}
 
+	// Containers can only be connected to 1 network at creation time
+	// Additional user defined networks will be connected after container is
+	// created.
 	netconfig := network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
 			"waypoint": {},
@@ -208,6 +211,23 @@ func (p *Platform) Deploy(
 	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, name)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unable to create Docker container: %s", err)
+	}
+
+	// Additional networks must be connected after container is created
+	if p.config.Networks != nil {
+		s.Update("Connecting additional networks to container...")
+		for _, net := range p.config.Networks {
+			err = cli.NetworkConnect(ctx, net, cr.ID, &network.EndpointSettings{})
+			if err != nil {
+				s.Update("Failed to connect additional network")
+				s.Status(terminal.StatusError)
+				s.Done()
+				return nil, status.Errorf(
+					codes.Internal,
+					"unable to connect container to additional networks: %s",
+					err)
+			}
+		}
 	}
 
 	s.Update("Starting container")
@@ -382,6 +402,9 @@ type PlatformConfig struct {
 	// See the docker docs for more info: https://docs.docker.com/config/labels-custom-metadata/
 	Labels map[string]string `hcl:"labels,optional"`
 
+	// An array of strings with network names to connect the container to
+	Networks []string `hcl:"networks,optional"`
+
 	// A path to a directory that will be created for the service to store
 	// temporary data.
 	ScratchSpace string `hcl:"scratch_path,optional"`
@@ -448,6 +471,16 @@ deploy {
 			"A map of key/value pair(s), stored in docker as a string. Each key/value pair must",
 			"be unique. Validiation occurs at the docker layer, not in Waypoint. Label",
 			"keys are alphanumeric strings which may contain periods (.) and hyphens (-).",
+		),
+	)
+
+	doc.SetField(
+		"networks",
+		"An list of strings with network names to connect the container to.",
+		docs.Default("waypoint"),
+		docs.Summary(
+			"A list of networks to connect the container to. By default the container",
+			"will always connect to the `waypoint` network.",
 		),
 	)
 
