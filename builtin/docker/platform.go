@@ -350,10 +350,21 @@ func makeImageCanonical(image string) string {
 
 // Config is the configuration structure for the Platform.
 type PlatformConfig struct {
+	// ClientConfig allow the user to specify the connection to the Docker
+	// engine. By default we try to load this from env vars:
+	// DOCKER_HOST to set the url to the docker server.
+	// DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
+	// DOCKER_CERT_PATH to load the TLS certificates from.
+	// DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
+	ClientConfig *ClientConfig `hcl:"client_config,block"`
+
 	// The command to run in the container. This is an array of arguments
 	// that are executed directly. These are not executed in the context of
 	// a shell. If you want to use a shell, add that to this command manually.
 	Command []string `hcl:"command,optional"`
+
+	// Force pull the image from the remote repository
+	ForcePull bool `hcl:"force_pull,optional"`
 
 	// A path to a directory that will be created for the service to store
 	// temporary data.
@@ -370,17 +381,6 @@ type PlatformConfig struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
-
-	// Force pull the image from the remote repository
-	ForcePull bool `hcl:"force_pull,optional"`
-
-	// ClientConfig allow the user to specify the connection to the Docker
-	// engine. By default we try to load this from env vars:
-	// DOCKER_HOST to set the url to the docker server.
-	// DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
-	// DOCKER_CERT_PATH to load the TLS certificates from.
-	// DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
-	ClientConfig *ClientConfig `hcl:"client_config,block"`
 }
 
 type ClientConfig struct {
