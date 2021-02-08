@@ -4,6 +4,7 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* builtin/docker: Add Binds, Labels and Networks config options for deploy [GH-1065]
 * cli/main: Add -version flag for CLI version [GH-1049]
 
 BUG FIXES:
