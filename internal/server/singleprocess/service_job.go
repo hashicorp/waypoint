@@ -70,6 +70,12 @@ func (s *service) QueueJob(
 	if job == nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "job must be set")
 	}
+	if job.Operation == nil {
+		// We special case this check and return "Unimplemented" because
+		// the primary case where operation is nil is if a client is sending
+		// us an unsupported operation.
+		return nil, status.Errorf(codes.Unimplemented, "operation is nil or unknown")
+	}
 	if err := serverptypes.ValidateJob(job); err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
 	}
