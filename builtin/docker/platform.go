@@ -168,8 +168,14 @@ func (p *Platform) Deploy(
 		},
 	}
 
+	// default container binds
+	containerBinds := []string{src.App + "-scratch" + ":/input"}
+	if p.config.Binds != nil {
+		containerBinds = append(containerBinds, p.config.Binds...)
+	}
+
 	hostconfig := container.HostConfig{
-		Binds:        []string{src.App + "-scratch" + ":/input"},
+		Binds:        containerBinds,
 		PortBindings: bindings,
 	}
 
@@ -380,6 +386,9 @@ func makeImageCanonical(image string) string {
 
 // Config is the configuration structure for the Platform.
 type PlatformConfig struct {
+	// A list of folders to mount to the container.
+	Binds []string `hcl:"binds,optional"`
+
 	// ClientConfig allow the user to specify the connection to the Docker
 	// engine. By default we try to load this from env vars:
 	// DOCKER_HOST to set the url to the docker server.
@@ -457,6 +466,16 @@ deploy {
 
 	doc.Input("docker.Image")
 	doc.Output("docker.Deployment")
+
+	doc.SetField(
+		"binds",
+		"A 'source:destination' list of folders to mount onto the container from the host.",
+		docs.Summary(
+			"A list of folders to mount onto the container from the host. The expected",
+			"format for each string entry in the list is `source:destination`. So",
+			"for example: `binds: [\"host_folder/scripts:/scripts\"]",
+		),
+	)
 
 	doc.SetField(
 		"command",
