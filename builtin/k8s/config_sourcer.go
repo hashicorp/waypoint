@@ -129,22 +129,25 @@ func (cs *ConfigSourcer) read(
 
 		case *corev1.Secret:
 			var secretValue []byte
-
 			secretValue, ok = d.Data[k8sReq.Key]
-			sEnc := base64.StdEncoding.EncodeToString(secretValue)
-			decValue, err := base64.StdEncoding.DecodeString(sEnc)
-			if err != nil {
-				L.Trace("failed to decode secret: ", err)
-				result.Result = &pb.ConfigSource_Value_Error{
-					Error: status.New(codes.Aborted, err.Error()).Proto(),
+
+			if ok {
+				// Encode secretValue byte array into string so that it can be decoded
+				// and returned as string for k8s config
+				sEnc := base64.StdEncoding.EncodeToString(secretValue)
+				decValue, err := base64.StdEncoding.DecodeString(sEnc)
+				if err != nil {
+					L.Trace("failed to decode secret: ", err)
+					result.Result = &pb.ConfigSource_Value_Error{
+						Error: status.New(codes.Aborted, err.Error()).Proto(),
+					}
+
+					// break from outer loop early since we err decoding key, but key was found in Secret
+					continue
 				}
 
-				// break from outer loop early since we err decoding key, but key was found in Secret
-				continue
+				value = string(decValue)
 			}
-
-			value = string(decValue)
-			ok = true //ensure ok is true, since we've found a decoded value
 
 		default:
 			ok = false
