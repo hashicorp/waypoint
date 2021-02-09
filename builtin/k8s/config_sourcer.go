@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	base64 "encoding/base64"
 	"math"
 	"math/rand"
 	"sync"
@@ -125,6 +126,25 @@ func (cs *ConfigSourcer) read(
 		switch d := cachedSecretVal.Data.(type) {
 		case *corev1.ConfigMap:
 			value, ok = d.Data[k8sReq.Key]
+
+		case *corev1.Secret:
+			var secretValue []byte
+
+			secretValue, ok = d.Data[k8sReq.Key]
+			sEnc := base64.StdEncoding.EncodeToString(secretValue)
+			decValue, err := base64.StdEncoding.DecodeString(sEnc)
+			if err != nil {
+				L.Trace("failed to decode secret: ", err)
+				result.Result = &pb.ConfigSource_Value_Error{
+					Error: status.New(codes.Aborted, err.Error()).Proto(),
+				}
+
+				// break from outer loop early since we err decoding key, but key was found in Secret
+				continue
+			}
+
+			value = string(decValue)
+			ok = true //ensure ok is true, since we've found a decoded value
 
 		default:
 			ok = false
