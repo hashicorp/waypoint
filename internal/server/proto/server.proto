@@ -306,6 +306,15 @@ message Project {
   // set using the `runner {}` block in the waypoint config.
   Job.DataSource data_source = 4;
 
+  // Polling settings. Polling will trigger a "waypoint up" whenever a
+  // new data is detected on the data source. For now, polling is only done
+  // on the `default` workspace. A future version of Waypoint will expand
+  // polling to other workspaces.
+  //
+  // Each polling event is tracked as a separate job. You can query the
+  // poll operations and their success/failure by using the ListJobs API.
+  Poll data_source_poll = 7;
+
   // The contents of a default waypoint.hcl file. This will be used ONLY IF
   // this project does not have a waypoint.hcl file when an operation is
   // executed. When this is used, local operations can't be run any more
@@ -318,6 +327,16 @@ message Project {
   enum Format {
     HCL = 0; // We assume HCL by default
     JSON = 1;
+  }
+
+  message Poll {
+    // enabled must be set to true to enable polling.
+    bool enabled = 1;
+
+    // interval is a duration string of how often to poll, such as "5s".
+    // The server may enforce minimum values, in which case a value lower
+    // than the minimum will be ignored.
+    string interval = 2;
   }
 }
 
