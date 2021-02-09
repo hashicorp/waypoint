@@ -54,6 +54,135 @@ func TestRunnerAccept(t *testing.T) {
 	require.Equal(pb.Job_SUCCESS, job.State)
 }
 
+func TestRunnerAccept_closeCancelesAccept(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Setup our runner
+	client := singleprocess.TestServer(t)
+	runner := TestRunner(t, WithClient(client))
+	require.NoError(runner.Start())
+
+	// Initialize our app
+	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	done := make(chan struct{})
+
+	go func() {
+		if runner.Accept(ctx) != context.Canceled {
+			close(done)
+		}
+	}()
+
+	// To allow Accept to block on waiting for a job
+	time.Sleep(time.Second)
+
+	require.NoError(runner.Close())
+
+	select {
+	case <-done:
+		// ok
+	case <-ctx.Done():
+		t.Error("close did not cancel accept")
+	}
+}
+
+func TestRunnerAccept_closeHoldingJob(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Setup our runner
+	client := singleprocess.TestServer(t)
+	runner := TestRunner(t, WithClient(client))
+	require.NoError(runner.Start())
+
+	// Initialize our app
+	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Queue a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(err)
+	jobId := queueResp.JobId
+
+	go func() {
+		time.Sleep(time.Second)
+		runner.Close()
+		runner.logger.Info("runner closed")
+	}()
+
+	testRecvDelay = 2 * time.Second
+	defer func() {
+		testRecvDelay = 0
+	}()
+
+	// Accept should error, seeing the runner shutdown
+	err = runner.Accept(ctx)
+	require.Error(err)
+
+	require.Contains(err.Error(), jobId)
+
+	// Verify that the job is completed
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
+	require.NoError(err)
+	require.Equal(pb.Job_QUEUED, job.State, job.State.String())
+}
+
+func TestRunnerAccept_closeWaits(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Setup our runner
+	client := singleprocess.TestServer(t)
+	runner := TestRunner(t, WithClient(client))
+	require.NoError(runner.Start())
+
+	// Initialize our app
+	singleprocess.TestApp(t, client, serverptypes.TestJobNew(t, nil).Application)
+
+	// Queue a job
+	queueResp, err := client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: serverptypes.TestJobNew(t, nil),
+	})
+	require.NoError(err)
+	jobId := queueResp.JobId
+
+	noopCh := make(chan struct{})
+	runner.noopCh = noopCh
+
+	go func() {
+		err := runner.Accept(ctx)
+		runner.logger.Error("error in accept", "error", err)
+	}()
+
+	// To allow Accept to block on noopCh while executing the job
+	time.Sleep(time.Second)
+
+	time.AfterFunc(2*time.Second, func() {
+		close(noopCh)
+	})
+
+	runner.runningMu.Lock()
+	count := runner.runningJobs
+	runner.runningMu.Unlock()
+
+	require.Equal(1, count)
+
+	ts := time.Now()
+	require.NoError(runner.Close())
+	dur := time.Since(ts)
+
+	require.True(dur >= 2*time.Second, dur.String())
+
+	// Verify that the job is completed
+	job, err := client.GetJob(ctx, &pb.GetJobRequest{JobId: jobId})
+	require.NoError(err)
+	require.Equal(pb.Job_SUCCESS, job.State, job.State.String())
+}
+
 func TestRunnerAccept_cancelContext(t *testing.T) {
 	require := require.New(t)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -81,7 +210,7 @@ func TestRunnerAccept_cancelContext(t *testing.T) {
 	// we'll block no matter what.
 	time.AfterFunc(500*time.Millisecond, cancel)
 
-	// Accept should complete with an error
+	// Accept should complete with no error
 	require.NoError(runner.Accept(ctx))
 
 	// Verify that the job is completed

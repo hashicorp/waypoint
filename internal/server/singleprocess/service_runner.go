@@ -214,10 +214,12 @@ func (s *service) RunnerJobStream(
 				err = status.Errorf(codes.FailedPrecondition,
 					"ack expected, got: %T", req.Event)
 			}
+		} else {
+			ack = false
 		}
 	}
 
-	// Send the ack.
+	// Send the ack OR nack, based on the value of +ack+.
 	job, ackerr := s.state.JobAck(job.Id, ack)
 	if ackerr != nil {
 		// If this fails, we just log, there is nothing more we can do.
