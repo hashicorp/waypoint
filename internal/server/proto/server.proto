@@ -598,7 +598,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 62 to 99; // future operation range
+  reserved 63 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -651,6 +651,7 @@ message Job {
     ConfigSyncOp config_sync = 59;
     ExecOp exec = 60;
     UpOp up = 61;
+    PollOp poll = 62;
   }
 
   //-----------------------------------------------------------------
@@ -974,6 +975,20 @@ message Job {
   message ConfigSyncOp {}
 
   message ConfigSyncResult {}
+
+  // PollOp triggers a poll action for a project. The job will fail if there
+  // is no data source configured for the project.
+  //
+  // A poll operation can be queued even if a project has polling disabled.
+  // If a project has polling enabled, a manually queued poll operation will
+  // have no effect on the poll timer or intervals.
+  message PollOp {
+    // NOTE(mitchellh): In the future I think we could have options here
+    // to poll only specific workspaces or the full project or whatever.
+    // At the time of writing this, we only support single workspace anyways.
+  }
+
+  message PollResult {}
 }
 
 message Documentation {
