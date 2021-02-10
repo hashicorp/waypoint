@@ -9,8 +9,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* builtin/k8s: Handle application config sync with K8s and Secrets [GH-1073]
 * cli/hostname: fix panic with no hostname arg specified [GH-1044]
-
 
 ## 0.2.1 (February 02, 2021)
 
