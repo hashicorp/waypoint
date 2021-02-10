@@ -36,7 +36,7 @@ type Project struct {
 	// in a goroutine.
 	wg           sync.WaitGroup
 	bg           context.Context
-	cancel       func()
+	bgCancel     func()
 	activeRunner *runner.Runner
 }
 
@@ -63,7 +63,7 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 	}
 
 	// Used by any background goroutines that we'll spawn (like runner job processing)
-	client.bg, client.cancel = context.WithCancel(context.Background())
+	client.bg, client.bgCancel = context.WithCancel(context.Background())
 
 	// If a client was explicitly provided, we use that. Otherwise, we
 	// have to establish a connection either through the serverclient
@@ -142,7 +142,7 @@ func (c *Project) Close() error {
 	}
 
 	// Forces any background goroutines to stop
-	c.cancel()
+	c.bgCancel()
 
 	// Now wait on those goroutines to finish up.
 	c.wg.Wait()
