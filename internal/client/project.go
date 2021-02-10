@@ -2,10 +2,12 @@ package client
 
 import (
 	"context"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
 )
@@ -29,6 +31,13 @@ type Project struct {
 	local bool
 
 	localServer bool // True when a local server is created
+
+	// These are used to manage a local runner and it's job processing
+	// in a goroutine.
+	wg           sync.WaitGroup
+	bg           context.Context
+	cancel       func()
+	activeRunner *runner.Runner
 }
 
 // New initializes a new client.
@@ -53,6 +62,9 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 		}
 	}
 
+	// Used by any background goroutines that we'll spawn (like runner job processing)
+	client.bg, client.cancel = context.WithCancel(context.Background())
+
 	// If a client was explicitly provided, we use that. Otherwise, we
 	// have to establish a connection either through the serverclient
 	// package or spinning up an in-process server.
@@ -73,6 +85,27 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 	// Default workspace if not specified
 	if client.workspace == nil {
 		client.workspace = &pb.Ref_Workspace{Workspace: "default"}
+	}
+
+	if client.local {
+		client.logger.Debug("starting runner to process local jobs")
+		r, err := client.startRunner()
+		if err != nil {
+			return nil, err
+		}
+
+		client.activeRunner = r
+
+		// We spin up the job processing here. Anything that spawns jobs (either locally spawned
+		// or server spawned) will be processed by this runner ONLY if the runner is directly targetted.
+		// Because this runner's lifetime is bound to a CLI context and therefore transient, we don't
+		// want to accept jobs that aren't related to local activities (job's queued or RPCs made)
+		// because they'll hang the CLI randomly as those jobs run (it's also a security issue).
+		client.wg.Add(1)
+		go func() {
+			defer client.wg.Done()
+			r.AcceptMany(client.bg)
+		}()
 	}
 
 	return client, nil
@@ -100,6 +133,20 @@ func (c *Project) Local() bool {
 
 // Close should be called to clean up any resources that the client created.
 func (c *Project) Close() error {
+	// Stop the runner early so that it we block here waiting for any outstanding jobs to finish
+	// before closing down the rest of the resources.
+	if c.activeRunner != nil {
+		if err := c.activeRunner.Close(); err != nil {
+			c.logger.Error("error stopping runner", "error", err)
+		}
+	}
+
+	// Forces any background goroutines to stop
+	c.cancel()
+
+	// Now wait on those goroutines to finish up.
+	c.wg.Wait()
+
 	// Run any cleanup necessary
 	if f := c.cleanupFunc; f != nil {
 		f()

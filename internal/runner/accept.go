@@ -18,6 +18,26 @@ import (
 
 var heartbeatDuration = 5 * time.Second
 
+// AcceptMany will accept jobs and execute them on after another as they are accepted.
+// This is meant to be run in a goroutine and reports it's own errors via r's logger.
+func (r *Runner) AcceptMany(ctx context.Context) {
+	for {
+		if err := r.Accept(ctx); err != nil {
+			switch {
+			case err == ErrClosed:
+				return
+			case status.Code(err) == codes.Canceled:
+				// Ideally we'd get ErrClosed, but there are cases where we'll observe
+				// the context being closed first, in which case we honor that as a valid
+				// reason to stop accepting jobs.
+				return
+			default:
+				r.logger.Error("error running job", "error", err)
+			}
+		}
+	}
+}
+
 // Accept will accept and execute a single job. This will block until
 // a job is available.
 //
