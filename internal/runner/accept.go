@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/pkg/errors"
 )
 
 var heartbeatDuration = 5 * time.Second
@@ -38,8 +39,14 @@ func (r *Runner) AcceptExact(ctx context.Context, id string) error {
 	return r.accept(ctx, id)
 }
 
+var testRecvDelay time.Duration
+
 func (r *Runner) accept(ctx context.Context, id string) error {
-	if r.closed() {
+	r.runningCond.L.Lock()
+	shutdown := r.shutdown
+	r.runningCond.L.Unlock()
+
+	if shutdown {
 		return ErrClosed
 	}
 
@@ -49,7 +56,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// since if the context is cancelled we want to continue reporting
 	// errors.
 	log.Debug("opening job stream")
-	client, err := r.client.RunnerJobStream(context.Background())
+	client, err := r.client.RunnerJobStream(r.runningCtx)
 	if err != nil {
 		return err
 	}
@@ -69,6 +76,10 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 
 	// Wait for an assignment
 	log.Info("waiting for job assignment")
+
+	// NOTE: if r.runningCtx is canceled, because the runner has finished closing,
+	// any job sent won't be acked, but the server will see an error on waiting
+	// for us to ack the job, and auto-nack it.
 	resp, err := client.Recv()
 	if err != nil {
 		return err
@@ -84,12 +95,34 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	log = log.With("job_id", assignment.Assignment.Job.Id)
 	log.Info("job assignment received")
 
-	// We increment the waitgroup at this point since prior to this if we're
-	// forcefully quit, we shouldn't have acked. This is somewhat brittle so
-	// a todo here is to build a better notification mechanism that we've quit
-	// and exit here.
-	r.acceptWg.Add(1)
-	defer r.acceptWg.Done()
+	// Used to test the behavior of accepting a job while
+	// the runner is shutting down.
+	if testRecvDelay != 0 {
+		time.Sleep(testRecvDelay)
+	}
+
+	// We need to register ourselves as being worthy to be waited on
+	// since prior to this, if Close() were called, we could go ahead
+	// and return.
+
+	r.runningCond.L.Lock()
+	shutdown = r.shutdown
+	if !shutdown {
+		r.runningJobs++
+	}
+	r.runningCond.L.Unlock()
+
+	if shutdown {
+		return errors.Wrapf(ErrClosed, "runner shutdown, dropped job: %s", assignment.Assignment.Job.Id)
+	}
+
+	defer func() {
+		r.runningCond.L.Lock()
+		defer r.runningCond.L.Unlock()
+
+		r.runningJobs--
+		r.runningCond.Broadcast()
+	}()
 
 	// If this isn't the job we expected then we nack and error.
 	if id != "" {
