@@ -181,12 +181,17 @@ func (r *Runner) Close() error {
 	r.runningCond.L.Lock()
 	defer r.runningCond.L.Unlock()
 
+	// Wait for all the jobs to finish before we set the shutdown flag.
 	for r.runningJobs > 0 {
 		r.runningCond.Wait()
 	}
 
 	r.shutdown = true
 
+	// Cancel the context that is used by Accept to wait on the RunnerJobStream.
+	// This interrupts the Recv() call so that any goroutine running Accept()
+	// knows that the Runner is closed now and can exit, avoiding a
+	// goroutine leak.
 	r.runningCancel()
 
 	// Run any cleanup necessary
