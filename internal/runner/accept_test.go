@@ -165,9 +165,9 @@ func TestRunnerAccept_closeWaits(t *testing.T) {
 		close(noopCh)
 	})
 
-	runner.runningMu.Lock()
+	runner.runningCond.L.Lock()
 	count := runner.runningJobs
-	runner.runningMu.Unlock()
+	runner.runningCond.L.Unlock()
 
 	require.Equal(1, count)
 

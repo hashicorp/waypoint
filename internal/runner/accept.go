@@ -42,9 +42,9 @@ func (r *Runner) AcceptExact(ctx context.Context, id string) error {
 var testRecvDelay time.Duration
 
 func (r *Runner) accept(ctx context.Context, id string) error {
-	r.runningMu.Lock()
+	r.runningCond.L.Lock()
 	shutdown := r.shutdown
-	r.runningMu.Unlock()
+	r.runningCond.L.Unlock()
 
 	if shutdown {
 		return ErrClosed
@@ -105,12 +105,12 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// since prior to this, if Close() were called, we could go ahead
 	// and return.
 
-	r.runningMu.Lock()
+	r.runningCond.L.Lock()
 	shutdown = r.shutdown
 	if !shutdown {
 		r.runningJobs++
 	}
-	r.runningMu.Unlock()
+	r.runningCond.L.Unlock()
 
 	if shutdown {
 		return errors.Wrapf(ErrClosed, "runner shutdown, dropped job: %s", assignment.Assignment.Job.Id)

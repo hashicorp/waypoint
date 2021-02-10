@@ -51,7 +51,6 @@ type Runner struct {
 	tempDir     string
 
 	// protects whether or not the runner is active or not.
-	runningMu   sync.Mutex
 	runningCond *sync.Cond
 	shutdown    bool
 	runningJobs int
@@ -94,7 +93,7 @@ func New(opts ...Option) (*Runner, error) {
 		},
 	}
 
-	runner.runningCond = sync.NewCond(&runner.runningMu)
+	runner.runningCond = sync.NewCond(new(sync.Mutex))
 	runner.runningCtx, runner.runningCancel = context.WithCancel(context.Background())
 
 	// Build our config
