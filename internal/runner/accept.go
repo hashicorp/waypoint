@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -243,61 +244,15 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		}
 	}()
 
-	// We need to get our data source next prior to executing.
-	var result *pb.Job_Result
-	wd, ref, closer, err := r.downloadJobData(
-		ctx,
-		log,
-		ui,
-		assignment.Assignment.Job.DataSource,
-		assignment.Assignment.Job.DataSourceOverrides,
-	)
-	if err == nil {
-		log.Debug("job data downloaded (or local)",
-			"pwd", wd,
-			"ref", fmt.Sprintf("%#v", ref),
-		)
+	// The job stream setup is done. Actually run the job, download any
+	// data necessary, setup the core, etc
+	log.Info("starting job execution")
+	result, err := r.prepareAndExecuteJob(ctx, log, ui, &sendMutex, client, assignment.Assignment.Job)
+	log.Debug("job finished", "error", err)
 
-		if closer != nil {
-			defer func() {
-				log.Debug("cleaning up downloaded data")
-				if err := closer(); err != nil {
-					log.Warn("error cleaning up data", "err", err)
-				}
-			}()
-		}
-
-		// Send our download info
-		if ref != nil {
-			log.Debug("sending download event")
-
-			sendMutex.Lock()
-			err = client.Send(&pb.RunnerJobStreamRequest{
-				Event: &pb.RunnerJobStreamRequest_Download{
-					Download: &pb.GetJobStreamResponse_Download{
-						DataSourceRef: ref,
-					},
-				},
-			})
-			sendMutex.Unlock()
-		}
-
-		// We want the working directory to always be absolute.
-		if err == nil && !filepath.IsAbs(wd) {
-			err = status.Errorf(codes.Internal,
-				"data working directory should be absolute. This is a bug, please report it.")
-		}
-
-		if err == nil {
-			// Execute the job. We have to close the UI right afterwards to
-			// ensure that no more output is writting to the client.
-			log.Info("starting job execution")
-			result, err = r.executeJob(ctx, log, ui, assignment.Assignment.Job, wd)
-			if ui, ok := ui.(*runnerUI); ok {
-				ui.Close()
-			}
-			log.Debug("job finished", "error", err)
-		}
+	// We won't output anything else to the UI anymore.
+	if ui, ok := ui.(*runnerUI); ok {
+		ui.Close()
 	}
 
 	// Check if we were force canceled. If so, then just exit now. Realistically
@@ -359,4 +314,75 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	}
 
 	return err
+}
+
+func (r *Runner) prepareAndExecuteJob(
+	ctx context.Context,
+	log hclog.Logger,
+	ui terminal.UI,
+	sendMutex *sync.Mutex,
+	client pb.Waypoint_RunnerJobStreamClient,
+	job *pb.Job,
+) (*pb.Job_Result, error) {
+	// Some operation types don't need to download data, execute those here.
+	switch job.Operation.(type) {
+	case *pb.Job_Poll:
+		return r.executePollOp(ctx, log, job)
+	}
+
+	// We need to get our data source next prior to executing.
+	var result *pb.Job_Result
+	wd, ref, closer, err := r.downloadJobData(
+		ctx,
+		log,
+		ui,
+		job.DataSource,
+		job.DataSourceOverrides,
+	)
+	if err == nil {
+		log.Debug("job data downloaded (or local)",
+			"pwd", wd,
+			"ref", fmt.Sprintf("%#v", ref),
+		)
+
+		if closer != nil {
+			defer func() {
+				log.Debug("cleaning up downloaded data")
+				if err := closer(); err != nil {
+					log.Warn("error cleaning up data", "err", err)
+				}
+			}()
+		}
+
+		// Send our download info
+		if ref != nil {
+			log.Debug("sending download event")
+
+			sendMutex.Lock()
+			err = client.Send(&pb.RunnerJobStreamRequest{
+				Event: &pb.RunnerJobStreamRequest_Download{
+					Download: &pb.GetJobStreamResponse_Download{
+						DataSourceRef: ref,
+					},
+				},
+			})
+			sendMutex.Unlock()
+		}
+
+		// We want the working directory to always be absolute.
+		if err == nil && !filepath.IsAbs(wd) {
+			err = status.Errorf(codes.Internal,
+				"data working directory should be absolute. This is a bug, please report it.")
+		}
+
+		if err == nil {
+			// Execute the job. We have to close the UI right afterwards to
+			// ensure that no more output is writting to the client.
+			log.Info("starting job execution")
+			result, err = r.executeJob(ctx, log, ui, job, wd)
+			log.Debug("job finished", "error", err)
+		}
+	}
+
+	return result, err
 }
