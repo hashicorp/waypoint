@@ -81,6 +81,7 @@
     "ember-page-title": "^6.0.3",
     "ember-qunit": "^5.1.1",
     "ember-resolver": "^8.0.2",
+    "ember-set-helper": "^2.0.0",
     "ember-source": "~3.24.0",
     "ember-svg-jar": "^2.2.3",
     "ember-template-lint": "^2.15.0",
