@@ -7443,7 +7443,7 @@ ember-cli-babel@^7.1.3, ember-cli-babel@^7.10.0, ember-cli-babel@^7.11.1, ember-
     rimraf "^3.0.1"
     semver "^5.5.0"
 
-ember-cli-babel@^7.13.0, ember-cli-babel@^7.21.0, ember-cli-babel@^7.23.1:
+ember-cli-babel@^7.13.0, ember-cli-babel@^7.18.0, ember-cli-babel@^7.21.0, ember-cli-babel@^7.23.1:
   version "7.23.1"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-7.23.1.tgz#d1517228ede08a5d4b045c78a7429728e956b30b"
   integrity sha512-qYggmt3hRs6QJ6cRkww3ahMpyP8IEV2KFrIRO/Z6hu9MkE/8Y28Xd5NjQl6fPV3oLoG0vwuHzhNe3Jr7Wec8zw==
@@ -8276,6 +8276,14 @@ ember-router-generator@^2.0.0:
     "@babel/parser" "^7.4.5"
     "@babel/traverse" "^7.4.5"
     recast "^0.18.1"
+
+ember-set-helper@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/ember-set-helper/-/ember-set-helper-2.0.0.tgz#afdb6cf2f5750f6f69e38a387f19615560f30a0f"
+  integrity sha512-cnKbQEkPi+plRI9eWj76zt4pjRKM/PsKIlYP2ZcSI7R83c1Zig5DLDUft+1PJI/1/fnPGLB8s3E6hjFBQo+T9g==
+  dependencies:
+    ember-cli-babel "^7.18.0"
+    ember-cli-htmlbars "^4.2.3"
 
 ember-source-channel-url@^3.0.0:
   version "3.0.0"
