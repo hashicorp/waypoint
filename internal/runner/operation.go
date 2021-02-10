@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"reflect"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
@@ -126,6 +127,9 @@ func (r *Runner) executeJob(
 	defer project.Close()
 
 	// Execute the operation
+	//
+	// Note some operation types don't require downloaded data. These are
+	// not executed here but are executed in accept.go.
 	log.Info("executing operation", "type", fmt.Sprintf("%T", job.Operation))
 	switch job.Operation.(type) {
 	case *pb.Job_Noop_:
@@ -236,4 +240,12 @@ func (r *Runner) pluginFactories(
 	}
 
 	return result, perr
+}
+
+// operationNoDataFunc is the function type for operations that are
+// executed without data downloaded.
+type operationNoDataFunc func(*Runner, context.Context, hclog.Logger, *pb.Job) (*pb.Job_Result, error)
+
+var operationsNoData = map[reflect.Type]operationNoDataFunc{
+	reflect.TypeOf((*pb.Job_Poll)(nil)): nil,
 }
