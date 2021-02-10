@@ -79,7 +79,7 @@ func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.U
 		}
 	}
 
-	return c.queueAndStreamJob(ctx, job, ui, nil, monCh)
+	return c.queueAndStreamJob(ctx, job, ui, monCh)
 }
 
 // queueAndStreamJob will queue the job. If the client is configured to watch the job,
@@ -88,7 +88,6 @@ func (c *Project) queueAndStreamJob(
 	ctx context.Context,
 	job *pb.Job,
 	ui terminal.UI,
-	jobIdCallback func(string),
 	monCh chan pb.Job_State,
 ) (*pb.Job_Result, error) {
 	log := c.logger
@@ -111,11 +110,6 @@ func (c *Project) queueAndStreamJob(
 		return nil, err
 	}
 	log = log.With("job_id", queueResp.JobId)
-
-	// Call our callback if it was given
-	if jobIdCallback != nil {
-		jobIdCallback(queueResp.JobId)
-	}
 
 	// Get the stream
 	log.Debug("opening job stream")
