@@ -25,6 +25,10 @@ type Sourcer interface {
 	// Override reconfigures the given data source with the given overrides.
 	Override(*pb.Job_DataSource, map[string]string) error
 
+	// RefToOverride converts a ref to the override settings necessary
+	// to use this ref with a job.
+	RefToOverride(*pb.Job_DataSource_Ref) (map[string]string, error)
+
 	// Get downloads the sourced data and returns the directory where
 	// the data is stored, a cleanup function, and any errors that occurred.
 	// The cleanup function may be nil.
