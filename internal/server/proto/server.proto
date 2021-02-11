@@ -201,10 +201,6 @@ service Waypoint {
   // to determine the settings to use for a deployment.
   rpc RunnerGetDeploymentConfig(RunnerGetDeploymentConfigRequest) returns (RunnerGetDeploymentConfigResponse);
 
-  // RunnerCompletePoll is called by a runner when a PollOp is complete and
-  // changes are detected. This will
-  //rpc RunnerCompletePoll(RunnerCompletePollRequest) returns (google.protobuf.Empty);
-
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
   // the entrypoint binary only.
