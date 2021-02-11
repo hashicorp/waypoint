@@ -1,6 +1,7 @@
 package singleprocess
 
 import (
+	"context"
 	"sync"
 
 	"github.com/boltdb/bolt"
@@ -36,6 +37,11 @@ type service struct {
 	urlCEBMu      sync.RWMutex
 	urlCEB        *pb.EntrypointConfig_URLService
 	urlCEBWatchCh chan struct{}
+
+	// bgCtx is used for background tasks within the service. This is
+	// cancelled when Close is called.
+	bgCtx       context.Context
+	bgCtxCancel context.CancelFunc
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -124,7 +130,22 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		}
 	}
 
+	// Setup the background context that is used for internal tasks
+	s.bgCtx, s.bgCtxCancel = context.WithCancel(context.Background())
+
+	// Start our polling background goroutine. We have a single goroutine
+	// that we run in the background that handles the queue of all polling
+	// operations. See the func docs for more info.
+	go s.runPollQueuer(s.bgCtx, log.Named("poll_queuer"))
+
 	return &s, nil
+}
+
+// Close shuts down any background processes and resources that may
+// be used by the service. This should be called after the service
+// is no longer responding to requests.
+func (s *service) Close() error {
+	return nil
 }
 
 type config struct {
