@@ -327,7 +327,7 @@ func (r *Runner) prepareAndExecuteJob(
 	// Some operation types don't need to download data, execute those here.
 	switch job.Operation.(type) {
 	case *pb.Job_Poll:
-		return r.executePollOp(ctx, log, job)
+		return r.executePollOp(ctx, log, ui, job)
 	}
 
 	// We need to get our data source next prior to executing.
