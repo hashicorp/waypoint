@@ -64,7 +64,9 @@ func (s *service) runPollQueuer(ctx context.Context, funclog hclog.Logger) {
 		log.Trace("waiting on watchset and contexts")
 		err = ws.WatchCtx(loopCtx)
 		loopCtxErr := loopCtx.Err()
-		loopCtxCancel()
+		if loopCtxCancel != nil {
+			loopCtxCancel()
+		}
 
 		if err == nil {
 			// Outcome (1) above
