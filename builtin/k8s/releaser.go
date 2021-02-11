@@ -91,52 +91,32 @@ func (r *Releaser) Release(
 		labelId: target.Id,
 	}
 
-	// Use ports, port, or 80
-	ports, err := coerceConfigPortArray(r.config.Port, DefaultPort)
-	if err != nil {
-		return nil, fmt.Errorf("port error: %w", err)
-	}
-
-	// If NodePort(s) are not defined, we use all 0s
-	nodePorts, err := coerceConfigPortArray(r.config.NodePort, 0)
-	if err != nil {
-		return nil, fmt.Errorf("node_port error: %w", err)
-	} else if len(nodePorts) == 1 && nodePorts[0] == 0 {
-		nodePorts = make([]uint, len(ports)) // all 0s
-	}
-
-	// Ensure Ports & NodePorts match in length
-	if len(nodePorts) != len(ports) {
-		return nil, fmt.Errorf("port and node_port need to correspond in length")
-	}
-
-	// Create ports and link them to "port0", "port1", from deploy step
-	service.Spec.Ports = make([]corev1.ServicePort, len(ports))
-	for i, port := range ports {
-		targetPort := fmt.Sprintf("port%d", i)
-		service.Spec.Ports[i] = corev1.ServicePort{
-			Name:       targetPort,
-			Port:       int32(port),
-			Protocol:   corev1.ProtocolTCP,
-			TargetPort: intstr.FromString(targetPort),
-			NodePort:   int32(nodePorts[i]),
-		}
-	}
-
 	var checkLB bool
 
 	if r.config.LoadBalancer {
 		service.Spec.Type = corev1.ServiceTypeLoadBalancer
 		checkLB = true
-	} else if len(nodePorts) > 0 {
+	} else if r.config.NodePort != 0 {
 		service.Spec.Type = corev1.ServiceTypeNodePort
-		for i, np := range nodePorts {
-			if np < 0 {
-				nodePorts[i] = 0
-			}
+		if r.config.NodePort < 0 {
+			r.config.NodePort = 0
 		}
 	} else {
 		service.Spec.Type = corev1.ServiceTypeClusterIP
+	}
+
+	port := r.config.Port
+	if port == 0 {
+		port = DefaultPort
+	}
+
+	service.Spec.Ports = []corev1.ServicePort{
+		{
+			Port:       int32(port),
+			TargetPort: intstr.FromString("http"),
+			Protocol:   corev1.ProtocolTCP,
+			NodePort:   int32(r.config.NodePort),
+		},
 	}
 
 	// Create/update
@@ -180,7 +160,8 @@ func (r *Releaser) Release(
 		if ingress.Hostname != "" {
 			result.Url = "http://" + ingress.Hostname
 		}
-		if port := ports[0]; port != 80 {
+
+		if port != 80 {
 			result.Url = fmt.Sprintf("%s:%d", result.Url, port)
 		}
 	} else if service.Spec.Ports[0].NodePort > 0 {
@@ -255,13 +236,20 @@ type ReleaserConfig struct {
 	// balancer type service
 	LoadBalancer bool `hcl:"load_balancer,optional"`
 
-	// Port configures the port(s) that is used to access the service.
+	// Port configures the port that is used to access the service.
 	// The default is 80.
-	Port interface{} `hcl:"port,optional"`
+	// Not valid if `Ports` is already defined
+	// If defined, will internally be stored into `Ports`
+	Port int `hcl:"port,optional"`
 
-	// NodePort configures a port(s) to access the service on whichever node
+	// A full resource of options to define ports for a service
+	Ports []map[string]string `hcl:"ports,optional"`
+
+	// NodePort configures a port to access the service on whichever node
 	// is running service.
-	NodePort interface{} `hcl:"node_port,optional"`
+	// Not valid if `Ports` is already defined
+	// If defined, will internally be stored into `Ports`
+	NodePort int `hcl:"node_port,optional"`
 
 	// Namespace is the Kubernetes namespace to target the deployment to.
 	Namespace string `hcl:"namespace,optional"`
