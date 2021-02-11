@@ -157,6 +157,9 @@ func (c *ServerRunCommand) Run(args []string) int {
 		singleprocess.WithLogger(log.Named("singleprocess")),
 		singleprocess.WithAcceptURLTerms(c.flagAcceptTOS),
 	)
+	if c, ok := impl.(io.Closer); ok {
+		defer c.Close()
+	}
 
 	if err != nil {
 		c.ui.Output(
