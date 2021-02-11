@@ -248,6 +248,87 @@ func TestGitSourceGet(t *testing.T) {
 	})
 }
 
+func TestGitSourceChanges(t *testing.T) {
+	var latestRef *pb.Job_DataSource_Ref
+
+	// NOTE(mitchellh): Most of the tests in this test use the Waypoint
+	// GitHub repo and require an internet connection. There is some brittleness
+	// to that if the internet is down, GitHub is down, etc. but we feel this
+	// is a fairly stable dependency for tests and the benefits of testing
+	// this functionality outweigh the risks.
+
+	t.Run("nil current ref", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		newRef, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "https://github.com/hashicorp/waypoint.git",
+					},
+				},
+			},
+			nil,
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+
+		latestRef = newRef
+	})
+
+	t.Run("with latest ref", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		newRef, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "https://github.com/hashicorp/waypoint.git",
+					},
+				},
+			},
+			latestRef,
+		)
+		require.NoError(err)
+		require.Nil(newRef)
+	})
+
+	t.Run("with old ref", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		newRef, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "https://github.com/hashicorp/waypoint.git",
+					},
+				},
+			},
+			&pb.Job_DataSource_Ref{
+				Ref: &pb.Job_DataSource_Ref_Git{
+					Git: &pb.Job_Git_Ref{
+						Commit: "old",
+					},
+				},
+			},
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+	})
+}
+
 // testGitFixture MUST be called before TestRunner since TestRunner
 // changes our working directory.
 func testGitFixture(t *testing.T, n string) string {

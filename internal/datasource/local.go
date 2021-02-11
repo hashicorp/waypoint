@@ -52,4 +52,15 @@ func (s *LocalSource) Get(
 	return pwd, nil, nil, err
 }
 
+func (s *LocalSource) Changes(
+	ctx context.Context,
+	log hclog.Logger,
+	ui terminal.UI,
+	source *pb.Job_DataSource,
+	current *pb.Job_DataSource_Ref,
+) (*pb.Job_DataSource_Ref, error) {
+	// Never any changes.
+	return nil, nil
+}
+
 var _ Sourcer = (*LocalSource)(nil)

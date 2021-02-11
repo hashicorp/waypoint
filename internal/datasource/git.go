@@ -14,6 +14,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hashicorp/go-hclog"
@@ -160,32 +161,9 @@ func (s *GitSource) Get(
 	}
 
 	// Setup auth information
-	var auth transport.AuthMethod
-	switch authcfg := source.Git.Auth.(type) {
-	case *pb.Job_Git_Basic_:
-		ui.Output("Auth: username/password", terminal.WithInfoStyle())
-		auth = &http.BasicAuth{
-			Username: authcfg.Basic.Username,
-			Password: authcfg.Basic.Password,
-		}
-
-	case *pb.Job_Git_Ssh:
-		ui.Output("Auth: ssh", terminal.WithInfoStyle())
-		auth, err = ssh.NewPublicKeys(
-			authcfg.Ssh.User,
-			authcfg.Ssh.PrivateKeyPem,
-			authcfg.Ssh.Password,
-		)
-		if err != nil {
-			return "", nil, nil, status.Errorf(codes.FailedPrecondition,
-				"Failed to load private key for Git auth: %s", err)
-		}
-
-	case nil:
-		// Do nothing
-
-	default:
-		log.Warn("unknown auth configuration, ignoring: %T", source.Git.Auth)
+	auth, err := s.auth(log, ui, source)
+	if err != nil {
+		return "", nil, nil, err
 	}
 
 	// Clone
@@ -278,6 +256,112 @@ func (s *GitSource) Get(
 			},
 		},
 	}, closer, nil
+}
+
+func (s *GitSource) Changes(
+	ctx context.Context,
+	log hclog.Logger,
+	ui terminal.UI,
+	raw *pb.Job_DataSource,
+	current *pb.Job_DataSource_Ref,
+) (*pb.Job_DataSource_Ref, error) {
+	source := raw.Source.(*pb.Job_DataSource_Git)
+
+	// Build our auth mechanism
+	auth, err := s.auth(log, ui, source)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get our remote
+	remote := git.NewRemote(memory.NewStorage(), &config.RemoteConfig{
+		Name: "origin",
+		URLs: []string{source.Git.Url},
+	})
+
+	// List our refs, equivalent to git ls-remote
+	refs, err := remote.List(&git.ListOptions{Auth: auth})
+	if err != nil {
+		return nil, err
+	}
+
+	// Find the target for HEAD
+	var headTarget plumbing.ReferenceName
+	for _, ref := range refs {
+		if ref.Type() == plumbing.SymbolicReference && ref.Name() == "HEAD" {
+			headTarget = ref.Target()
+			break
+		}
+	}
+	if headTarget == "" {
+		return nil, status.Errorf(codes.Internal, "HEAD symbolic ref not found")
+	}
+
+	// Get the actual hash for HEAD
+	var headRef *plumbing.Reference
+	for _, ref := range refs {
+		if ref.Name() == headTarget {
+			headRef = ref
+			break
+		}
+	}
+	if headRef == nil {
+		return nil, status.Errorf(codes.Internal, "HEAD hash ref not found")
+	}
+
+	// Compare
+	if current != nil {
+		currentRef := current.Ref.(*pb.Job_DataSource_Ref_Git).Git
+		if currentRef.Commit == headRef.Hash().String() {
+			log.Trace("HEAD matches current ref, ignoring")
+			return nil, nil
+		}
+	}
+
+	return &pb.Job_DataSource_Ref{
+		Ref: &pb.Job_DataSource_Ref_Git{
+			Git: &pb.Job_Git_Ref{
+				Commit: headRef.Hash().String(),
+			},
+		},
+	}, nil
+}
+
+func (s *GitSource) auth(
+	log hclog.Logger,
+	ui terminal.UI,
+	source *pb.Job_DataSource_Git,
+) (transport.AuthMethod, error) {
+	switch authcfg := source.Git.Auth.(type) {
+	case *pb.Job_Git_Basic_:
+		ui.Output("Auth: username/password", terminal.WithInfoStyle())
+		return &http.BasicAuth{
+			Username: authcfg.Basic.Username,
+			Password: authcfg.Basic.Password,
+		}, nil
+
+	case *pb.Job_Git_Ssh:
+		ui.Output("Auth: ssh", terminal.WithInfoStyle())
+		auth, err := ssh.NewPublicKeys(
+			authcfg.Ssh.User,
+			authcfg.Ssh.PrivateKeyPem,
+			authcfg.Ssh.Password,
+		)
+		if err != nil {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"Failed to load private key for Git auth: %s", err)
+		}
+
+		return auth, nil
+
+	case nil:
+		// Do nothing
+
+	default:
+		log.Warn("unknown auth configuration, ignoring: %T", source.Git.Auth)
+	}
+
+	return nil, nil
 }
 
 type gitConfig struct {
