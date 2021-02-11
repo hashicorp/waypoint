@@ -34,6 +34,10 @@ func (s *LocalSource) Override(raw *pb.Job_DataSource, m map[string]string) erro
 	return nil
 }
 
+func (s *LocalSource) RefToOverride(*pb.Job_DataSource_Ref) (map[string]string, error) {
+	return nil, nil
+}
+
 func (s *LocalSource) Get(
 	ctx context.Context,
 	log hclog.Logger,

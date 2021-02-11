@@ -64,6 +64,13 @@ func (r *Runner) executePollOp(
 		return &pb.Job_Result{}, nil
 	}
 
+	// Setup our overrides. Overrides are used to set the exact ref that
+	// the job will use.
+	overrides, err := sourcer.RefToOverride(newRef)
+	if err != nil {
+		return nil, err
+	}
+
 	// Setup our base job that we'll queue an "up" for. We'll setup a new
 	// job for each application within the project but this will be the
 	// common fields.
@@ -80,7 +87,7 @@ func (r *Runner) executePollOp(
 
 			// Reuse the same data source and bring in our overrides to set the ref
 			DataSource:          job.DataSource,
-			DataSourceOverrides: nil,
+			DataSourceOverrides: overrides,
 
 			// Doing a plain old "up"
 			Operation: &pb.Job_Up{

@@ -32,6 +32,17 @@ type GitSource struct{}
 
 func newGitSource() Sourcer { return &GitSource{} }
 
+func (s *GitSource) RefToOverride(ref *pb.Job_DataSource_Ref) (map[string]string, error) {
+	gitRef, ok := ref.Ref.(*pb.Job_DataSource_Ref_Git)
+	if !ok {
+		return nil, fmt.Errorf("ref is not a git ref: %T", ref.Ref)
+	}
+
+	return map[string]string{
+		"ref": gitRef.Git.Commit,
+	}, nil
+}
+
 func (s *GitSource) ProjectSource(body hcl.Body, ctx *hcl.EvalContext) (*pb.Job_DataSource, error) {
 	// Decode
 	var cfg gitConfig
