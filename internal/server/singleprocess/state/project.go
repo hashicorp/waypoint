@@ -90,6 +90,21 @@ func (s *State) ProjectList() ([]*pb.Ref_Project, error) {
 	return s.projectList(memTxn)
 }
 
+// ProjectListWorkspaces returns the list of workspaces that a project is in.
+func (s *State) ProjectListWorkspaces(ref *pb.Ref_Project) ([]*pb.Workspace_Project, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	var results []*pb.Workspace_Project
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		results, err = s.workspaceListProjects(dbTxn, memTxn, ref)
+		return err
+	})
+
+	return results, err
+}
+
 // ProjectPollPeek returns the next project that should be polled.
 // This will return (nil,nil) if there are no projects to poll currently.
 //
