@@ -302,6 +302,10 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 		apps = append(apps, app)
 	}
 
+	// Inject the metadata about the client, such as the runner id if it is running
+	// a local runner.
+	ctx = c.project.AddMetadata(ctx)
+
 	// Just a serialize loop for now, one day we'll parallelize.
 	var finalErr error
 	var didErrSentinel bool
