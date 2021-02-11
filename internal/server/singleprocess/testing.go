@@ -3,6 +3,7 @@ package singleprocess
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -39,6 +40,9 @@ func TestImpl(t testing.T, opts ...Option) pb.WaypointServer {
 		opts...,
 	)...)
 	require.NoError(t, err)
+	if c, ok := impl.(io.Closer); ok {
+		t.Cleanup(func() { c.Close() })
+	}
 	return impl
 }
 
