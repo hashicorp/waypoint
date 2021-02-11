@@ -107,7 +107,7 @@ func (r *Runner) executePollOp(
 		// We set a singleton ID so that future polling operations will
 		// override this if it already exists.
 		job.SingletonId = strings.ToLower(fmt.Sprintf(
-			"poll/%s/%s/%s",
+			"poll-trigger/%s/%s/%s",
 			job.Application.Project,
 			job.Application.Application,
 			job.Workspace.Workspace,
