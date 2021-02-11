@@ -9,11 +9,14 @@ import (
 	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 func TestServiceStartExecStream_badOpen(t *testing.T) {
@@ -54,7 +57,7 @@ func TestServiceStartExecStream_start(t *testing.T) {
 	instanceId, deploymentId, closer := TestEntrypoint(t, client)
 	defer closer()
 
-	// Start exec with a bad starting message
+	// Start an exec stream properly
 	stream, err := client.StartExecStream(ctx)
 	require.NoError(err)
 	require.NoError(stream.Send(&pb.ExecStreamRequest{
@@ -375,4 +378,123 @@ func TestServiceStartExecStream_targeted(t *testing.T) {
 	// The event channel should be closed
 	_, active := <-exec.ClientEventCh
 	require.False(active)
+}
+
+func TestServiceStartExecStream_startPlugin(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Create an instance
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Component: &pb.Component{
+				Name: "testapp",
+			},
+
+			HasExecPlugin: true,
+		}),
+	})
+	require.NoError(err)
+
+	deploymentId := resp.Deployment.Id
+
+	fakeRunner, err := server.Id()
+	require.NoError(err)
+
+	ctx = metadata.AppendToOutgoingContext(ctx, serverconfig.GrpcMetadataRunnerId, fakeRunner)
+
+	// Start an exec stream
+	stream, err := client.StartExecStream(ctx)
+	require.NoError(err)
+	require.NoError(stream.Send(&pb.ExecStreamRequest{
+		Event: &pb.ExecStreamRequest_Start_{
+			Start: &pb.ExecStreamRequest_Start{
+				Target: &pb.ExecStreamRequest_Start_DeploymentId{
+					DeploymentId: deploymentId,
+				},
+				Args: []string{"foo", "bar"},
+			},
+		},
+	}))
+
+	// Observe that a job to start the exec plugin has been queued
+	time.Sleep(time.Second)
+
+	jobs, err := testServiceImpl(impl).state.JobList()
+	require.NoError(err)
+
+	require.True(len(jobs) == 1)
+
+	job := jobs[0]
+	require.Equal(pb.Job_QUEUED, job.State)
+	require.Equal(fakeRunner, job.TargetRunner.Target.(*pb.Ref_Runner_Id).Id.Id)
+	require.Equal(resp.Deployment.Application, job.Application)
+}
+
+func TestService_waitOnJobStarted(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Create an instance
+	resp, err := client.UpsertDeployment(ctx, &pb.UpsertDeploymentRequest{
+		Deployment: serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Component: &pb.Component{
+				Name: "testapp",
+			},
+
+			HasExecPlugin: true,
+		}),
+	})
+	require.NoError(err)
+
+	job := &pb.Job{
+		Id:          "aabbcc",
+		Workspace:   resp.Deployment.Workspace,
+		Application: resp.Deployment.Application,
+		Operation: &pb.Job_Noop_{
+			Noop: &pb.Job_Noop{},
+		},
+		DataSource: &pb.Job_DataSource{
+			Source: &pb.Job_DataSource_Local{
+				Local: &pb.Job_Local{},
+			},
+		},
+		TargetRunner: &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Any{
+				Any: &pb.Ref_RunnerAny{},
+			},
+		},
+	}
+
+	s := testServiceImpl(impl)
+
+	// Queue the job
+	err = s.state.JobCreate(job)
+	require.NoError(err)
+
+	go func() {
+		time.Sleep(time.Second)
+		s.state.JobExpire(job.Id)
+	}()
+
+	ts := time.Now()
+	js, err := s.waitOnJobStarted(ctx, job.Id)
+	require.NoError(err)
+	dur := time.Since(ts)
+
+	require.InDelta(1.0, dur.Seconds(), 0.1)
+
+	require.Equal(pb.Job_ERROR, js)
 }

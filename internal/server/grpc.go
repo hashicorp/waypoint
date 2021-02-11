@@ -1,14 +1,17 @@
 package server
 
 import (
+	"context"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 // grpcInit initializes the gRPC server and adds it to the run group.
@@ -85,4 +88,21 @@ func grpcInit(group *run.Group, opts *options) error {
 	})
 
 	return nil
+}
+
+// Returns the runner id attached to the context as grpc Metadata.
+// This would be set by the client to indicate there is a runner attached
+// directly to it.
+func RunnerId(ctx context.Context) (string, bool) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", false
+	}
+
+	val := md.Get(serverconfig.GrpcMetadataRunnerId)
+	if len(val) == 0 {
+		return "", false
+	}
+
+	return val[0], true
 }
