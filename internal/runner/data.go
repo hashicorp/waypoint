@@ -27,8 +27,31 @@ func (r *Runner) downloadJobData(
 	source *pb.Job_DataSource,
 	overrides map[string]string,
 ) (string, *pb.Job_DataSource_Ref, func() error, error) {
+	sourcer, err := r.dataSourcer(ctx, log, ui, source, overrides)
+	if err != nil {
+		return "", nil, nil, err
+	}
+
+	// Get data
+	return sourcer.Get(ctx, log, ui, source, r.tempDir)
+}
+
+// downloadJobData takes the data source of the given job, gets the data,
+// and returns the directory where the data is stored.
+//
+// This will also return a closer function that should be deferred to
+// clean up any resources created by this. Note that the directory isn't
+// always a temporary directory (such as for local data) so callers should
+// NOT assume this and delete data. Use the returned closer.
+func (r *Runner) dataSourcer(
+	ctx context.Context,
+	log hclog.Logger,
+	ui terminal.UI,
+	source *pb.Job_DataSource,
+	overrides map[string]string,
+) (datasource.Sourcer, error) {
 	if source == nil {
-		return "", nil, nil, status.Errorf(codes.Internal,
+		return nil, status.Errorf(codes.Internal,
 			"data source not set for job")
 	}
 
@@ -36,7 +59,7 @@ func (r *Runner) downloadJobData(
 	typ := reflect.TypeOf(source.Source)
 	factory, ok := datasource.FromType[typ]
 	if !ok {
-		return "", nil, nil, status.Errorf(codes.FailedPrecondition,
+		return nil, status.Errorf(codes.FailedPrecondition,
 			"invalid data source type: %s", typ.String())
 	}
 	sourcer := factory()
@@ -44,11 +67,10 @@ func (r *Runner) downloadJobData(
 	// Apply any overrides
 	if len(overrides) > 0 {
 		if err := sourcer.Override(source, overrides); err != nil {
-			return "", nil, nil, status.Errorf(codes.FailedPrecondition,
+			return nil, status.Errorf(codes.FailedPrecondition,
 				"error with data source overrides: %s", err)
 		}
 	}
 
-	// Get data
-	return sourcer.Get(ctx, log, ui, source, r.tempDir)
+	return sourcer, nil
 }
