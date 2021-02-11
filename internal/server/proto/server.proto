@@ -201,6 +201,10 @@ service Waypoint {
   // to determine the settings to use for a deployment.
   rpc RunnerGetDeploymentConfig(RunnerGetDeploymentConfigRequest) returns (RunnerGetDeploymentConfigResponse);
 
+  // RunnerCompletePoll is called by a runner when a PollOp is complete and
+  // changes are detected. This will
+  //rpc RunnerCompletePoll(RunnerCompletePollRequest) returns (google.protobuf.Empty);
+
   //----------------------------------------------------------------------
   // Entrypoint binary endpoints. These are all expected to be called by
   // the entrypoint binary only.
@@ -357,6 +361,11 @@ message Workspace {
   message Project {
     // Project that this is referencing.
     Ref.Project project = 1;
+
+    // Workspace that this project is part of. This will only be set
+    // when using the GetProject API. This will ALWAYS BE NIL on workspace
+    // list and get APIs.
+    Ref.Workspace workspace = 5;
 
     // The last non-local ref that was used for any operation.
     Job.DataSource.Ref data_source_ref = 2;
@@ -1449,6 +1458,9 @@ message GetProjectRequest {
 
 message GetProjectResponse {
   Project project = 1;
+
+  // The list of workspaces that this project is part of.
+  repeated Workspace.Project workspaces = 2;
 }
 
 message ListProjectsResponse {
