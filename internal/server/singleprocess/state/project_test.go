@@ -169,7 +169,7 @@ func TestProjectPollPeek(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
-		v, err := s.ProjectPollPeek(nil)
+		v, _, err := s.ProjectPollPeek(nil)
 		require.NoError(err)
 		require.Nil(v)
 	})
@@ -201,10 +201,11 @@ func TestProjectPollPeek(t *testing.T) {
 
 		// Get exact
 		{
-			resp, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
 		}
 	})
 
@@ -215,7 +216,7 @@ func TestProjectPollPeek(t *testing.T) {
 		defer s.Close()
 
 		ws := memdb.NewWatchSet()
-		v, err := s.ProjectPollPeek(ws)
+		v, _, err := s.ProjectPollPeek(ws)
 		require.NoError(err)
 		require.Nil(v)
 
@@ -236,10 +237,11 @@ func TestProjectPollPeek(t *testing.T) {
 
 		// Get exact
 		{
-			resp, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
 		}
 	})
 
@@ -282,10 +284,11 @@ func TestProjectPollPeek(t *testing.T) {
 
 		// Peek, we should get A
 		ws := memdb.NewWatchSet()
-		p, err := s.ProjectPollPeek(ws)
+		p, ts, err := s.ProjectPollPeek(ws)
 		require.NoError(err)
 		require.NotNil(p)
 		require.Equal("A", p.Name)
+		require.False(ts.IsZero())
 
 		// Watch should block
 		require.True(ws.Watch(time.After(10 * time.Millisecond)))
@@ -298,10 +301,11 @@ func TestProjectPollPeek(t *testing.T) {
 
 		// Get exact
 		{
-			resp, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
 		}
 	})
 }
@@ -341,7 +345,7 @@ func TestProjectPollComplete(t *testing.T) {
 		require.NoError(s.ProjectPollComplete(p, time.Now()))
 
 		// Peek does nothing
-		v, err := s.ProjectPollPeek(nil)
+		v, _, err := s.ProjectPollPeek(nil)
 		require.NoError(err)
 		require.Nil(v)
 	})
@@ -385,10 +389,11 @@ func TestProjectPollComplete(t *testing.T) {
 
 		// Peek should return A, lower interval
 		{
-			resp, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
 		}
 
 		// Complete again, a minute later. The result should be A again
@@ -396,20 +401,22 @@ func TestProjectPollComplete(t *testing.T) {
 		{
 			require.NoError(s.ProjectPollComplete(pA, now.Add(1*time.Minute)))
 
-			resp, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
 		}
 
 		// Complete A, now 6 minutes later. The result should be B now.
 		{
 			require.NoError(s.ProjectPollComplete(pA, now.Add(6*time.Minute)))
 
-			resp, err := s.ProjectPollPeek(nil)
+			resp, t, err := s.ProjectPollPeek(nil)
 			require.NoError(err)
 			require.NotNil(resp)
 			require.Equal("B", resp.Name)
+			require.False(t.IsZero())
 		}
 	})
 }
