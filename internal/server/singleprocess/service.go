@@ -145,6 +145,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 // be used by the service. This should be called after the service
 // is no longer responding to requests.
 func (s *service) Close() error {
+	s.bgCtxCancel()
 	return nil
 }
 
