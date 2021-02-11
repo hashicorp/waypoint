@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/ceb"
+	"github.com/hashicorp/waypoint/internal/ceb/ssh"
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
 )
 
@@ -31,12 +32,33 @@ func realMain() int {
 	ctx, closer := signalcontext.WithInterrupt(context.Background(), log)
 	defer closer()
 
-	if port := os.Getenv("WAYPOINT_EXEC_PLUGIN_SSH"); port != "" {
-		key := os.Getenv("WAYPOINT_EXEC_PLUGIN_SSH_KEY")
-		hostKey := os.Getenv("WAYPOINT_EXEC_PLUGIN_SSH_HOST_KEY")
+	// If WAYPOINT_EXEC_PLUGIN_SSH is set, then the entrypoint is being launched
+	// by a platform's exec plugin to provide a place to run an exec command.
+	// For instance, the Lambda plugin launches the docker image used by the
+	// Lambda function as an ECS task and sets these environment variables. The
+	// exec function then uses SSH to connect to the ECS task and runs the users
+	// requested exec command inside ECS.
+	//
+	// Any exec function that wishes to spin up the docker image in a special
+	// location is free to use this SSH server functionality to create a context
+	// to run exec.
+
+	// port contains which TCP port the ssh server should listen on.
+	if port := os.Getenv(ssh.ENVSSHPort); port != "" {
+
+		// Pull the ssh materials out of the environment first
+		hostKey, userKey, err := ssh.DecodeFromEnv()
+		if err != nil {
+			fmt.Fprintf(flag.CommandLine.Output(),
+				"Error decoding ssh keys in environment: %s\n", formatError(err))
+			return 1
+		}
+
+		// The combination of key and hostKey allow both sides to validate that they
+		// are communicating with the party they expect to be.
 
 		// Run our core logic
-		err := ceb.RunExecSSHServer(ctx, log, port, hostKey, key)
+		err = ssh.RunExecSSHServer(ctx, log, port, hostKey, userKey)
 		if err != nil {
 			fmt.Fprintf(flag.CommandLine.Output(),
 				"Error initializing Waypoint entrypoint: %s\n", formatError(err))

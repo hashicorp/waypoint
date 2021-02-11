@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
+	"github.com/hashicorp/waypoint/internal/ceb/ssh"
 )
 
 // This launches an ECS task to run the given image. It creates an ECS cluster configured
@@ -290,15 +291,15 @@ func (e *ecsLauncher) Launch(
 					Name: aws.String("waypoint-console"),
 					Environment: []*ecs.KeyValuePair{
 						{
-							Name:  aws.String("WAYPOINT_EXEC_PLUGIN_SSH"),
+							Name:  aws.String(ssh.ENVSSHPort),
 							Value: aws.String(strconv.Itoa(sshPort)),
 						},
 						{
-							Name:  aws.String("WAYPOINT_EXEC_PLUGIN_SSH_KEY"),
+							Name:  aws.String(ssh.ENVUserKey),
 							Value: aws.String(e.PublicKey),
 						},
 						{
-							Name:  aws.String("WAYPOINT_EXEC_PLUGIN_SSH_HOST_KEY"),
+							Name:  aws.String(ssh.ENVHostKey),
 							Value: aws.String(e.HostKey),
 						},
 						{

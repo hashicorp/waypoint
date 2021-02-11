@@ -1,9 +1,7 @@
-package ceb
+package ssh
 
 import (
 	"context"
-	"crypto/x509"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -14,14 +12,60 @@ import (
 	"github.com/creack/pty"
 	"github.com/gliderlabs/ssh"
 	"github.com/hashicorp/go-hclog"
-	"github.com/pkg/errors"
 	gossh "golang.org/x/crypto/ssh"
 )
 
-func RunExecSSHServer(ctx context.Context, logger hclog.Logger, sport, hostkey, key string) error {
+// RunExecSSHServer starts up an ssh server on the given port +sport+. The server
+// will use +hostkey+ as the host key and only accepts a connection when the client
+// has authenticated with +key+.
+// The SSH server will run one command and then exit, as it's designed to only be used
+// for one-shot commands via an exec plugin.
+func RunExecSSHServer(
+	ctx context.Context,
+	logger hclog.Logger,
+	sport string,
+	hostkey gossh.Signer,
+	key gossh.PublicKey,
+) error {
 	var server *ssh.Server
 
-	ssh.Handle(func(s ssh.Session) {
+	port, err := strconv.Atoi(sport)
+	if err != nil {
+		return err
+	}
+
+	check := func(ctx ssh.Context, inputKey ssh.PublicKey) bool {
+		if ssh.KeysEqual(inputKey, key) {
+			return true
+		}
+
+		logger.Error("keys did not match")
+		return false
+	}
+
+	logger.Info("starting ssh listener...")
+
+	err = ssh.ListenAndServe(
+		fmt.Sprintf(":%d", port),
+		createHandler(ctx, logger, &server),
+		ssh.Option(func(serv *ssh.Server) error {
+			server = serv
+			serv.PublicKeyHandler = check
+			serv.AddHostKey(hostkey)
+			return nil
+		}),
+	)
+
+	if err != ssh.ErrServerClosed {
+		return err
+	}
+
+	return nil
+}
+
+// This is pulled out to make it easier to test.
+func createHandler(ctx context.Context, logger hclog.Logger, server **ssh.Server) ssh.Handler {
+	return func(s ssh.Session) {
 		// Build the subprocess
 
 		args := s.Command()
@@ -164,14 +208,20 @@ func RunExecSSHServer(ctx context.Context, logger hclog.Logger, sport, hostkey, 
 			case err := <-exitCh:
 				logger.Debug("command as exited")
 
-				if exiterr, ok := err.(*exec.ExitError); ok {
-					s.Exit(exiterr.ExitCode())
+				if err != nil {
+					if exiterr, ok := err.(*exec.ExitError); ok {
+						s.Exit(exiterr.ExitCode())
+					} else {
+						logger.Error("error waiting on command", "error", err)
+						s.Exit(1)
+					}
 				} else {
-					logger.Error("error waiting on command", "error", err)
-					s.Exit(1)
+					s.Exit(0)
 				}
 
-				go server.Shutdown(ctx)
+				if server != nil {
+					go (*server).Shutdown(ctx)
+				}
 				return
 			case <-breakCh:
 				logger.Warn("break detected from client")
@@ -199,65 +249,5 @@ func RunExecSSHServer(ctx context.Context, logger hclog.Logger, sport, hostkey, 
 				}
 			}
 		}
-	})
-
-	port, err := strconv.Atoi(sport)
-	if err != nil {
-		return err
 	}
-
-	hostbytes, err := base64.StdEncoding.DecodeString(hostkey)
-	if err != nil {
-		return errors.Wrapf(err, "decoding host key")
-	}
-
-	hkey, err := x509.ParsePKCS1PrivateKey(hostbytes)
-	if err != nil {
-		return errors.Wrapf(err, "parsing host key")
-	}
-
-	signer, err := gossh.NewSignerFromKey(hkey)
-	if err != nil {
-		return errors.Wrapf(err, "making ssh signer")
-	}
-
-	userbytes, err := base64.StdEncoding.DecodeString(key)
-	if err != nil {
-		return errors.Wrapf(err, "decoding user key")
-	}
-
-	userKey, err := x509.ParsePKCS1PublicKey(userbytes)
-	if err != nil {
-		return errors.Wrapf(err, "parsing user key")
-	}
-
-	authorizedKey, err := gossh.NewPublicKey(userKey)
-
-	if err != nil {
-		return errors.Wrapf(err, "make ssh pub key")
-	}
-
-	check := func(ctx ssh.Context, inputKey ssh.PublicKey) bool {
-		if ssh.KeysEqual(inputKey, authorizedKey) {
-			return true
-		}
-
-		logger.Error("keys did not match")
-		return false
-	}
-
-	logger.Info("starting ssh listener...")
-
-	err = ssh.ListenAndServe(fmt.Sprintf(":%d", port), nil, ssh.Option(func(serv *ssh.Server) error {
-		server = serv
-		serv.PublicKeyHandler = check
-		serv.AddHostKey(signer)
-		return nil
-	}))
-
-	if err != ssh.ErrServerClosed {
-		return err
-	}
-
-	return nil
 }

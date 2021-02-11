@@ -2,11 +2,7 @@ package lambda
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/subtle"
-	"crypto/x509"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"net"
@@ -26,6 +22,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
+	cebssh "github.com/hashicorp/waypoint/internal/ceb/ssh"
 	"github.com/pkg/errors"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -424,40 +421,15 @@ func (p *Platform) Exec(
 ) (*component.ExecResult, error) {
 	rewriteLine(es.Output, "Launching ECS task to provide shell...")
 
-	// Generate 2 keys, one is the host key that the server will use, and
-	// the other is the user key the client will use. That way, both parties
-	// can validate they are who we think they are.
-	// We armor the keys with base64 because they're going to be passed in
-	// ECS environment variable fields.
-
-	hostkey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return nil, err
-	}
-
-	hoststr := base64.StdEncoding.EncodeToString(x509.MarshalPKCS1PrivateKey(hostkey))
-
-	sshHostKey, err := ssh.NewSignerFromKey(hostkey)
-	if err != nil {
-		return nil, err
-	}
-
-	userkey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return nil, err
-	}
-
-	userstr := base64.StdEncoding.EncodeToString(x509.MarshalPKCS1PublicKey(&userkey.PublicKey))
-
-	sshKey, err := ssh.NewSignerFromKey(userkey)
+	sshMaterial, err := cebssh.GenerateKeys()
 	if err != nil {
 		return nil, err
 	}
 
 	var esl ecsLauncher
 	esl.Region = p.config.Region
-	esl.PublicKey = userstr
-	esl.HostKey = hoststr
+	esl.PublicKey = sshMaterial.UserPublic
+	esl.HostKey = sshMaterial.HostPrivate
 	esl.Image = image.Name()
 	esl.LogOutput = es.Output
 
@@ -471,12 +443,12 @@ func (p *Platform) Exec(
 	log.Info("starting exec session for aws lambda", "args", es.Arguments, "ip", ti.IP)
 
 	var cfg ssh.ClientConfig
-	cfg.User = "evan"
+	cfg.User = "waypoint"
 	cfg.Auth = []ssh.AuthMethod{
-		ssh.PublicKeys(sshKey),
+		ssh.PublicKeys(sshMaterial.UserPrivate),
 	}
 
-	expectedHost := sshHostKey.PublicKey().Marshal()
+	expectedHost := sshMaterial.HostPublic.Marshal()
 
 	cfg.HostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 		// Weirdly this is how you make sure the host key is what you think it should be.
