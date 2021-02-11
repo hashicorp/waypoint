@@ -184,6 +184,48 @@ func (s *State) workspaceUpdateProjectDataRef(
 	return err
 }
 
+// workspaceListProjects lists the project information for all the workspaces
+// that a specific project is in.
+func (s *State) workspaceListProjects(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Project,
+) ([]*pb.Workspace_Project, error) {
+	iter, err := memTxn.Get(
+		workspaceTableName,
+		workspaceProjectIndexName,
+		ref.Project,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pb.Workspace_Project
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+		idx := next.(*workspaceIndex)
+
+		ws, err := s.workspaceFromDB(dbTxn, idx.Id)
+		if err != nil {
+			return nil, err
+		}
+		for _, p := range ws.Projects {
+			if strings.ToLower(p.Project.Project) == strings.ToLower(ref.Project) {
+				// This gets set only for this API call (as documented in the proto)
+				p.Workspace = &pb.Ref_Workspace{Workspace: ws.Name}
+
+				result = append(result, p)
+				break
+			}
+		}
+	}
+
+	return result, nil
+}
+
 // workspaceFromDB loads the Workspace structure from disk.
 func (s *State) workspaceFromDB(dbTxn *bolt.Tx, id string) (*pb.Workspace, error) {
 	var result pb.Workspace
@@ -263,6 +305,11 @@ func (s *State) workspaceIndexSet(
 		Id: wspb.Name,
 	}
 
+	// Index all the projects that are in this workspace
+	for _, p := range wspb.Projects {
+		rec.Projects = append(rec.Projects, p.Project.Project)
+	}
+
 	// Insert the index
 	return rec, txn.Insert(workspaceTableName, rec)
 }
@@ -280,15 +327,27 @@ func workspaceIndexSchema() *memdb.TableSchema {
 					Lowercase: true,
 				},
 			},
+
+			workspaceProjectIndexName: {
+				Name:         workspaceProjectIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.StringSliceFieldIndex{
+					Field:     "Projects",
+					Lowercase: true,
+				},
+			},
 		},
 	}
 }
 
 const (
-	workspaceTableName   = "workspace-index"
-	workspaceIdIndexName = "id"
+	workspaceTableName        = "workspace-index"
+	workspaceIdIndexName      = "id"
+	workspaceProjectIndexName = "project"
 )
 
 type workspaceIndex struct {
-	Id string // Id is the name of the workspace lowercased
+	Id       string   // Id is the name of the workspace lowercased
+	Projects []string // Projects that are part of this workspace
 }

@@ -32,7 +32,16 @@ func (s *service) GetProject(
 		return nil, err
 	}
 
-	return &pb.GetProjectResponse{Project: result}, nil
+	// Get all the workspaces that this project is part of
+	workspaces, err := s.state.ProjectListWorkspaces(req.Project)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetProjectResponse{
+		Project:    result,
+		Workspaces: workspaces,
+	}, nil
 }
 
 // TODO: test

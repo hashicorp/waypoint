@@ -413,3 +413,57 @@ func TestProjectPollComplete(t *testing.T) {
 		}
 	})
 }
+
+func TestProjectListWorkspaces(t *testing.T) {
+	t.Run("empty for non-existent project", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		result, err := s.ProjectListWorkspaces(&pb.Ref_Project{Project: "nope"})
+		require.NoError(err)
+		require.Empty(result)
+	})
+
+	t.Run("returns only the workspaces a project is in", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id: "1",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "A",
+			},
+		})))
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id: "2",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "B",
+			},
+		})))
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id: "3",
+			Application: &pb.Ref_Application{
+				Application: "B",
+				Project:     "B",
+			},
+		})))
+
+		// Create some other resources
+		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Id: "1",
+		})))
+
+		// Workspace list should only list one
+		{
+			result, err := s.ProjectListWorkspaces(&pb.Ref_Project{Project: "B"})
+			require.NoError(err)
+			require.Len(result, 1)
+			require.NotNil(result[0].Workspace)
+		}
+	})
+}
