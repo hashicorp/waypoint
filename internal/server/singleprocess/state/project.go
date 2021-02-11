@@ -117,7 +117,7 @@ func (s *State) ProjectListWorkspaces(ref *pb.Ref_Project) ([]*pb.Workspace_Proj
 // projects to poll are added. This is important functionality since callers
 // may be sleeping on a deadline for awhile when a new project is inserted
 // to poll immediately.
-func (s *State) ProjectPollPeek(ws memdb.WatchSet) (*pb.Project, error) {
+func (s *State) ProjectPollPeek(ws memdb.WatchSet) (*pb.Project, time.Time, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
@@ -130,7 +130,7 @@ func (s *State) ProjectPollPeek(ws memdb.WatchSet) (*pb.Project, error) {
 		time.Unix(0, 0), // lowest next poll time
 	)
 	if err != nil {
-		return nil, err
+		return nil, time.Time{}, err
 	}
 	ws.Add(iter.WatchCh())
 
@@ -142,19 +142,19 @@ func (s *State) ProjectPollPeek(ws memdb.WatchSet) (*pb.Project, error) {
 		time.Unix(0, 0), // lowest next poll time
 	)
 	if err != nil {
-		return nil, err
+		return nil, time.Time{}, err
 	}
 
 	// If we have no values, then return
 	raw := iter.Next()
 	if raw == nil {
-		return nil, nil
+		return nil, time.Time{}, nil
 	}
 
 	rec := raw.(*projectIndexRecord)
 	if rec.NextPoll.IsZero() {
 		// This _shouldnt_ happen but let's protect against it anyways.
-		return nil, nil
+		return nil, time.Time{}, nil
 	}
 
 	var result *pb.Project
@@ -167,7 +167,7 @@ func (s *State) ProjectPollPeek(ws memdb.WatchSet) (*pb.Project, error) {
 		return err
 	})
 
-	return result, err
+	return result, rec.NextPoll, err
 }
 
 // ProjectPollComplete sets the next poll time for the given project to the
