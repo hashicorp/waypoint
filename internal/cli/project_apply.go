@@ -33,6 +33,8 @@ type ProjectApplyCommand struct {
 	flagGitKeyPassword  string
 	flagFromWaypointHcl string
 	flagWaypointHcl     string
+	flagPoll            bool
+	flagPollInterval    string
 }
 
 func (c *ProjectApplyCommand) Run(args []string) int {
@@ -87,6 +89,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 	if resp != nil {
 		s.Update("Updating project %q...", name)
 		updated = true
+		proj = resp.Project
 	} else {
 		s.Update("Creating project %q...", name)
 		proj = &pb.Project{Name: name}
@@ -156,6 +159,14 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 	case "git":
 		// Set remote enabled to true so users can run remote ops
 		proj.RemoteEnabled = true
+		if c.flagPoll {
+			if proj.DataSourcePoll == nil {
+				proj.DataSourcePoll = &pb.Project_Poll{}
+			}
+
+			proj.DataSourcePoll.Enabled = true
+			proj.DataSourcePoll.Interval = c.flagPollInterval
+		}
 
 		// If the project existing datasource is Git, then we're overriding.
 		// If the existing datasource is not Git or not set, then we set it
@@ -230,6 +241,9 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 		}
 
 	case "local":
+		// Disable polling cause this never works with local
+		proj.DataSourcePoll.Enabled = false
+
 		// Set the data source to local if it isn't set.
 		var localInfo *pb.Job_Local
 		if proj.DataSource != nil {
@@ -421,6 +435,21 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 			Usage: "Password for the private key specified by git-private-key-path " +
 				"if the key requires a password to decode. This is not required if " +
 				"the private key doesn't require a password.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "poll",
+			Target:  &c.flagPoll,
+			Default: false,
+			Usage: "Enable polling. This is only valid if a Git data source is supplied. " +
+				"This will watch the repo for changes and trigger a remote 'up'",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:    "poll-interval",
+			Target:  &c.flagPollInterval,
+			Default: "30s",
+			Usage:   "Interval between polling if polling is enabled.",
 		})
 	})
 }
