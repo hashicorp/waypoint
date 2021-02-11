@@ -150,7 +150,9 @@ func (op *deployOperation) Upsert(
 	return resp.Deployment, nil
 }
 
-func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ proto.Message) (interface{}, error) {
+func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
+	deploy := msg.(*pb.Deployment)
+
 	// Sync our config first
 	if err := app.ConfigSync(ctx); err != nil {
 		return nil, err
@@ -159,7 +161,8 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, _
 	dconfig := *op.DeploymentConfig
 	dconfig.Id = op.id
 	dconfig.EntrypointInviteToken = op.cebToken
-	return app.callDynamicFunc(ctx,
+
+	val, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
 		op.Component,
@@ -167,6 +170,15 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, _
 		argNamedAny("artifact", op.Push.Artifact.Artifact),
 		argmapper.Typed(&dconfig),
 	)
+
+	if ep, ok := op.Component.Value.(component.Execer); ok && ep.ExecFunc() != nil {
+		log.Debug("detected deployment uses an exec plugin, decorating deployment with info")
+		deploy.HasExecPlugin = true
+	} else {
+		log.Debug("no exec plugin detected on platform component")
+	}
+
+	return val, err
 }
 
 func (op *deployOperation) StatusPtr(msg proto.Message) **pb.Status {
