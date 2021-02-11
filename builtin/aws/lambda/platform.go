@@ -115,9 +115,9 @@ const lambdaRolePolicy = `{
 	]
 }`
 
-// SetupRole creates an IAM role that will be used by the Lambda function. The role
+// setupRole creates an IAM role that will be used by the Lambda function. The role
 // has the basic lambda execution rules attached to it.
-func (p *Platform) SetupRole(L hclog.Logger, app *component.Source, sess *session.Session) (string, error) {
+func (p *Platform) setupRole(L hclog.Logger, app *component.Source, sess *session.Session) (string, error) {
 	svc := iam.New(sess)
 
 	roleName := "lambda-" + app.App
@@ -178,6 +178,17 @@ func (p *Platform) Deploy(
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
+
+	sg := ui.StepGroup()
+
+	step := sg.Add("Connecting to AWS")
+
+	// We put this in a function because if/when step is reassigned, we want to
+	// abort the new value.
+	defer func() {
+		step.Abort()
+	}()
+
 	// Start building our deployment since we use this information
 	deployment := &Deployment{}
 	id, err := component.Id()
@@ -195,7 +206,7 @@ func (p *Platform) Deploy(
 	roleArn := p.config.RoleArn
 
 	if roleArn == "" {
-		arn, err := p.SetupRole(log, src, sess)
+		arn, err := p.setupRole(log, src, sess)
 		if err != nil {
 			return nil, err
 		}
@@ -213,6 +224,10 @@ func (p *Platform) Deploy(
 		timeout = DefaultTimeout
 	}
 
+	step.Done()
+
+	step = sg.Add("Reading Lambda function: %s", src.App)
+
 	lamSvc := lambda.New(sess)
 	curFunc, err := lamSvc.GetFunction(&lambda.GetFunctionInput{
 		FunctionName: aws.String(src.App),
@@ -220,9 +235,9 @@ func (p *Platform) Deploy(
 
 	var funcarn string
 
-	// If the function exists, we update it's code rather than create a new one.
-	// Will then publish this new code to create a stable identifier for it.
+	// If the function exists (ie we read it), we update it's code rather than create a new one.
 	if err == nil {
+		step.Update("Updating Lambda function with new code")
 
 		var reset bool
 		var update lambda.UpdateFunctionConfigurationInput
@@ -261,8 +276,10 @@ func (p *Platform) Deploy(
 			return nil, err
 		}
 
-		ui.Output("Updated Lambda Function: %s", funcarn)
+		// We couldn't read the function before, so we'll go ahead and create one.
 	} else {
+		step.Update("Creating new Lambda function")
+
 		funcOut, err := lamSvc.CreateFunction(&lambda.CreateFunctionInput{
 			Description:  aws.String(fmt.Sprintf("waypoint %s", src.App)),
 			FunctionName: aws.String(src.App),
@@ -284,19 +301,19 @@ func (p *Platform) Deploy(
 		}
 
 		funcarn = *funcOut.FunctionArn
-
-		ui.Output("Created Lambda Function: %s", funcarn)
 	}
 
-	st := ui.Status()
-	defer st.Close()
+	step.Done()
 
-	st.Update("Waiting for Lambda function to be processed")
+	step = sg.Add("Waiting for Lambda function to be processed")
 	// The image is never ready right away, AWS has to process it, so we wait
 	// 3 seconds before trying to publish the version
 
 	time.Sleep(3 * time.Second)
 
+	// no publish this new code to create a stable identifier for it. Otherwise
+	// if a manually pushes to the function and we use $LATEST, we'll accidentally
+	// start running their manual code rather then the fixed one we have here.
 	var ver *lambda.FunctionConfiguration
 
 	// Only try 30 times.
@@ -326,11 +343,10 @@ func (p *Platform) Deploy(
 		return nil, fmt.Errorf("Lambda was unable to prepare the function in the aloted time")
 	}
 
-	st.Close()
-
 	verarn := *ver.FunctionArn
 
-	ui.Output("Published Lambda Function: %s (%s)", verarn, *ver.Version)
+	step.Update("Published Lambda function: %s (%s)", verarn, *ver.Version)
+	step.Done()
 
 	_, err = lamSvc.AddPermission(&lambda.AddPermissionInput{
 		Action:       aws.String("lambda:InvokeFunction"),
@@ -345,6 +361,7 @@ func (p *Platform) Deploy(
 
 	// Now generate a new TargetGroup so the Lambda can be attached to an ALB easily.
 
+	step = sg.Add("Creating TargetGroup for Lambda version")
 	svc := elbv2.New(sess)
 
 	serviceName := fmt.Sprintf("%s-%s", src.App, id)
@@ -377,6 +394,8 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	step.Done()
+
 	deployment.Id = id
 	deployment.FuncArn = funcarn
 	deployment.VerArn = verarn
@@ -387,7 +406,7 @@ func (p *Platform) Deploy(
 }
 
 // This is used by the Exec plugin to provide some helpful output
-// while we proper the exec environment.
+// while we prepare the exec environment.
 func rewriteLine(w io.Writer, str string, args ...interface{}) {
 	fmt.Fprintf(w, "\r\033[K"+str, args...)
 }

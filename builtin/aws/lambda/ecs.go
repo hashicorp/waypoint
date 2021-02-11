@@ -93,6 +93,11 @@ func (e *ecsLauncher) SetupRole(L hclog.Logger, sess *session.Session, log hclog
 
 	e.roleName = "ecr-" + app.App
 
+	// role names have to be 64 characters or less, and the client side doesn't validate this.
+	if len(e.roleName) > 64 {
+		e.roleName = e.roleName[:64]
+	}
+
 	log.Info("setting up IAM role")
 	L.Debug("attempting to retrieve existing role", "role-name", e.roleName)
 
