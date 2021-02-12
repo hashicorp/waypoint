@@ -232,7 +232,7 @@ func (p *Platform) Deploy(
 			ContainerPort: int32(port),
 			HostPort:      int32(hostPort),
 			HostIP:        cp["host_ip"],
-			// add protocol options here?
+			Protocol:      corev1.ProtocolTCP,
 		}
 	}
 
