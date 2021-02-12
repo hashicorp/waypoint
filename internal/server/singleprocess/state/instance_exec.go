@@ -113,6 +113,10 @@ func (s *State) InstanceExecCreateForVirtualInstance(ctx context.Context, id str
 		// the newly created record for the instance.
 		txn := s.inmem.Txn(false)
 
+		// NOTE: we don't defer the txn.Abort() here because Abort() on a readonly txn
+		// is a noop anyway AND we don't want to fill the stack of this function up with
+		// defers, since this is in a loop. Defers in loops, thar be dragons.
+
 		watchCh, raw, err := txn.FirstWatch(instanceTableName, instanceIdIndexName, id)
 		if err != nil {
 			return err
