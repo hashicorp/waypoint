@@ -313,7 +313,7 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	doc.SetField(
 		"port",
 		"the TCP port that the application is listening on",
-		docs.Default(DefaultPort),
+		docs.Default(fmt.Sprint(DefaultPort)),
 	)
 
 	doc.SetField(
