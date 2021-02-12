@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -91,30 +92,49 @@ func (r *Releaser) Release(
 		labelId: target.Id,
 	}
 
+	if (r.config.Port != 0 || r.config.NodePort != 0) && r.config.Ports != nil {
+		return nil, fmt.Errorf("Cannot define both 'Ports' and 'port' or 'node_port'." +
+			" Use 'ports' for configuring multiple service ports.")
+	} else if r.config.Ports == nil && (r.config.Port != 0 || r.config.NodePort != 0) {
+		r.config.Ports = make([]map[string]string, 1)
+		r.config.Ports[0] = map[string]string{
+			"port":      strconv.Itoa(int(r.config.Port)),
+			"node_port": strconv.Itoa(int(r.config.NodePort)),
+		}
+	} else if r.config.Port == 0 && r.config.NodePort == 0 && r.config.Ports == nil {
+		// We don't explicitly set nodeport if Port isn't defined, because
+		// k8s will automatically assign a nodeport if unspecified
+		r.config.Ports = make([]map[string]string, 1)
+		r.config.Ports[0] = map[string]string{
+			"port": strconv.Itoa(int(DefaultPort)),
+		}
+	}
+
 	var checkLB bool
 
 	if r.config.LoadBalancer {
 		service.Spec.Type = corev1.ServiceTypeLoadBalancer
 		checkLB = true
-	} else if r.config.NodePort != 0 {
+	} else if r.config.Ports[0]["node_port"] != "" || r.config.Ports[0]["node_port"] != "0" {
 		service.Spec.Type = corev1.ServiceTypeNodePort
 	} else {
 		service.Spec.Type = corev1.ServiceTypeClusterIP
 	}
 
-	port := r.config.Port
-	if port == 0 {
-		port = DefaultPort
+	servicePorts := make([]corev1.ServicePort, len(r.config.Ports))
+	for i, sp := range r.config.Ports {
+		nodePort, _ := strconv.ParseInt(sp["node_port"], 10, 32)
+		port, _ := strconv.ParseInt(sp["port"], 10, 32)
+
+		servicePorts[i] = corev1.ServicePort{
+			Port:       int32(port),
+			TargetPort: intstr.FromString(sp["target_port"]),
+			Protocol:   corev1.ProtocolTCP,
+			NodePort:   int32(nodePort),
+		}
 	}
 
-	service.Spec.Ports = []corev1.ServicePort{
-		{
-			Port:       int32(port),
-			TargetPort: intstr.FromString("http"),
-			Protocol:   corev1.ProtocolTCP,
-			NodePort:   int32(r.config.NodePort),
-		},
-	}
+	service.Spec.Ports = servicePorts
 
 	// Create/update
 	if create {
@@ -158,8 +178,8 @@ func (r *Releaser) Release(
 			result.Url = "http://" + ingress.Hostname
 		}
 
-		if port != 80 {
-			result.Url = fmt.Sprintf("%s:%d", result.Url, port)
+		if service.Spec.Ports[0].Port != 80 {
+			result.Url = fmt.Sprintf("%s:%d", result.Url, service.Spec.Ports[0].Port)
 		}
 	} else if service.Spec.Ports[0].NodePort > 0 {
 		nodeclient := clientset.CoreV1().Nodes()
