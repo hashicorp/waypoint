@@ -657,7 +657,7 @@ deploy "kubernetes" {
 	doc.SetField(
 		"service_port",
 		"the TCP port that the application is listening on",
-		docs.Default(DefaultServicePort),
+		docs.Default(fmt.Sprint(DefaultServicePort)),
 		docs.Summary(
 			"by default, this config variable is used for exposing a single port for",
 			"the container in use. For multi-port configuration, use 'ports' instead.",
