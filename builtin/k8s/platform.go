@@ -238,7 +238,7 @@ func (p *Platform) Deploy(
 	}
 
 	// assume the first port defined is the 'main' port to use
-	defaultPort, err := strconv.Atoi(p.config.Ports[0]["port"])
+	defaultPort := int(containerPorts[0].ContainerPort)
 
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
