@@ -137,18 +137,12 @@ func (p *Platform) Deploy(
 
 	if p.config.ServicePort == 0 && p.config.Ports == nil {
 		// nothing defined, set up the defaults
-		servicePort := map[string]string{"port": strconv.Itoa(defaultServicePort), "name": "http"}
-		ports := make([]map[string]string, 1)
-		p.config.Ports = ports
-
-		p.config.Ports[0] = servicePort
+		p.config.Ports = make([]map[string]string, 1)
+		p.config.Ports[0] = map[string]string{"port": strconv.Itoa(defaultServicePort), "name": "http"}
 	} else if p.config.ServicePort > 0 && p.config.Ports == nil {
 		// old ServicePort var is used, so set it up in our Ports map to be used
-		servicePort := map[string]string{"port": strconv.Itoa(defaultServicePort), "name": "http"}
-		ports := make([]map[string]string, 1)
-		p.config.Ports = ports
-
-		p.config.Ports[0] = servicePort
+		p.config.Ports = make([]map[string]string, 1)
+		p.config.Ports[0] = map[string]string{"port": strconv.Itoa(int(p.config.ServicePort)), "name": "http"}
 	} else if p.config.ServicePort > 0 && len(p.config.Ports) > 0 {
 		// both defined, this is an error
 		return nil, fmt.Errorf("Cannot define both 'service_port' and 'ports'. Use" +
