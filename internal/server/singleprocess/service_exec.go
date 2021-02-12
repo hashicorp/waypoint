@@ -132,13 +132,14 @@ func (s *service) StartExecStream(
 
 			jobId := qresp.JobId
 
+			// Be sure that if we decide things aren't going well, the job doesn't outlive
+			// it's usefulness.
+			defer s.state.JobCancel(jobId, false)
+
 			log.Debug("waiting on job state", "job-id", jobId)
 
 			state, err := s.waitOnJobStarted(srv.Context(), jobId)
 			if err != nil {
-				// most common case here is if the remote side disconnected and the context
-				// was canceled before the job transitioned to a started state.
-				s.state.JobCancel(jobId, false)
 				return err
 			}
 
