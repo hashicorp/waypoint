@@ -115,7 +115,7 @@ func (r *Releaser) Release(
 	if r.config.LoadBalancer {
 		service.Spec.Type = corev1.ServiceTypeLoadBalancer
 		checkLB = true
-	} else if r.config.Ports[0]["node_port"] != "" || r.config.Ports[0]["node_port"] != "0" {
+	} else if r.config.Ports[0]["node_port"] != "" && r.config.Ports[0]["node_port"] != "0" {
 		service.Spec.Type = corev1.ServiceTypeNodePort
 	} else {
 		service.Spec.Type = corev1.ServiceTypeClusterIP
