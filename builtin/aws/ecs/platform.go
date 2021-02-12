@@ -571,7 +571,9 @@ func createALB(
 	sess *session.Session,
 	app *component.Source,
 	albConfig *ALBConfig,
-	vpcId, serviceName, sgWebId *string,
+	vpcId *string,
+	serviceName *string,
+	sgWebId *string,
 	servicePort *int64,
 	subnets []*string,
 ) (lbArn *string, tgArn *string, err error) {
