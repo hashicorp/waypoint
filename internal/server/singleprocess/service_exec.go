@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -89,7 +90,7 @@ func (s *service) StartExecStream(
 
 			// Means the client WANTS the job run on itself, so let's target the
 			// job back to it.
-			if runnerId, ok := server.RunnerId(srv.Context()); ok {
+			if runnerId, ok := grpcmetadata.RunnerId(srv.Context()); ok {
 				job.DataSource = &pb.Job_DataSource{
 					Source: &pb.Job_DataSource_Local{
 						Local: &pb.Job_Local{},

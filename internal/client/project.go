@@ -5,13 +5,11 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-hclog"
-	"google.golang.org/grpc/metadata"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/runner"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverclient"
-	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 // Project is the primary structure for interacting with a Waypoint
@@ -113,16 +111,14 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 	return client, nil
 }
 
-// addMetadata adds any grpc metadata that should be include by any gRPC
-// calls that are done with returned context. This is used to inject metadata
-// about the local runner, allow the server to target jobs back to the client
-// that performed an RPC call.
-func (c *Project) AddMetadata(ctx context.Context) context.Context {
-	if c.activeRunner != nil {
-		ctx = metadata.AppendToOutgoingContext(ctx, serverconfig.GrpcMetadataRunnerId, c.activeRunner.Id())
+// LocalRunnerId returns the id of the runner that this project started
+// This is used to target jobs specificly at this runner.
+func (c *Project) LocalRunnerId() (string, bool) {
+	if c.activeRunner == nil {
+		return "", false
 	}
 
-	return ctx
+	return c.activeRunner.Id(), true
 }
 
 // Ref returns the raw Waypoint server API client.

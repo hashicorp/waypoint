@@ -9,14 +9,13 @@ import (
 	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
-	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 func TestServiceStartExecStream_badOpen(t *testing.T) {
@@ -406,7 +405,7 @@ func TestServiceStartExecStream_startPlugin(t *testing.T) {
 	fakeRunner, err := server.Id()
 	require.NoError(err)
 
-	ctx = metadata.AppendToOutgoingContext(ctx, serverconfig.GrpcMetadataRunnerId, fakeRunner)
+	ctx = grpcmetadata.AddRunner(ctx, fakeRunner)
 
 	// Start an exec stream
 	stream, err := client.StartExecStream(ctx)

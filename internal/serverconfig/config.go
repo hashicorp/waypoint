@@ -4,11 +4,6 @@ import (
 	"strconv"
 )
 
-// The metadata key that stores the runner id associated with a client. This is
-// used by the CLI to advertise it's local client for when the server needs to
-// spawn jobs back on that client in response to an RPC.
-const GrpcMetadataRunnerId = "waypoint-runner-id"
-
 // Client configures a client to connect to a server.
 type Client struct {
 	Address string `hcl:"address,attr"`
