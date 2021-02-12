@@ -27,6 +27,7 @@ const (
 	labelId    = "waypoint.hashicorp.com/id"
 	labelNonce = "waypoint.hashicorp.com/nonce"
 
+	// TODO Evaluate if this should remain as a default 3000 to another port.
 	DefaultServicePort = 3000
 )
 
@@ -528,8 +529,6 @@ type Config struct {
 
 	// A full resource of options to define ports for your service running on the container
 	// Defaults to port 3000.
-	// TODO Evaluate if this should remain as a default 3000, should be a required field,
-	// or default to another port.
 	Ports []map[string]string `hcl:"ports,optional"`
 
 	// If set, this is the HTTP path to request to test that the application
@@ -550,9 +549,7 @@ type Config struct {
 	ServiceAccount string `hcl:"service_account,optional"`
 
 	// Port that your service is running on within the actual container.
-	// Defaults to port 3000.
-	// TODO Evaluate if this should remain as a default 3000, should be a required field,
-	// or default to another port.
+	// Defaults to DefaultServicePort const.
 	// NOTE: Ports and ServicePort cannot both be defined
 	ServicePort uint `hcl:"service_port,optional"`
 
