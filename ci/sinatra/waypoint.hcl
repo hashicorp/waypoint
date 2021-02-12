@@ -21,7 +21,7 @@ app "sinatra" {
   release {
     use "kubernetes" {
       load_balancer = false
-      node_port = -1
+      node_port=30000 // can only be 30000-32767 in k8s
     }
   }
 }
