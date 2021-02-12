@@ -1498,6 +1498,11 @@ deploy {
 	)
 
 	doc.SetField(
+		"disable_alb",
+		"do not create a load balancer assigned to the service",
+	)
+
+	doc.SetField(
 		"static_environment",
 		"static environment variables to make available",
 	)
