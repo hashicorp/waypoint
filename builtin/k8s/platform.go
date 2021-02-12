@@ -146,7 +146,7 @@ func (p *Platform) Deploy(
 	} else if p.config.ServicePort > 0 && len(p.config.Ports) > 0 {
 		// both defined, this is an error
 		return nil, fmt.Errorf("Cannot define both 'service_port' and 'ports'. Use" +
-			"'ports' for configuring multiple container ports.")
+			" 'ports' for configuring multiple container ports.")
 	}
 
 	// Build our env vars
