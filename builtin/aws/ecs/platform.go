@@ -571,10 +571,12 @@ func createALB(
 	sess *session.Session,
 	app *component.Source,
 	albConfig *ALBConfig,
-	vpcId, serviceName, sgWebId *string,
+	vpcId *string,
+	serviceName *string,
+	sgWebId *string,
 	servicePort *int64,
 	subnets []*string,
-) (lbArn, tgArn *string, err error) {
+) (lbArn *string, tgArn *string, err error) {
 	s.Update("Creating ALB target group")
 	L.Debug("creating target group", "name", serviceName)
 
@@ -735,10 +737,6 @@ func createALB(
 			}
 		}
 
-		if len(tgs) == 0 {
-			tgs[0].Weight = aws.Int64(100)
-		}
-
 		s.Update("Modifying ALB Listener to introduce target group")
 
 		_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
@@ -821,7 +819,7 @@ func createALB(
 		}
 	}
 
-	lbArn = lb.LoadBalancerArn
+	lbArn = listener.LoadBalancerArn
 
 	return lbArn, tgArn, err
 }
@@ -1088,7 +1086,9 @@ func (p *Platform) Launch(
 			ctx, s, L, sess,
 			app,
 			p.config.ALB,
-			vpcId, &serviceName, sgweb,
+			vpcId,
+			&serviceName,
+			sgweb,
 			&p.config.ServicePort,
 			subnets,
 		)
@@ -1157,6 +1157,8 @@ func (p *Platform) Launch(
 		ServiceArn: *servOut.Service.ServiceArn,
 	}
 
+	// the TargetGroupArn set here is used by Releaser to set the active
+	// TargetGroup's weight to 100
 	if !p.config.DisableALB {
 		dep.TargetGroupArn = *tgArn
 		dep.LoadBalancerArn = *lbArn
