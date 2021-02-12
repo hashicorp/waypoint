@@ -27,7 +27,7 @@ const (
 	labelId    = "waypoint.hashicorp.com/id"
 	labelNonce = "waypoint.hashicorp.com/nonce"
 
-	defaultServicePort = 3000
+	DefaultServicePort = 3000
 )
 
 // Platform is the Platform implementation for Kubernetes.
@@ -138,7 +138,7 @@ func (p *Platform) Deploy(
 	if p.config.ServicePort == 0 && p.config.Ports == nil {
 		// nothing defined, set up the defaults
 		p.config.Ports = make([]map[string]string, 1)
-		p.config.Ports[0] = map[string]string{"port": strconv.Itoa(defaultServicePort), "name": "http"}
+		p.config.Ports[0] = map[string]string{"port": strconv.Itoa(DefaultServicePort), "name": "http"}
 	} else if p.config.ServicePort > 0 && p.config.Ports == nil {
 		// old ServicePort var is used, so set it up in our Ports map to be used
 		p.config.Ports = make([]map[string]string, 1)
@@ -657,7 +657,7 @@ deploy "kubernetes" {
 	doc.SetField(
 		"service_port",
 		"the TCP port that the application is listening on",
-		docs.Default(defaultServicePort),
+		docs.Default(DefaultServicePort),
 		docs.Summary(
 			"by default, this config variable is used for exposing a single port for",
 			"the container in use. For multi-port configuration, use 'ports' instead.",
