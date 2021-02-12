@@ -29,7 +29,7 @@ func (r *Releaser) ReleaseFunc() interface{} {
 	return r.Release
 }
 
-// Release creates a Kubernetes service configured for the deployment
+// Release updates the load balancer for the ECS deployment
 func (r *Releaser) Release(
 	ctx context.Context,
 	log hclog.Logger,
@@ -37,6 +37,11 @@ func (r *Releaser) Release(
 	ui terminal.UI,
 	target *Deployment,
 ) (*Release, error) {
+	if target.LoadBalancerArn == "" && target.TargetGroupArn == "" {
+		log.Info("No load-balancer configured")
+		return &Release{}, nil
+	}
+
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: r.p.config.Region,
 	})
