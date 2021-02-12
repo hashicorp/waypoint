@@ -1,6 +1,8 @@
 package state
 
 import (
+	"context"
+
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -158,6 +160,50 @@ func (s *State) InstanceById(id string) (*Instance, error) {
 	}
 
 	return raw.(*Instance), nil
+}
+
+// InstanceByIdWaiting waits for an instance with +id+ to connect before returning
+// itself record.
+func (s *State) InstanceByIdWaiting(ctx context.Context, id string) (*Instance, error) {
+	// If the caller specified an instance id already, then just validate it.
+	if id == "" {
+		return nil, status.Errorf(codes.NotFound, "No instance id given")
+	}
+
+	for {
+		// We have to start a new txn per iteration because we want to be able to observe
+		// the newly created record for the instance.
+		txn := s.inmem.Txn(false)
+
+		// NOTE: we don't defer the txn.Abort() here because Abort() on a readonly txn
+		// is a noop anyway AND we don't want to fill the stack of this function up with
+		// defers, since this is in a loop. Defers in loops, thar be dragons.
+
+		watchCh, raw, err := txn.FirstWatch(instanceTableName, instanceIdIndexName, id)
+		if err != nil {
+			return nil, err
+		}
+
+		// It's there!
+		if raw != nil {
+			return raw.(*Instance), nil
+		}
+
+		// The watcher here registers itself on the bottom of a leaf node in the memdb
+		// graph, which is fired when a new value is loaded into that leaf. Thus, it can
+		// detect previously unknown values.
+		ws := memdb.NewWatchSet()
+		ws.Add(watchCh)
+
+		// Wait for the instance to show up
+		if err := ws.WatchCtx(ctx); err != nil {
+			if ctx.Err() != nil {
+				return nil, ctx.Err()
+			}
+
+			return nil, err
+		}
+	}
 }
 
 func (s *State) InstancesByDeployment(id string, ws memdb.WatchSet) ([]*Instance, error) {

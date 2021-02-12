@@ -178,6 +178,13 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 		log.Debug("no exec plugin detected on platform component")
 	}
 
+	if ep, ok := op.Component.Value.(component.LogPlatform); ok && ep.LogsFunc() != nil {
+		log.Debug("detected deployment uses a logs plugin, decorating deployment with info")
+		deploy.HasLogsPlugin = true
+	} else {
+		log.Debug("no logs plugin detected on platform component")
+	}
+
 	return val, err
 }
 

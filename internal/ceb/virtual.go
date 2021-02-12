@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -329,6 +331,89 @@ func (v *Virtual) startExec(
 					v.log.Warn("error changing window size, this doesn't quit the stream",
 						"err", err)
 				}
+			}
+		}
+	}
+}
+
+// RunExec connects to the server and handles any inbound Exec requests via the
+// VirtualExecHandler. The count parameter inidcates how many exec sessions to handle
+// before returning. If count is less than 0, it handles sessions forever.
+func (v *Virtual) RunLogs(
+	ctx context.Context,
+	startTime time.Time,
+	limit int,
+	f func(ctx context.Context, lv *component.LogViewer) error,
+) error {
+	// Open our log stream
+	client, err := v.cfg.Client.EntrypointLogStream(ctx)
+	if err != nil {
+		return status.Errorf(codes.Aborted,
+			"failed to open a log stream: %s", err)
+	}
+
+	defer client.CloseAndRecv()
+
+	v.log.Info("connecting virtual instance log stream")
+
+	logs := make(chan component.LogEvent, 10)
+
+	// A quick heads up: gRPC provides to ability to let the client of a recieve stream
+	// tell the remote side "hey, I'm done now, don't send me anything else.". So instead
+	// we wire up a context to the call and cancel it when we are done. This cancelation
+	// will propogate to the server and they'll see that we have gone away.
+	//
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	ls := &component.LogViewer{
+		Output:     logs,
+		StartingAt: startTime,
+		Limit:      limit,
+	}
+
+	done := make(chan error, 1)
+
+	go func() {
+		done <- f(ctx, ls)
+	}()
+
+	v.log.Info("processing logs for virtual instance")
+	defer v.log.Info("finished logs for virtual instance")
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case err := <-done:
+			return err
+		case lev, ok := <-logs:
+			if !ok {
+				return nil
+			}
+
+			ts, err := ptypes.TimestampProto(lev.Timestamp)
+			if err == nil {
+				ts = ptypes.TimestampNow()
+			}
+
+			entry := &pb.LogBatch_Entry{
+				Source:    pb.LogBatch_Entry_APP,
+				Timestamp: ts,
+				Line:      lev.Message,
+			}
+
+			v.log.Debug("sending log entry via EntrypointLogBatch")
+
+			// TODO(evanphx) Do something with lev.Partition
+			err = client.Send(&pb.EntrypointLogBatch{
+				InstanceId: v.cfg.InstanceId,
+				Lines:      []*pb.LogBatch_Entry{entry},
+			})
+
+			if err != nil {
+				v.log.Error("error sending entrypoint log batch", "error", err)
+				return nil
 			}
 		}
 	}

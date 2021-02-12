@@ -108,39 +108,9 @@ func (s *State) InstanceExecCreateForVirtualInstance(ctx context.Context, id str
 		return status.Errorf(codes.NotFound, "No instance id given")
 	}
 
-	for {
-		// We have to start a new txn per iteration because we want to be able to observe
-		// the newly created record for the instance.
-		txn := s.inmem.Txn(false)
-
-		// NOTE: we don't defer the txn.Abort() here because Abort() on a readonly txn
-		// is a noop anyway AND we don't want to fill the stack of this function up with
-		// defers, since this is in a loop. Defers in loops, thar be dragons.
-
-		watchCh, raw, err := txn.FirstWatch(instanceTableName, instanceIdIndexName, id)
-		if err != nil {
-			return err
-		}
-
-		// It's there!
-		if raw != nil {
-			break
-		}
-
-		// The watcher here registers itself on the bottom of a leaf node in the memdb
-		// graph, which is fired when a new value is loaded into that leaf. Thus, it can
-		// detect previously unknown values.
-		ws := memdb.NewWatchSet()
-		ws.Add(watchCh)
-
-		// Wait for the instance to show up
-		if err := ws.WatchCtx(ctx); err != nil {
-			if ctx.Err() != nil {
-				return ctx.Err()
-			}
-
-			return err
-		}
+	_, err := s.InstanceByIdWaiting(ctx, id)
+	if err != nil {
+		return err
 	}
 
 	// Now make a new write txn. We don't want to hold a write txn above (plus we have

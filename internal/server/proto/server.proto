@@ -579,7 +579,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 62 to 99; // future operation range
+  reserved 63 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -639,6 +639,7 @@ message Job {
     ConfigSyncOp config_sync = 59;
     ExecOp exec = 60;
     UpOp up = 61;
+    LogsOp logs = 62;
   }
 
   //-----------------------------------------------------------------
@@ -922,6 +923,22 @@ message Job {
   }
 
   message ExecResult {}
+
+  // Used to start a platform's exec function within a runner. This is only used
+  // there are no long running instances for a deployment and can fail if the
+  // platform plugin does not provide an exec function.
+  message LogsOp {
+    // Id to assign the virtual instance created
+    string instance_id = 1;
+
+    // The deployment to create the exec session context. Ie, what
+    // application code will be available within the exec session.
+    Deployment deployment = 2;
+
+    google.protobuf.Timestamp start_time = 3;
+
+    int32 limit = 4;
+  }
 
   message DestroyOp {
     // target is what to destroy in this operation.
@@ -1740,6 +1757,9 @@ message Deployment {
   // True if the deployment was done by a plugin that defined an exec plugin
   bool has_exec_plugin = 15;
 
+  // True if the deployment was done by a plugin that defined an logs plugin
+  bool has_logs_plugin = 16;
+
   enum LoadDetails {
     NONE = 0;
     ARTIFACT = 1;
@@ -1992,6 +2012,9 @@ message GetLogStreamRequest {
 
     // Logs for a specific application in a workspace.
     Application application = 2;
+
+    // Logs for a specific instance.
+    string instance_id = 4;
   }
 
   // limit_backlog sets the maximum backlog lines to return on the initial

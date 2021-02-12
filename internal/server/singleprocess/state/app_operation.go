@@ -195,7 +195,11 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 		return nil, err
 	}
 
-	var result []interface{}
+	var (
+		result []interface{}
+		first  time.Time
+	)
+
 	s.db.View(func(tx *bolt.Tx) error {
 		for {
 			current := iter.Next()
@@ -237,6 +241,15 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 				}
 			}
 
+			// Capture the time value to use for a possible WatchSet below
+			if first.IsZero() {
+				if idx == opStartTimeIndexName {
+					first = record.StartTime
+				} else {
+					first = record.CompleteTime
+				}
+			}
+
 			result = append(result, value)
 
 			// If we have a limit, check that now
@@ -245,6 +258,23 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 			}
 		}
 	})
+
+	// We can derive a watchch by doing a get on the "first" prefix, discarding the result, and
+	// just use the watchch.
+	if opts.WatchSet != nil {
+		iter, err := memTxn.Get(
+			op.memTableName(),
+			idx,
+			opts.Application.Project,
+			opts.Application.Application,
+			first,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		opts.WatchSet.Add(iter.WatchCh())
+	}
 
 	return result, nil
 }
@@ -687,6 +717,7 @@ type listOperationsOptions struct {
 	Status        []*pb.StatusFilter
 	Order         *pb.OperationOrder
 	PhysicalState pb.Operation_PhysicalState
+	WatchSet      memdb.WatchSet
 }
 
 func buildListOperationsOptions(ref *pb.Ref_Application, opts ...ListOperationOption) *listOperationsOptions {
@@ -766,5 +797,13 @@ func statusFilterMatchSingle(
 	default:
 		// unknown filters never match
 		return false
+	}
+}
+
+// ListWithWatchSet registers watches for the listing, allowing the watcher
+// to detect if new items are added.
+func ListWithWatchSet(ws memdb.WatchSet) ListOperationOption {
+	return func(opts *listOperationsOptions) {
+		opts.WatchSet = ws
 	}
 }
