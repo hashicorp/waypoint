@@ -98,9 +98,6 @@ func (r *Releaser) Release(
 		checkLB = true
 	} else if r.config.NodePort != 0 {
 		service.Spec.Type = corev1.ServiceTypeNodePort
-		if r.config.NodePort < 0 {
-			r.config.NodePort = 0
-		}
 	} else {
 		service.Spec.Type = corev1.ServiceTypeClusterIP
 	}
@@ -240,7 +237,7 @@ type ReleaserConfig struct {
 	// The default is 80.
 	// Not valid if `Ports` is already defined
 	// If defined, will internally be stored into `Ports`
-	Port int `hcl:"port,optional"`
+	Port uint `hcl:"port,optional"`
 
 	// A full resource of options to define ports for a service
 	Ports []map[string]string `hcl:"ports,optional"`
@@ -249,7 +246,7 @@ type ReleaserConfig struct {
 	// is running service.
 	// Not valid if `Ports` is already defined
 	// If defined, will internally be stored into `Ports`
-	NodePort int `hcl:"node_port,optional"`
+	NodePort uint `hcl:"node_port,optional"`
 
 	// Namespace is the Kubernetes namespace to target the deployment to.
 	Namespace string `hcl:"namespace,optional"`
