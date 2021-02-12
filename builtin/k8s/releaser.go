@@ -317,6 +317,15 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	)
 
 	doc.SetField(
+		"ports",
+		"a map of ports and options that the application is listening on",
+		docs.Summary(
+			"used to define and configure multiple ports that the application is",
+			"listening on. Can define a 'port', 'node_port', and 'target_port'.",
+		),
+	)
+
+	doc.SetField(
 		"namespace",
 		"namespace to create Service in",
 		docs.Summary(
