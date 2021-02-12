@@ -125,6 +125,10 @@ func (r *Releaser) Release(
 	for i, sp := range r.config.Ports {
 		nodePort, _ := strconv.ParseInt(sp["node_port"], 10, 32)
 		port, _ := strconv.ParseInt(sp["port"], 10, 32)
+		if port == 0 {
+			// This likely means port was unset and got parsed to 0
+			port = DefaultPort
+		}
 
 		servicePorts[i] = corev1.ServicePort{
 			Port:       int32(port),
