@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/api/iam/v1"
 	run "google.golang.org/api/run/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
@@ -67,11 +67,15 @@ func (p *Platform) Auth() error {
 	return nil
 }
 
+// DefaultReleaserFunc implements component.PlatformReleaser
+func (p *Platform) DefaultReleaserFunc() interface{} {
+	return func() *Releaser { return &Releaser{} }
+}
+
 func (p *Platform) ValidateAuth(
 	ctx context.Context,
 	log hclog.Logger,
 	src *component.Source,
-	dir *datadir.Component,
 	ui terminal.UI,
 ) error {
 	deployment := &Deployment{
@@ -114,10 +118,10 @@ func (p *Platform) ValidateAuth(
 		src.App,
 	)
 
-	st.Update("Testing IAM permissions...")
+	st.Update("Testing Cloud Run IAM permissions...")
 	result, err := client.TestIamPermissions(apiResource, &testReq).Do()
 	if err != nil {
-		st.Step(terminal.StatusError, "Error testing IAM permissions: "+err.Error())
+		st.Step(terminal.StatusError, "Error testing Cloud Run IAM permissions: "+err.Error())
 		return err
 	}
 
@@ -127,16 +131,53 @@ func (p *Platform) ValidateAuth(
 		return fmt.Errorf("incorrect IAM permissions, received %s", strings.Join(result.Permissions, ", "))
 	}
 
+	// Validate if user has access to the service account specified
+	if p.config.ServiceAccountName != "" {
+
+		iamAPIService, err := deployment.iamAPIService(ctx)
+		if err != nil {
+			ui.Output("Error constructing api client: "+err.Error(), terminal.WithErrorStyle())
+			return status.Errorf(codes.Aborted, err.Error())
+		}
+
+		client := iam.NewProjectsServiceAccountsService(iamAPIService)
+
+		expectedPermissions := []string{
+			"iam.serviceAccounts.actAs",
+		}
+
+		// We need to ensure that the service creator has Service Account User role.
+		testReq := iam.TestIamPermissionsRequest{
+			Permissions: expectedPermissions,
+		}
+
+		apiResource := fmt.Sprintf("projects/%s/serviceAccounts/%s",
+			p.config.Project,
+			p.config.ServiceAccountName,
+		)
+
+		st.Update("Testing IAM permissions on the supplied service account...")
+		result, err := client.TestIamPermissions(apiResource, &testReq).Do()
+		if err != nil {
+			st.Step(terminal.StatusError, "Error testing IAM permissions of the Service Account: "+err.Error())
+			return err
+		}
+
+		// If our resulting permissions do not equal our expected permissions, auth does not validate
+		if !reflect.DeepEqual(result.Permissions, expectedPermissions) {
+			st.Step(terminal.StatusError, "Incorrect IAM permissions on the Service Account, received "+strings.Join(result.Permissions, ", "))
+			return fmt.Errorf("Incorrect IAM permissions on the Service Account, received %s", strings.Join(result.Permissions, ", "))
+		}
+	}
 	return nil
 }
 
-// Deploy deploys an image to GCR.
+// Deploy deploys an image to Cloud Run.
 func (p *Platform) Deploy(
 	ctx context.Context,
 	log hclog.Logger,
 	src *component.Source,
 	img *docker.Image,
-	dir *datadir.Component,
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
@@ -156,7 +197,7 @@ func (p *Platform) Deploy(
 
 	// Validate that the Docker image is stored in a GCP registry
 	// It is not possible to deploy to Cloud Run using external container registries
-	err = validateImageName(img.Image, p.config.Project)
+	err = validateImageName(img.Image)
 	if err != nil {
 		return nil, status.Error(codes.FailedPrecondition, err.Error())
 	}
@@ -318,6 +359,10 @@ func (p *Platform) Deploy(
 		*/
 	}
 
+	if p.config.ServiceAccountName != "" {
+		service.Spec.Template.Spec.ServiceAccountName = p.config.ServiceAccountName
+	}
+
 	if create {
 		// Create the service
 		log.Info("creating the service")
@@ -383,7 +428,7 @@ func (p *Platform) Destroy(
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
-	doc, err := docs.New(docs.FromConfig(&Config{}))
+	doc, err := docs.New(docs.FromConfig(&Config{}), docs.FromFunc(p.DeployFunc()))
 	if err != nil {
 		return nil, err
 	}
@@ -427,6 +472,8 @@ app "wpmini" {
         max_requests_per_container = 10
         request_timeout            = 300
       }
+
+	  service_account_name = "cloudrun@waypoint-project-id.iam.gserviceaccount.com"
 
       auto_scaling {
         max = 10
@@ -500,6 +547,11 @@ app "wpmini" {
 	)
 
 	doc.SetField(
+		"service_account_name",
+		"Specify a service account email that Cloud Run will use to run the service. You must have the `iam.serviceAccounts.actAs` permission on the service account.",
+	)
+
+	doc.SetField(
 		"auto_scaling.max",
 		`Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.
 		This parameter controls the maximum number of instances that can be created.`,
@@ -538,6 +590,9 @@ type Config struct {
 
 	// AutoScaling details.
 	AutoScaling *AutoScaling `hcl:"auto_scaling,block"`
+
+	// Service Account details
+	ServiceAccountName string `hcl:"service_account_name,optional"`
 }
 
 // Capacity defines configuration for deployed Cloud Run resources

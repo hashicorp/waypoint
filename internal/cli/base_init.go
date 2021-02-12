@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/hashicorp/hcl/v2/hclsimple"
-
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
@@ -40,7 +38,7 @@ func (c *baseCommand) initConfig(optional bool) (*configpkg.Config, error) {
 
 // initConfigPath returns the configuration path to load.
 func (c *baseCommand) initConfigPath() (string, error) {
-	path, err := configpkg.FindPath("", "")
+	path, err := configpkg.FindPath("", "", true)
 	if err != nil {
 		return "", fmt.Errorf("Error looking for a Waypoint configuration: %s", err)
 	}
@@ -50,15 +48,8 @@ func (c *baseCommand) initConfigPath() (string, error) {
 
 // initConfigLoad loads the configuration at the given path.
 func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
-	c.cfgCtx = configpkg.EvalContext(filepath.Dir(path))
-
-	var cfg configpkg.Config
-	if err := hclsimple.DecodeFile(path, c.cfgCtx, &cfg); err != nil {
-		return nil, err
-	}
-
-	// Set the proper defaults
-	if err := cfg.Default(); err != nil {
+	cfg, err := configpkg.Load(path, filepath.Dir(path))
+	if err != nil {
 		return nil, err
 	}
 
@@ -67,7 +58,7 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 		return nil, err
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }
 
 // initClient initializes the client.
@@ -101,7 +92,7 @@ func (c *baseCommand) initClient() (*clientpkg.Project, error) {
 		clientpkg.WithLabels(c.flagLabels),
 		clientpkg.WithSourceOverrides(c.flagRemoteSource),
 	}
-	if !c.flagRemote {
+	if !c.flagRemote && c.autoServer {
 		opts = append(opts, clientpkg.WithLocal())
 	}
 

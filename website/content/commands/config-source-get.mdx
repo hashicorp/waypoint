@@ -1,0 +1,30 @@
+---
+layout: commands
+page_title: 'Commands: Config source-get'
+sidebar_title: 'config source-get'
+description: 'Get the configuration for a dynamic source plugin'
+---
+
+# Waypoint Config source-get
+
+Command: `waypoint config source-get`
+
+Get the configuration for a dynamic source plugin
+
+@include "commands/config-source-get_desc.mdx"
+
+## Usage
+
+Usage: `waypoint config source-get [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-type=<string>` - Dynamic source type to look up, such as 'vault'.
+
+@include "commands/config-source-get_more.mdx"

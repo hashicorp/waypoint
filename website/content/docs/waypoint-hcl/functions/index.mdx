@@ -1,0 +1,52 @@
+---
+layout: docs
+page_title: Functions - waypoint.hcl
+sidebar_title: Functions
+description: |-
+  The `waypoint.hcl` file uses HCL which is able to call predefined functions. Functions enable Waypoint configurations to represent complex configurations using programming techniques.
+---
+
+# Functions in `waypoint.hcl`
+
+The `waypoint.hcl` file uses [HCL](https://github.com/hashicorp/hcl) which
+is able to call predefined functions. Functions enable Waypoint configurations
+to represent complex configurations using programming techniques.
+
+Most functions can be used anywhere in the Waypoint configuration file.
+Some functions are context-specific and are only valid when called from the correct locations.
+Function documentation pages may use [placement tables](/docs/waypoint-hcl#placement-tables)
+to document where functions are valid. If a placement table is not present
+for a function, it is safe to assume that it can be used anywhere.
+
+## Calling Functions
+
+Function usage is similar to many mainstream programming languages such
+as Javascript, Ruby, or Python. Functions can be called directly and
+assigned to values:
+
+```hcl
+port = floor(8080.4)
+```
+
+Functions can be composed:
+
+```hcl
+port = floor(abs(-8080.4))
+```
+
+Functions arguments can be any expressions: variables, mathematical operations, etc.:
+
+```hcl
+port = floor(abs(artifact.port) + 42)
+```
+
+Functions can be used as part of string interpolations. Regardless of the
+return value HCL will attempt to coerce it into a string:
+
+```hcl
+port = "80${floor(80.4)}" // 8080
+```
+
+## Custom Functions
+
+Waypoint does not support custom defined functions.

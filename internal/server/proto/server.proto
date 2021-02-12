@@ -58,6 +58,12 @@ service Waypoint {
   // ListInstances returns the running instances of deployments.
   rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse);
 
+  // FindExecInstance returns an instance that can be used for an exec session.
+  // This is used by the exec cli command to detect if there is a long running
+  // instance to connect to or if a virtual instance should be created by running
+  // the plugins exec function.
+  rpc FindExecInstance(FindExecInstanceRequest) returns (FindExecInstanceResponse);
+
   // GetDeployment returns a deployment
   rpc GetDeployment(GetDeploymentRequest) returns (Deployment);
 
@@ -95,6 +101,16 @@ service Waypoint {
   // where a configuration variable was set by looking at the scope field on
   // each variable.
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
+
+  // Set the configuration for a dynamic configuration source. If you're looking
+  // to set application configuration, you probably want SetConfig instead.
+  rpc SetConfigSource(SetConfigSourceRequest) returns (google.protobuf.Empty);
+
+  // Get the matching configuration source for the request. This will return
+  // the most specific matching config source given the scope in the request.
+  // For example, if you search for an app-specific config source and only
+  // a global config exists, the global config will be returned.
+  rpc GetConfigSource(GetConfigSourceRequest) returns (GetConfigSourceResponse);
 
   // Create a hostname with the URL service.
   rpc CreateHostname(CreateHostnameRequest) returns (CreateHostnameResponse);
@@ -143,6 +159,15 @@ service Waypoint {
 
   // SetServerConfig sets configuration for the Waypoint server.
   rpc SetServerConfig(SetServerConfigRequest) returns (google.protobuf.Empty);
+
+  // CreateSnapshot creates a new database snapshot.
+  rpc CreateSnapshot(google.protobuf.Empty) returns (stream CreateSnapshotResponse);
+
+  // RestoreSnapshot performs a database restore with the given snapshot.
+  // This API doesn't do a full online restore, it only stages the restore
+  // for the next server start to finalize the restore. See the arguments for
+  // more information.
+  rpc RestoreSnapshot(stream RestoreSnapshotRequest) returns (google.protobuf.Empty);
 
   // BootstrapToken returns the initial token for the server. This can only
   // be requested once on first startup. After initial request this will
@@ -194,6 +219,15 @@ service Waypoint {
 
   // EntrypointExecStream is called to open the data stream for the exec session.
   rpc EntrypointExecStream(stream EntrypointExecRequest) returns (stream EntrypointExecResponse);
+
+  //----------------------------------------------------------------------
+  // Waypoint.hcl functions. These endpoints don't modify any server state,
+  // they're conveniences to build tools on top of Waypoint.
+  //----------------------------------------------------------------------
+
+  // WaypointHclFmt formats a waypoint.hcl file. This must be in HCL format.
+  // JSON formatting is not supported.
+  rpc WaypointHclFmt(WaypointHclFmtRequest) returns (WaypointHclFmtResponse);
 
   //----------------------------------------------------------------------
   // Internal metadata endpoints. The endpoints below are expected to be
@@ -271,18 +305,53 @@ message Project {
   // queued for this project without a data source set. This is usually
   // set using the `runner {}` block in the waypoint config.
   Job.DataSource data_source = 4;
+
+  // The contents of a default waypoint.hcl file. This will be used ONLY IF
+  // this project does not have a waypoint.hcl file when an operation is
+  // executed. When this is used, local operations can't be run any more
+  // since the CLI usually determines the project based on the waypoint.hcl
+  // file. The CLI may still be used for remote operations by executing
+  // i.e. waypoint up <project>
+  bytes waypoint_hcl = 5;
+  Format waypoint_hcl_format = 6;
+
+  enum Format {
+    HCL = 0; // We assume HCL by default
+    JSON = 1;
+  }
 }
 
 message Workspace {
+  // Old fields that were removed.
+  reserved 2;
+  reserved "applications";
+
   string name = 1;
 
-  // The list of applications that have executed at least one operation
-  // within the context of this workspace. To determine which operations
-  // you must call the operations respective List API such as ListDeployments.
-  repeated Application applications = 2;
+  // The list of projects that have executed at least one operation within
+  // the context of this workspace.
+  repeated Project projects = 4;
 
   // active_time is the last time that this workspace had activity.
   google.protobuf.Timestamp active_time = 3;
+
+  message Project {
+    // Project that this is referencing.
+    Ref.Project project = 1;
+
+    // The last non-local ref that was used for any operation.
+    Job.DataSource.Ref data_source_ref = 2;
+
+    // active_time is the last time that this project had activity in
+    // this workspace.
+    google.protobuf.Timestamp active_time = 3;
+
+    // The list of applications that have executed at least one operation
+    // within the context of this workspace. To determine which operations
+    // you must call the respect list API for that operation, such as
+    // ListDeployments.
+    repeated Application applications = 4;
+  }
 
   message Application {
     // Application that this is referencing.
@@ -301,6 +370,10 @@ message Workspace {
 //
 // Refs should be used when the full type shouldn't be embedded in the message.
 message Ref {
+  // Global references the entire server. This is used in some APIs
+  // as a way to read/write values that are server-global.
+  message Global {}
+
   // Application references an application. To uniquely identify an
   // application, this must encapsulate the full hierarchy to the application.
   message Application {
@@ -506,11 +579,17 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 59 to 79; // future operation range
+  reserved 62 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
   string id = 1;
+
+  // If this is set, then only one job with this singleton_id may exist
+  // at any point in the QUEUED state. If QueueJob is called with this set
+  // and an existing job is already queued with a matching singleton_id,
+  // that job will be overwritten with this job.
+  string singleton_id = 8;
 
   // The application to target for the operation. Some operations may allow
   // certain fields of this to be empty, so check with the operation
@@ -550,6 +629,9 @@ message Job {
     ValidateOp validate = 56;
     AuthOp auth = 57;
     DocsOp docs = 58;
+    ConfigSyncOp config_sync = 59;
+    ExecOp exec = 60;
+    UpOp up = 61;
   }
 
   //-----------------------------------------------------------------
@@ -569,6 +651,12 @@ message Job {
   google.protobuf.Timestamp assign_time = 103;
   google.protobuf.Timestamp ack_time = 104;
   google.protobuf.Timestamp complete_time = 105;
+
+  // Ref of the data was fetched for this job. This is available after
+  // the Ref event is sent down by GetJobStream. This is NOT used to specify
+  // the ref that should be downloaded. That level of configuration should be
+  // exposed via the data_source parameter itself.
+  DataSource.Ref data_source_ref = 110;
 
   // error is set if state == ERROR
   google.rpc.Status error = 106;
@@ -606,6 +694,8 @@ message Job {
     ValidateResult validate = 5;
     AuthResult auth = 6;
     DocsResult docs = 7;
+    ConfigSyncResult config_sync = 8;
+    UpResult up = 9;
   }
 
   message DataSource {
@@ -618,6 +708,18 @@ message Job {
 
       // git will check out the data from a Git repository.
       Git git = 2;
+    }
+
+    // Ref is a reference to the exact set of data used by a data source.
+    message Ref {
+      oneof ref {
+        // unknown is set if the ref is not known or not supported, such
+        // as for local data sources where we have no way to uniquely identify.
+        google.protobuf.Empty unknown = 1;
+
+        // git commit
+        Git.Ref git = 2;
+      }
     }
   }
 
@@ -635,6 +737,52 @@ message Job {
     // go into for the configuration. This must be a relative path
     // and may not contain ".."
     string path = 3;
+
+    // auth is the auth mechanism to use for this data source. This is optional.
+    // If this isn't set, then the data source will attempt to clone
+    // without setting any explicit auth. This usually picks up machine
+    // settings like ssh config files and so on if they exist.
+    //
+    // Note that any auth settings set here are stored in the server and
+    // may NOT be encrypted. If you want increased security, we recommend
+    // using auth baked into the machine running Waypoint.
+    oneof auth {
+      Basic basic = 4;
+      SSH ssh = 5;
+    }
+
+    // Basic auth
+    message Basic {
+      // username for authentication. If using access token based auth
+      // for something like GitHub, this can be any non-empty string.
+      string username = 1;
+
+      // password for authentication. If using access token based auth
+      // for GitHub, this should be the access token.
+      string password = 2;
+    }
+
+    // SSH private key auth
+    message SSH {
+      // private_key_pem is a PEM-encoded private key.
+      bytes private_key_pem = 1;
+
+      // password is an optional password for decoding the private key.
+      string password = 2;
+
+      // user is the SSH user to use when cloning. This will default to
+      // "git" if not specified.
+      string user = 3;
+    }
+
+    // Ref is used to populate DataSource.Ref
+    message Ref {
+      // commit is the full commit hash
+      string commit = 1;
+
+      // timestamp is the timestamp of the commit
+      google.protobuf.Timestamp timestamp = 2;
+    }
   }
 
   // Noop operations do nothing. This is primarily used for testing.
@@ -642,6 +790,39 @@ message Job {
   // A noop may be useful outside of testing to verify a runner is
   // executing properly or can access data properly.
   message Noop {}
+
+  // UpOp runs the "waypoint up" logic: it does a build (with push),
+  // deploy, and release all in one. The results for each child operation
+  // will be set directly on the Release message (i.e. "build" will be
+  // populated in addition to "up").
+  message UpOp {}
+
+  // UpResult is the result of an UpOp. Because "up" calls other operations,
+  // the Result message will set the build, deploy, push, and release results.
+  message UpResult {
+    // release_url is the equivalent of Release.Url. This is the URL that
+    // the release plugin generates directly from the platform. For example,
+    // on AWS this might be an ALB addr, on K8S this might be a load balancer
+    // addr, etc.
+    //
+    // This can be empty if the release plugin does not support getting a URL.
+    string release_url = 1;
+
+    // app_url is the HashiCorp URL service URL for the entire application.
+    // Example: mistakenly-crucial-malamute.waypoint.run. If there are multiple
+    // hostnames registered for the application, this always picks the first one.
+    //
+    // This can be blank if the URL service is disabled or errored.
+    string app_url = 2;
+
+    // deploy_url is the HashiCorp URL service URL for this specific deploy.
+    // Example: mistakenly-crucial-malamute--v1.waypoint.run. Similar to app_url,
+    // if there are multiple registered hostnames for the application, this
+    // always picks the first one.
+    //
+    // This can be blank if the URL service is disabled or errored.
+    string deploy_url = 3;
+  }
 
   // ValidateOp validates various aspects of a configuration.
   message ValidateOp {}
@@ -721,6 +902,20 @@ message Job {
     Deployment deployment = 1;
   }
 
+  // Used to start a platform's exec function within a runner. This is only used
+  // there are no long running instances for a deployment and can fail if the
+  // platform plugin does not provide an exec function.
+  message ExecOp {
+    // Id to assign the virtual instance created
+    string instance_id = 1;
+
+    // The deployment to create the exec session context. Ie, what
+    // application code will be available within the exec session.
+    Deployment deployment = 2;
+  }
+
+  message ExecResult {}
+
   message DestroyOp {
     // target is what to destroy in this operation.
     oneof target {
@@ -744,9 +939,7 @@ message Job {
     Release release = 1;
   }
 
-  message DocsOp {
-
-  }
+  message DocsOp {}
 
   message DocsResult {
     // results are the list of components that were checked
@@ -758,6 +951,10 @@ message Job {
       Documentation docs = 2;
     }
   }
+
+  message ConfigSyncOp {}
+
+  message ConfigSyncResult {}
 }
 
 message Documentation {
@@ -815,7 +1012,9 @@ message GetJobStreamResponse {
     // sent first followed immediately by a Complete.
     Open open = 1;
 
-    // state is sent when there is a job state change event.
+    // state is sent when there is a job state change event. This event is
+    // also used if there is job metadata changes. In this case, the state
+    // may be the same but the job is different.
     State state = 2;
 
     // terminal output. On initial connection, the server may send buffered
@@ -823,6 +1022,13 @@ message GetJobStreamResponse {
     // and getting its first byte output. You can determine this based on the
     // flag on Terminal.
     Terminal terminal = 3;
+
+    // data downloaded for the job. This is sent after the state is RUNNING
+    // when the runner has cloned any data (if necessary) containing information
+    // about the data. This is an optional event and may not be sent, indicating
+    // that the runner is either older and doesn't support this event or that
+    // there was no data download necessary and it is using local data.
+    Download download = 6;
 
     // an error regarding the stream itself, rather than the executing job.
     // For example, if you request a job stream for an invalid job ID,
@@ -852,6 +1058,13 @@ message GetJobStreamResponse {
 
     // canceling is true if the job was requested to be canceled.
     bool canceling = 4;
+  }
+
+  message Download {
+    // The ref for the data that was downloaded. This can be nil if no
+    // data was downloaded (though it'd be more reasonable to just not
+    // send a download event in that case).
+    Job.DataSource.Ref data_source_ref = 1;
   }
 
   message Terminal {
@@ -1018,6 +1231,11 @@ message RunnerJobStreamRequest {
     // terminal output from the job.
     GetJobStreamResponse.Terminal terminal = 5;
 
+    // download event is sent after the data is downloaded. This is optional.
+    // If this isn't sent the job will still remain in the "running" state but
+    // download details will not be available.
+    GetJobStreamResponse.Download download = 7;
+
     // heartbeat that the job is still running.
     Heartbeat heartbeat = 6;
   }
@@ -1098,6 +1316,10 @@ message ServerConfig {
     bool tls = 2;
     bool tls_skip_verify = 3;
   }
+
+  // The platform that the server is currently installed to. This is set
+  // through the CLI flag '-platform' on installation.
+  string platform = 4;
 }
 
 /********************************************************************
@@ -1280,6 +1502,9 @@ message Build {
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 5;
 
+  // template data for HCL variables and template functions, json-encoded
+  bytes template_data = 10;
+
   // ID of the job that created this build. This may be empty.
   string job_id = 9;
 }
@@ -1375,6 +1600,9 @@ message PushedArtifact {
 
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 6;
+
+  // template data for HCL variables and template functions, json-encoded
+  bytes template_data = 12;
 
   // If include_build was set on the list request, this will include
   // the Build value associated with the given build_id.
@@ -1489,6 +1717,9 @@ message Deployment {
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 7;
 
+  // template data for HCL variables and template functions, json-encoded
+  bytes template_data = 14;
+
   // ID of the job that created this. This may be empty.
   string job_id = 12;
 
@@ -1547,6 +1778,9 @@ message ListInstancesRequest {
     // the app are returned.
     Ref.Workspace workspace = 2;
   }
+
+  // Time to wait before retrying a request to connect to requested instance
+  string wait_timeout = 3;
 }
 
 message ListInstancesResponse {
@@ -1570,6 +1804,37 @@ message Instance {
 
   // The workspace that this exists in
   Ref.Workspace workspace = 4;
+
+  // Which type of instance this is
+  Type type = 5;
+
+  // Instances are one of a these types.
+  enum Type {
+    // The "traditional" instance type, a process that is running
+    // constantly for a long period of time.
+    LONG_RUNNING = 0;
+
+    // An instance that was launched in response to a request and will
+    // disappear quickly.
+    ON_DEMAND = 1;
+
+    // An instance that is not actually running any code, but registers
+    // itself as an instance for the purposes of interacting with the
+    // exec and logs functionality
+    VIRTUAL = 2;
+  }
+}
+
+message FindExecInstanceRequest {
+  // List instances for a specific deployment.
+  string deployment_id = 1;
+
+  // Time to wait before retrying a request to connect to requested instance
+  string wait_timeout = 3;
+}
+
+message FindExecInstanceResponse {
+  Instance instance = 1;
 }
 
 /********************************************************************
@@ -1670,6 +1935,9 @@ message Release {
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 6;
 
+  // template data for HCL variables and template functions, json-encoded
+  bytes template_data = 14;
+
   // URL for this release. This is valid while the release is still
   // in use. After the release is not in use, this may still be set but
   // may no longer be valid.
@@ -1738,8 +2006,18 @@ message LogBatch {
   repeated Entry lines = 3;
 
   message Entry {
+    Source source = 3;
     google.protobuf.Timestamp timestamp = 1;
     string line = 2;
+
+    enum Source {
+      // App is zero for backwards compatibility since Source was
+      // added later this allows the default to just work.
+      APP = 0;
+
+      // Entrypoint logs.
+      ENTRYPOINT = 1;
+    }
   }
 }
 
@@ -1758,8 +2036,31 @@ message ConfigVar {
     Ref.Runner runner = 5;
   }
 
+  // name is the name of the environment variable that this config var is setting
   string name = 1;
-  string value = 2;
+
+  oneof value {
+    // unset, if set, unsets this value. For historical reasons, empty static
+    // values also unset the value.
+    google.protobuf.Empty unset = 7;
+
+    // static, direct value.
+    string static = 2;
+
+    // dynamically sourced value
+    DynamicVal dynamic = 6;
+  }
+
+  // DynamicVal is the configuration for dynamic values for configuration.
+  message DynamicVal {
+    // from is the config source plugin to use
+    string from = 1;
+
+    // config is the configuration for the config source plugin that
+    // defines how the value is read. For example, for a "Vault" config
+    // source this may contain the path in the KV store to read the value.
+    map<string, string> config = 2;
+  }
 }
 
 message ConfigSetRequest {
@@ -1786,6 +2087,62 @@ message ConfigGetResponse {
 }
 
 /********************************************************************
+* Config Sources
+********************************************************************/
+
+message ConfigSource {
+  // delete may be set to true on SetConfigSource to delete this config source.
+  // This is a field on ConfigSource since there are a variety of ways to
+  // identify a ConfigSource. Therefore, the recommend deletion process is
+  // to query the ConfigSource using GetConfigSource and then set delete
+  // on a return value to ensure the correct value is deleted.
+  bool delete = 3;
+
+  // Scope that this configuration is valid. Note that this doesn't
+  // prevent a config source from being used in other scopes, it only
+  // prevents this configuration. Configuration sources used in other
+  // scopes will use a default configuration set by the plugin.
+  oneof scope {
+    Ref.Global global = 50;
+  }
+
+  // type of the config source. This should match the plugin name.
+  string type = 1;
+
+  // config is the configuration for the config source.
+  map<string, string> config = 2;
+
+  // hash is set automatically on write and available on read and is a
+  // content hash of the configuration. This can be used to determine
+  // uniqueness or changes in the configuration. Setting this value with
+  // SetConfigSource has no effect and will be overwritten. Note that this
+  // hash may take more into account than just "config" as other fields
+  // are introduced to this message type.
+  uint64 hash = 4;
+}
+
+message SetConfigSourceRequest {
+  ConfigSource config_source = 1;
+}
+
+message GetConfigSourceRequest {
+  // scope is the scoping for the config source.
+  oneof scope {
+    Ref.Global global = 50;
+  }
+
+  // config source type. This is optional. If this is omitted, all
+  // config source types matching the above scoping will be returned.
+  // This is a prefix-search. All config sources with this type prefix
+  // will be returned.
+  string type = 1;
+}
+
+message GetConfigSourceResponse {
+  repeated ConfigSource config_sources = 1;
+}
+
+/********************************************************************
 * Exec
 ********************************************************************/
 
@@ -1794,11 +2151,25 @@ message ExecStreamRequest {
     Start start = 1;
     Input input = 2;
     WindowSize winch = 3;
+
+    // input_eof should be sent as an event when the input stream is
+    // closed. After this, no more Input messages can be sent. Any Input
+    // messages sent will be ignored. This will send an EOF on the remote
+    // end as well to close stdin for the exec process.
+    google.protobuf.Empty input_eof = 4;
   }
 
   message Start {
-    // Deployment to exec into
-    string deployment_id = 1;
+    oneof target {
+      // Deployment to exec into
+      string deployment_id = 1;
+
+      // Instance to send the exec request to. This is indicates that
+      // the client wants an exec session to this specific instance,
+      // rather than one the server picks. Targetted instances can be
+      // any instance type, where as untargeted have to be LONG_RUNNING.
+      string instance_id = 4;
+    }
 
     // Args including the command at args[0] to execute.
     repeated string args = 2;
@@ -1869,6 +2240,10 @@ message EntrypointConfigRequest {
   // instance_id is a unique ID generated by the running entrypoint. This is
   // not an auth mechanism, just a way to associate data with the correct instance.
   string instance_id = 2;
+
+  // The type of instance that is making the config request. This type will be
+  // recorded by the server to alter how the server interacts with the instance.
+  Instance.Type type = 3;
 }
 
 message EntrypointConfigResponse {
@@ -1879,11 +2254,22 @@ message EntrypointConfig {
   // Exec are requested exec sessions for this instance.
   repeated Exec exec = 1;
 
+  // The environment variables to set in the entrypoint.
   repeated ConfigVar env_vars = 2;
+
+  // The configuration for any config sources that may be used in the
+  // config vars sent down. The server may send down extra configs that
+  // aren't used so consumers should filter these based on what env vars
+  // are actually in use.
+  repeated ConfigSource config_sources = 5;
 
   // The URL service configuration. This might be nil. If this is nil,
   // then the URL service is disabled.
   URLService url_service = 3;
+
+  // Deployment is the deployment information for this instance. This may
+  // be nil if the user is running an old enough server so always nil-check this.
+  DeploymentInfo deployment = 4;
 
   message Exec {
     int64 index = 1;
@@ -1898,6 +2284,14 @@ message EntrypointConfig {
 
     // labels to register this instance under
     string labels = 3;
+  }
+
+  message DeploymentInfo {
+    // component is the deployment plugin information that launched this instance.
+    Component component = 1;
+
+    // labels are the set of labels that are present on the deployment.
+    map<string,string> labels = 2;
   }
 }
 
@@ -1957,6 +2351,9 @@ message EntrypointExecResponse {
   oneof event {
     // input is raw stdin input from the client
     bytes input = 1;
+
+    // input_eof means that stdin is now closed
+    google.protobuf.Empty input_eof = 4;
 
     // winch is SIGWNCH information for window sizing
     ExecStreamRequest.WindowSize winch = 2;
@@ -2048,4 +2445,116 @@ message NewTokenResponse {
 message ConvertInviteTokenRequest {
   // A token previous returned by GenerateInviteToken.
   string token = 1;
+}
+
+/********************************************************************
+* Snapshot/Restore
+********************************************************************/
+
+message CreateSnapshotResponse {
+  oneof event {
+    // Open is sent as the opening message with information about the
+    // snapshot. This is always sent first (before any data).
+    Open open = 1;
+
+    // Chunk is a next chunk of data. You should continue to expect
+    // data until an EOF is received on the stream.
+    bytes chunk = 2;
+  }
+
+  // One day we may add information here. For now we are reserving this.
+  message Open {}
+}
+
+message RestoreSnapshotRequest {
+  oneof event {
+    // Open MUST be sent as the first message and sent exactly once.
+    // This sets the settings for the restore.
+    Open open = 1;
+
+    // Chunk is a chunk of restore data. The restore snapshot API will
+    // continue reading data until an EOF is received (the write end is
+    // closed).
+    bytes chunk = 2;
+  }
+
+  message Open {
+    // If true, the server will exit after the restore is staged. This will
+    // SHUT DOWN the server and some external process you created is expected
+    // to bring it back. The Waypoint server on its own WILL NOT automatically
+    // restart. You should only set this if you have some operation to
+    // automate restart such as running in Nomad or Kubernetes.
+    bool exit = 1;
+  }
+}
+
+// Snapshot is the encoding of the snapshot for all snapshot APIs.
+// The encoding is proto.Message delimited data. This is also the encoding
+// expected if the waypoint-restore.db file is copied manually from the
+// snapshot data.
+//
+// For snapshots, the Header message is always guaranteed first. After that,
+// it is NOT guaranteed that only data chunks are sent. It is only guaranteed
+// that the data chunks are over at EOF. Unknown messages can probably be
+// ignored.
+//
+// It is HIGHLY RECOMMENDED you do not modify snapshots, but these messages
+// are publicly exported so that you can try to inspect snapshots.
+message Snapshot {
+  // Header is _always_ the first message encoded into a snapshot. If
+  // this isn't present, the entire snapshot can be considered corrupt.
+  message Header {
+    // version is the version of Waypoint that generated this snapshot.
+    VersionInfo version = 1;
+
+    // format is the format of the remaining messages. This can be used
+    // to determine what messages to expect following the header.
+    Format format = 2;
+
+    enum Format {
+      UNKNOWN = 0;
+      BOLT = 1; // Expect a series of BoltChunk messages
+    }
+  }
+
+  // Trailer is sent as the final message encoded into a snapshot. Detecting
+  // when the trailer is is dependent on the format.
+  message Trailer {
+    // checksum is the checksum of all the bytes up to but not including
+    // this proto message. The checksum is for the raw uncompressed bytes.
+    oneof checksum {
+      string sha256 = 1; // SHA-256 checksum
+    }
+  }
+
+  // BoltChunk is a single chunk of data for BoltDB if the snapshot format
+  // is BOLT. A chunk will always contain items designated for a single bucket,
+  // but a bucket may be repeated multiple time across chunks if there are
+  // too many items in the bucket.
+  //
+  // The final BoltChunk will have trailer set to true. Immediaetly following
+  // that chunk will be the Trailer message.
+  message BoltChunk {
+    // bucket is the name of the bucket. This may be empty. If this is empty,
+    // then this chunk should be ignored.
+    string bucket = 1;
+
+    // items is a id/value mapping of all this chunk of items in this bucket
+    map<string, bytes> items = 2;
+
+    // final is true if this is the last bolt chunk being written.
+    bool final = 3;
+  }
+}
+
+/********************************************************************
+* Waypoint.hcl Helpers
+********************************************************************/
+
+message WaypointHclFmtRequest {
+  bytes waypoint_hcl = 1;
+}
+
+message WaypointHclFmtResponse {
+  bytes waypoint_hcl = 1;
 }

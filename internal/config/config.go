@@ -1,67 +1,33 @@
 package config
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsimple"
+
+	"github.com/hashicorp/waypoint/internal/pkg/defaults"
+	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// Config is the configuration structure.
 type Config struct {
-	Runner  *Runner           `hcl:"runner,block" default:"{}"`
+	*hclConfig
+
+	ctx      *hcl.EvalContext
+	path     string
+	pathData map[string]string
+}
+
+type hclConfig struct {
 	Project string            `hcl:"project,attr"`
-	Apps    []*App            `hcl:"app,block"`
+	Runner  *Runner           `hcl:"runner,block" default:"{}"`
 	Labels  map[string]string `hcl:"labels,optional"`
 	Plugin  []*Plugin         `hcl:"plugin,block"`
-}
-
-// Retrieve the app config for the named application
-func (c *Config) AppConfig(name string) (*App, bool) {
-	for _, appCfg := range c.Apps {
-		if appCfg.Name == name {
-			return appCfg, true
-		}
-	}
-
-	return nil, false
-}
-
-// App represents a single application.
-type App struct {
-	Name   string            `hcl:",label"`
-	Path   string            `hcl:"path,optional"`
-	Labels map[string]string `hcl:"labels,optional"`
-	URL    *AppURL           `hcl:"url,block" default:"{}"`
-
-	Build   *Build   `hcl:"build,block"`
-	Deploy  *Deploy  `hcl:"deploy,block"`
-	Release *Release `hcl:"release,block"`
-}
-
-// AppURL configures the App-specific URL settings.
-type AppURL struct {
-	AutoHostname *bool `hcl:"auto_hostname,optional"`
-}
-
-// Server configures the remote server.
-type Server struct {
-	Address string `hcl:"address,attr"`
-
-	// Tls, if true, will connect to the server with TLS. If TlsSkipVerify
-	// is true, the certificate presented by the server will not be validated.
-	Tls           bool `hcl:"tls,optional"`
-	TlsSkipVerify bool `hcl:"tls_skip_verify,optional"`
-
-	// AddressInternal is a temporary config to work with local deployments
-	// on platforms such as Docker for Mac. We need to discuss a more
-	// long term approach to this.
-	AddressInternal string `hcl:"address_internal,optional"`
-
-	// Indicates that we need to present a token to connect to this server.
-	RequireAuth bool `hcl:"require_auth,optional"`
-
-	// AuthToken is the token to use to authenticate to the server.
-	// Note this will be stored plaintext on disk. You can also use the
-	// WAYPOINT_SERVER_TOKEN env var.
-	AuthToken string `hcl:"auth_token,optional"`
+	Config  *genericConfig    `hcl:"config,block"`
+	Apps    []*hclApp         `hcl:"app,block"`
+	Body    hcl.Body          `hcl:",body"`
 }
 
 // Runner is the configuration for supporting runners in this project.
@@ -80,50 +46,72 @@ type DataSource struct {
 	Body hcl.Body `hcl:",remain"`
 }
 
-// Hook is the configuration for a hook that runs at specified times.
-type Hook struct {
-	When      string   `hcl:"when,attr"`
-	Command   []string `hcl:"command,attr"`
-	OnFailure string   `hcl:"on_failure,optional"`
+// Load loads the configuration file from the given path.
+//
+// Configuration loading in Waypoint is lazy. This will load just the amount
+// necessary to return the initial Config structure. Additional functions on
+// Config must be called to load additional parts of the Config.
+//
+// This also means that the config may be invalid. To validate the config
+// call the Validate method.
+func Load(path string, pwd string) (*Config, error) {
+	// We require an absolute path for the path so we can set the path vars
+	if !filepath.IsAbs(path) {
+		var err error
+		path, err = filepath.Abs(path)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// If we have no pwd, then create a temporary directory
+	if pwd == "" {
+		td, err := ioutil.TempDir("", "waypoint-config")
+		if err != nil {
+			return nil, err
+		}
+		defer os.RemoveAll(td)
+		pwd = td
+	}
+
+	// Setup our initial variable set
+	pathData := map[string]string{
+		"pwd":     pwd,
+		"project": filepath.Dir(path),
+	}
+
+	// Build our context
+	ctx := EvalContext(nil, pwd).NewChild()
+	addPathValue(ctx, pathData)
+
+	// Decode
+	var cfg hclConfig
+	if err := hclsimple.DecodeFile(path, finalizeContext(ctx), &cfg); err != nil {
+		return nil, err
+	}
+	if err := defaults.Set(&cfg); err != nil {
+		return nil, err
+	}
+
+	// Set some values
+	if cfg.Config != nil {
+		cfg.Config.ctx = ctx
+		cfg.Config.scopeFunc = func(cv *pb.ConfigVar) {
+			cv.Scope = &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{Project: cfg.Project},
+			}
+		}
+	}
+
+	return &Config{
+		hclConfig: &cfg,
+		ctx:       ctx,
+		path:      filepath.Dir(path),
+		pathData:  pathData,
+	}, nil
 }
 
-func (h *Hook) ContinueOnFailure() bool {
-	return h.OnFailure == "continue"
-}
-
-// Build are the build settings.
-type Build struct {
-	Labels   map[string]string `hcl:"labels,optional"`
-	Hooks    []*Hook           `hcl:"hook,block"`
-	Use      *Use              `hcl:"use,block"`
-	Registry *Registry         `hcl:"registry,block"`
-}
-
-// Registry are the registry settings.
-type Registry struct {
-	Labels map[string]string `hcl:"labels,optional"`
-	Hooks  []*Hook           `hcl:"hook,block"`
-	Use    *Use              `hcl:"use,block"`
-}
-
-// Deploy are the deploy settings.
-type Deploy struct {
-	Labels map[string]string `hcl:"labels,optional"`
-	Hooks  []*Hook           `hcl:"hook,block"`
-	Use    *Use              `hcl:"use,block"`
-}
-
-// Release are the release settings.
-type Release struct {
-	Labels map[string]string `hcl:"labels,optional"`
-	Hooks  []*Hook           `hcl:"hook,block"`
-	Use    *Use              `hcl:"use,block"`
-}
-
-// Use is something in the Waypoint configuration that is executed
-// using some underlying plugin. This is a general shared structure that is
-// used by internal/core to initialize all the proper plugins.
-type Use struct {
-	Type string   `hcl:",label"`
-	Body hcl.Body `hcl:",remain"`
+// HCLContext returns the eval context for this configuration.
+func (c *Config) HCLContext() *hcl.EvalContext {
+	return c.ctx.NewChild()
 }

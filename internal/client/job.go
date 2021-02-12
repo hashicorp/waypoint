@@ -51,60 +51,35 @@ func (c *Project) job() *pb.Job {
 // doJob will queue and execute the job. If the client is configured for
 // local mode, this will start and target the proper runner.
 func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.Job_Result, error) {
-	log := c.logger
+	return c.doJobMonitored(ctx, job, ui, nil)
+}
 
-	// cb is used in local mode only to get a callback of the job ID
-	// so we can tell our runner what ID to expect.
-	var cb func(string)
+// Same as doJob, but with the addition of a  mon channel that can be used
+// to monitor the job status as it changes.
+// The receiver must be careful to not block sending to mon as it will block
+// the job state processing loop.
+func (c *Project) doJobMonitored(ctx context.Context, job *pb.Job, ui terminal.UI, monCh chan pb.Job_State) (*pb.Job_Result, error) {
+	// Be sure that the monitor is closed so the reciever knows for sure the job isn't going
+	// anymore.
+	if monCh != nil {
+		defer close(monCh)
+	}
 
 	// In local mode we have to start a runner.
 	if c.local {
-		log.Info("local mode, starting local runner")
-		r, err := c.startRunner()
-		if err != nil {
-			return nil, err
-		}
-
-		log.Info("runner started", "runner_id", r.Id())
-
-		// We defer the close so that we clean up resources. Local mode
-		// always blocks and streams the full output so when doJob exits
-		// the job is complete.
-		defer r.Close()
-
-		var jobCh chan struct{}
-
-		defer func() {
-			if jobCh != nil {
-				log.Info("waiting for accept to finish")
-				<-jobCh
-				log.Debug("finished waiting for job accept")
-			}
-		}()
-
-		// Set our callback up so that we will accept a job once it is queued
-		// so that we can accept exactly this job.
-		cb = func(id string) {
-			jobCh = make(chan struct{})
-			go func() {
-				defer close(jobCh)
-				if err := r.AcceptExact(ctx, id); err != nil {
-					log.Error("runner job accept error", "err", err)
-				}
-			}()
-		}
-
 		// Modify the job to target this runner and use the local data source.
+		// The runner will have been started when we created the Project value and be
+		// used for all local jobs.
 		job.TargetRunner = &pb.Ref_Runner{
 			Target: &pb.Ref_Runner_Id{
 				Id: &pb.Ref_RunnerId{
-					Id: r.Id(),
+					Id: c.activeRunner.Id(),
 				},
 			},
 		}
 	}
 
-	return c.queueAndStreamJob(ctx, job, ui, cb)
+	return c.queueAndStreamJob(ctx, job, ui, monCh)
 }
 
 // queueAndStreamJob will queue the job. If the client is configured to watch the job,
@@ -113,7 +88,7 @@ func (c *Project) queueAndStreamJob(
 	ctx context.Context,
 	job *pb.Job,
 	ui terminal.UI,
-	jobIdCallback func(string),
+	monCh chan pb.Job_State,
 ) (*pb.Job_Result, error) {
 	log := c.logger
 
@@ -135,11 +110,6 @@ func (c *Project) queueAndStreamJob(
 		return nil, err
 	}
 	log = log.With("job_id", queueResp.JobId)
-
-	// Call our callback if it was given
-	if jobIdCallback != nil {
-		jobIdCallback(queueResp.JobId)
-	}
 
 	// Get the stream
 	log.Debug("opening job stream")
@@ -372,6 +342,15 @@ func (c *Project) queueAndStreamJob(
 					ui.Output("If you interrupt this command, the job will still run in the background.",
 						terminal.WithInfoStyle())
 				})
+			}
+
+			if monCh != nil {
+				select {
+				case <-ctx.Done():
+					break
+				case monCh <- event.State.Current:
+					// ok
+				}
 			}
 
 		default:

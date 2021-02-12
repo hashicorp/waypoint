@@ -59,6 +59,13 @@ func Main(args []string) int {
 	// up plugin processes by calling Close on all the resources we use.
 	defer plugin.CleanupClients()
 
+	// NOTE: This is only for running `waypoint -v` and expecting it to return
+	// a version. Any other subcommand will expect `-v` to be around verbose
+	// logging rather than printing a version
+	if len(args) == 2 && args[1] == "-v" {
+		args[1] = "-version"
+	}
+
 	// Initialize our logger based on env vars
 	args, log, logOutput, err := logger(args)
 	if err != nil {
@@ -87,6 +94,7 @@ func Main(args []string) int {
 	cli := &cli.CLI{
 		Name:                       args[0],
 		Args:                       args[1:],
+		Version:                    vsn.FullVersionNumber(true),
 		Commands:                   commands,
 		Autocomplete:               true,
 		AutocompleteNoDefaultFlags: true,
@@ -168,6 +176,21 @@ func Commands(
 		},
 		"config set": func() (cli.Command, error) {
 			return &ConfigSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"config source-get": func() (cli.Command, error) {
+			return &ConfigSourceGetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"config source-set": func() (cli.Command, error) {
+			return &ConfigSourceSetCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"config sync": func() (cli.Command, error) {
+			return &ConfigSyncCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},
@@ -254,6 +277,11 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"server uninstall": func() (cli.Command, error) {
+			return &UninstallCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"server run": func() (cli.Command, error) {
 			return &ServerRunCommand{
 				baseCommand: baseCommand,
@@ -264,7 +292,21 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
-
+		"server snapshot": func() (cli.Command, error) {
+			return &SnapshotBackupCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"server restore": func() (cli.Command, error) {
+			return &SnapshotRestoreCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"server upgrade": func() (cli.Command, error) {
+			return &ServerUpgradeCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"plugin": func() (cli.Command, error) {
 			return &PluginCommand{
 				baseCommand: baseCommand,
@@ -383,6 +425,23 @@ func Commands(
 
 		"docs": func() (cli.Command, error) {
 			return &AppDocsCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"project list": func() (cli.Command, error) {
+			return &ProjectListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"project apply": func() (cli.Command, error) {
+			return &ProjectApplyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"fmt": func() (cli.Command, error) {
+			return &FmtCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

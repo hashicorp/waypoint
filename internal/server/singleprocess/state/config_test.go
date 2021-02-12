@@ -4,8 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -26,7 +29,7 @@ func TestConfig(t *testing.T) {
 			},
 
 			Name:  "foo",
-			Value: "bar",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
 		}))
 
 		{
@@ -85,7 +88,7 @@ func TestConfig(t *testing.T) {
 				},
 
 				Name:  "global",
-				Value: "value",
+				Value: &pb.ConfigVar_Static{Static: "value"},
 			},
 			&pb.ConfigVar{
 				Scope: &pb.ConfigVar_Project{
@@ -95,7 +98,7 @@ func TestConfig(t *testing.T) {
 				},
 
 				Name:  "hello",
-				Value: "project",
+				Value: &pb.ConfigVar_Static{Static: "project"},
 			},
 			&pb.ConfigVar{
 				Scope: &pb.ConfigVar_Application{
@@ -106,7 +109,7 @@ func TestConfig(t *testing.T) {
 				},
 
 				Name:  "hello",
-				Value: "app",
+				Value: &pb.ConfigVar_Static{Static: "app"},
 			},
 		))
 
@@ -125,9 +128,9 @@ func TestConfig(t *testing.T) {
 
 			// They are sorted, so check on them
 			require.Equal("global", vs[0].Name)
-			require.Equal("value", vs[0].Value)
+			require.Equal("value", vs[0].Value.(*pb.ConfigVar_Static).Static)
 			require.Equal("hello", vs[1].Name)
-			require.Equal("app", vs[1].Value)
+			require.Equal("app", vs[1].Value.(*pb.ConfigVar_Static).Static)
 		}
 
 		{
@@ -159,7 +162,7 @@ func TestConfig(t *testing.T) {
 			},
 
 			Name:  "foo",
-			Value: "bar",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
 		}))
 
 		{
@@ -201,6 +204,124 @@ func TestConfig(t *testing.T) {
 		}
 	})
 
+	t.Run("delete with unset", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a var
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
+		}))
+
+		{
+			// Get it exactly
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		// Delete it
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name: "foo",
+			Value: &pb.ConfigVar_Unset{
+				Unset: &empty.Empty{},
+			},
+		}))
+
+		// Should not exist
+		{
+			// Get it exactly
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 0)
+		}
+	})
+
+	t.Run("delete with empty static value", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a var
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
+		}))
+
+		{
+			// Get it exactly
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 1)
+		}
+
+		// Delete it
+		require.NoError(s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Project{
+				Project: &pb.Ref_Project{
+					Project: "foo",
+				},
+			},
+
+			Name:  "foo",
+			Value: &pb.ConfigVar_Static{Static: ""},
+		}))
+
+		// Should not exist
+		{
+			// Get it exactly
+			vs, err := s.ConfigGet(&pb.ConfigGetRequest{
+				Scope: &pb.ConfigGetRequest_Project{
+					Project: &pb.Ref_Project{Project: "foo"},
+				},
+
+				Prefix: "foo",
+			})
+			require.NoError(err)
+			require.Len(vs, 0)
+		}
+	})
+
 	t.Run("runner configs any", func(t *testing.T) {
 		require := require.New(t)
 
@@ -218,7 +339,7 @@ func TestConfig(t *testing.T) {
 			},
 
 			Name:  "foo",
-			Value: "bar",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
 		}))
 
 		// Create a var that shouldn't match
@@ -230,7 +351,7 @@ func TestConfig(t *testing.T) {
 			},
 
 			Name:  "bar",
-			Value: "baz",
+			Value: &pb.ConfigVar_Static{Static: "baz"},
 		}))
 
 		{
@@ -292,7 +413,7 @@ func TestConfig(t *testing.T) {
 			},
 
 			Name:  "foo",
-			Value: "bar",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
 		}))
 
 		// Create a var that shouldn't match
@@ -304,7 +425,7 @@ func TestConfig(t *testing.T) {
 			},
 
 			Name:  "bar",
-			Value: "baz",
+			Value: &pb.ConfigVar_Static{Static: "baz"},
 		}))
 
 		{
@@ -351,7 +472,7 @@ func TestConfig(t *testing.T) {
 			},
 
 			Name:  "foo",
-			Value: "bar",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
 		}))
 
 		require.NoError(s.ConfigSet(&pb.ConfigVar{
@@ -366,7 +487,7 @@ func TestConfig(t *testing.T) {
 			},
 
 			Name:  "foo",
-			Value: "baz",
+			Value: &pb.ConfigVar_Static{Static: "baz"},
 		}))
 
 		{
@@ -380,8 +501,34 @@ func TestConfig(t *testing.T) {
 			})
 			require.NoError(err)
 			require.Len(vs, 1)
-			require.Equal("baz", vs[0].Value)
+			require.Equal("baz", vs[0].Value.(*pb.ConfigVar_Static).Static)
 		}
+	})
+
+	t.Run("runner dynamic config not allowed", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create the config
+		err := s.ConfigSet(&pb.ConfigVar{
+			Scope: &pb.ConfigVar_Runner{
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			},
+
+			Name: "foo",
+			Value: &pb.ConfigVar_Dynamic{
+				Dynamic: &pb.ConfigVar_DynamicVal{},
+			},
+		})
+
+		require.Error(err)
+		require.Equal(codes.FailedPrecondition, status.Code(err))
 	})
 }
 
@@ -417,7 +564,7 @@ func TestConfigWatch(t *testing.T) {
 			},
 
 			Name:  "foo",
-			Value: "bar",
+			Value: &pb.ConfigVar_Static{Static: "bar"},
 		}))
 
 		require.False(ws.Watch(time.After(100 * time.Millisecond)))

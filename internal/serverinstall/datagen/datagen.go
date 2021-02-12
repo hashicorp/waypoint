@@ -1,3 +1,0 @@
-package datagen
-
-//go:generate go-bindata -nomemcopy -nometadata -pkg datagen -prefix ../data/ ../data/...

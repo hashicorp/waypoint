@@ -31,16 +31,27 @@ goog.exportSymbol('proto.hashicorp.waypoint.ConfigGetRequest.ScopeCase', null, g
 goog.exportSymbol('proto.hashicorp.waypoint.ConfigGetResponse', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ConfigSetRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ConfigSetResponse', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.ConfigSource', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.ConfigSource.ScopeCase', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ConfigVar', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.ConfigVar.DynamicVal', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ConfigVar.ScopeCase', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.ConfigVar.ValueCase', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ConvertInviteTokenRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.CreateHostnameRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.CreateHostnameResponse', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.CreateSnapshotResponse', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.CreateSnapshotResponse.EventCase', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.CreateSnapshotResponse.Open', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.DeleteHostnameRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Deployment', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Deployment.LoadDetails', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Deployment.Preload', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Documentation', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Documentation.Field', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Documentation.Mapper', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.EntrypointConfig', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.EntrypointConfig.Exec', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.EntrypointConfig.URLService', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.EntrypointConfigRequest', null, global);
@@ -60,13 +71,18 @@ goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamRequest.EventCase', null, 
 goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamRequest.Input', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamRequest.PTY', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamRequest.Start', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamRequest.Start.TargetCase', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamRequest.WindowSize', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamResponse', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamResponse.EventCase', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamResponse.Exit', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamResponse.Open', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamResponse.Output', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ExecStreamResponse.Output.Channel', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.GetBuildRequest', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.GetConfigSourceRequest', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.GetConfigSourceRequest.ScopeCase', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.GetConfigSourceResponse', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.GetDeploymentRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.GetJobRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.GetJobStreamRequest', null, global);
@@ -101,6 +117,7 @@ goog.exportSymbol('proto.hashicorp.waypoint.GetPushedArtifactRequest', null, glo
 goog.exportSymbol('proto.hashicorp.waypoint.GetReleaseRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.GetRunnerRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.GetServerConfigResponse', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.GetVersionInfoResponse', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.GetWorkspaceRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.GetWorkspaceResponse', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.HMACKey', null, global);
@@ -109,6 +126,7 @@ goog.exportSymbol('proto.hashicorp.waypoint.Hostname.Target', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Hostname.Target.TargetCase', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Hostname.TargetApp', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Instance', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Instance.Type', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.InviteTokenRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.AuthOp', null, global);
@@ -116,13 +134,21 @@ goog.exportSymbol('proto.hashicorp.waypoint.Job.AuthResult', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.AuthResult.Result', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.BuildOp', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.BuildResult', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Job.ConfigSyncOp', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Job.ConfigSyncResult', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.DataSource', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.DataSource.SourceCase', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.DeployOp', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.DeployResult', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.DestroyOp', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.DestroyOp.TargetCase', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Job.DocsOp', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Job.DocsResult', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Job.DocsResult.Result', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.Git', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Job.Git.AuthCase', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Job.Git.Basic', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Job.Git.SSH', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.Local', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.Noop', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Job.OperationCase', null, global);
@@ -154,6 +180,7 @@ goog.exportSymbol('proto.hashicorp.waypoint.ListReleasesResponse', null, global)
 goog.exportSymbol('proto.hashicorp.waypoint.ListWorkspacesResponse', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.LogBatch', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.LogBatch.Entry', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.LogBatch.Entry.Source', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.NewTokenResponse', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Operation', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Operation.PhysicalState', null, global);
@@ -166,6 +193,7 @@ goog.exportSymbol('proto.hashicorp.waypoint.QueueJobResponse', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Ref', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Ref.Application', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Ref.Component', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Ref.Global', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Ref.Operation', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Ref.Operation.TargetCase', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Ref.OperationSeq', null, global);
@@ -178,6 +206,9 @@ goog.exportSymbol('proto.hashicorp.waypoint.Ref.Workspace', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Release', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Release.LoadDetails', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Release.Preload', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.RestoreSnapshotRequest', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.RestoreSnapshotRequest.EventCase', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.RestoreSnapshotRequest.Open', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Runner', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.RunnerConfig', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.RunnerConfigRequest', null, global);
@@ -199,7 +230,14 @@ goog.exportSymbol('proto.hashicorp.waypoint.RunnerJobStreamResponse.JobAssignmen
 goog.exportSymbol('proto.hashicorp.waypoint.RunnerJobStreamResponse.JobCancel', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ServerConfig', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ServerConfig.AdvertiseAddr', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.SetConfigSourceRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.SetServerConfigRequest', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Snapshot', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Snapshot.BoltChunk', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Snapshot.Header', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Snapshot.Header.Format', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Snapshot.Trailer', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.Snapshot.Trailer.ChecksumCase', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Status', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Status.State', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.StatusFilter', null, global);
@@ -223,8 +261,73 @@ goog.exportSymbol('proto.hashicorp.waypoint.UpsertReleaseRequest', null, global)
 goog.exportSymbol('proto.hashicorp.waypoint.UpsertReleaseResponse', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ValidateJobRequest', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.ValidateJobResponse', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.VersionInfo', null, global);
+goog.exportSymbol('proto.hashicorp.waypoint.VersionInfo.ProtocolVersion', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Workspace', null, global);
 goog.exportSymbol('proto.hashicorp.waypoint.Workspace.Application', null, global);
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.GetVersionInfoResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.GetVersionInfoResponse.displayName = 'proto.hashicorp.waypoint.GetVersionInfoResponse';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.VersionInfo = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.VersionInfo, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.VersionInfo.displayName = 'proto.hashicorp.waypoint.VersionInfo';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.VersionInfo.ProtocolVersion, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.displayName = 'proto.hashicorp.waypoint.VersionInfo.ProtocolVersion';
+}
 /**
  * Generated by JsPbCodeGenerator.
  * @param {Array=} opt_data Optional initial data array, typically from a
@@ -329,6 +432,27 @@ if (goog.DEBUG && !COMPILED) {
    * @override
    */
   proto.hashicorp.waypoint.Ref.displayName = 'proto.hashicorp.waypoint.Ref';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Ref.Global = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Ref.Global, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Ref.Global.displayName = 'proto.hashicorp.waypoint.Ref.Global';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -845,7 +969,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.hashicorp.waypoint.Job.Git = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.hashicorp.waypoint.Job.Git.oneofGroups_);
 };
 goog.inherits(proto.hashicorp.waypoint.Job.Git, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -854,6 +978,48 @@ if (goog.DEBUG && !COMPILED) {
    * @override
    */
   proto.hashicorp.waypoint.Job.Git.displayName = 'proto.hashicorp.waypoint.Job.Git';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Job.Git.Basic = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Job.Git.Basic, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Job.Git.Basic.displayName = 'proto.hashicorp.waypoint.Job.Git.Basic';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Job.Git.SSH = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Job.Git.SSH, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Job.Git.SSH.displayName = 'proto.hashicorp.waypoint.Job.Git.SSH';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -1169,6 +1335,174 @@ if (goog.DEBUG && !COMPILED) {
    * @override
    */
   proto.hashicorp.waypoint.Job.ReleaseResult.displayName = 'proto.hashicorp.waypoint.Job.ReleaseResult';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Job.DocsOp = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Job.DocsOp, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Job.DocsOp.displayName = 'proto.hashicorp.waypoint.Job.DocsOp';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Job.DocsResult = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.hashicorp.waypoint.Job.DocsResult.repeatedFields_, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Job.DocsResult, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Job.DocsResult.displayName = 'proto.hashicorp.waypoint.Job.DocsResult';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Job.DocsResult.Result, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Job.DocsResult.Result.displayName = 'proto.hashicorp.waypoint.Job.DocsResult.Result';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncOp = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Job.ConfigSyncOp, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Job.ConfigSyncOp.displayName = 'proto.hashicorp.waypoint.Job.ConfigSyncOp';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncResult = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Job.ConfigSyncResult, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Job.ConfigSyncResult.displayName = 'proto.hashicorp.waypoint.Job.ConfigSyncResult';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Documentation = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.hashicorp.waypoint.Documentation.repeatedFields_, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Documentation, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Documentation.displayName = 'proto.hashicorp.waypoint.Documentation';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Documentation.Field = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Documentation.Field, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Documentation.Field.displayName = 'proto.hashicorp.waypoint.Documentation.Field';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Documentation.Mapper = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Documentation.Mapper, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Documentation.Mapper.displayName = 'proto.hashicorp.waypoint.Documentation.Mapper';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -3259,6 +3593,27 @@ if (goog.DEBUG && !COMPILED) {
  * @extends {jspb.Message}
  * @constructor
  */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.ConfigVar.DynamicVal, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.ConfigVar.DynamicVal.displayName = 'proto.hashicorp.waypoint.ConfigVar.DynamicVal';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
 proto.hashicorp.waypoint.ConfigSetRequest = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, proto.hashicorp.waypoint.ConfigSetRequest.repeatedFields_, null);
 };
@@ -3343,6 +3698,90 @@ if (goog.DEBUG && !COMPILED) {
  * @extends {jspb.Message}
  * @constructor
  */
+proto.hashicorp.waypoint.ConfigSource = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.hashicorp.waypoint.ConfigSource.oneofGroups_);
+};
+goog.inherits(proto.hashicorp.waypoint.ConfigSource, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.ConfigSource.displayName = 'proto.hashicorp.waypoint.ConfigSource';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.SetConfigSourceRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.SetConfigSourceRequest.displayName = 'proto.hashicorp.waypoint.SetConfigSourceRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.hashicorp.waypoint.GetConfigSourceRequest.oneofGroups_);
+};
+goog.inherits(proto.hashicorp.waypoint.GetConfigSourceRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.GetConfigSourceRequest.displayName = 'proto.hashicorp.waypoint.GetConfigSourceRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.hashicorp.waypoint.GetConfigSourceResponse.repeatedFields_, null);
+};
+goog.inherits(proto.hashicorp.waypoint.GetConfigSourceResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.GetConfigSourceResponse.displayName = 'proto.hashicorp.waypoint.GetConfigSourceResponse';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
 proto.hashicorp.waypoint.ExecStreamRequest = function(opt_data) {
   jspb.Message.initialize(this, opt_data, 0, -1, null, proto.hashicorp.waypoint.ExecStreamRequest.oneofGroups_);
 };
@@ -3365,7 +3804,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.hashicorp.waypoint.ExecStreamRequest.Start = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, proto.hashicorp.waypoint.ExecStreamRequest.Start.repeatedFields_, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.hashicorp.waypoint.ExecStreamRequest.Start.repeatedFields_, proto.hashicorp.waypoint.ExecStreamRequest.Start.oneofGroups_);
 };
 goog.inherits(proto.hashicorp.waypoint.ExecStreamRequest.Start, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -3458,6 +3897,27 @@ if (goog.DEBUG && !COMPILED) {
    * @override
    */
   proto.hashicorp.waypoint.ExecStreamResponse.displayName = 'proto.hashicorp.waypoint.ExecStreamResponse';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.Open = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.ExecStreamResponse.Open, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.ExecStreamResponse.Open.displayName = 'proto.hashicorp.waypoint.ExecStreamResponse.Open';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -3605,6 +4065,27 @@ if (goog.DEBUG && !COMPILED) {
    * @override
    */
   proto.hashicorp.waypoint.EntrypointConfig.URLService.displayName = 'proto.hashicorp.waypoint.EntrypointConfig.URLService';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.displayName = 'proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -3900,6 +4381,717 @@ if (goog.DEBUG && !COMPILED) {
    */
   proto.hashicorp.waypoint.ConvertInviteTokenRequest.displayName = 'proto.hashicorp.waypoint.ConvertInviteTokenRequest';
 }
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.hashicorp.waypoint.CreateSnapshotResponse.oneofGroups_);
+};
+goog.inherits(proto.hashicorp.waypoint.CreateSnapshotResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.CreateSnapshotResponse.displayName = 'proto.hashicorp.waypoint.CreateSnapshotResponse';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.Open = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.CreateSnapshotResponse.Open, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.CreateSnapshotResponse.Open.displayName = 'proto.hashicorp.waypoint.CreateSnapshotResponse.Open';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.hashicorp.waypoint.RestoreSnapshotRequest.oneofGroups_);
+};
+goog.inherits(proto.hashicorp.waypoint.RestoreSnapshotRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.RestoreSnapshotRequest.displayName = 'proto.hashicorp.waypoint.RestoreSnapshotRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.Open = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.RestoreSnapshotRequest.Open, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.displayName = 'proto.hashicorp.waypoint.RestoreSnapshotRequest.Open';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Snapshot = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Snapshot, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Snapshot.displayName = 'proto.hashicorp.waypoint.Snapshot';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Snapshot.Header = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Snapshot.Header, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Snapshot.Header.displayName = 'proto.hashicorp.waypoint.Snapshot.Header';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, proto.hashicorp.waypoint.Snapshot.Trailer.oneofGroups_);
+};
+goog.inherits(proto.hashicorp.waypoint.Snapshot.Trailer, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Snapshot.Trailer.displayName = 'proto.hashicorp.waypoint.Snapshot.Trailer';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.hashicorp.waypoint.Snapshot.BoltChunk, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.hashicorp.waypoint.Snapshot.BoltChunk.displayName = 'proto.hashicorp.waypoint.Snapshot.BoltChunk';
+}
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.GetVersionInfoResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.GetVersionInfoResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    info: (f = msg.getInfo()) && proto.hashicorp.waypoint.VersionInfo.toObject(includeInstance, f)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.GetVersionInfoResponse}
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.GetVersionInfoResponse;
+  return proto.hashicorp.waypoint.GetVersionInfoResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.GetVersionInfoResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.GetVersionInfoResponse}
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.VersionInfo;
+      reader.readMessage(value,proto.hashicorp.waypoint.VersionInfo.deserializeBinaryFromReader);
+      msg.setInfo(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.GetVersionInfoResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.GetVersionInfoResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getInfo();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.VersionInfo.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional VersionInfo info = 1;
+ * @return {?proto.hashicorp.waypoint.VersionInfo}
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse.prototype.getInfo = function() {
+  return /** @type{?proto.hashicorp.waypoint.VersionInfo} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.VersionInfo, 1));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.VersionInfo|undefined} value
+ * @return {!proto.hashicorp.waypoint.GetVersionInfoResponse} returns this
+*/
+proto.hashicorp.waypoint.GetVersionInfoResponse.prototype.setInfo = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.GetVersionInfoResponse} returns this
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse.prototype.clearInfo = function() {
+  return this.setInfo(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.GetVersionInfoResponse.prototype.hasInfo = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.VersionInfo.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.VersionInfo} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.VersionInfo.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    api: (f = msg.getApi()) && proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.toObject(includeInstance, f),
+    entrypoint: (f = msg.getEntrypoint()) && proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.toObject(includeInstance, f),
+    version: jspb.Message.getFieldWithDefault(msg, 3, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.VersionInfo}
+ */
+proto.hashicorp.waypoint.VersionInfo.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.VersionInfo;
+  return proto.hashicorp.waypoint.VersionInfo.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.VersionInfo} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.VersionInfo}
+ */
+proto.hashicorp.waypoint.VersionInfo.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.VersionInfo.ProtocolVersion;
+      reader.readMessage(value,proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.deserializeBinaryFromReader);
+      msg.setApi(value);
+      break;
+    case 2:
+      var value = new proto.hashicorp.waypoint.VersionInfo.ProtocolVersion;
+      reader.readMessage(value,proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.deserializeBinaryFromReader);
+      msg.setEntrypoint(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setVersion(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.VersionInfo.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.VersionInfo} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.VersionInfo.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getApi();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.serializeBinaryToWriter
+    );
+  }
+  f = message.getEntrypoint();
+  if (f != null) {
+    writer.writeMessage(
+      2,
+      f,
+      proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.serializeBinaryToWriter
+    );
+  }
+  f = message.getVersion();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.VersionInfo.ProtocolVersion} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    current: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    minimum: jspb.Message.getFieldWithDefault(msg, 2, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.VersionInfo.ProtocolVersion}
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.VersionInfo.ProtocolVersion;
+  return proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.VersionInfo.ProtocolVersion} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.VersionInfo.ProtocolVersion}
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setCurrent(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setMinimum(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.VersionInfo.ProtocolVersion} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getCurrent();
+  if (f !== 0) {
+    writer.writeUint32(
+      1,
+      f
+    );
+  }
+  f = message.getMinimum();
+  if (f !== 0) {
+    writer.writeUint32(
+      2,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional uint32 current = 1;
+ * @return {number}
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.prototype.getCurrent = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.hashicorp.waypoint.VersionInfo.ProtocolVersion} returns this
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.prototype.setCurrent = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional uint32 minimum = 2;
+ * @return {number}
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.prototype.getMinimum = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.hashicorp.waypoint.VersionInfo.ProtocolVersion} returns this
+ */
+proto.hashicorp.waypoint.VersionInfo.ProtocolVersion.prototype.setMinimum = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional ProtocolVersion api = 1;
+ * @return {?proto.hashicorp.waypoint.VersionInfo.ProtocolVersion}
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.getApi = function() {
+  return /** @type{?proto.hashicorp.waypoint.VersionInfo.ProtocolVersion} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.VersionInfo.ProtocolVersion, 1));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.VersionInfo.ProtocolVersion|undefined} value
+ * @return {!proto.hashicorp.waypoint.VersionInfo} returns this
+*/
+proto.hashicorp.waypoint.VersionInfo.prototype.setApi = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.VersionInfo} returns this
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.clearApi = function() {
+  return this.setApi(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.hasApi = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional ProtocolVersion entrypoint = 2;
+ * @return {?proto.hashicorp.waypoint.VersionInfo.ProtocolVersion}
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.getEntrypoint = function() {
+  return /** @type{?proto.hashicorp.waypoint.VersionInfo.ProtocolVersion} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.VersionInfo.ProtocolVersion, 2));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.VersionInfo.ProtocolVersion|undefined} value
+ * @return {!proto.hashicorp.waypoint.VersionInfo} returns this
+*/
+proto.hashicorp.waypoint.VersionInfo.prototype.setEntrypoint = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.VersionInfo} returns this
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.clearEntrypoint = function() {
+  return this.setEntrypoint(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.hasEntrypoint = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional string version = 3;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.getVersion = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.VersionInfo} returns this
+ */
+proto.hashicorp.waypoint.VersionInfo.prototype.setVersion = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
 
 
 
@@ -4892,6 +6084,107 @@ proto.hashicorp.waypoint.Ref.prototype.serializeBinary = function() {
  * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.hashicorp.waypoint.Ref.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Ref.Global.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Ref.Global.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Ref.Global} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Ref.Global.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Ref.Global}
+ */
+proto.hashicorp.waypoint.Ref.Global.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Ref.Global;
+  return proto.hashicorp.waypoint.Ref.Global.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Ref.Global} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Ref.Global}
+ */
+proto.hashicorp.waypoint.Ref.Global.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Ref.Global.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Ref.Global.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Ref.Global} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Ref.Global.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
 };
 
@@ -8320,7 +9613,7 @@ proto.hashicorp.waypoint.ValidateJobResponse.prototype.setAssignable = function(
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.hashicorp.waypoint.Job.oneofGroups_ = [[50,51,52,53,54,55,56,57]];
+proto.hashicorp.waypoint.Job.oneofGroups_ = [[50,51,52,53,54,55,56,57,58,59]];
 
 /**
  * @enum {number}
@@ -8334,7 +9627,9 @@ proto.hashicorp.waypoint.Job.OperationCase = {
   DESTROY: 54,
   RELEASE: 55,
   VALIDATE: 56,
-  AUTH: 57
+  AUTH: 57,
+  DOCS: 58,
+  CONFIG_SYNC: 59
 };
 
 /**
@@ -8390,6 +9685,8 @@ proto.hashicorp.waypoint.Job.toObject = function(includeInstance, msg) {
     release: (f = msg.getRelease()) && proto.hashicorp.waypoint.Job.ReleaseOp.toObject(includeInstance, f),
     validate: (f = msg.getValidate()) && proto.hashicorp.waypoint.Job.ValidateOp.toObject(includeInstance, f),
     auth: (f = msg.getAuth()) && proto.hashicorp.waypoint.Job.AuthOp.toObject(includeInstance, f),
+    docs: (f = msg.getDocs()) && proto.hashicorp.waypoint.Job.DocsOp.toObject(includeInstance, f),
+    configSync: (f = msg.getConfigSync()) && proto.hashicorp.waypoint.Job.ConfigSyncOp.toObject(includeInstance, f),
     state: jspb.Message.getFieldWithDefault(msg, 100, 0),
     assignedRunner: (f = msg.getAssignedRunner()) && proto.hashicorp.waypoint.Ref.RunnerId.toObject(includeInstance, f),
     queueTime: (f = msg.getQueueTime()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
@@ -8511,6 +9808,16 @@ proto.hashicorp.waypoint.Job.deserializeBinaryFromReader = function(msg, reader)
       var value = new proto.hashicorp.waypoint.Job.AuthOp;
       reader.readMessage(value,proto.hashicorp.waypoint.Job.AuthOp.deserializeBinaryFromReader);
       msg.setAuth(value);
+      break;
+    case 58:
+      var value = new proto.hashicorp.waypoint.Job.DocsOp;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.DocsOp.deserializeBinaryFromReader);
+      msg.setDocs(value);
+      break;
+    case 59:
+      var value = new proto.hashicorp.waypoint.Job.ConfigSyncOp;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.ConfigSyncOp.deserializeBinaryFromReader);
+      msg.setConfigSync(value);
       break;
     case 100:
       var value = /** @type {!proto.hashicorp.waypoint.Job.State} */ (reader.readEnum());
@@ -8701,6 +10008,22 @@ proto.hashicorp.waypoint.Job.serializeBinaryToWriter = function(message, writer)
       proto.hashicorp.waypoint.Job.AuthOp.serializeBinaryToWriter
     );
   }
+  f = message.getDocs();
+  if (f != null) {
+    writer.writeMessage(
+      58,
+      f,
+      proto.hashicorp.waypoint.Job.DocsOp.serializeBinaryToWriter
+    );
+  }
+  f = message.getConfigSync();
+  if (f != null) {
+    writer.writeMessage(
+      59,
+      f,
+      proto.hashicorp.waypoint.Job.ConfigSyncOp.serializeBinaryToWriter
+    );
+  }
   f = message.getState();
   if (f !== 0.0) {
     writer.writeEnum(
@@ -8832,7 +10155,9 @@ proto.hashicorp.waypoint.Job.Result.toObject = function(includeInstance, msg) {
     deploy: (f = msg.getDeploy()) && proto.hashicorp.waypoint.Job.DeployResult.toObject(includeInstance, f),
     release: (f = msg.getRelease()) && proto.hashicorp.waypoint.Job.ReleaseResult.toObject(includeInstance, f),
     validate: (f = msg.getValidate()) && proto.hashicorp.waypoint.Job.ValidateResult.toObject(includeInstance, f),
-    auth: (f = msg.getAuth()) && proto.hashicorp.waypoint.Job.AuthResult.toObject(includeInstance, f)
+    auth: (f = msg.getAuth()) && proto.hashicorp.waypoint.Job.AuthResult.toObject(includeInstance, f),
+    docs: (f = msg.getDocs()) && proto.hashicorp.waypoint.Job.DocsResult.toObject(includeInstance, f),
+    configSync: (f = msg.getConfigSync()) && proto.hashicorp.waypoint.Job.ConfigSyncResult.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -8898,6 +10223,16 @@ proto.hashicorp.waypoint.Job.Result.deserializeBinaryFromReader = function(msg, 
       var value = new proto.hashicorp.waypoint.Job.AuthResult;
       reader.readMessage(value,proto.hashicorp.waypoint.Job.AuthResult.deserializeBinaryFromReader);
       msg.setAuth(value);
+      break;
+    case 7:
+      var value = new proto.hashicorp.waypoint.Job.DocsResult;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.DocsResult.deserializeBinaryFromReader);
+      msg.setDocs(value);
+      break;
+    case 8:
+      var value = new proto.hashicorp.waypoint.Job.ConfigSyncResult;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.ConfigSyncResult.deserializeBinaryFromReader);
+      msg.setConfigSync(value);
       break;
     default:
       reader.skipField();
@@ -8974,6 +10309,22 @@ proto.hashicorp.waypoint.Job.Result.serializeBinaryToWriter = function(message, 
       6,
       f,
       proto.hashicorp.waypoint.Job.AuthResult.serializeBinaryToWriter
+    );
+  }
+  f = message.getDocs();
+  if (f != null) {
+    writer.writeMessage(
+      7,
+      f,
+      proto.hashicorp.waypoint.Job.DocsResult.serializeBinaryToWriter
+    );
+  }
+  f = message.getConfigSync();
+  if (f != null) {
+    writer.writeMessage(
+      8,
+      f,
+      proto.hashicorp.waypoint.Job.ConfigSyncResult.serializeBinaryToWriter
     );
   }
 };
@@ -9198,6 +10549,80 @@ proto.hashicorp.waypoint.Job.Result.prototype.clearAuth = function() {
  */
 proto.hashicorp.waypoint.Job.Result.prototype.hasAuth = function() {
   return jspb.Message.getField(this, 6) != null;
+};
+
+
+/**
+ * optional DocsResult docs = 7;
+ * @return {?proto.hashicorp.waypoint.Job.DocsResult}
+ */
+proto.hashicorp.waypoint.Job.Result.prototype.getDocs = function() {
+  return /** @type{?proto.hashicorp.waypoint.Job.DocsResult} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Job.DocsResult, 7));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Job.DocsResult|undefined} value
+ * @return {!proto.hashicorp.waypoint.Job.Result} returns this
+*/
+proto.hashicorp.waypoint.Job.Result.prototype.setDocs = function(value) {
+  return jspb.Message.setWrapperField(this, 7, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Job.Result} returns this
+ */
+proto.hashicorp.waypoint.Job.Result.prototype.clearDocs = function() {
+  return this.setDocs(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Job.Result.prototype.hasDocs = function() {
+  return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional ConfigSyncResult config_sync = 8;
+ * @return {?proto.hashicorp.waypoint.Job.ConfigSyncResult}
+ */
+proto.hashicorp.waypoint.Job.Result.prototype.getConfigSync = function() {
+  return /** @type{?proto.hashicorp.waypoint.Job.ConfigSyncResult} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Job.ConfigSyncResult, 8));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Job.ConfigSyncResult|undefined} value
+ * @return {!proto.hashicorp.waypoint.Job.Result} returns this
+*/
+proto.hashicorp.waypoint.Job.Result.prototype.setConfigSync = function(value) {
+  return jspb.Message.setWrapperField(this, 8, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Job.Result} returns this
+ */
+proto.hashicorp.waypoint.Job.Result.prototype.clearConfigSync = function() {
+  return this.setConfigSync(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Job.Result.prototype.hasConfigSync = function() {
+  return jspb.Message.getField(this, 8) != null;
 };
 
 
@@ -9531,6 +10956,32 @@ proto.hashicorp.waypoint.Job.Local.serializeBinaryToWriter = function(message, w
 
 
 
+/**
+ * Oneof group definitions for this message. Each group defines the field
+ * numbers belonging to that group. When of these fields' value is set, all
+ * other fields in the group are cleared. During deserialization, if multiple
+ * fields are encountered for a group, only the last value seen will be kept.
+ * @private {!Array<!Array<number>>}
+ * @const
+ */
+proto.hashicorp.waypoint.Job.Git.oneofGroups_ = [[4,5]];
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.Job.Git.AuthCase = {
+  AUTH_NOT_SET: 0,
+  BASIC: 4,
+  SSH: 5
+};
+
+/**
+ * @return {proto.hashicorp.waypoint.Job.Git.AuthCase}
+ */
+proto.hashicorp.waypoint.Job.Git.prototype.getAuthCase = function() {
+  return /** @type {proto.hashicorp.waypoint.Job.Git.AuthCase} */(jspb.Message.computeOneofCase(this, proto.hashicorp.waypoint.Job.Git.oneofGroups_[0]));
+};
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -9564,7 +11015,9 @@ proto.hashicorp.waypoint.Job.Git.toObject = function(includeInstance, msg) {
   var f, obj = {
     url: jspb.Message.getFieldWithDefault(msg, 1, ""),
     ref: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    path: jspb.Message.getFieldWithDefault(msg, 3, "")
+    path: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    basic: (f = msg.getBasic()) && proto.hashicorp.waypoint.Job.Git.Basic.toObject(includeInstance, f),
+    ssh: (f = msg.getSsh()) && proto.hashicorp.waypoint.Job.Git.SSH.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -9612,6 +11065,16 @@ proto.hashicorp.waypoint.Job.Git.deserializeBinaryFromReader = function(msg, rea
     case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setPath(value);
+      break;
+    case 4:
+      var value = new proto.hashicorp.waypoint.Job.Git.Basic;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.Git.Basic.deserializeBinaryFromReader);
+      msg.setBasic(value);
+      break;
+    case 5:
+      var value = new proto.hashicorp.waypoint.Job.Git.SSH;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.Git.SSH.deserializeBinaryFromReader);
+      msg.setSsh(value);
       break;
     default:
       reader.skipField();
@@ -9663,6 +11126,396 @@ proto.hashicorp.waypoint.Job.Git.serializeBinaryToWriter = function(message, wri
       f
     );
   }
+  f = message.getBasic();
+  if (f != null) {
+    writer.writeMessage(
+      4,
+      f,
+      proto.hashicorp.waypoint.Job.Git.Basic.serializeBinaryToWriter
+    );
+  }
+  f = message.getSsh();
+  if (f != null) {
+    writer.writeMessage(
+      5,
+      f,
+      proto.hashicorp.waypoint.Job.Git.SSH.serializeBinaryToWriter
+    );
+  }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Job.Git.Basic.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Job.Git.Basic} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    username: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    password: jspb.Message.getFieldWithDefault(msg, 2, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Job.Git.Basic}
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Job.Git.Basic;
+  return proto.hashicorp.waypoint.Job.Git.Basic.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Job.Git.Basic} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Job.Git.Basic}
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setUsername(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPassword(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Job.Git.Basic.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Job.Git.Basic} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getUsername();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getPassword();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string username = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.prototype.getUsername = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Job.Git.Basic} returns this
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.prototype.setUsername = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string password = 2;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.prototype.getPassword = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Job.Git.Basic} returns this
+ */
+proto.hashicorp.waypoint.Job.Git.Basic.prototype.setPassword = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Job.Git.SSH.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Job.Git.SSH} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    privateKeyPem: msg.getPrivateKeyPem_asB64(),
+    password: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    user: jspb.Message.getFieldWithDefault(msg, 3, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Job.Git.SSH}
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Job.Git.SSH;
+  return proto.hashicorp.waypoint.Job.Git.SSH.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Job.Git.SSH} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Job.Git.SSH}
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setPrivateKeyPem(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPassword(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setUser(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Job.Git.SSH.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Job.Git.SSH} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getPrivateKeyPem_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      1,
+      f
+    );
+  }
+  f = message.getPassword();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getUser();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional bytes private_key_pem = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.getPrivateKeyPem = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * optional bytes private_key_pem = 1;
+ * This is a type-conversion wrapper around `getPrivateKeyPem()`
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.getPrivateKeyPem_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getPrivateKeyPem()));
+};
+
+
+/**
+ * optional bytes private_key_pem = 1;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getPrivateKeyPem()`
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.getPrivateKeyPem_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getPrivateKeyPem()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.hashicorp.waypoint.Job.Git.SSH} returns this
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.setPrivateKeyPem = function(value) {
+  return jspb.Message.setProto3BytesField(this, 1, value);
+};
+
+
+/**
+ * optional string password = 2;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.getPassword = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Job.Git.SSH} returns this
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.setPassword = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string user = 3;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.getUser = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Job.Git.SSH} returns this
+ */
+proto.hashicorp.waypoint.Job.Git.SSH.prototype.setUser = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
@@ -9717,6 +11570,80 @@ proto.hashicorp.waypoint.Job.Git.prototype.getPath = function() {
  */
 proto.hashicorp.waypoint.Job.Git.prototype.setPath = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional Basic basic = 4;
+ * @return {?proto.hashicorp.waypoint.Job.Git.Basic}
+ */
+proto.hashicorp.waypoint.Job.Git.prototype.getBasic = function() {
+  return /** @type{?proto.hashicorp.waypoint.Job.Git.Basic} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Job.Git.Basic, 4));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Job.Git.Basic|undefined} value
+ * @return {!proto.hashicorp.waypoint.Job.Git} returns this
+*/
+proto.hashicorp.waypoint.Job.Git.prototype.setBasic = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 4, proto.hashicorp.waypoint.Job.Git.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Job.Git} returns this
+ */
+proto.hashicorp.waypoint.Job.Git.prototype.clearBasic = function() {
+  return this.setBasic(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Job.Git.prototype.hasBasic = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional SSH ssh = 5;
+ * @return {?proto.hashicorp.waypoint.Job.Git.SSH}
+ */
+proto.hashicorp.waypoint.Job.Git.prototype.getSsh = function() {
+  return /** @type{?proto.hashicorp.waypoint.Job.Git.SSH} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Job.Git.SSH, 5));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Job.Git.SSH|undefined} value
+ * @return {!proto.hashicorp.waypoint.Job.Git} returns this
+*/
+proto.hashicorp.waypoint.Job.Git.prototype.setSsh = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 5, proto.hashicorp.waypoint.Job.Git.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Job.Git} returns this
+ */
+proto.hashicorp.waypoint.Job.Git.prototype.clearSsh = function() {
+  return this.setSsh(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Job.Git.prototype.hasSsh = function() {
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
@@ -12203,6 +14130,671 @@ proto.hashicorp.waypoint.Job.ReleaseResult.prototype.hasRelease = function() {
 };
 
 
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Job.DocsOp.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Job.DocsOp.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Job.DocsOp} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.DocsOp.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Job.DocsOp}
+ */
+proto.hashicorp.waypoint.Job.DocsOp.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Job.DocsOp;
+  return proto.hashicorp.waypoint.Job.DocsOp.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Job.DocsOp} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Job.DocsOp}
+ */
+proto.hashicorp.waypoint.Job.DocsOp.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Job.DocsOp.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Job.DocsOp.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Job.DocsOp} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.DocsOp.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.hashicorp.waypoint.Job.DocsResult.repeatedFields_ = [1];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Job.DocsResult.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Job.DocsResult} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.DocsResult.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    resultsList: jspb.Message.toObjectList(msg.getResultsList(),
+    proto.hashicorp.waypoint.Job.DocsResult.Result.toObject, includeInstance)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Job.DocsResult;
+  return proto.hashicorp.waypoint.Job.DocsResult.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Job.DocsResult} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.Job.DocsResult.Result;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.DocsResult.Result.deserializeBinaryFromReader);
+      msg.addResults(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Job.DocsResult.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Job.DocsResult} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.DocsResult.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getResultsList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.Job.DocsResult.Result.serializeBinaryToWriter
+    );
+  }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Job.DocsResult.Result.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Job.DocsResult.Result} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    component: (f = msg.getComponent()) && proto.hashicorp.waypoint.Component.toObject(includeInstance, f),
+    docs: (f = msg.getDocs()) && proto.hashicorp.waypoint.Documentation.toObject(includeInstance, f)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult.Result}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Job.DocsResult.Result;
+  return proto.hashicorp.waypoint.Job.DocsResult.Result.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Job.DocsResult.Result} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult.Result}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.Component;
+      reader.readMessage(value,proto.hashicorp.waypoint.Component.deserializeBinaryFromReader);
+      msg.setComponent(value);
+      break;
+    case 2:
+      var value = new proto.hashicorp.waypoint.Documentation;
+      reader.readMessage(value,proto.hashicorp.waypoint.Documentation.deserializeBinaryFromReader);
+      msg.setDocs(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Job.DocsResult.Result.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Job.DocsResult.Result} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getComponent();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.Component.serializeBinaryToWriter
+    );
+  }
+  f = message.getDocs();
+  if (f != null) {
+    writer.writeMessage(
+      2,
+      f,
+      proto.hashicorp.waypoint.Documentation.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional Component component = 1;
+ * @return {?proto.hashicorp.waypoint.Component}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.getComponent = function() {
+  return /** @type{?proto.hashicorp.waypoint.Component} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Component, 1));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Component|undefined} value
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult.Result} returns this
+*/
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.setComponent = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult.Result} returns this
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.clearComponent = function() {
+  return this.setComponent(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.hasComponent = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional Documentation docs = 2;
+ * @return {?proto.hashicorp.waypoint.Documentation}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.getDocs = function() {
+  return /** @type{?proto.hashicorp.waypoint.Documentation} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Documentation, 2));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Documentation|undefined} value
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult.Result} returns this
+*/
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.setDocs = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult.Result} returns this
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.clearDocs = function() {
+  return this.setDocs(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.Result.prototype.hasDocs = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * repeated Result results = 1;
+ * @return {!Array<!proto.hashicorp.waypoint.Job.DocsResult.Result>}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.prototype.getResultsList = function() {
+  return /** @type{!Array<!proto.hashicorp.waypoint.Job.DocsResult.Result>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.hashicorp.waypoint.Job.DocsResult.Result, 1));
+};
+
+
+/**
+ * @param {!Array<!proto.hashicorp.waypoint.Job.DocsResult.Result>} value
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult} returns this
+*/
+proto.hashicorp.waypoint.Job.DocsResult.prototype.setResultsList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 1, value);
+};
+
+
+/**
+ * @param {!proto.hashicorp.waypoint.Job.DocsResult.Result=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult.Result}
+ */
+proto.hashicorp.waypoint.Job.DocsResult.prototype.addResults = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.hashicorp.waypoint.Job.DocsResult.Result, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.hashicorp.waypoint.Job.DocsResult} returns this
+ */
+proto.hashicorp.waypoint.Job.DocsResult.prototype.clearResultsList = function() {
+  return this.setResultsList([]);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncOp.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Job.ConfigSyncOp.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Job.ConfigSyncOp} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncOp.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Job.ConfigSyncOp}
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncOp.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Job.ConfigSyncOp;
+  return proto.hashicorp.waypoint.Job.ConfigSyncOp.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Job.ConfigSyncOp} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Job.ConfigSyncOp}
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncOp.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncOp.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Job.ConfigSyncOp.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Job.ConfigSyncOp} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncOp.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncResult.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Job.ConfigSyncResult.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Job.ConfigSyncResult} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncResult.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Job.ConfigSyncResult}
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncResult.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Job.ConfigSyncResult;
+  return proto.hashicorp.waypoint.Job.ConfigSyncResult.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Job.ConfigSyncResult} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Job.ConfigSyncResult}
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncResult.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncResult.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Job.ConfigSyncResult.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Job.ConfigSyncResult} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Job.ConfigSyncResult.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
 /**
  * optional string id = 1;
  * @return {string}
@@ -12710,6 +15302,80 @@ proto.hashicorp.waypoint.Job.prototype.hasAuth = function() {
 
 
 /**
+ * optional DocsOp docs = 58;
+ * @return {?proto.hashicorp.waypoint.Job.DocsOp}
+ */
+proto.hashicorp.waypoint.Job.prototype.getDocs = function() {
+  return /** @type{?proto.hashicorp.waypoint.Job.DocsOp} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Job.DocsOp, 58));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Job.DocsOp|undefined} value
+ * @return {!proto.hashicorp.waypoint.Job} returns this
+*/
+proto.hashicorp.waypoint.Job.prototype.setDocs = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 58, proto.hashicorp.waypoint.Job.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Job} returns this
+ */
+proto.hashicorp.waypoint.Job.prototype.clearDocs = function() {
+  return this.setDocs(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Job.prototype.hasDocs = function() {
+  return jspb.Message.getField(this, 58) != null;
+};
+
+
+/**
+ * optional ConfigSyncOp config_sync = 59;
+ * @return {?proto.hashicorp.waypoint.Job.ConfigSyncOp}
+ */
+proto.hashicorp.waypoint.Job.prototype.getConfigSync = function() {
+  return /** @type{?proto.hashicorp.waypoint.Job.ConfigSyncOp} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Job.ConfigSyncOp, 59));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Job.ConfigSyncOp|undefined} value
+ * @return {!proto.hashicorp.waypoint.Job} returns this
+*/
+proto.hashicorp.waypoint.Job.prototype.setConfigSync = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 59, proto.hashicorp.waypoint.Job.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Job} returns this
+ */
+proto.hashicorp.waypoint.Job.prototype.clearConfigSync = function() {
+  return this.setConfigSync(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Job.prototype.hasConfigSync = function() {
+  return jspb.Message.getField(this, 59) != null;
+};
+
+
+/**
  * optional State state = 100;
  * @return {!proto.hashicorp.waypoint.Job.State}
  */
@@ -13057,6 +15723,819 @@ proto.hashicorp.waypoint.Job.prototype.clearExpireTime = function() {
  */
 proto.hashicorp.waypoint.Job.prototype.hasExpireTime = function() {
   return jspb.Message.getField(this, 109) != null;
+};
+
+
+
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.hashicorp.waypoint.Documentation.repeatedFields_ = [6];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Documentation.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Documentation.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Documentation} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Documentation.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    description: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    example: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    input: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    output: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    fieldsMap: (f = msg.getFieldsMap()) ? f.toObject(includeInstance, proto.hashicorp.waypoint.Documentation.Field.toObject) : [],
+    mappersList: jspb.Message.toObjectList(msg.getMappersList(),
+    proto.hashicorp.waypoint.Documentation.Mapper.toObject, includeInstance)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Documentation}
+ */
+proto.hashicorp.waypoint.Documentation.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Documentation;
+  return proto.hashicorp.waypoint.Documentation.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Documentation} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Documentation}
+ */
+proto.hashicorp.waypoint.Documentation.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setDescription(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setExample(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setInput(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setOutput(value);
+      break;
+    case 5:
+      var value = msg.getFieldsMap();
+      reader.readMessage(value, function(message, reader) {
+        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readMessage, proto.hashicorp.waypoint.Documentation.Field.deserializeBinaryFromReader, "", new proto.hashicorp.waypoint.Documentation.Field());
+         });
+      break;
+    case 6:
+      var value = new proto.hashicorp.waypoint.Documentation.Mapper;
+      reader.readMessage(value,proto.hashicorp.waypoint.Documentation.Mapper.deserializeBinaryFromReader);
+      msg.addMappers(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Documentation.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Documentation.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Documentation} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Documentation.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getDescription();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getExample();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getInput();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = message.getOutput();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+  f = message.getFieldsMap(true);
+  if (f && f.getLength() > 0) {
+    f.serializeBinary(5, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeMessage, proto.hashicorp.waypoint.Documentation.Field.serializeBinaryToWriter);
+  }
+  f = message.getMappersList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      6,
+      f,
+      proto.hashicorp.waypoint.Documentation.Mapper.serializeBinaryToWriter
+    );
+  }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Documentation.Field.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Documentation.Field} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Documentation.Field.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    name: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    synopsis: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    summary: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    optional: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
+    envVar: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    type: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    pb_default: jspb.Message.getFieldWithDefault(msg, 7, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Documentation.Field}
+ */
+proto.hashicorp.waypoint.Documentation.Field.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Documentation.Field;
+  return proto.hashicorp.waypoint.Documentation.Field.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Documentation.Field} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Documentation.Field}
+ */
+proto.hashicorp.waypoint.Documentation.Field.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setName(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSynopsis(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSummary(value);
+      break;
+    case 4:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setOptional(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEnvVar(value);
+      break;
+    case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setType(value);
+      break;
+    case 7:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setDefault(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Documentation.Field.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Documentation.Field} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Documentation.Field.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getName();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getSynopsis();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getSummary();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = message.getOptional();
+  if (f) {
+    writer.writeBool(
+      4,
+      f
+    );
+  }
+  f = message.getEnvVar();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
+      f
+    );
+  }
+  f = message.getType();
+  if (f.length > 0) {
+    writer.writeString(
+      6,
+      f
+    );
+  }
+  f = message.getDefault();
+  if (f.length > 0) {
+    writer.writeString(
+      7,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string name = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.getName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Field} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.setName = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string synopsis = 2;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.getSynopsis = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Field} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.setSynopsis = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string summary = 3;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.getSummary = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Field} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.setSummary = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional bool optional = 4;
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.getOptional = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Field} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.setOptional = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 4, value);
+};
+
+
+/**
+ * optional string env_var = 5;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.getEnvVar = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Field} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.setEnvVar = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * optional string type = 6;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.getType = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Field} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.setType = function(value) {
+  return jspb.Message.setProto3StringField(this, 6, value);
+};
+
+
+/**
+ * optional string default = 7;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.getDefault = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Field} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Field.prototype.setDefault = function(value) {
+  return jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Documentation.Mapper.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Documentation.Mapper} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    input: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    output: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    description: jspb.Message.getFieldWithDefault(msg, 3, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Documentation.Mapper}
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Documentation.Mapper;
+  return proto.hashicorp.waypoint.Documentation.Mapper.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Documentation.Mapper} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Documentation.Mapper}
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setInput(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setOutput(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setDescription(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Documentation.Mapper.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Documentation.Mapper} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getInput();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getOutput();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getDescription();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string input = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.prototype.getInput = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Mapper} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.prototype.setInput = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string output = 2;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.prototype.getOutput = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Mapper} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.prototype.setOutput = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string description = 3;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.prototype.getDescription = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation.Mapper} returns this
+ */
+proto.hashicorp.waypoint.Documentation.Mapper.prototype.setDescription = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string description = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.prototype.getDescription = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation} returns this
+ */
+proto.hashicorp.waypoint.Documentation.prototype.setDescription = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string example = 2;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.prototype.getExample = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation} returns this
+ */
+proto.hashicorp.waypoint.Documentation.prototype.setExample = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string input = 3;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.prototype.getInput = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation} returns this
+ */
+proto.hashicorp.waypoint.Documentation.prototype.setInput = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string output = 4;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Documentation.prototype.getOutput = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Documentation} returns this
+ */
+proto.hashicorp.waypoint.Documentation.prototype.setOutput = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * map<string, Field> fields = 5;
+ * @param {boolean=} opt_noLazyCreate Do not create the map if
+ * empty, instead returning `undefined`
+ * @return {!jspb.Map<string,!proto.hashicorp.waypoint.Documentation.Field>}
+ */
+proto.hashicorp.waypoint.Documentation.prototype.getFieldsMap = function(opt_noLazyCreate) {
+  return /** @type {!jspb.Map<string,!proto.hashicorp.waypoint.Documentation.Field>} */ (
+      jspb.Message.getMapField(this, 5, opt_noLazyCreate,
+      proto.hashicorp.waypoint.Documentation.Field));
+};
+
+
+/**
+ * Clears values from the map. The map will be non-null.
+ * @return {!proto.hashicorp.waypoint.Documentation} returns this
+ */
+proto.hashicorp.waypoint.Documentation.prototype.clearFieldsMap = function() {
+  this.getFieldsMap().clear();
+  return this;};
+
+
+/**
+ * repeated Mapper mappers = 6;
+ * @return {!Array<!proto.hashicorp.waypoint.Documentation.Mapper>}
+ */
+proto.hashicorp.waypoint.Documentation.prototype.getMappersList = function() {
+  return /** @type{!Array<!proto.hashicorp.waypoint.Documentation.Mapper>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.hashicorp.waypoint.Documentation.Mapper, 6));
+};
+
+
+/**
+ * @param {!Array<!proto.hashicorp.waypoint.Documentation.Mapper>} value
+ * @return {!proto.hashicorp.waypoint.Documentation} returns this
+*/
+proto.hashicorp.waypoint.Documentation.prototype.setMappersList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 6, value);
+};
+
+
+/**
+ * @param {!proto.hashicorp.waypoint.Documentation.Mapper=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.hashicorp.waypoint.Documentation.Mapper}
+ */
+proto.hashicorp.waypoint.Documentation.prototype.addMappers = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.hashicorp.waypoint.Documentation.Mapper, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.hashicorp.waypoint.Documentation} returns this
+ */
+proto.hashicorp.waypoint.Documentation.prototype.clearMappersList = function() {
+  return this.setMappersList([]);
 };
 
 
@@ -20376,7 +23855,8 @@ proto.hashicorp.waypoint.ServerConfig.prototype.toObject = function(opt_includeI
 proto.hashicorp.waypoint.ServerConfig.toObject = function(includeInstance, msg) {
   var f, obj = {
     advertiseAddrsList: jspb.Message.toObjectList(msg.getAdvertiseAddrsList(),
-    proto.hashicorp.waypoint.ServerConfig.AdvertiseAddr.toObject, includeInstance)
+    proto.hashicorp.waypoint.ServerConfig.AdvertiseAddr.toObject, includeInstance),
+    platform: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
 
   if (includeInstance) {
@@ -20418,6 +23898,10 @@ proto.hashicorp.waypoint.ServerConfig.deserializeBinaryFromReader = function(msg
       reader.readMessage(value,proto.hashicorp.waypoint.ServerConfig.AdvertiseAddr.deserializeBinaryFromReader);
       msg.addAdvertiseAddrs(value);
       break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPlatform(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -20453,6 +23937,13 @@ proto.hashicorp.waypoint.ServerConfig.serializeBinaryToWriter = function(message
       1,
       f,
       proto.hashicorp.waypoint.ServerConfig.AdvertiseAddr.serializeBinaryToWriter
+    );
+  }
+  f = message.getPlatform();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
     );
   }
 };
@@ -20683,6 +24174,24 @@ proto.hashicorp.waypoint.ServerConfig.prototype.addAdvertiseAddrs = function(opt
  */
 proto.hashicorp.waypoint.ServerConfig.prototype.clearAdvertiseAddrsList = function() {
   return this.setAdvertiseAddrsList([]);
+};
+
+
+/**
+ * optional string platform = 4;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.ServerConfig.prototype.getPlatform = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.ServerConfig} returns this
+ */
+proto.hashicorp.waypoint.ServerConfig.prototype.setPlatform = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
@@ -24696,6 +28205,7 @@ proto.hashicorp.waypoint.Build.toObject = function(includeInstance, msg) {
     component: (f = msg.getComponent()) && proto.hashicorp.waypoint.Component.toObject(includeInstance, f),
     artifact: (f = msg.getArtifact()) && proto.hashicorp.waypoint.Artifact.toObject(includeInstance, f),
     labelsMap: (f = msg.getLabelsMap()) ? f.toObject(includeInstance, undefined) : [],
+    templateData: msg.getTemplateData_asB64(),
     jobId: jspb.Message.getFieldWithDefault(msg, 9, "")
   };
 
@@ -24771,6 +28281,10 @@ proto.hashicorp.waypoint.Build.deserializeBinaryFromReader = function(msg, reade
       reader.readMessage(value, function(message, reader) {
         jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
          });
+      break;
+    case 10:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setTemplateData(value);
       break;
     case 9:
       var value = /** @type {string} */ (reader.readString());
@@ -24862,6 +28376,13 @@ proto.hashicorp.waypoint.Build.serializeBinaryToWriter = function(message, write
   f = message.getLabelsMap(true);
   if (f && f.getLength() > 0) {
     f.serializeBinary(5, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
+  }
+  f = message.getTemplateData_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      10,
+      f
+    );
   }
   f = message.getJobId();
   if (f.length > 0) {
@@ -25114,6 +28635,48 @@ proto.hashicorp.waypoint.Build.prototype.getLabelsMap = function(opt_noLazyCreat
 proto.hashicorp.waypoint.Build.prototype.clearLabelsMap = function() {
   this.getLabelsMap().clear();
   return this;};
+
+
+/**
+ * optional bytes template_data = 10;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Build.prototype.getTemplateData = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 10, ""));
+};
+
+
+/**
+ * optional bytes template_data = 10;
+ * This is a type-conversion wrapper around `getTemplateData()`
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Build.prototype.getTemplateData_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getTemplateData()));
+};
+
+
+/**
+ * optional bytes template_data = 10;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getTemplateData()`
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Build.prototype.getTemplateData_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getTemplateData()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.hashicorp.waypoint.Build} returns this
+ */
+proto.hashicorp.waypoint.Build.prototype.setTemplateData = function(value) {
+  return jspb.Message.setProto3BytesField(this, 10, value);
+};
 
 
 /**
@@ -26484,6 +30047,7 @@ proto.hashicorp.waypoint.PushedArtifact.toObject = function(includeInstance, msg
     artifact: (f = msg.getArtifact()) && proto.hashicorp.waypoint.Artifact.toObject(includeInstance, f),
     buildId: jspb.Message.getFieldWithDefault(msg, 5, ""),
     labelsMap: (f = msg.getLabelsMap()) ? f.toObject(includeInstance, undefined) : [],
+    templateData: msg.getTemplateData_asB64(),
     build: (f = msg.getBuild()) && proto.hashicorp.waypoint.Build.toObject(includeInstance, f),
     jobId: jspb.Message.getFieldWithDefault(msg, 11, "")
   };
@@ -26564,6 +30128,10 @@ proto.hashicorp.waypoint.PushedArtifact.deserializeBinaryFromReader = function(m
       reader.readMessage(value, function(message, reader) {
         jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
          });
+      break;
+    case 12:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setTemplateData(value);
       break;
     case 10:
       var value = new proto.hashicorp.waypoint.Build;
@@ -26667,6 +30235,13 @@ proto.hashicorp.waypoint.PushedArtifact.serializeBinaryToWriter = function(messa
   f = message.getLabelsMap(true);
   if (f && f.getLength() > 0) {
     f.serializeBinary(6, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
+  }
+  f = message.getTemplateData_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      12,
+      f
+    );
   }
   f = message.getBuild();
   if (f != null) {
@@ -26945,6 +30520,48 @@ proto.hashicorp.waypoint.PushedArtifact.prototype.getLabelsMap = function(opt_no
 proto.hashicorp.waypoint.PushedArtifact.prototype.clearLabelsMap = function() {
   this.getLabelsMap().clear();
   return this;};
+
+
+/**
+ * optional bytes template_data = 12;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.PushedArtifact.prototype.getTemplateData = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
+};
+
+
+/**
+ * optional bytes template_data = 12;
+ * This is a type-conversion wrapper around `getTemplateData()`
+ * @return {string}
+ */
+proto.hashicorp.waypoint.PushedArtifact.prototype.getTemplateData_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getTemplateData()));
+};
+
+
+/**
+ * optional bytes template_data = 12;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getTemplateData()`
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.PushedArtifact.prototype.getTemplateData_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getTemplateData()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.hashicorp.waypoint.PushedArtifact} returns this
+ */
+proto.hashicorp.waypoint.PushedArtifact.prototype.setTemplateData = function(value) {
+  return jspb.Message.setProto3BytesField(this, 12, value);
+};
 
 
 /**
@@ -28099,7 +31716,9 @@ proto.hashicorp.waypoint.Deployment.toObject = function(includeInstance, msg) {
     artifactId: jspb.Message.getFieldWithDefault(msg, 5, ""),
     deployment: (f = msg.getDeployment()) && google_protobuf_any_pb.Any.toObject(includeInstance, f),
     labelsMap: (f = msg.getLabelsMap()) ? f.toObject(includeInstance, undefined) : [],
+    templateData: msg.getTemplateData_asB64(),
     jobId: jspb.Message.getFieldWithDefault(msg, 12, ""),
+    hasEntrypointConfig: jspb.Message.getBooleanFieldWithDefault(msg, 13, false),
     preload: (f = msg.getPreload()) && proto.hashicorp.waypoint.Deployment.Preload.toObject(includeInstance, f)
   };
 
@@ -28184,9 +31803,17 @@ proto.hashicorp.waypoint.Deployment.deserializeBinaryFromReader = function(msg, 
         jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
          });
       break;
+    case 14:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setTemplateData(value);
+      break;
     case 12:
       var value = /** @type {string} */ (reader.readString());
       msg.setJobId(value);
+      break;
+    case 13:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setHasEntrypointConfig(value);
       break;
     case 11:
       var value = new proto.hashicorp.waypoint.Deployment.Preload;
@@ -28294,10 +31921,24 @@ proto.hashicorp.waypoint.Deployment.serializeBinaryToWriter = function(message, 
   if (f && f.getLength() > 0) {
     f.serializeBinary(7, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
   }
+  f = message.getTemplateData_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      14,
+      f
+    );
+  }
   f = message.getJobId();
   if (f.length > 0) {
     writer.writeString(
       12,
+      f
+    );
+  }
+  f = message.getHasEntrypointConfig();
+  if (f) {
+    writer.writeBool(
+      13,
       f
     );
   }
@@ -28833,6 +32474,48 @@ proto.hashicorp.waypoint.Deployment.prototype.clearLabelsMap = function() {
 
 
 /**
+ * optional bytes template_data = 14;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Deployment.prototype.getTemplateData = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 14, ""));
+};
+
+
+/**
+ * optional bytes template_data = 14;
+ * This is a type-conversion wrapper around `getTemplateData()`
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Deployment.prototype.getTemplateData_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getTemplateData()));
+};
+
+
+/**
+ * optional bytes template_data = 14;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getTemplateData()`
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Deployment.prototype.getTemplateData_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getTemplateData()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.hashicorp.waypoint.Deployment} returns this
+ */
+proto.hashicorp.waypoint.Deployment.prototype.setTemplateData = function(value) {
+  return jspb.Message.setProto3BytesField(this, 14, value);
+};
+
+
+/**
  * optional string job_id = 12;
  * @return {string}
  */
@@ -28847,6 +32530,24 @@ proto.hashicorp.waypoint.Deployment.prototype.getJobId = function() {
  */
 proto.hashicorp.waypoint.Deployment.prototype.setJobId = function(value) {
   return jspb.Message.setProto3StringField(this, 12, value);
+};
+
+
+/**
+ * optional bool has_entrypoint_config = 13;
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Deployment.prototype.getHasEntrypointConfig = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 13, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.hashicorp.waypoint.Deployment} returns this
+ */
+proto.hashicorp.waypoint.Deployment.prototype.setHasEntrypointConfig = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 13, value);
 };
 
 
@@ -28946,7 +32647,8 @@ proto.hashicorp.waypoint.ListInstancesRequest.prototype.toObject = function(opt_
 proto.hashicorp.waypoint.ListInstancesRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     deploymentId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    application: (f = msg.getApplication()) && proto.hashicorp.waypoint.ListInstancesRequest.Application.toObject(includeInstance, f)
+    application: (f = msg.getApplication()) && proto.hashicorp.waypoint.ListInstancesRequest.Application.toObject(includeInstance, f),
+    waitTimeout: jspb.Message.getFieldWithDefault(msg, 3, "")
   };
 
   if (includeInstance) {
@@ -28992,6 +32694,10 @@ proto.hashicorp.waypoint.ListInstancesRequest.deserializeBinaryFromReader = func
       reader.readMessage(value,proto.hashicorp.waypoint.ListInstancesRequest.Application.deserializeBinaryFromReader);
       msg.setApplication(value);
       break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setWaitTimeout(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -29034,6 +32740,13 @@ proto.hashicorp.waypoint.ListInstancesRequest.serializeBinaryToWriter = function
       2,
       f,
       proto.hashicorp.waypoint.ListInstancesRequest.Application.serializeBinaryToWriter
+    );
+  }
+  f = message.getWaitTimeout();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
     );
   }
 };
@@ -29314,6 +33027,24 @@ proto.hashicorp.waypoint.ListInstancesRequest.prototype.hasApplication = functio
 };
 
 
+/**
+ * optional string wait_timeout = 3;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.ListInstancesRequest.prototype.getWaitTimeout = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.ListInstancesRequest} returns this
+ */
+proto.hashicorp.waypoint.ListInstancesRequest.prototype.setWaitTimeout = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
 
 /**
  * List of repeated fields within this message type.
@@ -29509,7 +33240,8 @@ proto.hashicorp.waypoint.Instance.toObject = function(includeInstance, msg) {
     id: jspb.Message.getFieldWithDefault(msg, 1, ""),
     deploymentId: jspb.Message.getFieldWithDefault(msg, 2, ""),
     application: (f = msg.getApplication()) && proto.hashicorp.waypoint.Ref.Application.toObject(includeInstance, f),
-    workspace: (f = msg.getWorkspace()) && proto.hashicorp.waypoint.Ref.Workspace.toObject(includeInstance, f)
+    workspace: (f = msg.getWorkspace()) && proto.hashicorp.waypoint.Ref.Workspace.toObject(includeInstance, f),
+    type: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -29563,6 +33295,10 @@ proto.hashicorp.waypoint.Instance.deserializeBinaryFromReader = function(msg, re
       var value = new proto.hashicorp.waypoint.Ref.Workspace;
       reader.readMessage(value,proto.hashicorp.waypoint.Ref.Workspace.deserializeBinaryFromReader);
       msg.setWorkspace(value);
+      break;
+    case 5:
+      var value = /** @type {!proto.hashicorp.waypoint.Instance.Type} */ (reader.readEnum());
+      msg.setType(value);
       break;
     default:
       reader.skipField();
@@ -29623,8 +33359,24 @@ proto.hashicorp.waypoint.Instance.serializeBinaryToWriter = function(message, wr
       proto.hashicorp.waypoint.Ref.Workspace.serializeBinaryToWriter
     );
   }
+  f = message.getType();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      5,
+      f
+    );
+  }
 };
 
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.Instance.Type = {
+  LONG_RUNNING: 0,
+  ON_DEMAND: 1,
+  VIRTUAL: 2
+};
 
 /**
  * optional string id = 1;
@@ -29733,6 +33485,24 @@ proto.hashicorp.waypoint.Instance.prototype.clearWorkspace = function() {
  */
 proto.hashicorp.waypoint.Instance.prototype.hasWorkspace = function() {
   return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional Type type = 5;
+ * @return {!proto.hashicorp.waypoint.Instance.Type}
+ */
+proto.hashicorp.waypoint.Instance.prototype.getType = function() {
+  return /** @type {!proto.hashicorp.waypoint.Instance.Type} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {!proto.hashicorp.waypoint.Instance.Type} value
+ * @return {!proto.hashicorp.waypoint.Instance} returns this
+ */
+proto.hashicorp.waypoint.Instance.prototype.setType = function(value) {
+  return jspb.Message.setProto3EnumField(this, 5, value);
 };
 
 
@@ -31026,6 +34796,7 @@ proto.hashicorp.waypoint.Release.toObject = function(includeInstance, msg) {
     release: (f = msg.getRelease()) && google_protobuf_any_pb.Any.toObject(includeInstance, f),
     deploymentId: jspb.Message.getFieldWithDefault(msg, 5, ""),
     labelsMap: (f = msg.getLabelsMap()) ? f.toObject(includeInstance, undefined) : [],
+    templateData: msg.getTemplateData_asB64(),
     url: jspb.Message.getFieldWithDefault(msg, 9, ""),
     jobId: jspb.Message.getFieldWithDefault(msg, 13, ""),
     preload: (f = msg.getPreload()) && proto.hashicorp.waypoint.Release.Preload.toObject(includeInstance, f)
@@ -31111,6 +34882,10 @@ proto.hashicorp.waypoint.Release.deserializeBinaryFromReader = function(msg, rea
       reader.readMessage(value, function(message, reader) {
         jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
          });
+      break;
+    case 14:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setTemplateData(value);
       break;
     case 9:
       var value = /** @type {string} */ (reader.readString());
@@ -31225,6 +35000,13 @@ proto.hashicorp.waypoint.Release.serializeBinaryToWriter = function(message, wri
   f = message.getLabelsMap(true);
   if (f && f.getLength() > 0) {
     f.serializeBinary(6, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
+  }
+  f = message.getTemplateData_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      14,
+      f
+    );
   }
   f = message.getUrl();
   if (f.length > 0) {
@@ -31794,6 +35576,48 @@ proto.hashicorp.waypoint.Release.prototype.clearLabelsMap = function() {
 
 
 /**
+ * optional bytes template_data = 14;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Release.prototype.getTemplateData = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 14, ""));
+};
+
+
+/**
+ * optional bytes template_data = 14;
+ * This is a type-conversion wrapper around `getTemplateData()`
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Release.prototype.getTemplateData_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getTemplateData()));
+};
+
+
+/**
+ * optional bytes template_data = 14;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getTemplateData()`
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Release.prototype.getTemplateData_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getTemplateData()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.hashicorp.waypoint.Release} returns this
+ */
+proto.hashicorp.waypoint.Release.prototype.setTemplateData = function(value) {
+  return jspb.Message.setProto3BytesField(this, 14, value);
+};
+
+
+/**
  * optional string url = 9;
  * @return {string}
  */
@@ -31925,7 +35749,8 @@ proto.hashicorp.waypoint.GetLogStreamRequest.prototype.toObject = function(opt_i
 proto.hashicorp.waypoint.GetLogStreamRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     deploymentId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    application: (f = msg.getApplication()) && proto.hashicorp.waypoint.GetLogStreamRequest.Application.toObject(includeInstance, f)
+    application: (f = msg.getApplication()) && proto.hashicorp.waypoint.GetLogStreamRequest.Application.toObject(includeInstance, f),
+    limitBacklog: jspb.Message.getFieldWithDefault(msg, 3, 0)
   };
 
   if (includeInstance) {
@@ -31971,6 +35796,10 @@ proto.hashicorp.waypoint.GetLogStreamRequest.deserializeBinaryFromReader = funct
       reader.readMessage(value,proto.hashicorp.waypoint.GetLogStreamRequest.Application.deserializeBinaryFromReader);
       msg.setApplication(value);
       break;
+    case 3:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setLimitBacklog(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -32013,6 +35842,13 @@ proto.hashicorp.waypoint.GetLogStreamRequest.serializeBinaryToWriter = function(
       2,
       f,
       proto.hashicorp.waypoint.GetLogStreamRequest.Application.serializeBinaryToWriter
+    );
+  }
+  f = message.getLimitBacklog();
+  if (f !== 0) {
+    writer.writeInt32(
+      3,
+      f
     );
   }
 };
@@ -32293,6 +36129,24 @@ proto.hashicorp.waypoint.GetLogStreamRequest.prototype.hasApplication = function
 };
 
 
+/**
+ * optional int32 limit_backlog = 3;
+ * @return {number}
+ */
+proto.hashicorp.waypoint.GetLogStreamRequest.prototype.getLimitBacklog = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.hashicorp.waypoint.GetLogStreamRequest} returns this
+ */
+proto.hashicorp.waypoint.GetLogStreamRequest.prototype.setLimitBacklog = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
 
 /**
  * List of repeated fields within this message type.
@@ -32471,6 +36325,7 @@ proto.hashicorp.waypoint.LogBatch.Entry.prototype.toObject = function(opt_includ
  */
 proto.hashicorp.waypoint.LogBatch.Entry.toObject = function(includeInstance, msg) {
   var f, obj = {
+    source: jspb.Message.getFieldWithDefault(msg, 3, 0),
     timestamp: (f = msg.getTimestamp()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
     line: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
@@ -32509,6 +36364,10 @@ proto.hashicorp.waypoint.LogBatch.Entry.deserializeBinaryFromReader = function(m
     }
     var field = reader.getFieldNumber();
     switch (field) {
+    case 3:
+      var value = /** @type {!proto.hashicorp.waypoint.LogBatch.Entry.Source} */ (reader.readEnum());
+      msg.setSource(value);
+      break;
     case 1:
       var value = new google_protobuf_timestamp_pb.Timestamp;
       reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
@@ -32547,6 +36406,13 @@ proto.hashicorp.waypoint.LogBatch.Entry.prototype.serializeBinary = function() {
  */
 proto.hashicorp.waypoint.LogBatch.Entry.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSource();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      3,
+      f
+    );
+  }
   f = message.getTimestamp();
   if (f != null) {
     writer.writeMessage(
@@ -32562,6 +36428,32 @@ proto.hashicorp.waypoint.LogBatch.Entry.serializeBinaryToWriter = function(messa
       f
     );
   }
+};
+
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.LogBatch.Entry.Source = {
+  APP: 0,
+  ENTRYPOINT: 1
+};
+
+/**
+ * optional Source source = 3;
+ * @return {!proto.hashicorp.waypoint.LogBatch.Entry.Source}
+ */
+proto.hashicorp.waypoint.LogBatch.Entry.prototype.getSource = function() {
+  return /** @type {!proto.hashicorp.waypoint.LogBatch.Entry.Source} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {!proto.hashicorp.waypoint.LogBatch.Entry.Source} value
+ * @return {!proto.hashicorp.waypoint.LogBatch.Entry} returns this
+ */
+proto.hashicorp.waypoint.LogBatch.Entry.prototype.setSource = function(value) {
+  return jspb.Message.setProto3EnumField(this, 3, value);
 };
 
 
@@ -32703,7 +36595,7 @@ proto.hashicorp.waypoint.LogBatch.prototype.clearLinesList = function() {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.hashicorp.waypoint.ConfigVar.oneofGroups_ = [[3,4,5]];
+proto.hashicorp.waypoint.ConfigVar.oneofGroups_ = [[3,4,5],[7,2,6]];
 
 /**
  * @enum {number}
@@ -32720,6 +36612,23 @@ proto.hashicorp.waypoint.ConfigVar.ScopeCase = {
  */
 proto.hashicorp.waypoint.ConfigVar.prototype.getScopeCase = function() {
   return /** @type {proto.hashicorp.waypoint.ConfigVar.ScopeCase} */(jspb.Message.computeOneofCase(this, proto.hashicorp.waypoint.ConfigVar.oneofGroups_[0]));
+};
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.ConfigVar.ValueCase = {
+  VALUE_NOT_SET: 0,
+  UNSET: 7,
+  STATIC: 2,
+  DYNAMIC: 6
+};
+
+/**
+ * @return {proto.hashicorp.waypoint.ConfigVar.ValueCase}
+ */
+proto.hashicorp.waypoint.ConfigVar.prototype.getValueCase = function() {
+  return /** @type {proto.hashicorp.waypoint.ConfigVar.ValueCase} */(jspb.Message.computeOneofCase(this, proto.hashicorp.waypoint.ConfigVar.oneofGroups_[1]));
 };
 
 
@@ -32757,7 +36666,9 @@ proto.hashicorp.waypoint.ConfigVar.toObject = function(includeInstance, msg) {
     project: (f = msg.getProject()) && proto.hashicorp.waypoint.Ref.Project.toObject(includeInstance, f),
     runner: (f = msg.getRunner()) && proto.hashicorp.waypoint.Ref.Runner.toObject(includeInstance, f),
     name: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    value: jspb.Message.getFieldWithDefault(msg, 2, "")
+    unset: (f = msg.getUnset()) && google_protobuf_empty_pb.Empty.toObject(includeInstance, f),
+    pb_static: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    dynamic: (f = msg.getDynamic()) && proto.hashicorp.waypoint.ConfigVar.DynamicVal.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -32813,9 +36724,19 @@ proto.hashicorp.waypoint.ConfigVar.deserializeBinaryFromReader = function(msg, r
       var value = /** @type {string} */ (reader.readString());
       msg.setName(value);
       break;
+    case 7:
+      var value = new google_protobuf_empty_pb.Empty;
+      reader.readMessage(value,google_protobuf_empty_pb.Empty.deserializeBinaryFromReader);
+      msg.setUnset(value);
+      break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setValue(value);
+      msg.setStatic(value);
+      break;
+    case 6:
+      var value = new proto.hashicorp.waypoint.ConfigVar.DynamicVal;
+      reader.readMessage(value,proto.hashicorp.waypoint.ConfigVar.DynamicVal.deserializeBinaryFromReader);
+      msg.setDynamic(value);
       break;
     default:
       reader.skipField();
@@ -32877,14 +36798,193 @@ proto.hashicorp.waypoint.ConfigVar.serializeBinaryToWriter = function(message, w
       f
     );
   }
-  f = message.getValue();
-  if (f.length > 0) {
+  f = message.getUnset();
+  if (f != null) {
+    writer.writeMessage(
+      7,
+      f,
+      google_protobuf_empty_pb.Empty.serializeBinaryToWriter
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 2));
+  if (f != null) {
     writer.writeString(
       2,
       f
     );
   }
+  f = message.getDynamic();
+  if (f != null) {
+    writer.writeMessage(
+      6,
+      f,
+      proto.hashicorp.waypoint.ConfigVar.DynamicVal.serializeBinaryToWriter
+    );
+  }
 };
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.ConfigVar.DynamicVal.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.ConfigVar.DynamicVal} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    from: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    configMap: (f = msg.getConfigMap()) ? f.toObject(includeInstance, undefined) : []
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.ConfigVar.DynamicVal}
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.ConfigVar.DynamicVal;
+  return proto.hashicorp.waypoint.ConfigVar.DynamicVal.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.ConfigVar.DynamicVal} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.ConfigVar.DynamicVal}
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setFrom(value);
+      break;
+    case 2:
+      var value = msg.getConfigMap();
+      reader.readMessage(value, function(message, reader) {
+        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
+         });
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.ConfigVar.DynamicVal.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.ConfigVar.DynamicVal} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getFrom();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getConfigMap(true);
+  if (f && f.getLength() > 0) {
+    f.serializeBinary(2, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
+  }
+};
+
+
+/**
+ * optional string from = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.prototype.getFrom = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.ConfigVar.DynamicVal} returns this
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.prototype.setFrom = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * map<string, string> config = 2;
+ * @param {boolean=} opt_noLazyCreate Do not create the map if
+ * empty, instead returning `undefined`
+ * @return {!jspb.Map<string,string>}
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.prototype.getConfigMap = function(opt_noLazyCreate) {
+  return /** @type {!jspb.Map<string,string>} */ (
+      jspb.Message.getMapField(this, 2, opt_noLazyCreate,
+      null));
+};
+
+
+/**
+ * Clears values from the map. The map will be non-null.
+ * @return {!proto.hashicorp.waypoint.ConfigVar.DynamicVal} returns this
+ */
+proto.hashicorp.waypoint.ConfigVar.DynamicVal.prototype.clearConfigMap = function() {
+  this.getConfigMap().clear();
+  return this;};
 
 
 /**
@@ -33017,10 +37117,47 @@ proto.hashicorp.waypoint.ConfigVar.prototype.setName = function(value) {
 
 
 /**
- * optional string value = 2;
+ * optional google.protobuf.Empty unset = 7;
+ * @return {?proto.google.protobuf.Empty}
+ */
+proto.hashicorp.waypoint.ConfigVar.prototype.getUnset = function() {
+  return /** @type{?proto.google.protobuf.Empty} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_empty_pb.Empty, 7));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Empty|undefined} value
+ * @return {!proto.hashicorp.waypoint.ConfigVar} returns this
+*/
+proto.hashicorp.waypoint.ConfigVar.prototype.setUnset = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 7, proto.hashicorp.waypoint.ConfigVar.oneofGroups_[1], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.ConfigVar} returns this
+ */
+proto.hashicorp.waypoint.ConfigVar.prototype.clearUnset = function() {
+  return this.setUnset(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.ConfigVar.prototype.hasUnset = function() {
+  return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional string static = 2;
  * @return {string}
  */
-proto.hashicorp.waypoint.ConfigVar.prototype.getValue = function() {
+proto.hashicorp.waypoint.ConfigVar.prototype.getStatic = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
@@ -33029,8 +37166,63 @@ proto.hashicorp.waypoint.ConfigVar.prototype.getValue = function() {
  * @param {string} value
  * @return {!proto.hashicorp.waypoint.ConfigVar} returns this
  */
-proto.hashicorp.waypoint.ConfigVar.prototype.setValue = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+proto.hashicorp.waypoint.ConfigVar.prototype.setStatic = function(value) {
+  return jspb.Message.setOneofField(this, 2, proto.hashicorp.waypoint.ConfigVar.oneofGroups_[1], value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.hashicorp.waypoint.ConfigVar} returns this
+ */
+proto.hashicorp.waypoint.ConfigVar.prototype.clearStatic = function() {
+  return jspb.Message.setOneofField(this, 2, proto.hashicorp.waypoint.ConfigVar.oneofGroups_[1], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.ConfigVar.prototype.hasStatic = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional DynamicVal dynamic = 6;
+ * @return {?proto.hashicorp.waypoint.ConfigVar.DynamicVal}
+ */
+proto.hashicorp.waypoint.ConfigVar.prototype.getDynamic = function() {
+  return /** @type{?proto.hashicorp.waypoint.ConfigVar.DynamicVal} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.ConfigVar.DynamicVal, 6));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.ConfigVar.DynamicVal|undefined} value
+ * @return {!proto.hashicorp.waypoint.ConfigVar} returns this
+*/
+proto.hashicorp.waypoint.ConfigVar.prototype.setDynamic = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 6, proto.hashicorp.waypoint.ConfigVar.oneofGroups_[1], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.ConfigVar} returns this
+ */
+proto.hashicorp.waypoint.ConfigVar.prototype.clearDynamic = function() {
+  return this.setDynamic(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.ConfigVar.prototype.hasDynamic = function() {
+  return jspb.Message.getField(this, 6) != null;
 };
 
 
@@ -33774,7 +37966,823 @@ proto.hashicorp.waypoint.ConfigGetResponse.prototype.clearVariablesList = functi
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.hashicorp.waypoint.ExecStreamRequest.oneofGroups_ = [[1,2,3]];
+proto.hashicorp.waypoint.ConfigSource.oneofGroups_ = [[50]];
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.ConfigSource.ScopeCase = {
+  SCOPE_NOT_SET: 0,
+  GLOBAL: 50
+};
+
+/**
+ * @return {proto.hashicorp.waypoint.ConfigSource.ScopeCase}
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.getScopeCase = function() {
+  return /** @type {proto.hashicorp.waypoint.ConfigSource.ScopeCase} */(jspb.Message.computeOneofCase(this, proto.hashicorp.waypoint.ConfigSource.oneofGroups_[0]));
+};
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.ConfigSource.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.ConfigSource} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.ConfigSource.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    pb_delete: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
+    global: (f = msg.getGlobal()) && proto.hashicorp.waypoint.Ref.Global.toObject(includeInstance, f),
+    type: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    configMap: (f = msg.getConfigMap()) ? f.toObject(includeInstance, undefined) : [],
+    hash: jspb.Message.getFieldWithDefault(msg, 4, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.ConfigSource}
+ */
+proto.hashicorp.waypoint.ConfigSource.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.ConfigSource;
+  return proto.hashicorp.waypoint.ConfigSource.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.ConfigSource} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.ConfigSource}
+ */
+proto.hashicorp.waypoint.ConfigSource.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setDelete(value);
+      break;
+    case 50:
+      var value = new proto.hashicorp.waypoint.Ref.Global;
+      reader.readMessage(value,proto.hashicorp.waypoint.Ref.Global.deserializeBinaryFromReader);
+      msg.setGlobal(value);
+      break;
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setType(value);
+      break;
+    case 2:
+      var value = msg.getConfigMap();
+      reader.readMessage(value, function(message, reader) {
+        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
+         });
+      break;
+    case 4:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setHash(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.ConfigSource.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.ConfigSource} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.ConfigSource.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getDelete();
+  if (f) {
+    writer.writeBool(
+      3,
+      f
+    );
+  }
+  f = message.getGlobal();
+  if (f != null) {
+    writer.writeMessage(
+      50,
+      f,
+      proto.hashicorp.waypoint.Ref.Global.serializeBinaryToWriter
+    );
+  }
+  f = message.getType();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getConfigMap(true);
+  if (f && f.getLength() > 0) {
+    f.serializeBinary(2, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
+  }
+  f = message.getHash();
+  if (f !== 0) {
+    writer.writeUint64(
+      4,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional bool delete = 3;
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.getDelete = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.hashicorp.waypoint.ConfigSource} returns this
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.setDelete = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 3, value);
+};
+
+
+/**
+ * optional Ref.Global global = 50;
+ * @return {?proto.hashicorp.waypoint.Ref.Global}
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.getGlobal = function() {
+  return /** @type{?proto.hashicorp.waypoint.Ref.Global} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Ref.Global, 50));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Ref.Global|undefined} value
+ * @return {!proto.hashicorp.waypoint.ConfigSource} returns this
+*/
+proto.hashicorp.waypoint.ConfigSource.prototype.setGlobal = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 50, proto.hashicorp.waypoint.ConfigSource.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.ConfigSource} returns this
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.clearGlobal = function() {
+  return this.setGlobal(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.hasGlobal = function() {
+  return jspb.Message.getField(this, 50) != null;
+};
+
+
+/**
+ * optional string type = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.getType = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.ConfigSource} returns this
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.setType = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * map<string, string> config = 2;
+ * @param {boolean=} opt_noLazyCreate Do not create the map if
+ * empty, instead returning `undefined`
+ * @return {!jspb.Map<string,string>}
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.getConfigMap = function(opt_noLazyCreate) {
+  return /** @type {!jspb.Map<string,string>} */ (
+      jspb.Message.getMapField(this, 2, opt_noLazyCreate,
+      null));
+};
+
+
+/**
+ * Clears values from the map. The map will be non-null.
+ * @return {!proto.hashicorp.waypoint.ConfigSource} returns this
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.clearConfigMap = function() {
+  this.getConfigMap().clear();
+  return this;};
+
+
+/**
+ * optional uint64 hash = 4;
+ * @return {number}
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.getHash = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.hashicorp.waypoint.ConfigSource} returns this
+ */
+proto.hashicorp.waypoint.ConfigSource.prototype.setHash = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.SetConfigSourceRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.SetConfigSourceRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    configSource: (f = msg.getConfigSource()) && proto.hashicorp.waypoint.ConfigSource.toObject(includeInstance, f)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.SetConfigSourceRequest}
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.SetConfigSourceRequest;
+  return proto.hashicorp.waypoint.SetConfigSourceRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.SetConfigSourceRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.SetConfigSourceRequest}
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.ConfigSource;
+      reader.readMessage(value,proto.hashicorp.waypoint.ConfigSource.deserializeBinaryFromReader);
+      msg.setConfigSource(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.SetConfigSourceRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.SetConfigSourceRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getConfigSource();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.ConfigSource.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional ConfigSource config_source = 1;
+ * @return {?proto.hashicorp.waypoint.ConfigSource}
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest.prototype.getConfigSource = function() {
+  return /** @type{?proto.hashicorp.waypoint.ConfigSource} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.ConfigSource, 1));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.ConfigSource|undefined} value
+ * @return {!proto.hashicorp.waypoint.SetConfigSourceRequest} returns this
+*/
+proto.hashicorp.waypoint.SetConfigSourceRequest.prototype.setConfigSource = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.SetConfigSourceRequest} returns this
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest.prototype.clearConfigSource = function() {
+  return this.setConfigSource(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.SetConfigSourceRequest.prototype.hasConfigSource = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+
+/**
+ * Oneof group definitions for this message. Each group defines the field
+ * numbers belonging to that group. When of these fields' value is set, all
+ * other fields in the group are cleared. During deserialization, if multiple
+ * fields are encountered for a group, only the last value seen will be kept.
+ * @private {!Array<!Array<number>>}
+ * @const
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.oneofGroups_ = [[50]];
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.ScopeCase = {
+  SCOPE_NOT_SET: 0,
+  GLOBAL: 50
+};
+
+/**
+ * @return {proto.hashicorp.waypoint.GetConfigSourceRequest.ScopeCase}
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.prototype.getScopeCase = function() {
+  return /** @type {proto.hashicorp.waypoint.GetConfigSourceRequest.ScopeCase} */(jspb.Message.computeOneofCase(this, proto.hashicorp.waypoint.GetConfigSourceRequest.oneofGroups_[0]));
+};
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.GetConfigSourceRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.GetConfigSourceRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    global: (f = msg.getGlobal()) && proto.hashicorp.waypoint.Ref.Global.toObject(includeInstance, f),
+    type: jspb.Message.getFieldWithDefault(msg, 1, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.GetConfigSourceRequest}
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.GetConfigSourceRequest;
+  return proto.hashicorp.waypoint.GetConfigSourceRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.GetConfigSourceRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.GetConfigSourceRequest}
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 50:
+      var value = new proto.hashicorp.waypoint.Ref.Global;
+      reader.readMessage(value,proto.hashicorp.waypoint.Ref.Global.deserializeBinaryFromReader);
+      msg.setGlobal(value);
+      break;
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setType(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.GetConfigSourceRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.GetConfigSourceRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getGlobal();
+  if (f != null) {
+    writer.writeMessage(
+      50,
+      f,
+      proto.hashicorp.waypoint.Ref.Global.serializeBinaryToWriter
+    );
+  }
+  f = message.getType();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional Ref.Global global = 50;
+ * @return {?proto.hashicorp.waypoint.Ref.Global}
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.prototype.getGlobal = function() {
+  return /** @type{?proto.hashicorp.waypoint.Ref.Global} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Ref.Global, 50));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Ref.Global|undefined} value
+ * @return {!proto.hashicorp.waypoint.GetConfigSourceRequest} returns this
+*/
+proto.hashicorp.waypoint.GetConfigSourceRequest.prototype.setGlobal = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 50, proto.hashicorp.waypoint.GetConfigSourceRequest.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.GetConfigSourceRequest} returns this
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.prototype.clearGlobal = function() {
+  return this.setGlobal(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.prototype.hasGlobal = function() {
+  return jspb.Message.getField(this, 50) != null;
+};
+
+
+/**
+ * optional string type = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.prototype.getType = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.GetConfigSourceRequest} returns this
+ */
+proto.hashicorp.waypoint.GetConfigSourceRequest.prototype.setType = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.repeatedFields_ = [1];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.GetConfigSourceResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.GetConfigSourceResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    configSourcesList: jspb.Message.toObjectList(msg.getConfigSourcesList(),
+    proto.hashicorp.waypoint.ConfigSource.toObject, includeInstance)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.GetConfigSourceResponse}
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.GetConfigSourceResponse;
+  return proto.hashicorp.waypoint.GetConfigSourceResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.GetConfigSourceResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.GetConfigSourceResponse}
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.ConfigSource;
+      reader.readMessage(value,proto.hashicorp.waypoint.ConfigSource.deserializeBinaryFromReader);
+      msg.addConfigSources(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.GetConfigSourceResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.GetConfigSourceResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getConfigSourcesList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.ConfigSource.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * repeated ConfigSource config_sources = 1;
+ * @return {!Array<!proto.hashicorp.waypoint.ConfigSource>}
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.prototype.getConfigSourcesList = function() {
+  return /** @type{!Array<!proto.hashicorp.waypoint.ConfigSource>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.hashicorp.waypoint.ConfigSource, 1));
+};
+
+
+/**
+ * @param {!Array<!proto.hashicorp.waypoint.ConfigSource>} value
+ * @return {!proto.hashicorp.waypoint.GetConfigSourceResponse} returns this
+*/
+proto.hashicorp.waypoint.GetConfigSourceResponse.prototype.setConfigSourcesList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 1, value);
+};
+
+
+/**
+ * @param {!proto.hashicorp.waypoint.ConfigSource=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.hashicorp.waypoint.ConfigSource}
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.prototype.addConfigSources = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.hashicorp.waypoint.ConfigSource, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.hashicorp.waypoint.GetConfigSourceResponse} returns this
+ */
+proto.hashicorp.waypoint.GetConfigSourceResponse.prototype.clearConfigSourcesList = function() {
+  return this.setConfigSourcesList([]);
+};
+
+
+
+/**
+ * Oneof group definitions for this message. Each group defines the field
+ * numbers belonging to that group. When of these fields' value is set, all
+ * other fields in the group are cleared. During deserialization, if multiple
+ * fields are encountered for a group, only the last value seen will be kept.
+ * @private {!Array<!Array<number>>}
+ * @const
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.oneofGroups_ = [[1,2,3,4]];
 
 /**
  * @enum {number}
@@ -33783,7 +38791,8 @@ proto.hashicorp.waypoint.ExecStreamRequest.EventCase = {
   EVENT_NOT_SET: 0,
   START: 1,
   INPUT: 2,
-  WINCH: 3
+  WINCH: 3,
+  INPUT_EOF: 4
 };
 
 /**
@@ -33826,7 +38835,8 @@ proto.hashicorp.waypoint.ExecStreamRequest.toObject = function(includeInstance, 
   var f, obj = {
     start: (f = msg.getStart()) && proto.hashicorp.waypoint.ExecStreamRequest.Start.toObject(includeInstance, f),
     input: (f = msg.getInput()) && proto.hashicorp.waypoint.ExecStreamRequest.Input.toObject(includeInstance, f),
-    winch: (f = msg.getWinch()) && proto.hashicorp.waypoint.ExecStreamRequest.WindowSize.toObject(includeInstance, f)
+    winch: (f = msg.getWinch()) && proto.hashicorp.waypoint.ExecStreamRequest.WindowSize.toObject(includeInstance, f),
+    inputEof: (f = msg.getInputEof()) && google_protobuf_empty_pb.Empty.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -33877,6 +38887,11 @@ proto.hashicorp.waypoint.ExecStreamRequest.deserializeBinaryFromReader = functio
       var value = new proto.hashicorp.waypoint.ExecStreamRequest.WindowSize;
       reader.readMessage(value,proto.hashicorp.waypoint.ExecStreamRequest.WindowSize.deserializeBinaryFromReader);
       msg.setWinch(value);
+      break;
+    case 4:
+      var value = new google_protobuf_empty_pb.Empty;
+      reader.readMessage(value,google_protobuf_empty_pb.Empty.deserializeBinaryFromReader);
+      msg.setInputEof(value);
       break;
     default:
       reader.skipField();
@@ -33931,6 +38946,14 @@ proto.hashicorp.waypoint.ExecStreamRequest.serializeBinaryToWriter = function(me
       proto.hashicorp.waypoint.ExecStreamRequest.WindowSize.serializeBinaryToWriter
     );
   }
+  f = message.getInputEof();
+  if (f != null) {
+    writer.writeMessage(
+      4,
+      f,
+      google_protobuf_empty_pb.Empty.serializeBinaryToWriter
+    );
+  }
 };
 
 
@@ -33941,6 +38964,32 @@ proto.hashicorp.waypoint.ExecStreamRequest.serializeBinaryToWriter = function(me
  * @const
  */
 proto.hashicorp.waypoint.ExecStreamRequest.Start.repeatedFields_ = [2];
+
+/**
+ * Oneof group definitions for this message. Each group defines the field
+ * numbers belonging to that group. When of these fields' value is set, all
+ * other fields in the group are cleared. During deserialization, if multiple
+ * fields are encountered for a group, only the last value seen will be kept.
+ * @private {!Array<!Array<number>>}
+ * @const
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.Start.oneofGroups_ = [[1,4]];
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.Start.TargetCase = {
+  TARGET_NOT_SET: 0,
+  DEPLOYMENT_ID: 1,
+  INSTANCE_ID: 4
+};
+
+/**
+ * @return {proto.hashicorp.waypoint.ExecStreamRequest.Start.TargetCase}
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.getTargetCase = function() {
+  return /** @type {proto.hashicorp.waypoint.ExecStreamRequest.Start.TargetCase} */(jspb.Message.computeOneofCase(this, proto.hashicorp.waypoint.ExecStreamRequest.Start.oneofGroups_[0]));
+};
 
 
 
@@ -33974,6 +39023,7 @@ proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.toObject = function(o
 proto.hashicorp.waypoint.ExecStreamRequest.Start.toObject = function(includeInstance, msg) {
   var f, obj = {
     deploymentId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    instanceId: jspb.Message.getFieldWithDefault(msg, 4, ""),
     argsList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
     pty: (f = msg.getPty()) && proto.hashicorp.waypoint.ExecStreamRequest.PTY.toObject(includeInstance, f)
   };
@@ -34016,6 +39066,10 @@ proto.hashicorp.waypoint.ExecStreamRequest.Start.deserializeBinaryFromReader = f
       var value = /** @type {string} */ (reader.readString());
       msg.setDeploymentId(value);
       break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setInstanceId(value);
+      break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
       msg.addArgs(value);
@@ -34054,10 +39108,17 @@ proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.serializeBinary = fun
  */
 proto.hashicorp.waypoint.ExecStreamRequest.Start.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getDeploymentId();
-  if (f.length > 0) {
+  f = /** @type {string} */ (jspb.Message.getField(message, 1));
+  if (f != null) {
     writer.writeString(
       1,
+      f
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 4));
+  if (f != null) {
+    writer.writeString(
+      4,
       f
     );
   }
@@ -34093,7 +39154,61 @@ proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.getDeploymentId = fun
  * @return {!proto.hashicorp.waypoint.ExecStreamRequest.Start} returns this
  */
 proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.setDeploymentId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
+  return jspb.Message.setOneofField(this, 1, proto.hashicorp.waypoint.ExecStreamRequest.Start.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.hashicorp.waypoint.ExecStreamRequest.Start} returns this
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.clearDeploymentId = function() {
+  return jspb.Message.setOneofField(this, 1, proto.hashicorp.waypoint.ExecStreamRequest.Start.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.hasDeploymentId = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional string instance_id = 4;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.getInstanceId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.ExecStreamRequest.Start} returns this
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.setInstanceId = function(value) {
+  return jspb.Message.setOneofField(this, 4, proto.hashicorp.waypoint.ExecStreamRequest.Start.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.hashicorp.waypoint.ExecStreamRequest.Start} returns this
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.clearInstanceId = function() {
+  return jspb.Message.setOneofField(this, 4, proto.hashicorp.waypoint.ExecStreamRequest.Start.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.Start.prototype.hasInstanceId = function() {
+  return jspb.Message.getField(this, 4) != null;
 };
 
 
@@ -34867,6 +39982,43 @@ proto.hashicorp.waypoint.ExecStreamRequest.prototype.hasWinch = function() {
 };
 
 
+/**
+ * optional google.protobuf.Empty input_eof = 4;
+ * @return {?proto.google.protobuf.Empty}
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.prototype.getInputEof = function() {
+  return /** @type{?proto.google.protobuf.Empty} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_empty_pb.Empty, 4));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Empty|undefined} value
+ * @return {!proto.hashicorp.waypoint.ExecStreamRequest} returns this
+*/
+proto.hashicorp.waypoint.ExecStreamRequest.prototype.setInputEof = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 4, proto.hashicorp.waypoint.ExecStreamRequest.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.ExecStreamRequest} returns this
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.prototype.clearInputEof = function() {
+  return this.setInputEof(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.ExecStreamRequest.prototype.hasInputEof = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
 
 /**
  * Oneof group definitions for this message. Each group defines the field
@@ -34876,13 +40028,14 @@ proto.hashicorp.waypoint.ExecStreamRequest.prototype.hasWinch = function() {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.hashicorp.waypoint.ExecStreamResponse.oneofGroups_ = [[1,2]];
+proto.hashicorp.waypoint.ExecStreamResponse.oneofGroups_ = [[3,1,2]];
 
 /**
  * @enum {number}
  */
 proto.hashicorp.waypoint.ExecStreamResponse.EventCase = {
   EVENT_NOT_SET: 0,
+  OPEN: 3,
   OUTPUT: 1,
   EXIT: 2
 };
@@ -34925,6 +40078,7 @@ proto.hashicorp.waypoint.ExecStreamResponse.prototype.toObject = function(opt_in
  */
 proto.hashicorp.waypoint.ExecStreamResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
+    open: (f = msg.getOpen()) && proto.hashicorp.waypoint.ExecStreamResponse.Open.toObject(includeInstance, f),
     output: (f = msg.getOutput()) && proto.hashicorp.waypoint.ExecStreamResponse.Output.toObject(includeInstance, f),
     exit: (f = msg.getExit()) && proto.hashicorp.waypoint.ExecStreamResponse.Exit.toObject(includeInstance, f)
   };
@@ -34963,6 +40117,11 @@ proto.hashicorp.waypoint.ExecStreamResponse.deserializeBinaryFromReader = functi
     }
     var field = reader.getFieldNumber();
     switch (field) {
+    case 3:
+      var value = new proto.hashicorp.waypoint.ExecStreamResponse.Open;
+      reader.readMessage(value,proto.hashicorp.waypoint.ExecStreamResponse.Open.deserializeBinaryFromReader);
+      msg.setOpen(value);
+      break;
     case 1:
       var value = new proto.hashicorp.waypoint.ExecStreamResponse.Output;
       reader.readMessage(value,proto.hashicorp.waypoint.ExecStreamResponse.Output.deserializeBinaryFromReader);
@@ -35002,6 +40161,14 @@ proto.hashicorp.waypoint.ExecStreamResponse.prototype.serializeBinary = function
  */
 proto.hashicorp.waypoint.ExecStreamResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getOpen();
+  if (f != null) {
+    writer.writeMessage(
+      3,
+      f,
+      proto.hashicorp.waypoint.ExecStreamResponse.Open.serializeBinaryToWriter
+    );
+  }
   f = message.getOutput();
   if (f != null) {
     writer.writeMessage(
@@ -35018,6 +40185,107 @@ proto.hashicorp.waypoint.ExecStreamResponse.serializeBinaryToWriter = function(m
       proto.hashicorp.waypoint.ExecStreamResponse.Exit.serializeBinaryToWriter
     );
   }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.Open.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.ExecStreamResponse.Open.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.ExecStreamResponse.Open} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.Open.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.ExecStreamResponse.Open}
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.Open.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.ExecStreamResponse.Open;
+  return proto.hashicorp.waypoint.ExecStreamResponse.Open.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.ExecStreamResponse.Open} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.ExecStreamResponse.Open}
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.Open.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.Open.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.ExecStreamResponse.Open.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.ExecStreamResponse.Open} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.Open.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
 };
 
 
@@ -35345,6 +40613,43 @@ proto.hashicorp.waypoint.ExecStreamResponse.Output.prototype.setData = function(
 
 
 /**
+ * optional Open open = 3;
+ * @return {?proto.hashicorp.waypoint.ExecStreamResponse.Open}
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.prototype.getOpen = function() {
+  return /** @type{?proto.hashicorp.waypoint.ExecStreamResponse.Open} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.ExecStreamResponse.Open, 3));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.ExecStreamResponse.Open|undefined} value
+ * @return {!proto.hashicorp.waypoint.ExecStreamResponse} returns this
+*/
+proto.hashicorp.waypoint.ExecStreamResponse.prototype.setOpen = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 3, proto.hashicorp.waypoint.ExecStreamResponse.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.ExecStreamResponse} returns this
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.prototype.clearOpen = function() {
+  return this.setOpen(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.ExecStreamResponse.prototype.hasOpen = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
  * optional Output output = 1;
  * @return {?proto.hashicorp.waypoint.ExecStreamResponse.Output}
  */
@@ -35451,7 +40756,8 @@ proto.hashicorp.waypoint.EntrypointConfigRequest.prototype.toObject = function(o
 proto.hashicorp.waypoint.EntrypointConfigRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     deploymentId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    instanceId: jspb.Message.getFieldWithDefault(msg, 2, "")
+    instanceId: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    type: jspb.Message.getFieldWithDefault(msg, 3, 0)
   };
 
   if (includeInstance) {
@@ -35496,6 +40802,10 @@ proto.hashicorp.waypoint.EntrypointConfigRequest.deserializeBinaryFromReader = f
       var value = /** @type {string} */ (reader.readString());
       msg.setInstanceId(value);
       break;
+    case 3:
+      var value = /** @type {!proto.hashicorp.waypoint.Instance.Type} */ (reader.readEnum());
+      msg.setType(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -35539,6 +40849,13 @@ proto.hashicorp.waypoint.EntrypointConfigRequest.serializeBinaryToWriter = funct
       f
     );
   }
+  f = message.getType();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      3,
+      f
+    );
+  }
 };
 
 
@@ -35575,6 +40892,24 @@ proto.hashicorp.waypoint.EntrypointConfigRequest.prototype.getInstanceId = funct
  */
 proto.hashicorp.waypoint.EntrypointConfigRequest.prototype.setInstanceId = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional Instance.Type type = 3;
+ * @return {!proto.hashicorp.waypoint.Instance.Type}
+ */
+proto.hashicorp.waypoint.EntrypointConfigRequest.prototype.getType = function() {
+  return /** @type {!proto.hashicorp.waypoint.Instance.Type} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {!proto.hashicorp.waypoint.Instance.Type} value
+ * @return {!proto.hashicorp.waypoint.EntrypointConfigRequest} returns this
+ */
+proto.hashicorp.waypoint.EntrypointConfigRequest.prototype.setType = function(value) {
+  return jspb.Message.setProto3EnumField(this, 3, value);
 };
 
 
@@ -35735,7 +41070,7 @@ proto.hashicorp.waypoint.EntrypointConfigResponse.prototype.hasConfig = function
  * @private {!Array<number>}
  * @const
  */
-proto.hashicorp.waypoint.EntrypointConfig.repeatedFields_ = [1,2];
+proto.hashicorp.waypoint.EntrypointConfig.repeatedFields_ = [1,2,5];
 
 
 
@@ -35772,7 +41107,10 @@ proto.hashicorp.waypoint.EntrypointConfig.toObject = function(includeInstance, m
     proto.hashicorp.waypoint.EntrypointConfig.Exec.toObject, includeInstance),
     envVarsList: jspb.Message.toObjectList(msg.getEnvVarsList(),
     proto.hashicorp.waypoint.ConfigVar.toObject, includeInstance),
-    urlService: (f = msg.getUrlService()) && proto.hashicorp.waypoint.EntrypointConfig.URLService.toObject(includeInstance, f)
+    configSourcesList: jspb.Message.toObjectList(msg.getConfigSourcesList(),
+    proto.hashicorp.waypoint.ConfigSource.toObject, includeInstance),
+    urlService: (f = msg.getUrlService()) && proto.hashicorp.waypoint.EntrypointConfig.URLService.toObject(includeInstance, f),
+    deployment: (f = msg.getDeployment()) && proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -35819,10 +41157,20 @@ proto.hashicorp.waypoint.EntrypointConfig.deserializeBinaryFromReader = function
       reader.readMessage(value,proto.hashicorp.waypoint.ConfigVar.deserializeBinaryFromReader);
       msg.addEnvVars(value);
       break;
+    case 5:
+      var value = new proto.hashicorp.waypoint.ConfigSource;
+      reader.readMessage(value,proto.hashicorp.waypoint.ConfigSource.deserializeBinaryFromReader);
+      msg.addConfigSources(value);
+      break;
     case 3:
       var value = new proto.hashicorp.waypoint.EntrypointConfig.URLService;
       reader.readMessage(value,proto.hashicorp.waypoint.EntrypointConfig.URLService.deserializeBinaryFromReader);
       msg.setUrlService(value);
+      break;
+    case 4:
+      var value = new proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo;
+      reader.readMessage(value,proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.deserializeBinaryFromReader);
+      msg.setDeployment(value);
       break;
     default:
       reader.skipField();
@@ -35869,12 +41217,28 @@ proto.hashicorp.waypoint.EntrypointConfig.serializeBinaryToWriter = function(mes
       proto.hashicorp.waypoint.ConfigVar.serializeBinaryToWriter
     );
   }
+  f = message.getConfigSourcesList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      5,
+      f,
+      proto.hashicorp.waypoint.ConfigSource.serializeBinaryToWriter
+    );
+  }
   f = message.getUrlService();
   if (f != null) {
     writer.writeMessage(
       3,
       f,
       proto.hashicorp.waypoint.EntrypointConfig.URLService.serializeBinaryToWriter
+    );
+  }
+  f = message.getDeployment();
+  if (f != null) {
+    writer.writeMessage(
+      4,
+      f,
+      proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.serializeBinaryToWriter
     );
   }
 };
@@ -36307,6 +41671,190 @@ proto.hashicorp.waypoint.EntrypointConfig.URLService.prototype.setLabels = funct
 };
 
 
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    component: (f = msg.getComponent()) && proto.hashicorp.waypoint.Component.toObject(includeInstance, f),
+    labelsMap: (f = msg.getLabelsMap()) ? f.toObject(includeInstance, undefined) : []
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo;
+  return proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.Component;
+      reader.readMessage(value,proto.hashicorp.waypoint.Component.deserializeBinaryFromReader);
+      msg.setComponent(value);
+      break;
+    case 2:
+      var value = msg.getLabelsMap();
+      reader.readMessage(value, function(message, reader) {
+        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
+         });
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getComponent();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.Component.serializeBinaryToWriter
+    );
+  }
+  f = message.getLabelsMap(true);
+  if (f && f.getLength() > 0) {
+    f.serializeBinary(2, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
+  }
+};
+
+
+/**
+ * optional Component component = 1;
+ * @return {?proto.hashicorp.waypoint.Component}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.prototype.getComponent = function() {
+  return /** @type{?proto.hashicorp.waypoint.Component} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Component, 1));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Component|undefined} value
+ * @return {!proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo} returns this
+*/
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.prototype.setComponent = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo} returns this
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.prototype.clearComponent = function() {
+  return this.setComponent(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.prototype.hasComponent = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * map<string, string> labels = 2;
+ * @param {boolean=} opt_noLazyCreate Do not create the map if
+ * empty, instead returning `undefined`
+ * @return {!jspb.Map<string,string>}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.prototype.getLabelsMap = function(opt_noLazyCreate) {
+  return /** @type {!jspb.Map<string,string>} */ (
+      jspb.Message.getMapField(this, 2, opt_noLazyCreate,
+      null));
+};
+
+
+/**
+ * Clears values from the map. The map will be non-null.
+ * @return {!proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo} returns this
+ */
+proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo.prototype.clearLabelsMap = function() {
+  this.getLabelsMap().clear();
+  return this;};
+
+
 /**
  * repeated Exec exec = 1;
  * @return {!Array<!proto.hashicorp.waypoint.EntrypointConfig.Exec>}
@@ -36384,6 +41932,44 @@ proto.hashicorp.waypoint.EntrypointConfig.prototype.clearEnvVarsList = function(
 
 
 /**
+ * repeated ConfigSource config_sources = 5;
+ * @return {!Array<!proto.hashicorp.waypoint.ConfigSource>}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.prototype.getConfigSourcesList = function() {
+  return /** @type{!Array<!proto.hashicorp.waypoint.ConfigSource>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.hashicorp.waypoint.ConfigSource, 5));
+};
+
+
+/**
+ * @param {!Array<!proto.hashicorp.waypoint.ConfigSource>} value
+ * @return {!proto.hashicorp.waypoint.EntrypointConfig} returns this
+*/
+proto.hashicorp.waypoint.EntrypointConfig.prototype.setConfigSourcesList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 5, value);
+};
+
+
+/**
+ * @param {!proto.hashicorp.waypoint.ConfigSource=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.hashicorp.waypoint.ConfigSource}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.prototype.addConfigSources = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.hashicorp.waypoint.ConfigSource, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.hashicorp.waypoint.EntrypointConfig} returns this
+ */
+proto.hashicorp.waypoint.EntrypointConfig.prototype.clearConfigSourcesList = function() {
+  return this.setConfigSourcesList([]);
+};
+
+
+/**
  * optional URLService url_service = 3;
  * @return {?proto.hashicorp.waypoint.EntrypointConfig.URLService}
  */
@@ -36417,6 +42003,43 @@ proto.hashicorp.waypoint.EntrypointConfig.prototype.clearUrlService = function()
  */
 proto.hashicorp.waypoint.EntrypointConfig.prototype.hasUrlService = function() {
   return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * optional DeploymentInfo deployment = 4;
+ * @return {?proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.prototype.getDeployment = function() {
+  return /** @type{?proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo, 4));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.EntrypointConfig.DeploymentInfo|undefined} value
+ * @return {!proto.hashicorp.waypoint.EntrypointConfig} returns this
+*/
+proto.hashicorp.waypoint.EntrypointConfig.prototype.setDeployment = function(value) {
+  return jspb.Message.setWrapperField(this, 4, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.EntrypointConfig} returns this
+ */
+proto.hashicorp.waypoint.EntrypointConfig.prototype.clearDeployment = function() {
+  return this.setDeployment(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.EntrypointConfig.prototype.hasDeployment = function() {
+  return jspb.Message.getField(this, 4) != null;
 };
 
 
@@ -37585,7 +43208,7 @@ proto.hashicorp.waypoint.EntrypointExecRequest.prototype.hasError = function() {
  * @private {!Array<!Array<number>>}
  * @const
  */
-proto.hashicorp.waypoint.EntrypointExecResponse.oneofGroups_ = [[1,2,3]];
+proto.hashicorp.waypoint.EntrypointExecResponse.oneofGroups_ = [[1,4,2,3]];
 
 /**
  * @enum {number}
@@ -37593,6 +43216,7 @@ proto.hashicorp.waypoint.EntrypointExecResponse.oneofGroups_ = [[1,2,3]];
 proto.hashicorp.waypoint.EntrypointExecResponse.EventCase = {
   EVENT_NOT_SET: 0,
   INPUT: 1,
+  INPUT_EOF: 4,
   WINCH: 2,
   OPENED: 3
 };
@@ -37636,6 +43260,7 @@ proto.hashicorp.waypoint.EntrypointExecResponse.prototype.toObject = function(op
 proto.hashicorp.waypoint.EntrypointExecResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
     input: msg.getInput_asB64(),
+    inputEof: (f = msg.getInputEof()) && google_protobuf_empty_pb.Empty.toObject(includeInstance, f),
     winch: (f = msg.getWinch()) && proto.hashicorp.waypoint.ExecStreamRequest.WindowSize.toObject(includeInstance, f),
     opened: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
   };
@@ -37677,6 +43302,11 @@ proto.hashicorp.waypoint.EntrypointExecResponse.deserializeBinaryFromReader = fu
     case 1:
       var value = /** @type {!Uint8Array} */ (reader.readBytes());
       msg.setInput(value);
+      break;
+    case 4:
+      var value = new google_protobuf_empty_pb.Empty;
+      reader.readMessage(value,google_protobuf_empty_pb.Empty.deserializeBinaryFromReader);
+      msg.setInputEof(value);
       break;
     case 2:
       var value = new proto.hashicorp.waypoint.ExecStreamRequest.WindowSize;
@@ -37721,6 +43351,14 @@ proto.hashicorp.waypoint.EntrypointExecResponse.serializeBinaryToWriter = functi
     writer.writeBytes(
       1,
       f
+    );
+  }
+  f = message.getInputEof();
+  if (f != null) {
+    writer.writeMessage(
+      4,
+      f,
+      google_protobuf_empty_pb.Empty.serializeBinaryToWriter
     );
   }
   f = message.getWinch();
@@ -37798,6 +43436,43 @@ proto.hashicorp.waypoint.EntrypointExecResponse.prototype.clearInput = function(
  */
 proto.hashicorp.waypoint.EntrypointExecResponse.prototype.hasInput = function() {
   return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional google.protobuf.Empty input_eof = 4;
+ * @return {?proto.google.protobuf.Empty}
+ */
+proto.hashicorp.waypoint.EntrypointExecResponse.prototype.getInputEof = function() {
+  return /** @type{?proto.google.protobuf.Empty} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_empty_pb.Empty, 4));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Empty|undefined} value
+ * @return {!proto.hashicorp.waypoint.EntrypointExecResponse} returns this
+*/
+proto.hashicorp.waypoint.EntrypointExecResponse.prototype.setInputEof = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 4, proto.hashicorp.waypoint.EntrypointExecResponse.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.EntrypointExecResponse} returns this
+ */
+proto.hashicorp.waypoint.EntrypointExecResponse.prototype.clearInputEof = function() {
+  return this.setInputEof(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.EntrypointExecResponse.prototype.hasInputEof = function() {
+  return jspb.Message.getField(this, 4) != null;
 };
 
 
@@ -39243,6 +44918,1391 @@ proto.hashicorp.waypoint.ConvertInviteTokenRequest.prototype.getToken = function
  */
 proto.hashicorp.waypoint.ConvertInviteTokenRequest.prototype.setToken = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+
+/**
+ * Oneof group definitions for this message. Each group defines the field
+ * numbers belonging to that group. When of these fields' value is set, all
+ * other fields in the group are cleared. During deserialization, if multiple
+ * fields are encountered for a group, only the last value seen will be kept.
+ * @private {!Array<!Array<number>>}
+ * @const
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.oneofGroups_ = [[1,2]];
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.EventCase = {
+  EVENT_NOT_SET: 0,
+  OPEN: 1,
+  CHUNK: 2
+};
+
+/**
+ * @return {proto.hashicorp.waypoint.CreateSnapshotResponse.EventCase}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.getEventCase = function() {
+  return /** @type {proto.hashicorp.waypoint.CreateSnapshotResponse.EventCase} */(jspb.Message.computeOneofCase(this, proto.hashicorp.waypoint.CreateSnapshotResponse.oneofGroups_[0]));
+};
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.CreateSnapshotResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.CreateSnapshotResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    open: (f = msg.getOpen()) && proto.hashicorp.waypoint.CreateSnapshotResponse.Open.toObject(includeInstance, f),
+    chunk: msg.getChunk_asB64()
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.CreateSnapshotResponse}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.CreateSnapshotResponse;
+  return proto.hashicorp.waypoint.CreateSnapshotResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.CreateSnapshotResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.CreateSnapshotResponse}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.CreateSnapshotResponse.Open;
+      reader.readMessage(value,proto.hashicorp.waypoint.CreateSnapshotResponse.Open.deserializeBinaryFromReader);
+      msg.setOpen(value);
+      break;
+    case 2:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setChunk(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.CreateSnapshotResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.CreateSnapshotResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getOpen();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.CreateSnapshotResponse.Open.serializeBinaryToWriter
+    );
+  }
+  f = /** @type {!(string|Uint8Array)} */ (jspb.Message.getField(message, 2));
+  if (f != null) {
+    writer.writeBytes(
+      2,
+      f
+    );
+  }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.Open.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.CreateSnapshotResponse.Open.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.CreateSnapshotResponse.Open} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.Open.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.CreateSnapshotResponse.Open}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.Open.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.CreateSnapshotResponse.Open;
+  return proto.hashicorp.waypoint.CreateSnapshotResponse.Open.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.CreateSnapshotResponse.Open} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.CreateSnapshotResponse.Open}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.Open.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.Open.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.CreateSnapshotResponse.Open.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.CreateSnapshotResponse.Open} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.Open.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+/**
+ * optional Open open = 1;
+ * @return {?proto.hashicorp.waypoint.CreateSnapshotResponse.Open}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.getOpen = function() {
+  return /** @type{?proto.hashicorp.waypoint.CreateSnapshotResponse.Open} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.CreateSnapshotResponse.Open, 1));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.CreateSnapshotResponse.Open|undefined} value
+ * @return {!proto.hashicorp.waypoint.CreateSnapshotResponse} returns this
+*/
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.setOpen = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 1, proto.hashicorp.waypoint.CreateSnapshotResponse.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.CreateSnapshotResponse} returns this
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.clearOpen = function() {
+  return this.setOpen(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.hasOpen = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional bytes chunk = 2;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.getChunk = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * optional bytes chunk = 2;
+ * This is a type-conversion wrapper around `getChunk()`
+ * @return {string}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.getChunk_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getChunk()));
+};
+
+
+/**
+ * optional bytes chunk = 2;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getChunk()`
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.getChunk_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getChunk()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.hashicorp.waypoint.CreateSnapshotResponse} returns this
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.setChunk = function(value) {
+  return jspb.Message.setOneofField(this, 2, proto.hashicorp.waypoint.CreateSnapshotResponse.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.hashicorp.waypoint.CreateSnapshotResponse} returns this
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.clearChunk = function() {
+  return jspb.Message.setOneofField(this, 2, proto.hashicorp.waypoint.CreateSnapshotResponse.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.CreateSnapshotResponse.prototype.hasChunk = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+
+/**
+ * Oneof group definitions for this message. Each group defines the field
+ * numbers belonging to that group. When of these fields' value is set, all
+ * other fields in the group are cleared. During deserialization, if multiple
+ * fields are encountered for a group, only the last value seen will be kept.
+ * @private {!Array<!Array<number>>}
+ * @const
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.oneofGroups_ = [[1,2]];
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.EventCase = {
+  EVENT_NOT_SET: 0,
+  OPEN: 1,
+  CHUNK: 2
+};
+
+/**
+ * @return {proto.hashicorp.waypoint.RestoreSnapshotRequest.EventCase}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.getEventCase = function() {
+  return /** @type {proto.hashicorp.waypoint.RestoreSnapshotRequest.EventCase} */(jspb.Message.computeOneofCase(this, proto.hashicorp.waypoint.RestoreSnapshotRequest.oneofGroups_[0]));
+};
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.RestoreSnapshotRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.RestoreSnapshotRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    open: (f = msg.getOpen()) && proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.toObject(includeInstance, f),
+    chunk: msg.getChunk_asB64()
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.RestoreSnapshotRequest}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.RestoreSnapshotRequest;
+  return proto.hashicorp.waypoint.RestoreSnapshotRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.RestoreSnapshotRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.RestoreSnapshotRequest}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.RestoreSnapshotRequest.Open;
+      reader.readMessage(value,proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.deserializeBinaryFromReader);
+      msg.setOpen(value);
+      break;
+    case 2:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setChunk(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.RestoreSnapshotRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.RestoreSnapshotRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getOpen();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.serializeBinaryToWriter
+    );
+  }
+  f = /** @type {!(string|Uint8Array)} */ (jspb.Message.getField(message, 2));
+  if (f != null) {
+    writer.writeBytes(
+      2,
+      f
+    );
+  }
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.RestoreSnapshotRequest.Open} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    exit: jspb.Message.getBooleanFieldWithDefault(msg, 1, false)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.RestoreSnapshotRequest.Open}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.RestoreSnapshotRequest.Open;
+  return proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.RestoreSnapshotRequest.Open} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.RestoreSnapshotRequest.Open}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setExit(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.RestoreSnapshotRequest.Open} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getExit();
+  if (f) {
+    writer.writeBool(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional bool exit = 1;
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.prototype.getExit = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 1, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.hashicorp.waypoint.RestoreSnapshotRequest.Open} returns this
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.Open.prototype.setExit = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 1, value);
+};
+
+
+/**
+ * optional Open open = 1;
+ * @return {?proto.hashicorp.waypoint.RestoreSnapshotRequest.Open}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.getOpen = function() {
+  return /** @type{?proto.hashicorp.waypoint.RestoreSnapshotRequest.Open} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.RestoreSnapshotRequest.Open, 1));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.RestoreSnapshotRequest.Open|undefined} value
+ * @return {!proto.hashicorp.waypoint.RestoreSnapshotRequest} returns this
+*/
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.setOpen = function(value) {
+  return jspb.Message.setOneofWrapperField(this, 1, proto.hashicorp.waypoint.RestoreSnapshotRequest.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.RestoreSnapshotRequest} returns this
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.clearOpen = function() {
+  return this.setOpen(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.hasOpen = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional bytes chunk = 2;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.getChunk = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * optional bytes chunk = 2;
+ * This is a type-conversion wrapper around `getChunk()`
+ * @return {string}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.getChunk_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getChunk()));
+};
+
+
+/**
+ * optional bytes chunk = 2;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getChunk()`
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.getChunk_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getChunk()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.hashicorp.waypoint.RestoreSnapshotRequest} returns this
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.setChunk = function(value) {
+  return jspb.Message.setOneofField(this, 2, proto.hashicorp.waypoint.RestoreSnapshotRequest.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.hashicorp.waypoint.RestoreSnapshotRequest} returns this
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.clearChunk = function() {
+  return jspb.Message.setOneofField(this, 2, proto.hashicorp.waypoint.RestoreSnapshotRequest.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.RestoreSnapshotRequest.prototype.hasChunk = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Snapshot.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Snapshot.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Snapshot} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Snapshot.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Snapshot}
+ */
+proto.hashicorp.waypoint.Snapshot.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Snapshot;
+  return proto.hashicorp.waypoint.Snapshot.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Snapshot} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Snapshot}
+ */
+proto.hashicorp.waypoint.Snapshot.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Snapshot.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Snapshot.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Snapshot} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Snapshot.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Snapshot.Header.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Snapshot.Header.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Snapshot.Header} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Snapshot.Header.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    version: (f = msg.getVersion()) && proto.hashicorp.waypoint.VersionInfo.toObject(includeInstance, f),
+    format: jspb.Message.getFieldWithDefault(msg, 2, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Snapshot.Header}
+ */
+proto.hashicorp.waypoint.Snapshot.Header.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Snapshot.Header;
+  return proto.hashicorp.waypoint.Snapshot.Header.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Snapshot.Header} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Snapshot.Header}
+ */
+proto.hashicorp.waypoint.Snapshot.Header.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = new proto.hashicorp.waypoint.VersionInfo;
+      reader.readMessage(value,proto.hashicorp.waypoint.VersionInfo.deserializeBinaryFromReader);
+      msg.setVersion(value);
+      break;
+    case 2:
+      var value = /** @type {!proto.hashicorp.waypoint.Snapshot.Header.Format} */ (reader.readEnum());
+      msg.setFormat(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Snapshot.Header.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Snapshot.Header.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Snapshot.Header} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Snapshot.Header.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getVersion();
+  if (f != null) {
+    writer.writeMessage(
+      1,
+      f,
+      proto.hashicorp.waypoint.VersionInfo.serializeBinaryToWriter
+    );
+  }
+  f = message.getFormat();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      2,
+      f
+    );
+  }
+};
+
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.Snapshot.Header.Format = {
+  UNKNOWN: 0,
+  BOLT: 1
+};
+
+/**
+ * optional VersionInfo version = 1;
+ * @return {?proto.hashicorp.waypoint.VersionInfo}
+ */
+proto.hashicorp.waypoint.Snapshot.Header.prototype.getVersion = function() {
+  return /** @type{?proto.hashicorp.waypoint.VersionInfo} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.VersionInfo, 1));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.VersionInfo|undefined} value
+ * @return {!proto.hashicorp.waypoint.Snapshot.Header} returns this
+*/
+proto.hashicorp.waypoint.Snapshot.Header.prototype.setVersion = function(value) {
+  return jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Snapshot.Header} returns this
+ */
+proto.hashicorp.waypoint.Snapshot.Header.prototype.clearVersion = function() {
+  return this.setVersion(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Snapshot.Header.prototype.hasVersion = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional Format format = 2;
+ * @return {!proto.hashicorp.waypoint.Snapshot.Header.Format}
+ */
+proto.hashicorp.waypoint.Snapshot.Header.prototype.getFormat = function() {
+  return /** @type {!proto.hashicorp.waypoint.Snapshot.Header.Format} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {!proto.hashicorp.waypoint.Snapshot.Header.Format} value
+ * @return {!proto.hashicorp.waypoint.Snapshot.Header} returns this
+ */
+proto.hashicorp.waypoint.Snapshot.Header.prototype.setFormat = function(value) {
+  return jspb.Message.setProto3EnumField(this, 2, value);
+};
+
+
+
+/**
+ * Oneof group definitions for this message. Each group defines the field
+ * numbers belonging to that group. When of these fields' value is set, all
+ * other fields in the group are cleared. During deserialization, if multiple
+ * fields are encountered for a group, only the last value seen will be kept.
+ * @private {!Array<!Array<number>>}
+ * @const
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.oneofGroups_ = [[1]];
+
+/**
+ * @enum {number}
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.ChecksumCase = {
+  CHECKSUM_NOT_SET: 0,
+  SHA256: 1
+};
+
+/**
+ * @return {proto.hashicorp.waypoint.Snapshot.Trailer.ChecksumCase}
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.prototype.getChecksumCase = function() {
+  return /** @type {proto.hashicorp.waypoint.Snapshot.Trailer.ChecksumCase} */(jspb.Message.computeOneofCase(this, proto.hashicorp.waypoint.Snapshot.Trailer.oneofGroups_[0]));
+};
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Snapshot.Trailer.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Snapshot.Trailer} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    sha256: jspb.Message.getFieldWithDefault(msg, 1, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Snapshot.Trailer}
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Snapshot.Trailer;
+  return proto.hashicorp.waypoint.Snapshot.Trailer.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Snapshot.Trailer} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Snapshot.Trailer}
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSha256(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Snapshot.Trailer.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Snapshot.Trailer} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = /** @type {string} */ (jspb.Message.getField(message, 1));
+  if (f != null) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string sha256 = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.prototype.getSha256 = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Snapshot.Trailer} returns this
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.prototype.setSha256 = function(value) {
+  return jspb.Message.setOneofField(this, 1, proto.hashicorp.waypoint.Snapshot.Trailer.oneofGroups_[0], value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Snapshot.Trailer} returns this
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.prototype.clearSha256 = function() {
+  return jspb.Message.setOneofField(this, 1, proto.hashicorp.waypoint.Snapshot.Trailer.oneofGroups_[0], undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Snapshot.Trailer.prototype.hasSha256 = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.prototype.toObject = function(opt_includeInstance) {
+  return proto.hashicorp.waypoint.Snapshot.BoltChunk.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.hashicorp.waypoint.Snapshot.BoltChunk} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    bucket: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    itemsMap: (f = msg.getItemsMap()) ? f.toObject(includeInstance, undefined) : [],
+    pb_final: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.hashicorp.waypoint.Snapshot.BoltChunk}
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.hashicorp.waypoint.Snapshot.BoltChunk;
+  return proto.hashicorp.waypoint.Snapshot.BoltChunk.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.hashicorp.waypoint.Snapshot.BoltChunk} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.hashicorp.waypoint.Snapshot.BoltChunk}
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setBucket(value);
+      break;
+    case 2:
+      var value = msg.getItemsMap();
+      reader.readMessage(value, function(message, reader) {
+        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readBytes, null, "", "");
+         });
+      break;
+    case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setFinal(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.hashicorp.waypoint.Snapshot.BoltChunk.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.hashicorp.waypoint.Snapshot.BoltChunk} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getBucket();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getItemsMap(true);
+  if (f && f.getLength() > 0) {
+    f.serializeBinary(2, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeBytes);
+  }
+  f = message.getFinal();
+  if (f) {
+    writer.writeBool(
+      3,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string bucket = 1;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.prototype.getBucket = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Snapshot.BoltChunk} returns this
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.prototype.setBucket = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * map<string, bytes> items = 2;
+ * @param {boolean=} opt_noLazyCreate Do not create the map if
+ * empty, instead returning `undefined`
+ * @return {!jspb.Map<string,!(string|Uint8Array)>}
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.prototype.getItemsMap = function(opt_noLazyCreate) {
+  return /** @type {!jspb.Map<string,!(string|Uint8Array)>} */ (
+      jspb.Message.getMapField(this, 2, opt_noLazyCreate,
+      null));
+};
+
+
+/**
+ * Clears values from the map. The map will be non-null.
+ * @return {!proto.hashicorp.waypoint.Snapshot.BoltChunk} returns this
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.prototype.clearItemsMap = function() {
+  this.getItemsMap().clear();
+  return this;};
+
+
+/**
+ * optional bool final = 3;
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.prototype.getFinal = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.hashicorp.waypoint.Snapshot.BoltChunk} returns this
+ */
+proto.hashicorp.waypoint.Snapshot.BoltChunk.prototype.setFinal = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 3, value);
 };
 
 

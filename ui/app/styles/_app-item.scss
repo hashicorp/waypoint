@@ -26,8 +26,16 @@
     font-size: 1rem;
   }
 
+  &.app-item--destroyed code{
+    color: rgb(var(--text-muted));
+  }
+
   .badge--version {
     margin-right: scale.$sm-2;
+  }
+
+  .badge--destroyed {
+    margin-left: scale.$sm-2;
   }
 
   small {

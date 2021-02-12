@@ -1,0 +1,13 @@
+<span class="hint-link connect-link" {{on "click" this.toggleHint}}>
+  {{inline-svg "bolt" class="nav-icon"}}
+  CLI
+</span>
+
+{{#if this.hintIsVisible}}
+  <div class="cli-hint">
+    <p>Connect to your Waypoint instance by running the following command in the CLI</p>
+    <ContextCreate></ContextCreate>
+    <small><ExternalLink href="https://waypointproject.io/commands/context-create">Read more in our documentation</ExternalLink></small>
+  </div>
+  <div class="cli-hint-overlay" {{on "click" this.toggleHint}}></div>
+{{/if}}

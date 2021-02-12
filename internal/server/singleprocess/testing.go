@@ -19,10 +19,10 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 
-	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 // TestServer starts a singleprocess server and returns the connected client.
@@ -92,10 +92,10 @@ func TestWithURLService(t testing.T, out *hzntest.DevSetup) Option {
 
 	return func(s *service, cfg *config) error {
 		if cfg.serverConfig == nil {
-			cfg.serverConfig = &configpkg.ServerConfig{}
+			cfg.serverConfig = &serverconfig.Config{}
 		}
 
-		cfg.serverConfig.URL = &configpkg.URL{
+		cfg.serverConfig.URL = &serverconfig.URL{
 			Enabled:              true,
 			APIAddress:           wphzndata.Addr,
 			APIInsecure:          true,
@@ -103,6 +103,18 @@ func TestWithURLService(t testing.T, out *hzntest.DevSetup) Option {
 			ControlAddress:       fmt.Sprintf("dev://%s", setup.HubAddr),
 			AutomaticAppHostname: true,
 		}
+
+		return nil
+	}
+}
+
+// TestWithURLServiceGuestAccount sets the API token to empty to force
+// getting a guest account with the URL service. This can ONLY be set if
+// TestWithURLService is set before this.
+func TestWithURLServiceGuestAccount(t testing.T) Option {
+	return func(s *service, cfg *config) error {
+		// Set the API token to empty which will force a guest account registration.
+		cfg.serverConfig.URL.APIToken = ""
 
 		return nil
 	}

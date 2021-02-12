@@ -1,48 +1,66 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
-	"github.com/hashicorp/hcl/v2/hclsimple"
-	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
-	goldie.FixtureDir = "testdata"
-	spew.Config.DisablePointerAddresses = true
-	spew.Config.SortKeys = true
-}
+func TestLoad_compare(t *testing.T) {
+	cases := []struct {
+		File string
+		Err  string
+		Func func(*testing.T, *Config)
+	}{
+		{
+			"project.hcl",
+			"",
+			func(t *testing.T, c *Config) {
+				require.Equal(t, "hello", c.Project)
+			},
+		},
 
-func TestParseFile(t *testing.T) {
-	f, err := os.Open("testdata")
-	require.NoError(t, err)
-	defer f.Close()
+		{
+			"project_pwd.hcl",
+			"",
+			func(t *testing.T, c *Config) {
+				require.NotEmpty(t, c.Project)
+			},
+		},
 
-	fis, err := f.Readdir(-1)
-	require.NoError(t, err)
-	for _, fi := range fis {
-		if fi.IsDir() {
-			continue
-		}
+		{
+			"project_path_project.hcl",
+			"",
+			func(t *testing.T, c *Config) {
+				expected, err := filepath.Abs(filepath.Join("testdata", "compare"))
+				require.NoError(t, err)
+				require.Equal(t, expected, c.Project)
+			},
+		},
 
-		if filepath.Ext(fi.Name()) == ".golden" {
-			continue
-		}
+		{
+			"project_function.hcl",
+			"",
+			func(t *testing.T, c *Config) {
+				require.Equal(t, "HELLO", c.Project)
+			},
+		},
+	}
 
-		t.Run(fi.Name(), func(t *testing.T) {
-			var cfg Config
-			err := hclsimple.DecodeFile(filepath.Join("testdata", fi.Name()), nil, &cfg)
-			if strings.HasSuffix(fi.Name(), "_error.hcl") {
-				require.Error(t, err)
+	for _, tt := range cases {
+		t.Run(tt.File, func(t *testing.T) {
+			require := require.New(t)
+
+			cfg, err := Load(filepath.Join("testdata", "compare", tt.File), "")
+			if tt.Err != "" {
+				require.Error(err)
+				require.Contains(err.Error(), tt.Err)
 				return
 			}
-			require.NoError(t, err)
-			goldie.Assert(t, fi.Name(), []byte(spew.Sdump(cfg)))
+			require.NoError(err)
+
+			tt.Func(t, cfg)
 		})
 	}
 }

@@ -5,7 +5,7 @@ import { Ref, Deployment, Build, Release, Project } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import ObjectProxy from '@ember/object/proxy';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
-import { resolve } from 'rsvp';
+import { resolve, hash } from 'rsvp';
 
 interface AppModelParams {
   app_id: string;
@@ -47,7 +47,7 @@ export default class App extends Route {
 
     let ObjectPromiseProxy = ObjectProxy.extend(PromiseProxyMixin);
 
-    return {
+    return hash({
       application: appRef.toObject(),
       deployments: ObjectPromiseProxy.create({
         promise: resolve(this.api.listDeployments(wsRef, appRef)),
@@ -58,7 +58,7 @@ export default class App extends Route {
       builds: ObjectPromiseProxy.create({
         promise: resolve(this.api.listBuilds(wsRef, appRef)),
       }),
-    };
+    });
   }
 
   afterModel() {

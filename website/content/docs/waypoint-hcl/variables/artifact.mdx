@@ -1,0 +1,54 @@
+---
+layout: docs
+page_title: artifact - Variables - waypoint.hcl
+sidebar_title: <code>artifact</code>
+description: |-
+  The `artifact` variable can be used to reference information about built artifacts. This can be used to access information such as the name and tag of a built Docker image, or the AMI of a built EC2 machine image.
+---
+
+# `artifact` Variable
+
+<Placement
+  groups={[
+    ['app', 'build', 'registry'],
+    ['app', 'deploy'],
+    ['app', 'release'],
+  ]}
+/>
+
+The `artifact` variable can be used to reference information about
+built artifacts. This can be used to access information such as
+the name and tag of a built Docker image, or the AMI of a built
+EC2 machine image.
+
+The exact fields within an `artifact` variable are dependent on the
+[plugin used for the build](/plugins) and the available fields are
+documented alongside plugins.
+
+## Example: Docker
+
+The example below uses the `artifact` variable to reuse the
+Docker image name from the build when pushing it to a registry. This
+configuration makes it so that if the build name is changed, it will
+also automatically change for the registry without having to modify
+the configuration.
+
+```hcl
+app "web" {
+  build {
+    use "docker" {}
+
+    registry {
+      use "docker" {
+        image = artifact.image
+        tag = gitrefpretty()
+      }
+    }
+  }
+}
+```
+
+The example uses the `artifact.image` value which is the image name
+(without a tag). Other fields such as `artifact.tag` and
+`artifact.name` (the full name with the tag) are also available.
+For the full list of available fields, see the Docker plugin documentation.

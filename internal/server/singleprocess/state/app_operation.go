@@ -403,7 +403,21 @@ func (op *appOperation) dbPut(
 	}
 
 	// Create our index value and write that.
-	return op.indexPut(s, memTxn, value)
+	indexRec, err := op.indexPut(s, memTxn, value)
+	if err != nil {
+		return err
+	}
+
+	// Ensure the workspace record is updated.
+	touchTime := indexRec.StartTime
+	if v := indexRec.CompleteTime; v.After(touchTime) {
+		touchTime = v
+	}
+	if err := s.workspaceTouchApp(dbTxn, memTxn, wsRef, appRef, touchTime); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // appSeq gets the pointer to the sequence number for the given application.
@@ -442,7 +456,7 @@ func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) e
 		if err := proto.Unmarshal(v, result); err != nil {
 			return err
 		}
-		if err := op.indexPut(s, memTxn, result); err != nil {
+		if _, err := op.indexPut(s, memTxn, result); err != nil {
 			return err
 		}
 
@@ -462,7 +476,11 @@ func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) e
 }
 
 // indexPut writes an index record for a single operation record.
-func (op *appOperation) indexPut(s *State, txn *memdb.Txn, value proto.Message) error {
+func (op *appOperation) indexPut(
+	s *State,
+	txn *memdb.Txn,
+	value proto.Message,
+) (*operationIndexRecord, error) {
 	var startTime, completeTime time.Time
 
 	statusRaw := op.valueField(value, "Status")
@@ -472,7 +490,7 @@ func (op *appOperation) indexPut(s *State, txn *memdb.Txn, value proto.Message) 
 			if t := statusVal.StartTime; t != nil {
 				st, err := ptypes.Timestamp(t)
 				if err != nil {
-					return status.Errorf(codes.Internal, "time for build can't be parsed")
+					return nil, status.Errorf(codes.Internal, "time for build can't be parsed")
 				}
 
 				startTime = st
@@ -481,7 +499,7 @@ func (op *appOperation) indexPut(s *State, txn *memdb.Txn, value proto.Message) 
 			if t := statusVal.CompleteTime; t != nil {
 				ct, err := ptypes.Timestamp(statusVal.CompleteTime)
 				if err != nil {
-					return status.Errorf(codes.Internal, "time for build can't be parsed")
+					return nil, status.Errorf(codes.Internal, "time for build can't be parsed")
 				}
 
 				completeTime = ct
@@ -498,16 +516,7 @@ func (op *appOperation) indexPut(s *State, txn *memdb.Txn, value proto.Message) 
 	ref := op.valueField(value, "Application").(*pb.Ref_Application)
 	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
 
-	// Ensure the workspace index record is created.
-	touchTime := startTime
-	if completeTime.After(startTime) {
-		touchTime = completeTime
-	}
-	if _, err := s.workspaceTouch(txn, wsRef, ref, op.workspaceResource(), touchTime); err != nil {
-		return err
-	}
-
-	return txn.Insert(op.memTableName(), &operationIndexRecord{
+	rec := &operationIndexRecord{
 		Id:           op.valueField(value, "Id").(string),
 		Project:      ref.Project,
 		App:          ref.Application,
@@ -515,7 +524,8 @@ func (op *appOperation) indexPut(s *State, txn *memdb.Txn, value proto.Message) 
 		Sequence:     sequence,
 		StartTime:    startTime,
 		CompleteTime: completeTime,
-	})
+	}
+	return rec, txn.Insert(op.memTableName(), rec)
 }
 
 func (op *appOperation) valueField(value interface{}, field string) interface{} {

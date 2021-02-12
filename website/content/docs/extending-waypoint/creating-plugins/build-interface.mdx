@@ -141,19 +141,8 @@ err := c.Run()
 ## Writing to the Terminal Output
 
 If an error occurs during the build process, you can update the terminal output to show a failure message. The error
-returned from the function will also be output terminal by Waypoint. The `Step` command can be used to write the status
-of the current component if an an error occurs during the build command, calling the `Step` method:
-
-```go
-u.Step(terminal.StatusError, "Build failed")
-```
-
-Would result in the terminal output shown to the user like:
-
-```shell
-» Building...
-x Application built successfully server
-```
+returned from the function will also be output to the terminal by Waypoint. The `Step` command can be used to write the status
+of the current component if an error occurs during the build command by calling the `Step` method.
 
 Add the following code to your `build` function after the `Run` method.
 
@@ -163,6 +152,13 @@ if err != nil {
 
   return nil, err
 }
+```
+
+Would result in the terminal output shown to the user like:
+
+```shell
+» Building...
+x Build failed
 ```
 
 Finally, if the build succeeds, you can update the status and return the `proto.Message` that can be passed to the next

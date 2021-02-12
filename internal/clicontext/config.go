@@ -7,14 +7,14 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 
-	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 // Config is the structure of the context configuration file. This structure
 // can be decoded with hclsimple.DecodeFile.
 type Config struct {
 	// Server is the configuration to talk to a Waypoint server.
-	Server config.Server `hcl:"server,block"`
+	Server serverconfig.Client `hcl:"server,block"`
 }
 
 // LoadPath loads a context configuration from a filepath.

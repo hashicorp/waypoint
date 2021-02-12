@@ -214,10 +214,12 @@ func (s *service) RunnerJobStream(
 				err = status.Errorf(codes.FailedPrecondition,
 					"ack expected, got: %T", req.Event)
 			}
+		} else {
+			ack = false
 		}
 	}
 
-	// Send the ack.
+	// Send the ack OR nack, based on the value of +ack+.
 	job, ackerr := s.state.JobAck(job.Id, ack)
 	if ackerr != nil {
 		// If this fails, we just log, there is nothing more we can do.
@@ -393,6 +395,15 @@ func (s *service) handleJobStreamRequest(
 
 	case *pb.RunnerJobStreamRequest_Heartbeat_:
 		return s.state.JobHeartbeat(job.Id)
+
+	case *pb.RunnerJobStreamRequest_Download:
+		if err := s.state.JobUpdateRef(job.Id, event.Download.DataSourceRef); err != nil {
+			return err
+		}
+
+		return s.state.ProjectUpdateDataRef(&pb.Ref_Project{
+			Project: job.Application.Project,
+		}, job.Workspace, event.Download.DataSourceRef)
 
 	case *pb.RunnerJobStreamRequest_Terminal:
 		// This shouldn't happen but we want to protect against it to prevent

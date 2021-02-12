@@ -242,9 +242,11 @@ func (p *Platform) Deploy(
 				return err
 			}
 
-			taskRole, err = p.SetupTaskRole(ctx, s, log, sess, src)
-			if err != nil {
-				return err
+			if p.config.TaskRoleName != "" {
+				taskRole, err = p.SetupTaskRole(ctx, s, log, sess, src)
+				if err != nil {
+					return err
+				}
 			}
 
 			logGroup, err = p.SetupLogs(ctx, s, log, sess)
@@ -402,6 +404,11 @@ func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L 
 		roleName = "ecr-" + app.App
 	}
 
+	// role names have to be 64 characters or less, and the client side doesn't validate this.
+	if len(roleName) > 64 {
+		roleName = roleName[:64]
+	}
+
 	// p.updateStatus("setting up IAM role")
 	L.Debug("attempting to retrieve existing role", "role-name", roleName)
 
@@ -416,7 +423,7 @@ func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L 
 	}
 
 	L.Debug("creating new role")
-	s.Status("Creating IAM role: %s (%s)", roleName)
+	s.Status("Creating IAM role: %s", roleName)
 
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(rolePolicy),
@@ -564,7 +571,8 @@ func createALB(
 	sess *session.Session,
 	app *component.Source,
 	albConfig *ALBConfig,
-	vpcId, serviceName, sgWebId *string,
+	vpcId, serviceName,
+  sgWebId *string,
 	servicePort *int64,
 	subnets []*string,
 ) (lbArn, tgArn *string, err error) {
@@ -637,6 +645,12 @@ func createALB(
 			*listener.ListenerArn, *listener.LoadBalancerArn)
 	} else {
 		lbName := "waypoint-ecs-" + app.App
+
+		// Names have to be 32 characters or less, so clamp it here.
+		if len(lbName) > 32 {
+			lbName = lbName[:32]
+		}
+
 		dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
 			Names: []*string{&lbName},
 		})
@@ -932,7 +946,7 @@ func (p *Platform) Launch(
 		additionalContainers = append(additionalContainers, c)
 	}
 
-	L.Debug("registring task definition", "id", id)
+	L.Debug("registering task definition", "id", id)
 
 	var cpuShares int
 
@@ -1003,11 +1017,10 @@ func (p *Platform) Launch(
 
 	containerDefinitions := append([]*ecs.ContainerDefinition{&def}, additionalContainers...)
 
-	taskOut, err := ecsSvc.RegisterTaskDefinition(&ecs.RegisterTaskDefinitionInput{
+	registerTaskDefinitionInput := ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: containerDefinitions,
 
 		ExecutionRoleArn: aws.String(executionRoleArn),
-		TaskRoleArn:      aws.String(taskRoleArn),
 		Cpu:              cpus,
 		Memory:           aws.String(mems),
 		Family:           aws.String(family),
@@ -1021,16 +1034,27 @@ func (p *Platform) Launch(
 				Value: aws.String(app.App),
 			},
 		},
-	})
+	}
+
+	if taskRoleArn != "" {
+		registerTaskDefinitionInput.SetTaskRoleArn(taskRoleArn)
+	}
+
+	taskOut, err := ecsSvc.RegisterTaskDefinition(&registerTaskDefinitionInput)
 
 	if err != nil {
 		return nil, err
 	}
 
 	s.Update("Registered Task definition: %s", family)
-	rand := id[len(id)-(31-len(app.App)):]
 
-	serviceName := fmt.Sprintf("%s-%s", app.App, rand)
+	serviceName := fmt.Sprintf("%s-%s", app.App, id)
+
+	// We have to clamp at a length of 32 because the Name field to CreateTargetGroup
+	// requires that the name is 32 characters or less.
+	if len(serviceName) > 32 {
+		serviceName = serviceName[:32]
+	}
 
 	taskArn := *taskOut.TaskDefinition.TaskDefinitionArn
 
@@ -1099,7 +1123,9 @@ func (p *Platform) Launch(
 		SecurityGroups: []*string{sgecsport},
 	}
 
-	netCfg.AssignPublicIp = aws.String("ENABLED")
+	if !p.config.EC2Cluster {
+		netCfg.AssignPublicIp = aws.String("ENABLED")
+	}
 
 	createServiceInput := &ecs.CreateServiceInput{
 		Cluster:        &clusterName,
@@ -1395,7 +1421,7 @@ type Config struct {
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
-	doc, err := docs.New(docs.FromConfig(&Config{}))
+	doc, err := docs.New(docs.FromConfig(&Config{}), docs.FromFunc(p.DeployFunc()))
 	if err != nil {
 		return nil, err
 	}

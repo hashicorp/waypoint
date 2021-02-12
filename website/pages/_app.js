@@ -23,7 +23,7 @@ const title = 'Waypoint by HashiCorp'
 const description =
   'Waypoint is an open source solution that provides a modern workflow for build, deploy, and release across platforms.'
 
-function App({ Component, pageProps }) {
+export default function App({ Component, pageProps }) {
   useAnchorLinkAnalytics()
 
   return (
@@ -37,11 +37,7 @@ function App({ Component, pageProps }) {
         icon={[{ href: '/favicon.ico' }]}
       >
         <meta name="og:title" property="og:title" content={title} />
-        <meta
-          name="og:description"
-          property="og:title"
-          content={description}
-        />
+        <meta name="og:description" property="og:title" content={description} />
       </HashiHead>
       {ALERT_BANNER_ACTIVE && <AlertBanner {...alertBannerData} theme="blue" />}
       <HashiStackMenu />
@@ -54,21 +50,3 @@ function App({ Component, pageProps }) {
     </ErrorBoundary>
   )
 }
-
-App.getInitialProps = async ({ Component, ctx }) => {
-  let pageProps = {}
-
-  if (Component.getInitialProps) {
-    pageProps = await Component.getInitialProps(ctx)
-  } else if (Component.isMDXComponent) {
-    // fix for https://github.com/mdx-js/mdx/issues/382
-    const mdxLayoutComponent = Component({}).props.originalType
-    if (mdxLayoutComponent.getInitialProps) {
-      pageProps = await mdxLayoutComponent.getInitialProps(ctx)
-    }
-  }
-
-  return { pageProps }
-}
-
-export default App

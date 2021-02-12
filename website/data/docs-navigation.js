@@ -19,7 +19,15 @@ export default [
   'getting-started',
   {
     category: 'upgrading',
-    content: ['compatibility', 'protocol-table', 'release-notifications'],
+    content: [
+      'compatibility',
+      'protocol-table',
+      'release-notifications',
+      {
+        category: 'version-guides',
+        content: ['0.2.0'],
+      },
+    ],
   },
   '-----------',
   {
@@ -29,8 +37,21 @@ export default [
   {
     category: 'waypoint-hcl',
     content: [
+      {
+        category: 'variables',
+        content: ['artifact', 'deploy', 'entrypoint', 'path'],
+      },
+      {
+        category: 'functions',
+        content: ['all', 'template'],
+      },
+      {
+        category: 'syntax',
+        content: ['expressions', 'json'],
+      },
       'app',
       'build',
+      'config',
       'deploy',
       'hook',
       'plugin',
@@ -53,7 +74,10 @@ export default [
   'url',
   'logs',
   'exec',
-  'app-config',
+  {
+    category: 'app-config',
+    content: ['dynamic'],
+  },
   'workspaces',
   'plugins',
   '-----------',

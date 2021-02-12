@@ -19,6 +19,7 @@ func (c *ServerConfigSetCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
+		WithNoConfig(),
 	); err != nil {
 		return 1
 	}
@@ -77,7 +78,7 @@ func (c *ServerConfigSetCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ServerConfigSetCommand) Synopsis() string {
-	return "Set the server online configuration."
+	return "Set the server online configuration"
 }
 
 func (c *ServerConfigSetCommand) Help() string {

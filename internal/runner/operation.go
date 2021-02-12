@@ -3,11 +3,11 @@ package runner
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2/hclsimple"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -32,23 +32,65 @@ func (r *Runner) executeJob(
 ) (*pb.Job_Result, error) {
 	// Eventually we'll need to extract the data source. For now we're
 	// just building for local exec so it is the working directory.
-	path := configpkg.Filename
-	if wd != "" {
-		path = filepath.Join(wd, path)
+	path, err := configpkg.FindPath(wd, "", false)
+	if err != nil {
+		return nil, err
+	}
+
+	if path == "" {
+		// If no waypoint.hcl file is found in the downloaded data, look for
+		// a default waypoint HCL.
+		//
+		// NOTE(mitchellh): For now, we query the project directly here
+		// since we don't need it for anything else. I can see us moving this
+		// to accept() eventually though if other data is used.
+		log.Trace("waypoint.hcl not found in downloaded data, looking for default in server")
+		resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
+			Project: &pb.Ref_Project{
+				Project: job.Application.Project,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		if v := resp.Project.WaypointHcl; len(v) > 0 {
+			log.Debug("using waypoint.hcl associated with the project in the server")
+
+			// ext has the extra extension information for the file. We add
+			// ".json" if this is JSON-formatted.
+			ext := ""
+			if resp.Project.WaypointHclFormat == pb.Project_JSON {
+				ext = ".json"
+			}
+
+			// We just write this into the working directory.
+			path = filepath.Join(wd, configpkg.Filename+ext)
+			if err := ioutil.WriteFile(path, v, 0644); err != nil {
+				return nil, status.Errorf(codes.Internal,
+					"Failed to write waypoint.hcl from server: %s", err)
+			}
+		} else {
+			log.Trace("waypoint.hcl not found in server data")
+		}
+	}
+
+	if path == "" {
+		// No waypoint.hcl file is found.
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"A waypoint.hcl was not found. Please either add a waypoint.hcl to "+
+				"the project source or in the project settings in the Waypoint UI.")
 	}
 
 	// Determine the evaluation context we'll be using
-	configCtx := configpkg.EvalContext(filepath.Dir(path))
-
-	// Decode the configuration
-	var cfg configpkg.Config
 	log.Trace("reading configuration", "path", path)
-	if err := hclsimple.DecodeFile(path, configCtx, &cfg); err != nil {
+	cfg, err := configpkg.Load(path, filepath.Dir(path))
+	if err != nil {
 		return nil, err
 	}
 
 	// Setup our project data directory.
-	projDir, err := datadir.NewProject(".waypoint")
+	projDir, err := datadir.NewProject(filepath.Join(wd, ".waypoint"))
 	if err != nil {
 		return nil, err
 	}
@@ -72,10 +114,8 @@ func (r *Runner) executeJob(
 		core.WithUI(ui),
 		core.WithComponents(factories),
 		core.WithClient(r.client),
-		core.WithConfig(&cfg),
-		core.WithConfigContext(configCtx),
+		core.WithConfig(cfg),
 		core.WithDataDir(projDir),
-		core.WithRootDir(filepath.Dir(path)),
 		core.WithLabels(job.Labels),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
@@ -100,6 +140,9 @@ func (r *Runner) executeJob(
 		log.Debug("noop job success")
 		return nil, nil
 
+	case *pb.Job_Up:
+		return r.executeUpOp(ctx, log, job, project)
+
 	case *pb.Job_Build:
 		return r.executeBuildOp(ctx, job, project)
 
@@ -123,6 +166,12 @@ func (r *Runner) executeJob(
 
 	case *pb.Job_Docs:
 		return r.executeDocsOp(ctx, log, job, project)
+
+	case *pb.Job_ConfigSync:
+		return r.executeConfigSyncOp(ctx, log, job, project)
+
+	case *pb.Job_Exec:
+		return r.executeExecOp(ctx, job, project)
 
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)

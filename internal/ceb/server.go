@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
@@ -15,6 +16,62 @@ import (
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+// client returns the Waypoint client or blocks until it is set or the
+// ceb is exiting. Once this returns, users should ALWAYS check if an exit
+// condition was triggered to avoid nil panics.
+func (ceb *CEB) waitClient() pb.WaypointClient {
+	ceb.clientMu.Lock()
+	defer ceb.clientMu.Unlock()
+
+	for ceb.client == nil {
+		ceb.clientCond.Wait()
+	}
+
+	return ceb.client
+}
+
+// initClient initializes the client connection to the server. This will
+// attempt to synchronously connect once, and then reattempt connection in
+// the background.
+//
+// Users of the client should use the waitClient() function to wait
+// for the client to be set.
+func (ceb *CEB) initClient(ctx context.Context, log hclog.Logger, cfg *config, retry bool) error {
+	if ceb.client != nil {
+		return nil
+	}
+
+	if cfg.ServerAddr == "" {
+		log.Info("no waypoint server configured, disabled entrypoint")
+		return nil
+	}
+
+RETRY_INIT:
+	err := ceb.dialServer(ctx, cfg, retry)
+	if status.Code(err) == codes.Unavailable {
+		// If we require a server connection, then just retry.
+		if cfg.ServerRequired {
+			log.Warn("server unavailable but ceb configured to require it, retrying synchronously")
+			retry = true
+			goto RETRY_INIT
+		}
+
+		// If we don't require a server connection, then we start a
+		// goroutine to retry and eventually connect (hopefully).
+		log.Warn("server unavailable, will retry in the background")
+		go ceb.initClient(ctx, log, cfg, true)
+
+		// We also mark that we can begin executing the child command.
+		// We usually don't do this because we wait for initial config, but
+		// if we fail to connect to the client, we can just start it.
+		ceb.markChildCmdReady()
+
+		return nil
+	}
+
+	return err
+}
 
 // dialServer connects to the server.
 func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error {
@@ -35,7 +92,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	}
 
 	// Connect to this server
-	ceb.logger.Info("connecting to server",
+	ceb.logger.Debug("connecting to server",
 		"addr", cfg.ServerAddr,
 		"tls", cfg.ServerTls,
 		"tls_skip_verify", cfg.ServerTlsSkipVerify,
@@ -63,7 +120,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 
 		// If we're ready then we're done!
 		if s == connectivity.Ready {
-			ceb.logger.Info("connection is ready")
+			ceb.logger.Debug("connection is ready")
 			break
 		}
 
@@ -86,7 +143,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	// the connection with the auth setup. If we have no token, we're done.
 	if cfg.InviteToken != "" {
 		// Exchange
-		ceb.logger.Info("converting invite token to login token")
+		ceb.logger.Debug("converting invite token to login token")
 		resp, err := client.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
 			Token: cfg.InviteToken,
 		}, grpc.WaitForReady(isRetry))
@@ -99,7 +156,7 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 
 		// Reconnect and return
 		conn.Close()
-		ceb.logger.Info("reconnecting to server with authentication")
+		ceb.logger.Debug("reconnecting to server with authentication")
 		conn, err = grpc.DialContext(ctx, cfg.ServerAddr, grpcOpts...)
 		if err != nil {
 			return err
@@ -126,10 +183,13 @@ func (ceb *CEB) dialServer(ctx context.Context, cfg *config, isRetry bool) error
 	if err != nil {
 		return err
 	}
-	ceb.logger.Info("negotiated entrypoint protocol version", "version", vsn)
+	ceb.logger.Debug("negotiated entrypoint protocol version", "version", vsn)
 
 	// Commit to using this client
+	ceb.clientMu.Lock()
+	defer ceb.clientMu.Unlock()
 	ceb.client = client
+	ceb.clientCond.Broadcast()
 	connCopy := conn
 	conn = nil
 	ceb.cleanup(func() { connCopy.Close() })

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"sync"
-	"sync/atomic"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
@@ -44,7 +43,6 @@ type Runner struct {
 	id          string
 	logger      hclog.Logger
 	client      pb.WaypointClient
-	ctx         context.Context
 	cleanupFunc func()
 	runner      *pb.Runner
 	factories   map[component.Type]*factory.Factory
@@ -52,8 +50,13 @@ type Runner struct {
 	local       bool
 	tempDir     string
 
-	closedVal int32
-	acceptWg  sync.WaitGroup
+	// protects whether or not the runner is active or not.
+	runningCond *sync.Cond
+	shutdown    bool
+	runningJobs int
+
+	runningCtx    context.Context
+	runningCancel func()
 
 	// config is the current runner config.
 	config      *pb.RunnerConfig
@@ -80,7 +83,6 @@ func New(opts ...Option) (*Runner, error) {
 	runner := &Runner{
 		id:     id,
 		logger: hclog.L(),
-		ctx:    context.Background(),
 		runner: &pb.Runner{Id: id},
 		factories: map[component.Type]*factory.Factory{
 			component.MapperType:         plugin.BaseFactories[component.MapperType],
@@ -90,6 +92,9 @@ func New(opts ...Option) (*Runner, error) {
 			component.ReleaseManagerType: plugin.BaseFactories[component.ReleaseManagerType],
 		},
 	}
+
+	runner.runningCond = sync.NewCond(new(sync.Mutex))
+	runner.runningCtx, runner.runningCancel = context.WithCancel(context.Background())
 
 	// Build our config
 	var cfg config
@@ -122,7 +127,7 @@ func (r *Runner) Id() string {
 // server. This will spawn goroutines for management. This will return after
 // registration so this should not be executed in a goroutine.
 func (r *Runner) Start() error {
-	if r.closed() {
+	if r.shutdown {
 		return ErrClosed
 	}
 
@@ -130,7 +135,7 @@ func (r *Runner) Start() error {
 
 	// Register
 	log.Debug("registering runner")
-	client, err := r.client.RunnerConfig(r.ctx)
+	client, err := r.client.RunnerConfig(r.runningCtx)
 	if err != nil {
 		return err
 	}
@@ -162,7 +167,7 @@ func (r *Runner) Start() error {
 	go r.watchConfig(ch)
 
 	// Start the goroutine that waits for all other configs
-	go r.recvConfig(r.ctx, client, ch)
+	go r.recvConfig(r.runningCtx, client, ch)
 
 	log.Info("runner registered with server")
 	return nil
@@ -173,13 +178,21 @@ func (r *Runner) Start() error {
 // this is called, Start and Accept will no longer function and will
 // return errors immediately.
 func (r *Runner) Close() error {
-	// If we can't swap, we're already closed.
-	if !atomic.CompareAndSwapInt32(&r.closedVal, 0, 1) {
-		return nil
+	r.runningCond.L.Lock()
+	defer r.runningCond.L.Unlock()
+
+	// Wait for all the jobs to finish before we set the shutdown flag.
+	for r.runningJobs > 0 {
+		r.runningCond.Wait()
 	}
 
-	// Wait for our jobs to complete
-	r.acceptWg.Wait()
+	r.shutdown = true
+
+	// Cancel the context that is used by Accept to wait on the RunnerJobStream.
+	// This interrupts the Recv() call so that any goroutine running Accept()
+	// knows that the Runner is closed now and can exit, avoiding a
+	// goroutine leak.
+	r.runningCancel()
 
 	// Run any cleanup necessary
 	if f := r.cleanupFunc; f != nil {
@@ -187,10 +200,6 @@ func (r *Runner) Close() error {
 	}
 
 	return nil
-}
-
-func (r *Runner) closed() bool {
-	return atomic.LoadInt32(&r.closedVal) > 0
 }
 
 type config struct{}

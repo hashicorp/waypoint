@@ -1,20 +1,16 @@
 package singleprocess
 
 import (
-	"crypto/tls"
+	"sync"
 
 	"github.com/boltdb/bolt"
-
 	"github.com/hashicorp/go-hclog"
-	grpctoken "github.com/hashicorp/horizon/pkg/grpc/token"
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 
-	configpkg "github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
+	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
 //go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:gen/"
@@ -30,8 +26,16 @@ type service struct {
 
 	// urlConfig is not nil if the URL service is enabled. This is guaranteed
 	// to have the configs set.
-	urlConfig *configpkg.URL
-	urlClient wphznpb.WaypointHznClient
+	urlConfig    *serverconfig.URL
+	urlClientMu  sync.Mutex
+	urlClientVal wphznpb.WaypointHznClient
+
+	// urlCEB has the configuration for the entrypoint. If this is nil,
+	// then the configuration is not ready. The urlCEBWatchCh can be used
+	// to watch for changes. All fields protected with urlCEBMu.
+	urlCEBMu      sync.RWMutex
+	urlCEB        *pb.EntrypointConfig_URLService
+	urlCEBWatchCh chan struct{}
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -75,33 +79,31 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	s.id = id
 
 	// Setup our URL service config if it is enabled.
-	if scfg := cfg.serverConfig; scfg != nil && scfg.URL != nil && scfg.URL.Enabled {
+	if scfg := cfg.serverConfig; scfg != nil && scfg.URL != nil {
 		// Set our config
 		s.urlConfig = scfg.URL
 
-		// If we have no API token, get our guest account token.
-		if scfg.URL.APIToken == "" {
-			if err := s.initURLGuestAccount(cfg.acceptUrlTerms); err != nil {
-				return nil, err
-			}
-		}
+		// Create a copy of the config that we use for initialization so
+		// that we don't create races with s.urlConfig if this retries.
+		cfgCopy := *scfg.URL
 
-		// Now that we have a token, connect to the API service.
-		opts := []grpc.DialOption{
-			grpc.WithPerRPCCredentials(grpctoken.Token(scfg.URL.APIToken)),
+		// Initialize our CEB settings.
+		s.urlCEBMu.Lock()
+		s.urlCEB = &pb.EntrypointConfig_URLService{
+			ControlAddr: cfgCopy.ControlAddress,
+			Token:       cfgCopy.APIToken,
 		}
-		if scfg.URL.APIInsecure {
-			opts = append(opts, grpc.WithInsecure())
-		} else {
-			opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
-		}
+		s.urlCEBWatchCh = make(chan struct{})
+		s.urlCEBMu.Unlock()
 
-		conn, err := grpc.Dial(scfg.URL.APIAddress, opts...)
-		if err != nil {
+		if err := s.initURLClient(
+			log.Named("url_service"),
+			false,
+			cfg.acceptUrlTerms,
+			&cfgCopy,
+		); err != nil {
 			return nil, err
 		}
-
-		s.urlClient = wphznpb.NewWaypointHznClient(conn)
 	}
 
 	// Set specific server config for the deployment entrypoint binaries
@@ -127,7 +129,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 type config struct {
 	db           *bolt.DB
-	serverConfig *configpkg.ServerConfig
+	serverConfig *serverconfig.Config
 	log          hclog.Logger
 
 	acceptUrlTerms bool
@@ -144,7 +146,7 @@ func WithDB(db *bolt.DB) Option {
 }
 
 // WithConfig sets the server config in use with this server.
-func WithConfig(scfg *configpkg.ServerConfig) Option {
+func WithConfig(scfg *serverconfig.Config) Option {
 	return func(s *service, cfg *config) error {
 		cfg.serverConfig = scfg
 		return nil

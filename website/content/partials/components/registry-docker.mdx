@@ -7,7 +7,43 @@ Push a Docker image to a Docker compatible registry.
 - Input: **docker.Image**
 - Output: **docker.Image**
 
-### Variables
+### Examples
+
+```hcl
+build {
+  use "docker" {}
+  registry {
+    use "docker" {
+      image = "hashicorp/http-echo"
+      tag   = "latest"
+    }
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### image
+
+The image to push the local image to, fully qualified.
+
+This value must be the fully qualified name to the image. for example: gcr.io/waypoint-demo/demo.
+
+- Type: **string**
+
+#### tag
+
+The tag for the new image.
+
+This is added to image to provide the full image reference.
+
+- Type: **string**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### encoded_auth
 
@@ -18,14 +54,6 @@ WARNING: be very careful to not leak the authentication information by hardcodin
 - Type: **string**
 - **Optional**
 
-#### image
-
-The image to push the local image to, fully qualified.
-
-This value must be the fully qualified name to the image. for example: gcr.io/waypoint-demo/demo.
-
-- Type: **string**
-
 #### local
 
 If set, the image will only be tagged locally and not pushed to a remote repository.
@@ -33,26 +61,14 @@ If set, the image will only be tagged locally and not pushed to a remote reposit
 - Type: **bool**
 - **Optional**
 
-#### tag
+### Output Attributes
 
-The tag for the new image.
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
 
-This is added to image to provide the full image reference.
+#### image
 
 - Type: **string**
 
-### Examples
+#### tag
 
-```
-
-build {
-  use "docker" {}
-  registry {
-    use "docker" {
-      image = "hashicorp/http-echo"
-      tag   = "latest"
-    }
-  }
-}
-
-```
+- Type: **string**

@@ -1,0 +1,162 @@
+---
+layout: docs
+page_title: Dynamic Values - Application Configuration
+sidebar_title: Dynamic Values
+description: |-
+  Waypoint can sync application configuration values with external systems such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon Parameter Store, and more. As the values change, Waypoint will automatically update your deployments and restart your application.
+---
+
+# Dynamic, Synced Configuration
+
+Waypoint can sync application configuration values with external systems
+such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon Parameter Store,
+and more. These are known as _dynamic configuration values_. As the values change,
+Waypoint will automatically update your deployments and restart your application.
+
+Dynamic values make it easy to utilize external configuration stores
+and the functionality they provide, such as automatic credential rotation
+in systems such as Vault or Amazon Parameter Store.
+
+This functionality requires the [Waypoint entrypoint](/docs/entrypoint).
+
+-> **Basic application configuration knowledge required.** This
+page assumes you know the basics of how to
+[set static application configuration](/docs/app-config). This page will
+not thoroughly explain the config setting CLI or `waypoint.hcl` stanzas.
+
+## Configuration Sources
+
+The following is a list of currently available configuration sources
+and their associated documentation:
+
+- [Kubernetes](/plugins/kubernetes#kubernetes-configsourcer) - Read values from ConfigMaps and Secrets.
+- [Vault](/plugins/vault#vault-configsourcer) - Read values from Vault secrets,
+  including dynamic secrets such as database credentials.
+
+-> **Custom configuration source plugins are coming soon.** The groundwork for
+this was set in Waypoint 0.2.0 and a future release will enable custom configuration
+source plugins.
+
+## Setting Dynamic Values via `waypoint.hcl`
+
+Dynamic configuration values are set in the `waypoint.hcl` file using
+the `configdynamic` function within the same `config` stanza as
+static configurations. This specifies that a configuration value is
+synced with an external system dynamically.
+
+```hcl
+config {
+  env = {
+    PORT = configdynamic("kubernetes", {
+      name = "my-config-map" # ConfigMap name
+      key  = "port"
+    })
+  }
+}
+```
+
+The example above syncs the `PORT` environment variable with the "port"
+key in the "my-config-map" Kubernetes ConfigMap. The "sync" actively watches
+the defined source, updates the environment variable whenever the value
+changes, and [restarts your application](/docs/app-config#application-restart-behavior).
+
+The `configdynamic` function has the following signature:
+
+```
+configdynamic(SOURCE, PARAMS)
+```
+
+The `SOURCE` parameter is a string specifying the config source to sync
+with and `PARAMS` is a map of parameters for that config source. The set
+of parameters is dependent on the source being used. The list of sources
+supported is in the [Configuration Sources section](#configuration-sources).
+
+## Unsetting Dynamic Values
+
+To unset a dynamic configuration value, delete it from the `waypoint.hcl`
+file and then use the CLI to set it to an empty string as shown below.
+Deleting the key from the Waypoint file and [syncing](/docs/app-config#configuration-syncing)
+it will not be enough.
+
+```shell-session
+$ waypoint config set PORT=
+```
+
+## Source Settings
+
+Configuration sources sometimes support global settings for their behavior or
+require global settings to be set for them to function at all.
+For example, [Vault](/plugins/vault#vault-configsourcer) has some global
+settings around how to authenticate. Without setting these, Vault configurations
+in applications will not work. These _source settings_ are set at the server
+level and used by all `configdynamic` calls.
+
+To set configuration source settings, the `waypoint config source-set` CLI command is used:
+
+```shell-session
+$ waypoint config source-set -type=vault -config="auth=aws"
+```
+
+The documentation for the source settings available to a configuration source
+are alongside their parameters in the plugin documentation.
+
+### Deleting Configuration Source Settings
+
+To unset the configuration specify the `-delete` flag.
+
+## Debugging Dynamic Configuration
+
+If a configuration value is not available (the environment variable is not
+set or the value is not what you expect), then the best debugging tool
+is `waypoint logs`. The logs command will show entrypoint logs where
+you will see any errors related to configuration syncing.
+
+The `waypoint logs` output below is from an application deployed with
+Waypoint using Kubernetes ConfigMaps but deployed within a Nomad cluster. The
+lines have been purposely shortened slightly to improve readability on the
+website.
+
+```shell-session
+$ waypoint logs
+7PMDER: [WARN]  entrypoint.config.watcher: error reading configuration values, all will be dropped: source=kubernetes
+err="unable to load in-cluster configuration, KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined"
+7PMDER: [INFO]  entrypoint.child: starting child process: args=[/usr/local/bin/docker-entrypoint.sh, node, app.js]
+cmd=/usr/local/bin/docker-entrypoint.sh
+7PMDER: Example app listening on port 3000!
+```
+
+You can see the first line has an error reading configuration value. If
+you keep scrolling right, you can see the `source` is `kubernetes` and the
+`err` is shown. In this case, it's telling us that it couldn't load any
+in-cluster configuration. Upon thinking about this, we can realize that
+we didn't deploy to a Kubernetes cluster so this error makes sense, and perhaps
+we need to do something else to enable out-of-cluster authentication.
+
+To iterate on configuration, change the `waypoint.hcl` file and run
+`waypoint config sync`. This allows you to change configuration without
+doing a full redeploy.
+
+### Listing Environment Variables
+
+If you don't see any errors in the log, it may be possible the envirnment
+variables are set correctly. To verify that environment variables are
+set, open a shell with `waypoint exec` and run `env`. This command will
+list the environment variables that are available to your application.
+
+```shell-session
+$ waypoint exec /bin/sh
+# env
+NODE_VERSION=13.14.0
+HOSTNAME=55882281dde1
+YARN_VERSION=1.22.4
+PORT=3000
+HOME=/root
+TERM=xterm-256color
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PWD=/usr/src/app
+```
+
+-> **Note: the availability of `/bin/sh` or `env` is dependent on your application.**
+Most deployments support these tools but if your application is built
+using a base Docker image or some other mechanism that doesn't include these,
+then it is possible they are not there.

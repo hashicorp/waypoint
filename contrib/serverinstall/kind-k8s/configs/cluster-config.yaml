@@ -1,0 +1,7 @@
+# three node (two workers) cluster config
+# https://kind.sigs.k8s.io/docs/user/quick-start/#multinode-clusters
+apiVersion: kind.x-k8s.io/v1alpha4
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:5000"]
+      endpoint = ["http://kind-registry:5000"]

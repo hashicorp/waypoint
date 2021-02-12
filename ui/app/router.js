@@ -1,5 +1,5 @@
 import EmberRouter from '@ember/routing/router';
-import config from './config/environment';
+import config from 'waypoint/config/environment';
 
 export default class Router extends EmberRouter {
   location = config.locationType;
@@ -12,11 +12,11 @@ Router.map(function () {
     this.route('token');
   });
   this.route('onboarding', function () {
-    this.route('install', function() {
+    this.route('install', function () {
       this.route('manual');
       this.route('homebrew');
       this.route('chocolatey');
-      this.route('linux', function() {
+      this.route('linux', function () {
         this.route('ubuntu');
         this.route('centos');
         this.route('fedora');

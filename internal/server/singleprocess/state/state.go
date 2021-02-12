@@ -56,6 +56,12 @@ type State struct {
 
 // New initializes a new State store.
 func New(log hclog.Logger, db *bolt.DB) (*State, error) {
+	// Restore DB if necessary
+	db, err := finalizeRestore(log, db)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create the in-memory DB.
 	inmem, err := memdb.NewMemDB(stateStoreSchema())
 	if err != nil {
@@ -112,8 +118,7 @@ func (s *State) callIndexer(fn indexFn, dbTxn *bolt.Tx, memTxn *memdb.Txn) error
 
 // Close should be called to gracefully close any resources.
 func (s *State) Close() error {
-	// Nothing for now, but we expect to do things one day.
-	return nil
+	return s.db.Close()
 }
 
 // schemaFn is an interface function used to create and return new memdb schema

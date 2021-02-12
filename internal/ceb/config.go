@@ -3,6 +3,7 @@ package ceb
 import (
 	"context"
 
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -10,12 +11,45 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool) error {
+func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {
 	log := ceb.logger.Named("config")
+
+	// Start the watcher. This will do nothing until anything is sent on the
+	// channel so we can start it early. We share the same channel across
+	// config reconnects.
+	ch := make(chan *pb.EntrypointConfig)
+	go ceb.watchConfig(ctx, log, cfg, ch)
+
+	// Start the config receiver. This will connect ot the EntrypointConfig
+	// endpoint and start receiving data. This will reconnect on failure.
+	go ceb.initConfigStreamReceiver(ctx, log, cfg, ch, false)
+
+	return nil
+}
+
+func (ceb *CEB) initConfigStreamReceiver(
+	ctx context.Context,
+	log hclog.Logger,
+	cfg *config,
+	ch chan<- *pb.EntrypointConfig,
+	isRetry bool,
+) error {
+	// On retry we always mark the child process ready so we can begin executing
+	// any staged child command. We don't do this on non-retries because we
+	// still have hope that we can talk to the server and get our initial config.
+	if isRetry {
+		ceb.markChildCmdReady()
+	}
+
+	// wait for initial server connection
+	serverClient := ceb.waitClient()
+	if serverClient == nil {
+		return ctx.Err()
+	}
 
 	// Open our log stream
 	log.Debug("registering instance, requesting config")
-	client, err := ceb.client.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
+	client, err := serverClient.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
 		DeploymentId: ceb.deploymentId,
 		InstanceId:   ceb.id,
 	}, grpc.WaitForReady(isRetry || cfg.ServerRequired))
@@ -26,50 +60,19 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool)
 		if status.Code(err) == codes.Unavailable {
 			log.Error("error connecting to Waypoint server, will retry but startup " +
 				"child command without initial settings")
-			go ceb.initConfigStream(ctx, cfg, true)
+			go ceb.initConfigStreamReceiver(ctx, log, cfg, ch, true)
 			return nil
 		}
 
 		return err
 	}
-	ceb.cleanup(func() { client.CloseSend() })
 
-	// Receive our first configuration which marks that we've registered,
-	// plus we need the config for behavior.
-	log.Trace("config stream connected, waiting for first config")
-	resp, err := client.Recv()
-	if err != nil {
-		return err
-	}
-	log.Trace("first config received")
-
-	// Modify childCmd to contain any passed variables as environment variables
-	for _, cv := range resp.Config.EnvVars {
-		ceb.childCmd.Env = append(ceb.childCmd.Env, cv.Name+"="+cv.Value)
-	}
-
-	// If we have URL service configuration, start it. We start this in a goroutine
-	// since we don't need to block starting up our application on this.
-	if url := resp.Config.UrlService; url != nil {
-		go func() {
-			if err := ceb.initURLService(ctx, cfg.URLServicePort, url); err != nil {
-				log.Warn("error starting URL service", "err", err)
-			}
-		}()
-	} else {
-		log.Debug("no URL service configuration, will not register with URL service")
-	}
-
-	// Start the watcher
-	ch := make(chan *pb.EntrypointConfig)
-	go ceb.watchConfig(ch)
-
-	// Send the first config which will trigger setup
-	ch <- resp.Config
+	// We never send anything
+	client.CloseSend()
 
 	// Start the goroutine that waits for all other configs
 	go ceb.recvConfig(ctx, client, ch, func() error {
-		return ceb.initConfigStream(ctx, cfg, true)
+		return ceb.initConfigStreamReceiver(ctx, log, cfg, ch, true)
 	})
 
 	return nil
@@ -77,11 +80,94 @@ func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config, isRetry bool)
 
 // watchConfig sits in a goroutine receiving the new configurations from the
 // server.
-func (ceb *CEB) watchConfig(ch <-chan *pb.EntrypointConfig) {
-	for config := range ch {
-		// Start the exec sessions if we have any
-		if len(config.Exec) > 0 {
-			ceb.startExecGroup(config.Exec)
+func (ceb *CEB) watchConfig(
+	ctx context.Context,
+	log hclog.Logger,
+	cfg *config,
+	ch <-chan *pb.EntrypointConfig,
+) {
+	log = log.Named("watcher")
+
+	// We only init the URL service once. In the future, we can do diffing
+	// and support automatically reinitializing if the URL service changes.
+	didInitURL := false
+
+	// env stores the currently known list of environment vars we set on the
+	// child. We need to store this since we want to launch all exec sessions
+	// with the latest/current view on env vars too.
+	var env []string
+
+	// Start the app config watcher. This runs in its own goroutine so that
+	// stuff like dynamic config fetching doesn't block starting things like
+	// exec sessions.
+	sourceCh := make(chan []*pb.ConfigSource)
+	varCh := make(chan []*pb.ConfigVar)
+	envCh := make(chan []string)
+	go ceb.watchAppConfig(ctx, log, sourceCh, varCh, envCh)
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Warn("exiting, context ended")
+			return
+
+		case config := <-ch:
+			// TODO(mitchellh): we need to handle changes to the URL settings
+			// and stop/restart the URL service gracefully.
+			if !didInitURL {
+				didInitURL = true
+
+				// If we have URL service configuration, start it. We start this in a goroutine
+				// since we don't need to block starting up our application on this.
+				if url := config.UrlService; url != nil {
+					go func() {
+						if err := ceb.initURLService(ctx, cfg.URLServicePort, url); err != nil {
+							log.Warn("error starting URL service", "err", err)
+						}
+					}()
+				} else {
+					log.Debug("no URL service configuration, will not register with URL service")
+				}
+			}
+
+			// Start the exec sessions if we have any
+			if len(config.Exec) > 0 {
+				ceb.startExecGroup(config.Exec, env)
+			}
+
+			// Configure our env vars for the child command. We always send
+			// these even if they're nil since the app config watcher will
+			// de-dup and we want to handle removing env vars.
+			select {
+			case sourceCh <- config.ConfigSources:
+			case <-ctx.Done():
+			}
+			select {
+			case varCh <- config.EnvVars:
+			case <-ctx.Done():
+			}
+
+		case newEnv := <-envCh:
+			// Store the new env vars. We could just do `env = <-envCh` above
+			// but in my experience its super easy in the future for someone
+			// to put a `:=` there and break things. This makes it more explicit.
+			env = newEnv
+
+			// Set our new env vars
+			newCmd := ceb.copyCmd(ceb.childCmdBase)
+			newCmd.Env = append(newCmd.Env, env...)
+
+			// Restart
+			log.Info("env vars changed, sending new child command")
+			select {
+			case ceb.childCmdCh <- newCmd:
+			case <-ctx.Done():
+			}
+
+			// Always mark the child command ready at this point. This is
+			// a noop if its already done. If its not, then we're ready now
+			// because readiness is waiting for that initial set of config.
+			ceb.markChildCmdReady()
 		}
 	}
 }
@@ -94,7 +180,9 @@ func (ceb *CEB) recvConfig(
 ) {
 	log := ceb.logger.Named("config_recv")
 	defer log.Trace("exiting receive goroutine")
-	defer close(ch)
+
+	// Keep track of our first receive
+	first := true
 
 	for {
 		// If the context is closed, exit
@@ -105,6 +193,9 @@ func (ceb *CEB) recvConfig(
 		// Wait for the next configuration
 		resp, err := client.Recv()
 		if err != nil {
+			// We're disconnected
+			ceb.setState(&ceb.stateConfig, false)
+
 			// If we get the unavailable error then the connection died.
 			// We restablish the connection.
 			if status.Code(err) == codes.Unavailable {
@@ -117,13 +208,18 @@ func (ceb *CEB) recvConfig(
 				}
 			}
 
-			if err != nil {
-				log.Error("error receiving configuration, exiting", "err", err)
-				return
-			}
+			log.Error("error receiving configuration, exiting", "err", err)
+			return
 		}
 
-		log.Info("new configuration received")
+		// If this is our first receive, then mark that we're connected.
+		if first {
+			log.Debug("first config received, switching config state to true")
+			first = false
+			ceb.setState(&ceb.stateConfig, true)
+		}
+
+		log.Debug("new configuration received")
 		ch <- resp.Config
 	}
 }

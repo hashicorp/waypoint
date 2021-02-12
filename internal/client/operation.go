@@ -3,9 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/logviewer"
 )
 
 func (c *Project) Validate(ctx context.Context, op *pb.Job_ValidateOp) (*pb.Job_ValidateResult, error) {
@@ -65,6 +63,27 @@ func (c *App) Docs(ctx context.Context, op *pb.Job_DocsOp) (*pb.Job_DocsResult, 
 	}
 
 	return result.Docs, nil
+}
+
+func (c *App) Up(ctx context.Context, op *pb.Job_UpOp) (*pb.Job_Result, error) {
+	if op == nil {
+		op = &pb.Job_UpOp{}
+	}
+
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_Up{
+		Up: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the full result struct since Up populates multiple fields.
+	return result, nil
 }
 
 func (c *App) Build(ctx context.Context, op *pb.Job_BuildOp) (*pb.Job_BuildResult, error) {
@@ -139,6 +158,22 @@ func (c *App) Destroy(ctx context.Context, op *pb.Job_DestroyOp) error {
 	return err
 }
 
+func (c *App) Exec(ctx context.Context, op *pb.Job_ExecOp, mon chan pb.Job_State) error {
+	if op == nil {
+		op = &pb.Job_ExecOp{}
+	}
+
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_Exec{
+		Exec: op,
+	}
+
+	// Execute it
+	_, err := c.doJobMonitored(ctx, job, mon)
+	return err
+}
+
 func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_ReleaseResult, error) {
 	if op == nil {
 		op = &pb.Job_ReleaseOp{}
@@ -159,7 +194,7 @@ func (c *App) Release(ctx context.Context, op *pb.Job_ReleaseOp) (*pb.Job_Releas
 	return result.Release, nil
 }
 
-func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
+func (a *App) Logs(ctx context.Context) (pb.Waypoint_GetLogStreamClient, error) {
 	log := a.project.logger.Named("logs")
 
 	// First we attempt to query the server for logs for this deployment.
@@ -177,5 +212,24 @@ func (a *App) Logs(ctx context.Context) (component.LogViewer, error) {
 	}
 
 	// Build our log viewer
-	return &logviewer.Viewer{Stream: client}, nil
+	return client, nil
+}
+
+func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_ConfigSyncResult, error) {
+	if op == nil {
+		op = &pb.Job_ConfigSyncOp{}
+	}
+
+	job := c.job()
+	job.Operation = &pb.Job_ConfigSync{
+		ConfigSync: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.ConfigSync, nil
 }

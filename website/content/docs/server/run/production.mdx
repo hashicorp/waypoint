@@ -28,7 +28,7 @@ Waypoint requires two different ports:
 Both of these ports require TCP, but the connections are always TLS
 protected. Non-TLS connections are not allowed on either port.
 
-## Network Toplogy
+## Network Topology
 
 Waypoint Servers expect to have ample bandwidth available for all client
 connections, particularly entrypoints. Entrypoints must have access to the
@@ -62,6 +62,21 @@ An "application instance" is a single running instance of your application.
 For example, if you deploy a Kubernetes application with 5 replicas,
 then that would be 5 application instances (even though it is only one
 "deployment").
+
+## TLS
+
+Waypoint requires TLS for all inbound connections. TLS cannot be disabled.
+By default, Waypoint will generate a self-signed certificate on startup.
+
+Servers that are [run manually](/docs/server/run#manually-running-the-server)
+(_not_ installed using `waypoint install`) can specify custom TLS certificates
+using the `-tls-cert-file` and `-tls-key-file` flags on the `waypoint server run`
+command. These flags should point to a PEM-encoded certificate file and
+private key, respectively.
+
+-> **Note:** Servers installed using `waypoint install` currently don't
+support specifying a custom TLS certificate. This limitation will be fixed
+in the future.
 
 ## Limitations
 

@@ -5,11 +5,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
+	"sync"
 
 	"github.com/containerd/console"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
 	sshterm "golang.org/x/crypto/ssh/terminal"
@@ -19,16 +22,27 @@ import (
 )
 
 type Client struct {
-	Logger        hclog.Logger
-	UI            terminal.UI
-	Context       context.Context
-	Client        pb.WaypointClient
+	Logger  hclog.Logger
+	UI      terminal.UI
+	Context context.Context
+	Client  pb.WaypointClient
+	Args    []string
+	Stdin   io.Reader
+	Stdout  io.Writer
+	Stderr  io.Writer
+
+	// Either DeploymentId or InstanceId have to be set. If both are set, then
+	// InstanceId takes priority.
+	//
+	// These identify a deployment that is used to search for an instance on
+	// server side. We target a specific deployment so that the exec session
+	// enters the correct application code.
 	DeploymentId  string
 	DeploymentSeq uint64
-	Args          []string
-	Stdin         io.Reader
-	Stdout        io.Writer
-	Stderr        io.Writer
+
+	// If set, will cause the server to connect to this specific
+	// instance.
+	InstanceId string
 }
 
 func (c *Client) Run() (int, error) {
@@ -79,14 +93,25 @@ func (c *Client) Run() (int, error) {
 		status.Update("Initializing session...")
 	}
 
+	start := &pb.ExecStreamRequest_Start{
+		Args: c.Args,
+		Pty:  ptyReq,
+	}
+
+	if c.InstanceId != "" {
+		start.Target = &pb.ExecStreamRequest_Start_InstanceId{
+			InstanceId: c.InstanceId,
+		}
+	} else {
+		start.Target = &pb.ExecStreamRequest_Start_DeploymentId{
+			DeploymentId: c.DeploymentId,
+		}
+	}
+
 	// Send the start event
 	if err := client.Send(&pb.ExecStreamRequest{
 		Event: &pb.ExecStreamRequest_Start_{
-			Start: &pb.ExecStreamRequest_Start{
-				DeploymentId: c.DeploymentId,
-				Args:         c.Args,
-				Pty:          ptyReq,
-			},
+			Start: start,
 		},
 	}); err != nil {
 		return 0, err
@@ -117,7 +142,7 @@ func (c *Client) Run() (int, error) {
 
 	if ptyF != nil {
 		// We need to go into raw mode with stdin
-		if f, ok := c.Stdin.(*os.File); ok {
+		if f, ok := c.Stdout.(*os.File); ok {
 			oldState, err := sshterm.MakeRaw(int(f.Fd()))
 			if err != nil {
 				return 0, err
@@ -133,24 +158,71 @@ func (c *Client) Run() (int, error) {
 	ctx, cancel := context.WithCancel(c.Context)
 	defer cancel()
 
-	input := &EscapeWatcher{Cancel: cancel, Input: c.Stdin}
+	// If we have interactive stdin WITHOUT a tty output, we treat stdin
+	// as if its closed. This allows commands such as "ls" to work without
+	// a terminal otherwise they'll hang open forever on stdin. Conversely,
+	// we allow interactive stdin with a TTY, and we also allow non-interactive
+	// stdin always since that'll end in an EOF at some point.
+	copyStdin := true
+	if stdinF, ok := c.Stdin.(*os.File); ok {
+		fi, err := stdinF.Stat()
+		if err != nil {
+			return 0, err
+		}
+
+		if fi.Mode()&os.ModeCharDevice != 0 && ptyF == nil {
+			// Stdin is from a terminal but we don't have a pty output.
+			// In this case, we treat stdin as if its closed.
+			c.Logger.Info("terminal stdin without a pty, not using input for command")
+			copyStdin = false
+		}
+	}
+
+	// We need to lock access to our stream writer since it is unsafe in
+	// gRPC to concurrently send data.
+	var streamLock sync.Mutex
 
 	// Build our connection. We only build the stdin sending side because
 	// we can receive other message types from our recv.
-	go io.Copy(&grpc_net_conn.Conn{
-		Stream:  client,
-		Request: &pb.ExecStreamRequest{},
-		Encode: grpc_net_conn.SimpleEncoder(func(msg proto.Message) *[]byte {
-			req := msg.(*pb.ExecStreamRequest)
-			if req.Event == nil {
-				req.Event = &pb.ExecStreamRequest_Input_{
-					Input: &pb.ExecStreamRequest_Input{},
-				}
-			}
+	go func() {
+		input := &EscapeWatcher{Cancel: cancel, Input: c.Stdin}
 
-			return &req.Event.(*pb.ExecStreamRequest_Input_).Input.Data
-		}),
-	}, input)
+		// If we're copying stdin then start that copy process.
+		if copyStdin {
+			io.Copy(&grpc_net_conn.Conn{
+				Stream:       client,
+				Request:      &pb.ExecStreamRequest{},
+				ResponseLock: &streamLock,
+				Encode: grpc_net_conn.SimpleEncoder(func(msg proto.Message) *[]byte {
+					req := msg.(*pb.ExecStreamRequest)
+					if req.Event == nil {
+						req.Event = &pb.ExecStreamRequest_Input_{
+							Input: &pb.ExecStreamRequest_Input{},
+						}
+					}
+
+					return &req.Event.(*pb.ExecStreamRequest_Input_).Input.Data
+				}),
+			}, input)
+		} else {
+			// If we're NOT copying, we still start a copy to discard
+			// in the background so that we still handle escape sequences.
+			go io.Copy(ioutil.Discard, input)
+		}
+
+		// After the copy ends, no matter what we send an EOF to the
+		// remote end because there will be no more input.
+		c.Logger.Debug("stdin closed, sending input EOF event")
+		streamLock.Lock()
+		defer streamLock.Unlock()
+		if err := client.Send(&pb.ExecStreamRequest{
+			Event: &pb.ExecStreamRequest_InputEof{
+				InputEof: &empty.Empty{},
+			},
+		}); err != nil {
+			c.Logger.Warn("error sending InputEOF event", "err", err)
+		}
+	}()
 
 	// Add our recv blocker that sends data
 	recvCh := make(chan *pb.ExecStreamResponse)
@@ -178,10 +250,12 @@ func (c *Client) Run() (int, error) {
 		case resp := <-recvCh:
 			switch event := resp.Event.(type) {
 			case *pb.ExecStreamResponse_Output_:
-				// TODO: stderr
-				out := c.Stdout
-				io.Copy(out, bytes.NewReader(event.Output.Data))
-
+				switch event.Output.Channel {
+				case pb.ExecStreamResponse_Output_STDOUT:
+					io.Copy(c.Stdout, bytes.NewReader(event.Output.Data))
+				case pb.ExecStreamResponse_Output_STDERR:
+					io.Copy(c.Stderr, bytes.NewReader(event.Output.Data))
+				}
 			case *pb.ExecStreamResponse_Exit_:
 				return int(event.Exit.Code), nil
 
@@ -203,7 +277,8 @@ func (c *Client) Run() (int, error) {
 			}
 
 			// Send the new window size
-			if err := client.Send(&pb.ExecStreamRequest{
+			streamLock.Lock()
+			err = client.Send(&pb.ExecStreamRequest{
 				Event: &pb.ExecStreamRequest_Winch{
 					Winch: &pb.ExecStreamRequest_WindowSize{
 						Rows:   int32(sz.Height),
@@ -212,7 +287,9 @@ func (c *Client) Run() (int, error) {
 						Width:  int32(sz.Width),
 					},
 				},
-			}); err != nil {
+			})
+			streamLock.Unlock()
+			if err != nil {
 				// Ignore this error
 				continue
 			}

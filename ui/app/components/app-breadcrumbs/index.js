@@ -6,7 +6,7 @@ import classic from 'ember-classic-decorator';
 
 @classic
 @tagName('ul')
-@classNames('breadcrumbs')
+@classNames('breadcrumbs', 'pds-breadcrumbs')
 export default class AppBreadcrumbs extends Component {
   @service('breadcrumbs') breadcrumbsService;
 

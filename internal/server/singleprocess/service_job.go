@@ -70,20 +70,14 @@ func (s *service) QueueJob(
 	if job == nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "job must be set")
 	}
+	if job.Operation == nil {
+		// We special case this check and return "Unimplemented" because
+		// the primary case where operation is nil is if a client is sending
+		// us an unsupported operation.
+		return nil, status.Errorf(codes.Unimplemented, "operation is nil or unknown")
+	}
 	if err := serverptypes.ValidateJob(job); err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, err.Error())
-	}
-
-	// Validate the project/app pair exists.
-	if job.Application.Application != "" {
-		_, err := s.state.AppGet(job.Application)
-		if status.Code(err) == codes.NotFound {
-			return nil, status.Errorf(codes.NotFound,
-				"Application %s/%s was not found! Please ensure that 'waypoint init' was run with this project.",
-				job.Application.Project,
-				job.Application.Application,
-			)
-		}
 	}
 
 	// Verify the project exists and use that to set the default data source
@@ -222,9 +216,14 @@ func (s *service) GetJobStream(
 		}
 	}()
 
+	// Track that we only send these events once. We could use a bitmask for
+	// this if we cared about that level of optimization but it hurts readability
+	// and we don't need the performance yet.
+	var cancelSent bool
+	var downloadSent bool
+
 	// Enter the event loop
 	var lastState pb.Job_State
-	var cancelSent bool
 	var eventsCh <-chan []*pb.GetJobStreamResponse_Terminal_Event
 	for {
 		select {
@@ -256,6 +255,21 @@ func (s *service) GetJobStream(
 
 				lastState = job.State
 				cancelSent = canceling
+			}
+
+			// If we have a data source ref set, then we need to send the download event.
+			if !downloadSent && job.DataSourceRef != nil {
+				if err := server.Send(&pb.GetJobStreamResponse{
+					Event: &pb.GetJobStreamResponse_Download_{
+						Download: &pb.GetJobStreamResponse_Download{
+							DataSourceRef: job.DataSourceRef,
+						},
+					},
+				}); err != nil {
+					return err
+				}
+
+				downloadSent = true
 			}
 
 			// If we haven't initialized output streaming and the output buffer

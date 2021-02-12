@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"path/filepath"
 	"sync"
@@ -12,9 +13,30 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/pkg/errors"
 )
 
 var heartbeatDuration = 5 * time.Second
+
+// AcceptMany will accept jobs and execute them on after another as they are accepted.
+// This is meant to be run in a goroutine and reports it's own errors via r's logger.
+func (r *Runner) AcceptMany(ctx context.Context) {
+	for {
+		if err := r.Accept(ctx); err != nil {
+			switch {
+			case err == ErrClosed:
+				return
+			case status.Code(err) == codes.Canceled:
+				// Ideally we'd get ErrClosed, but there are cases where we'll observe
+				// the context being closed first, in which case we honor that as a valid
+				// reason to stop accepting jobs.
+				return
+			default:
+				r.logger.Error("error running job", "error", err)
+			}
+		}
+	}
+}
 
 // Accept will accept and execute a single job. This will block until
 // a job is available.
@@ -37,8 +59,14 @@ func (r *Runner) AcceptExact(ctx context.Context, id string) error {
 	return r.accept(ctx, id)
 }
 
+var testRecvDelay time.Duration
+
 func (r *Runner) accept(ctx context.Context, id string) error {
-	if r.closed() {
+	r.runningCond.L.Lock()
+	shutdown := r.shutdown
+	r.runningCond.L.Unlock()
+
+	if shutdown {
 		return ErrClosed
 	}
 
@@ -48,7 +76,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	// since if the context is cancelled we want to continue reporting
 	// errors.
 	log.Debug("opening job stream")
-	client, err := r.client.RunnerJobStream(context.Background())
+	client, err := r.client.RunnerJobStream(r.runningCtx)
 	if err != nil {
 		return err
 	}
@@ -68,6 +96,10 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 
 	// Wait for an assignment
 	log.Info("waiting for job assignment")
+
+	// NOTE: if r.runningCtx is canceled, because the runner has finished closing,
+	// any job sent won't be acked, but the server will see an error on waiting
+	// for us to ack the job, and auto-nack it.
 	resp, err := client.Recv()
 	if err != nil {
 		return err
@@ -83,12 +115,34 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	log = log.With("job_id", assignment.Assignment.Job.Id)
 	log.Info("job assignment received")
 
-	// We increment the waitgroup at this point since prior to this if we're
-	// forcefully quit, we shouldn't have acked. This is somewhat brittle so
-	// a todo here is to build a better notification mechanism that we've quit
-	// and exit here.
-	r.acceptWg.Add(1)
-	defer r.acceptWg.Done()
+	// Used to test the behavior of accepting a job while
+	// the runner is shutting down.
+	if testRecvDelay != 0 {
+		time.Sleep(testRecvDelay)
+	}
+
+	// We need to register ourselves as being worthy to be waited on
+	// since prior to this, if Close() were called, we could go ahead
+	// and return.
+
+	r.runningCond.L.Lock()
+	shutdown = r.shutdown
+	if !shutdown {
+		r.runningJobs++
+	}
+	r.runningCond.L.Unlock()
+
+	if shutdown {
+		return errors.Wrapf(ErrClosed, "runner shutdown, dropped job: %s", assignment.Assignment.Job.Id)
+	}
+
+	defer func() {
+		r.runningCond.L.Lock()
+		defer r.runningCond.L.Unlock()
+
+		r.runningJobs--
+		r.runningCond.Broadcast()
+	}()
 
 	// If this isn't the job we expected then we nack and error.
 	if id != "" {
@@ -191,7 +245,7 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 
 	// We need to get our data source next prior to executing.
 	var result *pb.Job_Result
-	wd, closer, err := r.downloadJobData(
+	wd, ref, closer, err := r.downloadJobData(
 		ctx,
 		log,
 		ui,
@@ -199,7 +253,10 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 		assignment.Assignment.Job.DataSourceOverrides,
 	)
 	if err == nil {
-		log.Debug("job data downloaded (or local)", "pwd", wd)
+		log.Debug("job data downloaded (or local)",
+			"pwd", wd,
+			"ref", fmt.Sprintf("%#v", ref),
+		)
 
 		if closer != nil {
 			defer func() {
@@ -210,8 +267,23 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			}()
 		}
 
+		// Send our download info
+		if ref != nil {
+			log.Debug("sending download event")
+
+			sendMutex.Lock()
+			err = client.Send(&pb.RunnerJobStreamRequest{
+				Event: &pb.RunnerJobStreamRequest_Download{
+					Download: &pb.GetJobStreamResponse_Download{
+						DataSourceRef: ref,
+					},
+				},
+			})
+			sendMutex.Unlock()
+		}
+
 		// We want the working directory to always be absolute.
-		if !filepath.IsAbs(wd) {
+		if err == nil && !filepath.IsAbs(wd) {
 			err = status.Errorf(codes.Internal,
 				"data working directory should be absolute. This is a bug, please report it.")
 		}
@@ -262,22 +334,21 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			},
 		}); rpcerr != nil {
 			log.Warn("error sending error event, job may be dangling", "err", rpcerr)
+			return rpcerr
 		}
-
-		return nil
-	}
-
-	// Complete the job
-	log.Debug("sending job completion")
-	if err := client.Send(&pb.RunnerJobStreamRequest{
-		Event: &pb.RunnerJobStreamRequest_Complete_{
-			Complete: &pb.RunnerJobStreamRequest_Complete{
-				Result: result,
+	} else {
+		// Complete the job
+		log.Debug("sending job completion")
+		if err := client.Send(&pb.RunnerJobStreamRequest{
+			Event: &pb.RunnerJobStreamRequest_Complete_{
+				Complete: &pb.RunnerJobStreamRequest_Complete{
+					Result: result,
+				},
 			},
-		},
-	}); err != nil {
-		log.Error("error sending job complete message", "error", err)
-		return err
+		}); err != nil {
+			log.Error("error sending job complete message", "error", err)
+			return err
+		}
 	}
 
 	// Wait for the connection to close. We do this because this ensures

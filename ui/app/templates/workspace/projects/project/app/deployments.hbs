@@ -1,7 +1,9 @@
-<h3>{{t "page.deployments.title"}}</h3>
+<h3>
+  {{t "page.deployments.title"}}
+</h3>
 
 <ul data-test-deployment-list=true class="list">
-  {{#each @model as |deployment|}}
+  {{#each this.deployments as |deployment|}}
     <AppItem::Deployment @deployment={{deployment}} />
   {{else}}
     <EmptyState>
@@ -13,6 +15,20 @@
         from the CLI</p>
     </EmptyState>
   {{/each}}
+  {{#if (and this.hasMoreDeployments (not this.destroyed))}}
+    <div class="destroyed-deployments-filter">
+      <Pds::HelpText>
+        Some deployments have been destroyed and are hidden.
+        <Pds::Button
+          @compact={{true}}
+          @variant="ghost"
+          {{on "click" this.showDestroyed}}>
+          Display destroyed deployments
+        </Pds::Button>
+      </Pds::HelpText>
+    </div>
+  {{/if}}
+
 </ul>
 
 {{outlet}}

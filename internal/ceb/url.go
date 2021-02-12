@@ -27,7 +27,20 @@ func (ceb *CEB) initURLService(ctx context.Context, port int, cfg *pb.Entrypoint
 	}
 
 	L := ceb.logger.Named("url")
-	L.Info("url service enabled, configuring",
+
+	ceb.urlAgentMu.Lock()
+	defer ceb.urlAgentMu.Unlock()
+
+	if ceb.urlAgentCancel != nil {
+		L.Debug("detected old agent, requesting it close")
+		ceb.urlAgentCancel()
+	}
+
+	ceb.urlAgentCtx, ceb.urlAgentCancel = context.WithCancel(ctx)
+
+	ctx = ceb.urlAgentCtx
+
+	L.Debug("url service enabled, configuring",
 		"addr", cfg.ControlAddr,
 		"service_port", port,
 		"labels", cfg.Labels,

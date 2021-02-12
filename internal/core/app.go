@@ -3,13 +3,11 @@ package core
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"reflect"
 	"strings"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/hcl/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -29,27 +27,21 @@ import (
 // App if constructed in any other way is undefined and likely to result
 // in crashes.
 type App struct {
-	Builder  component.Builder
-	Registry component.Registry
-	Platform component.Platform
-	Releaser component.ReleaseManager
-
 	// UI is the UI that should be used for any output that is specific
 	// to this app vs the project UI.
 	UI terminal.UI
 
-	project    *Project
-	config     *config.App
-	ref        *pb.Ref_Application
-	workspace  *pb.Ref_Workspace
-	client     pb.WaypointClient
-	source     *component.Source
-	jobInfo    *component.JobInfo
-	logger     hclog.Logger
-	dir        *datadir.App
-	mappers    []*argmapper.Func
-	components map[interface{}]*appComponent
-	closers    []func() error
+	project   *Project
+	config    *config.App
+	ref       *pb.Ref_Application
+	workspace *pb.Ref_Workspace
+	client    pb.WaypointClient
+	source    *component.Source
+	jobInfo   *component.JobInfo
+	logger    hclog.Logger
+	dir       *datadir.App
+	mappers   []*argmapper.Func
+	closers   []func() error
 }
 
 type appComponent struct {
@@ -76,16 +68,14 @@ func newApp(
 	ctx context.Context,
 	p *Project,
 	cfg *config.App,
-	evalContext *hcl.EvalContext,
 ) (*App, error) {
 	// Initialize
 	app := &App{
-		project:    p,
-		client:     p.client,
-		source:     &component.Source{App: cfg.Name, Path: "."},
-		jobInfo:    p.jobInfo,
-		logger:     p.logger.Named("app").Named(cfg.Name),
-		components: make(map[interface{}]*appComponent),
+		project: p,
+		client:  p.client,
+		source:  &component.Source{App: cfg.Name, Path: cfg.Path},
+		jobInfo: p.jobInfo,
+		logger:  p.logger.Named("app").Named(cfg.Name),
 		ref: &pb.Ref_Application{
 			Application: cfg.Name,
 			Project:     p.name,
@@ -102,13 +92,6 @@ func newApp(
 		UI: p.UI,
 	}
 
-	// Determine our path
-	path := p.root
-	if cfg.Path != "" {
-		path = filepath.Join(path, cfg.Path)
-	}
-	app.source.Path = path
-
 	// Setup our directory
 	dir, err := p.dir.App(cfg.Name)
 	if err != nil {
@@ -116,60 +99,11 @@ func newApp(
 	}
 	app.dir = dir
 
-	// Load all the components
-	components := []struct {
-		Target interface{}
-		Type   component.Type
-		Config *config.Operation
-	}{
-		{&app.Builder, component.BuilderType, cfg.Build.Operation()},
-		{&app.Registry, component.RegistryType, cfg.Build.RegistryOperation()},
-		{&app.Platform, component.PlatformType, cfg.Deploy.Operation()},
-		{&app.Releaser, component.ReleaseManagerType, cfg.Release.Operation()},
-	}
-	for _, c := range components {
-		if c.Config == nil || c.Config.Use == nil {
-			// This component is not set, ignore.
-			continue
-		}
-
-		err = app.initComponent(ctx, evalContext, c.Type, c.Target, p.factories[c.Type], c.Config, c.Config.Labels)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	// Initialize mappers if we have those
 	if f, ok := p.factories[component.MapperType]; ok {
 		err = app.initMappers(ctx, f)
 		if err != nil {
 			return nil, err
-		}
-	}
-
-	// If we don't have a releaser but our platform implements release then
-	// we use that.
-	if app.Releaser == nil && app.Platform != nil {
-		app.logger.Trace("no releaser configured, checking if platform supports release")
-		if r, ok := app.Platform.(component.PlatformReleaser); ok && r.DefaultReleaserFunc() != nil {
-			app.logger.Info("platform capable of release, using platform for release")
-			raw, err := app.callDynamicFunc(
-				ctx,
-				app.logger,
-				(*component.ReleaseManager)(nil),
-				app.Platform,
-				r.DefaultReleaserFunc(),
-			)
-			if err != nil {
-				return nil, err
-			}
-
-			app.Releaser = raw.(component.ReleaseManager)
-			app.components[app.Releaser] = app.components[app.Platform]
-		} else {
-			app.logger.Info("no releaser configured, platform does not support a default releaser",
-				"platform_type", fmt.Sprintf("%T", app.Platform),
-			)
 		}
 	}
 
@@ -191,25 +125,32 @@ func (a *App) Ref() *pb.Ref_Application {
 	return a.ref
 }
 
-// Components returns the list of components that were initilized for this app.
-func (a *App) Components() []interface{} {
-	var result []interface{}
-	for c := range a.components {
-		result = append(result, c)
+// Components initializes and returns all the components that are defined
+// for this app across all stages. The caller must call close on all the
+// components to clean up resources properly.
+func (a *App) Components(ctx context.Context) ([]*Component, error) {
+	var results []*Component
+	for _, cc := range componentCreatorMap {
+		c, err := cc.CreateNoConfig(ctx, a)
+		if status.Code(err) == codes.Unimplemented {
+			c = nil
+			err = nil
+		}
+		if err != nil {
+			// Make sure we clean ourselves up in an error case.
+			for _, r := range results {
+				r.Close()
+			}
+
+			return nil, err
+		}
+
+		if c != nil {
+			results = append(results, c)
+		}
 	}
 
-	return result
-}
-
-// ComponentProto returns the proto info for a component. The passed component
-// must be part of the app or nil will be returned.
-func (a *App) ComponentProto(c interface{}) *pb.Component {
-	info, ok := a.components[c]
-	if !ok {
-		return nil
-	}
-
-	return info.Info
+	return results, nil
 }
 
 // mergeLabels merges the set of labels given. See project.mergeLabels.
@@ -218,6 +159,44 @@ func (a *App) ComponentProto(c interface{}) *pb.Component {
 func (a *App) mergeLabels(ls ...map[string]string) map[string]string {
 	ls = append([]map[string]string{a.config.Labels}, ls...)
 	return a.project.mergeLabels(ls...)
+}
+
+// startPlugin starts a plugin with the given type and name. The returned
+// value must be closed to clean up the plugin properly.
+func (a *App) startPlugin(
+	ctx context.Context,
+	typ component.Type,
+	f *factory.Factory,
+	n string,
+) (*plugin.Instance, error) {
+	log := a.logger.Named(strings.ToLower(typ.String()))
+
+	// Get the factory function for this type
+	fn := f.Func(n)
+	if fn == nil {
+		return nil, fmt.Errorf("unknown type: %q", n)
+	}
+
+	// Call the factory to get our raw value (interface{} type)
+	fnResult := fn.Call(argmapper.Typed(ctx, a.source, log))
+	if err := fnResult.Err(); err != nil {
+		return nil, err
+	}
+	log.Info("initialized component", "type", typ.String())
+	raw := fnResult.Out(0)
+
+	// If we have a plugin.Instance then we can extract other information
+	// from this plugin. We accept pure factories too that don't return
+	// this so we type-check here.
+	pinst, ok := raw.(*plugin.Instance)
+	if !ok {
+		pinst = &plugin.Instance{
+			Component: raw,
+			Close:     func() {},
+		}
+	}
+
+	return pinst, nil
 }
 
 // callDynamicFunc calls a dynamic function which is a common pattern for
@@ -234,7 +213,7 @@ func (a *App) callDynamicFunc(
 	ctx context.Context,
 	log hclog.Logger,
 	result interface{}, // expected result type
-	c interface{}, // component
+	c *Component, // component
 	f interface{}, // function
 	args ...argmapper.Arg,
 ) (interface{}, error) {
@@ -250,12 +229,6 @@ func (a *App) callDynamicFunc(
 		}
 	}
 
-	// Get the component directory
-	componentData, ok := a.components[c]
-	if !ok {
-		return nil, fmt.Errorf("component dir not found for: %T", c)
-	}
-
 	// Be sure that the status is closed after every operation so we don't leak
 	// weird output outside the normal execution.
 	defer a.UI.Status().Close()
@@ -269,11 +242,10 @@ func (a *App) callDynamicFunc(
 			a.source,
 			a.jobInfo,
 			a.dir,
-			componentData.Dir,
 			a.UI,
 		),
 
-		argmapper.Named("labels", &component.LabelSet{Labels: componentData.Labels}),
+		argmapper.Named("labels", &component.LabelSet{Labels: c.labels}),
 	)
 
 	// Build the chain and call it
@@ -301,104 +273,6 @@ func (a *App) callDynamicFunc(
 	return raw, nil
 }
 
-// initComponent initializes a component with the given factory and configuration
-// and then sets it on the value pointed to by target.
-func (a *App) initComponent(
-	ctx context.Context,
-	evalContext *hcl.EvalContext,
-	typ component.Type,
-	target interface{},
-	f *factory.Factory,
-	cfg *config.Operation,
-	labels map[string]string,
-) error {
-	log := a.logger.Named(strings.ToLower(typ.String()))
-
-	// Before we do anything, the target should be a pointer. If so,
-	// then we get the value of the pointer so we can set it later.
-	targetV := reflect.ValueOf(target)
-	if targetV.Kind() != reflect.Ptr {
-		return fmt.Errorf("target value should be a pointer")
-	}
-	targetV = reflect.Indirect(targetV)
-
-	// Get the factory function for this type
-	fn := f.Func(cfg.Use.Type)
-	if fn == nil {
-		return fmt.Errorf("unknown type: %q", cfg.Use.Type)
-	}
-
-	// Create the data directory for this component
-	cdir, err := a.dir.Component(strings.ToLower(typ.String()), cfg.Use.Type)
-	if err != nil {
-		return err
-	}
-
-	// Call the factory to get our raw value (interface{} type)
-	result := fn.Call(argmapper.Typed(ctx, a.source, log, cdir))
-	if err := result.Err(); err != nil {
-		return err
-	}
-	log.Info("initialized component", "type", typ.String())
-	raw := result.Out(0)
-
-	// If we have a plugin.Instance then we can extract other information
-	// from this plugin. We accept pure factories too that don't return
-	// this so we type-check here.
-	if pinst, ok := raw.(*plugin.Instance); ok {
-		raw = pinst.Component
-
-		// Plugins may contain their own dedicated mappers. We want to be
-		// aware of them so that we can map data to/from as necessary.
-		// These mappers become app-specific here so that other apps aren't
-		// affected by other plugins.
-		a.mappers = append(a.mappers, pinst.Mappers...)
-		log.Info("registered component-specific mappers", "len", len(pinst.Mappers))
-
-		// Store the closer
-		a.closers = append(a.closers, func() error {
-			pinst.Close()
-			return nil
-		})
-	}
-
-	// We have our value so let's make sure it is the correct type.
-	rawV := reflect.ValueOf(raw)
-	if !rawV.Type().AssignableTo(targetV.Type()) {
-		return fmt.Errorf("component %s not assigntable to type %s", rawV.Type(), targetV.Type())
-	}
-
-	// Configure the component. This will handle all the cases where no
-	// config is given but required, vice versa, and everything in between.
-	diag := component.Configure(raw, cfg.Use.Body, evalContext)
-	if diag.HasErrors() {
-		return diag
-	}
-
-	// Assign our value now that we won't error anymore
-	targetV.Set(rawV)
-
-	// Setup our hooks
-	hooks := map[string][]*config.Hook{}
-	for _, h := range cfg.Hooks {
-		hooks[h.When] = append(hooks[h.When], h)
-	}
-
-	// Store component metadata
-	a.components[raw] = &appComponent{
-		Info: &pb.Component{
-			Type: pb.Component_Type(typ),
-			Name: cfg.Use.Type,
-		},
-
-		Dir:    cdir,
-		Hooks:  hooks,
-		Labels: labels,
-	}
-
-	return nil
-}
-
 // initMappers initializes plugins that are just mappers.
 func (a *App) initMappers(
 	ctx context.Context,
@@ -407,41 +281,33 @@ func (a *App) initMappers(
 	log := a.logger
 
 	for _, name := range f.Registered() {
-		log.Debug("loading mapper plugin", "name", name)
+		plog := log.With("name", name)
+		plog.Debug("loading mapper plugin")
 
-		// Get the factory function for this type
-		fn := f.Func(name)
-		if fn == nil {
-			panic(name + " is not a registered plugin, but factory claims it is")
-		}
-
-		// Call the factory to get our raw value (interface{} type)
-		result := fn.Call(argmapper.Typed(ctx, log))
-		if err := result.Err(); err != nil {
+		// Start the component
+		pinst, err := a.startPlugin(ctx, component.MapperType, f, name)
+		if err != nil {
 			return err
 		}
-		log.Info("initialized mapper plugin", "name", name)
-		raw := result.Out(0)
 
-		// If we have a plugin.Instance then we can extract other information
-		// from this plugin. We accept pure factories too that don't return
-		// this so we type-check here.
-		if pinst, ok := raw.(*plugin.Instance); ok {
-			raw = pinst.Component
-
-			// Plugins may contain their own dedicated mappers. We want to be
-			// aware of them so that we can map data to/from as necessary.
-			// These mappers become app-specific here so that other apps aren't
-			// affected by other plugins.
-			a.mappers = append(a.mappers, pinst.Mappers...)
-			log.Info("registered component-specific mappers", "len", len(pinst.Mappers))
-
-			// Store the closer
-			a.closers = append(a.closers, func() error {
-				pinst.Close()
-				return nil
-			})
+		// If we have no mappers in this plugin, then exit the plugin and
+		// continue. This will keep us from having non-mapper plugins just
+		// running in memory.
+		if len(pinst.Mappers) == 0 {
+			plog.Debug("no mappers advertised by plugin, closing")
+			pinst.Close()
+			continue
 		}
+
+		// We store the mappers
+		plog.Debug("registered mappers", "len", len(pinst.Mappers))
+		a.mappers = append(a.mappers, pinst.Mappers...)
+
+		// Add this to our closer list
+		a.closers = append(a.closers, func() error {
+			pinst.Close()
+			return nil
+		})
 	}
 
 	return nil

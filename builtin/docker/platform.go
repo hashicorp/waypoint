@@ -168,11 +168,20 @@ func (p *Platform) Deploy(
 		},
 	}
 
+	// default container binds
+	containerBinds := []string{src.App + "-scratch" + ":/input"}
+	if p.config.Binds != nil {
+		containerBinds = append(containerBinds, p.config.Binds...)
+	}
+
 	hostconfig := container.HostConfig{
-		Binds:        []string{src.App + "-scratch" + ":/input"},
+		Binds:        containerBinds,
 		PortBindings: bindings,
 	}
 
+	// Containers can only be connected to 1 network at creation time
+	// Additional user defined networks will be connected after container is
+	// created.
 	netconfig := network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
 			"waypoint": {},
@@ -187,17 +196,44 @@ func (p *Platform) Deploy(
 		cfg.Env = append(cfg.Env, k+"="+v)
 	}
 
-	cfg.Labels = map[string]string{
+	defaultLabels := map[string]string{
 		labelId:     result.Id,
 		"app":       src.App,
 		"workspace": job.Workspace,
 	}
+
+	if p.config.Labels != nil {
+		for k, v := range defaultLabels {
+			p.config.Labels[k] = v
+		}
+	} else {
+		p.config.Labels = defaultLabels
+	}
+
+	cfg.Labels = p.config.Labels
 
 	name := src.App + "-" + id
 
 	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, name)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unable to create Docker container: %s", err)
+	}
+
+	// Additional networks must be connected after container is created
+	if p.config.Networks != nil {
+		s.Update("Connecting additional networks to container...")
+		for _, net := range p.config.Networks {
+			err = cli.NetworkConnect(ctx, net, cr.ID, &network.EndpointSettings{})
+			if err != nil {
+				s.Update("Failed to connect additional network")
+				s.Status(terminal.StatusError)
+				s.Done()
+				return nil, status.Errorf(
+					codes.Internal,
+					"unable to connect container to additional networks: %s",
+					err)
+			}
+		}
 	}
 
 	s.Update("Starting container")
@@ -350,10 +386,33 @@ func makeImageCanonical(image string) string {
 
 // Config is the configuration structure for the Platform.
 type PlatformConfig struct {
+	// A list of folders to mount to the container.
+	Binds []string `hcl:"binds,optional"`
+
+	// ClientConfig allow the user to specify the connection to the Docker
+	// engine. By default we try to load this from env vars:
+	// DOCKER_HOST to set the url to the docker server.
+	// DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
+	// DOCKER_CERT_PATH to load the TLS certificates from.
+	// DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
+	ClientConfig *ClientConfig `hcl:"client_config,block"`
+
 	// The command to run in the container. This is an array of arguments
 	// that are executed directly. These are not executed in the context of
 	// a shell. If you want to use a shell, add that to this command manually.
 	Command []string `hcl:"command,optional"`
+
+	// Force pull the image from the remote repository
+	ForcePull bool `hcl:"force_pull,optional"`
+
+	// A map of key/value pairs, stored in docker as a string. Each key/value pair must
+	// be unique. Validiation occurs at the docker layer, not in Waypoint. Label
+	// keys are alphanumeric strings which may contain periods (.) and hyphens (-).
+	// See the docker docs for more info: https://docs.docker.com/config/labels-custom-metadata/
+	Labels map[string]string `hcl:"labels,optional"`
+
+	// An array of strings with network names to connect the container to
+	Networks []string `hcl:"networks,optional"`
 
 	// A path to a directory that will be created for the service to store
 	// temporary data.
@@ -370,17 +429,6 @@ type PlatformConfig struct {
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
-
-	// Force pull the image from the remote repository
-	ForcePull bool `hcl:"force_pull,optional"`
-
-	// ClientConfig allow the user to specify the connection to the Docker
-	// engine. By default we try to load this from env vars:
-	// DOCKER_HOST to set the url to the docker server.
-	// DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.
-	// DOCKER_CERT_PATH to load the TLS certificates from.
-	// DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
-	ClientConfig *ClientConfig `hcl:"client_config,block"`
 }
 
 type ClientConfig struct {
@@ -396,7 +444,7 @@ type ClientConfig struct {
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
-	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}))
+	doc, err := docs.New(docs.FromConfig(&PlatformConfig{}), docs.FromFunc(p.DeployFunc()))
 	if err != nil {
 		return nil, err
 	}
@@ -420,9 +468,39 @@ deploy {
 	doc.Output("docker.Deployment")
 
 	doc.SetField(
+		"binds",
+		"A 'source:destination' list of folders to mount onto the container from the host.",
+		docs.Summary(
+			"A list of folders to mount onto the container from the host. The expected",
+			"format for each string entry in the list is `source:destination`. So",
+			"for example: `binds: [\"host_folder/scripts:/scripts\"]",
+		),
+	)
+
+	doc.SetField(
 		"command",
 		"the command to run to start the application in the container",
 		docs.Default("the image entrypoint"),
+	)
+
+	doc.SetField(
+		"labels",
+		"A map of key/value pairs to label the docker container with.",
+		docs.Summary(
+			"A map of key/value pair(s), stored in docker as a string. Each key/value pair must",
+			"be unique. Validiation occurs at the docker layer, not in Waypoint. Label",
+			"keys are alphanumeric strings which may contain periods (.) and hyphens (-).",
+		),
+	)
+
+	doc.SetField(
+		"networks",
+		"An list of strings with network names to connect the container to.",
+		docs.Default("waypoint"),
+		docs.Summary(
+			"A list of networks to connect the container to. By default the container",
+			"will always connect to the `waypoint` network.",
+		),
 	)
 
 	doc.SetField(
@@ -462,12 +540,12 @@ deploy {
 		docs.Summary(
 			"this config block can be used to configure",
 			"a remote Docker engine.",
-			"by default Waypoint will attempt to discover this configuration",
+			"By default Waypoint will attempt to discover this configuration",
 			"using the environment variables:",
-			"DOCKER_HOST to set the url to the docker server.",
-			"DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest.",
-			"DOCKER_CERT_PATH to load the TLS certificates from.",
-			"DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.",
+			"`DOCKER_HOST` to set the url to the docker server.",
+			"`DOCKER_API_VERSION` to set the version of the API to reach, leave empty for latest.",
+			"`DOCKER_CERT_PATH` to load the TLS certificates from.",
+			"`DOCKER_TLS_VERIFY` to enable or disable TLS verification, off by default.",
 		),
 	)
 

@@ -65,7 +65,7 @@ func TestRunnerStart_config(t *testing.T) {
 			},
 
 			Name:  "I_AM_A_TEST_VALUE",
-			Value: "1234567890",
+			Value: &pb.ConfigVar_Static{Static: "1234567890"},
 		}
 
 		// Initialize our runner
@@ -82,11 +82,11 @@ func TestRunnerStart_config(t *testing.T) {
 
 		// Should be set
 		require.Eventually(func() bool {
-			return os.Getenv(cfgVar.Name) == cfgVar.Value
+			return os.Getenv(cfgVar.Name) == cfgVar.Value.(*pb.ConfigVar_Static).Static
 		}, 1000*time.Millisecond, 50*time.Millisecond)
 
 		// Unset
-		cfgVar.Value = ""
+		cfgVar.Value = &pb.ConfigVar_Static{Static: ""}
 		_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{Variables: []*pb.ConfigVar{cfgVar}})
 		require.NoError(err)
 
@@ -111,7 +111,7 @@ func TestRunnerStart_config(t *testing.T) {
 			},
 
 			Name:  "I_AM_A_TEST_VALUE",
-			Value: "1234567890",
+			Value: &pb.ConfigVar_Static{Static: "1234567890"},
 		}
 
 		// Set a value
@@ -129,11 +129,11 @@ func TestRunnerStart_config(t *testing.T) {
 
 		// Should be set
 		require.Eventually(func() bool {
-			return os.Getenv(cfgVar.Name) == cfgVar.Value
+			return os.Getenv(cfgVar.Name) == cfgVar.Value.(*pb.ConfigVar_Static).Static
 		}, 1000*time.Millisecond, 50*time.Millisecond)
 
 		// Unset
-		cfgVar.Value = ""
+		cfgVar.Value = &pb.ConfigVar_Static{Static: ""}
 		_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{Variables: []*pb.ConfigVar{cfgVar}})
 		require.NoError(err)
 

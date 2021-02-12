@@ -1,4 +1,4 @@
-import styles from './CommunityPage.module.css'
+import styles from './style.module.css'
 import classNames from 'classnames'
 import VerticalTextBlockList from '@hashicorp/react-vertical-text-block-list'
 import SectionHeader from '@hashicorp/react-section-header'
@@ -24,12 +24,12 @@ export default function CommunityPage() {
           {
             header: 'Community Forum',
             body:
-              '[Waypoint Community Forum](https://discuss.hashicorp.com/c/waypoint)',
+              '<a href="https://discuss.hashicorp.com/c/waypoint">Waypoint Community Forum</a>',
           },
           {
             header: 'Bug Tracker',
             body:
-              '[Issue tracker on GitHub](https://github.com/hashicorp/waypoint/issues). Please only use this for reporting bugs. Do not ask for general help here; use the Community Form for that.',
+              '<a href="https://github.com/hashicorp/waypoint/issues">Issue tracker on GitHub</a>. Please only use this for reporting bugs. Do not ask for general help here; use the Community Form for that.',
           },
         ]}
       />

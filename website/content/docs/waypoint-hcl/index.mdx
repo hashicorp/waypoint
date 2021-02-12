@@ -3,15 +3,15 @@ layout: docs
 page_title: 'waypoint.hcl'
 sidebar_title: 'waypoint.hcl'
 description: |-
-  The `waypoint.hcl` file is used to configure each Waypoint project. It defines how Waypoint build, deploys, and releases a project.
+  The `waypoint.hcl` file is used to configure each Waypoint project. It defines how Waypoint builds, deploys, and releases a project.
 ---
 
 # Project Configuration: `waypoint.hcl`
 
 The `waypoint.hcl` file is used to configure each Waypoint project. It defines
-how Waypoint build, deploys, and releases a project. The `waypoint.hcl` file is
-written in [HCL](https://github.com/hashicorp/hcl) or JSON, allowing both human
-and machine friendly formats.
+how Waypoint builds, deploys, and releases a project. The `waypoint.hcl` file is
+written in [HCL](/docs/waypoint-hcl/syntax) or [JSON](/docs/waypoint-hcl/syntax/json),
+allowing both human and machine friendly formats.
 
 Waypoint expects one `waypoint.hcl` per [project](/docs/glossary#project) or
 version control repository. The `waypoint.hcl` file is supposed to be committed
@@ -50,6 +50,19 @@ plugin "plugin-name" {
 }
 ```
 
+## Placement Tables
+
+Many pages within the `waypoint.hcl` documentation section will have
+a _placement table_ just beneath the header. This table documents where
+a configuration, function, or variable may be used. An example placement
+table is shown below.
+
+If the example below were present on the documentation page, the documented
+feature is only valid within the context of an `app` stanza. It is not valid
+at the top-level, or any further nested locations.
+
+<Placement groups={[['app', 'build']]} />
+
 ## Top-level
 
 The "top-level" refers to the objects that are not nested in any other
@@ -70,6 +83,13 @@ These can not be top-level parameters, but are available in `build`, `deploy`,
 and `release`. These are documented further in their respective pages.
 
 A stanza is a parameter, but not all parameters are stanzas.
+
+## Variables
+
+Waypoint configuration files have access to a number of predefined variables.
+Using variables helps make a Waypoint configuration more robust by more
+explicitly specifying paths, reducing duplication, etc. You can learn more about
+variables in the dedicated [variables section](/docs/waypoint-hcl/variables).
 
 ## Top-level Parameters
 

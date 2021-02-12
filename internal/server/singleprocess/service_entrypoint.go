@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 	"google.golang.org/grpc/codes"
@@ -46,6 +48,7 @@ func (s *service) EntrypointConfig(
 		Application:  deployment.Application.Application,
 		Workspace:    deployment.Workspace.Workspace,
 		LogBuffer:    logbuffer.New(),
+		Type:         req.Type,
 	}
 	if err := s.state.InstanceCreate(record); err != nil {
 		return err
@@ -97,6 +100,13 @@ func (s *service) EntrypointConfig(
 			})
 		}
 
+		// Write our deployment info
+		config.Deployment = &pb.EntrypointConfig_DeploymentInfo{
+			Component: deployment.Component,
+			Labels:    deployment.Labels,
+		}
+
+		// Get the config vars in use
 		vars, err := s.state.ConfigGetWatch(&pb.ConfigGetRequest{
 			Scope: &pb.ConfigGetRequest_Application{
 				Application: deployment.Application,
@@ -107,8 +117,32 @@ func (s *service) EntrypointConfig(
 		}
 		config.EnvVars = vars
 
+		// Get the config sources we need for our vars. We only do this if
+		// at least one var has a dynamic value.
+		if varContainsDynamic(vars) {
+			// NOTE(mitchellh): For now we query all the types and always send it
+			// all down. In the future we may want to consider filtering this
+			// by only the types we actually need above.
+			sources, err := s.state.ConfigSourceGetWatch(&pb.GetConfigSourceRequest{
+				Scope: &pb.GetConfigSourceRequest_Global{
+					Global: &pb.Ref_Global{},
+				},
+			}, ws)
+			if err != nil {
+				return err
+			}
+
+			config.ConfigSources = sources
+		}
+
 		// If we have the URL service setup, note that
 		if v := s.urlConfig; v != nil {
+			// Get our base config
+			s.urlCEBMu.RLock()
+			pbVal := proto.Clone(s.urlCEB).(*pb.EntrypointConfig_URLService)
+			ws.Add(s.urlCEBWatchCh) // Watch for changes
+			s.urlCEBMu.RUnlock()
+
 			var flatLabels []string
 			for k, v := range deployment.Labels {
 				flatLabels = append(flatLabels, fmt.Sprintf("%s=%s", k, v))
@@ -124,11 +158,14 @@ func (s *service) EntrypointConfig(
 				":deployment=v"+strconv.FormatUint(deployment.Sequence, 10),
 				":deployment-order="+strings.ToLower(deployment.Id),
 			)
+			pbVal.Labels = strings.Join(flatLabels, ",")
 
-			config.UrlService = &pb.EntrypointConfig_URLService{
-				ControlAddr: v.ControlAddress,
-				Token:       v.APIToken,
-				Labels:      strings.Join(flatLabels, ","),
+			// If the token is empty, don't send anything down to the
+			// entrypoint yet since the entrypoint doesn't yet handle changes
+			// to the URL config.
+			// NOTE(mitchellh): when ceb supports changes to URL config, remove this
+			if pbVal.Token != "" {
+				config.UrlService = pbVal
 			}
 		}
 
@@ -199,7 +236,6 @@ func (s *service) EntrypointLogStream(
 	}
 }
 
-// TODO: test
 func (s *service) EntrypointExecStream(
 	server pb.Waypoint_EntrypointExecStreamServer,
 ) error {
@@ -230,21 +266,14 @@ func (s *service) EntrypointExecStream(
 	}
 	log.Debug("exec stream open")
 
-	// Always close the event channel which signals to the reader end that
-	// we are done.
-	defer close(exec.EntrypointEventCh)
-
-	// Note to the caller that we're opened
-	if err := server.Send(&pb.EntrypointExecResponse{
-		Event: &pb.EntrypointExecResponse_Opened{
-			Opened: true,
-		},
-	}); err != nil {
-		return err
-	}
-
-	// Create a context we can use to cancel
-	ctx, cancel := context.WithCancel(server.Context())
+	// Create a new context that we'll use manage the below go routine.
+	// We use a new context rather than server.Context() so that we don't
+	// exit too early because we see the context Done(). Specificly we want
+	// to allow server.Recv() to return any buffered messages even if the
+	// server.Context() is Done().
+	// This fresh context will only be canceled we are no longer able to
+	// process any client messages.
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Create a goroutine that just waits for events from the entrypoint
@@ -253,8 +282,47 @@ func (s *service) EntrypointExecStream(
 	go func() {
 		defer cancel()
 
+		// backgroundRetry indicates that we detected a context cancellation
+		// while holding a message and are handling that message in another
+		// goroutine first.
+		//
+		// sawExit indicates that we observed either an Exit or Error message
+		// flow through. We use this to control if we should synthesizes a Error
+		// message about an improper closure.
+		var sawExit bool
+
+		// Close the event channel we send to. This signals to the receiving
+		// side in StartExecStream (service_exec.go) that the entrypoint
+		// exited and it should also exit the client stream.
+		defer func() {
+			// We defer the close again here so that if sendExit fails, we always
+			// manage to get the channel closed.
+			defer close(exec.EntrypointEventCh)
+
+			// If we observed a Exit or Error event, we don't need to do this.
+			if sawExit {
+				return
+			}
+
+			req := &pb.EntrypointExecRequest{
+				Event: &pb.EntrypointExecRequest_Error_{
+					Error: &pb.EntrypointExecRequest_Error{
+						Error: status.New(codes.Aborted, "server side exited unexpectedly").Proto(),
+					},
+				},
+			}
+
+			// We're again careful here to not block forever, but depend on the
+			// client's context to decide if we should give up.
+			select {
+			case exec.EntrypointEventCh <- req:
+				log.Debug("entrypoint event for improper closure dispatched")
+			case <-exec.Context.Done():
+			}
+		}()
+
 		for {
-			log.Trace("waiting for entrypoint exec event")
+			log.Debug("waiting for entrypoint exec event")
 			req, err := server.Recv()
 			if err == io.EOF {
 				// On EOF, this means the client closed their write side.
@@ -269,13 +337,26 @@ func (s *service) EntrypointExecStream(
 				errCh <- err
 				return
 			}
-			log.Trace("entrypoint event received", "event", req.Event)
+			log.Trace("entrypoint event received", "event", hclog.Fmt("%#v", req.Event))
 
-			// Send the event along
+			// If this is an exit or error event track that so we don't synthesize one.
+			// We synthesize an Error value if this loop is going to returning without
+			// having sent one of these types to tell the client that something happened.
+			switch req.Event.(type) {
+			case *pb.EntrypointExecRequest_Exit_, *pb.EntrypointExecRequest_Error_:
+				sawExit = true
+			}
+
+			// Send the event along. We if the reciever is gone (ie it's context is Done())
+			// then we don't bother. We don't depend on server.Context() here because
+			// that is done within server.Recv() and we want to allow it to returned buffered
+			// messages even if it's internal context is Done().
 			select {
 			case exec.EntrypointEventCh <- req:
-			case <-ctx.Done():
-				return
+			// ok
+			case <-exec.Context.Done():
+				// oops, guess they went away. Keep reading req's so we don't
+				// block though.
 			}
 
 			// If this is an exit or error event then we also exit this loop now.
@@ -291,15 +372,39 @@ func (s *service) EntrypointExecStream(
 		}
 	}()
 
+	// Note to the caller that we're opened. It is very important that
+	// we call this AFTER the goroutine is started above so that we
+	// properly close the exec.EntrypointEventCh channel. This channel has
+	// to be closed when this function exits so that the client side properly
+	// exits.
+	if err := server.Send(&pb.EntrypointExecResponse{
+		Event: &pb.EntrypointExecResponse_Opened{
+			Opened: true,
+		},
+	}); err != nil {
+		return err
+	}
+
 	// Loop through our receive loop
 	for {
 		select {
-		case <-ctx.Done():
-			return nil
 
+		// Wait on the above goroutine.
+		case <-ctx.Done():
+
+			// Double check and see if there was an error and if so, return it.
+			select {
+			case err = <-errCh:
+				return err
+			default:
+				return nil
+			}
+
+		// The above goroutine has errored.
 		case err := <-errCh:
 			return err
 
+		// The client goroutine has finished.
 		case req, active := <-exec.ClientEventCh:
 			if !active {
 				log.Debug("client event channel closed, exiting")
@@ -318,13 +423,20 @@ func (s *service) handleClientExecRequest(
 	srv pb.Waypoint_EntrypointExecStreamServer,
 	req *pb.ExecStreamRequest,
 ) error {
-	log.Trace("event received from client", "event", req.Event)
+	log.Debug("event received from client", "event", req.Event)
 	var send *pb.EntrypointExecResponse
 	switch event := req.Event.(type) {
 	case *pb.ExecStreamRequest_Input_:
 		send = &pb.EntrypointExecResponse{
 			Event: &pb.EntrypointExecResponse_Input{
 				Input: event.Input.Data,
+			},
+		}
+
+	case *pb.ExecStreamRequest_InputEof:
+		send = &pb.EntrypointExecResponse{
+			Event: &pb.EntrypointExecResponse_InputEof{
+				InputEof: &empty.Empty{},
 			},
 		}
 
@@ -345,4 +457,15 @@ func (s *service) handleClientExecRequest(
 	}
 
 	return nil
+}
+
+// varContainsDynamic returns true if there are any dynamic values in the list.
+func varContainsDynamic(vars []*pb.ConfigVar) bool {
+	for _, v := range vars {
+		if _, ok := v.Value.(*pb.ConfigVar_Dynamic); ok {
+			return true
+		}
+	}
+
+	return false
 }

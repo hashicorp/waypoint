@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/api/googleapi"
+	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	run "google.golang.org/api/run/v1"
 	"google.golang.org/grpc/codes"
@@ -46,6 +47,16 @@ func (d *Deployment) apiService(ctx context.Context) (*run.APIService, error) {
 	result, err := run.NewService(ctx,
 		option.WithEndpoint("https://"+d.Resource.Location+"-run.googleapis.com"),
 	)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, err.Error())
+	}
+
+	return result, nil
+}
+
+// iamAPIService returns the IAM API service for GCP client usage.
+func (d *Deployment) iamAPIService(ctx context.Context) (*iam.Service, error) {
+	result, err := iam.NewService(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, err.Error())
 	}

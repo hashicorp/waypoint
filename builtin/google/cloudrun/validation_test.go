@@ -8,22 +8,22 @@ import (
 )
 
 func TestValidateImageReturnsErrorOnInvalidImageName(t *testing.T) {
-	err := validateImageName("foo", "proj")
+	err := validateImageName("foo")
 	require.Error(t, err)
 }
 
 func TestValidateImageReturnsErrorOnInvalidRegistry(t *testing.T) {
-	err := validateImageName("foo/proj/image", "proj")
+	err := validateImageName("foo/proj/image")
 	require.Error(t, err)
 }
 
-func TestValidateImageReturnsErrorOnInvalidProject(t *testing.T) {
-	err := validateImageName("gcr.io/proj2/image", "proj")
+func TestValidateImageReturnsErrorOnInvalidArtifactRegistry(t *testing.T) {
+	err := validateImageName("FOO-docker.pkg.dev/waypoint-286812/foo/bar")
 	require.Error(t, err)
 }
 
-func TestValidateImageReturnsNoErrorWhenValid(t *testing.T) {
-	err := validateImageName("gcr.io/proj/image:latest", "proj")
+func TestValidateImageReturnsNoErrorOnValidArtifactRegistry(t *testing.T) {
+	err := validateImageName("europe-north1-docker.pkg.dev/waypoint-286812/foo/bar")
 	require.NoError(t, err)
 }
 

@@ -8,10 +8,12 @@
       {{inline-svg "docs" class="nav-icon"}}
       Documentation
     </ExternalLink>
-    {{#if canLogout}}
-    <Actions::Invite />
+    {{#if this.canLogout}}
+      <hr />
+      <Actions::Context />
+      <Actions::Invite />
     {{/if}}
     <hr />
-    <Logout @canLogout={{canLogout}} />
+    <Logout @canLogout={{this.canLogout}} />
   </nav>
 </header>

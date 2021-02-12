@@ -1,21 +1,17 @@
-import {
-  productName,
-  productSlug,
-} from 'data/metadata'
+import { productName, productSlug } from 'data/metadata'
 import order from 'data/plugins-navigation.js'
-import DocsPage from 'components/temporary_docs-page'
+import DocsPage from '@hashicorp/react-docs-page'
 import {
   generateStaticPaths,
   generateStaticProps,
-} from 'components/temporary_docs-page/server'
+} from '@hashicorp/react-docs-page/server'
 
 const subpath = 'plugins'
 
-function DocsLayout(props) {
+function PluginsLayout(props) {
   return (
     <DocsPage
-      productName={productName}
-      productSlug={productSlug}
+      product={{ name: productName, slug: productSlug }}
       subpath={subpath}
       order={order}
       staticProps={props}
@@ -28,7 +24,7 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  return generateStaticProps(subpath, productName, params)
+  return generateStaticProps({ subpath, productName, params })
 }
 
-export default DocsLayout
+export default PluginsLayout

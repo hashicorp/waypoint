@@ -11,7 +11,6 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/hcl/v2"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
@@ -44,8 +43,7 @@ type baseCommand struct {
 	// The fields below are only available after calling Init.
 
 	// cfg is the parsed configuration
-	cfg    *config.Config
-	cfgCtx *hcl.EvalContext
+	cfg *config.Config
 
 	// UI is used to write to the CLI.
 	ui terminal.UI
@@ -96,6 +94,10 @@ type baseCommand struct {
 
 	// options passed in at the global level
 	globalOptions []Option
+
+	// autoServer will be set to true if an automatic in-memory server
+	// is allowd.
+	autoServer bool
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -129,6 +131,9 @@ func (c *baseCommand) Init(opts ...Option) error {
 	for _, opt := range opts {
 		opt(&baseCfg)
 	}
+
+	// Set some basic internal fields
+	c.autoServer = !baseCfg.NoAutoServer
 
 	// Init our UI first so we can write output to the user immediately.
 	ui := baseCfg.UI
@@ -256,14 +261,14 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// one app or that we have an app target.
 	if baseCfg.AppTargetRequired {
 		if c.refApp == nil {
-			if len(c.cfg.Apps) != 1 {
+			if len(c.cfg.Apps()) != 1 {
 				c.ui.Output(errAppModeSingle, terminal.WithErrorStyle())
 				return ErrSentinel
 			}
 
 			c.refApp = &pb.Ref_Application{
 				Project:     c.cfg.Project,
-				Application: c.cfg.Apps[0].Name,
+				Application: c.cfg.Apps()[0],
 			}
 		}
 	}
@@ -277,7 +282,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 // thread-safe.
 //
 // If any error is returned, the caller should just exit. The error handling
-// including messaging to the user is handling by this function call.
+// including messaging to the user is handled by this function call.
 //
 // If you want to early exit all the running functions, you should use
 // the callback closure properties to cancel the passed in context. This
@@ -287,9 +292,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 	if c.refApp != nil {
 		appTargets = []string{c.refApp.Application}
 	} else if c.cfg != nil {
-		for _, appCfg := range c.cfg.Apps {
-			appTargets = append(appTargets, appCfg.Name)
-		}
+		appTargets = append(appTargets, c.cfg.Apps()...)
 	}
 
 	var apps []*clientpkg.App
@@ -301,6 +304,7 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 
 	// Just a serialize loop for now, one day we'll parallelize.
 	var finalErr error
+	var didErrSentinel bool
 	for _, app := range apps {
 		// Support cancellation
 		if err := ctx.Err(); err != nil {
@@ -310,8 +314,13 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 		if err := f(ctx, app); err != nil {
 			if err != ErrSentinel {
 				finalErr = multierror.Append(finalErr, err)
+			} else {
+				didErrSentinel = true
 			}
 		}
+	}
+	if finalErr == nil && didErrSentinel {
+		finalErr = ErrSentinel
 	}
 
 	return finalErr
@@ -437,4 +446,10 @@ so you can specify the app to target using the "-app" flag.
 `)
 
 	reAppTarget = regexp.MustCompile(`^(?P<project>[-0-9A-Za-z_]+)/(?P<app>[-0-9A-Za-z_]+)$`)
+
+	snapshotUnimplementedErr = strings.TrimSpace(`
+The current Waypoint server does not support snapshots. Rerunning the command
+with '-snapshot=false' is required, and there will be no automatic data backups
+for the server.
+`)
 )

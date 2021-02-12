@@ -2,6 +2,7 @@ package cloudrun
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/go-playground/validator"
@@ -10,7 +11,7 @@ import (
 
 // ValidateImageName validates that that the specified image is in the gcr Docker Registry for this project
 // Returns an error message when validation fails.
-func validateImageName(image string, project string) error {
+func validateImageName(image string) error {
 	// cloud run deployments must come from one of the following image registries
 	var validRegistries = []string{
 		"gcr.io",
@@ -19,28 +20,26 @@ func validateImageName(image string, project string) error {
 		"asia.gcr.io",
 	}
 
-	// check the image name has the valid parts
-	parts := strings.Split(image, "/")
-	if len(parts) != 3 {
-		return fmt.Errorf("Invalid container image '%s'. Container images should be hosted in a Google Cloud registry for your project, i.e. 'gcr.io/%s/helloworld'", image, project)
-	}
-
 	//check the registry is one which can be used with cloud run
 	registryValid := false
 	for _, r := range validRegistries {
-		if r == parts[0] {
+		if strings.HasPrefix(image, r+"/") {
 			registryValid = true
 			break
 		}
+
+		// Also check if a valid Artifact Registry was supplied which is LOCATION-docker.pkg.dev
+		parts := regexp.MustCompile(`([a-z0-9-]*)-docker\.pkg\.dev`).FindStringSubmatch(image)
+		if len(parts) > 1 {
+			if parts[1] != "" {
+				registryValid = true
+			}
+		}
+
 	}
 
 	if !registryValid {
-		return fmt.Errorf("Invalid container registry '%s'. Container images should be hosted in a valid Google Cloud registry e.g. '%s'", parts[0], strings.Join(parts, ","))
-	}
-
-	// check the project
-	if parts[1] != project {
-		return fmt.Errorf("Invalid container registry project '%s'. Container images should be hosted in Google Cloud registry for your project e.g. '%s/%s/%s'", parts[1], parts[0], project, parts[2])
+		return fmt.Errorf("Invalid container registry '%s'. Container images should be hosted in a valid Google Cloud registry.", image)
 	}
 
 	return nil

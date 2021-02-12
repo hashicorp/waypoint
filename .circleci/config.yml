@@ -11,7 +11,7 @@ references:
     test-results: &TEST_RESULTS_DIR /tmp/test-results
 
   cache:
-    yarn: &YARN_CACHE_KEY waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}
+    yarn: &YARN_CACHE_KEY waypoint-ui-v1-{{ checksum "ui/yarn.lock" }}-{{ checksum "uilib.md5" }}
     rubygem: &RUBYGEM_CACHE_KEY static-site-gems-v1-{{ checksum "Gemfile.lock" }}
 
   environment: &ENVIRONMENT
@@ -128,7 +128,7 @@ jobs:
           name: go test
           command: |
             mkdir -p $TEST_RESULTS_DIR
-            PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
+            PACKAGE_NAMES=$(go list ./... | grep -v test-e2e | circleci tests split --split-by=timings --timings-type=classname)
             echo "Running $(echo $PACKAGE_NAMES | wc -w) packages"
             echo $PACKAGE_NAMES
             gotestsum --format=short-verbose \
@@ -238,6 +238,7 @@ jobs:
       <<: *ENVIRONMENT
     steps:
       - checkout
+      - md5uilib
       # cache yarn deps
       - restore_cache:
           key: *YARN_CACHE_KEY
@@ -279,6 +280,7 @@ jobs:
       JOBS: 2 # limit parallelism for broccoli-babel-transpiler
     steps:
       - checkout
+      - md5uilib
       - restore_cache:
           key: *YARN_CACHE_KEY
       - run: cd ui && make
@@ -340,6 +342,18 @@ jobs:
               echo "no UI changes so no static assets to publish"
             fi
       - notify_main_failure
+  
+  algolia-index:
+    docker:
+      - image: docker.mirror.hashicorp.services/node:12
+    steps:
+      - checkout
+      - run:
+          name: Push content to Algolia Index
+          command: |
+            cd website/
+            npm install
+            node scripts/index_search_content.js
 
   # # run ember frontend tests
   # ember-test:
@@ -378,10 +392,16 @@ workflows:
   version: 2
   go-tests:
     jobs:
-      - check-vendor
       - lint
-      - go-test
+      - check-vendor:
+          requires:
+            - lint
+      - go-test:
+          requires:
+            - lint
       - dev-build:
+          requires:
+            - lint
           filters:
             branches:
               ignore:
@@ -389,7 +409,10 @@ workflows:
 
   integration:
     jobs:
-      - frontend-cache
+      - lint
+      - frontend-cache:
+          requires:
+            - lint
       - ember-build-prod:
           requires:
             - frontend-cache
@@ -416,6 +439,13 @@ workflows:
             branches:
               only:
                 - main
+  website:
+    jobs:
+      - algolia-index:
+          filters:
+            branches:
+              only:
+                - stable-website
 
   # website:
   #   jobs:
@@ -444,6 +474,10 @@ workflows:
   #           - ember-build
 
 commands:
+  md5uilib:
+    description: "md5 hash of ui/lib directory"
+    steps:
+      - run: find ui/lib -type f | sort | xargs md5sum > uilib.md5
   notify_main_failure:
     steps:
       - run:

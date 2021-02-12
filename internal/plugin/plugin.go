@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/ec2"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/ecs"
+	"github.com/hashicorp/waypoint/builtin/aws/ssm"
 	"github.com/hashicorp/waypoint/builtin/azure/aci"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	dockerpull "github.com/hashicorp/waypoint/builtin/docker/pull"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/netlify"
 	"github.com/hashicorp/waypoint/builtin/nomad"
 	"github.com/hashicorp/waypoint/builtin/pack"
+	"github.com/hashicorp/waypoint/builtin/vault"
 )
 
 var (
@@ -41,6 +43,8 @@ var (
 		"aws-ami":                  ami.Options,
 		"aws-ec2":                  ec2.Options,
 		"aws-alb":                  alb.Options,
+		"aws-ssm":                  ssm.Options,
+		"vault":                    vault.Options,
 	}
 
 	// BaseFactories is the set of base plugin factories. This will include any
@@ -52,6 +56,7 @@ var (
 		component.RegistryType:       mustFactory(factory.New(component.TypeMap[component.RegistryType])),
 		component.PlatformType:       mustFactory(factory.New(component.TypeMap[component.PlatformType])),
 		component.ReleaseManagerType: mustFactory(factory.New(component.TypeMap[component.ReleaseManagerType])),
+		component.ConfigSourcerType:  mustFactory(factory.New(component.TypeMap[component.ConfigSourcerType])),
 	}
 )
 

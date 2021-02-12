@@ -74,7 +74,16 @@ func (c *ConfigGetCommand) Run(args []string) int {
 		vars := map[string]string{}
 
 		for _, cv := range resp.Variables {
-			vars[cv.Name] = cv.Value
+			value := ""
+			switch v := cv.Value.(type) {
+			case *pb.ConfigVar_Static:
+				value = v.Static
+
+			case *pb.ConfigVar_Dynamic:
+				value = fmt.Sprintf("<dynamic via %s>", v.Dynamic.From)
+			}
+
+			vars[cv.Name] = value
 		}
 
 		json.NewEncoder(out).Encode(vars)
@@ -90,15 +99,24 @@ func (c *ConfigGetCommand) Run(args []string) int {
 			return 1
 		}
 
+		if prefix == "" {
+			for _, cv := range resp.Variables {
+				fmt.Printf("%s=%s\n", cv.Name, cv.Value)
+			}
+			return 0
+		}
+
 		if len(resp.Variables) == 0 {
+			fmt.Fprintf(os.Stderr, "named variable '%s' was not found in config", prefix)
 			return 1
 		}
 
 		if resp.Variables[0].Name != prefix {
+			fmt.Fprintf(os.Stderr, "name '%s' doesn't match prefix: %s", resp.Variables[0].Name, prefix)
 			return 1
 		}
 
-		fmt.Fprintln(out, resp.Variables[0].Value)
+		fmt.Fprintf(out, "%s=%s\n", resp.Variables[0].Name, resp.Variables[0].Value)
 		return 0
 	}
 
@@ -109,10 +127,19 @@ func (c *ConfigGetCommand) Run(args []string) int {
 			app = scope.Application.Application
 		}
 
+		value := ""
+		switch v := v.Value.(type) {
+		case *pb.ConfigVar_Static:
+			value = v.Static
+
+		case *pb.ConfigVar_Dynamic:
+			value = fmt.Sprintf("<dynamic via %s>", v.Dynamic.From)
+		}
+
 		table.Rich([]string{
 			app,
 			v.Name,
-			v.Value,
+			value,
 		}, []string{
 			"",
 			terminal.Green,
@@ -137,7 +164,7 @@ func (c *ConfigGetCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:   "raw",
 			Target: &c.raw,
-			Usage:  "Output the value for the named variable only (disables prefix matching)",
+			Usage:  "Output in key=val",
 		})
 	})
 }

@@ -7,6 +7,8 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serversort "github.com/hashicorp/waypoint/internal/server/sort"
@@ -71,11 +73,20 @@ func (s *State) configSet(
 
 	// Get the global bucket and write the value to it.
 	b := dbTxn.Bucket(configBucket)
-	if value.Value == "" {
+
+	if isConfigVarDelete(value) {
 		if err := b.Delete(id); err != nil {
 			return err
 		}
 	} else {
+		// If this is a runner, we don't support dynamic values currently.
+		if _, ok := value.Scope.(*pb.ConfigVar_Runner); ok {
+			if _, ok := value.Value.(*pb.ConfigVar_Static); !ok {
+				return status.Errorf(codes.FailedPrecondition,
+					"runner-scoped configuration must be static")
+			}
+		}
+
 		if err := dbPut(b, id, value); err != nil {
 			return err
 		}
@@ -306,7 +317,7 @@ func (s *State) configIndexSet(txn *memdb.Txn, id []byte, value *pb.ConfigVar) e
 	}
 
 	// If we have no value, we delete from the memdb index
-	if value.Value == "" {
+	if isConfigVarDelete(value) {
 		return txn.Delete(configIndexTableName, record)
 	}
 
@@ -459,4 +470,20 @@ type configIndexRecord struct {
 	Name        string
 	Runner      bool // true if this is a runner config
 	RunnerRef   *pb.Ref_Runner
+}
+
+// isConfigVarDelete returns true if the config var represents a deletion.
+func isConfigVarDelete(value *pb.ConfigVar) bool {
+	switch v := value.Value.(type) {
+	case *pb.ConfigVar_Unset:
+		return true
+
+	case *pb.ConfigVar_Static:
+		return v.Static == ""
+
+	case nil:
+		return true
+	}
+
+	return false
 }

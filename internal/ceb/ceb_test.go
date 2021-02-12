@@ -14,6 +14,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
@@ -21,7 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRun(t *testing.T) {
+func TestRun_reconnect(t *testing.T) {
 	require := require.New(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -307,6 +309,36 @@ func TestRun_disabledUp(t *testing.T) {
 	}
 }
 
+// Test CEB disabled via no server addr being set.
+func TestRun_disabledNoServerAddr(t *testing.T) {
+	require := require.New(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Create a temporary directory for our test
+	td, err := ioutil.TempDir("", "test")
+	require.NoError(err)
+	defer os.RemoveAll(td)
+	path := filepath.Join(td, "hello")
+
+	// Start the CEB
+	testRun(t, ctx, &testRunOpts{
+		ClientDisable: true,
+		DeploymentId:  "who cares",
+		Helper:        "write-file",
+		HelperEnv: map[string]string{
+			envServerAddr: "",
+			"HELPER_PATH": path,
+		},
+	})
+
+	// The child should start up
+	require.Eventually(func() bool {
+		_, err := ioutil.ReadFile(path)
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+}
+
 var (
 	testExec      = os.Args[0]
 	envHelperMode = "TEST_HELPER_MODE"
@@ -316,7 +348,7 @@ func TestMain(m *testing.M) {
 	switch os.Getenv(envHelperMode) {
 	case "":
 		// Log
-		hclog.L().SetLevel(hclog.Trace)
+		hclog.L().SetLevel(hclog.Debug)
 
 		// Normal test mode
 		os.Exit(m.Run())
@@ -337,6 +369,15 @@ func TestMain(m *testing.M) {
 		}
 
 		ioutil.WriteFile(path, []byte("hello"), 0600)
+		time.Sleep(10 * time.Minute)
+
+	case "write-env":
+		path := os.Getenv("HELPER_PATH")
+		if path == "" {
+			panic("bad")
+		}
+
+		ioutil.WriteFile(path, []byte(fmt.Sprintf("%d,%s", os.Getpid(), os.Getenv("TEST_VALUE"))), 0600)
 		time.Sleep(10 * time.Minute)
 
 	default:
@@ -390,8 +431,17 @@ func testRun(t *testing.T, ctx context.Context, opts *testRunOpts) *CEB {
 		WithEnvDefaults(),
 		withCEBValue(cebCh),
 	)
+	ceb := <-cebCh
 
-	return <-cebCh
+	// Register our config plugins. NOTE(mitchellh): This is nasty cause we're
+	// just poking at internal state, so we should clean this up one day.
+	for k, v := range opts.ConfigPlugins {
+		ceb.configPlugins[k] = &plugin.Instance{
+			Component: v,
+		}
+	}
+
+	return ceb
 }
 
 type testRunOpts struct {
@@ -400,4 +450,5 @@ type testRunOpts struct {
 	Helper        string
 	HelperEnv     map[string]string
 	DeploymentId  string
+	ConfigPlugins map[string]component.ConfigSourcer
 }

@@ -1,8 +1,0 @@
-@use "config";
-
-// a.k.a. "Header Bar", "Global Header"
-.pdsAppHeader {
-  background-color: config.$header-background-color;
-  color: config.$header-color;
-  height: config.$header-height;
-}

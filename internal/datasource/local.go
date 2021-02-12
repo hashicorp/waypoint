@@ -40,7 +40,7 @@ func (s *LocalSource) Get(
 	ui terminal.UI,
 	raw *pb.Job_DataSource,
 	baseDir string,
-) (string, func() error, error) {
+) (string, *pb.Job_DataSource_Ref, func() error, error) {
 	pwd, err := os.Getwd()
 	if err == nil && !filepath.IsAbs(pwd) {
 		// This should never happen because os.Getwd I believe always
@@ -49,7 +49,7 @@ func (s *LocalSource) Get(
 		pwd, err = filepath.Abs(pwd)
 	}
 
-	return pwd, nil, err
+	return pwd, nil, nil, err
 }
 
 var _ Sourcer = (*LocalSource)(nil)

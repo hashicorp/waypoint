@@ -7,15 +7,36 @@ Deploy a container to Docker, local or remote.
 - Input: **docker.Image**
 - Output: **docker.Deployment**
 
-### Variables
+### Examples
+
+```hcl
+deploy {
+  use "docker" {
+	command      = ["ps"]
+	service_port = 3000
+	static_environment = {
+	  "environment": "production",
+	  "LOG_LEVEL": "debug"
+	}
+  }
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### client_config
 
 Client config for remote Docker engine.
 
-This config block can be used to configure a remote Docker engine. by default Waypoint will attempt to discover this configuration using the environment variables: DOCKER_HOST to set the url to the docker server. DOCKER_API_VERSION to set the version of the API to reach, leave empty for latest. DOCKER_CERT_PATH to load the TLS certificates from. DOCKER_TLS_VERIFY to enable or disable TLS verification, off by default.
+This config block can be used to configure a remote Docker engine. By default Waypoint will attempt to discover this configuration using the environment variables: `DOCKER_HOST` to set the url to the docker server. `DOCKER_API_VERSION` to set the version of the API to reach, leave empty for latest. `DOCKER_CERT_PATH` to load the TLS certificates from. `DOCKER_TLS_VERIFY` to enable or disable TLS verification, off by default.
 
 - Type: **\*docker.ClientConfig**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
 #### command
 
@@ -59,19 +80,18 @@ These environment variables should not be run of the mill configuration variable
 - Type: **map[string]string**
 - **Optional**
 
-### Examples
+### Output Attributes
 
-```
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
 
-deploy {
-  use "docker" {
-	command      = ["ps"]
-	service_port = 3000
-	static_environment = {
-	  "environment": "production",
-	  "LOG_LEVEL": "debug"
-	}
-  }
-}
+#### container
 
-```
+- Type: **string**
+
+#### id
+
+- Type: **string**
+
+#### name
+
+- Type: **string**

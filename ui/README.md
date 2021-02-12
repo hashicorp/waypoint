@@ -35,13 +35,30 @@ that are static and are re-loaded on page refresh.
 ### Running with a local Waypoint Server
 
 This option assumes there is a Waypoint server running
-at `https://localhost:9702`.
+at `https://localhost:9702`. If you need to make any API changes to go along
+with frontend changes, or just wish to run the server locally, you can follow
+the instructions to run [Waypoint server locally](https://www.waypointproject.io/docs/server/run).
 
 Note: You'll need to visit the above address in the same browser session to
 accept the invalid certificate warning in your browser for this to work.
 
 - `ember serve local`
 - The app will be available at [http://localhost:4200](http://localhost:4200).
+
+If you need to build the server and run it locally, you'll want to stop the existing instance, build and reinstall it in docker:
+
+- `docker stop waypoint-server; docker rm waypoint-server; docker volume prune -f`
+- `make docker/server`
+- `waypoint install -platform=docker -docker-server-image="waypoint:dev" -accept-tos`
+
+Then run the authentication steps above again.
+
+### Generating Type Definitions after making api changes
+
+if you've made API changes in `/internal/server` and want to use those on the frontend, you'll need to generate the type definitions again: 
+
+- `go generate ./internal/server`
+- `make gen/ts`
 
 ### Code Generators
 

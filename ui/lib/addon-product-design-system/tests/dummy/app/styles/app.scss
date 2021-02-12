@@ -1,9 +1,0 @@
-// load PDS styles in DEV mode
-@use "pds/config" with ($env: DEV);
-@use "pds";
-
-// load additional styles for docs
-.pdsDocs {
-  @import "blueprint";
-  @import "figure";
-}

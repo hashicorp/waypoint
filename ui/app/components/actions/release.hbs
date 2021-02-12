@@ -1,0 +1,15 @@
+<button class="button button--primary" type="button" {{on "click" this.toggleHint}}>
+  {{inline-svg "public-default" class="icon"}}
+  <span>Release...</span>
+</button>
+
+{{#if this.hintIsVisible}}
+  <div class="cli-hint">
+    <p>To release this deployment you can run the following command in the CLI</p>
+    <CopyableCode @ref="release-cli-hint">
+      <pre><code id="release-cli-hint">waypoint release {{@id}}</code></pre>
+    </CopyableCode>
+    <small><ExternalLink href="https://waypointproject.io/commands/release">Read more in our documentation</ExternalLink></small>
+  </div>
+  <div class="cli-hint-overlay" {{on "click" this.toggleHint}}></div>
+{{/if}}

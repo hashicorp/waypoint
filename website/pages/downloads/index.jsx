@@ -1,55 +1,42 @@
-import { useMemo, useState, useEffect } from 'react'
-import VERSION from 'data/version.js'
+import VERSION, { packageManagers } from 'data/version.js'
 import Head from 'next/head'
 import HashiHead from '@hashicorp/react-head'
 import { productName, productSlug } from 'data/metadata'
-import { packageManagersByOs, getStartedLinks } from 'data/downloads'
-import ReleaseInformation from 'components/downloader/release-information'
-import {
-  sortPlatforms,
-  detectOs,
-  sortAndFilterReleases,
-} from 'components/downloader/utils/downloader'
-import DownloadCards from 'components/downloader/cards'
+import ProductDownloader from '@hashicorp/react-product-downloader'
 import styles from './style.module.css'
 
 export default function DownloadsPage({ releases }) {
-  // Sort our downloads for the DownloadCards
-  const currentRelease = releases.versions[VERSION]
-  const sortedDownloads = useMemo(() => sortPlatforms(currentRelease), [
-    currentRelease,
-  ])
-  const osKeys = Object.keys(sortedDownloads)
-  const [osIndex, setSelectedOsIndex] = useState()
-
-  const tabData = Object.keys(sortedDownloads).map((osKey) => ({
-    os: osKey,
-    packageManagers: packageManagersByOs[osKey] || null,
-  }))
-
-  // Sort our releases for our ReleaseInformation section
-  const latestReleases = sortAndFilterReleases(Object.keys(releases.versions))
-  const sortedReleases = latestReleases.map((releaseVersion) => ({
-    ...sortPlatforms(releases.versions[releaseVersion]),
-    version: releaseVersion,
-  }))
-
-  useEffect(() => {
-    // if we're on the client side, detect the default platform only on initial render
-    const index = osKeys.indexOf(detectOs(window.navigator.platform))
-    setSelectedOsIndex(index)
-  }, [])
-
   return (
-    <div className={styles.root}>
-      <h1>Download {productName}</h1>
+    <>
       <HashiHead is={Head} title={`Downloads | ${productName} by HashiCorp`} />
-      <DownloadCards
-        brand="blue"
-        defaultTabIdx={osIndex}
-        tabData={tabData}
-        downloads={sortedDownloads}
-        version={VERSION}
+
+      <ProductDownloader
+        releases={releases}
+        packageManagers={packageManagers}
+        productName={productName}
+        productId={productSlug}
+        latestVersion={VERSION}
+        getStartedDescription="Follow step-by-step tutorials on AWS, Azure, GCP, and localhost."
+        getStartedLinks={[
+          {
+            label: 'Deploy to Docker',
+            href:
+              'https://learn.hashicorp.com/collections/waypoint/get-started-docker',
+          },
+          {
+            label: 'Deploy to Kubernetes',
+            href:
+              'https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes',
+          },
+          {
+            label: 'Deploy to AWS',
+            href: 'https://learn.hashicorp.com/collections/waypoint/deploy-aws',
+          },
+          {
+            label: 'View all Waypoint tutorials',
+            href: 'https://learn.hashicorp.com/waypoint',
+          },
+        ]}
         logo={
           <img
             className={styles.logo}
@@ -57,36 +44,13 @@ export default function DownloadsPage({ releases }) {
             src={require('./img/waypoint-logo.svg')}
           />
         }
+        brand="waypoint"
         tutorialLink={{
-          label: 'View Tutorials at HashiCorp Learn',
           href: 'https://learn.hashicorp.com/waypoint',
+          label: 'View Tutorials at HashiCorp Learn',
         }}
       />
-
-      <div className="g-container">
-        <div className={styles.gettingStarted}>
-          <h2>Get Started</h2>
-          <p>
-            Follow step-by-step tutorials on AWS, Azure, GCP, and localhost.
-          </p>
-          <div className={styles.links}>
-            {getStartedLinks.map((link) => (
-              <a href={link.href} key={link.href}>
-                {link.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <ReleaseInformation
-        brand="blue"
-        productId="waypoint"
-        productName={productName}
-        releases={sortedReleases}
-        latestVersion={VERSION}
-      />
-    </div>
+    </>
   )
 }
 

@@ -1,0 +1,119 @@
+---
+layout: docs
+page_title: config - waypoint.hcl
+sidebar_title: <code>config</code>
+description: |-
+  The `config` stanza configures [application configuration](/docs/app-config). Application configuration sets environment variables for your application that is either statically set or synced with an external system.
+---
+
+# `config` Stanza
+
+<Placement groups={[['config'], ['app', 'config']]} />
+
+The `config` stanza configures [application configuration](/docs/app-config).
+Application configuration sets environment variables for your application
+that is either statically set or synced with an external system.
+Application configuration can be set via the `waypoint.hcl` file using
+the `config` stanza as well as via the [CLI](/commands/config-set).
+
+-> **To learn about application configuration more broadly** please also read the
+[application configuration](/docs/app-config) docs. The dedicated application
+configuration section goes into more detail about how application configuration
+works with Waypoint. This page is specifically about the `config` stanza
+in the `waypoint.hcl` file and _does not_ cover the application configuration
+system more broadly.
+
+## Project vs. App Scope
+
+The `config` stanza can appear at the project (root) level or within
+an `app`. Configuration set at the project level is used for all applications
+and merged with any app-scoped configuration. Configuration set within an
+`app` stanza is only set for that application. If there are any conflicting
+values, the app-scoped value overrides the project-scoped value.
+
+The example below shows configuration set at both the project and app scope.
+In this case, these will be merged and the app will have both the `THEME`
+and `PORT` environment variables set.
+
+```hcl
+config {
+  env = {
+    THEME = "rainbow"
+  }
+}
+
+app "frontend" {
+  config {
+    env = {
+      PORT = 8080
+    }
+  }
+
+  # ...
+}
+```
+
+## Syncing
+
+Changes to `config` in the `waypoint.hcl` file take effect only during
+the scenarios listed below:
+
+1. `waypoint up` - A full build, deploy, release will resync configuration.
+1. `waypoint deploy` - This is useful when you want to redeploy but don't
+   want to rebuild the application.
+1. `waypoint config sync` - This is useful when you want to update the
+   configuration but don't want to redeploy the application.
+
+When the configuration is synced, any values set in the file will overwrite
+values that may have been set manually via the CLI. Any configuration set in the CLI
+that was not set in the configuration file will remain unchanged.
+
+Synced configuration impacts _all_ versions of a deployed application. All
+deployed applications will subsequently be restarted if configuration values
+changed.
+
+## `config` Parameters
+
+### Optional
+
+- `env` `(map<string>ConfigValue: {})` - Environment variables to set
+  for the deployed application. See the `ConfigValue` section below on more
+  details on valid values for this map.
+
+## `ConfigValue`
+
+A `ConfigValue` type is used to configure the value of a configuration key
+such as within `env`.
+
+### Primitive Values
+
+A configuration value can be set to a primitive value such as a string
+or number. This will be coerced into a string and set as a static configuration
+value. In the example below, we set the `PORT` environment variable using
+a static value:
+
+```hcl
+config {
+  env = {
+    PORT = 8080
+  }
+}
+```
+
+### Dynamic Value
+
+A configuration value can be synced with an external system using the
+`configdynamic` function. This function can only be used within a `config`
+stanza and creates a `ConfigValue`. In the example below, we synchronize
+a value with a Kubernetes ConfigMap:
+
+```hcl
+config {
+  env = {
+    PORT = configdynamic("kubernetes", {
+      name = "my-app" # ConfigMap name
+      key  = "port"
+    })
+  }
+}
+```

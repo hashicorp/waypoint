@@ -7,153 +7,151 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
 )
 
-// internalValidator is an interface implemented internally for validation.
-// This is unexported since it takes a name parameter to build better error
-// messages.
-type internalValidator interface {
-	validate(name string) error
+// validateStruct is the validation structure for the configuration.
+// This is used to validate the full structure of the configuration. This
+// requires duplication between this struct and the other config structs
+// since we don't do any lazy loading here.
+type validateStruct struct {
+	Project string            `hcl:"project,attr"`
+	Runner  *Runner           `hcl:"runner,block" default:"{}"`
+	Labels  map[string]string `hcl:"labels,optional"`
+	Plugin  []*Plugin         `hcl:"plugin,block"`
+	Apps    []*validateApp    `hcl:"app,block"`
+	Config  *genericConfig    `hcl:"config,block"`
 }
 
+type validateApp struct {
+	Name    string            `hcl:",label"`
+	Path    string            `hcl:"path,optional"`
+	Labels  map[string]string `hcl:"labels,optional"`
+	URL     *AppURL           `hcl:"url,block" default:"{}"`
+	Build   *Build            `hcl:"build,block"`
+	Deploy  *Deploy           `hcl:"deploy,block"`
+	Release *Release          `hcl:"release,block"`
+	Config  *genericConfig    `hcl:"config,block"`
+}
+
+// Validate the structure of the configuration.
+//
+// This will validate required fields are specified and the types of some fields.
+// Plugin-specific fields won't be validated until later. Fields that use functions
+// and variables will not be validated until those values can be realized.
+//
+// Users of this package should call Validate on each subsequent configuration
+// that is loaded (Apps, Builds, Deploys, etc.) for further rich validation.
 func (c *Config) Validate() error {
-	var result error
-
-	if errs := ValidateLabels(c.Labels); len(errs) > 0 {
-		result = multierror.Append(result, errs...)
+	// Validate root
+	schema, _ := gohcl.ImpliedBodySchema(&validateStruct{})
+	content, diag := c.hclConfig.Body.Content(schema)
+	if diag.HasErrors() {
+		return diag
 	}
 
-	for _, app := range c.Apps {
-		if err := app.Validate(); err != nil {
+	// Validate apps
+	var result error
+	for _, block := range content.Blocks.OfType("app") {
+		err := c.validateApp(block)
+		if err != nil {
 			result = multierror.Append(result, err)
 		}
+	}
+
+	// Validate labels
+	if errs := ValidateLabels(c.Labels); len(errs) > 0 {
+		result = multierror.Append(result, errs...)
 	}
 
 	return result
 }
 
-func (app *App) Validate() error {
+func (c *Config) validateApp(b *hcl.Block) error {
+	// Validate root
+	schema, _ := gohcl.ImpliedBodySchema(&validateApp{})
+	content, diag := b.Body.Content(schema)
+	if diag.HasErrors() {
+		return diag
+	}
+
+	// Build required
+	if len(content.Blocks.OfType("build")) != 1 {
+		return &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "'build' stanza required",
+			Subject:  &b.DefRange,
+			Context:  &b.TypeRange,
+		}
+	}
+
+	// Deploy required
+	if len(content.Blocks.OfType("deploy")) != 1 {
+		return &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "'deploy' stanza required",
+			Subject:  &b.DefRange,
+			Context:  &b.TypeRange,
+		}
+	}
+
+	return nil
+}
+
+// Validate validates the application.
+//
+// Similar to Config.App, this doesn't validate configuration that is
+// further deferred such as build, deploy, etc. stanzas so call Validate
+// on those as they're loaded.
+func (c *App) Validate() error {
 	var result error
-	if errs := ValidateLabels(app.Labels); len(errs) > 0 {
+
+	// Validate labels
+	if errs := ValidateLabels(c.Labels); len(errs) > 0 {
 		result = multierror.Append(result, errs...)
 	}
 
-	// If a path is specified, it must be relative and it must not
-	// contain any "..".
-	if app.Path != "" {
-		if filepath.IsAbs(app.Path) {
+	// If a path is specified, it must not be a child of the root.
+	if c.Path != "" {
+		if !filepath.IsAbs(c.Path) {
+			// This should never happen because during App load time
+			// we ensure that the path is absolute relative to the project
+			// path.
+			panic("path is not absolute")
+		}
+
+		rel, err := filepath.Rel(c.config.path, c.Path)
+		if err != nil {
 			result = multierror.Append(result, fmt.Errorf(
-				"path: must be a relative path"))
+				"path: must be a child of the project directory"))
 		}
-
-		for _, part := range filepath.SplitList(app.Path) {
-			if part == ".." {
-				result = multierror.Append(result, fmt.Errorf(
-					"path: must not contain .. entries"))
-				break
-			}
+		if strings.HasPrefix(rel, "../") || strings.HasPrefix(rel, "..\\") {
+			result = multierror.Append(result, fmt.Errorf(
+				"path: must be a child of the project directory"))
 		}
 	}
 
-	// Build and deploy are currently required.
-	if app.Build == nil {
+	if c.BuildRaw == nil || c.BuildRaw.Use == nil || c.BuildRaw.Use.Type == "" {
 		result = multierror.Append(result, fmt.Errorf(
-			"build: a builder must be configured"))
+			"build stage with a 'use' stanza is required"))
 	}
-	if app.Deploy == nil {
+
+	if c.DeployRaw == nil || c.DeployRaw.Use == nil || c.DeployRaw.Use.Type == "" {
 		result = multierror.Append(result, fmt.Errorf(
-			"deploy: a deployment platform must be configured"))
-	}
-
-	for k, v := range app.validatorChildren() {
-		if v != nil {
-			if err := v.validate(k); err != nil {
-				result = multierror.Append(result, err)
-			}
-		}
-	}
-
-	return multierror.Prefix(result, fmt.Sprintf("app[%s]:", app.Name))
-}
-
-func (app *App) validatorChildren() map[string]internalValidator {
-	result := map[string]internalValidator{
-		"build":   app.Build,
-		"deploy":  app.Deploy,
-		"release": app.Release,
-	}
-
-	if app.Build != nil && app.Build.Registry != nil {
-		result["build.registry"] = app.Build.Registry
+			"deploy stage with a 'use' stanza is required"))
 	}
 
 	return result
 }
 
-func (c *Build) validate(key string) error {
-	return c.Operation().validate(key)
-}
-
-func (c *Deploy) validate(key string) error {
-	return c.Operation().validate(key)
-}
-
-func (c *Registry) validate(key string) error {
-	return c.Operation().validate(key)
-}
-
-func (c *Release) validate(key string) error {
-	return c.Operation().validate(key)
-}
-
-func (c *Operation) validate(key string) error {
-	if c == nil {
-		return nil
-	}
-
-	var result error
-
-	if c.required && c.Use == nil {
-		result = multierror.Append(result, fmt.Errorf(
-			"a `use` statement is required"))
-	}
-
-	if errs := ValidateLabels(c.Labels); len(errs) > 0 {
-		result = multierror.Append(result, errs...)
-	}
-
-	for i, h := range c.Hooks {
-		if err := h.validate(fmt.Sprintf("hook[%d]", i)); err != nil {
-			result = multierror.Append(result, err)
-		}
-	}
-
-	return multierror.Prefix(result, fmt.Sprintf("%s:", key))
-}
-
-func (h *Hook) validate(key string) error {
-	var result error
-
-	switch h.When {
-	case "before", "after":
-	default:
-		result = multierror.Append(result, fmt.Errorf("label must be 'before' or 'after'"))
-	}
-
-	if len(h.Command) == 0 {
-		result = multierror.Append(result, fmt.Errorf("command must be non-empty"))
-	}
-
-	switch h.OnFailure {
-	case "", "continue", "fail":
-	default:
-		result = multierror.Append(result, fmt.Errorf("on_failure must be 'continue' or 'fail'"))
-	}
-
-	return multierror.Prefix(result, fmt.Sprintf("%s:", key))
-}
-
-// ValidateLabels validates a set of labels.
+// ValidateLabels validates a set of labels. This ensures that labels are
+// set according to our requirements:
+//
+//   * key and value length can't be greater than 255 characters each
+//   * keys must be in hostname format (RFC 952)
+//   * keys can't be prefixed with "waypoint/" which is reserved for system use
+//
 func ValidateLabels(labels map[string]string) []error {
 	var errs []error
 	for k, v := range labels {
