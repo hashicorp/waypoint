@@ -98,15 +98,17 @@ func (r *Releaser) Release(
 	} else if r.config.Ports == nil && (r.config.Port != 0 || r.config.NodePort != 0) {
 		r.config.Ports = make([]map[string]string, 1)
 		r.config.Ports[0] = map[string]string{
-			"port":      strconv.Itoa(int(r.config.Port)),
-			"node_port": strconv.Itoa(int(r.config.NodePort)),
+			"port":        strconv.Itoa(int(r.config.Port)),
+			"target_port": "http",
+			"node_port":   strconv.Itoa(int(r.config.NodePort)),
 		}
 	} else if r.config.Port == 0 && r.config.NodePort == 0 && r.config.Ports == nil {
 		// We don't explicitly set nodeport if Port isn't defined, because
 		// k8s will automatically assign a nodeport if unspecified
 		r.config.Ports = make([]map[string]string, 1)
 		r.config.Ports[0] = map[string]string{
-			"port": strconv.Itoa(int(DefaultPort)),
+			"target_port": "http",
+			"port":        strconv.Itoa(int(DefaultPort)),
 		}
 	}
 
@@ -128,6 +130,10 @@ func (r *Releaser) Release(
 		if port == 0 {
 			// This likely means port was unset and got parsed to 0
 			port = DefaultPort
+		}
+
+		if sp["target_port"] == "" {
+			sp["target_port"] = "http"
 		}
 
 		servicePorts[i] = corev1.ServicePort{
