@@ -574,7 +574,7 @@ func createALB(
 	vpcId, serviceName, sgWebId *string,
 	servicePort *int64,
 	subnets []*string,
-) (lbArn, tgArn *string, err error) {
+) (lbArn *string, tgArn *string, err error) {
 	s.Update("Creating ALB target group")
 	L.Debug("creating target group", "name", serviceName)
 
@@ -817,7 +817,7 @@ func createALB(
 		}
 	}
 
-	lbArn = lb.LoadBalancerArn
+	lbArn = listener.LoadBalancerArn
 
 	return lbArn, tgArn, err
 }
