@@ -1198,7 +1198,7 @@ func destroyALB(
 		var tgs []*elbv2.TargetGroupTuple
 
 		// If there is only 1 target group, delete the listener
-		if len(def) == 1 {
+		if len(def) == 1 && len(def[0].ForwardConfig.TargetGroups) == 1 {
 			log.Debug("only 1 target group, deleting listener")
 			_, err = elbsrv.DeleteListener(&elbv2.DeleteListenerInput{
 				ListenerArn: listener.ListenerArn,
