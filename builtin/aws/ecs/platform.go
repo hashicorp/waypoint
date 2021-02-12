@@ -831,22 +831,22 @@ func buildLoggingOptions(conf *Logging, region string, logGroup string, defaultS
 		streamPrefix = defaultStreamPrefix
 	}
 
-	result := map[string]*string {
-		"awslogs-region": aws.String(region),
-		"awslogs-group": aws.String(logGroup),
-		"awslogs-endpoint": aws.String(conf.Endpoint),
-		"awslogs-stream-prefix": aws.String(streamPrefix),
-		"awslogs-datetime-format": aws.String(conf.DateTimeFormat),
+	result := map[string]*string{
+		"awslogs-region":            aws.String(region),
+		"awslogs-group":             aws.String(logGroup),
+		"awslogs-endpoint":          aws.String(conf.Endpoint),
+		"awslogs-stream-prefix":     aws.String(streamPrefix),
+		"awslogs-datetime-format":   aws.String(conf.DateTimeFormat),
 		"awslogs-multiline-pattern": aws.String(conf.MultilinePattern),
-		"mode": aws.String(conf.Mode),
-		"max-buffer-size": aws.String(conf.MaxBufferSize),
+		"mode":                      aws.String(conf.Mode),
+		"max-buffer-size":           aws.String(conf.MaxBufferSize),
 	}
 
 	if conf.CreateGroup {
 		result["awslogs-create-group"] = aws.String("true")
 	}
 
-	for k,v := range result {
+	for k, v := range result {
 		if *v == "" {
 			delete(result, k)
 		}
@@ -919,7 +919,7 @@ func (p *Platform) Launch(
 		Secrets:     secrets,
 		LogConfiguration: &ecs.LogConfiguration{
 			LogDriver: aws.String("awslogs"),
-			Options: logOptions,
+			Options:   logOptions,
 		},
 	}
 
@@ -1626,12 +1626,19 @@ deploy {
 
 	doc.SetField(
 		"logging.datetime_format",
-		"Defines the pattern multiline start pattern in Python strftime format",
+		"Defines the multiline start pattern in Python strftime format",
 	)
+
+	doc.SetField(
+		"logging.multiline_pattern",
+		"Defines the multiline start pattern using a regular expression",
+	)
+
 	doc.SetField(
 		"logging.mode",
 		"Delivery method for log messages, either 'blocking' or 'non-blocking'",
 	)
+
 	doc.SetField(
 		"logging.max_buffer_size",
 		"When using non-blocking logging mode, this is the buffer size for message storage",
