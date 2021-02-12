@@ -62,6 +62,11 @@ func (p *Platform) DestroyFunc() interface{} {
 	return p.Destroy
 }
 
+// DestroyWorkspaceFunc implements component.WorkspaceDestroyer
+func (p *Platform) DestroyWorkspaceFunc() interface{} {
+	return p.DestroyWorkspace
+}
+
 // ExecFunc implements component.Execer
 func (p *Platform) ExecFunc() interface{} {
 	return p.Exec
@@ -177,6 +182,7 @@ func (p *Platform) Deploy(
 ) (*Deployment, error) {
 
 	sg := ui.StepGroup()
+	defer sg.Wait()
 
 	step := sg.Add("Connecting to AWS")
 
@@ -620,6 +626,75 @@ func (p *Platform) Destroy(
 		})
 	}
 	st.Step(terminal.StatusOK, "Deleted Lambda function version")
+
+	return err
+}
+
+// DestroyWorkspace deletes other bits we created
+func (p *Platform) DestroyWorkspace(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	app *component.Source,
+	ui terminal.UI,
+) error {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	step := sg.Add("Connecting to AWS")
+	defer func() {
+		step.Abort()
+	}()
+
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: p.config.Region,
+	})
+	if err != nil {
+		return err
+	}
+
+	lamSvc := lambda.New(sess)
+
+	step.Done()
+	step = sg.Add("Deleting Lambda function")
+
+	_, err = lamSvc.DeleteFunction(&lambda.DeleteFunctionInput{
+		FunctionName: aws.String(app.App),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// If the user specified a role, we don't delete it
+	if p.config.RoleArn == "" {
+		svc := iam.New(sess)
+
+		roleName := "lambda-" + app.App
+
+		step.Done()
+		step = sg.Add("Deleting automatically created IAM role...")
+
+		log.Info("attempting to delete role", "role-name", roleName)
+
+		_, err = svc.DetachRolePolicy(&iam.DetachRolePolicyInput{
+			RoleName:  aws.String(roleName),
+			PolicyArn: aws.String("arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"),
+		})
+		if err != nil {
+			return err
+		}
+
+		_, err = svc.DeleteRole(&iam.DeleteRoleInput{
+			RoleName: aws.String(roleName),
+		})
+		if err != nil {
+			return err
+		}
+
+		step.Update("IAM role deleted")
+		step.Done()
+	}
 
 	return err
 }
