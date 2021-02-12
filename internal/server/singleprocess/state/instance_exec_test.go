@@ -1,6 +1,7 @@
 package state
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -189,4 +190,44 @@ func TestCalculateInstanceExecByDeployment(t *testing.T) {
 	reserve2, err := s.CalculateInstanceExecByDeployment(instance.DeploymentId)
 	require.NoError(err)
 	assert.NotEqual(reserve.Id, reserve2.Id)
+}
+
+func TestInstanceExecCreateForVirtualInstance(t *testing.T) {
+	require := require.New(t)
+
+	s := TestState(t)
+	defer s.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	instId := "instA"
+
+	go func() {
+		time.Sleep(time.Second)
+		instance := testInstance(t, nil)
+		instance.Id = instId
+
+		require.NoError(s.InstanceCreate(instance))
+	}()
+
+	{
+		// Create an instance exec
+		rec := &InstanceExec{}
+		require.NoError(s.InstanceExecCreateForVirtualInstance(ctx, instId, rec))
+		require.NotEmpty(rec.Id)
+		require.Equal(instId, rec.InstanceId)
+
+		// Test single get
+		found, err := s.InstanceExecById(rec.Id)
+		require.NoError(err)
+		require.Equal(rec, found)
+	}
+
+	// List them
+	ws := memdb.NewWatchSet()
+	list, err := s.InstanceExecListByInstanceId(instId, ws)
+	require.NoError(err)
+	require.Len(list, 1)
+	require.True(ws.Watch(time.After(50 * time.Millisecond)))
 }

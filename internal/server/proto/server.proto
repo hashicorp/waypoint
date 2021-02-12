@@ -589,21 +589,26 @@ message Job {
   // at any point in the QUEUED state. If QueueJob is called with this set
   // and an existing job is already queued with a matching singleton_id,
   // that job will be overwritten with this job.
+  // This is optional.
   string singleton_id = 8;
 
   // The application to target for the operation. Some operations may allow
   // certain fields of this to be empty, so check with the operation
   // documentation to determine what needs to be set. Generally, project
   // must be set.
+  // This is required.
   Ref.Application application = 2;
 
   // The workspace to perform the operation in.
+  // This is required.
   Ref.Workspace workspace = 3;
 
-  // The runner that should execute this job. This is required.
+  // The runner that should execute this job.
+  // This is required.
   Ref.Runner target_runner = 4;
 
   // Labels are the labels to set for this operation.
+  // This is optional.
   map<string, string> labels = 5;
 
   // data_source determines where the data to operate on (such as the
@@ -615,10 +620,12 @@ message Job {
   // data source dependent but this allows for example setting the Git ref
   // without knowing the full data source. Invalid overrides will fail the
   // job.
+  // Ergo, this is optional.
   DataSource data_source = 6;
   map<string, string> data_source_overrides = 7;
 
   // The operation to execute. See the message docs for details on the operation.
+  // This is required, set one (and one only).
   oneof operation {
     Noop noop = 50;
     BuildOp build = 51;
@@ -1729,6 +1736,9 @@ message Deployment {
   // has the entrypoint available. This means this deployment will not
   // support logs, exec, etc.
   bool has_entrypoint_config = 13;
+
+  // True if the deployment was done by a plugin that defined an exec plugin
+  bool has_exec_plugin = 15;
 
   enum LoadDetails {
     NONE = 0;

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/config"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
 )
 
 // baseCommand is embedded in all commands to provide common logic and data.
@@ -300,6 +301,12 @@ func (c *baseCommand) DoApp(ctx context.Context, f func(context.Context, *client
 		app := c.project.App(appName)
 		c.Log.Debug("will operate on app", "name", appName)
 		apps = append(apps, app)
+	}
+
+	// Inject the metadata about the client, such as the runner id if it is running
+	// a local runner.
+	if id, ok := c.project.LocalRunnerId(); ok {
+		ctx = grpcmetadata.AddRunner(ctx, id)
 	}
 
 	// Just a serialize loop for now, one day we'll parallelize.

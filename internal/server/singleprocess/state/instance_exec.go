@@ -98,6 +98,69 @@ func (s *State) InstanceExecCreateByTargetedInstance(id string, exec *InstanceEx
 	return nil
 }
 
+// InstanceExecCreateForVirtualInstance registers the given InstanceExec record on
+// the instance specified. The instance does not yet have to be known (as it may
+// not yet have connected to the server) so this code will use memdb watchers
+// to detect the instance as it connects and then register the exec.
+func (s *State) InstanceExecCreateForVirtualInstance(ctx context.Context, id string, exec *InstanceExec) error {
+	// If the caller specified an instance id already, then just validate it.
+	if id == "" {
+		return status.Errorf(codes.NotFound, "No instance id given")
+	}
+
+	for {
+		// We have to start a new txn per iteration because we want to be able to observe
+		// the newly created record for the instance.
+		txn := s.inmem.Txn(false)
+
+		// NOTE: we don't defer the txn.Abort() here because Abort() on a readonly txn
+		// is a noop anyway AND we don't want to fill the stack of this function up with
+		// defers, since this is in a loop. Defers in loops, thar be dragons.
+
+		watchCh, raw, err := txn.FirstWatch(instanceTableName, instanceIdIndexName, id)
+		if err != nil {
+			return err
+		}
+
+		// It's there!
+		if raw != nil {
+			break
+		}
+
+		// The watcher here registers itself on the bottom of a leaf node in the memdb
+		// graph, which is fired when a new value is loaded into that leaf. Thus, it can
+		// detect previously unknown values.
+		ws := memdb.NewWatchSet()
+		ws.Add(watchCh)
+
+		// Wait for the instance to show up
+		if err := ws.WatchCtx(ctx); err != nil {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+
+			return err
+		}
+	}
+
+	// Now make a new write txn. We don't want to hold a write txn above (plus we have
+	// to create a one per loop)
+	txn := s.inmem.Txn(true)
+	defer txn.Abort()
+
+	// Set our ID
+	exec.Id = atomic.AddInt64(&instanceExecId, 1)
+	exec.InstanceId = id
+
+	// Insert
+	if err := txn.Insert(instanceExecTableName, exec); err != nil {
+		return status.Errorf(codes.Aborted, err.Error())
+	}
+	txn.Commit()
+
+	return nil
+}
+
 // CalculateInstanceExecByDeployment considers all the instances registered
 // to the given deployment and finds the one that is least loaded. If there
 // are no instances, returns a ResourceExhausted error. Calls to this

@@ -111,6 +111,16 @@ func New(ctx context.Context, opts ...Option) (*Project, error) {
 	return client, nil
 }
 
+// LocalRunnerId returns the id of the runner that this project started
+// This is used to target jobs specificly at this runner.
+func (c *Project) LocalRunnerId() (string, bool) {
+	if c.activeRunner == nil {
+		return "", false
+	}
+
+	return c.activeRunner.Id(), true
+}
+
 // Ref returns the raw Waypoint server API client.
 func (c *Project) Ref() *pb.Ref_Project {
 	return c.project
