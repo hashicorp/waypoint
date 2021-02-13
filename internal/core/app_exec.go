@@ -2,6 +2,8 @@ package core
 
 import (
 	"context"
+	"fmt"
+	"io"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
@@ -23,7 +25,9 @@ import (
 // exec session.
 // The result of running this task is that the platform plugin is called
 // and made available as a virtual instance with the given id.
-func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment) error {
+// enableDynConfig controls if exec jobs will attempt to read from any dynamic config sources.
+// Reading from those sources requires the runner to have credentials to those sources.
+func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment, enableDynConfig bool) error {
 	// We need to get the pushed artifact if it isn't loaded.
 	var artifact *pb.PushedArtifact
 	if d.Preload != nil && d.Preload.Artifact != nil {
@@ -79,9 +83,10 @@ func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment) error {
 	a.logger.Debug("spawn virtual ceb to handle exec")
 
 	virt, err := ceb.NewVirtual(a.logger, ceb.VirtualConfig{
-		DeploymentId: d.Id,
-		InstanceId:   id,
-		Client:       a.client,
+		DeploymentId:        d.Id,
+		InstanceId:          id,
+		Client:              a.client,
+		EnableDynamicConfig: enableDynConfig,
 	})
 
 	if err != nil {
@@ -94,6 +99,7 @@ func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment) error {
 		component:  c,
 		deployment: d,
 		execer:     execer,
+		artifact:   artifact,
 	}, 1)
 }
 
@@ -105,6 +111,7 @@ type pluginExecVirtHandler struct {
 	component  *Component
 	deployment *pb.Deployment
 	execer     component.Execer
+	artifact   *pb.PushedArtifact
 
 	// Set in CreateSession
 	info *ceb.VirtualExecInfo
@@ -121,14 +128,26 @@ type pluginExecVirtHandler struct {
 // ceb instance.
 func (p *pluginExecVirtHandler) CreateSession(
 	ctx context.Context,
-	sess *ceb.VirtualExecInfo,
+	info *ceb.VirtualExecInfo,
 ) (ceb.VirtualExecSession, error) {
 
 	p.log.Info("creating plugin virt handler session")
 
-	p.info = sess
+	p.info = info
 
 	return p, nil
+}
+
+type exitStatusError struct {
+	code int
+}
+
+func (e *exitStatusError) Error() string {
+	return fmt.Sprintf("command exited with status %d", e.code)
+}
+
+func (e *exitStatusError) ExitStatus() int {
+	return e.code
 }
 
 // Run translates the session info set in CreateSession into the
@@ -139,13 +158,19 @@ func (p *pluginExecVirtHandler) Run(ctx context.Context) error {
 
 	defer func() {
 		p.cancel = nil
+
+		// Attempt to cleanup the IO so that we don't have folks hanging
+		if c, ok := p.info.Input.(io.Closer); ok {
+			c.Close()
+		}
 	}()
 
 	esi := &component.ExecSessionInfo{
-		Input:     p.info.Input,
-		Output:    p.info.Output,
-		Error:     p.info.Error,
-		Arguments: p.info.Arguments,
+		Input:       p.info.Input,
+		Output:      p.info.Output,
+		Error:       p.info.Error,
+		Arguments:   p.info.Arguments,
+		Environment: p.info.Environment,
 	}
 
 	if p.info.PTY != nil && p.info.PTY.Enable {
@@ -162,17 +187,26 @@ func (p *pluginExecVirtHandler) Run(ctx context.Context) error {
 
 	p.log.Debug("calling plugin with session-info", "arguments", esi.Arguments)
 
-	_, err := p.app.callDynamicFunc(ctx,
+	result, err := p.app.callDynamicFunc(ctx,
 		p.log,
 		nil,
 		p.component,
 		p.execer.ExecFunc(),
 		argNamedAny("deployment", p.deployment.Deployment),
+		argNamedAny("image", p.artifact.Artifact.Artifact),
 		argmapper.Typed(esi),
 	)
 	if err != nil {
 		p.log.Error("error executing plugin function", "error", err)
 		return err
+	}
+
+	p.log.Info("exec finished", "result", hclog.Fmt("%#v", result))
+
+	if ec, ok := result.(*component.ExecResult); ok {
+		if ec.ExitCode != 0 {
+			return &exitStatusError{ec.ExitCode}
+		}
 	}
 
 	return nil

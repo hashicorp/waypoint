@@ -21,6 +21,9 @@ type VirtualExecInfo struct {
 	// Command line arguments
 	Arguments []string
 
+	// The environment variables to set in the exec context
+	Environment []string
+
 	// Specifies if we and how we should allocate a pty to handle
 	// the command.
 	PTY *pb.ExecStreamRequest_PTY
@@ -57,6 +60,9 @@ type VirtualConfig struct {
 	// How to connect back to the server. Because Virtual is usually used in the context
 	// of a Runner, this can be the same Client the Runner is using.
 	Client pb.WaypointClient
+
+	// Support Dynamic Config
+	EnableDynamicConfig bool
 }
 
 // Virtual represents a virtual CEB instance. It is used to manifest an instance that
@@ -144,6 +150,11 @@ func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) 
 		}
 
 		if msg.Config.Exec != nil {
+			if !v.cfg.EnableDynamicConfig {
+				dynamic = nil
+				dynamicSources = nil
+			}
+
 			env = buildAppConfig(ctx, v.log, configPlugins, static, dynamic, dynamicSources, prevVarsChanged)
 
 			idx := highestExec
@@ -220,11 +231,12 @@ func (v *Virtual) startExec(
 
 	// Spawn a new exec session for this exec config.
 	xsess, err := h.CreateSession(ctx, &VirtualExecInfo{
-		Input:     stdinR,
-		Output:    stdout,
-		Error:     stderr,
-		Arguments: execConfig.Args,
-		PTY:       execConfig.Pty,
+		Input:       stdinR,
+		Output:      stdout,
+		Error:       stderr,
+		Arguments:   execConfig.Args,
+		Environment: env,
+		PTY:         execConfig.Pty,
 	})
 	if err != nil {
 		return err
@@ -255,6 +267,7 @@ func (v *Virtual) startExec(
 	// We don't block on Run in the main goroutine so that we can just shuffle
 	// and orchestrate the data there.
 	go func() {
+		defer v.log.Debug("virtual ceb exec session has ended")
 		done <- xsess.Run(ctx)
 	}()
 
@@ -266,7 +279,14 @@ func (v *Virtual) startExec(
 			v.log.Info("command has finished", "error", err)
 			exitCode := 0
 			if err != nil {
-				exitCode = 1
+				// Following in the path of exec.Command and ssh.ExitError, try to
+				// detect if the error has a exit status associated with it and pass
+				// it back to the client.
+				if es, ok := err.(interface{ ExitStatus() int }); ok {
+					exitCode = es.ExitStatus()
+				} else {
+					exitCode = 1
+				}
 			}
 
 			if err := client.Send(&pb.EntrypointExecRequest{

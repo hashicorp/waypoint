@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package aws.lambda;
+
+option go_package = "waypoint/builtin/aws/lambda";
+
+message Deployment {
+  // Identifier for the deployment, required by Waypoint
+  string id = 1;
+
+  // The AWS region the function is deployed in
+  string region = 3;
+
+  // The ARN for the Lambda function itself.
+  string func_arn = 4;
+
+  // The ARN for the version of the Lambda function this deployment uses.
+  string ver_arn = 5;
+
+  // The ARN of the TargetGroup created for ver_arn
+  string target_group_arn = 6;
+
+  // The version identifier AWS uses for this version (basically a serial increasing number)
+  string version = 7;
+}

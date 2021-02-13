@@ -15,6 +15,11 @@ import (
 
 type RunnerAgentCommand struct {
 	*baseCommand
+
+	// Indicates if exec plugins run by this runner should read dynamic
+	// config. This requires the runner to have credentials to the dynamic
+	// config sources.
+	flagDynConfig bool
 }
 
 func (c *RunnerAgentCommand) Run(args []string) int {
@@ -86,6 +91,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	runner, err := runnerpkg.New(
 		runnerpkg.WithClient(client),
 		runnerpkg.WithLogger(log.Named("runner")),
+		runnerpkg.WithDynamicConfig(c.flagDynConfig),
 	)
 	if err != nil {
 		c.ui.Output(
@@ -129,7 +135,14 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 }
 
 func (c *RunnerAgentCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:   "enable-dynamic-config",
+			Target: &c.flagDynConfig,
+			Usage:  "Allow dynamic config to be created when an exec plugin is used.",
+		})
+	})
 }
 
 func (c *RunnerAgentCommand) AutocompleteArgs() complete.Predictor {

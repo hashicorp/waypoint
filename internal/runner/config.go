@@ -120,7 +120,7 @@ func (r *Runner) recvConfig(
 		// Wait for the next configuration
 		resp, err := client.Recv()
 		if err != nil {
-			if err == io.EOF {
+			if err == io.EOF || err == context.Canceled {
 				return
 			}
 
