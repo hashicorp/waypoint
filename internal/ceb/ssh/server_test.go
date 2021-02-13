@@ -85,7 +85,6 @@ func TestServer(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	sess.Stderr = &buf
 	sess.Stdout = &buf
 
 	err = sess.Run("sh -c 'echo hello'")
