@@ -267,6 +267,7 @@ func (v *Virtual) startExec(
 	// We don't block on Run in the main goroutine so that we can just shuffle
 	// and orchestrate the data there.
 	go func() {
+		defer v.log.Debug("virtual ceb exec session has ended")
 		done <- xsess.Run(ctx)
 	}()
 

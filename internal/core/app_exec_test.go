@@ -85,10 +85,6 @@ func TestAppExec_happy(t *testing.T) {
 	mock.Execer.On("ExecFunc").Return(func(d *any.Any, esi *component.ExecSessionInfo) error {
 		app.logger.Info("called mock ExecFunc")
 
-		if d == nil || d != anyd {
-			return fmt.Errorf("value didn't match")
-		}
-
 		io.Copy(&stdin, esi.Input)
 
 		fmt.Fprintf(esi.Output, "from the mock\n")

@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
@@ -157,6 +158,11 @@ func (p *pluginExecVirtHandler) Run(ctx context.Context) error {
 
 	defer func() {
 		p.cancel = nil
+
+		// Attempt to cleanup the IO so that we don't have folks hanging
+		if c, ok := p.info.Input.(io.Closer); ok {
+			c.Close()
+		}
 	}()
 
 	esi := &component.ExecSessionInfo{
