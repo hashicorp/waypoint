@@ -612,7 +612,8 @@ deploy "kubernetes" {
 		"a map of ports and options that the application is listening on",
 		docs.Summary(
 			"used to define and configure multiple ports that the application is",
-			"listening on. Can also define a 'name', 'host_port', and 'host_ip'.",
+			"listening on. Available keys are 'port', 'name', 'host_port', and 'host_ip'.",
+			"Ports will be TCP protocol.",
 		),
 	)
 
