@@ -144,6 +144,18 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	return p, nil
 }
 
+// Apps returns the list of app names that are present in this project.
+// This is the list of applications defined in the Waypoint configuration
+// and may not match what the Waypoint server knows about.
+func (p *Project) Apps() []string {
+	var result []string
+	for name := range p.apps {
+		result = append(result, name)
+	}
+
+	return result
+}
+
 // App initializes and returns the app with the given name. This
 // returns an error with codes.NotFound if the app is not found.
 func (p *Project) App(name string) (*App, error) {
