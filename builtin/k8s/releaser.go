@@ -93,7 +93,7 @@ func (r *Releaser) Release(
 	}
 
 	if (r.config.Port != 0 || r.config.NodePort != 0) && r.config.Ports != nil {
-		return nil, fmt.Errorf("Cannot define both 'Ports' and 'port' or 'node_port'." +
+		return nil, fmt.Errorf("Cannot define both 'ports' and 'port' or 'node_port'." +
 			" Use 'ports' for configuring multiple service ports.")
 	} else if r.config.Ports == nil && (r.config.Port != 0 || r.config.NodePort != 0) {
 		r.config.Ports = make([]map[string]string, 1)
@@ -331,7 +331,8 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 		"a map of ports and options that the application is listening on",
 		docs.Summary(
 			"used to define and configure multiple ports that the application is",
-			"listening on. Can define a 'port', 'node_port', and 'target_port'.",
+			"listening on. Available keys are 'port', 'node_port', and 'target_port'.",
+			"Ports will be TCP protocol.",
 		),
 	)
 
