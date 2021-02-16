@@ -26,7 +26,11 @@ Router.map(function () {
     this.route('connect');
     this.route('start');
   });
-  this.route('workspaces', { path: '/' });
+  this.route('workspaces', { path: '/' }, function() {
+    this.route('projects', function() {
+      this.route('project', function() {});
+    });
+  });
   this.route('workspace', { path: '/:workspace_id' }, function () {
     this.route('projects', { path: '/' }, function () {
       this.route('project', { path: '/:project_id' }, function () {
@@ -43,6 +47,7 @@ Router.map(function () {
         });
         this.route('settings');
       });
+      this.route('new');
     });
   });
 });
