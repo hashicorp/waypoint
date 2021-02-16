@@ -332,7 +332,9 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 		docs.Summary(
 			"used to define and configure multiple ports that the application is",
 			"listening on. Available keys are 'port', 'node_port', and 'target_port'.",
-			"Ports will be TCP protocol.",
+			"If 'node_port' is set but 'load_balancer' is not, the service will be",
+			" NodePort type. If 'load_balancer' is also set, it will be LoadBalancer.",
+			"Ports defined will be TCP protocol.",
 		),
 	)
 

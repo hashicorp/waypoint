@@ -611,9 +611,9 @@ deploy "kubernetes" {
 		"ports",
 		"a map of ports and options that the application is listening on",
 		docs.Summary(
-			"used to define and configure multiple ports that the application is",
-			"listening on. Available keys are 'port', 'name', 'host_port', and 'host_ip'.",
-			"Ports will be TCP protocol.",
+			"used to define and expose multiple ports that the application is",
+			"listening on for the container in use. Available keys are 'port', 'name'",
+			", 'host_port', and 'host_ip'. Ports defined will be TCP protocol.",
 		),
 	)
 
@@ -685,7 +685,7 @@ deploy "kubernetes" {
 		"namespace",
 		"namespace to target deployment into",
 		docs.Summary(
-			"namespace is the name of the Kubernetes namespace to apply the deployment in",
+			"namespace is the name of the Kubernetes namespace to apply the deployment in.",
 			"This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each",
 		),
 	)
