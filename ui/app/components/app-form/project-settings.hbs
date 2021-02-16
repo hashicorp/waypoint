@@ -11,7 +11,7 @@
           id="git-source-url"
           placeholder="https://github.com/mycompany/awesome-project"
           value={{this.git.url}}
-          {{on "change" this.setGitUrl value="target.value"}}
+          {{on "input" (set this "project.dataSource.git.url" (get _ "target.value"))}}
         />
       </div>
       <div class="pds-formField">
@@ -24,7 +24,7 @@
           id="git-source-ref"
           placeholder="main"
           value={{this.git.ref}}
-          {{on "change" this.setGitRef value="target.value"}}
+          {{on "input" (set this "project.dataSource.git.ref" (get _ "target.value"))}}
         />
       </div>
       <div class="pds-formField">
@@ -37,7 +37,7 @@
           id="git-source-path"
           placeholder="/my-project-path"
           value={{this.git.path}}
-          {{on "change" this.setGitPath value="target.value"}}
+          {{on "input" (set this "project.dataSource.git.path" (get _ "target.value"))}}
         />
       </div>
       <div class="pds-formField">
@@ -75,7 +75,7 @@
             id="git-source-ssh"
             placeholder="*****************"
             value={{this.git.ssh.privateKeyPem}}
-            {{on "change" this.setGitSSH value="target.value"}}
+            {{on "input" (fn this.setSshAuth "privateKeyPem")}}
           />
         </div>
       {{else if this.authBasic}}
@@ -88,8 +88,8 @@
             aria-describedby="{HELP_ID} {ERROR_ID}"
             id="git-source-user"
             placeholder="mitchellh"
-            value={{this.git.basic.username}}
-            {{on "change" this.setGitUsername value="target.value"}}
+            value={{this.project.dataSource.git.basic.username}}
+            {{on "input" (fn this.setBasicAuth "username")}}
           />
         </div>
         <div class="pds-formField">
@@ -101,8 +101,8 @@
             aria-describedby="{HELP_ID} {ERROR_ID}"
             id="git-source-password"
             placeholder="**********"
-            value={{this.git.basic.password}}
-            {{on "change" this.setGitPassword value="target.value"}}
+            value={{this.project.dataSource.git.basic.password}}
+            {{on "input" (fn this.setBasicAuth "password")}}
           />
         </div>
       {{/if}}
