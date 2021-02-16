@@ -62,6 +62,43 @@ func (p *Platform) ValidateAuth() error {
 	return nil
 }
 
+func (p *Platform) ConfigurableNotify(config interface{}) error {
+	c, ok := config.(*Config)
+	if !ok {
+		return fmt.Errorf("Expected type Config")
+	}
+
+	if c.ALB != nil {
+		if c.ALB.ListenerARN != "" {
+			if c.ALB.ZoneId != "" || p.config.ALB.FQDN != "" {
+				return fmt.Errorf("When using an existing listener, Route53 setup is not available")
+			}
+
+			if c.ALB.CertificateId != "" {
+				return fmt.Errorf("When using an existing listener, certification configuration is not available")
+			}
+			validArn := IsValidArn(c.ALB.ListenerARN)
+			if !validArn {
+				return fmt.Errorf("The ALB Listener ARN provided is NOT a valid ARN.  Please double check the ARN to ensure it is a valid ARN.")
+			}
+			albExists := DoesListenerExist(c.ALB.ListenerARN)
+			if !albExists {
+				return fmt.Errorf("The ALB Listener ARN does not exist in your environment.  Please double check to ensure the ARN is the ARN of the ALB Listner.")
+			}
+		}
+		if c.ALB.ZoneId != "" {
+			validZone := DoesRoute53ZoneExist(c.ALB.ZoneId)
+			if !validZone {
+				return fmt.Errorf("The Zone ID supplied does not exist in subscription.  Please ensure the Zone ID exists.")
+			}
+
+		}
+	}
+
+	// config validated ok
+	return nil
+}
+
 // DefaultReleaserFunc implements component.PlatformReleaser
 func (p *Platform) DefaultReleaserFunc() interface{} {
 	return func() *Releaser { return &Releaser{p: p} }
@@ -207,18 +244,6 @@ func (p *Platform) Deploy(
 
 		err error
 	)
-
-	if p.config.ALB != nil {
-		if p.config.ALB.ListenerARN != "" {
-			if p.config.ALB.ZoneId != "" || p.config.ALB.FQDN != "" {
-				return nil, fmt.Errorf("When using an existing listener, Route53 setup is not available")
-			}
-
-			if p.config.ALB.CertificateId != "" {
-				return nil, fmt.Errorf("When using an existing listener, certification configuration is not available")
-			}
-		}
-	}
 
 	if p.config.ServicePort == 0 {
 		p.config.ServicePort = 3000
@@ -1325,13 +1350,13 @@ func (p *Platform) Destroy(
 
 type ALBConfig struct {
 	// Certificate ARN to attach to the load balancer
-	CertificateId string `hcl:"certificate"`
+	CertificateId string `hcl:"certificate,optional"`
 
 	// Route53 Zone to setup record in
-	ZoneId string `hcl:"zone_id"`
+	ZoneId string `hcl:"zone_id,optional"`
 
 	// Fully qualified domain name of the record to create in the target zone id
-	FQDN string `hcl:"domain_name"`
+	FQDN string `hcl:"domain_name,optional"`
 
 	// When set, waypoint will configure the target group into the specified
 	// ALB Listener ARN. This allows for usage of existing ALBs.
