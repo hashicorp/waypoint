@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -91,33 +92,59 @@ func (r *Releaser) Release(
 		labelId: target.Id,
 	}
 
+	if (r.config.Port != 0 || r.config.NodePort != 0) && r.config.Ports != nil {
+		return nil, fmt.Errorf("Cannot define both 'ports' and 'port' or 'node_port'." +
+			" Use 'ports' for configuring multiple service ports.")
+	} else if r.config.Ports == nil && (r.config.Port != 0 || r.config.NodePort != 0) {
+		r.config.Ports = make([]map[string]string, 1)
+		r.config.Ports[0] = map[string]string{
+			"port":        strconv.Itoa(int(r.config.Port)),
+			"target_port": "http",
+			"node_port":   strconv.Itoa(int(r.config.NodePort)),
+		}
+	} else if r.config.Port == 0 && r.config.NodePort == 0 && r.config.Ports == nil {
+		// We don't explicitly set nodeport if Port isn't defined, because
+		// k8s will automatically assign a nodeport if unspecified
+		r.config.Ports = make([]map[string]string, 1)
+		r.config.Ports[0] = map[string]string{
+			"target_port": "http",
+			"port":        strconv.Itoa(int(DefaultPort)),
+		}
+	}
+
 	var checkLB bool
 
 	if r.config.LoadBalancer {
 		service.Spec.Type = corev1.ServiceTypeLoadBalancer
 		checkLB = true
-	} else if r.config.NodePort != 0 {
+	} else if r.config.Ports[0]["node_port"] != "" && r.config.Ports[0]["node_port"] != "0" {
 		service.Spec.Type = corev1.ServiceTypeNodePort
-		if r.config.NodePort < 0 {
-			r.config.NodePort = 0
-		}
 	} else {
 		service.Spec.Type = corev1.ServiceTypeClusterIP
 	}
 
-	port := r.config.Port
-	if port == 0 {
-		port = DefaultPort
+	servicePorts := make([]corev1.ServicePort, len(r.config.Ports))
+	for i, sp := range r.config.Ports {
+		nodePort, _ := strconv.ParseInt(sp["node_port"], 10, 32)
+		port, _ := strconv.ParseInt(sp["port"], 10, 32)
+		if port == 0 {
+			// This likely means port was unset and got parsed to 0
+			port = DefaultPort
+		}
+
+		if sp["target_port"] == "" {
+			sp["target_port"] = "http"
+		}
+
+		servicePorts[i] = corev1.ServicePort{
+			Port:       int32(port),
+			TargetPort: intstr.FromString(sp["target_port"]),
+			Protocol:   corev1.ProtocolTCP,
+			NodePort:   int32(nodePort),
+		}
 	}
 
-	service.Spec.Ports = []corev1.ServicePort{
-		{
-			Port:       int32(port),
-			TargetPort: intstr.FromString("http"),
-			Protocol:   corev1.ProtocolTCP,
-			NodePort:   int32(r.config.NodePort),
-		},
-	}
+	service.Spec.Ports = servicePorts
 
 	// Create/update
 	if create {
@@ -161,8 +188,8 @@ func (r *Releaser) Release(
 			result.Url = "http://" + ingress.Hostname
 		}
 
-		if port != 80 {
-			result.Url = fmt.Sprintf("%s:%d", result.Url, port)
+		if service.Spec.Ports[0].Port != 80 {
+			result.Url = fmt.Sprintf("%s:%d", result.Url, service.Spec.Ports[0].Port)
 		}
 	} else if service.Spec.Ports[0].NodePort > 0 {
 		nodeclient := clientset.CoreV1().Nodes()
@@ -238,11 +265,18 @@ type ReleaserConfig struct {
 
 	// Port configures the port that is used to access the service.
 	// The default is 80.
-	Port int `hcl:"port,optional"`
+	// Not valid if `Ports` is already defined
+	// If defined, will internally be stored into `Ports`
+	Port uint `hcl:"port,optional"`
+
+	// A full resource of options to define ports for a service
+	Ports []map[string]string `hcl:"ports,optional"`
 
 	// NodePort configures a port to access the service on whichever node
 	// is running service.
-	NodePort int `hcl:"node_port,optional"`
+	// Not valid if `Ports` is already defined
+	// If defined, will internally be stored into `Ports`
+	NodePort uint `hcl:"node_port,optional"`
 
 	// Namespace is the Kubernetes namespace to target the deployment to.
 	Namespace string `hcl:"namespace,optional"`
@@ -289,7 +323,19 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	doc.SetField(
 		"port",
 		"the TCP port that the application is listening on",
-		docs.Default("80"),
+		docs.Default(fmt.Sprint(DefaultPort)),
+	)
+
+	doc.SetField(
+		"ports",
+		"a map of ports and options that the application is listening on",
+		docs.Summary(
+			"used to define and configure multiple ports that the application is",
+			"listening on. Available keys are 'port', 'node_port', and 'target_port'.",
+			"If 'node_port' is set but 'load_balancer' is not, the service will be",
+			" NodePort type. If 'load_balancer' is also set, it will be LoadBalancer.",
+			"Ports defined will be TCP protocol.",
+		),
 	)
 
 	doc.SetField(
