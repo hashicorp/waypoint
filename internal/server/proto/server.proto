@@ -603,7 +603,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 63 to 99; // future operation range
+  reserved 64 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -657,6 +657,7 @@ message Job {
     ExecOp exec = 60;
     UpOp up = 61;
     PollOp poll = 62;
+    QueueProjectOp queue_project = 63;
   }
 
   //-----------------------------------------------------------------
@@ -721,6 +722,7 @@ message Job {
     DocsResult docs = 7;
     ConfigSyncResult config_sync = 8;
     UpResult up = 9;
+    QueueProjectResult queue_project = 10;
   }
 
   message DataSource {
@@ -994,6 +996,32 @@ message Job {
   }
 
   message PollResult {}
+
+  // QueueProjectOp queues a job for all applications in a project. The
+  // applications queued may not directly align with what can be found in
+  // ListProjects because the application list will be based on the config
+  // and not the database.
+  message QueueProjectOp {
+    // The template for the job to queue for each application. The "application"
+    // field will be overwritten for each application. All other fields are
+    // untouched.
+    Job job_template = 1;
+  }
+
+  message QueueProjectResult {
+    // All applications that had jobs queued. This may be empty even if the
+    // job was a success. If this is empty, it means that no applications were
+    // found to have jobs queued.
+    repeated Application applications = 1;
+
+    message Application {
+      // Application that was queued.
+      Ref.Application application = 1;
+
+      // ID of the job that was queued.
+      string job_id = 2;
+    }
+  }
 }
 
 message Documentation {
