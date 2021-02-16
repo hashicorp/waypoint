@@ -7,6 +7,7 @@ IMPROVEMENTS:
 * builtin/aws/ecs: Add config option for disabling the load balancer [GH-1082]
 * builtin/aws/ecs: Add awslog driver configuration [GH-1089]
 * builtin/docker: Add Binds, Labels and Networks config options for deploy [GH-1065]
+* builtin/k8s: Support multi-port application configs for deploy and release [GH-1092]
 * cli/main: Add -version flag for CLI version [GH-1049]
 
 BUG FIXES:
