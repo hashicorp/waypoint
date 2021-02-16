@@ -26,6 +26,27 @@ class ProjectModel {
   remoteEnabled: boolean;
 }
 
+const DEFAULT_PROJECT_MODEL = {
+  name: '',
+  applicationsList: [],
+  dataSource: {
+    git: {
+      url: '',
+      path: '',
+      ref: '',
+      basic: {
+        username: '',
+        password: ''
+      },
+      ssh: {
+        privateKeyPem: ''
+      }
+    },
+    local: null,
+  },
+  remoteEnabled: null
+};
+
 interface ProjectSettingsArgs {
   project: ProjectModel
 }
@@ -39,8 +60,12 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   constructor(owner: any, args: any) {
     super(owner, args);
     let { project } = this.args;
-    this.project = Object.assign(new ProjectModel(), project);
-    this.authCase = 4;
+    this.project = Object.assign(DEFAULT_PROJECT_MODEL, project);
+    if (this.project?.dataSource?.git) {
+      this.authCase = project.dataSource?.git?.ssh?.privateKeyPem ? 5 : 4;
+    } else {
+      this.authCase = 4;
+    }
   }
 
   get dataSource(){
@@ -59,34 +84,6 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     return this.dataSource?.git;
   }
 
-  set git(args: any) {
-    this.project.dataSource.git = args;
-  }
-
-  setGitData(prop: string, value: any) {
-    if (!this.dataSource) {
-      this.project.dataSource = {};
-    }
-    if (!this.dataSource.git) {
-      this.project.dataSource.git = {};
-    }
-    this.project.dataSource.git[prop] = value;
-  }
-
-  @action
-  setGitPath(e: any) {
-    this.setGitData('path', e.target.value)
-  }
-
-  @action
-  setGitUrl(e: any) {
-    this.setGitData('url', e.target.value)
-  }
-
-  @action
-  setGitRef(e: any) {
-    this.setGitData('ref', e.target.value)
-  }
 
   @action
   setAuthCase(val:any) {
@@ -94,27 +91,24 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   }
 
   @action
-  setGitSSH(e: any) {
-    if (!this.git.ssh) {
-      this.git.ssh = {};
+  setBasicAuth(path: string, e: any) {
+    if (!this.project.dataSource?.git?.basic) {
+      this.project.dataSource.git.basic = {
+        username: '',
+        password: ''
+      };
     }
-    this.git.ssh['privateKeyPem'] = e.target.value;
+    this.project.dataSource.git.basic[path] = e.target.value;
   }
 
   @action
-  setGitPassword(e: any) {
-    if (!this.git.basic) {
-      this.git.basic = {};
+  setSshAuth(path: string, e: any) {
+    if (!this.project.dataSource?.git?.ssh) {
+      this.project.dataSource.git.basic = {
+        privateKeyPem: '',
+      };
     }
-    this.git.basic['password'] = e.target.value;
-  }
-
-  @action
-  setGitUsername(e: any) {
-    if (!this.git.basic) {
-      this.git.basic = {};
-    }
-    this.git.basic['username'] = e.target.value
+    this.project.dataSource.git.ssh[path] = e.target.value;
   }
 
   @action
@@ -136,12 +130,14 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
       gitBasic.setUsername(this.git.basic.username);
       gitBasic.setPassword(this.git.basic.password);
       git.setBasic(gitBasic);
+      git.clearSsh();
     }
 
     if (this.authSSH) {
       let gitSSH = new Job.Git.SSH();
       gitSSH.setPrivateKeyPem(this.git.ssh.privateKeyPem);
       git.setSsh(gitSSH);
+      git.clearBasic();
     }
 
     dataSource.setGit(git);
