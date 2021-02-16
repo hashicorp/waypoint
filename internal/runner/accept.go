@@ -113,7 +113,10 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 			"expected job assignment, server sent %T",
 			resp.Event)
 	}
-	log = log.With("job_id", assignment.Assignment.Job.Id)
+	log = log.With(
+		"job_id", assignment.Assignment.Job.Id,
+		"job_op", fmt.Sprintf("%T", assignment.Assignment.Job.Operation),
+	)
 	log.Info("job assignment received")
 
 	// Used to test the behavior of accepting a job while
@@ -378,9 +381,7 @@ func (r *Runner) prepareAndExecuteJob(
 		if err == nil {
 			// Execute the job. We have to close the UI right afterwards to
 			// ensure that no more output is writting to the client.
-			log.Info("starting job execution")
 			result, err = r.executeJob(ctx, log, ui, job, wd)
-			log.Debug("job finished", "error", err)
 		}
 	}
 
