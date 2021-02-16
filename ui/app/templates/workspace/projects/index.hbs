@@ -18,7 +18,10 @@
       {{/if}}
     </small>
   </div>
-  <LinkTo @route="workspace.projects.new" class="pds-button pds--primary"><Pds::Icon @type="plus-plain"/> New project</LinkTo>
+  <LinkTo @route="workspace.projects.new" class="pds-button pds--primary pds--iconStart">
+    <Pds::Icon @type="plus-plain" class="pds-button__iconStart"/>
+    &nbsp;New project
+  </LinkTo>
 </PageHeader>
 
 <div data-test-project-list=true>

@@ -5,4 +5,26 @@
   </div>
 </PageHeader>
 
+<form class="pds-form">
+  <div part="fields">
+    <fieldset class="pds-formFieldSet">
+      <div class="pds-formField">
+        <label for="project-name" class="pds-fieldName">
+          Project Name
+        </label>
+        <Pds::Input
+          @type="text"
+          aria-describedby="{HELP_ID} {ERROR_ID}"
+          id="git-source-url"
+          placeholder="my-new-project"
+          value={{this.model.name}}
+          {{on "input" (set this "model.name" (get _ "target.value"))}}
+        />
+      </div>
+    </fieldset>
+  </div>
+  <Pds::Button @variant="primary" {{on "click" this.saveProject}}>Next</Pds::Button>
+</form>
+
+
 {{outlet}}
