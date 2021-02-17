@@ -7,6 +7,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * plugin/docker: support for building, pulling, and pushing Docker images without a Docker daemon available. [GH-970]
+* plugin/k8s: plugin will attempt in-cluster auth first if no kubeconfig file is specified [GH-1103]
 
 BUG FIXES:
 
