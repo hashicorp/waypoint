@@ -195,10 +195,7 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 		return nil, err
 	}
 
-	var (
-		result []interface{}
-		first  time.Time
-	)
+	var result []interface{}
 
 	s.db.View(func(tx *bolt.Tx) error {
 		for {
@@ -241,15 +238,6 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 				}
 			}
 
-			// Capture the time value to use for a possible WatchSet below
-			if first.IsZero() {
-				if idx == opStartTimeIndexName {
-					first = record.StartTime
-				} else {
-					first = record.CompleteTime
-				}
-			}
-
 			result = append(result, value)
 
 			// If we have a limit, check that now
@@ -262,18 +250,18 @@ func (op *appOperation) List(s *State, opts *listOperationsOptions) ([]interface
 	// We can derive a watchch by doing a get on the "first" prefix, discarding the result, and
 	// just use the watchch.
 	if opts.WatchSet != nil {
-		iter, err := memTxn.Get(
+		watchCh, _, err := memTxn.FirstWatch(
 			op.memTableName(),
-			idx,
+			opSeqIndexName,
 			opts.Application.Project,
 			opts.Application.Application,
-			first,
+			uint(0),
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		opts.WatchSet.Add(iter.WatchCh())
+		opts.WatchSet.Add(watchCh)
 	}
 
 	return result, nil

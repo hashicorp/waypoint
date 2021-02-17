@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/require"
 
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
@@ -384,6 +385,80 @@ func TestAppOperation(t *testing.T) {
 		})
 		require.NoError(err)
 		require.Len(results, 1)
+	})
+
+	t.Run("list with memwatch", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		ref := &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		}
+
+		{
+			ts := time.Now().Add(5 * time.Hour)
+			pt, err := ptypes.TimestampProto(ts)
+			require.NoError(err)
+
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id:          "A",
+				Application: ref,
+				Status: &pb.Status{
+					State:     pb.Status_SUCCESS,
+					StartTime: pt,
+				},
+			})))
+		}
+		{
+			ts := time.Now().Add(6 * time.Hour)
+			pt, err := ptypes.TimestampProto(ts)
+			require.NoError(err)
+
+			require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+				Id:          "B",
+				Application: ref,
+				Status: &pb.Status{
+					State:     pb.Status_SUCCESS,
+					StartTime: pt,
+				},
+			})))
+		}
+
+		ws := memdb.NewWatchSet()
+
+		// make sure the watchset was populated
+		require.Equal(0, len(ws))
+
+		// List with a filter
+		results, err := op.List(s, &listOperationsOptions{
+			Application: ref,
+			WatchSet:    ws,
+		})
+		require.NoError(err)
+		require.Len(results, 2)
+
+		// make sure the watchset was populated
+		require.Equal(1, len(ws))
+
+		// Now add new item to fire the watch channel
+		ts := time.Now().Add(8 * time.Hour)
+		pt, err := ptypes.TimestampProto(ts)
+		require.NoError(err)
+
+		require.NoError(op.Put(s, false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id:          "D",
+			Application: ref,
+			Status: &pb.Status{
+				State:     pb.Status_SUCCESS,
+				StartTime: pt,
+			},
+		})))
+
+		// Observe that the watch fires
+		require.False(ws.Watch(time.After(1 * time.Second)))
 	})
 }
 
