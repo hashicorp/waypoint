@@ -924,9 +924,9 @@ message Job {
 
   message ExecResult {}
 
-  // Used to start a platform's exec function within a runner. This is only used
-  // there are no long running instances for a deployment and can fail if the
-  // platform plugin does not provide an exec function.
+  // Used to start a platform's log function within a runner. API users
+  // interested in viewing logs should use the GetLogStream API. This
+  // is only meant for implementing custom log handling by plugins.
   message LogsOp {
     // Id to assign the virtual instance created
     string instance_id = 1;
@@ -935,8 +935,11 @@ message Job {
     // application code will be available within the exec session.
     Deployment deployment = 2;
 
+    // Indicates the time horizon that log entries must be beyond for them
+    // to be emitted.
     google.protobuf.Timestamp start_time = 3;
 
+    // The maximum of log entries to be output.
     int32 limit = 4;
   }
 

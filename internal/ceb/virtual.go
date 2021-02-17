@@ -336,9 +336,9 @@ func (v *Virtual) startExec(
 	}
 }
 
-// RunExec connects to the server and handles any inbound Exec requests via the
-// VirtualExecHandler. The count parameter inidcates how many exec sessions to handle
-// before returning. If count is less than 0, it handles sessions forever.
+// RunLogs connects to the server and streams logs from the function passed
+// back to the server. The log entries will be associated with the Instance Id
+// the virtual CEB is using.
 func (v *Virtual) RunLogs(
 	ctx context.Context,
 	startTime time.Time,
@@ -389,6 +389,7 @@ func (v *Virtual) RunLogs(
 			return err
 		case lev, ok := <-logs:
 			if !ok {
+				// the logs channel was closed, so the plugin must have exited
 				return nil
 			}
 
