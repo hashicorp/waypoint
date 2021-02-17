@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
@@ -183,10 +184,15 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 }
 
 func TestServiceGetLogStream_byApp(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	log := hclog.New(&hclog.LoggerOptions{
+		Level: hclog.Trace,
+	})
 
 	// Create our server
-	impl, err := New(WithDB(testDB(t)))
+	impl, err := New(WithDB(testDB(t)), WithLogger(log))
 	require.NoError(t, err)
 	client := server.TestServer(t, impl)
 
@@ -206,6 +212,10 @@ func TestServiceGetLogStream_byApp(t *testing.T) {
 			Workspace:   refWs,
 			Component: &pb.Component{
 				Name: "testapp",
+			},
+			State: pb.Operation_CREATED,
+			Status: &pb.Status{
+				State: pb.Status_SUCCESS,
 			},
 		}),
 	})
