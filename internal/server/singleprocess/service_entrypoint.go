@@ -213,6 +213,8 @@ func (s *service) EntrypointLogStream(
 					// These are used by the logs plugin functionality to provide a place
 					// to rendezvous logs sent by the plugin with the waiting client
 					// without generating a full Instance.
+
+					log.Info("no Instance found, attempting to lookup InstanceLogs record instead")
 					il, err := s.state.InstanceLogsByInstanceId(batch.InstanceId)
 					if err != nil {
 						return err
