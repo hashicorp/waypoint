@@ -729,10 +729,57 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 		return err
 	}
 
+	s.Update("Deleting any automatically installed runners...")
+
+	// create our wait channel to later poll for statefulset+pod deletion
+	w, err := clientset.AppsV1().Deployments(i.config.namespace).Watch(
+		ctx,
+		metav1.ListOptions{
+			LabelSelector: "app=" + runnerName,
+		},
+	)
+
+	// send DELETE to statefulset collection
+	if err = clientset.AppsV1().Deployments(i.config.namespace).DeleteCollection(
+		ctx,
+		metav1.DeleteOptions{},
+		metav1.ListOptions{
+			LabelSelector: "app=" + runnerName,
+		},
+	); err != nil {
+		ui.Output(
+			"Error deleting Waypoint deployment: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	// wait for deletion to complete
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		select {
+		case wCh := <-w.ResultChan():
+			if wCh.Type == "DELETED" {
+				w.Stop()
+				return true, nil
+			}
+			log.Trace("deployment collection not fully removed, waiting")
+			return false, nil
+		default:
+			log.Trace("no message received on watch.ResultChan(), waiting for Event")
+			return false, nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	s.Update("Runner deployment deleted")
+	s.Done()
+
+	s = sg.Add("")
 	s.Update("Deleting statefulset and pods...")
 
 	// create our wait channel to later poll for statefulset+pod deletion
-	w, err := clientset.AppsV1().StatefulSets(i.config.namespace).Watch(
+	w, err = clientset.AppsV1().StatefulSets(i.config.namespace).Watch(
 		ctx,
 		metav1.ListOptions{
 			LabelSelector: "app=" + serverName,
