@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 )
@@ -150,18 +151,20 @@ func (s *VCSGit) refTagFunc(args []cty.Value, retType cty.Type) (cty.Value, erro
 	if err != nil {
 		return cty.UnknownVal(cty.String), err
 	}
-	defer iter.Close()
-	for {
-		tagRef, err := iter.Next()
-		if err == io.EOF {
-			break
+
+	var tagRefStr string
+	err = iter.ForEach(func(t *plumbing.Reference) error {
+		if t.Hash() == ref.Hash() {
+			tagRefStr = t.Name().Short()
 		}
-		if err != nil {
-			return cty.UnknownVal(cty.String), err
-		}
-		if tagRef.Hash() == ref.Hash() {
-			return cty.StringVal(tagRef.Name().Short()), nil
-		}
+		return nil
+	})
+	if err != nil {
+		return cty.UnknownVal(cty.String), err
+	}
+
+	if tagRefStr != "" {
+		return cty.StringVal(tagRefStr), nil
 	}
 
 	return cty.StringVal(""), nil
