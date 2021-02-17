@@ -119,6 +119,39 @@ func TestGitSourceOverride(t *testing.T) {
 		},
 
 		{
+			"ref with auth",
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "foo",
+						Auth: &pb.Job_Git_Basic_{
+							Basic: &pb.Job_Git_Basic{
+								Username: "foo",
+								Password: "bar",
+							},
+						},
+					},
+				},
+			},
+			map[string]string{"ref": "bar"},
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "foo",
+						Ref: "bar",
+						Auth: &pb.Job_Git_Basic_{
+							Basic: &pb.Job_Git_Basic{
+								Username: "foo",
+								Password: "bar",
+							},
+						},
+					},
+				},
+			},
+			"",
+		},
+
+		{
 			"invalid",
 			&pb.Job_DataSource{
 				Source: &pb.Job_DataSource_Git{

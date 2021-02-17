@@ -195,6 +195,7 @@ func (s *GitSource) Get(
 	if ref := source.Git.Ref; ref != "" {
 		// We have to fetch all the refs so that ResolveRevisoin can find them.
 		err = repo.Fetch(&git.FetchOptions{
+			Auth:     auth,
 			RefSpecs: []config.RefSpec{"refs/*:refs/*", "HEAD:refs/heads/HEAD"},
 		})
 		if err != nil {
