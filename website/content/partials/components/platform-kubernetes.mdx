@@ -60,9 +60,18 @@ By default uses from current user's home directory.
 
 Namespace to target deployment into.
 
-Namespace is the name of the Kubernetes namespace to apply the deployment in This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each.
+Namespace is the name of the Kubernetes namespace to apply the deployment in. This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each.
 
 - Type: **string**
+- **Optional**
+
+#### ports
+
+A map of ports and options that the application is listening on.
+
+Used to define and expose multiple ports that the application is listening on for the container in use. Available keys are 'port', 'name' , 'host_port', and 'host_ip'. Ports defined will be TCP protocol.
+
+- Type: **[]map[string]string**
 - **Optional**
 
 #### probe_path
@@ -81,6 +90,15 @@ The number of replicas to maintain.
 If the replica count is maintained outside waypoint, for instance by a pod autoscaler, do not set this variable.
 
 - Type: **int32**
+- **Optional**
+
+#### resources
+
+A map of resource limits and requests to apply to a pod on deploy.
+
+Resource limits and requests for a pod. limits and requests options must start with either 'limits*' or 'requests*'. Any other options will be ignored.
+
+- Type: **map[string]string**
 - **Optional**
 
 #### scratch_path
@@ -104,6 +122,8 @@ Service account is the name of the Kubernetes service account to add to the pod.
 #### service_port
 
 The TCP port that the application is listening on.
+
+By default, this config variable is used for exposing a single port for the container in use. For multi-port configuration, use 'ports' instead.
 
 - Type: **uint**
 - **Optional**
