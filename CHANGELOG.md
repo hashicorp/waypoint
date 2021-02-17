@@ -10,6 +10,26 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.2.2 (February 17, 2021)
+
+FEATURES:
+
+IMPROVEMENTS:
+
+* builtin/aws/ecs: Add config option for disabling the load balancer [GH-1082]
+* builtin/aws/ecs: Add awslog driver configuration [GH-1089]
+* builtin/docker: Add Binds, Labels and Networks config options for deploy [GH-1065]
+* builtin/k8s: Support multi-port application configs for deploy and release [GH-1092]
+* cli/main: Add -version flag for CLI version [GH-1049]
+
+BUG FIXES:
+
+* bulitin/aws/ecs: Determine load balancer and target group for pre-existing listeners [GH-1085]
+* builtin/aws/ecs: fix listener deletion on deployment deletion [GH-1087]
+* builtin/k8s: Handle application config sync with K8s and Secrets [GH-1073]
+* cli/hostname: fix panic with no hostname arg specified [GH-1044]
+* core: Fix empty gitreftag response in config [GH-1047]
+
 ## 0.2.1 (February 02, 2021)
 
 FEATURES:
