@@ -34,7 +34,6 @@ func (r *Runner) executePollOp(
 	if err != nil {
 		return nil, err
 	}
-	project := resp.Project
 
 	// Get the current ref for the default workspace.
 	//
@@ -71,60 +70,65 @@ func (r *Runner) executePollOp(
 		return nil, err
 	}
 
-	// Setup our base job that we'll queue an "up" for. We'll setup a new
-	// job for each application within the project but this will be the
-	// common fields.
-	baseJob := func() *pb.Job {
-		return &pb.Job{
-			TargetRunner: &pb.Ref_Runner{
-				Target: &pb.Ref_Runner_Any{
-					Any: &pb.Ref_RunnerAny{},
-				},
+	// Setup our job template. This will be used with the QueueProject operation
+	// to queue an "up" for each app within the project.
+	jobTemplate := &pb.Job{
+		TargetRunner: &pb.Ref_Runner{
+			Target: &pb.Ref_Runner_Any{
+				Any: &pb.Ref_RunnerAny{},
+			},
+		},
+
+		// NOTE(mitchellh): default workspace only for now
+		Workspace: &pb.Ref_Workspace{Workspace: "default"},
+
+		// Reuse the same data source and bring in our overrides to set the ref
+		DataSource:          job.DataSource,
+		DataSourceOverrides: overrides,
+
+		// Doing a plain old "up"
+		Operation: &pb.Job_Up{
+			Up: &pb.Job_UpOp{},
+		},
+	}
+
+	log.Debug("queueing job")
+	queueResp, err := r.client.QueueJob(ctx, &pb.QueueJobRequest{
+		Job: &pb.Job{
+			// We set a singleton ID to verify that we only setup
+			// a queue operation once (in case it is taking longer to
+			// process than the poll interval).
+			SingletonId: strings.ToLower(fmt.Sprintf(
+				"poll-trigger/%s/%s/%s",
+				job.Application.Project,
+				job.Application.Application,
+				job.Workspace.Workspace,
+			)),
+
+			// Target only our project, we don't need an app for this.
+			Application: &pb.Ref_Application{
+				Project: resp.Project.Name,
 			},
 
-			// NOTE(mitchellh): default workspace only for now
-			Workspace: &pb.Ref_Workspace{Workspace: "default"},
-
-			// Reuse the same data source and bring in our overrides to set the ref
-			DataSource:          job.DataSource,
-			DataSourceOverrides: overrides,
+			// Copy all of these fields from the job template since we
+			// want to execute the same way.
+			TargetRunner:        jobTemplate.TargetRunner,
+			Workspace:           jobTemplate.Workspace,
+			DataSource:          jobTemplate.DataSource,
+			DataSourceOverrides: jobTemplate.DataSourceOverrides,
 
 			// Doing a plain old "up"
-			Operation: &pb.Job_Up{
-				Up: &pb.Job_UpOp{},
+			Operation: &pb.Job_QueueProject{
+				QueueProject: &pb.Job_QueueProjectOp{
+					JobTemplate: jobTemplate,
+				},
 			},
-		}
+		},
+	})
+	if err != nil {
+		return nil, err
 	}
-
-	// Go through each application registered with the project and run up.
-	for _, app := range project.Applications {
-		job := baseJob()
-		job.Application = &pb.Ref_Application{
-			Project:     project.Name,
-			Application: app.Name,
-		}
-
-		// We set a singleton ID so that future polling operations will
-		// override this if it already exists.
-		job.SingletonId = strings.ToLower(fmt.Sprintf(
-			"poll-trigger/%s/%s/%s",
-			job.Application.Project,
-			job.Application.Application,
-			job.Workspace.Workspace,
-		))
-
-		log := log.With("project", project.Name, "app", app.Name)
-
-		// Queue it
-		log.Debug("queueing job")
-		resp, err := r.client.QueueJob(ctx, &pb.QueueJobRequest{
-			Job: job,
-		})
-		if err != nil {
-			return nil, err
-		}
-		log.Debug("job queued", "job_id", resp.JobId)
-	}
+	log.Debug("job queued", "job_id", queueResp.JobId)
 
 	return &pb.Job_Result{}, nil
 }
