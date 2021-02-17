@@ -11,8 +11,29 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// clientset returns a K8S clientset and configured namespace.
+// clientset returns a K8S clientset and configured namespace. This will
+// attempt to use in-cluster auth if available if kubeconfig is not explicitly
+// specified. Otherwise, this will fall back to out of cluster auth.
 func clientset(kubeconfig, context string) (*kubernetes.Clientset, string, *rest.Config, error) {
+	if kubeconfig == "" {
+		cs, ns, c, err := clientsetInCluster()
+		if err == nil {
+			return cs, ns, c, nil
+		}
+
+		// If we got an error about not being in the cluster, that's okay
+		// and fall back to out of cluster auth. If we got any other error
+		// though then report an error.
+		if err != rest.ErrNotInCluster {
+			return nil, "", nil, err
+		}
+	}
+
+	return clientsetOutOfCluster(kubeconfig, context)
+}
+
+// clientsetOutOfCluster loads a Kubernetes clientset using only a kubeconfig.
+func clientsetOutOfCluster(kubeconfig, context string) (*kubernetes.Clientset, string, *rest.Config, error) {
 	loader := clientcmd.NewDefaultClientConfigLoadingRules()
 
 	// Path to the kube config file
@@ -52,15 +73,15 @@ func clientset(kubeconfig, context string) (*kubernetes.Clientset, string, *rest
 
 // clientsetInCluster returns a K8S clientset and configured namespace for
 // in-cluster usage.
-func clientsetInCluster() (*kubernetes.Clientset, string, error) {
+func clientsetInCluster() (*kubernetes.Clientset, string, *rest.Config, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, err
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, err
 	}
 
 	ns := "default"
@@ -70,5 +91,5 @@ func clientsetInCluster() (*kubernetes.Clientset, string, error) {
 		}
 	}
 
-	return clientset, ns, nil
+	return clientset, ns, config, nil
 }

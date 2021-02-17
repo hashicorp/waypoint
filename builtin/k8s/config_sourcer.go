@@ -68,7 +68,7 @@ func (cs *ConfigSourcer) read(
 		cs.secretCache = map[string]*cachedSecret{}
 	}
 
-	clientset, ns, err := clientsetInCluster()
+	clientset, ns, _, err := clientsetInCluster()
 	if err != nil {
 		return nil, err
 	}
