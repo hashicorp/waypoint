@@ -38,6 +38,15 @@ This config block can be used to configure a remote Docker engine. By default Wa
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### binds
+
+A 'source:destination' list of folders to mount onto the container from the host.
+
+A list of folders to mount onto the container from the host. The expected format for each string entry in the list is `source:destination`. So for example: `binds: ["host_folder/scripts:/scripts"].
+
+- Type: **[]string**
+- **Optional**
+
 #### command
 
 The command to run to start the application in the container.
@@ -53,6 +62,25 @@ Always pull the docker container from the registry.
 - Type: **bool**
 - **Optional**
 - Default: false
+
+#### labels
+
+A map of key/value pairs to label the docker container with.
+
+A map of key/value pair(s), stored in docker as a string. Each key/value pair must be unique. Validiation occurs at the docker layer, not in Waypoint. Label keys are alphanumeric strings which may contain periods (.) and hyphens (-).
+
+- Type: **map[string]string**
+- **Optional**
+
+#### networks
+
+An list of strings with network names to connect the container to.
+
+A list of networks to connect the container to. By default the container will always connect to the `waypoint` network.
+
+- Type: **[]string**
+- **Optional**
+- Default: waypoint
 
 #### scratch_path
 

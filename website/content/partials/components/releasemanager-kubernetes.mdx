@@ -52,13 +52,22 @@ The TCP port that the Service should consume as a NodePort.
 
 If this is set but load_balancer is not, the service will be NodePort type, but if load_balancer is also set, it will be LoadBalancer.
 
-- Type: **int**
+- Type: **uint**
 - **Optional**
 
 #### port
 
 The TCP port that the application is listening on.
 
-- Type: **int**
+- Type: **uint**
 - **Optional**
 - Default: 80
+
+#### ports
+
+A map of ports and options that the application is listening on.
+
+Used to define and configure multiple ports that the application is listening on. Available keys are 'port', 'node_port', and 'target_port'. If 'node_port' is set but 'load_balancer' is not, the service will be NodePort type. If 'load_balancer' is also set, it will be LoadBalancer. Ports defined will be TCP protocol.
+
+- Type: **[]map[string]string**
+- **Optional**
