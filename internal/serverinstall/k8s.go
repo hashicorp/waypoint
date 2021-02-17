@@ -875,8 +875,204 @@ func (i *K8sInstaller) InstallRunner(
 	ctx context.Context,
 	opts *InstallRunnerOpts,
 ) error {
-	// TODO
+	ui := opts.UI
+	log := opts.Log
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Inspecting Kubernetes cluster...")
+	defer func() { s.Abort() }()
+
+	// Build our K8S client.
+	configOverrides := &clientcmd.ConfigOverrides{}
+	if i.config.k8sContext != "" {
+		configOverrides = &clientcmd.ConfigOverrides{
+			CurrentContext: i.config.k8sContext,
+		}
+	}
+	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		configOverrides,
+	)
+
+	// Discover the current target namespace in the user's config so if they
+	// run kubectl commands waypoint will show up. If we use the default namespace
+	// they might not see the objects we've created.
+	if i.config.namespace == "" {
+		namespace, _, err := newCmdConfig.Namespace()
+		if err != nil {
+			ui.Output(
+				"Error getting namespace from client config: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
+		}
+		i.config.namespace = namespace
+	}
+
+	clientconfig, err := newCmdConfig.ClientConfig()
+	if err != nil {
+		ui.Output(
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	clientset, err := kubernetes.NewForConfig(clientconfig)
+	if err != nil {
+		ui.Output(
+			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	// Decode our configuration
+	deployment, err := newDeployment(i.config, opts)
+	if err != nil {
+		ui.Output(
+			"Error generating deployment configuration: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	s.Update("Creating Deployment for Runner")
+
+	deploymentClient := clientset.AppsV1().Deployments(i.config.namespace)
+	_, err = deploymentClient.Create(context.TODO(), deployment, metav1.CreateOptions{})
+	if err != nil {
+		ui.Output(
+			"Error creating deployment %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
+
+	s.Done()
+	s = sg.Add("Waiting for Kubernetes Deployment to be ready...")
+	log.Info("waiting for server deployment to become ready")
+	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+		ss, err := clientset.AppsV1().Deployments(i.config.namespace).Get(
+			ctx, runnerName, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+
+		if ss.Status.ReadyReplicas != ss.Status.Replicas {
+			log.Trace("deployment not ready, waiting")
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	s.Update("Kubernetes Deployment for Waypoint runner reporting ready")
+	s.Done()
+
 	return nil
+}
+
+// newDeployment takes in a k8sConfig and creates a new Waypoint Deployment for
+// deploying Waypoint runners.
+func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, error) {
+	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.cpuRequest, err)
+	}
+
+	memRequest, err := resource.ParseQuantity(c.memRequest)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse memory request resource %s: %s", c.memRequest, err)
+	}
+
+	securityContext := &apiv1.PodSecurityContext{}
+	if !c.openshift {
+		securityContext.FSGroup = int64Ptr(1000)
+	}
+
+	// Build our env vars so we can connect back to the Waypoint server.
+	var envs []apiv1.EnvVar
+	for _, line := range opts.AdvertiseClient.Env() {
+		idx := strings.Index(line, "=")
+		if idx == -1 {
+			// Should never happen but let's not crash.
+			continue
+		}
+
+		key := line[:idx]
+		value := line[idx+1:]
+		envs = append(envs, apiv1.EnvVar{
+			Name:  key,
+			Value: value,
+		})
+	}
+
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      runnerName,
+			Namespace: c.namespace,
+			Labels: map[string]string{
+				"app": runnerName,
+			},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: int32Ptr(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": runnerName,
+				},
+			},
+			Template: apiv1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": runnerName,
+					},
+				},
+				Spec: apiv1.PodSpec{
+					ImagePullSecrets: []apiv1.LocalObjectReference{
+						{
+							Name: c.imagePullSecret,
+						},
+					},
+					SecurityContext: securityContext,
+					Containers: []apiv1.Container{
+						{
+							Name:            "runner",
+							Image:           c.serverImage,
+							ImagePullPolicy: apiv1.PullPolicy(c.imagePullPolicy),
+							Env:             envs,
+							Command:         []string{serviceName},
+							Args: []string{
+								"runner",
+								"agent",
+								"-vvv",
+								"-liveness-tcp-addr=:1234",
+							},
+							LivenessProbe: &apiv1.Probe{
+								Handler: apiv1.Handler{
+									TCPSocket: &apiv1.TCPSocketAction{
+										Port: intstr.FromInt(1234),
+									},
+								},
+							},
+							Resources: apiv1.ResourceRequirements{
+								Requests: apiv1.ResourceList{
+									apiv1.ResourceMemory: memRequest,
+									apiv1.ResourceCPU:    cpuRequest,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}, nil
 }
 
 // newStatefulSet takes in a k8sConfig and creates a new Waypoint Statefulset
