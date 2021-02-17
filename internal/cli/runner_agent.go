@@ -2,6 +2,7 @@ package cli
 
 import (
 	"io/ioutil"
+	"net"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/posener/complete"
@@ -20,6 +21,10 @@ type RunnerAgentCommand struct {
 	// config. This requires the runner to have credentials to the dynamic
 	// config sources.
 	flagDynConfig bool
+
+	// Specifies an address to setup a noop TCP server on that can be
+	// used for liveness probes.
+	flagLivenessTCPAddr string
 }
 
 func (c *RunnerAgentCommand) Run(args []string) int {
@@ -108,6 +113,33 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 		return 1
 	}
 
+	// If we have a liveness address setup, start the liveness server.
+	if addr := c.flagLivenessTCPAddr; addr != "" {
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			c.ui.Output(
+				"Error starting liveness server: %s", err.Error(),
+				terminal.WithErrorStyle(),
+			)
+			return 1
+		}
+		defer ln.Close()
+
+		go func() {
+			for {
+				conn, err := ln.Accept()
+				if err != nil {
+					log.Warn("error accepting liveness connection: %s", err)
+				}
+
+				// Immediately close. The liveness check only ensures a
+				// connection can be established, we close immediately
+				// thereafter.
+				conn.Close()
+			}
+		}()
+	}
+
 	// Accept jobs in goroutine so that we can interrupt it.
 	go func() {
 		for {
@@ -141,6 +173,14 @@ func (c *RunnerAgentCommand) Flags() *flag.Sets {
 			Name:   "enable-dynamic-config",
 			Target: &c.flagDynConfig,
 			Usage:  "Allow dynamic config to be created when an exec plugin is used.",
+		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "liveness-tcp-addr",
+			Target: &c.flagLivenessTCPAddr,
+			Usage: "If this is set, the runner will open a TCP listener on this " +
+				"address when it is running. This can be used as a liveness probe " +
+				"endpoint. The TCP server serves no other purpose.",
 		})
 	})
 }
