@@ -15,8 +15,8 @@ export default class WorkspaceProjectsNew extends Controller {
     ref.setName(project.name);
     let req = new UpsertProjectRequest();
     req.setProject(ref);
-    await this.api.client.upsertProject(req, this.api.WithMeta());
-    // route to new project settings
+    let newProject = await this.api.client.upsertProject(req, this.api.WithMeta());
+    this.transitionToRoute('workspace.projects.project', newProject.toObject().project?.name);
   }
 
 }
