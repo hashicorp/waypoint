@@ -71,32 +71,19 @@ func (p *Platform) ConfigurableNotify(config interface{}) error {
 	if c.ALB != nil {
 		if c.ALB.ListenerARN != "" {
 			if c.ALB.ZoneId != "" || p.config.ALB.FQDN != "" {
-				return fmt.Errorf("When using an existing listener, Route53 setup is not available")
+				return fmt.Errorf("When using an existing listener, Route53 setup is not available\n")
 			}
 
 			if c.ALB.CertificateId != "" {
-				return fmt.Errorf("When using an existing listener, certification configuration is not available")
+				return fmt.Errorf("When using an existing listener, certification configuration is not available\n")
 			}
 			validArn := IsValidArn(c.ALB.ListenerARN)
 			if !validArn {
-				return fmt.Errorf("The ALB Listener ARN provided is NOT a valid ARN.  Please double check the ARN to ensure it is a valid ARN.")
-			}
-			sess := CreateSession()
-			client := elbv2.New(sess)
-			albExists := DoesListenerExist(c.ALB.ListenerARN, client)
-			if !albExists {
-				return fmt.Errorf("The ALB Listener ARN does not exist in your environment.  Please double check to ensure the ARN is the ARN of the ALB Listner.")
-			}
-		}
-		if c.ALB.ZoneId != "" {
-			sess := CreateSession()
-			client := route53.New(sess)
-			validZone := DoesRoute53ZoneExist(c.ALB.ZoneId, client)
-			if !validZone {
-				return fmt.Errorf("The Zone ID supplied does not exist in subscription.  Please ensure the Zone ID exists.")
+				return fmt.Errorf("The ALB Listener ARN provided is NOT a valid ARN.  Please double check the ARN to ensure it is a valid ARN.\n")
 			}
 
 		}
+
 	}
 
 	// config validated ok
@@ -248,6 +235,24 @@ func (p *Platform) Deploy(
 
 		err error
 	)
+	sess = CreateSession()
+	if p.config.ALB != nil {
+		if p.config.ALB.ListenerARN != "" {
+			client := elbv2.New(sess)
+			albExists := DoesListenerExist(p.config.ALB.ListenerARN, client)
+			if !albExists {
+				return nil, fmt.Errorf("The ALB Listener ARN does not exist in your environment.  Please double check to ensure the ARN is the ARN of the ALB Listner.")
+			}
+		}
+		if p.config.ALB.ZoneId != "" {
+			client := route53.New(sess)
+			validZone := DoesRoute53ZoneExist(p.config.ALB.ZoneId, client)
+			if !validZone {
+				return nil, fmt.Errorf("The Zone ID supplied does not exist in subscription.  Please ensure the Zone ID exists.")
+			}
+
+		}
+	}
 
 	if p.config.ServicePort == 0 {
 		p.config.ServicePort = 3000
