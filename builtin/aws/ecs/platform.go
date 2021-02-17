@@ -81,9 +81,7 @@ func (p *Platform) ConfigurableNotify(config interface{}) error {
 			if !validArn {
 				return fmt.Errorf("The ALB Listener ARN provided is NOT a valid ARN.  Please double check the ARN to ensure it is a valid ARN.\n")
 			}
-
 		}
-
 	}
 
 	// config validated ok
