@@ -108,7 +108,7 @@ func (s *State) InstanceExecCreateForVirtualInstance(ctx context.Context, id str
 		return status.Errorf(codes.NotFound, "No instance id given")
 	}
 
-	_, err := s.InstanceByIdWaiting(ctx, id)
+	_, err := s.instanceByIdWaiting(ctx, id)
 	if err != nil {
 		return err
 	}

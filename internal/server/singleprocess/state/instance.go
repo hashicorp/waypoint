@@ -162,9 +162,9 @@ func (s *State) InstanceById(id string) (*Instance, error) {
 	return raw.(*Instance), nil
 }
 
-// InstanceByIdWaiting waits for an instance with +id+ to connect before returning
+// instanceByIdWaiting waits for an instance with +id+ to connect before returning
 // itself record.
-func (s *State) InstanceByIdWaiting(ctx context.Context, id string) (*Instance, error) {
+func (s *State) instanceByIdWaiting(ctx context.Context, id string) (*Instance, error) {
 	// If the caller specified an instance id already, then just validate it.
 	if id == "" {
 		return nil, status.Errorf(codes.NotFound, "No instance id given")
