@@ -72,6 +72,11 @@ func (p *Platform) ExecFunc() interface{} {
 	return p.Exec
 }
 
+// LogsFunc implements component.LogsPlatform
+func (p *Platform) LogsFunc() interface{} {
+	return p.Logs
+}
+
 // ValidateAuthFunc implements component.Authenticator
 func (p *Platform) ValidateAuthFunc() interface{} {
 	return p.ValidateAuth

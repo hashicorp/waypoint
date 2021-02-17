@@ -208,11 +208,26 @@ func (s *service) EntrypointLogStream(
 			// Read our instance record
 			instance, err := s.state.InstanceById(batch.InstanceId)
 			if err != nil {
-				return err
-			}
+				if status.Code(err) == codes.NotFound {
+					// See if we have a instance logs entry to use instead.
+					// These are used by the logs plugin functionality to provide a place
+					// to rendezvous logs sent by the plugin with the waiting client
+					// without generating a full Instance.
 
-			// Get our log buffer
-			buf = instance.LogBuffer
+					log.Info("no Instance found, attempting to lookup InstanceLogs record instead")
+					il, err := s.state.InstanceLogsByInstanceId(batch.InstanceId)
+					if err != nil {
+						return err
+					}
+
+					buf = il.LogBuffer
+				} else {
+					return err
+				}
+			} else {
+				// Get our log buffer
+				buf = instance.LogBuffer
+			}
 		}
 
 		// Log that we received data in trace mode
