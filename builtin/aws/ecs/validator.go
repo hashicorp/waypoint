@@ -18,11 +18,11 @@ type Route53Client interface {
 	GetHostedZone(input *route53.GetHostedZoneInput) (*route53.GetHostedZoneOutput, error)
 }
 
-func IsValidArn(arn string) bool {
+func isValidArn(arn string) bool {
 	return awsarn.IsARN(arn)
 }
 
-func DoesRoute53ZoneExist(hosted_zone_id string, client Route53Client) bool {
+func doesRoute53ZoneExist(hosted_zone_id string, client Route53Client) bool {
 
 	var input route53.GetHostedZoneInput
 	input.Id = aws.String(hosted_zone_id)
@@ -33,7 +33,7 @@ func DoesRoute53ZoneExist(hosted_zone_id string, client Route53Client) bool {
 	return true
 }
 
-func DoesListenerExist(arn string, client ALBListenerClient) bool {
+func doesListenerExist(arn string, client ALBListenerClient) bool {
 
 	var listnerArray []string
 	listnerArray = append(listnerArray, arn)
@@ -49,7 +49,7 @@ func DoesListenerExist(arn string, client ALBListenerClient) bool {
 
 }
 
-func CreateSession() *session.Session {
+func createSession() *session.Session {
 	return session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
