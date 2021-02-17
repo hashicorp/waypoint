@@ -1028,6 +1028,11 @@ func (i *K8sInstaller) InstallRunner(
 // newDeployment takes in a k8sConfig and creates a new Waypoint Deployment for
 // deploying Waypoint runners.
 func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, error) {
+	// This is the port we'll use for the liveness check with the
+	// runner. This isn't exposed outside the pod so it doesn't really
+	// matter what it is.
+	const livenessPort = "1234"
+
 	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse cpu request resource %s: %s", c.cpuRequest, err)
@@ -1099,12 +1104,12 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 								"runner",
 								"agent",
 								"-vvv",
-								"-liveness-tcp-addr=:1234",
+								"-liveness-tcp-addr=:" + livenessPort,
 							},
 							LivenessProbe: &apiv1.Probe{
 								Handler: apiv1.Handler{
 									TCPSocket: &apiv1.TCPSocketAction{
-										Port: intstr.FromInt(1234),
+										Port: intstr.FromString(livenessPort),
 									},
 								},
 							},
