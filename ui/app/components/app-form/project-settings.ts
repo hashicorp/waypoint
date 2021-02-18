@@ -60,10 +60,13 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   constructor(owner: any, args: any) {
     super(owner, args);
     let { project } = this.args;
-    this.project = Object.assign(DEFAULT_PROJECT_MODEL, project);
+    this.project = project;
     if (this.project?.dataSource?.git) {
+      // Set authCase if it exists
       this.authCase = project.dataSource?.git?.ssh?.privateKeyPem ? 5 : 4;
     } else {
+      // set empty default dataSource data if non-existent
+      this.project.dataSource = DEFAULT_PROJECT_MODEL.dataSource
       this.authCase = 4;
     }
   }
