@@ -1114,6 +1114,13 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 					Labels: map[string]string{
 						"app": runnerName,
 					},
+
+					Annotations: map[string]string{
+						// These annotations are required for `img` to work
+						// properly within Kubernetes.
+						"container.apparmor.security.beta.kubernetes.io/runner": "unconfined",
+						"container.seccomp.security.alpha.kubernetes.io/runner": "unconfined",
+					},
 				},
 				Spec: apiv1.PodSpec{
 					ImagePullSecrets: []apiv1.LocalObjectReference{
