@@ -429,7 +429,9 @@ func (p *Platform) Deploy(
 				}
 
 				if cs.State.Waiting != nil {
-					if cs.State.Waiting.Reason == "ImagePullBackOff" {
+					// TODO: handle other pod failures here
+					if cs.State.Waiting.Reason == "ImagePullBackOff" ||
+						cs.State.Waiting.Reason == "ErrImagePull" {
 						detectedError = "Pod unable to access Docker image"
 						k8error = cs.State.Waiting.Message
 					}
@@ -438,17 +440,15 @@ func (p *Platform) Deploy(
 		}
 
 		if detectedError != "" && !reportedError {
-			step.Update("Detected pods having an issue starting - %s: %s", detectedError, k8error)
-			step.Status(terminal.StatusWarn)
+			// we use ui output here instead of a step group, otherwise the warning
+			// gets swallowed up on the next poll iteration
+			ui.Output("Detected pods having an issue starting - %s: %s",
+				detectedError, k8error, terminal.WithWarningStyle())
 			reportedError = true
 
 			// force a faster rerender
 			lastStatus = time.Time{}
 		}
-
-		// TODO: Report the statuses and events of the pods that are starting
-		// here so that users know why stuff isn't starting. Most commonly here
-		// it's going to be an error pulling the image.
 
 		return false, nil
 	})
