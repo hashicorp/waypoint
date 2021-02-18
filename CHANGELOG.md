@@ -6,6 +6,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* builtin/k8s: Surface pod failures on deploy [GH-1110]
 
 ## 0.2.2 (February 17, 2021)
 
