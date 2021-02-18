@@ -442,7 +442,7 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 			Target:  &c.flagPoll,
 			Default: false,
 			Usage: "Enable polling. This is only valid if a Git data source is supplied. " +
-				"This will watch the repo for changes and trigger a remote 'up'",
+				"This will watch the repo for changes and trigger a remote 'up'.",
 		})
 
 		f.StringVar(&flag.StringVar{
