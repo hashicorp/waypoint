@@ -824,26 +824,36 @@ func createALB(
 	return lbArn, tgArn, err
 }
 
-func buildLoggingOptions(conf *Logging, region string, logGroup string, defaultStreamPrefix string) map[string]*string {
-
-	var streamPrefix = conf.StreamPrefix
-	if streamPrefix == "" {
-		streamPrefix = defaultStreamPrefix
-	}
+func buildLoggingOptions(
+	lo *Logging,
+	region string,
+	logGroup string,
+	defaultStreamPrefix string,
+	isEC2 bool,
+) map[string]*string {
 
 	result := map[string]*string{
-		"awslogs-region":            aws.String(region),
-		"awslogs-group":             aws.String(logGroup),
-		"awslogs-endpoint":          aws.String(conf.Endpoint),
-		"awslogs-stream-prefix":     aws.String(streamPrefix),
-		"awslogs-datetime-format":   aws.String(conf.DateTimeFormat),
-		"awslogs-multiline-pattern": aws.String(conf.MultilinePattern),
-		"mode":                      aws.String(conf.Mode),
-		"max-buffer-size":           aws.String(conf.MaxBufferSize),
+		"awslogs-region":        aws.String(region),
+		"awslogs-group":         aws.String(logGroup),
+		"awslogs-stream-prefix": aws.String(defaultStreamPrefix),
 	}
 
-	if conf.CreateGroup {
-		result["awslogs-create-group"] = aws.String("true")
+	if lo != nil {
+		// We receive the error `Log driver awslogs disallows options: awslogs-endpoint`
+		// when setting `awslogs-endpoint`, so that is not included here of the
+		// available options
+		// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html
+		result["awslogs-datetime-format"] = aws.String(lo.DateTimeFormat)
+		result["awslogs-multiline-pattern"] = aws.String(lo.MultilinePattern)
+		result["mode"] = aws.String(lo.Mode)
+		result["max-buffer-size"] = aws.String(lo.MaxBufferSize)
+
+		if lo.CreateGroup {
+			result["awslogs-create-group"] = aws.String("true")
+		}
+		if lo.StreamPrefix != "" {
+			result["awslogs-stream-prefix"] = aws.String(lo.StreamPrefix)
+		}
 	}
 
 	for k, v := range result {
@@ -904,7 +914,13 @@ func (p *Platform) Launch(
 		})
 	}
 
-	logOptions := buildLoggingOptions(p.config.Logging, p.config.Region, logGroup, defaultStreamPrefix)
+	logOptions := buildLoggingOptions(
+		p.config.Logging,
+		p.config.Region,
+		logGroup,
+		defaultStreamPrefix,
+		p.config.EC2Cluster,
+	)
 
 	def := ecs.ContainerDefinition{
 		Essential: aws.Bool(true),
@@ -1358,8 +1374,6 @@ type HealthCheckConfig struct {
 type Logging struct {
 	CreateGroup bool `hcl:"create_group,optional"`
 
-	Endpoint string `hcl:"endpoint,optional"`
-
 	StreamPrefix string `hcl:"stream_prefix,optional"`
 
 	DateTimeFormat string `hcl:"datetime_format,optional"`
@@ -1611,11 +1625,6 @@ deploy {
 		"logging.region",
 		"The region the logs are to be shipped to.",
 		docs.Default("The same region the task is to be running."),
-	)
-
-	doc.SetField(
-		"logging.endpoint",
-		"Override the endpoint the logs are shipped to",
 	)
 
 	doc.SetField(
