@@ -1,17 +1,15 @@
 package serverinstall
 
 import (
-	"bytes"
 	"context"
 	json "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
-	"os/exec"
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -140,11 +138,7 @@ func (i *K8sInstaller) Install(
 			return nil, err
 		}
 
-		var secretData struct {
-			Metadata struct {
-				Name string `yaml:"name"`
-			} `yaml:"metadata"`
-		}
+		var secretData apiv1.Secret
 
 		err = yaml.Unmarshal(data, &secretData)
 		if err != nil {
@@ -155,29 +149,17 @@ func (i *K8sInstaller) Install(
 			return nil, err
 		}
 
-		if secretData.Metadata.Name == "" {
-			ui.Output(
-				"Invalid secret, no metadata.name",
-				terminal.WithErrorStyle(),
-			)
-			return nil, err
-		}
-
-		i.config.imagePullSecret = secretData.Metadata.Name
+		i.config.imagePullSecret = secretData.ObjectMeta.Name
 
 		ui.Output("Installing kubernetes secret...")
 
-		cmd := exec.Command("kubectl", "create", "-f", "-")
-		cmd.Stdin = bytes.NewReader(data)
-		cmd.Stdout = s.TermOutput()
-		cmd.Stderr = cmd.Stdout
-
-		if err = cmd.Run(); err != nil {
+		secretsClient := clientset.CoreV1().Secrets(i.config.namespace)
+		_, err = secretsClient.Create(context.TODO(), &secretData, metav1.CreateOptions{})
+		if err != nil {
 			ui.Output(
-				"Error executing kubectl to install secret: %s", clierrors.Humanize(err),
+				"Error creating Kubernetes secret from file: %s", clierrors.Humanize(err),
 				terminal.WithErrorStyle(),
 			)
-
 			return nil, err
 		}
 

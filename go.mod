@@ -29,7 +29,9 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/fatih/color v1.9.0
-	github.com/go-git/go-git/v5 v5.1.0
+	github.com/ghodss/yaml v1.0.0
+	github.com/gliderlabs/ssh v0.3.1 // indirect
+	github.com/go-git/go-git/v5 v5.2.0
 	github.com/go-openapi/runtime v0.19.15
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
@@ -101,7 +103,7 @@ require (
 	google.golang.org/grpc v1.32.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
 	k8s.io/client-go v0.19.4
