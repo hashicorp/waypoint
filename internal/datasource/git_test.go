@@ -313,6 +313,8 @@ func TestGitSourceChanges(t *testing.T) {
 		latestRef = newRef
 	})
 
+	// Note this test depends on the 'nil current ref' test to run first.
+	// t.Run tests are run sequentially which makes this work.
 	t.Run("with latest ref", func(t *testing.T) {
 		require := require.New(t)
 

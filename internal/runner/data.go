@@ -27,7 +27,7 @@ func (r *Runner) downloadJobData(
 	source *pb.Job_DataSource,
 	overrides map[string]string,
 ) (string, *pb.Job_DataSource_Ref, func() error, error) {
-	sourcer, err := r.dataSourcer(ctx, log, ui, source, overrides)
+	sourcer, err := r.dataSourcer(ctx, log, source, overrides)
 	if err != nil {
 		return "", nil, nil, err
 	}
@@ -36,17 +36,11 @@ func (r *Runner) downloadJobData(
 	return sourcer.Get(ctx, log, ui, source, r.tempDir)
 }
 
-// downloadJobData takes the data source of the given job, gets the data,
-// and returns the directory where the data is stored.
-//
-// This will also return a closer function that should be deferred to
-// clean up any resources created by this. Note that the directory isn't
-// always a temporary directory (such as for local data) so callers should
-// NOT assume this and delete data. Use the returned closer.
+// dataSourcer returns the datasource implementation for a job,
+// properly configured with any overrides.
 func (r *Runner) dataSourcer(
 	ctx context.Context,
 	log hclog.Logger,
-	ui terminal.UI,
 	source *pb.Job_DataSource,
 	overrides map[string]string,
 ) (datasource.Sourcer, error) {

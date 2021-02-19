@@ -87,6 +87,16 @@ func (s *service) runPollQueuer(ctx context.Context, funclog hclog.Logger) {
 			continue
 		}
 
+		// p is allowed to be nil in this loop, but it should never reach
+		// this point. Given we use it below, we put this check here to warn
+		// loudly that it happened. p shouldn't be nil here because if p is
+		// nil then we have no pollTime and therefore no loopCtx either. This
+		// means outcome (1) or (2) MUST happen.
+		if p == nil {
+			log.Error("reached outcome (3) in poller with nil p. This should not happen.")
+			continue
+		}
+
 		// Outcome (3)
 		log.Trace("queueing poll job")
 		resp, err := s.QueueJob(ctx, &pb.QueueJobRequest{

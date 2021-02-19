@@ -17,7 +17,7 @@ func (r *Runner) executePollOp(
 	ui terminal.UI,
 	job *pb.Job,
 ) (*pb.Job_Result, error) {
-	sourcer, err := r.dataSourcer(ctx, log, ui, job.DataSource, job.DataSourceOverrides)
+	sourcer, err := r.dataSourcer(ctx, log, job.DataSource, job.DataSourceOverrides)
 	if err != nil {
 		return nil, err
 	}
