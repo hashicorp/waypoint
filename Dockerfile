@@ -1,6 +1,6 @@
-# syntax = hashicorp.jfrog.io/docker/docker/dockerfile:experimental
+# syntax = docker.mirror.hashicorp.services/docker/dockerfile:experimental
 
-FROM hashicorp.jfrog.io/docker/golang:alpine AS builder
+FROM docker.mirror.hashicorp.services/golang:alpine AS builder
 
 RUN apk add --no-cache git gcc libc-dev openssh
 
@@ -26,7 +26,7 @@ RUN go get github.com/kevinburke/go-bindata/...
 RUN --mount=type=cache,target=/root/.cache/go-build make bin
 RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 
-FROM hashicorp.jfrog.io/docker/alpine
+FROM docker.mirror.hashicorp.services/alpine
 
 COPY --from=builder /tmp/wp-src/waypoint /usr/bin/waypoint
 COPY --from=builder /tmp/wp-src/waypoint-entrypoint /usr/bin/waypoint-entrypoint
