@@ -3,7 +3,7 @@ version: 2.1
 
 references:
   images:
-    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/circleci/golang:1.15.3
+    go: &GOLANG_IMAGE docker.mirror.hashicorp.services/circleci/golang:1.16
     middleman: &MIDDLEMAN_IMAGE docker.mirror.hashicorp.services/hashicorp/middleman-hashicorp:0.3.44
     ember: &EMBER_IMAGE docker.mirror.hashicorp.services/circleci/node:12-browsers
 
@@ -342,7 +342,7 @@ jobs:
               echo "no UI changes so no static assets to publish"
             fi
       - notify_main_failure
-  
+
   algolia-index:
     docker:
       - image: docker.mirror.hashicorp.services/node:12
