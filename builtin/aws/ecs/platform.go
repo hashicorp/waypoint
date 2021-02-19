@@ -824,7 +824,6 @@ func buildLoggingOptions(
 	region string,
 	logGroup string,
 	defaultStreamPrefix string,
-	isEC2 bool,
 ) map[string]*string {
 
 	result := map[string]*string{
@@ -916,7 +915,6 @@ func (p *Platform) Launch(
 		p.config.Region,
 		logGroup,
 		defaultStreamPrefix,
-		p.config.EC2Cluster,
 	)
 
 >>>>>>> 6a5897f8... check for nil logging opts; remove endpoint
