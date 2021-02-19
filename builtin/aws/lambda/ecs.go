@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
-	"github.com/hashicorp/waypoint/internal/ceb/ssh"
+	"github.com/hashicorp/waypoint/internal/ssh"
 )
 
 // This launches an ECS task to run the given image. It creates an ECS cluster configured
