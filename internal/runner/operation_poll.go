@@ -130,5 +130,11 @@ func (r *Runner) executePollOp(
 	}
 	log.Debug("job queued", "job_id", queueResp.JobId)
 
-	return &pb.Job_Result{}, nil
+	return &pb.Job_Result{
+		Poll: &pb.Job_PollResult{
+			JobId:  queueResp.JobId,
+			OldRef: currentRef,
+			NewRef: newRef,
+		},
+	}, nil
 }
