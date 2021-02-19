@@ -14,6 +14,9 @@ import (
 // runPollQueuer starts the poll queuer. The poll queuer sleeps on and
 // schedules polling operations for projects that have polling enabled.
 // This blocks and is expected to be run in a goroutine.
+//
+// This function should only ever be invoked one at a time. Running multiple
+// copies can result in duplicate polls for projects.
 func (s *service) runPollQueuer(ctx context.Context, funclog hclog.Logger) {
 	funclog.Info("starting")
 	defer funclog.Info("exiting")
@@ -33,7 +36,7 @@ func (s *service) runPollQueuer(ctx context.Context, funclog hclog.Logger) {
 			// we log it and just sleep a minute. Hopefully someone will notice
 			// the logs. We sleep for a minute because any error that happened
 			// here is probably real bad and is gonna keep happening.
-			log.Error("error during poll queuer, sleeping 1 minute", "err", err)
+			log.Error("BUG (please report): error during poll queuer, sleeping 1 minute", "err", err)
 			time.Sleep(1 * time.Minute)
 			continue
 		}
@@ -140,7 +143,7 @@ func (s *service) runPollQueuer(ctx context.Context, funclog hclog.Logger) {
 			// sleep for a minute so we don't completely overload the
 			// server since this is likely to happen again. We want people
 			// to see this in the logs.
-			log.Warn("error marking project polling complete", "err", err)
+			log.Warn("BUG (please report): error marking project polling complete", "err", err)
 			time.Sleep(1 * time.Minute)
 			continue
 		}
