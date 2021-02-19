@@ -559,6 +559,307 @@ func createSG(
 	return groupId, nil
 }
 
+func createALB(
+	ctx context.Context,
+	s LifecycleStatus,
+	L hclog.Logger,
+	sess *session.Session,
+	app *component.Source,
+	albConfig *ALBConfig,
+	vpcId *string,
+	serviceName *string,
+	sgWebId *string,
+	servicePort *int64,
+	subnets []*string,
+) (lbArn *string, tgArn *string, err error) {
+	s.Update("Creating ALB target group")
+	L.Debug("creating target group", "name", serviceName)
+
+	elbsrv := elbv2.New(sess)
+	ctg, err := elbsrv.CreateTargetGroup(&elbv2.CreateTargetGroupInput{
+		HealthCheckEnabled: aws.Bool(true),
+		Name:               serviceName,
+		Port:               servicePort,
+		Protocol:           aws.String("HTTP"),
+		TargetType:         aws.String("ip"),
+		VpcId:              vpcId,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tgArn = ctg.TargetGroups[0].TargetGroupArn
+
+	s.Update("Created ALB target group")
+
+	// Create the load balancer OR modify the existing one to have this new target
+	// group but with a weight of 0
+
+	tgs := []*elbv2.TargetGroupTuple{
+		{
+			TargetGroupArn: tgArn,
+			Weight:         aws.Int64(0),
+		},
+	}
+
+	var (
+		certs    []*elbv2.Certificate
+		protocol string = "HTTP"
+		port     int64  = 80
+	)
+
+	if albConfig != nil && albConfig.CertificateId != "" {
+		protocol = "HTTPS"
+		port = 443
+		certs = append(certs, &elbv2.Certificate{
+			CertificateArn: &albConfig.CertificateId,
+		})
+	}
+
+	var existingListener string
+
+	if albConfig != nil && albConfig.ListenerARN != "" {
+		existingListener = albConfig.ListenerARN
+	}
+
+	var (
+		lb          *elbv2.LoadBalancer
+		listener    *elbv2.Listener
+		newListener bool
+	)
+
+	if existingListener != "" {
+		out, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
+			ListenerArns: []*string{aws.String(existingListener)},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+
+		listener = out.Listeners[0]
+		s.Update("Using configured ALB Listener: %s (load-balancer: %s)",
+			*listener.ListenerArn, *listener.LoadBalancerArn)
+	} else {
+		lbName := "waypoint-ecs-" + app.App
+		dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
+			Names: []*string{&lbName},
+		})
+		if err != nil {
+			if aerr, ok := err.(awserr.Error); ok {
+				switch aerr.Code() {
+				case elbv2.ErrCodeLoadBalancerNotFoundException:
+					// fine, means we'll create it.
+				default:
+					return nil, nil, err
+				}
+			} else {
+				return nil, nil, err
+			}
+		}
+
+		if dlb != nil && len(dlb.LoadBalancers) > 0 {
+			lb = dlb.LoadBalancers[0]
+			s.Update("Using existing ALB %s (%s, dns-name: %s)",
+				lbName, *lb.LoadBalancerArn, *lb.DNSName)
+		} else {
+			s.Update("Creating new ALB: %s", lbName)
+
+			clb, err := elbsrv.CreateLoadBalancer(&elbv2.CreateLoadBalancerInput{
+				Name:           aws.String(lbName),
+				Subnets:        subnets,
+				SecurityGroups: []*string{sgWebId},
+			})
+			if err != nil {
+				return nil, nil, err
+			}
+
+			lb = clb.LoadBalancers[0]
+
+			s.Update("Created new ALB: %s (dns-name: %s)", lbName, *lb.DNSName)
+		}
+
+		listeners, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
+			LoadBalancerArn: lb.LoadBalancerArn,
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if len(listeners.Listeners) > 0 {
+			listener = listeners.Listeners[0]
+			s.Update("Using existing ALB Listener")
+		} else {
+			s.Update("Creating new ALB Listener")
+
+			L.Info("load-balancer defined", "dns-name", *lb.DNSName)
+
+			tgs[0].Weight = aws.Int64(100)
+			lo, err := elbsrv.CreateListener(&elbv2.CreateListenerInput{
+				LoadBalancerArn: lb.LoadBalancerArn,
+				Port:            aws.Int64(port),
+				Protocol:        aws.String(protocol),
+				Certificates:    certs,
+				DefaultActions: []*elbv2.Action{
+					{
+						ForwardConfig: &elbv2.ForwardActionConfig{
+							TargetGroups: tgs,
+						},
+						Type: aws.String("forward"),
+					},
+				},
+			})
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			newListener = true
+			listener = lo.Listeners[0]
+
+			s.Update("Created new ALB Listener")
+		}
+	}
+
+	if !newListener {
+		def := listener.DefaultActions
+
+		if len(def) > 0 && def[0].ForwardConfig != nil {
+			for _, tg := range def[0].ForwardConfig.TargetGroups {
+				if *tg.Weight > 0 {
+					tgs = append(tgs, tg)
+					L.Debug("previous target group", "arn", *tg.TargetGroupArn)
+				}
+			}
+		}
+
+		s.Update("Modifying ALB Listener to introduce target group")
+
+		_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
+			ListenerArn:  listener.ListenerArn,
+			Port:         aws.Int64(port),
+			Protocol:     aws.String(protocol),
+			Certificates: certs,
+			DefaultActions: []*elbv2.Action{
+				{
+					ForwardConfig: &elbv2.ForwardActionConfig{
+						TargetGroups: tgs,
+					},
+					Type: aws.String("forward"),
+				},
+			},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+
+		s.Update("Modified ALB Listener to introduce target group")
+	}
+
+	if albConfig != nil && albConfig.ZoneId != "" {
+		r53 := route53.New(sess)
+
+		records, err := r53.ListResourceRecordSets(&route53.ListResourceRecordSetsInput{
+			HostedZoneId:    aws.String(albConfig.ZoneId),
+			StartRecordName: aws.String(albConfig.FQDN),
+			StartRecordType: aws.String("A"),
+			MaxItems:        aws.String("1"),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+
+		fqdn := albConfig.FQDN
+
+		if fqdn[len(fqdn)-1] != '.' {
+			fqdn += "."
+		}
+
+		if len(records.ResourceRecordSets) > 0 && *(records.ResourceRecordSets[0].Name) == fqdn {
+			s.Status("Found existing Route53 record: %s", *records.ResourceRecordSets[0].Name)
+			L.Debug("found existing record, assuming it's correct")
+		} else {
+			s.Status("Creating new Route53 record: %s (zone-id: %s)",
+				albConfig.FQDN, albConfig.ZoneId)
+
+			L.Debug("creating new route53 record", "zone-id", albConfig.ZoneId)
+			input := &route53.ChangeResourceRecordSetsInput{
+				ChangeBatch: &route53.ChangeBatch{
+					Changes: []*route53.Change{
+						{
+							Action: aws.String("CREATE"),
+							ResourceRecordSet: &route53.ResourceRecordSet{
+								Name: aws.String(albConfig.FQDN),
+								Type: aws.String("A"),
+								AliasTarget: &route53.AliasTarget{
+									DNSName:              lb.DNSName,
+									EvaluateTargetHealth: aws.Bool(true),
+									HostedZoneId:         lb.CanonicalHostedZoneId,
+								},
+							},
+						},
+					},
+					Comment: aws.String("managed by waypoint"),
+				},
+				HostedZoneId: aws.String(albConfig.ZoneId),
+			}
+
+			result, err := r53.ChangeResourceRecordSets(input)
+			if err != nil {
+				return nil, nil, err
+			}
+			L.Debug("record created", "change-id", *result.ChangeInfo.Id)
+
+			s.Update("Created new Route53 record: %s (zone-id: %s)",
+				albConfig.FQDN, albConfig.ZoneId)
+		}
+	}
+
+	lbArn = listener.LoadBalancerArn
+
+	return lbArn, tgArn, err
+}
+
+func buildLoggingOptions(
+	lo *Logging,
+	region string,
+	logGroup string,
+	defaultStreamPrefix string,
+	isEC2 bool,
+) map[string]*string {
+
+	result := map[string]*string{
+		"awslogs-region":        aws.String(region),
+		"awslogs-group":         aws.String(logGroup),
+		"awslogs-stream-prefix": aws.String(defaultStreamPrefix),
+	}
+
+	if lo != nil {
+		// We receive the error `Log driver awslogs disallows options: awslogs-endpoint`
+		// when setting `awslogs-endpoint`, so that is not included here of the
+		// available options
+		// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html
+		result["awslogs-datetime-format"] = aws.String(lo.DateTimeFormat)
+		result["awslogs-multiline-pattern"] = aws.String(lo.MultilinePattern)
+		result["mode"] = aws.String(lo.Mode)
+		result["max-buffer-size"] = aws.String(lo.MaxBufferSize)
+
+		if lo.CreateGroup {
+			result["awslogs-create-group"] = aws.String("true")
+		}
+		if lo.StreamPrefix != "" {
+			result["awslogs-stream-prefix"] = aws.String(lo.StreamPrefix)
+		}
+	}
+
+	for k, v := range result {
+		if *v == "" {
+			delete(result, k)
+		}
+	}
+
+	return result
+}
+
 func (p *Platform) Launch(
 	ctx context.Context,
 	s LifecycleStatus,
@@ -608,6 +909,17 @@ func (p *Platform) Launch(
 		})
 	}
 
+<<<<<<< HEAD
+=======
+	logOptions := buildLoggingOptions(
+		p.config.Logging,
+		p.config.Region,
+		logGroup,
+		defaultStreamPrefix,
+		p.config.EC2Cluster,
+	)
+
+>>>>>>> 6a5897f8... check for nil logging opts; remove endpoint
 	def := ecs.ContainerDefinition{
 		Essential: aws.Bool(true),
 		Name:      aws.String(app.App),
@@ -1257,6 +1569,20 @@ type HealthCheckConfig struct {
 	StartPeriod int64 `hcl:"start_period,optional"`
 }
 
+type Logging struct {
+	CreateGroup bool `hcl:"create_group,optional"`
+
+	StreamPrefix string `hcl:"stream_prefix,optional"`
+
+	DateTimeFormat string `hcl:"datetime_format,optional"`
+
+	MultilinePattern string `hcl:"multiline_pattern,optional"`
+
+	Mode string `hcl:"mode,optional"`
+
+	MaxBufferSize string `hcl:"max_buffer_size,optional"`
+}
+
 type ContainerConfig struct {
 	// The name of a container
 	Name string `hcl:"name"`
@@ -1469,6 +1795,50 @@ deploy {
 			"configure their ALB outside waypoint but still have waypoint hook the application",
 			"to that ALB",
 		),
+	)
+
+	doc.SetField(
+		"logging",
+		"Provides additional configuration for logging flags for ECS.",
+		docs.Summary("Part of the ecs task definition.  These configuration flags help",
+			"control how the awslogs log driver is configured."),
+	)
+
+	doc.SetField(
+		"logging.create_group",
+		"Should the task attempt to create the aws logs group if not present?",
+	)
+
+	doc.SetField(
+		"logging.region",
+		"The region the logs are to be shipped to.",
+		docs.Default("The same region the task is to be running."),
+	)
+
+	doc.SetField(
+		"logging.stream_prefix",
+		"prefix for application in cloudwatch logs path",
+		docs.Default("Generated based off timestamp"),
+	)
+
+	doc.SetField(
+		"logging.datetime_format",
+		"Defines the multiline start pattern in Python strftime format",
+	)
+
+	doc.SetField(
+		"logging.multiline_pattern",
+		"Defines the multiline start pattern using a regular expression",
+	)
+
+	doc.SetField(
+		"logging.mode",
+		"Delivery method for log messages, either 'blocking' or 'non-blocking'",
+	)
+
+	doc.SetField(
+		"logging.max_buffer_size",
+		"When using non-blocking logging mode, this is the buffer size for message storage",
 	)
 
 	doc.SetField(
