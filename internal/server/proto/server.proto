@@ -731,6 +731,7 @@ message Job {
     ConfigSyncResult config_sync = 8;
     UpResult up = 9;
     QueueProjectResult queue_project = 10;
+    PollResult poll = 11;
   }
 
   message DataSource {
@@ -1022,7 +1023,18 @@ message Job {
     // At the time of writing this, we only support single workspace anyways.
   }
 
-  message PollResult {}
+  message PollResult {
+    // This field will be non-empty if and only if polling resulted in
+    // new data that needs to be deployed. This will be the ID of the job
+    // that queues the "up" operation.
+    string job_id = 1;
+
+    // If the poll resulted in new data, old_ref and new_ref will contain
+    // the two refs that were currently in use. These are nil if the polling
+    // didn't find new data.
+    Job.DataSource.Ref old_ref = 2;
+    Job.DataSource.Ref new_ref = 3;
+  }
 
   // QueueProjectOp queues a job for all applications in a project. The
   // applications queued may not directly align with what can be found in
