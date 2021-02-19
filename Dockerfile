@@ -1,10 +1,10 @@
-# syntax = hashicorp.jfrog.io/docker/docker/dockerfile:experimental
+# syntax = docker.mirror.hashicorp.services/docker/dockerfile:experimental
 
 #--------------------------------------------------------------------
 # builder builds the Waypoint binaries
 #--------------------------------------------------------------------
 
-FROM hashicorp.jfrog.io/docker/golang:alpine AS builder
+FROM docker.mirror.hashicorp.services/golang:alpine AS builder
 
 RUN apk add --no-cache git gcc libc-dev openssh make
 
@@ -34,7 +34,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 
 # We build a fork of img for now so we can get the `img inspect` CLI
 # Watch this PR: https://github.com/genuinetools/img/pull/324
-FROM hashicorp.jfrog.io/docker/golang:alpine AS imgbuilder
+FROM docker.mirror.hashicorp.services/golang:alpine AS imgbuilder
 
 RUN apk add --no-cache \
 	bash \
@@ -53,7 +53,7 @@ RUN make BUILDTAGS="seccomp noembed" && mv img /usr/bin/img
 
 # Copied from img repo, see notes for specific reasons:
 # https://github.com/genuinetools/img/blob/d858ac71f93cc5084edd2ba2d425b90234cf2ead/Dockerfile
-FROM hashicorp.jfrog.io/docker/alpine AS imgbase
+FROM docker.mirror.hashicorp.services/alpine AS imgbase
 RUN apk add --no-cache autoconf automake build-base byacc gettext gettext-dev \
     gcc git libcap-dev libtool libxslt img runc
 RUN git clone https://github.com/shadow-maint/shadow.git /shadow
@@ -80,7 +80,7 @@ RUN ./autogen.sh --disable-nls --disable-man --without-audit \
 #  - USER, HOME, and XDG_RUNTIME_DIR all need to be set
 #
 
-FROM hashicorp.jfrog.io/docker/alpine
+FROM docker.mirror.hashicorp.services/alpine
 
 COPY --from=imgbuilder /usr/bin/img /usr/bin/img
 COPY --from=imgbase /usr/bin/runc /usr/bin/runc
