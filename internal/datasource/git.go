@@ -35,7 +35,7 @@ func newGitSource() Sourcer { return &GitSource{} }
 func (s *GitSource) RefToOverride(ref *pb.Job_DataSource_Ref) (map[string]string, error) {
 	gitRef, ok := ref.Ref.(*pb.Job_DataSource_Ref_Git)
 	if !ok {
-		return nil, fmt.Errorf("ref is not a git ref: %T", ref.Ref)
+		return nil, status.Errorf(codes.Internal, "ref is not a git ref: %T", ref.Ref)
 	}
 
 	return map[string]string{
