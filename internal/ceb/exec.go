@@ -1,3 +1,5 @@
+// +build !windows
+
 package ceb
 
 import (
@@ -8,10 +10,7 @@ import (
 	"syscall"
 
 	"github.com/creack/pty"
-	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-hclog"
-	grpc_net_conn "github.com/mitchellh/go-grpc-net-conn"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -298,27 +297,5 @@ func (ceb *CEB) handleExecProcessExit(
 		},
 	}); err != nil {
 		log.Warn("error sending exit message", "err", err)
-	}
-}
-
-func execOutputWriter(
-	client grpc.ClientStream,
-	channel pb.EntrypointExecRequest_Output_Channel,
-) io.Writer {
-	return &grpc_net_conn.Conn{
-		Stream:  client,
-		Request: &pb.EntrypointExecRequest{},
-		Encode: grpc_net_conn.SimpleEncoder(func(msg proto.Message) *[]byte {
-			req := msg.(*pb.EntrypointExecRequest)
-			if req.Event == nil {
-				req.Event = &pb.EntrypointExecRequest_Output_{
-					Output: &pb.EntrypointExecRequest_Output{
-						Channel: channel,
-					},
-				}
-			}
-
-			return &req.Event.(*pb.EntrypointExecRequest_Output_).Output.Data
-		}),
 	}
 }

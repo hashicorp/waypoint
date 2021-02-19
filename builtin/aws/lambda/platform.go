@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/builtin/aws/ecr"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
-	cebssh "github.com/hashicorp/waypoint/internal/ceb/ssh"
+	wpssh "github.com/hashicorp/waypoint/internal/ssh"
 	"github.com/pkg/errors"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -432,7 +432,7 @@ func (p *Platform) Exec(
 ) (*component.ExecResult, error) {
 	rewriteLine(es.Output, "Launching ECS task to provide shell...")
 
-	sshMaterial, err := cebssh.GenerateKeys()
+	sshMaterial, err := wpssh.GenerateKeys()
 	if err != nil {
 		return nil, err
 	}
