@@ -79,6 +79,7 @@ func TestServer(t *testing.T) {
 	cfg.Timeout = 5 * time.Second
 
 	client, err := gossh.Dial("tcp", l.Addr().String(), &cfg)
+	require.NoError(t, err)
 
 	sess, err := client.NewSession()
 	require.NoError(t, err)
