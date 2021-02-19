@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
+	goUnits "github.com/docker/go-units"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -174,9 +176,25 @@ func (p *Platform) Deploy(
 		containerBinds = append(containerBinds, p.config.Binds...)
 	}
 
+	var resources container.Resources
+	if p.config.Resources != nil {
+		memory, err := goUnits.FromHumanSize(p.config.Resources["memory"])
+		if err != nil {
+			return nil, err
+		}
+		resources.Memory = memory
+
+		cpu, err := strconv.ParseInt(p.config.Resources["cpu"], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		resources.CPUShares = cpu
+	}
+
 	hostconfig := container.HostConfig{
 		Binds:        containerBinds,
 		PortBindings: bindings,
+		Resources:    resources,
 	}
 
 	// Containers can only be connected to 1 network at creation time
@@ -414,6 +432,10 @@ type PlatformConfig struct {
 	// An array of strings with network names to connect the container to
 	Networks []string `hcl:"networks,optional"`
 
+	// A map of resources to configure the container with such as memory and cpu
+	// limits.
+	Resources map[string]string `hcl:"resources,optional"`
+
 	// A path to a directory that will be created for the service to store
 	// temporary data.
 	ScratchSpace string `hcl:"scratch_path,optional"`
@@ -500,6 +522,16 @@ deploy {
 		docs.Summary(
 			"A list of networks to connect the container to. By default the container",
 			"will always connect to the `waypoint` network.",
+		),
+	)
+
+	doc.SetField(
+		"resources",
+		"A map of resources to configure the container with, such as memory or cpu limits.",
+		docs.Summary(
+			"these options are used to configure the container used when deploying",
+			"with docker. Currently, the supported resources are 'memory' and 'cpu' limits.",
+			"The field 'memory' is expected to be defined as \"512MB\", \"44kB\", etc.",
 		),
 	)
 
