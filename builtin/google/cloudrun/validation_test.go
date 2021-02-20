@@ -157,6 +157,26 @@ func TestConfigValidation(t *testing.T) {
 			},
 			false,
 		},
+		"Egress invalid": {
+			Config{
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
+				VPCAccess: &VPCAccess{
+					Egress: "invalid value for egress",
+				},
+			},
+			false,
+		},
+		"Egress valid": {
+			Config{
+				Project:  "waypoint-286812",
+				Location: "europe-north1",
+				VPCAccess: &VPCAccess{
+					Egress: "all",
+				},
+			},
+			true,
+		},
 	}
 
 	for name, tc := range tests {

@@ -363,6 +363,19 @@ func (p *Platform) Deploy(
 		service.Spec.Template.Spec.ServiceAccountName = p.config.ServiceAccountName
 	}
 
+	if len(p.config.CloudSQLInstances) > 0 {
+		service.Spec.Template.Metadata.Annotations["run.googleapis.com/cloudsql-instances"] = strings.Join(p.config.CloudSQLInstances, ",")
+	}
+
+	if p.config.VPCAccess != nil {
+		if p.config.VPCAccess.Connector != "" {
+			service.Spec.Template.Metadata.Annotations["run.googleapis.com/vpc-access-connector"] = p.config.VPCAccess.Connector
+		}
+		if p.config.VPCAccess.Egress != "" {
+			service.Spec.Template.Metadata.Annotations["run.googleapis.com/vpc-access-egress"] = p.config.VPCAccess.Egress
+		}
+	}
+
 	if create {
 		// Create the service
 		log.Info("creating the service")
@@ -478,6 +491,13 @@ app "wpmini" {
       auto_scaling {
         max = 10
       }
+
+      cloudsql_instances = ["waypoint-project-id:europe-north1:sql-instance"]
+
+      vpc_access {
+        connector = "custom-vpc-connector"
+        egress = "all"
+      }
     }
   }
 
@@ -558,6 +578,21 @@ app "wpmini" {
 		docs.Default("1000"),
 	)
 
+	doc.SetField(
+		"cloudsql_instances",
+		"Specify list of CloudSQL instances that the Cloud Run instance will have access to.",
+	)
+
+	doc.SetField(
+		"vpc_access.connector",
+		"Set VPC Access Connector for the Cloud Run instance.",
+	)
+
+	doc.SetField(
+		"vpc_access.egress",
+		"Set VPC egress. Supported values are 'all' and 'private-ranges-only'.",
+	)
+
 	return doc, nil
 }
 
@@ -593,6 +628,12 @@ type Config struct {
 
 	// Service Account details
 	ServiceAccountName string `hcl:"service_account_name,optional"`
+
+	// CloudSQLInstances that the application can connect to.
+	CloudSQLInstances []string `hcl:"cloudsql_instances,optional"`
+
+	// VPCAccess details.
+	VPCAccess *VPCAccess `hcl:"vpc_access,block"`
 }
 
 // Capacity defines configuration for deployed Cloud Run resources
@@ -614,6 +655,14 @@ type Capacity struct {
 type AutoScaling struct {
 	//Min int `hcl:"min,attr"` // not yet supported by cloud run
 	Max int `hcl:"max,attr" validate:"gte=0"`
+}
+
+type VPCAccess struct {
+	// Connector sets Serverless VPC Access connector for the application.
+	Connector string `hcl:"connector,optional"`
+
+	// Egress sets VPC egress type. Supported values are `all` and `private-ranges-only`.
+	Egress string `hcl:"egress,optional" validate:"oneof=all private-ranges-only"`
 }
 
 var (
