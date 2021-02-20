@@ -4,6 +4,8 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* builtin/docker: Introduce resources map for configuring cpu, memory on deploy [GH-1116]
+
 BUG FIXES:
 
 * builtin/docker: Fix host port mapping defined by service_port [GH-918]
