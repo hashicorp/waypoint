@@ -3,6 +3,7 @@ package singleprocess
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -17,7 +18,13 @@ import (
 //
 // This function should only ever be invoked one at a time. Running multiple
 // copies can result in duplicate polls for projects.
-func (s *service) runPollQueuer(ctx context.Context, funclog hclog.Logger) {
+func (s *service) runPollQueuer(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	funclog hclog.Logger,
+) {
+	defer wg.Done()
+
 	funclog.Info("starting")
 	defer funclog.Info("exiting")
 

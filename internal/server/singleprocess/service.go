@@ -42,6 +42,11 @@ type service struct {
 	// cancelled when Close is called.
 	bgCtx       context.Context
 	bgCtxCancel context.CancelFunc
+
+	// bgWg is incremented for every background goroutine that the
+	// service starts up. When Close is called, we wait on this to ensure
+	// that we fully shut down before returning.
+	bgWg sync.WaitGroup
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -136,7 +141,8 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	// Start our polling background goroutine. We have a single goroutine
 	// that we run in the background that handles the queue of all polling
 	// operations. See the func docs for more info.
-	go s.runPollQueuer(s.bgCtx, log.Named("poll_queuer"))
+	s.bgWg.Add(1)
+	go s.runPollQueuer(s.bgCtx, &s.bgWg, log.Named("poll_queuer"))
 
 	return &s, nil
 }
@@ -146,6 +152,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 // is no longer responding to requests.
 func (s *service) Close() error {
 	s.bgCtxCancel()
+	s.bgWg.Wait()
 	return nil
 }
 
