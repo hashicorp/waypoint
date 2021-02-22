@@ -37,6 +37,10 @@ var (
 type Watcher struct {
 	log hclog.Logger
 
+	// dynamicEnabled determines whether we allow dynamic sources or not.
+	// If this is false, then we ignore all dynamic configs.
+	dynamicEnabled bool
+
 	// refreshInterval is the interval between checking for new
 	// config values. In a steady state, configuration NORMALLY doesn't
 	// change so this is set fairly high to avoid unnecessary load on
@@ -98,6 +102,7 @@ func NewWatcher(opts ...Option) (*Watcher, error) {
 	// Build our initial watcher
 	w := &Watcher{
 		log:             hclog.L(),
+		dynamicEnabled:  true,
 		refreshInterval: defaultRefreshInterval,
 		plugins:         map[string]*plugin.Instance{},
 		inSourceCh:      make(chan []*pb.ConfigSource),
@@ -134,6 +139,59 @@ func (w *Watcher) Close() error {
 	w.bgCancel()
 	w.bgWg.Wait()
 	return nil
+}
+
+// Next returns the next values for the configuration AFTER the given
+// iterator value iter. A value of 0 can be used for iter for a first read.
+//
+// The return value will be the configuration values in env format (KEY=VALUE),
+// the current iterator value that you should use with the next call to Next,
+// and any error if it occurred.
+//
+// The ctx parameter can be used for timeouts, cancellation, etc. If the context
+// is closed, this will return the context error.
+func (w *Watcher) Next(ctx context.Context, iter uint64) ([]string, uint64, error) {
+	var doneCh chan struct{}
+
+	w.currentCond.L.Lock()
+	defer w.currentCond.L.Unlock()
+
+	// Wait on the condition var as long as we have the same iterator
+	// and the context isn't yet cancelled.
+	for w.currentGen == iter && ctx.Err() == nil {
+		// If we're waiting, then we want to start a goroutine to notify
+		// us if the context closes. We have to do this in a goroutine because
+		// cond vars have no other way to wait on a context.
+		//
+		// We do this in the for loop so that on the fast path where we
+		// have an older generation, we just return the value immediately
+		// without all the goroutine ceremony.
+		if doneCh == nil {
+			// doneCh ensures that we clean up our goroutines when we return.
+			doneCh = make(chan struct{})
+			defer close(doneCh)
+
+			go func() {
+				select {
+				case <-ctx.Done():
+					// Wake up all condition vars so we wake ourself up.
+					w.currentCond.Broadcast()
+
+				case <-doneCh:
+					// Return
+				}
+			}()
+		}
+
+		w.currentCond.Wait()
+	}
+
+	// If we exited due to context being canceled, exit now.
+	if ctx.Err() != nil {
+		return nil, 0, ctx.Err()
+	}
+
+	return w.currentEnv, w.currentGen, nil
 }
 
 // UpdateSources updates the configuration sources for the watcher. The
@@ -174,25 +232,14 @@ func (w *Watcher) notify(
 	var lastGen uint64 = 0
 
 	for {
-		// Sit on the condition variable waiting for either an update
-		// to the env or a cancelation of our context. Note that the
-		// context cancellation will not be processed until the cond is
-		// updated but that's okay because we only set notifiers early
-		// so Close is guaranteed to stop all of them.
-		w.currentCond.L.Lock()
-		for lastGen == w.currentGen && ctx.Err() == nil {
-			w.currentCond.Wait()
-		}
-		newEnv := w.currentEnv
-		lastGen = w.currentGen
-		w.currentCond.L.Unlock()
-
-		// If the context is closed, exit.
-		if err := ctx.Err(); err != nil {
+		newEnv, nextGen, err := w.Next(ctx, lastGen)
+		if err != nil {
+			// This case covers context cancellation as well since
+			// Next returns the context error on cancellation.
 			return
 		}
 
-		// Update our listener
+		lastGen = nextGen
 		select {
 		case ch <- newEnv:
 			// Sent successfully
@@ -346,6 +393,12 @@ func (w *Watcher) watcher(
 			// we're going to need often so we precompute it once.
 			dynamicOld := dynamic
 			static, dynamic = splitAppConfig(log, newVars)
+
+			// Handle the case we disable dynamics
+			if !w.dynamicEnabled && len(dynamic) > 0 {
+				log.Debug("dynamic config vars are disabled, ignoring", "n", len(dynamic))
+				dynamic = nil
+			}
 
 			// We need to do a diff of if any dynamic var config changed.
 			// We loop through the result here and set values to true so

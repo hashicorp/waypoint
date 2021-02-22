@@ -61,3 +61,16 @@ func WithRefreshInterval(d time.Duration) Option {
 		return nil
 	}
 }
+
+// WithDynamicEnabled sets whether we allow dynamic sources or not.
+// This defaults to true.
+//
+// If this is disabled, then all dynamic config requests are ignored.
+// They aren't set to empty values or anything, they simply aren't set
+// at all.
+func WithDynamicEnabled(v bool) Option {
+	return func(w *Watcher) error {
+		w.dynamicEnabled = v
+		return nil
+	}
+}
