@@ -15,7 +15,11 @@ import (
 // with this function.
 func Notify(ctx context.Context, cond *sync.Cond) func() {
 	doneCh := make(chan struct{})
-	go func() {
+
+	// We copy the doneCh into the goroutine in the astronomically unlikely
+	// case that the goroutine doesn't get scheduled and run before cancel
+	// is called.
+	go func(doneCh <-chan struct{}) {
 		select {
 		case <-ctx.Done():
 			// Wake up all condition vars so we wake ourself up.
@@ -24,7 +28,7 @@ func Notify(ctx context.Context, cond *sync.Cond) func() {
 		case <-doneCh:
 			// Return since we were cancelled.
 		}
-	}()
+	}(doneCh)
 
 	return func() {
 		// We do this if so that the function can be called multiple times.
