@@ -19,6 +19,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	sdkpb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
+	"github.com/hashicorp/waypoint/internal/pkg/condctx"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -151,7 +152,7 @@ func (w *Watcher) Close() error {
 // The ctx parameter can be used for timeouts, cancellation, etc. If the context
 // is closed, this will return the context error.
 func (w *Watcher) Next(ctx context.Context, iter uint64) ([]string, uint64, error) {
-	var doneCh chan struct{}
+	var cancelFunc func()
 
 	w.currentCond.L.Lock()
 	defer w.currentCond.L.Unlock()
@@ -166,21 +167,9 @@ func (w *Watcher) Next(ctx context.Context, iter uint64) ([]string, uint64, erro
 		// We do this in the for loop so that on the fast path where we
 		// have an older generation, we just return the value immediately
 		// without all the goroutine ceremony.
-		if doneCh == nil {
-			// doneCh ensures that we clean up our goroutines when we return.
-			doneCh = make(chan struct{})
-			defer close(doneCh)
-
-			go func() {
-				select {
-				case <-ctx.Done():
-					// Wake up all condition vars so we wake ourself up.
-					w.currentCond.Broadcast()
-
-				case <-doneCh:
-					// Return
-				}
-			}()
+		if cancelFunc == nil {
+			cancelFunc = condctx.Notify(ctx, w.currentCond)
+			defer cancelFunc()
 		}
 
 		w.currentCond.Wait()
