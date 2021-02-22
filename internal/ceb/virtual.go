@@ -156,39 +156,37 @@ func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) 
 			continue
 		}
 
-		if msg.Config.Exec != nil {
-			var env []string
-			env, lastConfigGen, err = w.Next(ctx, lastConfigGen)
-			if err != nil {
-				// we drop the error here (only log it don't return) because
-				// that is what we did prior to this change too
-				v.log.Warn("error retrieving config values", "err", err)
-			}
-
-			idx := highestExec
-			for _, exec := range msg.Config.Exec {
-				// Skip sessions we already know about. Normal CEB does this too, I guess beacuse
-				// the server can resend exec info.
-				if exec.Index <= highestExec {
-					continue
-				}
-
-				if exec.Index > idx {
-					idx = exec.Index
-				}
-
-				err = v.startExec(ctx, h, exec, env)
-				if count > 0 {
-					count--
-					if count == 0 {
-						v.log.Info("virtual instance stopping")
-						return nil
-					}
-				}
-			}
-
-			highestExec = idx
+		var env []string
+		env, lastConfigGen, err = w.Next(ctx, lastConfigGen)
+		if err != nil {
+			// we drop the error here (only log it don't return) because
+			// that is what we did prior to this change too
+			v.log.Warn("error retrieving config values", "err", err)
 		}
+
+		idx := highestExec
+		for _, exec := range msg.Config.Exec {
+			// Skip sessions we already know about. Normal CEB does this too, I guess beacuse
+			// the server can resend exec info.
+			if exec.Index <= highestExec {
+				continue
+			}
+
+			if exec.Index > idx {
+				idx = exec.Index
+			}
+
+			err = v.startExec(ctx, h, exec, env)
+			if count > 0 {
+				count--
+				if count == 0 {
+					v.log.Info("virtual instance stopping")
+					return nil
+				}
+			}
+		}
+
+		highestExec = idx
 	}
 }
 
