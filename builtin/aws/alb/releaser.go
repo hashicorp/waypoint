@@ -335,6 +335,12 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 		"Allow EC2 Deployments to be hooked up to an ALB",
 	)
 
+	doc.AddMapper(
+		"lambda.Deployment",
+		"alb.TargetGroup",
+		"Allow Lambda Deployments to be hooked up to an ALB",
+	)
+
 	doc.SetField(
 		"name",
 		"the name to assign the ALB",

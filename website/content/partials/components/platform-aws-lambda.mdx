@@ -1,0 +1,85 @@
+## aws-lambda (platform)
+
+Deploy functions as OCI Images to AWS Lambda.
+
+### Interface
+
+- Input: **ecr.Image**
+- Output: **lambda.Deployment**
+
+### Examples
+
+```hcl
+deploy {
+	use "aws-lambda" {
+		region = "us-east-1"
+		memory = 512
+	}
+}
+```
+
+### Required Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### region
+
+The AWS region for the ECS cluster.
+
+- Type: **string**
+
+### Optional Parameters
+
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### iam_role
+
+An IAM Role specified by ARN that will be used by the Lambda at execution time.
+
+- Type: **string**
+- **Optional**
+- Default: created automatically
+
+#### memory
+
+The amount of memory, in megabytes, to assign the function.
+
+- Type: **int**
+- **Optional**
+- Default: 265
+
+#### timeout
+
+The number of seconds a function has to return a result.
+
+- Type: **int**
+- **Optional**
+- Default: 60
+
+### Output Attributes
+
+Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
+
+#### func_arn
+
+- Type: **string**
+
+#### id
+
+- Type: **string**
+
+#### region
+
+- Type: **string**
+
+#### target_group_arn
+
+- Type: **string**
+
+#### ver_arn
+
+- Type: **string**
+
+#### version
+
+- Type: **string**
