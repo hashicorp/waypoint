@@ -133,9 +133,6 @@ func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) 
 	}
 	defer w.Close()
 
-	// This will keep track of the config values to use for exec.
-	lastConfigGen := uint64(0)
-
 	// This is much more paired down than the version in the official CEB because the
 	// expectation is that a virtual instance is used for a single operation and then
 	// exits. So we only need to see a single view of the config variables before we
@@ -156,8 +153,11 @@ func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) 
 			continue
 		}
 
-		var env []string
-		env, lastConfigGen, err = w.Next(ctx, lastConfigGen)
+		// Get the config values, we use a iterator value of 0 here so that
+		// we will wait for at least one set of config values to resolve.
+		// In most virtual CEB cases we are only open for a single exec
+		// anyways so this resolves perfectly to our expected values.
+		env, _, err := w.Next(ctx, 0)
 		if err != nil {
 			// we drop the error here (only log it don't return) because
 			// that is what we did prior to this change too
