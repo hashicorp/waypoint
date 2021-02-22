@@ -2,6 +2,7 @@ package ceb
 
 import (
 	"context"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
@@ -10,6 +11,18 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/appconfig"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+)
+
+var (
+	// appConfigRefreshPeriod is the interval between checking for new
+	// config values. In a steady state, configuration NORMALLY doesn't
+	// change so this is set fairly high to avoid unnecessary load on
+	// dynamic config sources.
+	//
+	// NOTE(mitchellh): In the future, we'd like to build a way for
+	// config sources to edge-trigger when changes happen to prevent
+	// this refresh.
+	appConfigRefreshPeriod = 15 * time.Second
 )
 
 func (ceb *CEB) initConfigStream(ctx context.Context, cfg *config) error {

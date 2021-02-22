@@ -12,6 +12,8 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/hashicorp/waypoint/internal/appconfig"
 )
 
 // VirtualExecInfo contains values to run an exec session.
@@ -114,20 +116,25 @@ func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) 
 
 	v.log.Info("virtual instance connected")
 
-	dynamicSources := map[string]*pb.ConfigSource{}
-
-	var (
-		static  []string
-		dynamic map[string][]*component.ConfigRequest
-		env     []string
-
-		highestExec int64
-	)
+	var highestExec int64
 
 	// They can be used for config sources that we might be sent.
 	configPlugins := loadPlugins()
 
-	prevVarsChanged := map[string]bool{}
+	// Setup our config watcher
+	w, err := appconfig.NewWatcher(
+		appconfig.WithLogger(v.log),
+		appconfig.WithPlugins(configPlugins),
+		appconfig.WithRefreshInterval(appConfigRefreshPeriod),
+		appconfig.WithDynamicEnabled(v.cfg.EnableDynamicConfig),
+	)
+	if err != nil {
+		return err
+	}
+	defer w.Close()
+
+	// This will keep track of the config values to use for exec.
+	lastConfigGen := uint64(0)
 
 	// This is much more paired down than the version in the official CEB because the
 	// expectation is that a virtual instance is used for a single operation and then
@@ -140,27 +147,25 @@ func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) 
 			return err
 		}
 
-		// The idea here is that we're going to gather up all the configs sent down
-		// and then use them in an exec session when it's requested.
+		// Always update our config vars even if we have no exec so that
+		// while we're waiting for exec we're at least gathering config.
+		w.UpdateSources(ctx, msg.Config.ConfigSources)
+		w.UpdateVars(ctx, msg.Config.EnvVars)
 
-		for _, src := range msg.Config.ConfigSources {
-			dynamicSources[src.Type] = src
-		}
-
-		if msg.Config.EnvVars != nil {
-			static, dynamic = splitAppConfig(v.log, msg.Config.EnvVars)
+		if msg.Config.Exec == nil {
+			continue
 		}
 
 		if msg.Config.Exec != nil {
-			if !v.cfg.EnableDynamicConfig {
-				dynamic = nil
-				dynamicSources = nil
+			var env []string
+			env, lastConfigGen, err = w.Next(ctx, lastConfigGen)
+			if err != nil {
+				// we drop the error here (only log it don't return) because
+				// that is what we did prior to this change too
+				v.log.Warn("error retrieving config values", "err", err)
 			}
 
-			env = buildAppConfig(ctx, v.log, configPlugins, static, dynamic, dynamicSources, prevVarsChanged)
-
 			idx := highestExec
-
 			for _, exec := range msg.Config.Exec {
 				// Skip sessions we already know about. Normal CEB does this too, I guess beacuse
 				// the server can resend exec info.
