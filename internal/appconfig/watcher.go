@@ -452,7 +452,7 @@ func (w *Watcher) watcher(
 			}
 
 			// New env vars!
-			log.Debug("new configuration computed", "env", newEnv)
+			log.Debug("new configuration computed")
 			prevEnv = newEnv
 
 			// Update our currentEnv
