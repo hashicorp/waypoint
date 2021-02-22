@@ -265,7 +265,13 @@ registry {
 `)
 
 	doc.Input("docker.Image")
-	doc.Output("docker.Image")
+	doc.Output("ecr.Image")
+
+	doc.AddMapper(
+		"ecr.Image",
+		"docker.Image",
+		"Allow an ECR Image to be used as a standard docker.Image",
+	)
 
 	doc.SetField(
 		"region",

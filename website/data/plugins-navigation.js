@@ -1,6 +1,7 @@
 export default [
   'aws-ec2',
   'aws-ecs',
+  'aws-lambda',
   'aws-ssm',
   'azure-container-instance',
   'docker',
