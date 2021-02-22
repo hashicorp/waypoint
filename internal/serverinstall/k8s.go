@@ -44,6 +44,7 @@ type k8sConfig struct {
 	openshift         bool   `hcl:"openshft,optional"`
 	cpuRequest        string `hcl:"cpu_request,optional"`
 	memRequest        string `hcl:"mem_request,optional"`
+	storageClassName  string `hcl:"storageclassname,optional"`
 	storageRequest    string `hcl:"storage_request,optional"`
 	secretFile        string `hcl:"secret_file,optional"`
 	imagePullSecret   string `hcl:"image_pull_secret,optional"`
@@ -1132,6 +1133,26 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 		securityContext.FSGroup = int64Ptr(1000)
 	}
 
+	volumeClaimTemplates := []apiv1.PersistentVolumeClaim{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "data",
+			},
+			Spec: apiv1.PersistentVolumeClaimSpec{
+				AccessModes: []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
+				Resources: apiv1.ResourceRequirements{
+					Requests: apiv1.ResourceList{
+						apiv1.ResourceStorage: storageRequest,
+					},
+				},
+			},
+		},
+	}
+
+	if c.storageClassName != "" {
+		volumeClaimTemplates[0].Spec.StorageClassName = &c.storageClassName
+	}
+
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serverName,
@@ -1219,21 +1240,7 @@ func newStatefulSet(c k8sConfig) (*appsv1.StatefulSet, error) {
 					},
 				},
 			},
-			VolumeClaimTemplates: []apiv1.PersistentVolumeClaim{
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "data",
-					},
-					Spec: apiv1.PersistentVolumeClaimSpec{
-						AccessModes: []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
-						Resources: apiv1.ResourceRequirements{
-							Requests: apiv1.ResourceList{
-								apiv1.ResourceStorage: storageRequest,
-							},
-						},
-					},
-				},
-			},
+			VolumeClaimTemplates: volumeClaimTemplates,
 		},
 	}, nil
 }
@@ -1346,6 +1353,12 @@ func (i *K8sInstaller) InstallFlags(set *flag.Set) {
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:   "k8s-storageclassname",
+		Target: &i.config.storageClassName,
+		Usage:  "Name of the StorageClass required by the volume claim to install the Waypoint server image to.",
 	})
 
 	set.StringVar(&flag.StringVar{
