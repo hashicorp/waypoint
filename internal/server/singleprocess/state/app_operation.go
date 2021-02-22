@@ -323,7 +323,7 @@ func (op *appOperation) Latest(
 		}
 	}
 
-	return nil, status.Errorf(codes.NotFound, "No application named %q to deploy!", ref.Application)
+	return nil, status.Errorf(codes.NotFound, "No application named %q is available!", ref.Application)
 }
 
 // dbGet reads the value from the database.
