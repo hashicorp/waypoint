@@ -404,6 +404,7 @@ func (p *Platform) Deploy(
 
 	step.Done()
 
+	deployment.Region = p.config.Region
 	deployment.Id = id
 	deployment.FuncArn = funcarn
 	deployment.VerArn = verarn
