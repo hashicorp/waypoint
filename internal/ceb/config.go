@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/appconfig"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -100,10 +101,18 @@ func (ceb *CEB) watchConfig(
 	// Start the app config watcher. This runs in its own goroutine so that
 	// stuff like dynamic config fetching doesn't block starting things like
 	// exec sessions.
-	sourceCh := make(chan []*pb.ConfigSource)
-	varCh := make(chan []*pb.ConfigVar)
 	envCh := make(chan []string)
-	go ceb.watchAppConfig(ctx, log, sourceCh, varCh, envCh)
+	w, err := appconfig.NewWatcher(
+		appconfig.WithLogger(log),
+		appconfig.WithPlugins(ceb.configPlugins),
+		appconfig.WithNotify(envCh),
+		appconfig.WithRefreshInterval(appConfigRefreshPeriod),
+	)
+	if err != nil {
+		log.Error("error starting app config watcher", "err", err)
+		return
+	}
+	defer w.Close()
 
 	for {
 		select {
@@ -138,14 +147,8 @@ func (ceb *CEB) watchConfig(
 			// Configure our env vars for the child command. We always send
 			// these even if they're nil since the app config watcher will
 			// de-dup and we want to handle removing env vars.
-			select {
-			case sourceCh <- config.ConfigSources:
-			case <-ctx.Done():
-			}
-			select {
-			case varCh <- config.EnvVars:
-			case <-ctx.Done():
-			}
+			w.UpdateSources(ctx, config.ConfigSources)
+			w.UpdateVars(ctx, config.EnvVars)
 
 		case newEnv := <-envCh:
 			// Store the new env vars. We could just do `env = <-envCh` above
