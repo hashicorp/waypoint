@@ -205,8 +205,12 @@ func (p *Platform) Destroy(
 
 // Config is the configuration structure for the Platform.
 type Config struct {
-	// The Nomad region to deploy to, defaults to "global"
-	Region string `hcl:"region,optional"`
+	// The credential of docker registry.
+	Auth *AuthConfig `hcl:"auth,block"`
+
+	// The number of replicas of the service to maintain. If this number is maintained
+	// outside waypoint, do not set this variable.
+	Count int `hcl:"replicas,optional"`
 
 	// The datacenters to deploy to, defaults to ["dc1"]
 	Datacenter string `hcl:"datacenter,optional"`
@@ -214,24 +218,20 @@ type Config struct {
 	// The namespace of the job
 	Namespace string `hcl:"namespace,optional"`
 
-	// The number of replicas of the service to maintain. If this number is maintained
-	// outside waypoint, do not set this variable.
-	Count int `hcl:"replicas,optional"`
-
-	// The credential of docker registry.
-	Auth *AuthConfig `hcl:"auth,block"`
-
-	// Environment variables that are meant to configure the application in a static
-	// way. This might be control an image that has multiple modes of operation,
-	// selected via environment variable. Most configuration should use the waypoint
-	// config commands.
-	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+	// The Nomad region to deploy to, defaults to "global"
+	Region string `hcl:"region,optional"`
 
 	// Port that your service is running on within the actual container.
 	// Defaults to port 3000.
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
 	// or default to another port.
 	ServicePort uint `hcl:"service_port,optional"`
+
+	// Environment variables that are meant to configure the application in a static
+	// way. This might be control an image that has multiple modes of operation,
+	// selected via environment variable. Most configuration should use the waypoint
+	// config commands.
+	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
 // AuthConfig maps the the Nomad Docker driver 'auth' config block
