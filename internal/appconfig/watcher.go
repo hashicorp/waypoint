@@ -1,4 +1,4 @@
-package ceb
+package appconfig
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-argmapper"
@@ -18,12 +19,30 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	sdkpb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
+	"github.com/hashicorp/waypoint/internal/pkg/condctx"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 var (
-	// appConfigRefreshPeriod is the interval between checking for new
+	// defaultRefreshInterval is picked to be long enough to not overstrain
+	// systems but short enough that config changes propagate reasonably.
+	defaultRefreshInterval = 15 * time.Second
+)
+
+// Watcher reads application configuration values and watches for any changes.
+//
+// The values that the watcher is watching can be added, removed, or updated
+// along with any configuration sources (how to read from external systems
+// such as Vault).
+type Watcher struct {
+	log hclog.Logger
+
+	// dynamicEnabled determines whether we allow dynamic sources or not.
+	// If this is false, then we ignore all dynamic configs.
+	dynamicEnabled bool
+
+	// refreshInterval is the interval between checking for new
 	// config values. In a steady state, configuration NORMALLY doesn't
 	// change so this is set fairly high to avoid unnecessary load on
 	// dynamic config sources.
@@ -31,17 +50,208 @@ var (
 	// NOTE(mitchellh): In the future, we'd like to build a way for
 	// config sources to edge-trigger when changes happen to prevent
 	// this refresh.
-	appConfigRefreshPeriod = 15 * time.Second
-)
+	refreshInterval time.Duration
 
-func (ceb *CEB) watchAppConfig(
+	// plugins is a set of plugins that are already launched for
+	// config sourcing.
+	plugins map[string]*plugin.Instance
+
+	// inSourceCh and inVarCh are the channels that are used to send
+	// updated sets of configuration sources and variables to the watch loop.
+	inSourceCh chan []*pb.ConfigSource
+	inVarCh    chan []*pb.ConfigVar
+
+	// currentCond is used to lock and notify updates for currentEnv.
+	currentCond *sync.Cond
+
+	// currentEnv is the list of current environment variable values for
+	// the configuration.
+	currentEnv []string
+
+	// currentGen is the current "generation" of configuration values. This
+	// is incremented by one each time the current config value (currentEnv)
+	// are updated. This can be used along with currentCond to detect
+	// changes in currentEnv.
+	currentGen uint64
+
+	// bgCtx, bgCancel, and bgWg are all used for lifecycle management of
+	// background goroutines managed by the watcher. bgCtx can be used to
+	// cancel them (via bgCancel), and bgWg can be waited on to ensure
+	// everything is stopped.
+	bgCtx    context.Context
+	bgCancel context.CancelFunc
+	bgWg     *sync.WaitGroup
+}
+
+// NewWatcher creates a new Watcher instance.
+//
+// This will immediately start the background goroutine for reading and
+// updating configuration values, even if no initial values are provided.
+// You must call Close to properly clean up resources used by the Watcher.
+func NewWatcher(opts ...Option) (*Watcher, error) {
+	var bgWg sync.WaitGroup
+	bgCtx, bgCancel := context.WithCancel(context.Background())
+
+	// If we return due to an error, cancel the background context.
+	// This won't do anything on success cause we nil out bgCancel.
+	defer func() {
+		if bgCancel != nil {
+			bgCancel()
+		}
+	}()
+
+	// Build our initial watcher
+	w := &Watcher{
+		log:             hclog.L(),
+		dynamicEnabled:  true,
+		refreshInterval: defaultRefreshInterval,
+		plugins:         map[string]*plugin.Instance{},
+		inSourceCh:      make(chan []*pb.ConfigSource),
+		inVarCh:         make(chan []*pb.ConfigVar),
+		currentCond:     sync.NewCond(&sync.Mutex{}),
+		bgCtx:           bgCtx,
+		bgCancel:        bgCancel,
+		bgWg:            &bgWg,
+	}
+
+	// Use the option pattern to update any options.
+	for _, opt := range opts {
+		if err := opt(w); err != nil {
+			return nil, err
+		}
+	}
+
+	// Start our background goroutine
+	w.bgWg.Add(1)
+	go w.watcher(
+		bgCtx,
+		w.log.Named("watchloop"),
+	)
+
+	// Everything is good, nil out bgCancel so our defer doesn't stop us
+	bgCancel = nil
+
+	return w, nil
+}
+
+// Close stops all the background goroutines that this watcher started.
+// This will block until all the background tasks have exited.
+func (w *Watcher) Close() error {
+	w.bgCancel()
+	w.bgWg.Wait()
+	return nil
+}
+
+// Next returns the next values for the configuration AFTER the given
+// iterator value iter. A value of 0 can be used for iter for a first read.
+//
+// The return value will be the configuration values in env format (KEY=VALUE),
+// the current iterator value that you should use with the next call to Next,
+// and any error if it occurred.
+//
+// The ctx parameter can be used for timeouts, cancellation, etc. If the context
+// is closed, this will return the context error.
+func (w *Watcher) Next(ctx context.Context, iter uint64) ([]string, uint64, error) {
+	var cancelFunc func()
+
+	w.currentCond.L.Lock()
+	defer w.currentCond.L.Unlock()
+
+	// Wait on the condition var as long as we have the same iterator
+	// and the context isn't yet cancelled.
+	for w.currentGen == iter && ctx.Err() == nil {
+		// If we're waiting, then we want to start a goroutine to notify
+		// us if the context closes. We have to do this in a goroutine because
+		// cond vars have no other way to wait on a context.
+		//
+		// We do this in the for loop so that on the fast path where we
+		// have an older generation, we just return the value immediately
+		// without all the goroutine ceremony.
+		if cancelFunc == nil {
+			cancelFunc = condctx.Notify(ctx, w.currentCond)
+			defer cancelFunc()
+		}
+
+		w.currentCond.Wait()
+	}
+
+	// If we exited due to context being canceled, exit now.
+	if ctx.Err() != nil {
+		return nil, 0, ctx.Err()
+	}
+
+	return w.currentEnv, w.currentGen, nil
+}
+
+// UpdateSources updates the configuration sources for the watcher. The
+// behavior and semantics are identical to UpdateVars but for configuration
+// sources, so please see the documentation for UpdateVars for more details.
+func (w *Watcher) UpdateSources(ctx context.Context, v []*pb.ConfigSource) error {
+	select {
+	case w.inSourceCh <- v:
+		return nil
+
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+// UpdateVars updates the variables for the watcher. This replaces all
+// the previous set variables.
+//
+// This may block for some time waiting for the update loop to accept
+// our changes. The ctx parameter can be used as a timeout. If the context
+// is cancelled, the error returned will be the context error.
+func (w *Watcher) UpdateVars(ctx context.Context, v []*pb.ConfigVar) error {
+	select {
+	case w.inVarCh <- v:
+		return nil
+
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func (w *Watcher) notify(
+	ctx context.Context,
+	ch chan<- []string,
+) {
+	// lastGen is the last generation we saw. We always set this to zero
+	// so we get an initial value sent (first value is 1).
+	var lastGen uint64 = 0
+
+	for {
+		newEnv, nextGen, err := w.Next(ctx, lastGen)
+		if err != nil {
+			// This case covers context cancellation as well since
+			// Next returns the context error on cancellation.
+			return
+		}
+
+		lastGen = nextGen
+		select {
+		case ch <- newEnv:
+			// Sent successfully
+
+		case <-ctx.Done():
+			// Context over, return
+			return
+		}
+	}
+}
+
+// watcher is the main watch loop that waits for changes in configuration
+// or configuration sources and sends the resulting set of environment variables
+// on the output channel.
+//
+// Callers must always add one to w.bgWg prior to calling this.
+func (w *Watcher) watcher(
 	ctx context.Context,
 	log hclog.Logger,
-	inSourceCh <-chan []*pb.ConfigSource,
-	inCh <-chan []*pb.ConfigVar,
-	outCh chan<- []string,
 ) {
-	// prevVars keeps track of the previous seen variables sent on inCh.
+	defer w.bgWg.Done()
+
+	// prevVars keeps track of the previous seen variables sent on inVarCh.
 	// We do some diffing to prevent unnecessary config fetching or command
 	// restarting and this is how we account for that.
 	var prevVars []*pb.ConfigVar
@@ -59,7 +269,7 @@ func (ceb *CEB) watchAppConfig(
 
 	// refreshCh will be sent a message when we want to refresh our
 	// configuration. We default to nil so that we do nothing until
-	// we receive our first set of variables (the <-inCh case below).
+	// we receive our first set of variables (the <-inVarCh case below).
 	//
 	// coalesceCh is used when we want to refresh, but allow some time
 	// for coalescing of the source/variable channels to occur.
@@ -84,9 +294,9 @@ func (ceb *CEB) watchAppConfig(
 	refreshNowCh := make(chan time.Time)
 	close(refreshNowCh)
 
-	// prevSent is flipped to true once we send our first set of compiled
-	// env vars to the outCh. We have to keep track of this because there is
-	// an expectation that we will always send an initial set of configs.
+	// prevSent is flipped to true once we update our first set of compiled
+	// env vars to the currentEnv. We have to keep track of this because there is
+	// an expectation that we will always set an initial set of configs.
 	prevSent := false
 
 	for {
@@ -96,7 +306,7 @@ func (ceb *CEB) watchAppConfig(
 			return
 
 		// Case: caller sends us a new set of config source settings
-		case newSources := <-inSourceCh:
+		case newSources := <-w.inSourceCh:
 			// Our first pass here is a quick high-level pass to determine if
 			// anything is possibly different at all. If it isn't, we just
 			// continue on.
@@ -156,9 +366,9 @@ func (ceb *CEB) watchAppConfig(
 			}
 
 		// Case: caller sends us a new set of variables
-		case newVars := <-inCh:
+		case newVars := <-w.inVarCh:
 			// If the variables are the same as the last set, then we do nothing.
-			if prevSent && ceb.sameAppConfig(log, prevVars, newVars) {
+			if prevSent && w.sameAppConfig(log, prevVars, newVars) {
 				log.Trace("got var update but ignoring since they're the same")
 				continue
 			}
@@ -173,11 +383,17 @@ func (ceb *CEB) watchAppConfig(
 			dynamicOld := dynamic
 			static, dynamic = splitAppConfig(log, newVars)
 
+			// Handle the case we disable dynamics
+			if !w.dynamicEnabled && len(dynamic) > 0 {
+				log.Debug("dynamic config vars are disabled, ignoring", "n", len(dynamic))
+				dynamic = nil
+			}
+
 			// We need to do a diff of if any dynamic var config changed.
 			// We loop through the result here and set values to true so
 			// that we don't clobber changes that inSourceCh receiving may have
 			// set. On refresh, we always reset prevVarsChanged to empty.
-			for k, v := range ceb.diffDynamicAppConfig(log, dynamicOld, dynamic) {
+			for k, v := range w.diffDynamicAppConfig(log, dynamicOld, dynamic) {
 				// If it is false, we override it with whatever v we have.
 				if !prevVarsChanged[k] {
 					prevVarsChanged[k] = v
@@ -205,7 +421,7 @@ func (ceb *CEB) watchAppConfig(
 			// Get our new env vars
 			log.Trace("refreshing app configuration")
 			newEnv := buildAppConfig(ctx, log,
-				ceb.configPlugins, static, dynamic, dynamicSources, prevVarsChanged)
+				w.plugins, static, dynamic, dynamicSources, prevVarsChanged)
 
 			sort.Strings(newEnv)
 
@@ -216,7 +432,7 @@ func (ceb *CEB) watchAppConfig(
 
 			// Setup our next refresh. This "leaks" timers in the scenario
 			// we get a lot of variable changes but that is an unlikely case.
-			refreshCh = time.After(appConfigRefreshPeriod)
+			refreshCh = time.After(w.refreshInterval)
 
 			// Compare our new env and old env. prevEnv is already sorted.
 			if prevSent && reflect.DeepEqual(prevEnv, newEnv) {
@@ -225,22 +441,25 @@ func (ceb *CEB) watchAppConfig(
 			}
 
 			// New env vars!
-			log.Debug("new configuration computed, sending to child process manager")
+			log.Debug("new configuration computed")
 			prevEnv = newEnv
-			select {
-			case outCh <- newEnv:
-				prevSent = true
 
-			case <-ctx.Done():
-				return
-			}
+			// Update our currentEnv
+			w.currentCond.L.Lock()
+			w.currentEnv = newEnv
+			w.currentGen++
+			w.currentCond.Broadcast()
+			w.currentCond.L.Unlock()
+
+			// We've sent now
+			prevSent = true
 		}
 	}
 }
 
 // sameAppConfig returns true if the vars and prevVars represent the
 // same application configuration.
-func (ceb *CEB) sameAppConfig(
+func (w *Watcher) sameAppConfig(
 	log hclog.Logger,
 	vars []*pb.ConfigVar,
 	prevVars []*pb.ConfigVar,
@@ -310,7 +529,7 @@ func splitAppConfig(
 //
 // The return value are all the plugins with changes, and the bool value
 // is true if the plugin process should also be killed.
-func (ceb *CEB) diffDynamicAppConfig(
+func (w *Watcher) diffDynamicAppConfig(
 	log hclog.Logger,
 	dynamicOld, dynamicNew map[string][]*component.ConfigRequest,
 ) map[string]bool {
@@ -393,7 +612,7 @@ func buildAppConfig(
 		L := log.With("source", k)
 		L.Debug("config variables changed, calling Stop")
 		s := raw.Component.(component.ConfigSourcer)
-		_, err := callDynamicFunc(L, s.StopFunc(),
+		_, err := plugin.CallDynamicFunc(L, s.StopFunc(),
 			argmapper.Typed(ctx),
 		)
 		if err != nil {
@@ -473,7 +692,7 @@ func buildAppConfig(
 			}
 			L.Trace("reading values for keys", "keys", keys)
 		}
-		result, err := callDynamicFunc(L, s.ReadFunc(),
+		result, err := plugin.CallDynamicFunc(L, s.ReadFunc(),
 			argmapper.Typed(ctx),
 			argmapper.Typed(reqs),
 		)
