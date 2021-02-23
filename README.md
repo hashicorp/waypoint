@@ -1,4 +1,4 @@
-![Image](website/public/img/logo-fullcolor-rgb.png)
+![Image](website/public/img/logo-fullcolor-whitebackground-rbg.png)
 
 ----------------------------------------
 
