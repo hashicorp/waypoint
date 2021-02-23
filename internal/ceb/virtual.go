@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/appconfig"
+	"github.com/hashicorp/waypoint/internal/ceb/execwriter"
 )
 
 // VirtualExecInfo contains values to run an exec session.
@@ -232,8 +233,8 @@ func (v *Virtual) startExec(
 	defer stdinW.Close()
 
 	// We need to modify our command so the input/output is all over gRPC
-	stdout := execOutputWriter(client, pb.EntrypointExecRequest_Output_STDOUT)
-	stderr := execOutputWriter(client, pb.EntrypointExecRequest_Output_STDERR)
+	stdout := execwriter.Writer(client, pb.EntrypointExecRequest_Output_STDOUT)
+	stderr := execwriter.Writer(client, pb.EntrypointExecRequest_Output_STDERR)
 
 	done := make(chan error, 1)
 
