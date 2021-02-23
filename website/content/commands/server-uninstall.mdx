@@ -31,14 +31,14 @@ Usage: `waypoint server uninstall [options]`
 - `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.
 - `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to uninstall.
 
+#### kubernetes Options
+
+- `-k8s-context=<string>` - The Kubernetes context to unisntall the Waypoint server from. If left unset, Waypoint will use the current Kubernetes context.
+
 #### nomad Options
 
 - `-nomad-purge` - Purge the Waypoint server job after deregistering as part of uninstall.
 
 #### docker Options
-
-#### kubernetes Options
-
-- `-k8s-context=<string>` - The Kubernetes context to unisntall the Waypoint server from. If left unset, Waypoint will use the current Kubernetes context.
 
 @include "commands/server-uninstall_more.mdx"
