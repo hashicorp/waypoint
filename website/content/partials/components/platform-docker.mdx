@@ -82,6 +82,15 @@ A list of networks to connect the container to. By default the container will al
 - **Optional**
 - Default: waypoint
 
+#### resources
+
+A map of resources to configure the container with, such as memory or cpu limits.
+
+These options are used to configure the container used when deploying with docker. Currently, the supported resources are 'memory' and 'cpu' limits. The field 'memory' is expected to be defined as "512MB", "44kB", etc.
+
+- Type: **map[string]string**
+- **Optional**
+
 #### scratch_path
 
 A path within the container to store temporary data.
