@@ -2,6 +2,7 @@
   (eq target.currentRouteName 'workspace.projects.project.app.build')
   (eq target.currentRouteName 'workspace.projects.project.app.deployment')
   (eq target.currentRouteName 'workspace.projects.project.app.release')
+  (eq target.currentRouteName 'workspace.projects.project.app.settings')
 )}}
 <PageHeader @iconName="git-repository">
   <div class="title">
@@ -18,6 +19,7 @@
       {{/if}}
     </small>
   </div>
+  <LinkTo @route="workspace.projects.project.app.settings" @model={{@model}}><Pds::Icon @type="settings"/> Settings </LinkTo>
   <div class="actions">
     {{#if @model.releases.length}}
     <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
