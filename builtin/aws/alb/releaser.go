@@ -65,6 +65,11 @@ func (r *Releaser) Release(
 		})
 	}
 
+	// If there is a port defined, honor it.
+	if r.config.Port != 0 {
+		port = int64(r.config.Port)
+	}
+
 	var (
 		lb               *elbv2.LoadBalancer
 		listener         *elbv2.Listener
@@ -147,7 +152,7 @@ func (r *Releaser) Release(
 				vpc = subnetInfo.Subnets[0].VpcId
 			}
 
-			sg, err := utils.CreateSecurityGroup(ctx, sess, fmt.Sprintf("%s-incoming", lbName), vpc, r.config.Port)
+			sg, err := utils.CreateSecurityGroup(ctx, sess, fmt.Sprintf("%s-incoming", lbName), vpc, int(port))
 			if err != nil {
 				return nil, err
 			}
