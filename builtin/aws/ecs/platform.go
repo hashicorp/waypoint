@@ -908,16 +908,6 @@ func (p *Platform) Launch(
 		})
 	}
 
-<<<<<<< HEAD
-=======
-	logOptions := buildLoggingOptions(
-		p.config.Logging,
-		p.config.Region,
-		logGroup,
-		defaultStreamPrefix,
-	)
-
->>>>>>> 6a5897f8... check for nil logging opts; remove endpoint
 	def := ecs.ContainerDefinition{
 		Essential: aws.Bool(true),
 		Name:      aws.String(app.App),
