@@ -1,4 +1,7 @@
-package ceb
+// Package execwriter contains helpers for writing "waypoint exec"
+// streams via an io.Writer. Data written to the io.Writer will be
+// automatically sent to the gRPC stream.
+package execwriter
 
 import (
 	"io"
@@ -10,7 +13,10 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-func execOutputWriter(
+// Writer returns an io.Writer for writing the given channel of exec
+// stream data (stderr or stdout). The writer doesn't have to be closed,
+// you'll receive an EOF once the stream itself closes.
+func Writer(
 	client grpc.ClientStream,
 	channel pb.EntrypointExecRequest_Output_Channel,
 ) io.Writer {

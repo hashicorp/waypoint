@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	"github.com/hashicorp/waypoint/internal/ceb"
+	"github.com/hashicorp/waypoint/internal/ceb/virtualceb"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -42,7 +42,7 @@ func (a *App) Logs(ctx context.Context, id string, d *pb.Deployment, startTime t
 
 	a.logger.Debug("spawn virtual ceb to handle logs", "instance-id", id)
 
-	virt, err := ceb.NewVirtual(a.logger, ceb.VirtualConfig{
+	virt, err := virtualceb.New(a.logger, virtualceb.Config{
 		InstanceId: id,
 		Client:     a.client,
 	})

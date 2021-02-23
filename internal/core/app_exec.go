@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	"github.com/hashicorp/waypoint/internal/ceb"
+	"github.com/hashicorp/waypoint/internal/ceb/virtualceb"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -82,7 +82,7 @@ func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment, enableDynCo
 
 	a.logger.Debug("spawn virtual ceb to handle exec")
 
-	virt, err := ceb.NewVirtual(a.logger, ceb.VirtualConfig{
+	virt, err := virtualceb.New(a.logger, virtualceb.Config{
 		DeploymentId:        d.Id,
 		InstanceId:          id,
 		Client:              a.client,
@@ -103,7 +103,7 @@ func (a *App) Exec(ctx context.Context, id string, d *pb.Deployment, enableDynCo
 	}, 1)
 }
 
-// pluginExecVirtHandler is an implementation of ceb.VirtualExecHandler
+// pluginExecVirtHandler is an implementation of virtualceb.ExecHandler
 // that hands off the exec session info to the plugin's Exec function.
 type pluginExecVirtHandler struct {
 	app        *App
@@ -114,7 +114,7 @@ type pluginExecVirtHandler struct {
 	artifact   *pb.PushedArtifact
 
 	// Set in CreateSession
-	info *ceb.VirtualExecInfo
+	info *virtualceb.ExecInfo
 
 	// Any window size updates that we get from the virtual CEB
 	wsUpdates chan component.WindowSize
@@ -128,8 +128,8 @@ type pluginExecVirtHandler struct {
 // ceb instance.
 func (p *pluginExecVirtHandler) CreateSession(
 	ctx context.Context,
-	info *ceb.VirtualExecInfo,
-) (ceb.VirtualExecSession, error) {
+	info *virtualceb.ExecInfo,
+) (virtualceb.ExecSession, error) {
 
 	p.log.Info("creating plugin virt handler session")
 

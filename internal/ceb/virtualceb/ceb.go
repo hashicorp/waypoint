@@ -1,4 +1,4 @@
-package ceb
+package virtualceb
 
 import (
 	"bytes"
@@ -14,10 +14,12 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint/internal/appconfig"
+	"github.com/hashicorp/waypoint/internal/ceb/execwriter"
+	"github.com/hashicorp/waypoint/internal/plugin"
 )
 
-// VirtualExecInfo contains values to run an exec session.
-type VirtualExecInfo struct {
+// ExecInfo contains values to run an exec session.
+type ExecInfo struct {
 	Input  io.Reader // stdin
 	Output io.Writer // stdout
 	Error  io.Writer // stderr
@@ -33,8 +35,8 @@ type VirtualExecInfo struct {
 	PTY *pb.ExecStreamRequest_PTY
 }
 
-// VirtualExecSession represents a running exec, spawned by VirtualExecHandler.
-type VirtualExecSession interface {
+// ExecSession represents a running exec, spawned by ExecHandler.
+type ExecSession interface {
 	// Called to start the session. Should block until the session is finished.
 	Run(ctx context.Context) error
 
@@ -46,14 +48,14 @@ type VirtualExecSession interface {
 	PTYResize(*pb.ExecStreamRequest_WindowSize) error
 }
 
-// VirtualExecHandler represents the ability to spawn exec sessions.
+// ExecHandler represents the ability to spawn exec sessions.
 // It is the abstraction layer Virtual uses for creating exec sessions.
-type VirtualExecHandler interface {
-	CreateSession(ctx context.Context, sess *VirtualExecInfo) (VirtualExecSession, error)
+type ExecHandler interface {
+	CreateSession(ctx context.Context, sess *ExecInfo) (ExecSession, error)
 }
 
-// VirtualConfig is the configuration of the CEB Virtual value
-type VirtualConfig struct {
+// Config is the configuration of the CEB Virtual value
+type Config struct {
 	// The deployment id that this virtual session is for. The server
 	// will validate this value.
 	DeploymentId string
@@ -72,12 +74,12 @@ type VirtualConfig struct {
 // Virtual represents a virtual CEB instance. It is used to manifest an instance that
 // performs exec operations via a Go interface rather than just running a command.
 type Virtual struct {
-	cfg VirtualConfig
+	cfg Config
 	log hclog.Logger
 }
 
-// NewVirtual creates a new Virtual value based on the logger and config.
-func NewVirtual(log hclog.Logger, cfg VirtualConfig) (*Virtual, error) {
+// New creates a new Virtual value based on the logger and config.
+func New(log hclog.Logger, cfg Config) (*Virtual, error) {
 	virt := &Virtual{
 		cfg: cfg,
 		log: log,
@@ -86,9 +88,9 @@ func NewVirtual(log hclog.Logger, cfg VirtualConfig) (*Virtual, error) {
 }
 
 // RunExec connects to the server and handles any inbound Exec requests via the
-// VirtualExecHandler. The count parameter inidcates how many exec sessions to handle
+// ExecHandler. The count parameter inidcates how many exec sessions to handle
 // before returning. If count is less than 0, it handles sessions forever.
-func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) error {
+func (v *Virtual) RunExec(ctx context.Context, h ExecHandler, count int) error {
 	v.log.Info("connecting virtual instance")
 
 	// A quick heads up: gRPC provides to ability to let the client of a recieve stream
@@ -119,13 +121,12 @@ func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) 
 	var highestExec int64
 
 	// They can be used for config sources that we might be sent.
-	configPlugins := loadPlugins()
+	configPlugins := plugin.ConfigSourcers
 
 	// Setup our config watcher
 	w, err := appconfig.NewWatcher(
 		appconfig.WithLogger(v.log),
 		appconfig.WithPlugins(configPlugins),
-		appconfig.WithRefreshInterval(appConfigRefreshPeriod),
 		appconfig.WithDynamicEnabled(v.cfg.EnableDynamicConfig),
 	)
 	if err != nil {
@@ -195,10 +196,10 @@ func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) 
 
 // startExec launches and manages a ExecStream for the given exec config. It will
 // spawn an exec session from the handler and then shuffle the data between gRPC
-// and the VirtualExecSession and VirtualExecInfo interfaces.
+// and the ExecSession and ExecInfo interfaces.
 func (v *Virtual) startExec(
 	ctx context.Context,
-	h VirtualExecHandler,
+	h ExecHandler,
 	execConfig *pb.EntrypointConfig_Exec,
 	env []string,
 ) error {
@@ -232,13 +233,13 @@ func (v *Virtual) startExec(
 	defer stdinW.Close()
 
 	// We need to modify our command so the input/output is all over gRPC
-	stdout := execOutputWriter(client, pb.EntrypointExecRequest_Output_STDOUT)
-	stderr := execOutputWriter(client, pb.EntrypointExecRequest_Output_STDERR)
+	stdout := execwriter.Writer(client, pb.EntrypointExecRequest_Output_STDOUT)
+	stderr := execwriter.Writer(client, pb.EntrypointExecRequest_Output_STDERR)
 
 	done := make(chan error, 1)
 
 	// Spawn a new exec session for this exec config.
-	xsess, err := h.CreateSession(ctx, &VirtualExecInfo{
+	xsess, err := h.CreateSession(ctx, &ExecInfo{
 		Input:       stdinR,
 		Output:      stdout,
 		Error:       stderr,

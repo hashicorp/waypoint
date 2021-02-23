@@ -1,4 +1,4 @@
-package ceb
+package virtualceb
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ import (
 )
 
 type testVirtualHandler struct {
-	info   *VirtualExecInfo
+	info   *ExecInfo
 	closed int
 
 	stdin bytes.Buffer
@@ -45,7 +45,7 @@ func (t *testVirtualHandler) PTYResize(_ *pb.ExecStreamRequest_WindowSize) error
 	return nil
 }
 
-func (t *testVirtualHandler) CreateSession(ctx context.Context, sess *VirtualExecInfo) (VirtualExecSession, error) {
+func (t *testVirtualHandler) CreateSession(ctx context.Context, sess *ExecInfo) (ExecSession, error) {
 	t.info = sess
 	return t, nil
 }
@@ -75,7 +75,7 @@ func TestVirtual_exec(t *testing.T) {
 	})
 	require.NoError(err)
 
-	virt, err := NewVirtual(L, VirtualConfig{
+	virt, err := New(L, Config{
 		DeploymentId: resp.Deployment.Id,
 		InstanceId:   "A",
 		Client:       client,

@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/ceb/execwriter"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -122,8 +123,8 @@ func (ceb *CEB) startExec(execConfig *pb.EntrypointConfig_Exec, env []string) {
 
 	// We need to modify our command so the input/output is all over gRPC
 	cmd.Stdin = stdinR
-	cmd.Stdout = execOutputWriter(client, pb.EntrypointExecRequest_Output_STDOUT)
-	cmd.Stderr = execOutputWriter(client, pb.EntrypointExecRequest_Output_STDERR)
+	cmd.Stdout = execwriter.Writer(client, pb.EntrypointExecRequest_Output_STDOUT)
+	cmd.Stderr = execwriter.Writer(client, pb.EntrypointExecRequest_Output_STDERR)
 
 	// PTY
 	var ptyFile *os.File

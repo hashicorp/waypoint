@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/version"
-
-	pluginAWSSSM "github.com/hashicorp/waypoint/builtin/aws/ssm"
-	pluginK8s "github.com/hashicorp/waypoint/builtin/k8s"
-	pluginVault "github.com/hashicorp/waypoint/builtin/vault"
 )
 
 const (
@@ -129,7 +125,7 @@ func Run(ctx context.Context, os ...Option) error {
 	defer ceb.Close()
 
 	// Setup our default config sourcers.
-	ceb.configPlugins = loadPlugins()
+	ceb.configPlugins = plugin.ConfigSourcers
 
 	// Set our options
 	var cfg config
@@ -196,22 +192,6 @@ func Run(ctx context.Context, os ...Option) error {
 	}
 
 	return nil
-}
-
-// In the future, this will load plugins from disk as true plugin instances,
-// but for now, they're hard coded.
-func loadPlugins() map[string]*plugin.Instance {
-	return map[string]*plugin.Instance{
-		"aws-ssm": {
-			Component: &pluginAWSSSM.ConfigSourcer{},
-		},
-		"kubernetes": {
-			Component: &pluginK8s.ConfigSourcer{},
-		},
-		"vault": {
-			Component: &pluginVault.ConfigSourcer{},
-		},
-	}
 }
 
 // waitState waits for the given state boolean to go true. This boolean
