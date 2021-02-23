@@ -1797,25 +1797,25 @@ deploy {
 
 	doc.SetField(
 		"logging",
-		"Provides additional configuration for logging flags for ECS.",
+		"Provides additional configuration for logging flags for ECS",
 		docs.Summary("Part of the ecs task definition.  These configuration flags help",
 			"control how the awslogs log driver is configured."),
 	)
 
 	doc.SetField(
 		"logging.create_group",
-		"Should the task attempt to create the aws logs group if not present?",
+		"Enables creation of the aws logs group if not present",
 	)
 
 	doc.SetField(
 		"logging.region",
-		"The region the logs are to be shipped to.",
-		docs.Default("The same region the task is to be running."),
+		"The region the logs are to be shipped to",
+		docs.Default("The same region the task is to be running"),
 	)
 
 	doc.SetField(
 		"logging.stream_prefix",
-		"prefix for application in cloudwatch logs path",
+		"Prefix for application in cloudwatch logs path",
 		docs.Default("Generated based off timestamp"),
 	)
 
