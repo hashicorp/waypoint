@@ -11,6 +11,23 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.2.3 (February 23, 2021)
+
+FEATURES:
+
+IMPROVEMENTS:
+
+* builtin/docker: Introduce resources map for configuring cpu, memory on deploy [GH-1116]
+* internal/server: More descriptive error for unknown application deploys [GH-973]
+* serverinstall/k8s: Include option to define storageClassName on install [GH-1126]
+
+BUG FIXES:
+
+* builtin/docker: Fix host port mapping defined by service_port [GH-918]
+* builtin/k8s: Surface pod failures on deploy [GH-1110]
+* serverinstall/nomad: Set platform as nomad at end of Install [GH-1129]
+* builtin/aws-ecs: Fix nil check on optional logging block [GH-1120]
+
 ## 0.2.2 (February 17, 2021)
 
 FEATURES:
