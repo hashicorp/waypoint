@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/appconfig"
 	"github.com/hashicorp/waypoint/internal/ceb/execwriter"
+	"github.com/hashicorp/waypoint/internal/plugin"
 )
 
 // VirtualExecInfo contains values to run an exec session.
@@ -120,7 +121,7 @@ func (v *Virtual) RunExec(ctx context.Context, h VirtualExecHandler, count int) 
 	var highestExec int64
 
 	// They can be used for config sources that we might be sent.
-	configPlugins := loadPlugins()
+	configPlugins := plugin.ConfigSourcers
 
 	// Setup our config watcher
 	w, err := appconfig.NewWatcher(
