@@ -69,10 +69,11 @@ app "backend" {
 }
 ```
 
-And then we can select specified `app` with paramater `-app <app-label>` . 
-An example we want deploy frontend `app` on monorepo project, we can run 
-`waypoint deploy -app frontend` for deploying frontend `app`.
-Also can be used in `waypoint build` , `deploy` , `release` and `up`
+Select a specified `app` with the paramater `-app <app-label>`. For example, 
+to deploy the `frontend` app from the `monorepo-project`, run 
+`waypoint deploy -app frontend`.
+The `-app` flag is a global target, and can be used with all Waypoint 
+commands.
 
 ## `app` Parameters
 
