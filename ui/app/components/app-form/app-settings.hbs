@@ -1,5 +1,21 @@
 <form class="pds-form">
+
   <div part="fields">
+    {{#if this.gitDisabled}}
+      <fieldset class="pds-formFieldSet">
+        <div class="pds-formField">
+          <Pds::Banner @variant="warning" as |B|>
+            <B.Header>Git configuration unvailable</B.Header>
+            <B.Body>
+              <p>To add a Git configuration to this application, the project needs to be configured to use Git first.</p>
+              <p><LinkTo @route="workspace.projects.project.settings" @model={{this.project.name}}>Update your Project settings</LinkTo></p>
+
+            </B.Body>
+          </Pds::Banner>
+        </div>
+      </fieldset>
+    {{/if}}
+
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="git-source-path" class="pds-fieldName">
@@ -11,11 +27,14 @@
           id="git-source-path"
           placeholder="/my-application-path"
           value={{this.git.path}}
+          disabled={{this.gitDisabled}}
           {{on "input" (set this "app.dataSource.git.path" (get _ "target.value"))}}
         />
       </div>
     </fieldset>
   </div>
 
-  <Pds::Button @variant="primary" {{on "click" this.saveSettings}}>Apply</Pds::Button>
+  <Pds::Button @variant="primary" {{on "click" this.saveSettings}} disabled={{this.gitDisabled}}>Apply</Pds::Button>
+
+
 </form>
