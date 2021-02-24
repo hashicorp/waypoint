@@ -167,6 +167,26 @@ jobs:
             - waypoint
       - notify_main_failure
 
+  # create a development build for Windows. This is used to verify
+  # Windows builds work.
+  dev-build-windows:
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          command: |
+            go get github.com/kevinburke/go-bindata/...
+            PATH=/go/bin:$PATH make bin/windows
+      - notify_main_failure
+
   integration:
     machine:
       image: circleci/classic:201808-01
@@ -400,6 +420,13 @@ workflows:
           requires:
             - lint
       - dev-build:
+          requires:
+            - lint
+          filters:
+            branches:
+              ignore:
+                - main
+      - dev-build-windows:
           requires:
             - lint
           filters:
