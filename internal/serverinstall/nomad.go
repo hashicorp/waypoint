@@ -432,6 +432,9 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 	s.Update("Removing Waypoint server from Nomad...")
 
 	_, _, err = client.Jobs().Deregister(serverName, i.config.serverPurge, &api.WriteOptions{})
+	if err != nil {
+		return err
+	}
 	allocs, _, err := client.Jobs().Allocations(serverName, true, nil)
 	if err != nil {
 		return err
