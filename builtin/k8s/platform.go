@@ -690,6 +690,11 @@ deploy "kubernetes" {
 	)
 
 	doc.SetField(
+		"labels",
+		"a map of key value labels to apply to the deployment pod",
+	)
+
+	doc.SetField(
 		"namespace",
 		"namespace to target deployment into",
 		docs.Summary(
