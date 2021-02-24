@@ -1,1 +1,21 @@
-{{yield}}
+<form class="pds-form">
+  <div part="fields">
+    <fieldset class="pds-formFieldSet">
+      <div class="pds-formField">
+        <label for="git-source-path" class="pds-fieldName">
+          Git Source Path
+        </label>
+        <Pds::Input
+          @type="text"
+          aria-describedby="{HELP_ID} {ERROR_ID}"
+          id="git-source-path"
+          placeholder="/my-application-path"
+          value={{this.git.path}}
+          {{on "input" (set this "app.dataSource.git.path" (get _ "target.value"))}}
+        />
+      </div>
+    </fieldset>
+  </div>
+
+  <Pds::Button @variant="primary" {{on "click" this.saveSettings}}>Apply</Pds::Button>
+</form>
