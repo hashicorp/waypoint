@@ -732,7 +732,14 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 				LabelSelector: "app=" + runnerName,
 			},
 		)
+		if err != nil {
+			ui.Output(
+				"Error creating deployments watcher %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
 
+		}
 		// send DELETE to statefulset collection
 		if err = deploymentClient.DeleteCollection(
 			ctx,
@@ -790,7 +797,13 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 				LabelSelector: "app=" + serverName,
 			},
 		)
-
+		if err != nil {
+			ui.Output(
+				"Error creating stateful set watcher: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
+		}
 		// send DELETE to statefulset collection
 		if err = ssClient.DeleteCollection(
 			ctx,
@@ -848,7 +861,13 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 				LabelSelector: "app=" + serverName,
 			},
 		)
-
+		if err != nil {
+			ui.Output(
+				"Error creating persistent volume claims watcher: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
+		}
 		// delete persistent volume claims
 		if err = pvcClient.DeleteCollection(
 			ctx,
@@ -906,7 +925,13 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 				LabelSelector: "app=" + serverName,
 			},
 		)
-
+		if err != nil {
+			ui.Output(
+				"Error creating service client watcher: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
+		}
 		// delete waypoint service
 		if err = svcClient.Delete(
 			ctx,
