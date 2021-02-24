@@ -24,14 +24,14 @@ func (d *Deployment) newDeployment(name string) *appsv1.Deployment {
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"name": name,
+					"app": name,
 				},
 			},
 
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"name": name,
+						"app": name,
 					},
 
 					Annotations: map[string]string{},
