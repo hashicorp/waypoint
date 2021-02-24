@@ -183,6 +183,11 @@ func (p *Platform) Deploy(
 	// to route to multiple versions during release management.
 	deployment.Spec.Template.Labels[labelId] = result.Id
 
+	// Apply user defined labels
+	for k, v := range p.config.Labels {
+		deployment.Spec.Template.Labels[k] = v
+	}
+
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
 	// This by default means kubernetes will always pull so that latest is useful.
 	pullPolicy := corev1.PullIfNotPresent
@@ -523,6 +528,9 @@ type Config struct {
 	// KubeconfigPath is the path to the kubeconfig file. If this is
 	// blank then we default to the home directory.
 	KubeconfigPath string `hcl:"kubeconfig,optional"`
+
+	// A map of key vals to label the deployed Pod and Deployment with.
+	Labels map[string]string `hcl:"labels,optional"`
 
 	// Namespace is the Kubernetes namespace to target the deployment to.
 	Namespace string `hcl:"namespace,optional"`
