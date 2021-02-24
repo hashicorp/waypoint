@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"reflect"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
@@ -55,7 +56,7 @@ func (r *Runner) executeJob(
 		}
 
 		if v := resp.Project.WaypointHcl; len(v) > 0 {
-			log.Debug("using waypoint.hcl associated with the project in the server")
+			log.Info("using waypoint.hcl associated with the project in the server")
 
 			// ext has the extra extension information for the file. We add
 			// ".json" if this is JSON-formatted.
@@ -126,7 +127,10 @@ func (r *Runner) executeJob(
 	defer project.Close()
 
 	// Execute the operation
-	log.Info("executing operation", "type", fmt.Sprintf("%T", job.Operation))
+	//
+	// Note some operation types don't require downloaded data. These are
+	// not executed here but are executed in accept.go.
+	log.Info("executing operation")
 	switch job.Operation.(type) {
 	case *pb.Job_Noop_:
 		if r.noopCh != nil {
@@ -175,6 +179,9 @@ func (r *Runner) executeJob(
 
 	case *pb.Job_Logs:
 		return r.executeLogsOp(ctx, job, project)
+
+	case *pb.Job_QueueProject:
+		return r.executeQueueProjectOp(ctx, log, job, project)
 
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)
@@ -239,4 +246,12 @@ func (r *Runner) pluginFactories(
 	}
 
 	return result, perr
+}
+
+// operationNoDataFunc is the function type for operations that are
+// executed without data downloaded.
+type operationNoDataFunc func(*Runner, context.Context, hclog.Logger, *pb.Job) (*pb.Job_Result, error)
+
+var operationsNoData = map[reflect.Type]operationNoDataFunc{
+	reflect.TypeOf((*pb.Job_Poll)(nil)): nil,
 }

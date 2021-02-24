@@ -2,7 +2,9 @@ package state
 
 import (
 	"testing"
+	"time"
 
+	"github.com/hashicorp/go-memdb"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -156,6 +158,319 @@ func TestProject(t *testing.T) {
 			resp, err := s.ProjectList()
 			require.NoError(err)
 			require.Len(resp, 0)
+		}
+	})
+}
+
+func TestProjectPollPeek(t *testing.T) {
+	t.Run("returns nil if no values", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		v, _, err := s.ProjectPollPeek(nil)
+		require.NoError(err)
+		require.Nil(v)
+	})
+
+	t.Run("returns next to poll", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: "A",
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+		})))
+
+		// Set another later
+		time.Sleep(10 * time.Millisecond)
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: "B",
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+		})))
+
+		// Get exact
+		{
+			resp, t, err := s.ProjectPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
+		}
+	})
+
+	t.Run("watchset triggers from empty to available", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		ws := memdb.NewWatchSet()
+		v, _, err := s.ProjectPollPeek(ws)
+		require.NoError(err)
+		require.Nil(v)
+
+		// Watch should block
+		require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+		// Set
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: "A",
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+		})))
+
+		// Should be triggered.
+		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+
+		// Get exact
+		{
+			resp, t, err := s.ProjectPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
+		}
+	})
+
+	t.Run("watchset triggers when records change", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: "A",
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled:  true,
+				Interval: "5s",
+			},
+		})))
+
+		// Set another later
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: "B",
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled:  true,
+				Interval: "5m", // 5 MINUTES, longer than A
+			},
+		})))
+
+		// Get
+		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "A"})
+		require.NoError(err)
+		require.NotNil(pA)
+		pB, err := s.ProjectGet(&pb.Ref_Project{Project: "B"})
+		require.NoError(err)
+		require.NotNil(pB)
+
+		// Complete both first
+		now := time.Now()
+		require.NoError(s.ProjectPollComplete(pA, now))
+		require.NoError(s.ProjectPollComplete(pB, now))
+
+		// Peek, we should get A
+		ws := memdb.NewWatchSet()
+		p, ts, err := s.ProjectPollPeek(ws)
+		require.NoError(err)
+		require.NotNil(p)
+		require.Equal("A", p.Name)
+		require.False(ts.IsZero())
+
+		// Watch should block
+		require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+		// Set
+		require.NoError(s.ProjectPollComplete(pA, now.Add(1*time.Second)))
+
+		// Should be triggered.
+		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+
+		// Get exact
+		{
+			resp, t, err := s.ProjectPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
+		}
+	})
+}
+
+func TestProjectPollComplete(t *testing.T) {
+	t.Run("returns nil for project that doesn't exist", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		require.NoError(s.ProjectPollComplete(&pb.Project{Name: "NOPE"}, time.Now()))
+	})
+
+	t.Run("does nothing for project that has polling disabled", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: "A",
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled: false,
+			},
+		})))
+
+		// Get
+		p, err := s.ProjectGet(&pb.Ref_Project{
+			Project: "A",
+		})
+		require.NoError(err)
+		require.NotNil(p)
+
+		// No error
+		require.NoError(s.ProjectPollComplete(p, time.Now()))
+
+		// Peek does nothing
+		v, _, err := s.ProjectPollPeek(nil)
+		require.NoError(err)
+		require.Nil(v)
+	})
+
+	t.Run("schedules the next poll time", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: "A",
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled:  true,
+				Interval: "5s",
+			},
+		})))
+
+		// Set another later
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: "B",
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled:  true,
+				Interval: "5m", // 5 MINUTES, longer than A
+			},
+		})))
+
+		// Get
+		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "A"})
+		require.NoError(err)
+		require.NotNil(pA)
+		pB, err := s.ProjectGet(&pb.Ref_Project{Project: "B"})
+		require.NoError(err)
+		require.NotNil(pB)
+
+		// Complete both first
+		now := time.Now()
+		require.NoError(s.ProjectPollComplete(pA, now))
+		require.NoError(s.ProjectPollComplete(pB, now))
+
+		// Peek should return A, lower interval
+		{
+			resp, t, err := s.ProjectPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
+		}
+
+		// Complete again, a minute later. The result should be A again
+		// because of the lower interval.
+		{
+			require.NoError(s.ProjectPollComplete(pA, now.Add(1*time.Minute)))
+
+			resp, t, err := s.ProjectPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("A", resp.Name)
+			require.False(t.IsZero())
+		}
+
+		// Complete A, now 6 minutes later. The result should be B now.
+		{
+			require.NoError(s.ProjectPollComplete(pA, now.Add(6*time.Minute)))
+
+			resp, t, err := s.ProjectPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("B", resp.Name)
+			require.False(t.IsZero())
+		}
+	})
+}
+
+func TestProjectListWorkspaces(t *testing.T) {
+	t.Run("empty for non-existent project", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		result, err := s.ProjectListWorkspaces(&pb.Ref_Project{Project: "nope"})
+		require.NoError(err)
+		require.Empty(result)
+	})
+
+	t.Run("returns only the workspaces a project is in", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id: "1",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "A",
+			},
+		})))
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id: "2",
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "B",
+			},
+		})))
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id: "3",
+			Application: &pb.Ref_Application{
+				Application: "B",
+				Project:     "B",
+			},
+		})))
+
+		// Create some other resources
+		require.NoError(s.DeploymentPut(false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Id: "1",
+		})))
+
+		// Workspace list should only list one
+		{
+			result, err := s.ProjectListWorkspaces(&pb.Ref_Project{Project: "B"})
+			require.NoError(err)
+			require.Len(result, 1)
+			require.NotNil(result[0].Workspace)
 		}
 	})
 }

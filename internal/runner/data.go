@@ -27,8 +27,25 @@ func (r *Runner) downloadJobData(
 	source *pb.Job_DataSource,
 	overrides map[string]string,
 ) (string, *pb.Job_DataSource_Ref, func() error, error) {
+	sourcer, err := r.dataSourcer(ctx, log, source, overrides)
+	if err != nil {
+		return "", nil, nil, err
+	}
+
+	// Get data
+	return sourcer.Get(ctx, log, ui, source, r.tempDir)
+}
+
+// dataSourcer returns the datasource implementation for a job,
+// properly configured with any overrides.
+func (r *Runner) dataSourcer(
+	ctx context.Context,
+	log hclog.Logger,
+	source *pb.Job_DataSource,
+	overrides map[string]string,
+) (datasource.Sourcer, error) {
 	if source == nil {
-		return "", nil, nil, status.Errorf(codes.Internal,
+		return nil, status.Errorf(codes.Internal,
 			"data source not set for job")
 	}
 
@@ -36,7 +53,7 @@ func (r *Runner) downloadJobData(
 	typ := reflect.TypeOf(source.Source)
 	factory, ok := datasource.FromType[typ]
 	if !ok {
-		return "", nil, nil, status.Errorf(codes.FailedPrecondition,
+		return nil, status.Errorf(codes.FailedPrecondition,
 			"invalid data source type: %s", typ.String())
 	}
 	sourcer := factory()
@@ -44,11 +61,10 @@ func (r *Runner) downloadJobData(
 	// Apply any overrides
 	if len(overrides) > 0 {
 		if err := sourcer.Override(source, overrides); err != nil {
-			return "", nil, nil, status.Errorf(codes.FailedPrecondition,
+			return nil, status.Errorf(codes.FailedPrecondition,
 				"error with data source overrides: %s", err)
 		}
 	}
 
-	// Get data
-	return sourcer.Get(ctx, log, ui, source, r.tempDir)
+	return sourcer, nil
 }

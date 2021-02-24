@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -712,189 +713,235 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 		return err
 	}
 
-	s.Update("Deleting any automatically installed runners...")
-
-	// create our wait channel to later poll for statefulset+pod deletion
-	w, err := clientset.AppsV1().Deployments(i.config.namespace).Watch(
-		ctx,
-		metav1.ListOptions{
-			LabelSelector: "app=" + runnerName,
-		},
-	)
-
-	// send DELETE to statefulset collection
-	if err = clientset.AppsV1().Deployments(i.config.namespace).DeleteCollection(
-		ctx,
-		metav1.DeleteOptions{},
-		metav1.ListOptions{
-			LabelSelector: "app=" + runnerName,
-		},
-	); err != nil {
+	deploymentClient := clientset.AppsV1().Deployments(i.config.namespace)
+	if list, err := deploymentClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", runnerName),
+	}); err != nil {
 		ui.Output(
-			"Error deleting Waypoint deployment: %s", clierrors.Humanize(err),
+			"Error looking up deployments: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return err
-	}
+	} else if len(list.Items) > 0 {
+		s.Update("Deleting any automatically installed runners...")
 
-	// wait for deletion to complete
-	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		select {
-		case wCh := <-w.ResultChan():
-			if wCh.Type == "DELETED" {
-				w.Stop()
-				return true, nil
-			}
-			log.Trace("deployment collection not fully removed, waiting")
-			return false, nil
-		default:
-			log.Trace("no message received on watch.ResultChan(), waiting for Event")
-			return false, nil
+		// create our wait channel to later poll for statefulset+pod deletion
+		w, err := deploymentClient.Watch(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: "app=" + runnerName,
+			},
+		)
+
+		// send DELETE to statefulset collection
+		if err = deploymentClient.DeleteCollection(
+			ctx,
+			metav1.DeleteOptions{},
+			metav1.ListOptions{
+				LabelSelector: "app=" + runnerName,
+			},
+		); err != nil {
+			ui.Output(
+				"Error deleting Waypoint deployment: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
 		}
-	})
-	if err != nil {
-		return err
+
+		// wait for deletion to complete
+		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+			select {
+			case wCh := <-w.ResultChan():
+				if wCh.Type == "DELETED" {
+					w.Stop()
+					return true, nil
+				}
+				log.Trace("deployment collection not fully removed, waiting")
+				return false, nil
+			default:
+				log.Trace("no message received on watch.ResultChan(), waiting for Event")
+				return false, nil
+			}
+		})
+		if err != nil {
+			return err
+		}
+		s.Update("Runner deployment deleted")
+		s.Done()
+		s = sg.Add("")
 	}
-	s.Update("Runner deployment deleted")
-	s.Done()
 
-	s = sg.Add("")
-	s.Update("Deleting statefulset and pods...")
-
-	// create our wait channel to later poll for statefulset+pod deletion
-	w, err = clientset.AppsV1().StatefulSets(i.config.namespace).Watch(
-		ctx,
-		metav1.ListOptions{
-			LabelSelector: "app=" + serverName,
-		},
-	)
-
-	// send DELETE to statefulset collection
-	if err = clientset.AppsV1().StatefulSets(i.config.namespace).DeleteCollection(
-		ctx,
-		metav1.DeleteOptions{},
-		metav1.ListOptions{
-			LabelSelector: "app=" + serverName,
-		},
-	); err != nil {
+	ssClient := clientset.AppsV1().StatefulSets(i.config.namespace)
+	if list, err := ssClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", serverName),
+	}); err != nil {
 		ui.Output(
-			"Error deleting Waypoint statefulset: %s", clierrors.Humanize(err),
+			"Error looking up stateful sets: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return err
-	}
+	} else if len(list.Items) > 0 {
+		s.Update("Deleting statefulset and pods...")
 
-	// wait for deletion to complete
-	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		select {
-		case wCh := <-w.ResultChan():
-			if wCh.Type == "DELETED" {
-				w.Stop()
-				return true, nil
-			}
-			log.Trace("statefulset collection not fully removed, waiting")
-			return false, nil
-		default:
-			log.Trace("no message received on watch.ResultChan(), waiting for Event")
-			return false, nil
+		// create our wait channel to later poll for statefulset+pod deletion
+		w, err := ssClient.Watch(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: "app=" + serverName,
+			},
+		)
+
+		// send DELETE to statefulset collection
+		if err = ssClient.DeleteCollection(
+			ctx,
+			metav1.DeleteOptions{},
+			metav1.ListOptions{
+				LabelSelector: "app=" + serverName,
+			},
+		); err != nil {
+			ui.Output(
+				"Error deleting Waypoint statefulset: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
 		}
-	})
-	if err != nil {
-		return err
+
+		// wait for deletion to complete
+		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+			select {
+			case wCh := <-w.ResultChan():
+				if wCh.Type == "DELETED" {
+					w.Stop()
+					return true, nil
+				}
+				log.Trace("statefulset collection not fully removed, waiting")
+				return false, nil
+			default:
+				log.Trace("no message received on watch.ResultChan(), waiting for Event")
+				return false, nil
+			}
+		})
+		if err != nil {
+			return err
+		}
+		s.Update("Statefulset and pods deleted")
+		s.Done()
+		s = sg.Add("")
 	}
-	s.Update("Statefulset and pods deleted")
-	s.Done()
 
-	s = sg.Add("")
-	s.Update("Deleting Persistent Volume Claim...")
-
-	// create our wait channel to later poll for pvc deletion
-	w, err = clientset.CoreV1().PersistentVolumeClaims(i.config.namespace).Watch(
-		ctx,
-		metav1.ListOptions{
-			LabelSelector: "app=" + serverName,
-		},
-	)
-
-	// delete persistent volume claims
-	if err = clientset.CoreV1().PersistentVolumeClaims(i.config.namespace).DeleteCollection(
-		ctx,
-		metav1.DeleteOptions{},
-		metav1.ListOptions{
-			LabelSelector: "app=" + serverName,
-		},
-	); err != nil {
+	pvcClient := clientset.CoreV1().PersistentVolumeClaims(i.config.namespace)
+	if list, err := pvcClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", serverName),
+	}); err != nil {
 		ui.Output(
-			"Error deleting Waypoint pvc: %s", clierrors.Humanize(err),
+			"Error looking up persistent volume claims: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return err
-	}
-	// wait for deletion to complete
-	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		select {
-		case wCh := <-w.ResultChan():
-			if wCh.Type == "DELETED" {
-				w.Stop()
-				return true, nil
-			}
-			log.Trace("persistent volume claims collection not fully removed, waiting")
-			return false, nil
-		default:
-			log.Trace("no message received on watch.ResultChan(), waiting for Event")
-			return false, nil
+	} else if len(list.Items) > 0 {
+		s.Update("Deleting Persistent Volume Claim...")
+
+		// create our wait channel to later poll for pvc deletion
+		w, err := pvcClient.Watch(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: "app=" + serverName,
+			},
+		)
+
+		// delete persistent volume claims
+		if err = pvcClient.DeleteCollection(
+			ctx,
+			metav1.DeleteOptions{},
+			metav1.ListOptions{
+				LabelSelector: "app=" + serverName,
+			},
+		); err != nil {
+			ui.Output(
+				"Error deleting Waypoint pvc: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
 		}
-	})
-	if err != nil {
-		return err
+		// wait for deletion to complete
+		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+			select {
+			case wCh := <-w.ResultChan():
+				if wCh.Type == "DELETED" {
+					w.Stop()
+					return true, nil
+				}
+				log.Trace("persistent volume claims collection not fully removed, waiting")
+				return false, nil
+			default:
+				log.Trace("no message received on watch.ResultChan(), waiting for Event")
+				return false, nil
+			}
+		})
+		if err != nil {
+			return err
+		}
+
+		s.Update("Persistent Volume Claim deleted")
+		s.Done()
+		s = sg.Add("")
 	}
 
-	s.Update("Persistent Volume Claim deleted")
-	s.Done()
-
-	s = sg.Add("")
-	s.Update("Deleting service...")
-
-	// create our wait channel to later poll for service deletion
-	w, err = clientset.CoreV1().Services(i.config.namespace).Watch(
-		ctx,
-		metav1.ListOptions{
-			LabelSelector: "app=" + serverName,
-		},
-	)
-
-	// delete waypoint service
-	if err = clientset.CoreV1().Services(i.config.namespace).Delete(
-		ctx,
-		serviceName,
-		metav1.DeleteOptions{},
-	); err != nil {
+	svcClient := clientset.CoreV1().Services(i.config.namespace)
+	if list, err := svcClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", serverName),
+	}); err != nil {
 		ui.Output(
-			"Error deleting Waypoint service: %s", clierrors.Humanize(err),
+			"Error looking up services: %s", clierrors.Humanize(err),
 			terminal.WithErrorStyle(),
 		)
 		return err
-	}
-	// wait for deletion to complete
-	err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-		select {
-		case wCh := <-w.ResultChan():
-			if wCh.Type == "DELETED" {
-				w.Stop()
-				return true, nil
-			}
-			log.Trace("no message received on watch.ResultChan(), waiting for Event")
-			return false, nil
-		default:
-			log.Trace("persistent volume claims not fully removed, waiting")
-			return false, nil
+	} else if len(list.Items) > 0 {
+		s.Update("Deleting service...")
+
+		// create our wait channel to later poll for service deletion
+		w, err := svcClient.Watch(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: "app=" + serverName,
+			},
+		)
+
+		// delete waypoint service
+		if err = svcClient.Delete(
+			ctx,
+			serviceName,
+			metav1.DeleteOptions{},
+		); err != nil {
+			ui.Output(
+				"Error deleting Waypoint service: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
 		}
-	})
-	if err != nil {
-		return err
+		// wait for deletion to complete
+		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+			select {
+			case wCh := <-w.ResultChan():
+				if wCh.Type == "DELETED" {
+					w.Stop()
+					return true, nil
+				}
+				log.Trace("no message received on watch.ResultChan(), waiting for Event")
+				return false, nil
+			default:
+				log.Trace("persistent volume claims not fully removed, waiting")
+				return false, nil
+			}
+		})
+		if err != nil {
+			return err
+		}
+
+		s.Update("Service deleted")
+		s.Done()
 	}
 
-	s.Update("Service deleted")
 	s.Done()
 
 	return nil
@@ -1014,7 +1061,7 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 	// This is the port we'll use for the liveness check with the
 	// runner. This isn't exposed outside the pod so it doesn't really
 	// matter what it is.
-	const livenessPort = "1234"
+	const livenessPort = 1234
 
 	cpuRequest, err := resource.ParseQuantity(c.cpuRequest)
 	if err != nil {
@@ -1068,6 +1115,13 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 					Labels: map[string]string{
 						"app": runnerName,
 					},
+
+					Annotations: map[string]string{
+						// These annotations are required for `img` to work
+						// properly within Kubernetes.
+						"container.apparmor.security.beta.kubernetes.io/runner": "unconfined",
+						"container.seccomp.security.alpha.kubernetes.io/runner": "unconfined",
+					},
 				},
 				Spec: apiv1.PodSpec{
 					ImagePullSecrets: []apiv1.LocalObjectReference{
@@ -1087,12 +1141,12 @@ func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, er
 								"runner",
 								"agent",
 								"-vvv",
-								"-liveness-tcp-addr=:" + livenessPort,
+								"-liveness-tcp-addr=:" + strconv.Itoa(livenessPort),
 							},
 							LivenessProbe: &apiv1.Probe{
 								Handler: apiv1.Handler{
 									TCPSocket: &apiv1.TCPSocketAction{
-										Port: intstr.FromString(livenessPort),
+										Port: intstr.FromInt(livenessPort),
 									},
 								},
 							},
