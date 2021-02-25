@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
@@ -433,6 +434,10 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 
 	_, _, err = client.Jobs().Deregister(serverName, i.config.serverPurge, &api.WriteOptions{})
 	if err != nil {
+		ui.Output(
+			"Error deregistering waypoint server job: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
 		return err
 	}
 	allocs, _, err := client.Jobs().Allocations(serverName, true, nil)
