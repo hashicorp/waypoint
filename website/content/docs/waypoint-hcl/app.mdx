@@ -15,9 +15,6 @@ A majority of the configuration of your project will be done in this stanza.
 
 A minimum of one `app` stanza is required in your project configuration.
 
-Multiple `app` stanzas can be specified if Waypoint should deploy multiple
-applications in your project. An example where this might be useful is
-separate backend and frontend processes.
 
 ```hcl
 app "frontend" {
@@ -34,6 +31,49 @@ app "frontend" {
   }
 }
 ```
+
+Multiple `app` stanzas can be specified if Waypoint should deploy multiple
+applications in your project. Some examples where this might be useful are
+a deployment that targets multiple application tiers, a project that is part of a monorepo, or applications that require lock-step deployment.
+
+
+```hcl
+project = "multi-tier-project"
+
+app "frontend" {
+  build {
+    # ...
+  }
+
+  deploy {
+    # ...
+  }
+
+  release {
+    # ...
+  }
+}
+
+app "backend" {
+  build {
+    # ...
+  }
+
+  deploy {
+    # ...
+  }
+
+  release {
+    # ...
+  }
+}
+```
+
+Select a specified `app` with the paramater `-app <app-label>`. For example, 
+to deploy the `frontend` app from the `multi-tier-project`, run 
+`waypoint deploy -app frontend`.
+The `-app` flag is a global target, and can be used with all Waypoint 
+commands.
 
 ## `app` Parameters
 
