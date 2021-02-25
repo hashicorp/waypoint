@@ -4,6 +4,8 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* builtin/k8s: Include user defined labels on deploy pod [GH-1146]
+
 BUG FIXES:
 
 
