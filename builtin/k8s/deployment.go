@@ -21,9 +21,12 @@ func (d *Deployment) newDeployment(name string) *appsv1.Deployment {
 			Name: name,
 		},
 
+		// Note both name and app are included here. 'app' is expected for certain
+		// k8s integrations, where as waypoint expepcts 'name' else where for release
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
+					"app":  name,
 					"name": name,
 				},
 			},
@@ -31,6 +34,7 @@ func (d *Deployment) newDeployment(name string) *appsv1.Deployment {
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
+						"app":  name,
 						"name": name,
 					},
 
