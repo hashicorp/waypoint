@@ -182,6 +182,14 @@ func (p *Platform) Deploy(
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
 	deployment.Spec.Template.Labels[labelId] = result.Id
+	// Version label duplicates "labelId" to support services like Istio that
+	// expect pods to be labled with 'version'
+	deployment.Spec.Template.Labels["version"] = result.Id
+
+	// Apply user defined labels
+	for k, v := range p.config.Labels {
+		deployment.Spec.Template.Labels[k] = v
+	}
 
 	// If the user is using the latest tag, then don't specify an overriding pull policy.
 	// This by default means kubernetes will always pull so that latest is useful.
@@ -524,6 +532,9 @@ type Config struct {
 	// blank then we default to the home directory.
 	KubeconfigPath string `hcl:"kubeconfig,optional"`
 
+	// A map of key vals to label the deployed Pod and Deployment with.
+	Labels map[string]string `hcl:"labels,optional"`
+
 	// Namespace is the Kubernetes namespace to target the deployment to.
 	Namespace string `hcl:"namespace,optional"`
 
@@ -679,6 +690,11 @@ deploy "kubernetes" {
 			"service account is the name of the Kubernetes service account to add to the pod.",
 			"This is useful to apply Kubernetes RBAC to the application.",
 		),
+	)
+
+	doc.SetField(
+		"labels",
+		"a map of key value labels to apply to the deployment pod",
 	)
 
 	doc.SetField(
