@@ -182,6 +182,9 @@ func (p *Platform) Deploy(
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
 	deployment.Spec.Template.Labels[labelId] = result.Id
+	// Version label duplicates "labelId" to support services like Istio that
+	// expect pods to be labled with 'version'
+	deployment.Spec.Template.Labels["version"] = result.Id
 
 	// Apply user defined labels
 	for k, v := range p.config.Labels {
