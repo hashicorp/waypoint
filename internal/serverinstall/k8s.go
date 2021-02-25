@@ -721,6 +721,13 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 			LabelSelector: "app=" + serverName,
 		},
 	)
+	if err != nil {
+		ui.Output(
+			"Error creating statefulsets watcher %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
 
 	// send DELETE to statefulset collection
 	if err = clientset.AppsV1().StatefulSets(i.config.namespace).DeleteCollection(
@@ -768,6 +775,13 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 			LabelSelector: "app=" + serverName,
 		},
 	)
+	if err != nil {
+		ui.Output(
+			"Error creating persistent volume claims watcher %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
 
 	// delete persistent volume claims
 	if err = clientset.CoreV1().PersistentVolumeClaims(i.config.namespace).DeleteCollection(
@@ -815,6 +829,13 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 			LabelSelector: "app=" + serverName,
 		},
 	)
+	if err != nil {
+		ui.Output(
+			"Error creating services watcher %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	}
 
 	// delete waypoint service
 	if err = clientset.CoreV1().Services(i.config.namespace).Delete(
