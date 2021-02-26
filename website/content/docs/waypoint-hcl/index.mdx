@@ -19,7 +19,7 @@ to version control. This allows multiple team members to share the same Waypoint
 behavior and also provides a history of change in how an application is deployed.
 
 The `waypoint.hcl` file is typically placed at the root of a version control
-repository. To deploy multiple applications, defined each with an [`app`][app]
+repository. To deploy multiple applications, define each with an [`app`][app]
 stanza. Each application should live in subdirectories of the project.
 
 When executing the `waypoint` CLI, it will search for the `waypoint.hcl` file
@@ -70,7 +70,7 @@ configuration. The top-level is made of "stanzas" and "parameters".
 
 ## Stanzas and Parameters
 
-A "stanza" is an block of code that opens and closes with braces `{ }`
+A "stanza" is a block of code that opens and closes with braces `{ }`
 and may contain more configuration parameters. Above, `app "app-name" {}` is
 the `app` stanza.
 

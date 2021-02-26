@@ -20,7 +20,7 @@ type AuthChecker interface {
 
 var readonly = []string{"readonly"}
 
-// Information about the effects of endpoints that are authenticated. If a endpoint
+// Information about the effects of endpoints that are authenticated. If an endpoint
 // is not listed, the DefaultEffect value is used.
 var Effects = map[string][]string{
 	"ListBuilds": readonly,
