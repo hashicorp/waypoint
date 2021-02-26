@@ -39,6 +39,9 @@ type BuilderConfig struct {
 	// The Buildpack builder image to use, defaults to the standard heroku one.
 	Builder string `hcl:"builder,optional"`
 
+	// The exact buildpacks to use.
+	Buildpacks []string `hcl:"buildpacks,optional"`
+
 	// Environment variables that are meant to configure the application in a static
 	// way. This might be control an image that has mulitple modes of operation,
 	// selected via environment variable. Most configuration should use the waypoint
@@ -105,10 +108,11 @@ func (b *Builder) Build(
 	step.Done()
 
 	err = client.Build(ctx, pack.BuildOptions{
-		Image:   src.App,
-		Builder: builder,
-		AppPath: src.Path,
-		Env:     b.config.StaticEnvVars,
+		Image:      src.App,
+		Builder:    builder,
+		AppPath:    src.Path,
+		Env:        b.config.StaticEnvVars,
+		Buildpacks: b.config.Buildpacks,
 		FileFilter: func(file string) bool {
 			// Do not include the bolt.db or bolt.db.lock
 			// These files hold the local state when Waypoint is running without a server
@@ -264,6 +268,15 @@ build {
 		"builder",
 		"The buildpack builder image to use",
 		docs.Default(DefaultBuilder),
+	)
+
+	doc.SetField(
+		"buildpacks",
+		"The exact buildpacks to use",
+		docs.Summary(
+			"If set, the builder will run these buildpacks in the specified order.\n\n",
+			"They can be listed using several [URI formats](https://buildpacks.io/docs/app-developer-guide/specific-buildpacks).",
+		),
 	)
 
 	doc.SetField(
