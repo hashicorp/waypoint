@@ -214,7 +214,7 @@ func (c *InitCommand) validateConfig() bool {
 	defer sg.Wait()
 
 	s := sg.Add("Validating configuration file...")
-	cfg, err := c.initConfig(c.from, false)
+	cfg, err := c.initConfig(false)
 	if err != nil {
 		c.stepError(s, initStepConfig, err)
 		return false
