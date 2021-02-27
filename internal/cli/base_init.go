@@ -18,10 +18,10 @@ import (
 // between Init and "init" to help ensure that "init" succeeding means that
 // other commands will succeed as well.
 
-// initConfig initializes the configuration with the specified filename.
+// initConfig initializes the configuration with the specified filename from the CLI.
 // If filename is empty, it will default to configpkg.Filename.
-func (c *baseCommand) initConfig(filename string, optional bool) (*configpkg.Config, error) {
-	path, err := c.initConfigPath(filename)
+func (c *baseCommand) initConfig(optional bool) (*configpkg.Config, error) {
+	path, err := c.initConfigPath(c.fromProject)
 	if err != nil {
 		return nil, err
 	}
