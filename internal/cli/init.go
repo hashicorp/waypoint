@@ -574,13 +574,6 @@ func (c *InitCommand) Flags() *flag.Sets {
 			Usage: "Update the project configuration if it already exists. This can be used " +
 				"to update settings such as the remote runner data source.",
 		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "from",
-			Target:  &c.from,
-			Default: configpkg.Filename,
-			Usage:   "Initialize a new project using the specified HCL file.",
-		})
 	})
 }
 
