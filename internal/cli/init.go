@@ -131,7 +131,7 @@ func (c *InitCommand) Run(args []string) int {
 		return 0
 	}
 
-	path, err := c.initConfigPath(c.from)
+	path, err := c.initConfigPath()
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
