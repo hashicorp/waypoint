@@ -39,8 +39,8 @@ func (c *baseCommand) initConfig(optional bool) (*configpkg.Config, error) {
 
 // initConfigPath returns the path for the configuration file with the
 // specified filename.
-func (c *baseCommand) initConfigPath(filename string) (string, error) {
-	path, err := configpkg.FindPath("", filename)
+func (c *baseCommand) initConfigPath() (string, error) {
+	path, err := configpkg.FindPath("", c.fromProject, true)
 	if err != nil {
 		return "", fmt.Errorf("Error looking for a Waypoint configuration: %s", err)
 	}
