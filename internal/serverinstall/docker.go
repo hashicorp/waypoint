@@ -740,6 +740,32 @@ func (i *DockerInstaller) UninstallRunner(
 	return nil
 }
 
+// HasRunner implements Installer.
+func (i *DockerInstaller) HasRunner(
+	ctx context.Context,
+	opts *InstallOpts,
+) (bool, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return false, err
+	}
+	defer cli.Close()
+	cli.NegotiateAPIVersion(ctx)
+
+	// Find and delete any runners. There could be zero, 1, or more.
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "label",
+			Value: containerKey + "=" + containerValueRunner,
+		}),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return len(containers) > 0, nil
+}
+
 func (i *DockerInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "docker-server-image",

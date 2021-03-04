@@ -484,6 +484,14 @@ func (i *NomadInstaller) UninstallRunner(
 	return nil
 }
 
+// HasRunner implements Installer.
+func (i *NomadInstaller) HasRunner(
+	ctx context.Context,
+	opts *InstallOpts,
+) (bool, error) {
+	return false, nil
+}
+
 // waypointNomadJob takes in a nomadConfig and returns a Nomad Job per the
 // Nomad API
 func waypointNomadJob(c nomadConfig) *api.Job {

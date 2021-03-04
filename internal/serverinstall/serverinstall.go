@@ -14,6 +14,9 @@ import (
 // Installer is implemented by the server platforms and is responsible for managing
 // the installation of the Waypoint server.
 type Installer interface {
+	// HasRunner returns true if a runner is installed.
+	HasRunner(context.Context, *InstallOpts) (bool, error)
+
 	// Install expects the Waypoint server to be installed.
 	Install(context.Context, *InstallOpts) (*InstallResults, error)
 
