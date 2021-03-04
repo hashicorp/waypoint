@@ -330,10 +330,10 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:    "x-runner",
+			Name:    "runner",
 			Target:  &c.flagRunner,
 			Usage:   "Install a runner in addition to the server",
-			Default: false,
+			Default: true,
 			Hidden:  true,
 		})
 
@@ -361,8 +361,12 @@ func (c *InstallCommand) Help() string {
 Usage: waypoint server install [options]
 Alias: waypoint install
 
-	Installs a Waypoint server to an existing platform. The platform should be
-	specified as kubernetes, nomad, or docker.
+  Installs a Waypoint server to an existing platform. The platform should be
+  specified as kubernetes, nomad, or docker.
+
+  This will also install a single Waypoint runner by default. This enables
+  remote operations out of the box, such as polling a Git repository. This can
+  be disabled by specifying "-runner=false".
 
   By default, this will also automatically create a new default CLI context
   (see "waypoint context") so the CLI will be configured to use the newly
