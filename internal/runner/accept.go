@@ -46,6 +46,14 @@ func (r *Runner) AcceptMany(ctx context.Context) {
 // Errors during job execution are expected (i.e. a project build is misconfigured)
 // and will be reported on the job.
 //
+// Two specific errors to watch out for are:
+//
+//   - ErrClosed (in this package) which means that the runner is closed
+//     and Accept can no longer be called.
+//   - code = NotFound which means that the runner was deregistered. This
+//     means the runner has to be fully recycled: Close called, a new runner
+//     started.
+//
 // This is safe to be called concurrently which can be used to execute
 // multiple jobs in parallel as a runner.
 func (r *Runner) Accept(ctx context.Context) error {
