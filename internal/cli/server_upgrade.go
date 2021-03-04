@@ -321,7 +321,6 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	installOpts *serverinstall.InstallOpts,
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
 ) int {
-	return 0
 	// Connect
 	c.ui.Output("Upgrading runner if required...", terminal.WithHeaderStyle())
 
