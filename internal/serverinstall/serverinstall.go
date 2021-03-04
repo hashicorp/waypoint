@@ -41,6 +41,13 @@ type Installer interface {
 	// interface should not be touched.
 	Uninstall(context.Context, *InstallOpts) error
 
+	// UninstallRunner should remove the runner(s) installed via InstallRunner.
+	//
+	// No runners may exist. Runners installed manually by the user should be
+	// ignored (i.e. InstallRunner should set some identifiers that can be used
+	// to distinguish between automatically installed vs. manually installed).
+	UninstallRunner(context.Context, *InstallOpts) error
+
 	// UninstallFlags is called prior to Uninstall and allows the Uninstaller to
 	// specify flags for the uninstall CLI. The flags should be prefixed with the
 	// platform name to avoid conflicts with other flags.

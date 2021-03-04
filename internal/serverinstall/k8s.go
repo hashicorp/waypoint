@@ -1080,6 +1080,14 @@ func (i *K8sInstaller) InstallRunner(
 	return nil
 }
 
+// UninstallRunner implements Installer.
+func (i *K8sInstaller) UninstallRunner(
+	ctx context.Context,
+	opts *InstallOpts,
+) error {
+	return nil
+}
+
 // newDeployment takes in a k8sConfig and creates a new Waypoint Deployment for
 // deploying Waypoint runners.
 func newDeployment(c k8sConfig, opts *InstallRunnerOpts) (*appsv1.Deployment, error) {
