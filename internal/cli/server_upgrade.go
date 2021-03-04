@@ -361,6 +361,9 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 	s.Update("Previous runner uninstalled")
 	s.Done()
 
+	// TODO(mitchellh): This creates a new auth token for the new runner.
+	// In the future, we need to invalidate the old token. We don't have
+	// the functionality to do this today.
 	return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr)
 }
 
