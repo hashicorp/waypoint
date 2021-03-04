@@ -214,6 +214,10 @@ Usage: waypoint server uninstall [options]
   This command does not destroy Waypoint resources, such as deployments and
   releases. Clear all workspaces prior to uninstall to prevent hanging resources.
 
+  If a runner was installed via "waypoint install", the runner will also be
+  uninstalled. Manually installed runners (outside of the "waypoint install"
+  command) will not be affected.
+
 ` + c.Flags().Help())
 }
 
