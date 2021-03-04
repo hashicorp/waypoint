@@ -38,6 +38,7 @@ func (c *UninstallCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
+		WithNoAutoServer(),
 	); err != nil {
 		return 1
 	}

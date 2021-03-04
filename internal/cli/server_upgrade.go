@@ -42,6 +42,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
+		WithNoAutoServer(),
 	); err != nil {
 		return 1
 	}
@@ -296,7 +297,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	// Upgrade the runner
 	if code := c.upgradeRunner(
-		ctx, client, sg2, p, installOpts, advertiseAddr,
+		ctx, client, p, installOpts, advertiseAddr,
 	); code > 0 {
 		return code
 	}
@@ -316,11 +317,17 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 func (c *ServerUpgradeCommand) upgradeRunner(
 	ctx context.Context,
 	client pb.WaypointClient,
-	sg terminal.StepGroup,
 	p serverinstall.Installer,
 	installOpts *serverinstall.InstallOpts,
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
 ) int {
+	return 0
+	// Connect
+	c.ui.Output("Upgrading runner if required...", terminal.WithHeaderStyle())
+
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
 	s := sg.Add("")
 	defer func() { s.Abort() }()
 
@@ -352,9 +359,10 @@ func (c *ServerUpgradeCommand) upgradeRunner(
 
 		return 1
 	}
+	s.Update("Previous runner uninstalled")
 	s.Done()
 
-	return installRunner(ctx, installOpts.Log, client, c.ui, sg, p, advertiseAddr)
+	return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr)
 }
 
 func (c *ServerUpgradeCommand) Flags() *flag.Sets {

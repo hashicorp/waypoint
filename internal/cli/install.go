@@ -282,7 +282,7 @@ func (c *InstallCommand) Run(args []string) int {
 	s.Done()
 
 	if c.flagRunner {
-		if code := installRunner(c.Ctx, log, client, c.ui, sg, p, advertiseAddr); code > 0 {
+		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr); code > 0 {
 			return code
 		}
 	}
@@ -390,10 +390,12 @@ func installRunner(
 	log hclog.Logger,
 	client pb.WaypointClient,
 	ui terminal.UI,
-	sg terminal.StepGroup,
 	p serverinstall.Installer,
 	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
 ) int {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
 	s := sg.Add("")
 	defer func() { s.Abort() }()
 
