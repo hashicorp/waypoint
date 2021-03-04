@@ -62,11 +62,11 @@ func (i *DockerInstaller) Install(
 	s.Update("Checking for existing installation...")
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: containerLabel,
 		}),
-		All: true,
 	})
 	if err != nil {
 		return nil, err
@@ -294,6 +294,7 @@ func (i *DockerInstaller) Upgrade(
 
 	s.Update("Checking for an existing Waypoint server installation...")
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: "waypoint-type=server",
@@ -494,6 +495,7 @@ func (i *DockerInstaller) Uninstall(
 	cli.NegotiateAPIVersion(ctx)
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: containerLabel,
@@ -618,6 +620,7 @@ func (i *DockerInstaller) InstallRunner(
 
 	s.Update("Checking for an existing runner...")
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: "waypoint-type=runner",
@@ -695,6 +698,7 @@ func (i *DockerInstaller) UninstallRunner(
 
 	// Find and delete any runners. There could be zero, 1, or more.
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: containerKey + "=" + containerValueRunner,
@@ -754,6 +758,7 @@ func (i *DockerInstaller) HasRunner(
 
 	// Find and delete any runners. There could be zero, 1, or more.
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: containerKey + "=" + containerValueRunner,
