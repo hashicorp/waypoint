@@ -20,11 +20,12 @@ import (
 type UninstallCommand struct {
 	*baseCommand
 
-	platform      string
-	snapshotName  string
-	flagSnapshot  bool
-	autoApprove   bool
-	deleteContext bool
+	platform          string
+	snapshotName      string
+	flagSnapshot      bool
+	autoApprove       bool
+	deleteContext     bool
+	ignoreRunnerError bool
 }
 
 func (c *UninstallCommand) Run(args []string) int {
@@ -130,11 +131,41 @@ func (c *UninstallCommand) Run(args []string) int {
 	}
 	s.Done()
 
-	err = p.Uninstall(ctx, &serverinstall.InstallOpts{
+	installOpts := &serverinstall.InstallOpts{
 		Log: log,
 		UI:  c.ui,
-	})
-	if err != nil {
+	}
+
+	// We first uninstall any runners.
+	log.Trace("calling UninstallRunner")
+	if err := p.UninstallRunner(ctx, installOpts); err != nil {
+		if !c.ignoreRunnerError {
+			c.ui.Output(
+				"Error uninstalling runners from %s: %s\n\n"+
+					"Server uninstallation aborted. You can force server uninstallation "+
+					"with runner uninstallation failures by using the -ignore-runner-error. "+
+					"Note that this may leave your runners dangling.\n\n"+
+					"See Troubleshooting docs "+
+					"for guidance on manual uninstall: https://www.waypointproject.io/docs/troubleshooting",
+				c.platform,
+				clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+
+			return 1
+		}
+
+		c.ui.Output(
+			"Error uninstalling runners from %s: %s\n\n"+
+				"-ignore-runner-error is specified so this will be ignored.",
+			c.platform,
+			clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+	}
+
+	log.Trace("calling Uninstall")
+	if err := p.Uninstall(ctx, installOpts); err != nil {
 		c.ui.Output(
 			"Error uninstalling server from %s: %s\nSee Troubleshooting docs "+
 				"for guidance on manual uninstall: https://www.waypointproject.io/docs/troubleshooting",
@@ -223,6 +254,16 @@ func (c *UninstallCommand) Flags() *flag.Sets {
 			Target:  &c.flagSnapshot,
 			Default: true,
 			Usage:   "Enable or disable taking a snapshot of Waypoint server prior to uninstall.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "ignore-runner-error",
+			Target:  &c.ignoreRunnerError,
+			Default: false,
+			Usage: "Ignore any errors encountered while uninstalling runners. This allows " +
+				"the server to be uninstalled even if runner uninstallation fails. Note that " +
+				"this may leave runners dangling since future 'uninstall' runs will do nothing if " +
+				"the server is uninstalled.",
 		})
 
 		for name, platform := range serverinstall.Platforms {
