@@ -1,11 +1,15 @@
 package cli
 
 import (
+	"context"
 	"io/ioutil"
 	"net"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/posener/complete"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -141,7 +145,10 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	}
 
 	// Accept jobs in goroutine so that we can interrupt it.
+	ctx, cancel := context.WithCancel(ctx)
 	go func() {
+		defer cancel()
+
 		for {
 			if err := runner.Accept(ctx); err != nil {
 				if err == runnerpkg.ErrClosed {
@@ -149,11 +156,27 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 				}
 
 				log.Error("error running job", "err", err)
+
+				switch status.Code(err) {
+				case codes.NotFound:
+					// This error code means that the runner is deregistered.
+					// There is no recover from this and we have to restart
+					// the runner.
+					log.Error("runner unexpectedly deregistered, exiting")
+					return
+
+				case codes.Unavailable:
+					// Server became unavailable. We retry on this after
+					// a short sleep to allow the server to come back online.
+					log.Warn("server unavailable, sleeping before retry")
+					time.Sleep(2 * time.Second)
+				}
 			}
 		}
 	}()
 
-	// Wait for end
+	// Wait for end. This ends either via an interrupt (parent context)
+	// or via the runner accept loop erroring in some way.
 	<-ctx.Done()
 
 	// Gracefully close
