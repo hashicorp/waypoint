@@ -25,7 +25,9 @@ type Installer interface {
 	// the platform name to avoid conflicts with other flags.
 	InstallFlags(*flag.Set)
 
-	// Upgrade expects the Waypoint server to be upgraded from a previous install
+	// Upgrade expects the Waypoint server to be upgraded from a previous install.
+	// After upgrading the server, this should also upgrade the primary
+	// runner that was installed with InstallRunner, if it exists.
 	Upgrade(ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (*InstallResults, error)
 
 	// UpgradeFlags is called prior to Upgrade and allows the upgrader to
@@ -33,7 +35,10 @@ type Installer interface {
 	// the platform name to avoid conflicts with other flags.
 	UpgradeFlags(*flag.Set)
 
-	// Uninstall expects the Waypoint server to be uninstalled.
+	// Uninstall expects the Waypoint server to be uninstalled. This should
+	// also look up to see if any runners exist (installed via InstallRunner)
+	// and remove those as well. Runners manually installed outside of this
+	// interface should not be touched.
 	Uninstall(context.Context, *InstallOpts) error
 
 	// UninstallFlags is called prior to Uninstall and allows the Uninstaller to
