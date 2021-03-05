@@ -57,7 +57,7 @@ Then run the authentication steps above again.
 
 if you've made API changes in `/internal/server` and want to use those on the frontend, you'll need to generate the type definitions again: 
 
-#### required dependencies for this build step
+#### Required dependencies for build step
 
 - MacOS only: `brew install gnu-sed` then follow the instructions to replace the default `sed`
 - Download [the 1.1.2 release of `mockery`](https://github.com/vektra/mockery/releases/tag/v1.1.2) and install in your `/go/bin` directory
