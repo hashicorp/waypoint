@@ -43,25 +43,34 @@ func TestServicePollQueue(t *testing.T) {
 	// have only one poll job queued.
 	time.Sleep(50 * time.Millisecond)
 
-	// We should have a single poll job
-	var jobs []*pb.Job
-	raw, err := testServiceImpl(impl).state.JobList()
-	for _, j := range raw {
-		if j.State != pb.Job_ERROR {
-			jobs = append(jobs, j)
+	// Check for our condition, we do eventually here because if we're
+	// in a slow environment then this may still be empty.
+	require.Eventually(func() bool {
+		// We should have a single poll job
+		var jobs []*pb.Job
+		raw, err := testServiceImpl(impl).state.JobList()
+		for _, j := range raw {
+			if j.State != pb.Job_ERROR {
+				jobs = append(jobs, j)
+			}
 		}
-	}
-	require.NoError(err)
-	require.Len(jobs, 1)
+
+		if err != nil {
+			t.Logf("err: %s", err)
+			return false
+		}
+
+		return len(jobs) == 1
+	}, 5*time.Second, 50*time.Millisecond)
 
 	// Cancel our poller to ensure it stops
 	testServiceImpl(impl).Close()
 
 	// Ensure we don't queue more jobs
-	time.Sleep(50 * time.Millisecond)
-	raw, err = testServiceImpl(impl).state.JobList()
+	time.Sleep(100 * time.Millisecond)
+	raw, err := testServiceImpl(impl).state.JobList()
 	require.NoError(err)
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	raw2, err := testServiceImpl(impl).state.JobList()
 	require.NoError(err)
 	require.Equal(len(raw), len(raw2))
