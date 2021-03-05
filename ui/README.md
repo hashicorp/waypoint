@@ -57,6 +57,15 @@ Then run the authentication steps above again.
 
 if you've made API changes in `/internal/server` and want to use those on the frontend, you'll need to generate the type definitions again: 
 
+#### required dependencies for this build step
+
+- MacOS only: `brew install gnu-sed` then follow the instructions to replace the default `sed`
+- Download [the 1.1.2 release of `mockery`](https://github.com/vektra/mockery/releases/tag/v1.1.2) and install in your `/go/bin` directory
+- use node 12.x: `nvm use 12`
+- install `ts-protoc-gen`: `yarn global add ts-protoc-gen` or `npm i -g ts-protoc-gen`
+
+#### Generate the API definitions
+
 - `go generate ./internal/server`
 - `make gen/ts`
 
