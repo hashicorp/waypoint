@@ -97,7 +97,10 @@ in pkgs.mkShell rec {
   ] ++ (with pkgs; [
     # Needed for website/
     pkgconfig autoconf automake libtool nasm autogen zlib libpng
-  ]);
+  ]) ++ (if stdenv.isLinux then [
+    # On Linux we use minikube as the primary k8s testing platform
+    pkgs.minikube
+  ] else []);
 
   # Extra env vars
   PGHOST = "localhost";
