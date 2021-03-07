@@ -888,6 +888,32 @@ func (i *K8sInstaller) UninstallRunner(
 	} else if len(list.Items) > 0 {
 		s.Update("Deleting any automatically installed runners...")
 
+		// Record various settings we can reuse for runner reinstallation
+		// if we're doing an upgrade. We need to do this because the upgrade
+		// flags don't contain the installation settings, and we prefer them
+		// not to; instead we just retain the old settings.
+		//
+		// Note we have lots of conditionals here to try to avoid weird
+		// panic situations if the remote side doesn't have the fields we
+		// expect.
+		podSpec := list.Items[0].Spec.Template.Spec
+		if secrets := podSpec.ImagePullSecrets; len(secrets) > 0 {
+			i.config.imagePullSecret = secrets[0].Name
+		}
+		if v := podSpec.Containers; len(v) > 0 {
+			c := v[0]
+
+			i.config.imagePullPolicy = string(c.ImagePullPolicy)
+			if m := c.Resources.Requests; len(m) > 0 {
+				if v, ok := m[apiv1.ResourceMemory]; ok {
+					i.config.memRequest = v.String()
+				}
+				if v, ok := m[apiv1.ResourceCPU]; ok {
+					i.config.cpuRequest = v.String()
+				}
+			}
+		}
+
 		// create our wait channel to later poll for statefulset+pod deletion
 		w, err := deploymentClient.Watch(
 			ctx,
