@@ -14,6 +14,10 @@ func (s *service) UpsertProject(
 	ctx context.Context,
 	req *pb.UpsertProjectRequest,
 ) (*pb.UpsertProjectResponse, error) {
+	if err := serverptypes.ValidateUpsertProjectRequest(req); err != nil {
+		return nil, err
+	}
+
 	result := req.Project
 	if err := s.state.ProjectPut(result); err != nil {
 		return nil, err

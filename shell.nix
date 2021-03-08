@@ -86,6 +86,7 @@ in pkgs.mkShell rec {
     pkgs.docker-compose
     pkgs.go
     pkgs.go-bindata
+    pkgs.grpcurl
     pkgs.niv
     pkgs.nodejs-12_x
     pkgs.protobuf3_11

@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 // TODO: test
@@ -13,6 +14,10 @@ func (s *service) GetWorkspace(
 	ctx context.Context,
 	req *pb.GetWorkspaceRequest,
 ) (*pb.GetWorkspaceResponse, error) {
+	if err := ptypes.ValidateGetWorkspaceRequest(req); err != nil {
+		return nil, err
+	}
+
 	result, err := s.state.WorkspaceGet(req.Workspace.Workspace)
 	if err != nil {
 		return nil, err
