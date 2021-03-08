@@ -3,13 +3,20 @@
 FEATURES:
 
 * cli: New `waypoint fmt` command will autoformat your `waypoint.hcl` files [GH-1037]
+* server: Add ability for server to poll a project via git and automatically deploy [GH-1109]
+* runner: Start a standalone runner process along side the server to enable CLI-less actions [GH-1167] [GH-1171]
+* builtin/aws/lambda: Add support for AWS Lambda deploys [GH-1097]
 
 IMPROVEMENTS:
 
 * plugin/docker: support for building, pulling, and pushing Docker images without a Docker daemon available. [GH-970]
-* plugin/k8s: plugin will attempt in-cluster auth first if no kubeconfig file is specified [GH-1103]
+* plugin/k8s: plugin will attempt in-cluster auth first if no kubeconfig file is specified [GH-1052] [GH-1103]
 
 BUG FIXES:
+
+BREAKING CHANGES:
+
+* ui: dropped support for Internet Explorer [GH-1075]
 
 ## 0.2.3 (February 23, 2021)
 
