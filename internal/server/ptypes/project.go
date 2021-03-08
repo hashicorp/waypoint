@@ -8,6 +8,7 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
 
+	"github.com/hashicorp/waypoint/internal/pkg/validationext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -43,7 +44,34 @@ func (p *Project) App(n string) int {
 
 // ValidateProject validates the project structure.
 func ValidateProject(p *pb.Project) error {
-	return validation.ValidateStruct(p,
-		validation.Field(&p.Name, validation.By(isEmpty)),
-	)
+	return validationext.Error(validation.ValidateStruct(p,
+		ValidateProjectRules(p)...,
+	))
+}
+
+// ValidateProjectRules
+func ValidateProjectRules(p *pb.Project) []*validation.FieldRules {
+	return []*validation.FieldRules{
+		validation.Field(&p.Name, validation.Required),
+
+		validationext.StructField(&p.DataSource, func() []*validation.FieldRules {
+			return ValidateJobDataSourceRules(p.DataSource)
+		}),
+
+		validationext.StructField(&p.DataSourcePoll, func() []*validation.FieldRules {
+			return []*validation.FieldRules{
+				validation.Field(&p.DataSourcePoll.Interval, validationext.IsDuration),
+			}
+		}),
+	}
+}
+
+// ValidateUpsertProjectRequest
+func ValidateUpsertProjectRequest(v *pb.UpsertProjectRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.Project, validation.Required),
+		validationext.StructField(&v.Project, func() []*validation.FieldRules {
+			return ValidateProjectRules(v.Project)
+		}),
+	))
 }
