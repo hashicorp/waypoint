@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/hashicorp/go-hclog"
 	grpctoken "github.com/hashicorp/horizon/pkg/grpc/token"
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
@@ -34,7 +35,7 @@ func (s *service) urlClient() wphznpb.WaypointHznClient {
 // that `urlClient()` never returns nil if the URL service is enabled.
 func (s *service) initURLClient(
 	log hclog.Logger,
-	isRetry bool,
+	bo backoff.BackOff,
 	acceptURLTerms bool,
 	cfg *serverconfig.URL,
 ) error {
@@ -43,17 +44,35 @@ func (s *service) initURLClient(
 		return nil
 	}
 
+	// We are in a retry only if we have backoff settings set.
+	isRetry := bo != nil
+
 	// We don't currently have a context here to thread through. The
 	// remainder of the logic is context-aware so when we do have one, we
 	// just need to replace this and everything will just work.
 	ctx := context.Background()
 
+	// If we aren't retrying, setup our backoff settings.
+	if !isRetry {
+		bo = backoff.NewExponentialBackOff()
+		bo = backoff.WithContext(bo, ctx)
+	}
+
 	// Perform the blocking attempt to initialize.
 	err := s.initURLClientBlocking(ctx, log, isRetry, acceptURLTerms, cfg)
 	if status.Code(err) == codes.Unavailable {
+		// Sleep the backoff duration
+		boSleep := bo.NextBackOff()
+		if boSleep == backoff.Stop {
+			log.Warn("URL service unavailable, backoff canceled")
+			return status.New(codes.DeadlineExceeded, "URL service reconnect timed out").Err()
+		}
+		log.Warn("URL service unavailable, will retry in the background",
+			"sleep", boSleep.String())
+		time.Sleep(boSleep)
+
 		// Start a goroutine to keep retrying in the background.
-		log.Warn("URL service unavailable, will retry in the background")
-		go s.initURLClient(log, true, acceptURLTerms, cfg)
+		go s.initURLClient(log, bo, acceptURLTerms, cfg)
 		return nil
 	}
 

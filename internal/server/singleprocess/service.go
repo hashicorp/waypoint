@@ -109,7 +109,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 
 		if err := s.initURLClient(
 			log.Named("url_service"),
-			false,
+			nil,
 			cfg.acceptUrlTerms,
 			&cfgCopy,
 		); err != nil {
