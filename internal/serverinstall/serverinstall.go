@@ -14,6 +14,9 @@ import (
 // Installer is implemented by the server platforms and is responsible for managing
 // the installation of the Waypoint server.
 type Installer interface {
+	// HasRunner returns true if a runner is installed.
+	HasRunner(context.Context, *InstallOpts) (bool, error)
+
 	// Install expects the Waypoint server to be installed.
 	Install(context.Context, *InstallOpts) (*InstallResults, error)
 
@@ -25,7 +28,9 @@ type Installer interface {
 	// the platform name to avoid conflicts with other flags.
 	InstallFlags(*flag.Set)
 
-	// Upgrade expects the Waypoint server to be upgraded from a previous install
+	// Upgrade expects the Waypoint server to be upgraded from a previous install.
+	// After upgrading the server, this should also upgrade the primary
+	// runner that was installed with InstallRunner, if it exists.
 	Upgrade(ctx context.Context, opts *InstallOpts, serverCfg serverconfig.Client) (*InstallResults, error)
 
 	// UpgradeFlags is called prior to Upgrade and allows the upgrader to
@@ -33,8 +38,18 @@ type Installer interface {
 	// the platform name to avoid conflicts with other flags.
 	UpgradeFlags(*flag.Set)
 
-	// Uninstall expects the Waypoint server to be uninstalled.
+	// Uninstall expects the Waypoint server to be uninstalled. This should
+	// also look up to see if any runners exist (installed via InstallRunner)
+	// and remove those as well. Runners manually installed outside of this
+	// interface should not be touched.
 	Uninstall(context.Context, *InstallOpts) error
+
+	// UninstallRunner should remove the runner(s) installed via InstallRunner.
+	//
+	// No runners may exist. Runners installed manually by the user should be
+	// ignored (i.e. InstallRunner should set some identifiers that can be used
+	// to distinguish between automatically installed vs. manually installed).
+	UninstallRunner(context.Context, *InstallOpts) error
 
 	// UninstallFlags is called prior to Uninstall and allows the Uninstaller to
 	// specify flags for the uninstall CLI. The flags should be prefixed with the

@@ -70,49 +70,9 @@ func (i *K8sInstaller) Install(
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	// Build our K8S client.
-	configOverrides := &clientcmd.ConfigOverrides{}
-	if i.config.k8sContext != "" {
-		configOverrides = &clientcmd.ConfigOverrides{
-			CurrentContext: i.config.k8sContext,
-		}
-	}
-
-	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		configOverrides,
-	)
-
-	// Discover the current target namespace in the user's config so if they
-	// run kubectl commands waypoint will show up. If we use the default namespace
-	// they might not see the objects we've created.
-	if i.config.namespace == "" {
-		namespace, _, err := newCmdConfig.Namespace()
-		if err != nil {
-			ui.Output(
-				"Error getting namespace from client config: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return nil, err
-		}
-		i.config.namespace = namespace
-	}
-
-	clientconfig, err := newCmdConfig.ClientConfig()
+	clientset, err := i.newClient()
 	if err != nil {
-		ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, err
-	}
-
-	clientset, err := kubernetes.NewForConfig(clientconfig)
-	if err != nil {
-		ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
+		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return nil, err
 	}
 
@@ -385,51 +345,12 @@ func (i *K8sInstaller) Upgrade(
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer s.Abort()
 
-	// Build our K8S client.
-	configOverrides := &clientcmd.ConfigOverrides{}
-	if i.config.k8sContext != "" {
-		configOverrides = &clientcmd.ConfigOverrides{
-			CurrentContext: i.config.k8sContext,
-		}
-	}
-
-	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		configOverrides,
-	)
-
-	// Discover the current target namespace in the user's config so if they
-	// run kubectl commands waypoint will show up. If we use the default namespace
-	// they might not see the objects we've created.
-	if i.config.namespace == "" {
-		namespace, _, err := newCmdConfig.Namespace()
-		if err != nil {
-			ui.Output(
-				"Error getting namespace from client config: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return nil, err
-		}
-		i.config.namespace = namespace
-	}
-
-	clientconfig, err := newCmdConfig.ClientConfig()
+	clientset, err := i.newClient()
 	if err != nil {
-		ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
+		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return nil, err
 	}
 
-	clientset, err := kubernetes.NewForConfig(clientconfig)
-	if err != nil {
-		ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return nil, err
-	}
 	// Do some probing to see if this is OpenShift. If so, we'll switch the config for the user.
 	// Setting the OpenShift flag will short circuit this.
 	if !i.config.openshift {
@@ -666,116 +587,10 @@ func (i *K8sInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	// Build our k8s client
-	configOverrides := &clientcmd.ConfigOverrides{}
-	if i.config.k8sContext != "" {
-		configOverrides = &clientcmd.ConfigOverrides{
-			CurrentContext: i.config.k8sContext,
-		}
-	}
-
-	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		configOverrides,
-	)
-
-	// Discover the current target namespace in the user's config so that we use
-	// the active kubectl target for the waypoint uninstall, mirroring what
-	// we do in Install.
-	if i.config.namespace == "" {
-		namespace, _, err := newCmdConfig.Namespace()
-		if err != nil {
-			ui.Output(
-				"Error getting namespace from client config: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-		}
-		i.config.namespace = namespace
-	}
-
-	// initialize the k8s client
-	clientconfig, err := newCmdConfig.ClientConfig()
+	clientset, err := i.newClient()
 	if err != nil {
-		ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
+		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
-	}
-
-	// init new clientset
-	clientset, err := kubernetes.NewForConfig(clientconfig)
-	if err != nil {
-		ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	}
-
-	deploymentClient := clientset.AppsV1().Deployments(i.config.namespace)
-	if list, err := deploymentClient.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", runnerName),
-	}); err != nil {
-		ui.Output(
-			"Error looking up deployments: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	} else if len(list.Items) > 0 {
-		s.Update("Deleting any automatically installed runners...")
-
-		// create our wait channel to later poll for statefulset+pod deletion
-		w, err := deploymentClient.Watch(
-			ctx,
-			metav1.ListOptions{
-				LabelSelector: "app=" + runnerName,
-			},
-		)
-		if err != nil {
-			ui.Output(
-				"Error creating deployments watcher %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-
-		}
-		// send DELETE to statefulset collection
-		if err = deploymentClient.DeleteCollection(
-			ctx,
-			metav1.DeleteOptions{},
-			metav1.ListOptions{
-				LabelSelector: "app=" + runnerName,
-			},
-		); err != nil {
-			ui.Output(
-				"Error deleting Waypoint deployment: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-
-		// wait for deletion to complete
-		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
-			select {
-			case wCh := <-w.ResultChan():
-				if wCh.Type == "DELETED" {
-					w.Stop()
-					return true, nil
-				}
-				log.Trace("deployment collection not fully removed, waiting")
-				return false, nil
-			default:
-				log.Trace("no message received on watch.ResultChan(), waiting for Event")
-				return false, nil
-			}
-		})
-		if err != nil {
-			return err
-		}
-		s.Update("Runner deployment deleted")
-		s.Done()
-		s = sg.Add("")
 	}
 
 	ssClient := clientset.AppsV1().StatefulSets(i.config.namespace)
@@ -986,48 +801,9 @@ func (i *K8sInstaller) InstallRunner(
 	s := sg.Add("Inspecting Kubernetes cluster...")
 	defer func() { s.Abort() }()
 
-	// Build our K8S client.
-	configOverrides := &clientcmd.ConfigOverrides{}
-	if i.config.k8sContext != "" {
-		configOverrides = &clientcmd.ConfigOverrides{
-			CurrentContext: i.config.k8sContext,
-		}
-	}
-	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		clientcmd.NewDefaultClientConfigLoadingRules(),
-		configOverrides,
-	)
-
-	// Discover the current target namespace in the user's config so if they
-	// run kubectl commands waypoint will show up. If we use the default namespace
-	// they might not see the objects we've created.
-	if i.config.namespace == "" {
-		namespace, _, err := newCmdConfig.Namespace()
-		if err != nil {
-			ui.Output(
-				"Error getting namespace from client config: %s", clierrors.Humanize(err),
-				terminal.WithErrorStyle(),
-			)
-			return err
-		}
-		i.config.namespace = namespace
-	}
-
-	clientconfig, err := newCmdConfig.ClientConfig()
+	clientset, err := i.newClient()
 	if err != nil {
-		ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
-		return err
-	}
-
-	clientset, err := kubernetes.NewForConfig(clientconfig)
-	if err != nil {
-		ui.Output(
-			"Error initializing kubernetes client: %s", clierrors.Humanize(err),
-			terminal.WithErrorStyle(),
-		)
+		ui.Output(err.Error(), terminal.WithErrorStyle())
 		return err
 	}
 
@@ -1063,12 +839,12 @@ func (i *K8sInstaller) InstallRunner(
 			return false, err
 		}
 
-		if ss.Status.ReadyReplicas != ss.Status.Replicas {
-			log.Trace("deployment not ready, waiting")
-			return false, nil
+		if ss.Status.ReadyReplicas > 0 {
+			return true, nil
 		}
 
-		return true, nil
+		log.Trace("deployment not ready, waiting")
+		return false, nil
 	})
 	if err != nil {
 		return err
@@ -1078,6 +854,143 @@ func (i *K8sInstaller) InstallRunner(
 	s.Done()
 
 	return nil
+}
+
+// UninstallRunner implements Installer.
+func (i *K8sInstaller) UninstallRunner(
+	ctx context.Context,
+	opts *InstallOpts,
+) error {
+	ui := opts.UI
+	log := opts.Log
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Inspecting Kubernetes cluster...")
+	defer func() { s.Abort() }()
+
+	clientset, err := i.newClient()
+	if err != nil {
+		ui.Output(err.Error(), terminal.WithErrorStyle())
+		return err
+	}
+
+	deploymentClient := clientset.AppsV1().Deployments(i.config.namespace)
+	if list, err := deploymentClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", runnerName),
+	}); err != nil {
+		ui.Output(
+			"Error looking up deployments: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return err
+	} else if len(list.Items) > 0 {
+		s.Update("Deleting any automatically installed runners...")
+
+		// Record various settings we can reuse for runner reinstallation
+		// if we're doing an upgrade. We need to do this because the upgrade
+		// flags don't contain the installation settings, and we prefer them
+		// not to; instead we just retain the old settings.
+		//
+		// Note we have lots of conditionals here to try to avoid weird
+		// panic situations if the remote side doesn't have the fields we
+		// expect.
+		podSpec := list.Items[0].Spec.Template.Spec
+		if secrets := podSpec.ImagePullSecrets; len(secrets) > 0 {
+			i.config.imagePullSecret = secrets[0].Name
+		}
+		if v := podSpec.Containers; len(v) > 0 {
+			c := v[0]
+
+			i.config.imagePullPolicy = string(c.ImagePullPolicy)
+			if m := c.Resources.Requests; len(m) > 0 {
+				if v, ok := m[apiv1.ResourceMemory]; ok {
+					i.config.memRequest = v.String()
+				}
+				if v, ok := m[apiv1.ResourceCPU]; ok {
+					i.config.cpuRequest = v.String()
+				}
+			}
+		}
+
+		// create our wait channel to later poll for statefulset+pod deletion
+		w, err := deploymentClient.Watch(
+			ctx,
+			metav1.ListOptions{
+				LabelSelector: "app=" + runnerName,
+			},
+		)
+		if err != nil {
+			ui.Output(
+				"Error creating deployments watcher %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
+
+		}
+		// send DELETE to statefulset collection
+		if err = deploymentClient.DeleteCollection(
+			ctx,
+			metav1.DeleteOptions{},
+			metav1.ListOptions{
+				LabelSelector: "app=" + runnerName,
+			},
+		); err != nil {
+			ui.Output(
+				"Error deleting Waypoint deployment: %s", clierrors.Humanize(err),
+				terminal.WithErrorStyle(),
+			)
+			return err
+		}
+
+		// wait for deletion to complete
+		err = wait.PollImmediate(2*time.Second, 10*time.Minute, func() (bool, error) {
+			select {
+			case wCh := <-w.ResultChan():
+				if wCh.Type == "DELETED" {
+					w.Stop()
+					return true, nil
+				}
+				log.Trace("deployment collection not fully removed, waiting")
+				return false, nil
+			default:
+				log.Trace("no message received on watch.ResultChan(), waiting for Event")
+				return false, nil
+			}
+		})
+		if err != nil {
+			return err
+		}
+		s.Update("Runner deployment deleted")
+		s.Done()
+	} else {
+		s.Update("No runners installed.")
+		s.Done()
+	}
+
+	return nil
+}
+
+// HasRunner implements Installer.
+func (i *K8sInstaller) HasRunner(
+	ctx context.Context,
+	opts *InstallOpts,
+) (bool, error) {
+	clientset, err := i.newClient()
+	if err != nil {
+		return false, err
+	}
+
+	deploymentClient := clientset.AppsV1().Deployments(i.config.namespace)
+	list, err := deploymentClient.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", runnerName),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return len(list.Items) > 0, nil
 }
 
 // newDeployment takes in a k8sConfig and creates a new Waypoint Deployment for
@@ -1504,6 +1417,54 @@ func int32Ptr(i int32) *int32 {
 
 func int64Ptr(i int64) *int64 {
 	return &i
+}
+
+// newClient creates a new K8S client based on the configured settings.
+func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
+	// Build our K8S client.
+	configOverrides := &clientcmd.ConfigOverrides{}
+	if i.config.k8sContext != "" {
+		configOverrides = &clientcmd.ConfigOverrides{
+			CurrentContext: i.config.k8sContext,
+		}
+	}
+	newCmdConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		configOverrides,
+	)
+
+	// Discover the current target namespace in the user's config so if they
+	// run kubectl commands waypoint will show up. If we use the default namespace
+	// they might not see the objects we've created.
+	if i.config.namespace == "" {
+		namespace, _, err := newCmdConfig.Namespace()
+		if err != nil {
+			return nil, fmt.Errorf(
+				"Error getting namespace from client config: %s",
+				clierrors.Humanize(err),
+			)
+		}
+
+		i.config.namespace = namespace
+	}
+
+	clientconfig, err := newCmdConfig.ClientConfig()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"Error initializing kubernetes client: %s",
+			clierrors.Humanize(err),
+		)
+	}
+
+	clientset, err := kubernetes.NewForConfig(clientconfig)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"Error initializing kubernetes client: %s",
+			clierrors.Humanize(err),
+		)
+	}
+
+	return clientset, nil
 }
 
 var (

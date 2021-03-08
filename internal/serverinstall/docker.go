@@ -62,11 +62,11 @@ func (i *DockerInstaller) Install(
 	s.Update("Checking for existing installation...")
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: containerLabel,
 		}),
-		All: true,
 	})
 	if err != nil {
 		return nil, err
@@ -294,6 +294,7 @@ func (i *DockerInstaller) Upgrade(
 
 	s.Update("Checking for an existing Waypoint server installation...")
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: "waypoint-type=server",
@@ -494,6 +495,7 @@ func (i *DockerInstaller) Uninstall(
 	cli.NegotiateAPIVersion(ctx)
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: containerLabel,
@@ -562,47 +564,6 @@ func (i *DockerInstaller) Uninstall(
 		s.Done()
 	}
 
-	// Find and delete any runners. There could be zero, 1, or more.
-	{
-		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
-			Filters: filters.NewArgs(filters.KeyValuePair{
-				Key:   "label",
-				Value: containerKey + "=" + containerValueRunner,
-			}),
-		})
-		if err != nil {
-			return err
-		}
-
-		// It is not an error for there to be zero or more than one containers
-		// since runners are optional.
-		if len(containers) >= 1 {
-			s = sg.Add("Uninstalling runners...")
-
-			// There should only be one but let's just delete any that exist.
-			for _, c := range containers {
-				containerId := c.ID
-
-				s.Update("Stopping container: %s", containerId)
-
-				// Stop the container gracefully, respecting the Engine's default timeout.
-				if err := cli.ContainerStop(ctx, containerId, nil); err != nil {
-					return err
-				}
-
-				removeOptions := types.ContainerRemoveOptions{
-					RemoveVolumes: true,
-					Force:         true,
-				}
-				if err := cli.ContainerRemove(ctx, containerId, removeOptions); err != nil {
-					return err
-				}
-			}
-			s.Update("%d runner(s) uninstalled", len(containers))
-			s.Done()
-		}
-	}
-
 	s = sg.Add("")
 
 	imageList, err := cli.ImageList(ctx, types.ImageListOptions{
@@ -659,6 +620,7 @@ func (i *DockerInstaller) InstallRunner(
 
 	s.Update("Checking for an existing runner...")
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
 			Value: "waypoint-type=runner",
@@ -714,6 +676,99 @@ func (i *DockerInstaller) InstallRunner(
 	s.Done()
 
 	return nil
+}
+
+// UninstallRunner implements Installer.
+func (i *DockerInstaller) UninstallRunner(
+	ctx context.Context,
+	opts *InstallOpts,
+) error {
+	sg := opts.UI.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Initializing Docker client...")
+	defer func() { s.Abort() }()
+
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return err
+	}
+	defer cli.Close()
+	cli.NegotiateAPIVersion(ctx)
+
+	// Find and delete any runners. There could be zero, 1, or more.
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "label",
+			Value: containerKey + "=" + containerValueRunner,
+		}),
+	})
+	if err != nil {
+		return err
+	}
+
+	// If there are no containers found, we do nothing.
+	if len(containers) == 0 {
+		s.Update("No runners found to uninstall.")
+		s.Done()
+		return nil
+	}
+
+	// It is not an error for there to be zero or more than one containers
+	// since runners are optional.
+	s.Update("Uninstalling runners...")
+
+	// There should only be one but let's just delete any that exist.
+	for _, c := range containers {
+		containerId := c.ID
+
+		s.Update("Stopping container: %s", containerId)
+
+		// Stop the container gracefully, respecting the Engine's default timeout.
+		if err := cli.ContainerStop(ctx, containerId, nil); err != nil {
+			return err
+		}
+
+		removeOptions := types.ContainerRemoveOptions{
+			RemoveVolumes: true,
+			Force:         true,
+		}
+		if err := cli.ContainerRemove(ctx, containerId, removeOptions); err != nil {
+			return err
+		}
+	}
+	s.Update("%d runner(s) uninstalled", len(containers))
+	s.Done()
+
+	return nil
+}
+
+// HasRunner implements Installer.
+func (i *DockerInstaller) HasRunner(
+	ctx context.Context,
+	opts *InstallOpts,
+) (bool, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return false, err
+	}
+	defer cli.Close()
+	cli.NegotiateAPIVersion(ctx)
+
+	// Find and delete any runners. There could be zero, 1, or more.
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{
+		All: true, // include stopped containers
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "label",
+			Value: containerKey + "=" + containerValueRunner,
+		}),
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return len(containers) > 0, nil
 }
 
 func (i *DockerInstaller) InstallFlags(set *flag.Set) {

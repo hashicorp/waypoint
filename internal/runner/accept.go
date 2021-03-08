@@ -24,14 +24,29 @@ var heartbeatDuration = 5 * time.Second
 func (r *Runner) AcceptMany(ctx context.Context) {
 	for {
 		if err := r.Accept(ctx); err != nil {
-			switch {
-			case err == ErrClosed:
+			if err == ErrClosed {
 				return
-			case status.Code(err) == codes.Canceled:
+			}
+
+			switch status.Code(err) {
+			case codes.Canceled:
 				// Ideally we'd get ErrClosed, but there are cases where we'll observe
 				// the context being closed first, in which case we honor that as a valid
 				// reason to stop accepting jobs.
 				return
+
+			case codes.NotFound:
+				// This means the runner was deregistered and we must exit.
+				// This won't be fixed unless the runner is closed and restarted.
+				r.logger.Error("runner unexpectedly deregistered, exiting")
+				return
+
+			case codes.Unavailable:
+				// Server became unavailable. Let's just sleep to give the
+				// server time to come back.
+				r.logger.Warn("server unavailable, sleeping before retry")
+				time.Sleep(2 * time.Second)
+
 			default:
 				r.logger.Error("error running job", "error", err)
 			}
@@ -45,6 +60,14 @@ func (r *Runner) AcceptMany(ctx context.Context) {
 // An error is only returned if there was an error internal to the runner.
 // Errors during job execution are expected (i.e. a project build is misconfigured)
 // and will be reported on the job.
+//
+// Two specific errors to watch out for are:
+//
+//   - ErrClosed (in this package) which means that the runner is closed
+//     and Accept can no longer be called.
+//   - code = NotFound which means that the runner was deregistered. This
+//     means the runner has to be fully recycled: Close called, a new runner
+//     started.
 //
 // This is safe to be called concurrently which can be used to execute
 // multiple jobs in parallel as a runner.

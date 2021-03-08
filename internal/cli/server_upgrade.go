@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -41,6 +42,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
+		WithNoAutoServer(),
 	); err != nil {
 		return 1
 	}
@@ -204,11 +206,13 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	c.ui.Output("Waypoint server will now upgrade from version %q",
 		initServerVersion, terminal.WithInfoStyle())
 
-	// Upgrade in place
-	result, err := p.Upgrade(ctx, &serverinstall.InstallOpts{
+	installOpts := &serverinstall.InstallOpts{
 		Log: log,
 		UI:  c.ui,
-	}, originalCfg.Server)
+	}
+
+	// Upgrade in place
+	result, err := p.Upgrade(ctx, installOpts, originalCfg.Server)
 	if err != nil {
 		c.ui.Output(
 			"Error upgrading server on %s: %s", c.platform, clierrors.Humanize(err),
@@ -247,6 +251,7 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	// Connect
 	c.ui.Output("Verifying upgrade...", terminal.WithHeaderStyle())
+
 	// New stepgroup to ensure output is after upgrade output
 	sg2 := c.ui.StepGroup()
 	defer sg2.Wait()
@@ -290,6 +295,13 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	s2.Update("Server connection verified!")
 	s2.Done()
 
+	// Upgrade the runner
+	if code := c.upgradeRunner(
+		ctx, client, p, installOpts, advertiseAddr,
+	); code > 0 {
+		return code
+	}
+
 	c.ui.Output("\nServer upgrade for platform %q context %q complete!",
 		c.platform, ctxName, terminal.WithSuccessStyle())
 
@@ -300,6 +312,59 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		terminal.WithSuccessStyle())
 
 	return 0
+}
+
+func (c *ServerUpgradeCommand) upgradeRunner(
+	ctx context.Context,
+	client pb.WaypointClient,
+	p serverinstall.Installer,
+	installOpts *serverinstall.InstallOpts,
+	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
+) int {
+	// Connect
+	c.ui.Output("Upgrading runner if required...", terminal.WithHeaderStyle())
+
+	sg := c.ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("")
+	defer func() { s.Abort() }()
+
+	// Upgrade the runner
+	s.Update("Checking if a runner needs to be upgraded...")
+	hasRunner, err := p.HasRunner(ctx, installOpts)
+	if err != nil {
+		s.Update("Error checking for runner: %s", err)
+		s.Status(terminal.StatusError)
+		s.Done()
+		return 1
+	}
+
+	if !hasRunner {
+		s.Update("No runners to upgrade.")
+		s.Done()
+		return 0
+	}
+
+	s.Update("Runner found. Uninstalling previous runner...")
+	if err := p.UninstallRunner(ctx, installOpts); err != nil {
+		c.ui.Output(
+			"Error uninstalling runner from %s: %s\n\n"+
+				"The runner will not be upgraded.",
+			c.platform,
+			clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+
+		return 1
+	}
+	s.Update("Previous runner uninstalled")
+	s.Done()
+
+	// TODO(mitchellh): This creates a new auth token for the new runner.
+	// In the future, we need to invalidate the old token. We don't have
+	// the functionality to do this today.
+	return installRunner(ctx, installOpts.Log, client, c.ui, p, advertiseAddr)
 }
 
 func (c *ServerUpgradeCommand) Flags() *flag.Sets {
@@ -360,10 +425,14 @@ func (c *ServerUpgradeCommand) Help() string {
 	return formatHelp(`
 Usage: waypoint server upgrade [options]
 
-	Upgrade Waypoint server in the current context to the latest version or the
-	server image version specified. By default, Waypoint will upgrade to server
-	version "hashicorp/waypoint:latest". Before upgrading, a snapshot of the
-	server will be taken in case of any upgrade failures.
+  Upgrade Waypoint server in the current context to the latest version or the
+  server image version specified. By default, Waypoint will upgrade to server
+  version "hashicorp/waypoint:latest". Before upgrading, a snapshot of the
+  server will be taken in case of any upgrade failures.
+
+  If a runner was installed via "waypoint install" then that runner will also
+  be upgraded to the latest version after the server is upgraded. Any other
+  manually installed runners will not be automatically upgraded.
 
 ` + c.Flags().Help())
 }

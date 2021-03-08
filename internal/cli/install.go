@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-hclog"
 	"github.com/posener/complete"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -280,53 +282,9 @@ func (c *InstallCommand) Run(args []string) int {
 	s.Done()
 
 	if c.flagRunner {
-		s = sg.Add("")
-
-		// We need a new auth token for the runner so that the runner
-		// can connect to the server. We don't want to reuse the bootstrap
-		// token that is shared with the CLI cause that can be revoked.
-		s.Update("Retrieving new auth token for runner...")
-		resp, err := client.GenerateLoginToken(c.Ctx, &empty.Empty{})
-		if err != nil {
-			c.ui.Output(
-				"Error retrieving auth token for runner: %s\n\n%s",
-				clierrors.Humanize(err),
-				errInstallRunner,
-				terminal.WithErrorStyle(),
-			)
-			return 1
+		if code := installRunner(c.Ctx, log, client, c.ui, p, advertiseAddr); code > 0 {
+			return code
 		}
-
-		// Build a serverconfig that uses the advertise addr and includes
-		// the token we just requested.
-		connConfig := &serverconfig.Client{
-			Address:       advertiseAddr.Addr,
-			Tls:           advertiseAddr.Tls,
-			TlsSkipVerify: advertiseAddr.TlsSkipVerify,
-			RequireAuth:   true,
-			AuthToken:     resp.Token,
-		}
-
-		// Install!
-		s.Update("Installing runner...")
-		err = p.InstallRunner(ctx, &serverinstall.InstallRunnerOpts{
-			Log:             log,
-			UI:              c.ui,
-			AuthToken:       resp.Token,
-			AdvertiseAddr:   advertiseAddr,
-			AdvertiseClient: connConfig,
-		})
-		if err != nil {
-			c.ui.Output(
-				"Error installing the runner: %s\n\n%s",
-				clierrors.Humanize(err),
-				errInstallRunner,
-				terminal.WithErrorStyle(),
-			)
-			return 1
-		}
-
-		s.Done()
 	}
 
 	// Close and success
@@ -372,10 +330,10 @@ func (c *InstallCommand) Flags() *flag.Sets {
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:    "x-runner",
+			Name:    "runner",
 			Target:  &c.flagRunner,
 			Usage:   "Install a runner in addition to the server",
-			Default: false,
+			Default: true,
 			Hidden:  true,
 		})
 
@@ -403,8 +361,12 @@ func (c *InstallCommand) Help() string {
 Usage: waypoint server install [options]
 Alias: waypoint install
 
-	Installs a Waypoint server to an existing platform. The platform should be
-	specified as kubernetes, nomad, or docker.
+  Installs a Waypoint server to an existing platform. The platform should be
+  specified as kubernetes, nomad, or docker.
+
+  This will also install a single Waypoint runner by default. This enables
+  remote operations out of the box, such as polling a Git repository. This can
+  be disabled by specifying "-runner=false".
 
   By default, this will also automatically create a new default CLI context
   (see "waypoint context") so the CLI will be configured to use the newly
@@ -417,6 +379,76 @@ Alias: waypoint install
   you do not need to accept any terms.
 
 ` + c.Flags().Help())
+}
+
+// installRunner installs the runner. This function is terribly ugly (takes
+// a lot of somewhat arbitrary params) but is extracted so that we can share
+// logic between install and upgrade for runners. This function is never meant
+// to be "general purpose" only meant to keep a consistent experience between
+// CLI commands.
+//
+// This returns an exit code. If it is 0 it is success. Any other value is an
+// error. The function itself handles outputting error messages to the terminal.
+func installRunner(
+	ctx context.Context,
+	log hclog.Logger,
+	client pb.WaypointClient,
+	ui terminal.UI,
+	p serverinstall.Installer,
+	advertiseAddr *pb.ServerConfig_AdvertiseAddr,
+) int {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("")
+	defer func() { s.Abort() }()
+
+	// We need a new auth token for the runner so that the runner
+	// can connect to the server. We don't want to reuse the bootstrap
+	// token that is shared with the CLI cause that can be revoked.
+	s.Update("Retrieving new auth token for runner...")
+	resp, err := client.GenerateLoginToken(ctx, &empty.Empty{})
+	if err != nil {
+		ui.Output(
+			"Error retrieving auth token for runner: %s\n\n%s",
+			clierrors.Humanize(err),
+			errInstallRunner,
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+
+	// Build a serverconfig that uses the advertise addr and includes
+	// the token we just requested.
+	connConfig := &serverconfig.Client{
+		Address:       advertiseAddr.Addr,
+		Tls:           advertiseAddr.Tls,
+		TlsSkipVerify: advertiseAddr.TlsSkipVerify,
+		RequireAuth:   true,
+		AuthToken:     resp.Token,
+	}
+
+	// Install!
+	s.Update("Installing runner...")
+	err = p.InstallRunner(ctx, &serverinstall.InstallRunnerOpts{
+		Log:             log,
+		UI:              ui,
+		AuthToken:       resp.Token,
+		AdvertiseAddr:   advertiseAddr,
+		AdvertiseClient: connConfig,
+	})
+	if err != nil {
+		ui.Output(
+			"Error installing the runner: %s\n\n%s",
+			clierrors.Humanize(err),
+			errInstallRunner,
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+	s.Done()
+
+	return 0
 }
 
 var (
