@@ -15852,7 +15852,7 @@ watchpack@^1.7.4:
     chokidar "^3.4.1"
     watchpack-chokidar2 "^2.0.1"
 
-waypoint-client@./lib/waypoint-client/:
+waypoint-client@./lib/waypoint-client:
   version "1.0.0"
 
 waypoint-pb@./lib/waypoint-pb:
