@@ -291,41 +291,89 @@ func (s *GitSource) Changes(
 		URLs: []string{source.Git.Url},
 	})
 
+	// Determine our target ref. If no Ref is specified by the user,
+	// we default to HEAD which points to whatever the default branch is.
+	targetRef := source.Git.Ref
+	if targetRef == "" {
+		targetRef = "HEAD"
+	}
+
 	// List our refs, equivalent to git ls-remote
 	refs, err := remote.List(&git.ListOptions{Auth: auth})
 	if err != nil {
 		return nil, err
 	}
 
-	// Find the target for HEAD
-	var headTarget plumbing.ReferenceName
+	// Build a map of our refs since we may have to do many lookups
+	refMap := map[plumbing.ReferenceName]*plumbing.Reference{}
 	for _, ref := range refs {
-		if ref.Type() == plumbing.SymbolicReference && ref.Name() == "HEAD" {
-			headTarget = ref.Target()
-			break
+		// We should never get a duplicate ref, but if we do, let's log it
+		// because this will PROBABLY result in some weird behavior.
+		if _, ok := refMap[ref.Name()]; ok {
+			log.Warn("duplicate ref in ls-remote, this shouldn't happen",
+				"name", ref.Name())
 		}
-	}
-	if headTarget == "" {
-		return nil, status.Errorf(codes.Internal, "HEAD symbolic ref not found")
+
+		refMap[ref.Name()] = ref
 	}
 
-	// Get the actual hash for HEAD
-	var headRef *plumbing.Reference
-	for _, ref := range refs {
-		if ref.Name() == headTarget {
-			headRef = ref
-			break
-		}
+	// tryRefs is the list of refs we will try to find in the ref list.
+	// The first ref found that matches will be returned first. This contains
+	// all the formats a user may enter for a ref. The order at the time
+	// of writing is the following, where %s is replaced with the user-supplied
+	// ref. This is the same logic `git rev-parse` uses.
+	//
+	//  - "%s",
+	//  - "refs/%s",
+	//  - "refs/tags/%s",
+	//  - "refs/heads/%s",
+	//  - "refs/remotes/%s",
+	//  - "refs/remotes/%s/HEAD",
+	//
+	tryRefs := []string{targetRef}
+	for _, rule := range plumbing.RefRevParseRules {
+		tryRefs = append(tryRefs, fmt.Sprintf(rule, targetRef))
 	}
-	if headRef == nil {
-		return nil, status.Errorf(codes.Internal, "HEAD hash ref not found")
+	var foundRef *plumbing.Reference
+	for _, tryRef := range tryRefs {
+		ref, ok := refMap[plumbing.ReferenceName(tryRef)]
+		if !ok {
+			continue
+		}
+
+		// The limit prevents adversarial or buggy remote git repos that
+		// might have a symbolic reference loop. The value 10 was chosen
+		// arbitrarily, I've never seen a reference repeat more than 1 time.
+		limit := 10
+
+		// If the ref is a symbolic reference, we dereference until we find
+		// the target. An example here is HEAD may point to refs/heads/main,
+		// and so on.
+		for limit > 0 && ref != nil && ref.Type() == plumbing.SymbolicReference {
+			ref = refMap[ref.Target()]
+			limit--
+		}
+		if limit == 0 {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"Infinite reference in hash lookup for target: %s", targetRef)
+		}
+		if ref == nil {
+			continue
+		}
+
+		foundRef = ref
+		break
+	}
+
+	if foundRef == nil {
+		return nil, status.Errorf(codes.Internal, "Hash for target ref not found: %s", targetRef)
 	}
 
 	// Compare
 	if current != nil {
 		currentRef := current.Ref.(*pb.Job_DataSource_Ref_Git).Git
-		if currentRef.Commit == headRef.Hash().String() {
-			log.Trace("HEAD matches current ref, ignoring")
+		if currentRef.Commit == foundRef.Hash().String() {
+			log.Trace("current ref matches last known ref, ignoring")
 			return nil, nil
 		}
 	}
@@ -333,7 +381,7 @@ func (s *GitSource) Changes(
 	return &pb.Job_DataSource_Ref{
 		Ref: &pb.Job_DataSource_Ref_Git{
 			Git: &pb.Job_Git_Ref{
-				Commit: headRef.Hash().String(),
+				Commit: foundRef.Hash().String(),
 			},
 		},
 	}, nil

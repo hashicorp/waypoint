@@ -362,6 +362,109 @@ func TestGitSourceChanges(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(newRef)
 	})
+
+	// Test a specific tag ref, we expect our public Waypoint repo tags
+	// to never change for the purpose of this test.
+	t.Run("tag ref shorthand", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		newRef, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "https://github.com/hashicorp/waypoint.git",
+						Ref: "v0.1.0",
+					},
+				},
+			},
+			nil,
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+
+		hash := newRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
+		require.Equal(hash, "66d19f02c5da9e628998d688cbc0d1755eeabf62")
+	})
+
+	t.Run("tag ref full", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		newRef, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "https://github.com/hashicorp/waypoint.git",
+						Ref: "refs/tags/v0.1.0",
+					},
+				},
+			},
+			nil,
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+
+		hash := newRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
+		require.Equal(hash, "66d19f02c5da9e628998d688cbc0d1755eeabf62")
+	})
+
+	// This assumes release/0.1.0 won't change again, which it probably won't.
+	t.Run("branch ref shorthand", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		newRef, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "https://github.com/hashicorp/waypoint.git",
+						Ref: "release/0.1.0",
+					},
+				},
+			},
+			nil,
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+
+		hash := newRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
+		require.Equal(hash, "a71a259607c26e93037aee9f2496a1da83dea6f2")
+	})
+
+	t.Run("branch ref full", func(t *testing.T) {
+		require := require.New(t)
+
+		var s GitSource
+		newRef, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url: "https://github.com/hashicorp/waypoint.git",
+						Ref: "refs/heads/release/0.1.0",
+					},
+				},
+			},
+			nil,
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+
+		hash := newRef.Ref.(*pb.Job_DataSource_Ref_Git).Git.Commit
+		require.Equal(hash, "a71a259607c26e93037aee9f2496a1da83dea6f2")
+	})
 }
 
 // testGitFixture MUST be called before TestRunner since TestRunner
