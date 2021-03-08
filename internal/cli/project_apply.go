@@ -301,7 +301,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 			}
 
 		case ".json":
-			format = pb.Project_HCL
+			format = pb.Project_JSON
 			_, diag := hcljson.Parse(bs, "<waypoint-hcl>")
 			if diag.HasErrors() {
 				c.ui.Output(

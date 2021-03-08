@@ -71,6 +71,24 @@ func TestValidateProject(t *testing.T) {
 			},
 			"url: cannot be blank",
 		},
+
+		{
+			"invalid Waypoint HCL",
+			func(v *pb.Project) {
+				v.WaypointHcl = []byte("i am not valid")
+				v.WaypointHclFormat = pb.Project_HCL
+			},
+			"waypoint_hcl",
+		},
+
+		{
+			"valid Waypoint HCL",
+			func(v *pb.Project) {
+				v.WaypointHcl = []byte("foo = 42")
+				v.WaypointHclFormat = pb.Project_HCL
+			},
+			"",
+		},
 	}
 
 	for _, tt := range cases {
