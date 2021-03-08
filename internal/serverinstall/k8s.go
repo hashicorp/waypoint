@@ -839,12 +839,12 @@ func (i *K8sInstaller) InstallRunner(
 			return false, err
 		}
 
-		if ss.Status.ReadyReplicas != ss.Status.Replicas {
-			log.Trace("deployment not ready, waiting")
-			return false, nil
+		if ss.Status.ReadyReplicas > 0 {
+			return true, nil
 		}
 
-		return true, nil
+		log.Trace("deployment not ready, waiting")
+		return false, nil
 	})
 	if err != nil {
 		return err
