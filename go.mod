@@ -54,6 +54,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-plugin v1.3.0
 	github.com/hashicorp/go-uuid v1.0.2
+	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.7.1-0.20201023000745-3de61ecba298
 	github.com/hashicorp/horizon v0.0.0-20201203173320-fcefbe49771c
