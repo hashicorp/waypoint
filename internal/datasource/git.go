@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/mitchellh/mapstructure"
+	cryptossh "golang.org/x/crypto/ssh"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -401,9 +402,15 @@ func (s *GitSource) auth(
 		}, nil
 
 	case *pb.Job_Git_Ssh:
+		// Default the user to "git" which is typically what is used.
+		user := authcfg.Ssh.User
+		if user == "" {
+			user = "git"
+		}
+
 		ui.Output("Auth: ssh", terminal.WithInfoStyle())
 		auth, err := ssh.NewPublicKeys(
-			authcfg.Ssh.User,
+			user,
 			authcfg.Ssh.PrivateKeyPem,
 			authcfg.Ssh.Password,
 		)
@@ -411,6 +418,11 @@ func (s *GitSource) auth(
 			return nil, status.Errorf(codes.FailedPrecondition,
 				"Failed to load private key for Git auth: %s", err)
 		}
+
+		// We do not do any host key verification for now.
+		// NOTE(mitchellh): in the future we should expose a way to
+		// configure enabling this in some way.
+		auth.HostKeyCallback = cryptossh.InsecureIgnoreHostKey()
 
 		return auth, nil
 
