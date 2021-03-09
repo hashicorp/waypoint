@@ -557,7 +557,8 @@ func (c *InitCommand) Flags() *flag.Sets {
 			Name:    "from-project",
 			Target:  &c.fromProject,
 			Default: "",
-			Usage:   "Create a new application by fetching the given application from a remote source or from a local file on disk.",
+			Usage: "Create a new application by fetching the given application from" +
+				"a remote source or from a local project folder or fileon disk.",
 		})
 
 		f.StringVar(&flag.StringVar{
