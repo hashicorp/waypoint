@@ -402,9 +402,15 @@ func (s *GitSource) auth(
 		}, nil
 
 	case *pb.Job_Git_Ssh:
+		// Default the user to "git" which is typically what is used.
+		user := authcfg.Ssh.User
+		if user == "" {
+			user = "git"
+		}
+
 		ui.Output("Auth: ssh", terminal.WithInfoStyle())
 		auth, err := ssh.NewPublicKeys(
-			authcfg.Ssh.User,
+			user,
 			authcfg.Ssh.PrivateKeyPem,
 			authcfg.Ssh.Password,
 		)
