@@ -210,7 +210,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// If we're loading the config, then get it.
 	if baseCfg.Config {
-		cfg, err := c.initConfig(baseCfg.ConfigOptional)
+		cfg, err := c.initConfig("", baseCfg.ConfigOptional)
 		if err != nil {
 			c.logError(c.Log, "failed to load config", err)
 			return err
