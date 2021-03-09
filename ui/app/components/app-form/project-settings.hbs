@@ -67,6 +67,32 @@
       </div>
       {{#if this.authSSH}}
         <div class="pds-formField">
+          <label for="git-source-ssh-user" class="pds-fieldName">
+            Username
+          </label>
+          <Pds::Input
+            @type="text"
+            aria-describedby="{HELP_ID} {ERROR_ID}"
+            id="git-source-ssh-user"
+            placeholder="mitchellh"
+            value={{this.project.dataSource.git.ssh.user}}
+            {{on "input" (fn this.setSshAuth "user")}}
+          />
+        </div>
+        <div class="pds-formField">
+          <label for="git-source-ssh-password" class="pds-fieldName">
+            Password
+          </label>
+          <Pds::Input
+            @type="password"
+            aria-describedby="{HELP_ID} {ERROR_ID}"
+            id="git-source-ssh-password"
+            placeholder="**********"
+            value={{this.project.dataSource.git.ssh.password}}
+            {{on "input" (fn this.setSshAuth "password")}}
+          />
+        </div>
+        <div class="pds-formField">
           <label for="git-source-ssh" class="pds-fieldName">
             SSH Key
           </label>
@@ -86,7 +112,7 @@
           <Pds::Input
             @type="text"
             aria-describedby="{HELP_ID} {ERROR_ID}"
-            id="git-source-user"
+            id="git-source-username"
             placeholder="mitchellh"
             value={{this.project.dataSource.git.basic.username}}
             {{on "input" (fn this.setBasicAuth "username")}}
@@ -115,8 +141,8 @@
           <XToggle
             @showLabels={{true}}
             @name="git-sync-enabled"
-            @value={{this.project.remoteEnabled}}
-            @onToggle={{fn (mut this.project.remoteEnabled)}} as |toggle|>
+            @value={{this.project.dataSourcePoll.enabled}}
+            @onToggle={{fn (mut this.project.dataSourcePoll.enabled)}} as |toggle|>
             <toggle.switch/>
 
             <toggle.label for="git-sync-enabled">
