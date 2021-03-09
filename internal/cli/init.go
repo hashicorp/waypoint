@@ -131,7 +131,7 @@ func (c *InitCommand) Run(args []string) int {
 		return 0
 	}
 
-	path, err := c.initConfigPath()
+	path, err := c.initConfigPath(c.fromProject)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
@@ -214,7 +214,7 @@ func (c *InitCommand) validateConfig() bool {
 	defer sg.Wait()
 
 	s := sg.Add("Validating configuration file...")
-	cfg, err := c.initConfig(false)
+	cfg, err := c.initConfig(c.fromProject, false)
 	if err != nil {
 		c.stepError(s, initStepConfig, err)
 		return false
