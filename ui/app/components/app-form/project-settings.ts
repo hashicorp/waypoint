@@ -3,7 +3,7 @@ import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import {Project, UpsertProjectRequest, Job, Application } from 'waypoint-pb';
+import { Project, UpsertProjectRequest, Job, Application } from 'waypoint-pb';
 
 class ProjectModel {
   name: string;
@@ -15,13 +15,19 @@ class ProjectModel {
       ref: string,
       basic: {
         username: string,
-        password: string
+        password: string,
       },
       ssh: {
+        user: string,
+        password: string,
         privateKeyPem: string
       }
     },
     local:any,
+  };
+  dataSourcePoll: {
+    enabled: boolean,
+    interval: string,
   };
   remoteEnabled: boolean;
 }
@@ -39,12 +45,18 @@ const DEFAULT_PROJECT_MODEL = {
         password: ''
       },
       ssh: {
-        privateKeyPem: ''
+        user: '',
+        password: '',
+        privateKeyPem: '',
       }
     },
     local: null,
   },
-  remoteEnabled: null
+  dataSourcePoll: {
+    enabled: false,
+    interval: '2m',
+  },
+  remoteEnabled: null,
 };
 
 interface ProjectSettingsArgs {
@@ -68,6 +80,10 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
       // set empty default dataSource data if non-existent
       this.project.dataSource = DEFAULT_PROJECT_MODEL.dataSource
       this.authCase = 4;
+    }
+
+    if (!this.project?.dataSourcePoll) {
+      this.project.dataSourcePoll = DEFAULT_PROJECT_MODEL.dataSourcePoll;
     }
   }
 
@@ -107,7 +123,9 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   @action
   setSshAuth(path: string, e: any) {
     if (!this.project.dataSource?.git?.ssh) {
-      this.project.dataSource.git.basic = {
+      this.project.dataSource.git.ssh = {
+        user: '',
+        password: '',
         privateKeyPem: '',
       };
     }
@@ -121,6 +139,9 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     let ref = new Project();
     ref.setName(project.name);
     let dataSource = new Job.DataSource();
+    let dataSourcePoll = new Project.Poll();
+    dataSourcePoll.setEnabled(project.dataSourcePoll.enabled);
+    dataSourcePoll.setInterval(project.dataSourcePoll.interval);
     // Git settings
     let git = new Job.Git();
     git.setUrl(project.dataSource.git.url);
@@ -138,14 +159,17 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
 
     if (this.authSSH) {
       let gitSSH = new Job.Git.SSH();
-      gitSSH.setPrivateKeyPem(this.git.ssh.privateKeyPem);
+      let encoder = new window.TextEncoder();
+      gitSSH.setPrivateKeyPem(encoder.encode(this.git.ssh.privateKeyPem));
+      gitSSH.setUser(this.git.ssh.user);
+      gitSSH.setPassword(this.git.ssh.password);
       git.setSsh(gitSSH);
       git.clearBasic();
     }
 
     dataSource.setGit(git);
     ref.setDataSource(dataSource);
-    ref.setRemoteEnabled(project.remoteEnabled);
+    ref.setDataSourcePoll(dataSourcePoll);
     const applist = project.applicationsList.map((app: any) => {
       return new Application(app);
     });

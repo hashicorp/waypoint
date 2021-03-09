@@ -4030,7 +4030,7 @@ anymatch@~3.1.1:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-api-common-protos@./lib/api-common-protos/:
+api-common-protos@./lib/api-common-protos:
   version "1.0.0"
 
 aproba@^1.0.3, aproba@^1.1.1:
