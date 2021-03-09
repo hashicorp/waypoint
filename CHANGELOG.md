@@ -8,6 +8,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* builtin/k8s/release: Allow target_port to be int or string [GH-1154]
 
 ## 0.2.3 (February 23, 2021)
 
