@@ -31,6 +31,10 @@ export default [
   },
   '-----------',
   {
+    category: 'projects',
+    content: ['git', 'remote'],
+  },
+  {
     category: 'lifecycle',
     content: ['build', 'deploy', 'release', 'hooks'],
   },
@@ -57,9 +61,17 @@ export default [
       'plugin',
       'registry',
       'release',
+      'runner',
       'url',
       'use',
     ],
+  },
+  'url',
+  'logs',
+  'exec',
+  {
+    category: 'app-config',
+    content: ['dynamic'],
   },
   {
     category: 'server',
@@ -74,13 +86,6 @@ export default [
   {
     category: 'runner',
     content: ['run-manual'],
-  },
-  'url',
-  'logs',
-  'exec',
-  {
-    category: 'app-config',
-    content: ['dynamic'],
   },
   'workspaces',
   'plugins',

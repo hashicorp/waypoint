@@ -23,4 +23,16 @@ Usage: `waypoint runner agent [options]`
 - `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-workspace=<string>` - Workspace to operate in.
 
+#### Operation Options
+
+- `-label=<key=value>` - Labels to set for this operation. Can be specified multiple times.
+- `-remote` - True to use a remote runner to execute. This defaults to false
+  unless 'runner.default' is set in your configuration.
+- `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
+
+#### Command Options
+
+- `-enable-dynamic-config` - Allow dynamic config to be created when an exec plugin is used.
+- `-liveness-tcp-addr=<string>` - If this is set, the runner will open a TCP listener on this address when it is running. This can be used as a liveness probe endpoint. The TCP server serves no other purpose.
+
 @include "commands/runner-agent_more.mdx"

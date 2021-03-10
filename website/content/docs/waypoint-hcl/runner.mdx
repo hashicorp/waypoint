@@ -1,0 +1,118 @@
+---
+layout: docs
+page_title: runner - waypoint.hcl
+sidebar_title: <code>runner</code>
+description: |-
+  The `runner` stanza configures a project for remote operations, Git polling, and more.
+---
+
+# `runner` Stanza
+
+<Placement groups={[['runner']]} />
+
+The `runner` stanza configures a project for [remote operations](/docs/remote),
+including configuring how to source a project source code from Git and
+configuring polling.
+
+The `runner` stanza is completely optional. The settings specified in the
+`runner `stanza can also be specified using the [`waypoint project apply`](/commands/project-apply)
+command or via the UI by creating or modifying a project.
+
+```hcl
+runner {
+  enable = true
+
+  data_source "git" {
+    url  = "https://github.com/hashicorp/waypoint-examples.git"
+	path = "docker/node-js"
+  }
+}
+```
+
+The above example enables [remote operations](/docs/remote) and configures
+the project to clone data from a GitHub repository.
+
+-> **Note: these settings are usually configured via the CLI or UI.** We
+recommend configuring things such as data sources in the CLI or UI to avoid
+tying your `waypoint.hcl` to a specific repository or putting secrets such
+as Git auth information your `waypoint.hcl` file. See
+[CLI or UI configuration](#cli-or-ui-configuration) for more details.
+
+## CLI or UI Configuration
+
+All of the settings in the `runner` stanza can be specified via the
+CLI using [`waypoint project apply`](/commands/project-apply) or via
+the UI in the project create or modify screens. This approach is preferable
+since it avoids having to put secrets in your waypoint.hcl file and makes
+your waypoint.hcl more portable since it doesn't specify a repository.
+
+An example using the CLI is shown below. The example is admittedly a bit
+unwieldy and not very user-friendly. The recommended approach is to use the web UI.
+
+```shell-session
+$ waypoint project apply \
+   -data-source=git \
+   -git-auth-type=ssh \
+   -git-private-key-path=$HOME/.ssh/id_ed25519 \
+   -git-url=git@github.com:hashicorp/waypoint-examples.git \
+   -waypoint-hcl=waypoint.hcl \
+   my-project
+```
+
+## `runner` Parameters
+
+### Required
+
+The `runner` stanza has no required parameters.
+
+### Optional
+
+- `enabled` `(boolean: false)` - This must be set to true to enable
+  [remote operations](/docs/remote) from the CLI. This only affects
+  the CLI. Remote operations triggered via Git polling or directly via the
+  API are still allowed.
+
+- `data_source` <code>([data_source][data_source]: nil)</code> - Configuration
+  for how to fetch the source for this project, such as from Git.
+
+## `data_source` Parameters
+
+### Label
+
+The `data_source` stanza takes a label, which is "git" in the example above.
+The label of the stanza is the data source type to use. Currently, the only
+supported value is "git", but this could be extended in the future to support
+other data source types.
+
+### Required Parameters
+
+#### Git
+
+- `url` `(string)` - The URL for the Git repository. This can be any supported
+  URL by `git clone`. For example: `https://github.com/hashicorp/waypoint-examples.git`
+  or `git@github.com:hashicorp/waypoint-examples.git`.
+
+### Optional Parameters
+
+#### Git
+
+- `path` `(string: "")` - A relative path within the Git repository where
+  the application is. This is used to determine the path to look for a
+  `waypoint.hcl` and sets the working directory when executing commands.
+  This defaults to the repository root.
+
+- `username` `(string: "git")` - Username for basic auth or SSH. The default
+  value is "git". For GitHub basic auth, this value can be any non-empty value.
+  GitHub basic auth only uses the password.
+
+- `password` `(password: "git")` - Password for basic auth. For GitHub, this
+  is typicall a [personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token).
+
+- `key` `(string: "")` - A PEM-encoded SSH private key to use for SSH authentication.
+  A valid value usually starts with `-----BEGIN RSA PRIVATE KEY-----` or something
+  similar.
+
+- `key_password` `(string: "")` - The password for the SSH private key if
+  it is encrypted. This is only required if the private key is encrypted.
+
+[data_source]: /docs/waypoint-hcl/config#data_source-parameters 'data_source Stanza'
