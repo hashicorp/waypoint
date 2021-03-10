@@ -5,6 +5,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * builtin/k8s: Include user defined labels on deploy pod [GH-1146]
+* core: Update `-from-project` in `waypoint init` to handle local projects [GH-722]
 
 BUG FIXES:
 
