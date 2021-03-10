@@ -60,3 +60,16 @@ the server (typically around 30 seconds).
 You may also enable polling using the `-poll` and `-poll-interval` flags
 on the [`waypoint project apply`](/commands/project-apply) command.
 **This is an advanced approach. The UI is the recommended way to enable polling.**
+
+## Ref Tracking
+
+The project can be configured to clone a specific Git ref. By default,
+any remote operations or polling will watch the latest commit of the
+default branch. However, when configuring Git, you may specify any ref
+for Waypoint to watch:
+
+TODO SCREENSHOT
+
+The value of this field can be a branch name, a tag name, or a fully
+qualified Git ref such as `refs/pull/1014`. When a ref is specified,
+Waypoint will watch only that ref for changes.
