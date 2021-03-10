@@ -103,6 +103,12 @@ in pkgs.mkShell rec {
     pkgs.minikube
   ] else []);
 
+  # workaround for npm/gulp dep compilation
+  # https://github.com/imagemin/optipng-bin/issues/108
+  shellHook = ''
+    LD=$CC
+  '';
+
   # Extra env vars
   PGHOST = "localhost";
   PGPORT = "5432";
