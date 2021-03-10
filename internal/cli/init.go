@@ -27,9 +27,10 @@ import (
 type InitCommand struct {
 	*baseCommand
 
-	from   string
-	into   string
-	update bool
+	fromProject string
+	into        string
+	update      bool
+	from        string
 
 	project *clientpkg.Project
 	cfg     *configpkg.Config
@@ -46,12 +47,12 @@ func (c *InitCommand) Run(args []string) int {
 		return 1
 	}
 
-	if c.from != "" {
+	if c.fromProject != "" {
 		if c.into == "" {
-			if u, err := url.Parse(c.from); err == nil {
+			if u, err := url.Parse(c.fromProject); err == nil {
 				c.into = filepath.Base(u.Path)
 			} else {
-				c.into = filepath.Base(c.from)
+				c.into = filepath.Base(c.fromProject)
 			}
 
 			ext := filepath.Ext(c.into)
@@ -84,7 +85,7 @@ func (c *InitCommand) Run(args []string) int {
 		c.ui.NamedValues([]terminal.NamedValue{
 			{
 				Name:  "Location",
-				Value: c.from,
+				Value: c.fromProject,
 			},
 			{
 				Name:  "Directory",
@@ -102,7 +103,7 @@ func (c *InitCommand) Run(args []string) int {
 		}
 
 		client := &getter.Client{
-			Src: c.from,
+			Src: c.fromProject,
 			Dst: dir,
 			Pwd: pwd,
 			Dir: true,
@@ -130,7 +131,7 @@ func (c *InitCommand) Run(args []string) int {
 		return 0
 	}
 
-	path, err := c.initConfigPath()
+	path, err := c.initConfigPath(c.fromProject)
 	if err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
@@ -213,7 +214,7 @@ func (c *InitCommand) validateConfig() bool {
 	defer sg.Wait()
 
 	s := sg.Add("Validating configuration file...")
-	cfg, err := c.initConfig(false)
+	cfg, err := c.initConfig(c.fromProject, false)
 	if err != nil {
 		c.stepError(s, initStepConfig, err)
 		return false
@@ -554,16 +555,17 @@ func (c *InitCommand) Flags() *flag.Sets {
 
 		f.StringVar(&flag.StringVar{
 			Name:    "from-project",
-			Target:  &c.from,
+			Target:  &c.fromProject,
 			Default: "",
-			Usage:   "Create a new application by fetching the given application from a remote source",
+			Usage: "Create a new application by fetching the given application from" +
+				"a remote source or from a local project folder or fileon disk.",
 		})
 
 		f.StringVar(&flag.StringVar{
 			Name:    "into",
 			Target:  &c.into,
 			Default: "",
-			Usage:   "Where to write the application fetched via -from",
+			Usage:   "Where to write the application fetched via -from-project",
 		})
 
 		f.BoolVar(&flag.BoolVar{
