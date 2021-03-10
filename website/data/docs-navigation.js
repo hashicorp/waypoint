@@ -71,6 +71,10 @@ export default [
       },
     ],
   },
+  {
+    category: 'runner',
+    content: ['run-manual'],
+  },
   'url',
   'logs',
   'exec',
