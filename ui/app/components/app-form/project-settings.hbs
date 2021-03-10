@@ -9,7 +9,7 @@
           @type="text"
           aria-describedby="{HELP_ID} {ERROR_ID}"
           id="git-source-url"
-          placeholder="https://github.com/mycompany/awesome-project"
+          placeholder="git@github.com:mycompany/awesome-project.git"
           value={{this.git.url}}
           {{on "input" (set this "project.dataSource.git.url" (get _ "target.value"))}}
         />
@@ -35,7 +35,7 @@
           @type="text"
           aria-describedby="{HELP_ID} {ERROR_ID}"
           id="git-source-path"
-          placeholder="/my-project-path"
+          placeholder="dir/subdir/my-project-path"
           value={{this.git.path}}
           {{on "input" (set this "project.dataSource.git.path" (get _ "target.value"))}}
         />
@@ -68,7 +68,7 @@
       {{#if this.authSSH}}
         <div class="pds-formField">
           <label for="git-source-ssh-user" class="pds-fieldName">
-            Username
+            Git User (optional)
           </label>
           <Pds::Input
             @type="text"
@@ -81,7 +81,7 @@
         </div>
         <div class="pds-formField">
           <label for="git-source-ssh-password" class="pds-fieldName">
-            Password
+            Passphrase (optional)
           </label>
           <Pds::Input
             @type="password"
@@ -93,12 +93,12 @@
           />
         </div>
         <div class="pds-formField">
-          <label for="git-source-ssh" class="pds-fieldName">
+          <label for="git-source-ssh-key" class="pds-fieldName">
             SSH Key
           </label>
           <Pds::Textarea
             aria-describedby="{HELP_ID} {ERROR_ID}"
-            id="git-source-ssh"
+            id="git-source-ssh-key"
             placeholder="*****************"
             value={{this.git.ssh.privateKeyPem}}
             {{on "input" (fn this.setSshAuth "privateKeyPem")}}
