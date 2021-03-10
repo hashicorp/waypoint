@@ -18,9 +18,10 @@ import (
 // between Init and "init" to help ensure that "init" succeeding means that
 // other commands will succeed as well.
 
-// initConfig initializes the configuration.
-func (c *baseCommand) initConfig(optional bool) (*configpkg.Config, error) {
-	path, err := c.initConfigPath()
+// initConfig initializes the configuration with the specified filename from the CLI.
+// If filename is empty, it will default to configpkg.Filename.
+func (c *baseCommand) initConfig(filename string, optional bool) (*configpkg.Config, error) {
+	path, err := c.initConfigPath(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +37,10 @@ func (c *baseCommand) initConfig(optional bool) (*configpkg.Config, error) {
 	return c.initConfigLoad(path)
 }
 
-// initConfigPath returns the configuration path to load.
-func (c *baseCommand) initConfigPath() (string, error) {
-	path, err := configpkg.FindPath("", "", true)
+// initConfigPath returns the path for the configuration file with the
+// specified filename.
+func (c *baseCommand) initConfigPath(filename string) (string, error) {
+	path, err := configpkg.FindPath("", filename, true)
 	if err != nil {
 		return "", fmt.Errorf("Error looking for a Waypoint configuration: %s", err)
 	}
