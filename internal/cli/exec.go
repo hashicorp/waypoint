@@ -107,6 +107,14 @@ func (c *ExecCommand) Run(args []string) int {
 	}
 
 	args = flagSet.Args()
+	if len(args) == 0 {
+		c.ui.Output(
+			"At least one argument expected.\n\n"+c.Help(),
+			terminal.WithErrorStyle(),
+		)
+
+		return 1
+	}
 
 	var exitCode int
 	client := c.project.Client()
