@@ -50,13 +50,13 @@ func TestJobNew(t testing.T, src *pb.Job) *pb.Job {
 
 // ValidateJob validates the job structure.
 func ValidateJob(job *pb.Job) error {
-	return validation.ValidateStruct(job,
+	return validationext.Error(validation.ValidateStruct(job,
 		validation.Field(&job.Id, validation.By(isEmpty)),
 		validation.Field(&job.Application, validation.Required),
 		validation.Field(&job.Workspace, validation.Required),
 		validation.Field(&job.TargetRunner, validation.Required),
 		validation.Field(&job.Operation, validation.Required),
-	)
+	))
 }
 
 // ValidateJobDataSourceRules
