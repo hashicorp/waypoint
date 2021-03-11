@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
+	"github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -31,6 +32,9 @@ func (s *service) StartExecStream(
 	if !ok {
 		return status.Errorf(codes.FailedPrecondition,
 			"first message must be start type")
+	}
+	if err := ptypes.ValidateExecStreamRequestStart(start.Start); err != nil {
+		return err
 	}
 
 	// Create our exec. We have to populate everything here first because
