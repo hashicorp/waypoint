@@ -166,7 +166,7 @@ func (p *Platform) Deploy(
 	bindings := nat.PortMap{}
 	bindings[np] = []nat.PortBinding{
 		{
-			HostPort: "",
+			HostPort: "", // this is intentionally left empty for a random host port assignment
 		},
 	}
 
