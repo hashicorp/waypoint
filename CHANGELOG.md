@@ -14,6 +14,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* cli/exec: require at least one argument [GH-1188]
+
 BREAKING CHANGES:
 
 * ui: dropped support for Internet Explorer [GH-1075]
