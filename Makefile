@@ -52,6 +52,15 @@ docker/evanphx:
 					-t waypoint:latest \
 					.
 
+# expected to be invoked by make gen/changelog LAST_RELEASE=gitref THIS_RELEASE=gitref
+.PHONY: gen/changelog
+gen/changelog:
+	@echo "Generating changelog diff..."
+	@echo
+	@changelog-build -last-release $(LAST_RELEASE) \
+		-entries-dir .changelog/ -changelog-template changelog.tmpl -note-template note.tmpl \
+		-this-release $(THIS_RELEASE)
+
 .PHONY: gen/ts
 gen/ts:
 	@rm -rf ./ui/lib/api-common-protos/google 2> /dev/null
