@@ -144,6 +144,7 @@ func (r *Releaser) Release(
 		}
 
 		servicePorts[i] = corev1.ServicePort{
+			Name:     sp["name"],
 			Port:     int32(port),
 			Protocol: corev1.ProtocolTCP,
 			NodePort: int32(nodePort),
@@ -345,10 +346,11 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 		"a map of ports and options that the application is listening on",
 		docs.Summary(
 			"used to define and configure multiple ports that the application is",
-			"listening on. Available keys are 'port', 'node_port', and 'target_port'.",
+			"listening on. Available keys are 'port', 'node_port', 'name', and 'target_port'.",
 			"If 'node_port' is set but 'load_balancer' is not, the service will be",
 			" NodePort type. If 'load_balancer' is also set, it will be LoadBalancer.",
 			"Ports defined will be TCP protocol.",
+			"Note that 'name' is required if defining more than one port.",
 		),
 	)
 
