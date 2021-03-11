@@ -24,6 +24,28 @@ The initial Waypoint releases have a minimal featureset around running the Waypo
 We plan to improve the `waypoint install` and `waypoint server run` interfaces
 to support more options, such as custom TLS certs.
 
+### Fine-Grained Resource and Health Tracking
+
+Waypoint currently gives you a history of operations such as builds and deploys.
+We will expand this so that history knows the _resources_ that were created
+by operations such as Docker Images, Kubernetes StatefulSets and Services, AWS
+ALBs, etc.
+
+Further, for supported resources, we will surface health information either
+by actively checking or pulling health information from an external source.
+
+This feature will allow users of Waypoint to drill down from the list of
+projects in their organization across multiple deployment platforms down
+to the individual resources created.
+
+### Deployment Templates
+
+Waypoint currently associates a [waypoint.hcl](/docs/waypoint-hcl)
+configuration with a single project. In the future, we will allow parameterized
+configurations to be shared as a template library with your installation.
+When users create a new project, they can select from a list of common
+templates.
+
 ### Access Control
 
 The initial Waypoint release has a minimal token system that is used as a
@@ -81,24 +103,6 @@ are a lot of improvements we want to make here:
 - **Native exec.** - If a platform provides a native `exec` feature, we
   want to provide that as an option to users. This is always likely to not
   be a default because we want the consistent option as the default.
-
-### Remote Runners
-
-We will enable the ability for operation execution (build, deploy, etc.)
-to happen remotely. The CLI can still kick off operations but operations will
-happen on a remote machine.
-
-The foundation for this and initial implementations are actually already
-in the initial versions of Waypoint. But we didn't feel confident in the
-implementation yet and we didn't feel we completed the story here to properly
-document and advertise this functionality.
-
-Remote runners will enable more advanced workflows and improve security
-since access credentials can be encapsulated onto remote machines. The runners
-are expected to be run by the individual (not a hosted service). Runners also
-better enable Slack and other integrations.
-
-We will continue building on this and release this in the future.
 
 ### Slack
 
