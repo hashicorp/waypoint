@@ -96,7 +96,7 @@ ul {
   padding: 0;
 }
 
-:any-link {
+:any-link, :any-link:not(.pds-button) {
   border-bottom: none;
 }
 
