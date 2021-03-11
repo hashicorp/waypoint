@@ -29,7 +29,7 @@
   & .pagingDots {
     & :global(.paging-item:not(.active) > button) {
       opacity: 1 !important;
-      fill: var(--gray-6) !important;
+      fill: var(--gray-5) !important;
     }
   }
 }
@@ -49,7 +49,7 @@
 
 .feature {
   border-left: 2px solid;
-  border-color: var(--gray-6);
+  border-color: var(--gray-5);
   padding-left: 44px;
   margin: 28px 0;
   min-height: auto;
@@ -96,7 +96,7 @@
   line-height: 28px;
   font-family: var(--font-display);
   font-weight: bold;
-  color: var(--gray-4);
+  color: var(--gray-3);
   cursor: pointer;
 }
 

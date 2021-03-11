@@ -4,7 +4,7 @@
     background: var(--white);
   }
   &.gray {
-    background: var(--gray-7);
+    background: var(--gray-6);
   }
   &.dark {
     background: var(--black);

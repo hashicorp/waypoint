@@ -3,7 +3,7 @@
   flex-shrink: 0;
 
   & a {
-    color: var(--gray-4);
+    color: var(--gray-3);
     transition: color 0.25s ease;
     cursor: pointer;
     display: inline-block;
