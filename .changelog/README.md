@@ -4,6 +4,12 @@ Waypoint uses `go-changelog` to generate its changelog on release:
 
 * https://github.com/hashicorp/go-changelog
 
+To install, run the following command:
+
+```
+go get github.com/hashicorp/go-changelog/cmd/changelog-build
+```
+
 ## How to generate CHANGELOG entries for release
 
 Below is an example for running `go-changelog` to generate a collection of
