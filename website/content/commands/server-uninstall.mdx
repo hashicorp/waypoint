@@ -30,6 +30,7 @@ Usage: `waypoint server uninstall [options]`
 - `-platform=<string>` - Platform to uninstall the Waypoint server from.
 - `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.
 - `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to uninstall.
+- `-ignore-runner-error` - Ignore any errors encountered while uninstalling runners. This allows the server to be uninstalled even if runner uninstallation fails. Note that this may leave runners dangling since future 'uninstall' runs will do nothing if the server is uninstalled.
 
 #### kubernetes Options
 

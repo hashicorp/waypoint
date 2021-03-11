@@ -1,0 +1,41 @@
+---
+layout: commands
+page_title: 'Commands: Project apply'
+sidebar_title: 'project apply'
+description: 'Create or update a project.'
+---
+
+# Waypoint Project apply
+
+Command: `waypoint project apply`
+
+Create or update a project.
+
+@include "commands/project-apply_desc.mdx"
+
+## Usage
+
+Usage: `waypoint project apply [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-from-waypoint-hcl=<string>` - waypoint.hcl formatted file to load settings from. This can be used to read settings from a file. Additional flags will override values found in the file. Note that any settings in the file will NOT be merged with what is already in the server; they will overwrite the server.
+- `-waypoint-hcl=<string>` - Path to a waypoint.hcl file to associate with this project. This is only necessary if a waypoint.hcl is not committed alongside the project source code. If a waypoint.hcl file does not exist in the project source then this waypoint.hcl file will be used. This file will not be validated until an operation is run against the project; this is done on purpose since the waypoint.hcl file may depend on files in the source repository.
+- `-data-source=<string>` - The data source type to use (currently only supports 'git' or 'local'). Associated data source settings (such as flags starting with '-git') will not take effect unless the appropriate data source is set with this flag.
+- `-git-url=<string>` - URL of the Git repository to clone. This can be an HTTP or SSH URL.
+- `-git-ref=<string>` - Git ref (i.e. branch, tag, commit) to clone on new operations.
+- `-git-auth-type=<string>` - Authentication type for Git. If set, must be one of 'basic' or 'ssh'. Basic auth is username/password and SSH uses an SSH key.
+- `-git-username=<string>` - Username for authentication when git-auth-type is 'basic'. For GitHub, this can be any value but it must be non-empty.
+- `-git-password=<string>` - Password for authentication when git-auth-type is 'basic'. For GitHub, this should be a personal access token (PAT).
+- `-git-private-key-path=<string>` - Path to a PEM-encoded private key for 'ssh'-based auth.
+- `-git-private-key-password=<string>` - Password for the private key specified by git-private-key-path if the key requires a password to decode. This is not required if the private key doesn't require a password.
+- `-poll` - Enable polling. This is only valid if a Git data source is supplied. This will watch the repo for changes and trigger a remote 'up'.
+- `-poll-interval=<string>` - Interval between polling if polling is enabled.
+
+@include "commands/project-apply_more.mdx"

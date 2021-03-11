@@ -1,0 +1,30 @@
+---
+layout: commands
+page_title: 'Commands: Fmt'
+sidebar_title: 'fmt'
+description: 'Rewrite waypoint.hcl configuration to a canonical format'
+---
+
+# Waypoint Fmt
+
+Command: `waypoint fmt`
+
+Rewrite waypoint.hcl configuration to a canonical format
+
+@include "commands/fmt_desc.mdx"
+
+## Usage
+
+Usage: `waypoint fmt [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-write` - Overwrite the input file. If this is false, the formatted output will be written to STDOUT. This has no effect when formattingfrom STDIN.
+
+@include "commands/fmt_more.mdx"

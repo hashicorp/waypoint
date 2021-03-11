@@ -1,0 +1,51 @@
+---
+layout: docs
+page_title: Runners
+sidebar_title: Runners
+description: |-
+  Waypoint utilizes "runners" to execute Waypoint operations remotely. Runners are responsible for performing builds and deploys, polling projects for changes, and more.
+---
+
+# Waypoint Remote Runners
+
+Waypoint utilizes "runners" to execute Waypoint operations remotely. Runners
+are responsible for performing builds and deploys, polling projects
+for changes, and more.
+
+Waypoint automatically installs a single runner by default when the Waypoint
+server is installed with [`waypoint install`](/commands/install). This lets
+you get up and running with runners out of the box quickly. Additional runners
+must be ran manually.
+
+-> **Runners are optional.** Waypoint can function without runners but
+certain functionality becomes unavailable. See [Disabling Runners](#disabling-runners)
+for more information.
+
+## Disabling Runners
+
+Runners can be disabled if desired. With runners disabled, Waypoint executes
+all operations via the local CLI (even when communicating with a remote
+[server](/docs/server)).
+
+### Unavailable Functionality
+
+With runners disabled, certain functionality becomes unavailable:
+
+- Remote operations
+- Git polling
+
+In addition to disabled functionality, consider that all clients must now
+have proper credentials for the target platforms (such as AWS, GCP, etc.)
+since without runners they must execute all operations locally.
+
+### Disabling Runner Installation
+
+Prior to installation, runners can be disabled by specifying the
+`-runner=false` flag to the [`waypoint install`](/commands/install) command.
+This will not install a runner.
+
+To uninstall a runner that is already installed, the only option today is
+to uninstall and reinstall Waypoint with a
+[data snapshot and restore](/docs/server/run/maintenance#backup-restore). You
+may also manually go into your platform and delete the runner, but Waypoint
+can't automate this for you today.

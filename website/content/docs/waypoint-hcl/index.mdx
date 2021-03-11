@@ -13,17 +13,49 @@ how Waypoint builds, deploys, and releases a project. The `waypoint.hcl` file is
 written in [HCL](/docs/waypoint-hcl/syntax) or [JSON](/docs/waypoint-hcl/syntax/json),
 allowing both human and machine friendly formats.
 
-Waypoint expects one `waypoint.hcl` per [project](/docs/glossary#project) or
-version control repository. The `waypoint.hcl` file is supposed to be committed
-to version control. This allows multiple team members to share the same Waypoint
-behavior and also provides a history of change in how an application is deployed.
+## `waypoint.hcl` Location
 
-The `waypoint.hcl` file is typically placed at the root of a version control
-repository. To deploy multiple applications, define each with an [`app`][app]
-stanza. Each application should live in subdirectories of the project.
+Waypoint expects one `waypoint.hcl` per [project](/docs/projects).
+The `waypoint.hcl` configuration can be a file committed alongside your
+project source, or it can be stored on the Waypoint server without modifying
+your version controlled source at all.
+
+For any Waypoint operation such as `waypoint up`, Waypoint will always prefer
+a local `waypoint.hcl` file if it is found, even if the project is associated
+with a server-side configuration.
+
+### File
+
+The `waypoint.hcl` file may be committed as a file
+to version control. This allows the Waypoint behavior of a project to be
+versioned directly alongside the application. The downside of this approach
+is that it requires making changes to your project source.
+
+For this approach, the `waypoint.hcl` file is typically placed at the root
+of a version control repository. To deploy multiple applications, define each
+with an [`app`][app] stanza.
 
 When executing the `waypoint` CLI, it will search for the `waypoint.hcl` file
 in the current directory, followed by each subsequent parent directory.
+
+### Server
+
+The `waypoint.hcl` configuration may be stored on the Waypoint server
+and associated directly with a [project](/docs/projects).
+
+The benefit of this approach is that no changes to project source repositories
+is required and the team managing the Waypoint configuration and the team
+_using_ Waypoint can be easily separated.
+
+This approach also makes it very easy to migrate existing applications to
+Waypoint, perhaps using a GitOps-style deployment pattern, since you can
+create and configure the projects completely in the web UI without having
+to touch any existing source code.
+
+To store the `waypoint.hcl` configuration on the Waypoint server, specify
+the `waypoint.hcl` contents in the web UI when prompted or specify the
+`-waypoint-hcl` flag to the [`waypoint project apply`](/commands/project-apply)
+command.
 
 ## Template `waypoint.hcl`
 

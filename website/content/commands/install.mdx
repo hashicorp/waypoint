@@ -56,6 +56,7 @@ Usage: `waypoint install [options]`
 - `-k8s-pull-secret=<string>` - Secret to use to access the Waypoint server image on Kubernetes.
 - `-k8s-secret-file=<string>` - Use the Kubernetes Secret in the given path to access the Waypoint server image.
 - `-k8s-server-image=<string>` - Docker image for the Waypoint server.
+- `-k8s-storageclassname=<string>` - Name of the StorageClass required by the volume claim to install the Waypoint server image to.
 - `-k8s-storage-request=<string>` - Configures the requested persistent volume size for the Waypoint server in Kubernetes.
 
 @include "commands/install_more.mdx"

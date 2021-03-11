@@ -9,6 +9,9 @@ If you wish to rename or retag an image, use this along with the
 "docker" registry option which will rename/retag the image and then
 push it to the specified registry.
 
+If Docker isn't available (the Docker daemon isn't running or a DOCKER_HOST
+isn't set), a daemonless solution will be used instead.
+
 ### Interface
 
 - Input: **component.Source**
@@ -72,6 +75,10 @@ Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoi
 #### image
 
 - Type: **string**
+
+#### location
+
+- Type: **docker.isImage_Location**
 
 #### tag
 

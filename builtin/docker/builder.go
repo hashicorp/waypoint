@@ -60,7 +60,29 @@ func (b *Builder) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
-	doc.Description("Build a Docker image using the `docker build` protocol")
+	doc.Description(`
+Build a Docker image from a Dockerfile.
+
+If a Docker server is available (either locally or via environment variables
+such as "DOCKER_HOST"), then "docker build" will be used to build an image
+from a Dockerfile.
+
+### Dockerless Builds
+
+Many hosted environments, such as Kubernetes clusters, don't provide access
+to a Docker server. In these cases, it is desirable to perform what is called
+a "dockerless" build: building a Docker image without access to a Docker
+daemon. Waypoint supports dockerless builds.
+
+Waypoint will automatically attempt a dockerless build if a Docker daemon
+is not available and no remote Docker server environment variables are set.
+
+Dockerless builds require user namespaces to be enabled. This is a host-level
+setting that is often not enabled by default. For GKE, you must not use ContainerOS.
+For AKS (Azure) and EKS (AWS), you must use a custom AMI that has user namespaces
+enabled. Please search for your distro how to enable user namespaces, it is
+usually a single line configuration.
+`)
 
 	doc.Example(`
 build {

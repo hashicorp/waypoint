@@ -1,0 +1,56 @@
+---
+layout: docs
+page_title: Additional Runners
+sidebar_title: Additional Runners
+description: |-
+  The `waypoint install` command installs and manages a single Waypoint runner. Waypoint supports any number of additional runners. Additional runners must be run manually today.
+---
+
+# Additional Runners
+
+The `waypoint install` command installs and manages a single Waypoint runner.
+Waypoint supports any number of additional runners. Additional runners must
+be run manually today. A future version of Waypoint will introduce more
+automated management for additional runners.
+
+## Manually Running a Runner
+
+The instructions below are only if you're installing additional runners
+manually. `waypoint install` automatically installs a single runner and
+you don't need to manually add any additional runners until the load
+requires it.
+
+To run a runner, use the `waypoint runner agent` command:
+
+```shell-session
+$ WAYPOINT_SERVER_ADDR=<server addr> \
+  WAYPOINT_SERVER_TLS=true \
+  WAYPOINT_SERVER_TOKEN=<auth token> \
+  waypoint runner agent
+
+
+» Runner configuration:
+  Server address: waypoint.example.com:9701
+
+» Runner logs:
+
+...
+```
+
+The environment variables specify how to connect to the server:
+
+- `WAYPOINT_SERVER_ADDR` should be the address to the Waypoint server
+  that the runner can reach. The port should be for the gRPC API, and
+  is typically 9701.
+
+- `WAYPOINT_SERVER_TLS` should be set to "true" if the server is listening
+  on TLS. You may additionally set `WAYPOINT_SERVER_TLS_SKIP_VERIFY` to
+  a non-empty value if the TLS cert is invalid and can be safely ignored
+  such as in a development environment.
+
+- `WAYPOINT_SERVER_TOKEN` should be an [auth token](/docs/server/auth)
+  the runner can use to communicate to the server. You can generate a new
+  auth token using `waypoint token new`.
+
+If the runner process remains running and doesn't show any errors, the
+runner is now registered with the server and can now be used.
