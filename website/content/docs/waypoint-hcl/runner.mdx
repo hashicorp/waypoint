@@ -14,6 +14,9 @@ The `runner` stanza configures a project for [remote operations](/docs/remote),
 including configuring how to source a project source code from Git and
 configuring polling.
 
+**The settings in this stanza only take effect when `waypoint init -update`
+is called.**
+
 The `runner` stanza is completely optional. The settings specified in the
 `runner `stanza can also be specified using the [`waypoint project apply`](/commands/project-apply)
 command or via the UI by creating or modifying a project.
@@ -75,6 +78,10 @@ The `runner` stanza has no required parameters.
 - `data_source` <code>([data_source][data_source]: nil)</code> - Configuration
   for how to fetch the source for this project, such as from Git.
 
+- `poll` <code>([poll][poll]: nil)</code> - Settings for polling the data
+  source for changes and automatically running `waypoint up`. By default
+  polling is disabled.
+
 ## `data_source` Parameters
 
 ### Label
@@ -120,4 +127,15 @@ other data source types.
   Git ref such as `refs/pulls/1234`. This defaults to pulling HEAD, the
   latest commit on the default branch.
 
+## `poll` Parameters
+
+### Optional Parameters
+
+- `enabled` `(boolean: false)` - True to enable [polling](/docs/projects/git#polling).
+  Polling requires that a valid datasource is configured.
+
+- `interval` `(string: "30s")` - The interval between polling for changes.
+  This defaults to 30 seconds.
+
 [data_source]: /docs/waypoint-hcl/config#data_source-parameters 'data_source Stanza'
+[poll]: /docs/waypoint-hcl/config#poll-parameters 'poll Stanza'
