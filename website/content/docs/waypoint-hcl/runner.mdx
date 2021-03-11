@@ -115,4 +115,9 @@ other data source types.
 - `key_password` `(string: "")` - The password for the SSH private key if
   it is encrypted. This is only required if the private key is encrypted.
 
+- `ref` `(string: "HEAD")` - The Git ref that is pulled for operations on
+  this project. This can be a branch name, tag name, or a fully qualified
+  Git ref such as `refs/pulls/1234`. This defaults to pulling HEAD, the
+  latest commit on the default branch.
+
 [data_source]: /docs/waypoint-hcl/config#data_source-parameters 'data_source Stanza'
