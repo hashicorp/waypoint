@@ -235,7 +235,7 @@ func (cs *ConfigSourcer) read(
 				L.Error("error reading workspace info", "status-code", resp.StatusCode)
 
 				result.Result = &pb.ConfigSource_Value_Error{
-					Error: status.New(codes.Aborted, "fucked").Proto(),
+					Error: status.New(codes.Aborted, "failed to read workspace info").Proto(),
 				}
 
 				continue
