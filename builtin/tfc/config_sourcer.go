@@ -453,7 +453,7 @@ config {
 	doc.SetField(
 		"refresh_interval",
 		"How often the outputs should be fetch.",
-		docs.Default("10m"),
+		docs.Default(refreshPeriod.String()),
 		docs.Summary(
 			"The format of this value is the Go time duration format. Specifically",
 			"a whole number followed by: s for seconds, m for minutes, h for hours.",
