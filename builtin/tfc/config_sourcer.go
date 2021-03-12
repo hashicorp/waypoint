@@ -455,7 +455,7 @@ config {
 		"How often the outputs should be fetch.",
 		docs.Default("10m"),
 		docs.Summary(
-			"The format of this value is the Go time duration format. Specificly",
+			"The format of this value is the Go time duration format. Specifically",
 			"a whole number followed by: s for seconds, m for minutes, h for hours.",
 			"The minimum value for this setting is 60 seconds, with no specified maximum.",
 		),
