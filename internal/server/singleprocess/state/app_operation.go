@@ -41,6 +41,13 @@ type appOperation struct {
 	// Bucket is the global bucket for all records of this operation.
 	Bucket []byte
 
+	// The number of records that should be indexed off disk. This allows
+	// dormant records to remain on disk but not indexed.
+	MaximumIndexedRecords int
+
+	// Holds how many records we've indexed at runtime.
+	indexedRecords int
+
 	// seq is the previous sequence number to set. This is initialized by the
 	// index init on server boot and `sync/atomic` should be used to increment
 	// it on each use.
@@ -49,6 +56,9 @@ type appOperation struct {
 	// once we implement Delete.
 	seq map[string]map[string]*uint64
 }
+
+// By default, we allow 10000 records
+const DefaultMaximumIndexedRecords = 10000
 
 // Test validates that the operation struct is setup properly. This
 // is expected to be called in a unit test.
@@ -468,6 +478,56 @@ func (op *appOperation) appSeq(ref *pb.Ref_Application) *uint64 {
 // indexInit initializes the index table in memdb from all the records
 // persisted on disk.
 func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
+	// If we're storing an unlimited number of this type, just index them all
+	if op.MaximumIndexedRecords == 0 {
+		return op.indexInitAll(s, dbTxn, memTxn)
+	}
+
+	// Otherwise we're going find the most recent records, up to the maximum, and index
+	// them.
+
+	bucket := dbTxn.Bucket(op.Bucket)
+	c := bucket.Cursor()
+
+	var cnt int
+
+	// This algorithm depends on boltdb's iteration order. Specificly that the keys are
+	// lexically order AND because we're using ULID's for the keys in production, the newest
+	// records will have the higher lexical value and thusly be at the end of the database.
+	//
+	// So we just start at the end and insert records until we hit the maximum, knowing
+	// we'll be inserted the newest records.
+
+	for k, v := c.Last(); k != nil; k, v = c.Prev() {
+		result := op.newStruct()
+		if err := proto.Unmarshal(v, result); err != nil {
+			return err
+		}
+		if _, err := op.indexPut(s, memTxn, result); err != nil {
+			return err
+		}
+
+		// Check if this has a bigger sequence number
+		if v := op.valueField(result, "Sequence"); v != nil {
+			seq := v.(uint64)
+
+			appRef := op.valueField(result, "Application").(*pb.Ref_Application)
+			current := op.appSeq(appRef)
+			if seq > *current {
+				*current = seq
+			}
+		}
+
+		cnt++
+
+		if cnt >= op.MaximumIndexedRecords {
+			break
+		}
+	}
+	return nil
+}
+
+func (op *appOperation) indexInitAll(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	bucket := dbTxn.Bucket(op.Bucket)
 	return bucket.ForEach(func(k, v []byte) error {
 		result := op.newStruct()
@@ -543,6 +603,37 @@ func (op *appOperation) indexPut(
 		StartTime:    startTime,
 		CompleteTime: completeTime,
 	}
+
+	// If we're not tracking how many we index, insert and go on.
+	if op.MaximumIndexedRecords == 0 {
+		return rec, txn.Insert(op.memTableName(), rec)
+	}
+
+	// If we're tracking fewer than the max, inc how many we've indexed
+	// and return.
+	if op.indexedRecords < op.MaximumIndexedRecords {
+		op.indexedRecords++
+		return rec, txn.Insert(op.memTableName(), rec)
+	}
+
+	// Ok, this means we are indexing the maximum number of values so
+	// we have to delete the first one.
+
+	// So we get the first one on, which because of the order of id's will be the
+	// oldest one.
+	oldest, err := txn.First(
+		op.memTableName(),
+		opIdIndexName,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	err = txn.Delete(op.memTableName(), oldest)
+	if err != nil {
+		return nil, err
+	}
+
 	return rec, txn.Insert(op.memTableName(), rec)
 }
 

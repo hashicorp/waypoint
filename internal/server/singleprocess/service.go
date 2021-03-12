@@ -144,6 +144,11 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	s.bgWg.Add(1)
 	go s.runPollQueuer(s.bgCtx, &s.bgWg, log.Named("poll_queuer"))
 
+	// Start out state pruning background goroutine. This calls
+	// Prune on the state every 10 minutes.
+	s.bgWg.Add(1)
+	go s.runPrune(s.bgCtx, &s.bgWg, log.Named("prune"))
+
 	return &s, nil
 }
 

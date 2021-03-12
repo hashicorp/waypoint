@@ -33,6 +33,8 @@ const (
 	jobQueueTimeIndexName   = "queue-time"
 	jobTargetIdIndexName    = "target-id"
 	jobSingletonIdIndexName = "singleton-id"
+
+	maximumJobsIndexed = 10000
 )
 
 func init() {
@@ -848,26 +850,39 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 // jobIndexInit initializes the config index from persisted data.
 func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	bucket := dbTxn.Bucket(jobBucket)
-	return bucket.ForEach(func(k, v []byte) error {
+	c := bucket.Cursor()
+
+	var cnt int
+
+	for k, v := c.Last(); k != nil; k, v = c.Prev() {
 		var value pb.Job
 		if err := proto.Unmarshal(v, &value); err != nil {
 			return err
 		}
 
-		idx, err := s.jobIndexSet(memTxn, k, &value)
-		if err != nil {
-			return err
-		}
+		// if we still have headroom for more indexed jobs OR the job hasn't finished yet,
+		// index it.
+		if cnt < maximumJobsIndexed ||
+			value.State == pb.Job_QUEUED ||
+			value.State == pb.Job_RUNNING ||
+			value.State == pb.Job_WAITING {
 
-		// If the job was running or waiting, set it as assigned.
-		if value.State == pb.Job_RUNNING || value.State == pb.Job_WAITING {
-			if err := s.jobAssignedSet(memTxn, idx, true); err != nil {
+			cnt++
+			idx, err := s.jobIndexSet(memTxn, k, &value)
+			if err != nil {
 				return err
 			}
-		}
 
-		return nil
-	})
+			// If the job was running or waiting, set it as assigned.
+			if value.State == pb.Job_RUNNING || value.State == pb.Job_WAITING {
+				if err := s.jobAssignedSet(memTxn, idx, true); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // jobIndexSet writes an index record for a single job.
@@ -1013,6 +1028,81 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 	// Insert into the DB
 	_, err = s.jobIndexSet(memTxn, id, jobpb)
 	return err
+}
+
+func (s *State) jobsPruneOld(memTxn *memdb.Txn) error {
+	// We don't track the total number of jobs anywhere but the number should be small
+	// enough that we can just quickly iterate through them all and calculate a count,
+	// so we start there.
+	iter, err := memTxn.Get(jobTableName, jobIdIndexName, "")
+	if err != nil {
+		return err
+	}
+
+	var cnt int
+
+	for {
+		raw := iter.Next()
+		if raw == nil {
+			break
+		}
+
+		cnt++
+
+		job := raw.(*jobIndex)
+		job.End()
+	}
+
+	// Now we know how many jobs are in indexed. If we have fewer than the maximum, we're done!
+	if cnt < maximumJobsIndexed {
+		return nil
+	}
+
+	// Calculate how many jobs we need to prune to get back to the maximum.
+	pruneCnt := maximumJobsIndexed - cnt
+
+	// Now we iterate the jobs, starting we the queue time that is furtherest in the past
+	// (ie, delete the oldest records first).
+	iter, err = memTxn.LowerBound(
+		jobTableName,
+		jobQueueTimeIndexName,
+		pb.Job_QUEUED,
+		time.Unix(0, 0),
+	)
+	if err != nil {
+		return err
+	}
+
+pruning:
+	for {
+		raw := iter.Next()
+		if raw == nil {
+			break
+		}
+
+		job := raw.(*jobIndex)
+
+		// If the job is, for some reason, still not finished, don't prune it.
+		switch job.State {
+		case pb.Job_WAITING, pb.Job_QUEUED, pb.Job_RUNNING:
+			continue pruning
+		}
+
+		// otherwise, prune this job! Once we've pruned enough jobs to get back
+		// to the maximum, we stop pruning.
+		pruneCnt--
+
+		err = memTxn.Delete(jobTableName, raw)
+		if err != nil {
+			return err
+		}
+
+		if pruneCnt <= 0 {
+			break
+		}
+	}
+
+	return nil
 }
 
 func (s *State) jobById(dbTxn *bolt.Tx, id string) (*pb.Job, error) {
