@@ -11,6 +11,7 @@ BUG FIXES:
 
 * builtin/k8s/release: Allow target_port to be int or string [GH-1154]
 * builtin/k8s/release: Include name field for service port release [GH-1184]
+* builtin/docker: Revert #918, ensure HostPort is randomly assigned between container deploys [GH-1189]
 
 ## 0.2.3 (February 23, 2021)
 
