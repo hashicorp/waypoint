@@ -15,11 +15,11 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/registry"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdocker "github.com/hashicorp/waypoint/builtin/docker"
@@ -126,15 +126,23 @@ func (b *Builder) Config() (interface{}, error) {
 }
 
 // Build
-func (b *Builder) Build(
-	ctx context.Context,
-	ui terminal.UI,
-	src *component.Source,
-	log hclog.Logger,
-) (*wpdocker.Image, error) {
+func (b *Builder) Build(args struct {
+	argmapper.Struct
+
+	Ctx         context.Context
+	UI          terminal.UI
+	Log         hclog.Logger
+	HasRegistry bool
+}) (*wpdocker.Image, error) {
+	// Pull all the args out to top-level values. This is mostly done
+	// cause the struct was added later, but also because these are very common.
+	ctx := args.Ctx
+	ui := args.UI
+	log := args.Log
+
 	sg := ui.StepGroup()
 	defer sg.Wait()
-	step := sg.Add("Initializing Docker client...")
+	step := sg.Add("")
 	defer func() {
 		if step != nil {
 			step.Abort()
@@ -147,6 +155,20 @@ func (b *Builder) Build(
 		Location: &wpdocker.Image_Docker{Docker: &empty.Empty{}},
 	}
 
+	// If we aren't injected the entrypoint AND we don't have a registry
+	// defined, then we don't pull the image at all. We do this so that
+	// Waypoint can work in an environment where Docker doesn't exist, img
+	// doesn't work, and we're just using an image reference that was built
+	// outside of Waypoint.
+	if b.config.DisableCEB && !args.HasRegistry {
+		step.Update("Using Docker image in remote registry: %s", result.Name())
+		step.Done()
+
+		result.Location = &wpdocker.Image_Registry{Registry: &empty.Empty{}}
+		return result, nil
+	}
+
+	step.Update("Initializing Docker client...")
 	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)

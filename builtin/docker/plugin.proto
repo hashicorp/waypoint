@@ -18,7 +18,9 @@ message Image {
   // If this is not set, it will be assumed that the image is in a local
   // Docker daemon registry for backwards compatiblity reasons.
   oneof location {
-    // registry is set if the image is in a remote registry.
+    // registry is set if the image is in a remote registry. This value
+    // might mean the image is local, too, but we never formally "pulled"
+    // it so we aren't sure. The image should be treated as remote.
     google.protobuf.Empty registry = 3;
 
     // docker is set if the image is in a local Docker daemon registry.
