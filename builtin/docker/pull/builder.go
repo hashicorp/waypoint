@@ -132,6 +132,8 @@ func (b *Builder) Config() (interface{}, error) {
 
 // Build
 func (b *Builder) Build(args struct {
+	// We use the struct form of arguments so that we can access named
+	// values (such as "HasRegistry").
 	argmapper.Struct
 
 	Ctx         context.Context
