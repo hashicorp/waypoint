@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -33,7 +34,8 @@ func (a *App) Build(ctx context.Context, optFuncs ...BuildOption) (
 
 	// First we do the build
 	_, msg, err := a.doOperation(ctx, a.logger.Named("build"), &buildOperation{
-		Component: c,
+		Component:   c,
+		HasRegistry: a.config.RegistryUse() != "",
 	})
 	if err != nil {
 		return nil, nil, err
@@ -91,6 +93,8 @@ func (opts *buildOptions) Validate() error {
 type buildOperation struct {
 	Component *Component
 	Build     *pb.Build
+
+	HasRegistry bool
 }
 
 func (op *buildOperation) Init(app *App) (proto.Message, error) {
@@ -130,6 +134,7 @@ func (op *buildOperation) Do(ctx context.Context, log hclog.Logger, app *App, _ 
 		(*component.Artifact)(nil),
 		op.Component,
 		op.Component.Value.(component.Builder).BuildFunc(),
+		argmapper.Named("HasRegistry", op.HasRegistry),
 	)
 }
 
