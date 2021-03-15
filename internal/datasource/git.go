@@ -55,6 +55,7 @@ func (s *GitSource) ProjectSource(body hcl.Body, ctx *hcl.EvalContext) (*pb.Job_
 	result := &pb.Job_Git{
 		Url:  cfg.Url,
 		Path: cfg.Path,
+		Ref:  cfg.Ref,
 	}
 	switch {
 	case cfg.Username != "":
@@ -443,6 +444,7 @@ type gitConfig struct {
 	Password       string `hcl:"password,optional"`
 	SSHKey         string `hcl:"key,optional"`
 	SSHKeyPassword string `hcl:"key_password,optional"`
+	Ref            string `hcl:"ref,optional"`
 }
 
 var _ Sourcer = (*GitSource)(nil)

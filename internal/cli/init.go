@@ -303,11 +303,20 @@ func (c *InitCommand) validateProject() bool {
 			}
 		}
 
+		var poll *pb.Project_Poll
+		if v := c.cfg.Runner.Poll; v != nil {
+			poll = &pb.Project_Poll{
+				Enabled:  v.Enabled,
+				Interval: v.Interval,
+			}
+		}
+
 		resp, err := client.UpsertProject(c.Ctx, &pb.UpsertProjectRequest{
 			Project: &pb.Project{
-				Name:          ref.Project,
-				RemoteEnabled: c.cfg.Runner.Enabled,
-				DataSource:    ds,
+				Name:           ref.Project,
+				RemoteEnabled:  c.cfg.Runner.Enabled,
+				DataSource:     ds,
+				DataSourcePoll: poll,
 			},
 		})
 		if err != nil {

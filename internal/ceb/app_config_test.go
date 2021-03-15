@@ -310,6 +310,7 @@ func TestConfig_dynamicConfigurable(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(err)
 
 	// Change our config
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
@@ -351,6 +352,7 @@ func TestConfig_dynamicConfigurable(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(err)
 
 	// The child should change
 	require.Eventually(func() bool {
@@ -458,6 +460,7 @@ func TestConfig_dynamicConfigurableUnused(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(err)
 
 	// The child should start up
 	var pid string
@@ -487,6 +490,7 @@ func TestConfig_dynamicConfigurableUnused(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(err)
 
 	// Sleep for a bit and ensure we have the same value
 	{

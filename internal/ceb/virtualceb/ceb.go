@@ -180,7 +180,9 @@ func (v *Virtual) RunExec(ctx context.Context, h ExecHandler, count int) error {
 				idx = exec.Index
 			}
 
-			err = v.startExec(ctx, h, exec, env)
+			if err := v.startExec(ctx, h, exec, env); err != nil {
+				return err
+			}
 			if count > 0 {
 				count--
 				if count == 0 {
