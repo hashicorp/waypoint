@@ -9,6 +9,7 @@ nav:
   deployments_index: 'Deployments index page'
   releases_index: 'Releases index page'
   exec: 'Exec'
+  settings: 'Settings'
   logs: 'Logs'
   auth: 'Authenticate'
 

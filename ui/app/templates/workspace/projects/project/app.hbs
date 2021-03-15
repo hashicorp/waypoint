@@ -19,7 +19,6 @@
       {{/if}}
     </small>
   </div>
-  <LinkTo @route="workspace.projects.project.app.settings" @model={{@model}}><Pds::Icon @type="settings"/> Settings </LinkTo>
   <div class="actions">
     {{#if @model.releases.length}}
     <LatestReleaseUrl @releases={{@model.releases}}></LatestReleaseUrl>
@@ -77,6 +76,11 @@
     @models={{array @model.application.project @model.application.application }}>
     {{inline-svg "exec" class="icon"}}
     {{t "nav.exec"}}
+  </LinkTo>
+  <LinkTo @route="workspace.projects.project.app.settings"
+    @models={{array @model.application.project @model.application.application }}>
+    <Pds::Icon @type="settings"/>
+    {{t "nav.settings"}}
   </LinkTo>
 </Pds::TabNav>
 {{/unless}}
