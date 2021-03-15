@@ -26,6 +26,10 @@ var (
 	// dbIndexers is the list of functions to call to initialize the
 	// in-memory indexes from the persisted db.
 	dbIndexers []indexFn
+
+	// pruneFns is the list of prune functions to call for appOperation types
+	// when performing state prune.
+	pruneFns []func(memTxn *memdb.Txn) (int, error)
 )
 
 // State is the primary API for state mutation for the server.
@@ -134,14 +138,29 @@ func (s *State) Prune() error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
-	cnt, err := s.jobsPruneOld(memTxn, maximumJobsIndexed)
+	jobs, err := s.jobsPruneOld(memTxn, maximumJobsIndexed)
 	if err != nil {
 		return err
 	}
 
-	memTxn.Commit()
+	var records int
 
-	s.log.Debug("pruned jobs", "total", cnt)
+	for _, f := range pruneFns {
+		cnt, err := f(memTxn)
+		if err != nil {
+			return err
+		}
+
+		records += cnt
+	}
+
+	s.log.Debug("Finished pruning data",
+		"removed-jobs", jobs,
+		"removed-records", records,
+		"op-tables", len(pruneFns),
+	)
+
+	memTxn.Commit()
 
 	return nil
 }

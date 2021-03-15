@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -44,6 +45,9 @@ type appOperation struct {
 	// The number of records that should be indexed off disk. This allows
 	// dormant records to remain on disk but not indexed.
 	MaximumIndexedRecords int
+
+	// This guards indexedRecords for manipulation during pruning
+	pruneMu sync.Mutex
 
 	// Holds how many records we've indexed at runtime.
 	indexedRecords int
@@ -97,6 +101,12 @@ func (op *appOperation) register() {
 	dbBuckets = append(dbBuckets, op.Bucket)
 	dbIndexers = append(dbIndexers, op.indexInit)
 	schemas = append(schemas, op.memSchema)
+
+	if op.MaximumIndexedRecords > 0 {
+		pruneFns = append(pruneFns, func(memTxn *memdb.Txn) (int, error) {
+			return op.pruneOld(memTxn, op.MaximumIndexedRecords)
+		})
+	}
 }
 
 // Put inserts or updates an operation record.
@@ -136,6 +146,23 @@ func (op *appOperation) Get(s *State, ref *pb.Ref_Operation) (interface{}, error
 		default:
 			return status.Errorf(codes.FailedPrecondition,
 				"unknown operation reference type: %T", ref.Target)
+		}
+
+		// Check if we are tracking this value in the indexes before returning
+		// it. When pruning, we leave the values on disk but remove them
+		// from the indexes.
+		raw, err := memTxn.First(
+			op.memTableName(),
+			opIdIndexName,
+			id,
+		)
+		if err != nil {
+			return err
+		}
+
+		if raw == nil {
+			return status.Errorf(codes.NotFound,
+				"value with given id not found: %s", id)
 		}
 
 		return op.dbGet(tx, []byte(id), result)
@@ -478,14 +505,6 @@ func (op *appOperation) appSeq(ref *pb.Ref_Application) *uint64 {
 // indexInit initializes the index table in memdb from all the records
 // persisted on disk.
 func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
-	// If we're storing an unlimited number of this type, just index them all
-	if op.MaximumIndexedRecords == 0 {
-		return op.indexInitAll(s, dbTxn, memTxn)
-	}
-
-	// Otherwise we're going find the most recent records, up to the maximum, and index
-	// them.
-
 	bucket := dbTxn.Bucket(op.Bucket)
 	c := bucket.Cursor()
 
@@ -520,37 +539,12 @@ func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) e
 
 		cnt++
 
-		if cnt >= op.MaximumIndexedRecords {
+		if op.MaximumIndexedRecords > 0 && cnt >= op.MaximumIndexedRecords {
 			break
 		}
 	}
+
 	return nil
-}
-
-func (op *appOperation) indexInitAll(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
-	bucket := dbTxn.Bucket(op.Bucket)
-	return bucket.ForEach(func(k, v []byte) error {
-		result := op.newStruct()
-		if err := proto.Unmarshal(v, result); err != nil {
-			return err
-		}
-		if _, err := op.indexPut(s, memTxn, result); err != nil {
-			return err
-		}
-
-		// Check if this has a bigger sequence number
-		if v := op.valueField(result, "Sequence"); v != nil {
-			seq := v.(uint64)
-
-			appRef := op.valueField(result, "Application").(*pb.Ref_Application)
-			current := op.appSeq(appRef)
-			if seq > *current {
-				*current = seq
-			}
-		}
-
-		return nil
-	})
 }
 
 // indexPut writes an index record for a single operation record.
@@ -604,37 +598,25 @@ func (op *appOperation) indexPut(
 		CompleteTime: completeTime,
 	}
 
-	// If we're not tracking how many we index, insert and go on.
-	if op.MaximumIndexedRecords == 0 {
-		return rec, txn.Insert(op.memTableName(), rec)
-	}
-
-	// If we're tracking fewer than the max, inc how many we've indexed
-	// and return.
-	if op.indexedRecords < op.MaximumIndexedRecords {
+	// If there is no maximum, don't track the record count.
+	if op.MaximumIndexedRecords != 0 {
+		op.pruneMu.Lock()
 		op.indexedRecords++
-		return rec, txn.Insert(op.memTableName(), rec)
-	}
-
-	// Ok, this means we are indexing the maximum number of values so
-	// we have to delete the first one.
-
-	// So we get the first one on, which because of the order of id's will be the
-	// oldest one.
-	oldest, err := txn.First(
-		op.memTableName(),
-		opIdIndexName,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	err = txn.Delete(op.memTableName(), oldest)
-	if err != nil {
-		return nil, err
+		op.pruneMu.Unlock()
 	}
 
 	return rec, txn.Insert(op.memTableName(), rec)
+}
+
+func (op *appOperation) pruneOld(memTxn *memdb.Txn, max int) (int, error) {
+	return pruneOld(memTxn, pruneOp{
+		lock:      &op.pruneMu,
+		table:     op.memTableName(),
+		index:     opIdIndexName,
+		indexArgs: []interface{}{""},
+		max:       max,
+		cur:       &op.indexedRecords,
+	})
 }
 
 func (op *appOperation) valueField(value interface{}, field string) interface{} {

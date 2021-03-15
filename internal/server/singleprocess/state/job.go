@@ -1047,77 +1047,18 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 }
 
 func (s *State) jobsPruneOld(memTxn *memdb.Txn, max int) (int, error) {
-	s.pruneMu.Lock()
-
-	// Easy enough, just exit if we haven't hit the maximum
-	if s.indexedJobs < max {
-		s.pruneMu.Unlock()
-		return 0, nil
-	}
-
-	// Calculate how many jobs we need to prune to get back to the maximum.
-	pruneCnt := s.indexedJobs - max
-
-	// Unlock the prune lock for the bulk of the work so we don't prevent new work
-	// from starting while the prune is taking place.
-	s.pruneMu.Unlock()
-
-	// Now we iterate the jobs, starting we the queue time that is furtherest in the past
-	// (ie, delete the oldest records first).
-	iter, err := memTxn.LowerBound(
-		jobTableName,
-		jobQueueTimeIndexName,
-		pb.Job_QUEUED,
-		time.Unix(0, 0),
-	)
-	if err != nil {
-		return 0, err
-	}
-
-	// Track the total values deleted separately because we can exit early
-	// and so we might want to prune, say, 100 we might only be able to prune 50
-	// and need to know the exact number.
-	var deleted int
-
-pruning:
-	for {
-		raw := iter.Next()
-		if raw == nil {
-			break
-		}
-
-		job := raw.(*jobIndex)
-
-		// If the job is, for some reason, still not finished, don't prune it.
-		if !jobIsCompleted(job.State) {
-			continue pruning
-		}
-
-		// otherwise, prune this job! Once we've pruned enough jobs to get back
-		// to the maximum, we stop pruning.
-		pruneCnt--
-
-		err = memTxn.Delete(jobTableName, raw)
-		if err != nil {
-			return 0, err
-		}
-
-		deleted++
-		if pruneCnt <= 0 {
-			break
-		}
-	}
-
-	// Grab the lock and update indexedJobs value
-	s.pruneMu.Lock()
-	defer s.pruneMu.Unlock()
-
-	// We subject the diff here because while prune was running, new jobs
-	// can get scheduled and thusly we might not actually remove the same
-	// percentage of jobs as we expect.
-	s.indexedJobs -= deleted
-
-	return deleted, nil
+	return pruneOld(memTxn, pruneOp{
+		lock:      &s.pruneMu,
+		table:     jobTableName,
+		index:     jobQueueTimeIndexName,
+		indexArgs: []interface{}{pb.Job_QUEUED, time.Unix(0, 0)},
+		max:       max,
+		cur:       &s.indexedJobs,
+		check: func(raw interface{}) bool {
+			job := raw.(*jobIndex)
+			return !jobIsCompleted(job.State)
+		},
+	})
 }
 
 func (s *State) jobById(dbTxn *bolt.Tx, id string) (*pb.Job, error) {
