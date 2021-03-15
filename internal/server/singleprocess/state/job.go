@@ -161,6 +161,17 @@ type jobIndex struct {
 	OutputBuffer *logbuffer.Buffer
 }
 
+// A helper, pulled out rather than on a value to allow it to be used against
+// pb.Job,s and jobIndex's alike.
+func jobIsCompleted(state pb.Job_State) bool {
+	switch state {
+	case pb.Job_ERROR, pb.Job_SUCCESS:
+		return true
+	default:
+		return false
+	}
+}
+
 // Job is the exported structure that is returned for most state APIs
 // and gives callers access to more information than the pure job structure.
 type Job struct {
@@ -862,11 +873,7 @@ func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 
 		// if we still have headroom for more indexed jobs OR the job hasn't finished yet,
 		// index it.
-		if cnt < maximumJobsIndexed ||
-			value.State == pb.Job_QUEUED ||
-			value.State == pb.Job_RUNNING ||
-			value.State == pb.Job_WAITING {
-
+		if cnt < maximumJobsIndexed || !jobIsCompleted(value.State) {
 			cnt++
 			idx, err := s.jobIndexSet(memTxn, k, &value)
 			if err != nil {
@@ -1027,51 +1034,50 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 
 	// Insert into the DB
 	_, err = s.jobIndexSet(memTxn, id, jobpb)
-	return err
-}
-
-func (s *State) jobsPruneOld(memTxn *memdb.Txn) error {
-	// We don't track the total number of jobs anywhere but the number should be small
-	// enough that we can just quickly iterate through them all and calculate a count,
-	// so we start there.
-	iter, err := memTxn.Get(jobTableName, jobIdIndexName, "")
 	if err != nil {
 		return err
 	}
 
-	var cnt int
+	s.pruneMu.Lock()
+	defer s.pruneMu.Unlock()
 
-	for {
-		raw := iter.Next()
-		if raw == nil {
-			break
-		}
+	s.indexedJobs++
 
-		cnt++
+	return nil
+}
 
-		job := raw.(*jobIndex)
-		job.End()
-	}
+func (s *State) jobsPruneOld(memTxn *memdb.Txn, max int) (int, error) {
+	s.pruneMu.Lock()
 
-	// Now we know how many jobs are in indexed. If we have fewer than the maximum, we're done!
-	if cnt < maximumJobsIndexed {
-		return nil
+	// Easy enough, just exit if we haven't hit the maximum
+	if s.indexedJobs < max {
+		s.pruneMu.Unlock()
+		return 0, nil
 	}
 
 	// Calculate how many jobs we need to prune to get back to the maximum.
-	pruneCnt := maximumJobsIndexed - cnt
+	pruneCnt := s.indexedJobs - max
+
+	// Unlock the prune lock for the bulk of the work so we don't prevent new work
+	// from starting while the prune is taking place.
+	s.pruneMu.Unlock()
 
 	// Now we iterate the jobs, starting we the queue time that is furtherest in the past
 	// (ie, delete the oldest records first).
-	iter, err = memTxn.LowerBound(
+	iter, err := memTxn.LowerBound(
 		jobTableName,
 		jobQueueTimeIndexName,
 		pb.Job_QUEUED,
 		time.Unix(0, 0),
 	)
 	if err != nil {
-		return err
+		return 0, err
 	}
+
+	// Track the total values deleted separately because we can exit early
+	// and so we might want to prune, say, 100 we might only be able to prune 50
+	// and need to know the exact number.
+	var deleted int
 
 pruning:
 	for {
@@ -1083,8 +1089,7 @@ pruning:
 		job := raw.(*jobIndex)
 
 		// If the job is, for some reason, still not finished, don't prune it.
-		switch job.State {
-		case pb.Job_WAITING, pb.Job_QUEUED, pb.Job_RUNNING:
+		if !jobIsCompleted(job.State) {
 			continue pruning
 		}
 
@@ -1094,15 +1099,25 @@ pruning:
 
 		err = memTxn.Delete(jobTableName, raw)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
+		deleted++
 		if pruneCnt <= 0 {
 			break
 		}
 	}
 
-	return nil
+	// Grab the lock and update indexedJobs value
+	s.pruneMu.Lock()
+	defer s.pruneMu.Unlock()
+
+	// We subject the diff here because while prune was running, new jobs
+	// can get scheduled and thusly we might not actually remove the same
+	// percentage of jobs as we expect.
+	s.indexedJobs -= deleted
+
+	return deleted, nil
 }
 
 func (s *State) jobById(dbTxn *bolt.Tx, id string) (*pb.Job, error) {

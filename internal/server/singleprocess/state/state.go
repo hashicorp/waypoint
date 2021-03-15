@@ -5,6 +5,7 @@ package state
 import (
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-hclog"
@@ -52,6 +53,12 @@ type State struct {
 
 	// Where to log to
 	log hclog.Logger
+
+	// indexedJobs indicates how many job records we are tracking in memory
+	indexedJobs int
+
+	// Used to track indexedJobs and prune records
+	pruneMu sync.Mutex
 }
 
 // New initializes a new State store.
@@ -127,12 +134,14 @@ func (s *State) Prune() error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
-	err := s.jobsPruneOld(memTxn)
+	cnt, err := s.jobsPruneOld(memTxn, maximumJobsIndexed)
 	if err != nil {
 		return err
 	}
 
 	memTxn.Commit()
+
+	s.log.Debug("pruned jobs", "total", cnt)
 
 	return nil
 }
