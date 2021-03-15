@@ -370,7 +370,7 @@ func (cs *ConfigSourcer) Documentation() (*docs.Documentation, error) {
 		return nil, err
 	}
 
-	doc.Description("Read configuration values from Terraform Cloud.")
+	doc.Description("Read Terraform state outputs from Terraform Cloud.")
 
 	doc.Example(`
 config {
@@ -447,7 +447,7 @@ config {
 		docs.Summary(
 			"This is not recommended unless absolutely necessary.",
 		),
-		docs.EnvVar("VAULT_SKIP_VERIFY"),
+		docs.EnvVar("TFC_SKIP_VERIFY"),
 	)
 
 	doc.SetField(
