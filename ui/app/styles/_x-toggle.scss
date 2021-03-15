@@ -1,0 +1,14 @@
+:root {
+  --toggle-color-off: #{dehex(color.$ui-cool-gray-300)};
+  --toggle-color-on: #{dehex(color.$blue-500)};
+}
+
+.x-toggle-light.x-toggle-btn {
+  background: rgb(var(--toggle-color-off));
+}
+
+.x-toggle:checked + label > .x-toggle-light.x-toggle-btn {
+  background: rgb(var(--toggle-color-on));
+}
+
+
