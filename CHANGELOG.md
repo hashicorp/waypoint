@@ -6,9 +6,11 @@ IMPROVEMENTS:
 
 * builtin/k8s: Include user defined labels on deploy pod [GH-1146]
 * core: Update `-from-project` in `waypoint init` to handle local projects [GH-722]
+* entrypoint: dump a memory profile to `/tmp` on `SIGUSR1` [GH-1194]
 
 BUG FIXES:
 
+* entrypoint: fix URL service memory leak [GH-1200]
 * builtin/k8s/release: Allow target_port to be int or string [GH-1154]
 * builtin/k8s/release: Include name field for service port release [GH-1184]
 * builtin/docker: Revert #918, ensure HostPort is randomly assigned between container deploys [GH-1189]
