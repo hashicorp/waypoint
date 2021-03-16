@@ -734,8 +734,8 @@ github.com/hashicorp/hcl/v2 v2.6.0/go.mod h1:bQTN5mpo+jewjJgh8jr0JUguIi7qPHUF6yI
 github.com/hashicorp/hcl/v2 v2.7.1-0.20201023000745-3de61ecba298 h1:pLsdnvAlWuZ9iYlATFIOYpqNCQ44IP1sLiX9UOCVCW8=
 github.com/hashicorp/hcl/v2 v2.7.1-0.20201023000745-3de61ecba298/go.mod h1:bQTN5mpo+jewjJgh8jr0JUguIi7qPHUF6yIfAEN3jqY=
 github.com/hashicorp/horizon v0.0.0-20200717001716-a175a185844b/go.mod h1:l600KU4y9clh+4RHdS3H5VP6+RdMnznXFrL9vg6uDnA=
-github.com/hashicorp/horizon v0.0.0-20201203173320-fcefbe49771c h1:sd5Ow+BqDAdiu3q2sOk9JRaYtt98jz3ZT5bhzDn0Cy0=
-github.com/hashicorp/horizon v0.0.0-20201203173320-fcefbe49771c/go.mod h1:sc8XTPn+0OBcjMo39WAcMkImGQ5iYWJvrnNIOR5HaYc=
+github.com/hashicorp/horizon v0.0.0-20210316161651-b7b41a97460a h1:cVm2Zn2/AoNCxbYVgiYco0Jx3O8ATbneXjX7f0Li/FE=
+github.com/hashicorp/horizon v0.0.0-20210316161651-b7b41a97460a/go.mod h1:TvirjjKrUV6vTAdoRQOmVf6mwORGShOOAmqbt4JDrNw=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
 github.com/hashicorp/mdns v1.0.1/go.mod h1:4gW7WsVCke5TE7EPeYliwHlRUyBtfCwuFwuMg2DmyNY=
 github.com/hashicorp/memberlist v0.2.2 h1:5+RffWKwqJ71YPu9mWsF7ZOscZmwfasdA8kbdC7AO2g=
@@ -758,8 +758,8 @@ github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210217205040-c3ed2e9c4f02/go.m
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20190923154419-df201c70410d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
-github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce h1:7UnVY3T/ZnHUrfviiAgIUjg2PXxsQfs5bphsG8F7Keo=
-github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
+github.com/hashicorp/yamux v0.0.0-20210316155119-a95892c5f864 h1:Y4V+SFe7d3iH+9pJCoeWIOS5/xBJIFsltS7E+KJSsJY=
+github.com/hashicorp/yamux v0.0.0-20210316155119-a95892c5f864/go.mod h1:CtWFDAQgb7dxtzFs4tWbplKIe2jSi3+5vKbgIO0SLnQ=
 github.com/heroku/color v0.0.6 h1:UTFFMrmMLFcL3OweqP1lAdp8i1y/9oHqkeHjQ/b/Ny0=
 github.com/heroku/color v0.0.6/go.mod h1:ZBvOcx7cTF2QKOv4LbmoBtNl5uB17qWxGuzZrsi1wLU=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
