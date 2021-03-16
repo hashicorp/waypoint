@@ -3,6 +3,7 @@ package state
 import (
 	"sync"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-memdb"
 )
 
@@ -15,10 +16,23 @@ type pruneOp struct {
 	check        func(val interface{}) bool
 }
 
+func (p *pruneOp) Validate() error {
+	return validation.ValidateStruct(p,
+		validation.Field(&p.lock, validation.Required),
+		validation.Field(&p.table, validation.Required),
+		validation.Field(&p.index, validation.Required),
+		validation.Field(&p.cur, validation.NilOrNotEmpty),
+	)
+}
+
 // pruneOld uses the types in op to scan the table indicated and prune old records.
 // The op's check function can allow the process to skip records that shouldn't be
 // pruned regardless of their age.
 func pruneOld(memTxn *memdb.Txn, op pruneOp) (int, error) {
+	if err := op.Validate(); err != nil {
+		return 0, err
+	}
+
 	op.lock.Lock()
 
 	// Easy enough, just exit if we haven't hit the maximum

@@ -100,8 +100,9 @@ func (op *appOperation) register() {
 	schemas = append(schemas, op.memSchema)
 
 	if op.MaximumIndexedRecords > 0 {
-		pruneFns = append(pruneFns, func(memTxn *memdb.Txn) (int, error) {
-			return op.pruneOld(memTxn, op.MaximumIndexedRecords)
+		pruneFns = append(pruneFns, func(memTxn *memdb.Txn) (string, int, error) {
+			cnt, err := op.pruneOld(memTxn, op.MaximumIndexedRecords)
+			return op.memTableName(), cnt, err
 		})
 	}
 }

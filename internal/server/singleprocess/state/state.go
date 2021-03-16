@@ -29,7 +29,7 @@ var (
 
 	// pruneFns is the list of prune functions to call for appOperation types
 	// when performing state prune.
-	pruneFns []func(memTxn *memdb.Txn) (int, error)
+	pruneFns []func(memTxn *memdb.Txn) (string, int, error)
 )
 
 // State is the primary API for state mutation for the server.
@@ -146,11 +146,12 @@ func (s *State) Prune() error {
 	var records int
 
 	for _, f := range pruneFns {
-		cnt, err := f(memTxn)
+		tbl, cnt, err := f(memTxn)
 		if err != nil {
 			return err
 		}
 
+		s.log.Debug("Pruning table index data", "table", tbl, "removed-records", cnt)
 		records += cnt
 	}
 
