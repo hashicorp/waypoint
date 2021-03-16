@@ -1461,7 +1461,7 @@ func TestJobsPrune(t *testing.T) {
 		memTxn := s.inmem.Txn(true)
 		defer memTxn.Abort()
 
-		cnt, err := s.jobsPruneOld(memTxn, 2)
+		cnt, err := s.jobsPruneOld(memTxn, 1)
 		require.NoError(err)
 
 		memTxn.Commit()

@@ -36,7 +36,7 @@ func pruneOld(memTxn *memdb.Txn, op pruneOp) (int, error) {
 	op.lock.Lock()
 
 	// Easy enough, just exit if we haven't hit the maximum
-	if *op.cur < op.max {
+	if *op.cur <= op.max {
 		op.lock.Unlock()
 		return 0, nil
 	}
