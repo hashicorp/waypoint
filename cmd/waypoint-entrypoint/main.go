@@ -37,6 +37,9 @@ func realMain() int {
 	ctx, closer := signalcontext.WithInterrupt(context.Background(), log)
 	defer closer()
 
+	// Start our debug signal handler
+	go debugSignalHandler(ctx, log.Named("debug"))
+
 	// Run our core logic
 	err := ceb.Run(ctx,
 		ceb.WithEnvDefaults(),
