@@ -130,17 +130,19 @@ func (b *Builder) Config() (interface{}, error) {
 	return &b.config, nil
 }
 
-// Build
-func (b *Builder) Build(args struct {
-	// We use the struct form of arguments so that we can access named
-	// values (such as "HasRegistry").
+// We use the struct form of arguments so that we can access named
+// values (such as "HasRegistry").
+type buildArgs struct {
 	argmapper.Struct
 
 	Ctx         context.Context
 	UI          terminal.UI
 	Log         hclog.Logger
 	HasRegistry bool
-}) (*wpdocker.Image, error) {
+}
+
+// Build
+func (b *Builder) Build(args *buildArgs) (*wpdocker.Image, error) {
 	// Pull all the args out to top-level values. This is mostly done
 	// cause the struct was added later, but also because these are very common.
 	ctx := args.Ctx
