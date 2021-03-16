@@ -61,9 +61,6 @@ type appOperation struct {
 	seq map[string]map[string]*uint64
 }
 
-// By default, we allow 10000 records
-const DefaultMaximumIndexedRecords = 10000
-
 // Test validates that the operation struct is setup properly. This
 // is expected to be called in a unit test.
 func (op *appOperation) Test(t testing.T) {
