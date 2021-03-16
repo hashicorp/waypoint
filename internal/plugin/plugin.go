@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/netlify"
 	"github.com/hashicorp/waypoint/builtin/nomad"
 	"github.com/hashicorp/waypoint/builtin/pack"
+	"github.com/hashicorp/waypoint/builtin/tfc"
 	"github.com/hashicorp/waypoint/builtin/vault"
 	pluginVault "github.com/hashicorp/waypoint/builtin/vault"
 )
@@ -50,6 +51,7 @@ var (
 		"aws-ssm":                  ssm.Options,
 		"aws-lambda":               lambda.Options,
 		"vault":                    vault.Options,
+		"terraform-cloud":          tfc.Options,
 	}
 
 	// BaseFactories is the set of base plugin factories. This will include any
@@ -76,6 +78,9 @@ var (
 		},
 		"vault": {
 			Component: &pluginVault.ConfigSourcer{},
+		},
+		"terraform-cloud": {
+			Component: &tfc.ConfigSourcer{},
 		},
 	}
 )
