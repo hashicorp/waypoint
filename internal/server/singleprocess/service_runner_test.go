@@ -265,7 +265,10 @@ func TestServiceRunnerJobStream_cancel(t *testing.T) {
 	}))
 
 	// Should be done
-	_, err = stream.Recv()
+	resp, err := stream.Recv()
+	if err == nil && resp != nil {
+		t.Logf("response type (should've been nil): %#v", resp.Event)
+	}
 	require.Error(err)
 	require.Equal(io.EOF, err, err.Error())
 
