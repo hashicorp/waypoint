@@ -4,11 +4,11 @@
 }
 
 .x-toggle-light.x-toggle-btn {
-  background: rgb(var(--toggle-color-off));
+  background-color: rgb(var(--toggle-color-off));
 }
 
 .x-toggle:checked + label > .x-toggle-light.x-toggle-btn {
-  background: rgb(var(--toggle-color-on));
+  background-color: rgb(var(--toggle-color-on));
 }
 
 

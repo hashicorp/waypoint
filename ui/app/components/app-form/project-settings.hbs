@@ -142,8 +142,13 @@
             @showLabels={{true}}
             @name="git-sync-enabled"
             @value={{this.project.dataSourcePoll.enabled}}
+            @size="small"
             @onToggle={{fn (mut this.project.dataSourcePoll.enabled)}} as |toggle|>
-            <toggle.switch/>
+            <toggle.switch
+              @onLabel='git sync on'
+              @offLabel='git sync off'
+              @name="Git Sync"
+              />
 
             <toggle.label for="git-sync-enabled">
               <span class="pds-toggleLabel">
