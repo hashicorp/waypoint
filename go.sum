@@ -764,8 +764,8 @@ github.com/hashicorp/hcl/v2 v2.6.0/go.mod h1:bQTN5mpo+jewjJgh8jr0JUguIi7qPHUF6yI
 github.com/hashicorp/hcl/v2 v2.7.1-0.20201023000745-3de61ecba298 h1:pLsdnvAlWuZ9iYlATFIOYpqNCQ44IP1sLiX9UOCVCW8=
 github.com/hashicorp/hcl/v2 v2.7.1-0.20201023000745-3de61ecba298/go.mod h1:bQTN5mpo+jewjJgh8jr0JUguIi7qPHUF6yIfAEN3jqY=
 github.com/hashicorp/horizon v0.0.0-20200717001716-a175a185844b/go.mod h1:l600KU4y9clh+4RHdS3H5VP6+RdMnznXFrL9vg6uDnA=
-github.com/hashicorp/horizon v0.0.0-20210316162917-ac0db1168ab9 h1:zMNSjcoKI06MekDuwxFS6RqDGrEB1cdQMpN0Of/wFgI=
-github.com/hashicorp/horizon v0.0.0-20210316162917-ac0db1168ab9/go.mod h1:TvirjjKrUV6vTAdoRQOmVf6mwORGShOOAmqbt4JDrNw=
+github.com/hashicorp/horizon v0.0.0-20210317214650-d2053943be04 h1:gCQ/WMqCjh49YJMHkeO17JPnytVXNj/U04F2cs4n9c8=
+github.com/hashicorp/horizon v0.0.0-20210317214650-d2053943be04/go.mod h1:TvirjjKrUV6vTAdoRQOmVf6mwORGShOOAmqbt4JDrNw=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
 github.com/hashicorp/mdns v1.0.1/go.mod h1:4gW7WsVCke5TE7EPeYliwHlRUyBtfCwuFwuMg2DmyNY=
 github.com/hashicorp/memberlist v0.2.2 h1:5+RffWKwqJ71YPu9mWsF7ZOscZmwfasdA8kbdC7AO2g=
