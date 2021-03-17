@@ -1,0 +1,5 @@
+<div class='notifications notifications--bottom notifications--left' aria-live='polite'>
+  {{#each this.flashMessages.queue key='initializedTime' as |flash|}}
+    <Notifications::Notification @flash={{flash}} />
+  {{/each}}
+</div>
