@@ -41,6 +41,15 @@ The buildpack builder image to use.
 - **Optional**
 - Default: heroku/buildpacks:18
 
+#### buildpacks
+
+The exact buildpacks to use.
+
+If set, the builder will run these buildpacks in the specified order. They can be listed using several [URI formats](https://buildpacks.io/docs/app-developer-guide/specific-buildpacks).
+
+- Type: **[]string**
+- **Optional**
+
 #### disable_entrypoint
 
 If set, the entrypoint binary won't be injected into the image.
