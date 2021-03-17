@@ -1,5 +1,5 @@
 // This is current version of the software available for download
-export default '0.2.3'
+export default '0.2.4'
 
 // HashiCorp officially supported package managers
 // NOTE: This information will be moving into the releases API
