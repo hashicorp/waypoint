@@ -93,7 +93,7 @@ build {
 		"The image to pull.",
 		docs.Summary(
 			"This should NOT include the tag (the value following the ':' in a Docker image).",
-			"Use `tag` to define the  image tag.",
+			"Use `tag` to define the image tag.",
 		),
 	)
 
