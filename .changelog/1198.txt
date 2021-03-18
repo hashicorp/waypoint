@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/docker-pull: doesn't require Docker if no registry is configured and entrypoint injection is disabled
+```
