@@ -2,9 +2,11 @@ package ceb
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -29,7 +31,7 @@ func (ceb *CEB) initChildCmd(ctx context.Context, cfg *config) error {
 	// goroutine that will eventually run them.
 	childCmdCh := make(chan *exec.Cmd, 5)
 	doneCh := make(chan error, 1)
-	go ceb.watchChildCmd(ctx, childCmdCh, doneCh)
+	go ceb.watchChildCmd(ctx, cfg, childCmdCh, doneCh)
 	ceb.childCmdCh = childCmdCh
 	ceb.childDoneCh = doneCh
 
@@ -47,6 +49,7 @@ func (ceb *CEB) markChildCmdReady() {
 // at a time.
 func (ceb *CEB) watchChildCmd(
 	ctx context.Context,
+	cfg *config,
 	cmdCh <-chan *exec.Cmd,
 	doneCh chan<- error,
 ) {
@@ -90,6 +93,20 @@ func (ceb *CEB) watchChildCmd(
 
 			// If we have an existing process, we need to exit that first.
 			if currentCh != nil {
+				if cfg.signalConfig {
+					log.Debug("signaling current process due to config change")
+
+					err := ceb.writeConfigAndSignal(log, currentCmd, cmd)
+					if err != nil {
+						// In the event terminating the child fails, we exit
+						// the whole CEB because we can't be sure we're not just
+						// going to fork bomb ourselves.
+						log.Info("error writing config and signaling", "err", err)
+					}
+
+					continue
+				}
+
 				log.Info("terminating current child process for restart")
 				err := ceb.termChildCmd(log, currentCmd, currentCh, false, false)
 				if err != nil {
@@ -128,6 +145,58 @@ func (ceb *CEB) watchChildCmd(
 			return
 		}
 	}
+}
+
+const ConfigPath = "/tmp/config.json"
+
+type configJson struct {
+	Environment map[string]string `json:"environment"`
+}
+
+func (ceb *CEB) writeConfigAndSignal(log hclog.Logger, cur, update *exec.Cmd) error {
+	// Subtract off the baseEnv because we don't need to include
+	// stuff like PATH, etc.
+	env := update.Env[len(ceb.childCmdBase.Env):]
+
+	var cj configJson
+	cj.Environment = make(map[string]string)
+
+	for _, pair := range env {
+		idx := strings.IndexByte(pair, '=')
+		if idx == -1 {
+			cj.Environment[pair] = ""
+		} else {
+			cj.Environment[pair[:idx]] = pair[idx+1:]
+		}
+	}
+
+	f, err := os.Create(ConfigPath)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	enc := json.NewEncoder(f)
+
+	// This isn't necessary at all, but I find it easier to read.
+	enc.SetIndent("", "  ")
+
+	err = enc.Encode(&cj)
+	if err != nil {
+		return err
+	}
+
+	log.Info("Updated on disk config", "path", ConfigPath)
+
+	if err := syscall.Kill(cur.Process.Pid, syscall.SIGUSR1); err != nil {
+		log.Warn("error sending SIGUSR1", "err", err)
+		return err
+	}
+
+	log.Info("Signaled pid to indicated config change", "pid", cur.Process.Pid)
+
+	return nil
 }
 
 // startChildCmd starts the child process, and waits for completion by sending an

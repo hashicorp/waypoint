@@ -31,6 +31,7 @@ const (
 	envCEBDisable          = "WAYPOINT_CEB_DISABLE"
 	envCEBServerRequired   = "WAYPOINT_CEB_SERVER_REQUIRED"
 	envCEBToken            = "WAYPOINT_CEB_INVITE_TOKEN"
+	envCEBSignal           = "WAYPOINT_CEB_SIGNAL_CONFIG"
 )
 
 const (
@@ -165,6 +166,11 @@ func Run(ctx context.Context, os ...Option) error {
 		"revision", vsn.Revision,
 	)
 
+	ceb.logger.Info("entrypoint options",
+		"disabled", cfg.disable,
+		"signal-config", cfg.signalConfig,
+	)
+
 	// Initialize our base child command. We do this before any server
 	// connections and so on because if this fails we just want to fail fast
 	// before any network activity.
@@ -255,7 +261,15 @@ func (ceb *CEB) DeploymentId() string {
 }
 
 type config struct {
-	disable             bool
+	// disable indicates that the CEB should not actually do it's normal
+	// functionality, just start the app and nothing else.
+	disable bool
+
+	// signalConfig indicates that rather than restarting the child command,
+	// we should write the updated config to a file and send it a unix signal
+	// instead.
+	signalConfig bool
+
 	cebPtr              *CEB
 	ExecArgs            []string
 	ServerAddr          string
@@ -295,6 +309,7 @@ func WithEnvDefaults() Option {
 		cfg.ServerTlsSkipVerify = os.Getenv(envServerTlsSkipVerify) != ""
 		cfg.InviteToken = os.Getenv(envCEBToken)
 		cfg.disable = os.Getenv(envCEBDisable) != ""
+		cfg.signalConfig = os.Getenv(envCEBSignal) != ""
 
 		ceb.deploymentId = os.Getenv(envDeploymentId)
 
