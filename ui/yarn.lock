@@ -2380,15 +2380,10 @@
     ember-svg-jar "^2.2.3"
     sass "^1.26.11"
 
-"@hashicorp/structure-icons@1.9.0-0":
+"@hashicorp/structure-icons@1.9.0-0", "@hashicorp/structure-icons@^1.9.0-0":
   version "1.9.0-0"
   resolved "https://registry.yarnpkg.com/@hashicorp/structure-icons/-/structure-icons-1.9.0-0.tgz#7bd2f4a61d2dd81247090d2cfb86f1f89d4ea22a"
   integrity sha512-khvUS/zThfR6pLW4hGVRpcGY2Ta5azeS/Vzb9iCfr3A8OhSZFdnrlkqjYknpBg4RwrQDBpWTzZhe/Z35Ne4Wxg==
-
-"@hashicorp/structure-icons@^1.8.1":
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/@hashicorp/structure-icons/-/structure-icons-1.8.1.tgz#d29945df2b41dcb317b141e51a26bd4be796a164"
-  integrity sha512-XFYdCIshmaR3Igc8eWpOZ2Gr3IR/0TogXZ4PQ9bz1E9cLzF3njBcs3tCpJUOwRwe/wMI5YTlL/sOGvcZ77AB/Q==
 
 "@jimp/bmp@^0.5.4":
   version "0.5.4"
@@ -7232,7 +7227,7 @@ ember-cli-babel@7.7.3:
     ensure-posix-path "^1.0.2"
     semver "^5.5.0"
 
-ember-cli-babel@^6.0.0-beta.4, ember-cli-babel@^6.16.0, ember-cli-babel@^6.3.0, ember-cli-babel@^6.6.0:
+ember-cli-babel@^6.0.0-beta.4, ember-cli-babel@^6.16.0, ember-cli-babel@^6.3.0, ember-cli-babel@^6.6.0, ember-cli-babel@^6.9.0:
   version "6.18.0"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-6.18.0.tgz#3f6435fd275172edeff2b634ee7b29ce74318957"
   integrity sha512-7ceC8joNYxY2wES16iIBlbPSxwKDBhYwC8drU3ZEvuPDMwVv1KzxCNu1fvxyFEBWhwaRNTUxSCsEVoTd9nosGA==
@@ -7283,7 +7278,7 @@ ember-cli-babel@^7.1.3, ember-cli-babel@^7.10.0, ember-cli-babel@^7.11.1, ember-
     rimraf "^3.0.1"
     semver "^5.5.0"
 
-ember-cli-babel@^7.13.0, ember-cli-babel@^7.21.0, ember-cli-babel@^7.23.1:
+ember-cli-babel@^7.13.0, ember-cli-babel@^7.18.0, ember-cli-babel@^7.21.0, ember-cli-babel@^7.23.1:
   version "7.23.1"
   resolved "https://registry.yarnpkg.com/ember-cli-babel/-/ember-cli-babel-7.23.1.tgz#d1517228ede08a5d4b045c78a7429728e956b30b"
   integrity sha512-qYggmt3hRs6QJ6cRkww3ahMpyP8IEV2KFrIRO/Z6hu9MkE/8Y28Xd5NjQl6fPV3oLoG0vwuHzhNe3Jr7Wec8zw==
@@ -7397,6 +7392,15 @@ ember-cli-favicon@^2.2.0:
     broccoli-string-replace "^0.1.2"
     ember-cli-babel "7.7.3"
     lodash.merge "~4.6.1"
+
+ember-cli-flash@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/ember-cli-flash/-/ember-cli-flash-2.1.1.tgz#a1547676d20a8d6f5d0f523228d3e7c8a76486ee"
+  integrity sha512-JLqrc2gOwCFI8dB1hUV537Iv+yzplsgfVG3u4JSp8QAsQHPCGAT0XZR1yQDlXfoLwFGr1Akw8y72/TwN9jBW9w==
+  dependencies:
+    ember-cli-babel "^7.18.0"
+    ember-cli-htmlbars "^4.2.3"
+    ember-runtime-enumerable-includes-polyfill "^2.1.0"
 
 ember-cli-get-component-path-option@^1.0.0:
   version "1.0.0"
@@ -8098,6 +8102,14 @@ ember-router-generator@^2.0.0:
     "@babel/parser" "^7.4.5"
     "@babel/traverse" "^7.4.5"
     recast "^0.18.1"
+
+ember-runtime-enumerable-includes-polyfill@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/ember-runtime-enumerable-includes-polyfill/-/ember-runtime-enumerable-includes-polyfill-2.1.0.tgz#dc6d4a028471e4acc350dfd2a149874fb20913f5"
+  integrity sha512-au18iI8VbEDYn3jLFZzETnKN5ciPgCUxMRucEP3jkq7qZ6sE0FVKpWMPY/h9tTND3VOBJt6fgPpEBJoJVCUudg==
+  dependencies:
+    ember-cli-babel "^6.9.0"
+    ember-cli-version-checker "^2.1.0"
 
 ember-source-channel-url@^3.0.0:
   version "3.0.0"

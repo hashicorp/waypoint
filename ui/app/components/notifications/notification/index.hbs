@@ -1,0 +1,23 @@
+<FlashMessage role='alertdialog' class='notification' @flash={{@flash}} as |component flash close|>
+  <Pds::Popup
+    @variant={{flash.type}}
+    @onClose={{close}}
+    data-test-flash-type={{flash.type}}
+  as |P|>
+    <P.Header data-test-flash-message>
+      {{flash.message}}
+    </P.Header>
+    {{#if flash.content}}
+      <P.Body data-test-flash-content>
+        {{flash.content}}
+      </P.Body>
+    {{/if}}
+    {{#if (and flash.actionText flash.onAction)}}
+      <P.Footer data-test-flash-action>
+        <Button type='button' @variant='link' @compact={{true}} {{on 'click' (fn this.onAction close)}}>
+          {{flash.actionText}}
+        </Button>
+      </P.Footer>
+    {{/if}}
+  </Pds::Popup>
+</FlashMessage>
