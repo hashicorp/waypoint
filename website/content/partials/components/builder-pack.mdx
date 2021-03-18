@@ -47,7 +47,7 @@ The exact buildpacks to use.
 
 If set, the builder will run these buildpacks in the specified order. They can be listed using several [URI formats](https://buildpacks.io/docs/app-developer-guide/specific-buildpacks).
 
-- Type: **[]string**
+- Type: **list of string**
 - **Optional**
 
 #### disable_entrypoint
@@ -65,7 +65,7 @@ Environment variables to expose to the buildpack.
 
 These environment variables should not be run of the mill configuration variables, use waypoint config for that. These variables are used to control over all container modes, such as configuring it to start a web app vs a background worker.
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 ### Output Attributes
@@ -74,7 +74,7 @@ Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoi
 
 #### build_labels
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 
 #### image
 

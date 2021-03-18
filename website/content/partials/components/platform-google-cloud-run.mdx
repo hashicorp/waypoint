@@ -66,18 +66,18 @@ These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this
 
 Configuration to control the auto scaling parameters for Cloud Run.
 
-- Type: **\*cloudrun.AutoScaling**
+- Type: **cloudrun.AutoScaling**
 
 #### auto_scaling.max
 
 Maximum number of Cloud Run instances. When the maximum requests per container is exceeded, Cloud Run will create an additional container instance to handle load.
-This parameter controls the maximum number of instances that can be created.
+		This parameter controls the maximum number of instances that can be created.
 
 #### capacity
 
 CPU, Memory, and resource limits for each Cloud Run instance.
 
-- Type: **\*cloudrun.Capacity**
+- Type: **cloudrun.Capacity**
 
 #### capacity.cpu_count
 
@@ -129,14 +129,14 @@ Specify a service account email that Cloud Run will use to run the service. You 
 
 Additional environment variables to be added to the Cloud Run instance.
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 #### unauthenticated
 
 Is public unauthenticated access allowed for the Cloud Run instance?.
 
-- Type: **\*bool**
+- Type: **bool**
 - **Optional**
 
 ### Output Attributes
@@ -153,7 +153,7 @@ Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoi
 
 #### resource
 
-- Type: **\*cloudrun.Deployment_Resource**
+- Type: **cloudrun.Deployment_Resource**
 
 #### revision_id
 
