@@ -7,7 +7,6 @@
         </label>
         <Pds::Input
           @type="text"
-          aria-describedby="{HELP_ID} {ERROR_ID}"
           id="git-source-url"
           placeholder="git@github.com:mycompany/awesome-project.git"
           value={{this.git.url}}
@@ -20,7 +19,6 @@
         </label>
         <Pds::Input
           @type="text"
-          aria-describedby="{HELP_ID} {ERROR_ID}"
           id="git-source-ref"
           placeholder="main"
           value={{this.git.ref}}
@@ -33,7 +31,6 @@
         </label>
         <Pds::Input
           @type="text"
-          aria-describedby="{HELP_ID} {ERROR_ID}"
           id="git-source-path"
           placeholder="dir/subdir/my-project-path"
           value={{this.git.path}}
@@ -72,7 +69,6 @@
           </label>
           <Pds::Input
             @type="text"
-            aria-describedby="{HELP_ID} {ERROR_ID}"
             id="git-source-ssh-user"
             placeholder="mitchellh"
             value={{this.project.dataSource.git.ssh.user}}
@@ -85,7 +81,6 @@
           </label>
           <Pds::Input
             @type="password"
-            aria-describedby="{HELP_ID} {ERROR_ID}"
             id="git-source-ssh-password"
             placeholder="**********"
             value={{this.project.dataSource.git.ssh.password}}
@@ -97,7 +92,6 @@
             SSH Key
           </label>
           <Pds::Textarea
-            aria-describedby="{HELP_ID} {ERROR_ID}"
             id="git-source-ssh-key"
             placeholder="*****************"
             value={{this.git.ssh.privateKeyPem}}
@@ -111,7 +105,6 @@
           </label>
           <Pds::Input
             @type="text"
-            aria-describedby="{HELP_ID} {ERROR_ID}"
             id="git-source-username"
             placeholder="mitchellh"
             value={{this.project.dataSource.git.basic.username}}
@@ -124,7 +117,6 @@
           </label>
           <Pds::Input
             @type="password"
-            aria-describedby="{HELP_ID} {ERROR_ID}"
             id="git-source-password"
             placeholder="**********"
             value={{this.project.dataSource.git.basic.password}}
