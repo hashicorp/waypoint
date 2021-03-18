@@ -70,7 +70,7 @@
           <Pds::Input
             @type="text"
             id="git-source-ssh-user"
-            placeholder="mitchellh"
+            placeholder="gitusername"
             value={{this.project.dataSource.git.ssh.user}}
             {{on "input" (fn this.setSshAuth "user")}}
           />
@@ -106,7 +106,7 @@
           <Pds::Input
             @type="text"
             id="git-source-username"
-            placeholder="mitchellh"
+            placeholder="gitusername"
             value={{this.project.dataSource.git.basic.username}}
             {{on "input" (fn this.setBasicAuth "username")}}
           />
