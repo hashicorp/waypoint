@@ -142,7 +142,7 @@ type buildArgs struct {
 }
 
 // Build
-func (b *Builder) Build(args *buildArgs) (*wpdocker.Image, error) {
+func (b *Builder) Build(args buildArgs) (*wpdocker.Image, error) {
 	// Pull all the args out to top-level values. This is mostly done
 	// cause the struct was added later, but also because these are very common.
 	ctx := args.Ctx
