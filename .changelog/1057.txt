@@ -1,0 +1,3 @@
+```release-note:feature
+ui/project-git-settings: Add ability to configure a project's git settings from the browser UI
+```
