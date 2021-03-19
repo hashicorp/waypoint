@@ -6,6 +6,8 @@ import {
   generateStaticProps,
 } from '@hashicorp/react-docs-page/server'
 import Placement from 'components/placement-table'
+import NestedNode from 'components/nested-node'
+const additionalComponents = { Placement, NestedNode }
 
 const subpath = 'docs'
 
@@ -16,7 +18,7 @@ function DocsLayout(props) {
       subpath={subpath}
       order={order}
       staticProps={props}
-      additionalComponents={{ Placement }}
+      additionalComponents={additionalComponents}
     />
   )
 }
@@ -26,7 +28,12 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  return generateStaticProps({ subpath, productName, params })
+  return generateStaticProps({
+    subpath,
+    productName,
+    params,
+    additionalComponents,
+  })
 }
 
 export default DocsLayout
