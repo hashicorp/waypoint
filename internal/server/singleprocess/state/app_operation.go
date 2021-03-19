@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -40,6 +41,16 @@ type appOperation struct {
 
 	// Bucket is the global bucket for all records of this operation.
 	Bucket []byte
+
+	// The number of records that should be indexed off disk. This allows
+	// dormant records to remain on disk but not indexed.
+	MaximumIndexedRecords int
+
+	// This guards indexedRecords for manipulation during pruning
+	pruneMu sync.Mutex
+
+	// Holds how many records we've indexed at runtime.
+	indexedRecords int
 
 	// seq is the previous sequence number to set. This is initialized by the
 	// index init on server boot and `sync/atomic` should be used to increment
@@ -87,6 +98,13 @@ func (op *appOperation) register() {
 	dbBuckets = append(dbBuckets, op.Bucket)
 	dbIndexers = append(dbIndexers, op.indexInit)
 	schemas = append(schemas, op.memSchema)
+
+	if op.MaximumIndexedRecords > 0 {
+		pruneFns = append(pruneFns, func(memTxn *memdb.Txn) (string, int, error) {
+			cnt, err := op.pruneOld(memTxn, op.MaximumIndexedRecords)
+			return op.memTableName(), cnt, err
+		})
+	}
 }
 
 // Put inserts or updates an operation record.
@@ -126,6 +144,23 @@ func (op *appOperation) Get(s *State, ref *pb.Ref_Operation) (interface{}, error
 		default:
 			return status.Errorf(codes.FailedPrecondition,
 				"unknown operation reference type: %T", ref.Target)
+		}
+
+		// Check if we are tracking this value in the indexes before returning
+		// it. When pruning, we leave the values on disk but remove them
+		// from the indexes.
+		raw, err := memTxn.First(
+			op.memTableName(),
+			opIdIndexName,
+			id,
+		)
+		if err != nil {
+			return err
+		}
+
+		if raw == nil {
+			return status.Errorf(codes.NotFound,
+				"value with given id not found: %s", id)
 		}
 
 		return op.dbGet(tx, []byte(id), result)
@@ -469,7 +504,18 @@ func (op *appOperation) appSeq(ref *pb.Ref_Application) *uint64 {
 // persisted on disk.
 func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	bucket := dbTxn.Bucket(op.Bucket)
-	return bucket.ForEach(func(k, v []byte) error {
+	c := bucket.Cursor()
+
+	var cnt int
+
+	// This algorithm depends on boltdb's iteration order. Specificly that the keys are
+	// lexically order AND because we're using ULID's for the keys in production, the newest
+	// records will have the higher lexical value and thusly be at the end of the database.
+	//
+	// So we just start at the end and insert records until we hit the maximum, knowing
+	// we'll be inserted the newest records.
+
+	for k, v := c.Last(); k != nil; k, v = c.Prev() {
 		result := op.newStruct()
 		if err := proto.Unmarshal(v, result); err != nil {
 			return err
@@ -489,8 +535,14 @@ func (op *appOperation) indexInit(s *State, dbTxn *bolt.Tx, memTxn *memdb.Txn) e
 			}
 		}
 
-		return nil
-	})
+		cnt++
+
+		if op.MaximumIndexedRecords > 0 && cnt >= op.MaximumIndexedRecords {
+			break
+		}
+	}
+
+	return nil
 }
 
 // indexPut writes an index record for a single operation record.
@@ -543,7 +595,26 @@ func (op *appOperation) indexPut(
 		StartTime:    startTime,
 		CompleteTime: completeTime,
 	}
+
+	// If there is no maximum, don't track the record count.
+	if op.MaximumIndexedRecords != 0 {
+		op.pruneMu.Lock()
+		op.indexedRecords++
+		op.pruneMu.Unlock()
+	}
+
 	return rec, txn.Insert(op.memTableName(), rec)
+}
+
+func (op *appOperation) pruneOld(memTxn *memdb.Txn, max int) (int, error) {
+	return pruneOld(memTxn, pruneOp{
+		lock:      &op.pruneMu,
+		table:     op.memTableName(),
+		index:     opIdIndexName,
+		indexArgs: []interface{}{""},
+		max:       max,
+		cur:       &op.indexedRecords,
+	})
 }
 
 func (op *appOperation) valueField(value interface{}, field string) interface{} {

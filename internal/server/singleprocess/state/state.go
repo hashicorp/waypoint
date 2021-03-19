@@ -5,6 +5,7 @@ package state
 import (
 	"fmt"
 	"reflect"
+	"sync"
 
 	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-hclog"
@@ -25,6 +26,10 @@ var (
 	// dbIndexers is the list of functions to call to initialize the
 	// in-memory indexes from the persisted db.
 	dbIndexers []indexFn
+
+	// pruneFns is the list of prune functions to call for appOperation types
+	// when performing state prune.
+	pruneFns []func(memTxn *memdb.Txn) (string, int, error)
 )
 
 // State is the primary API for state mutation for the server.
@@ -52,6 +57,12 @@ type State struct {
 
 	// Where to log to
 	log hclog.Logger
+
+	// indexedJobs indicates how many job records we are tracking in memory
+	indexedJobs int
+
+	// Used to track indexedJobs and prune records
+	pruneMu sync.Mutex
 }
 
 // New initializes a new State store.
@@ -119,6 +130,40 @@ func (s *State) callIndexer(fn indexFn, dbTxn *bolt.Tx, memTxn *memdb.Txn) error
 // Close should be called to gracefully close any resources.
 func (s *State) Close() error {
 	return s.db.Close()
+}
+
+// Prune should be called in a on a regular interval to allow State
+// to prune out old data.
+func (s *State) Prune() error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	jobs, err := s.jobsPruneOld(memTxn, maximumJobsIndexed)
+	if err != nil {
+		return err
+	}
+
+	var records int
+
+	for _, f := range pruneFns {
+		tbl, cnt, err := f(memTxn)
+		if err != nil {
+			return err
+		}
+
+		s.log.Debug("Pruning table index data", "table", tbl, "removed-records", cnt)
+		records += cnt
+	}
+
+	s.log.Debug("Finished pruning data",
+		"removed-jobs", jobs,
+		"removed-records", records,
+		"op-tables", len(pruneFns),
+	)
+
+	memTxn.Commit()
+
+	return nil
 }
 
 // schemaFn is an interface function used to create and return new memdb schema

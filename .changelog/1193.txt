@@ -1,0 +1,5 @@
+```release-note:improvement
+server: Prune old deployments and jobs from server memory. This limits the number
+of deployments and jobs to 10,000. The data for the old entries is still stored on disk
+but it is not indexed in memory, to allow data recovery should it be needed.
+```

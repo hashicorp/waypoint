@@ -7,6 +7,8 @@ import (
 var deploymentOp = &appOperation{
 	Struct: (*pb.Deployment)(nil),
 	Bucket: []byte("deployment"),
+
+	MaximumIndexedRecords: 10000,
 }
 
 func init() {

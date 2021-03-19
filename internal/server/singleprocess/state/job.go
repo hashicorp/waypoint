@@ -33,6 +33,8 @@ const (
 	jobQueueTimeIndexName   = "queue-time"
 	jobTargetIdIndexName    = "target-id"
 	jobSingletonIdIndexName = "singleton-id"
+
+	maximumJobsIndexed = 10000
 )
 
 func init() {
@@ -157,6 +159,17 @@ type jobIndex struct {
 
 	// OutputBuffer stores the terminal output
 	OutputBuffer *logbuffer.Buffer
+}
+
+// A helper, pulled out rather than on a value to allow it to be used against
+// pb.Job,s and jobIndex's alike.
+func jobIsCompleted(state pb.Job_State) bool {
+	switch state {
+	case pb.Job_ERROR, pb.Job_SUCCESS:
+		return true
+	default:
+		return false
+	}
 }
 
 // Job is the exported structure that is returned for most state APIs
@@ -848,26 +861,35 @@ func (s *State) JobIsAssignable(ctx context.Context, jobpb *pb.Job) (bool, error
 // jobIndexInit initializes the config index from persisted data.
 func (s *State) jobIndexInit(dbTxn *bolt.Tx, memTxn *memdb.Txn) error {
 	bucket := dbTxn.Bucket(jobBucket)
-	return bucket.ForEach(func(k, v []byte) error {
+	c := bucket.Cursor()
+
+	var cnt int
+
+	for k, v := c.Last(); k != nil; k, v = c.Prev() {
 		var value pb.Job
 		if err := proto.Unmarshal(v, &value); err != nil {
 			return err
 		}
 
-		idx, err := s.jobIndexSet(memTxn, k, &value)
-		if err != nil {
-			return err
-		}
-
-		// If the job was running or waiting, set it as assigned.
-		if value.State == pb.Job_RUNNING || value.State == pb.Job_WAITING {
-			if err := s.jobAssignedSet(memTxn, idx, true); err != nil {
+		// if we still have headroom for more indexed jobs OR the job hasn't finished yet,
+		// index it.
+		if cnt < maximumJobsIndexed || !jobIsCompleted(value.State) {
+			cnt++
+			idx, err := s.jobIndexSet(memTxn, k, &value)
+			if err != nil {
 				return err
 			}
-		}
 
-		return nil
-	})
+			// If the job was running or waiting, set it as assigned.
+			if value.State == pb.Job_RUNNING || value.State == pb.Job_WAITING {
+				if err := s.jobAssignedSet(memTxn, idx, true); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // jobIndexSet writes an index record for a single job.
@@ -1012,7 +1034,31 @@ func (s *State) jobCreate(dbTxn *bolt.Tx, memTxn *memdb.Txn, jobpb *pb.Job) erro
 
 	// Insert into the DB
 	_, err = s.jobIndexSet(memTxn, id, jobpb)
-	return err
+	if err != nil {
+		return err
+	}
+
+	s.pruneMu.Lock()
+	defer s.pruneMu.Unlock()
+
+	s.indexedJobs++
+
+	return nil
+}
+
+func (s *State) jobsPruneOld(memTxn *memdb.Txn, max int) (int, error) {
+	return pruneOld(memTxn, pruneOp{
+		lock:      &s.pruneMu,
+		table:     jobTableName,
+		index:     jobQueueTimeIndexName,
+		indexArgs: []interface{}{pb.Job_QUEUED, time.Unix(0, 0)},
+		max:       max,
+		cur:       &s.indexedJobs,
+		check: func(raw interface{}) bool {
+			job := raw.(*jobIndex)
+			return !jobIsCompleted(job.State)
+		},
+	})
 }
 
 func (s *State) jobById(dbTxn *bolt.Tx, id string) (*pb.Job, error) {
