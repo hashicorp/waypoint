@@ -43,7 +43,7 @@ These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this
 
 The capacity details for the container.
 
-- Type: **\*aci.Capacity**
+- Type: **aci.Capacity**
 
 #### capacity.cpu
 
@@ -63,7 +63,7 @@ The resource group to deploy the container to.
 
 The volume details for a container.
 
-- Type: **[]aci.Volume**
+- Type: **list of aci.Volume**
 
 #### volume.azure_file_share
 
@@ -107,7 +107,7 @@ The managed identity assigned to the container group.
 
 The ports the container is listening on, the first port in this list will be used by the entrypoint binary to direct traffic to your application.
 
-- Type: **[]int**
+- Type: **list of int**
 - **Optional**
 
 #### static_environment
@@ -116,7 +116,7 @@ Environment variables to control broad modes of the application.
 
 Environment variables that are meant to configure the application in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 #### subscription_id
@@ -134,7 +134,7 @@ Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoi
 
 #### container_group
 
-- Type: **\*aci.Deployment_ContainerGroup**
+- Type: **aci.Deployment_ContainerGroup**
 
 #### id
 

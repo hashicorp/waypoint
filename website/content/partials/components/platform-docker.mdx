@@ -32,7 +32,7 @@ Client config for remote Docker engine.
 
 This config block can be used to configure a remote Docker engine. By default Waypoint will attempt to discover this configuration using the environment variables: `DOCKER_HOST` to set the url to the docker server. `DOCKER_API_VERSION` to set the version of the API to reach, leave empty for latest. `DOCKER_CERT_PATH` to load the TLS certificates from. `DOCKER_TLS_VERIFY` to enable or disable TLS verification, off by default.
 
-- Type: **\*docker.ClientConfig**
+- Type: **docker.ClientConfig**
 
 ### Optional Parameters
 
@@ -44,14 +44,14 @@ A 'source:destination' list of folders to mount onto the container from the host
 
 A list of folders to mount onto the container from the host. The expected format for each string entry in the list is `source:destination`. So for example: `binds: ["host_folder/scripts:/scripts"].
 
-- Type: **[]string**
+- Type: **list of string**
 - **Optional**
 
 #### command
 
 The command to run to start the application in the container.
 
-- Type: **[]string**
+- Type: **list of string**
 - **Optional**
 - Default: the image entrypoint
 
@@ -69,7 +69,7 @@ A map of key/value pairs to label the docker container with.
 
 A map of key/value pair(s), stored in docker as a string. Each key/value pair must be unique. Validiation occurs at the docker layer, not in Waypoint. Label keys are alphanumeric strings which may contain periods (.) and hyphens (-).
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 #### networks
@@ -78,7 +78,7 @@ An list of strings with network names to connect the container to.
 
 A list of networks to connect the container to. By default the container will always connect to the `waypoint` network.
 
-- Type: **[]string**
+- Type: **list of string**
 - **Optional**
 - Default: waypoint
 
@@ -88,7 +88,7 @@ A map of resources to configure the container with, such as memory or cpu limits
 
 These options are used to configure the container used when deploying with docker. Currently, the supported resources are 'memory' and 'cpu' limits. The field 'memory' is expected to be defined as "512MB", "44kB", etc.
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 #### scratch_path
@@ -114,7 +114,7 @@ Environment variables to expose to the application.
 
 These environment variables should not be run of the mill configuration variables, use waypoint config for that. These variables are used to control over all container modes, such as configuring it to start a web app vs a background worker.
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 ### Output Attributes

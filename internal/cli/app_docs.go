@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -162,6 +164,98 @@ func (c *AppDocsCommand) humanize(s string) string {
 	return s
 }
 
+func (c *AppDocsCommand) emitField(w io.Writer, h, out string, f *docs.FieldDocs) {
+	name := f.Field
+
+	if out != "" {
+		name = out + "." + name
+	}
+
+	var parts []string
+
+	if f.Category {
+		parts = append(parts, fmt.Sprintf("%s %s (category)", h, name))
+	} else {
+		parts = append(parts, fmt.Sprintf("%s %s", h, name))
+	}
+
+	if f.Summary != "" {
+		parts = append(parts, fmt.Sprintf("%s\n\n%s", c.humanize(f.Synopsis), c.humanize(f.Summary)))
+	} else if f.Synopsis != "" {
+		parts = append(parts, c.humanize(f.Synopsis))
+	}
+
+	var list bytes.Buffer
+	if !f.Category && f.Type != "" {
+		fmt.Fprintf(&list, "- Type: **%s**", f.Type)
+	}
+
+	if f.Optional {
+		fmt.Fprintf(&list, "\n- **Optional**")
+
+		if f.Default != "" {
+			fmt.Fprintf(&list, "\n- Default: %s", f.Default)
+		}
+	}
+
+	if list.Len() != 0 {
+		parts = append(parts, list.String())
+	}
+
+	if sf := f.SubFields; len(sf) > 0 {
+		for _, f := range sf {
+			var sub bytes.Buffer
+			c.emitField(&sub, h+"#", name, f)
+			parts = append(parts, sub.String())
+		}
+	}
+
+	for i, part := range parts {
+		fmt.Fprintf(w, "%s", part)
+		endingSpace(w, i, len(parts))
+	}
+}
+
+func endingSpace(w io.Writer, i, tot int) {
+	if i < tot-1 {
+		fmt.Fprintf(w, "\n\n")
+	}
+}
+
+func splitFields(fields []*docs.FieldDocs) (required, optional []*docs.FieldDocs) {
+	var o, r []*docs.FieldDocs
+
+	for _, f := range fields {
+		if f.Optional {
+			o = append(o, f)
+		} else {
+			r = append(r, f)
+		}
+	}
+
+	return r, o
+}
+
+func (c *AppDocsCommand) emitSection(w io.Writer, name, use, h string, fields []*docs.FieldDocs) {
+	fmt.Fprintf(w, "%s %s Parameters\n", h, name)
+
+	if len(fields) == 0 {
+		fmt.Fprintf(w, "\nThis plugin has no %s parameters.", strings.ToLower(name))
+		return
+	}
+
+	if use != "" {
+		fmt.Fprintf(w, "\nThese parameters are used in %s\n\n", use)
+	} else {
+		fmt.Fprintln(w)
+	}
+
+	for i, f := range fields {
+		c.emitField(w, h+"#", "", f)
+		endingSpace(w, i, len(fields))
+	}
+}
+
 func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 	// we use this constnat to compare to ct for some special behavior
 	const csType = "configsourcer"
@@ -181,124 +275,57 @@ func (c *AppDocsCommand) mdxFormat(name, ct string, doc *docs.Documentation) {
 
 	fmt.Fprintf(w, "### Interface\n\n")
 
+	space := false
 	if dets.Input != "" {
 		fmt.Fprintf(w, "- Input: **%s**\n", dets.Input)
+		space = true
 	}
 
 	if dets.Output != "" {
 		fmt.Fprintf(w, "- Output: **%s**\n", dets.Output)
+		space = true
+	}
+
+	if space {
+		fmt.Fprintf(w, "\n")
 	}
 
 	if dets.Example != "" {
-		fmt.Fprintf(w, "\n\n### Examples\n\n```hcl\n%s\n```\n", strings.TrimSpace(dets.Example))
+		fmt.Fprintf(w, "### Examples\n\n```hcl\n%s\n```\n\n", strings.TrimSpace(dets.Example))
 	}
 
 	mappers := dets.Mappers
 	if len(mappers) > 0 {
-		fmt.Fprintf(w, "\n### Mappers\n\n")
+		fmt.Fprintf(w, "### Mappers\n\n")
 
 		for _, m := range mappers {
 			fmt.Fprintf(w, "#### %s\n\n", m.Description)
 			fmt.Fprintf(w, "- Input: **%s**\n", m.Input)
 			fmt.Fprintf(w, "- Output: **%s**\n", m.Output)
 		}
+
+		fmt.Fprintf(w, "\n")
 	}
 
-	hasRequired := false
-	fmt.Fprintf(w, "\n### Required Parameters\n")
-	for _, f := range doc.Fields() {
-		if f.Optional {
-			continue
-		}
-		if !hasRequired {
-			hasRequired = true
-			fmt.Fprintf(w, "\nThese parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.\n")
-		}
+	required, optional := splitFields(doc.Fields())
 
-		fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
+	use := "the [`use` stanza](/docs/waypoint-hcl/use) for this plugin."
+	c.emitSection(w, "Required", use, "###", required)
 
-		if f.Summary != "" {
-			fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
-		} else {
-			fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
-		}
+	fmt.Fprintf(w, "\n\n")
 
-		if f.Type != "" {
-			fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
-		}
-
-		if f.Optional {
-			fmt.Fprintf(w, "- **Optional**\n")
-
-			if f.Default != "" {
-				fmt.Fprintf(w, "- Default: %s\n", f.Default)
-			}
-		}
-	}
-	if !hasRequired {
-		fmt.Fprintf(w, "\nThis plugin has no required parameters.\n")
-	}
-
-	hasOptional := false
-	fmt.Fprintf(w, "\n### Optional Parameters\n")
-	for _, f := range doc.Fields() {
-		if !f.Optional {
-			continue
-		}
-		if !hasOptional {
-			hasOptional = true
-			fmt.Fprintf(w, "\nThese parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.\n")
-		}
-
-		fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
-
-		if f.Summary != "" {
-			fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
-		} else {
-			fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
-		}
-
-		if f.Type != "" {
-			fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
-		}
-
-		if f.Optional {
-			fmt.Fprintf(w, "- **Optional**\n")
-
-			if f.Default != "" {
-				fmt.Fprintf(w, "- Default: %s\n", f.Default)
-			}
-		}
-	}
-	if !hasOptional {
-		fmt.Fprintf(w, "\nThis plugin has no optional parameters.\n")
-	}
+	c.emitSection(w, "Optional", use, "###", optional)
 
 	if fields := doc.TemplateFields(); len(fields) > 0 {
-		fmt.Fprintf(w, "\n### Output Attributes\n")
-		fmt.Fprintf(w, "\nOutput attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).\n")
-		for _, f := range fields {
-			fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
-
-			if f.Summary != "" {
-				fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
-			} else {
-				fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
-			}
-
-			if f.Type != "" {
-				fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
-			}
-
-			if f.Optional {
-				fmt.Fprintf(w, "- **Optional**\n")
-
-				if f.Default != "" {
-					fmt.Fprintf(w, "- Default: %s\n", f.Default)
-				}
-			}
+		fmt.Fprintf(w, "\n\n### Output Attributes\n")
+		fmt.Fprintf(w, "\nOutput attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).\n\n")
+		for i, f := range fields {
+			c.emitField(w, "####", "", f)
+			endingSpace(w, i, len(fields))
 		}
 	}
+
+	fmt.Fprintln(w)
 }
 
 func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Documentation) {
@@ -316,164 +343,47 @@ func (c *AppDocsCommand) mdxFormatConfigSourcer(name, ct string, doc *docs.Docum
 	}
 
 	if dets.Example != "" {
-		fmt.Fprintf(w, "\n\n### Examples\n\n```hcl\n%s\n```\n", strings.TrimSpace(dets.Example))
+		fmt.Fprintf(w, "### Examples\n\n```hcl\n%s\n```\n\n", strings.TrimSpace(dets.Example))
 	}
 
 	mappers := dets.Mappers
 	if len(mappers) > 0 {
-		fmt.Fprintf(w, "\n### Mappers\n\n")
+		fmt.Fprintf(w, "### Mappers\n\n")
 
 		for _, m := range mappers {
 			fmt.Fprintf(w, "#### %s\n\n", m.Description)
 			fmt.Fprintf(w, "- Input: **%s**\n", m.Input)
 			fmt.Fprintf(w, "- Output: **%s**\n", m.Output)
 		}
+
+		fmt.Fprintln(w)
 	}
 
-	hasRequired := false
-	fmt.Fprintf(w, "\n### Required Parameters\n")
-	for _, f := range doc.RequestFields() {
-		if f.Optional {
-			continue
-		}
-		if !hasRequired {
-			hasRequired = true
-			fmt.Fprintf(w, "\nThese parameters are used in `configdynamic` for [dynamic configuration syncing](/docs/app-config/dynamic).\n")
-		}
+	required, optional := splitFields(doc.RequestFields())
 
-		fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
+	use := "`configdynamic` for [dynamic configuration syncing](/docs/app-config/dynamic)."
+	c.emitSection(w, "Required", use, "###", required)
 
-		if f.Summary != "" {
-			fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
-		} else {
-			fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
-		}
+	fmt.Fprintf(w, "\n\n")
 
-		if f.Type != "" {
-			fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
-		}
-
-		if f.Optional {
-			fmt.Fprintf(w, "- **Optional**\n")
-
-			if f.Default != "" {
-				fmt.Fprintf(w, "- Default: %s\n", f.Default)
-			}
-		}
-	}
-	if !hasRequired {
-		fmt.Fprintf(w, "\nThis plugin has no required parameters.\n")
-	}
-
-	hasOptional := false
-	fmt.Fprintf(w, "\n### Optional Parameters\n")
-	for _, f := range doc.RequestFields() {
-		if !f.Optional {
-			continue
-		}
-		if !hasOptional {
-			hasOptional = true
-			fmt.Fprintf(w, "\nThese parameters are used in `configdynamic` for [dynamic configuration syncing](/docs/app-config/dynamic).\n")
-		}
-
-		fmt.Fprintf(w, "\n#### %s\n\n", f.Field)
-
-		if f.Summary != "" {
-			fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
-		} else {
-			fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
-		}
-
-		if f.Type != "" {
-			fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
-		}
-
-		if f.Optional {
-			fmt.Fprintf(w, "- **Optional**\n")
-
-			if f.Default != "" {
-				fmt.Fprintf(w, "- Default: %s\n", f.Default)
-			}
-		}
-	}
-	if !hasOptional {
-		fmt.Fprintf(w, "\nThis plugin has no optional parameters.\n")
-	}
+	c.emitSection(w, "Optional", use, "###", optional)
 
 	if len(doc.Fields()) > 0 {
-		fmt.Fprintf(w, "\n### Source Parameters\n\n"+
+		fmt.Fprintf(w, "\n\n### Source Parameters\n\n"+
 			"The parameters below are used with `waypoint config set-source` to configure\n"+
 			"the behavior this plugin. These are _not_ used in `configdynamic` calls. The\n"+
-			"parameters used for `configdynamic` are in the previous section.\n")
+			"parameters used for `configdynamic` are in the previous section.\n\n")
 
-		hasRequired := false
-		fmt.Fprintf(w, "\n#### Required Parameters\n")
-		for _, f := range doc.Fields() {
-			if f.Optional {
-				continue
-			}
-			if !hasRequired {
-				hasRequired = true
-			}
+		required, optional := splitFields(doc.Fields())
 
-			fmt.Fprintf(w, "\n##### %s\n\n", f.Field)
+		c.emitSection(w, "Required Source", "", "####", required)
 
-			if f.Summary != "" {
-				fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
-			} else {
-				fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
-			}
+		fmt.Fprintf(w, "\n\n")
 
-			if f.Type != "" {
-				fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
-			}
-
-			if f.Optional {
-				fmt.Fprintf(w, "- **Optional**\n")
-
-				if f.Default != "" {
-					fmt.Fprintf(w, "- Default: %s\n", f.Default)
-				}
-			}
-		}
-		if !hasRequired {
-			fmt.Fprintf(w, "\nThis plugin has no required source parameters.\n")
-		}
-
-		hasOptional := false
-		fmt.Fprintf(w, "\n#### Optional Parameters\n")
-		for _, f := range doc.Fields() {
-			if !f.Optional {
-				continue
-			}
-			if !hasOptional {
-				hasOptional = true
-			}
-
-			fmt.Fprintf(w, "\n##### %s\n\n", f.Field)
-
-			if f.Summary != "" {
-				fmt.Fprintf(w, "%s\n\n%s\n", c.humanize(f.Synopsis), c.humanize(f.Summary))
-			} else {
-				fmt.Fprintf(w, "%s\n", c.humanize(f.Synopsis))
-			}
-
-			if f.Type != "" {
-				fmt.Fprintf(w, "\n- Type: **%s**\n", f.Type)
-			}
-
-			if f.Optional {
-				fmt.Fprintf(w, "- **Optional**\n")
-
-				if f.Default != "" {
-					fmt.Fprintf(w, "- Default: %s\n", f.Default)
-				}
-			}
-		}
-		if !hasOptional {
-			fmt.Fprintf(w, "\nThis plugin has no optional source parameters.\n")
-		}
+		c.emitSection(w, "Optional Source", "", "####", optional)
 	}
+
+	fmt.Fprintln(w)
 }
 
 func (c *AppDocsCommand) markdownFormatPB(name, ct string, doc *pb.Documentation) {

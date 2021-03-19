@@ -28,7 +28,7 @@ Annotations to be added to the application pod.
 
 Annotations are added to the pod spec of the deployed application. This is useful when using mutating webhook admission controllers to further process pod events.
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 #### context
@@ -60,7 +60,7 @@ By default uses from current user's home directory.
 
 A map of key value labels to apply to the deployment pod.
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 #### namespace
@@ -78,7 +78,7 @@ A map of ports and options that the application is listening on.
 
 Used to define and expose multiple ports that the application is listening on for the container in use. Available keys are 'port', 'name' , 'host_port', and 'host_ip'. Ports defined will be TCP protocol.
 
-- Type: **[]map[string]string**
+- Type: **list of map of string to string**
 - **Optional**
 
 #### probe_path
@@ -103,9 +103,9 @@ If the replica count is maintained outside waypoint, for instance by a pod autos
 
 A map of resource limits and requests to apply to a pod on deploy.
 
-Resource limits and requests for a pod. limits and requests options must start with either 'limits*' or 'requests*'. Any other options will be ignored.
+Resource limits and requests for a pod. limits and requests options must start with either 'limits_' or 'requests_'. Any other options will be ignored.
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 #### scratch_path
@@ -142,7 +142,7 @@ Environment variables to control broad modes of the application.
 
 Environment variables that are meant to configure the application in a static way. This might be control an image that has multiple modes of operation, selected via environment variable. Most configuration should use the waypoint config commands.
 
-- Type: **map[string]string**
+- Type: **map of string to string**
 - **Optional**
 
 ### Output Attributes

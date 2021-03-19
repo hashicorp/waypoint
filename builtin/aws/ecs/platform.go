@@ -1610,45 +1610,48 @@ deploy {
 	doc.SetField(
 		"logging",
 		"Provides additional configuration for logging flags for ECS",
-		docs.Summary("Part of the ecs task definition.  These configuration flags help",
+		docs.Summary(
+			"Part of the ecs task definition.  These configuration flags help",
 			"control how the awslogs log driver is configured."),
-	)
 
-	doc.SetField(
-		"logging.create_group",
-		"Enables creation of the aws logs group if not present",
-	)
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"create_group",
+				"Enables creation of the aws logs group if not present",
+			)
 
-	doc.SetField(
-		"logging.region",
-		"The region the logs are to be shipped to",
-		docs.Default("The same region the task is to be running"),
-	)
+			doc.SetField(
+				"region",
+				"The region the logs are to be shipped to",
+				docs.Default("The same region the task is to be running"),
+			)
 
-	doc.SetField(
-		"logging.stream_prefix",
-		"Prefix for application in cloudwatch logs path",
-		docs.Default("Generated based off timestamp"),
-	)
+			doc.SetField(
+				"stream_prefix",
+				"Prefix for application in cloudwatch logs path",
+				docs.Default("Generated based off timestamp"),
+			)
 
-	doc.SetField(
-		"logging.datetime_format",
-		"Defines the multiline start pattern in Python strftime format",
-	)
+			doc.SetField(
+				"datetime_format",
+				"Defines the multiline start pattern in Python strftime format",
+			)
 
-	doc.SetField(
-		"logging.multiline_pattern",
-		"Defines the multiline start pattern using a regular expression",
-	)
+			doc.SetField(
+				"multiline_pattern",
+				"Defines the multiline start pattern using a regular expression",
+			)
 
-	doc.SetField(
-		"logging.mode",
-		"Delivery method for log messages, either 'blocking' or 'non-blocking'",
-	)
+			doc.SetField(
+				"mode",
+				"Delivery method for log messages, either 'blocking' or 'non-blocking'",
+			)
 
-	doc.SetField(
-		"logging.max_buffer_size",
-		"When using non-blocking logging mode, this is the buffer size for message storage",
+			doc.SetField(
+				"max_buffer_size",
+				"When using non-blocking logging mode, this is the buffer size for message storage",
+			)
+		}),
 	)
 
 	doc.SetField(

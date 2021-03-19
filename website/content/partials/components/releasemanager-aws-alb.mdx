@@ -13,7 +13,6 @@ Release target groups by attaching them to an ALB.
 
 - Input: **ec2.Deployment**
 - Output: **alb.TargetGroup**
-
 #### Allow Lambda Deployments to be hooked up to an ALB
 
 - Input: **lambda.Deployment**
@@ -76,7 +75,7 @@ The TCP port to configure the ALB to listen on.
 
 The subnet ids to allow the ALB to run in.
 
-- Type: **[]string**
+- Type: **list of string**
 - **Optional**
 - Default: public subnets in the account default VPC
 
