@@ -17,6 +17,23 @@ CHANGELOG entries are expected to be txt files created inside this folder
 be linked when the CHANGELOG is generated. So for example, if your issue is
 \#1234, your file name would be `.changelog/1234.txt`.
 
+While for git commit messages, we expect the leading subject to be more specific
+as to the section it updates, for example a change with k8s might be:
+
+```
+builtin/k8s: Add support for feature Y
+
+This commit adds support for feature Y....
+```
+
+The changelog entry should be more user facing friendly, so it would instead read:
+
+~~~
+```release-note:improvement
+plugin/k8s: Add support for feature Y
+```
+~~~
+
 Below are some examples of how to generate a CHANGELOG entry with your pull
 request.
 
@@ -24,7 +41,7 @@ request.
 
 ~~~
 ```release-note:improvement
-internal/server: Add new option for configs
+server: Add new option for configs
 ```
 ~~~
 
@@ -32,7 +49,7 @@ internal/server: Add new option for configs
 
 ~~~
 ```release-note:feature
-platform/nomad: New feature integration
+plugin/nomad: New feature integration
 ```
 ~~~
 
@@ -40,7 +57,7 @@ platform/nomad: New feature integration
 
 ~~~
 ```release-note:bug
-platform/docker: Fix broken code
+plugin/docker: Fix broken code
 ```
 ~~~
 
@@ -48,15 +65,15 @@ platform/docker: Fix broken code
 
 ~~~
 ```release-note:bug
-platform/docker: Fix broken code
+plugin/docker: Fix broken code
 ```
 
 ```release-note:bug
-platform/nomad: Fix broken code
+plugin/nomad: Fix broken code
 ```
 
 ```release-note:bug
-platform/k8s: Fix broken code
+plugin/k8s: Fix broken code
 ```
 ~~~
 
@@ -64,7 +81,7 @@ platform/k8s: Fix broken code
 
 ~~~
 ```release-note:feature
-main: Lorem ipsum dolor `sit amet`, _consectetur_ adipiscing elit, **sed** do
+cli: Lorem ipsum dolor `sit amet`, _consectetur_ adipiscing elit, **sed** do
 eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
 veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
