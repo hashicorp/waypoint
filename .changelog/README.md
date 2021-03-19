@@ -10,17 +10,6 @@ To install, run the following command:
 go get github.com/hashicorp/go-changelog/cmd/changelog-build
 ```
 
-## How to generate CHANGELOG entries for release
-
-Below is an example for running `go-changelog` to generate a collection of
-entries. It will generate output that can be inserted into CHANGELOG.md.
-
-For more information as to what each flag does, make sure to run `changelog-build -help`.
-
-```
-changelog-build -last-release v0.5.0 -entries-dir .changelog/ -changelog-template changelog.tmpl -note-template note.tmpl -this-release 86b6b38faa7c69f26f1d4c71e271cd4285daadf9
-```
-
 ## CHANGELOG entry examples
 
 CHANGELOG entries are expected to be txt files created inside this folder
@@ -83,3 +72,15 @@ cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 ```
 ~~~
+
+## How to generate CHANGELOG entries for release
+
+Below is an example for running `go-changelog` to generate a collection of
+entries. It will generate output that can be inserted into CHANGELOG.md.
+
+For more information as to what each flag does, make sure to run `changelog-build -help`.
+
+```
+changelog-build -last-release v0.5.0 -entries-dir .changelog/ -changelog-template changelog.tmpl -note-template note.tmpl -this-release 86b6b38faa7c69f26f1d4c71e271cd4285daadf9
+```
+
