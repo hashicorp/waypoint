@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/aws/alb: clamp alb name per aws limits
+```
