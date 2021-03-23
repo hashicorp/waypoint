@@ -23,6 +23,16 @@ module.exports = function (environment) {
       // when it is created
     },
 
+    // Ember-cli-flash addon settings
+    flashMessageDefaults: {
+      destroyOnClick: false,
+      timeout: 5000,
+      extendedTimeout: 700,
+      type: 'info',
+      types: ['error', 'success', 'info', 'warning'],
+    },
+
+    // Ember-toggle addon settings
     'ember-toggle': {
       includedThemes: ['light'],
       defaultTheme: 'light',

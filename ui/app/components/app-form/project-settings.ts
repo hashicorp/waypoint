@@ -1,6 +1,8 @@
 import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
+import RouterService from '@ember/routing/router-service';
 import ApiService from 'waypoint/services/api';
+import FlashMessagesService from 'waypoint/services/flash-messages';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { Project, UpsertProjectRequest, Job, Application } from 'waypoint-pb';
@@ -66,6 +68,8 @@ interface ProjectSettingsArgs {
 export default class AppFormProjectSettings extends Component<ProjectSettingsArgs> {
   // normal class body definition here
   @service api!: ApiService;
+  @service flashMessages!: FlashMessagesService;
+  @service router!: RouterService;
   @tracked project: ProjectModel;
   @tracked authCase: number;
 
@@ -75,6 +79,16 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     this.project = project;
     if (this.project?.dataSource?.git) {
       // Set authCase if it exists
+      if (project.dataSource?.git?.ssh?.privateKeyPem) {
+        this.authCase = 5;
+      } else {
+        this.authCase = 4;
+        // Set empty default git basic auth if not defined
+        if (!this.project?.dataSource?.git?.basic?.username) {
+          this.project.dataSource.git.basic = DEFAULT_PROJECT_MODEL.dataSource.git.basic;
+          this.project.dataSource.git.ssh = DEFAULT_PROJECT_MODEL.dataSource.git.ssh;
+        }
+      }
       this.authCase = project.dataSource?.git?.ssh?.privateKeyPem ? 5 : 4;
     } else {
       // set empty default dataSource data if non-existent
@@ -170,12 +184,20 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     dataSource.setGit(git);
     ref.setDataSource(dataSource);
     ref.setDataSourcePoll(dataSourcePoll);
-    const applist = project.applicationsList.map((app: any) => {
+    let applist = project.applicationsList.map((app: Application.AsObject) => {
       return new Application(app);
     });
     ref.setApplicationsList(applist);
     let req = new UpsertProjectRequest();
     req.setProject(ref);
-    await this.api.client.upsertProject(req, this.api.WithMeta());
+    await this.api.client
+      .upsertProject(req, this.api.WithMeta())
+      .then(() => {
+        this.flashMessages.success('Settings saved');
+        this.router.transitionTo('workspace.projects.project', this.project);
+      })
+      .catch((err) => {
+        this.flashMessages.error('Failed to save Settings', { content: err.message, sticky: true });
+      });
   }
 }
