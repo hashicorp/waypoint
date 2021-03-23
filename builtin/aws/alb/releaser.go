@@ -55,6 +55,7 @@ func (r *Releaser) Release(
 	// CreateLoadBalancer requires that the name is 32 characters or less.
 	if len(lbName) > 32 {
 		lbName = lbName[:32]
+		log.Debug("using a shortened value for load balancer name due to AWS's length limits", "lbName", lbName)
 	}
 
 	var (

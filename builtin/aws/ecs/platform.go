@@ -407,6 +407,7 @@ func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L 
 	// role names have to be 64 characters or less, and the client side doesn't validate this.
 	if len(roleName) > 64 {
 		roleName = roleName[:64]
+		L.Debug("using a shortened value for role name due to AWS's length limits", "roleName", roleName)
 	}
 
 	// p.updateStatus("setting up IAM role")
@@ -1088,6 +1089,7 @@ func (p *Platform) Launch(
 	// requires that the name is 32 characters or less.
 	if len(serviceName) > 32 {
 		serviceName = serviceName[:32]
+		L.Debug("using a shortened value for service name due to AWS's length limits", "serviceName", serviceName)
 	}
 
 	taskArn := *taskOut.TaskDefinition.TaskDefinitionArn
