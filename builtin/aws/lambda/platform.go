@@ -378,6 +378,7 @@ func (p *Platform) Deploy(
 	// requires that the name is 32 characters or less.
 	if len(serviceName) > 32 {
 		serviceName = serviceName[:32]
+		log.Debug("using a shortened value for service name due to AWS's length limits", "serviceName", serviceName)
 	}
 
 	ctg, err := svc.CreateTargetGroup(&elbv2.CreateTargetGroupInput{
