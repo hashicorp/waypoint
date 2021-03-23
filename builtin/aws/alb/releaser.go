@@ -51,6 +51,12 @@ func (r *Releaser) Release(
 		lbName = "waypoint-" + src.App
 	}
 
+	// We have to clamp at a length of 32 because the Name field to 
+	// CreateLoadBalancer requires that the name is 32 characters or less.
+	if len(lbName) > 32 {
+		lbName = lbName[:32]
+	}
+
 	var (
 		certs    []*elbv2.Certificate
 		protocol string = "HTTP"
