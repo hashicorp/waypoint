@@ -10,6 +10,7 @@
           id="git-source-url"
           placeholder="git@github.com:mycompany/awesome-project.git"
           value={{this.git.url}}
+          required
           {{on "input" (set this "project.dataSource.git.url" (get _ "target.value"))}}
         />
       </div>
@@ -21,13 +22,14 @@
           @type="text"
           id="git-source-ref"
           placeholder="main"
+          required
           value={{this.git.ref}}
           {{on "input" (set this "project.dataSource.git.ref" (get _ "target.value"))}}
         />
       </div>
       <div class="pds-formField">
         <label for="git-source-path" class="pds-fieldName">
-          Git Source Path
+          Git Source Path (optional)
         </label>
         <Pds::Input
           @type="text"
@@ -95,6 +97,7 @@
             id="git-source-ssh-key"
             placeholder="*****************"
             value={{this.git.ssh.privateKeyPem}}
+            required={{this.authSSH}}
             {{on "input" (fn this.setSshAuth "privateKeyPem")}}
           />
         </div>
@@ -107,6 +110,7 @@
             @type="text"
             id="git-source-username"
             placeholder="gitusername"
+            required={{this.authBasic}}
             value={{this.project.dataSource.git.basic.username}}
             {{on "input" (fn this.setBasicAuth "username")}}
           />
@@ -119,6 +123,7 @@
             @type="password"
             id="git-source-password"
             placeholder="**********"
+            required={{this.authBasic}}
             value={{this.project.dataSource.git.basic.password}}
             {{on "input" (fn this.setBasicAuth "password")}}
           />
