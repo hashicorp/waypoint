@@ -188,7 +188,7 @@ func (c *ReleaseCreateCommand) Flags() *flag.Sets {
 			Target: &c.flagPruneRetain,
 			Usage: "The number of unreleased deployments to keep. " +
 				"If this isn't set or is set to any negative number, " +
-				"then this will default to 2 on the server. If you want to prune " +
+				"then this will default to 1 on the server. If you want to prune " +
 				"all unreleased deployments, set this to 0.",
 			Default: -1,
 		})
