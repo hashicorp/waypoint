@@ -63,7 +63,7 @@ the deployments available to traffic or this is handled externally.
 ## Deployment Pruning
 
 During the release stage, Waypoint will prune unreleased deployments.
-By default, Waypoint keeps the past two deployments at all times for
+By default, Waypoint keeps just one previous deployment for
 easy rollback behavior. Any older unreleased deployments are destroyed.
 
 This behavior can be changed using the `-prune` and `-prune-retain` flags
