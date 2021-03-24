@@ -118,6 +118,25 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   }
 
 
+  validateGitUrl() {
+    let gitUrl = new URL(this.project.dataSource.git.url)
+    // If basic auth, match https url
+    if (this.authCase == 4) {
+      if (gitUrl.protocol != 'https:') {
+        this.flashMessages.error('Git url needs to use "https:" protocol');
+        return false;
+      }
+    }
+    // If ssh force users to use a git: url
+    if (this.authCase == 5) {
+      if (gitUrl.protocol != 'git:') {
+        this.flashMessages.error('Git url needs to use "git:" protocol');
+        return false;
+      }
+    }
+    return true;
+  }
+
   @action
   setAuthCase(val:any) {
     this.authCase = val;
@@ -148,6 +167,9 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
 
   @action
   async saveSettings() {
+    if (!this.validateGitUrl()) {
+      return;
+    }
     let project = this.project;
     project.dataSource = this.dataSource;
     let ref = new Project();
