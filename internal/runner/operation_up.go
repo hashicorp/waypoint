@@ -21,6 +21,19 @@ func (r *Runner) executeUpOp(
 		return nil, err
 	}
 
+	opRaw, ok := job.Operation.(*pb.Job_Up)
+	if !ok {
+		// this shouldn't happen since the call to this function is gated
+		// on the above type match.
+		panic("operation not expected type")
+	}
+	op := opRaw.Up
+
+	// Setup our default options
+	if op.Release == nil {
+		op.Release = &pb.Job_ReleaseOp{Prune: true}
+	}
+
 	// Build it
 	app.UI.Output("Building...", terminal.WithHeaderStyle())
 	result, err := r.executeBuildOp(ctx, &pb.Job{
@@ -51,13 +64,11 @@ func (r *Runner) executeUpOp(
 
 	// We're releasing, do that too.
 	app.UI.Output("Releasing...", terminal.WithHeaderStyle())
+	op.Release.Deployment = deployResult.Deployment
 	result, err = r.executeReleaseOp(ctx, log, &pb.Job{
 		Application: job.Application,
 		Operation: &pb.Job_Release{
-			Release: &pb.Job_ReleaseOp{
-				Deployment: deployResult.Deployment,
-				Prune:      true,
-			},
+			Release: op.Release,
 		},
 	}, project)
 	if err != nil {
