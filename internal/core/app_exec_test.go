@@ -58,6 +58,7 @@ func TestAppExec_happy(t *testing.T) {
 	mockPluginArtifact := &pb.GetVersionInfoResponse{}
 
 	anyval, err := ptypes.MarshalAny(mockPluginArtifact)
+	require.NoError(err)
 
 	aresp, err := client.UpsertPushedArtifact(ctx, &pb.UpsertPushedArtifactRequest{
 		Artifact: serverptypes.TestValidArtifact(t, &pb.PushedArtifact{
