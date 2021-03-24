@@ -35,7 +35,7 @@ func (r *Runner) executeReleaseOp(
 		// Determine the number of deployments to keep around.
 		retain := 2
 		if op.Release.PruneRetainOverride {
-			retain = int(op.Release.PruneRetain)
+			retain = int(op.Release.PruneRetain) + 1 // add 1 to make this the total number
 		}
 
 		log.Debug("pruning requested, gathering deployments to prune",
