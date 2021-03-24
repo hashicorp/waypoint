@@ -986,8 +986,13 @@ message Job {
     Deployment deployment = 1;
 
     // Prune settings. This will prune the deployments that aren't released.
-    // The number to prune is determined based on the configuration.
     bool prune = 2;
+
+    // This sets the number of unreleased deployments to retain when pruning.
+    // This only has an effect if "prune_retain_override" is true. If that
+    // is false, then pruning uses the default behavior (retain 2).
+    uint32 prune_retain = 3;
+    bool prune_retain_override = 4;
   }
 
   message ReleaseResult {
