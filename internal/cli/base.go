@@ -90,9 +90,6 @@ type baseCommand struct {
 	// flagConnection contains manual flag-based connection info.
 	flagConnection clicontext.Config
 
-	// flagForce is whether to run an action automatically
-	flagForce bool
-
 	// args that were present after parsing flags
 	args []string
 
@@ -403,13 +400,6 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Usage: "Override configurations for how remote runners source data. " +
 				"This is specified to the data source type being used in your configuration. " +
 				"This is used for example to set a specific Git ref to run against.",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:    "force",
-			Target:  &c.flagForce,
-			Default: false,
-			Usage:   "True to disable interactive approval.",
 		})
 	}
 
