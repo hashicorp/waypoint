@@ -32,7 +32,14 @@ func (r *Runner) executeReleaseOp(
 	// ahead of time so that fails fast.
 	var pruneDeploys []*pb.Deployment
 	if op.Release.Prune {
-		log.Debug("pruning requested, gathering deployments to prune")
+		// Determine the number of deployments to keep around.
+		retain := 2
+		if op.Release.PruneRetainOverride {
+			retain = int(op.Release.PruneRetain) + 1 // add 1 to make this the total number
+		}
+
+		log.Debug("pruning requested, gathering deployments to prune",
+			"retain", retain)
 		resp, err := r.client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
 			Application:   app.Ref(),
 			Workspace:     project.WorkspaceRef(),
@@ -48,11 +55,11 @@ func (r *Runner) executeReleaseOp(
 
 		// If we have less than the prune amount, then we do nothing. Otherwise
 		// we prune away the ones we're definitely keeping.
-		if len(resp.Deployments) <= 2 {
+		if len(resp.Deployments) <= retain {
 			log.Debug("less than the limit deployments exists, no pruning")
 			resp.Deployments = nil
 		} else {
-			resp.Deployments = resp.Deployments[2:]
+			resp.Deployments = resp.Deployments[retain:]
 		}
 
 		// Assign to short character var since we'll manipulate it a lot

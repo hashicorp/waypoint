@@ -831,7 +831,12 @@ message Job {
   // deploy, and release all in one. The results for each child operation
   // will be set directly on the Release message (i.e. "build" will be
   // populated in addition to "up").
-  message UpOp {}
+  message UpOp {
+    // Options for the release stage. The "deployment" field in this will
+    // be ignored since we'll always use the deployment from the deploy
+    // step in Up.
+    ReleaseOp release = 1;
+  }
 
   // UpResult is the result of an UpOp. Because "up" calls other operations,
   // the Result message will set the build, deploy, push, and release results.
@@ -986,8 +991,13 @@ message Job {
     Deployment deployment = 1;
 
     // Prune settings. This will prune the deployments that aren't released.
-    // The number to prune is determined based on the configuration.
     bool prune = 2;
+
+    // This sets the number of unreleased deployments to retain when pruning.
+    // This only has an effect if "prune_retain_override" is true. If that
+    // is false, then pruning uses the default behavior (retain 2).
+    int32 prune_retain = 3;
+    bool prune_retain_override = 4;
   }
 
   message ReleaseResult {

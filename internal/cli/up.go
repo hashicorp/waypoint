@@ -16,6 +16,9 @@ import (
 
 type UpCommand struct {
 	*baseCommand
+
+	flagPrune       bool
+	flagPruneRetain int
 }
 
 func (c *UpCommand) Run(args []string) int {
@@ -29,7 +32,13 @@ func (c *UpCommand) Run(args []string) int {
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		result, err := app.Up(ctx, &pb.Job_UpOp{})
+		result, err := app.Up(ctx, &pb.Job_UpOp{
+			Release: &pb.Job_ReleaseOp{
+				Prune:               c.flagPrune,
+				PruneRetain:         int32(c.flagPruneRetain),
+				PruneRetainOverride: c.flagPruneRetain >= 0,
+			},
+		})
 		if c.legacyRequired(err) {
 			// An older Waypoint server version that doesn't support the
 			// "up" operation, so fall back.
@@ -191,6 +200,24 @@ func (c *UpCommand) legacyUp(
 
 func (c *UpCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "prune",
+			Target:  &c.flagPrune,
+			Usage:   "Prune old unreleased deployments.",
+			Default: true,
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:   "prune-retain",
+			Target: &c.flagPruneRetain,
+			Usage: "The number of unreleased deployments to keep. " +
+				"If this isn't set or is set to any negative number, " +
+				"then this will default to 1 on the server. If you want to prune " +
+				"all unreleased deployments, set this to 0.",
+			Default: -1,
+		})
 	})
 }
 

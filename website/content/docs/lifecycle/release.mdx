@@ -59,3 +59,33 @@ you deploy and it is immediately available to consumers of your application.
 
 In this scenario, it is expected that either the deployment platform makes
 the deployments available to traffic or this is handled externally.
+
+## Deployment Pruning
+
+During the release stage, Waypoint will prune unreleased deployments.
+By default, Waypoint keeps just one previous deployment for
+easy rollback behavior. Any older unreleased deployments are destroyed.
+
+This behavior can be changed using the `-prune` and `-prune-retain` flags
+on `waypoint up` and `waypoint release`. The `-prune` flag can be used to
+disable pruning completely and `-prune-retain` can be used to specify how
+many recent deployments to keep around.
+
+-> **Note:** CLI flags are the only way to customize this today. In the future,
+we will support setting defaults on the server side, in the `waypoint.hcl`
+file, and via the UI.
+
+### Pruning All Unreleased Deployments
+
+If you don't want to keep any past deployments, specify a value of `0`
+for `-prune-retain`:
+
+```shell-session
+$ waypoint up -prune-retain=0
+...
+
+or
+
+$ waypoint release -prune-retain=0
+...
+```

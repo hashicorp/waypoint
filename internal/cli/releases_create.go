@@ -19,8 +19,10 @@ import (
 type ReleaseCreateCommand struct {
 	*baseCommand
 
-	flagRepeat     bool
-	flagDeployment string
+	flagRepeat      bool
+	flagDeployment  string
+	flagPrune       bool
+	flagPruneRetain int
 }
 
 func (c *ReleaseCreateCommand) Run(args []string) int {
@@ -130,7 +132,10 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 		// Release
 		result, err := app.Release(ctx, &pb.Job_ReleaseOp{
 			Deployment: deploy,
-			Prune:      true,
+
+			Prune:               c.flagPrune,
+			PruneRetain:         int32(c.flagPruneRetain),
+			PruneRetainOverride: c.flagPruneRetain >= 0,
 		})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -163,11 +168,29 @@ func (c *ReleaseCreateCommand) Flags() *flag.Sets {
 			Usage:   "Re-release if deploy is already released.",
 			Default: false,
 		})
+
 		f.StringVar(&flag.StringVar{
 			Name:    "deployment",
 			Aliases: []string{"d"},
 			Target:  &c.flagDeployment,
 			Usage:   "Release the specified deployment.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "prune",
+			Target:  &c.flagPrune,
+			Usage:   "Prune old unreleased deployments.",
+			Default: true,
+		})
+
+		f.IntVar(&flag.IntVar{
+			Name:   "prune-retain",
+			Target: &c.flagPruneRetain,
+			Usage: "The number of unreleased deployments to keep. " +
+				"If this isn't set or is set to any negative number, " +
+				"then this will default to 1 on the server. If you want to prune " +
+				"all unreleased deployments, set this to 0.",
+			Default: -1,
 		})
 	})
 }
