@@ -14,6 +14,8 @@ import (
 
 type DestroyCommand struct {
 	*baseCommand
+
+	confirm bool
 }
 
 func (c *DestroyCommand) Run(args []string) int {
@@ -27,19 +29,9 @@ func (c *DestroyCommand) Run(args []string) int {
 	}
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
-		if !c.flagForce {
-			// show confirmation dialog asking user for approval
-			choice, err := app.UI.Input(&terminal.Input{
-				Prompt: "Are you sure you want to destroy this app? Type 'yes' to confirm.",
-				Style:  terminal.WarningStyle,
-			})
-			if err != nil {
-				return err
-			}
-			if choice != "yes" {
-				app.UI.Output("Aborting destroy.")
-				return nil
-			}
+		if !c.confirm {
+			app.UI.Output("Destroying app %q requires confirmation with `-auto-approve`.", app.Ref().GetApplication(), terminal.WithWarningStyle())
+			return nil
 		}
 
 		if err := app.Destroy(ctx, &pb.Job_DestroyOp{
@@ -67,6 +59,13 @@ func (c *DestroyCommand) Run(args []string) int {
 
 func (c *DestroyCommand) Flags() *flag.Sets {
 	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+		f.BoolVar(&flag.BoolVar{
+			Name:    "auto-approve",
+			Target:  &c.confirm,
+			Default: false,
+			Usage:   "Confirm destroying all resources.",
+		})
 	})
 }
 
