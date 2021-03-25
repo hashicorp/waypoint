@@ -8,6 +8,11 @@ GOLDFLAGS="-s -w -X $(GIT_IMPORT).GitCommit=$(GIT_COMMIT)$(GIT_DIRTY) -X $(GIT_I
 CGO_ENABLED?=0
 GO_CMD?=go
 
+# For changelog generation, default the last release to the last tag on
+# any branch, and this release to just be the current branch we're on.
+LAST_RELEASE?=$$(git describe --tags $$(git rev-list --tags --max-count=1))
+THIS_RELEASE?=$$(git rev-parse --abbrev-ref HEAD)
+
 .PHONY: bin
 bin: # bin creates the binaries for Waypoint for the current platform
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
@@ -55,10 +60,12 @@ docker/evanphx:
 # expected to be invoked by make gen/changelog LAST_RELEASE=gitref THIS_RELEASE=gitref
 .PHONY: gen/changelog
 gen/changelog:
-	@echo "Generating changelog diff..."
+	@echo "Generating changelog for $(THIS_RELEASE) from $(LAST_RELEASE)..."
 	@echo
 	@changelog-build -last-release $(LAST_RELEASE) \
-		-entries-dir .changelog/ -changelog-template changelog.tmpl -note-template note.tmpl \
+		-entries-dir .changelog/ \
+		-changelog-template .changelog/changelog.tmpl \
+		-note-template .changelog/note.tmpl \
 		-this-release $(THIS_RELEASE)
 
 .PHONY: gen/ts
