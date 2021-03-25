@@ -2,14 +2,17 @@
 
 FEATURES:
 
+* **GitOps: Poll for changes and automatically run `waypoint up`**. Waypoint
+  can now trigger a full build, deploy, release cycle on changes detected in Git. [GH-1109]
+* **Runners: Run Waypoint operations remotely**. Runners are standalone processes that
+  run operations such as builds, deploys, etc. remotely. [GH-1167] [GH-1171]
+* **AWS Lambda**: Add support for building and deploying AWS Lambda workloads [GH-1097]
+* **Dockerless image builds**: Waypoint can now build, tag, pull, and push
+  Docker images in unprivileged environments without a Docker daemon. [GH-970]
 * cli: New `waypoint fmt` command will autoformat your `waypoint.hcl` files [GH-1037]
-* server: Add ability for server to poll a project via git and automatically deploy [GH-1109]
-* runner: Start a standalone runner process along side the server to enable CLI-less actions [GH-1167] [GH-1171]
-* builtin/aws/lambda: Add support for AWS Lambda deploys [GH-1097]
 
 IMPROVEMENTS:
 
-* plugin/docker: support for building, pulling, and pushing Docker images without a Docker daemon available. [GH-970]
 * plugin/k8s: plugin will attempt in-cluster auth first if no kubeconfig file is specified [GH-1052] [GH-1103]
 
 BUG FIXES:
@@ -111,18 +114,18 @@ FEATURES:
 * **Application config syncing with Kubernetes (ConfigMaps), Vault, Consul, and AWS SSM**;
 Automatically sync environment variable values with remote sources and restart your
 application when those values change. [GH-810]
-* **Access to Artifact, Deploy Metadata**: `registry` and `deploy` configuration can use 
-`artifact.*` variable syntax to access metadata from the results of those stages. 
+* **Access to Artifact, Deploy Metadata**: `registry` and `deploy` configuration can use
+`artifact.*` variable syntax to access metadata from the results of those stages.
 The `release` configuration can use `artifact.*` and `deploy.*` to access metadata.
 For example: `image = artifact.image` for Docker-based builds. [GH-757]
 * **`template` Functions**: `templatefile`, `templatedir`, and `templatestring` functions
 allow you to template files, directories, and strings with the variables and functions
-available to your Waypoint configuration. 
+available to your Waypoint configuration.
 * **`path` Variables**: you can now use `path.project`, `path.app`, and `path.pwd` as
 variables in your Waypoint file to specify paths as relative to the project (waypoint.hcl
 file), app, or pwd of the CLI invocation.
 * **Server snapshot/restore**: you can now use the CLI or API to take and restore online
-snapshots. Restoring snapshot data requires a server restart but the restore operation 
+snapshots. Restoring snapshot data requires a server restart but the restore operation
 can be staged online. [GH-870]
 
 IMPROVEMENTS:
