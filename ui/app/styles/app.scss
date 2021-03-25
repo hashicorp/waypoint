@@ -74,6 +74,7 @@ $button-shadow: 0 3px 2px rgba(var(--shadow), 0.2);
     --warning-border: #{dehex(color.$yellow-800)};
     --info: #{dehex(color.$blue-800)};
     --info-text: #{dehex(color.$blue-200)};
+    --pds-color: #{dehex(color.$white)};
   }
 }
 
