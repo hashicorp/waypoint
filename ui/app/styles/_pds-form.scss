@@ -29,5 +29,13 @@
     .pds-radioField {
       margin-right: scale.$lg-1;
     }
+
+    .pds-radioField__input {
+      // Fix overflow not being hidden on FF
+      clip: rect(1px, 1px, 1px, 1px);
+      clip-path: inset(50%); /* browsers in the future */
+      /* Prevent the screen reader to skip spaces between words */
+      white-space: nowrap;
+    }
   }
 }
