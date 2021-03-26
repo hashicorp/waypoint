@@ -6,6 +6,7 @@ import FlashMessagesService from 'waypoint/services/flash-messages';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { Project, UpsertProjectRequest, Job, Application } from 'waypoint-pb';
+import parseUrl from 'parse-url';
 
 class ProjectModel {
   name: string;
@@ -119,17 +120,17 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
 
 
   validateGitUrl() {
-    let gitUrl = new URL(this.project.dataSource.git.url)
+    let gitUrl = parseUrl(this.project.dataSource.git.url);
     // If basic auth, match https url
     if (this.authCase == 4) {
-      if (gitUrl.protocol != 'https:') {
+      if (gitUrl.protocol != 'https') {
         this.flashMessages.error('Git url needs to use "https:" protocol');
         return false;
       }
     }
     // If ssh force users to use a git: url
     if (this.authCase == 5) {
-      if (gitUrl.protocol != 'git:') {
+      if (gitUrl.protocol != 'ssh') {
         this.flashMessages.error('Git url needs to use "git:" protocol');
         return false;
       }
@@ -166,7 +167,8 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   }
 
   @action
-  async saveSettings() {
+  async saveSettings(e: Event) {
+    e.preventDefault();
     if (!this.validateGitUrl()) {
       return;
     }

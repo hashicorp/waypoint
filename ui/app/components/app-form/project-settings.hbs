@@ -1,4 +1,4 @@
-<form class="pds-form">
+<form class="pds-form" {{on "submit" this.saveSettings}}>
   <div part="fields">
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
@@ -159,5 +159,5 @@
     </fieldset>
   </div>
 
-  <Pds::Button @variant="primary" {{on "click" this.saveSettings}}>Apply</Pds::Button>
+  <Pds::Button @variant="primary" @type="submit">Apply</Pds::Button>
 </form>
