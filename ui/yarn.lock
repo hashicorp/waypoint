@@ -8534,16 +8534,6 @@ ember-native-dom-helpers@^0.7.0:
     broccoli-funnel "^1.1.0"
     ember-cli-babel "^6.6.0"
 
-ember-on-modifier@^1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/ember-on-modifier/-/ember-on-modifier-1.0.1.tgz#b99e9c9d7919a9f536bfc9d4a68704462eceb0fe"
-  integrity sha512-4JKUb/DBmdZkLfljN2Dj6gKmqq2vZ0/3TOwRs1+jUIXTUg1MaBMUVD1XYwzUm+a7abW9/JkQNUEVZZu13SwFMg==
-  dependencies:
-    broccoli-funnel "^2.0.2"
-    ember-cli-babel "^7.19.0"
-    ember-cli-version-checker "^4.1.0"
-    ember-modifier-manager-polyfill "^1.2.0"
-
 ember-page-title@^6.0.3:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/ember-page-title/-/ember-page-title-6.2.0.tgz#d79f7422299ebb8f8ac819399596e8f54f01a0e9"
@@ -8610,12 +8600,13 @@ ember-runtime-enumerable-includes-polyfill@^2.1.0:
     ember-cli-babel "^6.9.0"
     ember-cli-version-checker "^2.1.0"
 
-ember-set-helper@pzuraq/ember-set-helper#dadf736:
-  version "0.1.1"
-  resolved "https://codeload.github.com/pzuraq/ember-set-helper/tar.gz/dadf736c09820452caaaab707265bfbdeb40e10c"
+ember-set-helper@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/ember-set-helper/-/ember-set-helper-2.0.0.tgz#afdb6cf2f5750f6f69e38a387f19615560f30a0f"
+  integrity sha512-cnKbQEkPi+plRI9eWj76zt4pjRKM/PsKIlYP2ZcSI7R83c1Zig5DLDUft+1PJI/1/fnPGLB8s3E6hjFBQo+T9g==
   dependencies:
-    ember-cli-babel "^7.7.3"
-    ember-on-modifier "^1.0.0"
+    ember-cli-babel "^7.18.0"
+    ember-cli-htmlbars "^4.2.3"
 
 ember-source-channel-url@^3.0.0:
   version "3.0.0"

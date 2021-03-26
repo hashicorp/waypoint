@@ -11,7 +11,7 @@
           placeholder="git@github.com:mycompany/awesome-project.git"
           value={{this.git.url}}
           required
-          {{on "input" (set this "project.dataSource.git.url" (get _ "target.value"))}}
+          {{on "input" (pick "target.value" (set this "project.dataSource.git.url"))}}
         />
       </div>
       <div class="pds-formField">
@@ -24,7 +24,7 @@
           placeholder="main"
           required
           value={{this.git.ref}}
-          {{on "input" (set this "project.dataSource.git.ref" (get _ "target.value"))}}
+          {{on "input" (pick "target.value" (set this "project.dataSource.git.ref"))}}
         />
       </div>
       <div class="pds-formField">
@@ -36,7 +36,7 @@
           id="git-source-path"
           placeholder="dir/subdir/my-project-path"
           value={{this.git.path}}
-          {{on "input" (set this "project.dataSource.git.path" (get _ "target.value"))}}
+          {{on "input" (pick "target.value" (set this "project.dataSource.git.path"))}}
         />
       </div>
       <div class="pds-formField">
