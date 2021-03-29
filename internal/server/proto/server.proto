@@ -1738,7 +1738,7 @@ message PushedArtifact {
 message GetDeploymentRequest {
   Ref.Operation ref = 1;
 
-  // Inidicate of the fetched deployments should include additional information
+  // Indicate of the fetched deployments should include additional information
   // about each deployment.
   Deployment.LoadDetails load_details = 2;
 }
@@ -1813,6 +1813,21 @@ message Deployment {
 
   // id is the unique ID for this deployment
   string id = 1;
+
+  // generation tracks the physical changes in a deployment. Two deployments
+  // with the same generation share the same physical resources. Another way
+  // to view generations: the same generation is a mutable deployment, whereas
+  // if the generation changes it is an immutable deployment.
+  //
+  // This value is opaque. Waypoint internally only requires that the semantics
+  // documented in the prior paragraph are adhered to. It is recommended that
+  // the value uses a UUID-type formatting.
+  //
+  // If this isn't set, a random ULID will be generated on insert.
+  //
+  // Older deployments from prior to generations being introduced may have
+  // an empty generation. Empty generations from prior deployments are ignored.
+  string generation = 17;
 
   // state is the state of this deployment.
   Operation.PhysicalState state = 2;
