@@ -756,9 +756,13 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 			},
 
 			opGenIndexName: {
-				Name:         opGenIndexName,
-				AllowMissing: false,
-				Unique:       false,
+				Name:   opGenIndexName,
+				Unique: false,
+
+				// Allow missing since not every app operation has a
+				// generation field.
+				AllowMissing: true,
+
 				Indexer: &memdb.CompoundIndex{
 					Indexes: []memdb.Indexer{
 						&memdb.StringFieldIndex{
