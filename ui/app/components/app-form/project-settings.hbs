@@ -3,7 +3,7 @@
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="git-source-url" class="pds-fieldName">
-          Git Source URL
+          {{t "form.project_settings.git_source_url_label"}}
         </label>
         <Pds::Input
           @type="text"
@@ -16,7 +16,7 @@
       </div>
       <div class="pds-formField">
         <label for="git-source-ref" class="pds-fieldName">
-          Git Ref
+          {{t "form.project_settings.git_source_ref_label"}}
         </label>
         <Pds::Input
           @type="text"
@@ -29,7 +29,7 @@
       </div>
       <div class="pds-formField">
         <label for="git-source-path" class="pds-fieldName">
-          Git Source Path (optional)
+          {{t "form.project_settings.git_source_path_label"}}
         </label>
         <Pds::Input
           @type="text"
@@ -41,7 +41,7 @@
       </div>
       <div class="pds-formField">
         <label for="git-auth-type" class="pds-fieldName">
-          Authentication
+          {{t "form.project_settings.git_auth_type_label"}}
         </label>
         <div class="pds-formRadioWrapper">
           <Pds::RadioField
@@ -51,7 +51,7 @@
             checked={{eq this.authCase 5}}
             {{on "input" (fn this.setAuthCase 5)}}
           >
-            SSH
+            {{t "form.project_settings.git_auth_type_ssh_label"}}
           </Pds::RadioField>
           <Pds::RadioField
             @id="git-auth-basic"
@@ -60,14 +60,14 @@
             checked={{eq this.authCase 4}}
             {{on "input" (fn this.setAuthCase 4)}}
           >
-            Username &amp; Password
+            {{t "form.project_settings.git_auth_type_basic_label"}}
           </Pds::RadioField>
         </div>
       </div>
       {{#if this.authSSH}}
         <div class="pds-formField">
           <label for="git-source-ssh-user" class="pds-fieldName">
-            Git User (optional)
+            {{t "form.project_settings.git_source_ssh_user_label"}}
           </label>
           <Pds::Input
             @type="text"
@@ -79,7 +79,7 @@
         </div>
         <div class="pds-formField">
           <label for="git-source-ssh-password" class="pds-fieldName">
-            Passphrase (optional)
+            {{t "form.project_settings.git_source_ssh_password_label"}}
           </label>
           <Pds::Input
             @type="password"
@@ -91,7 +91,7 @@
         </div>
         <div class="pds-formField">
           <label for="git-source-ssh-key" class="pds-fieldName">
-            SSH Key
+            {{t "form.project_settings.git_source_ssh_key_label"}}
           </label>
           <Pds::Textarea
             id="git-source-ssh-key"
@@ -104,7 +104,7 @@
       {{else if this.authBasic}}
         <div class="pds-formField">
           <label for="git-source-username" class="pds-fieldName">
-            Username
+            {{t "form.project_settings.git_source_basic_username_label"}}
           </label>
           <Pds::Input
             @type="text"
@@ -117,7 +117,7 @@
         </div>
         <div class="pds-formField">
           <label for="git-source-password" class="pds-fieldName">
-            Password
+            {{t "form.project_settings.git_source_basic_password_label"}}
           </label>
           <Pds::Input
             @type="password"
@@ -132,7 +132,7 @@
 
       <div class="pds-formField">
         <label class="pds-fieldName">
-          Automated Sync
+          {{t "form.project_settings.git_sync_label"}}
         </label>
         <div class="pds-formFieldToggle">
           <XToggle
@@ -149,7 +149,7 @@
 
             <toggle.label for="git-sync-enabled">
               <span class="pds-toggleLabel">
-                Enable automated deployment on changes
+                {{t "form.project_settings.git_sync_description_label"}}
               </span>
             </toggle.label>
           </XToggle>
@@ -159,5 +159,5 @@
     </fieldset>
   </div>
 
-  <Pds::Button @variant="primary" @type="submit">Apply</Pds::Button>
+  <Pds::Button @variant="primary" @type="submit">{{t "form.project_settings.button"}}</Pds::Button>
 </form>

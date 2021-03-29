@@ -23,6 +23,23 @@ page:
   releases:
     title: 'Releases'
 
+form:
+  project_settings:
+    git_source_url_label: 'Git Source URL'
+    git_source_ref_label: 'Git Ref'
+    git_source_path_label: 'Git Source Path (optional)'
+    git_auth_type_label: 'Authentication'
+    git_auth_type_ssh_label: 'SSH'
+    git_auth_type_basic_label: 'Username & Password'
+    git_source_ssh_user_label: 'Git User (optional)'
+    git_source_ssh_password_label: 'Passphrase (optional)'
+    git_source_ssh_key_label: 'SSH Key'
+    git_source_basic_username_label: 'Username'
+    git_source_basic_password_label: 'Password'
+    git_sync_label: 'Automated Sync'
+    git_sync_description_label: 'Enable automated deployment on changes'
+    button: 'Apply'
+
 auth:
   title: 'Welcome to Waypoint'
   subtitle: 'To get started, please authenticate'
