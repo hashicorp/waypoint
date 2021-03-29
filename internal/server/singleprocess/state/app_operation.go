@@ -438,11 +438,21 @@ func (op *appOperation) dbPut(
 		}
 	}
 
-	// If we're not updating, then set the sequence number up if we have one.
 	if !update {
+		// If we're not updating, then set the sequence number up if we have one.
 		if f := op.valueFieldReflect(value, "Sequence"); f.IsValid() {
 			seq := atomic.AddUint64(op.appSeq(appRef), 1)
 			f.Set(reflect.ValueOf(seq))
+		}
+
+		// Default the generation to a new ULID if it isn't set.
+		if f := op.valueFieldReflect(value, "Generation"); f.IsValid() && f.Interface() == "" {
+			v, err := ulid()
+			if err != nil {
+				return err
+			}
+
+			f.Set(reflect.ValueOf(v))
 		}
 	}
 
@@ -582,6 +592,11 @@ func (op *appOperation) indexPut(
 		sequence = v.(uint64)
 	}
 
+	var generation string
+	if v := op.valueField(value, "Generation"); v != nil && v.(string) != "" {
+		generation = v.(string)
+	}
+
 	// Get our refs
 	ref := op.valueField(value, "Application").(*pb.Ref_Application)
 	wsRef := op.valueField(value, "Workspace").(*pb.Ref_Workspace)
@@ -592,6 +607,7 @@ func (op *appOperation) indexPut(
 		App:          ref.Application,
 		Workspace:    wsRef.Workspace,
 		Sequence:     sequence,
+		Generation:   generation,
 		StartTime:    startTime,
 		CompleteTime: completeTime,
 	}
@@ -738,6 +754,30 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 					},
 				},
 			},
+
+			opGenIndexName: {
+				Name:         opGenIndexName,
+				AllowMissing: false,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.StringFieldIndex{
+							Field:     "Project",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "App",
+							Lowercase: true,
+						},
+
+						&memdb.StringFieldIndex{
+							Field:     "Generation",
+							Lowercase: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -750,6 +790,7 @@ type operationIndexRecord struct {
 	App          string
 	Workspace    string
 	Sequence     uint64
+	Generation   string
 	StartTime    time.Time
 	CompleteTime time.Time
 }
@@ -766,6 +807,7 @@ const (
 	opStartTimeIndexName    = "start-time"    // start time index
 	opCompleteTimeIndexName = "complete-time" // complete time index
 	opSeqIndexName          = "seq"           // sequence number index
+	opGenIndexName          = "generation"    // generation index
 )
 
 // listOperationsOptions are options that can be set for List calls on

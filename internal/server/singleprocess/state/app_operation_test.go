@@ -493,6 +493,38 @@ func TestAppOperation_deploy(t *testing.T) {
 		require.True(ok)
 		require.Equal("A", b.Id)
 		require.Equal(uint64(1), b.Sequence)
+		require.NotEmpty(b.Generation)
+		require.NotNil(b.Preload)
+		require.Nil(b.Preload.Build)
+	})
+
+	t.Run("does not change generation if set", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Nothing special about this except it is properly formatted.
+		expectedId := "f0866585-2aab-498b-8842-27706865acda"
+
+		// Create with preload set
+		require.NoError(op.Put(s, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
+			Id:         "A",
+			Generation: expectedId,
+			Preload: &pb.Deployment_Preload{
+				Build: serverptypes.TestValidBuild(t, nil),
+			},
+		})))
+
+		// Read it back
+		raw, err := op.Get(s, appOpById("A"))
+		require.NoError(err)
+		require.NotNil(raw)
+
+		b, ok := raw.(*pb.Deployment)
+		require.True(ok)
+		require.Equal("A", b.Id)
+		require.Equal(expectedId, b.Generation)
 		require.NotNil(b.Preload)
 		require.Nil(b.Preload.Build)
 	})
