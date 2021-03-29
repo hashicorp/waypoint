@@ -1,0 +1,21 @@
+:root {
+  --toggle-color-off: #{dehex(color.$ui-cool-gray-300)};
+  --toggle-color-on: #{dehex(color.$blue-500)};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+  --toggle-color-off: #{dehex(color.$ui-cool-gray-100)};
+  --toggle-color-on: #{dehex(color.$blue-500)};
+  }
+}
+
+.x-toggle-light.x-toggle-btn {
+  background-color: rgb(var(--toggle-color-off));
+}
+
+.x-toggle:checked + label > .x-toggle-light.x-toggle-btn {
+  background-color: rgb(var(--toggle-color-on));
+}
+
+

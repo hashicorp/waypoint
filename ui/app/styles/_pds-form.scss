@@ -1,0 +1,40 @@
+.pds-form {
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    max-width: 800px;
+  }
+
+  .pds-formField {
+    margin-bottom: scale.$lg-1;
+  }
+
+  .pds-formFieldToggle {
+    display: flex;
+    .x-toggle-container {
+      padding-left: 0;
+    }
+  }
+
+  .pds-toggleLabel {
+    padding-left: scale.$sm-1;;
+  }
+
+  .pds-formRadioWrapper {
+    display: flex;
+    flex-direction: row;
+
+    .pds-radioField {
+      margin-right: scale.$lg-1;
+    }
+
+    .pds-radioField__input {
+      // Fix overflow not being hidden on FF
+      clip: rect(1px, 1px, 1px, 1px);
+      clip-path: inset(50%); /* browsers in the future */
+      /* Prevent the screen reader to skip spaces between words */
+      white-space: nowrap;
+    }
+  }
+}

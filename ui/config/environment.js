@@ -22,6 +22,21 @@ module.exports = function (environment) {
       // Here you can pass flags/options to your application instance
       // when it is created
     },
+
+    // Ember-cli-flash addon settings
+    flashMessageDefaults: {
+      destroyOnClick: false,
+      timeout: 5000,
+      extendedTimeout: 700,
+      type: 'info',
+      types: ['error', 'success', 'info', 'warning'],
+    },
+
+    // Ember-toggle addon settings
+    'ember-toggle': {
+      includedThemes: ['light'],
+      defaultTheme: 'light',
+    }
   };
 
   if (environment === 'development') {
