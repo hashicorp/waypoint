@@ -248,6 +248,11 @@ func (p *Platform) Deploy(
 	// assume the first port defined is the 'main' port to use
 	defaultPort := int(containerPorts[0].ContainerPort)
 
+	initialDelaySeconds := int32(5)
+	if p.config.ProbeDelay != 0 {
+		initialDelaySeconds = int32(p.config.ProbeDelay)
+	}
+
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{
@@ -262,7 +267,7 @@ func (p *Platform) Deploy(
 							Port: intstr.FromInt(defaultPort),
 						},
 					},
-					InitialDelaySeconds: 5,
+					InitialDelaySeconds: initialDelaySeconds,
 					TimeoutSeconds:      5,
 					FailureThreshold:    5,
 				},
@@ -272,7 +277,7 @@ func (p *Platform) Deploy(
 							Port: intstr.FromInt(defaultPort),
 						},
 					},
-					InitialDelaySeconds: 5,
+					InitialDelaySeconds: initialDelaySeconds,
 					TimeoutSeconds:      5,
 				},
 				Env:       env,
@@ -290,7 +295,7 @@ func (p *Platform) Deploy(
 					Port: intstr.FromInt(defaultPort),
 				},
 			},
-			InitialDelaySeconds: 5,
+			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      5,
 			FailureThreshold:    5,
 		}
@@ -302,7 +307,7 @@ func (p *Platform) Deploy(
 					Port: intstr.FromInt(defaultPort),
 				},
 			},
-			InitialDelaySeconds: 5,
+			InitialDelaySeconds: initialDelaySeconds,
 			TimeoutSeconds:      5,
 		}
 	}
@@ -547,6 +552,10 @@ type Config struct {
 	// made to the port.
 	ProbePath string `hcl:"probe_path,optional"`
 
+	// Time in seconds to delay the initial liveness and readiness probes.
+	// Defaults to 5 seconds.
+	ProbeDelay uint `hcl:"probe_delay,optional"`
+
 	// Optionally define various resources limits for kubernetes pod containers
 	// such as memory and cpu.
 	Resources map[string]string `hcl:"resources,optional"`
@@ -634,6 +643,12 @@ deploy "kubernetes" {
 		docs.Summary(
 			"without this, the test will simply be that the application has bound to the port",
 		),
+	)
+
+	doc.SetField(
+		"probe_delay",
+		"time in seconds to delay the initial liveness and readiness probes",
+		docs.Default("5"),
 	)
 
 	doc.SetField(
