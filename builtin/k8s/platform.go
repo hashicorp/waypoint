@@ -672,27 +672,30 @@ deploy "kubernetes" {
 	doc.SetField(
 		"probe",
 		"configuration to control liveness and readiness probes",
-	)
+		docs.Summary(),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"initial_delay",
+				"time in seconds to wait before performing the initial liveness and readiness probes",
+				docs.Default("5"),
+			)
 
-	doc.SetField(
-		"probe.initial_delay",
-		"time in seconds to wait before performing the initial liveness and readiness probes",
-		docs.Default("5"),
-	)
+			doc.SetField(
+				"timeout",
+				"time in seconds before the probe fails",
+				docs.Default("5"),
+			)
 
-	doc.SetField(
-		"probe.timeout",
-		"time in seconds before the probe fails",
-		docs.Default("5"),
-	)
+			doc.SetField(
+				"failure_threshold",
+				"number of times a liveness probe can fail before the container is killed",
+				docs.Summary(
+					"failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
+				),
+				docs.Default("5"),
+			)
 
-	doc.SetField(
-		"probe.failure_threshold",
-		"number of times a liveness probe can fail before the container is killed",
-		docs.Summary(
-			"failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
-		),
-		docs.Default("5"),
+		}),
 	)
 
 	doc.SetField(
