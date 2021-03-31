@@ -99,6 +99,7 @@ func TestServiceGetLogStream_depPlugin(t *testing.T) {
 			HasLogsPlugin: true,
 		}),
 	})
+	require.NoError(t, err)
 
 	fakeRunner, err := server.Id()
 	require.NoError(t, err)
