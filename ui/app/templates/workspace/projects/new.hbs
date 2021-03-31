@@ -14,12 +14,30 @@
         </label>
         <Pds::Input
           @type="text"
-          aria-describedby="{HELP_ID} {ERROR_ID}"
           id="git-source-url"
           placeholder="my-new-project"
           value={{this.model.name}}
-          {{on "input" (set this "model.name" (get _ "target.value"))}}
+          {{on "input" (pick "target.value" (set this "model.name"))}}
         />
+      </div>
+    </fieldset>
+    <fieldset class="pds-formFieldSet">
+      <div class="pds-formField">
+        <label for="create-git" class="pds-fieldName">
+          <Pds::Icon @type="git-repository"/> Git Configuration
+        </label>
+        <Pds::HelpText id="{HELP_ID}">
+          <p>Connect a git repository containing a waypoint.hcl file. Note that the project names need to match.</p>
+          <p>If you skip this, you can always configure it later in project settings.</p>
+        </Pds::HelpText>
+        <Pds::CheckboxField
+          @checked={{this.createGit}}
+          @id="create-git"
+          {{on "change" (set this "createGit" (not this.createGit))}}
+        >
+          I would like to connect a Git repository to this Project
+        </Pds::CheckboxField>
+
       </div>
     </fieldset>
   </div>

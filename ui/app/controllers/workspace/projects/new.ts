@@ -1,12 +1,14 @@
 import Controller from '@ember/controller';
 import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
+import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
 import { Project, UpsertProjectRequest } from 'waypoint-pb';
 
 
 export default class WorkspaceProjectsNew extends Controller {
   @service api!: ApiService;
+  @tracked createGit = false;
 
   @action
   async saveProject() {
@@ -16,7 +18,11 @@ export default class WorkspaceProjectsNew extends Controller {
     let req = new UpsertProjectRequest();
     req.setProject(ref);
     let newProject = await this.api.client.upsertProject(req, this.api.WithMeta());
-    this.transitionToRoute('workspace.projects.project', newProject.toObject().project?.name);
+    if (this.createGit) {
+      this.transitionToRoute('workspace.projects.project.settings', newProject.toObject().project?.name);
+    } else {
+      this.transitionToRoute('workspace.projects.project', newProject.toObject().project?.name);
+    }
   }
 
 }
