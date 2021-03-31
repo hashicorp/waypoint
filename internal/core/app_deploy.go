@@ -2,9 +2,11 @@ package core
 
 import (
 	"context"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/google/uuid"
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
@@ -147,7 +149,38 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 		}
 	}
 
+	// If the deployment plugin supports creating a generation ID, then
+	// get that ID up front and set it.
+	var generation string
+	if g, ok := op.Component.Value.(component.Generation); ok {
+		if f := g.GenerationFunc(); f != nil {
+			// Get the ID from the plugin.
+			idBytesRaw, err := app.callDynamicFunc(context.Background(),
+				app.logger,
+				nil,
+				op.Component,
+				g.GenerationFunc(),
+				op.args()...,
+			)
+			if err != nil {
+				return nil, err
+			}
+			idBytes := idBytesRaw.([]byte)
+
+			// The plugin can return an empty ID for us to default it to random.
+			// If it isn't empty, then we SHA-1 (Version 5 UUID) the bytes
+			// to create the actual generation.
+			if len(idBytes) > 0 {
+				generation = strings.Replace(
+					uuid.NewSHA1(uuid.NameSpaceDNS, idBytes).String(),
+					"-", "", -1,
+				)
+			}
+		}
+	}
+
 	return &pb.Deployment{
+		Generation:  generation,
 		Application: app.ref,
 		Workspace:   app.workspace,
 		Component:   op.Component.Info,
@@ -214,17 +247,12 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 		return nil, err
 	}
 
-	dconfig := *op.DeploymentConfig
-	dconfig.Id = op.id
-	dconfig.EntrypointInviteToken = op.cebToken
-
 	val, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
 		op.Component,
 		op.Component.Value.(component.Platform).DeployFunc(),
-		argNamedAny("artifact", op.Push.Artifact.Artifact),
-		argmapper.Typed(&dconfig),
+		op.args()...,
 	)
 
 	if ep, ok := op.Component.Value.(component.Execer); ok && ep.ExecFunc() != nil {
@@ -242,6 +270,27 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 	}
 
 	return val, err
+}
+
+// args returns the args we send to the Deploy function call
+func (op *deployOperation) args() []argmapper.Arg {
+	dconfig := *op.DeploymentConfig
+	dconfig.Id = op.id
+	dconfig.EntrypointInviteToken = op.cebToken
+
+	var args []argmapper.Arg
+
+	if v := op.Push.Artifact.Artifact; v != nil {
+		// This should always be non-nil but for tests we sometimes set this to nil.
+		// If we don't do this we will panic so its best to protect against this
+		// anyways.
+		args = append(args,
+			argNamedAny("artifact", op.Push.Artifact.Artifact),
+		)
+	}
+
+	args = append(args, argmapper.Typed(&dconfig))
+	return args
 }
 
 func (op *deployOperation) StatusPtr(msg proto.Message) **pb.Status {
