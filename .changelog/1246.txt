@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/k8s: Add new probe configuration options
+```

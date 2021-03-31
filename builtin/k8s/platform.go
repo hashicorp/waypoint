@@ -248,6 +248,21 @@ func (p *Platform) Deploy(
 	// assume the first port defined is the 'main' port to use
 	defaultPort := int(containerPorts[0].ContainerPort)
 
+	initialDelaySeconds := int32(5)
+	timeoutSeconds := int32(5)
+	failureThreshold := int32(5)
+	if p.config.Probe != nil {
+		if p.config.Probe.InitialDelaySeconds != 0 {
+			initialDelaySeconds = int32(p.config.Probe.InitialDelaySeconds)
+		}
+		if p.config.Probe.TimeoutSeconds != 0 {
+			timeoutSeconds = int32(p.config.Probe.TimeoutSeconds)
+		}
+		if p.config.Probe.FailureThreshold != 0 {
+			failureThreshold = int32(p.config.Probe.FailureThreshold)
+		}
+	}
+
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{
@@ -262,9 +277,9 @@ func (p *Platform) Deploy(
 							Port: intstr.FromInt(defaultPort),
 						},
 					},
-					InitialDelaySeconds: 5,
-					TimeoutSeconds:      5,
-					FailureThreshold:    5,
+					InitialDelaySeconds: initialDelaySeconds,
+					TimeoutSeconds:      timeoutSeconds,
+					FailureThreshold:    failureThreshold,
 				},
 				ReadinessProbe: &corev1.Probe{
 					Handler: corev1.Handler{
@@ -272,8 +287,8 @@ func (p *Platform) Deploy(
 							Port: intstr.FromInt(defaultPort),
 						},
 					},
-					InitialDelaySeconds: 5,
-					TimeoutSeconds:      5,
+					InitialDelaySeconds: initialDelaySeconds,
+					TimeoutSeconds:      timeoutSeconds,
 				},
 				Env:       env,
 				Resources: resourceRequirements,
@@ -290,9 +305,9 @@ func (p *Platform) Deploy(
 					Port: intstr.FromInt(defaultPort),
 				},
 			},
-			InitialDelaySeconds: 5,
-			TimeoutSeconds:      5,
-			FailureThreshold:    5,
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
+			FailureThreshold:    failureThreshold,
 		}
 
 		deployment.Spec.Template.Spec.Containers[0].ReadinessProbe = &corev1.Probe{
@@ -302,8 +317,8 @@ func (p *Platform) Deploy(
 					Port: intstr.FromInt(defaultPort),
 				},
 			},
-			InitialDelaySeconds: 5,
-			TimeoutSeconds:      5,
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
 		}
 	}
 
@@ -547,6 +562,9 @@ type Config struct {
 	// made to the port.
 	ProbePath string `hcl:"probe_path,optional"`
 
+	// Probe details for describing a health check to be performed against a container.
+	Probe *Probe `hcl:"probe,block"`
+
 	// Optionally define various resources limits for kubernetes pod containers
 	// such as memory and cpu.
 	Resources map[string]string `hcl:"resources,optional"`
@@ -569,6 +587,23 @@ type Config struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+}
+
+// Probe describes a health check to be performed against a container to determine whether it is
+// alive or ready to receive traffic.
+type Probe struct {
+	// Time in seconds to wait before performing the initial liveness and readiness probes.
+	// Defaults to 5 seconds.
+	InitialDelaySeconds uint `hcl:"initial_delay,optional"`
+
+	// Time in seconds before the probe fails.
+	// Defaults to 5 seconds.
+	TimeoutSeconds uint `hcl:"timeout,optional"`
+
+	// Number of times a liveness probe can fail before the container is killed.
+	// FailureThreshold * TimeoutSeconds should be long enough to cover your worst
+	// case startup times. Defaults to 5 failures.
+	FailureThreshold uint `hcl:"failure_threshold,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -634,6 +669,36 @@ deploy "kubernetes" {
 		docs.Summary(
 			"without this, the test will simply be that the application has bound to the port",
 		),
+	)
+
+	doc.SetField(
+		"probe",
+		"configuration to control liveness and readiness probes",
+		docs.Summary("Probe describes a health check to be performed against a ",
+			"container to determine whether it is alive or ready to receive traffic."),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"initial_delay",
+				"time in seconds to wait before performing the initial liveness and readiness probes",
+				docs.Default("5"),
+			)
+
+			doc.SetField(
+				"timeout",
+				"time in seconds before the probe fails",
+				docs.Default("5"),
+			)
+
+			doc.SetField(
+				"failure_threshold",
+				"number of times a liveness probe can fail before the container is killed",
+				docs.Summary(
+					"failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
+				),
+				docs.Default("5"),
+			)
+
+		}),
 	)
 
 	doc.SetField(
