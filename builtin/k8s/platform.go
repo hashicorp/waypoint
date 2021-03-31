@@ -562,7 +562,7 @@ type Config struct {
 	// made to the port.
 	ProbePath string `hcl:"probe_path,optional"`
 
-	// Probe details
+	// Probe details for describing a health check to be performed against a container.
 	Probe *Probe `hcl:"probe,block"`
 
 	// Optionally define various resources limits for kubernetes pod containers
@@ -589,6 +589,8 @@ type Config struct {
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 }
 
+// Probe describes a health check to be performed against a container to determine whether it is
+// alive or ready to receive traffic.
 type Probe struct {
 	// Time in seconds to wait before performing the initial liveness and readiness probes.
 	// Defaults to 5 seconds.
@@ -672,7 +674,8 @@ deploy "kubernetes" {
 	doc.SetField(
 		"probe",
 		"configuration to control liveness and readiness probes",
-		docs.Summary(),
+		docs.Summary("Probe describes a health check to be performed against a ",
+			"container to determine whether it is alive or ready to receive traffic."),
 		docs.SubFields(func(doc *docs.SubFieldDoc) {
 			doc.SetField(
 				"initial_delay",
