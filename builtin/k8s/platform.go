@@ -675,6 +675,27 @@ deploy "kubernetes" {
 	)
 
 	doc.SetField(
+		"probe.initial_delay",
+		"time in seconds to wait before performing the initial liveness and readiness probes",
+		docs.Default("5"),
+	)
+
+	doc.SetField(
+		"probe.timeout",
+		"time in seconds before the probe fails",
+		docs.Default("5"),
+	)
+
+	doc.SetField(
+		"probe.failure_threshold",
+		"number of times a liveness probe can fail before the container is killed",
+		docs.Summary(
+			"failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
+		),
+		docs.Default("5"),
+	)
+
+	doc.SetField(
 		"scratch_path",
 		"a path for the service to store temporary data",
 		docs.Summary(
@@ -742,27 +763,6 @@ deploy "kubernetes" {
 			"namespace is the name of the Kubernetes namespace to apply the deployment in.",
 			"This is useful to create deployments in non-default namespaces without creating kubeconfig contexts for each",
 		),
-	)
-
-	doc.SetField(
-		"probe.initial_delay",
-		"time in seconds to wait before performing the initial liveness and readiness probes",
-		docs.Default("5"),
-	)
-
-	doc.SetField(
-		"probe.timeout",
-		"time in seconds before the probe fails",
-		docs.Default("5"),
-	)
-
-	doc.SetField(
-		"probe.failure_threshold",
-		"number of times a liveness probe can fail before the container is killed",
-		docs.Summary(
-			"failureThreshold * TimeoutSeconds should be long enough to cover your worst case startup times",
-		),
-		docs.Default("5"),
 	)
 
 	return doc, nil
