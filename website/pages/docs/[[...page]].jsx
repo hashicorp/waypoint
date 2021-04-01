@@ -1,4 +1,3 @@
-
 import { productName, productSlug } from 'data/metadata'
 import DocsPage from '@hashicorp/react-docs-page'
 import {
@@ -6,12 +5,11 @@ import {
   generateStaticProps,
 } from '@hashicorp/react-docs-page/server'
 import Placement from 'components/placement-table'
-import NestedNode from 'components/nested-node'
 
 const NAV_DATA_FILE = 'data/docs-nav-data.json'
 const CONTENT_DIR = 'content/docs'
 const basePath = 'docs'
-const additionalComponents = { Placement, NestedNode }
+const additionalComponents = { Placement }
 
 export default function DocsLayout(props) {
   return (
