@@ -4,10 +4,11 @@ import { action } from '@ember/object';
 import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
 import { Project, UpsertProjectRequest } from 'waypoint-pb';
-
-
+import FlashMessagesService from 'waypoint/services/flash-messages';
 export default class WorkspaceProjectsNew extends Controller {
   @service api!: ApiService;
+  @service flashMessages!: FlashMessagesService;
+
   @tracked createGit = false;
 
   @action
@@ -17,12 +18,16 @@ export default class WorkspaceProjectsNew extends Controller {
     ref.setName(project.name);
     let req = new UpsertProjectRequest();
     req.setProject(ref);
-    let newProject = await this.api.client.upsertProject(req, this.api.WithMeta());
-    if (this.createGit) {
-      this.transitionToRoute('workspace.projects.project.settings', newProject.toObject().project?.name);
-    } else {
-      this.transitionToRoute('workspace.projects.project', newProject.toObject().project?.name);
+    try {
+      let newProject = await this.api.client.upsertProject(req, this.api.WithMeta());
+      this.flashMessages.success(`Project "${project.name}" created`);
+      if (this.createGit) {
+        this.transitionToRoute('workspace.projects.project.settings', newProject.toObject().project?.name);
+      } else {
+        this.transitionToRoute('workspace.projects.project', newProject.toObject().project?.name);
+      }
+    } catch (err) {
+      this.flashMessages.error('Failed to create project', { content: err.message, sticky: true });
     }
   }
-
 }
