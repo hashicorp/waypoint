@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/core"
@@ -36,30 +38,25 @@ func (r *Runner) executeReleaseOp(
 	// We SHOULD but if we have an old client, its possible we don't.
 	var release *pb.Release
 	if target.Generation != nil {
-		resp, err := r.client.ListReleases(ctx, &pb.ListReleasesRequest{
-			Application:   app.Ref(),
-			Workspace:     project.WorkspaceRef(),
-			PhysicalState: pb.Operation_CREATED,
-			LoadDetails:   pb.Release_DEPLOYMENT,
-			Order: &pb.OperationOrder{
-				Order: pb.OperationOrder_COMPLETE_TIME,
-				Desc:  true,
-			},
+		resp, err := r.client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
+			Application: app.Ref(),
+			Workspace:   project.WorkspaceRef(),
+			LoadDetails: pb.Release_DEPLOYMENT,
 		})
+		if status.Code(err) == codes.NotFound {
+			err = nil
+			resp = nil
+		}
 		if err != nil {
 			return nil, err
 		}
-		for _, r := range resp.Releases {
-			if r.Preload != nil && r.Preload.Deployment != nil {
-				d := r.Preload.Deployment
+		if resp != nil {
+			if resp.Preload != nil && resp.Preload.Deployment != nil {
+				d := resp.Preload.Deployment
 				if d.Generation != nil && d.Generation.Id == target.Generation.Id {
-					release = r
+					release = resp
 				}
 			}
-
-			// We always break cause we really only want the first release.
-			// This is the most recent release.
-			break
 		}
 	}
 
