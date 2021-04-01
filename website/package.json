@@ -10,7 +10,7 @@
     "@hashicorp/react-button": "4.0.0",
     "@hashicorp/react-command-line-terminal": "1.0.0",
     "@hashicorp/react-content": "6.2.0",
-    "@hashicorp/react-docs-page": "10.6.0",
+    "@hashicorp/react-docs-page": "12.0.0",
     "@hashicorp/react-hashi-stack-menu": "1.1.0",
     "@hashicorp/react-head": "1.1.6",
     "@hashicorp/react-image": "3.0.3",

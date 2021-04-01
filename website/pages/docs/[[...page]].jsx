@@ -1,32 +1,47 @@
+
 import { productName, productSlug } from 'data/metadata'
-import order from 'data/docs-navigation.js'
 import DocsPage from '@hashicorp/react-docs-page'
 import {
   generateStaticPaths,
   generateStaticProps,
 } from '@hashicorp/react-docs-page/server'
 import Placement from 'components/placement-table'
+import NestedNode from 'components/nested-node'
 
-const subpath = 'docs'
+const NAV_DATA_FILE = 'data/docs-nav-data.json'
+const CONTENT_DIR = 'content/docs'
+const basePath = 'docs'
+const additionalComponents = { Placement, NestedNode }
 
-function DocsLayout(props) {
+export default function DocsLayout(props) {
   return (
     <DocsPage
       product={{ name: productName, slug: productSlug }}
-      subpath={subpath}
-      order={order}
+      baseRoute={basePath}
       staticProps={props}
-      additionalComponents={{ Placement }}
+      additionalComponents={additionalComponents}
     />
   )
 }
 
 export async function getStaticPaths() {
-  return generateStaticPaths(subpath)
+  return {
+    fallback: false,
+    paths: await generateStaticPaths({
+      navDataFile: NAV_DATA_FILE,
+      localContentDir: CONTENT_DIR,
+    }),
+  }
 }
 
 export async function getStaticProps({ params }) {
-  return generateStaticProps({ subpath, productName, params })
+  return {
+    props: await generateStaticProps({
+      navDataFile: NAV_DATA_FILE,
+      localContentDir: CONTENT_DIR,
+      product: { name: productName, slug: productSlug },
+      params,
+      additionalComponents,
+    }),
+  }
 }
-
-export default DocsLayout

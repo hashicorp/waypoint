@@ -1,0 +1,441 @@
+[
+  {
+    "title": "Introduction",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "intro"
+      },
+      {
+        "title": "Waypoint vs. Other Software",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "intro/vs"
+          },
+          {
+            "title": "Helm",
+            "path": "intro/vs/helm"
+          },
+          {
+            "title": "Heroku, Vercel, etc.",
+            "path": "intro/vs/paas"
+          },
+          {
+            "title": "Kubernetes",
+            "path": "intro/vs/kubernetes"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Getting Started",
+    "path": "getting-started"
+  },
+  {
+    "title": "Upgrading",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "upgrading"
+      },
+      {
+        "title": "Compatibility Promise",
+        "path": "upgrading/compatibility"
+      },
+      {
+        "title": "Protocol Version Table",
+        "path": "upgrading/protocol-table"
+      },
+      {
+        "title": "Release Notifications",
+        "path": "upgrading/release-notifications"
+      },
+      {
+        "title": "Specific Version Guides",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "upgrading/version-guides"
+          },
+          {
+            "title": "Upgrade to 0.2.0",
+            "path": "upgrading/version-guides/0.2.0"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "divider": true
+  },
+  {
+    "title": "Lifecycle",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "lifecycle"
+      },
+      {
+        "title": "Build",
+        "path": "lifecycle/build"
+      },
+      {
+        "title": "Deploy",
+        "path": "lifecycle/deploy"
+      },
+      {
+        "title": "Release",
+        "path": "lifecycle/release"
+      },
+      {
+        "title": "Hooks",
+        "path": "lifecycle/hooks"
+      }
+    ]
+  },
+  {
+    "title": "waypoint.hcl",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "waypoint-hcl"
+      },
+      {
+        "title": "Variables",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "waypoint-hcl/variables"
+          },
+          {
+            "title": "<code>artifact</code>",
+            "path": "waypoint-hcl/variables/artifact"
+          },
+          {
+            "title": "<code>deploy</code>",
+            "path": "waypoint-hcl/variables/deploy"
+          },
+          {
+            "title": "<code>entrypoint</code>",
+            "path": "waypoint-hcl/variables/entrypoint"
+          },
+          {
+            "title": "<code>path</code>",
+            "path": "waypoint-hcl/variables/path"
+          }
+        ]
+      },
+      {
+        "title": "Functions",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "waypoint-hcl/functions"
+          },
+          {
+            "title": "Full Reference",
+            "path": "waypoint-hcl/functions/all"
+          },
+          {
+            "title": "Templating",
+            "path": "waypoint-hcl/functions/template"
+          }
+        ]
+      },
+      {
+        "title": "Syntax",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "waypoint-hcl/syntax"
+          },
+          {
+            "title": "Expressions",
+            "path": "waypoint-hcl/syntax/expressions"
+          },
+          {
+            "title": "JSON Syntax",
+            "path": "waypoint-hcl/syntax/json"
+          }
+        ]
+      },
+      {
+        "title": "<code>app</code>",
+        "path": "waypoint-hcl/app"
+      },
+      {
+        "title": "<code>build</code>",
+        "path": "waypoint-hcl/build"
+      },
+      {
+        "title": "<code>config</code>",
+        "path": "waypoint-hcl/config"
+      },
+      {
+        "title": "<code>deploy</code>",
+        "path": "waypoint-hcl/deploy"
+      },
+      {
+        "title": "<code>hook</code>",
+        "path": "waypoint-hcl/hook"
+      },
+      {
+        "title": "<code>plugin</code>",
+        "path": "waypoint-hcl/plugin"
+      },
+      {
+        "title": "<code>registry</code>",
+        "path": "waypoint-hcl/registry"
+      },
+      {
+        "title": "<code>release</code>",
+        "path": "waypoint-hcl/release"
+      },
+      {
+        "title": "<code>url</code>",
+        "path": "waypoint-hcl/url"
+      },
+      {
+        "title": "<code>use</code>",
+        "path": "waypoint-hcl/use"
+      }
+    ]
+  },
+  {
+    "title": "Server",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "server"
+      },
+      {
+        "title": "Authentication",
+        "path": "server/auth"
+      },
+      {
+        "title": "Running a Server",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "server/run"
+          },
+          {
+            "title": "Maintenance",
+            "path": "server/run/maintenance"
+          },
+          {
+            "title": "Production",
+            "path": "server/run/production"
+          },
+          {
+            "title": "Security",
+            "path": "server/run/security"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "URL Service",
+    "path": "url"
+  },
+  {
+    "title": "Logs",
+    "path": "logs"
+  },
+  {
+    "title": "Exec",
+    "path": "exec"
+  },
+  {
+    "title": "Configuration",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "app-config"
+      },
+      {
+        "title": "Dynamic Values",
+        "path": "app-config/dynamic"
+      }
+    ]
+  },
+  {
+    "title": "Workspaces",
+    "path": "workspaces"
+  },
+  {
+    "title": "Plugins",
+    "path": "plugins"
+  },
+  {
+    "divider": true
+  },
+  {
+    "title": "Extending Waypoint",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "extending-waypoint"
+      },
+      {
+        "title": "Creating a Waypoint Plugin",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "extending-waypoint/creating-plugins"
+          },
+          {
+            "title": "Registering Plugin Components",
+            "path": "extending-waypoint/creating-plugins/main"
+          },
+          {
+            "title": "Handling Configuration",
+            "path": "extending-waypoint/creating-plugins/configuration"
+          },
+          {
+            "title": "Implementing the Builder Interface",
+            "path": "extending-waypoint/creating-plugins/build-interface"
+          },
+          {
+            "title": "Compiling the Plugin",
+            "path": "extending-waypoint/creating-plugins/compiling"
+          },
+          {
+            "title": "Creating an Example Application",
+            "path": "extending-waypoint/creating-plugins/example-application"
+          },
+          {
+            "title": "Testing the Plugin",
+            "path": "extending-waypoint/creating-plugins/testing"
+          }
+        ]
+      },
+      {
+        "title": "Initializing the SDK",
+        "path": "extending-waypoint/main-func"
+      },
+      {
+        "title": "Passing Values Between Components",
+        "path": "extending-waypoint/passing-values"
+      },
+      {
+        "title": "Plugin Interfaces",
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "extending-waypoint/plugin-interfaces"
+          },
+          {
+            "title": "Authenticator",
+            "path": "extending-waypoint/plugin-interfaces/authenticator"
+          },
+          {
+            "title": "Configurable",
+            "path": "extending-waypoint/plugin-interfaces/configurable"
+          },
+          {
+            "title": "ConfigurableNotify",
+            "path": "extending-waypoint/plugin-interfaces/configurable-notify"
+          },
+          {
+            "title": "Builder",
+            "path": "extending-waypoint/plugin-interfaces/builder"
+          },
+          {
+            "title": "Registry",
+            "path": "extending-waypoint/plugin-interfaces/registry"
+          },
+          {
+            "title": "Platform",
+            "path": "extending-waypoint/plugin-interfaces/platform"
+          },
+          {
+            "title": "ReleaseManager",
+            "path": "extending-waypoint/plugin-interfaces/release-manager"
+          },
+          {
+            "title": "Destroy",
+            "path": "extending-waypoint/plugin-interfaces/destroy"
+          },
+          {
+            "title": "Default Parameters",
+            "path": "extending-waypoint/plugin-interfaces/default-parameters"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Entrypoint",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "entrypoint"
+      },
+      {
+        "title": "Disable",
+        "path": "entrypoint/disable"
+      }
+    ]
+  },
+  {
+    "title": "Automating Execution",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "automating-execution"
+      },
+      {
+        "title": "GitHub Actions",
+        "path": "automating-execution/github-actions"
+      },
+      {
+        "title": "GitLab CI/CD",
+        "path": "automating-execution/gitlab-cicd"
+      },
+      {
+        "title": "CircleCI",
+        "path": "automating-execution/circle-ci"
+      },
+      {
+        "title": "Jenkins",
+        "path": "automating-execution/jenkins"
+      }
+    ]
+  },
+  {
+    "title": "Troubleshooting",
+    "path": "troubleshooting"
+  },
+  {
+    "title": "Glossary",
+    "path": "glossary"
+  },
+  {
+    "divider": true
+  },
+  {
+    "title": "Internals",
+    "routes": [
+      {
+        "title": "Overview",
+        "path": "internals"
+      },
+      {
+        "title": "Architecture",
+        "path": "internals/architecture"
+      },
+      {
+        "title": "Operation Execution",
+        "path": "internals/execution"
+      }
+    ]
+  },
+  {
+    "title": "Roadmap",
+    "path": "roadmap"
+  }
+]
