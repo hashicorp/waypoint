@@ -11209,6 +11209,11 @@ type Job_ReleaseResult struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// The release that was just created. If the release operation was a noop,
+	// for example if the target deployment shares a generation with the
+	// previously released deployment, then this may be an existing release.
+	// Callers can verify by checking if the target deployment changed
+	// or not.
 	Release *Release `protobuf:"bytes,1,opt,name=release,proto3" json:"release,omitempty"`
 }
 
