@@ -45,7 +45,7 @@ func TestAppDeploy_generation(t *testing.T) {
 			require.NotNil(deploy)
 			require.NotEmpty(deploy.Generation)
 
-			gen1 = deploy.Generation
+			gen1 = deploy.Generation.Id
 		}
 
 		{
@@ -92,7 +92,7 @@ func TestAppDeploy_generation(t *testing.T) {
 			require.NotNil(deploy)
 			require.NotEmpty(deploy.Generation)
 
-			gen1 = deploy.Generation
+			gen1 = deploy.Generation.Id
 		}
 
 		{
@@ -101,7 +101,7 @@ func TestAppDeploy_generation(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(deploy)
 			require.NotEmpty(deploy.Generation)
-			require.Equal(deploy.Generation, gen1)
+			require.Equal(deploy.Generation.Id, gen1)
 		}
 	})
 
@@ -139,7 +139,7 @@ func TestAppDeploy_generation(t *testing.T) {
 			require.NotNil(deploy)
 			require.NotEmpty(deploy.Generation)
 
-			gen1 = deploy.Generation
+			gen1 = deploy.Generation.Id
 		}
 
 		{
@@ -148,7 +148,7 @@ func TestAppDeploy_generation(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(deploy)
 			require.NotEmpty(deploy.Generation)
-			require.NotEqual(deploy.Generation, gen1)
+			require.NotEqual(deploy.Generation.Id, gen1)
 		}
 	})
 }

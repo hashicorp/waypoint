@@ -151,7 +151,7 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 
 	// If the deployment plugin supports creating a generation ID, then
 	// get that ID up front and set it.
-	var generation string
+	var generationId string
 	if g, ok := op.Component.Value.(component.Generation); ok {
 		if f := g.GenerationFunc(); f != nil {
 			// Get the ID from the plugin.
@@ -171,7 +171,7 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 			// If it isn't empty, then we SHA-1 (Version 5 UUID) the bytes
 			// to create the actual generation.
 			if len(idBytes) > 0 {
-				generation = strings.Replace(
+				generationId = strings.Replace(
 					uuid.NewSHA1(uuid.NameSpaceDNS, idBytes).String(),
 					"-", "", -1,
 				)
@@ -180,7 +180,7 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 	}
 
 	return &pb.Deployment{
-		Generation:  generation,
+		Generation:  &pb.Generation{Id: generationId},
 		Application: app.ref,
 		Workspace:   app.workspace,
 		Component:   op.Component.Info,
