@@ -28,6 +28,9 @@ func (r *Runner) executeReleaseOp(
 		panic("operation not expected type")
 	}
 
+	// Our target deployment
+	target := op.Release.Deployment
+
 	// If we're pruning, then let's query the deployments we want to prune
 	// ahead of time so that fails fast.
 	var pruneDeploys []*pb.Deployment
@@ -70,6 +73,14 @@ func (r *Runner) executeReleaseOp(
 				continue
 			}
 
+			// Ignore deployments with the same generation, because this
+			// means that they share underlying resources.
+			if target.Generation != nil && d.Generation != nil {
+				if target.Generation.Id == d.Generation.Id {
+					continue
+				}
+			}
+
 			// TODO this should instead check against the app's platform component
 			// and ignore any deployments that are NOT the app's current platform
 			// component (ya dig?)
@@ -101,7 +112,7 @@ func (r *Runner) executeReleaseOp(
 		log.Info("pruning deploys", "len", len(pruneDeploys))
 		app.UI.Output("Pruning old deployments...", terminal.WithHeaderStyle())
 		for _, d := range pruneDeploys {
-			app.UI.Output("Deployment: %s", d.Id, terminal.WithInfoStyle())
+			app.UI.Output("Deployment: %s (v%d)", d.Id, d.Sequence, terminal.WithInfoStyle())
 			if err := app.DestroyDeploy(ctx, d); err != nil {
 				return result, err
 			}
