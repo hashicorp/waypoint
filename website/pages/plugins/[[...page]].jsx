@@ -1,30 +1,41 @@
 import { productName, productSlug } from 'data/metadata'
-import order from 'data/plugins-navigation.js'
 import DocsPage from '@hashicorp/react-docs-page'
 import {
   generateStaticPaths,
   generateStaticProps,
 } from '@hashicorp/react-docs-page/server'
 
-const subpath = 'plugins'
+const NAV_DATA_FILE = 'data/plugins-nav-data.json'
+const CONTENT_DIR = 'content/plugins'
+const basePath = 'plugins'
 
-function PluginsLayout(props) {
+export default function DocsLayout(props) {
   return (
     <DocsPage
       product={{ name: productName, slug: productSlug }}
-      subpath={subpath}
-      order={order}
+      baseRoute={basePath}
       staticProps={props}
     />
   )
 }
 
 export async function getStaticPaths() {
-  return generateStaticPaths(subpath)
+  return {
+    fallback: false,
+    paths: await generateStaticPaths({
+      navDataFile: NAV_DATA_FILE,
+      localContentDir: CONTENT_DIR,
+    }),
+  }
 }
 
 export async function getStaticProps({ params }) {
-  return generateStaticProps({ subpath, productName, params })
+  return {
+    props: await generateStaticProps({
+      navDataFile: NAV_DATA_FILE,
+      localContentDir: CONTENT_DIR,
+      product: { name: productName, slug: productSlug },
+      params,
+    }),
+  }
 }
-
-export default PluginsLayout
