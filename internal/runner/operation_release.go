@@ -31,6 +31,38 @@ func (r *Runner) executeReleaseOp(
 	// Our target deployment
 	target := op.Release.Deployment
 
+	// Get our last release. If its the same generation, then release is
+	// a no-op and return this value. We only do this if we have a generation.
+	// We SHOULD but if we have an old client, its possible we don't.
+	var release *pb.Release
+	if target.Generation != nil {
+		resp, err := r.client.ListReleases(ctx, &pb.ListReleasesRequest{
+			Application:   app.Ref(),
+			Workspace:     project.WorkspaceRef(),
+			PhysicalState: pb.Operation_CREATED,
+			LoadDetails:   pb.Release_DEPLOYMENT,
+			Order: &pb.OperationOrder{
+				Order: pb.OperationOrder_COMPLETE_TIME,
+				Desc:  true,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range resp.Releases {
+			if r.Preload != nil && r.Preload.Deployment != nil {
+				d := r.Preload.Deployment
+				if d.Generation != nil && d.Generation.Id == target.Generation.Id {
+					release = r
+				}
+			}
+
+			// We always break cause we really only want the first release.
+			// This is the most recent release.
+			break
+		}
+	}
+
 	// If we're pruning, then let's query the deployments we want to prune
 	// ahead of time so that fails fast.
 	var pruneDeploys []*pb.Deployment
@@ -97,10 +129,16 @@ func (r *Runner) executeReleaseOp(
 	}
 
 	// Do the release
-	release, _, err := app.Release(ctx, op.Release.Deployment)
-	if err != nil {
-		return nil, err
+	if release == nil {
+		release, _, err = app.Release(ctx, op.Release.Deployment)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Info("not releasing since last released deploy has a matching generation",
+			"gen", target.Generation.Id)
 	}
+
 	result := &pb.Job_Result{
 		Release: &pb.Job_ReleaseResult{
 			Release: release,
