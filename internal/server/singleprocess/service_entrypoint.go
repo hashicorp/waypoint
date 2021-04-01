@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 	"sync/atomic"
 
@@ -17,6 +16,7 @@ import (
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/logbuffer"
+	"github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -148,6 +148,9 @@ func (s *service) EntrypointConfig(
 				flatLabels = append(flatLabels, fmt.Sprintf("%s=%s", k, v))
 			}
 
+			// Determine our URL fragment
+			pd := &ptypes.Deployment{Deployment: deployment}
+
 			// We always have these default labels for the URL service.
 			flatLabels = append(flatLabels,
 				hznLabelApp+"="+deployment.Application.Application,
@@ -155,7 +158,7 @@ func (s *service) EntrypointConfig(
 				hznLabelWorkspace+"="+deployment.Workspace.Workspace,
 				hznLabelInstance+"="+record.Id,
 
-				":deployment=v"+strconv.FormatUint(deployment.Sequence, 10),
+				":deployment="+pd.URLFragment(),
 				":deployment-order="+strings.ToLower(deployment.Id),
 			)
 			pbVal.Labels = strings.Join(flatLabels, ",")
