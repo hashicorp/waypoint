@@ -423,6 +423,7 @@ func (op *appOperation) dbPut(
 
 		// Next, ensure that the fields we want to match are matched.
 		matchFields := []string{"Sequence"}
+
 		for _, name := range matchFields {
 			f := op.valueFieldReflect(value, name)
 			if !f.IsValid() {
@@ -440,19 +441,50 @@ func (op *appOperation) dbPut(
 
 	if !update {
 		// If we're not updating, then set the sequence number up if we have one.
+		var seq uint64
 		if f := op.valueFieldReflect(value, "Sequence"); f.IsValid() {
-			seq := atomic.AddUint64(op.appSeq(appRef), 1)
+			seq = atomic.AddUint64(op.appSeq(appRef), 1)
 			f.Set(reflect.ValueOf(seq))
 		}
 
-		// Default the generation to a new ULID if it isn't set.
-		if f := op.valueFieldReflect(value, "Generation"); f.IsValid() && f.Interface() == "" {
-			v, err := ulid()
+		if f := op.valueFieldReflect(value, "Generation"); f.IsValid() {
+			gen := f.Interface().(*pb.Generation)
+
+			// Default the generation to a new ULID if it isn't set.
+			if gen == nil || gen.Id == "" {
+				v, err := ulid()
+				if err != nil {
+					return err
+				}
+
+				gen = &pb.Generation{Id: v}
+				f.Set(reflect.ValueOf(gen))
+			}
+
+			// Our initial sequence is always our current to start. But
+			// if we can find an older version, we will update it.
+			gen.InitialSequence = seq
+
+			// Set our initial sequence number by searching the history
+			// to the first operation that used this generation.
+			iter, err := memTxn.LowerBound(
+				op.memTableName(),
+				opGenIndexName,
+				appRef.Project,
+				appRef.Application,
+				gen.Id,
+				uint64(0),
+			)
 			if err != nil {
 				return err
 			}
-
-			f.Set(reflect.ValueOf(v))
+			if raw := iter.Next(); raw != nil {
+				idx := raw.(*operationIndexRecord)
+				if idx.MatchRef(appRef) &&
+					idx.Generation == gen.Id {
+					gen.InitialSequence = idx.Sequence
+				}
+			}
 		}
 	}
 
@@ -593,8 +625,8 @@ func (op *appOperation) indexPut(
 	}
 
 	var generation string
-	if v := op.valueField(value, "Generation"); v != nil && v.(string) != "" {
-		generation = v.(string)
+	if v := op.valueField(value, "Generation"); v != nil && v.(*pb.Generation) != nil {
+		generation = v.(*pb.Generation).Id
 	}
 
 	// Get our refs
@@ -778,6 +810,10 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 						&memdb.StringFieldIndex{
 							Field:     "Generation",
 							Lowercase: true,
+						},
+
+						&memdb.UintFieldIndex{
+							Field: "Sequence",
 						},
 					},
 				},

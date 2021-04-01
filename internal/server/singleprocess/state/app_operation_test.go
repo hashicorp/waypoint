@@ -494,8 +494,38 @@ func TestAppOperation_deploy(t *testing.T) {
 		require.Equal("A", b.Id)
 		require.Equal(uint64(1), b.Sequence)
 		require.NotEmpty(b.Generation)
+		require.Equal(b.Sequence, b.Generation.InitialSequence)
 		require.NotNil(b.Preload)
 		require.Nil(b.Preload.Build)
+		aSeq := b.Sequence
+
+		// Inserting it again will preserve the sequence number
+		b.Id = "C"
+		require.NoError(op.Put(s, false, b))
+
+		raw, err = op.Get(s, appOpById("C"))
+		require.NoError(err)
+		require.NotNil(raw)
+		c, ok := raw.(*pb.Deployment)
+		require.True(ok)
+		require.NotEmpty(b.Generation)
+		require.Equal(b.Generation.Id, c.Generation.Id)
+		require.Equal(aSeq, c.Generation.InitialSequence)
+
+		// Insert it again with a different generation
+		b.Id = "D"
+		b.Generation.Id = "other"
+		require.NoError(op.Put(s, false, b))
+
+		raw, err = op.Get(s, appOpById("D"))
+		require.NoError(err)
+		require.NotNil(raw)
+		d, ok := raw.(*pb.Deployment)
+		require.True(ok)
+		require.Equal(uint64(3), d.Sequence)
+		require.NotEmpty(b.Generation)
+		require.Equal("other", d.Generation.Id)
+		require.Equal(uint64(3), d.Generation.InitialSequence)
 	})
 
 	t.Run("does not change generation if set", func(t *testing.T) {
@@ -510,7 +540,7 @@ func TestAppOperation_deploy(t *testing.T) {
 		// Create with preload set
 		require.NoError(op.Put(s, false, serverptypes.TestValidDeployment(t, &pb.Deployment{
 			Id:         "A",
-			Generation: expectedId,
+			Generation: &pb.Generation{Id: expectedId},
 			Preload: &pb.Deployment_Preload{
 				Build: serverptypes.TestValidBuild(t, nil),
 			},
@@ -524,7 +554,7 @@ func TestAppOperation_deploy(t *testing.T) {
 		b, ok := raw.(*pb.Deployment)
 		require.True(ok)
 		require.Equal("A", b.Id)
-		require.Equal(expectedId, b.Generation)
+		require.Equal(expectedId, b.Generation.Id)
 		require.NotNil(b.Preload)
 		require.Nil(b.Preload.Build)
 	})
