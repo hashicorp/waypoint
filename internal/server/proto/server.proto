@@ -549,6 +549,41 @@ message OperationOrder {
   }
 }
 
+// Generation is a shared message type used by operations to denote the
+// "generation" they're a part of. A generation denotes whether shared
+// physical resources were used or whether new resources were created.
+// Another way to conceptualize generations: immutable deployment models
+// will create new generations each operation, whereas mutable models will
+// reuse a generation.
+//
+// The concept of a "Generation" was introduced in Waypoint 0.4. Operations
+// from earlier versions will have nil generations and callers must handle
+// that scenario.
+//
+// == Read/Write Notes
+//
+// Callers inserting operations should ONLY set the generation ID. Remaining
+// fields will be automatically populated.
+//
+// Updates should never modify the generation.
+message Generation {
+  // Id is the unique identifier for this generation. This value is opaque.
+  // Waypoint internally only requires that two different generations have
+  // two different IDs. The format of the value can be anything.
+  string id = 1;
+
+  // This is the sequence number of the first operation that introduced
+  // this generation. Once all operations using a sequence number are fully
+  // destroyed, a reused generation will introduce a new sequence number.
+  //
+  // This should not be manually set. This value will be automatically
+  // populated on insert. Updates should not modify this value.
+  //
+  // Consumers can compare this to the sequence number of the operation
+  // to determine if this generation is new or existing.
+  uint64 initial_sequence = 2;
+}
+
 /********************************************************************
 * Queueing
 ********************************************************************/
@@ -1814,20 +1849,8 @@ message Deployment {
   // id is the unique ID for this deployment
   string id = 1;
 
-  // generation tracks the physical changes in a deployment. Two deployments
-  // with the same generation share the same physical resources. Another way
-  // to view generations: the same generation is a mutable deployment, whereas
-  // if the generation changes it is an immutable deployment.
-  //
-  // This value is opaque. Waypoint internally only requires that the semantics
-  // documented in the prior paragraph are adhered to. It is recommended that
-  // the value uses a UUID-type formatting.
-  //
-  // If this isn't set, a random ULID will be generated on insert.
-  //
-  // Older deployments from prior to generations being introduced may have
-  // an empty generation. Empty generations from prior deployments are ignored.
-  string generation = 17;
+  // See the docs for Generation.
+  Generation generation = 17;
 
   // state is the state of this deployment.
   Operation.PhysicalState state = 2;
