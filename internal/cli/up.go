@@ -55,18 +55,31 @@ func (c *UpCommand) Run(args []string) int {
 		appUrl := result.Up.AppUrl
 		deployUrl := result.Up.DeployUrl
 
+		// inplace is true if this was an in-place deploy. We detect this
+		// if we have a generation that uses a non-matching sequence number
+		inplace := result.Deploy.Deployment.Generation != nil &&
+			result.Deploy.Deployment.Generation.InitialSequence != result.Deploy.Deployment.Sequence
+
 		// Output
 		app.UI.Output("")
 		switch {
 		case releaseUrl != "":
-			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			if !inplace {
+				app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			} else {
+				app.UI.Output(strings.TrimSpace(deployInPlace)+"\n", terminal.WithSuccessStyle())
+			}
 			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
 			if deployUrl != "" {
 				app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 			}
 
 		case appUrl != "" && deployUrl != "":
-			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			if !inplace {
+				app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			} else {
+				app.UI.Output(strings.TrimSpace(deployInPlace)+"\n", terminal.WithSuccessStyle())
+			}
 			app.UI.Output("           URL: %s", appUrl, terminal.WithSuccessStyle())
 			app.UI.Output("Deployment URL: %s", deployUrl, terminal.WithSuccessStyle())
 

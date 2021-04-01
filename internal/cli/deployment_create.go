@@ -87,16 +87,29 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			releaseUrl = releaseResult.Release.Url
 		}
 
+		// inplace is true if this was an in-place deploy. We detect this
+		// if we have a generation that uses a non-matching sequence number
+		inplace := result.Deployment.Generation != nil &&
+			result.Deployment.Generation.InitialSequence != result.Deployment.Sequence
+
 		// Output
 		app.UI.Output("")
 		switch {
 		case releaseUrl != "":
-			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			if !inplace {
+				app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			} else {
+				app.UI.Output(strings.TrimSpace(deployInPlace)+"\n", terminal.WithSuccessStyle())
+			}
 			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
 			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
 
 		case hostname != nil:
-			app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			if !inplace {
+				app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+			} else {
+				app.UI.Output(strings.TrimSpace(deployInPlace)+"\n", terminal.WithSuccessStyle())
+			}
 			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())
 			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
 
@@ -163,5 +176,10 @@ The release did not provide a URL and the URL service is disabled on the
 server, so no further URL information can be automatically provided. If
 this is unexpected, please ensure the Waypoint server has both the URL service
 enabled and advertise addresses set.
+`
+
+	deployInPlace = `
+The deploy was successful! This deploy was done in-place so the deployment
+URL may match a previous deployment.
 `
 )
