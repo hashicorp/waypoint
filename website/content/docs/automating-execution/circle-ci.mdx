@@ -1,7 +1,6 @@
 ---
 layout: docs
 page_title: Integrating Waypoint with CircleCI
-sidebar_title: CircleCI
 description: |-
   How to utilize Waypoint with CircleCI as the service to run
   Waypoint to build and deploy applications
@@ -17,10 +16,10 @@ The example demonstrates the main steps:
 1. **Set-up the dependencies Waypoint might use.** This could be
    a Kubernetes context for a more advanced application, or in the
    below example, a Docker daemon to run applications on.
-2. **Install and Initalize Waypoint with `waypoint/init`.** This command will 
-   install the waypoint CLI, start up a remote docker instance and run 
+2. **Install and Initalize Waypoint with `waypoint/init`.** This command will
+   install the waypoint CLI, start up a remote docker instance and run
    `waypoint init`.
-4. **Run the build, deploy, and release.** We can leverage the orb's `up` 
+3. **Run the build, deploy, and release.** We can leverage the orb's `up`
    command to do so
 
 ## Workspaces
