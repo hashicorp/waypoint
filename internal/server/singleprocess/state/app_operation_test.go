@@ -526,6 +526,20 @@ func TestAppOperation_deploy(t *testing.T) {
 		require.NotEmpty(b.Generation)
 		require.Equal("other", d.Generation.Id)
 		require.Equal(uint64(3), d.Generation.InitialSequence)
+
+		// Cannot update the generation sequence
+		d.Generation.InitialSequence = 42
+		require.NoError(op.Put(s, true, d))
+
+		raw, err = op.Get(s, appOpById("D"))
+		require.NoError(err)
+		require.NotNil(raw)
+		d, ok = raw.(*pb.Deployment)
+		require.True(ok)
+		require.Equal(uint64(3), d.Sequence)
+		require.NotEmpty(b.Generation)
+		require.Equal("other", d.Generation.Id)
+		require.Equal(uint64(3), d.Generation.InitialSequence)
 	})
 
 	t.Run("does not change generation if set", func(t *testing.T) {

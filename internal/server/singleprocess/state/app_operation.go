@@ -422,8 +422,7 @@ func (op *appOperation) dbPut(
 		}
 
 		// Next, ensure that the fields we want to match are matched.
-		matchFields := []string{"Sequence"}
-
+		matchFields := []string{"Generation", "Sequence"}
 		for _, name := range matchFields {
 			f := op.valueFieldReflect(value, name)
 			if !f.IsValid() {
