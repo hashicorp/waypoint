@@ -45,7 +45,7 @@ func appendContext(parent, child *hcl.EvalContext) *hcl.EvalContext {
 	}
 
 	// We need to get the full tree of contexts since we need to go
-	// paernt => child traversal but HCL only supports child => parent.
+	// parent => child traversal but HCL only supports child => parent.
 	var tree []*hcl.EvalContext
 	for current := child; current != nil; current = current.Parent() {
 		tree = append(tree, current)
