@@ -44,10 +44,23 @@ func appendContext(parent, child *hcl.EvalContext) *hcl.EvalContext {
 		return parent
 	}
 
-	newChild := parent.NewChild()
-	newChild.Variables = child.Variables
-	newChild.Functions = child.Functions
-	return newChild
+	// We need to get the full tree of contexts since we need to go
+	// paernt => child traversal but HCL only supports child => parent.
+	var tree []*hcl.EvalContext
+	for current := child; current != nil; current = current.Parent() {
+		tree = append(tree, current)
+	}
+
+	// Go backward through the tree (parent => child) order to ensure
+	// that we merge all the context trees properly.
+	for i := len(tree) - 1; i >= 0; i-- {
+		current := tree[i]
+		parent = parent.NewChild()
+		parent.Variables = current.Variables
+		parent.Functions = current.Functions
+	}
+
+	return parent
 }
 
 // addPathValue adds the "path" variable to the context.
