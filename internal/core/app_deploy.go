@@ -18,12 +18,6 @@ import (
 // Deploy deploys the given artifact.
 // TODO(mitchellh): test
 func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployment, error) {
-	// Get the deployment config
-	resp, err := a.client.RunnerGetDeploymentConfig(ctx, &pb.RunnerGetDeploymentConfigRequest{})
-	if err != nil {
-		return nil, err
-	}
-
 	// Add our build to our config
 	var evalCtx hcl.EvalContext
 	evalCtx.Variables = map[string]cty.Value{}
@@ -31,20 +25,10 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 		a.logger.Warn("failed to prepare template variables, will not be available",
 			"err", err)
 	}
-
-	// Build our deployment config and expose the env we need to the config
-	deployConfig := &component.DeploymentConfig{
-		ServerAddr:          resp.ServerAddr,
-		ServerTls:           resp.ServerTls,
-		ServerTlsSkipVerify: resp.ServerTlsSkipVerify,
+	deployConfig, err := a.deployEvalContext(ctx, &evalCtx)
+	if err != nil {
+		return nil, err
 	}
-	deployEnv := map[string]cty.Value{}
-	for k, v := range deployConfig.Env() {
-		deployEnv[k] = cty.StringVal(v)
-	}
-	evalCtx.Variables["entrypoint"] = cty.ObjectVal(map[string]cty.Value{
-		"env": cty.MapVal(deployEnv),
-	})
 
 	// Render the config
 	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, &evalCtx)
@@ -63,6 +47,38 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 	}
 
 	return msg.(*pb.Deployment), nil
+}
+
+// deployEvalContext sets the HCL evaluation context for `deploy` blocks.
+func (a *App) deployEvalContext(
+	ctx context.Context,
+	evalCtx *hcl.EvalContext,
+) (*component.DeploymentConfig, error) {
+	if evalCtx.Variables == nil {
+		evalCtx.Variables = map[string]cty.Value{}
+	}
+
+	// Get the deployment config
+	resp, err := a.client.RunnerGetDeploymentConfig(ctx, &pb.RunnerGetDeploymentConfigRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Build our deployment config and expose the env we need to the config
+	deployConfig := &component.DeploymentConfig{
+		ServerAddr:          resp.ServerAddr,
+		ServerTls:           resp.ServerTls,
+		ServerTlsSkipVerify: resp.ServerTlsSkipVerify,
+	}
+	deployEnv := map[string]cty.Value{}
+	for k, v := range deployConfig.Env() {
+		deployEnv[k] = cty.StringVal(v)
+	}
+	evalCtx.Variables["entrypoint"] = cty.ObjectVal(map[string]cty.Value{
+		"env": cty.MapVal(deployEnv),
+	})
+
+	return deployConfig, nil
 }
 
 type deployOperation struct {

@@ -1,0 +1,3 @@
+```release-note:bug
+core: default releasers initialize properly when they use HCL variables
+```
