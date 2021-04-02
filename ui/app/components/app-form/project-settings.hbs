@@ -1,5 +1,7 @@
 <form class="pds-form" {{on "submit" this.saveSettings}}>
+
   <div part="fields">
+    <h2>Git settings</h2>
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="git-source-url" class="pds-fieldName">
@@ -156,6 +158,52 @@
 
         </div>
       </div>
+    </fieldset>
+    <h2>Waypoint.hcl settings</h2>
+    <fieldset class="pds-formFieldSet">
+      <div class="pds-formField">
+        <label for="project-hcl-location" class="pds-fieldName">
+          {{t "form.project_settings.hcl_location"}}
+        </label>
+        <div class="pds-formRadioWrapper">
+          <Pds::RadioField
+            @id="project-hcl-location-repo"
+            name="project-hcl-location"
+            value={{false}}
+            checked={{eq this.serverHcl false}}
+            {{on "input" (set this "serverHcl" false)}}
+          >
+            {{t "form.project_settings.hcl_location_repo_label"}}
+          </Pds::RadioField>
+          <Pds::RadioField
+            @id="project-hcl-location-server"
+            name="project-hcl-location"
+            value={{true}}
+            checked={{eq this.serverHcl true}}
+            {{on "input" (set this "serverHcl" true)}}
+          >
+            {{t "form.project_settings.hcl_location_server_label"}}
+          </Pds::RadioField>
+        </div>
+      </div>
+      {{#if this.serverHcl}}
+        <div class="pds-formField">
+          <label for="project-hcl-content" class="pds-fieldName">
+            {{t "form.project_settings.hcl_content_label"}}
+          </label>
+          <Pds::HelpText>
+            <p>Paste or edit your waypoint configuration here to store it on the server</p>
+          </Pds::HelpText>
+          <Pds::Textarea
+            id="project-hcl-content"
+            placeholder=""
+            value={{this.project.waypointHcl}}
+            required={{this.this.serverHcl}}
+            {{on "input" (pick "target.value" (set this.project "waypointHcl"))}}
+          />
+        </div>
+      {{else}}
+      {{/if}}
     </fieldset>
   </div>
 
