@@ -12,7 +12,7 @@ You will need the following things properly installed on your computer.
   - You can use node version managers to manage all of your node versions, for example [nvm](https://github.com/nvm-sh/nvm), [n](https://github.com/tj/n), etc.
 - [Yarn](https://classic.yarnpkg.com/en/docs/install)
 - [Ember CLI](https://ember-cli.com/)
-
+- [Google Chrome](https://google.com/chrome/)
 
 ## Installation
 
