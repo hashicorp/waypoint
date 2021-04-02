@@ -103,7 +103,13 @@ func (a *App) createReleaser(ctx context.Context, hclCtx *hcl.EvalContext) (*Com
 	}
 
 	// No releaser. Let's try a default releaser if we can. We first
-	// initialize the platform.
+	// initialize the platform. We need to configure the eval context to
+	// match a deployment.
+	hclCtx = hclCtx.NewChild()
+	if _, err := a.deployEvalContext(ctx, hclCtx); err != nil {
+		return nil, err
+	}
+
 	log.Debug("no release manager plugin, initializing platform to check for default releaser")
 	platformC, err := componentCreatorMap[component.PlatformType].Create(ctx, a, hclCtx)
 	if err != nil {
