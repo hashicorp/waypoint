@@ -33,6 +33,7 @@ func EvalContext(parent *hcl.EvalContext, pwd string) *hcl.EvalContext {
 	addFuncs(funcs.VCSGitFuncs(pwd))
 	addFuncs(funcs.Filesystem())
 	addFuncs(funcs.Encoding())
+	addFuncs(funcs.Datetime())
 
 	return result
 }

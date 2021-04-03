@@ -593,6 +593,7 @@ func (c *AppDocsCommand) funcsMDX() int {
 	addFuncs(funcs.VCSGitFuncs("."))
 	addFuncs(funcs.Filesystem())
 	addFuncs(funcs.Encoding())
+	addFuncs(funcs.Datetime())
 
 	docs := funcs.Docs()
 
