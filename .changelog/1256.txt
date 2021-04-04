@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/aws/ecs: Route 53 "A" Type record properly created when not found for domain name
+```
