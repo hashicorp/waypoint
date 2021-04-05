@@ -1,0 +1,3 @@
+```release-note:feature
+config: `timestamp` function allows you to avail the current date and time in your Waypoint configuration.
+```
