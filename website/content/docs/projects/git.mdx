@@ -39,22 +39,22 @@ information to be present in the Waypoint configuration. Learn more about
 
 ### Add to an existing Waypoint project
 
-If you already have a Waypoint project, you can add git integration just as you
+If you already have a Waypoint project, you can add Git integration just as you
 would if you were to start a new one. You'll want to include a runner stanza in
-your `waypoint.hcl`, or enable git through the UI. Also ensure your Waypoint
+your `waypoint.hcl`, or enable Git through the UI. Also ensure your Waypoint
 server is [at least 0.3.0 and has runners enabled.](#Waypoint-Server-Requirement)
 
 ### Configuring via the UI
 
-If you wish to enable git settings on a project in the UI, you'll want to navigate
+If you wish to enable Git settings on a project in the UI, you'll want to navigate
 to the project homepage after running `waypoint ui -authenticate`. From there,
 you can click on the settings gear icon on the right to navigate to the project
-settings. Fill in the requested fields to setup git on your project. **It is
+settings. Fill in the requested fields to setup Git on your project. **It is
 recommended that you configure the Git data source using the CLI or web UI.**
 
 #### Configuring via waypoint.hcl
 
-If you wish to enable git inside your project file:
+If you wish to enable Git inside your project file:
 
 ```hcl
 project = "example"
@@ -106,7 +106,7 @@ Waypoint will watch only that ref for changes.
 
 ## Debugging Git Integration Failures
 
-For triaging any failures with git or Waypoint runners, you'll want to look in
+For triaging any failures with Git or Waypoint runners, you'll want to look in
 a couple of places.
 
 ### UI Troubleshooting
