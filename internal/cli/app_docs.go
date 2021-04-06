@@ -565,7 +565,6 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 			doc, err := component.Documentation(raw)
 			if err != nil {
 				panic(err.Error())
-				continue
 			}
 
 			switch f.t {
