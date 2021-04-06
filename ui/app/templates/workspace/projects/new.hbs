@@ -1,19 +1,19 @@
 <AppBreadcrumbs/>
 <PageHeader @iconName="plus-plain">
   <div class="title">
-    <h1>New Project</h1>
+    <h1>{{t 'form.project_new.title'}}</h1>
   </div>
 </PageHeader>
 
-<form class="pds-form">
+<form class="pds-form" {{on "submit" this.saveProject}}>
   <div part="fields">
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="project-name" class="pds-fieldName">
-          Project Name
+          {{t 'form.project_new.project_name_label'}}
         </label>
         <Pds::HelpText>
-          <p>The Project Name needs to match your waypoint.hcl configuration</p>
+          <p>{{t 'form.project_new.project_name_helptext'}}</p>
         </Pds::HelpText>
         <Pds::Input
           @type="text"
@@ -28,24 +28,23 @@
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="create-git" class="pds-fieldName">
-          <Pds::Icon @type="git-repository"/> Git Configuration
+          <Pds::Icon @type="git-repository"/> {{t 'form.project_new.create_git_label'}}
         </label>
         <Pds::HelpText>
-          <p>Connect a git repository. If you skip this, you can always configure it later in project settings.</p>
+          <p>{{t 'form.project_new.create_git_helptext'}}</p>
         </Pds::HelpText>
         <Pds::CheckboxField
           @checked={{this.createGit}}
           @id="create-git"
           {{on "change" (set this "createGit" (not this.createGit))}}
         >
-          Connect a Git repository to this Project
+          {{t 'form.project_new.create_git_checkbox_label'}}
         </Pds::CheckboxField>
 
       </div>
     </fieldset>
   </div>
-  <Pds::Button @variant="primary" {{on "click" this.saveProject}}>Next</Pds::Button>
+  <Pds::Button @variant="primary" @type="submit">
+    {{t 'form.project_new.button'}}
+  </Pds::Button>
 </form>
-
-
-{{outlet}}

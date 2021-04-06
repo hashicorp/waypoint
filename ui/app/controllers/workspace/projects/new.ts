@@ -12,7 +12,8 @@ export default class WorkspaceProjectsNew extends Controller {
   @tracked createGit = false;
 
   @action
-  async saveProject() {
+  async saveProject(e: Event) {
+    e.preventDefault();
     let project = this.model;
     let ref = new Project();
     ref.setName(project.name);
