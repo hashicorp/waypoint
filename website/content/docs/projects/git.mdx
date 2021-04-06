@@ -57,6 +57,8 @@ recommended that you configure the Git data source using the CLI or web UI.**
 If you wish to enable git inside your project file:
 
 ```hcl
+project = "example"
+
 runner {
   enable = true
 
@@ -65,21 +67,11 @@ runner {
     path = "docker/node-js"
   }
 }
+
+app "example" {
+  // etc
+}
 ```
-
-### Configuring via the UI
-
-If you wish to enable git settings on a project in the UI, you'll want to navigate
-to the project homepage after running `waypoint ui -authenticate`. From there,
-you can click on the settings gear icon on the right to navigate to the project
-settings. Fill in the requested fields to setup git on your project.
-
-### Add to an existing Waypoint project
-
-If you already have a Waypoint project, you can add git integration just as you
-would if you were to start a new one. You'll want to include a runner stanza in
-your `waypoint.hcl`, and ensure your Waypoint server is [at least 0.3.0 and has
-runners enabled.](#Waypoint-Server-Requirement)
 
 ## Polling
 
