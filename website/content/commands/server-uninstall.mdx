@@ -32,8 +32,6 @@ Usage: `waypoint server uninstall [options]`
 - `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to uninstall.
 - `-ignore-runner-error` - Ignore any errors encountered while uninstalling runners. This allows the server to be uninstalled even if runner uninstallation fails. Note that this may leave runners dangling since future 'uninstall' runs will do nothing if the server is uninstalled.
 
-#### docker Options
-
 #### kubernetes Options
 
 - `-k8s-context=<string>` - The Kubernetes context to unisntall the Waypoint server from. If left unset, Waypoint will use the current Kubernetes context.
@@ -41,5 +39,7 @@ Usage: `waypoint server uninstall [options]`
 #### nomad Options
 
 - `-nomad-purge` - Purge the Waypoint server job after deregistering as part of uninstall.
+
+#### docker Options
 
 @include "commands/server-uninstall_more.mdx"

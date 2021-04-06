@@ -648,7 +648,7 @@ deploy "kubernetes" {
 		"a map of resource limits and requests to apply to a pod on deploy",
 		docs.Summary(
 			"resource limits and requests for a pod. limits and requests options "+
-				"must start with either 'limits_' or 'requests_'. Any other options "+
+				"must start with either 'limits\\_' or 'requests\\_'. Any other options "+
 				"will be ignored.",
 		),
 	)

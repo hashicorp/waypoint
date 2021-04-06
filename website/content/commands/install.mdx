@@ -30,15 +30,6 @@ Usage: `waypoint install [options]`
 - `-context-set-default` - Set the newly installed server as the default CLI context.
 - `-platform=<string>` - Platform to install the Waypoint server into.
 
-#### nomad Options
-
-- `-nomad-annotate-service=<key=value>` - Annotations for the Service generated.
-- `-nomad-dc=<string>` - Datacenters to install to for Nomad.
-- `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad.
-- `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
-- `-nomad-region=<string>` - Region to install to for Nomad.
-- `-nomad-server-image=<string>` - Docker image for the Waypoint server.
-
 #### docker Options
 
 - `-docker-server-image=<string>` - Docker image for the Waypoint server.
@@ -58,5 +49,14 @@ Usage: `waypoint install [options]`
 - `-k8s-server-image=<string>` - Docker image for the Waypoint server.
 - `-k8s-storageclassname=<string>` - Name of the StorageClass required by the volume claim to install the Waypoint server image to.
 - `-k8s-storage-request=<string>` - Configures the requested persistent volume size for the Waypoint server in Kubernetes.
+
+#### nomad Options
+
+- `-nomad-annotate-service=<key=value>` - Annotations for the Service generated.
+- `-nomad-dc=<string>` - Datacenters to install to for Nomad.
+- `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad.
+- `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
+- `-nomad-region=<string>` - Region to install to for Nomad.
+- `-nomad-server-image=<string>` - Docker image for the Waypoint server.
 
 @include "commands/install_more.mdx"
