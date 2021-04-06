@@ -17,10 +17,18 @@ This is an optional integration. If you do not associate a project with a Git
 repository, you can always execute local operations such as `waypoint up`
 by checking out the source code and having a `waypoint.hcl` file.
 
+## Waypoint Server Requirement
+
+Git Polling requires Waypoint server version 0.3.0 and later. If you are on an older
+version and wish to take advantage of this feature, follow the [upgrade guide](/docs/upgrading)
+to upgrade your Waypoint Server. Note that you will have to manually install
+a runner in your server if you are upgrading from an old server version. A fresh
+installation of Waypoint server 0.3.0 will automatically include runners.
+
 ## Configuring the Project
 
 The Git repository associated with a project is configured with the
-[`data_source` stanza in the `runner` stanza in the waypoint.hcl file](/docs/waypoint-hcl/runner).
+`data_source` stanza in the `runner` stanza in the [waypoint.hcl file](/docs/waypoint-hcl/runner).
 These settings can also be specified via the CLI or web UI.
 
 **It is recommended that you configure the Git data source using
@@ -41,6 +49,13 @@ runner {
   }
 }
 ```
+
+### Add to an existing Waypoint project
+
+If you already have a Waypoint project, you can add git integration just as you
+would if you were to start a new one. You'll want to include a runner stanza in
+your `waypoint.hcl`, and ensure your Waypoint server is [at least 0.3.0 and has
+runners enabled.](#Waypoint-Server-Requirement)
 
 ## Polling
 
@@ -72,3 +87,7 @@ TODO SCREENSHOT
 The value of this field can be a branch name, a tag name, or a fully
 qualified Git ref such as `refs/pull/1014`. When a ref is specified,
 Waypoint will watch only that ref for changes.
+
+## Debugging Git Integration Failures
+
+TODO - where to look in the logs when git polling fails, what to search/grep for, etc
