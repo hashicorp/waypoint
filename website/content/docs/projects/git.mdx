@@ -106,4 +106,24 @@ Waypoint will watch only that ref for changes.
 
 ## Debugging Git Integration Failures
 
-TODO - where to look in the logs when git polling fails, what to search/grep for, etc
+For triaging any failures with git or Waypoint runners, you'll want to look in
+a couple of places.
+
+### UI Troubleshooting
+
+When clicking on a failed build, deploy, or release, the UI should show logs
+of what happened and why the previous run has failed. If there's not enough
+information or context here, you'll want to dig into the Waypoint runner logs
+to determine what went wrong.
+
+### Server side Troubleshooting
+
+Waypoint uses runners to execute Git operations, build containers, and more. If
+you are troubleshooting a failure, you'll want to look at the runner logs to see
+if there's any additional information there. This will depend on what platform
+you are deploying to.
+
+#### More Information
+
+For more information on debugging and troubleshooting Waypoint, please check out
+the [docs for troubleshooting](/docs/troubleshooting).
