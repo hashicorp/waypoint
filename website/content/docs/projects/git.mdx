@@ -123,6 +123,13 @@ you are troubleshooting a failure, you'll want to look at the runner logs to see
 if there's any additional information there. This will depend on what platform
 you are deploying to.
 
+If you are deploying to Kubernetes, you'll want to look at the Waypoint runner
+pod logs:
+
+```
+kubectl logs pod/waypoint-runner-7744b58c9b-mvrcb
+```
+
 #### More Information
 
 For more information on debugging and troubleshooting Waypoint, please check out
