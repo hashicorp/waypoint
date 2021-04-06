@@ -2,13 +2,14 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { Ref, GetProjectRequest } from 'waypoint-pb';
-
+import PollModelService from 'waypoint/services/poll-model';
 interface ProjectModelParams {
   project_id: string;
 }
 
 export default class ProjectDetail extends Route {
   @service api!: ApiService;
+  @service pollModel!: PollModelService;
 
   breadcrumbs = [
     {
@@ -28,5 +29,9 @@ export default class ProjectDetail extends Route {
     let project = resp.getProject();
 
     return project?.toObject();
+  }
+
+  afterModel() {
+    this.pollModel.setup(this);
   }
 }

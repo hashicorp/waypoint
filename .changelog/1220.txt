@@ -1,0 +1,3 @@
+```release-note:feature
+ui/project-create: Add ability to create a project from the browser UI
+```

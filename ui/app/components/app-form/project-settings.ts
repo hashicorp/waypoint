@@ -217,7 +217,7 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     try {
       await this.api.client.upsertProject(req, this.api.WithMeta());
       this.flashMessages.success('Settings saved');
-      this.router.transitionTo('workspace.projects.project', this.project);
+      this.router.transitionTo('workspace.projects.project', this.project.name);
     } catch (err) {
       this.flashMessages.error('Failed to save Settings', { content: err.message, sticky: true });
     }

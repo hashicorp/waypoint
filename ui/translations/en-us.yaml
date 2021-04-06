@@ -9,6 +9,7 @@ nav:
   deployments_index: 'Deployments index page'
   releases_index: 'Releases index page'
   exec: 'Exec'
+  settings: 'Settings'
   logs: 'Logs'
   auth: 'Authenticate'
 
@@ -24,6 +25,14 @@ page:
     title: 'Releases'
 
 form:
+  project_new:
+    title: 'New Project'
+    project_name_label: 'Project Name'
+    project_name_helptext: 'The Project Name needs to match your waypoint.hcl configuration.'
+    create_git_label: 'Git Configuration'
+    create_git_helptext: 'Connect a git repository. If you skip this, you can always configure it later in project settings.'
+    create_git_checkbox_label: 'Connect a Git repository to this Project'
+    button: 'Next'
   project_settings:
     git_source_url_label: 'Git Source URL'
     git_source_ref_label: 'Git Ref'

@@ -1,0 +1,8 @@
+<PageHeader @iconName="settings">
+  <div class="title">
+    <h1>Application Settings</h1>
+  </div>
+</PageHeader>
+
+<AppForm::AppSettings @app={{this.model}} @project={{this.project}}/>
+{{outlet}}
