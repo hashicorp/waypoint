@@ -1,0 +1,3 @@
+```release-note:feature
+ui/project-hcl-input: Add ability to input a waypoint.hcl configuration from the browser UI
+```
