@@ -8,6 +8,10 @@ import { action } from '@ember/object';
 import { Project, UpsertProjectRequest, Job, Application } from 'waypoint-pb';
 import parseUrl from 'parse-url';
 
+const FORMAT = {
+  HCL: 0,
+  JSON: 1,
+};
 class ProjectModel {
   name: string;
   applicationsList: [];
@@ -63,7 +67,7 @@ const DEFAULT_PROJECT_MODEL = {
   },
   remoteEnabled: null,
   waypointHcl: '',
-  waypointHclFormat: 0,
+  waypointHclFormat: FORMAT.HCL,
 };
 
 interface ProjectSettingsArgs {
@@ -226,7 +230,7 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
       let hclEncoder = new window.TextEncoder();
       let waypointHcl = hclEncoder.encode(this.project.waypointHcl);
       // Hardcode hcl for now
-      ref.setWaypointHclFormat(0);
+      ref.setWaypointHclFormat(FORMAT.HCL);
       ref.setWaypointHcl(waypointHcl);
     }
     let applist = project.applicationsList.map((app: Application.AsObject) => {
