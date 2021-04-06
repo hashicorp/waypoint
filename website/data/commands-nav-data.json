@@ -171,6 +171,14 @@
     "path": "server-snapshot"
   },
   {
+    "title": "server uninstall",
+    "path": "server-uninstall"
+  },
+  {
+    "title": "server upgrade",
+    "path": "server-upgrade"
+  },
+  {
     "title": "token exchange",
     "path": "token-exchange"
   },

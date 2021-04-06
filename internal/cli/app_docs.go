@@ -426,6 +426,7 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 		component.RegistryType,
 		component.PlatformType,
 		component.ReleaseManagerType,
+		component.ConfigSourcerType,
 	}
 
 	docfactories := map[component.Type]*factory.Factory{}
@@ -454,6 +455,7 @@ func (c *AppDocsCommand) builtinDocs(args []string) int {
 		{docfactories[component.RegistryType], "registry"},
 		{docfactories[component.PlatformType], "platform"},
 		{docfactories[component.ReleaseManagerType], "releasemanager"},
+		{docfactories[component.ConfigSourcerType], "configsourcer"},
 	}
 
 	for _, f := range factories {
@@ -562,7 +564,7 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 
 			doc, err := component.Documentation(raw)
 			if err != nil {
-				continue
+				panic(err.Error())
 			}
 
 			switch f.t {

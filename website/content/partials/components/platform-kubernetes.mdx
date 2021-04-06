@@ -16,7 +16,39 @@ deploy "kubernetes" {
 
 ### Required Parameters
 
-This plugin has no required parameters.
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### probe (category)
+
+Configuration to control liveness and readiness probes.
+
+Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
+
+##### probe.failure_threshold
+
+Number of times a liveness probe can fail before the container is killed.
+
+FailureThreshold \* TimeoutSeconds should be long enough to cover your worst case startup times.
+
+- Type: **uint**
+- **Optional**
+- Default: 5
+
+##### probe.initial_delay
+
+Time in seconds to wait before performing the initial liveness and readiness probes.
+
+- Type: **uint**
+- **Optional**
+- Default: 5
+
+##### probe.timeout
+
+Time in seconds before the probe fails.
+
+- Type: **uint**
+- **Optional**
+- Default: 5
 
 ### Optional Parameters
 
@@ -103,7 +135,7 @@ If the replica count is maintained outside waypoint, for instance by a pod autos
 
 A map of resource limits and requests to apply to a pod on deploy.
 
-Resource limits and requests for a pod. limits and requests options must start with either 'limits_' or 'requests_'. Any other options will be ignored.
+Resource limits and requests for a pod. limits and requests options must start with either 'limits*' or 'requests*'. Any other options will be ignored.
 
 - Type: **map of string to string**
 - **Optional**

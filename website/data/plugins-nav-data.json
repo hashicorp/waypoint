@@ -48,6 +48,10 @@
     "path": "pack"
   },
   {
+    "title": "terraform-cloud",
+    "path": "terraform-cloud"
+  },
+  {
     "title": "vault",
     "path": "vault"
   }
