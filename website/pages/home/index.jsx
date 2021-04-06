@@ -433,7 +433,7 @@ export default function HomePage() {
               learnMoreLink: '/docs/logs',
               content: (
                 <Terminal
-                  theme="waypoint"
+                  product="waypoint"
                   lines={[
                     { code: '$ waypoint logs' },
                     {
@@ -472,7 +472,7 @@ export default function HomePage() {
               learnMoreLink: '/docs/exec',
               content: (
                 <Terminal
-                  theme="waypoint"
+                  product="waypoint"
                   lines={[
                     { code: '$ waypoint exec bash' },
                     {
@@ -494,7 +494,7 @@ export default function HomePage() {
               learnMoreLink: '/docs/url',
               content: (
                 <Terminal
-                  theme="waypoint"
+                  product="waypoint"
                   lines={[
                     { code: '$ waypoint deploy' },
                     { code: '' },
@@ -550,7 +550,7 @@ export default function HomePage() {
               learnMoreLink: '/docs/automating-execution',
               content: (
                 <Terminal
-                  theme="waypoint"
+                  product="waypoint"
                   title="config.yaml"
                   lines={[
                     {
@@ -605,7 +605,7 @@ export default function HomePage() {
               learnMoreLink: '/docs/extending-waypoint',
               content: (
                 <Terminal
-                  theme="waypoint"
+                  product="waypoint"
                   title="plugin.go"
                   lines={[
                     {

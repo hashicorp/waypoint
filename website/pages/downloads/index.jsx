@@ -44,7 +44,7 @@ export default function DownloadsPage({ releases }) {
             src={require('./img/waypoint-logo.svg')}
           />
         }
-        brand="waypoint"
+        product="waypoint"
         tutorialLink={{
           href: 'https://learn.hashicorp.com/waypoint',
           label: 'View Tutorials at HashiCorp Learn',
