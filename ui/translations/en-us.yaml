@@ -34,6 +34,7 @@ form:
     create_git_checkbox_label: 'Connect a Git repository to this Project'
     button: 'Next'
   project_settings:
+    git_title: 'Git settings'
     git_source_url_label: 'Git Source URL'
     git_source_ref_label: 'Git Ref'
     git_source_path_label: 'Git Source Path (optional)'
@@ -47,9 +48,11 @@ form:
     git_source_basic_password_label: 'Password'
     git_sync_label: 'Automated Sync'
     git_sync_description_label: 'Enable automated deployment on changes'
+    hcl_title: 'Waypoint.hcl settings'
     hcl_location: 'Waypoint.hcl config location'
     hcl_location_repo_label: 'in Project repository'
     hcl_location_server_label: 'on the Waypoint server'
+    hcl_content_helptext: 'Paste or edit your waypoint configuration here to store it on the server'
     hcl_content_label: 'waypoint.hcl file'
     button: 'Apply'
 

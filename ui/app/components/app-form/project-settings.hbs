@@ -1,7 +1,7 @@
 <form class="pds-form" {{on "submit" this.saveSettings}}>
 
   <div part="fields">
-    <h2>Git settings</h2>
+    <h2>{{t "form.project_settings.git_title"}}</h2>
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="git-source-url" class="pds-fieldName">
@@ -159,7 +159,7 @@
         </div>
       </div>
     </fieldset>
-    <h2>Waypoint.hcl settings</h2>
+    <h2>{{t "form.project_settings.hcl_title"}}</h2>
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="project-hcl-location" class="pds-fieldName">
@@ -192,7 +192,7 @@
             {{t "form.project_settings.hcl_content_label"}}
           </label>
           <Pds::HelpText>
-            <p>Paste or edit your waypoint configuration here to store it on the server</p>
+            <p>{{t "form.project_settings.hcl_content_helptext"}}</p>
           </Pds::HelpText>
           <Pds::Textarea
             id="project-hcl-content"
