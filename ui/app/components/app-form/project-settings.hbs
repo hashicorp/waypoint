@@ -197,6 +197,9 @@
           <Pds::Textarea
             id="project-hcl-content"
             placeholder=""
+            class="pds-textarea__codeInput"
+            spellcheck="false"
+            rows="14"
             value={{this.project.waypointHcl}}
             required={{this.this.serverHcl}}
             {{on "input" (pick "target.value" (set this.project "waypointHcl"))}}
