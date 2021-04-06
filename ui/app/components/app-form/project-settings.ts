@@ -8,6 +8,10 @@ import { action } from '@ember/object';
 import { Project, UpsertProjectRequest, Job, Application } from 'waypoint-pb';
 import parseUrl from 'parse-url';
 
+const FORMAT = {
+  HCL: 0,
+  JSON: 1,
+};
 class ProjectModel {
   name: string;
   applicationsList: [];
@@ -33,6 +37,8 @@ class ProjectModel {
     interval: string,
   };
   remoteEnabled: boolean;
+  waypointHcl: string;
+  waypointHclFormat: number;
 }
 
 const DEFAULT_PROJECT_MODEL = {
@@ -60,10 +66,12 @@ const DEFAULT_PROJECT_MODEL = {
     interval: '2m',
   },
   remoteEnabled: null,
+  waypointHcl: '',
+  waypointHclFormat: FORMAT.HCL,
 };
 
 interface ProjectSettingsArgs {
-  project: ProjectModel
+  project: ProjectModel;
 }
 
 export default class AppFormProjectSettings extends Component<ProjectSettingsArgs> {
@@ -73,6 +81,7 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   @service router!: RouterService;
   @tracked project: ProjectModel;
   @tracked authCase: number;
+  @tracked serverHcl: boolean;
 
   constructor(owner: any, args: any) {
     super(owner, args);
@@ -93,12 +102,20 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
       this.authCase = project.dataSource?.git?.ssh?.privateKeyPem ? 5 : 4;
     } else {
       // set empty default dataSource data if non-existent
-      this.project.dataSource = DEFAULT_PROJECT_MODEL.dataSource
+      this.project.dataSource = DEFAULT_PROJECT_MODEL.dataSource;
       this.authCase = 4;
     }
 
     if (!this.project?.dataSourcePoll) {
       this.project.dataSourcePoll = DEFAULT_PROJECT_MODEL.dataSourcePoll;
+    }
+
+    if (this.project?.waypointHcl) {
+      this.serverHcl = true;
+    } else {
+      this.serverHcl = false;
+      this.project.waypointHcl = DEFAULT_PROJECT_MODEL.waypointHcl;
+      this.project.waypointHclFormat = DEFAULT_PROJECT_MODEL.waypointHclFormat;
     }
   }
 
@@ -208,10 +225,20 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     dataSource.setGit(git);
     ref.setDataSource(dataSource);
     ref.setDataSourcePoll(dataSourcePoll);
+
+    if (this.serverHcl && this.project.waypointHcl) {
+      let hclEncoder = new window.TextEncoder();
+      let waypointHcl = hclEncoder.encode(this.project.waypointHcl);
+      // Hardcode hcl for now
+      ref.setWaypointHclFormat(FORMAT.HCL);
+      ref.setWaypointHcl(waypointHcl);
+    }
     let applist = project.applicationsList.map((app: Application.AsObject) => {
       return new Application(app);
     });
     ref.setApplicationsList(applist);
+
+    // Build and trigger request
     let req = new UpsertProjectRequest();
     req.setProject(ref);
     try {

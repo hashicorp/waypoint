@@ -37,4 +37,8 @@
       white-space: nowrap;
     }
   }
+  .pds-textarea__codeInput {
+    font-family: ui-monospace, 'Menlo', monospace;
+    font-size: scale.$sm--1;
+  }
 }
