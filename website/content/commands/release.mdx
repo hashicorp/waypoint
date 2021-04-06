@@ -1,6 +1,7 @@
 ---
 layout: commands
 page_title: 'Commands: Release'
+sidebar_title: 'release'
 description: 'Release a deployment'
 ---
 
@@ -33,5 +34,7 @@ Usage: `waypoint release [options]`
 
 - `-repeat` - Re-release if deploy is already released.
 - `-deployment=<string>` (`-d`) - Release the specified deployment.
+- `-prune` - Prune old unreleased deployments.
+- `-prune-retain=<int>` - The number of unreleased deployments to keep. If this isn't set or is set to any negative number, then this will default to 1 on the server. If you want to prune all unreleased deployments, set this to 0.
 
 @include "commands/release_more.mdx"

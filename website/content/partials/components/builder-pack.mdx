@@ -2,6 +2,14 @@
 
 Create a Docker image using CloudNative Buildpacks.
 
+**Pack requires access to a Docker daemon.** For remote builds, such as those
+triggered by [Git polling](/docs/projects/git), the
+[runner](/docs/runner) needs to have access to a Docker daemon such
+as exposing the Docker socket, enabling Docker-in-Docker, etc. Unfortunately,
+pack doesn't support dockerless builds. Configuring Docker access within
+a Docker container is outside the scope of these docs, please search the
+internet for "Docker in Docker" or other terms for more information.
+
 ### Interface
 
 - Input: **component.Source**
