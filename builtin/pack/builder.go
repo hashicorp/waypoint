@@ -9,6 +9,7 @@ import (
 	"github.com/buildpacks/pack"
 	"github.com/buildpacks/pack/logging"
 	"github.com/docker/docker/client"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -66,23 +67,12 @@ func (b *Builder) Build(
 	ui terminal.UI,
 	jobInfo *component.JobInfo,
 	src *component.Source,
+	log hclog.Logger,
 ) (*DockerImage, error) {
 	builder := b.config.Builder
 	if builder == "" {
 		builder = DefaultBuilder
 	}
-
-	ui.Output("Creating new buildpack-based image using builder: %s", builder)
-
-	sg := ui.StepGroup()
-
-	step := sg.Add("Creating pack client")
-	defer step.Abort()
-
-	build := sg.Add("Building image")
-	defer build.Abort()
-
-	log := logging.New(build.TermOutput())
 
 	dockerClient, err := wpdockerclient.NewClientWithOpts(
 		client.FromEnv,
@@ -97,8 +87,40 @@ func (b *Builder) Build(
 		return nil, err
 	}
 
+	// We now test if Docker is actually functional. Pack requires a Docker
+	// daemon and we can't fallback to "img" or any other Dockerless solution.
+	log.Debug("testing if Docker is available")
+	if fallback, err := wpdockerclient.Fallback(ctx, log, dockerClient); err != nil {
+		log.Warn("error during check if we should use Docker fallback", "err", err)
+		return nil, status.Errorf(codes.Internal,
+			"error validating Docker connection: %s", err)
+	} else if fallback {
+		ui.Output(
+			`WARNING: `+
+				`Docker daemon appears unavailable. The 'pack' builder requires access `+
+				`to a Docker daemon. Pack does not support dockerless builds. We will `+
+				`still attempt to run the build but it will likely fail. If you are `+
+				`running this build locally, please install Docker. If you are running `+
+				`this build remotely (in a Waypoint runner), the runner must be configured `+
+				`to have access to the Docker daemon.`+"\n",
+			terminal.WithWarningStyle(),
+		)
+	} else {
+		log.Debug("Docker appears available")
+	}
+
+	ui.Output("Creating new buildpack-based image using builder: %s", builder)
+
+	sg := ui.StepGroup()
+
+	step := sg.Add("Creating pack client")
+	defer step.Abort()
+
+	build := sg.Add("Building image")
+	defer build.Abort()
+
 	client, err := pack.NewClient(
-		pack.WithLogger(log),
+		pack.WithLogger(logging.New(build.TermOutput())),
 		pack.WithDockerClient(dockerClient),
 	)
 	if err != nil {
