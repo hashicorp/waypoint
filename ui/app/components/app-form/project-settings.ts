@@ -87,19 +87,23 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     super(owner, args);
     let { project } = this.args;
     this.project = project;
-    if (this.project?.dataSource?.git) {
+    // restore git settings state from existing datasource
+    if (this.project?.dataSource?.git && this.project?.dataSource?.git?.url) {
       // Set authCase if it exists
       if (project.dataSource?.git?.ssh?.privateKeyPem) {
         this.authCase = 5;
       } else {
-        this.authCase = 4;
-        // Set empty default git basic auth if not defined
-        if (!this.project?.dataSource?.git?.basic?.username) {
+        if (project.dataSource?.git?.basic?.username) {
+          this.authCase = 4;
+        } else {
+          this.authCase = 0;
+        }
+        // Set empty default git auth if not defined
+        if (!this.project?.dataSource?.git?.basic?.username || !this.project?.dataSource?.git?.ssh?.privateKeyPem) {
           this.project.dataSource.git.basic = DEFAULT_PROJECT_MODEL.dataSource.git.basic;
           this.project.dataSource.git.ssh = DEFAULT_PROJECT_MODEL.dataSource.git.ssh;
         }
       }
-      this.authCase = project.dataSource?.git?.ssh?.privateKeyPem ? 5 : 4;
     } else {
       // set empty default dataSource data if non-existent
       this.project.dataSource = DEFAULT_PROJECT_MODEL.dataSource;
@@ -131,6 +135,10 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     return this.authCase === 4;
   }
 
+  get authNotSet() {
+    return this.authCase === 0;
+  }
+
   get git() {
     return this.dataSource?.git;
   }
@@ -139,7 +147,7 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   validateGitUrl() {
     let gitUrl = parseUrl(this.project.dataSource.git.url);
     // If basic auth, match https url
-    if (this.authCase == 4) {
+    if (this.authCase == 4 || this.authCase == 0) {
       if (gitUrl.protocol != 'https') {
         this.flashMessages.error('Git url needs to use "https:" protocol');
         return false;
@@ -224,6 +232,11 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
       gitSSH.setPassword(this.git.ssh.password);
       git.setSsh(gitSSH);
       git.clearBasic();
+    }
+
+    if (this.authNotSet) {
+      git.clearBasic();
+      git.clearSsh();
     }
 
     dataSource.setGit(git);
