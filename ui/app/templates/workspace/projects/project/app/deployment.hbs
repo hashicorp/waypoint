@@ -25,7 +25,12 @@
     {{else if (eq @model.status.state 2)}}
     <b class="badge badge--success">{{t 'state.deployment.success'}}</b>
     {{else if (eq @model.status.state 3)}}
-    <b class="badge badge--error">{{t 'state.deployment.error'}}</b>
+    <b class="badge badge--error">
+      {{t 'state.deployment.error'}}
+      {{#if @model.status.error.message}}
+        : {{@model.status.error.message}}
+      {{/if}}
+    </b>
     {{/if}}
   </div>
 

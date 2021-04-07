@@ -96,6 +96,11 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
           });
         }
       }
+      // If it completes with an error, we should surface that in the UI
+      if ((event == GetJobStreamResponse.EventCase.COMPLETE) && (response.getComplete()?.getError())) {
+        let error = response.getComplete()?.getError()?.toObject();
+        this.addLogLine(this.typeLine, { style: this.errorBoldStyle, msg: error.message });
+      }
     };
 
     const onStatus = (status: any) => {
