@@ -15,16 +15,35 @@ import (
 type ConfigGetCommand struct {
 	*baseCommand
 
-	json bool
-	raw  bool
+	json       bool
+	raw        bool
+	flagRunner bool
 }
 
 func (c *ConfigGetCommand) Run(args []string) int {
-	// Initialize. If we fail, we just exit since Init handles the UI.
-	if err := c.Init(
+	initOpts := []Option{
 		WithArgs(args),
 		WithFlags(c.Flags()),
-	); err != nil {
+
+		// Don't allow a local in-mem server because configuration
+		// makes no sense with the local server.
+		WithNoAutoServer(),
+	}
+
+	// We parse our flags twice in this command because we need to
+	// determine if we're setting runner config or not. If we're setting
+	// runner config, we don't need any Waypoint config.
+	//
+	// NOTE we specifically ignore errors here because if we have errors
+	// they'll happen again on Init and Init will output to the CLI.
+	if err := c.Flags().Parse(args); err == nil && c.flagRunner {
+		initOpts = append(initOpts,
+			WithNoConfig(), // no waypoint.hcl
+		)
+	}
+
+	// Initialize. If we fail, we just exit since Init handles the UI.
+	if err := c.Init(initOpts...); err != nil {
 		return 1
 	}
 
@@ -32,7 +51,6 @@ func (c *ConfigGetCommand) Run(args []string) int {
 	client := c.project.Client()
 
 	var prefix string
-
 	switch len(c.args) {
 	case 0:
 		// ok
@@ -44,16 +62,29 @@ func (c *ConfigGetCommand) Run(args []string) int {
 	}
 
 	req := &pb.ConfigGetRequest{
-		Scope:  &pb.ConfigGetRequest_Project{Project: c.project.Ref()},
 		Prefix: prefix,
 	}
-	if c.flagApp != "" {
+	switch {
+	case c.flagRunner:
+		req.Scope = &pb.ConfigGetRequest_Runner{
+			Runner: &pb.Ref_RunnerId{
+				// Specifying a non-existent ID will return the runner
+				// vars set for all since none will match this ID (since
+				// we use ULIDs).
+				Id: "-",
+			},
+		}
+
+	case c.flagApp != "":
 		req.Scope = &pb.ConfigGetRequest_Application{
 			Application: &pb.Ref_Application{
 				Project:     c.project.Ref().Project,
 				Application: c.flagApp,
 			},
 		}
+
+	default:
+		req.Scope = &pb.ConfigGetRequest_Project{Project: c.project.Ref()}
 	}
 
 	resp, err := client.GetConfig(c.Ctx, req)
@@ -165,6 +196,15 @@ func (c *ConfigGetCommand) Flags() *flag.Sets {
 			Name:   "raw",
 			Target: &c.raw,
 			Usage:  "Output in key=val",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "runner",
+			Target: &c.flagRunner,
+			Usage: "Show configuration that is set on runners. This will not " +
+				"show any configuration that is set on any applications. " +
+				"This only includes configuration set with the -runner flag.",
+			Default: false,
 		})
 	})
 }
