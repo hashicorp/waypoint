@@ -30,6 +30,10 @@ Usage: `waypoint server install [options]`
 - `-context-set-default` - Set the newly installed server as the default CLI context.
 - `-platform=<string>` - Platform to install the Waypoint server into.
 
+#### docker Options
+
+- `-docker-server-image=<string>` - Docker image for the Waypoint server.
+
 #### kubernetes Options
 
 - `-k8s-advertise-internal` - Advertise the internal service address rather than the external. This is useful if all your deployments will be able to access the private service address. This will default to false but will be automatically set to true if the external host is detected to be localhost.
@@ -54,9 +58,5 @@ Usage: `waypoint server install [options]`
 - `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
 - `-nomad-region=<string>` - Region to install to for Nomad.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server.
-
-#### docker Options
-
-- `-docker-server-image=<string>` - Docker image for the Waypoint server.
 
 @include "commands/server-install_more.mdx"
