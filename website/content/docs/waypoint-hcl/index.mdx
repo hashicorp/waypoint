@@ -131,7 +131,9 @@ variables in the dedicated [variables section](/docs/waypoint-hcl/variables).
 
 - `project` `(string)` - The name of the project. This should be unique
   for the Waypoint server and must not be changed later. This is used to
-  organize information on the server.
+  organize information on the server. **This field is optional if you're
+  using [remote operations](/docs/projects/remote), including those
+  triggered via [Git polling](/docs/projects/git).**
 
 ~> **Warning: the project name can not be changed.** Changing the project
 name is not currently supported. If you change the name, the history,
