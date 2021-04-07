@@ -46,7 +46,6 @@ Router.map(function () {
           this.route('release', { path: '/release/:release_id' });
           this.route('logs');
           this.route('exec');
-          this.route('settings');
         });
         this.route('settings');
       });
