@@ -48,6 +48,7 @@ docker/server:
 					--secret id=ssh.config,src="${HOME}/.ssh/config" \
 					--secret id=ssh.key,src="${HOME}/.ssh/config" \
 					-t waypoint:dev \
+					--network host \
 					.
 
 .PHONY: docker/evanphx
