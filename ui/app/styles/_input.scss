@@ -25,6 +25,14 @@ $input-focus: inset 0 1px 1px 1px rgba(var(--shadow), 0.1), 0 0 0 3px rgba(var(-
   }
 }
 
+.pds-input.pds--textLike, .pds-textarea {
+  color: rgb(var(--input-text));
+  background: rgb(var(--input));
+  &::placeholder {
+    color: rgb(var(--input-text-placeholder));
+  }
+}
+
 input {
   color: rgb(var(--input-text));
   font-size: scale.$base;
