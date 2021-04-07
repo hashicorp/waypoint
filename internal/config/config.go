@@ -21,7 +21,7 @@ type Config struct {
 }
 
 type hclConfig struct {
-	Project string            `hcl:"project,attr"`
+	Project string            `hcl:"project,optional"`
 	Runner  *Runner           `hcl:"runner,block" default:"{}"`
 	Labels  map[string]string `hcl:"labels,optional"`
 	Plugin  []*Plugin         `hcl:"plugin,block"`

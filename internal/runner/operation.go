@@ -90,6 +90,19 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
+	// If we have a project specified on the job, override the configuration
+	// project with that. This allows the same Waypoint configuration to
+	// be shared by multiple projects, which is very possible in the UI,
+	// and less useful when stored as a file in the repo.
+	if v := job.Application.Project; v != "" {
+		cfg.Project = v
+	}
+
+	// Validate our configuration
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
 	// Setup our project data directory.
 	projDir, err := datadir.NewProject(filepath.Join(wd, ".waypoint"))
 	if err != nil {
