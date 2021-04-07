@@ -123,7 +123,6 @@ $ curl ...
 </Tab>
 </Tabs>
 
-
 Contined normal markdown content
 ````
 
