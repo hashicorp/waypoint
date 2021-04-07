@@ -509,6 +509,7 @@
         font-size: 12px;
         padding: scale.$sm-4 0;
         line-height: var(--pds-lineHeight--dense);
+        white-space: pre-wrap;
 
         &:empty {
           display: none;
