@@ -104,7 +104,7 @@ func (c *FmtCommand) Flags() *flag.Sets {
 			Target:  &c.flagWrite,
 			Default: true,
 			Usage: "Overwrite the input file. If this is false, the formatted " +
-				"output will be written to STDOUT. This has no effect when formatting" +
+				"output will be written to STDOUT. This has no effect when formatting " +
 				"from STDIN.",
 		})
 	})
