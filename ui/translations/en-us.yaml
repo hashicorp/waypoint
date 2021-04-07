@@ -43,7 +43,7 @@ form:
     git_auth_type_basic_label: 'Username & Password'
     git_source_ssh_user_label: 'Git User (optional)'
     git_source_ssh_password_label: 'Passphrase (optional)'
-    git_source_ssh_key_label: 'SSH Key'
+    git_source_ssh_key_label: 'SSH Private Key'
     git_source_basic_username_label: 'Username'
     git_source_basic_password_label: 'Password'
     git_sync_label: 'Automated Sync'
