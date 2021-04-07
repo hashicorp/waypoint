@@ -16,7 +16,7 @@ import (
 // requires duplication between this struct and the other config structs
 // since we don't do any lazy loading here.
 type validateStruct struct {
-	Project string            `hcl:"project,attr"`
+	Project string            `hcl:"project,optional"`
 	Runner  *Runner           `hcl:"runner,block" default:"{}"`
 	Labels  map[string]string `hcl:"labels,optional"`
 	Plugin  []*Plugin         `hcl:"plugin,block"`
@@ -51,8 +51,16 @@ func (c *Config) Validate() error {
 		return diag
 	}
 
-	// Validate apps
 	var result error
+
+	// Require the project. We don't use an "attr" above (which would require it)
+	// because the project can be populated later such as in a runner which
+	// sets it to the project in the job ref.
+	if c.Project == "" {
+		result = multierror.Append(result, fmt.Errorf("'project' attribute is required"))
+	}
+
+	// Validate apps
 	for _, block := range content.Blocks.OfType("app") {
 		err := c.validateApp(block)
 		if err != nil {
