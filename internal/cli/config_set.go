@@ -15,14 +15,34 @@ import (
 
 type ConfigSetCommand struct {
 	*baseCommand
+
+	flagRunner bool
 }
 
 func (c *ConfigSetCommand) Run(args []string) int {
-	// Initialize. If we fail, we just exit since Init handles the UI.
-	if err := c.Init(
+	initOpts := []Option{
 		WithArgs(args),
 		WithFlags(c.Flags()),
-	); err != nil {
+
+		// Don't allow a local in-mem server because configuration
+		// makes no sense with the local server.
+		WithNoAutoServer(),
+	}
+
+	// We parse our flags twice in this command because we need to
+	// determine if we're setting runner config or not. If we're setting
+	// runner config, we don't need any Waypoint config.
+	//
+	// NOTE we specifically ignore errors here because if we have errors
+	// they'll happen again on Init and Init will output to the CLI.
+	if err := c.Flags().Parse(args); err == nil && c.flagRunner {
+		initOpts = append(initOpts,
+			WithNoConfig(), // no waypoint.hcl
+		)
+	}
+
+	// Initialize. If we fail, we just exit since Init handles the UI.
+	if err := c.Init(initOpts...); err != nil {
 		return 1
 	}
 
@@ -66,11 +86,22 @@ func (c *ConfigSetCommand) Run(args []string) int {
 			},
 		}
 
-		if c.flagApp == "" {
+		switch {
+		case c.flagRunner:
+			configVar.Scope = &pb.ConfigVar_Runner{
+				Runner: &pb.Ref_Runner{
+					Target: &pb.Ref_Runner_Any{
+						Any: &pb.Ref_RunnerAny{},
+					},
+				},
+			}
+
+		case c.flagApp == "":
 			configVar.Scope = &pb.ConfigVar_Project{
 				Project: c.project.Ref(),
 			}
-		} else {
+
+		default:
 			configVar.Scope = &pb.ConfigVar_Application{
 				Application: &pb.Ref_Application{
 					Project:     c.project.Ref().Project,
@@ -92,7 +123,19 @@ func (c *ConfigSetCommand) Run(args []string) int {
 }
 
 func (c *ConfigSetCommand) Flags() *flag.Sets {
-	return c.flagSet(0, nil)
+	return c.flagSet(0, func(set *flag.Sets) {
+		f := set.NewSet("Command Options")
+
+		f.BoolVar(&flag.BoolVar{
+			Name:   "runner",
+			Target: &c.flagRunner,
+			Usage: "Expose this configuration on runners. This can be used " +
+				"to set things such as credentials to cloud platforms " +
+				"for remote runners. This configuration will not be exposed " +
+				"to deployed applications.",
+			Default: false,
+		})
+	})
 }
 
 func (c *ConfigSetCommand) AutocompleteArgs() complete.Predictor {
@@ -117,5 +160,5 @@ Usage: waypoint config set <name>=<value>
   This will scope the variable to the entire project by default.
   Specify the "-app" flag to set a config variable for a specific app.
 
-`)
+` + c.Flags().Help())
 }
