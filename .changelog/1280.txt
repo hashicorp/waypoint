@@ -1,0 +1,3 @@
+```release-note:bug
+ui: output failed build errors in logs
+```

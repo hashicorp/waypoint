@@ -35,7 +35,12 @@
     {{else if (eq @model.status.state 3)}}
     <b class="badge badge--error">
       {{inline-svg "alert-triangle" class="icon"}}
-      <span>Build failed</span>
+      <span>
+        Build failed
+        {{#if @model.status.error.message}}
+          : {{@model.status.error.message}}
+        {{/if}}
+      </span>
     </b>
     {{/if}}
   </div>
