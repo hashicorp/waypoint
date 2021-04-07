@@ -48,7 +48,7 @@ const DEFAULT_PROJECT_MODEL = {
     git: {
       url: '',
       path: '',
-      ref: '',
+      ref: 'HEAD',
       basic: {
         username: '',
         password: ''
@@ -201,7 +201,11 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     let git = new Job.Git();
     git.setUrl(project.dataSource.git.url);
     git.setPath(project.dataSource.git.path);
-    git.setRef(project.dataSource.git.ref);
+    if (!project.dataSource.git.ref) {
+      git.setRef('HEAD');
+    } else {
+      git.setRef(project.dataSource.git.ref);
+    }
 
     // Git Authentication settings
     if (this.authBasic) {
