@@ -462,6 +462,7 @@
         width: 100%;
         flex-shrink: 0;
         overflow-x: auto;
+        max-width: 73rem;
 
         &::-webkit-scrollbar {
           width: scale.$sm-3;
@@ -509,6 +510,7 @@
         font-size: 12px;
         padding: scale.$sm-4 0;
         line-height: var(--pds-lineHeight--dense);
+        white-space: pre-wrap;
 
         &:empty {
           display: none;
