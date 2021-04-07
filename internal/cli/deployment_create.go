@@ -119,7 +119,7 @@ func (c *DeploymentCreateCommand) Flags() *flag.Sets {
 		f.BoolVar(&flag.BoolVar{
 			Name:    "release",
 			Target:  &c.flagRelease,
-			Usage:   "Release this deployment immedately.",
+			Usage:   "Release this deployment immediately.",
 			Default: true,
 		})
 	})
