@@ -1,7 +1,23 @@
 {{#if @isLatest}}
   <div class="app-card-item app-card-item--latest">
     <LinkTo @route="workspace.projects.project.app.release" @models={{array @model.id }}>
-      <p><b class="badge badge--version">v{{@model.sequence}}</b> <code>{{truncate @model.id 8 false}}</code></p>
+      <p>
+        <b class="badge badge--version">v{{@model.sequence}}</b>
+        <code>{{truncate @model.id 8 false}}</code>
+        {{#if (eq @model.status.state 1)}}
+          <b class="badge">
+            {{inline-svg "clock-outline" class="icon"}}
+          </b>
+          {{else if (eq @model.status.state 2)}}
+          <b class="badge badge--success">
+            {{inline-svg "check-plain" class="icon"}}
+          </b>
+          {{else if (eq @model.status.state 3)}}
+          <b class="badge badge--error">
+            {{inline-svg "alert-triangle" class="icon"}}
+          </b>
+        {{/if}}
+      </p>
       <small>
         {{inline-svg (icon-for-component @model.component.name) class="icon"}}
         <span>{{if (eq @model.status.state 1) 'Releasing' 'Released'}} on
