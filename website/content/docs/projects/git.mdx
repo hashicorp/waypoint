@@ -17,10 +17,28 @@ This is an optional integration. If you do not associate a project with a Git
 repository, you can always execute local operations such as `waypoint up`
 by checking out the source code and having a `waypoint.hcl` file.
 
+### Waypoint Server Requirement
+
+Git Polling requires Waypoint server version 0.3.0 and later. If you are on an older
+version and wish to take advantage of this feature, follow the [upgrade guide](/docs/upgrading)
+to upgrade your Waypoint Server. Note that you will have to [manually install
+a runner](/docs/runner/run-manual#manually-running-a-runner) in your server if
+you are upgrading from an old server version. A fresh installation of Waypoint
+server 0.3.0 will automatically include runners.
+
+~> **Note**: To build a Docker image using CloudNative Buildpacks, the Pack
+plugin requires access to a Docker daemon. For remote builds, such
+as those triggered by Git polling, the [runner](/docs/runner) needs to have
+access to a Docker daemon such as exposing the Docker socket, enabling
+Docker-in-Docker, etc. Unfortunately, pack doesn't support dockerless builds.
+Configuring Docker access within a Docker container is outside the scope of
+these docs, please search the internet for "Docker in Docker" or other terms
+for more information.
+
 ## Configuring the Project
 
 The Git repository associated with a project is configured with the
-[`data_source` stanza in the `runner` stanza in the waypoint.hcl file](/docs/waypoint-hcl/runner).
+`data_source` stanza in the `runner` stanza in the [waypoint.hcl file](/docs/waypoint-hcl/runner).
 These settings can also be specified via the CLI or web UI.
 
 **It is recommended that you configure the Git data source using
@@ -29,9 +47,28 @@ to a single Git repository and also avoids secrets such as Git authentication
 information to be present in the Waypoint configuration. Learn more about
 [how to configure the Git data source using the CLI or web UI here](/docs/waypoint-hcl/runner#cli-or-ui-configuration).
 
-Example:
+### Add to an existing Waypoint project
+
+If you already have a Waypoint project, you can add Git integration just as you
+would if you were to start a new one. You'll want to configure Git via the CLI
+or Web, or include a runner stanza in your `waypoint.hcl`. Also ensure your Waypoint
+server is [at least 0.3.0 and has runners enabled.](#Waypoint-Server-Requirement)
+
+#### Configuring via the UI
+
+If you wish to enable Git settings on a project in the UI, you'll want to navigate
+to the project homepage after running `waypoint ui -authenticate`. From there,
+you can click on the settings gear icon on the right to navigate to the project
+settings. Fill in the requested fields to setup Git on your project. **It is
+recommended that you configure the Git data source using the CLI or web UI.**
+
+#### Configuring via waypoint.hcl
+
+If you wish to enable Git inside your project file:
 
 ```hcl
+project = "example"
+
 runner {
   enable = true
 
@@ -40,15 +77,19 @@ runner {
     path = "docker/node-js"
   }
 }
+
+app "example" {
+  // etc
+}
 ```
 
 ## Polling
 
 The project can be configured to poll the Git repository and
 automatically trigger a `waypoint up` on any changes. To enable polling,
-toggle polling to on in the web UI as shown below.
+toggle polling to on in the web UI as shown below under `Automated Sync`:
 
-TODO SCREENSHOT
+![git-settings](/img/project-git.png)
 
 When polling is first enabled, it'll trigger an immediate poll. Subsequent
 polling operations will happen according to the poll interval set by
@@ -67,8 +108,39 @@ any remote operations or polling will watch the latest commit of the
 default branch. However, when configuring Git, you may specify any ref
 for Waypoint to watch:
 
-TODO SCREENSHOT
+![ref-tracking](/img/ref-tracking-git.png)
 
 The value of this field can be a branch name, a tag name, or a fully
 qualified Git ref such as `refs/pull/1014`. When a ref is specified,
 Waypoint will watch only that ref for changes.
+
+## Debugging Git Integration Failures
+
+For triaging any failures with Git or Waypoint runners, you'll want to look in
+a couple of places.
+
+### UI Troubleshooting
+
+When clicking on a failed build, deploy, or release, the UI should show logs
+of what happened and why the previous run has failed. If there's not enough
+information or context here, you'll want to dig into the Waypoint runner logs
+to determine what went wrong.
+
+### Server side Troubleshooting
+
+Waypoint uses runners to execute Git operations, build containers, and more. If
+you are troubleshooting a failure, you'll want to look at the runner logs to see
+if there's any additional information there. This will depend on what platform
+you are deploying to.
+
+If you are deploying to Kubernetes, you'll want to look at the Waypoint runner
+pod logs:
+
+```
+kubectl logs pod/waypoint-runner-7744b58c9b-mvrcb
+```
+
+#### More Information
+
+For more information on debugging and troubleshooting Waypoint, please check out
+the [docs for troubleshooting](/docs/troubleshooting).

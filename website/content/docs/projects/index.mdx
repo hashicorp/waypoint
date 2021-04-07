@@ -33,7 +33,24 @@ details about where to place the `waypoint.hcl` [here](/docs/waypoint-hcl#waypoi
 
 ### Web UI
 
-TODO
+When creating a new project through the UI, you can automatically log into the
+dashboard by running `waypoint ui -authenticate` on the CLI after installing Waypoint.
+
+![new-install](/img/new-waypoint-install-ui.png)
+
+From here, you can click on the `New project` button to create a new Waypoint
+project.
+
+![new-project](/img/new-waypoint-project.png)
+
+Follow the instructions, and optionally [enable connect a Git repository](/docs/projects/git)
+to the project.
+
+![project-created](/img/waypoint-project-created.png)
+
+And there you have it! You are now ready to [deploy a project](#deploying-a-project)
+using Waypoint! Read on to learn more about how to use a project once it hs been
+created.
 
 ### `waypoint init`
 
@@ -80,7 +97,9 @@ Once a project is created and [configured](/docs/waypoint-hcl), you
 can now deploy the project.
 
 If you have the repository checked out with a `waypoint.hcl` locally,
-you can run `waypoint up` and perform a local deploy.
+you can run `waypoint up` and perform a local deploy. If your project was
+configured to [automatically poll a git repository](/docs/projects/git), Waypoint
+will automatically begin the process to build and deploy your application.
 
 ## Multiple Applications
 
