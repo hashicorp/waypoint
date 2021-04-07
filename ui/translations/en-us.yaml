@@ -28,7 +28,6 @@ form:
   project_new:
     title: 'New Project'
     project_name_label: 'Project Name'
-    project_name_helptext: 'The Project Name needs to match your waypoint.hcl configuration.'
     create_git_label: 'Git Configuration'
     create_git_helptext: 'Connect a git repository. If you skip this, you can always configure it later in project settings.'
     create_git_checkbox_label: 'Connect a Git repository to this Project'
