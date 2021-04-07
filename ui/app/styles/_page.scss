@@ -462,6 +462,7 @@
         width: 100%;
         flex-shrink: 0;
         overflow-x: auto;
+        max-width: 73rem;
 
         &::-webkit-scrollbar {
           width: scale.$sm-3;
