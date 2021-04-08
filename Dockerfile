@@ -47,9 +47,8 @@ RUN apk add --no-cache \
 
 RUN git clone https://github.com/mitchellh/img.git /img
 WORKDIR /img
-RUN git checkout pull-config
 RUN go get github.com/go-bindata/go-bindata/go-bindata
-RUN make BUILDTAGS="seccomp noembed" && mv img /usr/bin/img
+RUN make BUILDTAGS="seccomp noembed dfrunmount dfsecrets dfssh" && mv img /usr/bin/img
 
 # Copied from img repo, see notes for specific reasons:
 # https://github.com/genuinetools/img/blob/d858ac71f93cc5084edd2ba2d425b90234cf2ead/Dockerfile
