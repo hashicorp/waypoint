@@ -12,17 +12,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/docker/distribution/reference"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/builtin/docker"
-	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 )
 
 // Registry represents access to an AWS registry.
@@ -67,25 +62,9 @@ func (r *Registry) Push(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	// stdout, _, err := ui.OutputWriters()
-	// if err != nil {
-	// return nil, err
-	// }
+	step := sg.Add("Connecting to AWS")
+	defer func() { step.Abort() }()
 
-	step := sg.Add("Connecting to docker")
-
-	defer func() {
-		step.Abort()
-	}()
-
-	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		return nil, err
-	}
-
-	cli.NegotiateAPIVersion(ctx)
-
-	step.Update("Connecting to AWS")
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: r.config.Region,
 	})
@@ -95,12 +74,10 @@ func (r *Registry) Push(
 	svc := ecr.New(sess)
 
 	step.Update("Getting ECR Authentication token...")
-
 	gat, err := svc.GetAuthorizationToken(&ecr.GetAuthorizationTokenInput{})
 	if err != nil {
 		return nil, err
 	}
-
 	if len(gat.AuthorizationData) == 0 {
 		return nil, fmt.Errorf("No authorization tokens provided")
 	}
@@ -109,16 +86,13 @@ func (r *Registry) Push(
 	step.Done()
 
 	step = sg.Add("Calculating repository name")
-
 	repoName := r.config.Repository
-
 	if repoName == "" {
 		log.Info("infering ECR repo name from app name")
 		repoName = "waypoint-" + src.App
 	}
 
 	step.Update("Set ECR Repository name to '%s'", repoName)
-
 	step.Done()
 
 	repOut, err := svc.DescribeRepositories(&ecr.DescribeRepositoriesInput{
@@ -132,7 +106,6 @@ func (r *Registry) Push(
 	}
 
 	var repo *ecr.Repository
-
 	if repOut == nil || len(repOut.Repositories) == 0 {
 		log.Info("no ECR repository detected, creating", "name", repoName)
 
@@ -158,26 +131,9 @@ func (r *Registry) Push(
 		repo = repOut.Repositories[0]
 	}
 
-	uri := repo.RepositoryUri
-
-	target := &Image{Image: *uri, Tag: r.config.Tag}
-
-	step = sg.Add("Tagging Docker image: %s => %s", img.Name(), target.Name())
-
-	err = cli.ImageTag(ctx, img.Name(), target.Name())
-	if err != nil {
-		return nil, err
-	}
-
-	ref, err := reference.ParseNormalizedNamed(target.Name())
-	if err != nil {
-		return nil, err
-	}
-
-	step.Done()
-
+	// Use the authorization token to create the base64 package that
+	// Docker requires to perform authentication.
 	uptoken := *gat.AuthorizationData[0].AuthorizationToken
-
 	data, err := base64.StdEncoding.DecodeString(uptoken)
 	if err != nil {
 		return nil, err
@@ -187,51 +143,36 @@ func (r *Registry) Push(
 		"username": "AWS",
 		"password": string(data[4:]),
 	}
-
 	authData, err := json.Marshal(authInfo)
 	if err != nil {
 		return nil, err
 	}
-
 	encodedAuth := base64.StdEncoding.EncodeToString(authData)
 
-	options := types.ImagePushOptions{
-		RegistryAuth: encodedAuth,
+	// Create the Docker registry plugin. We use the Docker registry plugin
+	// directly so we can inherit all of its logic around Dockerless if necessary
+	// and other complexities since at this point we're doing a standard
+	// tag and push.
+	dockerReg := &docker.Registry{}
+	raw, err := dockerReg.Config()
+	if err != nil {
+		return nil, err
 	}
+	dockerConfig := raw.(*docker.Config)
+	dockerConfig.EncodedAuth = encodedAuth
+	dockerConfig.Image = *repo.RepositoryUri
+	dockerConfig.Tag = r.config.Tag
 
-	step.Done()
-
-	step = sg.Add("Pushing image...")
-
-	responseBody, err := cli.ImagePush(ctx, reference.FamiliarString(ref), options)
+	// Build
+	dockerImg, err := dockerReg.Push(ctx, img, ui, log)
 	if err != nil {
 		return nil, err
 	}
 
-	defer responseBody.Close()
-
-	stdout := step.TermOutput()
-
-	var (
-		termFd uintptr
-		isTerm bool
-	)
-
-	if f, ok := stdout.(*os.File); ok {
-		termFd = f.Fd()
-		isTerm = true
-	}
-
-	err = jsonmessage.DisplayJSONMessagesStream(responseBody, stdout, termFd, isTerm, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	step.Done()
-
-	ui.Output("Docker image pushed: %s", target.Name())
-
-	return target, nil
+	return &Image{
+		Image: dockerImg.Image,
+		Tag:   dockerImg.Tag,
+	}, nil
 }
 
 // Config is the configuration structure for the registry.
