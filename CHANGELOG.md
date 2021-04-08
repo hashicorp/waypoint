@@ -1,5 +1,9 @@
 ## unreleased
 
+BREAKING CHANGES:
+
+* ui: dropped support for Internet Explorer [GH-1075]
+
 FEATURES:
 
 * **GitOps: Poll for changes and automatically run `waypoint up`**. Waypoint
@@ -10,18 +14,29 @@ FEATURES:
 * **Dockerless image builds**: Waypoint can now build, tag, pull, and push
   Docker images in unprivileged environments without a Docker daemon. [GH-970]
 * cli: New `waypoint fmt` command will autoformat your `waypoint.hcl` files [GH-1037]
+* config: `timestamp` function allows you to avail the current date and time in your Waypoint configuration. [[GH-1255](https://github.com/hashicorp/waypoint/issues/1255)]
+* ui: Add ability to create a project from the browser UI [[GH-1220](https://github.com/hashicorp/waypoint/issues/1220)]
+* ui: Add ability to configure a project's git settings from the browser UI [[GH-1057](https://github.com/hashicorp/waypoint/issues/1057)]
+* ui: Add ability to input a waypoint.hcl configuration from the browser UI [[GH-1253](https://github.com/hashicorp/waypoint/issues/1253)]
 
 IMPROVEMENTS:
 
+* cli: Require confirmation before destroying all resources [[GH-1232](https://github.com/hashicorp/waypoint/issues/1232)]
+* cli: Can specify the number of deployments to prune for `up` and `release`. [[GH-1230](https://github.com/hashicorp/waypoint/issues/1230)]
+* cli: Support and render new documentation subfields [[GH-1213](https://github.com/hashicorp/waypoint/issues/1213)]
+* plugin/docker-pull: doesn't require Docker if no registry is configured and entrypoint injection is disabled [[GH-1198](https://github.com/hashicorp/waypoint/issues/1198)]
+* plugin/k8s: Add new probe configuration options [[GH-1246](https://github.com/hashicorp/waypoint/issues/1246)]
 * plugin/k8s: plugin will attempt in-cluster auth first if no kubeconfig file is specified [GH-1052] [GH-1103]
+* server: Prune old deployments and jobs from server memory. This limits the number
+of deployments and jobs to 10,000. The data for the old entries is still stored on disk
+but it is not indexed in memory, to allow data recovery should it be needed. [[GH-1193](https://github.com/hashicorp/waypoint/issues/1193)]
 
 BUG FIXES:
 
-* cli/exec: require at least one argument [GH-1188]
-
-BREAKING CHANGES:
-
-* ui: dropped support for Internet Explorer [GH-1075]
+* core: default releasers initialize properly when they use HCL variables [[GH-1254](https://github.com/hashicorp/waypoint/issues/1254)]
+* cli: require at least one argument [GH-1188]
+* plugin/aws/alb: clamp alb name per aws limits [[GH-1225](https://github.com/hashicorp/waypoint/issues/1225)]
+* ui: output failed build errors in logs [[GH-1280](https://github.com/hashicorp/waypoint/issues/1280)]
 
 ## 0.2.4 (March 18, 2021)
 
