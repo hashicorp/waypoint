@@ -92,6 +92,14 @@ func AlterEntrypointImg(
 
 		tplData.Entrypoint = string(v)
 	}
+	if len(imageSpec.Config.Cmd) > 0 {
+		v, err := json.Marshal(imageSpec.Config.Cmd)
+		if err != nil {
+			return "", err
+		}
+
+		tplData.Cmd = string(v)
+	}
 
 	// For every file, we copy it into our temporary directory so it can be copied.
 	L.Debug("copying files for injection", "n", len(newEp.InjectFiles))
@@ -206,6 +214,10 @@ FROM {{.Base}}
 COPY {{.From}} {{.To}}
 {{end}}
 
+{{if .Cmd}}
+CMD {{.Cmd}}
+{{end}}
+
 {{if .Entrypoint}}
 ENTRYPOINT {{.Entrypoint}}
 {{end}}
@@ -214,6 +226,7 @@ ENTRYPOINT {{.Entrypoint}}
 type tplData struct {
 	Base       string // Base image
 	Copy       []tplDataFile
+	Cmd        string
 	Entrypoint string
 }
 
