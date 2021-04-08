@@ -291,6 +291,10 @@
         "path": "runner"
       },
       {
+        "title": "Configuration",
+        "path": "runner/config"
+      },
+      {
         "title": "Additional Runners",
         "path": "runner/run-manual"
       }

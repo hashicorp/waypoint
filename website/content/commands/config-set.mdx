@@ -23,4 +23,8 @@ Usage: `waypoint config set [options]`
 - `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
 - `-workspace=<string>` - Workspace to operate in.
 
+#### Command Options
+
+- `-runner` - Expose this configuration on runners. This can be used to set things such as credentials to cloud platforms for remote runners. This configuration will not be exposed to deployed applications.
+
 @include "commands/config-set_more.mdx"

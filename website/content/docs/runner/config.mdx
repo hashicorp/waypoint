@@ -1,0 +1,40 @@
+---
+layout: docs
+page_title: Runner Configuration
+description: |-
+  TODO
+---
+
+# Runner Configuration
+
+Runners may require additional configuration such as cloud credentials,
+Docker registry credentials, etc. There are two ways to set these credentials
+today: via environment variables set with `waypoint config` or
+[manually running the runner](/docs/runner/run-manual) and setting up the
+environment.
+
+## Environment Variables
+
+You can set environment variables using [`waypoint config`](/commands/config-set)
+with the `-runner` flag:
+
+```shell-session
+$ waypoint config set -runner AWS_ACCESS_KEY_ID=abcd AWS_SECRET_ACCESS_KEY=1234
+```
+
+This will expose these environment variables on every runner (including
+the CLI when it runs operations locally). To unset any variables, assign it to
+an empty value. You may view the set of runner configuration values using
+`waypoint config get`:
+
+```shell-session
+$ waypoint config get -runner
+```
+
+~> **Security note:** These configuration values are stored as plaintext in the
+Waypoint server. If you do not want to store any secrets on the Waypoint server,
+you must set the environment variables manually when
+[manually running the runner](/docs/runner/run-manual).
+
+-> **Dynamic values:** Runners do not support [dynamic configuration values](/docs/app-config/dynamic)
+yet. We plan to expose this in a future version.
