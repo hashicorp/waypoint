@@ -111,6 +111,7 @@ func (p *Platform) Deploy(
 				},
 			},
 		}
+		job.Namespace = &p.config.Namespace
 		job.AddTaskGroup(tg)
 		tg.AddTask(&api.Task{
 			Name:   result.Name,
