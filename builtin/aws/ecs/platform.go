@@ -767,7 +767,7 @@ func createALB(
 		records, err := r53.ListResourceRecordSets(&route53.ListResourceRecordSetsInput{
 			HostedZoneId:    aws.String(albConfig.ZoneId),
 			StartRecordName: aws.String(albConfig.FQDN),
-			StartRecordType: aws.String("A"),
+			StartRecordType: aws.String(route53.RRTypeA),
 			MaxItems:        aws.String("1"),
 		})
 		if err != nil {
@@ -776,14 +776,23 @@ func createALB(
 
 		fqdn := albConfig.FQDN
 
+		// Add trailing period to match Route53 record name
 		if fqdn[len(fqdn)-1] != '.' {
 			fqdn += "."
 		}
 
-		if len(records.ResourceRecordSets) > 0 && *(records.ResourceRecordSets[0].Name) == fqdn {
-			s.Status("Found existing Route53 record: %s", *records.ResourceRecordSets[0].Name)
-			L.Debug("found existing record, assuming it's correct")
-		} else {
+		var recordExists bool
+
+		if len(records.ResourceRecordSets) > 0 {
+			record := records.ResourceRecordSets[0]
+			if aws.StringValue(record.Type) == route53.RRTypeA && aws.StringValue(record.Name) == fqdn {
+				s.Status("Found existing Route53 record: %s", aws.StringValue(record.Name))
+				L.Debug("found existing record, assuming it's correct")
+				recordExists = true
+			}
+		}
+
+		if !recordExists {
 			s.Status("Creating new Route53 record: %s (zone-id: %s)",
 				albConfig.FQDN, albConfig.ZoneId)
 
@@ -792,10 +801,10 @@ func createALB(
 				ChangeBatch: &route53.ChangeBatch{
 					Changes: []*route53.Change{
 						{
-							Action: aws.String("CREATE"),
+							Action: aws.String(route53.ChangeActionCreate),
 							ResourceRecordSet: &route53.ResourceRecordSet{
 								Name: aws.String(albConfig.FQDN),
-								Type: aws.String("A"),
+								Type: aws.String(route53.RRTypeA),
 								AliasTarget: &route53.AliasTarget{
 									DNSName:              lb.DNSName,
 									EvaluateTargetHealth: aws.Bool(true),
