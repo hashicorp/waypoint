@@ -13,7 +13,7 @@ FEATURES:
 * **GitOps: Poll for changes and automatically run `waypoint up`**. Waypoint
   can now trigger a full build, deploy, release cycle on changes detected in Git. [[GH-1109](https://github.com/hashicorp/waypoint/issues/1109)]
 * **Runners: Run Waypoint operations remotely**. Runners are standalone processes that
-  run operations such as builds, deploys, etc. remotely. [[GH-1167] [GH-1171](https://github.com/hashicorp/waypoint/issues/1167] [GH-1171)]
+  run operations such as builds, deploys, etc. remotely. [[GH-1167](https://github.com/hashicorp/waypoint/issues/1167)] [[GH-1171](https://github.com/hashicorp/waypoint/issues/1171)]
 * **AWS Lambda**: Add support for building and deploying AWS Lambda workloads [[GH-1097](https://github.com/hashicorp/waypoint/issues/1097)]
 * **Dockerless image builds**: Waypoint can now build, tag, pull, and push
   Docker images in unprivileged environments without a Docker daemon. [[GH-970](https://github.com/hashicorp/waypoint/issues/970)]
