@@ -1,0 +1,3 @@
+```release-note:bug
+cli: connections with TLS without insecure flag properly connect
+```
