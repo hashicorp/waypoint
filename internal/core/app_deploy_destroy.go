@@ -8,8 +8,6 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -31,44 +29,77 @@ func (a *App) CanDestroyDeploy() bool {
 
 // DestroyDeploy destroyes a specific deployment.
 func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
+	return a.destroyDeploy(ctx, d, nil)
+}
+
+// destroyAllDeploys will destroy all non-destroyed releases.
+func (a *App) destroyAllDeploys(ctx context.Context) error {
+	resp, err := a.client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
+		Application:   a.ref,
+		Workspace:     a.workspace,
+		PhysicalState: pb.Operation_CREATED,
+		Order: &pb.OperationOrder{
+			Order: pb.OperationOrder_COMPLETE_TIME,
+			Desc:  true,
+		},
+	})
+	if err != nil {
+		return nil
+	}
+
+	results := resp.Deployments
+	if len(results) == 0 {
+		return nil
+	}
+
+	// current deploy is the latest deploy
+	currentDeploy := results[0]
+
+	a.UI.Output(fmt.Sprintf("Destroying deployments for application '%s'...", a.config.Name), terminal.WithHeaderStyle())
+	for _, v := range results {
+		err := a.destroyDeploy(ctx, v, currentDeploy)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// destroyDeploy destroyes a specific deployment. "d" is the deployment
+// to destroy. "configD" is the deployment to use to render the configuration.
+// If configD is nil, then "d" is used.
+//
+// We separate configD and d because when destroying multiple deployments, we
+// only have access to the current config, which we can only render using
+// the latest deploy typically. This lets callers make that determination.
+func (a *App) destroyDeploy(
+	ctx context.Context,
+	d *pb.Deployment,
+	configD *pb.Deployment,
+) error {
 	// If the deploy is destroyed already then do nothing.
 	if d.State == pb.Operation_DESTROYED {
 		a.logger.Info("deployment already destroyed, doing nothing", "id", d.Id)
 		return nil
 	}
 
-	// We need to get the pushed artifact if it isn't loaded.
-	var artifact *pb.PushedArtifact
-	if d.Preload != nil && d.Preload.Artifact != nil {
-		artifact = d.Preload.Artifact
+	if configD == nil {
+		configD = d
 	}
-	if artifact == nil {
-		a.logger.Debug("querying artifact", "artifact_id", d.ArtifactId)
-		resp, err := a.client.GetPushedArtifact(ctx, &pb.GetPushedArtifactRequest{
-			Ref: &pb.Ref_Operation{
-				Target: &pb.Ref_Operation_Id{
-					Id: d.ArtifactId,
-				},
-			},
-		})
-		if status.Code(err) == codes.NotFound {
-			resp = nil
-			err = nil
-			a.logger.Warn("artifact not found, will attempt destroy regardless",
-				"artifact_id", d.ArtifactId)
-		}
-		if err != nil {
-			a.logger.Error("error querying artifact",
-				"artifact_id", d.ArtifactId,
-				"error", err)
-			return err
-		}
 
-		artifact = resp
+	// We need to get the pushed artifact if it isn't loaded.
+	artifact, err := a.deployArtifact(ctx, configD)
+	if err != nil {
+		return err
 	}
 
 	// Add our build to our config
 	var evalCtx hcl.EvalContext
+	if _, err := a.deployEvalContext(ctx, &evalCtx); err != nil {
+		a.logger.Warn("failed to prepare entrypoint variables, will not be available",
+			"err", err)
+	}
 	if err := evalCtxTemplateProto(&evalCtx, "artifact", artifact); err != nil {
 		a.logger.Warn("failed to prepare template variables, will not be available",
 			"err", err)
@@ -86,44 +117,6 @@ func (a *App) DestroyDeploy(ctx context.Context, d *pb.Deployment) error {
 		Deployment: d,
 	})
 	return err
-}
-
-// destroyAllDeploys will destroy all non-destroyed releases.
-func (a *App) destroyAllDeploys(ctx context.Context) error {
-	resp, err := a.client.ListDeployments(ctx, &pb.ListDeploymentsRequest{
-		Application:   a.ref,
-		Workspace:     a.workspace,
-		PhysicalState: pb.Operation_CREATED,
-	})
-	if err != nil {
-		return nil
-	}
-
-	results := resp.Deployments
-	if len(results) == 0 {
-		return nil
-	}
-
-	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, nil)
-	if status.Code(err) == codes.Unimplemented {
-		return status.Errorf(codes.FailedPrecondition,
-			"Created deployments must be destroyed but no deployment plugin is configured! "+
-				"Please configure a deployment plugin in your Waypoint configuration.")
-	}
-	if err != nil {
-		return err
-	}
-	defer c.Close()
-
-	a.UI.Output(fmt.Sprintf("Destroying deployments for application '%s'...", a.config.Name), terminal.WithHeaderStyle())
-	for _, v := range results {
-		err := a.DestroyDeploy(ctx, v)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // destroyDeployWorkspace will call the DestroyWorkspace hook if there
@@ -152,8 +145,25 @@ func (a *App) destroyDeployWorkspace(ctx context.Context) error {
 		return nil
 	}
 
+	// We need to get the pushed artifact if it isn't loaded.
+	artifact, err := a.deployArtifact(ctx, results[0])
+	if err != nil {
+		return err
+	}
+
+	// Add our build to our config
+	var evalCtx hcl.EvalContext
+	if _, err := a.deployEvalContext(ctx, &evalCtx); err != nil {
+		a.logger.Warn("failed to prepare entrypoint variables, will not be available",
+			"err", err)
+	}
+	if err := evalCtxTemplateProto(&evalCtx, "artifact", artifact); err != nil {
+		a.logger.Warn("failed to prepare template variables, will not be available",
+			"err", err)
+	}
+
 	// Start the plugin
-	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, nil)
+	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, &evalCtx)
 	if err != nil {
 		return err
 	}

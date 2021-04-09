@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
@@ -79,6 +81,44 @@ func (a *App) deployEvalContext(
 	})
 
 	return deployConfig, nil
+}
+
+// deployArtifact loads the pushed artifact for a deployment.
+func (a *App) deployArtifact(
+	ctx context.Context,
+	d *pb.Deployment,
+) (*pb.PushedArtifact, error) {
+	var artifact *pb.PushedArtifact
+	if d.Preload != nil && d.Preload.Artifact != nil {
+		artifact = d.Preload.Artifact
+	}
+
+	if artifact == nil {
+		a.logger.Debug("querying artifact", "artifact_id", d.ArtifactId)
+		resp, err := a.client.GetPushedArtifact(ctx, &pb.GetPushedArtifactRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: d.ArtifactId,
+				},
+			},
+		})
+		if status.Code(err) == codes.NotFound {
+			resp = nil
+			err = nil
+			a.logger.Warn("artifact not found, will attempt destroy regardless",
+				"artifact_id", d.ArtifactId)
+		}
+		if err != nil {
+			a.logger.Error("error querying artifact",
+				"artifact_id", d.ArtifactId,
+				"error", err)
+			return nil, err
+		}
+
+		artifact = resp
+	}
+
+	return artifact, nil
 }
 
 type deployOperation struct {

@@ -43,42 +43,10 @@ func (a *App) DestroyRelease(ctx context.Context, d *pb.Release) error {
 		return nil
 	}
 
-	// Query the deployment
-	a.logger.Debug("querying deployment", "deployment_id", d.DeploymentId)
-	resp, err := a.client.GetDeployment(ctx, &pb.GetDeploymentRequest{
-		Ref: &pb.Ref_Operation{
-			Target: &pb.Ref_Operation_Id{
-				Id: d.DeploymentId,
-			},
-		},
-
-		LoadDetails: pb.Deployment_ARTIFACT,
-	})
-	if status.Code(err) == codes.NotFound {
-		resp = nil
-		err = nil
-		a.logger.Warn("deployment not found, will attempt destroy regardless",
-			"deployment_id", d.DeploymentId)
-	}
-	if err != nil {
-		a.logger.Error("error querying deployment",
-			"deployment_id", d.DeploymentId,
-			"error", err)
-		return err
-	}
-	deploy := resp
-
-	// Add our build to our config
+	// Setup our context
 	var evalCtx hcl.EvalContext
-	if deploy != nil {
-		if err := evalCtxTemplateProto(&evalCtx, "artifact", deploy.Preload.Artifact); err != nil {
-			a.logger.Warn("failed to prepare template variables, will not be available",
-				"err", err)
-		}
-		if err := evalCtxTemplateProto(&evalCtx, "deploy", deploy); err != nil {
-			a.logger.Warn("failed to prepare template variables, will not be available",
-				"err", err)
-		}
+	if err := a.releaserEvalContext(ctx, d, &evalCtx); err != nil {
+		return err
 	}
 
 	c, err := a.createReleaser(ctx, &evalCtx)
@@ -96,6 +64,53 @@ func (a *App) DestroyRelease(ctx context.Context, d *pb.Release) error {
 		Release:   d,
 	})
 	return err
+}
+
+// releaserEvalContext populates the typical HCL context for rendering
+// the releaser.
+func (a *App) releaserEvalContext(
+	ctx context.Context,
+	r *pb.Release,
+	evalCtx *hcl.EvalContext,
+) error {
+	// Query the deployment
+	a.logger.Debug("querying deployment", "deployment_id", r.DeploymentId)
+	resp, err := a.client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+		Ref: &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: r.DeploymentId,
+			},
+		},
+
+		LoadDetails: pb.Deployment_ARTIFACT,
+	})
+	if status.Code(err) == codes.NotFound {
+		resp = nil
+		err = nil
+		a.logger.Warn("deployment not found, will attempt destroy regardless",
+			"deployment_id", r.DeploymentId)
+	}
+	if err != nil {
+		a.logger.Error("error querying deployment",
+			"deployment_id", r.DeploymentId,
+			"error", err)
+		return err
+	}
+	deploy := resp
+
+	// Add our build to our config
+	if deploy != nil {
+		if err := evalCtxTemplateProto(evalCtx, "artifact", deploy.Preload.Artifact); err != nil {
+			a.logger.Warn("failed to prepare template variables, will not be available",
+				"err", err)
+		}
+		if err := evalCtxTemplateProto(evalCtx, "deploy", deploy); err != nil {
+			a.logger.Warn("failed to prepare template variables, will not be available",
+				"err", err)
+		}
+	}
+
+	return nil
 }
 
 // destroyAllReleases will destroy all non-destroyed releases.
@@ -151,8 +166,14 @@ func (a *App) destroyReleaseWorkspace(ctx context.Context) error {
 		return nil
 	}
 
+	// Setup our context
+	var evalCtx hcl.EvalContext
+	if err := a.releaserEvalContext(ctx, results[0], &evalCtx); err != nil {
+		return err
+	}
+
 	// Start the plugin
-	c, err := a.createReleaser(ctx, nil)
+	c, err := a.createReleaser(ctx, &evalCtx)
 	if status.Code(err) == codes.Unimplemented {
 		return nil
 	}
