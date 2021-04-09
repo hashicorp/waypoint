@@ -1,0 +1,3 @@
+```release-note:bug
+ui/checkbox-inputs-safari: Custom Inputs in the browser Ui now render properly on all supported browsers 
+```
