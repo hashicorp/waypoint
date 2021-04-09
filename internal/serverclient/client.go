@@ -59,6 +59,10 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(
 			credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}),
 		))
+	} else {
+		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(
+			credentials.NewTLS(&tls.Config{}),
+		))
 	}
 
 	if cfg.Auth {
