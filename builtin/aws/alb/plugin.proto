@@ -12,4 +12,10 @@ message TargetGroup {
 message Release {
   string url = 1;
   string load_balancer_arn = 2;
+  string management_level = 3;
+  string listener_arn = 4;
+  string target_group_arn = 5;
+  string security_group_id = 7;
+  string zone_id = 8;
+  string fqdn = 9;
 }

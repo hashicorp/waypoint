@@ -1,0 +1,9 @@
+```release-note:bug
+builtin/aws: Fixed some bugs in Lambda deploys and ALB releases. ALB
+releases should now have their their associated resources (applicable
+load balancers, listeners, and security groups) deleted upon
+`waypoint destroy`. Additionally, it will now retry Lambda target
+group deletion for a short time to give time for AWS to fully remove
+any attachments to the target group by the aforementioned release
+resources.
+```

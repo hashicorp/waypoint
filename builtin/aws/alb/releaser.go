@@ -16,6 +16,12 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 )
 
+const (
+	managementLevelTargetGroup = "target_group"
+	managementLevelListener    = "listener"
+	managementLevelComplete    = "complete"
+)
+
 type Releaser struct {
 	config ReleaserConfig
 }
@@ -28,6 +34,11 @@ func (r *Releaser) Config() (interface{}, error) {
 // ReleaseFunc implements component.ReleaseManager
 func (r *Releaser) ReleaseFunc() interface{} {
 	return r.Release
+}
+
+// ReleaseFunc implements component.ReleaseManager
+func (r *Releaser) DestroyFunc() interface{} {
+	return r.Destroy
 }
 
 // Release manages target group attachement to a configured ALB
@@ -44,6 +55,10 @@ func (r *Releaser) Release(
 	if err != nil {
 		return nil, err
 	}
+
+	// Start recording our state here
+	result := new(Release)
+
 	elbsrv := elbv2.New(sess)
 
 	lbName := r.config.Name
@@ -51,7 +66,7 @@ func (r *Releaser) Release(
 		lbName = "waypoint-" + src.App
 	}
 
-	// We have to clamp at a length of 32 because the Name field to 
+	// We have to clamp at a length of 32 because the Name field to
 	// CreateLoadBalancer requires that the name is 32 characters or less.
 	if len(lbName) > 32 {
 		lbName = lbName[:32]
@@ -86,6 +101,8 @@ func (r *Releaser) Release(
 
 	if r.config.ListenerARN != "" {
 		existingListener = r.config.ListenerARN
+		result.ListenerArn = existingListener
+		result.ManagementLevel = managementLevelTargetGroup
 	}
 
 	tgs := []*elbv2.TargetGroupTuple{
@@ -123,6 +140,7 @@ func (r *Releaser) Release(
 
 		if dlb != nil && len(dlb.LoadBalancers) > 0 {
 			lb = dlb.LoadBalancers[0]
+			result.ManagementLevel = managementLevelListener
 		} else {
 			var (
 				vpc     *string
@@ -163,6 +181,9 @@ func (r *Releaser) Release(
 			if err != nil {
 				return nil, err
 			}
+
+			result.SecurityGroupId = *sg
+
 			clb, err := elbsrv.CreateLoadBalancer(&elbv2.CreateLoadBalancerInput{
 				Name:           aws.String(lbName),
 				Subnets:        subnets,
@@ -173,8 +194,10 @@ func (r *Releaser) Release(
 			}
 
 			lb = clb.LoadBalancers[0]
+			result.ManagementLevel = managementLevelComplete
 		}
 
+		result.LoadBalancerArn = *lb.LoadBalancerArn
 		listeners, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
 			LoadBalancerArn: lb.LoadBalancerArn,
 		})
@@ -184,6 +207,7 @@ func (r *Releaser) Release(
 
 		if len(listeners.Listeners) > 0 {
 			listener = listeners.Listeners[0]
+			result.ListenerArn = *listener.ListenerArn
 		} else {
 			log.Info("load-balancer defined", "dns-name", *lb.DNSName)
 
@@ -209,6 +233,7 @@ func (r *Releaser) Release(
 
 			newListener = true
 			listener = lo.Listeners[0]
+			result.ListenerArn = *listener.ListenerArn
 		}
 	}
 
@@ -292,18 +317,203 @@ func (r *Releaser) Release(
 				HostedZoneId: aws.String(r.config.ZoneId),
 			}
 
-			result, err := r53.ChangeResourceRecordSets(input)
+			out, err := r53.ChangeResourceRecordSets(input)
 			if err != nil {
 				return nil, err
 			}
-			log.Debug("record created", "change-id", *result.ChangeInfo.Id)
+			log.Debug("record created", "change-id", *out.ChangeInfo.Id)
+			result.ZoneId = r.config.ZoneId
+			result.Fqdn = fqdn
 		}
 	}
 
-	return &Release{
-		Url:             "http://" + hostname,
-		LoadBalancerArn: *lb.LoadBalancerArn,
-	}, nil
+	result.Url = "http://" + hostname
+	result.TargetGroupArn = target.Arn
+	return result, nil
+}
+
+func (r *Releaser) Destroy(
+	ctx context.Context,
+	log hclog.Logger,
+	release *Release,
+	ui terminal.UI,
+) error {
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
+	sess, err := utils.GetSession(&utils.SessionConfig{})
+	if err != nil {
+		return err
+	}
+
+	elbsrv := elbv2.New(sess)
+
+	switch release.ManagementLevel {
+	case managementLevelTargetGroup:
+		// Existing listener was supplied, just detach. Since we just
+		// inserted our target group with a weight of 100 before in the
+		// list, just locate that target group in the list and remove it
+		// there.
+		existingListener := release.ListenerArn
+		log.Debug("detaching target group from supplied listener", "arn", existingListener)
+		st.Update("Detaching target group...")
+		out, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
+			ListenerArns: []*string{aws.String(existingListener)},
+		})
+		if err != nil {
+			st.Step(terminal.StatusError, "Error detaching target group")
+			return err
+		}
+
+		actions := out.Listeners[0].DefaultActions
+		tgtMissing := true
+		for i := 0; i < len(actions[0].ForwardConfig.TargetGroups[1:]); i++ {
+			tgt := actions[0].ForwardConfig.TargetGroups[i]
+			if *tgt.TargetGroupArn == release.TargetGroupArn {
+				actions[0].ForwardConfig.TargetGroups = append(
+					actions[0].ForwardConfig.TargetGroups[:i],
+					actions[0].ForwardConfig.TargetGroups[i+1:]...,
+				)
+				tgtMissing = false
+			}
+		}
+
+		if tgtMissing {
+			log.Debug("target group not found in listener, not modifying", "arn", existingListener)
+			break
+		}
+
+		_, err = elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
+			ListenerArn:    aws.String(existingListener),
+			DefaultActions: actions,
+		})
+		if err != nil {
+			st.Step(terminal.StatusError, "Error detaching target group")
+			return err
+		}
+
+		st.Step(terminal.StatusOK, "Detached target group")
+
+	case managementLevelListener:
+		// Existing load balancer was supplied (via the "name" field),
+		// but no listeners existed. Simply remove the listener we
+		// created.
+		log.Debug("removing managed listener from existing load balancer", "arn", release.LoadBalancerArn)
+		st.Update("Removing listener from existing load balancer...")
+		out, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
+			LoadBalancerArn: aws.String(release.LoadBalancerArn),
+		})
+		if err != nil {
+			st.Step(terminal.StatusError, "Error removing listener from existing load balancer")
+			return err
+		}
+
+		var listenerArns []string
+	nextListener:
+		for _, l := range out.Listeners {
+			for _, a := range l.DefaultActions {
+				if *a.TargetGroupArn == release.TargetGroupArn {
+					listenerArns = append(listenerArns, *l.ListenerArn)
+					continue nextListener
+				}
+
+				for _, tgt := range a.ForwardConfig.TargetGroups {
+					if *tgt.TargetGroupArn == release.TargetGroupArn {
+						listenerArns = append(listenerArns, *l.ListenerArn)
+						continue nextListener
+					}
+				}
+			}
+		}
+
+		if len(listenerArns) == 0 {
+			log.Debug("no listeners found with assigned target group, not modifying", "arn", release.LoadBalancerArn)
+			break
+		}
+
+		for _, listenerArn := range listenerArns {
+			log.Debug("deleting listener", "arn", listenerArn)
+			_, err = elbsrv.DeleteListener(&elbv2.DeleteListenerInput{
+				ListenerArn: aws.String(listenerArn),
+			})
+			if err != nil {
+				st.Step(terminal.StatusError, "Error removing listener from existing load balancer")
+				return err
+			}
+		}
+
+		st.Step(terminal.StatusOK, "Removed listeners from existing load balancer")
+
+	default:
+		// Assume managementLevelComplete here, as it's the only state
+		// otherwise. Just remove the load balancer wholesale.
+		log.Debug("deleting load balancer", "arn", release.LoadBalancerArn)
+		st.Update("Deleting load balancer...")
+		if _, err := elbsrv.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
+			LoadBalancerArn: aws.String(release.LoadBalancerArn),
+		}); err != nil {
+			st.Step(terminal.StatusError, "Error deleting load balancer")
+			return err
+		}
+
+		st.Step(terminal.StatusOK, "Deleted load balancer")
+
+		// Delete the security group as well
+		log.Debug("deleting security group", "id", release.SecurityGroupId)
+		st.Update("Deleting security group...")
+		e := ec2.New(sess)
+		if _, err := e.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
+			GroupId: aws.String(release.SecurityGroupId),
+		}); err != nil {
+			st.Step(terminal.StatusError, "Error deleting security group")
+			return err
+		}
+
+		st.Step(terminal.StatusOK, "Deleted security group")
+	}
+
+	if release.ZoneId != "" && release.Fqdn != "" {
+		// Delete the Route53 record we created
+		log.Debug("deleting route53 record", "zone_id", release.ZoneId, "fqdn", release.Fqdn)
+		st.Update("Deleting DNS record...")
+
+		r53 := route53.New(sess)
+
+		records, err := r53.ListResourceRecordSets(&route53.ListResourceRecordSetsInput{
+			HostedZoneId:    aws.String(release.ZoneId),
+			StartRecordName: aws.String(release.Fqdn),
+			StartRecordType: aws.String("A"),
+			MaxItems:        aws.String("1"),
+		})
+		if err != nil {
+			st.Step(terminal.StatusError, "Error deleting DNS record")
+			return err
+		}
+
+		if len(records.ResourceRecordSets) > 0 && *(records.ResourceRecordSets[0].Name) == release.Fqdn {
+			if _, err := r53.ChangeResourceRecordSets(&route53.ChangeResourceRecordSetsInput{
+				HostedZoneId: aws.String(release.ZoneId),
+				ChangeBatch: &route53.ChangeBatch{
+					Changes: []*route53.Change{
+						{
+							Action:            aws.String(route53.ChangeActionDelete),
+							ResourceRecordSet: records.ResourceRecordSets[0],
+						},
+					},
+				},
+			}); err != nil {
+				st.Step(terminal.StatusError, "Error deleting DNS record")
+				return err
+			}
+
+			st.Step(terminal.StatusOK, "Deleted DNS record")
+		} else {
+			log.Debug("route53 record not found, ignoring", "zone_id", release.ZoneId, "fqdn", release.Fqdn)
+		}
+	}
+
+	return nil
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.

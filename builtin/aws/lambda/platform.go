@@ -628,15 +628,45 @@ func (p *Platform) Destroy(
 	}
 
 	elbsrv := elbv2.New(sess)
-
-	log.Debug("deleting target group", "arn", deployment.TargetGroupArn)
 	st.Update("Deleting target group...")
+	for i := 1; ; i++ {
+		// Retry deleting the target group. This seems to take a moment
+		// to propagate through the AWS API, so we just use a rudimentary
+		// retry loop, retrying on ResourceInUse.
+		const (
+			delaySec                   = 1
+			maxRetries                 = 10
+			expectedRetryableErrorCode = "ResourceInUse"
+		)
 
-	_, err = elbsrv.DeleteTargetGroup(&elbv2.DeleteTargetGroupInput{
-		TargetGroupArn: &deployment.TargetGroupArn,
-	})
-	if err != nil {
-		return err
+		log.Debug(
+			"deleting target group",
+			"arn", deployment.TargetGroupArn,
+			"attempt", i,
+			"max_attempts", maxRetries,
+		)
+		_, err := elbsrv.DeleteTargetGroup(&elbv2.DeleteTargetGroupInput{
+			TargetGroupArn: &deployment.TargetGroupArn,
+		})
+		if err != nil {
+			if awerr, ok := err.(awserr.Error); ok && awerr.Code() != expectedRetryableErrorCode {
+				return err
+			}
+		} else {
+			break
+		}
+
+		if i >= maxRetries {
+			return err
+		}
+		log.Debug(
+			fmt.Sprintf("retryable error deleting target group, waiting %ds before retry", delaySec),
+			"err", err,
+			"arn", deployment.TargetGroupArn,
+			"attempt", i,
+			"max_attempts", maxRetries,
+		)
+		time.Sleep(time.Second * delaySec)
 	}
 
 	st.Step(terminal.StatusOK, "Deleted target group")
