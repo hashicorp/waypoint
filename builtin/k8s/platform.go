@@ -107,7 +107,7 @@ func (p *Platform) Deploy(
 	defer step.Abort()
 
 	// Get our client
-	clientset, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
+	clientSet, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -122,11 +122,11 @@ func (p *Platform) Deploy(
 
 	step = sg.Add("Preparing deployment...")
 
-	deployclient := clientset.AppsV1().Deployments(ns)
+	deployClient := clientSet.AppsV1().Deployments(ns)
 
 	// Determine if we have a deployment that we manage already
 	create := false
-	deployment, err := deployclient.Get(ctx, result.Name, metav1.GetOptions{})
+	deployment, err := deployClient.Get(ctx, result.Name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		deployment = result.newDeployment(result.Name)
 		create = true
@@ -153,7 +153,7 @@ func (p *Platform) Deploy(
 	// Build our env vars
 	env := []corev1.EnvVar{
 		{
-			Name:  "PORT",
+			Name:  "WAYPOINT_EXPOSED_PORT",
 			Value: fmt.Sprint(p.config.Ports[0]["port"]),
 		},
 	}
@@ -263,37 +263,48 @@ func (p *Platform) Deploy(
 		}
 	}
 
+	container := corev1.Container{
+		Name:            result.Name,
+		Image:           img.Name(),
+		ImagePullPolicy: pullPolicy,
+		Ports:           containerPorts,
+		LivenessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(defaultPort),
+				},
+			},
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
+			FailureThreshold:    failureThreshold,
+		},
+		ReadinessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(defaultPort),
+				},
+			},
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
+		},
+		Env:       env,
+		Resources: resourceRequirements,
+	}
+
+	if p.config.Pod.Container != nil {
+		containerCfg := p.config.Pod.Container
+		if containerCfg.Command != nil {
+			container.Command = *containerCfg.Command
+		}
+
+		if containerCfg.Args != nil {
+			container.Args = *containerCfg.Args
+		}
+	}
+
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
-		Containers: []corev1.Container{
-			{
-				Name:            result.Name,
-				Image:           img.Name(),
-				ImagePullPolicy: pullPolicy,
-				Ports:           containerPorts,
-				LivenessProbe: &corev1.Probe{
-					Handler: corev1.Handler{
-						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(defaultPort),
-						},
-					},
-					InitialDelaySeconds: initialDelaySeconds,
-					TimeoutSeconds:      timeoutSeconds,
-					FailureThreshold:    failureThreshold,
-				},
-				ReadinessProbe: &corev1.Probe{
-					Handler: corev1.Handler{
-						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(defaultPort),
-						},
-					},
-					InitialDelaySeconds: initialDelaySeconds,
-					TimeoutSeconds:      timeoutSeconds,
-				},
-				Env:       env,
-				Resources: resourceRequirements,
-			},
-		},
+		Containers: []corev1.Container{container},
 	}
 
 	// Override the default TCP socket checks if we have a probe path
@@ -354,6 +365,7 @@ func (p *Platform) Deploy(
 			deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
 				RunAsUser:    secCtx.RunAsUser,
 				RunAsNonRoot: secCtx.RunAsNonRoot,
+				FSGroup:      secCtx.FsGroup,
 			}
 		}
 	}
@@ -383,7 +395,7 @@ func (p *Platform) Deploy(
 		deployment.Spec.Template.Spec.ServiceAccountName = p.config.ServiceAccount
 
 		// Determine if we need to make a service account
-		saClient := clientset.CoreV1().ServiceAccounts(ns)
+		saClient := clientSet.CoreV1().ServiceAccounts(ns)
 		saCreate := false
 		serviceAccount, err := saClient.Get(ctx, p.config.ServiceAccount, metav1.GetOptions{})
 		if errors.IsNotFound(err) {
@@ -403,7 +415,7 @@ func (p *Platform) Deploy(
 		}
 	}
 
-	dc := clientset.AppsV1().Deployments(ns)
+	dc := clientSet.AppsV1().Deployments(ns)
 
 	// Create/update
 	if create {
@@ -422,7 +434,7 @@ func (p *Platform) Deploy(
 	step.Done()
 	step = sg.Add("Waiting for deployment...")
 
-	ps := clientset.CoreV1().Pods(ns)
+	ps := clientSet.CoreV1().Pods(ns)
 	podLabelId := fmt.Sprintf("%s=%s", labelId, result.Id)
 
 	var (
@@ -609,15 +621,22 @@ type Config struct {
 	Pod *Pod `hcl:"pod,block"`
 }
 
+type Container struct {
+	Command *[]string `hcl:"command"`
+	Args    *[]string `hcl:"args"`
+}
+
 // Pod describes the configuration for the pod
 type Pod struct {
 	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
+	Container       *Container          `hcl:"container,block"`
 }
 
 // PodSecurityContext describes the security config for the Pod
 type PodSecurityContext struct {
 	RunAsUser    *int64 `hcl:"run_as_user"`
 	RunAsNonRoot *bool  `hcl:"run_as_non_root"`
+	FsGroup      *int64 `hcl:"fs_group"`
 }
 
 // Probe describes a health check to be performed against a container to determine whether it is
