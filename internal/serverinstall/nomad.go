@@ -21,6 +21,7 @@ type NomadInstaller struct {
 }
 
 type nomadConfig struct {
+	authSoftFail       bool              `hcl:"auth_soft_fail,optional"`
 	serverImage        string            `hcl:"server_image,optional"`
 	namespace          string            `hcl:"namespace,optional"`
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
@@ -648,9 +649,10 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 
 	task := api.NewTask("server", "docker")
 	task.Config = map[string]interface{}{
-		"image": c.serverImage,
-		"ports": []string{"server", "ui"},
-		"args":  []string{"server", "run", "-accept-tos", "-vvv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
+		"image":          c.serverImage,
+		"ports":          []string{"server", "ui"},
+		"args":           []string{"server", "run", "-accept-tos", "-vvv", "-db=/alloc/data/data.db", fmt.Sprintf("-listen-grpc=0.0.0.0:%s", defaultGrpcPort), fmt.Sprintf("-listen-http=0.0.0.0:%s", defaultHttpPort)},
+		"auth_soft_fail": c.authSoftFail,
 	}
 	task.Env = map[string]string{
 		"PORT": defaultGrpcPort,
@@ -684,6 +686,7 @@ func waypointRunnerNomadJob(c nomadConfig, opts *InstallRunnerOpts) *api.Job {
 			"agent",
 			"-vvv",
 		},
+		"auth_soft_fail": c.authSoftFail,
 	}
 
 	task.Env = map[string]string{}
@@ -744,6 +747,14 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Usage:  "Annotations for the Service generated.",
 	})
 
+	set.BoolVar(&flag.BoolVar{
+		Name:    "nomad-auth-soft-fail",
+		Target:  &i.config.authSoftFail,
+		Default: false,
+		Usage: "Don't fail the Nomad task on an auth failure obtaining server " +
+			"image container. Attempt to continue without auth.",
+	})
+
 	set.StringSliceVar(&flag.StringSliceVar{
 		Name:    "nomad-dc",
 		Target:  &i.config.datacenters,
@@ -785,6 +796,14 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Name:   "nomad-annotate-service",
 		Target: &i.config.serviceAnnotations,
 		Usage:  "Annotations for the Service generated.",
+	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "nomad-auth-soft-fail",
+		Target:  &i.config.authSoftFail,
+		Default: false,
+		Usage: "Don't fail the Nomad task on an auth failure obtaining server " +
+			"image container. Attempt to continue without auth.",
 	})
 
 	set.StringSliceVar(&flag.StringSliceVar{
