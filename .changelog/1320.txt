@@ -1,0 +1,3 @@
+```release-note:bug
+cli: server bootstrap will not give auth token errors
+```
