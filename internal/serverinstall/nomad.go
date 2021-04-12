@@ -818,7 +818,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-server-cpu",
 		Target:  &i.config.serverResourcesCPU,
-		Usage:   "Number of CPUs to allocate to the Server job task.",
+		Usage:   "CPU required to run this task in MHz.",
 		Default: strconv.Itoa(defaultResourcesCPU),
 	})
 
@@ -832,7 +832,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-runner-cpu",
 		Target:  &i.config.runnerResourcesCPU,
-		Usage:   "Number of CPUs to allocate to the Server job task.",
+		Usage:   "CPU required to run this task in MHz.",
 		Default: strconv.Itoa(defaultResourcesCPU),
 	})
 
