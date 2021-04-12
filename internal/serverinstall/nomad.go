@@ -663,11 +663,11 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	cpu := defaultResourcesCPU
 	mem := defaultResourcesMemory
 
-	if c.runnerResourcesCPU != "" {
+	if c.serverResourcesCPU != "" {
 		cpu, _ = strconv.Atoi(c.serverResourcesCPU)
 	}
 
-	if c.runnerResourcesMemory != "" {
+	if c.serverResourcesMemory != "" {
 		mem, _ = strconv.Atoi(c.serverResourcesMemory)
 	}
 	task.Resources = &api.Resources{
@@ -839,7 +839,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-runner-memory",
 		Target:  &i.config.runnerResourcesCPU,
-		Usage:   "MB of Memory to allocate to the Server job task.",
+		Usage:   "MB of Memory to allocate to the runner job task.",
 		Default: strconv.Itoa(defaultResourcesMemory),
 	})
 
@@ -904,7 +904,7 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-server-memory",
 		Target:  &i.config.serverResourcesMemory,
-		Usage:   "MB of Memory to allocate to the Server job task.",
+		Usage:   "MB of Memory to allocate to the server job task.",
 		Default: strconv.Itoa(defaultResourcesMemory),
 	})
 
@@ -918,7 +918,7 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-runner-memory",
 		Target:  &i.config.runnerResourcesMemory,
-		Usage:   "MB of Memory to allocate to the Server job task.",
+		Usage:   "MB of Memory to allocate to the runner job task.",
 		Default: strconv.Itoa(defaultResourcesMemory),
 	})
 
