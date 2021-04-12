@@ -1,0 +1,3 @@
+```release-note:feature
+plugins/k8s: Add more configuration options to Kubernetes plugin
+```
