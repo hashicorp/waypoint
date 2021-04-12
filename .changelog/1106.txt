@@ -1,0 +1,4 @@
+
+```release-note:feature
+plugin/nomad: Allow for auth soft fail on serverinstall for server image
+```
