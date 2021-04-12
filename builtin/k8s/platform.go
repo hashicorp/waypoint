@@ -322,21 +322,39 @@ func (p *Platform) Deploy(
 		}
 	}
 
-	if p.config.ScratchSpace != "" {
-		deployment.Spec.Template.Spec.Volumes = []corev1.Volume{
-			{
-				Name: "scratch",
-				VolumeSource: corev1.VolumeSource{
-					EmptyDir: &corev1.EmptyDirVolumeSource{},
+	if len(p.config.ScratchSpace) > 0 {
+		for idx, scratchSpaceLocation := range p.config.ScratchSpace {
+			scratchName := fmt.Sprintf("scratch-%d", idx)
+			deployment.Spec.Template.Spec.Volumes = append(
+				deployment.Spec.Template.Spec.Volumes,
+				corev1.Volume{
+					Name: scratchName,
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{},
+					},
 				},
-			},
-		}
+			)
 
-		deployment.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
-			{
-				Name:      "scratch",
-				MountPath: p.config.ScratchSpace,
-			},
+			deployment.Spec.Template.Spec.Containers[0].VolumeMounts = append(
+				deployment.Spec.Template.Spec.Containers[0].VolumeMounts,
+				corev1.VolumeMount{
+					Name:      scratchName,
+					MountPath: scratchSpaceLocation,
+				},
+			)
+		}
+	}
+
+	if p.config.Pod != nil {
+		// Configure Pod
+		podConfig := p.config.Pod
+		if podConfig.SecurityContext != nil {
+			secCtx := podConfig.SecurityContext
+			// Configure Pod Security Context
+			deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
+				RunAsUser:    secCtx.RunAsUser,
+				RunAsNonRoot: secCtx.RunAsNonRoot,
+			}
 		}
 	}
 
@@ -571,7 +589,7 @@ type Config struct {
 
 	// A path to a directory that will be created for the service to store
 	// temporary data.
-	ScratchSpace string `hcl:"scratch_path,optional"`
+	ScratchSpace []string `hcl:"scratch_path,optional"`
 
 	// ServiceAccount is the name of the Kubernetes service account to apply to the
 	// application deployment. This is useful to apply Kubernetes RBAC to the pod.
@@ -587,6 +605,19 @@ type Config struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+
+	Pod *Pod `hcl:"pod,block"`
+}
+
+// Pod describes the configuration for the pod
+type Pod struct {
+	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
+}
+
+// PodSecurityContext describes the security config for the Pod
+type PodSecurityContext struct {
+	RunAsUser    *int64 `hcl:"run_as_user"`
+	RunAsNonRoot *bool  `hcl:"run_as_non_root"`
 }
 
 // Probe describes a health check to be performed against a container to determine whether it is
