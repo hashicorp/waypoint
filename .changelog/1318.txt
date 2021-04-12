@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/nomad: Add CPU and Memory resource options for server and runner installs
+```
