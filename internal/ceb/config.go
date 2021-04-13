@@ -170,6 +170,10 @@ func (ceb *CEB) watchConfig(
 			// to put a `:=` there and break things. This makes it more explicit.
 			env = newEnv
 
+			// Process it for any keys that we handle differently (such as
+			// WAYPOINT_LOG_LEVEL)
+			ceb.processAppEnv(env)
+
 			// Set our new env vars
 			newCmd := ceb.copyCmd(ceb.childCmdBase)
 			newCmd.Env = append(newCmd.Env, env...)
