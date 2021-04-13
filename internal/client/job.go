@@ -54,7 +54,7 @@ func (c *Project) doJob(ctx context.Context, job *pb.Job, ui terminal.UI) (*pb.J
 	return c.doJobMonitored(ctx, job, ui, nil)
 }
 
-// Same as doJob, but with the addition of a  mon channel that can be used
+// Same as doJob, but with the addition of a mon channel that can be used
 // to monitor the job status as it changes.
 // The receiver must be careful to not block sending to mon as it will block
 // the job state processing loop.

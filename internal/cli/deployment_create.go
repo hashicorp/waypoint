@@ -70,6 +70,22 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			hostname = hostnamesResp.Hostnames[0]
 		}
 
+		// TODO: status report
+		// Note we need a clientpkg.App.StatusReport func
+		app.UI.Output("Reporting Status...", terminal.WithHeaderStyle())
+		statusReportResult, err := app.StatusReport(ctx, &pb.Job_StatusReportOp{
+			Deployment: deployment,
+		})
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+		statusReport := statusReportResult.StatusReport
+		if statusReport != nil {
+			// create helper to print health?
+			app.UI.Output(statusReport.Health.String(), terminal.WithInfoStyle())
+		}
+
 		// Release if we're releasing
 		var releaseUrl string
 		if c.flagRelease {
@@ -85,6 +101,22 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			}
 
 			releaseUrl = releaseResult.Release.Url
+
+			// TODO: status report
+			// Note we need a clientpkg.App.StatusReport func
+			app.UI.Output("Reporting Status...", terminal.WithHeaderStyle())
+			statusReportResult, err = app.StatusReport(ctx, &pb.Job_StatusReportOp{
+				Deployment: deployment,
+			})
+			if err != nil {
+				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+				return ErrSentinel
+			}
+			statusReport := statusReportResult.StatusReport
+			if statusReport != nil {
+				// create helper to print health?
+				app.UI.Output(statusReport.Health.String(), terminal.WithInfoStyle())
+			}
 		}
 
 		// inplace is true if this was an in-place deploy. We detect this

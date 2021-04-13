@@ -199,6 +199,9 @@ func (r *Runner) executeJob(
 	case *pb.Job_QueueProject:
 		return r.executeQueueProjectOp(ctx, log, job, project)
 
+	case *pb.Job_StatusReport:
+		return r.executeStatusReportOp(ctx, job, project)
+
 	default:
 		return nil, status.Errorf(codes.Aborted, "unknown operation %T", job.Operation)
 	}

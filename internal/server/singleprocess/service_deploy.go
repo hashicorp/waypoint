@@ -189,5 +189,12 @@ func (s *service) deploymentPreloadDetails(
 		d.Preload.Build = build
 	}
 
+	// TODO: preload status report?
+	//statusReport, err := s.state.StatusReportGet(???)
+	//if err != nil {
+	//	return err
+	//}
+	//d.Preload.StatusReport = statusReport
+
 	return nil
 }
