@@ -22,7 +22,7 @@ const (
 
 var (
 	// default resources used for the deployed app. Can be overridden
-	// through config flags at install. Note that these are the same defaults
+	// through the resources stanza in a deploy. Note that these are the same defaults
 	// used currently in Nomad if left unconfigured.
 	defaultResourcesCPU      = 100
 	defaultResourcesMemoryMB = 300
