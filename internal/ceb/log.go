@@ -25,10 +25,20 @@ func (ceb *CEB) initSystemLogger() {
 	// and let us register additional sinks for streaming and so on.
 	opts := *hclog.DefaultOptions
 	opts.Name = "entrypoint"
-	opts.Level = hclog.Trace
+	opts.Level = hclog.Debug
 	intercept := hclog.NewInterceptLogger(&opts)
 	nonintercept := hclog.New(&opts)
 	ceb.logger = intercept
+
+	// Set our initial log level
+	if v := os.Getenv(envLogLevel); v != "" {
+		level := hclog.LevelFromString(v)
+		if level == hclog.NoLevel {
+			ceb.logger.Warn("log level provided in env var is invalid", v)
+		} else {
+			ceb.logger.SetLevel(level)
+		}
+	}
 
 	// Create our reader/writer that will send to the server log stream.
 	r, w := io.Pipe()
