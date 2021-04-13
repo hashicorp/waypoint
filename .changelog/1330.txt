@@ -1,0 +1,7 @@
+```release-note:improvement
+entrypoint: default log level changed to DEBUG
+```
+
+```release-note:improvement
+entrypoint: can change log level using the `WAYPOINT_LOG_LEVEL` env var, which can also be set with `waypoint config`
+```

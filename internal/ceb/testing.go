@@ -44,12 +44,16 @@ func TestCEB(t testing.T, opts ...Option) *TestCEBData {
 }
 
 type TestCEBData struct {
+	CEB     *CEB
 	Horizon hzntest.DevSetup
 }
 
 func withTestDefaults(t testing.T, data *TestCEBData, doneCh chan<- struct{}) Option {
 	return func(ceb *CEB, cfg *config) error {
 		defer close(doneCh)
+
+		// Store a reference to the CEB
+		data.CEB = ceb
 
 		// If we have no server configured, create that.
 		if ceb.client == nil && cfg.ServerAddr == "" {

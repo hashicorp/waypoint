@@ -25,9 +25,11 @@ func realMain() int {
 	flag.Usage = usage
 	flag.Parse()
 
-	// TODO(mitchellh): proper log setup
+	// This logger always uses debug logging. These logs don't go to
+	// the log stream. The entrypoint will create a new logger that respects
+	// the WAYPOINT_LOG_LEVEL env var.
 	log := hclog.L()
-	hclog.L().SetLevel(hclog.Trace)
+	log.SetLevel(hclog.Debug)
 
 	// Create a context that is cancelled on interrupt
 	ctx, closer := signalcontext.WithInterrupt(context.Background(), log)

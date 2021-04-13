@@ -79,12 +79,12 @@ $ docker volume list
 
 Locate the volumes named starting with `pack-cache-` and remove them with `docker volume rm`.
 
-# Investigating deployed applications
+# Investigating Deployed Applications
 
 Waypoint includes several commands to support debugging and monitoring while
 developing your application.
 
-## Exec into the application container
+## Exec Into the Application Container
 
 After deploying your application, you can use `waypoint exec` to run
 commands in the context of the most recent deployment. Typically, `waypoint exec` will be used for running database migrations and debugging. However, you
@@ -121,10 +121,11 @@ Type `exit` to leave the interactive Docker session.
 $ exit
 ```
 
-## View Waypoint application logs
+## View Waypoint Application and Entrypoint Logs
 
 In the application's directory, run the `logs` command to observe the running
-logs for your deployment.
+logs for your deployment. This will include logs from the
+[entrypoint](/docs/entrypoint) if it is in use.
 
 ```shell-session
 $ waypoint logs
@@ -142,6 +143,10 @@ existing deployment.
 ```
 
 Press `Ctrl-C` to exit the `logs` command.
+
+You may increase the verbosity of entrypoint logs by setting the
+`WAYPOINT_LOG_LEVEL` environment variable. See the documentation on
+[entrypoint logs](/docs/entrypoint#logging) for more information.
 
 ## Access the Waypoint web UI
 
