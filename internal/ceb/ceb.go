@@ -31,6 +31,11 @@ const (
 	envCEBDisable          = "WAYPOINT_CEB_DISABLE"
 	envCEBServerRequired   = "WAYPOINT_CEB_SERVER_REQUIRED"
 	envCEBToken            = "WAYPOINT_CEB_INVITE_TOKEN"
+
+	// envLogLevel is the env var to set with the log level. This
+	// env var matches the Waypoint CLI on purpose. This can be set on
+	// the entrypoint process OR via app config (`waypoint config`).
+	envLogLevel = "WAYPOINT_LOG_LEVEL"
 )
 
 const (

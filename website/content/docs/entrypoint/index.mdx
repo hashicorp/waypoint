@@ -72,6 +72,29 @@ will only "wake up" from blocking on network traffic when it receives new
 application configuration, a request for `exec`, an inbound request from the
 URL service, etc.
 
+## Logging
+
+The entrypoint itself emits logs about its own behavior. These logs are
+in addition to the logs emitted by the deployed application. We differentiate
+between the two by calling one "entrypoint logs" and the other "application
+logs".
+
+Entrypoint logs are also streamed and can be viewed via `waypoint logs`. If
+`waypoint logs` is not working, the entrypoint logs are also emitted to stderr.
+This is primarily for debugging purposes in case the entrypoint is not
+functioning properly.
+
+The default log level for entrypoint logs is `DEBUG`. You may change the
+log level by setting the `WAYPOINT_LOG_LEVEL` environment variable to
+one of: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR` (values further to the
+left are more verbose than those to the right). This environment variable
+may be set at build time, using deployment plugin configuration, or
+via the [waypoint config CLI](/docs/app-config#setting-configuration-via-the-cli).
+
+-> **Note:** The `WAYPOINT_LOG_LEVEL` environment variable must be set
+within the runtime environment of your deployment, not on your local machine.
+This is a common error when attempting to change entrypoint log levels.
+
 ## Failure Behavior
 
 The Waypoint entrypoint is designed to be resilient to failure scenarios
