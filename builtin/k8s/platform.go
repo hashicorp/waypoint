@@ -599,8 +599,8 @@ type Config struct {
 	// such as memory and cpu.
 	Resources map[string]string `hcl:"resources,optional"`
 
-	// A path to a directory that will be created for the service to store
-	// temporary data.
+	// An array of paths to directories that will be mounted as EmptyDirVolumes in the pod
+	// to store temporary data.
 	ScratchSpace []string `hcl:"scratch_path,optional"`
 
 	// ServiceAccount is the name of the Kubernetes service account to apply to the
