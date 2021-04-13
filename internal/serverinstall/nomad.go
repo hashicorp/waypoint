@@ -29,8 +29,6 @@ type nomadConfig struct {
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
 	policyOverride bool     `hcl:"policy_override,optional"`
-
-	serverPurge bool `hcl:"serverPurge,optional"`
 }
 
 // Install is a method of NomadInstaller and implements the Installer interface to
@@ -335,7 +333,7 @@ EVAL:
 }
 
 // Unnstall is a method of NomadInstaller and implements the Installer interface to
-// stop, and optionally purge, the waypoint-server job on a Nomad cluster
+// stop and purge the waypoint-server job on a Nomad cluster
 func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error {
 	ui := opts.UI
 
@@ -371,7 +369,7 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 
 	s.Update("Removing Waypoint server from Nomad...")
 
-	_, _, err = client.Jobs().Deregister(serverName, i.config.serverPurge, &api.WriteOptions{})
+	_, _, err = client.Jobs().Deregister(serverName, true, &api.WriteOptions{})
 	if err != nil {
 		ui.Output(
 			"Error deregistering waypoint server job: %s", clierrors.Humanize(err),
@@ -396,11 +394,7 @@ func (i *NomadInstaller) Uninstall(ctx context.Context, opts *InstallOpts) error
 		}
 	}
 
-	if i.config.serverPurge {
-		s.Update("Waypoint job and allocations purged")
-	} else {
-		s.Update("Waypoint job and allocations stopped")
-	}
+	s.Update("Waypoint job and allocations purged")
 	s.Done()
 
 	return nil
@@ -475,7 +469,7 @@ func (i *NomadInstaller) UninstallRunner(
 	}
 
 	s.Update("Removing Waypoint runner...")
-	_, _, err = client.Jobs().Deregister(runnerName, i.config.serverPurge, &api.WriteOptions{})
+	_, _, err = client.Jobs().Deregister(runnerName, true, &api.WriteOptions{})
 	if err != nil {
 		ui.Output(
 			"Error deregistering Waypoint runner job: %s", clierrors.Humanize(err),
@@ -501,11 +495,7 @@ func (i *NomadInstaller) UninstallRunner(
 		}
 	}
 
-	if i.config.serverPurge {
-		s.Update("Waypoint runner job and allocations purged")
-	} else {
-		s.Update("Waypoint runner job and allocations stopped")
-	}
+	s.Update("Waypoint runner job and allocations purged")
 	s.Done()
 
 	return nil
@@ -843,9 +833,5 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 }
 
 func (i *NomadInstaller) UninstallFlags(set *flag.Set) {
-	set.BoolVar(&flag.BoolVar{
-		Name:   "nomad-purge",
-		Target: &i.config.serverPurge,
-		Usage:  "Purge the Waypoint server job after deregistering as part of uninstall.",
-	})
+	// Purposely empty, no flags
 }

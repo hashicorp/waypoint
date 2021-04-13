@@ -210,7 +210,8 @@ Usage: waypoint server uninstall [options]
   Uninstall the Waypoint server. The platform should be specified as kubernetes,
   nomad, or docker. '-auto-approve' is required.
 
-  By default, this command deletes the default server's context.
+  By default, this command deletes the default server's context and creates 
+  a server snapshot.
 
   This command does not destroy Waypoint resources, such as deployments and
   releases. Clear all workspaces prior to uninstall to prevent hanging resources.
