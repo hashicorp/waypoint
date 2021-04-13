@@ -7,6 +7,7 @@ import * as deployment from './services/deployment';
 import * as token from './services/token';
 import * as inviteToken from './services/invite-token';
 import * as release from './services/release';
+import * as versionInfo from './services/version-info';
 
 export default function (this: Server) {
   this.namespace = 'hashicorp.waypoint.Waypoint';
@@ -32,6 +33,7 @@ export default function (this: Server) {
   this.post('/GenerateLoginToken', token.create);
   this.post('/ListReleases', release.list);
   this.post('/GetRelease', release.get);
+  this.post('/GetVersionInfo', versionInfo.get);
 
   // Pass through all other requests
   this.passthrough();
