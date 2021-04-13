@@ -2,6 +2,7 @@ package ceb
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -237,5 +238,34 @@ func (ceb *CEB) recvConfig(
 
 		log.Debug("new configuration received")
 		ch <- resp.Config
+	}
+}
+
+// processAppEnv takes a list of env vars meant for the app and handles
+// certain special cases (such as WAYPOINT_LOG_LEVEL) that also affect the
+// entrypoint.
+func (ceb *CEB) processAppEnv(env []string) {
+	// Check if we changed our log level. We change this on the
+	// root logger for the CEB.
+	for _, pair := range env {
+		idx := strings.Index(pair, "=")
+		if idx == -1 {
+			// Shouldn't happen
+			continue
+		}
+
+		key := pair[:idx]
+		if key == envLogLevel {
+			value := pair[idx+1:]
+			level := hclog.LevelFromString(value)
+			if level == hclog.NoLevel {
+				// We warn this
+				ceb.logger.Warn("log level provided in env var is invalid", value)
+			} else {
+				// We set the log level on the root logger so it
+				// affects all CEB logs.
+				ceb.logger.SetLevel(level)
+			}
+		}
 	}
 }
