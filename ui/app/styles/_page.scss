@@ -70,10 +70,6 @@
       min-height: 76px;
       max-width: 100%;
 
-      &.projects-title {
-        margin-top: scale.$lg-4;
-      }
-
       h1,
       h2 {
         margin: 0;
@@ -109,6 +105,10 @@
           margin-right: scale.$sm-3;
         }
       }
+    }
+
+    &.projects-header {
+      margin-top: scale.$lg-4;
     }
 
     .actions {
@@ -722,7 +722,7 @@
     float: right;
     text-align: right;
     margin-bottom: scale.$sm-1;
-    button  {
+    button {
       font-size: 0.75rem;
     }
   }
