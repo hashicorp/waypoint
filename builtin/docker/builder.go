@@ -49,6 +49,9 @@ type BuilderConfig struct {
 
 	// The name/path to the Dockerfile if it is not the root of the project
 	Dockerfile string `hcl:"dockerfile,optional"`
+
+	// Controls the passing of build time variables
+	BuildArgs []string `hcl:"build_args,optional"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -154,6 +157,15 @@ func (b *Builder) Build(
 	}
 	cli.NegotiateAPIVersion(ctx)
 
+	buildArgs := make(map[string]*string)
+
+	if b.config.BuildArgs != nil {
+		for _, arg := range b.config.BuildArgs {
+			pair := strings.Split(arg, "=")
+			buildArgs[pair[0]] = &pair[1]
+		}
+	}
+
 	dockerfile := b.config.Dockerfile
 	if dockerfile == "" {
 		dockerfile = "Dockerfile"
@@ -199,9 +211,10 @@ func (b *Builder) Build(
 		// fail but that error message should help the user.
 		step.Update("Docker isn't available. Falling back to daemonless image build...")
 		step.Done()
+		buildArgsString := strings.Join(b.config.BuildArgs, "--build-arg ")
 		step = nil
 		if err := b.buildWithImg(
-			ctx, ui, sg, relDockerfile, contextDir, result.Name(),
+			ctx, ui, sg, relDockerfile, contextDir, result.Name(), buildArgsString,
 		); err != nil {
 			return nil, err
 		}
@@ -217,7 +230,7 @@ func (b *Builder) Build(
 		step.Done()
 		step = nil
 		if err := b.buildWithDocker(
-			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(),
+			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), buildArgs,
 		); err != nil {
 			return nil, err
 		}
@@ -273,6 +286,7 @@ func (b *Builder) buildWithDocker(
 	contextDir string,
 	relDockerfile string,
 	tag string,
+	buildArgs map[string]*string,
 ) error {
 	excludes, err := build.ReadDockerignore(contextDir)
 	if err != nil {
@@ -314,6 +328,7 @@ func (b *Builder) buildWithDocker(
 		Dockerfile: relDockerfile,
 		Tags:       []string{tag},
 		Remove:     true,
+		BuildArgs:  buildArgs,
 	})
 	if err != nil {
 		return status.Errorf(codes.Internal, "error building image: %s", err)

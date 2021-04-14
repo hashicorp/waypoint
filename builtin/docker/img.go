@@ -23,6 +23,7 @@ func (b *Builder) buildWithImg(
 	dockerfilePath string,
 	contextDir string,
 	tag string,
+	buildArgs string,
 ) error {
 	step := sg.Add("Building Docker image with img...")
 	defer func() {
@@ -37,6 +38,7 @@ func (b *Builder) buildWithImg(
 		"build",
 		"-f", dockerfilePath,
 		"-t", tag,
+		buildArgs,
 		".",
 	)
 
