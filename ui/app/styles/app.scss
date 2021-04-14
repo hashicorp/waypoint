@@ -119,6 +119,12 @@ pre code {
   white-space: pre;
 }
 
+hr {
+  margin: scale.$lg-1 0;
+  border: none;
+  border-top: 1px solid rgb(var(--border));
+}
+
 // Set a default size for icons
 
 svg.icon {
