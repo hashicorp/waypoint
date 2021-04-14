@@ -123,6 +123,14 @@
     "path": "deployment-list"
   },
   {
+    "title": "docs",
+    "path": "docs"
+  },
+  {
+    "title": "fmt",
+    "path": "fmt"
+  },
+  {
     "title": "hostname delete",
     "path": "hostname-delete"
   },
