@@ -6,8 +6,6 @@
   </div>
 </div>
 
-<hr />
-
 <div class="onboarding-step">
   <p>Anyone using Waypoint to deploy from their workstation needs to install it locally. The below
     instructions guide you through that for various operating systems.
@@ -15,19 +13,11 @@
 
   <h2>Install Waypoint</h2>
 
-  <nav>
-    <ul>
-      <li>
-        <LinkTo @route="onboarding.install.manual">Manual installation</LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="onboarding.install.linux">Linux</LinkTo>
-      </li>
-    </ul>
-  </nav>
+  <Pds::TabNav>
+    <LinkTo @route="onboarding.install.manual">Manual installation</LinkTo>
+    <LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo>
+    <LinkTo @route="onboarding.install.linux">Linux</LinkTo>
+  </Pds::TabNav>
 
   {{outlet}}
 
