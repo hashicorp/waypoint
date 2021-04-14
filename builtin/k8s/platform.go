@@ -153,7 +153,7 @@ func (p *Platform) Deploy(
 	// Build our env vars
 	env := []corev1.EnvVar{
 		{
-			Name:  "WAYPOINT_EXPOSED_PORT",
+			Name:  "PORT",
 			Value: fmt.Sprint(p.config.Ports[0]["port"]),
 		},
 	}
