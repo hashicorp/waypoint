@@ -68,6 +68,10 @@ gen/changelog:
 		-note-template .changelog/note.tmpl \
 		-this-release $(THIS_RELEASE)
 
+.PHONY: gen/server
+gen/server:
+	go generate ./internal/server 
+
 .PHONY: gen/ts
 gen/ts:
 	@rm -rf ./ui/lib/api-common-protos/google 2> /dev/null
