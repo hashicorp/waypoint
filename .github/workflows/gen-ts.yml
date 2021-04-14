@@ -1,0 +1,43 @@
+name: "Generate API TS definitions"
+
+on:
+  push:
+    paths:
+      - 'internal/server/**'
+    branches:
+      - main
+
+jobs:
+  gen-ts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          ref: main
+      - name: setup-node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
+      - name: install-node-deps
+        run: 'npm i -g ts-protoc-gen'
+      - name: setup-go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ‘1.16.0’
+      - name: install-go-deps
+        run: |
+          go version
+          go get -u github.com/vektra/mockery@v1.1.2
+      - name: generate-server
+        run: |
+          go generate ./internal/server
+      - name: generate-ts
+        run: | 
+          make gen/ts
+      - name: create-pull-request
+        uses: peter-evans/create-pull-request@v3
+    
+
