@@ -102,6 +102,8 @@ to work on the fork is to set it as a remote of the Waypoint project:
 By following these steps you can push to your fork to create a PR, but the code on disk still
 lives in the spot where the go cli tools are expecting to find it.
 
+If the scope of the code change requires it, follow the [Changelog Guide](/.github/CHANGELOG_GUIDE.md) to add an entry.
+
 >Note: If you make any changes to the code, run `make format` to automatically format the code according to Go standards.
 
 ## Testing
