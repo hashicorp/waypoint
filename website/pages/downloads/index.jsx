@@ -7,7 +7,7 @@ import styles from './style.module.css'
 
 export default function DownloadsPage({ releases }) {
   return (
-    <>
+    <span className={styles.downloads}>
       <HashiHead is={Head} title={`Downloads | ${productName} by HashiCorp`} />
 
       <ProductDownloader
@@ -50,7 +50,7 @@ export default function DownloadsPage({ releases }) {
           label: 'View Tutorials at HashiCorp Learn',
         }}
       />
-    </>
+    </span>
   )
 }
 
