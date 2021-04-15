@@ -744,6 +744,8 @@ message Job {
 
       // git will check out the data from a Git repository.
       Git git = 2;
+
+      Subversion svn = 3;
     }
 
     // Ref is a reference to the exact set of data used by a data source.
@@ -760,6 +762,8 @@ message Job {
   }
 
   message Local {}
+
+  message Subversion {}
 
   message Git {
     // url of the repository to clone. Local paths are not allowed.
