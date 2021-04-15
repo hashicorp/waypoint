@@ -5,9 +5,14 @@ page_title: 'Waypoint Commands (CLI)'
 
 # Waypoint Commands (CLI)
 
-Waypoint is controlled via a very easy to use command-line interface (CLI). Waypoint is only a single command-line application: `waypoint`. This application then takes a subcommand such as `artifact` or `deployment`. The complete list of subcommands is in the navigation to the left.
+Waypoint is controlled via a very easy to use command-line interface (CLI). Waypoint 
+is only a single command-line application: `waypoint`. This application then takes a 
+subcommand such as `artifact` or `deployment`. The complete list of subcommands is in 
+the navigation to the left.
 
-The waypoint CLI is a well-behaved command line application. In erroneous cases, a non-zero exit status will be returned. It also responds to -h and --help as you'd most likely expect.
+The waypoint CLI is a well-behaved command line application. In erroneous cases, a 
+non-zero exit status will be returned. It also responds to -h and --help as you'd most
+likely expect.
 
 To view a list of the available commands at any time, just run waypoint with no arguments:
 
@@ -41,7 +46,8 @@ Other commands:
     version         Prints the version of this Waypoint CLI.
 ```
 
-To get help for any specific command, pass the -h flag to the relevant subcommand. For example, to see help about the up subcommand:
+To get help for any specific command, pass the -h flag to the relevant subcommand. 
+For example, to see help about the up subcommand:
 
 ```shell-session
 $ waypoint up -h
@@ -69,4 +75,7 @@ Operation Options:
       is used for example to set a specific Git ref to run against.
 ```
 
-Running `waypoint -autocomplete-install` will add the waypoint autocomplete capability so you can do `waypoint <tab>` on commands. Running `waypoint -autocomplete-uninstall` will remove it. Please note that this will modify your shell init script, so you will need to reload your shell.
+Running `waypoint -autocomplete-install` will add the waypoint autocomplete capability 
+so you can do `waypoint <tab>` on commands. Running `waypoint -autocomplete-uninstall` 
+will remove it. Please note that this will modify your shell init script, so you will 
+need to reload your shell.
