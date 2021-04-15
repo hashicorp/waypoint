@@ -6,6 +6,8 @@ references:
     go: &GOLANG_IMAGE docker.mirror.hashicorp.services/circleci/golang:1.16
     middleman: &MIDDLEMAN_IMAGE docker.mirror.hashicorp.services/hashicorp/middleman-hashicorp:0.3.44
     ember: &EMBER_IMAGE docker.mirror.hashicorp.services/circleci/node:12-browsers
+    go-node: &GONODE_IMAGE  docker.mirror.hashicorp.services/cimg/go:1.16.3-node
+
 
   paths:
     test-results: &TEST_RESULTS_DIR /tmp/test-results
@@ -379,7 +381,7 @@ jobs:
   # generate server ts definitions
   gen-ts: 
     docker:
-      - image: *GOLANG_IMAGE
+      - image: *GONODE_IMAGE
     environment:
       <<: *ENVIRONMENT
     steps:
@@ -392,14 +394,18 @@ jobs:
       - run:
           name: gen/ts
           command: |
-            # check if there are any changes in internal/server/server.go
+            # check if there are any changes in internal/server/proto/server.proto
             # if there are, we commit the ui static asset file
             # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
             if ! git diff --quiet --exit-code HEAD^! internal/server/proto/server.proto; then
               git config --local user.email "hashicorp-ci@users.noreply.github.com"
               git config --local user.name "hashicorp-ci"
               short_sha=$(git rev-parse --short HEAD)
-              go generate ./internal/server
+              go get -u github.com/vektra/mockery@v1.1.2
+              make tools
+              protoc --version
+              yarn add global ts-protoc-gen
+              make gen/server
               make gen/ts
               git add ui/lib
               git commit -m "auto-updated ui/lib/* from commit ${short_sha}"
