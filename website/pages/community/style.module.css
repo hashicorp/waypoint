@@ -1,6 +1,4 @@
 .communityPage {
-  --brand-link: var(--waypoint-link);
-
   max-width: var(--site-max-width);
   margin: 72px auto;
 
