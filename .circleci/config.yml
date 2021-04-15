@@ -376,6 +376,40 @@ jobs:
             npm install
             node scripts/index_search_content.js
 
+  # generate server ts definitions
+  gen-ts: 
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+      - attach_workspace:
+          at: .
+      - run:
+          name: gen/ts
+          command: |
+            # check if there are any changes in internal/server/server.go
+            # if there are, we commit the ui static asset file
+            # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
+            if ! git diff --quiet --exit-code HEAD^! internal/server/proto/server.proto; then
+              git config --local user.email "hashicorp-ci@users.noreply.github.com"
+              git config --local user.name "hashicorp-ci"
+              short_sha=$(git rev-parse --short HEAD)
+              go generate ./internal/server
+              make gen/ts
+              git add ui/lib
+              git commit -m "auto-updated ui/lib/* from commit ${short_sha}"
+              git push origin circle-ts-gen
+            else
+              echo "no server.proto changes so nothing to publish"
+            fi
+      - notify_main_failure
+
+
   # # run ember frontend tests
   # ember-test:
   #   docker:
@@ -455,6 +489,9 @@ workflows:
             branches:
               only:
                 - main
+          requires:
+            - build-static-assets
+      - gen-ts:
           requires:
             - build-static-assets
       - integration:
