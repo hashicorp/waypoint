@@ -392,6 +392,31 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Get protoc builtins
+          command: |
+            sudo apt-get update && sudo apt-get install curl unzip
+            # Note: for reasons unknown, the protoc built in types need to be
+            # downloaded separately.
+            sudo mkdir -p /usr/src/protoc/
+            sudo curl --location https://github.com/protocolbuffers/protobuf/releases/download/v3.11.2/protoc-3.11.2-linux-x86_64.zip --output /usr/src/protoc/protoc-3.11.2.zip
+            cd /usr/src/protoc/
+            unzip protoc-3.11.2.zip
+            protoc --version
+      - run:
+          name: install-protoc
+          command: |
+            sudo apt-get update && sudo apt-get install -y protobuf-compiler
+      - run:
+          name: Install protoc.
+          command: |
+            curl -o ~/protoc3.zip -L https://github.com/google/protobuf/releases/download/v${PROTO_VERSION}/protoc-${PROTO_VERSION}-linux-x86_64.zip
+            unzip ~/protoc3.zip -d ~/protoc3
+            sudo mv ~/protoc3/bin/* /usr/local/bin/
+            sudo mv ~/protoc3/include/* /usr/local/include/
+            protoc --version
+          environment:
+            PROTO_VERSION: 3.6.1
+      - run:
           name: gen/ts
           command: |
             # check if there are any changes in internal/server/proto/server.proto
