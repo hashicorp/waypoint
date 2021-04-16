@@ -1,12 +1,10 @@
 <p>HashiCorp officially maintains and signs packages for the following Linux distributions.</p>
 
-<nav>
-  <ul>
-    <li><LinkTo @route="onboarding.install.linux.ubuntu">Ubuntu/Debian</LinkTo></li>
-    <li><LinkTo @route="onboarding.install.linux.centos">CentOS/RHEL</LinkTo></li>
-    <li><LinkTo @route="onboarding.install.linux.fedora">Fedora</LinkTo></li>
-    <li><LinkTo @route="onboarding.install.linux.amazon">Amazon Linux</LinkTo></li>
-  </ul>
-</nav>
+<Pds::TabNav>
+  <LinkTo @route="onboarding.install.linux.ubuntu">Ubuntu/Debian</LinkTo>
+  <LinkTo @route="onboarding.install.linux.centos">CentOS/RHEL</LinkTo>
+  <LinkTo @route="onboarding.install.linux.fedora">Fedora</LinkTo>
+  <LinkTo @route="onboarding.install.linux.amazon">Amazon Linux</LinkTo>
+</Pds::TabNav>
 
 {{outlet}}

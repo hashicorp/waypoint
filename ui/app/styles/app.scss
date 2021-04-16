@@ -99,7 +99,7 @@ ul {
   padding: 0;
 }
 
-:any-link, :any-link:not(.pds-button) {
+:any-link:not(.pds-button) {
   border-bottom: none;
 }
 
@@ -117,6 +117,12 @@ code {
 
 pre code {
   white-space: pre;
+}
+
+hr {
+  margin: scale.$lg-1 0;
+  border: none;
+  border-top: 1px solid rgb(var(--border));
 }
 
 // Set a default size for icons
