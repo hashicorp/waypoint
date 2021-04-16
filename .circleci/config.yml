@@ -408,8 +408,9 @@ jobs:
               make gen/server
               make gen/ts
               git add ui/lib
+              git checkout -b gen-s-${short_sha}
               git commit -m "auto-updated ui/lib/* from commit ${short_sha}"
-              git push origin circle-ts-gen
+              git push origin gen-s-${short_sha}
             else
               echo "no server.proto changes so nothing to publish"
             fi
