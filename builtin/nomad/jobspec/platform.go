@@ -216,6 +216,17 @@ environment variables using the [templating feature](/docs/waypoint-hcl/function
 One of the examples below shows the entrypoint environment variables being
 injected.
 
+### URL Service
+
+If you want your workload to be accessible by the
+[Waypoint URL service](/docs/url), you must set the PORT environment variable
+within your job and be using the Waypoint entrypoint (documented in the
+previous section).
+
+The PORT environment variable should be the port that your web service
+is listening on that the URL service will connect to. See one of the examples
+below for more details.
+
 `)
 
 	doc.Example(`
@@ -252,6 +263,10 @@ job "web" {
         %{ for k,v in entrypoint.env ~}
         ${k} = "${v}"
         %{ endfor ~}
+
+		// Ensure we set PORT for the URL service. This is only necessary
+		// if we want the URL service to function.
+		PORT = 3000
       }
     }
   }
