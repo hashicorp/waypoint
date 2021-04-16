@@ -92,8 +92,10 @@ func (s *service) QueueJob(
 	if job.DataSource == nil {
 		if project.DataSource == nil {
 			return nil, status.Errorf(codes.FailedPrecondition,
-				"Project %s does not have a default data source. A data source must be manually "+
-					"specified for any queued jobs.",
+				"Project %s does not have a data source configured. Remote jobs "+
+					"require a data source such as Git to be configured with the project. "+
+					"Data sources can be configured via the CLI or UI. For help, see : "+
+					"https://www.waypointproject.io/docs/projects/git#configuring-the-project",
 				job.Application.Project,
 			)
 		}
