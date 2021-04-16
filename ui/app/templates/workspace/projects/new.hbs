@@ -6,7 +6,7 @@
 </PageHeader>
 
 <form class="pds-form" {{on "submit" this.saveProject}}>
-  <div part="fields">
+  <div part="fields" class="card">
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="project-name" class="pds-fieldName">
@@ -22,14 +22,17 @@
         />
       </div>
     </fieldset>
+    <hr />
     <fieldset class="pds-formFieldSet">
       <div class="pds-formField">
         <label for="create-git" class="pds-fieldName">
-          <Pds::Icon @type="git-repository"/> {{t 'form.project_new.create_git_label'}}
+          <Pds::Icon @type="git-repository" class="icon" />
+          {{t 'form.project_new.create_git_label'}}
         </label>
         <Pds::HelpText>
           <p>{{t 'form.project_new.create_git_helptext'}}</p>
         </Pds::HelpText>
+
         <Pds::CheckboxField
           @checked={{this.createGit}}
           @id="create-git"
@@ -37,7 +40,6 @@
         >
           {{t 'form.project_new.create_git_checkbox_label'}}
         </Pds::CheckboxField>
-
       </div>
     </fieldset>
   </div>

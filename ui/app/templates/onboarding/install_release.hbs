@@ -14,22 +14,12 @@
 
   <h2>Install Waypoint</h2>
 
-  <nav>
-    <ul>
-      <li>
-        <LinkTo @route="onboarding.install.manual">Manual installation</LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="onboarding.install.chocolatey">Chocolatey on Windows</LinkTo>
-      </li>
-      <li>
-        <LinkTo @route="onboarding.install.linux">Linux</LinkTo>
-      </li>
-    </ul>
-  </nav>
+  <Pds::TabNav>
+    <LinkTo @route="onboarding.install.manual">Manual installation</LinkTo>
+    <LinkTo @route="onboarding.install.homebrew">Homebrew on OS X</LinkTo>
+    <LinkTo @route="onboarding.install.chocolatey">Chocolatey on Windows</LinkTo>
+    <LinkTo @route="onboarding.install.linux">Linux</LinkTo>
+  </Pds::TabNav>
 
   {{outlet}}
 
