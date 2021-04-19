@@ -20,7 +20,45 @@ func Jsonnet() map[string]function.Function {
 
 func jsonnetVM(opts cty.Value) *jsonnet.VM {
 	vm := jsonnet.MakeVM()
+
+	// Get our options. If it isn't a valid type that we're looking for
+	// then just return the VM as-is.
+	optsT := opts.Type()
+	if opts.IsNull() {
+		return vm
+	}
+	if !optsT.IsObjectType() && !optsT.IsMapType() {
+		return vm
+	}
+
+	// Jsonnet has FOUR ways to parameterize a file, all with string key/values.
+	// This function abstracts setting it so we can set all four methods.
+	setter := func(k string, cb func(string, string)) {
+		val := attr(opts, k)
+		if !val.IsNull() && val.CanIterateElements() {
+			for k, v := range val.AsValueMap() {
+				cb(k, v.AsString())
+			}
+
+		}
+	}
+	setter("ext_vars", vm.ExtVar)
+	setter("ext_code", vm.ExtCode)
+	setter("tla_vars", vm.TLAVar)
+	setter("tla_code", vm.TLACode)
+
 	return vm
+}
+
+func attr(v cty.Value, k string) cty.Value {
+	t := v.Type()
+	if t.IsMapType() {
+		return v.Index(cty.StringVal(k))
+	} else if t.HasAttribute(k) {
+		return v.GetAttr(k)
+	}
+
+	return cty.NullVal(cty.String)
 }
 
 // JsonnetDirFunc constructs a function that converts a directory of

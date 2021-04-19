@@ -27,6 +27,49 @@ func TestJsonnetFile(t *testing.T) {
 			cty.ObjectVal(nil),
 			``,
 		},
+
+		{
+			cty.StringVal("testdata/jsonnet/top-level-ext.jsonnet"),
+			cty.ObjectVal(map[string]cty.Value{
+				"ext_vars": cty.MapVal(map[string]cty.Value{
+					"prefix": cty.StringVal("Happy Hour "),
+				}),
+
+				"ext_code": cty.MapVal(map[string]cty.Value{
+					"brunch": cty.StringVal("true"),
+				}),
+			}),
+			``,
+		},
+
+		{
+			cty.StringVal("testdata/jsonnet/top-level-ext.jsonnet"),
+			// with a map
+			cty.MapVal(map[string]cty.Value{
+				"ext_vars": cty.MapVal(map[string]cty.Value{
+					"prefix": cty.StringVal("Happy Hour "),
+				}),
+
+				"ext_code": cty.MapVal(map[string]cty.Value{
+					"brunch": cty.StringVal("true"),
+				}),
+			}),
+			``,
+		},
+
+		{
+			cty.StringVal("testdata/jsonnet/top-level-tla.jsonnet"),
+			cty.ObjectVal(map[string]cty.Value{
+				"tla_vars": cty.MapVal(map[string]cty.Value{
+					"prefix": cty.StringVal("Happy Hour "),
+				}),
+
+				"tla_code": cty.MapVal(map[string]cty.Value{
+					"brunch": cty.StringVal("true"),
+				}),
+			}),
+			``,
+		},
 	}
 
 	for _, tt := range tests {
