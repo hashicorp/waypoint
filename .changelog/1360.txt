@@ -1,0 +1,4 @@
+```release-note:feature
+config: `jsonnetfile` and `jsonnetdir` functions for processing Jsonnet files
+and converting them to JSON.
+```
