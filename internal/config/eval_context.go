@@ -34,6 +34,7 @@ func EvalContext(parent *hcl.EvalContext, pwd string) *hcl.EvalContext {
 	addFuncs(funcs.Filesystem())
 	addFuncs(funcs.Encoding())
 	addFuncs(funcs.Datetime())
+	addFuncs(funcs.Jsonnet())
 
 	return result
 }

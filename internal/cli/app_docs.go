@@ -596,6 +596,7 @@ func (c *AppDocsCommand) funcsMDX() int {
 	addFuncs(funcs.Filesystem())
 	addFuncs(funcs.Encoding())
 	addFuncs(funcs.Datetime())
+	addFuncs(funcs.Jsonnet())
 
 	docs := funcs.Docs()
 
