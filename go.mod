@@ -41,6 +41,7 @@ require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofrs/flock v0.8.0
 	github.com/golang/protobuf v1.4.2
+	github.com/google/go-jsonnet v0.17.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
@@ -97,7 +98,7 @@ require (
 	github.com/slack-go/slack v0.6.5
 	github.com/stretchr/testify v1.6.1
 	github.com/vektra/mockery v1.1.2
-	github.com/zclconf/go-cty v1.5.1
+	github.com/zclconf/go-cty v1.8.1
 	github.com/zclconf/go-cty-yaml v1.0.2
 	go.uber.org/goleak v1.1.10
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
