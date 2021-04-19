@@ -114,6 +114,11 @@ var JsonnetDirFunc = function.New(&function.Spec{
 				}
 			}
 
+			// Ignore non-jsonnet extensions
+			if filepath.Ext(path) != ".jsonnet" {
+				return nil
+			}
+
 			// Render
 			jsonStr, err := vm.EvaluateFile(path)
 			if err != nil {
