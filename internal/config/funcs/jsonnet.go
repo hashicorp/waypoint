@@ -120,8 +120,13 @@ var JsonnetDirFunc = function.New(&function.Spec{
 				return err
 			}
 
+			// We ensure the filename ends with ".json"
+			filename := filepath.Base(path)
+			filename = strings.TrimSuffix(filename, ".jsonnet")
+			filename += ".json"
+
 			// We'll copy the file into the temporary directory
-			path = filepath.Join(dir, filepath.Base(path))
+			path = filepath.Join(dir, filename)
 			return ioutil.WriteFile(path, []byte(jsonStr), 0600)
 		})
 		if err != nil {
