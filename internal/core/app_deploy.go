@@ -34,18 +34,15 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 		return nil, err
 	}
 
-	// Render the config
-	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, &evalCtx)
-	if err != nil {
-		return nil, err
-	}
-	defer c.Close()
-
-	_, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), &deployOperation{
-		Component:        c,
+	op := &deployOperation{
+		ComponentFactory: componentCreatorMap[component.PlatformType].Create,
+		EvalContext:      &evalCtx,
 		Push:             push,
 		DeploymentConfig: deployConfig,
-	})
+	}
+	defer op.Close()
+
+	_, msg, err := a.doOperation(ctx, a.logger.Named("deploy"), op)
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +51,12 @@ func (a *App) Deploy(ctx context.Context, push *pb.PushedArtifact) (*pb.Deployme
 }
 
 // deployEvalContext sets the HCL evaluation context for `deploy` blocks.
+//
+// Note that the eval context set won't be entirely identical to the eval
+// context that exists during a real deploy operation. During a real deploy
+// operation, the `entrypoint.env` map will contain an auth token that is
+// generated just-in-time for the deploy. We omit this for non-deploy operations
+// such as destroys or default releasers.
 func (a *App) deployEvalContext(
 	ctx context.Context,
 	evalCtx *hcl.EvalContext,
@@ -124,12 +127,17 @@ func (a *App) deployArtifact(
 }
 
 type deployOperation struct {
-	Component        *Component
+	ComponentFactory func(context.Context, *App, *hcl.EvalContext) (*Component, error)
+	EvalContext      *hcl.EvalContext
 	Push             *pb.PushedArtifact
 	DeploymentConfig *component.DeploymentConfig
 
 	// Set by init
 	autoHostname pb.UpsertDeploymentRequest_Tristate
+
+	// component is initialized and recycled at various points in the deployment
+	// operation as we have more templating information for the config.
+	component *Component
 
 	// id is populated with the deployment id on Upsert
 	id string
@@ -138,7 +146,48 @@ type deployOperation struct {
 	cebToken string
 }
 
+func (op *deployOperation) Close() error {
+	if op.component != nil {
+		return op.component.Close()
+	}
+
+	return nil
+}
+
+func (op *deployOperation) reinitComponent(app *App) error {
+	// Shut down any previously running plugin if we have one
+	if op.component != nil {
+		if err := op.component.Close(); err != nil {
+			return err
+		}
+		op.component = nil
+	}
+
+	// Recalculate our entrypoint env since this is the one
+	// dynamic element that changes while the operation runs.
+	deployEnv := map[string]cty.Value{}
+	for k, v := range op.DeploymentConfig.Env() {
+		deployEnv[k] = cty.StringVal(v)
+	}
+	op.EvalContext.Variables["entrypoint"] = cty.ObjectVal(map[string]cty.Value{
+		"env": cty.MapVal(deployEnv),
+	})
+
+	c, err := op.ComponentFactory(context.Background(), app, op.EvalContext)
+	if err != nil {
+		return err
+	}
+
+	op.component = c
+	return nil
+}
+
 func (op *deployOperation) Init(app *App) (proto.Message, error) {
+	// Initialize our component
+	if err := op.reinitComponent(app); err != nil {
+		return nil, err
+	}
+
 	if v := app.config.URL; v != nil {
 		if v.AutoHostname != nil {
 			if *v.AutoHostname {
@@ -152,13 +201,13 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 	// If the deployment plugin supports creating a generation ID, then
 	// get that ID up front and set it.
 	var generationId string
-	if g, ok := op.Component.Value.(component.Generation); ok {
+	if g, ok := op.component.Value.(component.Generation); ok {
 		if f := g.GenerationFunc(); f != nil {
 			// Get the ID from the plugin.
 			idBytesRaw, err := app.callDynamicFunc(context.Background(),
 				app.logger,
 				nil,
-				op.Component,
+				op.component,
 				g.GenerationFunc(),
 				op.args()...,
 			)
@@ -183,8 +232,8 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 		Generation:  &pb.Generation{Id: generationId},
 		Application: app.ref,
 		Workspace:   app.workspace,
-		Component:   op.Component.Info,
-		Labels:      op.Component.labels,
+		Component:   op.component.Info,
+		Labels:      op.component.labels,
 		ArtifactId:  op.Push.Id,
 		State:       pb.Operation_CREATED,
 		HasEntrypointConfig: op.DeploymentConfig != nil &&
@@ -193,11 +242,11 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 }
 
 func (op *deployOperation) Hooks(app *App) map[string][]*config.Hook {
-	return op.Component.hooks
+	return op.component.hooks
 }
 
 func (op *deployOperation) Labels(app *App) map[string]string {
-	return op.Component.labels
+	return op.component.labels
 }
 
 func (op *deployOperation) Upsert(
@@ -236,11 +285,26 @@ func (op *deployOperation) Upsert(
 		op.cebToken = resp.Token
 	}
 
+	// Set the new values on our deployment config
+	dconfig := *op.DeploymentConfig
+	dconfig.Id = op.id
+	dconfig.EntrypointInviteToken = op.cebToken
+	op.DeploymentConfig = &dconfig
+
 	return resp.Deployment, nil
 }
 
 func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
 	deploy := msg.(*pb.Deployment)
+
+	// Reinitialize our plugin so that we can render the configuration
+	// with the entrypoint token. We need to do this because we have a
+	// chicken/egg problem: we need to initialize the config first to
+	// get to this point, but we need this env token for the entrypoint
+	// to function properly.
+	if err := op.reinitComponent(app); err != nil {
+		return nil, err
+	}
 
 	// Sync our config first
 	if err := app.ConfigSync(ctx); err != nil {
@@ -250,19 +314,19 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 	val, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
-		op.Component,
-		op.Component.Value.(component.Platform).DeployFunc(),
+		op.component,
+		op.component.Value.(component.Platform).DeployFunc(),
 		op.args()...,
 	)
 
-	if ep, ok := op.Component.Value.(component.Execer); ok && ep.ExecFunc() != nil {
+	if ep, ok := op.component.Value.(component.Execer); ok && ep.ExecFunc() != nil {
 		log.Debug("detected deployment uses an exec plugin, decorating deployment with info")
 		deploy.HasExecPlugin = true
 	} else {
 		log.Debug("no exec plugin detected on platform component")
 	}
 
-	if ep, ok := op.Component.Value.(component.LogPlatform); ok && ep.LogsFunc() != nil {
+	if ep, ok := op.component.Value.(component.LogPlatform); ok && ep.LogsFunc() != nil {
 		log.Debug("detected deployment uses a logs plugin, decorating deployment with info")
 		deploy.HasLogsPlugin = true
 	} else {
@@ -274,10 +338,6 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 
 // args returns the args we send to the Deploy function call
 func (op *deployOperation) args() []argmapper.Arg {
-	dconfig := *op.DeploymentConfig
-	dconfig.Id = op.id
-	dconfig.EntrypointInviteToken = op.cebToken
-
 	var args []argmapper.Arg
 
 	if v := op.Push.Artifact.Artifact; v != nil {
@@ -289,7 +349,7 @@ func (op *deployOperation) args() []argmapper.Arg {
 		)
 	}
 
-	args = append(args, argmapper.Typed(&dconfig))
+	args = append(args, argmapper.Typed(op.DeploymentConfig))
 	return args
 }
 

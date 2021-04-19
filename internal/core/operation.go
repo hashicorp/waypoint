@@ -21,7 +21,9 @@ import (
 // as build, deploy, push, etc. This lets us share logic around creating
 // server metadata, error checking, etc.
 type operation interface {
-	// Init returns a new metadata message we'll upsert
+	// Init returns a new metadata message we'll upsert. This is the first
+	// function called before any other operation logic is executed and so
+	// can be used to initialize state for the other callbacks.
 	Init(*App) (proto.Message, error)
 
 	// Upsert performs an upsert operation for some metadata
@@ -54,14 +56,14 @@ func (a *App) doOperation(
 	log hclog.Logger,
 	op operation,
 ) (interface{}, proto.Message, error) {
-	// Get our hooks
-	hooks := op.Hooks(a)
-
 	// Init the metadata
 	msg, err := op.Init(a)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// Get our hooks
+	hooks := op.Hooks(a)
 
 	// Initialize our labels
 	msgUpdateLabels(a, op.Labels(a), msg, nil)
