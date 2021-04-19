@@ -208,23 +208,6 @@ func TestFileSet(t *testing.T) {
 		},
 		{
 			cty.StringVal("."),
-			cty.StringVal("*/*/*.txt"),
-			cty.SetVal([]cty.Value{
-				cty.StringVal("testdata/filesystem/hello.txt"),
-			}),
-			false,
-		},
-		{
-			cty.StringVal("."),
-			cty.StringVal("*/*/hello*"),
-			cty.SetVal([]cty.Value{
-				cty.StringVal("testdata/filesystem/hello.tmpl"),
-				cty.StringVal("testdata/filesystem/hello.txt"),
-			}),
-			false,
-		},
-		{
-			cty.StringVal("."),
 			cty.StringVal("testdata/**/list*"),
 			cty.SetVal([]cty.Value{
 				cty.StringVal("testdata/filesystem/list.tmpl"),
