@@ -1,12 +1,14 @@
 package funcs
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/google/go-jsonnet"
+	"github.com/hashicorp/go-multierror"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 )
@@ -18,26 +20,39 @@ func Jsonnet() map[string]function.Function {
 	}
 }
 
-func jsonnetVM(opts cty.Value) *jsonnet.VM {
+func jsonnetVM(opts cty.Value) (*jsonnet.VM, error) {
 	vm := jsonnet.MakeVM()
 
 	// Get our options. If it isn't a valid type that we're looking for
 	// then just return the VM as-is.
 	optsT := opts.Type()
 	if opts.IsNull() {
-		return vm
+		return vm, nil
 	}
 	if !optsT.IsObjectType() && !optsT.IsMapType() {
-		return vm
+		return vm, nil
 	}
 
 	// Jsonnet has FOUR ways to parameterize a file, all with string key/values.
 	// This function abstracts setting it so we can set all four methods.
+	var erracc error
 	setter := func(k string, cb func(string, string)) {
 		val := attr(opts, k)
-		if !val.IsNull() && val.CanIterateElements() {
-			for k, v := range val.AsValueMap() {
-				cb(k, v.AsString())
+		if !val.IsNull() {
+			if !val.CanIterateElements() {
+				erracc = multierror.Append(erracc, fmt.Errorf(
+					"Option %q must be an object or map", k))
+				return
+			}
+
+			for optK, v := range val.AsValueMap() {
+				if v.Type() != cty.String {
+					erracc = multierror.Append(erracc, fmt.Errorf(
+						"Option %q values must be string types", k))
+					return
+				}
+
+				cb(optK, v.AsString())
 			}
 
 		}
@@ -47,7 +62,11 @@ func jsonnetVM(opts cty.Value) *jsonnet.VM {
 	setter("tla_vars", vm.TLAVar)
 	setter("tla_code", vm.TLACode)
 
-	return vm
+	if erracc != nil {
+		return nil, erracc
+	}
+
+	return vm, nil
 }
 
 func attr(v cty.Value, k string) cty.Value {
@@ -85,7 +104,10 @@ var JsonnetDirFunc = function.New(&function.Spec{
 		}
 
 		root := args[0].AsString()
-		vm := jsonnetVM(args[1])
+		vm, err := jsonnetVM(args[1])
+		if err != nil {
+			return cty.DynamicVal, err
+		}
 		err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -165,7 +187,10 @@ var JsonnetFileFunc = function.New(&function.Spec{
 		path := args[0].AsString()
 
 		// Render
-		vm := jsonnetVM(args[1])
+		vm, err := jsonnetVM(args[1])
+		if err != nil {
+			return cty.DynamicVal, err
+		}
 		jsonStr, err := vm.EvaluateFile(path)
 		if err != nil {
 			return cty.DynamicVal, err

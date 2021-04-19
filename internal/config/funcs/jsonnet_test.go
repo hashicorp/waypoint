@@ -71,6 +71,28 @@ func TestJsonnetFile(t *testing.T) {
 			}),
 			``,
 		},
+
+		// extra arguments are just ignored
+		{
+			cty.StringVal("testdata/jsonnet/hello.jsonnet"),
+			cty.ObjectVal(map[string]cty.Value{
+				"what": cty.MapVal(map[string]cty.Value{
+					"foo": cty.StringVal("bar"),
+				}),
+			}),
+			``,
+		},
+
+		// TLA vars with invalid type
+		{
+			cty.StringVal("testdata/jsonnet/hello.jsonnet"),
+			cty.ObjectVal(map[string]cty.Value{
+				"tla_vars": cty.MapVal(map[string]cty.Value{
+					"foo": cty.BoolVal(true),
+				}),
+			}),
+			`string types`,
+		},
 	}
 
 	for _, tt := range tests {
