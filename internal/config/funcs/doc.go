@@ -36,6 +36,8 @@ func Docs() map[string]string {
 		"join":            "create a string by joining each list element with the given separator",
 		"jsondecode":      "decode the given string as json into HCL values",
 		"jsonencode":      "encode the given HCL value as json",
+		"jsonnetfile":     "convert a Jsonnet file into JSON, returning a file path",
+		"jsonnetdir":      "convert a directory of Jsonnet files into JSON, returning a path",
 		"keys":            "return a list of the keys present in the given map",
 		"log":             "returns the logarithm of a given number in a given base",
 		"lower":           "convert the given string to lower case according the unicode rules",
