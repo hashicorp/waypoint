@@ -111,6 +111,10 @@ func (p *Platform) Deploy(
 				},
 			},
 		}
+
+		if p.config.Namespace == "" {
+			p.config.Namespace = "default"
+		}
 		job.Namespace = &p.config.Namespace
 		job.AddTaskGroup(tg)
 		tg.AddTask(&api.Task{
