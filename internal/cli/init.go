@@ -234,7 +234,7 @@ func (c *InitCommand) validateServer() bool {
 	defer sg.Wait()
 
 	s := sg.Add("Validating server credentials...")
-	client, err := c.initClient()
+	client, err := c.initClient(nil)
 	if err != nil {
 		c.stepError(s, initStepConnect, err)
 		return false

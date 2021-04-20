@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -64,7 +65,10 @@ func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
 }
 
 // initClient initializes the client.
-func (c *baseCommand) initClient() (*clientpkg.Project, error) {
+//
+// If ctx is nil, c.Ctx will be used. If ctx is non-nil, that context will be
+// used and c.Ctx will be ignored.
+func (c *baseCommand) initClient(ctx context.Context) (*clientpkg.Project, error) {
 	// We use our flag-based connection info if the user set an addr.
 	var flagConnection *clicontext.Config
 	if v := c.flagConnection; v.Server.Address != "" {
@@ -102,6 +106,10 @@ func (c *baseCommand) initClient() (*clientpkg.Project, error) {
 		opts = append(opts, clientpkg.WithUI(c.ui))
 	}
 
+	if ctx == nil {
+		ctx = c.Ctx
+	}
+
 	// Create our client
-	return clientpkg.New(c.Ctx, opts...)
+	return clientpkg.New(ctx, opts...)
 }

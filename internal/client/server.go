@@ -187,6 +187,9 @@ func (c *Project) negotiateApiVersion(ctx context.Context) error {
 		"entrypoint_current", resp.Info.Entrypoint.Current,
 	)
 
+	// Store the server version info
+	c.serverVersion = resp.Info
+
 	vsn, err := protocolversion.Negotiate(protocolversion.Current().Api, resp.Info.Api)
 	if err != nil {
 		return err
