@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/nomad: Add CPU and Memory resource options for server and runner installs, and app deploys
+```

@@ -3,6 +3,7 @@ package nomad
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +18,14 @@ import (
 const (
 	metaId    = "waypoint.hashicorp.com/id"
 	metaNonce = "waypoint.hashicorp.com/nonce"
+)
+
+var (
+	// default resources used for the deployed app. Can be overridden
+	// through the resources stanza in a deploy. Note that these are the same defaults
+	// used currently in Nomad if left unconfigured.
+	defaultResourcesCPU      = 100
+	defaultResourcesMemoryMB = 300
 )
 
 // Platform is the Platform implementation for Nomad.
@@ -117,10 +126,19 @@ func (p *Platform) Deploy(
 		}
 		job.Namespace = &p.config.Namespace
 		job.AddTaskGroup(tg)
-		tg.AddTask(&api.Task{
+		task := &api.Task{
 			Name:   result.Name,
 			Driver: "docker",
-		})
+		}
+
+		if p.config.Resources != nil {
+			task.Resources = &api.Resources{
+				CPU:      p.config.Resources.CPU,
+				MemoryMB: p.config.Resources.MemoryMB,
+			}
+		}
+
+		tg.AddTask(task)
 		err = nil
 	}
 	if err != nil {
@@ -226,6 +244,10 @@ type Config struct {
 	// The Nomad region to deploy to, defaults to "global"
 	Region string `hcl:"region,optional"`
 
+	// The amount of resources to allocate to the Nomad task for the deployed
+	// application
+	Resources *Resources `hcl:"resources,block"`
+
 	// Port that your service is running on within the actual container.
 	// Defaults to port 3000.
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
@@ -237,6 +259,11 @@ type Config struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+}
+
+type Resources struct {
+	CPU      *int `hcl:"cpu,optional"`
+	MemoryMB *int `hcl:"memorymb,optional"`
 }
 
 // AuthConfig maps the the Nomad Docker driver 'auth' config block
@@ -295,6 +322,24 @@ deploy {
 		"replicas",
 		"The replica count for the job.",
 		docs.Default("1"),
+	)
+
+	doc.SetField(
+		"resources",
+		"The amount of resources to allocate to the deployed allocation.",
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"cpu",
+				"Amount of CPU in MHz to allocate to this task",
+				docs.Default(strconv.Itoa(defaultResourcesCPU)),
+			)
+
+			doc.SetField(
+				"memorymb",
+				"Amount of memory in MB to allocate to this task.",
+				docs.Default(strconv.Itoa(defaultResourcesMemoryMB)),
+			)
+		}),
 	)
 
 	doc.SetField(
