@@ -54,7 +54,11 @@ func (p *Platform) Deploy(
 	}
 
 	s.Update("Executing kubectl apply...")
-	cmd, err := p.cmd(ctx, s, "apply", "-f", p.config.Path, "--prune", "-l", deployment.PruneLabel)
+	cmd, err := p.cmd(ctx, s, "apply",
+		"-R",
+		"-f", p.config.Path,
+		"--prune", "-l", deployment.PruneLabel,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -276,6 +280,7 @@ spec:
 			"Kubernetes resources. Pair this with `templatefile` or `templatedir`",
 			"[templating functions](/docs/waypoint-hcl/functions/template)",
 			"to inject dynamic elements into your Kubernetes resources.",
+			"Subdirectories are included recursively.",
 		),
 	)
 
