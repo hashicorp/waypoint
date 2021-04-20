@@ -179,7 +179,7 @@ func (p *Platform) Deploy(
 	// Wait on the allocation
 	st.Update(fmt.Sprintf("Monitoring evaluation %q", evalID))
 
-	if err := newMonitor(st, client).monitor(evalID); err != nil {
+	if err := NewMonitor(st, client).Monitor(evalID); err != nil {
 		return nil, err
 	}
 	st.Step(terminal.StatusOK, "Deployment successfully rolled out!")

@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/core"
@@ -26,6 +28,36 @@ func (r *Runner) executeReleaseOp(
 		// this shouldn't happen since the call to this function is gated
 		// on the above type match.
 		panic("operation not expected type")
+	}
+
+	// Our target deployment
+	target := op.Release.Deployment
+
+	// Get our last release. If its the same generation, then release is
+	// a no-op and return this value. We only do this if we have a generation.
+	// We SHOULD but if we have an old client, its possible we don't.
+	var release *pb.Release
+	if target.Generation != nil {
+		resp, err := r.client.GetLatestRelease(ctx, &pb.GetLatestReleaseRequest{
+			Application: app.Ref(),
+			Workspace:   project.WorkspaceRef(),
+			LoadDetails: pb.Release_DEPLOYMENT,
+		})
+		if status.Code(err) == codes.NotFound {
+			err = nil
+			resp = nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		if resp != nil {
+			if resp.Preload != nil && resp.Preload.Deployment != nil {
+				d := resp.Preload.Deployment
+				if d.Generation != nil && d.Generation.Id == target.Generation.Id {
+					release = resp
+				}
+			}
+		}
 	}
 
 	// If we're pruning, then let's query the deployments we want to prune
@@ -70,6 +102,14 @@ func (r *Runner) executeReleaseOp(
 				continue
 			}
 
+			// Ignore deployments with the same generation, because this
+			// means that they share underlying resources.
+			if target.Generation != nil && d.Generation != nil {
+				if target.Generation.Id == d.Generation.Id {
+					continue
+				}
+			}
+
 			// TODO this should instead check against the app's platform component
 			// and ignore any deployments that are NOT the app's current platform
 			// component (ya dig?)
@@ -86,10 +126,16 @@ func (r *Runner) executeReleaseOp(
 	}
 
 	// Do the release
-	release, _, err := app.Release(ctx, op.Release.Deployment)
-	if err != nil {
-		return nil, err
+	if release == nil {
+		release, _, err = app.Release(ctx, op.Release.Deployment)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Info("not releasing since last released deploy has a matching generation",
+			"gen", target.Generation.Id)
 	}
+
 	result := &pb.Job_Result{
 		Release: &pb.Job_ReleaseResult{
 			Release: release,
@@ -101,7 +147,7 @@ func (r *Runner) executeReleaseOp(
 		log.Info("pruning deploys", "len", len(pruneDeploys))
 		app.UI.Output("Pruning old deployments...", terminal.WithHeaderStyle())
 		for _, d := range pruneDeploys {
-			app.UI.Output("Deployment: %s", d.Id, terminal.WithInfoStyle())
+			app.UI.Output("Deployment: %s (v%d)", d.Id, d.Sequence, terminal.WithInfoStyle())
 			if err := app.DestroyDeploy(ctx, d); err != nil {
 				return result, err
 			}

@@ -1,0 +1,6 @@
+```release-note:feature
+**Mutable Deployments**: Waypoint now supports the concept of "mutable" deployments
+where a deployment updates an existing resource rather than creating something
+new. New plugins in this release include deploying from a Nomad job file,
+Kubernetes apply from a directory or file, and more.
+```

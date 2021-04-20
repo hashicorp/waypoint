@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
@@ -145,9 +146,9 @@ func (s *service) deploymentPreloadUrl(
 		hostname := resp.Hostnames[0]
 
 		d.Preload.DeployUrl = fmt.Sprintf(
-			"%s--v%d%s",
+			"%s--%s%s",
 			hostname.Hostname,
-			d.Sequence,
+			(&ptypes.Deployment{Deployment: d}).URLFragment(),
 			strings.TrimPrefix(hostname.Fqdn, hostname.Hostname),
 		)
 	}

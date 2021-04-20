@@ -142,6 +142,15 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 
+		// If the released deploy doesn't match what we requested, it is
+		// because they share a generation, meaning the release was a noop.
+		if result.Release.DeploymentId != deploy.Id {
+			app.UI.Output(strings.TrimSpace(releaseMatchingGen)+"\n",
+				deploy.Sequence,
+				deploy.Component.Name,
+				terminal.WithWarningStyle())
+		}
+
 		if result.Release.Url == "" {
 			app.UI.Output("\n"+strings.TrimSpace(releaseNoUrl),
 				deploy.Id,
@@ -240,5 +249,15 @@ using "waypoint deploy" and try again.
 
 	releaseUpToDate = `
 The deployment %q is already the released deployment. Nothing to be done.
+`
+
+	releaseMatchingGen = `
+Warning: deployment v%[1]d is the same generation as the currently released
+deployment. This means v%[1]d is already released, since deployments
+with matching generations share the same underlying resources.
+
+This means that your deployment plugin %[2]q performed an in-place update.
+For plugins that perform in-place updates, you can only release deployments
+of a different generation.
 `
 )

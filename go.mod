@@ -42,6 +42,7 @@ require (
 	github.com/gofrs/flock v0.8.0
 	github.com/golang/protobuf v1.4.2
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
 	github.com/hashicorp/errwrap v1.0.0
@@ -50,19 +51,18 @@ require (
 	github.com/hashicorp/go-gcp-common v0.6.0
 	github.com/hashicorp/go-getter v1.4.1
 	github.com/hashicorp/go-hclog v0.14.1
-	github.com/hashicorp/go-memdb v1.2.0
+	github.com/hashicorp/go-memdb v1.3.2
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-plugin v1.3.0
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/go-version v1.2.0
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.7.1-0.20201023000745-3de61ecba298
 	github.com/hashicorp/horizon v0.0.0-20210317214650-d2053943be04
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210319163606-c48e1a6cba30
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210420153757-b55c787a65ff
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kevinburke/go-bindata v3.22.0+incompatible
