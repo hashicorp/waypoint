@@ -90,15 +90,29 @@ func Main(args []string) int {
 	base, commands := Commands(ctx, log, logOutput)
 	defer base.Close()
 
-	// Build the CLI
-	cli := &cli.CLI{
-		Name:                       args[0],
-		Args:                       args[1:],
-		Version:                    vsn.FullVersionNumber(true),
-		Commands:                   commands,
-		Autocomplete:               true,
-		AutocompleteNoDefaultFlags: true,
-		HelpFunc:                   GroupedHelpFunc(cli.BasicHelpFunc(cliName)),
+	// Build the CLI. We use a CLI factory function because to modify the
+	// args once you call a func on CLI you need to create a new CLI instance.
+	cliFactory := func() *cli.CLI {
+		return &cli.CLI{
+			Name:                       args[0],
+			Args:                       args[1:],
+			Version:                    vsn.FullVersionNumber(true),
+			Commands:                   commands,
+			Autocomplete:               true,
+			AutocompleteNoDefaultFlags: true,
+			HelpFunc:                   GroupedHelpFunc(cli.BasicHelpFunc(cliName)),
+		}
+	}
+
+	// Copy the CLI to check if it is a version call. If so, we modify
+	// the args to just be the version subcommand. This ensures that
+	// --version behaves by calling `waypoint version` and we get consistent
+	// behavior.
+	cli := cliFactory()
+	if cli.IsVersion() {
+		// We need to reinit because you can't modify fields after calling funcs
+		cli = cliFactory()
+		cli.Args = []string{"version"}
 	}
 
 	// Run the CLI
