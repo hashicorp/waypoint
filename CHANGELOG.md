@@ -1,6 +1,22 @@
 ## unreleased
 
+IMPROVEMENTS:
 
+* cli: Make `purge` default and remove flag for Nomad uninstall [[GH-1326](https://github.com/hashicorp/waypoint/issues/1326)]
+* cli: Show usage example on `waypoint context use` command [[GH-1325](https://github.com/hashicorp/waypoint/issues/1325)]
+* cli: version command now shoes the server version [[GH-1364](https://github.com/hashicorp/waypoint/issues/1364)]
+* entrypoint: can change log level using the `WAYPOINT_LOG_LEVEL` env var, which can also be set with `waypoint config` [[GH-1330](https://github.com/hashicorp/waypoint/issues/1330)]
+* entrypoint: default log level changed to DEBUG [[GH-1330](https://github.com/hashicorp/waypoint/issues/1330)]
+* plugin/nomad: Add CPU and Memory resource options for server and runner installs, and app deploys [[GH-1318](https://github.com/hashicorp/waypoint/issues/1318)]
+* plugin/nomad: Allow for auth soft fail on serverinstall for server image [[GH-1106](https://github.com/hashicorp/waypoint/issues/1106)]
+* ui: Improve the design of the Project Settings forms [[GH-1335](https://github.com/hashicorp/waypoint/issues/1335)]
+
+BUG FIXES:
+
+* cli: connections with TLS without insecure flag properly connect [[GH-1307](https://github.com/hashicorp/waypoint/issues/1307)]
+* cli: server bootstrap will not give auth token errors [[GH-1320](https://github.com/hashicorp/waypoint/issues/1320)]
+* plugin/aws/ecs: Route 53 "A" Type record properly created when not found for domain name [[GH-1256](https://github.com/hashicorp/waypoint/issues/1256)]
+* plugin/nomad: use namespace config option for deploy [[GH-1300](https://github.com/hashicorp/waypoint/issues/1300)]
 
 ## 0.3.0 (April 08, 2021)
 
