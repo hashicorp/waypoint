@@ -121,7 +121,10 @@ func (p *Platform) cmd(
 	// <subcmd> <flags> <flags + args provided to this func>
 	realArgs := []string{subcmd}
 	if p.config.KubeconfigPath != "" {
-		realArgs = append(realArgs, "-kubeconfig="+p.config.KubeconfigPath)
+		realArgs = append(realArgs, "--kubeconfig="+p.config.KubeconfigPath)
+	}
+	if p.config.Context != "" {
+		realArgs = append(realArgs, "--context="+p.config.Context)
 	}
 	realArgs = append(realArgs, args...)
 
@@ -144,6 +147,9 @@ type Config struct {
 
 	// KubeconfigPath is the path to the kubeconfig file.
 	KubeconfigPath string `hcl:"kubeconfig,optional"`
+
+	// Kubernetes context to use in the kubeconfig
+	Context string `hcl:"context,optional"`
 }
 
 func (p *Platform) Documentation() (*docs.Documentation, error) {
@@ -289,6 +295,11 @@ spec:
 			"If this isn't set, the default lookup used by `kubectl` will be used.",
 		),
 		docs.EnvVar("KUBECONFIG"),
+	)
+
+	doc.SetField(
+		"context",
+		"The kubectl context to use, as defined in the kubeconfig file.",
 	)
 
 	return doc, nil
