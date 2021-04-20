@@ -242,7 +242,7 @@ deploy {
 deploy {
   use "nomad-jobspec" {
     // Templated to perhaps bring in the artifact from a previous
-	// build/registry, entrypoint env vars, etc.
+    // build/registry, entrypoint env vars, etc.
     jobspec = templatefile("${path.app}/app.nomad.tpl")
   }
 }
@@ -264,9 +264,9 @@ job "web" {
         ${k} = "${v}"
         %{ endfor ~}
 
-		// Ensure we set PORT for the URL service. This is only necessary
-		// if we want the URL service to function.
-		PORT = 3000
+        // Ensure we set PORT for the URL service. This is only necessary
+        // if we want the URL service to function.
+        PORT = 3000
       }
     }
   }
