@@ -237,7 +237,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// Create our client
 	if baseCfg.Client {
-		c.project, err = c.initClient()
+		c.project, err = c.initClient(nil)
 		if err != nil {
 			c.logError(c.Log, "failed to create client", err)
 			return err
