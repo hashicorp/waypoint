@@ -29,7 +29,19 @@ type nomadConfig struct {
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
 	policyOverride bool     `hcl:"policy_override,optional"`
+
+	serverResourcesCPU    string `hcl:"server_resources_cpu,optional"`
+	serverResourcesMemory string `hcl:"server_resources_memory,optional"`
+	runnerResourcesCPU    string `hcl:"runner_resources_cpu,optional"`
+	runnerResourcesMemory string `hcl:"runner_resources_memory,optional"`
 }
+
+var (
+	// default resources used for both the Server and its runners. Can be overridden
+	// through config flags at install
+	defaultResourcesCPU    = 200
+	defaultResourcesMemory = 600
+)
 
 // Install is a method of NomadInstaller and implements the Installer interface to
 // register a waypoint-server job with a Nomad cluster
@@ -647,6 +659,21 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	task.Env = map[string]string{
 		"PORT": defaultGrpcPort,
 	}
+
+	cpu := defaultResourcesCPU
+	mem := defaultResourcesMemory
+
+	if c.serverResourcesCPU != "" {
+		cpu, _ = strconv.Atoi(c.serverResourcesCPU)
+	}
+
+	if c.serverResourcesMemory != "" {
+		mem, _ = strconv.Atoi(c.serverResourcesMemory)
+	}
+	task.Resources = &api.Resources{
+		CPU:      &cpu,
+		MemoryMB: &mem,
+	}
 	tg.AddTask(task)
 
 	return job
@@ -677,6 +704,21 @@ func waypointRunnerNomadJob(c nomadConfig, opts *InstallRunnerOpts) *api.Job {
 			"-vvv",
 		},
 		"auth_soft_fail": c.authSoftFail,
+	}
+
+	cpu := defaultResourcesCPU
+	mem := defaultResourcesMemory
+
+	if c.runnerResourcesCPU != "" {
+		cpu, _ = strconv.Atoi(c.runnerResourcesCPU)
+	}
+
+	if c.runnerResourcesMemory != "" {
+		mem, _ = strconv.Atoi(c.runnerResourcesMemory)
+	}
+	task.Resources = &api.Resources{
+		CPU:      &cpu,
+		MemoryMB: &mem,
 	}
 
 	task.Env = map[string]string{}
@@ -774,6 +816,34 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	})
 
 	set.StringVar(&flag.StringVar{
+		Name:    "nomad-server-cpu",
+		Target:  &i.config.serverResourcesCPU,
+		Usage:   "CPU required to run this task in MHz.",
+		Default: strconv.Itoa(defaultResourcesCPU),
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-server-memory",
+		Target:  &i.config.serverResourcesCPU,
+		Usage:   "MB of Memory to allocate to the Server job task.",
+		Default: strconv.Itoa(defaultResourcesMemory),
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-runner-cpu",
+		Target:  &i.config.runnerResourcesCPU,
+		Usage:   "CPU required to run this task in MHz.",
+		Default: strconv.Itoa(defaultResourcesCPU),
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-runner-memory",
+		Target:  &i.config.runnerResourcesCPU,
+		Usage:   "MB of Memory to allocate to the runner job task.",
+		Default: strconv.Itoa(defaultResourcesMemory),
+	})
+
+	set.StringVar(&flag.StringVar{
 		Name:    "nomad-server-image",
 		Target:  &i.config.serverImage,
 		Usage:   "Docker image for the Waypoint server.",
@@ -822,6 +892,34 @@ func (i *NomadInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.region,
 		Default: "global",
 		Usage:   "Region to install to for Nomad.",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-server-cpu",
+		Target:  &i.config.serverResourcesCPU,
+		Usage:   "CPU required to run this task in MHz.",
+		Default: strconv.Itoa(defaultResourcesCPU),
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-server-memory",
+		Target:  &i.config.serverResourcesMemory,
+		Usage:   "MB of Memory to allocate to the server job task.",
+		Default: strconv.Itoa(defaultResourcesMemory),
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-runner-cpu",
+		Target:  &i.config.runnerResourcesCPU,
+		Usage:   "CPU required to run this task in MHz.",
+		Default: strconv.Itoa(defaultResourcesCPU),
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "nomad-runner-memory",
+		Target:  &i.config.runnerResourcesMemory,
+		Usage:   "MB of Memory to allocate to the runner job task.",
+		Default: strconv.Itoa(defaultResourcesMemory),
 	})
 
 	set.StringVar(&flag.StringVar{
