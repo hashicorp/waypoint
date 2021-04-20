@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package k8sapply;
+
+option go_package = "waypoint/builtin/k8s/apply";
+
+message Deployment {
+  string prune_label = 1;
+}
