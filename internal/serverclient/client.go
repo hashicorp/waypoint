@@ -3,6 +3,7 @@ package serverclient
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -14,6 +15,10 @@ import (
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
+
+// ErrNoServerConfig is the error when there is no server configuration
+// found for connection.
+var ErrNoServerConfig = errors.New("no server connection configuration found")
 
 // ConnectOption is used to configure how Waypoint server connection
 // configuration is sourced.
@@ -40,7 +45,7 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 			return nil, nil
 		}
 
-		return nil, fmt.Errorf("no server credentials found")
+		return nil, ErrNoServerConfig
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, cfg.Timeout)
