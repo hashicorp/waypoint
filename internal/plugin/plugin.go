@@ -23,6 +23,7 @@ import (
 	k8sapply "github.com/hashicorp/waypoint/builtin/k8s/apply"
 	"github.com/hashicorp/waypoint/builtin/netlify"
 	"github.com/hashicorp/waypoint/builtin/nomad"
+	"github.com/hashicorp/waypoint/builtin/nomad/jobspec"
 	"github.com/hashicorp/waypoint/builtin/pack"
 	"github.com/hashicorp/waypoint/builtin/tfc"
 	"github.com/hashicorp/waypoint/builtin/vault"
@@ -46,6 +47,7 @@ var (
 		"aws-ecs":                  ecs.Options,
 		"aws-ecr":                  ecr.Options,
 		"nomad":                    nomad.Options,
+		"nomad-jobspec":            jobspec.Options,
 		"aws-ami":                  ami.Options,
 		"aws-ec2":                  ec2.Options,
 		"aws-alb":                  alb.Options,

@@ -62,7 +62,7 @@ type monitor struct {
 
 // newMonitor returns a new monitor. The returned monitor will
 // write output information to the provided ui.
-func newMonitor(ui terminal.Status, client *api.Client) *monitor {
+func NewMonitor(ui terminal.Status, client *api.Client) *monitor {
 	mon := &monitor{
 		ui:     ui,
 		client: client,
@@ -126,9 +126,9 @@ func (m *monitor) update(update *evalState) {
 	}
 }
 
-// monitor is used to start monitoring the given evaluation ID. It
+// Monitor is used to start monitoring the given evaluation ID. It
 // writes output directly to the terminal ui, and returns an error.
-func (m *monitor) monitor(evalID string) error {
+func (m *monitor) Monitor(evalID string) error {
 	// Track if we encounter a scheduling failure. This can only be
 	// detected while querying allocations, so we use this bool to
 	// carry that status into the return code.

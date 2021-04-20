@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/nomad: A new plugin "nomad-jobspec" for deploying a Nomad job specification directly.
+```
