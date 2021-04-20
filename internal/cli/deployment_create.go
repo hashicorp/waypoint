@@ -89,7 +89,8 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 		// inplace is true if this was an in-place deploy. We detect this
 		// if we have a generation that uses a non-matching sequence number
-		inplace := result.Deployment.Generation.Id != "" &&
+		inplace := result.Deployment.Generation != nil &&
+			result.Deployment.Generation.Id != "" &&
 			result.Deployment.Generation.InitialSequence != result.Deployment.Sequence
 
 		// Output

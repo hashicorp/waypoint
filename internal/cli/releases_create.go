@@ -144,7 +144,7 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 
 		// If the released deploy doesn't match what we requested, it is
 		// because they share a generation, meaning the release was a noop.
-		inplace := deploy.Generation.Id != "" &&
+		inplace := deploy.Generation != nil && deploy.Generation.Id != "" &&
 			deploy.Generation.InitialSequence != deploy.Sequence
 
 		if result.Release.DeploymentId != deploy.Id && inplace {
