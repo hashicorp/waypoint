@@ -8,7 +8,7 @@ IMPROVEMENTS:
 
 * cli: Make `purge` default and remove flag for Nomad uninstall [[GH-1326](https://github.com/hashicorp/waypoint/issues/1326)]
 * cli: Show usage example on `waypoint context use` command [[GH-1325](https://github.com/hashicorp/waypoint/issues/1325)]
-* cli: version command now shoes the server version [[GH-1364](https://github.com/hashicorp/waypoint/issues/1364)]
+* cli: version command now shows the server version [[GH-1364](https://github.com/hashicorp/waypoint/issues/1364)]
 * entrypoint: can change log level using the `WAYPOINT_LOG_LEVEL` env var, which can also be set with `waypoint config` [[GH-1330](https://github.com/hashicorp/waypoint/issues/1330)]
 * entrypoint: default log level changed to DEBUG [[GH-1330](https://github.com/hashicorp/waypoint/issues/1330)]
 * plugin/nomad: Add CPU and Memory resource options for server and runner installs, and app deploys [[GH-1318](https://github.com/hashicorp/waypoint/issues/1318)]
