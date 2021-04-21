@@ -49,14 +49,21 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	// Error handling from input
 
-	if !c.confirm {
+	// NOTE(briancain): This check will look different once https://github.com/hashicorp/waypoint/issues/1233
+	// is implemeneted. This func should initially look for the platform
+	// saved in the context and if none was included, fall back to look for an
+	// included platform flag like we do below
+	if !c.confirm && c.platform == "" {
+		c.ui.Output(confirmReqMsg, terminal.WithErrorStyle())
+		c.ui.Output(platformReqMsg, terminal.WithErrorStyle())
+		c.ui.Output(c.Help(), terminal.WithErrorStyle())
+		return 1
+	} else if !c.confirm {
 		c.ui.Output(confirmReqMsg, terminal.WithErrorStyle())
 		return 1
-	}
-
-	if c.platform == "" {
+	} else if c.platform == "" {
 		c.ui.Output(
-			"A platform is required and must match the server context",
+			platformReqMsg,
 			terminal.WithErrorStyle(),
 		)
 		return 1
@@ -442,6 +449,11 @@ var (
 	confirmReqMsg       = strings.TrimSpace(`
 Upgrading Waypoint server requires confirmation.
 Rerun the command with '-auto-approve' to continue with the upgrade.
+`)
+	platformReqMsg = strings.TrimSpace(`
+A platform is required and must match the server context.
+Rerun the command with '-platform=' and include the platform of the context to
+upgrade.
 `)
 	upgradeFailHelp = strings.TrimSpace(`
 Upgrading Waypoint server has failed. To restore from a snapshot, use the command:
