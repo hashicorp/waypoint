@@ -1,0 +1,3 @@
+```release-note:bug
+ui: unread log count resets after scrolling
+```
