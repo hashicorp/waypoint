@@ -38,6 +38,7 @@ export default class LogStream extends Component<LogStreamArgs> {
       element.closest('.output-scroll-y');
 
     scrollableElement.scroll(0, scrollableElement.scrollHeight);
+    this.badgeCount = 0;
   }
 
   @action
