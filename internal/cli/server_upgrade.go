@@ -452,7 +452,7 @@ Rerun the command with '-auto-approve' to continue with the upgrade.
 `)
 	platformReqMsg = strings.TrimSpace(`
 A platform is required and must match the server context.
-Rerun the command with '-platform=' and include the patform of the context to
+Rerun the command with '-platform=' and include the platform of the context to
 upgrade.
 `)
 	upgradeFailHelp = strings.TrimSpace(`
