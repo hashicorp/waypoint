@@ -2219,6 +2219,10 @@ message ConfigVar {
     DynamicVal dynamic = 6;
   }
 
+  // Indicates if the variable is not meant to be exposed applications or runners.
+  // It exists only to be referenced by other variables.
+  bool internal = 8;
+
   // DynamicVal is the configuration for dynamic values for configuration.
   message DynamicVal {
     // from is the config source plugin to use
