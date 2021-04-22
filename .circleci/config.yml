@@ -34,7 +34,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - run:
           name: Install golangci-lint
@@ -62,7 +62,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - run:
           command: go mod tidy
@@ -101,7 +101,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - attach_workspace:
           at: /go/bin
@@ -151,7 +151,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - attach_workspace: # this normally runs as the first job and has nothing to attach; only used in main branch after rebuilding UI
           at: .
@@ -177,7 +177,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - attach_workspace:
           at: .
@@ -219,7 +219,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
@@ -324,7 +324,7 @@ jobs:
           at: .
       - add_ssh_keys:
           fingerprints:
-            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - run: go get github.com/kevinburke/go-bindata/...
       - run: make static-assets
       - persist_to_workspace:
@@ -343,7 +343,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - attach_workspace:
           at: .
       - run:
@@ -353,8 +353,8 @@ jobs:
             # if there are, we commit the ui static asset file
             # HEAD^! is shorthand for HEAD^..HEAD (parent of HEAD and HEAD)
             if ! git diff --quiet --exit-code HEAD^! ui/; then
-              git config --local user.email "hashicorp-ci@users.noreply.github.com"
-              git config --local user.name "hashicorp-ci"
+              git config --local user.email "github-team-waypoint@hashicorp.com"
+              git config --local user.name "hc-github-team-waypoint"
               short_sha=$(git rev-parse --short HEAD)
               git add internal/server/gen/bindata_ui.go
               git commit -m "auto-updated internal/server/gen/bindata_ui.go from commit ${short_sha}"
