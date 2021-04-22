@@ -699,6 +699,28 @@ export namespace OperationOrder {
   }
 }
 
+export class Generation extends jspb.Message {
+  getId(): string;
+  setId(value: string): Generation;
+
+  getInitialSequence(): number;
+  setInitialSequence(value: number): Generation;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Generation.AsObject;
+  static toObject(includeInstance: boolean, msg: Generation): Generation.AsObject;
+  static serializeBinaryToWriter(message: Generation, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Generation;
+  static deserializeBinaryFromReader(message: Generation, reader: jspb.BinaryReader): Generation;
+}
+
+export namespace Generation {
+  export type AsObject = {
+    id: string,
+    initialSequence: number,
+  }
+}
+
 export class QueueJobRequest extends jspb.Message {
   getJob(): Job | undefined;
   setJob(value?: Job): QueueJobRequest;
@@ -1326,6 +1348,11 @@ export namespace Job {
 
 
   export class UpOp extends jspb.Message {
+    getRelease(): Job.ReleaseOp | undefined;
+    setRelease(value?: Job.ReleaseOp): UpOp;
+    hasRelease(): boolean;
+    clearRelease(): UpOp;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): UpOp.AsObject;
     static toObject(includeInstance: boolean, msg: UpOp): UpOp.AsObject;
@@ -1336,6 +1363,7 @@ export namespace Job {
 
   export namespace UpOp {
     export type AsObject = {
+      release?: Job.ReleaseOp.AsObject,
     }
   }
 
@@ -1737,6 +1765,12 @@ export namespace Job {
     getPrune(): boolean;
     setPrune(value: boolean): ReleaseOp;
 
+    getPruneRetain(): number;
+    setPruneRetain(value: number): ReleaseOp;
+
+    getPruneRetainOverride(): boolean;
+    setPruneRetainOverride(value: boolean): ReleaseOp;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): ReleaseOp.AsObject;
     static toObject(includeInstance: boolean, msg: ReleaseOp): ReleaseOp.AsObject;
@@ -1749,6 +1783,8 @@ export namespace Job {
     export type AsObject = {
       deployment?: Deployment.AsObject,
       prune: boolean,
+      pruneRetain: number,
+      pruneRetainOverride: boolean,
     }
   }
 
@@ -4212,6 +4248,11 @@ export class Deployment extends jspb.Message {
   getId(): string;
   setId(value: string): Deployment;
 
+  getGeneration(): Generation | undefined;
+  setGeneration(value?: Generation): Deployment;
+  hasGeneration(): boolean;
+  clearGeneration(): Deployment;
+
   getState(): Operation.PhysicalState;
   setState(value: Operation.PhysicalState): Deployment;
 
@@ -4235,6 +4276,9 @@ export class Deployment extends jspb.Message {
 
   getLabelsMap(): jspb.Map<string, string>;
   clearLabelsMap(): Deployment;
+
+  getUrl(): string;
+  setUrl(value: string): Deployment;
 
   getTemplateData(): Uint8Array | string;
   getTemplateData_asU8(): Uint8Array;
@@ -4272,12 +4316,14 @@ export namespace Deployment {
     workspace?: Ref.Workspace.AsObject,
     sequence: number,
     id: string,
+    generation?: Generation.AsObject,
     state: Operation.PhysicalState,
     status?: Status.AsObject,
     component?: Component.AsObject,
     artifactId: string,
     deployment?: google_protobuf_any_pb.Any.AsObject,
     labelsMap: Array<[string, string]>,
+    url: string,
     templateData: Uint8Array | string,
     jobId: string,
     hasEntrypointConfig: boolean,

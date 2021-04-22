@@ -40,11 +40,12 @@ require (
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofrs/flock v0.8.0
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.5.2
 	github.com/google/go-jsonnet v0.17.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.4.2
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
 	github.com/hashicorp/errwrap v1.0.0
 	github.com/hashicorp/go-argmapper v0.1.1
@@ -79,7 +80,7 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.1
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/pointerstructure v1.0.0
-	github.com/mitchellh/protoc-gen-go-json v0.0.0-20200917194518-364b693410ae
+	github.com/mitchellh/protoc-gen-go-json v1.0.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/mr-tron/base58 v1.2.0
 	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
@@ -103,14 +104,13 @@ require (
 	go.uber.org/goleak v1.1.10
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
-	golang.org/x/tools v0.0.0-20200410194907-79a7a3126eef // indirect
+	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4
 	google.golang.org/api v0.20.0
-	google.golang.org/genproto v0.0.0-20201002142447-3860012362da
-	google.golang.org/grpc v1.32.0
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/genproto v0.0.0-20210422153429-2279cbceda62
+	google.golang.org/grpc v1.36.1
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
 	k8s.io/client-go v0.19.4
@@ -123,9 +123,9 @@ require (
 // replace github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
 
 replace (
+	github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
 	// v0.3.11 panics for some reason on our tests
 	github.com/imdario/mergo => github.com/imdario/mergo v0.3.9
-
 	// https://github.com/ory/dockertest/issues/208
 	golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
 )

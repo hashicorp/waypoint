@@ -37,6 +37,10 @@ type Deployment struct {
 	Id         string               `protobuf:"bytes,5,opt,name=id,proto3" json:"id,omitempty"`
 }
 
+func (x *Deployment) URL() string {
+	return ""
+}
+
 func (x *Deployment) Reset() {
 	*x = Deployment{}
 	if protoimpl.UnsafeEnabled {

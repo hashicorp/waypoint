@@ -18,6 +18,7 @@ import (
 
 // service implements the gRPC service for the server.
 type service struct {
+	pb.UnimplementedWaypointServer
 	// state is the state management interface that provides functions for
 	// safely mutating server state.
 	state *state.State

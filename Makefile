@@ -87,10 +87,10 @@ gen/ts:
 	# These issues below will help:
 	#   https://github.com/protocolbuffers/protobuf/issues/5119
 	#   https://github.com/protocolbuffers/protobuf/issues/6341
-	find . -type f -wholename './ui/lib/waypoint-pb/*' | xargs sed -i 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g'
-	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g'
-	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/.\/server_pb/waypoint-pb/g'
-	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i 's/..\/..\/..\/internal\/server\/protwaypoint-pb/waypoint-pb/g'
+	find . -type f -wholename './ui/lib/waypoint-pb/*' | xargs sed -i '' 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g'
+	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i '' 's/..\/..\/..\/google\/rpc\/status/api-common-protos\/google\/rpc\/status/g'
+	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i '' 's/.\/server_pb/waypoint-pb/g'
+	find . -type f -wholename './ui/lib/waypoint-client/*' | xargs sed -i '' 's/..\/..\/..\/internal\/server\/protwaypoint-pb/waypoint-pb/g'
 
 	protoc \
 		-I=./vendor/proto/api-common-protos/ \

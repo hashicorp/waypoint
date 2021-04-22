@@ -1879,6 +1879,11 @@ message Deployment {
   // labels are the set of labels that are present on this build.
   map<string,string> labels = 7;
 
+  // URL for this Deployment. This is valid while the deployment is still
+  // in use. After the release is not in use, this may still be set but
+  // may no longer be valid.
+  string url = 18;
+
   // template data for HCL variables and template functions, json-encoded
   bytes template_data = 14;
 

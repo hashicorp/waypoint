@@ -35,6 +35,10 @@ type Deployment struct {
 	ContainerGroup *Deployment_ContainerGroup `protobuf:"bytes,3,opt,name=container_group,json=containerGroup,proto3" json:"container_group,omitempty"`
 }
 
+func (x *Deployment) URL() string {
+	return ""
+}
+
 func (x *Deployment) Reset() {
 	*x = Deployment{}
 	if protoimpl.UnsafeEnabled {

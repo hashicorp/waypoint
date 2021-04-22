@@ -144,6 +144,9 @@ type deployOperation struct {
 
 	// cebToken is the token to set for the deployment to auth
 	cebToken string
+
+	// result contains the component.Deployment returned from the protobuf call to the plugin
+	result   component.Deployment
 }
 
 func (op *deployOperation) Close() error {
@@ -311,13 +314,18 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 		return nil, err
 	}
 
-	val, err := app.callDynamicFunc(ctx,
+	result, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
 		op.component,
 		op.component.Value.(component.Platform).DeployFunc(),
 		op.args()...,
 	)
+
+	op.result = result.(component.Release)
+
+	dm := msg.(*pb.Deployment)
+	dm.Url = op.result.URL()
 
 	if ep, ok := op.component.Value.(component.Execer); ok && ep.ExecFunc() != nil {
 		log.Debug("detected deployment uses an exec plugin, decorating deployment with info")
@@ -333,7 +341,7 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 		log.Debug("no logs plugin detected on platform component")
 	}
 
-	return val, err
+	return result, err
 }
 
 // args returns the args we send to the Deploy function call

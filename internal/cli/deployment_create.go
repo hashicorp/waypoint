@@ -52,6 +52,9 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			return ErrSentinel
 		}
 		deployUrl := result.Deployment.Preload.DeployUrl
+		if deployUrl == "" {
+			deployUrl = result.Deployment.Url
+		}
 		deployment := result.Deployment
 
 		// Try to get the hostname
