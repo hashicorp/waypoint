@@ -2,10 +2,10 @@
 package aci
 
 import (
-	"github.com/hashicorp/waypoint-plugin-sdk"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk"
 )
 
-//go:generate protoc -I ../../../.. --go_opt=plugins=grpc --go_out=../../../.. waypoint/builtin/azure/aci/plugin.proto
+//go:generate protoc -I ../../../.. ../../../../waypoint/builtin/azure/aci/plugin.proto --go_out=plugins=grpc:../../../..
 
 // Options are the SDK options to use for instantiation for
 // the Azure ACI plugin.
