@@ -190,8 +190,12 @@ func TestConfigApp_compare(t *testing.T) {
 				require.NoError(err)
 
 				// test the static value
-				require.Len(vars, 3)
-				static, ok := vars[2].Value.(*pb.ConfigVar_Static)
+				require.Len(vars, 4)
+				static, ok := vars[3].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("extra: ${config.internal.greeting} ok?", static.Static)
+
+				static, ok = vars[2].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
 				require.Equal("${config.internal.greeting} ok?", static.Static)
 			},

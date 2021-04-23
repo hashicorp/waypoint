@@ -84,6 +84,8 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 				Static: str,
 			}
 
+			val = cty.StringVal(str)
+
 			if pair.Internal {
 				internal[pair.Name] = val
 
