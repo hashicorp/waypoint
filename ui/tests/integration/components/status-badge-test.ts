@@ -6,21 +6,56 @@ import hbs from 'htmlbars-inline-precompile';
 module('Integration | Component | status-badge', function(hooks) {
   setupRenderingTest(hooks);
 
-  test('it renders', async function(assert) {
+  test('it renders different states', async function(assert) {
     // Set any properties with this.set('myProperty', 'value');
     // Handle any actions with this.set('myAction', function(val) { ... });
 
-    await render(hbs`{{status-badge}}`);
+    let errorBuild = {
+      status: {
+        state: 3,
+      },
+    };
 
-    assert.equal(this.element.textContent.trim(), '');
+    let successBuild = {
+      status: {
+        state: 2,
+      },
+    };
 
-    // Template block usage:
-    await render(hbs`
-      {{#status-badge}}
-        template block text
-      {{/status-badge}}
-    `);
+    let runningBuild = {
+      status: {
+        state: 1,
+      },
+    };
 
-    assert.equal(this.element.textContent.trim(), 'template block text');
+    let unknownBuild = {
+      status: {
+        state: 0,
+      },
+    };
+
+    this.build = errorBuild;
+
+    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+
+    assert.equal(this.element.getElementsByClassName('badge-status--error').length, 1);
+
+    this.build = successBuild;
+
+    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+
+    assert.equal(this.element.getElementsByClassName('badge-status--success').length, 1);
+
+    this.build = runningBuild;
+
+    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+
+    assert.equal(this.element.getElementsByClassName('badge-status--running').length, 1);
+
+    this.build = unknownBuild;
+
+    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+
+    assert.equal(this.element.getElementsByClassName('badge-status--unknown').length, 1);
   });
 });
