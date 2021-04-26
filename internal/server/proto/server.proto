@@ -2357,52 +2357,16 @@ message StatusReport {
   // the deployment id that this status report was generated on
   string deployment_id = 3;
 
-  // a collection of resources for a deployed application
-  repeated Resource resources = 4;
-
-  // the current overall health state for a deployment
-  Health health = 5;
-
-  // a simple human readable message detailing the Health state
-  string health_message = 6;
-
-  // the time when this report was generated
-  google.protobuf.Timestamp time_generated = 7;
-
-  // where the health check was performed. External means not executed by Waypoint,
-  // but by the platform deployed to.
-  bool external = 8;
-
   // status of the release operation.
   //Note that this status is not related to the status report, but the current
   // state of the StatusReport operation
-  Status status = 9;
+  Status status = 4;
 
   // id is the unique ID for this status report.
-  string id = 10;
+  string id = 5;
 
   // release is the raw release object encoded directly from the plugin.
-  google.protobuf.Any status_report = 11;
-
-  message Resource {
-    // the resource name
-    string name = 1;
-
-    // the current health state for a single resource
-    Health health = 2;
-
-    // a simple human readable message detailing the Health state
-    string health_message = 3;
-  }
-
-  // the state of overall health of a deployed application
-  enum Health {
-    UNKNOWN = 0;
-    ALIVE = 1;
-    READY = 2;
-    DOWN = 3;
-    PARTIAL = 4; // Some resources in deployment are OK, others are not OK
-  }
+  google.protobuf.Any status_report = 6;
 }
 
 /********************************************************************
