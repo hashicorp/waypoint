@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/vault: Use Service Account Credentials API for GCP SignJWT endpoint
+```
