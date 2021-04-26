@@ -127,7 +127,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			return c.displayJson(resp.Deployments)
 		}
 
-		tbl := terminal.NewTable("", "ID", "Platform", "Details", "Started", "Completed", "Health")
+		tbl := terminal.NewTable("", "ID", "Platform", "Details", "Started", "Completed", "URL", "Health")
 
 		const bullet = "●"
 
@@ -275,6 +275,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 					details[0],
 					startTime,
 					completeTime,
+					b.Preload.DeployUrl,
 					statusReportComplete,
 				},
 				[]string{
