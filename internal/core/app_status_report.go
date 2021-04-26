@@ -18,7 +18,10 @@ import (
 
 // Builds a status report on the given deployment
 // TODO(briancain): test
-func (a *App) StatusReport(ctx context.Context, target *pb.Deployment) (*pb.StatusReport, error) {
+func (a *App) StatusReport(
+	ctx context.Context,
+	target *pb.Deployment,
+) (*pb.StatusReport, error) {
 	var evalCtx hcl.EvalContext
 	if err := evalCtxTemplateProto(&evalCtx, "deploy", target); err != nil {
 		a.logger.Warn("failed to prepare template variables, will not be available",
@@ -51,6 +54,7 @@ func (a *App) StatusReport(ctx context.Context, target *pb.Deployment) (*pb.Stat
 	if err != nil {
 		return nil, err
 	}
+	panic("after do op")
 
 	return msg.(*pb.StatusReport), nil
 }
@@ -124,7 +128,12 @@ func (op *statusReportOperation) Upsert(
 	return resp.StatusReport, nil
 }
 
-func (op *statusReportOperation) Do(ctx context.Context, log hclog.Logger, app *App, msg proto.Message) (interface{}, error) {
+func (op *statusReportOperation) Do(
+	ctx context.Context,
+	log hclog.Logger,
+	app *App,
+	msg proto.Message,
+) (interface{}, error) {
 	// If we have no statusRreport, we do nothing since we just update the
 	// blank status report metadata.
 	if op.Component == nil {
@@ -139,10 +148,9 @@ func (op *statusReportOperation) Do(ctx context.Context, log hclog.Logger, app *
 		argNamedAny("target", op.Target.Deployment),
 	)
 	if err != nil {
-		// TODO: Look at deployments LoadDetails and how it matches the plugins
-		// Deploy message proto. Need to do the same for StatusReport
 		return nil, err
 	}
+	panic("after call dynamic func")
 
 	op.result = result.(component.Status)
 

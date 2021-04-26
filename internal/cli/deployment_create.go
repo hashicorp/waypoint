@@ -83,7 +83,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		statusReport := statusReportResult.StatusReport
 		if statusReport != nil {
 			// create helper to print health?
-			app.UI.Output(statusReport.Health.String(), terminal.WithInfoStyle())
+			//app.UI.Output(statusReport.Health.String(), terminal.WithInfoStyle())
 		}
 
 		// Release if we're releasing
@@ -115,7 +115,7 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 			statusReport := statusReportResult.StatusReport
 			if statusReport != nil {
 				// create helper to print health?
-				app.UI.Output(statusReport.Health.String(), terminal.WithInfoStyle())
+				//app.UI.Output(statusReport.Health.String(), terminal.WithInfoStyle())
 			}
 		}
 
