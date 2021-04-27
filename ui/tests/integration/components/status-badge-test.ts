@@ -7,22 +7,26 @@ module('Integration | Component | status-badge', function(hooks) {
   setupRenderingTest(hooks);
 
   test('it renders different states', async function(assert) {
-    // Set any properties with this.set('myProperty', 'value');
-    // Handle any actions with this.set('myAction', function(val) { ... });
 
-    let errorBuild = {
+    let partialBuild = {
+      status: {
+        state: 4,
+      },
+    };
+
+    let downBuild = {
       status: {
         state: 3,
       },
     };
 
-    let successBuild = {
+    let readyBuild = {
       status: {
         state: 2,
       },
     };
 
-    let runningBuild = {
+    let aliveBuild = {
       status: {
         state: 1,
       },
@@ -34,23 +38,29 @@ module('Integration | Component | status-badge', function(hooks) {
       },
     };
 
-    this.build = errorBuild;
+    this.build = partialBuild;
 
     await render(hbs`<StatusBadge @model={{this.build}}/>`);
 
-    assert.equal(this.element.getElementsByClassName('badge-status--error').length, 1);
+    assert.equal(this.element.getElementsByClassName('badge-status--partial').length, 1);
 
-    this.build = successBuild;
-
-    await render(hbs`<StatusBadge @model={{this.build}}/>`);
-
-    assert.equal(this.element.getElementsByClassName('badge-status--success').length, 1);
-
-    this.build = runningBuild;
+    this.build = downBuild;
 
     await render(hbs`<StatusBadge @model={{this.build}}/>`);
 
-    assert.equal(this.element.getElementsByClassName('badge-status--running').length, 1);
+    assert.equal(this.element.getElementsByClassName('badge-status--down').length, 1);
+
+    this.build = readyBuild;
+
+    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+
+    assert.equal(this.element.getElementsByClassName('badge-status--ready').length, 1);
+
+    this.build = aliveBuild;
+
+    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+
+    assert.equal(this.element.getElementsByClassName('badge-status--alive').length, 1);
 
     this.build = unknownBuild;
 

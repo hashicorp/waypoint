@@ -93,3 +93,10 @@ state:
     success: 'Released successfully'
     error: 'Release encountered an error'
     pending: 'Release pending'
+
+status_badge:
+  partial: 'Partial'
+  down: 'Down'
+  ready: 'Up'
+  alive: 'Starting...'
+  unknown: 'Unknown'

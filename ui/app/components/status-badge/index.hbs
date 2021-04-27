@@ -1,3 +1,7 @@
 <b class="badge-status badge-status--{{this.statusClass}}">
-  {{yield}}
+  <Pds::Icon @type={{this.iconType}}/>
+  {{#unless this.iconOnly}}
+    {{t (concat 'status_badge.' this.statusClass)}}
+    {{yield}}
+  {{/unless}}
 </b>

@@ -1,0 +1,44 @@
+@use 'pds/tokens/color';
+@use 'pds/tokens/scale';
+@use 'pds/core/typography/config' as Typography;
+
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  @include Typography.Interface(S);
+  padding: scale.$sm-4 scale.$sm-2;
+  color: rgb(var(--badge-text));
+  background: rgb(var(--badge));
+  border-radius: 2px;
+  &--partial {
+    color: rgb(var(--background));
+    background: color.$orange-500;
+  }
+  &--down {
+    color: rgb(var(--background));
+    background: rgb(var(--error-text));
+  }
+  &--ready {
+    color: rgb(var(--background));
+    background: rgb(var(--success-text));
+  }
+  &--alive {
+    color: rgb(var(--success-text));
+    background: rgb(var(--success));
+  }
+  &--unknown {
+    color: rgb(var(--badge-text));
+    background: rgb(var(--badge));
+  }
+
+  .pds-icon {
+    width: scale.$base;
+    height: scale.$base;
+    margin-left: -(scale.$sm-4);
+    margin-right: scale.$sm-4;
+
+    &:only-child {
+      margin-right: -(scale.$sm-4);
+    }
+  }
+}
