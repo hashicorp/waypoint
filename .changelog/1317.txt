@@ -1,5 +1,5 @@
 ```release-note:improvement
-plugins/k8s: Add more configuration options to Kubernetes plugin
+plugins/k8s: Add configuration options for pods and its security contexts
 ```
 
 ```release-note:breaking-change
