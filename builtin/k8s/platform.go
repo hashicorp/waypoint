@@ -291,7 +291,7 @@ func (p *Platform) Deploy(
 		Resources: resourceRequirements,
 	}
 
-	if p.config.Pod.Container != nil {
+	if p.config.Pod != nil && p.config.Pod.Container != nil {
 		containerCfg := p.config.Pod.Container
 		if containerCfg.Command != nil {
 			container.Command = *containerCfg.Command
