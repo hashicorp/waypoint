@@ -90,6 +90,8 @@ func renderTemplate(ctx *hcl.EvalContext, expr *hclsyntax.TemplateExpr) (string,
 func render(ctx *hcl.EvalContext, expr hcl.Expression) (string, error) {
 	switch expr := expr.(type) {
 	case *hclsyntax.LiteralValueExpr:
+		// TokensForValue automatically escapes any HCL present in expr.Val
+		// so we don't need to do it ourselves.
 		tokens := hclwrite.TokensForValue(expr.Val)
 		var buf bytes.Buffer
 

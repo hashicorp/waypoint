@@ -2,6 +2,7 @@ package config
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
@@ -35,6 +36,8 @@ func (c *genericConfig) ConfigVars() ([]*pb.ConfigVar, error) {
 
 	return c.envVars()
 }
+
+var hclEscaper = strings.NewReplacer("${", "$${", "%{", "%%{")
 
 func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 	ctx := c.ctx
@@ -84,23 +87,21 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 				Static: str,
 			}
 
-			val = cty.StringVal(str)
-
-			if pair.Internal {
-				internal[pair.Name] = val
-
-				// Because of the nature of the hcl map type, we have to rebuild these
-				// each time we modify them.
-				config["internal"] = cty.MapVal(internal)
-				ctx.Variables["config"] = cty.MapVal(config)
-			} else {
-				env[pair.Name] = val
-
-				// Because of the nature of the hcl map type, we have to rebuild these
-				// each time we modify them.
-				config["env"] = cty.MapVal(env)
-				ctx.Variables["config"] = cty.MapVal(config)
-			}
+			// We don't advertise these variables in the eval context because
+			// we don't want them to be substituted as strings into other variables.
+			// If the current variable is referenced by a later variable, we want
+			// that to be a normal HCL template expansion of the variable reference,
+			// not the contents. Quick example:
+			//
+			// a = "${g} ${s}"
+			// b = "more: ${a}"
+			// g = unknown()
+			// s = "ok"
+			//
+			// After running the algorith, we want b to still be 'more: ${a}', NOT
+			// 'more: ${g} ok'. The reason being the 2nd one confuses the escaping
+			// as it appears like it might be data that was returned from a file or
+			// something.
 		} else {
 			switch val.Type() {
 			case typeDynamicConfig:
@@ -117,8 +118,10 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 					return nil, err
 				}
 
+				// We have to escape any HCL we find in the string so that we don't
+				// evaluate it down-stream.
 				newVar.Value = &pb.ConfigVar_Static{
-					Static: val.AsString(),
+					Static: hclEscaper.Replace(val.AsString()),
 				}
 
 				if pair.Internal {

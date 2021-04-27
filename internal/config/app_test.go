@@ -193,7 +193,7 @@ func TestConfigApp_compare(t *testing.T) {
 				require.Len(vars, 4)
 				static, ok := vars[3].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
-				require.Equal("extra: ${config.internal.greeting} ok?", static.Static)
+				require.Equal("extra: ${config.env.static}", static.Static)
 
 				static, ok = vars[2].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
@@ -215,6 +215,27 @@ func TestConfigApp_compare(t *testing.T) {
 				static, ok := vars[2].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
 				require.Equal("lower(config.internal.greeting, \"FOO\")", static.Static)
+			},
+		},
+
+		{
+			"config_internal_escape.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				vars, err := c.Config.ConfigVars()
+				require.NoError(err)
+
+				// test the static value
+				require.Len(vars, 3)
+				static, ok := vars[0].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("hostname = $${get_hostname()}\n", static.Static)
+
+				static, ok = vars[2].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("templatestring(\"hostname = $${get_hostname()}\\n\", {\"pass\" = config.internal.pass})", static.Static)
 			},
 		},
 

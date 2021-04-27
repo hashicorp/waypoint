@@ -1,0 +1,1 @@
+hostname = ${get_hostname()}
