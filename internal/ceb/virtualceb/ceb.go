@@ -160,12 +160,14 @@ func (v *Virtual) RunExec(ctx context.Context, h ExecHandler, count int) error {
 			// we will wait for at least one set of config values to resolve.
 			// In most virtual CEB cases we are only open for a single exec
 			// anyways so this resolves perfectly to our expected values.
-			env, _, err = w.Next(ctx, 0)
+			uenv, _, err := w.Next(ctx, 0)
 			if err != nil {
 				// we drop the error here (only log it don't return) because
 				// that is what we did prior to this change too
 				v.log.Warn("error retrieving config values", "err", err)
 			}
+
+			env = uenv.EnvVars
 		}
 
 		idx := highestExec

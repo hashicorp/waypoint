@@ -43,7 +43,7 @@ func TestWatcher_initialBlock(t *testing.T) {
 	defer cancel()
 	env, _, err := w.Next(ctx, 0)
 	require.NoError(err)
-	require.Empty(env)
+	require.Empty(env.EnvVars)
 }
 
 func TestWatcher_static(t *testing.T) {
@@ -68,7 +68,7 @@ func TestWatcher_static(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err := w.Next(ctx, 0)
 	require.NoError(err)
-	require.Equal(env, []string{"TEST_VALUE=hello"})
+	require.Equal(env.EnvVars, []string{"TEST_VALUE=hello"})
 
 	// Update with some other static vars
 	w.UpdateVars(ctx, []*pb.ConfigVar{
@@ -85,7 +85,7 @@ func TestWatcher_static(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
-	require.Equal(env, []string{"VALUE2=goodbye", "VALUE3=hello"})
+	require.Equal(env.EnvVars, []string{"VALUE2=goodbye", "VALUE3=hello"})
 }
 
 func TestWatcher_staticChange(t *testing.T) {
@@ -110,7 +110,7 @@ func TestWatcher_staticChange(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err := w.Next(ctx, 0)
 	require.NoError(err)
-	require.Equal(env, []string{"TEST_VALUE=hello"})
+	require.Equal(env.EnvVars, []string{"TEST_VALUE=hello"})
 
 	// Update with some other static vars
 	w.UpdateVars(ctx, []*pb.ConfigVar{
@@ -123,7 +123,7 @@ func TestWatcher_staticChange(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
-	require.Equal(env, []string{"TEST_VALUE=goodbye"})
+	require.Equal(env.EnvVars, []string{"TEST_VALUE=goodbye"})
 }
 
 // Test that we read dynamic config variables.
@@ -164,7 +164,7 @@ func TestWatcher_dynamicSuccess(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err := w.Next(ctx, 0)
 	require.NoError(err)
-	require.Equal(env, []string{"TEST_VALUE=hello"})
+	require.Equal(env.EnvVars, []string{"TEST_VALUE=hello"})
 
 	// Change the value and make sure we get it
 	testSource.Lock()
@@ -174,7 +174,7 @@ func TestWatcher_dynamicSuccess(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
-	require.Equal(env, []string{"TEST_VALUE=goodbye"})
+	require.Equal(env.EnvVars, []string{"TEST_VALUE=goodbye"})
 
 	// We should've called Stop once: exactly for the first read
 	testSource.Lock()
@@ -188,7 +188,7 @@ func TestWatcher_dynamicSuccess(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
-	require.Empty(env)
+	require.Empty(env.EnvVars)
 
 	// We should call stop once more to end the previous run
 	testSource.Lock()
@@ -241,7 +241,7 @@ func TestWatcher_dynamicConfigurable(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err := w.Next(ctx, 0)
 	require.NoError(err)
-	require.Equal(env, []string{"TEST_VALUE=flower"})
+	require.Equal(env.EnvVars, []string{"TEST_VALUE=flower"})
 
 	// Change our config source
 	w.UpdateSources(ctx, []*pb.ConfigSource{
@@ -261,7 +261,7 @@ func TestWatcher_dynamicConfigurable(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
-	require.Equal(env, []string{"TEST_VALUE=leaf"})
+	require.Equal(env.EnvVars, []string{"TEST_VALUE=leaf"})
 
 	// We should've called Stop twice: once for the first read and
 	// then again when we changed the configuration.
@@ -273,7 +273,7 @@ func TestWatcher_dynamicConfigurable(t *testing.T) {
 	// We should get the static vars back
 	env, iter, err = w.Next(ctx, iter)
 	require.NoError(err)
-	require.Empty(env)
+	require.Empty(env.EnvVars)
 
 	// We should call stop once more to end the previous run
 	require.Equal(uint32(3), testSource.StopCount())
@@ -314,7 +314,7 @@ func TestConfig_dynamicConfigurableUnused(t *testing.T) {
 	// We should get an empty result
 	env, iter, err := w.Next(ctx, 0)
 	require.NoError(err)
-	require.Empty(env)
+	require.Empty(env.EnvVars)
 
 	// Change our config source
 	w.UpdateSources(ctx, []*pb.ConfigSource{
@@ -385,7 +385,7 @@ func TestWatcher_variableReferences(t *testing.T) {
 	// We should get the static vars back
 	env, _, err := w.Next(ctx, 0)
 	require.NoError(err)
-	require.Equal([]string{"TEST_VALUE=hello", "V1=connect://hello"}, env)
+	require.Equal([]string{"TEST_VALUE=hello", "V1=connect://hello"}, env.EnvVars)
 }
 
 // Test that we process escaped variables.
@@ -421,7 +421,7 @@ func TestWatcher_variableEscape(t *testing.T) {
 	// We should get the static vars back
 	env, _, err := w.Next(ctx, 0)
 	require.NoError(err)
-	require.Equal([]string{"V1=connect://${get_hostname()}"}, env)
+	require.Equal([]string{"V1=connect://${get_hostname()}"}, env.EnvVars)
 }
 
 type testConfigSourcer struct {

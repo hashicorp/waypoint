@@ -31,6 +31,7 @@ type analyzedPair struct {
 	Name     string
 	Internal bool
 	Refs     []string
+	Path     bool
 }
 
 // VariableLoopError is returned when, in the course of sorting the variables,
@@ -59,9 +60,11 @@ func (c *genericConfig) sortVars(ctx *hcl.EvalContext) ([]*analyzedPair, error) 
 		expr     hcl.Expression
 		prefix   string
 		internal bool
+		path     bool
 	}{
 		{expr: c.EnvRaw, prefix: "config.env."},
 		{expr: c.InternalRaw, prefix: "config.internal.", internal: true},
+		{expr: c.FileRaw, prefix: "config.file.", path: true},
 	}
 
 	for _, m := range maps {
@@ -112,6 +115,7 @@ func (c *genericConfig) sortVars(ctx *hcl.EvalContext) ([]*analyzedPair, error) 
 				Name:     key,
 				Refs:     refs,
 				Internal: m.internal,
+				Path:     m.path,
 			}
 		}
 	}

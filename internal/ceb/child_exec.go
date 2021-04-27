@@ -29,9 +29,11 @@ func (ceb *CEB) initChildCmd(ctx context.Context, cfg *config) error {
 	// goroutine that will eventually run them.
 	childCmdCh := make(chan *exec.Cmd, 5)
 	doneCh := make(chan error, 1)
-	go ceb.watchChildCmd(ctx, childCmdCh, doneCh)
+	sigCh := make(chan os.Signal, 1)
+	go ceb.watchChildCmd(ctx, childCmdCh, doneCh, sigCh)
 	ceb.childCmdCh = childCmdCh
 	ceb.childDoneCh = doneCh
+	ceb.childSigCh = sigCh
 
 	return nil
 }
@@ -49,6 +51,7 @@ func (ceb *CEB) watchChildCmd(
 	ctx context.Context,
 	cmdCh <-chan *exec.Cmd,
 	doneCh chan<- error,
+	sigCh <-chan os.Signal,
 ) {
 	// We always close the done channel when we exit so that callers can
 	// detect this and also exit.
@@ -85,6 +88,22 @@ func (ceb *CEB) watchChildCmd(
 
 			return
 
+		case sig := <-sigCh:
+			if currentCmd != nil {
+				err := currentCmd.Process.Signal(sig)
+				if err != nil {
+					log.Error("error sending signal to process",
+						"error", err,
+						"signal", sig,
+						"pid", currentCmd.Process.Pid,
+					)
+				} else {
+					log.Info("sent signal to process",
+						"signal", sig,
+						"pid", currentCmd.Process.Pid,
+					)
+				}
+			}
 		case cmd := <-cmdCh:
 			log.Debug("child command received")
 

@@ -25,6 +25,10 @@ type genericConfig struct {
 	// environment.
 	EnvRaw hcl.Expression `hcl:"env,optional"`
 
+	// file are paths that will be written to disk in the context of the application
+	// environment.
+	FileRaw hcl.Expression `hcl:"file,optional"`
+
 	ctx       *hcl.EvalContext    // ctx is the context to use when evaluating
 	scopeFunc func(*pb.ConfigVar) // scopeFunc should set the scope for the config var
 }
@@ -54,6 +58,7 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 	var (
 		env      = map[string]cty.Value{}
 		internal = map[string]cty.Value{}
+		file     = map[string]cty.Value{}
 		config   = map[string]cty.Value{}
 	)
 
@@ -62,6 +67,32 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 	pairs, err := c.sortVars(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	setup := func(pair *analyzedPair, val cty.Value) {
+		if pair.Internal {
+			internal[pair.Name] = val
+
+			// Because of the nature of the hcl map type, we have to rebuild these
+			// each time we modify them.
+			config["internal"] = cty.MapVal(internal)
+			ctx.Variables["config"] = cty.MapVal(config)
+		} else if pair.Path {
+			file[pair.Name] = val
+
+			// Because of the nature of the hcl map type, we have to rebuild these
+			// each time we modify them.
+			config["file"] = cty.MapVal(file)
+			ctx.Variables["config"] = cty.MapVal(config)
+
+		} else {
+			env[pair.Name] = val
+
+			// Because of the nature of the hcl map type, we have to rebuild these
+			// each time we modify them.
+			config["env"] = cty.MapVal(env)
+			ctx.Variables["config"] = cty.MapVal(config)
+		}
 	}
 
 	var result []*pb.ConfigVar
@@ -73,6 +104,7 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 		c.scopeFunc(&newVar)
 		newVar.Name = key
 		newVar.Internal = pair.Internal
+		newVar.NameIsPath = pair.Path
 
 		// Decode the value
 		val, diags := pair.Pair.Value.Value(ctx)
@@ -124,21 +156,7 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 					Static: hclEscaper.Replace(val.AsString()),
 				}
 
-				if pair.Internal {
-					internal[pair.Name] = val
-
-					// Because of the nature of the hcl map type, we have to rebuild these
-					// each time we modify them.
-					config["internal"] = cty.MapVal(internal)
-					ctx.Variables["config"] = cty.MapVal(config)
-				} else {
-					env[pair.Name] = val
-
-					// Because of the nature of the hcl map type, we have to rebuild these
-					// each time we modify them.
-					config["env"] = cty.MapVal(env)
-					ctx.Variables["config"] = cty.MapVal(config)
-				}
+				setup(pair, val)
 			}
 		}
 

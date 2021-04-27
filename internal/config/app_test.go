@@ -257,6 +257,40 @@ func TestConfigApp_compare(t *testing.T) {
 				require.Equal([]string{"config.env.v1", "config.env.v2", "config.env.v3"}, vle.LoopVars)
 			},
 		},
+
+		{
+			"config_file.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				vars, err := c.Config.ConfigVars()
+				require.NoError(err)
+
+				// test the static value
+				require.Len(vars, 3)
+
+				sort.Slice(vars, func(i, j int) bool {
+					return vars[i].Name < vars[j].Name
+				})
+
+				require.Equal("blah.yml", vars[0].Name)
+
+				static, ok := vars[0].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("greeting: hello\n", static.Static)
+
+				require.True(vars[0].NameIsPath)
+
+				require.Equal("foo.yml", vars[1].Name)
+
+				static, ok = vars[1].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("foo: hello", static.Static)
+
+				require.True(vars[1].NameIsPath)
+			},
+		},
 	}
 
 	for _, tt := range cases {

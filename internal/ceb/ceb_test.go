@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 
@@ -378,6 +380,32 @@ func TestMain(m *testing.M) {
 		}
 
 		ioutil.WriteFile(path, []byte(fmt.Sprintf("%d,%s", os.Getpid(), os.Getenv("TEST_VALUE"))), 0600)
+		time.Sleep(10 * time.Minute)
+
+	case "read-file":
+		path := os.Getenv("HELPER_PATH")
+		if path == "" {
+			panic("bad")
+		}
+
+		rp := os.Getenv("READ_PATH")
+		if rp == "" {
+			panic("bad")
+		}
+
+		sig := make(chan os.Signal, 1)
+
+		signal.Notify(sig, syscall.SIGUSR2)
+		go func() {
+			<-sig
+			data, _ := ioutil.ReadFile(rp)
+
+			ioutil.WriteFile(path, []byte(fmt.Sprintf("%d,%s", os.Getpid(), string(data))), 0600)
+		}()
+
+		data, _ := ioutil.ReadFile(rp)
+
+		ioutil.WriteFile(path, []byte(fmt.Sprintf("%d,%s", os.Getpid(), string(data))), 0600)
 		time.Sleep(10 * time.Minute)
 
 	default:

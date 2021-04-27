@@ -36,6 +36,11 @@ const (
 	// env var matches the Waypoint CLI on purpose. This can be set on
 	// the entrypoint process OR via app config (`waypoint config`).
 	envLogLevel = "WAYPOINT_LOG_LEVEL"
+
+	// envFileRewriteSignal defines which unix signal to send to the application
+	// when a file changes. By default, no signal is sent because signals can cause
+	// programs to quit unexpectedly.
+	envFileRewriteSignal = "WAYPOINT_CEB_CHANGE_SIGNAL"
 )
 
 const (
@@ -75,6 +80,9 @@ type CEB struct {
 	clientMu   sync.Mutex
 	clientCond *sync.Cond
 	client     pb.WaypointClient
+
+	// childSigCh can be sent signals which will be sent to the child command via kill(2).
+	childSigCh chan os.Signal
 
 	// childDoneCh is sent a value (incl. nil) when the child process exits.
 	// This is not sent anything for restarts.
@@ -268,6 +276,7 @@ type config struct {
 	ServerTls           bool
 	ServerTlsSkipVerify bool
 	InviteToken         string
+	FileRewriteSignal   string
 
 	URLServicePort int
 }
@@ -302,6 +311,7 @@ func WithEnvDefaults() Option {
 		cfg.disable = os.Getenv(envCEBDisable) != ""
 
 		ceb.deploymentId = os.Getenv(envDeploymentId)
+		cfg.FileRewriteSignal = os.Getenv(envFileRewriteSignal)
 
 		return nil
 	}

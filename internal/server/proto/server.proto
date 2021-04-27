@@ -2223,6 +2223,10 @@ message ConfigVar {
   // It exists only to be referenced by other variables.
   bool internal = 8;
 
+  // Indicates that this is actually be written as a file, with the name
+  // field being the filename.
+  bool name_is_path = 9;
+
   // DynamicVal is the configuration for dynamic values for configuration.
   message DynamicVal {
     // from is the config source plugin to use
