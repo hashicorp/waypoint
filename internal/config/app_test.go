@@ -202,6 +202,23 @@ func TestConfigApp_compare(t *testing.T) {
 		},
 
 		{
+			"config_internal_partial.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				vars, err := c.Config.ConfigVars()
+				require.NoError(err)
+
+				// test the static value
+				require.Len(vars, 3)
+				static, ok := vars[2].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("lower(config.internal.greeting, \"FOO\")", static.Static)
+			},
+		},
+
+		{
 			"config_reference_loop.hcl",
 			"test",
 			func(t *testing.T, c *App) {
