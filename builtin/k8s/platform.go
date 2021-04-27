@@ -618,6 +618,7 @@ type Config struct {
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
+	// Pod describes the configuration for the pod
 	Pod *Pod `hcl:"pod,block"`
 }
 
