@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint/internal/config"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -21,7 +22,7 @@ import (
 func (a *App) StatusReport(
 	ctx context.Context,
 	target *pb.Deployment,
-) (*pb.StatusReport, component.Status, error) {
+) (*pb.StatusReport, *sdk.StatusReport, error) {
 	var evalCtx hcl.EvalContext
 	if err := evalCtxTemplateProto(&evalCtx, "deploy", target); err != nil {
 		a.logger.Warn("failed to prepare template variables, will not be available",
@@ -52,11 +53,12 @@ func (a *App) StatusReport(
 		Target:    target,
 	})
 	if err != nil {
+		panic(err)
 		return nil, nil, err
 	}
-	var status component.Status
+	var status *sdk.StatusReport
 	if result != nil {
-		status = result.(component.Status)
+		status = result.(*sdk.StatusReport)
 	}
 
 	return msg.(*pb.StatusReport), status, nil
@@ -89,7 +91,7 @@ type statusReportOperation struct {
 	Component *Component
 	Target    *pb.Deployment
 
-	result component.Status
+	result *sdk.StatusReport
 }
 
 func (op *statusReportOperation) Init(app *App) (proto.Message, error) {
@@ -145,16 +147,17 @@ func (op *statusReportOperation) Do(
 
 	result, err := app.callDynamicFunc(ctx,
 		log,
-		(*component.Status)(nil),
+		nil, // what should expected return be? component.Status?
 		op.Component,
 		op.Component.Value.(component.Status).StatusFunc(),
 		argNamedAny("target", op.Target.Deployment),
 	)
 	if err != nil {
+		panic(err)
 		return nil, err
 	}
 
-	op.result = result.(component.Status)
+	op.result = result.(*sdk.StatusReport)
 
 	return result, nil
 }

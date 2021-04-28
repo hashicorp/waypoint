@@ -62,7 +62,6 @@ func (r *Runner) executeUpOp(
 	}
 	deployResult := result.Deploy
 
-	// TODO: status report
 	app.UI.Output("\nReporting Status...", terminal.WithInfoStyle())
 	result, err = r.executeStatusReportOp(ctx, &pb.Job{
 		Application: job.Application,
@@ -93,21 +92,21 @@ func (r *Runner) executeUpOp(
 	}
 	releaseResult := result.Release
 
-	// TODO: status report
 	app.UI.Output("\nReporting Status...", terminal.WithInfoStyle())
-	//result, err = r.executeStatusReportOp(ctx, &pb.Job{
-	//	Application: job.Application,
-	//	Operation: &pb.Job_StatusReport{
-	//		StatusReport: &pb.Job_StatusReportOp{
-	//			Deployment: deployResult.Deployment,
-	//		},
-	//	},
-	//}, project)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//// TODO: use report to output current health state?
-	//// release report overrides deploy report?
+	result, err = r.executeStatusReportOp(ctx, &pb.Job{
+		Application: job.Application,
+		Operation: &pb.Job_StatusReport{
+			StatusReport: &pb.Job_StatusReportOp{
+				Deployment: deployResult.Deployment,
+			},
+		},
+	}, project)
+	if err != nil {
+		panic(err)
+		return nil, err
+	}
+	// TODO: use report to output current health state?
+	// release report overrides deploy report?
 	//statusReportResult = result.StatusReport
 
 	// Try to get the hostname so we can build up the URL.
