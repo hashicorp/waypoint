@@ -497,14 +497,24 @@ func configVarSortFunc(vars []*pb.ConfigVar) func(i, j int) bool {
 	}
 }
 
-// Used to just in tracking from the config split, through eval, and back
+// These 2 structs are used to track static and dynamic variables as we
+// process them before sending the configuration to the application.
+//
+// static vars are ones that contain a string value we can see. If that
+// string contains HCL templating, we'll evaluate it as such to get it
+// fully converted to a static string.
+//
+// dynmaic variables are configured with `configdynamic` and their value
+// needs to be fetched from a plugin available to the entrypoint.
+
+// Used tracking from the config split, through eval, and back
 // to exporting.
 type staticVar struct {
 	name, value string
 	internal    bool
 }
 
-// Used to just in tracking from the config split, through eval, and back
+// Used in tracking from the config split, through eval, and back
 // to exporting.
 type dynamicVar struct {
 	req      *component.ConfigRequest
