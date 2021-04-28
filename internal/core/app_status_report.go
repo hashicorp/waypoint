@@ -53,7 +53,6 @@ func (a *App) StatusReport(
 		Target:    target,
 	})
 	if err != nil {
-		panic(err)
 		return nil, nil, err
 	}
 	var status *sdk.StatusReport
@@ -73,7 +72,7 @@ func (a *App) createStatusReporter(
 	log.Debug("initializing status report plugin")
 	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, hclCtx)
 	if err == nil {
-		// We have a releaser configured, use that.
+		// We have a status reporter configured, use that.
 		return c, nil
 	}
 
@@ -139,7 +138,7 @@ func (op *statusReportOperation) Do(
 	app *App,
 	msg proto.Message,
 ) (interface{}, error) {
-	// If we have no statusRreport, we do nothing since we just update the
+	// If we have no statusReport, we do nothing since we just update the
 	// blank status report metadata.
 	if op.Component == nil {
 		return nil, nil
@@ -153,7 +152,6 @@ func (op *statusReportOperation) Do(
 		argNamedAny("target", op.Target.Deployment),
 	)
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 

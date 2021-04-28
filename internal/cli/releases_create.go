@@ -154,20 +154,15 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 				terminal.WithWarningStyle())
 		}
 
-		// TODO: status report
-		app.UI.Output("Reporting Status...", terminal.WithHeaderStyle())
-		statusReportResult, err := app.StatusReport(ctx, &pb.Job_StatusReportOp{
+		app.UI.Output("\nReporting Status...", terminal.WithInfoStyle())
+		_, err = app.StatusReport(ctx, &pb.Job_StatusReportOp{
 			Deployment: deploy,
 		})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
-		statusReport := statusReportResult.StatusReport
-		if statusReport != nil {
-			// create helper to print health?
-			//app.UI.Output(statusReport.Health.String(), terminal.WithInfoStyle())
-		}
+		//statusReport := statusReportResult.StatusReport
 
 		if result.Release.Url == "" {
 			app.UI.Output("\n"+strings.TrimSpace(releaseNoUrl),

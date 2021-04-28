@@ -26,7 +26,6 @@ func (r *Runner) executeStatusReportOp(
 
 	statusReportResult, _, err := app.StatusReport(ctx, op.StatusReport.Deployment)
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 

@@ -62,7 +62,8 @@ func (r *Runner) executeUpOp(
 	}
 	deployResult := result.Deploy
 
-	app.UI.Output("\nReporting Status...", terminal.WithInfoStyle())
+	app.UI.Output("")
+	//app.UI.Output("\nReporting Status...")
 	result, err = r.executeStatusReportOp(ctx, &pb.Job{
 		Application: job.Application,
 		Operation: &pb.Job_StatusReport{
@@ -72,7 +73,6 @@ func (r *Runner) executeUpOp(
 		},
 	}, project)
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 	// TODO: use report to output current health state?
@@ -92,7 +92,8 @@ func (r *Runner) executeUpOp(
 	}
 	releaseResult := result.Release
 
-	app.UI.Output("\nReporting Status...", terminal.WithInfoStyle())
+	app.UI.Output("")
+	//app.UI.Output("\nReporting Status...")
 	result, err = r.executeStatusReportOp(ctx, &pb.Job{
 		Application: job.Application,
 		Operation: &pb.Job_StatusReport{
@@ -102,7 +103,6 @@ func (r *Runner) executeUpOp(
 		},
 	}, project)
 	if err != nil {
-		panic(err)
 		return nil, err
 	}
 	// TODO: use report to output current health state?
