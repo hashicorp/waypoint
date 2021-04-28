@@ -1,0 +1,3 @@
+```release-note:improvement
+builtin/k8s: Added Service annotations option to K8S release
+```

@@ -161,6 +161,9 @@ func (r *Releaser) Release(
 
 	service.Spec.Ports = servicePorts
 
+	// Apply Service annotations
+	service.Annotations = r.config.Annotations
+
 	// Create/update
 	if create {
 		step.Update("Creating service...")
@@ -267,6 +270,9 @@ func (r *Releaser) Destroy(
 
 // ReleaserConfig is the configuration structure for the Releaser.
 type ReleaserConfig struct {
+	// Annotations to be applied to the kube service.
+	Annotations map[string]string `hcl:"annotations,optional"`
+
 	// KubeconfigPath is the path to the kubeconfig file. If this is
 	// blank then we default to the home directory.
 	KubeconfigPath string `hcl:"kubeconfig,optional"`
