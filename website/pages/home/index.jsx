@@ -535,11 +535,10 @@ export default function HomePage() {
               content: (
                 <img
                   style={{
-                    border: '1px solid rgba(174,176,183,.45)',
                     height: '500px',
                     width: 'auto',
                   }}
-                  src={require('./img/web-ui.png')}
+                  src={require('./img/waypoint_ui@3x.png')}
                   alt="Web UI"
                 />
               ),
