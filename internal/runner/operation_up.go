@@ -73,11 +73,11 @@ func (r *Runner) executeUpOp(
 		},
 	}, project)
 	if err != nil {
+		panic(err)
 		return nil, err
 	}
 	// TODO: use report to output current health state?
 	//statusReportResult := result.StatusReport
-	panic("after reporting status")
 
 	// We're releasing, do that too.
 	app.UI.Output("Releasing...", terminal.WithHeaderStyle())

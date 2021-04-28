@@ -21,7 +21,7 @@ import (
 func (a *App) StatusReport(
 	ctx context.Context,
 	target *pb.Deployment,
-) (*pb.StatusReport, error) {
+) (*pb.StatusReport, component.Status, error) {
 	var evalCtx hcl.EvalContext
 	if err := evalCtxTemplateProto(&evalCtx, "deploy", target); err != nil {
 		a.logger.Warn("failed to prepare template variables, will not be available",
@@ -35,7 +35,7 @@ func (a *App) StatusReport(
 	}
 	if err != nil {
 		a.logger.Error("error creating component in platform", "error", err)
-		return nil, err
+		return nil, nil, err
 	}
 	defer c.Close()
 
@@ -44,19 +44,22 @@ func (a *App) StatusReport(
 
 	if !ok || statusReporter.StatusFunc() == nil {
 		a.logger.Debug("component is not a Status or has no StatusFunc()")
-		return nil, nil
+		return nil, nil, nil
 	}
 
-	_, msg, err := a.doOperation(ctx, a.logger.Named("statusreport"), &statusReportOperation{
+	result, msg, err := a.doOperation(ctx, a.logger.Named("statusreport"), &statusReportOperation{
 		Component: c,
 		Target:    target,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	panic("after do op")
+	var status component.Status
+	if result != nil {
+		status = result.(component.Status)
+	}
 
-	return msg.(*pb.StatusReport), nil
+	return msg.(*pb.StatusReport), status, nil
 }
 
 func (a *App) createStatusReporter(
@@ -150,7 +153,6 @@ func (op *statusReportOperation) Do(
 	if err != nil {
 		return nil, err
 	}
-	panic("after call dynamic func")
 
 	op.result = result.(component.Status)
 

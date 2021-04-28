@@ -24,8 +24,9 @@ func (r *Runner) executeStatusReportOp(
 		panic("operation not expected type")
 	}
 
-	statusReportResult, err := app.StatusReport(ctx, op.StatusReport.Deployment)
+	statusReportResult, _, err := app.StatusReport(ctx, op.StatusReport.Deployment)
 	if err != nil {
+		panic("we here")
 		return nil, err
 	}
 
