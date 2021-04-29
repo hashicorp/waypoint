@@ -43,5 +43,5 @@ resource "foo_instance" /* ... */ "baz" {
   }
 }
 
-  provider "" {
+  provider {
 }

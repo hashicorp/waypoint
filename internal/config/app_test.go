@@ -158,6 +158,101 @@ func TestConfigApp_compare(t *testing.T) {
 				require.Len(vars, 2)
 			},
 		},
+
+		{
+			"config_internal.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				vars, err := c.Config.ConfigVars()
+				require.NoError(err)
+
+				// test the static value
+				require.Len(vars, 2)
+				static, ok := vars[0].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("hello", static.Static)
+
+				static, ok = vars[1].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("hello", static.Static)
+			},
+		},
+
+		{
+			"config_internal_dynamic.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				vars, err := c.Config.ConfigVars()
+				require.NoError(err)
+
+				// test the static value
+				require.Len(vars, 4)
+				static, ok := vars[3].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("extra: ${config.env.static}", static.Static)
+
+				static, ok = vars[2].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("${config.internal.greeting} ok?", static.Static)
+			},
+		},
+
+		{
+			"config_internal_partial.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				vars, err := c.Config.ConfigVars()
+				require.NoError(err)
+
+				// test the static value
+				require.Len(vars, 3)
+				static, ok := vars[2].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal(`lower(config.internal.greeting, "FOO")`, static.Static)
+			},
+		},
+
+		{
+			"config_internal_escape.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				vars, err := c.Config.ConfigVars()
+				require.NoError(err)
+
+				// test the static value
+				require.Len(vars, 3)
+				static, ok := vars[0].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal("hostname = $${get_hostname()}\n", static.Static)
+
+				static, ok = vars[2].Value.(*pb.ConfigVar_Static)
+				require.True(ok)
+				require.Equal(`templatestring("hostname = $${get_hostname()}\n", {"pass" = config.internal.pass})`, static.Static)
+			},
+		},
+
+		{
+			"config_reference_loop.hcl",
+			"test",
+			func(t *testing.T, c *App) {
+				require := require.New(t)
+
+				_, err := c.Config.ConfigVars()
+				require.Error(err)
+
+				vle := err.(*VariableLoopError)
+
+				require.Equal([]string{"config.env.v1", "config.env.v2", "config.env.v3"}, vle.LoopVars)
+			},
+		},
 	}
 
 	for _, tt := range cases {

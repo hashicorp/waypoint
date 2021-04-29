@@ -7,14 +7,18 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	hcljson "github.com/hashicorp/hcl/v2/json"
 	"github.com/r3labs/diff"
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -263,8 +267,8 @@ func (w *Watcher) watcher(
 
 	// static keeps track of the static env vars that we have and dynamic
 	// keeps track of all the dynamic configurations that we have.
-	var static []string
-	var dynamic map[string][]*component.ConfigRequest
+	var static []*staticVar
+	var dynamic map[string][]*dynamicVar
 	var dynamicSources map[string]*pb.ConfigSource
 
 	// refreshCh will be sent a message when we want to refresh our
@@ -493,25 +497,56 @@ func configVarSortFunc(vars []*pb.ConfigVar) func(i, j int) bool {
 	}
 }
 
+// These 2 structs are used to track static and dynamic variables as we
+// process them before sending the configuration to the application.
+//
+// static vars are ones that contain a string value we can see. If that
+// string contains HCL templating, we'll evaluate it as such to get it
+// fully converted to a static string.
+//
+// dynmaic variables are configured with `configdynamic` and their value
+// needs to be fetched from a plugin available to the entrypoint.
+
+// Used tracking from the config split, through eval, and back
+// to exporting.
+type staticVar struct {
+	name, value string
+	internal    bool
+}
+
+// Used in tracking from the config split, through eval, and back
+// to exporting.
+type dynamicVar struct {
+	req      *component.ConfigRequest
+	internal bool
+}
+
 // splitAppConfig takes a list of config variables as sent on the wire
 // and splits them into a set of static env vars (in KEY=VALUE format already),
 // and a map of dynamic config requests keyed by plugin type.
 func splitAppConfig(
 	log hclog.Logger,
 	vars []*pb.ConfigVar,
-) (static []string, dynamic map[string][]*component.ConfigRequest) {
+) (static []*staticVar, dynamic map[string][]*dynamicVar) {
 	// Split out our static and dynamic here.
-	dynamic = map[string][]*component.ConfigRequest{}
+	dynamic = map[string][]*dynamicVar{}
 	for _, cv := range vars {
 		switch v := cv.Value.(type) {
 		case *pb.ConfigVar_Static:
-			static = append(static, cv.Name+"="+v.Static)
+			static = append(static, &staticVar{
+				name:     cv.Name,
+				value:    v.Static,
+				internal: cv.Internal,
+			})
 
 		case *pb.ConfigVar_Dynamic:
 			from := v.Dynamic.From
-			dynamic[from] = append(dynamic[from], &component.ConfigRequest{
-				Name:   cv.Name,
-				Config: v.Dynamic.Config,
+			dynamic[from] = append(dynamic[from], &dynamicVar{
+				req: &component.ConfigRequest{
+					Name:   cv.Name,
+					Config: v.Dynamic.Config,
+				},
+				internal: cv.Internal,
 			})
 
 		default:
@@ -531,7 +566,7 @@ func splitAppConfig(
 // is true if the plugin process should also be killed.
 func (w *Watcher) diffDynamicAppConfig(
 	log hclog.Logger,
-	dynamicOld, dynamicNew map[string][]*component.ConfigRequest,
+	dynamicOld, dynamicNew map[string][]*dynamicVar,
 ) map[string]bool {
 	log.Trace("calculating changes between old and new config")
 	changed := map[string]bool{}
@@ -553,14 +588,14 @@ func (w *Watcher) diffDynamicAppConfig(
 			continue
 		}
 
-		reqsOld := map[string]*component.ConfigRequest{}
+		reqsOld := map[string]*dynamicVar{}
 		for _, req := range dynamicOld[k] {
-			reqsOld[req.Name] = req
+			reqsOld[req.req.Name] = req
 		}
 
-		reqsNew := map[string]*component.ConfigRequest{}
+		reqsNew := map[string]*dynamicVar{}
 		for _, req := range dynamicNew[k] {
-			reqsNew[req.Name] = req
+			reqsNew[req.req.Name] = req
 		}
 
 		changes, _ := diff.Diff(reqsOld, reqsNew)
@@ -579,8 +614,8 @@ func buildAppConfig(
 	ctx context.Context,
 	log hclog.Logger,
 	configPlugins map[string]*plugin.Instance,
-	static []string,
-	dynamic map[string][]*component.ConfigRequest,
+	staticVars []*staticVar,
+	dynamic map[string][]*dynamicVar,
 	dynamicSources map[string]*pb.ConfigSource,
 	changed map[string]bool,
 ) []string {
@@ -662,14 +697,32 @@ func buildAppConfig(
 		}
 	}
 
+	var ectx hcl.EvalContext
+
 	// If we have no dynamic values, then we just return the static ones.
 	if len(dynamic) == 0 {
-		return static
+		return expandStaticVars(log, &ectx, staticVars)
 	}
 
+	// The way this next bit works is that any static values that referenced
+	// other static values have already been expanded before they make it this far,
+	// which means that if a static variable still contains an HCL template, it's
+	// going to reference a dynamic variable. And because dynamic variables can't
+	// reference other variables, the job is pretty easy.
+	//
+	// We go through and compute all the dynamic variables first and build up an
+	// hcl EvalContext with their values. Next we loop through the static variables,
+	// parse them as templates, and then request their value. We don't have to perform
+	// partial evaluation at this stage because there is never a further step, so we can
+	// presume all the variables are present OR there is an error. In the case of an error,
+	// we log about the issue and set the variable to empty string.
+	ectx.Variables = map[string]cty.Value{}
+
+	env := map[string]cty.Value{}
+	internal := map[string]cty.Value{}
+
 	// Ininitialize our result with the static values
-	env := make([]string, len(static), len(static)*2)
-	copy(env, static)
+	var envVars []string
 
 	// Go through each and read our configurations. Note that ConfigSourcers
 	// are documented to note that Read will be called frequently so caching
@@ -688,13 +741,20 @@ func buildAppConfig(
 		if L.IsTrace() {
 			var keys []string
 			for _, req := range reqs {
-				keys = append(keys, req.Name)
+				keys = append(keys, req.req.Name)
 			}
 			L.Trace("reading values for keys", "keys", keys)
 		}
+
+		var creq []*component.ConfigRequest
+
+		for _, r := range reqs {
+			creq = append(creq, r.req)
+		}
+
 		result, err := plugin.CallDynamicFunc(L, s.ReadFunc(),
 			argmapper.Typed(ctx),
-			argmapper.Typed(reqs),
+			argmapper.Typed(creq),
 		)
 		if err != nil {
 			L.Warn("error reading configuration values, all will be dropped", "err", err)
@@ -719,29 +779,95 @@ func buildAppConfig(
 			valueMap[v.Name] = v
 		}
 		for _, req := range reqs {
-			value, ok := valueMap[req.Name]
+			value, ok := valueMap[req.req.Name]
 			if !ok {
-				L.Warn("config source didn't populate expected value", "key", req.Name)
+				L.Warn("config source didn't populate expected value", "key", req.req.Name)
 				continue
 			}
 
 			switch r := value.Result.(type) {
 			case *sdkpb.ConfigSource_Value_Value:
-				env = append(env, req.Name+"="+r.Value)
+
+				if req.internal {
+					internal[req.req.Name] = cty.StringVal(r.Value)
+				} else {
+					envVars = append(envVars, req.req.Name+"="+r.Value)
+
+					env[req.req.Name] = cty.StringVal(r.Value)
+				}
 
 			case *sdkpb.ConfigSource_Value_Error:
 				st := status.FromProto(r.Error)
 				L.Warn("error retrieving config value",
-					"key", req.Name,
+					"key", req.req.Name,
 					"err", st.Err().Error())
 
 			default:
 				L.Warn("config value had unknown result type, ignoring",
-					"key", req.Name,
+					"key", req.req.Name,
 					"type", fmt.Sprintf("%T", value.Result))
 			}
 		}
 	}
 
-	return env
+	// MapVal REALLY does not want an empty map (due to typing) so we do this dance.
+	config := map[string]cty.Value{}
+
+	if len(env) > 0 {
+		config["env"] = cty.MapVal(env)
+	}
+
+	if len(internal) > 0 {
+		config["internal"] = cty.MapVal(internal)
+	}
+
+	if len(config) > 0 {
+		ectx.Variables["config"] = cty.MapVal(config)
+	}
+
+	return append(envVars, expandStaticVars(log, &ectx, staticVars)...)
+}
+
+// expandStaticVars will parse any value that appears to be a HCL template as one and then
+// use the result of the expression Value as the value of the variable. This is the last
+// stage of the variable composition pipeline.
+func expandStaticVars(L hclog.Logger, ctx *hcl.EvalContext, vars []*staticVar) []string {
+	var out []string
+
+	for _, v := range vars {
+		value := v.value
+
+		if strings.Contains(value, "${") || strings.Contains(value, "%{") {
+			expr, diags := hclsyntax.ParseTemplate([]byte(value), v.name, hcl.Pos{Line: 1, Column: 1})
+			if diags != nil {
+				L.Error("error parsing expression", "var", v.name, "error", diags.Error())
+				value = ""
+				goto add
+			}
+
+			val, diags := expr.Value(ctx)
+			if diags.HasErrors() {
+				L.Error("error evaluating expression", "var", v.name, "error", diags.Error())
+				value = ""
+				goto add
+			}
+
+			str, err := convert.Convert(val, cty.String)
+			if err != nil {
+				L.Error("error converting expression to string", "var", v.name, "error", err)
+				value = ""
+				goto add
+			}
+
+			L.Debug("expanded variable successfully", "var", v.name)
+			value = str.AsString()
+		}
+
+	add:
+		if !v.internal {
+			out = append(out, v.name+"="+value)
+		}
+	}
+
+	return out
 }

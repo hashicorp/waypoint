@@ -1,0 +1,3 @@
+```release-note:feature
+config: Add ability to define internal variables and compose variables together via templating
+```

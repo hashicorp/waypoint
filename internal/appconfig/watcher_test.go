@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	hclog.L().SetLevel(hclog.Trace)
+	hclog.L().SetLevel(hclog.Debug)
 }
 
 func TestWatcher_initialBlock(t *testing.T) {
@@ -339,6 +339,89 @@ func TestConfig_dynamicConfigurableUnused(t *testing.T) {
 		require.Error(err)
 		require.Equal(err, ctx.Err())
 	}
+}
+
+// Test that we read dynamic config variables.
+func TestWatcher_variableReferences(t *testing.T) {
+	t.Parallel()
+
+	require := require.New(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	// Create our test config source
+	testSource := &testConfigSourcer{
+		readValue: map[string]string{"key": "hello"},
+	}
+
+	w, err := NewWatcher(
+		WithRefreshInterval(10*time.Millisecond),
+		testWithConfigSourcer("cloud", testSource),
+	)
+	require.NoError(err)
+	defer w.Close()
+
+	// Change our config
+	w.UpdateVars(ctx, []*pb.ConfigVar{
+		{
+			Name: "V1",
+			Value: &pb.ConfigVar_Static{
+				Static: "connect://${config.env.TEST_VALUE}",
+			},
+		},
+		{
+			Name: "TEST_VALUE",
+			Value: &pb.ConfigVar_Dynamic{
+				Dynamic: &pb.ConfigVar_DynamicVal{
+					From: "cloud",
+					Config: map[string]string{
+						"key": "key",
+					},
+				},
+			},
+		},
+	})
+
+	// We should get the static vars back
+	env, _, err := w.Next(ctx, 0)
+	require.NoError(err)
+	require.Equal([]string{"TEST_VALUE=hello", "V1=connect://hello"}, env)
+}
+
+// Test that we process escaped variables.
+func TestWatcher_variableEscape(t *testing.T) {
+	t.Parallel()
+
+	require := require.New(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	// Create our test config source
+	testSource := &testConfigSourcer{
+		readValue: map[string]string{"key": "hello"},
+	}
+
+	w, err := NewWatcher(
+		WithRefreshInterval(10*time.Millisecond),
+		testWithConfigSourcer("cloud", testSource),
+	)
+	require.NoError(err)
+	defer w.Close()
+
+	// Change our config
+	w.UpdateVars(ctx, []*pb.ConfigVar{
+		{
+			Name: "V1",
+			Value: &pb.ConfigVar_Static{
+				Static: "connect://$${get_hostname()}",
+			},
+		},
+	})
+
+	// We should get the static vars back
+	env, _, err := w.Next(ctx, 0)
+	require.NoError(err)
+	require.Equal([]string{"V1=connect://${get_hostname()}"}, env)
 }
 
 type testConfigSourcer struct {
