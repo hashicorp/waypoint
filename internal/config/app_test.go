@@ -214,7 +214,7 @@ func TestConfigApp_compare(t *testing.T) {
 				require.Len(vars, 3)
 				static, ok := vars[2].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
-				require.Equal("lower(config.internal.greeting, \"FOO\")", static.Static)
+				require.Equal(`lower(config.internal.greeting, "FOO")`, static.Static)
 			},
 		},
 
@@ -235,7 +235,7 @@ func TestConfigApp_compare(t *testing.T) {
 
 				static, ok = vars[2].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
-				require.Equal("templatestring(\"hostname = $${get_hostname()}\\n\", {\"pass\" = config.internal.pass})", static.Static)
+				require.Equal(`templatestring("hostname = $${get_hostname()}\n", {"pass" = config.internal.pass})`, static.Static)
 			},
 		},
 
