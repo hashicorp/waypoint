@@ -117,6 +117,13 @@ func (s *service) EntrypointConfig(
 		}
 		config.EnvVars = vars
 
+		config.FileChangeSignal, err = s.state.MetadataGetFileChangeSignal(
+			deployment.Application,
+		)
+		if err != nil {
+			return err
+		}
+
 		// Get the config sources we need for our vars. We only do this if
 		// at least one var has a dynamic value.
 		if varContainsDynamic(vars) {

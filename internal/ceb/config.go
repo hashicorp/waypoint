@@ -161,6 +161,9 @@ func (ceb *CEB) watchConfig(
 				ceb.startExecGroup(config.Exec, env.EnvVars)
 			}
 
+			// Respect any value sent down right away.
+			cfg.FileRewriteSignal = config.FileChangeSignal
+
 			// Configure our env vars for the child command. We always send
 			// these even if they're nil since the app config watcher will
 			// de-dup and we want to handle removing env vars.
