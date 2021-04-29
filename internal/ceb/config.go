@@ -2,10 +2,12 @@ package ceb
 
 import (
 	"context"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -191,6 +193,58 @@ func (ceb *CEB) watchConfig(
 			ceb.markChildCmdReady()
 		}
 	}
+}
+
+var sigMap = map[string]os.Signal{
+	"SIGABRT":   unix.SIGABRT,
+	"SIGALRM":   unix.SIGALRM,
+	"SIGBUS":    unix.SIGBUS,
+	"SIGCHLD":   unix.SIGCHLD,
+	"SIGCONT":   unix.SIGCONT,
+	"SIGHUP":    unix.SIGHUP,
+	"SIGINT":    unix.SIGINT,
+	"SIGIO":     unix.SIGIO,
+	"SIGKILL":   unix.SIGKILL,
+	"SIGPIPE":   unix.SIGPIPE,
+	"SIGPROF":   unix.SIGPROF,
+	"SIGQUIT":   unix.SIGQUIT,
+	"SIGSEGV":   unix.SIGSEGV,
+	"SIGSTOP":   unix.SIGSTOP,
+	"SIGSYS":    unix.SIGSYS,
+	"SIGTERM":   unix.SIGTERM,
+	"SIGTRAP":   unix.SIGTRAP,
+	"SIGTSTP":   unix.SIGTSTP,
+	"SIGTTIN":   unix.SIGTTIN,
+	"SIGTTOU":   unix.SIGTTOU,
+	"SIGUSR1":   unix.SIGUSR1,
+	"SIGUSR2":   unix.SIGUSR2,
+	"SIGVTALRM": unix.SIGVTALRM,
+	"SIGWINCH":  unix.SIGWINCH,
+
+	"ABRT":   unix.SIGABRT,
+	"ALRM":   unix.SIGALRM,
+	"BUS":    unix.SIGBUS,
+	"CHLD":   unix.SIGCHLD,
+	"CONT":   unix.SIGCONT,
+	"HUP":    unix.SIGHUP,
+	"INT":    unix.SIGINT,
+	"IO":     unix.SIGIO,
+	"KILL":   unix.SIGKILL,
+	"PIPE":   unix.SIGPIPE,
+	"PROF":   unix.SIGPROF,
+	"QUIT":   unix.SIGQUIT,
+	"SEGV":   unix.SIGSEGV,
+	"STOP":   unix.SIGSTOP,
+	"SYS ":   unix.SIGSYS,
+	"TERM":   unix.SIGTERM,
+	"TRAP":   unix.SIGTRAP,
+	"TSTP":   unix.SIGTSTP,
+	"TTIN":   unix.SIGTTIN,
+	"TTOU":   unix.SIGTTOU,
+	"USR1":   unix.SIGUSR1,
+	"USR2":   unix.SIGUSR2,
+	"VTALRM": unix.SIGVTALRM,
+	"WINCH":  unix.SIGWINCH,
 }
 
 func (ceb *CEB) recvConfig(
