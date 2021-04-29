@@ -235,7 +235,7 @@ var sigMap = map[string]os.Signal{
 	"QUIT":   unix.SIGQUIT,
 	"SEGV":   unix.SIGSEGV,
 	"STOP":   unix.SIGSTOP,
-	"SYS ":   unix.SIGSYS,
+	"SYS":    unix.SIGSYS,
 	"TERM":   unix.SIGTERM,
 	"TRAP":   unix.SIGTRAP,
 	"TSTP":   unix.SIGTSTP,
