@@ -65,10 +65,6 @@ func (c *genericConfig) sortVars(ctx *hcl.EvalContext) ([]*analyzedPair, error) 
 	}
 
 	for _, m := range maps {
-		if m.expr == nil {
-			continue
-		}
-
 		pairs, diags := hcl.ExprMap(m.expr)
 		if diags.HasErrors() {
 			continue

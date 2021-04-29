@@ -25,6 +25,7 @@ func TestSortVars(t *testing.T) {
 			b = "${config.env.a}, sir"
 			c = "goodbye"
 		}`)
+		c.InternalRaw = &hclsyntax.AnonSymbolExpr{}
 
 		var ctx hcl.EvalContext
 
