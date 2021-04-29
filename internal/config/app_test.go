@@ -2,6 +2,7 @@ package config
 
 import (
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -227,15 +228,18 @@ func TestConfigApp_compare(t *testing.T) {
 				vars, err := c.Config.ConfigVars()
 				require.NoError(err)
 
+				sort.Slice(vars, func(i, j int) bool {
+					return vars[i].Name < vars[j].Name
+				})
+
 				// test the static value
 				require.Len(vars, 3)
 				static, ok := vars[0].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
-				require.Equal("hostname = $${get_hostname()}\n", static.Static)
-
+				require.Equal(`templatestring("hostname = $${get_hostname()}\n", {"pass" = config.internal.pass})`, static.Static)
 				static, ok = vars[2].Value.(*pb.ConfigVar_Static)
 				require.True(ok)
-				require.Equal(`templatestring("hostname = $${get_hostname()}\n", {"pass" = config.internal.pass})`, static.Static)
+				require.Equal("hostname = $${get_hostname()}\n", static.Static)
 			},
 		},
 
