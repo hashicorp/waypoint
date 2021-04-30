@@ -29,6 +29,9 @@ type genericConfig struct {
 	// environment.
 	FileRaw hcl.Expression `hcl:"file,optional"`
 
+	// Indicates a signal to send the application when config files change.
+	FileChangeSignal string `hcl:"file_change_signal,optional"`
+
 	ctx       *hcl.EvalContext    // ctx is the context to use when evaluating
 	scopeFunc func(*pb.ConfigVar) // scopeFunc should set the scope for the config var
 }

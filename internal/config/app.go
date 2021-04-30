@@ -134,6 +134,31 @@ func (c *App) ConfigVars() ([]*pb.ConfigVar, error) {
 	return append(vars, appVars...), nil
 }
 
+// ConfigMetadata holds information about the configuration variables or process
+// themselves.
+type ConfigMetadata struct {
+	FileChangeSignal string
+}
+
+// ConfigMetadata returns any configuration metadata about the project and app.
+func (c *App) ConfigMetadata() (*ConfigMetadata, *ConfigMetadata) {
+	var app, proj *ConfigMetadata
+
+	if c.config.Config != nil {
+		proj = &ConfigMetadata{
+			FileChangeSignal: c.config.Config.FileChangeSignal,
+		}
+	}
+
+	if c.Config != nil {
+		app = &ConfigMetadata{
+			FileChangeSignal: c.Config.FileChangeSignal,
+		}
+	}
+
+	return proj, app
+}
+
 // Build loads the Build section of the configuration.
 func (c *App) Build(ctx *hcl.EvalContext) (*Build, error) {
 	ctx = appendContext(c.ctx, ctx)

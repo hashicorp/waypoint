@@ -137,9 +137,8 @@ func TestConfig_fileChange(t *testing.T) {
 		Client: client,
 		Helper: "read-file",
 		HelperEnv: map[string]string{
-			"HELPER_PATH":                path,
-			"READ_PATH":                  fooPath,
-			"WAYPOINT_CEB_CHANGE_SIGNAL": "USR2",
+			"HELPER_PATH": path,
+			"READ_PATH":   fooPath,
 		},
 	})
 
@@ -158,6 +157,15 @@ func TestConfig_fileChange(t *testing.T) {
 		},
 	})
 	require.NoError(err)
+
+	client.SetMetadata(ctx, &pb.MetadataSetRequest{
+		Scope: &pb.MetadataSetRequest_Application{
+			Application: deployment.Application,
+		},
+		Value: &pb.MetadataSetRequest_FileChangeSignal{
+			FileChangeSignal: "USR2",
+		},
+	})
 
 	// Change our config
 	_, err = client.SetConfig(ctx, &pb.ConfigSetRequest{
