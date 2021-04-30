@@ -49,6 +49,9 @@ type BuilderConfig struct {
 
 	// The name/path to the Dockerfile if it is not the root of the project
 	Dockerfile string `hcl:"dockerfile,optional"`
+
+	// Controls the passing of build context
+	Context string `hcl:"context,optional"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -180,9 +183,18 @@ func (b *Builder) Build(
 		dockerfile = newPath
 	}
 
-	contextDir, relDockerfile, err := build.GetContextFromLocalDir(src.Path, dockerfile)
-	if err != nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker context: %s", err)
+	var contextDir string
+
+	if b.config.Context == "" {
+		contextDir, relDockerfile, err = build.GetContextFromLocalDir(src.Path, dockerfile)
+		if err != nil {
+			return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker context: %s", err)
+		}
+	} else {
+		contextDir, relDockerfile, err = build.GetContextFromLocalDir(b.config.Context, dockerfile)
+		if err != nil {
+			return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker context: %s", err)
+		}
 	}
 
 	// We now test if Docker is actually functional. We do this here because we
