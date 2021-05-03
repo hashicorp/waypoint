@@ -5,10 +5,10 @@
     <desc>Created with Sketch.</desc>
     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <g id="Group" transform="translate(0.500000, 0.520000)">
-            <polygon id="Path" fill="#623CE4" points="41.7 24.22 79.29 45.92 79.29 89.33 41.7 67.63"></polygon>
-            <polygon id="Path" fill="#3C2AA8" points="83.41 45.93 83.41 89.33 121 67.63 121 24.22"></polygon>
-            <polygon id="Path" fill="#623CE4" points="1.42108547e-14 -2.13162821e-14 1.42108547e-14 43.4 37.59 65.1 37.59 21.7"></polygon>
-            <polygon id="Path" fill="#623CE4" points="41.71 115.79 79.29 137.49 79.29 94.37 79.29 94.09 41.71 72.38"></polygon>
+            <polygon id="Path" fill="var(--terraform, #844fba)" points="41.7 24.22 79.29 45.92 79.29 89.33 41.7 67.63"></polygon>
+            <polygon id="Path" fill="var(--terraform, #844fba)" points="83.41 45.93 83.41 89.33 121 67.63 121 24.22"></polygon>
+            <polygon id="Path" fill="var(--terraform, #844fba)" points="1.42108547e-14 -2.13162821e-14 1.42108547e-14 43.4 37.59 65.1 37.59 21.7"></polygon>
+            <polygon id="Path" fill="var(--terraform, #844fba)" points="41.71 115.79 79.29 137.49 79.29 94.37 79.29 94.09 41.71 72.38"></polygon>
         </g>
     </g>
 </svg>

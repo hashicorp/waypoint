@@ -11,13 +11,13 @@
     & .alert {
       color: #416f8c;
       padding: 1em;
-      background-color: var(--brand-l3);
-      border: 1px solid var(--brand-l2);
+      background-color: var(--brand-secondary);
+      border: 1px solid var(--brand-secondary);
       border-radius: 3px;
     }
 
     & a {
-      color: var(--link-color);
+      color: var(--waypoint-link);
     }
   }
 }

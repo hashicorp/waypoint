@@ -110,5 +110,5 @@ export default function FramedTerminal({ frame, lines }) {
     })
     .filter((el) => el != null)
 
-  return <Terminal lines={terminalLines} noScroll theme="waypoint" />
+  return <Terminal lines={terminalLines} noScroll product="waypoint" />
 }

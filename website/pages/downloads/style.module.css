@@ -1,3 +1,11 @@
 .logo {
   width: 140px;
 }
+
+/** DEBT: remove when product page is upgraded */
+.downloads {
+  --brand-d1: var(--waypoint);
+  & a {
+    color: var(--brand-link) !important;
+  }
+}
