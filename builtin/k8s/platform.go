@@ -633,6 +633,12 @@ type Pod struct {
 	Container       *Container          `hcl:"container,block"`
 }
 
+// Container describes the commands and arguments for a container config
+type Container struct {
+	Command *[]string `hcl:"command"`
+	Args    *[]string `hcl:"args"`
+}
+
 // PodSecurityContext describes the security config for the Pod
 type PodSecurityContext struct {
 	RunAsUser    *int64 `hcl:"run_as_user"`
@@ -672,6 +678,47 @@ deploy "kubernetes" {
 	probe_path = "/_healthz"
 }
 `)
+
+	doc.SetField(
+		"pod",
+		"the configuration for a pod",
+		docs.Summary("Pod describes the configuration for a pod when deploying"),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"container",
+				"container describes the commands and arguments for a container config",
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"command",
+						"An array of strings to run for the container",
+					)
+
+					doc.SetField(
+						"args",
+						"An array of string arguments to pass through to the container",
+					)
+				}),
+			)
+			doc.SetField(
+				"pod_security_context",
+				"",
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"run_as_user",
+						"The UID to run the entrypoint of the container process",
+					)
+					doc.SetField(
+						"run_as_non_root",
+						"Indicates that the container must run as a non-root user",
+					)
+					doc.SetField(
+						"fs_group",
+						"A special supplemental group that applies to all containers in a pod",
+					)
+				}),
+			)
+		}),
+	)
 
 	doc.SetField(
 		"kubeconfig",
