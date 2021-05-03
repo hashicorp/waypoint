@@ -266,16 +266,19 @@ var sigMap = map[string]os.Signal{
 func (ceb *CEB) writeFiles(log hclog.Logger, cfg *config, env *appconfig.UpdatedConfig) {
 	log.Debug("writing application files to disk", "count", len(env.Files))
 
+	var sendSignal bool
+
 	for _, fc := range env.Files {
 		err := ioutil.WriteFile(fc.Path, fc.Data, 0644)
 		if err != nil {
 			log.Error("error writing application file", "error", err, "path", fc.Path)
 		} else {
 			log.Info("wrote application file to disk", "path", fc.Path)
+			sendSignal = true
 		}
 	}
 
-	if cfg.FileRewriteSignal != "" {
+	if sendSignal && cfg.FileRewriteSignal != "" {
 		if sig, ok := sigMap[strings.ToUpper(cfg.FileRewriteSignal)]; ok {
 			ceb.childSigCh <- sig
 		} else {
