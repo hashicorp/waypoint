@@ -1,0 +1,3 @@
+```release-note:feature
+platform/ecs: Add ability to request an internal ALB for ECS
+```
