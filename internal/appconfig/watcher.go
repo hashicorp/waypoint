@@ -69,7 +69,7 @@ type Watcher struct {
 	// currentCond is used to lock and notify updates for currentEnv.
 	currentCond *sync.Cond
 
-	// currentFiles is the current environment variables and application config files for
+	// currentConfig is the current environment variables and application config files for
 	// the configuration.
 	currentConfig *UpdatedConfig
 
@@ -267,7 +267,7 @@ func (w *Watcher) watcher(
 	var prevEnv []string
 
 	// prevFiles keeps track of the last set of files we computed. We do
-	// this to compare and prevent unnecessarilly restarting the command.
+	// this to compare and prevent unnecessarily restarting the command.
 	var prevFiles []*FileContent
 
 	// static keeps track of the static env vars that we have and dynamic

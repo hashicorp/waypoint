@@ -72,32 +72,6 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 		return nil, err
 	}
 
-	setup := func(pair *analyzedPair, val cty.Value) {
-		if pair.Internal {
-			internal[pair.Name] = val
-
-			// Because of the nature of the hcl map type, we have to rebuild these
-			// each time we modify them.
-			config["internal"] = cty.MapVal(internal)
-			ctx.Variables["config"] = cty.MapVal(config)
-		} else if pair.Path {
-			file[pair.Name] = val
-
-			// Because of the nature of the hcl map type, we have to rebuild these
-			// each time we modify them.
-			config["file"] = cty.MapVal(file)
-			ctx.Variables["config"] = cty.MapVal(config)
-
-		} else {
-			env[pair.Name] = val
-
-			// Because of the nature of the hcl map type, we have to rebuild these
-			// each time we modify them.
-			config["env"] = cty.MapVal(env)
-			ctx.Variables["config"] = cty.MapVal(config)
-		}
-	}
-
 	var result []*pb.ConfigVar
 	for _, pair := range pairs {
 		key := pair.Name
@@ -159,7 +133,27 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 					Static: hclEscaper.Replace(val.AsString()),
 				}
 
-				setup(pair, val)
+				if pair.Internal {
+					internal[pair.Name] = val
+
+					// Because of the nature of the hcl map type, we have to rebuild these
+					// each time we modify them.
+					config["internal"] = cty.MapVal(internal)
+				} else if pair.Path {
+					file[pair.Name] = val
+
+					// Because of the nature of the hcl map type, we have to rebuild these
+					// each time we modify them.
+					config["file"] = cty.MapVal(file)
+				} else {
+					env[pair.Name] = val
+
+					// Because of the nature of the hcl map type, we have to rebuild these
+					// each time we modify them.
+					config["env"] = cty.MapVal(env)
+				}
+
+				ctx.Variables["config"] = cty.MapVal(config)
 			}
 		}
 

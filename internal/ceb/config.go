@@ -110,19 +110,20 @@ func (ceb *CEB) watchConfig(
 	// and support automatically reinitializing if the URL service changes.
 	didInitURL := false
 
-	// env stores the currently known list of environment vars we set on the
+	// appCfg stores the currently known application configuration (which includes
+	// a list of environment vars and config files) we set on the
 	// child. We need to store this since we want to launch all exec sessions
-	// with the latest/current view on env vars too.
-	var env *appconfig.UpdatedConfig
+	// with the latest/current view on appCfg vars too.
+	var appCfg *appconfig.UpdatedConfig
 
 	// Start the app config watcher. This runs in its own goroutine so that
 	// stuff like dynamic config fetching doesn't block starting things like
 	// exec sessions.
-	envCh := make(chan *appconfig.UpdatedConfig)
+	appCfgCh := make(chan *appconfig.UpdatedConfig)
 	w, err := appconfig.NewWatcher(
 		appconfig.WithLogger(log),
 		appconfig.WithPlugins(ceb.configPlugins),
-		appconfig.WithNotify(envCh),
+		appconfig.WithNotify(appCfgCh),
 		appconfig.WithRefreshInterval(appConfigRefreshPeriod),
 	)
 	if err != nil {
@@ -158,7 +159,7 @@ func (ceb *CEB) watchConfig(
 
 			// Start the exec sessions if we have any
 			if len(config.Exec) > 0 {
-				ceb.startExecGroup(config.Exec, env.EnvVars)
+				ceb.startExecGroup(config.Exec, appCfg.EnvVars)
 			}
 
 			// Respect any value sent down right away.
@@ -170,30 +171,30 @@ func (ceb *CEB) watchConfig(
 			w.UpdateSources(ctx, config.ConfigSources)
 			w.UpdateVars(ctx, config.EnvVars)
 
-		case newEnv := <-envCh:
+		case newEnv := <-appCfgCh:
 			// Store the new env vars. We could just do `env = <-envCh` above
 			// but in my experience its super easy in the future for someone
 			// to put a `:=` there and break things. This makes it more explicit.
-			env = newEnv
+			appCfg = newEnv
 
 			log.Trace("received new config")
 
-			if env.UpdatedFiles && len(env.Files) > 0 {
-				ceb.writeFiles(log, cfg, env)
+			if appCfg.UpdatedFiles && len(appCfg.Files) > 0 {
+				ceb.writeFiles(log, cfg, appCfg)
 			}
 
-			if !env.UpdatedEnv {
+			if !appCfg.UpdatedEnv {
 				log.Trace("updated env did not include new env vars, skipping restart")
 				continue
 			}
 
 			// Process it for any keys that we handle differently (such as
 			// WAYPOINT_LOG_LEVEL)
-			ceb.processAppEnv(env.EnvVars)
+			ceb.processAppEnv(appCfg.EnvVars)
 
 			// Set our new env vars
 			newCmd := ceb.copyCmd(ceb.childCmdBase)
-			newCmd.Env = append(newCmd.Env, env.EnvVars...)
+			newCmd.Env = append(newCmd.Env, appCfg.EnvVars...)
 
 			// Restart
 			log.Info("env vars changed, sending new child command")
