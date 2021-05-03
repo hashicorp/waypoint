@@ -44,6 +44,7 @@ func (r *Releaser) Release(
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: r.p.config.Region,
+		Logger: log,
 	})
 	if err != nil {
 		return nil, err
