@@ -710,10 +710,10 @@ func createALB(
 		} else {
 			s.Update("Creating new ALB: %s", lbName)
 
-			scheme := "internet-facing"
+			scheme := elbv2.LoadBalancerSchemeEnumInternetFacing
 
 			if albConfig != nil && albConfig.InternalScheme != nil && *albConfig.InternalScheme {
-				scheme = "internal"
+				scheme = elbv2.LoadBalancerSchemeEnumInternal
 			}
 
 			clb, err := elbsrv.CreateLoadBalancer(&elbv2.CreateLoadBalancerInput{
