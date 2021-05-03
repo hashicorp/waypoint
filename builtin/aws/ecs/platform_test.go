@@ -104,4 +104,31 @@ func TestPlatformConfig(t *testing.T) {
 
 		require.NoError(t, p.ConfigSet(cfg))
 	})
+
+	t.Run("errors if internal and listener are set", func(t *testing.T) {
+		var p Platform
+
+		i := true
+		cfg := &Config{
+			ALB: &ALBConfig{
+				InternalScheme: &i,
+				ListenerARN:    "abc",
+			},
+		}
+
+		require.Error(t, p.ConfigSet(cfg))
+	})
+
+	t.Run("fine with just internal", func(t *testing.T) {
+		var p Platform
+
+		i := true
+		cfg := &Config{
+			ALB: &ALBConfig{
+				InternalScheme: &i,
+			},
+		}
+
+		require.NoError(t, p.ConfigSet(cfg))
+	})
 }
