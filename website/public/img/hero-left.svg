@@ -12,7 +12,7 @@
                 <use xlink:href="#path-1"></use>
             </mask>
             <g id="Rectangle"></g>
-            <g id="Group" opacity="0.7" mask="url(#mask-2)" stroke="#14C6CB" stroke-linecap="round" stroke-width="2.25">
+            <g id="Group" opacity="0.7" mask="url(#mask-2)" stroke="var(--waypoint, #62d4dc)" stroke-linecap="round" stroke-width="2.25">
                 <g transform="translate(-145.000000, -235.000000)" id="Path">
                     <path d="M156.0194,370.679 L369.467,0.951"></path>
                     <path d="M178.5057,409.598 L414.44,0.951"></path>

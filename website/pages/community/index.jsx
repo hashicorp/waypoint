@@ -20,6 +20,7 @@ export default function CommunityPage() {
         />
       </div>
       <VerticalTextBlockList
+        product="waypoint"
         data={[
           {
             header: 'Community Forum',
