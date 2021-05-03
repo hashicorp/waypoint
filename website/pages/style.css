@@ -23,19 +23,6 @@
 @import './print.css';
 
 /*
- * Define a temporary link color as we determine the right
- * color to have an appropriate amount of contrast between the
- * background & the rest of the content.
- *
- * This color is not officially blessed by the design team,
- * and is just a reasonable color picked w/ 3:1 contrast against
- * a white background.
- */
-:root {
-  --link-color: #13acae;
-}
-
-/*
  * About this selector:
  * `.g-subnav ~ *` finds all elements after the navigation.
  * `:target` finds the active permalink on the page.

@@ -20,7 +20,7 @@
     }
 
     & li {
-      border: 1px solid #dcdde0;
+      border: 1px solid var(--gray-5, #dbdbdc);
       padding: 30px;
       margin: var(--gutter);
       flex-basis: calc(33.33% - var(--gutter));
