@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 	"github.com/hashicorp/waypoint/builtin/docker"
-	"github.com/hashicorp/waypoint/internal/pkg/validationext"
 )
 
 type Platform struct {
@@ -47,7 +46,7 @@ func (p *Platform) ConfigSet(config interface{}) error {
 
 	if c.ALB != nil {
 		alb := c.ALB
-		err := validationext.Error(validation.ValidateStruct(alb,
+		err := utils.Error(validation.ValidateStruct(alb,
 			validation.Field(&alb.CertificateId,
 				validation.Empty.When(alb.ListenerARN != "").Error("certificate can not be used with listener"),
 			),
