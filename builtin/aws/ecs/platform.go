@@ -49,7 +49,7 @@ func (p *Platform) ConfigSet(config interface{}) error {
 		alb := c.ALB
 		err := validationext.Error(validation.ValidateStruct(alb,
 			validation.Field(&alb.CertificateId,
-				validation.Empty.When(alb.ListenerARN != "").Error("certificate can not be used with listener"),
+				validation.Empty.When(alb.ListenerARN != "").Error("certificate can not be used with listener_arn"),
 			),
 			validation.Field(&alb.ZoneId,
 				validation.Empty.When(alb.ListenerARN != ""),
@@ -58,6 +58,9 @@ func (p *Platform) ConfigSet(config interface{}) error {
 			validation.Field(&alb.FQDN,
 				validation.Empty.When(alb.ListenerARN != ""),
 				validation.Required.When(alb.ZoneId != "").Error("fqdn only valid with zone_id"),
+			),
+			validation.Field(&alb.InternalScheme,
+				validation.Nil.When(alb.ListenerARN != "").Error("internal can not be used with listener_arn"),
 			),
 			validation.Field(&alb.ListenerARN,
 				validation.Empty.When(alb.CertificateId != "" || alb.ZoneId != "" || alb.FQDN != "").Error("listener_arn can not be used with other options"),
@@ -708,10 +711,17 @@ func createALB(
 		} else {
 			s.Update("Creating new ALB: %s", lbName)
 
+			scheme := "internet-facing"
+
+			if albConfig != nil && albConfig.InternalScheme != nil && *albConfig.InternalScheme {
+				scheme = "internal"
+			}
+
 			clb, err := elbsrv.CreateLoadBalancer(&elbv2.CreateLoadBalancerInput{
 				Name:           aws.String(lbName),
 				Subnets:        subnets,
 				SecurityGroups: []*string{sgWebId},
+				Scheme:         &scheme,
 			})
 			if err != nil {
 				return nil, nil, err
@@ -1399,6 +1409,10 @@ type ALBConfig struct {
 	// When set, waypoint will configure the target group into the specified
 	// ALB Listener ARN. This allows for usage of existing ALBs.
 	ListenerARN string `hcl:"listener_arn,optional"`
+
+	// Indicates, when creating an ALB, that it should be internal rather than
+	// internet facing.
+	InternalScheme *bool `hcl:"internal,optional"`
 }
 
 type HealthCheckConfig struct {
@@ -1623,37 +1637,52 @@ deploy {
 	)
 
 	doc.SetField(
-		"alb.certificate",
-		"the ARN of an AWS Certificate Manager cert to associate with the ALB",
-	)
+		"alb",
+		"Provides additional configuration for using an ALB with ECS",
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"certificate",
+				"the ARN of an AWS Certificate Manager cert to associate with the ALB",
+			)
 
-	doc.SetField(
-		"alb.zone_id",
-		"Route53 ZoneID to create a DNS record into",
-		docs.Summary(
-			"set along with alb.domain_name to have DNS automatically setup for the ALB",
-		),
-	)
+			doc.SetField(
+				"zone_id",
+				"Route53 ZoneID to create a DNS record into",
+				docs.Summary(
+					"set along with alb.domain_name to have DNS automatically setup for the ALB",
+				),
+			)
 
-	doc.SetField(
-		"alb.domain_name",
-		"Fully qualified domain name to set for the ALB",
-		docs.Summary(
-			"set along with zone_id to have DNS automatically setup for the ALB.",
-			"this value should include the full hostname and domain name, for instance",
-			"app.example.com",
-		),
-	)
+			doc.SetField(
+				"domain_name",
+				"Fully qualified domain name to set for the ALB",
+				docs.Summary(
+					"set along with zone_id to have DNS automatically setup for the ALB.",
+					"this value should include the full hostname and domain name, for instance",
+					"app.example.com",
+				),
+			)
 
-	doc.SetField(
-		"alb.listener_arn",
-		"the ARN on an existing ALB to configure",
-		docs.Summary(
-			"when this is set, no ALB or Listener is created. Instead the application is",
-			"configured by manipulating this existing Listener. This allows users to",
-			"configure their ALB outside waypoint but still have waypoint hook the application",
-			"to that ALB",
-		),
+			doc.SetField(
+				"internal",
+				"Whether or not the created ALB should be internal",
+				docs.Summary(
+					"used when listener_arn is not set. If set, the created ALB will have a scheme",
+					"of `internal`, otherwise by default it has a scheme of `internet-facing`.",
+				),
+			)
+
+			doc.SetField(
+				"listener_arn",
+				"the ARN on an existing ALB to configure",
+				docs.Summary(
+					"when this is set, no ALB or Listener is created. Instead the application is",
+					"configured by manipulating this existing Listener. This allows users to",
+					"configure their ALB outside waypoint but still have waypoint hook the application",
+					"to that ALB",
+				),
+			)
+		}),
 	)
 
 	doc.SetField(
