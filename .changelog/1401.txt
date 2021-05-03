@@ -1,0 +1,3 @@
+```release-note:bug
+platform/ecs: Fix bug where certificate and other fields had to be set to empty string to use listener.
+```
