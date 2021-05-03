@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/route53"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
@@ -32,6 +33,42 @@ type Platform struct {
 // Config implements Configurable
 func (p *Platform) Config() (interface{}, error) {
 	return &p.config, nil
+}
+
+// ConfigSet is called after a configuration has been decoded
+// we can use this to validate the config
+func (p *Platform) ConfigSet(config interface{}) error {
+	c, ok := config.(*Config)
+	if !ok {
+		// this should never happen
+		return fmt.Errorf("Invalid configuration, expected *cloudrun.Config, got %T", config)
+	}
+
+	if c.ALB != nil {
+		alb := c.ALB
+		err := utils.Error(validation.ValidateStruct(alb,
+			validation.Field(&alb.CertificateId,
+				validation.Empty.When(alb.ListenerARN != "").Error("certificate can not be used with listener"),
+			),
+			validation.Field(&alb.ZoneId,
+				validation.Empty.When(alb.ListenerARN != ""),
+				validation.Required.When(alb.FQDN != ""),
+			),
+			validation.Field(&alb.FQDN,
+				validation.Empty.When(alb.ListenerARN != ""),
+				validation.Required.When(alb.ZoneId != "").Error("fqdn only valid with zone_id"),
+			),
+			validation.Field(&alb.ListenerARN,
+				validation.Empty.When(alb.CertificateId != "" || alb.ZoneId != "" || alb.FQDN != "").Error("listener_arn can not be used with other options"),
+			),
+		))
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // DeployFunc implements component.Platform
@@ -1350,13 +1387,13 @@ func (p *Platform) Destroy(
 
 type ALBConfig struct {
 	// Certificate ARN to attach to the load balancer
-	CertificateId string `hcl:"certificate"`
+	CertificateId string `hcl:"certificate,optional"`
 
 	// Route53 Zone to setup record in
-	ZoneId string `hcl:"zone_id"`
+	ZoneId string `hcl:"zone_id,optional"`
 
 	// Fully qualified domain name of the record to create in the target zone id
-	FQDN string `hcl:"domain_name"`
+	FQDN string `hcl:"domain_name,optional"`
 
 	// When set, waypoint will configure the target group into the specified
 	// ALB Listener ARN. This allows for usage of existing ALBs.
