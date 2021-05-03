@@ -19,7 +19,6 @@ import (
 	"github.com/r3labs/diff"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
-	"github.com/zclconf/go-cty/cty/function"
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -244,26 +243,6 @@ func (w *Watcher) notify(
 			return
 		}
 	}
-}
-
-var cebFunctions map[string]function.Function
-
-func init() {
-	// Start with our HCL stdlib
-	cebFunctions = funcs.Stdlib()
-
-	// add functions to our context
-	addFuncs := func(fs map[string]function.Function) {
-		for k, v := range fs {
-			cebFunctions[k] = v
-		}
-	}
-
-	// Add some of our functions
-	addFuncs(funcs.Filesystem())
-	addFuncs(funcs.Encoding())
-	addFuncs(funcs.Datetime())
-	addFuncs(funcs.Jsonnet())
 }
 
 // watcher is the main watch loop that waits for changes in configuration
@@ -747,7 +726,8 @@ func buildAppConfig(
 	}
 
 	var ectx hcl.EvalContext
-	ectx.Functions = cebFunctions
+
+	funcs.AddEntrypointFunctions(&ectx)
 
 	// If we have no dynamic values, then we just return the static ones.
 	if len(dynamic) == 0 {
