@@ -381,8 +381,8 @@ func (w *Watcher) watcher(
 
 		// Case: caller sends us a new set of variables
 		case newVars := <-w.inVarCh:
-			// If the variables are the same as the last set, then we do nothing.
-			if prevEnvSent && w.sameAppConfig(log, prevVars, newVars) {
+			// If the variables and files are the same as the last set, then we do nothing.
+			if prevEnvSent && prevFilesSent && w.sameAppConfig(log, prevVars, newVars) {
 				log.Trace("got var update but ignoring since they're the same")
 				continue
 			}
@@ -439,6 +439,9 @@ func (w *Watcher) watcher(
 
 			sort.Strings(newEnv)
 
+			// We sort the fields by path so that when we compare the current
+			// files with the previous files using reflect.DeepEqual the order
+			// won't cause the equality check to fail.
 			sort.Slice(newFiles, func(i, j int) bool {
 				return newFiles[i].Path < newFiles[j].Path
 			})
@@ -454,13 +457,15 @@ func (w *Watcher) watcher(
 
 			var uc UpdatedConfig
 
-			// Compare our new env and old env. prevEnv is already sorted.
+			// If we didn't send the env previously OR the new env is different
+			// than the old env, then we send these env vars.
 			if !prevEnvSent || !reflect.DeepEqual(prevEnv, newEnv) {
 				uc.EnvVars = newEnv
 				uc.UpdatedEnv = true
 			}
 
-			// Compare our new env and old files. prevFiles is already sorted.
+			// If we didn't send the files previously OR the new files are different
+			// than the old files, then we send these files.
 			if !prevFilesSent || !reflect.DeepEqual(prevFiles, newFiles) {
 				uc.Files = newFiles
 				uc.UpdatedFiles = true
