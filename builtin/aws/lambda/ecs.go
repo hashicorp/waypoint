@@ -197,6 +197,7 @@ func (e *ecsLauncher) Launch(
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: e.Region,
+		Logger: L,
 	})
 	if err != nil {
 		return nil, err
