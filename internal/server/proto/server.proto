@@ -102,9 +102,6 @@ service Waypoint {
   // each variable.
   rpc GetConfig(ConfigGetRequest) returns (ConfigGetResponse);
 
-  // Set a metadata configuration item on a project or application.
-  rpc SetMetadata(MetadataSetRequest) returns (google.protobuf.Empty);
-
   // Set the configuration for a dynamic configuration source. If you're looking
   // to set application configuration, you probably want SetConfig instead.
   rpc SetConfigSource(SetConfigSourceRequest) returns (google.protobuf.Empty);
@@ -1597,6 +1594,9 @@ message UpsertApplicationRequest {
 
   // name of the application to register
   string name = 2;
+
+  // a signal to send the application when config files change
+  string file_change_signal = 3;
 }
 
 message UpsertApplicationResponse {
@@ -2463,6 +2463,9 @@ message EntrypointConfig {
   // are actually in use.
   repeated ConfigSource config_sources = 5;
 
+  // The signal to send the application when config files change.
+  string file_change_signal = 6;
+
   // The URL service configuration. This might be nil. If this is nil,
   // then the URL service is disabled.
   URLService url_service = 3;
@@ -2470,9 +2473,6 @@ message EntrypointConfig {
   // Deployment is the deployment information for this instance. This may
   // be nil if the user is running an old enough server so always nil-check this.
   DeploymentInfo deployment = 4;
-
-  // The signal to send the application when config files change.
-  string file_change_signal = 6;
 
   message Exec {
     int64 index = 1;

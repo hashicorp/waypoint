@@ -53,14 +53,3 @@ func (s *service) GetConfigSource(
 
 	return &pb.GetConfigSourceResponse{ConfigSources: vars}, nil
 }
-
-func (s *service) SetMetadata(
-	ctx context.Context,
-	req *pb.MetadataSetRequest,
-) (*empty.Empty, error) {
-	if err := s.state.MetadataSet(req); err != nil {
-		return nil, err
-	}
-
-	return &empty.Empty{}, nil
-}

@@ -43,13 +43,17 @@ func (a *App) ConfigSync(ctx context.Context) error {
 	projMD, appMD := a.config.ConfigMetadata()
 
 	if projMD != nil {
-		_, err = a.client.SetMetadata(ctx, &pb.MetadataSetRequest{
-			Scope: &pb.MetadataSetRequest_Project{
-				Project: a.project.Ref(),
-			},
-			Value: &pb.MetadataSetRequest_FileChangeSignal{
-				FileChangeSignal: projMD.FileChangeSignal,
-			},
+		resp, err := a.client.GetProject(ctx, &pb.GetProjectRequest{
+			Project: a.project.Ref(),
+		})
+		if err != nil {
+			return err
+		}
+
+		resp.Project.FileChangeSignal = projMD.FileChangeSignal
+
+		_, err = a.client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+			Project: resp.Project,
 		})
 		if err != nil {
 			return err
@@ -57,13 +61,10 @@ func (a *App) ConfigSync(ctx context.Context) error {
 	}
 
 	if appMD != nil {
-		_, err = a.client.SetMetadata(ctx, &pb.MetadataSetRequest{
-			Scope: &pb.MetadataSetRequest_Application{
-				Application: a.Ref(),
-			},
-			Value: &pb.MetadataSetRequest_FileChangeSignal{
-				FileChangeSignal: appMD.FileChangeSignal,
-			},
+		_, err := a.client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
+			Project:          a.project.Ref(),
+			Name:             a.Ref().Application,
+			FileChangeSignal: appMD.FileChangeSignal,
 		})
 		if err != nil {
 			return err

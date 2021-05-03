@@ -117,7 +117,7 @@ func (s *service) EntrypointConfig(
 		}
 		config.EnvVars = vars
 
-		config.FileChangeSignal, err = s.state.MetadataGetFileChangeSignal(
+		config.FileChangeSignal, err = s.state.GetFileChangeSignal(
 			deployment.Application,
 		)
 		if err != nil {

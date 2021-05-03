@@ -158,13 +158,10 @@ func TestConfig_fileChange(t *testing.T) {
 	})
 	require.NoError(err)
 
-	client.SetMetadata(ctx, &pb.MetadataSetRequest{
-		Scope: &pb.MetadataSetRequest_Application{
-			Application: deployment.Application,
-		},
-		Value: &pb.MetadataSetRequest_FileChangeSignal{
-			FileChangeSignal: "USR2",
-		},
+	client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
+		Project:          &pb.Ref_Project{Project: deployment.Application.Project},
+		Name:             deployment.Application.Application,
+		FileChangeSignal: "USR2",
 	})
 
 	// Change our config

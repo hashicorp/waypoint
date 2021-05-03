@@ -947,29 +947,6 @@ func (_m *WaypointServer) SetConfigSource(_a0 context.Context, _a1 *gen.SetConfi
 	return r0, r1
 }
 
-// SetMetadata provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) SetMetadata(_a0 context.Context, _a1 *gen.MetadataSetRequest) (*emptypb.Empty, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *emptypb.Empty
-	if rf, ok := ret.Get(0).(func(context.Context, *gen.MetadataSetRequest) *emptypb.Empty); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*emptypb.Empty)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *gen.MetadataSetRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // SetServerConfig provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) SetServerConfig(_a0 context.Context, _a1 *gen.SetServerConfigRequest) (*emptypb.Empty, error) {
 	ret := _m.Called(_a0, _a1)
