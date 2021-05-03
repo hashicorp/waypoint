@@ -285,7 +285,7 @@ message Application {
 
   string name = 1;
 
-  // Indicates signal to be sent to the applications when it's config files
+  // Indicates signal to be sent to the applications when its config files
   // change.
   string file_change_signal = 3;
 }

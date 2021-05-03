@@ -324,7 +324,7 @@ func (w *Watcher) watcher(
 	refreshNowCh := make(chan time.Time)
 	close(refreshNowCh)
 
-	// prevFilesSent is flipped to true once we update our first set of compiled
+	// prevEnvSent is flipped to true once we update our first set of compiled
 	// env vars to the currentEnv. We have to keep track of this because there is
 	// an expectation that we will always set an initial set of configs.
 	prevEnvSent := false

@@ -37,7 +37,7 @@ func (s *State) MetadataSet(req *pb.MetadataSetRequest) error {
 	return nil
 }
 
-// MetadataGetFileChangeSignal checks the metadata for the given application and it's
+// MetadataGetFileChangeSignal checks the metadata for the given application and its
 // project, returning the value of FileChangeSignal that is most relevent.
 func (s *State) MetadataGetFileChangeSignal(scope *pb.Ref_Application) (string, error) {
 	app, err := s.AppGet(scope)
