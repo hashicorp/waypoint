@@ -7,7 +7,7 @@ import styles from './style.module.css'
 
 export default function DownloadsPage({ releases }) {
   return (
-    <>
+    <span className={styles.downloads}>
       <HashiHead is={Head} title={`Downloads | ${productName} by HashiCorp`} />
 
       <ProductDownloader
@@ -44,13 +44,13 @@ export default function DownloadsPage({ releases }) {
             src={require('./img/waypoint-logo.svg')}
           />
         }
-        brand="waypoint"
+        product="waypoint"
         tutorialLink={{
           href: 'https://learn.hashicorp.com/waypoint',
           label: 'View Tutorials at HashiCorp Learn',
         }}
       />
-    </>
+    </span>
   )
 }
 

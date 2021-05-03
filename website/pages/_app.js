@@ -34,7 +34,7 @@ export default function App({ Component, pageProps }) {
         siteName={title}
         description={description}
         image="https://www.waypointproject.io/img/og-image.png"
-        icon={[{ href: '/favicon.ico' }]}
+        icon={[{ href: '/_favicon.ico' }]}
       >
         <meta name="og:title" property="og:title" content={title} />
         <meta name="og:description" property="og:title" content={description} />
