@@ -31,7 +31,7 @@ func (c *ContextCreateCommand) Run(args []string) int {
 
 	// Require one argument
 	if len(args) != 1 {
-		c.ui.Output(c.Flags().Help(), terminal.WithErrorStyle())
+		c.ui.Output(c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
