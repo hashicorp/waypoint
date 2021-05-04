@@ -1,0 +1,3 @@
+```release-note:feature
+platform/aws: Set the AWS log level along with the waypoint log level
+```

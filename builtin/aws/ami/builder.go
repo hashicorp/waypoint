@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -81,11 +82,13 @@ func (b *Builder) Config() (interface{}, error) {
 // Build
 func (b *Builder) Build(
 	ctx context.Context,
+	log hclog.Logger,
 	ui terminal.UI,
 	src *component.Source,
 ) (*Image, error) {
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: b.config.Region,
+		Logger: log,
 	})
 	if err != nil {
 		return nil, err
