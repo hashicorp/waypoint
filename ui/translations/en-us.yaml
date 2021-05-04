@@ -95,8 +95,18 @@ state:
     pending: 'Release pending'
 
 status_badge:
-  partial: 'Partial'
-  down: 'Down'
-  ready: 'Up'
-  alive: 'Starting...'
-  unknown: 'Unknown'
+  partial:
+    text: 'Partial'
+    tooltip: 'Application is partially running'
+  down:
+    text: 'Down'
+    tooltip: 'Application is down'
+  ready:
+    text: 'Up'
+    tooltip: 'Application is running'
+  alive:
+    text: 'Starting...'
+    tooltip: 'Application is starting'
+  unknown:
+    text: 'Unknown'
+    tooltip: 'Unknown Application state'
