@@ -450,7 +450,7 @@ type PlatformConfig struct {
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
-	// Additional ports to allow into the container
+	// Additional ports the application is listening on to expose on the container
 	ExtraPorts []uint `hcl:"extra_ports,optional"`
 
 	// Port that your service is running on within the actual container.
@@ -563,9 +563,10 @@ deploy {
 
 	doc.SetField(
 		"extra_ports",
-		"additional TCP ports to allow into the container",
+		"additional TCP ports the application is listening on to expose on the container",
 		docs.Summary(
-			"these additional ports are usually used to allow secondary services, such as debug ports",
+			"Used to define and expose multiple ports that the application is listening on for the container in use.",
+			"These ports will get merged with service_port when creating the container if defined.",
 		),
 	)
 
