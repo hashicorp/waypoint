@@ -2273,19 +2273,6 @@ message ConfigGetResponse {
   repeated ConfigVar variables = 1;
 }
 
-message MetadataSetRequest {
-  // scope is the scoping for this config variable.
-  oneof scope {
-    Ref.Application application = 1;
-    Ref.Project project = 2;
-  }
-
-  // The metadata value that is being set.
-  oneof value {
-    string file_change_signal = 3;
-  }
-}
-
 /********************************************************************
 * Config Sources
 ********************************************************************/
