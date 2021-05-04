@@ -121,6 +121,11 @@ build {
 		),
 	)
 
+	doc.SetField(
+		"context",
+		"Build context path",
+	)
+
 	return doc, nil
 }
 
