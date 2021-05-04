@@ -28,6 +28,7 @@ func (p *Platform) Logs(
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: p.config.Region,
+		Logger: log,
 	})
 	if err != nil {
 		return err

@@ -268,6 +268,7 @@ func (p *Platform) Deploy(
 		Init: func(s LifecycleStatus) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
 				Region: p.config.Region,
+				Logger: log,
 			})
 			if err != nil {
 				return err
@@ -1369,6 +1370,7 @@ func (p *Platform) Destroy(
 ) error {
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: p.config.Region,
+		Logger: log,
 	})
 	if err != nil {
 		return err

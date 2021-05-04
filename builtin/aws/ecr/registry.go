@@ -67,6 +67,7 @@ func (r *Registry) Push(
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: r.config.Region,
+		Logger: log,
 	})
 	if err != nil {
 		return nil, err
