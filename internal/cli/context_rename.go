@@ -26,7 +26,7 @@ func (c *ContextRenameCommand) Run(args []string) int {
 	args = flagSet.Args()
 
 	if len(args) != 2 {
-		c.ui.Output(c.Flags().Help(), terminal.WithErrorStyle())
+		c.ui.Output(c.Help(), terminal.WithErrorStyle())
 		return 1
 	}
 
