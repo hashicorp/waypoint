@@ -121,6 +121,12 @@ build {
 		),
 	)
 
+	doc.SetField(
+		"buildargs",
+		"An array of strings of build-time variables passed as build-arg to docker"+
+			"or img for the build step.",
+	)
+
 	return doc, nil
 }
 
