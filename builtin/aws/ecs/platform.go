@@ -71,6 +71,24 @@ func (p *Platform) ConfigSet(config interface{}) error {
 		}
 	}
 
+	err := utils.Error(validation.ValidateStruct(c,
+		validation.Field(&c.Memory, validation.Required, validation.Min(4)),
+		validation.Field(&c.MemoryReservation, validation.Min(4), validation.Max(c.Memory)),
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, cc := range c.ContainersConfig {
+		err := utils.Error(validation.ValidateStruct(cc,
+			validation.Field(&cc.Memory, validation.Required, validation.Min(4)),
+			validation.Field(&cc.MemoryReservation, validation.Min(4), validation.Max(cc.Memory)),
+		))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -987,8 +1005,10 @@ func (p *Platform) Launch(
 				ContainerPort: aws.Int64(p.config.ServicePort),
 			},
 		},
-		Environment: env,
-		Secrets:     secrets,
+		Environment:       env,
+		Memory:            aws.Int64(int64(p.config.Memory)),
+		MemoryReservation: aws.Int64(int64(p.config.MemoryReservation)),
+		Secrets:           secrets,
 		LogConfiguration: &ecs.LogConfiguration{
 			LogDriver: aws.String("awslogs"),
 			Options:   logOptions,
@@ -1019,8 +1039,8 @@ func (p *Platform) Launch(
 			Image:     aws.String(container.Image),
 			PortMappings: []*ecs.PortMapping{
 				{
-					ContainerPort: aws.Int64(container.ContainerPort),
-					HostPort:      aws.Int64(container.HostPort),
+					ContainerPort: aws.Int64(int64(container.ContainerPort)),
+					HostPort:      aws.Int64(int64(container.HostPort)),
 					Protocol:      aws.String(container.Protocol),
 				},
 			},
@@ -1031,8 +1051,10 @@ func (p *Platform) Launch(
 				Retries:     aws.Int64(container.HealthCheck.Retries),
 				StartPeriod: aws.Int64(container.HealthCheck.StartPeriod),
 			},
-			Secrets:     secrets,
-			Environment: env,
+			Secrets:           secrets,
+			Environment:       env,
+			Memory:            aws.Int64(int64(container.Memory)),
+			MemoryReservation: aws.Int64(int64(container.MemoryReservation)),
 		}
 
 		additionalContainers = append(additionalContainers, c)
@@ -1455,16 +1477,16 @@ type ContainerConfig struct {
 	Image string `hcl:"image"`
 
 	// The amount (in MiB) of memory to present to the container
-	Memory string `hcl:"memory,optional"`
+	Memory int `hcl:"memory,optional"`
 
 	// The soft limit (in MiB) of memory to reserve for the container
-	MemoryReservation string `hcl:"memory_reservation,optional"`
+	MemoryReservation int `hcl:"memory_reservation,optional"`
 
 	// The port number on the container
-	ContainerPort int64 `hcl:"container_port,optional"`
+	ContainerPort int `hcl:"container_port,optional"`
 
 	// The port number on the container instance to reserve for your container
-	HostPort int64 `hcl:"host_port,optional"`
+	HostPort int `hcl:"host_port,optional"`
 
 	// The protocol used for the port mapping
 	Protocol string `hcl:"protocol,optional"`
@@ -1503,6 +1525,9 @@ type Config struct {
 
 	// How much memory to assign to the containers
 	Memory int `hcl:"memory"`
+
+	// The soft limit (in MiB) of memory to reserve for the container
+	MemoryReservation int `hcl:"memory_reservation,optional"`
 
 	// How much CPU to assign to the containers
 	CPU int `hcl:"cpu,optional"`
