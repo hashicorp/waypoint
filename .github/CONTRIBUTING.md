@@ -129,7 +129,7 @@ e.g. `builtin/k8s` or `internal/core`
    * If applicable, include information on how to test manually
 1. Assign the `backport/[version].x` label for PRs that should be included 
 in an upcoming .x release (e.g. `backport/0.3.x`)
-1. Assign the `backport/stable` label for PRs that should be published 
+1. Assign the `backport/website` label for PRs that should be published 
 immediately to the website
 1. Request review from either `waypoint-core` or `waypoint-frontend` based on 
 your changes
