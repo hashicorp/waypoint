@@ -51,7 +51,7 @@ type BuilderConfig struct {
 	Dockerfile string `hcl:"dockerfile,optional"`
 
 	// Controls the passing of build time variables
-	BuildArgs []string `hcl:"build_args,optional"`
+	BuildArgs map[string]*string `hcl:"build_args,optional"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -163,15 +163,6 @@ func (b *Builder) Build(
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	buildArgs := make(map[string]*string)
-
-	if b.config.BuildArgs != nil {
-		for _, arg := range b.config.BuildArgs {
-			pair := strings.Split(arg, "=")
-			buildArgs[pair[0]] = &pair[1]
-		}
-	}
-
 	dockerfile := b.config.Dockerfile
 	if dockerfile == "" {
 		dockerfile = "Dockerfile"
@@ -217,10 +208,9 @@ func (b *Builder) Build(
 		// fail but that error message should help the user.
 		step.Update("Docker isn't available. Falling back to daemonless image build...")
 		step.Done()
-		buildArgsString := strings.Join(b.config.BuildArgs, "--build-arg ")
 		step = nil
 		if err := b.buildWithImg(
-			ctx, ui, sg, relDockerfile, contextDir, result.Name(), buildArgsString,
+			ctx, ui, sg, relDockerfile, contextDir, result.Name(), createBuildArgsString(b.config.BuildArgs),
 		); err != nil {
 			return nil, err
 		}
@@ -236,7 +226,7 @@ func (b *Builder) Build(
 		step.Done()
 		step = nil
 		if err := b.buildWithDocker(
-			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), buildArgs,
+			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.BuildArgs,
 		); err != nil {
 			return nil, err
 		}
@@ -282,6 +272,18 @@ func (b *Builder) Build(
 	}
 
 	return result, nil
+}
+
+// Translates BuildArgs from a map of key vals into a string of '--build-arg key=vals'
+func createBuildArgsString(m map[string]*string) string {
+	if m == nil {
+		return ""
+	}
+	b := []string{}
+	for key, value := range m {
+		b = append(b, fmt.Sprintf("--build-arg \"%s=%s\"", key, *value))
+	}
+	return strings.Join(b, " ")
 }
 
 func (b *Builder) buildWithDocker(
