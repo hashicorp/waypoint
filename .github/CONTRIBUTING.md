@@ -81,8 +81,8 @@ that must be on your PATH to build Waypoint. This
 
 Next, clone this repository and then run the following commands:
 * `make bin` will build the binary for your local machine's os/architecture
-* (optional) `make install` will move that executable binary to `$GOPATH/bin/waypoint`
-* `make docker/server` will build the server with the tag `waypoint:dev`
+* (optional) `make install` will copy that executable binary to `$GOPATH/bin/waypoint`
+* `make docker/server` will build the docker image of the server with the tag `waypoint:dev`
 
 Once those steps are complete, you can install the waypoint server you just built. To do
 this on docker you would run:
@@ -90,7 +90,7 @@ this on docker you would run:
 waypoint install -platform=docker -accept-tos -docker-server-image=waypoint:dev
 ```
 
->Note: If you don't run `make install` then you should use `path/to/waypoint` 
+>Note: If you didn't run `make install` then you should use `path/to/waypoint` 
 in place of `waypoint`.
 
 ## Making Changes to Waypoint
