@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/ecs: Allow memory_reservation to be set on primary container
+```
