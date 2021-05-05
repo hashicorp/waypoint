@@ -701,7 +701,7 @@ deploy "kubernetes" {
 			)
 			doc.SetField(
 				"pod_security_context",
-				"",
+				"holds pod-level security attributes and container settings",
 				docs.SubFields(func(doc *docs.SubFieldDoc) {
 					doc.SetField(
 						"run_as_user",
