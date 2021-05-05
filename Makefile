@@ -68,6 +68,11 @@ gen/changelog:
 		-note-template .changelog/note.tmpl \
 		-this-release $(THIS_RELEASE)
 
+# generates protos for the plugins inside builtin
+.PHONY: gen/plugins
+gen/plugins:
+	go generate ./builtin/...
+
 .PHONY: gen/server
 gen/server:
 	go generate ./internal/server 
