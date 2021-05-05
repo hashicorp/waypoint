@@ -24,7 +24,11 @@ if (process.env.VERCEL_GIT_COMMIT_REF == 'main') {
 
 module.exports = withHashicorp({
   defaultLayout: true,
-  transpileModules: ['is-absolute-url', '@hashicorp/react-.*'],
+  transpileModules: [
+    'is-absolute-url',
+    '@hashicorp/react-.*',
+    '@hashicorp/versioned-docs',
+  ],
 })({
   redirects() {
     return redirects
