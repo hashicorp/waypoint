@@ -72,17 +72,22 @@ func (s *service) UpsertApplication(
 		return nil, err
 	}
 
+	var app *pb.Application
+
 	// If the project has the application already then we're done.
 	p := serverptypes.Project{Project: praw}
 	if idx := p.App(req.Name); idx >= 0 {
-		return &pb.UpsertApplicationResponse{Application: p.Applications[idx]}, nil
+		app = p.Applications[idx]
+	} else {
+		app = &pb.Application{
+			Project: req.Project,
+			Name:    req.Name,
+		}
 	}
 
-	// Initialize a new app.
-	app, err := s.state.AppPut(&pb.Application{
-		Project: req.Project,
-		Name:    req.Name,
-	})
+	app.FileChangeSignal = req.FileChangeSignal
+
+	app, err = s.state.AppPut(app)
 	if err != nil {
 		return nil, err
 	}

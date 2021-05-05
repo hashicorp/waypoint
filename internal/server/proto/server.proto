@@ -281,6 +281,10 @@ message Application {
   Ref.Project project = 2;
 
   string name = 1;
+
+  // Indicates signal to be sent to the applications when its config files
+  // change.
+  string file_change_signal = 3;
 }
 
 message Project {
@@ -323,6 +327,10 @@ message Project {
   // i.e. waypoint up <project>
   bytes waypoint_hcl = 5;
   Format waypoint_hcl_format = 6;
+
+  // Indicates signal to be sent to any applications when their config files
+  // change.
+  string file_change_signal = 8;
 
   enum Format {
     HCL = 0; // We assume HCL by default
@@ -1586,6 +1594,9 @@ message UpsertApplicationRequest {
 
   // name of the application to register
   string name = 2;
+
+  // a signal to send the application when config files change
+  string file_change_signal = 3;
 }
 
 message UpsertApplicationResponse {
@@ -2223,6 +2234,10 @@ message ConfigVar {
   // It exists only to be referenced by other variables.
   bool internal = 8;
 
+  // Indicates that this is actually be written as a file, with the name
+  // field being the filename.
+  bool name_is_path = 9;
+
   // DynamicVal is the configuration for dynamic values for configuration.
   message DynamicVal {
     // from is the config source plugin to use
@@ -2434,6 +2449,9 @@ message EntrypointConfig {
   // aren't used so consumers should filter these based on what env vars
   // are actually in use.
   repeated ConfigSource config_sources = 5;
+
+  // The signal to send the application when config files change.
+  string file_change_signal = 6;
 
   // The URL service configuration. This might be nil. If this is nil,
   // then the URL service is disabled.

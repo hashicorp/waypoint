@@ -1,0 +1,3 @@
+```release-note:feature
+config: Add ability to write configuration values as files rather than environment variables.
+```

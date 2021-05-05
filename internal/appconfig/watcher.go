@@ -23,6 +23,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	sdkpb "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
+	"github.com/hashicorp/waypoint/internal/config/funcs"
 	"github.com/hashicorp/waypoint/internal/pkg/condctx"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -68,9 +69,9 @@ type Watcher struct {
 	// currentCond is used to lock and notify updates for currentEnv.
 	currentCond *sync.Cond
 
-	// currentEnv is the list of current environment variable values for
+	// currentConfig is the current environment variables and application config files for
 	// the configuration.
-	currentEnv []string
+	currentConfig *UpdatedConfig
 
 	// currentGen is the current "generation" of configuration values. This
 	// is incremented by one each time the current config value (currentEnv)
@@ -155,7 +156,7 @@ func (w *Watcher) Close() error {
 //
 // The ctx parameter can be used for timeouts, cancellation, etc. If the context
 // is closed, this will return the context error.
-func (w *Watcher) Next(ctx context.Context, iter uint64) ([]string, uint64, error) {
+func (w *Watcher) Next(ctx context.Context, iter uint64) (*UpdatedConfig, uint64, error) {
 	var cancelFunc func()
 
 	w.currentCond.L.Lock()
@@ -184,7 +185,7 @@ func (w *Watcher) Next(ctx context.Context, iter uint64) ([]string, uint64, erro
 		return nil, 0, ctx.Err()
 	}
 
-	return w.currentEnv, w.currentGen, nil
+	return w.currentConfig, w.currentGen, nil
 }
 
 // UpdateSources updates the configuration sources for the watcher. The
@@ -218,14 +219,14 @@ func (w *Watcher) UpdateVars(ctx context.Context, v []*pb.ConfigVar) error {
 
 func (w *Watcher) notify(
 	ctx context.Context,
-	ch chan<- []string,
+	ch chan<- *UpdatedConfig,
 ) {
 	// lastGen is the last generation we saw. We always set this to zero
 	// so we get an initial value sent (first value is 1).
 	var lastGen uint64 = 0
 
 	for {
-		newEnv, nextGen, err := w.Next(ctx, lastGen)
+		newConfig, nextGen, err := w.Next(ctx, lastGen)
 		if err != nil {
 			// This case covers context cancellation as well since
 			// Next returns the context error on cancellation.
@@ -234,7 +235,7 @@ func (w *Watcher) notify(
 
 		lastGen = nextGen
 		select {
-		case ch <- newEnv:
+		case ch <- newConfig:
 			// Sent successfully
 
 		case <-ctx.Done():
@@ -264,6 +265,10 @@ func (w *Watcher) watcher(
 	// prevEnv keeps track of the last set of env vars we computed. We do
 	// this to compare and prevent unnecessarilly restarting the command.
 	var prevEnv []string
+
+	// prevFiles keeps track of the last set of files we computed. We do
+	// this to compare and prevent unnecessarily restarting the command.
+	var prevFiles []*FileContent
 
 	// static keeps track of the static env vars that we have and dynamic
 	// keeps track of all the dynamic configurations that we have.
@@ -298,10 +303,15 @@ func (w *Watcher) watcher(
 	refreshNowCh := make(chan time.Time)
 	close(refreshNowCh)
 
-	// prevSent is flipped to true once we update our first set of compiled
+	// prevEnvSent is flipped to true once we update our first set of compiled
 	// env vars to the currentEnv. We have to keep track of this because there is
 	// an expectation that we will always set an initial set of configs.
-	prevSent := false
+	prevEnvSent := false
+
+	// prevFilesSent is flipped to true once we update our first set of compiled
+	// files to the currentEnv. We have to keep track of this because there is
+	// an expectation that we will always set an initial set of configs.
+	prevFilesSent := false
 
 	for {
 		select {
@@ -371,8 +381,8 @@ func (w *Watcher) watcher(
 
 		// Case: caller sends us a new set of variables
 		case newVars := <-w.inVarCh:
-			// If the variables are the same as the last set, then we do nothing.
-			if prevSent && w.sameAppConfig(log, prevVars, newVars) {
+			// If the variables and files are the same as the last set, then we do nothing.
+			if prevEnvSent && prevFilesSent && w.sameAppConfig(log, prevVars, newVars) {
 				log.Trace("got var update but ignoring since they're the same")
 				continue
 			}
@@ -424,10 +434,17 @@ func (w *Watcher) watcher(
 
 			// Get our new env vars
 			log.Trace("refreshing app configuration")
-			newEnv := buildAppConfig(ctx, log,
+			newEnv, newFiles := buildAppConfig(ctx, log,
 				w.plugins, static, dynamic, dynamicSources, prevVarsChanged)
 
 			sort.Strings(newEnv)
+
+			// We sort the fields by path so that when we compare the current
+			// files with the previous files using reflect.DeepEqual the order
+			// won't cause the equality check to fail.
+			sort.Slice(newFiles, func(i, j int) bool {
+				return newFiles[i].Path < newFiles[j].Path
+			})
 
 			// Mark that we aren't seeing any new vars anymore. This speeds up
 			// future buildAppConfig calls since it prevents all the diff logic
@@ -438,8 +455,23 @@ func (w *Watcher) watcher(
 			// we get a lot of variable changes but that is an unlikely case.
 			refreshCh = time.After(w.refreshInterval)
 
-			// Compare our new env and old env. prevEnv is already sorted.
-			if prevSent && reflect.DeepEqual(prevEnv, newEnv) {
+			var uc UpdatedConfig
+
+			// If we didn't send the env previously OR the new env is different
+			// than the old env, then we send these env vars.
+			if !prevEnvSent || !reflect.DeepEqual(prevEnv, newEnv) {
+				uc.EnvVars = newEnv
+				uc.UpdatedEnv = true
+			}
+
+			// If we didn't send the files previously OR the new files are different
+			// than the old files, then we send these files.
+			if !prevFilesSent || !reflect.DeepEqual(prevFiles, newFiles) {
+				uc.Files = newFiles
+				uc.UpdatedFiles = true
+			}
+
+			if !uc.UpdatedEnv && !uc.UpdatedFiles {
 				log.Trace("app configuration unchanged")
 				continue
 			}
@@ -447,16 +479,18 @@ func (w *Watcher) watcher(
 			// New env vars!
 			log.Debug("new configuration computed")
 			prevEnv = newEnv
+			prevFiles = newFiles
 
 			// Update our currentEnv
 			w.currentCond.L.Lock()
-			w.currentEnv = newEnv
+			w.currentConfig = &uc
 			w.currentGen++
 			w.currentCond.Broadcast()
 			w.currentCond.L.Unlock()
 
 			// We've sent now
-			prevSent = true
+			prevEnvSent = true
+			prevFilesSent = true
 		}
 	}
 }
@@ -510,15 +544,15 @@ func configVarSortFunc(vars []*pb.ConfigVar) func(i, j int) bool {
 // Used tracking from the config split, through eval, and back
 // to exporting.
 type staticVar struct {
-	name, value string
-	internal    bool
+	cv    *pb.ConfigVar
+	value string
 }
 
 // Used in tracking from the config split, through eval, and back
 // to exporting.
 type dynamicVar struct {
-	req      *component.ConfigRequest
-	internal bool
+	cv  *pb.ConfigVar
+	req *component.ConfigRequest
 }
 
 // splitAppConfig takes a list of config variables as sent on the wire
@@ -534,19 +568,18 @@ func splitAppConfig(
 		switch v := cv.Value.(type) {
 		case *pb.ConfigVar_Static:
 			static = append(static, &staticVar{
-				name:     cv.Name,
-				value:    v.Static,
-				internal: cv.Internal,
+				cv:    cv,
+				value: v.Static,
 			})
 
 		case *pb.ConfigVar_Dynamic:
 			from := v.Dynamic.From
 			dynamic[from] = append(dynamic[from], &dynamicVar{
+				cv: cv,
 				req: &component.ConfigRequest{
 					Name:   cv.Name,
 					Config: v.Dynamic.Config,
 				},
-				internal: cv.Internal,
 			})
 
 		default:
@@ -618,7 +651,7 @@ func buildAppConfig(
 	dynamic map[string][]*dynamicVar,
 	dynamicSources map[string]*pb.ConfigSource,
 	changed map[string]bool,
-) []string {
+) ([]string, []*FileContent) {
 	// For each dynamic config, we need to launch that plugin if we
 	// haven't already.
 	for k := range dynamic {
@@ -698,6 +731,8 @@ func buildAppConfig(
 	}
 
 	var ectx hcl.EvalContext
+
+	funcs.AddEntrypointFunctions(&ectx)
 
 	// If we have no dynamic values, then we just return the static ones.
 	if len(dynamic) == 0 {
@@ -788,7 +823,7 @@ func buildAppConfig(
 			switch r := value.Result.(type) {
 			case *sdkpb.ConfigSource_Value_Value:
 
-				if req.internal {
+				if req.cv.Internal {
 					internal[req.req.Name] = cty.StringVal(r.Value)
 				} else {
 					envVars = append(envVars, req.req.Name+"="+r.Value)
@@ -825,49 +860,64 @@ func buildAppConfig(
 		ectx.Variables["config"] = cty.MapVal(config)
 	}
 
-	return append(envVars, expandStaticVars(log, &ectx, staticVars)...)
+	staticEnv, staticFiles := expandStaticVars(log, &ectx, staticVars)
+
+	return append(envVars, staticEnv...), staticFiles
 }
 
 // expandStaticVars will parse any value that appears to be a HCL template as one and then
 // use the result of the expression Value as the value of the variable. This is the last
 // stage of the variable composition pipeline.
-func expandStaticVars(L hclog.Logger, ctx *hcl.EvalContext, vars []*staticVar) []string {
-	var out []string
+func expandStaticVars(
+	L hclog.Logger,
+	ctx *hcl.EvalContext,
+	vars []*staticVar,
+) ([]string, []*FileContent) {
+	var (
+		envVars []string
+		files   []*FileContent
+	)
 
 	for _, v := range vars {
+		name := v.cv.Name
 		value := v.value
 
 		if strings.Contains(value, "${") || strings.Contains(value, "%{") {
-			expr, diags := hclsyntax.ParseTemplate([]byte(value), v.name, hcl.Pos{Line: 1, Column: 1})
+			expr, diags := hclsyntax.ParseTemplate([]byte(value), name, hcl.Pos{Line: 1, Column: 1})
 			if diags != nil {
-				L.Error("error parsing expression", "var", v.name, "error", diags.Error())
+				L.Error("error parsing expression", "var", name, "error", diags.Error())
 				value = ""
 				goto add
 			}
 
 			val, diags := expr.Value(ctx)
 			if diags.HasErrors() {
-				L.Error("error evaluating expression", "var", v.name, "error", diags.Error())
+				L.Error("error evaluating expression", "var", name, "error", diags.Error())
 				value = ""
 				goto add
 			}
 
 			str, err := convert.Convert(val, cty.String)
 			if err != nil {
-				L.Error("error converting expression to string", "var", v.name, "error", err)
+				L.Error("error converting expression to string", "var", name, "error", err)
 				value = ""
 				goto add
 			}
 
-			L.Debug("expanded variable successfully", "var", v.name)
+			L.Debug("expanded variable successfully", "var", name)
 			value = str.AsString()
 		}
 
 	add:
-		if !v.internal {
-			out = append(out, v.name+"="+value)
+		if v.cv.NameIsPath {
+			files = append(files, &FileContent{
+				Path: name,
+				Data: []byte(value),
+			})
+		} else if !v.cv.Internal {
+			envVars = append(envVars, name+"="+value)
 		}
 	}
 
-	return out
+	return envVars, files
 }

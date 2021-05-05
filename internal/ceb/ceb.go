@@ -76,6 +76,9 @@ type CEB struct {
 	clientCond *sync.Cond
 	client     pb.WaypointClient
 
+	// childSigCh can be sent signals which will be sent to the child command via kill(2).
+	childSigCh chan os.Signal
+
 	// childDoneCh is sent a value (incl. nil) when the child process exits.
 	// This is not sent anything for restarts.
 	childDoneCh <-chan error
@@ -268,6 +271,7 @@ type config struct {
 	ServerTls           bool
 	ServerTlsSkipVerify bool
 	InviteToken         string
+	FileRewriteSignal   string
 
 	URLServicePort int
 }

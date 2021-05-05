@@ -34,5 +34,42 @@ func (a *App) ConfigSync(ctx context.Context) error {
 	_, err = a.client.SetConfig(ctx, &pb.ConfigSetRequest{
 		Variables: vars,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Sync the project and application metadata
+
+	projMD, appMD := a.config.ConfigMetadata()
+
+	if projMD != nil {
+		resp, err := a.client.GetProject(ctx, &pb.GetProjectRequest{
+			Project: a.project.Ref(),
+		})
+		if err != nil {
+			return err
+		}
+
+		resp.Project.FileChangeSignal = projMD.FileChangeSignal
+
+		_, err = a.client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+			Project: resp.Project,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if appMD != nil {
+		_, err := a.client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
+			Project:          a.project.Ref(),
+			Name:             a.Ref().Application,
+			FileChangeSignal: appMD.FileChangeSignal,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

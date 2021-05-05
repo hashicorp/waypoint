@@ -12,9 +12,9 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/posener/complete"
 	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/function"
 
 	"github.com/hashicorp/go-argmapper"
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -581,22 +581,11 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 }
 
 func (c *AppDocsCommand) funcsMDX() int {
-	// Start with our HCL stdlib
-	all := funcs.Stdlib()
+	var ectx hcl.EvalContext
 
-	// add functions to our context
-	addFuncs := func(fs map[string]function.Function) {
-		for k, v := range fs {
-			all[k] = v
-		}
-	}
+	funcs.AddStandardFunctions(&ectx, ".")
 
-	// Add some of our functions
-	addFuncs(funcs.VCSGitFuncs("."))
-	addFuncs(funcs.Filesystem())
-	addFuncs(funcs.Encoding())
-	addFuncs(funcs.Datetime())
-	addFuncs(funcs.Jsonnet())
+	all := ectx.Functions
 
 	docs := funcs.Docs()
 

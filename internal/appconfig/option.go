@@ -32,6 +32,34 @@ func WithPlugins(ps map[string]*plugin.Instance) Option {
 	}
 }
 
+// Contains the information about a file that should be written to the application's
+// current directory.
+type FileContent struct {
+	Path string
+	Data []byte
+}
+
+// UpdatedConfig contains any updated configuration that needs to be applied to the
+// application.
+type UpdatedConfig struct {
+	// Indicates that EnvVars is what the application should be using. This is an
+	// explicit flag because EnvVars might be reset to nil, meaning the application
+	// should remove all it's configuration
+	UpdatedEnv bool
+
+	// This is the list of env vars in key=value format that the application should
+	// know about.
+	EnvVars []string
+
+	// Indicates that Files is what should be presented on disk. This is an explicit
+	// flag to match UpdatedEnv.
+	UpdatedFiles bool
+
+	// Files is the list of file paths and contents that the should be on disk for the
+	// application to read.
+	Files []*FileContent
+}
+
 // WithNotify notifies a channel whenever there are changes to the
 // configuration values. This will stop receiving values when the watcher
 // is closed.
@@ -41,7 +69,7 @@ func WithPlugins(ps map[string]*plugin.Instance) Option {
 // follow up update when the channel send succeeds. Therefore, receivers
 // will always eventually receive the full current env list, but may miss
 // intermediate sets if they are slow to receive.
-func WithNotify(ch chan<- []string) Option {
+func WithNotify(ch chan<- *UpdatedConfig) Option {
 	return func(w *Watcher) error {
 		// Start the goroutine for watching. If there is an error during
 		// init, NewWatcher calls Close so these will be cleaned up.

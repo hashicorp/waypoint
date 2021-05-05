@@ -3,7 +3,6 @@ package config
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/function"
 	"github.com/zclconf/go-cty/cty/gocty"
 
 	"github.com/hashicorp/waypoint/internal/config/funcs"
@@ -19,22 +18,7 @@ func EvalContext(parent *hcl.EvalContext, pwd string) *hcl.EvalContext {
 	// NewChild works even with parent == nil so this is valid
 	result := parent.NewChild()
 
-	// Start with our HCL stdlib
-	result.Functions = funcs.Stdlib()
-
-	// add functions to our context
-	addFuncs := func(fs map[string]function.Function) {
-		for k, v := range fs {
-			result.Functions[k] = v
-		}
-	}
-
-	// Add some of our functions
-	addFuncs(funcs.VCSGitFuncs(pwd))
-	addFuncs(funcs.Filesystem())
-	addFuncs(funcs.Encoding())
-	addFuncs(funcs.Datetime())
-	addFuncs(funcs.Jsonnet())
+	funcs.AddStandardFunctions(result, pwd)
 
 	return result
 }

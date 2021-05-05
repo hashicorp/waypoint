@@ -26,6 +26,7 @@ func TestSortVars(t *testing.T) {
 			c = "goodbye"
 		}`)
 		c.InternalRaw = &hclsyntax.AnonSymbolExpr{}
+		c.FileRaw = &hclsyntax.AnonSymbolExpr{}
 
 		var ctx hcl.EvalContext
 
@@ -51,6 +52,7 @@ func TestSortVars(t *testing.T) {
 			b = "${config.env.a}, sir"
 		}`)
 
+		c.FileRaw = &hclsyntax.AnonSymbolExpr{}
 		var ctx hcl.EvalContext
 
 		pairs, err := c.sortVars(&ctx)
@@ -76,6 +78,7 @@ func TestSortVars(t *testing.T) {
 			b = "${upcase(config.env.a)}, sir"
 		}`)
 
+		c.FileRaw = &hclsyntax.AnonSymbolExpr{}
 		var ctx hcl.EvalContext
 
 		pairs, err := c.sortVars(&ctx)
@@ -101,6 +104,7 @@ func TestSortVars(t *testing.T) {
 			b = "${config.env.a}, sir"
 		}`)
 
+		c.FileRaw = &hclsyntax.AnonSymbolExpr{}
 		var ctx hcl.EvalContext
 
 		_, err := c.sortVars(&ctx)
