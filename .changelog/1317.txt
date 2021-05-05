@@ -1,0 +1,8 @@
+```release-note:improvement
+plugins/k8s: Add configuration options for pods and its security contexts
+```
+
+```release-note:breaking-change
+plugins/k8s: `scratch_path` now uses an array of strings instead of a string, allowing you to specify
+multiple directories to be mounted as [emptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir)
+```

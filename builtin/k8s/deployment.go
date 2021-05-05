@@ -22,7 +22,7 @@ func (d *Deployment) newDeployment(name string) *appsv1.Deployment {
 		},
 
 		// Note both name and app are included here. 'app' is expected for certain
-		// k8s integrations, where as waypoint expepcts 'name' else where for release
+		// k8s integrations, where as waypoint expects 'name' else where for release
 		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
