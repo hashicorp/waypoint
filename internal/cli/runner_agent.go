@@ -133,7 +133,8 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 			for {
 				conn, err := ln.Accept()
 				if err != nil {
-					log.Warn("error accepting liveness connection: %s", err)
+					log.Warn("error accepting liveness connection", "err", err)
+					continue
 				}
 
 				// Immediately close. The liveness check only ensures a
