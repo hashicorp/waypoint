@@ -79,12 +79,25 @@ that must be on your PATH to build Waypoint. This
 [repository version](https://github.com/kevinburke/go-bindata/) may be installed with:
 `go get -u github.com/kevinburke/go-bindata/...`
 
-Next, clone this repository and then run `make bin`. In a few moments, you'll have a working
-`waypoint` executable in the Waypoint repository root and `$GOPATH/bin`:
+Next, clone this repository and then run the following commands:
+* `make bin` will build the binary for your local machine's os/architecture
+* (optional) `make install` will copy that executable binary to `$GOPATH/bin/waypoint`
+* `make docker/server` will build the docker image of the server with the tag `waypoint:dev`
 
->Note: `make bin` will build for your local machine's os/architecture.
+Once those steps are complete, you can install the waypoint server you just built. To do
+this on docker you would run:
+```
+waypoint install -platform=docker -accept-tos -docker-server-image=waypoint:dev
+```
+
+>Note: If you didn't run `make install` then you should use `path/to/waypoint` 
+in place of `waypoint`.
 
 ## Making Changes to Waypoint
+
+Run `make tools` to install the list of tools in ./tools/tools.go.
+>Note: If notice you have a large set of diffs due to upgrading the version of 
+>a tool, it is best to separate out the upgrade into its own PR.
 
 The first step to making changes is to fork Waypoint. Afterwards, the easiest way
 to work on the fork is to set it as a remote of the Waypoint project:
@@ -105,6 +118,20 @@ lives in the spot where the go cli tools are expecting to find it.
 If the scope of the code change requires it, follow the [Changelog Guide](/.github/CHANGELOG_GUIDE.md) to add an entry.
 
 >Note: If you make any changes to the code, run `make format` to automatically format the code according to Go standards.
+
+## Opening a PR
+
+1. Title the PR with a helpful prefix following the pattern `parent/child`, 
+e.g. `builtin/k8s` or `internal/core`
+1. Include helpful information in the description
+   * For a bug fix, explain or show an example of the behavior before and 
+  after the change
+   * If applicable, include information on how to test manually
+1. Request review from either `waypoint-core` or `waypoint-frontend` based on 
+your changes
+
+>Note: the auto-labeler will assign other labels after you open the PR, based 
+>on what files have changes.
 
 ## Testing
 
