@@ -11,7 +11,8 @@ func TestPlatformConfig(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
-			ALB: &ALBConfig{},
+			Memory: 512,
+			ALB:    &ALBConfig{},
 		}
 
 		require.NoError(t, p.ConfigSet(cfg))
@@ -21,6 +22,7 @@ func TestPlatformConfig(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
+			Memory: 512,
 			ALB: &ALBConfig{
 				CertificateId: "xyz",
 			},
@@ -33,6 +35,7 @@ func TestPlatformConfig(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
+			Memory: 512,
 			ALB: &ALBConfig{
 				ListenerARN: "xyz",
 			},
@@ -45,6 +48,7 @@ func TestPlatformConfig(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
+			Memory: 512,
 			ALB: &ALBConfig{
 				CertificateId: "xyz",
 				ListenerARN:   "abc",
@@ -58,6 +62,7 @@ func TestPlatformConfig(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
+			Memory: 512,
 			ALB: &ALBConfig{
 				ZoneId:      "xyz",
 				FQDN:        "a.b",
@@ -72,6 +77,7 @@ func TestPlatformConfig(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
+			Memory: 512,
 			ALB: &ALBConfig{
 				ZoneId: "xyz",
 			},
@@ -84,6 +90,7 @@ func TestPlatformConfig(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
+			Memory: 512,
 			ALB: &ALBConfig{
 				FQDN: "xyz",
 			},
@@ -96,6 +103,7 @@ func TestPlatformConfig(t *testing.T) {
 		var p Platform
 
 		cfg := &Config{
+			Memory: 512,
 			ALB: &ALBConfig{
 				ZoneId: "xyz",
 				FQDN:   "a.b",
@@ -110,6 +118,7 @@ func TestPlatformConfig(t *testing.T) {
 
 		i := true
 		cfg := &Config{
+			Memory: 512,
 			ALB: &ALBConfig{
 				InternalScheme: &i,
 				ListenerARN:    "abc",
@@ -124,11 +133,76 @@ func TestPlatformConfig(t *testing.T) {
 
 		i := true
 		cfg := &Config{
+			Memory: 512,
 			ALB: &ALBConfig{
 				InternalScheme: &i,
 			},
 		}
 
 		require.NoError(t, p.ConfigSet(cfg))
+	})
+
+	t.Run("allows no memory_reservation", func(t *testing.T) {
+		var p Platform
+
+		cfg := &Config{
+			Memory: 512,
+		}
+
+		require.NoError(t, p.ConfigSet(cfg))
+	})
+
+	t.Run("allows memory_reservation same as memory", func(t *testing.T) {
+		var p Platform
+
+		cfg := &Config{
+			Memory:            512,
+			MemoryReservation: 512,
+		}
+
+		require.NoError(t, p.ConfigSet(cfg))
+	})
+
+	t.Run("allows memory_reservation less than memory", func(t *testing.T) {
+		var p Platform
+
+		cfg := &Config{
+			Memory:            512,
+			MemoryReservation: 256,
+		}
+
+		require.NoError(t, p.ConfigSet(cfg))
+	})
+
+	t.Run("disallows too small values of memory", func(t *testing.T) {
+		var p Platform
+
+		cfg := &Config{
+			Memory: 3,
+		}
+
+		require.Error(t, p.ConfigSet(cfg))
+	})
+
+	t.Run("disallows too small values of memory_reservation", func(t *testing.T) {
+		var p Platform
+
+		cfg := &Config{
+			Memory:            512,
+			MemoryReservation: 3,
+		}
+
+		require.Error(t, p.ConfigSet(cfg))
+	})
+
+	t.Run("disallows memory_reservation greater than memory", func(t *testing.T) {
+		var p Platform
+
+		cfg := &Config{
+			Memory:            512,
+			MemoryReservation: 513,
+		}
+
+		require.Error(t, p.ConfigSet(cfg))
 	})
 }
