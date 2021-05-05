@@ -127,10 +127,6 @@ e.g. `builtin/k8s` or `internal/core`
    * For a bug fix, explain or show an example of the behavior before and 
   after the change
    * If applicable, include information on how to test manually
-1. Assign the `backport/[version].x` label for PRs that should be included 
-in an upcoming .x release (e.g. `backport/0.3.x`)
-1. Assign the `backport/website` label for PRs that should be published 
-immediately to the website
 1. Request review from either `waypoint-core` or `waypoint-frontend` based on 
 your changes
 
