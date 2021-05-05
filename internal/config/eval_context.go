@@ -65,19 +65,49 @@ func appendContext(parent, child *hcl.EvalContext) *hcl.EvalContext {
 	return parent
 }
 
+// defineContextVarsIfNeeded will set an empty map to ctx.Variables if needed
+func defineContextVarsIfNeeded(ctx *hcl.EvalContext) {
+	if ctx.Variables == nil {
+		ctx.Variables = map[string]cty.Value{}
+	}
+}
+
+// addWorkspaceValue adds the workspace values to the context
+func addWorkspaceValue(ctx *hcl.EvalContext, v string) {
+	addStringVariable(ctx, "workspace", v)
+}
+
 // addPathValue adds the "path" variable to the context.
 func addPathValue(ctx *hcl.EvalContext, v map[string]string) {
+	addMapVariable(ctx, "path", v)
+}
+
+// addMapVariable adds a map[string]string to the context
+func addMapVariable(ctx *hcl.EvalContext, varName string, v map[string]string) {
 	value, err := gocty.ToCtyValue(v, cty.Map(cty.String))
 	if err != nil {
 		// map[string]string conversion should never fail
 		panic(err)
 	}
 
-	if ctx.Variables == nil {
-		ctx.Variables = map[string]cty.Value{}
+	addCtyVariable(ctx, varName, value)
+}
+
+// addStringVariable adds a string variable to the context
+func addStringVariable(ctx *hcl.EvalContext, varName string, v string) {
+	value, err := gocty.ToCtyValue(v, cty.String)
+	if err != nil {
+		// string conversion should never fail
+		panic(err)
 	}
 
-	ctx.Variables["path"] = value
+	addCtyVariable(ctx, varName, value)
+}
+
+// addCtyVariable adds a cty variable to the context
+func addCtyVariable(ctx *hcl.EvalContext, varName string, value cty.Value) {
+	defineContextVarsIfNeeded(ctx)
+	ctx.Variables[varName] = value
 }
 
 // finalizeContext should be called whenever an HCL context is being used
