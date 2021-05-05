@@ -107,7 +107,7 @@ func (p *Platform) Deploy(
 	defer step.Abort()
 
 	// Get our client
-	clientset, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
+	clientSet, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
 	}
@@ -122,11 +122,11 @@ func (p *Platform) Deploy(
 
 	step = sg.Add("Preparing deployment...")
 
-	deployclient := clientset.AppsV1().Deployments(ns)
+	deployClient := clientSet.AppsV1().Deployments(ns)
 
 	// Determine if we have a deployment that we manage already
 	create := false
-	deployment, err := deployclient.Get(ctx, result.Name, metav1.GetOptions{})
+	deployment, err := deployClient.Get(ctx, result.Name, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		deployment = result.newDeployment(result.Name)
 		create = true
@@ -263,37 +263,48 @@ func (p *Platform) Deploy(
 		}
 	}
 
+	container := corev1.Container{
+		Name:            result.Name,
+		Image:           img.Name(),
+		ImagePullPolicy: pullPolicy,
+		Ports:           containerPorts,
+		LivenessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(defaultPort),
+				},
+			},
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
+			FailureThreshold:    failureThreshold,
+		},
+		ReadinessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromInt(defaultPort),
+				},
+			},
+			InitialDelaySeconds: initialDelaySeconds,
+			TimeoutSeconds:      timeoutSeconds,
+		},
+		Env:       env,
+		Resources: resourceRequirements,
+	}
+
+	if p.config.Pod != nil && p.config.Pod.Container != nil {
+		containerCfg := p.config.Pod.Container
+		if containerCfg.Command != nil {
+			container.Command = *containerCfg.Command
+		}
+
+		if containerCfg.Args != nil {
+			container.Args = *containerCfg.Args
+		}
+	}
+
 	// Update the deployment with our spec
 	deployment.Spec.Template.Spec = corev1.PodSpec{
-		Containers: []corev1.Container{
-			{
-				Name:            result.Name,
-				Image:           img.Name(),
-				ImagePullPolicy: pullPolicy,
-				Ports:           containerPorts,
-				LivenessProbe: &corev1.Probe{
-					Handler: corev1.Handler{
-						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(defaultPort),
-						},
-					},
-					InitialDelaySeconds: initialDelaySeconds,
-					TimeoutSeconds:      timeoutSeconds,
-					FailureThreshold:    failureThreshold,
-				},
-				ReadinessProbe: &corev1.Probe{
-					Handler: corev1.Handler{
-						TCPSocket: &corev1.TCPSocketAction{
-							Port: intstr.FromInt(defaultPort),
-						},
-					},
-					InitialDelaySeconds: initialDelaySeconds,
-					TimeoutSeconds:      timeoutSeconds,
-				},
-				Env:       env,
-				Resources: resourceRequirements,
-			},
-		},
+		Containers: []corev1.Container{container},
 	}
 
 	// Override the default TCP socket checks if we have a probe path
@@ -322,21 +333,40 @@ func (p *Platform) Deploy(
 		}
 	}
 
-	if p.config.ScratchSpace != "" {
-		deployment.Spec.Template.Spec.Volumes = []corev1.Volume{
-			{
-				Name: "scratch",
-				VolumeSource: corev1.VolumeSource{
-					EmptyDir: &corev1.EmptyDirVolumeSource{},
+	if len(p.config.ScratchSpace) > 0 {
+		for idx, scratchSpaceLocation := range p.config.ScratchSpace {
+			scratchName := fmt.Sprintf("scratch-%d", idx)
+			deployment.Spec.Template.Spec.Volumes = append(
+				deployment.Spec.Template.Spec.Volumes,
+				corev1.Volume{
+					Name: scratchName,
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{},
+					},
 				},
-			},
-		}
+			)
 
-		deployment.Spec.Template.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
-			{
-				Name:      "scratch",
-				MountPath: p.config.ScratchSpace,
-			},
+			deployment.Spec.Template.Spec.Containers[0].VolumeMounts = append(
+				deployment.Spec.Template.Spec.Containers[0].VolumeMounts,
+				corev1.VolumeMount{
+					Name:      scratchName,
+					MountPath: scratchSpaceLocation,
+				},
+			)
+		}
+	}
+
+	if p.config.Pod != nil {
+		// Configure Pod
+		podConfig := p.config.Pod
+		if podConfig.SecurityContext != nil {
+			secCtx := podConfig.SecurityContext
+			// Configure Pod Security Context
+			deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{
+				RunAsUser:    secCtx.RunAsUser,
+				RunAsNonRoot: secCtx.RunAsNonRoot,
+				FSGroup:      secCtx.FsGroup,
+			}
 		}
 	}
 
@@ -365,7 +395,7 @@ func (p *Platform) Deploy(
 		deployment.Spec.Template.Spec.ServiceAccountName = p.config.ServiceAccount
 
 		// Determine if we need to make a service account
-		saClient := clientset.CoreV1().ServiceAccounts(ns)
+		saClient := clientSet.CoreV1().ServiceAccounts(ns)
 		saCreate := false
 		serviceAccount, err := saClient.Get(ctx, p.config.ServiceAccount, metav1.GetOptions{})
 		if errors.IsNotFound(err) {
@@ -385,7 +415,7 @@ func (p *Platform) Deploy(
 		}
 	}
 
-	dc := clientset.AppsV1().Deployments(ns)
+	dc := clientSet.AppsV1().Deployments(ns)
 
 	// Create/update
 	if create {
@@ -404,7 +434,7 @@ func (p *Platform) Deploy(
 	step.Done()
 	step = sg.Add("Waiting for deployment...")
 
-	ps := clientset.CoreV1().Pods(ns)
+	ps := clientSet.CoreV1().Pods(ns)
 	podLabelId := fmt.Sprintf("%s=%s", labelId, result.Id)
 
 	var (
@@ -569,9 +599,9 @@ type Config struct {
 	// such as memory and cpu.
 	Resources map[string]string `hcl:"resources,optional"`
 
-	// A path to a directory that will be created for the service to store
-	// temporary data.
-	ScratchSpace string `hcl:"scratch_path,optional"`
+	// An array of paths to directories that will be mounted as EmptyDirVolumes in the pod
+	// to store temporary data.
+	ScratchSpace []string `hcl:"scratch_path,optional"`
 
 	// ServiceAccount is the name of the Kubernetes service account to apply to the
 	// application deployment. This is useful to apply Kubernetes RBAC to the pod.
@@ -587,6 +617,28 @@ type Config struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+
+	// Pod describes the configuration for the pod
+	Pod *Pod `hcl:"pod,block"`
+}
+
+// Pod describes the configuration for the pod
+type Pod struct {
+	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
+	Container       *Container          `hcl:"container,block"`
+}
+
+// Container describes the commands and arguments for a container config
+type Container struct {
+	Command *[]string `hcl:"command"`
+	Args    *[]string `hcl:"args"`
+}
+
+// PodSecurityContext describes the security config for the Pod
+type PodSecurityContext struct {
+	RunAsUser    *int64 `hcl:"run_as_user"`
+	RunAsNonRoot *bool  `hcl:"run_as_non_root"`
+	FsGroup      *int64 `hcl:"fs_group"`
 }
 
 // Probe describes a health check to be performed against a container to determine whether it is
@@ -621,6 +673,47 @@ deploy "kubernetes" {
 	probe_path = "/_healthz"
 }
 `)
+
+	doc.SetField(
+		"pod",
+		"the configuration for a pod",
+		docs.Summary("Pod describes the configuration for a pod when deploying"),
+		docs.SubFields(func(doc *docs.SubFieldDoc) {
+			doc.SetField(
+				"container",
+				"container describes the commands and arguments for a container config",
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"command",
+						"An array of strings to run for the container",
+					)
+
+					doc.SetField(
+						"args",
+						"An array of string arguments to pass through to the container",
+					)
+				}),
+			)
+			doc.SetField(
+				"pod_security_context",
+				"holds pod-level security attributes and container settings",
+				docs.SubFields(func(doc *docs.SubFieldDoc) {
+					doc.SetField(
+						"run_as_user",
+						"The UID to run the entrypoint of the container process",
+					)
+					doc.SetField(
+						"run_as_non_root",
+						"Indicates that the container must run as a non-root user",
+					)
+					doc.SetField(
+						"fs_group",
+						"A special supplemental group that applies to all containers in a pod",
+					)
+				}),
+			)
+		}),
+	)
 
 	doc.SetField(
 		"kubeconfig",
