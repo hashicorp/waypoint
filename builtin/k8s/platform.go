@@ -622,11 +622,6 @@ type Config struct {
 	Pod *Pod `hcl:"pod,block"`
 }
 
-type Container struct {
-	Command *[]string `hcl:"command"`
-	Args    *[]string `hcl:"args"`
-}
-
 // Pod describes the configuration for the pod
 type Pod struct {
 	SecurityContext *PodSecurityContext `hcl:"security_context,block"`
