@@ -1,24 +1,22 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 interface StatusBadgeArgs {
-  model: Object
+  state: number;
+  iconOnly: boolean;
 }
 
 export default class StatusBadge extends Component<StatusBadgeArgs> {
-  @tracked model = {};
   @tracked iconOnly = false;
+  @tracked state: number;
 
   constructor(owner: any, args: StatusBadgeArgs) {
     super(owner, args);
-    this.model = args.model;
-  }
-
-  get state() {
-    return this.model?.status?.state;
+    this.state = args.state;
+    this.iconOnly = args.iconOnly;
   }
 
   get statusClass() {
-    let state = this.state;
+    let { state } = this.args;
     switch (state) {
       case 4:
         return 'partial';
@@ -39,7 +37,7 @@ export default class StatusBadge extends Component<StatusBadgeArgs> {
   }
 
   get iconType() {
-    let state = this.state;
+    let { state } = this.args;
     switch (state) {
       case 4:
         return 'alert-triangle';

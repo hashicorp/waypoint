@@ -41,4 +41,11 @@
       margin-right: -(scale.$sm-4);
     }
   }
+
+  &.badge-status--icon-only {
+    .pds-icon {
+      margin-right: 0;
+      margin-left: 0;
+    }
+  }
 }

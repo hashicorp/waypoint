@@ -40,31 +40,31 @@ module('Integration | Component | status-badge', function(hooks) {
 
     this.build = partialBuild;
 
-    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
 
     assert.equal(this.element.getElementsByClassName('badge-status--partial').length, 1);
 
     this.build = downBuild;
 
-    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
 
     assert.equal(this.element.getElementsByClassName('badge-status--down').length, 1);
 
     this.build = readyBuild;
 
-    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
 
     assert.equal(this.element.getElementsByClassName('badge-status--ready').length, 1);
 
     this.build = aliveBuild;
 
-    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
 
     assert.equal(this.element.getElementsByClassName('badge-status--alive').length, 1);
 
     this.build = unknownBuild;
 
-    await render(hbs`<StatusBadge @model={{this.build}}/>`);
+    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
 
     assert.equal(this.element.getElementsByClassName('badge-status--unknown').length, 1);
   });
