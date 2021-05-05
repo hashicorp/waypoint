@@ -1006,8 +1006,8 @@ func (p *Platform) Launch(
 			},
 		},
 		Environment:       env,
-		Memory:            aws.Int64(int64(p.config.Memory)),
-		MemoryReservation: aws.Int64(int64(p.config.MemoryReservation)),
+		Memory:            utils.OptionalInt64(int64(p.config.Memory)),
+		MemoryReservation: utils.OptionalInt64(int64(p.config.MemoryReservation)),
 		Secrets:           secrets,
 		LogConfiguration: &ecs.LogConfiguration{
 			LogDriver: aws.String("awslogs"),
@@ -1053,8 +1053,8 @@ func (p *Platform) Launch(
 			},
 			Secrets:           secrets,
 			Environment:       env,
-			Memory:            aws.Int64(int64(container.Memory)),
-			MemoryReservation: aws.Int64(int64(container.MemoryReservation)),
+			Memory:            utils.OptionalInt64(int64(container.Memory)),
+			MemoryReservation: utils.OptionalInt64(int64(container.MemoryReservation)),
 		}
 
 		additionalContainers = append(additionalContainers, c)
