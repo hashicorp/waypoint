@@ -300,7 +300,7 @@ func TestConfigApp_compare(t *testing.T) {
 			cfg, err := Load(filepath.Join("testdata", "compare", tt.File), "")
 			require.NoError(err)
 
-			app, err := cfg.App(tt.App, nil)
+			app, err := cfg.App(tt.App, "default", nil)
 			require.NoError(err)
 
 			tt.Func(t, app)
@@ -340,7 +340,7 @@ func TestAppValidate(t *testing.T) {
 			cfg, err := Load(filepath.Join("testdata", "validate", tt.File), "")
 			require.NoError(err)
 
-			app, err := cfg.App(tt.App, nil)
+			app, err := cfg.App(tt.App, "default", nil)
 			require.NoError(err)
 			require.NotNil(app)
 
