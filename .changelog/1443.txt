@@ -1,0 +1,3 @@
+```release-note:docs
+cli: Better explain how the flags passed to `server config-set` are applied to the server
+```
