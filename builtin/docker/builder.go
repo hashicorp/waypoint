@@ -276,9 +276,6 @@ func (b *Builder) Build(
 
 // Translates BuildArgs from a map of key vals into a string of '--build-arg key=vals'
 func createBuildArgsString(m map[string]*string) string {
-	if m == nil {
-		return ""
-	}
 	b := []string{}
 	for key, value := range m {
 		b = append(b, fmt.Sprintf("--build-arg \"%s=%s\"", key, *value))
