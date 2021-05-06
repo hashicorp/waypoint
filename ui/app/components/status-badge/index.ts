@@ -33,6 +33,8 @@ export default class StatusBadge extends Component<StatusBadgeArgs> {
       case 0:
         return 'unknown';
         break;
+      default:
+        return 'unknown';
     }
   }
 
@@ -54,6 +56,8 @@ export default class StatusBadge extends Component<StatusBadgeArgs> {
       case 0:
         return 'help-circle-outline';
         break;
+      default:
+        return 'help-circle-outline';
     }
   }
 }
