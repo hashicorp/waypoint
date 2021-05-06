@@ -119,22 +119,21 @@ func (s *service) spawnLogPlugin(
 	return &lo, jobId, nil
 }
 
-// TODO: test
+// Used to coordinate the data from either Instance or InstanceLogs entries
+// and then funnel them all to the waiting client.
+type streamRec struct {
+	InstanceId   string
+	DeploymentId string
+	LogBuffer    *logbuffer.Buffer
+
+	InstanceLogsId int64
+	JobId          string
+}
+
 func (s *service) GetLogStream(
 	req *pb.GetLogStreamRequest,
 	srv pb.Waypoint_GetLogStreamServer,
 ) error {
-
-	// Used to coordinate the data from either Instance or InstanceLogs entries
-	// and then funnel them all to the waiting client.
-	type streamRec struct {
-		InstanceId   string
-		DeploymentId string
-		LogBuffer    *logbuffer.Buffer
-
-		InstanceLogsId int64
-		JobId          string
-	}
 
 	log := hclog.FromContext(srv.Context())
 
@@ -305,14 +304,163 @@ func (s *service) GetLogStream(
 		)
 	}
 
+	return s.sendInstanceLogs(srv.Context(), log, srv, instanceFunc, req.LimitBacklog)
+}
+
+// Used to reduce the functional surface area of sendInstanceLogs
+type batchSender interface {
+	Send(batch *pb.LogBatch) error
+}
+
+// sendInstanceLogs calls instanceFunc and coordinates sending both the known
+// log entries (ie ones that are already stored on the server) to the waiting
+// client, as well as blocking for all new generate log entries that are created
+// currently known as well as future instances that are returned by instanceFunc.
+func (s *service) sendInstanceLogs(
+	ctx context.Context,
+	log hclog.Logger,
+	sender batchSender,
+	instanceFunc func(ws memdb.WatchSet) ([]*streamRec, error),
+	backlog int32,
+) error {
 	// We keep track of what instances we already have readers for here.
 	var instanceSetLock sync.Mutex
 	instanceSet := make(map[string]struct{})
 
+	// For values returned by LogMerge, we want to be able to map back to
+	// the stream that the reader was for, so we can include the instanceid.
+	// This map lets us do that.
+	readerToInstance := make(map[*logbuffer.Reader]*streamRec)
+
+	// Step 1: we use log merge to read all the known entries from existing
+	// instances. This will never block, it will just weave the log entries
+	// that are already known together and then send them back to the client.
+
+	// Get all current records
+	ws := memdb.NewWatchSet()
+	records, err := instanceFunc(ws)
+	if err != nil {
+		return err
+	}
+	log.Trace("instances loaded", "len", len(records))
+
+	var inputs []logbuffer.LogMergeInput
+
+	for _, record := range records {
+		r := record.LogBuffer.Reader(backlog)
+		readerToInstance[r] = record
+
+		inputs = append(inputs, r)
+	}
+
+	lm, err := logbuffer.NewLogMerge(inputs...)
+	if err != nil {
+		return err
+	}
+
+	lines := make([]*pb.LogBatch_Entry, 60)
+
+	// Read out all the log entries from LogMerge. This never blocks waiting
+	// for new log entries, it will simply let each reader output all known
+	// entries and then loop exits.
+	for {
+		entries, err := lm.ReadNext(60)
+		if err != nil {
+			return err
+		}
+
+		// When there are no more buffered entries to read, means
+		// we'll switch to the on-demand reading logic below.
+		if len(entries) == 0 {
+			break
+		}
+
+		log.Trace("sending known log data", "entries", len(entries))
+
+		var (
+			prev *streamRec
+			idx  int
+		)
+
+		// We batch up the lines so long as the previous line is from the
+		// same instance as the current one. When we detect a change, we flush
+		// lines and begin buffering again.
+		for _, v := range entries {
+			rec := readerToInstance[v.Input.(*logbuffer.Reader)]
+
+			if prev != nil && prev != rec {
+				// Flush current lines that were all the same instance
+				sender.Send(&pb.LogBatch{
+					DeploymentId: prev.DeploymentId,
+					InstanceId:   prev.InstanceId,
+					Lines:        lines[:idx],
+				})
+
+				idx = 0
+			}
+
+			val := v.Value().(*pb.LogBatch_Entry)
+			lines[idx] = val
+
+			prev = rec
+			idx++
+		}
+
+		// Flush any unsent lines
+		if idx > 0 {
+			// Flush current lines that were all the same instance
+			sender.Send(&pb.LogBatch{
+				DeploymentId: prev.DeploymentId,
+				InstanceId:   prev.InstanceId,
+				Lines:        lines[:idx],
+			})
+		}
+	}
+
+	// Step 2: startup background forwarders for all the readers we spawned above.
+
+	// We lock around this section because if one of the launched goroutines exits
+	// very quickly, we might still be adding the others when it does exit.
+	{
+		instanceSetLock.Lock()
+
+		for r, rec := range readerToInstance {
+			instanceSet[rec.InstanceId] = struct{}{}
+
+			instanceLog := log.With("instance_id", rec.InstanceId)
+			instanceLog.Debug("instance log stream starting", "instance-id", rec.InstanceId)
+
+			go func(r *logbuffer.Reader, rec *streamRec) {
+				defer func() {
+					instanceSetLock.Lock()
+					defer instanceSetLock.Unlock()
+					delete(instanceSet, rec.InstanceId)
+				}()
+
+				s.forwardLogBatches(ctx, instanceLog, sender, r, rec)
+			}(r, rec)
+		}
+
+		instanceSetLock.Unlock()
+	}
+
+	// Step 3: Now we setup goroutines to read on-demand log entries. Additionally
+	// this will pickup any new instances and begin streaming their on-demand log entries.
+
 	// We loop forever so that we can automatically get any new instances that
 	// join as we have an open log stream.
 	for {
-		// Get all our records
+		// Wait for changes or to be done
+		if err := ws.WatchCtx(ctx); err != nil {
+			// If our context ended, exit with that
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+
+			return err
+		}
+
+		// Get all current records
 		ws := memdb.NewWatchSet()
 		records, err := instanceFunc(ws)
 		if err != nil {
@@ -321,9 +469,9 @@ func (s *service) GetLogStream(
 		log.Trace("instances loaded", "len", len(records))
 
 		// For each record, start a goroutine that reads the log entries and sends them.
+		// This will skip any instance we already know about.
 		for _, record := range records {
 			instanceId := record.InstanceId
-			deploymentId := record.DeploymentId
 
 			// If we already have a reader for this, then do nothing.
 			instanceSetLock.Lock()
@@ -335,49 +483,54 @@ func (s *service) GetLogStream(
 			}
 
 			// Start our reader up
-			r := record.LogBuffer.Reader(req.LimitBacklog)
+			r := record.LogBuffer.Reader(backlog)
 			instanceLog := log.With("instance_id", instanceId)
-			instanceLog.Debug("instance log stream starting", "instance-id", instanceId)
+			instanceLog.Info("instance log stream starting", "instance-id", instanceId)
 
-			go r.CloseContext(srv.Context())
-			go func() {
-				defer instanceLog.Debug("instance log stream ending")
+			go func(record *streamRec) {
 				defer func() {
 					instanceSetLock.Lock()
 					defer instanceSetLock.Unlock()
-					delete(instanceSet, instanceId)
+					delete(instanceSet, record.InstanceId)
 				}()
 
-				for {
-					entries := r.Read(64, true)
-					if entries == nil {
-						instanceLog.Debug("exitting logs loop, Read returned nil")
-						return
-					}
+				s.forwardLogBatches(ctx, instanceLog, sender, r, record)
+			}(record)
+		}
+	}
+}
 
-					lines := make([]*pb.LogBatch_Entry, len(entries))
-					for i, v := range entries {
-						lines[i] = v.(*pb.LogBatch_Entry)
-					}
+// forwardLogBatches reads entries from the reader and spews them at the sender,
+// nothing more. This function wires the reader up to the given context, such that
+// when the context is finished, the reader is forced closed so this function can
+// return.
+func (s *service) forwardLogBatches(
+	ctx context.Context,
+	log hclog.Logger,
+	sender batchSender,
+	r *logbuffer.Reader,
+	record *streamRec,
+) {
+	go r.CloseContext(ctx)
+	defer log.Debug("instance log stream ending")
 
-					instanceLog.Trace("sending instance log data", "entries", len(entries))
-					srv.Send(&pb.LogBatch{
-						DeploymentId: deploymentId,
-						InstanceId:   instanceId,
-						Lines:        lines,
-					})
-				}
-			}()
+	for {
+		entries := r.Read(64, true)
+		if entries == nil {
+			log.Debug("exitting logs loop, Read returned nil")
+			return
 		}
 
-		// Wait for changes or to be done
-		if err := ws.WatchCtx(srv.Context()); err != nil {
-			// If our context ended, exit with that
-			if err := srv.Context().Err(); err != nil {
-				return err
-			}
-
-			return err
+		lines := make([]*pb.LogBatch_Entry, len(entries))
+		for i, v := range entries {
+			lines[i] = v.(*pb.LogBatch_Entry)
 		}
+
+		log.Trace("sending instance log data", "entries", len(entries))
+		sender.Send(&pb.LogBatch{
+			DeploymentId: record.DeploymentId,
+			InstanceId:   record.InstanceId,
+			Lines:        lines,
+		})
 	}
 }
