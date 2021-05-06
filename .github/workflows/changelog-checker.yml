@@ -7,7 +7,6 @@ on:
     # Runs on PRs to main and all release branches
     branches:
       - main
-      - release/*
 
 jobs:
   # checks that a .changelog entry is present for a PR
