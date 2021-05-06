@@ -244,9 +244,7 @@ func (r *Reader) Read(max int, block bool) []Entry {
 	}
 
 	// Convert back to the raw Entry's because that's what the API expects.
-	var entries []Entry
-
-	entries = make([]Entry, len(timedEntries))
+	entries := make([]Entry, len(timedEntries))
 	for i, te := range timedEntries {
 		entries[i] = te.entry
 	}
