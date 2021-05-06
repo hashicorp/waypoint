@@ -704,6 +704,10 @@ func waypointRunnerNomadJob(c nomadConfig, opts *InstallRunnerOpts) *api.Job {
 			"-vvv",
 		},
 		"auth_soft_fail": c.authSoftFail,
+		"security_opt": []string{
+			"seccomp=unconfined",
+			"apparmor=unconfined",
+		},
 	}
 
 	cpu := defaultResourcesCPU
