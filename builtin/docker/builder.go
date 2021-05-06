@@ -49,6 +49,9 @@ type BuilderConfig struct {
 
 	// The name/path to the Dockerfile if it is not the root of the project
 	Dockerfile string `hcl:"dockerfile,optional"`
+
+	// Controls the passing of build time variables
+	BuildArgs map[string]*string `hcl:"build_args,optional"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -116,6 +119,12 @@ build {
 		docs.Summary(
 			"Set this when the Dockerfile is not APP-PATH/Dockerfile",
 		),
+	)
+
+	doc.SetField(
+		"buildargs",
+		"An array of strings of build-time variables passed as build-arg to docker"+
+			"or img for the build step.",
 	)
 
 	return doc, nil
@@ -201,7 +210,7 @@ func (b *Builder) Build(
 		step.Done()
 		step = nil
 		if err := b.buildWithImg(
-			ctx, ui, sg, relDockerfile, contextDir, result.Name(),
+			ctx, ui, sg, relDockerfile, contextDir, result.Name(), createBuildArgsString(b.config.BuildArgs),
 		); err != nil {
 			return nil, err
 		}
@@ -217,7 +226,7 @@ func (b *Builder) Build(
 		step.Done()
 		step = nil
 		if err := b.buildWithDocker(
-			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(),
+			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.BuildArgs,
 		); err != nil {
 			return nil, err
 		}
@@ -265,6 +274,15 @@ func (b *Builder) Build(
 	return result, nil
 }
 
+// Translates BuildArgs from a map of key vals into a string of '--build-arg key=vals'
+func createBuildArgsString(m map[string]*string) string {
+	b := []string{}
+	for key, value := range m {
+		b = append(b, fmt.Sprintf("--build-arg \"%s=%s\"", key, *value))
+	}
+	return strings.Join(b, " ")
+}
+
 func (b *Builder) buildWithDocker(
 	ctx context.Context,
 	ui terminal.UI,
@@ -273,6 +291,7 @@ func (b *Builder) buildWithDocker(
 	contextDir string,
 	relDockerfile string,
 	tag string,
+	buildArgs map[string]*string,
 ) error {
 	excludes, err := build.ReadDockerignore(contextDir)
 	if err != nil {
@@ -314,6 +333,7 @@ func (b *Builder) buildWithDocker(
 		Dockerfile: relDockerfile,
 		Tags:       []string{tag},
 		Remove:     true,
+		BuildArgs:  buildArgs,
 	})
 	if err != nil {
 		return status.Errorf(codes.Internal, "error building image: %s", err)
