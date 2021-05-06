@@ -344,19 +344,16 @@ func (s *service) sendInstanceLogs(
 	}
 	log.Trace("instances loaded", "len", len(records))
 
-	var inputs []logbuffer.LogMergeInput
+	var readers []logbuffer.MergeReader
 
 	for _, record := range records {
 		r := record.LogBuffer.Reader(backlog)
 		readerToInstance[r] = record
 
-		inputs = append(inputs, r)
+		readers = append(readers, r)
 	}
 
-	lm, err := logbuffer.NewLogMerge(inputs...)
-	if err != nil {
-		return err
-	}
+	lm := logbuffer.NewMerger(readers...)
 
 	lines := make([]*pb.LogBatch_Entry, 60)
 
@@ -386,7 +383,7 @@ func (s *service) sendInstanceLogs(
 		// same instance as the current one. When we detect a change, we flush
 		// lines and begin buffering again.
 		for _, v := range entries {
-			rec := readerToInstance[v.Input.(*logbuffer.Reader)]
+			rec := readerToInstance[v.Reader.(*logbuffer.Reader)]
 
 			if prev != nil && prev != rec {
 				// Flush current lines that were all the same instance

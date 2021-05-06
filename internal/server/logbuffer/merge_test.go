@@ -34,8 +34,7 @@ func TestMerge(t *testing.T) {
 			})
 		}
 
-		lm, err := NewLogMerge(&input)
-		require.NoError(t, err)
+		lm := NewMerger(&input)
 
 		entries, err := lm.ReadNext(10)
 		require.NoError(t, err)
@@ -67,8 +66,7 @@ func TestMerge(t *testing.T) {
 			})
 		}
 
-		lm, err := NewLogMerge(&input1, &input2)
-		require.NoError(t, err)
+		lm := NewMerger(&input1, &input2)
 
 		entries, err := lm.ReadNext(20)
 		require.NoError(t, err)
@@ -103,8 +101,7 @@ func TestMerge(t *testing.T) {
 			})
 		}
 
-		lm, err := NewLogMerge(&input1, &input2)
-		require.NoError(t, err)
+		lm := NewMerger(&input1, &input2)
 
 		entries, err := lm.ReadNext(1)
 		require.NoError(t, err)
@@ -142,8 +139,7 @@ func TestMerge(t *testing.T) {
 			}
 		}
 
-		lm, err := NewLogMerge(&input1, &input2)
-		require.NoError(t, err)
+		lm := NewMerger(&input1, &input2)
 
 		entries, err := lm.ReadNext(20)
 		require.NoError(t, err)
@@ -187,8 +183,7 @@ func TestMerge(t *testing.T) {
 			})
 		}
 
-		lm, err := NewLogMerge(&input1, &input2)
-		require.NoError(t, err)
+		lm := NewMerger(&input1, &input2)
 
 		entries, err := lm.ReadNext(20)
 		require.NoError(t, err)

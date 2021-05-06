@@ -205,6 +205,9 @@ type Reader struct {
 	closed  uint32
 }
 
+// readTimedEntries is the core reading logic and used by Read and Next.
+// See Read for it's semantics, as Read just calls this and then converts
+// the timedEntry's to Entry's.
 func (r *Reader) readTimedEntries(max int, block bool) []timedEntry {
 	// If we're closed then do nothing.
 	if atomic.LoadUint32(&r.closed) > 0 {

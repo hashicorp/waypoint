@@ -5,12 +5,12 @@ import (
 	"time"
 )
 
-// LogMerge can combine multiple log streams into one stream. It presumes
+// Merger can combine multiple log streams into one stream. It presumes
 // each stream emits entries in time order, and then weaves the entries
 // together to create a total time ordered stream.
-type LogMerge struct {
-	inputs []LogMergeInput
-	heads  []TimedEntry
+type Merger struct {
+	readers []MergeReader
+	heads   []TimedEntry
 }
 
 // TimedEntry is the interface each input returns entries in
@@ -24,28 +24,21 @@ type TimedEntry interface {
 	Value() interface{}
 }
 
-// LogMergeInput is value that returns TimedEntry's for LogMerge
+// MergeReader is value that returns TimedEntry's for LogMerge
 // to weave together.
-type LogMergeInput interface {
+type MergeReader interface {
 	Next() (TimedEntry, error)
 }
 
-// NewLogMerge creates a new LogMerge, with the stream generated
+// NewMerger creates a new LogMerge, with the stream generated
 // from the given inputs.
-func NewLogMerge(inputs ...LogMergeInput) (*LogMerge, error) {
-	var lm LogMerge
-	lm.inputs = inputs
+func NewMerger(readers ...MergeReader) *Merger {
+	var lm Merger
+	lm.readers = readers
 
 	lm.heads = lm.makeHeads()
 
-	return &lm, nil
-}
-
-// AddInput adds a new input to the LogMerge. NOTE: inputs can
-// not be removed at this time.
-func (l *LogMerge) AddInput(input LogMergeInput) {
-	l.inputs = append(l.inputs, input)
-	l.heads = append(l.heads, nil)
+	return &lm
 }
 
 // TimedEntries is a convience type of TimedEntry's that provides
@@ -66,13 +59,13 @@ func (t *TimedEntries) Next() (TimedEntry, error) {
 }
 
 // Create a slice to be used by refillEntries and findNext
-func (l *LogMerge) makeHeads() []TimedEntry {
-	return make([]TimedEntry, len(l.inputs))
+func (l *Merger) makeHeads() []TimedEntry {
+	return make([]TimedEntry, len(l.readers))
 }
 
 // Populate any missing entries with an entry from the corresponding
 // input (index in slice corresponds to inputs slice).
-func (l *LogMerge) refillEntries(entries []TimedEntry) int {
+func (l *Merger) refillEntries(entries []TimedEntry) int {
 	var pop int
 
 	for i, ent := range entries {
@@ -81,7 +74,7 @@ func (l *LogMerge) refillEntries(entries []TimedEntry) int {
 			continue
 		}
 
-		ent, err := l.inputs[i].Next()
+		ent, err := l.readers[i].Next()
 		if err == nil {
 			pop++
 			entries[i] = ent
@@ -93,11 +86,11 @@ func (l *LogMerge) refillEntries(entries []TimedEntry) int {
 
 // Find the entry in entries with earliest time, returning the entry and the
 // input that generated it.
-func (l *LogMerge) findNext(entries []TimedEntry) (TimedEntry, LogMergeInput) {
+func (l *Merger) findNext(entries []TimedEntry) (TimedEntry, MergeReader) {
 	var (
 		best      TimedEntry
 		bestIdx   int
-		bestInput LogMergeInput
+		bestInput MergeReader
 	)
 
 	for i, ent := range entries {
@@ -108,7 +101,7 @@ func (l *LogMerge) findNext(entries []TimedEntry) (TimedEntry, LogMergeInput) {
 		if best == nil || ent.Time().Before(best.Time()) {
 			best = ent
 			bestIdx = i
-			bestInput = l.inputs[i]
+			bestInput = l.readers[i]
 		}
 	}
 
@@ -121,21 +114,21 @@ func (l *LogMerge) findNext(entries []TimedEntry) (TimedEntry, LogMergeInput) {
 	return best, bestInput
 }
 
-// InputEntry is returned by ReadNext. It provides access to the TimedEntry
+// ReaderEntry is returned by ReadNext. It provides access to the TimedEntry
 // that is next as well as the input that generated the entry. This
 // type is important because it allows the caller to figure out the context
 // of the entry from the input. Because LogMerge is going to effectively
 // shuffle the values that are put into it, the caller is going to have to deal
 // with entries appearing in any order and the input provides critical context.
-type InputEntry struct {
+type ReaderEntry struct {
 	TimedEntry
-	Input LogMergeInput
+	Reader MergeReader
 }
 
 // ReadNext returns a slice of InputEntrys that are next in total time order.
 // The result might be fewer than count values, depending on what is available.
-func (l *LogMerge) ReadNext(count int) ([]InputEntry, error) {
-	var out []InputEntry
+func (l *Merger) ReadNext(count int) ([]ReaderEntry, error) {
+	var out []ReaderEntry
 
 	heads := l.heads
 
@@ -146,7 +139,7 @@ func (l *LogMerge) ReadNext(count int) ([]InputEntry, error) {
 		}
 
 		ent, ip := l.findNext(heads)
-		out = append(out, InputEntry{TimedEntry: ent, Input: ip})
+		out = append(out, ReaderEntry{TimedEntry: ent, Reader: ip})
 	}
 
 	return out, nil
