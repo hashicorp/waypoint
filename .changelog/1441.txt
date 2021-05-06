@@ -1,0 +1,3 @@
+```release-note:bug
+server: fix order of log lines when showing logs from multiple instances
+```
