@@ -97,13 +97,13 @@ state:
 status_badge:
   partial:
     text: 'Partial'
-    tooltip: 'Application is partially running'
+    tooltip: 'Application is partially available'
   down:
     text: 'Down'
     tooltip: 'Application is down'
   ready:
     text: 'Up'
-    tooltip: 'Application is running'
+    tooltip: 'Application is ready'
   alive:
     text: 'Starting...'
     tooltip: 'Application is starting'
