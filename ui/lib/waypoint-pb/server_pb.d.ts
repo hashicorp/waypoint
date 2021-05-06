@@ -88,6 +88,9 @@ export class Application extends jspb.Message {
   getName(): string;
   setName(value: string): Application;
 
+  getFileChangeSignal(): string;
+  setFileChangeSignal(value: string): Application;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Application.AsObject;
   static toObject(includeInstance: boolean, msg: Application): Application.AsObject;
@@ -100,6 +103,7 @@ export namespace Application {
   export type AsObject = {
     project?: Ref.Project.AsObject,
     name: string,
+    fileChangeSignal: string,
   }
 }
 
@@ -133,6 +137,9 @@ export class Project extends jspb.Message {
   getWaypointHclFormat(): Project.Format;
   setWaypointHclFormat(value: Project.Format): Project;
 
+  getFileChangeSignal(): string;
+  setFileChangeSignal(value: string): Project;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Project.AsObject;
   static toObject(includeInstance: boolean, msg: Project): Project.AsObject;
@@ -150,6 +157,7 @@ export namespace Project {
     dataSourcePoll?: Project.Poll.AsObject,
     waypointHcl: Uint8Array | string,
     waypointHclFormat: Project.Format,
+    fileChangeSignal: string,
   }
 
   export class Poll extends jspb.Message {
@@ -696,6 +704,28 @@ export namespace OperationOrder {
     UNSET = 0,
     START_TIME = 1,
     COMPLETE_TIME = 2,
+  }
+}
+
+export class Generation extends jspb.Message {
+  getId(): string;
+  setId(value: string): Generation;
+
+  getInitialSequence(): number;
+  setInitialSequence(value: number): Generation;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Generation.AsObject;
+  static toObject(includeInstance: boolean, msg: Generation): Generation.AsObject;
+  static serializeBinaryToWriter(message: Generation, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Generation;
+  static deserializeBinaryFromReader(message: Generation, reader: jspb.BinaryReader): Generation;
+}
+
+export namespace Generation {
+  export type AsObject = {
+    id: string,
+    initialSequence: number,
   }
 }
 
@@ -1326,6 +1356,11 @@ export namespace Job {
 
 
   export class UpOp extends jspb.Message {
+    getRelease(): Job.ReleaseOp | undefined;
+    setRelease(value?: Job.ReleaseOp): UpOp;
+    hasRelease(): boolean;
+    clearRelease(): UpOp;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): UpOp.AsObject;
     static toObject(includeInstance: boolean, msg: UpOp): UpOp.AsObject;
@@ -1336,6 +1371,7 @@ export namespace Job {
 
   export namespace UpOp {
     export type AsObject = {
+      release?: Job.ReleaseOp.AsObject,
     }
   }
 
@@ -1737,6 +1773,12 @@ export namespace Job {
     getPrune(): boolean;
     setPrune(value: boolean): ReleaseOp;
 
+    getPruneRetain(): number;
+    setPruneRetain(value: number): ReleaseOp;
+
+    getPruneRetainOverride(): boolean;
+    setPruneRetainOverride(value: boolean): ReleaseOp;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): ReleaseOp.AsObject;
     static toObject(includeInstance: boolean, msg: ReleaseOp): ReleaseOp.AsObject;
@@ -1749,6 +1791,8 @@ export namespace Job {
     export type AsObject = {
       deployment?: Deployment.AsObject,
       prune: boolean,
+      pruneRetain: number,
+      pruneRetainOverride: boolean,
     }
   }
 
@@ -3572,6 +3616,9 @@ export class UpsertApplicationRequest extends jspb.Message {
   getName(): string;
   setName(value: string): UpsertApplicationRequest;
 
+  getFileChangeSignal(): string;
+  setFileChangeSignal(value: string): UpsertApplicationRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UpsertApplicationRequest.AsObject;
   static toObject(includeInstance: boolean, msg: UpsertApplicationRequest): UpsertApplicationRequest.AsObject;
@@ -3584,6 +3631,7 @@ export namespace UpsertApplicationRequest {
   export type AsObject = {
     project?: Ref.Project.AsObject,
     name: string,
+    fileChangeSignal: string,
   }
 }
 
@@ -4212,6 +4260,11 @@ export class Deployment extends jspb.Message {
   getId(): string;
   setId(value: string): Deployment;
 
+  getGeneration(): Generation | undefined;
+  setGeneration(value?: Generation): Deployment;
+  hasGeneration(): boolean;
+  clearGeneration(): Deployment;
+
   getState(): Operation.PhysicalState;
   setState(value: Operation.PhysicalState): Deployment;
 
@@ -4272,6 +4325,7 @@ export namespace Deployment {
     workspace?: Ref.Workspace.AsObject,
     sequence: number,
     id: string,
+    generation?: Generation.AsObject,
     state: Operation.PhysicalState,
     status?: Status.AsObject,
     component?: Component.AsObject,
@@ -4934,6 +4988,12 @@ export class ConfigVar extends jspb.Message {
   hasDynamic(): boolean;
   clearDynamic(): ConfigVar;
 
+  getInternal(): boolean;
+  setInternal(value: boolean): ConfigVar;
+
+  getNameIsPath(): boolean;
+  setNameIsPath(value: boolean): ConfigVar;
+
   getScopeCase(): ConfigVar.ScopeCase;
 
   getValueCase(): ConfigVar.ValueCase;
@@ -4955,6 +5015,8 @@ export namespace ConfigVar {
     unset?: google_protobuf_empty_pb.Empty.AsObject,
     pb_static: string,
     dynamic?: ConfigVar.DynamicVal.AsObject,
+    internal: boolean,
+    nameIsPath: boolean,
   }
 
   export class DynamicVal extends jspb.Message {
@@ -5548,6 +5610,9 @@ export class EntrypointConfig extends jspb.Message {
   clearConfigSourcesList(): EntrypointConfig;
   addConfigSources(value?: ConfigSource, index?: number): ConfigSource;
 
+  getFileChangeSignal(): string;
+  setFileChangeSignal(value: string): EntrypointConfig;
+
   getUrlService(): EntrypointConfig.URLService | undefined;
   setUrlService(value?: EntrypointConfig.URLService): EntrypointConfig;
   hasUrlService(): boolean;
@@ -5571,6 +5636,7 @@ export namespace EntrypointConfig {
     execList: Array<EntrypointConfig.Exec.AsObject>,
     envVarsList: Array<ConfigVar.AsObject>,
     configSourcesList: Array<ConfigSource.AsObject>,
+    fileChangeSignal: string,
     urlService?: EntrypointConfig.URLService.AsObject,
     deployment?: EntrypointConfig.DeploymentInfo.AsObject,
   }
