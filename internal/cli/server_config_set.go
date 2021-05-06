@@ -24,6 +24,31 @@ func (c *ServerConfigSetCommand) Run(args []string) int {
 		return 1
 	}
 
+	c.ui.Output(
+		"Modifying server configuration with the following settings:",
+		terminal.WithHeaderStyle(),
+	)
+
+	addr := c.flagAdvertiseAddr.Addr
+	if addr == "" {
+		addr = "<empty>"
+	}
+
+	c.ui.NamedValues([]terminal.NamedValue{
+		{
+			Name:  "advertise-addr",
+			Value: addr,
+		},
+		{
+			Name:  "advertise-tls",
+			Value: c.flagAdvertiseAddr.Tls,
+		},
+		{
+			Name:  "advertise-tls-skip-verify",
+			Value: c.flagAdvertiseAddr.TlsSkipVerify,
+		},
+	})
+
 	cfg := &pb.ServerConfig{
 		AdvertiseAddrs: []*pb.ServerConfig_AdvertiseAddr{
 			&c.flagAdvertiseAddr,
@@ -90,6 +115,10 @@ Usage: waypoint server config-set [options]
   The configuration that can be set here is different from the configuration
   given via the startup file. This configuration is persisted in the server
   database.
+
+  Each flag represents a setting and all settings are transmitted to the server
+  on submission. To correctly set the configuration, provide all flags
+  together in one call.
 
 ` + c.Flags().Help())
 }
