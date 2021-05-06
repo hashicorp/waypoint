@@ -121,7 +121,7 @@ func (a *App) createReleaser(ctx context.Context, hclCtx *hcl.EvalContext) (*Com
 	if !ok || pr.DefaultReleaserFunc() == nil {
 		log.Debug("default releaser not supported by platform, stopping")
 		platformC.Close()
-		return nil, status.Errorf(codes.Unimplemented, "")
+		return nil, status.Errorf(codes.Unimplemented, "no releaser is supported by the requested platform")
 	}
 
 	// It does! Initialize it.

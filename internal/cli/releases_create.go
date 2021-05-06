@@ -154,9 +154,12 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 				terminal.WithWarningStyle())
 		}
 
-		app.UI.Output("\nReporting Status...", terminal.WithInfoStyle())
+		// Status Report
+		app.UI.Output("")
 		_, err = app.StatusReport(ctx, &pb.Job_StatusReportOp{
-			Deployment: deploy,
+			Target: &pb.Job_StatusReportOp_Release{
+				Release: result.Release,
+			},
 		})
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())

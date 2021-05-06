@@ -251,7 +251,6 @@ func (a *App) callDynamicFunc(
 	// Build the chain and call it
 	callResult := rawFunc.Call(args...)
 	if err := callResult.Err(); err != nil {
-		// TODO original error
 		return nil, err
 	}
 	raw := callResult.Out(0)

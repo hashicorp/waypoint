@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 
@@ -18,13 +19,13 @@ import (
 )
 
 // Builds a status report on the given deployment
-// TODO(briancain): test
 func (a *App) StatusReport(
 	ctx context.Context,
-	target *pb.Deployment,
+	deployTarget *pb.Deployment,
+	releaseTarget *pb.Release,
 ) (*pb.StatusReport, *sdk.StatusReport, error) {
 	var evalCtx hcl.EvalContext
-	if err := evalCtxTemplateProto(&evalCtx, "deploy", target); err != nil {
+	if err := evalCtxTemplateProto(&evalCtx, "deploy", deployTarget); err != nil {
 		a.logger.Warn("failed to prepare template variables, will not be available",
 			"err", err)
 	}
@@ -49,8 +50,9 @@ func (a *App) StatusReport(
 	}
 
 	result, msg, err := a.doOperation(ctx, a.logger.Named("statusreport"), &statusReportOperation{
-		Component: c,
-		Target:    target,
+		Component:     c,
+		DeployTarget:  deployTarget,
+		ReleaseTarget: releaseTarget,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -69,7 +71,15 @@ func (a *App) createStatusReporter(
 ) (*Component, error) {
 	log := a.logger
 
+	// Load variables from deploy
+	hclCtx = hclCtx.NewChild()
+	if _, err := a.deployEvalContext(ctx, hclCtx); err != nil {
+		return nil, err
+	}
+
 	log.Debug("initializing status report plugin")
+	// Potential bug here with k8s apply plugin
+	// Works with docker and k8s ok
 	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, hclCtx)
 	if err == nil {
 		// We have a status reporter configured, use that.
@@ -79,25 +89,27 @@ func (a *App) createStatusReporter(
 	// If we received Unimplemented, we just don't have a status report. Otherwise
 	// we want to return the error we got.
 	if status.Code(err) != codes.Unimplemented {
+		c.Close()
 		return nil, err
 	}
 
-	// TODO remove this
 	return nil, err
 }
 
 type statusReportOperation struct {
-	Component *Component
-	Target    *pb.Deployment
+	Component     *Component
+	DeployTarget  *pb.Deployment
+	ReleaseTarget *pb.Release
 
 	result *sdk.StatusReport
 }
 
 func (op *statusReportOperation) Init(app *App) (proto.Message, error) {
-	// TODO: Maybe more is needed here... deployment id?
 	return &pb.StatusReport{
-		Application: app.ref,
-		Workspace:   app.workspace,
+		Application:   app.ref,
+		Workspace:     app.workspace,
+		HealthStatus:  "UNKNOWN",
+		HealthMessage: "Unknown health status",
 	}, nil
 }
 
@@ -144,12 +156,22 @@ func (op *statusReportOperation) Do(
 		return nil, nil
 	}
 
+	// Call func on deployment _or_ release target
+	var args []argmapper.Arg
+	if op.DeployTarget != nil && op.DeployTarget.Deployment != nil {
+		args = append(args, argNamedAny("target", op.DeployTarget.Deployment))
+	} else if op.ReleaseTarget != nil && op.ReleaseTarget.Release != nil {
+		args = append(args, argNamedAny("target", op.ReleaseTarget.Release))
+	} else {
+		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status report target given")
+	}
+
 	result, err := app.callDynamicFunc(ctx,
 		log,
-		nil, // what should expected return be? component.Status?
+		nil,
 		op.Component,
 		op.Component.Value.(component.Status).StatusFunc(),
-		argNamedAny("target", op.Target.Deployment),
+		args...,
 	)
 	if err != nil {
 		return nil, err

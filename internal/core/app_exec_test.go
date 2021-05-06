@@ -29,7 +29,7 @@ func TestAppExec_happy(t *testing.T) {
 	require := require.New(t)
 	assert := assert.New(t)
 
-	// Our mock platform, which must also implement Destroyer
+	// Our mock platform, which must also implement Execer
 	mock := struct {
 		*componentmocks.Platform
 		*componentmocks.Execer

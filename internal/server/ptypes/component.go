@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
@@ -72,6 +73,8 @@ func TestValidDeployment(t testing.T, src *pb.Deployment) *pb.Deployment {
 		src = &pb.Deployment{}
 	}
 
+	deployment, _ := ptypes.MarshalAny(&empty.Empty{})
+
 	require.NoError(t, mergo.Merge(src, &pb.Deployment{
 		Application: &pb.Ref_Application{
 			Application: "a_test",
@@ -80,7 +83,8 @@ func TestValidDeployment(t testing.T, src *pb.Deployment) *pb.Deployment {
 		Workspace: &pb.Ref_Workspace{
 			Workspace: "default",
 		},
-		Status: testStatus(t),
+		Status:     testStatus(t),
+		Deployment: deployment,
 	}))
 
 	return src
@@ -102,6 +106,28 @@ func TestValidRelease(t testing.T, src *pb.Release) *pb.Release {
 			Workspace: "default",
 		},
 		Status: testStatus(t),
+	}))
+
+	return src
+}
+
+func TestValidStatusReport(t testing.T, src *pb.StatusReport) *pb.StatusReport {
+	t.Helper()
+
+	if src == nil {
+		src = &pb.StatusReport{}
+	}
+
+	require.NoError(t, mergo.Merge(src, &pb.StatusReport{
+		Application: &pb.Ref_Application{
+			Application: "a_test",
+			Project:     "p_test",
+		},
+		Workspace: &pb.Ref_Workspace{
+			Workspace: "default",
+		},
+		HealthStatus:  "READY",
+		HealthMessage: "ready for requests",
 	}))
 
 	return src

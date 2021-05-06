@@ -37,7 +37,6 @@ func (s *service) UpsertStatusReport(
 	return &pb.UpsertStatusReportResponse{StatusReport: result}, nil
 }
 
-// TODO: test
 func (s *service) ListStatusReports(
 	ctx context.Context,
 	req *pb.ListStatusReportsRequest,
@@ -55,7 +54,6 @@ func (s *service) ListStatusReports(
 	return &pb.ListStatusReportsResponse{StatusReports: result}, nil
 }
 
-// TODO: test
 func (s *service) GetLatestStatusReport(
 	ctx context.Context,
 	req *pb.GetLatestStatusReportRequest,
@@ -64,10 +62,6 @@ func (s *service) GetLatestStatusReport(
 	if err != nil {
 		return nil, err
 	}
-
-	//if err := s.releasePreloadDetails(ctx, req.LoadDetails, r); err != nil {
-	//	return nil, err
-	//}
 
 	return r, nil
 }

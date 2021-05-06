@@ -186,6 +186,9 @@ service Waypoint {
   // GetStatusReport returns a StatusReport
   rpc GetStatusReport(GetStatusReportRequest) returns (StatusReport);
 
+  // ListStatusReports returns the deployments.
+  rpc ListStatusReports(ListStatusReportsRequest) returns (ListStatusReportsResponse);
+
   //----------------------------------------------------------------------
   // Runner endpoints. These are expected to be called only by a runner.
   // These are not meant to be public endpoints.
@@ -1132,9 +1135,16 @@ message Job {
   }
 
   message StatusReportOp {
-    // The deployment that should be associated with this status report
-    // operation
-    Deployment deployment = 1;
+    oneof target {
+
+      // The deployment that should be associated with this status report
+      // operation
+      Deployment deployment = 1;
+
+      // The release that should be associated with this status report
+      // operation
+      Release release = 2;
+    }
   }
 
   message StatusReportResult {
@@ -2046,10 +2056,6 @@ message Deployment {
     // all deployment API calls. This will be empty if the URL service
     // is not enabled or there was an error loading this information.
     string deploy_url = 3;
-
-    // The most recent status report for the given deployment. We preload this
-    // report for easy access for the UI
-    StatusReport status_report = 4;
   }
 }
 
@@ -2264,10 +2270,6 @@ message Release {
 
     // Populated when LoadDetails is set.
     Build build = 3;
-
-    // The most recent status report for the given release. We preload this
-    // report for easy access for the UI
-    StatusReport status_report = 4;
   }
 }
 
@@ -2295,10 +2297,6 @@ message GetLatestStatusReportRequest {
 
   // workspace for the report, any workspace if empty
   Ref.Workspace workspace = 2;
-
-  // Load additional details about the release. These will become available
-  // in the Preload section.
-  //Release.LoadDetails load_details = 3;
 }
 
 message ListStatusReportsRequest {
@@ -2320,15 +2318,11 @@ message ListStatusReportsRequest {
   // Specifies the order of results. If this isn't specified, the results
   // are in an undefined order.
   OperationOrder order = 2;
-
-  // Load additional details about the release. These will become available
-  // in the Preload section.
-  //Release.LoadDetails load_details = 6;
 }
 
 
-// For 0.4.0, there should only be 1 status report per resource
 message ListStatusReportsResponse {
+  // For 0.4.0, there should only the one 'latest' status report
   repeated StatusReport status_reports = 1;
 }
 
@@ -2358,7 +2352,7 @@ message StatusReport {
   string deployment_id = 3;
 
   // status of the release operation.
-  //Note that this status is not related to the status report, but the current
+  // Note that this status is not related to the status report, but the current
   // state of the StatusReport operation
   Status status = 4;
 
@@ -2367,6 +2361,27 @@ message StatusReport {
 
   // release is the raw release object encoded directly from the plugin.
   google.protobuf.Any status_report = 6;
+
+  // the overall health of the report
+  string health_status = 7;
+
+  // the overall health message of the report
+  string health_message = 8;
+
+  // Sub-resources that make up the deployment or release. If there is only
+  // one resosurce, the health status and message will exist as the overall
+  // health_status and health_message
+  repeated ResourcesHealthState resources_health = 9;
+
+  message ResourcesHealthState {
+    // the overall health of the report
+    string health_status = 1;
+
+    // the overall health message of the report
+    string health_message = 2;
+
+    // TODO: resource name/id?
+  }
 }
 
 /********************************************************************

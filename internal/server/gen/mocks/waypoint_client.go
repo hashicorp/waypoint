@@ -1128,6 +1128,36 @@ func (_m *WaypointClient) ListReleases(ctx context.Context, in *gen.ListReleases
 	return r0, r1
 }
 
+// ListStatusReports provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) ListStatusReports(ctx context.Context, in *gen.ListStatusReportsRequest, opts ...grpc.CallOption) (*gen.ListStatusReportsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.ListStatusReportsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListStatusReportsRequest, ...grpc.CallOption) *gen.ListStatusReportsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListStatusReportsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListStatusReportsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListWorkspaces provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) ListWorkspaces(ctx context.Context, in *gen.ListWorkspacesRequest, opts ...grpc.CallOption) (*gen.ListWorkspacesResponse, error) {
 	_va := make([]interface{}, len(opts))

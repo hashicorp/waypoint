@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -24,7 +25,17 @@ func (r *Runner) executeStatusReportOp(
 		panic("operation not expected type")
 	}
 
-	statusReportResult, _, err := app.StatusReport(ctx, op.StatusReport.Deployment)
+	var statusReportResult *pb.StatusReport
+
+	switch t := op.StatusReport.Target.(type) {
+	case *pb.Job_StatusReportOp_Deployment:
+		statusReportResult, _, err = app.StatusReport(ctx, t.Deployment, nil)
+	case *pb.Job_StatusReportOp_Release:
+		statusReportResult, _, err = app.StatusReport(ctx, nil, t.Release)
+	default:
+		err = fmt.Errorf("unknown destruction target: %T", op.StatusReport.Target)
+	}
+
 	if err != nil {
 		return nil, err
 	}

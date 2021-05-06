@@ -8,7 +8,7 @@ var statusReportOp = &appOperation{
 	Struct: (*pb.StatusReport)(nil),
 	Bucket: []byte("statusreport"),
 
-	MaximumIndexedRecords: 1,
+	MaximumIndexedRecords: 1, // Only store the "latest" report
 }
 
 func init() {
