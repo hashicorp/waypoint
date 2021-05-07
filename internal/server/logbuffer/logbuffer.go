@@ -75,7 +75,7 @@ func New() *Buffer {
 func (b *Buffer) Write(entries ...Entry) {
 	// We could ask Entry if it supports time, but using ingest time is
 	// pretty standard as well. So we wrap each entry in a timed entry
-	// with the time it arrived, so that later LogMerge can make sense
+	// with the time it arrived, so that later Merger can make sense
 	// of the total order across multiple buffers.
 	timedEntries := make([]timedEntry, len(entries))
 	for i, ent := range entries {
@@ -255,7 +255,7 @@ func (r *Reader) Read(max int, block bool) []Entry {
 	return entries
 }
 
-// Next returns the next entry. This is used by LogMerge to merge multiple
+// Next returns the next entry. This is used by Merger to merge multiple
 // readers results together, using the ingest time to provide an order on
 // the values. This never blocks, returning io.EOF if there are no further
 // values.

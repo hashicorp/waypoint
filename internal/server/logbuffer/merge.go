@@ -24,13 +24,13 @@ type TimedEntry interface {
 	Value() interface{}
 }
 
-// MergeReader is value that returns TimedEntry's for LogMerge
+// MergeReader is value that returns TimedEntry's for Merger
 // to weave together.
 type MergeReader interface {
 	Next() (TimedEntry, error)
 }
 
-// NewMerger creates a new LogMerge, with the stream generated
+// NewMerger creates a new Merger, with the stream generated
 // from the given inputs.
 func NewMerger(readers ...MergeReader) *Merger {
 	var lm Merger
@@ -117,7 +117,7 @@ func (l *Merger) findNext(entries []TimedEntry) (TimedEntry, MergeReader) {
 // ReaderEntry is returned by ReadNext. It provides access to the TimedEntry
 // that is next as well as the input that generated the entry. This
 // type is important because it allows the caller to figure out the context
-// of the entry from the input. Because LogMerge is going to effectively
+// of the entry from the input. Because Merger is going to effectively
 // shuffle the values that are put into it, the caller is going to have to deal
 // with entries appearing in any order and the input provides critical context.
 type ReaderEntry struct {
