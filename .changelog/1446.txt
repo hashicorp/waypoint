@@ -1,0 +1,3 @@
+```release-note:bug
+aws-ec2: Check Auto Scaling activites for failures or cancellations
+```
