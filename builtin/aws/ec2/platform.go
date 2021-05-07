@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
@@ -117,6 +119,7 @@ func (p *Platform) Deploy(
 		subnetsComma = strings.Join(sc, ",")
 
 		vpc = v
+
 	} else {
 		subnetInfo, err := e.DescribeSubnets(&ec2.DescribeSubnetsInput{
 			SubnetIds: []*string{aws.String(p.config.Subnet)},
@@ -243,7 +246,36 @@ func (p *Platform) Deploy(
 
 	var instances []*string
 
+	// activityTicker periodically checks the ASG activity API to look for failure
+	// or cancellation
+	activityTicker := time.NewTicker(10 * time.Second)
+	defer activityTicker.Stop()
+
 	for {
+		select {
+		case <-activityTicker.C:
+			dsa, err := as.DescribeScalingActivities(&autoscaling.DescribeScalingActivitiesInput{
+				AutoScalingGroupName: aws.String(serviceName),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			// check scaling activities, capture any non-nil status code and messages
+			// to check for failures
+			var lastStatusCode, lastStatusMessage string
+			if len(dsa.Activities) > 0 {
+				lastStatusCode = aws.StringValue(dsa.Activities[0].StatusCode)
+				lastStatusMessage = aws.StringValue(dsa.Activities[0].StatusMessage)
+			}
+
+			if lastStatusCode == autoscaling.ScalingActivityStatusCodeFailed ||
+				lastStatusCode == autoscaling.ScalingActivityStatusCodeCancelled {
+				return nil, status.Errorf(codes.FailedPrecondition, "error setting up autoscaling group. Last status code (%s): \n Message: %s", lastStatusCode, lastStatusMessage)
+			}
+		default:
+		}
+
 		asg, err := as.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
 			AutoScalingGroupNames: []*string{aws.String(serviceName)},
 		})
@@ -334,7 +366,6 @@ func (p *Platform) Destroy(
 		_, err := elbv2.New(sess).DeleteTargetGroup(&elbv2.DeleteTargetGroupInput{
 			TargetGroupArn: &deployment.TargetGroupArn,
 		})
-
 		if err != nil {
 			ui.Output("error deleting tg: %s", err)
 			return err
