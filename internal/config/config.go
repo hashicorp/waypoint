@@ -15,9 +15,14 @@ import (
 type Config struct {
 	*hclConfig
 
-	ctx      *hcl.EvalContext
-	path     string
-	pathData map[string]string
+	ctx       *hcl.EvalContext
+	path      string
+	pathData  map[string]string
+	workspace string
+}
+
+func (c *Config) SetWorkspace(workspace string) {
+	c.workspace = workspace
 }
 
 type hclConfig struct {
