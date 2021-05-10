@@ -1154,7 +1154,29 @@ func (p *Platform) Launch(
 		registerTaskDefinitionInput.SetTaskRoleArn(taskRoleArn)
 	}
 
-	taskOut, err := ecsSvc.RegisterTaskDefinition(&registerTaskDefinitionInput)
+	var taskOut *ecs.RegisterTaskDefinitionOutput
+
+	// AWS is eventually consistent so even though we probably created the resources that
+	// are referenced by the task definition, it can error out if we try to reference those resources
+	// too quickly. So we're forced to guard actions which reference other AWS services
+	// with loops like this.
+	for i := 0; i < 30; i++ {
+		taskOut, err = ecsSvc.RegisterTaskDefinition(&registerTaskDefinitionInput)
+		if err == nil {
+			break
+		}
+
+		// if we encounter an unrecoverable error, exit now.
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "ResourceConflictException":
+				return nil, err
+			}
+		}
+
+		// otherwise sleep and try again
+		time.Sleep(2 * time.Second)
+	}
 
 	if err != nil {
 		return nil, err
@@ -1266,7 +1288,32 @@ func (p *Platform) Launch(
 	}
 
 	s.Status("Creating ECS Service (%s, cluster-name: %s)", serviceName, clusterName)
-	servOut, err := ecsSvc.CreateService(createServiceInput)
+
+	var servOut *ecs.CreateServiceOutput
+
+	// AWS is eventually consistent so even though we probably created the resources that
+	// are referenced by the service, it can error out if we try to reference those resources
+	// too quickly. So we're forced to guard actions which reference other AWS services
+	// with loops like this.
+	for i := 0; i < 30; i++ {
+		servOut, err = ecsSvc.CreateService(createServiceInput)
+		if err == nil {
+			break
+		}
+
+		// if we encounter an unrecoverable error, exit now.
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case "AccessDeniedException", "UnsupportedFeatureException",
+				"PlatformUnknownException",
+				"PlatformTaskDefinitionIncompatibilityException":
+				return nil, err
+			}
+		}
+
+		// otherwise sleep and try again
+		time.Sleep(2 * time.Second)
+	}
 
 	if err != nil {
 		return nil, err
