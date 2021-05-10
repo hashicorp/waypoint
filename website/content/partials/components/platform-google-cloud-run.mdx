@@ -139,6 +139,35 @@ Is public unauthenticated access allowed for the Cloud Run instance?.
 - Type: **bool**
 - **Optional**
 
+#### cloudsql_instances
+
+List of CloudSQL instances that the Cloud Run instance will have access to.
+
+- Type: **[]string**
+- **Optional**
+
+#### vpc_access
+
+VPC (Virtual Private Cloud) configuration for the Cloud Run instance granting
+access to reqsources by their internal IPs.
+
+- Type: **\*cloudrun.VPCAccess**
+
+#### vpc_access.connector
+
+Name of the VPC Access Connector to use for this Cloud Run instance.
+
+- Type: **string**
+- **Optional**
+
+#### vpc_access.egress
+
+VPC egress type. Supported values are 'all' (route all traffic through the VPC connctor)
+and 'private-ranges-only' (only route requsts to internal IPs throgh the connector).
+
+- Type: **string**
+- **Optional**
+
 ### Output Attributes
 
 Output attributes can be used in your `waypoint.hcl` as [variables](/docs/waypoint-hcl/variables) via [`artifact`](/docs/waypoint-hcl/variables/artifact) or [`deploy`](/docs/waypoint-hcl/variables/deploy).
