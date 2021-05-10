@@ -36,7 +36,7 @@ func TestMerge(t *testing.T) {
 
 		lm := NewMerger(&input)
 
-		entries, err := lm.ReadNext(10)
+		entries, err := lm.Read(10)
 		require.NoError(t, err)
 
 		require.Len(t, entries, 10)
@@ -68,7 +68,7 @@ func TestMerge(t *testing.T) {
 
 		lm := NewMerger(&input1, &input2)
 
-		entries, err := lm.ReadNext(20)
+		entries, err := lm.Read(20)
 		require.NoError(t, err)
 
 		require.Len(t, entries, 20)
@@ -103,14 +103,14 @@ func TestMerge(t *testing.T) {
 
 		lm := NewMerger(&input1, &input2)
 
-		entries, err := lm.ReadNext(1)
+		entries, err := lm.Read(1)
 		require.NoError(t, err)
 
 		require.Len(t, entries, 1)
 
 		require.True(t, start.Equal(entries[0].Time()))
 
-		entries, err = lm.ReadNext(1)
+		entries, err = lm.Read(1)
 		require.NoError(t, err)
 
 		require.Len(t, entries, 1)
@@ -141,7 +141,7 @@ func TestMerge(t *testing.T) {
 
 		lm := NewMerger(&input1, &input2)
 
-		entries, err := lm.ReadNext(20)
+		entries, err := lm.Read(20)
 		require.NoError(t, err)
 
 		require.Len(t, entries, 15)
@@ -185,7 +185,7 @@ func TestMerge(t *testing.T) {
 
 		lm := NewMerger(&input1, &input2)
 
-		entries, err := lm.ReadNext(20)
+		entries, err := lm.Read(20)
 		require.NoError(t, err)
 
 		require.Len(t, entries, 20)

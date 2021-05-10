@@ -259,7 +259,7 @@ func (r *Reader) Read(max int, block bool) []Entry {
 // readers results together, using the ingest time to provide an order on
 // the values. This never blocks, returning io.EOF if there are no further
 // values.
-func (r *Reader) Next() (TimedEntry, error) {
+func (r *Reader) NextTimedEntry() (TimedEntry, error) {
 	timedEntries := r.readTimedEntries(1, false)
 	if timedEntries == nil {
 		return nil, io.EOF
@@ -267,6 +267,9 @@ func (r *Reader) Next() (TimedEntry, error) {
 
 	return timedEntries[0], nil
 }
+
+// Check that Reader is also a MergeReader
+var _ MergeReader = (*Reader)(nil)
 
 // Close closes the reader. This will cause all future Read calls to
 // return immediately with a nil result. This will also immediately unblock

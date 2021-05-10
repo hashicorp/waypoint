@@ -27,26 +27,24 @@ type TimedEntry interface {
 // MergeReader is value that returns TimedEntry's for Merger
 // to weave together.
 type MergeReader interface {
-	Next() (TimedEntry, error)
+	NextTimedEntry() (TimedEntry, error)
 }
 
 // NewMerger creates a new Merger, with the stream generated
 // from the given inputs.
 func NewMerger(readers ...MergeReader) *Merger {
-	var lm Merger
-	lm.readers = readers
-
-	lm.heads = lm.makeHeads()
-
-	return &lm
+	return &Merger{
+		readers: readers,
+		heads:   make([]TimedEntry, len(readers)),
+	}
 }
 
 // TimedEntries is a convience type of TimedEntry's that provides
-// the LogMergeInput interface.
+// the MergeReader interface.
 type TimedEntries []TimedEntry
 
 // Next returns the next value in the slice and then shrinks itself.
-func (t *TimedEntries) Next() (TimedEntry, error) {
+func (t *TimedEntries) NextTimedEntry() (TimedEntry, error) {
 	if len(*t) == 0 {
 		return nil, io.EOF
 	}
@@ -56,11 +54,6 @@ func (t *TimedEntries) Next() (TimedEntry, error) {
 	*t = (*t)[1:]
 
 	return ent, nil
-}
-
-// Create a slice to be used by refillEntries and findNext
-func (l *Merger) makeHeads() []TimedEntry {
-	return make([]TimedEntry, len(l.readers))
 }
 
 // Populate any missing entries with an entry from the corresponding
@@ -74,7 +67,7 @@ func (l *Merger) refillEntries(entries []TimedEntry) int {
 			continue
 		}
 
-		ent, err := l.readers[i].Next()
+		ent, err := l.readers[i].NextTimedEntry()
 		if err == nil {
 			pop++
 			entries[i] = ent
@@ -127,7 +120,7 @@ type ReaderEntry struct {
 
 // ReadNext returns a slice of InputEntrys that are next in total time order.
 // The result might be fewer than count values, depending on what is available.
-func (l *Merger) ReadNext(count int) ([]ReaderEntry, error) {
+func (l *Merger) Read(count int) ([]ReaderEntry, error) {
 	var out []ReaderEntry
 
 	heads := l.heads

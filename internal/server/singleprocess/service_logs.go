@@ -16,8 +16,13 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
-// defaultLogLimitBacklog is the default backlog amount to send down.
-const defaultLogLimitBacklog = 100
+const (
+	// defaultLogLimitBacklog is the default backlog amount to send down.
+	defaultLogLimitBacklog = 100
+
+	// maxEntriesPerRead is how many log entries we request at a time.
+	maxEntriesPerRead = 60
+)
 
 func (s *service) spawnLogPlugin(
 	ctx context.Context,
@@ -355,13 +360,13 @@ func (s *service) sendInstanceLogs(
 
 	lm := logbuffer.NewMerger(readers...)
 
-	lines := make([]*pb.LogBatch_Entry, 60)
+	lines := make([]*pb.LogBatch_Entry, maxEntriesPerRead)
 
 	// Read out all the log entries from LogMerge. This never blocks waiting
 	// for new log entries, it will simply let each reader output all known
 	// entries and then loop exits.
 	for {
-		entries, err := lm.ReadNext(60)
+		entries, err := lm.Read(len(lines))
 		if err != nil {
 			return err
 		}
