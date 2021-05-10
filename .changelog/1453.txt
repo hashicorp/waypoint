@@ -1,0 +1,3 @@
+```release-note:improvement
+builtin/pack: Add ability to specify a list of file patterns to include files.
+```
