@@ -75,7 +75,7 @@ interface ProjectSettingsArgs {
   project: ProjectModel;
 }
 
-export default class AppFormProjectSettings extends Component<ProjectSettingsArgs> {
+export default class AppFormProjectRepositorySettings extends Component<ProjectSettingsArgs> {
   // normal class body definition here
   @service api!: ApiService;
   @service flashMessages!: FlashMessagesService;
