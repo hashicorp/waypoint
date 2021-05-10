@@ -5,17 +5,15 @@ go 1.13
 require (
 	github.com/Azure/azure-sdk-for-go v42.3.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.10.2
-	github.com/Azure/go-autorest/autorest/adal v0.8.3 // indirect
 	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2
 	github.com/Azure/go-autorest/autorest/to v0.3.0
-	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/adrg/xdg v0.2.1
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
 	github.com/aws/aws-sdk-go v1.36.31
 	github.com/bmatcuk/doublestar v1.1.5
 	github.com/boltdb/bolt v1.3.1
-	github.com/buildpacks/pack v0.11.1
+	github.com/buildpacks/pack v0.15.1
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
 	github.com/containerd/console v1.0.1
@@ -41,7 +39,7 @@ require (
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofrs/flock v0.8.0
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/google/go-jsonnet v0.17.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.1.2
@@ -102,17 +100,15 @@ require (
 	github.com/zclconf/go-cty v1.8.2
 	github.com/zclconf/go-cty-yaml v1.0.2
 	go.uber.org/goleak v1.1.10
-	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20210426230700-d19ff857e887
 	golang.org/x/text v0.3.6 // indirect
-	golang.org/x/tools v0.0.0-20200410194907-79a7a3126eef // indirect
-	google.golang.org/api v0.20.0
-	google.golang.org/genproto v0.0.0-20201002142447-3860012362da
-	google.golang.org/grpc v1.32.0
+	google.golang.org/api v0.22.0
+	google.golang.org/genproto v0.0.0-20201022181438-0ff5f38871d5
+	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/yaml.v2 v2.3.0 // indirect
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
 	k8s.io/client-go v0.19.4

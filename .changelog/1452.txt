@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/pack: Upgrade pack package to fix downloading remote buildpacks
+```
