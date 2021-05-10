@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	ignore "github.com/sabhiram/go-gitignore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -48,6 +49,9 @@ type BuilderConfig struct {
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
+
+	// Files patterns to prevent from being pulled into the build.
+	Ignore []string `hcl:"ignore,optional"`
 }
 
 const DefaultBuilder = "heroku/buildpacks:18"
@@ -129,7 +133,7 @@ func (b *Builder) Build(
 
 	step.Done()
 
-	err = client.Build(ctx, pack.BuildOptions{
+	bo := pack.BuildOptions{
 		Image:      src.App,
 		Builder:    builder,
 		AppPath:    src.Path,
@@ -147,8 +151,22 @@ func (b *Builder) Build(
 
 			return true
 		},
-	})
+	}
 
+	if len(b.config.Ignore) > 0 {
+		excludes := ignore.CompileIgnoreLines(b.config.Ignore...)
+
+		old := bo.FileFilter
+		bo.FileFilter = func(path string) bool {
+			if !old(path) {
+				return false
+			}
+
+			return !excludes.MatchesPath(path)
+		}
+	}
+
+	err = client.Build(ctx, bo)
 	if err != nil {
 		return nil, err
 	}
@@ -319,6 +337,56 @@ build {
 			"configuration variables, use waypoint config for that.",
 			"These variables are used to control over all container modes,",
 			"such as configuring it to start a web app vs a background worker",
+		),
+	)
+
+	doc.SetField(
+		"ignore",
+		"file patterns to match files which not be included in the build",
+		docs.Summary(
+			"Each pattern follows the semantics of .gitignore. This is a summarized version:",
+			`
+    1. A blank line matches no files, so it can serve as a separator
+       for readability.
+    2. A line starting with # serves as a comment. Put a backslash ("\")
+       in front of the first hash for patterns that begin with a hash.
+    3. Trailing spaces are ignored unless they are quoted with backslash ("\").
+    4. An optional prefix "!" which negates the pattern; any matching file
+       excluded by a previous pattern will become included again. It is not
+       possible to re-include a file if a parent directory of that file is
+       excluded. Git doesn’t list excluded directories for performance reasons,
+       so any patterns on contained files have no effect, no matter where they
+       are defined. Put a backslash ("\") in front of the first "!" for
+       patterns that begin with a literal "!", for example, "\!important!.txt".
+    5. If the pattern ends with a slash, it is removed for the purpose of the
+       following description, but it would only find a match with a directory.
+       In other words, foo/ will match a directory foo and paths underneath it,
+       but will not match a regular file or a symbolic link foo (this is
+       consistent with the way how pathspec works in general in Git).
+    6. If the pattern does not contain a slash /, Git treats it as a shell glob
+       pattern and checks for a match against the pathname relative to the
+       location of the .gitignore file (relative to the toplevel of the work
+       tree if not from a .gitignore file).
+    7. Otherwise, Git treats the pattern as a shell glob suitable for
+       consumption by fnmatch(3) with the FNM_PATHNAME flag: wildcards in the
+       pattern will not match a / in the pathname. For example,
+       "Documentation/*.html" matches "Documentation/git.html" but not
+       "Documentation/ppc/ppc.html" or "tools/perf/Documentation/perf.html".
+    8. A leading slash matches the beginning of the pathname. For example,
+       "/*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
+    9. Two consecutive asterisks ("**") in patterns matched against full
+       pathname may have special meaning:
+        i.   A leading "**" followed by a slash means match in all directories.
+             For example, "** /foo" matches file or directory "foo" anywhere,
+             the same as pattern "foo". "** /foo/bar" matches file or directory
+             "bar" anywhere that is directly under directory "foo".
+        ii.  A trailing "/**" matches everything inside. For example, "abc/**"
+             matches all files inside directory "abc", relative to the location
+             of the .gitignore file, with infinite depth.
+        iii. A slash followed by two consecutive asterisks then a slash matches
+             zero or more directories. For example, "a/** /b" matches "a/b",
+             "a/x/b", "a/x/y/b" and so on.
+        iv.  Other consecutive asterisks are considered invalid.`,
 		),
 	)
 
