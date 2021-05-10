@@ -58,7 +58,7 @@ func (c *Config) Apps() []string {
 
 // App returns the configured app named n. If the app doesn't exist, this
 // will return (nil, nil).
-func (c *Config) App(n string, workspace string, ctx *hcl.EvalContext) (*App, error) {
+func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	ctx = appendContext(c.ctx, ctx)
 
 	// Find the app by progressively decoding
@@ -86,7 +86,7 @@ func (c *Config) App(n string, workspace string, ctx *hcl.EvalContext) (*App, er
 	// Build a new context with our app-scoped values
 	ctx = ctx.NewChild()
 	addPathValue(ctx, pathData)
-	addWorkspaceValue(ctx, workspace)
+	addWorkspaceValue(ctx, c.workspace)
 
 	// Full decode
 	var app App
