@@ -65,6 +65,7 @@ var ErrInvalidCPUCount = fmt.Errorf("Invalid value for CPUCount, it is currently
 var ErrInvalidRequestTimetout = fmt.Errorf("RequestTimeout must be greater than 0 and lets than 900\n")
 var ErrInvalidMaxRequests = fmt.Errorf("MaxRequestsPerContainer must be greater than 0\n")
 var ErrInvalidAutoscalingMax = fmt.Errorf("AutoScaling maximum must be larger than 0\n")
+var ErrInvalidVPCAccessEgress = fmt.Errorf("Invalid value for Egress, possible values: 'all' and 'private-ranges-only'\n")
 
 // ValidateConfig checks the deployment configuration for errors
 func validateConfig(c Config) error {
@@ -86,6 +87,8 @@ func validateConfig(c Config) error {
 				errorMessage += ErrInvalidMaxRequests.Error()
 			case "Config.AutoScaling.Max":
 				errorMessage += ErrInvalidAutoscalingMax.Error()
+			case "Config.VPCAccess.Egress":
+				errorMessage += ErrInvalidVPCAccessEgress.Error()
 			default:
 				errorMessage += fmt.Sprintf("%s\n", err.Value())
 			}

@@ -1,0 +1,3 @@
+```release-note:improvement
+builtin/google/cloudrun: Add VPC and Cloud SQL config options
+```
