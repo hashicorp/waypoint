@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/aws/ecs: Retry actions that cross AWS service boundaries to fix eventual consistency issues.
+```
