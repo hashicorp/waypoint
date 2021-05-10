@@ -1,0 +1,3 @@
+```release-note:bug
+plugins: Fix detecting an older version of the plugin SDK in use
+```
