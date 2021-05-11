@@ -342,7 +342,7 @@ build {
 
 	doc.SetField(
 		"ignore",
-		"file patterns to match files which not be included in the build",
+		"file patterns to match files which will not be included in the build",
 		docs.Summary(
 			"Each pattern follows the semantics of .gitignore. This is a summarized version:",
 			`
