@@ -26,6 +26,50 @@ func (c *ContextInspectCommand) Run(args []string) int {
 		return 1
 	}
 
+	if len(c.args) >= 1 {
+		cc, err := c.contextStorage.Load(c.args[0])
+		if err != nil {
+			c.ui.Output("Error loading context '%s': %s", c.args[0], err)
+			return 1
+		}
+
+		if c.flagJson {
+			data, err := json.MarshalIndent(cc.Server, "", "  ")
+			if err != nil {
+				c.ui.Output("Error rendering json: %s", err)
+				return 1
+			}
+
+			c.ui.Output(string(data))
+			return 0
+		}
+
+		c.ui.Output("Context Info:", terminal.WithHeaderStyle())
+
+		c.ui.NamedValues([]terminal.NamedValue{
+			{
+				Name: "address", Value: cc.Server.Address,
+			},
+			{
+				Name: "address internal", Value: cc.Server.AddressInternal,
+			},
+			{
+				Name: "tls", Value: cc.Server.Tls,
+			},
+			{
+				Name: "tls skip verify", Value: cc.Server.TlsSkipVerify,
+			},
+			{
+				Name: "require auth", Value: cc.Server.RequireAuth,
+			},
+			{
+				Name: "platform", Value: cc.Server.Platform,
+			},
+		}, terminal.WithInfoStyle())
+
+		return 0
+	}
+
 	def, err := c.contextStorage.Default()
 	if err != nil {
 		def = "<unknown>"
@@ -45,7 +89,7 @@ func (c *ContextInspectCommand) Run(args []string) int {
 		return 0
 	}
 
-	c.ui.Output("Context Info:", terminal.WithHeaderStyle())
+	c.ui.Output("Context Settings:", terminal.WithHeaderStyle())
 
 	if def == "" {
 		def = "<unset>"
@@ -85,14 +129,14 @@ func (c *ContextInspectCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *ContextInspectCommand) Synopsis() string {
-	return "Output current context info."
+	return "Output context info."
 }
 
 func (c *ContextInspectCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint context inspect <name>=<value>
+Usage: waypoint context inspect [<name>]
 
-  Output information the current waypoint context.
+  Output information about a waypoint context or general context info.
 
 ` + c.Flags().Help())
 }
