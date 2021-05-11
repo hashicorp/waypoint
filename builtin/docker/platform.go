@@ -158,10 +158,20 @@ func (p *Platform) resourceContainerCreate(
 	s := sg.Add("Creating new container...")
 	defer func() { s.Abort() }()
 
-	port := fmt.Sprint(p.config.ServicePort)
-	np, err := nat.NewPort("tcp", port)
-	if err != nil {
-		return err
+	portBindings := nat.PortMap{}
+	exposedPorts := nat.PortSet{}
+	for _, port := range append(p.config.ExtraPorts, p.config.ServicePort) {
+		np, err := nat.NewPort("tcp", fmt.Sprint(port))
+		if err != nil {
+			return err
+		}
+
+		exposedPorts[np] = struct{}{}
+		portBindings[np] = []nat.PortBinding{
+			{
+				HostPort: "", // this is intentionally left empty for a random host port assignment
+			},
+		}
 	}
 
 	cfg := container.Config{
@@ -171,18 +181,11 @@ func (p *Platform) resourceContainerCreate(
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Image:        img.Image + ":" + img.Tag,
-		ExposedPorts: nat.PortSet{np: struct{}{}},
-		Env:          []string{"PORT=" + port},
+		ExposedPorts: exposedPorts,
+		Env:          []string{"PORT=" + fmt.Sprint(p.config.ServicePort)},
 	}
 	if c := p.config.Command; len(c) > 0 {
 		cfg.Cmd = c
-	}
-
-	bindings := nat.PortMap{}
-	bindings[np] = []nat.PortBinding{
-		{
-			HostPort: "", // this is intentionally left empty for a random host port assignment
-		},
 	}
 
 	// default container binds
@@ -210,7 +213,7 @@ func (p *Platform) resourceContainerCreate(
 	// Build our host configuration from the bindings, ports, and resources.
 	hostconfig := container.HostConfig{
 		Binds:        containerBinds,
-		PortBindings: bindings,
+		PortBindings: portBindings,
 		Resources:    resources,
 	}
 
@@ -297,7 +300,7 @@ func (p *Platform) resourceContainerDestroy(
 		return nil
 	}
 
-	s := sg.Add("Deleting container...")
+	s := sg.Add("Deleting container: %s", state.Id)
 	defer func() { s.Abort() }()
 
 	// Remove it
@@ -366,7 +369,7 @@ func (p *Platform) Deploy(
 	return &result, nil
 }
 
-// Destroy deletes the K8S deployment.
+// Destroy deletes a Docker deployment.
 func (p *Platform) Destroy(
 	ctx context.Context,
 	log hclog.Logger,
@@ -551,6 +554,9 @@ type PlatformConfig struct {
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
+	// Additional ports the application is listening on to expose on the container
+	ExtraPorts []uint `hcl:"extra_ports,optional"`
+
 	// Port that your service is running on within the actual container.
 	// Defaults to port 3000.
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
@@ -656,6 +662,15 @@ deploy {
 			"configuration variables, use waypoint config for that.",
 			"These variables are used to control over all container modes,",
 			"such as configuring it to start a web app vs a background worker",
+		),
+	)
+
+	doc.SetField(
+		"extra_ports",
+		"additional TCP ports the application is listening on to expose on the container",
+		docs.Summary(
+			"Used to define and expose multiple ports that the application is listening on for the container in use.",
+			"These ports will get merged with service_port when creating the container if defined.",
 		),
 	)
 
