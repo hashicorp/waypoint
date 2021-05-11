@@ -247,7 +247,7 @@ func (i *DockerInstaller) Install(
 		containerKey: containerValue,
 	}
 
-	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, serverName)
+	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, nil, serverName)
 	if err != nil {
 		return nil, err
 	}
@@ -449,7 +449,7 @@ func (i *DockerInstaller) Upgrade(
 	}
 	s.Update("Creating and starting container")
 	//
-	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, serverName)
+	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, nil, serverName)
 	if err != nil {
 		return nil, err
 	}
@@ -662,7 +662,7 @@ func (i *DockerInstaller) InstallRunner(
 		EndpointsConfig: map[string]*network.EndpointSettings{
 			"waypoint": {},
 		},
-	}, "waypoint-runner")
+	}, nil, "waypoint-runner")
 	if err != nil {
 		return err
 	}
