@@ -390,9 +390,15 @@ func Commands(
 		},
 
 		"context": func() (cli.Command, error) {
-			return &helpCommand{
+			return &ContextHelpCommand{
+				baseCommand:  baseCommand,
 				SynopsisText: helpText["context"][0],
 				HelpText:     helpText["context"][1],
+			}, nil
+		},
+		"context inspect": func() (cli.Command, error) {
+			return &ContextInspectCommand{
+				baseCommand: baseCommand,
 			}, nil
 		},
 		"context create": func() (cli.Command, error) {

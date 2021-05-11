@@ -99,6 +99,9 @@ type baseCommand struct {
 	// autoServer will be set to true if an automatic in-memory server
 	// is allowd.
 	autoServer bool
+
+	// The home directory that we loaded the waypoint config from
+	homeConfigPath string
 }
 
 // Close cleans up any resources that the command created. This should be
@@ -166,6 +169,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 		return err
 	}
 	homeConfigPath = filepath.Dir(homeConfigPath)
+	c.homeConfigPath = homeConfigPath
 	c.Log.Debug("home configuration directory", "path", homeConfigPath)
 
 	// Setup our base directory for context management
