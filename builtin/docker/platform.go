@@ -89,6 +89,7 @@ func (p *Platform) resourceManager() *resource.Manager {
 			resource.WithName("container"),
 			resource.WithState(&Resource_Container{}),
 			resource.WithCreate(p.resourceContainerCreate),
+			resource.WithDestroy(p.resourceContainerDestroy),
 		)),
 	)
 	return nil
@@ -284,6 +285,33 @@ func (p *Platform) resourceContainerCreate(
 	return nil
 }
 
+func (p *Platform) resourceContainerDestroy(
+	ctx context.Context,
+	cli *client.Client,
+	state *Resource_Container,
+	sg terminal.StepGroup,
+) error {
+	// Check if the container exists
+	_, err := cli.ContainerInspect(ctx, state.Id)
+	if client.IsErrNotFound(err) {
+		return nil
+	}
+
+	s := sg.Add("Deleting container...")
+	defer func() { s.Abort() }()
+
+	// Remove it
+	err = cli.ContainerRemove(ctx, state.Id, types.ContainerRemoveOptions{
+		Force: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	s.Done()
+	return nil
+}
+
 // Deploy deploys an image to Docker.
 func (p *Platform) Deploy(
 	ctx context.Context,
@@ -321,6 +349,9 @@ func (p *Platform) Deploy(
 		return nil, err
 	}
 
+	// Store our resource state
+	result.ResourceState = rm.State()
+
 	// Get our container state
 	crState := rm.Resource("container").State().(*Resource_Container)
 	if crState == nil {
@@ -342,26 +373,26 @@ func (p *Platform) Destroy(
 	deployment *Deployment,
 	ui terminal.UI,
 ) error {
-	cli, err := p.getDockerClient(ctx)
-	if err != nil {
-		return status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	rm := p.resourceManager()
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource("container").SetState(&Resource_Container{
+			Id: deployment.Container,
+		})
+	} else {
+		// Load our set state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return err
+		}
 	}
 
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-	st.Update("Deleting container...")
-
-	// Check if the container exists
-	_, err = cli.ContainerInspect(ctx, deployment.Container)
-	if client.IsErrNotFound(err) {
-		return nil
-	}
-
-	// Remove it
-	return cli.ContainerRemove(ctx, deployment.Container, types.ContainerRemoveOptions{
-		Force: true,
-	})
+	// Destroy
+	return rm.DestroyAll(ctx, log, sg, ui)
 }
 
 func (p *Platform) getDockerClient(ctx context.Context) (*client.Client, error) {
