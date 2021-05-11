@@ -47,4 +47,9 @@ message Resource {
   message Network {
     string name = 1;
   }
+
+  message Container {
+    string id = 1;
+    string name = 2;
+  }
 }
