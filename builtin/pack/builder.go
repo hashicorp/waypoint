@@ -127,16 +127,6 @@ func (b *Builder) Build(
 
 	step.Done()
 
-	var ignore []string
-
-	// We want a copy of the slice, not share it because concurrency within
-	// the runner, etc.
-	ignore = append(ignore, b.config.Ignore...)
-
-	if jobInfo.Local {
-		ignore = []string{"data.db", "data.db.lock"}
-	}
-
 	bo := pack.BuildOptions{
 		Image:      src.App,
 		Builder:    builder,
@@ -146,7 +136,7 @@ func (b *Builder) Build(
 
 		ProjectDescriptor: project.Descriptor{
 			Build: project.Build{
-				Exclude: ignore,
+				Exclude: b.config.Ignore,
 			},
 		},
 	}
