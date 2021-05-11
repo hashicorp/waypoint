@@ -94,7 +94,7 @@ func AlterEntrypoint(
 		networkCfg = network.NetworkingConfig{}
 	)
 
-	body, err := dc.ContainerCreate(ctx, &cfg, &hostCfg, &networkCfg, name)
+	body, err := dc.ContainerCreate(ctx, &cfg, &hostCfg, &networkCfg, nil, name)
 	if err != nil {
 		return "", err
 	}

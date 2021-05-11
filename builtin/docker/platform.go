@@ -236,7 +236,7 @@ func (p *Platform) Deploy(
 
 	name := src.App + "-" + id
 
-	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, name)
+	cr, err := cli.ContainerCreate(ctx, &cfg, &hostconfig, &netconfig, nil, name)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unable to create Docker container: %s", err)
 	}
