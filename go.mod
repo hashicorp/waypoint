@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go v1.36.31
 	github.com/bmatcuk/doublestar v1.1.5
 	github.com/boltdb/bolt v1.3.1
-	github.com/buildpacks/pack v0.15.1
+	github.com/buildpacks/pack v0.18.1
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
 	github.com/containerd/console v1.0.1
@@ -22,7 +22,7 @@ require (
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/docker/cli v0.0.0-20200312141509-ef2f64abbd37
 	github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker v1.4.2-0.20200319182547-c7ad2b866182
+	github.com/docker/docker v20.10.0-beta1.0.20201110211921-af34b94a78a1+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.4.0
@@ -80,6 +80,8 @@ require (
 	github.com/mitchellh/pointerstructure v1.0.0
 	github.com/mitchellh/protoc-gen-go-json v0.0.0-20200917194518-364b693410ae
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
+	github.com/moby/sys/mountinfo v0.4.1 // indirect
+	github.com/moby/sys/symlink v0.1.0 // indirect
 	github.com/mr-tron/base58 v1.2.0
 	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
 	github.com/netlify/open-api v0.15.0
@@ -92,7 +94,7 @@ require (
 	github.com/posener/complete v1.2.3
 	github.com/r3labs/diff v1.1.0
 	github.com/rs/cors v1.7.0 // indirect
-	github.com/sabhiram/go-gitignore v0.0.0-20201211210132-54b8a0bf510f
+	github.com/sabhiram/go-gitignore v0.0.0-20201211210132-54b8a0bf510f // indirect
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/slack-go/slack v0.6.5
@@ -103,13 +105,14 @@ require (
 	go.uber.org/goleak v1.1.10
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20210426230700-d19ff857e887
+	golang.org/x/sys v0.0.0-20210511113859-b0526f3d8744
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/api v0.22.0
 	google.golang.org/genproto v0.0.0-20201022181438-0ff5f38871d5
 	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
 	k8s.io/client-go v0.19.4
@@ -121,10 +124,5 @@ require (
 // replace github.com/hashicorp/horizon => ../horizon
 // replace github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
 
-replace (
-	// v0.3.11 panics for some reason on our tests
-	github.com/imdario/mergo => github.com/imdario/mergo v0.3.9
-
-	// https://github.com/ory/dockertest/issues/208
-	golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
-)
+// v0.3.11 panics for some reason on our tests
+replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.9

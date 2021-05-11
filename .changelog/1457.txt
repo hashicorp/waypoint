@@ -1,0 +1,3 @@
+```release-note:bug
+builtin/pack: Honor DOCKER_HOST properly
+```
