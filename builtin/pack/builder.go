@@ -78,18 +78,12 @@ func (b *Builder) Build(
 		builder = DefaultBuilder
 	}
 
-	dockerClient, err := wpdockerclient.NewClientWithOpts(
-		client.FromEnv,
-		// If we don't specify a version, the client will use too new an API, and users
-		// will get and error of the form shown below. Note that when you don't pass a
-		// client 'pack' does the same thing we're doing here:
-		//
-		// client version X.XX is too new. Maximum supported API
-		client.WithVersion("1.38"),
-	)
+	dockerClient, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
+
+	dockerClient.NegotiateAPIVersion(ctx)
 
 	// We now test if Docker is actually functional. Pack requires a Docker
 	// daemon and we can't fallback to "img" or any other Dockerless solution.
