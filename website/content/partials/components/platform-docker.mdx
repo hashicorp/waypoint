@@ -55,6 +55,15 @@ The command to run to start the application in the container.
 - **Optional**
 - Default: the image entrypoint
 
+#### extra_ports
+
+Additional TCP ports the application is listening on to expose on the container.
+
+Used to define and expose multiple ports that the application is listening on for the container in use. These ports will get merged with service_port when creating the container if defined.
+
+- Type: **list of uint**
+- **Optional**
+
 #### force_pull
 
 Always pull the docker container from the registry.

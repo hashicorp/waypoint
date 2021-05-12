@@ -39,11 +39,20 @@ build {
 
 ### Required Parameters
 
-This plugin has no required parameters.
+These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### buildargs
+
+An array of strings of build-time variables passed as build-arg to dockeror img for the build step.
 
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### build_args
+
+- Type: **map of string to string**
+- **Optional**
 
 #### buildkit
 

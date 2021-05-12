@@ -22,31 +22,52 @@ deploy {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
-#### alb
+#### alb (category)
 
-- Type: **ecs.ALBConfig**
+Provides additional configuration for using an ALB with ECS.
 
-#### alb.certificate
+##### <NestedNode>alb.certificate</NestedNode>
 
 The ARN of an AWS Certificate Manager cert to associate with the ALB.
 
-#### alb.domain_name
+- Type: **string**
+- **Optional**
+
+##### <NestedNode>alb.domain_name</NestedNode>
 
 Fully qualified domain name to set for the ALB.
 
 Set along with zone_id to have DNS automatically setup for the ALB. this value should include the full hostname and domain name, for instance app.example.com.
 
-#### alb.listener_arn
+- Type: **string**
+- **Optional**
+
+##### <NestedNode>alb.internal</NestedNode>
+
+Whether or not the created ALB should be internal.
+
+Used when listener_arn is not set. If set, the created ALB will have a scheme of `internal`, otherwise by default it has a scheme of `internet-facing`.
+
+- Type: **bool**
+- **Optional**
+
+##### <NestedNode>alb.listener_arn</NestedNode>
 
 The ARN on an existing ALB to configure.
 
 When this is set, no ALB or Listener is created. Instead the application is configured by manipulating this existing Listener. This allows users to configure their ALB outside waypoint but still have waypoint hook the application to that ALB.
 
-#### alb.zone_id
+- Type: **string**
+- **Optional**
+
+##### <NestedNode>alb.zone_id</NestedNode>
 
 Route53 ZoneID to create a DNS record into.
 
 Set along with alb.domain_name to have DNS automatically setup for the ALB.
+
+- Type: **string**
+- **Optional**
 
 #### logging (category)
 
@@ -54,46 +75,46 @@ Provides additional configuration for logging flags for ECS.
 
 Part of the ecs task definition. These configuration flags help control how the awslogs log driver is configured.
 
-##### logging.create_group
+##### <NestedNode>logging.create_group</NestedNode>
 
 Enables creation of the aws logs group if not present.
 
 - Type: **bool**
 - **Optional**
 
-##### logging.datetime_format
+##### <NestedNode>logging.datetime_format</NestedNode>
 
 Defines the multiline start pattern in Python strftime format.
 
 - Type: **string**
 - **Optional**
 
-##### logging.max_buffer_size
+##### <NestedNode>logging.max_buffer_size</NestedNode>
 
 When using non-blocking logging mode, this is the buffer size for message storage.
 
 - Type: **string**
 - **Optional**
 
-##### logging.mode
+##### <NestedNode>logging.mode</NestedNode>
 
 Delivery method for log messages, either 'blocking' or 'non-blocking'.
 
 - Type: **string**
 - **Optional**
 
-##### logging.multiline_pattern
+##### <NestedNode>logging.multiline_pattern</NestedNode>
 
 Defines the multiline start pattern using a regular expression.
 
 - Type: **string**
 - **Optional**
 
-##### logging.region
+##### <NestedNode>logging.region</NestedNode>
 
 The region the logs are to be shipped to.
 
-##### logging.stream_prefix
+##### <NestedNode>logging.stream_prefix</NestedNode>
 
 Prefix for application in cloudwatch logs path.
 
@@ -249,6 +270,11 @@ The CloudWatchLogs log group to store container logs into.
 - Type: **string**
 - **Optional**
 - Default: derived from the application name
+
+#### memory_reservation
+
+- Type: **int**
+- **Optional**
 
 #### secrets
 

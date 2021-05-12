@@ -18,13 +18,51 @@ deploy "kubernetes" {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### pod (category)
+
+The configuration for a pod.
+
+Pod describes the configuration for a pod when deploying.
+
+##### <NestedNode>pod.container</NestedNode> (category)
+
+Container describes the commands and arguments for a container config.
+
+###### <NestedNode>pod.container.args</NestedNode>
+
+An array of string arguments to pass through to the container.
+
+###### <NestedNode>pod.container.command</NestedNode>
+
+An array of strings to run for the container.
+
+##### <NestedNode>pod.pod_security_context</NestedNode> (category)
+
+Holds pod-level security attributes and container settings.
+
+###### <NestedNode>pod.pod_security_context.fs_group</NestedNode>
+
+A special supplemental group that applies to all containers in a pod.
+
+###### <NestedNode>pod.pod_security_context.run_as_non_root</NestedNode>
+
+Indicates that the container must run as a non-root user.
+
+###### <NestedNode>pod.pod_security_context.run_as_user</NestedNode>
+
+The UID to run the entrypoint of the container process.
+
+##### <NestedNode>pod.security_context</NestedNode>
+
+- Type: **k8s.PodSecurityContext**
+
 #### probe (category)
 
 Configuration to control liveness and readiness probes.
 
 Probe describes a health check to be performed against a container to determine whether it is alive or ready to receive traffic.
 
-##### probe.failure_threshold
+##### <NestedNode>probe.failure_threshold</NestedNode>
 
 Number of times a liveness probe can fail before the container is killed.
 
@@ -34,7 +72,7 @@ FailureThreshold \* TimeoutSeconds should be long enough to cover your worst cas
 - **Optional**
 - Default: 5
 
-##### probe.initial_delay
+##### <NestedNode>probe.initial_delay</NestedNode>
 
 Time in seconds to wait before performing the initial liveness and readiness probes.
 
@@ -42,7 +80,7 @@ Time in seconds to wait before performing the initial liveness and readiness pro
 - **Optional**
 - Default: 5
 
-##### probe.timeout
+##### <NestedNode>probe.timeout</NestedNode>
 
 Time in seconds before the probe fails.
 
@@ -146,7 +184,7 @@ A path for the service to store temporary data.
 
 A path to a directory that will be created for the service to store temporary data using tmpfs.
 
-- Type: **string**
+- Type: **list of string**
 - **Optional**
 
 #### service_account
