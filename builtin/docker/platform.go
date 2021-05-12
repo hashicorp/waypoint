@@ -72,8 +72,9 @@ func (p *Platform) ValidateAuth() error {
 	return nil
 }
 
-func (p *Platform) resourceManager() *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 	return resource.NewManager(
+		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(p.getDockerClient),
 		resource.WithResource(resource.NewResource(
 			resource.WithName("network"),
@@ -344,7 +345,7 @@ func (p *Platform) Deploy(
 	result.Name = src.App
 
 	// Create our resource manager and create
-	rm := p.resourceManager()
+	rm := p.resourceManager(log)
 	if err := rm.CreateAll(
 		ctx, log, sg, ui,
 		src, job, img, deployConfig, &result,
@@ -379,7 +380,7 @@ func (p *Platform) Destroy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := p.resourceManager()
+	rm := p.resourceManager(log)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
