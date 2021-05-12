@@ -47,41 +47,6 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		return 1
 	}
 
-	// Error handling from input
-
-	// NOTE(briancain): This check will look different once https://github.com/hashicorp/waypoint/issues/1233
-	// is implemeneted. This func should initially look for the platform
-	// saved in the context and if none was included, fall back to look for an
-	// included platform flag like we do below
-	if !c.confirm && c.platform == "" {
-		c.ui.Output(confirmReqMsg, terminal.WithErrorStyle())
-		c.ui.Output(platformReqMsg, terminal.WithErrorStyle())
-		c.ui.Output(c.Help(), terminal.WithErrorStyle())
-		return 1
-	} else if !c.confirm {
-		c.ui.Output(confirmReqMsg, terminal.WithErrorStyle())
-		return 1
-	} else if c.platform == "" {
-		c.ui.Output(
-			platformReqMsg,
-			terminal.WithErrorStyle(),
-		)
-		return 1
-	}
-
-	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
-	if !ok {
-		c.ui.Output(
-			"Error upgrading server on %s: unsupported platform",
-			c.platform,
-			terminal.WithErrorStyle(),
-		)
-
-		return 1
-	}
-
-	// Finish error handling
-
 	// Get Server config to preserve existing configurations from context
 	var ctxName string
 	if c.contextName != "" {
@@ -109,6 +74,41 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 		)
 		return 1
 	}
+
+	// Default the platform to the platform from the context
+	if c.platform == "" {
+		c.platform = originalCfg.Server.Platform
+	}
+
+	// Error handling from input
+
+	if !c.confirm {
+		c.ui.Output(confirmReqMsg, terminal.WithErrorStyle())
+		if c.platform == "" {
+			c.ui.Output(platformReqMsg, terminal.WithErrorStyle())
+			c.ui.Output(c.Help(), terminal.WithErrorStyle())
+		}
+		return 1
+	} else if c.platform == "" {
+		c.ui.Output(
+			platformReqMsg,
+			terminal.WithErrorStyle(),
+		)
+		return 1
+	}
+
+	p, ok := serverinstall.Platforms[strings.ToLower(c.platform)]
+	if !ok {
+		c.ui.Output(
+			"Error upgrading server on %s: unsupported platform",
+			c.platform,
+			terminal.WithErrorStyle(),
+		)
+
+		return 1
+	}
+
+	// Finish error handling
 
 	// Upgrade waypoint server
 	sg := c.ui.StepGroup()
@@ -236,6 +236,10 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 
 	// We update the context config if the server addr has changed between upgrades
 	if originalCfg.Server.Address != contextConfig.Server.Address {
+		// Update the plaform here, basically to upgrade an older context that didn't
+		// have platform set.
+		originalCfg.Server.Platform = c.platform
+
 		originalCfg.Server.Address = contextConfig.Server.Address
 
 		if err := c.contextStorage.Set(ctxName, originalCfg); err != nil {
@@ -393,7 +397,8 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 			Name:    "platform",
 			Target:  &c.platform,
 			Default: "",
-			Usage:   "Platform to upgrade the Waypoint server from.",
+			Usage: "Platform to upgrade the Waypoint server from, " +
+				"defaults to the platform stored in the context",
 		})
 		f.StringVar(&flag.StringVar{
 			Name:    "snapshot-name",
