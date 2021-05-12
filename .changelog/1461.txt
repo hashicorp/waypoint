@@ -1,0 +1,3 @@
+```release-note:improvement
+cli: Default the platform for `server upgrade` to the platform in the context
+```
