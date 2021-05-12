@@ -46,7 +46,7 @@ require (
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
 	github.com/hashicorp/errwrap v1.0.0
-	github.com/hashicorp/go-argmapper v0.1.2-0.20210512005550-10419f7826a3
+	github.com/hashicorp/go-argmapper v0.2.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-gcp-common v0.6.0
 	github.com/hashicorp/go-getter v1.4.1
@@ -62,7 +62,7 @@ require (
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
 	github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef
 	github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9
-	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210512005619-a5c22da6a087
+	github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210512030414-02e1e13be6b3
 	github.com/imdario/mergo v0.3.11
 	github.com/improbable-eng/grpc-web v0.13.0
 	github.com/kevinburke/go-bindata v3.22.0+incompatible

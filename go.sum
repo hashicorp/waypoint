@@ -695,8 +695,8 @@ github.com/hashicorp/cronexpr v1.1.0 h1:dnNsWtH0V2ReN7JccYe8m//Bj14+PjJDntR1dz0C
 github.com/hashicorp/cronexpr v1.1.0/go.mod h1:P4wA0KBl9C5q2hABiMO7cp6jcIg96CDh1Efb3g1PWA4=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
-github.com/hashicorp/go-argmapper v0.1.2-0.20210512005550-10419f7826a3 h1:8ZECF0zx/XOMHlEMS+5oFtYIKDCPY/YNWmI/NcKrJAg=
-github.com/hashicorp/go-argmapper v0.1.2-0.20210512005550-10419f7826a3/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
+github.com/hashicorp/go-argmapper v0.2.0 h1:hODvyLdq7akV0n6SbOP47VXZjAX1QrUvAveCA6qXSfQ=
+github.com/hashicorp/go-argmapper v0.2.0/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
 github.com/hashicorp/go-cleanhttp v0.5.0/go.mod h1:JpRdi6/HCYpAwUzNwuwqhbovhLtngrth3wmdIIUrZ80=
 github.com/hashicorp/go-cleanhttp v0.5.1 h1:dH3aiDG9Jvb5r5+bYHsikaOUIpcM0xvgMXVoDkXMzJM=
 github.com/hashicorp/go-cleanhttp v0.5.1/go.mod h1:JpRdi6/HCYpAwUzNwuwqhbovhLtngrth3wmdIIUrZ80=
@@ -784,8 +784,8 @@ github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef h1:YKouRHFf
 github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef/go.mod h1:cAGI4nVnEfAyMeqt9oB+Mase8DNn3qA/LDNHURiwssY=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9 h1:i9hzlv2SpmaNcQ8ZLGn01fp2Gqyejj0juVs7rYDgecE=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9/go.mod h1:ObgQSWSX9rsNofh16kctm6XxLW2QW1Ay6/9ris6T6DU=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210512005619-a5c22da6a087 h1:rNf/EUC7cfdEpdsAsL+Vhjjq9YQrgRjLxj7rh8KhXvM=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210512005619-a5c22da6a087/go.mod h1:b26qjCpQ4baxjxZS8wQlVYthankBQGtjskrs3wIoPEE=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210512030414-02e1e13be6b3 h1:j2L9BqRr0TIn0LHMMGJzaEEaCQ3mSke+9HfY0SEjdZA=
+github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210512030414-02e1e13be6b3/go.mod h1:YK9Eebq7fF0V9xCUgdWIFT4+H0ePs729C5I6uGlNEQo=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20190923154419-df201c70410d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
