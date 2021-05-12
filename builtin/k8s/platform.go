@@ -120,6 +120,18 @@ func (p *Platform) Deploy(
 	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
 	step.Done()
 
+	step = sg.Add("Validating cluster...")
+
+	nodes, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		step.Update("Unable to read node list, assuming cluster healthy")
+	} else {
+		if nodes.Size() == 0 {
+			return nil, fmt.Errorf("Cluster has no nodes, refusing to perform deploy")
+		}
+	}
+
+	step.Done()
 	step = sg.Add("Preparing deployment...")
 
 	deployClient := clientSet.AppsV1().Deployments(ns)
