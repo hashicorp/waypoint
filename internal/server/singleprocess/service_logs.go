@@ -124,8 +124,9 @@ func (s *service) spawnLogPlugin(
 	return &lo, jobId, nil
 }
 
-// Used to coordinate the data from either Instance or InstanceLogs entries
-// and then funnel them all to the waiting client.
+// streamRec is a single "stream record" that represents a single instance
+// with logs. This is used by the sendInstanceLogs function to get all the
+// required information for streaming logs.
 type streamRec struct {
 	InstanceId   string
 	DeploymentId string
@@ -139,7 +140,6 @@ func (s *service) GetLogStream(
 	req *pb.GetLogStreamRequest,
 	srv pb.Waypoint_GetLogStreamServer,
 ) error {
-
 	log := hclog.FromContext(srv.Context())
 
 	// Default the limit
@@ -147,7 +147,11 @@ func (s *service) GetLogStream(
 		req.LimitBacklog = defaultLogLimitBacklog
 	}
 
+	// instanceFunc will be the function that sendInstanceLogs calls in order
+	// to grab the list of instances. This is expected to setup the WatchSet
+	// to notify the caller when the set of instances changes.
 	var instanceFunc func(ws memdb.WatchSet) ([]*streamRec, error)
+
 	switch scope := req.Scope.(type) {
 	case *pb.GetLogStreamRequest_DeploymentId:
 		deployment, err := s.state.DeploymentGet(&pb.Ref_Operation{
@@ -312,7 +316,8 @@ func (s *service) GetLogStream(
 	return s.sendInstanceLogs(srv.Context(), log, srv, instanceFunc, req.LimitBacklog)
 }
 
-// Used to reduce the functional surface area of sendInstanceLogs
+// Used to reduce the functional surface area of sendInstanceLogs. This is
+// implemented by the GetLogStream service stream.
 type batchSender interface {
 	Send(batch *pb.LogBatch) error
 }
