@@ -167,16 +167,19 @@ func (c *AppDocsCommand) humanize(s string) string {
 func (c *AppDocsCommand) emitField(w io.Writer, h, out string, f *docs.FieldDocs) {
 	name := f.Field
 
+	header := name
+
 	if out != "" {
 		name = out + "." + name
+		header = "<NestedNode>" + name + "</NestedNode>"
 	}
 
 	var parts []string
 
 	if f.Category {
-		parts = append(parts, fmt.Sprintf("%s %s (category)", h, name))
+		parts = append(parts, fmt.Sprintf("%s %s (category)", h, header))
 	} else {
-		parts = append(parts, fmt.Sprintf("%s %s", h, name))
+		parts = append(parts, fmt.Sprintf("%s %s", h, header))
 	}
 
 	if f.Summary != "" {
