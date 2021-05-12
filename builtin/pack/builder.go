@@ -8,12 +8,12 @@ import (
 
 	"github.com/buildpacks/pack"
 	"github.com/buildpacks/pack/logging"
+	"github.com/buildpacks/pack/project"
 	"github.com/docker/docker/client"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
-	ignore "github.com/sabhiram/go-gitignore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -78,18 +78,12 @@ func (b *Builder) Build(
 		builder = DefaultBuilder
 	}
 
-	dockerClient, err := wpdockerclient.NewClientWithOpts(
-		client.FromEnv,
-		// If we don't specify a version, the client will use too new an API, and users
-		// will get and error of the form shown below. Note that when you don't pass a
-		// client 'pack' does the same thing we're doing here:
-		//
-		// client version X.XX is too new. Maximum supported API
-		client.WithVersion("1.38"),
-	)
+	dockerClient, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
+
+	dockerClient.NegotiateAPIVersion(ctx)
 
 	// We now test if Docker is actually functional. Pack requires a Docker
 	// daemon and we can't fallback to "img" or any other Dockerless solution.
@@ -139,31 +133,12 @@ func (b *Builder) Build(
 		AppPath:    src.Path,
 		Env:        b.config.StaticEnvVars,
 		Buildpacks: b.config.Buildpacks,
-		FileFilter: func(file string) bool {
-			// Do not include the bolt.db or bolt.db.lock
-			// These files hold the local state when Waypoint is running without a server
-			// on Windows it will not be possible to copy these files due to a file lock.
-			if jobInfo.Local {
-				if strings.HasSuffix(file, "data.db") || strings.HasSuffix(file, "data.db.lock") {
-					return false
-				}
-			}
 
-			return true
+		ProjectDescriptor: project.Descriptor{
+			Build: project.Build{
+				Exclude: b.config.Ignore,
+			},
 		},
-	}
-
-	if len(b.config.Ignore) > 0 {
-		excludes := ignore.CompileIgnoreLines(b.config.Ignore...)
-
-		old := bo.FileFilter
-		bo.FileFilter = func(path string) bool {
-			if !old(path) {
-				return false
-			}
-
-			return !excludes.MatchesPath(path)
-		}
 	}
 
 	err = client.Build(ctx, bo)
