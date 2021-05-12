@@ -1,0 +1,10 @@
+<b class="badge badge-status badge-status--{{this.statusClass}} {{if this.iconOnly 'badge-status--icon-only'}}">
+  <Pds::Icon @type={{this.iconType}}/>
+  {{#unless this.iconOnly}}
+    {{t (concat 'status_badge.' this.statusClass '.text')}}
+    {{yield}}
+  {{/unless}}
+  <EmberTooltip @side="top">
+    {{t (concat 'status_badge.' this.statusClass '.tooltip')}}
+  </EmberTooltip>
+</b>
