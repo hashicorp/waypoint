@@ -8,6 +8,9 @@ import {
 const NAV_DATA_FILE = 'data/commands-nav-data.json'
 const CONTENT_DIR = 'content/commands'
 const basePath = 'commands'
+import NestedNode from 'components/nested-node'
+
+const additionalComponents = { NestedNode }
 
 export default function DocsLayout(props) {
   return (
@@ -15,6 +18,7 @@ export default function DocsLayout(props) {
       product={{ name: productName, slug: productSlug }}
       baseRoute={basePath}
       staticProps={props}
+      additionalComponents={additionalComponents}
     />
   )
 }
