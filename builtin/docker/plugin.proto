@@ -41,3 +41,10 @@ message Deployment {
 message Release {
   string url = 1;
 }
+
+// Resource contains the internal resource states.
+message Resource {
+  message Network {
+    string name = 1;
+  }
+}

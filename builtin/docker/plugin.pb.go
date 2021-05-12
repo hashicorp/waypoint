@@ -38,6 +38,9 @@ type Image struct {
 	// determine if the image is pulled or not based on this proto rather
 	// than environment inspection.
 	//
+	// If this is not set, it will be assumed that the image is in a local
+	// Docker daemon registry for backwards compatiblity reasons.
+	//
 	// Types that are assignable to Location:
 	//	*Image_Registry
 	//	*Image_Docker
@@ -124,7 +127,9 @@ type isImage_Location interface {
 }
 
 type Image_Registry struct {
-	// registry is set if the image is in a remote registry.
+	// registry is set if the image is in a remote registry. This value
+	// might mean the image is local, too, but we never formally "pulled"
+	// it so we aren't sure. The image should be treated as remote.
 	Registry *empty.Empty `protobuf:"bytes,3,opt,name=registry,proto3,oneof"`
 }
 
@@ -255,6 +260,92 @@ func (x *Release) GetUrl() string {
 	return ""
 }
 
+// Resource contains the internal resource states.
+type Resource struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *Resource) Reset() {
+	*x = Resource{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_docker_plugin_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Resource) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Resource) ProtoMessage() {}
+
+func (x *Resource) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_docker_plugin_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Resource.ProtoReflect.Descriptor instead.
+func (*Resource) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_docker_plugin_proto_rawDescGZIP(), []int{3}
+}
+
+type Resource_Network struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (x *Resource_Network) Reset() {
+	*x = Resource_Network{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_docker_plugin_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Resource_Network) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Resource_Network) ProtoMessage() {}
+
+func (x *Resource_Network) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_docker_plugin_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Resource_Network.ProtoReflect.Descriptor instead.
+func (*Resource_Network) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_docker_plugin_proto_rawDescGZIP(), []int{3, 0}
+}
+
+func (x *Resource_Network) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 var File_waypoint_builtin_docker_plugin_proto protoreflect.FileDescriptor
 
 var file_waypoint_builtin_docker_plugin_proto_rawDesc = []byte{
@@ -282,9 +373,12 @@ var file_waypoint_builtin_docker_plugin_proto_rawDesc = []byte{
 	0x1c, 0x0a, 0x09, 0x63, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x09, 0x63, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x22, 0x1b, 0x0a,
 	0x07, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x72, 0x6c, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x6c, 0x42, 0x19, 0x5a, 0x17, 0x77, 0x61,
-	0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e, 0x2f, 0x64,
-	0x6f, 0x63, 0x6b, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x6c, 0x22, 0x29, 0x0a, 0x08, 0x52, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x1a, 0x1d, 0x0a, 0x07, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
+	0x6b, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x42, 0x19, 0x5a, 0x17, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e,
+	0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e, 0x2f, 0x64, 0x6f, 0x63, 0x6b, 0x65, 0x72,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -299,17 +393,19 @@ func file_waypoint_builtin_docker_plugin_proto_rawDescGZIP() []byte {
 	return file_waypoint_builtin_docker_plugin_proto_rawDescData
 }
 
-var file_waypoint_builtin_docker_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_waypoint_builtin_docker_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_waypoint_builtin_docker_plugin_proto_goTypes = []interface{}{
-	(*Image)(nil),       // 0: docker.Image
-	(*Deployment)(nil),  // 1: docker.Deployment
-	(*Release)(nil),     // 2: docker.Release
-	(*empty.Empty)(nil), // 3: google.protobuf.Empty
+	(*Image)(nil),            // 0: docker.Image
+	(*Deployment)(nil),       // 1: docker.Deployment
+	(*Release)(nil),          // 2: docker.Release
+	(*Resource)(nil),         // 3: docker.Resource
+	(*Resource_Network)(nil), // 4: docker.Resource.Network
+	(*empty.Empty)(nil),      // 5: google.protobuf.Empty
 }
 var file_waypoint_builtin_docker_plugin_proto_depIdxs = []int32{
-	3, // 0: docker.Image.registry:type_name -> google.protobuf.Empty
-	3, // 1: docker.Image.docker:type_name -> google.protobuf.Empty
-	3, // 2: docker.Image.img:type_name -> google.protobuf.Empty
+	5, // 0: docker.Image.registry:type_name -> google.protobuf.Empty
+	5, // 1: docker.Image.docker:type_name -> google.protobuf.Empty
+	5, // 2: docker.Image.img:type_name -> google.protobuf.Empty
 	3, // [3:3] is the sub-list for method output_type
 	3, // [3:3] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -359,6 +455,30 @@ func file_waypoint_builtin_docker_plugin_proto_init() {
 				return nil
 			}
 		}
+		file_waypoint_builtin_docker_plugin_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Resource); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_waypoint_builtin_docker_plugin_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Resource_Network); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_waypoint_builtin_docker_plugin_proto_msgTypes[0].OneofWrappers = []interface{}{
 		(*Image_Registry)(nil),
@@ -371,7 +491,7 @@ func file_waypoint_builtin_docker_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_waypoint_builtin_docker_plugin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

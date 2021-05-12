@@ -24,6 +24,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
 )
@@ -71,6 +72,64 @@ func (p *Platform) ValidateAuth() error {
 	return nil
 }
 
+func (p *Platform) resourceManager() *resource.Manager {
+	return resource.NewManager(
+		resource.WithValueProvider(p.getDockerClient),
+		resource.WithResource(resource.NewResource(
+			resource.WithName("network"),
+			resource.WithState(&Resource_Network{}),
+			resource.WithCreate(p.resourceNetworkCreate),
+
+			// networks have no destroy logic, we leave the network
+			// lingering around for now. This was the logic prior to
+			// refactoring into the resource manager so we kept it.
+		)),
+	)
+	return nil
+}
+
+func (p *Platform) resourceNetworkCreate(
+	ctx context.Context,
+	cli *client.Client,
+	sg terminal.StepGroup,
+	state *Resource_Network,
+) error {
+	s := sg.Add("Setting up network...")
+	defer func() { s.Abort() }()
+
+	nets, err := cli.NetworkList(ctx, types.NetworkListOptions{
+		Filters: filters.NewArgs(filters.Arg("label", "use=waypoint")),
+	})
+	if err != nil {
+		return status.Errorf(codes.FailedPrecondition, "unable to list Docker networks: %s", err)
+	}
+
+	// If we have a network already we're done
+	if len(nets) > 0 {
+		s.Done()
+		return nil
+	}
+
+	_, err = cli.NetworkCreate(ctx, "waypoint", types.NetworkCreate{
+		Driver:         "bridge",
+		CheckDuplicate: true,
+		Internal:       false,
+		Attachable:     true,
+		Labels: map[string]string{
+			"use": "waypoint",
+		},
+	})
+	if err != nil {
+		return status.Errorf(codes.FailedPrecondition, "unable to create Docker network: %s", err)
+	}
+	s.Done()
+
+	// Set our state
+	state.Name = "waypoint"
+
+	return nil
+}
+
 // Deploy deploys an image to Docker.
 func (p *Platform) Deploy(
 	ctx context.Context,
@@ -89,12 +148,16 @@ func (p *Platform) Deploy(
 		p.config.ServicePort = 3000
 	}
 
-	cli, err := p.getDockerClient()
+	// Create our resource manager and create
+	rm := p.resourceManager()
+	if err := rm.CreateAll(ctx, log, sg); err != nil {
+		return nil, err
+	}
+
+	cli, err := p.getDockerClient(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
-
-	cli.NegotiateAPIVersion(ctx)
 
 	// Pull the image
 	err = p.pullImage(cli, log, ui, img, p.config.ForcePull)
@@ -112,7 +175,7 @@ func (p *Platform) Deploy(
 	result.Name = src.App
 
 	s := sg.Add("Setting up waypoint network")
-	defer s.Abort()
+	defer func() { s.Abort() }()
 
 	nets, err := cli.NetworkList(ctx, types.NetworkListOptions{
 		Filters: filters.NewArgs(filters.Arg("label", "use=waypoint")),
@@ -141,22 +204,11 @@ func (p *Platform) Deploy(
 	s.Done()
 
 	s = sg.Add("Creating new container")
-	defer s.Abort()
 
-	portBindings := nat.PortMap{}
-	exposedPorts := nat.PortSet{}
-
-	for _, port := range append(p.config.ExtraPorts, p.config.ServicePort) {
-		np, err := nat.NewPort("tcp", fmt.Sprint(port))
-		if err != nil {
-			return nil, err
-		}
-		exposedPorts[np] = struct{}{}
-		portBindings[np] = []nat.PortBinding{
-			{
-				HostPort: "", // this is intentionally left empty for a random host port assignment
-			},
-		}
+	port := fmt.Sprint(p.config.ServicePort)
+	np, err := nat.NewPort("tcp", port)
+	if err != nil {
+		return nil, err
 	}
 
 	cfg := container.Config{
@@ -166,12 +218,19 @@ func (p *Platform) Deploy(
 		OpenStdin:    true,
 		StdinOnce:    true,
 		Image:        img.Image + ":" + img.Tag,
-		ExposedPorts: exposedPorts,
-		Env:          []string{"PORT=" + fmt.Sprint(p.config.ServicePort)},
+		ExposedPorts: nat.PortSet{np: struct{}{}},
+		Env:          []string{"PORT=" + port},
 	}
 
 	if c := p.config.Command; len(c) > 0 {
 		cfg.Cmd = c
+	}
+
+	bindings := nat.PortMap{}
+	bindings[np] = []nat.PortBinding{
+		{
+			HostPort: "", // this is intentionally left empty for a random host port assignment
+		},
 	}
 
 	// default container binds
@@ -197,7 +256,7 @@ func (p *Platform) Deploy(
 
 	hostconfig := container.HostConfig{
 		Binds:        containerBinds,
-		PortBindings: portBindings,
+		PortBindings: bindings,
 		Resources:    resources,
 	}
 
@@ -273,19 +332,17 @@ func (p *Platform) Deploy(
 	return &result, nil
 }
 
-// Destroy deletes a Docker deployment.
+// Destroy deletes the K8S deployment.
 func (p *Platform) Destroy(
 	ctx context.Context,
 	log hclog.Logger,
 	deployment *Deployment,
 	ui terminal.UI,
 ) error {
-	cli, err := p.getDockerClient()
+	cli, err := p.getDockerClient(ctx)
 	if err != nil {
 		return status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
 	}
-
-	cli.NegotiateAPIVersion(ctx)
 
 	// We'll update the user in real time
 	st := ui.Status()
@@ -304,7 +361,7 @@ func (p *Platform) Destroy(
 	})
 }
 
-func (p *Platform) getDockerClient() (*client.Client, error) {
+func (p *Platform) getDockerClient(ctx context.Context) (*client.Client, error) {
 	if p.config.ClientConfig == nil {
 		return wpdockerclient.NewClientWithOpts(client.FromEnv)
 	}
@@ -327,7 +384,13 @@ func (p *Platform) getDockerClient() (*client.Client, error) {
 		opts = append(opts, client.WithVersion(version))
 	}
 
-	return wpdockerclient.NewClientWithOpts(opts...)
+	cli, err := wpdockerclient.NewClientWithOpts(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	cli.NegotiateAPIVersion(ctx)
+	return cli, nil
 }
 
 func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.UI, img *Image, force bool) error {
@@ -450,9 +513,6 @@ type PlatformConfig struct {
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
 
-	// Additional ports the application is listening on to expose on the container
-	ExtraPorts []uint `hcl:"extra_ports,optional"`
-
 	// Port that your service is running on within the actual container.
 	// Defaults to port 3000.
 	// TODO Evaluate if this should remain as a default 3000, should be a required field,
@@ -558,15 +618,6 @@ deploy {
 			"configuration variables, use waypoint config for that.",
 			"These variables are used to control over all container modes,",
 			"such as configuring it to start a web app vs a background worker",
-		),
-	)
-
-	doc.SetField(
-		"extra_ports",
-		"additional TCP ports the application is listening on to expose on the container",
-		docs.Summary(
-			"Used to define and expose multiple ports that the application is listening on for the container in use.",
-			"These ports will get merged with service_port when creating the container if defined.",
 		),
 	)
 
