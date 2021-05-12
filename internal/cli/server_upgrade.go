@@ -235,7 +235,8 @@ func (c *ServerUpgradeCommand) Run(args []string) int {
 	httpAddr := result.HTTPAddr
 
 	// We update the context config if the server addr has changed between upgrades
-	if originalCfg.Server.Address != contextConfig.Server.Address {
+	if originalCfg.Server.Address != contextConfig.Server.Address ||
+		originalCfg.Server.Platform != c.platform {
 		// Update the platform here, basically to upgrade an older context that didn't
 		// have platform set.
 		originalCfg.Server.Platform = c.platform
