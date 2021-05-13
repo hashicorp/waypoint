@@ -1,6 +1,36 @@
-## unreleased
+## 0.3.2 (May 13, 2021)
 
+BREAKING CHANGES:
 
+* plugin/k8s: `scratch_path` now uses an array of strings instead of a string, allowing you to specify multiple directories to be mounted as [emptyDir](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) [[GH-1317](https://github.com/hashicorp/waypoint/issues/1317)]
+
+FEATURES:
+
+* platform/aws: Set the AWS log level along with the waypoint log level [[GH-1404](https://github.com/hashicorp/waypoint/issues/1404)]
+* plugin/aws/ecs: Add ability to request an internal ALB for ECS [[GH-1403](https://github.com/hashicorp/waypoint/issues/1403)]
+* plugin/docker: Add support for exposing additional ports [[GH-1414](https://github.com/hashicorp/waypoint/issues/1414)]
+* plugin/docker: Add support for build args for both docker and img builders [[GH-1346](https://github.com/hashicorp/waypoint/issues/1346)]
+* plugin/ecs: Allow memory\_reservation to be set on primary container [[GH-1415](https://github.com/hashicorp/waypoint/issues/1415)]
+
+IMPROVEMENTS:
+
+* cli: Add `context inspect` command to aid in user enjoyment of waypoint contexts. [[GH-1458](https://github.com/hashicorp/waypoint/issues/1458)]
+* cli: Default the platform for `server upgrade` to the platform in the context [[GH-1461](https://github.com/hashicorp/waypoint/issues/1461)]
+* cli: Print warning and help docs if required flags for upgrade are not included [[GH-1372](https://github.com/hashicorp/waypoint/issues/1372)]
+* plugin/google/cloudrun: Add VPC and Cloud SQL config options [[GH-1123](https://github.com/hashicorp/waypoint/issues/1123)]
+* plugin/k8s: Added Service annotations option to K8S release [[GH-1393](https://github.com/hashicorp/waypoint/issues/1393)]
+* plugin/k8s: Add configuration options for pods and its security contexts [[GH-1317](https://github.com/hashicorp/waypoint/issues/1317)]
+* plugin/pack: Add ability to specify a list of file patterns to include files. [[GH-1453](https://github.com/hashicorp/waypoint/issues/1453)]
+* plugin/vault: Use Service Account Credentials API for GCP SignJWT endpoint [[GH-1389](https://github.com/hashicorp/waypoint/issues/1389)]
+
+BUG FIXES:
+
+* cli: runner will not crash if liveness check has error [[GH-1426](https://github.com/hashicorp/waypoint/issues/1426)]
+* plugins: Fix detecting an older version of the plugin SDK in use [[GH-1450](https://github.com/hashicorp/waypoint/issues/1450)]
+* plugin/aws/ec2: Check Auto Scaling activites for failures or cancellations [[GH-1447](https://github.com/hashicorp/waypoint/issues/1447)]
+* plugin/aws/ecs: Fix bug where certificate and other fields had to be set to empty string to use listener. [[GH-1401](https://github.com/hashicorp/waypoint/issues/1401)]
+* plugin/aws/ecs: Retry actions that cross AWS service boundaries to fix eventual consistency issues. [[GH-1454](https://github.com/hashicorp/waypoint/issues/1454)]
+* plugin/pack: Honor DOCKER\_HOST properly [[GH-1457](https://github.com/hashicorp/waypoint/issues/1457)]
 
 ## 0.3.1 (April 20, 2021)
 
