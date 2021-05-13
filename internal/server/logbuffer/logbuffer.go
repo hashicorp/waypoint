@@ -4,8 +4,10 @@ package logbuffer
 
 import (
 	"context"
+	"io"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 // Entry is just an interface{} type. Buffer doesn't care what the entries
@@ -71,6 +73,18 @@ func New() *Buffer {
 //
 // This is safe for concurrent access.
 func (b *Buffer) Write(entries ...Entry) {
+	// We could ask Entry if it supports time, but using ingest time is
+	// pretty standard as well. So we wrap each entry in a timed entry
+	// with the time it arrived, so that later Merger can make sense
+	// of the total order across multiple buffers.
+	timedEntries := make([]timedEntry, len(entries))
+	for i, ent := range entries {
+		timedEntries[i] = timedEntry{
+			ingestTs: time.Now(),
+			entry:    ent,
+		}
+	}
+
 	b.cond.L.Lock()
 	defer b.cond.L.Unlock()
 
@@ -79,7 +93,7 @@ func (b *Buffer) Write(entries ...Entry) {
 		current := &b.chunks[b.current]
 
 		// Write our entries
-		n += current.write(entries[n:])
+		n += current.write(timedEntries[n:])
 
 		// If our chunk is full, we need to move to the next chunk or
 		// otherwise move the full window.
@@ -191,11 +205,10 @@ type Reader struct {
 	closed  uint32
 }
 
-// Read returns a batch of log entries, up to "max" amount. If "max" isn't
-// available, this will return any number that currently exists. If zero
-// exist and block is true, this will block waiting for available entries.
-// If block is false and no more log entries exist, this will return nil.
-func (r *Reader) Read(max int, block bool) []Entry {
+// readTimedEntries is the core reading logic and used by Read and Next.
+// See Read for it's semantics, as Read just calls this and then converts
+// the timedEntry's to Entry's.
+func (r *Reader) readTimedEntries(max int, block bool) []timedEntry {
 	// If we're closed then do nothing.
 	if atomic.LoadUint32(&r.closed) > 0 {
 		return nil
@@ -222,6 +235,41 @@ func (r *Reader) Read(max int, block bool) []Entry {
 
 	return result
 }
+
+// Read returns a batch of log entries, up to "max" amount. If "max" isn't
+// available, this will return any number that currently exists. If zero
+// exist and block is true, this will block waiting for available entries.
+// If block is false and no more log entries exist, this will return nil.
+func (r *Reader) Read(max int, block bool) []Entry {
+	timedEntries := r.readTimedEntries(max, block)
+	if timedEntries == nil {
+		return nil
+	}
+
+	// Convert back to the raw Entry's because that's what the API expects.
+	entries := make([]Entry, len(timedEntries))
+	for i, te := range timedEntries {
+		entries[i] = te.entry
+	}
+
+	return entries
+}
+
+// Next returns the next entry. This is used by Merger to merge multiple
+// readers results together, using the ingest time to provide an order on
+// the values. This never blocks, returning io.EOF if there are no further
+// values.
+func (r *Reader) NextTimedEntry() (TimedEntry, error) {
+	timedEntries := r.readTimedEntries(1, false)
+	if timedEntries == nil {
+		return nil, io.EOF
+	}
+
+	return timedEntries[0], nil
+}
+
+// Check that Reader is also a MergeReader
+var _ MergeReader = (*Reader)(nil)
 
 // Close closes the reader. This will cause all future Read calls to
 // return immediately with a nil result. This will also immediately unblock
@@ -258,9 +306,27 @@ func (r *Reader) CloseContext(ctx context.Context) {
 	}
 }
 
+// timedEntry is a wrapper type for Entry to carry the ingest time along.
+// It satifies TimedEntry interface.
+type timedEntry struct {
+	ingestTs time.Time
+	entry    Entry
+}
+
+// Time returns the ingest time of the entry. This time is added to the entry
+// when it was passed to Write of the Buffer.
+func (t timedEntry) Time() time.Time {
+	return t.ingestTs
+}
+
+// Value returns the underlying Entry value that was passed to Write.
+func (t timedEntry) Value() interface{} {
+	return t.entry
+}
+
 type chunk struct {
 	idx    uint32
-	buffer []Entry
+	buffer []timedEntry
 }
 
 // atEnd returns true if the cursor is at the end of the chunk. The
@@ -283,13 +349,13 @@ func (w *chunk) size() uint32 {
 
 // read reads up to max number of elements from the chunk from the current
 // cursor value. If any values are available, this will return up to max
-// amount immediately. If no values are available, this will block until
-// more become available.
+// amount immediately. If no values are available, the block arg indicates if
+// this will block until more become available.
 //
 // The caller should take care to check chunk.atEnd with their cursor to
 // see if they're at the end of the chunk. If you're at the end of the chunk,
 // this will always return immediately to avoid blocking forever.
-func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32, block bool) ([]Entry, uint32) {
+func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32, block bool) ([]timedEntry, uint32) {
 	idx := atomic.LoadUint32(&w.idx)
 	if idx <= current {
 		// If we're at the end we'd block forever cause we'll never see another
@@ -338,12 +404,12 @@ func (w *chunk) read(cond *sync.Cond, closed *uint32, current, max uint32, block
 // of entries written. If the return value is less than the length of
 // entries, this means this chunk is full and the remaining entries must
 // be written to the next chunk.
-func (w *chunk) write(entries []Entry) int {
+func (w *chunk) write(entries []timedEntry) int {
 	// If we have no buffer then allocate it now. This is safe to do in
 	// a concurrent setting because we'll only ever attempt to read
 	// w.buffer in read if w.idx > 0.
 	if w.buffer == nil {
-		w.buffer = make([]Entry, chunkSize)
+		w.buffer = make([]timedEntry, chunkSize)
 	}
 
 	// Write as much of the entries as we can into our buffer starting
