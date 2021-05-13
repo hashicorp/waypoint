@@ -17,10 +17,6 @@ export default class extends Controller {
     let workspace = new Ref.Workspace();
     let runner = new Ref.Runner();
 
-    if (!appObject.project) {
-      return;
-    }
-
     workspace.setWorkspace('default');
 
     application.setApplication(appObject.application);
