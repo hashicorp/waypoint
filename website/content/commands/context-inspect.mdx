@@ -1,0 +1,30 @@
+---
+layout: commands
+page_title: 'Commands: Context inspect'
+sidebar_title: 'context inspect'
+description: 'Output context info.'
+---
+
+# Waypoint Context inspect
+
+Command: `waypoint context inspect`
+
+Output context info.
+
+@include "commands/context-inspect_desc.mdx"
+
+## Usage
+
+Usage: `waypoint context inspect [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-json` - Output information in JSON format
+
+@include "commands/context-inspect_more.mdx"

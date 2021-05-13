@@ -27,9 +27,13 @@ Usage: `waypoint server upgrade [options]`
 
 - `-auto-approve` - Confirm server upgrade.
 - `-context-name=<string>` - Waypoint server context to upgrade.
-- `-platform=<string>` - Platform to upgrade the Waypoint server from.
+- `-platform=<string>` - Platform to upgrade the Waypoint server from, defaults to the platform stored in the context
 - `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.
 - `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to upgrades.
+
+#### docker Options
+
+- `-docker-server-image=<string>` - Docker image for the Waypoint server.
 
 #### kubernetes Options
 
@@ -47,10 +51,10 @@ Usage: `waypoint server upgrade [options]`
 - `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad.
 - `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
 - `-nomad-region=<string>` - Region to install to for Nomad.
+- `-nomad-server-cpu=<string>` - CPU required to run this task in MHz.
+- `-nomad-server-memory=<string>` - MB of Memory to allocate to the server job task.
+- `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
+- `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server.
-
-#### docker Options
-
-- `-docker-server-image=<string>` - Docker image for the Waypoint server.
 
 @include "commands/server-upgrade_more.mdx"

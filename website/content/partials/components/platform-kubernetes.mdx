@@ -18,6 +18,44 @@ deploy "kubernetes" {
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
 
+#### pod (category)
+
+The configuration for a pod.
+
+Pod describes the configuration for a pod when deploying.
+
+##### pod.container (category)
+
+Container describes the commands and arguments for a container config.
+
+###### pod.container.args
+
+An array of string arguments to pass through to the container.
+
+###### pod.container.command
+
+An array of strings to run for the container.
+
+##### pod.pod_security_context (category)
+
+Holds pod-level security attributes and container settings.
+
+###### pod.pod_security_context.fs_group
+
+A special supplemental group that applies to all containers in a pod.
+
+###### pod.pod_security_context.run_as_non_root
+
+Indicates that the container must run as a non-root user.
+
+###### pod.pod_security_context.run_as_user
+
+The UID to run the entrypoint of the container process.
+
+##### pod.security_context
+
+- Type: **k8s.PodSecurityContext**
+
 #### probe (category)
 
 Configuration to control liveness and readiness probes.
@@ -146,7 +184,7 @@ A path for the service to store temporary data.
 
 A path to a directory that will be created for the service to store temporary data using tmpfs.
 
-- Type: **string**
+- Type: **list of string**
 - **Optional**
 
 #### service_account

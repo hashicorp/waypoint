@@ -35,6 +35,26 @@ The credentials for docker registry.
 
 - Type: **nomad.AuthConfig**
 
+#### resources (category)
+
+The amount of resources to allocate to the deployed allocation.
+
+##### resources.cpu
+
+Amount of CPU in MHz to allocate to this task.
+
+- Type: **int**
+- **Optional**
+- Default: 100
+
+##### resources.memorymb
+
+Amount of memory in MB to allocate to this task.
+
+- Type: **int**
+- **Optional**
+- Default: 300
+
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
