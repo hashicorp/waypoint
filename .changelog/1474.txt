@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/netlify: Restore operations by no longer caching automatically retrieved access tokens
+```
