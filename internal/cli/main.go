@@ -449,6 +449,12 @@ func Commands(
 			}, nil
 		},
 
+		"project": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["project"][0],
+				HelpText:     helpText["project"][1],
+			}, nil
+		},
 		"project list": func() (cli.Command, error) {
 			return &ProjectListCommand{
 				baseCommand: baseCommand,
@@ -718,6 +724,16 @@ deployments. These can be used to share previews with teammates, see
 unreleased deployments, and more.
 
 For more information see: https://waypointproject.io/docs/url
+`,
+	},
+
+	"project": {
+		"Project management",
+		`
+Project management.
+
+Projects are comprised of one or more applications. A project maps 
+to a VCS repository (if one exists).
 `,
 	},
 
