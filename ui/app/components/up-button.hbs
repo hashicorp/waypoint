@@ -1,0 +1,13 @@
+<span class="up-button">
+  {{#if this.currentMessage}}
+    <code class="up-button__msg">{{this.currentMessage}}</code>
+  {{/if}}
+  <Pds::Button
+    @variant="primary"
+    @compact={{true}}
+    disabled={{this.up.isRunning}}
+    {{on "click" (perform this.up @application)}}
+  >
+    waypoint up
+  </Pds::Button>
+</span>
