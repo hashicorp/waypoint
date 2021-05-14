@@ -165,7 +165,6 @@ func (c *ReleaseCreateCommand) Run(args []string) int {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
 		}
-		//statusReport := statusReportResult.StatusReport
 
 		if result.Release.Url == "" {
 			app.UI.Output("\n"+strings.TrimSpace(releaseNoUrl),

@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -24,8 +25,34 @@ func (a *App) StatusReport(
 	deployTarget *pb.Deployment,
 	releaseTarget *pb.Release,
 ) (*pb.StatusReport, *sdk.StatusReport, error) {
+	// Query the artifact
+	var artifact *pb.PushedArtifact
+	if deployTarget != nil && deployTarget.Preload != nil &&
+		deployTarget.Preload.Artifact != nil {
+		artifact = deployTarget.Preload.Artifact
+	}
+	if artifact == nil {
+		a.logger.Debug("querying artifact", "artifact_id", deployTarget.ArtifactId)
+		resp, err := a.client.GetPushedArtifact(ctx, &pb.GetPushedArtifactRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: deployTarget.ArtifactId,
+				},
+			},
+		})
+		if err != nil {
+			a.logger.Error("error querying artifact",
+				"artifact_id", deployTarget.ArtifactId,
+				"error", err)
+			return nil, nil, err
+		}
+
+		artifact = resp
+	}
+
 	var evalCtx hcl.EvalContext
-	if err := evalCtxTemplateProto(&evalCtx, "deploy", deployTarget); err != nil {
+	evalCtx.Variables = map[string]cty.Value{}
+	if err := evalCtxTemplateProto(&evalCtx, "artifact", artifact); err != nil {
 		a.logger.Warn("failed to prepare template variables, will not be available",
 			"err", err)
 	}
@@ -57,6 +84,7 @@ func (a *App) StatusReport(
 	if err != nil {
 		return nil, nil, err
 	}
+
 	var status *sdk.StatusReport
 	if result != nil {
 		status = result.(*sdk.StatusReport)

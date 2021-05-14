@@ -98,16 +98,23 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 
 			releaseUrl = releaseResult.Release.Url
 
-			// Status Report
-			app.UI.Output("")
-			_, err = app.StatusReport(ctx, &pb.Job_StatusReportOp{ // TODO: release
-				Target: &pb.Job_StatusReportOp_Release{
-					Release: releaseResult.Release,
-				},
-			})
-			if err != nil {
-				app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
-				return ErrSentinel
+			// NOTE(briancain): Because executeReleaseOp returns an initialized struct
+			// of release results, we need this deep check here to really ensure that a
+			// release actually happened, otherwise we'd attempt to run a status report
+			// on a nil release
+			if releaseResult != nil && releaseResult.Release != nil &&
+				releaseResult.Release.Release != nil {
+				// Status Report
+				app.UI.Output("")
+				_, err = app.StatusReport(ctx, &pb.Job_StatusReportOp{
+					Target: &pb.Job_StatusReportOp_Release{
+						Release: releaseResult.Release,
+					},
+				})
+				if err != nil {
+					app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+					return ErrSentinel
+				}
 			}
 		}
 
