@@ -6,12 +6,12 @@ let
 in with pkgs; let
   go-protobuf = buildGoModule rec {
     pname = "go-protobuf";
-    version = "v1.4.2";
+    version = "v1.5.2";
 
     src = fetchFromGitHub {
       owner = "golang";
       repo = "protobuf";
-      rev = "v1.4.2";
+      rev = "v1.5.2";
       sha256 = "0m5z81im4nsyfgarjhppayk4hqnrwswr3nix9mj8pff8x9jvcjqw";
     };
 
