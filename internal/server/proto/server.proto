@@ -287,6 +287,53 @@ message Application {
   string file_change_signal = 3;
 }
 
+// Variable stores a variable's value, and metadata to allow for precedence 
+// sorting and source-specific error messaging 
+message Variable {
+  string name = 1;
+
+  oneof value {
+    string str = 2;
+    string hcl = 3;
+  }
+
+  // Source tracks where a value came from for more helpful error messaging.
+  // This is optional. If unset, we will give a generic error message.
+  oneof source {
+    SourceCLIArg cliarg = 4;
+    SourceCLIFile file = 5;
+    SourceEnvVar envvar= 6;
+    SourceRepoFile repofile = 7;
+    SourceServer server = 8;
+  }
+
+  // SourceCLIArg is set if a variable value is set via a -var flag
+  message SourceCLIArg {}
+
+  // SourceCLIFile is set if a variable value is set via a -var-file flag
+  message SourceCLIFile {
+    string fileName = 1;
+    bytes hclPos = 2;
+  }
+
+  // SourceEnvVar is set if a variable value is set in the local
+  // environment via a WP_VAR_*
+  message SourceEnvVar {}
+  
+  // SourceRepoFile is set if git polling is enabled and an
+  // *.auto.wpvars.hcl/json file is found in the repo
+  message SourceRepoFile {
+    string fileName = 1;
+    bytes hclPos = 2;
+  }
+
+  // SourceServer is set if the variable value comes from the server.
+  // When we add support for workspace variables, we can store the workspace
+  // id here.
+  message SourceServer {}
+
+}
+
 message Project {
   string name = 1;
 
@@ -331,6 +378,9 @@ message Project {
   // Indicates signal to be sent to any applications when their config files
   // change.
   string file_change_signal = 8;
+
+  // Variable values stored on the server. These values are set in the UI.
+  repeated Variable variables = 9;
 
   enum Format {
     HCL = 0; // We assume HCL by default
@@ -690,6 +740,13 @@ message Job {
   // Ergo, this is optional.
   DataSource data_source = 6;
   map<string, string> data_source_overrides = 7;
+
+  // variables store the key/value pairs of parsed variables; the parse prior to
+  // running a job only verifies syntax correctness. Verifying type checks and
+  // the presence of required values will both need to be done in the job's 
+  // validation
+  repeated Variable variables = 9;
+  // map<string, string> variables = 9;
 
   // The operation to execute. See the message docs for details on the operation.
   // This is required, set one (and one only).
