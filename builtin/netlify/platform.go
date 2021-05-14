@@ -12,7 +12,6 @@ import (
 	"github.com/skratchdot/open-golang/open"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
-	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/files"
@@ -28,52 +27,23 @@ func (p *Platform) Config() (interface{}, error) {
 	return &p.config, nil
 }
 
-// AuthFunc implements component.Authenticator
-func (p *Platform) AuthFunc() interface{} {
-	return p.Auth
-}
-
-// ValidateAuthFunc implements component.Authenticator
-func (p *Platform) ValidateAuthFunc() interface{} {
-	return p.ValidateAuth
-}
-
 // DeployFunc implements component.Platform
 func (p *Platform) DeployFunc() interface{} {
 	return p.Deploy
 }
 
 // Auth retrieves a token and stores it
-func (p *Platform) Auth(
+func (p *Platform) getToken(
 	ctx context.Context,
 	log hclog.Logger,
-	src *component.Source,
-	info *component.JobInfo,
-	dir *datadir.Component,
-	ui terminal.UI,
-) (*component.AuthResult, error) {
-	// If we're not running local we can't open browser windows and stuff so
-	// just output some help text to the user.
-	if !info.Local {
-		ui.Output(
-			"Jack Pearkes needs to do this but he'll tell you to open a URL to\n" +
-				"some place and copy some token to some other place and then after\n" +
-				"all that we should be good to go.")
-		return nil, nil
-	}
-
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-
+) (string, error) {
 	// Setup API content for netlify, we are not authenticated yet
 	clientContext := apiContext("")
 
 	// If the user configured a token, just stop and use that
 	if p.config.AccessToken != "" {
 		log.Debug("user configured token in access_token config, not authenticating")
-		st.Update("Using configured token")
-		return nil, nil
+		return p.config.AccessToken, nil
 	}
 
 	client := netlify.Default
@@ -81,73 +51,28 @@ func (p *Platform) Auth(
 	// Create a ticket to exchange for a secret token
 	ticket, err := client.CreateTicket(clientContext, clientID)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Authorize in the users browser
 	url := fmt.Sprintf("%s/authorize?response_type=ticket&ticket=%s", netlifyUI, ticket.ID)
 	if err := open.Start(url); err != nil {
 		err = fmt.Errorf("Error opening URL: %s", err)
-		return nil, err
+		return "", err
 	}
 
 	// Blocks until the user proceeds in the browser
 	client.WaitUntilTicketAuthorized(clientContext, ticket)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	token, err := client.ExchangeTicket(clientContext, ticket.ID)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	// Persist the token for future runs
-	err = persistLocalToken(dir.DataDir(), token.AccessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	return &component.AuthResult{
-		Authenticated: true,
-	}, nil
-}
-
-// ValidateAuth checks validity of the stored or supplied credential
-func (p *Platform) ValidateAuth(
-	ctx context.Context,
-	log hclog.Logger,
-	src *component.Source,
-	dir *datadir.Component,
-	ui terminal.UI,
-) error {
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-
-	st.Update("Validating credentials...")
-
-	// If the user configured a token, just stop and use that
-	if p.config.AccessToken != "" {
-		log.Debug("user configured token in access_token config, not authenticating")
-		st.Update("Using configured token")
-		return nil
-	}
-
-	// Will retrive local token it if exists
-	token := retrieveLocalToken(dir.DataDir())
-
-	clientContext := apiContext(token)
-	client := netlify.Default
-
-	// Try listing sites to validate auth
-	_, err := client.ListSites(clientContext, nil)
-	if err != nil {
-		return err
-	}
-
-	// Auth is valid if we did not error
-	return nil
+	return token.AccessToken, nil
 }
 
 // Deploy deploys a set of files to netlify
@@ -156,7 +81,6 @@ func (p *Platform) Deploy(
 	log hclog.Logger,
 	src *component.Source,
 	files *files.Files,
-	dir *datadir.Component,
 	deployConfig *component.DeploymentConfig,
 	ui terminal.UI,
 ) (*Deployment, error) {
@@ -165,10 +89,9 @@ func (p *Platform) Deploy(
 
 	// If the user configured a token, just use that, otherwise
 	// get the token that should exist because of auth calls
-	var token string
-	if p.config.AccessToken == "" {
-		localToken := retrieveLocalToken(dir.DataDir())
-		token = localToken
+	token, err := p.getToken(ctx, log)
+	if err != nil {
+		return nil, err
 	}
 
 	// Setup API content for netlify
