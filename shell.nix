@@ -105,7 +105,7 @@ in pkgs.mkShell rec {
     pkgs.grpcurl
     pkgs.niv
     pkgs.nodejs-12_x
-    pkgs.protobuf3_11
+    pkgs.protobufPin
     pkgs.postgresql_12
     go-protobuf
     go-protobuf-json
