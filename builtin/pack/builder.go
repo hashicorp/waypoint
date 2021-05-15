@@ -52,6 +52,9 @@ type BuilderConfig struct {
 
 	// Files patterns to prevent from being pulled into the build.
 	Ignore []string `hcl:"ignore,optional"`
+	
+	// Process type that will be used when setting container start command.
+	ProcessType string `hcl:"process_type,optional" default:"web"`
 }
 
 const DefaultBuilder = "heroku/buildpacks:18"
@@ -133,12 +136,12 @@ func (b *Builder) Build(
 		AppPath:    src.Path,
 		Env:        b.config.StaticEnvVars,
 		Buildpacks: b.config.Buildpacks,
-
 		ProjectDescriptor: project.Descriptor{
 			Build: project.Build{
 				Exclude: b.config.Ignore,
 			},
 		},
+		DefaultProcessType: b.config.ProcessType,
 	}
 
 	err = client.Build(ctx, bo)
@@ -362,6 +365,15 @@ build {
              zero or more directories. For example, "a/** /b" matches "a/b",
              "a/x/b", "a/x/y/b" and so on.
         iv.  Other consecutive asterisks are considered invalid.`,
+		),
+	)
+
+	doc.SetField(
+		"process_type",
+		"The process type to use from your Procfile. if not set, defaults to `web`",
+		docs.Summary(
+			"The process type is used to control over all container modes,",
+			"such as configuring it to start a web app vs a background worker",
 		),
 	)
 
