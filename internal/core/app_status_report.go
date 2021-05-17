@@ -19,7 +19,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// Builds a status report on the given deployment
+// Builds a status report on the given deployment or release
 func (a *App) StatusReport(
 	ctx context.Context,
 	deployTarget *pb.Deployment,
