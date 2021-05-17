@@ -695,8 +695,6 @@ github.com/hashicorp/cronexpr v1.1.0 h1:dnNsWtH0V2ReN7JccYe8m//Bj14+PjJDntR1dz0C
 github.com/hashicorp/cronexpr v1.1.0/go.mod h1:P4wA0KBl9C5q2hABiMO7cp6jcIg96CDh1Efb3g1PWA4=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
-github.com/hashicorp/go-argmapper v0.1.1 h1:MSt+BaKb4vegl5dZpRRb26cuUmv9IqOLASp5q1Lr81c=
-github.com/hashicorp/go-argmapper v0.1.1/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
 github.com/hashicorp/go-argmapper v0.2.0 h1:hODvyLdq7akV0n6SbOP47VXZjAX1QrUvAveCA6qXSfQ=
 github.com/hashicorp/go-argmapper v0.2.0/go.mod h1:WA3PocIo+40wf4ko3dRdL3DEgxIQB4qaqp+jVccLV1I=
 github.com/hashicorp/go-cleanhttp v0.5.0/go.mod h1:JpRdi6/HCYpAwUzNwuwqhbovhLtngrth3wmdIIUrZ80=
@@ -786,8 +784,6 @@ github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef h1:YKouRHFf
 github.com/hashicorp/vault/sdk v0.1.14-0.20201202172114-ee5ebeb30fef/go.mod h1:cAGI4nVnEfAyMeqt9oB+Mase8DNn3qA/LDNHURiwssY=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9 h1:i9hzlv2SpmaNcQ8ZLGn01fp2Gqyejj0juVs7rYDgecE=
 github.com/hashicorp/waypoint-hzn v0.0.0-20201008221232-97cd4d9120b9/go.mod h1:ObgQSWSX9rsNofh16kctm6XxLW2QW1Ay6/9ris6T6DU=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210510195008-b42c688ebedf h1:jisI3N2+Qf1LxHgELDAKGxC90kTJq2MrRPBGScA5g9I=
-github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210510195008-b42c688ebedf/go.mod h1:Lwc83y1fKC2ktVgbU6jkKbgFNJuR3N+gSWpVHQ+0KSI=
 github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210517205105-3e92a1f0efce h1:pqXdTiVFdF8sFoCAgW4pSXaBNaHJOOppsnfzNjy0oAo=
 github.com/hashicorp/waypoint-plugin-sdk v0.0.0-20210517205105-3e92a1f0efce/go.mod h1:3EzMFm8svUyyR35eop57AZmFBqFbIJVx6/MkALuNEjo=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
@@ -890,7 +886,6 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxv
 github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515/go.mod h1:+0opPa2QZZtGFBFZlji/RkVcI2GknAs/DXo4wKdlNEc=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
-github.com/kr/pretty v0.2.0 h1:s5hAObm+yFO5uHYt5dYjxi2rXrsnmRpJx4OYvIWUaQs=
 github.com/kr/pretty v0.2.0/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pretty v0.2.1 h1:Fmg33tUaq4/8ym9TJN1x7sLJnHVwhP33CNkpYV/7rwI=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
