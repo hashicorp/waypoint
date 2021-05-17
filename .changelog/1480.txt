@@ -1,0 +1,3 @@
+```release-note:bug
+core: Fix confusing UI output caused by concurrent step groups
+```
