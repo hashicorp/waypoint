@@ -54,7 +54,7 @@ RUN make BUILDTAGS="seccomp noembed dfrunmount dfsecrets dfssh" && mv img /usr/b
 # https://github.com/genuinetools/img/blob/d858ac71f93cc5084edd2ba2d425b90234cf2ead/Dockerfile
 FROM docker.mirror.hashicorp.services/alpine AS imgbase
 RUN apk add --no-cache autoconf automake build-base byacc gettext gettext-dev \
-    gcc git libcap-dev libtool libxslt img runc
+    gcc git libcap-dev libtool libxslt runc
 RUN git clone https://github.com/shadow-maint/shadow.git /shadow
 WORKDIR /shadow
 RUN git checkout 59c2dabb264ef7b3137f5edb52c0b31d5af0cf76
