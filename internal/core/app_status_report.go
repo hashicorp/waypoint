@@ -31,7 +31,7 @@ func (a *App) StatusReport(
 		deployTarget.Preload.Artifact != nil {
 		artifact = deployTarget.Preload.Artifact
 	}
-	if artifact == nil {
+	if artifact == nil && deployTarget != nil {
 		a.logger.Debug("querying artifact", "artifact_id", deployTarget.ArtifactId)
 		resp, err := a.client.GetPushedArtifact(ctx, &pb.GetPushedArtifactRequest{
 			Ref: &pb.Ref_Operation{
