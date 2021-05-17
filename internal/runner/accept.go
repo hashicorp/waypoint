@@ -277,8 +277,8 @@ func (r *Runner) accept(ctx context.Context, id string) error {
 	log.Debug("job finished", "error", err)
 
 	// We won't output anything else to the UI anymore.
-	if ui, ok := ui.(*runnerUI); ok {
-		ui.Close()
+	if c, ok := ui.(io.Closer); ok {
+		c.Close()
 	}
 
 	// Check if we were force canceled. If so, then just exit now. Realistically
