@@ -83,7 +83,7 @@ func TestServiceStatusReport_GetStatusReport(t *testing.T) {
 	t.Run("get existing", func(t *testing.T) {
 		require := require.New(t)
 
-		// Get, should return a release
+		// Get, should return a status report
 		sp, err := client.GetStatusReport(ctx, &Req{
 			Ref: &pb.Ref_Operation{
 				Target: &pb.Ref_Operation_Id{Id: statusReportResp.StatusReport.Id},
@@ -130,7 +130,7 @@ func TestServiceStatusReport_ListStatusReports(t *testing.T) {
 	t.Run("list", func(t *testing.T) {
 		require := require.New(t)
 
-		// Get, should return a release
+		// Get, should return a status report
 		sr, err := client.ListStatusReports(ctx, &Req{
 			Application: resp.StatusReport.Application,
 		})

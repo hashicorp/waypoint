@@ -8,14 +8,14 @@ var statusReportOp = &appOperation{
 	Struct: (*pb.StatusReport)(nil),
 	Bucket: []byte("statusreport"),
 
-	MaximumIndexedRecords: 1, // Only store the "latest" report
+	MaximumIndexedRecords: 1, // Only store the "latest" status report
 }
 
 func init() {
 	statusReportOp.register()
 }
 
-// get status report by referenced deployment
+// get status report by referenced operation
 func (s *State) StatusReportGet(ref *pb.Ref_Operation) (*pb.StatusReport, error) {
 	result, err := statusReportOp.Get(s, ref)
 	if err != nil {
@@ -47,7 +47,7 @@ func (s *State) StatusReportList(
 	return result, nil
 }
 
-// StatusReportLatest gets the latest generated status reeport
+// StatusReportLatest gets the latest generated status report
 func (s *State) StatusReportLatest(
 	ref *pb.Ref_Application,
 	ws *pb.Ref_Workspace,
