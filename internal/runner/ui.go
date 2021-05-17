@@ -25,6 +25,8 @@ type runnerUI struct {
 	// ID. You must never reuse an old ID.
 	stepIdx int32
 
+	sgIdx int32
+
 	stdSetup       sync.Once
 	stdout, stderr io.Writer
 }
@@ -345,6 +347,7 @@ func (u *runnerUIStatus) Close() error {
 type runnerUISGStep struct {
 	sg   *runnerUISG
 	id   int32
+	sgid int32
 	done bool
 
 	stdSetup sync.Once
@@ -392,8 +395,9 @@ func (u *runnerUISGStep) sendData(r io.ReadCloser, stderr bool) {
 						{
 							Event: &pb.GetJobStreamResponse_Terminal_Event_Step_{
 								Step: &pb.GetJobStreamResponse_Terminal_Event_Step{
-									Id:     u.id,
-									Output: data,
+									StepGroup: u.sgid,
+									Id:        u.id,
+									Output:    data,
 								},
 							},
 						},
@@ -427,8 +431,9 @@ func (u *runnerUISGStep) Update(str string, args ...interface{}) {
 						{
 							Event: &pb.GetJobStreamResponse_Terminal_Event_Step_{
 								Step: &pb.GetJobStreamResponse_Terminal_Event_Step{
-									Id:  u.id,
-									Msg: msg,
+									StepGroup: u.sgid,
+									Id:        u.id,
+									Msg:       msg,
 								},
 							},
 						},
@@ -453,8 +458,9 @@ func (u *runnerUISGStep) Status(status string) {
 						{
 							Event: &pb.GetJobStreamResponse_Terminal_Event_Step_{
 								Step: &pb.GetJobStreamResponse_Terminal_Event_Step{
-									Id:     u.id,
-									Status: status,
+									StepGroup: u.sgid,
+									Id:        u.id,
+									Status:    status,
 								},
 							},
 						},
@@ -484,8 +490,9 @@ func (u *runnerUISGStep) Done() {
 						{
 							Event: &pb.GetJobStreamResponse_Terminal_Event_Step_{
 								Step: &pb.GetJobStreamResponse_Terminal_Event_Step{
-									Id:    u.id,
-									Close: true,
+									StepGroup: u.sgid,
+									Id:        u.id,
+									Close:     true,
 								},
 							},
 						},
@@ -517,9 +524,10 @@ func (u *runnerUISGStep) Abort() {
 						{
 							Event: &pb.GetJobStreamResponse_Terminal_Event_Step_{
 								Step: &pb.GetJobStreamResponse_Terminal_Event_Step{
-									Id:     u.id,
-									Close:  true,
-									Status: terminal.StatusAbort,
+									StepGroup: u.sgid,
+									Id:        u.id,
+									Close:     true,
+									Status:    terminal.StatusAbort,
 								},
 							},
 						},
@@ -541,6 +549,7 @@ type runnerUISG struct {
 	ui *runnerUI
 	wg sync.WaitGroup
 
+	id    int32
 	steps []*runnerUISGStep
 }
 
@@ -553,12 +562,12 @@ func (u *runnerUISG) Add(str string, args ...interface{}) terminal.Step {
 
 	u.wg.Add(1)
 
-	stepIdx := u.ui.stepIdx
-	u.ui.stepIdx++
+	stepIdx := int32(len(u.steps))
 
 	step := &runnerUISGStep{
-		sg: u,
-		id: stepIdx,
+		sg:   u,
+		sgid: u.id,
+		id:   stepIdx,
 	}
 
 	u.steps = append(u.steps, step)
@@ -596,6 +605,7 @@ func (u *runnerUISG) Wait() {
 					{
 						Event: &pb.GetJobStreamResponse_Terminal_Event_StepGroup_{
 							StepGroup: &pb.GetJobStreamResponse_Terminal_Event_StepGroup{
+								Id:    u.id,
 								Close: true,
 							},
 						},
@@ -614,8 +624,12 @@ func (u *runnerUI) StepGroup() terminal.StepGroup {
 
 	ctx, cancel := context.WithCancel(u.ctx)
 
+	id := u.sgIdx
+	u.sgIdx++
+
 	sg := &runnerUISG{
 		ui:     u,
+		id:     id,
 		ctx:    ctx,
 		cancel: cancel,
 	}
@@ -626,7 +640,9 @@ func (u *runnerUI) StepGroup() terminal.StepGroup {
 				Events: []*pb.GetJobStreamResponse_Terminal_Event{
 					{
 						Event: &pb.GetJobStreamResponse_Terminal_Event_StepGroup_{
-							StepGroup: &pb.GetJobStreamResponse_Terminal_Event_StepGroup{},
+							StepGroup: &pb.GetJobStreamResponse_Terminal_Event_StepGroup{
+								Id: id,
+							},
 						},
 					},
 				},

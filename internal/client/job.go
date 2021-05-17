@@ -137,6 +137,11 @@ func (c *Project) queueAndStreamJob(
 		out io.Writer
 	}
 
+	type stepGroup struct {
+		sg    terminal.StepGroup
+		steps map[int32]*stepData
+	}
+
 	// Process events
 	var (
 		completed bool
@@ -146,8 +151,7 @@ func (c *Project) queueAndStreamJob(
 
 		stdout, stderr io.Writer
 
-		sg    terminal.StepGroup
-		steps = map[int32]*stepData{}
+		sgs = map[int32]*stepGroup{}
 	)
 
 	if c.local {
@@ -269,24 +273,29 @@ func (c *Project) queueAndStreamJob(
 
 					ui.Table(tbl)
 				case *pb.GetJobStreamResponse_Terminal_Event_StepGroup_:
-					if sg != nil {
-						sg.Wait()
+					sgd, ok := sgs[ev.StepGroup.Id]
+					if ok {
+						sgd.sg.Wait()
 					}
 
 					if !ev.StepGroup.Close {
-						sg = ui.StepGroup()
+						sgs[ev.StepGroup.Id] = &stepGroup{
+							sg:    ui.StepGroup(),
+							steps: make(map[int32]*stepData),
+						}
 					}
 				case *pb.GetJobStreamResponse_Terminal_Event_Step_:
-					if sg == nil {
+					sgd, ok := sgs[ev.Step.StepGroup]
+					if !ok {
 						continue
 					}
 
-					step, ok := steps[ev.Step.Id]
+					step, ok := sgd.steps[ev.Step.Id]
 					if !ok {
 						step = &stepData{
-							Step: sg.Add(ev.Step.Msg),
+							Step: sgd.sg.Add(ev.Step.Msg),
 						}
-						steps[ev.Step.Id] = step
+						sgd.steps[ev.Step.Id] = step
 					} else {
 						if ev.Step.Msg != "" {
 							step.Update(ev.Step.Msg)
