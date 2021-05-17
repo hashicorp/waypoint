@@ -5,17 +5,4 @@
   & .sectionHeaderWrapper {
     margin-bottom: 100px;
   }
-
-  & :global(.g-vertical-text-block-list) {
-    & :global(.list) {
-      & :global(.body-text) {
-        & a {
-          color: var(--link-color) !important;
-          &::after {
-            background-color: var(--link-color) !important;
-          }
-        }
-      }
-    }
-  }
 }
