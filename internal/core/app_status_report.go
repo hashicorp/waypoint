@@ -105,8 +105,6 @@ func (a *App) createStatusReporter(
 	}
 
 	log.Debug("initializing status report plugin")
-	// Potential bug here with k8s apply plugin
-	// Works with docker and k8s ok
 	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, hclCtx)
 	if err != nil {
 		if status.Code(err) != codes.Unimplemented {
