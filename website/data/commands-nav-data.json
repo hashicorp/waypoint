@@ -83,6 +83,10 @@
     "path": "config-sync"
   },
   {
+    "title": "context",
+    "path": "context"
+  },
+  {
     "title": "context clear",
     "path": "context-clear"
   },
@@ -93,6 +97,10 @@
   {
     "title": "context delete",
     "path": "context-delete"
+  },
+  {
+    "title": "context inspect",
+    "path": "context-inspect"
   },
   {
     "title": "context list",
