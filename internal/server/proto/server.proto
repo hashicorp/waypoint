@@ -2300,24 +2300,20 @@ message GetLatestStatusReportRequest {
 }
 
 message ListStatusReportsRequest {
+  // The filters to apply to this request. These are ORed, so you should
+  // specify multiple filters in the StatusFilter for AND behavior.
+  repeated StatusFilter status = 1;
+
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 2;
+
   // application that this release belongs to
   Ref.Application application = 3;
 
   // workspace that this should belong to. If this is empty, values in
   // all workspaces will be listed.
   Ref.Workspace workspace = 4;
-
-  // The filters to apply to this request. These are ORed, so you should
-  // specify multiple filters in the StatusFilter for AND behavior.
-  repeated StatusFilter status = 1;
-
-  // The physical state to filter for. If this is zero or unset then no
-  // filtering on physical state will be done.
-  Operation.PhysicalState physical_state = 5;
-
-  // Specifies the order of results. If this isn't specified, the results
-  // are in an undefined order.
-  OperationOrder order = 2;
 }
 
 
