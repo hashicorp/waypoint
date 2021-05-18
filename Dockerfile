@@ -6,6 +6,8 @@
 
 FROM docker.mirror.hashicorp.services/golang:alpine AS builder
 
+RUN apk add --no-cache git gcc libc-dev openssh make
+
 RUN mkdir -p /tmp/wp-prime
 COPY go.sum /tmp/wp-prime
 COPY go.mod /tmp/wp-prime
@@ -22,8 +24,6 @@ RUN go get github.com/kevinburke/go-bindata/...
 
 COPY . /tmp/wp-src
 WORKDIR /tmp/wp-src
-
-RUN apk add --no-cache git gcc libc-dev openssh make
 
 RUN --mount=type=cache,target=/root/.cache/go-build make bin
 RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
