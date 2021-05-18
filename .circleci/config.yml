@@ -211,7 +211,7 @@ jobs:
   image-build:
     docker:
       # Use a modern Circle image as we just need up-to-date Docker here
-      - image: docker.mirror.hashicorp.services/cimg/base:2020.07-20.04
+      - image: ubuntu-2004:202010-01
     resource_class: medium+
     environment:
       <<: *ENVIRONMENT
