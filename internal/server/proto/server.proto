@@ -2344,23 +2344,29 @@ message StatusReport {
   // The workspace that this exists in
   Ref.Workspace workspace = 2;
 
-  // the deployment id that this status report was generated on
-  string deployment_id = 3;
+  // the reference id that is associated with this report
+  oneof target_id {
+    // the deployment id that this status report was generated on
+    string deployment_id = 3;
+
+    // the release id that this status report was generated on
+    string release_id = 4;
+  }
 
   // status of the release operation.
   // Note that this status is not related to the status report, but the current
   // state of the StatusReport operation
-  Status status = 4;
+  Status status = 5;
 
   // id is the unique ID for this status report.
-  string id = 5;
+  string id = 6;
 
   // release is the raw release object encoded directly from the plugin.
-  google.protobuf.Any status_report = 6;
+  google.protobuf.Any status_report = 7;
 
   // Resources that make up the report. The root most report is expected
   // to be the overall health associated with the report.
-  repeated Health resources_health = 7;
+  repeated Health resources_health = 8;
 
   message Health {
     // the overall health of the report for a resource
