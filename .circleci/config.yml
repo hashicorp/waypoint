@@ -465,13 +465,13 @@ workflows:
       - integration:
           requires:
             - dev-build
-      - image-release:
-          requires:
-            - integration
-          filters:
-            branches:
-              only:
-                - main
+      # - image-release:
+      #     requires:
+      #       - integration
+      #     filters:
+      #       branches:
+      #         only:
+      #           - main
   website:
     jobs:
       - algolia-index:
