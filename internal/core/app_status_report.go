@@ -66,7 +66,6 @@ func (a *App) StatusReport(
 		a.logger.Error("error creating component in platform", "error", err)
 		return nil, nil, err
 	}
-	defer c.Close()
 
 	a.logger.Debug("starting status report operation")
 	statusReporter, ok := c.Value.(component.Status)
@@ -75,6 +74,7 @@ func (a *App) StatusReport(
 		a.logger.Debug("component is not a Status or has no StatusFunc()")
 		return nil, nil, nil
 	}
+	defer c.Close()
 
 	result, msg, err := a.doOperation(ctx, a.logger.Named("statusreport"), &statusReportOperation{
 		Component:     c,
