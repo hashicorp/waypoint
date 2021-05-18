@@ -5,6 +5,7 @@
    @success={{this.onSuccess}}
    @error={{this.onError}}
    class={{if this.copySuccess 'copy-success'}}
+   title="Copy"
   >
     {{inline-svg (if this.copySuccess 'copy-success' 'copy-action') class="icon"}}
   </CopyButton>
