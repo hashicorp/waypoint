@@ -135,19 +135,11 @@ func (op *statusReportOperation) Init(app *App) (proto.Message, error) {
 }
 
 func (op *statusReportOperation) Hooks(app *App) map[string][]*config.Hook {
-	if op.Component == nil {
-		return nil
-	}
-
-	return op.Component.hooks
+	return nil
 }
 
 func (op *statusReportOperation) Labels(app *App) map[string]string {
-	if op.Component == nil {
-		return nil
-	}
-
-	return op.Component.labels
+	return nil
 }
 
 func (op *statusReportOperation) Upsert(
