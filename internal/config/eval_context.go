@@ -56,9 +56,13 @@ func defineContextVarsIfNeeded(ctx *hcl.EvalContext) {
 	}
 }
 
-// addWorkspaceValue adds the workspace values to the context
+// addWorkspaceValue adds the workspace values to the context. This
+// adds the `workspace` map and currently only supports the `workspace.name`
+// value.
 func addWorkspaceValue(ctx *hcl.EvalContext, v string) {
-	addStringVariable(ctx, "workspace", v)
+	addMapVariable(ctx, "workspace", map[string]string{
+		"name": v,
+	})
 }
 
 // addPathValue adds the "path" variable to the context.
@@ -71,17 +75,6 @@ func addMapVariable(ctx *hcl.EvalContext, varName string, v map[string]string) {
 	value, err := gocty.ToCtyValue(v, cty.Map(cty.String))
 	if err != nil {
 		// map[string]string conversion should never fail
-		panic(err)
-	}
-
-	addCtyVariable(ctx, varName, value)
-}
-
-// addStringVariable adds a string variable to the context
-func addStringVariable(ctx *hcl.EvalContext, varName string, v string) {
-	value, err := gocty.ToCtyValue(v, cty.String)
-	if err != nil {
-		// string conversion should never fail
 		panic(err)
 	}
 

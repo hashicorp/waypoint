@@ -297,10 +297,10 @@ func TestConfigApp_compare(t *testing.T) {
 		t.Run(tt.File, func(t *testing.T) {
 			require := require.New(t)
 
-			cfg, err := Load(filepath.Join("testdata", "compare", tt.File), "")
+			cfg, err := Load(filepath.Join("testdata", "compare", tt.File), &LoadOptions{
+				Workspace: "default",
+			})
 			require.NoError(err)
-
-			cfg.workspace = "default"
 
 			app, err := cfg.App(tt.App, nil)
 			require.NoError(err)
@@ -339,9 +339,10 @@ func TestAppValidate(t *testing.T) {
 		t.Run(tt.File, func(t *testing.T) {
 			require := require.New(t)
 
-			cfg, err := Load(filepath.Join("testdata", "validate", tt.File), "")
+			cfg, err := Load(filepath.Join("testdata", "validate", tt.File), &LoadOptions{
+				Workspace: "default",
+			})
 			require.NoError(err)
-			cfg.workspace = "default"
 
 			app, err := cfg.App(tt.App, nil)
 			require.NoError(err)

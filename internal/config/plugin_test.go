@@ -105,7 +105,7 @@ func TestConfigAppPlugins(t *testing.T) {
 		t.Run(tt.File, func(t *testing.T) {
 			require := require.New(t)
 
-			cfg, err := Load(filepath.Join("testdata", "plugins", tt.File), "")
+			cfg, err := Load(filepath.Join("testdata", "plugins", tt.File), nil)
 			require.NoError(err)
 
 			ps := cfg.Plugins()

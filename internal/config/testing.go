@@ -22,7 +22,7 @@ func TestConfig(t testing.T, src string) *Config {
 	path := filepath.Join(td, "waypoint.hcl")
 	require.NoError(t, ioutil.WriteFile(path, []byte(src), 0644))
 
-	result, err := Load(path, "")
+	result, err := Load(path, &LoadOptions{})
 	require.NoError(t, err)
 
 	return result

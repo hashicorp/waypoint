@@ -86,7 +86,6 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	// Build a new context with our app-scoped values
 	ctx = ctx.NewChild()
 	addPathValue(ctx, pathData)
-	addWorkspaceValue(ctx, c.workspace)
 
 	// Full decode
 	var app App

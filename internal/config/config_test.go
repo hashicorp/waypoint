@@ -52,7 +52,7 @@ func TestLoad_compare(t *testing.T) {
 		t.Run(tt.File, func(t *testing.T) {
 			require := require.New(t)
 
-			cfg, err := Load(filepath.Join("testdata", "compare", tt.File), "")
+			cfg, err := Load(filepath.Join("testdata", "compare", tt.File), nil)
 			if tt.Err != "" {
 				require.Error(err)
 				require.Contains(err.Error(), tt.Err)

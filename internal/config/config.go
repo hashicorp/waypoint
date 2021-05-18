@@ -15,14 +15,9 @@ import (
 type Config struct {
 	*hclConfig
 
-	ctx       *hcl.EvalContext
-	path      string
-	pathData  map[string]string
-	workspace string
-}
-
-func (c *Config) SetWorkspace(workspace string) {
-	c.workspace = workspace
+	ctx      *hcl.EvalContext
+	path     string
+	pathData map[string]string
 }
 
 type hclConfig struct {
@@ -60,6 +55,17 @@ type Poll struct {
 	Interval string `hcl:"interval,optional"`
 }
 
+// LoadOptions should be set for the Load function.
+type LoadOptions struct {
+	// Pwd is the current working directory. This is used to setup the
+	// `path.pwd` variable and also makes things such as the Git rules work.
+	Pwd string
+
+	// Workspace is the workspace that we are executing in. This is used to
+	// setup `workspace.name` variables.
+	Workspace string
+}
+
 // Load loads the configuration file from the given path.
 //
 // Configuration loading in Waypoint is lazy. This will load just the amount
@@ -68,7 +74,14 @@ type Poll struct {
 //
 // This also means that the config may be invalid. To validate the config
 // call the Validate method.
-func Load(path string, pwd string) (*Config, error) {
+func Load(path string, opts *LoadOptions) (*Config, error) {
+	if opts == nil {
+		opts = &LoadOptions{}
+	}
+
+	// Unpack these cause they're used a lot
+	pwd := opts.Pwd
+
 	// We require an absolute path for the path so we can set the path vars
 	if !filepath.IsAbs(path) {
 		var err error
@@ -97,6 +110,7 @@ func Load(path string, pwd string) (*Config, error) {
 	// Build our context
 	ctx := EvalContext(nil, pwd).NewChild()
 	addPathValue(ctx, pathData)
+	addWorkspaceValue(ctx, opts.Workspace)
 
 	// Decode
 	var cfg hclConfig
