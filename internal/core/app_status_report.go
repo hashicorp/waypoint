@@ -27,8 +27,7 @@ func (a *App) StatusReport(
 ) (*pb.StatusReport, *sdk.StatusReport, error) {
 	// Query the artifact
 	var artifact *pb.PushedArtifact
-	if deployTarget != nil && deployTarget.Preload != nil &&
-		deployTarget.Preload.Artifact != nil {
+	if deployTarget != nil && deployTarget.Preload != nil {
 		artifact = deployTarget.Preload.Artifact
 	}
 	if artifact == nil && deployTarget != nil {
