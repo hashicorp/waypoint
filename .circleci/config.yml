@@ -221,11 +221,11 @@ jobs:
           fingerprints:
             - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-          # We require > 17.06 to support --mount being
-          # passed to RUN
-          version: 19.03.8
+      # - setup_remote_docker:
+      #     docker_layer_caching: true
+      #     # We require > 17.06 to support --mount being
+      #     # passed to RUN
+      #     version: 19.03.8
       - attach_workspace:
           at: .
       # - run:
