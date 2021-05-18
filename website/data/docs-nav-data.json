@@ -141,6 +141,10 @@
           {
             "title": "<code>path</code>",
             "path": "waypoint-hcl/variables/path"
+          },
+          {
+            "title": "<code>workspace</code>",
+            "path": "waypoint-hcl/variables/workspace"
           }
         ]
       },
