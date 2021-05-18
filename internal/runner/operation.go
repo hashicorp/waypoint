@@ -85,7 +85,10 @@ func (r *Runner) executeJob(
 
 	// Determine the evaluation context we'll be using
 	log.Trace("reading configuration", "path", path)
-	cfg, err := configpkg.Load(path, filepath.Dir(path))
+	cfg, err := configpkg.Load(path, &configpkg.LoadOptions{
+		Pwd:       filepath.Dir(path),
+		Workspace: job.Workspace.Workspace,
+	})
 	if err != nil {
 		return nil, err
 	}

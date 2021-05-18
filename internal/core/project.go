@@ -124,7 +124,6 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 	// Initialize all the applications and load all their components.
 	for _, name := range opts.Config.Apps() {
-		opts.Config.SetWorkspace(p.workspace)
 		appConfig, err := opts.Config.App(name, nil)
 		if err != nil {
 			return nil, fmt.Errorf("error loading app %q: %w", name, err)
