@@ -126,8 +126,12 @@ func TestValidStatusReport(t testing.T, src *pb.StatusReport) *pb.StatusReport {
 		Workspace: &pb.Ref_Workspace{
 			Workspace: "default",
 		},
-		HealthStatus:  "READY",
-		HealthMessage: "ready for requests",
+		ResourcesHealth: []*pb.StatusReport_Health{
+			{
+				HealthStatus:  "READY",
+				HealthMessage: "ready for requests",
+			},
+		},
 	}))
 
 	return src

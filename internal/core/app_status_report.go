@@ -127,10 +127,14 @@ type statusReportOperation struct {
 
 func (op *statusReportOperation) Init(app *App) (proto.Message, error) {
 	return &pb.StatusReport{
-		Application:   app.ref,
-		Workspace:     app.workspace,
-		HealthStatus:  "UNKNOWN",
-		HealthMessage: "Unknown health status",
+		Application: app.ref,
+		Workspace:   app.workspace,
+		ResourcesHealth: []*pb.StatusReport_Health{
+			{
+				HealthStatus:  "UNKNOWN",
+				HealthMessage: "Unknown health status",
+			},
+		},
 	}, nil
 }
 

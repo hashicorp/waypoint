@@ -2358,25 +2358,18 @@ message StatusReport {
   // release is the raw release object encoded directly from the plugin.
   google.protobuf.Any status_report = 6;
 
-  // the overall health of the report
-  string health_status = 7;
+  // Resources that make up the report. The root most report is expected
+  // to be the overall health associated with the report.
+  repeated Health resources_health = 7;
 
-  // the overall health message of the report
-  string health_message = 8;
-
-  // Sub-resources that make up the deployment or release. If there is only
-  // one resosurce, the health status and message will exist as the overall
-  // health_status and health_message
-  repeated ResourcesHealthState resources_health = 9;
-
-  message ResourcesHealthState {
-    // the overall health of the report
+  message Health {
+    // the overall health of the report for a resource
     string health_status = 1;
 
-    // the overall health message of the report
+    // the overall health message of the report for a resource
     string health_message = 2;
 
-    // TODO: resource name/id?
+    // TODO: resource map of name/id from Resource Manager?
   }
 }
 
