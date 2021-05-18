@@ -107,7 +107,10 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 			return 1
 		}
 
-		cfg, err := configpkg.Load(path, filepath.Dir(path))
+		cfg, err := configpkg.Load(path, &configpkg.LoadOptions{
+			Pwd:       filepath.Dir(path),
+			Workspace: c.refWorkspace.Workspace,
+		})
 		if err != nil {
 			c.ui.Output(
 				"Error loading HCL file specified with the -from-waypoint-hcl flag: %s", clierrors.Humanize(err),

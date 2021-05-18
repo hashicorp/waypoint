@@ -51,7 +51,10 @@ func (c *baseCommand) initConfigPath(filename string) (string, error) {
 
 // initConfigLoad loads the configuration at the given path.
 func (c *baseCommand) initConfigLoad(path string) (*configpkg.Config, error) {
-	cfg, err := configpkg.Load(path, filepath.Dir(path))
+	cfg, err := configpkg.Load(path, &configpkg.LoadOptions{
+		Pwd:       filepath.Dir(path),
+		Workspace: c.refWorkspace.Workspace,
+	})
 	if err != nil {
 		return nil, err
 	}
