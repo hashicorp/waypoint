@@ -36,10 +36,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 # Watch this PR: https://github.com/genuinetools/img/pull/324
 FROM docker.mirror.hashicorp.services/golang:alpine AS imgbuilder
 
-RUN git clone https://github.com/mitchellh/img.git /img
-WORKDIR /img
-RUN go get github.com/go-bindata/go-bindata/go-bindata
-
 RUN apk add --no-cache \
 	bash \
 	build-base \
@@ -48,7 +44,11 @@ RUN apk add --no-cache \
 	libseccomp-dev \
 	linux-headers \
 	make
-	
+
+RUN git clone https://github.com/mitchellh/img.git /img
+WORKDIR /img
+RUN go get github.com/go-bindata/go-bindata/go-bindata
+
 RUN make BUILDTAGS="seccomp noembed dfrunmount dfsecrets dfssh" && mv img /usr/bin/img
 
 # Copied from img repo, see notes for specific reasons:
