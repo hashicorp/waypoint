@@ -244,7 +244,6 @@ jobs:
               --ssh default \
               --secret id=ssh.config,src="${HOME}/project/.circleci/ssh_config" \
               --secret id=ssh.key,src="${HOME}/.ssh/id_rsa_769415c8a041f08b9bf1f7364cd57f57" \
-              --progress=plain \
               -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest \
               .
       # - run:
