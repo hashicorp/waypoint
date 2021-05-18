@@ -109,19 +109,15 @@ func (a *App) createStatusReporter(
 	// Potential bug here with k8s apply plugin
 	// Works with docker and k8s ok
 	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, hclCtx)
-	if err == nil {
-		// We have a status reporter configured, use that.
-		return c, nil
-	}
-
-	// If we received Unimplemented, we just don't have a status report. Otherwise
-	// we want to return the error we got.
-	if status.Code(err) != codes.Unimplemented {
-		c.Close()
+	if err != nil {
+		if status.Code(err) != codes.Unimplemented {
+			c.Close()
+		}
 		return nil, err
 	}
 
-	return nil, err
+	// We have a status reporter configured, use that.
+	return c, nil
 }
 
 type statusReportOperation struct {
