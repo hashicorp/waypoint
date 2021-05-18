@@ -209,10 +209,9 @@ jobs:
       - notify_main_failure
 
   image-build:
-    docker:
+    machine:
       # Use a modern Circle image as we just need up-to-date Docker here
-      - image: ubuntu-2004:202010-01
-    resource_class: medium+
+       image: ubuntu-2004:202010-01
     environment:
       <<: *ENVIRONMENT
       DOCKER_CLI_EXPERIMENTAL: enabled
