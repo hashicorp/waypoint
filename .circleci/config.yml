@@ -208,13 +208,14 @@ jobs:
           command: ./ci/integration.sh
       - notify_main_failure
 
-  image-release:
+  image-build:
     docker:
       # Use a modern Circle image as we just need up-to-date Docker here
       - image: docker.mirror.hashicorp.services/cimg/base:2020.07-20.04
     resource_class: medium+
     environment:
       <<: *ENVIRONMENT
+      DOCKER_CLI_EXPERIMENTAL: enabled
     shell: /usr/bin/env bash -euo pipefail -c
     steps:
       - add_ssh_keys:
@@ -228,16 +229,17 @@ jobs:
           version: 19.03.8
       - attach_workspace:
           at: .
-      - run:
-          name: "Docker: Login to GitHub Package Registry"
-          command: |
-            echo "$GH_DOCKER_PASS" | docker login docker.pkg.github.com --username $GH_DOCKER_USER --password-stdin
+      # - run:
+      #     name: "Docker: Login to GitHub Package Registry"
+      #     command: |
+      #       echo "$GH_DOCKER_PASS" | docker login docker.pkg.github.com --username $GH_DOCKER_USER --password-stdin
+      - run: docker buildx create --use
       - run:
           name: "Docker: Build image"
           command: |
             # Note that the "id_rsa_FOO" key name is based on the fingerprint of the SSH key
             # added in add_ssh_keys, but with colons removed.
-            docker build \
+            docker buildx build --platform linux/amd64,linux/arm64,linux/386 \
               --ssh default \
               --secret id=ssh.config,src="${HOME}/project/.circleci/ssh_config" \
               --secret id=ssh.key,src="${HOME}/.ssh/id_rsa_769415c8a041f08b9bf1f7364cd57f57" \
@@ -245,11 +247,11 @@ jobs:
               -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest \
               -t docker.pkg.github.com/hashicorp/waypoint/alpha:$GIT_COMMIT \
               .
-      - run:
-          name: "Docker: Push image"
-          command: |
-            docker push docker.pkg.github.com/hashicorp/waypoint/alpha
-      - notify_main_failure
+      # - run:
+      #     name: "Docker: Push image"
+      #     command: |
+      #       docker push docker.pkg.github.com/hashicorp/waypoint/alpha
+      # - notify_main_failure
 
   # build frontend yarn cache
   frontend-cache:
@@ -434,6 +436,9 @@ workflows:
             branches:
               ignore:
                 - main
+      - image-build:
+          requires:
+            - lint
 
   integration:
     jobs:
