@@ -104,7 +104,7 @@
     "qunit-dom": "^1.6.0",
     "sass": "^1.26.10",
     "typescript": "^3.9.6",
-    "ua-parser-js": "^0.7.21",
+    "ua-parser-js": "^0.7.24",
     "webpack-bundle-analyzer": "^3.8.0"
   },
   "engines": {
