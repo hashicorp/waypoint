@@ -1789,7 +1789,7 @@ message PushedArtifact {
 message GetDeploymentRequest {
   Ref.Operation ref = 1;
 
-  // Indicate of the fetched deployments should include additional information
+  // Indicate if the fetched deployments should include additional information
   // about each deployment.
   Deployment.LoadDetails load_details = 2;
 }
