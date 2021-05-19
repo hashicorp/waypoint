@@ -19,6 +19,12 @@ bin: # bin creates the binaries for Waypoint for the current platform
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
+.PHONY: bin/linux
+bin/linux: # bin creates the binaries for Waypoint for the current platform
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
+	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
+	GOOS=linux CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
+
 .PHONY: bin/windows
 bin/windows: # create windows binaries
 	GOOS=linux GOARCH=amd64 go build -o ./internal/assets/ceb/ceb ./cmd/waypoint-entrypoint
