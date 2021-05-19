@@ -31,7 +31,11 @@
     </small>
   </LinkTo>
   {{#if @model.preload.deployUrl}}
-  <ExternalLink href="https://{{@model.preload.deployUrl}}" class="button button--secondary">
+  <ExternalLink
+    href="https://{{@model.preload.deployUrl}}"
+    title="https://{{@model.preload.deployUrl}}"
+    class="button button--secondary"
+  >
     {{inline-svg "exit" class="icon"}}
   </ExternalLink>
   {{/if}}
@@ -55,7 +59,11 @@
     </small>
   </LinkTo>
   {{#if @model.preload.deployUrl}}
-  <ExternalLink href="https://{{@model.preload.deployUrl}}" class="button button--secondary button--compact">
+  <ExternalLink
+    href="https://{{@model.preload.deployUrl}}"
+    title="https://{{@model.preload.deployUrl}}"
+    class="button button--secondary button--compact"
+  >
     {{inline-svg "exit" class="icon"}}
   </ExternalLink>
   {{/if}}

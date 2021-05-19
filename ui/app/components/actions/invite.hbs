@@ -10,6 +10,7 @@
     <input type="text" id="invite-token" value="{{this.hostname}}/auth/invite?token={{this.token}}" {{did-insert this.selectContents}} {{did-update this.selectContents this.token}} />
     <CopyButton
       class="button button--secondary button--compact"
+      title="Copy"
       @clipboardTarget="#invite-token"
       @success={{this.onSuccess}}
     >
