@@ -15,8 +15,6 @@ export function iconForComponent([component]: [string]): string {
       return 'logo-gcp-color';
     case 'kubernetes':
       return 'logo-kubernetes-color-alt';
-    case 'netlify':
-      return 'logo-netlify-color';
     case 'nomad':
       return 'logo-nomad-color';
     case 'pack':
