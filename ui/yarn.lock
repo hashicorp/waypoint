@@ -2718,10 +2718,10 @@
   resolved "https://registry.yarnpkg.com/@handlebars/parser/-/parser-1.1.0.tgz#d6dbc7574774b238114582410e8fee0dc3532bdf"
   integrity sha512-rR7tJoSwJ2eooOpYGxGGW95sLq6GXUaS1UtWvN7pei6n2/okYvCGld9vsUTvkl2migxbkszsycwtMf/GEc1k1A==
 
-"@hashicorp/pds-ember@^0.5.1":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@hashicorp/pds-ember/-/pds-ember-0.5.1.tgz#5a21d73505ec8b1d8e32fc7f76e4007f403ad82e"
-  integrity sha512-5f+BHRzZ5LquyZSOFowKWW519ywmdF2Bvy+/CGidj46NIVU1RTBq+YzmdQJ13RTK0iepG9E0r/PUgB56VJoeJg==
+"@hashicorp/pds-ember@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@hashicorp/pds-ember/-/pds-ember-0.6.0.tgz#70cc8025828168ea4dd824ef7ef0f2fbaac5f157"
+  integrity sha512-zT0bRFjlws2QGQUS7CKLOoyEv16eiWFMWJyuUTKgmvVKIJKdAbEX/7Cqy8iXoxW08ZzGK8Wf84qunoEznGu0Ng==
   dependencies:
     "@ember/render-modifiers" "^1.0.2"
     "@hashicorp/structure-icons" "1.9.0-0"
