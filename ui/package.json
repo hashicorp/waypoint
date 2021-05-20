@@ -29,7 +29,7 @@
     "@ember/test-helpers": "^2.1.4",
     "@glimmer/component": "^1.0.3",
     "@glimmer/tracking": "^1.0.3",
-    "@hashicorp/pds-ember": "^0.5.1",
+    "@hashicorp/pds-ember": "^0.6.0",
     "@hashicorp/structure-icons": "^1.9.0-0",
     "@types/ember": "^3.16.0",
     "@types/ember-qunit": "^3.4.9",
