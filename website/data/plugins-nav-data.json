@@ -36,10 +36,6 @@
     "path": "kubernetes"
   },
   {
-    "title": "netlify",
-    "path": "netlify"
-  },
-  {
     "title": "nomad",
     "path": "nomad"
   },
