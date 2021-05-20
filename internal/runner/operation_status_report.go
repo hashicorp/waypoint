@@ -29,11 +29,11 @@ func (r *Runner) executeStatusReportOp(
 
 	switch t := op.StatusReport.Target.(type) {
 	case *pb.Job_StatusReportOp_Deployment:
-		statusReportResult, _, err = app.StatusReport(ctx, t.Deployment, nil)
+		statusReportResult, _, err = app.DeploymentStatusReport(ctx, t.Deployment)
 	case *pb.Job_StatusReportOp_Release:
-		statusReportResult, _, err = app.StatusReport(ctx, nil, t.Release)
+		statusReportResult, _, err = app.ReleaseStatusReport(ctx, t.Release)
 	default:
-		err = fmt.Errorf("unknown destruction target: %T", op.StatusReport.Target)
+		err = fmt.Errorf("unknown status report target: %T", op.StatusReport.Target)
 	}
 
 	if err != nil {

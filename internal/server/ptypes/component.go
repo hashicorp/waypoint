@@ -97,6 +97,8 @@ func TestValidRelease(t testing.T, src *pb.Release) *pb.Release {
 		src = &pb.Release{}
 	}
 
+	release, _ := ptypes.MarshalAny(&empty.Empty{})
+
 	require.NoError(t, mergo.Merge(src, &pb.Release{
 		Application: &pb.Ref_Application{
 			Application: "a_test",
@@ -105,7 +107,8 @@ func TestValidRelease(t testing.T, src *pb.Release) *pb.Release {
 		Workspace: &pb.Ref_Workspace{
 			Workspace: "default",
 		},
-		Status: testStatus(t),
+		Status:  testStatus(t),
+		Release: release,
 	}))
 
 	return src

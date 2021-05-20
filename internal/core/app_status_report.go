@@ -19,44 +19,23 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
-// Builds a status report on the given deployment or release
-func (a *App) StatusReport(
+func (a *App) DeploymentStatusReport(
 	ctx context.Context,
 	deployTarget *pb.Deployment,
-	releaseTarget *pb.Release,
 ) (*pb.StatusReport, *sdk.StatusReport, error) {
-	// Query the artifact
-	var artifact *pb.PushedArtifact
-	if deployTarget != nil && deployTarget.Preload != nil {
-		artifact = deployTarget.Preload.Artifact
-	}
-	if artifact == nil && deployTarget != nil {
-		a.logger.Debug("querying artifact", "artifact_id", deployTarget.ArtifactId)
-		resp, err := a.client.GetPushedArtifact(ctx, &pb.GetPushedArtifactRequest{
-			Ref: &pb.Ref_Operation{
-				Target: &pb.Ref_Operation_Id{
-					Id: deployTarget.ArtifactId,
-				},
-			},
-		})
-		if err != nil {
-			a.logger.Error("error querying artifact",
-				"artifact_id", deployTarget.ArtifactId,
-				"error", err)
-			return nil, nil, err
-		}
-
-		artifact = resp
-	}
-
 	var evalCtx hcl.EvalContext
-	evalCtx.Variables = map[string]cty.Value{}
-	if err := evalCtxTemplateProto(&evalCtx, "artifact", artifact); err != nil {
-		a.logger.Warn("failed to prepare template variables, will not be available",
-			"err", err)
+	// Load the deployment variables context
+	if err := a.deployStatusReportEvalContext(ctx, deployTarget, &evalCtx); err != nil {
+		return nil, nil, err
 	}
 
-	c, err := a.createStatusReporter(ctx, &evalCtx)
+	// Load variables from deploy
+	hclCtx := evalCtx.NewChild()
+	if _, err := a.deployEvalContext(ctx, hclCtx); err != nil {
+		return nil, nil, err
+	}
+
+	c, err := a.createStatusReporter(ctx, hclCtx, component.PlatformType)
 	if status.Code(err) == codes.Unimplemented {
 		c = nil
 		err = nil
@@ -75,10 +54,62 @@ func (a *App) StatusReport(
 	}
 	defer c.Close()
 
-	result, msg, err := a.doOperation(ctx, a.logger.Named("statusreport"), &statusReportOperation{
-		Component:     c,
-		DeployTarget:  deployTarget,
-		ReleaseTarget: releaseTarget,
+	return a.statusReport(ctx, "deploy_statusreport", c, deployTarget)
+}
+
+func (a *App) ReleaseStatusReport(
+	ctx context.Context,
+	releaseTarget *pb.Release,
+) (*pb.StatusReport, *sdk.StatusReport, error) {
+	var evalCtx hcl.EvalContext
+	// Load the deployment variables context
+	if err := a.releaseStatusReportEvalContext(ctx, releaseTarget, &evalCtx); err != nil {
+		return nil, nil, err
+	}
+
+	// Load variables from deploy
+	hclCtx := evalCtx.NewChild()
+	if _, err := a.deployEvalContext(ctx, hclCtx); err != nil {
+		return nil, nil, err
+	}
+
+	c, err := a.createStatusReporter(ctx, &evalCtx, component.ReleaseManagerType)
+	if status.Code(err) == codes.Unimplemented {
+		c = nil
+		err = nil
+	}
+	if err != nil {
+		a.logger.Error("error creating component in platform", "error", err)
+		return nil, nil, err
+	}
+
+	a.logger.Debug("starting status report operation")
+	statusReporter, ok := c.Value.(component.Status)
+
+	if !ok || statusReporter.StatusFunc() == nil {
+		a.logger.Debug("component is not a Status or has no StatusFunc()")
+		return nil, nil, nil
+	}
+	defer c.Close()
+
+	return a.statusReport(ctx, "release_statusreport", c, releaseTarget)
+}
+
+// A generic status report func that takes an already setup component and a
+// specific target to execute the report on.
+func (a *App) statusReport(
+	ctx context.Context,
+	loggerName string,
+	component *Component,
+	target interface{},
+) (*pb.StatusReport, *sdk.StatusReport, error) {
+	if loggerName == "" {
+		loggerName = "statusreport"
+	}
+
+	result, msg, err := a.doOperation(ctx, a.logger.Named(loggerName), &statusReportOperation{
+		Component: component,
+		Target:    target,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -92,20 +123,100 @@ func (a *App) StatusReport(
 	return msg.(*pb.StatusReport), status, nil
 }
 
+// Sets up the eval context for a status report for deployments
+func (a *App) deployStatusReportEvalContext(
+	ctx context.Context,
+	d *pb.Deployment,
+	evalCtx *hcl.EvalContext,
+) error {
+	// Query the artifact
+	var artifact *pb.PushedArtifact
+	if d != nil && d.Preload != nil {
+		artifact = d.Preload.Artifact
+	}
+	if artifact == nil && d != nil {
+		a.logger.Debug("querying artifact", "artifact_id", d.ArtifactId)
+		resp, err := a.client.GetPushedArtifact(ctx, &pb.GetPushedArtifactRequest{
+			Ref: &pb.Ref_Operation{
+				Target: &pb.Ref_Operation_Id{
+					Id: d.ArtifactId,
+				},
+			},
+		})
+		if err != nil {
+			a.logger.Error("error querying artifact",
+				"artifact_id", d.ArtifactId,
+				"error", err)
+			return err
+		}
+
+		artifact = resp
+	}
+
+	evalCtx.Variables = map[string]cty.Value{}
+	if err := evalCtxTemplateProto(evalCtx, "artifact", artifact); err != nil {
+		a.logger.Warn("failed to prepare template variables, will not be available",
+			"err", err)
+	}
+	return nil
+}
+
+// Sets up the eval context for a status report for deployments
+func (a *App) releaseStatusReportEvalContext(
+	ctx context.Context,
+	r *pb.Release,
+	evalCtx *hcl.EvalContext,
+) error {
+	// Query the deployment
+	a.logger.Debug("querying deployment", "deployment_id", r.DeploymentId)
+	resp, err := a.client.GetDeployment(ctx, &pb.GetDeploymentRequest{
+		Ref: &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: r.DeploymentId,
+			},
+		},
+
+		LoadDetails: pb.Deployment_ARTIFACT,
+	})
+	if status.Code(err) == codes.NotFound {
+		// TODO: fix panic. Should this be an error though?
+		resp = nil
+		err = nil
+		a.logger.Warn("deployment not found, will attempt status report regardless",
+			"deployment_id", r.DeploymentId)
+	}
+	if err != nil {
+		a.logger.Error("error querying deployment",
+			"deployment_id", r.DeploymentId,
+			"error", err)
+		return err
+	}
+	deploy := resp
+
+	evalCtx.Variables = map[string]cty.Value{}
+	// Add our build to our config
+	if deploy != nil {
+		if err := evalCtxTemplateProto(evalCtx, "artifact", deploy.Preload.Artifact); err != nil {
+			a.logger.Warn("failed to prepare template variables, will not be available",
+				"err", err)
+		}
+		if err := evalCtxTemplateProto(evalCtx, "deploy", deploy); err != nil {
+			a.logger.Warn("failed to prepare template variables, will not be available",
+				"err", err)
+		}
+	}
+	return nil
+}
+
 func (a *App) createStatusReporter(
 	ctx context.Context,
 	hclCtx *hcl.EvalContext,
+	componentType component.Type,
 ) (*Component, error) {
 	log := a.logger
 
-	// Load variables from deploy
-	hclCtx = hclCtx.NewChild()
-	if _, err := a.deployEvalContext(ctx, hclCtx); err != nil {
-		return nil, err
-	}
-
 	log.Debug("initializing status report plugin")
-	c, err := componentCreatorMap[component.PlatformType].Create(ctx, a, hclCtx)
+	c, err := componentCreatorMap[componentType].Create(ctx, a, hclCtx)
 	if err != nil {
 		if status.Code(err) != codes.Unimplemented {
 			c.Close()
@@ -121,6 +232,7 @@ type statusReportOperation struct {
 	Component     *Component
 	DeployTarget  *pb.Deployment
 	ReleaseTarget *pb.Release
+	Target        interface{}
 
 	result *sdk.StatusReport
 }
@@ -173,16 +285,12 @@ func (op *statusReportOperation) Do(
 		return nil, nil
 	}
 
-	// Call func on deployment _or_ release target
-	var args []argmapper.Arg
-	if op.DeployTarget != nil && op.DeployTarget.Deployment != nil {
-		args = append(args, argNamedAny("target", op.DeployTarget.Deployment))
-	} else if op.ReleaseTarget != nil && op.ReleaseTarget.Release != nil {
-		args = append(args, argNamedAny("target", op.ReleaseTarget.Release))
-	} else {
-		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status report target given")
+	args, err := op.argsStatusReport()
+	if err != nil {
+		return nil, err
 	}
 
+	// Call func on deployment _or_ release target
 	result, err := app.callDynamicFunc(ctx,
 		log,
 		nil,
@@ -197,6 +305,28 @@ func (op *statusReportOperation) Do(
 	op.result = result.(*sdk.StatusReport)
 
 	return result, nil
+}
+
+// args returns the args we send to the Status function call
+func (op *statusReportOperation) argsStatusReport() ([]argmapper.Arg, error) {
+	var args []argmapper.Arg
+
+	switch t := op.Target.(type) {
+	case *pb.Deployment:
+		op.DeployTarget = t
+	case *pb.Release:
+		op.ReleaseTarget = t
+	}
+
+	if op.DeployTarget != nil && op.DeployTarget.Deployment != nil {
+		args = append(args, argNamedAny("target", op.DeployTarget.Deployment))
+	} else if op.ReleaseTarget != nil && op.ReleaseTarget.Release != nil {
+		args = append(args, argNamedAny("target", op.ReleaseTarget.Release))
+	} else {
+		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status report target given")
+	}
+
+	return args, nil
 }
 
 func (op *statusReportOperation) StatusPtr(msg proto.Message) **pb.Status {
