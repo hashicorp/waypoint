@@ -4,6 +4,7 @@ package docker;
 
 option go_package = "waypoint/builtin/docker";
 
+import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 
 // Image is the artifact type for the registry.
@@ -36,8 +37,21 @@ message Deployment {
   string id = 1;
   string name = 2;
   string container = 3;
+  google.protobuf.Any resource_state = 4;
 }
 
 message Release {
   string url = 1;
+}
+
+// Resource contains the internal resource states.
+message Resource {
+  message Network {
+    string name = 1;
+  }
+
+  message Container {
+    string id = 1;
+    string name = 2;
+  }
 }
