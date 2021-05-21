@@ -452,6 +452,7 @@ func (p *Platform) pullImage(cli *client.Client, log hclog.Logger, ui terminal.U
 
 		// if we have images do not pull
 		if len(sum) > 0 {
+			s.Update("Docker image %q up to date!", in)
 			s.Done()
 			return nil
 		}
