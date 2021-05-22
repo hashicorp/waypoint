@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/k8s: destroy deployment on error
+```
