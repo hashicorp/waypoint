@@ -20,7 +20,7 @@ service Waypoint {
   //
   // Note that currently this list is never pruned, even if a workspace is
   // no longer in use. We plan to prune this in a future improvement.
-  rpc ListWorkspaces(google.protobuf.Empty) returns (ListWorkspacesResponse);
+  rpc ListWorkspaces(ListWorkspacesRequest) returns (ListWorkspacesResponse);
 
   // GetWorkspace returns the workspace.
   rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceResponse);
@@ -1547,6 +1547,27 @@ message Hostname {
 /********************************************************************
 * Workspaces
 ********************************************************************/
+
+message ListWorkspacesRequest {
+  // scope of the workspaces to list. If this isn't set, it defaults to
+  // "global" for backwards compatibility reasons. Note for that non-global
+  // scopes, the workspaces returned may still contain other
+  // projects/applications; the scopes guarantee that the workspaces
+  // include the project/app/etc. in that scope, however.
+  oneof scope {
+    // global lists all the workspaces used throughout the entire server.
+    google.protobuf.Empty global = 1;
+
+    // project lists all the workspaces in use by any applications in
+    // a single project. A workspace returned here is used by 1 or more
+    // applications in the project.
+    Ref.Project project = 2;
+
+    // application lists all the workspaces in use by a specific application
+    // in a project.
+    Ref.Application application = 3;
+  }
+}
 
 message ListWorkspacesResponse {
   repeated Workspace workspaces = 1;
