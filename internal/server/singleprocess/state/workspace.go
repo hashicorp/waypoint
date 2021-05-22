@@ -34,6 +34,27 @@ func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
 		return nil, err
 	}
 
+	return s.workspaceListFromIter(iter)
+}
+
+// WorkspaceListByProject lists all the workspaces used by a project.
+func (s *State) WorkspaceListByProject(ref *pb.Ref_Project) ([]*pb.Workspace, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.Get(
+		workspaceTableName,
+		workspaceProjectIndexName,
+		ref.Project,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.workspaceListFromIter(iter)
+}
+
+func (s *State) workspaceListFromIter(iter memdb.ResultIterator) ([]*pb.Workspace, error) {
 	var result []*pb.Workspace
 	for {
 		next := iter.Next()
@@ -44,6 +65,7 @@ func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
 
 		var ws *pb.Workspace
 		err := s.db.View(func(dbTxn *bolt.Tx) error {
+			var err error
 			ws, err = s.workspaceFromDB(dbTxn, idx.Id)
 			return err
 		})
