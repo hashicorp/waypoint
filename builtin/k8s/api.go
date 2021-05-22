@@ -11,6 +11,14 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// clientsetInfo is used by some functions to collect the results returned by
+// the clientset functions.
+type clientsetInfo struct {
+	Clientset *kubernetes.Clientset
+	Namespace string
+	Config    *rest.Config
+}
+
 // clientset returns a K8S clientset and configured namespace. This will
 // attempt to use in-cluster auth if available if kubeconfig is not explicitly
 // specified. Otherwise, this will fall back to out of cluster auth.

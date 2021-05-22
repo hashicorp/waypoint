@@ -11,7 +11,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
+	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -19,6 +19,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
 )
@@ -84,44 +85,64 @@ func (p *Platform) DefaultReleaserFunc() interface{} {
 	}
 }
 
-// Deploy deploys an image to Kubernetes.
-func (p *Platform) Deploy(
-	ctx context.Context,
-	log hclog.Logger,
-	src *component.Source,
-	img *docker.Image,
-	deployConfig *component.DeploymentConfig,
-	ui terminal.UI,
-) (*Deployment, error) {
-	// Create our deployment and set an initial ID
-	var result Deployment
-	id, err := component.Id()
-	if err != nil {
-		return nil, err
-	}
-	result.Id = id
-	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
+func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
+	return resource.NewManager(
+		resource.WithLogger(log.Named("resource_manager")),
+		resource.WithValueProvider(p.getClientset),
+		resource.WithResource(resource.NewResource(
+			resource.WithName("deployment"),
+			resource.WithState(&Resource_Deployment{}),
+			resource.WithCreate(p.resourceDeploymentCreate),
+			resource.WithDestroy(p.resourceDeploymentDestroy),
+		)),
+	)
+	return nil
+}
 
-	sg := ui.StepGroup()
-	step := sg.Add("Initializing Kubernetes client...")
-	defer step.Abort()
-
+// getClientset is a value provider for our resource manager and provides
+// the connection information used by resources to interact with Kubernetes.
+func (p *Platform) getClientset() (*clientsetInfo, error) {
 	// Get our client
 	clientSet, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
 	if err != nil {
 		return nil, err
 	}
 
-	// Override namespace if set
+	return &clientsetInfo{
+		Clientset: clientSet,
+		Namespace: ns,
+		Config:    config,
+	}, nil
+}
+
+// resourceDeploymentCreate creates the Kubernetes deployment.
+func (p *Platform) resourceDeploymentCreate(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	img *docker.Image,
+	deployConfig *component.DeploymentConfig,
+	ui terminal.UI,
+
+	result *Deployment,
+	state *Resource_Deployment,
+	csinfo *clientsetInfo,
+	sg terminal.StepGroup,
+) error {
+	// Prepare our namespace and override if set.
+	ns := csinfo.Namespace
 	if p.config.Namespace != "" {
 		ns = p.config.Namespace
 	}
 
-	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
+	step := sg.Add("")
+	defer func() { step.Abort() }()
+	step.Update("Kubernetes client connected to %s with namespace %s", csinfo.Config.Host, ns)
 	step.Done()
 
 	step = sg.Add("Preparing deployment...")
 
+	clientSet := csinfo.Clientset
 	deployClient := clientSet.AppsV1().Deployments(ns)
 
 	// Determine if we have a deployment that we manage already
@@ -133,9 +154,10 @@ func (p *Platform) Deploy(
 		err = nil
 	}
 	if err != nil {
-		return nil, err
+		return err
 	}
 
+	// Setup our port configuration
 	if p.config.ServicePort == 0 && p.config.Ports == nil {
 		// nothing defined, set up the defaults
 		p.config.Ports = make([]map[string]string, 1)
@@ -146,7 +168,7 @@ func (p *Platform) Deploy(
 		p.config.Ports[0] = map[string]string{"port": strconv.Itoa(int(p.config.ServicePort)), "name": "http"}
 	} else if p.config.ServicePort > 0 && len(p.config.Ports) > 0 {
 		// both defined, this is an error
-		return nil, fmt.Errorf("Cannot define both 'service_port' and 'ports'. Use" +
+		return fmt.Errorf("Cannot define both 'service_port' and 'ports'. Use" +
 			" 'ports' for configuring multiple container ports.")
 	}
 
@@ -157,14 +179,12 @@ func (p *Platform) Deploy(
 			Value: fmt.Sprint(p.config.Ports[0]["port"]),
 		},
 	}
-
 	for k, v := range p.config.StaticEnvVars {
 		env = append(env, corev1.EnvVar{
 			Name:  k,
 			Value: v,
 		})
 	}
-
 	for k, v := range deployConfig.Env() {
 		env = append(env, corev1.EnvVar{
 			Name:  k,
@@ -182,6 +202,7 @@ func (p *Platform) Deploy(
 	// Set our ID on the label. We use this ID so that we can have a key
 	// to route to multiple versions during release management.
 	deployment.Spec.Template.Labels[labelId] = result.Id
+
 	// Version label duplicates "labelId" to support services like Istio that
 	// expect pods to be labled with 'version'
 	deployment.Spec.Template.Labels["version"] = result.Id
@@ -199,26 +220,26 @@ func (p *Platform) Deploy(
 	}
 
 	// Get container resource limits and requests
-	var resourceLimits = make(map[corev1.ResourceName]resource.Quantity)
-	var resourceRequests = make(map[corev1.ResourceName]resource.Quantity)
+	var resourceLimits = make(map[corev1.ResourceName]k8sresource.Quantity)
+	var resourceRequests = make(map[corev1.ResourceName]k8sresource.Quantity)
 
 	for k, v := range p.config.Resources {
 		if strings.HasPrefix(k, "limits_") {
 			limitKey := strings.Split(k, "_")
 			resourceName := corev1.ResourceName(limitKey[1])
 
-			quantity, err := resource.ParseQuantity(v)
+			quantity, err := k8sresource.ParseQuantity(v)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			resourceLimits[resourceName] = quantity
 		} else if strings.HasPrefix(k, "requests_") {
 			reqKey := strings.Split(k, "_")
 			resourceName := corev1.ResourceName(reqKey[1])
 
-			quantity, err := resource.ParseQuantity(v)
+			quantity, err := k8sresource.ParseQuantity(v)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			resourceRequests[resourceName] = quantity
 		} else {
@@ -404,13 +425,13 @@ func (p *Platform) Deploy(
 			err = nil
 		}
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		if saCreate {
 			serviceAccount, err = saClient.Create(ctx, serviceAccount, metav1.CreateOptions{})
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 	}
@@ -428,8 +449,12 @@ func (p *Platform) Deploy(
 		deployment, err = dc.Update(ctx, deployment, metav1.UpdateOptions{})
 	}
 	if err != nil {
-		return nil, err
+		return err
 	}
+
+	// We successfully created or updated, so set the name on our state so
+	// that if we error, we'll partially clean up properly. THIS IS IMPORTANT.
+	state.Name = result.Name
 
 	step.Done()
 	step = sg.Add("Waiting for deployment...")
@@ -509,11 +534,80 @@ func (p *Platform) Deploy(
 		if err == wait.ErrWaitTimeout {
 			err = fmt.Errorf("Deployment was not able to start pods after %s", timeout)
 		}
-		return nil, err
+		return err
 	}
 
 	step.Update("Deployment successfully rolled out!")
 	step.Done()
+
+	return nil
+}
+
+// Destroy deletes the K8S deployment.
+func (p *Platform) resourceDeploymentDestroy(
+	ctx context.Context,
+	state *Resource_Deployment,
+	sg terminal.StepGroup,
+	csinfo *clientsetInfo,
+) error {
+	// Prepare our namespace and override if set.
+	ns := csinfo.Namespace
+	if p.config.Namespace != "" {
+		ns = p.config.Namespace
+	}
+
+	step := sg.Add("")
+	defer func() { step.Abort() }()
+	step.Update("Kubernetes client connected to %s with namespace %s", csinfo.Config.Host, ns)
+	step.Done()
+
+	step = sg.Add("Deleting deployment...")
+	deployclient := csinfo.Clientset.AppsV1().Deployments(ns)
+	if err := deployclient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+	step.Done()
+
+	return nil
+}
+
+// Deploy deploys an image to Kubernetes.
+func (p *Platform) Deploy(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	img *docker.Image,
+	deployConfig *component.DeploymentConfig,
+	ui terminal.UI,
+) (*Deployment, error) {
+	// Create our deployment and set an initial ID
+	var result Deployment
+	id, err := component.Id()
+	if err != nil {
+		return nil, err
+	}
+	result.Id = id
+	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
+
+	// We'll update the user in real time
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	if p.config.ServicePort == 0 {
+		p.config.ServicePort = 3000
+	}
+
+	// Create our resource manager and create
+	rm := p.resourceManager(log)
+	if err := rm.CreateAll(
+		ctx, log, sg, ui,
+		src, img, deployConfig, &result,
+	); err != nil {
+		return nil, err
+	}
+
+	// Store our resource state
+	result.ResourceState = rm.State()
 
 	return &result, nil
 }
@@ -526,31 +620,25 @@ func (p *Platform) Destroy(
 	ui terminal.UI,
 ) error {
 	sg := ui.StepGroup()
-	step := sg.Add("Initializing Kubernetes client...")
-	defer step.Abort()
+	defer sg.Wait()
 
-	// Get our client
-	clientset, ns, config, err := clientset(p.config.KubeconfigPath, p.config.Context)
-	if err != nil {
-		return err
+	rm := p.resourceManager(log)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource("deployment").SetState(&Resource_Deployment{
+			Name: deployment.Name,
+		})
+	} else {
+		// Load our set state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return err
+		}
 	}
 
-	// Override namespace if set
-	if p.config.Namespace != "" {
-		ns = p.config.Namespace
-	}
-
-	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
-	step.Done()
-	step = sg.Add("Deleting deployment...")
-
-	deployclient := clientset.AppsV1().Deployments(ns)
-	if err := deployclient.Delete(ctx, deployment.Name, metav1.DeleteOptions{}); err != nil {
-		return err
-	}
-
-	step.Done()
-	return nil
+	// Destroy
+	return rm.DestroyAll(ctx, log, sg, ui)
 }
 
 // Config is the configuration structure for the Platform.

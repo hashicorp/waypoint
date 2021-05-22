@@ -4,13 +4,23 @@ package k8s;
 
 option go_package = "waypoint/builtin/k8s";
 
+import "google/protobuf/any.proto";
+
 message Deployment {
   string id = 1;
   string name = 2;
+  google.protobuf.Any resource_state = 3;
 }
 
 message Release {
   // service_name is the name of the service in Kubernetes
   string service_name = 2;
   string Url = 1;
+}
+
+// Resource contains the internal resource states.
+message Resource {
+  message Deployment {
+    string name = 1;
+  }
 }
