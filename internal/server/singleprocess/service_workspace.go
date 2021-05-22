@@ -3,7 +3,8 @@ package singleprocess
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/ptypes"
@@ -29,9 +30,29 @@ func (s *service) GetWorkspace(
 // TODO: test
 func (s *service) ListWorkspaces(
 	ctx context.Context,
-	req *empty.Empty,
+	req *pb.ListWorkspacesRequest,
 ) (*pb.ListWorkspacesResponse, error) {
-	result, err := s.state.WorkspaceList()
+	var err error
+	var result []*pb.Workspace
+
+	switch v := req.Scope.(type) {
+	case nil:
+		// This is the same as Global for backwards compat reasons.
+		result, err = s.state.WorkspaceList()
+
+	case *pb.ListWorkspacesRequest_Global:
+		result, err = s.state.WorkspaceList()
+
+	case *pb.ListWorkspacesRequest_Project:
+		result, err = s.state.WorkspaceListByProject(v.Project)
+
+	case *pb.ListWorkspacesRequest_Application:
+		result, err = s.state.WorkspaceListByApp(v.Application)
+
+	default:
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"unknown ListWorkspaces scope type: %T", req.Scope)
+	}
 	if err != nil {
 		return nil, err
 	}
