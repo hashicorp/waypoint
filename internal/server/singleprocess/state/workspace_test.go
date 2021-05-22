@@ -132,3 +132,48 @@ func TestWorkspaceProject(t *testing.T) {
 		}
 	})
 }
+
+func TestWorkspaceApp(t *testing.T) {
+	t.Run("List non-empty", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a build
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id: "1",
+		})))
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id: "2",
+			Application: &pb.Ref_Application{
+				Application: "B",
+				Project:     "A",
+			},
+		})))
+		require.NoError(s.BuildPut(false, serverptypes.TestValidBuild(t, &pb.Build{
+			Id: "3",
+			Application: &pb.Ref_Application{
+				Application: "B",
+				Project:     "B",
+			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "1",
+			},
+		})))
+
+		// Workspace list should return only 1 for B,B
+		{
+			result, err := s.WorkspaceListByApp(&pb.Ref_Application{
+				Application: "B",
+				Project:     "B",
+			})
+			require.NoError(err)
+			require.Len(result, 1)
+
+			ws := result[0]
+			require.Equal("1", ws.Name)
+			require.Len(ws.Projects, 1)
+		}
+	})
+}
