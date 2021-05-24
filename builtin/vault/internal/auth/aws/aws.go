@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/vault/api"
@@ -189,7 +188,7 @@ func (a *awsMethod) Authenticate(ctx context.Context, client *api.Client) (retTo
 	data := make(map[string]interface{})
 	sess, err := session.NewSession()
 	if err != nil {
-		retErr = errwrap.Wrapf("error creating session: {{err}}", err)
+		retErr = fmt.Errorf("error creating session: %w", err)
 		return
 	}
 	metadataSvc := ec2metadata.New(sess)
@@ -200,7 +199,7 @@ func (a *awsMethod) Authenticate(ctx context.Context, client *api.Client) (retTo
 		{
 			doc, err := metadataSvc.GetDynamicData("/instance-identity/document")
 			if err != nil {
-				retErr = errwrap.Wrapf("error requesting doc: {{err}}", err)
+				retErr = fmt.Errorf("error requesting doc: %w", err)
 				return
 			}
 			data["identity"] = base64.StdEncoding.EncodeToString([]byte(doc))
@@ -210,7 +209,7 @@ func (a *awsMethod) Authenticate(ctx context.Context, client *api.Client) (retTo
 		{
 			signature, err := metadataSvc.GetDynamicData("/instance-identity/signature")
 			if err != nil {
-				retErr = errwrap.Wrapf("error requesting signature: {{err}}", err)
+				retErr = fmt.Errorf("error requesting signature: %w", err)
 				return
 			}
 			data["signature"] = signature
@@ -220,7 +219,7 @@ func (a *awsMethod) Authenticate(ctx context.Context, client *api.Client) (retTo
 		if a.nonce == "" {
 			uid, err := uuid.GenerateUUID()
 			if err != nil {
-				retErr = errwrap.Wrapf("error generating uuid for reauthentication value: {{err}}", err)
+				retErr = fmt.Errorf("error generating uuid for reauthentication value: %w", err)
 				return
 			}
 			a.nonce = uid
@@ -235,7 +234,7 @@ func (a *awsMethod) Authenticate(ctx context.Context, client *api.Client) (retTo
 		var err error
 		data, err = generateLoginData(a.lastCreds, a.headerValue, a.region)
 		if err != nil {
-			retErr = errwrap.Wrapf("error creating login value: {{err}}", err)
+			retErr = fmt.Errorf("error creating login value: %w", err)
 			return
 		}
 	}
@@ -321,7 +320,7 @@ func retrieveCreds(accessKey, secretKey, sessionToken string, logger hclog.Logge
 
 	_, err = creds.Get()
 	if err != nil {
-		return nil, errwrap.Wrapf("failed to retrieve credentials from credential chain: {{err}}", err)
+		return nil, fmt.Errorf("failed to retrieve credentials from credential chain: %w", err)
 	}
 	return creds, nil
 }
