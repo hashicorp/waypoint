@@ -34,6 +34,63 @@ func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
 		return nil, err
 	}
 
+	return s.workspaceListFromIter(iter)
+}
+
+// WorkspaceListByProject lists all the workspaces used by a project.
+func (s *State) WorkspaceListByProject(ref *pb.Ref_Project) ([]*pb.Workspace, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.Get(
+		workspaceTableName,
+		workspaceProjectIndexName,
+		ref.Project,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.workspaceListFromIter(iter)
+}
+
+// WorkspaceListByApp lists all the workspaces used by a specific application.
+func (s *State) WorkspaceListByApp(ref *pb.Ref_Application) ([]*pb.Workspace, error) {
+	// To implement this, we just list by project and filter. Projects
+	// don't have that many applications, and the index structure to do this
+	// more efficiently would be complicated so its not worth it.
+	projectWorkspaces, err := s.WorkspaceListByProject(&pb.Ref_Project{Project: ref.Project})
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter the project workspaces to only include workspaces that also
+	// have this application.
+	var result []*pb.Workspace
+PROJECT_LOOP:
+	for _, ws := range projectWorkspaces {
+		for _, p := range ws.Projects {
+			if strings.ToLower(p.Project.Project) != strings.ToLower(ref.Project) {
+				continue
+			}
+
+			for _, app := range p.Applications {
+				if strings.ToLower(app.Application.Application) != strings.ToLower(ref.Application) {
+					continue
+				}
+
+				// We have an app match, so add it to our results and
+				// reloop on the workspace results
+				result = append(result, ws)
+				continue PROJECT_LOOP
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func (s *State) workspaceListFromIter(iter memdb.ResultIterator) ([]*pb.Workspace, error) {
 	var result []*pb.Workspace
 	for {
 		next := iter.Next()
@@ -44,6 +101,7 @@ func (s *State) WorkspaceList() ([]*pb.Workspace, error) {
 
 		var ws *pb.Workspace
 		err := s.db.View(func(dbTxn *bolt.Tx) error {
+			var err error
 			ws, err = s.workspaceFromDB(dbTxn, idx.Id)
 			return err
 		})

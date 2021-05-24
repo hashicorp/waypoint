@@ -791,11 +791,11 @@ func (_m *WaypointServer) ListReleases(_a0 context.Context, _a1 *gen.ListRelease
 }
 
 // ListWorkspaces provides a mock function with given fields: _a0, _a1
-func (_m *WaypointServer) ListWorkspaces(_a0 context.Context, _a1 *emptypb.Empty) (*gen.ListWorkspacesResponse, error) {
+func (_m *WaypointServer) ListWorkspaces(_a0 context.Context, _a1 *gen.ListWorkspacesRequest) (*gen.ListWorkspacesResponse, error) {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 *gen.ListWorkspacesResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.ListWorkspacesResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListWorkspacesRequest) *gen.ListWorkspacesResponse); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
@@ -804,7 +804,7 @@ func (_m *WaypointServer) ListWorkspaces(_a0 context.Context, _a1 *emptypb.Empty
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListWorkspacesRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
