@@ -300,37 +300,48 @@ message Variable {
   // Source tracks where a value came from for more helpful error messaging.
   // This is optional. If unset, we will give a generic error message.
   oneof source {
-    SourceCLIArg cliarg = 4;
-    SourceCLIFile file = 5;
-    SourceEnvVar envvar= 6;
-    SourceRepoFile repofile = 7;
-    SourceServer server = 8;
-  }
-
-  // SourceCLIArg is set if a variable value is set via a -var flag
-  message SourceCLIArg {}
-
-  // SourceCLIFile is set if a variable value is set via a -var-file flag
-  message SourceCLIFile {
-    string fileName = 1;
-    bytes hclPos = 2;
-  }
-
-  // SourceEnvVar is set if a variable value is set in the local
-  // environment via a WP_VAR_*
-  message SourceEnvVar {}
+    // Cli is set if a variable value is set via a -var flag
+    google.protobuf.Empty cli = 4;
   
-  // SourceRepoFile is set if git polling is enabled and an
-  // *.auto.wpvars.hcl/json file is found in the repo
-  message SourceRepoFile {
-    string fileName = 1;
-    bytes hclPos = 2;
+    // File is set if a variable value is set via a -var-file flag
+    File file = 5;
+    
+    // Env is set if a variable value is set in the local
+    // environment via a WP_VAR_*
+    google.protobuf.Empty env = 6;
+    
+    // VCS is set if git polling is enabled and an
+    // *.auto.wpvars.hcl/json file is found in the repo
+    VCS vcs = 7;
+
+    // Server is set if the variable value comes from the server.
+    // When we add support for workspace variables, we can store the workspace
+    // id here.
+    google.protobuf.Empty server = 8;
   }
 
-  // SourceServer is set if the variable value comes from the server.
-  // When we add support for workspace variables, we can store the workspace
-  // id here.
-  message SourceServer {}
+  message File {
+    string fileName = 1;
+    HclRange hcl_range = 2;
+  }
+
+  message VCS {
+    string fileName = 1;
+    HclRange hcl_range = 2;
+  }
+
+  // Types mapped from https://pkg.go.dev/github.com/hashicorp/hcl/v2#Pos
+  message HclPos {
+    int32 line = 1;
+    int32 column = 2;
+    int32 byte = 3;
+  }
+
+  message HclRange {
+	  string filename = 1;
+	  HclPos start = 2;
+    HclPos end = 3;
+  }
 
 }
 
