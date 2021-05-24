@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -209,9 +208,6 @@ func (p *Platform) Status(
 	result.TimeGenerated = ptypes.TimestampNow()
 	log.Debug("status report complete")
 
-	// TODO(briancain): remove me GH #1469
-	time.Sleep(500 * time.Millisecond)
-
 	// update output based on main health state
 	s.Update("Finished building report for Docker platform")
 	s.Done()
@@ -227,9 +223,6 @@ func (p *Platform) Status(
 	} else {
 		st.Step(terminal.StatusError, fmt.Sprintf("Container %q is reporting not ready!", containerInfo.Name))
 	}
-
-	// TODO(briancain): remove me GH #1469
-	time.Sleep(500 * time.Millisecond)
 
 	return &result, nil
 }
