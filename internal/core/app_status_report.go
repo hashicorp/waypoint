@@ -185,7 +185,6 @@ func (a *App) releaseStatusReportEvalContext(
 		LoadDetails: pb.Deployment_ARTIFACT,
 	})
 	if status.Code(err) == codes.NotFound {
-		// TODO: fix panic. Should this be an error though?
 		resp = nil
 		err = nil
 		a.logger.Warn("deployment not found, will attempt status report regardless",
@@ -200,7 +199,7 @@ func (a *App) releaseStatusReportEvalContext(
 	deploy := resp
 
 	evalCtx.Variables = map[string]cty.Value{}
-	// Add our build to our config
+	// Add our build to our config if deploy found
 	if deploy != nil {
 		if err := evalCtxTemplateProto(evalCtx, "artifact", deploy.Preload.Artifact); err != nil {
 			a.logger.Warn("failed to prepare template variables, will not be available",
