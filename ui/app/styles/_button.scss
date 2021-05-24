@@ -45,6 +45,12 @@ a[href].button {
   cursor: pointer;
   min-height: 36px;
 
+  > .pds-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
   &--compact {
     padding: 0 scale.$sm-2;
     min-height: 22px;
@@ -82,6 +88,12 @@ a[href].button {
     &:active {
       background: rgb(var(--button-secondary-active));
       box-shadow: none;
+    }
+  }
+
+  &--external-link {
+    > .pds-icon {
+      align-items: flex-end;
     }
   }
 

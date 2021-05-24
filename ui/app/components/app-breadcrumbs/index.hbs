@@ -5,7 +5,7 @@
     {{else}}
       <LinkTo @params={{breadcrumb.args}} data-test-breadcrumb={{breadcrumb.args.firstObject}}>
         {{#if breadcrumb.icon}}
-          {{inline-svg breadcrumb.icon}}
+          <Pds::Icon @type={{breadcrumb.icon}} />
         {{/if}}
         <span>{{breadcrumb.label}}</span>
       </LinkTo>

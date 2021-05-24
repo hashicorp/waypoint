@@ -5,12 +5,12 @@
       <code>{{@deployment.id}}</code>
       {{#if (eq @deployment.state 4)}}
         <b class="badge badge--destroyed">
-          {{inline-svg "trash" class="icon"}}&nbsp;Destroyed
+          <Pds::Icon @type="trash" class="icon" />&nbsp;Destroyed
         </b>
       {{/if}}
     </p>
     <small>
-      {{inline-svg (icon-for-component @deployment.component.name) class="icon"}}
+      <Pds::Icon @type={{icon-for-component @deployment.component.name}} class="icon" />
       <span>{{if (eq @deployment.status.state 1) 'Deploying' 'Deployed'}} by
         <b>{{component-name @deployment.component.name}}</b>
         {{#if (eq @deployment.status.state 1)}}
@@ -22,9 +22,9 @@
     </small>
   </LinkTo>
   {{#if (and @deployment.preload.deployUrl (not-eq @deployment.state 4))}}
-    <ExternalLink href="https://{{@deployment.preload.deployUrl}}" class="button button--secondary">
+    <ExternalLink href="https://{{@deployment.preload.deployUrl}}" class="button button--secondary button--external-link">
       <span>{{lowercase @deployment.preload.deployUrl}}</span>
-      {{inline-svg "exit" class="icon"}}
+      <Pds::Icon @type="exit" class="icon" />
     </ExternalLink>
   {{/if}}
 </li>

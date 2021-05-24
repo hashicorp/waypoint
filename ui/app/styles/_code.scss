@@ -37,6 +37,7 @@
     padding: 4px;
     cursor: pointer;
     outline: none;
+    align-items: center;
     transition: background ease 0.2s;
 
     &.copy-success {
@@ -46,6 +47,7 @@
     .icon {
       width: 12px;
       height: 12px;
+      font-size: scale.$base;
     }
   }
 }

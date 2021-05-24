@@ -2,5 +2,5 @@
   {{if @isSmall 'icon-tile--small'}}
   {{if @isLarge 'icon-tile--large'}}
   {{if @isBold 'icon-tile--bold'}}">
-  {{inline-svg @icon class="icon"}}
+  <Pds::Icon @type={{@icon}} class="icon" />
 </div>
