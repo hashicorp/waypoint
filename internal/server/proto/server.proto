@@ -338,8 +338,8 @@ message Variable {
   }
 
   message HclRange {
-	  string filename = 1;
-	  HclPos start = 2;
+    string filename = 1;
+    HclPos start = 2;
     HclPos end = 3;
   }
 
