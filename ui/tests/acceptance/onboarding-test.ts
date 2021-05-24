@@ -78,6 +78,8 @@ module('Acceptance | onboarding start', function (hooks) {
   login();
 
   test('sends users to default workspace after completion', async function (assert) {
+    this.server.create('project', 'marketing-public');
+
     await page.visit().nextStep();
 
     assert.equal(currentURL(), `/default`);
