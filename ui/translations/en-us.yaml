@@ -66,6 +66,19 @@ form:
     hcl_content_helptext: 'Paste or edit your Waypoint configuration here to store it on the server'
     hcl_content_label: 'waypoint.hcl file'
     button: 'Apply'
+  project_variables_settings:
+    title: 'Input Variable'
+    variable_name: 'Variable name'
+    variable_name_placeholder: 'var_name'
+    variable_value: 'Value'
+    variable_value_placeholder: 'var_value'
+    button_submit: 'Save variable'
+    button_cancel: 'Cancel'
+
+
+
+
+
 
 auth:
   title: 'Welcome to Waypoint'

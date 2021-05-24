@@ -57,3 +57,32 @@
     }
   }
 }
+.pds-formField__input-inline-toggle {
+  display: flex;
+  margin-bottom: 1.25rem;
+  .pds-input {
+    margin-right: auto;
+  }
+  .pds-input-inline-toggle {
+    border: var(--pds-borderColor) 1px solid;
+    border-left: none;
+    background: color.$ui-gray-100;
+    padding: 0.5rem 0.5rem;
+    margin-top: 0.75rem;
+    width: auto;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+
+    line-height: var(--pds-lineHeight--dense);
+    input {
+      margin: 0 5px 0 0;
+    }
+    label {
+      color: color.$ui-cool-gray-800;
+      @include Typography.Label();
+      font-size: 0.875rem;
+      vertical-align: middle;
+    }
+  }
+}

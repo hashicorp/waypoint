@@ -1,0 +1,24 @@
+<ul class="project-input-variables-list">
+  <li>
+    <div class="project-input-variables--list-item project-input-variables--list-item__header">
+      <span class="project-input-variables--list-item-name">Key</span>
+      <span class="project-input-variables--list-item-value">Value</span>
+    </div>
+  </li>
+  {{#each this.variablesList as |variable|}}
+    <ProjectInputVariables::ListItem
+      @variable={{variable}}
+      @isEditing={{eq variable.name this.activeVariable.name}}
+      @isCreating={{this.isCreating}}
+      @saveVariableSettings={{this.saveVariableSettings}}
+      @deleteVariable={{this.deleteVariable}}/>
+
+  {{else}}
+    <Pds::EmptyState as |P|>
+      <P.Header>No variables defined</P.Header>
+    </Pds::EmptyState>
+  {{/each}}
+</ul>
+<Pds::ButtonSet>
+  <Pds::Button @variant="primary" {{on "click" this.addVariable}}><Pds::Icon @type="plus-plain"/>Add Variable</Pds::Button>
+</Pds::ButtonSet>
