@@ -2361,7 +2361,7 @@ message StatusReport {
   // id is the unique ID for this status report.
   string id = 6;
 
-  // release is the raw release object encoded directly from the plugin.
+  // StatusReport is the raw report object encoded directly from the plugin.
   google.protobuf.Any status_report = 7;
 
   // Resources that make up the report. The root most report is expected
@@ -2375,7 +2375,11 @@ message StatusReport {
     // the overall health message of the report for a resource
     string health_message = 2;
 
-    // TODO: resource map of name/id from Resource Manager?
+    // Resource name
+    string name = 3;
+
+    // Resource id
+    string id = 4;
   }
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
@@ -22,27 +23,27 @@ import (
 func (a *App) DeploymentStatusReport(
 	ctx context.Context,
 	deployTarget *pb.Deployment,
-) (*pb.StatusReport, *sdk.StatusReport, error) {
+) (*pb.StatusReport, error) {
 	var evalCtx hcl.EvalContext
 	// Load the deployment variables context
 	if err := a.deployStatusReportEvalContext(ctx, deployTarget, &evalCtx); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Load variables from deploy
 	hclCtx := evalCtx.NewChild()
 	if _, err := a.deployEvalContext(ctx, hclCtx); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	c, err := a.createStatusReporter(ctx, hclCtx, component.PlatformType)
 	if status.Code(err) == codes.Unimplemented {
-		c = nil
-		err = nil
+		a.logger.Debug("status report is not implemented in plugin, cannot report on status")
+		return &pb.StatusReport{}, nil
 	}
 	if err != nil {
 		a.logger.Error("error creating component in platform", "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	a.logger.Debug("starting status report operation")
@@ -50,7 +51,7 @@ func (a *App) DeploymentStatusReport(
 
 	if !ok || statusReporter.StatusFunc() == nil {
 		a.logger.Debug("component is not a Status or has no StatusFunc()")
-		return nil, nil, nil
+		return nil, nil
 	}
 	defer c.Close()
 
@@ -60,27 +61,27 @@ func (a *App) DeploymentStatusReport(
 func (a *App) ReleaseStatusReport(
 	ctx context.Context,
 	releaseTarget *pb.Release,
-) (*pb.StatusReport, *sdk.StatusReport, error) {
+) (*pb.StatusReport, error) {
 	var evalCtx hcl.EvalContext
 	// Load the deployment variables context
 	if err := a.releaseStatusReportEvalContext(ctx, releaseTarget, &evalCtx); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Load variables from deploy
 	hclCtx := evalCtx.NewChild()
 	if _, err := a.deployEvalContext(ctx, hclCtx); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	c, err := a.createStatusReporter(ctx, &evalCtx, component.ReleaseManagerType)
 	if status.Code(err) == codes.Unimplemented {
-		c = nil
-		err = nil
+		a.logger.Debug("status report is not implemented in plugin, cannot report on status")
+		return &pb.StatusReport{}, nil
 	}
 	if err != nil {
 		a.logger.Error("error creating component in platform", "error", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	a.logger.Debug("starting status report operation")
@@ -88,7 +89,7 @@ func (a *App) ReleaseStatusReport(
 
 	if !ok || statusReporter.StatusFunc() == nil {
 		a.logger.Debug("component is not a Status or has no StatusFunc()")
-		return nil, nil, nil
+		return nil, nil
 	}
 	defer c.Close()
 
@@ -102,7 +103,7 @@ func (a *App) statusReport(
 	loggerName string,
 	component *Component,
 	target interface{},
-) (*pb.StatusReport, *sdk.StatusReport, error) {
+) (*pb.StatusReport, error) {
 	if loggerName == "" {
 		loggerName = "statusreport"
 	}
@@ -112,7 +113,7 @@ func (a *App) statusReport(
 		Target:    target,
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	var statusReport *sdk.StatusReport
@@ -122,11 +123,29 @@ func (a *App) statusReport(
 
 	reportResp, ok := msg.(*pb.StatusReport)
 	if !ok {
-		return nil, nil,
+		return nil,
 			status.Errorf(codes.FailedPrecondition, "unsupported status report response returned from plugin")
+	} else {
+		// Load Status Report message compiled by the plugin into the overall generated report
+		report, err := anypb.New(statusReport)
+		if err != nil {
+			return nil, err
+		}
+		reportResp.StatusReport = report
+
+		// Populate top level resource health with health in plugin compiled report
+		resourcesHealth := make([]*pb.StatusReport_Health, len(statusReport.Resources))
+		for i, r := range statusReport.Resources {
+			resourcesHealth[i] = &pb.StatusReport_Health{
+				HealthStatus:  r.Health.String(),
+				HealthMessage: r.HealthMessage,
+				Name:          r.Name,
+			}
+		}
+		reportResp.ResourcesHealth = resourcesHealth
 	}
 
-	return reportResp, statusReport, nil
+	return reportResp, nil
 }
 
 // Sets up the eval context for a status report for deployments

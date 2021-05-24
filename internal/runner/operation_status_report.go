@@ -29,9 +29,9 @@ func (r *Runner) executeStatusReportOp(
 
 	switch t := op.StatusReport.Target.(type) {
 	case *pb.Job_StatusReportOp_Deployment:
-		statusReportResult, _, err = app.DeploymentStatusReport(ctx, t.Deployment)
+		statusReportResult, err = app.DeploymentStatusReport(ctx, t.Deployment)
 	case *pb.Job_StatusReportOp_Release:
-		statusReportResult, _, err = app.ReleaseStatusReport(ctx, t.Release)
+		statusReportResult, err = app.ReleaseStatusReport(ctx, t.Release)
 	default:
 		err = fmt.Errorf("unknown status report target: %T", op.StatusReport.Target)
 	}
@@ -40,23 +40,9 @@ func (r *Runner) executeStatusReportOp(
 		return nil, err
 	}
 
-	// Update to the latest deployment in order to get all the preload data.
-	var statusReport *pb.StatusReport
-
-	if statusReportResult != nil {
-		statusReport, err = r.client.GetStatusReport(ctx, &pb.GetStatusReportRequest{
-			Ref: &pb.Ref_Operation{
-				Target: &pb.Ref_Operation_Id{Id: statusReportResult.Id},
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return &pb.Job_Result{
 		StatusReport: &pb.Job_StatusReportResult{
-			StatusReport: statusReport,
+			StatusReport: statusReportResult,
 		},
 	}, nil
 }

@@ -12,6 +12,8 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestAppDeploymentStatusReport(t *testing.T) {
@@ -62,9 +64,8 @@ func TestAppDeploymentStatusReport(t *testing.T) {
 		mock.Status.On("StatusFunc").Return(nil)
 
 		// Status Report
-		srResp, statusReport, err := app.DeploymentStatusReport(context.Background(), deploy)
+		srResp, err := app.DeploymentStatusReport(context.Background(), deploy)
 		require.NoError(err)
-		require.Nil(statusReport)
 		require.Nil(srResp)
 
 	})
@@ -117,9 +118,11 @@ func TestAppDeploymentStatusReport(t *testing.T) {
 		})
 
 		// Status Report
-		_, statusReport, err := app.DeploymentStatusReport(context.Background(), deploy)
+		srResp, err := app.DeploymentStatusReport(context.Background(), deploy)
+		statusReport := &sdk.StatusReport{}
+		anypb.UnmarshalTo(srResp.StatusReport, statusReport, proto.UnmarshalOptions{})
 		require.NoError(err)
-		require.NotNil(statusReport)
+		require.NotNil(srResp.StatusReport)
 		require.NotNil(statusReport.Health)
 
 	})
@@ -181,9 +184,8 @@ func TestAppReleaseStatusReport(t *testing.T) {
 		mock.Status.On("StatusFunc").Return(nil)
 
 		// Status Report
-		srResp, statusReport, err := app.ReleaseStatusReport(context.Background(), release)
+		srResp, err := app.ReleaseStatusReport(context.Background(), release)
 		require.NoError(err)
-		require.Nil(statusReport)
 		require.Nil(srResp)
 
 	})
@@ -243,9 +245,11 @@ func TestAppReleaseStatusReport(t *testing.T) {
 		})
 
 		// Status Report
-		_, statusReport, err := app.ReleaseStatusReport(context.Background(), release)
+		srResp, err := app.ReleaseStatusReport(context.Background(), release)
+		statusReport := &sdk.StatusReport{}
+		anypb.UnmarshalTo(srResp.StatusReport, statusReport, proto.UnmarshalOptions{})
 		require.NoError(err)
-		require.NotNil(statusReport)
+		require.NotNil(srResp.StatusReport)
 		require.NotNil(statusReport.Health)
 
 	})
