@@ -63,7 +63,7 @@ func (a *App) ReleaseStatusReport(
 	releaseTarget *pb.Release,
 ) (*pb.StatusReport, error) {
 	var evalCtx hcl.EvalContext
-	// Load the deployment variables context
+	// Load the release variables context
 	if err := a.releaseStatusReportEvalContext(ctx, releaseTarget, &evalCtx); err != nil {
 		return nil, err
 	}
