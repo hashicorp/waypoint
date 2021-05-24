@@ -229,10 +229,8 @@ func (a *App) createStatusReporter(
 }
 
 type statusReportOperation struct {
-	Component     *Component
-	DeployTarget  *pb.Deployment
-	ReleaseTarget *pb.Release
-	Target        interface{}
+	Component *Component
+	Target    interface{} // Target to run a Status Report against
 
 	result *sdk.StatusReport
 }
@@ -313,16 +311,10 @@ func (op *statusReportOperation) argsStatusReport() ([]argmapper.Arg, error) {
 
 	switch t := op.Target.(type) {
 	case *pb.Deployment:
-		op.DeployTarget = t
+		args = append(args, argNamedAny("target", t.Deployment))
 	case *pb.Release:
-		op.ReleaseTarget = t
-	}
-
-	if op.DeployTarget != nil && op.DeployTarget.Deployment != nil {
-		args = append(args, argNamedAny("target", op.DeployTarget.Deployment))
-	} else if op.ReleaseTarget != nil && op.ReleaseTarget.Release != nil {
-		args = append(args, argNamedAny("target", op.ReleaseTarget.Release))
-	} else {
+		args = append(args, argNamedAny("target", t.Release))
+	default:
 		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status report target given")
 	}
 
