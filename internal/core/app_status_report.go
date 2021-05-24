@@ -115,12 +115,18 @@ func (a *App) statusReport(
 		return nil, nil, err
 	}
 
-	var status *sdk.StatusReport
+	var statusReport *sdk.StatusReport
 	if result != nil {
-		status = result.(*sdk.StatusReport)
+		statusReport = result.(*sdk.StatusReport)
 	}
 
-	return msg.(*pb.StatusReport), status, nil
+	reportResp, ok := msg.(*pb.StatusReport)
+	if !ok {
+		return nil, nil,
+			status.Errorf(codes.FailedPrecondition, "unsupported status report response returned from plugin")
+	}
+
+	return reportResp, statusReport, nil
 }
 
 // Sets up the eval context for a status report for deployments
