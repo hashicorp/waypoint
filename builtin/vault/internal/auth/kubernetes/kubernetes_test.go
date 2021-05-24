@@ -5,9 +5,9 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/errwrap"
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/vault/sdk/helper/logging"
 
@@ -67,7 +67,7 @@ func TestKubernetesAuth_basic(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if err != nil && !errwrap.Contains(err, tc.e.Error()) {
+			if err != nil && !strings.Contains(err.Error(), tc.e.Error()) {
 				t.Fatalf("expected \"no such file\" error, got: (%s)", err)
 			}
 
