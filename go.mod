@@ -45,7 +45,6 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
-	github.com/hashicorp/errwrap v1.0.0
 	github.com/hashicorp/go-argmapper v0.2.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-gcp-common v0.6.0
