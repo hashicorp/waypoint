@@ -2358,7 +2358,7 @@ message StatusReport {
   // StatusReport is the raw report object encoded directly from the plugin.
   google.protobuf.Any status_report = 7;
 
-  // Resources that make up the report. The root most report is expected
+  // Resources that make up the report. The first report is expected
   // to be the overall health associated with the report.
   repeated Health resources_health = 8;
 
