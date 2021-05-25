@@ -125,25 +125,25 @@ func (a *App) statusReport(
 	if !ok {
 		return nil,
 			status.Errorf(codes.FailedPrecondition, "unsupported status report response returned from plugin")
-	} else {
-		// Load Status Report message compiled by the plugin into the overall generated report
-		report, err := anypb.New(statusReport)
-		if err != nil {
-			return nil, err
-		}
-		reportResp.StatusReport = report
-
-		// Populate top level resource health with health in plugin compiled report
-		resourcesHealth := make([]*pb.StatusReport_Health, len(statusReport.Resources))
-		for i, r := range statusReport.Resources {
-			resourcesHealth[i] = &pb.StatusReport_Health{
-				HealthStatus:  r.Health.String(),
-				HealthMessage: r.HealthMessage,
-				Name:          r.Name,
-			}
-		}
-		reportResp.ResourcesHealth = resourcesHealth
 	}
+	// Load Status Report message compiled by the plugin into the overall generated report
+	report, err := anypb.New(statusReport)
+	if err != nil {
+		return nil, err
+	}
+
+	reportResp.StatusReport = report
+
+	// Populate top level resource health with health in plugin compiled report
+	resourcesHealth := make([]*pb.StatusReport_Health, len(statusReport.Resources))
+	for i, r := range statusReport.Resources {
+		resourcesHealth[i] = &pb.StatusReport_Health{
+			HealthStatus:  r.Health.String(),
+			HealthMessage: r.HealthMessage,
+			Name:          r.Name,
+		}
+	}
+	reportResp.ResourcesHealth = resourcesHealth
 
 	return reportResp, nil
 }
