@@ -7406,7 +7406,7 @@ type StatusReport struct {
 	Id string `protobuf:"bytes,6,opt,name=id,proto3" json:"id,omitempty"`
 	// StatusReport is the raw report object encoded directly from the plugin.
 	StatusReport *any.Any `protobuf:"bytes,7,opt,name=status_report,json=statusReport,proto3" json:"status_report,omitempty"`
-	// Resources that make up the report. The root most report is expected
+	// Resources that make up the report. The first report is expected
 	// to be the overall health associated with the report.
 	ResourcesHealth []*StatusReport_Health `protobuf:"bytes,8,rep,name=resources_health,json=resourcesHealth,proto3" json:"resources_health,omitempty"`
 }
