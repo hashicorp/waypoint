@@ -183,6 +183,12 @@ service Waypoint {
   // Exchange a invite token for a login token.
   rpc ConvertInviteToken(ConvertInviteTokenRequest) returns (NewTokenResponse);
 
+  // GetStatusReport returns a StatusReport
+  rpc GetStatusReport(GetStatusReportRequest) returns (StatusReport);
+
+  // ListStatusReports returns the deployments.
+  rpc ListStatusReports(ListStatusReportsRequest) returns (ListStatusReportsResponse);
+
   //----------------------------------------------------------------------
   // Runner endpoints. These are expected to be called only by a runner.
   // These are not meant to be public endpoints.
@@ -249,6 +255,9 @@ service Waypoint {
 
   // UpsertRelease updates or inserts a release.
   rpc UpsertRelease(UpsertReleaseRequest) returns (UpsertReleaseResponse);
+
+  // UpsertStatusReport updates or inserts a statusreport.
+  rpc UpsertStatusReport(UpsertStatusReportRequest) returns (UpsertStatusReportResponse);
 }
 
 /********************************************************************
@@ -709,7 +718,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 65 to 99; // future operation range
+  reserved 66 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -780,6 +789,7 @@ message Job {
     LogsOp logs = 62;
     QueueProjectOp queue_project = 63;
     PollOp poll = 64;
+    StatusReportOp status_report = 65;
   }
 
   //-----------------------------------------------------------------
@@ -846,6 +856,7 @@ message Job {
     UpResult up = 9;
     QueueProjectResult queue_project = 10;
     PollResult poll = 11;
+    StatusReportResult status_report = 12;
   }
 
   message DataSource {
@@ -1121,6 +1132,24 @@ message Job {
     // Callers can verify by checking if the target deployment changed
     // or not.
     Release release = 1;
+  }
+
+  message StatusReportOp {
+    oneof target {
+
+      // The deployment that should be associated with this status report
+      // operation
+      Deployment deployment = 1;
+
+      // The release that should be associated with this status report
+      // operation
+      Release release = 2;
+    }
+  }
+
+  message StatusReportResult {
+    // The status report that was just created
+    StatusReport status_report = 1;
   }
 
   message DocsOp {}
@@ -2239,6 +2268,112 @@ message Release {
 
     // Populated when LoadDetails is set.
     Build build = 3;
+  }
+}
+
+/********************************************************************
+* Status Reports
+********************************************************************/
+
+message UpsertStatusReportRequest {
+  // status report to upsert. If the id in the deployment is empty, then this
+  // will be an insert. Otherwise, this will be an update and if the ID
+  // isn't found, it will be an error.
+  StatusReport status_report = 1;
+}
+
+message UpsertStatusReportResponse {
+  // resulting object, you should replace this with what was sent in the request
+  // since the update operation may touch up the input data (i.e. update
+  // timestamps)
+  StatusReport status_report = 1;
+}
+
+message GetLatestStatusReportRequest {
+  // application that this belongs to
+  Ref.Application application = 1;
+
+  // workspace for the report, any workspace if empty
+  Ref.Workspace workspace = 2;
+}
+
+message ListStatusReportsRequest {
+  // The filters to apply to this request. These are ORed, so you should
+  // specify multiple filters in the StatusFilter for AND behavior.
+  repeated StatusFilter status = 1;
+
+  // Specifies the order of results. If this isn't specified, the results
+  // are in an undefined order.
+  OperationOrder order = 2;
+
+  // application that this release belongs to
+  Ref.Application application = 3;
+
+  // workspace that this should belong to. If this is empty, values in
+  // all workspaces will be listed.
+  Ref.Workspace workspace = 4;
+}
+
+
+message ListStatusReportsResponse {
+  // For 0.4.0, there should only the one 'latest' status report
+  repeated StatusReport status_reports = 1;
+}
+
+message GetStatusReportRequest {
+  Ref.Operation ref = 1;
+}
+
+// Not related to Status or StatusFilter messages
+//
+// StatusReport is the report genrated when querying the overall health of
+// a deployed or released application. This report can be either generated
+// by querying the platform itself which has performed the health checks,
+// or by Waypoint running user-defined health checks.
+message StatusReport {
+
+  // The application that this build is part of.
+  Ref.Application application = 1;
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 2;
+
+  // the reference id that is associated with this report
+  oneof target_id {
+    // the deployment id that this status report was generated on
+    string deployment_id = 3;
+
+    // the release id that this status report was generated on
+    string release_id = 4;
+  }
+
+  // status of the release operation.
+  // Note that this status is not related to the status report, but the current
+  // state of the StatusReport operation
+  Status status = 5;
+
+  // id is the unique ID for this status report.
+  string id = 6;
+
+  // StatusReport is the raw report object encoded directly from the plugin.
+  google.protobuf.Any status_report = 7;
+
+  // Resources that make up the report. The first report is expected
+  // to be the overall health associated with the report.
+  repeated Health resources_health = 8;
+
+  message Health {
+    // the overall health of the report for a resource
+    string health_status = 1;
+
+    // the overall health message of the report for a resource
+    string health_message = 2;
+
+    // Resource name
+    string name = 3;
+
+    // Resource id
+    string id = 4;
   }
 }
 

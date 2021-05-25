@@ -583,6 +583,29 @@ func (_m *WaypointServer) GetServerConfig(_a0 context.Context, _a1 *emptypb.Empt
 	return r0, r1
 }
 
+// GetStatusReport provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetStatusReport(_a0 context.Context, _a1 *gen.GetStatusReportRequest) (*gen.StatusReport, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.StatusReport
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetStatusReportRequest) *gen.StatusReport); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.StatusReport)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetStatusReportRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetVersionInfo provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetVersionInfo(_a0 context.Context, _a1 *emptypb.Empty) (*gen.GetVersionInfoResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -782,6 +805,29 @@ func (_m *WaypointServer) ListReleases(_a0 context.Context, _a1 *gen.ListRelease
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListReleasesRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListStatusReports provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListStatusReports(_a0 context.Context, _a1 *gen.ListStatusReportsRequest) (*gen.ListStatusReportsResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListStatusReportsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.ListStatusReportsRequest) *gen.ListStatusReportsResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListStatusReportsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListStatusReportsRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -1114,6 +1160,29 @@ func (_m *WaypointServer) UpsertRelease(_a0 context.Context, _a1 *gen.UpsertRele
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertReleaseRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertStatusReport provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpsertStatusReport(_a0 context.Context, _a1 *gen.UpsertStatusReportRequest) (*gen.UpsertStatusReportResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpsertStatusReportResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertStatusReportRequest) *gen.UpsertStatusReportResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertStatusReportResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertStatusReportRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

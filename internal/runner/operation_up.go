@@ -62,6 +62,23 @@ func (r *Runner) executeUpOp(
 	}
 	deployResult := result.Deploy
 
+	// Status Report for Deployments
+	app.UI.Output("")
+	result, err = r.executeStatusReportOp(ctx, &pb.Job{
+		Application: job.Application,
+		Operation: &pb.Job_StatusReport{
+			StatusReport: &pb.Job_StatusReportOp{
+				Target: &pb.Job_StatusReportOp_Deployment{
+					Deployment: deployResult.Deployment,
+				},
+			},
+		},
+	}, project)
+	if err != nil {
+		return nil, err
+	}
+	statusReportResult := result.StatusReport
+
 	// We're releasing, do that too.
 	app.UI.Output("Releasing...", terminal.WithHeaderStyle())
 	op.Release.Deployment = deployResult.Deployment
@@ -75,6 +92,30 @@ func (r *Runner) executeUpOp(
 		return nil, err
 	}
 	releaseResult := result.Release
+
+	// NOTE(briancain): Because executeReleaseOp returns an initialized struct
+	// of release results, we need this deep check here to really ensure that a
+	// release actually happened, otherwise we'd attempt to run a status report
+	// on a nil release
+	if releaseResult != nil && releaseResult.Release != nil &&
+		releaseResult.Release.Release != nil {
+		// Status Report for Releases
+		app.UI.Output("")
+		result, err = r.executeStatusReportOp(ctx, &pb.Job{
+			Application: job.Application,
+			Operation: &pb.Job_StatusReport{
+				StatusReport: &pb.Job_StatusReportOp{
+					Target: &pb.Job_StatusReportOp_Release{
+						Release: releaseResult.Release,
+					},
+				},
+			},
+		}, project)
+		if err != nil {
+			return nil, err
+		}
+		statusReportResult = result.StatusReport
+	}
 
 	// Try to get the hostname so we can build up the URL.
 	var hostname *pb.Hostname
@@ -108,5 +149,6 @@ func (r *Runner) executeUpOp(
 			AppUrl:     appUrl,
 			DeployUrl:  deployUrl,
 		},
+		StatusReport: statusReportResult,
 	}, nil
 }

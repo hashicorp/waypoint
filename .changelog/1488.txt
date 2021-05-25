@@ -1,0 +1,3 @@
+```release-note:feature
+core: Introduce ability to report on the status of deployments and releases
+```

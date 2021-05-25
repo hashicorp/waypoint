@@ -233,3 +233,23 @@ func (c *App) ConfigSync(ctx context.Context, op *pb.Job_ConfigSyncOp) (*pb.Job_
 
 	return result.ConfigSync, nil
 }
+
+func (c *App) StatusReport(ctx context.Context, op *pb.Job_StatusReportOp) (*pb.Job_StatusReportResult, error) {
+	if op == nil {
+		op = &pb.Job_StatusReportOp{}
+	}
+
+	// Build our job
+	job := c.job()
+	job.Operation = &pb.Job_StatusReport{
+		StatusReport: op,
+	}
+
+	// Execute it
+	result, err := c.doJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.StatusReport, nil
+}
