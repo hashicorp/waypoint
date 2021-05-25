@@ -1,0 +1,3 @@
+```release-note:breaking-change
+plugin/netlify: Removed the netlify plugin
+```

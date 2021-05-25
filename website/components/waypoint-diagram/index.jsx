@@ -72,10 +72,6 @@ export default function WaypointDiagram({ className }) {
                   url: require('./img/logos/amazon-ecs.svg'),
                 },
                 {
-                  alt: 'Netlify',
-                  url: require('./img/logos/netlify.svg'),
-                },
-                {
                   alt: 'Nomad',
                   url: require('./img/logos/nomad.svg'),
                 },

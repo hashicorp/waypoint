@@ -240,10 +240,6 @@ export default function HomePage() {
                   alt: 'Nomad',
                 },
                 {
-                  url: require('./img/step-logos/netlify.svg'),
-                  alt: 'Netlify',
-                },
-                {
                   url: require('./img/step-logos/amazon-ecs.svg'),
                   alt: 'Amazon ECS',
                 },

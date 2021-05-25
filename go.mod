@@ -33,8 +33,6 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/gliderlabs/ssh v0.3.1
 	github.com/go-git/go-git/v5 v5.2.0
-	github.com/go-openapi/runtime v0.19.15
-	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible
@@ -83,7 +81,6 @@ require (
 	github.com/moby/sys/symlink v0.1.0 // indirect
 	github.com/mr-tron/base58 v1.2.0
 	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
-	github.com/netlify/open-api v0.15.0
 	github.com/oklog/run v1.1.0
 	github.com/oklog/ulid v1.3.1
 	github.com/oklog/ulid/v2 v2.0.2

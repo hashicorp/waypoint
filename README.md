@@ -19,7 +19,6 @@ and more can be easily added via plugins:
 * AWS EC2 and ECS
 * Azure Container Instances
 * Google Cloud Run
-* Netlify
 * And many more...
 
 Waypoint runs on Linux, Mac OS X, and Windows.
