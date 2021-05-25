@@ -107,6 +107,189 @@ export namespace Application {
   }
 }
 
+export class Variable extends jspb.Message {
+  getName(): string;
+  setName(value: string): Variable;
+
+  getStr(): string;
+  setStr(value: string): Variable;
+
+  getHcl(): string;
+  setHcl(value: string): Variable;
+
+  getCli(): google_protobuf_empty_pb.Empty | undefined;
+  setCli(value?: google_protobuf_empty_pb.Empty): Variable;
+  hasCli(): boolean;
+  clearCli(): Variable;
+
+  getFile(): Variable.File | undefined;
+  setFile(value?: Variable.File): Variable;
+  hasFile(): boolean;
+  clearFile(): Variable;
+
+  getEnv(): google_protobuf_empty_pb.Empty | undefined;
+  setEnv(value?: google_protobuf_empty_pb.Empty): Variable;
+  hasEnv(): boolean;
+  clearEnv(): Variable;
+
+  getVcs(): Variable.VCS | undefined;
+  setVcs(value?: Variable.VCS): Variable;
+  hasVcs(): boolean;
+  clearVcs(): Variable;
+
+  getServer(): google_protobuf_empty_pb.Empty | undefined;
+  setServer(value?: google_protobuf_empty_pb.Empty): Variable;
+  hasServer(): boolean;
+  clearServer(): Variable;
+
+  getValueCase(): Variable.ValueCase;
+
+  getSourceCase(): Variable.SourceCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Variable.AsObject;
+  static toObject(includeInstance: boolean, msg: Variable): Variable.AsObject;
+  static serializeBinaryToWriter(message: Variable, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Variable;
+  static deserializeBinaryFromReader(message: Variable, reader: jspb.BinaryReader): Variable;
+}
+
+export namespace Variable {
+  export type AsObject = {
+    name: string,
+    str: string,
+    hcl: string,
+    cli?: google_protobuf_empty_pb.Empty.AsObject,
+    file?: Variable.File.AsObject,
+    env?: google_protobuf_empty_pb.Empty.AsObject,
+    vcs?: Variable.VCS.AsObject,
+    server?: google_protobuf_empty_pb.Empty.AsObject,
+  }
+
+  export class File extends jspb.Message {
+    getFilename(): string;
+    setFilename(value: string): File;
+
+    getHclRange(): Variable.HclRange | undefined;
+    setHclRange(value?: Variable.HclRange): File;
+    hasHclRange(): boolean;
+    clearHclRange(): File;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): File.AsObject;
+    static toObject(includeInstance: boolean, msg: File): File.AsObject;
+    static serializeBinaryToWriter(message: File, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): File;
+    static deserializeBinaryFromReader(message: File, reader: jspb.BinaryReader): File;
+  }
+
+  export namespace File {
+    export type AsObject = {
+      filename: string,
+      hclRange?: Variable.HclRange.AsObject,
+    }
+  }
+
+
+  export class VCS extends jspb.Message {
+    getFilename(): string;
+    setFilename(value: string): VCS;
+
+    getHclRange(): Variable.HclRange | undefined;
+    setHclRange(value?: Variable.HclRange): VCS;
+    hasHclRange(): boolean;
+    clearHclRange(): VCS;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): VCS.AsObject;
+    static toObject(includeInstance: boolean, msg: VCS): VCS.AsObject;
+    static serializeBinaryToWriter(message: VCS, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): VCS;
+    static deserializeBinaryFromReader(message: VCS, reader: jspb.BinaryReader): VCS;
+  }
+
+  export namespace VCS {
+    export type AsObject = {
+      filename: string,
+      hclRange?: Variable.HclRange.AsObject,
+    }
+  }
+
+
+  export class HclPos extends jspb.Message {
+    getLine(): number;
+    setLine(value: number): HclPos;
+
+    getColumn(): number;
+    setColumn(value: number): HclPos;
+
+    getByte(): number;
+    setByte(value: number): HclPos;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): HclPos.AsObject;
+    static toObject(includeInstance: boolean, msg: HclPos): HclPos.AsObject;
+    static serializeBinaryToWriter(message: HclPos, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): HclPos;
+    static deserializeBinaryFromReader(message: HclPos, reader: jspb.BinaryReader): HclPos;
+  }
+
+  export namespace HclPos {
+    export type AsObject = {
+      line: number,
+      column: number,
+      pb_byte: number,
+    }
+  }
+
+
+  export class HclRange extends jspb.Message {
+    getFilename(): string;
+    setFilename(value: string): HclRange;
+
+    getStart(): Variable.HclPos | undefined;
+    setStart(value?: Variable.HclPos): HclRange;
+    hasStart(): boolean;
+    clearStart(): HclRange;
+
+    getEnd(): Variable.HclPos | undefined;
+    setEnd(value?: Variable.HclPos): HclRange;
+    hasEnd(): boolean;
+    clearEnd(): HclRange;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): HclRange.AsObject;
+    static toObject(includeInstance: boolean, msg: HclRange): HclRange.AsObject;
+    static serializeBinaryToWriter(message: HclRange, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): HclRange;
+    static deserializeBinaryFromReader(message: HclRange, reader: jspb.BinaryReader): HclRange;
+  }
+
+  export namespace HclRange {
+    export type AsObject = {
+      filename: string,
+      start?: Variable.HclPos.AsObject,
+      end?: Variable.HclPos.AsObject,
+    }
+  }
+
+
+  export enum ValueCase { 
+    VALUE_NOT_SET = 0,
+    STR = 2,
+    HCL = 3,
+  }
+
+  export enum SourceCase { 
+    SOURCE_NOT_SET = 0,
+    CLI = 4,
+    FILE = 5,
+    ENV = 6,
+    VCS = 7,
+    SERVER = 8,
+  }
+}
+
 export class Project extends jspb.Message {
   getName(): string;
   setName(value: string): Project;
@@ -140,6 +323,11 @@ export class Project extends jspb.Message {
   getFileChangeSignal(): string;
   setFileChangeSignal(value: string): Project;
 
+  getVariablesList(): Array<Variable>;
+  setVariablesList(value: Array<Variable>): Project;
+  clearVariablesList(): Project;
+  addVariables(value?: Variable, index?: number): Variable;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Project.AsObject;
   static toObject(includeInstance: boolean, msg: Project): Project.AsObject;
@@ -158,6 +346,7 @@ export namespace Project {
     waypointHcl: Uint8Array | string,
     waypointHclFormat: Project.Format,
     fileChangeSignal: string,
+    variablesList: Array<Variable.AsObject>,
   }
 
   export class Poll extends jspb.Message {
@@ -874,6 +1063,11 @@ export class Job extends jspb.Message {
   getDataSourceOverridesMap(): jspb.Map<string, string>;
   clearDataSourceOverridesMap(): Job;
 
+  getVariablesList(): Array<Variable>;
+  setVariablesList(value: Array<Variable>): Job;
+  clearVariablesList(): Job;
+  addVariables(value?: Variable, index?: number): Variable;
+
   getNoop(): Job.Noop | undefined;
   setNoop(value?: Job.Noop): Job;
   hasNoop(): boolean;
@@ -1022,6 +1216,7 @@ export namespace Job {
     labelsMap: Array<[string, string]>,
     dataSource?: Job.DataSource.AsObject,
     dataSourceOverridesMap: Array<[string, string]>,
+    variablesList: Array<Variable.AsObject>,
     noop?: Job.Noop.AsObject,
     build?: Job.BuildOp.AsObject,
     push?: Job.PushOp.AsObject,
@@ -3439,6 +3634,47 @@ export namespace Hostname {
     }
   }
 
+}
+
+export class ListWorkspacesRequest extends jspb.Message {
+  getGlobal(): google_protobuf_empty_pb.Empty | undefined;
+  setGlobal(value?: google_protobuf_empty_pb.Empty): ListWorkspacesRequest;
+  hasGlobal(): boolean;
+  clearGlobal(): ListWorkspacesRequest;
+
+  getProject(): Ref.Project | undefined;
+  setProject(value?: Ref.Project): ListWorkspacesRequest;
+  hasProject(): boolean;
+  clearProject(): ListWorkspacesRequest;
+
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): ListWorkspacesRequest;
+  hasApplication(): boolean;
+  clearApplication(): ListWorkspacesRequest;
+
+  getScopeCase(): ListWorkspacesRequest.ScopeCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListWorkspacesRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListWorkspacesRequest): ListWorkspacesRequest.AsObject;
+  static serializeBinaryToWriter(message: ListWorkspacesRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListWorkspacesRequest;
+  static deserializeBinaryFromReader(message: ListWorkspacesRequest, reader: jspb.BinaryReader): ListWorkspacesRequest;
+}
+
+export namespace ListWorkspacesRequest {
+  export type AsObject = {
+    global?: google_protobuf_empty_pb.Empty.AsObject,
+    project?: Ref.Project.AsObject,
+    application?: Ref.Application.AsObject,
+  }
+
+  export enum ScopeCase { 
+    SCOPE_NOT_SET = 0,
+    GLOBAL = 1,
+    PROJECT = 2,
+    APPLICATION = 3,
+  }
 }
 
 export class ListWorkspacesResponse extends jspb.Message {

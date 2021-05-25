@@ -78,24 +78,24 @@ export class WaypointClient {
 
   methodInfoListWorkspaces = new grpcWeb.AbstractClientBase.MethodInfo(
     internal_server_proto_server_pb.ListWorkspacesResponse,
-    (request: google_protobuf_empty_pb.Empty) => {
+    (request: internal_server_proto_server_pb.ListWorkspacesRequest) => {
       return request.serializeBinary();
     },
     internal_server_proto_server_pb.ListWorkspacesResponse.deserializeBinary
   );
 
   listWorkspaces(
-    request: google_protobuf_empty_pb.Empty,
+    request: internal_server_proto_server_pb.ListWorkspacesRequest,
     metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.ListWorkspacesResponse>;
 
   listWorkspaces(
-    request: google_protobuf_empty_pb.Empty,
+    request: internal_server_proto_server_pb.ListWorkspacesRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: internal_server_proto_server_pb.ListWorkspacesResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.ListWorkspacesResponse>;
 
   listWorkspaces(
-    request: google_protobuf_empty_pb.Empty,
+    request: internal_server_proto_server_pb.ListWorkspacesRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
                response: internal_server_proto_server_pb.ListWorkspacesResponse) => void) {
