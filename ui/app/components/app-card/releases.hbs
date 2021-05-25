@@ -2,7 +2,7 @@
   {{#if @releases.length}}
     <Card::Header>
       <h4>
-        {{inline-svg "public-default" class="icon"}}
+        <Pds::Icon @type="public-default" class="icon" />
         <span>Latest releases</span>
       </h4>
       <LinkTo @route="workspace.projects.project.app.releases">
@@ -24,7 +24,7 @@
     {{/if}}
   {{else}}
     <p>
-      {{inline-svg "public-default" class="icon"}}
+      <Pds::Icon @type="public-default" class="icon" />
       <span>There are no releases to display yet</span>
     </p>
   {{/if}}

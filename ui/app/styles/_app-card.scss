@@ -45,9 +45,20 @@
     }
 
     .icon {
-      width: scale.$lg-1;
-      height: scale.$lg-1;
       margin-right: scale.$sm-3;
+      font-size: scale.$lg-1;
+      display: flex;
+    }
+  }
+
+  &--latest {
+    .button {
+      > .pds-icon {
+        font-size: scale.$lg-1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
   }
 }

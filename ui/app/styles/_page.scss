@@ -170,8 +170,7 @@
     margin-bottom: scale.$lg-4;
 
     .icon {
-      width: scale.$base;
-      height: scale.$base;
+      display: flex;
       margin-right: scale.$sm-3;
     }
     a {
@@ -380,6 +379,12 @@
           padding-right: 0;
         }
       }
+    }
+
+    .pds-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 
@@ -675,6 +680,7 @@
       box-shadow: 0 0 0 1px color.$black;
       border-radius: 2px 2px 0 0;
       background: url(/images/pattern.svg) no-repeat top center color.$black;
+      font-size: scale.$lg-14;
 
       @media (prefers-color-scheme: dark) {
         background-color: rgba(color.$black, 0.5);
@@ -682,9 +688,6 @@
       }
 
       .icon.brand {
-        width: scale.$lg-14;
-        height: scale.$lg-14;
-
         path {
           fill: color.$black;
           stroke: $brand-color;

@@ -7,6 +7,6 @@
    class={{if this.copySuccess 'copy-success'}}
    title="Copy"
   >
-    {{inline-svg (if this.copySuccess 'copy-success' 'copy-action') class="icon"}}
+    <Pds::Icon @type={{if this.copySuccess 'copy-success' 'copy-action'}} class="icon" />
   </CopyButton>
 </span>

@@ -2,7 +2,7 @@
   {{#if @deployments.length}}
     <Card::Header>
       <h4>
-        {{inline-svg "upload" class="icon"}}
+        <Pds::Icon @type="upload" class="icon" />
         <span>Latest deployments</span>
       </h4>
       <LinkTo @route="workspace.projects.project.app.deployments">
@@ -24,7 +24,7 @@
     {{/if}}
   {{else}}
     <p>
-      {{inline-svg "upload" class="icon"}}
+      <Pds::Icon @type="upload" class="icon" />
       <span>There are no deployments to display yet</span>
     </p>
   {{/if}}

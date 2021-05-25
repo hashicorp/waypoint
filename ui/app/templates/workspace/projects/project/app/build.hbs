@@ -4,7 +4,7 @@
       <b class="badge badge--version">#{{@model.sequence}}</b> <code>{{@model.id}}</code>
     </h2>
     <small>
-      {{inline-svg (icon-for-component @model.component.name) class="icon"}}
+      <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
       <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
         <b>{{titleize @model.component.name}}</b>
         {{#if (eq @model.status.state 1)}}
@@ -24,17 +24,17 @@
   <div class="item">
     {{#if (eq @model.status.state 1)}}
     <b class="badge">
-      {{inline-svg "clock-outline" class="icon"}}
+      <Pds::Icon @type="clock-outline" class="icon" />
       <span>Build running...</span>
     </b>
     {{else if (eq @model.status.state 2)}}
     <b class="badge badge--success">
-      {{inline-svg "check-plain" class="icon"}}
+      <Pds::Icon @type="check-plain" class="icon" />
       <span>Built in {{date-format-distance @model.status.startTime.seconds @model.status.completeTime.seconds }}</span>
     </b>
     {{else if (eq @model.status.state 3)}}
     <b class="badge badge--error">
-      {{inline-svg "alert-triangle" class="icon"}}
+      <Pds::Icon @type="alert-triangle" class="icon" />
       <span>
         Build failed
         {{#if @model.status.error.message}}

@@ -1,6 +1,6 @@
 {{#if this.firstRelease.url}}
-<ExternalLink href={{this.firstRelease.url}} class="button button--primary">
+<ExternalLink href={{this.firstRelease.url}} class="button button--primary button--external-link">
   <span>{{this.firstRelease.url}}</span>
-  {{inline-svg "exit" class="icon"}}
+  <Pds::Icon @type="exit" class="icon" />
 </ExternalLink>
 {{/if}}

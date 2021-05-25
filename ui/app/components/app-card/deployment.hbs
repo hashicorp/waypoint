@@ -6,20 +6,20 @@
       <code>{{truncate @model.id 8 false}}</code>
       {{#if (eq @model.status.state 1)}}
         <b class="badge">
-          {{inline-svg "clock-outline" class="icon"}}
+          <Pds::Icon @type="clock-outline" class="icon" />
         </b>
         {{else if (eq @model.status.state 2)}}
         <b class="badge badge--success">
-          {{inline-svg "check-plain" class="icon"}}
+          <Pds::Icon @type="check-plain" class="icon" />
         </b>
         {{else if (eq @model.status.state 3)}}
         <b class="badge badge--error">
-          {{inline-svg "alert-triangle" class="icon"}}
+          <Pds::Icon @type="alert-triangle" class="icon" />
         </b>
       {{/if}}
     </p>
     <small>
-      {{inline-svg (icon-for-component @model.component.name) class="icon"}}
+      <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
       <span>{{if (eq @model.status.state 1) 'Deploying' 'Deployed'}} by
         <b>{{component-name @model.component.name}} </b>
         {{#if (eq @model.status.state 1)}}
@@ -36,7 +36,7 @@
     title="https://{{@model.preload.deployUrl}}"
     class="button button--secondary"
   >
-    {{inline-svg "exit" class="icon"}}
+    <Pds::Icon @type="exit" class="icon" />
   </ExternalLink>
   {{/if}}
 </div>
@@ -48,7 +48,7 @@
       <code>{{truncate @model.id 8 false}}</code>
     </p>
     <small>
-      {{inline-svg (icon-for-component @model.component.name) class="icon"}}
+      <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
       <span>
         {{#if (eq @model.status.state 1)}}
         Started {{date-format-distance-to-now @model.status.startTime.seconds }}
@@ -64,7 +64,7 @@
     title="https://{{@model.preload.deployUrl}}"
     class="button button--secondary button--compact"
   >
-    {{inline-svg "exit" class="icon"}}
+    <Pds::Icon @type="exit" class="icon" />
   </ExternalLink>
   {{/if}}
 </li>

@@ -2,7 +2,7 @@
   {{#if @builds.length}}
     <Card::Header>
       <h4>
-        {{inline-svg "build" class="icon"}}
+        <Pds::Icon @type="build" class="icon" />
         <span>Latest builds</span>
       </h4>
       <LinkTo @route="workspace.projects.project.app.builds">
@@ -24,7 +24,7 @@
     {{/if}}
   {{else}}
     <p>
-      {{inline-svg "build" class="icon"}}
+      <Pds::Icon @type="build" class="icon" />
       <span>There are no builds to display yet</span>
     </p>
   {{/if}}

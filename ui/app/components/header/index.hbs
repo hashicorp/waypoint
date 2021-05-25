@@ -1,16 +1,17 @@
 <header id="header">
   <LinkTo @route="application" class="brand">
-    {{inline-svg "brand" class="logo"}}
+    <Pds::Icon @type="brand" class="logo" />
     <span class="pds--visuallyHidden">{{t "product.name"}}</span>
   </LinkTo>
   <nav>
     <ExternalLink href="https://waypointproject.io/docs">
-      {{inline-svg "docs" class="nav-icon"}}
+      <Pds::Icon @type="docs" class="nav-icon" />
       Documentation
     </ExternalLink>
     {{#if this.canLogout}}
       <hr />
       <Actions::Context />
+      <hr />
       <Actions::Invite />
     {{/if}}
     <hr />

@@ -5,7 +5,7 @@
       <code>{{@release.id}}</code>
     </p>
     <small>
-      {{inline-svg (icon-for-component @release.component.name) class="icon"}}
+      <Pds::Icon @type={{icon-for-component @release.component.name}} class="icon" />
       <span>{{if (eq @release.status.state 1) 'Releasing' 'Released'}} on
         <b>{{component-name @release.component.name}}</b>
         {{#if (eq @release.status.state 1)}}
@@ -18,9 +18,9 @@
   </LinkTo>
 
   {{#if (and @isLatest @release.url)}}
-    <ExternalLink href={{@release.url}} class="button button--primary">
+    <ExternalLink href={{@release.url}} class="button button--primary button--external-link">
       <span>{{@release.url}}</span>
-      {{inline-svg "exit" class="icon"}}
+      <Pds::Icon @type="exit" class="icon" />
     </ExternalLink>
   {{/if}}
 </li>

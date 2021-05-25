@@ -24,6 +24,13 @@
   background: rgb(var(--tile));
   box-shadow: inset 0 0 0 1px rgb(var(--border));
   border-radius: 2px;
+  font-size: scale.$lg-1;
+
+  > .pds-icon
+  {
+    height: unset;
+    width: unset;   
+  }
 
   @media (prefers-color-scheme: dark) {
     box-shadow: inset 0 0 0 1px rgba(var(--border), .5);

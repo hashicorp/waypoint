@@ -5,7 +5,7 @@
       <code>{{@build.id}}</code>
     </p>
     <small>
-      {{inline-svg (icon-for-component @build.component.name) class="icon"}}
+      <Pds::Icon @type={{icon-for-component @build.component.name}} class="icon" />
       <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
         <b>{{titleize @build.component.name}}</b>
         {{#if (eq @build.status.state 1)}}
@@ -18,17 +18,17 @@
   </LinkTo>
   {{#if (eq @build.status.state 1)}}
     <b class="badge">
-      {{inline-svg "clock-outline" class="icon"}}
+      <Pds::Icon @type="clock-outline" class="icon" />
       <span>Building...</span>
     </b>
   {{else if (eq @build.status.state 2)}}
     <b class="badge badge--success">
-      {{inline-svg "check-plain" class="icon"}}
+      <Pds::Icon @type="check-plain" class="icon" />
       <span>Built in {{date-format-distance @build.status.startTime.seconds @build.status.completeTime.seconds }}</span>
     </b>
   {{else if (eq @build.status.state 3)}}
     <b class="badge badge--error">
-      {{inline-svg "alert-triangle" class="icon"}}
+      <Pds::Icon @type="alert-triangle" class="icon" />
       <span>Build failed</span>
     </b>
   {{/if}}

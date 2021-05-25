@@ -49,9 +49,9 @@
     }
 
     .icon {
-      width: scale.$lg-1;
-      height: scale.$lg-1;
       margin-right: scale.$sm-3;
+      font-size: scale.$lg-1;
+      display: flex;
     }
   }
 
