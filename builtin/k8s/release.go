@@ -24,4 +24,6 @@ func (*Release) newService(name string) *corev1.Service {
 
 func (r *Release) URL() string { return r.Url }
 
-var _ component.Release = (*Release)(nil)
+var (
+	_ component.Release = (*Release)(nil)
+)

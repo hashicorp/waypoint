@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/mapstructure"
 	corev1 "k8s.io/api/core/v1"
@@ -20,8 +21,10 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 )
 
 const (
@@ -68,6 +71,10 @@ func (p *Platform) Auth() error {
 
 func (p *Platform) ValidateAuth() error {
 	return nil
+}
+
+func (p *Platform) StatusFunc() interface{} {
+	return p.Status
 }
 
 // DefaultReleaserFunc implements component.PlatformReleaser
@@ -641,6 +648,139 @@ func (p *Platform) Destroy(
 	return rm.DestroyAll(ctx, log, sg, ui)
 }
 
+func (p *Platform) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	step := sg.Add("Gathering health report for Kubernetes platform...")
+	defer step.Abort()
+
+	csInfo, err := p.getClientset()
+	if err != nil {
+		return nil, err
+	}
+	clientSet := csInfo.Clientset
+	namespace := csInfo.Namespace
+	if p.config.Namespace != "" {
+		namespace = p.config.Namespace
+	}
+
+	podClient := clientSet.CoreV1().Pods(namespace)
+	podLabelId := fmt.Sprintf("app=%s", deployment.Name)
+	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: podLabelId})
+	if err != nil {
+		ui.Output(
+			"Error listing pods to determine application health: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, err
+	}
+
+	// Create our status report
+	step.Update("Building status report for running pods...")
+	result := p.buildStatusReport(podList)
+
+	result.TimeGenerated = ptypes.TimestampNow()
+	log.Debug("status report complete")
+
+	// update output based on main health state
+	step.Update("Finished building report for Kubernetes platform")
+	step.Done()
+
+	st := ui.Status()
+	defer st.Close()
+
+	st.Update("Determining overall container health...")
+	if result.Health == sdk.StatusReport_READY {
+		st.Step(terminal.StatusOK, fmt.Sprintf("Deployment %q is reporting ready!", deployment.Name))
+	} else if result.Health == sdk.StatusReport_PARTIAL {
+		st.Step(terminal.StatusWarn, fmt.Sprintf("Deployment %q is reporting partially available!", deployment.Name))
+	} else {
+		st.Step(terminal.StatusError, fmt.Sprintf("Deployment %q is reporting not ready!", deployment.Name))
+	}
+
+	return &result, nil
+}
+
+// Translate a K8S container status into a Waypoint Health Status
+func (p *Platform) containerStatusToHealth(
+	containerStatus corev1.ContainerStatus,
+) *sdk.StatusReport_Resource {
+	var resourceHealth sdk.StatusReport_Resource
+	resourceHealth.Name = containerStatus.Name
+
+	// ContainerStatus.State is a struct of possible container states. If one
+	// is set, that is the current state of the container
+	if containerStatus.State.Running != nil || containerStatus.Ready == true {
+		resourceHealth.Health = sdk.StatusReport_READY
+		resourceHealth.HealthMessage = "container is reporting running" // no message defined by k8s api
+	} else if containerStatus.State.Waiting != nil {
+		resourceHealth.Health = sdk.StatusReport_PARTIAL
+		resourceHealth.HealthMessage = containerStatus.State.Waiting.Message
+	} else if containerStatus.State.Terminated != nil {
+		resourceHealth.Health = sdk.StatusReport_DOWN
+		resourceHealth.HealthMessage = containerStatus.State.Terminated.Message
+	} else {
+		resourceHealth.Health = sdk.StatusReport_UNKNOWN
+		resourceHealth.HealthMessage = "container health could not be determined"
+	}
+
+	return &resourceHealth
+}
+
+// Translate a Pod Phase into a Waypoint Health Status
+func (p *Platform) podPhaseToHealth(
+	phase corev1.PodPhase,
+) sdk.StatusReport_Health {
+	var healthResult sdk.StatusReport_Health
+
+	//  TODO: what about alive?
+	switch phase {
+	case corev1.PodPending:
+		healthResult = sdk.StatusReport_PARTIAL
+	case corev1.PodRunning:
+		healthResult = sdk.StatusReport_READY // ALIVE? READY?
+	case corev1.PodSucceeded:
+		healthResult = sdk.StatusReport_PARTIAL
+	case corev1.PodFailed:
+		healthResult = sdk.StatusReport_DOWN
+	case corev1.PodUnknown:
+		healthResult = sdk.StatusReport_UNKNOWN
+	default:
+		healthResult = sdk.StatusReport_UNKNOWN
+	}
+
+	return healthResult
+}
+
+func (p *Platform) buildStatusReport(
+	podList *corev1.PodList,
+) sdk.StatusReport {
+	var result sdk.StatusReport
+	result.External = true
+	resources := make([]*sdk.StatusReport_Resource, len(podList.Items))
+
+	// Report on most recently observed status of a deployments pod
+	for _, pod := range podList.Items {
+		// Overall Pod Health
+		podStatus := pod.Status
+		result.HealthMessage = podStatus.Message
+		result.Health = p.podPhaseToHealth(podStatus.Phase)
+
+		// Pod containers health
+		for i, containerStatus := range podStatus.ContainerStatuses {
+			resources[i] = p.containerStatusToHealth(containerStatus)
+		}
+	}
+
+	return result
+}
+
 // Config is the configuration structure for the Platform.
 type Config struct {
 	// Annotations are added to the pod spec of the deployed application.  This is
@@ -961,4 +1101,5 @@ var (
 	_ component.Configurable     = (*Platform)(nil)
 	_ component.Documented       = (*Platform)(nil)
 	_ component.Destroyer        = (*Platform)(nil)
+	_ component.Status           = (*Platform)(nil)
 )

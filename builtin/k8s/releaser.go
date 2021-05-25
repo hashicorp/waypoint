@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
 
@@ -39,6 +40,11 @@ func (r *Releaser) ReleaseFunc() interface{} {
 // DestroyFunc implements component.Destroyer
 func (r *Releaser) DestroyFunc() interface{} {
 	return r.Destroy
+}
+
+// StatusFunc implements component.Status
+func (r *Releaser) StatusFunc() interface{} {
+	return r.Status
 }
 
 // Release creates a Kubernetes service configured for the deployment
@@ -268,6 +274,28 @@ func (r *Releaser) Destroy(
 	return nil
 }
 
+func (r *Releaser) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	release *Release,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	step := sg.Add("Gathering health report for Kubernetes platform...")
+	defer step.Abort()
+
+	// update output based on main health state
+	step.Update("Finished building report for Kubernetes platform")
+	step.Done()
+
+	st := ui.Status()
+	defer st.Close()
+
+	return &sdk.StatusReport{}, nil
+}
+
 // ReleaserConfig is the configuration structure for the Releaser.
 type ReleaserConfig struct {
 	// Annotations to be applied to the kube service.
@@ -377,4 +405,5 @@ var (
 	_ component.Destroyer      = (*Releaser)(nil)
 	_ component.Configurable   = (*Releaser)(nil)
 	_ component.Documented     = (*Releaser)(nil)
+	_ component.Status         = (*Releaser)(nil)
 )
