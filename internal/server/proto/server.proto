@@ -1833,8 +1833,6 @@ message GetLatestPushedArtifactRequest {
 
   // workspace for the artifact, any workspace if empty
   Ref.Workspace workspace = 2;
-
-  // TODO need a ref to deployment too?
 }
 
 message GetPushedArtifactRequest {
@@ -2324,10 +2322,6 @@ message ListStatusReportsResponse {
 
 message GetStatusReportRequest {
   Ref.Operation ref = 1;
-
-  // Load additional details about the release. These will become available
-  // in the Preload section.
-  //Release.LoadDetails load_details = 2;
 }
 
 // Not related to Status or StatusFilter messages
