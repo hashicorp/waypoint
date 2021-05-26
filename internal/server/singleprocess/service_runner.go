@@ -3,7 +3,6 @@ package singleprocess
 import (
 	"context"
 	"io"
-	"time"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
@@ -278,10 +277,7 @@ func (s *service) RunnerJobStream(
 	// so we can exit properly on client side close.
 	eventCh := make(chan *pb.RunnerJobStreamRequest, 1)
 	go func() {
-		defer func() {
-			time.Sleep(2 * time.Second)
-			cancel()
-		}()
+		defer cancel()
 
 		for {
 			log.Trace("waiting for job stream event")
