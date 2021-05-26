@@ -1,37 +1,29 @@
-import { Build, ListBuildsResponse, Component, Status, Ref } from 'waypoint-pb';
-import { fakeId, fakeComponentForKind, statusRandom, sequenceRandom } from '../utils';
+import { ListBuildsRequest, ListBuildsResponse, GetBuildRequest } from 'waypoint-pb';
+import { Request, Response } from 'miragejs';
+import { decode } from '../helpers/protobufs';
 
-export function createBuild(): Build {
-  let build = new Build();
-  build.setId(fakeId());
-
-  build.setSequence(sequenceRandom());
-
-  // todo(pearkes): create util
-  let workspace = new Ref.Workspace();
-  workspace.setWorkspace('default');
-
-  let component = new Component();
-  component.setType(Component.Type.BUILDER);
-  component.setName(fakeComponentForKind(Component.Type.BUILDER));
-
-  build.setComponent(component);
-  build.setStatus(statusRandom());
-  build.setWorkspace(workspace);
-
-  build.getLabelsMap().set('common/vcs-ref', '0d56a9f8456b088dd0e4a7b689b842876fd47352');
-  build.getLabelsMap().set('common/vcs-ref-path', 'https://github.com/hashicorp/waypoint/commit/');
-
-  return build;
-}
-
-export function list(schema: any, { params, requestHeaders }) {
+export function list(schema: any, { requestBody }: Request): Response {
+  let requestMsg = decode(ListBuildsRequest, requestBody);
+  let projectName = requestMsg.getApplication().getProject();
+  let appName = requestMsg.getApplication().getApplication();
+  let workspaceName = requestMsg.getWorkspace().getWorkspace();
+  let project = schema.projects.findBy({ name: projectName });
+  let application = schema.applications.findBy({ name: appName, projectId: project.id });
+  let workspace = schema.workspaces.findBy({ name: workspaceName });
+  let builds = schema.builds.where({ applicationId: application?.id, workspaceId: workspace?.id });
+  let buildProtobufs = builds.models.map((b) => b.toProtobuf());
   let resp = new ListBuildsResponse();
-  let builds = new Array(createBuild(), createBuild(), createBuild(), createBuild());
-  resp.setBuildsList(builds);
+
+  resp.setBuildsList(buildProtobufs);
+
   return this.serialize(resp, 'application');
 }
 
-export function get(schema: any, { params, requestHeaders }) {
-  return this.serialize(createBuild(), 'application');
+export function get(schema: any, { requestBody }: Request): Response {
+  let requestMsg = decode(GetBuildRequest, requestBody);
+  let id = requestMsg.getRef().getId();
+  let model = schema.builds.find(id);
+  let build = model?.toProtobuf();
+
+  return this.serialize(build, 'application');
 }

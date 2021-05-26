@@ -8,7 +8,6 @@ import login from '../helpers/login';
 const buildsUrl = '/default/microchip/app/wp-bandwidth/builds';
 
 const page = create({
-  // todo(pearkes): seeds inline tests
   visit: visitable(buildsUrl),
   buildList: collection('[data-test-build-list] li'),
 });
@@ -19,9 +18,12 @@ module('Acceptance | builds list', function (hooks) {
   login();
 
   test('visiting builds page', async function (assert) {
+    let project = this.server.create('project', { name: 'microchip' });
+    let application = this.server.create('application', { name: 'wp-bandwidth', project });
+    this.server.createList('build', 4, 'random', { application });
+
     await page.visit();
 
-    // Currently no way to seed past the default in mirage/services/builds.ts
     assert.equal(page.buildList.length, 4);
     assert.equal(currentURL(), buildsUrl);
   });

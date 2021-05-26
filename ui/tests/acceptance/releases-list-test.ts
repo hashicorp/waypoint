@@ -18,6 +18,10 @@ module('Acceptance | releases list', function (hooks) {
   login();
 
   test('visiting releases page', async function (assert) {
+    let project = this.server.create('project', { name: 'microchip' });
+    let application = this.server.create('application', { name: 'wp-bandwidth', project });
+    this.server.createList('release', 3, { application });
+
     await page.visit();
 
     assert.equal(page.list.length, 3);
