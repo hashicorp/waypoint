@@ -338,6 +338,13 @@ func (r *Releaser) Status(
 		st.Step(terminal.StatusError, fmt.Sprintf("Release %q is reporting not ready!", appName))
 	}
 
+	// More UI detail for non-ready resources
+	for _, resource := range result.Resources {
+		if resource.Health != sdk.StatusReport_READY {
+			st.Step(terminal.StatusWarn, fmt.Sprintf("Resource %q is reporting %q", resource.Name, resource.Health.String()))
+		}
+	}
+
 	return &result, nil
 }
 

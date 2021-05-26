@@ -704,6 +704,13 @@ func (p *Platform) Status(
 		st.Step(terminal.StatusError, fmt.Sprintf("Deployment %q is reporting not ready!", deployment.Name))
 	}
 
+	// More UI detail for non-ready resources
+	for _, resource := range result.Resources {
+		if resource.Health != sdk.StatusReport_READY {
+			st.Step(terminal.StatusWarn, fmt.Sprintf("Resource %q is reporting %q", resource.Name, resource.Health.String()))
+		}
+	}
+
 	return &result, nil
 }
 
