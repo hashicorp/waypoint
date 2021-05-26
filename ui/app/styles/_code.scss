@@ -45,9 +45,12 @@
     }
 
     .icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 12px;
       height: 12px;
-      font-size: scale.$base;
+      font-size: 12px;
     }
   }
 }
