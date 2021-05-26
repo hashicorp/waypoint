@@ -6,7 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -286,6 +288,40 @@ func (r *Releaser) Status(
 	step := sg.Add("Gathering health report for Kubernetes platform...")
 	defer step.Abort()
 
+	// Get our client
+	clientset, namespace, _, err := clientset(r.config.KubeconfigPath, r.config.Context)
+	if err != nil {
+		return nil, err
+	}
+	if r.config.Namespace != "" {
+		namespace = r.config.Namespace
+	}
+
+	serviceclient := clientset.CoreV1().Services(namespace)
+	service, err := serviceclient.Get(ctx, release.ServiceName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	appName := service.Spec.Selector["name"]
+	podClient := clientset.CoreV1().Pods(namespace)
+	podLabelId := fmt.Sprintf("app=%s", appName)
+	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: podLabelId})
+	if err != nil {
+		ui.Output(
+			"Error listing pods to determine application health: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, err
+	}
+
+	// Create our status report
+	step.Update("Building status report for running pods...")
+	result := buildStatusReport(podList)
+
+	result.TimeGenerated = ptypes.TimestampNow()
+	log.Debug("status report complete")
+
 	// update output based on main health state
 	step.Update("Finished building report for Kubernetes platform")
 	step.Done()
@@ -293,7 +329,16 @@ func (r *Releaser) Status(
 	st := ui.Status()
 	defer st.Close()
 
-	return &sdk.StatusReport{}, nil
+	st.Update("Determining overall container health...")
+	if result.Health == sdk.StatusReport_READY {
+		st.Step(terminal.StatusOK, fmt.Sprintf("Release %q is reporting ready!", appName))
+	} else if result.Health == sdk.StatusReport_PARTIAL {
+		st.Step(terminal.StatusWarn, fmt.Sprintf("Release %q is reporting partially available!", appName))
+	} else {
+		st.Step(terminal.StatusError, fmt.Sprintf("Release %q is reporting not ready!", appName))
+	}
+
+	return &result, nil
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.
