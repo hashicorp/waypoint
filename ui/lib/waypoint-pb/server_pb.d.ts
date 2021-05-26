@@ -1143,6 +1143,11 @@ export class Job extends jspb.Message {
   hasPoll(): boolean;
   clearPoll(): Job;
 
+  getStatusReport(): Job.StatusReportOp | undefined;
+  setStatusReport(value?: Job.StatusReportOp): Job;
+  hasStatusReport(): boolean;
+  clearStatusReport(): Job;
+
   getState(): Job.State;
   setState(value: Job.State): Job;
 
@@ -1232,6 +1237,7 @@ export namespace Job {
     logs?: Job.LogsOp.AsObject,
     queueProject?: Job.QueueProjectOp.AsObject,
     poll?: Job.PollOp.AsObject,
+    statusReport?: Job.StatusReportOp.AsObject,
     state: Job.State,
     assignedRunner?: Ref.RunnerId.AsObject,
     queueTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
@@ -1301,6 +1307,11 @@ export namespace Job {
     hasPoll(): boolean;
     clearPoll(): Result;
 
+    getStatusReport(): Job.StatusReportResult | undefined;
+    setStatusReport(value?: Job.StatusReportResult): Result;
+    hasStatusReport(): boolean;
+    clearStatusReport(): Result;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Result.AsObject;
     static toObject(includeInstance: boolean, msg: Result): Result.AsObject;
@@ -1322,6 +1333,7 @@ export namespace Job {
       up?: Job.UpResult.AsObject,
       queueProject?: Job.QueueProjectResult.AsObject,
       poll?: Job.PollResult.AsObject,
+      statusReport?: Job.StatusReportResult.AsObject,
     }
   }
 
@@ -2013,6 +2025,62 @@ export namespace Job {
   }
 
 
+  export class StatusReportOp extends jspb.Message {
+    getDeployment(): Deployment | undefined;
+    setDeployment(value?: Deployment): StatusReportOp;
+    hasDeployment(): boolean;
+    clearDeployment(): StatusReportOp;
+
+    getRelease(): Release | undefined;
+    setRelease(value?: Release): StatusReportOp;
+    hasRelease(): boolean;
+    clearRelease(): StatusReportOp;
+
+    getTargetCase(): StatusReportOp.TargetCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): StatusReportOp.AsObject;
+    static toObject(includeInstance: boolean, msg: StatusReportOp): StatusReportOp.AsObject;
+    static serializeBinaryToWriter(message: StatusReportOp, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): StatusReportOp;
+    static deserializeBinaryFromReader(message: StatusReportOp, reader: jspb.BinaryReader): StatusReportOp;
+  }
+
+  export namespace StatusReportOp {
+    export type AsObject = {
+      deployment?: Deployment.AsObject,
+      release?: Release.AsObject,
+    }
+
+    export enum TargetCase { 
+      TARGET_NOT_SET = 0,
+      DEPLOYMENT = 1,
+      RELEASE = 2,
+    }
+  }
+
+
+  export class StatusReportResult extends jspb.Message {
+    getStatusReport(): StatusReport | undefined;
+    setStatusReport(value?: StatusReport): StatusReportResult;
+    hasStatusReport(): boolean;
+    clearStatusReport(): StatusReportResult;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): StatusReportResult.AsObject;
+    static toObject(includeInstance: boolean, msg: StatusReportResult): StatusReportResult.AsObject;
+    static serializeBinaryToWriter(message: StatusReportResult, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): StatusReportResult;
+    static deserializeBinaryFromReader(message: StatusReportResult, reader: jspb.BinaryReader): StatusReportResult;
+  }
+
+  export namespace StatusReportResult {
+    export type AsObject = {
+      statusReport?: StatusReport.AsObject,
+    }
+  }
+
+
   export class DocsOp extends jspb.Message {
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): DocsOp.AsObject;
@@ -2245,6 +2313,7 @@ export namespace Job {
     LOGS = 62,
     QUEUE_PROJECT = 63,
     POLL = 64,
+    STATUS_REPORT = 65,
   }
 }
 
@@ -5064,6 +5133,245 @@ export namespace Release {
     DEPLOYMENT = 1,
     ARTIFACT = 2,
     BUILD = 3,
+  }
+}
+
+export class UpsertStatusReportRequest extends jspb.Message {
+  getStatusReport(): StatusReport | undefined;
+  setStatusReport(value?: StatusReport): UpsertStatusReportRequest;
+  hasStatusReport(): boolean;
+  clearStatusReport(): UpsertStatusReportRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpsertStatusReportRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: UpsertStatusReportRequest): UpsertStatusReportRequest.AsObject;
+  static serializeBinaryToWriter(message: UpsertStatusReportRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpsertStatusReportRequest;
+  static deserializeBinaryFromReader(message: UpsertStatusReportRequest, reader: jspb.BinaryReader): UpsertStatusReportRequest;
+}
+
+export namespace UpsertStatusReportRequest {
+  export type AsObject = {
+    statusReport?: StatusReport.AsObject,
+  }
+}
+
+export class UpsertStatusReportResponse extends jspb.Message {
+  getStatusReport(): StatusReport | undefined;
+  setStatusReport(value?: StatusReport): UpsertStatusReportResponse;
+  hasStatusReport(): boolean;
+  clearStatusReport(): UpsertStatusReportResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpsertStatusReportResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: UpsertStatusReportResponse): UpsertStatusReportResponse.AsObject;
+  static serializeBinaryToWriter(message: UpsertStatusReportResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpsertStatusReportResponse;
+  static deserializeBinaryFromReader(message: UpsertStatusReportResponse, reader: jspb.BinaryReader): UpsertStatusReportResponse;
+}
+
+export namespace UpsertStatusReportResponse {
+  export type AsObject = {
+    statusReport?: StatusReport.AsObject,
+  }
+}
+
+export class GetLatestStatusReportRequest extends jspb.Message {
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): GetLatestStatusReportRequest;
+  hasApplication(): boolean;
+  clearApplication(): GetLatestStatusReportRequest;
+
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): GetLatestStatusReportRequest;
+  hasWorkspace(): boolean;
+  clearWorkspace(): GetLatestStatusReportRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetLatestStatusReportRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetLatestStatusReportRequest): GetLatestStatusReportRequest.AsObject;
+  static serializeBinaryToWriter(message: GetLatestStatusReportRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetLatestStatusReportRequest;
+  static deserializeBinaryFromReader(message: GetLatestStatusReportRequest, reader: jspb.BinaryReader): GetLatestStatusReportRequest;
+}
+
+export namespace GetLatestStatusReportRequest {
+  export type AsObject = {
+    application?: Ref.Application.AsObject,
+    workspace?: Ref.Workspace.AsObject,
+  }
+}
+
+export class ListStatusReportsRequest extends jspb.Message {
+  getStatusList(): Array<StatusFilter>;
+  setStatusList(value: Array<StatusFilter>): ListStatusReportsRequest;
+  clearStatusList(): ListStatusReportsRequest;
+  addStatus(value?: StatusFilter, index?: number): StatusFilter;
+
+  getOrder(): OperationOrder | undefined;
+  setOrder(value?: OperationOrder): ListStatusReportsRequest;
+  hasOrder(): boolean;
+  clearOrder(): ListStatusReportsRequest;
+
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): ListStatusReportsRequest;
+  hasApplication(): boolean;
+  clearApplication(): ListStatusReportsRequest;
+
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): ListStatusReportsRequest;
+  hasWorkspace(): boolean;
+  clearWorkspace(): ListStatusReportsRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListStatusReportsRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ListStatusReportsRequest): ListStatusReportsRequest.AsObject;
+  static serializeBinaryToWriter(message: ListStatusReportsRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListStatusReportsRequest;
+  static deserializeBinaryFromReader(message: ListStatusReportsRequest, reader: jspb.BinaryReader): ListStatusReportsRequest;
+}
+
+export namespace ListStatusReportsRequest {
+  export type AsObject = {
+    statusList: Array<StatusFilter.AsObject>,
+    order?: OperationOrder.AsObject,
+    application?: Ref.Application.AsObject,
+    workspace?: Ref.Workspace.AsObject,
+  }
+}
+
+export class ListStatusReportsResponse extends jspb.Message {
+  getStatusReportsList(): Array<StatusReport>;
+  setStatusReportsList(value: Array<StatusReport>): ListStatusReportsResponse;
+  clearStatusReportsList(): ListStatusReportsResponse;
+  addStatusReports(value?: StatusReport, index?: number): StatusReport;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ListStatusReportsResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ListStatusReportsResponse): ListStatusReportsResponse.AsObject;
+  static serializeBinaryToWriter(message: ListStatusReportsResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ListStatusReportsResponse;
+  static deserializeBinaryFromReader(message: ListStatusReportsResponse, reader: jspb.BinaryReader): ListStatusReportsResponse;
+}
+
+export namespace ListStatusReportsResponse {
+  export type AsObject = {
+    statusReportsList: Array<StatusReport.AsObject>,
+  }
+}
+
+export class GetStatusReportRequest extends jspb.Message {
+  getRef(): Ref.Operation | undefined;
+  setRef(value?: Ref.Operation): GetStatusReportRequest;
+  hasRef(): boolean;
+  clearRef(): GetStatusReportRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): GetStatusReportRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: GetStatusReportRequest): GetStatusReportRequest.AsObject;
+  static serializeBinaryToWriter(message: GetStatusReportRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): GetStatusReportRequest;
+  static deserializeBinaryFromReader(message: GetStatusReportRequest, reader: jspb.BinaryReader): GetStatusReportRequest;
+}
+
+export namespace GetStatusReportRequest {
+  export type AsObject = {
+    ref?: Ref.Operation.AsObject,
+  }
+}
+
+export class StatusReport extends jspb.Message {
+  getApplication(): Ref.Application | undefined;
+  setApplication(value?: Ref.Application): StatusReport;
+  hasApplication(): boolean;
+  clearApplication(): StatusReport;
+
+  getWorkspace(): Ref.Workspace | undefined;
+  setWorkspace(value?: Ref.Workspace): StatusReport;
+  hasWorkspace(): boolean;
+  clearWorkspace(): StatusReport;
+
+  getDeploymentId(): string;
+  setDeploymentId(value: string): StatusReport;
+
+  getReleaseId(): string;
+  setReleaseId(value: string): StatusReport;
+
+  getStatus(): Status | undefined;
+  setStatus(value?: Status): StatusReport;
+  hasStatus(): boolean;
+  clearStatus(): StatusReport;
+
+  getId(): string;
+  setId(value: string): StatusReport;
+
+  getStatusReport(): google_protobuf_any_pb.Any | undefined;
+  setStatusReport(value?: google_protobuf_any_pb.Any): StatusReport;
+  hasStatusReport(): boolean;
+  clearStatusReport(): StatusReport;
+
+  getResourcesHealthList(): Array<StatusReport.Health>;
+  setResourcesHealthList(value: Array<StatusReport.Health>): StatusReport;
+  clearResourcesHealthList(): StatusReport;
+  addResourcesHealth(value?: StatusReport.Health, index?: number): StatusReport.Health;
+
+  getTargetIdCase(): StatusReport.TargetIdCase;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): StatusReport.AsObject;
+  static toObject(includeInstance: boolean, msg: StatusReport): StatusReport.AsObject;
+  static serializeBinaryToWriter(message: StatusReport, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): StatusReport;
+  static deserializeBinaryFromReader(message: StatusReport, reader: jspb.BinaryReader): StatusReport;
+}
+
+export namespace StatusReport {
+  export type AsObject = {
+    application?: Ref.Application.AsObject,
+    workspace?: Ref.Workspace.AsObject,
+    deploymentId: string,
+    releaseId: string,
+    status?: Status.AsObject,
+    id: string,
+    statusReport?: google_protobuf_any_pb.Any.AsObject,
+    resourcesHealthList: Array<StatusReport.Health.AsObject>,
+  }
+
+  export class Health extends jspb.Message {
+    getHealthStatus(): string;
+    setHealthStatus(value: string): Health;
+
+    getHealthMessage(): string;
+    setHealthMessage(value: string): Health;
+
+    getName(): string;
+    setName(value: string): Health;
+
+    getId(): string;
+    setId(value: string): Health;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Health.AsObject;
+    static toObject(includeInstance: boolean, msg: Health): Health.AsObject;
+    static serializeBinaryToWriter(message: Health, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Health;
+    static deserializeBinaryFromReader(message: Health, reader: jspb.BinaryReader): Health;
+  }
+
+  export namespace Health {
+    export type AsObject = {
+      healthStatus: string,
+      healthMessage: string,
+      name: string,
+      id: string,
+    }
+  }
+
+
+  export enum TargetIdCase { 
+    TARGET_ID_NOT_SET = 0,
+    DEPLOYMENT_ID = 3,
+    RELEASE_ID = 4,
   }
 }
 
