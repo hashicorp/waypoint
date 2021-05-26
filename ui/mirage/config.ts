@@ -1,4 +1,6 @@
+import Ember from 'ember';
 import { logRequestConsole } from './utils';
+import failUnhandledRequest from './helpers/fail-unhandled-request';
 import { Server } from 'miragejs';
 
 import * as build from './services/build';
@@ -22,6 +24,10 @@ export default function (this: Server) {
 
   this.pretender.handledRequest = logRequestConsole;
 
+  if (Ember.testing) {
+    this.pretender.unhandledRequest = failUnhandledRequest;
+  }
+
   this.post('/ListBuilds', build.list);
   this.post('/GetBuild', build.get);
   this.post('/ListDeployments', deployment.list);
@@ -35,6 +41,8 @@ export default function (this: Server) {
   this.post('/GetRelease', release.get);
   this.post('/GetVersionInfo', versionInfo.get);
 
-  // Pass through all other requests
-  this.passthrough();
+  if (!Ember.testing) {
+    // Pass through all other requests
+    this.passthrough();
+  }
 }
