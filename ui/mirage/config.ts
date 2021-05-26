@@ -48,6 +48,7 @@ export default function (this: Server) {
   this.post('/GetLatestStatusReport', statusReport.getLatest);
   this.post('/GetJobStream', job.stream);
   this.post('/GetLogStream', log.stream);
+  this.post('/QueueJob', job.queue);
 
   if (!Ember.testing) {
     // Pass through all other requests
