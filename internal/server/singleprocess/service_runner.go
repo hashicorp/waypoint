@@ -351,7 +351,7 @@ func (s *service) RunnerJobStream(
 			// the cancel time changes. The cancel time only changes if multiple
 			// cancel requests are made.
 			if job.CancelTime != nil &&
-				(lastJob == nil || lastJob.CancelTime != job.CancelTime) {
+				(lastJob == nil || !lastJob.CancelTime.AsTime().Equal(job.CancelTime.AsTime())) {
 				// The job is forced if we're in an error state. This must be true
 				// because we would've already exited the loop if we naturally
 				// got a terminal event.
