@@ -10,6 +10,7 @@ import * as token from './services/token';
 import * as inviteToken from './services/invite-token';
 import * as release from './services/release';
 import * as versionInfo from './services/version-info';
+import * as job from './services/job';
 
 export default function (this: Server) {
   this.namespace = 'hashicorp.waypoint.Waypoint';
@@ -40,6 +41,7 @@ export default function (this: Server) {
   this.post('/ListReleases', release.list);
   this.post('/GetRelease', release.get);
   this.post('/GetVersionInfo', versionInfo.get);
+  this.post('/QueueJob', job.queue);
 
   if (!Ember.testing) {
     // Pass through all other requests
