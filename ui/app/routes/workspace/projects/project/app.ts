@@ -48,6 +48,7 @@ export default class App extends Route {
     let ObjectPromiseProxy = ObjectProxy.extend(PromiseProxyMixin);
 
     return hash({
+      project: proj,
       application: appRef.toObject(),
       deployments: ObjectPromiseProxy.create({
         promise: resolve(this.api.listDeployments(wsRef, appRef)),
