@@ -74,10 +74,8 @@ export function fakeComponentForKind(kind: Component.Type): string {
  * dependent on the readability of the data being sent.
  */
 export function logRequestConsole(verb: string, path: string, request: FakeXMLHttpRequest) {
-  let url = request.responseURL.split('/');
-  if (url.length >= 5) {
-    console.groupCollapsed(`Mock: ${url[3]} ${url[4]}/${url[5]}`);
-  }
+  console.groupCollapsed(`Mock: ${verb} ${path}`);
+
   let { requestBody, responseText } = request;
   let loggedRequest: string, loggedResponse: string;
 
@@ -93,16 +91,16 @@ export function logRequestConsole(verb: string, path: string, request: FakeXMLHt
     loggedResponse = responseText;
   }
 
-  console.groupCollapsed('Response (base64 decoded)');
-  console.log(loggedResponse);
+  console.groupCollapsed('Request (raw)');
+  console.log(request);
   console.groupEnd();
 
-  console.groupCollapsed('Request (base64 decoded)');
+  console.groupCollapsed('Request (protobuf wire format)');
   console.log(loggedRequest);
   console.groupEnd();
 
-  console.groupCollapsed('Request (raw)');
-  console.log(request);
+  console.groupCollapsed('Response (protobuf wire format)');
+  console.log(loggedResponse);
   console.groupEnd();
 
   console.groupEnd();
