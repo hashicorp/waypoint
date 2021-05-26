@@ -5,6 +5,7 @@ export default Model.extend({
   project: belongsTo(),
   builds: hasMany(),
   deployments: hasMany(),
+  jobs: hasMany(),
 
   toProtobuf(): Application {
     let result = new Application();

@@ -3,6 +3,9 @@ import { Ref, Workspace } from 'waypoint-pb';
 
 export default Model.extend({
   builds: hasMany(),
+  deployments: hasMany(),
+  releases: hasMany(),
+  jobs: hasMany(),
 
   toProtobuf(): Workspace {
     let result = new Workspace();
