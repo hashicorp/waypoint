@@ -40,7 +40,7 @@ func podPhaseToHealth(
 
 	switch phase {
 	case corev1.PodPending:
-		healthResult = sdk.StatusReport_PARTIAL
+		healthResult = sdk.StatusReport_ALIVE
 	case corev1.PodRunning:
 		healthResult = sdk.StatusReport_READY
 	case corev1.PodSucceeded:
@@ -56,6 +56,7 @@ func podPhaseToHealth(
 	return healthResult
 }
 
+// Take a list of Pods and build a Waypoint Status Report based on their reported health
 func buildStatusReport(
 	podList *corev1.PodList,
 ) sdk.StatusReport {
