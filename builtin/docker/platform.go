@@ -16,6 +16,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
 	goUnits "github.com/docker/go-units"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,6 +27,8 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
+
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 )
 
 const (
@@ -71,6 +74,11 @@ func (p *Platform) ValidateAuth() error {
 	return nil
 }
 
+// StatusFunc implements component.Status
+func (p *Platform) StatusFunc() interface{} {
+	return p.Status
+}
+
 func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
@@ -93,6 +101,132 @@ func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 		)),
 	)
 	return nil
+}
+
+func (p *Platform) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+	cli, err := p.getDockerClient(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
+	}
+	cli.NegotiateAPIVersion(ctx)
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Gathering health report for Docker platform...")
+	defer s.Abort()
+
+	// currently the docker platform only deploys 1 container
+	containerInfo, err := cli.ContainerInspect(ctx, deployment.Container)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create our status report
+	var result sdk.StatusReport
+	result.External = true
+
+	// NOTE(briancain): The docker platform currently only deploys a single
+	// container, so for now the status report makes the same assumption.
+
+	log.Debug("querying docker for container health")
+
+	resources := []*sdk.StatusReport_Resource{{
+		Name: containerInfo.Name,
+	}}
+
+	if containerInfo.State.Health != nil {
+		// Built-in Docker health reporting
+		// NOTE: this only works if the container has configured health checks
+
+		switch containerInfo.State.Health.Status {
+		case "Healthy":
+			resources[0].Health = sdk.StatusReport_READY
+			resources[0].HealthMessage = "container is running"
+		case "Unhealthy":
+			resources[0].Health = sdk.StatusReport_DOWN
+			resources[0].HealthMessage = "container is down"
+		case "Starting":
+			resources[0].Health = sdk.StatusReport_ALIVE
+			resources[0].HealthMessage = "container is starting"
+		default:
+			resources[0].Health = sdk.StatusReport_UNKNOWN
+			resources[0].HealthMessage = "unknown status reported by docker for container"
+		}
+	} else {
+		// Waypoint container inspection
+
+		if containerInfo.State.Running && containerInfo.State.ExitCode == 0 {
+			resources[0].Health = sdk.StatusReport_READY
+			resources[0].HealthMessage = "container is running"
+		} else if containerInfo.State.Restarting || containerInfo.State.Status == "created" {
+			resources[0].Health = sdk.StatusReport_ALIVE
+			resources[0].HealthMessage = "container is still starting"
+		} else if containerInfo.State.Dead || containerInfo.State.OOMKilled || containerInfo.State.ExitCode != 0 {
+			resources[0].Health = sdk.StatusReport_DOWN
+			resources[0].HealthMessage = "container is down"
+		} else {
+			resources[0].Health = sdk.StatusReport_UNKNOWN
+			resources[0].HealthMessage = "unknown status for container"
+		}
+	}
+
+	result.Resources = resources
+
+	// Determine overall deployment health based on its resource health
+	var ready, alive, down, unknown int
+	for _, r := range result.Resources {
+		switch r.Health {
+		case sdk.StatusReport_DOWN:
+			down++
+		case sdk.StatusReport_UNKNOWN:
+			unknown++
+		case sdk.StatusReport_READY:
+			ready++
+		case sdk.StatusReport_ALIVE:
+			alive++
+		}
+	}
+
+	if ready == len(result.Resources) {
+		result.Health = sdk.StatusReport_READY
+	} else if down == len(result.Resources) {
+		result.Health = sdk.StatusReport_DOWN
+	} else if unknown == len(result.Resources) {
+		result.Health = sdk.StatusReport_UNKNOWN
+	} else if alive == len(result.Resources) {
+		result.Health = sdk.StatusReport_ALIVE
+	} else {
+		result.Health = sdk.StatusReport_PARTIAL
+	}
+
+	result.TimeGenerated = ptypes.TimestampNow()
+	log.Debug("status report complete")
+
+	// update output based on main health state
+	s.Update("Finished building report for Docker platform")
+	s.Done()
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+
+	st.Update("Determining overall container health...")
+	if result.Health == sdk.StatusReport_READY {
+		st.Step(terminal.StatusOK, fmt.Sprintf("Container %q is reporting ready!", containerInfo.Name))
+	} else if result.Health == sdk.StatusReport_PARTIAL {
+		st.Step(terminal.StatusWarn, fmt.Sprintf("Container %q is reporting partially available!", containerInfo.Name))
+	} else {
+		st.Step(terminal.StatusError, fmt.Sprintf("Container %q is reporting not ready!", containerInfo.Name))
+	}
+
+	return &result, nil
 }
 
 func (p *Platform) resourceNetworkCreate(
@@ -709,4 +843,5 @@ var (
 	_ component.Platform     = (*Platform)(nil)
 	_ component.Configurable = (*Platform)(nil)
 	_ component.Destroyer    = (*Platform)(nil)
+	_ component.Status       = (*Platform)(nil)
 )
