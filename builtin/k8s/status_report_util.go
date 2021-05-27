@@ -125,7 +125,7 @@ func buildStatusReport(
 		result.HealthMessage = "all pods are reporting alive"
 	} else {
 		result.Health = sdk.StatusReport_PARTIAL
-		result.HealthMessage = "all pods are reporting a mixed statusu"
+		result.HealthMessage = "all pods are reporting a mixed status"
 	}
 
 	return result
