@@ -62,19 +62,62 @@ func buildStatusReport(
 ) sdk.StatusReport {
 	var result sdk.StatusReport
 	result.External = true
-	resources := make([]*sdk.StatusReport_Resource, len(podList.Items))
+	var resources []*sdk.StatusReport_Resource
+
+	// Build health for every possible pod for overal health report
+	var ready, alive, down, unknown int
 
 	// Report on most recently observed status of a deployments pod
+	// Pod resources and its containers will be in order inside Resources
 	for _, pod := range podList.Items {
 		// Overall Pod Health
 		podStatus := pod.Status
-		result.HealthMessage = podStatus.Message
-		result.Health = podPhaseToHealth(podStatus.Phase)
+
+		// Determine overall health report based on all pods
+		switch podStatus.Phase {
+		case corev1.PodPending:
+			alive++
+		case corev1.PodRunning:
+			ready++
+		case corev1.PodSucceeded:
+			alive++
+		case corev1.PodFailed:
+			down++
+		case corev1.PodUnknown:
+			unknown++
+		default:
+			unknown++
+		}
+
+		podHealth := podPhaseToHealth(podStatus.Phase)
+		resources = append(resources, &sdk.StatusReport_Resource{
+			Health:        podHealth,
+			HealthMessage: podStatus.Message,
+			Name:          pod.ObjectMeta.Name,
+		})
 
 		// Pod containers health
-		for i, containerStatus := range podStatus.ContainerStatuses {
-			resources[i] = containerStatusToHealth(containerStatus)
+		for _, containerStatus := range podStatus.ContainerStatuses {
+			resources = append(resources, containerStatusToHealth(containerStatus))
 		}
+	}
+
+	// Overall health status for report
+	if ready == len(podList.Items) {
+		result.Health = sdk.StatusReport_READY
+		result.HealthMessage = "all pods are reporting ready"
+	} else if down == len(podList.Items) {
+		result.Health = sdk.StatusReport_DOWN
+		result.HealthMessage = "all pods are reporting down"
+	} else if unknown == len(podList.Items) {
+		result.Health = sdk.StatusReport_UNKNOWN
+		result.HealthMessage = "status of all pods cannot be determined"
+	} else if alive == len(podList.Items) {
+		result.Health = sdk.StatusReport_ALIVE
+		result.HealthMessage = "all pods are reporting alive"
+	} else {
+		result.Health = sdk.StatusReport_PARTIAL
+		result.HealthMessage = "all pods are reporting a mixed statusu"
 	}
 
 	return result
