@@ -98,6 +98,7 @@ func (c *baseCommand) initClient(ctx context.Context) (*clientpkg.Project, error
 		clientpkg.WithClientConnect(connectOpts...),
 		clientpkg.WithProjectRef(c.refProject),
 		clientpkg.WithWorkspaceRef(c.refWorkspace),
+		clientpkg.WithVars(c.variables),
 		clientpkg.WithLabels(c.flagLabels),
 		clientpkg.WithSourceOverrides(c.flagRemoteSource),
 	}
