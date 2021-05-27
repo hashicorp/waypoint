@@ -2,6 +2,9 @@ import { Factory, trait, association } from 'ember-cli-mirage';
 import { fakeId } from '../utils';
 
 export default Factory.extend({
+  id: () => fakeId(),
+  sequence: (i) => i + 1,
+
   afterCreate(deployment, server) {
     if (!deployment.workspace) {
       let workspace =
@@ -11,9 +14,7 @@ export default Factory.extend({
   },
 
   random: trait({
-    id: () => fakeId(),
     component: association('platform', 'with-random-name'),
-    sequence: (i) => i + 1,
     status: association('random'),
     state: 'CREATED',
     labels: () => ({
@@ -25,6 +26,22 @@ export default Factory.extend({
       let url = `https://wildly-intent-honeybee--v${deployment.sequence}.waypoint.run`;
       deployment.update('deployUrl', url);
     },
+  }),
+
+  docker: trait({
+    component: association('platform', 'docker'),
+  }),
+
+  nomad: trait({
+    component: association('platform', 'nomad'),
+  }),
+
+  'nomad-jobspec': trait({
+    component: association('platform', 'nomad-jobspec'),
+  }),
+
+  kubernetes: trait({
+    component: association('platform', 'kubernetes'),
   }),
 
   'seconds-old-success': trait({

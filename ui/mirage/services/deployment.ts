@@ -14,6 +14,8 @@ export function list(schema: any, { requestBody }: Request): Response {
   let deploymentProtobufs = deployments.models.map((d) => d.toProtobuf());
   let resp = new ListDeploymentsResponse();
 
+  deploymentProtobufs.sort((a, b) => b.getSequence() - a.getSequence());
+
   resp.setDeploymentsList(deploymentProtobufs);
 
   return this.serialize(resp, 'application');

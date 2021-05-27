@@ -24,6 +24,26 @@ export default Factory.extend({
     type: 'RELEASEMANAGER',
   }),
 
+  docker: trait({
+    name: 'docker',
+  }),
+
+  pack: trait({
+    name: 'pack',
+  }),
+
+  nomad: trait({
+    name: 'nomad',
+  }),
+
+  'nomad-jobspec': trait({
+    name: 'nomad-jobspec',
+  }),
+
+  kubernetes: trait({
+    name: 'kubernetes',
+  }),
+
   'with-random-name': trait({
     afterCreate(component) {
       component.update('name', randomNameForType(component.type));
