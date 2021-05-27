@@ -13,8 +13,8 @@
 
 import * as grpcWeb from 'grpc-web';
 
-import * as internal_server_proto_server_pb from 'waypoint-pb';
 import * as google_protobuf_empty_pb from 'google-protobuf/google/protobuf/empty_pb';
+import * as internal_server_proto_server_pb from 'waypoint-pb';
 
 
 export class WaypointClient {
@@ -1691,6 +1691,46 @@ export class WaypointClient {
     request,
     metadata || {},
     this.methodInfoGetStatusReport);
+  }
+
+  methodInfoGetLatestStatusReport = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.StatusReport,
+    (request: internal_server_proto_server_pb.GetLatestStatusReportRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.StatusReport.deserializeBinary
+  );
+
+  getLatestStatusReport(
+    request: internal_server_proto_server_pb.GetLatestStatusReportRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.StatusReport>;
+
+  getLatestStatusReport(
+    request: internal_server_proto_server_pb.GetLatestStatusReportRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.StatusReport) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.StatusReport>;
+
+  getLatestStatusReport(
+    request: internal_server_proto_server_pb.GetLatestStatusReportRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.StatusReport) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
+        request,
+        metadata || {},
+        this.methodInfoGetLatestStatusReport,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/GetLatestStatusReport',
+    request,
+    metadata || {},
+    this.methodInfoGetLatestStatusReport);
   }
 
   methodInfoListStatusReports = new grpcWeb.AbstractClientBase.MethodInfo(
