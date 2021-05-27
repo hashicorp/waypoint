@@ -25,6 +25,7 @@ type Project struct {
 	workspace           *pb.Ref_Workspace
 	runner              *pb.Ref_Runner
 	labels              map[string]string
+	variables 					[]*pb.Variable
 	dataSourceOverrides map[string]string
 	cleanupFunc         func()
 	serverVersion       *pb.VersionInfo
@@ -223,6 +224,14 @@ func WithClient(client pb.WaypointClient) Option {
 func WithClientConnect(opts ...serverclient.ConnectOption) Option {
 	return func(c *Project, cfg *config) error {
 		cfg.connectOpts = opts
+		return nil
+	}
+}
+
+// WithVars sets variable values from flags and local env on any operations.
+func WithVars(m []*pb.Variable) Option {
+	return func(c *Project, cfg *config) error {
+		c.variables = m
 		return nil
 	}
 }
