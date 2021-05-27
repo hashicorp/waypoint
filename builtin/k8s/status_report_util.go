@@ -78,7 +78,15 @@ func buildStatusReport(
 		case corev1.PodPending:
 			alive++
 		case corev1.PodRunning:
-			ready++
+			// Extra checks on the latest condition to ensure pod is reporting ready and running
+			for _, c := range podStatus.Conditions {
+				if c.Status == corev1.ConditionTrue && c.Type == corev1.PodReady {
+					ready++
+					break
+				}
+			}
+
+			alive++
 		case corev1.PodSucceeded:
 			alive++
 		case corev1.PodFailed:
