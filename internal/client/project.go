@@ -25,7 +25,7 @@ type Project struct {
 	workspace           *pb.Ref_Workspace
 	runner              *pb.Ref_Runner
 	labels              map[string]string
-	variables 					[]*pb.Variable
+	variables           []*pb.Variable
 	dataSourceOverrides map[string]string
 	cleanupFunc         func()
 	serverVersion       *pb.VersionInfo

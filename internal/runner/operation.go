@@ -125,7 +125,7 @@ func (r *Runner) executeJob(
 	if diags.HasErrors() {
 		return nil, diags
 	}
-	
+
 	serverVars := resp.Project.GetVariables()
 	diags = vs.CollectInputValRemote(nil, serverVars)
 	if diags.HasErrors() {

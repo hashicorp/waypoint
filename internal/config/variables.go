@@ -26,7 +26,7 @@ type VariableAssignment struct {
 	Expr   hcl.Expression
 	// The location of the variable value if the value was provided
 	// from a file
-	Range  hcl.Range
+	Range hcl.Range
 }
 
 // TODO krantzinator: this goes somewhere else
