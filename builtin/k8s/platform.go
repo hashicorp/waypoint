@@ -692,6 +692,8 @@ func (p *Platform) Status(
 	step.Update("Finished building report for Kubernetes platform")
 	step.Done()
 
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
 	st := ui.Status()
 	defer st.Close()
 
