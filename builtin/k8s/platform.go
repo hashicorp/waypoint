@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/mapstructure"
 	corev1 "k8s.io/api/core/v1"
@@ -20,8 +21,10 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
+	"github.com/hashicorp/waypoint/internal/clierrors"
 )
 
 const (
@@ -68,6 +71,10 @@ func (p *Platform) Auth() error {
 
 func (p *Platform) ValidateAuth() error {
 	return nil
+}
+
+func (p *Platform) StatusFunc() interface{} {
+	return p.Status
 }
 
 // DefaultReleaserFunc implements component.PlatformReleaser
@@ -641,6 +648,74 @@ func (p *Platform) Destroy(
 	return rm.DestroyAll(ctx, log, sg, ui)
 }
 
+func (p *Platform) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	step := sg.Add("Gathering health report for Kubernetes platform...")
+	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
+
+	csInfo, err := p.getClientset()
+	if err != nil {
+		return nil, err
+	}
+	clientSet := csInfo.Clientset
+	namespace := csInfo.Namespace
+	if p.config.Namespace != "" {
+		namespace = p.config.Namespace
+	}
+
+	podClient := clientSet.CoreV1().Pods(namespace)
+	podLabelId := fmt.Sprintf("app=%s", deployment.Name)
+	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: podLabelId})
+	if err != nil {
+		ui.Output(
+			"Error listing pods to determine application health: %s", clierrors.Humanize(err),
+			terminal.WithErrorStyle(),
+		)
+		return nil, err
+	}
+
+	// Create our status report
+	step.Update("Building status report for running pods...")
+	result := buildStatusReport(podList)
+
+	result.TimeGenerated = ptypes.TimestampNow()
+	log.Debug("status report complete")
+
+	// update output based on main health state
+	step.Update("Finished building report for Kubernetes platform")
+	step.Done()
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+
+	st.Update("Determining overall container health...")
+	if result.Health == sdk.StatusReport_READY {
+		st.Step(terminal.StatusOK, fmt.Sprintf("Deployment %q is reporting ready!", deployment.Name))
+	} else if result.Health == sdk.StatusReport_PARTIAL {
+		st.Step(terminal.StatusWarn, fmt.Sprintf("Deployment %q is reporting partially available!", deployment.Name))
+	} else {
+		st.Step(terminal.StatusError, fmt.Sprintf("Deployment %q is reporting not ready!", deployment.Name))
+	}
+
+	// More UI detail for non-ready resources
+	for _, resource := range result.Resources {
+		if resource.Health != sdk.StatusReport_READY {
+			st.Step(terminal.StatusWarn, fmt.Sprintf("Resource %q is reporting %q", resource.Name, resource.Health.String()))
+		}
+	}
+
+	return &result, nil
+}
+
 // Config is the configuration structure for the Platform.
 type Config struct {
 	// Annotations are added to the pod spec of the deployed application.  This is
@@ -961,4 +1036,5 @@ var (
 	_ component.Configurable     = (*Platform)(nil)
 	_ component.Documented       = (*Platform)(nil)
 	_ component.Destroyer        = (*Platform)(nil)
+	_ component.Status           = (*Platform)(nil)
 )
