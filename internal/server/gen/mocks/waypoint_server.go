@@ -454,6 +454,29 @@ func (_m *WaypointServer) GetLatestRelease(_a0 context.Context, _a1 *gen.GetLate
 	return r0, r1
 }
 
+// GetLatestStatusReport provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetLatestStatusReport(_a0 context.Context, _a1 *gen.GetLatestStatusReportRequest) (*gen.StatusReport, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.StatusReport
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetLatestStatusReportRequest) *gen.StatusReport); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.StatusReport)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetLatestStatusReportRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetLogStream provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetLogStream(_a0 *gen.GetLogStreamRequest, _a1 gen.Waypoint_GetLogStreamServer) error {
 	ret := _m.Called(_a0, _a1)
