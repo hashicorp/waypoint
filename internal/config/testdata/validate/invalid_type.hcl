@@ -15,5 +15,5 @@ app "web" {
 variable "bees" {
   default = "buzz"
   description = "This is my description"
-  type = string
+  type = othertype
 }

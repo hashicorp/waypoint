@@ -1,0 +1,187 @@
+package config
+
+import (
+	"fmt"
+
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/ext/typeexpr"
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
+)
+
+// A consistent detail message for all "not a valid identifier" diagnostics.
+const badIdentifierDetail = "A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."
+
+// VariableAssignments contain the values from the job, from the server/VCS
+// repo, and default values from the waypoint.hcl. These are to
+// sort precedence and add the final variable values to the EvalContext
+type VariableAssignment struct {
+	Value  cty.Value
+	Source string
+	Expr   hcl.Expression
+	// The location of the variable value if the value was provided
+	// from a file
+	Range hcl.Range
+}
+
+// TODO krantzinator: this goes somewhere else
+type Variable struct {
+	Name string
+
+	// Values contains possible values for the variable; The last value set
+	// from these will be the one used. If none is set; an error will be
+	// returned by Value().
+	Values []VariableAssignment
+
+	// Cty Type of the variable. If the default value or a collected value is
+	// not of this type nor can be converted to this type an error diagnostic
+	// will show up. This allows us to assume that values are valid.
+	//
+	// When a default value - and no type - is passed into the variable
+	// declaration, the type of the default variable will be used.
+	Type cty.Type
+
+	// Description of the variable
+	Description string
+
+	// The location of the variable definition block in the waypoint.hcl
+	Range hcl.Range
+}
+
+type hclVariable struct {
+	Name        string         `hcl:",label"`
+	Default     cty.Value      `hcl:"default,optional"`
+	Type        hcl.Expression `hcl:"type,optional"`
+	Description string         `hcl:"description,optional"`
+}
+
+// Variables are used when parsing the Config, to set default values from
+// the waypoint.hcl and bring in the values from the job and the server/VCS
+// for eventual precedence sorting and setting on the EvalContext
+type Variables map[string]*Variable
+
+// TODO krantzinator - use implied body scheme instead?
+var variableBlockSchema = &hcl.BodySchema{
+	Attributes: []hcl.AttributeSchema{
+		{
+			Name: "default",
+		},
+		{
+			Name: "type",
+		},
+		{
+			Name: "description",
+		},
+	},
+}
+
+func (c *Config) DecodeVariableBlocks(variables *Variables) hcl.Diagnostics {
+	schema, _ := gohcl.ImpliedBodySchema(&validateStruct{})
+	content, diag := c.hclConfig.Body.Content(schema)
+	if diag.HasErrors() {
+		return diag
+	}
+
+	var diags hcl.Diagnostics
+	for _, block := range content.Blocks.OfType("variable") {
+		moreDiags := variables.decodeVariableBlock(block)
+		if moreDiags != nil {
+			diags = append(diags, moreDiags...)
+		}
+	}
+
+	return diags
+}
+
+// decodeVariableBlock decodes a "variable" block
+// ectx is passed only in the evaluation of the default value.
+func (variables *Variables) decodeVariableBlock(block *hcl.Block) hcl.Diagnostics {
+	if (*variables) == nil {
+		(*variables) = Variables{}
+	}
+
+	// TODO krantzinator: A lot of these validations happen twice before now --
+	// when we validate the config on init and on the runner; we probably
+	// don't need it here, too
+	if _, found := (*variables)[block.Labels[0]]; found {
+		return []*hcl.Diagnostic{{
+			Severity: hcl.DiagError,
+			Summary:  "Duplicate variable",
+			Detail:   "Duplicate " + block.Labels[0] + " variable definition found.",
+			Context:  block.DefRange.Ptr(),
+		}}
+	}
+
+	name := block.Labels[0]
+
+	// TODO krantzinator this should happen earlier than the runner
+	// Could be done before any ops are run and fail immediately
+	content, diags := block.Body.Content(variableBlockSchema)
+	if !hclsyntax.ValidIdentifier(name) {
+		diags = append(diags, &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid variable name",
+			Detail:   badIdentifierDetail,
+			Subject:  &block.LabelRanges[0],
+		})
+	}
+
+	v := &Variable{
+		Name:  name,
+		Range: block.DefRange,
+	}
+
+	if attr, exists := content.Attributes["description"]; exists {
+		valDiags := gohcl.DecodeExpression(attr.Expr, nil, &v.Description)
+		diags = append(diags, valDiags...)
+	}
+
+	if t, ok := content.Attributes["type"]; ok {
+		tp, moreDiags := typeexpr.Type(t.Expr)
+		diags = append(diags, moreDiags...)
+		if moreDiags.HasErrors() {
+			return diags
+		}
+
+		v.Type = tp
+	}
+
+	if def, ok := content.Attributes["default"]; ok {
+		defaultValue, moreDiags := def.Expr.Value(nil)
+		diags = append(diags, moreDiags...)
+		if moreDiags.HasErrors() {
+			return diags
+		}
+
+		if v.Type != cty.NilType {
+			var err error
+			defaultValue, err = convert.Convert(defaultValue, v.Type)
+			if err != nil {
+				diags = append(diags, &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid default value for variable",
+					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
+					Subject:  def.Expr.Range().Ptr(),
+				})
+				defaultValue = cty.DynamicVal
+			}
+		}
+
+		v.Values = append(v.Values, VariableAssignment{
+			Source: "default",
+			Value:  defaultValue,
+		})
+
+		// It's possible no type attribute was assigned so lets make sure we
+		// have a valid type otherwise there could be issues parsing the value.
+		if v.Type == cty.NilType {
+			v.Type = defaultValue.Type()
+		}
+	}
+
+	(*variables)[name] = v
+
+	return diags
+}

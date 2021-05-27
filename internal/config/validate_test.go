@@ -21,6 +21,16 @@ func TestConfigValidate(t *testing.T) {
 			"no_build.hcl",
 			"'build' stanza",
 		},
+
+		{
+			"invalid_type.hcl",
+			"Invalid type specification",
+		},
+
+		{
+			"invalid_def.hcl",
+			"Invalid default value for variable",
+		},
 	}
 
 	for _, tt := range cases {

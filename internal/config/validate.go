@@ -8,7 +8,11 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/ext/typeexpr"
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 )
 
 // validateStruct is the validation structure for the configuration.
@@ -16,12 +20,13 @@ import (
 // requires duplication between this struct and the other config structs
 // since we don't do any lazy loading here.
 type validateStruct struct {
-	Project string            `hcl:"project,optional"`
-	Runner  *Runner           `hcl:"runner,block" default:"{}"`
-	Labels  map[string]string `hcl:"labels,optional"`
-	Plugin  []*Plugin         `hcl:"plugin,block"`
-	Apps    []*validateApp    `hcl:"app,block"`
-	Config  *genericConfig    `hcl:"config,block"`
+	Project   string              `hcl:"project,optional"`
+	Runner    *Runner             `hcl:"runner,block" default:"{}"`
+	Labels    map[string]string   `hcl:"labels,optional"`
+	Variables []*validateVariable `hcl:"variable,block"`
+	Plugin    []*Plugin           `hcl:"plugin,block"`
+	Apps      []*validateApp      `hcl:"app,block"`
+	Config    *genericConfig      `hcl:"config,block"`
 }
 
 type validateApp struct {
@@ -33,6 +38,16 @@ type validateApp struct {
 	Deploy  *Deploy           `hcl:"deploy,block"`
 	Release *Release          `hcl:"release,block"`
 	Config  *genericConfig    `hcl:"config,block"`
+}
+
+// validateVariable is separate from hclVariable because of the limitations
+// of hclsimple, which we use in config.Load. hclsimple needs Type to be an
+// hcl.Expression, but we want it to be a cty.Type for everything else.
+type validateVariable struct {
+	Name        string    `hcl:",label"`
+	Default     cty.Value `hcl:"default,optional"`
+	Type        cty.Type  `hcl:"type,optional"`
+	Description string    `hcl:"description,optional"`
 }
 
 // Validate the structure of the configuration.
@@ -63,6 +78,14 @@ func (c *Config) Validate() error {
 	// Validate apps
 	for _, block := range content.Blocks.OfType("app") {
 		err := c.validateApp(block)
+		if err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
+
+	// Validate variable definitions
+	for _, block := range content.Blocks.OfType("variable") {
+		err := c.validateVarBlock(block)
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
@@ -103,6 +126,81 @@ func (c *Config) validateApp(b *hcl.Block) error {
 			Context:  &b.TypeRange,
 		}
 	}
+
+	return nil
+}
+
+func (c *Config) validateVarBlock(block *hcl.Block) hcl.Diagnostics {
+	v := Variable{
+		Name:  block.Labels[0],
+		Range: block.DefRange,
+	}
+
+	content, diags := block.Body.Content(variableBlockSchema)
+
+	if !hclsyntax.ValidIdentifier(v.Name) {
+		diags = append(diags, &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid variable name",
+			Detail:   badIdentifierDetail,
+			Subject:  &block.LabelRanges[0],
+		})
+	}
+
+	if attr, exists := content.Attributes["description"]; exists {
+		valDiags := gohcl.DecodeExpression(attr.Expr, nil, &v.Description)
+		diags = append(diags, valDiags...)
+		if diags.HasErrors() {
+			return diags
+		}
+	}
+
+	if t, ok := content.Attributes["type"]; ok {
+		tt, moreDiags := typeexpr.Type(t.Expr)
+		v.Type = tt
+		diags = append(diags, moreDiags...)
+		if moreDiags.HasErrors() {
+			return diags
+		}
+	}
+
+	if attr, exists := content.Attributes["default"]; exists {
+		val, valDiags := attr.Expr.Value(nil)
+		diags = append(diags, valDiags...)
+		// Convert the default to the expected type so we can catch invalid
+		// defaults early and allow later code to assume validity.
+		// Note that this depends on us having already processed any "type"
+		// attribute above.
+		if v.Type != cty.NilType {
+			var err error
+			val, err = convert.Convert(val, v.Type)
+			if err != nil {
+				diags = append(diags, &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid default value for variable",
+					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
+					Subject:  attr.Expr.Range().Ptr(),
+				})
+				return diags
+			}
+		}
+	}
+
+	// TODO krantzinator: not doing custom validations right now, unless it's easy
+	// for _, block := range content.Blocks {
+	// 	switch block.Type {
+
+	// case "validation":
+	// 	vv, moreDiags := decodeVariableValidationBlock(v.Name, block, override)
+	// 	diags = append(diags, moreDiags...)
+	// 	v.Validations = append(v.Validations, vv)
+
+	// 	default:
+	// 		// The above cases should be exhaustive for all block types
+	// 		// defined in variableBlockSchema
+	// 		panic(fmt.Sprintf("unhandled block type %q", block.Type))
+	// 	}
+	// }
 
 	return nil
 }
