@@ -186,6 +186,10 @@ service Waypoint {
   // GetStatusReport returns a StatusReport
   rpc GetStatusReport(GetStatusReportRequest) returns (StatusReport);
 
+  // GetLatestStatusReport returns the most recent successfully completed
+  // health report for an app
+  rpc GetLatestStatusReport(GetLatestStatusReportRequest) returns (StatusReport);
+
   // ListStatusReports returns the deployments.
   rpc ListStatusReports(ListStatusReportsRequest) returns (ListStatusReportsResponse);
 
