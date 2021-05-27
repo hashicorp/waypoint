@@ -187,9 +187,9 @@ func (c *DeploymentListCommand) Run(args []string) int {
 					case sdk.StatusReport_ALIVE:
 						statusReportComplete = "✔"
 					case sdk.StatusReport_DOWN:
-						statusReportComplete = "X"
-					case sdk.StatusReport_PARTIAL:
 						statusReportComplete = "✖"
+					case sdk.StatusReport_PARTIAL:
+						statusReportComplete = "●"
 					case sdk.StatusReport_UNKNOWN:
 						statusReportComplete = "?"
 					}
