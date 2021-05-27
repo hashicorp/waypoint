@@ -129,6 +129,7 @@ export default Factory.extend({
           generation: generations[0],
           build: builds[1],
           sequence: 2,
+          state: 'DESTROYED',
         }),
         server.create('deployment', 'random', 'nomad-jobspec', 'hours-old-success', {
           application,
@@ -139,25 +140,25 @@ export default Factory.extend({
         server.create('deployment', 'random', 'nomad-jobspec', 'hours-old-success', {
           application,
           generation: generations[1],
-          build: builds[2],
+          build: builds[3],
           sequence: 4,
         }),
         server.create('deployment', 'random', 'nomad-jobspec', 'minutes-old-success', {
           application,
           generation: generations[1],
-          build: builds[2],
+          build: builds[4],
           sequence: 5,
         }),
         server.create('deployment', 'random', 'nomad-jobspec', 'minutes-old-success', {
           application,
           generation: generations[1],
-          build: builds[2],
+          build: builds[5],
           sequence: 6,
         }),
         server.create('deployment', 'random', 'nomad-jobspec', 'seconds-old-success', {
           application,
           generation: generations[1],
-          build: builds[2],
+          build: builds[6],
           sequence: 7,
         }),
       ];

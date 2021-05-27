@@ -21,6 +21,16 @@ page:
     title: 'Builds'
   deployments:
     title: 'Deployments'
+    destroyed_label: 'Destroyed'
+    external_url_label: 'Visit Deployment'
+    replaced_label: 'Replaced by '
+    destroyed_and_hidden_state: 'Some deployments have been destroyed and are hidden'
+    display_destroyed: 'Display destroyed deployments'
+    status_prefix:
+      0: 'Deploying by ' # UNKNOWN
+      1: 'Deploying by ' # RUNNING
+      2: 'Deployed by ' # SUCCESS
+      3: 'Failed to deploy by ' # ERROR
   releases:
     title: 'Releases'
 
