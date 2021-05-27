@@ -3,8 +3,10 @@
 </h3>
 
 <ul data-test-deployment-list=true class="list">
-  {{#each this.deployments as |deployment|}}
-    <AppItem::Deployment @deployment={{deployment}} />
+  {{#each this.deploymentsByGeneration key="generationID" as |group|}}
+    {{#each group.deployments key="id" as |deployment|}}
+      <AppItem::Deployment @deployment={{deployment}} />
+    {{/each}}
   {{else}}
     <EmptyState>
       <p>There are no deployments to display for this app yet</p>
