@@ -7,12 +7,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
+
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 )
 
 const (
@@ -64,6 +67,11 @@ func (p *Platform) Auth() error {
 
 func (p *Platform) ValidateAuth() error {
 	return nil
+}
+
+// StatusFunc implements component.Status
+func (p *Platform) StatusFunc() interface{} {
+	return p.Status
 }
 
 // Deploy deploys an image to Nomad.
@@ -224,6 +232,68 @@ func (p *Platform) Destroy(
 	st.Update("Deleting job...")
 	_, _, err = client.Jobs().Deregister(deployment.Name, true, nil)
 	return err
+}
+
+func (p *Platform) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+	client, err := api.NewClient(api.DefaultConfig())
+	if err != nil {
+		return nil, err
+	}
+	jobclient := client.Jobs()
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Gathering health report for Nomad platform...")
+	defer s.Abort()
+
+	// Create our status report
+	var result sdk.StatusReport
+	result.External = true
+
+	log.Debug("querying nomad for job health")
+
+	job, _, err := jobclient.Info(deployment.Name, &api.QueryOptions{})
+
+	if *job.Status == "running" {
+		result.Health = sdk.StatusReport_READY
+	} else if *job.Status == "queued" || *job.Status == "started" {
+		result.Health = sdk.StatusReport_ALIVE
+	} else if *job.Status == "completed" {
+		result.Health = sdk.StatusReport_PARTIAL
+	} else if *job.Status == "failed" || *job.Status == "lost" {
+		result.Health = sdk.StatusReport_DOWN
+	} else {
+		result.Health = sdk.StatusReport_UNKNOWN
+	}
+
+	result.HealthMessage = *job.StatusDescription
+
+	result.TimeGenerated = ptypes.TimestampNow()
+
+	s.Update("Finished building report for Nomad platform")
+	s.Done()
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+
+	st.Update("Determining overall container health...")
+	if result.Health == sdk.StatusReport_READY {
+		st.Step(terminal.StatusOK, fmt.Sprintf("Job %q is reporting ready!", deployment.Name))
+	} else if result.Health == sdk.StatusReport_PARTIAL {
+		st.Step(terminal.StatusWarn, fmt.Sprintf("Job %q is reporting partially available!", deployment.Name))
+	} else {
+		st.Step(terminal.StatusError, fmt.Sprintf("Job %q is reporting not ready!", deployment.Name))
+	}
+
+	return &result, nil
 }
 
 // Config is the configuration structure for the Platform.
