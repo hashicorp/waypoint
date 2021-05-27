@@ -60,6 +60,11 @@ type Project struct {
 	// overrideLabels are the labels specified via the CLI to override
 	// all other conflicting keys.
 	overrideLabels map[string]string
+
+	// variables are set on the job directly so that the runner
+	// can access this set of values along with any server- or vcs-stored
+	// values for final evaluation
+	variables []*pb.Variable
 }
 
 // NewProject creates a new Project with the given options.
@@ -124,6 +129,8 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 
 	// Initialize all the applications and load all their components.
 	for _, name := range opts.Config.Apps() {
+		// TODO krantzinator inject variables evalctx here
+		// config.EvalContext()
 		appConfig, err := opts.Config.App(name, nil)
 		if err != nil {
 			return nil, fmt.Errorf("error loading app %q: %w", name, err)
@@ -289,6 +296,11 @@ func WithMappers(m ...*argmapper.Func) Option {
 // WithLabels sets the labels that will override any other labels set.
 func WithLabels(m map[string]string) Option {
 	return func(p *Project, opts *options) { p.overrideLabels = m }
+}
+
+// WithVariables sets the final set of variable values for the operation.
+func WithVariables(vs []*pb.Variable) Option {
+	return func(p *Project, opts *options) { p.variables = vs }
 }
 
 // WithWorkspace sets the workspace we'll be working in.

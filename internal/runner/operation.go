@@ -38,23 +38,22 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
+	// If no waypoint.hcl file is found in the downloaded data, look for
+	// a default waypoint HCL.
+	//
+	// NOTE(mitchellh): For now, we query the project directly here
+	// since we don't need it for anything else. I can see us moving this
+	// to accept() eventually though if other data is used.
+	log.Trace("waypoint.hcl not found in downloaded data, looking for default in server")
+	resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
+		Project: &pb.Ref_Project{
+			Project: job.Application.Project,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
 	if path == "" {
-		// If no waypoint.hcl file is found in the downloaded data, look for
-		// a default waypoint HCL.
-		//
-		// NOTE(mitchellh): For now, we query the project directly here
-		// since we don't need it for anything else. I can see us moving this
-		// to accept() eventually though if other data is used.
-		log.Trace("waypoint.hcl not found in downloaded data, looking for default in server")
-		resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
-			Project: &pb.Ref_Project{
-				Project: job.Application.Project,
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-
 		if v := resp.Project.WaypointHcl; len(v) > 0 {
 			log.Info("using waypoint.hcl associated with the project in the server")
 
@@ -118,6 +117,25 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
+	// Evaluate defined variables and store values
+	// TODO krantzinator - we can probably put everything under one function
+	// call in config/variables.go to keep this simpler/less exported funcs
+	var vs configpkg.Variables
+	diags := cfg.DecodeVariableBlocks(&vs)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+	
+	serverVars := resp.Project.GetVariables()
+	diags = vs.CollectInputValRemote(nil, serverVars)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
+	// TODO krantinzator implement precedence sorting
+	jv, err := vs.SortPrecedence()
+	job.Variables = jv
+
 	// Build our job info
 	jobInfo := &component.JobInfo{
 		Id:    job.Id,
@@ -134,6 +152,7 @@ func (r *Runner) executeJob(
 		core.WithConfig(cfg),
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
+		core.WithVariables(job.Variables),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
 	)
