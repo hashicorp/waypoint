@@ -62,7 +62,7 @@ func (r *Releaser) Release(
 
 	sg := ui.StepGroup()
 	step := sg.Add("Initializing Kubernetes client...")
-	defer step.Abort()
+	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
 
 	// Get our clientset
 	clientset, ns, config, err := clientset(r.config.KubeconfigPath, r.config.Context)

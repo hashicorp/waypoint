@@ -658,7 +658,7 @@ func (p *Platform) Status(
 	defer sg.Wait()
 
 	step := sg.Add("Gathering health report for Kubernetes platform...")
-	defer step.Abort()
+	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
 
 	csInfo, err := p.getClientset()
 	if err != nil {
