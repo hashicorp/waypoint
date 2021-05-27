@@ -3,6 +3,8 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"strings"
 	"time"
 
@@ -45,6 +47,11 @@ func (p *Platform) DeployFunc() interface{} {
 // DestroyFunc implements component.Destroyer
 func (p *Platform) DestroyFunc() interface{} {
 	return p.Destroy
+}
+
+// StatusFunc implements platform.Status
+func (p *Platform) StatusFunc() interface{} {
+	return p.Status
 }
 
 // ValidateAuthFunc implements component.Authenticator
@@ -375,6 +382,106 @@ func (p *Platform) Destroy(
 	return err
 }
 
+// Status returns the health status of an EC2 deployment
+func (p *Platform) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	deployment *Deployment,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: p.config.Region,
+		Logger: log,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debug(fmt.Sprintf("Dumping deployment: %#+v", deployment))
+	spew.Dump(deployment)
+
+	time.Sleep(time.Second * 30)
+
+	elbsrv := elbv2.New(sess)
+
+	tgHealthResp, err := elbsrv.DescribeTargetHealthWithContext(ctx, &elbv2.DescribeTargetHealthInput{
+		TargetGroupArn: &deployment.TargetGroupArn,
+	})
+	if err != nil {
+		ui.Output("failed to describe target group %s health: %s", deployment.TargetGroupArn, err)
+	}
+
+	if len(tgHealthResp.TargetHealthDescriptions) == 0 {
+		errMsg := fmt.Sprintf("no registered targets with health for target group %s", deployment.TargetGroupArn)
+		ui.Output(errMsg)
+
+		return nil, fmt.Errorf(errMsg)
+	}
+
+	var report sdk.StatusReport
+	report.External = true
+	var resources []*sdk.StatusReport_Resource
+
+	healthyCount := 0
+	for _, tgHealth := range tgHealthResp.TargetHealthDescriptions {
+
+		var targetId string
+		if tgHealth.Target.Id == nil {
+			errMsg := fmt.Sprintf("target group %s target has no id", deployment.TargetGroupArn)
+			ui.Output(errMsg)
+			return nil, fmt.Errorf(errMsg)
+		} else {
+			targetId = *tgHealth.Target.Id
+		}
+
+		if tgHealth.TargetHealth.State == nil {
+			errMsg := fmt.Sprintf("target group %s target %s has no health state", deployment.TargetGroupArn, targetId)
+			ui.Output(errMsg)
+			return nil, fmt.Errorf(errMsg)
+		}
+
+		var health sdk.StatusReport_Health
+
+		switch *tgHealth.TargetHealth.State {
+		case elbv2.TargetHealthStateEnumHealthy:
+			healthyCount++
+			health = sdk.StatusReport_READY
+		case elbv2.TargetHealthStateEnumUnhealthy:
+			health = sdk.StatusReport_DOWN
+		case elbv2.TargetHealthStateEnumUnavailable:
+			health = sdk.StatusReport_DOWN
+		default:
+			// There are more TargetHealthStateEnums, but they do not cleanly map to our states.
+			health = sdk.StatusReport_UNKNOWN
+		}
+
+		var healthMessage string
+		if tgHealth.TargetHealth.Description != nil {
+			healthMessage = *tgHealth.TargetHealth.Description
+		}
+
+		resources = append(resources, &sdk.StatusReport_Resource{
+			Health:        health,
+			HealthMessage: healthMessage,
+			Name:          targetId,
+		})
+	}
+
+
+	// TODO (izaak) improve health messages
+	if healthyCount == len(tgHealthResp.TargetHealthDescriptions) {
+		report.Health = sdk.StatusReport_READY
+		report.HealthMessage = "ok"
+	} else if healthyCount > 0 {
+		report.Health = sdk.StatusReport_PARTIAL
+		report.HealthMessage = "some ok"
+	} else {
+		report.Health = sdk.StatusReport_DOWN
+		report.HealthMessage = "down"
+	}
+	return &report, nil
+}
+
 type countConfig struct {
 	Desired int64 `hcl:"desired,optional"`
 	Min     int64 `hcl:"min,optional"`
@@ -477,4 +584,5 @@ var (
 	_ component.Configurable = (*Platform)(nil)
 	_ component.Destroyer    = (*Platform)(nil)
 	_ component.Documented   = (*Platform)(nil)
+	_ component.Status       = (*Platform)(nil)
 )
