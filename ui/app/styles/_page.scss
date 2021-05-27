@@ -682,6 +682,8 @@
       }
 
       .icon.brand {
+        display: flex;
+
         path {
           fill: color.$black;
           stroke: $brand-color;
