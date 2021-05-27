@@ -250,7 +250,7 @@ func (p *Platform) Status(
 	defer sg.Wait()
 
 	s := sg.Add("Gathering health report for Nomad platform...")
-	defer s.Abort()
+	defer func() { s.Abort() }()
 
 	// Create our status report
 	var result sdk.StatusReport
