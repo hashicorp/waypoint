@@ -52,6 +52,9 @@ type BuilderConfig struct {
 
 	// Controls the passing of build time variables
 	BuildArgs map[string]*string `hcl:"build_args,optional"`
+
+	// Controls the passing of build context
+	Context string `hcl:"context,optional"`
 }
 
 func (b *Builder) Documentation() (*docs.Documentation, error) {
@@ -127,6 +130,11 @@ build {
 			"or img for the build step.",
 	)
 
+	doc.SetField(
+		"context",
+		"Build context path",
+	)
+
 	return doc, nil
 }
 
@@ -189,7 +197,13 @@ func (b *Builder) Build(
 		dockerfile = newPath
 	}
 
-	contextDir, relDockerfile, err := build.GetContextFromLocalDir(src.Path, dockerfile)
+	path := src.Path
+
+	if b.config.Context != "" {
+		path = b.config.Context
+	}
+
+	contextDir, relDockerfile, err := build.GetContextFromLocalDir(path, dockerfile)
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker context: %s", err)
 	}

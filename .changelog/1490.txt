@@ -1,0 +1,3 @@
+```release-note:feature
+plugins/docker: Add support build context
+```
