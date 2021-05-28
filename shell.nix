@@ -107,6 +107,7 @@ in pkgs.mkShell rec {
     pkgs.nodejs-12_x
     pkgs.protobufPin
     pkgs.postgresql_12
+    pkgs.protoc-gen-doc
     go-protobuf
     go-protobuf-json
     go-tools

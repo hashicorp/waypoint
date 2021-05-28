@@ -120,6 +120,7 @@ static-assets:
 
 .PHONY: gen/doc
 gen/doc:
+	mkdir -p ./doc/ 
 	@rm -rf ./doc/* 2> /dev/null
 	protoc -I=. \
 		-I=./vendor/proto/api-common-protos/ \
