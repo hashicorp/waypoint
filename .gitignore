@@ -5,6 +5,7 @@ tmp/
 /waypoint
 /waypoint-entrypoint
 /pkg
+/doc
 
 # System-specific
 .DS_Store
