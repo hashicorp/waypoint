@@ -493,7 +493,7 @@ func TestService_waitOnJobStarted(t *testing.T) {
 	require.NoError(err)
 	dur := time.Since(ts)
 
-	require.InDelta(1.0, dur.Seconds(), 0.1)
+	require.InDelta(1.0, dur.Seconds(), 1.0)
 
 	require.Equal(pb.Job_ERROR, js)
 }
