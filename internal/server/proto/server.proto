@@ -2326,13 +2326,15 @@ message ListStatusReportsResponse {
 
 message GetStatusReportRequest {
   Ref.Operation ref = 1;
+
+  // TODO(briancain): Once polling is in place, provide a way to query for
+  // a report by deployment or release operation id
 }
 
 // StatusReport is the report genrated when querying the overall health of
 // a deployed or released application. This report is generated after the
-// user runs an UpOperation which calls a DeployOp or ReleaseOp. In the future
-// Waypoint will be able to generate these reports on demand in the UI, or
-// on an interval using a poller.
+// an Up Operation, DeployOp or ReleaseOp. In the future Waypoint will be able
+// to generate these reports on demand in the UI, or on an interval using a poller.
 //
 // NOTE: This is not related to Status or StatusFilter messages but a message
 // used to run the StatusReport job operation for Waypoint Server. The raw SDK

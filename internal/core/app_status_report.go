@@ -143,7 +143,6 @@ func (a *App) statusReport(
 	// Populate resource health with health in plugin compiled report
 	resourcesHealth := make([]*pb.StatusReport_Health, len(statusReport.Resources))
 	for i, r := range statusReport.Resources {
-		// NOTE(briancain): we don't set ID yet since no plugins set this value for a resource
 		resourcesHealth[i] = &pb.StatusReport_Health{
 			HealthStatus:  r.Health.String(),
 			HealthMessage: r.HealthMessage,
