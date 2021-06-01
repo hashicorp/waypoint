@@ -357,7 +357,7 @@ deploy {
         use "nomad" {
           region = "global"
           datacenter = "dc1"
-          auth = {
+          auth {
             username = "username"
             password = "password"
           }
