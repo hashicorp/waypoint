@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -334,10 +335,16 @@ func (r *Releaser) Status(
 	st.Update("Determining overall container health...")
 	if result.Health == sdk.StatusReport_READY {
 		st.Step(terminal.StatusOK, fmt.Sprintf("Release %q is reporting ready!", appName))
-	} else if result.Health == sdk.StatusReport_PARTIAL {
-		st.Step(terminal.StatusWarn, fmt.Sprintf("Release %q is reporting partially available!", appName))
 	} else {
-		st.Step(terminal.StatusError, fmt.Sprintf("Release %q is reporting not ready!", appName))
+		if result.Health == sdk.StatusReport_PARTIAL {
+			st.Step(terminal.StatusWarn, fmt.Sprintf("Release %q is reporting partially available!", appName))
+		} else {
+			st.Step(terminal.StatusError, fmt.Sprintf("Release %q is reporting not ready!", appName))
+		}
+
+		// Extra advisory wording to let user know that the deployment could be still starting up
+		// if the report was generated immediately after it was deployed or released.
+		st.Step(terminal.StatusWarn, mixedHealthReleaseWarn)
 	}
 
 	// More UI detail for non-ready resources
@@ -453,6 +460,13 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 
 	return doc, nil
 }
+
+var (
+	mixedHealthReleaseWarn = strings.TrimSpace(`
+Waypoint detected that the current release is not ready, however your application
+might be available or still starting up.
+`)
+)
 
 var (
 	_ component.ReleaseManager = (*Releaser)(nil)
