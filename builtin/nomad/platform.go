@@ -287,10 +287,17 @@ func (p *Platform) Status(
 	st.Update("Determining overall container health...")
 	if result.Health == sdk.StatusReport_READY {
 		st.Step(terminal.StatusOK, fmt.Sprintf("Job %q is reporting ready!", deployment.Name))
-	} else if result.Health == sdk.StatusReport_PARTIAL {
-		st.Step(terminal.StatusWarn, fmt.Sprintf("Job %q is reporting partially available!", deployment.Name))
 	} else {
-		st.Step(terminal.StatusError, fmt.Sprintf("Job %q is reporting not ready!", deployment.Name))
+		if result.Health == sdk.StatusReport_PARTIAL {
+			st.Step(terminal.StatusWarn, fmt.Sprintf("Job %q is reporting partially available!", deployment.Name))
+		} else {
+			st.Step(terminal.StatusError, fmt.Sprintf("Job %q is reporting not ready!", deployment.Name))
+		}
+
+		// Extra advisory wording to let user know that the deployment could be still starting up
+		// if the report was generated immediately after it was deployed or released.
+		st.Step(terminal.StatusWarn, "Waypoint detected that the current deployment "+
+			"is not ready, however your\napplication might be available or still starting up.")
 	}
 
 	return &result, nil
