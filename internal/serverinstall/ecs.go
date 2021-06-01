@@ -37,6 +37,7 @@ const (
 	defaultTaskRuntime = "FARGATE"
 
 	defaultSecurityGroupName = "waypoint-server-security-group"
+	defaultNLBName           = "waypoint-server-nlb"
 )
 
 var ulid string
@@ -52,17 +53,22 @@ type ECSInstaller struct {
 }
 
 type ecsConfig struct {
+	// serverImage is the image/tag of the Waypoint server to use. Default is
+	// hashicorp/waypoint:latest
 	serverImage string `hcl:"server_image,optional"`
 
+	// region defines which AWS region to use.
 	region string `hcl:"region,optional"`
 
-	// Name of the ECS cluster to install the service into
+	// Name of the ECS cluster to install the service into. Defaults to
+	// waypoint-server
 	cluster string `hcl:"cluster,optional"`
 
 	// Name of the execution task IAM Role to associate with the ECS Service
 	executionRoleName string `hcl:"execution_role_name,optional"`
 
-	// Subnets to place the service into. Defaults to the subnets in the default VPC.
+	// Subnets to place the service into. Defaults to the public subnets in the
+	// default VPC.
 	subnets []string `hcl:"subnets,optional"`
 }
 
@@ -176,7 +182,21 @@ func (i *ECSInstaller) Launch(
 ) (*ecsServer, error) {
 	s.Status("Installing Waypoint server into ECS...")
 
-	ecsSvc := ecs.New(sess)
+	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
+	httpPort, _ := strconv.Atoi(defaultHttpPort)
+	s.Status("Creating Network resources...")
+	nlb, err := createNLB(
+		ctx, s, log, sess,
+		netInfo.vpcID,
+		aws.Int64(int64(grpcPort)),
+		aws.Int64(int64(httpPort)),
+		netInfo.subnets,
+		ulid,
+	)
+	if err != nil {
+		return nil, err
+	}
+	s.Update("Created Network resources")
 
 	defaultStreamPrefix := fmt.Sprintf("waypoint-server-%d", time.Now().Nanosecond())
 	logOptions := buildLoggingOptions(
@@ -185,9 +205,6 @@ func (i *ECSInstaller) Launch(
 		logGroup,
 		defaultStreamPrefix,
 	)
-
-	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
-	httpPort, _ := strconv.Atoi(defaultHttpPort)
 
 	cmd := []*string{
 		aws.String("server"),
@@ -223,19 +240,6 @@ func (i *ECSInstaller) Launch(
 			},
 		},
 	}
-
-	s.Status("Creating Network resources...")
-	nlb, err := createNLB(
-		ctx, s, log, sess,
-		netInfo.vpcID,
-		aws.Int64(int64(grpcPort)),
-		netInfo.subnets,
-		ulid,
-	)
-	if err != nil {
-		return nil, err
-	}
-	s.Update("Created Network resources")
 
 	// Create mount points for the EFS file system. The EFS mount targets need to
 	// existin in a 1:1 pair with the subnets in use.
@@ -275,6 +279,7 @@ func (i *ECSInstaller) Launch(
 		},
 	}
 
+	ecsSvc := ecs.New(sess)
 	taskDef, err := registerTaskDefinition(&registerTaskDefinitionInput, ecsSvc)
 	if err != nil {
 		return nil, err
@@ -331,7 +336,8 @@ func (i *ECSInstaller) Launch(
 	log.Debug("service started", "arn", service.ServiceArn)
 
 	// after the service is created with the specified target groups, the load
-	// balancer will start making health checks.
+	// balancer will start making health checks. Initial registration and health
+	// checks can regularly take upwards of 5 minutes.
 	s.Update("Waiting for target group to be healthy...")
 	elbsrv := elbv2.New(sess)
 	var healthy bool
@@ -356,7 +362,7 @@ func (i *ECSInstaller) Launch(
 	}
 
 	if !healthy {
-		return nil, fmt.Errorf("no healthy target group")
+		return nil, fmt.Errorf("no healthy target group found")
 	}
 	s.Status("Service launched!")
 
@@ -1701,6 +1707,7 @@ func createNLB(
 	sess *session.Session,
 	vpcId *string,
 	grpcPort *int64,
+	httpPort *int64,
 	subnets []*string,
 	ulid string,
 ) (serverNLB *nlb, err error) {
@@ -1729,14 +1736,14 @@ func createNLB(
 
 	htgGPRC, err := elbsrv.CreateTargetGroup(&elbv2.CreateTargetGroupInput{
 		Name:                    aws.String("waypoint-server-http"),
+		Port:                    httpPort,
+		Protocol:                aws.String("TCP"),
+		TargetType:              aws.String("ip"),
+		VpcId:                   vpcId,
 		HealthCheckProtocol:     aws.String(elbv2.ProtocolEnumHttps),
 		HealthCheckPath:         aws.String("/auth"),
 		HealthyThresholdCount:   aws.Int64(int64(2)),
 		UnhealthyThresholdCount: aws.Int64(int64(2)),
-		Port:                    aws.Int64(int64(9702)),
-		Protocol:                aws.String("TCP"),
-		TargetType:              aws.String("ip"),
-		VpcId:                   vpcId,
 		Tags: []*elbv2.Tag{
 			{
 				Key:   aws.String(serverName),
@@ -1769,9 +1776,8 @@ func createNLB(
 
 	var lb *elbv2.LoadBalancer
 
-	lbName := "waypoint-server-nlb"
 	dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-		Names: []*string{&lbName},
+		Names: []*string{aws.String(defaultNLBName)},
 	})
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -1789,14 +1795,14 @@ func createNLB(
 	if dlb != nil && len(dlb.LoadBalancers) > 0 {
 		lb = dlb.LoadBalancers[0]
 		s.Update("Using existing NLB %s (%s, dns-name: %s)",
-			lbName, *lb.LoadBalancerArn, *lb.DNSName)
+			defaultNLBName, *lb.LoadBalancerArn, *lb.DNSName)
 	} else {
-		s.Update("Creating new NLB: %s", lbName)
+		s.Update("Creating new NLB: %s", defaultNLBName)
 
 		scheme := elbv2.LoadBalancerSchemeEnumInternetFacing
 
 		clb, err := elbsrv.CreateLoadBalancer(&elbv2.CreateLoadBalancerInput{
-			Name:    aws.String(lbName),
+			Name:    aws.String(defaultNLBName),
 			Subnets: subnets,
 			// SecurityGroups: []*string{sgWebId},
 			Scheme: &scheme,
@@ -1836,7 +1842,7 @@ func createNLB(
 			return nil, fmt.Errorf("failed to create NLB in time, last state: (%s)", *lb.State.Code)
 		}
 
-		s.Update("Created new NLB: %s (dns-name: %s)", lbName, *lb.DNSName)
+		s.Update("Created new NLB: %s (dns-name: %s)", defaultNLBName, *lb.DNSName)
 	}
 
 	s.Update("Creating new NLB Listener")
