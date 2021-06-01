@@ -195,14 +195,19 @@ func (p *Platform) Status(
 
 	if ready == len(result.Resources) {
 		result.Health = sdk.StatusReport_READY
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting ready!", containerInfo.Name)
 	} else if down == len(result.Resources) {
 		result.Health = sdk.StatusReport_DOWN
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting down!", containerInfo.Name)
 	} else if unknown == len(result.Resources) {
 		result.Health = sdk.StatusReport_UNKNOWN
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting unknown!", containerInfo.Name)
 	} else if alive == len(result.Resources) {
 		result.Health = sdk.StatusReport_ALIVE
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting alive!", containerInfo.Name)
 	} else {
 		result.Health = sdk.StatusReport_PARTIAL
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting partially available!", containerInfo.Name)
 	}
 
 	result.TimeGenerated = ptypes.TimestampNow()
@@ -219,12 +224,12 @@ func (p *Platform) Status(
 
 	st.Update("Determining overall container health...")
 	if result.Health == sdk.StatusReport_READY {
-		st.Step(terminal.StatusOK, fmt.Sprintf("Container %q is reporting ready!", containerInfo.Name))
+		st.Step(terminal.StatusOK, result.HealthMessage)
 	} else {
 		if result.Health == sdk.StatusReport_PARTIAL {
-			st.Step(terminal.StatusWarn, fmt.Sprintf("Container %q is reporting partially available!", containerInfo.Name))
+			st.Step(terminal.StatusWarn, result.HealthMessage)
 		} else {
-			st.Step(terminal.StatusError, fmt.Sprintf("Container %q is reporting not ready!", containerInfo.Name))
+			st.Step(terminal.StatusError, result.HealthMessage)
 		}
 
 		// Extra advisory wording to let user know that the deployment could be still starting up
