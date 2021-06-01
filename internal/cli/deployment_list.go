@@ -13,7 +13,10 @@ import (
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -108,15 +111,34 @@ func (c *DeploymentListCommand) Run(args []string) int {
 		}
 		sort.Sort(serversort.DeploymentCompleteDesc(resp.Deployments))
 
+		// get status reports
+		statusReportResp, err := client.GetLatestStatusReport(ctx, &pb.GetLatestStatusReportRequest{
+			Application: app.Ref(),
+			Workspace:   wsRef,
+		})
+		if status.Code(err) == codes.NotFound {
+			err = nil
+			statusReportResp = nil
+		}
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
+		}
+
+		statusReport := &sdk.StatusReport{}
+		if statusReportResp != nil {
+			anypb.UnmarshalTo(statusReportResp.StatusReport, statusReport, proto.UnmarshalOptions{})
+		}
+
 		if c.flagJson {
 			return c.displayJson(resp.Deployments)
 		}
 
-		tbl := terminal.NewTable("", "ID", "Platform", "Details", "Started", "Completed")
+		tbl := terminal.NewTable("", "ID", "Platform", "Details", "Started", "Completed", "Health")
 
 		const bullet = "●"
 
-		for _, b := range resp.Deployments {
+		for i, b := range resp.Deployments {
 			// Determine our bullet
 			status := ""
 			statusColor := ""
@@ -153,6 +175,30 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			}
 			if t, err := ptypes.Timestamp(b.Status.CompleteTime); err == nil {
 				completeTime = humanize.Time(t)
+			}
+
+			// Only display "Latest" report on Last deployment
+			var statusReportComplete string
+			if statusReportResp != nil {
+				if i == 0 { // Latest deployment
+					switch statusReport.Health {
+					case sdk.StatusReport_READY:
+						statusReportComplete = "✔"
+					case sdk.StatusReport_ALIVE:
+						statusReportComplete = "✔"
+					case sdk.StatusReport_DOWN:
+						statusReportComplete = "✖"
+					case sdk.StatusReport_PARTIAL:
+						statusReportComplete = "●"
+					case sdk.StatusReport_UNKNOWN:
+						statusReportComplete = "?"
+					}
+					if t, err := ptypes.Timestamp(statusReport.TimeGenerated); err == nil {
+						statusReportComplete = fmt.Sprintf("%s - %s", statusReportComplete, humanize.Time(t))
+					}
+				}
+			} else {
+				statusReportComplete = "Unknown status"
 			}
 
 			var (
@@ -235,6 +281,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 					details[0],
 					startTime,
 					completeTime,
+					statusReportComplete,
 				},
 				[]string{
 					statusColor,
