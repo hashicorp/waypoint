@@ -690,13 +690,13 @@ func deleteNLBResources(
 					return err
 				}
 			}
-			// s.Update("Deleting Network Load Balancer ", *r.ResourceArn)
-			// _, err := elbSvc.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
-			// 	LoadBalancerArn: r.ResourceArn,
-			// })
-			// if err != nil {
-			// 	return err
-			// }
+			s.Update("Deleting Network Load Balancer ", *r.ResourceArn)
+			_, err = elbSvc.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
+				LoadBalancerArn: r.ResourceArn,
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 	s.Update("Deleting Target Groups...")
