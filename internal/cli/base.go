@@ -17,6 +17,7 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
@@ -256,7 +257,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// if diags.HasErrors() != nil {
 	// 	return diags
 	// }
-	vars, diags := config.CollectInputVars(c.flagVars, nil)
+	vars, diags := variables.CollectInputVars(c.flagVars, nil)
 	if diags.HasErrors() {
 		return diags
 	}

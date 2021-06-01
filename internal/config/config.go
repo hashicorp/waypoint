@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/pkg/defaults"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
@@ -21,14 +22,14 @@ type Config struct {
 }
 
 type hclConfig struct {
-	Project   string            `hcl:"project,optional"`
-	Runner    *Runner           `hcl:"runner,block" default:"{}"`
-	Labels    map[string]string `hcl:"labels,optional"`
-	Variables []*hclVariable    `hcl:"variable,block"`
-	Plugin    []*Plugin         `hcl:"plugin,block"`
-	Config    *genericConfig    `hcl:"config,block"`
-	Apps      []*hclApp         `hcl:"app,block"`
-	Body      hcl.Body          `hcl:",body"`
+	Project   string                   `hcl:"project,optional"`
+	Runner    *Runner                  `hcl:"runner,block" default:"{}"`
+	Labels    map[string]string        `hcl:"labels,optional"`
+	Variables []*variables.HclVariable `hcl:"variable,block"`
+	Plugin    []*Plugin                `hcl:"plugin,block"`
+	Config    *genericConfig           `hcl:"config,block"`
+	Apps      []*hclApp                `hcl:"app,block"`
+	Body      hcl.Body                 `hcl:",body"`
 }
 
 // Runner is the configuration for supporting runners in this project.

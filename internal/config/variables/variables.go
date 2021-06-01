@@ -1,4 +1,4 @@
-package config
+package variables
 
 import (
 	"fmt"
@@ -53,7 +53,13 @@ type Variable struct {
 	Range hcl.Range
 }
 
-type hclVariable struct {
+type HclBase struct {
+	Variables []*HclVariable `hcl:"variable,block"`
+	Body      hcl.Body       `hcl:",body"`
+	Remain    hcl.Body       `hcl:",remain"`
+}
+
+type HclVariable struct {
 	Name        string         `hcl:",label"`
 	Default     cty.Value      `hcl:"default,optional"`
 	Type        hcl.Expression `hcl:"type,optional"`
@@ -80,9 +86,9 @@ var variableBlockSchema = &hcl.BodySchema{
 	},
 }
 
-func (c *Config) DecodeVariableBlocks(variables *Variables) hcl.Diagnostics {
-	schema, _ := gohcl.ImpliedBodySchema(&validateStruct{})
-	content, diag := c.hclConfig.Body.Content(schema)
+func (variables *Variables) DecodeVariableBlocks(body hcl.Body) hcl.Diagnostics {
+	schema, _ := gohcl.ImpliedBodySchema(&HclBase{})
+	content, diag := body.Content(schema)
 	if diag.HasErrors() {
 		return diag
 	}
@@ -98,31 +104,46 @@ func (c *Config) DecodeVariableBlocks(variables *Variables) hcl.Diagnostics {
 	return diags
 }
 
-// decodeVariableBlock decodes a "variable" block
-// ectx is passed only in the evaluation of the default value.
+// decodeVariableBlock first validates the variable block, and then sets
+// the decoded variables with their default value on *Variables
 func (variables *Variables) decodeVariableBlock(block *hcl.Block) hcl.Diagnostics {
 	if (*variables) == nil {
 		(*variables) = Variables{}
 	}
+	name := block.Labels[0]
 
-	// TODO krantzinator: A lot of these validations happen twice before now --
-	// when we validate the config on init and on the runner; we probably
-	// don't need it here, too
-	if _, found := (*variables)[block.Labels[0]]; found {
+	// Checking for duplicates happens here, rather than during the config.Validate
+	// step, because config.Validate doesn't store any decoded blocks.
+	if _, found := (*variables)[name]; found {
 		return []*hcl.Diagnostic{{
 			Severity: hcl.DiagError,
 			Summary:  "Duplicate variable",
-			Detail:   "Duplicate " + block.Labels[0] + " variable definition found.",
+			Detail:   "Duplicate " + name + " variable definition found.",
 			Context:  block.DefRange.Ptr(),
 		}}
 	}
 
-	name := block.Labels[0]
+	v, diags := ValidateVarBlock(block)
+	if diags.HasErrors() {
+		return diags
+	}
 
-	// TODO krantzinator this should happen earlier than the runner
-	// Could be done before any ops are run and fail immediately
+	(*variables)[name] = v
+
+	return diags
+}
+
+// ValidateVarBlock validates each part of the variable block, building out
+// the final *Variable along the way
+func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
+	v := Variable{
+		Name:  block.Labels[0],
+		Range: block.DefRange,
+	}
+
 	content, diags := block.Body.Content(variableBlockSchema)
-	if !hclsyntax.ValidIdentifier(name) {
+
+	if !hclsyntax.ValidIdentifier(v.Name) {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid variable name",
@@ -131,62 +152,78 @@ func (variables *Variables) decodeVariableBlock(block *hcl.Block) hcl.Diagnostic
 		})
 	}
 
-	v := &Variable{
-		Name:  name,
-		Range: block.DefRange,
-	}
-
 	if attr, exists := content.Attributes["description"]; exists {
 		valDiags := gohcl.DecodeExpression(attr.Expr, nil, &v.Description)
 		diags = append(diags, valDiags...)
+		if diags.HasErrors() {
+			return nil, diags
+		}
 	}
 
 	if t, ok := content.Attributes["type"]; ok {
-		tp, moreDiags := typeexpr.Type(t.Expr)
+		tt, moreDiags := typeexpr.Type(t.Expr)
 		diags = append(diags, moreDiags...)
 		if moreDiags.HasErrors() {
-			return diags
+			return nil, diags
 		}
-
-		v.Type = tp
+		v.Type = tt
 	}
 
-	if def, ok := content.Attributes["default"]; ok {
-		defaultValue, moreDiags := def.Expr.Value(nil)
-		diags = append(diags, moreDiags...)
-		if moreDiags.HasErrors() {
-			return diags
+	if attr, exists := content.Attributes["default"]; exists {
+		val, valDiags := attr.Expr.Value(nil)
+		diags = append(diags, valDiags...)
+		if diags.HasErrors() {
+			return nil, diags
 		}
-
+		// Convert the default to the expected type so we can catch invalid
+		// defaults early and allow later code to assume validity.
+		// Note that this depends on us having already processed any "type"
+		// attribute above.
 		if v.Type != cty.NilType {
 			var err error
-			defaultValue, err = convert.Convert(defaultValue, v.Type)
+			val, err = convert.Convert(val, v.Type)
 			if err != nil {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid default value for variable",
 					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
-					Subject:  def.Expr.Range().Ptr(),
+					Subject:  attr.Expr.Range().Ptr(),
 				})
-				defaultValue = cty.DynamicVal
+				return nil, diags
 			}
+			val = cty.DynamicVal
 		}
 
+		// TODO krantzinator; may not do this slice of var assignments
 		v.Values = append(v.Values, VariableAssignment{
 			Source: "default",
-			Value:  defaultValue,
+			Value:  val,
 		})
 
 		// It's possible no type attribute was assigned so lets make sure we
 		// have a valid type otherwise there could be issues parsing the value.
 		if v.Type == cty.NilType {
-			v.Type = defaultValue.Type()
+			v.Type = val.Type()
 		}
 	}
 
-	(*variables)[name] = v
+	// TODO krantzinator: not doing custom validations right now, unless it's easy
+	// for _, block := range content.Blocks {
+	// 	switch block.Type {
 
-	return diags
+	// case "validation":
+	// 	vv, moreDiags := decodeVariableValidationBlock(v.Name, block, override)
+	// 	diags = append(diags, moreDiags...)
+	// 	v.Validations = append(v.Validations, vv)
+
+	// 	default:
+	// 		// The above cases should be exhaustive for all block types
+	// 		// defined in variableBlockSchema
+	// 		panic(fmt.Sprintf("unhandled block type %q", block.Type))
+	// 	}
+	// }
+
+	return &v, diags
 }
 
 // Prefix your environment variables with VarEnvPrefix so that Waypoint can see

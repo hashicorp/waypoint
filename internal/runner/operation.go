@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
@@ -120,8 +121,8 @@ func (r *Runner) executeJob(
 	// Evaluate defined variables and store values
 	// TODO krantzinator - we can probably put everything under one function
 	// call in config/variables.go to keep this simpler/less exported funcs
-	var vs configpkg.Variables
-	diags := cfg.DecodeVariableBlocks(&vs)
+	var vs variables.Variables
+	diags := vs.DecodeVariableBlocks(cfg.Body)
 	if diags.HasErrors() {
 		return nil, diags
 	}

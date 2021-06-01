@@ -1,49 +1,14 @@
-package config
+package variables
 
 import (
 	"path/filepath"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclsimple"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/stretchr/testify/require"
 )
-
-func TestVariables_validateHcl(t *testing.T) {
-	cases := []struct {
-		File string
-		Err  string
-	}{
-		{
-			"valid.hcl",
-			"",
-		},
-		{
-			"invalid_type.hcl",
-			"Invalid type specification",
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.File, func(t *testing.T) {
-			require := require.New(t)
-
-			cfg, err := Load(filepath.Join("testdata", "variables", tt.File), &LoadOptions{
-				Workspace: "default",
-			})
-			require.NoError(err)
-
-			err = cfg.Validate()
-			if tt.Err == "" {
-				require.NoError(err)
-				return
-			}
-
-			require.Error(err)
-			require.Contains(err.Error(), tt.Err)
-		})
-	}
-}
 
 func TestVariables_decode(t *testing.T) {
 	// TODO krantzinator: this can probably move under just validate, and
@@ -54,7 +19,7 @@ func TestVariables_decode(t *testing.T) {
 		Err  string
 	}{
 		{
-			"valid_blocks.hcl",
+			"valid.hcl",
 			"",
 		},
 		{
@@ -75,13 +40,14 @@ func TestVariables_decode(t *testing.T) {
 		t.Run(tt.File, func(t *testing.T) {
 			require := require.New(t)
 
-			cfg, err := Load(filepath.Join("testdata", "variables", tt.File), &LoadOptions{
-				Workspace: "default",
-			})
+			file := filepath.Join("testdata", tt.File)
+			basecfg := HclBase{}
+
+			err := hclsimple.DecodeFile(file, nil, &basecfg)
 			require.NoError(err)
 
-			schema, _ := gohcl.ImpliedBodySchema(&hclConfig{})
-			content, diag := cfg.Body.Content(schema)
+			schema, _ := gohcl.ImpliedBodySchema(&HclBase{})
+			content, diag := basecfg.Body.Content(schema)
 			require.False(diag.HasErrors())
 
 			vars := &Variables{}
@@ -126,13 +92,14 @@ func TestVariables_collectValues(t *testing.T) {
 		t.Run(tt.File, func(t *testing.T) {
 			require := require.New(t)
 
-			cfg, err := Load(filepath.Join("testdata", "variables", tt.File), &LoadOptions{
-				Workspace: "default",
-			})
+			file := filepath.Join("testdata", tt.File)
+			basecfg := HclBase{}
+
+			err := hclsimple.DecodeFile(file, nil, &basecfg)
 			require.NoError(err)
 
 			var vs Variables
-			diags := cfg.DecodeVariableBlocks(&vs)
+			diags := vs.DecodeVariableBlocks(basecfg.Body)
 			require.False(diags.HasErrors())
 
 			// collect values
