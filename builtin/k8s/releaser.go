@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -343,8 +344,7 @@ func (r *Releaser) Status(
 
 		// Extra advisory wording to let user know that the deployment could be still starting up
 		// if the report was generated immediately after it was deployed or released.
-		st.Step(terminal.StatusWarn, "Waypoint detected that the current release "+
-			"is not ready, however your\napplication might be available or still starting up.")
+		st.Step(terminal.StatusWarn, mixedHealthReleaseWarn)
 	}
 
 	// More UI detail for non-ready resources
@@ -460,6 +460,13 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 
 	return doc, nil
 }
+
+var (
+	mixedHealthReleaseWarn = strings.TrimSpace(`
+Waypoint detected that the current release is not ready, however your application
+might be available or still starting up.
+`)
+)
 
 var (
 	_ component.ReleaseManager = (*Releaser)(nil)

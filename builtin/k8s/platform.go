@@ -709,8 +709,7 @@ func (p *Platform) Status(
 
 		// Extra advisory wording to let user know that the deployment could be still starting up
 		// if the report was generated immediately after it was deployed or released.
-		st.Step(terminal.StatusWarn, "Waypoint detected that the current deployment "+
-			"is not ready, however your\napplication might be available or still starting up.")
+		st.Step(terminal.StatusWarn, mixedHealthWarn)
 	}
 
 	// More UI detail for non-ready resources
@@ -1036,6 +1035,13 @@ deploy "kubernetes" {
 
 	return doc, nil
 }
+
+var (
+	mixedHealthWarn = strings.TrimSpace(`
+Waypoint detected that the current deployment is not ready, however your application
+might be available or still starting up.
+`)
+)
 
 var (
 	_ component.Platform         = (*Platform)(nil)
