@@ -105,7 +105,7 @@ li.app-card-item {
 
   .button {
     flex-grow: 0;
-    margin-left: scale.$sm-2;
+    margin-left: scale.$sm--1;
   }
 }
 
@@ -124,9 +124,14 @@ div.app-card-item {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    flex-grow: 1;
   }
 
   .button {
+    margin-left: scale.$sm--1;
+  }
+
+  .badge-status {
     margin-left: auto;
   }
 }

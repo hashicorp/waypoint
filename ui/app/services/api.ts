@@ -15,6 +15,10 @@ import {
   Release,
   ListReleasesRequest,
   ListReleasesResponse,
+  StatusReport,
+  ListStatusReportsRequest,
+  ListStatusReportsResponse,
+  GetLatestStatusReportRequest,
 } from 'waypoint-pb';
 import config from 'waypoint/config/environment';
 
@@ -93,6 +97,32 @@ export default class ApiService extends Service {
     let resp: ListReleasesResponse = await this.client.listReleases(req, this.WithMeta());
 
     return resp.getReleasesList().map((d) => d.toObject());
+  }
+
+  async listStatusReports(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<StatusReport.AsObject[]> {
+    let req = new ListStatusReportsRequest();
+    req.setWorkspace(wsRef);
+    req.setApplication(appRef);
+
+    let order = new OperationOrder();
+    order.setDesc(true);
+    req.setOrder(order);
+
+    let resp: ListStatusReportsResponse = await this.client.listStatusReports(req, this.WithMeta());
+
+    return resp.getStatusReportsList().map((d) => d.toObject());
+  }
+
+  async getLatestStatusReport(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<StatusReport|undefined>{
+    let req = new GetLatestStatusReportRequest();
+    req.setApplication(appRef);
+    // We have to try/catch to avoid failing the hash request because the api errors if no statusReport is available
+    try {
+      let resp: StatusReport = await this.client.getLatestStatusReport(req, this.WithMeta());
+      return resp.toObject();
+    } catch {
+      return;
+    }
   }
 }
 

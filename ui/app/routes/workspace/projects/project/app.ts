@@ -1,7 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, Deployment, Build, Release, Project } from 'waypoint-pb';
+import { Ref, Deployment, Build, Release, Project, StatusReport } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import ObjectProxy from '@ember/object/proxy';
 import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
@@ -16,6 +16,19 @@ export interface AppRouteModel {
   deployments: Promise<Deployment.AsObject[]>;
   releases: Promise<Release.AsObject[]>;
   builds: Promise<Build.AsObject[]>;
+  statusReports: Promise<StatusReport.AsObject[]>;
+}
+
+interface WithStatusReport {
+  statusReport: StatusReport.AsObject;
+}
+
+interface ResolvedModel {
+  application: Ref.Application.AsObject;
+  deployments: (Deployment.AsObject & WithStatusReport)[];
+  releases: (Release.AsObject & WithStatusReport)[];
+  builds: (Build.AsObject & WithStatusReport)[];
+  statusReports: StatusReport.AsObject[];
 }
 
 export default class App extends Route {
@@ -58,10 +71,35 @@ export default class App extends Route {
       builds: ObjectPromiseProxy.create({
         promise: resolve(this.api.listBuilds(wsRef, appRef)),
       }),
+      statusReports: ObjectPromiseProxy.create({
+        promise: resolve(this.api.listStatusReports(wsRef, appRef)),
+      }),
+      latestStatusReport: ObjectPromiseProxy.create({
+        promise: resolve(this.api.getLatestStatusReport(wsRef, appRef)),
+      }),
     });
   }
 
-  afterModel() {
+  afterModel(model: ResolvedModel): void {
+    injectStatusReports(model);
     this.pollModel.setup(this);
+  }
+}
+
+function injectStatusReports(model: ResolvedModel): void {
+  let { deployments, releases, statusReports } = model;
+
+  for (let statusReport of statusReports) {
+    if (statusReport.deploymentId) {
+      let deployment = deployments.find((d) => d.id === statusReport.deploymentId);
+      if (deployment) {
+        deployment.statusReport = statusReport;
+      }
+    } else if (statusReport.releaseId) {
+      let release = releases.find((d) => d.id === statusReport.releaseId);
+      if (release) {
+        release.statusReport = statusReport;
+      }
+    }
   }
 }

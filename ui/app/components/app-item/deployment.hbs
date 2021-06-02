@@ -25,6 +25,14 @@
       </span>
     </small>
   </LinkTo>
+  {{#if @deployment.statusReport}}
+    {{#let @deployment.statusReport.health as |health|}}
+      <StatusBadge
+        @state={{health.healthStatus}}
+        @message={{health.healthMessage}}
+      />
+    {{/let}}
+  {{/if}}
   {{#if (not-eq @latest.id @deployment.id)}}
   <small class="replacement-info">
     {{t "page.deployments.replaced_label"}}<b class="badge badge--version">v{{@latest.sequence}}</b>

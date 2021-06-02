@@ -4,19 +4,6 @@
     <p>
       <b class="badge badge--version">v{{@model.sequence}}</b>
       <code>{{truncate @model.id 8 false}}</code>
-      {{#if (eq @model.status.state 1)}}
-        <b class="badge">
-          <Pds::Icon @type="clock-outline" class="icon" />
-        </b>
-        {{else if (eq @model.status.state 2)}}
-        <b class="badge badge--success">
-          <Pds::Icon @type="check-plain" class="icon" />
-        </b>
-        {{else if (eq @model.status.state 3)}}
-        <b class="badge badge--error">
-          <Pds::Icon @type="alert-triangle" class="icon" />
-        </b>
-      {{/if}}
     </p>
     <small>
       <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
@@ -30,6 +17,15 @@
       </span>
     </small>
   </LinkTo>
+  {{#if @model.statusReport}}
+    {{#let @model.statusReport.health as |health|}}
+      <StatusBadge
+        @state={{health.healthStatus}}
+        @message={{health.healthMessage}}
+        @iconOnly={{true}}
+      />
+    {{/let}}
+  {{/if}}
   {{#if @model.preload.deployUrl}}
   <ExternalLink
     href="https://{{@model.preload.deployUrl}}"
@@ -51,21 +47,30 @@
       <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
       <span>
         {{#if (eq @model.status.state 1)}}
-        Started {{date-format-distance-to-now @model.status.startTime.seconds }}
+          Started {{date-format-distance-to-now @model.status.startTime.seconds }}
         {{else}}
-        {{date-format-distance-to-now @model.status.completeTime.seconds }}
+          {{date-format-distance-to-now @model.status.completeTime.seconds }}
         {{/if}}
       </span>
     </small>
+    {{#if @model.statusReport}}
+      {{#let @model.statusReport.health as |health|}}
+        <StatusBadge
+          @state={{health.healthStatus}}
+          @message={{health.healthMessage}}
+          @iconOnly={{true}}
+        />
+      {{/let}}
+    {{/if}}
   </LinkTo>
   {{#if @model.preload.deployUrl}}
-  <ExternalLink
-    href="https://{{@model.preload.deployUrl}}"
-    title="https://{{@model.preload.deployUrl}}"
-    class="button button--secondary button--compact"
-  >
-    <Pds::Icon @type="exit" class="icon" />
-  </ExternalLink>
+    <ExternalLink
+      href="https://{{@model.preload.deployUrl}}"
+      title="https://{{@model.preload.deployUrl}}"
+      class="button button--secondary button--compact"
+    >
+      <Pds::Icon @type="exit" class="icon" />
+    </ExternalLink>
   {{/if}}
 </li>
 {{/if}}
