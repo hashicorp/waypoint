@@ -51,11 +51,11 @@ export default class ApiService extends Service {
   }
 
   async listDeployments(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Deployment.AsObject[]> {
-    var req = new ListDeploymentsRequest();
+    let req = new ListDeploymentsRequest();
     req.setWorkspace(wsRef);
     req.setApplication(appRef);
 
-    var order = new OperationOrder();
+    let order = new OperationOrder();
     order.setDesc(true);
     req.setOrder(order);
 
@@ -65,11 +65,11 @@ export default class ApiService extends Service {
   }
 
   async listBuilds(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Build.AsObject[]> {
-    var req = new ListBuildsRequest();
+    let req = new ListBuildsRequest();
     req.setWorkspace(wsRef);
     req.setApplication(appRef);
 
-    var order = new OperationOrder();
+    let order = new OperationOrder();
     order.setLimit(3);
     order.setDesc(true);
     // todo(pearkes): set order
@@ -81,11 +81,11 @@ export default class ApiService extends Service {
   }
 
   async listReleases(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Release.AsObject[]> {
-    var req = new ListReleasesRequest();
+    let req = new ListReleasesRequest();
     req.setWorkspace(wsRef);
     req.setApplication(appRef);
 
-    var order = new OperationOrder();
+    let order = new OperationOrder();
     order.setLimit(3);
     order.setDesc(true);
     req.setOrder(order);
