@@ -103,7 +103,7 @@ func TestVariables_collectValues(t *testing.T) {
 			require.False(diags.HasErrors())
 
 			// collect values
-			diags = vs.CollectInputValRemote(nil, tt.Values)
+			diags = vs.CollectInputValues(nil, tt.Values)
 			require.False(diags.HasErrors())
 
 			// check that default and set values are all in the

@@ -15,12 +15,21 @@ import (
 )
 
 // A consistent detail message for all "not a valid identifier" diagnostics.
-const badIdentifierDetail = "A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."
+const (
+	badIdentifierDetail = "A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."
 
-// VariableAssignments contain the values from the job, from the server/VCS
-// repo, and default values from the waypoint.hcl. These are to
-// sort precedence and add the final variable values to the EvalContext
-type VariableAssignment struct {
+	// Variable value sources
+	sourceDefault = "default"
+	sourceCLI     = "cli"
+	sourceFile    = "file"
+	sourceEnv     = "env"
+	sourceVCS     = "vcs"
+	sourceServer  = "server"
+)
+
+// Value contain the value of the variable along with associated metada,
+// including the source it was set from: cli, file, env, vcs, server/ui
+type Value struct {
 	Value  cty.Value
 	Source string
 	Expr   hcl.Expression
@@ -29,14 +38,13 @@ type VariableAssignment struct {
 	Range hcl.Range
 }
 
-// TODO krantzinator: this goes somewhere else
 type Variable struct {
 	Name string
 
-	// Values contains possible values for the variable; The last value set
-	// from these will be the one used. If none is set; an error will be
-	// returned by Value().
-	Values []VariableAssignment
+	// Value contain the values from the job, from the server/VCS
+	// repo, and default values from the waypoint.hcl. These are to
+	// sort precedence and add the final variable values to the EvalContext
+	Values []Value
 
 	// Cty Type of the variable. If the default value or a collected value is
 	// not of this type nor can be converted to this type an error diagnostic
@@ -69,6 +77,7 @@ type HclVariable struct {
 // Variables are used when parsing the Config, to set default values from
 // the waypoint.hcl and bring in the values from the job and the server/VCS
 // for eventual precedence sorting and setting on the EvalContext
+// TODO krantzinator: make these InputVars
 type Variables map[string]*Variable
 
 // TODO krantzinator - use implied body scheme instead?
@@ -195,8 +204,8 @@ func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 		}
 
 		// TODO krantzinator; may not do this slice of var assignments
-		v.Values = append(v.Values, VariableAssignment{
-			Source: "default",
+		v.Values = append(v.Values, Value{
+			Source: sourceDefault,
 			Value:  val,
 		})
 
@@ -235,8 +244,6 @@ func CollectInputVars(vars map[string]string, files []string) ([]*pb.Variable, h
 	var diags hcl.Diagnostics
 	ret := []*pb.Variable{}
 
-	// First we'll deal with environment variables, since they have the lowest
-	// precedence.
 	{
 		env := os.Environ()
 		for _, raw := range env {
@@ -266,8 +273,6 @@ func CollectInputVars(vars map[string]string, files []string) ([]*pb.Variable, h
 
 	// Then we process values given explicitly on the command line, either
 	// as individual literal settings or as files to read.
-	// We'll first check for a value already set and overwrite if there, or
-	// append a new value
 	for name, val := range vars {
 		ret = append(ret, &pb.Variable{
 			Name:   name,
@@ -280,7 +285,7 @@ func CollectInputVars(vars map[string]string, files []string) ([]*pb.Variable, h
 }
 
 // Collect values from server and remote-stored wpvars file
-func (variables *Variables) CollectInputValRemote(files []*hcl.File, serverVars []*pb.Variable) hcl.Diagnostics {
+func (variables *Variables) CollectInputValues(files []*hcl.File, pbvars []*pb.Variable) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	// files will contain files found in the remote git source
@@ -362,40 +367,38 @@ func (variables *Variables) CollectInputValRemote(files []*hcl.File, serverVars 
 				}
 			}
 
-			variable.Values = append(variable.Values, VariableAssignment{
-				Source: "repofile",
+			variable.Values = append(variable.Values, Value{
+				Source: sourceFile,
 				Value:  val,
 				Expr:   attr.Expr,
 			})
 		}
 	}
 
-	// Finally we process values given explicitly on the command line.
-	for _, sv := range serverVars {
-		variable, found := (*variables)[sv.Name]
+	for _, pbv := range pbvars {
+		variable, found := (*variables)[pbv.Name]
 		if !found {
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
-				Summary:  "Undefined server variable",
-				Detail: fmt.Sprintf("A %q variable was set in the UI "+
-					"and stored on the server, but was not found in "+
-					"known variables. To declare variable %q, place "+
-					"this block in your waypoint.hcl file.",
-					sv.Name, sv.Name),
+				Summary:  "Undefined variable",
+				Detail: fmt.Sprintf("A %q variable value was set, " +
+					"but was not found in known variables. To declare " +
+					"variable %q, place this block in your waypoint.hcl file.",
+					pbv.Name, pbv.Name),
 			})
 			continue
 		}
 
 		var expr hclsyntax.Expression
-		switch sv.Value.(type) {
+		switch pbv.Value.(type) {
 
 		case *pb.Variable_Hcl:
-			value := sv.Value.(*pb.Variable_Hcl).Hcl
-			fakeFilename := fmt.Sprintf("<value for var.%s from server>", sv.Name)
+			value := pbv.Value.(*pb.Variable_Hcl).Hcl
+			fakeFilename := fmt.Sprintf("<value for var.%s from server>", pbv.Name)
 			expr, diags = hclsyntax.ParseExpression([]byte(value), fakeFilename, hcl.Pos{Line: 1, Column: 1})
 
 		case *pb.Variable_Str:
-			value := sv.Value.(*pb.Variable_Str).Str
+			value := pbv.Value.(*pb.Variable_Str).Str
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.StringVal(value)}
 		}
 
@@ -412,15 +415,29 @@ func (variables *Variables) CollectInputValRemote(files []*hcl.File, serverVars 
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid argument value for server-stored variable",
-					Detail:   fmt.Sprintf("The received arg value for %s is not compatible with the variable's type constraint: %s.", sv.Name, err),
+					Detail:   fmt.Sprintf("The received arg value for %s is not compatible with the variable's type constraint: %s.", pbv.Name, err),
 					Subject:  expr.Range().Ptr(),
 				})
 				val = cty.DynamicVal
 			}
 		}
 
-		variable.Values = append(variable.Values, VariableAssignment{
-			Source: "server",
+		var source string
+		switch pbv.Source.(type) {
+		case *pb.Variable_Cli:
+			source = sourceCLI
+		case *pb.Variable_File_:
+			source = sourceFile
+		case *pb.Variable_Env:
+			source = sourceEnv
+		case *pb.Variable_Vcs:
+			source = sourceVCS
+		case *pb.Variable_Server:
+			source = sourceServer
+		}
+
+		variable.Values = append(variable.Values, Value{
+			Source: source,
 			Value:  val,
 			Expr:   expr,
 		})
@@ -429,29 +446,13 @@ func (variables *Variables) CollectInputValRemote(files []*hcl.File, serverVars 
 	return diags
 }
 
-func (variables *Variables) SortPrecedence() ([]*pb.Variable, error) {
-	var ret []*pb.Variable
+func (variables *Variables) SortPrecedence(vars []*pb.Variable) error {
 
-	for _, v := range *variables {
-		for _, vv := range v.Values {
-			switch st := vv.Source; st {
-			case "default":
-				pbv := &pb.Variable{
-					Name:   v.Name,
-					Value:  &pb.Variable_Str{Str: vv.Value.AsString()},
-					Source: nil,
-				}
-				ret = append(ret, pbv)
-			case "server":
-				pbv := &pb.Variable{
-					Name:   v.Name,
-					Value:  &pb.Variable_Str{Str: vv.Value.AsString()},
-					Source: &pb.Variable_Server{},
-				}
-				ret = append(ret, pbv)
-			}
-		}
-	}
+	//
 
-	return ret, nil
+	// for _, v := range *variables {
+	// 	// gsv.Name
+	// }
+
+	return nil
 }

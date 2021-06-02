@@ -128,14 +128,10 @@ func (r *Runner) executeJob(
 	}
 
 	serverVars := resp.Project.GetVariables()
-	diags = vs.CollectInputValRemote(nil, serverVars)
+	diags = vs.CollectInputValues(nil, append(serverVars, job.Variables...))
 	if diags.HasErrors() {
 		return nil, diags
 	}
-
-	// TODO krantinzator implement precedence sorting
-	jv, err := vs.SortPrecedence()
-	job.Variables = jv
 
 	// Build our job info
 	jobInfo := &component.JobInfo{
@@ -153,7 +149,7 @@ func (r *Runner) executeJob(
 		core.WithConfig(cfg),
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
-		core.WithVariables(job.Variables),
+		core.WithVariables(vs),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
 	)

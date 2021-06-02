@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/internal-shared/protomappers"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -64,7 +65,7 @@ type Project struct {
 	// variables are set on the job directly so that the runner
 	// can access this set of values along with any server- or vcs-stored
 	// values for final evaluation
-	variables []*pb.Variable
+	variables variables.Variables
 }
 
 // NewProject creates a new Project with the given options.
@@ -299,7 +300,7 @@ func WithLabels(m map[string]string) Option {
 }
 
 // WithVariables sets the final set of variable values for the operation.
-func WithVariables(vs []*pb.Variable) Option {
+func WithVariables(vs variables.Variables) Option {
 	return func(p *Project, opts *options) { p.variables = vs }
 }
 
