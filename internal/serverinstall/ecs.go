@@ -588,19 +588,18 @@ func (i *ECSInstaller) Uninstall(
 	}
 	s.Done()
 
-	s = sg.Add("Deleting Cloud Watch Log Group resources...")
+	s.Update("Deleting Cloud Watch Log Group resources...")
 	if err := deleteCWLResources(ctx, sess, defaultServerLogGroup); err != nil {
 		return err
 	}
 	s.Done()
 
-	s = sg.Add("Deleting EFS resources...")
+	s.Update("Deleting EFS resources...")
 	if err := deleteEFSResources(ctx, sess, resources); err != nil {
 		return err
 	}
-	s.Done()
 
-	s = sg.Add("Deleting Network resources...")
+	s.Update("Deleting Network resources...")
 	if err := deleteNLBResources(ctx, sess, resources); err != nil {
 		return err
 	}
@@ -986,11 +985,11 @@ func (i *ECSInstaller) UninstallRunner(
 	if err := deleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
 		return err
 	}
-	s.Done()
-	s = sg.Add("Deleting Cloud Watch Log Group resources...")
+	s.Update("Deleting Cloud Watch Log Group resources...")
 	if err := deleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
 		return err
 	}
+	s.Update("Runner resources deleted")
 	s.Done()
 	return nil
 }
