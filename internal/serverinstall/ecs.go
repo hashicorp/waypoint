@@ -39,6 +39,9 @@ const (
 	defaultSecurityGroupName = "waypoint-server-security-group"
 	defaultNLBName           = "waypoint-server-nlb"
 
+	// These tags are used to tag resources as they are created in AWS. Two tags
+	// are required, so that the UninstallRunner method(s) can query for runner
+	// resources and retrieve the cluster ARN
 	defaultServerTagName  = "waypoint-server"
 	defaultServerTagValue = "server-component"
 	defaultRunnerTagName  = "waypoint-runner"
@@ -79,11 +82,6 @@ func (i *ECSInstaller) Install(
 	ui := opts.UI
 	log := opts.Log
 
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Installing Waypoint server")
-	defer func() { s.Abort() }()
 	log.Info("Starting lifecycle")
 
 	var (
@@ -158,7 +156,6 @@ func (i *ECSInstaller) Install(
 			Platform:      "ecs",
 		},
 	}
-	s.Done()
 	return &InstallResults{
 		Context:       &contextConfig,
 		AdvertiseAddr: &advertiseAddr,
@@ -196,7 +193,7 @@ func (i *ECSInstaller) Launch(
 	if err != nil {
 		return nil, err
 	}
-	s.Update("Created Network resources")
+	s.Update("Network load balancer created")
 	s.Done()
 	s = sg.Add("")
 
@@ -368,6 +365,7 @@ func (i *ECSInstaller) Launch(
 	s.Done()
 	s = sg.Add("")
 	s.Update("Service launched!")
+	s.Done()
 
 	return &ecsServer{
 		Url:                nlb.publicDNS,
@@ -560,7 +558,7 @@ func (i *ECSInstaller) Uninstall(
 	}
 	rgSvc := resourcegroups.New(sess)
 
-	query := fmt.Sprintf(defaultResourceQuery, serverName)
+	query := fmt.Sprintf(serverResourceQuery, defaultServerTagName)
 	results, err := rgSvc.SearchResources(&resourcegroups.SearchResourcesInput{
 		ResourceQuery: &resourcegroups.ResourceQuery{
 			Type:  aws.String(resourcegroups.QueryTypeTagFilters10),
@@ -880,8 +878,6 @@ func (i *ECSInstaller) InstallRunner(
 	ui := opts.UI
 	log := opts.Log
 
-	sg := ui.StepGroup()
-	defer sg.Wait()
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: i.config.Region,
 		Logger: log,
@@ -890,8 +886,6 @@ func (i *ECSInstaller) InstallRunner(
 		return err
 	}
 
-	s := sg.Add("Starting Runner installation")
-	defer func() { s.Abort() }()
 	var (
 		logGroup      string
 		executionRole string
@@ -936,15 +930,15 @@ func (i *ECSInstaller) InstallRunner(
 		return err
 	}
 
-	s.Update("Created ECS Service (%s)", runnerName)
 	log.Debug("runner service started", "arn", *runSvcArn)
-
-	s.Done()
 
 	return nil
 }
 
-var defaultResourceQuery = "{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{\"Key\":\"%s\",\"Values\":[]}]}"
+var (
+	serverResourceQuery = "{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{\"Key\":\"%s\",\"Values\":[]}]}"
+	runnerResourceQuery = "{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{\"Key\":\"%s\",\"Values\":[\"%s\"]}]}"
+)
 
 func (i *ECSInstaller) UninstallRunner(
 	ctx context.Context,
@@ -968,7 +962,7 @@ func (i *ECSInstaller) UninstallRunner(
 	}
 	rgSvc := resourcegroups.New(sess)
 
-	query := fmt.Sprintf(defaultResourceQuery, runnerName)
+	query := fmt.Sprintf(runnerResourceQuery, defaultRunnerTagName, defaultRunnerTagValue)
 	results, err := rgSvc.SearchResources(&resourcegroups.SearchResourcesInput{
 		ResourceQuery: &resourcegroups.ResourceQuery{
 			Type:  aws.String(resourcegroups.QueryTypeTagFilters10),
@@ -990,10 +984,12 @@ func (i *ECSInstaller) UninstallRunner(
 	if err := deleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
 		return err
 	}
-	s.Update("Deleting Cloud Watch Log Group resources...")
+	s.Done()
+	s = sg.Add("Deleting Cloud Watch Log Group resources...")
 	if err := deleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
 		return err
 	}
+	s.Done()
 	return nil
 }
 
@@ -1211,7 +1207,7 @@ func (i *ECSInstaller) SetupNetworking(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Establishing subnets and security group...")
+	s := sg.Add("Setting up networking...")
 	defer s.Abort()
 	subnets, vpcID, err := i.subnetInfo(ctx, s, sess)
 	if err != nil {
@@ -1231,6 +1227,7 @@ func (i *ECSInstaller) SetupNetworking(
 	if err != nil {
 		return nil, err
 	}
+	s.Update("Networking setup")
 	s.Done()
 	return &networkInformation{
 		vpcID:   vpcID,
@@ -1280,6 +1277,10 @@ func (i *ECSInstaller) SetupCluster(
 			{
 				Key:   aws.String(defaultServerTagName),
 				Value: aws.String(defaultServerTagValue),
+			},
+			{
+				Key:   aws.String(defaultRunnerTagName),
+				Value: aws.String(defaultRunnerTagValue),
 			},
 		},
 	})
