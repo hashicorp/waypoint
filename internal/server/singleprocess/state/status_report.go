@@ -8,7 +8,9 @@ var statusReportOp = &appOperation{
 	Struct: (*pb.StatusReport)(nil),
 	Bucket: []byte("statusreport"),
 
-	MaximumIndexedRecords: 1, // Only store the "latest" status report
+	// This number is global, not per deployment. So we set this number to a high
+	// number instead of trying to store just "one" per deploy/release
+	MaximumIndexedRecords: 10000,
 }
 
 func init() {
