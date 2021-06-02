@@ -1026,13 +1026,13 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Default: "waypoint-server",
 	})
 	set.StringVar(&flag.StringVar{
-		Name:    "region",
+		Name:    "ecs-region",
 		Target:  &i.config.Region,
 		Usage:   "Configures the region specific things.",
 		Default: "us-west-2",
 	})
 	set.StringSliceVar(&flag.StringSliceVar{
-		Name:   "subnets",
+		Name:   "ecs-subnets",
 		Target: &i.config.Subnets,
 		Usage:  "Subnets to install server into.",
 	})
@@ -1064,9 +1064,27 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-region",
+		Target:  &i.config.Region,
+		Usage:   "Configures the region specific things.",
+		Default: "us-west-2",
+	})
 }
 
 func (i *ECSInstaller) UninstallFlags(set *flag.Set) {
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-cluster",
+		Target:  &i.config.Cluster,
+		Usage:   "Configures the Cluster to upgrade.",
+		Default: "waypoint-server",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-region",
+		Target:  &i.config.Region,
+		Usage:   "Configures the region specific things.",
+		Default: "us-west-2",
+	})
 }
 
 type Lifecycle struct {
