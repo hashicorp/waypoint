@@ -3,6 +3,8 @@ package alb
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,7 +16,6 @@ import (
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
-	"time"
 )
 
 type Releaser struct {
@@ -36,7 +37,7 @@ func (r *Releaser) ReleaseFunc() interface{} {
 	return r.Release
 }
 
-//StatusFunc implements component.Status
+// StatusFunc implements component.Status
 func (r *Releaser) StatusFunc() interface{} {
 	return r.Status
 }
@@ -327,9 +328,12 @@ func (r *Releaser) Status(
 	ui terminal.UI,
 ) (*sdk.StatusReport, error) {
 
+	var report sdk.StatusReport
+	report.External = true
+
 	if release.Region == "" {
 		log.Debug("Region is not available for this release. Unable to determine status.")
-		return &sdk.StatusReport{}, nil
+		return &report, nil
 	}
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
@@ -342,12 +346,13 @@ func (r *Releaser) Status(
 
 	elbsrv := elbv2.New(sess)
 
-	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
-	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
-	st := ui.Status()
-	defer st.Close()
+	sg := ui.StepGroup()
+	defer sg.Wait()
 
-	st.Update("Waiting for at least one target to pass initialization...")
+	step := sg.Add("Gathering health report for AWS/ALB platform...")
+	defer step.Abort()
+
+	step.Update("Waiting for at least one target to pass initialization...")
 
 	var targetHealthDescriptions []*elbv2.TargetHealthDescription
 
@@ -360,7 +365,11 @@ func (r *Releaser) Status(
 		}
 
 		if startTime+int64(targetGroupInitializationTimeoutSeconds) <= time.Now().Unix() {
-			return nil, fmt.Errorf("timed out after %d seconds waiting for the following target group to initialize:\n%s", time.Now().Unix()-startTime, release.TargetGroupArn)
+			report.HealthMessage = fmt.Sprintf("timed out after %d seconds waiting for the following target group to initialize:\n%s", time.Now().Unix()-startTime, release.TargetGroupArn)
+			report.Health = sdk.StatusReport_UNKNOWN
+			step.Status(terminal.StatusWarn)
+			step.Update(report.HealthMessage)
+			return &report, nil
 		}
 
 		tgHealthResp, err := elbsrv.DescribeTargetHealthWithContext(ctx, &elbv2.DescribeTargetHealthInput{
@@ -374,28 +383,27 @@ func (r *Releaser) Status(
 
 		// We may not have any targets if the target group was created very recently.
 		if len(targetHealthDescriptions) == 0 {
-			st.Update("Waiting for registered targets with health...")
+			step.Update("Waiting for registered targets with health...")
 			continue
 		}
 
 		initializingCount := 0
 		for _, tgHealth := range targetHealthDescriptions {
 
+			// NOTE(izaaklauer) potentially unsafe dereference
 			if *tgHealth.TargetHealth.State == elbv2.TargetHealthStateEnumInitial {
 				initializingCount++
 			}
 		}
 		if initializingCount == len(targetHealthDescriptions) {
-			st.Update("Waiting for at least one target to finish initializing...")
+			step.Update("Waiting for at least one target to finish initializing...")
 			continue
 		}
 
-		st.Update("Target group has been initialized.")
+		step.Update("Target group has been initialized.")
 		break
 	}
 
-	var report sdk.StatusReport
-	report.External = true
 	report.Resources = []*sdk.StatusReport_Resource{}
 
 	healthyCount := 0
@@ -432,23 +440,28 @@ func (r *Releaser) Status(
 		})
 	}
 
+	step.Update("Finished building report for AWS/ALB platform")
+	step.Done()
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+
 	// If AWS registers targets slowly or incrementally, we may report an artificially low number of total targets.
 	totalTargets := len(targetHealthDescriptions)
 
 	if healthyCount == totalTargets {
 		report.Health = sdk.StatusReport_READY
-		msg := fmt.Sprintf("All %d targets are healthy.", totalTargets)
-		report.HealthMessage = msg
+		report.HealthMessage = fmt.Sprintf("All %d targets are healthy.", totalTargets)
 	} else if healthyCount > 0 {
 		report.Health = sdk.StatusReport_PARTIAL
-		msg := fmt.Sprintf("%d/%d targets are healthy.", healthyCount, totalTargets)
-		report.HealthMessage = msg
-		st.Step(terminal.StatusWarn, msg)
+		report.HealthMessage = fmt.Sprintf("Only %d/%d targets are healthy.", healthyCount, totalTargets)
+		st.Step(terminal.StatusWarn, report.HealthMessage)
 	} else {
 		report.Health = sdk.StatusReport_DOWN
-		msg := fmt.Sprintf("All targets are unhealthy, however your application might be available or still\nstarting up.")
-		report.HealthMessage = msg
-		st.Step(terminal.StatusWarn, msg)
+		report.HealthMessage = fmt.Sprintf("All targets are unhealthy, however your application might be available or still starting up.")
+		st.Step(terminal.StatusWarn, report.HealthMessage)
 	}
 
 	return &report, nil
