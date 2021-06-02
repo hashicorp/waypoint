@@ -423,6 +423,8 @@ func (i *ECSInstaller) Upgrade(
 	if !found {
 		return nil, fmt.Errorf("error: could not find ecs cluster")
 	}
+	s.Done()
+	s = sg.Add("Updating task definition")
 	// list the services to find the task descriptions
 	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
 		Cluster:  aws.String(i.config.Cluster),
@@ -2184,11 +2186,12 @@ func (i *ECSInstaller) LaunchRunner(
 	}
 
 	s.Update("Creating ECS Service (%s)", runnerName)
-
 	svc, err := createService(createServiceInput, ecsSvc)
 	if err != nil {
 		return nil, err
 	}
+	s.Update("Runner service created")
+	s.Done()
 
 	return svc.ClusterArn, nil
 }
