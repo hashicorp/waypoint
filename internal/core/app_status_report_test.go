@@ -118,12 +118,16 @@ func TestAppDeploymentStatusReport(t *testing.T) {
 		})
 
 		// Status Report
+
 		srResp, err := app.DeploymentStatusReport(context.Background(), deploy)
 		statusReport := &sdk.StatusReport{}
 		anypb.UnmarshalTo(srResp.StatusReport, statusReport, proto.UnmarshalOptions{})
 		require.NoError(err)
 		require.NotNil(srResp.StatusReport)
 		require.NotNil(statusReport.Health)
+
+		require.IsType(srResp.TargetId, &pb.StatusReport_DeploymentId{})
+		require.Equal(srResp.TargetId.(*pb.StatusReport_DeploymentId).DeploymentId, deploy.Id)
 
 	})
 }
@@ -251,6 +255,9 @@ func TestAppReleaseStatusReport(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(srResp.StatusReport)
 		require.NotNil(statusReport.Health)
+
+		require.IsType(srResp.TargetId, &pb.StatusReport_ReleaseId{})
+		require.Equal(srResp.TargetId.(*pb.StatusReport_ReleaseId).ReleaseId, release.Id)
 
 	})
 }
