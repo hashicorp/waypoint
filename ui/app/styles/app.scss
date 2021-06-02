@@ -133,6 +133,12 @@ svg.icon {
   flex-shrink: 0;
 }
 
+.pds-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @import './_footer';
 @import './_header';
 @import './_notifications';
