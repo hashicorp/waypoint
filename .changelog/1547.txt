@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/k8s: Add reporting on status of a deployment and release
+```

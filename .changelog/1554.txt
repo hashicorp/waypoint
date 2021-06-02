@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/nomad: Add reporting on status of a deployment
+```
