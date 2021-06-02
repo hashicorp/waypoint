@@ -1,3 +1,10 @@
 ```release-note:feature
-core: Introduce ability to report on the status of deployments and releases
+**Status Reports**: Waypoint now supports a new feature for reporting 
+on the health of deployments or releases. Waypoint surfaces a deployment 
+and or releases status by relying on an existing platform for health checks.
+A status is responsible for reporting the health of a deployed service by
+representing its states as Ready, Alive, Partial, Down, or Unknown.
+Platform health reporting lets teams take action quickly depending on the health
+of their applications. Currently, the Kubernetes, Nomad, AWS ALB, and Docker built-in
+plugins support the new Status reporting, with more support on the way!
 ```
