@@ -1,10 +1,23 @@
-<b class="badge badge-status badge-status--{{this.statusClass}} {{if this.iconOnly 'badge-status--icon-only'}}">
+<b
+  class="
+    badge
+    badge-status
+    badge-status--{{this.statusClass}}
+    {{if @iconOnly 'badge-status--icon-only'}}
+  "
+  data-test-status-badge={{this.statusClass}}
+  tabindex="0"
+>
   <Pds::Icon @type={{this.iconType}}/>
-  {{#unless this.iconOnly}}
+  {{#unless @iconOnly}}
     {{t (concat 'status_badge.' this.statusClass '.text')}}
     {{yield}}
   {{/unless}}
-  <EmberTooltip @side="top">
-    {{t (concat 'status_badge.' this.statusClass '.tooltip')}}
+  <EmberTooltip @side={{or @tooltipSide "top"}}>
+    {{#if @message}}
+      {{@message}}
+    {{else}}
+      {{t (concat 'status_badge.' this.statusClass '.tooltip')}}
+    {{/if}}
   </EmberTooltip>
 </b>

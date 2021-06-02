@@ -43,6 +43,7 @@
   }
 
   &.badge-status--icon-only {
+    padding: scale.$sm-4 scale.$sm-4;
     .pds-icon {
       margin-right: 0;
       margin-left: 0;

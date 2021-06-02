@@ -1,61 +1,41 @@
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
+
 interface StatusBadgeArgs {
-  state: number;
-  iconOnly: boolean;
+  state?: State;
+  iconOnly?: boolean;
+  message?: string;
 }
 
+type State = 'UNKNOWN' | 'ALIVE' | 'READY' | 'DOWN' | 'PARTIAL';
+
 export default class StatusBadge extends Component<StatusBadgeArgs> {
-  @tracked iconOnly = false;
-  @tracked state: number;
-
-  constructor(owner: any, args: StatusBadgeArgs) {
-    super(owner, args);
-    this.state = args.state;
-    this.iconOnly = args.iconOnly;
-  }
-
-  get statusClass() {
-    let { state } = this.args;
-    switch (state) {
-      case 4:
-        return 'partial';
-        break;
-      case 3:
-        return 'down';
-        break;
-      case 2:
-        return 'ready';
-        break;
-      case 1:
+  get statusClass(): string {
+    switch (this.args.state) {
+      case 'ALIVE':
         return 'alive';
-        break;
-      case 0:
-        return 'unknown';
-        break;
+      case 'READY':
+        return 'ready';
+      case 'DOWN':
+        return 'down';
+      case 'PARTIAL':
+        return 'partial';
+      case 'UNKNOWN':
       default:
         return 'unknown';
     }
   }
 
-  get iconType() {
-    let { state } = this.args;
-    switch (state) {
-      case 4:
-        return 'alert-triangle';
-        break;
-      case 3:
-        return 'cancel-circle-fill';
-        break;
-      case 2:
-        return 'check-plain';
-        break;
-      case 1:
+  get iconType(): string {
+    switch (this.args.state) {
+      case 'ALIVE':
         return 'run';
-        break;
-      case 0:
-        return 'help-circle-outline';
-        break;
+      case 'READY':
+        return 'check-plain';
+      case 'DOWN':
+        return 'cancel-circle-fill';
+      case 'PARTIAL':
+        return 'alert-triangle';
+      case 'UNKNOWN':
       default:
         return 'help-circle-outline';
     }
