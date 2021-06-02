@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/pack: Support for non-default process types
+```
