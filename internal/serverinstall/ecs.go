@@ -50,23 +50,24 @@ type ECSInstaller struct {
 }
 
 type ecsConfig struct {
-	// serverImage is the image/tag of the Waypoint server to use. Default is
+	// ServerImage is the image/tag of the Waypoint server to use. Default is
 	// hashicorp/waypoint:latest
-	serverImage string `hcl:"server_image,optional"`
+	ServerImage string `hcl:"server_image,optional"`
 
-	// region defines which AWS region to use.
-	region string `hcl:"region,optional"`
+	// Region defines which AWS region to use.
+	Region string `hcl:"region,optional"`
 
-	// Name of the ECS cluster to install the service into. Defaults to
-	// waypoint-server
-	cluster string `hcl:"cluster,optional"`
+	// Cluster is the name of the ECS Cluster to install the service into.
+	// Defaults to waypoint-server
+	Cluster string `hcl:"cluster,optional"`
 
-	// Name of the execution task IAM Role to associate with the ECS Service
-	executionRoleName string `hcl:"execution_role_name,optional"`
+	// ExecutionRoleName is the name of the execution task IAM Role to associate
+	// with the ECS Service
+	ExecutionRoleName string `hcl:"execution_role_name,optional"`
 
-	// Subnets to place the service into. Defaults to the public subnets in the
+	// Subnets to place the service into. Defaults to the public Subnets in the
 	// default VPC.
-	subnets []string `hcl:"subnets,optional"`
+	Subnets []string `hcl:"subnets,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to
@@ -98,7 +99,7 @@ func (i *ECSInstaller) Install(
 	lf := &Lifecycle{
 		Init: func(s LifecycleStatus) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
-				Region: i.config.region,
+				Region: i.config.Region,
 				Logger: log,
 			})
 			if err != nil {
@@ -197,7 +198,7 @@ func (i *ECSInstaller) Launch(
 	defaultStreamPrefix := fmt.Sprintf("waypoint-server-%d", time.Now().Nanosecond())
 	logOptions := buildLoggingOptions(
 		nil,
-		i.config.region,
+		i.config.Region,
 		logGroup,
 		defaultStreamPrefix,
 	)
@@ -216,7 +217,7 @@ func (i *ECSInstaller) Launch(
 		Essential: aws.Bool(true),
 		Command:   cmd,
 		Name:      aws.String(serverName),
-		Image:     aws.String(i.config.serverImage),
+		Image:     aws.String(i.config.ServerImage),
 		PortMappings: []*ecs.PortMapping{
 			{
 				ContainerPort: aws.Int64(int64(httpPort)),
@@ -380,7 +381,7 @@ func (i *ECSInstaller) Upgrade(
 	ui := opts.UI
 	log := opts.Log
 	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: i.config.region,
+		Region: i.config.Region,
 		Logger: log,
 	})
 	if err != nil {
@@ -396,7 +397,7 @@ func (i *ECSInstaller) Upgrade(
 	// inspect current service - looking for image used in Task
 	// Get Task definition
 	var clusterArn string
-	cluster := i.config.cluster
+	cluster := i.config.Cluster
 	ecsSvc := ecs.New(sess)
 
 	desc, err := ecsSvc.DescribeClusters(&ecs.DescribeClustersInput{
@@ -419,7 +420,7 @@ func (i *ECSInstaller) Upgrade(
 	}
 	// list the services to find the task descriptions
 	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
-		Cluster:  aws.String(i.config.cluster),
+		Cluster:  aws.String(i.config.Cluster),
 		Services: []*string{aws.String(serverName)},
 	})
 	if err != nil {
@@ -445,8 +446,8 @@ func (i *ECSInstaller) Upgrade(
 	containerDef := taskDef.ContainerDefinitions[0]
 
 	upgradeImg := defaultServerImage
-	if i.config.serverImage != "" {
-		upgradeImg = i.config.serverImage
+	if i.config.ServerImage != "" {
+		upgradeImg = i.config.ServerImage
 	}
 	// assume upgrade to latest
 	if *containerDef.Image == defaultServerImage {
@@ -543,7 +544,7 @@ func (i *ECSInstaller) Uninstall(
 	// Get list of resources created with either the waypoint-server, or
 	// waypoint-runner tag
 	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: i.config.region,
+		Region: i.config.Region,
 		Logger: log,
 	})
 	if err != nil {
@@ -879,7 +880,7 @@ func (i *ECSInstaller) InstallRunner(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: i.config.region,
+		Region: i.config.Region,
 		Logger: log,
 	})
 	if err != nil {
@@ -896,7 +897,7 @@ func (i *ECSInstaller) InstallRunner(
 	lf := &Lifecycle{
 		Init: func(s LifecycleStatus) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
-				Region: i.config.region,
+				Region: i.config.Region,
 				Logger: log,
 			})
 			if err != nil {
@@ -954,7 +955,7 @@ func (i *ECSInstaller) UninstallRunner(
 	s.Status("Uninstalling Runner resources...")
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: i.config.region,
+		Region: i.config.Region,
 		Logger: log,
 	})
 	if err != nil {
@@ -998,7 +999,7 @@ func (i *ECSInstaller) HasRunner(
 ) (bool, error) {
 	log := opts.Log
 	sess, err := utils.GetSession(&utils.SessionConfig{
-		Region: i.config.region,
+		Region: i.config.Region,
 		Logger: log,
 	})
 	if err != nil {
@@ -1007,7 +1008,7 @@ func (i *ECSInstaller) HasRunner(
 	ecsSvc := ecs.New(sess)
 	// query what subnets and vpc information from the server service
 	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
-		Cluster:  aws.String(i.config.cluster),
+		Cluster:  aws.String(i.config.Cluster),
 		Services: []*string{aws.String(runnerName)},
 	})
 	if err != nil {
@@ -1020,31 +1021,31 @@ func (i *ECSInstaller) HasRunner(
 func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-cluster",
-		Target:  &i.config.cluster,
+		Target:  &i.config.Cluster,
 		Usage:   "Configures the Cluster to install into.",
 		Default: "waypoint-server",
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "region",
-		Target:  &i.config.region,
+		Target:  &i.config.Region,
 		Usage:   "Configures the region specific things.",
 		Default: "us-west-2",
 	})
 	set.StringSliceVar(&flag.StringSliceVar{
 		Name:   "subnets",
-		Target: &i.config.subnets,
+		Target: &i.config.Subnets,
 		Usage:  "Subnets to install server into.",
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-execution-role-name",
-		Target:  &i.config.executionRoleName,
+		Target:  &i.config.ExecutionRoleName,
 		Usage:   "Configures the Execution role name to use.",
 		Default: "waypoint-server-execution-role",
 	})
 
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-server-image",
-		Target:  &i.config.serverImage,
+		Target:  &i.config.ServerImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
@@ -1053,13 +1054,13 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-cluster",
-		Target:  &i.config.cluster,
+		Target:  &i.config.Cluster,
 		Usage:   "Configures the Cluster to upgrade.",
 		Default: "waypoint-server",
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-server-image",
-		Target:  &i.config.serverImage,
+		Target:  &i.config.ServerImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
@@ -1232,7 +1233,7 @@ func (i *ECSInstaller) SetupCluster(
 	ecsSvc := ecs.New(sess)
 
 	s.Status("Inspecting existing ECS clusters...")
-	cluster := i.config.cluster
+	cluster := i.config.Cluster
 
 	// re-use an existing cluster if we have one
 	desc, err := ecsSvc.DescribeClusters(&ecs.DescribeClustersInput{
@@ -1614,7 +1615,7 @@ func (i *ECSInstaller) SetupExecutionRole(
 ) (string, error) {
 	svc := iam.New(sess)
 
-	roleName := i.config.executionRoleName
+	roleName := i.config.ExecutionRoleName
 
 	// role names have to be 64 characters or less, and the client side doesn't
 	// validate this.
@@ -1906,7 +1907,7 @@ func (i *ECSInstaller) subnetInfo(
 		vpcID   *string
 	)
 
-	if len(i.config.subnets) == 0 {
+	if len(i.config.Subnets) == 0 {
 		s.Update("Using default subnets for Service networking")
 		desc, err := ec2Svc.DescribeSubnets(&ec2.DescribeSubnetsInput{
 			Filters: []*ec2.Filter{
@@ -1930,9 +1931,9 @@ func (i *ECSInstaller) subnetInfo(
 		return subnets, vpcID, nil
 	}
 
-	subnets = make([]*string, len(i.config.subnets))
-	for j := range i.config.subnets {
-		subnets[j] = &i.config.subnets[j]
+	subnets = make([]*string, len(i.config.Subnets))
+	for j := range i.config.Subnets {
+		subnets[j] = &i.config.Subnets[j]
 	}
 	s.Update("Using provided subnets for Service networking")
 	subnetInfo, err := ec2Svc.DescribeSubnets(&ec2.DescribeSubnetsInput{
@@ -1992,7 +1993,7 @@ func (i *ECSInstaller) LaunchRunner(
 	defaultStreamPrefix := fmt.Sprintf("waypoint-runner-%d", time.Now().Nanosecond())
 	logOptions := buildLoggingOptions(
 		nil,
-		i.config.region,
+		i.config.Region,
 		logGroup,
 		defaultStreamPrefix,
 	)
@@ -2026,7 +2027,7 @@ func (i *ECSInstaller) LaunchRunner(
 			aws.String("-liveness-tcp-addr=:1234"),
 		},
 		Name:  aws.String("waypoint-runner"),
-		Image: aws.String(i.config.serverImage),
+		Image: aws.String(i.config.ServerImage),
 		PortMappings: []*ecs.PortMapping{
 			{
 				ContainerPort: aws.Int64(int64(grpcPort)),
@@ -2096,7 +2097,7 @@ func (i *ECSInstaller) LaunchRunner(
 
 	// query what subnets and vpc information from the server service
 	services, err := ecsSvc.DescribeServices(&ecs.DescribeServicesInput{
-		Cluster:  aws.String(i.config.cluster),
+		Cluster:  aws.String(i.config.Cluster),
 		Services: []*string{aws.String(serverName)},
 	})
 	if err != nil {
