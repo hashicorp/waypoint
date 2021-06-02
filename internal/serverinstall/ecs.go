@@ -1030,7 +1030,7 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-region",
 		Target:  &i.config.Region,
-		Usage:   "Configures the region specific things.",
+		Usage:   "Configures which AWS region to install into.",
 		Default: "us-west-2",
 	})
 	set.StringSliceVar(&flag.StringSliceVar{
