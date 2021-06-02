@@ -2,8 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/zclconf/go-cty/cty"
@@ -337,13 +335,14 @@ func (op *statusReportOperation) Do(
 	// Add the deployment/release ID to the report.
 	// TODO: this is a stopgap solution - we should wire resource ID information into here in a more generic way
 	// rather than continue to append to this switch case.
-	switch op.Target.(type) {
+
+	switch target := op.Target.(type) {
 	case *pb.Deployment:
-		realMsg.TargetId = &pb.StatusReport_DeploymentId{DeploymentId: op.Target.(*pb.Deployment).Id}
+		realMsg.TargetId = &pb.StatusReport_DeploymentId{DeploymentId: target.Id}
 	case *pb.Release:
-		realMsg.TargetId = &pb.StatusReport_ReleaseId{ReleaseId: op.Target.(*pb.Release).Id}
+		realMsg.TargetId = &pb.StatusReport_ReleaseId{ReleaseId: target.Id}
 	default:
-		return nil, fmt.Errorf("unsupported status operation type")
+		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status operation type")
 	}
 
 	op.result = result.(*sdk.StatusReport)
