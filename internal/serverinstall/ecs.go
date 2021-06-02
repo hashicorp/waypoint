@@ -38,15 +38,12 @@ const (
 
 	defaultSecurityGroupName = "waypoint-server-security-group"
 	defaultNLBName           = "waypoint-server-nlb"
+
+	defaultServerTagName  = "waypoint-server"
+	defaultServerTagValue = "server-component"
+	defaultRunnerTagName  = "waypoint-runner"
+	defaultRunnerTagValue = "runner-component"
 )
-
-var ulid string
-
-func init() {
-	// generate a ULID for use in FileSystem creation and unique tag value for
-	// this installation
-	ulid, _ = component.Id()
-}
 
 type ECSInstaller struct {
 	config ecsConfig
@@ -108,23 +105,23 @@ func (i *ECSInstaller) Install(
 				return err
 			}
 
-			if netInfo, err = i.SetupNetworking(ctx, s, sess, ulid); err != nil {
+			if netInfo, err = i.SetupNetworking(ctx, s, sess); err != nil {
 				return err
 			}
 
-			if cluster, err = i.SetupCluster(ctx, s, sess, ulid); err != nil {
+			if cluster, err = i.SetupCluster(ctx, s, sess); err != nil {
 				return err
 			}
 
-			if efsInfo, err = i.SetupEFS(ctx, s, sess, netInfo, ulid); err != nil {
+			if efsInfo, err = i.SetupEFS(ctx, s, sess, netInfo); err != nil {
 				return err
 			}
 
-			if executionRole, err = i.SetupExecutionRole(ctx, s, log, sess, ulid); err != nil {
+			if executionRole, err = i.SetupExecutionRole(ctx, s, log, sess); err != nil {
 				return err
 			}
 
-			if serverLogGroup, err = i.SetupLogs(ctx, s, log, sess, ulid, defaultServerLogGroup); err != nil {
+			if serverLogGroup, err = i.SetupLogs(ctx, s, log, sess, defaultServerLogGroup); err != nil {
 				return err
 			}
 
@@ -132,7 +129,7 @@ func (i *ECSInstaller) Install(
 		},
 
 		Run: func(s LifecycleStatus) error {
-			server, err = i.Launch(ctx, s, log, ui, sess, efsInfo, netInfo, executionRole, cluster, serverLogGroup, ulid)
+			server, err = i.Launch(ctx, s, log, ui, sess, efsInfo, netInfo, executionRole, cluster, serverLogGroup)
 			return err
 		},
 
@@ -178,7 +175,7 @@ func (i *ECSInstaller) Launch(
 	sess *session.Session,
 	efsInfo *efsInformation,
 	netInfo *networkInformation,
-	executionRoleArn, clusterName, logGroup, ulid string,
+	executionRoleArn, clusterName, logGroup string,
 ) (*ecsServer, error) {
 	s.Status("Installing Waypoint server into ECS...")
 
@@ -191,7 +188,6 @@ func (i *ECSInstaller) Launch(
 		aws.Int64(int64(grpcPort)),
 		aws.Int64(int64(httpPort)),
 		netInfo.subnets,
-		ulid,
 	)
 	if err != nil {
 		return nil, err
@@ -244,7 +240,7 @@ func (i *ECSInstaller) Launch(
 	// Create mount points for the EFS file system. The EFS mount targets need to
 	// existin in a 1:1 pair with the subnets in use.
 	s.Status("Creating ECS Service and Tasks...")
-	log.Debug("registering task definition", "ulid", ulid)
+	log.Debug("registering task definition")
 
 	cpus := aws.String(strconv.Itoa(defaultTaskCPU))
 	mems := strconv.Itoa(defaultTaskMemory)
@@ -261,8 +257,8 @@ func (i *ECSInstaller) Launch(
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 		Volumes: []*ecs.Volume{
@@ -307,8 +303,8 @@ func (i *ECSInstaller) Launch(
 		},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 		LoadBalancers: []*ecs.LoadBalancer{
@@ -716,7 +712,7 @@ func deleteNLBResources(
 		Filters: []*ec2.Filter{
 			{
 				Name:   aws.String("tag-key"),
-				Values: []*string{aws.String("waypoint-server")},
+				Values: []*string{aws.String(defaultServerTagName)},
 			},
 		},
 	})
@@ -906,12 +902,12 @@ func (i *ECSInstaller) InstallRunner(
 			if err != nil {
 				return err
 			}
-			executionRole, err = i.SetupExecutionRole(ctx, s, log, sess, ulid)
+			executionRole, err = i.SetupExecutionRole(ctx, s, log, sess)
 			if err != nil {
 				return err
 			}
 
-			logGroup, err = i.SetupLogs(ctx, s, log, sess, ulid, defaultRunnerLogGroup)
+			logGroup, err = i.SetupLogs(ctx, s, log, sess, defaultRunnerLogGroup)
 			if err != nil {
 				return err
 			}
@@ -925,7 +921,6 @@ func (i *ECSInstaller) InstallRunner(
 				opts.AdvertiseClient.Env(),
 				executionRole,
 				logGroup,
-				ulid,
 			)
 			return err
 		},
@@ -1201,7 +1196,6 @@ func (i *ECSInstaller) SetupNetworking(
 	ctx context.Context,
 	s LifecycleStatus,
 	sess *session.Session,
-	ulid string,
 ) (*networkInformation, error) {
 
 	s.Status("Establishing subnets and security group...")
@@ -1219,7 +1213,7 @@ func (i *ECSInstaller) SetupNetworking(
 		aws.Int64(int64(2049)), // EFS File system port
 	}
 
-	sgID, err := createSG(ctx, s, sess, defaultSecurityGroupName, vpcID, ulid, ports)
+	sgID, err := createSG(ctx, s, sess, defaultSecurityGroupName, vpcID, ports)
 	if err != nil {
 		return nil, err
 	}
@@ -1234,7 +1228,6 @@ func (i *ECSInstaller) SetupCluster(
 	ctx context.Context,
 	s LifecycleStatus,
 	sess *session.Session,
-	ulid string,
 ) (string, error) {
 	ecsSvc := ecs.New(sess)
 
@@ -1264,12 +1257,8 @@ func (i *ECSInstaller) SetupCluster(
 		// cleanup
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
-			},
-			{
-				Key:   aws.String(runnerName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	})
@@ -1287,9 +1276,10 @@ func (i *ECSInstaller) SetupEFS(
 	s LifecycleStatus,
 	sess *session.Session,
 	netInfo *networkInformation,
-	ulid string,
+
 ) (*efsInformation, error) {
 	efsSvc := efs.New(sess)
+	ulid, _ := component.Id()
 
 	s.Status("Creating new EFS file system...")
 	fsd, err := efsSvc.CreateFileSystem(&efs.CreateFileSystemInput{
@@ -1297,8 +1287,8 @@ func (i *ECSInstaller) SetupEFS(
 		Encrypted:     aws.Bool(true),
 		Tags: []*efs.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	})
@@ -1371,8 +1361,8 @@ EFSLOOP:
 		},
 		Tags: []*efs.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	})
@@ -1450,7 +1440,7 @@ func createSG(
 	sess *session.Session,
 	name string,
 	vpcId *string,
-	ulid string,
+
 	ports []*int64,
 ) (*string, error) {
 	ec2srv := ec2.New(sess)
@@ -1487,8 +1477,8 @@ func createSG(
 					ResourceType: aws.String(ec2.ResourceTypeSecurityGroup),
 					Tags: []*ec2.Tag{
 						{
-							Key:   aws.String(serverName),
-							Value: aws.String(ulid),
+							Key:   aws.String(defaultServerTagName),
+							Value: aws.String(defaultServerTagValue),
 						},
 					},
 				},
@@ -1535,7 +1525,7 @@ func (i *ECSInstaller) SetupLogs(
 	s LifecycleStatus,
 	log hclog.Logger,
 	sess *session.Session,
-	ulid string,
+
 	logGroup string,
 ) (string, error) {
 	cwl := cloudwatchlogs.New(sess)
@@ -1620,7 +1610,7 @@ func (i *ECSInstaller) SetupExecutionRole(
 	s LifecycleStatus,
 	log hclog.Logger,
 	sess *session.Session,
-	ulid string,
+
 ) (string, error) {
 	svc := iam.New(sess)
 
@@ -1654,8 +1644,8 @@ func (i *ECSInstaller) SetupExecutionRole(
 		RoleName:                 aws.String(roleName),
 		Tags: []*iam.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	}
@@ -1709,7 +1699,6 @@ func createNLB(
 	grpcPort *int64,
 	httpPort *int64,
 	subnets []*string,
-	ulid string,
 ) (serverNLB *nlb, err error) {
 
 	s.Update("Creating NLB target groups")
@@ -1725,8 +1714,8 @@ func createNLB(
 		VpcId:                   vpcId,
 		Tags: []*elbv2.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	})
@@ -1746,8 +1735,8 @@ func createNLB(
 		UnhealthyThresholdCount: aws.Int64(int64(2)),
 		Tags: []*elbv2.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	})
@@ -1809,8 +1798,8 @@ func createNLB(
 			Type:   aws.String(elbv2.LoadBalancerTypeEnumNetwork),
 			Tags: []*elbv2.Tag{
 				{
-					Key:   aws.String(serverName),
-					Value: aws.String(ulid),
+					Key:   aws.String(defaultServerTagName),
+					Value: aws.String(defaultServerTagValue),
 				},
 			},
 		})
@@ -1864,8 +1853,8 @@ func createNLB(
 		},
 		Tags: []*elbv2.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	})
@@ -1888,8 +1877,8 @@ func createNLB(
 		},
 		Tags: []*elbv2.Tag{
 			{
-				Key:   aws.String(serverName),
-				Value: aws.String(ulid),
+				Key:   aws.String(defaultServerTagName),
+				Value: aws.String(defaultServerTagValue),
 			},
 		},
 	})
@@ -1995,7 +1984,7 @@ func (i *ECSInstaller) LaunchRunner(
 	ui terminal.UI,
 	sess *session.Session,
 	env []string,
-	executionRoleArn, logGroup, ulid string,
+	executionRoleArn, logGroup string,
 ) (*string, error) {
 
 	s.Status("Installing Waypoint runner into ECS...")
@@ -2067,8 +2056,8 @@ func (i *ECSInstaller) LaunchRunner(
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(runnerName),
-				Value: aws.String(runnerName),
+				Key:   aws.String(defaultRunnerTagName),
+				Value: aws.String(defaultRunnerTagValue),
 			},
 		},
 	}
@@ -2138,8 +2127,8 @@ func (i *ECSInstaller) LaunchRunner(
 		},
 		Tags: []*ecs.Tag{
 			{
-				Key:   aws.String(runnerName),
-				Value: aws.String(runnerName),
+				Key:   aws.String(defaultRunnerTagName),
+				Value: aws.String(defaultRunnerTagValue),
 			},
 		},
 	}
