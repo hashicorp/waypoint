@@ -5310,6 +5310,11 @@ export class StatusReport extends jspb.Message {
   hasStatusReport(): boolean;
   clearStatusReport(): StatusReport;
 
+  getHealth(): StatusReport.Health | undefined;
+  setHealth(value?: StatusReport.Health): StatusReport;
+  hasHealth(): boolean;
+  clearHealth(): StatusReport;
+
   getResourcesHealthList(): Array<StatusReport.Health>;
   setResourcesHealthList(value: Array<StatusReport.Health>): StatusReport;
   clearResourcesHealthList(): StatusReport;
@@ -5334,6 +5339,7 @@ export namespace StatusReport {
     status?: Status.AsObject,
     id: string,
     statusReport?: google_protobuf_any_pb.Any.AsObject,
+    health?: StatusReport.Health.AsObject,
     resourcesHealthList: Array<StatusReport.Health.AsObject>,
   }
 

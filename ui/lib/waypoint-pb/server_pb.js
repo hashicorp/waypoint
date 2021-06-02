@@ -44137,7 +44137,7 @@ proto.hashicorp.waypoint.GetStatusReportRequest.prototype.hasRef = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.hashicorp.waypoint.StatusReport.repeatedFields_ = [8];
+proto.hashicorp.waypoint.StatusReport.repeatedFields_ = [9];
 
 /**
  * Oneof group definitions for this message. Each group defines the field
@@ -44203,6 +44203,7 @@ proto.hashicorp.waypoint.StatusReport.toObject = function(includeInstance, msg) 
     status: (f = msg.getStatus()) && proto.hashicorp.waypoint.Status.toObject(includeInstance, f),
     id: jspb.Message.getFieldWithDefault(msg, 6, ""),
     statusReport: (f = msg.getStatusReport()) && google_protobuf_any_pb.Any.toObject(includeInstance, f),
+    health: (f = msg.getHealth()) && proto.hashicorp.waypoint.StatusReport.Health.toObject(includeInstance, f),
     resourcesHealthList: jspb.Message.toObjectList(msg.getResourcesHealthList(),
     proto.hashicorp.waypoint.StatusReport.Health.toObject, includeInstance)
   };
@@ -44274,6 +44275,11 @@ proto.hashicorp.waypoint.StatusReport.deserializeBinaryFromReader = function(msg
       msg.setStatusReport(value);
       break;
     case 8:
+      var value = new proto.hashicorp.waypoint.StatusReport.Health;
+      reader.readMessage(value,proto.hashicorp.waypoint.StatusReport.Health.deserializeBinaryFromReader);
+      msg.setHealth(value);
+      break;
+    case 9:
       var value = new proto.hashicorp.waypoint.StatusReport.Health;
       reader.readMessage(value,proto.hashicorp.waypoint.StatusReport.Health.deserializeBinaryFromReader);
       msg.addResourcesHealth(value);
@@ -44360,10 +44366,18 @@ proto.hashicorp.waypoint.StatusReport.serializeBinaryToWriter = function(message
       google_protobuf_any_pb.Any.serializeBinaryToWriter
     );
   }
+  f = message.getHealth();
+  if (f != null) {
+    writer.writeMessage(
+      8,
+      f,
+      proto.hashicorp.waypoint.StatusReport.Health.serializeBinaryToWriter
+    );
+  }
   f = message.getResourcesHealthList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      8,
+      9,
       f,
       proto.hashicorp.waypoint.StatusReport.Health.serializeBinaryToWriter
     );
@@ -44830,12 +44844,49 @@ proto.hashicorp.waypoint.StatusReport.prototype.hasStatusReport = function() {
 
 
 /**
- * repeated Health resources_health = 8;
+ * optional Health health = 8;
+ * @return {?proto.hashicorp.waypoint.StatusReport.Health}
+ */
+proto.hashicorp.waypoint.StatusReport.prototype.getHealth = function() {
+  return /** @type{?proto.hashicorp.waypoint.StatusReport.Health} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.StatusReport.Health, 8));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.StatusReport.Health|undefined} value
+ * @return {!proto.hashicorp.waypoint.StatusReport} returns this
+*/
+proto.hashicorp.waypoint.StatusReport.prototype.setHealth = function(value) {
+  return jspb.Message.setWrapperField(this, 8, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.StatusReport} returns this
+ */
+proto.hashicorp.waypoint.StatusReport.prototype.clearHealth = function() {
+  return this.setHealth(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.StatusReport.prototype.hasHealth = function() {
+  return jspb.Message.getField(this, 8) != null;
+};
+
+
+/**
+ * repeated Health resources_health = 9;
  * @return {!Array<!proto.hashicorp.waypoint.StatusReport.Health>}
  */
 proto.hashicorp.waypoint.StatusReport.prototype.getResourcesHealthList = function() {
   return /** @type{!Array<!proto.hashicorp.waypoint.StatusReport.Health>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.hashicorp.waypoint.StatusReport.Health, 8));
+    jspb.Message.getRepeatedWrapperField(this, proto.hashicorp.waypoint.StatusReport.Health, 9));
 };
 
 
@@ -44844,7 +44895,7 @@ proto.hashicorp.waypoint.StatusReport.prototype.getResourcesHealthList = functio
  * @return {!proto.hashicorp.waypoint.StatusReport} returns this
 */
 proto.hashicorp.waypoint.StatusReport.prototype.setResourcesHealthList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 8, value);
+  return jspb.Message.setRepeatedWrapperField(this, 9, value);
 };
 
 
@@ -44854,7 +44905,7 @@ proto.hashicorp.waypoint.StatusReport.prototype.setResourcesHealthList = functio
  * @return {!proto.hashicorp.waypoint.StatusReport.Health}
  */
 proto.hashicorp.waypoint.StatusReport.prototype.addResourcesHealth = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 8, opt_value, proto.hashicorp.waypoint.StatusReport.Health, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.hashicorp.waypoint.StatusReport.Health, opt_index);
 };
 
 
