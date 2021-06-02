@@ -334,6 +334,7 @@ func (op *statusReportOperation) Do(
 	}
 	realMsg.ResourcesHealth = resourcesHealth
 
+	// Add the deployment/release ID to the report. TODO: wire the resource ID through explicitly
 	switch op.Target.(type) {
 	case *pb.Deployment:
 		realMsg.TargetId = &pb.StatusReport_DeploymentId{DeploymentId: op.Target.(*pb.Deployment).Id}
