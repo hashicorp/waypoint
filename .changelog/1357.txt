@@ -1,0 +1,4 @@
+```release-note:feature
+plugin/k8s: A new plugin "kubernetes-apply" that is able to deploy any typical
+directory of YAML or JSON files to Kubernetes
+```
