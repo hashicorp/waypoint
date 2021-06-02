@@ -1081,7 +1081,7 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-region",
 		Target:  &i.config.Region,
-		Usage:   "Configures the region specific things.",
+		Usage:   "Configures which AWS region to install into.",
 		Default: "us-west-2",
 	})
 	set.StringVar(&flag.StringVar{
@@ -1103,13 +1103,13 @@ func (i *ECSInstaller) UninstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-cluster",
 		Target:  &i.config.Cluster,
-		Usage:   "Configures the Cluster to upgrade.",
+		Usage:   "Configures the Cluster to uninstall.",
 		Default: "waypoint-server",
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-region",
 		Target:  &i.config.Region,
-		Usage:   "Configures the region specific things.",
+		Usage:   "Configures which AWS region to uninstall from.",
 		Default: "us-west-2",
 	})
 }
