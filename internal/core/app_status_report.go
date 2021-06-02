@@ -108,7 +108,7 @@ func (a *App) statusReport(
 		loggerName = "statusreport"
 	}
 
-	result, msg, err := a.doOperation(ctx, a.logger.Named(loggerName), &statusReportOperation{
+	_, msg, err := a.doOperation(ctx, a.logger.Named(loggerName), &statusReportOperation{
 		Component: component,
 		Target:    target,
 	})
@@ -116,34 +116,11 @@ func (a *App) statusReport(
 		return nil, err
 	}
 
-	var statusReport *sdk.StatusReport
-	if result != nil {
-		statusReport = result.(*sdk.StatusReport)
-	}
-
 	reportResp, ok := msg.(*pb.StatusReport)
 	if !ok {
 		return nil,
 			status.Errorf(codes.FailedPrecondition, "unsupported status report response returned from plugin")
 	}
-	// Load Status Report message compiled by the plugin into the overall generated report
-	report, err := anypb.New(statusReport)
-	if err != nil {
-		return nil, err
-	}
-
-	reportResp.StatusReport = report
-
-	// Populate top level resource health with health in plugin compiled report
-	resourcesHealth := make([]*pb.StatusReport_Health, len(statusReport.Resources))
-	for i, r := range statusReport.Resources {
-		resourcesHealth[i] = &pb.StatusReport_Health{
-			HealthStatus:  r.Health.String(),
-			HealthMessage: r.HealthMessage,
-			Name:          r.Name,
-		}
-	}
-	reportResp.ResourcesHealth = resourcesHealth
 
 	return reportResp, nil
 }
@@ -312,6 +289,13 @@ func (op *statusReportOperation) Do(
 		return nil, err
 	}
 
+	// realMsg is a ref to the actual proto message that gets Upserted into the DB
+	realMsg, ok := msg.(*pb.StatusReport)
+	if !ok {
+		return nil,
+			status.Errorf(codes.FailedPrecondition, "unsupported status report response returned from plugin")
+	}
+
 	// Call func on deployment _or_ release target
 	result, err := app.callDynamicFunc(ctx,
 		log,
@@ -323,6 +307,31 @@ func (op *statusReportOperation) Do(
 	if err != nil {
 		return nil, err
 	}
+
+	// Populate message with results before Upsert is called
+	report := result.(*sdk.StatusReport)
+	// Load Status Report message compiled by the plugin into the overall generated report
+	reportAny, err := anypb.New(report)
+	if err != nil {
+		return nil, err
+	}
+	realMsg.StatusReport = reportAny // marshall to Any
+
+	realMsg.Health = &pb.StatusReport_Health{
+		HealthStatus:  report.Health.String(),
+		HealthMessage: report.HealthMessage,
+	}
+
+	// Populate resource health with health in plugin compiled report
+	resourcesHealth := make([]*pb.StatusReport_Health, len(report.Resources))
+	for i, r := range report.Resources {
+		resourcesHealth[i] = &pb.StatusReport_Health{
+			HealthStatus:  r.Health.String(),
+			HealthMessage: r.HealthMessage,
+			Name:          r.Name,
+		}
+	}
+	realMsg.ResourcesHealth = resourcesHealth
 
 	op.result = result.(*sdk.StatusReport)
 

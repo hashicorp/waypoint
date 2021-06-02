@@ -262,14 +262,19 @@ func (p *Platform) Status(
 
 	if *job.Status == "running" {
 		result.Health = sdk.StatusReport_READY
+		result.HealthMessage = fmt.Sprintf("Job %q is reporting ready!", deployment.Name)
 	} else if *job.Status == "queued" || *job.Status == "started" {
 		result.Health = sdk.StatusReport_ALIVE
+		result.HealthMessage = fmt.Sprintf("Job %q is reporting alive!", deployment.Name)
 	} else if *job.Status == "completed" {
 		result.Health = sdk.StatusReport_PARTIAL
+		result.HealthMessage = fmt.Sprintf("Job %q is reporting partially available!", deployment.Name)
 	} else if *job.Status == "failed" || *job.Status == "lost" {
 		result.Health = sdk.StatusReport_DOWN
+		result.HealthMessage = fmt.Sprintf("Job %q is reporting down!", deployment.Name)
 	} else {
 		result.Health = sdk.StatusReport_UNKNOWN
+		result.HealthMessage = fmt.Sprintf("Job %q is reporting unknown!", deployment.Name)
 	}
 
 	result.HealthMessage = *job.StatusDescription
@@ -286,12 +291,12 @@ func (p *Platform) Status(
 
 	st.Update("Determining overall container health...")
 	if result.Health == sdk.StatusReport_READY {
-		st.Step(terminal.StatusOK, fmt.Sprintf("Job %q is reporting ready!", deployment.Name))
+		st.Step(terminal.StatusOK, result.HealthMessage)
 	} else {
 		if result.Health == sdk.StatusReport_PARTIAL {
-			st.Step(terminal.StatusWarn, fmt.Sprintf("Job %q is reporting partially available!", deployment.Name))
+			st.Step(terminal.StatusWarn, result.HealthMessage)
 		} else {
-			st.Step(terminal.StatusError, fmt.Sprintf("Job %q is reporting not ready!", deployment.Name))
+			st.Step(terminal.StatusError, result.HealthMessage)
 		}
 
 		// Extra advisory wording to let user know that the deployment could be still starting up
