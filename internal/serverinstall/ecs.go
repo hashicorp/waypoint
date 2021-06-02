@@ -181,12 +181,11 @@ func (i *ECSInstaller) Launch(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	s := sg.Add("Installing Waypoint server into ECS...")
+	s := sg.Add("Creating Network resources...")
 	defer func() { s.Abort() }()
 
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)
-	s.Update("Creating Network resources...")
 	nlb, err := createNLB(
 		ctx, s, log, sess,
 		netInfo.vpcID,
@@ -198,6 +197,8 @@ func (i *ECSInstaller) Launch(
 		return nil, err
 	}
 	s.Update("Created Network resources")
+	s.Done()
+	s = sg.Add("")
 
 	defaultStreamPrefix := fmt.Sprintf("waypoint-server-%d", time.Now().Nanosecond())
 	logOptions := buildLoggingOptions(
@@ -244,7 +245,6 @@ func (i *ECSInstaller) Launch(
 
 	// Create mount points for the EFS file system. The EFS mount targets need to
 	// existin in a 1:1 pair with the subnets in use.
-	s.Update("Creating ECS Service and Tasks...")
 	log.Debug("registering task definition")
 
 	cpus := aws.String(strconv.Itoa(defaultTaskCPU))
@@ -289,7 +289,7 @@ func (i *ECSInstaller) Launch(
 	taskDefArn := *taskDef.TaskDefinitionArn
 
 	// Create the service
-	s.Update("Creating Service...")
+	s.Update("Creating server Service...")
 	log.Debug("creating service", "arn", *taskDef.TaskDefinitionArn)
 
 	createServiceInput := &ecs.CreateServiceInput{
@@ -326,14 +326,14 @@ func (i *ECSInstaller) Launch(
 		},
 	}
 
-	s.Update("Creating ECS Service (%s, cluster-name: %s)", serviceName, clusterName)
-
 	service, err := createService(createServiceInput, ecsSvc)
 	if err != nil {
 		return nil, err
 	}
 
 	s.Update("Created ECS Service (%s, cluster-name: %s)", serviceName, clusterName)
+	s.Done()
+	s = sg.Add("")
 	log.Debug("service started", "arn", service.ServiceArn)
 
 	// after the service is created with the specified target groups, the load
@@ -365,6 +365,8 @@ func (i *ECSInstaller) Launch(
 	if !healthy {
 		return nil, fmt.Errorf("no healthy target group found")
 	}
+	s.Done()
+	s = sg.Add("")
 	s.Update("Service launched!")
 
 	return &ecsServer{
@@ -384,6 +386,13 @@ func (i *ECSInstaller) Upgrade(
 ) {
 	ui := opts.UI
 	log := opts.Log
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Inspecting ecs cluster...")
+	defer s.Abort()
+
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: i.config.Region,
 		Logger: log,
@@ -391,12 +400,6 @@ func (i *ECSInstaller) Upgrade(
 	if err != nil {
 		return nil, err
 	}
-
-	sg := ui.StepGroup()
-	defer sg.Wait()
-
-	s := sg.Add("Inspecting ecs cluster...")
-	defer s.Abort()
 
 	// inspect current service - looking for image used in Task
 	// Get Task definition
@@ -580,29 +583,35 @@ func (i *ECSInstaller) Uninstall(
 	// - EFS File System
 
 	s.Update("Deleting ECS resources...")
-	if err := deleteEcsResources(ctx, s, sess, resources); err != nil {
+	if err := deleteEcsResources(ctx, sess, resources); err != nil {
 		return err
 	}
-	s.Update("Deleting Cloud Watch Log Group resources...")
-	if err := deleteCWLResources(ctx, s, sess, defaultServerLogGroup); err != nil {
+	s.Done()
+
+	s = sg.Add("Deleting Cloud Watch Log Group resources...")
+	if err := deleteCWLResources(ctx, sess, defaultServerLogGroup); err != nil {
 		return err
 	}
-	s.Update("Deleting EFS resources...")
-	if err := deleteEFSResources(ctx, s, sess, resources); err != nil {
+	s.Done()
+
+	s = sg.Add("Deleting EFS resources...")
+	if err := deleteEFSResources(ctx, sess, resources); err != nil {
 		return err
 	}
-	s.Update("Deleting Network resources...")
-	if err := deleteNLBResources(ctx, s, sess, resources); err != nil {
+	s.Done()
+
+	s = sg.Add("Deleting Network resources...")
+	if err := deleteNLBResources(ctx, sess, resources); err != nil {
 		return err
 	}
 
 	s.Update("Server resources deleted")
+	s.Done()
 	return nil
 }
 
 func deleteEFSResources(
 	ctx context.Context,
-	s LifecycleStatus,
 	sess *session.Session,
 	resources []*resourcegroups.ResourceIdentifier,
 ) error {
@@ -621,7 +630,7 @@ func deleteEFSResources(
 	if err != nil {
 		return err
 	}
-	s.Update("Deleting EFS Mount Targets...")
+
 	for _, mt := range mtgs.MountTargets {
 		_, err := efsSvc.DeleteMountTarget(&efs.DeleteMountTargetInput{
 			MountTargetId: mt.MountTargetId,
@@ -658,7 +667,6 @@ func deleteEFSResources(
 		continue
 	}
 
-	s.Update("Deleting EFS File System...")
 	_, err = efsSvc.DeleteFileSystem(&efs.DeleteFileSystemInput{
 		FileSystemId: &id,
 	})
@@ -670,14 +678,13 @@ func deleteEFSResources(
 
 func deleteNLBResources(
 	ctx context.Context,
-	s LifecycleStatus,
 	sess *session.Session,
 	resources []*resourcegroups.ResourceIdentifier,
 ) error {
+
 	elbSvc := elbv2.New(sess)
 	for _, r := range resources {
 		if *r.ResourceType == "AWS::ElasticLoadBalancingV2::LoadBalancer" {
-			s.Update("Deleting Network Load Balancer LISTENERS", *r.ResourceArn)
 			results, err := elbSvc.DescribeListeners(&elbv2.DescribeListenersInput{
 				LoadBalancerArn: r.ResourceArn,
 			})
@@ -692,7 +699,7 @@ func deleteNLBResources(
 					return err
 				}
 			}
-			s.Update("Deleting Network Load Balancer ", *r.ResourceArn)
+
 			_, err = elbSvc.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
 				LoadBalancerArn: r.ResourceArn,
 			})
@@ -701,7 +708,7 @@ func deleteNLBResources(
 			}
 		}
 	}
-	s.Update("Deleting Target Groups...")
+
 	for _, r := range resources {
 		if *r.ResourceType == "AWS::ElasticLoadBalancingV2::TargetGroup" {
 			_, err := elbSvc.DeleteTargetGroup(&elbv2.DeleteTargetGroupInput{
@@ -728,7 +735,6 @@ func deleteNLBResources(
 	if len(results.SecurityGroups) > 0 {
 		for _, g := range results.SecurityGroups {
 			for i := 0; i < 20; i++ {
-				s.Update("Deleting Security Group (%s)", *g.GroupId)
 				_, err := ec2Svc.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 					GroupId: g.GroupId,
 				})
@@ -759,13 +765,11 @@ func nameFromArn(arn string) string {
 
 func deleteCWLResources(
 	ctx context.Context,
-	s LifecycleStatus,
 	sess *session.Session,
 	logGroup string,
 ) error {
 	cwlSvc := cloudwatchlogs.New(sess)
 
-	s.Update("Deleting Log Group %s", logGroup)
 	_, err := cwlSvc.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{
 		LogGroupName: aws.String(logGroup),
 	})
@@ -777,7 +781,6 @@ func deleteCWLResources(
 
 func deleteEcsResources(
 	ctx context.Context,
-	s LifecycleStatus,
 	sess *session.Session,
 	resources []*resourcegroups.ResourceIdentifier,
 ) error {
@@ -789,11 +792,10 @@ func deleteEcsResources(
 			clusterArn = *r.ResourceArn
 		}
 	}
-	if err := deleteEcsCommonResources(ctx, s, sess, clusterArn, resources); err != nil {
+	if err := deleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
 		return err
 	}
 
-	s.Update("Deleting ECS cluster: %s", clusterArn)
 	_, err := ecsSvc.DeleteCluster(&ecs.DeleteClusterInput{
 		Cluster: &clusterArn,
 	})
@@ -806,7 +808,6 @@ func deleteEcsResources(
 
 func deleteEcsCommonResources(
 	ctx context.Context,
-	s LifecycleStatus,
 	sess *session.Session,
 	clusterArn string,
 	resources []*resourcegroups.ResourceIdentifier,
@@ -820,11 +821,9 @@ func deleteEcsCommonResources(
 		}
 	}
 	if serviceArn == "" {
-		s.Update("No runner ECS services found")
 		return nil
 	}
 
-	s.Update("Deleting ECS service: %s", serviceArn)
 	_, err := ecsSvc.DeleteService(&ecs.DeleteServiceInput{
 		Service: &serviceArn,
 		Force:   aws.Bool(true),
@@ -861,7 +860,6 @@ func deleteEcsCommonResources(
 	}
 	for _, r := range resources {
 		if *r.ResourceType == "AWS::ECS::TaskDefinition" {
-			s.Update("Deregistering ECS task: %s", *r.ResourceArn)
 			_, err := ecsSvc.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
 				TaskDefinition: r.ResourceArn,
 			})
@@ -900,7 +898,7 @@ func (i *ECSInstaller) InstallRunner(
 		runSvcArn     *string
 	)
 	lf := &Lifecycle{
-		Init: func(s LifecycleStatus) error {
+		Init: func(ui terminal.UI) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
 				Region: i.config.Region,
 				Logger: log,
@@ -908,12 +906,12 @@ func (i *ECSInstaller) InstallRunner(
 			if err != nil {
 				return err
 			}
-			executionRole, err = i.SetupExecutionRole(ctx, s, log, sess)
+			executionRole, err = i.SetupExecutionRole(ctx, ui, log, sess)
 			if err != nil {
 				return err
 			}
 
-			logGroup, err = i.SetupLogs(ctx, s, log, sess, defaultRunnerLogGroup)
+			logGroup, err = i.SetupLogs(ctx, ui, log, sess, defaultRunnerLogGroup)
 			if err != nil {
 				return err
 			}
@@ -921,9 +919,9 @@ func (i *ECSInstaller) InstallRunner(
 			return nil
 		},
 
-		Run: func(s LifecycleStatus) error {
+		Run: func(ui terminal.UI) error {
 			runSvcArn, err = i.LaunchRunner(
-				ctx, s, log, ui, sess,
+				ctx, ui, log, sess,
 				opts.AdvertiseClient.Env(),
 				executionRole,
 				logGroup,
@@ -989,11 +987,11 @@ func (i *ECSInstaller) UninstallRunner(
 		}
 	}
 	s.Update("Deleting ECS resources...")
-	if err := deleteEcsCommonResources(ctx, s, sess, clusterArn, resources); err != nil {
+	if err := deleteEcsCommonResources(ctx, sess, clusterArn, resources); err != nil {
 		return err
 	}
 	s.Update("Deleting Cloud Watch Log Group resources...")
-	if err := deleteCWLResources(ctx, s, sess, defaultRunnerLogGroup); err != nil {
+	if err := deleteCWLResources(ctx, sess, defaultRunnerLogGroup); err != nil {
 		return err
 	}
 	return nil
@@ -1176,46 +1174,32 @@ type Lifecycle struct {
 // }
 
 func (lf *Lifecycle) Execute(log hclog.Logger, ui terminal.UI) error {
-	var l lStatus
-	l.ui = ui
-
-	defer l.Close()
-
 	if lf.Init != nil {
 		log.Debug("lifecycle init")
 
-		err := lf.Init(&l)
+		err := lf.Init(ui)
 		if err != nil {
-			l.Abort()
 			return err
 		}
 
 	}
 
 	log.Debug("lifecycle run")
-	err := lf.Run(&l)
+	err := lf.Run(ui)
 	if err != nil {
-		l.Abort()
 		return err
 	}
 
 	if lf.Cleanup != nil {
 		log.Debug("lifecycle cleanup")
 
-		err = lf.Cleanup(&l)
+		err = lf.Cleanup(ui)
 		if err != nil {
-			l.Abort()
 			return err
 		}
 	}
 
 	return nil
-}
-
-type LifecycleStatus interface {
-	Status(str string, args ...interface{})
-	Update(str string, args ...interface{})
-	Error(str string, args ...interface{})
 }
 
 func (i *ECSInstaller) SetupNetworking(
@@ -1754,7 +1738,7 @@ const rolePolicy = `{
 // creates a network load balancer for grpc and http
 func createNLB(
 	ctx context.Context,
-	s LifecycleStatus,
+	s terminal.Step,
 	log hclog.Logger,
 	sess *session.Session,
 	vpcId *string,
@@ -2041,15 +2025,18 @@ func registerTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.EC
 
 func (i *ECSInstaller) LaunchRunner(
 	ctx context.Context,
-	s LifecycleStatus,
-	log hclog.Logger,
 	ui terminal.UI,
+	log hclog.Logger,
 	sess *session.Session,
 	env []string,
 	executionRoleArn, logGroup string,
 ) (*string, error) {
 
-	s.Update("Installing Waypoint runner into ECS...")
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Installing Waypoint runner into ECS...")
+	defer func() { s.Abort() }()
 
 	defaultStreamPrefix := fmt.Sprintf("waypoint-runner-%d", time.Now().Nanosecond())
 	logOptions := buildLoggingOptions(
