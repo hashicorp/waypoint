@@ -31,8 +31,6 @@ const (
 	defaultRunnerLogGroup = "waypoint-runner-logs"
 	defaultServerLogGroup = "waypoint-server-logs"
 
-	defaultTaskCPU     = 512
-	defaultTaskMemory  = 1024
 	defaultTaskFamily  = "waypoint-server"
 	defaultTaskRuntime = "FARGATE"
 
@@ -71,6 +69,11 @@ type ecsConfig struct {
 	// Subnets to place the service into. Defaults to the public Subnets in the
 	// default VPC.
 	Subnets []string `hcl:"subnets,optional"`
+
+	// CPU configures the default amount of CPU for the task
+	CPU string `hcl:"cpu,optional"`
+	// Memory configures the default amount of memory for the task
+	Memory string `hcl:"memory,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to
@@ -244,16 +247,13 @@ func (i *ECSInstaller) Launch(
 	// existin in a 1:1 pair with the subnets in use.
 	log.Debug("registering task definition")
 
-	cpus := aws.String(strconv.Itoa(defaultTaskCPU))
-	mems := strconv.Itoa(defaultTaskMemory)
-
 	s.Update("Registering Task definition: %s", defaultTaskFamily)
 
 	registerTaskDefinitionInput := ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions:    []*ecs.ContainerDefinition{&def},
 		ExecutionRoleArn:        aws.String(executionRoleArn),
-		Cpu:                     cpus,
-		Memory:                  aws.String(mems),
+		Cpu:                     aws.String(i.config.CPU),
+		Memory:                  aws.String(i.config.Memory),
 		Family:                  aws.String(defaultTaskFamily),
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{aws.String(defaultTaskRuntime)},
@@ -1045,12 +1045,24 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Configures the Execution role name to use.",
 		Default: "waypoint-server-execution-role",
 	})
-
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-server-image",
 		Target:  &i.config.ServerImage,
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
+	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-cpu",
+		Target:  &i.config.CPU,
+		Usage:   "Configures the requested CPU amount for the Waypoint server task in ECS.",
+		Default: "512",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-mem",
+		Target:  &i.config.Memory,
+		Usage:   "Configures the requested memory amount for the Waypoint server task in ECS.",
+		Default: "1024",
 	})
 }
 
@@ -1072,6 +1084,19 @@ func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
 		Target:  &i.config.Region,
 		Usage:   "Configures the region specific things.",
 		Default: "us-west-2",
+	})
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-cpu",
+		Target:  &i.config.CPU,
+		Usage:   "Configures the requested CPU amount for the Waypoint server task in ECS.",
+		Default: "512",
+	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "ecs-mem",
+		Target:  &i.config.Memory,
+		Usage:   "Configures the requested memory amount for the Waypoint server task in ECS.",
+		Default: "1024",
 	})
 }
 
@@ -2049,8 +2074,6 @@ func (i *ECSInstaller) LaunchRunner(
 		defaultStreamPrefix,
 	)
 
-	cpu := defaultTaskCPU
-	mem := defaultTaskMemory
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 
 	envs := []*ecs.KeyValuePair{}
@@ -2091,17 +2114,14 @@ func (i *ECSInstaller) LaunchRunner(
 		},
 	}
 
-	cpus := aws.String(strconv.Itoa(cpu))
-	mems := strconv.Itoa(mem)
-
 	s.Update("Registering Task definition: waypoint-runner")
 
 	registerTaskDefinitionInput := ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: []*ecs.ContainerDefinition{&def},
 
 		ExecutionRoleArn: aws.String(executionRoleArn),
-		Cpu:              cpus,
-		Memory:           aws.String(mems),
+		Cpu:              aws.String(i.config.CPU),
+		Memory:           aws.String(i.config.Memory),
 		Family:           aws.String(runnerName),
 
 		NetworkMode:             aws.String("awsvpc"),
