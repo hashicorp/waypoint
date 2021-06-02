@@ -97,7 +97,7 @@ func (i *ECSInstaller) Install(
 	)
 
 	lf := &Lifecycle{
-		Init: func(s LifecycleStatus) error {
+		Init: func(ui terminal.UI) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
 				Region: i.config.Region,
 				Logger: log,
@@ -106,35 +106,35 @@ func (i *ECSInstaller) Install(
 				return err
 			}
 
-			if netInfo, err = i.SetupNetworking(ctx, s, sess); err != nil {
+			if netInfo, err = i.SetupNetworking(ctx, ui, sess); err != nil {
 				return err
 			}
 
-			if cluster, err = i.SetupCluster(ctx, s, sess); err != nil {
+			if cluster, err = i.SetupCluster(ctx, ui, sess); err != nil {
 				return err
 			}
 
-			if efsInfo, err = i.SetupEFS(ctx, s, sess, netInfo); err != nil {
+			if efsInfo, err = i.SetupEFS(ctx, ui, sess, netInfo); err != nil {
 				return err
 			}
 
-			if executionRole, err = i.SetupExecutionRole(ctx, s, log, sess); err != nil {
+			if executionRole, err = i.SetupExecutionRole(ctx, ui, log, sess); err != nil {
 				return err
 			}
 
-			if serverLogGroup, err = i.SetupLogs(ctx, s, log, sess, defaultServerLogGroup); err != nil {
+			if serverLogGroup, err = i.SetupLogs(ctx, ui, log, sess, defaultServerLogGroup); err != nil {
 				return err
 			}
 
 			return nil
 		},
 
-		Run: func(s LifecycleStatus) error {
-			server, err = i.Launch(ctx, s, log, ui, sess, efsInfo, netInfo, executionRole, cluster, serverLogGroup)
+		Run: func(ui terminal.UI) error {
+			server, err = i.Launch(ctx, log, ui, sess, efsInfo, netInfo, executionRole, cluster, serverLogGroup)
 			return err
 		},
 
-		Cleanup: func(s LifecycleStatus) error { return nil },
+		Cleanup: func(ui terminal.UI) error { return nil },
 	}
 
 	if err := lf.Execute(log, ui); err != nil {
@@ -170,7 +170,6 @@ func (i *ECSInstaller) Install(
 // service
 func (i *ECSInstaller) Launch(
 	ctx context.Context,
-	s LifecycleStatus,
 	log hclog.Logger,
 	ui terminal.UI,
 	sess *session.Session,
@@ -178,11 +177,16 @@ func (i *ECSInstaller) Launch(
 	netInfo *networkInformation,
 	executionRoleArn, clusterName, logGroup string,
 ) (*ecsServer, error) {
-	s.Status("Installing Waypoint server into ECS...")
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Installing Waypoint server into ECS...")
+	defer func() { s.Abort() }()
 
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)
-	s.Status("Creating Network resources...")
+	s.Update("Creating Network resources...")
 	nlb, err := createNLB(
 		ctx, s, log, sess,
 		netInfo.vpcID,
@@ -240,7 +244,7 @@ func (i *ECSInstaller) Launch(
 
 	// Create mount points for the EFS file system. The EFS mount targets need to
 	// existin in a 1:1 pair with the subnets in use.
-	s.Status("Creating ECS Service and Tasks...")
+	s.Update("Creating ECS Service and Tasks...")
 	log.Debug("registering task definition")
 
 	cpus := aws.String(strconv.Itoa(defaultTaskCPU))
@@ -322,7 +326,7 @@ func (i *ECSInstaller) Launch(
 		},
 	}
 
-	s.Status("Creating ECS Service (%s, cluster-name: %s)", serviceName, clusterName)
+	s.Update("Creating ECS Service (%s, cluster-name: %s)", serviceName, clusterName)
 
 	service, err := createService(createServiceInput, ecsSvc)
 	if err != nil {
@@ -361,7 +365,7 @@ func (i *ECSInstaller) Launch(
 	if !healthy {
 		return nil, fmt.Errorf("no healthy target group found")
 	}
-	s.Status("Service launched!")
+	s.Update("Service launched!")
 
 	return &ecsServer{
 		Url:                nlb.publicDNS,
@@ -535,11 +539,12 @@ func (i *ECSInstaller) Uninstall(
 ) error {
 	ui := opts.UI
 	log := opts.Log
-	s := new(lStatus)
-	s.ui = ui
-	defer s.Close()
 
-	s.Status("Uninstalling Server resources...")
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Uninstalling Server resources...")
+	defer func() { s.Abort() }()
 
 	// Get list of resources created with either the waypoint-server, or
 	// waypoint-runner tag
@@ -574,24 +579,24 @@ func (i *ECSInstaller) Uninstall(
 	// - ELB Network Load Balancer
 	// - EFS File System
 
-	s.Status("Deleting ECS resources...")
+	s.Update("Deleting ECS resources...")
 	if err := deleteEcsResources(ctx, s, sess, resources); err != nil {
 		return err
 	}
-	s.Status("Deleting Cloud Watch Log Group resources...")
+	s.Update("Deleting Cloud Watch Log Group resources...")
 	if err := deleteCWLResources(ctx, s, sess, defaultServerLogGroup); err != nil {
 		return err
 	}
-	s.Status("Deleting EFS resources...")
+	s.Update("Deleting EFS resources...")
 	if err := deleteEFSResources(ctx, s, sess, resources); err != nil {
 		return err
 	}
-	s.Status("Deleting Network resources...")
+	s.Update("Deleting Network resources...")
 	if err := deleteNLBResources(ctx, s, sess, resources); err != nil {
 		return err
 	}
 
-	s.Status("Server resources deleted")
+	s.Update("Server resources deleted")
 	return nil
 }
 
@@ -926,7 +931,7 @@ func (i *ECSInstaller) InstallRunner(
 			return err
 		},
 
-		Cleanup: func(s LifecycleStatus) error { return nil },
+		Cleanup: func(ui terminal.UI) error { return nil },
 	}
 
 	if err := lf.Execute(log, ui); err != nil {
@@ -949,10 +954,12 @@ func (i *ECSInstaller) UninstallRunner(
 ) error {
 	ui := opts.UI
 	log := opts.Log
-	s := new(lStatus)
-	s.ui = ui
-	defer s.Close()
-	s.Status("Uninstalling Runner resources...")
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Uninstalling Runner resources...")
+	defer func() { s.Abort() }()
 
 	sess, err := utils.GetSession(&utils.SessionConfig{
 		Region: i.config.Region,
@@ -981,11 +988,11 @@ func (i *ECSInstaller) UninstallRunner(
 			clusterArn = *r.ResourceArn
 		}
 	}
-	s.Status("Deleting ECS resources...")
+	s.Update("Deleting ECS resources...")
 	if err := deleteEcsCommonResources(ctx, s, sess, clusterArn, resources); err != nil {
 		return err
 	}
-	s.Status("Deleting Cloud Watch Log Group resources...")
+	s.Update("Deleting Cloud Watch Log Group resources...")
 	if err := deleteCWLResources(ctx, s, sess, defaultRunnerLogGroup); err != nil {
 		return err
 	}
@@ -1088,85 +1095,85 @@ func (i *ECSInstaller) UninstallFlags(set *flag.Set) {
 }
 
 type Lifecycle struct {
-	Init    func(LifecycleStatus) error
-	Run     func(LifecycleStatus) error
-	Cleanup func(LifecycleStatus) error
+	Init    func(terminal.UI) error
+	Run     func(terminal.UI) error
+	Cleanup func(terminal.UI) error
 }
 
-type lStatus struct {
-	ui   terminal.UI
-	sg   terminal.StepGroup
-	step terminal.Step
-}
+// type lStatus struct {
+// 	ui   terminal.UI
+// 	sg   terminal.StepGroup
+// 	step terminal.Step
+// }
 
-func (l *lStatus) Status(str string, args ...interface{}) {
-	if l.sg == nil {
-		l.sg = l.ui.StepGroup()
-	}
+// func (l *lStatus) Status(str string, args ...interface{}) {
+// 	if l.sg == nil {
+// 		l.sg = l.ui.StepGroup()
+// 	}
 
-	if l.step != nil {
-		l.step.Done()
-		l.step = nil
-	}
+// 	if l.step != nil {
+// 		l.step.Done()
+// 		l.step = nil
+// 	}
 
-	l.step = l.sg.Add(str, args...)
-}
+// 	l.step = l.sg.Add(str, args...)
+// }
 
-func (l *lStatus) Update(str string, args ...interface{}) {
-	if l.sg == nil {
-		l.sg = l.ui.StepGroup()
-	}
+// func (l *lStatus) Update(str string, args ...interface{}) {
+// 	if l.sg == nil {
+// 		l.sg = l.ui.StepGroup()
+// 	}
 
-	if l.step != nil {
-		l.step.Update(str, args...)
-	} else {
-		l.step = l.sg.Add(str, args)
-	}
-}
+// 	if l.step != nil {
+// 		l.step.Update(str, args...)
+// 	} else {
+// 		l.step = l.sg.Add(str, args)
+// 	}
+// }
 
-func (l *lStatus) Error(str string, args ...interface{}) {
-	if l.sg == nil {
-		l.sg = l.ui.StepGroup()
-	}
+// func (l *lStatus) Error(str string, args ...interface{}) {
+// 	if l.sg == nil {
+// 		l.sg = l.ui.StepGroup()
+// 	}
 
-	if l.step != nil {
-		l.step.Update(str, args...)
-		l.step.Abort()
-	} else {
-		l.step = l.sg.Add(str, args)
-		l.step.Abort()
-	}
+// 	if l.step != nil {
+// 		l.step.Update(str, args...)
+// 		l.step.Abort()
+// 	} else {
+// 		l.step = l.sg.Add(str, args)
+// 		l.step.Abort()
+// 	}
 
-	l.step = nil
-}
+// 	l.step = nil
+// }
 
-func (l *lStatus) Abort() error {
-	if l.step != nil {
-		l.step.Abort()
-		l.step = nil
-	}
+// func (l *lStatus) Abort() error {
+// 	if l.step != nil {
+// 		l.step.Abort()
+// 		l.step = nil
+// 	}
 
-	if l.sg != nil {
-		l.sg.Wait()
-		l.sg = nil
-	}
+// 	if l.sg != nil {
+// 		l.sg.Wait()
+// 		l.sg = nil
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func (l *lStatus) Close() error {
-	if l.step != nil {
-		l.step.Done()
-		l.step = nil
-	}
+// func (l *lStatus) Close() error {
+// 	if l.step != nil {
+// 		l.step.Done()
+// 		l.step = nil
+// 	}
 
-	if l.sg != nil {
-		l.sg.Wait()
-		l.sg = nil
-	}
+// 	if l.sg != nil {
+// 		l.sg.Wait()
+// 		l.sg = nil
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (lf *Lifecycle) Execute(log hclog.Logger, ui terminal.UI) error {
 	var l lStatus
@@ -1213,17 +1220,21 @@ type LifecycleStatus interface {
 
 func (i *ECSInstaller) SetupNetworking(
 	ctx context.Context,
-	s LifecycleStatus,
+	ui terminal.UI,
 	sess *session.Session,
 ) (*networkInformation, error) {
 
-	s.Status("Establishing subnets and security group...")
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Establishing subnets and security group...")
+	defer s.Abort()
 	subnets, vpcID, err := i.subnetInfo(ctx, s, sess)
 	if err != nil {
 		return nil, err
 	}
 
-	s.Status("Setting up security group...")
+	s.Update("Setting up security group...")
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)
 	ports := []*int64{
@@ -1236,6 +1247,7 @@ func (i *ECSInstaller) SetupNetworking(
 	if err != nil {
 		return nil, err
 	}
+	s.Done()
 	return &networkInformation{
 		vpcID:   vpcID,
 		subnets: subnets,
@@ -1245,14 +1257,19 @@ func (i *ECSInstaller) SetupNetworking(
 
 func (i *ECSInstaller) SetupCluster(
 	ctx context.Context,
-	s LifecycleStatus,
+	ui terminal.UI,
 	sess *session.Session,
 ) (string, error) {
-	ecsSvc := ecs.New(sess)
 
-	s.Status("Inspecting existing ECS clusters...")
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Inspecting existing ECS clusters...")
+	defer func() { s.Abort() }()
+
 	cluster := i.config.Cluster
 
+	ecsSvc := ecs.New(sess)
 	// re-use an existing cluster if we have one
 	desc, err := ecsSvc.DescribeClusters(&ecs.DescribeClustersInput{
 		Clusters: []*string{aws.String(cluster)},
@@ -1263,12 +1280,13 @@ func (i *ECSInstaller) SetupCluster(
 
 	for _, c := range desc.Clusters {
 		if *c.ClusterName == cluster && strings.ToLower(*c.Status) == "active" {
-			s.Status("Found existing ECS cluster: %s", cluster)
+			s.Update("Found existing ECS cluster: %s", cluster)
+			s.Done()
 			return cluster, nil
 		}
 	}
 
-	s.Status("Creating new ECS cluster: %s", cluster)
+	s.Update("Creating new ECS cluster: %s", cluster)
 
 	_, err = ecsSvc.CreateCluster(&ecs.CreateClusterInput{
 		ClusterName: aws.String(cluster),
@@ -1287,20 +1305,27 @@ func (i *ECSInstaller) SetupCluster(
 	}
 
 	s.Update("Created new ECS cluster: %s", cluster)
+	s.Done()
+
 	return cluster, nil
 }
 
 func (i *ECSInstaller) SetupEFS(
 	ctx context.Context,
-	s LifecycleStatus,
+	ui terminal.UI,
 	sess *session.Session,
 	netInfo *networkInformation,
 
 ) (*efsInformation, error) {
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Creating new EFS file system...")
+	defer func() { s.Abort() }()
+
 	efsSvc := efs.New(sess)
 	ulid, _ := component.Id()
 
-	s.Status("Creating new EFS file system...")
 	fsd, err := efsSvc.CreateFileSystem(&efs.CreateFileSystemInput{
 		CreationToken: aws.String(ulid),
 		Encrypted:     aws.Bool(true),
@@ -1345,7 +1370,7 @@ EFSLOOP:
 		time.Sleep(2 * time.Second)
 	}
 
-	s.Status("Creating EFS Mount targets...")
+	s.Update("Creating EFS Mount targets...")
 
 	// poll for available
 	for _, sub := range netInfo.subnets {
@@ -1419,6 +1444,8 @@ EFSLOOP:
 		return nil, fmt.Errorf("not enough available mount targets found")
 	}
 
+	s.Update("EFS ready")
+	s.Done()
 	return &efsInformation{
 		fileSystemID:  fsd.FileSystemId,
 		accessPointID: accessPoint.AccessPointId,
@@ -1455,7 +1482,7 @@ type nlb struct {
 
 func createSG(
 	ctx context.Context,
-	s LifecycleStatus,
+	s terminal.Step,
 	sess *session.Session,
 	name string,
 	vpcId *string,
@@ -1541,7 +1568,7 @@ func createSG(
 
 func (i *ECSInstaller) SetupLogs(
 	ctx context.Context,
-	s LifecycleStatus,
+	ui terminal.UI,
 	log hclog.Logger,
 	sess *session.Session,
 
@@ -1549,7 +1576,11 @@ func (i *ECSInstaller) SetupLogs(
 ) (string, error) {
 	cwl := cloudwatchlogs.New(sess)
 
-	s.Status("Examining existing CloudWatchLogs groups...")
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Examining existing CloudWatchLogs groups...")
+	defer func() { s.Abort() }()
 
 	groups, err := cwl.DescribeLogGroups(&cloudwatchlogs.DescribeLogGroupsInput{
 		Limit:              aws.Int64(1),
@@ -1560,7 +1591,7 @@ func (i *ECSInstaller) SetupLogs(
 	}
 
 	if len(groups.LogGroups) == 0 {
-		s.Status("Creating CloudWatchLogs group to store logs in: %s", logGroup)
+		s.Update("Creating CloudWatchLogs group to store logs in: %s", logGroup)
 
 		log.Debug("creating log group", "group", logGroup)
 		_, err = cwl.CreateLogGroup(&cloudwatchlogs.CreateLogGroupInput{
@@ -1571,8 +1602,11 @@ func (i *ECSInstaller) SetupLogs(
 		}
 
 		s.Update("Created CloudWatchLogs group to store logs in: %s", logGroup)
+	} else {
+		s.Update("Using existing log group")
 	}
 
+	s.Done()
 	return logGroup, nil
 }
 
@@ -1626,11 +1660,18 @@ type Logging struct {
 
 func (i *ECSInstaller) SetupExecutionRole(
 	ctx context.Context,
-	s LifecycleStatus,
+	ui terminal.UI,
 	log hclog.Logger,
 	sess *session.Session,
 
 ) (string, error) {
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	s := sg.Add("Setting up execution role...")
+	defer func() { s.Abort() }()
+
 	svc := iam.New(sess)
 
 	roleName := i.config.ExecutionRoleName
@@ -1650,12 +1691,13 @@ func (i *ECSInstaller) SetupExecutionRole(
 
 	getOut, err := svc.GetRole(queryInput)
 	if err == nil {
-		s.Status("Found existing IAM role to use: %s", roleName)
+		s.Update("Found existing IAM role to use: %s", roleName)
+		s.Done()
 		return *getOut.Role.Arn, nil
 	}
 
 	log.Debug("creating new role")
-	s.Status("Creating IAM role: %s", roleName)
+	s.Update("Creating IAM role: %s", roleName)
 
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(rolePolicy),
@@ -1691,6 +1733,7 @@ func (i *ECSInstaller) SetupExecutionRole(
 	log.Debug("attached execution role policy")
 
 	s.Update("Created IAM role: %s", roleName)
+	s.Done()
 	return roleArn, nil
 }
 
@@ -1915,7 +1958,7 @@ func createNLB(
 
 func (i *ECSInstaller) subnetInfo(
 	ctx context.Context,
-	s LifecycleStatus,
+	s terminal.Step,
 	sess *session.Session,
 ) ([]*string, *string, error) {
 	ec2Svc := ec2.New(sess)
@@ -2006,7 +2049,7 @@ func (i *ECSInstaller) LaunchRunner(
 	executionRoleArn, logGroup string,
 ) (*string, error) {
 
-	s.Status("Installing Waypoint runner into ECS...")
+	s.Update("Installing Waypoint runner into ECS...")
 
 	defaultStreamPrefix := fmt.Sprintf("waypoint-runner-%d", time.Now().Nanosecond())
 	logOptions := buildLoggingOptions(
@@ -2088,7 +2131,7 @@ func (i *ECSInstaller) LaunchRunner(
 	}
 
 	taskDefArn := *taskDef.TaskDefinitionArn
-	s.Status("Creating Service...")
+	s.Update("Creating Service...")
 	log.Debug("creating service", "arn", *taskDef.TaskDefinitionArn)
 
 	// find the default security group to use
