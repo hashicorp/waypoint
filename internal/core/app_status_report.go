@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
@@ -332,6 +333,15 @@ func (op *statusReportOperation) Do(
 		}
 	}
 	realMsg.ResourcesHealth = resourcesHealth
+
+	switch op.Target.(type) {
+	case *pb.Deployment:
+		realMsg.TargetId = &pb.StatusReport_DeploymentId{DeploymentId: op.Target.(*pb.Deployment).Id}
+	case *pb.Release:
+		realMsg.TargetId = &pb.StatusReport_ReleaseId{ReleaseId: op.Target.(*pb.Release).Id}
+	default:
+		return nil, fmt.Errorf("unsupported status operation type")
+	}
 
 	op.result = result.(*sdk.StatusReport)
 
