@@ -399,7 +399,7 @@ func (c *ServerUpgradeCommand) Flags() *flag.Sets {
 			Target:  &c.platform,
 			Default: "",
 			Usage: "Platform to upgrade the Waypoint server from, " +
-				"defaults to the platform stored in the context",
+				"defaults to the platform stored in the context.",
 		})
 		f.StringVar(&flag.StringVar{
 			Name:    "snapshot-name",

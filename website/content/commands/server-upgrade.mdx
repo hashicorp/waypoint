@@ -27,13 +27,17 @@ Usage: `waypoint server upgrade [options]`
 
 - `-auto-approve` - Confirm server upgrade.
 - `-context-name=<string>` - Waypoint server context to upgrade.
-- `-platform=<string>` - Platform to upgrade the Waypoint server from.
+- `-platform=<string>` - Platform to upgrade the Waypoint server from, defaults to the platform stored in the context.
 - `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.
 - `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to upgrades.
 
-#### docker Options
+#### ecs Options
 
-- `-docker-server-image=<string>` - Docker image for the Waypoint server.
+- `-ecs-cluster=<string>` - Configures the Cluster to upgrade.
+- `-ecs-server-image=<string>` - Docker image for the Waypoint server.
+- `-ecs-region=<string>` - Configures which AWS region to install into.
+- `-ecs-cpu=<string>` - Configures the requested CPU amount for the Waypoint server task in ECS.
+- `-ecs-mem=<string>` - Configures the requested memory amount for the Waypoint server task in ECS.
 
 #### kubernetes Options
 
@@ -56,5 +60,9 @@ Usage: `waypoint server upgrade [options]`
 - `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server.
+
+#### docker Options
+
+- `-docker-server-image=<string>` - Docker image for the Waypoint server.
 
 @include "commands/server-upgrade_more.mdx"
