@@ -1,0 +1,3 @@
+```release-note:feature
+ui: Add reporting on status of a deployment
+```
