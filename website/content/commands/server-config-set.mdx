@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: 'Commands: Server config-set'
-sidebar_title: 'server config-set'
-description: 'Set the server online configuration'
+page_title: "Commands: Server config-set"
+sidebar_title: "server config-set"
+description: "Set the server online configuration"
 ---
 
 # Waypoint Server config-set
@@ -26,9 +26,9 @@ Usage: `waypoint server config-set [options]`
 #### Command Options
 
 - `-advertise-addr=<string>` - Address to advertise for the server. This is used by the entrypoints
-  binaries to communicate back to the server. If this is blank, then
-  the entrypoints will not communicate to the server. Features such as
-  logs, exec, etc. will not work.
+binaries to communicate back to the server. If this is blank, then
+the entrypoints will not communicate to the server. Features such as
+logs, exec, etc. will not work.
 - `-advertise-tls` - If true, the advertised address should be connected to with TLS.
 - `-advertise-tls-skip-verify` - Do not verify the TLS certificate presented by the server.
 

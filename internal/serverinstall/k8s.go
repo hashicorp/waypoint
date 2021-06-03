@@ -1405,7 +1405,7 @@ func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
 	set.StringVar(&flag.StringVar{
 		Name:   "k8s-context",
 		Target: &i.config.k8sContext,
-		Usage: "The Kubernetes context to unisntall the Waypoint server from. If left" +
+		Usage: "The Kubernetes context to uninstall the Waypoint server from. If left" +
 			" unset, Waypoint will use the current Kubernetes context.",
 		Default: "",
 	})

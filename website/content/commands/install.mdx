@@ -1,8 +1,8 @@
 ---
 layout: commands
-page_title: 'Commands: Install'
-sidebar_title: 'install'
-description: 'Install the Waypoint server to Kubernetes, Nomad, or Docker'
+page_title: "Commands: Install"
+sidebar_title: "install"
+description: "Install the Waypoint server to Kubernetes, Nomad, or Docker"
 ---
 
 # Waypoint Install
@@ -30,6 +30,24 @@ Usage: `waypoint install [options]`
 - `-context-set-default` - Set the newly installed server as the default CLI context.
 - `-platform=<string>` - Platform to install the Waypoint server into.
 
+#### nomad Options
+
+- `-nomad-annotate-service=<key=value>` - Annotations for the Service generated.
+- `-nomad-auth-soft-fail` - Don't fail the Nomad task on an auth failure obtaining server image container. Attempt to continue without auth.
+- `-nomad-dc=<string>` - Datacenters to install to for Nomad.
+- `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad.
+- `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
+- `-nomad-region=<string>` - Region to install to for Nomad.
+- `-nomad-server-cpu=<string>` - CPU required to run this task in MHz.
+- `-nomad-server-memory=<string>` - MB of Memory to allocate to the Server job task.
+- `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
+- `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
+- `-nomad-server-image=<string>` - Docker image for the Waypoint server.
+
+#### docker Options
+
+- `-docker-server-image=<string>` - Docker image for the Waypoint server.
+
 #### ecs Options
 
 - `-ecs-cluster=<string>` - Configures the Cluster to install into.
@@ -55,23 +73,5 @@ Usage: `waypoint install [options]`
 - `-k8s-server-image=<string>` - Docker image for the Waypoint server.
 - `-k8s-storageclassname=<string>` - Name of the StorageClass required by the volume claim to install the Waypoint server image to.
 - `-k8s-storage-request=<string>` - Configures the requested persistent volume size for the Waypoint server in Kubernetes.
-
-#### nomad Options
-
-- `-nomad-annotate-service=<key=value>` - Annotations for the Service generated.
-- `-nomad-auth-soft-fail` - Don't fail the Nomad task on an auth failure obtaining server image container. Attempt to continue without auth.
-- `-nomad-dc=<string>` - Datacenters to install to for Nomad.
-- `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad.
-- `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
-- `-nomad-region=<string>` - Region to install to for Nomad.
-- `-nomad-server-cpu=<string>` - CPU required to run this task in MHz.
-- `-nomad-server-memory=<string>` - MB of Memory to allocate to the Server job task.
-- `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
-- `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
-- `-nomad-server-image=<string>` - Docker image for the Waypoint server.
-
-#### docker Options
-
-- `-docker-server-image=<string>` - Docker image for the Waypoint server.
 
 @include "commands/install_more.mdx"
