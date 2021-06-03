@@ -1,0 +1,4 @@
+```release-note:feature
+server/ecs: Use `--platform=ecs` to install waypoint server to
+AWS ECS using Fargate
+```
