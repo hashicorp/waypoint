@@ -8,10 +8,16 @@ interface DeploymentModelParams {
   deployment_id: string;
 }
 
+interface Breadcrumb {
+  label: string;
+  icon: string;
+  args: string[];
+}
+
 export default class DeploymentDetail extends Route {
   @service api!: ApiService;
 
-  breadcrumbs(model: AppRouteModel) {
+  breadcrumbs(model: AppRouteModel): Breadcrumb[] {
     if (!model) return [];
     return [
       {
@@ -27,13 +33,13 @@ export default class DeploymentDetail extends Route {
     ];
   }
 
-  async model(params: DeploymentModelParams) {
-    var ref = new Ref.Operation();
+  async model(params: DeploymentModelParams): Promise<Deployment.AsObject> {
+    let ref = new Ref.Operation();
     ref.setId(params.deployment_id);
-    var req = new GetDeploymentRequest();
+    let req = new GetDeploymentRequest();
     req.setRef(ref);
 
-    var resp = await this.api.client.getDeployment(req, this.api.WithMeta());
+    let resp = await this.api.client.getDeployment(req, this.api.WithMeta());
     let deploy: Deployment = resp;
     return deploy.toObject();
   }
