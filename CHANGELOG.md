@@ -1,15 +1,53 @@
-## unreleased
+## 0.4.0 (June 03, 2021)
 
 FEATURES:
 
+* **Mutable Deployments**: Waypoint now supports the concept of "mutable" deployments
+where a deployment updates an existing resource rather than creating something
+new. New plugins in this release include deploying from a Nomad job file,
+Kubernetes apply from a directory or file, and more. [[GH-1298](https://github.com/hashicorp/waypoint/issues/1298)]
+* **Status Reports**: Waypoint now supports a new feature for reporting
+on the health of deployments or releases. Waypoint surfaces a deployment
+and or releases status by relying on an existing platform for health checks.
+A status is responsible for reporting the health of a deployed service by
+representing its states as Ready, Alive, Partial, Down, or Unknown.
+Platform health reporting lets teams take action quickly depending on the health
+of their applications. Currently, the Kubernetes, Nomad, AWS ALB, and Docker built-in
+plugins support the new Status reporting, with more support on the way! [[GH-1488](https://github.com/hashicorp/waypoint/issues/1488)]
+* config: Add ability to define internal variables and compose variables together via templating [[GH-1382](https://github.com/hashicorp/waypoint/issues/1382)]
+* config: Add ability to write configuration values as files rather than environment variables. [[GH-1395](https://github.com/hashicorp/waypoint/issues/1395)]
+* config: `jsonnetfile` and `jsonnetdir` functions for processing Jsonnet files
+and converting them to JSON. [[GH-1360](https://github.com/hashicorp/waypoint/issues/1360)]
+* plugin/aws-alb: Report on status of releases [[GH-1567](https://github.com/hashicorp/waypoint/issues/1567)]
+* plugin/docker: Add reporting on status of a deployment [[GH-1487](https://github.com/hashicorp/waypoint/issues/1487)]
+* plugin/k8s: A new plugin "kubernetes-apply" that is able to deploy any typical
+directory of YAML or JSON files to Kubernetes [[GH-1357](https://github.com/hashicorp/waypoint/issues/1357)]
+* plugin/k8s: Add reporting on status of a deployment and release [[GH-1547](https://github.com/hashicorp/waypoint/issues/1547)]
+* plugin/nomad: A new plugin "nomad-jobspec" for deploying a Nomad job specification directly. [[GH-1299](https://github.com/hashicorp/waypoint/issues/1299)]
+* plugin/nomad: Add reporting on status of a deployment [[GH-1554](https://github.com/hashicorp/waypoint/issues/1554)]
+* server/ecs: Use `--platform=ecs` to install waypoint server to
+AWS ECS using Fargate [[GH-1564](https://github.com/hashicorp/waypoint/issues/1564)]
+* ui: Add reporting on status of a deployment [[GH-1559](https://github.com/hashicorp/waypoint/issues/1559)]
+* ui: Mutable deployments support on web dashboard. [[GH-1549](https://github.com/hashicorp/waypoint/issues/1549)]
+
 IMPROVEMENTS:
+
+* internal/config: add `${workspace}` variable [[GH-1419](https://github.com/hashicorp/waypoint/issues/1419)]
+* plugin/pack: Support for non-default process types [[GH-1475](https://github.com/hashicorp/waypoint/issues/1475)]
+* plugins/docker: Add support build context [[GH-1490](https://github.com/hashicorp/waypoint/issues/1490)]
 
 BUG FIXES:
 
+* plugin/k8s: destroy deployment on error [[GH-1528](https://github.com/hashicorp/waypoint/issues/1528)]
+* plugin/pack: Upgrade pack package to fix downloading remote buildpacks [[GH-1452](https://github.com/hashicorp/waypoint/issues/1452)]
+* server: Fix a bug that sometimes sends duplicate cancellation messages [[GH-1538](https://github.com/hashicorp/waypoint/issues/1538)]
+* server: fix order of log lines when showing logs from multiple instances [[GH-1441](https://github.com/hashicorp/waypoint/issues/1441)]
+* ui/checkbox-inputs-safari: Custom Inputs in the browser Ui now render properly on all supported browsers [[GH-1312](https://github.com/hashicorp/waypoint/issues/1312)]
+* ui: unread log count resets after scrolling [[GH-1373](https://github.com/hashicorp/waypoint/issues/1373)]
 
-## 0.4.0 (June 03, 2021)
+BREAKING CHANGES:
 
-
+* plugin/netlify: Removed the netlify plugin [[GH-1525](https://github.com/hashicorp/waypoint/issues/1525)]
 
 ## 0.3.1 (April 20, 2021)
 
