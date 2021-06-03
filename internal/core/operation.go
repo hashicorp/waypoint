@@ -158,7 +158,7 @@ func (a *App) doOperation(
 				log.Warn("error running after hook", "err", err)
 
 				if h.ContinueOnFailure() {
-					log.Info("hook configured to continueon failure, ignoring error")
+					log.Info("hook configured to continue on failure, ignoring error")
 					doErr = nil
 				}
 			}
