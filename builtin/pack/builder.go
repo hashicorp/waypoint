@@ -52,7 +52,7 @@ type BuilderConfig struct {
 
 	// Files patterns to prevent from being pulled into the build.
 	Ignore []string `hcl:"ignore,optional"`
-	
+
 	// Process type that will be used when setting container start command.
 	ProcessType string `hcl:"process_type,optional" default:"web"`
 }
@@ -343,7 +343,7 @@ build {
        consistent with the way how pathspec works in general in Git).
     6. If the pattern does not contain a slash /, Git treats it as a shell glob
        pattern and checks for a match against the pathname relative to the
-       location of the .gitignore file (relative to the toplevel of the work
+       location of the .gitignore file (relative to the top level of the work
        tree if not from a .gitignore file).
     7. Otherwise, Git treats the pattern as a shell glob suitable for
        consumption by fnmatch(3) with the FNM_PATHNAME flag: wildcards in the
