@@ -32,6 +32,11 @@ Usage: `waypoint server uninstall [options]`
 - `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to uninstall.
 - `-ignore-runner-error` - Ignore any errors encountered while uninstalling runners. This allows the server to be uninstalled even if runner uninstallation fails. Note that this may leave runners dangling since future 'uninstall' runs will do nothing if the server is uninstalled.
 
+#### ecs Options
+
+- `-ecs-cluster=<string>` - Configures the Cluster to uninstall.
+- `-ecs-region=<string>` - Configures which AWS region to uninstall from.
+
 #### kubernetes Options
 
 - `-k8s-context=<string>` - The Kubernetes context to unisntall the Waypoint server from. If left unset, Waypoint will use the current Kubernetes context.
