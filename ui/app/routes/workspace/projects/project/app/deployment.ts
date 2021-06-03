@@ -1,8 +1,8 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { GetDeploymentRequest, Deployment, Ref } from 'waypoint-pb';
-import { AppRouteModel } from '../app';
+import { GetDeploymentRequest, Deployment, Ref, StatusReport } from 'waypoint-pb';
+import { AppRouteModel, ResolvedModel as ResolvedAppRouteModel } from '../app';
 
 interface DeploymentModelParams {
   deployment_id: string;
@@ -12,6 +12,10 @@ interface Breadcrumb {
   label: string;
   icon: string;
   args: string[];
+}
+
+interface WithStatusReport {
+  statusReport?: StatusReport.AsObject;
 }
 
 export default class DeploymentDetail extends Route {
@@ -42,5 +46,12 @@ export default class DeploymentDetail extends Route {
     let resp = await this.api.client.getDeployment(req, this.api.WithMeta());
     let deploy: Deployment = resp;
     return deploy.toObject();
+  }
+
+  afterModel(model: Deployment.AsObject & WithStatusReport): void {
+    let { statusReports } = this.modelFor('workspace.projects.project.app') as ResolvedAppRouteModel;
+    let statusReport = statusReports.find((sr) => sr.deploymentId === model.id);
+
+    model.statusReport = statusReport;
   }
 }

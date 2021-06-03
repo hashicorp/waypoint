@@ -23,7 +23,7 @@ interface WithStatusReport {
   statusReport: StatusReport.AsObject;
 }
 
-interface ResolvedModel {
+export interface ResolvedModel {
   application: Ref.Application.AsObject;
   deployments: (Deployment.AsObject & WithStatusReport)[];
   releases: (Release.AsObject & WithStatusReport)[];
