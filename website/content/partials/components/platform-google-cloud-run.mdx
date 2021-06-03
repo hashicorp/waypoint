@@ -49,6 +49,13 @@ app "wpmini" {
       auto_scaling {
         max = 10
       }
+
+      cloudsql_instances = ["waypoint-project-id:europe-north1:sql-instance"]
+
+      vpc_access {
+        connector = "custom-vpc-connector"
+        egress = "all"
+      }
     }
   }
 
@@ -107,9 +114,28 @@ GCP project ID where the Cloud Run instance will be deployed.
 
 - Type: **string**
 
+#### vpc_access
+
+- Type: **cloudrun.VPCAccess**
+
+#### vpc_access.connector
+
+Set VPC Access Connector for the Cloud Run instance.
+
+#### vpc_access.egress
+
+Set VPC egress. Supported values are 'all' and 'private-ranges-only'.
+
 ### Optional Parameters
 
 These parameters are used in the [`use` stanza](/docs/waypoint-hcl/use) for this plugin.
+
+#### cloudsql_instances
+
+Specify list of CloudSQL instances that the Cloud Run instance will have access to.
+
+- Type: **list of string**
+- **Optional**
 
 #### port
 
@@ -137,35 +163,6 @@ Additional environment variables to be added to the Cloud Run instance.
 Is public unauthenticated access allowed for the Cloud Run instance?.
 
 - Type: **bool**
-- **Optional**
-
-#### cloudsql_instances
-
-List of CloudSQL instances that the Cloud Run instance will have access to.
-
-- Type: **[]string**
-- **Optional**
-
-#### vpc_access
-
-VPC (Virtual Private Cloud) configuration for the Cloud Run instance granting
-access to reqsources by their internal IPs.
-
-- Type: **\*cloudrun.VPCAccess**
-
-#### vpc_access.connector
-
-Name of the VPC Access Connector to use for this Cloud Run instance.
-
-- Type: **string**
-- **Optional**
-
-#### vpc_access.egress
-
-VPC egress type. Supported values are 'all' (route all traffic through the VPC connctor)
-and 'private-ranges-only' (only route requsts to internal IPs throgh the connector).
-
-- Type: **string**
 - **Optional**
 
 ### Output Attributes
