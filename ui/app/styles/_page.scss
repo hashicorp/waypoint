@@ -622,7 +622,7 @@
     padding: scale.$lg-4;
 
     p {
-      color: rgb(var(--text-subtle));
+      color: rgb(var(--text-muted));
       @include Typography.Interface(M);
       margin: scale.$sm-2;
 
