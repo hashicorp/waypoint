@@ -16,6 +16,7 @@ export function iconForComponent([component]: [string]): string {
     case 'kubernetes':
       return 'logo-kubernetes-color-alt';
     case 'nomad':
+    case 'nomad-jobspec':
       return 'logo-nomad-color';
     case 'pack':
       return 'logo-pack-color';

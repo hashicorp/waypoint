@@ -4,6 +4,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   width: 100%;
+  padding-left: scale.$sm-2;
 
   a:not(.button) {
     display: flex;
@@ -26,7 +27,7 @@
     font-size: 1rem;
   }
 
-  &.app-item--destroyed code{
+  &.app-item--destroyed code {
     color: rgb(var(--text-muted));
   }
 
@@ -63,5 +64,19 @@
       white-space: nowrap;
       text-overflow: ellipsis;
     }
+  }
+
+  .replacement-info {
+    b {
+      text-transform: inherit;
+      margin-left: scale.$sm-2;
+    }
+  }
+
+  &--previous {
+    background: color.$ui-cool-gray-050;
+    background-clip: border-box;
+    margin-bottom: 0px;
+    border-top: 1rem solid color.$ui-cool-gray-050;
   }
 }

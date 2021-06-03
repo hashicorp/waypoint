@@ -14,6 +14,8 @@ export function list(schema: any, { requestBody }: Request): Response {
   let releaseProtobufs = releases.models.map((d) => d.toProtobuf());
   let resp = new ListReleasesResponse();
 
+  releaseProtobufs.sort((a, b) => b.getSequence() - a.getSequence());
+
   resp.setReleasesList(releaseProtobufs);
 
   return this.serialize(resp, 'application');

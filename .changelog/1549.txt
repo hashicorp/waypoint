@@ -1,0 +1,3 @@
+```release-note:feature
+ui: Mutable deployments support on web dashboard.
+```

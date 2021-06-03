@@ -186,13 +186,12 @@
   ul.list {
     li {
       padding-bottom: scale.$base;
-      margin-bottom: scale.$base;
+      border-top: 1rem solid transparent;
+      margin-bottom: 0;
       border-bottom: 1px solid rgb(var(--border));
 
       &:last-child {
-        padding-bottom: 0;
-        margin-bottom: 0;
-        border: none;
+        border-bottom: none;
       }
     }
   }

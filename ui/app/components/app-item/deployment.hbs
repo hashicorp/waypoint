@@ -1,17 +1,21 @@
-<li class={{if (eq @deployment.state 4) "app-item app-item--destroyed" "app-item"}}>
+<li
+  class="app-item
+  {{if (not-eq @deployment.sequence @latest.sequence) "app-item--previous"}}
+  {{if (eq @deployment.state 4) "app-item--destroyed"}}"
+>
   <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @deployment.id}}>
     <p>
       <b class="badge badge--version">v{{@deployment.sequence}}</b>
       <code>{{@deployment.id}}</code>
       {{#if (eq @deployment.state 4)}}
-        <b class="badge badge--destroyed">
-          <Pds::Icon @type="trash" class="icon" />&nbsp;Destroyed
+        <b data-test-destroyed-badge class="badge badge--destroyed">
+          <Pds::Icon @type="trash" class="icon" />&nbsp; {{t "page.deployments.destroyed_label"}}
         </b>
       {{/if}}
     </p>
     <small>
       <Pds::Icon @type={{icon-for-component @deployment.component.name}} class="icon" />
-      <span>{{if (eq @deployment.status.state 1) 'Deploying' 'Deployed'}} by
+      <span>{{t (concat "page.deployments.status_prefix." @deployment.status.state)}}
         <b>{{component-name @deployment.component.name}}</b>
         {{#if (eq @deployment.status.state 1)}}
         (Started {{date-format-distance-to-now @deployment.status.startTime.seconds }})
@@ -21,9 +25,13 @@
       </span>
     </small>
   </LinkTo>
-  {{#if (and @deployment.preload.deployUrl (not-eq @deployment.state 4))}}
-    <ExternalLink href="https://{{@deployment.preload.deployUrl}}" class="button button--secondary button--external-link">
-      <span>{{lowercase @deployment.preload.deployUrl}}</span>
+  {{#if (not-eq @latest.id @deployment.id)}}
+  <small class="replacement-info">
+    {{t "page.deployments.replaced_label"}}<b class="badge badge--version">v{{@latest.sequence}}</b>
+  </small>
+  {{else if (and @deployment.preload.deployUrl (not-eq @deployment.state 4))}}
+    <ExternalLink data-test-external-deployment-button href="https://{{@deployment.preload.deployUrl}}" class="button button--secondary button--external-link">
+      <span>{{t "page.deployments.external_url_label"}}</span>
       <Pds::Icon @type="exit" class="icon" />
     </ExternalLink>
   {{/if}}

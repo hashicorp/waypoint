@@ -14,6 +14,8 @@ export function list(schema: any, { requestBody }: Request): Response {
   let buildProtobufs = builds.models.map((b) => b.toProtobuf());
   let resp = new ListBuildsResponse();
 
+  buildProtobufs.sort((a, b) => b.getSequence() - a.getSequence());
+
   resp.setBuildsList(buildProtobufs);
 
   return this.serialize(resp, 'application');

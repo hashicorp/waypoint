@@ -10,6 +10,7 @@ export default Model.extend({
   build: belongsTo(),
   status: belongsTo({ inverse: 'owner' }),
   component: belongsTo({ inverse: 'owner' }),
+  generation: belongsTo(),
 
   toProtobuf(): Deployment {
     let result = new Deployment();
@@ -18,8 +19,7 @@ export default Model.extend({
     result.setArtifactId(this.artifactId);
     result.setComponent(this.component?.toProtobuf());
     // TODO: result.setDeployment
-    // TODO: result.setExtension
-    // TODO: result.setGeneration
+    result.setGeneration(this.generation?.toProtobuf());
     result.setHasEntrypointConfig(this.hasEntrypointConfig);
     result.setHasExecPlugin(this.hasExecPlugin);
     result.setHasLogsPlugin(this.hasLogsPlugin);
@@ -30,7 +30,7 @@ export default Model.extend({
     result.setState(PhysicalState[this.state as StateName]);
     result.setStatus(this.status?.toProtobuf());
     result.setTemplateData(this.templateData);
-    result.setWorkspace(this.workspace.toProtobufRef());
+    result.setWorkspace(this.workspace?.toProtobufRef());
 
     for (let [key, value] of Object.entries<string>(this.labels ?? {})) {
       result.getLabelsMap().set(key, value);
