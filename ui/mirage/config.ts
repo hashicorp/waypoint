@@ -11,6 +11,7 @@ import * as inviteToken from './services/invite-token';
 import * as release from './services/release';
 import * as versionInfo from './services/version-info';
 import * as statusReport from './services/status-report';
+import * as job from './services/job';
 
 export default function (this: Server) {
   this.namespace = 'hashicorp.waypoint.Waypoint';
@@ -43,6 +44,7 @@ export default function (this: Server) {
   this.post('/GetVersionInfo', versionInfo.get);
   this.post('/ListStatusReports', statusReport.list);
   this.post('/GetLatestStatusReport', statusReport.getLatest);
+  this.post('/GetJobStream', job.stream);
 
   if (!Ember.testing) {
     // Pass through all other requests
