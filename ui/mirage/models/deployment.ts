@@ -11,6 +11,7 @@ export default Model.extend({
   status: belongsTo({ inverse: 'owner' }),
   component: belongsTo({ inverse: 'owner' }),
   generation: belongsTo(),
+  statusReport: belongsTo({ inverse: 'target' }),
 
   toProtobuf(): Deployment {
     let result = new Deployment();

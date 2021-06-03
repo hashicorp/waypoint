@@ -1,5 +1,5 @@
 import { module, test } from 'qunit';
-import { currentURL } from '@ember/test-helpers';
+import { currentURL, findAll } from '@ember/test-helpers';
 import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
 import { visitable, create, collection, clickable } from 'ember-cli-page-object';
@@ -84,5 +84,35 @@ module('Acceptance | deployments list', function (hooks) {
     assert.equal(page.list.length, 5);
     assert.equal(page.deploymentLinks.length, 1);
     assert.equal(page.destroyedBadges.length, 1);
+  });
+
+  test('status reports appear where available', async function (assert) {
+    let project = this.server.create('project', { name: 'microchip' });
+    let application = this.server.create('application', { name: 'wp-bandwidth', project });
+
+    this.server.create('deployment', 'random', {
+      application,
+      sequence: 3,
+      statusReport: this.server.create('status-report', 'alive', { application }),
+    });
+    this.server.create('deployment', 'random', {
+      application,
+      sequence: 2,
+      statusReport: this.server.create('status-report', 'ready', { application }),
+    });
+    this.server.create('deployment', 'random', {
+      application,
+      sequence: 1,
+      statusReport: this.server.create('status-report', 'down', { application }),
+    });
+
+    await page.visit();
+
+    for (let parent of ['latest-deployments', 'deployment-list']) {
+      let badges = findAll(`[data-test-${parent}] [data-test-status-badge]`);
+      let statuses = badges.map((b) => b.getAttribute('data-test-status-badge'));
+
+      assert.deepEqual(statuses, ['alive', 'ready', 'down'], `correct status badges appear in ${parent}`);
+    }
   });
 });

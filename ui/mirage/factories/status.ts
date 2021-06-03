@@ -3,17 +3,17 @@ import faker from '../faker';
 import { Status } from 'waypoint-pb';
 
 export default Factory.extend({
+  afterCreate(status) {
+    let minutes = faker.random.number({ min: 1, max: 10 });
+    let startTime = new Date(status.completeTime.valueOf() - minutes * 60 * 1000);
+
+    status.update('startTime', startTime);
+  },
+
   random: trait({
     state: () => randomStateName(),
 
     completeTime: () => faker.date.recent(),
-
-    afterCreate(status) {
-      let minutes = faker.random.number({ min: 1, max: 10 });
-      let startTime = new Date(status.completeTime.valueOf() - minutes * 60 * 1000);
-
-      status.update('startTime', startTime);
-    },
   }),
 
   success: trait({

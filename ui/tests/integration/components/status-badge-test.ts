@@ -1,71 +1,108 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
-import { render } from '@ember/test-helpers';
+import { render, focus } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 
-module('Integration | Component | status-badge', function(hooks) {
+module('Integration | Component | status-badge', function (hooks) {
   setupRenderingTest(hooks);
 
-  test('it renders different states', async function(assert) {
+  test('renders the correct class for @state', async function (assert) {
+    await render(hbs`
+      <StatusBadge @state={{this.state}} />
+    `);
 
-    let partialBuild = {
-      status: {
-        state: 4,
-      },
-    };
+    assert.dom('.badge-status--unknown').exists();
 
-    let downBuild = {
-      status: {
-        state: 3,
-      },
-    };
+    this.set('state', 'UNKNOWN');
+    assert.dom('.badge-status--unknown').exists();
 
-    let readyBuild = {
-      status: {
-        state: 2,
-      },
-    };
+    this.set('state', 'ALIVE');
+    assert.dom('.badge-status--alive').exists();
 
-    let aliveBuild = {
-      status: {
-        state: 1,
-      },
-    };
+    this.set('state', 'READY');
+    assert.dom('.badge-status--ready').exists();
 
-    let unknownBuild = {
-      status: {
-        state: 0,
-      },
-    };
+    this.set('state', 'DOWN');
+    assert.dom('.badge-status--down').exists();
 
-    this.build = partialBuild;
+    this.set('state', 'PARTIAL');
+    assert.dom('.badge-status--partial').exists();
+  });
 
-    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
+  test('renders the correct icon for @state', async function (assert) {
+    await render(hbs`
+      <StatusBadge @state={{this.state}} />
+    `);
 
-    assert.equal(this.element.getElementsByClassName('badge-status--partial').length, 1);
+    assert.dom('[data-test-icon-type="help-circle-outline"]').exists();
 
-    this.build = downBuild;
+    this.set('state', 'UNKNOWN');
+    assert.dom('[data-test-icon-type="help-circle-outline"]').exists();
 
-    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
+    this.set('state', 'ALIVE');
+    assert.dom('[data-test-icon-type="run"]').exists();
 
-    assert.equal(this.element.getElementsByClassName('badge-status--down').length, 1);
+    this.set('state', 'READY');
+    assert.dom('[data-test-icon-type="check-plain"]').exists();
 
-    this.build = readyBuild;
+    this.set('state', 'DOWN');
+    assert.dom('[data-test-icon-type="cancel-circle-fill"]').exists();
 
-    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
+    this.set('state', 'PARTIAL');
+    assert.dom('[data-test-icon-type="alert-triangle"]').exists();
+  });
 
-    assert.equal(this.element.getElementsByClassName('badge-status--ready').length, 1);
+  test('renders the correct text for @state', async function (assert) {
+    await render(hbs`
+      <StatusBadge @state={{this.state}} />
+    `);
 
-    this.build = aliveBuild;
+    assert.dom('[data-test-status-badge]').includesText('Unknown');
 
-    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
+    this.set('state', 'UNKNOWN');
+    assert.dom('[data-test-status-badge]').includesText('Unknown');
 
-    assert.equal(this.element.getElementsByClassName('badge-status--alive').length, 1);
+    this.set('state', 'ALIVE');
+    assert.dom('[data-test-status-badge]').includesText('Starting…');
 
-    this.build = unknownBuild;
+    this.set('state', 'READY');
+    assert.dom('[data-test-status-badge]').includesText('Up');
 
-    await render(hbs`<StatusBadge @state={{this.build.status.state}}/>`);
+    this.set('state', 'DOWN');
+    assert.dom('[data-test-status-badge]').includesText('Down');
 
-    assert.equal(this.element.getElementsByClassName('badge-status--unknown').length, 1);
+    this.set('state', 'PARTIAL');
+    assert.dom('[data-test-status-badge]').includesText('Partial');
+  });
+
+  test('does not render text if @iconOnly={{true}}', async function (assert) {
+    await render(hbs`
+      <StatusBadge @state="READY" @iconOnly={{true}} />
+    `);
+
+    assert.dom('[data-test-status-badge]').doesNotIncludeText('Up');
+  });
+
+  test('renders a default tooltip for @state', async function (assert) {
+    await render(hbs`
+      <StatusBadge @state="READY" />
+    `);
+
+    await focus('[data-test-status-badge]');
+
+    assert.dom('.ember-tooltip').includesText('Application is ready');
+  });
+
+  test('renders @message as a tooltip', async function (assert) {
+    await render(hbs`
+      <StatusBadge
+        @state={{this.state}}
+        @message="Test message"
+      />
+    `);
+
+    await focus('[data-test-status-badge]');
+
+    assert.dom('.ember-tooltip').includesText('Test message');
   });
 });

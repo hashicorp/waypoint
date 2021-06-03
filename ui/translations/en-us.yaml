@@ -115,7 +115,7 @@ status_badge:
     text: 'Up'
     tooltip: 'Application is ready'
   alive:
-    text: 'Starting...'
+    text: 'Starting…'
     tooltip: 'Application is starting'
   unknown:
     text: 'Unknown'
