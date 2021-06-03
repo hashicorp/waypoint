@@ -335,7 +335,6 @@ func (op *statusReportOperation) Do(
 	// Add the deployment/release ID to the report.
 	// TODO: this is a stopgap solution - we should wire resource ID information into here in a more generic way
 	// rather than continue to append to this switch case.
-
 	switch target := op.Target.(type) {
 	case *pb.Deployment:
 		realMsg.TargetId = &pb.StatusReport_DeploymentId{DeploymentId: target.Id}
@@ -344,6 +343,9 @@ func (op *statusReportOperation) Do(
 	default:
 		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status operation type")
 	}
+
+	// Add the time generated to the outer status report
+	realMsg.TimeGenerated = report.TimeGenerated
 
 	op.result = result.(*sdk.StatusReport)
 

@@ -2387,6 +2387,9 @@ message StatusReport {
     // Resource id
     string id = 4;
   }
+
+  // the time when this report was generated
+  google.protobuf.Timestamp time_generated = 10;
 }
 
 /********************************************************************
