@@ -2,6 +2,7 @@ package variables
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2/ext/typeexpr"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	hcljson "github.com/hashicorp/hcl/v2/json"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
@@ -39,8 +41,6 @@ type Value struct {
 }
 
 type Variable struct {
-	Name string
-
 	// Value contain the values from the job, from the server/VCS
 	// repo, and default values from the waypoint.hcl. These are to
 	// sort precedence and add the final variable values to the EvalContext
@@ -146,13 +146,12 @@ func (variables *Variables) decodeVariableBlock(block *hcl.Block) hcl.Diagnostic
 // the final *Variable along the way
 func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	v := Variable{
-		Name:  block.Labels[0],
 		Range: block.DefRange,
 	}
 
 	content, diags := block.Body.Content(variableBlockSchema)
 
-	if !hclsyntax.ValidIdentifier(v.Name) {
+	if !hclsyntax.ValidIdentifier(block.Labels[0]) {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid variable name",
@@ -285,93 +284,17 @@ func CollectInputVars(vars map[string]string, files []string) ([]*pb.Variable, h
 }
 
 // Collect values from server and remote-stored wpvars file
-func (variables *Variables) CollectInputValues(files []*hcl.File, pbvars []*pb.Variable) hcl.Diagnostics {
+func (variables *Variables) CollectInputValues(files []string, pbvars []*pb.Variable) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	// files will contain files found in the remote git source
 	for _, file := range files {
-		// Before we do our real decode, we'll probe to see if there are any
-		// blocks of type "variable" in this body, since it's a common mistake
-		// for new users to put variable declarations in wpvars rather than
-		// variable value definitions.
-		{
-			content, _, _ := file.Body.PartialContent(&hcl.BodySchema{
-				Blocks: []hcl.BlockHeaderSchema{
-					{
-						Type:       "variable",
-						LabelNames: []string{"name"},
-					},
-				},
-			})
-			for _, block := range content.Blocks {
-				name := block.Labels[0]
-				diags = append(diags, &hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  "Variable declaration in a .wpvars file",
-					Detail: fmt.Sprintf("A .wpvars file is used to assign "+
-						"values to variables that have already been declared "+
-						"in the waypoint.hcl, not to declare new variables. To "+
-						"declare variable %q, place this block in your "+
-						"waypoint.hcl file.\n\nTo set a value for this variable "+
-						"in %s, use the definition syntax instead:\n    %s = <value>",
-						name, block.TypeRange.Filename, name),
-					Subject: &block.TypeRange,
-				})
-			}
+		if file != "" {
+			fileDiags := variables.parseFileValues(file)
+			diags = append(diags, fileDiags...)
 			if diags.HasErrors() {
-				// If we already found problems then JustAttributes below will find
-				// the same problems with less-helpful messages, so we'll bail for
-				// now to let the user focus on the immediate problem.
 				return diags
 			}
-		}
-
-		attrs, moreDiags := file.Body.JustAttributes()
-		diags = append(diags, moreDiags...)
-
-		for name, attr := range attrs {
-			variable, found := (*variables)[name]
-			if !found {
-				sev := hcl.DiagWarning
-				// TODO krantzinator
-				// if cfg.ValidationOptions.Strict {
-				// 	sev = hcl.DiagError
-				// }
-				diags = append(diags, &hcl.Diagnostic{
-					Severity: sev,
-					Summary:  "Undefined variable",
-					Detail: fmt.Sprintf("A %q variable was set but was "+
-						"not found in known variables. To declare "+
-						"variable %q, place this block in your "+
-						"waypoint.hcl file.",
-						name, name),
-					Context: attr.Range.Ptr(),
-				})
-				continue
-			}
-
-			val, moreDiags := attr.Expr.Value(nil)
-			diags = append(diags, moreDiags...)
-
-			if variable.Type != cty.NilType {
-				var err error
-				val, err = convert.Convert(val, variable.Type)
-				if err != nil {
-					diags = append(diags, &hcl.Diagnostic{
-						Severity: hcl.DiagError,
-						Summary:  "Invalid value for variable",
-						Detail:   fmt.Sprintf("The value for %s is not compatible with the variable's type constraint: %s.", name, err),
-						Subject:  attr.Expr.Range().Ptr(),
-					})
-					val = cty.DynamicVal
-				}
-			}
-
-			variable.Values = append(variable.Values, Value{
-				Source: sourceFile,
-				Value:  val,
-				Expr:   attr.Expr,
-			})
 		}
 	}
 
@@ -455,4 +378,124 @@ func (variables *Variables) SortPrecedence(vars []*pb.Variable) error {
 	// }
 
 	return nil
+}
+
+func (variables *Variables) parseFileValues(filename string) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	// load the file
+	src, err := ioutil.ReadFile(filename)
+	if err != nil {
+		var errStr string
+		if os.IsNotExist(err) {
+			errStr = fmt.Sprintf("Given variables file %s does not exist.", filename)
+		} else {
+			errStr = fmt.Sprintf("Error while reading %s: %s.", filename, err)
+		}
+		return append(diags, &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Failed to read variable values from file",
+			Detail:   errStr,
+		})
+	}
+
+	// parse the file, whether it's hcl or json
+	var f *hcl.File
+	if strings.HasSuffix(filename, ".json") {
+		var hclDiags hcl.Diagnostics
+		f, hclDiags = hcljson.Parse(src, filename)
+		diags = append(diags, hclDiags...)
+		if f == nil || f.Body == nil {
+			return diags
+		}
+	} else {
+		var hclDiags hcl.Diagnostics
+		f, hclDiags = hclsyntax.ParseConfig(src, filename, hcl.Pos{Line: 1, Column: 1})
+		diags = append(diags, hclDiags...)
+		if f == nil || f.Body == nil {
+			return diags
+		}
+	}
+
+	// Before we do our real decode, we'll probe to see if there are any
+	// blocks of type "variable" in this body, since it's a common mistake
+	// for new users to put variable declarations in wpvars rather than
+	// variable value definitions.
+	{
+		content, _, _ := f.Body.PartialContent(&hcl.BodySchema{
+			Blocks: []hcl.BlockHeaderSchema{
+				{
+					Type:       "variable",
+					LabelNames: []string{"name"},
+				},
+			},
+		})
+		for _, block := range content.Blocks {
+			name := block.Labels[0]
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Variable declaration in a .wpvars file",
+				Detail: fmt.Sprintf("A .wpvars file is used to assign "+
+					"values to variables that have already been declared "+
+					"in the waypoint.hcl, not to declare new variables. To "+
+					"declare variable %q, place this block in your "+
+					"waypoint.hcl file.\n\nTo set a value for this variable "+
+					"in %s, use the definition syntax instead:\n    %s = <value>",
+					name, block.TypeRange.Filename, name),
+				Subject: &block.TypeRange,
+			})
+		}
+		if diags.HasErrors() {
+			// If we already found problems then JustAttributes below will find
+			// the same problems with less-helpful messages, so we'll bail for
+			// now to let the user focus on the immediate problem.
+			return diags
+		}
+	}
+
+	attrs, moreDiags := f.Body.JustAttributes()
+	diags = append(diags, moreDiags...)
+
+	for name, attr := range attrs {
+		variable, found := (*variables)[name]
+		if !found {
+			// TODO krantzinator: what to do with a warning diag type
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagWarning,
+				Summary:  "Undefined variable",
+				Detail: fmt.Sprintf("A %q variable was set but was "+
+					"not found in known variables. To declare "+
+					"variable %q, place this block in your "+
+					"waypoint.hcl file.",
+					name, name),
+				Context: attr.Range.Ptr(),
+			})
+			continue
+		}
+
+		val, moreDiags := attr.Expr.Value(nil)
+		diags = append(diags, moreDiags...)
+
+		if variable.Type != cty.NilType {
+			var err error
+			val, err = convert.Convert(val, variable.Type)
+			if err != nil {
+				diags = append(diags, &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid value for variable",
+					Detail:   fmt.Sprintf("The value for %s is not compatible with the variable's type constraint: %s.", name, err),
+					Subject:  attr.Expr.Range().Ptr(),
+				})
+				val = cty.DynamicVal
+			}
+		}
+
+		variable.Values = append(variable.Values, Value{
+			Source: sourceFile,
+			Value:  val,
+			Expr:   attr.Expr,
+		})
+	}
+
+	return diags
 }
