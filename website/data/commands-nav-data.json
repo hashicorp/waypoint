@@ -8,6 +8,14 @@
     "path": "deploy"
   },
   {
+    "title": "context",
+    "path": "context"
+  },
+  {
+    "title": "context-inspect",
+    "path": "context-inspect"
+  },
+  {
     "title": "destroy",
     "path": "destroy"
   },
