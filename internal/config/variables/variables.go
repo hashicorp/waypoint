@@ -304,12 +304,26 @@ func (variables *Variables) CollectInputValues(files []string, pbvars []*pb.Vari
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "Undefined variable",
-				Detail: fmt.Sprintf("A %q variable value was set, " +
-					"but was not found in known variables. To declare " +
+				Detail: fmt.Sprintf("A %q variable value was set, "+
+					"but was not found in known variables. To declare "+
 					"variable %q, place this block in your waypoint.hcl file.",
 					pbv.Name, pbv.Name),
 			})
 			continue
+		}
+
+		var source string
+		switch pbv.Source.(type) {
+		case *pb.Variable_Cli:
+			source = sourceCLI
+		case *pb.Variable_File_:
+			source = sourceFile
+		case *pb.Variable_Env:
+			source = sourceEnv
+		case *pb.Variable_Vcs:
+			source = sourceVCS
+		case *pb.Variable_Server:
+			source = sourceServer
 		}
 
 		var expr hclsyntax.Expression
@@ -337,26 +351,12 @@ func (variables *Variables) CollectInputValues(files []string, pbvars []*pb.Vari
 			if err != nil {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
-					Summary:  "Invalid argument value for server-stored variable",
-					Detail:   fmt.Sprintf("The received arg value for %s is not compatible with the variable's type constraint: %s.", pbv.Name, err),
+					Summary:  "Invalid value for variable",
+					Detail:   fmt.Sprintf("The value set for variable %q from source %q is not compatible with the variable's type constraint: %s.", pbv.Name, source, err),
 					Subject:  expr.Range().Ptr(),
 				})
 				val = cty.DynamicVal
 			}
-		}
-
-		var source string
-		switch pbv.Source.(type) {
-		case *pb.Variable_Cli:
-			source = sourceCLI
-		case *pb.Variable_File_:
-			source = sourceFile
-		case *pb.Variable_Env:
-			source = sourceEnv
-		case *pb.Variable_Vcs:
-			source = sourceVCS
-		case *pb.Variable_Server:
-			source = sourceServer
 		}
 
 		variable.Values = append(variable.Values, Value{
@@ -434,8 +434,8 @@ func (variables *Variables) parseFileValues(filename string) hcl.Diagnostics {
 			name := block.Labels[0]
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
-				Summary:  "Variable declaration in a .wpvars file",
-				Detail: fmt.Sprintf("A .wpvars file is used to assign "+
+				Summary:  "Variable declaration in a wpvars file",
+				Detail: fmt.Sprintf("A wpvars file is used to assign "+
 					"values to variables that have already been declared "+
 					"in the waypoint.hcl, not to declare new variables. To "+
 					"declare variable %q, place this block in your "+
@@ -461,7 +461,7 @@ func (variables *Variables) parseFileValues(filename string) hcl.Diagnostics {
 		if !found {
 			// TODO krantzinator: what to do with a warning diag type
 			diags = append(diags, &hcl.Diagnostic{
-				Severity: hcl.DiagWarning,
+				Severity: hcl.DiagError,
 				Summary:  "Undefined variable",
 				Detail: fmt.Sprintf("A %q variable was set but was "+
 					"not found in known variables. To declare "+

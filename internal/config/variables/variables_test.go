@@ -75,12 +75,12 @@ func TestVariables_decode(t *testing.T) {
 
 func TestVariables_collectValues(t *testing.T) {
 	cases := []struct {
-		name              string
-		file              string
-		inputFiles        []string
-		inputValues       []*pb.Variable
-		expectedVariables Variables
-		err               string
+		name        string
+		file        string
+		inputFiles  []string
+		inputValues []*pb.Variable
+		expected    Variables
+		err         string
 	}{
 		{
 			name:       "valid",
@@ -93,7 +93,7 @@ func TestVariables_collectValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expectedVariables: Variables{
+			expected: Variables{
 				"art": &Variable{
 					Values: []Value{
 						{cty.DynamicVal, "default", hcl.Expression(nil), hcl.Range{}},
@@ -106,7 +106,7 @@ func TestVariables_collectValues(t *testing.T) {
 			err: "",
 		},
 		{
-			name:       "undefined variable",
+			name:       "undefined variable for pb.Variable value",
 			file:       "valid.hcl",
 			inputFiles: []string{filepath.Join("testdata", "values.hcl")},
 			inputValues: []*pb.Variable{
@@ -116,8 +116,62 @@ func TestVariables_collectValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expectedVariables: Variables{},
-			err:               "Undefined variable",
+			expected: Variables{},
+			err:      "Undefined variable",
+		},
+		{
+			name:       "invalid value type for pb.Variable",
+			file:       "valid.hcl",
+			inputFiles: []string{filepath.Join("testdata", "values.hcl")},
+			inputValues: []*pb.Variable{
+				{
+					Name:   "is_good",
+					Value:  &pb.Variable_Str{Str: "bar"},
+					Source: &pb.Variable_Cli{},
+				},
+			},
+			expected: Variables{},
+			err:      "Invalid value for variable",
+		},
+		{
+			name:        "no varfile",
+			file:        "valid.hcl",
+			inputFiles:  []string{filepath.Join("testdata", "nofile.hcl")},
+			inputValues: []*pb.Variable{},
+			expected:    Variables{},
+			err:         "Given variables file testdata/nofile.hcl does not exist",
+		},
+		{
+			name:        "input file not valid hcl",
+			file:        "valid.hcl",
+			inputFiles:  []string{filepath.Join("testdata", "nothcl")},
+			inputValues: []*pb.Variable{},
+			expected:    Variables{},
+			err:         "Missing newline after argument",
+		},
+		{
+			name:        "defintion in values file",
+			file:        "valid.hcl",
+			inputFiles:  []string{filepath.Join("testdata", "valid.hcl")},
+			inputValues: []*pb.Variable{},
+			expected:    Variables{},
+			err:         "Variable declaration in a wpvars file",
+		},
+		{
+			name:        "undefined var for file value",
+			file:        "valid.hcl",
+			inputFiles:  []string{filepath.Join("testdata", "undefined.hcl")},
+			inputValues: []*pb.Variable{},
+			expected:    Variables{},
+			err:         "Undefined variable",
+		},
+		{
+			name:        "invalid value type",
+			file:        "valid.hcl",
+			inputFiles:  []string{filepath.Join("testdata", "invalid_value.hcl")},
+			inputValues: []*pb.Variable{},
+			expected:    Variables{},
+			err:         "Invalid value for variable",
 		},
 	}
 	for _, tt := range cases {
@@ -138,14 +192,15 @@ func TestVariables_collectValues(t *testing.T) {
 			diags = vs.CollectInputValues(tt.inputFiles, tt.inputValues)
 			if tt.err != "" {
 				require.True(diags.HasErrors())
+				require.Contains(diags.Error(), tt.err)
 				return
 			}
 
 			require.False(diags.HasErrors())
-			for k, v := range tt.expectedVariables {
+			for k, v := range tt.expected {
 				diff := cmp.Diff(v, vs[k], cmpOpts...)
 				if diff != "" {
-					t.Fatalf("Didn't get expected variables: %s", diff)
+					t.Fatalf("Expected variables differed from actual: %s", diff)
 				}
 			}
 			// check that default and set values are all in the
