@@ -1,10 +1,9 @@
-variable "bees" {
-  default = "buzz"
-  description = "This is my description"
+variable "art" {
+  default = null
   type = string
 }
 
-variable "dinosaur" {
-  default = "longneck"
+variable "mug" {
+  default = "clay"
   type = string
 }

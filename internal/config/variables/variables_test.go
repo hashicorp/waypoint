@@ -4,10 +4,14 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/stretchr/testify/require"
+	"github.com/zclconf/go-cty/cty"
 )
 
 func TestVariables_decode(t *testing.T) {
@@ -71,28 +75,56 @@ func TestVariables_decode(t *testing.T) {
 
 func TestVariables_collectValues(t *testing.T) {
 	cases := []struct {
-		File     string
-		Values   []*pb.Variable
-		Expected map[string][]string
-		Err      string
+		name              string
+		file              string
+		inputFiles        []string
+		inputValues       []*pb.Variable
+		expectedVariables Variables
+		err               string
 	}{
 		{
-			"valid.hcl",
-			[]*pb.Variable{
+			name:       "valid",
+			file:       "valid.hcl",
+			inputFiles: []string{filepath.Join("testdata", "values.hcl")},
+			inputValues: []*pb.Variable{
 				{
-					Name:  "bees",
-					Value: &pb.Variable_Str{Str: "notbuzz"},
+					Name:   "art",
+					Value:  &pb.Variable_Str{Str: "gdbee"},
+					Source: &pb.Variable_Cli{},
 				},
 			},
-			map[string][]string{"bees": {"notbuzz", "buzz"}, "dinosaur": {"longneck"}},
-			"",
+			expectedVariables: Variables{
+				"art": &Variable{
+					Values: []Value{
+						{cty.DynamicVal, "default", hcl.Expression(nil), hcl.Range{}},
+						{cty.StringVal("gdbee"), "file", hcl.Expression(nil), hcl.Range{}},
+						{cty.StringVal("gdbee"), "cli", hcl.Expression(nil), hcl.Range{}},
+					},
+					Type: cty.String,
+				},
+			},
+			err: "",
+		},
+		{
+			name:       "undefined variable",
+			file:       "valid.hcl",
+			inputFiles: []string{filepath.Join("testdata", "values.hcl")},
+			inputValues: []*pb.Variable{
+				{
+					Name:   "foo",
+					Value:  &pb.Variable_Str{Str: "bar"},
+					Source: &pb.Variable_Cli{},
+				},
+			},
+			expectedVariables: Variables{},
+			err:               "Undefined variable",
 		},
 	}
 	for _, tt := range cases {
-		t.Run(tt.File, func(t *testing.T) {
+		t.Run(tt.file, func(t *testing.T) {
 			require := require.New(t)
 
-			file := filepath.Join("testdata", tt.File)
+			file := filepath.Join("testdata", tt.file)
 			basecfg := HclBase{}
 
 			err := hclsimple.DecodeFile(file, nil, &basecfg)
@@ -103,14 +135,22 @@ func TestVariables_collectValues(t *testing.T) {
 			require.False(diags.HasErrors())
 
 			// collect values
-			diags = vs.CollectInputValues(nil, tt.Values)
-			require.False(diags.HasErrors())
-
-			// check that default and set values are all in the
-			// created []VariableAssignments
-			for k, vs := range tt.Expected {
-				require.Equal(vs, tt.Expected[k])
+			diags = vs.CollectInputValues(tt.inputFiles, tt.inputValues)
+			if tt.err != "" {
+				require.True(diags.HasErrors())
+				return
 			}
+
+			require.False(diags.HasErrors())
+			for k, v := range tt.expectedVariables {
+				diff := cmp.Diff(v, vs[k], cmpOpts...)
+				if diff != "" {
+					t.Fatalf("Didn't get expected variables: %s", diff)
+				}
+			}
+			// check that default and set values are all in the
+			// created []Values
+
 		})
 	}
 }
@@ -135,6 +175,18 @@ func TestVariables_collectInputVars(t *testing.T) {
 				},
 			},
 			"",
+		}, {
+			"success",
+			[]string{"values.hcl"},
+			map[string]string{"foo": "bar"},
+			[]*pb.Variable{
+				{
+					Name:   "foo",
+					Value:  &pb.Variable_Str{Str: "bar"},
+					Source: &pb.Variable_Cli{},
+				},
+			},
+			"",
 		},
 	}
 	for _, tt := range cases {
@@ -146,4 +198,25 @@ func TestVariables_collectInputVars(t *testing.T) {
 			require.Equal(vars, tt.Expected)
 		})
 	}
+}
+
+var ctyValueComparer = cmp.Comparer(func(x, y cty.Value) bool {
+	return x.RawEquals(y)
+})
+
+var ctyTypeComparer = cmp.Comparer(func(x, y cty.Type) bool {
+	if x == cty.NilType && y == cty.NilType {
+		return true
+	}
+	if x == cty.NilType || y == cty.NilType {
+		return false
+	}
+	return x.Equals(y)
+})
+
+var cmpOpts = []cmp.Option{
+	ctyValueComparer,
+	ctyTypeComparer,
+	cmpopts.IgnoreInterfaces(struct{ hcl.Expression }{}),
+	cmpopts.IgnoreTypes(hcl.Range{}),
 }
