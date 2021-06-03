@@ -44,6 +44,10 @@ export default Factory.extend({
     name: 'kubernetes',
   }),
 
+  'kubernetes-apply': trait({
+    name: 'kubernetes-apply',
+  }),
+
   'with-random-name': trait({
     afterCreate(component) {
       component.update('name', randomNameForType(component.type));
