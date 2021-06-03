@@ -1,0 +1,3 @@
+```release-note:feature
+plugin/aws-alb: Report on status of releases
+```

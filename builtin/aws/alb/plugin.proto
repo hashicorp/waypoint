@@ -12,4 +12,6 @@ message TargetGroup {
 message Release {
   string url = 1;
   string load_balancer_arn = 2;
+  string target_group_arn = 4;
+  string region = 3;
 }

@@ -3,6 +3,7 @@ package alb
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
 )
@@ -19,6 +21,11 @@ import (
 type Releaser struct {
 	config ReleaserConfig
 }
+
+const (
+	targetGroupInitializationTimeoutSeconds         int = 60
+	targetGroupInitializationPollingIntervalSeconds int = 5
+)
 
 // Config implements Configurable
 func (r *Releaser) Config() (interface{}, error) {
@@ -30,7 +37,12 @@ func (r *Releaser) ReleaseFunc() interface{} {
 	return r.Release
 }
 
-// Release manages target group attachement to a configured ALB
+// StatusFunc implements component.Status
+func (r *Releaser) StatusFunc() interface{} {
+	return r.Status
+}
+
+// Release manages target group attachment to a configured ALB
 func (r *Releaser) Release(
 	ctx context.Context,
 	log hclog.Logger,
@@ -304,7 +316,155 @@ func (r *Releaser) Release(
 	return &Release{
 		Url:             "http://" + hostname,
 		LoadBalancerArn: *lb.LoadBalancerArn,
+		TargetGroupArn:  target.Arn,
+		Region:          target.Region,
 	}, nil
+}
+
+func (r *Releaser) Status(
+	ctx context.Context,
+	log hclog.Logger,
+	release *Release,
+	ui terminal.UI,
+) (*sdk.StatusReport, error) {
+
+	var report sdk.StatusReport
+	report.External = true
+
+	if release.Region == "" {
+		log.Debug("Region is not available for this release. Unable to determine status.")
+		return &report, nil
+	}
+
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: release.Region,
+		Logger: log,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	elbsrv := elbv2.New(sess)
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	step := sg.Add("Gathering health report for AWS/ALB platform...")
+	defer step.Abort()
+
+	step.Update("Waiting for at least one target to pass initialization...")
+
+	var targetHealthDescriptions []*elbv2.TargetHealthDescription
+
+	startTime := time.Now().Unix()
+	for {
+		if targetHealthDescriptions != nil {
+			sleepDuration := time.Second * time.Duration(targetGroupInitializationPollingIntervalSeconds)
+			log.Debug("Sleeping %0.f seconds to give the following target group time to initialize:\n%s", sleepDuration.Seconds(), release.TargetGroupArn)
+			time.Sleep(sleepDuration)
+		}
+
+		if startTime+int64(targetGroupInitializationTimeoutSeconds) <= time.Now().Unix() {
+			report.HealthMessage = fmt.Sprintf("timed out after %d seconds waiting for the following target group to initialize:\n%s", time.Now().Unix()-startTime, release.TargetGroupArn)
+			report.Health = sdk.StatusReport_UNKNOWN
+			step.Status(terminal.StatusWarn)
+			step.Update(report.HealthMessage)
+			return &report, nil
+		}
+
+		tgHealthResp, err := elbsrv.DescribeTargetHealthWithContext(ctx, &elbv2.DescribeTargetHealthInput{
+			TargetGroupArn: &release.TargetGroupArn,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to describe target group %s health: %s", release.TargetGroupArn, err)
+		}
+
+		targetHealthDescriptions = tgHealthResp.TargetHealthDescriptions
+
+		// We may not have any targets if the target group was created very recently.
+		if len(targetHealthDescriptions) == 0 {
+			step.Update("Waiting for registered targets with health...")
+			continue
+		}
+
+		initializingCount := 0
+		for _, tgHealth := range targetHealthDescriptions {
+
+			// NOTE(izaaklauer) potentially unsafe dereference
+			if *tgHealth.TargetHealth.State == elbv2.TargetHealthStateEnumInitial {
+				initializingCount++
+			}
+		}
+		if initializingCount == len(targetHealthDescriptions) {
+			step.Update("Waiting for at least one target to finish initializing...")
+			continue
+		}
+
+		step.Update("Target group has been initialized.")
+		break
+	}
+
+	report.Resources = []*sdk.StatusReport_Resource{}
+
+	healthyCount := 0
+	for _, tgHealth := range targetHealthDescriptions {
+
+		targetId := *tgHealth.Target.Id
+
+		var health sdk.StatusReport_Health
+
+		switch *tgHealth.TargetHealth.State {
+		case elbv2.TargetHealthStateEnumHealthy:
+			healthyCount++
+			health = sdk.StatusReport_READY
+		case elbv2.TargetHealthStateEnumUnavailable:
+			// Lambda functions present this way. Defaulting to UNKNOWN seems reasonable here too.
+			healthyCount++
+			health = sdk.StatusReport_READY
+		case elbv2.TargetHealthStateEnumUnhealthy:
+			health = sdk.StatusReport_DOWN
+		default:
+			// There are more TargetHealthStateEnums, but they do not cleanly map to our states.
+			health = sdk.StatusReport_UNKNOWN
+		}
+
+		var healthMessage string
+		if tgHealth.TargetHealth.Description != nil {
+			healthMessage = *tgHealth.TargetHealth.Description
+		}
+
+		report.Resources = append(report.Resources, &sdk.StatusReport_Resource{
+			Health:        health,
+			HealthMessage: healthMessage,
+			Name:          targetId,
+		})
+	}
+
+	step.Update("Finished building report for AWS/ALB platform")
+	step.Done()
+
+	// NOTE(briancain): Replace ui.Status with StepGroups once this bug
+	// has been fixed: https://github.com/hashicorp/waypoint/issues/1536
+	st := ui.Status()
+	defer st.Close()
+
+	// If AWS registers targets slowly or incrementally, we may report an artificially low number of total targets.
+	totalTargets := len(targetHealthDescriptions)
+
+	if healthyCount == totalTargets {
+		report.Health = sdk.StatusReport_READY
+		report.HealthMessage = fmt.Sprintf("All %d targets are healthy.", totalTargets)
+	} else if healthyCount > 0 {
+		report.Health = sdk.StatusReport_PARTIAL
+		report.HealthMessage = fmt.Sprintf("Only %d/%d targets are healthy.", healthyCount, totalTargets)
+		st.Step(terminal.StatusWarn, report.HealthMessage)
+	} else {
+		report.Health = sdk.StatusReport_DOWN
+		report.HealthMessage = fmt.Sprintf("All targets are unhealthy, however your application might be available or still starting up.")
+		st.Step(terminal.StatusWarn, report.HealthMessage)
+	}
+
+	return &report, nil
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.
@@ -420,4 +580,5 @@ var (
 	_ component.ReleaseManager = (*Releaser)(nil)
 	_ component.Configurable   = (*Releaser)(nil)
 	_ component.Documented     = (*Releaser)(nil)
+	_ component.Status         = (*Releaser)(nil)
 )
