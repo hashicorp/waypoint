@@ -250,6 +250,14 @@
       {
         "title": "Dynamic Values",
         "path": "app-config/dynamic"
+      },
+      {
+        "title": "Files",
+        "path": "app-config/files"
+      },
+      {
+        "title": "Internal Values",
+        "path": "app-config/internal"
       }
     ]
   },
