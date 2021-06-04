@@ -2368,11 +2368,17 @@ message StatusReport {
   // This message is a StatusReport proto that exists inside the SDK
   google.protobuf.Any status_report = 7;
 
-  // The overall health of the deployment or release as reported by the plugin
+  // The overall health of the deployment or release as reported by the plugin.
+  // Copied from the plugin generated raw SDK status report for convenient API access.
   Health health = 8;
 
   // A health report of all of the resources that make up the report.
+  // Copied from the plugin generated raw SDK status report for convenient API access.
   repeated Health resources_health = 9;
+
+  // the time when this report was generated
+  // Copied from the plugin generated raw SDK status report for convenient API access.
+  google.protobuf.Timestamp generated_time = 10;
 
   message Health {
     // the overall health of the report for a resource
@@ -2387,9 +2393,6 @@ message StatusReport {
     // Resource id
     string id = 4;
   }
-
-  // the time when this report was generated
-  google.protobuf.Timestamp generated_time = 10;
 }
 
 /********************************************************************

@@ -7409,11 +7409,14 @@ type StatusReport struct {
 	// StatusReport is the raw SDK report object encoded directly from the plugin.
 	// This message is a StatusReport proto that exists inside the SDK
 	StatusReport *anypb.Any `protobuf:"bytes,7,opt,name=status_report,json=statusReport,proto3" json:"status_report,omitempty"`
-	// The overall health of the deployment or release as reported by the plugin
+	// The overall health of the deployment or release as reported by the plugin.
+	// Copied from the plugin generated raw SDK status report for convenient API access.
 	Health *StatusReport_Health `protobuf:"bytes,8,opt,name=health,proto3" json:"health,omitempty"`
 	// A health report of all of the resources that make up the report.
+	// Copied from the plugin generated raw SDK status report for convenient API access.
 	ResourcesHealth []*StatusReport_Health `protobuf:"bytes,9,rep,name=resources_health,json=resourcesHealth,proto3" json:"resources_health,omitempty"`
 	// the time when this report was generated
+	// Copied from the plugin generated raw SDK status report for convenient API access.
 	GeneratedTime *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=generated_time,json=generatedTime,proto3" json:"generated_time,omitempty"`
 }
 
