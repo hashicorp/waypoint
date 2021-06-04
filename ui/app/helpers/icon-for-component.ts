@@ -14,6 +14,7 @@ export function iconForComponent([component]: [string]): string {
     case 'google-cloud-run':
       return 'logo-gcp-color';
     case 'kubernetes':
+    case 'kubernetes-apply':
       return 'logo-kubernetes-color-alt';
     case 'nomad':
     case 'nomad-jobspec':

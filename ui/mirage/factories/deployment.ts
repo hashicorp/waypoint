@@ -44,6 +44,10 @@ export default Factory.extend({
     component: association('platform', 'kubernetes'),
   }),
 
+  'kubernetes-apply': trait({
+    component: association('platform', 'kubernetes-apply'),
+  }),
+
   'seconds-old-success': trait({
     status: association('random', 'success', 'seconds-old'),
   }),
