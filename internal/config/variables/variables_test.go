@@ -203,20 +203,17 @@ func TestVariables_collectValues(t *testing.T) {
 					t.Fatalf("Expected variables differed from actual: %s", diff)
 				}
 			}
-			// check that default and set values are all in the
-			// created []Values
-
 		})
 	}
 }
 
-func TestVariables_collectInputVars(t *testing.T) {
+func TestVariables_SetJobInputVariables(t *testing.T) {
 	cases := []struct {
-		Name     string
-		File     []string
-		Values   map[string]string
-		Expected []*pb.Variable
-		Err      string
+		name     string
+		file     []string
+		cliArgs  map[string]string
+		expected []*pb.Variable
+		err      string
 	}{
 		{
 			"success",
@@ -232,9 +229,19 @@ func TestVariables_collectInputVars(t *testing.T) {
 			"",
 		}, {
 			"success",
-			[]string{"values.hcl"},
+			[]string{filepath.Join("testdata", "values.hcl")},
 			map[string]string{"foo": "bar"},
 			[]*pb.Variable{
+				{
+					Name:   "mug",
+					Value:  &pb.Variable_Str{Str: "yeti"},
+					Source: &pb.Variable_File_{},
+				},
+				{
+					Name:   "art",
+					Value:  &pb.Variable_Str{Str: "gdbee"},
+					Source: &pb.Variable_File_{},
+				},
 				{
 					Name:   "foo",
 					Value:  &pb.Variable_Str{Str: "bar"},
@@ -245,15 +252,26 @@ func TestVariables_collectInputVars(t *testing.T) {
 		},
 	}
 	for _, tt := range cases {
-		t.Run(tt.Name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
-			vars, diags := CollectInputVars(tt.Values, tt.File)
+			vars, diags := SetJobInputVariables(tt.cliArgs, tt.file)
 			require.False(diags.HasErrors())
 
-			require.Equal(vars, tt.Expected)
+			require.Equal(len(vars), len(tt.expected))
+			require.Equal(vars, tt.expected)
+			// TODO krantzinator: add a sort before comparing for equality
+			for i, v := range vars {
+				require.Equal(v, tt.expected[i])
+			}
 		})
 	}
 }
+
+// func TestVariables_mergeValues(t *testing.T) {
+// 	cases := []struct {
+
+// 	}
+// }
 
 var ctyValueComparer = cmp.Comparer(func(x, y cty.Value) bool {
 	return x.RawEquals(y)

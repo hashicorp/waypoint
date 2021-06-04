@@ -257,7 +257,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// if diags.HasErrors() != nil {
 	// 	return diags
 	// }
-	vars, diags := variables.CollectInputVars(c.flagVars, nil)
+	vars, diags := variables.SetJobInputVariables(c.flagVars, nil)
 	if diags.HasErrors() {
 		return diags
 	}
