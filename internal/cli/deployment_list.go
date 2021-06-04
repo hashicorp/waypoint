@@ -183,7 +183,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 							statusReportComplete = "?"
 						}
 
-						if t, err := ptypes.Timestamp(statusReport.TimeGenerated); err == nil {
+						if t, err := ptypes.Timestamp(statusReport.GeneratedTime); err == nil {
 							statusReportComplete = fmt.Sprintf("%s - %s", statusReportComplete, humanize.Time(t))
 						}
 					}
