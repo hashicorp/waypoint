@@ -2,21 +2,20 @@
 layout: docs
 page_title: Application Configuration
 description: |-
-  Waypoint can configure your application via environment variables that are either set via static values or synced with an external system such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon Parameter Store, etc.
+  Waypoint can configure your application by setting environment variables and writing files. Both the environment variables and files can use values sourced from external systems such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon Parameter Store, etc.
 ---
 
 # Application Configuration
 
-Waypoint can configure your application via environment variables
-that are either set via static values or synced with an external
-system such as Kubernetes ConfigMaps, HashiCorp Vault, Amazon
-Parameter Store, etc.
+Waypoint can configure your application by setting environment variables
+and writing files. Both the environment variables and files can use
+values sourced from external systems such as Kubernetes ConfigMaps,
+HashiCorp Vault, Amazon Parameter Store, etc.
 
-Applications often take configuration such as database URLs, ports to
-listen on, etc. in the form of environment variables. Waypoint can set
-these variables and make them available to your application. These values
-can be set via the `waypoint.hcl` file or using the `waypoint config`
-CLI.
+Application configuration can be set two ways. First, it may be set using the
+[`config` stanza](/docs/waypoint-hcl/config) in the `waypoint.hcl` file. You
+may also use the [`waypoint config`](/commands/config-set) CLI command, but this
+can only be used for environment variables.
 
 When configuration values change, Waypoint will automatically
 [restart your application](#application-restart-behavior).
