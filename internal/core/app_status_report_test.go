@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 
 	"github.com/golang/protobuf/ptypes"
@@ -113,12 +114,14 @@ func TestAppDeploymentStatusReport(t *testing.T) {
 		require.NoError(err)
 		deploy := resp.Deployment
 
+		statusReportTs := timestamppb.Now()
 		mock.Status.On("StatusFunc").Return(func(context.Context) (*sdk.StatusReport, error) {
-			return &sdk.StatusReport{}, nil
+			return &sdk.StatusReport{
+				TimeGenerated: statusReportTs,
+			}, nil
 		})
 
 		// Status Report
-
 		srResp, err := app.DeploymentStatusReport(context.Background(), deploy)
 		statusReport := &sdk.StatusReport{}
 		anypb.UnmarshalTo(srResp.StatusReport, statusReport, proto.UnmarshalOptions{})
@@ -126,9 +129,13 @@ func TestAppDeploymentStatusReport(t *testing.T) {
 		require.NotNil(srResp.StatusReport)
 		require.NotNil(statusReport.Health)
 
+		// Verify that we have a Target of the right type with the right id
 		require.IsType(srResp.TargetId, &pb.StatusReport_DeploymentId{})
 		require.Equal(srResp.TargetId.(*pb.StatusReport_DeploymentId).DeploymentId, deploy.Id)
 
+		// Verify that the status report timestamp made it into the server resp
+		require.NotNil(srResp.GeneratedTime)
+		require.True(srResp.GeneratedTime.AsTime().Equal(statusReportTs.AsTime()))
 	})
 }
 
@@ -244,8 +251,11 @@ func TestAppReleaseStatusReport(t *testing.T) {
 		require.NoError(err)
 		release := releaseResp.Release
 
+		statusReportTs := timestamppb.Now()
 		mock.Status.On("StatusFunc").Return(func(context.Context) (*sdk.StatusReport, error) {
-			return &sdk.StatusReport{}, nil
+			return &sdk.StatusReport{
+				TimeGenerated: statusReportTs,
+			}, nil
 		})
 
 		// Status Report
@@ -256,9 +266,13 @@ func TestAppReleaseStatusReport(t *testing.T) {
 		require.NotNil(srResp.StatusReport)
 		require.NotNil(statusReport.Health)
 
+		// Verify that we have a Target of the right type with the right id
 		require.IsType(srResp.TargetId, &pb.StatusReport_ReleaseId{})
 		require.Equal(srResp.TargetId.(*pb.StatusReport_ReleaseId).ReleaseId, release.Id)
 
+		// Verify that the status report timestamp made it into the server resp
+		require.NotNil(srResp.GeneratedTime)
+		require.True(srResp.GeneratedTime.AsTime().Equal(statusReportTs.AsTime()))
 	})
 }
 
