@@ -2389,7 +2389,7 @@ message StatusReport {
   }
 
   // the time when this report was generated
-  google.protobuf.Timestamp time_generated = 10;
+  google.protobuf.Timestamp generated_time = 10;
 }
 
 /********************************************************************
