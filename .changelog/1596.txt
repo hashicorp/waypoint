@@ -1,0 +1,3 @@
+```release-note:bug
+cli: Ignore error on Unimplemented for health checks
+```
