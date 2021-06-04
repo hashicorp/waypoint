@@ -10,8 +10,9 @@ description: |-
 <Placement groups={[['config'], ['app', 'config']]} />
 
 The `config` stanza configures [application configuration](/docs/app-config).
-Application configuration sets environment variables for your application
-that is either statically set or synced with an external system.
+Application configuration sets environment variables or writes files for
+your application. Application configuration can use static values or by synced
+with an external system.
 Application configuration can be set via the `waypoint.hcl` file using
 the `config` stanza as well as via the [CLI](/commands/config-set).
 
@@ -68,7 +69,7 @@ values that may have been set manually via the CLI. Any configuration set in the
 that was not set in the configuration file will remain unchanged.
 
 Synced configuration impacts _all_ versions of a deployed application. All
-deployed applications will subsequently be restarted if configuration values
+deployed applications will subsequently be restarted or signaled if configuration values
 changed.
 
 ## `config` Parameters
@@ -78,6 +79,22 @@ changed.
 - `env` `(map<string>ConfigValue: {})` - Environment variables to set
   for the deployed application. See the `ConfigValue` section below on more
   details on valid values for this map.
+
+- `file` `(map<string>string: {})` - Files to write at runtime for the
+  deployed application. The key is the path to write the file and the value
+  is the file contents. If the path is relative, it is relative to the working
+  directory of the deployment. The value is usually paired with
+  [templating functions](/docs/waypoint-hcl/functions/template). See
+  the [configuration file documentation](/docs/app-config/files) for more information.
+
+- `file_change_signal` `(string: "USR2")` - The signal to send to the deployed
+  application when a configuration file changes.
+
+- `internal` `(map<string>ConfigValue: {})` - Internal variables use the
+  same syntax as `env` but are not exposed directly to the application. Instead,
+  these values may be referenced using `config.internal.NAME` within `env`
+  values or `file` values. See the
+  [internal values documentation](/docs/app-config/internal) for more information.
 
 ## `ConfigValue`
 

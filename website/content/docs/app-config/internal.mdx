@@ -1,0 +1,51 @@
+---
+layout: docs
+page_title: Internal Values - Application Configuration
+description: |-
+  Internal values are static or dynamic configuration values that can be referenced by environment variables or files to compose values.
+---
+
+# Internal Values
+
+Internal values are static or [dynamic](/docs/app-config/dynamic)
+configuration values that can be referenced by environment variables,
+[files](/docs/app-config/files), or other internal variables to compose
+values. An example common usecase is building a database connection string
+which requires a database host, username, password, etc. that may come from difference sources.
+
+## Using Internal Values
+
+Internal values are declared in the `waypoint.hcl` file in the
+[`config` stanza](/docs/waypoint-hcl/config). The example below configures
+an internal value that reads a database username and host from a Terraform
+output and then combines them in an environment variable:
+
+```hcl
+config {
+  internal = {
+    "db_host" = configdynamic("terraform-cloud", {
+      organization = "mycorp"
+      workspace = "databases"
+      output = "db_host"
+    })
+
+    "db_user" = configdynamic("terraform-cloud", {
+      organization = "mycorp"
+      workspace = "databases"
+      output = "db_user"
+    })
+  }
+
+  env = {
+    "DB_ADDR" = "${config.internal.db_user}@${config.internal.db_host}"
+  }
+}
+```
+
+The internal values `db_host` and `db_user` are never exposed directly
+to the application. Instead, only the combined value created in the
+`DB_ADDR` env var is exposed.
+
+If the dynamic value of the database host or user changes, the environment
+variable will subsequently be updated and the application will be restarted
+using standard application restart behavior.
