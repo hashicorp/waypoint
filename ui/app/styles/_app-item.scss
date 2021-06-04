@@ -84,4 +84,10 @@
     margin-bottom: 0px;
     border-top: 1rem solid color.$ui-cool-gray-050;
   }
+
+  @media (prefers-color-scheme: dark) {
+    &--previous {
+      background: color.$ui-cool-gray-800;
+    }
+  }
 }
