@@ -181,6 +181,12 @@
         color: rgb(var(--text));
       }
     }
+
+    @media (prefers-color-scheme: dark) {
+      a:hover {
+        background: color.$ui-cool-gray-800;
+      }
+    }
   }
 
   ul.list {
