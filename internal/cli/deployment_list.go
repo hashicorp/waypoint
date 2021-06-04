@@ -112,10 +112,14 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			Application: app.Ref(),
 			Workspace:   wsRef,
 		})
-		
+
 		if status.Code(err) == codes.NotFound || status.Code(err) == codes.Unimplemented {
 			err = nil
 			statusReportsResp = nil
+		}
+		if err != nil {
+			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return ErrSentinel
 		}
 
 		if c.flagJson {
