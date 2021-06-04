@@ -166,7 +166,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			}
 
 			// Add status report information if we have any
-			statusReportComplete := "Unknown Status"
+			statusReportComplete := "n/a"
 			for _, statusReport := range statusReportsResp.StatusReports {
 				if deploymentTargetId, ok := statusReport.TargetId.(*pb.StatusReport_DeploymentId); ok {
 					if deploymentTargetId.DeploymentId == b.Id {
