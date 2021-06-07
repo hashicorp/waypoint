@@ -23,7 +23,7 @@ type Releaser struct {
 }
 
 const (
-	targetGroupInitializationTimeoutSeconds         int = 60
+	targetGroupInitializationTimeoutSeconds         int = 120
 	targetGroupInitializationPollingIntervalSeconds int = 5
 )
 
@@ -40,6 +40,11 @@ func (r *Releaser) ReleaseFunc() interface{} {
 // StatusFunc implements component.Status
 func (r *Releaser) StatusFunc() interface{} {
 	return r.Status
+}
+
+// DestroyFunc implements component.Destroyer
+func (r *Releaser) DestroyFunc() interface{} {
+	return r.Destroy
 }
 
 // Release manages target group attachment to a configured ALB
@@ -215,7 +220,6 @@ func (r *Releaser) Release(
 					},
 				},
 			})
-
 			if err != nil {
 				return nil, err
 			}
@@ -389,7 +393,6 @@ func (r *Releaser) Status(
 
 		initializingCount := 0
 		for _, tgHealth := range targetHealthDescriptions {
-
 			// NOTE(izaaklauer) potentially unsafe dereference
 			if *tgHealth.TargetHealth.State == elbv2.TargetHealthStateEnumInitial {
 				initializingCount++
@@ -465,6 +468,104 @@ func (r *Releaser) Status(
 	}
 
 	return &report, nil
+}
+
+// Destroy will modify or delete Listeners, so that the platform can destroy the
+// target groups
+func (r *Releaser) Destroy(
+	ctx context.Context,
+	log hclog.Logger,
+	release *Release,
+	ui terminal.UI,
+) error {
+	sg := ui.StepGroup()
+	step := sg.Add("Initializing client...")
+	defer step.Abort()
+
+	sess, err := utils.GetSession(&utils.SessionConfig{
+		Region: release.Region,
+		Logger: log,
+	})
+	if err != nil {
+		return err
+	}
+	elbsrv := elbv2.New(sess)
+	step.Update("Connected to region %s", release.Region)
+	step.Done()
+	step = sg.Add("Inspecting listeners...")
+
+	out, err := elbsrv.DescribeListeners(&elbv2.DescribeListenersInput{
+		LoadBalancerArn: &release.LoadBalancerArn,
+	})
+	if err != nil {
+		return err
+	}
+
+	// We don't know the ARN of the listener, only the Target Group and the
+	// LoadBalancer. We need to loop through each Listener's actions to find the
+	// target group that matches.
+	var (
+		listener *elbv2.Listener
+		actions  []*elbv2.Action
+	)
+LLOOP:
+	for j, ol := range out.Listeners {
+
+		defaultActions := ol.DefaultActions
+		for i, def := range defaultActions {
+			if def.ForwardConfig != nil {
+				for _, tg := range def.ForwardConfig.TargetGroups {
+					if *tg.TargetGroupArn == release.TargetGroupArn {
+						step.Update("Found listener for Target Group: %s", release.TargetGroupArn)
+						listener = out.Listeners[j]
+						// Waypoint adds a single default action. If there are more than 1,
+						// simply remove the one in question and leave the others alone
+						if len(defaultActions) > 1 {
+							// remove this item in-place
+							copy(defaultActions[i:], defaultActions[i+1:])
+						}
+						actions = defaultActions[:len(defaultActions)-1]
+						break LLOOP
+					}
+				}
+			}
+		}
+	}
+
+	if listener == nil {
+		step.Update("No matching listener for Target Group %s", release.TargetGroupArn)
+		log.Debug("no matching listener found for target group", "arn", release.TargetGroupArn)
+		return nil
+	}
+	step.Done()
+	step = sg.Add("")
+
+	log.Debug("modifying", "arn", *listener.ListenerArn)
+	// If a ListenerARN was specified, it's possible that the listener has other
+	// actions outside of the Waypoint installation, so we should simply modify it
+	// without including the action that was added by Waypoint. Otherwise, delete
+	// the entire listener
+	if len(actions) > 0 {
+		step.Update("modifying listener: %s", *listener.ListenerArn)
+		_, err := elbsrv.ModifyListener(&elbv2.ModifyListenerInput{
+			ListenerArn:    listener.ListenerArn,
+			DefaultActions: actions,
+		})
+		if err != nil {
+			return err
+		}
+	} else {
+		step.Update("deleting listener: %s", *listener.ListenerArn)
+		_, err := elbsrv.DeleteListener(&elbv2.DeleteListenerInput{
+			ListenerArn: listener.ListenerArn,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	step.Done()
+	return nil
 }
 
 // ReleaserConfig is the configuration structure for the Releaser.
@@ -579,6 +680,7 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 var (
 	_ component.ReleaseManager = (*Releaser)(nil)
 	_ component.Configurable   = (*Releaser)(nil)
+	_ component.Destroyer      = (*Releaser)(nil)
 	_ component.Documented     = (*Releaser)(nil)
 	_ component.Status         = (*Releaser)(nil)
 )
