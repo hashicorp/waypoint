@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/aws-alb: Fix issue destroying when Target Group still in use 
+```
