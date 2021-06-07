@@ -2,7 +2,6 @@ package singleprocess
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -12,8 +11,31 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
+// pollHandler is a private interface that the server implements for polling on
+// different items such as projects or status reports.
+type pollHandler interface {
+	// Peek returns the next item that should be polled.
+	// This will return (nil,nil,nil) if there are no projects to poll currently.
+	//
+	// This calls the items state implementation of its "peek" operation so it
+	// does not update the project's next poll time. Therefore, calling this
+	// multiple times should return the same result unless a function like
+	// ProjectPollComplete is called.
+	Peek(memdb.WatchSet, hclog.Logger) (interface{}, time.Time, error)
+
+	// PollJob generates a QueueJobRequest that is used to poll on.
+	// It is expected to be given a proto message obtained from Peek which
+	// is used to define the job returned.
+	PollJob(interface{}, hclog.Logger) (*pb.QueueJobRequest, error)
+
+	// Complete will mark the job that was queued as complete using the specific
+	// state implementation.
+	Complete(interface{}, hclog.Logger) error
+}
+
 // runPollQueuer starts the poll queuer. The poll queuer sleeps on and
-// schedules polling operations for projects that have polling enabled.
+// schedules polling operations for pollable items that have polling enabled
+// and implemented.
 // This blocks and is expected to be run in a goroutine.
 //
 // This function should only ever be invoked one at a time. Running multiple
@@ -21,6 +43,7 @@ import (
 func (s *service) runPollQueuer(
 	ctx context.Context,
 	wg *sync.WaitGroup,
+	handler pollHandler,
 	funclog hclog.Logger,
 ) {
 	defer wg.Done()
@@ -37,7 +60,7 @@ func (s *service) runPollQueuer(
 		}
 
 		ws := memdb.NewWatchSet()
-		p, pollTime, err := s.state.ProjectPollPeek(ws)
+		pollItem, pollTime, err := handler.Peek(ws, log)
 		if err != nil {
 			// This error really should never happen. Instead of just exiting,
 			// we log it and just sleep a minute. Hopefully someone will notice
@@ -46,9 +69,6 @@ func (s *service) runPollQueuer(
 			log.Error("BUG (please report): error during poll queuer, sleeping 1 minute", "err", err)
 			time.Sleep(1 * time.Minute)
 			continue
-		}
-		if p != nil {
-			log = log.With("project", p.Name)
 		}
 
 		var loopCtxCancel context.CancelFunc
@@ -102,41 +122,20 @@ func (s *service) runPollQueuer(
 		// loudly that it happened. p shouldn't be nil here because if p is
 		// nil then we have no pollTime and therefore no loopCtx either. This
 		// means outcome (1) or (2) MUST happen.
-		if p == nil {
-			log.Error("reached outcome (3) in poller with nil p. This should not happen.")
+		if pollItem == nil {
+			log.Error("reached outcome (3) in poller with nil pollItem. This should not happen.")
 			continue
 		}
 
 		// Outcome (3)
 		log.Trace("queueing poll job")
-		resp, err := s.QueueJob(ctx, &pb.QueueJobRequest{
-			Job: &pb.Job{
-				// SingletonId so that we only have one poll operation at
-				// any time queued per project.
-				SingletonId: fmt.Sprintf("poll/%s", p.Name),
+		queueJobRequest, err := handler.PollJob(pollItem, log)
+		if err != nil {
+			log.Warn("error building a poll job request", "err", err)
+			continue
+		}
 
-				Application: &pb.Ref_Application{
-					Project: p.Name,
-					// No Application set since PollOp is project-oriented
-				},
-
-				// Polling always happens on the default workspace even
-				// though the PollOp is across every workspace.
-				Workspace: &pb.Ref_Workspace{Workspace: "default"},
-
-				// Poll!
-				Operation: &pb.Job_Poll{
-					Poll: &pb.Job_PollOp{},
-				},
-
-				// Any runner is fine for polling.
-				TargetRunner: &pb.Ref_Runner{
-					Target: &pb.Ref_Runner_Any{
-						Any: &pb.Ref_RunnerAny{},
-					},
-				},
-			},
-		})
+		resp, err := s.QueueJob(ctx, queueJobRequest)
 		if err != nil {
 			log.Warn("error queueing a poll job", "err", err)
 			continue
@@ -145,12 +144,12 @@ func (s *service) runPollQueuer(
 
 		// Mark this as complete so the next poll gets rescheduled.
 		log.Trace("scheduling next project poll time")
-		if err := s.state.ProjectPollComplete(p, time.Now()); err != nil {
+		if err := handler.Complete(pollItem, log); err != nil {
 			// This should never happen so like above, if this happens we
 			// sleep for a minute so we don't completely overload the
 			// server since this is likely to happen again. We want people
 			// to see this in the logs.
-			log.Warn("BUG (please report): error marking project polling complete", "err", err)
+			log.Warn("BUG (please report): error marking polling item complete", "err", err)
 			time.Sleep(1 * time.Minute)
 			continue
 		}
