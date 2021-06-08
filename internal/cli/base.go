@@ -83,7 +83,7 @@ type baseCommand struct {
 
 	// flagVarFile is a HCL or JSON file setting one or more values
 	// for defined input variables
-	flagVarFile string
+	flagVarFile []string
 
 	// flagRemote is whether to execute using a remote runner or use
 	// a local runner.
@@ -253,11 +253,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// TODO krantzinator: where to get var files from project path? On runner?
 	// Collect variable values from -var and -varfile flags, any .wpvars files
 	// locally, and env vars set with WP_VAR_*
-	// vf, diags := config.ParseVarFiles(c.flagVarFile)
-	// if diags.HasErrors() != nil {
-	// 	return diags
-	// }
-	vars, diags := variables.SetJobInputVariables(c.flagVars, nil)
+	vars, diags := variables.SetJobInputVariables(c.flagVars, c.flagVarFile)
 	if diags.HasErrors() {
 		return diags
 	}
@@ -436,7 +432,7 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Usage:  "Variable value to set for this operation. Can be specified multiple times.",
 		})
 
-		f.StringVar(&flag.StringVar{
+		f.StringSliceVar(&flag.StringSliceVar{
 			Name:   "var-file",
 			Target: &c.flagVarFile,
 			Usage: "HCL or JSON file containing variable values to set for this " +
