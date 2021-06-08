@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -17,27 +18,35 @@ import (
 )
 
 // A consistent detail message for all "not a valid identifier" diagnostics.
-const (
+var (
 	badIdentifierDetail = "A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."
 
 	// Variable value sources
-	sourceDefault = "default"
-	sourceCLI     = "cli"
-	sourceFile    = "file"
-	sourceEnv     = "env"
-	sourceVCS     = "vcs"
-	sourceServer  = "server"
+	// Highest precedence is the final value used
+	sourceDefault = Source{Name: "default", Precedence: 0}
+	sourceServer  = Source{Name: "server", Precedence: 1}
+	sourceVCS     = Source{Name: "vcs", Precedence: 2}
+	sourceEnv     = Source{Name: "env", Precedence: 3}
+	sourceFile    = Source{Name: "file", Precedence: 4}
+	sourceCLI     = Source{Name: "cli", Precedence: 5}
 )
 
 // Value contain the value of the variable along with associated metada,
 // including the source it was set from: cli, file, env, vcs, server/ui
 type Value struct {
 	Value  cty.Value
-	Source string
+	Source Source
 	Expr   hcl.Expression
 	// The location of the variable value if the value was provided
 	// from a file
 	Range hcl.Range
+}
+
+type Source struct {
+	Name string
+	// used for sorting precedence order once we've combined values from
+	// all sources
+	Precedence int
 }
 
 type Variable struct {
@@ -238,9 +247,9 @@ func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 // them.
 const VarEnvPrefix = "WP_VAR_"
 
-// SetJobInputVariables collects values set via the CLI (-var, -varfile) and 
-// local env vars (WP_VAR_*) and translates those values to pb.Variables. These 
-// pb.Variables can then be set on the job for eventual parsing on the runner, 
+// SetJobInputVariables collects values set via the CLI (-var, -varfile) and
+// local env vars (WP_VAR_*) and translates those values to pb.Variables. These
+// pb.Variables can then be set on the job for eventual parsing on the runner,
 // after the runner has decoded the variables defined in the waypoint.hcl.
 func SetJobInputVariables(vars map[string]string, files []string) ([]*pb.Variable, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
@@ -284,7 +293,7 @@ func SetJobInputVariables(vars map[string]string, files []string) ([]*pb.Variabl
 			attrs, moreDiags := f.Body.JustAttributes()
 			diags = append(diags, moreDiags...)
 
-			// We grab all variables here; we'll later check set variables against the 
+			// We grab all variables here; we'll later check set variables against the
 			// known variables defined in the waypoint.hcl on the runner when we
 			// consolidate values from local + server
 			for name, attr := range attrs {
@@ -313,7 +322,11 @@ func SetJobInputVariables(vars map[string]string, files []string) ([]*pb.Variabl
 	return ret, diags
 }
 
-// Collect values from server and remote-stored wpvars file
+// CollectInputValues parses the provided variable values and validates their
+// types per the type declared in the waypoint.hcl for that variable name.
+// Once all assigned values have been set, it then sorts the variables
+// in precedence order per their source, with the highest-precedence value
+// being the first item in *Variables.Values
 func (variables *Variables) CollectInputValues(files []string, pbvars []*pb.Variable) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
@@ -342,7 +355,7 @@ func (variables *Variables) CollectInputValues(files []string, pbvars []*pb.Vari
 			continue
 		}
 
-		var source string
+		var source Source
 		switch pbv.Source.(type) {
 		case *pb.Variable_Cli:
 			source = sourceCLI
@@ -396,18 +409,12 @@ func (variables *Variables) CollectInputValues(files []string, pbvars []*pb.Vari
 		})
 	}
 
+	// sort for precedence
+	for i, variable := range *variables {
+		(*variables)[i].Values = sortValues(variable.Values)
+	}
+
 	return diags
-}
-
-func (variables *Variables) SortPrecedence(vars []*pb.Variable) error {
-
-	//
-
-	// for _, v := range *variables {
-	// 	// gsv.Name
-	// }
-
-	return nil
 }
 
 func (variables *Variables) parseFileValues(filename string) hcl.Diagnostics {
@@ -463,8 +470,8 @@ func (variables *Variables) parseFileValues(filename string) hcl.Diagnostics {
 	return diags
 }
 
-// readFileValues is a helper function that loads a file, parses if it is 
-// hcl or json, and checks for any errant variable definition blocks. It returns 
+// readFileValues is a helper function that loads a file, parses if it is
+// hcl or json, and checks for any errant variable definition blocks. It returns
 // the files contents for further evaluation if necessary.
 func readFileValues(filename string) (*hcl.File, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
@@ -540,4 +547,13 @@ func readFileValues(filename string) (*hcl.File, hcl.Diagnostics) {
 	}
 
 	return f, diags
+}
+
+// sortValues is a helper function that sorts variable Values by their
+// precedence order, ordering the slice from highest to lowest precedence
+func sortValues(values []Value) []Value {
+	sort.Slice(values, func(i, j int) bool {
+		return values[i].Source.Precedence > values[j].Source.Precedence
+	})
+	return values
 }

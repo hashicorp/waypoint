@@ -96,9 +96,9 @@ func TestVariables_collectValues(t *testing.T) {
 			expected: Variables{
 				"art": &Variable{
 					Values: []Value{
-						{cty.DynamicVal, "default", hcl.Expression(nil), hcl.Range{}},
-						{cty.StringVal("gdbee"), "file", hcl.Expression(nil), hcl.Range{}},
-						{cty.StringVal("gdbee"), "cli", hcl.Expression(nil), hcl.Range{}},
+						{cty.StringVal("gdbee"), Source{"cli", 5}, hcl.Expression(nil), hcl.Range{}},
+						{cty.StringVal("gdbee"), Source{"file", 4}, hcl.Expression(nil), hcl.Range{}},
+						{cty.DynamicVal, Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
 					},
 					Type: cty.String,
 				},
@@ -258,20 +258,12 @@ func TestVariables_SetJobInputVariables(t *testing.T) {
 			require.False(diags.HasErrors())
 
 			require.Equal(len(vars), len(tt.expected))
-			require.Equal(vars, tt.expected)
-			// TODO krantzinator: add a sort before comparing for equality
-			for i, v := range vars {
-				require.Equal(v, tt.expected[i])
+			for _, v := range tt.expected {
+				require.Contains(vars, v)
 			}
 		})
 	}
 }
-
-// func TestVariables_mergeValues(t *testing.T) {
-// 	cases := []struct {
-
-// 	}
-// }
 
 var ctyValueComparer = cmp.Comparer(func(x, y cty.Value) bool {
 	return x.RawEquals(y)
