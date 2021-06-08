@@ -6,6 +6,7 @@ import (
 	"github.com/zclconf/go-cty/cty/gocty"
 
 	"github.com/hashicorp/waypoint/internal/config/funcs"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 )
 
 // EvalContext returns the common eval context to use for parsing all
@@ -92,6 +93,11 @@ func addCtyVariable(ctx *hcl.EvalContext, varName string, value cty.Value) {
 func finalizeContext(ctx *hcl.EvalContext) *hcl.EvalContext {
 	ctx = ctx.NewChild()
 	ctx.Functions = funcs.MakeTemplateFuncs(ctx)
+	return ctx
+}
+
+func AddVariables(ctx *hcl.EvalContext, vs *variables.Variables) *hcl.EvalContext {
+	variables.AddInputVariables(ctx, vs)
 	return ctx
 }
 

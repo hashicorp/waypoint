@@ -50,9 +50,12 @@ type Source struct {
 }
 
 type Variable struct {
+	Name string
+
 	// Value contain the values from the job, from the server/VCS
-	// repo, and default values from the waypoint.hcl. These are to
-	// sort precedence and add the final variable values to the EvalContext
+	// repo, and default values from the waypoint.hcl. These are 
+	// sorted in precedence order, with the highest order precedence 
+	// listed first
 	Values []Value
 
 	// Cty Type of the variable. If the default value or a collected value is
@@ -154,13 +157,15 @@ func (variables *Variables) decodeVariableBlock(block *hcl.Block) hcl.Diagnostic
 // ValidateVarBlock validates each part of the variable block, building out
 // the final *Variable along the way
 func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
+	name := block.Labels[0]
 	v := Variable{
+		Name: name,
 		Range: block.DefRange,
 	}
 
 	content, diags := block.Body.Content(variableBlockSchema)
 
-	if !hclsyntax.ValidIdentifier(block.Labels[0]) {
+	if !hclsyntax.ValidIdentifier(name) {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid variable name",
@@ -202,7 +207,7 @@ func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 			if err != nil {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
-					Summary:  "Invalid default value for variable",
+					Summary:  fmt.Sprintf("Invalid default value for variable %q", name),
 					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
 					Subject:  attr.Expr.Range().Ptr(),
 				})
@@ -556,4 +561,38 @@ func sortValues(values []Value) []Value {
 		return values[i].Source.Precedence > values[j].Source.Precedence
 	})
 	return values
+}
+
+func (variables Variables) Values() (map[string]cty.Value, hcl.Diagnostics) {
+	res := map[string]cty.Value{}
+	var diags hcl.Diagnostics
+	for k, v := range variables {
+		value, moreDiags := v.Value()
+		diags = append(diags, moreDiags...)
+		res[k] = value
+	}
+	return res, diags
+}
+
+func (v *Variable) Value() (cty.Value, hcl.Diagnostics) {
+	if len(v.Values) == 0 {
+		return cty.UnknownVal(v.Type), hcl.Diagnostics{&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  fmt.Sprintf("Unset variable %q", v.Name),
+			Detail: "A used variable must be set or have a default value; see " +
+				"https://packer.io/docs/templates/hcl_templates/syntax for " +
+				"details.",
+			Context: v.Range.Ptr(),
+		}}
+	}
+	val := v.Values[0]
+	return val.Value, nil
+}
+
+func AddInputVariables(ctx *hcl.EvalContext, vs *Variables) {
+	vars, _ := (*vs).Values()
+	variables := map[string]cty.Value{
+		"var": cty.ObjectVal(vars),
+	}
+	ctx.Variables = variables
 }

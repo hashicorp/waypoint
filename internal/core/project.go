@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/hcl/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -131,8 +132,9 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	// Initialize all the applications and load all their components.
 	for _, name := range opts.Config.Apps() {
 		// TODO krantzinator inject variables evalctx here
-		// config.EvalContext()
-		appConfig, err := opts.Config.App(name, nil)
+		var evalCtx *hcl.EvalContext
+		config.AddVariables(evalCtx, &p.variables)
+		appConfig, err := opts.Config.App(name, evalCtx)
 		if err != nil {
 			return nil, fmt.Errorf("error loading app %q: %w", name, err)
 		}
