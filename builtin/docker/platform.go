@@ -210,7 +210,7 @@ func (p *Platform) Status(
 		result.HealthMessage = fmt.Sprintf("Container %q is reporting partially available!", containerInfo.Name)
 	}
 
-	result.TimeGenerated = ptypes.TimestampNow()
+	result.GeneratedTime = ptypes.TimestampNow()
 	log.Debug("status report complete")
 
 	// update output based on main health state

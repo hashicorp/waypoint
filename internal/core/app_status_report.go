@@ -345,7 +345,7 @@ func (op *statusReportOperation) Do(
 	}
 
 	// Add the time generated to the outer status report
-	realMsg.GeneratedTime = report.TimeGenerated
+	realMsg.GeneratedTime = report.GeneratedTime
 
 	op.result = result.(*sdk.StatusReport)
 
