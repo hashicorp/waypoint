@@ -15,12 +15,12 @@ import (
 // different items such as projects or status reports.
 type pollHandler interface {
 	// Peek returns the next item that should be polled.
-	// This will return (nil,nil,nil) if there are no projects to poll currently.
+	// This will return (nil,nil,nil) if there are no items to poll currently.
 	//
 	// This calls the items state implementation of its "peek" operation so it
-	// does not update the project's next poll time. Therefore, calling this
+	// does not update the poll item's next poll time. Therefore, calling this
 	// multiple times should return the same result unless a function like
-	// ProjectPollComplete is called.
+	// Complete is called.
 	Peek(memdb.WatchSet, hclog.Logger) (interface{}, time.Time, error)
 
 	// PollJob generates a QueueJobRequest that is used to poll on.
@@ -39,7 +39,7 @@ type pollHandler interface {
 // This blocks and is expected to be run in a goroutine.
 //
 // This function should only ever be invoked one at a time. Running multiple
-// copies can result in duplicate polls for projects.
+// copies can result in duplicate polls for items.
 func (s *service) runPollQueuer(
 	ctx context.Context,
 	wg *sync.WaitGroup,
@@ -81,14 +81,14 @@ func (s *service) runPollQueuer(
 		// solving for: there are THREE possible outcomes that we are waiting on:
 		//
 		//   (1) WatchSet (ws) triggers - this means that the data changed,
-		//       i.e. a project changed polling settings, so we need to reloop.
+		//       i.e. a poll item changed polling settings, so we need to reloop.
 		//
 		//   (2) ctx is cancelled - this means the whole queuer is cancelled
 		//       and we just want to exit.
 		//
 		//   (3) loopCtx is cancelled - this means we hit our deadline for
 		//       polling and we want to queue a polling operation for this
-		//       project.
+		//       poll item.
 		//
 
 		log.Trace("waiting on watchset and contexts")
@@ -117,11 +117,11 @@ func (s *service) runPollQueuer(
 			continue
 		}
 
-		// p is allowed to be nil in this loop, but it should never reach
+		// pollItem is allowed to be nil in this loop, but it should never reach
 		// this point. Given we use it below, we put this check here to warn
-		// loudly that it happened. p shouldn't be nil here because if p is
-		// nil then we have no pollTime and therefore no loopCtx either. This
-		// means outcome (1) or (2) MUST happen.
+		// loudly that it happened. pollItem shouldn't be nil here because if
+		// pollItem is nil then we have no pollTime and therefore no loopCtx either.
+		// This means outcome (1) or (2) MUST happen.
 		if pollItem == nil {
 			log.Error("reached outcome (3) in poller with nil pollItem. This should not happen.")
 			continue
@@ -143,7 +143,7 @@ func (s *service) runPollQueuer(
 		log.Debug("queued polling job", "job_id", resp.JobId)
 
 		// Mark this as complete so the next poll gets rescheduled.
-		log.Trace("scheduling next project poll time")
+		log.Trace("scheduling next poll time")
 		if err := handler.Complete(pollItem, log); err != nil {
 			// This should never happen so like above, if this happens we
 			// sleep for a minute so we don't completely overload the
