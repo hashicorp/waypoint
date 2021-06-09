@@ -138,11 +138,22 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	// Setup the background context that is used for internal tasks
 	s.bgCtx, s.bgCtxCancel = context.WithCancel(context.Background())
 
-	// Start our polling background goroutine. We have a single goroutine
-	// that we run in the background that handles the queue of all polling
-	// operations. See the func docs for more info.
-	s.bgWg.Add(1)
-	go s.runPollQueuer(s.bgCtx, &s.bgWg, log.Named("poll_queuer"))
+	// TODO: When more items are added, move this else where
+	// pollableItems is a map of potential items Waypoint can queue a poll for.
+	// Each item should implement the pollHandler interface
+	pollableItems := map[string]pollHandler{
+		"project": &projectPoll{state: s.state},
+	}
+
+	// Start our polling background goroutines.
+	// We currently have one  goroutine that we run in the background that
+	// handles the queue of all polling operations. However, there will be more
+	// pollable items to run jobs against in future iterations.
+	// See the func docs for more info.
+	for pollName, pollItem := range pollableItems {
+		s.bgWg.Add(1)
+		go s.runPollQueuer(s.bgCtx, &s.bgWg, pollItem, log.Named("poll_queuer").Named(pollName))
+	}
 
 	// Start out state pruning background goroutine. This calls
 	// Prune on the state every 10 minutes.
