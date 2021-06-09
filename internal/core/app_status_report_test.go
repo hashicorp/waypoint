@@ -117,7 +117,7 @@ func TestAppDeploymentStatusReport(t *testing.T) {
 		statusReportTs := timestamppb.Now()
 		mock.Status.On("StatusFunc").Return(func(context.Context) (*sdk.StatusReport, error) {
 			return &sdk.StatusReport{
-				TimeGenerated: statusReportTs,
+				GeneratedTime: statusReportTs,
 			}, nil
 		})
 
@@ -254,7 +254,7 @@ func TestAppReleaseStatusReport(t *testing.T) {
 		statusReportTs := timestamppb.Now()
 		mock.Status.On("StatusFunc").Return(func(context.Context) (*sdk.StatusReport, error) {
 			return &sdk.StatusReport{
-				TimeGenerated: statusReportTs,
+				GeneratedTime: statusReportTs,
 			}, nil
 		})
 

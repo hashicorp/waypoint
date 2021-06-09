@@ -279,7 +279,7 @@ func (p *Platform) Status(
 
 	result.HealthMessage = *job.StatusDescription
 
-	result.TimeGenerated = ptypes.TimestampNow()
+	result.GeneratedTime = ptypes.TimestampNow()
 
 	s.Update("Finished building report for Nomad platform")
 	s.Done()

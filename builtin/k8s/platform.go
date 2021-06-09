@@ -685,7 +685,7 @@ func (p *Platform) Status(
 	step.Update("Building status report for running pods...")
 	result := buildStatusReport(podList)
 
-	result.TimeGenerated = ptypes.TimestampNow()
+	result.GeneratedTime = ptypes.TimestampNow()
 	log.Debug("status report complete")
 
 	// update output based on main health state
