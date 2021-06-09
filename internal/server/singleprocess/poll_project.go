@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
-type ProjectPoll struct {
+type projectPoll struct {
 	// state is the state management interface that provides functions for
 	// safely mutating server state.
 	state *state.State
@@ -22,7 +22,7 @@ type ProjectPoll struct {
 // Peek returns the latest project to poll on
 // If there is an error in the ProjectPollPeek, it will return nil
 // to allow the outer caller loop to continue and try again
-func (pp *ProjectPoll) Peek(
+func (pp *projectPoll) Peek(
 	ws memdb.WatchSet,
 	log hclog.Logger,
 ) (interface{}, time.Time, error) {
@@ -39,7 +39,7 @@ func (pp *ProjectPoll) Peek(
 }
 
 // PollJob will generate a job to queue a project on
-func (pp *ProjectPoll) PollJob(
+func (pp *projectPoll) PollJob(
 	project interface{},
 	log hclog.Logger,
 ) (*pb.QueueJobRequest, error) {
@@ -83,7 +83,7 @@ func (pp *ProjectPoll) PollJob(
 
 // Complete will mark the job that was queued as complete, if it
 // fails to do so, it will return false with the err to continue the loop
-func (pp *ProjectPoll) Complete(
+func (pp *projectPoll) Complete(
 	project interface{},
 	log hclog.Logger,
 ) error {
