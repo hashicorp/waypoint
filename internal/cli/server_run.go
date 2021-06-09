@@ -17,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-hclog"
 	hznhub "github.com/hashicorp/horizon/pkg/hub"
 	hzntest "github.com/hashicorp/horizon/pkg/testutils/central"
@@ -25,6 +24,7 @@ import (
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/posener/complete"
 	"github.com/stretchr/testify/require"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"

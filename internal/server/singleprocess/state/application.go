@@ -1,8 +1,8 @@
 package state
 
 import (
-	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-memdb"
+	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

@@ -3,10 +3,10 @@ package state
 import (
 	"strings"
 
-	"github.com/boltdb/bolt"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/go-memdb"
 	"github.com/mitchellh/hashstructure/v2"
+	bolt "go.etcd.io/bbolt"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )

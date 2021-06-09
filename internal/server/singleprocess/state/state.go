@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/boltdb/bolt"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
+	bolt "go.etcd.io/bbolt"
 )
 
 // The global variables below can be set by init() functions of other

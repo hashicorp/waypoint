@@ -12,7 +12,6 @@ require (
 	github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
 	github.com/aws/aws-sdk-go v1.36.31
 	github.com/bmatcuk/doublestar v1.1.5
-	github.com/boltdb/bolt v1.3.1
 	github.com/buildpacks/pack v0.18.1
 	github.com/cenkalti/backoff/v4 v4.0.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
@@ -98,6 +97,7 @@ require (
 	github.com/vektra/mockery v1.1.2
 	github.com/zclconf/go-cty v1.8.2
 	github.com/zclconf/go-cty-yaml v1.0.2
+	go.etcd.io/bbolt v1.3.3
 	go.uber.org/goleak v1.1.10
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
