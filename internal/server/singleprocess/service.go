@@ -143,7 +143,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	// pollableItems is a map of potential items Waypoint can queue a poll for.
 	// Each item should implement the pollHandler interface
 	var pollableItems = map[string]pollHandler{
-		"project": &ProjectPoll{state: s.state},
+		"project": &projectPoll{state: s.state},
 	}
 
 	// Start our polling background goroutines.
