@@ -1,0 +1,3 @@
+```release-note:improvement
+core: Upgrade from unmaintained `boltdb/bolt` to `etcd-io/bbolt`
+```
