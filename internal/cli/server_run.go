@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/boltdb/bolt"
+	bolt "go.etcd.io/bbolt"
 	"github.com/hashicorp/go-hclog"
 	hznhub "github.com/hashicorp/horizon/pkg/hub"
 	hzntest "github.com/hashicorp/horizon/pkg/testutils/central"

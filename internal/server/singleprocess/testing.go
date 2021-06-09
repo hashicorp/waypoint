@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/boltdb/bolt"
+	bolt "go.etcd.io/bbolt"
 	"github.com/hashicorp/go-hclog"
 	hznhub "github.com/hashicorp/horizon/pkg/hub"
 	hznpb "github.com/hashicorp/horizon/pkg/pb"

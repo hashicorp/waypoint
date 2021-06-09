@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/boltdb/bolt"
+	bolt "go.etcd.io/bbolt"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-memdb"
 )
