@@ -13,6 +13,10 @@ import (
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
+// projectPoll accepts a state management interface which provides access
+// to a projects current state implementation. Functions like Peek and Complete
+// need access to this state interface for peeking at the next available project
+// as well as marking a projects poll as complete.
 type projectPoll struct {
 	// state is the state management interface that provides functions for
 	// safely mutating server state.
