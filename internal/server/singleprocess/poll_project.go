@@ -48,7 +48,7 @@ func (pp *projectPoll) PollJob(
 	project interface{},
 ) (*pb.QueueJobRequest, error) {
 	p, ok := project.(*pb.Project)
-	if !ok {
+	if !ok || p == nil {
 		log.Error("could not generate poll job for project, incorrect type passed in")
 		return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Project PollJob")
 	}
@@ -92,7 +92,7 @@ func (pp *projectPoll) Complete(
 	project interface{},
 ) error {
 	p, ok := project.(*pb.Project)
-	if !ok {
+	if !ok || p == nil {
 		log.Error("could not mark project poll as complete, incorrect type passed in")
 		return status.Error(codes.FailedPrecondition, "incorrect type passed into Project Complete")
 	}
