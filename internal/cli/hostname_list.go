@@ -57,12 +57,12 @@ func (c *HostnameListCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *HostnameListCommand) Synopsis() string {
-	return "List all registered hostname."
+	return "List all registered hostnames."
 }
 
 func (c *HostnameListCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint hostname delete HOSTNAME
+Usage: waypoint hostname list
 
   List all registered hostnames.
 
