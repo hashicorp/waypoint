@@ -23,8 +23,8 @@ type projectPoll struct {
 // If there is an error in the ProjectPollPeek, it will return nil
 // to allow the outer caller loop to continue and try again
 func (pp *projectPoll) Peek(
-	ws memdb.WatchSet,
 	log hclog.Logger,
+	ws memdb.WatchSet,
 ) (interface{}, time.Time, error) {
 	p, pollTime, err := pp.state.ProjectPollPeek(ws)
 	if err != nil {
@@ -40,8 +40,8 @@ func (pp *projectPoll) Peek(
 
 // PollJob will generate a job to queue a project on
 func (pp *projectPoll) PollJob(
-	project interface{},
 	log hclog.Logger,
+	project interface{},
 ) (*pb.QueueJobRequest, error) {
 	p, ok := project.(*pb.Project)
 	if !ok {
@@ -84,8 +84,8 @@ func (pp *projectPoll) PollJob(
 // Complete will mark the job that was queued as complete, if it
 // fails to do so, it will return false with the err to continue the loop
 func (pp *projectPoll) Complete(
-	project interface{},
 	log hclog.Logger,
+	project interface{},
 ) error {
 	p, ok := project.(*pb.Project)
 	if !ok {

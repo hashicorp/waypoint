@@ -21,16 +21,19 @@ type pollHandler interface {
 	// does not update the poll item's next poll time. Therefore, calling this
 	// multiple times should return the same result unless a function like
 	// Complete is called.
-	Peek(memdb.WatchSet, hclog.Logger) (interface{}, time.Time, error)
+	//
+	// Note that the WatchSet must be populated with a watch channel that is triggered when
+	// there might be a new or changed record
+	Peek(hclog.Logger, memdb.WatchSet) (interface{}, time.Time, error)
 
 	// PollJob generates a QueueJobRequest that is used to poll on.
 	// It is expected to be given a proto message obtained from Peek which
 	// is used to define the job returned.
-	PollJob(interface{}, hclog.Logger) (*pb.QueueJobRequest, error)
+	PollJob(hclog.Logger, interface{}) (*pb.QueueJobRequest, error)
 
 	// Complete will mark the job that was queued as complete using the specific
 	// state implementation.
-	Complete(interface{}, hclog.Logger) error
+	Complete(hclog.Logger, interface{}) error
 }
 
 // runPollQueuer starts the poll queuer. The poll queuer sleeps on and
@@ -60,7 +63,7 @@ func (s *service) runPollQueuer(
 		}
 
 		ws := memdb.NewWatchSet()
-		pollItem, pollTime, err := handler.Peek(ws, log)
+		pollItem, pollTime, err := handler.Peek(log, ws)
 		if err != nil {
 			// This error really should never happen. Instead of just exiting,
 			// we log it and just sleep a minute. Hopefully someone will notice
@@ -129,7 +132,7 @@ func (s *service) runPollQueuer(
 
 		// Outcome (3)
 		log.Trace("queueing poll job")
-		queueJobRequest, err := handler.PollJob(pollItem, log)
+		queueJobRequest, err := handler.PollJob(log, pollItem)
 		if err != nil {
 			log.Warn("error building a poll job request", "err", err)
 			continue
@@ -144,7 +147,7 @@ func (s *service) runPollQueuer(
 
 		// Mark this as complete so the next poll gets rescheduled.
 		log.Trace("scheduling next poll time")
-		if err := handler.Complete(pollItem, log); err != nil {
+		if err := handler.Complete(log, pollItem); err != nil {
 			// This should never happen so like above, if this happens we
 			// sleep for a minute so we don't completely overload the
 			// server since this is likely to happen again. We want people
