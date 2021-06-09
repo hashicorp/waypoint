@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	bolt "go.etcd.io/bbolt"
 	"github.com/hashicorp/go-hclog"
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"

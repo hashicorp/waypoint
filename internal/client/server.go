@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	bolt "go.etcd.io/bbolt"
 	"github.com/golang/protobuf/ptypes/empty"
+	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/waypoint/internal/protocolversion"

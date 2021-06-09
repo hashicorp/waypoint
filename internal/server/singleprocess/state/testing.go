@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	bolt "go.etcd.io/bbolt"
 	"github.com/hashicorp/go-hclog"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
+	bolt "go.etcd.io/bbolt"
 )
 
 // TestState returns an initialized State for testing.
