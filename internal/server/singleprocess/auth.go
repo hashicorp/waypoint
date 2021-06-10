@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/mr-tron/base58"
@@ -182,33 +183,37 @@ func (s *service) decodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 	return &tt, &body, nil
 }
 
-// Generate a new token by signing the data in body.
+// Encode the given token with the given key and metadata.
 // keyId controls which key is used to sign the key (key values are generated lazily).
 // metadata is attached to the token transport as configuration style information
-func (s *service) GenerateToken(keyId string, metadata map[string]string, body *pb.Token) (string, error) {
+func (s *service) encodeToken(keyId string, metadata map[string]string, body *pb.Token) (string, error) {
+	// Get the key material
 	key, err := s.state.HMACKeyCreateIfNotExist(keyId, hmacKeySize)
 	if err != nil {
 		return "", err
 	}
 
+	// Proto encode the body, this is what we sign.
 	bodyData, err := proto.Marshal(body)
 	if err != nil {
 		return "", err
 	}
 
+	// Sign it
 	h, err := blake2b.New256(key.Key)
 	if err != nil {
 		return "", err
 	}
-
 	h.Write(bodyData)
 
+	// Build our wrapper which is not signed or encrypted.
 	var tt pb.TokenTransport
 	tt.Body = bodyData
 	tt.KeyId = keyId
 	tt.Metadata = metadata
 	tt.Signature = h.Sum(nil)
 
+	// Marshal the wrapper and base58 encode it.
 	ttData, err := proto.Marshal(&tt)
 	if err != nil {
 		return "", err
@@ -231,6 +236,7 @@ func (s *service) NewLoginToken(
 ) (string, error) {
 	var body pb.Token
 	body.AccessorId = make([]byte, 16)
+	body.IssuedTime = ptypes.TimestampNow()
 	body.Kind = &pb.Token_Login_{
 		Login: &pb.Token_Login{
 			UserId:     DefaultUser,
@@ -243,11 +249,13 @@ func (s *service) NewLoginToken(
 		return "", err
 	}
 
-	return s.GenerateToken(keyId, metadata, &body)
+	return s.encodeToken(keyId, metadata, &body)
 }
 
 // Create a new login token. This is just a gRPC wrapper around NewLoginToken.
-func (s *service) GenerateLoginToken(ctx context.Context, _ *empty.Empty) (*pb.NewTokenResponse, error) {
+func (s *service) GenerateLoginToken(
+	ctx context.Context, _ *pb.LoginTokenRequest,
+) (*pb.NewTokenResponse, error) {
 	token, err := s.NewLoginToken(DefaultKeyId, nil, nil)
 	if err != nil {
 		return nil, err
@@ -267,6 +275,7 @@ func (s *service) NewInviteToken(
 ) (string, error) {
 	var body pb.Token
 	body.AccessorId = make([]byte, 16)
+	body.IssuedTime = ptypes.TimestampNow()
 	body.Kind = &pb.Token_Invite_{
 		Invite: &pb.Token_Invite{
 			Login: &pb.Token_Login{
@@ -287,17 +296,82 @@ func (s *service) NewInviteToken(
 		return "", err
 	}
 
-	return s.GenerateToken(keyId, metadata, &body)
+	return s.encodeToken(keyId, metadata, &body)
 }
 
-// Create a new invite token. This is just a gRPC wrapper around NewInviteToken.
-func (s *service) GenerateInviteToken(ctx context.Context, req *pb.InviteTokenRequest) (*pb.NewTokenResponse, error) {
+// newToken is the generic internal function to create and encode a new
+// token. The final parameter "body" should be set to the initial value
+// of the token body, most importantly the "Kind" field should be set.
+func (s *service) newToken(
+	duration time.Duration,
+	keyId string,
+	metadata map[string]string,
+	body *pb.Token,
+) (string, error) {
+	body.IssuedTime = ptypes.TimestampNow()
+
+	// If this token expires at some point, set an expiry
+	if duration > 0 {
+		now := time.Now().UTC().Add(duration)
+		body.ValidUntil = &timestamp.Timestamp{
+			Seconds: now.Unix(),
+			Nanos:   int32(now.Nanosecond()),
+		}
+	}
+
+	// Set the accessor ID
+	body.AccessorId = make([]byte, 16)
+	_, err := io.ReadFull(rand.Reader, body.AccessorId)
+	if err != nil {
+		return "", err
+	}
+
+	return s.encodeToken(keyId, metadata, body)
+}
+
+// Create a new invite token.
+func (s *service) GenerateInviteToken(
+	ctx context.Context, req *pb.InviteTokenRequest,
+) (*pb.NewTokenResponse, error) {
+	// Old behavior, if we have the entrypoint set, we convert that to
+	// a request in the new (WP 0.5+) style. We do this right away so the rest of the
+	// request can assume the new style.
+	if ep := req.UnusedEntrypoint; ep != nil {
+		req.Signup = nil // not a signup token
+		req.Login = &pb.Token_Login{
+			UserId:     DefaultUser,
+			Entrypoint: ep,
+		}
+	}
+
+	if req.Login == nil {
+		req.Login = &pb.Token_Login{
+			// TODO(mitchellh): when we have a login system, set this
+			// to the currently logged in user.
+			UserId: DefaultUser,
+		}
+	}
+
+	// We don't currently have any other users.
+	if req.Login.UserId != DefaultUser {
+		return nil, status.Errorf(codes.PermissionDenied, "cannot create invite for other users")
+	}
+
 	dur, err := time.ParseDuration(req.Duration)
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := s.NewInviteToken(dur, DefaultKeyId, nil, req.Entrypoint)
+	invite := &pb.Token_Invite{
+		// TODO(mitchellh): when we have a user system, set this.
+		FromUserId: "",
+		Login:      req.Login,
+		Signup:     req.Signup,
+	}
+
+	token, err := s.newToken(dur, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Invite_{Invite: invite},
+	})
 	if err != nil {
 		return nil, err
 	}
