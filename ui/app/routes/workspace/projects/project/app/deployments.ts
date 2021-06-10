@@ -8,9 +8,9 @@ export default class Deployments extends Route {
     return app.deployments;
   }
 
-  resetController(controller:DeploymentsController, isExiting: boolean) {
+  resetController(controller: DeploymentsController, isExiting: boolean) {
     if (isExiting) {
-      controller.set('destroyed', null);
+      controller.set('isShowingDestroyed', null);
     }
   }
 }
