@@ -379,7 +379,7 @@ func (_m *WaypointClient) GenerateInviteToken(ctx context.Context, in *gen.Invit
 }
 
 // GenerateLoginToken provides a mock function with given fields: ctx, in, opts
-func (_m *WaypointClient) GenerateLoginToken(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.NewTokenResponse, error) {
+func (_m *WaypointClient) GenerateLoginToken(ctx context.Context, in *gen.LoginTokenRequest, opts ...grpc.CallOption) (*gen.NewTokenResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -390,7 +390,7 @@ func (_m *WaypointClient) GenerateLoginToken(ctx context.Context, in *emptypb.Em
 	ret := _m.Called(_ca...)
 
 	var r0 *gen.NewTokenResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) *gen.NewTokenResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.LoginTokenRequest, ...grpc.CallOption) *gen.NewTokenResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -399,7 +399,7 @@ func (_m *WaypointClient) GenerateLoginToken(ctx context.Context, in *emptypb.Em
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.LoginTokenRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
