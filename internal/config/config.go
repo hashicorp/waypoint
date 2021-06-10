@@ -21,7 +21,7 @@ type Config struct {
 	path     string
 	pathData map[string]string
 
-	InputVariables *variables.Variables
+	InputVariables *variables.InputVars
 }
 
 type hclConfig struct {
@@ -155,7 +155,7 @@ func (c *Config) HCLContext() *hcl.EvalContext {
 	return c.ctx.NewChild()
 }
 
-func DecodeVariableBlocks(body hcl.Body) (*variables.Variables, hcl.Diagnostics) {
+func DecodeVariableBlocks(body hcl.Body) (*variables.InputVars, hcl.Diagnostics) {
 	schema, _ := gohcl.ImpliedBodySchema(&hclConfig{})
 	content, diag := body.Content(schema)
 	if diag.HasErrors() {
@@ -163,7 +163,7 @@ func DecodeVariableBlocks(body hcl.Body) (*variables.Variables, hcl.Diagnostics)
 	}
 
 	var diags hcl.Diagnostics
-	vs := &variables.Variables{}
+	vs := &variables.InputVars{}
 	for _, block := range content.Blocks.OfType("variable") {
 		moreDiags := vs.DecodeVariableBlock(block)
 		if moreDiags != nil {

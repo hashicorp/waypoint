@@ -49,7 +49,7 @@ type Source struct {
 	Precedence int
 }
 
-type Variable struct {
+type InputVar struct {
 	Name string
 
 	// Value contain the values from the job, from the server/VCS
@@ -80,11 +80,10 @@ type HclVariable struct {
 	Description string         `hcl:"description,optional"`
 }
 
-// Variables are used when parsing the Config, to set default values from
+// InputVars are used when parsing the Config, to set default values from
 // the waypoint.hcl and bring in the values from the job and the server/VCS
 // for eventual precedence sorting and setting on the EvalContext
-// TODO krantzinator: make these InputVars
-type Variables map[string]*Variable
+type InputVars map[string]*InputVar
 
 // TODO krantzinator - use implied body scheme instead?
 var variableBlockSchema = &hcl.BodySchema{
@@ -102,16 +101,16 @@ var variableBlockSchema = &hcl.BodySchema{
 }
 
 // decodeVariableBlock first validates the variable block, and then sets
-// the decoded variables with their default value on *Variables
-func (variables *Variables) DecodeVariableBlock(block *hcl.Block) hcl.Diagnostics {
-	if (*variables) == nil {
-		(*variables) = Variables{}
+// the decoded variables with their default value on *InputVars
+func (iv *InputVars) DecodeVariableBlock(block *hcl.Block) hcl.Diagnostics {
+	if (*iv) == nil {
+		(*iv) = InputVars{}
 	}
 	name := block.Labels[0]
 
 	// Checking for duplicates happens here, rather than during the config.Validate
 	// step, because config.Validate doesn't store any decoded blocks.
-	if _, found := (*variables)[name]; found {
+	if _, found := (*iv)[name]; found {
 		return []*hcl.Diagnostic{{
 			Severity: hcl.DiagError,
 			Summary:  "Duplicate variable",
@@ -125,16 +124,16 @@ func (variables *Variables) DecodeVariableBlock(block *hcl.Block) hcl.Diagnostic
 		return diags
 	}
 
-	(*variables)[name] = v
+	(*iv)[name] = v
 
 	return diags
 }
 
 // parseVarBlock validates each part of the variable block, building out
-// the final *Variable along the way
-func parseVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
+// the final *InputVar along the way
+func parseVarBlock(block *hcl.Block) (*InputVar, hcl.Diagnostics) {
 	name := block.Labels[0]
-	v := Variable{
+	v := InputVar{
 		Name:  name,
 		Range: block.DefRange,
 	}
@@ -305,14 +304,14 @@ func SetJobInputVariables(vars map[string]string, files []string) ([]*pb.Variabl
 // types per the type declared in the waypoint.hcl for that variable name.
 // Once all assigned values have been set, it then sorts the variables
 // in precedence order per their source, with the highest-precedence value
-// being the first item in *Variables.Values
-func (variables *Variables) CollectInputValues(files []string, pbvars []*pb.Variable) hcl.Diagnostics {
+// being the first item in *InputVar.Values
+func (iv *InputVars) CollectInputValues(files []string, pbvars []*pb.Variable) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	// files will contain files found in the remote git source
 	for _, file := range files {
 		if file != "" {
-			fileDiags := variables.parseFileValues(file)
+			fileDiags := iv.parseFileValues(file)
 			diags = append(diags, fileDiags...)
 			if diags.HasErrors() {
 				return diags
@@ -321,7 +320,7 @@ func (variables *Variables) CollectInputValues(files []string, pbvars []*pb.Vari
 	}
 
 	for _, pbv := range pbvars {
-		variable, found := (*variables)[pbv.Name]
+		variable, found := (*iv)[pbv.Name]
 		if !found {
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
@@ -389,14 +388,14 @@ func (variables *Variables) CollectInputValues(files []string, pbvars []*pb.Vari
 	}
 
 	// sort for precedence
-	for i, variable := range *variables {
-		(*variables)[i].Values = sortValues(variable.Values)
+	for i, variable := range *iv {
+		(*iv)[i].Values = sortValues(variable.Values)
 	}
 
 	return diags
 }
 
-func (variables *Variables) parseFileValues(filename string) hcl.Diagnostics {
+func (iv *InputVars) parseFileValues(filename string) hcl.Diagnostics {
 	f, diags := readFileValues(filename)
 	if diags.HasErrors() {
 		return diags
@@ -406,7 +405,7 @@ func (variables *Variables) parseFileValues(filename string) hcl.Diagnostics {
 	diags = append(diags, moreDiags...)
 
 	for name, attr := range attrs {
-		variable, found := (*variables)[name]
+		variable, found := (*iv)[name]
 		if !found {
 			// TODO krantzinator: what to do with a warning diag type
 			diags = append(diags, &hcl.Diagnostic{
@@ -537,10 +536,10 @@ func sortValues(values []Value) []Value {
 	return values
 }
 
-func (variables Variables) Values() (map[string]cty.Value, hcl.Diagnostics) {
+func (iv InputVars) Values() (map[string]cty.Value, hcl.Diagnostics) {
 	res := map[string]cty.Value{}
 	var diags hcl.Diagnostics
-	for k, v := range variables {
+	for k, v := range iv {
 		value, moreDiags := v.Value()
 		diags = append(diags, moreDiags...)
 		res[k] = value
@@ -548,7 +547,7 @@ func (variables Variables) Values() (map[string]cty.Value, hcl.Diagnostics) {
 	return res, diags
 }
 
-func (v *Variable) Value() (cty.Value, hcl.Diagnostics) {
+func (v *InputVar) Value() (cty.Value, hcl.Diagnostics) {
 	if len(v.Values) == 0 {
 		return cty.UnknownVal(v.Type), hcl.Diagnostics{&hcl.Diagnostic{
 			Severity: hcl.DiagError,
@@ -563,7 +562,7 @@ func (v *Variable) Value() (cty.Value, hcl.Diagnostics) {
 	return val.Value, nil
 }
 
-func AddInputVariables(ctx *hcl.EvalContext, vs *Variables) {
+func AddInputVariables(ctx *hcl.EvalContext, vs *InputVars) {
 	vars, _ := (*vs).Values()
 	variables := map[string]cty.Value{
 		"var": cty.ObjectVal(vars),

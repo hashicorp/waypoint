@@ -65,7 +65,7 @@ type Project struct {
 	// variables are set on the job directly so that the runner
 	// can access this set of values along with any server- or vcs-stored
 	// values for final evaluation
-	variables variables.Variables
+	variables variables.InputVars
 }
 
 // NewProject creates a new Project with the given options.
@@ -302,7 +302,7 @@ func WithLabels(m map[string]string) Option {
 }
 
 // WithVariables sets the final set of variable values for the operation.
-func WithVariables(vs variables.Variables) Option {
+func WithVariables(vs variables.InputVars) Option {
 	return func(p *Project, opts *options) { p.variables = vs }
 }
 

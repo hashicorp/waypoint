@@ -96,7 +96,7 @@ func finalizeContext(ctx *hcl.EvalContext) *hcl.EvalContext {
 	return ctx
 }
 
-func AddVariables(ctx *hcl.EvalContext, vs *variables.Variables) *hcl.EvalContext {
+func AddVariables(ctx *hcl.EvalContext, vs *variables.InputVars) *hcl.EvalContext {
 	variables.AddInputVariables(ctx, vs)
 	return ctx
 }
