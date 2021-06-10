@@ -44,7 +44,54 @@ const (
 
 var (
 	ErrInvalidToken = errors.New("invalid authentication token")
+
+	// unauthenticatedEndpoints are the gRPC service APIs that do not require
+	// any authentication. Authenticate doesn't even attempt to parse the
+	// token so it can be totally invalid.
+	unauthenticatedEndpoints = map[string]struct{}{
+		"ConvertInviteToken": {},
+		"BootstrapToken":     {},
+		"GetVersionInfo":     {},
+	}
 )
+
+// Authenticate implements the server.AuthChecker interface.
+//
+// This checks if the given endpoint should be allowed. This is called during a
+// gRPC request. Effects is some information about the endpoint, at present these are
+// either ["readonly"] or ["mutable"] to indicate if the endpoint will be only reading
+// data or also mutating it.
+func (s *service) Authenticate(ctx context.Context, token, endpoint string, effects []string) error {
+	// Ignore unauthenticated endpoints
+	if _, ok := unauthenticatedEndpoints[endpoint]; ok {
+		return nil
+	}
+
+	if token == "" {
+		return status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
+	}
+
+	_, body, err := s.DecodeToken(token)
+	if err != nil {
+		return err
+	}
+
+	if !body.Login {
+		return ErrInvalidToken
+	}
+
+	// If this is an entrypoint token then we can only access entrypoint APIs.
+	if body.Entrypoint != nil && !strings.HasPrefix(endpoint, "Entrypoint") {
+		return status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
+	}
+
+	// TODO When we have a user model, this is where you'll check for the user.
+	if body.User != DefaultUser {
+		return ErrInvalidToken
+	}
+
+	return nil
+}
 
 // DecodeToken parses the string and validates it as a valid token. If the token
 // has a validity period attached to it, the period is checked here.
@@ -99,42 +146,6 @@ func (s *service) DecodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 	}
 
 	return &tt, &body, nil
-}
-
-// Authenticate checks if the given endpoint should be allowed. This is called during a
-// gRPC request. Effects is some information about the endpoint, at present these are
-// either ["readonly"] or ["mutable"] to indicate if the endpoint will be only reading
-// data or also mutating it.
-func (s *service) Authenticate(ctx context.Context, token, endpoint string, effects []string) error {
-	// We always allow ConvertInviteToken so that folks can actually get authentication data
-	if endpoint == "ConvertInviteToken" || endpoint == "BootstrapToken" || endpoint == "GetVersionInfo" {
-		return nil
-	}
-
-	if token == "" {
-		return status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
-	}
-
-	_, body, err := s.DecodeToken(token)
-	if err != nil {
-		return err
-	}
-
-	if !body.Login {
-		return ErrInvalidToken
-	}
-
-	// If this is an entrypoint token then we can only access entrypoint APIs.
-	if body.Entrypoint != nil && !strings.HasPrefix(endpoint, "Entrypoint") {
-		return status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
-	}
-
-	// TODO When we have a user model, this is where you'll check for the user.
-	if body.User != DefaultUser {
-		return ErrInvalidToken
-	}
-
-	return nil
 }
 
 // Generate a new token by signing the data in body.

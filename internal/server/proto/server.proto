@@ -300,8 +300,8 @@ message Application {
   string file_change_signal = 3;
 }
 
-// Variable stores a variable's value, and metadata to allow for precedence 
-// sorting and source-specific error messaging 
+// Variable stores a variable's value, and metadata to allow for precedence
+// sorting and source-specific error messaging
 message Variable {
   string name = 1;
 
@@ -315,14 +315,14 @@ message Variable {
   oneof source {
     // Cli is set if a variable value is set via a -var flag
     google.protobuf.Empty cli = 4;
-  
+
     // File is set if a variable value is set via a -var-file flag
     File file = 5;
-    
+
     // Env is set if a variable value is set in the local
     // environment via a WP_VAR_*
     google.protobuf.Empty env = 6;
-    
+
     // VCS is set if git polling is enabled and an
     // *.auto.wpvars.hcl/json file is found in the repo
     VCS vcs = 7;
@@ -769,9 +769,9 @@ message Job {
 
   // NOTE: Variables are WIP and experimental; currently
   // these are not used, and don't do anything
-  // WIP: variables store the key/value pairs of parsed variables; the parse 
-  // prior to running a job only verifies syntax correctness. Verifying type 
-  // checks and the presence of required values will both need to be done 
+  // WIP: variables store the key/value pairs of parsed variables; the parse
+  // prior to running a job only verifies syntax correctness. Verifying type
+  // checks and the presence of required values will both need to be done
   // in the job's validation
   repeated Variable variables = 9;
 
@@ -2824,30 +2824,82 @@ message TokenTransport {
 
 // The authenticated Token information. This is used to authenticate requests.
 message Token {
-  // The user that the token is fore.
-  string user = 1;
+  // Non-secret ID that is used in logs to represent this token. Internally,
+  // this is also used as a nonce when signing. This ID is randomly generated
+  // when created.
+  bytes accessor_id = 2;
 
-  // A random id for the token. Also functions as a nonce when signing.
-  bytes token_id = 2;
-
-  // When the token is valid until. After the given date, the token will be rejected.
-  // When this is not set, the token is valid forever.
+  // When the token is valid until. After the given date, the token will be
+  // rejected. When this is not set, the token is valid forever.
   google.protobuf.Timestamp valid_until = 3;
 
-  // Indicates whether or not this token can be used for to authenticate RPCs.
-  bool login = 4;
+  // When the token was issued. This may be used for revocation using a
+  // "no earlier than" rule.
+  google.protobuf.Timestamp issued_time = 7;
 
-  // Inidicates whether or not this token can be used as an invite.
-  bool invite = 5;
+  // The kind of token this is.
+  oneof kind {
+    // login tokens can be used for API requests
+    Login login = 8;
 
-  // Entrypoint if set indicates that this token is for entrypoint binary
-  // usage only and specific restrictions are specified in this message.
-  Entrypoint entrypoint = 6;
+    // invite tokens can be exhanged for login tokens and also optionally
+    // sign a new user up.
+    Invite invite = 9;
+  }
+
+  message Login {
+    // User that this token represents. This is the internal user ID (ULID),
+    // not the username/email/etc.
+    string user_id = 1;
+
+    // If set, this login token can only be used for entrypoint-related
+    // APIs against the configured deployment.
+    Entrypoint entrypoint = 2;
+  }
+
+  message Invite {
+    // The user that initiated the invite
+    string from_user_id = 1;
+
+    // The login token we'd like to create. This can be used to setup
+    // all the policy attachments and other restrictions. If this is a
+    // signup-only invite token, then "user_id" in this login field will
+    // be ignored and set to the newly created user ID.
+    Login login = 2;
+
+    // Signup, if non-nil, makes this invite a signup-only invite token. This
+    // means that this token can only be used to create a new account, not
+    // to exchange for a token for an existing account.
+    Signup signup = 3;
+
+    message Signup {
+      // The initial username that the new user should be given. If this
+      // username is taken, a random number will be appended. If this is
+      // empty, a totally random username will be given to the new user.
+      string initial_username = 1;
+    }
+  }
 
   message Entrypoint {
     // deployment id is the deployment to restrict this token to.
     string deployment_id = 1;
   }
+
+  // OLD FIELDS FOR BACKWARDS COMPATIBILITY. These are no longer used
+  // for new tokens, please do not attempt to read them. Any calls to
+  // DecodeToken API will automatically convert old tokens to the new
+  // style so callers should never see these set.
+
+  // The user that the token is for. This must be "waypoint" for
+  // backwards compat reasons.
+  string unused_user = 1;
+
+  // Old way to determine what kind of token this is.
+  bool unused_login = 4;
+  bool unused_invite = 5;
+
+  // Same as Login.entrypoint, we just moved it.
+  Entrypoint unused_entrypoint = 6;
 }
 
 // Represents a key used to sign tokens using HMAC
