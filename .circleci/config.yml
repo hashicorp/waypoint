@@ -274,23 +274,24 @@ jobs:
       - notify_main_failure
 
   # build ember so frontend tests run faster
-  # ember-build-tests:
-  #   docker:
-  #     - image: *EMBER_IMAGE
-  #   environment:
-  #     JOBS: 2 # limit parallelism for broccoli-babel-transpiler
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         key: *YARN_CACHE_KEY
-  #     - run: cd ui && make build-ci
+  ember-build-tests:
+    docker:
+      - image: *EMBER_IMAGE
+    environment:
+      JOBS: 2 # limit parallelism for broccoli-babel-transpiler
+    steps:
+      - checkout
+      - md5uilib
+      - restore_cache:
+          key: *YARN_CACHE_KEY
+      - run: cd ui && yarn build:test
 
-  #     # saves the build to a workspace to be passed to a downstream job
-  #     - persist_to_workspace:
-  #         root: ui
-  #         paths:
-  #           - dist
-      # - notify_main_failure
+      # saves the build to a workspace to be passed to a downstream job
+      - persist_to_workspace:
+          root: ui
+          paths:
+            - dist
+      - notify_main_failure
 
   # rebuild UI for packaging
   ember-build-prod:
@@ -376,38 +377,27 @@ jobs:
             npm install
             node scripts/index_search_content.js
 
-  # # run ember frontend tests
-  # ember-test:
-  #   docker:
-  #     - image: *EMBER_IMAGE
-  #   environment:
-  #     EMBER_TEST_REPORT: test-results/report-oss.xml #outputs test report for CircleCI test summary
-  #     EMBER_TEST_PARALLEL: true #enables test parallelization with ember-exam
-  #   parallelism: 2
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         key: *YARN_CACHE_KEY
-  #     - attach_workspace:
-  #         at: ui
-  #     - run:
-  #         working_directory: ui
-  #         command: node_modules/.bin/ember exam --split=$CIRCLE_NODE_TOTAL --partition=`expr $CIRCLE_NODE_INDEX + 1` --path dist --silent -r xunit
-  #     - store_test_results:
-  #         path: ui/test-results
-
-  # ember-coverage:
-  #   docker:
-  #     - image: *EMBER_IMAGE
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         key: *YARN_CACHE_KEY
-  #     - attach_workspace:
-  #         at: ui
-  #     - run:
-  #         working_directory: ui
-  #         command: make test-coverage-ci
+  # run ember frontend tests
+  ember-test:
+    docker:
+      - image: *EMBER_IMAGE
+    resource_class: xlarge
+    environment:
+      EMBER_TEST_REPORT: test-results/report-oss.xml #outputs test report for CircleCI test summary
+      EMBER_TEST_PARALLEL: true #enables test parallelization with ember-exam
+    parallelism: 2
+    steps:
+      - checkout
+      - md5uilib
+      - restore_cache:
+          key: *YARN_CACHE_KEY
+      - attach_workspace:
+          at: ui
+      - run:
+          working_directory: ui
+          command: yarn test:ember
+      - store_test_results:
+          path: ui/test-results
 
 workflows:
   version: 2
@@ -475,6 +465,16 @@ workflows:
               only:
                 - stable-website
 
+  frontend:
+    jobs:
+      - frontend-cache
+      - ember-build-tests:
+          requires:
+            - frontend-cache
+      - ember-test:
+          requires:
+            - ember-build-tests
+
   # website:
   #   jobs:
   #     - build-website-docker-image:
@@ -483,23 +483,6 @@ workflows:
   #           branches:
   #             only:
   #               - main
-
-  # frontend:
-  #   jobs:
-  #     - frontend-cache:
-  #         filters:
-  #           branches:
-  #             only:
-  #               - main
-  #     - ember-build:
-  #         requires:
-  #           - frontend-cache
-  #     - ember-test:
-  #         requires:
-  #           - ember-build
-  #     - ember-coverage:
-  #         requires:
-  #           - ember-build
 
 commands:
   md5uilib:
