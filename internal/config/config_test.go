@@ -64,3 +64,40 @@ func TestLoad_compare(t *testing.T) {
 		})
 	}
 }
+
+func TestConfig_variableDecode(t *testing.T) {
+	cases := []struct {
+		File string
+		Err  string
+	}{
+		{
+			"valid.hcl",
+			"",
+		},
+		{
+			"invalid_type.hcl",
+			"Invalid type specification",
+		},
+
+		{
+			"invalid_def.hcl",
+			"Invalid default value for variable",
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.File, func(t *testing.T) {
+			require := require.New(t)
+
+			_, err := Load(filepath.Join("testdata", "validate", tt.File), nil)
+
+			if tt.Err == "" {
+				require.NoError(err)
+				return
+			}
+
+			require.Error(err)
+			require.Contains(err.Error(), tt.Err)
+		})
+	}
+}

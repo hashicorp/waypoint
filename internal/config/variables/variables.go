@@ -53,8 +53,8 @@ type Variable struct {
 	Name string
 
 	// Value contain the values from the job, from the server/VCS
-	// repo, and default values from the waypoint.hcl. These are 
-	// sorted in precedence order, with the highest order precedence 
+	// repo, and default values from the waypoint.hcl. These are
+	// sorted in precedence order, with the highest order precedence
 	// listed first
 	Values []Value
 
@@ -71,12 +71,6 @@ type Variable struct {
 
 	// The location of the variable definition block in the waypoint.hcl
 	Range hcl.Range
-}
-
-type HclBase struct {
-	Variables []*HclVariable `hcl:"variable,block"`
-	Body      hcl.Body       `hcl:",body"`
-	Remain    hcl.Body       `hcl:",remain"`
 }
 
 type HclVariable struct {
@@ -107,27 +101,9 @@ var variableBlockSchema = &hcl.BodySchema{
 	},
 }
 
-func (variables *Variables) DecodeVariableBlocks(body hcl.Body) hcl.Diagnostics {
-	schema, _ := gohcl.ImpliedBodySchema(&HclBase{})
-	content, diag := body.Content(schema)
-	if diag.HasErrors() {
-		return diag
-	}
-
-	var diags hcl.Diagnostics
-	for _, block := range content.Blocks.OfType("variable") {
-		moreDiags := variables.decodeVariableBlock(block)
-		if moreDiags != nil {
-			diags = append(diags, moreDiags...)
-		}
-	}
-
-	return diags
-}
-
 // decodeVariableBlock first validates the variable block, and then sets
 // the decoded variables with their default value on *Variables
-func (variables *Variables) decodeVariableBlock(block *hcl.Block) hcl.Diagnostics {
+func (variables *Variables) DecodeVariableBlock(block *hcl.Block) hcl.Diagnostics {
 	if (*variables) == nil {
 		(*variables) = Variables{}
 	}
@@ -144,7 +120,7 @@ func (variables *Variables) decodeVariableBlock(block *hcl.Block) hcl.Diagnostic
 		}}
 	}
 
-	v, diags := ValidateVarBlock(block)
+	v, diags := parseVarBlock(block)
 	if diags.HasErrors() {
 		return diags
 	}
@@ -154,12 +130,12 @@ func (variables *Variables) decodeVariableBlock(block *hcl.Block) hcl.Diagnostic
 	return diags
 }
 
-// ValidateVarBlock validates each part of the variable block, building out
+// parseVarBlock validates each part of the variable block, building out
 // the final *Variable along the way
-func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
+func parseVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	name := block.Labels[0]
 	v := Variable{
-		Name: name,
+		Name:  name,
 		Range: block.DefRange,
 	}
 
@@ -192,7 +168,7 @@ func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	}
 
 	if attr, exists := content.Attributes["default"]; exists {
-		val, valDiags := attr.Expr.Value(nil)
+		superfancyval, valDiags := attr.Expr.Value(nil)
 		diags = append(diags, valDiags...)
 		if diags.HasErrors() {
 			return nil, diags
@@ -203,7 +179,7 @@ func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 		// attribute above.
 		if v.Type != cty.NilType {
 			var err error
-			val, err = convert.Convert(val, v.Type)
+			superfancyval, err = convert.Convert(superfancyval, v.Type)
 			if err != nil {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
@@ -211,21 +187,19 @@ func ValidateVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
 					Subject:  attr.Expr.Range().Ptr(),
 				})
-				return nil, diags
+				superfancyval = cty.DynamicVal
 			}
-			val = cty.DynamicVal
 		}
 
-		// TODO krantzinator; may not do this slice of var assignments
 		v.Values = append(v.Values, Value{
 			Source: sourceDefault,
-			Value:  val,
+			Value:  superfancyval,
 		})
 
 		// It's possible no type attribute was assigned so lets make sure we
 		// have a valid type otherwise there could be issues parsing the value.
 		if v.Type == cty.NilType {
-			v.Type = val.Type()
+			v.Type = superfancyval.Type()
 		}
 	}
 

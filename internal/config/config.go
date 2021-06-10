@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 
 	"github.com/hashicorp/waypoint/internal/config/variables"
@@ -19,6 +20,8 @@ type Config struct {
 	ctx      *hcl.EvalContext
 	path     string
 	pathData map[string]string
+
+	InputVariables *variables.Variables
 }
 
 type hclConfig struct {
@@ -119,6 +122,11 @@ func Load(path string, opts *LoadOptions) (*Config, error) {
 	if err := hclsimple.DecodeFile(path, finalizeContext(ctx), &cfg); err != nil {
 		return nil, err
 	}
+	vs, diags := DecodeVariableBlocks(cfg.Body)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
 	if err := defaults.Set(&cfg); err != nil {
 		return nil, err
 	}
@@ -134,14 +142,34 @@ func Load(path string, opts *LoadOptions) (*Config, error) {
 	}
 
 	return &Config{
-		hclConfig: cfg,
-		ctx:       ctx,
-		path:      filepath.Dir(path),
-		pathData:  pathData,
+		hclConfig:      cfg,
+		ctx:            ctx,
+		path:           filepath.Dir(path),
+		pathData:       pathData,
+		InputVariables: vs,
 	}, nil
 }
 
 // HCLContext returns the eval context for this configuration.
 func (c *Config) HCLContext() *hcl.EvalContext {
 	return c.ctx.NewChild()
+}
+
+func DecodeVariableBlocks(body hcl.Body) (*variables.Variables, hcl.Diagnostics) {
+	schema, _ := gohcl.ImpliedBodySchema(&hclConfig{})
+	content, diag := body.Content(schema)
+	if diag.HasErrors() {
+		return nil, diag
+	}
+
+	var diags hcl.Diagnostics
+	vs := &variables.Variables{}
+	for _, block := range content.Blocks.OfType("variable") {
+		moreDiags := vs.DecodeVariableBlock(block)
+		if moreDiags != nil {
+			diags = append(diags, moreDiags...)
+		}
+	}
+
+	return vs, diags
 }

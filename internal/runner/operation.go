@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
-	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
@@ -118,23 +117,14 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
-	// Evaluate defined variables and store values
-	// TODO krantzinator - we can probably put everything under one function
-	// call in config/variables.go to keep this simpler/less exported funcs
-	var vs variables.Variables
-	diags := vs.DecodeVariableBlocks(cfg.Body)
-	if diags.HasErrors() {
-		return nil, diags
-	}
-
 	// get variables values from the server (set via the UI)
 	serverVars := resp.Project.GetVariables()
 
 	// TODO krantzinator get vcs stored var files
-	// 
+	//
 
 	// evaluate all variables against the variable blocks we just decoded
-	diags = vs.CollectInputValues(nil, append(serverVars, job.Variables...))
+	diags := cfg.InputVariables.CollectInputValues(nil, append(serverVars, job.Variables...))
 	if diags.HasErrors() {
 		return nil, diags
 	}
@@ -155,7 +145,7 @@ func (r *Runner) executeJob(
 		core.WithConfig(cfg),
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
-		core.WithVariables(vs),
+		core.WithVariables(*cfg.InputVariables),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
 	)

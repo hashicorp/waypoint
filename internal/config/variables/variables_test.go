@@ -45,20 +45,20 @@ func TestVariables_decode(t *testing.T) {
 			require := require.New(t)
 
 			file := filepath.Join("testdata", tt.File)
-			basecfg := HclBase{}
+			base := testConfig{}
 
-			err := hclsimple.DecodeFile(file, nil, &basecfg)
+			err := hclsimple.DecodeFile(file, nil, &base)
 			require.NoError(err)
 
-			schema, _ := gohcl.ImpliedBodySchema(&HclBase{})
-			content, diag := basecfg.Body.Content(schema)
+			schema, _ := gohcl.ImpliedBodySchema(&testConfig{})
+			content, diag := base.Body.Content(schema)
 			require.False(diag.HasErrors())
 
 			vars := &Variables{}
 			for _, block := range content.Blocks {
 				switch block.Type {
 				case "variable":
-					diag = vars.decodeVariableBlock(block)
+					diag = vars.DecodeVariableBlock(block)
 				}
 			}
 
@@ -95,6 +95,7 @@ func TestVariables_collectValues(t *testing.T) {
 			},
 			expected: Variables{
 				"art": &Variable{
+					Name: "art",
 					Values: []Value{
 						{cty.StringVal("gdbee"), Source{"cli", 5}, hcl.Expression(nil), hcl.Range{}},
 						{cty.StringVal("gdbee"), Source{"file", 4}, hcl.Expression(nil), hcl.Range{}},
@@ -179,17 +180,26 @@ func TestVariables_collectValues(t *testing.T) {
 			require := require.New(t)
 
 			file := filepath.Join("testdata", tt.file)
-			basecfg := HclBase{}
+			base := testConfig{}
 
-			err := hclsimple.DecodeFile(file, nil, &basecfg)
+			err := hclsimple.DecodeFile(file, nil, &base)
 			require.NoError(err)
 
-			var vs Variables
-			diags := vs.DecodeVariableBlocks(basecfg.Body)
+			schema, _ := gohcl.ImpliedBodySchema(&testConfig{})
+			content, diags := base.Body.Content(schema)
+			require.False(diags.HasErrors())
+
+			vars := &Variables{}
+			for _, block := range content.Blocks {
+				switch block.Type {
+				case "variable":
+					diags = vars.DecodeVariableBlock(block)
+				}
+			}
 			require.False(diags.HasErrors())
 
 			// collect values
-			diags = vs.CollectInputValues(tt.inputFiles, tt.inputValues)
+			diags = vars.CollectInputValues(tt.inputFiles, tt.inputValues)
 			if tt.err != "" {
 				require.True(diags.HasErrors())
 				require.Contains(diags.Error(), tt.err)
@@ -198,7 +208,7 @@ func TestVariables_collectValues(t *testing.T) {
 
 			require.False(diags.HasErrors())
 			for k, v := range tt.expected {
-				diff := cmp.Diff(v, vs[k], cmpOpts...)
+				diff := cmp.Diff(v, (*vars)[k], cmpOpts...)
 				if diff != "" {
 					t.Fatalf("Expected variables differed from actual: %s", diff)
 				}
@@ -210,13 +220,13 @@ func TestVariables_collectValues(t *testing.T) {
 func TestVariables_SetJobInputVariables(t *testing.T) {
 	cases := []struct {
 		name     string
-		file     []string
+		files    []string
 		cliArgs  map[string]string
 		expected []*pb.Variable
 		err      string
 	}{
 		{
-			"success",
+			"cli args",
 			[]string{""},
 			map[string]string{"foo": "bar"},
 			[]*pb.Variable{
@@ -227,34 +237,35 @@ func TestVariables_SetJobInputVariables(t *testing.T) {
 				},
 			},
 			"",
-		}, {
-			"success",
-			[]string{filepath.Join("testdata", "values.hcl")},
-			map[string]string{"foo": "bar"},
-			[]*pb.Variable{
-				{
-					Name:   "mug",
-					Value:  &pb.Variable_Str{Str: "yeti"},
-					Source: &pb.Variable_File_{},
-				},
-				{
-					Name:   "art",
-					Value:  &pb.Variable_Str{Str: "gdbee"},
-					Source: &pb.Variable_File_{},
-				},
-				{
-					Name:   "foo",
-					Value:  &pb.Variable_Str{Str: "bar"},
-					Source: &pb.Variable_Cli{},
-				},
-			},
-			"",
 		},
+		// {
+		// 	"files",
+		// 	[]string{filepath.Join("testdata", "values.hcl"),filepath.Join("testdata", "more_values.hcl") },
+		// 	nil,
+		// 	[]*pb.Variable{
+		// 		{
+		// 			Name:   "mug",
+		// 			Value:  &pb.Variable_Str{Str: "yeti"},
+		// 			Source: &pb.Variable_File_{},
+		// 		},
+		// 		{
+		// 			Name:   "art",
+		// 			Value:  &pb.Variable_Str{Str: "gdbee"},
+		// 			Source: &pb.Variable_File_{},
+		// 		},
+		// 		{
+		// 			Name:   "is_good",
+		// 			Value:  &pb.Variable_Str{Str: "true"},
+		// 			Source: &pb.Variable_File_{},
+		// 		},
+		// 	},
+		// 	"",
+		// },
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
-			vars, diags := SetJobInputVariables(tt.cliArgs, tt.file)
+			vars, diags := SetJobInputVariables(tt.cliArgs, tt.files)
 			require.False(diags.HasErrors())
 
 			require.Equal(len(vars), len(tt.expected))
@@ -284,4 +295,9 @@ var cmpOpts = []cmp.Option{
 	ctyTypeComparer,
 	cmpopts.IgnoreInterfaces(struct{ hcl.Expression }{}),
 	cmpopts.IgnoreTypes(hcl.Range{}),
+}
+
+type testConfig struct {
+	Variables []*HclVariable `hcl:"variable,block"`
+	Body      hcl.Body       `hcl:",body"`
 }

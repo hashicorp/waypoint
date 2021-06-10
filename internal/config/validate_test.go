@@ -16,20 +16,13 @@ func TestConfigValidate(t *testing.T) {
 			"valid.hcl",
 			"",
 		},
-
 		{
 			"no_build.hcl",
 			"'build' stanza",
 		},
-
 		{
-			"invalid_type.hcl",
-			"Invalid type specification",
-		},
-
-		{
-			"invalid_def.hcl",
-			"Invalid default value for variable",
+			"no_variable_default.hcl",
+			"'default' value required for variable block",
 		},
 	}
 

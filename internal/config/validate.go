@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -83,7 +82,7 @@ func (c *Config) Validate() error {
 
 	// Validate variable definitions
 	for _, block := range content.Blocks.OfType("variable") {
-		_, err := variables.ValidateVarBlock(block)
+		err := c.validateVarBlock(block)
 		if err != nil {
 			result = multierror.Append(result, err)
 		}
@@ -120,6 +119,26 @@ func (c *Config) validateApp(b *hcl.Block) error {
 		return &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "'deploy' stanza required",
+			Subject:  &b.DefRange,
+			Context:  &b.TypeRange,
+		}
+	}
+
+	return nil
+}
+
+// TODO krantzinator docs
+func (c *Config) validateVarBlock(b *hcl.Block) error {
+	schema, _ := gohcl.ImpliedBodySchema(&validateVariable{})
+	content, diag := b.Body.Content(schema)
+	if diag.HasErrors() {
+		return diag
+	}
+
+	if _, exists := content.Attributes["default"]; !exists {
+		return &hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  fmt.Sprintf("'default' value required for variable block %q", b.Labels[0]),
 			Subject:  &b.DefRange,
 			Context:  &b.TypeRange,
 		}
