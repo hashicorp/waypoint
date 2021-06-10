@@ -49,8 +49,9 @@ var (
 	// any authentication. Authenticate doesn't even attempt to parse the
 	// token so it can be totally invalid.
 	unauthenticatedEndpoints = map[string]struct{}{
-		"ConvertInviteToken": {},
 		"BootstrapToken":     {},
+		"ConvertInviteToken": {},
+		"DecodeToken":        {},
 		"GetVersionInfo":     {},
 	}
 )
@@ -329,6 +330,7 @@ func (s *service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 	return &pb.NewTokenResponse{Token: token}, nil
 }
 
+// BootstrapToken RPC call.
 func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.NewTokenResponse, error) {
 	if !s.state.HMACKeyEmpty() {
 		return nil, status.Errorf(codes.PermissionDenied, "server is already bootstrapped")
@@ -342,6 +344,23 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 	return &pb.NewTokenResponse{Token: token}, nil
 }
 
+// Bootstrapped returns true if the server is already bootstrapped. If
+// this returns true then BootstrapToken can no longer be called.
 func (s *service) Bootstrapped() bool {
 	return !s.state.HMACKeyEmpty()
+}
+
+// DecodeToken RPC call.
+func (s *service) DecodeToken(
+	ctx context.Context, req *pb.DecodeTokenRequest,
+) (*pb.DecodeTokenResponse, error) {
+	tt, body, err := s.decodeToken(req.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.DecodeTokenResponse{
+		Token:     body,
+		Transport: tt,
+	}, nil
 }

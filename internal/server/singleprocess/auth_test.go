@@ -182,3 +182,23 @@ func TestServiceBootstrapToken(t *testing.T) {
 		require.Nil(resp)
 	}
 }
+
+func TestServiceDecodeToken(t *testing.T) {
+	ctx := context.Background()
+	require := require.New(t)
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+
+	// Grab our bootstrap token, that'll work
+	resp, err := impl.BootstrapToken(ctx, &empty.Empty{})
+	require.NoError(err)
+	require.NotEmpty(resp.Token)
+
+	// Decode it
+	decodeResp, err := impl.DecodeToken(ctx, &pb.DecodeTokenRequest{Token: resp.Token})
+	require.NoError(err)
+	require.NotNil(decodeResp.Token)
+	require.NotNil(decodeResp.Transport)
+}
