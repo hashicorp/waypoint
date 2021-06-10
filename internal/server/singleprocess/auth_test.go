@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"testing"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -22,85 +21,169 @@ func TestServiceAuth(t *testing.T) {
 	// Create our server
 	impl, err := New(WithDB(testDB(t)))
 	require.NoError(t, err)
+	s := impl.(*service)
+	ctx := context.Background()
 
-	t.Run("create and validate a token", func(t *testing.T) {
-		s := impl.(*service)
-
-		md := map[string]string{
-			"addr": "test",
-		}
-
-		token, err := s.NewLoginToken(DefaultKeyId, md, nil)
+	// Bootstrap
+	var bootstrapToken string
+	{
+		resp, err := impl.BootstrapToken(ctx, &empty.Empty{})
 		require.NoError(t, err)
+		require.NotEmpty(t, resp.Token)
+		bootstrapToken = resp.Token
+	}
 
-		require.True(t, len(token) > 5)
+	t.Run("authenticate with gibberish", func(t *testing.T) {
+		err := s.Authenticate(context.Background(), "hello!", "test", nil)
+		require.Error(t, err)
+	})
+
+	t.Run("authenticate with gibberish to unauthenticated endpoint", func(t *testing.T) {
+		err := s.Authenticate(context.Background(), "hello!", "GetVersionInfo", nil)
+		require.NoError(t, err)
+	})
+
+	t.Run("authenticate with bootstrap token", func(t *testing.T) {
+		err := s.Authenticate(context.Background(), bootstrapToken, "test", nil)
+		require.NoError(t, err)
+	})
+
+	t.Run("create and validate a new token", func(t *testing.T) {
+		require := require.New(t)
+
+		resp, err := s.GenerateLoginToken(ctx, &pb.LoginTokenRequest{})
+		require.NoError(err)
+		token := resp.Token
+
+		require.True(len(token) > 5)
 		t.Logf("token: %s", token)
 
-		tt, body, err := s.decodeToken(token)
-		require.NoError(t, err)
-
+		// Test some internal state of the token
+		_, body, err := s.decodeToken(token)
+		require.NoError(err)
 		kind, ok := body.Kind.(*pb.Token_Login_)
 		assert.True(t, ok)
 		assert.Equal(t, DefaultUser, kind.Login.UserId)
-		assert.Equal(t, md, tt.Metadata)
 
+		// Verify authing works
 		err = s.Authenticate(context.Background(), token, "test", nil)
-		require.NoError(t, err)
+		require.NoError(err)
 
 		// Now corrupt the token and check that validation fails
 		data := []byte(token)
-
 		data[len(data)-2] = data[len(data)-2] + 1
 		_, _, err = s.decodeToken(string(data))
-		require.Error(t, err)
+		require.Error(err)
+	})
 
-		// Generate a legit token with an unknown key though
+	t.Run("exchange an invite token", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get our invite token for the entrypoint
+		resp, err := s.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
+			Duration: "5m",
+			Login: &pb.Token_Login{
+				UserId: DefaultUser,
+			},
+		})
+		require.NoError(err)
+
+		// Exchange it
+		resp, err = s.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
+			Token: resp.Token,
+		})
+		require.NoError(err)
+		token := resp.Token
+
+		{
+			err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
+			require.NoError(err)
+		}
 	})
 
 	t.Run("entrypoint token can only access entrypoint APIs", func(t *testing.T) {
-		s := impl.(*service)
+		require := require.New(t)
 
-		token, err := s.NewLoginToken(DefaultKeyId, nil, &pb.Token_Entrypoint{})
-		require.NoError(t, err)
+		// Get our invite token for the entrypoint
+		resp, err := s.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
+			Duration: "5m",
+			Login: &pb.Token_Login{
+				UserId:     DefaultUser,
+				Entrypoint: &pb.Token_Entrypoint{DeploymentId: "A"},
+			},
+		})
+		require.NoError(err)
+
+		// Exchange it
+		resp, err = s.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
+			Token: resp.Token,
+		})
+		require.NoError(err)
+		token := resp.Token
 
 		{
 			err := s.Authenticate(context.Background(), token, "EntrypointConfig", nil)
-			require.NoError(t, err)
+			require.NoError(err)
 		}
 
 		{
 			err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
-			require.Error(t, err)
+			require.Error(err)
+		}
+	})
+
+	t.Run("entrypoint token can only access entrypoint APIs (LEGACY)", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get our invite token for the entrypoint
+		resp, err := s.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
+			Duration:         "5m",
+			UnusedEntrypoint: &pb.Token_Entrypoint{DeploymentId: "A"},
+		})
+		require.NoError(err)
+
+		// Exchange it
+		resp, err = s.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
+			Token: resp.Token,
+		})
+		require.NoError(err)
+		token := resp.Token
+
+		{
+			err := s.Authenticate(context.Background(), token, "EntrypointConfig", nil)
+			require.NoError(err)
+		}
+
+		{
+			err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
+			require.Error(err)
 		}
 	})
 
 	t.Run("rejects tokens signed with unknown keys", func(t *testing.T) {
-		s := impl.(*service)
+		require := require.New(t)
 
-		md := map[string]string{
-			"addr": "test",
-		}
+		resp, err := s.GenerateLoginToken(ctx, &pb.LoginTokenRequest{})
+		require.NoError(err)
+		token := resp.Token
 
-		token, err := s.NewLoginToken(DefaultKeyId, md, nil)
-		require.NoError(t, err)
-
-		require.True(t, len(token) > 5)
+		require.True(len(token) > 5)
 		t.Logf("token: %s", token)
 
 		tt, body, err := s.decodeToken(token)
-		require.NoError(t, err)
+		require.NoError(err)
 		bodyData, err := proto.Marshal(body)
-		require.NoError(t, err)
+		require.NoError(err)
 
 		h, err := blake2b.New256([]byte("abcdabcdabcdabcadacdacdaaa"))
-		require.NoError(t, err)
+		require.NoError(err)
 
 		h.Write(bodyData)
 
 		tt.Signature = h.Sum(nil)
 
 		ttData, err := proto.Marshal(tt)
-		require.NoError(t, err)
+		require.NoError(err)
 
 		var buf bytes.Buffer
 		buf.WriteString(tokenMagic)
@@ -109,53 +192,7 @@ func TestServiceAuth(t *testing.T) {
 		rogue := base58.Encode(buf.Bytes())
 
 		_, _, err = s.decodeToken(rogue)
-		require.Error(t, err)
-	})
-
-	t.Run("exchange an invite token", func(t *testing.T) {
-		s := impl.(*service)
-
-		invite, err := s.NewInviteToken(2*time.Second, DefaultKeyId, nil, nil)
-		require.NoError(t, err)
-
-		lt, err := s.ExchangeInvite(DefaultKeyId, invite)
-		require.NoError(t, err)
-
-		_, body, err := s.decodeToken(lt)
-		require.NoError(t, err)
-
-		_, ok := body.Kind.(*pb.Token_Login_)
-		assert.True(t, ok)
-
-		time.Sleep(3 * time.Second)
-
-		_, err = s.ExchangeInvite(DefaultKeyId, invite)
-		require.Error(t, err)
-	})
-
-	t.Run("exchange an entrypoint invite token", func(t *testing.T) {
-		s := impl.(*service)
-
-		entry := &pb.Token_Entrypoint{DeploymentId: "foo"}
-
-		invite, err := s.NewInviteToken(2*time.Second, DefaultKeyId, nil, entry)
-		require.NoError(t, err)
-
-		lt, err := s.ExchangeInvite(DefaultKeyId, invite)
-		require.NoError(t, err)
-
-		_, body, err := s.decodeToken(lt)
-		require.NoError(t, err)
-
-		kind, ok := body.Kind.(*pb.Token_Login_)
-		assert.True(t, ok)
-		assert.NotNil(t, kind.Login.Entrypoint)
-		assert.Equal(t, entry.DeploymentId, kind.Login.Entrypoint.DeploymentId)
-
-		time.Sleep(3 * time.Second)
-
-		_, err = s.ExchangeInvite(DefaultKeyId, invite)
-		require.Error(t, err)
+		require.Error(err)
 	})
 }
 

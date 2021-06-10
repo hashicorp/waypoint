@@ -226,77 +226,37 @@ func (s *service) encodeToken(keyId string, metadata map[string]string, body *pb
 	return base58.Encode(buf.Bytes()), nil
 }
 
-// Create a new login token.
-// keyId controls which key is used to sign the key (key values are generated lazily).
-// metadata is attached to the token transport as configuration style information
-func (s *service) NewLoginToken(
-	keyId string,
-	metadata map[string]string,
-	entrypoint *pb.Token_Entrypoint,
-) (string, error) {
-	var body pb.Token
-	body.AccessorId = make([]byte, 16)
-	body.IssuedTime = ptypes.TimestampNow()
-	body.Kind = &pb.Token_Login_{
-		Login: &pb.Token_Login{
-			UserId:     DefaultUser,
-			Entrypoint: entrypoint,
-		},
-	}
-
-	_, err := io.ReadFull(rand.Reader, body.AccessorId)
-	if err != nil {
-		return "", err
-	}
-
-	return s.encodeToken(keyId, metadata, &body)
-}
-
 // Create a new login token. This is just a gRPC wrapper around NewLoginToken.
 func (s *service) GenerateLoginToken(
-	ctx context.Context, _ *pb.LoginTokenRequest,
+	ctx context.Context, req *pb.LoginTokenRequest,
 ) (*pb.NewTokenResponse, error) {
-	token, err := s.NewLoginToken(DefaultKeyId, nil, nil)
+	// We don't currently have any other users.
+	if req.User != nil {
+		return nil, status.Errorf(codes.PermissionDenied, "cannot create token for other users")
+	}
+
+	// If we have a duration set, set the expiry
+	var dur time.Duration
+	if d := req.Duration; d != "" {
+		var err error
+		dur, err = time.ParseDuration(d)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	login := &pb.Token_Login{
+		UserId: DefaultUser,
+	}
+
+	token, err := s.newToken(dur, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Login_{Login: login},
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.NewTokenResponse{Token: token}, nil
-}
-
-// Create a new invite token. The duration controls for how long the invite token is valid.
-// keyId controls which key is used to sign the key (key values are generated lazily).
-// metadata is attached to the token transport as configuration style information
-func (s *service) NewInviteToken(
-	duration time.Duration,
-	keyId string,
-	metadata map[string]string,
-	entrypoint *pb.Token_Entrypoint,
-) (string, error) {
-	var body pb.Token
-	body.AccessorId = make([]byte, 16)
-	body.IssuedTime = ptypes.TimestampNow()
-	body.Kind = &pb.Token_Invite_{
-		Invite: &pb.Token_Invite{
-			Login: &pb.Token_Login{
-				UserId:     DefaultUser,
-				Entrypoint: entrypoint,
-			},
-		},
-	}
-
-	now := time.Now().UTC().Add(duration)
-	body.ValidUntil = &timestamp.Timestamp{
-		Seconds: now.Unix(),
-		Nanos:   int32(now.Nanosecond()),
-	}
-
-	_, err := io.ReadFull(rand.Reader, body.AccessorId)
-	if err != nil {
-		return "", err
-	}
-
-	return s.encodeToken(keyId, metadata, &body)
 }
 
 // newToken is the generic internal function to create and encode a new
@@ -379,24 +339,30 @@ func (s *service) GenerateInviteToken(
 	return &pb.NewTokenResponse{Token: token}, nil
 }
 
-// Given an invite token, validate it and return a login token
-func (s *service) ExchangeInvite(keyId, invite string) (string, error) {
-	tt, body, err := s.decodeToken(invite)
+// Given an invite token, validate it and return a login token. This is a gRPC wrapper around ExchangeInvite.
+func (s *service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteTokenRequest) (*pb.NewTokenResponse, error) {
+	_, body, err := s.decodeToken(req.Token)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	kind, ok := body.Kind.(*pb.Token_Invite_)
 	if !ok || kind == nil {
-		return "", errors.Wrapf(ErrInvalidToken, "not an invite token")
+		return nil, errors.Wrapf(ErrInvalidToken, "not an invite token")
+	}
+	invite := kind.Invite
+
+	// Our login token is just the login token on the invite.
+	login := invite.Login
+
+	// If we have a signup invite, then error for now until we have an account system.
+	if invite.Signup != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "signup tokens not allowed")
 	}
 
-	return s.NewLoginToken(keyId, tt.Metadata, kind.Invite.Login.Entrypoint)
-}
-
-// Given an invite token, validate it and return a login token. This is a gRPC wrapper around ExchangeInvite.
-func (s *service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteTokenRequest) (*pb.NewTokenResponse, error) {
-	token, err := s.ExchangeInvite(DefaultKeyId, req.Token)
+	token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Login_{Login: login},
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +376,13 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 		return nil, status.Errorf(codes.PermissionDenied, "server is already bootstrapped")
 	}
 
-	token, err := s.NewLoginToken(DefaultKeyId, nil, nil)
+	token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Login_{
+			Login: &pb.Token_Login{
+				UserId: DefaultUser,
+			},
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
