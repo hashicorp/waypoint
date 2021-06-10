@@ -4,7 +4,6 @@ import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
 import { visitable, create, collection, clickable } from 'ember-cli-page-object';
 import login from 'waypoint/tests/helpers/login';
-import { isEqual } from 'date-fns';
 
 const url = '/default/microchip/app/wp-bandwidth/deployments';
 

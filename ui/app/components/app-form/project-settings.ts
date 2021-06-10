@@ -1,6 +1,7 @@
 import Component from '@glimmer/component';
 import { inject as service } from '@ember/service';
 import RouterService from '@ember/routing/router-service';
+import { isEmpty } from '@ember/utils';
 import ApiService from 'waypoint/services/api';
 import FlashMessagesService from 'waypoint/services/flash-messages';
 import { tracked } from '@glimmer/tracking';
@@ -17,24 +18,24 @@ class ProjectModel {
   applicationsList: [];
   dataSource: {
     git: {
-      url: string,
-      path: string,
-      ref: string,
+      url: string;
+      path: string;
+      ref: string;
       basic: {
-        username: string,
-        password: string,
-      },
+        username: string;
+        password: string;
+      };
       ssh: {
-        user: string,
-        password: string,
-        privateKeyPem: string
-      }
-    },
-    local:any,
+        user: string;
+        password: string;
+        privateKeyPem: string;
+      };
+    };
+    local: any;
   };
   dataSourcePoll: {
-    enabled: boolean,
-    interval: string,
+    enabled: boolean;
+    interval: string;
   };
   remoteEnabled: boolean;
   waypointHcl: string;
@@ -51,13 +52,13 @@ const DEFAULT_PROJECT_MODEL = {
       ref: 'HEAD',
       basic: {
         username: '',
-        password: ''
+        password: '',
       },
       ssh: {
         user: '',
         password: '',
         privateKeyPem: '',
-      }
+      },
     },
     local: null,
   },
@@ -65,7 +66,7 @@ const DEFAULT_PROJECT_MODEL = {
     enabled: false,
     interval: '2m',
   },
-  remoteEnabled: null,
+  remoteEnabled: false,
   waypointHcl: '',
   waypointHclFormat: FORMAT.HCL,
 };
@@ -86,44 +87,25 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   constructor(owner: any, args: any) {
     super(owner, args);
     let { project } = this.args;
-    this.project = project;
-    // restore git settings state from existing datasource
-    if (this.project?.dataSource?.git && this.project?.dataSource?.git?.url) {
-      // Set authCase if it exists
+    this.project = JSON.parse(JSON.stringify(DEFAULT_PROJECT_MODEL)); // to ensure we're doing a deep copy
+    this.populateExistingFields(project, this.project);
+    this.authCase = 4;
+    this.serverHcl = !!this.project?.waypointHcl;
+
+    // restore git settings state if editing existing project
+    if (this.git?.url) {
       if (project.dataSource?.git?.ssh?.privateKeyPem) {
-        this.authCase = 5;
-      } else {
-        if (project.dataSource?.git?.basic?.username) {
-          this.authCase = 4;
-        } else {
-          this.authCase = 0;
-        }
-        // Set empty default git auth if not defined
-        if (!this.project?.dataSource?.git?.basic?.username || !this.project?.dataSource?.git?.ssh?.privateKeyPem) {
-          this.project.dataSource.git.basic = DEFAULT_PROJECT_MODEL.dataSource.git.basic;
-          this.project.dataSource.git.ssh = DEFAULT_PROJECT_MODEL.dataSource.git.ssh;
-        }
+        this.setAuthCase(5);
+        return;
       }
-    } else {
-      // set empty default dataSource data if non-existent
-      this.project.dataSource = DEFAULT_PROJECT_MODEL.dataSource;
-      this.authCase = 4;
-    }
-
-    if (!this.project?.dataSourcePoll) {
-      this.project.dataSourcePoll = DEFAULT_PROJECT_MODEL.dataSourcePoll;
-    }
-
-    if (this.project?.waypointHcl) {
-      this.serverHcl = true;
-    } else {
-      this.serverHcl = false;
-      this.project.waypointHcl = DEFAULT_PROJECT_MODEL.waypointHcl;
-      this.project.waypointHclFormat = DEFAULT_PROJECT_MODEL.waypointHclFormat;
+      if (!project.dataSource?.git?.basic?.username) {
+        this.setAuthCase(0);
+        return;
+      }
     }
   }
 
-  get dataSource(){
+  get dataSource() {
     return this.project.dataSource;
   }
 
@@ -143,19 +125,18 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     return this.dataSource?.git;
   }
 
-
   validateGitUrl() {
     let gitUrl = parseUrl(this.project.dataSource.git.url);
     // If basic auth, match https url
-    if (this.authCase == 4 || this.authCase == 0) {
-      if (gitUrl.protocol != 'https') {
+    if (this.authBasic || this.authNotSet) {
+      if (gitUrl.protocol !== 'https') {
         this.flashMessages.error('Git url needs to use "https:" protocol');
         return false;
       }
     }
     // If ssh force users to use a git: url
-    if (this.authCase == 5) {
-      if (gitUrl.protocol != 'ssh') {
+    if (this.authSSH) {
+      if (gitUrl.protocol !== 'ssh') {
         this.flashMessages.error('Git url needs to use "git:" protocol');
         return false;
       }
@@ -163,20 +144,37 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     return true;
   }
 
+  populateExistingFields(newProject, savedModel) {
+    for (const [key, value] of Object.entries(newProject)) {
+      if (isEmpty(value)) {
+        continue;
+      }
+
+      // if the value is a nested object, recursively call this function
+      if (typeof value === 'object') {
+        return this.populateExistingFields(newProject[key], savedModel[key]);
+      }
+
+      if (value !== savedModel[key]) {
+        savedModel[key] = value;
+      }
+    }
+  }
+
   @action
-  setAuthCase(val:any) {
+  setAuthCase(val: any) {
     this.authCase = val;
   }
 
   @action
   setBasicAuth(path: string, e: any) {
-    if (!this.project.dataSource?.git?.basic) {
-      this.project.dataSource.git.basic = {
+    if (!this.git?.basic) {
+      this.git.basic = {
         username: '',
-        password: ''
+        password: '',
       };
     }
-    this.project.dataSource.git.basic[path] = e.target.value;
+    this.git.basic[path] = e.target.value;
   }
 
   @action
@@ -198,7 +196,6 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
       return;
     }
     let project = this.project;
-    project.dataSource = this.dataSource;
     let ref = new Project();
     ref.setName(project.name);
     let dataSource = new Job.DataSource();
