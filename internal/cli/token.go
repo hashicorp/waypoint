@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -169,7 +168,7 @@ func (c *GetTokenCommand) Run(args []string) int {
 	// Get our API client
 	client := c.project.Client()
 
-	resp, err := client.GenerateLoginToken(c.Ctx, &empty.Empty{})
+	resp, err := client.GenerateLoginToken(c.Ctx, &pb.LoginTokenRequest{})
 	if err != nil {
 		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1

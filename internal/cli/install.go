@@ -407,7 +407,7 @@ func installRunner(
 	// can connect to the server. We don't want to reuse the bootstrap
 	// token that is shared with the CLI cause that can be revoked.
 	s.Update("Retrieving new auth token for runner...")
-	resp, err := client.GenerateLoginToken(ctx, &empty.Empty{})
+	resp, err := client.GenerateLoginToken(ctx, &pb.LoginTokenRequest{})
 	if err != nil {
 		ui.Output(
 			"Error retrieving auth token for runner: %s\n\n%s",
