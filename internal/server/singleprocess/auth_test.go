@@ -36,12 +36,12 @@ func TestServiceAuth(t *testing.T) {
 		require.True(t, len(token) > 5)
 		t.Logf("token: %s", token)
 
-		tt, body, err := s.DecodeToken(token)
+		tt, body, err := s.decodeToken(token)
 		require.NoError(t, err)
 
-		assert.True(t, body.Login)
-		assert.False(t, body.Invite)
-		assert.Equal(t, DefaultUser, body.User)
+		kind, ok := body.Kind.(*pb.Token_Login_)
+		assert.True(t, ok)
+		assert.Equal(t, DefaultUser, kind.Login.UserId)
 		assert.Equal(t, md, tt.Metadata)
 
 		err = s.Authenticate(context.Background(), token, "test", nil)
@@ -51,7 +51,7 @@ func TestServiceAuth(t *testing.T) {
 		data := []byte(token)
 
 		data[len(data)-2] = data[len(data)-2] + 1
-		_, _, err = s.DecodeToken(string(data))
+		_, _, err = s.decodeToken(string(data))
 		require.Error(t, err)
 
 		// Generate a legit token with an unknown key though
@@ -87,7 +87,7 @@ func TestServiceAuth(t *testing.T) {
 		require.True(t, len(token) > 5)
 		t.Logf("token: %s", token)
 
-		tt, body, err := s.DecodeToken(token)
+		tt, body, err := s.decodeToken(token)
 		require.NoError(t, err)
 		bodyData, err := proto.Marshal(body)
 		require.NoError(t, err)
@@ -108,7 +108,7 @@ func TestServiceAuth(t *testing.T) {
 
 		rogue := base58.Encode(buf.Bytes())
 
-		_, _, err = s.DecodeToken(rogue)
+		_, _, err = s.decodeToken(rogue)
 		require.Error(t, err)
 	})
 
@@ -121,10 +121,11 @@ func TestServiceAuth(t *testing.T) {
 		lt, err := s.ExchangeInvite(DefaultKeyId, invite)
 		require.NoError(t, err)
 
-		_, body, err := s.DecodeToken(lt)
+		_, body, err := s.decodeToken(lt)
 		require.NoError(t, err)
 
-		assert.True(t, body.Login)
+		_, ok := body.Kind.(*pb.Token_Login_)
+		assert.True(t, ok)
 
 		time.Sleep(3 * time.Second)
 
@@ -143,12 +144,13 @@ func TestServiceAuth(t *testing.T) {
 		lt, err := s.ExchangeInvite(DefaultKeyId, invite)
 		require.NoError(t, err)
 
-		_, body, err := s.DecodeToken(lt)
+		_, body, err := s.decodeToken(lt)
 		require.NoError(t, err)
 
-		assert.True(t, body.Login)
-		assert.NotNil(t, body.Entrypoint)
-		assert.Equal(t, entry.DeploymentId, body.Entrypoint.DeploymentId)
+		kind, ok := body.Kind.(*pb.Token_Login_)
+		assert.True(t, ok)
+		assert.NotNil(t, kind.Login.Entrypoint)
+		assert.Equal(t, entry.DeploymentId, kind.Login.Entrypoint.DeploymentId)
 
 		time.Sleep(3 * time.Second)
 

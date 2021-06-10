@@ -71,31 +71,37 @@ func (s *service) Authenticate(ctx context.Context, token, endpoint string, effe
 		return status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
 	}
 
-	_, body, err := s.DecodeToken(token)
+	_, body, err := s.decodeToken(token)
 	if err != nil {
 		return err
 	}
 
-	if !body.Login {
+	// Token must be a login token to be used for auth
+	login, ok := body.Kind.(*pb.Token_Login_)
+	if !ok || login == nil {
 		return ErrInvalidToken
 	}
 
 	// If this is an entrypoint token then we can only access entrypoint APIs.
-	if body.Entrypoint != nil && !strings.HasPrefix(endpoint, "Entrypoint") {
+	if login.Login.Entrypoint != nil && !strings.HasPrefix(endpoint, "Entrypoint") {
 		return status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
 	}
 
 	// TODO When we have a user model, this is where you'll check for the user.
-	if body.User != DefaultUser {
+	if login.Login.UserId != DefaultUser {
 		return ErrInvalidToken
 	}
 
 	return nil
 }
 
-// DecodeToken parses the string and validates it as a valid token. If the token
+// decodeToken parses the string and validates it as a valid token. If the token
 // has a validity period attached to it, the period is checked here.
-func (s *service) DecodeToken(token string) (*pb.TokenTransport, *pb.Token, error) {
+//
+// This will accept older (pre-Waypoint 0.5) tokens and automatically
+// upgrade them to the 0.5 format if it is able. The "unused" fields are
+// left untouched in this case.
+func (s *service) decodeToken(token string) (*pb.TokenTransport, *pb.Token, error) {
 	data, err := base58.Decode(token)
 	if err != nil {
 		return nil, nil, err
@@ -116,21 +122,22 @@ func (s *service) DecodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 		return nil, nil, errors.Wrapf(ErrInvalidToken, "unknown key")
 	}
 
+	// Hash the token body using the HMAC key so that we can compare
+	// with our signature to ensure this hasn't been tampered with.
 	h, err := blake2b.New256(key.Key)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	h.Write(tt.Body)
-
 	sum := h.Sum(nil)
 
 	if subtle.ConstantTimeCompare(sum, tt.Signature) != 1 {
 		return nil, nil, errors.Wrapf(ErrInvalidToken, "bad signature")
 	}
 
+	// Decode the actual token structure
 	var body pb.Token
-
 	err = proto.Unmarshal(tt.Body, &body)
 	if err != nil {
 		return nil, nil, err
@@ -142,6 +149,32 @@ func (s *service) DecodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 		now := time.Now()
 		if vt.Before(now.UTC()) {
 			return nil, nil, errors.Wrapf(ErrInvalidToken, "token has expired. %s < %s", vt, now)
+		}
+	}
+
+	// Determine if we have an old token and upgrade it. We ignore unused
+	// fields if we have a Kind set, since this was introduced in WP 0.5.
+	if body.Kind == nil {
+		login := &pb.Token_Login{
+			UserId:     DefaultUser,
+			Entrypoint: body.UnusedEntrypoint,
+		}
+
+		switch {
+		case body.UnusedLogin:
+			body.Kind = &pb.Token_Login_{
+				Login: login,
+			}
+
+		case body.UnusedInvite:
+			body.Kind = &pb.Token_Invite_{
+				Invite: &pb.Token_Invite{
+					Login: login,
+				},
+			}
+
+		default:
+			return nil, nil, errors.Wrapf(ErrInvalidToken, "token kind is not set")
 		}
 	}
 
@@ -196,12 +229,15 @@ func (s *service) NewLoginToken(
 	entrypoint *pb.Token_Entrypoint,
 ) (string, error) {
 	var body pb.Token
-	body.Login = true
-	body.User = DefaultUser
-	body.TokenId = make([]byte, 16)
-	body.Entrypoint = entrypoint
+	body.AccessorId = make([]byte, 16)
+	body.Kind = &pb.Token_Login_{
+		Login: &pb.Token_Login{
+			UserId:     DefaultUser,
+			Entrypoint: entrypoint,
+		},
+	}
 
-	_, err := io.ReadFull(rand.Reader, body.TokenId)
+	_, err := io.ReadFull(rand.Reader, body.AccessorId)
 	if err != nil {
 		return "", err
 	}
@@ -229,9 +265,15 @@ func (s *service) NewInviteToken(
 	entrypoint *pb.Token_Entrypoint,
 ) (string, error) {
 	var body pb.Token
-	body.Invite = true
-	body.TokenId = make([]byte, 16)
-	body.Entrypoint = entrypoint
+	body.AccessorId = make([]byte, 16)
+	body.Kind = &pb.Token_Invite_{
+		Invite: &pb.Token_Invite{
+			Login: &pb.Token_Login{
+				UserId:     DefaultUser,
+				Entrypoint: entrypoint,
+			},
+		},
+	}
 
 	now := time.Now().UTC().Add(duration)
 	body.ValidUntil = &timestamp.Timestamp{
@@ -239,7 +281,7 @@ func (s *service) NewInviteToken(
 		Nanos:   int32(now.Nanosecond()),
 	}
 
-	_, err := io.ReadFull(rand.Reader, body.TokenId)
+	_, err := io.ReadFull(rand.Reader, body.AccessorId)
 	if err != nil {
 		return "", err
 	}
@@ -264,16 +306,17 @@ func (s *service) GenerateInviteToken(ctx context.Context, req *pb.InviteTokenRe
 
 // Given an invite token, validate it and return a login token
 func (s *service) ExchangeInvite(keyId, invite string) (string, error) {
-	tt, body, err := s.DecodeToken(invite)
+	tt, body, err := s.decodeToken(invite)
 	if err != nil {
 		return "", err
 	}
 
-	if !body.Invite {
+	kind, ok := body.Kind.(*pb.Token_Invite_)
+	if !ok || kind == nil {
 		return "", errors.Wrapf(ErrInvalidToken, "not an invite token")
 	}
 
-	return s.NewLoginToken(keyId, tt.Metadata, body.Entrypoint)
+	return s.NewLoginToken(keyId, tt.Metadata, kind.Invite.Login.Entrypoint)
 }
 
 // Given an invite token, validate it and return a login token. This is a gRPC wrapper around ExchangeInvite.
