@@ -168,7 +168,7 @@ func parseVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	}
 
 	if attr, exists := content.Attributes["default"]; exists {
-		superfancyval, valDiags := attr.Expr.Value(nil)
+		val, valDiags := attr.Expr.Value(nil)
 		diags = append(diags, valDiags...)
 		if diags.HasErrors() {
 			return nil, diags
@@ -179,7 +179,7 @@ func parseVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 		// attribute above.
 		if v.Type != cty.NilType {
 			var err error
-			superfancyval, err = convert.Convert(superfancyval, v.Type)
+			val, err = convert.Convert(val, v.Type)
 			if err != nil {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
@@ -187,19 +187,19 @@ func parseVarBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 					Detail:   fmt.Sprintf("This default value is not compatible with the variable's type constraint: %s.", err),
 					Subject:  attr.Expr.Range().Ptr(),
 				})
-				superfancyval = cty.DynamicVal
+				val = cty.DynamicVal
 			}
 		}
 
 		v.Values = append(v.Values, Value{
 			Source: sourceDefault,
-			Value:  superfancyval,
+			Value:  val,
 		})
 
 		// It's possible no type attribute was assigned so lets make sure we
 		// have a valid type otherwise there could be issues parsing the value.
 		if v.Type == cty.NilType {
-			v.Type = superfancyval.Type()
+			v.Type = val.Type()
 		}
 	}
 
