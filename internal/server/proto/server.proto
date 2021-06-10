@@ -174,6 +174,15 @@ service Waypoint {
   // always return a PermissionDenied error.
   rpc BootstrapToken(google.protobuf.Empty) returns (NewTokenResponse);
 
+  // DecodeToken takes a token string and returns the structured information
+  // about the given token. This is useful for frontends (CLI, UI, etc.) to
+  // learn more about a token before using it. For example, if a UI wants to
+  // create a signup flow around signup tokens, they can validate the token
+  // ahead of time.
+  //
+  // This endpoint does NOT require authentication.
+  rpc DecodeToken(DecodeTokenRequest) returns (DecodeTokenResponse);
+
   // Generate a new invite token that users can exchange for a login token.
   rpc GenerateInviteToken(InviteTokenRequest) returns (NewTokenResponse);
 
@@ -2849,7 +2858,9 @@ message Token {
 
   message Login {
     // User that this token represents. This is the internal user ID (ULID),
-    // not the username/email/etc.
+    // not the username/email/etc. The special value of "waypoint" means the
+    // superuser (default user) that is setup on bootstrap. This is for
+    // historical reasons only and is the only valid non-ULID value.
     string user_id = 1;
 
     // If set, this login token can only be used for entrypoint-related
@@ -2909,6 +2920,20 @@ message HMACKey {
 
   // A randomly generated key used to sign tokens with
   bytes key = 2;
+}
+
+message DecodeTokenRequest {
+  // The token to decode.
+  string token = 1;
+}
+
+message DecodeTokenResponse {
+  // The decoded token.
+  Token token = 1;
+
+  // Transport is the wrapper around the token. This may be useful
+  // to look into the metadata around the token.
+  TokenTransport transport = 2;
 }
 
 // Passed with GenerateInviteToken with the params on how the invite token should
