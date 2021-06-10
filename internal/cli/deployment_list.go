@@ -13,10 +13,7 @@ import (
 	"github.com/posener/complete"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 
-	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
@@ -112,22 +109,18 @@ func (c *DeploymentListCommand) Run(args []string) int {
 		sort.Sort(serversort.DeploymentCompleteDesc(resp.Deployments))
 
 		// get status reports
-		statusReportResp, err := client.GetLatestStatusReport(ctx, &pb.GetLatestStatusReportRequest{
+		statusReportsResp, err := client.ListStatusReports(ctx, &pb.ListStatusReportsRequest{
 			Application: app.Ref(),
 			Workspace:   wsRef,
 		})
+
 		if status.Code(err) == codes.NotFound || status.Code(err) == codes.Unimplemented {
 			err = nil
-			statusReportResp = nil
+			statusReportsResp = nil
 		}
 		if err != nil {
 			app.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 			return ErrSentinel
-		}
-
-		statusReport := &sdk.StatusReport{}
-		if statusReportResp != nil {
-			anypb.UnmarshalTo(statusReportResp.StatusReport, statusReport, proto.UnmarshalOptions{})
 		}
 
 		if c.flagJson {
@@ -138,7 +131,7 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 		const bullet = "●"
 
-		for i, b := range resp.Deployments {
+		for _, b := range resp.Deployments {
 			// Determine our bullet
 			status := ""
 			statusColor := ""
@@ -177,28 +170,29 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				completeTime = humanize.Time(t)
 			}
 
-			// Only display "Latest" report on Last deployment
-			var statusReportComplete string
-			if statusReportResp != nil {
-				if i == 0 { // Latest deployment
-					switch statusReport.Health {
-					case sdk.StatusReport_READY:
-						statusReportComplete = "✔"
-					case sdk.StatusReport_ALIVE:
-						statusReportComplete = "✔"
-					case sdk.StatusReport_DOWN:
-						statusReportComplete = "✖"
-					case sdk.StatusReport_PARTIAL:
-						statusReportComplete = "●"
-					case sdk.StatusReport_UNKNOWN:
-						statusReportComplete = "?"
-					}
-					if t, err := ptypes.Timestamp(statusReport.TimeGenerated); err == nil {
-						statusReportComplete = fmt.Sprintf("%s - %s", statusReportComplete, humanize.Time(t))
+			// Add status report information if we have any
+			statusReportComplete := "n/a"
+			for _, statusReport := range statusReportsResp.StatusReports {
+				if deploymentTargetId, ok := statusReport.TargetId.(*pb.StatusReport_DeploymentId); ok {
+					if deploymentTargetId.DeploymentId == b.Id {
+						switch statusReport.Health.HealthStatus {
+						case "READY":
+							statusReportComplete = "✔"
+						case "ALIVE":
+							statusReportComplete = "✔"
+						case "DOWN":
+							statusReportComplete = "✖"
+						case "PARTIAL":
+							statusReportComplete = "●"
+						case "UNKNOWN":
+							statusReportComplete = "?"
+						}
+
+						if t, err := ptypes.Timestamp(statusReport.GeneratedTime); err == nil {
+							statusReportComplete = fmt.Sprintf("%s - %s", statusReportComplete, humanize.Time(t))
+						}
 					}
 				}
-			} else {
-				statusReportComplete = "Unknown status"
 			}
 
 			var (
