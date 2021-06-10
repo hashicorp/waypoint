@@ -99,7 +99,7 @@ func TestVariables_collectValues(t *testing.T) {
 					Values: []Value{
 						{cty.StringVal("gdbee"), Source{"cli", 5}, hcl.Expression(nil), hcl.Range{}},
 						{cty.StringVal("gdbee"), Source{"file", 4}, hcl.Expression(nil), hcl.Range{}},
-						{cty.DynamicVal, Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
+						{cty.NullVal(cty.String), Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
 					},
 					Type: cty.String,
 				},
