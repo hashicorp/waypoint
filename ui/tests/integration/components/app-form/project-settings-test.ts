@@ -22,6 +22,49 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
     assert.dom('#git-source-password').hasValue('');
   });
 
+  test('populated applications list does not break render', async function (assert) {
+    this.set('project', {
+      applicationsList: [
+        {
+          name: 'app-1',
+          project: {
+            project: 'project',
+          },
+        },
+      ],
+      dataSource: {
+        git: {
+          url: 'https://github.com',
+        },
+      },
+    });
+    await render(hbs`<AppForm::ProjectSettings @project={{this.project}} />`);
+
+    assert.dom('#git-source-url').hasValue('https://github.com');
+    assert.dom('#git-auth-not-set').isChecked();
+  });
+
+  test('cli generated project does not break render', async function (assert) {
+    this.set('project', {
+      applicationsList: [
+        {
+          name: 'app-1',
+          project: {
+            project: 'project',
+          },
+        },
+      ],
+      dataSource: undefined,
+      dataSourcePoll: undefined,
+    });
+    await render(hbs`<AppForm::ProjectSettings @project={{this.project}} />`);
+
+    assert.dom('#git-source-url').hasValue('');
+    assert.dom('#git-auth-basic').isChecked();
+    assert.dom('#git-source-username').hasValue('');
+    assert.dom('#git-source-password').hasValue('');
+  });
+
   test('basic auth project loads properly', async function (assert) {
     this.set('project', {
       dataSource: {

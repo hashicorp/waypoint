@@ -144,19 +144,22 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     return true;
   }
 
-  populateExistingFields(newProject, savedModel) {
-    for (const [key, value] of Object.entries(newProject)) {
+  populateExistingFields(projectFromArgs, currentModel) {
+    for (const [key, value] of Object.entries(projectFromArgs)) {
       if (isEmpty(value)) {
         continue;
       }
 
       // if the value is a nested object, recursively call this function
       if (typeof value === 'object') {
-        return this.populateExistingFields(newProject[key], savedModel[key]);
+        this.populateExistingFields(
+          projectFromArgs[key],
+          !isEmpty(currentModel[key]) ? currentModel[key] : {}
+        );
       }
 
-      if (value !== savedModel[key]) {
-        savedModel[key] = value;
+      if (value !== currentModel[key]) {
+        currentModel[key] = value;
       }
     }
   }
