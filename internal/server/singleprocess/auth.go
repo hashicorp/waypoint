@@ -226,7 +226,7 @@ func (s *service) encodeToken(keyId string, metadata map[string]string, body *pb
 	return base58.Encode(buf.Bytes()), nil
 }
 
-// Create a new login token. This is just a gRPC wrapper around NewLoginToken.
+// Create a new login token. This is just a gRPC wrapper around newToken.
 func (s *service) GenerateLoginToken(
 	ctx context.Context, req *pb.LoginTokenRequest,
 ) (*pb.NewTokenResponse, error) {
