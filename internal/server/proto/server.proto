@@ -1260,6 +1260,17 @@ message Job {
   }
 }
 
+// A generic poll message that any proto could include
+message Poll {
+  // enabled must be set to true to enable polling.
+  bool enabled = 1;
+
+  // interval is a duration string of how often to poll, such as "5s".
+  // The server may enforce minimum values, in which case a value lower
+  // than the minimum will be ignored.
+  string interval = 2;
+}
+
 message Documentation {
   string description = 1;
   string example = 2;
@@ -2398,6 +2409,13 @@ message StatusReport {
 
   // id is the unique ID for this status report.
   string id = 6;
+
+  // Each polling event is tracked as a separate job. You can query the
+  // poll operations and their success/failure by using the ListJobs API.
+  Poll data_source_poll = 30;
+
+  // NOTE: The following variables are in support of a raw SDK status report. Other
+  // internal options should go above here.
 
   // StatusReport is the raw SDK report object encoded directly from the plugin.
   // This message is a StatusReport proto that exists inside the SDK

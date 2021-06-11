@@ -361,6 +361,119 @@ func (op *appOperation) Latest(
 	return nil, status.Errorf(codes.NotFound, "No application named %q is available!", ref.Application)
 }
 
+// PollPeek returns the next app operation that should be polled.
+// This will return (nil,time.Time{},nil) if there are no app operations to poll currently.
+//
+// This is a "peek" operation so it does not update the app op's next poll
+// time. Therefore, calling this multiple times should return the same result
+// unless a function like PollComplete is called.
+//
+// If ws is non-nil, the WatchSet can be watched for any changes to
+// app operations to poll. This can be watched, for example, to detect when
+// app operations to poll are added. This is important functionality since callers
+// may be sleeping on a deadline for awhile when a new app op is inserted
+// to poll immediately.
+func (op *appOperation) PollPeek(
+	s *State,
+	ws memdb.WatchSet,
+) (interface{}, time.Time, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	// LowerBound doesn't support watches so we have to do a Get first
+	// to get a valid watch channel on these fields.
+	iter, err := memTxn.Get(
+		op.memTableName(),
+		opIndexNextPollIndexName,
+		true,            // polling enabled
+		time.Unix(0, 0), // lowest next poll time
+	)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	ws.Add(iter.WatchCh())
+
+	// Get the app operation with the lowest "next poll" time.
+	iter, err = memTxn.LowerBound(
+		op.memTableName(),
+		opIndexNextPollIndexName,
+		true,            // polling enabled
+		time.Unix(0, 0), // lowest next poll time
+	)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+
+	// If we have no values, then return
+	raw := iter.Next()
+	if raw == nil {
+		return nil, time.Time{}, nil
+	}
+
+	rec := raw.(*operationIndexRecord)
+	if rec.NextPoll.IsZero() {
+		// This _shouldnt_ happen but let's protect against it anyways.
+		return nil, time.Time{}, nil
+	}
+
+	result := op.newStruct()
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		err = op.dbGet(dbTxn, []byte(rec.Id), result)
+		// TODO validate fields in result??
+
+		return err
+	})
+
+	return result, rec.NextPoll, err
+}
+
+func (op *appOperation) PollComplete(
+	s *State,
+	pollItemId string,
+	t time.Time,
+) error {
+	memTxn := s.inmem.Txn(true)
+	defer memTxn.Abort()
+
+	raw, err := memTxn.First(
+		op.memTableName(),
+		opIdIndexName,
+		strings.ToLower(pollItemId),
+	)
+	if err != nil {
+		return err
+	}
+	if raw == nil {
+		return nil
+	}
+
+	record := raw.(*operationIndexRecord)
+	if !record.Poll {
+		// If this poll item doesn't have polling enabled, then do nothing.
+		// This could happen if a poll item had polling when Peek was called,
+		// then between Peek and Complete, polling was disabled.
+		return nil
+	}
+
+	record = record.Copy()
+	record.LastPoll = t
+	record.NextPoll = t.Add(record.PollInterval)
+	if err := memTxn.Insert(op.memTableName(), record); err != nil {
+		return err
+	}
+
+	memTxn.Commit()
+	return nil
+}
+
+// Copy should be called prior to any modifications to an existing record.
+func (idx *operationIndexRecord) Copy() *operationIndexRecord {
+	// A shallow copy is good enough since we only modify top-level fields.
+	copy := *idx
+	return &copy
+}
+
 // dbGet reads the value from the database.
 func (op *appOperation) dbGet(
 	dbTxn *bolt.Tx,
@@ -641,6 +754,7 @@ func (op *appOperation) indexPut(
 		Generation:   generation,
 		StartTime:    startTime,
 		CompleteTime: completeTime,
+		Poll:         false, // being explicit that we want to default poll to false
 	}
 
 	// If there is no maximum, don't track the record count.
@@ -648,6 +762,26 @@ func (op *appOperation) indexPut(
 		op.pruneMu.Lock()
 		op.indexedRecords++
 		op.pruneMu.Unlock()
+	}
+
+	// This entire if block sets up polling tracking for the app operation. In the
+	// state store we just maintain timestamps of when to poll next. It is
+	// up to downstream users to call PeekPoll repeatedly to iterate
+	// over the next projects to poll and do something.
+	if v := op.valueField(value, "DataSourcePoll"); v != nil && v.(*pb.Poll).Enabled {
+		// This should be validated downstream so this should never fail.
+		interval, err := time.ParseDuration(v.(*pb.Poll).Interval)
+		if err != nil {
+			return nil, err
+		}
+
+		// We're polling. By default we have no last polling time and
+		// we set the next polling time to now cause we want to poll ASAP.
+		// If we're updating a project without changing the poll settings,
+		// the next block will ensure we have the next poll time retained.
+		rec.Poll = true
+		rec.NextPoll = time.Now()
+		rec.PollInterval = interval
 	}
 
 	return rec, txn.Insert(op.memTableName(), rec)
@@ -817,6 +951,24 @@ func (op *appOperation) memSchema() *memdb.TableSchema {
 					},
 				},
 			},
+
+			opIndexNextPollIndexName: {
+				Name:         opIndexNextPollIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.BoolFieldIndex{
+							Field: "Poll",
+						},
+
+						&IndexTime{
+							Field: "NextPoll",
+							Asc:   true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -832,6 +984,21 @@ type operationIndexRecord struct {
 	Generation   string
 	StartTime    time.Time
 	CompleteTime time.Time
+
+	// Polling
+
+	// Poll is true if this project has polling enabled.
+	Poll bool
+
+	// PollInterval is the interval currently set between poll operations.
+	PollInterval time.Duration
+
+	// LastPoll is the time that the last polling operation was queued.
+	// NextPoll is the time when the next polling operation is expected.
+	// Storing NextPoll rather than the interval makes it easier to query
+	// for the next operation.
+	LastPoll time.Time
+	NextPoll time.Time
 }
 
 // MatchRef checks if a record matches the ref value. We have to provide
@@ -842,11 +1009,12 @@ func (rec *operationIndexRecord) MatchRef(ref *pb.Ref_Application) bool {
 }
 
 const (
-	opIdIndexName           = "id"            // id index name
-	opStartTimeIndexName    = "start-time"    // start time index
-	opCompleteTimeIndexName = "complete-time" // complete time index
-	opSeqIndexName          = "seq"           // sequence number index
-	opGenIndexName          = "generation"    // generation index
+	opIdIndexName            = "id"            // id index name
+	opStartTimeIndexName     = "start-time"    // start time index
+	opCompleteTimeIndexName  = "complete-time" // complete time index
+	opSeqIndexName           = "seq"           // sequence number index
+	opGenIndexName           = "generation"    // generation index
+	opIndexNextPollIndexName = "next-poll"     // next poll indiex
 )
 
 // listOperationsOptions are options that can be set for List calls on

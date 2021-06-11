@@ -625,3 +625,168 @@ func appOpById(id string) *pb.Ref_Operation {
 		Target: &pb.Ref_Operation_Id{Id: id},
 	}
 }
+
+func TestAppOperation_PollPeek(t *testing.T) {
+	op := &appOperation{
+		Struct: (*pb.StatusReport)(nil),
+		Bucket: statusReportOp.Bucket,
+	}
+
+	t.Run("returns nil if no values", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		v, _, err := op.PollPeek(s, nil)
+		require.NoError(err)
+		require.Nil(v)
+	})
+
+	t.Run("returns next to poll", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		require.NoError(op.Put(s, false, serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			Id: "ABC",
+			DataSourcePoll: &pb.Poll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+		})))
+
+		// Set another later
+		time.Sleep(10 * time.Millisecond)
+		require.NoError(op.Put(s, false, serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			Id: "DEF",
+			DataSourcePoll: &pb.Poll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+		})))
+
+		// Get latest report by peek
+		{
+			resp, t, err := op.PollPeek(s, nil)
+			require.NoError(err)
+			require.NotNil(resp)
+
+			report, ok := resp.(*pb.StatusReport)
+
+			require.Equal(true, ok)
+			require.Equal("ABC", report.Id)
+			require.False(t.IsZero())
+		}
+	})
+
+	t.Run("watchset triggers from empty to available", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		ws := memdb.NewWatchSet()
+		v, _, err := op.PollPeek(s, ws)
+		require.NoError(err)
+		require.Nil(v)
+
+		// Watch should block
+		require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+		// Set
+		require.NoError(op.Put(s, false, serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			Id: "ABC",
+			DataSourcePoll: &pb.Poll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+		})))
+
+		// Should be triggered.
+		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+
+		// Get exact
+		{
+			resp, t, err := op.PollPeek(s, nil)
+			require.NoError(err)
+			require.NotNil(resp)
+
+			report, ok := resp.(*pb.StatusReport)
+
+			require.Equal(true, ok)
+			require.Equal("ABC", report.Id)
+			require.False(t.IsZero())
+		}
+	})
+
+	t.Run("watchset triggers when records change", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		require.NoError(op.Put(s, false, serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			Id: "ABC",
+			DataSourcePoll: &pb.Poll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+		})))
+
+		// Set another later
+		require.NoError(op.Put(s, false, serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			Id: "DEF",
+			DataSourcePoll: &pb.Poll{
+				Enabled:  true,
+				Interval: "5m", // 5 MINUTES, longer than A
+			},
+		})))
+
+		// Get
+		pA, err := op.Get(s, appOpById("ABC"))
+		require.NoError(err)
+		require.NotNil(pA)
+		pB, err := op.Get(s, appOpById("DEF"))
+		require.NoError(err)
+		require.NotNil(pB)
+
+		// Complete both first
+		now := time.Now()
+		require.NoError(op.PollComplete(s, pA.(*pb.StatusReport).Id, now))
+		require.NoError(op.PollComplete(s, pB.(*pb.StatusReport).Id, now))
+
+		// Peek, we should get A
+		ws := memdb.NewWatchSet()
+		p, ts, err := op.PollPeek(s, ws)
+		require.NoError(err)
+		require.NotNil(p)
+		require.Equal("ABC", p.(*pb.StatusReport).Id)
+		require.False(ts.IsZero())
+
+		// Watch should block
+		require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+		// Set
+		require.NoError(op.PollComplete(s, pA.(*pb.StatusReport).Id, now.Add(1*time.Second)))
+
+		// Should be triggered.
+		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+
+		// Get exact
+		{
+			resp, t, err := op.PollPeek(s, nil)
+			require.NoError(err)
+			require.NotNil(resp)
+
+			report, ok := resp.(*pb.StatusReport)
+
+			require.Equal(true, ok)
+			require.Equal("ABC", report.Id)
+			require.False(t.IsZero())
+		}
+	})
+}
