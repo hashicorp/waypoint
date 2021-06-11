@@ -785,20 +785,23 @@ func (op *appOperation) indexPut(
 	// state store we just maintain timestamps of when to poll next. It is
 	// up to downstream users to call PeekPoll repeatedly to iterate
 	// over the next app operations to poll and do something.
-	if v := op.valueField(value, "DataSourcePoll"); v != nil && v.(*pb.Poll).Enabled {
-		// This should be validated downstream so this should never fail.
-		interval, err := time.ParseDuration(v.(*pb.Poll).Interval)
-		if err != nil {
-			return nil, err
-		}
+	if v := op.valueField(value, "DataSourcePoll"); v != nil {
+		poll := v.(*pb.Poll)
+		if poll != nil && poll.Enabled {
+			// This should be validated downstream so this should never fail.
+			interval, err := time.ParseDuration(v.(*pb.Poll).Interval)
+			if err != nil {
+				return nil, err
+			}
 
-		// We're polling. By default we have no last polling time and
-		// we set the next polling time to now cause we want to poll ASAP.
-		// If we're updating a app operation without changing the poll settings,
-		// the next block will ensure we have the next poll time retained.
-		rec.Poll = true
-		rec.NextPoll = time.Now()
-		rec.PollInterval = interval
+			// We're polling. By default we have no last polling time and
+			// we set the next polling time to now cause we want to poll ASAP.
+			// If we're updating a app operation without changing the poll settings,
+			// the next block will ensure we have the next poll time retained.
+			rec.Poll = true
+			rec.NextPoll = time.Now()
+			rec.PollInterval = interval
+		}
 	}
 
 	return rec, txn.Insert(op.memTableName(), rec)
