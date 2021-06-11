@@ -2410,12 +2410,17 @@ message StatusReport {
   // id is the unique ID for this status report.
   string id = 6;
 
+  // data_source_poll starts at number 30 to reserve any space for copied status
+  // report options on this message. Hopefully with RFC WP-072, any further
+  // status report details needed out of the raw report can be obtained through
+  // the json structure rather than manually copied and added here.
+
   // Each polling event is tracked as a separate job. You can query the
   // poll operations and their success/failure by using the ListJobs API.
   Poll data_source_poll = 30;
 
   // NOTE: The following variables are in support of a raw SDK status report. Other
-  // internal options should go above here.
+  // internal options should go above here and start after var number 30
 
   // StatusReport is the raw SDK report object encoded directly from the plugin.
   // This message is a StatusReport proto that exists inside the SDK
