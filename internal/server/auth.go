@@ -29,7 +29,7 @@ var Effects = map[string][]string{
 var DefaultEffects = []string{"mutable"}
 
 // authUnaryInterceptor returns a gRPC unary interceptor that inspects the metadata
-// attached to the context. A token is extract from that metadata and the given
+// attached to the context. A token is extracted from that metadata and the given
 // AuthChecker is invoked to guard calling the target handler. Effectively
 // it implements authentication in front of any unary call.
 func authUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {

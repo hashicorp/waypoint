@@ -272,8 +272,10 @@ func (op *deployOperation) Upsert(
 			// to long enough that it should be forever.
 			Duration: "87600h", // 10 years
 
-			// This is an entrypoint token specifically for this deployment
-			Entrypoint: &pb.Token_Entrypoint{
+			// This is an entrypoint token specifically for this deployment.
+			// NOTE: we purposely use the old "unused" version here until
+			// we have an account system.
+			UnusedEntrypoint: &pb.Token_Entrypoint{
 				DeploymentId: op.id,
 			},
 		})
