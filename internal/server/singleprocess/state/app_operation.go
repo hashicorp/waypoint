@@ -418,9 +418,7 @@ func (op *appOperation) PollPeek(
 
 	result := op.newStruct()
 	err = s.db.View(func(dbTxn *bolt.Tx) error {
-		var err error
-		err = op.dbGet(dbTxn, []byte(rec.Id), result)
-		// TODO validate fields in result??
+		err := op.dbGet(dbTxn, []byte(rec.Id), result)
 
 		return err
 	})
@@ -428,18 +426,37 @@ func (op *appOperation) PollPeek(
 	return result, rec.NextPoll, err
 }
 
+// PollComplete sets the next poll time for the given app operation to the
+// time "t" plus the interval time for the app operation.
 func (op *appOperation) PollComplete(
 	s *State,
-	pollItemId string,
+	ref *pb.Ref_Operation,
 	t time.Time,
 ) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
+	var id string
+	switch t := ref.Target.(type) {
+	case *pb.Ref_Operation_Id:
+		id = t.Id
+
+	case *pb.Ref_Operation_Sequence:
+		var err error
+		id, err = op.getIdForSeq(s, nil, memTxn, t.Sequence)
+		if err != nil {
+			return err
+		}
+
+	default:
+		return status.Errorf(codes.FailedPrecondition,
+			"unknown operation reference type: %T", ref.Target)
+	}
+
 	raw, err := memTxn.First(
 		op.memTableName(),
 		opIdIndexName,
-		strings.ToLower(pollItemId),
+		id,
 	)
 	if err != nil {
 		return err
@@ -767,7 +784,7 @@ func (op *appOperation) indexPut(
 	// This entire if block sets up polling tracking for the app operation. In the
 	// state store we just maintain timestamps of when to poll next. It is
 	// up to downstream users to call PeekPoll repeatedly to iterate
-	// over the next projects to poll and do something.
+	// over the next app operations to poll and do something.
 	if v := op.valueField(value, "DataSourcePoll"); v != nil && v.(*pb.Poll).Enabled {
 		// This should be validated downstream so this should never fail.
 		interval, err := time.ParseDuration(v.(*pb.Poll).Interval)
@@ -777,7 +794,7 @@ func (op *appOperation) indexPut(
 
 		// We're polling. By default we have no last polling time and
 		// we set the next polling time to now cause we want to poll ASAP.
-		// If we're updating a project without changing the poll settings,
+		// If we're updating a app operation without changing the poll settings,
 		// the next block will ensure we have the next poll time retained.
 		rec.Poll = true
 		rec.NextPoll = time.Now()
@@ -987,7 +1004,7 @@ type operationIndexRecord struct {
 
 	// Polling
 
-	// Poll is true if this project has polling enabled.
+	// Poll is true if this app operation has polling enabled.
 	Poll bool
 
 	// PollInterval is the interval currently set between poll operations.

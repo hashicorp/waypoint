@@ -754,10 +754,21 @@ func TestAppOperation_PollPeek(t *testing.T) {
 		require.NoError(err)
 		require.NotNil(pB)
 
+		refOpA := &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: "ABC",
+			},
+		}
+		refOpB := &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: "DEF",
+			},
+		}
+
 		// Complete both first
 		now := time.Now()
-		require.NoError(op.PollComplete(s, pA.(*pb.StatusReport).Id, now))
-		require.NoError(op.PollComplete(s, pB.(*pb.StatusReport).Id, now))
+		require.NoError(op.PollComplete(s, refOpA, now))
+		require.NoError(op.PollComplete(s, refOpB, now))
 
 		// Peek, we should get A
 		ws := memdb.NewWatchSet()
@@ -771,7 +782,7 @@ func TestAppOperation_PollPeek(t *testing.T) {
 		require.True(ws.Watch(time.After(10 * time.Millisecond)))
 
 		// Set
-		require.NoError(op.PollComplete(s, pA.(*pb.StatusReport).Id, now.Add(1*time.Second)))
+		require.NoError(op.PollComplete(s, refOpA, now.Add(1*time.Second)))
 
 		// Should be triggered.
 		require.False(ws.Watch(time.After(100 * time.Millisecond)))
@@ -786,6 +797,142 @@ func TestAppOperation_PollPeek(t *testing.T) {
 
 			require.Equal(true, ok)
 			require.Equal("ABC", report.Id)
+			require.False(t.IsZero())
+		}
+	})
+}
+
+func TestAppOperation_PollComplete(t *testing.T) {
+	op := &appOperation{
+		Struct: (*pb.StatusReport)(nil),
+		Bucket: statusReportOp.Bucket,
+	}
+
+	t.Run("returns nil for app op that doesn't exist", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		refOp := &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: "NOPE",
+			},
+		}
+		require.NoError(op.PollComplete(s, refOp, time.Now()))
+	})
+
+	t.Run("does nothing for project that has polling disabled", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		require.NoError(op.Put(s, false, serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			Id: "ABC",
+			DataSourcePoll: &pb.Poll{
+				Enabled: false,
+			},
+		})))
+
+		// Get
+		pA, err := op.Get(s, appOpById("ABC"))
+		require.NoError(err)
+		require.NotNil(pA)
+
+		refOpA := &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: "ABC",
+			},
+		}
+
+		// No error
+		require.NoError(op.PollComplete(s, refOpA, time.Now()))
+
+		// Peek does nothing
+		v, _, err := op.PollPeek(s, nil)
+		require.NoError(err)
+		require.Nil(v)
+	})
+
+	t.Run("schedules the next poll time", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		require.NoError(op.Put(s, false, serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			Id: "ABC",
+			DataSourcePoll: &pb.Poll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+		})))
+
+		// Set another later
+		require.NoError(op.Put(s, false, serverptypes.TestValidStatusReport(t, &pb.StatusReport{
+			Id: "DEF",
+			DataSourcePoll: &pb.Poll{
+				Enabled:  true,
+				Interval: "5m", // 5 MINUTES, longer than A
+			},
+		})))
+
+		// Get
+		pA, err := op.Get(s, appOpById("ABC"))
+		require.NoError(err)
+		require.NotNil(pA)
+		pB, err := op.Get(s, appOpById("DEF"))
+		require.NoError(err)
+		require.NotNil(pB)
+
+		refOpA := &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: "ABC",
+			},
+		}
+		refOpB := &pb.Ref_Operation{
+			Target: &pb.Ref_Operation_Id{
+				Id: "DEF",
+			},
+		}
+
+		// Complete both first
+		now := time.Now()
+		require.NoError(op.PollComplete(s, refOpA, now))
+		require.NoError(op.PollComplete(s, refOpB, now))
+
+		// Peek should return A, lower interval
+		{
+			resp, t, err := op.PollPeek(s, nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("ABC", resp.(*pb.StatusReport).Id)
+			require.False(t.IsZero())
+		}
+
+		// Complete again, a minute later. The result should be A again
+		// because of the lower interval.
+		{
+			require.NoError(op.PollComplete(s, refOpA, now.Add(1*time.Second)))
+
+			resp, t, err := op.PollPeek(s, nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("ABC", resp.(*pb.StatusReport).Id)
+			require.False(t.IsZero())
+		}
+
+		// Complete A, now 6 minutes later. The result should be B now.
+		{
+			require.NoError(op.PollComplete(s, refOpA, now.Add(6*time.Minute)))
+
+			resp, t, err := op.PollPeek(s, nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("DEF", resp.(*pb.StatusReport).Id)
 			require.False(t.IsZero())
 		}
 	})
