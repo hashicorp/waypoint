@@ -600,10 +600,6 @@ func (p *Platform) Deploy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	if p.config.ServicePort == 0 {
-		p.config.ServicePort = 3000
-	}
-
 	// Create our resource manager and create
 	rm := p.resourceManager(log)
 	if err := rm.CreateAll(
