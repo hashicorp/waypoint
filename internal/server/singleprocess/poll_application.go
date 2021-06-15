@@ -75,6 +75,8 @@ func (a *applicationPoll) PollJob(
 		StatusReport: &pb.Job_StatusReportOp{},
 	}
 
+	// Default to poll on the "latest" lifecycle operation, so if there's a
+	// release, queue up a status on release. If the latest is deploy, then queue that.
 	if latestRelease != nil {
 		pollOperation.StatusReport.Target = &pb.Job_StatusReportOp_Release{
 			Release: latestRelease,

@@ -458,6 +458,24 @@ func projectIndexSchema() *memdb.TableSchema {
 					},
 				},
 			},
+
+			applIndexNextPollIndexName: {
+				Name:         applIndexNextPollIndexName,
+				AllowMissing: true,
+				Unique:       false,
+				Indexer: &memdb.CompoundIndex{
+					Indexes: []memdb.Indexer{
+						&memdb.BoolFieldIndex{
+							Field: "ApplPoll",
+						},
+
+						&IndexTime{
+							Field: "ApplNextPoll",
+							Asc:   true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -466,6 +484,7 @@ const (
 	projectIndexTableName         = "project-index"
 	projectIndexIdIndexName       = "id"
 	projectIndexNextPollIndexName = "next-poll"
+	applIndexNextPollIndexName    = "appl-next-poll"
 
 	projectWaypointHclMaxSize = 5 * 1024 // 5 MB
 
@@ -475,18 +494,33 @@ const (
 type projectIndexRecord struct {
 	Id string
 
+	// Project polling is used for updating the project from a remote source
+	// on an interval
+
 	// Poll is true if this project has polling enabled.
 	Poll bool
-
 	// PollInterval is the interval currently set between poll operations.
 	PollInterval time.Duration
-
 	// LastPoll is the time that the last polling operation was queued.
 	// NextPoll is the time when the next polling operation is expected.
 	// Storing NextPoll rather than the interval makes it easier to query
 	// for the next project.
 	LastPoll time.Time
 	NextPoll time.Time
+
+	// Application Polling is used for generating a status report on the current
+	// health of the application in a project.
+
+	// ApplPoll is true if this projects applications has polling enabled.
+	ApplPoll bool
+	// ApplPollInterval is the interval currently set between poll operations.
+	ApplPollInterval time.Duration // Default to 30s??
+	// We separate project and application polling vars because project polling
+	// is used for updating the project, and application polling is used for
+	// generating status reports. So there are two separate Next and Last Poll
+	// vars for projects and applications
+	ApplLastPoll time.Time
+	ApplNextPoll time.Time
 }
 
 // Copy should be called prior to any modifications to an existing record.

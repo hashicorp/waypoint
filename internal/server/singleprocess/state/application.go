@@ -205,6 +205,8 @@ func (s *State) appDefaultForRef(ref *pb.Ref_Application) *pb.Application {
 	}
 }
 
+// TODO: instead of directly calling project poll peek, we probably will need
+// to implement our own that peeks on the last applications poll time
 func (s *State) appPollPeek(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
@@ -217,10 +219,12 @@ func (s *State) appPollPeek(
 		return nil, time.Time{}, err
 	}
 
-	// TODO: which application do we return? all of them?
+	// TODO: which application do we return in a project?
 	return p.Applications[0], pollTime, nil
 }
 
+// TODO: if we have to implement our own peek, then we'll also want to add
+// our down complete which completes the appl poll next time instead of project
 func (s *State) appPollComplete(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
