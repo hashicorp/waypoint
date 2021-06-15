@@ -41,7 +41,12 @@
                 />
               {{/if}}
               <span class="pds-input-inline-toggle">
-                <input type="checkbox" id="input-variable-hcl" {{on "change" (fn this.toggleHcl this.variable)}}><label for="input-variable-hcl">HCL</label>
+                <input
+                  type="checkbox"
+                  id="input-variable-hcl"
+                  checked={{this.isHcl}}
+                  {{on "change" (fn this.toggleHcl this.variable)}}>
+                  <label for="input-variable-hcl">HCL</label>
               </span>
             </div>
           </div>
@@ -61,6 +66,9 @@
         {{#if this.variable.str}}
           {{this.variable.str}}
         {{else}}
+          <b class="badge">
+            HCL
+          </b>
           {{this.variable.hcl}}
         {{/if}}
       </span>
