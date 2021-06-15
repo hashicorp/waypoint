@@ -16,6 +16,7 @@ import (
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/aws/utils"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Releaser struct {
@@ -463,6 +464,8 @@ func (r *Releaser) Status(
 		report.HealthMessage = fmt.Sprintf("All targets are unhealthy, however your application might be available or still starting up.")
 		st.Step(terminal.StatusWarn, report.HealthMessage)
 	}
+
+	report.GeneratedTime = timestamppb.Now()
 
 	return &report, nil
 }
