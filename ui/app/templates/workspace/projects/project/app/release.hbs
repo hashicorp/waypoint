@@ -1,6 +1,7 @@
 <PageHeader @iconName="public-default">
   <div class="title">
-    <h2><b class="badge badge--version">v{{@model.sequence}}</b> <code>{{ @model.id }}</code></h2>
+    {{! TODO(jgwhite): Make this a real <h1> }}
+    <h2 aria-level="1"><b class="badge badge--version">v{{@model.sequence}}</b> <code>{{ @model.id }}</code></h2>
     <small>
       <Pds::Icon @type=(icon-for-component @model.component.name) class="icon" />
       <span>Released on <b>{{component-name @model.component.name}}</b>
@@ -19,17 +20,14 @@
 
 <div class="item-row">
   <div class="item">
-    {{#if (eq @model.state 1)}}
-    <b class="badge">{{t 'state.release.pending'}}</b>
-    {{else if (eq @model.status.state 2)}}
-    <b class="badge badge--success">{{t 'state.release.success'}}</b>
-    {{else if (eq @model.status.state 3)}}
-    <b class="badge badge--error">
-      {{t 'state.release.error'}}
-      {{#if @model.status.error.message}}
-        : {{@model.status.error.message}}
-      {{/if}}
-    </b>
+    {{#if @model.statusReport}}
+      {{#let @model.statusReport.health as |health|}}
+        <StatusBadge
+          @state={{health.healthStatus}}
+          @message={{health.healthMessage}}
+          @tooltipSide="right"
+        />
+      {{/let}}
     {{/if}}
   </div>
 

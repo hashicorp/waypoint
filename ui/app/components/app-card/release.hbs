@@ -4,19 +4,6 @@
       <p>
         <b class="badge badge--version">v{{@model.sequence}}</b>
         <code>{{truncate @model.id 8 false}}</code>
-        {{#if (eq @model.status.state 1)}}
-          <b class="badge">
-            <Pds::Icon @type="clock-outline" class="icon" />
-          </b>
-          {{else if (eq @model.status.state 2)}}
-          <b class="badge badge--success">
-            <Pds::Icon @type="check-plain" class="icon" />
-          </b>
-          {{else if (eq @model.status.state 3)}}
-          <b class="badge badge--error">
-            <Pds::Icon @type="alert-triangle" class="icon" />
-          </b>
-        {{/if}}
       </p>
       <small>
         <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
@@ -30,6 +17,17 @@
         </span>
       </small>
     </LinkTo>
+
+		{{#if @model.statusReport}}
+			{{#let @model.statusReport.health as |health|}}
+				<StatusBadge
+					@state={{health.healthStatus}}
+					@message={{health.healthMessage}}
+					@iconOnly={{true}}
+				/>
+			{{/let}}
+		{{/if}}
+
     {{#if @model.url}}
     <ExternalLink href={{@model.url}} title={{@model.url}} class="button button--primary">
       <Pds::Icon @type="exit" class="icon" />

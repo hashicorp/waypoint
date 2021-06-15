@@ -1,4 +1,7 @@
-<Card @classNames={{unless @releases.length 'empty-state'}}>
+<Card
+	data-test-latest-releases
+	@classNames={{unless @releases.length 'empty-state'}}
+>
   {{#if @releases.length}}
     <Card::Header>
       <h4>
