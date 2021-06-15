@@ -1,6 +1,8 @@
 package state
 
 import (
+	"time"
+
 	"github.com/hashicorp/go-memdb"
 	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc/codes"
@@ -54,6 +56,45 @@ func (s *State) AppGet(ref *pb.Ref_Application) (*pb.Application, error) {
 	})
 
 	return result, err
+}
+
+// AppPollPeek peeks at the next available project that will be polled against,
+// and returns the projects application as the result along with the poll time.
+// For more information on how ProjectPollPeek works, refer to the ProjectPollPeek
+// docs.
+func (s *State) AppPollPeek(
+	ws memdb.WatchSet,
+) (*pb.Application, time.Time, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	var result *pb.Application
+	var pollTime time.Time
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, pollTime, err = s.appPollPeek(dbTxn, memTxn, ws)
+		return err
+	})
+
+	return result, pollTime, err
+}
+
+// AppPollComplete sets the next poll time for a given project given the app
+// reference along with the time interval "t".
+func (s *State) AppPollComplete(
+	ref *pb.Ref_Application,
+	t time.Time,
+) error {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		err = s.appPollComplete(dbTxn, memTxn, ref, t)
+		return err
+	})
+
+	return err
 }
 
 // GetFileChangeSignal checks the metadata for the given application and its
@@ -162,4 +203,42 @@ func (s *State) appDefaultForRef(ref *pb.Ref_Application) *pb.Application {
 			Project: ref.Project,
 		},
 	}
+}
+
+func (s *State) appPollPeek(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ws memdb.WatchSet,
+) (*pb.Application, time.Time, error) {
+	// Get the project
+	// Get next poll app from next project
+	p, pollTime, err := s.ProjectPollPeek(ws)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+
+	// TODO: which application do we return? all of them?
+	return p.Applications[0], pollTime, nil
+}
+
+func (s *State) appPollComplete(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	ref *pb.Ref_Application,
+	t time.Time,
+) error {
+	// Get the project
+	p, err := s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
+		Project: ref.Project,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.ProjectPollComplete(p, t)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
