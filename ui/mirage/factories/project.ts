@@ -58,6 +58,7 @@ export default Factory.extend({
         sequence: 3,
         application,
         deployment: deployments[2],
+        statusReport: server.create('status-report', 'ready', { application }),
       });
       server.create('release', 'random', 'hours-old-success', {
         sequence: 2,

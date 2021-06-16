@@ -16,10 +16,11 @@ export default Model.extend({
 
     result.setApplication(this.application?.toProtobufRef());
     result.setWorkspace(this.workspace?.toProtobufRef());
+
     if (this.target instanceof MirageDeployment) {
       result.setDeploymentId(this.target.id);
     } else if (this.target instanceof MirageRelease) {
-      result.setReleaseId(this.release.id);
+      result.setReleaseId(this.target.id);
     }
     result.setStatus(this.status?.toProtobuf());
     result.setId(this.id);
