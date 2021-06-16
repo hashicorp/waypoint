@@ -4,7 +4,7 @@
 # builder builds the Waypoint binaries
 #--------------------------------------------------------------------
 
-FROM docker.mirror.hashicorp.services/golang:alpine AS builder
+FROM docker.mirror.hashicorp.services/golang:1.16.5-alpine3.13 AS builder
 
 RUN apk add --no-cache git gcc libc-dev openssh make
 
@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 #
 # We are now waiting on the img maintainers to do a new release of 'img' that
 # includes these fixes before we can delete this and install img directly.
-FROM docker.mirror.hashicorp.services/golang:alpine AS imgbuilder
+FROM docker.mirror.hashicorp.services/golang:1.16.5-alpine3.13 AS imgbuilder
 
 RUN apk add --no-cache \
 	bash \
@@ -58,7 +58,7 @@ RUN make BUILDTAGS="seccomp noembed dfrunmount dfsecrets dfssh" && mv img /usr/b
 
 # Copied from img repo, see notes for specific reasons:
 # https://github.com/genuinetools/img/blob/d858ac71f93cc5084edd2ba2d425b90234cf2ead/Dockerfile
-FROM docker.mirror.hashicorp.services/alpine AS imgbase
+FROM docker.mirror.hashicorp.services/alpine:3.13.5 AS imgbase
 RUN apk add --no-cache autoconf automake build-base byacc gettext gettext-dev \
     gcc git libcap-dev libtool libxslt runc
 RUN git clone https://github.com/shadow-maint/shadow.git /shadow
@@ -85,7 +85,7 @@ RUN ./autogen.sh --disable-nls --disable-man --without-audit \
 #  - USER, HOME, and XDG_RUNTIME_DIR all need to be set
 #
 
-FROM docker.mirror.hashicorp.services/alpine
+FROM docker.mirror.hashicorp.services/alpine:3.13.5
 
 COPY --from=imgbuilder /usr/bin/img /usr/bin/img
 COPY --from=imgbase /usr/bin/runc /usr/bin/runc
