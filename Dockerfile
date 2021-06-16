@@ -33,7 +33,13 @@ RUN --mount=type=cache,target=/root/.cache/go-build make bin/entrypoint
 #--------------------------------------------------------------------
 
 # We build a fork of img for now so we can get the `img inspect` CLI
-# Watch this PR: https://github.com/genuinetools/img/pull/324
+#
+# These PRs were required for us:
+# - https://github.com/genuinetools/img/pull/324
+# - https://github.com/genuinetools/img/pull/326
+#
+# We are now waiting on the img maintainers to do a new release of 'img' that
+# includes these fixes before we can delete this and install img directly.
 FROM docker.mirror.hashicorp.services/golang:alpine AS imgbuilder
 
 RUN apk add --no-cache \
