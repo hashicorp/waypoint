@@ -13,6 +13,7 @@ interface VariableArgs {
 }
 
 export default class ProjectInputVariablesListComponent extends Component<VariableArgs> {
+  initialVariable?: Variable.AsObject;
   @service api!: ApiService;
   @tracked args;
   @tracked variable: Variable.AsObject;
@@ -30,6 +31,9 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
     this.isHcl = false;
     if (variable.hcl) {
       this.isHcl = true;
+    }
+    if (this.isEditing) {
+      this.initialVariable = JSON.parse(JSON.stringify(this.variable));
     }
   }
 
@@ -55,6 +59,14 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   cancelCreate() {
     this.isCreating = false;
     this.isEditing = false;
+    this.deleteVariable(this.variable);
+  }
+
+  @action
+  cancelEdit() {
+    this.isCreating = false;
+    this.isEditing = false;
+    this.variable = this.initialVariable;
   }
 
   @action
