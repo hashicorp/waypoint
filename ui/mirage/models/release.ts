@@ -10,7 +10,7 @@ export default Model.extend({
   deployment: belongsTo(),
   status: belongsTo({ inverse: 'owner' }),
   component: belongsTo({ inverse: 'owner' }),
-  statusReport: belongsTo({ inverse: 'target ' }),
+  statusReport: belongsTo({ inverse: 'target' }),
 
   toProtobuf(): Release {
     let result = new Release();

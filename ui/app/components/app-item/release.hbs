@@ -17,6 +17,15 @@
     </small>
   </LinkTo>
 
+  {{#if @release.statusReport}}
+    {{#let @release.statusReport.health as |health|}}
+      <StatusBadge
+        @state={{health.healthStatus}}
+        @message={{health.healthMessage}}
+      />
+    {{/let}}
+  {{/if}}
+
   {{#if (and @isLatest @release.url)}}
     <ExternalLink href={{@release.url}} class="button button--primary button--external-link">
       <span>{{@release.url}}</span>
