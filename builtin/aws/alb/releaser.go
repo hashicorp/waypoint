@@ -452,7 +452,7 @@ func (r *Releaser) resourceListenerDestroy(
 		if err != nil {
 			return err
 		}
-		step.Update("No listener found to destroy")
+		step.Update("Listener destroyed")
 		step.Done()
 	} else {
 		step := sg.Add("Removing forwarding action...")
