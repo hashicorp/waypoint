@@ -1,0 +1,7 @@
+```release-note:bug
+plugin/aws-alb: Fix issue destroying when Target Group still in use 
+```
+
+```release-note:improvement
+plugin/aws-alb: Update ALB Releaser to use new SDK Resource Manager
+```
