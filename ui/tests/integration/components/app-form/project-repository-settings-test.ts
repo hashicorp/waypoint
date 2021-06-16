@@ -8,14 +8,14 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
 
   test('second new project does not have previous input', async function (assert) {
     this.set('project', {});
-    await render(hbs`<AppForm::ProjectSettings @project={{this.project}} />`);
+    await render(hbs`<AppForm::ProjectRepositorySettings @project={{this.project}} />`);
     await fillIn('#git-source-url', 'https://github.projectone.git');
     await fillIn('#git-source-username', 'admin');
     await fillIn('#git-source-password', 'password');
     await clearRender();
 
     this.set('project2', {});
-    await render(hbs`<AppForm::ProjectSettings @project={{this.project2}} />`);
+    await render(hbs`<AppForm::ProjectRepositorySettings @project={{this.project2}} />`);
 
     assert.dom('#git-source-url').hasValue('');
     assert.dom('#git-source-username').hasValue('');
@@ -38,7 +38,7 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
         },
       },
     });
-    await render(hbs`<AppForm::ProjectSettings @project={{this.project}} />`);
+    await render(hbs`<AppForm::ProjectRepositorySettings @project={{this.project}} />`);
 
     assert.dom('#git-source-url').hasValue('https://github.com');
     assert.dom('#git-auth-not-set').isChecked();
@@ -57,7 +57,7 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
       dataSource: undefined,
       dataSourcePoll: undefined,
     });
-    await render(hbs`<AppForm::ProjectSettings @project={{this.project}} />`);
+    await render(hbs`<AppForm::ProjectRepositorySettings @project={{this.project}} />`);
 
     assert.dom('#git-source-url').hasValue('');
     assert.dom('#git-auth-basic').isChecked();
@@ -77,7 +77,7 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
         },
       },
     });
-    await render(hbs`<AppForm::ProjectSettings @project={{this.project}} />`);
+    await render(hbs`<AppForm::ProjectRepositorySettings @project={{this.project}} />`);
 
     assert.dom('#git-auth-basic').isChecked();
     assert.dom('#git-source-username').hasValue('user');
@@ -97,7 +97,7 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
         },
       },
     });
-    await render(hbs`<AppForm::ProjectSettings @project={{this.project}} />`);
+    await render(hbs`<AppForm::ProjectRepositorySettings @project={{this.project}} />`);
 
     assert.dom('#git-auth-ssh').isChecked();
     assert.dom('#git-source-ssh-user').hasValue('user');
@@ -113,7 +113,7 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
         },
       },
     });
-    await render(hbs`<AppForm::ProjectSettings @project={{this.project}} />`);
+    await render(hbs`<AppForm::ProjectRepositorySettings @project={{this.project}} />`);
 
     assert.dom('#git-auth-not-set').isChecked();
   });
