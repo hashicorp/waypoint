@@ -85,7 +85,7 @@ func (s *State) AppPollComplete(
 	ref *pb.Ref_Application,
 	t time.Time,
 ) error {
-	memTxn := s.inmem.Txn(false)
+	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
@@ -204,26 +204,62 @@ func (s *State) appDefaultForRef(ref *pb.Ref_Application) *pb.Application {
 	}
 }
 
-// TODO: instead of directly calling project poll peek, we probably will need
-// to implement our own that peeks on the last applications poll time
 func (s *State) appPollPeek(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
 	ws memdb.WatchSet,
 ) (*pb.Application, time.Time, error) {
-	// Get the project
-	// Get next poll app from next project
-	p, pollTime, err := s.ProjectPollPeek(ws)
+	// LowerBound doesn't support watches so we have to do a Get first
+	// to get a valid watch channel on these fields.
+	iter, err := memTxn.Get(
+		projectIndexTableName,
+		applIndexNextPollIndexName,
+		true,            // polling enabled
+		time.Unix(0, 0), // lowest next poll time
+	)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	ws.Add(iter.WatchCh())
+
+	// Get the project with the lowest "next poll" time.
+	iter, err = memTxn.LowerBound(
+		projectIndexTableName,
+		applIndexNextPollIndexName,
+		true,            // polling enabled
+		time.Unix(0, 0), // lowest next poll time
+	)
 	if err != nil {
 		return nil, time.Time{}, err
 	}
 
-	// TODO: which application do we return in a project?
-	return p.Applications[0], pollTime, nil
+	// If we have no values, then return
+	raw := iter.Next()
+	if raw == nil {
+		return nil, time.Time{}, nil
+	}
+
+	rec := raw.(*projectIndexRecord)
+	if rec.ApplNextPoll.IsZero() {
+		// This _shouldnt_ happen but let's protect against it anyways.
+		return nil, time.Time{}, nil
+	}
+
+	var result *pb.Project
+	err = s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, err = s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
+			Project: rec.Id,
+		})
+
+		return err
+	})
+
+	// TODO(briancain): what about projects that define multiple apps? So far I
+	// don't think this workflow is really supported in Waypoint
+	return result.Applications[0], rec.ApplNextPoll, err
 }
 
-// TODO: if we have to implement our own peek, then we'll also want to add
-// our down complete which completes the appl poll next time instead of project
 func (s *State) appPollComplete(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
@@ -238,10 +274,33 @@ func (s *State) appPollComplete(
 		return err
 	}
 
-	err = s.ProjectPollComplete(p, t)
+	raw, err := memTxn.First(
+		projectIndexTableName,
+		applIndexNextPollIndexName,
+		string(s.projectId(p)),
+	)
 	if err != nil {
 		return err
 	}
+	if raw == nil {
+		return nil
+	}
 
+	record := raw.(*projectIndexRecord)
+	if !record.Poll {
+		// If this project doesn't have polling enabled, then do nothing.
+		// This could happen if a project had polling when Peek was called,
+		// then between Peek and Complete, polling was disabled.
+		return nil
+	}
+
+	record = record.Copy()
+	record.ApplLastPoll = t
+	record.ApplNextPoll = t.Add(record.ApplPollInterval)
+	if err := memTxn.Insert(projectIndexTableName, record); err != nil {
+		return err
+	}
+
+	memTxn.Commit()
 	return nil
 }
