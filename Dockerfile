@@ -14,7 +14,6 @@ COPY go.mod /tmp/wp-prime
 
 WORKDIR /tmp/wp-prime
 
-RUN git config --global url.ssh://git@github.com/.insteadOf https://github.com/
 RUN go mod download
 RUN go get github.com/kevinburke/go-bindata/...
 
