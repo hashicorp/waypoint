@@ -1035,8 +1035,8 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 	})
 	set.StringSliceVar(&flag.StringSliceVar{
 		Name:   "ecs-subnets",
+		Usage:  "Subnets to install server into. The default is all public subnets of default VPC.",
 		Target: &i.config.Subnets,
-		Usage:  "Subnets to install server into.",
 	})
 	set.StringVar(&flag.StringVar{
 		Name:    "ecs-execution-role-name",
