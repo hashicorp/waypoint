@@ -50,9 +50,6 @@ format: # format go code
 .PHONY: docker/server
 docker/server:
 	DOCKER_BUILDKIT=1 docker build \
-					--ssh default \
-					--secret id=ssh.config,src="${HOME}/.ssh/config" \
-					--secret id=ssh.key,src="${HOME}/.ssh/config" \
 					-t waypoint:dev \
 					.
 

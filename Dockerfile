@@ -6,7 +6,7 @@
 
 FROM docker.mirror.hashicorp.services/golang:1.16.5-alpine3.13 AS builder
 
-RUN apk add --no-cache git gcc libc-dev openssh make
+RUN apk add --no-cache git gcc libc-dev make
 
 RUN mkdir -p /tmp/wp-prime
 COPY go.sum /tmp/wp-prime
@@ -14,12 +14,7 @@ COPY go.mod /tmp/wp-prime
 
 WORKDIR /tmp/wp-prime
 
-RUN mkdir -p -m 0600 ~/.ssh \
-    && ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
-RUN git config --global url.ssh://git@github.com/.insteadOf https://github.com/
-RUN --mount=type=ssh --mount=type=secret,id=ssh.config --mount=type=secret,id=ssh.key \
-    GIT_SSH_COMMAND="ssh -o \"ControlMaster auto\" -F \"/run/secrets/ssh.config\"" \
-    go mod download
+RUN go mod download
 RUN go get github.com/kevinburke/go-bindata/...
 
 COPY . /tmp/wp-src
