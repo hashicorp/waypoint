@@ -1,0 +1,69 @@
+.cli-hint {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: scale.$sm-2;
+  width: 410px;
+  color: rgb(var(--text-muted));
+  background: rgb(var(--card));
+  box-shadow: $elevated-shadow;
+  border-radius: 2px;
+  padding: scale.$sm-1 scale.$base;
+  z-index: 99;
+
+  @media (prefers-color-scheme: dark) {
+    border: 1px solid;
+    border-color: rgb(var(--outline));
+  }
+
+  @media only screen and (max-width: 600px) {
+    max-width: calc(100vw - 48px);
+    margin-left: scale.$lg-2;
+  }
+
+  p {
+    @include Typography.Interface(M);
+    font-weight: normal;
+    margin-bottom: scale.$sm-2;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  .copyable-code {
+    margin-bottom: scale.$sm-3;
+  }
+
+  .input-wrap {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: scale.$sm-2;
+
+    input {
+      margin-bottom: 0;
+    }
+
+    .button {
+      margin-left: scale.$sm-2;
+    }
+  }
+
+  input {
+    margin-bottom: scale.$sm-2;
+  }
+
+  small {
+    font-size: 75%;
+    color: rgb(var(--text-muted));
+  }
+
+  &-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 98;
+  }
+}

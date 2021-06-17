@@ -1,11 +1,6 @@
-
-@use 'pds/tokens/color';
-@use 'pds/tokens/scale';
-
 :root {
   --footer-text: #{dehex(color.$ui-cool-gray-500)};
 }
-
 
 #footer {
   color: rgb(var(--footer-text));
