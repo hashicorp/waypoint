@@ -89,8 +89,7 @@ func (s *State) AppPollComplete(
 	defer memTxn.Abort()
 
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
-		var err error
-		err = s.appPollComplete(dbTxn, memTxn, ref, t)
+		err := s.appPollComplete(dbTxn, memTxn, ref, t)
 		return err
 	})
 
