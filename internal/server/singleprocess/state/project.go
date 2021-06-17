@@ -350,8 +350,9 @@ func (s *State) projectDelete(
 // projectIndexSet writes an index record for a single project.
 func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) error {
 	record := &projectIndexRecord{
-		Id:   string(id),
-		Poll: false, // being explicit that we want to default poll to false
+		Id:       string(id),
+		Poll:     false, // being explicit that we want to default poll to false
+		ApplPoll: false,
 	}
 
 	// This entire if block sets up polling tracking for the project. In the
@@ -395,6 +396,51 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 			if !recordOld.LastPoll.IsZero() {
 				record.LastPoll = recordOld.LastPoll
 				record.NextPoll = record.LastPoll.Add(interval)
+			}
+		}
+	}
+
+	// Insert application poll
+	for _, a := range value.Applications {
+		// This entire if block sets up polling tracking for the project. In the
+		// state store we just maintain timestamps of when to poll next. It is
+		// up to downstream users to call ProjectNextPoll repeatedly to iterate
+		// over the next projects to poll and do something.
+		if app := a.StatusReportPoll; app != nil && app.Enabled {
+			// This should be validated downstream so this should never fail.
+			interval, err := time.ParseDuration(app.Interval)
+			if err != nil {
+				return err
+			}
+
+			// We're polling. By default we have no last polling time and
+			// we set the next polling time to now cause we want to poll ASAP.
+			// If we're updating a project without changing the poll settings,
+			// the next block will ensure we have the next poll time retained.
+			record.ApplPoll = true
+			record.ApplNextPoll = time.Now()
+			record.ApplPollInterval = interval
+
+			// If there is a previous value with a last poll time, then we
+			// update the next poll time to use our new interval.
+			raw, err := txn.First(
+				projectIndexTableName,
+				projectIndexIdIndexName,
+				record.Id,
+			)
+			if err != nil {
+				return err
+			}
+			if raw != nil {
+				recordOld := raw.(*projectIndexRecord)
+
+				// If we have a last poll time, then set the next poll time.
+				// This also ensures that if we're updating a project w/o changing
+				// poll settings, that the previous settings are retained.
+				if !recordOld.ApplLastPoll.IsZero() {
+					record.ApplLastPoll = recordOld.LastPoll
+					record.ApplNextPoll = record.ApplLastPoll.Add(interval)
+				}
 			}
 		}
 	}
