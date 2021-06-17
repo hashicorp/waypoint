@@ -45,6 +45,7 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   @action
   editVariable(variable) {
     this.isEditing = true;
+    this.initialVariable = JSON.parse(JSON.stringify(this.variable));
   }
 
   @action
