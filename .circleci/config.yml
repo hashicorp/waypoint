@@ -218,8 +218,6 @@ jobs:
           name: "Docker: Build image"
           command: |
             docker build \
-              --ssh default \
-              --secret id=ssh.config,src="${HOME}/project/.circleci/ssh_config" \
               --progress=plain \
               -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest \
               -t docker.pkg.github.com/hashicorp/waypoint/alpha:$GIT_COMMIT \
