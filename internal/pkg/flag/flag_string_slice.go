@@ -65,7 +65,7 @@ func (s *stringSliceValue) Set(val string) error {
 		*s.target = nil
 	}
 
-	*s.target = append(*s.target, strings.TrimSpace(val))
+	*s.target = append(*s.target, strings.Split(strings.TrimSpace(val), ",")...)
 	return nil
 }
 
