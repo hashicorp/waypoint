@@ -62,7 +62,7 @@ func (s *State) AppGet(ref *pb.Ref_Application) (*pb.Application, error) {
 // and returns the projects application as the result along with the poll time.
 // For more information on how ProjectPollPeek works, refer to the ProjectPollPeek
 // docs.
-func (s *State) AppPollPeek(
+func (s *State) ApplicationPollPeek(
 	ws memdb.WatchSet,
 ) (*pb.Application, time.Time, error) {
 	memTxn := s.inmem.Txn(false)
@@ -81,7 +81,7 @@ func (s *State) AppPollPeek(
 
 // AppPollComplete sets the next poll time for a given project given the app
 // reference along with the time interval "t".
-func (s *State) AppPollComplete(
+func (s *State) ApplicationPollComplete(
 	ref *pb.Ref_Application,
 	t time.Time,
 ) error {
@@ -270,6 +270,9 @@ func (s *State) appPollComplete(
 	p, err := s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
 		Project: ref.Project,
 	})
+	if status.Code(err) == codes.NotFound {
+		return nil
+	}
 	if err != nil {
 		return err
 	}

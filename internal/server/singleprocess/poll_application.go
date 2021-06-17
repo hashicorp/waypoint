@@ -33,7 +33,7 @@ func (a *applicationPoll) Peek(
 	log hclog.Logger,
 	ws memdb.WatchSet,
 ) (interface{}, time.Time, error) {
-	app, pollTime, err := a.state.AppPollPeek(ws)
+	app, pollTime, err := a.state.ApplicationPollPeek(ws)
 	if err != nil {
 		return nil, time.Time{}, err // continue loop
 	}
@@ -135,7 +135,7 @@ func (a *applicationPoll) Complete(
 		Application: app.Name,
 		Project:     app.Project.Project,
 	}
-	if err := a.state.AppPollComplete(appRef, time.Now()); err != nil {
+	if err := a.state.ApplicationPollComplete(appRef, time.Now()); err != nil {
 		return err
 	}
 	return nil

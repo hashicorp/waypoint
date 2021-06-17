@@ -2,6 +2,7 @@ package state
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	/*
@@ -204,5 +205,30 @@ func TestApplication(t *testing.T) {
 		require.NoError(err)
 
 		require.Equal("TERM", sig)
+	})
+}
+
+func TestApplicationPollPeek(t *testing.T) {
+	t.Run("returns nil if no values", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		v, _, err := s.ApplicationPollPeek(nil)
+		require.NoError(err)
+		require.Nil(v)
+	})
+}
+
+func TestApplicationPollComplete(t *testing.T) {
+	t.Run("returns nil for application that doesn't exist", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		err := s.ApplicationPollComplete(&pb.Ref_Application{Application: "NOPE", Project: "NOPE"}, time.Now())
+		require.NoError(err)
 	})
 }
