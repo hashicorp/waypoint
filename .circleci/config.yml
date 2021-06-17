@@ -32,9 +32,6 @@ jobs:
     environment:
       GOTAGS: ""
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - run:
           name: Install golangci-lint
@@ -60,9 +57,6 @@ jobs:
     environment:
       <<: *ENVIRONMENT
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - run:
           command: go mod tidy
@@ -99,9 +93,6 @@ jobs:
       # https://circleci.com/docs/2.0/configuration-reference/#docker-executor
       # but we can run a little over that limit.
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - attach_workspace:
           at: /go/bin
@@ -149,9 +140,6 @@ jobs:
     environment:
       <<: *ENVIRONMENT
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - attach_workspace: # this normally runs as the first job and has nothing to attach; only used in main branch after rebuilding UI
           at: .
@@ -175,9 +163,6 @@ jobs:
     environment:
       <<: *ENVIRONMENT
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - attach_workspace:
           at: .
@@ -217,9 +202,6 @@ jobs:
       <<: *ENVIRONMENT
     shell: /usr/bin/env bash -euo pipefail -c
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
@@ -235,12 +217,7 @@ jobs:
       - run:
           name: "Docker: Build image"
           command: |
-            # Note that the "id_rsa_FOO" key name is based on the fingerprint of the SSH key
-            # added in add_ssh_keys, but with colons removed.
             docker build \
-              --ssh default \
-              --secret id=ssh.config,src="${HOME}/project/.circleci/ssh_config" \
-              --secret id=ssh.key,src="${HOME}/.ssh/id_rsa_769415c8a041f08b9bf1f7364cd57f57" \
               --progress=plain \
               -t docker.pkg.github.com/hashicorp/waypoint/alpha:latest \
               -t docker.pkg.github.com/hashicorp/waypoint/alpha:$GIT_COMMIT \
@@ -322,9 +299,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - add_ssh_keys:
-          fingerprints:
-            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - run: go get github.com/kevinburke/go-bindata/...
       - run: make static-assets
       - persist_to_workspace:
@@ -341,9 +315,6 @@ jobs:
       <<: *ENVIRONMENT
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints:
-            - "76:94:15:c8:a0:41:f0:8b:9b:f1:f7:36:4c:d5:7f:57"
       - attach_workspace:
           at: .
       - run:
