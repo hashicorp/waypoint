@@ -131,11 +131,7 @@ func (a *applicationPoll) Complete(
 	}
 
 	// Mark this as complete so the next poll gets rescheduled.
-	appRef := &pb.Ref_Application{
-		Application: app.Name,
-		Project:     app.Project.Project,
-	}
-	if err := a.state.ApplicationPollComplete(appRef, time.Now()); err != nil {
+	if err := a.state.ApplicationPollComplete(app, time.Now()); err != nil {
 		return err
 	}
 	return nil

@@ -82,14 +82,14 @@ func (s *State) ApplicationPollPeek(
 // AppPollComplete sets the next poll time for a given project given the app
 // reference along with the time interval "t".
 func (s *State) ApplicationPollComplete(
-	ref *pb.Ref_Application,
+	app *pb.Application,
 	t time.Time,
 ) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
-		err := s.appPollComplete(dbTxn, memTxn, ref, t)
+		err := s.appPollComplete(dbTxn, memTxn, app, t)
 		return err
 	})
 
@@ -263,12 +263,12 @@ func (s *State) appPollPeek(
 func (s *State) appPollComplete(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
-	ref *pb.Ref_Application,
+	app *pb.Application,
 	t time.Time,
 ) error {
 	// Get the project
 	p, err := s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
-		Project: ref.Project,
+		Project: app.Project.Project,
 	})
 	if status.Code(err) == codes.NotFound {
 		return nil
@@ -279,7 +279,7 @@ func (s *State) appPollComplete(
 
 	raw, err := memTxn.First(
 		projectIndexTableName,
-		applIndexNextPollIndexName,
+		projectIndexIdIndexName,
 		string(s.projectId(p)),
 	)
 	if err != nil {
@@ -290,7 +290,7 @@ func (s *State) appPollComplete(
 	}
 
 	record := raw.(*projectIndexRecord)
-	if !record.Poll {
+	if !record.ApplPoll {
 		// If this project doesn't have polling enabled, then do nothing.
 		// This could happen if a project had polling when Peek was called,
 		// then between Peek and Complete, polling was disabled.
