@@ -33,8 +33,9 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
     let newVar = new Variable();
     // why is this empty?
     newVar.setServer();
-    this.variablesList = [newVar.toObject(), ...this.variablesList];
-    this.activeVariable = newVar.toObject();
+    let newVarObj = newVar.toObject();
+    this.variablesList = [newVarObj, ...this.variablesList];
+    this.activeVariable = newVarObj;
   }
 
   @action

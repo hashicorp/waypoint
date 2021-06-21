@@ -35,11 +35,7 @@ module('Integration | Component | project-input-variables-list', function (hooks
     };
     this.set('project', project);
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
-    assert.equal(
-      this.element.getElementsByClassName('project-input-variables-list').length,
-      1,
-      'The list renders'
-    );
+    assert.dom('.project-input-variables-list').exists('The list renders');
     assert.equal(page.variablesList.length, 2, 'the list contains all variables');
     await page.createButton();
     assert.ok(page.hasForm);

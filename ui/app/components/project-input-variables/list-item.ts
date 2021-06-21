@@ -9,13 +9,13 @@ interface VariableArgs {
   variable: Variable.AsObject;
   isEditing: boolean;
   isCreating: boolean;
-  saveVariableSettings;
+  saveVariableSettings: (variable: Variable.AsObject) => Promise<void>;
+  deleteVariable: (variable: Variable.AsObject) => Promise<void>;
 }
 
 export default class ProjectInputVariablesListComponent extends Component<VariableArgs> {
   initialVariable?: Variable.AsObject;
   @service api!: ApiService;
-  @tracked args;
   @tracked variable: Variable.AsObject;
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;
@@ -43,7 +43,7 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   }
 
   @action
-  editVariable(variable) {
+  editVariable() {
     this.isEditing = true;
     this.initialVariable = JSON.parse(JSON.stringify(this.variable));
   }
