@@ -402,9 +402,9 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 
 	// Insert application poll
 	for _, a := range value.Applications {
-		// This entire if block sets up polling tracking for the project. In the
+		// This entire if block sets up polling tracking for the application. In the
 		// state store we just maintain timestamps of when to poll next. It is
-		// up to downstream users to call ProjectNextPoll repeatedly to iterate
+		// up to downstream users to call ApplicationNextPoll repeatedly to iterate
 		// over the next projects to poll and do something.
 		if app := a.StatusReportPoll; app != nil && app.Enabled {
 			// This should be validated downstream so this should never fail.
@@ -415,11 +415,12 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 
 			// We're polling. By default we have no last polling time and
 			// we set the next polling time to now cause we want to poll ASAP.
-			// If we're updating a project without changing the poll settings,
+			// If we're updating an app without changing the poll settings,
 			// the next block will ensure we have the next poll time retained.
 			record.ApplPoll = true
 			record.ApplNextPoll = time.Now()
 			record.ApplPollInterval = interval
+			//record.ApplPollInterval, _ = time.ParseDuration("30s")
 
 			// If there is a previous value with a last poll time, then we
 			// update the next poll time to use our new interval.
@@ -435,7 +436,7 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 				recordOld := raw.(*projectIndexRecord)
 
 				// If we have a last poll time, then set the next poll time.
-				// This also ensures that if we're updating a project w/o changing
+				// This also ensures that if we're updating an app w/o changing
 				// poll settings, that the previous settings are retained.
 				if !recordOld.ApplLastPoll.IsZero() {
 					record.ApplLastPoll = recordOld.LastPoll

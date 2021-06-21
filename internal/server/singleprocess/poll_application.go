@@ -35,11 +35,15 @@ func (a *applicationPoll) Peek(
 ) (interface{}, time.Time, error) {
 	app, pollTime, err := a.state.ApplicationPollPeek(ws)
 	if err != nil {
+		log.Warn("error peeking for next application to poll", "err", err)
 		return nil, time.Time{}, err // continue loop
 	}
 
 	if app != nil {
 		log = log.With("application", app.Name)
+		log.Trace("returning peek for app")
+	} else {
+		log.Trace("no application returned from peek")
 	}
 
 	return app, pollTime, nil
