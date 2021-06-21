@@ -67,7 +67,8 @@ form:
     hcl_content_label: 'waypoint.hcl file'
     button: 'Apply'
   project_variables_settings:
-    title: 'Input Variable'
+    title: 'Input variable'
+    button_apply: 'Add variable'
     variable_name: 'Variable name'
     variable_name_placeholder: 'var_name'
     variable_value: 'Value'
