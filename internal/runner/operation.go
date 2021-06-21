@@ -31,20 +31,10 @@ func (r *Runner) executeJob(
 	job *pb.Job,
 	wd string,
 ) (*pb.Job_Result, error) {
-	// Eventually we'll need to extract the data source. For now we're
-	// just building for local exec so it is the working directory.
-	path, err := configpkg.FindPath(wd, "", false)
-	if err != nil {
-		return nil, err
-	}
-
-	// If no waypoint.hcl file is found in the downloaded data, look for
-	// a default waypoint HCL.
-	//
-	// NOTE(mitchellh): For now, we query the project directly here
-	// since we don't need it for anything else. I can see us moving this
+	// NOTE(mitchellh; krantzinator): For now, we query the project directly here
+	// since we use it only in case of a missing local waypoint.hcl, and to
+	// collect input variable values set on the server. I can see us moving this
 	// to accept() eventually though if other data is used.
-	log.Trace("waypoint.hcl not found in downloaded data, looking for default in server")
 	resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
 		Project: &pb.Ref_Project{
 			Project: job.Application.Project,
@@ -53,7 +43,17 @@ func (r *Runner) executeJob(
 	if err != nil {
 		return nil, err
 	}
+
+	// Eventually we'll need to extract the data source. For now we're
+	// just building for local exec so it is the working directory.
+	path, err := configpkg.FindPath(wd, "", false)
+	if err != nil {
+		return nil, err
+	}
 	if path == "" {
+		// If no waypoint.hcl file is found in the downloaded data, look for
+		// a default waypoint HCL.
+		log.Trace("waypoint.hcl not found in downloaded data, looking for default in server")
 		if v := resp.Project.WaypointHcl; len(v) > 0 {
 			log.Info("using waypoint.hcl associated with the project in the server")
 
