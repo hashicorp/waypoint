@@ -31,7 +31,7 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
   addVariable() {
     this.isCreating = true;
     let newVar = new Variable();
-    // why is this empty?
+    // Seems like setServer (with empty arguments?) is required to make it a server variable
     newVar.setServer();
     let newVarObj = newVar.toObject();
     this.variablesList = [newVarObj, ...this.variablesList];
@@ -40,11 +40,7 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
 
   @action
   async deleteVariable(variable) {
-    let existingVarIndex = this.variablesList.findIndex((v) => v.name === variable.name);
-    if (existingVarIndex !== -1) {
-      this.variablesList.splice(existingVarIndex, 1);
-      this.variablesList = [...this.variablesList];
-    }
+    this.variablesList = this.variablesList.filter((v) => v.name !== variable.name);
     await this.saveVariableSettings();
   }
 
@@ -55,33 +51,37 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
   }
 
   @action
-  async saveVariableSettings(variable?: Variable.AsObject) {
+  async saveVariableSettings(variable?: Variable.AsObject): Promise<Project.AsObject | void> {
     let project = this.project;
     let ref = new Project();
     ref.setName(project.name);
     if (variable) {
-      let existingVar = this.variablesList.find((v) => v.name === variable.name);
-      if (existingVar) {
-        existingVar = variable;
+      let existingVarIndex = this.variablesList.findIndex((v) => v.name === variable.name);
+      if (existingVarIndex !== -1) {
+        this.variablesList.splice(existingVarIndex, 1, variable);
+        this.variablesList = [...this.variablesList];
       }
     }
-    let varlist = this.variablesList.map((v: Variable.AsObject) => {
+    let varProtosList = this.variablesList.map((v: Variable.AsObject) => {
       let variable = new Variable();
       variable.setName(v.name);
-      variable.setStr(v.str);
       if (v.hcl) {
         variable.setHcl(v.hcl);
+      } else {
+        variable.setStr(v.str);
       }
       return variable;
     });
-    ref.setVariablesList(varlist);
+    ref.setVariablesList(varProtosList);
     // Build and trigger request
     let req = new UpsertProjectRequest();
     req.setProject(ref);
     try {
       let resp = await this.api.client.upsertProject(req, this.api.WithMeta());
-      this.project = resp.toObject().project;
+      let respProject = resp.toObject().project;
+      this.project = respProject;
       this.flashMessages.success('Settings saved');
+      return respProject;
     } catch (err) {
       this.flashMessages.error('Failed to save Settings', { content: err.message, sticky: true });
     }

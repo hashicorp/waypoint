@@ -78,7 +78,7 @@
       <span class="project-input-variables--list-item-name">{{this.variable.name}}</span>
       <span class="project-input-variables--list-item-value">
         {{#if this.isHcl}}
-          <b class="badge">
+          <b class="badge" data-test-input-variables-list-item-is-hcl>
             HCL
           </b>
           {{this.variable.hcl}}

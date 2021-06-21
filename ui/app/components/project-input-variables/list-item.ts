@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { Variable } from 'waypoint-pb';
+import { Project, Variable } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 
@@ -9,32 +9,33 @@ interface VariableArgs {
   variable: Variable.AsObject;
   isEditing: boolean;
   isCreating: boolean;
-  saveVariableSettings: (variable: Variable.AsObject) => Promise<void>;
+  saveVariableSettings: (variable: Variable.AsObject) => Promise<Project.AsObject>;
   deleteVariable: (variable: Variable.AsObject) => Promise<void>;
 }
 
 export default class ProjectInputVariablesListComponent extends Component<VariableArgs> {
-  initialVariable?: Variable.AsObject;
+  initialVariable: Variable.AsObject;
   @service api!: ApiService;
   @tracked variable: Variable.AsObject;
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;
-  @tracked isHcl: boolean;
+  @tracked args;
 
   constructor(owner: any, args: VariableArgs) {
     super(owner, args);
-    this.isCreating = false;
     let { variable, isEditing, isCreating } = args;
     this.variable = variable;
     this.isEditing = isEditing;
     this.isCreating = isCreating;
-    this.isHcl = false;
-    if (variable.hcl) {
-      this.isHcl = true;
-    }
-    if (this.isEditing) {
-      this.initialVariable = JSON.parse(JSON.stringify(this.variable));
-    }
+    this.storeInitialVariable();
+  }
+
+  get isHcl(): boolean {
+    return !!this.variable.hcl;
+  }
+
+  storeInitialVariable() {
+    this.initialVariable = JSON.parse(JSON.stringify(this.variable));
   }
 
   @action
@@ -45,15 +46,18 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   @action
   editVariable() {
     this.isEditing = true;
-    this.initialVariable = JSON.parse(JSON.stringify(this.variable));
+    this.storeInitialVariable();
   }
 
   @action
   async saveVariable(e) {
     e.preventDefault();
-    await this.args.saveVariableSettings(this.variable);
+    let savedProject = await this.args.saveVariableSettings(this.variable);
     this.isCreating = false;
     this.isEditing = false;
+    if (savedProject) {
+      this.variable = savedProject.variablesList.find(v => v.name === this.variable.name);
+    }
   }
 
   @action
@@ -73,11 +77,9 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   @action
   toggleHcl(variable) {
     if (this.isHcl) {
-      this.isHcl = false;
       this.variable.str = variable.hcl;
       this.variable.hcl = '';
     } else {
-      this.isHcl = true;
       this.variable.hcl = variable.str;
       this.variable.str = '';
     }

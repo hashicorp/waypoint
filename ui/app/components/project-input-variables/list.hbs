@@ -1,33 +1,32 @@
 {{#if this.variablesList}}
-<ul class="project-input-variables-list">
-  <li>
-    <div class="project-input-variables--list-item project-input-variables--list-item__header">
-      <span class="project-input-variables--list-item-name">Key</span>
-      <span class="project-input-variables--list-item-value">Value</span>
-    </div>
-  </li>
-  {{#each this.variablesList as |variable|}}
-  <ProjectInputVariables::ListItem @variable={{variable}} @isEditing={{eq variable.name this.activeVariable.name}}
-    @isCreating={{this.isCreating}} @saveVariableSettings={{this.saveVariableSettings}}
-    @deleteVariable={{this.deleteVariable}} />
-
-  {{/each}}
-</ul>
-<Pds::ButtonSet>
-  <Pds::Button data-test-input-variables-add-variable @variant="primary" {{on "click" this.addVariable}}>
-    <Pds::Icon @type="plus-plain" />{{t "form.project_variables_settings.button_apply"}}
-  </Pds::Button>
-</Pds::ButtonSet>
-{{else}}
-<Pds::EmptyState as |P|>
-  <P.Header>No input variables defined</P.Header>
-  <P.Body>
-    Variables defined here can be used in your <code>waypoint.hcl</code> file
-  </P.Body>
-  <P.Footer>
+  <ul class="project-input-variables-list">
+    <li>
+      <div class="project-input-variables--list-item project-input-variables--list-item__header">
+        <span class="project-input-variables--list-item-name">Key</span>
+        <span class="project-input-variables--list-item-value">Value</span>
+      </div>
+    </li>
+    {{#each this.variablesList as |variable|}}
+      <ProjectInputVariables::ListItem @variable={{variable}} @isEditing={{eq variable.name this.activeVariable.name}}
+        @isCreating={{this.isCreating}} @saveVariableSettings={{this.saveVariableSettings}}
+        @deleteVariable={{this.deleteVariable}} />
+    {{/each}}
+  </ul>
+  <Pds::ButtonSet>
     <Pds::Button data-test-input-variables-add-variable @variant="primary" {{on "click" this.addVariable}}>
       <Pds::Icon @type="plus-plain" />{{t "form.project_variables_settings.button_apply"}}
     </Pds::Button>
-  </P.Footer>
-</Pds::EmptyState>
+  </Pds::ButtonSet>
+{{else}}
+  <Pds::EmptyState as |P|>
+    <P.Header>No input variables defined</P.Header>
+    <P.Body>
+      Variables defined here can be used in your <code>waypoint.hcl</code> file
+    </P.Body>
+    <P.Footer>
+      <Pds::Button data-test-input-variables-add-variable @variant="primary" {{on "click" this.addVariable}}>
+        <Pds::Icon @type="plus-plain" />{{t "form.project_variables_settings.button_apply"}}
+      </Pds::Button>
+    </P.Footer>
+  </Pds::EmptyState>
 {{/if}}

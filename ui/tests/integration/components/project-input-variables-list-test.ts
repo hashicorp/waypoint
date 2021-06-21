@@ -1,6 +1,6 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
-import { render, fillIn, click, pauseTest } from '@ember/test-helpers';
+import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { create, collection, clickable, isPresent, fillable } from 'ember-cli-page-object';
 
@@ -9,6 +9,7 @@ const page = create({
   variablesList: collection('[data-test-input-variables-list-item]', {
     dropdown: clickable('[data-test-input-variables-dropdown]'),
     dropdownDelete: clickable('[data-test-input-variables-dropdown-delete]'),
+    isHcl: isPresent('[data-test-input-variables-list-item-is-hcl]'),
   }),
   createButton: clickable('[data-test-input-variables-add-variable]'),
   cancelButton: clickable('[data-test-input-variables-edit-cancel]'),
@@ -29,6 +30,27 @@ module('Integration | Component | project-input-variables-list', function (hooks
         },
         {
           name: 'Varname2',
+          hcl: 'hclval',
+        },
+      ],
+    };
+    this.set('project', project);
+    await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
+    assert.dom('.project-input-variables-list').exists('The list renders');
+    assert.equal(page.variablesList.length, 2, 'the list contains all variables');
+    assert.notOk(page.variablesList.objectAt(0).isHcl, 'the list contains a string variable');
+    assert.ok(page.variablesList.objectAt(1).isHcl, 'the list contains a hcl variable');
+  });
+
+  test('the list can be edited and updated', async function (assert) {
+    let project = {
+      variablesList: [
+        {
+          name: 'Varname',
+          str: 'foo',
+        },
+        {
+          name: 'Varname2',
           str: 'foo2',
         },
       ],
@@ -38,12 +60,12 @@ module('Integration | Component | project-input-variables-list', function (hooks
     assert.dom('.project-input-variables-list').exists('The list renders');
     assert.equal(page.variablesList.length, 2, 'the list contains all variables');
     await page.createButton();
-    assert.ok(page.hasForm);
+    assert.ok(page.hasForm), 'Attempt to create: the form appears when the Add Variable button is clicked';
     await page.cancelButton();
     assert.equal(
       page.variablesList.length,
       2,
-      'Attempt to create then cancel: the list still has the normal count of variables'
+      'Attempt to create: the list still has the normal count of variables after cancelling'
     );
     await page.createButton();
     await page.varName('var_name');
