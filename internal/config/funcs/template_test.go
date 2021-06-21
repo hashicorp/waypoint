@@ -50,9 +50,19 @@ func TestTemplateString(t *testing.T) {
 		{
 			"missing variable",
 			cty.StringVal("Hello, ${name}!"),
-			nil,
+			[]cty.Value{
+				cty.MapVal(map[string]cty.Value{
+					"not_name": cty.StringVal("Jodie"),
+				})},
 			cty.NilVal,
 			`vars map does not contain key "name"`,
+		},
+		{
+			"no variables at all",
+			cty.StringVal("Hello, ${name}!"),
+			nil, // must blame the template for the missing variable in this case
+			cty.NilVal,
+			`but this call has no vars map`,
 		},
 		{
 			"parent value",
@@ -150,9 +160,19 @@ func TestTemplateFile(t *testing.T) {
 		},
 		{
 			cty.StringVal("testdata/filesystem/hello.tmpl"),
-			nil,
+			[]cty.Value{
+				cty.MapVal(map[string]cty.Value{
+					"not_name": cty.StringVal("Jodie"),
+				}),
+			},
 			cty.NilVal,
 			`vars map does not contain key "name"`,
+		},
+		{
+			cty.StringVal("testdata/filesystem/hello.tmpl"),
+			nil, // must blame the template for the missing variable in this case
+			cty.NilVal,
+			`but this call has no vars map`,
 		},
 		{
 			cty.StringVal("testdata/filesystem/func.tmpl"),
