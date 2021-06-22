@@ -1,0 +1,3 @@
+```release-note:bug
+cli: set runner poll interval default for runner defined in waypoint.hcl
+```
