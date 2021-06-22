@@ -1,15 +1,19 @@
 import { module, test } from 'qunit';
 import { setupRenderingTest } from 'ember-qunit';
+import { setupMirage } from 'ember-cli-mirage/test-support';
 import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
-import { create, collection, clickable, isPresent, fillable } from 'ember-cli-page-object';
+import { create, collection, clickable, isPresent, fillable, text } from 'ember-cli-page-object';
 
 const page = create({
   hasForm: isPresent('[data-test-input-variables-form]'),
   variablesList: collection('[data-test-input-variables-list-item]', {
     dropdown: clickable('[data-test-input-variables-dropdown]'),
+    dropdownEdit: clickable('[data-test-input-variables-dropdown-edit]'),
     dropdownDelete: clickable('[data-test-input-variables-dropdown-delete]'),
     isHcl: isPresent('[data-test-input-variables-list-item-is-hcl]'),
+    varName: text('[data-test-input-variables-var-name]'),
+    varValue: text('[data-test-input-variables-var-value]'),
   }),
   createButton: clickable('[data-test-input-variables-add-variable]'),
   cancelButton: clickable('[data-test-input-variables-edit-cancel]'),
@@ -20,9 +24,11 @@ const page = create({
 
 module('Integration | Component | project-input-variables-list', function (hooks) {
   setupRenderingTest(hooks);
+  setupMirage(hooks);
 
   test('it renders', async function (assert) {
     let project = {
+      name: 'ProjFoo',
       variablesList: [
         {
           name: 'Varname',
@@ -42,8 +48,9 @@ module('Integration | Component | project-input-variables-list', function (hooks
     assert.ok(page.variablesList.objectAt(1).isHcl, 'the list contains a hcl variable');
   });
 
-  test('the list can be edited and updated', async function (assert) {
+  test('adding and deleting variables works', async function (assert) {
     let project = {
+      name: 'Projfoo',
       variablesList: [
         {
           name: 'Varname',
@@ -53,27 +60,66 @@ module('Integration | Component | project-input-variables-list', function (hooks
           name: 'Varname2',
           str: 'foo2',
         },
+        {
+          name: 'Varname3',
+          hcl: 'hcl = {}',
+        },
       ],
     };
     this.set('project', project);
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.project-input-variables-list').exists('The list renders');
-    assert.equal(page.variablesList.length, 2, 'the list contains all variables');
+    assert.equal(page.variablesList.length, 3, 'the list contains all variables');
     await page.createButton();
     assert.ok(page.hasForm), 'Attempt to create: the form appears when the Add Variable button is clicked';
     await page.cancelButton();
     assert.equal(
       page.variablesList.length,
-      2,
+      3,
       'Attempt to create: the list still has the normal count of variables after cancelling'
     );
     await page.createButton();
     await page.varName('var_name');
     await page.varStr('foozbarz');
     await page.saveButton();
-    assert.equal(page.variablesList.length, 3, 'Create Variable: the list has the new variable');
+    assert.equal(page.variablesList.length, 4, 'Create Variable: the list has the new variable');
     await page.variablesList.objectAt(0).dropdown();
     await page.variablesList.objectAt(0).dropdownDelete();
-    assert.equal(page.variablesList.length, 2, 'Delete Variable: the variable has been removed');
+    assert.equal(page.variablesList.length, 3, 'Delete Variable: the variable has been removed');
+  });
+
+  test('editing variables works', async function (assert) {
+    let project = {
+      name: 'Projfoo',
+      variablesList: [],
+    };
+    this.set('project', project);
+    await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
+    assert.dom('.project-input-variables-list').doesNotExist('the list is empty initially');
+    assert.equal(page.variablesList.length, 0, 'the list contains no variables');
+    await page.createButton();
+    assert.ok(page.hasForm), 'Attempt to create: the form appears when the Add Variable button is clicked';
+    await page.varName('var_name');
+    await page.varStr('foozbarz');
+    await page.saveButton();
+    assert.equal(page.variablesList.length, 1, 'Create Variable: the list has the new variable');
+    assert.equal(page.variablesList.objectAt(0).varName, 'var_name', 'the variable name is correct');
+    assert.equal(page.variablesList.objectAt(0).varValue, 'foozbarz', 'the variable value is correct');
+    await page.variablesList.objectAt(0).dropdown();
+    await page.variablesList.objectAt(0).dropdownEdit();
+    await page.varName('var_name_edited');
+    await page.varStr('foozbarz_edited');
+    await page.saveButton();
+    assert.equal(page.variablesList.length, 1, 'The list has the edited variable');
+    assert.equal(
+      page.variablesList.objectAt(0).varName,
+      'var_name_edited',
+      'the updated variable name is correct'
+    );
+    assert.equal(
+      page.variablesList.objectAt(0).varValue,
+      'foozbarz_edited',
+      'the updated variable value is correct'
+    );
   });
 });
