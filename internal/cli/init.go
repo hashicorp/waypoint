@@ -309,6 +309,9 @@ func (c *InitCommand) validateProject() bool {
 				Enabled:  v.Enabled,
 				Interval: v.Interval,
 			}
+			if poll.Interval == "" {
+				poll.Interval = "30s"
+			}
 		}
 
 		resp, err := client.UpsertProject(c.Ctx, &pb.UpsertProjectRequest{
