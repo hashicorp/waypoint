@@ -326,7 +326,15 @@ func renderTmpl(expr hcl.Expression, parentCtx *hcl.EvalContext, varsVal ...cty.
 	for _, traversal := range expr.Variables() {
 		root := traversal.RootName()
 		if !hasVar(root) {
-			return cty.DynamicVal, function.NewArgErrorf(1, "vars map does not contain key %q, referenced at %s", root, traversal[0].SourceRange())
+			// If the call had a vars map then we "blame" that argument for
+			// having a missing key, but if the caller included no variables
+			// map at all then the blame falls instead to the template so
+			// we avoid returning an out-of-bounds argument index in our error.
+			if len(varsVal) > 0 {
+				return cty.DynamicVal, function.NewArgErrorf(1, "vars map does not contain key %q, referenced at %s", root, traversal[0].SourceRange())
+			} else {
+				return cty.DynamicVal, function.NewArgErrorf(0, "template refers to variable %q at %s, but this call has no vars map", root, traversal[0].SourceRange())
+			}
 		}
 	}
 

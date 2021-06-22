@@ -1,0 +1,3 @@
+```release-note:bug
+core: fix crash that could occur when using `templatefile` with certain HCL files
+```
