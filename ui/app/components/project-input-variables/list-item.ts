@@ -19,7 +19,6 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   @tracked variable: Variable.AsObject;
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;
-  @tracked args;
 
   constructor(owner: any, args: VariableArgs) {
     super(owner, args);
@@ -53,11 +52,11 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   async saveVariable(e) {
     e.preventDefault();
     let savedProject = await this.args.saveVariableSettings(this.variable);
-    this.isCreating = false;
-    this.isEditing = false;
     if (savedProject) {
       this.variable = savedProject.variablesList.find(v => v.name === this.variable.name);
     }
+    this.isCreating = false;
+    this.isEditing = false;
   }
 
   @action

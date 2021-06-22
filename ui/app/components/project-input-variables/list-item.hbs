@@ -27,6 +27,7 @@
               {{#if this.isHcl}}
                 <Pds::Input
                   @type="text"
+                  data-test-input-variables-var-hcl
                   id="input-variable-value"
                   placeholder={{t "form.project_variables_settings.variable_value_placeholder"}}
                   value={{this.variable.hcl}}
@@ -45,6 +46,7 @@
               <span class="pds-input-inline-toggle">
                 <input
                   type="checkbox"
+                  data-test-input-variables-toggle-hcl
                   id="input-variable-hcl"
                   checked={{this.isHcl}}
                   {{on "change" (fn this.toggleHcl this.variable)}}>
@@ -75,8 +77,8 @@
     </form>
   {{else}}
     <div class="project-input-variables--list-item">
-      <span class="project-input-variables--list-item-name">{{this.variable.name}}</span>
-      <span class="project-input-variables--list-item-value">
+      <span class="project-input-variables--list-item-name" data-test-input-variables-var-name>{{this.variable.name}}</span>
+      <span class="project-input-variables--list-item-value" data-test-input-variables-var-value>
         {{#if this.isHcl}}
           <b class="badge" data-test-input-variables-list-item-is-hcl>
             HCL
@@ -94,7 +96,10 @@
         </D.Trigger>
         <D.Dialog >
           <section>
-            <Pds::Button @variant="secondary" {{on "click" (fn this.editVariable this.variable)}}>
+            <Pds::Button
+              data-test-input-variables-dropdown-edit
+              @variant="secondary"
+              {{on "click" (fn this.editVariable this.variable)}}>
               Edit
             </Pds::Button>
             <Pds::Button

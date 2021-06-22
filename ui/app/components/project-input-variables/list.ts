@@ -1,18 +1,17 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { Ref, Project, UpsertProjectRequest, Variable } from 'waypoint-pb';
+import { Project, UpsertProjectRequest, Variable } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 
 interface ProjectSettingsArgs {
-  project;
+  project: Project.AsObject;
 }
 
 export default class ProjectInputVariablesListComponent extends Component<ProjectSettingsArgs> {
   @service api!: ApiService;
   @service flashMessages;
-  @tracked args;
   @tracked project;
   @tracked variablesList: Array<Variable.AsObject>;
   @tracked isCreating: boolean;
@@ -81,6 +80,8 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
       let respProject = resp.toObject().project;
       this.project = respProject;
       this.flashMessages.success('Settings saved');
+      this.activeVariable = null;
+      this.isCreating = false;
       return respProject;
     } catch (err) {
       this.flashMessages.error('Failed to save Settings', { content: err.message, sticky: true });
