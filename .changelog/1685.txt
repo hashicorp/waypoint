@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/docker: Fix issue falling back to `img` for builds when docker daemon not present
+```
