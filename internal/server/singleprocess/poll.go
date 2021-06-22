@@ -123,6 +123,7 @@ func (s *service) runPollQueuer(
 
 		if ctx.Err() != nil {
 			// Outcome (2) above
+			log.Debug("context cancelled for poll queuer, returning from poll loop ctx")
 			return
 		}
 
