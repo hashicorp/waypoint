@@ -52,7 +52,7 @@ require (
 	github.com/hashicorp/go-plugin v1.3.0
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/go-version v1.2.0
-	github.com/hashicorp/hcl/v2 v2.10.0
+	github.com/hashicorp/hcl/v2 v2.10.1-0.20210621220818-327f3ce2570e
 	github.com/hashicorp/horizon v0.0.0-20210317214650-d2053943be04
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
@@ -95,7 +95,7 @@ require (
 	github.com/slack-go/slack v0.6.5
 	github.com/stretchr/testify v1.6.1
 	github.com/vektra/mockery v1.1.2
-	github.com/zclconf/go-cty v1.8.2
+	github.com/zclconf/go-cty v1.8.4
 	github.com/zclconf/go-cty-yaml v1.0.2
 	go.etcd.io/bbolt v1.3.3
 	go.uber.org/goleak v1.1.10
