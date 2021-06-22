@@ -50,12 +50,12 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
   }
 
   @action
-  async saveVariableSettings(variable?: Variable.AsObject): Promise<Project.AsObject | void> {
+  async saveVariableSettings(variable?: Variable.AsObject, initialVariable?: Variable.AsObject): Promise<Project.AsObject | void> {
     let project = this.project;
     let ref = new Project();
     ref.setName(project.name);
-    if (variable) {
-      let existingVarIndex = this.variablesList.findIndex((v) => v.name === variable.name);
+    if (variable && initialVariable) {
+      let existingVarIndex = this.variablesList.findIndex((v) => v.name === initialVariable.name);
       if (existingVarIndex !== -1) {
         this.variablesList.splice(existingVarIndex, 1, variable);
         this.variablesList = [...this.variablesList];

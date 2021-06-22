@@ -51,7 +51,7 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   @action
   async saveVariable(e) {
     e.preventDefault();
-    let savedProject = await this.args.saveVariableSettings(this.variable);
+    let savedProject = await this.args.saveVariableSettings(this.variable, this.initialVariable);
     if (savedProject) {
       this.variable = savedProject.variablesList.find(v => v.name === this.variable.name);
     }

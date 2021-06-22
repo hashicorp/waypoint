@@ -4,6 +4,8 @@ import { setupMirage } from 'ember-cli-mirage/test-support';
 import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { create, collection, clickable, isPresent, fillable, text } from 'ember-cli-page-object';
+import { Ref, GetProjectRequest } from 'waypoint-pb';
+
 
 const page = create({
   hasForm: isPresent('[data-test-input-variables-form]'),
@@ -27,51 +29,41 @@ module('Integration | Component | project-input-variables-list', function (hooks
   setupMirage(hooks);
 
   test('it renders', async function (assert) {
-    let project = {
-      name: 'ProjFoo',
-      variablesList: [
-        {
-          name: 'Varname',
-          str: 'foo',
-        },
-        {
-          name: 'Varname2',
-          hcl: 'hclval',
-        },
-      ],
-    };
-    this.set('project', project);
+    let dbproj = await this.server.create('project', 'with-input-variables', { name: 'Proj1' });
+
+    let api = this.owner.lookup('service:api');
+    let ref = new Ref.Project();
+    ref.setProject(dbproj.name);
+    let req = new GetProjectRequest();
+    req.setProject(ref);
+
+    let resp = await api.client.getProject(req, api.WithMeta());
+    let project = resp.getProject();
+    this.set('project', project.toObject());
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.project-input-variables-list').exists('The list renders');
-    assert.equal(page.variablesList.length, 2, 'the list contains all variables');
+    assert.equal(page.variablesList.length, 3, 'the list contains all variables');
     assert.notOk(page.variablesList.objectAt(0).isHcl, 'the list contains a string variable');
-    assert.ok(page.variablesList.objectAt(1).isHcl, 'the list contains a hcl variable');
+    assert.ok(page.variablesList.objectAt(2).isHcl, 'the list contains a hcl variable');
   });
 
   test('adding and deleting variables works', async function (assert) {
-    let project = {
-      name: 'Projfoo',
-      variablesList: [
-        {
-          name: 'Varname',
-          str: 'foo',
-        },
-        {
-          name: 'Varname2',
-          str: 'foo2',
-        },
-        {
-          name: 'Varname3',
-          hcl: 'hcl = {}',
-        },
-      ],
-    };
-    this.set('project', project);
+    let dbproj = await this.server.create('project', 'with-input-variables', { name: 'Proj2' });
+
+    let api = this.owner.lookup('service:api');
+    let ref = new Ref.Project();
+    ref.setProject(dbproj.name);
+    let req = new GetProjectRequest();
+    req.setProject(ref);
+
+    let resp = await api.client.getProject(req, api.WithMeta());
+    let project = resp.getProject();
+    this.set('project', project.toObject());
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.project-input-variables-list').exists('The list renders');
     assert.equal(page.variablesList.length, 3, 'the list contains all variables');
     await page.createButton();
-    assert.ok(page.hasForm), 'Attempt to create: the form appears when the Add Variable button is clicked';
+    assert.ok(page.hasForm, 'Attempt to create: the form appears when the Add Variable button is clicked');
     await page.cancelButton();
     assert.equal(
       page.variablesList.length,
@@ -89,11 +81,17 @@ module('Integration | Component | project-input-variables-list', function (hooks
   });
 
   test('editing variables works', async function (assert) {
-    let project = {
-      name: 'Projfoo',
-      variablesList: [],
-    };
-    this.set('project', project);
+    let dbproj = await this.server.create('project', { name: 'Proj3' });
+
+    let api = this.owner.lookup('service:api');
+    let ref = new Ref.Project();
+    ref.setProject(dbproj.name);
+    let req = new GetProjectRequest();
+    req.setProject(ref);
+
+    let resp = await api.client.getProject(req, api.WithMeta());
+    let project = resp.getProject();
+    this.set('project', project.toObject());
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.project-input-variables-list').doesNotExist('the list is empty initially');
     assert.equal(page.variablesList.length, 0, 'the list contains no variables');
