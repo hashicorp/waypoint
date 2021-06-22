@@ -23,7 +23,7 @@ func (b *Builder) buildWithImg(
 	dockerfilePath string,
 	contextDir string,
 	tag string,
-	buildArgs string,
+	buildArgs map[string]*string,
 ) error {
 	step := sg.Add("Building Docker image with img...")
 	defer func() {
@@ -32,15 +32,27 @@ func (b *Builder) buildWithImg(
 		}
 	}()
 
-	// NOTE(mitchellh): we can probably use the img Go pkg directly one day.
-	cmd := exec.CommandContext(ctx,
+	// Start constructing our arg string for img
+	args := []string{
 		"img",
 		"build",
 		"-f", dockerfilePath,
 		"-t", tag,
-		buildArgs,
-		".",
-	)
+	}
+
+	// If we have build args we append each
+	for k, v := range buildArgs {
+		// v should always not be nil but guard just in case to avoid a panic
+		if v != nil {
+			args = append(args, "--build-arg", k+"="+*v)
+		}
+	}
+
+	// Context dir
+	args = append(args, ".")
+
+	// NOTE(mitchellh): we can probably use the img Go pkg directly one day.
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 
 	// Working directory to directory with build context
 	cmd.Dir = contextDir

@@ -207,6 +207,10 @@ func (b *Builder) Build(
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "unable to create Docker context: %s", err)
 	}
+	log.Debug("loaded Docker context",
+		"context_dir", contextDir,
+		"dockerfile", relDockerfile,
+	)
 
 	// We now test if Docker is actually functional. We do this here because we
 	// need all of the above to complete the actual build.
@@ -224,7 +228,8 @@ func (b *Builder) Build(
 		step.Done()
 		step = nil
 		if err := b.buildWithImg(
-			ctx, ui, sg, relDockerfile, contextDir, result.Name(), createBuildArgsString(b.config.BuildArgs),
+			ctx, ui, sg, relDockerfile, contextDir, result.Name(),
+			b.config.BuildArgs,
 		); err != nil {
 			return nil, err
 		}
@@ -286,15 +291,6 @@ func (b *Builder) Build(
 	}
 
 	return result, nil
-}
-
-// Translates BuildArgs from a map of key vals into a string of '--build-arg key=vals'
-func createBuildArgsString(m map[string]*string) string {
-	b := []string{}
-	for key, value := range m {
-		b = append(b, fmt.Sprintf("--build-arg \"%s=%s\"", key, *value))
-	}
-	return strings.Join(b, " ")
 }
 
 func (b *Builder) buildWithDocker(
