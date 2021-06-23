@@ -40,9 +40,54 @@ func (r *Runner) executeStatusReportOp(
 		return nil, err
 	}
 
+	if statusReportResult != nil {
+		err = r.enableApplicationPoll(ctx, job.Application)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &pb.Job_Result{
 		StatusReport: &pb.Job_StatusReportResult{
 			StatusReport: statusReportResult,
 		},
 	}, nil
+}
+
+func (r *Runner) enableApplicationPoll(
+	ctx context.Context,
+	appRef *pb.Ref_Application,
+) error {
+	//log.Trace("calling GetProject to get list of workspaces for project")
+	resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
+		Project: &pb.Ref_Project{
+			Project: appRef.Project,
+		},
+	})
+	if err != nil {
+		return err
+	}
+	project := resp.Project
+
+	for _, a := range project.Applications {
+		if a.Name == appRef.Application {
+			// check that polling isn't enabled for app then do, otherwise break and return
+
+			// get project client and upsert update to app
+			_, err := r.client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
+				Project: &pb.Ref_Project{Project: project.Name},
+				Name:    appRef.Application,
+				Poll:    true,
+			})
+
+			if err != nil {
+				return err
+			} else {
+				break // we found the app we were trying to update
+			}
+		}
+	}
+
+	return nil
 }

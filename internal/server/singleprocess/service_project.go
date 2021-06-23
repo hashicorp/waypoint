@@ -87,6 +87,13 @@ func (s *service) UpsertApplication(
 
 	app.FileChangeSignal = req.FileChangeSignal
 
+	if req.Poll {
+		// Use the default poll interval defined
+		app.StatusReportPoll = &pb.Application_Poll{
+			Enabled: true,
+		}
+	}
+
 	app, err = s.state.AppPut(app)
 	if err != nil {
 		return nil, err

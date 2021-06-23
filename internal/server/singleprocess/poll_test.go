@@ -375,3 +375,33 @@ func TestServicePollQueue(t *testing.T) {
 	require.NoError(err)
 	require.Equal(len(raw), len(raw2))
 }
+
+/*
+// TODO: write me
+func TestProjectPollHandler(t *testing.T) {
+	require := require.New(t)
+	ctx := context.Background()
+
+	// Create our server
+	impl, err := New(WithDB(testDB(t)))
+	require.NoError(err)
+	client := server.TestServer(t, impl)
+
+	// Create a project
+	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+		Project: serverptypes.TestProject(t, &pb.Project{
+			Name: "A",
+			DataSource: &pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Local{
+					Local: &pb.Job_Local{},
+				},
+			},
+			DataSourcePoll: &pb.Project_Poll{
+				Enabled:  true,
+				Interval: "15ms",
+			},
+		}),
+	})
+	require.NoError(err)
+}
+*/
