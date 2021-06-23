@@ -16,11 +16,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/env"
 	"github.com/hashicorp/waypoint/internal/pkg/gatedwriter"
 	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/util"
 	"github.com/hashicorp/waypoint/internal/version"
 )
 
@@ -300,11 +300,11 @@ func WithEnvDefaults() Option {
 
 		cfg.URLServicePort = port
 		cfg.ServerAddr = os.Getenv(envServerAddr)
-		cfg.ServerRequired = util.GetEnvBool(envCEBServerRequired, false)
-		cfg.ServerTls = util.GetEnvBool(envServerTls, false)
-		cfg.ServerTlsSkipVerify = util.GetEnvBool(envServerTlsSkipVerify, false)
+		cfg.ServerRequired = env.GetEnvBool(envCEBServerRequired, false)
+		cfg.ServerTls = env.GetEnvBool(envServerTls, false)
+		cfg.ServerTlsSkipVerify = env.GetEnvBool(envServerTlsSkipVerify, false)
 		cfg.InviteToken = os.Getenv(envCEBToken)
-		cfg.disable = util.GetEnvBool(envCEBDisable, false)
+		cfg.disable = env.GetEnvBool(envCEBDisable, false)
 
 		ceb.deploymentId = os.Getenv(envDeploymentId)
 
