@@ -128,12 +128,12 @@ func FromEnv() ConnectOption {
 		if v := os.Getenv(EnvServerAddr); v != "" {
 			c.Addr = v
 
-			c.Tls, err = env.GetEnvBool(EnvServerTls, false)
+			c.Tls, err = env.GetBool(EnvServerTls, false)
 			if err != nil {
 				return err
 			}
 
-			c.TlsSkipVerify, err = env.GetEnvBool(EnvServerTlsSkipVerify, false)
+			c.TlsSkipVerify, err = env.GetBool(EnvServerTlsSkipVerify, false)
 			if err != nil {
 				return err
 			}

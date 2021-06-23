@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-// GetEnvBool Extracts a boolean from an env var. Falls back to the default
+// GetBool Extracts a boolean from an env var. Falls back to the default
 // if the key is unset or not a valid boolean.
-func GetEnvBool(key string, defaultValue bool) (bool, error) {
+func GetBool(key string, defaultValue bool) (bool, error) {
 	envVal := os.Getenv(key)
 	if envVal == "" {
 		return defaultValue, nil

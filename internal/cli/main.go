@@ -140,7 +140,7 @@ func Commands(
 	}
 
 	// Set plain mode if set
-	outputModeBool, err := env.GetEnvBool(EnvPlain, false)
+	outputModeBool, err := env.GetBool(EnvPlain, false)
 	if err != nil {
 		log.Warn(err.Error())
 	}
