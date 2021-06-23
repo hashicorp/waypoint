@@ -1,4 +1,4 @@
 ```release-note:improvement
-core: Inspect values of enviromment variables meant to be booleans
+core: Correct parsing of boolean environment variables
 ```
 
