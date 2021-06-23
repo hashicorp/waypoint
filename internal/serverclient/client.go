@@ -12,9 +12,9 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/env"
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
-	"github.com/hashicorp/waypoint/internal/util"
 )
 
 // ErrNoServerConfig is the error when there is no server configuration
@@ -127,8 +127,8 @@ func FromEnv() ConnectOption {
 	return func(c *connectConfig) error {
 		if v := os.Getenv(EnvServerAddr); v != "" {
 			c.Addr = v
-			c.Tls = util.GetEnvBool(EnvServerTls, false)
-			c.TlsSkipVerify = util.GetEnvBool(EnvServerTlsSkipVerify, false)
+			c.Tls = env.GetEnvBool(EnvServerTls, false)
+			c.TlsSkipVerify = env.GetEnvBool(EnvServerTlsSkipVerify, false)
 			c.Auth = os.Getenv(EnvServerToken) != ""
 		}
 
