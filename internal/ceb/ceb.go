@@ -301,24 +301,24 @@ func WithEnvDefaults() Option {
 		cfg.URLServicePort = port
 		cfg.ServerAddr = os.Getenv(envServerAddr)
 
-		cfg.ServerRequired, err = env.GetEnvBool(envCEBServerRequired, false)
+		cfg.ServerRequired, err = env.GetBool(envCEBServerRequired, false)
 		if err != nil {
 			return err
 		}
 
-		cfg.ServerTls, err = env.GetEnvBool(envServerTls, false)
+		cfg.ServerTls, err = env.GetBool(envServerTls, false)
 		if err != nil {
 			return err
 		}
 
-		cfg.ServerTlsSkipVerify, err = env.GetEnvBool(envServerTlsSkipVerify, false)
+		cfg.ServerTlsSkipVerify, err = env.GetBool(envServerTlsSkipVerify, false)
 		if err != nil {
 			return err
 		}
 
 		cfg.InviteToken = os.Getenv(envCEBToken)
 
-		cfg.disable, err = env.GetEnvBool(envCEBDisable, false)
+		cfg.disable, err = env.GetBool(envCEBDisable, false)
 		if err != nil {
 			return err
 		}

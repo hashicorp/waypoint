@@ -1,65 +1,88 @@
 package env
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 )
 
-func TestGetEnvBool(t *testing.T) {
+func TestGetBool(t *testing.T) {
 	envVarTestKey := "WAYPOINT_GET_ENV_BOOL_TEST"
-	require := require.New(t)
 
-	t.Run("Unset env var returns default", func(t *testing.T) {
-		b, err := GetEnvBool(envVarTestKey, true)
-		require.NoError(err)
-		require.True(b)
-
-		b, err = GetEnvBool(envVarTestKey, false)
-		require.NoError(err)
-		require.False(b)
-	})
-
-	t.Run("Empty env var returns default", func(t *testing.T) {
-		os.Setenv(envVarTestKey, "")
-		b, err := GetEnvBool(envVarTestKey, true)
-		require.NoError(err)
-		require.True(b)
-
-		b, err = GetEnvBool(envVarTestKey, false)
-		require.NoError(err)
-		require.False(b)
-	})
-
-	t.Run("Non-truthy env var returns an error", func(t *testing.T) {
-		os.Setenv(envVarTestKey, "unparseable")
-		_, err := GetEnvBool(envVarTestKey, true)
-		require.Error(err)
-	})
-
-	t.Run("true/false env vars return non-default", func(t *testing.T) {
-		os.Setenv(envVarTestKey, "true")
-		b, err := GetEnvBool(envVarTestKey, false)
-		require.NoError(err)
-		require.True(b)
-
-		os.Setenv(envVarTestKey, "false")
-		b, err = GetEnvBool(envVarTestKey, true)
-		require.NoError(err)
-		require.False(b)
-	})
-
-	t.Run("boolean parsing is generous with capitalization", func(t *testing.T) {
-		os.Setenv(envVarTestKey, "tRuE")
-		b, err := GetEnvBool(envVarTestKey, false)
-		require.NoError(err)
-		require.True(b)
-	})
-
-	t.Run("1 evaluates as true", func(t *testing.T) {
-		os.Setenv(envVarTestKey, "1")
-		b, err := GetEnvBool(envVarTestKey, false)
-		require.NoError(err)
-		require.True(b)
-	})
+	tests := []struct {
+		name       string
+		defaultVal bool
+		envVal     string
+		want       bool
+		wantErr    bool
+	}{
+		{
+			name:       "Empty env var returns default 1",
+			defaultVal: true,
+			envVal:     "",
+			want:       true,
+			wantErr:    false,
+		},
+		{
+			name:       "Empty env var returns default 2",
+			defaultVal: false,
+			envVal:     "",
+			want:       false,
+			wantErr:    false,
+		},
+		{
+			name:       "Non-truthy env var returns err",
+			defaultVal: false,
+			envVal:     "unparseable",
+			want:       false,
+			wantErr:    true,
+		},
+		{
+			name:       "'true' is true",
+			defaultVal: false,
+			envVal:     "true",
+			want:       true,
+			wantErr:    false,
+		},
+		{
+			name:       "'false' is true",
+			defaultVal: true,
+			envVal:     "false",
+			want:       false,
+			wantErr:    false,
+		},
+		{
+			name:       "1 is true",
+			defaultVal: false,
+			envVal:     "1",
+			want:       true,
+			wantErr:    false,
+		},
+		{
+			name:       "0 is false",
+			defaultVal: true,
+			envVal:     "0",
+			want:       false,
+			wantErr:    false,
+		},
+		{
+			name:       "Boolean parsing ignores capitalization",
+			defaultVal: false,
+			envVal:     "tRuE",
+			want:       true,
+			wantErr:    false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Setenv(envVarTestKey, tt.envVal)
+			got, err := GetBool(envVarTestKey, tt.defaultVal)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetBool() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GetBool() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
