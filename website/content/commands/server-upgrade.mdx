@@ -31,6 +31,10 @@ Usage: `waypoint server upgrade [options]`
 - `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.
 - `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to upgrades.
 
+#### docker Options
+
+- `-docker-server-image=<string>` - Docker image for the Waypoint server.
+
 #### ecs Options
 
 - `-ecs-cluster=<string>` - Configures the Cluster to upgrade.
@@ -60,9 +64,5 @@ Usage: `waypoint server upgrade [options]`
 - `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server.
-
-#### docker Options
-
-- `-docker-server-image=<string>` - Docker image for the Waypoint server.
 
 @include "commands/server-upgrade_more.mdx"
