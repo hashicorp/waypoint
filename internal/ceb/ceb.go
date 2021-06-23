@@ -283,7 +283,7 @@ type Option func(*CEB, *config) error
 // environment variables. If this is NOT called, then the environment variable
 // based confiugration will be ignored.
 func WithEnvDefaults() Option {
-	return func(ceb *CEB, cfg *config) error {
+	return func(ceb *CEB, cfg *config) (err error) {
 		var port int
 		portStr := os.Getenv("PORT")
 		if portStr == "" {
@@ -301,31 +301,27 @@ func WithEnvDefaults() Option {
 		cfg.URLServicePort = port
 		cfg.ServerAddr = os.Getenv(envServerAddr)
 
-		serverRequiredBool, err := env.GetEnvBool(envCEBServerRequired, false)
+		cfg.ServerRequired, err = env.GetEnvBool(envCEBServerRequired, false)
 		if err != nil {
 			return err
 		}
-		cfg.ServerRequired = serverRequiredBool
 
-		serverTlsBool, err := env.GetEnvBool(envServerTls, false)
+		cfg.ServerTls, err = env.GetEnvBool(envServerTls, false)
 		if err != nil {
 			return err
 		}
-		cfg.ServerTls = serverTlsBool
 
-		serverTlsSkipVerifyBool, err := env.GetEnvBool(envServerTlsSkipVerify, false)
+		cfg.ServerTlsSkipVerify, err = env.GetEnvBool(envServerTlsSkipVerify, false)
 		if err != nil {
 			return err
 		}
-		cfg.ServerTlsSkipVerify = serverTlsSkipVerifyBool
 
 		cfg.InviteToken = os.Getenv(envCEBToken)
 
-		disableCEBBool, err := env.GetEnvBool(envCEBDisable, false)
+		cfg.disable, err = env.GetEnvBool(envCEBDisable, false)
 		if err != nil {
 			return err
 		}
-		cfg.disable = disableCEBBool
 
 		ceb.deploymentId = os.Getenv(envDeploymentId)
 

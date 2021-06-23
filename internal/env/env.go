@@ -14,7 +14,7 @@ func GetEnvBool(key string, defaultValue bool) (bool, error) {
 	if envVal == "" {
 		return defaultValue, nil
 	}
-	value, err := strconv.ParseBool(strings.ToLower(envVal)))
+	value, err := strconv.ParseBool(strings.ToLower(envVal))
 	if err != nil {
 		return defaultValue, fmt.Errorf("failed to parse a boolean from environment variable %s=%s",key,envVal)
 	}
