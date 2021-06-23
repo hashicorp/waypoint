@@ -43,9 +43,9 @@ configure the Waypoint CLI for communication with the Waypoint server.
 - `WAYPOINT_SERVER_TOKEN`. Must be set to a Waypoint token, created with [`waypoint token new`](/commands/token-new)
 - `WAYPOINT_SERVER_ADDR`. The address to the Waypoint server gRPC address. This must
   be accessible from the network that the client is running on.
-- `WAYPOINT_SERVER_TLS`. Should be set to `1` to configure the client to use TLS when
+- `WAYPOINT_SERVER_TLS`. Should be set to a truthy value (e.g. "1") to configure the client to use TLS when
   connecting to the server.
-- `WAYPOINT_SERVER_TLS_SKIP_VERIFY`. Current must be set to `1` to disable TLS verification
+- `WAYPOINT_SERVER_TLS_SKIP_VERIFY`. Current must be set to truthy value (e.g. "1") to disable TLS verification
   when communicating with the server.
 
 ~> The Waypoint server token is sensitive and should be
@@ -71,7 +71,7 @@ If Waypoint detects that the terminal does not support interactivity it will out
 simpler "non-interactive" output mode. This output is easier to consume in
 a CI/CD systems logging views, or through log archiving systems. This is automatic
 and does not need to be explicitly configured, but can be forced by setting
-the environment variable `WAYPOINT_PLAIN` to `1`.
+the environment variable `WAYPOINT_PLAIN` to a truthy value (e.g. "1").
 
 ## Workspaces
 
