@@ -21,7 +21,7 @@ func TestGetEnvBool(t *testing.T) {
 		require.False(GetEnvBool(envVarTestKey, false))
 	})
 
-	t.Run("Non-truthy env var returns true", func (t *testing.T) {
+	t.Run("Non-truthy env var returns default", func (t *testing.T) {
 		os.Setenv(envVarTestKey, "unparseable")
 		require.True(GetEnvBool(envVarTestKey, true))
 		require.False(GetEnvBool(envVarTestKey, false))
@@ -38,5 +38,6 @@ func TestGetEnvBool(t *testing.T) {
 	t.Run("1 evaluates as true", func (t *testing.T) {
 		os.Setenv(envVarTestKey, "1")
 		require.True(GetEnvBool(envVarTestKey, false))
+		require.True(GetEnvBool(envVarTestKey, true))
 	})
 }
