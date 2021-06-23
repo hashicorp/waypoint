@@ -352,7 +352,7 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 	record := &projectIndexRecord{
 		Id:       string(id),
 		Poll:     false, // being explicit that we want to default poll to false
-		ApplPoll: false,
+		ApplPoll: false, // application polling off by default until a deployment or release happens
 	}
 
 	// This entire if block sets up polling tracking for the project. In the
@@ -401,13 +401,18 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 	}
 
 	// Insert application poll
+	// Note that application polling currently is turned on after the first
+	// status report is generated. Otherwise it's off by default to save
+	// polling cycles when someone just creates a new project
 	for _, a := range value.Applications {
 		// This entire if block sets up polling tracking for the application. In the
 		// state store we just maintain timestamps of when to poll next. It is
 		// up to downstream users to call ApplicationNextPoll repeatedly to iterate
 		// over the next projects to poll and do something.
 		if app := a.StatusReportPoll; app != nil && app.Enabled {
-			// This should be validated downstream so this should never fail.
+			if app.Interval == "" {
+				app.Interval = defaultPollInterval
+			}
 			interval, err := time.ParseDuration(app.Interval)
 			if err != nil {
 				return err
@@ -420,7 +425,6 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 			record.ApplPoll = true
 			record.ApplNextPoll = time.Now()
 			record.ApplPollInterval = interval
-			//record.ApplPollInterval, _ = time.ParseDuration("30s")
 
 			// If there is a previous value with a last poll time, then we
 			// update the next poll time to use our new interval.
@@ -535,6 +539,8 @@ const (
 
 	projectWaypointHclMaxSize = 5 * 1024 // 5 MB
 
+	// defaultPollInterval is used both by the project poll handler and the
+	// application poll handler for setting up a default interval time
 	defaultPollInterval = "30s"
 )
 
