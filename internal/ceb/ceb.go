@@ -300,11 +300,32 @@ func WithEnvDefaults() Option {
 
 		cfg.URLServicePort = port
 		cfg.ServerAddr = os.Getenv(envServerAddr)
-		cfg.ServerRequired = env.GetEnvBool(envCEBServerRequired, false)
-		cfg.ServerTls = env.GetEnvBool(envServerTls, false)
-		cfg.ServerTlsSkipVerify = env.GetEnvBool(envServerTlsSkipVerify, false)
+
+		serverRequiredBool, err := env.GetEnvBool(envCEBServerRequired, false)
+		if err != nil {
+			return err
+		}
+		cfg.ServerRequired = serverRequiredBool
+
+		serverTlsBool, err := env.GetEnvBool(envServerTls, false)
+		if err != nil {
+			return err
+		}
+		cfg.ServerTls = serverTlsBool
+
+		serverTlsSkipVerifyBool, err := env.GetEnvBool(envServerTlsSkipVerify, false)
+		if err != nil {
+			return err
+		}
+		cfg.ServerTlsSkipVerify = serverTlsSkipVerifyBool
+
 		cfg.InviteToken = os.Getenv(envCEBToken)
-		cfg.disable = env.GetEnvBool(envCEBDisable, false)
+
+		disableCEBBool, err := env.GetEnvBool(envCEBDisable, false)
+		if err != nil {
+			return err
+		}
+		cfg.disable = disableCEBBool
 
 		ceb.deploymentId = os.Getenv(envDeploymentId)
 

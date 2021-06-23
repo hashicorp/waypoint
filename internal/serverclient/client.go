@@ -127,8 +127,19 @@ func FromEnv() ConnectOption {
 	return func(c *connectConfig) error {
 		if v := os.Getenv(EnvServerAddr); v != "" {
 			c.Addr = v
-			c.Tls = env.GetEnvBool(EnvServerTls, false)
-			c.TlsSkipVerify = env.GetEnvBool(EnvServerTlsSkipVerify, false)
+
+			tlsBool, err := env.GetEnvBool(EnvServerTls, false)
+			if err != nil {
+				return err
+			}
+			c.Tls = tlsBool
+
+			tlsSkipVerifyBool, err := env.GetEnvBool(EnvServerTlsSkipVerify, false)
+			if err != nil {
+				return err
+			}
+			c.TlsSkipVerify = tlsSkipVerifyBool
+
 			c.Auth = os.Getenv(EnvServerToken) != ""
 		}
 
