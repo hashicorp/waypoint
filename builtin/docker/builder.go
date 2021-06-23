@@ -125,9 +125,12 @@ build {
 	)
 
 	doc.SetField(
-		"buildargs",
-		"An array of strings of build-time variables passed as build-arg to docker"+
-			"or img for the build step.",
+		"build_args",
+		"build args to pass to docker or img for the build step",
+		docs.Summary(
+			"An array of strings of build-time variables passed as build-arg to docker",
+			" or img for the build step.",
+		),
 	)
 
 	doc.SetField(
