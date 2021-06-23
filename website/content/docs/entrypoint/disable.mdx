@@ -22,10 +22,10 @@ deployments and apps.
 ## Disable at Runtime
 
 You can disable the entrypoint at runtime by setting the `WAYPOINT_CEB_DISABLE`
-environment variable to any non-empty value.
+environment variable to 1.
 
 This environment variable is checked immediately on entrypoint startup. If
-it is present and non-empty then the entrypoint will immediately execute the
+it is set to 1 then the entrypoint will immediately execute the
 child process. The entrypoint **will not** attempt to even connect to the
 server and will not use any network or disk resources.
 
