@@ -493,6 +493,43 @@ message Workspace {
   }
 }
 
+// User represents a single user identity within the Waypoint server. A
+// user account may represent multiple authentication methods (OIDC from
+// multiple sources, tokens, etc.).
+message User {
+  // Id that is unique to the Waypoint server (usually a ULID).
+  string id = 1;
+
+  // username, unique to the Waypoint server. May not be blank,
+  // but can be changed. We allow changing so that auth methods
+  // such as OIDC can generate non-user-friendly usernames and
+  // the user can fix them up later.
+  string username = 2;
+
+  // Display name, not used for login. May be blank.
+  string display = 3;
+
+  // Email, not used for login. May be blank. May not be verified.
+  // Verification currently depends on the auth system. One day maybe
+  // Waypoint will handle this.
+  string email = 4;
+
+  // Links is the list of account links with 3rd party
+  // identity systems.
+  repeated Link links = 5;
+
+  // Link is a connection between an authentication provider and
+  // the user identity. This is used to lookup a unique user account
+  // within Waypoint from multiple auth sources (i.e. GitHub auth,
+  // user/pass, etc.).
+  message Link {
+    oneof method {
+      // TODO: one day!
+      string todo = 1;
+    }
+  }
+}
+
 /********************************************************************
 * Shared Messages
 ********************************************************************/
