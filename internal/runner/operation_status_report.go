@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func (r *Runner) executeStatusReportOp(
 	ctx context.Context,
+	log hclog.Logger,
 	job *pb.Job,
 	project *core.Project,
 ) (*pb.Job_Result, error) {
@@ -41,7 +43,7 @@ func (r *Runner) executeStatusReportOp(
 	}
 
 	if statusReportResult != nil {
-		err = r.enableApplicationPoll(ctx, job.Application)
+		err = r.enableApplicationPoll(ctx, log, job.Application)
 
 		if err != nil {
 			return nil, err
@@ -57,9 +59,10 @@ func (r *Runner) executeStatusReportOp(
 
 func (r *Runner) enableApplicationPoll(
 	ctx context.Context,
+	log hclog.Logger,
 	appRef *pb.Ref_Application,
 ) error {
-	//log.Trace("calling GetProject to get list of workspaces for project")
+	log.Trace("calling GetProject to determine app polling status")
 	resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
 		Project: &pb.Ref_Project{
 			Project: appRef.Project,
