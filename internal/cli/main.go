@@ -140,7 +140,11 @@ func Commands(
 	}
 
 	// Set plain mode if set
-	if env.GetEnvBool(EnvPlain, false) {
+	outputModeBool, err := env.GetEnvBool(EnvPlain, false)
+	if err != nil {
+		log.Warn(err.Error())
+	}
+	if outputModeBool {
 		baseCommand.globalOptions = append(baseCommand.globalOptions,
 			WithUI(terminal.NonInteractiveUI(ctx)))
 	}
