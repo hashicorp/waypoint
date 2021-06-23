@@ -19,6 +19,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
+	"github.com/hashicorp/waypoint/internal/util"
 	"github.com/hashicorp/waypoint/internal/version"
 )
 
@@ -139,7 +140,7 @@ func Commands(
 	}
 
 	// Set plain mode if set
-	if os.Getenv(EnvPlain) != "" {
+	if util.GetEnvBool(EnvPlain, false) {
 		baseCommand.globalOptions = append(baseCommand.globalOptions,
 			WithUI(terminal.NonInteractiveUI(ctx)))
 	}

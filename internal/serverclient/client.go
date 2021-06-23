@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
+	"github.com/hashicorp/waypoint/internal/util"
 )
 
 // ErrNoServerConfig is the error when there is no server configuration
@@ -126,8 +127,8 @@ func FromEnv() ConnectOption {
 	return func(c *connectConfig) error {
 		if v := os.Getenv(EnvServerAddr); v != "" {
 			c.Addr = v
-			c.Tls = os.Getenv(EnvServerTls) != ""
-			c.TlsSkipVerify = os.Getenv(EnvServerTlsSkipVerify) != ""
+			c.Tls = util.GetEnvBool(EnvServerTls, false)
+			c.TlsSkipVerify = util.GetEnvBool(EnvServerTlsSkipVerify, false)
 			c.Auth = os.Getenv(EnvServerToken) != ""
 		}
 

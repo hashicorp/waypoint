@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/plugin"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/util"
 	"github.com/hashicorp/waypoint/internal/version"
 )
 
@@ -299,11 +300,11 @@ func WithEnvDefaults() Option {
 
 		cfg.URLServicePort = port
 		cfg.ServerAddr = os.Getenv(envServerAddr)
-		cfg.ServerRequired = os.Getenv(envCEBServerRequired) != ""
-		cfg.ServerTls = os.Getenv(envServerTls) != ""
-		cfg.ServerTlsSkipVerify = os.Getenv(envServerTlsSkipVerify) != ""
+		cfg.ServerRequired = util.GetEnvBool(envCEBServerRequired, false)
+		cfg.ServerTls = util.GetEnvBool(envServerTls, false)
+		cfg.ServerTlsSkipVerify = util.GetEnvBool(envServerTlsSkipVerify, false)
 		cfg.InviteToken = os.Getenv(envCEBToken)
-		cfg.disable = os.Getenv(envCEBDisable) != ""
+		cfg.disable = util.GetEnvBool(envCEBDisable, false)
 
 		ceb.deploymentId = os.Getenv(envDeploymentId)
 
