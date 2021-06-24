@@ -13,7 +13,7 @@ import (
 )
 
 type Config struct {
-	*hclConfig
+	hclConfig
 
 	ctx      *hcl.EvalContext
 	path     string
@@ -132,7 +132,7 @@ func Load(path string, opts *LoadOptions) (*Config, error) {
 	}
 
 	return &Config{
-		hclConfig: &cfg,
+		hclConfig: cfg,
 		ctx:       ctx,
 		path:      filepath.Dir(path),
 		pathData:  pathData,
