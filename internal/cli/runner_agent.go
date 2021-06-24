@@ -191,7 +191,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 }
 
 func (c *RunnerAgentCommand) Flags() *flag.Sets {
-	return c.flagSet(flagSetOperation, func(set *flag.Sets) {
+	return c.flagSet(0, func(set *flag.Sets) {
 		f := set.NewSet("Command Options")
 		f.BoolVar(&flag.BoolVar{
 			Name:   "enable-dynamic-config",
