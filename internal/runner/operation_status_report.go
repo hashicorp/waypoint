@@ -27,6 +27,7 @@ func (r *Runner) executeStatusReportOp(
 		panic("operation not expected type")
 	}
 
+	log.Trace("generating status report")
 	var statusReportResult *pb.StatusReport
 
 	switch t := op.StatusReport.Target.(type) {
@@ -62,6 +63,8 @@ func (r *Runner) enableApplicationPoll(
 	log hclog.Logger,
 	appRef *pb.Ref_Application,
 ) error {
+	log = log.With("app", appRef.Application)
+
 	log.Trace("calling GetProject to determine app polling status")
 	resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
 		Project: &pb.Ref_Project{
@@ -74,9 +77,15 @@ func (r *Runner) enableApplicationPoll(
 	project := resp.Project
 
 	for _, a := range project.Applications {
+		// Find the application in the current project
 		if a.Name == appRef.Application {
 			// check that polling isn't enabled for app then do, otherwise break and return
+			if a.StatusReportPoll != nil && a.StatusReportPoll.Enabled {
+				// Status report polling is already enabled
+				break
+			}
 
+			log.Info("enabling application polling")
 			// get project client and upsert update to app
 			_, err := r.client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
 				Project: &pb.Ref_Project{Project: project.Name},

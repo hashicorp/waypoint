@@ -116,26 +116,12 @@ func (s *service) queueJobReqToJob(
 	}
 
 	// Verify the project exists and use that to set the default data source
-	project, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
+	_, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
 		return nil, status.Errorf(codes.NotFound,
-			"Project %s was not found! Please ensure that 'waypoint init' was run with this project.",
+			"Project %q was not found! Please ensure that 'waypoint init' was run with this project.",
 			job.Application.Project,
 		)
-	}
-
-	if job.DataSource == nil {
-		if project.DataSource == nil {
-			return nil, status.Errorf(codes.FailedPrecondition,
-				"Project %s does not have a data source configured. Remote jobs "+
-					"require a data source such as Git to be configured with the project. "+
-					"Data sources can be configured via the CLI or UI. For help, see : "+
-					"https://www.waypointproject.io/docs/projects/git#configuring-the-project",
-				job.Application.Project,
-			)
-		}
-
-		job.DataSource = project.DataSource
 	}
 
 	// Get the next id

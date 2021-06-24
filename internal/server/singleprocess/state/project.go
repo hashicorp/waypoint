@@ -352,7 +352,7 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 	record := &projectIndexRecord{
 		Id:       string(id),
 		Poll:     false, // being explicit that we want to default poll to false
-		ApplPoll: false, // application polling off by default until a deployment or release happens
+		ApplPoll: true,  // application polling off by default until a deployment or release happens
 	}
 
 	// This entire if block sets up polling tracking for the project. In the

@@ -71,7 +71,9 @@ func (a *applicationPoll) PollJob(
 		return nil, err
 	}
 	latestRelease, err := a.state.ReleaseLatest(appRef, &pb.Ref_Workspace{Workspace: a.workspace})
-	if err != nil {
+	// Some platforms don't release, so we shouldn't error here if we at least got a deployment
+	if err != nil && latestDeployment == nil {
+		log.Error("no deployment or release found, cannot generate a poll job")
 		return nil, err
 	}
 
@@ -90,6 +92,8 @@ func (a *applicationPoll) PollJob(
 			Deployment: latestDeployment,
 		}
 	} else {
+		// Unclear if we'll even reach this. DeploymentLatest and ReleaseLatest will
+		// return an error if there's no deployment or release given an app name.
 		log.Debug("no release or deploy target to run a status report poll against.")
 		return nil, nil
 	}

@@ -429,7 +429,7 @@ func TestApplicationPollComplete(t *testing.T) {
 		// Peek does nothing
 		v, _, err := s.ApplicationPollPeek(nil)
 		require.NoError(err)
-		require.Nil(v)
+		require.False(v.StatusReportPoll.Enabled)
 	})
 
 	t.Run("schedules the next poll time", func(t *testing.T) {
