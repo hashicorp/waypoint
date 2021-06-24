@@ -102,7 +102,7 @@ func (a *applicationPoll) PollJob(
 		Job: &pb.Job{
 			// SingletonId so that we only have one poll operation at
 			// any time queued per project.
-			SingletonId: fmt.Sprintf("poll/%s", app.Name),
+			SingletonId: fmt.Sprintf("appl-poll/%s", app.Name),
 
 			Application: &pb.Ref_Application{
 				Application: app.Name,
