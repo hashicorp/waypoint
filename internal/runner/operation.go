@@ -120,11 +120,8 @@ func (r *Runner) executeJob(
 	// get variables values from the server (set via the UI)
 	serverVars := resp.Project.GetVariables()
 
-	// TODO krantzinator get vcs stored var files
-	//
-
 	// evaluate all variables against the variable blocks we just decoded
-	diags := cfg.InputVariables.CollectInputValues(nil, append(serverVars, job.Variables...))
+	diags := cfg.InputVariables.CollectInputValues(wd, append(serverVars, job.Variables...))
 	if diags.HasErrors() {
 		return nil, diags
 	}

@@ -305,13 +305,25 @@ func SetJobInputVariables(vars map[string]string, files []string) ([]*pb.Variabl
 // Once all assigned values have been set, it then sorts the variables
 // in precedence order per their source, with the highest-precedence value
 // being the first item in *InputVar.Values
-func (iv *InputVars) CollectInputValues(files []string, pbvars []*pb.Variable) hcl.Diagnostics {
+func (iv *InputVars) CollectInputValues(wd string, pbvars []*pb.Variable) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
+	// Check working directory (vcs or local) for *.auto.wpvars(.json) files
+	var varFiles []string
+	if files, err := ioutil.ReadDir(wd); err == nil {
+		for _, f := range files {
+			name := f.Name()
+			if !isAutoVarFile(name) {
+				continue
+			}
+			varFiles = append(varFiles, wd+"/"+name)
+		}
+	}
+
 	// files will contain files found in the remote git source
-	for _, file := range files {
-		if file != "" {
-			fileDiags := iv.parseFileValues(file)
+	for _, vf := range varFiles {
+		if vf != "" {
+			fileDiags := iv.parseFileValues(vf)
 			diags = append(diags, fileDiags...)
 			if diags.HasErrors() {
 				return diags
@@ -326,8 +338,8 @@ func (iv *InputVars) CollectInputValues(files []string, pbvars []*pb.Variable) h
 				Severity: hcl.DiagError,
 				Summary:  "Undefined variable",
 				Detail: fmt.Sprintf("A %q variable value was set, "+
-					"but was not found in known variables. To declare "+
-					"variable %q, place this block in your waypoint.hcl file.",
+					"but was not found in known variables. To declare variable "+
+					"%q, place a variable definition block in your waypoint.hcl file.",
 					pbv.Name, pbv.Name),
 			})
 			continue
@@ -568,4 +580,10 @@ func AddInputVariables(ctx *hcl.EvalContext, vs *InputVars) {
 		"var": cty.ObjectVal(vars),
 	}
 	ctx.Variables = variables
+}
+
+// isAutoVarFile determines if the file ends with .auto.tfvars or .auto.tfvars.json
+func isAutoVarFile(path string) bool {
+	return strings.HasSuffix(path, ".auto.wpvars") ||
+		strings.HasSuffix(path, ".auto.wpvars.json")
 }
