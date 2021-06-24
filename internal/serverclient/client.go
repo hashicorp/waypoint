@@ -124,10 +124,11 @@ type connectConfig struct {
 // FromEnv sources the connection information from the environment
 // using standard environment variables.
 func FromEnv() ConnectOption {
-	return func(c *connectConfig) (err error) {
+	return func(c *connectConfig) error {
 		if v := os.Getenv(EnvServerAddr); v != "" {
 			c.Addr = v
 
+			var err error
 			c.Tls, err = env.GetBool(EnvServerTls, false)
 			if err != nil {
 				return err

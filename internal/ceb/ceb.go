@@ -283,7 +283,7 @@ type Option func(*CEB, *config) error
 // environment variables. If this is NOT called, then the environment variable
 // based confiugration will be ignored.
 func WithEnvDefaults() Option {
-	return func(ceb *CEB, cfg *config) (err error) {
+	return func(ceb *CEB, cfg *config) error {
 		var port int
 		portStr := os.Getenv("PORT")
 		if portStr == "" {
@@ -301,6 +301,7 @@ func WithEnvDefaults() Option {
 		cfg.URLServicePort = port
 		cfg.ServerAddr = os.Getenv(envServerAddr)
 
+		var err error
 		cfg.ServerRequired, err = env.GetBool(envCEBServerRequired, false)
 		if err != nil {
 			return err
