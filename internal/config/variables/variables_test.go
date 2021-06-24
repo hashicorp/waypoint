@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsimple"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
@@ -73,19 +74,56 @@ func TestVariables_decode(t *testing.T) {
 	}
 }
 
+func TestVariables_readFileValues(t *testing.T) {
+	cases := []struct {
+		file string
+		err  string
+	}{
+		{
+			file: "values.wpvars",
+			err:  "",
+		},
+		{
+			file: "nofile.wpvars",
+			err:  "Given variables file testdata/nofile.wpvars does not exist",
+		},
+		{
+			file: "nothcl",
+			err:  "Missing newline after argument",
+		},
+		{
+			file: "valid.hcl",
+			err:  "Variable declaration in a wpvars file",
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.file, func(t *testing.T) {
+			require := require.New(t)
+
+			fp := filepath.Join("testdata", tt.file)
+			_, diags := readFileValues(fp)
+
+			if tt.err != "" {
+				require.Contains(diags.Error(), tt.err)
+				return
+			}
+
+			require.False(diags.HasErrors())
+		})
+	}
+}
+
 func TestVariables_collectValues(t *testing.T) {
 	cases := []struct {
 		name        string
 		file        string
-		inputFiles  []string
 		inputValues []*pb.Variable
 		expected    InputVars
 		err         string
 	}{
 		{
-			name:       "valid",
-			file:       "valid.hcl",
-			inputFiles: []string{filepath.Join("testdata", "values.hcl")},
+			name: "valid",
+			file: "valid.hcl",
 			inputValues: []*pb.Variable{
 				{
 					Name:   "art",
@@ -98,7 +136,7 @@ func TestVariables_collectValues(t *testing.T) {
 					Name: "art",
 					Values: []Value{
 						{cty.StringVal("gdbee"), Source{"cli", 5}, hcl.Expression(nil), hcl.Range{}},
-						{cty.StringVal("gdbee"), Source{"file", 4}, hcl.Expression(nil), hcl.Range{}},
+						{cty.StringVal("gdbee"), Source{"vcs", 2}, hcl.Expression(nil), hcl.Range{}},
 						{cty.NullVal(cty.String), Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
 					},
 					Type: cty.String,
@@ -107,9 +145,8 @@ func TestVariables_collectValues(t *testing.T) {
 			err: "",
 		},
 		{
-			name:       "undefined variable for pb.Variable value",
-			file:       "valid.hcl",
-			inputFiles: []string{filepath.Join("testdata", "values.hcl")},
+			name: "undefined variable for pb.Variable value",
+			file: "valid.hcl",
 			inputValues: []*pb.Variable{
 				{
 					Name:   "foo",
@@ -121,9 +158,8 @@ func TestVariables_collectValues(t *testing.T) {
 			err:      "Undefined variable",
 		},
 		{
-			name:       "invalid value type for pb.Variable",
-			file:       "valid.hcl",
-			inputFiles: []string{filepath.Join("testdata", "values.hcl")},
+			name: "invalid value type for pb.Variable",
+			file: "valid.hcl",
 			inputValues: []*pb.Variable{
 				{
 					Name:   "is_good",
@@ -135,48 +171,22 @@ func TestVariables_collectValues(t *testing.T) {
 			err:      "Invalid value for variable",
 		},
 		{
-			name:        "no varfile",
-			file:        "valid.hcl",
-			inputFiles:  []string{filepath.Join("testdata", "nofile.hcl")},
-			inputValues: []*pb.Variable{},
-			expected:    InputVars{},
-			err:         "Given variables file testdata/nofile.hcl does not exist",
-		},
-		{
-			name:        "input file not valid hcl",
-			file:        "valid.hcl",
-			inputFiles:  []string{filepath.Join("testdata", "nothcl")},
-			inputValues: []*pb.Variable{},
-			expected:    InputVars{},
-			err:         "Missing newline after argument",
-		},
-		{
-			name:        "defintion in values file",
-			file:        "valid.hcl",
-			inputFiles:  []string{filepath.Join("testdata", "valid.hcl")},
-			inputValues: []*pb.Variable{},
-			expected:    InputVars{},
-			err:         "Variable declaration in a wpvars file",
-		},
-		{
 			name:        "undefined var for file value",
-			file:        "valid.hcl",
-			inputFiles:  []string{filepath.Join("testdata", "undefined.hcl")},
+			file:        "undefined.hcl",
 			inputValues: []*pb.Variable{},
 			expected:    InputVars{},
 			err:         "Undefined variable",
 		},
 		{
 			name:        "invalid value type",
-			file:        "valid.hcl",
-			inputFiles:  []string{filepath.Join("testdata", "invalid_value.hcl")},
+			file:        "invalid_value.hcl",
 			inputValues: []*pb.Variable{},
 			expected:    InputVars{},
 			err:         "Invalid value for variable",
 		},
 	}
 	for _, tt := range cases {
-		t.Run(tt.file, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
 
 			file := filepath.Join("testdata", tt.file)
@@ -199,7 +209,7 @@ func TestVariables_collectValues(t *testing.T) {
 			require.False(diags.HasErrors())
 
 			// collect values
-			diags = vars.CollectInputValues(tt.inputFiles, tt.inputValues)
+			diags = vars.CollectInputValues("testdata", tt.inputValues)
 			if tt.err != "" {
 				require.True(diags.HasErrors())
 				require.Contains(diags.Error(), tt.err)
@@ -240,7 +250,7 @@ func TestVariables_SetJobInputVariables(t *testing.T) {
 		},
 		// {
 		// 	"files",
-		// 	[]string{filepath.Join("testdata", "values.hcl"),filepath.Join("testdata", "more_values.hcl") },
+		// 	[]string{filepath.Join("testdata", "values.wpvars"), filepath.Join("testdata", "more_values.wpvars")},
 		// 	nil,
 		// 	[]*pb.Variable{
 		// 		{
@@ -294,6 +304,7 @@ var cmpOpts = []cmp.Option{
 	ctyValueComparer,
 	ctyTypeComparer,
 	cmpopts.IgnoreInterfaces(struct{ hcl.Expression }{}),
+	cmpopts.IgnoreTypes(hclsyntax.TemplateExpr{}),
 	cmpopts.IgnoreTypes(hcl.Range{}),
 }
 

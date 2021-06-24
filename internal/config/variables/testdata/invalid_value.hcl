@@ -1,1 +1,9 @@
-is_good = 1
+variable "art" {
+  default = null
+  type = bool
+}
+
+variable "mug" {
+  default = "clay"
+  type = string
+}

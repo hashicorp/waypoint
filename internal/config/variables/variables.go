@@ -451,7 +451,7 @@ func (iv *InputVars) parseFileValues(filename string) hcl.Diagnostics {
 		}
 
 		variable.Values = append(variable.Values, Value{
-			Source: sourceFile,
+			Source: sourceVCS,
 			Value:  val,
 			Expr:   attr.Expr,
 		})

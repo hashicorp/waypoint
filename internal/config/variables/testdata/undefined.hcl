@@ -1,1 +1,3 @@
-thatsnotmy = "name"
+variable "thatsnotmy" {
+  default = "name"
+}
