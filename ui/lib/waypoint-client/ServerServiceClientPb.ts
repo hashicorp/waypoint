@@ -1533,6 +1533,46 @@ export class WaypointClient {
     this.methodInfoBootstrapToken);
   }
 
+  methodInfoDecodeToken = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.DecodeTokenResponse,
+    (request: internal_server_proto_server_pb.DecodeTokenRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.DecodeTokenResponse.deserializeBinary
+  );
+
+  decodeToken(
+    request: internal_server_proto_server_pb.DecodeTokenRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.DecodeTokenResponse>;
+
+  decodeToken(
+    request: internal_server_proto_server_pb.DecodeTokenRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.DecodeTokenResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.DecodeTokenResponse>;
+
+  decodeToken(
+    request: internal_server_proto_server_pb.DecodeTokenRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.DecodeTokenResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/DecodeToken',
+        request,
+        metadata || {},
+        this.methodInfoDecodeToken,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/DecodeToken',
+    request,
+    metadata || {},
+    this.methodInfoDecodeToken);
+  }
+
   methodInfoGenerateInviteToken = new grpcWeb.AbstractClientBase.MethodInfo(
     internal_server_proto_server_pb.NewTokenResponse,
     (request: internal_server_proto_server_pb.InviteTokenRequest) => {
@@ -1575,24 +1615,24 @@ export class WaypointClient {
 
   methodInfoGenerateLoginToken = new grpcWeb.AbstractClientBase.MethodInfo(
     internal_server_proto_server_pb.NewTokenResponse,
-    (request: google_protobuf_empty_pb.Empty) => {
+    (request: internal_server_proto_server_pb.LoginTokenRequest) => {
       return request.serializeBinary();
     },
     internal_server_proto_server_pb.NewTokenResponse.deserializeBinary
   );
 
   generateLoginToken(
-    request: google_protobuf_empty_pb.Empty,
+    request: internal_server_proto_server_pb.LoginTokenRequest,
     metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.NewTokenResponse>;
 
   generateLoginToken(
-    request: google_protobuf_empty_pb.Empty,
+    request: internal_server_proto_server_pb.LoginTokenRequest,
     metadata: grpcWeb.Metadata | null,
     callback: (err: grpcWeb.Error,
                response: internal_server_proto_server_pb.NewTokenResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.NewTokenResponse>;
 
   generateLoginToken(
-    request: google_protobuf_empty_pb.Empty,
+    request: internal_server_proto_server_pb.LoginTokenRequest,
     metadata: grpcWeb.Metadata | null,
     callback?: (err: grpcWeb.Error,
                response: internal_server_proto_server_pb.NewTokenResponse) => void) {

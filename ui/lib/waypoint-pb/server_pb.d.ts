@@ -718,6 +718,79 @@ export namespace Ref {
     }
   }
 
+
+  export class User extends jspb.Message {
+    getId(): Ref.UserId | undefined;
+    setId(value?: Ref.UserId): User;
+    hasId(): boolean;
+    clearId(): User;
+
+    getUsername(): Ref.UserUsername | undefined;
+    setUsername(value?: Ref.UserUsername): User;
+    hasUsername(): boolean;
+    clearUsername(): User;
+
+    getRefCase(): User.RefCase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): User.AsObject;
+    static toObject(includeInstance: boolean, msg: User): User.AsObject;
+    static serializeBinaryToWriter(message: User, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): User;
+    static deserializeBinaryFromReader(message: User, reader: jspb.BinaryReader): User;
+  }
+
+  export namespace User {
+    export type AsObject = {
+      id?: Ref.UserId.AsObject,
+      username?: Ref.UserUsername.AsObject,
+    }
+
+    export enum RefCase { 
+      REF_NOT_SET = 0,
+      ID = 1,
+      USERNAME = 2,
+    }
+  }
+
+
+  export class UserId extends jspb.Message {
+    getId(): string;
+    setId(value: string): UserId;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): UserId.AsObject;
+    static toObject(includeInstance: boolean, msg: UserId): UserId.AsObject;
+    static serializeBinaryToWriter(message: UserId, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): UserId;
+    static deserializeBinaryFromReader(message: UserId, reader: jspb.BinaryReader): UserId;
+  }
+
+  export namespace UserId {
+    export type AsObject = {
+      id: string,
+    }
+  }
+
+
+  export class UserUsername extends jspb.Message {
+    getUsername(): string;
+    setUsername(value: string): UserUsername;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): UserUsername.AsObject;
+    static toObject(includeInstance: boolean, msg: UserUsername): UserUsername.AsObject;
+    static serializeBinaryToWriter(message: UserUsername, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): UserUsername;
+    static deserializeBinaryFromReader(message: UserUsername, reader: jspb.BinaryReader): UserUsername;
+  }
+
+  export namespace UserUsername {
+    export type AsObject = {
+      username: string,
+    }
+  }
+
 }
 
 export class Component extends jspb.Message {
@@ -5320,6 +5393,11 @@ export class StatusReport extends jspb.Message {
   clearResourcesHealthList(): StatusReport;
   addResourcesHealth(value?: StatusReport.Health, index?: number): StatusReport.Health;
 
+  getGeneratedTime(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setGeneratedTime(value?: google_protobuf_timestamp_pb.Timestamp): StatusReport;
+  hasGeneratedTime(): boolean;
+  clearGeneratedTime(): StatusReport;
+
   getTargetIdCase(): StatusReport.TargetIdCase;
 
   serializeBinary(): Uint8Array;
@@ -5341,6 +5419,7 @@ export namespace StatusReport {
     statusReport?: google_protobuf_any_pb.Any.AsObject,
     health?: StatusReport.Health.AsObject,
     resourcesHealthList: Array<StatusReport.Health.AsObject>,
+    generatedTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
   }
 
   export class Health extends jspb.Message {
@@ -6522,29 +6601,46 @@ export namespace TokenTransport {
 }
 
 export class Token extends jspb.Message {
-  getUser(): string;
-  setUser(value: string): Token;
-
-  getTokenId(): Uint8Array | string;
-  getTokenId_asU8(): Uint8Array;
-  getTokenId_asB64(): string;
-  setTokenId(value: Uint8Array | string): Token;
+  getAccessorId(): Uint8Array | string;
+  getAccessorId_asU8(): Uint8Array;
+  getAccessorId_asB64(): string;
+  setAccessorId(value: Uint8Array | string): Token;
 
   getValidUntil(): google_protobuf_timestamp_pb.Timestamp | undefined;
   setValidUntil(value?: google_protobuf_timestamp_pb.Timestamp): Token;
   hasValidUntil(): boolean;
   clearValidUntil(): Token;
 
-  getLogin(): boolean;
-  setLogin(value: boolean): Token;
+  getIssuedTime(): google_protobuf_timestamp_pb.Timestamp | undefined;
+  setIssuedTime(value?: google_protobuf_timestamp_pb.Timestamp): Token;
+  hasIssuedTime(): boolean;
+  clearIssuedTime(): Token;
 
-  getInvite(): boolean;
-  setInvite(value: boolean): Token;
+  getLogin(): Token.Login | undefined;
+  setLogin(value?: Token.Login): Token;
+  hasLogin(): boolean;
+  clearLogin(): Token;
 
-  getEntrypoint(): Token.Entrypoint | undefined;
-  setEntrypoint(value?: Token.Entrypoint): Token;
-  hasEntrypoint(): boolean;
-  clearEntrypoint(): Token;
+  getInvite(): Token.Invite | undefined;
+  setInvite(value?: Token.Invite): Token;
+  hasInvite(): boolean;
+  clearInvite(): Token;
+
+  getUnusedUser(): string;
+  setUnusedUser(value: string): Token;
+
+  getUnusedLogin(): boolean;
+  setUnusedLogin(value: boolean): Token;
+
+  getUnusedInvite(): boolean;
+  setUnusedInvite(value: boolean): Token;
+
+  getUnusedEntrypoint(): Token.Entrypoint | undefined;
+  setUnusedEntrypoint(value?: Token.Entrypoint): Token;
+  hasUnusedEntrypoint(): boolean;
+  clearUnusedEntrypoint(): Token;
+
+  getKindCase(): Token.KindCase;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Token.AsObject;
@@ -6556,13 +6652,91 @@ export class Token extends jspb.Message {
 
 export namespace Token {
   export type AsObject = {
-    user: string,
-    tokenId: Uint8Array | string,
+    accessorId: Uint8Array | string,
     validUntil?: google_protobuf_timestamp_pb.Timestamp.AsObject,
-    login: boolean,
-    invite: boolean,
-    entrypoint?: Token.Entrypoint.AsObject,
+    issuedTime?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+    login?: Token.Login.AsObject,
+    invite?: Token.Invite.AsObject,
+    unusedUser: string,
+    unusedLogin: boolean,
+    unusedInvite: boolean,
+    unusedEntrypoint?: Token.Entrypoint.AsObject,
   }
+
+  export class Login extends jspb.Message {
+    getUserId(): string;
+    setUserId(value: string): Login;
+
+    getEntrypoint(): Token.Entrypoint | undefined;
+    setEntrypoint(value?: Token.Entrypoint): Login;
+    hasEntrypoint(): boolean;
+    clearEntrypoint(): Login;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Login.AsObject;
+    static toObject(includeInstance: boolean, msg: Login): Login.AsObject;
+    static serializeBinaryToWriter(message: Login, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Login;
+    static deserializeBinaryFromReader(message: Login, reader: jspb.BinaryReader): Login;
+  }
+
+  export namespace Login {
+    export type AsObject = {
+      userId: string,
+      entrypoint?: Token.Entrypoint.AsObject,
+    }
+  }
+
+
+  export class Invite extends jspb.Message {
+    getFromUserId(): string;
+    setFromUserId(value: string): Invite;
+
+    getLogin(): Token.Login | undefined;
+    setLogin(value?: Token.Login): Invite;
+    hasLogin(): boolean;
+    clearLogin(): Invite;
+
+    getSignup(): Token.Invite.Signup | undefined;
+    setSignup(value?: Token.Invite.Signup): Invite;
+    hasSignup(): boolean;
+    clearSignup(): Invite;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Invite.AsObject;
+    static toObject(includeInstance: boolean, msg: Invite): Invite.AsObject;
+    static serializeBinaryToWriter(message: Invite, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Invite;
+    static deserializeBinaryFromReader(message: Invite, reader: jspb.BinaryReader): Invite;
+  }
+
+  export namespace Invite {
+    export type AsObject = {
+      fromUserId: string,
+      login?: Token.Login.AsObject,
+      signup?: Token.Invite.Signup.AsObject,
+    }
+
+    export class Signup extends jspb.Message {
+      getInitialUsername(): string;
+      setInitialUsername(value: string): Signup;
+
+      serializeBinary(): Uint8Array;
+      toObject(includeInstance?: boolean): Signup.AsObject;
+      static toObject(includeInstance: boolean, msg: Signup): Signup.AsObject;
+      static serializeBinaryToWriter(message: Signup, writer: jspb.BinaryWriter): void;
+      static deserializeBinary(bytes: Uint8Array): Signup;
+      static deserializeBinaryFromReader(message: Signup, reader: jspb.BinaryReader): Signup;
+    }
+
+    export namespace Signup {
+      export type AsObject = {
+        initialUsername: string,
+      }
+    }
+
+  }
+
 
   export class Entrypoint extends jspb.Message {
     getDeploymentId(): string;
@@ -6582,6 +6756,12 @@ export namespace Token {
     }
   }
 
+
+  export enum KindCase { 
+    KIND_NOT_SET = 0,
+    LOGIN = 8,
+    INVITE = 9,
+  }
 }
 
 export class HMACKey extends jspb.Message {
@@ -6608,14 +6788,92 @@ export namespace HMACKey {
   }
 }
 
+export class DecodeTokenRequest extends jspb.Message {
+  getToken(): string;
+  setToken(value: string): DecodeTokenRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DecodeTokenRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DecodeTokenRequest): DecodeTokenRequest.AsObject;
+  static serializeBinaryToWriter(message: DecodeTokenRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DecodeTokenRequest;
+  static deserializeBinaryFromReader(message: DecodeTokenRequest, reader: jspb.BinaryReader): DecodeTokenRequest;
+}
+
+export namespace DecodeTokenRequest {
+  export type AsObject = {
+    token: string,
+  }
+}
+
+export class DecodeTokenResponse extends jspb.Message {
+  getToken(): Token | undefined;
+  setToken(value?: Token): DecodeTokenResponse;
+  hasToken(): boolean;
+  clearToken(): DecodeTokenResponse;
+
+  getTransport(): TokenTransport | undefined;
+  setTransport(value?: TokenTransport): DecodeTokenResponse;
+  hasTransport(): boolean;
+  clearTransport(): DecodeTokenResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DecodeTokenResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: DecodeTokenResponse): DecodeTokenResponse.AsObject;
+  static serializeBinaryToWriter(message: DecodeTokenResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DecodeTokenResponse;
+  static deserializeBinaryFromReader(message: DecodeTokenResponse, reader: jspb.BinaryReader): DecodeTokenResponse;
+}
+
+export namespace DecodeTokenResponse {
+  export type AsObject = {
+    token?: Token.AsObject,
+    transport?: TokenTransport.AsObject,
+  }
+}
+
+export class LoginTokenRequest extends jspb.Message {
+  getDuration(): string;
+  setDuration(value: string): LoginTokenRequest;
+
+  getUser(): Ref.User | undefined;
+  setUser(value?: Ref.User): LoginTokenRequest;
+  hasUser(): boolean;
+  clearUser(): LoginTokenRequest;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): LoginTokenRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: LoginTokenRequest): LoginTokenRequest.AsObject;
+  static serializeBinaryToWriter(message: LoginTokenRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): LoginTokenRequest;
+  static deserializeBinaryFromReader(message: LoginTokenRequest, reader: jspb.BinaryReader): LoginTokenRequest;
+}
+
+export namespace LoginTokenRequest {
+  export type AsObject = {
+    duration: string,
+    user?: Ref.User.AsObject,
+  }
+}
+
 export class InviteTokenRequest extends jspb.Message {
   getDuration(): string;
   setDuration(value: string): InviteTokenRequest;
 
-  getEntrypoint(): Token.Entrypoint | undefined;
-  setEntrypoint(value?: Token.Entrypoint): InviteTokenRequest;
-  hasEntrypoint(): boolean;
-  clearEntrypoint(): InviteTokenRequest;
+  getLogin(): Token.Login | undefined;
+  setLogin(value?: Token.Login): InviteTokenRequest;
+  hasLogin(): boolean;
+  clearLogin(): InviteTokenRequest;
+
+  getSignup(): Token.Invite.Signup | undefined;
+  setSignup(value?: Token.Invite.Signup): InviteTokenRequest;
+  hasSignup(): boolean;
+  clearSignup(): InviteTokenRequest;
+
+  getUnusedEntrypoint(): Token.Entrypoint | undefined;
+  setUnusedEntrypoint(value?: Token.Entrypoint): InviteTokenRequest;
+  hasUnusedEntrypoint(): boolean;
+  clearUnusedEntrypoint(): InviteTokenRequest;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): InviteTokenRequest.AsObject;
@@ -6628,7 +6886,9 @@ export class InviteTokenRequest extends jspb.Message {
 export namespace InviteTokenRequest {
   export type AsObject = {
     duration: string,
-    entrypoint?: Token.Entrypoint.AsObject,
+    login?: Token.Login.AsObject,
+    signup?: Token.Invite.Signup.AsObject,
+    unusedEntrypoint?: Token.Entrypoint.AsObject,
   }
 }
 
