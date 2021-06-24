@@ -1,0 +1,3 @@
+```release-note:feature
+internal/config: add `${app.name}` variable
+```
