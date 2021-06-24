@@ -1,8 +1,11 @@
 package cli
 
 import (
+	"context"
+	"fmt"
 	"github.com/hashicorp/waypoint-plugin-sdk"
 	"github.com/hashicorp/waypoint/internal/plugin"
+	"os"
 )
 
 type PluginCommand struct {
@@ -15,8 +18,18 @@ func (c *PluginCommand) Run(args []string) int {
 		panic("no such plugin: " + args[0])
 	}
 
+	debug := os.Getenv("WAYPOINT_PLUGIN_DEBUG") != ""
+
 	// Run the plugin
-	sdk.Main(plugin...)
+	if !debug {
+		sdk.Main(plugin...)
+	} else {
+		err := sdk.Debug(context.Background(), "pack", plugin...)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to launch plugin in debug mode: %v", err))
+		}
+	}
+
 	return 0
 }
 
