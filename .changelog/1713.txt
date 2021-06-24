@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Removed references to IDs in favor of sequence # to align with CLI
+```

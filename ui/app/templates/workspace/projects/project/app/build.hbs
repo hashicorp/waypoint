@@ -1,7 +1,7 @@
 <PageHeader @iconName="build">
   <div class="title">
     <h2>
-      <b class="badge badge--version">#{{@model.sequence}}</b> <code>{{@model.id}}</code>
+      <b class="badge badge--version">v{{@model.sequence}}</b>
     </h2>
     <small>
       <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
@@ -16,7 +16,7 @@
     </small>
   </div>
   <div class="actions">
-    <Actions::Deploy @id={{@model.id}} />
+    <Actions::Deploy @sequence={{@model.sequence}} />
   </div>
 </PageHeader>
 
