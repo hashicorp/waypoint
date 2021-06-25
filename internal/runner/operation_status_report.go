@@ -82,6 +82,7 @@ func (r *Runner) enableApplicationPoll(
 			// check that polling isn't enabled for app then do, otherwise break and return
 			if a.StatusReportPoll != nil && a.StatusReportPoll.Enabled {
 				// Status report polling is already enabled
+				log.Trace("application polling for status reports already enabled")
 				break
 			}
 

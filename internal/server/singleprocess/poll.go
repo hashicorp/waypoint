@@ -117,13 +117,13 @@ func (s *service) runPollQueuer(
 
 		if err == nil {
 			// Outcome (1) above
-			log.Debug("dataset change, restarting poll queuer")
+			log.Trace("dataset change, restarting poll queuer")
 			continue
 		}
 
 		if ctx.Err() != nil {
 			// Outcome (2) above
-			log.Debug("context cancelled for poll queuer, returning from poll loop ctx")
+			log.Trace("context cancelled for poll queuer, returning from poll loop ctx")
 			return
 		}
 
