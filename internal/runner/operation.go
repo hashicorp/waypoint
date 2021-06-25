@@ -2,16 +2,22 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
+	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-multierror"
+	goplugin "github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	sdk "github.com/hashicorp/waypoint-plugin-sdk"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -225,11 +231,32 @@ func (r *Runner) pluginFactories(
 	}
 	log.Debug("plugin search path", "path", pluginPaths)
 
+	// Look for any unmanaged plugins
+	var unmanagedPluginConfigs map[string]*goplugin.ReattachConfig
+	unmanagedPluginsStr := os.Getenv("WP_REATTACH_PLUGINS")
+	if unmanagedPluginsStr != "" {
+		var err error
+		unmanagedPluginConfigs, err = parseReattachPlugins(unmanagedPluginsStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// Search for all of our plugins
 	var perr error
 	for _, pluginCfg := range plugins {
 		plog := log.With("plugin_name", pluginCfg.Name)
 		plog.Debug("searching for plugin")
+
+		if reattachConfig, ok := unmanagedPluginConfigs[pluginCfg.Name]; ok {
+			plog.Debug(fmt.Sprintf("plugin %s is declared as running unmanaged"))
+			for _, t := range pluginCfg.Types() {
+				if err := result[t].Register(pluginCfg.Name, plugin.UnmanagedPluginFactory(reattachConfig, t)); err != nil {
+					return nil, err
+				}
+			}
+			continue
+		}
 
 		// Find our plugin.
 		cmd, err := plugin.Discover(pluginCfg, pluginPaths)
@@ -265,6 +292,46 @@ func (r *Runner) pluginFactories(
 	}
 
 	return result, perr
+}
+
+// parse information on reattaching to unmanaged plugins out of a
+// JSON-encoded environment variable.
+func parseReattachPlugins(in string) (map[string]*goplugin.ReattachConfig, error) {
+	unmanangedPlugins := map[string]*goplugin.ReattachConfig{}
+	if in != "" {
+		in = strings.TrimRight(in, "'")
+		in = strings.TrimLeft(in, "'")
+		var m map[string]sdk.ReattachConfig
+		err := json.Unmarshal([]byte(in), &m)
+		if err != nil {
+			return unmanangedPlugins, fmt.Errorf("Invalid format for WP_REATTACH_PROVIDERS: %w", err)
+		}
+		for p, c := range m {
+			var addr net.Addr
+			switch c.Addr.Network {
+			case "unix":
+				addr, err = net.ResolveUnixAddr("unix", c.Addr.String)
+				if err != nil {
+					return unmanangedPlugins, fmt.Errorf("Invalid unix socket path %q for %q: %w", c.Addr.String, p, err)
+				}
+			case "tcp":
+				addr, err = net.ResolveTCPAddr("tcp", c.Addr.String)
+				if err != nil {
+					return unmanangedPlugins, fmt.Errorf("Invalid TCP address %q for %q: %w", c.Addr.String, p, err)
+				}
+			default:
+				return unmanangedPlugins, fmt.Errorf("Unknown address type %q for %q", c.Addr.String, p)
+			}
+			unmanangedPlugins[p] = &goplugin.ReattachConfig{
+				Protocol:        goplugin.Protocol(c.Protocol),
+				ProtocolVersion: c.ProtocolVersion,
+				Pid:             c.Pid,
+				Test:            c.Test,
+				Addr:            addr,
+			}
+		}
+	}
+	return unmanangedPlugins, nil
 }
 
 // operationNoDataFunc is the function type for operations that are
