@@ -1,5 +1,4 @@
 import VERSION, { packageManagers } from 'data/version.js'
-import Head from 'next/head'
 import HashiHead from '@hashicorp/react-head'
 import { productName, productSlug } from 'data/metadata'
 import ProductDownloader from '@hashicorp/react-product-downloader'
@@ -8,8 +7,7 @@ import styles from './style.module.css'
 export default function DownloadsPage({ releases }) {
   return (
     <span className={styles.downloads}>
-      <HashiHead is={Head} title={`Downloads | ${productName} by HashiCorp`} />
-
+      <HashiHead title={`Downloads | ${productName} by HashiCorp`} />
       <ProductDownloader
         releases={releases}
         packageManagers={packageManagers}
