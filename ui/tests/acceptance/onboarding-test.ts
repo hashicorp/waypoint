@@ -61,7 +61,7 @@ module('Acceptance | onboarding connect', function (hooks) {
   test('renders a real token', async function (assert) {
     await page.visit();
 
-    assert.equal(page.token.length, 101);
+    assert.equal(page.token.length, 120);
   });
 });
 
