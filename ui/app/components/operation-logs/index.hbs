@@ -54,9 +54,14 @@
             {{/if}}
           </div>
         {{/each}}
-        <div class="output-end" {{in-viewport
-          onEnter=(action (mut this.isFollowingLogs) true)
-          onExit=(action (mut this.isFollowingLogs) false)}} {{did-update this.updateScroll this.logLines.length}}></div>
+        <div
+          class="output-end"
+          {{in-viewport
+            onEnter=(fn (mut this.isFollowingLogs) true)
+            onExit=(fn (mut this.isFollowingLogs) false)
+          }}
+          {{did-update this.updateScroll this.logLines.length}}
+        ></div>
       </div>
     </div>
   {{else}}
