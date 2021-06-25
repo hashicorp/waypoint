@@ -15,6 +15,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/convert"
+	"github.com/zclconf/go-cty/cty/gocty"
 )
 
 // A consistent detail message for all "not a valid identifier" diagnostics.
@@ -225,11 +226,11 @@ func parseVarBlock(block *hcl.Block) (*InputVar, hcl.Diagnostics) {
 // them.
 const VarEnvPrefix = "WP_VAR_"
 
-// SetJobInputVariables collects values set via the CLI (-var, -varfile) and
+// SetJobInputValues collects values set via the CLI (-var, -varfile) and
 // local env vars (WP_VAR_*) and translates those values to pb.Variables. These
 // pb.Variables can then be set on the job for eventual parsing on the runner,
 // after the runner has decoded the variables defined in the waypoint.hcl.
-func SetJobInputVariables(vars map[string]string, files []string) ([]*pb.Variable, hcl.Diagnostics) {
+func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	ret := []*pb.Variable{}
 
@@ -278,11 +279,30 @@ func SetJobInputVariables(vars map[string]string, files []string) ([]*pb.Variabl
 				val, moreDiags := attr.Expr.Value(nil)
 				diags = append(diags, moreDiags...)
 
-				ret = append(ret, &pb.Variable{
+				v := &pb.Variable{
 					Name:   name,
-					Value:  &pb.Variable_Str{Str: val.AsString()},
 					Source: &pb.Variable_File_{},
-				})
+				}
+				switch val.Type() {
+				case cty.String:
+					v.Value = &pb.Variable_Str{Str: val.AsString()}
+				case cty.Bool:
+					v.Value = &pb.Variable_Bool{Bool: val.True()}
+				case cty.Number:
+					var num int64
+					err := gocty.FromCtyValue(val, &num)
+					if err != nil {
+						diags = append(diags, &hcl.Diagnostic{
+							Severity: hcl.DiagError,
+							Summary:  "Invalid number",
+							Detail:   err.Error(),
+							Subject:  &attr.Range,
+						})
+						return nil, diags
+					}
+					v.Value = &pb.Variable_Num{Num: num}
+				}
+				ret = append(ret, v)
 			}
 		}
 	}

@@ -248,34 +248,39 @@ func TestVariables_SetJobInputVariables(t *testing.T) {
 			},
 			"",
 		},
-		// {
-		// 	"files",
-		// 	[]string{filepath.Join("testdata", "values.wpvars"), filepath.Join("testdata", "more_values.wpvars")},
-		// 	nil,
-		// 	[]*pb.Variable{
-		// 		{
-		// 			Name:   "mug",
-		// 			Value:  &pb.Variable_Str{Str: "yeti"},
-		// 			Source: &pb.Variable_File_{},
-		// 		},
-		// 		{
-		// 			Name:   "art",
-		// 			Value:  &pb.Variable_Str{Str: "gdbee"},
-		// 			Source: &pb.Variable_File_{},
-		// 		},
-		// 		{
-		// 			Name:   "is_good",
-		// 			Value:  &pb.Variable_Str{Str: "true"},
-		// 			Source: &pb.Variable_File_{},
-		// 		},
-		// 	},
-		// 	"",
-		// },
+		{
+			"files",
+			[]string{filepath.Join("testdata", "values.wpvars"), filepath.Join("testdata", "more_values.wpvars")},
+			nil,
+			[]*pb.Variable{
+				{
+					Name:   "mug",
+					Value:  &pb.Variable_Str{Str: "yeti"},
+					Source: &pb.Variable_File_{},
+				},
+				{
+					Name:   "art",
+					Value:  &pb.Variable_Str{Str: "gdbee"},
+					Source: &pb.Variable_File_{},
+				},
+				{
+					Name:   "is_good",
+					Value:  &pb.Variable_Bool{Bool: true},
+					Source: &pb.Variable_File_{},
+				},
+				{
+					Name:   "whatdoesittaketobenumber",
+					Value:  &pb.Variable_Num{Num: 1},
+					Source: &pb.Variable_File_{},
+				},
+			},
+			"",
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
-			vars, diags := SetJobInputVariables(tt.cliArgs, tt.files)
+			vars, diags := SetJobInputValues(tt.cliArgs, tt.files)
 			require.False(diags.HasErrors())
 
 			require.Equal(len(vars), len(tt.expected))
