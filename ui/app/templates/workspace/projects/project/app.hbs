@@ -1,7 +1,7 @@
-{{#unless (or
-  (eq target.currentRouteName 'workspace.projects.project.app.build')
-  (eq target.currentRouteName 'workspace.projects.project.app.deployment')
-  (eq target.currentRouteName 'workspace.projects.project.app.release')
+{{#if (and
+  (not-eq this.target.currentRouteName 'workspace.projects.project.app.build')
+  (not-eq this.target.currentRouteName 'workspace.projects.project.app.deployment')
+  (not-eq this.target.currentRouteName 'workspace.projects.project.app.release')
 )}}
 <PageHeader @iconName="git-repository">
   <div class="title">
@@ -77,6 +77,6 @@
     {{t "nav.exec"}}
   </LinkTo>
 </Pds::TabNav>
-{{/unless}}
+{{/if}}
 
 {{outlet}}
