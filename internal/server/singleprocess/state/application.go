@@ -222,7 +222,7 @@ func (s *State) appPollPeek(
 	}
 	ws.Add(iter.WatchCh())
 
-	// Get the project with the lowest "next poll" time.
+	// Get the projects app with the lowest "next poll" time.
 	iter, err = memTxn.LowerBound(
 		projectIndexTableName,
 		applIndexNextPollIndexName,
@@ -255,8 +255,8 @@ func (s *State) appPollPeek(
 		return err
 	})
 
-	// TODO(briancain): what about projects that define multiple apps? So far I
-	// don't think this workflow is really supported in Waypoint
+	// TODO(briancain): what about projects that define multiple apps?
+	// For now stick to 1 app to get it working
 	return result.Applications[0], rec.ApplNextPoll, err
 }
 
