@@ -249,7 +249,7 @@ func (r *Runner) pluginFactories(
 		plog.Debug("searching for plugin")
 
 		if reattachConfig, ok := unmanagedPluginConfigs[pluginCfg.Name]; ok {
-			plog.Debug(fmt.Sprintf("plugin %s is declared as running unmanaged"))
+			plog.Debug(fmt.Sprintf("plugin %s is declared as running unmanaged", pluginCfg.Name))
 			for _, t := range pluginCfg.Types() {
 				if err := result[t].Register(pluginCfg.Name, plugin.UnmanagedPluginFactory(reattachConfig, t)); err != nil {
 					return nil, err
