@@ -443,7 +443,7 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 				// This also ensures that if we're updating an app w/o changing
 				// poll settings, that the previous settings are retained.
 				if !recordOld.ApplLastPoll.IsZero() {
-					record.ApplLastPoll = recordOld.LastPoll
+					record.ApplLastPoll = recordOld.ApplLastPoll
 					record.ApplNextPoll = record.ApplLastPoll.Add(interval)
 				}
 			}
