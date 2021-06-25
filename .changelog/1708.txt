@@ -1,4 +1,4 @@
 ```release-note:bug
-core/runner: prevent use of operation flags on `runner agent` command
+cli: prevent use of operation flags on `runner agent` command
 ```
 
