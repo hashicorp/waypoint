@@ -2,7 +2,7 @@
   {{#if this.logLines}}
     <div class="output-scroll-y">
       {{#unless this.isFollowingLogs}}
-        <button class="follow-logs" {{on "click" this.followLogs}}>
+        <button type="button" class="follow-logs" {{on "click" this.followLogs}}>
           <Pds::Icon @type="arrow-down" class="icon" />
           {{#if (gt this.badgeCount 0)}}
             <div class="badge">{{this.badgeCount}}</div>
