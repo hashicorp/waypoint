@@ -1,17 +1,17 @@
-<form {{action 'login' on='submit'}} class="login">
+<form {{on "submit" this.login}} class="login">
   <fieldset>
     <label for="invite-token-field">{{if @cli (t 'invite_login.input.cli_label') (t 'invite_login.input.label')}}</label>
     <Input
       autofocus
-      data-test-invite-login=true
+      data-test-invite-login
       @value={{this.inviteToken}}
       id="invite-token-field"
       placeholder={{if @cli (t 'invite_login.input.cli_placeholder') (t 'invite_login.input.placeholder')}} />
     </fieldset>
 
     <button
-      data-test-invite-login-submit {{action "login"}}
-      type="button"
+      data-test-invite-login-submit
+      type="submit"
       class="button button--primary">
       {{if @cli (t 'invite_login.cli_button') (t 'invite_login.button')}}
     </button>
