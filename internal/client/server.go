@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"path/filepath"
@@ -93,7 +94,7 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 		Timeout: 1 * time.Second,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed opening boltdb path %s. Is another server already running against this db?: %w", path, err)
 	}
 	closers = append(closers, db)
 

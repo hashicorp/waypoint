@@ -20,6 +20,9 @@ func (c *PluginCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flags),
+		WithClient(false),
+		WithNoAutoServer(),
+		WithNoConfig(),
 	); err != nil {
 		return 1
 	}
