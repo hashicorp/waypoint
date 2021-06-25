@@ -96,10 +96,10 @@ func BuiltinFactory(name string, typ component.Type) interface{} {
 	return Factory(cmd, typ)
 }
 
-// UnmanagedPluginFactory produces a provider factory that uses the passed
+// ReattachPluginFactory produces a provider factory that uses the passed
 // reattach information to connect to go-plugin processes that are already
 // running, and implements Instance against it.
-func UnmanagedPluginFactory(reattach *plugin.ReattachConfig, typ component.Type) interface{} {
+func ReattachPluginFactory(reattach *plugin.ReattachConfig, typ component.Type) interface{} {
 	return func(log hclog.Logger) (interface{}, error) {
 		config := pluginclient.ClientConfig(log)
 		config.Logger = log
@@ -115,13 +115,13 @@ func UnmanagedPluginFactory(reattach *plugin.ReattachConfig, typ component.Type)
 		config.Plugins = plugins
 
 		// Log that we're going to launch this
-		log.Info("Connecting to an unmanaged plugin", "type", typ, "Addr", reattach.Addr.String())
+		log.Info("Connecting to a reattach plugin", "type", typ, "Addr", reattach.Addr.String())
 
 		// Connect to the plugin
 		client := plugin.NewClient(config)
 		rpcClient, err := client.Client()
 		if err != nil {
-			log.Error("error creating unmanaged plugin client", "err", err)
+			log.Error("error creating reattach plugin client", "err", err)
 			client.Kill()
 			return nil, err
 		}
@@ -132,7 +132,7 @@ func UnmanagedPluginFactory(reattach *plugin.ReattachConfig, typ component.Type)
 		if typ != component.MapperType {
 			raw, err = rpcClient.Dispense(strings.ToLower(typ.String()))
 			if err != nil {
-				log.Error("error requesting unmanaged plugin", "type", typ, "err", err)
+				log.Error("error requesting reattach plugin", "type", typ, "err", err)
 				client.Kill()
 				return nil, err
 			}
@@ -141,12 +141,12 @@ func UnmanagedPluginFactory(reattach *plugin.ReattachConfig, typ component.Type)
 		// Request the mappers
 		mappers, err := pluginclient.Mappers(client)
 		if err != nil {
-			log.Error("error requesting unmanaged plugin mappers", "err", err)
+			log.Error("error requesting reattach plugin mappers", "err", err)
 			client.Kill()
 			return nil, err
 		}
 
-		log.Debug("successfully reattached to an unmanaged plugin")
+		log.Debug("successfully reattached to a plugin")
 		return &Instance{
 			Component: raw,
 			Mappers:   mappers,
