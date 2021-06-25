@@ -1,4 +1,4 @@
-<span class="hint-link connect-link" {{on "click" this.toggleHint}}>
+<span class="hint-link connect-link" role="button" {{on "click" this.toggleHint}}>
   <Pds::Icon @type="bolt" class="nav-icon" />
   CLI
 </span>
@@ -9,5 +9,5 @@
     <ContextCreate></ContextCreate>
     <small><ExternalLink href="https://waypointproject.io/commands/context-create">Read more in our documentation</ExternalLink></small>
   </div>
-  <div class="cli-hint-overlay" {{on "click" this.toggleHint}}></div>
+  <div class="cli-hint-overlay" role="button" {{on "click" this.toggleHint}}></div>
 {{/if}}
