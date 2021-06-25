@@ -3,14 +3,14 @@
     {{! TODO(jgwhite): Make this a real <h1> }}
     <h2 aria-level="1"><b class="badge badge--version">v{{@model.sequence}}</b> <code>{{ @model.id }}</code></h2>
     <small>
-      <Pds::Icon @type=(icon-for-component @model.component.name) class="icon" />
+      <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
       <span>Released on <b>{{component-name @model.component.name}}</b>
         {{date-format-distance-to-now @model.status.startTime.seconds }}</span>
     </small>
   </div>
   <div class="actions">
     {{#if @isLatest}}
-    <button class="button button--primary">
+    <button class="button button--primary" type="button">
       <span>{{@model.release.url}}</span>
       <Pds::Icon @type="exit" class="icon" />
     </button>

@@ -1,6 +1,6 @@
 <h3>{{t "page.builds.title"}}</h3>
 
-<ul data-test-build-list=true class="list">
+<ul data-test-build-list class="list">
   {{#each @model as |build|}}
     <AppItem::Build @build={{build}} />
   {{else}}

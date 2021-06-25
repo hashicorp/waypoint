@@ -34,7 +34,9 @@ export default class InviteLoginForm extends Component<InviteLoginFormArgs> {
   }
 
   @action
-  async login() {
+  async login(event?: Event) {
+    event?.preventDefault();
+
     var req = new ConvertInviteTokenRequest();
     req.setToken(this.inviteToken);
     var resp = await this.api.client.convertInviteToken(req, this.api.WithMeta());

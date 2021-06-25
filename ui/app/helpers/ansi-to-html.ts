@@ -1,14 +1,15 @@
 import { helper } from '@ember/component/helper';
 import * as Anser from 'anser';
+import { htmlSafe } from '@ember/template';
 
 // ansiToHtml
-export function ansiToHtml([text]: [string]): string {
+export function ansiToHtml([text]: [string]): string | ReturnType<typeof htmlSafe> {
   if (!text) return '';
 
   // Simple escaping
   text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  return Anser.default.ansiToHtml(text);
+  return htmlSafe(Anser.default.ansiToHtml(text));
 }
 
 export default helper(ansiToHtml);

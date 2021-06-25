@@ -2,7 +2,7 @@
   {{#if this.logLines}}
     <div class="output-scroll-y">
       {{#unless this.isFollowingLogs}}
-        <button class="follow-logs" {{on "click" this.followLogs}}>
+        <button type="button" class="follow-logs" {{on "click" this.followLogs}}>
           <Pds::Icon @type="arrow-down" class="icon" />
           {{#if (gt this.badgeCount 0)}}
             <div class="badge">{{this.badgeCount}}</div>
@@ -45,7 +45,7 @@
 
             {{!-- Step object --}}
             {{#if (eq line.type this.typeStep)}}
-              <code>{{{ansi-to-html line.logLine.output}}}</code>
+              <code>{{ansi-to-html line.logLine.output}}</code>
             {{/if}}
 
             {{!-- Status --}}
@@ -54,9 +54,14 @@
             {{/if}}
           </div>
         {{/each}}
-        <div class="output-end" {{in-viewport
-          onEnter=(action (mut this.isFollowingLogs) true)
-          onExit=(action (mut this.isFollowingLogs) false)}} {{did-update this.updateScroll this.logLines.length}}></div>
+        <div
+          class="output-end"
+          {{in-viewport
+            onEnter=(fn (mut this.isFollowingLogs) true)
+            onExit=(fn (mut this.isFollowingLogs) false)
+          }}
+          {{did-update this.updateScroll this.logLines.length}}
+        ></div>
       </div>
     </div>
   {{else}}

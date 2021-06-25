@@ -24,7 +24,7 @@
   </Pds::CtaLink>
 </PageHeader>
 
-<div data-test-project-list=true>
+<div data-test-project-list>
   {{#each @model as |project|}}
   <Card>
     <LinkTo @route="workspace.projects.project" @model={{project.project}}>
