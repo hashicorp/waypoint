@@ -141,9 +141,38 @@ func TestVariables_collectValues(t *testing.T) {
 					},
 					Type: cty.String,
 				},
+				"is_good": &InputVar{
+					Name: "is_good",
+					Values: []Value{
+						{cty.BoolVal(false), Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
+					},
+					Type: cty.Bool,
+				},
+				"whatdoesittaketobenumber": &InputVar{
+					Name: "whatdoesittaketobenumber",
+					Values: []Value{
+						{cty.NumberIntVal(1), Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
+					},
+					Type: cty.Number,
+				},
 			},
 			err: "",
 		},
+		// {
+		// 	name:        "complex types",
+		// 	file:        "collections.hcl",
+		// 	inputValues: []*pb.Variable{},
+		// 	expected: InputVars{
+		// 		"docker_ports": &InputVar{
+		// 			Name: "docker_ports",
+		// 			Values: []Value{
+		// 				{stringListVal("us-east-1"), Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
+		// 			},
+		// 			Type: cty.List(cty.String),
+		// 		},
+		// 	},
+		// 	err: "",
+		// },
 		{
 			name: "undefined variable for pb.Variable value",
 			file: "valid.hcl",
@@ -317,3 +346,15 @@ type testConfig struct {
 	Variables []*HclVariable `hcl:"variable,block"`
 	Body      hcl.Body       `hcl:",body"`
 }
+
+// func stringListVal(strings ...string) cty.Value {
+// 	values := []cty.Value{}
+// 	for _, str := range strings {
+// 		values = append(values, cty.StringVal(str))
+// 	}
+// 	list, err := convert.Convert(cty.ListVal(values), cty.List(cty.String))
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return list
+// }

@@ -320,9 +320,10 @@ message Variable {
 
   oneof value {
     string str = 2;
-    string hcl = 3;
     bool bool = 9;
     int64 num = 10;
+    // Unimplemented
+    string hcl = 3;
   }
 
   // Source tracks where a value came from for more helpful error messaging.

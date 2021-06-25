@@ -382,14 +382,19 @@ func (iv *InputVars) CollectInputValues(wd string, pbvars []*pb.Variable) hcl.Di
 		var expr hclsyntax.Expression
 		switch pbv.Value.(type) {
 
-		case *pb.Variable_Hcl:
-			value := pbv.Value.(*pb.Variable_Hcl).Hcl
-			fakeFilename := fmt.Sprintf("<value for var.%s from server>", pbv.Name)
-			expr, diags = hclsyntax.ParseExpression([]byte(value), fakeFilename, hcl.Pos{Line: 1, Column: 1})
-
+		// case *pb.Variable_Hcl:
+		// 	value := pbv.Value.(*pb.Variable_Hcl).Hcl
+		// 	fakeFilename := fmt.Sprintf("<value for var.%s from server>", pbv.Name)
+		// 	expr, diags = hclsyntax.ParseExpression([]byte(value), fakeFilename, hcl.Pos{Line: 1, Column: 1})
 		case *pb.Variable_Str:
 			value := pbv.Value.(*pb.Variable_Str).Str
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.StringVal(value)}
+		case *pb.Variable_Bool:
+			value := pbv.Value.(*pb.Variable_Bool).Bool
+			expr = &hclsyntax.LiteralValueExpr{Val: cty.BoolVal(value)}
+		case *pb.Variable_Num:
+			value := pbv.Value.(*pb.Variable_Num).Num
+			expr = &hclsyntax.LiteralValueExpr{Val: cty.NumberIntVal(value)}
 		}
 
 		val, valDiags := expr.Value(nil)

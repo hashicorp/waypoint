@@ -12,3 +12,8 @@ variable "is_good" {
   default = false
   type = bool
 }
+
+variable "whatdoesittaketobenumber" {
+  default = 1
+  type = number
+}
