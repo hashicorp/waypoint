@@ -115,13 +115,13 @@ func UnmanagedPluginFactory(reattach *plugin.ReattachConfig, typ component.Type)
 		config.Plugins = plugins
 
 		// Log that we're going to launch this
-		log.Info("Connecting to existing plugin", "type", typ, "Addr", reattach.Addr.String())
+		log.Info("Connecting to an unmanaged plugin", "type", typ, "Addr", reattach.Addr.String())
 
 		// Connect to the plugin
 		client := plugin.NewClient(config)
 		rpcClient, err := client.Client()
 		if err != nil {
-			log.Error("error creating plugin client", "err", err)
+			log.Error("error creating unmanaged plugin client", "err", err)
 			client.Kill()
 			return nil, err
 		}
@@ -132,7 +132,7 @@ func UnmanagedPluginFactory(reattach *plugin.ReattachConfig, typ component.Type)
 		if typ != component.MapperType {
 			raw, err = rpcClient.Dispense(strings.ToLower(typ.String()))
 			if err != nil {
-				log.Error("error requesting plugin", "type", typ, "err", err)
+				log.Error("error requesting unmanaged plugin", "type", typ, "err", err)
 				client.Kill()
 				return nil, err
 			}
@@ -141,12 +141,12 @@ func UnmanagedPluginFactory(reattach *plugin.ReattachConfig, typ component.Type)
 		// Request the mappers
 		mappers, err := pluginclient.Mappers(client)
 		if err != nil {
-			log.Error("error requesting plugin mappers", "err", err)
+			log.Error("error requesting unmanaged plugin mappers", "err", err)
 			client.Kill()
 			return nil, err
 		}
 
-		log.Debug("successfully reattached to existing running plugin")
+		log.Debug("successfully reattached to an unmanaged plugin")
 		return &Instance{
 			Component: raw,
 			Mappers:   mappers,
