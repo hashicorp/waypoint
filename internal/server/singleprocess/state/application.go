@@ -241,7 +241,7 @@ func (s *State) appPollPeek(
 
 	rec := raw.(*projectIndexRecord)
 	if rec.ApplNextPoll.IsZero() {
-		// This _shouldnt_ happen but let's protect against it anyways.
+		// This happens if this applications poller hasn't been switched on
 		return nil, time.Time{}, nil
 	}
 
