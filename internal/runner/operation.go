@@ -231,12 +231,12 @@ func (r *Runner) pluginFactories(
 	}
 	log.Debug("plugin search path", "path", pluginPaths)
 
-	// Look for any unmanaged plugins
-	var unmanagedPluginConfigs map[string]*goplugin.ReattachConfig
-	unmanagedPluginsStr := os.Getenv("WP_REATTACH_PLUGINS")
-	if unmanagedPluginsStr != "" {
+	// Look for any reattach plugins
+	var reattachPluginConfigs map[string]*goplugin.ReattachConfig
+	reattachPluginsStr := os.Getenv("WP_REATTACH_PLUGINS")
+	if reattachPluginsStr != "" {
 		var err error
-		unmanagedPluginConfigs, err = parseReattachPlugins(unmanagedPluginsStr)
+		reattachPluginConfigs, err = parseReattachPlugins(reattachPluginsStr)
 		if err != nil {
 			return nil, err
 		}
@@ -248,10 +248,10 @@ func (r *Runner) pluginFactories(
 		plog := log.With("plugin_name", pluginCfg.Name)
 		plog.Debug("searching for plugin")
 
-		if reattachConfig, ok := unmanagedPluginConfigs[pluginCfg.Name]; ok {
-			plog.Debug(fmt.Sprintf("plugin %s is declared as running unmanaged", pluginCfg.Name))
+		if reattachConfig, ok := reattachPluginConfigs[pluginCfg.Name]; ok {
+			plog.Debug(fmt.Sprintf("plugin %s is declared as running for reattachment", pluginCfg.Name))
 			for _, t := range pluginCfg.Types() {
-				if err := result[t].Register(pluginCfg.Name, plugin.UnmanagedPluginFactory(reattachConfig, t)); err != nil {
+				if err := result[t].Register(pluginCfg.Name, plugin.ReattachPluginFactory(reattachConfig, t)); err != nil {
 					return nil, err
 				}
 			}
@@ -294,17 +294,17 @@ func (r *Runner) pluginFactories(
 	return result, perr
 }
 
-// parse information on reattaching to unmanaged plugins out of a
+// parse information on reattaching to plugins out of a
 // JSON-encoded environment variable.
 func parseReattachPlugins(in string) (map[string]*goplugin.ReattachConfig, error) {
-	unmanangedPlugins := map[string]*goplugin.ReattachConfig{}
+	reattachConfigs := map[string]*goplugin.ReattachConfig{}
 	if in != "" {
 		in = strings.TrimRight(in, "'")
 		in = strings.TrimLeft(in, "'")
 		var m map[string]sdk.ReattachConfig
 		err := json.Unmarshal([]byte(in), &m)
 		if err != nil {
-			return unmanangedPlugins, fmt.Errorf("Invalid format for WP_REATTACH_PROVIDERS: %w", err)
+			return reattachConfigs, fmt.Errorf("Invalid format for WP_REATTACH_PROVIDERS: %w", err)
 		}
 		for p, c := range m {
 			var addr net.Addr
@@ -312,17 +312,17 @@ func parseReattachPlugins(in string) (map[string]*goplugin.ReattachConfig, error
 			case "unix":
 				addr, err = net.ResolveUnixAddr("unix", c.Addr.String)
 				if err != nil {
-					return unmanangedPlugins, fmt.Errorf("Invalid unix socket path %q for %q: %w", c.Addr.String, p, err)
+					return reattachConfigs, fmt.Errorf("Invalid unix socket path %q for %q: %w", c.Addr.String, p, err)
 				}
 			case "tcp":
 				addr, err = net.ResolveTCPAddr("tcp", c.Addr.String)
 				if err != nil {
-					return unmanangedPlugins, fmt.Errorf("Invalid TCP address %q for %q: %w", c.Addr.String, p, err)
+					return reattachConfigs, fmt.Errorf("Invalid TCP address %q for %q: %w", c.Addr.String, p, err)
 				}
 			default:
-				return unmanangedPlugins, fmt.Errorf("Unknown address type %q for %q", c.Addr.String, p)
+				return reattachConfigs, fmt.Errorf("Unknown address type %q for %q", c.Addr.String, p)
 			}
-			unmanangedPlugins[p] = &goplugin.ReattachConfig{
+			reattachConfigs[p] = &goplugin.ReattachConfig{
 				Protocol:        goplugin.Protocol(c.Protocol),
 				ProtocolVersion: c.ProtocolVersion,
 				Pid:             c.Pid,
@@ -331,7 +331,7 @@ func parseReattachPlugins(in string) (map[string]*goplugin.ReattachConfig, error
 			}
 		}
 	}
-	return unmanangedPlugins, nil
+	return reattachConfigs, nil
 }
 
 // operationNoDataFunc is the function type for operations that are
