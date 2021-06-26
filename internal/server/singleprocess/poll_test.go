@@ -560,7 +560,7 @@ func TestApplicationPollHandler(t *testing.T) {
 	testServiceImpl(impl).Close()
 
 	// ensure the next poll is after the initial poll before waiting
-	// next poll time gets set when a project poll is marked complete
+	// next poll time gets set when a app poll is marked complete
 	a, nextPollTime, err := state.ApplicationPollPeek(nil)
 	require.NoError(err)
 	require.NotNil(a)

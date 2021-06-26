@@ -58,6 +58,12 @@ func (r *Runner) executeStatusReportOp(
 	}, nil
 }
 
+// enableApplicationPoll will switch on its queued poll handler. This means
+// on the defined interval, Waypoint will generate a status report for this
+// application. When an application is initially inserted, like on a `waypoint init`,
+// it won't enable the poller to generate a status report. This method switches
+// it on after the first status report is generated. Each time after it should
+// do nothinng when its polling has been enabled.
 func (r *Runner) enableApplicationPoll(
 	ctx context.Context,
 	log hclog.Logger,

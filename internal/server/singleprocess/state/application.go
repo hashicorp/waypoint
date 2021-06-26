@@ -242,6 +242,8 @@ func (s *State) appPollPeek(
 	rec := raw.(*projectIndexRecord)
 	if rec.ApplNextPoll.IsZero() {
 		// This happens if this applications poller hasn't been switched on
+		// TODO: This could be why the poll handler isn't running. This needs
+		// to be checked out here
 		return nil, time.Time{}, nil
 	}
 

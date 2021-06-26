@@ -49,7 +49,12 @@ func (a *applicationPoll) Peek(
 	return app, pollTime, nil
 }
 
-// PollJob will generate a job to queue a project on
+// PollJob will generate a job to queue a project on.
+// When determining what to generate a report on, either a Deployment or Release,
+// this job assumes that the _Release_ was the last operation taken on the application.
+// If there's a release, this job will queue a status report genreation on that.
+// Otherwise if there's just a deployment, it return a job to generate a
+// status report on the deployment.
 func (a *applicationPoll) PollJob(
 	log hclog.Logger,
 	appl interface{},
@@ -77,18 +82,18 @@ func (a *applicationPoll) PollJob(
 		return nil, err
 	}
 
-	pollOperation := &pb.Job_StatusReport{
+	statusReportJob := &pb.Job_StatusReport{
 		StatusReport: &pb.Job_StatusReportOp{},
 	}
 
 	// Default to poll on the "latest" lifecycle operation, so if there's a
 	// release, queue up a status on release. If the latest is deploy, then queue that.
 	if latestRelease != nil {
-		pollOperation.StatusReport.Target = &pb.Job_StatusReportOp_Release{
+		statusReportJob.StatusReport.Target = &pb.Job_StatusReportOp_Release{
 			Release: latestRelease,
 		}
 	} else if latestDeployment != nil {
-		pollOperation.StatusReport.Target = &pb.Job_StatusReportOp_Deployment{
+		statusReportJob.StatusReport.Target = &pb.Job_StatusReportOp_Deployment{
 			Deployment: latestDeployment,
 		}
 	} else {
@@ -112,7 +117,7 @@ func (a *applicationPoll) PollJob(
 			Workspace: &pb.Ref_Workspace{Workspace: a.workspace},
 
 			// Poll!
-			Operation: pollOperation,
+			Operation: statusReportJob,
 
 			// Any runner is fine for polling.
 			TargetRunner: &pb.Ref_Runner{
