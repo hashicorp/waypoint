@@ -86,7 +86,9 @@ func (c *Config) App(n string, ctx *hcl.EvalContext) (*App, error) {
 	// Build a new context with our app-scoped values
 	ctx = ctx.NewChild()
 	addPathValue(ctx, pathData)
-	addAppValue(ctx, rawApp.Name)
+	addMapVariable(ctx, "app", map[string]string{
+		"name": rawApp.Name,
+	})
 
 	// Full decode
 	var app App

@@ -65,15 +65,6 @@ func addWorkspaceValue(ctx *hcl.EvalContext, v string) {
 	})
 }
 
-// addAppValue adds the app values to the context. This
-// adds the `app` map and currently only supports the `app.name`
-// value.
-func addAppValue(ctx *hcl.EvalContext, v string) {
-	addMapVariable(ctx, "app", map[string]string{
-		"name": v,
-	})
-}
-
 // addPathValue adds the "path" variable to the context.
 func addPathValue(ctx *hcl.EvalContext, v map[string]string) {
 	addMapVariable(ctx, "path", v)
