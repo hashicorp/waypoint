@@ -627,11 +627,13 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	// TODO: Determine if service stanza should be at group level or task level
 	if c.consulService == true {
 		tg.Services = []*api.Service{
-			Name: "waypoint",
-			PortLabel: "ui"
-			// TODO: Add service health check
-			// TODO: Add optional meta tags (useful for Consul-integrated routing e.g. Fabio, Traefik)
-		}
+			{
+				Name: "waypoint",
+				PortLabel: "ui"
+				// TODO: Add service health check
+				// TODO: Add optional meta tags (useful for Consul-integrated routing e.g. Fabio, Traefik)
+			},
+		},
 	}
 
 	tg.Networks = []*api.NetworkResource{
@@ -865,7 +867,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
 		Usage:   "Create Waypoint service in Consul",
-		Default: false
+		Default: false,
 	})
 }
 
