@@ -26,6 +26,7 @@ type nomadConfig struct {
 	namespace          string            `hcl:"namespace,optional"`
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
 	consulService			 bool							 `hcl:"consul_service,optional"`
+	consulServiceTags  map[string]string `hcl:"consul_service_tags:optional"`
 
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
@@ -624,14 +625,22 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)
 
-	// TODO: Determine if service stanza should be at group level or task level
+	// Convert map[string]string input of consulServiceTags to []string, for job Tags
+	//   in Nomad API
+	tagArray := make([]string, len(c.consulServiceTags))
+	var i = 0
+	for key, value := range c.consulServiceTags {
+		tagArray[i] = key + "=" + value
+		i++
+	}
+
+	// Include Service to be registered in Consul, if specified in the server install
 	if c.consulService == true {
 		tg.Services = []*api.Service{
 			{
 				Name: "waypoint",
 				PortLabel: "ui",
-				// TODO: Add service health check
-				// TODO: Add optional meta tags (useful for Consul-integrated routing e.g. Fabio, Traefik)
+				Tags: tagArray,
 			},
 		}
 	}
@@ -863,11 +872,18 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
+
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
 		Usage:   "Create Waypoint service in Consul.",
 		Default: false,
+	})
+
+	set.StringMapVar(&flag.StringMapVar{
+		Name:   "nomad-consul-service-tags",
+		Target: &i.config.consulServiceTags,
+		Usage:  "Tags for the Consul service generated.",
 	})
 }
 
