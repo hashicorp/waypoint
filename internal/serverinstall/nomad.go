@@ -876,7 +876,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
-		Usage:   "Create Waypoint service in Consul.",
+		Usage:   "Create service for Waypoint UI in Consul.",
 		Default: false,
 	})
 
