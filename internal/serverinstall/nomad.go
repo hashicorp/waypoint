@@ -629,11 +629,11 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 		tg.Services = []*api.Service{
 			{
 				Name: "waypoint",
-				PortLabel: "ui"
+				PortLabel: "ui",
 				// TODO: Add service health check
 				// TODO: Add optional meta tags (useful for Consul-integrated routing e.g. Fabio, Traefik)
 			},
-		},
+		}
 	}
 
 	tg.Networks = []*api.NetworkResource{
@@ -863,10 +863,10 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Docker image for the Waypoint server.",
 		Default: defaultServerImage,
 	})
-	set.BoolVar(&flag.StringVar{
+	set.BoolVar(&flag.BoolVar{
 		Name:    "nomad-consul-service",
 		Target:  &i.config.consulService,
-		Usage:   "Create Waypoint service in Consul",
+		Usage:   "Create Waypoint service in Consul.",
 		Default: false,
 	})
 }
