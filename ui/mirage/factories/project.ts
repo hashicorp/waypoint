@@ -18,11 +18,8 @@ export default Factory.extend({
     name: 'with-input-variables',
 
     afterCreate(project, server) {
-      let variables = [
-        server.create('variable', 'random-str', { project }),
-        server.create('variable', 'random-str', { project }),
-        server.create('variable', 'random-hcl', { project }),
-      ];
+      server.createList('variable', 2, 'random-str', { project });
+      server.create('variable', 'random-hcl', { project });
     }
   }),
 

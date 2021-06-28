@@ -11,7 +11,9 @@ export default Model.extend({
     result.setName(this.name);
     if (this.hcl) {
       result.setHcl(this.hcl);
+      result.setStr('');
     } else {
+      result.setHcl('');
       result.setStr(this.str);
     }
 
