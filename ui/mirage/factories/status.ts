@@ -12,7 +12,7 @@ export default Factory.extend({
 
   random: trait({
     state: () => randomStateName(),
-
+    details: 'Example status details',
     completeTime: () => faker.date.recent(),
   }),
 
