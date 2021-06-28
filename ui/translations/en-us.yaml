@@ -120,3 +120,15 @@ status_badge:
   unknown:
     text: 'Unknown'
     tooltip: 'Unknown Application state'
+
+status_report_indicator:
+  label:
+    prefix: 'Health:'
+    unknown: Unknown
+    alive: Starting…
+    ready: Available
+    down: Down
+    partial: Degraded
+  tooltip:
+    checking_now: Checking now…
+    last_checked: Last checked
