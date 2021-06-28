@@ -129,7 +129,6 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 				"Error starting liveness server: %s", err.Error(),
 				terminal.WithErrorStyle(),
 			)
-			cancel()
 			return 1
 		}
 		defer ln.Close()
