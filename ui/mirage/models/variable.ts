@@ -10,11 +10,13 @@ export default Model.extend({
     result.setServer();
     result.setName(this.name);
     if (this.hcl) {
-      result.setHcl(this.hcl);
       result.setStr('');
+      result.setHcl(this.hcl);
     } else {
-      result.setHcl('');
-      result.setStr(this.str);
+      if (this.str) {
+        result.setHcl('');
+        result.setStr(this.str);
+      }
     }
 
     return result;
