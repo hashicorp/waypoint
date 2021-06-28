@@ -674,9 +674,15 @@ message Ref {
     string username = 1;
   }
 
+
   // AuthMethod references an auth method.
   message AuthMethod {
     string name = 1;
+  }
+
+  // DeclaredResource references a declared resource.
+  message DeclaredResource {
+    string id = 1;
   }
 }
 
@@ -806,6 +812,38 @@ message Generation {
   // Consumers can compare this to the sequence number of the operation
   // to determine if this generation is new or existing.
   uint64 initial_sequence = 2;
+}
+
+// A platform resource that an operation (release/deployment) has created, depends on, or manages.
+message DeclaredResource {
+  // platform-specific name of the resource type. i.e. instance, pod, auto-scaling group, etc
+  string type = 1;
+
+  // The platform on which the resource should exist, i.e. docker, gcp, k8s, etc.
+  string platform = 2;
+
+  // Internal ResourceManager representation of the resource.
+  google.protobuf.Any state = 3;
+
+  // Any additional information a plugin wants to expose on this resource.
+  // EX: Availability zones on a load balancer, concurrency limit on a lambda function, etc.
+  string state_json = 4;
+
+  // high level type of the resource, used for display purposes.
+  ResourceCategoryDisplayHint category_display_hint = 5;
+
+}
+
+enum ResourceCategoryDisplayHint {
+  UNKNOWN = 0;
+  OTHER = 1; // catch-all for types that do not fit well into other predefined roles. i.e. aws target group
+  INSTANCE = 2; // i.e. k8s pod, docker container, ecs task
+  INSTANCE_MANAGER = 3; // i.e. k8s deployment, ec2 asg, nomad job, ecs service
+  ROUTER = 4; // i.e. k8s service, aws alb
+  POLICY = 5; // i.e. aws security group or iam role, k8s RoleBinding
+  CONFIG = 6; // i.e. aws launch config, k8s configmap
+  FUNCTION = 7; // i.e. lambda function, azure function
+  STORAGE = 8; // i.e. EBS volume, EFS filesystem, k8s PVC
 }
 
 /********************************************************************
@@ -2419,6 +2457,9 @@ message Deployment {
     BUILD = 2;
   }
 
+  // Resources that this deployment has created or manages.
+  repeated DeclaredResource declared_resources = 19;
+
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
   // calls will pre-populate some of these fields for convenience. The exact
@@ -2439,6 +2480,16 @@ message Deployment {
     string deploy_url = 3;
   }
 }
+
+// A deployment with additional related messages pre-fetched.
+message DeploymentExpanded {
+  // The deployment in question
+  Deployment deployment = 1;
+
+  // The most recent status report generated for this deployment
+  StatusReport latest_status_report = 2;
+}
+
 
 /********************************************************************
 * Instances
@@ -2629,6 +2680,9 @@ message Release {
   // ID of the job that created this. This may be empty.
   string job_id = 13;
 
+  // A platform resource that this release has created, depends on, or manages.
+  repeated DeclaredResource declared_resources = 19;
+
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
   // calls will pre-populate some of these fields for convenience. The exact
@@ -2653,6 +2707,16 @@ message Release {
     Build build = 3;
   }
 }
+
+// A release with additional related messages pre-fetched.
+message ReleaseExpanded {
+  // The release in question
+  Release release = 1;
+
+  // The most recent status report generated for this release
+  StatusReport latest_status_report = 2;
+}
+
 
 /********************************************************************
 * Status Reports
@@ -2758,6 +2822,52 @@ message StatusReport {
   // the time when this report was generated
   // Copied from the plugin generated raw SDK status report for convenient API access.
   google.protobuf.Timestamp generated_time = 10;
+
+  // where the health check was performed. External means not executed by Waypoint,
+  // but by the platform deployed to.
+  bool external = 11;
+
+  // a collection of resources, e.x. platform resources generated and monitored by a deployment.
+  repeated Resource resources = 12;
+
+  // A resource as observed in a platform
+  message Resource {
+    // The id of the resource, according to the platform.
+    string id = 1;
+
+    // declared resource that this directly references.
+    Ref.DeclaredResource declared_resource = 2;
+
+    // Resources that created this resource.
+    string parent_resource_id = 3;
+
+    // Friendly name of the resource, if applicable
+    string name = 4;
+
+    // The platform on which the resource exists.
+    string platform = 5;
+
+    // platform-specific name of the resource type. i.e. instance, pod, auto-scaling group, etc
+    string type = 6;
+
+    // A link directly to the resource in the platform, if applicable.
+    string platform_url = 7;
+
+    // The high level category of the resource, used as a hint to the UI on how to display the resource.
+    ResourceCategoryDisplayHint category_display_hint = 8;
+
+    // platform-reported time of resource creation
+    google.protobuf.Timestamp created_time = 9;
+
+    // any additional metadata about the resource, encoded as JSON
+    string state_json = 10;
+
+    // the current health state for a single resource
+    Health health = 11;
+
+    // a simple human readable message detailing the Health state
+    string health_message = 12;
+  }
 
   message Health {
     // the overall health of the report for a resource
