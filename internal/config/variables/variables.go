@@ -158,13 +158,13 @@ func parseVarBlock(block *hcl.Block) (*InputVar, hcl.Diagnostics) {
 		}
 	}
 
-	if t, ok := content.Attributes["type"]; ok {
-		tt, moreDiags := typeexpr.Type(t.Expr)
+	if attr, ok := content.Attributes["type"]; ok {
+		t, moreDiags := typeexpr.Type(attr.Expr)
 		diags = append(diags, moreDiags...)
 		if moreDiags.HasErrors() {
 			return nil, diags
 		}
-		v.Type = tt
+		v.Type = t
 	}
 
 	if attr, exists := content.Attributes["default"]; exists {
