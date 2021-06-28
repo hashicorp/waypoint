@@ -39,7 +39,7 @@ module('Integration | Component | project-input-variables-list', function (hooks
   });
 
   test('adding and deleting variables works', async function (assert) {
-    let dbproj = await this.server.create('project', { name: 'Proj3' });
+    let dbproj = await this.server.create('project', 'with-input-variables', { name: 'Proj3' });
     let project = dbproj.toProtobuf();
     this.set('project', project.toObject());
 
