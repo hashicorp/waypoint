@@ -1,0 +1,3 @@
+```release-note:bug
+serverinstall/k8s: accept k8s-namespace when uninstalling server
+```
