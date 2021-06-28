@@ -635,7 +635,7 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	}
 
 	// Include Service to be registered in Consul, if specified in the server install
-	if c.consulService == true {
+	if c.consulService {
 		tg.Services = []*api.Service{
 			{
 				Name: "waypoint",
