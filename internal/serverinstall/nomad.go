@@ -25,7 +25,7 @@ type nomadConfig struct {
 	serverImage        string            `hcl:"server_image,optional"`
 	namespace          string            `hcl:"namespace,optional"`
 	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
-	consulService			 bool							 `hcl:"consul_service,optional"`
+	consulService      bool              `hcl:"consul_service,optional"`
 	consulServiceTags  map[string]string `hcl:"consul_service_tags:optional"`
 
 	region         string   `hcl:"namespace,optional"`
