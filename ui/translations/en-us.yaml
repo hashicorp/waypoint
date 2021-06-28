@@ -67,6 +67,8 @@ form:
     hcl_content_label: 'waypoint.hcl file'
     button: 'Apply'
   project_variables_settings:
+    empty_state_heading: 'No input variables configured'
+    empty_state_content: 'Variables defined in your waypoint.hcl file can be assigned a server value here.'
     title: 'Input variable'
     button_apply: 'Add variable'
     variable_name: 'Key'
