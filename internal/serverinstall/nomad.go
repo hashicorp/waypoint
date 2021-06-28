@@ -36,7 +36,6 @@ type nomadConfig struct {
 	serverResourcesMemory string `hcl:"server_resources_memory,optional"`
 	runnerResourcesCPU    string `hcl:"runner_resources_cpu,optional"`
 	runnerResourcesMemory string `hcl:"runner_resources_memory,optional"`
-
 }
 
 var (
@@ -624,7 +623,6 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)
-
 	// Convert map[string]string input of consulServiceTags to []string, for job Tags
 	//   in Nomad API
 	tagArray := make([]string, len(c.consulServiceTags))
@@ -633,7 +631,6 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 		tagArray[i] = key + "=" + value
 		i++
 	}
-
 	// Include Service to be registered in Consul, if specified in the server install
 	if c.consulService {
 		tg.Services = []*api.Service{
