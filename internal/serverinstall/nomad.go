@@ -635,9 +635,9 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 	if c.consulService {
 		tg.Services = []*api.Service{
 			{
-				Name: "waypoint",
+				Name:      "waypoint",
 				PortLabel: "ui",
-				Tags: tagArray,
+				Tags:      tagArray,
 			},
 		}
 	}
