@@ -69,8 +69,8 @@ form:
   project_variables_settings:
     title: 'Input variable'
     button_apply: 'Add variable'
-    variable_name: 'Variable name'
-    variable_name_placeholder: 'var_name'
+    variable_name: 'Key'
+    variable_name_placeholder: 'var_key'
     variable_value: 'Value'
     variable_value_placeholder: 'var_value'
     button_submit: 'Save variable'
