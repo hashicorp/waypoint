@@ -328,32 +328,14 @@ func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, 
 func (iv *InputVars) CollectInputValues(wd string, pbvars []*pb.Variable) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
-	// Check working directory (vcs or local) for *.auto.wpvars(.json) files
-	var varFiles []string
-	if files, err := ioutil.ReadDir(wd); err == nil {
-		for _, f := range files {
-			name := f.Name()
-			if !isAutoVarFile(name) {
-				continue
-			}
-			varFiles = append(varFiles, wd+"/"+name)
-		}
-	}
-
-	// files will contain files found in the remote git source
-	for _, vf := range varFiles {
-		if vf != "" {
-			fileDiags := iv.parseFileValues(vf)
-			diags = append(diags, fileDiags...)
-			if diags.HasErrors() {
-				return diags
-			}
-		}
+	for v, def := range vs {
+		iv[v] = def.Default
 	}
 
 	for _, pbv := range pbvars {
 		variable, found := (*iv)[pbv.Name]
 		if !found {
+			// TODO krantzinator: what to do with a warning diag type
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "Undefined variable",
@@ -424,15 +406,54 @@ func (iv *InputVars) CollectInputValues(wd string, pbvars []*pb.Variable) hcl.Di
 		})
 	}
 
-	// sort for precedence
-	for i, variable := range *iv {
-		(*iv)[i].Values = sortValues(variable.Values)
+	// check that all variables have a set value, including default of null
+	for name, _ := range vs {
+		_, found := iv[name]
+		if !found {
+			return nil, append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  fmt.Sprintf("Unset variable %q", name),
+				// TODO add our docs link here
+				Detail: "A variable must be set or have a default value; see " +
+					"[docs] for " +
+					"details.",
+			})
+		}
 	}
 
 	return diags
 }
 
-func (iv *InputVars) parseFileValues(filename string) hcl.Diagnostics {
+// LoadVCSFiles loads any *.auto.wpvars(.json) files in the VCS repo
+func LoadVCSFiles(wd string) ([]*pb.Variable, hcl.Diagnostics) {
+	var pbv []*pb.Variable
+	var diags hcl.Diagnostics
+
+	// Check working directory (vcs or local) for *.auto.wpvars(.json) files
+	var varFiles []string
+	if files, err := ioutil.ReadDir(wd); err == nil {
+		for _, f := range files {
+			name := f.Name()
+			if !isAutoVarFile(name) {
+				continue
+			}
+			varFiles = append(varFiles, wd+"/"+name)
+		}
+	}
+
+	for _, f := range varFiles {
+		if f != "" {
+			pbv, diags = parseFileValues(f, sourceVCS)
+			if diags.HasErrors() {
+				return nil, diags
+			}
+		}
+	}
+	return pbv, nil
+}
+
+func parseFileValues(filename string, source string) ([]*pb.Variable, hcl.Diagnostics) {
+	var pbv []*pb.Variable
 	f, diags := readFileValues(filename)
 	if diags.HasErrors() {
 		return diags
@@ -442,22 +463,6 @@ func (iv *InputVars) parseFileValues(filename string) hcl.Diagnostics {
 	diags = append(diags, moreDiags...)
 
 	for name, attr := range attrs {
-		variable, found := (*iv)[name]
-		if !found {
-			// TODO krantzinator: what to do with a warning diag type
-			diags = append(diags, &hcl.Diagnostic{
-				Severity: hcl.DiagError,
-				Summary:  "Undefined variable",
-				Detail: fmt.Sprintf("A %q variable was set but was "+
-					"not found in known variables. To declare "+
-					"variable %q, place this block in your "+
-					"waypoint.hcl file.",
-					name, name),
-				Context: attr.Range.Ptr(),
-			})
-			continue
-		}
-
 		val, moreDiags := attr.Expr.Value(nil)
 		diags = append(diags, moreDiags...)
 
@@ -475,11 +480,14 @@ func (iv *InputVars) parseFileValues(filename string) hcl.Diagnostics {
 			}
 		}
 
-		variable.Values = append(variable.Values, Value{
-			Source: sourceVCS,
-			Value:  val,
-			Expr:   attr.Expr,
-		})
+		// Set source
+		switch source {
+		case sourceFile:
+			v.Source = &pb.Variable_File_{}
+		case sourceVCS:
+			v.Source = &pb.Variable_Vcs{}
+		}
+		pbv = append(pbv, v)
 	}
 
 	return diags
