@@ -30,16 +30,9 @@ module('Integration | Component | project-input-variables-list', function (hooks
 
   test('it renders', async function (assert) {
     let dbproj = await this.server.create('project', 'with-input-variables', { name: 'Proj1' });
-
-    let api = this.owner.lookup('service:api');
-    let ref = new Ref.Project();
-    ref.setProject(dbproj.name);
-    let req = new GetProjectRequest();
-    req.setProject(ref);
-
-    let resp = await api.client.getProject(req, api.WithMeta());
-    let project = resp.getProject();
+    let project = dbproj.toProtobuf();
     this.set('project', project.toObject());
+
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.project-input-variables-list').exists('The list renders');
     assert.equal(page.variablesList.length, 3, 'the list contains all variables');
@@ -48,17 +41,10 @@ module('Integration | Component | project-input-variables-list', function (hooks
   });
 
   test('adding and deleting variables works', async function (assert) {
-    let dbproj = await this.server.create('project', 'with-input-variables', { name: 'Proj2' });
-
-    let api = this.owner.lookup('service:api');
-    let ref = new Ref.Project();
-    ref.setProject(dbproj.name);
-    let req = new GetProjectRequest();
-    req.setProject(ref);
-
-    let resp = await api.client.getProject(req, api.WithMeta());
-    let project = resp.getProject();
+    let dbproj = await this.server.create('project', { name: 'Proj3' });
+    let project = dbproj.toProtobuf();
     this.set('project', project.toObject());
+
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.project-input-variables-list').exists('The list renders');
     assert.equal(page.variablesList.length, 3, 'the list contains all variables');
@@ -82,16 +68,9 @@ module('Integration | Component | project-input-variables-list', function (hooks
 
   test('editing variables works', async function (assert) {
     let dbproj = await this.server.create('project', { name: 'Proj3' });
-
-    let api = this.owner.lookup('service:api');
-    let ref = new Ref.Project();
-    ref.setProject(dbproj.name);
-    let req = new GetProjectRequest();
-    req.setProject(ref);
-
-    let resp = await api.client.getProject(req, api.WithMeta());
-    let project = resp.getProject();
+    let project = dbproj.toProtobuf();
     this.set('project', project.toObject());
+
     await render(hbs`<ProjectInputVariables::List @project={{this.project}}/>`);
     assert.dom('.project-input-variables-list').doesNotExist('the list is empty initially');
     assert.equal(page.variablesList.length, 0, 'the list contains no variables');
