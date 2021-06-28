@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
@@ -117,11 +118,19 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
-	// get variables values from the server (set via the UI)
-	serverVars := resp.Project.GetVariables()
+	// Here we'll load our values from the server/UI, as well as VCS.
+	// The order values are added to our final pbVars slice is the order
+	// of precedence
+	pbVars := resp.Project.GetVariables()
+	vcsVars, diags := variables.LoadVCSFiles(wd)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+	pbVars = append(pbVars, vcsVars...)
+	pbVars = append(pbVars, job.Variables...)
 
 	// evaluate all variables against the variable blocks we just decoded
-	diags := cfg.InputVariables.CollectInputValues(wd, append(serverVars, job.Variables...))
+	inputVars, diags := variables.EvalInputValues(pbVars, cfg.InputVariables)
 	if diags.HasErrors() {
 		return nil, diags
 	}
@@ -142,7 +151,7 @@ func (r *Runner) executeJob(
 		core.WithConfig(cfg),
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
-		core.WithVariables(*cfg.InputVariables),
+		core.WithVariables(inputVars),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
 	)

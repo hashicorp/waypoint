@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2"
@@ -24,40 +23,29 @@ var (
 
 	// Variable value sources
 	// Highest precedence is the final value used
-	sourceDefault = Source{Name: "default", Precedence: 0}
-	sourceServer  = Source{Name: "server", Precedence: 1}
-	sourceVCS     = Source{Name: "vcs", Precedence: 2}
-	sourceEnv     = Source{Name: "env", Precedence: 3}
-	sourceFile    = Source{Name: "file", Precedence: 4}
-	sourceCLI     = Source{Name: "cli", Precedence: 5}
+	sourceDefault = "default"
+	sourceServer  = "server"
+	sourceVCS     = "vcs"
+	sourceEnv     = "env"
+	sourceFile    = "file"
+	sourceCLI     = "cli"
 )
 
-// Value contain the value of the variable along with associated metada,
+// InputValue contain the value of the variable along with associated metada,
 // including the source it was set from: cli, file, env, vcs, server/ui
-type Value struct {
+type InputValue struct {
 	Value  cty.Value
-	Source Source
+	Source string
 	Expr   hcl.Expression
 	// The location of the variable value if the value was provided
 	// from a file
 	Range hcl.Range
 }
 
-type Source struct {
-	Name string
-	// used for sorting precedence order once we've combined values from
-	// all sources
-	Precedence int
-}
-
-type InputVar struct {
+type Variable struct {
 	Name string
 
-	// Value contain the values from the job, from the server/VCS
-	// repo, and default values from the waypoint.hcl. These are
-	// sorted in precedence order, with the highest order precedence
-	// listed first
-	Values []Value
+	Default *InputValue
 
 	// Cty Type of the variable. If the default value or a collected value is
 	// not of this type nor can be converted to this type an error diagnostic
@@ -81,10 +69,10 @@ type HclVariable struct {
 	Description string         `hcl:"description,optional"`
 }
 
-// InputVars are used when parsing the Config, to set default values from
+// InputValues are used when parsing the Config, to set default values from
 // the waypoint.hcl and bring in the values from the job and the server/VCS
 // for eventual precedence sorting and setting on the EvalContext
-type InputVars map[string]*InputVar
+type InputValues map[string]*InputValue
 
 // TODO krantzinator - use implied body scheme instead?
 var variableBlockSchema = &hcl.BodySchema{
@@ -103,38 +91,12 @@ var variableBlockSchema = &hcl.BodySchema{
 
 // decodeVariableBlock first validates the variable block, and then sets
 // the decoded variables with their default value on *InputVars
-func (iv *InputVars) DecodeVariableBlock(block *hcl.Block) hcl.Diagnostics {
-	if (*iv) == nil {
-		(*iv) = InputVars{}
-	}
-	name := block.Labels[0]
-
-	// Checking for duplicates happens here, rather than during the config.Validate
-	// step, because config.Validate doesn't store any decoded blocks.
-	if _, found := (*iv)[name]; found {
-		return []*hcl.Diagnostic{{
-			Severity: hcl.DiagError,
-			Summary:  "Duplicate variable",
-			Detail:   "Duplicate " + name + " variable definition found.",
-			Context:  block.DefRange.Ptr(),
-		}}
-	}
-
-	v, diags := parseVarBlock(block)
-	if diags.HasErrors() {
-		return diags
-	}
-
-	(*iv)[name] = v
-
-	return diags
-}
 
 // parseVarBlock validates each part of the variable block, building out
-// the final *InputVar along the way
-func parseVarBlock(block *hcl.Block) (*InputVar, hcl.Diagnostics) {
+// a defined *Variable definition
+func DecodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	name := block.Labels[0]
-	v := InputVar{
+	v := Variable{
 		Name:  name,
 		Range: block.DefRange,
 	}
@@ -191,10 +153,10 @@ func parseVarBlock(block *hcl.Block) (*InputVar, hcl.Diagnostics) {
 			}
 		}
 
-		v.Values = append(v.Values, Value{
+		v.Default = &InputValue{
 			Source: sourceDefault,
 			Value:  val,
-		})
+		}
 
 		// It's possible no type attribute was assigned so lets make sure we
 		// have a valid type otherwise there could be issues parsing the value.
@@ -264,46 +226,11 @@ func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, 
 
 	for _, file := range files {
 		if file != "" {
-			f, diags := readFileValues(file)
+			pbv, diags := parseFileValues(file, sourceFile)
 			if diags.HasErrors() {
 				return nil, diags
 			}
-
-			attrs, moreDiags := f.Body.JustAttributes()
-			diags = append(diags, moreDiags...)
-
-			// We grab all variables here; we'll later check set variables against the
-			// known variables defined in the waypoint.hcl on the runner when we
-			// consolidate values from local + server
-			for name, attr := range attrs {
-				val, moreDiags := attr.Expr.Value(nil)
-				diags = append(diags, moreDiags...)
-
-				v := &pb.Variable{
-					Name:   name,
-					Source: &pb.Variable_File_{},
-				}
-				switch val.Type() {
-				case cty.String:
-					v.Value = &pb.Variable_Str{Str: val.AsString()}
-				case cty.Bool:
-					v.Value = &pb.Variable_Bool{Bool: val.True()}
-				case cty.Number:
-					var num int64
-					err := gocty.FromCtyValue(val, &num)
-					if err != nil {
-						diags = append(diags, &hcl.Diagnostic{
-							Severity: hcl.DiagError,
-							Summary:  "Invalid number",
-							Detail:   err.Error(),
-							Subject:  &attr.Range,
-						})
-						return nil, diags
-					}
-					v.Value = &pb.Variable_Num{Num: num}
-				}
-				ret = append(ret, v)
-			}
+			ret = append(ret, pbv...)
 		}
 	}
 
@@ -316,24 +243,26 @@ func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, 
 			Source: &pb.Variable_Cli{},
 		})
 	}
-
 	return ret, diags
 }
 
-// CollectInputValues parses the provided variable values and validates their
+// EvalInputValues evaluates the provided variable values and validates their
 // types per the type declared in the waypoint.hcl for that variable name.
-// Once all assigned values have been set, it then sorts the variables
-// in precedence order per their source, with the highest-precedence value
-// being the first item in *InputVar.Values
-func (iv *InputVars) CollectInputValues(wd string, pbvars []*pb.Variable) hcl.Diagnostics {
+// The order in which values are evaluated corresponds to their precedence, with
+// higher precedence values overwriting lower precedence values.
+func EvalInputValues(
+	pbvars []*pb.Variable,
+	vs map[string]*Variable,
+) (InputValues, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
+	iv := InputValues{}
 
 	for v, def := range vs {
 		iv[v] = def.Default
 	}
 
 	for _, pbv := range pbvars {
-		variable, found := (*iv)[pbv.Name]
+		variable, found := vs[pbv.Name]
 		if !found {
 			// TODO krantzinator: what to do with a warning diag type
 			diags = append(diags, &hcl.Diagnostic{
@@ -347,7 +276,7 @@ func (iv *InputVars) CollectInputValues(wd string, pbvars []*pb.Variable) hcl.Di
 			continue
 		}
 
-		var source Source
+		var source string
 		switch pbv.Source.(type) {
 		case *pb.Variable_Cli:
 			source = sourceCLI
@@ -382,7 +311,7 @@ func (iv *InputVars) CollectInputValues(wd string, pbvars []*pb.Variable) hcl.Di
 		val, valDiags := expr.Value(nil)
 		diags = append(diags, valDiags...)
 		if valDiags.HasErrors() {
-			return diags
+			return nil, diags
 		}
 
 		if variable.Type != cty.NilType {
@@ -393,17 +322,16 @@ func (iv *InputVars) CollectInputValues(wd string, pbvars []*pb.Variable) hcl.Di
 					Severity: hcl.DiagError,
 					Summary:  "Invalid value for variable",
 					Detail:   fmt.Sprintf("The value set for variable %q from source %q is not compatible with the variable's type constraint: %s.", pbv.Name, source, err),
-					Subject:  expr.Range().Ptr(),
 				})
 				val = cty.DynamicVal
 			}
 		}
 
-		variable.Values = append(variable.Values, Value{
+		iv[pbv.Name] = &InputValue{
 			Source: source,
 			Value:  val,
 			Expr:   expr,
-		})
+		}
 	}
 
 	// check that all variables have a set value, including default of null
@@ -421,7 +349,7 @@ func (iv *InputVars) CollectInputValues(wd string, pbvars []*pb.Variable) hcl.Di
 		}
 	}
 
-	return diags
+	return iv, diags
 }
 
 // LoadVCSFiles loads any *.auto.wpvars(.json) files in the VCS repo
@@ -456,28 +384,40 @@ func parseFileValues(filename string, source string) ([]*pb.Variable, hcl.Diagno
 	var pbv []*pb.Variable
 	f, diags := readFileValues(filename)
 	if diags.HasErrors() {
-		return diags
+		return nil, diags
 	}
 
 	attrs, moreDiags := f.Body.JustAttributes()
 	diags = append(diags, moreDiags...)
-
+	// We grab all variables here; we'll later check set variables against the
+	// known variables defined in the waypoint.hcl on the runner when we
+	// consolidate values from local + server
 	for name, attr := range attrs {
 		val, moreDiags := attr.Expr.Value(nil)
 		diags = append(diags, moreDiags...)
 
-		if variable.Type != cty.NilType {
-			var err error
-			val, err = convert.Convert(val, variable.Type)
+		v := &pb.Variable{
+			Name: name,
+		}
+		// Set type
+		switch val.Type() {
+		case cty.String:
+			v.Value = &pb.Variable_Str{Str: val.AsString()}
+		case cty.Bool:
+			v.Value = &pb.Variable_Bool{Bool: val.True()}
+		case cty.Number:
+			var num int64
+			err := gocty.FromCtyValue(val, &num)
 			if err != nil {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
-					Summary:  "Invalid value for variable",
-					Detail:   fmt.Sprintf("The value for %s is not compatible with the variable's type constraint: %s.", name, err),
-					Subject:  attr.Expr.Range().Ptr(),
+					Summary:  "Invalid number",
+					Detail:   err.Error(),
+					Subject:  &attr.Range,
 				})
-				val = cty.DynamicVal
+				return nil, diags
 			}
+			v.Value = &pb.Variable_Num{Num: num}
 		}
 
 		// Set source
@@ -490,7 +430,7 @@ func parseFileValues(filename string, source string) ([]*pb.Variable, hcl.Diagno
 		pbv = append(pbv, v)
 	}
 
-	return diags
+	return pbv, diags
 }
 
 // readFileValues is a helper function that loads a file, parses if it is
@@ -572,43 +512,25 @@ func readFileValues(filename string) (*hcl.File, hcl.Diagnostics) {
 	return f, diags
 }
 
-// sortValues is a helper function that sorts variable Values by their
-// precedence order, ordering the slice from highest to lowest precedence
-func sortValues(values []Value) []Value {
-	sort.Slice(values, func(i, j int) bool {
-		return values[i].Source.Precedence > values[j].Source.Precedence
-	})
-	return values
-}
+// // sortValues is a helper function that sorts variable Values by their
+// // precedence order, ordering the slice from highest to lowest precedence
+// func sortValues(values []InputValue) []InputValue {
+// 	sort.Slice(values, func(i, j int) bool {
+// 		return values[i].Source.Precedence > values[j].Source.Precedence
+// 	})
+// 	return values
+// }
 
-func (iv InputVars) Values() (map[string]cty.Value, hcl.Diagnostics) {
+func (iv *InputValues) Values() map[string]cty.Value {
 	res := map[string]cty.Value{}
-	var diags hcl.Diagnostics
-	for k, v := range iv {
-		value, moreDiags := v.Value()
-		diags = append(diags, moreDiags...)
-		res[k] = value
+	for k, v := range *iv {
+		res[k] = v.Value
 	}
-	return res, diags
+	return res
 }
 
-func (v *InputVar) Value() (cty.Value, hcl.Diagnostics) {
-	if len(v.Values) == 0 {
-		return cty.UnknownVal(v.Type), hcl.Diagnostics{&hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  fmt.Sprintf("Unset variable %q", v.Name),
-			Detail: "A used variable must be set or have a default value; see " +
-				"https://packer.io/docs/templates/hcl_templates/syntax for " +
-				"details.",
-			Context: v.Range.Ptr(),
-		}}
-	}
-	val := v.Values[0]
-	return val.Value, nil
-}
-
-func AddInputVariables(ctx *hcl.EvalContext, vs *InputVars) {
-	vars, _ := (*vs).Values()
+func AddInputVariables(ctx *hcl.EvalContext, vs *InputValues) {
+	vars := (*vs).Values()
 	variables := map[string]cty.Value{
 		"var": cty.ObjectVal(vars),
 	}

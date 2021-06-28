@@ -21,7 +21,7 @@ type Config struct {
 	path     string
 	pathData map[string]string
 
-	InputVariables *variables.InputVars
+	InputVariables map[string]*variables.Variable
 }
 
 type hclConfig struct {
@@ -155,7 +155,7 @@ func (c *Config) HCLContext() *hcl.EvalContext {
 	return c.ctx.NewChild()
 }
 
-func DecodeVariableBlocks(body hcl.Body) (*variables.InputVars, hcl.Diagnostics) {
+func DecodeVariableBlocks(body hcl.Body) (map[string]*variables.Variable, hcl.Diagnostics) {
 	schema, _ := gohcl.ImpliedBodySchema(&hclConfig{})
 	content, diag := body.Content(schema)
 	if diag.HasErrors() {
@@ -163,12 +163,25 @@ func DecodeVariableBlocks(body hcl.Body) (*variables.InputVars, hcl.Diagnostics)
 	}
 
 	var diags hcl.Diagnostics
-	vs := &variables.InputVars{}
+	vs := map[string]*variables.Variable{}
 	for _, block := range content.Blocks.OfType("variable") {
-		moreDiags := vs.DecodeVariableBlock(block)
+		v, moreDiags := variables.DecodeVariableBlock(block)
 		if moreDiags != nil {
 			diags = append(diags, moreDiags...)
 		}
+
+		// Checking for duplicates happens here, rather than during the config.Validate
+		// step, because config.Validate doesn't store any decoded blocks.
+		if _, found := vs[v.Name]; found {
+			return nil, []*hcl.Diagnostic{{
+				Severity: hcl.DiagError,
+				Summary:  "Duplicate variable",
+				Detail:   "Duplicate " + v.Name + " variable definition found.",
+				Context:  block.DefRange.Ptr(),
+			}}
+		}
+
+		vs[block.Labels[0]] = v
 	}
 
 	return vs, diags
