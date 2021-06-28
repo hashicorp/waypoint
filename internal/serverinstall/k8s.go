@@ -1409,6 +1409,13 @@ func (i *K8sInstaller) UninstallFlags(set *flag.Set) {
 			" unset, Waypoint will use the current Kubernetes context.",
 		Default: "",
 	})
+
+	set.StringVar(&flag.StringVar{
+		Name:    "k8s-namespace",
+		Target:  &i.config.namespace,
+		Usage:   "Namespace in Kubernetes to uninstall the Waypoint server from.",
+		Default: "",
+	})
 }
 
 func int32Ptr(i int32) *int32 {
@@ -1467,8 +1474,7 @@ func (i *K8sInstaller) newClient() (*kubernetes.Clientset, error) {
 	return clientset, nil
 }
 
-var (
-	warnK8SKind = strings.TrimSpace(`
+var warnK8SKind = strings.TrimSpace(`
 Kind cluster detected!
 
 Installing Waypoint to a Kind cluster requires that the cluster has
@@ -1476,4 +1482,3 @@ LoadBalancer capabilities (such as metallb). If Kind isn't configured
 in this way, then the install may hang. If this happens, please delete
 all the Waypoint resources and try again.
 `)
-)
