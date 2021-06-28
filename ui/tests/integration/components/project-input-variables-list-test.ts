@@ -4,8 +4,6 @@ import { setupMirage } from 'ember-cli-mirage/test-support';
 import { render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import { create, collection, clickable, isPresent, fillable, text } from 'ember-cli-page-object';
-import { Ref, GetProjectRequest } from 'waypoint-pb';
-
 
 const page = create({
   hasForm: isPresent('[data-test-input-variables-form]'),
