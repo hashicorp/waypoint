@@ -328,6 +328,11 @@ export class Project extends jspb.Message {
   clearVariablesList(): Project;
   addVariables(value?: Variable, index?: number): Variable;
 
+  getLinksList(): Array<Project.Link>;
+  setLinksList(value: Array<Project.Link>): Project;
+  clearLinksList(): Project;
+  addLinks(value?: Project.Link, index?: number): Project.Link;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Project.AsObject;
   static toObject(includeInstance: boolean, msg: Project): Project.AsObject;
@@ -347,6 +352,7 @@ export namespace Project {
     waypointHclFormat: Project.Format,
     fileChangeSignal: string,
     variablesList: Array<Variable.AsObject>,
+    linksList: Array<Project.Link.AsObject>,
   }
 
   export class Poll extends jspb.Message {
@@ -368,6 +374,29 @@ export namespace Project {
     export type AsObject = {
       enabled: boolean,
       interval: string,
+    }
+  }
+
+
+  export class Link extends jspb.Message {
+    getUrl(): string;
+    setUrl(value: string): Link;
+
+    getLabel(): string;
+    setLabel(value: string): Link;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Link.AsObject;
+    static toObject(includeInstance: boolean, msg: Link): Link.AsObject;
+    static serializeBinaryToWriter(message: Link, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Link;
+    static deserializeBinaryFromReader(message: Link, reader: jspb.BinaryReader): Link;
+  }
+
+  export namespace Link {
+    export type AsObject = {
+      url: string,
+      label: string,
     }
   }
 
