@@ -335,7 +335,7 @@ func EvalInputValues(
 	}
 
 	// check that all variables have a set value, including default of null
-	for name, _ := range vs {
+	for name := range vs {
 		_, found := iv[name]
 		if !found {
 			return nil, append(diags, &hcl.Diagnostic{
