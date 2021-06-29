@@ -319,17 +319,37 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 		return nil, err
 	}
 
+	baseArgs := op.args()
+
+	// Add an outparameter for declared resources, which will be populated by the dynamic func
+	declaredResourcesResp := &component.DeclaredResourcesResp{}
+	args := append(baseArgs, argmapper.Typed(declaredResourcesResp))
+
 	result, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
 		op.component,
 		op.component.Value.(component.Platform).DeployFunc(),
-		op.args()...,
+		args...,
 	)
 
 	if err != nil {
 		return nil, err
 	}
+
+	// Convert from the plugin declaredResources to server declaredResources. Should be identical.
+	declaredResources := make([]*pb.DeclaredResource, len(declaredResourcesResp.DeclaredResources))
+	for i, resource := range declaredResourcesResp.DeclaredResources {
+		declaredResources[i] = &pb.DeclaredResource{
+			Type:                resource.Type,
+			Platform:            resource.Platform,
+			State:               resource.State,
+			StateJson:           resource.StateJson,
+			CategoryDisplayHint: pb.ResourceCategoryDisplayHint(resource.CategoryDisplayHint.Number()),
+		}
+	}
+
+	deploy.DeclaredResources = declaredResources
 
 	if ep, ok := op.component.Value.(component.Execer); ok && ep.ExecFunc() != nil {
 		log.Debug("detected deployment uses an exec plugin, decorating deployment with info")
@@ -344,7 +364,6 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 	} else {
 		log.Debug("no logs plugin detected on platform component")
 	}
-
 	return result, err
 }
 
