@@ -70,6 +70,9 @@ export default Factory.extend({
         application,
         deployment: deployments[0],
       });
+
+      project.createLink({ label: 'README', url: 'https://github.com/hashicorp/waypoint' });
+      project.createLink({ label: 'RUNBOOK', url: 'https://example.com' });
     },
   }),
 

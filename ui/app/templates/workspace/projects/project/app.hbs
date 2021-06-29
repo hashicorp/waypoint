@@ -76,6 +76,17 @@
     <Pds::Icon @type="exec" class="icon" />
     {{t "nav.exec"}}
   </LinkTo>
+  <a href="#">
+    <Pds::Icon @type="more-horizontal" class="icon" />
+    Links
+    <EmberPopover @side="bottom" @event="click" @popperContainer="body">
+      <ul>
+        {{#each @model.project.linksList as |link|}}
+          <li><ExternalLink href={{link.url}}>{{link.label}}</ExternalLink></li>
+        {{/each}}
+      </ul>
+    </EmberPopover>
+  </a>
 </Pds::TabNav>
 {{/if}}
 
