@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
 	"net"
 	"time"
@@ -117,10 +118,6 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 		return 1
 	}
 
-	// ctx and cancel here is used in both liveness listener and accepting jobs,
-	// so that if one errors the other will gracefully quit.
-	ctx, cancel := context.WithCancel(ctx)
-
 	// If we have a liveness address setup, start the liveness server.
 	if addr := c.flagLivenessTCPAddr; addr != "" {
 		ln, err := net.Listen("tcp", addr)
@@ -135,15 +132,14 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 
 		go func() {
 			for {
-				select {
-				case <-ctx.Done():
-					return
-
-				default:
-				}
 				conn, err := ln.Accept()
 				if err != nil {
 					log.Warn("error accepting liveness connection", "err", err)
+					if errors.Is(err, net.ErrClosed) {
+						log.Warn("liveness server exiting")
+						return
+					}
+
 					continue
 				}
 
@@ -156,6 +152,7 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 	}
 
 	// Accept jobs in goroutine so that we can interrupt it.
+	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		defer cancel()
 
