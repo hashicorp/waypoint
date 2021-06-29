@@ -1,0 +1,40 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-grow: 1;
+  background: rgb(var(--panel));
+  border: 1px solid;
+  border-color: rgb(var(--border));
+  border-radius: 2px;
+  padding: scale.$lg-4;
+
+  p {
+    color: rgb(var(--text-muted));
+    @include Typography.Interface(M);
+    margin: scale.$sm-2;
+
+    &:first-child {
+      color: rgb(var(--text-muted));
+      @include Typography.Interface(L);
+    }
+
+    .copyable-code {
+      margin: 0 scale.$sm-4;
+
+      code {
+        font-size: 0.95em;
+      }
+    }
+
+    code.inline {
+      font-size: 0.95em;
+      color: rgb(var(--text-muted));
+      padding: scale.$sm-4 scale.$sm-3;
+      background: rgb(var(--badge));
+      border-radius: 2px;
+    }
+  }
+}

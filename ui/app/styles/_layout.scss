@@ -1,0 +1,137 @@
+body {
+  @include Layout.stack(0);
+  color: rgb(var(--text));
+  background: rgb(var(--background));
+  min-height: 100vh;
+}
+
+#page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  width: 100vw;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: scale.$lg-3 scale.$lg-4 scale.$lg-5;
+}
+
+.svg-patterns {
+  display: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin-bottom: scale.$sm-3;
+}
+
+h1 {
+  @include Typography.Heading(1);
+}
+
+h2 {
+  @include Typography.Heading(2);
+}
+
+h3 {
+  @include Typography.Heading(3);
+}
+
+h4 {
+  @include Typography.Heading(4);
+}
+
+p {
+  margin: 0;
+}
+
+aside {
+  padding-top: scale.$lg-6;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.list {
+  li {
+    padding-bottom: scale.$base;
+    border-top: 1rem solid transparent;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgb(var(--border));
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+:any-link:not(.pds-button) {
+  border-bottom: none;
+}
+
+.status-row {
+  // status information on specific build/deployment/release page
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: scale.$base 0;
+  border-top: 1px solid rgb(var(--border));
+  color: rgb(var(--text-muted));
+  @include Typography.Interface(M);
+
+  .item {
+    a {
+      text-decoration: none;
+
+      .badge {
+        margin: 0 scale.$sm-4;
+      }
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: scale.$sm-3 scale.$sm-2;
+    }
+  }
+}
+
+// Waypoint styles
+
+code {
+  font-family: ui-monospace, 'Menlo', monospace;
+  white-space: nowrap;
+  color: rgb(var(--text));
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+pre code {
+  white-space: pre;
+}
+
+hr {
+  margin: scale.$lg-1 0;
+  border: none;
+  border-top: 1px solid rgb(var(--border));
+}
+
+// Set a default size for icons
+
+svg.icon {
+  width: scale.$lg-2;
+  height: scale.$lg-2;
+  flex-shrink: 0;
+}
+
+.pds-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

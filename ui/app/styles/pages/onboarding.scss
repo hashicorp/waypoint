@@ -1,4 +1,4 @@
-#page .onboarding-page {
+.onboarding-page {
   display: flex;
   justify-content: center;
   padding: scale.$lg-4;
@@ -19,14 +19,14 @@
     background: url(/images/pattern-alt.svg) no-repeat bottom right color.$black;
 
     @media (prefers-color-scheme: dark) {
-      background-color: rgba(color.$black, .5);
+      background-color: rgba(color.$black, 0.5);
       box-shadow: 0 0 0 1px rgb(var(--outline));
     }
 
     .icon-tile {
       color: $brand-color;
       background: transparent;
-      box-shadow: inset 0 0 0 1px rgba($brand-color, .6);
+      box-shadow: inset 0 0 0 1px rgba($brand-color, 0.6);
     }
 
     .onboarding-header-content {

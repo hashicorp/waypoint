@@ -1,0 +1,113 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: scale.$base;
+
+  .icon-tile {
+    margin-right: scale.$base;
+  }
+
+  .title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: scale.$sm-2 scale.$sm-2 scale.$sm-2 0;
+    margin-right: auto;
+    min-height: 76px;
+    max-width: 100%;
+
+    h1,
+    h2 {
+      margin: 0;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+
+      code {
+        font-size: 1em;
+        font-weight: 600;
+        margin: scale.$sm-2 0 scale.$sm-4;
+      }
+
+      .badge {
+        font-size: 1rem;
+        position: relative;
+        top: -2px;
+        margin-right: scale.$sm-4;
+      }
+    }
+
+    small {
+      display: flex;
+      align-items: center;
+      color: rgb(var(--text-muted));
+      @include Typography.Interface(M);
+      padding-bottom: scale.$sm-3;
+
+      .icon {
+        width: 16px;
+        height: 16px;
+        margin-right: scale.$sm-3;
+      }
+    }
+  }
+
+  &.projects-header {
+    margin-top: scale.$lg-4;
+  }
+
+  .actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 100%;
+    margin: scale.$sm-4 0;
+
+    .button-group {
+      display: flex;
+      max-width: 100%;
+
+      .button:first-child {
+        flex-shrink: 1;
+        overflow: hidden;
+      }
+    }
+
+    .button {
+      margin: scale.$sm-3 0;
+
+      span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+      }
+
+      & + .button {
+        margin-left: scale.$base;
+      }
+    }
+
+    .first-run-hint {
+      p {
+        color: rgb(var(--text-muted));
+        @include Typography.Interface(S);
+        display: inline-block;
+        margin-right: scale.$sm-2;
+      }
+
+      .copyable-code {
+        margin: scale.$sm-2 0;
+
+        code {
+          display: inline-flex;
+          font-size: 11px;
+          flex-shrink: 0;
+        }
+      }
+    }
+  }
+}

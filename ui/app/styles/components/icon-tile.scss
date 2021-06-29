@@ -1,6 +1,3 @@
-@use 'pds/tokens/color';
-@use 'pds/tokens/scale';
-
 :root {
   --tile: #{dehex(color.$ui-cool-gray-050)};
   --tile-icon: #{dehex(color.$blue-500)};
@@ -26,14 +23,13 @@
   border-radius: 2px;
   font-size: scale.$lg-1;
 
-  > .pds-icon
-  {
+  > .pds-icon {
     height: unset;
-    width: unset;   
+    width: unset;
   }
 
   @media (prefers-color-scheme: dark) {
-    box-shadow: inset 0 0 0 1px rgba(var(--border), .5);
+    box-shadow: inset 0 0 0 1px rgba(var(--border), 0.5);
   }
 
   &--small {

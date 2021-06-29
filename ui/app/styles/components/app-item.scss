@@ -1,4 +1,5 @@
 .app-item {
+  // individual list item in expanded builds/deployments/releases section
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -79,15 +80,20 @@
   }
 
   &--previous {
-    background: color.$ui-cool-gray-050;
+    background: rgb(var(--panel));
     background-clip: border-box;
     margin-bottom: 0px;
-    border-top: 1rem solid color.$ui-cool-gray-050;
+    border-top: 1rem solid rgb(var(--panel));
   }
+}
 
-  @media (prefers-color-scheme: dark) {
-    &--previous {
-      background: color.$ui-cool-gray-800;
-    }
+.destroyed-deployments-filter {
+  // explanatory text + button at the bottom of the expanded list of deployments
+  display: block;
+  float: right;
+  text-align: right;
+  margin-bottom: scale.$sm-1;
+  button {
+    font-size: 0.75rem;
   }
 }

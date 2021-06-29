@@ -1,0 +1,178 @@
+.output-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 scale.$sm-2 0 0;
+  background: rgb(var(--panel));
+  border: 1px solid;
+  border-color: rgb(var(--border));
+  border-radius: 2px;
+  min-height: 320px;
+  flex-grow: 1;
+  flex-shrink: 1;
+
+  .output-scroll-y {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: scale.$sm-2 scale.$sm-1;
+    height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--outline)) rgb(var(--border));
+    box-sizing: content-box;
+
+    .output-scroll-x {
+      width: 100%;
+      flex-shrink: 0;
+      overflow-x: auto;
+      max-width: 73rem;
+
+      &::-webkit-scrollbar {
+        width: scale.$sm-3;
+        height: scale.$sm-3;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: rgb(var(--border));
+        border-radius: scale.$sm-3;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: rgb(var(--outline));
+        border-radius: scale.$sm-3;
+      }
+
+      &::-webkit-scrollbar-button {
+        width: scale.$sm-3;
+        height: scale.$sm-3;
+      }
+    }
+
+    &::-webkit-scrollbar {
+      width: scale.$sm-3;
+      height: scale.$sm-3;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgb(var(--border));
+      border-radius: scale.$sm-3;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgb(var(--outline));
+      border-radius: scale.$sm-3;
+    }
+
+    &::-webkit-scrollbar-button {
+      width: scale.$sm-3;
+      height: scale.$sm-3;
+    }
+
+    code {
+      display: block;
+      font-size: 12px;
+      padding: scale.$sm-4 0;
+      line-height: var(--pds-lineHeight--dense);
+      white-space: pre-wrap;
+
+      &:empty {
+        display: none;
+      }
+    }
+
+    .output-end {
+      display: block;
+      width: 100%;
+      height: scale.$sm-4;
+      flex-shrink: 0;
+      background: transparent;
+    }
+  }
+
+  .follow-logs {
+    position: absolute;
+    top: scale.$sm-2;
+    right: scale.$lg-1;
+    color: rgb(var(--text-muted));
+    background: rgb(var(--card));
+    box-shadow: $elevated-shadow;
+    border: none;
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: scale.$lg-4;
+    padding: 0 scale.$sm-3;
+    cursor: pointer;
+
+    @media (prefers-color-scheme: dark) {
+      background: rgb(var(--button-secondary));
+      border: 1px solid;
+      border-color: rgb(var(--button-secondary-border));
+    }
+
+    .icon {
+      color: rgb(var(--link));
+      width: scale.$lg-1;
+      height: scale.$lg-1;
+      margin: 0 scale.$sm-4;
+      pointer-events: none;
+
+      @media (prefers-color-scheme: dark) {
+        color: rgb(var(--text));
+      }
+    }
+
+    .badge {
+      color: rgb(var(--info-text));
+      background: rgb(var(--info));
+      border-radius: scale.$base;
+      margin-right: scale.$sm-3;
+      pointer-events: none;
+
+      @media (prefers-color-scheme: dark) {
+        color: rgb(var(--badge-text));
+        background: rgb(var(--text-subtle));
+      }
+    }
+  }
+
+  .empty-state {
+    background: none;
+    border: none;
+  }
+
+  .run-prompt {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    align-self: flex-end;
+    width: 100%;
+    padding: scale.$sm-2 scale.$sm-2;
+    background: rgb(var(--background));
+    border-top: 1px solid rgb(var(--border));
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+
+    input.run-prompt-input {
+      padding: 0 0 scale.$sm-4 scale.$lg-3;
+      margin-right: scale.$sm-2;
+      line-height: 1.8;
+    }
+
+    .prompt-icon {
+      position: absolute;
+      left: scale.$sm-1;
+      top: 13px;
+      width: 24px;
+      height: 24px;
+      pointer-events: none;
+      color: rgb(var(--text-muted));
+    }
+  }
+}
