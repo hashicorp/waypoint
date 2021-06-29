@@ -255,6 +255,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 	// locally, and env vars set with WP_VAR_*
 	vars, diags := variables.SetJobInputValues(c.flagVars, c.flagVarFile)
 	if diags.HasErrors() {
+		c.logError(c.Log, "failed to load wpvars file", errors.New(diags.Error()))
 		return diags
 	}
 	c.variables = vars

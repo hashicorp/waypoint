@@ -502,13 +502,9 @@ func readFileValues(filename string) (*hcl.File, hcl.Diagnostics) {
 			})
 		}
 		if diags.HasErrors() {
-			// If we already found problems then JustAttributes below will find
-			// the same problems with less-helpful messages, so we'll bail for
-			// now to let the user focus on the immediate problem.
 			return nil, diags
 		}
 	}
-
 	return f, diags
 }
 
