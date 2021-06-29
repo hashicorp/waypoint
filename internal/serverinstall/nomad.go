@@ -21,12 +21,13 @@ type NomadInstaller struct {
 }
 
 type nomadConfig struct {
-	authSoftFail       bool              `hcl:"auth_soft_fail,optional"`
-	serverImage        string            `hcl:"server_image,optional"`
-	namespace          string            `hcl:"namespace,optional"`
-	serviceAnnotations map[string]string `hcl:"service_annotations,optional"`
-	consulService      bool              `hcl:"consul_service,optional"`
-	consulServiceTags  map[string]string `hcl:"consul_service_tags:optional"`
+	authSoftFail             bool              `hcl:"auth_soft_fail,optional"`
+	serverImage              string            `hcl:"server_image,optional"`
+	namespace                string            `hcl:"namespace,optional"`
+	serviceAnnotations       map[string]string `hcl:"service_annotations,optional"`
+	consulService            bool              `hcl:"consul_service,optional"`
+	consulServiceUITags      []string          `hcl:"consul_service_ui_tags:optional"`
+	consulServiceBackendTags []string          `hcl:"consul_service_backend_tags:optional"`
 
 	region         string   `hcl:"namespace,optional"`
 	datacenters    []string `hcl:"datacenters,optional"`
@@ -623,21 +624,20 @@ func waypointNomadJob(c nomadConfig) *api.Job {
 
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)
-	// Convert map[string]string input of consulServiceTags to []string, for job Tags
-	//   in Nomad API
-	tagArray := make([]string, len(c.consulServiceTags))
-	var i = 0
-	for key, value := range c.consulServiceTags {
-		tagArray[i] = key + "=" + value
-		i++
-	}
-	// Include Service to be registered in Consul, if specified in the server install
+
+	// Include services to be registered in Consul, if specified in the server install
+	// One service added for Waypoint UI, and one for Waypoint backend port
 	if c.consulService {
 		tg.Services = []*api.Service{
 			{
-				Name:      "waypoint",
+				Name:      "waypoint-ui",
 				PortLabel: "ui",
-				Tags:      tagArray,
+				Tags:      c.consulServiceUITags,
+			},
+			{
+				Name:      "waypoint-server",
+				PortLabel: "server",
+				Tags:      c.consulServiceBackendTags,
 			},
 		}
 	}
@@ -877,10 +877,16 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 		Default: false,
 	})
 
-	set.StringMapVar(&flag.StringMapVar{
-		Name:   "nomad-consul-service-tags",
-		Target: &i.config.consulServiceTags,
-		Usage:  "Tags for the Consul service generated.",
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:   "nomad-consul-service-ui-tags",
+		Target: &i.config.consulServiceUITags,
+		Usage:  "Tags for the Waypoint UI service generated in Consul.",
+	})
+
+	set.StringSliceVar(&flag.StringSliceVar{
+		Name:   "nomad-consul-service-backend-tags",
+		Target: &i.config.consulServiceBackendTags,
+		Usage:  "Tags for the Waypoint backend service generated in Consul.",
 	})
 }
 
