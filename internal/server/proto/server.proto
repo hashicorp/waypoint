@@ -421,6 +421,8 @@ message Project {
   // WIP: Variable values stored on the server. These values are set in the UI.
   repeated Variable variables = 9;
 
+  repeated Link links = 10;
+
   enum Format {
     HCL = 0; // We assume HCL by default
     JSON = 1;
@@ -434,6 +436,11 @@ message Project {
     // The server may enforce minimum values, in which case a value lower
     // than the minimum will be ignored.
     string interval = 2;
+  }
+
+  message Link {
+      string url = 1;
+      string label = 2;
   }
 }
 
