@@ -27,6 +27,7 @@ type DeploymentListCommand struct {
 
 	flagWorkspaceAll bool
 	flagVerbose      bool
+	flagUrl          bool
 	flagJson         bool
 	flagId           idFormat
 	filterFlags      filterFlags
@@ -127,7 +128,15 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			return c.displayJson(resp.Deployments)
 		}
 
-		tbl := terminal.NewTable("", "ID", "Platform", "Details", "Started", "Completed", "URL", "Health")
+		headers := []string{
+			"", "ID", "Platform", "Details", "Started", "Completed", "Health",
+		}
+
+		if c.flagUrl {
+			headers = append(headers, "URL")
+		}
+
+		tbl := terminal.NewTable(headers...)
 
 		const bullet = "●"
 
@@ -267,17 +276,24 @@ func (c *DeploymentListCommand) Run(args []string) int {
 
 			sort.Strings(details)
 
+			var columns []string
+
+			columns = []string{
+				status,
+				c.flagId.FormatId(b.Sequence, b.Id),
+				b.Component.Name,
+				details[0],
+				startTime,
+				completeTime,
+				statusReportComplete,
+			}
+
+			if c.flagUrl {
+				columns = append(columns, b.Url)
+			}
+
 			tbl.Rich(
-				[]string{
-					status,
-					c.flagId.FormatId(b.Sequence, b.Id),
-					b.Component.Name,
-					details[0],
-					startTime,
-					completeTime,
-					b.Preload.DeployUrl,
-					statusReportComplete,
-				},
+				columns,
 				[]string{
 					statusColor,
 				},
@@ -383,6 +399,13 @@ func (c *DeploymentListCommand) Flags() *flag.Sets {
 			Aliases: []string{"V"},
 			Target:  &c.flagVerbose,
 			Usage:   "Display more details about each deployment.",
+		})
+
+		f.BoolVar(&flag.BoolVar{
+			Name:    "url",
+			Aliases: []string{"u"},
+			Target:  &c.flagUrl,
+			Usage:   "Display deployment URL.",
 		})
 
 		f.BoolVar(&flag.BoolVar{
