@@ -14,8 +14,15 @@ import (
 // An interface implemented by something that wishes to authenticate the server
 // actions.
 type AuthChecker interface {
-	// Called before each RPC to authenticate it.
-	Authenticate(ctx context.Context, token, endpoint string, effects []string) error
+	// Called before each RPC to authenticate it. The implementation may
+	// return a new context if they want to insert authentication information
+	// into it (such as the current user). The implementation may return a nil
+	// context and the existing context will be used.
+	Authenticate(
+		ctx context.Context,
+		token, endpoint string,
+		effects []string,
+	) (context.Context, error)
 }
 
 var readonly = []string{"readonly"}
@@ -60,10 +67,16 @@ func authUnaryInterceptor(checker AuthChecker) grpc.UnaryServerInterceptor {
 			token = authHeader[0]
 		}
 
-		err := checker.Authenticate(ctx, token, name, effects)
+		newCtx, err := checker.Authenticate(ctx, token, name, effects)
 		if err != nil {
 			return nil, err
 		}
+
+		// If we were given a new context, use that for future requests
+		if newCtx != nil {
+			ctx = newCtx
+		}
+
 		return handler(ctx, req)
 	}
 }
@@ -102,12 +115,29 @@ func authStreamInterceptor(checker AuthChecker) grpc.StreamServerInterceptor {
 
 		token := authHeader[0]
 
-		err := checker.Authenticate(ss.Context(), token, name, effects)
+		newCtx, err := checker.Authenticate(ss.Context(), token, name, effects)
 		if err != nil {
 			return err
+		}
+
+		if newCtx != nil {
+			ss = &ssContextOverride{Ctx: newCtx}
 		}
 
 		// Invoke the handler.
 		return handler(srv, ss)
 	}
 }
+
+// ssContextOverride implements grpc.ServerStream but only overrides the
+// returned context.
+type ssContextOverride struct {
+	grpc.ServerStream
+	Ctx context.Context
+}
+
+func (ss *ssContextOverride) Context() context.Context {
+	return ss.Ctx
+}
+
+var _ grpc.ServerStream = (*ssContextOverride)(nil)
