@@ -14,7 +14,7 @@ export default class ContextCreate extends Component {
   }
 
   async createToken() {
-    const resp = await this.api.client.generateLoginToken(new Empty(), this.api.WithMeta());
+    let resp = await this.api.client.generateLoginToken(new Empty(), this.api.WithMeta());
     this.token = resp.getToken();
   }
 
