@@ -145,7 +145,7 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
   }
 
   populateExistingFields(projectFromArgs, currentModel) {
-    for (const [key, value] of Object.entries(projectFromArgs)) {
+    for (let [key, value] of Object.entries(projectFromArgs)) {
       if (isEmpty(value)) {
         continue;
       }

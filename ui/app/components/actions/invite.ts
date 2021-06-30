@@ -36,9 +36,9 @@ export default class ActionsInvite extends Component {
 
   @action
   async createToken() {
-    const req = new InviteTokenRequest();
+    let req = new InviteTokenRequest();
     req.setDuration('12h');
-    const resp = await this.api.client.generateInviteToken(req, this.api.WithMeta());
+    let resp = await this.api.client.generateInviteToken(req, this.api.WithMeta());
     this.token = resp.getToken();
   }
 
