@@ -20,10 +20,6 @@ func TestConfigValidate(t *testing.T) {
 			"no_build.hcl",
 			"'build' stanza",
 		},
-		{
-			"no_variable_default.hcl",
-			"'default' value required for variable block",
-		},
 	}
 
 	for _, tt := range cases {

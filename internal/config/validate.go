@@ -80,14 +80,6 @@ func (c *Config) Validate() error {
 		}
 	}
 
-	// Validate variable definitions
-	for _, block := range content.Blocks.OfType("variable") {
-		err := c.validateVarBlock(block)
-		if err != nil {
-			result = multierror.Append(result, err)
-		}
-	}
-
 	// Validate labels
 	if errs := ValidateLabels(c.Labels); len(errs) > 0 {
 		result = multierror.Append(result, errs...)
@@ -119,26 +111,6 @@ func (c *Config) validateApp(b *hcl.Block) error {
 		return &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "'deploy' stanza required",
-			Subject:  &b.DefRange,
-			Context:  &b.TypeRange,
-		}
-	}
-
-	return nil
-}
-
-// validateVarBlock verifies the variable blocks match the required schema
-func (c *Config) validateVarBlock(b *hcl.Block) error {
-	schema, _ := gohcl.ImpliedBodySchema(&validateVariable{})
-	content, diag := b.Body.Content(schema)
-	if diag.HasErrors() {
-		return diag
-	}
-
-	if _, exists := content.Attributes["default"]; !exists {
-		return &hcl.Diagnostic{
-			Severity: hcl.DiagError,
-			Summary:  fmt.Sprintf("'default' value required for variable block %q", b.Labels[0]),
 			Subject:  &b.DefRange,
 			Context:  &b.TypeRange,
 		}
