@@ -4,6 +4,7 @@ import { action } from '@ember/object';
 import { Project, UpsertProjectRequest, Variable } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
+import RouterService from '@ember/routing/router-service';
 
 interface ProjectSettingsArgs {
   project: Project.AsObject;
@@ -11,6 +12,7 @@ interface ProjectSettingsArgs {
 
 export default class ProjectInputVariablesListComponent extends Component<ProjectSettingsArgs> {
   @service api!: ApiService;
+  @service router!: RouterService;
   @service flashMessages;
   @tracked project;
   @tracked variablesList: Array<Variable.AsObject>;
@@ -82,6 +84,7 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
       this.flashMessages.success('Settings saved');
       this.activeVariable = null;
       this.isCreating = false;
+      this.router.refresh('workspace.projects.project');
       return respProject;
     } catch (err) {
       this.flashMessages.error('Failed to save Settings', { content: err.message, sticky: true });
