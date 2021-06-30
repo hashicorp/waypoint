@@ -119,7 +119,7 @@ func (r *Runner) executeJob(
 	}
 
 	// Here we'll load our values from the server/UI, as well as VCS.
-	// The order values are added to our final pbVars slice is the order
+	// The order values are added to our final pbVars slice in the order
 	// of precedence
 	pbVars := resp.Project.GetVariables()
 	vcsVars, diags := variables.LoadVCSFiles(wd)
