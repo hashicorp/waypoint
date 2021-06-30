@@ -127,7 +127,7 @@ func (c *Config) validateApp(b *hcl.Block) error {
 	return nil
 }
 
-// TODO krantzinator docs
+// validateVarBlock verifies the variable blocks match the required schema
 func (c *Config) validateVarBlock(b *hcl.Block) error {
 	schema, _ := gohcl.ImpliedBodySchema(&validateVariable{})
 	content, diag := b.Body.Content(schema)

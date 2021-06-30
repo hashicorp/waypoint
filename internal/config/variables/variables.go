@@ -17,7 +17,6 @@ import (
 	"github.com/zclconf/go-cty/cty/gocty"
 )
 
-// A consistent detail message for all "not a valid identifier" diagnostics.
 var (
 	// Variable value sources
 	// listed in descending precedence order for ease of reference
@@ -27,22 +26,32 @@ var (
 	sourceVCS     = "vcs"
 	sourceServer  = "server"
 	sourceDefault = "default"
+
+	// Prefix for collecting variable values from environment variables
+	varEnvPrefix = "WP_VAR_"
+
+	// The attributes we expect to see in variable blocks
+	// Future expansion here could include `sensitive`, `validations`, etc
+	variableBlockSchema = &hcl.BodySchema{
+		Attributes: []hcl.AttributeSchema{
+			{
+				Name: "default",
+			},
+			{
+				Name: "type",
+			},
+			{
+				Name: "description",
+			},
+		},
+	}
 )
 
-// InputValue contain the value of the variable along with associated metada,
-// including the source it was set from: cli, file, env, vcs, server/ui
-type InputValue struct {
-	Value  cty.Value
-	Source string
-	Expr   hcl.Expression
-	// The location of the variable value if the value was provided
-	// from a file
-	Range hcl.Range
-}
-
+// Variable stores a parsed variable definition from the waypoint.hcl
 type Variable struct {
 	Name string
 
+	// The default value in the variable definition
 	Default *InputValue
 
 	// Cty Type of the variable. If the default value or a collected value is
@@ -67,31 +76,23 @@ type HclVariable struct {
 	Description string         `hcl:"description,optional"`
 }
 
-// InputValues are used when parsing the Config, to set default values from
-// the waypoint.hcl and bring in the values from the job and the server/VCS
-// for eventual precedence sorting and setting on the EvalContext
+// InputValues are used to store values collected from various sources.
+// Values are added to the map in precedence order, and then used to
+// create the final map of cty.Values for config hcl context evaluation.
 type InputValues map[string]*InputValue
 
-// TODO krantzinator - use implied body scheme instead?
-var variableBlockSchema = &hcl.BodySchema{
-	Attributes: []hcl.AttributeSchema{
-		{
-			Name: "default",
-		},
-		{
-			Name: "type",
-		},
-		{
-			Name: "description",
-		},
-	},
+// InputValue contain the value of the variable along with associated metada,
+// including the source it was set from: cli, file, env, vcs, server/ui
+type InputValue struct {
+	Value  cty.Value
+	Source string
+	Expr   hcl.Expression
+	// The location of the variable value if the value was provided from a file
+	Range hcl.Range
 }
 
-// decodeVariableBlock first validates the variable block, and then sets
-// the decoded variables with their default value on *InputVars
-
-// parseVarBlock validates each part of the variable block, building out
-// a defined *Variable definition
+// DecodeVariableBlock validates each part of the variable block,
+// building out a defined *Variable
 func DecodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	name := block.Labels[0]
 	v := Variable{
@@ -163,33 +164,15 @@ func DecodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 		}
 	}
 
-	// TODO krantzinator: not doing custom validations right now, unless it's easy
-	// for _, block := range content.Blocks {
-	// 	switch block.Type {
-
-	// case "validation":
-	// 	vv, moreDiags := decodeVariableValidationBlock(v.Name, block, override)
-	// 	diags = append(diags, moreDiags...)
-	// 	v.Validations = append(v.Validations, vv)
-
-	// 	default:
-	// 		// The above cases should be exhaustive for all block types
-	// 		// defined in variableBlockSchema
-	// 		panic(fmt.Sprintf("unhandled block type %q", block.Type))
-	// 	}
-	// }
-
 	return &v, diags
 }
-
-// Prefix your environment variables with VarEnvPrefix so that Waypoint can see
-// them.
-const VarEnvPrefix = "WP_VAR_"
 
 // SetJobInputValues collects values set via the CLI (-var, -varfile) and
 // local env vars (WP_VAR_*) and translates those values to pb.Variables. These
 // pb.Variables can then be set on the job for eventual parsing on the runner,
 // after the runner has decoded the variables defined in the waypoint.hcl.
+// All values are set as protobuf strings, with the expectation that later
+// evaluation will convert them to their defined types.
 func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	ret := []*pb.Variable{}
@@ -197,13 +180,15 @@ func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, 
 	// The order here is important, as the order in which values are evaluated
 	// dictate their precedence. We therefore evalute these three sources in order
 	// of env, file, cli.
+
+	// process env values ("env" source)
 	{
 		env := os.Environ()
 		for _, raw := range env {
-			if !strings.HasPrefix(raw, VarEnvPrefix) {
+			if !strings.HasPrefix(raw, varEnvPrefix) {
 				continue
 			}
-			raw = raw[len(VarEnvPrefix):] // trim the prefix
+			raw = raw[len(varEnvPrefix):] // trim the prefix
 
 			eq := strings.Index(raw, "=")
 			if eq == -1 {
@@ -214,9 +199,6 @@ func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, 
 			name := raw[:eq]
 			rawVal := raw[eq+1:]
 
-			// TODO krantzinator: I'm making everything a Variable_Str which
-			// removes the reason of even specifying a value type, so I should
-			// not do that
 			ret = append(ret, &pb.Variable{
 				Name:   name,
 				Value:  &pb.Variable_Str{Str: rawVal},
@@ -225,6 +207,7 @@ func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, 
 		}
 	}
 
+	// process -var-file args ("file" source)
 	for _, file := range files {
 		if file != "" {
 			pbv, diags := parseFileValues(file, sourceFile)
@@ -235,8 +218,7 @@ func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, 
 		}
 	}
 
-	// Then we process values given explicitly on the command line, either
-	// as individual literal settings or as files to read.
+	// process -var args ("cli" source)
 	for name, val := range vars {
 		ret = append(ret, &pb.Variable{
 			Name:   name,
@@ -354,7 +336,7 @@ func EvalInputValues(
 			return nil, append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  fmt.Sprintf("Unset variable %q", name),
-				// TODO add our docs link here
+				// TODO krantzinator: add our docs link here
 				Detail: "A variable must be set or have a default value; see " +
 					"[docs] for " +
 					"details.",
@@ -365,7 +347,7 @@ func EvalInputValues(
 	return iv, diags
 }
 
-// LoadVCSFiles loads any *.auto.wpvars(.json) files in the VCS repo
+// LoadVCSFiles loads any *.auto.wpvars(.json) files in the source repo
 func LoadVCSFiles(wd string) ([]*pb.Variable, hcl.Diagnostics) {
 	var pbv []*pb.Variable
 	var diags hcl.Diagnostics

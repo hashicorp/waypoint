@@ -250,11 +250,12 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
-	// TODO krantzinator: where to get var files from project path? On runner?
-	// Collect variable values from -var and -varfile flags, any .wpvars files
-	// locally, and env vars set with WP_VAR_*
+	// Collect variable values from -var and -varfile flags,
+	// and env vars set with WP_VAR_*
 	vars, diags := variables.SetJobInputValues(c.flagVars, c.flagVarFile)
 	if diags.HasErrors() {
+		// we only return errors for file parsing, so we are specific
+		// in the error log here
 		c.logError(c.Log, "failed to load wpvars file", errors.New(diags.Error()))
 		return diags
 	}
