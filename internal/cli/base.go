@@ -438,8 +438,8 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Name:   "var-file",
 			Target: &c.flagVarFile,
 			Usage: "HCL or JSON file containing variable values to set for this " +
-				"operation. If any \"waypoint.wpvars\" \"*.auto.wpvars\" files are " +
-				"present, they will be automatically loaded.",
+				"operation. If any \"*.auto.wpvars\" or \"*.auto.wpvars.json\" " +
+				"files are present, they will be automatically loaded.",
 		})
 	}
 
