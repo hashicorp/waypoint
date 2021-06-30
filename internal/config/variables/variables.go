@@ -21,14 +21,13 @@ import (
 var (
 	badIdentifierDetail = "A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."
 
-	// Variable value sources
-	// Highest precedence is the final value used
-	sourceDefault = "default"
-	sourceServer  = "server"
-	sourceVCS     = "vcs"
-	sourceEnv     = "env"
-	sourceFile    = "file"
+	// Variable value sources; listed in descending precedence order
 	sourceCLI     = "cli"
+	sourceFile    = "file"
+	sourceEnv     = "env"
+	sourceVCS     = "vcs"
+	sourceServer  = "server"
+	sourceDefault = "default"
 )
 
 // InputValue contain the value of the variable along with associated metada,
@@ -291,13 +290,19 @@ func EvalInputValues(
 			source = sourceServer
 		}
 
+		// We have to specify the three different simple types we support -- string,
+		// bool, number -- when doing the below evaluation of hcl expressions
+		// because of our translation to-and-from protobuf format.
+		// While cty allows us to parse all simple types as LiteralValueExpr, we
+		// have to first translate the pb values back into cty values, thus
+		// necessitating a separate case statement for each simple type
 		var expr hclsyntax.Expression
 		switch pbv.Value.(type) {
 
-		// case *pb.Variable_Hcl:
-		// 	value := pbv.Value.(*pb.Variable_Hcl).Hcl
-		// 	fakeFilename := fmt.Sprintf("<value for var.%s from server>", pbv.Name)
-		// 	expr, diags = hclsyntax.ParseExpression([]byte(value), fakeFilename, hcl.Pos{Line: 1, Column: 1})
+		case *pb.Variable_Hcl:
+			value := pbv.Value.(*pb.Variable_Hcl).Hcl
+			fakeFilename := fmt.Sprintf("<value for var.%s from server>", pbv.Name)
+			expr, diags = hclsyntax.ParseExpression([]byte(value), fakeFilename, hcl.Pos{Line: 1, Column: 1})
 		case *pb.Variable_Str:
 			value := pbv.Value.(*pb.Variable_Str).Str
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.StringVal(value)}

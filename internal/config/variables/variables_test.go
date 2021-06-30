@@ -13,6 +13,7 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/stretchr/testify/require"
 	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/convert"
 )
 
 func TestVariables_decode(t *testing.T) {
@@ -144,21 +145,34 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			},
 			err: "",
 		},
-		// {
-		// 	name:        "complex types",
-		// 	file:        "collections.hcl",
-		// 	inputValues: []*pb.Variable{},
-		// 	expected: InputVars{
-		// 		"docker_ports": &InputVar{
-		// 			Name: "docker_ports",
-		// 			Values: []Value{
-		// 				{stringListVal("us-east-1"), Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
-		// 			},
-		// 			Type: cty.List(cty.String),
-		// 		},
-		// 	},
-		// 	err: "",
-		// },
+		{
+			name:        "complex types",
+			file:        "collections.hcl",
+			inputValues: []*pb.Variable{},
+			expected: InputValues{
+				"testdata": &InputValue{
+					stringListVal("pancakes"), "default", hcl.Expression(nil), hcl.Range{},
+				},
+			},
+			err: "",
+		},
+		{
+			name:        "complex types",
+			file:        "collections.hcl",
+			inputValues: []*pb.Variable{
+				{
+					Name: "testdata",
+					Value: &pb.Variable_Hcl{Hcl: "[\"waffles\"]"},
+					Source: &pb.Variable_Server{},
+				},
+			},
+			expected: InputValues{
+				"testdata": &InputValue{
+					stringListVal("waffles"), "server", hcl.Expression(nil), hcl.Range{},
+				},
+			},
+			err: "",
+		},
 		{
 			name: "undefined variable for pb.Variable value",
 			file: "valid.hcl",
@@ -336,14 +350,14 @@ type testConfig struct {
 	Body      hcl.Body       `hcl:",body"`
 }
 
-// func stringListVal(strings ...string) cty.Value {
-// 	values := []cty.Value{}
-// 	for _, str := range strings {
-// 		values = append(values, cty.StringVal(str))
-// 	}
-// 	list, err := convert.Convert(cty.ListVal(values), cty.List(cty.String))
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return list
-// }
+func stringListVal(strings ...string) cty.Value {
+	values := []cty.Value{}
+	for _, str := range strings {
+		values = append(values, cty.StringVal(str))
+	}
+	list, err := convert.Convert(cty.ListVal(values), cty.List(cty.String))
+	if err != nil {
+		panic(err)
+	}
+	return list
+}
