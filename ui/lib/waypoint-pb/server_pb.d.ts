@@ -4638,6 +4638,9 @@ export class Deployment extends jspb.Message {
   getId(): string;
   setId(value: string): Deployment;
 
+  getUrl(): string;
+  setUrl(value: string): Deployment;
+
   getGeneration(): Generation | undefined;
   setGeneration(value?: Generation): Deployment;
   hasGeneration(): boolean;
@@ -4703,6 +4706,7 @@ export namespace Deployment {
     workspace?: Ref.Workspace.AsObject,
     sequence: number,
     id: string,
+    url: string,
     generation?: Generation.AsObject,
     state: Operation.PhysicalState,
     status?: Status.AsObject,

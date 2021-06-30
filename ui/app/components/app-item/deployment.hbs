@@ -33,7 +33,7 @@
   </small>
   {{else if (and @deployment.preload.deployUrl (not-eq @deployment.state 4))}}
     <ExternalLink data-test-external-deployment-button href="https://{{@deployment.preload.deployUrl}}" class="button button--secondary button--external-link">
-      <span>{{t "page.deployments.external_url_label"}}</span>
+      <span>{{@deployment.preload.deployUrl}}</span>
       <Pds::Icon @type="exit" class="icon" />
     </ExternalLink>
   {{/if}}

@@ -2,6 +2,7 @@
 /**
  * @fileoverview
  * @enhanceable
+ * @suppress {missingRequire} reports error on implicit type usages.
  * @suppress {messageConventions} JS Compiler reports an error if a variable or
  *     field starts with 'MSG_' and isn't a translatable message.
  * @public
@@ -39289,6 +39290,7 @@ proto.hashicorp.waypoint.Deployment.toObject = function(includeInstance, msg) {
     workspace: (f = msg.getWorkspace()) && proto.hashicorp.waypoint.Ref.Workspace.toObject(includeInstance, f),
     sequence: jspb.Message.getFieldWithDefault(msg, 10, 0),
     id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    url: jspb.Message.getFieldWithDefault(msg, 18, ""),
     generation: (f = msg.getGeneration()) && proto.hashicorp.waypoint.Generation.toObject(includeInstance, f),
     state: jspb.Message.getFieldWithDefault(msg, 2, 0),
     status: (f = msg.getStatus()) && proto.hashicorp.waypoint.Status.toObject(includeInstance, f),
@@ -39355,6 +39357,10 @@ proto.hashicorp.waypoint.Deployment.deserializeBinaryFromReader = function(msg, 
     case 1:
       var value = /** @type {string} */ (reader.readString());
       msg.setId(value);
+      break;
+    case 18:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setUrl(value);
       break;
     case 17:
       var value = new proto.hashicorp.waypoint.Generation;
@@ -39471,6 +39477,13 @@ proto.hashicorp.waypoint.Deployment.serializeBinaryToWriter = function(message, 
   if (f.length > 0) {
     writer.writeString(
       1,
+      f
+    );
+  }
+  f = message.getUrl();
+  if (f.length > 0) {
+    writer.writeString(
+      18,
       f
     );
   }
@@ -39918,6 +39931,24 @@ proto.hashicorp.waypoint.Deployment.prototype.getId = function() {
  */
 proto.hashicorp.waypoint.Deployment.prototype.setId = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string url = 18;
+ * @return {string}
+ */
+proto.hashicorp.waypoint.Deployment.prototype.getUrl = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 18, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.hashicorp.waypoint.Deployment} returns this
+ */
+proto.hashicorp.waypoint.Deployment.prototype.setUrl = function(value) {
+  return jspb.Message.setProto3StringField(this, 18, value);
 };
 
 
