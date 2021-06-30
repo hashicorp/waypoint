@@ -130,9 +130,9 @@ func TestVariables_readFileValues(t *testing.T) {
 
 func TestVariables_LoadVCSFile(t *testing.T) {
 	cases := []struct {
-		name   string
+		name     string
 		expected []*pb.Variable
-	  err string
+		err      string
 	}{
 		{
 			name: "loads auto file only",
