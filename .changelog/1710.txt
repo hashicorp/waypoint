@@ -1,0 +1,3 @@
+```release-note:bug
+cli: fix crash that could occur when running commands outside the context of a project with an hcl config file.
+```
