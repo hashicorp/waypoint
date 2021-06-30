@@ -62,9 +62,7 @@ type Project struct {
 	// all other conflicting keys.
 	overrideLabels map[string]string
 
-	// variables are set on the job directly so that the runner
-	// can access this set of values along with any server- or vcs-stored
-	// values for final evaluation
+	// variables is the final map of values to use when evaluating config vars
 	variables variables.InputValues
 }
 
