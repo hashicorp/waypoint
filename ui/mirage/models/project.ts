@@ -1,5 +1,5 @@
 import { Model, hasMany } from 'ember-cli-mirage';
-import { Project, Ref, Variable } from 'waypoint-pb';
+import { Project, Ref } from 'waypoint-pb';
 
 export default Model.extend({
   applications: hasMany(),

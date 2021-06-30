@@ -33,7 +33,8 @@ export function update(schema: any, { requestBody }: Request): Response {
     .map((v) => v.toObject());
   let model = schema.projects.findBy({ name });
 
-  variablesList.forEach((v) => model.createVariable(v));
+  model.variables = variablesList.map((v) => model.newVariable(v));
+  model.save();
 
   let project = model?.toProtobuf();
   let resp = new UpsertProjectResponse();
