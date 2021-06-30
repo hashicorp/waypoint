@@ -170,8 +170,6 @@ func DecodeVariableBlocks(body hcl.Body) (map[string]*variables.Variable, hcl.Di
 			return nil, diags
 		}
 
-		// Checking for duplicates happens here, rather than during the config.Validate
-		// step, because config.Validate doesn't store any decoded blocks.
 		if _, found := vs[v.Name]; found {
 			return nil, []*hcl.Diagnostic{{
 				Severity: hcl.DiagError,
