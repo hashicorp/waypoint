@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -37,6 +38,15 @@ func grpcInit(group *run.Group, opts *options) error {
 			// Protocol version negotiation
 			versionStreamInterceptor(resp.Info),
 		),
+		grpc.KeepaliveEnforcementPolicy(
+			keepalive.EnforcementPolicy{
+				// connections need to wait at least 20s before sending a
+				// keepalive ping
+				MinTime: 20 * time.Second,
+				// allow runners to send keeplive pings even if there are no
+				// active RCP streams.
+				PermitWithoutStream: true,
+			}),
 	)
 
 	if opts.AuthChecker != nil {
