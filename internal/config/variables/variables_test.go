@@ -20,16 +20,12 @@ func TestVariables_decode(t *testing.T) {
 	// then Decode calls the validate function and if it passes, saves those in
 	// *variables
 	cases := []struct {
-		File string
-		Err  string
+		file string
+		err  string
 	}{
 		{
 			"valid.hcl",
 			"",
-		},
-		{
-			"duplicate_def.hcl",
-			"Duplicate variable",
 		},
 		{
 			"invalid_name.hcl",
@@ -42,34 +38,38 @@ func TestVariables_decode(t *testing.T) {
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.File, func(t *testing.T) {
+		t.Run(tt.file, func(t *testing.T) {
 			require := require.New(t)
 
-			file := filepath.Join("testdata", tt.File)
+			file := filepath.Join("testdata", tt.file)
 			base := testConfig{}
 
 			err := hclsimple.DecodeFile(file, nil, &base)
 			require.NoError(err)
 
 			schema, _ := gohcl.ImpliedBodySchema(&testConfig{})
-			content, diag := base.Body.Content(schema)
-			require.False(diag.HasErrors())
+			content, diags := base.Body.Content(schema)
+			require.False(diags.HasErrors())
 
-			vars := &InputVars{}
+			vs := map[string]*Variable{}
 			for _, block := range content.Blocks {
 				switch block.Type {
 				case "variable":
-					diag = vars.DecodeVariableBlock(block)
+					v, decodeDiag := DecodeVariableBlock(block)
+					vs[block.Labels[0]] = v
+					if decodeDiag.HasErrors() {
+						diags = append(diags, decodeDiag...)
+					}
 				}
 			}
 
-			if tt.Err == "" {
-				require.False(diag.HasErrors())
+			if tt.err == "" {
+				require.False(diags.HasErrors())
 				return
 			}
 
-			require.True(diag.HasErrors())
-			require.Contains(diag.Error(), tt.Err)
+			require.True(diags.HasErrors())
+			require.Contains(diags.Error(), tt.err)
 		})
 	}
 }
@@ -113,12 +113,12 @@ func TestVariables_readFileValues(t *testing.T) {
 	}
 }
 
-func TestVariables_collectValues(t *testing.T) {
+func TestVariables_EvalInputValues(t *testing.T) {
 	cases := []struct {
 		name        string
 		file        string
 		inputValues []*pb.Variable
-		expected    InputVars
+		expected    InputValues
 		err         string
 	}{
 		{
@@ -131,29 +131,15 @@ func TestVariables_collectValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: InputVars{
-				"art": &InputVar{
-					Name: "art",
-					Values: []Value{
-						{cty.StringVal("gdbee"), Source{"cli", 5}, hcl.Expression(nil), hcl.Range{}},
-						{cty.StringVal("gdbee"), Source{"vcs", 2}, hcl.Expression(nil), hcl.Range{}},
-						{cty.NullVal(cty.String), Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
-					},
-					Type: cty.String,
+			expected: InputValues{
+				"art": &InputValue{
+					cty.StringVal("gdbee"), "cli", hcl.Expression(nil), hcl.Range{},
 				},
-				"is_good": &InputVar{
-					Name: "is_good",
-					Values: []Value{
-						{cty.BoolVal(false), Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
-					},
-					Type: cty.Bool,
+				"is_good": &InputValue{
+					cty.BoolVal(false), "default", hcl.Expression(nil), hcl.Range{},
 				},
-				"whatdoesittaketobenumber": &InputVar{
-					Name: "whatdoesittaketobenumber",
-					Values: []Value{
-						{cty.NumberIntVal(1), Source{"default", 0}, hcl.Expression(nil), hcl.Range{}},
-					},
-					Type: cty.Number,
+				"whatdoesittaketobenumber": &InputValue{
+					cty.NumberIntVal(1), "default", hcl.Expression(nil), hcl.Range{},
 				},
 			},
 			err: "",
@@ -183,11 +169,11 @@ func TestVariables_collectValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: InputVars{},
+			expected: InputValues{},
 			err:      "Undefined variable",
 		},
 		{
-			name: "invalid value type for pb.Variable",
+			name: "invalid value type",
 			file: "valid.hcl",
 			inputValues: []*pb.Variable{
 				{
@@ -196,22 +182,21 @@ func TestVariables_collectValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: InputVars{},
+			expected: InputValues{},
 			err:      "Invalid value for variable",
 		},
 		{
-			name:        "undefined var for file value",
-			file:        "undefined.hcl",
-			inputValues: []*pb.Variable{},
-			expected:    InputVars{},
-			err:         "Undefined variable",
-		},
-		{
-			name:        "invalid value type",
-			file:        "invalid_value.hcl",
-			inputValues: []*pb.Variable{},
-			expected:    InputVars{},
-			err:         "Invalid value for variable",
+			name: "undefined var for file value",
+			file: "undefined.hcl",
+			inputValues: []*pb.Variable{
+				{
+					Name:   "is_good",
+					Value:  &pb.Variable_Bool{Bool: true},
+					Source: &pb.Variable_Cli{},
+				},
+			},
+			expected: InputValues{},
+			err:      "Undefined variable",
 		},
 	}
 	for _, tt := range cases {
@@ -228,17 +213,21 @@ func TestVariables_collectValues(t *testing.T) {
 			content, diags := base.Body.Content(schema)
 			require.False(diags.HasErrors())
 
-			vars := &InputVars{}
+			vs := map[string]*Variable{}
 			for _, block := range content.Blocks {
 				switch block.Type {
 				case "variable":
-					diags = vars.DecodeVariableBlock(block)
+					v, decodeDiag := DecodeVariableBlock(block)
+					vs[block.Labels[0]] = v
+					if decodeDiag.HasErrors() {
+						diags = append(diags, decodeDiag...)
+					}
 				}
 			}
 			require.False(diags.HasErrors())
 
 			// collect values
-			diags = vars.CollectInputValues("testdata", tt.inputValues)
+			ivs, diags := EvalInputValues(tt.inputValues, vs)
 			if tt.err != "" {
 				require.True(diags.HasErrors())
 				require.Contains(diags.Error(), tt.err)
@@ -247,7 +236,7 @@ func TestVariables_collectValues(t *testing.T) {
 
 			require.False(diags.HasErrors())
 			for k, v := range tt.expected {
-				diff := cmp.Diff(v, (*vars)[k], cmpOpts...)
+				diff := cmp.Diff(v, ivs[k], cmpOpts...)
 				if diff != "" {
 					t.Fatalf("Expected variables differed from actual: %s", diff)
 				}

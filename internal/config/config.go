@@ -156,18 +156,18 @@ func (c *Config) HCLContext() *hcl.EvalContext {
 }
 
 func DecodeVariableBlocks(body hcl.Body) (map[string]*variables.Variable, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
 	schema, _ := gohcl.ImpliedBodySchema(&hclConfig{})
-	content, diag := body.Content(schema)
-	if diag.HasErrors() {
-		return nil, diag
+	content, diags := body.Content(schema)
+	if diags.HasErrors() {
+		return nil, diags
 	}
 
-	var diags hcl.Diagnostics
 	vs := map[string]*variables.Variable{}
 	for _, block := range content.Blocks.OfType("variable") {
-		v, moreDiags := variables.DecodeVariableBlock(block)
-		if moreDiags != nil {
-			diags = append(diags, moreDiags...)
+		v, diags := variables.DecodeVariableBlock(block)
+		if diags.HasErrors() {
+			return nil, diags
 		}
 
 		// Checking for duplicates happens here, rather than during the config.Validate

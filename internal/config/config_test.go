@@ -67,8 +67,8 @@ func TestLoad_compare(t *testing.T) {
 
 func TestConfig_variableDecode(t *testing.T) {
 	cases := []struct {
-		File string
-		Err  string
+		file string
+		err  string
 	}{
 		{
 			"valid.hcl",
@@ -83,21 +83,25 @@ func TestConfig_variableDecode(t *testing.T) {
 			"invalid_def.hcl",
 			"Invalid default value for variable",
 		},
+		{
+			"duplicate_def.hcl",
+			"Duplicate variable",
+		},
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.File, func(t *testing.T) {
+		t.Run(tt.file, func(t *testing.T) {
 			require := require.New(t)
 
-			_, err := Load(filepath.Join("testdata", "validate", tt.File), nil)
+			_, err := Load(filepath.Join("testdata", "validate", tt.file), nil)
 
-			if tt.Err == "" {
+			if tt.err == "" {
 				require.NoError(err)
 				return
 			}
 
 			require.Error(err)
-			require.Contains(err.Error(), tt.Err)
+			require.Contains(err.Error(), tt.err)
 		})
 	}
 }

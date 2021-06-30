@@ -264,7 +264,8 @@ func EvalInputValues(
 	for _, pbv := range pbvars {
 		variable, found := vs[pbv.Name]
 		if !found {
-			// TODO krantzinator: what to do with a warning diag type
+			// TODO krantzinator: this should be a DiagWarning rather than a DiagErr
+			// What to do with a warning diag type?
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "Undefined variable",
@@ -309,8 +310,8 @@ func EvalInputValues(
 		}
 
 		val, valDiags := expr.Value(nil)
-		diags = append(diags, valDiags...)
 		if valDiags.HasErrors() {
+			diags = append(diags, valDiags...)
 			return nil, diags
 		}
 
@@ -321,7 +322,12 @@ func EvalInputValues(
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid value for variable",
-					Detail:   fmt.Sprintf("The value set for variable %q from source %q is not compatible with the variable's type constraint: %s.", pbv.Name, source, err),
+					Detail: fmt.Sprintf(
+						"The value set for variable %q from source %q is not compatible with the variable's type constraint: %s.",
+						pbv.Name,
+						source,
+						err,
+					),
 				})
 				val = cty.DynamicVal
 			}
