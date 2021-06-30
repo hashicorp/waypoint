@@ -16,10 +16,7 @@ import (
 	"github.com/zclconf/go-cty/cty/convert"
 )
 
-func TestVariables_decode(t *testing.T) {
-	// TODO krantzinator: this can probably move under just validate, and
-	// then Decode calls the validate function and if it passes, saves those in
-	// *variables
+func TestVariables_DecodeVariableBlock(t *testing.T) {
 	cases := []struct {
 		file string
 		err  string
@@ -77,12 +74,25 @@ func TestVariables_decode(t *testing.T) {
 
 func TestVariables_readFileValues(t *testing.T) {
 	cases := []struct {
-		file string
-		err  string
+		file     string
+		expected []*pb.Variable
+		err      string
 	}{
 		{
 			file: "values.wpvars",
-			err:  "",
+			expected: []*pb.Variable{
+				{
+					Name:   "art",
+					Value:  &pb.Variable_Str{Str: "gdbee"},
+					Source: &pb.Variable_Vcs{},
+				},
+				{
+					Name:   "mug",
+					Value:  &pb.Variable_Str{Str: "yeti"},
+					Source: &pb.Variable_Vcs{},
+				},
+			},
+			err: "",
 		},
 		{
 			file: "nofile.wpvars",
@@ -102,7 +112,7 @@ func TestVariables_readFileValues(t *testing.T) {
 			require := require.New(t)
 
 			fp := filepath.Join("testdata", tt.file)
-			_, diags := readFileValues(fp)
+			fv, diags := parseFileValues(fp, "vcs")
 
 			if tt.err != "" {
 				require.Contains(diags.Error(), tt.err)
@@ -110,6 +120,45 @@ func TestVariables_readFileValues(t *testing.T) {
 			}
 
 			require.False(diags.HasErrors())
+			require.Equal(len(fv), len(tt.expected))
+			for _, v := range tt.expected {
+				require.Contains(fv, v)
+			}
+		})
+	}
+}
+
+func TestVariables_LoadVCSFile(t *testing.T) {
+	cases := []struct {
+		name   string
+		expected []*pb.Variable
+	  err string
+	}{
+		{
+			name: "loads auto file only",
+			expected: []*pb.Variable{
+				{
+					Name:   "mug",
+					Value:  &pb.Variable_Str{Str: "ceramic"},
+					Source: &pb.Variable_Vcs{},
+				},
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			require := require.New(t)
+
+			vars, diags := LoadVCSFiles("testdata")
+
+			if tt.err != "" {
+				require.True(diags.HasErrors())
+				require.Contains(diags.Error(), tt.err)
+				return
+			}
+
+			require.False(diags.HasErrors())
+			require.ElementsMatch(vars, tt.expected)
 		})
 	}
 }
@@ -147,7 +196,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 		},
 		{
 			name:        "complex types",
-			file:        "collections.hcl",
+			file:        "list.hcl",
 			inputValues: []*pb.Variable{},
 			expected: InputValues{
 				"testdata": &InputValue{
@@ -157,12 +206,12 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			err: "",
 		},
 		{
-			name:        "complex types",
-			file:        "collections.hcl",
+			name: "complex types",
+			file: "list.hcl",
 			inputValues: []*pb.Variable{
 				{
-					Name: "testdata",
-					Value: &pb.Variable_Hcl{Hcl: "[\"waffles\"]"},
+					Name:   "testdata",
+					Value:  &pb.Variable_Hcl{Hcl: "[\"waffles\"]"},
 					Source: &pb.Variable_Server{},
 				},
 			},
@@ -240,7 +289,6 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			}
 			require.False(diags.HasErrors())
 
-			// collect values
 			ivs, diags := EvalInputValues(tt.inputValues, vs)
 			if tt.err != "" {
 				require.True(diags.HasErrors())
@@ -323,6 +371,7 @@ func TestVariables_SetJobInputVariables(t *testing.T) {
 	}
 }
 
+// helper functions
 var ctyValueComparer = cmp.Comparer(func(x, y cty.Value) bool {
 	return x.RawEquals(y)
 })

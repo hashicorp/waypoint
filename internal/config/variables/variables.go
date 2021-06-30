@@ -19,9 +19,8 @@ import (
 
 // A consistent detail message for all "not a valid identifier" diagnostics.
 var (
-	badIdentifierDetail = "A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes."
-
-	// Variable value sources; listed in descending precedence order
+	// Variable value sources
+	// listed in descending precedence order for ease of reference
 	sourceCLI     = "cli"
 	sourceFile    = "file"
 	sourceEnv     = "env"
@@ -106,7 +105,7 @@ func DecodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 		diags = append(diags, &hcl.Diagnostic{
 			Severity: hcl.DiagError,
 			Summary:  "Invalid variable name",
-			Detail:   badIdentifierDetail,
+			Detail:   "A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes.",
 			Subject:  &block.LabelRanges[0],
 		})
 	}
@@ -195,6 +194,9 @@ func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, 
 	var diags hcl.Diagnostics
 	ret := []*pb.Variable{}
 
+	// The order here is important, as the order in which values are evaluated
+	// dictate their precedence. We therefore evalute these three sources in order
+	// of env, file, cli.
 	{
 		env := os.Environ()
 		for _, raw := range env {
@@ -391,6 +393,8 @@ func LoadVCSFiles(wd string) ([]*pb.Variable, hcl.Diagnostics) {
 	return pbv, nil
 }
 
+// parseFileValues is a helper function to extract variable values from the
+// provided file, using the provided source to set the pb.Variable.Source value.
 func parseFileValues(filename string, source string) ([]*pb.Variable, hcl.Diagnostics) {
 	var pbv []*pb.Variable
 	f, diags := readFileValues(filename)
@@ -446,7 +450,7 @@ func parseFileValues(filename string, source string) ([]*pb.Variable, hcl.Diagno
 
 // readFileValues is a helper function that loads a file, parses if it is
 // hcl or json, and checks for any errant variable definition blocks. It returns
-// the files contents for further evaluation if necessary.
+// the files contents for further evaluation.
 func readFileValues(filename string) (*hcl.File, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
@@ -519,16 +523,9 @@ func readFileValues(filename string) (*hcl.File, hcl.Diagnostics) {
 	return f, diags
 }
 
-// // sortValues is a helper function that sorts variable Values by their
-// // precedence order, ordering the slice from highest to lowest precedence
-// func sortValues(values []InputValue) []InputValue {
-// 	sort.Slice(values, func(i, j int) bool {
-// 		return values[i].Source.Precedence > values[j].Source.Precedence
-// 	})
-// 	return values
-// }
-
-func (iv *InputValues) Values() map[string]cty.Value {
+// values creates a map of cty.values from the map of InputValues, for use
+// in creating hcl contexts
+func (iv *InputValues) values() map[string]cty.Value {
 	res := map[string]cty.Value{}
 	for k, v := range *iv {
 		res[k] = v.Value
@@ -536,15 +533,16 @@ func (iv *InputValues) Values() map[string]cty.Value {
 	return res
 }
 
+// AddInputVariables adds the InputValues to the provided hcl context
 func AddInputVariables(ctx *hcl.EvalContext, vs *InputValues) {
-	vars := (*vs).Values()
+	vars := (*vs).values()
 	variables := map[string]cty.Value{
 		"var": cty.ObjectVal(vars),
 	}
 	ctx.Variables = variables
 }
 
-// isAutoVarFile determines if the file ends with .auto.tfvars or .auto.tfvars.json
+// isAutoVarFile determines if the file ends with .auto.wpvars or .auto.wpvars.json
 func isAutoVarFile(path string) bool {
 	return strings.HasSuffix(path, ".auto.wpvars") ||
 		strings.HasSuffix(path, ".auto.wpvars.json")
