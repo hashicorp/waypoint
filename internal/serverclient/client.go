@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/env"
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
@@ -126,8 +127,18 @@ func FromEnv() ConnectOption {
 	return func(c *connectConfig) error {
 		if v := os.Getenv(EnvServerAddr); v != "" {
 			c.Addr = v
-			c.Tls = os.Getenv(EnvServerTls) != ""
-			c.TlsSkipVerify = os.Getenv(EnvServerTlsSkipVerify) != ""
+
+			var err error
+			c.Tls, err = env.GetBool(EnvServerTls, false)
+			if err != nil {
+				return err
+			}
+
+			c.TlsSkipVerify, err = env.GetBool(EnvServerTlsSkipVerify, false)
+			if err != nil {
+				return err
+			}
+
 			c.Auth = os.Getenv(EnvServerToken) != ""
 		}
 
