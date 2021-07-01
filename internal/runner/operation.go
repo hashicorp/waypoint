@@ -132,7 +132,7 @@ func (r *Runner) executeJob(
 	pbVars = append(pbVars, job.Variables...)
 
 	// evaluate all variables against the variable blocks we just decoded
-	inputVars, diags := variables.EvalInputValues(pbVars, cfg.InputVariables, log)
+	inputVars, diags := variables.EvaluateVariables(pbVars, cfg.InputVariables, log)
 	if diags.HasErrors() {
 		return nil, diags
 	}

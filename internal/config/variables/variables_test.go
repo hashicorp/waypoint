@@ -54,7 +54,7 @@ func TestVariables_DecodeVariableBlock(t *testing.T) {
 			for _, block := range content.Blocks {
 				switch block.Type {
 				case "variable":
-					v, decodeDiag := DecodeVariableBlock(block)
+					v, decodeDiag := decodeVariableBlock(block)
 					vs[block.Labels[0]] = v
 					if decodeDiag.HasErrors() {
 						diags = append(diags, decodeDiag...)
@@ -281,7 +281,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			for _, block := range content.Blocks {
 				switch block.Type {
 				case "variable":
-					v, decodeDiag := DecodeVariableBlock(block)
+					v, decodeDiag := decodeVariableBlock(block)
 					vs[block.Labels[0]] = v
 					if decodeDiag.HasErrors() {
 						diags = append(diags, decodeDiag...)
@@ -290,7 +290,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			}
 			require.False(diags.HasErrors())
 
-			ivs, diags := EvalInputValues(tt.inputValues, vs, hclog.New(&hclog.LoggerOptions{}))
+			ivs, diags := EvaluateVariables(tt.inputValues, vs, hclog.New(&hclog.LoggerOptions{}))
 			if tt.err != "" {
 				require.True(diags.HasErrors())
 				require.Contains(diags.Error(), tt.err)

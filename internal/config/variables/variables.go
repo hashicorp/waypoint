@@ -110,9 +110,36 @@ type Value struct {
 	Range hcl.Range
 }
 
-// DecodeVariableBlock validates each part of the variable block,
+// DecodeVariableBlocks uses the hclConfig schema to iterate over all
+// variable blocks, validating names and types and checking for duplicates.
+// It returns the final map of Variables to store for later reference.
+func DecodeVariableBlocks(content *hcl.BodyContent) (map[string]*Variable, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+	vs := map[string]*Variable{}
+	for _, block := range content.Blocks.OfType("variable") {
+		v, diags := decodeVariableBlock(block)
+		if diags.HasErrors() {
+			return nil, diags
+		}
+
+		if _, found := vs[v.Name]; found {
+			return nil, []*hcl.Diagnostic{{
+				Severity: hcl.DiagError,
+				Summary:  "Duplicate variable",
+				Detail:   "Duplicate " + v.Name + " variable definition found.",
+				Context:  block.DefRange.Ptr(),
+			}}
+		}
+
+		vs[block.Labels[0]] = v
+	}
+
+	return vs, diags
+}
+
+// decodeVariableBlock validates each part of the variable block,
 // building out a defined *Variable
-func DecodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
+func decodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	name := block.Labels[0]
 	v := Variable{
 		Name:  name,
@@ -248,7 +275,7 @@ func LoadVariableValues(vars map[string]string, files []string) ([]*pb.Variable,
 	return ret, diags
 }
 
-// EvalInputValues evaluates the provided variable values and validates their
+// EvaluateVariables evaluates the provided variable values and validates their
 // types per the type declared in the waypoint.hcl for that variable name.
 // The order in which values are evaluated corresponds to their precedence, with
 // higher precedence values overwriting lower precedence values.
@@ -256,7 +283,7 @@ func LoadVariableValues(vars map[string]string, files []string) ([]*pb.Variable,
 // comes from decoding all variable blocks within the waypoint.hcl), and
 // is used to validate types and that all variables have at least one
 // assigned value.
-func EvalInputValues(
+func EvaluateVariables(
 	pbvars []*pb.Variable,
 	vs map[string]*Variable,
 	log hclog.Logger,
