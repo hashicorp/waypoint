@@ -23,9 +23,13 @@ import (
 )
 
 const (
-	// The user that all tokens are encoded with. The server has a single server model
-	// so all actions are mapped to this user.
+	// The username of the initial user created during bootstrapping. This
+	// also is the user that Waypoint server versions prior to 0.5 used with
+	// their token, so we use this to detect that scenario as well.
 	DefaultUser = "waypoint"
+
+	// The ID of the initial user created during bootstrapping.
+	DefaultUserId = "00000000000000000000000001"
 
 	// The identifier for the default key to use to generating tokens.
 	DefaultKeyId = "k1"
@@ -57,44 +61,70 @@ var (
 	}
 )
 
+type userKey struct{}
+
+// userWithContext inserts the user value u into the context. This can
+// be extracted with userFromContext.
+func userWithContext(ctx context.Context, u *pb.User) context.Context {
+	return context.WithValue(ctx, userKey{}, u)
+}
+
+// userFromContext returns the authenticated user in the request context.
+// This will return nil if the user is not authenticated.
+func userFromContext(ctx context.Context) *pb.User {
+	value, _ := ctx.Value(userKey{}).(*pb.User)
+	return value
+}
+
 // Authenticate implements the server.AuthChecker interface.
 //
 // This checks if the given endpoint should be allowed. This is called during a
 // gRPC request. Effects is some information about the endpoint, at present these are
 // either ["readonly"] or ["mutable"] to indicate if the endpoint will be only reading
 // data or also mutating it.
-func (s *service) Authenticate(ctx context.Context, token, endpoint string, effects []string) error {
+func (s *service) Authenticate(
+	ctx context.Context, token, endpoint string, effects []string,
+) (context.Context, error) {
 	// Ignore unauthenticated endpoints
 	if _, ok := unauthenticatedEndpoints[endpoint]; ok {
-		return nil
+		return nil, nil
 	}
 
 	if token == "" {
-		return status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
+		return nil, status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
 	}
 
 	_, body, err := s.decodeToken(token)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Token must be a login token to be used for auth
 	login, ok := body.Kind.(*pb.Token_Login_)
 	if !ok || login == nil {
-		return ErrInvalidToken
+		return nil, ErrInvalidToken
 	}
 
 	// If this is an entrypoint token then we can only access entrypoint APIs.
 	if login.Login.Entrypoint != nil && !strings.HasPrefix(endpoint, "Entrypoint") {
-		return status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
+		return nil, status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
 	}
 
-	// TODO When we have a user model, this is where you'll check for the user.
-	if login.Login.UserId != DefaultUser {
-		return ErrInvalidToken
+	// Look up the user that this token is for.
+	user, err := s.state.UserGet(&pb.Ref_User{
+		Ref: &pb.Ref_User_Id{
+			Id: &pb.Ref_UserId{Id: login.Login.UserId},
+		},
+	})
+	if status.Code(err) == codes.NotFound {
+		// TODO bootstrap user
+		return nil, status.Errorf(codes.Unauthenticated, "Expired or invalid authentication token")
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return userWithContext(ctx, user), nil
 }
 
 // decodeToken parses the string and validates it as a valid token. If the token
@@ -158,7 +188,7 @@ func (s *service) decodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 	// fields if we have a Kind set, since this was introduced in WP 0.5.
 	if body.Kind == nil {
 		login := &pb.Token_Login{
-			UserId:     DefaultUser,
+			UserId:     DefaultUserId,
 			Entrypoint: body.UnusedEntrypoint,
 		}
 
@@ -245,8 +275,11 @@ func (s *service) GenerateLoginToken(
 		}
 	}
 
+	// Get our user, that's what we log in is
+	currentUser := userFromContext(ctx)
+
 	login := &pb.Token_Login{
-		UserId: DefaultUser,
+		UserId: currentUser.Id,
 	}
 
 	token, err := s.newToken(dur, DefaultKeyId, nil, &pb.Token{
@@ -293,27 +326,27 @@ func (s *service) newToken(
 func (s *service) GenerateInviteToken(
 	ctx context.Context, req *pb.InviteTokenRequest,
 ) (*pb.NewTokenResponse, error) {
+	currentUser := userFromContext(ctx)
+
 	// Old behavior, if we have the entrypoint set, we convert that to
 	// a request in the new (WP 0.5+) style. We do this right away so the rest of the
 	// request can assume the new style.
 	if ep := req.UnusedEntrypoint; ep != nil {
 		req.Signup = nil // not a signup token
 		req.Login = &pb.Token_Login{
-			UserId:     DefaultUser,
+			UserId:     DefaultUserId,
 			Entrypoint: ep,
 		}
 	}
 
 	if req.Login == nil {
 		req.Login = &pb.Token_Login{
-			// TODO(mitchellh): when we have a login system, set this
-			// to the currently logged in user.
-			UserId: DefaultUser,
+			UserId: currentUser.Id,
 		}
 	}
 
 	// We don't currently have any other users.
-	if req.Login.UserId != DefaultUser {
+	if req.Login.UserId != currentUser.Id {
 		return nil, status.Errorf(codes.PermissionDenied, "cannot create invite for other users")
 	}
 
@@ -323,8 +356,7 @@ func (s *service) GenerateInviteToken(
 	}
 
 	invite := &pb.Token_Invite{
-		// TODO(mitchellh): when we have a user system, set this.
-		FromUserId: "",
+		FromUserId: currentUser.Id,
 		Login:      req.Login,
 		Signup:     req.Signup,
 	}
@@ -356,6 +388,7 @@ func (s *service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 	login := invite.Login
 
 	// If we have a signup invite, then error for now until we have an account system.
+	// TODO
 	if invite.Signup != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "signup tokens not allowed")
 	}
@@ -376,10 +409,20 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 		return nil, status.Errorf(codes.PermissionDenied, "server is already bootstrapped")
 	}
 
+	// Create a default user
+	user := &pb.User{
+		Id:       DefaultUserId,
+		Username: DefaultUser,
+	}
+	if err := s.state.UserPut(user); err != nil {
+		return nil, err
+	}
+
+	// Create a new token pointed to our existing user
 	token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{
 			Login: &pb.Token_Login{
-				UserId: DefaultUser,
+				UserId: user.Id,
 			},
 		},
 	})

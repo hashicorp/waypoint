@@ -20,7 +20,8 @@ func init() {
 	schemas = append(schemas, userIndexSchema)
 }
 
-// UserPut creates or updates the given user.
+// UserPut creates or updates the given user. If the user has no ID set
+// then an ID will be written directly to the parameter.
 func (s *State) UserPut(user *pb.User) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
@@ -70,6 +71,16 @@ func (s *State) userPut(
 	memTxn *memdb.Txn,
 	value *pb.User,
 ) error {
+	// If the user doesn't have an ID set, we create one.
+	if value.Id == "" {
+		id, err := ulid()
+		if err != nil {
+			return err
+		}
+
+		value.Id = id
+	}
+
 	id := s.userId(value)
 
 	// Get the global bucket and write the value to it.
