@@ -324,7 +324,6 @@ build {
 		docs.Summary(
 			"Each pattern follows the semantics of .gitignore. This is a summarized version:",
 			strings.TrimSpace(`
-
 1. A blank line matches no files, so it can serve as a separator
 	 for readability.
 
@@ -376,7 +375,7 @@ build {
 				 zero or more directories. For example, "a/** /b" matches "a/b",
 				 "a/x/b", "a/x/y/b" and so on.
 
-		iv.  Other consecutive asterisks are considered invalid.`,
+		iv.  Other consecutive asterisks are considered invalid.`),
 		),
 	)
 
