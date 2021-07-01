@@ -34,7 +34,7 @@ func Run(opts ...Option) error {
 		return err
 	}
 
-	errch := make(chan error, 0)
+	errch := make(chan error)
 	go func() {
 		if err := grpcServer.start(); err != nil {
 			errch <- err

@@ -111,5 +111,4 @@ func (s *grpcServer) close() {
 		log.Debug("stopping gRPC server after waiting unsuccessfully for graceful shutdown")
 		s.server.Stop()
 	}
-	return
 }
