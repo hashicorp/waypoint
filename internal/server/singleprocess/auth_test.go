@@ -277,3 +277,15 @@ func TestServiceDecodeToken(t *testing.T) {
 	require.NotNil(decodeResp.Token)
 	require.NotNil(decodeResp.Transport)
 }
+
+func TestServiceAuth_userSuperuserForced(t *testing.T) {
+	// Create our server
+	impl, err := New(WithDB(testDB(t)), WithSuperuser())
+	require.NoError(t, err)
+	s := impl.(*service)
+	ctx := context.Background()
+
+	user := s.userFromContext(ctx)
+	require.NotNil(t, user)
+	require.Equal(t, DefaultUserId, user.Id)
+}
