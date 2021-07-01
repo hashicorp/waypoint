@@ -30,6 +30,32 @@ func TestUser(t *testing.T) {
 		require.Equal(codes.NotFound, status.Code(err))
 	})
 
+	t.Run("Empty", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		{
+			empty, err := s.UserEmpty()
+			require.NoError(err)
+			require.True(empty)
+		}
+
+		// Set
+		err = s.UserPut(serverptypes.TestUser(t, &pb.User{
+			Id:       id,
+			Username: "foo",
+		}))
+		require.NoError(err)
+
+		{
+			empty, err := s.UserEmpty()
+			require.NoError(err)
+			require.False(empty)
+		}
+	})
+
 	t.Run("Put and Get", func(t *testing.T) {
 		require := require.New(t)
 

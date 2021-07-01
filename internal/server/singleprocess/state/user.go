@@ -100,6 +100,19 @@ func (s *State) UserList() ([]*pb.User, error) {
 	return result, nil
 }
 
+// UserEmpty returns true if there are no users yet (bootstrap state).
+func (s *State) UserEmpty() (bool, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.Get(userIndexTableName, userIndexIdIndexName+"_prefix", "")
+	if err != nil {
+		return false, err
+	}
+
+	return iter.Next() == nil, nil
+}
+
 func (s *State) userPut(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,

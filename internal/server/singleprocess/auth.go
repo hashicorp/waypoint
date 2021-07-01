@@ -132,6 +132,12 @@ LOOKUP_USER:
 
 		// Bootstrap our user
 		if _, err := s.bootstrapUser(); err != nil {
+			// If we're already bootstrapped, give a slightly better error.
+			if status.Code(err) == codes.PermissionDenied {
+				return nil, status.Errorf(codes.Unauthenticated,
+					"Pre-Waypoint 0.5 token no longer accepted once the bootstrap user is deleted")
+			}
+
 			return nil, err
 		}
 
@@ -458,6 +464,14 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 // bootstrapUser creates the initial default user. This will always attempt
 // to create the user so gating logic to prevent that is up to the caller.
 func (s *service) bootstrapUser() (*pb.User, error) {
+	empty, err := s.state.UserEmpty()
+	if err != nil {
+		return nil, err
+	}
+	if !empty {
+		return nil, status.Errorf(codes.PermissionDenied, "server is already bootstrapped")
+	}
+
 	// Create a default user
 	user := &pb.User{
 		Id:       DefaultUserId,
