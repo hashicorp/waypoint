@@ -15,14 +15,14 @@ import (
 )
 
 type httpServer struct {
-	opts *options
-	log hclog.Logger
+	opts   *options
+	log    hclog.Logger
 	server *http.Server
 }
 
 // newHttpServer initializes a new http server.
 // Uses grpc-web to wrap an existing grpc server.
-func newHttpServer(grpcServer *grpc.Server, opts *options) *httpServer{
+func newHttpServer(grpcServer *grpc.Server, opts *options) *httpServer {
 	log := opts.Logger.Named("http")
 	if opts.HTTPListener == nil {
 		log.Info("HTTP listener not specified, HTTP API is disabled")
@@ -57,7 +57,7 @@ func newHttpServer(grpcServer *grpc.Server, opts *options) *httpServer{
 	// Create our http server
 	return &httpServer{
 		opts: opts,
-		log: log,
+		log:  log,
 		server: &http.Server{
 			ReadHeaderTimeout: 5 * time.Second,
 			IdleTimeout:       120 * time.Second,

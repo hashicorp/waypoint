@@ -13,8 +13,8 @@ import (
 )
 
 type grpcServer struct {
-	opts *options
-	log hclog.Logger
+	opts   *options
+	log    hclog.Logger
 	server *grpc.Server
 }
 
@@ -65,9 +65,9 @@ func newGrpcServer(opts *options) (*grpcServer, error) {
 	s := grpc.NewServer(so...)
 
 	return &grpcServer{
-		opts: opts,
+		opts:   opts,
 		server: s,
-		log: log,
+		log:    log,
 	}, nil
 }
 

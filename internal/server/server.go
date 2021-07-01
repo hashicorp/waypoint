@@ -52,9 +52,9 @@ func Run(opts ...Option) error {
 	defer cancel()
 
 	select {
-	case err := <- errch:
+	case err := <-errch:
 		return err
-	case <- cfg.Context.Done():
+	case <-cfg.Context.Done():
 		// Must shut down the http server first, as the grpc server can't drain http connections
 		httpServer.close()
 		grpcServer.close()
