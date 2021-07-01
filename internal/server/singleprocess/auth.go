@@ -111,14 +111,27 @@ func (s *service) Authenticate(
 	}
 
 	// Look up the user that this token is for.
+LOOKUP_USER:
 	user, err := s.state.UserGet(&pb.Ref_User{
 		Ref: &pb.Ref_User_Id{
 			Id: &pb.Ref_UserId{Id: login.Login.UserId},
 		},
 	})
 	if status.Code(err) == codes.NotFound {
-		// TODO bootstrap user
-		return nil, status.Errorf(codes.Unauthenticated, "Expired or invalid authentication token")
+		// If we are a legacy token logging into a WP 0.5+ server for the
+		// first time, we need to create the initial Waypoint user. This is
+		// purely a backwards compatibility case that we should drop at some
+		// point.
+		if !body.UnusedLogin || login.Login.UserId != DefaultUserId {
+			return nil, status.Errorf(codes.Unauthenticated, "Expired or invalid authentication token")
+		}
+
+		// Bootstrap our user
+		if _, err := s.bootstrapUser(); err != nil {
+			return nil, err
+		}
+
+		goto LOOKUP_USER
 	}
 	if err != nil {
 		return nil, err
@@ -410,11 +423,8 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 	}
 
 	// Create a default user
-	user := &pb.User{
-		Id:       DefaultUserId,
-		Username: DefaultUser,
-	}
-	if err := s.state.UserPut(user); err != nil {
+	user, err := s.bootstrapUser()
+	if err != nil {
 		return nil, err
 	}
 
@@ -431,6 +441,18 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 	}
 
 	return &pb.NewTokenResponse{Token: token}, nil
+}
+
+// bootstrapUser creates the initial default user. This will always attempt
+// to create the user so gating logic to prevent that is up to the caller.
+func (s *service) bootstrapUser() (*pb.User, error) {
+	// Create a default user
+	user := &pb.User{
+		Id:       DefaultUserId,
+		Username: DefaultUser,
+	}
+
+	return user, s.state.UserPut(user)
 }
 
 // Bootstrapped returns true if the server is already bootstrapped. If
