@@ -82,7 +82,6 @@ require (
 	github.com/moby/sys/symlink v0.1.0 // indirect
 	github.com/mr-tron/base58 v1.2.0
 	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
-	github.com/oklog/run v1.1.0
 	github.com/oklog/ulid v1.3.1
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/olekukonko/tablewriter v0.0.4
