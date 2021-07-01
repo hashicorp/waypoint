@@ -931,6 +931,12 @@ type Variable struct {
 	unknownFields protoimpl.UnknownFields
 
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// value stores one of three simple types (string, number, bool) as their
+	// matching protobuf format, or any complex hcl type as a raw string. Values
+	// taken from cli -var arguments and env vars are all processed as strings;
+	// if a complex type is assigned from one of these sources, it is checked
+	// for being assigned a complex type in the variable evaluation stage.
+	//
 	// Types that are assignable to Value:
 	//	*Variable_Str
 	//	*Variable_Bool
@@ -1082,7 +1088,9 @@ type Variable_Num struct {
 }
 
 type Variable_Hcl struct {
-	// Unimplemented
+	// hcl stores values of any complex type in a raw string format, and
+	// converts it to hcl when we evaluate variables. This is used when
+	// loading values from a file or from the server/UI.
 	Hcl string `protobuf:"bytes,3,opt,name=hcl,proto3,oneof"`
 }
 

@@ -326,7 +326,7 @@ func EvaluateVariables(
 		switch sv := pbv.Value.(type) {
 		case *pb.Variable_Hcl:
 			value := sv.Hcl
-			fakeFilename := fmt.Sprintf("<value for var.%s from server>", pbv.Name)
+			fakeFilename := fmt.Sprintf("<value for var.%s from source %q>", pbv.Name, source)
 			expr, diags = hclsyntax.ParseExpression([]byte(value), fakeFilename, hcl.Pos{Line: 1, Column: 1})
 		case *pb.Variable_Str:
 			value := sv.Str
@@ -354,15 +354,37 @@ func EvaluateVariables(
 
 		if variable.Type != cty.NilType {
 			var err error
+			// if variable.Type.IsCollectionType()
+			// store the current cty.Value type before attempting the conversion
+			valType := val.Type().FriendlyName()
+
+			// If the value came from the cli or an env var, it was stored as
+			// a raw string value; however it could be a complex value, such as a
+			// map/list/etc.
+			// Now that we know the expected type, we'll check here for that
+			// and, if necessary, repeat the expression parsing for HCL syntax
+			if source == sourceCLI || source == sourceEnv {
+				if !variable.Type.IsPrimitiveType() {
+					fakeFilename := fmt.Sprintf("<value for var.%s from source %q>", pbv.Name, source)
+					expr, diags = hclsyntax.ParseExpression([]byte(val.AsString()), fakeFilename, hcl.Pos{Line: 1, Column: 1})
+					val, valDiags = expr.Value(nil)
+					if valDiags.HasErrors() {
+						diags = append(diags, valDiags...)
+						return nil, diags
+					}
+				}
+			}
+
 			val, err = convert.Convert(val, variable.Type)
 			if err != nil {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid value for variable",
 					Detail: fmt.Sprintf(
-						"The value set for variable %q from source %q is not compatible with the variable's type constraint: %s.",
+						"The value set for variable %q from source %q is of value type %q and is not compatible with the variable's type constraint: %s.",
 						pbv.Name,
 						source,
+						valType,
 						err,
 					),
 				})
@@ -463,6 +485,11 @@ func parseFileValues(filename string, source string) ([]*pb.Variable, hcl.Diagno
 				return nil, diags
 			}
 			v.Value = &pb.Variable_Num{Num: num}
+		default:
+			// if it's not a primitive/simple type, we set as hcl here to be later
+			// evaluated as hcl; any errors at evaluating the hcl type will
+			// be handled at that time
+			v.Value = &pb.Variable_Hcl{Hcl: val.AsString()}
 		}
 
 		// Set source

@@ -196,7 +196,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			err: "",
 		},
 		{
-			name:        "complex types",
+			name:        "complex types from default",
 			file:        "list.hcl",
 			inputValues: []*pb.Variable{},
 			expected: Values{
@@ -207,7 +207,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			err: "",
 		},
 		{
-			name: "complex types",
+			name: "complex types from server",
 			file: "list.hcl",
 			inputValues: []*pb.Variable{
 				{
@@ -219,6 +219,23 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			expected: Values{
 				"testdata": &Value{
 					stringListVal("waffles"), "server", hcl.Expression(nil), hcl.Range{},
+				},
+			},
+			err: "",
+		},
+		{
+			name:        "complex types from cli",
+			file:        "list.hcl",
+			inputValues: []*pb.Variable{
+				{
+					Name:   "testdata",
+					Value:  &pb.Variable_Str{Str: "[\"waffles\"]"},
+					Source: &pb.Variable_Cli{},
+				},
+			},
+			expected: Values{
+				"testdata": &Value{
+					stringListVal("waffles"), "cli", hcl.Expression(nil), hcl.Range{},
 				},
 			},
 			err: "",
