@@ -41,12 +41,16 @@ func Run(opts ...Option) error {
 		}
 	}()
 
-	httpServer := newHttpServer(grpcServer.server, &cfg)
-	go func() {
-		if err := httpServer.start(); err != nil {
-			errch <- err
-		}
-	}()
+	httpEnabled := cfg.HTTPListener != nil
+	var httpServer *httpServer
+	if httpEnabled {
+		httpServer = newHttpServer(grpcServer.server, &cfg)
+		go func() {
+			if err := httpServer.start(); err != nil {
+				errch <- err
+			}
+		}()
+	}
 
 	ctx, cancel := context.WithCancel(cfg.Context)
 	defer cancel()
@@ -55,8 +59,10 @@ func Run(opts ...Option) error {
 	case err := <-errch:
 		return err
 	case <-cfg.Context.Done():
-		// Must shut down the http server first, as the grpc server can't drain http connections
-		httpServer.close()
+		if httpEnabled {
+			// Must shut down the http server first, as the grpc server can't drain http connections
+			httpServer.close()
+		}
 		grpcServer.close()
 		return ctx.Err()
 	}
