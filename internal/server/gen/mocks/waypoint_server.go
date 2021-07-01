@@ -1099,6 +1099,29 @@ func (_m *WaypointServer) StartExecStream(_a0 gen.Waypoint_StartExecStreamServer
 	return r0
 }
 
+// UpdateUser provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpdateUser(_a0 context.Context, _a1 *gen.UpdateUserRequest) (*gen.UpdateUserResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpdateUserResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpdateUserRequest) *gen.UpdateUserResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpdateUserResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpdateUserRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpsertApplication provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) UpsertApplication(_a0 context.Context, _a1 *gen.UpsertApplicationRequest) (*gen.UpsertApplicationResponse, error) {
 	ret := _m.Called(_a0, _a1)

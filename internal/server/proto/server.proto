@@ -19,6 +19,9 @@ service Waypoint {
   // GetUser returns the current logged in user or some other user.
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
 
+  // Update the details about an existing user.
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+
   // ListWorkspaces returns a list of all workspaces.
   //
   // Note that currently this list is never pruned, even if a workspace is
@@ -764,6 +767,17 @@ message GetUserRequest {
 }
 
 message GetUserResponse {
+  User user = 1;
+}
+
+message UpdateUserRequest {
+  // User to update along with the edited fields. Please see the docs
+  // on User to determine what can be edited. Fields that aren't editable
+  // will be ignored.
+  User user = 1;
+}
+
+message UpdateUserResponse {
   User user = 1;
 }
 
