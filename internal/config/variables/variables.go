@@ -324,7 +324,6 @@ func EvaluateVariables(
 		// necessitating a separate case statement for each simple type
 		var expr hclsyntax.Expression
 		switch sv := pbv.Value.(type) {
-
 		case *pb.Variable_Hcl:
 			value := sv.Hcl
 			fakeFilename := fmt.Sprintf("<value for var.%s from server>", pbv.Name)
@@ -341,8 +340,8 @@ func EvaluateVariables(
 		default:
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
-				Summary:  "Invalid value for variable",
-				Detail:   "",
+				Summary:  "Invalid value type for variable",
+				Detail:   "The variable type was not set as a string, number, bool, or hcl expression",
 			})
 			return nil, diags
 		}
