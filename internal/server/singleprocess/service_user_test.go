@@ -19,8 +19,8 @@ func TestServiceUpdateUser(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	// Get ourself
-	userResp,err := client.GetUser(ctx, &pb.GetUserRequest{})
-	require.NoError(t,err)
+	userResp, err := client.GetUser(ctx, &pb.GetUserRequest{})
+	require.NoError(t, err)
 	user := userResp.User
 
 	// Simplify writing tests

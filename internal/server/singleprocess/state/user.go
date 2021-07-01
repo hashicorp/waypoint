@@ -143,9 +143,17 @@ func (s *State) userDelete(
 		return err
 	}
 
+	// We can't delete the final user or the system will get into a state
+	// where it can't do anything!
+	bucket := dbTxn.Bucket(userBucket)
+	if bucket.Stats().KeyN <= 1 {
+		return status.Errorf(codes.FailedPrecondition,
+			"the final user in the system can't be deleted until another one is created")
+	}
+
 	// Delete from bolt
 	id := s.userId(u)
-	if err := dbTxn.Bucket(userBucket).Delete(id); err != nil {
+	if err := bucket.Delete(id); err != nil {
 		return err
 	}
 
