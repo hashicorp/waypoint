@@ -19,6 +19,9 @@ service Waypoint {
   // GetUser returns the current logged in user or some other user.
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
 
+  // List all users in the system.
+  rpc ListUsers(google.protobuf.Empty) returns (ListUsersResponse);
+
   // Update the details about an existing user.
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
 
@@ -772,6 +775,10 @@ message GetUserRequest {
 
 message GetUserResponse {
   User user = 1;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
 }
 
 message UpdateUserRequest {

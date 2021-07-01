@@ -928,6 +928,29 @@ func (_m *WaypointServer) ListStatusReports(_a0 context.Context, _a1 *gen.ListSt
 	return r0, r1
 }
 
+// ListUsers provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListUsers(_a0 context.Context, _a1 *emptypb.Empty) (*gen.ListUsersResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListUsersResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.ListUsersResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListUsersResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListWorkspaces provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ListWorkspaces(_a0 context.Context, _a1 *gen.ListWorkspacesRequest) (*gen.ListWorkspacesResponse, error) {
 	ret := _m.Called(_a0, _a1)
