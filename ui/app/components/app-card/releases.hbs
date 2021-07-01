@@ -6,25 +6,14 @@
     <Card::Header>
       <h4>
         <Pds::Icon @type="public-default" class="icon" />
-        <span>Latest releases</span>
+        <span>Latest release</span>
       </h4>
       <LinkTo @route="workspace.projects.project.app.releases">
         View all releases
       </LinkTo>
     </Card::Header>
 
-    <AppCard::Release @model={{@releases.[0] }} @isLatest="true" />
-
-    {{#if (gt @releases.length '1')}}
-      <ul class="app-card-items">
-        {{#if @releases.[1]}}
-          <AppCard::Release @model={{@releases.[1]}} />
-        {{/if}}
-        {{#if @releases.[2]}}
-          <AppCard::Release @model={{@releases.[2]}} />
-        {{/if}}
-      </ul>
-    {{/if}}
+    <AppCard::Release @model={{@releases.[0] }} />
   {{else}}
     <p>
       <Pds::Icon @type="public-default" class="icon" />
