@@ -1,3 +1,33 @@
+## 0.4.1 (July 1, 2021)
+
+FEATURES:
+
+* config: Add `${app.name}` variable [[GH-1709](https://github.com/hashicorp/waypoint/issues/1709)]
+
+IMPROVEMENTS:
+
+* cli: Fix incorrect description for `hostname list` command [[GH-1628](https://github.com/hashicorp/waypoint/issues/1628)]
+* core: Correct parsing of boolean environment variables [[GH-1699](https://github.com/hashicorp/waypoint/issues/1699)]
+* plugin/aws-alb: Update ALB Releaser to use new SDK Resource Manager [[GH-1648](https://github.com/hashicorp/waypoint/issues/1648)]
+* ui: Add reporting on status of a release [[GH-1657](https://github.com/hashicorp/waypoint/issues/1657)]
+
+BUG FIXES:
+
+* builtin/k8s: Fix `ports` configurability [[GH-1650](https://github.com/hashicorp/waypoint/issues/1650)]
+* cli: Fix issue parsing string slice inputs [[GH-1669](https://github.com/hashicorp/waypoint/issues/1669)]
+* cli: Ignore error on Unimplemented for health checks [[GH-1596](https://github.com/hashicorp/waypoint/issues/1596)]
+* cli: Fix crash that could occur when running commands outside the context of a project with an hcl config file. [[GH-1710](https://github.com/hashicorp/waypoint/issues/1710)]
+* cli: Prevent use of operation flags on `runner agent` command [[GH-1708](https://github.com/hashicorp/waypoint/issues/1708)]
+* cli: Set runner poll interval default for runner defined in waypoint.hcl [[GH-1690](https://github.com/hashicorp/waypoint/issues/1690)]
+* cli: List deployments shows status for each deployment [[GH-1594](https://github.com/hashicorp/waypoint/issues/1594)]
+* core: Fix crash that could occur when using `templatefile` with certain HCL files [[GH-1679](https://github.com/hashicorp/waypoint/issues/1679)]
+* plugin/aws-alb: Fix issue destroying when Target Group still in use [[GH-1648](https://github.com/hashicorp/waypoint/issues/1648)]
+* plugin/docker: Fix issue falling back to `img` for builds when docker daemon not present [[GH-1685](https://github.com/hashicorp/waypoint/issues/1685)]
+* plugin/nomad: Fix case where Nomad error would be ignored during a status check [[GH-1723](https://github.com/hashicorp/waypoint/issues/1723)]
+* server/client: Configure keepalive properties to RPC connections to persist connections even after inactivity [[GH-1735](https://github.com/hashicorp/waypoint/issues/1735)]
+* server/runner: Correctly exit liveness listener when connection is closed [[GH-1732](https://github.com/hashicorp/waypoint/issues/1732)]
+* serverinstall/k8s: Accept k8s-namespace when uninstalling server [[GH-1730](https://github.com/hashicorp/waypoint/issues/1730)]
+
 ## 0.4.0 (June 03, 2021)
 
 FEATURES:
