@@ -224,8 +224,8 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			err: "",
 		},
 		{
-			name:        "complex types from cli",
-			file:        "list.hcl",
+			name: "complex types from cli",
+			file: "list.hcl",
 			inputValues: []*pb.Variable{
 				{
 					Name:   "testdata",
