@@ -354,7 +354,6 @@ func EvaluateVariables(
 
 		if variable.Type != cty.NilType {
 			var err error
-			// if variable.Type.IsCollectionType()
 			// store the current cty.Value type before attempting the conversion
 			valType := val.Type().FriendlyName()
 
