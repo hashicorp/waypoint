@@ -96,7 +96,9 @@ func finalizeContext(ctx *hcl.EvalContext) *hcl.EvalContext {
 	return ctx
 }
 
-func AddVariables(ctx *hcl.EvalContext, vs *variables.InputValues) *hcl.EvalContext {
+// AddVariables uses the final map of InputValues to add all input variables
+// to the given hcl EvalContext.
+func AddVariables(ctx *hcl.EvalContext, vs variables.Values) *hcl.EvalContext {
 	variables.AddInputVariables(ctx, vs)
 	return ctx
 }

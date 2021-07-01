@@ -322,7 +322,6 @@ message Variable {
     string str = 2;
     bool bool = 9;
     int64 num = 10;
-    // Unimplemented
     string hcl = 3;
   }
 

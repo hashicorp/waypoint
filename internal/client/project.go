@@ -228,8 +228,8 @@ func WithClientConnect(opts ...serverclient.ConnectOption) Option {
 	}
 }
 
-// WithVars sets variable values from flags and local env on any operations.
-func WithVars(m []*pb.Variable) Option {
+// WithVariables sets variable values from flags and local env on any operations.
+func WithVariables(m []*pb.Variable) Option {
 	return func(c *Project, cfg *config) error {
 		c.variables = m
 		return nil

@@ -118,19 +118,21 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
-	// Here we'll load our values from the server/UI, as well as VCS.
-	// The order values are added to our final pbVars slice in the order
+	// Here we'll load our values from auto vars files and the server/UI, and 
+	// combine them with any values set on the job
+	// The order values are added to our final pbVars slice is the order
 	// of precedence
-	pbVars := resp.Project.GetVariables()
-	vcsVars, diags := variables.LoadVCSFiles(wd)
+	vcsVars, diags := variables.LoadAutoFiles(wd)
 	if diags.HasErrors() {
 		return nil, diags
 	}
+
+	pbVars := resp.Project.GetVariables()
 	pbVars = append(pbVars, vcsVars...)
 	pbVars = append(pbVars, job.Variables...)
 
 	// evaluate all variables against the variable blocks we just decoded
-	inputVars, diags := variables.EvalInputValues(pbVars, cfg.InputVariables)
+	inputVars, diags := variables.EvalInputValues(pbVars, cfg.InputVariables, log)
 	if diags.HasErrors() {
 		return nil, diags
 	}

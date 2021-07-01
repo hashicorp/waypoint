@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/ext/typeexpr"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -17,7 +20,10 @@ import (
 	"github.com/zclconf/go-cty/cty/gocty"
 )
 
-var (
+const (
+	// Prefix for collecting variable values from environment variables
+	varEnvPrefix = "WP_VAR_"
+
 	// Variable value sources
 	// listed in descending precedence order for ease of reference
 	sourceCLI     = "cli"
@@ -26,9 +32,17 @@ var (
 	sourceVCS     = "vcs"
 	sourceServer  = "server"
 	sourceDefault = "default"
+)
 
-	// Prefix for collecting variable values from environment variables
-	varEnvPrefix = "WP_VAR_"
+var (
+	// sourceMap maps a variable pb source type to its string representation
+	fromSource = map[reflect.Type]string{
+		reflect.TypeOf((*pb.Variable_Cli)(nil)):    sourceCLI,
+		reflect.TypeOf((*pb.Variable_File_)(nil)):  sourceFile,
+		reflect.TypeOf((*pb.Variable_Env)(nil)):    sourceEnv,
+		reflect.TypeOf((*pb.Variable_Vcs)(nil)):    sourceVCS,
+		reflect.TypeOf((*pb.Variable_Server)(nil)): sourceServer,
+	}
 
 	// The attributes we expect to see in variable blocks
 	// Future expansion here could include `sensitive`, `validations`, etc
@@ -52,7 +66,7 @@ type Variable struct {
 	Name string
 
 	// The default value in the variable definition
-	Default *InputValue
+	Default *Value
 
 	// Cty Type of the variable. If the default value or a collected value is
 	// not of this type nor can be converted to this type an error diagnostic
@@ -69,6 +83,11 @@ type Variable struct {
 	Range hcl.Range
 }
 
+// HclVariable is used when decoding the waypoint.hcl config. Because we use
+// hclsimple for this decode, we need the `Type` to be evaluated as an hcl
+// expression. When we parse the config, we need `Type` to be evaluated as
+// cty.Type, so this struct is only used for the basic decoding of the file
+// to verify HCL syntax.
 type HclVariable struct {
 	Name        string         `hcl:",label"`
 	Default     cty.Value      `hcl:"default,optional"`
@@ -76,14 +95,14 @@ type HclVariable struct {
 	Description string         `hcl:"description,optional"`
 }
 
-// InputValues are used to store values collected from various sources.
+// Values are used to store values collected from various sources.
 // Values are added to the map in precedence order, and then used to
 // create the final map of cty.Values for config hcl context evaluation.
-type InputValues map[string]*InputValue
+type Values map[string]*Value
 
-// InputValue contain the value of the variable along with associated metada,
+// Value contain the value of the variable along with associated metada,
 // including the source it was set from: cli, file, env, vcs, server/ui
-type InputValue struct {
+type Value struct {
 	Value  cty.Value
 	Source string
 	Expr   hcl.Expression
@@ -152,7 +171,7 @@ func DecodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 			}
 		}
 
-		v.Default = &InputValue{
+		v.Default = &Value{
 			Source: sourceDefault,
 			Value:  val,
 		}
@@ -167,13 +186,13 @@ func DecodeVariableBlock(block *hcl.Block) (*Variable, hcl.Diagnostics) {
 	return &v, diags
 }
 
-// SetJobInputValues collects values set via the CLI (-var, -varfile) and
+// LoadVariableValues collects values set via the CLI (-var, -varfile) and
 // local env vars (WP_VAR_*) and translates those values to pb.Variables. These
 // pb.Variables can then be set on the job for eventual parsing on the runner,
 // after the runner has decoded the variables defined in the waypoint.hcl.
 // All values are set as protobuf strings, with the expectation that later
 // evaluation will convert them to their defined types.
-func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, hcl.Diagnostics) {
+func LoadVariableValues(vars map[string]string, files []string) ([]*pb.Variable, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	ret := []*pb.Variable{}
 
@@ -233,12 +252,17 @@ func SetJobInputValues(vars map[string]string, files []string) ([]*pb.Variable, 
 // types per the type declared in the waypoint.hcl for that variable name.
 // The order in which values are evaluated corresponds to their precedence, with
 // higher precedence values overwriting lower precedence values.
+// The supplied map of *Variable should be all defined variables (currently
+// comes from decoding all variable blocks within the waypoint.hcl), and
+// is used to validate types and that all variables have at least one
+// assigned value.
 func EvalInputValues(
 	pbvars []*pb.Variable,
 	vs map[string]*Variable,
-) (InputValues, hcl.Diagnostics) {
+	log hclog.Logger,
+) (Values, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
-	iv := InputValues{}
+	iv := Values{}
 
 	for v, def := range vs {
 		iv[v] = def.Default
@@ -247,8 +271,6 @@ func EvalInputValues(
 	for _, pbv := range pbvars {
 		variable, found := vs[pbv.Name]
 		if !found {
-			// TODO krantzinator: this should be a DiagWarning rather than a DiagErr
-			// What to do with a warning diag type?
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "Undefined variable",
@@ -260,18 +282,11 @@ func EvalInputValues(
 			continue
 		}
 
-		var source string
-		switch pbv.Source.(type) {
-		case *pb.Variable_Cli:
-			source = sourceCLI
-		case *pb.Variable_File_:
-			source = sourceFile
-		case *pb.Variable_Env:
-			source = sourceEnv
-		case *pb.Variable_Vcs:
-			source = sourceVCS
-		case *pb.Variable_Server:
-			source = sourceServer
+		// set our source for error messaging
+		source := fromSource[reflect.TypeOf(pbv.Source)]
+		if source == "" {
+			source = "unknown"
+			log.Debug("No source found for value given for variable %q", pbv.Name)
 		}
 
 		// We have to specify the three different simple types we support -- string,
@@ -281,21 +296,28 @@ func EvalInputValues(
 		// have to first translate the pb values back into cty values, thus
 		// necessitating a separate case statement for each simple type
 		var expr hclsyntax.Expression
-		switch pbv.Value.(type) {
+		switch sv := pbv.Value.(type) {
 
 		case *pb.Variable_Hcl:
-			value := pbv.Value.(*pb.Variable_Hcl).Hcl
+			value := sv.Hcl
 			fakeFilename := fmt.Sprintf("<value for var.%s from server>", pbv.Name)
 			expr, diags = hclsyntax.ParseExpression([]byte(value), fakeFilename, hcl.Pos{Line: 1, Column: 1})
 		case *pb.Variable_Str:
-			value := pbv.Value.(*pb.Variable_Str).Str
+			value := sv.Str
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.StringVal(value)}
 		case *pb.Variable_Bool:
-			value := pbv.Value.(*pb.Variable_Bool).Bool
+			value := sv.Bool
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.BoolVal(value)}
 		case *pb.Variable_Num:
-			value := pbv.Value.(*pb.Variable_Num).Num
+			value := sv.Num
 			expr = &hclsyntax.LiteralValueExpr{Val: cty.NumberIntVal(value)}
+		default:
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid value for variable",
+				Detail:   "",
+			})
+			return nil, diags
 		}
 
 		val, valDiags := expr.Value(nil)
@@ -322,7 +344,7 @@ func EvalInputValues(
 			}
 		}
 
-		iv[pbv.Name] = &InputValue{
+		iv[pbv.Name] = &Value{
 			Source: source,
 			Value:  val,
 			Expr:   expr,
@@ -347,8 +369,8 @@ func EvalInputValues(
 	return iv, diags
 }
 
-// LoadVCSFiles loads any *.auto.wpvars(.json) files in the source repo
-func LoadVCSFiles(wd string) ([]*pb.Variable, hcl.Diagnostics) {
+// LoadAutoFiles loads any *.auto.wpvars(.json) files in the source repo
+func LoadAutoFiles(wd string) ([]*pb.Variable, hcl.Diagnostics) {
 	var pbv []*pb.Variable
 	var diags hcl.Diagnostics
 
@@ -360,7 +382,7 @@ func LoadVCSFiles(wd string) ([]*pb.Variable, hcl.Diagnostics) {
 			if !isAutoVarFile(name) {
 				continue
 			}
-			varFiles = append(varFiles, wd+"/"+name)
+			varFiles = append(varFiles, filepath.Join(wd, name))
 		}
 	}
 
@@ -507,17 +529,17 @@ func readFileValues(filename string) (*hcl.File, hcl.Diagnostics) {
 
 // values creates a map of cty.values from the map of InputValues, for use
 // in creating hcl contexts
-func (iv *InputValues) values() map[string]cty.Value {
+func (iv Values) values() map[string]cty.Value {
 	res := map[string]cty.Value{}
-	for k, v := range *iv {
+	for k, v := range iv {
 		res[k] = v.Value
 	}
 	return res
 }
 
 // AddInputVariables adds the InputValues to the provided hcl context
-func AddInputVariables(ctx *hcl.EvalContext, vs *InputValues) {
-	vars := (*vs).values()
+func AddInputVariables(ctx *hcl.EvalContext, vs Values) {
+	vars := vs.values()
 	variables := map[string]cty.Value{
 		"var": cty.ObjectVal(vars),
 	}

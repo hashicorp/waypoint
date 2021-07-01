@@ -252,7 +252,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 
 	// Collect variable values from -var and -varfile flags,
 	// and env vars set with WP_VAR_* and set them on the job
-	vars, diags := variables.SetJobInputValues(c.flagVars, c.flagVarFile)
+	vars, diags := variables.LoadVariableValues(c.flagVars, c.flagVarFile)
 	if diags.HasErrors() {
 		// we only return errors for file parsing, so we are specific
 		// in the error log here

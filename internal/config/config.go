@@ -155,6 +155,9 @@ func (c *Config) HCLContext() *hcl.EvalContext {
 	return c.ctx.NewChild()
 }
 
+// DecodeVariableBlocks uses the hclConfig schema to iterate over all
+// variable blocks, validating names and types and checking for duplicates.
+// It returns the final map of Variables to store for later reference.
 func DecodeVariableBlocks(body hcl.Body) (map[string]*variables.Variable, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	schema, _ := gohcl.ImpliedBodySchema(&hclConfig{})

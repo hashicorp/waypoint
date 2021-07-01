@@ -37,7 +37,7 @@ type validateApp struct {
 	Config  *genericConfig    `hcl:"config,block"`
 }
 
-// validateVariable is separate from hclVariable because of the limitations
+// validateVariable is separate from HclVariable because of the limitations
 // of hclsimple, which we use in config.Load. hclsimple needs Type to be an
 // hcl.Expression, but we want it to be a cty.Type for everything else.
 type validateVariable struct {

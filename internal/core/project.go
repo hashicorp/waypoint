@@ -63,7 +63,7 @@ type Project struct {
 	overrideLabels map[string]string
 
 	// variables is the final map of values to use when evaluating config vars
-	variables variables.InputValues
+	variables variables.Values
 }
 
 // NewProject creates a new Project with the given options.
@@ -130,7 +130,7 @@ func NewProject(ctx context.Context, os ...Option) (*Project, error) {
 	for _, name := range opts.Config.Apps() {
 		// Set input variables for applications and components
 		evalCtx := config.EvalContext(nil, p.dir.DataDir()).NewChild()
-		config.AddVariables(evalCtx, &p.variables)
+		config.AddVariables(evalCtx, p.variables)
 
 		appConfig, err := opts.Config.App(name, evalCtx)
 		if err != nil {
@@ -300,7 +300,7 @@ func WithLabels(m map[string]string) Option {
 }
 
 // WithVariables sets the final set of variable values for the operation.
-func WithVariables(vs variables.InputValues) Option {
+func WithVariables(vs variables.Values) Option {
 	return func(p *Project, opts *options) { p.variables = vs }
 }
 

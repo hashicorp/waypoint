@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsimple"
@@ -149,7 +150,7 @@ func TestVariables_LoadVCSFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
 
-			vars, diags := LoadVCSFiles("testdata")
+			vars, diags := LoadAutoFiles("testdata")
 
 			if tt.err != "" {
 				require.True(diags.HasErrors())
@@ -168,7 +169,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 		name        string
 		file        string
 		inputValues []*pb.Variable
-		expected    InputValues
+		expected    Values
 		err         string
 	}{
 		{
@@ -181,14 +182,14 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: InputValues{
-				"art": &InputValue{
+			expected: Values{
+				"art": &Value{
 					cty.StringVal("gdbee"), "cli", hcl.Expression(nil), hcl.Range{},
 				},
-				"is_good": &InputValue{
+				"is_good": &Value{
 					cty.BoolVal(false), "default", hcl.Expression(nil), hcl.Range{},
 				},
-				"whatdoesittaketobenumber": &InputValue{
+				"whatdoesittaketobenumber": &Value{
 					cty.NumberIntVal(1), "default", hcl.Expression(nil), hcl.Range{},
 				},
 			},
@@ -198,8 +199,8 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			name:        "complex types",
 			file:        "list.hcl",
 			inputValues: []*pb.Variable{},
-			expected: InputValues{
-				"testdata": &InputValue{
+			expected: Values{
+				"testdata": &Value{
 					stringListVal("pancakes"), "default", hcl.Expression(nil), hcl.Range{},
 				},
 			},
@@ -215,8 +216,8 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Server{},
 				},
 			},
-			expected: InputValues{
-				"testdata": &InputValue{
+			expected: Values{
+				"testdata": &Value{
 					stringListVal("waffles"), "server", hcl.Expression(nil), hcl.Range{},
 				},
 			},
@@ -232,7 +233,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: InputValues{},
+			expected: Values{},
 			err:      "Undefined variable",
 		},
 		{
@@ -245,7 +246,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: InputValues{},
+			expected: Values{},
 			err:      "Invalid value for variable",
 		},
 		{
@@ -258,7 +259,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 					Source: &pb.Variable_Cli{},
 				},
 			},
-			expected: InputValues{},
+			expected: Values{},
 			err:      "Undefined variable",
 		},
 	}
@@ -289,7 +290,7 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			}
 			require.False(diags.HasErrors())
 
-			ivs, diags := EvalInputValues(tt.inputValues, vs)
+			ivs, diags := EvalInputValues(tt.inputValues, vs, hclog.New(&hclog.LoggerOptions{}))
 			if tt.err != "" {
 				require.True(diags.HasErrors())
 				require.Contains(diags.Error(), tt.err)
@@ -360,7 +361,7 @@ func TestVariables_SetJobInputVariables(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
-			vars, diags := SetJobInputValues(tt.cliArgs, tt.files)
+			vars, diags := LoadVariableValues(tt.cliArgs, tt.files)
 			require.False(diags.HasErrors())
 
 			require.Equal(len(vars), len(tt.expected))
