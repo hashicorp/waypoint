@@ -121,7 +121,7 @@ func authStreamInterceptor(checker AuthChecker) grpc.StreamServerInterceptor {
 		}
 
 		if newCtx != nil {
-			ss = &ssContextOverride{Ctx: newCtx}
+			ss = &ssContextOverride{ServerStream: ss, Ctx: newCtx}
 		}
 
 		// Invoke the handler.
