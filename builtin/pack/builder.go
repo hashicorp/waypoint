@@ -324,6 +324,7 @@ build {
 		docs.Summary(
 			"Each pattern follows the semantics of .gitignore. This is a summarized version:",
 			`
+
 1. A blank line matches no files, so it can serve as a separator
 	 for readability.
 
