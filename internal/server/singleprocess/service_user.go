@@ -77,3 +77,15 @@ func (s *service) DeleteUser(
 
 	return &empty.Empty{}, nil
 }
+
+func (s *service) ListUsers(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.ListUsersResponse, error) {
+	users, err := s.state.UserList()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.ListUsersResponse{Users: users}, nil
+}
