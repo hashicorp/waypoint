@@ -5,9 +5,6 @@ import (
 	"net"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/oklog/run"
-	"google.golang.org/grpc"
-
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -32,32 +29,37 @@ func Run(opts ...Option) error {
 		cfg.Logger = hclog.L()
 	}
 
-	// Setup our run group since we're going to be starting multiple
-	// goroutines for all the servers that we want to live/die as a group.
-	var group run.Group
+	grpcServer, err := newGrpcServer(&cfg)
+	if err != nil {
+		return err
+	}
 
-	// We first add an actor that just returns when the context ends. This
-	// will trigger the rest of the group to end since a group will not exit
-	// until any of its actors exit.
-	ctx, cancelCtx := context.WithCancel(cfg.Context)
-	cfg.Context = ctx
-	group.Add(func() error {
-		<-ctx.Done()
+	errch := make(chan error, 0)
+	go func() {
+		if err := grpcServer.start(); err != nil {
+			errch <- err
+		}
+	}()
+
+	httpServer := newHttpServer(grpcServer.server, &cfg)
+	go func() {
+		if err := httpServer.start(); err != nil {
+			errch <- err
+		}
+	}()
+
+	ctx, cancel := context.WithCancel(cfg.Context)
+	defer cancel()
+
+	select {
+	case err := <- errch:
+		return err
+	case <- cfg.Context.Done():
+		// Must shut down the http server first, as the grpc server can't drain http connections
+		httpServer.close()
+		grpcServer.close()
 		return ctx.Err()
-	}, func(error) { cancelCtx() })
-
-	// Setup our gRPC server.
-	if err := grpcInit(&group, &cfg); err != nil {
-		return err
 	}
-
-	// Setup our HTTP server.
-	if err := httpInit(&group, &cfg); err != nil {
-		return err
-	}
-
-	// Run!
-	return group.Run()
 }
 
 // Option configures Run
@@ -90,8 +92,6 @@ type options struct {
 
 	// BrowserUIEnabled determines if the browser UI should be mounted
 	BrowserUIEnabled bool
-
-	grpcServer *grpc.Server
 }
 
 // WithContext sets the context for the server. When this context is cancelled,
