@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/hashicorp/waypoint/internal/protocolversion"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -76,6 +77,14 @@ func (s *service) Authenticate(ctx context.Context, token, endpoint string, effe
 	_, body, err := s.decodeToken(token)
 	if err != nil {
 		return err
+	}
+
+	// Token protocol version must be compatible with this server
+	if body.VersionInfo.Api.Current > protocolversion.Current().Api.Current || body.VersionInfo.Api.Current < protocolversion.Current().Api.Minimum {
+		return status.Errorf(codes.InvalidArgument,
+			"token protocol version %d is incompatible with this server's protocol version %d",
+			body.VersionInfo.Api.Current, protocolversion.Current().Api.Current,
+		)
 	}
 
 	// Token must be a login token to be used for auth
@@ -268,6 +277,8 @@ func (s *service) newToken(
 	metadata map[string]string,
 	body *pb.Token,
 ) (string, error) {
+	body.VersionInfo = protocolversion.Current()
+
 	body.IssuedTime = ptypes.TimestampNow()
 
 	// If this token expires at some point, set an expiry

@@ -2859,6 +2859,9 @@ message TokenTransport {
 
 // The authenticated Token information. This is used to authenticate requests.
 message Token {
+  // Version info of the server that generated this token.
+  VersionInfo version_info = 10;
+
   // Non-secret ID that is used in logs to represent this token. Internally,
   // this is also used as a nonce when signing. This ID is randomly generated
   // when created.
@@ -2877,7 +2880,7 @@ message Token {
     // login tokens can be used for API requests
     Login login = 8;
 
-    // invite tokens can be exhanged for login tokens and also optionally
+    // invite tokens can be exchanged for login tokens and also optionally
     // sign a new user up.
     Invite invite = 9;
   }
