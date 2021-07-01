@@ -8,9 +8,9 @@ export default class ActionsDeploy extends Component {
   @action
   toggleHint() {
     if (this.hintIsVisible === true) {
-      return this.hintIsVisible = false;
+      return (this.hintIsVisible = false);
     } else {
-      return this.hintIsVisible = true;
-    };
+      return (this.hintIsVisible = true);
+    }
   }
 }

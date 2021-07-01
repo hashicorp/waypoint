@@ -47,9 +47,9 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
 
   @action
   followLogs(element: any) {
-    let scrollableElement = element.target ?
-      element.target.closest('.output-scroll-y') :
-      element.closest('.output-scroll-y');
+    let scrollableElement = element.target
+      ? element.target.closest('.output-scroll-y')
+      : element.closest('.output-scroll-y');
 
     scrollableElement.scroll(0, scrollableElement.scrollHeight);
   }
@@ -63,7 +63,7 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
   }
 
   async start() {
-    const onData = (response: GetJobStreamResponse) => {
+    let onData = (response: GetJobStreamResponse) => {
       let event = response.getEventCase();
 
       // We only care about the terminal event
@@ -75,8 +75,8 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
           }
         } else {
           terminal.getEventsList().forEach((event) => {
-            const line = event.getLine();
-            const step = event.getStep();
+            let line = event.getLine();
+            let step = event.getStep();
 
             if (line && line.getMsg()) {
               console.log(line);
@@ -85,7 +85,7 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
 
             if (step && step.getOutput()) {
               console.log(step);
-              const newStep = step.toObject();
+              let newStep = step.toObject();
 
               if (step.getOutput_asU8().length > 0) {
                 newStep.output = new TextDecoder().decode(step.getOutput_asU8());
@@ -97,13 +97,13 @@ export default class OperationLogs extends Component<OperationLogsArgs> {
         }
       }
       // If it completes with an error, we should surface that in the UI
-      if ((event == GetJobStreamResponse.EventCase.COMPLETE) && (response.getComplete()?.getError())) {
+      if (event == GetJobStreamResponse.EventCase.COMPLETE && response.getComplete()?.getError()) {
         let error = response.getComplete()?.getError()?.toObject();
         this.addLogLine(this.typeLine, { style: this.errorBoldStyle, msg: error.message });
       }
     };
 
-    const onStatus = (status: any) => {
+    let onStatus = (status: any) => {
       if (status.details) {
         this.addLogLine(this.typeStatus, { msg: status.details });
       }
