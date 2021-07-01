@@ -918,6 +918,36 @@ func (_m *WaypointClient) GetStatusReport(ctx context.Context, in *gen.GetStatus
 	return r0, r1
 }
 
+// GetUser provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetUser(ctx context.Context, in *gen.GetUserRequest, opts ...grpc.CallOption) (*gen.GetUserResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetUserResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetUserRequest, ...grpc.CallOption) *gen.GetUserResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetUserResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetUserRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetVersionInfo provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) GetVersionInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*gen.GetVersionInfoResponse, error) {
 	_va := make([]interface{}, len(opts))

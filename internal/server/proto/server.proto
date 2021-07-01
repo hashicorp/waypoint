@@ -16,6 +16,9 @@ service Waypoint {
   // are capable of talking to this server.
   rpc GetVersionInfo(google.protobuf.Empty) returns (GetVersionInfoResponse);
 
+  // GetUser returns the current logged in user or some other user.
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
   // ListWorkspaces returns a list of all workspaces.
   //
   // Note that currently this list is never pruned, even if a workspace is
@@ -748,6 +751,20 @@ message Generation {
   // Consumers can compare this to the sequence number of the operation
   // to determine if this generation is new or existing.
   uint64 initial_sequence = 2;
+}
+
+/********************************************************************
+* User
+********************************************************************/
+
+message GetUserRequest {
+  // User to get. If this is not set then the currently logged in
+  // user will be requested.
+  Ref.User user = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
 }
 
 /********************************************************************
