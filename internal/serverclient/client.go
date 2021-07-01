@@ -10,8 +10,10 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/hashicorp/waypoint/internal/clicontext"
+	"github.com/hashicorp/waypoint/internal/env"
 	"github.com/hashicorp/waypoint/internal/protocolversion"
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
@@ -56,6 +58,13 @@ func Connect(ctx context.Context, opts ...ConnectOption) (*grpc.ClientConn, erro
 		grpc.WithBlock(),
 		grpc.WithUnaryInterceptor(protocolversion.UnaryClientInterceptor(protocolversion.Current())),
 		grpc.WithStreamInterceptor(protocolversion.StreamClientInterceptor(protocolversion.Current())),
+		grpc.WithKeepaliveParams(
+			keepalive.ClientParameters{
+				// ping after this amount of time of inactivity
+				Time: 30 * time.Second,
+				// send keepalive pings even if there is no active streams
+				PermitWithoutStream: true,
+			}),
 	}
 
 	if !cfg.Tls {
@@ -126,8 +135,18 @@ func FromEnv() ConnectOption {
 	return func(c *connectConfig) error {
 		if v := os.Getenv(EnvServerAddr); v != "" {
 			c.Addr = v
-			c.Tls = os.Getenv(EnvServerTls) != ""
-			c.TlsSkipVerify = os.Getenv(EnvServerTlsSkipVerify) != ""
+
+			var err error
+			c.Tls, err = env.GetBool(EnvServerTls, false)
+			if err != nil {
+				return err
+			}
+
+			c.TlsSkipVerify, err = env.GetBool(EnvServerTlsSkipVerify, false)
+			if err != nil {
+				return err
+			}
+
 			c.Auth = os.Getenv(EnvServerToken) != ""
 		}
 

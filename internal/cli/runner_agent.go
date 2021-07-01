@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
 	"net"
 	"time"
@@ -134,6 +135,11 @@ func (c *RunnerAgentCommand) Run(args []string) int {
 				conn, err := ln.Accept()
 				if err != nil {
 					log.Warn("error accepting liveness connection", "err", err)
+					if errors.Is(err, net.ErrClosed) {
+						log.Warn("liveness server exiting")
+						return
+					}
+
 					continue
 				}
 

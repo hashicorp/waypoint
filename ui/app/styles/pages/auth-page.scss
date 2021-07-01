@@ -1,0 +1,65 @@
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  height: 100%;
+  padding-top: scale.$lg-2;
+
+  .card {
+    text-align: center;
+    padding: scale.$lg-8;
+  }
+
+  .auth-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: scale.$lg-14;
+    padding-bottom: scale.$base;
+    color: $brand-color;
+    margin: (-(scale.$lg-8)) (-(scale.$lg-8)) scale.$lg-6;
+    box-shadow: 0 0 0 1px color.$black;
+    border-radius: 2px 2px 0 0;
+    background: url(/images/pattern.svg) no-repeat top center color.$black;
+    font-size: scale.$lg-14;
+
+    @media (prefers-color-scheme: dark) {
+      background-color: rgba(color.$black, 0.5);
+      box-shadow: 0 0 0 1px rgb(var(--outline));
+    }
+
+    .icon.brand {
+      display: flex;
+
+      path {
+        fill: color.$black;
+        stroke: $brand-color;
+      }
+    }
+  }
+
+  h1 {
+    margin: scale.$lg-2 auto scale.$sm-2;
+
+    & + p {
+      color: rgb(var(--text-muted));
+      @include Typography.Interface(L);
+      margin-bottom: scale.$lg-2;
+    }
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid rgb(var(--border));
+    margin: scale.$lg-3 0 scale.$lg-2;
+  }
+
+  small {
+    color: rgb(var(--text-muted));
+  }
+
+  .button {
+    width: 100%;
+  }
+}

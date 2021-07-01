@@ -18,6 +18,7 @@ import (
 	"github.com/mitchellh/go-glint"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/env"
 	"github.com/hashicorp/waypoint/internal/pkg/signalcontext"
 	"github.com/hashicorp/waypoint/internal/version"
 )
@@ -139,7 +140,11 @@ func Commands(
 	}
 
 	// Set plain mode if set
-	if os.Getenv(EnvPlain) != "" {
+	outputModeBool, err := env.GetBool(EnvPlain, false)
+	if err != nil {
+		log.Warn(err.Error())
+	}
+	if outputModeBool {
 		baseCommand.globalOptions = append(baseCommand.globalOptions,
 			WithUI(terminal.NonInteractiveUI(ctx)))
 	}
