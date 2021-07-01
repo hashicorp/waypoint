@@ -3,6 +3,8 @@ package singleprocess
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
@@ -59,4 +61,19 @@ func (s *service) UpdateUser(
 	return &pb.UpdateUserResponse{
 		User: user,
 	}, nil
+}
+
+func (s *service) DeleteUser(
+	ctx context.Context,
+	req *pb.DeleteUserRequest,
+) (*empty.Empty, error) {
+	if err := serverptypes.ValidateDeleteUserRequest(req); err != nil {
+		return nil, err
+	}
+
+	if err := s.state.UserDelete(req.User); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
 }

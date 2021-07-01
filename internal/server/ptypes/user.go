@@ -50,3 +50,10 @@ func ValidateUpdateUserRequest(v *pb.UpdateUserRequest) error {
 		}),
 	))
 }
+
+// ValidateDeleteUserRequest
+func ValidateDeleteUserRequest(v *pb.DeleteUserRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.User, validation.Required),
+	))
+}
