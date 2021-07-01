@@ -107,3 +107,7 @@
     @include Typography.Interface(M);
   }
 }
+
+.card-header {
+  font-size: scale.$sm-1;
+}
