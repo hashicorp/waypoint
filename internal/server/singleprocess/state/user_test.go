@@ -79,6 +79,14 @@ func TestUser(t *testing.T) {
 			require.NoError(err)
 			require.NotNil(resp)
 		}
+
+		// List
+		{
+			resp, err := s.UserList()
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 1)
+		}
 	})
 
 	t.Run("Delete", func(t *testing.T) {
@@ -127,6 +135,14 @@ func TestUser(t *testing.T) {
 			})
 			require.Error(err)
 			require.Equal(codes.NotFound, status.Code(err))
+		}
+
+		// List
+		{
+			resp, err := s.UserList()
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Len(resp, 1)
 		}
 	})
 

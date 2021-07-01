@@ -66,6 +66,40 @@ func (s *State) UserDelete(ref *pb.Ref_User) error {
 	return err
 }
 
+// UserList returns the list of projects.
+func (s *State) UserList() ([]*pb.User, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	iter, err := memTxn.Get(userIndexTableName, userIndexIdIndexName+"_prefix", "")
+	if err != nil {
+		return nil, err
+	}
+
+	var result []*pb.User
+	for {
+		next := iter.Next()
+		if next == nil {
+			break
+		}
+		idx := next.(*userIndexRecord)
+
+		var v *pb.User
+		err = s.db.View(func(dbTxn *bolt.Tx) error {
+			v, err = s.userGet(dbTxn, memTxn, &pb.Ref_User{
+				Ref: &pb.Ref_User_Id{
+					Id: &pb.Ref_UserId{Id: idx.Id},
+				},
+			})
+			return err
+		})
+
+		result = append(result, v)
+	}
+
+	return result, nil
+}
+
 func (s *State) userPut(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
