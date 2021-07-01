@@ -368,6 +368,9 @@ func (s *service) GenerateInviteToken(
 		return nil, err
 	}
 
+	// TODO(mitchellh): when we have a policy system, we need to ensure only
+	// management tokens can signup other users.
+
 	invite := &pb.Token_Invite{
 		FromUserId: currentUser.Id,
 		Login:      req.Login,
@@ -397,14 +400,19 @@ func (s *service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 	}
 	invite := kind.Invite
 
+	// If we have a signup invite, then create a new user.
+	if signup := invite.Signup; signup != nil {
+		user := &pb.User{Username: signup.InitialUsername}
+		if err := s.state.UserPut(user); err != nil {
+			return nil, err
+		}
+
+		// Setup the login information for the new user
+		invite.Login.UserId = user.Id
+	}
+
 	// Our login token is just the login token on the invite.
 	login := invite.Login
-
-	// If we have a signup invite, then error for now until we have an account system.
-	// TODO
-	if invite.Signup != nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "signup tokens not allowed")
-	}
 
 	token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{Login: login},

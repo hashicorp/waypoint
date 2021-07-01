@@ -108,6 +108,37 @@ func TestServiceAuth(t *testing.T) {
 		}
 	})
 
+	t.Run("exchange an invite token for new user", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get our invite token for the entrypoint
+		resp, err := s.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
+			Duration: "5m",
+			Login: &pb.Token_Login{
+				UserId: DefaultUserId,
+			},
+			Signup: &pb.Token_Invite_Signup{
+				InitialUsername: "alice",
+			},
+		})
+		require.NoError(err)
+
+		// Exchange it
+		resp, err = s.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
+			Token: resp.Token,
+		})
+		require.NoError(err)
+		token := resp.Token
+
+		// Auth
+		ctx, err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
+		require.NoError(err)
+		user := userFromContext(ctx)
+		require.NotNil(user)
+		require.NotEqual(DefaultUserId, user.Id)
+		require.Equal("alice", user.Username)
+	})
+
 	t.Run("entrypoint token can only access entrypoint APIs", func(t *testing.T) {
 		require := require.New(t)
 
