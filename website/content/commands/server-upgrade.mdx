@@ -31,6 +31,20 @@ Usage: `waypoint server upgrade [options]`
 - `-snapshot-name=<string>` - Filename to write the snapshot to. If no name is specified, by default a timestamp will be appended to the default snapshot name.
 - `-snapshot` - Enable or disable taking a snapshot of Waypoint server prior to upgrades.
 
+#### nomad Options
+
+- `-nomad-annotate-service=<key=value>` - Annotations for the Service generated.
+- `-nomad-auth-soft-fail` - Don't fail the Nomad task on an auth failure obtaining server image container. Attempt to continue without auth.
+- `-nomad-dc=<string>` - Datacenters to install to for Nomad.
+- `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad.
+- `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
+- `-nomad-region=<string>` - Region to install to for Nomad.
+- `-nomad-server-cpu=<string>` - CPU required to run this task in MHz.
+- `-nomad-server-memory=<string>` - MB of Memory to allocate to the server job task.
+- `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
+- `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
+- `-nomad-server-image=<string>` - Docker image for the Waypoint server.
+
 #### docker Options
 
 - `-docker-server-image=<string>` - Docker image for the Waypoint server.
@@ -50,19 +64,5 @@ Usage: `waypoint server upgrade [options]`
 - `-k8s-namespace=<string>` - Namespace to install the Waypoint server into for Kubernetes.
 - `-k8s-openshift` - Enables installing the Waypoint server on Kubernetes on Red Hat OpenShift. If set, auto-configures the installation.
 - `-k8s-server-image=<string>` - Docker image for the Waypoint server.
-
-#### nomad Options
-
-- `-nomad-annotate-service=<key=value>` - Annotations for the Service generated.
-- `-nomad-auth-soft-fail` - Don't fail the Nomad task on an auth failure obtaining server image container. Attempt to continue without auth.
-- `-nomad-dc=<string>` - Datacenters to install to for Nomad.
-- `-nomad-namespace=<string>` - Namespace to install the Waypoint server into for Nomad.
-- `-nomad-policy-override` - Override the Nomad sentinel policy for enterprise Nomad.
-- `-nomad-region=<string>` - Region to install to for Nomad.
-- `-nomad-server-cpu=<string>` - CPU required to run this task in MHz.
-- `-nomad-server-memory=<string>` - MB of Memory to allocate to the server job task.
-- `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
-- `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
-- `-nomad-server-image=<string>` - Docker image for the Waypoint server.
 
 @include "commands/server-upgrade_more.mdx"
