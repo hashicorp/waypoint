@@ -228,6 +228,36 @@ func (_m *WaypointClient) DeleteHostname(ctx context.Context, in *gen.DeleteHost
 	return r0, r1
 }
 
+// DeleteUser provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) DeleteUser(ctx context.Context, in *gen.DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteUserRequest, ...grpc.CallOption) *emptypb.Empty); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteUserRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // EntrypointConfig provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) EntrypointConfig(ctx context.Context, in *gen.EntrypointConfigRequest, opts ...grpc.CallOption) (gen.Waypoint_EntrypointConfigClient, error) {
 	_va := make([]interface{}, len(opts))

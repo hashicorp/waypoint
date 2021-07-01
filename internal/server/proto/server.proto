@@ -22,6 +22,10 @@ service Waypoint {
   // Update the details about an existing user.
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
 
+  // Delete a user. This will invalidate all authentication for this user
+  // as well since they no longer exist.
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
+
   // ListWorkspaces returns a list of all workspaces.
   //
   // Note that currently this list is never pruned, even if a workspace is
@@ -779,6 +783,10 @@ message UpdateUserRequest {
 
 message UpdateUserResponse {
   User user = 1;
+}
+
+message DeleteUserRequest {
+  Ref.User user = 1;
 }
 
 /********************************************************************
