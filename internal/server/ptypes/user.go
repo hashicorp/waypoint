@@ -39,14 +39,14 @@ func ValidateUserRules(v *pb.User) []*validation.FieldRules {
 	}
 }
 
-/*
-// ValidateUpsertUserRequest
-func ValidateUpsertUserRequest(v *pb.UpsertUserRequest) error {
+// ValidateUpdateUserRequest
+func ValidateUpdateUserRequest(v *pb.UpdateUserRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.User, validation.Required),
 		validationext.StructField(&v.User, func() []*validation.FieldRules {
-			return ValidateUserRules(v.User)
+			return append(ValidateUserRules(v.User),
+				validation.Field(&v.User.Id, validation.Required),
+			)
 		}),
 	))
 }
-*/

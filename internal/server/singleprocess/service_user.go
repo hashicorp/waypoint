@@ -4,6 +4,7 @@ import (
 	"context"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 func (s *service) GetUser(
@@ -23,6 +24,39 @@ func (s *service) GetUser(
 	}
 
 	return &pb.GetUserResponse{
+		User: user,
+	}, nil
+}
+
+func (s *service) UpdateUser(
+	ctx context.Context,
+	req *pb.UpdateUserRequest,
+) (*pb.UpdateUserResponse, error) {
+	if err := serverptypes.ValidateUpdateUserRequest(req); err != nil {
+		return nil, err
+	}
+
+	// Get the user so that we don't overwrite fields that shouldn't be.
+	user, err := s.state.UserGet(&pb.Ref_User{
+		Ref: &pb.Ref_User_Id{
+			Id: &pb.Ref_UserId{Id: req.User.Id},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Update our writable fields
+	user.Username = req.User.Username
+	user.Display = req.User.Display
+	user.Email = req.User.Email
+
+	// Write it
+	if err := s.state.UserPut(user); err != nil {
+		return nil, err
+	}
+
+	return &pb.UpdateUserResponse{
 		User: user,
 	}, nil
 }
