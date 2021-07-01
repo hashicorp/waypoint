@@ -95,17 +95,17 @@ Each pattern follows the semantics of .gitignore. This is a summarized version:
    location of the .gitignore file (relative to the top level of the work
    tree if not from a .gitignore file).
 7. Otherwise, Git treats the pattern as a shell glob suitable for
-   consumption by fnmatch(3) with the FNM*PATHNAME flag: wildcards in the
+   consumption by fnmatch(3) with the FNM_PATHNAME flag: wildcards in the
    pattern will not match a / in the pathname. For example,
-   "Documentation/*.html" matches "Documentation/git.html" but not
+   "Documentation/\*.html" matches "Documentation/git.html" but not
    "Documentation/ppc/ppc.html" or "tools/perf/Documentation/perf.html".
 8. A leading slash matches the beginning of the pathname. For example,
-   "/\_.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
+   "/\*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
 9. Two consecutive asterisks ("\*\*") in patterns matched against full
    pathname may have special meaning:
 
-i. A leading "**" followed by a slash means match in all directories.
-For example, "** /foo" matches file or directory "foo" anywhere,
+i. A leading "\*\*" followed by a slash means match in all directories.
+For example, "\*\* /foo" matches file or directory "foo" anywhere,
 the same as pattern "foo". "\*\* /foo/bar" matches file or directory
 "bar" anywhere that is directly under directory "foo".
 
