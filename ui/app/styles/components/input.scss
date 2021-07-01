@@ -67,4 +67,12 @@ input {
     border: 1px solid;
     border-color: rgb(var(--input-disabled-border));
   }
+
+  #qunit & {
+    width: unset;
+    padding: unset;
+    font-family: unset;
+    font-size: unset;
+    line-height: unset;
+  }
 }
