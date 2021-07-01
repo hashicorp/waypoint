@@ -323,7 +323,7 @@ build {
 		"file patterns to match files which will not be included in the build",
 		docs.Summary(
 			"Each pattern follows the semantics of .gitignore. This is a summarized version:",
-			strings.TrimSpace(`
+			`
 1. A blank line matches no files, so it can serve as a separator
 	 for readability.
 2. A line starting with # serves as a comment. Put a backslash ("\")
@@ -364,7 +364,7 @@ build {
 		iii. A slash followed by two consecutive asterisks then a slash matches
 				 zero or more directories. For example, "a/** /b" matches "a/b",
 				 "a/x/b", "a/x/y/b" and so on.
-		iv.  Other consecutive asterisks are considered invalid.`),
+		iv.  Other consecutive asterisks are considered invalid.`,
 		),
 	)
 
