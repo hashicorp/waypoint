@@ -71,8 +71,12 @@ func userWithContext(ctx context.Context, u *pb.User) context.Context {
 
 // userFromContext returns the authenticated user in the request context.
 // This will return nil if the user is not authenticated.
-func userFromContext(ctx context.Context) *pb.User {
-	value, _ := ctx.Value(userKey{}).(*pb.User)
+func (s *service) userFromContext(ctx context.Context) *pb.User {
+	value, ok := ctx.Value(userKey{}).(*pb.User)
+	if !ok && s.superuser {
+		value = &pb.User{Id: DefaultUserId, Username: DefaultUser}
+	}
+
 	return value
 }
 
@@ -289,7 +293,7 @@ func (s *service) GenerateLoginToken(
 	}
 
 	// Get our user, that's what we log in is
-	currentUser := userFromContext(ctx)
+	currentUser := s.userFromContext(ctx)
 
 	login := &pb.Token_Login{
 		UserId: currentUser.Id,
@@ -339,7 +343,7 @@ func (s *service) newToken(
 func (s *service) GenerateInviteToken(
 	ctx context.Context, req *pb.InviteTokenRequest,
 ) (*pb.NewTokenResponse, error) {
-	currentUser := userFromContext(ctx)
+	currentUser := s.userFromContext(ctx)
 
 	// Old behavior, if we have the entrypoint set, we convert that to
 	// a request in the new (WP 0.5+) style. We do this right away so the rest of the

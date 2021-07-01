@@ -50,7 +50,7 @@ func TestServiceAuth(t *testing.T) {
 		ctx, err := s.Authenticate(context.Background(), bootstrapToken, "test", nil)
 		require.NoError(t, err)
 
-		user := userFromContext(ctx)
+		user := s.userFromContext(ctx)
 		require.NotNil(t, user)
 		require.Equal(t, DefaultUserId, user.Id)
 	})
@@ -133,7 +133,7 @@ func TestServiceAuth(t *testing.T) {
 		// Auth
 		ctx, err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
 		require.NoError(err)
-		user := userFromContext(ctx)
+		user := s.userFromContext(ctx)
 		require.NotNil(user)
 		require.NotEqual(DefaultUserId, user.Id)
 		require.Equal("alice", user.Username)

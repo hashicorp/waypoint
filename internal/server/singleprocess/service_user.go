@@ -11,7 +11,7 @@ func (s *service) GetUser(
 	req *pb.GetUserRequest,
 ) (*pb.GetUserResponse, error) {
 	// Currently logged in user by default
-	user := userFromContext(ctx)
+	user := s.userFromContext(ctx)
 
 	// If we have a request, get that user
 	if req.User != nil {
