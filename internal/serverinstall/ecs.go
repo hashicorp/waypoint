@@ -74,6 +74,9 @@ type ecsConfig struct {
 	CPU string `hcl:"cpu,optional"`
 	// Memory configures the default amount of memory for the task
 	Memory string `hcl:"memory,optional"`
+
+	// InternalScheme configures the ELB Internet-facing or not
+	InternalScheme bool `hcl:"internal,optional"`
 }
 
 // Install is a method of ECSInstaller and implements the Installer interface to
@@ -186,12 +189,19 @@ func (i *ECSInstaller) Launch(
 
 	grpcPort, _ := strconv.Atoi(defaultGrpcPort)
 	httpPort, _ := strconv.Atoi(defaultHttpPort)
+	nlbScheme := elbv2.LoadBalancerSchemeEnumInternetFacing
+
+	if i.config.InternalScheme {
+		nlbScheme = elbv2.LoadBalancerSchemeEnumInternal
+	}
+
 	nlb, err := createNLB(
 		ctx, s, log, sess,
 		netInfo.vpcID,
 		aws.Int64(int64(grpcPort)),
 		aws.Int64(int64(httpPort)),
 		netInfo.subnets,
+		&nlbScheme,
 	)
 	if err != nil {
 		return nil, err
@@ -1063,6 +1073,13 @@ func (i *ECSInstaller) InstallFlags(set *flag.Set) {
 		Usage:   "Configures the requested memory amount for the Waypoint server task in ECS.",
 		Default: "1024",
 	})
+
+	set.BoolVar(&flag.BoolVar{
+		Name:    "ecs-alb-internal",
+		Target:  &i.config.InternalScheme,
+		Usage:   "Configures the ELB for the internal access.",
+		Default: false,
+	})
 }
 
 func (i *ECSInstaller) UpgradeFlags(set *flag.Set) {
@@ -1697,6 +1714,7 @@ func createNLB(
 	grpcPort *int64,
 	httpPort *int64,
 	subnets []*string,
+	loadBalancerScheme *string,
 ) (serverNLB *nlb, err error) {
 
 	s.Update("Creating NLB target groups")
@@ -1786,13 +1804,11 @@ func createNLB(
 	} else {
 		s.Update("Creating new NLB: %s", defaultNLBName)
 
-		scheme := elbv2.LoadBalancerSchemeEnumInternetFacing
-
 		clb, err := elbsrv.CreateLoadBalancer(&elbv2.CreateLoadBalancerInput{
 			Name:    aws.String(defaultNLBName),
 			Subnets: subnets,
 			// SecurityGroups: []*string{sgWebId},
-			Scheme: &scheme,
+			Scheme: loadBalancerScheme,
 			Type:   aws.String(elbv2.LoadBalancerTypeEnumNetwork),
 			Tags: []*elbv2.Tag{
 				{
