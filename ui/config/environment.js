@@ -36,7 +36,7 @@ module.exports = function (environment) {
     'ember-toggle': {
       includedThemes: ['light'],
       defaultTheme: 'light',
-    }
+    },
   };
 
   if (environment === 'development') {
