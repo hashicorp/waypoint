@@ -16,13 +16,8 @@
     </small>
   </LinkTo>
 
-  {{#if @release.statusReport}}
-    {{#let @release.statusReport.health as |health|}}
-      <StatusBadge
-        @state={{health.healthStatus}}
-        @message={{health.healthMessage}}
-      />
-    {{/let}}
+  {{#if (and (not-eq @release.state 4) @release.statusReport)}}
+    <StatusReportIndicator @statusReport={{@release.statusReport}} />
   {{/if}}
 
   {{#if (and @isLatest @release.url)}}

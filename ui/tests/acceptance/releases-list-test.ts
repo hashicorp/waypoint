@@ -39,6 +39,6 @@ module('Acceptance | releases list', function (hooks) {
 
     await page.visit();
 
-    assert.dom('[data-test-release-list] [data-test-status-badge="ready"]').exists();
+    assert.dom('[data-test-release-list] [data-test-status-report-indicator="ready"]').exists();
   });
 });
