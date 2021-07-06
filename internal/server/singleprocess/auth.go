@@ -127,7 +127,9 @@ LOOKUP_USER:
 		// purely a backwards compatibility case that we should drop at some
 		// point.
 		if !body.UnusedLogin || login.Login.UserId != DefaultUserId {
-			return nil, status.Errorf(codes.Unauthenticated, "Expired or invalid authentication token")
+			return nil, status.Errorf(codes.Unauthenticated,
+				"Pre-Waypoint 0.5 token must be for the default user. This should always "+
+					"be the case so the token is likely corrupt.")
 		}
 
 		// Bootstrap our user
