@@ -33,22 +33,20 @@ func Run(opts ...Option) error {
 
 	log := cfg.Logger.Named("server")
 
-	wg := sync.WaitGroup{}
-
 	grpcServer, err := newGrpcServer(&cfg)
 	if err != nil {
 		return err
 	}
 
+	wg := sync.WaitGroup{}
+
 	gprcErrs := make(chan error, 1)
 	wg.Add(1)
 	go func() {
-		if err := grpcServer.start(); err != nil {
-			log.Debug("GRPC server has exited", "err", err)
-			gprcErrs <- err
-		}
+		err := grpcServer.start()
+		gprcErrs <- err
+		log.Debug("gRPC server has exited", "err", err)
 		wg.Done()
-		log.Debug("GRPC server has exited with no err")
 	}()
 
 	httpErrs := make(chan error, 1)
@@ -58,24 +56,17 @@ func Run(opts ...Option) error {
 		wg.Add(1)
 		httpServer = newHttpServer(grpcServer.server, &cfg)
 		go func() {
-			if err := httpServer.start(); err != nil {
-				log.Debug("HTTP server has exited", "err", err)
-				httpErrs <- err
-			}
+			err := httpServer.start()
+			httpErrs <- err
+			log.Debug("HTTP server has exited", "err", err)
 			wg.Done()
-			log.Debug("HTTP server has exited with no err")
 		}()
 	}
 
 	ctx, cancel := context.WithCancel(cfg.Context)
 	defer cancel()
 
-	defer func() {
-		log.Debug("Waiting for all server run processes to end")
-		wg.Wait()
-		log.Debug("Server processes have exited.")
-	}()
-
+	defer wg.Wait() // Wait for server run processes to exit before returning
 	select {
 	case err := <-gprcErrs:
 		// If the GRPC server errored, we can assume it's closed and shut down the http server if necessary

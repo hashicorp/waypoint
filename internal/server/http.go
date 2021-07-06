@@ -90,20 +90,21 @@ func (s *httpServer) close() {
 	gracefulCh := make(chan struct{})
 	go func() {
 		defer close(gracefulCh)
-		log.Info("shutting down HTTP server")
+		log.Info("stopping")
 		if err := s.server.Shutdown(ctx); err != nil {
-			log.Error("failed gracefully shutting down http server: %s", err)
+			log.Error("failed graceful shutdown: %s", err)
 		}
 	}()
 
 	select {
 	case <-gracefulCh:
+		log.Debug("exited gracefully")
 
 	// After a timeout we just forcibly exit. Our HTTP endpoints should
 	// be fairly quick and their operations are atomic so we just kill
 	// the connections after a few seconds.
 	case <-time.After(2 * time.Second):
-		log.Debug("stopping http server after waiting unsuccessfully for graceful shutdown")
+		log.Debug("stopping forcefully after waiting unsuccessfully for graceful stop")
 		cancelFunc()
 	}
 }

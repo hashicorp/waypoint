@@ -97,19 +97,19 @@ func (s *grpcServer) close() {
 	gracefulCh := make(chan struct{})
 	go func() {
 		defer close(gracefulCh)
-		log.Info("shutting down gRPC server")
+		log.Debug("stopping")
 		s.server.GracefulStop()
 	}()
 
 	select {
 	case <-gracefulCh:
-		log.Debug("grpc server exited gracefully")
+		log.Debug("exited gracefully")
 
 	// After a timeout we just forcibly exit. Our gRPC endpoints should
 	// be fairly quick and their operations are atomic so we just kill
 	// the connections after a few seconds.
 	case <-time.After(2 * time.Second):
-		log.Debug("stopping gRPC server after waiting unsuccessfully for graceful shutdown")
+		log.Debug("stopping forcefully after waiting unsuccessfully for graceful stop")
 		s.server.Stop()
 	}
 }
