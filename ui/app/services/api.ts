@@ -113,7 +113,10 @@ export default class ApiService extends Service {
     return resp.getStatusReportsList().map((d) => d.toObject());
   }
 
-  async getLatestStatusReport(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<StatusReport|undefined>{
+  async getLatestStatusReport(
+    _wsRef: Ref.Workspace,
+    appRef: Ref.Application
+  ): Promise<StatusReport | undefined> {
     let req = new GetLatestStatusReportRequest();
     req.setApplication(appRef);
     // We have to try/catch to avoid failing the hash request because the api errors if no statusReport is available

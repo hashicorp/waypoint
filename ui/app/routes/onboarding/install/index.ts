@@ -3,7 +3,7 @@ import { UAParser } from 'ua-parser-js';
 
 export default class OnboardingInstallIndex extends Route {
   redirect() {
-    const parser = new UAParser();
+    let parser = new UAParser();
 
     switch (parser.getResult().os.name) {
       case 'Mac OS':
