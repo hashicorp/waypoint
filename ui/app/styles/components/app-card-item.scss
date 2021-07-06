@@ -1,4 +1,97 @@
+.cards {
+  // parent div around the latest builds/deployments/releases card on the app page
+  position: relative;
+  margin: (-(scale.$lg-2)) (-(scale.$lg-2)) 0;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: scale.$lg-3;
+  }
+
+  &::before {
+    left: -#{scale.$sm-2};
+    background: linear-gradient(
+      to right,
+      rgb(var(--background)),
+      rgb(var(--background)),
+      rgba(var(--background), 0)
+    );
+  }
+
+  &::after {
+    right: -#{scale.$sm-2};
+    background: linear-gradient(
+      to left,
+      rgb(var(--background)),
+      rgb(var(--background)),
+      rgba(var(--background), 0)
+    );
+  }
+
+  .cards-wrap {
+    display: flex;
+    overflow: auto;
+    padding: scale.$sm-1 0 0;
+    margin-bottom: scale.$sm-2;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--outline)) rgb(var(--border));
+
+    &::-webkit-scrollbar {
+      height: scale.$sm-3;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgb(var(--border));
+      border-radius: scale.$sm-3;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgb(var(--outline));
+      border-radius: scale.$sm-3;
+    }
+
+    &::-webkit-scrollbar-button {
+      width: scale.$sm-1;
+    }
+  }
+
+  .cards-inner {
+    display: flex;
+    width: 100%;
+  }
+
+  .card-outer {
+    box-sizing: content-box;
+    flex: 1;
+    padding: scale.$sm-1;
+    margin: 0 -24px;
+    min-width: 300px;
+
+    &:first-child {
+      padding-left: scale.$lg-2;
+      margin-right: 24px;
+      margin-left: 0;
+    }
+
+    &:last-child {
+      padding-right: scale.$lg-2;
+      margin-left: 24px;
+      margin-right: 0;
+    }
+  }
+
+  .card {
+    flex: 1;
+    margin-bottom: 0;
+  }
+}
+
 .app-card-items {
+  // the ul of the latest builds/deployments/releases, excluding the most recent
   width: 100%;
   padding-top: scale.$sm-1;
   margin-top: scale.$sm-1;
