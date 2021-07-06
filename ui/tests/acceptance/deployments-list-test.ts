@@ -107,8 +107,8 @@ module('Acceptance | deployments list', function (hooks) {
 
     await page.visit();
 
-    let badges = findAll(`[data-test-deployment-list] [data-test-status-badge]`);
-    let statuses = badges.map((b) => b.getAttribute('data-test-status-badge'));
+    let badges = findAll(`[data-test-deployment-list] [data-test-status-report-indicator]`);
+    let statuses = badges.map((b) => b.getAttribute('data-test-status-report-indicator'));
 
     assert.deepEqual(statuses, ['alive', 'ready', 'down'], `correct status badges appear in deployment-list`);
   });
