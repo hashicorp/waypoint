@@ -12,7 +12,7 @@
         </b>
       {{/if}}
     </p>
-    <small>
+    <small class="app-item__meta__secondary">
       <Pds::Icon @type={{icon-for-component @deployment.component.name}} class="icon" />
       <span>{{t (concat "page.deployments.status_prefix." @deployment.status.state)}}
         <b>{{component-name @deployment.component.name}}</b>
