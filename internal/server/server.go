@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -29,38 +31,66 @@ func Run(opts ...Option) error {
 		cfg.Logger = hclog.L()
 	}
 
+	log := cfg.Logger.Named("server")
+
+	wg := sync.WaitGroup{}
+
 	grpcServer, err := newGrpcServer(&cfg)
 	if err != nil {
 		return err
 	}
 
-	errch := make(chan error)
+	gprcErrs := make(chan error, 1)
+	wg.Add(1)
 	go func() {
 		if err := grpcServer.start(); err != nil {
-			errch <- err
+			log.Debug("GRPC server has exited", "err", err)
+			gprcErrs <- err
 		}
+		wg.Done()
+		log.Debug("GRPC server has exited with no err")
 	}()
 
+	httpErrs := make(chan error, 1)
 	httpEnabled := cfg.HTTPListener != nil
 	var httpServer *httpServer
 	if httpEnabled {
+		wg.Add(1)
 		httpServer = newHttpServer(grpcServer.server, &cfg)
 		go func() {
 			if err := httpServer.start(); err != nil {
-				errch <- err
+				log.Debug("HTTP server has exited", "err", err)
+				httpErrs <- err
 			}
+			wg.Done()
+			log.Debug("HTTP server has exited with no err")
 		}()
 	}
 
 	ctx, cancel := context.WithCancel(cfg.Context)
 	defer cancel()
 
+	defer func() {
+		log.Debug("Waiting for all server run processes to end")
+		wg.Wait()
+		log.Debug("Server processes have exited.")
+	}()
+
 	select {
-	case err := <-errch:
-		return err
-	case <-cfg.Context.Done():
+	case err := <-gprcErrs:
+		// If the GRPC server errored, we can assume it's closed and shut down the http server if necessary
 		if httpEnabled {
-			// Must shut down the http server first, as the grpc server can't drain http connections
+			httpServer.close()
+		}
+		return fmt.Errorf("failed running the grpc server: %w", err)
+	case err := <-httpErrs:
+		// If the HTTP server errored, we can assume it's closed and shut down the grpc server
+		grpcServer.close()
+		return fmt.Errorf("failed running the http server: %w", err)
+	case <-cfg.Context.Done():
+		// Received an external shutdown signal, and should close everything.
+		// NOTE: must close HTTP server before GRPC server.
+		if httpEnabled {
 			httpServer.close()
 		}
 		grpcServer.close()
