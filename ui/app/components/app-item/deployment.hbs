@@ -6,7 +6,6 @@
   <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @deployment.id}}>
     <p>
       <b class="badge badge--version">v{{@deployment.sequence}}</b>
-      <code>{{@deployment.id}}</code>
       {{#if (eq @deployment.state 4)}}
         <b data-test-destroyed-badge class="badge badge--destroyed">
           <Pds::Icon @type="trash" class="icon" />&nbsp; {{t "page.deployments.destroyed_label"}}

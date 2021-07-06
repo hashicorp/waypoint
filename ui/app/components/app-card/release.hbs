@@ -3,7 +3,6 @@
     <LinkTo @route="workspace.projects.project.app.release" @models={{array @model.id }}>
       <p>
         <b class="badge badge--version">v{{@model.sequence}}</b>
-        <code>{{truncate @model.id 8 false}}</code>
       </p>
       <small>
         <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
@@ -39,7 +38,6 @@
     <LinkTo @route="workspace.projects.project.app.release" @models={{array @model.id}}>
       <p>
         <b class="badge badge--version">v{{@model.sequence}}</b>
-        <code>{{truncate @model.id 8 false}}</code>
       </p>
       <small>
         <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
