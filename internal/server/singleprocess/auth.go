@@ -289,7 +289,7 @@ func (s *service) encodeToken(keyId string, metadata map[string]string, body *pb
 func (s *service) GenerateLoginToken(
 	ctx context.Context, req *pb.LoginTokenRequest,
 ) (*pb.NewTokenResponse, error) {
-	// Get our user, that's what we log in is
+	// Get our user, that's what we log in as
 	currentUser := s.userFromContext(ctx)
 
 	// If we have a duration set, set the expiry
