@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/datadir"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	configpkg "github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/core"
 	"github.com/hashicorp/waypoint/internal/factory"
 	"github.com/hashicorp/waypoint/internal/plugin"
@@ -31,30 +32,29 @@ func (r *Runner) executeJob(
 	job *pb.Job,
 	wd string,
 ) (*pb.Job_Result, error) {
+	// NOTE(mitchellh; krantzinator): For now, we query the project directly here
+	// since we use it only in case of a missing local waypoint.hcl, and to
+	// collect input variable values set on the server. I can see us moving this
+	// to accept() eventually though if other data is used.
+	resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
+		Project: &pb.Ref_Project{
+			Project: job.Application.Project,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	// Eventually we'll need to extract the data source. For now we're
 	// just building for local exec so it is the working directory.
 	path, err := configpkg.FindPath(wd, "", false)
 	if err != nil {
 		return nil, err
 	}
-
 	if path == "" {
 		// If no waypoint.hcl file is found in the downloaded data, look for
 		// a default waypoint HCL.
-		//
-		// NOTE(mitchellh): For now, we query the project directly here
-		// since we don't need it for anything else. I can see us moving this
-		// to accept() eventually though if other data is used.
 		log.Trace("waypoint.hcl not found in downloaded data, looking for default in server")
-		resp, err := r.client.GetProject(ctx, &pb.GetProjectRequest{
-			Project: &pb.Ref_Project{
-				Project: job.Application.Project,
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-
 		if v := resp.Project.WaypointHcl; len(v) > 0 {
 			log.Info("using waypoint.hcl associated with the project in the server")
 
@@ -118,6 +118,25 @@ func (r *Runner) executeJob(
 		return nil, err
 	}
 
+	// Here we'll load our values from auto vars files and the server/UI, and
+	// combine them with any values set on the job
+	// The order values are added to our final pbVars slice is the order
+	// of precedence
+	vcsVars, diags := variables.LoadAutoFiles(wd)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
+	pbVars := resp.Project.GetVariables()
+	pbVars = append(pbVars, vcsVars...)
+	pbVars = append(pbVars, job.Variables...)
+
+	// evaluate all variables against the variable blocks we just decoded
+	inputVars, diags := variables.EvaluateVariables(pbVars, cfg.InputVariables, log)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
 	// Build our job info
 	jobInfo := &component.JobInfo{
 		Id:    job.Id,
@@ -134,6 +153,7 @@ func (r *Runner) executeJob(
 		core.WithConfig(cfg),
 		core.WithDataDir(projDir),
 		core.WithLabels(job.Labels),
+		core.WithVariables(inputVars),
 		core.WithWorkspace(job.Workspace.Workspace),
 		core.WithJobInfo(jobInfo),
 	)

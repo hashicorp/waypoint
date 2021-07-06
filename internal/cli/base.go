@@ -17,6 +17,7 @@ import (
 	clientpkg "github.com/hashicorp/waypoint/internal/client"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/config/variables"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/grpcmetadata"
@@ -65,6 +66,9 @@ type baseCommand struct {
 	refApp       *pb.Ref_Application
 	refWorkspace *pb.Ref_Workspace
 
+	// variables hold the values set via flags and local env vars
+	variables []*pb.Variable
+
 	//---------------------------------------------------------------
 	// Internal fields that should not be accessed directly
 
@@ -73,6 +77,13 @@ type baseCommand struct {
 
 	// flagLabels are set via -label if flagSetOperation is set.
 	flagLabels map[string]string
+
+	// flagVars sets values for defined input variables
+	flagVars map[string]string
+
+	// flagVarFile is a HCL or JSON file setting one or more values
+	// for defined input variables
+	flagVarFile []string
 
 	// flagRemote is whether to execute using a remote runner or use
 	// a local runner.
@@ -239,6 +250,17 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
+	// Collect variable values from -var and -varfile flags,
+	// and env vars set with WP_VAR_* and set them on the job
+	vars, diags := variables.LoadVariableValues(c.flagVars, c.flagVarFile)
+	if diags.HasErrors() {
+		// we only return errors for file parsing, so we are specific
+		// in the error log here
+		c.logError(c.Log, "failed to load wpvars file", errors.New(diags.Error()))
+		return diags
+	}
+	c.variables = vars
+
 	// Create our client
 	if baseCfg.Client {
 		c.project, err = c.initClient(nil)
@@ -404,6 +426,20 @@ func (c *baseCommand) flagSet(bit flagSetBit, f func(*flag.Sets)) *flag.Sets {
 			Usage: "Override configurations for how remote runners source data. " +
 				"This is specified to the data source type being used in your configuration. " +
 				"This is used for example to set a specific Git ref to run against.",
+		})
+
+		f.StringMapVar(&flag.StringMapVar{
+			Name:   "var",
+			Target: &c.flagVars,
+			Usage:  "Variable value to set for this operation. Can be specified multiple times.",
+		})
+
+		f.StringSliceVar(&flag.StringSliceVar{
+			Name:   "var-file",
+			Target: &c.flagVarFile,
+			Usage: "HCL or JSON file containing variable values to set for this " +
+				"operation. If any \"*.auto.wpvars\" or \"*.auto.wpvars.json\" " +
+				"files are present, they will be automatically loaded.",
 		})
 	}
 
