@@ -103,6 +103,7 @@ func (s *grpcServer) close() {
 
 	select {
 	case <-gracefulCh:
+		log.Debug("grpc server exited gracefully")
 
 	// After a timeout we just forcibly exit. Our gRPC endpoints should
 	// be fairly quick and their operations are atomic so we just kill
