@@ -1,8 +1,7 @@
 <li class="app-item">
   <LinkTo @route="workspace.projects.project.app.build" @models={{array @build.id}}>
     <p>
-      <b class="badge badge--version">#{{@build.sequence}}</b>
-      <code>{{@build.id}}</code>
+      <b class="badge badge--version">v{{@build.sequence}}</b>
     </p>
     <small>
       <Pds::Icon @type={{icon-for-component @build.component.name}} class="icon" />

@@ -1,7 +1,7 @@
 <PageHeader @iconName="upload">
   <div class="title">
     {{! TODO(jgwhite): Make this a real <h1> }}
-    <h2 aria-level="1"><b class="badge badge--version">#{{@model.sequence}}</b> <code>{{@model.id}}</code></h2>
+    <h1 aria-level="1"><b class="badge badge--version">v{{@model.sequence}}</b></h1>
     <small>
       <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
       <span>Deployed by <b>{{component-name @model.component.name}}</b>
@@ -14,7 +14,7 @@
         <span>{{lowercase @model.preload.deployUrl}}</span>
         <Pds::Icon @type="exit" class="icon" />
       </ExternalLink>
-      <Actions::Release @id={{@model.id}} />
+      <Actions::Release @sequence={{@model.sequence}} />
     </div>
   </div>
 </PageHeader>

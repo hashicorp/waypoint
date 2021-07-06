@@ -2,7 +2,6 @@
   <LinkTo @route="workspace.projects.project.app.release" @models={{array @release.id}}>
     <p>
       <b class="badge badge--version">v{{@release.sequence}}</b>
-      <code>{{@release.id}}</code>
     </p>
     <small>
       <Pds::Icon @type={{icon-for-component @release.component.name}} class="icon" />
