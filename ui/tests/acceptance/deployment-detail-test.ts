@@ -17,7 +17,7 @@ module('Acceptance | deployment detail', function (hooks) {
 
     await visit(`/default/acme-project/app/acme-app/deployment/${deployment.id}`);
 
-    assert.dom('[data-test-status-badge="ready"]').exists();
+    assert.dom('[data-test-status-report-indicator="ready"]').exists();
   });
 
   test('displays no status report badge if none is available', async function (assert) {
@@ -27,6 +27,6 @@ module('Acceptance | deployment detail', function (hooks) {
 
     await visit(`/default/acme-project/app/acme-app/deployment/${deployment.id}`);
 
-    assert.dom('[data-test-status-badge]').doesNotExist();
+    assert.dom('[data-test-status-report-indicator]').doesNotExist();
   });
 });
