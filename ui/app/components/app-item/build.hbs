@@ -3,7 +3,7 @@
     <p>
       <b class="badge badge--version">v{{@build.sequence}}</b>
     </p>
-    <small>
+    <small class="app-item__meta__secondary">
       <Pds::Icon @type={{icon-for-component @build.component.name}} class="icon" />
       <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
         <b>{{titleize @build.component.name}}</b>

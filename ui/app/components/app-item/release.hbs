@@ -3,7 +3,7 @@
     <p>
       <b class="badge badge--version">v{{@release.sequence}}</b>
     </p>
-    <small>
+    <small class="app-item__meta__secondary">
       <Pds::Icon @type={{icon-for-component @release.component.name}} class="icon" />
       <span>{{if (eq @release.status.state 1) 'Releasing' 'Released'}} on
         <b>{{component-name @release.component.name}}</b>
