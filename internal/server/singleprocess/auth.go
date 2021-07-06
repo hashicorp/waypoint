@@ -115,7 +115,6 @@ func (s *service) Authenticate(
 	}
 
 	// Look up the user that this token is for.
-LOOKUP_USER:
 	user, err := s.state.UserGet(&pb.Ref_User{
 		Ref: &pb.Ref_User_Id{
 			Id: &pb.Ref_UserId{Id: login.Login.UserId},
@@ -143,7 +142,12 @@ LOOKUP_USER:
 			return nil, err
 		}
 
-		goto LOOKUP_USER
+		// Look up the user again
+		user, err = s.state.UserGet(&pb.Ref_User{
+			Ref: &pb.Ref_User_Id{
+				Id: &pb.Ref_UserId{Id: login.Login.UserId},
+			},
+		})
 	}
 	if err != nil {
 		return nil, err
