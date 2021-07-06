@@ -285,10 +285,8 @@ func (s *service) encodeToken(keyId string, metadata map[string]string, body *pb
 func (s *service) GenerateLoginToken(
 	ctx context.Context, req *pb.LoginTokenRequest,
 ) (*pb.NewTokenResponse, error) {
-	// We don't currently have any other users.
-	if req.User != nil {
-		return nil, status.Errorf(codes.PermissionDenied, "cannot create token for other users")
-	}
+	// Get our user, that's what we log in is
+	currentUser := s.userFromContext(ctx)
 
 	// If we have a duration set, set the expiry
 	var dur time.Duration
@@ -300,11 +298,18 @@ func (s *service) GenerateLoginToken(
 		}
 	}
 
-	// Get our user, that's what we log in is
-	currentUser := s.userFromContext(ctx)
-
 	login := &pb.Token_Login{
 		UserId: currentUser.Id,
+	}
+
+	// If we're authing as another user, we have to get that user
+	if req.User != nil {
+		user, err := s.state.UserGet(req.User)
+		if err != nil {
+			return nil, err
+		}
+
+		login.UserId = user.Id
 	}
 
 	token, err := s.newToken(dur, DefaultKeyId, nil, &pb.Token{

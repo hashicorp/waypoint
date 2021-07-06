@@ -137,6 +137,29 @@ func TestServiceAuth(t *testing.T) {
 		require.NotNil(user)
 		require.NotEqual(DefaultUserId, user.Id)
 		require.Equal("alice", user.Username)
+
+		// Generate a login token for that user using the superuser
+		{
+			resp, err := s.GenerateLoginToken(ctx, &pb.LoginTokenRequest{
+				User: &pb.Ref_User{
+					Ref: &pb.Ref_User_Username{
+						Username: &pb.Ref_UserUsername{
+							Username: "alice",
+						},
+					},
+				},
+			})
+			require.NoError(err)
+			token := resp.Token
+
+			// Verify authing works
+			ctx, err := s.Authenticate(context.Background(), token, "test", nil)
+			require.NoError(err)
+			user := s.userFromContext(ctx)
+			require.NotNil(t, user)
+			require.NotEqual(t, DefaultUserId, user.Id)
+			require.Equal("alice", user.Username)
+		}
 	})
 
 	t.Run("entrypoint token can only access entrypoint APIs", func(t *testing.T) {
