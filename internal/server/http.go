@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"github.com/hashicorp/go-hclog"
+	"google.golang.org/grpc"
 	"net"
 	"net/http"
 	"strings"
@@ -10,11 +12,17 @@ import (
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
-	"github.com/oklog/run"
 )
 
-// httpInit initializes the HTTP server and adds it to the run group.
-func httpInit(group *run.Group, opts *options) error {
+type httpServer struct {
+	opts   *options
+	log    hclog.Logger
+	server *http.Server
+}
+
+// newHttpServer initializes a new http server.
+// Uses grpc-web to wrap an existing grpc server.
+func newHttpServer(grpcServer *grpc.Server, opts *options) *httpServer {
 	log := opts.Logger.Named("http")
 	if opts.HTTPListener == nil {
 		log.Info("HTTP listener not specified, HTTP API is disabled")
@@ -22,7 +30,7 @@ func httpInit(group *run.Group, opts *options) error {
 	}
 
 	// Wrap the grpc server so that it is grpc-web compatible
-	grpcWrapped := grpcweb.WrapServer(opts.grpcServer,
+	grpcWrapped := grpcweb.WrapServer(grpcServer,
 		grpcweb.WithCorsForRegisteredEndpointsOnly(false),
 		grpcweb.WithOriginFunc(func(string) bool { return true }),
 		grpcweb.WithAllowNonRootResource(true),
@@ -47,43 +55,56 @@ func httpInit(group *run.Group, opts *options) error {
 	})
 
 	// Create our http server
-	httpSrv := &http.Server{
-		ReadHeaderTimeout: 5 * time.Second,
-		IdleTimeout:       120 * time.Second,
-		Handler:           httpLogHandler(rootHandler, log),
-		BaseContext: func(net.Listener) context.Context {
-			return opts.Context
+	return &httpServer{
+		opts: opts,
+		log:  log,
+		server: &http.Server{
+			ReadHeaderTimeout: 5 * time.Second,
+			IdleTimeout:       120 * time.Second,
+			Handler:           httpLogHandler(rootHandler, log),
+			BaseContext: func(net.Listener) context.Context {
+				return opts.Context
+			},
 		},
 	}
+}
 
-	// Add our gRPC server to the run group
-	group.Add(func() error {
-		// Serve traffic
-		ln := opts.HTTPListener
-		log.Info("starting HTTP server", "addr", ln.Addr().String())
-		return httpSrv.Serve(ln)
-	}, func(err error) {
-		ctx, cancelFunc := context.WithCancel(context.Background())
-		defer cancelFunc()
+// start starts an http server
+func (s *httpServer) start() error {
+	// Serve traffic
+	ln := s.opts.HTTPListener
+	s.log.Info("starting HTTP server", "addr", ln.Addr().String())
+	return s.server.Serve(ln)
+}
 
-		// Graceful in a goroutine so we can timeout
-		gracefulCh := make(chan struct{})
-		go func() {
-			defer close(gracefulCh)
-			log.Info("shutting down HTTP server")
-			httpSrv.Shutdown(ctx)
-		}()
+// close stops the grpc server, gracefully if possible. Should be called exactly once.
+// Warning: before closing the GRPC server, this HTTP server must first be closed.
+// Attempting to gracefully stop the GRPC server first will cause it to drain HTTP connections,
+// which will panic.
+func (s *httpServer) close() {
+	log := s.log
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
 
-		select {
-		case <-gracefulCh:
-
-		// After a timeout we just forcibly exit. Our HTTP endpoints should
-		// be fairly quick and their operations are atomic so we just kill
-		// the connections after a few seconds.
-		case <-time.After(2 * time.Second):
-			cancelFunc()
+	// Graceful in a goroutine so we can timeout
+	gracefulCh := make(chan struct{})
+	go func() {
+		defer close(gracefulCh)
+		log.Debug("stopping")
+		if err := s.server.Shutdown(ctx); err != nil {
+			log.Error("failed graceful shutdown: %s", err)
 		}
-	})
+	}()
 
-	return nil
+	select {
+	case <-gracefulCh:
+		log.Debug("exited gracefully")
+
+	// After a timeout we just forcibly exit. Our HTTP endpoints should
+	// be fairly quick and their operations are atomic so we just kill
+	// the connections after a few seconds.
+	case <-time.After(2 * time.Second):
+		log.Debug("stopping forcefully after waiting unsuccessfully for graceful stop")
+		cancelFunc()
+	}
 }
