@@ -77,7 +77,7 @@ func (s *httpServer) start() error {
 	return s.server.Serve(ln)
 }
 
-// close stops the grpc server, gracefully if possible.
+// close stops the grpc server, gracefully if possible. Should be called exactly once.
 // Warning: before closing the GRPC server, this HTTP server must first be closed.
 // Attempting to gracefully stop the GRPC server first will cause it to drain HTTP connections,
 // which will panic.
@@ -90,7 +90,7 @@ func (s *httpServer) close() {
 	gracefulCh := make(chan struct{})
 	go func() {
 		defer close(gracefulCh)
-		log.Info("stopping")
+		log.Debug("stopping")
 		if err := s.server.Shutdown(ctx); err != nil {
 			log.Error("failed graceful shutdown: %s", err)
 		}
