@@ -1,0 +1,3 @@
+```release-note:improvement
+core: add scoped_settings to allow custom settings per workspace
+```

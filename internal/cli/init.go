@@ -287,19 +287,11 @@ func (c *InitCommand) validateProject() bool {
 
 		// We need to load the data source configuration if we have it
 		var ds *pb.Job_DataSource
-		if dscfg := c.cfg.Runner.DataSource; dscfg != nil {
-			factory, ok := datasource.FromString[dscfg.Type]
-			if !ok {
-				c.stepError(s, initStepProject, fmt.Errorf(
-					"runner data source type %q unknown", dscfg.Type))
-				return false
-			}
-
-			source := factory()
-			ds, err = source.ProjectSource(dscfg.Body, c.cfg.HCLContext())
-			if err != nil {
-				c.stepError(s, initStepProject, err)
-				return false
+		if dsCfg := c.cfg.Runner.DataSource; dsCfg != nil {
+			var success bool
+			ds, success = c.parseDataSourceConfig(dsCfg, s, ds)
+			if !success {
+				return success
 			}
 		}
 
@@ -311,12 +303,30 @@ func (c *InitCommand) validateProject() bool {
 			}
 		}
 
+		scopedSettings := map[string]*pb.Project_ScopedProjectSettings{}
+		if v := c.cfg.Runner.ScopedSettings; v != nil {
+			for _, el := range v.Workspaces {
+				ds, success := c.parseDataSourceConfig(el.DataSource, s, ds)
+				if !success {
+					return success
+				}
+
+				// TODO: Parse variables
+
+				scopedSettings[el.Workspace] = &pb.Project_ScopedProjectSettings{
+					DataSource: ds,
+					Variables:  nil,
+				}
+			}
+		}
+
 		resp, err := client.UpsertProject(c.Ctx, &pb.UpsertProjectRequest{
 			Project: &pb.Project{
 				Name:           ref.Project,
 				RemoteEnabled:  c.cfg.Runner.Enabled,
 				DataSource:     ds,
 				DataSourcePoll: poll,
+				ScopedSettings: scopedSettings,
 			},
 		})
 		if err != nil {
@@ -353,6 +363,25 @@ func (c *InitCommand) validateProject() bool {
 	s.Status(terminal.StatusOK)
 	s.Done()
 	return true
+}
+
+func (c *InitCommand) parseDataSourceConfig(dsCfg *configpkg.DataSource, s terminal.Step, ds *pb.Job_DataSource) (*pb.Job_DataSource, bool) {
+	var err error
+
+	factory, ok := datasource.FromString[dsCfg.Type]
+	if !ok {
+		c.stepError(s, initStepProject, fmt.Errorf(
+			"runner data source type %q unknown", dsCfg.Type))
+		return nil, false
+	}
+
+	source := factory()
+	ds, err = source.ProjectSource(dsCfg.Body, c.cfg.HCLContext())
+	if err != nil {
+		c.stepError(s, initStepProject, err)
+		return nil, false
+	}
+	return ds, true
 }
 
 func (c *InitCommand) validatePlugins() bool {

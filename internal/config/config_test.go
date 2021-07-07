@@ -46,19 +46,28 @@ func TestLoad_compare(t *testing.T) {
 				require.Equal(t, "HELLO", c.Project)
 			},
 		},
+
+		{
+			"scoped_settings.hcl",
+			"",
+			func(t *testing.T, c *Config) {
+				require.Equal(t, 3, len(c.Runner.ScopedSettings.Workspaces))
+				require.Equal(t, "develop", c.Runner.ScopedSettings.Workspaces[0].Workspace)
+			},
+		},
 	}
 
 	for _, tt := range cases {
 		t.Run(tt.File, func(t *testing.T) {
-			require := require.New(t)
+			req := require.New(t)
 
 			cfg, err := Load(filepath.Join("testdata", "compare", tt.File), nil)
 			if tt.Err != "" {
-				require.Error(err)
-				require.Contains(err.Error(), tt.Err)
+				req.Error(err)
+				req.Contains(err.Error(), tt.Err)
 				return
 			}
-			require.NoError(err)
+			req.NoError(err)
 
 			tt.Func(t, cfg)
 		})
@@ -91,17 +100,17 @@ func TestConfig_variableDecode(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.file, func(t *testing.T) {
-			require := require.New(t)
+			req := require.New(t)
 
 			_, err := Load(filepath.Join("testdata", "validate", tt.file), nil)
 
 			if tt.err == "" {
-				require.NoError(err)
+				req.NoError(err)
 				return
 			}
 
-			require.Error(err)
-			require.Contains(err.Error(), tt.err)
+			req.Error(err)
+			req.Contains(err.Error(), tt.err)
 		})
 	}
 }

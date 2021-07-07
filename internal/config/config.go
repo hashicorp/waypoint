@@ -46,6 +46,9 @@ type Runner struct {
 
 	// Poll are the settings related to polling.
 	Poll *Poll `hcl:"poll,block"`
+
+	// ScopedSettings are some settings (that will overwrite the one above) scoped by the workspace
+	ScopedSettings *ScopedSettingBlock `hcl:"scoped_settings,block"`
 }
 
 // DataSource configures the data source for the runner.
@@ -58,6 +61,20 @@ type DataSource struct {
 type Poll struct {
 	Enabled  bool   `hcl:"enabled,optional"`
 	Interval string `hcl:"interval,optional"`
+}
+
+type ScopedSettingBlock struct {
+	Workspaces []WorkspaceSettings `hcl:"workspace,block"`
+}
+
+type WorkspaceSettings struct {
+	Workspace  string      `hcl:",label"`
+	DataSource *DataSource `hcl:"data_source,block"`
+}
+
+// ScopedSettings represents some settings that overwrite the `default` workspace ones
+type ScopedSettings struct {
+	DataSource *DataSource `hcl:"data_source,block"`
 }
 
 // LoadOptions should be set for the Load function.
