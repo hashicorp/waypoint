@@ -67,6 +67,52 @@ jobs:
           fi
       - notify_main_failure
 
+  generate-website-mdx:
+    docker:
+      - image: *GOLANG_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: generate plugin docs
+          command: go run ./cmd/waypoint docs -website-mdx
+      - run:
+          name: generate cli docs
+          command: go run ./tools/gendocs
+      - run:
+          command: rm waypoint-restore.db.lock; git status
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+      - notify_main_failure
+
+  check-website-mdx:
+    docker:
+      - image: *EMBER_IMAGE
+    environment:
+      <<: *ENVIRONMENT
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          command: git status
+      - run:
+          command: cd ./website; npm install
+      - run:
+          command: cd ./website; npx --no-install next-hashicorp format
+      - run: |
+          if ! git diff --exit-code; then
+            echo "Git directory has website mdx changes. Run `make gen/website-mdx`"
+            echo "and validate that the corresponding website pages look acceptable."
+            git status
+            exit 1
+          fi
+      - notify_main_failure
+
   go-test:
     docker:
       - image: *GOLANG_IMAGE
@@ -431,6 +477,22 @@ workflows:
             branches:
               only:
                 - main
+
+  website-mdx:
+    jobs:
+      - generate-website-mdx:
+          filters:
+            branches:
+              ignore:
+                - main
+      - check-website-mdx:
+          requires:
+            - generate-website-mdx
+          filters:
+            branches:
+              ignore:
+                - main
+
   website:
     jobs:
       - algolia-index:
