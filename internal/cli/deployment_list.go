@@ -225,12 +225,12 @@ func (c *DeploymentListCommand) Run(args []string) int {
 				details = append(details, "image:"+img)
 			}
 
-			artdetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(b.Preload.Artifact.Sequence, b.Preload.Artifact.Id))
+			artDetails := fmt.Sprintf("artifact:%s", c.flagId.FormatId(b.Preload.Artifact.Sequence, b.Preload.Artifact.Id))
 			if len(details) == 0 {
-				details = append(details, artdetails)
+				details = append(details, artDetails)
 			} else if c.flagVerbose {
 				details = append(details,
-					artdetails,
+					artDetails,
 					fmt.Sprintf("build:%s", c.flagId.FormatId(b.Preload.Build.Sequence, b.Preload.Build.Id)))
 			}
 
@@ -289,7 +289,13 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			}
 
 			if c.flagUrl {
-				columns = append(columns, b.Url)
+				theUrl := "N/A"
+				if b.Url != "" {
+					theUrl = b.Url
+				} else if b.Preload.DeployUrl != "" {
+					theUrl = b.Url
+				}
+				columns = append(columns, theUrl)
 			}
 
 			tbl.Rich(
