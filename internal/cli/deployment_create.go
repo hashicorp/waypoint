@@ -128,23 +128,17 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 		app.UI.Output("")
 		switch {
 		case releaseUrl != "":
-			if !inplace {
-				app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
-			} else {
-				app.UI.Output(strings.TrimSpace(deployInPlace)+"\n", terminal.WithSuccessStyle())
-			}
+			printInplaceInfo(inplace, app)
 			app.UI.Output("   Release URL: %s", releaseUrl, terminal.WithSuccessStyle())
 			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
 
 		case hostname != nil:
-			if !inplace {
-				app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
-			} else {
-				app.UI.Output(strings.TrimSpace(deployInPlace)+"\n", terminal.WithSuccessStyle())
-			}
+			printInplaceInfo(inplace, app)
 			app.UI.Output("           URL: https://%s", hostname.Fqdn, terminal.WithSuccessStyle())
 			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
-
+		case deployUrl != "":
+			printInplaceInfo(inplace, app)
+			app.UI.Output("Deployment URL: https://%s", deployUrl, terminal.WithSuccessStyle())
 		default:
 			app.UI.Output(strings.TrimSpace(deployNoURL)+"\n", terminal.WithSuccessStyle())
 		}
@@ -156,6 +150,14 @@ func (c *DeploymentCreateCommand) Run(args []string) int {
 	}
 
 	return 0
+}
+
+func printInplaceInfo(inplace bool, app *clientpkg.App) {
+	if !inplace {
+		app.UI.Output(strings.TrimSpace(deployURLService)+"\n", terminal.WithSuccessStyle())
+	} else {
+		app.UI.Output(strings.TrimSpace(deployInPlace)+"\n", terminal.WithSuccessStyle())
+	}
 }
 
 func (c *DeploymentCreateCommand) Flags() *flag.Sets {

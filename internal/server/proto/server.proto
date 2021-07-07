@@ -2118,6 +2118,12 @@ message Deployment {
   // id is the unique ID for this deployment
   string id = 1;
 
+  // url is the URL to the Deployment
+  // this URL might be empty, indicating that the deployment doesn't have
+  // the possibility to be contacted directly (e.g: Kubernetes pod)
+  // and thus the URL Service (Hashicorp Horizon) will be used instead, if enabled.
+  string url = 18;
+
   // See the docs for Generation.
   Generation generation = 17;
 
