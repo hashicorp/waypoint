@@ -289,13 +289,13 @@ func (c *DeploymentListCommand) Run(args []string) int {
 			}
 
 			if c.flagUrl {
-				theUrl := "N/A"
+				url := "n/a"
 				if b.Url != "" {
-					theUrl = b.Url
+					url = b.Url
 				} else if b.Preload.DeployUrl != "" {
-					theUrl = b.Url
+					url = b.Preload.DeployUrl
 				}
-				columns = append(columns, theUrl)
+				columns = append(columns, url)
 			}
 
 			tbl.Rich(
