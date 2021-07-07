@@ -828,7 +828,7 @@ message AuthMethod {
   string name = 1;
 
   // human friendly name for display and description. This has no impact
-  // internally and is only helpful for the UI and API.
+  // internally and is only helpful for the UI and API. This is optional.
   string display_name = 2;
   string description = 3;
 
