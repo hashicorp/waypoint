@@ -64,6 +64,7 @@ func (a *applicationPoll) PollJob(
 		log.Error("could not generate poll job for application, incorrect type passed in")
 		return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Application PollJob")
 	}
+	log = log.Named(app.Name)
 
 	// Determine the latest deployment or release to poll for a status report
 	appRef := &pb.Ref_Application{
@@ -71,6 +72,7 @@ func (a *applicationPoll) PollJob(
 		Project:     app.Project.Project,
 	}
 
+	log.Trace("looking at latest deployment and release to generate status report on")
 	latestDeployment, err := a.state.DeploymentLatest(appRef, &pb.Ref_Workspace{Workspace: a.workspace})
 	if err != nil {
 		return nil, err
@@ -103,10 +105,11 @@ func (a *applicationPoll) PollJob(
 		return nil, nil
 	}
 
+	log.Trace("building queue job request for generating status report")
 	jobRequest := &pb.QueueJobRequest{
 		Job: &pb.Job{
 			// SingletonId so that we only have one poll operation at
-			// any time queued per project.
+			// any time queued per application.
 			SingletonId: fmt.Sprintf("appl-poll/%s", app.Name),
 
 			Application: &pb.Ref_Application{
@@ -116,7 +119,7 @@ func (a *applicationPoll) PollJob(
 
 			Workspace: &pb.Ref_Workspace{Workspace: a.workspace},
 
-			// Poll!
+			// Generate a status report
 			Operation: statusReportJob,
 
 			// Any runner is fine for polling.
@@ -142,8 +145,10 @@ func (a *applicationPoll) Complete(
 		log.Error("could not mark application poll as complete, incorrect type passed in")
 		return status.Error(codes.FailedPrecondition, "incorrect type passed into Application Complete")
 	}
+	log = log.Named(app.Name)
 
 	// Mark this as complete so the next poll gets rescheduled.
+	log.Trace("marking app poll as complete")
 	if err := a.state.ApplicationPollComplete(app, time.Now()); err != nil {
 		return err
 	}

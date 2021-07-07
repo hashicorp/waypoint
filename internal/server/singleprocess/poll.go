@@ -169,7 +169,7 @@ func (s *service) runPollQueuer(
 		log.Debug("queued polling job", "job_id", resp.JobId)
 
 		// Mark this as complete so the next poll gets rescheduled.
-		log.Trace("scheduling next poll time")
+		log.Trace("completing poll and scheduling next poll time")
 		if err := handler.Complete(log, pollItem); err != nil {
 			// This should never happen so like above, if this happens we
 			// sleep for a minute so we don't completely overload the
