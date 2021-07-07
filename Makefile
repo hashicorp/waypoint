@@ -126,6 +126,12 @@ gen/doc:
 		--doc_out=./doc --doc_opt=html,index.html \
 		./internal/server/proto/server.proto
 
+.PHONY: gen/website-mdx
+gen/website-mdx:
+	go run ./cmd/waypoint docs -website-mdx
+	go run ./tools/gendocs
+	cd ./website; npx --no-install next-hashicorp format
+
 .PHONY: tools
 tools: # install dependencies and tools required to build
 	@echo "Fetching tools..."
