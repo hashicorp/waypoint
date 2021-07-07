@@ -60,3 +60,20 @@ func validateAuthMethodOIDCRules(v *pb.AuthMethod_Oidc) []*validation.FieldRules
 		validation.Field(&v.Oidc.ClientSecret, validation.Required),
 	}
 }
+
+// ValidateUpsertAuthMethodRequest
+func ValidateUpsertAuthMethodRequest(v *pb.UpsertAuthMethodRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.AuthMethod, validation.Required),
+		validationext.StructField(&v.AuthMethod, func() []*validation.FieldRules {
+			return ValidateAuthMethodRules(v.AuthMethod)
+		}),
+	))
+}
+
+// ValidateDeleteAuthMethodRequest
+func ValidateDeleteAuthMethodRequest(v *pb.DeleteAuthMethodRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.AuthMethod, validation.Required),
+	))
+}
