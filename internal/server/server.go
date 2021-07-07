@@ -3,11 +3,9 @@ package server
 import (
 	"context"
 	"net"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/oklog/run"
-	"google.golang.org/grpc"
-
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -29,35 +27,66 @@ func Run(opts ...Option) error {
 		cfg.Context = context.Background()
 	}
 	if cfg.Logger == nil {
-		cfg.Logger = hclog.L()
+		cfg.Logger = hclog.L().Named("server")
+	}
+	log := cfg.Logger
+
+	grpcServer, err := newGrpcServer(&cfg)
+	if err != nil {
+		return err
 	}
 
-	// Setup our run group since we're going to be starting multiple
-	// goroutines for all the servers that we want to live/die as a group.
-	var group run.Group
+	wg := sync.WaitGroup{}
 
-	// We first add an actor that just returns when the context ends. This
-	// will trigger the rest of the group to end since a group will not exit
-	// until any of its actors exit.
-	ctx, cancelCtx := context.WithCancel(cfg.Context)
-	cfg.Context = ctx
-	group.Add(func() error {
-		<-ctx.Done()
+	gprcErrs := make(chan error, 1)
+	wg.Add(1)
+	go func() {
+		err := grpcServer.start()
+		gprcErrs <- err
+		log.Debug("gRPC server has exited", "err", err)
+		wg.Done()
+	}()
+
+	httpErrs := make(chan error, 1)
+	httpEnabled := cfg.HTTPListener != nil
+	var httpServer *httpServer
+	if httpEnabled {
+		wg.Add(1)
+		httpServer = newHttpServer(grpcServer.server, &cfg)
+		go func() {
+			err := httpServer.start()
+			httpErrs <- err
+			log.Debug("HTTP server has exited", "err", err)
+			wg.Done()
+		}()
+	}
+
+	ctx, cancel := context.WithCancel(cfg.Context)
+	defer cancel()
+
+	defer wg.Wait() // Wait for server run processes to exit before returning
+	select {
+	case err := <-gprcErrs:
+		// If the GRPC server errored, we can assume it's closed and shut down the http server if necessary
+		if httpEnabled {
+			httpServer.close()
+		}
+		log.Error("failed running the grpc server", "err", err)
+		return err
+	case err := <-httpErrs:
+		// If the HTTP server errored, we can assume it's closed and shut down the grpc server
+		grpcServer.close()
+		log.Error("failed running the http server", "err", err)
+		return err
+	case <-cfg.Context.Done():
+		// Received an external shutdown signal, and should close everything.
+		// NOTE: must close HTTP server before GRPC server.
+		if httpEnabled {
+			httpServer.close()
+		}
+		grpcServer.close()
 		return ctx.Err()
-	}, func(error) { cancelCtx() })
-
-	// Setup our gRPC server.
-	if err := grpcInit(&group, &cfg); err != nil {
-		return err
 	}
-
-	// Setup our HTTP server.
-	if err := httpInit(&group, &cfg); err != nil {
-		return err
-	}
-
-	// Run!
-	return group.Run()
 }
 
 // Option configures Run
@@ -90,8 +119,6 @@ type options struct {
 
 	// BrowserUIEnabled determines if the browser UI should be mounted
 	BrowserUIEnabled bool
-
-	grpcServer *grpc.Server
 }
 
 // WithContext sets the context for the server. When this context is cancelled,
