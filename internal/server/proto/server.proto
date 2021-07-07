@@ -29,6 +29,21 @@ service Waypoint {
   // as well since they no longer exist.
   rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
 
+  // UpsertAuthMethod upserts the auth method. All users logged in with
+  // this auth method will remain logged in even if settings change.
+  rpc UpsertAuthMethod(UpsertAuthMethodRequest) returns (UpsertAuthMethodResponse);
+
+  // GetAuthMethod returns the auth method.
+  rpc GetAuthMethod(GetAuthMethodRequest) returns (GetAuthMethodResponse);
+
+  // ListAuthMethods returns a list of all the auth methods.
+  rpc ListAuthMethods(google.protobuf.Empty) returns (ListAuthMethodsResponse);
+
+  // Delete an auth method. This will invalidate all users authenticated
+  // using this auth method and they will have to reauthenticate some other
+  // way.
+  rpc DeleteAuthMethod(DeleteAuthMethodRequest) returns (google.protobuf.Empty);
+
   // ListWorkspaces returns a list of all workspaces.
   //
   // Note that currently this list is never pruned, even if a workspace is
@@ -875,6 +890,31 @@ message AuthMethod {
     string token_endpoint = 9;
     string userinfo_endpoint = 10;
   }
+}
+
+message UpsertAuthMethodRequest {
+  // AuthMethod to upsert. See the message for what fields to set.
+  AuthMethod auth_method = 1;
+}
+
+message UpsertAuthMethodResponse {
+  AuthMethod auth_method = 1;
+}
+
+message GetAuthMethodRequest {
+  Ref.AuthMethod auth_method = 1;
+}
+
+message GetAuthMethodResponse {
+  AuthMethod auth_method = 1;
+}
+
+message DeleteAuthMethodRequest {
+  Ref.AuthMethod auth_method = 1;
+}
+
+message ListAuthMethodsResponse {
+  repeated AuthMethod auth_methods = 1;
 }
 
 /********************************************************************
