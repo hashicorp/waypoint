@@ -1,54 +1,36 @@
-{{#if @isLatest}}
-  <div class="app-card-item app-card-item--latest">
-    <LinkTo @route="workspace.projects.project.app.release" @models={{array @model.id }}>
-      <p>
-        <b class="badge badge--version">v{{@model.sequence}}</b>
-      </p>
-      <small>
-        <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-        <span>{{if (eq @model.status.state 1) 'Releasing' 'Released'}} on
-          <b>{{component-name @model.component.name}} </b>
-          {{#if (eq @model.status.state 1)}}
-            (Started {{date-format-distance-to-now @model.status.startTime.seconds }})
-          {{else}}
-            {{date-format-distance-to-now @model.status.completeTime.seconds }}
-          {{/if}}
-        </span>
-      </small>
+<AppCard
+  data-test-app-card-release={{@model.sequence}}
+>
+  <:meta-primary>
+    <LinkTo
+      @route="workspace.projects.project.app.release"
+      @models={{array @model.id}}
+      class="app-card__sequence-link"
+    >
+      <b class="badge badge--version">v{{@model.sequence}}</b>
     </LinkTo>
+    <OperationStatusIndicator @status={{@model.status}} />
+  </:meta-primary>
 
-		{{#if @model.statusReport}}
-			{{#let @model.statusReport.health as |health|}}
-				<StatusBadge
-					@state={{health.healthStatus}}
-					@message={{health.healthMessage}}
-					@iconOnly={{true}}
-				/>
-			{{/let}}
-		{{/if}}
-
-    {{#if @model.url}}
-    <ExternalLink href={{@model.url}} title={{@model.url}} class="button button--primary">
-      <Pds::Icon @type="exit" class="icon" />
-    </ExternalLink>
+  <:meta-secondary>
+    <Pds::Icon
+      @type={{icon-for-component @model.component.name}}
+      class="icon app-card__component-icon"
+    />
+    {{#if @model.statusReport}}
+      <StatusReportIndicator @statusReport={{@model.statusReport}} />
     {{/if}}
-  </div>
-{{else}}
-  <li class="app-card-item">
-    <LinkTo @route="workspace.projects.project.app.release" @models={{array @model.id}}>
-      <p>
-        <b class="badge badge--version">v{{@model.sequence}}</b>
-      </p>
-      <small>
-        <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-        <span>
-          {{#if (eq @model.status.state 1)}}
-            Started {{date-format-distance-to-now @model.status.startTime.seconds }}
-          {{else}}
-            {{date-format-distance-to-now @model.status.completeTime.seconds }}
-          {{/if}}
-        </span>
-      </small>
-    </LinkTo>
-  </li>
-{{/if}}
+  </:meta-secondary>
+
+  <:actions>
+    {{#if @model.url}}
+      <ExternalLink
+        href="https://{{@model.url}}"
+        title="Visit https://{{@model.url}}"
+        class="button button--primary app-card__launch-link"
+      >
+        <Pds::Icon @type="exit" class="icon" />
+      </ExternalLink>
+    {{/if}}
+  </:actions>
+</AppCard>

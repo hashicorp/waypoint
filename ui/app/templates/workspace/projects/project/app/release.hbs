@@ -21,13 +21,7 @@
 <div class="status-row">
   <div class="item">
     {{#if @model.statusReport}}
-      {{#let @model.statusReport.health as |health|}}
-        <StatusBadge
-          @state={{health.healthStatus}}
-          @message={{health.healthMessage}}
-          @tooltipSide="right"
-        />
-      {{/let}}
+      <StatusReportIndicator @statusReport={{@model.statusReport}} />
     {{/if}}
   </div>
 
