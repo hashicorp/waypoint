@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"sync"
 
@@ -28,10 +27,9 @@ func Run(opts ...Option) error {
 		cfg.Context = context.Background()
 	}
 	if cfg.Logger == nil {
-		cfg.Logger = hclog.L()
+		cfg.Logger = hclog.L().Named("server")
 	}
-
-	log := cfg.Logger.Named("server")
+	log := cfg.Logger
 
 	grpcServer, err := newGrpcServer(&cfg)
 	if err != nil {
@@ -73,11 +71,13 @@ func Run(opts ...Option) error {
 		if httpEnabled {
 			httpServer.close()
 		}
-		return fmt.Errorf("failed running the grpc server: %w", err)
+		log.Error("failed running the grpc server", "err", err)
+		return err
 	case err := <-httpErrs:
 		// If the HTTP server errored, we can assume it's closed and shut down the grpc server
 		grpcServer.close()
-		return fmt.Errorf("failed running the http server: %w", err)
+		log.Error("failed running the http server", "err", err)
+		return err
 	case <-cfg.Context.Done():
 		// Received an external shutdown signal, and should close everything.
 		// NOTE: must close HTTP server before GRPC server.
