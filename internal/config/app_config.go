@@ -130,10 +130,9 @@ func (c *genericConfig) envVars() ([]*pb.ConfigVar, error) {
 
 				// We have to escape any HCL we find in the string so that we don't
 				// evaluate it down-stream.
-				// First, we need to check if the value can be evaluated as a string,
-				// since we allow `null` defaults for input variables, and a user
-				// may forget to provide a value to an input variable that they
-				// reference inside of app config
+				// First, we need to check if the value is not null, since we allow
+				// `null` defaults for input variables, and a user may forget to
+				// provide a value to an input variable
 				if val.IsNull() {
 					return nil, fmt.Errorf("could not evaluate %q in app config with `null` value", newVar.Name)
 				}
