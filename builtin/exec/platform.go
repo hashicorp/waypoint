@@ -290,7 +290,7 @@ template. The top of the documentation there has details on the format.
 
 The following template values are always available:
 
-  - ".Env" (map<string>string) - These are environment variables that should
+  - ".Env" (map<string\>string) - These are environment variables that should
     be set on the deployed workload. These enable the entrypoint to work so
     you should set these if able.
 
