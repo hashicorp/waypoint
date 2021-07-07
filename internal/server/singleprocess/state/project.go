@@ -567,10 +567,10 @@ type projectIndexRecord struct {
 	// Application Polling is used for generating a status report on the current
 	// health of the application in a project.
 
-	// ApplPoll is true if this projects applications has polling enabled.
+	// AppPoll is true if this projects applications has polling enabled.
 	AppPoll bool
-	// ApplPollInterval is the interval currently set between poll operations.
-	AppPollInterval time.Duration // Default to 30s??
+	// AppPollInterval is the interval currently set between poll operations.
+	AppPollInterval time.Duration
 	// We separate project and application polling vars because project polling
 	// is used for updating the project, and application polling is used for
 	// generating status reports. So there are two separate Next and Last Poll
