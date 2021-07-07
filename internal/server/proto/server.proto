@@ -332,7 +332,7 @@ message Variable {
   string name = 1;
 
   // value stores one of three simple types (string, number, bool) as their
-  // matching protobuf format, or any complex hcl type as a raw string. Values 
+  // matching protobuf format, or any complex hcl type as a raw string. Values
   // taken from cli -var arguments and env vars are all processed as strings;
   // if a complex type is assigned from one of these sources, it is checked
   // for being assigned a complex type in the variable evaluation stage.
@@ -340,7 +340,7 @@ message Variable {
     string str = 2;
     bool bool = 9;
     int64 num = 10;
-    // hcl stores values of any complex type in a raw string format, and 
+    // hcl stores values of any complex type in a raw string format, and
     // converts it to hcl when we evaluate variables. This is used when
     // loading values from a file or from the server/UI.
     string hcl = 3;
@@ -794,6 +794,67 @@ message UpdateUserResponse {
 
 message DeleteUserRequest {
   Ref.User user = 1;
+}
+
+/********************************************************************
+* Auth Methods
+********************************************************************/
+
+// AuthMethod is a mechanism for authenticating to the Waypoint server.
+// An AuthMethod deals with AuthN only: it provides identity and trades
+// that for a Waypoint token.
+message AuthMethod {
+  // unique name for this auth method
+  string name = 1;
+
+  // human friendly name for display and description. This has no impact
+  // internally and is only helpful for the UI and API.
+  string display_name = 2;
+  string description = 3;
+
+  // The method to configure.
+  oneof method {
+    // OIDC uses OpenID Connect for auth. OIDC is supported by most
+    // major identity providers.
+    OIDC oidc = 20;
+  }
+
+  message OIDC {
+    // client ID and secret provided by OIDC provider.
+    string client_id = 1;
+    string client_secret = 2;
+
+    // scopes is a list of scopes to request from the provider
+    repeated string scopes = 3;
+
+    // List of valid audience values to accept login. This can be
+    // used to restrict only certain folks in a shared OIDC domain.
+    repeated string auds = 4;
+
+    // List of allowed redirect URIs, since our redirect URIs
+    // are somewhat dynamic (UI for web UI, localhost server for
+    // CLI, etc.). This protects against attack since this is not
+    // generally recommended.
+    repeated string allowed_redirect_uris = 5;
+
+    // Discovery URL endpoint to get other information.
+    // Required by OIDC.
+    string discovery_url = 6;
+
+    // Optional CA certificate chain to validate the discovery URL.
+    // Multiple CA certificates can be specified to support easier
+    // rotation.
+    repeated string discovery_ca_pem = 7;
+
+    // If the OIDC provider doesn't implement a discovery URL,
+    // then these must be manually specified. These are specifically
+    // for GitHub -- mainly -- since they basically implement OIDC
+    // but without a discovery URL. If a user provides these, we can
+    // do GitHub auth. See this example in other software.
+    string authorization_endpoint = 8;
+    string token_endpoint = 9;
+    string userinfo_endpoint = 10;
+  }
 }
 
 /********************************************************************
