@@ -350,9 +350,9 @@ func (s *State) projectDelete(
 // projectIndexSet writes an index record for a single project.
 func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) error {
 	record := &projectIndexRecord{
-		Id:       string(id),
-		Poll:     false, // being explicit that we want to default poll to false
-		ApplPoll: true,  // application polling off by default until a deployment or release happens
+		Id:      string(id),
+		Poll:    false, // being explicit that we want to default poll to false
+		AppPoll: true,  // application polling off by default until a deployment or release happens
 	}
 
 	// This entire if block sets up polling tracking for the project. In the
@@ -422,9 +422,9 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 			// we set the next polling time to now cause we want to poll ASAP.
 			// If we're updating an app without changing the poll settings,
 			// the next block will ensure we have the next poll time retained.
-			record.ApplPoll = true
-			record.ApplNextPoll = time.Now()
-			record.ApplPollInterval = interval
+			record.AppPoll = true
+			record.AppNextPoll = time.Now()
+			record.AppPollInterval = interval
 
 			// If there is a previous value with a last poll time, then we
 			// update the next poll time to use our new interval.
@@ -442,9 +442,9 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 				// If we have a last poll time, then set the next poll time.
 				// This also ensures that if we're updating an app w/o changing
 				// poll settings, that the previous settings are retained.
-				if !recordOld.ApplLastPoll.IsZero() {
-					record.ApplLastPoll = recordOld.ApplLastPoll
-					record.ApplNextPoll = record.ApplLastPoll.Add(interval)
+				if !recordOld.AppLastPoll.IsZero() {
+					record.AppLastPoll = recordOld.AppLastPoll
+					record.AppNextPoll = record.AppLastPoll.Add(interval)
 				}
 			}
 		}
@@ -510,18 +510,18 @@ func projectIndexSchema() *memdb.TableSchema {
 				},
 			},
 
-			applIndexNextPollIndexName: {
-				Name:         applIndexNextPollIndexName,
+			appIndexNextPollIndexName: {
+				Name:         appIndexNextPollIndexName,
 				AllowMissing: true,
 				Unique:       false,
 				Indexer: &memdb.CompoundIndex{
 					Indexes: []memdb.Indexer{
 						&memdb.BoolFieldIndex{
-							Field: "ApplPoll",
+							Field: "AppPoll",
 						},
 
 						&IndexTime{
-							Field: "ApplNextPoll",
+							Field: "AppNextPoll",
 							Asc:   true,
 						},
 					},
@@ -535,7 +535,7 @@ const (
 	projectIndexTableName         = "project-index"
 	projectIndexIdIndexName       = "id"
 	projectIndexNextPollIndexName = "next-poll"
-	applIndexNextPollIndexName    = "appl-next-poll"
+	appIndexNextPollIndexName     = "app-next-poll"
 
 	projectWaypointHclMaxSize = 5 * 1024 // 5 MB
 
@@ -568,15 +568,15 @@ type projectIndexRecord struct {
 	// health of the application in a project.
 
 	// ApplPoll is true if this projects applications has polling enabled.
-	ApplPoll bool
+	AppPoll bool
 	// ApplPollInterval is the interval currently set between poll operations.
-	ApplPollInterval time.Duration // Default to 30s??
+	AppPollInterval time.Duration // Default to 30s??
 	// We separate project and application polling vars because project polling
 	// is used for updating the project, and application polling is used for
 	// generating status reports. So there are two separate Next and Last Poll
 	// vars for projects and applications
-	ApplLastPoll time.Time
-	ApplNextPoll time.Time
+	AppLastPoll time.Time
+	AppNextPoll time.Time
 }
 
 // Copy should be called prior to any modifications to an existing record.

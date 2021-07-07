@@ -213,7 +213,7 @@ func (s *State) appPollPeek(
 	// to get a valid watch channel on these fields.
 	iter, err := memTxn.Get(
 		projectIndexTableName,
-		applIndexNextPollIndexName,
+		appIndexNextPollIndexName,
 		true,            // polling enabled
 		time.Unix(0, 0), // lowest next poll time
 	)
@@ -225,7 +225,7 @@ func (s *State) appPollPeek(
 	// Get the projects app with the lowest "next poll" time.
 	iter, err = memTxn.LowerBound(
 		projectIndexTableName,
-		applIndexNextPollIndexName,
+		appIndexNextPollIndexName,
 		true,            // polling enabled
 		time.Unix(0, 0), // lowest next poll time
 	)
@@ -240,7 +240,7 @@ func (s *State) appPollPeek(
 	}
 
 	rec := raw.(*projectIndexRecord)
-	if rec.ApplNextPoll.IsZero() {
+	if rec.AppNextPoll.IsZero() {
 		// This happens if this applications poller hasn't been switched on
 		return nil, time.Time{}, nil
 	}
@@ -257,7 +257,7 @@ func (s *State) appPollPeek(
 
 	// TODO(briancain): what about projects that define multiple apps?
 	// For now stick to 1 app to get it working
-	return result.Applications[0], rec.ApplNextPoll, err
+	return result.Applications[0], rec.AppNextPoll, err
 }
 
 func (s *State) appPollComplete(
@@ -290,7 +290,7 @@ func (s *State) appPollComplete(
 	}
 
 	record := raw.(*projectIndexRecord)
-	if !record.ApplPoll {
+	if !record.AppPoll {
 		// If this project doesn't have polling enabled, then do nothing.
 		// This could happen if a project had polling when Peek was called,
 		// then between Peek and Complete, polling was disabled.
@@ -298,8 +298,8 @@ func (s *State) appPollComplete(
 	}
 
 	record = record.Copy()
-	record.ApplLastPoll = t
-	record.ApplNextPoll = t.Add(record.ApplPollInterval)
+	record.AppLastPoll = t
+	record.AppNextPoll = t.Add(record.AppPollInterval)
 	if err := memTxn.Insert(projectIndexTableName, record); err != nil {
 		return err
 	}
