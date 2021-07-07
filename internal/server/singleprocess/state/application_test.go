@@ -5,10 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	/*
-		"google.golang.org/grpc/codes"
-		"google.golang.org/grpc/status"
-	*/
 
 	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
