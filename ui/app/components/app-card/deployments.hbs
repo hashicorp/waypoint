@@ -6,25 +6,14 @@
     <Card::Header>
       <h4>
         <Pds::Icon @type="upload" class="icon" />
-        <span>Latest deployments</span>
+        <span>Latest deployment</span>
       </h4>
       <LinkTo @route="workspace.projects.project.app.deployments">
         View all deployments
       </LinkTo>
     </Card::Header>
 
-    <AppCard::Deployment @model={{@deployments.[0] }} @isLatest="true" />
-
-    {{#if (gt @deployments.length '1')}}
-      <ul class="app-card-items">
-        {{#if @deployments.[1]}}
-          <AppCard::Deployment @model={{@deployments.[1]}} />
-        {{/if}}
-        {{#if @deployments.[2]}}
-          <AppCard::Deployment @model={{@deployments.[2]}} />
-        {{/if}}
-      </ul>
-    {{/if}}
+    <AppCard::Deployment @model={{@deployments.[0] }} />
   {{else}}
     <p>
       <Pds::Icon @type="upload" class="icon" />

@@ -1,0 +1,86 @@
+.status-report-indicator {
+  display: inline-flex;
+  align-items: center;
+  cursor: default;
+
+  &:focus {
+    box-shadow: 0 0 0 3px var(--pds-focus-color);
+    outline: none;
+  }
+
+  &__badge {
+    width: scale.$sm--2;
+    height: scale.$sm--2;
+    border-radius: 50%;
+    background: color.$black;
+    margin-right: scale.$sm--3;
+  }
+
+  &__label {
+    @include Typography.Interface(S);
+  }
+
+  // Status: Unknown
+
+  &--unknown &__badge {
+    background: color.$ui-gray-300;
+  }
+  &--unknown &__label {
+    color: rgb(var(--text-muted));
+  }
+
+  // Status: Alive
+
+  &--alive &__badge {
+    background: color.$green-500;
+    animation: pulse 2s infinite;
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+  &--alive &__label {
+    color: color.$green-700;
+    @media (prefers-color-scheme: dark) {
+      color: color.$green-400;
+    }
+  }
+
+  // Status: Ready
+
+  &--ready &__badge {
+    background: color.$green-500;
+  }
+  &--ready &__label {
+    color: color.$green-700;
+    @media (prefers-color-scheme: dark) {
+      color: color.$green-400;
+    }
+  }
+
+  // Status: Down
+
+  &--down &__badge {
+    background: color.$red-500;
+    @media (prefers-color-scheme: dark) {
+      background: color.$red-400;
+    }
+  }
+  &--down &__label {
+    color: color.$red-600;
+    @media (prefers-color-scheme: dark) {
+      color: color.$red-400;
+    }
+  }
+
+  // Status: Partial
+
+  &--partial &__badge {
+    background: color.$orange-500;
+  }
+  &--partial &__label {
+    color: color.$orange-700;
+    @media (prefers-color-scheme: dark) {
+      color: color.$orange-500;
+    }
+  }
+}

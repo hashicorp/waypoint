@@ -78,6 +78,7 @@
     "ember-intl": "^5.5.0",
     "ember-load-initializers": "^2.1.2",
     "ember-maybe-import-regenerator": "^0.1.6",
+    "ember-named-blocks-polyfill": "^0.2.4",
     "ember-page-title": "^6.0.3",
     "ember-qunit": "^5.1.1",
     "ember-resolver": "^8.0.2",

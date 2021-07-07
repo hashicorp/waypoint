@@ -1,64 +1,36 @@
-{{#if @isLatest}}
-  <div class="app-card-item app-card-item--latest">
-    <LinkTo @route="workspace.projects.project.app.build" @models={{array @model.id}}>
-      <p>
-        <b class="badge badge--version">v{{@model.sequence}}</b>
-        {{#if (eq @model.status.state 1)}}
-        <b class="badge">
-          <Pds::Icon @type="clock-outline" class="icon" />
-        </b>
-        {{else if (eq @model.status.state 2)}}
-        <b class="badge badge--success">
-          <Pds::Icon @type="check-plain" class="icon" />
-        </b>
-        {{else if (eq @model.status.state 3)}}
-        <b class="badge badge--error">
-          <Pds::Icon @type="alert-triangle" class="icon" />
-        </b>
-        {{/if}}
-      </p>
-      <small>
-        <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-        <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
-          <b>{{component-name @model.component.name}} </b>
-          {{#if (eq @model.status.state 1)}}
-            (Started {{date-format-distance-to-now @model.status.startTime.seconds }})
-          {{else}}
-            {{date-format-distance-to-now @model.status.completeTime.seconds }}
-          {{/if}}
-        </span>
-      </small>
+<AppCard
+  data-test-app-card-build={{@model.sequence}}
+>
+  <:meta-primary>
+    <LinkTo
+      @route="workspace.projects.project.app.build"
+      @models={{array @model.id}}
+      class="app-card__sequence-link"
+    >
+      <b class="badge badge--version">v{{@model.sequence}}</b>
     </LinkTo>
-  </div>
-{{else}}
-  <li class="app-card-item">
-    <LinkTo @route="workspace.projects.project.app.build" @models={{array @model.id}}>
-      <p>
-        <b class="badge badge--version">v{{@model.sequence}}</b>
-        {{#if (eq @model.status.state 1)}}
-          <b class="badge">
-            <Pds::Icon @type="clock-outline" class="icon" />
-          </b>
-        {{else if (eq @model.status.state 2)}}
-          <b class="badge badge--success">
-            <Pds::Icon @type="check-plain" class="icon" />
-          </b>
-        {{else if (eq @model.status.state 3)}}
-          <b class="badge badge--error">
-            <Pds::Icon @type="alert-triangle" class="icon" />
-          </b>
-        {{/if}}
-      </p>
-      <small>
-        <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-        <span>
-          {{#if (eq @model.status.state 1)}}
-            Started {{date-format-distance-to-now @model.status.startTime.seconds }}
-          {{else}}
-            {{date-format-distance-to-now @model.status.completeTime.seconds }}
-          {{/if}}
-        </span>
-      </small>
-    </LinkTo>
-  </li>
-{{/if}}
+    <OperationStatusIndicator @status={{@model.status}} />
+  </:meta-primary>
+
+  <:meta-secondary>
+    <Pds::Icon
+      @type={{icon-for-component @model.component.name}}
+      class="icon app-card__component-icon"
+    />
+
+    <span>
+      {{#if (eq @model.status.state 2)}}
+        Built with
+        <b>{{component-name @model.component.name}}</b>
+        in
+        {{date-format-distance @model.status.startTime.seconds @model.status.completeTime.seconds }}
+      {{else if (eq @model.status.state 3)}}
+        Failed to build with
+        <b>{{component-name @model.component.name}}</b>
+      {{else}}
+        Building with
+        <b>{{component-name @model.component.name}}</b>
+      {{/if}}
+    </span>
+  </:meta-secondary>
+</AppCard>

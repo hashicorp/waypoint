@@ -1,0 +1,39 @@
+{{!
+  ## Usage
+
+  <AppCard class="my-custom-class">
+    <:meta-primary>
+      v5
+    </:meta-primary>
+    <:meta-secondary>
+      Starting…
+    </:meta-secondary>
+    <:actions>
+      <a href="...">Visit</a>
+    </:actions>
+  </AppCard>
+}}
+
+<div
+  data-test-app-card
+  class="app-card"
+  ...attributes
+>
+
+  <div class="app-card__meta">
+
+    <div class="app-card__meta__primary">
+      {{yield to="meta-primary"}}
+    </div>
+
+    <div class="app-card__meta__secondary">
+      {{yield to="meta-secondary"}}
+    </div>
+
+  </div>
+
+  <div class="app-card__actions">
+    {{yield to="actions"}}
+  </div>
+
+</div>
