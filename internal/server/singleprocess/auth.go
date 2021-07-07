@@ -23,9 +23,13 @@ import (
 )
 
 const (
-	// The user that all tokens are encoded with. The server has a single server model
-	// so all actions are mapped to this user.
+	// The username of the initial user created during bootstrapping. This
+	// also is the user that Waypoint server versions prior to 0.5 used with
+	// their token, so we use this to detect that scenario as well.
 	DefaultUser = "waypoint"
+
+	// The ID of the initial user created during bootstrapping.
+	DefaultUserId = "00000000000000000000000001"
 
 	// The identifier for the default key to use to generating tokens.
 	DefaultKeyId = "k1"
@@ -57,44 +61,99 @@ var (
 	}
 )
 
+type userKey struct{}
+
+// userWithContext inserts the user value u into the context. This can
+// be extracted with userFromContext.
+func userWithContext(ctx context.Context, u *pb.User) context.Context {
+	return context.WithValue(ctx, userKey{}, u)
+}
+
+// userFromContext returns the authenticated user in the request context.
+// This will return nil if the user is not authenticated.
+func (s *service) userFromContext(ctx context.Context) *pb.User {
+	value, ok := ctx.Value(userKey{}).(*pb.User)
+	if !ok && s.superuser {
+		value = &pb.User{Id: DefaultUserId, Username: DefaultUser}
+	}
+
+	return value
+}
+
 // Authenticate implements the server.AuthChecker interface.
 //
 // This checks if the given endpoint should be allowed. This is called during a
 // gRPC request. Effects is some information about the endpoint, at present these are
 // either ["readonly"] or ["mutable"] to indicate if the endpoint will be only reading
 // data or also mutating it.
-func (s *service) Authenticate(ctx context.Context, token, endpoint string, effects []string) error {
+func (s *service) Authenticate(
+	ctx context.Context, token, endpoint string, effects []string,
+) (context.Context, error) {
 	// Ignore unauthenticated endpoints
 	if _, ok := unauthenticatedEndpoints[endpoint]; ok {
-		return nil
+		return nil, nil
 	}
 
 	if token == "" {
-		return status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
+		return nil, status.Errorf(codes.Unauthenticated, "Authorization token is not supplied")
 	}
 
 	_, body, err := s.decodeToken(token)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Token must be a login token to be used for auth
 	login, ok := body.Kind.(*pb.Token_Login_)
 	if !ok || login == nil {
-		return ErrInvalidToken
+		return nil, ErrInvalidToken
 	}
 
 	// If this is an entrypoint token then we can only access entrypoint APIs.
 	if login.Login.Entrypoint != nil && !strings.HasPrefix(endpoint, "Entrypoint") {
-		return status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
+		return nil, status.Errorf(codes.Unauthenticated, "Unauthorized endpoint")
 	}
 
-	// TODO When we have a user model, this is where you'll check for the user.
-	if login.Login.UserId != DefaultUser {
-		return ErrInvalidToken
+	// Look up the user that this token is for.
+	user, err := s.state.UserGet(&pb.Ref_User{
+		Ref: &pb.Ref_User_Id{
+			Id: &pb.Ref_UserId{Id: login.Login.UserId},
+		},
+	})
+	if status.Code(err) == codes.NotFound {
+		// If we are a legacy token logging into a WP 0.5+ server for the
+		// first time, we need to create the initial Waypoint user. This is
+		// purely a backwards compatibility case that we should drop at some
+		// point.
+		if !body.UnusedLogin || login.Login.UserId != DefaultUserId {
+			return nil, status.Errorf(codes.Unauthenticated,
+				"Pre-Waypoint 0.5 token must be for the default user. This should always "+
+					"be the case so the token is likely corrupt.")
+		}
+
+		// Bootstrap our user
+		if _, err := s.bootstrapUser(); err != nil {
+			// If we're already bootstrapped, give a slightly better error.
+			if status.Code(err) == codes.PermissionDenied {
+				return nil, status.Errorf(codes.Unauthenticated,
+					"Pre-Waypoint 0.5 token no longer accepted once the bootstrap user is deleted")
+			}
+
+			return nil, err
+		}
+
+		// Look up the user again
+		user, err = s.state.UserGet(&pb.Ref_User{
+			Ref: &pb.Ref_User_Id{
+				Id: &pb.Ref_UserId{Id: login.Login.UserId},
+			},
+		})
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return userWithContext(ctx, user), nil
 }
 
 // decodeToken parses the string and validates it as a valid token. If the token
@@ -158,7 +217,7 @@ func (s *service) decodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 	// fields if we have a Kind set, since this was introduced in WP 0.5.
 	if body.Kind == nil {
 		login := &pb.Token_Login{
-			UserId:     DefaultUser,
+			UserId:     DefaultUserId,
 			Entrypoint: body.UnusedEntrypoint,
 		}
 
@@ -230,10 +289,8 @@ func (s *service) encodeToken(keyId string, metadata map[string]string, body *pb
 func (s *service) GenerateLoginToken(
 	ctx context.Context, req *pb.LoginTokenRequest,
 ) (*pb.NewTokenResponse, error) {
-	// We don't currently have any other users.
-	if req.User != nil {
-		return nil, status.Errorf(codes.PermissionDenied, "cannot create token for other users")
-	}
+	// Get our user, that's what we log in as
+	currentUser := s.userFromContext(ctx)
 
 	// If we have a duration set, set the expiry
 	var dur time.Duration
@@ -246,7 +303,17 @@ func (s *service) GenerateLoginToken(
 	}
 
 	login := &pb.Token_Login{
-		UserId: DefaultUser,
+		UserId: currentUser.Id,
+	}
+
+	// If we're authing as another user, we have to get that user
+	if req.User != nil {
+		user, err := s.state.UserGet(req.User)
+		if err != nil {
+			return nil, err
+		}
+
+		login.UserId = user.Id
 	}
 
 	token, err := s.newToken(dur, DefaultKeyId, nil, &pb.Token{
@@ -293,27 +360,27 @@ func (s *service) newToken(
 func (s *service) GenerateInviteToken(
 	ctx context.Context, req *pb.InviteTokenRequest,
 ) (*pb.NewTokenResponse, error) {
+	currentUser := s.userFromContext(ctx)
+
 	// Old behavior, if we have the entrypoint set, we convert that to
 	// a request in the new (WP 0.5+) style. We do this right away so the rest of the
 	// request can assume the new style.
 	if ep := req.UnusedEntrypoint; ep != nil {
 		req.Signup = nil // not a signup token
 		req.Login = &pb.Token_Login{
-			UserId:     DefaultUser,
+			UserId:     DefaultUserId,
 			Entrypoint: ep,
 		}
 	}
 
 	if req.Login == nil {
 		req.Login = &pb.Token_Login{
-			// TODO(mitchellh): when we have a login system, set this
-			// to the currently logged in user.
-			UserId: DefaultUser,
+			UserId: currentUser.Id,
 		}
 	}
 
 	// We don't currently have any other users.
-	if req.Login.UserId != DefaultUser {
+	if req.Login.UserId != currentUser.Id {
 		return nil, status.Errorf(codes.PermissionDenied, "cannot create invite for other users")
 	}
 
@@ -322,9 +389,11 @@ func (s *service) GenerateInviteToken(
 		return nil, err
 	}
 
+	// TODO(mitchellh): when we have a policy system, we need to ensure only
+	// management tokens can signup other users.
+
 	invite := &pb.Token_Invite{
-		// TODO(mitchellh): when we have a user system, set this.
-		FromUserId: "",
+		FromUserId: currentUser.Id,
 		Login:      req.Login,
 		Signup:     req.Signup,
 	}
@@ -352,13 +421,19 @@ func (s *service) ConvertInviteToken(ctx context.Context, req *pb.ConvertInviteT
 	}
 	invite := kind.Invite
 
+	// If we have a signup invite, then create a new user.
+	if signup := invite.Signup; signup != nil {
+		user := &pb.User{Username: signup.InitialUsername}
+		if err := s.state.UserPut(user); err != nil {
+			return nil, err
+		}
+
+		// Setup the login information for the new user
+		invite.Login.UserId = user.Id
+	}
+
 	// Our login token is just the login token on the invite.
 	login := invite.Login
-
-	// If we have a signup invite, then error for now until we have an account system.
-	if invite.Signup != nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "signup tokens not allowed")
-	}
 
 	token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{Login: login},
@@ -376,10 +451,17 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 		return nil, status.Errorf(codes.PermissionDenied, "server is already bootstrapped")
 	}
 
+	// Create a default user
+	user, err := s.bootstrapUser()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new token pointed to our existing user
 	token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{
 			Login: &pb.Token_Login{
-				UserId: DefaultUser,
+				UserId: user.Id,
 			},
 		},
 	})
@@ -388,6 +470,26 @@ func (s *service) BootstrapToken(ctx context.Context, req *empty.Empty) (*pb.New
 	}
 
 	return &pb.NewTokenResponse{Token: token}, nil
+}
+
+// bootstrapUser creates the initial default user. This will always attempt
+// to create the user so gating logic to prevent that is up to the caller.
+func (s *service) bootstrapUser() (*pb.User, error) {
+	empty, err := s.state.UserEmpty()
+	if err != nil {
+		return nil, err
+	}
+	if !empty {
+		return nil, status.Errorf(codes.PermissionDenied, "server is already bootstrapped")
+	}
+
+	// Create a default user
+	user := &pb.User{
+		Id:       DefaultUserId,
+		Username: DefaultUser,
+	}
+
+	return user, s.state.UserPut(user)
 }
 
 // Bootstrapped returns true if the server is already bootstrapped. If

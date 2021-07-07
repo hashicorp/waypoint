@@ -168,6 +168,29 @@ func (_m *WaypointServer) DeleteHostname(_a0 context.Context, _a1 *gen.DeleteHos
 	return r0, r1
 }
 
+// DeleteUser provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DeleteUser(_a0 context.Context, _a1 *gen.DeleteUserRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteUserRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteUserRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // EntrypointConfig provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) EntrypointConfig(_a0 *gen.EntrypointConfigRequest, _a1 gen.Waypoint_EntrypointConfigServer) error {
 	ret := _m.Called(_a0, _a1)
@@ -652,6 +675,29 @@ func (_m *WaypointServer) GetStatusReport(_a0 context.Context, _a1 *gen.GetStatu
 	return r0, r1
 }
 
+// GetUser provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetUser(_a0 context.Context, _a1 *gen.GetUserRequest) (*gen.GetUserResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetUserResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetUserRequest) *gen.GetUserResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetUserResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetUserRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetVersionInfo provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetVersionInfo(_a0 context.Context, _a1 *emptypb.Empty) (*gen.GetVersionInfoResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -882,6 +928,29 @@ func (_m *WaypointServer) ListStatusReports(_a0 context.Context, _a1 *gen.ListSt
 	return r0, r1
 }
 
+// ListUsers provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListUsers(_a0 context.Context, _a1 *emptypb.Empty) (*gen.ListUsersResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListUsersResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.ListUsersResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListUsersResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListWorkspaces provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ListWorkspaces(_a0 context.Context, _a1 *gen.ListWorkspacesRequest) (*gen.ListWorkspacesResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -1074,6 +1143,29 @@ func (_m *WaypointServer) StartExecStream(_a0 gen.Waypoint_StartExecStreamServer
 	}
 
 	return r0
+}
+
+// UpdateUser provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpdateUser(_a0 context.Context, _a1 *gen.UpdateUserRequest) (*gen.UpdateUserResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpdateUserResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpdateUserRequest) *gen.UpdateUserResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpdateUserResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpdateUserRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // UpsertApplication provides a mock function with given fields: _a0, _a1

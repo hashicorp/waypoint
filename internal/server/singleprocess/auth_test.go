@@ -24,6 +24,9 @@ func TestServiceAuth(t *testing.T) {
 	s := impl.(*service)
 	ctx := context.Background()
 
+	// "Log in" a default user
+	ctx = userWithContext(ctx, &pb.User{Id: DefaultUserId})
+
 	// Bootstrap
 	var bootstrapToken string
 	{
@@ -34,18 +37,22 @@ func TestServiceAuth(t *testing.T) {
 	}
 
 	t.Run("authenticate with gibberish", func(t *testing.T) {
-		err := s.Authenticate(context.Background(), "hello!", "test", nil)
+		_, err := s.Authenticate(context.Background(), "hello!", "test", nil)
 		require.Error(t, err)
 	})
 
 	t.Run("authenticate with gibberish to unauthenticated endpoint", func(t *testing.T) {
-		err := s.Authenticate(context.Background(), "hello!", "GetVersionInfo", nil)
+		_, err := s.Authenticate(context.Background(), "hello!", "GetVersionInfo", nil)
 		require.NoError(t, err)
 	})
 
 	t.Run("authenticate with bootstrap token", func(t *testing.T) {
-		err := s.Authenticate(context.Background(), bootstrapToken, "test", nil)
+		ctx, err := s.Authenticate(context.Background(), bootstrapToken, "test", nil)
 		require.NoError(t, err)
+
+		user := s.userFromContext(ctx)
+		require.NotNil(t, user)
+		require.Equal(t, DefaultUserId, user.Id)
 	})
 
 	t.Run("create and validate a new token", func(t *testing.T) {
@@ -63,10 +70,10 @@ func TestServiceAuth(t *testing.T) {
 		require.NoError(err)
 		kind, ok := body.Kind.(*pb.Token_Login_)
 		assert.True(t, ok)
-		assert.Equal(t, DefaultUser, kind.Login.UserId)
+		assert.Equal(t, DefaultUserId, kind.Login.UserId)
 
 		// Verify authing works
-		err = s.Authenticate(context.Background(), token, "test", nil)
+		_, err = s.Authenticate(context.Background(), token, "test", nil)
 		require.NoError(err)
 
 		// Now corrupt the token and check that validation fails
@@ -83,7 +90,7 @@ func TestServiceAuth(t *testing.T) {
 		resp, err := s.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
 			Duration: "5m",
 			Login: &pb.Token_Login{
-				UserId: DefaultUser,
+				UserId: DefaultUserId,
 			},
 		})
 		require.NoError(err)
@@ -96,8 +103,62 @@ func TestServiceAuth(t *testing.T) {
 		token := resp.Token
 
 		{
-			err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
+			_, err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
 			require.NoError(err)
+		}
+	})
+
+	t.Run("exchange an invite token for new user", func(t *testing.T) {
+		require := require.New(t)
+
+		// Get our invite token for the entrypoint
+		resp, err := s.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
+			Duration: "5m",
+			Login: &pb.Token_Login{
+				UserId: DefaultUserId,
+			},
+			Signup: &pb.Token_Invite_Signup{
+				InitialUsername: "alice",
+			},
+		})
+		require.NoError(err)
+
+		// Exchange it
+		resp, err = s.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
+			Token: resp.Token,
+		})
+		require.NoError(err)
+		token := resp.Token
+
+		// Auth
+		ctx, err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
+		require.NoError(err)
+		user := s.userFromContext(ctx)
+		require.NotNil(user)
+		require.NotEqual(DefaultUserId, user.Id)
+		require.Equal("alice", user.Username)
+
+		// Generate a login token for that user using the superuser
+		{
+			resp, err := s.GenerateLoginToken(ctx, &pb.LoginTokenRequest{
+				User: &pb.Ref_User{
+					Ref: &pb.Ref_User_Username{
+						Username: &pb.Ref_UserUsername{
+							Username: "alice",
+						},
+					},
+				},
+			})
+			require.NoError(err)
+			token := resp.Token
+
+			// Verify authing works
+			ctx, err := s.Authenticate(context.Background(), token, "test", nil)
+			require.NoError(err)
+			user := s.userFromContext(ctx)
+			require.NotNil(t, user)
+			require.NotEqual(t, DefaultUserId, user.Id)
+			require.Equal("alice", user.Username)
 		}
 	})
 
@@ -108,7 +169,7 @@ func TestServiceAuth(t *testing.T) {
 		resp, err := s.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
 			Duration: "5m",
 			Login: &pb.Token_Login{
-				UserId:     DefaultUser,
+				UserId:     DefaultUserId,
 				Entrypoint: &pb.Token_Entrypoint{DeploymentId: "A"},
 			},
 		})
@@ -122,12 +183,12 @@ func TestServiceAuth(t *testing.T) {
 		token := resp.Token
 
 		{
-			err := s.Authenticate(context.Background(), token, "EntrypointConfig", nil)
+			_, err := s.Authenticate(context.Background(), token, "EntrypointConfig", nil)
 			require.NoError(err)
 		}
 
 		{
-			err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
+			_, err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
 			require.Error(err)
 		}
 	})
@@ -150,12 +211,12 @@ func TestServiceAuth(t *testing.T) {
 		token := resp.Token
 
 		{
-			err := s.Authenticate(context.Background(), token, "EntrypointConfig", nil)
+			_, err := s.Authenticate(context.Background(), token, "EntrypointConfig", nil)
 			require.NoError(err)
 		}
 
 		{
-			err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
+			_, err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
 			require.Error(err)
 		}
 	})
@@ -238,4 +299,16 @@ func TestServiceDecodeToken(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(decodeResp.Token)
 	require.NotNil(decodeResp.Transport)
+}
+
+func TestServiceAuth_userSuperuserForced(t *testing.T) {
+	// Create our server
+	impl, err := New(WithDB(testDB(t)), WithSuperuser())
+	require.NoError(t, err)
+	s := impl.(*service)
+	ctx := context.Background()
+
+	user := s.userFromContext(ctx)
+	require.NotNil(t, user)
+	require.Equal(t, DefaultUserId, user.Id)
 }

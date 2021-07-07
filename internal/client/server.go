@@ -101,6 +101,7 @@ func (c *Project) initLocalServer(ctx context.Context) (*grpc.ClientConn, error)
 	impl, err := singleprocess.New(
 		singleprocess.WithDB(db),
 		singleprocess.WithLogger(log.Named("singleprocess")),
+		singleprocess.WithSuperuser(), // local mode has no auth
 	)
 	if err != nil {
 		return nil, err
