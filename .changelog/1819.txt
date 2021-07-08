@@ -1,0 +1,3 @@
+```release-note:bug
+core: fix certain error scenarios causing 100% CPU usage for polling
+```

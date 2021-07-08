@@ -11,6 +11,8 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
+//go:generate mockery -case underscore -structname PollHandler -name pollHandler
+
 // pollHandler is a private interface that the server implements for polling on
 // different items such as projects or status reports.
 type pollHandler interface {
@@ -51,6 +53,12 @@ func (s *service) runPollQueuer(
 ) {
 	defer wg.Done()
 
+	// We allow nil loggers cause most funcs that take an hclog do.
+	// Use default logger in this case.
+	if funclog == nil {
+		funclog = hclog.L()
+	}
+
 	funclog.Info("starting")
 	defer funclog.Info("exiting")
 
@@ -70,7 +78,13 @@ func (s *service) runPollQueuer(
 			// the logs. We sleep for a minute because any error that happened
 			// here is probably real bad and is gonna keep happening.
 			log.Error("BUG (please report): error during poll queuer, sleeping 1 minute", "err", err)
-			time.Sleep(1 * time.Minute)
+
+			// We also exit on context done so we can just exit the goroutine.
+			select {
+			case <-time.After(1 * time.Minute):
+			case <-ctx.Done():
+			}
+
 			continue
 		}
 
@@ -126,7 +140,10 @@ func (s *service) runPollQueuer(
 		// pollItem is nil then we have no pollTime and therefore no loopCtx either.
 		// This means outcome (1) or (2) MUST happen.
 		if pollItem == nil {
-			log.Error("reached outcome (3) in poller with nil pollItem. This should not happen.")
+			log.Error("reached outcome (3) in poller with nil pollItem. " +
+				"This should not happen. This usually means there is a bug " +
+				"in the pollHandler implementation")
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
@@ -134,13 +151,17 @@ func (s *service) runPollQueuer(
 		log.Trace("queueing poll job")
 		queueJobRequest, err := handler.PollJob(log, pollItem)
 		if err != nil {
-			log.Warn("error building a poll job request", "err", err)
+			log.Warn("error building a poll job request. This should not happen "+
+				"repeatedly. If you see this in your log repeatedly, report a bug.",
+				"err", err)
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
 		resp, err := s.QueueJob(ctx, queueJobRequest)
 		if err != nil {
 			log.Warn("error queueing a poll job", "err", err)
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		log.Debug("queued polling job", "job_id", resp.JobId)
