@@ -141,7 +141,10 @@ func (s *service) runPollQueuer(
 		// pollItem is nil then we have no pollTime and therefore no loopCtx either.
 		// This means outcome (1) or (2) MUST happen.
 		if pollItem == nil {
-			log.Error("reached outcome (3) in poller with nil pollItem. This should not happen.")
+			log.Error("reached outcome (3) in poller with nil pollItem. " +
+				"This should not happen. This usually means there is a bug " +
+				"in the pollHandler implementation")
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
