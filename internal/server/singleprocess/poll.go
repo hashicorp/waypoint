@@ -50,7 +50,6 @@ func (s *service) runPollQueuer(
 	wg *sync.WaitGroup,
 	handler pollHandler,
 	funclog hclog.Logger,
-	counter *uint32,
 ) {
 	defer wg.Done()
 
