@@ -5,6 +5,7 @@ import { Project, UpsertProjectRequest, Variable } from 'waypoint-pb';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import RouterService from '@ember/routing/router-service';
+import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 
 interface ProjectSettingsArgs {
   project: Project.AsObject;
@@ -52,7 +53,10 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
   }
 
   @action
-  async saveVariableSettings(variable?: Variable.AsObject, initialVariable?: Variable.AsObject): Promise<Project.AsObject | void> {
+  async saveVariableSettings(
+    variable?: Variable.AsObject,
+    initialVariable?: Variable.AsObject
+  ): Promise<Project.AsObject | void> {
     let project = this.project;
     let ref = new Project();
     ref.setName(project.name);
@@ -66,6 +70,7 @@ export default class ProjectInputVariablesListComponent extends Component<Projec
     let varProtosList = this.variablesList.map((v: Variable.AsObject) => {
       let variable = new Variable();
       variable.setName(v.name);
+      variable.setServer(new Empty());
       if (v.hcl) {
         variable.setHcl(v.hcl);
       } else {
