@@ -400,7 +400,7 @@ func EvaluateVariables(
 
 	// check that all variables have a set value, including default of null
 	for name := range vs {
-		value, _ := iv[name]
+		value := iv[name]
 		if value == nil {
 			return nil, append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
