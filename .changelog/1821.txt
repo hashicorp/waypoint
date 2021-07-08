@@ -1,0 +1,3 @@
+```release-note:improvement
+core: git poller ignores changes outside of the configured project path
+```
