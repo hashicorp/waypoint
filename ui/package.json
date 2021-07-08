@@ -21,7 +21,8 @@
     "lint:js:fix": "eslint . --fix",
     "start": "ember serve",
     "test": "npm-run-all lint test:*",
-    "test:ember": "ember test"
+    "test:ember": "ember test",
+    "test:ember:percy": "percy exec ember test"
   },
   "devDependencies": {
     "@ember-decorators/component": "^6.1.1",

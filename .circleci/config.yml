@@ -419,7 +419,7 @@ jobs:
           at: ui
       - run:
           working_directory: ui
-          command: yarn test:ember
+          command: yarn test:ember:percy
       - store_test_results:
           path: ui/test-results
 
