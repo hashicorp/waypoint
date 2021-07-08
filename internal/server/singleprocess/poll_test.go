@@ -186,6 +186,43 @@ func TestPollQueuer_peek(t *testing.T) {
 	})
 }
 
+func TestPollQueuer_queue(t *testing.T) {
+	// If the poll item is nil, then we should repeek and not CPU saturate.
+	t.Run("poll timeout with nil item", func(t *testing.T) {
+		require := require.New(t)
+
+		var wg sync.WaitGroup
+		ctx, cancel := context.WithCancel(context.Background())
+		defer wg.Wait()
+		defer cancel()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+
+		// Create our mock handler
+		mockH := &mocks.PollHandler{}
+
+		// Return our fast poll result: ready in 1ms, but nil item
+		var counter uint32
+		mockH.On("Peek", mock.Anything, mock.Anything).
+			Return(nil, time.Now().Add(1*time.Millisecond), nil).
+			Run(func(args mock.Arguments) {
+				atomic.AddUint32(&counter, 1)
+			})
+
+		// Start
+		wg.Add(1)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+
+		// Let's just run this for awhile
+		time.Sleep(250 * time.Millisecond)
+
+		// We should only peek once
+		require.EqualValues(1, atomic.LoadUint32(&counter))
+	})
+}
+
 func TestServicePollQueue(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
