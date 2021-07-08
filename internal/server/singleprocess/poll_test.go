@@ -47,7 +47,7 @@ func TestPollQueuer_peek(t *testing.T) {
 
 		// Start
 		wg.Add(1)
-		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil)
 
 		// What we're testing here is that we eventually call Peek
 		// and that we call it a reasonable number of times. And we don't crash!
@@ -107,7 +107,7 @@ func TestPollQueuer_peek(t *testing.T) {
 
 		// Start
 		wg.Add(1)
-		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil)
 
 		// Wait for Peek to be called
 		select {
@@ -166,7 +166,7 @@ func TestPollQueuer_peek(t *testing.T) {
 
 		// Start
 		wg.Add(1)
-		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil)
 
 		// Wait for Peek to be called
 		select {
@@ -214,7 +214,7 @@ func TestPollQueuer_queue(t *testing.T) {
 
 		// Start
 		wg.Add(1)
-		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil)
 
 		// Let's just run this for awhile
 		time.Sleep(250 * time.Millisecond)
@@ -254,7 +254,7 @@ func TestPollQueuer_queue(t *testing.T) {
 
 		// Start
 		wg.Add(1)
-		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil)
 
 		// Let's just run this for awhile
 		time.Sleep(250 * time.Millisecond)
@@ -298,7 +298,7 @@ func TestPollQueuer_queue(t *testing.T) {
 
 		// Start
 		wg.Add(1)
-		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil)
 
 		// Let's just run this for awhile
 		time.Sleep(250 * time.Millisecond)

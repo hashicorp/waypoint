@@ -153,7 +153,6 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 		go s.runPollQueuer(
 			s.bgCtx, &s.bgWg, pollItem,
 			log.Named("poll_queuer").Named(pollName),
-			nil,
 		)
 	}
 
