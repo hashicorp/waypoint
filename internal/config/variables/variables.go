@@ -290,6 +290,7 @@ func EvaluateVariables(
 ) (Values, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	iv := Values{}
+
 	for v, def := range vs {
 		iv[v] = def.Default
 	}
