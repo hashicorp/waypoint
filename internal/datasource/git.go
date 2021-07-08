@@ -540,8 +540,11 @@ func (s *GitSource) changes(
 	// do in our subpath (no matter what the action is) then we detect
 	// changes.
 	for _, change := range changes {
-		if strings.HasPrefix(change.From.Name, subpath) ||
-			strings.HasPrefix(change.To.Name, subpath) {
+		// The slashes in the Git object I _think_ are always / but regardless
+		// we want to make sure our slashes match our subpath.
+		from := filepath.ToSlash(change.From.Name)
+		to := filepath.ToSlash(change.To.Name)
+		if strings.HasPrefix(from, subpath) || strings.HasPrefix(to, subpath) {
 			log.Trace("detected change", "change", change.String())
 			return true, nil
 		}
