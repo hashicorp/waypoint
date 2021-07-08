@@ -110,7 +110,7 @@ description: "%s"
 		flags.VisitSets(func(name string, set *flag.Set) {
 			// Only print a set if it contains vars
 			numVars := 0
-			set.VisitVars(func(f *flag.VarFlag) {numVars++})
+			set.VisitVars(func(f *flag.VarFlag) { numVars++ })
 			if numVars == 0 {
 				return
 			}

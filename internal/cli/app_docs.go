@@ -557,7 +557,7 @@ func (c *AppDocsCommand) builtinMDX(args []string) int {
 			// If we have a plugin.Instance then we can extract other information
 			// from this plugin. We accept pure factories too that don't return
 			// this so we type-check here.
-			cleanup := func(){}
+			cleanup := func() {}
 			if pinst, ok := raw.(*plugin.Instance); ok {
 				raw = pinst.Component
 				cleanup = pinst.Close // must cleanup during this loop to avoid instantiating all plugins simultaneously

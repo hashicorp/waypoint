@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -337,7 +338,17 @@ func (c *InstallCommand) Flags() *flag.Sets {
 			Hidden:  true,
 		})
 
-		for name, platform := range serverinstall.Platforms {
+		// Add platforms in alphabetical order. A consistent order is important for repeatable doc generation.
+		i := 0
+		sortedPlatformNames := make([]string, len(serverinstall.Platforms))
+		for name := range serverinstall.Platforms {
+			sortedPlatformNames[i] = name
+			i++
+		}
+		sort.Strings(sortedPlatformNames)
+
+		for _, name := range sortedPlatformNames {
+			platform := serverinstall.Platforms[name]
 			platformSet := set.NewSet(name + " Options")
 			platform.InstallFlags(platformSet)
 		}
