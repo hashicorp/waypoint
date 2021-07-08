@@ -14,8 +14,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
-//go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:gen/"
-
 // service implements the gRPC service for the server.
 type service struct {
 	// state is the state management interface that provides functions for
@@ -152,7 +150,11 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	// See the func docs for more info.
 	for pollName, pollItem := range pollableItems {
 		s.bgWg.Add(1)
-		go s.runPollQueuer(s.bgCtx, &s.bgWg, pollItem, log.Named("poll_queuer").Named(pollName))
+		go s.runPollQueuer(
+			s.bgCtx, &s.bgWg, pollItem,
+			log.Named("poll_queuer").Named(pollName),
+			nil,
+		)
 	}
 
 	// Start out state pruning background goroutine. This calls
