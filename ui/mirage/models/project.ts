@@ -3,7 +3,7 @@ import { Project, Ref } from 'waypoint-pb';
 
 export default Model.extend({
   applications: hasMany(),
-
+  variables: hasMany(),
   toProtobuf(): Project {
     let result = new Project();
 
@@ -16,7 +16,8 @@ export default Model.extend({
     result.setRemoteEnabled(this.remoteEnabled);
     result.setWaypointHcl(this.waypointHcl);
     result.setWaypointHclFormat(Project.Format.HCL);
-
+    let varProtosList = this.variables.models.map((a) => a.toProtobuf());
+    result.setVariablesList(varProtosList);
     return result;
   },
 

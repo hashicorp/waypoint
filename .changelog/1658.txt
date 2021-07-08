@@ -1,0 +1,3 @@
+```release-note:improvement
+ui: Add ability to add input variables in the project settings UI
+```

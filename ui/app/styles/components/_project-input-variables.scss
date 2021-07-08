@@ -1,0 +1,27 @@
+.project-input-variables-list {
+  margin-bottom: scale.$lg-1;
+  .project-input-variables--list-item {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgb(var(--border));
+    padding: scale.$sm-1;
+    &.project-input-variables--list-item__header {
+      color: rgb(var(--text-muted));
+      .project-input-variables--list-item-value {
+        font-weight: bold;
+      }
+    }
+  }
+  .project-input-variables--list-item-name {
+    width: 50%;
+    font-weight: bold;
+  }
+  .project-input-variables--list-item-value {
+    max-width: 40%;
+    margin-right: auto;
+  }
+  .pds-emptyState {
+    padding: scale.$lg-1 0;
+    text-align: center;
+  }
+}

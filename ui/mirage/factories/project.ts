@@ -14,6 +14,15 @@ export default Factory.extend({
     remoteEnabled: true,
   }),
 
+  'with-input-variables': trait({
+    name: 'with-input-variables',
+
+    afterCreate(project, server) {
+      server.createList('variable', 2, 'random-str', { project });
+      server.create('variable', 'random-hcl', { project });
+    }
+  }),
+
   // This is our primary demo trait for development mode
   'marketing-public': trait({
     name: 'marketing-public',
