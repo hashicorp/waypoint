@@ -2,15 +2,189 @@ package singleprocess
 
 import (
 	"context"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-memdb"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
+	"github.com/hashicorp/waypoint/internal/server/singleprocess/mocks"
 )
+
+func TestPollQueuer_peek(t *testing.T) {
+	// with this we're basically testing that the poller just doesn't crash
+	// if Peek returns literally nothing.
+	t.Run("zero result", func(t *testing.T) {
+		require := require.New(t)
+
+		var wg sync.WaitGroup
+		ctx, cancel := context.WithCancel(context.Background())
+		defer wg.Wait()
+		defer cancel()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+
+		// Create our mock handler
+		mockH := &mocks.PollHandler{}
+
+		// Return zero values
+		var counter uint32
+		mockH.On("Peek", mock.Anything, mock.Anything).
+			Return(nil, time.Time{}, nil).
+			Run(func(args mock.Arguments) {
+				// Count how many times we've peeked
+				atomic.AddUint32(&counter, 1)
+			})
+
+		// Start
+		wg.Add(1)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+
+		// What we're testing here is that we eventually call Peek
+		// and that we call it a reasonable number of times. And we don't crash!
+		require.Eventually(func() bool {
+			count := atomic.LoadUint32(&counter)
+			if count == 0 {
+				return false
+			}
+
+			// We should poll exactly once cause we're stuck in a wait loop
+			require.EqualValues(count, 1)
+			return true
+		}, 10*time.Second, 10*time.Millisecond)
+
+		// Roughly test we never call PollJob. If we do AFTER this, its
+		// okay, we have some other tests to verify some more. We don't
+		// need an assertion cause the mock will fail.
+		time.Sleep(100 * time.Millisecond)
+	})
+
+	// Test that if the watchset triggers while we're waiting, we re-peek
+	t.Run("watchset trigger", func(t *testing.T) {
+		require := require.New(t)
+
+		var wg sync.WaitGroup
+		ctx, cancel := context.WithCancel(context.Background())
+		defer wg.Wait()
+		defer cancel()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+
+		// Create our mock handler
+		mockH := &mocks.PollHandler{}
+
+		// On our first peek call, setup the watchset
+		wsCh := make(chan struct{})
+		peekCalled := make(chan struct{})
+		mockH.On("Peek", mock.Anything, mock.Anything).
+			Return(nil, time.Time{}, nil).
+			Run(func(args mock.Arguments) {
+				defer close(peekCalled)
+				ws := args.Get(1).(memdb.WatchSet)
+				ws.Add(wsCh)
+			}).
+			Once()
+
+		// On our second peek call, return nothing
+		peek2Called := make(chan struct{})
+		mockH.On("Peek", mock.Anything, mock.Anything).
+			Return(nil, time.Time{}, nil).
+			Run(func(args mock.Arguments) {
+				defer close(peek2Called)
+			}).
+			Once()
+
+		// Start
+		wg.Add(1)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+
+		// Wait for Peek to be called
+		select {
+		case <-peekCalled:
+		case <-time.After(1 * time.Second):
+			t.Fatal("never called peek")
+		}
+
+		// Trigger our watchset
+		close(wsCh)
+
+		// Peek #2 should be called
+		select {
+		case <-peekCalled:
+		case <-time.After(1 * time.Second):
+			t.Fatal("never called peek after watchset")
+		}
+	})
+
+	// Test that watchset takes priority over a pending poll timer.
+	t.Run("long poll with watchset trigger", func(t *testing.T) {
+		require := require.New(t)
+
+		var wg sync.WaitGroup
+		ctx, cancel := context.WithCancel(context.Background())
+		defer wg.Wait()
+		defer cancel()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+
+		// Create our mock handler
+		mockH := &mocks.PollHandler{}
+
+		// On our first peek call, setup the watchset
+		wsCh := make(chan struct{})
+		peekCalled := make(chan struct{})
+		mockH.On("Peek", mock.Anything, mock.Anything).
+			Return(nil, time.Now().Add(1*time.Minute), nil).
+			Run(func(args mock.Arguments) {
+				defer close(peekCalled)
+				ws := args.Get(1).(memdb.WatchSet)
+				ws.Add(wsCh)
+			}).
+			Once()
+
+		// On our second peek call, return nothing
+		peek2Called := make(chan struct{})
+		mockH.On("Peek", mock.Anything, mock.Anything).
+			Return(nil, time.Time{}, nil).
+			Run(func(args mock.Arguments) {
+				defer close(peek2Called)
+			}).
+			Once()
+
+		// Start
+		wg.Add(1)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+
+		// Wait for Peek to be called
+		select {
+		case <-peekCalled:
+		case <-time.After(1 * time.Second):
+			t.Fatal("never called peek")
+		}
+
+		// Trigger our watchset
+		close(wsCh)
+
+		// Peek #2 should be called
+		select {
+		case <-peekCalled:
+		case <-time.After(1 * time.Second):
+			t.Fatal("never called peek after watchset")
+		}
+	})
+}
 
 func TestServicePollQueue(t *testing.T) {
 	require := require.New(t)
