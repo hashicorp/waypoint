@@ -1,0 +1,3 @@
+variable "dinosaur" {
+  type = string
+}

@@ -290,7 +290,6 @@ func EvaluateVariables(
 ) (Values, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 	iv := Values{}
-
 	for v, def := range vs {
 		iv[v] = def.Default
 	}
@@ -400,8 +399,8 @@ func EvaluateVariables(
 
 	// check that all variables have a set value, including default of null
 	for name := range vs {
-		_, found := iv[name]
-		if !found {
+		value, _ := iv[name]
+		if value == nil {
 			return nil, append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  fmt.Sprintf("Unset variable %q", name),
