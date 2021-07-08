@@ -105,9 +105,13 @@ jobs:
       - run:
           command: cd ./website; npx --no-install next-hashicorp format
       - run: |
-          if ! git diff --exit-code; then
-            echo "Git directory has website mdx changes. Run `make gen/website-mdx`"
-            echo "and validate that the corresponding website pages look acceptable."
+          if ! git diff --exit-code > /dev/null; then
+            echo "Website directory has unstaged mdx changes. This is because you have modified doc strings"
+            echo "that must be reflected in the website. Run the following make command:"
+            echo
+            echo "make gen/website-mdx"
+            echo
+            echo "And then validate that the corresponding website pages look acceptable."
             git status
             exit 1
           fi
