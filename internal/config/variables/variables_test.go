@@ -279,6 +279,13 @@ func TestVariables_EvalInputValues(t *testing.T) {
 			expected: Values{},
 			err:      "Undefined variable",
 		},
+		{
+			name:        "no assigned or default value",
+			file:        "no_default.hcl",
+			inputValues: []*pb.Variable{},
+			expected:    Values{},
+			err:         "Unset variable",
+		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
