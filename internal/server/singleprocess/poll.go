@@ -152,7 +152,10 @@ func (s *service) runPollQueuer(
 		log.Trace("queueing poll job")
 		queueJobRequest, err := handler.PollJob(log, pollItem)
 		if err != nil {
-			log.Warn("error building a poll job request", "err", err)
+			log.Warn("error building a poll job request. This should not happen "+
+				"repeatedly. If you see this in your log repeatedly, report a bug.",
+				"err", err)
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
