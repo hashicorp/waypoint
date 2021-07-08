@@ -9,13 +9,17 @@ interface VariableArgs {
   variable: Variable.AsObject;
   isEditing: boolean;
   isCreating: boolean;
-  saveVariableSettings: (variable: Variable.AsObject) => Promise<Project.AsObject>;
+  saveVariableSettings: (
+    variable: Variable.AsObject,
+    initialVariable: Variable.AsObject
+  ) => Promise<Project.AsObject>;
   deleteVariable: (variable: Variable.AsObject) => Promise<void>;
 }
 
 export default class ProjectInputVariablesListComponent extends Component<VariableArgs> {
   initialVariable: Variable.AsObject;
   @service api!: ApiService;
+  @service flashMessages;
   @tracked variable: Variable.AsObject;
   @tracked isCreating: boolean;
   @tracked isEditing: boolean;
@@ -51,6 +55,14 @@ export default class ProjectInputVariablesListComponent extends Component<Variab
   @action
   async saveVariable(e) {
     e.preventDefault();
+    // Validate non-empty var name & value
+    if (
+      this.variable.name === '' ||
+      (this.isHcl && this.variable.hcl === '') ||
+      (!this.isHcl && this.variable.str === '')
+    ) {
+      return this.flashMessages.error('Variable keys or values can not be empty');
+    }
     let savedProject = await this.args.saveVariableSettings(this.variable, this.initialVariable);
     if (savedProject) {
       this.variable = savedProject.variablesList.find(v => v.name === this.variable.name);
