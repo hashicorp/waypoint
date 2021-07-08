@@ -266,6 +266,50 @@ func TestPollQueuer_queue(t *testing.T) {
 		require.True(atomic.LoadUint32(&pollCounter) > 0)
 		require.True(atomic.LoadUint32(&pollCounter) < 100, "excessive polling")
 	})
+
+	// If the poll job errors, we should re-peek, but not too much.
+	t.Run("queue job error", func(t *testing.T) {
+		require := require.New(t)
+
+		var wg sync.WaitGroup
+		ctx, cancel := context.WithCancel(context.Background())
+		defer wg.Wait()
+		defer cancel()
+
+		// Create our server
+		impl, err := New(WithDB(testDB(t)))
+		require.NoError(err)
+
+		// Create our mock handler
+		mockH := &mocks.PollHandler{}
+
+		// Returning a queue job request that is empty should fail validation.
+		var peekCounter, pollCounter uint32
+		mockH.On("Peek", mock.Anything, mock.Anything).
+			Return(42, time.Now().Add(1*time.Millisecond), nil).
+			Run(func(args mock.Arguments) {
+				atomic.AddUint32(&peekCounter, 1)
+			})
+		mockH.On("PollJob", mock.Anything, 42).
+			Return(&pb.QueueJobRequest{}, nil).
+			Run(func(args mock.Arguments) {
+				atomic.AddUint32(&pollCounter, 1)
+			})
+
+		// Start
+		wg.Add(1)
+		go testServiceImpl(impl).runPollQueuer(ctx, &wg, mockH, nil, nil)
+
+		// Let's just run this for awhile
+		time.Sleep(250 * time.Millisecond)
+
+		// We should peek more than once but less than a bunch. This is a rough
+		// heuristic for a "reasonable amount" to not CPU saturate.
+		require.True(atomic.LoadUint32(&peekCounter) > 0)
+		require.True(atomic.LoadUint32(&peekCounter) < 100, "excessive peeking")
+		require.True(atomic.LoadUint32(&pollCounter) > 0)
+		require.True(atomic.LoadUint32(&pollCounter) < 100, "excessive polling")
+	})
 }
 
 func TestServicePollQueue(t *testing.T) {
