@@ -41,7 +41,7 @@ form:
     create_git_helptext: 'If you skip this, you can always configure this later in Project settings.'
     create_git_checkbox_label: 'Connect a repository to this Project'
     button: 'Create Project'
-  project_settings:
+  project_git_settings:
     git_title: 'Git settings'
     git_source_url_label: 'Git source URL'
     git_source_ref_label: 'Git ref'
