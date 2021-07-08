@@ -4,6 +4,7 @@ import { setupApplicationTest } from 'ember-qunit';
 import { setupMirage } from 'ember-cli-mirage/test-support';
 import { visitable, create, collection, clickable } from 'ember-cli-page-object';
 import login from 'waypoint/tests/helpers/login';
+import percySnapshot from '@percy/ember';
 
 const url = '/default/microchip/app/wp-bandwidth/deployments';
 
@@ -26,6 +27,7 @@ module('Acceptance | deployments list', function (hooks) {
     this.server.createList('deployment', 3, 'random', { application });
 
     await page.visit();
+    await percySnapshot('Deployments page baseline');
 
     assert.equal(page.list.length, 3);
     assert.equal(currentURL(), url);

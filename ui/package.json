@@ -32,6 +32,8 @@
     "@glimmer/tracking": "^1.0.3",
     "@hashicorp/pds-ember": "^0.6.0",
     "@hashicorp/structure-icons": "^1.9.0-0",
+    "@percy/cli": "^1.0.0-beta.58",
+    "@percy/ember": "^3.0.0",
     "@types/ember": "^3.16.0",
     "@types/ember-qunit": "^3.4.9",
     "@types/ember__test-helpers": "^1.7.0",
