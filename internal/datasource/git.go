@@ -280,13 +280,14 @@ func (s *GitSource) Changes(
 	ui terminal.UI,
 	raw *pb.Job_DataSource,
 	current *pb.Job_DataSource_Ref,
-) (*pb.Job_DataSource_Ref, error) {
+	tempDir string,
+) (*pb.Job_DataSource_Ref, bool, error) {
 	source := raw.Source.(*pb.Job_DataSource_Git)
 
 	// Build our auth mechanism
 	auth, err := s.auth(log, ui, source)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// Get our remote
@@ -305,7 +306,7 @@ func (s *GitSource) Changes(
 	// List our refs, equivalent to git ls-remote
 	refs, err := remote.List(&git.ListOptions{Auth: auth})
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	// Build a map of our refs since we may have to do many lookups
@@ -358,7 +359,7 @@ func (s *GitSource) Changes(
 			limit--
 		}
 		if limit == 0 {
-			return nil, status.Errorf(codes.FailedPrecondition,
+			return nil, false, status.Errorf(codes.FailedPrecondition,
 				"Infinite reference in hash lookup for target: %s", targetRef)
 		}
 		if ref == nil {
@@ -370,15 +371,19 @@ func (s *GitSource) Changes(
 	}
 
 	if foundRef == nil {
-		return nil, status.Errorf(codes.Internal, "Hash for target ref not found: %s", targetRef)
+		return nil, false, status.Errorf(codes.Internal, "Hash for target ref not found: %s", targetRef)
 	}
+
+	// We maybe have changes. We set the ignore value later if we
+	// determine that the changes we have should be ignored.
+	ignore := false
 
 	// Compare
 	if current != nil {
 		currentRef := current.Ref.(*pb.Job_DataSource_Ref_Git).Git
 		if currentRef.Commit == foundRef.Hash().String() {
 			log.Trace("current ref matches last known ref, ignoring")
-			return nil, nil
+			return nil, false, nil
 		}
 
 		// If there is a subpath specified for the data, then we go one step
@@ -387,22 +392,22 @@ func (s *GitSource) Changes(
 		// We only do this if we had a previous value we used. If we don't,
 		// we've never run before and we consider ANY new ref changes.
 		if path := source.Git.Path; path != "" {
+			log.Trace("subpath specified, we'll check for changes within the subpath")
 			changes, err := s.changes(
 				ctx,
 				log,
 				raw,
-				"",
+				tempDir,
 				foundRef.Hash().String(),
 				currentRef.Commit,
 				path,
 			)
 			if err != nil {
-				return nil, err
+				return nil, false, err
 			}
 
-			if !changes {
-				return nil, nil
-			}
+			// We ignore if there are no changes in our subpath
+			ignore = !changes
 		}
 	}
 
@@ -412,7 +417,7 @@ func (s *GitSource) Changes(
 				Commit: foundRef.Hash().String(),
 			},
 		},
-	}, nil
+	}, ignore, nil
 }
 
 func (s *GitSource) changes(
