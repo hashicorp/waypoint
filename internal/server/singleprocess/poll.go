@@ -162,6 +162,7 @@ func (s *service) runPollQueuer(
 		resp, err := s.QueueJob(ctx, queueJobRequest)
 		if err != nil {
 			log.Warn("error queueing a poll job", "err", err)
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		log.Debug("queued polling job", "job_id", resp.JobId)
