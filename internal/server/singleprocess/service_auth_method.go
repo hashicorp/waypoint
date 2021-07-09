@@ -89,7 +89,7 @@ func (s *service) ListOIDCAuthMethods(
 			continue
 		}
 
-		// Attempt to sniff the kind from the OIDC discovery URL
+		// TODO(mitchellh): sniff the kind from the discovery URL.
 
 		result = append(result, &pb.OIDCAuthMethod{
 			Name:        method.Name,
