@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/aws: add ability to pass additional security groups for ecs
+```
