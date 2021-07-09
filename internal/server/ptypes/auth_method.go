@@ -20,12 +20,15 @@ func TestAuthMethod(t testing.T, src *pb.AuthMethod) *pb.AuthMethod {
 	}
 
 	require.NoError(t, mergo.Merge(src, &pb.AuthMethod{
-		Name: "test",
+		Name:        "test",
+		DisplayName: "test",
 
 		Method: &pb.AuthMethod_Oidc{
 			Oidc: &pb.AuthMethod_OIDC{
-				ClientId:     "A",
-				ClientSecret: "B",
+				ClientId:            "A",
+				ClientSecret:        "B",
+				AllowedRedirectUris: []string{"foo"},
+				DiscoveryUrl:        "https://example.com/discovery",
 			},
 		},
 	}))
@@ -44,6 +47,7 @@ func ValidateAuthMethod(v *pb.AuthMethod) error {
 func ValidateAuthMethodRules(v *pb.AuthMethod) []*validation.FieldRules {
 	return []*validation.FieldRules{
 		validation.Field(&v.Name, validation.Required),
+		validation.Field(&v.DisplayName, validation.Required),
 		validation.Field(&v.Method, validation.Required),
 
 		validationext.StructOneof(&v.Method, (*pb.AuthMethod_Oidc)(nil),
