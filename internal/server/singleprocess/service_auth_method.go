@@ -67,3 +67,36 @@ func (s *service) ListAuthMethods(
 
 	return &pb.ListAuthMethodsResponse{AuthMethods: values}, nil
 }
+
+func (s *service) ListOIDCAuthMethods(
+	ctx context.Context,
+	req *empty.Empty,
+) (*pb.ListOIDCAuthMethodsResponse, error) {
+	// We implement this by just requesting all the auth methods. We could
+	// index OIDC methods specifically and do this more efficiently but
+	// realistically we don't expect there to ever be that many auth methods.
+	// Even if there were thousands (why????) this would be okay.
+	values, err := s.state.AuthMethodList()
+	if err != nil {
+		return nil, err
+	}
+
+	// Go through and extract the auth methods
+	var result []*pb.OIDCAuthMethod
+	for _, method := range values {
+		_, ok := method.Method.(*pb.AuthMethod_Oidc)
+		if !ok {
+			continue
+		}
+
+		// Attempt to sniff the kind from the OIDC discovery URL
+
+		result = append(result, &pb.OIDCAuthMethod{
+			Name:        method.Name,
+			DisplayName: method.DisplayName,
+			Kind:        pb.OIDCAuthMethod_UNKNOWN,
+		})
+	}
+
+	return &pb.ListOIDCAuthMethodsResponse{AuthMethods: result}, nil
+}
