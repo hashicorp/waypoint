@@ -1247,9 +1247,14 @@ func (p *Platform) Launch(
 	// Create the service
 
 	L.Debug("creating service", "arn", *taskOut.TaskDefinition.TaskDefinitionArn)
-	sgecsport, err := createSG(ctx, s, sess, fmt.Sprintf("%s-inbound-internal", app.App), vpcId, int(p.config.ServicePort))
-	if err != nil {
-		return nil, err
+
+	if p.config.SecurityGroups == nil {
+		sgecsport, err := createSG(ctx, s, sess, fmt.Sprintf("%s-inbound-internal", app.App), vpcId, int(p.config.ServicePort))
+		if err != nil {
+			return nil, err
+		}
+
+		p.config.SecurityGroups = append(p.config.SecurityGroups, sgecsport)
 	}
 
 	count := int64(p.config.Count)
@@ -1259,7 +1264,7 @@ func (p *Platform) Launch(
 
 	netCfg := &ecs.AwsVpcConfiguration{
 		Subnets:        subnets,
-		SecurityGroups: []*string{sgecsport},
+		SecurityGroups: p.config.SecurityGroups,
 	}
 
 	if !p.config.EC2Cluster {
@@ -1566,6 +1571,9 @@ type Config struct {
 
 	// Subnets to place the service into. Defaults to the subnets in the default VPC.
 	Subnets []string `hcl:"subnets,optional"`
+
+	// SecurityGroups to pass security groups to deployment.
+	SecurityGroups []*string `hcl:"security_groups,optional"`
 
 	// How many tasks of the service to run. Default 1.
 	Count int `hcl:"count,optional"`
