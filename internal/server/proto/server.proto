@@ -11,10 +11,23 @@ import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
+  //----------------------------------------------------------------------
+  // Unauthenticated endpoints
+  //----------------------------------------------------------------------
+
   // GetVersionInfo returns information about the server. This RPC call does
   // NOT require authentication. It can be used by clients to determine if they
   // are capable of talking to this server.
   rpc GetVersionInfo(google.protobuf.Empty) returns (GetVersionInfoResponse);
+
+  // List the available OIDC providers for authentication. The "name" of the
+  // OIDC provider can be used with GetOIDCAuthURL and CompleteOIDCAuth to
+  // perform OIDC-based authentication.
+  rpc ListOIDCAuthMethods(google.protobuf.Empty) returns (ListOIDCAuthMethodsResponse);
+
+  //----------------------------------------------------------------------
+  // Authenticated endpoints for general API use.
+  //----------------------------------------------------------------------
 
   // GetUser returns the current logged in user or some other user.
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
@@ -877,6 +890,27 @@ message AuthMethod {
   }
 }
 
+// This is used by ListOIDCAuthMethods to return the minimal information
+// for an OIDC auth method in an unauthenticated setting.
+message OIDCAuthMethod {
+  // unique identifier used for this auth method. This may or may
+  // not be human friendly; use display_name for human display.
+  string name = 1;
+
+  // human friendly name
+  string display_name = 2;
+
+  // kind is a well known kind of OIDC provider. This is sniffed by
+  // the server heuristically and is only here to assist in the UI.
+  Kind kind = 3;
+
+  enum Kind {
+    UNKNOWN = 0;
+    GITHUB = 1;
+    GOOGLE = 2;
+  }
+}
+
 message UpsertAuthMethodRequest {
   // AuthMethod to upsert. See the message for what fields to set.
   AuthMethod auth_method = 1;
@@ -900,6 +934,10 @@ message DeleteAuthMethodRequest {
 
 message ListAuthMethodsResponse {
   repeated AuthMethod auth_methods = 1;
+}
+
+message ListOIDCAuthMethodsResponse {
+  repeated OIDCAuthMethod auth_methods = 1;
 }
 
 /********************************************************************
