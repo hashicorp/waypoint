@@ -76,7 +76,7 @@ func ValidateJobDataSourceRules(v *pb.Job_DataSource) []*validation.FieldRules {
 func validateJobDataSourceGitRules(v *pb.Job_DataSource_Git) []*validation.FieldRules {
 	return []*validation.FieldRules{
 		validation.Field(&v.Git.Url, validation.Required),
-		validation.Field(&v.Git.Path, validation.By(hasNoDotDot)),
+		validation.Field(&v.Git.Path, validation.By(hasNoDotDot), validation.By(isGitPath)),
 
 		validationext.StructOneof(&v.Git.Auth, (*pb.Job_Git_Basic_)(nil),
 			func() []*validation.FieldRules {
@@ -104,6 +104,33 @@ func isEmpty(v interface{}) error {
 	}
 
 	return errors.New("must be empty")
+}
+
+// isGitPath validates the Git path.
+func isGitPath(v interface{}) error {
+	path := v.(string)
+	if len(path) == 0 {
+		return nil
+	}
+
+	if filepath.IsAbs(path) {
+		return errors.New("must be relative")
+	}
+
+	// Verify we don't start with ./ or .\
+	if len(path) >= 2 && path[0] == '.' &&
+		(path[1] == '/' || path[1] == '\\') {
+		return errors.New("relative path shouldn't start with " + path[:2])
+	}
+
+	// We also don't want '..' anywhere in the path, but that
+	// is validated with hasNoDotDot.
+
+	// We also want paths to end with / but that seems overly
+	// pedantic so that is something we'll add ourselves in our
+	// data source anytime we need the path to end with a slash.
+
+	return nil
 }
 
 // isGitSSHKey validates the SSH key given.
