@@ -4,6 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/go-ozzo/ozzo-validation/v4"
@@ -117,10 +118,19 @@ func isGitPath(v interface{}) error {
 		return errors.New("must be relative")
 	}
 
+	// We do this so we can just assume that all slashes are filepath.Sep
+	path = filepath.ToSlash(path)
+
 	// Verify we don't start with ./ or .\
-	if len(path) >= 2 && path[0] == '.' &&
-		(path[1] == '/' || path[1] == '\\') {
+	if len(path) >= 2 && path[0] == '.' && path[1] == filepath.Separator {
 		return errors.New("relative path shouldn't start with " + path[:2])
+	}
+
+	// Verify we don't have any '//' in there. This also catches anything
+	// more than 2 since any grouping of 3 or more is also a grouping of at least 2
+	multisep := strings.Repeat(string(filepath.Separator), 2)
+	if strings.Contains(path, multisep) {
+		return errors.New("path should not contain repeated separator characters such as '//'")
 	}
 
 	// We also don't want '..' anywhere in the path, but that
