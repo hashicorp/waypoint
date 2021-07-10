@@ -51,7 +51,6 @@ func (s *service) UpdateUser(
 	// Update our writable fields
 	user.Username = req.User.Username
 	user.Display = req.User.Display
-	user.Email = req.User.Email
 
 	// Write it
 	if err := s.state.UserPut(user); err != nil {
