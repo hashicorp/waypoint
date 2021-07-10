@@ -99,6 +99,16 @@ func ValidateGetOIDCAuthURLRequest(v *pb.GetOIDCAuthURLRequest) error {
 	return validationext.Error(validation.ValidateStruct(v,
 		validation.Field(&v.AuthMethod, validation.Required),
 		validation.Field(&v.RedirectUri, validation.Required),
-		validation.Field(&v.ClientNonce, validation.Required),
+	))
+}
+
+// ValidateCompleteOIDCAuthRequest
+func ValidateCompleteOIDCAuthRequest(v *pb.CompleteOIDCAuthRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.AuthMethod, validation.Required),
+		validation.Field(&v.RedirectUri, validation.Required),
+		validation.Field(&v.State, validation.Required),
+		validation.Field(&v.Code, validation.Required),
+		validation.Field(&v.Nonce, validation.Required),
 	))
 }

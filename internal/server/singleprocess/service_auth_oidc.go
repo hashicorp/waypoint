@@ -74,9 +74,7 @@ func (s *service) GetOIDCAuthURL(
 	}
 
 	// Create a minimal request to get the auth URL
-	oidcReqOpts := []oidc.Option{
-		oidc.WithNonce(req.ClientNonce),
-	}
+	oidcReqOpts := []oidc.Option{}
 	if v := amMethod.Oidc.Scopes; len(v) > 0 {
 		oidcReqOpts = append(oidcReqOpts, oidc.WithScopes(v...))
 	}
@@ -98,4 +96,68 @@ func (s *service) GetOIDCAuthURL(
 	return &pb.GetOIDCAuthURLResponse{
 		Url: url,
 	}, nil
+}
+
+func (s *service) CompleteOIDCAuth(
+	ctx context.Context,
+	req *pb.CompleteOIDCAuthRequest,
+) (*pb.CompleteOIDCAuthResponse, error) {
+	if err := serverptypes.ValidateCompleteOIDCAuthRequest(req); err != nil {
+		return nil, err
+	}
+
+	// Get the auth method
+	am, err := s.state.AuthMethodGet(req.AuthMethod)
+	if err != nil {
+		return nil, err
+	}
+
+	// The auth method must be OIDC
+	amMethod, ok := am.Method.(*pb.AuthMethod_Oidc)
+	if !ok {
+		return nil, status.Errorf(codes.FailedPrecondition,
+			"auth method is not OIDC")
+	}
+
+	// Get our OIDC provider
+	provider, err := s.oidcCache.Get(ctx, am)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a minimal request to get the auth URL
+	oidcReqOpts := []oidc.Option{
+		oidc.WithNonce(req.Nonce),
+		oidc.WithState(req.State),
+	}
+	if v := amMethod.Oidc.Scopes; len(v) > 0 {
+		oidcReqOpts = append(oidcReqOpts, oidc.WithScopes(v...))
+	}
+	if v := amMethod.Oidc.Auds; len(v) > 0 {
+		oidcReqOpts = append(oidcReqOpts, oidc.WithAudiences(v...))
+	}
+	oidcReq, err := oidc.NewRequest(
+		5*60*time.Second,
+		req.RedirectUri,
+		oidcReqOpts...,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Exchange our code for our token
+	oidcToken, err := provider.Exchange(ctx, oidcReq, req.State, req.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract the claims for this token
+	var idClaims map[string]interface{}
+	if err := oidcToken.IDToken().Claims(&idClaims); err != nil {
+		return nil, err
+	}
+
+	// TODO: look up by sub, look up by email, create new user
+
+	return &pb.CompleteOIDCAuthResponse{}, nil
 }
