@@ -65,12 +65,15 @@ func (c *ProviderCache) Get(
 		return nil, err
 	}
 
+	// Normalize name
+	name := strings.ToLower(am.Name)
+
 	// Get our current value
 	var current *oidc.Provider
 	ok = false
 	c.mu.RLock()
 	if c.providers != nil {
-		current, ok = c.providers[am.Name]
+		current, ok = c.providers[name]
 	}
 	c.mu.RUnlock()
 
@@ -110,9 +113,23 @@ func (c *ProviderCache) Get(
 	if c.providers == nil {
 		c.providers = map[string]*oidc.Provider{}
 	}
-	c.providers[am.Name] = newProvider
+	c.providers[name] = newProvider
 
 	return newProvider, nil
+}
+
+// Delete force deletes a single auth method from the cache by name.
+func (c *ProviderCache) Delete(ctx context.Context, name string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.providers != nil {
+		name = strings.ToLower(name)
+		p, ok := c.providers[name]
+		if ok {
+			p.Done()
+		}
+		delete(c.providers, name)
+	}
 }
 
 // Clear is called to delete all the providers in the cache.
