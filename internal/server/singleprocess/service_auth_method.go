@@ -100,3 +100,11 @@ func (s *service) ListOIDCAuthMethods(
 
 	return &pb.ListOIDCAuthMethodsResponse{AuthMethods: result}, nil
 }
+
+func (s *service) GetOIDCAuthURL(
+	ctx context.Context,
+	req *pb.GetOIDCAuthURLRequest,
+) (*pb.GetOIDCAuthURLResponse, error) {
+	panic("TODO")
+	return nil, nil
+}
