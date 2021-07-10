@@ -28,6 +28,10 @@ service Waypoint {
   // Get the URL to visit to start authentication with OIDC.
   rpc GetOIDCAuthURL(GetOIDCAuthURLRequest) returns (GetOIDCAuthURLResponse);
 
+  // Complete the OIDC auth cycle after receiving the callback from the
+  // OIDC provider.
+  rpc CompleteOIDCAuth(CompleteOIDCAuthRequest) returns (CompleteOIDCAuthResponse);
+
   //----------------------------------------------------------------------
   // Authenticated endpoints for general API use.
   //----------------------------------------------------------------------
@@ -965,13 +969,38 @@ message ListOIDCAuthMethodsResponse {
 }
 
 message GetOIDCAuthURLRequest {
+  // OIDC auth method to use
   Ref.AuthMethod auth_method = 1;
+
+  // The URL that authorization should redirect to.
   string redirect_uri = 2;
-  string client_nonce = 3;
 }
 
 message GetOIDCAuthURLResponse {
+  // The URL to begin authorization. The user should go here.
   string url = 1;
+}
+
+message CompleteOIDCAuthRequest {
+  Ref.AuthMethod auth_method = 1;
+
+  // This should match the GetOIDCAuthURL RPC. This is not used anymore
+  // except for verification.
+  string redirect_uri = 2;
+
+  // This should be provided from the parameters given to the redirect URL.
+  string state = 3;
+  string nonce = 4;
+  string code = 5;
+}
+
+message CompleteOIDCAuthResponse {
+  string token = 1;
+
+  // The user that was authenticated. This is the same as if GetUser
+  // was called with the token returned. This is eager returned because
+  // it is commonly useful and also readily available as part of auth.
+  User user = 2;
 }
 
 /********************************************************************
