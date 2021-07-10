@@ -25,6 +25,9 @@ service Waypoint {
   // perform OIDC-based authentication.
   rpc ListOIDCAuthMethods(google.protobuf.Empty) returns (ListOIDCAuthMethodsResponse);
 
+  // Get the URL to visit to start authentication with OIDC.
+  rpc GetOIDCAuthURL(GetOIDCAuthURLRequest) returns (GetOIDCAuthURLResponse);
+
   //----------------------------------------------------------------------
   // Authenticated endpoints for general API use.
   //----------------------------------------------------------------------
@@ -938,6 +941,16 @@ message ListAuthMethodsResponse {
 
 message ListOIDCAuthMethodsResponse {
   repeated OIDCAuthMethod auth_methods = 1;
+}
+
+message GetOIDCAuthURLRequest {
+  string name = 1;
+  string redirect_uri = 2;
+  string client_nonce = 3;
+}
+
+message GetOIDCAuthURLResponse {
+  string url = 1;
 }
 
 /********************************************************************
