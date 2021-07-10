@@ -93,3 +93,12 @@ func ValidateDeleteAuthMethodRequest(v *pb.DeleteAuthMethodRequest) error {
 		validation.Field(&v.AuthMethod, validation.Required),
 	))
 }
+
+// ValidateGetOIDCAuthURLRequest
+func ValidateGetOIDCAuthURLRequest(v *pb.GetOIDCAuthURLRequest) error {
+	return validationext.Error(validation.ValidateStruct(v,
+		validation.Field(&v.AuthMethod, validation.Required),
+		validation.Field(&v.RedirectUri, validation.Required),
+		validation.Field(&v.ClientNonce, validation.Required),
+	))
+}
