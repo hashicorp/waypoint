@@ -873,6 +873,12 @@ message AuthMethod {
     // generally recommended.
     repeated string allowed_redirect_uris = 5;
 
+    // The signing algorithms supported by the OIDC connect server.
+    // If this isn't specified, this will default to RS256 since that
+    // should be supported according to the RFC. The string values here
+    // should be valid OIDC signing algorithms.
+    repeated string signing_algs = 11;
+
     // Discovery URL endpoint to get other information.
     // Required by OIDC.
     string discovery_url = 6;
