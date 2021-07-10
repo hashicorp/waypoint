@@ -53,6 +53,10 @@ func (s *service) DeleteAuthMethod(
 		return nil, err
 	}
 
+	// Delete from the cache. If this auth method isn't OIDC that's okay
+	// cause this will do nothing.
+	s.oidcCache.Delete(ctx, req.AuthMethod.Name)
+
 	return &empty.Empty{}, nil
 }
 
