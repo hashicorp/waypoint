@@ -12,7 +12,7 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-func TestGetOIDCAuthURL(t *testing.T) {
+func TestOIDCAuth(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 
@@ -33,7 +33,7 @@ func TestGetOIDCAuthURL(t *testing.T) {
 		DiscoveryUrl:        oidcTP.Addr(),
 		DiscoveryCaPem:      []string{oidcTP.CACert()},
 		SigningAlgs:         []string{string(tpAlg)},
-		AllowedRedirectUris: []string{"http://example.com"},
+		AllowedRedirectUris: []string{"https://example.com"},
 	}
 
 	// Create
@@ -53,11 +53,26 @@ func TestGetOIDCAuthURL(t *testing.T) {
 	// Get our URL
 	resp, err := client.GetOIDCAuthURL(ctx, &pb.GetOIDCAuthURLRequest{
 		AuthMethod:  &pb.Ref_AuthMethod{Name: "TEST"},
-		RedirectUri: "http://example.com",
-		ClientNonce: "test",
+		RedirectUri: "https://example.com",
 	})
 	require.NoError(err)
 	require.NotNil(resp)
 	require.NotEmpty(resp.Url)
 	t.Logf("auth url: %s", resp.Url)
+
+	// Setup our test provider to auth
+	oidcTP.SetExpectedState("state")
+	oidcTP.SetExpectedAuthCode("hello")
+	oidcTP.SetExpectedAuthNonce("nonce")
+
+	// Complete our auth
+	respAuth, err := client.CompleteOIDCAuth(ctx, &pb.CompleteOIDCAuthRequest{
+		AuthMethod:  &pb.Ref_AuthMethod{Name: "TEST"},
+		RedirectUri: "https://example.com",
+		State:       "state",
+		Code:        "hello",
+		Nonce:       "nonce",
+	})
+	require.NoError(err)
+	require.NotNil(respAuth)
 }
