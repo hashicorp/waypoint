@@ -828,6 +828,36 @@ func (_m *WaypointClient) GetLogStream(ctx context.Context, in *gen.GetLogStream
 	return r0, r1
 }
 
+// GetOIDCAuthURL provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) GetOIDCAuthURL(ctx context.Context, in *gen.GetOIDCAuthURLRequest, opts ...grpc.CallOption) (*gen.GetOIDCAuthURLResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.GetOIDCAuthURLResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetOIDCAuthURLRequest, ...grpc.CallOption) *gen.GetOIDCAuthURLResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetOIDCAuthURLResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetOIDCAuthURLRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetProject provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) GetProject(ctx context.Context, in *gen.GetProjectRequest, opts ...grpc.CallOption) (*gen.GetProjectResponse, error) {
 	_va := make([]interface{}, len(opts))
