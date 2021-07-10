@@ -959,7 +959,7 @@ message ListOIDCAuthMethodsResponse {
 }
 
 message GetOIDCAuthURLRequest {
-  string name = 1;
+  Ref.AuthMethod auth_method = 1;
   string redirect_uri = 2;
   string client_nonce = 3;
 }
