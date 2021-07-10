@@ -8,6 +8,7 @@ import (
 	wphznpb "github.com/hashicorp/waypoint-hzn/pkg/pb"
 	bolt "go.etcd.io/bbolt"
 
+	wpoidc "github.com/hashicorp/waypoint/internal/auth/oidc"
 	"github.com/hashicorp/waypoint/internal/server"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
@@ -49,6 +50,9 @@ type service struct {
 	// superuser is true if all API actions should act as if a superuser
 	// made them. This is used for local mode only.
 	superuser bool
+
+	// oidcCache is the cache for OIDC providers.
+	oidcCache wpoidc.ProviderCache
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -174,6 +178,7 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 func (s *service) Close() error {
 	s.bgCtxCancel()
 	s.bgWg.Wait()
+	s.oidcCache.Close()
 	return nil
 }
 

@@ -2,7 +2,6 @@ package singleprocess
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -68,30 +67,11 @@ func (s *service) GetOIDCAuthURL(
 			"auth method is not OIDC")
 	}
 
-	// Create our OIDC provider.
-	// NOTE(mitchellh): we should cache this because this has to make an
-	// external HTTP request and do a bunch of other stateful things.
-	oidcCfg, err := oidc.NewConfig(
-		amMethod.Oidc.DiscoveryUrl,
-		amMethod.Oidc.ClientId,
-		oidc.ClientSecret(amMethod.Oidc.ClientSecret),
-		[]oidc.Alg{ // TODO(mitchellh): make this configurable
-			oidc.EdDSA,
-		},
-		amMethod.Oidc.AllowedRedirectUris,
-		oidc.WithAudiences(amMethod.Oidc.Auds...),
-		oidc.WithProviderCA(strings.Join(amMethod.Oidc.DiscoveryCaPem, "\n")),
-	)
+	// Get our OIDC provider
+	provider, err := s.oidcCache.Get(ctx, am)
 	if err != nil {
 		return nil, err
 	}
-
-	provider, err := oidc.NewProvider(oidcCfg)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal,
-			"error initializing OIDC provider: %s", err)
-	}
-	defer provider.Done()
 
 	// Create a minimal request to get the auth URL
 	oidcReqOpts := []oidc.Option{
