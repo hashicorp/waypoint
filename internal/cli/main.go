@@ -476,6 +476,25 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"auth-method": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["auth-method"][0],
+				HelpText:     helpText["auth-method"][1],
+			}, nil
+		},
+
+		"auth-method delete": func() (cli.Command, error) {
+			return &AuthMethodDeleteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"auth-method list": func() (cli.Command, error) {
+			return &AuthMethodListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
@@ -683,6 +702,18 @@ Waypoint will search for artifacts to pass to the deployment phase.
 `,
 	},
 
+	"auth-method": {
+		"Auth Method Management",
+		`
+Auth Method Management
+
+The auth-method commands can be used to manage how users can authenticate
+into the Waypoint server. For day-to-day Waypoint users, you likely want
+to use the "waypoint login" command or "waypoint user" commands. The
+auth-method subcommand is primarily aimed at Waypoint server operators.
+`,
+	},
+
 	"config": {
 		"Application configuration management",
 		`
@@ -737,7 +768,7 @@ For more information see: https://waypointproject.io/docs/url
 		`
 Project management.
 
-Projects are comprised of one or more applications. A project maps 
+Projects are comprised of one or more applications. A project maps
 to a VCS repository (if one exists).
 `,
 	},
