@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/aws: add custom name prefix for AWS resources
+```

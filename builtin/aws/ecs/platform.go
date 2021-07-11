@@ -35,6 +35,8 @@ func (p *Platform) Config() (interface{}, error) {
 	return &p.config, nil
 }
 
+var prefix string
+
 // ConfigSet is called after a configuration has been decoded
 // we can use this to validate the config
 func (p *Platform) ConfigSet(config interface{}) error {
@@ -266,6 +268,11 @@ func (p *Platform) Deploy(
 		err error
 	)
 
+	prefix = "waypoint"
+	if p.config.NamePrefix != nil {
+		prefix = *p.config.NamePrefix
+	}
+
 	if p.config.ALB != nil {
 		if p.config.ALB.ListenerARN != "" {
 			if p.config.ALB.ZoneId != "" || p.config.ALB.FQDN != "" {
@@ -460,7 +467,7 @@ func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L 
 	roleName := p.config.ExecutionRoleName
 
 	if roleName == "" {
-		roleName = "ecr-" + app.App
+		roleName = fmt.Sprintf("%s-%s-%s", prefix, "ecr", app.App)
 	}
 
 	// role names have to be 64 characters or less, and the client side doesn't validate this.
@@ -705,7 +712,8 @@ func createALB(
 		s.Update("Using configured ALB Listener: %s (load-balancer: %s)",
 			*listener.ListenerArn, *listener.LoadBalancerArn)
 	} else {
-		lbName := "waypoint-ecs-" + app.App
+		lbName := fmt.Sprintf("%s-%s", prefix, app.App)
+
 		dlb, err := elbsrv.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
 			Names: []*string{&lbName},
 		})
@@ -1125,7 +1133,7 @@ func (p *Platform) Launch(
 	}
 	mems := strconv.Itoa(p.config.Memory)
 
-	family := "waypoint-" + app.App
+	family := fmt.Sprintf("%s-%s", prefix, app.App)
 
 	s.Status("Registering Task definition: %s", family)
 
@@ -1184,7 +1192,7 @@ func (p *Platform) Launch(
 
 	s.Update("Registered Task definition: %s", family)
 
-	serviceName := fmt.Sprintf("%s-%s", app.App, id)
+	serviceName := fmt.Sprintf("%s-%s-%s", prefix, app.App, id)
 
 	// We have to clamp at a length of 32 because the Name field to CreateTargetGroup
 	// requires that the name is 32 characters or less.
@@ -1223,7 +1231,7 @@ func (p *Platform) Launch(
 	var lbArn, tgArn *string
 	if !p.config.DisableALB {
 		L.Debug("creating security group for ports 80 and 443")
-		sgweb, err := createSG(ctx, s, sess, fmt.Sprintf("%s-inbound", app.App), vpcId, 80, 443)
+		sgweb, err := createSG(ctx, s, sess, fmt.Sprintf("%s-%s-inbound", prefix, app.App), vpcId, 80, 443)
 		if err != nil {
 			return nil, err
 		}
@@ -1585,6 +1593,9 @@ type Config struct {
 	// The secrets to pass to to the main container
 	Secrets map[string]string `hcl:"secrets,optional"`
 
+	// Custom name prefix for AWS resources
+	NamePrefix *string `hcl:"name_prefix,optional"`
+
 	// Assign each task a public IP. Default false.
 	// TODO to access ECR you need a nat gateway or a public address and so if you
 	// set this to false in the default subnets, ECS can't pull the image. Leaving
@@ -1707,6 +1718,11 @@ deploy {
 	doc.SetField(
 		"secrets",
 		"secret key/values to pass to the ECS container",
+	)
+
+	doc.SetField(
+		"name prefix",
+		"name prefix for AWS resources",
 	)
 
 	doc.SetField(
