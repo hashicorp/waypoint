@@ -167,13 +167,56 @@ func (s *State) userGetOIDC(
 				continue
 			}
 
-			if oidc.Oidc.Sub == sub && oidc.Oidc.Iss == iss {
+			if strings.EqualFold(oidc.Oidc.Sub, sub) && strings.EqualFold(oidc.Oidc.Iss, iss) {
 				return &result, nil
 			}
 		}
 	}
 
 	return nil, status.Errorf(codes.NotFound, "user not found")
+}
+
+// UserGetEmail gets a user by by email lookup. This will return
+// a codes.NotFound error if the user is not found.
+func (s *State) UserGetEmail(email string) (*pb.User, error) {
+	memTxn := s.inmem.Txn(false)
+	defer memTxn.Abort()
+
+	var result *pb.User
+	err := s.db.View(func(dbTxn *bolt.Tx) error {
+		var err error
+		result, err = s.userGetEmail(dbTxn, memTxn, email)
+		return err
+	})
+
+	return result, err
+}
+
+func (s *State) userGetEmail(
+	dbTxn *bolt.Tx,
+	memTxn *memdb.Txn,
+	email string,
+) (*pb.User, error) {
+	b := dbTxn.Bucket(userBucket)
+
+	// Look up all users that match this sub.
+	iter, err := memTxn.Get(
+		userTableName,
+		userEmailIndexName,
+		email,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	raw := iter.Next()
+	if raw == nil {
+		return nil, status.Errorf(codes.NotFound, "user not found")
+	}
+	idx := raw.(*userIndexRecord)
+
+	var result pb.User
+	return &result, dbGet(b, []byte(strings.ToLower(idx.Id)), &result)
 }
 
 func (s *State) userPut(
