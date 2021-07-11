@@ -23,12 +23,24 @@ func ProviderConfig(am *pb.AuthMethod_OIDC) (*oidc.Config, error) {
 		algs = []oidc.Alg{oidc.RS256}
 	}
 
+	// Modify our allowed uris to always have loopback addresses for our CLI.
+	// Note that "http" instead of "https" is okay for loopback addresses since
+	// the protocl is ignored anyways for loopback.
+	allowedUris := make([]string, len(am.AllowedRedirectUris))
+	copy(allowedUris, am.AllowedRedirectUris)
+	allowedUris = append(allowedUris,
+		// Loopback addresses used by the CLI
+		"http://localhost/oidc/callback",
+		"http://127.0.0.1/oidc/callback",
+		"http://[::1]/oidc/callback",
+	)
+
 	return oidc.NewConfig(
 		am.DiscoveryUrl,
 		am.ClientId,
 		oidc.ClientSecret(am.ClientSecret),
 		algs,
-		am.AllowedRedirectUris,
+		allowedUris,
 		oidc.WithAudiences(am.Auds...),
 		oidc.WithProviderCA(strings.Join(am.DiscoveryCaPem, "\n")),
 	)
