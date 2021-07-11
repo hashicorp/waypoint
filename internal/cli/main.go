@@ -484,6 +484,19 @@ func Commands(
 			}, nil
 		},
 
+		"auth-method set": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["auth-method-set"][0],
+				HelpText:     helpText["auth-method-set"][1],
+			}, nil
+		},
+
+		"auth-method set oidc": func() (cli.Command, error) {
+			return &AuthMethodSetOIDCCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"auth-method delete": func() (cli.Command, error) {
 			return &AuthMethodDeleteCommand{
 				baseCommand: baseCommand,
@@ -711,6 +724,18 @@ The auth-method commands can be used to manage how users can authenticate
 into the Waypoint server. For day-to-day Waypoint users, you likely want
 to use the "waypoint login" command or "waypoint user" commands. The
 auth-method subcommand is primarily aimed at Waypoint server operators.
+`,
+	},
+
+	"auth-method-set": {
+		"Create or update an auth method",
+		`
+Create or update an auth method.
+
+This command can be used to configure a new auth method or update
+an existing auth method. Use the specific auth-method type subcommand.
+Once the auth method is created it is immediately available for use by
+end users.
 `,
 	},
 
