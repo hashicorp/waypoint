@@ -31,6 +31,11 @@ func (s *service) UpsertAuthMethod(
 		return nil, err
 	}
 
+	// Display name defaults to the name
+	if req.AuthMethod.DisplayName == "" {
+		req.AuthMethod.DisplayName = req.AuthMethod.Name
+	}
+
 	// Write it
 	if err := s.state.AuthMethodPut(req.AuthMethod); err != nil {
 		return nil, err
