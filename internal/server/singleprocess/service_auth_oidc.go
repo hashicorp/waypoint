@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -125,6 +126,12 @@ func (s *service) CompleteOIDCAuth(
 		return nil, err
 	}
 
+	// We need this discovery info later
+	discovery, err := provider.DiscoveryInfo(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create a minimal request to get the auth URL
 	oidcReqOpts := []oidc.Option{
 		oidc.WithNonce(req.Nonce),
@@ -151,13 +158,114 @@ func (s *service) CompleteOIDCAuth(
 		return nil, err
 	}
 
-	// Extract the claims for this token
-	var idClaims map[string]interface{}
-	if err := oidcToken.IDToken().Claims(&idClaims); err != nil {
+	// Extract the claims for this token. We create a struct here that
+	// extracts only the claims we actually care about.
+	var idClaimVals idClaims
+	if err := oidcToken.IDToken().Claims(&idClaimVals); err != nil {
 		return nil, err
 	}
 
-	// TODO: look up by sub, look up by email, create new user
+	// Valid OIDC providers should never behave this way.
+	if idClaimVals.Sub == "" {
+		return nil, status.Errorf(codes.Internal, "OIDC provider returned empty subscriber ID")
+	}
 
-	return &pb.CompleteOIDCAuthResponse{}, nil
+	// Look up a user by sub.
+	user, err := s.oidcInitUser(discovery.Issuer, idClaimVals.Sub, idClaimVals.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate a token for this user
+	// TODO(mitchellh): expiration is "0" we probably want a real value
+	token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
+		Kind: &pb.Token_Login_{
+			Login: &pb.Token_Login{UserId: user.Id},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.CompleteOIDCAuthResponse{
+		Token: token,
+		User:  user,
+	}, nil
+}
+
+// oidcInitUser finds or creates the user for the given OIDC information.
+func (s *service) oidcInitUser(iss, sub, email string) (*pb.User, error) {
+	// This method attempts to find, link, or create a new user to the
+	// given OIDC result in the following order:
+	//
+	//   (1) find user with exact account link (iss, sub match)
+	//   (2) find user with matching email and then link it
+	//   (3) create new user and link it
+	//
+
+	// First look up by exact account link.
+	user, err := s.state.UserGetOIDC(iss, sub)
+	if err != nil {
+		if status.Code(err) != codes.NotFound {
+			return nil, err
+		}
+
+		// Just ensure user is nil cause that's the check we'll keep using.
+		user = nil
+	}
+	if user != nil {
+		return user, nil
+	}
+
+	// Look up the user by email if we don't have a user by sub.
+	if email != "" {
+		user, err = s.state.UserGetEmail(email)
+		if err != nil {
+			if status.Code(err) != codes.NotFound {
+				return nil, err
+			}
+
+			// Just ensure user is nil cause that's the check we'll keep using.
+			user = nil
+		}
+	}
+
+	// If the user still doesn't exist, we create a new user.
+	if user == nil {
+		// Random username to start.
+		// NOTE(mitchellh): we can improve this in a ton of ways in
+		// the future by using their preferred username claim, first name,
+		// etc.
+		username := fmt.Sprintf("user_%d", time.Now().Unix())
+
+		user = &pb.User{
+			Username: username,
+		}
+	}
+
+	// Setup their link
+	user.Links = append(user.Links, &pb.User_Link{
+		Method: &pb.User_Link_Oidc{
+			Oidc: &pb.User_Link_OIDC{
+				Iss: iss,
+				Sub: sub,
+			},
+		},
+	})
+
+	if err := s.state.UserPut(user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// idClaims are the claims for the ID token that we care about. There
+// are many more claims[1] but we only add what we need.
+//
+// [1]: https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
+type idClaims struct {
+	Sub           string `json:"sub"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
 }
