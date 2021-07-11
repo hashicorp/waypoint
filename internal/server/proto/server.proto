@@ -572,8 +572,13 @@ message User {
   // user/pass, etc.).
   message Link {
     oneof method {
-      // TODO: one day!
-      string todo = 1;
+      OIDC oidc = 1;
+    }
+
+    message OIDC {
+      // issuer and sub claims can be used to uniquely identify a user
+      string iss = 1;
+      string sub = 2;
     }
   }
 }
