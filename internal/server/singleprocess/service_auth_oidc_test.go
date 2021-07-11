@@ -75,4 +75,24 @@ func TestOIDCAuth(t *testing.T) {
 	})
 	require.NoError(err)
 	require.NotNil(respAuth)
+	require.NotEmpty(respAuth.Token)
+	user := respAuth.User
+	require.NotNil(user)
+
+	// Complete our auth again. We should get the same user.
+	{
+		respAuth, err := client.CompleteOIDCAuth(ctx, &pb.CompleteOIDCAuthRequest{
+			AuthMethod:  &pb.Ref_AuthMethod{Name: "TEST"},
+			RedirectUri: "https://example.com",
+			State:       "state",
+			Code:        "hello",
+			Nonce:       "nonce",
+		})
+		require.NoError(err)
+		require.NotNil(respAuth)
+
+		user2 := respAuth.User
+		require.NotNil(user2)
+		require.Equal(user.Id, user2.Id)
+	}
 }
