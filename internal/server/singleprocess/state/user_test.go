@@ -217,7 +217,7 @@ func TestUser(t *testing.T) {
 			Id:       id,
 			Username: "foo",
 			Links: []*pb.User_Link{
-				&pb.User_Link{
+				{
 					Method: &pb.User_Link_Oidc{
 						Oidc: &pb.User_Link_OIDC{
 							Iss: "A",
