@@ -75,7 +75,9 @@ func (s *service) GetOIDCAuthURL(
 	}
 
 	// Create a minimal request to get the auth URL
-	oidcReqOpts := []oidc.Option{}
+	oidcReqOpts := []oidc.Option{
+		oidc.WithNonce(req.Nonce),
+	}
 	if v := amMethod.Oidc.Scopes; len(v) > 0 {
 		oidcReqOpts = append(oidcReqOpts, oidc.WithScopes(v...))
 	}

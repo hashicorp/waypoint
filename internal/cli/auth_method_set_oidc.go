@@ -134,5 +134,5 @@ Usage: waypoint auth-method set oidc [options] name
 
   Configure an OIDC auth method.
 
-`)
+` + c.Flags().Help())
 }
