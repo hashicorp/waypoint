@@ -212,7 +212,9 @@ func (s *service) decodeToken(token string) (*pb.TokenTransport, *pb.Token, erro
 
 		now := time.Now()
 		if vt.Before(now.UTC()) {
-			return nil, nil, errors.Wrapf(ErrInvalidToken, "token has expired. %s < %s", vt, now)
+			return nil, nil, errors.Wrapf(ErrInvalidToken,
+				"Token has expired. The token was valid until: %s. Please "+
+					"reauthenticate to continue accessing Waypoint.", vt)
 		}
 	}
 
