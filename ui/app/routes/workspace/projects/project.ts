@@ -32,6 +32,6 @@ export default class ProjectDetail extends Route {
   }
 
   afterModel() {
-    this.pollModel.setup(this);
+    // this.pollModel.setup(this);
   }
 }

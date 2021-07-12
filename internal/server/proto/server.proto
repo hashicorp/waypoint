@@ -105,7 +105,7 @@ service Waypoint {
   rpc GetLogStream(GetLogStreamRequest) returns (stream LogBatch);
 
   // StartExecStream starts an exec session.
-  rpc StartExecStream(stream ExecStreamRequest) returns (stream ExecStreamResponse);
+  rpc StartExecStream(ExecStreamRequest) returns (stream ExecStreamResponse);
 
   // Set a single configuration item for the application.
   rpc SetConfig(ConfigSetRequest) returns (ConfigSetResponse);

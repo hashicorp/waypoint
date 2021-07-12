@@ -1015,6 +1015,25 @@ export class WaypointClient {
       this.methodInfoGetLogStream);
   }
 
+  methodInfoStartExecStream = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.ExecStreamResponse,
+    (request: internal_server_proto_server_pb.ExecStreamRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.ExecStreamResponse.deserializeBinary
+  );
+
+  startExecStream(
+    request: internal_server_proto_server_pb.ExecStreamRequest,
+    metadata?: grpcWeb.Metadata) {
+    return this.client_.serverStreaming(
+      this.hostname_ +
+        '/hashicorp.waypoint.Waypoint/StartExecStream',
+      request,
+      metadata || {},
+      this.methodInfoStartExecStream);
+  }
+
   methodInfoSetConfig = new grpcWeb.AbstractClientBase.MethodInfo(
     internal_server_proto_server_pb.ConfigSetResponse,
     (request: internal_server_proto_server_pb.ConfigSetRequest) => {

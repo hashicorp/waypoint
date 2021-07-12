@@ -17,7 +17,7 @@ export default class Index extends Route {
   }
 
   afterModel() {
-    this.pollModel.setup(this);
+    // this.pollModel.setup(this);
   }
 
   resetController(controller: ProjectsIndex) {

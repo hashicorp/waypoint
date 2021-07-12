@@ -82,7 +82,7 @@ export default class App extends Route {
 
   afterModel(model: ResolvedModel): void {
     injectStatusReports(model);
-    this.pollModel.setup(this);
+    // this.pollModel.setup(this);
   }
 }
 
