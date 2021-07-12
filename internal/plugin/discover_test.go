@@ -6,22 +6,20 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/hashicorp/waypoint/internal/config"
 )
 
 func TestDiscover(t *testing.T) {
 	cases := []struct {
 		Name   string
 		Paths  []string
-		Plugin *config.Plugin
+		Plugin *Config
 		Err    string
 		Result *exec.Cmd
 	}{
 		{
 			"No paths",
 			nil,
-			&config.Plugin{Name: "foo"},
+			&Config{Name: "foo"},
 			"",
 			nil,
 		},
@@ -32,7 +30,7 @@ func TestDiscover(t *testing.T) {
 				filepath.Join("testdata", "pathA"),
 				filepath.Join("testdata", "pathB"),
 			},
-			&config.Plugin{Name: "foo"},
+			&Config{Name: "foo"},
 			"",
 			nil,
 		},
@@ -43,7 +41,7 @@ func TestDiscover(t *testing.T) {
 				filepath.Join("testdata", "pathA"),
 				filepath.Join("testdata", "pathB"),
 			},
-			&config.Plugin{Name: "b"},
+			&Config{Name: "b"},
 			"",
 			&exec.Cmd{
 				Path: filepath.Join("testdata", "pathB", "waypoint-plugin-b"),
@@ -57,7 +55,7 @@ func TestDiscover(t *testing.T) {
 				filepath.Join("testdata", "pathA"),
 				filepath.Join("testdata", "pathB"),
 			},
-			&config.Plugin{Name: "a"},
+			&Config{Name: "a"},
 			"",
 			&exec.Cmd{
 				Path: filepath.Join("testdata", "pathA", "waypoint-plugin-a"),
@@ -71,7 +69,7 @@ func TestDiscover(t *testing.T) {
 				filepath.Join("testdata", "pathA"),
 				filepath.Join("testdata", "pathB"),
 			},
-			&config.Plugin{
+			&Config{
 				Name:     "b",
 				Checksum: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 			},
@@ -88,7 +86,7 @@ func TestDiscover(t *testing.T) {
 				filepath.Join("testdata", "pathA"),
 				filepath.Join("testdata", "pathB"),
 			},
-			&config.Plugin{
+			&Config{
 				Name:     "b",
 				Checksum: "f3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 			},

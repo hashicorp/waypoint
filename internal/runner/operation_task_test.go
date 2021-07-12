@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,6 +13,10 @@ import (
 )
 
 func TestRunnerTaskLauncherStart(t *testing.T) {
+	if os.Getenv("WAYPOINT_PLUGIN_PATH") == "" {
+		t.Skip("unable to run plugins in tests without setting plugin path")
+
+	}
 	require := require.New(t)
 	ctx := context.Background()
 	client := singleprocess.TestServer(t)
