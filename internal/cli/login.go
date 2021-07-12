@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/serverclient"
 )
 
 type LoginCommand struct {
@@ -31,7 +33,14 @@ func (c *LoginCommand) Run(args []string) int {
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
+		WithNoAutoServer(), // no need to login for local mode
 	); err != nil {
+		// This error specifically comes if we attempt to run this without
+		// a server address configured.
+		if errors.Is(err, serverclient.ErrNoServerConfig) {
+			c.ui.Output(strings.TrimSpace(errLoginServerAddress), terminal.WithErrorStyle())
+		}
+
 		return 1
 	}
 
@@ -198,6 +207,18 @@ which auth method you want to use using the "-auth-method" flag. The list
 of available auth methods are:
 
 %s
+`
+
+	errLoginServerAddress = `
+This error usually is because you forgot to specify an address for
+a server as an argument. Please use "waypoint login <address>" where
+"<address>" is the address to your Waypoint server. For example:
+
+waypoint login example.com
+
+or
+
+waypoint login https://example.com
 `
 
 	outVisitURL = `
