@@ -5,7 +5,7 @@ import { Ref, GetBuildRequest } from 'waypoint-pb';
 import { AppRouteModel } from '../app';
 
 interface BuildModelParams {
-  build_id: string;
+  sequence: number;
 }
 export default class BuildDetail extends Route {
   @service api!: ApiService;
@@ -28,11 +28,12 @@ export default class BuildDetail extends Route {
 
   async model(params: BuildModelParams) {
     // Setup the build request
+    let { builds } = this.modelFor('workspace.projects.project.app');
+    let { id: build_id } = builds.find((obj) => obj.sequence == params.sequence);
     let ref = new Ref.Operation();
-    ref.setId(params.build_id);
+    ref.setId(build_id);
     let req = new GetBuildRequest();
     req.setRef(ref);
-
     let build = await this.api.client.getBuild(req, this.api.WithMeta());
     return build.toObject();
   }
