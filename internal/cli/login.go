@@ -26,14 +26,13 @@ type LoginCommand struct {
 }
 
 func (c *LoginCommand) Run(args []string) int {
-	// TODO server addr arg
-
 	// Initialize. If we fail, we just exit since Init handles the UI.
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
 		WithNoConfig(),
 		WithNoAutoServer(), // no need to login for local mode
+		WithConnectionArg(),
 	); err != nil {
 		// This error specifically comes if we attempt to run this without
 		// a server address configured.
