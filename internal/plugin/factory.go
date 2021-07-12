@@ -3,6 +3,7 @@ package plugin
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -20,9 +21,17 @@ var exePath string
 
 func init() {
 	var err error
-	exePath, err = os.Executable()
-	if err != nil {
-		panic(err)
+	exp := os.Getenv("WAYPOINT_PLUGIN_PATH")
+	if exp != "" {
+		exePath, err = filepath.Abs(exp)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		exePath, err = os.Executable()
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -59,7 +68,7 @@ func Factory(cmd *exec.Cmd, typ component.Type) interface{} {
 		if typ != component.MapperType {
 			raw, err = rpcClient.Dispense(strings.ToLower(typ.String()))
 			if err != nil {
-				log.Error("error requesting plugin", "type", typ, "err", err)
+				log.Error("error requesting plugin", "type", typ, "id", strings.ToLower(typ.String()), "err", err)
 				client.Kill()
 				return nil, err
 			}
