@@ -8,6 +8,6 @@ import (
 
 // Options are the SDK options to use for instantiation.
 var Options = []sdk.Option{
-	sdk.WithComponents(&Builder{}, &Registry{}, &Platform{}),
+	sdk.WithComponents(&Builder{}, &Registry{}, &Platform{}, &TaskLauncher{}),
 	// sdk.WithMappers(PackImageMapper),
 }

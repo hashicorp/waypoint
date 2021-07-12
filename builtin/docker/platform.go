@@ -370,7 +370,6 @@ func (p *Platform) resourceContainerCreate(
 			netState.Name: {},
 		},
 	}
-	log.Warn("NETWORK NAME", "name", netState.Name)
 
 	for k, v := range p.config.StaticEnvVars {
 		cfg.Env = append(cfg.Env, k+"="+v)
