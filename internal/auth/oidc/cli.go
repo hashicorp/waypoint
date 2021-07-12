@@ -89,7 +89,6 @@ func (s *CallbackServer) SuccessCh() <-chan *pb.CompleteOIDCAuthRequest {
 // ServeHTTP implements http.Handler and handles the callback request. This
 // isn't usually used directly. Instead, get the server address.
 func (s *CallbackServer) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	//QUERY: url.Values{"authuser":[]string{"0"}, "code":[]string{"4/0AX4XfWj4G-70eqlWST4vwFlQTl6Cx1ccpObU54U4OR5ZDgcsfrsp5Y0xpIE-NI83XNsHbQ"}, "prompt":[]string{"consent"}, "scope":[]string{"openid"}, "state":[]string{"st_b369Ynw7UYYg5L5sFooD"}}
 	q := req.URL.Query()
 
 	// Build our result

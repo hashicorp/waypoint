@@ -14,6 +14,12 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
+// oidcAuthExpiry is the duration that an OIDC-based login is valid for.
+// We default this to 30 days for now but that is arbitrary. We can change
+// this default anytime or choose to make it configurable one day on the
+// server.
+const oidcAuthExpiry = 30 * 24 * time.Hour
+
 func (s *service) ListOIDCAuthMethods(
 	ctx context.Context,
 	req *empty.Empty,
@@ -34,8 +40,6 @@ func (s *service) ListOIDCAuthMethods(
 		if !ok {
 			continue
 		}
-
-		// TODO(mitchellh): sniff the kind from the discovery URL.
 
 		result = append(result, &pb.OIDCAuthMethod{
 			Name:        method.Name,
@@ -191,8 +195,7 @@ func (s *service) CompleteOIDCAuth(
 	}
 
 	// Generate a token for this user
-	// TODO(mitchellh): expiration is "0" we probably want a real value
-	token, err := s.newToken(0, DefaultKeyId, nil, &pb.Token{
+	token, err := s.newToken(oidcAuthExpiry, DefaultKeyId, nil, &pb.Token{
 		Kind: &pb.Token_Login_{
 			Login: &pb.Token_Login{UserId: user.Id},
 		},
