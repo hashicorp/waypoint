@@ -44,6 +44,7 @@ func (c *Config) FromURL(v string) error {
 	// Set our defaults
 	c.Server.Tls = true
 	c.Server.TlsSkipVerify = true
+	c.Server.RequireAuth = false
 
 	// Setting the address as the default allows this to work for
 	// urls like "foo.com:1234" which url.Parse doesn't handle well at all.
