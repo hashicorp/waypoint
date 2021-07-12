@@ -30,7 +30,6 @@ func LoadPath(path string) (*Config, error) {
 //
 //   - assumes TLS
 //   - assumes TLS skip verify
-//   - assumes requires auth
 //
 // The skip verify bit is a bad default but it is the most common UX
 // getting started and this URL is most commonly used with `waypoint login`
@@ -45,7 +44,6 @@ func (c *Config) FromURL(v string) error {
 	// Set our defaults
 	c.Server.Tls = true
 	c.Server.TlsSkipVerify = true
-	c.Server.RequireAuth = true
 
 	// Setting the address as the default allows this to work for
 	// urls like "foo.com:1234" which url.Parse doesn't handle well at all.
