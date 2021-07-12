@@ -13,6 +13,44 @@ import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
+// Test that a DeployFunc that returns a DeclaredResource results in a resource saved on the deployment response
+func TestAppDeploy_withDeclaredResource(t *testing.T) {
+	require := require.New(t)
+
+	// Make our factory for platforms
+	mock := &componentmocks.Platform{}
+	factory := TestFactory(t, component.PlatformType)
+	TestFactoryRegister(t, factory, "test", mock)
+
+	// Make our app
+	app := TestApp(t, TestProject(t,
+		WithConfig(config.TestConfig(t, testDeployConfig)),
+		WithFactory(component.PlatformType, factory),
+	), "test")
+
+	// Setup our value
+	mock.On("DeployFunc").Return(
+		func(c context.Context, declaredResourcesResp *component.DeclaredResourcesResp) (component.Deployment, error) {
+			declaredResourcesResp.DeclaredResources = append(declaredResourcesResp.DeclaredResources,
+				&sdk.DeclaredResource{
+					Type:                "test-instance",
+					Platform:            "test-platform",
+					CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
+				})
+			return &componentmocks.Deployment{}, nil
+		},
+	)
+
+	push := &pb.PushedArtifact{
+		Artifact: &pb.Artifact{},
+	}
+
+	deploy, err := app.Deploy(context.Background(), push)
+	require.NoError(err)
+	require.NotNil(deploy)
+	require.NotEmpty(deploy.DeclaredResources)
+}
+
 // Test that we set the correct generation ID.
 func TestAppDeploy_generation(t *testing.T) {
 	t.Run("with no generation implementation", func(t *testing.T) {
