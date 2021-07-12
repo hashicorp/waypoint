@@ -41,18 +41,18 @@ func TestProviderCache(t *testing.T) {
 	})
 
 	// Get our first value
-	p, err := cache.Get(ctx, am)
+	p, err := cache.Get(ctx, am, nil)
 	require.NoError(err)
 	require.NotNil(p)
 
 	// Get a second value, they should be pointer equal
-	p2, err := cache.Get(ctx, am)
+	p2, err := cache.Get(ctx, am, nil)
 	require.NoError(err)
 	require.Equal(p, p2)
 
 	// Update the config
 	amOIDC.AllowedRedirectUris = []string{"http://example.com/foo"}
-	p2, err = cache.Get(ctx, am)
+	p2, err = cache.Get(ctx, am, nil)
 	require.NoError(err)
 	require.NotNil(p2)
 	require.NotEqual(p, p2)

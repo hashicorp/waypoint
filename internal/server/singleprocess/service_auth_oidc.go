@@ -68,8 +68,14 @@ func (s *service) GetOIDCAuthURL(
 			"auth method is not OIDC")
 	}
 
+	// We need our server config.
+	sc, err := s.state.ServerConfigGet()
+	if err != nil {
+		return nil, err
+	}
+
 	// Get our OIDC provider
-	provider, err := s.oidcCache.Get(ctx, am)
+	provider, err := s.oidcCache.Get(ctx, am, sc)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +128,14 @@ func (s *service) CompleteOIDCAuth(
 			"auth method is not OIDC")
 	}
 
+	// We need our server config.
+	sc, err := s.state.ServerConfigGet()
+	if err != nil {
+		return nil, err
+	}
+
 	// Get our OIDC provider
-	provider, err := s.oidcCache.Get(ctx, am)
+	provider, err := s.oidcCache.Get(ctx, am, sc)
 	if err != nil {
 		return nil, err
 	}
