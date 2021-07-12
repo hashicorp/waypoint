@@ -38,6 +38,7 @@ var (
 	// commonCommands are the commands that are deemed "common" and shown first
 	// in the CLI help output.
 	commonCommands = []string{
+		"login",
 		"build",
 		"deploy",
 		"release",
@@ -159,6 +160,12 @@ func Commands(
 
 	// start building our commands
 	commands := map[string]cli.CommandFactory{
+		"login": func() (cli.Command, error) {
+			return &LoginCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"init": func() (cli.Command, error) {
 			return &InitCommand{
 				baseCommand: baseCommand,
