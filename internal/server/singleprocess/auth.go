@@ -54,10 +54,13 @@ var (
 	// any authentication. Authenticate doesn't even attempt to parse the
 	// token so it can be totally invalid.
 	unauthenticatedEndpoints = map[string]struct{}{
-		"BootstrapToken":     {},
-		"ConvertInviteToken": {},
-		"DecodeToken":        {},
-		"GetVersionInfo":     {},
+		"BootstrapToken":      {},
+		"ConvertInviteToken":  {},
+		"DecodeToken":         {},
+		"GetVersionInfo":      {},
+		"ListOIDCAuthMethods": {},
+		"GetOIDCAuthURL":      {},
+		"CompleteOIDCAuth":    {},
 	}
 )
 
