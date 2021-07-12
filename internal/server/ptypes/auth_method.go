@@ -25,10 +25,9 @@ func TestAuthMethod(t testing.T, src *pb.AuthMethod) *pb.AuthMethod {
 
 		Method: &pb.AuthMethod_Oidc{
 			Oidc: &pb.AuthMethod_OIDC{
-				ClientId:            "A",
-				ClientSecret:        "B",
-				AllowedRedirectUris: []string{"foo"},
-				DiscoveryUrl:        "https://example.com/discovery",
+				ClientId:     "A",
+				ClientSecret: "B",
+				DiscoveryUrl: "https://example.com/discovery",
 			},
 		},
 	}))
@@ -64,7 +63,6 @@ func validateAuthMethodOIDCRules(v *pb.AuthMethod_Oidc) []*validation.FieldRules
 	return []*validation.FieldRules{
 		validation.Field(&v.Oidc.ClientId, validation.Required),
 		validation.Field(&v.Oidc.ClientSecret, validation.Required),
-		validation.Field(&v.Oidc.AllowedRedirectUris, validation.Required),
 
 		// Discovery URL or manual endpoints are required
 		validation.Field(&v.Oidc.DiscoveryUrl,
