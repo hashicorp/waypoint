@@ -1,10 +1,10 @@
 import Component from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
 import ApiService from 'waypoint/services/api';
 import { inject as service } from '@ember/service';
-
 import { GetJobStreamRequest, GetJobStreamResponse } from 'waypoint-pb';
-import { ITerminalOptions, Terminal } from 'xterm';
+import { ITerminalOptions, Terminal, ITheme } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
+
 
 const ANSI_UI_GRAY_400 = '\x1b[38;2;142;150;163m';
 const ANSI_WHITE = '\x1b[0m';
@@ -14,11 +14,27 @@ interface LogTerminalArgs {
   jobId: string;
 }
 
+const terminalTheme: ITheme = {
+  foreground: 'rgb(0,0,0)',
+  background: 'rgb(247,250,252)',
+  cyan: 'rgb(0, 187, 187)',
+  brightBlue: 'rgb(85, 85, 255)',
+  green: 'rgb(0, 187, 0)',
+  magenta: 'rgb(187, 0, 187)',
+  brightMagenta: 'rgb(187, 0, 187)',
+  yellow: 'rgb(187, 187, 0)',
+  brightYellow: 'rgb(187, 187, 0)',
+  blue: 'rgb(0, 187, 187)',
+  brightBlack: 'rgb(0,0,0)',
+  selection: 'rgb(5,198,194)',
+};
+
 export default class LogTerminal extends Component<LogTerminalArgs> {
   @service api!: ApiService;
   terminal: any;
   inputDisabled: boolean;
   jobId: string;
+  fitAddon: FitAddon;
 
   constructor(owner: any, args: any) {
     super(owner, args);
@@ -27,9 +43,13 @@ export default class LogTerminal extends Component<LogTerminalArgs> {
     this.inputDisabled = inputDisabled;
 
     let terminalOptions: ITerminalOptions = {
-      fontFamily: 'monospace',
+      fontFamily: 'ui-monospace,Menlo,monospace',
       fontWeight: '400',
       logLevel: 'debug',
+      lineHeight: 1.4,
+      fontSize: 12,
+      fontWeightBold: '700',
+      theme: terminalTheme,
     };
 
     if (this.inputDisabled) {
@@ -40,17 +60,31 @@ export default class LogTerminal extends Component<LogTerminalArgs> {
     }
     let terminal = new Terminal(terminalOptions);
     this.terminal = terminal;
+    // Setup resize Addon
+    let fitAddon = new FitAddon();
+    this.fitAddon = fitAddon;
+    this.terminal.loadAddon(fitAddon);
+
     this.start();
   }
 
   didInsertNode(element) {
     this.terminal.open(element);
-    this.terminal.write(ANSI_UI_GRAY_400);
+    // Initial fit to component size
+    this.fitAddon.fit();
+    // this.terminal.write(ANSI_UI_GRAY_400);
     this.terminal.writeln('Welcome to Waypoint...');
   }
 
   willDestroyNode() {
     this.terminal.dispose();
+  }
+
+  didResize(e) {
+    this.fitAddon.fit();
+    if (this.terminal.resized) {
+      this.terminal.resized(e);
+    }
   }
 
   writeTerminalOutput(response: GetJobStreamResponse) {
@@ -80,6 +114,8 @@ export default class LogTerminal extends Component<LogTerminalArgs> {
       }
     }
   }
+
+
 
   onData = (response: GetJobStreamResponse) => {
     this.writeTerminalOutput(response);
