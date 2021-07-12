@@ -964,6 +964,11 @@ message GetOIDCAuthURLRequest {
 
   // The URL that authorization should redirect to.
   string redirect_uri = 2;
+
+  // Nonce is a randomly generated string to prevent replay attacks.
+  // It is up to the client to generate this. This must then be passed
+  // back to CompleteOIDCAuthRequest.
+  string nonce = 3;
 }
 
 message GetOIDCAuthURLResponse {
