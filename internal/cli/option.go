@@ -73,6 +73,15 @@ func WithNoAutoServer() Option {
 	}
 }
 
+// WithConnectionArg parses the first argument in the CLI as connection
+// info if it exists. This parses it according to the clicontext.Config.FromURL
+// method.
+func WithConnectionArg() Option {
+	return func(c *baseConfig) {
+		c.ConnArg = true
+	}
+}
+
 type baseConfig struct {
 	Args              []string
 	Flags             *flag.Sets
@@ -84,4 +93,8 @@ type baseConfig struct {
 
 	// NoAutoServer is true if an in-memory server is not allowed.
 	NoAutoServer bool
+
+	// ConnArg as true means we should parse the server address as an
+	// argument (the first argument).
+	ConnArg bool
 }

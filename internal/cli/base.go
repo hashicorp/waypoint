@@ -177,6 +177,16 @@ func (c *baseCommand) Init(opts ...Option) error {
 		c.ui = terminal.NonInteractiveUI(c.Ctx)
 	}
 
+	// If we're parsing the connection from the arg, then use that.
+	if baseCfg.ConnArg && len(c.args) > 0 {
+		if err := c.flagConnection.FromURL(c.args[0]); err != nil {
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return err
+		}
+
+		c.args = c.args[1:]
+	}
+
 	// With the flags we now know what workspace we're targeting
 	c.refWorkspace = &pb.Ref_Workspace{Workspace: c.flagWorkspace}
 
