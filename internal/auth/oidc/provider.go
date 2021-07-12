@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"net/url"
 	"strings"
 	"sync"
 
@@ -13,7 +14,9 @@ import (
 )
 
 // ProviderConfig returns the OIDC provider configuration for an OIDC auth method.
-func ProviderConfig(am *pb.AuthMethod_OIDC) (*oidc.Config, error) {
+// The ServerConfig argument can be nil. If it is not nil, then the server
+// advertise addresses will be added as valid redirect URLs.
+func ProviderConfig(am *pb.AuthMethod_OIDC, sc *pb.ServerConfig) (*oidc.Config, error) {
 	var algs []oidc.Alg
 	if len(am.SigningAlgs) > 0 {
 		for _, alg := range am.SigningAlgs {
@@ -34,6 +37,22 @@ func ProviderConfig(am *pb.AuthMethod_OIDC) (*oidc.Config, error) {
 		"http://127.0.0.1/oidc/callback",
 		"http://[::1]/oidc/callback",
 	)
+
+	// We also add all the addresses our UI might use with the server advertise addrs.
+	// TODO(mitchellh): once the UI path is determined, we have to update the path
+	if sc != nil {
+		for _, addr := range sc.AdvertiseAddrs {
+			var u url.URL
+			u.Scheme = "https"
+			u.Host = addr.Addr
+			if !addr.Tls {
+				u.Scheme = "http"
+			}
+			u.Path = "/oidc/callback"
+
+			allowedUris = append(allowedUris, u.String())
+		}
+	}
 
 	return oidc.NewConfig(
 		am.DiscoveryUrl,
@@ -63,7 +82,7 @@ type ProviderCache struct {
 // This will initialize the provider if it isn't already in the cache or
 // if the configuration changed.
 func (c *ProviderCache) Get(
-	ctx context.Context, am *pb.AuthMethod,
+	ctx context.Context, am *pb.AuthMethod, sc *pb.ServerConfig,
 ) (*oidc.Provider, error) {
 	amMethod, ok := am.Method.(*pb.AuthMethod_Oidc)
 	if !ok {
@@ -72,7 +91,7 @@ func (c *ProviderCache) Get(
 
 	// No matter what we'll use the config of the arg method since we'll
 	// use it to compare to existing (if exists) or initialize a new provider.
-	oidcCfg, err := ProviderConfig(amMethod.Oidc)
+	oidcCfg, err := ProviderConfig(amMethod.Oidc, sc)
 	if err != nil {
 		return nil, err
 	}
