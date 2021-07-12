@@ -476,6 +476,12 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"validate": func() (cli.Command, error) {
+			return &ValidateCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
