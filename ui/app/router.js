@@ -39,7 +39,8 @@ Router.map(function () {
         });
         this.route('app', { path: '/app/:app_id' }, function () {
           this.route('builds');
-          this.route('build', { path: '/build/:build_id' });
+          this.route('build-id', { path: '/build/:build_id' });
+          this.route('build', { path: '/build/seq/:sequence' });
           this.route('deployments');
           this.route('deployment', { path: '/deployment/:deployment_id' });
           this.route('releases');
