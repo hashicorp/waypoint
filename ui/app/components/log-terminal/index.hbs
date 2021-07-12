@@ -1,7 +1,10 @@
-<div class="terminal"
-  {{did-insert (action this.didInsertNode)}}
-  {{will-destroy (action this.willDestroyNode)}}
->
+<div class="xterm-pane">
+  <div class="log-terminal"
+    {{did-insert (action this.didInsertNode)}}
+    {{will-destroy (action this.willDestroyNode)}}
+    {{did-resize (action this.didResize)}}
+  >
+  </div>
 </div>
 
 
