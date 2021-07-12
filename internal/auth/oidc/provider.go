@@ -28,7 +28,7 @@ func ProviderConfig(am *pb.AuthMethod_OIDC, sc *pb.ServerConfig) (*oidc.Config, 
 
 	// Modify our allowed uris to always have loopback addresses for our CLI.
 	// Note that "http" instead of "https" is okay for loopback addresses since
-	// the protocl is ignored anyways for loopback.
+	// the protocol is ignored anyways for loopback.
 	allowedUris := make([]string, len(am.AllowedRedirectUris))
 	copy(allowedUris, am.AllowedRedirectUris)
 	allowedUris = append(allowedUris,
