@@ -92,6 +92,7 @@ func New(opts ...Option) (*Runner, error) {
 			component.RegistryType:       plugin.BaseFactories[component.RegistryType],
 			component.PlatformType:       plugin.BaseFactories[component.PlatformType],
 			component.ReleaseManagerType: plugin.BaseFactories[component.ReleaseManagerType],
+			component.TaskLauncherType:   plugin.BaseFactories[component.TaskLauncherType],
 		},
 	}
 

@@ -704,6 +704,21 @@ message Generation {
 }
 
 /********************************************************************
+* Tasks
+********************************************************************/
+
+message TaskLaunchInfo {
+  // The URL of the OCI image to execute the task under.
+  string oci_url = 1;
+
+  // The environment variables that will be exposed to the task.
+  map<string, string> environment_variables = 2;
+ 
+  // The arguments that will be passed to the new container on boot
+  repeated string arguments = 3; 
+}
+
+/********************************************************************
 * Queueing
 ********************************************************************/
 
@@ -757,7 +772,7 @@ message ValidateJobResponse {
 
 // A Job is a job that executes on a runner and is queued by QueueOperation.
 message Job {
-  reserved 66 to 99; // future operation range
+  reserved 68 to 99; // future operation range
 
   // id of the job. This is generated on the server side when queued. If
   // you are queueing a job, this must be empty or unset.
@@ -829,6 +844,8 @@ message Job {
     QueueProjectOp queue_project = 63;
     PollOp poll = 64;
     StatusReportOp status_report = 65;
+    StartTaskLaunchOp start_task = 66;
+    StopTaskLaunchOp stop_task = 67;
   }
 
   //-----------------------------------------------------------------
@@ -1171,6 +1188,33 @@ message Job {
     // Callers can verify by checking if the target deployment changed
     // or not.
     Release release = 1;
+  }
+
+  message StartTaskLaunchOp {
+    // The info to use to create the task
+    TaskLaunchInfo info = 1;
+
+    // The plugin type to invoke for the task plugin.
+    string plugin_type = 2;
+
+    // The configuration information for the task. This is HCL that is
+    // decoded to figure out the task plugin and then provide that
+    // task plugin with configuration
+    bytes hcl_config = 3;
+    Project.Format hcl_format = 4;
+  }
+
+  message StartTaskLaunchResult {
+    // The state of the create task, used to identify it later.
+    google.protobuf.Any state = 1;
+  }
+
+  message StopTaskLaunchOp {
+    // The state returned by the start operation.
+    google.protobuf.Any state = 1;
+  }
+
+  message StopTaskLaunchResult {
   }
 
   message StatusReportOp {

@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/waypoint/internal/clierrors"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -120,7 +121,7 @@ func (r *Runner) recvConfig(
 		// Wait for the next configuration
 		resp, err := client.Recv()
 		if err != nil {
-			if err == io.EOF || err == context.Canceled {
+			if err == io.EOF || clierrors.IsCanceled(err) {
 				return
 			}
 
