@@ -25,8 +25,8 @@
   <:actions>
     {{#if @model.url}}
       <ExternalLink
-        href={{@model.url}}
-        title="Visit {{@model.url}}"
+        href={{enforce-protocol @model.url}}
+        title="Visit {{enforce-protocol @model.url}}"
         class="button button--primary app-card__launch-link"
       >
         <Pds::Icon @type="exit" class="icon" />
