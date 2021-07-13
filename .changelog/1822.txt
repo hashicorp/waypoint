@@ -1,0 +1,3 @@
+```release-note:bug
+core: git datasource `path` field has more validation
+```
