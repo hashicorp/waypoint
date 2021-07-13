@@ -17,9 +17,7 @@
       @type={{icon-for-component @model.component.name}}
       class="icon app-card__component-icon"
     />
-    {{#if @model.statusReport}}
-      <StatusReportIndicator @statusReport={{@model.statusReport}} />
-    {{/if}}
+    <StatusReportIndicator @statusReport={{@model.statusReport}} />
   </:meta-secondary>
 
   <:actions>

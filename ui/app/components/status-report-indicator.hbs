@@ -1,6 +1,6 @@
 {{#let
   (hash
-    status=(downcase @statusReport.health.healthStatus)
+    status=(or (downcase @statusReport.health.healthStatus) "unknown")
     message=@statusReport.health.healthMessage
     isReportRunning=(eq @statusReport.status.state 1)
     completeTime=@statusReport.status.completeTime
@@ -28,6 +28,7 @@
         modifiers=(hash
           preventOverflow=(hash
             escapeWithReference=false
+            boundariesElement="viewport"
           )
         )
       }}
@@ -35,7 +36,7 @@
       {{#if vars.isReportRunning}}
         {{t "status_report_indicator.tooltip.checking_now"}}
       {{else}}
-        {{vars.message}}
+        {{or vars.message (t "status_report_indicator.tooltip.unknown")}}
 
         {{#if vars.completeTime}}
           <small>
