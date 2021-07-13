@@ -105,6 +105,12 @@ func (a *applicationPoll) PollJob(
 		return nil, nil
 	}
 
+	// App polling needs the parent project to obtain its datasource
+	project, err := a.state.ProjectGet(&pb.Ref_Project{Project: app.Project.Project})
+	if err != nil {
+		return nil, err
+	}
+
 	log.Trace("building queue job request for generating status report")
 	jobRequest := &pb.QueueJobRequest{
 		Job: &pb.Job{
@@ -116,6 +122,11 @@ func (a *applicationPoll) PollJob(
 				Application: app.Name,
 				Project:     app.Project.Project,
 			},
+
+			// Applicatioon polling requires a data source to be configured for the project
+			// Otherwise a status report can't properly eval the projects hcl context
+			// needed to query the deploy or release
+			DataSource: project.DataSource,
 
 			Workspace: &pb.Ref_Workspace{Workspace: a.workspace},
 
