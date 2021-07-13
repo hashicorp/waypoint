@@ -78,6 +78,12 @@ func (c *LoginCommand) Run(args []string) int {
 	// which is already configured with the basic server connection stuff
 	// from this command.
 	newContext := c.flagConnection
+	if c.clientContext != nil {
+		// clientContext is always set to our actual context we used to
+		// create our client. So this will accurately grab non-flag based
+		// access i.e. loading our default context.
+		newContext = *c.clientContext
+	}
 	newContext.Server.AuthToken = token
 	newContext.Server.RequireAuth = true
 
