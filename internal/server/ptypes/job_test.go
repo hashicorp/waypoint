@@ -25,7 +25,81 @@ func TestValidateJob(t *testing.T) {
 			func(j *pb.Job) { j.Id = "nope" },
 			"id: must be empty",
 		},
-	}
+
+		{
+			"git: path good",
+			func(j *pb.Job) {
+				j.DataSource = &pb.Job_DataSource{
+					Source: &pb.Job_DataSource_Git{
+						Git: &pb.Job_Git{
+							Url:  "example.com",
+							Path: "foo",
+						},
+					},
+				}
+			},
+			"",
+		},
+
+		{
+			"git: path has a ..",
+			func(j *pb.Job) {
+				j.DataSource = &pb.Job_DataSource{
+					Source: &pb.Job_DataSource_Git{
+						Git: &pb.Job_Git{
+							Url:  "example.com",
+							Path: "../foo",
+						},
+					},
+				}
+			},
+			"path: must not contain",
+		},
+
+		{
+			"git: path is absolute",
+			func(j *pb.Job) {
+				j.DataSource = &pb.Job_DataSource{
+					Source: &pb.Job_DataSource_Git{
+						Git: &pb.Job_Git{
+							Url:  "example.com",
+							Path: "/foo/bar",
+						},
+					},
+				}
+			},
+			"path: must be relative",
+		},
+
+		{
+			"git: path starts with ./",
+			func(j *pb.Job) {
+				j.DataSource = &pb.Job_DataSource{
+					Source: &pb.Job_DataSource_Git{
+						Git: &pb.Job_Git{
+							Url:  "example.com",
+							Path: "./foo/bar",
+						},
+					},
+				}
+			},
+			"path: relative path shouldn't",
+		},
+
+		{
+			"git: path has repeating /",
+			func(j *pb.Job) {
+				j.DataSource = &pb.Job_DataSource{
+					Source: &pb.Job_DataSource_Git{
+						Git: &pb.Job_Git{
+							Url:  "example.com",
+							Path: "foo//bar",
+						},
+					},
+				}
+			},
+			"path: path should not contain repeated",
+		}}
 
 	for _, tt := range cases {
 		t.Run(tt.Name, func(t *testing.T) {
