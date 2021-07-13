@@ -162,3 +162,18 @@ app_card_build:
         state-1: Pushing to # RUNNING
         state-2: Pushed to # SUCCESS
         state-3: Failed to push to # ERROR
+
+app_item_build:
+  label:
+    prefix:
+      type-1: # BUILDER
+        state-0: Building with # UNKNOWN
+        state-1: Building with # RUNNING
+        state-2: Built with # SUCCESS
+        state-3: Failed to build with # ERROR
+      type-2: # REGISTRY
+        state-0: Pushing to # UNKNOWN
+        state-1: Pushing to # RUNNING
+        state-2: Pushed to # SUCCESS
+        state-3: Failed to push to # ERROR
+  built_in: Built in {duration}
