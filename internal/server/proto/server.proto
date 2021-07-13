@@ -896,15 +896,6 @@ message AuthMethod {
     // Multiple CA certificates can be specified to support easier
     // rotation.
     repeated string discovery_ca_pem = 7;
-
-    // If the OIDC provider doesn't implement a discovery URL,
-    // then these must be manually specified. These are specifically
-    // for GitHub -- mainly -- since they basically implement OIDC
-    // but without a discovery URL. If a user provides these, we can
-    // do GitHub auth. See this example in other software.
-    string authorization_endpoint = 8;
-    string token_endpoint = 9;
-    string userinfo_endpoint = 10;
   }
 }
 
