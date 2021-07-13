@@ -21,11 +21,11 @@ waypoint.hcl, and setting their values using CLI options, environment variables,
 ## Declaring an Input Variable
 
 Each input variable referenced in the waypoint.hcl must be declared using a
-`variable` block:
+`variable` block. Example variable declaration blocks include:
 
 ```hcl
 variable "port" {
-  type = number
+  type    = number
   default = 8080
 }
 
@@ -39,7 +39,7 @@ variable "docker_labels" {
     environment = string
     log_level   = string
   })
-  default =  {
+  default = {
       environment = test
       log_level   = debug
     }
