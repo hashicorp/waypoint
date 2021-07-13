@@ -10,7 +10,9 @@
   </div>
   <div class="actions">
     <div class="button-group">
-      <ExternalLink href="https://{{@model.preload.deployUrl}}" class="button button--secondary button--external-link">
+      <ExternalLink
+        href={{enforce-protocol @model.preload.deployUrl}}
+        class="button button--secondary button--external-link">
         <span>{{lowercase @model.preload.deployUrl}}</span>
         <Pds::Icon @type="exit" class="icon" />
       </ExternalLink>
