@@ -3,50 +3,47 @@ import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { Ref, Deployment, Build, Release, Project, StatusReport } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
-import ObjectProxy from '@ember/object/proxy';
-import PromiseProxyMixin from '@ember/object/promise-proxy-mixin';
-import { resolve, hash } from 'rsvp';
+import { hash } from 'rsvp';
 
-interface AppModelParams {
+export interface Params {
   app_id: string;
 }
 
-export interface AppRouteModel {
-  application: Ref.Application.AsObject;
-  deployments: Promise<Deployment.AsObject[]>;
-  releases: Promise<Release.AsObject[]>;
-  builds: Promise<Build.AsObject[]>;
-  statusReports: Promise<StatusReport.AsObject[]>;
-}
-
-interface WithStatusReport {
-  statusReport: StatusReport.AsObject;
-}
-
-export interface ResolvedModel {
+export interface Model {
   application: Ref.Application.AsObject;
   deployments: (Deployment.AsObject & WithStatusReport)[];
   releases: (Release.AsObject & WithStatusReport)[];
-  builds: (Build.AsObject & WithStatusReport)[];
+  builds: Build.AsObject[];
   statusReports: StatusReport.AsObject[];
+}
+
+interface WithStatusReport {
+  statusReport?: StatusReport.AsObject;
+}
+
+interface Breadcrumb {
+  label: string;
+  icon: string;
+  args: string[];
 }
 
 export default class App extends Route {
   @service api!: ApiService;
   @service pollModel!: PollModelService;
 
-  breadcrumbs(model: AppRouteModel) {
+  breadcrumbs(model: Model): Breadcrumb[] {
     if (!model) return [];
+
     return [
       {
-        label: model.application.project!,
+        label: model.application.project,
         icon: 'folder-outline',
         args: ['workspace.projects.project.apps'],
       },
     ];
   }
 
-  async model(params: AppModelParams): Promise<AppRouteModel> {
+  async model(params: Params): Promise<Model> {
     let ws = this.modelFor('workspace') as Ref.Workspace.AsObject;
     let wsRef = new Ref.Workspace();
     wsRef.setWorkspace(ws.workspace);
@@ -58,35 +55,22 @@ export default class App extends Route {
     appRef.setApplication(params.app_id);
     appRef.setProject(proj.name);
 
-    let ObjectPromiseProxy = ObjectProxy.extend(PromiseProxyMixin);
-
     return hash({
       application: appRef.toObject(),
-      deployments: ObjectPromiseProxy.create({
-        promise: resolve(this.api.listDeployments(wsRef, appRef)),
-      }),
-      releases: ObjectPromiseProxy.create({
-        promise: resolve(this.api.listReleases(wsRef, appRef)),
-      }),
-      builds: ObjectPromiseProxy.create({
-        promise: resolve(this.api.listBuilds(wsRef, appRef)),
-      }),
-      statusReports: ObjectPromiseProxy.create({
-        promise: resolve(this.api.listStatusReports(wsRef, appRef)),
-      }),
-      latestStatusReport: ObjectPromiseProxy.create({
-        promise: resolve(this.api.getLatestStatusReport(wsRef, appRef)),
-      }),
+      deployments: this.api.listDeployments(wsRef, appRef),
+      releases: this.api.listReleases(wsRef, appRef),
+      builds: this.api.listBuilds(wsRef, appRef),
+      statusReports: this.api.listStatusReports(wsRef, appRef),
     });
   }
 
-  afterModel(model: ResolvedModel): void {
+  afterModel(model: Model): void {
     injectStatusReports(model);
     this.pollModel.setup(this);
   }
 }
 
-function injectStatusReports(model: ResolvedModel): void {
+function injectStatusReports(model: Model): void {
   let { deployments, releases, statusReports } = model;
 
   for (let statusReport of statusReports) {

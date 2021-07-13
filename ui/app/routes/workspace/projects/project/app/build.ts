@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { Ref, GetBuildRequest } from 'waypoint-pb';
-import { AppRouteModel } from '../app';
+import { Model as AppRouteModel } from '../app';
 
 interface BuildModelParams {
   build_id: string;

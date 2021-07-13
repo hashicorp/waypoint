@@ -1,5 +1,5 @@
 import Route from '@ember/routing/route';
-import { AppRouteModel } from '../app';
+import { Model as AppRouteModel } from '../app';
 
 export default class AppIndex extends Route {
   redirect(model: AppRouteModel) {
