@@ -480,8 +480,7 @@ func TestGitSourceChanges(t *testing.T) {
 		require.Equal(hash, "a71a259607c26e93037aee9f2496a1da83dea6f2")
 	})
 
-	// Detect no changes in a specific path
-	t.Run("no changes in specific path", func(t *testing.T) {
+	t.Run("no changes in specific path without ignore setting", func(t *testing.T) {
 		require := require.New(t)
 
 		hclog.L().SetLevel(hclog.Trace)
@@ -497,6 +496,41 @@ func TestGitSourceChanges(t *testing.T) {
 						Url:  "https://github.com/hashicorp/waypoint.git",
 						Ref:  "release/0.1.0",
 						Path: "idontexist",
+					},
+				},
+			},
+			&pb.Job_DataSource_Ref{
+				Ref: &pb.Job_DataSource_Ref_Git{
+					Git: &pb.Job_Git_Ref{
+						Commit: "38a28ec5af18265189fc6d55fd5970fd5e48544d",
+					},
+				},
+			},
+			"",
+		)
+		require.NoError(err)
+		require.NotNil(newRef)
+		require.False(ignore)
+	})
+
+	// Detect no changes in a specific path
+	t.Run("no changes in specific path", func(t *testing.T) {
+		require := require.New(t)
+
+		hclog.L().SetLevel(hclog.Trace)
+
+		var s GitSource
+		newRef, ignore, err := s.Changes(
+			context.Background(),
+			hclog.L(),
+			terminal.ConsoleUI(context.Background()),
+			&pb.Job_DataSource{
+				Source: &pb.Job_DataSource_Git{
+					Git: &pb.Job_Git{
+						Url:                      "https://github.com/hashicorp/waypoint.git",
+						Ref:                      "release/0.1.0",
+						Path:                     "idontexist",
+						IgnoreChangesOutsidePath: true,
 					},
 				},
 			},
@@ -527,9 +561,10 @@ func TestGitSourceChanges(t *testing.T) {
 			&pb.Job_DataSource{
 				Source: &pb.Job_DataSource_Git{
 					Git: &pb.Job_Git{
-						Url:  "https://github.com/hashicorp/waypoint.git",
-						Ref:  "release/0.1.0",
-						Path: "./internal",
+						Url:                      "https://github.com/hashicorp/waypoint.git",
+						Ref:                      "release/0.1.0",
+						Path:                     "./internal",
+						IgnoreChangesOutsidePath: true,
 					},
 				},
 			},
@@ -561,9 +596,10 @@ func TestGitSourceChanges(t *testing.T) {
 			&pb.Job_DataSource{
 				Source: &pb.Job_DataSource_Git{
 					Git: &pb.Job_Git{
-						Url:  "https://github.com/hashicorp/waypoint.git",
-						Ref:  "release/0.1.0",
-						Path: "idontexist",
+						Url:                      "https://github.com/hashicorp/waypoint.git",
+						Ref:                      "release/0.1.0",
+						Path:                     "idontexist",
+						IgnoreChangesOutsidePath: true,
 					},
 				},
 			},

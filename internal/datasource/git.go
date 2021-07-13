@@ -391,7 +391,7 @@ func (s *GitSource) Changes(
 		// path. To do that, we have no choice but to check out the whole repo.
 		// We only do this if we had a previous value we used. If we don't,
 		// we've never run before and we consider ANY new ref changes.
-		if path := source.Git.Path; path != "" {
+		if path := source.Git.Path; path != "" && source.Git.IgnoreChangesOutsidePath {
 			log.Trace("subpath specified, we'll check for changes within the subpath")
 			changes, err := s.changes(
 				ctx,
