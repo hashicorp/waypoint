@@ -1,6 +1,8 @@
 package ptypes
 
 import (
+	"regexp"
+
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
@@ -9,6 +11,11 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/validationext"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
+
+// UsernameRegexp is the valid username regular expression. This is
+// somewhat arbitrary but exactly matches the GitHub username requirements.
+// We can always loosen this later.
+var UsernameRegexp = regexp.MustCompile(`(?i)^([a-z\d]+_-)*[a-z\d]+$`)
 
 // TestUser returns a valid user for tests.
 func TestUser(t testing.T, src *pb.User) *pb.User {
@@ -35,7 +42,10 @@ func ValidateUser(v *pb.User) error {
 // ValidateUserRules
 func ValidateUserRules(v *pb.User) []*validation.FieldRules {
 	return []*validation.FieldRules{
-		validation.Field(&v.Username, validation.Required),
+		validation.Field(&v.Username,
+			validation.Required,
+			validation.Match(UsernameRegexp),
+			validation.Length(1, 38)),
 	}
 }
 
