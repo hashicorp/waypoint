@@ -20,6 +20,10 @@ export default Factory.extend({
     state: 'SUCCESS',
   }),
 
+  error: trait({
+    state: 'ERROR',
+  }),
+
   'seconds-old': trait({
     completeTime: () => new Date(),
   }),
