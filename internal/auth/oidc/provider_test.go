@@ -12,7 +12,7 @@ import (
 )
 
 func TestProviderCache(t *testing.T) {
-	var cache ProviderCache
+	cache := NewProviderCache()
 	defer cache.Close()
 	require := require.New(t)
 	ctx := context.Background()

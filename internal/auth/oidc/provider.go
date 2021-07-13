@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/cap/oidc"
 
@@ -71,11 +72,27 @@ func ProviderConfig(am *pb.AuthMethod_OIDC, sc *pb.ServerConfig) (*oidc.Config, 
 //
 // The ProviderCache purges a provider under two scenarios: (1) the
 // provider config is updated and it is different and (2) after a set
-// amount of time (default 12 hours) in case the remote provider configuration
+// amount of time (see cacheExpiry for value) in case the remote provider configuration
 // changed.
 type ProviderCache struct {
 	providers map[string]*oidc.Provider
 	mu        sync.RWMutex
+	cancel    context.CancelFunc
+}
+
+// NewProviderCache should be used to initialize a provider cache. This
+// will start up background resources to manage the cache.
+func NewProviderCache() *ProviderCache {
+	ctx, cancel := context.WithCancel(context.Background())
+	result := &ProviderCache{
+		providers: map[string]*oidc.Provider{},
+		cancel:    cancel,
+	}
+
+	// Start the cleanup timer
+	go result.runCleanupLoop(ctx)
+
+	return result
 }
 
 // Get returns the OIDC provider for the given auth method configuration.
@@ -141,9 +158,6 @@ func (c *ProviderCache) Get(
 		current.Done()
 	}
 
-	if c.providers == nil {
-		c.providers = map[string]*oidc.Provider{}
-	}
 	c.providers[name] = newProvider
 
 	return newProvider, nil
@@ -153,12 +167,11 @@ func (c *ProviderCache) Get(
 func (c *ProviderCache) Delete(ctx context.Context, name string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.providers != nil {
-		name = strings.ToLower(name)
-		p, ok := c.providers[name]
-		if ok {
-			p.Done()
-		}
+
+	name = strings.ToLower(name)
+	p, ok := c.providers[name]
+	if ok {
+		p.Done()
 		delete(c.providers, name)
 	}
 }
@@ -180,5 +193,27 @@ func (c *ProviderCache) Close() error {
 	c.Clear()
 	return nil
 }
+
+// runCleanupLoop runs an infinite loop that clears the cache every
+// "cacheExpiry" duration. This ensures that we force refresh our provider
+// info periodically in case anything changes. In practice, this is very
+// rare so we don't refresh very often.
+func (c *ProviderCache) runCleanupLoop(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		// note(mitchellh): we could be more clever and do a per-entry
+		// expiry but in practice a Waypoint server probably has one, maybe
+		// two auth methods, and its just not worth the complexity.
+		case <-time.After(cacheExpiry):
+			c.Clear()
+		}
+	}
+}
+
+// cacheExpiry is the duration after which the provider cache is reset.
+const cacheExpiry = 6 * time.Hour
 
 var _ io.Closer = (*ProviderCache)(nil)

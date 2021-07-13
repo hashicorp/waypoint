@@ -54,13 +54,15 @@ type service struct {
 	superuser bool
 
 	// oidcCache is the cache for OIDC providers.
-	oidcCache wpoidc.ProviderCache
+	oidcCache *wpoidc.ProviderCache
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
 // in-memory locks to operate safely.
 func New(opts ...Option) (pb.WaypointServer, error) {
 	var s service
+	s.oidcCache = wpoidc.NewProviderCache()
+
 	var cfg config
 	for _, opt := range opts {
 		if err := opt(&s, &cfg); err != nil {
