@@ -147,3 +147,4 @@ status_report_indicator:
   tooltip:
     checking_now: Checking now…
     last_checked: Last checked
+    unknown: Status unknown
