@@ -1,5 +1,5 @@
 import Route from '@ember/routing/route';
-import { AppRouteModel } from '../app';
+import { Model as AppRouteModel } from '../app';
 import DeploymentsController from 'waypoint/controllers/workspace/projects/project/app/deployments';
 
 export default class Deployments extends Route {
