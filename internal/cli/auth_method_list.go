@@ -34,7 +34,7 @@ func (c *AuthMethodListCommand) Run(args []string) int {
 
 	table := terminal.NewTable("Name", "Method")
 
-	// We always add "token" even though thats technically not a type
+	// We always add "token" even though that's technically not a type
 	// of auth method. This just makes it more obvious to users that
 	// token auth is always available.
 	table.Rich([]string{
