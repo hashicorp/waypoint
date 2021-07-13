@@ -190,6 +190,7 @@ func (c *ProviderCache) Clear() {
 // io.Closer so that things that look for this interface implementation for
 // "cleanup" will call this.
 func (c *ProviderCache) Close() error {
+	c.cancel()
 	c.Clear()
 	return nil
 }
