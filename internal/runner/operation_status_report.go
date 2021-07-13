@@ -82,6 +82,17 @@ func (r *Runner) enableApplicationPoll(
 	}
 	project := resp.Project
 
+	// We never turn on application polling for status reports if the applications
+	// project is not configured with a remote data source via git. This is because
+	// the runner needs access to the project to generate a status report, and if
+	// the project source is local (i.e. a local waypoint up), the remote runner
+	// has no way to access the projects code. For now, we only enable application
+	// polling for continuous status reports if the project has a data source configured.
+	if project.DataSource == nil {
+		log.Trace("cannot use status report polling if there is not a data source configured")
+		return nil
+	}
+
 	for _, a := range project.Applications {
 		// Find the application in the current project
 		if a.Name == appRef.Application {

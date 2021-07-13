@@ -111,6 +111,14 @@ func (a *applicationPoll) PollJob(
 		return nil, err
 	}
 
+	// Application polling requires a remote data source, otherwise a status report
+	// cannot be generated without a project and its hcl context. This returns
+	// an error so we fail early instead of queueing an already broken job
+	if project.DataSource == nil {
+		log.Debug("cannot poll a job without a remote data source configured.")
+		return nil, status.Error(codes.FailedPrecondition, "application polling requires a remote data source")
+	}
+
 	log.Trace("building queue job request for generating status report")
 	jobRequest := &pb.QueueJobRequest{
 		Job: &pb.Job{
