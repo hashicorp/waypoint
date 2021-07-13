@@ -9,15 +9,14 @@ description: |-
 
 # Input Variables
 
-<!-- TODO krantzinator: get a Learn tutorial up -->
-
-> **Hands-on:** Try the [Customize Waypoint Configuration with Input Variables]() tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Input Variables]() tutorial on HashiCorp Learn.
 
 Input variables let you customize aspects of Waypoint configuration with values
 that may change, or that need to be set per Waypoint run.
 
-When you declare variables in the waypoint.hcl, you can set their values using
-CLI options, environment variables, `auto` files, and the Waypoint server UI.
+You can parameterize your configuration by declaring variables in the
+waypoint.hcl, and setting their values using CLI options, environment variables,
+`auto` files, and the Waypoint server UI.
 
 ## Declaring an Input Variable
 
@@ -52,13 +51,7 @@ be unique among all variables in the same waypoint.hcl. This name is used to
 assign a value to the variable and to reference the variable's value when
 evaluating the configuration.
 
-<!-- TODO krantzinator -->
-
-The name of a variable can be any valid [identifier]([docs link]#identifiers)
-
-<!-- TODO krantzinator: any limits? -->
-
-_except_ the following: `source`, `version`, `providers`, `count`, `for_each`, `lifecycle`, `depends_on`, `locals`.
+The name of a variable can be any valid [identifier](/docs/waypoint-hcl/syntax#identifiers)
 
 ## Arguments
 
@@ -117,8 +110,8 @@ variable "port" {
 [inpage-type]: #type-constraints
 
 The `type` argument in a `variable` block allows you to restrict the
-[type of value](/docs/language/expressions/types.html) that will be accepted as
-the value for a variable.
+[type of value](/docs/waypoint-hcl/syntax/expressions#types-and-values) that
+will be accepted as the value for a variable.
 
 While type constraints are optional, we recommend specifying them; they
 can serve as helpful reminders for users of the module, and they
@@ -177,8 +170,8 @@ kind of value is expected.
 ## Using Input Variable Values
 
 Within the waypoint.hcl that declared a variable, its value can be accessed from
-within [expressions](TODO) as `var.<NAME>`, where `<NAME>` matches the label
-given in the declaration block:
+within [expressions](/docs/waypoint-hcl/syntax/expressions) as `var.<NAME>`,
+where `<NAME>` matches the label given in the declaration block:
 
 -> **Note:** Input variables are _created_ by a `variable` block, but you
 _reference_ them as attributes on an object named `var`.
