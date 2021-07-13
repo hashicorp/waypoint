@@ -2,7 +2,6 @@ package singleprocess
 
 import (
 	"context"
-
 	"github.com/golang/protobuf/ptypes/empty"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -46,6 +45,25 @@ func (s *service) GetProject(
 		Project:    result,
 		Workspaces: workspaces,
 	}, nil
+}
+
+// DeleteProject processes a DeleteProjectRequest and deletes the requested project
+// TODO: test
+func (s *service) DeleteProject(
+	ctx context.Context,
+	req *pb.DeleteProjectRequest,
+) (*pb.DeleteProjectResponse, error) {
+	_, err := s.state.ProjectGet(req.Project)
+	if err != nil {
+		return &pb.DeleteProjectResponse{Successful: false}, nil
+	}
+
+	err = s.state.ProjectDelete(req.Project)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.DeleteProjectResponse{Successful: true}, nil
 }
 
 // TODO: test

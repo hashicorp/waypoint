@@ -125,7 +125,7 @@ func Main(args []string) int {
 	return exitCode
 }
 
-// commands returns the map of commands that can be used to initialize a CLI.
+// Commands returns the map of commands that can be used to initialize a CLI.
 func Commands(
 	ctx context.Context,
 	log hclog.Logger,
@@ -467,6 +467,12 @@ func Commands(
 		},
 		"project apply": func() (cli.Command, error) {
 			return &ProjectApplyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"project delete": func() (cli.Command, error) {
+			return &ProjectDeleteCommand{
 				baseCommand: baseCommand,
 			}, nil
 		},

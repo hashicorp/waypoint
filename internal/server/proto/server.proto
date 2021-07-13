@@ -44,6 +44,9 @@ service Waypoint {
   // GetProject returns the project.
   rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
 
+  // DeleteProject returns the project.
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
+
   // ListProjects returns a list of all the projects. There is no equivalent
   // ListApplications because applications are a part of projects and you
   // can use GetProject to get more information about the project.
@@ -1835,6 +1838,14 @@ message GetProjectResponse {
 
   // The list of workspaces that this project is part of.
   repeated Workspace.Project workspaces = 2;
+}
+
+message DeleteProjectRequest {
+  Ref.Project project = 1;
+}
+
+message DeleteProjectResponse {
+  bool successful = 1;
 }
 
 message ListProjectsResponse {

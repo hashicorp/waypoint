@@ -543,7 +543,7 @@ func (c *InitCommand) stepError(s terminal.Step, step initStepType, err error) {
 	c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 }
 
-func (c *InitCommand) inputContinue(style string) (bool, error) {
+func (c *baseCommand) inputContinue(style string) (bool, error) {
 	for {
 		result, err := c.ui.Input(&terminal.Input{
 			Prompt: "Continue? [y/n]",
