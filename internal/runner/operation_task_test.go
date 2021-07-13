@@ -41,8 +41,10 @@ func TestRunnerTaskLauncherStart(t *testing.T) {
 	job := &pb.Job{
 		Operation: &pb.Job_StartTask{
 			StartTask: &pb.Job_StartTaskLaunchOp{
-				PluginType: "docker",
-				HclConfig:  []byte("force_pull = true\n"),
+				Params: &pb.Job_TaskPluginParams{
+					PluginType: "docker",
+					HclConfig:  []byte("force_pull = true\n"),
+				},
 				Info: &pb.TaskLaunchInfo{
 					OciUrl: "ubuntu",
 					Arguments: []string{

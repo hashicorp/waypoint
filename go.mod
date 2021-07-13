@@ -119,7 +119,7 @@ require (
 // development at the moment it is common to be working on these libs too.
 // replace github.com/hashicorp/go-argmapper => ../go-argmapper
 // replace github.com/hashicorp/horizon => ../horizon
-replace github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
+// replace github.com/hashicorp/waypoint-plugin-sdk => ../waypoint-plugin-sdk
 
 // replace github.com/hashicorp/go-plugin => ../go-plugin
 

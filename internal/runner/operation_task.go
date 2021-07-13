@@ -25,13 +25,15 @@ func (r *Runner) executeStartTaskOp(
 		panic("operation not expected type")
 	}
 
+	params := op.StartTask.Params
+
 	pi, c, err := plugin.Open(ctx, log, &plugin.PluginRequest{
 		Config: plugin.Config{
-			Name: op.StartTask.PluginType,
+			Name: params.PluginType,
 		},
 		Dir:        "/tmp",
-		ConfigData: op.StartTask.HclConfig,
-		JsonConfig: op.StartTask.HclFormat == pb.Project_JSON,
+		ConfigData: params.HclConfig,
+		JsonConfig: params.HclFormat == pb.Project_JSON,
 		Type:       component.TaskLauncherType,
 	})
 	if err != nil {
@@ -82,12 +84,16 @@ func (r *Runner) executeStopTaskOp(
 		panic("operation not expected type")
 	}
 
+	params := op.StopTask.Params
+
 	pi, c, err := plugin.Open(ctx, log, &plugin.PluginRequest{
 		Config: plugin.Config{
-			Name: "dack",
+			Name: params.PluginType,
 		},
-		Dir:  "/tmp",
-		Type: component.TaskLauncherType,
+		Dir:        "/tmp",
+		ConfigData: params.HclConfig,
+		JsonConfig: params.HclFormat == pb.Project_JSON,
+		Type:       component.TaskLauncherType,
 	})
 	if err != nil {
 		return nil, err

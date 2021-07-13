@@ -1191,10 +1191,9 @@ message Job {
     Release release = 1;
   }
 
-  message StartTaskLaunchOp {
-    // The info to use to create the task
-    TaskLaunchInfo info = 1;
-
+  // TaskPluginParams contains the information about a specific task plugin
+  // that is used by both StartTask and StopTask
+  message TaskPluginParams {
     // The plugin type to invoke for the task plugin.
     string plugin_type = 2;
 
@@ -1205,6 +1204,14 @@ message Job {
     Project.Format hcl_format = 4;
   }
 
+  message StartTaskLaunchOp {
+    // The info to use to create the task
+    TaskLaunchInfo info = 1;
+
+    // Params is needed to spawn the plugin so we can send it the start.
+    TaskPluginParams params = 2;
+  }
+
   message StartTaskResult {
     // The state of the create task, used to identify it later.
     google.protobuf.Any state = 1;
@@ -1213,6 +1220,9 @@ message Job {
   message StopTaskLaunchOp {
     // The state returned by the start operation.
     google.protobuf.Any state = 1;
+
+    // Params is needed to spawn the plugin so we can send it the stop.
+    TaskPluginParams params = 2;
   }
 
   message StatusReportOp {
