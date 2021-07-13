@@ -1,41 +1,37 @@
-import { Factory, trait, association } from 'ember-cli-mirage';
+import { Factory, association, trait } from 'ember-cli-mirage';
 import { fakeId } from '../utils';
 
 export default Factory.extend({
   id: () => fakeId(),
   sequence: (i) => i + 1,
 
-  afterCreate(build, server) {
-    if (!build.workspace) {
+  afterCreate(pushedArtifact, server) {
+    if (!pushedArtifact.workspace) {
       let workspace =
         server.schema.workspaces.findBy({ name: 'default' }) || server.create('workspace', 'default');
-      build.update('workspace', workspace);
+      pushedArtifact.update('workspace', workspace);
     }
-
-    build.pushedArtifact?.update('application', build.application);
-    build.pushedArtifact?.update('workspace', build.workspace);
   },
 
   random: trait({
-    labels: () => ({
-      'common/vcs-ref': '0d56a9f8456b088dd0e4a7b689b842876fd47352',
-      'common/vcs-ref-path': 'https://github.com/hashicorp/waypoint/commit/',
-    }),
-    component: association('builder', 'with-random-name'),
+    component: association('registry', 'with-random-name'),
     status: association('random'),
-    pushedArtifact: association('random'),
   }),
 
   docker: trait({
-    component: association('builder', 'docker'),
+    component: association('registry', 'docker'),
   }),
 
-  pack: trait({
-    component: association('builder', 'pack'),
+  'aws-ecr': trait({
+    component: association('registry', 'aws-ecr'),
   }),
 
   'seconds-old-success': trait({
     status: association('random', 'success', 'seconds-old'),
+  }),
+
+  'seconds-old-error': trait({
+    status: association('random', 'error', 'seconds-old'),
   }),
 
   'minutes-old-success': trait({
