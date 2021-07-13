@@ -178,15 +178,25 @@ func (p *Plugin) Invoke(
 		return nil, err
 	}
 
+	var amArgs []argmapper.Arg
+
+	for _, a := range args {
+		switch a := a.(type) {
+		case argmapper.Arg:
+			amArgs = append(amArgs, a)
+		default:
+			amArgs = append(amArgs, argmapper.Typed(a))
+		}
+	}
+
 	// Make sure we have access to our context and logger and default args
-	amArgs := []argmapper.Arg{
-		argmapper.Typed(args...),
+	amArgs = append(amArgs,
 		argmapper.ConverterFunc(mappers...),
 		argmapper.Typed(
 			ctx,
 			log,
 		),
-	}
+	)
 
 	log.Debug("invoking plugin function")
 

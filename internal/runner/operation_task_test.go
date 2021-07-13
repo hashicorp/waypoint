@@ -53,7 +53,9 @@ func TestRunnerTaskLauncherStart(t *testing.T) {
 		},
 	}
 
-	_, err = runner.executeStartTaskOp(ctx, runner.logger, runner.ui, job)
+	res, err := runner.executeStartTaskOp(ctx, runner.logger, runner.ui, job)
 	require.NoError(err)
 
+	require.NotNil(t, res.StartTask)
+	require.NotNil(t, res.StartTask.State)
 }

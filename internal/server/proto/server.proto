@@ -913,6 +913,7 @@ message Job {
     QueueProjectResult queue_project = 10;
     PollResult poll = 11;
     StatusReportResult status_report = 12;
+    StartTaskResult start_task = 13;
   }
 
   message DataSource {
@@ -1204,7 +1205,7 @@ message Job {
     Project.Format hcl_format = 4;
   }
 
-  message StartTaskLaunchResult {
+  message StartTaskResult {
     // The state of the create task, used to identify it later.
     google.protobuf.Any state = 1;
   }
@@ -1212,9 +1213,6 @@ message Job {
   message StopTaskLaunchOp {
     // The state returned by the start operation.
     google.protobuf.Any state = 1;
-  }
-
-  message StopTaskLaunchResult {
   }
 
   message StatusReportOp {

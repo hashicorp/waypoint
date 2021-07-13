@@ -35,7 +35,7 @@ func (b *TaskLauncher) StartTaskFunc() interface{} {
 
 // BuildFunc implements component.TaskLauncher
 func (b *TaskLauncher) StopTaskFunc() interface{} {
-	return nil
+	return b.StopTask
 }
 
 type TaskResources struct {
@@ -46,7 +46,7 @@ type TaskResources struct {
 	MemoryLimit string `hcl:"memory,optional"`
 }
 
-// Config is the configuration structure for the registry.
+// TaskLauncherConfig is the configuration structure for the task plugin.
 type TaskLauncherConfig struct {
 	// A list of folders to mount to the container.
 	Binds []string `hcl:"binds,optional"`
@@ -159,7 +159,7 @@ task {
 	return doc, nil
 }
 
-// Config implements Configurable
+// TaskLauncher implements Configurable
 func (b *TaskLauncher) Config() (interface{}, error) {
 	return &b.config, nil
 }
@@ -248,7 +248,22 @@ func (b *TaskLauncher) setupNetworking(
 	return "waypoint", nil
 }
 
-// Build
+// StopTask signals to docker to stop the container created previously
+func (b *TaskLauncher) StopTask(
+	ctx context.Context,
+	log hclog.Logger,
+	ti *TaskInfo,
+) error {
+	cli, err := wpdockerclient.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return status.Errorf(codes.FailedPrecondition, "unable to create Docker client: %s", err)
+	}
+	cli.NegotiateAPIVersion(ctx)
+
+	return cli.ContainerStop(ctx, ti.Id, nil)
+}
+
+// StartTask creates a docker container for the task.
 func (b *TaskLauncher) StartTask(
 	ctx context.Context,
 	log hclog.Logger,

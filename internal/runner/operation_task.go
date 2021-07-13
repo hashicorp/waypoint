@@ -3,6 +3,8 @@ package runner
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes"
+	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -50,7 +52,60 @@ func (r *Runner) executeStartTaskOp(
 
 	fn := c.(component.TaskLauncher).StartTaskFunc()
 
-	_, err = pi.Invoke(ctx, log, fn, tli)
+	val, err := pi.Invoke(ctx, log, fn, tli)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := component.ProtoAny(val)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Job_Result{
+		StartTask: &pb.Job_StartTaskResult{
+			State: result,
+		},
+	}, nil
+}
+
+func (r *Runner) executeStopTaskOp(
+	ctx context.Context,
+	log hclog.Logger,
+	ui terminal.UI,
+	job *pb.Job,
+) (*pb.Job_Result, error) {
+	op, ok := job.Operation.(*pb.Job_StopTask)
+	if !ok {
+		// this shouldn't happen since the call to this function is gated
+		// on the above type match.
+		panic("operation not expected type")
+	}
+
+	pi, c, err := plugin.OpenPlugin(ctx, log, &plugin.PluginRequest{
+		Config: plugin.Config{
+			Name: "dack",
+		},
+		Dir:  "/tmp",
+		Type: component.TaskLauncherType,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	defer pi.Close()
+
+	stop := c.(component.TaskLauncher).StopTaskFunc()
+
+	msg, err := ptypes.AnyMessageName(op.StopTask.State)
+	if err != nil {
+		// This should never happen.
+		panic(err)
+	}
+
+	arg := argmapper.NamedSubtype("state", op.StopTask.State, msg)
+
+	_, err = pi.Invoke(ctx, log, stop, arg)
 	if err != nil {
 		return nil, err
 	}
