@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { GetDeploymentRequest, Deployment, Ref, StatusReport } from 'waypoint-pb';
-import { AppRouteModel, ResolvedModel as ResolvedAppRouteModel } from '../app';
+import { Model as AppRouteModel } from '../app';
 
 interface DeploymentModelParams {
   sequence: number;
@@ -52,7 +52,7 @@ export default class DeploymentDetail extends Route {
   }
 
   afterModel(model: Deployment.AsObject & WithStatusReport): void {
-    let { statusReports } = this.modelFor('workspace.projects.project.app') as ResolvedAppRouteModel;
+    let { statusReports } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
     let statusReport = statusReports.find((sr) => sr.deploymentId === model.id);
 
     model.statusReport = statusReport;
