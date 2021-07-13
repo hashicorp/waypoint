@@ -53,16 +53,6 @@ func (pp *projectPoll) PollJob(
 		return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Project PollJob")
 	}
 
-	if p.DataSource == nil {
-		return nil, status.Errorf(codes.FailedPrecondition,
-			"Project %q does not have a data source configured. Remote jobs "+
-				"require a data source such as Git to be configured with the project. "+
-				"Data sources can be configured via the CLI or UI. For help, see : "+
-				"https://www.waypointproject.io/docs/projects/git#configuring-the-project",
-			p.Name,
-		)
-	}
-
 	jobRequest := &pb.QueueJobRequest{
 		Job: &pb.Job{
 			// SingletonId so that we only have one poll operation at
