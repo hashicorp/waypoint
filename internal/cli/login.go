@@ -24,6 +24,7 @@ type LoginCommand struct {
 	*baseCommand
 
 	flagAuthMethod string
+	flagToken      string
 }
 
 func (c *LoginCommand) Run(args []string) int {
@@ -57,8 +58,18 @@ func (c *LoginCommand) Run(args []string) int {
 		return 1
 	}
 
-	// Login with OIDC
-	token, exitCode := c.loginOIDC()
+	// Determine our auth func, which by default is OIDC
+	var authFunc func() (string, int)
+	switch {
+	case c.flagToken != "":
+		authFunc = c.loginToken
+
+	default:
+		authFunc = c.loginOIDC
+	}
+
+	// Log in
+	token, exitCode := authFunc()
 	if exitCode > 0 {
 		return exitCode
 	}
@@ -91,6 +102,41 @@ func (c *LoginCommand) Run(args []string) int {
 	c.ui.Output("Authentication complete! You're now logged in.", terminal.WithSuccessStyle())
 
 	return 0
+}
+
+func (c *LoginCommand) loginToken() (string, int) {
+	// First we decode the token to ensure it is valid and also to figure
+	// out if we have a login or invite token.
+	decodeResp, err := c.project.Client().DecodeToken(c.Ctx, &pb.DecodeTokenRequest{
+		Token: c.flagToken,
+	})
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return "", 1
+	}
+	token := decodeResp.Token
+
+	// If we have a login token, then we're just done cause that can be stored directly.
+	if _, ok := token.Kind.(*pb.Token_Login_); ok {
+		return c.flagToken, 0
+	}
+
+	// Then it must be an invite token
+	if _, ok := token.Kind.(*pb.Token_Invite_); !ok {
+		c.ui.Output(strings.TrimSpace(errTokenInvalid), terminal.WithErrorStyle())
+		return "", 1
+	}
+
+	// Convert it
+	convertResp, err := c.project.Client().ConvertInviteToken(c.Ctx, &pb.ConvertInviteTokenRequest{
+		Token: c.flagToken,
+	})
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return "", 1
+	}
+
+	return convertResp.Token, 0
 }
 
 func (c *LoginCommand) loginOIDC() (string, int) {
@@ -146,6 +192,8 @@ func (c *LoginCommand) loginOIDC() (string, int) {
 	}
 
 	// Open the auth URL in the user browser or ask them to visit it.
+	// We purposely use fmt here and NOT c.ui because the ui will truncate
+	// our URL (a known bug).
 	fmt.Printf(strings.TrimSpace(outVisitURL)+"\n\n", respURL.Url)
 	if err := util.OpenURL(respURL.Url); err != nil {
 		c.Log.Warn("error opening auth url", "err", err)
@@ -186,6 +234,13 @@ func (c *LoginCommand) Flags() *flag.Sets {
 			Usage: "Auth method to use for login. This will default to " +
 				"the only available auth method if only one exists.",
 		})
+
+		f.StringVar(&flag.StringVar{
+			Name:   "token",
+			Target: &c.flagToken,
+			Usage: "Auth with a token. This will force auth-method to 'token'. " +
+				"This works with both login and invite tokens.",
+		})
 	})
 }
 
@@ -207,9 +262,16 @@ Usage: waypoint login [server address]
 
   Log in to a Waypoint server.
 
+  This is usually the first command a new user runs to gain CLI access to
+  an existing Waypoint server.
+
   If the server address is not specified and you have an active
   context (see "waypoint context"), then this command will reauthenticate
   to the currently active server.
+
+  This command can be used for token-based authentication as well as
+  other forms such as OIDC. You can use "-token" to specify a login or
+  invite token and configure the CLI to access the server.
 
 ` + c.Flags().Help())
 }
@@ -238,6 +300,11 @@ waypoint login example.com
 or
 
 waypoint login https://example.com
+`
+
+	errTokenInvalid = `
+The specified token is not a valid login or invite token. Please
+double-check the token and try again.
 `
 
 	outVisitURL = `
