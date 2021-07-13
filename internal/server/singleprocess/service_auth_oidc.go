@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/cap/oidc"
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -121,6 +122,8 @@ func (s *service) CompleteOIDCAuth(
 	ctx context.Context,
 	req *pb.CompleteOIDCAuthRequest,
 ) (*pb.CompleteOIDCAuthResponse, error) {
+	log := hclog.FromContext(ctx)
+
 	if err := serverptypes.ValidateCompleteOIDCAuthRequest(req); err != nil {
 		return nil, err
 	}
@@ -195,7 +198,7 @@ func (s *service) CompleteOIDCAuth(
 	}
 
 	// Look up a user by sub.
-	user, err := s.oidcInitUser(discovery.Issuer, idClaimVals.Sub, idClaimVals.Email)
+	user, err := s.oidcInitUser(log, discovery.Issuer, idClaimVals.Sub, idClaimVals.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +220,7 @@ func (s *service) CompleteOIDCAuth(
 }
 
 // oidcInitUser finds or creates the user for the given OIDC information.
-func (s *service) oidcInitUser(iss, sub, email string) (*pb.User, error) {
+func (s *service) oidcInitUser(log hclog.Logger, iss, sub, email string) (*pb.User, error) {
 	// This method attempts to find, link, or create a new user to the
 	// given OIDC result in the following order:
 	//
@@ -263,6 +266,7 @@ func (s *service) oidcInitUser(iss, sub, email string) (*pb.User, error) {
 
 		user = &pb.User{
 			Username: username,
+			Email:    email,
 		}
 	}
 
@@ -279,6 +283,13 @@ func (s *service) oidcInitUser(iss, sub, email string) (*pb.User, error) {
 	if err := s.state.UserPut(user); err != nil {
 		return nil, err
 	}
+
+	log.Info("new OIDC user linked",
+		"user_id", user.Id,
+		"username", user.Username,
+		"iss", iss,
+		"sub", sub,
+	)
 
 	return user, nil
 }
