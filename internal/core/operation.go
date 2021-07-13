@@ -130,6 +130,9 @@ func (a *App) doOperation(
 			// Set our labels if we can
 			msgUpdateLabels(a, op.Labels(a), msg, result)
 
+			// Set the deployment URL, if possible
+			msgUpdateURL(msg, result)
+
 			// Set our template data. Any errors here are logged but ignored
 			// since we don't want to leave dangling physical resources.
 			if err := msgUpdateTemplateData(msg, result); err != nil {
@@ -194,6 +197,18 @@ func (a *App) doOperation(
 	}
 
 	return result, msg, nil
+}
+
+func msgUpdateURL(msg proto.Message, result interface{}) {
+	val := msgField(msg, "Url")
+	if !val.IsValid() {
+		return
+	}
+
+	switch t := result.(type) {
+	case component.DeploymentWithUrl:
+		val.SetString(t.URL())
+	}
 }
 
 func msgUpdateLabels(

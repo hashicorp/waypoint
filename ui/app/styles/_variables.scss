@@ -1,0 +1,73 @@
+$brand-color: #04c6c2;
+
+$shadow: 0 0 0 1px rgb(var(--outline)), 0 2px 1px 1px rgba(var(--shadow), 0.1);
+$elevated-shadow: 0 0 0 1px rgba(var(--shadow), 0.1), 0 6px 8px 4px rgba(var(--shadow), 0.1),
+  0 3px 2px rgba(var(--shadow), 0.2);
+
+$button-shadow: 0 3px 2px rgba(var(--shadow), 0.2);
+
+// Convert hex values to RGB values
+@function dehex($hex) {
+  @return red($hex), green($hex), blue($hex);
+}
+
+:root {
+  --brand: #{dehex($brand-color)};
+  --background: #{dehex(color.$white)};
+  --text: #{dehex(color.$black)};
+  --text-muted: #{dehex(color.$ui-cool-gray-600)};
+  --text-subtle: #{dehex(color.$ui-cool-gray-400)};
+  --link: #{dehex(color.$blue-500)};
+  --border: #{dehex(color.$ui-gray-200)};
+  --outline: #{dehex(color.$ui-gray-300)};
+  --card: #{dehex(color.$white)};
+  --panel: #{dehex(color.$ui-cool-gray-050)};
+  --badge: #{dehex(color.$blue-050)};
+  --badge-text: #{dehex(color.$blue-500)};
+  --shadow: #{dehex(color.$ui-cool-gray-900)};
+  --focus-ring: #{dehex(color.$blue-500)};
+  --success: #{dehex(color.$green-050)};
+  --success-text: #{dehex(color.$green-700)};
+  --success-border: #{dehex(color.$green-100)};
+  --error: #{dehex(color.$red-050)};
+  --error-text: #{dehex(color.$red-600)};
+  --error-border: #{dehex(color.$red-100)};
+  --warning: #{dehex(color.$yellow-050)};
+  --warning-text: #{dehex(color.$yellow-800)};
+  --warning-border: #{dehex(color.$yellow-100)};
+  --info: #{dehex(color.$blue-050)};
+  --info-text: #{dehex(color.$blue-500)};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand: #{dehex($brand-color)};
+    --background: #{dehex(color.$black)};
+    --text: #{dehex(color.$ui-gray-100)};
+    --text-muted: #{dehex(color.$ui-gray-400)};
+    --text-subtle: #{dehex(color.$ui-gray-600)};
+    --link: #{dehex(color.$blue-400)};
+    --border: #{dehex(color.$ui-cool-gray-700)};
+    --outline: #{dehex(color.$ui-gray-700)};
+    --card: #{dehex(color.$ui-cool-gray-800)};
+    --panel: #{dehex(color.$ui-cool-gray-800)};
+    --shadow: #{dehex(color.$ui-cool-gray-900)};
+    --focus-ring: #{dehex(color.$blue-400)};
+    --badge: #{dehex(color.$ui-gray-800)};
+    --badge-text: #{dehex(color.$ui-gray-300)};
+    --success: #{dehex(color.$green-900)};
+    --success-text: #{dehex(color.$green-400)};
+    --success-border: #{dehex(color.$green-800)};
+    --error: #{dehex(color.$red-900)};
+    --error-text: #{dehex(color.$red-400)};
+    --error-border: #{dehex(color.$red-800)};
+    --warning: #{dehex(color.$yellow-900)};
+    --warning-text: #{dehex(color.$yellow-400)};
+    --warning-border: #{dehex(color.$yellow-800)};
+    --info: #{dehex(color.$blue-800)};
+    --info-text: #{dehex(color.$blue-200)};
+    --pds-color: #{dehex(color.$white)};
+    --pds-input-backgroundColor: #{dehex(color.$ui-cool-gray-900)};
+    --pds-input-color: #{dehex(color.$white)};
+  }
+}

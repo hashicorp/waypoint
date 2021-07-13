@@ -1,0 +1,49 @@
+:root {
+  --tile: #{dehex(color.$ui-cool-gray-050)};
+  --tile-icon: #{dehex(color.$blue-500)};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tile: #{dehex(color.$ui-gray-900)};
+    --tile-icon: #{dehex(color.$blue-400)};
+  }
+}
+
+.icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: scale.$lg-8;
+  height: scale.$lg-8;
+  color: rgb(var(--tile-icon));
+  background: rgb(var(--tile));
+  box-shadow: inset 0 0 0 1px rgb(var(--border));
+  border-radius: 2px;
+  font-size: scale.$lg-1;
+
+  > .pds-icon {
+    height: unset;
+    width: unset;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    box-shadow: inset 0 0 0 1px rgba(var(--border), 0.5);
+  }
+
+  &--small {
+    width: scale.$lg-6;
+    height: scale.$lg-6;
+  }
+
+  &--large {
+    width: scale.$lg-12;
+    height: scale.$lg-12;
+
+    .icon {
+      width: scale.$lg-8;
+      height: scale.$lg-8;
+    }
+  }
+}

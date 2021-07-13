@@ -14,8 +14,6 @@ import (
 	"github.com/hashicorp/waypoint/internal/serverconfig"
 )
 
-//go:generate sh -c "protoc -I proto/ proto/*.proto --go_out=plugins=grpc:gen/"
-
 // service implements the gRPC service for the server.
 type service struct {
 	// state is the state management interface that provides functions for
@@ -47,6 +45,10 @@ type service struct {
 	// service starts up. When Close is called, we wait on this to ensure
 	// that we fully shut down before returning.
 	bgWg sync.WaitGroup
+
+	// superuser is true if all API actions should act as if a superuser
+	// made them. This is used for local mode only.
+	superuser bool
 }
 
 // New returns a Waypoint server implementation that uses BotlDB plus
@@ -152,7 +154,10 @@ func New(opts ...Option) (pb.WaypointServer, error) {
 	// See the func docs for more info.
 	for pollName, pollItem := range pollableItems {
 		s.bgWg.Add(1)
-		go s.runPollQueuer(s.bgCtx, &s.bgWg, pollItem, log.Named("poll_queuer").Named(pollName))
+		go s.runPollQueuer(
+			s.bgCtx, &s.bgWg, pollItem,
+			log.Named("poll_queuer").Named(pollName),
+		)
 	}
 
 	// Start out state pruning background goroutine. This calls
@@ -176,6 +181,7 @@ type config struct {
 	db           *bolt.DB
 	serverConfig *serverconfig.Config
 	log          hclog.Logger
+	superuser    bool
 
 	acceptUrlTerms bool
 }
@@ -202,6 +208,16 @@ func WithConfig(scfg *serverconfig.Config) Option {
 func WithLogger(log hclog.Logger) Option {
 	return func(s *service, cfg *config) error {
 		cfg.log = log
+		return nil
+	}
+}
+
+// WithSuperuser forces all API actions to behave as if a superuser
+// made them. This is usually turned on for local mode only. There is no
+// option (at the time of writing) to enable this on a network-attached server.
+func WithSuperuser() Option {
+	return func(s *service, cfg *config) error {
+		s.superuser = true
 		return nil
 	}
 }

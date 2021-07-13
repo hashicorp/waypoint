@@ -1,7 +1,7 @@
 <h3>{{t "page.releases.title"}}</h3>
 
-<ul data-test-release-list=true class="list">
-  {{#each @model as |release releaseIndex|}}
+<ul data-test-release-list class="list">
+  {{#each @model key="id" as |release releaseIndex|}}
     <AppItem::Release @release={{release}} @isLatest={{ eq releaseIndex 0}} />
   {{else}}
     <EmptyState>

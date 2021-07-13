@@ -1,0 +1,102 @@
+.app-item {
+  // individual list item in expanded builds/deployments/releases section
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 70px;
+  padding-left: scale.$sm-2;
+
+  a:not(.button) {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    color: inherit;
+    text-decoration: none;
+    margin-right: scale.$base;
+
+    &:hover code {
+      color: rgb(var(--link));
+    }
+  }
+
+  p {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  code {
+    font-size: 1rem;
+  }
+
+  &.app-item--destroyed code {
+    color: rgb(var(--text-muted));
+  }
+
+  .badge--version {
+    margin-right: scale.$sm-2;
+  }
+
+  .badge--destroyed {
+    margin-left: scale.$sm-2;
+
+    @media (prefers-color-scheme: light) {
+      background: color.$ui-cool-gray-200;
+      color: color.$ui-cool-gray-800;
+    }
+  }
+
+  &__meta__secondary {
+    display: flex;
+    align-items: center;
+    color: rgb(var(--text-muted));
+    margin-right: scale.$sm-2;
+
+    b {
+      text-transform: capitalize;
+    }
+
+    .icon {
+      margin-right: scale.$sm-3;
+      font-size: scale.$lg-1;
+      display: flex;
+    }
+  }
+
+  .button {
+    max-width: 100%;
+    margin-left: scale.$base;
+
+    span {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .replacement-info {
+    b {
+      text-transform: inherit;
+      margin-left: scale.$sm-2;
+    }
+  }
+
+  &--previous {
+    background: rgb(var(--panel));
+    background-clip: border-box;
+    margin-bottom: 0px;
+    border-top: 1rem solid rgb(var(--panel));
+  }
+}
+
+.destroyed-deployments-filter {
+  // explanatory text + button at the bottom of the expanded list of deployments
+  display: block;
+  float: right;
+  text-align: right;
+  margin-bottom: scale.$sm-1;
+  button {
+    font-size: 0.75rem;
+  }
+}

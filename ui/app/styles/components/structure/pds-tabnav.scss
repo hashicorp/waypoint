@@ -1,0 +1,27 @@
+.pds-tabNav {
+  padding-top: scale.$sm-2;
+  margin-bottom: scale.$lg-4;
+
+  :any-link:not(.pds-button) {
+    display: flex;
+  }
+
+  .icon {
+    display: flex;
+    margin-right: scale.$sm-3;
+  }
+  a {
+    color: rgb(var(--text-muted));
+    display: flex;
+    align-items: center;
+    &:hover {
+      color: rgb(var(--text));
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    a:hover {
+      background: color.$ui-cool-gray-800;
+    }
+  }
+}

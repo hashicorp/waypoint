@@ -12,6 +12,7 @@ import * as release from './services/release';
 import * as versionInfo from './services/version-info';
 import * as statusReport from './services/status-report';
 import * as job from './services/job';
+import * as log from './services/log';
 
 export default function (this: Server) {
   this.namespace = 'hashicorp.waypoint.Waypoint';
@@ -34,6 +35,7 @@ export default function (this: Server) {
   this.post('/GetBuild', build.get);
   this.post('/ListDeployments', deployment.list);
   this.post('/GetDeployment', deployment.get);
+  this.post('/UpsertProject', project.update);
   this.post('/ListProjects', project.list);
   this.post('/GetProject', project.get);
   this.post('/ConvertInviteToken', token.create);
@@ -45,6 +47,7 @@ export default function (this: Server) {
   this.post('/ListStatusReports', statusReport.list);
   this.post('/GetLatestStatusReport', statusReport.getLatest);
   this.post('/GetJobStream', job.stream);
+  this.post('/GetLogStream', log.stream);
 
   if (!Ember.testing) {
     // Pass through all other requests

@@ -1,0 +1,35 @@
+form.login {
+  display: flex;
+  flex-direction: column;
+  padding-top: scale.$base;
+
+  p.intro {
+    @include Typography.Heading(2);
+    max-width: 320px;
+    margin-top: -(scale.$sm-1);
+    margin-bottom: scale.$lg-3;
+  }
+}
+
+.login fieldset {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 0;
+  margin: 0 0 scale.$lg-2;
+  border: none;
+
+  label {
+    @include Typography.Interface(M);
+    padding-bottom: scale.$sm-2;
+  }
+
+  small {
+    text-align: right;
+    padding-top: scale.$sm-2;
+  }
+
+  fieldset {
+    margin-bottom: scale.$lg-2;
+  }
+}

@@ -9,9 +9,9 @@ import { setUa } from '../helpers/set-ua';
 const userAgent = window.navigator.userAgent;
 
 module('Acceptance | onboarding index', function (hooks) {
-  const onboardingUrl = '/onboarding';
+  let onboardingUrl = '/onboarding';
 
-  const page = create({
+  let page = create({
     visit: visitable(onboardingUrl),
     nextStep: clickable('[data-test-next-step]'),
   });
@@ -40,9 +40,9 @@ module('Acceptance | onboarding index', function (hooks) {
 });
 
 module('Acceptance | onboarding connect', function (hooks) {
-  const connectUrl = '/onboarding/connect';
+  let connectUrl = '/onboarding/connect';
 
-  const page = create({
+  let page = create({
     visit: visitable(connectUrl),
     nextStep: clickable('[data-test-next-step]'),
     token: text('[data-test-token]'),
@@ -61,14 +61,14 @@ module('Acceptance | onboarding connect', function (hooks) {
   test('renders a real token', async function (assert) {
     await page.visit();
 
-    assert.equal(page.token.length, 101);
+    assert.equal(page.token.length, 120);
   });
 });
 
 module('Acceptance | onboarding start', function (hooks) {
-  const startUrl = '/onboarding/start';
+  let startUrl = '/onboarding/start';
 
-  const page = create({
+  let page = create({
     visit: visitable(startUrl),
     nextStep: clickable('[data-test-next-step]'),
   });

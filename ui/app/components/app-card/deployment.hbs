@@ -1,76 +1,34 @@
-{{#if @isLatest}}
-<div class="app-card-item app-card-item--latest">
-  <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @model.id }}>
-    <p>
-      <b class="badge badge--version">v{{@model.sequence}}</b>
-      <code>{{truncate @model.id 8 false}}</code>
-    </p>
-    <small>
-      <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-      <span>{{if (eq @model.status.state 1) 'Deploying' 'Deployed'}} by
-        <b>{{component-name @model.component.name}} </b>
-        {{#if (eq @model.status.state 1)}}
-        (Started {{date-format-distance-to-now @model.status.startTime.seconds }})
-        {{else}}
-        {{date-format-distance-to-now @model.status.completeTime.seconds }}
-        {{/if}}
-      </span>
-    </small>
-  </LinkTo>
-  {{#if @model.statusReport}}
-    {{#let @model.statusReport.health as |health|}}
-      <StatusBadge
-        @state={{health.healthStatus}}
-        @message={{health.healthMessage}}
-        @iconOnly={{true}}
-      />
-    {{/let}}
-  {{/if}}
-  {{#if @model.preload.deployUrl}}
-  <ExternalLink
-    href="https://{{@model.preload.deployUrl}}"
-    title="https://{{@model.preload.deployUrl}}"
-    class="button button--secondary"
-  >
-    <Pds::Icon @type="exit" class="icon" />
-  </ExternalLink>
-  {{/if}}
-</div>
-{{else}}
-<li class="app-card-item">
-  <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @model.id}}>
-    <p>
-      <b class="badge badge--version">v{{@model.sequence}}</b>
-      <code>{{truncate @model.id 8 false}}</code>
-    </p>
-    <small>
-      <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
-      <span>
-        {{#if (eq @model.status.state 1)}}
-          Started {{date-format-distance-to-now @model.status.startTime.seconds }}
-        {{else}}
-          {{date-format-distance-to-now @model.status.completeTime.seconds }}
-        {{/if}}
-      </span>
-    </small>
-    {{#if @model.statusReport}}
-      {{#let @model.statusReport.health as |health|}}
-        <StatusBadge
-          @state={{health.healthStatus}}
-          @message={{health.healthMessage}}
-          @iconOnly={{true}}
-        />
-      {{/let}}
-    {{/if}}
-  </LinkTo>
-  {{#if @model.preload.deployUrl}}
-    <ExternalLink
-      href="https://{{@model.preload.deployUrl}}"
-      title="https://{{@model.preload.deployUrl}}"
-      class="button button--secondary button--compact"
+<AppCard
+  data-test-app-card-deployment={{@model.sequence}}
+>
+  <:meta-primary>
+    <LinkTo
+      @route="workspace.projects.project.app.deployment"
+      @models={{array @model.id}}
+      class="app-card__sequence-link"
     >
-      <Pds::Icon @type="exit" class="icon" />
-    </ExternalLink>
-  {{/if}}
-</li>
-{{/if}}
+      <b class="badge badge--version">v{{@model.sequence}}</b>
+    </LinkTo>
+    <OperationStatusIndicator @status={{@model.status}} />
+  </:meta-primary>
+
+  <:meta-secondary>
+    <Pds::Icon
+      @type={{icon-for-component @model.component.name}}
+      class="icon app-card__component-icon"
+    />
+    <StatusReportIndicator @statusReport={{@model.statusReport}} />
+  </:meta-secondary>
+
+  <:actions>
+    {{#if @model.preload.deployUrl}}
+      <ExternalLink
+        href={{enforce-protocol @model.preload.deployUrl}}
+        title="Visit {{enforce-protocol @model.preload.deployUrl}}"
+        class="button button--secondary button--external-link app-card__launch-link"
+      >
+        <Pds::Icon @type="exit" class="icon" />
+      </ExternalLink>
+    {{/if}}
+  </:actions>
+</AppCard>

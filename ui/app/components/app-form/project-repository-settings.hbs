@@ -1,0 +1,231 @@
+<form class="pds-form" {{on "submit" this.saveSettings}}>
+
+  <div part="fields" class="card">
+    <div class="card-header">
+      <h4>{{t "form.project_git_settings.git_title"}}</h4>
+    </div>
+    <fieldset class="pds-formFieldSet">
+      <div class="pds-formField">
+        <label for="git-source-url" class="pds-fieldName">
+          {{t "form.project_git_settings.git_source_url_label"}}
+        </label>
+        <Pds::Input
+          @type="text"
+          id="git-source-url"
+          placeholder="git@github.com:mycompany/awesome-project.git"
+          value={{this.git.url}}
+          required
+          {{on "input" (pick "target.value" (set this "project.dataSource.git.url"))}}
+        />
+      </div>
+      <div class="pds-formField">
+        <label for="git-source-ref" class="pds-fieldName">
+          {{t "form.project_git_settings.git_source_ref_label"}}
+        </label>
+        <Pds::HelpText>
+          <p>{{t 'form.project_git_settings.git_source_ref_helptext'}} <code>{{t 'form.project_git_settings.git_source_ref_example'}}</code></p>
+        </Pds::HelpText>
+        <Pds::Input
+          @type="text"
+          id="git-source-ref"
+          placeholder="main"
+          required
+          value={{this.git.ref}}
+          {{on "input" (pick "target.value" (set this "project.dataSource.git.ref"))}}
+        />
+      </div>
+      <div class="pds-formField">
+        <label for="git-source-path" class="pds-fieldName">
+          {{t "form.project_git_settings.git_source_path_label"}}
+        </label>
+        <Pds::Input
+          @type="text"
+          id="git-source-path"
+          placeholder="dir/subdir/my-project-path"
+          value={{this.git.path}}
+          {{on "input" (pick "target.value" (set this "project.dataSource.git.path"))}}
+        />
+      </div>
+      <hr />
+      <div class="pds-formField">
+        <label for="git-auth-type" class="pds-fieldName">
+          {{t "form.project_git_settings.git_auth_type_label"}}
+        </label>
+        <div class="pds-formRadioWrapper">
+          <Pds::RadioField
+            @id="git-auth-basic"
+            name="git-auth-type"
+            value={{4}}
+            checked={{eq this.authCase 4}}
+            {{on "input" (fn this.setAuthCase 4)}}
+          >
+            {{t "form.project_git_settings.git_auth_type_basic_label"}}
+          </Pds::RadioField>
+          <Pds::RadioField
+            @id="git-auth-ssh"
+            name="git-auth-type"
+            value={{5}}
+            checked={{eq this.authCase 5}}
+            {{on "input" (fn this.setAuthCase 5)}}
+          >
+            {{t "form.project_git_settings.git_auth_type_ssh_label"}}
+          </Pds::RadioField>
+          <Pds::RadioField
+            @id="git-auth-not-set"
+            name="git-auth-type"
+            value={{0}}
+            checked={{eq this.authCase 0}}
+            {{on "input" (fn this.setAuthCase 0)}}
+          >
+            {{t "form.project_git_settings.git_auth_type_not_set_label"}}
+          </Pds::RadioField>
+        </div>
+      </div>
+      {{#if this.authSSH}}
+        <div class="pds-formField">
+          <label for="git-source-ssh-user" class="pds-fieldName">
+            {{t "form.project_git_settings.git_source_ssh_user_label"}}
+          </label>
+          <Pds::Input
+            @type="text"
+            id="git-source-ssh-user"
+            placeholder="gitusername"
+            value={{this.project.dataSource.git.ssh.user}}
+            {{on "input" (fn this.setSshAuth "user")}}
+          />
+        </div>
+        <div class="pds-formField">
+          <label for="git-source-ssh-password" class="pds-fieldName">
+            {{t "form.project_git_settings.git_source_ssh_password_label"}}
+          </label>
+          <Pds::Input
+            @type="password"
+            id="git-source-ssh-password"
+            placeholder="**********"
+            value={{this.project.dataSource.git.ssh.password}}
+            {{on "input" (fn this.setSshAuth "password")}}
+          />
+        </div>
+        <div class="pds-formField">
+          <label for="git-source-ssh-key" class="pds-fieldName">
+            {{t "form.project_git_settings.git_source_ssh_key_label"}}
+          </label>
+          <Pds::Textarea
+            id="git-source-ssh-key"
+            placeholder="*****************"
+            value={{this.git.ssh.privateKeyPem}}
+            required={{this.authSSH}}
+            {{on "input" (fn this.setSshAuth "privateKeyPem")}}
+          />
+        </div>
+      {{else if this.authBasic}}
+        <div class="pds-formField">
+          <label for="git-source-username" class="pds-fieldName">
+            {{t "form.project_git_settings.git_source_basic_username_label"}}
+          </label>
+          <Pds::Input
+            @type="text"
+            id="git-source-username"
+            placeholder="gitusername"
+            required={{this.authBasic}}
+            value={{this.project.dataSource.git.basic.username}}
+            {{on "input" (fn this.setBasicAuth "username")}}
+          />
+        </div>
+        <div class="pds-formField">
+          <label for="git-source-password" class="pds-fieldName">
+            {{t "form.project_git_settings.git_source_basic_password_label"}}
+          </label>
+          <Pds::Input
+            @type="password"
+            id="git-source-password"
+            placeholder="**********"
+            required={{this.authBasic}}
+            value={{this.project.dataSource.git.basic.password}}
+            {{on "input" (fn this.setBasicAuth "password")}}
+          />
+        </div>
+      {{/if}}
+      <hr />
+      <div class="pds-formField">
+        <label class="pds-fieldName">
+          {{t "form.project_git_settings.git_sync_label"}}
+        </label>
+        <div class="pds-formFieldToggle">
+          <XToggle
+            @showLabels={{true}}
+            @name="git-sync-enabled"
+            @value={{this.project.dataSourcePoll.enabled}}
+            @size="small"
+            @onToggle={{fn (mut this.project.dataSourcePoll.enabled)}} as |toggle|>
+            <toggle.switch
+              @onLabel='git sync on'
+              @offLabel='git sync off'
+              @name="Git Sync"
+              />
+            <toggle.label for="git-sync-enabled">
+              <span class="pds-toggleLabel">
+                {{t "form.project_git_settings.git_sync_description_label"}}
+              </span>
+            </toggle.label>
+          </XToggle>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+  <div part="fields" class="card">
+    <div class="card-header">
+      <h4>{{t "form.project_git_settings.hcl_title"}}</h4>
+    </div>
+    <fieldset class="pds-formFieldSet">
+      <div class="pds-formField">
+        <label for="project-hcl-location" class="pds-fieldName">
+          {{t "form.project_git_settings.hcl_location"}}
+        </label>
+        <div class="pds-formRadioWrapper">
+          <Pds::RadioField
+            @id="project-hcl-location-repo"
+            name="project-hcl-location"
+            value={{false}}
+            checked={{eq this.serverHcl false}}
+            {{on "input" (set this "serverHcl" false)}}
+          >
+            {{t "form.project_git_settings.hcl_location_repo_label"}}
+          </Pds::RadioField>
+          <Pds::RadioField
+            @id="project-hcl-location-server"
+            name="project-hcl-location"
+            value={{true}}
+            checked={{eq this.serverHcl true}}
+            {{on "input" (set this "serverHcl" true)}}
+          >
+            {{t "form.project_git_settings.hcl_location_server_label"}}
+          </Pds::RadioField>
+        </div>
+      </div>
+      {{#if this.serverHcl}}
+        <div class="pds-formField">
+          <label for="project-hcl-content" class="pds-fieldName">
+            {{t "form.project_git_settings.hcl_content_label"}}
+          </label>
+          <Pds::HelpText>
+            <p>{{t "form.project_git_settings.hcl_content_helptext"}}</p>
+          </Pds::HelpText>
+          <Pds::Textarea
+            id="project-hcl-content"
+            placeholder=""
+            class="pds-textarea__codeInput"
+            spellcheck="false"
+            rows="14"
+            value={{this.project.waypointHcl}}
+            required={{this.this.serverHcl}}
+            {{on "input" (pick "target.value" (set this.project "waypointHcl"))}}
+          />
+        </div>
+      {{else}}
+      {{/if}}
+    </fieldset>
+  </div>
+
+  <Pds::Button @variant="primary" @type="submit">{{t "form.project_git_settings.button"}}</Pds::Button>
+</form>

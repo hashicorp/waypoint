@@ -1,0 +1,3 @@
+```release-note:bug
+plugin/nomad: Fix case where nomad error would be ignored during a status check
+```

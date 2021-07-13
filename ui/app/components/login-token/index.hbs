@@ -1,4 +1,4 @@
-<form {{action 'login' on='submit'}} class="login">
+<form {{on "submit" this.login}} class="login">
   <fieldset>
     <label>{{t 'login.instruction'}}</label>
     <CopyableCode @ref="waypoint-token-new">
@@ -11,7 +11,7 @@
     <label for="token-field">{{t 'login.input.label'}}</label>
     <Input
       autofocus
-      data-test-login=true
+      data-test-login
       @value={{this.token}}
       id="token-field"
       placeholder={{t 'login.input.placeholder'}} />
@@ -19,8 +19,7 @@
 
   <button
     data-test-login-submit
-    {{action "login"}}
-    type="button"
+    type="submit"
     class="button button--primary">
     {{t 'login.button'}}
   </button>

@@ -9,6 +9,7 @@ package alb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -80,10 +81,11 @@ type Release struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Url             string `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
-	LoadBalancerArn string `protobuf:"bytes,2,opt,name=load_balancer_arn,json=loadBalancerArn,proto3" json:"load_balancer_arn,omitempty"`
-	TargetGroupArn  string `protobuf:"bytes,4,opt,name=targetGroupArn,proto3" json:"targetGroupArn,omitempty"`
-	Region          string `protobuf:"bytes,3,opt,name=region,proto3" json:"region,omitempty"`
+	Url             string     `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	LoadBalancerArn string     `protobuf:"bytes,2,opt,name=load_balancer_arn,json=loadBalancerArn,proto3" json:"load_balancer_arn,omitempty"`
+	TargetGroupArn  string     `protobuf:"bytes,4,opt,name=target_group_arn,json=targetGroupArn,proto3" json:"target_group_arn,omitempty"`
+	Region          string     `protobuf:"bytes,3,opt,name=region,proto3" json:"region,omitempty"`
+	ResourceState   *anypb.Any `protobuf:"bytes,5,opt,name=resource_state,json=resourceState,proto3" json:"resource_state,omitempty"`
 }
 
 func (x *Release) Reset() {
@@ -146,27 +148,304 @@ func (x *Release) GetRegion() string {
 	return ""
 }
 
+func (x *Release) GetResourceState() *anypb.Any {
+	if x != nil {
+		return x.ResourceState
+	}
+	return nil
+}
+
+// Resource contains the internal resource states.
+type Resource struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *Resource) Reset() {
+	*x = Resource{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Resource) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Resource) ProtoMessage() {}
+
+func (x *Resource) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Resource.ProtoReflect.Descriptor instead.
+func (*Resource) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_aws_alb_plugin_proto_rawDescGZIP(), []int{2}
+}
+
+type Resource_SecurityGroup struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *Resource_SecurityGroup) Reset() {
+	*x = Resource_SecurityGroup{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Resource_SecurityGroup) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Resource_SecurityGroup) ProtoMessage() {}
+
+func (x *Resource_SecurityGroup) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Resource_SecurityGroup.ProtoReflect.Descriptor instead.
+func (*Resource_SecurityGroup) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_aws_alb_plugin_proto_rawDescGZIP(), []int{2, 0}
+}
+
+func (x *Resource_SecurityGroup) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type Resource_LoadBalancer struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Arn     string `protobuf:"bytes,1,opt,name=arn,proto3" json:"arn,omitempty"`
+	DnsName string `protobuf:"bytes,2,opt,name=dns_name,json=dnsName,proto3" json:"dns_name,omitempty"`
+	ZoneId  string `protobuf:"bytes,3,opt,name=zone_id,json=zoneId,proto3" json:"zone_id,omitempty"`
+}
+
+func (x *Resource_LoadBalancer) Reset() {
+	*x = Resource_LoadBalancer{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Resource_LoadBalancer) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Resource_LoadBalancer) ProtoMessage() {}
+
+func (x *Resource_LoadBalancer) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Resource_LoadBalancer.ProtoReflect.Descriptor instead.
+func (*Resource_LoadBalancer) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_aws_alb_plugin_proto_rawDescGZIP(), []int{2, 1}
+}
+
+func (x *Resource_LoadBalancer) GetArn() string {
+	if x != nil {
+		return x.Arn
+	}
+	return ""
+}
+
+func (x *Resource_LoadBalancer) GetDnsName() string {
+	if x != nil {
+		return x.DnsName
+	}
+	return ""
+}
+
+func (x *Resource_LoadBalancer) GetZoneId() string {
+	if x != nil {
+		return x.ZoneId
+	}
+	return ""
+}
+
+type Resource_Listener struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Arn   string `protobuf:"bytes,1,opt,name=arn,proto3" json:"arn,omitempty"`
+	TgArn string `protobuf:"bytes,2,opt,name=tg_arn,json=tgArn,proto3" json:"tg_arn,omitempty"`
+}
+
+func (x *Resource_Listener) Reset() {
+	*x = Resource_Listener{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Resource_Listener) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Resource_Listener) ProtoMessage() {}
+
+func (x *Resource_Listener) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Resource_Listener.ProtoReflect.Descriptor instead.
+func (*Resource_Listener) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_aws_alb_plugin_proto_rawDescGZIP(), []int{2, 2}
+}
+
+func (x *Resource_Listener) GetArn() string {
+	if x != nil {
+		return x.Arn
+	}
+	return ""
+}
+
+func (x *Resource_Listener) GetTgArn() string {
+	if x != nil {
+		return x.TgArn
+	}
+	return ""
+}
+
+type Resource_RecordSet struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	FQDN string `protobuf:"bytes,1,opt,name=FQDN,proto3" json:"FQDN,omitempty"`
+}
+
+func (x *Resource_RecordSet) Reset() {
+	*x = Resource_RecordSet{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Resource_RecordSet) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Resource_RecordSet) ProtoMessage() {}
+
+func (x *Resource_RecordSet) ProtoReflect() protoreflect.Message {
+	mi := &file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Resource_RecordSet.ProtoReflect.Descriptor instead.
+func (*Resource_RecordSet) Descriptor() ([]byte, []int) {
+	return file_waypoint_builtin_aws_alb_plugin_proto_rawDescGZIP(), []int{2, 3}
+}
+
+func (x *Resource_RecordSet) GetFQDN() string {
+	if x != nil {
+		return x.FQDN
+	}
+	return ""
+}
+
 var File_waypoint_builtin_aws_alb_plugin_proto protoreflect.FileDescriptor
 
 var file_waypoint_builtin_aws_alb_plugin_proto_rawDesc = []byte{
 	0x0a, 0x25, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c, 0x74,
 	0x69, 0x6e, 0x2f, 0x61, 0x77, 0x73, 0x2f, 0x61, 0x6c, 0x62, 0x2f, 0x70, 0x6c, 0x75, 0x67, 0x69,
-	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x03, 0x61, 0x6c, 0x62, 0x22, 0x37, 0x0a, 0x0b,
-	0x54, 0x61, 0x72, 0x67, 0x65, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x12, 0x10, 0x0a, 0x03, 0x61,
-	0x72, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x61, 0x72, 0x6e, 0x12, 0x16, 0x0a,
-	0x06, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72,
-	0x65, 0x67, 0x69, 0x6f, 0x6e, 0x22, 0x87, 0x01, 0x0a, 0x07, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73,
-	0x65, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
-	0x75, 0x72, 0x6c, 0x12, 0x2a, 0x0a, 0x11, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x62, 0x61, 0x6c, 0x61,
-	0x6e, 0x63, 0x65, 0x72, 0x5f, 0x61, 0x72, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f,
-	0x6c, 0x6f, 0x61, 0x64, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x72, 0x41, 0x72, 0x6e, 0x12,
-	0x26, 0x0a, 0x0e, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x41, 0x72,
-	0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x47,
-	0x72, 0x6f, 0x75, 0x70, 0x41, 0x72, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x67, 0x69, 0x6f,
-	0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x42,
-	0x1a, 0x5a, 0x18, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f, 0x62, 0x75, 0x69, 0x6c,
-	0x74, 0x69, 0x6e, 0x2f, 0x61, 0x77, 0x73, 0x2f, 0x61, 0x6c, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x03, 0x61, 0x6c, 0x62, 0x1a, 0x19, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x61, 0x6e,
+	0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x37, 0x0a, 0x0b, 0x54, 0x61, 0x72, 0x67, 0x65,
+	0x74, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x72, 0x6e, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x03, 0x61, 0x72, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x67, 0x69,
+	0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e,
+	0x22, 0xc6, 0x01, 0x0a, 0x07, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03,
+	0x75, 0x72, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x6c, 0x12, 0x2a,
+	0x0a, 0x11, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x72, 0x5f,
+	0x61, 0x72, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x6c, 0x6f, 0x61, 0x64, 0x42,
+	0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x72, 0x41, 0x72, 0x6e, 0x12, 0x28, 0x0a, 0x10, 0x74, 0x61,
+	0x72, 0x67, 0x65, 0x74, 0x5f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x61, 0x72, 0x6e, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x41, 0x72, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x12, 0x3b, 0x0a, 0x0e,
+	0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x0d, 0x72, 0x65, 0x73, 0x6f,
+	0x75, 0x72, 0x63, 0x65, 0x53, 0x74, 0x61, 0x74, 0x65, 0x22, 0xd7, 0x01, 0x0a, 0x08, 0x52, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x1a, 0x1f, 0x0a, 0x0d, 0x53, 0x65, 0x63, 0x75, 0x72, 0x69,
+	0x74, 0x79, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x1a, 0x54, 0x0a, 0x0c, 0x4c, 0x6f, 0x61, 0x64, 0x42,
+	0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x72, 0x6e, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x61, 0x72, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x64, 0x6e, 0x73,
+	0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x64, 0x6e, 0x73,
+	0x4e, 0x61, 0x6d, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x7a, 0x6f, 0x6e, 0x65, 0x5f, 0x69, 0x64, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x7a, 0x6f, 0x6e, 0x65, 0x49, 0x64, 0x1a, 0x33, 0x0a,
+	0x08, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x65, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x72, 0x6e,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x61, 0x72, 0x6e, 0x12, 0x15, 0x0a, 0x06, 0x74,
+	0x67, 0x5f, 0x61, 0x72, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x67, 0x41,
+	0x72, 0x6e, 0x1a, 0x1f, 0x0a, 0x09, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x53, 0x65, 0x74, 0x12,
+	0x12, 0x0a, 0x04, 0x46, 0x51, 0x44, 0x4e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x46,
+	0x51, 0x44, 0x4e, 0x42, 0x1a, 0x5a, 0x18, 0x77, 0x61, 0x79, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x2f,
+	0x62, 0x75, 0x69, 0x6c, 0x74, 0x69, 0x6e, 0x2f, 0x61, 0x77, 0x73, 0x2f, 0x61, 0x6c, 0x62, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -181,17 +460,24 @@ func file_waypoint_builtin_aws_alb_plugin_proto_rawDescGZIP() []byte {
 	return file_waypoint_builtin_aws_alb_plugin_proto_rawDescData
 }
 
-var file_waypoint_builtin_aws_alb_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_waypoint_builtin_aws_alb_plugin_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_waypoint_builtin_aws_alb_plugin_proto_goTypes = []interface{}{
-	(*TargetGroup)(nil), // 0: alb.TargetGroup
-	(*Release)(nil),     // 1: alb.Release
+	(*TargetGroup)(nil),            // 0: alb.TargetGroup
+	(*Release)(nil),                // 1: alb.Release
+	(*Resource)(nil),               // 2: alb.Resource
+	(*Resource_SecurityGroup)(nil), // 3: alb.Resource.SecurityGroup
+	(*Resource_LoadBalancer)(nil),  // 4: alb.Resource.LoadBalancer
+	(*Resource_Listener)(nil),      // 5: alb.Resource.Listener
+	(*Resource_RecordSet)(nil),     // 6: alb.Resource.RecordSet
+	(*anypb.Any)(nil),              // 7: google.protobuf.Any
 }
 var file_waypoint_builtin_aws_alb_plugin_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	7, // 0: alb.Release.resource_state:type_name -> google.protobuf.Any
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_waypoint_builtin_aws_alb_plugin_proto_init() }
@@ -224,6 +510,66 @@ func file_waypoint_builtin_aws_alb_plugin_proto_init() {
 				return nil
 			}
 		}
+		file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Resource); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Resource_SecurityGroup); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Resource_LoadBalancer); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Resource_Listener); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_waypoint_builtin_aws_alb_plugin_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Resource_RecordSet); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -231,7 +577,7 @@ func file_waypoint_builtin_aws_alb_plugin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_waypoint_builtin_aws_alb_plugin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

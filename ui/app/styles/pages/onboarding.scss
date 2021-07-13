@@ -1,0 +1,132 @@
+.onboarding-page {
+  display: flex;
+  justify-content: center;
+  padding: scale.$lg-4;
+
+  .card {
+    width: 800px;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .onboarding-header {
+    display: flex;
+    align-items: center;
+    padding: scale.$lg-2 scale.$lg-2;
+    margin: 0 0 scale.$lg-1;
+    box-shadow: 0 0 0 1px color.$black;
+    border-radius: 2px 2px 0 0;
+    background: url(/images/pattern-alt.svg) no-repeat bottom right color.$black;
+
+    @media (prefers-color-scheme: dark) {
+      background-color: rgba(color.$black, 0.5);
+      box-shadow: 0 0 0 1px rgb(var(--outline));
+    }
+
+    .icon-tile {
+      color: $brand-color;
+      background: transparent;
+      box-shadow: inset 0 0 0 1px rgba($brand-color, 0.6);
+    }
+
+    .onboarding-header-content {
+      margin-left: scale.$lg-1;
+    }
+
+    h1 {
+      @include Typography.Heading(2);
+      color: $brand-color;
+      margin: 0 auto scale.$sm-2;
+
+      & + p {
+        @include Typography.Interface(L);
+        color: $brand-color;
+      }
+    }
+  }
+
+  nav {
+    padding: 0;
+  }
+
+  .onboarding-step {
+    font-size: 14px;
+    padding: 0 scale.$lg-2;
+
+    h2,
+    h3,
+    p,
+    pre,
+    ul {
+      margin-bottom: scale.$lg-1;
+      line-height: 1.7;
+    }
+
+    ul {
+      list-style: inside;
+    }
+
+    pre {
+      line-height: 1.4;
+    }
+
+    .copyable-code.block {
+      margin-bottom: scale.$lg-2;
+    }
+
+    code.cmd {
+      font-size: 12px;
+      color: color.$white;
+      background: color.$ui-gray-800;
+      padding: scale.$sm-3;
+      border-radius: 2px;
+    }
+
+    code.inline {
+      font-size: 12px;
+      color: color.$ui-gray-800;
+      background: color.$ui-gray-050;
+      padding: scale.$sm-3;
+      border-radius: 2px;
+    }
+
+    code.output {
+      font-size: 12px;
+      display: block;
+      width: 100%;
+      color: rgb(var(--text-muted));
+      background: rgb(var(--panel));
+      padding: scale.$sm-1;
+      border-radius: 2px;
+    }
+
+    .onboarding-tip,
+    .onboarding-note {
+      font-size: 0.8rem;
+      color: rgb(var(--info-text));
+      background: rgb(var(--info));
+      margin-bottom: scale.$lg-2;
+      padding: scale.$sm-2 scale.$sm-1;
+      border-radius: 2px;
+
+      p {
+        margin: 0;
+      }
+    }
+
+    .onboarding-note {
+      color: rgb(var(--warning-text));
+      background: rgb(var(--warning));
+    }
+  }
+
+  .onboarding-footer {
+    padding: scale.$sm-4 scale.$lg-2 scale.$lg-2;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid rgb(var(--border));
+    margin: 0 0 scale.$lg-1;
+  }
+}

@@ -1,0 +1,4 @@
+```release-note:bug
+server/client: configure keepalive properties to RPC connections to persist
+connections even after inactivity
+```

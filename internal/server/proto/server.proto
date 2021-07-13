@@ -16,6 +16,19 @@ service Waypoint {
   // are capable of talking to this server.
   rpc GetVersionInfo(google.protobuf.Empty) returns (GetVersionInfoResponse);
 
+  // GetUser returns the current logged in user or some other user.
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // List all users in the system.
+  rpc ListUsers(google.protobuf.Empty) returns (ListUsersResponse);
+
+  // Update the details about an existing user.
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+
+  // Delete a user. This will invalidate all authentication for this user
+  // as well since they no longer exist.
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
+
   // ListWorkspaces returns a list of all workspaces.
   //
   // Note that currently this list is never pruned, even if a workspace is
@@ -318,8 +331,18 @@ message Application {
 message Variable {
   string name = 1;
 
+  // value stores one of three simple types (string, number, bool) as their
+  // matching protobuf format, or any complex hcl type as a raw string. Values 
+  // taken from cli -var arguments and env vars are all processed as strings;
+  // if a complex type is assigned from one of these sources, it is checked
+  // for being assigned a complex type in the variable evaluation stage.
   oneof value {
     string str = 2;
+    bool bool = 9;
+    int64 num = 10;
+    // hcl stores values of any complex type in a raw string format, and 
+    // converts it to hcl when we evaluate variables. This is used when
+    // loading values from a file or from the server/UI.
     string hcl = 3;
   }
 
@@ -480,6 +503,43 @@ message Workspace {
 
     // active_time is the last time that this application was active
     google.protobuf.Timestamp active_time = 2;
+  }
+}
+
+// User represents a single user identity within the Waypoint server. A
+// user account may represent multiple authentication methods (OIDC from
+// multiple sources, tokens, etc.).
+message User {
+  // Id that is unique to the Waypoint server (usually a ULID).
+  string id = 1;
+
+  // username, unique to the Waypoint server. May not be blank,
+  // but can be changed. We allow changing so that auth methods
+  // such as OIDC can generate non-user-friendly usernames and
+  // the user can fix them up later.
+  string username = 2;
+
+  // Display name, not used for login. May be blank.
+  string display = 3;
+
+  // Email, not used for login. May be blank. May not be verified.
+  // Verification currently depends on the auth system. One day maybe
+  // Waypoint will handle this.
+  string email = 4;
+
+  // Links is the list of account links with 3rd party
+  // identity systems.
+  repeated Link links = 5;
+
+  // Link is a connection between an authentication provider and
+  // the user identity. This is used to lookup a unique user account
+  // within Waypoint from multiple auth sources (i.e. GitHub auth,
+  // user/pass, etc.).
+  message Link {
+    oneof method {
+      // TODO: one day!
+      string todo = 1;
+    }
   }
 }
 
@@ -716,6 +776,39 @@ message TaskLaunchInfo {
  
   // The arguments that will be passed to the new container on boot
   repeated string arguments = 3; 
+}
+
+/********************************************************************
+* User
+********************************************************************/
+
+message GetUserRequest {
+  // User to get. If this is not set then the currently logged in
+  // user will be requested.
+  Ref.User user = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+}
+
+message UpdateUserRequest {
+  // User to update along with the edited fields. Please see the docs
+  // on User to determine what can be edited. Fields that aren't editable
+  // will be ignored.
+  User user = 1;
+}
+
+message UpdateUserResponse {
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  Ref.User user = 1;
 }
 
 /********************************************************************
@@ -2076,6 +2169,12 @@ message Deployment {
 
   // id is the unique ID for this deployment
   string id = 1;
+
+  // url is the URL to the Deployment
+  // this URL might be empty, indicating that the deployment doesn't have
+  // the possibility to be contacted directly (e.g: Kubernetes pod)
+  // and thus the URL Service (Hashicorp Horizon) will be used instead, if enabled.
+  string url = 18;
 
   // See the docs for Generation.
   Generation generation = 17;

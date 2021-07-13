@@ -259,7 +259,9 @@ func (p *Platform) Status(
 	log.Debug("querying nomad for job health")
 
 	job, _, err := jobclient.Info(deployment.Name, &api.QueryOptions{})
-
+	if err != nil {
+		return nil, err
+	}
 	if *job.Status == "running" {
 		result.Health = sdk.StatusReport_READY
 		result.HealthMessage = fmt.Sprintf("Job %q is reporting ready!", deployment.Name)

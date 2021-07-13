@@ -1,0 +1,4 @@
+```release-note:improvement
+core: Correct parsing of boolean environment variables
+```
+

@@ -1,4 +1,4 @@
-<span class="hint-link" {{on "click" this.toggleHint}}>
+<span class="hint-link" role="button" {{on "click" this.toggleHint}}>
   <Pds::Icon @type="plus-circle-outline" class="nav-icon" />
   Invite
 </span>
@@ -22,5 +22,5 @@
     <ExternalLink href="https://waypointproject.io/docs">Read more in our documentation</ExternalLink>
   </small>
 </div>
-<div class="cli-hint-overlay" {{on "click" this.toggleHint}}></div>
+<div class="cli-hint-overlay" role="button" {{on "click" this.toggleHint}}></div>
 {{/if}}

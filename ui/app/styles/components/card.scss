@@ -1,0 +1,111 @@
+.card {
+  // all instances of cards (including the list of projects/apps)
+  padding: scale.$sm--1 scale.$base;
+  margin-bottom: scale.$lg-2;
+  box-shadow: $shadow;
+  border-radius: 2px;
+  background: rgba(var(--card), 0.75);
+
+  &.empty-state {
+    border: none;
+    padding: scale.$base;
+
+    p {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      &:only-child {
+        color: rgb(var(--text-subtle));
+        @include Typography.Interface(S);
+      }
+
+      .icon {
+        margin-bottom: scale.$sm-2;
+      }
+    }
+  }
+
+  &-header {
+    display: flex;
+    align-items: center;
+    padding-bottom: scale.$sm--2;
+
+    h4 {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+
+      span {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .icon {
+        width: scale.$lg-1;
+        height: scale.$lg-1;
+        margin-right: scale.$sm-3;
+      }
+    }
+
+    a {
+      margin-left: auto;
+      white-space: nowrap;
+      @include Typography.Interface(S);
+    }
+  }
+
+  h2,
+  h4 {
+    margin: 0;
+  }
+
+  h4 {
+    color: rgb(var(--text-muted));
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  .grid {
+    margin-top: scale.$base;
+    margin-bottom: -(scale.$sm-2);
+    border-top: 1px solid rgb(var(--border));
+
+    > div {
+      flex: 1 1 0;
+      padding: scale.$sm-2 scale.$base;
+      border-right: 1px solid rgb(var(--border));
+
+      &:first-child {
+        padding-left: 0;
+      }
+
+      &:last-child {
+        border: none;
+        padding-right: 0;
+      }
+    }
+  }
+}
+
+.row {
+  // content within a card (list of projects/apps)
+  display: flex;
+  align-items: center;
+
+  .icon-tile {
+    margin-right: scale.$base;
+  }
+
+  .meta small {
+    color: rgb(var(--text-muted));
+    @include Typography.Interface(M);
+  }
+}
+
+.card-header {
+  font-size: scale.$sm-1;
+}

@@ -262,6 +262,42 @@ func (msg *Workspace_Application) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
+func (msg *User) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *User) UnmarshalJSON(b []byte) error {
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
+}
+
+// MarshalJSON implements json.Marshaler
+func (msg *User_Link) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *User_Link) UnmarshalJSON(b []byte) error {
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
+}
+
+// MarshalJSON implements json.Marshaler
 func (msg *Ref) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
@@ -652,6 +688,114 @@ func (msg *TaskLaunchInfo) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler
 func (msg *TaskLaunchInfo) UnmarshalJSON(b []byte) error {
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
+}
+
+// MarshalJSON implements json.Marshaler
+func (msg *GetUserRequest) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *GetUserRequest) UnmarshalJSON(b []byte) error {
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
+}
+
+// MarshalJSON implements json.Marshaler
+func (msg *GetUserResponse) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *GetUserResponse) UnmarshalJSON(b []byte) error {
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
+}
+
+// MarshalJSON implements json.Marshaler
+func (msg *ListUsersResponse) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *ListUsersResponse) UnmarshalJSON(b []byte) error {
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
+}
+
+// MarshalJSON implements json.Marshaler
+func (msg *UpdateUserRequest) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *UpdateUserRequest) UnmarshalJSON(b []byte) error {
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
+}
+
+// MarshalJSON implements json.Marshaler
+func (msg *UpdateUserResponse) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *UpdateUserResponse) UnmarshalJSON(b []byte) error {
+	return (&jsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}).Unmarshal(bytes.NewReader(b), msg)
+}
+
+// MarshalJSON implements json.Marshaler
+func (msg *DeleteUserRequest) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	err := (&jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: false,
+		OrigName:     false,
+	}).Marshal(&buf, msg)
+	return buf.Bytes(), err
+}
+
+// UnmarshalJSON implements json.Unmarshaler
+func (msg *DeleteUserRequest) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)

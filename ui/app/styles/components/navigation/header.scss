@@ -1,0 +1,132 @@
+:root {
+  --header: #{dehex(color.$black)};
+  --header-text: #{dehex(color.$white)};
+  --header-border: #{dehex(color.$ui-cool-gray-700)};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --header: #{dehex(color.$black)};
+    --header-text: #{dehex(color.$white)};
+    --header-border: #{dehex(color.$ui-cool-gray-700)};
+  }
+}
+
+#header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  color: rgb(var(--header-text));
+  background: rgb(var(--header));
+  padding: scale.$base scale.$lg-4;
+  z-index: 2;
+
+  @media (prefers-color-scheme: dark) {
+    box-shadow: 0 1px 0 rgb(var(--header-border));
+  }
+
+  @media only screen and (max-width: 600px) {
+    flex-direction: column;
+    padding: scale.$base;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    @include Typography.Interface(L);
+
+    a {
+      display: flex;
+      align-items: center;
+      margin: 0 scale.$sm-2;
+      text-decoration: none;
+
+      > .pds-icon {
+        display: flex;
+      }
+    }
+
+    .nav-icon {
+      margin-right: scale.$sm-3;
+      width: scale.$base;
+      height: scale.$base;
+    }
+
+    .hint-link {
+      display: flex;
+      align-items: center;
+      position: relative;
+      margin: 0 scale.$sm-2;
+      cursor: pointer;
+
+      & + .cli-hint {
+        margin-top: -(scale.$sm-2);
+        margin-right: scale.$lg-2;
+
+        a {
+          color: rgb(var(--link));
+          display: inline;
+          margin: 0;
+        }
+      }
+    }
+
+    hr {
+      height: scale.$lg-1;
+      border: none;
+      border-right: 1px solid rgb(var(--header-border));
+      margin: 0 scale.$sm-2;
+    }
+
+    .auth-link {
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0 0 0 scale.$sm-2;
+      cursor: pointer;
+      outline: 0;
+      @include Typography.Interface(L);
+      color: rgb(var(--header-text));
+      font-family: font.$family-system-sans;
+    }
+
+    @media only screen and (max-width: 600px) {
+      margin-left: 0;
+      margin: scale.$base 0 0;
+
+      hr,
+      > a,
+      .invite-link {
+        margin: 0 scale.$sm-2;
+      }
+
+      hr {
+        margin-right: scale.$sm-1;
+      }
+    }
+  }
+
+  a {
+    color: inherit;
+  }
+
+  .brand {
+    color: rgb(var(--brand));
+    display: flex;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+    font-size: scale.$lg-3;
+
+    .logo {
+      width: unset;
+      height: unset;
+      display: flex;
+    }
+  }
+}

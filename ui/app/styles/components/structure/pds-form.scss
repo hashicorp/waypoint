@@ -1,0 +1,88 @@
+.pds-form {
+  fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    max-width: 800px;
+  }
+
+  .pds-formField:not(:last-child) {
+    margin-bottom: scale.$lg-1;
+  }
+
+  .pds-formFieldToggle {
+    display: flex;
+    margin-top: scale.$sm-1;
+
+    .x-toggle-container {
+      padding-left: 0;
+    }
+  }
+
+  .pds-toggleLabel {
+    padding-left: scale.$sm-1;
+  }
+
+  .pds-checkboxField__label {
+    margin-top: scale.$sm-2;
+  }
+
+  .pds-formRadioWrapper {
+    display: flex;
+    flex-direction: row;
+
+    .pds-radioField {
+      margin-right: scale.$lg-1;
+    }
+
+    .pds-radioField__input {
+      // Fix overflow not being hidden on FF
+      clip: rect(1px, 1px, 1px, 1px);
+      clip-path: inset(50%); /* browsers in the future */
+      /* Prevent the screen reader to skip spaces between words */
+      white-space: nowrap;
+    }
+  }
+  .pds-textarea__codeInput {
+    font-family: ui-monospace, 'Menlo', monospace;
+    font-size: scale.$sm--1;
+  }
+  .pds-helpText {
+    code {
+      font-size: 0.95em;
+      color: rgb(var(--text-muted));
+      padding: scale.$sm-4 scale.$sm-3;
+      background: rgb(var(--badge));
+      border-radius: 2px;
+    }
+  }
+}
+.pds-formField__input-inline-toggle {
+  display: flex;
+  margin-bottom: 1.25rem;
+  .pds-input {
+    margin-right: auto;
+  }
+  .pds-input-inline-toggle {
+    border: var(--pds-borderColor) 1px solid;
+    border-left: none;
+    background: color.$ui-gray-100;
+    padding: 0.5rem 0.5rem;
+    margin-top: 0.75rem;
+    width: auto;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+
+    line-height: var(--pds-lineHeight--dense);
+    input {
+      margin: 0 5px 0 0;
+    }
+    label {
+      color: color.$ui-cool-gray-800;
+      @include Typography.Label();
+      font-size: 0.875rem;
+      vertical-align: middle;
+    }
+  }
+}

@@ -34,10 +34,12 @@ export default class InviteLoginForm extends Component<InviteLoginFormArgs> {
   }
 
   @action
-  async login() {
-    var req = new ConvertInviteTokenRequest();
+  async login(event?: Event) {
+    event?.preventDefault();
+
+    let req = new ConvertInviteTokenRequest();
     req.setToken(this.inviteToken);
-    var resp = await this.api.client.convertInviteToken(req, this.api.WithMeta());
+    let resp = await this.api.client.convertInviteToken(req, this.api.WithMeta());
     await this.session.setToken(resp.getToken());
 
     // If this is an invite for a new user, take them to on-boarding, otherwise, take

@@ -19,9 +19,9 @@ require (
 	github.com/creack/pty v1.1.11
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/docker/cli v0.0.0-20200312141509-ef2f64abbd37
+	github.com/docker/cli v20.10.0-beta1.0.20201029214301-1d20b15adc38+incompatible
 	github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker v20.10.0-beta1.0.20201110211921-af34b94a78a1+incompatible
+	github.com/docker/docker v20.10.7+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.4.0
@@ -37,6 +37,7 @@ require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofrs/flock v0.8.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/go-cmp v0.5.5
 	github.com/google/go-jsonnet v0.17.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.1.2
@@ -49,10 +50,10 @@ require (
 	github.com/hashicorp/go-hclog v0.16.1
 	github.com/hashicorp/go-memdb v1.3.2
 	github.com/hashicorp/go-multierror v1.1.0
-	github.com/hashicorp/go-plugin v1.3.0
+	github.com/hashicorp/go-plugin v1.4.2
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/go-version v1.2.0
-	github.com/hashicorp/hcl/v2 v2.10.0
+	github.com/hashicorp/hcl/v2 v2.10.1-0.20210621220818-327f3ce2570e
 	github.com/hashicorp/horizon v0.0.0-20210317214650-d2053943be04
 	github.com/hashicorp/nomad/api v0.0.0-20200814140818-42de70466a9d
 	github.com/hashicorp/vault/api v1.0.5-0.20200519221902-385fac77e20f
@@ -77,11 +78,11 @@ require (
 	github.com/mitchellh/pointerstructure v1.0.0
 	github.com/mitchellh/protoc-gen-go-json v0.0.0-20200917194518-364b693410ae
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
+	github.com/moby/buildkit v0.8.3 // indirect
 	github.com/moby/sys/mountinfo v0.4.1 // indirect
 	github.com/moby/sys/symlink v0.1.0 // indirect
 	github.com/mr-tron/base58 v1.2.0
 	github.com/natefinch/atomic v0.0.0-20200526193002-18c0533a5b09
-	github.com/oklog/run v1.1.0
 	github.com/oklog/ulid v1.3.1
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/olekukonko/tablewriter v0.0.4
@@ -96,20 +97,19 @@ require (
 	github.com/slack-go/slack v0.6.5
 	github.com/stretchr/testify v1.6.1
 	github.com/vektra/mockery v1.1.2
-	github.com/zclconf/go-cty v1.8.2
+	github.com/zclconf/go-cty v1.8.4
 	github.com/zclconf/go-cty-yaml v1.0.2
-	go.etcd.io/bbolt v1.3.3
+	go.etcd.io/bbolt v1.3.5
 	go.uber.org/goleak v1.1.10
-	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
 	golang.org/x/text v0.3.6 // indirect
-	google.golang.org/api v0.22.0
+	google.golang.org/api v0.25.0
 	google.golang.org/genproto v0.0.0-20201022181438-0ff5f38871d5
 	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
 	k8s.io/client-go v0.19.4

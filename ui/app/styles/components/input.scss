@@ -1,0 +1,78 @@
+$input-shadow: inset 0 1px 1px 1px rgba(var(--shadow), 0.1);
+$input-focus: inset 0 1px 1px 1px rgba(var(--shadow), 0.1), 0 0 0 3px rgba(var(--focus-ring), 0.3);
+
+:root {
+  --input: #{dehex(color.$white)};
+  --input-text: #{dehex(color.$black)};
+  --input-text-placeholder: #{dehex(color.$ui-gray-600)};
+  --input-border: #{dehex(color.$ui-gray-300)};
+  --input-border-focus: #{dehex(color.$blue-500)};
+  --input-disabled: #{dehex(color.$ui-cool-gray-050)};
+  --input-disabled-text: #{dehex(color.$ui-gray-400)};
+  --input-disabled-border: #{dehex(color.$ui-gray-300)};
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --input: #{dehex(color.$ui-cool-gray-900)};
+    --input-text: #{dehex(color.$white)};
+    --input-text-placeholder: #{dehex(color.$ui-gray-700)};
+    --input-border: #{dehex(color.$ui-cool-gray-600)};
+    --input-border-focus: #{dehex(color.$blue-500)};
+    --input-disabled: #{dehex(color.$ui-cool-gray-800)};
+    --input-disabled-text: #{dehex(color.$ui-gray-400)};
+    --input-disabled-border: #{dehex(color.$ui-cool-gray-700)};
+  }
+}
+
+.pds-input.pds--textLike,
+.pds-textarea {
+  color: rgb(var(--input-text));
+  background: rgb(var(--input));
+  margin-top: scale.$sm-1;
+
+  &::placeholder {
+    color: rgb(var(--input-text-placeholder));
+  }
+}
+
+input:not([type='checkbox']) {
+  color: rgb(var(--input-text));
+  font-size: scale.$base;
+  padding: scale.$sm-2 scale.$sm-2;
+  box-shadow: $input-shadow;
+  border-radius: 2px;
+  border: 1px solid;
+  border-color: rgb(var(--input-border));
+  margin: 0;
+  width: 100%;
+  font-family: monospace;
+  background: rgb(var(--input));
+
+  &::placeholder {
+    color: rgb(var(--input-text-placeholder));
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: $input-focus;
+    border: 1px solid;
+    border-color: rgb(var(--input-border-focus));
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    color: rgb(var(--input-disable-text));
+    background: rgb(var(--input-disabled));
+    border: 1px solid;
+    border-color: rgb(var(--input-disabled-border));
+  }
+
+  #qunit & {
+    width: unset;
+    padding: unset;
+    font-family: unset;
+    font-size: unset;
+    line-height: unset;
+  }
+}

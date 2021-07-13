@@ -145,6 +145,9 @@ type deployOperation struct {
 
 	// cebToken is the token to set for the deployment to auth
 	cebToken string
+
+	// result is either a component.Deployment or component.DeploymentWithUrl
+	result interface{}
 }
 
 func (op *deployOperation) Close() error {
@@ -229,7 +232,7 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 		}
 	}
 
-	return &pb.Deployment{
+	deployment := &pb.Deployment{
 		Generation:  &pb.Generation{Id: generationId},
 		Application: app.ref,
 		Workspace:   app.workspace,
@@ -239,7 +242,9 @@ func (op *deployOperation) Init(app *App) (proto.Message, error) {
 		State:       pb.Operation_CREATED,
 		HasEntrypointConfig: op.DeploymentConfig != nil &&
 			op.DeploymentConfig.ServerAddr != "",
-	}, nil
+	}
+
+	return deployment, nil
 }
 
 func (op *deployOperation) Hooks(app *App) map[string][]*config.Hook {
@@ -314,13 +319,17 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 		return nil, err
 	}
 
-	val, err := app.callDynamicFunc(ctx,
+	result, err := app.callDynamicFunc(ctx,
 		log,
 		(*component.Deployment)(nil),
 		op.component,
 		op.component.Value.(component.Platform).DeployFunc(),
 		op.args()...,
 	)
+
+	if err != nil {
+		return nil, err
+	}
 
 	if ep, ok := op.component.Value.(component.Execer); ok && ep.ExecFunc() != nil {
 		log.Debug("detected deployment uses an exec plugin, decorating deployment with info")
@@ -336,7 +345,7 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 		log.Debug("no logs plugin detected on platform component")
 	}
 
-	return val, err
+	return result, err
 }
 
 // args returns the args we send to the Deploy function call

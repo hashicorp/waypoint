@@ -4,6 +4,8 @@ package alb;
 
 option go_package = "waypoint/builtin/aws/alb";
 
+import "google/protobuf/any.proto";
+
 message TargetGroup {
   string arn = 1;
   string region = 2;
@@ -14,4 +16,27 @@ message Release {
   string load_balancer_arn = 2;
   string target_group_arn = 4;
   string region = 3;
+  google.protobuf.Any resource_state = 5;
+}
+
+// Resource contains the internal resource states.
+message Resource {
+  message SecurityGroup {
+    string id = 1;
+  }
+
+  message LoadBalancer {
+    string arn = 1;
+    string dns_name = 2;
+    string zone_id = 3;
+  }
+
+  message Listener {
+    string arn = 1;
+    string tg_arn = 2;
+  }
+
+  message RecordSet {
+    string FQDN = 1;
+  }
 }

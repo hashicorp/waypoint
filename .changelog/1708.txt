@@ -1,0 +1,4 @@
+```release-note:bug
+cli: prevent use of operation flags on `runner agent` command
+```
+

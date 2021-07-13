@@ -4,6 +4,9 @@
   </div>
 </PageHeader>
 
-<AppForm::ProjectSettings @project={{this.model}}/>
+<Pds::TabNav>
+  <LinkTo role="tab" @route="workspace.projects.project.settings.repository" @model={{this.model.name}}>Git Repository</LinkTo>
+  <LinkTo role="tab" @route="workspace.projects.project.settings.variables" @model={{this.model.name}}>Input Variables</LinkTo>
+</Pds::TabNav>
 
 {{outlet}}

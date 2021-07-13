@@ -54,9 +54,6 @@ format: # format go code
 .PHONY: docker/server
 docker/server:
 	DOCKER_BUILDKIT=1 docker build \
-					--ssh default \
-					--secret id=ssh.config,src="${HOME}/.ssh/config" \
-					--secret id=ssh.key,src="${HOME}/.ssh/config" \
 					-t waypoint:dev \
 					.
 
@@ -132,6 +129,12 @@ gen/doc:
 		-I=./thirdparty/proto/api-common-protos/ \
 		--doc_out=./doc --doc_opt=html,index.html \
 		./internal/server/proto/server.proto
+
+.PHONY: gen/website-mdx
+gen/website-mdx:
+	go run ./cmd/waypoint docs -website-mdx
+	go run ./tools/gendocs
+	cd ./website; npx --no-install next-hashicorp format
 
 .PHONY: tools
 tools: # install dependencies and tools required to build

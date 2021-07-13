@@ -13,15 +13,15 @@ export default class BreadcrumbsService extends Service {
   // model occurs.
   @computed('router.{currentURL,currentRouteName}')
   get breadcrumbs() {
-    const owner = getOwner(this);
-    const allRoutes = (this.router.currentRouteName || '')
+    let owner = getOwner(this);
+    let allRoutes = (this.router.currentRouteName || '')
       .split('.')
       .without('')
       .map((segment, index, allSegments) => allSegments.slice(0, index + 1).join('.'));
 
     let crumbs = [];
     allRoutes.forEach((routeName) => {
-      const route = owner.lookup(`route:${routeName}`);
+      let route = owner.lookup(`route:${routeName}`);
 
       // Routes can reset the breadcrumb trail to start anew even
       // if the route is deeply nested.

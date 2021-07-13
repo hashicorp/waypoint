@@ -42,9 +42,11 @@ The environment variables specify how to connect to the server:
   that the runner can reach. The port should be for the gRPC API, and
   is typically 9701.
 
-- `WAYPOINT_SERVER_TLS` should be set to "true" if the server is listening
-  on TLS. You may additionally set `WAYPOINT_SERVER_TLS_SKIP_VERIFY` to
-  a non-empty value if the TLS cert is invalid and can be safely ignored
+- `WAYPOINT_SERVER_TLS` should be set to a truthy value (e.g. "1") if
+  the server is listening on TLS.
+
+- `WAYPOINT_SERVER_TLS_SKIP_VERIFY` should be set to a truthy value
+  (e.g. "1") if the TLS cert is invalid and can be safely ignored,
   such as in a development environment.
 
 - `WAYPOINT_SERVER_TOKEN` should be an [auth token](/docs/server/auth)

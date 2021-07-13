@@ -33,9 +33,9 @@ export default class LogStream extends Component<LogStreamArgs> {
 
   @action
   followLogs(element: any) {
-    let scrollableElement = element.target ?
-      element.target.closest('.output-scroll-y') :
-      element.closest('.output-scroll-y');
+    let scrollableElement = element.target
+      ? element.target.closest('.output-scroll-y')
+      : element.closest('.output-scroll-y');
 
     scrollableElement.scroll(0, scrollableElement.scrollHeight);
     this.badgeCount = 0;
@@ -50,18 +50,18 @@ export default class LogStream extends Component<LogStreamArgs> {
   }
 
   async start() {
-    const onData = (response: LogBatch) => {
+    let onData = (response: LogBatch) => {
       response.getLinesList().forEach((entry) => {
-        const prefix = formatRFC3339(entry.getTimestamp()!.toDate());
+        let prefix = formatRFC3339(entry.getTimestamp()!.toDate());
         this.addLine(`${prefix}: ${entry.getLine()}`);
       });
     };
 
-    const onStatus = (status: any) => {
+    let onStatus = (status: any) => {
       this.addLine(status.details);
     };
 
-    var stream = this.api.client.getLogStream(this.args.req, this.api.WithMeta());
+    let stream = this.api.client.getLogStream(this.args.req, this.api.WithMeta());
 
     stream.on('data', onData);
     stream.on('status', onStatus);

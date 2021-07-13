@@ -12,10 +12,11 @@ type OptionsWithContext = RunOptions & ContextObject;
 // Selectors of elements to exclude from a11y auditing. See the following docs
 // for more:
 // https://github.com/dequelabs/axe-core/blob/develop/doc/API.md#include-exclude-object
-const exclude = [['.pds-logomark'], ['.pds-tabNav'], ['.card-header'], ['iframe']];
+const include = [['#ember-testing-container']];
+const exclude = [['.pds-logomark'], ['.pds-tabNav'], ['.card-header']];
 
 export function setup(): void {
   setupGlobalA11yHooks(() => true);
   setEnableA11yAudit(true);
-  setRunOptions({ exclude } as OptionsWithContext);
+  setRunOptions({ include, exclude } as OptionsWithContext);
 }

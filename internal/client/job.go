@@ -22,6 +22,7 @@ func (c *Project) job() *pb.Job {
 	job := &pb.Job{
 		TargetRunner: c.runner,
 		Labels:       c.labels,
+		Variables:    c.variables,
 		Workspace:    c.workspace,
 		Application: &pb.Ref_Application{
 			Project: c.project.Project,

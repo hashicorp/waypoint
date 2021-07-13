@@ -2,9 +2,8 @@
   <LinkTo @route="workspace.projects.project.app.release" @models={{array @release.id}}>
     <p>
       <b class="badge badge--version">v{{@release.sequence}}</b>
-      <code>{{@release.id}}</code>
     </p>
-    <small>
+    <small class="app-item__meta__secondary">
       <Pds::Icon @type={{icon-for-component @release.component.name}} class="icon" />
       <span>{{if (eq @release.status.state 1) 'Releasing' 'Released'}} on
         <b>{{component-name @release.component.name}}</b>
@@ -17,8 +16,14 @@
     </small>
   </LinkTo>
 
+  {{#if (and (not-eq @release.state 4) @release.statusReport)}}
+    <StatusReportIndicator @statusReport={{@release.statusReport}} />
+  {{/if}}
+
   {{#if (and @isLatest @release.url)}}
-    <ExternalLink href={{@release.url}} class="button button--primary button--external-link">
+    <ExternalLink
+      href={{enforce-protocol @release.url}}
+      class="button button--primary button--external-link">
       <span>{{@release.url}}</span>
       <Pds::Icon @type="exit" class="icon" />
     </ExternalLink>
