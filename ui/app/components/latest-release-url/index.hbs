@@ -1,5 +1,5 @@
 {{#if this.firstRelease.url}}
-<ExternalLink href={{this.firstRelease.url}} class="button button--primary button--external-link">
+<ExternalLink href={{enforce-protocol this.firstRelease.url}} class="button button--primary button--external-link">
   <span>{{this.firstRelease.url}}</span>
   <Pds::Icon @type="exit" class="icon" />
 </ExternalLink>

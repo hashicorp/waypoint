@@ -25,8 +25,8 @@
   <:actions>
     {{#if @model.preload.deployUrl}}
       <ExternalLink
-        href="https://{{@model.preload.deployUrl}}"
-        title="Visit https://{{@model.preload.deployUrl}}"
+        href={{enforce-protocol @model.preload.deployUrl}}
+        title="Visit {{enforce-protocol @model.preload.deployUrl}}"
         class="button button--secondary button--external-link app-card__launch-link"
       >
         <Pds::Icon @type="exit" class="icon" />
