@@ -58,19 +58,10 @@ func ValidateAuthMethodRules(v *pb.AuthMethod) []*validation.FieldRules {
 
 // validateAuthMethodOIDCRules
 func validateAuthMethodOIDCRules(v *pb.AuthMethod_Oidc) []*validation.FieldRules {
-	manualEndpoint := validation.When(v.Oidc.DiscoveryUrl == "", validation.Required, is.URL)
-
 	return []*validation.FieldRules{
 		validation.Field(&v.Oidc.ClientId, validation.Required),
 		validation.Field(&v.Oidc.ClientSecret, validation.Required),
-
-		// Discovery URL or manual endpoints are required
-		validation.Field(&v.Oidc.DiscoveryUrl,
-			validation.When(v.Oidc.AuthorizationEndpoint == "",
-				validation.Required, is.URL)),
-		validation.Field(&v.Oidc.AuthorizationEndpoint, manualEndpoint),
-		validation.Field(&v.Oidc.TokenEndpoint, manualEndpoint),
-		validation.Field(&v.Oidc.UserinfoEndpoint, manualEndpoint),
+		validation.Field(&v.Oidc.DiscoveryUrl, validation.Required, is.URL),
 	}
 }
 
