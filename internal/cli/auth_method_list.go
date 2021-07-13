@@ -84,7 +84,7 @@ Usage: waypoint auth-method list
   This will list all the ways that a user can log in to the Waypoint server.
   For most day-to-day Waypoint users, this doesn't provide much value. You
   can use the results of this command with "waypoint login" to target a
-  specific auth method. However, if there is only one auth method, then
+  specific auth method. However, if there is only one auth method other than "token", then
   "waypoint login" automatically uses that method.
 
 `)
