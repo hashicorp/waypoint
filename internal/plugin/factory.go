@@ -21,7 +21,7 @@ var exePath string
 
 func init() {
 	var err error
-	exp := os.Getenv("WAYPOINT_PLUGIN_PATH")
+	exp := os.Getenv("WAYPOINT_BUILTIN_PLUGIN_EXE")
 	if exp != "" {
 		exePath, err = filepath.Abs(exp)
 		if err != nil {

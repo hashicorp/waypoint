@@ -13,7 +13,7 @@ import (
 )
 
 func TestRunnerTaskLauncherStart(t *testing.T) {
-	if os.Getenv("WAYPOINT_PLUGIN_PATH") == "" {
+	if os.Getenv("WAYPOINT_BUILTIN_PLUGIN_EXE") == "" {
 		t.Skip("unable to run plugins in tests without setting plugin path")
 
 	}
