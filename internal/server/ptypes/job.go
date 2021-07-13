@@ -57,6 +57,9 @@ func ValidateJob(job *pb.Job) error {
 		validation.Field(&job.Workspace, validation.Required),
 		validation.Field(&job.TargetRunner, validation.Required),
 		validation.Field(&job.Operation, validation.Required),
+		validationext.StructField(&job.DataSource, func() []*validation.FieldRules {
+			return ValidateJobDataSourceRules(job.DataSource)
+		}),
 	))
 }
 
@@ -161,7 +164,9 @@ func isSSHKey(v *pb.Job_Git_Ssh) validation.Rule {
 }
 
 func hasNoDotDot(v interface{}) error {
-	for _, part := range filepath.SplitList(v.(string)) {
+	path := v.(string)
+	path = filepath.ToSlash(path)
+	for _, part := range strings.Split(path, string(filepath.Separator)) {
 		if part == ".." {
 			return errors.New("must not contain '..'")
 		}
