@@ -285,7 +285,7 @@ Usage: waypoint login [server address]
 const (
 	errNoAuthMethods = `
 Only token-based authentication is allowed by this server. To login using
-a token, use the "waypoint context create" command.
+a token, use the "waypoint login" command with the "-token" flag.
 `
 
 	errManyAuthMethods = `
