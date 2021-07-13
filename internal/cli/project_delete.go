@@ -100,7 +100,7 @@ func (c *ProjectDeleteCommand) Synopsis() string {
 
 func (c *ProjectDeleteCommand) Help() string {
 	return formatHelp(`
-Usage: waypoint project delete PROJECT-NAME
+Usage: waypoint project delete PROJECT-NAME [options]
 
   This command deletes a project entirely.
 
