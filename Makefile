@@ -19,8 +19,8 @@ bin: # bin creates the binaries for Waypoint for the current platform
 	cd internal/assets && go-bindata -pkg assets -o prod.go -tags assetsembedded ./ceb
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
-.PHONY: bin-dirty
-bin-dirty: # bin-dirty only recompiles waypoint
+.PHONY: bin/cli-only
+bin/cli-only: # bin/cli-only only recompiles waypoint
 	CGO_ENABLED=$(CGO_ENABLED) go build -ldflags $(GOLDFLAGS) -tags assetsembedded -o ./waypoint ./cmd/waypoint
 
 .PHONY: bin/linux
