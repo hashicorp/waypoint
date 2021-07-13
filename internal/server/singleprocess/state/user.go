@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
 var userBucket = []byte("user")
@@ -126,6 +127,11 @@ func (s *State) userPut(
 		}
 
 		value.Id = id
+	}
+
+	// We want to validate the user again.
+	if err := ptypes.ValidateUser(value); err != nil {
+		return err
 	}
 
 	id := s.userId(value)
