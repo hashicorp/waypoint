@@ -1,0 +1,4 @@
+```release-note:feature
+plugin: Allow debugging of plugins with tools like delve
+```
+
