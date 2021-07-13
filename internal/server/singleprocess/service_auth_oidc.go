@@ -14,11 +14,17 @@ import (
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
 
-// oidcAuthExpiry is the duration that an OIDC-based login is valid for.
-// We default this to 30 days for now but that is arbitrary. We can change
-// this default anytime or choose to make it configurable one day on the
-// server.
-const oidcAuthExpiry = 30 * 24 * time.Hour
+const (
+	// oidcAuthExpiry is the duration that an OIDC-based login is valid for.
+	// We default this to 30 days for now but that is arbitrary. We can change
+	// this default anytime or choose to make it configurable one day on the
+	// server.
+	oidcAuthExpiry = 30 * 24 * time.Hour
+
+	// oidcReqExpiry is the time that an OIDC auth request is valid for.
+	// 5 minutes should be plenty of time to complete auth.
+	oidcReqExpiry = 5 * 60 * time.Minute
+)
 
 func (s *service) ListOIDCAuthMethods(
 	ctx context.Context,
@@ -92,7 +98,7 @@ func (s *service) GetOIDCAuthURL(
 		oidcReqOpts = append(oidcReqOpts, oidc.WithScopes(v...))
 	}
 	oidcReq, err := oidc.NewRequest(
-		5*60*time.Second,
+		oidcReqExpiry,
 		req.RedirectUri,
 		oidcReqOpts...,
 	)
@@ -162,7 +168,7 @@ func (s *service) CompleteOIDCAuth(
 		oidcReqOpts = append(oidcReqOpts, oidc.WithAudiences(v...))
 	}
 	oidcReq, err := oidc.NewRequest(
-		5*60*time.Second,
+		oidcReqExpiry,
 		req.RedirectUri,
 		oidcReqOpts...,
 	)
