@@ -71,12 +71,12 @@ type TaskLauncherConfig struct {
 	// An array of strings with network names to connect the container to
 	Networks []string `hcl:"networks,optional"`
 
-	// Resources configures the resource constraings such as cpu and memory for the
+	// Resources configures the resource constraints such as cpu and memory for the
 	// created containers.
 	Resources TaskResources `hcl:"resources,block"`
 
 	// Environment variables that are meant to configure the application in a static
-	// way. This might be control an image that has mulitple modes of operation,
+	// way. This might be start an image in a specific mode,
 	// selected via environment variable. Most configuration should use the waypoint
 	// config commands.
 	StaticEnvVars map[string]string `hcl:"static_environment,optional"`
@@ -128,7 +128,7 @@ task {
 
 	doc.SetField(
 		"networks",
-		"An list of strings with network names to connect the container to.",
+		"A list of strings with network names to connect the container to.",
 		docs.Default("waypoint"),
 		docs.Summary(
 			"A list of networks to connect the container to. By default the container",
@@ -149,10 +149,10 @@ task {
 		"static_environment",
 		"environment variables to expose to the application",
 		docs.Summary(
-			"these environment variables should not be run of the mill",
-			"configuration variables, use waypoint config for that.",
-			"These variables are used to control over all container modes,",
-			"such as configuring it to start a web app vs a background worker",
+			"These variables are used to control all of a container's modes,",
+			"such as configuring it to start a web app vs a background worker.",
+			"These environment variables should not be common",
+			"configuration variables normally set in `waypoint config`.",
 		),
 	)
 
