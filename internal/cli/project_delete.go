@@ -70,7 +70,7 @@ func (c *ProjectDeleteCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.ui.Output(fmt.Sprintf("project %s deleted successfully", name), terminal.WithInfoStyle())
+	c.ui.Output(fmt.Sprintf("project %s deleted successfully", name), terminal.WithSuccessStyle())
 	return 0
 }
 
