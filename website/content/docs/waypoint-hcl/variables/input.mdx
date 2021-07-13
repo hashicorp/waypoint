@@ -37,11 +37,11 @@ variable "image_name" {
 variable "docker_labels" {
   type = object({
     environment = string
-    log_level = string
+    log_level   = string
   })
   default =  {
       environment = test
-      log_level = debug
+      log_level   = debug
     }
 }
 ```
@@ -51,7 +51,7 @@ be unique among all variables in the same waypoint.hcl. This name is used to
 assign a value to the variable and to reference the variable's value when
 evaluating the configuration.
 
-The name of a variable can be any valid [identifier](/docs/waypoint-hcl/syntax#identifiers)
+The name of a variable can be any valid [identifier](/docs/waypoint-hcl/syntax#identifiers).
 
 ## Arguments
 
@@ -99,7 +99,7 @@ app "my-app" {
 }
 
 variable "port" {
-  type = number
+  type    = number
   default = null
 }
 
@@ -347,7 +347,7 @@ precedence over earlier ones:
 - In the project settings via [the Waypoint server's UI](https://www.waypointproject.io/docs/server#waypoint-server).
 - Automatically loaded variable definition files, named with the pattern
   `*.auto.wpvars`.
-- As environment variables.
-- In variable definitions (`.wpvars`) files specified with the `-var-file` command
-  line option.
+- From environment variables prefixed with `WP_VAR_`.
+- In variable definitions files (e.g. `dev.wpvars`) specified with the
+  `-var-file` command line option.
 - Individually, with the `-var` command line option.
