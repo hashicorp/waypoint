@@ -178,7 +178,7 @@ func (b *TaskLauncher) setupImage(
 	if !b.config.ForcePull {
 		sum, err := cli.ImageList(context.Background(), types.ImageListOptions{Filters: args})
 		if err != nil {
-			return status.Errorf(codes.FailedPrecondition, "unable to list images in local Docker cache: %w", err)
+			return status.Errorf(codes.FailedPrecondition, "unable to list images in local Docker cache: %s", err)
 		}
 
 		log.Debug("image list", "images", len(sum))
@@ -194,7 +194,7 @@ func (b *TaskLauncher) setupImage(
 
 	out, err := cli.ImagePull(context.Background(), img, types.ImagePullOptions{})
 	if err != nil {
-		return status.Errorf(codes.FailedPrecondition, "unable to pull image: %w", err)
+		return status.Errorf(codes.FailedPrecondition, "unable to pull image: %s", err)
 	}
 
 	var stdout bytes.Buffer
