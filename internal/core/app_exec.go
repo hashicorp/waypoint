@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/ceb/virtualceb"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -192,8 +193,8 @@ func (p *pluginExecVirtHandler) Run(ctx context.Context) error {
 		nil,
 		p.component,
 		p.execer.ExecFunc(),
-		argNamedAny("deployment", p.deployment.Deployment),
-		argNamedAny("image", p.artifact.Artifact.Artifact),
+		plugin.ArgNamedAny("deployment", p.deployment.Deployment),
+		plugin.ArgNamedAny("image", p.artifact.Artifact.Artifact),
 		argmapper.Typed(esi),
 	)
 	if err != nil {

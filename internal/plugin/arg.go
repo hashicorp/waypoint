@@ -1,4 +1,4 @@
-package core
+package plugin
 
 import (
 	"github.com/golang/protobuf/ptypes"
@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/go-argmapper"
 )
 
-// argNamedAny returns an argmapper.Arg that specifies the Any value
+// ArgNamedAny returns an argmapper.Arg that specifies the Any value
 // with the proper subtype.
-func argNamedAny(n string, v *any.Any) argmapper.Arg {
+func ArgNamedAny(n string, v *any.Any) argmapper.Arg {
 	if v == nil {
 		return nil
 	}

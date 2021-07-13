@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -219,7 +220,7 @@ func (op *releaseOperation) Do(ctx context.Context, log hclog.Logger, app *App, 
 		(*component.Release)(nil),
 		op.Component,
 		op.Component.Value.(component.ReleaseManager).ReleaseFunc(),
-		argNamedAny("target", op.Target.Deployment),
+		plugin.ArgNamedAny("target", op.Target.Deployment),
 	)
 	if err != nil {
 		return nil, err

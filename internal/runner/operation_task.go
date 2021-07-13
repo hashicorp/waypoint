@@ -3,8 +3,6 @@ package runner
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/hashicorp/go-argmapper"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -103,15 +101,7 @@ func (r *Runner) executeStopTaskOp(
 
 	stop := c.(component.TaskLauncher).StopTaskFunc()
 
-	msg, err := ptypes.AnyMessageName(op.StopTask.State)
-	if err != nil {
-		// This should never happen.
-		panic(err)
-	}
-
-	arg := argmapper.NamedSubtype("state", op.StopTask.State, msg)
-
-	_, err = pi.Invoke(ctx, log, stop, arg)
+	_, err = pi.Invoke(ctx, log, stop, plugin.ArgNamedAny("state", op.StopTask.State))
 	if err != nil {
 		return nil, err
 	}
