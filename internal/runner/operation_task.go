@@ -25,7 +25,7 @@ func (r *Runner) executeStartTaskOp(
 		panic("operation not expected type")
 	}
 
-	pi, c, err := plugin.OpenPlugin(ctx, log, &plugin.PluginRequest{
+	pi, c, err := plugin.Open(ctx, log, &plugin.PluginRequest{
 		Config: plugin.Config{
 			Name: op.StartTask.PluginType,
 		},
@@ -82,7 +82,7 @@ func (r *Runner) executeStopTaskOp(
 		panic("operation not expected type")
 	}
 
-	pi, c, err := plugin.OpenPlugin(ctx, log, &plugin.PluginRequest{
+	pi, c, err := plugin.Open(ctx, log, &plugin.PluginRequest{
 		Config: plugin.Config{
 			Name: "dack",
 		},

@@ -95,16 +95,16 @@ func startInstance(
 	return pi, nil
 }
 
-// Plugin is the state of a created plugin to be invoked, returned by OpenPlugin.
+// Plugin is the state of a created plugin to be invoked, returned by Open.
 type Plugin struct {
 	req      *PluginRequest
 	Instance *Instance
 }
 
-// OpenPlugin resolves the plugin information in req and returns a Plugin value
-// to have Invoke called upon it. OpenPlugin also returns the raw component
+// Open resolves the plugin information in req and returns a Plugin value
+// to have Invoke called upon it. Open also returns the raw component
 // interface, which is used to get the function value that will be invoked
-func OpenPlugin(
+func Open(
 	ctx context.Context, log hclog.Logger, req *PluginRequest,
 ) (*Plugin, interface{}, error) {
 	pi, err := startInstance(ctx, log, req)
