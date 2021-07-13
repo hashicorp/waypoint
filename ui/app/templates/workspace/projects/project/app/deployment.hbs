@@ -1,7 +1,6 @@
 <PageHeader @iconName="upload">
   <div class="title">
-    {{! TODO(jgwhite): Make this a real <h1> }}
-    <h1 aria-level="1"><b class="badge badge--version">v{{@model.sequence}}</b></h1>
+    <h1><b class="badge badge--version">v{{@model.sequence}}</b></h1>
     <small>
       <Pds::Icon @type={{icon-for-component @model.component.name}} class="icon" />
       <span>Deployed by <b>{{component-name @model.component.name}}</b>
