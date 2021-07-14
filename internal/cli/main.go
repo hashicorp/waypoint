@@ -504,6 +504,12 @@ func Commands(
 			}, nil
 		},
 
+		"auth-method inspect": func() (cli.Command, error) {
+			return &AuthMethodInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"auth-method delete": func() (cli.Command, error) {
 			return &AuthMethodDeleteCommand{
 				baseCommand: baseCommand,
