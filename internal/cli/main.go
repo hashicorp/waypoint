@@ -532,6 +532,12 @@ func Commands(
 			}, nil
 		},
 
+		"user inspect": func() (cli.Command, error) {
+			return &UserInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"user invite": func() (cli.Command, error) {
 			return &UserInviteCommand{
 				baseCommand: baseCommand,
