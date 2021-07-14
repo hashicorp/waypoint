@@ -529,6 +529,12 @@ func Commands(
 			}, nil
 		},
 
+		"user invite": func() (cli.Command, error) {
+			return &UserInviteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"user token": func() (cli.Command, error) {
 			return &UserTokenCommand{
 				baseCommand: baseCommand,
