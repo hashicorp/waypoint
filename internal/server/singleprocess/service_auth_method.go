@@ -54,6 +54,13 @@ func (s *service) DeleteAuthMethod(
 		return nil, err
 	}
 
+	// Validate that the auth method exists
+	if _, err := s.state.AuthMethodGet(req.AuthMethod); err != nil {
+		return nil, err
+	}
+
+	// There may be a race between deleting and checking above, but that
+	// is okay because the delete is idempotent.
 	if err := s.state.AuthMethodDelete(req.AuthMethod); err != nil {
 		return nil, err
 	}
