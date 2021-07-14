@@ -175,4 +175,39 @@ export default Factory.extend({
       });
     },
   }),
+
+  'example-nodejs': trait({
+    name: 'example-nodejs',
+
+    afterCreate(project, server) {
+      let application = server.create('application', { name: 'example-nodejs', project });
+
+      server.create('build', 'pack', 'minutes-old-success', { application, sequence: 1 });
+      server.create('build', 'pack', 'seconds-old-success', { application, sequence: 2 });
+
+      server.create('deployment', 'docker', 'minutes-old-success', {
+        application,
+        sequence: 1,
+        statusReport: server.create('status-report', 'ready', { application }),
+        deployUrl: `https://instantly-worthy-shrew--v1.waypoint.run`,
+      });
+      server.create('deployment', 'docker', 'seconds-old-success', {
+        application,
+        sequence: 2,
+        statusReport: server.create('status-report', 'ready', { application }),
+        deployUrl: `https://instantly-worthy-shrew--v2.waypoint.run`,
+      });
+
+      server.create('release', 'docker', 'minutes-old-success', {
+        application,
+        sequence: 1,
+        statusReport: server.create('status-report', 'ready', { application }),
+      });
+      server.create('release', 'docker', 'seconds-old-success', {
+        application,
+        sequence: 2,
+        statusReport: server.create('status-report', 'ready', { application }),
+      });
+    },
+  }),
 });
