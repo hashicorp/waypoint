@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/ceb/virtualceb"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -57,7 +58,7 @@ func (a *App) Logs(ctx context.Context, id string, d *pb.Deployment, startTime t
 			nil,
 			c,
 			logs.LogsFunc(),
-			argNamedAny("deployment", d.Deployment),
+			plugin.ArgNamedAny("deployment", d.Deployment),
 			argmapper.Typed(lv),
 		)
 		if err != nil {

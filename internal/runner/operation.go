@@ -279,7 +279,10 @@ func (r *Runner) pluginFactories(
 		}
 
 		// Find our plugin.
-		cmd, err := plugin.Discover(pluginCfg, pluginPaths)
+		cmd, err := plugin.Discover(&plugin.Config{
+			Name:     pluginCfg.Name,
+			Checksum: pluginCfg.Checksum,
+		}, pluginPaths)
 		if err != nil {
 			plog.Warn("error searching for plugin", "err", err)
 			perr = multierror.Append(perr, err)
@@ -297,6 +300,7 @@ func (r *Runner) pluginFactories(
 			} else {
 				plog.Debug("plugin found as builtin")
 				for _, t := range pluginCfg.Types() {
+					plog.Info("register", "type", t.String(), "nil", result[t] == nil)
 					result[t].Register(pluginCfg.Name, plugin.BuiltinFactory(pluginCfg.Name, t))
 				}
 			}

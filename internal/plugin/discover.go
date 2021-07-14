@@ -13,9 +13,18 @@ import (
 
 	"github.com/adrg/xdg"
 	"github.com/mitchellh/go-homedir"
-
-	"github.com/hashicorp/waypoint/internal/config"
 )
+
+// Config contains the information about a plugin's loading information.
+type Config struct {
+	// Name of the plugin. This is expected to match the plugin binary
+	// "waypoint-plugin-<name>" including casing.
+	Name string
+
+	// Checksum is the SHA256 checksum to validate this plugin.
+	// If set, the binary will be validated against this checksum.
+	Checksum string
+}
 
 // Discover finds the given plugin and returns the command for it. The command
 // can subsequently be used with Factory to build a factory for a specific
@@ -27,7 +36,7 @@ import (
 // This will search the paths given. You can use DefaultPaths() to get
 // the default set of paths.
 //
-func Discover(cfg *config.Plugin, paths []string) (*exec.Cmd, error) {
+func Discover(cfg *Config, paths []string) (*exec.Cmd, error) {
 	// Expected filename
 	expected := "waypoint-plugin-" + cfg.Name
 	if runtime.GOOS == "windows " {

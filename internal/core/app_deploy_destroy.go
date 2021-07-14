@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -182,7 +183,7 @@ func (a *App) destroyDeployWorkspace(ctx context.Context) error {
 		nil,
 		c,
 		d.DestroyWorkspaceFunc(),
-		argNamedAny("deployment", results[0].Deployment),
+		plugin.ArgNamedAny("deployment", results[0].Deployment),
 	)
 	return err
 }
@@ -238,7 +239,7 @@ func (op *deployDestroyOperation) Do(ctx context.Context, log hclog.Logger, app 
 		nil,
 		op.Component,
 		destroyer.DestroyFunc(),
-		argNamedAny("deployment", op.Deployment.Deployment),
+		plugin.ArgNamedAny("deployment", op.Deployment.Deployment),
 	)
 }
 

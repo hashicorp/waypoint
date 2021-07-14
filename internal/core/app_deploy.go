@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint/internal/config"
+	"github.com/hashicorp/waypoint/internal/plugin"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
@@ -356,7 +357,7 @@ func (op *deployOperation) args() []argmapper.Arg {
 		// If we don't do this we will panic so its best to protect against this
 		// anyways.
 		args = append(args,
-			argNamedAny("artifact", op.Push.Artifact.Artifact),
+			plugin.ArgNamedAny("artifact", op.Push.Artifact.Artifact),
 		)
 	}
 

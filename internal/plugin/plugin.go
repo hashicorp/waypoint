@@ -65,6 +65,7 @@ var (
 		component.PlatformType:       mustFactory(factory.New(component.TypeMap[component.PlatformType])),
 		component.ReleaseManagerType: mustFactory(factory.New(component.TypeMap[component.ReleaseManagerType])),
 		component.ConfigSourcerType:  mustFactory(factory.New(component.TypeMap[component.ConfigSourcerType])),
+		component.TaskLauncherType:   mustFactory(factory.New(component.TypeMap[component.TaskLauncherType])),
 	}
 
 	// ConfigSourcers are the list of built-in config sourcers. These will

@@ -354,6 +354,8 @@ func (r *Runner) prepareAndExecuteJob(
 	switch job.Operation.(type) {
 	case *pb.Job_Poll:
 		return r.executePollOp(ctx, log, ui, job)
+	case *pb.Job_StartTask:
+		return r.executeStartTaskOp(ctx, log, ui, job)
 	}
 
 	// We need to get our data source next prior to executing.
