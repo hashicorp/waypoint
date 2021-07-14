@@ -1,6 +1,11 @@
 package cli
 
 import (
+	"strings"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
@@ -27,6 +32,25 @@ func (c *AuthMethodDeleteCommand) Run(args []string) int {
 		return 1
 	}
 	name := c.args[0]
+	ref := &pb.Ref_AuthMethod{Name: name}
+
+	// We special case token here. If it actually exists we let this through
+	// (weird edge case, operators shouldn't name it token). If it doesn't
+	// exist we notify the user they can't disable token auth.
+	if name == "token" {
+		_, err := c.project.Client().GetAuthMethod(c.Ctx, &pb.GetAuthMethodRequest{
+			AuthMethod: ref,
+		})
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				c.ui.Output(strings.TrimSpace(errDeleteTokenAuth), terminal.WithErrorStyle())
+				return 1
+			}
+
+			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			return 1
+		}
+	}
 
 	_, err := c.project.Client().DeleteAuthMethod(c.Ctx, &pb.DeleteAuthMethodRequest{
 		AuthMethod: &pb.Ref_AuthMethod{Name: name},
@@ -68,3 +92,8 @@ Usage: waypoint auth-method delete NAME
 
 `)
 }
+
+const errDeleteTokenAuth = `
+The "token" auth method can't be deleted. This auth method is required for
+the Waypoint server to function.
+`
