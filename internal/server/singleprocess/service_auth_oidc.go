@@ -153,12 +153,6 @@ func (s *service) CompleteOIDCAuth(
 		return nil, err
 	}
 
-	// We need this discovery info later
-	discovery, err := provider.DiscoveryInfo(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	// Create a minimal request to get the auth URL
 	oidcReqOpts := []oidc.Option{
 		oidc.WithNonce(req.Nonce),
@@ -198,7 +192,7 @@ func (s *service) CompleteOIDCAuth(
 	}
 
 	// Look up a user by sub.
-	user, err := s.oidcInitUser(log, discovery.Issuer, &idClaimVals)
+	user, err := s.oidcInitUser(log, &idClaimVals)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +214,7 @@ func (s *service) CompleteOIDCAuth(
 }
 
 // oidcInitUser finds or creates the user for the given OIDC information.
-func (s *service) oidcInitUser(log hclog.Logger, iss string, claims *idClaims) (*pb.User, error) {
+func (s *service) oidcInitUser(log hclog.Logger, claims *idClaims) (*pb.User, error) {
 	// This method attempts to find, link, or create a new user to the
 	// given OIDC result in the following order:
 	//
@@ -237,7 +231,7 @@ func (s *service) oidcInitUser(log hclog.Logger, iss string, claims *idClaims) (
 	}
 
 	// First look up by exact account link.
-	user, err := s.state.UserGetOIDC(iss, claims.Sub)
+	user, err := s.state.UserGetOIDC(claims.Iss, claims.Sub)
 	if err != nil {
 		if status.Code(err) != codes.NotFound {
 			return nil, err
@@ -281,7 +275,7 @@ func (s *service) oidcInitUser(log hclog.Logger, iss string, claims *idClaims) (
 	user.Links = append(user.Links, &pb.User_Link{
 		Method: &pb.User_Link_Oidc{
 			Oidc: &pb.User_Link_OIDC{
-				Iss: iss,
+				Iss: claims.Iss,
 				Sub: claims.Sub,
 			},
 		},
@@ -294,7 +288,7 @@ func (s *service) oidcInitUser(log hclog.Logger, iss string, claims *idClaims) (
 	log.Info("new OIDC user linked",
 		"user_id", user.Id,
 		"username", user.Username,
-		"iss", iss,
+		"iss", claims.Iss,
 		"sub", claims.Sub,
 	)
 
@@ -306,6 +300,7 @@ func (s *service) oidcInitUser(log hclog.Logger, iss string, claims *idClaims) (
 //
 // [1]: https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
 type idClaims struct {
+	Iss           string `json:"iss"`
 	Sub           string `json:"sub"`
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"email_verified"`
