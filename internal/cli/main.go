@@ -48,6 +48,9 @@ var (
 	// hiddenCommands are not shown in CLI help output.
 	hiddenCommands = map[string]struct{}{
 		"plugin": {},
+
+		// Deprecated:
+		"token": {}, // replaced by "user"
 	}
 
 	ExposeDocs bool
@@ -873,6 +876,8 @@ Everyone who uses Waypoint is represented as a Waypoint user, including
 token authentication. This subcommand can be used to inspect information
 about the currently logged in user, generate new access, and invite new
 users directly into the Waypoint server.
+
+If you are looking to log in to Waypoint, use "waypoint login".
 `,
 	},
 }
