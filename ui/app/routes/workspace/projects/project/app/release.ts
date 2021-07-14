@@ -5,7 +5,7 @@ import { GetReleaseRequest, Release, Ref, StatusReport } from 'waypoint-pb';
 import { AppRouteModel, ResolvedModel as ResolvedAppRouteModel } from '../app';
 
 interface ReleaseModelParams {
-  release_id: string;
+  sequence: number;
 }
 
 interface Breadcrumb {
@@ -38,13 +38,15 @@ export default class ReleaseDetail extends Route {
   }
 
   async model(params: ReleaseModelParams): Promise<Release.AsObject> {
+    let { releases } = this.modelFor('workspace.projects.project.app');
+    let { id: release_id } = releases.find((obj) => obj.sequence === Number(params.sequence));
+
     let ref = new Ref.Operation();
-    ref.setId(params.release_id);
+    ref.setId(release_id);
     let req = new GetReleaseRequest();
     req.setRef(ref);
 
     let release: Release = await this.api.client.getRelease(req, this.api.WithMeta());
-
     return release.toObject();
   }
 
