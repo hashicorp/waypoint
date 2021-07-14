@@ -521,6 +521,19 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"user": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["user"][0],
+				HelpText:     helpText["user"][1],
+			}, nil
+		},
+
+		"user token": func() (cli.Command, error) {
+			return &UserTokenCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
@@ -842,6 +855,18 @@ Authenticate and invite collaborators.
 
 Tokens are the primary form of authentication to Waypoint. Everyone who
 accesses a Waypoint server requires a token.
+`,
+	},
+
+	"user": {
+		"User information and management",
+		`
+View, manage, and invite users.
+
+Everyone who uses Waypoint is represented as a Waypoint user, including
+token authentication. This subcommand can be used to inspect information
+about the currently logged in user, generate new access, and invite new
+users directly into the Waypoint server.
 `,
 	},
 }
