@@ -183,7 +183,7 @@ func (c *ProviderCache) Clear() {
 	for _, p := range c.providers {
 		p.Done()
 	}
-	c.providers = nil
+	c.providers = map[string]*oidc.Provider{}
 }
 
 // Close implements io.Closer. This just calls Clear, but we implement
