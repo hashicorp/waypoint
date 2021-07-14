@@ -856,9 +856,9 @@ message TaskLaunchInfo {
 
   // The environment variables that will be exposed to the task.
   map<string, string> environment_variables = 2;
- 
+
   // The arguments that will be passed to the new container on boot
-  repeated string arguments = 3; 
+  repeated string arguments = 3;
 }
 
 /********************************************************************
@@ -1040,6 +1040,13 @@ message CompleteOIDCAuthResponse {
   // was called with the token returned. This is eager returned because
   // it is commonly useful and also readily available as part of auth.
   User user = 2;
+
+  // These are all the claims that were associated with this OIDC
+  // authentication. This is used for debugging and operator inspection
+  // when setting up an OIDC auth method and aren't meant for general purpose
+  // use. These may also contain sensitive data so it shouldn't be stored.
+  // These claims only include claims from the ID token.
+  string claims_json = 3;
 }
 
 /********************************************************************
