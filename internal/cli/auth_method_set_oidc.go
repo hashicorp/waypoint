@@ -21,6 +21,7 @@ func (c *AuthMethodSetOIDCCommand) Run(args []string) int {
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(c.Flags()),
+		WithNoAutoServer(), // no auth in local mode
 		WithNoConfig(),
 	); err != nil {
 		return 1
