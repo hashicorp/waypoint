@@ -16,12 +16,14 @@ You can parameterize your configuration by declaring variables in the
 waypoint.hcl file, and setting their values using CLI options, environment variables,
 `auto` files, and the Waypoint server UI.
 
-> **Hands-on:** Try the [Input Variables]() tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Input Variables](https://learn.hashicorp.com/collections/waypoint/input-variables)
+> tutorial on HashiCorp Learn.
 
 ## Declaring an Input Variable
 
-Each input variable referenced in the waypoint.hcl must be declared using a
-`variable` block. Example variable declaration blocks include:
+Each input variable referenced in the waypoint.hcl file must be declared using a
+[`variable` block](/docs/waypoint-hcl/variable). Example variable declaration
+blocks include:
 
 ```hcl
 variable "port" {
@@ -42,13 +44,13 @@ variable "docker_labels" {
   default = {
       environment = test
       log_level   = debug
-    }
+  }
 }
 ```
 
 The label after the `variable` keyword is a name for the variable, which must
-be unique among all variables in the same waypoint.hcl. This name is used to
-assign a value to the variable and to reference the variable's value when
+be unique among all variables in the same waypoint.hcl file. This name is used
+to assign a value to the variable and to reference the variable's value when
 evaluating the configuration.
 
 The name of a variable can be any valid [identifier](/docs/waypoint-hcl/syntax#identifiers).
@@ -80,7 +82,7 @@ it is a fine placeholder for initializing a project.
 This also allows for variables that are not used in all stanzas to be
 indicated as optional values.
 
-For example, given the below waypoint.hcl, you could run `waypoint build`
+For example, given the below waypoint.hcl file, you could run `waypoint build`
 without needing to pass in a value for the `port` variable. If you ran
 `waypoint up` or `waypoint deploy` without specifying a value, you would
 receive an error.
@@ -145,7 +147,7 @@ evaluated as follows:
 - A value supplied from an environment variable or a CLI flag will be evaluated
   as a `string`.
 - A value supplied from a wpvars file will be evaluated as one of the three
-  primitive types, `string, `number`, or `bool`, based on syntax.
+  primitive types, `string`, `number`, or `bool`, based on syntax.
 - A value supplied from the UI will be evaluated as either a `string` or HCL
   type constructor, dependent on if the HCL option is selected.
 
@@ -169,9 +171,9 @@ kind of value is expected.
 
 ## Using Input Variable Values
 
-Within the waypoint.hcl that declared a variable, its value can be accessed from
-within [expressions](/docs/waypoint-hcl/syntax/expressions) as `var.<NAME>`,
-where `<NAME>` matches the label given in the declaration block:
+Within the waypoint.hcl file that declared a variable, its value can be accessed
+from within [expressions](/docs/waypoint-hcl/syntax/expressions) as
+`var.<NAME>`, where `<NAME>` matches the label given in the declaration block:
 
 -> **Note:** Input variables are _created_ by a `variable` block, but you
 _reference_ them as attributes on an object named `var`.
@@ -234,12 +236,6 @@ escape those with a backslash:
 waypoint up -var "name=va\"lue"
 ```
 
-PowerShell on Windows cannot correctly pass literal quotes to external programs,
-so we do not recommend using Waypoint with PowerShell when you are on Windows.
-Use Windows Command Prompt instead.
-
-<a id="variable-files"></a>
-
 ### Variable Definitions (`.wpvars`) Files
 
 To set lots of variables, it is more convenient to specify their values in
@@ -296,7 +292,28 @@ Waypoint matches the variable name exactly as given in configuration, and
 so the required environment variable name will usually have a mix of upper
 and lower case letters as in the above example.
 
+### Variables in the UI
+
+To assign variable values in the UI, navigate to the Project Settings page and
+then to the Input Variables tab.
+
+![input-variables-settings](/img/input-vars-empty-settings-tab.png)
+
+Add new variables using the variable name as the `key`, and the value you
+wish to assign as the `value`. All non-HCL values will be evaluated as strings,
+and values with the `HCL` box selected will be evaluated as a
+[complex type][inpage-complex-types].
+
+![input-variables-settings](/img/input-vars-add-variable-dialog.png)
+
+All values will then be converted to the `type` specified in the corresponding
+`variable` definition block in the waypoint.hcl file.
+If the value cannot be converted to this type (or, if `type` is unset, the
+implicit type of the `default` value), you will receive an error.
+
 ### Complex-typed Values
+
+[inpage-complex-types]: #complex-types
 
 When variable values are provided in a variable definitions file, you can use
 Waypoint's usual syntax for
@@ -328,7 +345,7 @@ recommend always setting complex variable values via variable definitions files.
 ### Values for Undeclared Variables
 
 If you have defined a variable value, but not its corresponding `variable {}`
-definition in the waypoint.hcl, you will get an error.
+definition in the waypoint.hcl file, you will get an error.
 
 To avoid this error, either declare a variable block for the value, or remove
 the variable value from your Waypoint call.
