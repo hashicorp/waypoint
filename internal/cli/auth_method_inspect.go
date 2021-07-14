@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/golang/protobuf/proto"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
@@ -52,7 +54,7 @@ func (c *AuthMethodInspectCommand) Run(args []string) int {
 		method.Oidc.ClientSecret = "[REDACTED: client secret]"
 	}
 
-	c.ui.Output(proto.MarshalTextString(am))
+	fmt.Println(proto.MarshalTextString(am))
 	return 0
 }
 
