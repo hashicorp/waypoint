@@ -43,7 +43,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.4.2
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
-	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-argmapper v0.2.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-gcp-common v0.6.0
@@ -103,7 +103,6 @@ require (
 	go.etcd.io/bbolt v1.3.5
 	go.uber.org/goleak v1.1.10
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
-	golang.org/x/net v0.0.0-20210510120150-4163338589ed // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
 	google.golang.org/api v0.25.0
@@ -111,7 +110,6 @@ require (
 	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
 	k8s.io/client-go v0.19.4
