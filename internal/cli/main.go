@@ -38,6 +38,7 @@ var (
 	// commonCommands are the commands that are deemed "common" and shown first
 	// in the CLI help output.
 	commonCommands = []string{
+		"login",
 		"build",
 		"deploy",
 		"release",
@@ -159,6 +160,12 @@ func Commands(
 
 	// start building our commands
 	commands := map[string]cli.CommandFactory{
+		"login": func() (cli.Command, error) {
+			return &LoginCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"init": func() (cli.Command, error) {
 			return &InitCommand{
 				baseCommand: baseCommand,
@@ -476,6 +483,44 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"auth-method": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["auth-method"][0],
+				HelpText:     helpText["auth-method"][1],
+			}, nil
+		},
+
+		"auth-method set": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["auth-method-set"][0],
+				HelpText:     helpText["auth-method-set"][1],
+			}, nil
+		},
+
+		"auth-method set oidc": func() (cli.Command, error) {
+			return &AuthMethodSetOIDCCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"auth-method inspect": func() (cli.Command, error) {
+			return &AuthMethodInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"auth-method delete": func() (cli.Command, error) {
+			return &AuthMethodDeleteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"auth-method list": func() (cli.Command, error) {
+			return &AuthMethodListCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
@@ -683,6 +728,30 @@ Waypoint will search for artifacts to pass to the deployment phase.
 `,
 	},
 
+	"auth-method": {
+		"Auth Method Management",
+		`
+Auth Method Management
+
+The auth-method commands can be used to manage how users can authenticate
+into the Waypoint server. For day-to-day Waypoint users, you likely want
+to use the "waypoint login" command or "waypoint user" commands. The
+auth-method subcommand is primarily aimed at Waypoint server operators.
+`,
+	},
+
+	"auth-method-set": {
+		"Create or update an auth method",
+		`
+Create or update an auth method.
+
+This command can be used to configure a new auth method or update
+an existing auth method. Use the specific auth-method type subcommand.
+Once the auth method is created it is immediately available for use by
+end users.
+`,
+	},
+
 	"config": {
 		"Application configuration management",
 		`
@@ -737,7 +806,7 @@ For more information see: https://waypointproject.io/docs/url
 		`
 Project management.
 
-Projects are comprised of one or more applications. A project maps 
+Projects are comprised of one or more applications. A project maps
 to a VCS repository (if one exists).
 `,
 	},

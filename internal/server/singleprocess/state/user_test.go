@@ -205,4 +205,50 @@ func TestUser(t *testing.T) {
 			require.Equal(codes.FailedPrecondition, status.Code(err))
 		}
 	})
+
+	t.Run("User lookup by OIDC", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		require.NoError(s.UserPut(serverptypes.TestUser(t, &pb.User{
+			Id:       id,
+			Username: "foo",
+			Links: []*pb.User_Link{
+				{
+					Method: &pb.User_Link_Oidc{
+						Oidc: &pb.User_Link_OIDC{
+							Iss: "A",
+							Sub: "B",
+						},
+					},
+				},
+			},
+		})))
+
+		// Read
+		{
+			resp, err := s.UserGetOIDC("A", "B")
+			require.NoError(err)
+			require.NotNil(resp)
+		}
+
+		// Not matching issuer
+		{
+			resp, err := s.UserGetOIDC("B", "B")
+			require.Error(err)
+			require.Nil(resp)
+			require.Equal(codes.NotFound, status.Code(err))
+		}
+
+		// Not matching sub
+		{
+			resp, err := s.UserGetOIDC("A", "C")
+			require.Error(err)
+			require.Nil(resp)
+			require.Equal(codes.NotFound, status.Code(err))
+		}
+	})
 }

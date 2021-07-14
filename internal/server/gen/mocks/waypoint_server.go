@@ -62,6 +62,29 @@ func (_m *WaypointServer) CancelJob(_a0 context.Context, _a1 *gen.CancelJobReque
 	return r0, r1
 }
 
+// CompleteOIDCAuth provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) CompleteOIDCAuth(_a0 context.Context, _a1 *gen.CompleteOIDCAuthRequest) (*gen.CompleteOIDCAuthResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.CompleteOIDCAuthResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.CompleteOIDCAuthRequest) *gen.CompleteOIDCAuthResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.CompleteOIDCAuthResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.CompleteOIDCAuthRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ConvertInviteToken provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ConvertInviteToken(_a0 context.Context, _a1 *gen.ConvertInviteTokenRequest) (*gen.NewTokenResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -137,6 +160,29 @@ func (_m *WaypointServer) DecodeToken(_a0 context.Context, _a1 *gen.DecodeTokenR
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.DecodeTokenRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteAuthMethod provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) DeleteAuthMethod(_a0 context.Context, _a1 *gen.DeleteAuthMethodRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *emptypb.Empty
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.DeleteAuthMethodRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.DeleteAuthMethodRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -294,6 +340,29 @@ func (_m *WaypointServer) GenerateLoginToken(_a0 context.Context, _a1 *gen.Login
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.LoginTokenRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAuthMethod provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetAuthMethod(_a0 context.Context, _a1 *gen.GetAuthMethodRequest) (*gen.GetAuthMethodResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetAuthMethodResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetAuthMethodRequest) *gen.GetAuthMethodResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetAuthMethodResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetAuthMethodRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -537,6 +606,29 @@ func (_m *WaypointServer) GetLogStream(_a0 *gen.GetLogStreamRequest, _a1 gen.Way
 	return r0
 }
 
+// GetOIDCAuthURL provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) GetOIDCAuthURL(_a0 context.Context, _a1 *gen.GetOIDCAuthURLRequest) (*gen.GetOIDCAuthURLResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.GetOIDCAuthURLResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.GetOIDCAuthURLRequest) *gen.GetOIDCAuthURLResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.GetOIDCAuthURLResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.GetOIDCAuthURLRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetProject provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) GetProject(_a0 context.Context, _a1 *gen.GetProjectRequest) (*gen.GetProjectResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -744,6 +836,29 @@ func (_m *WaypointServer) GetWorkspace(_a0 context.Context, _a1 *gen.GetWorkspac
 	return r0, r1
 }
 
+// ListAuthMethods provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListAuthMethods(_a0 context.Context, _a1 *emptypb.Empty) (*gen.ListAuthMethodsResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListAuthMethodsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.ListAuthMethodsResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListAuthMethodsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListBuilds provides a mock function with given fields: _a0, _a1
 func (_m *WaypointServer) ListBuilds(_a0 context.Context, _a1 *gen.ListBuildsRequest) (*gen.ListBuildsResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -828,6 +943,29 @@ func (_m *WaypointServer) ListInstances(_a0 context.Context, _a1 *gen.ListInstan
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.ListInstancesRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListOIDCAuthMethods provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) ListOIDCAuthMethods(_a0 context.Context, _a1 *emptypb.Empty) (*gen.ListOIDCAuthMethodsResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.ListOIDCAuthMethodsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *emptypb.Empty) *gen.ListOIDCAuthMethodsResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.ListOIDCAuthMethodsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *emptypb.Empty) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -1183,6 +1321,29 @@ func (_m *WaypointServer) UpsertApplication(_a0 context.Context, _a1 *gen.Upsert
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertApplicationRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpsertAuthMethod provides a mock function with given fields: _a0, _a1
+func (_m *WaypointServer) UpsertAuthMethod(_a0 context.Context, _a1 *gen.UpsertAuthMethodRequest) (*gen.UpsertAuthMethodResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *gen.UpsertAuthMethodResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UpsertAuthMethodRequest) *gen.UpsertAuthMethodResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UpsertAuthMethodResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UpsertAuthMethodRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

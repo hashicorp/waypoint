@@ -11,10 +11,30 @@ import "google/rpc/status.proto";
 
 // The service that is implemented for the server backend.
 service Waypoint {
+  //----------------------------------------------------------------------
+  // Unauthenticated endpoints
+  //----------------------------------------------------------------------
+
   // GetVersionInfo returns information about the server. This RPC call does
   // NOT require authentication. It can be used by clients to determine if they
   // are capable of talking to this server.
   rpc GetVersionInfo(google.protobuf.Empty) returns (GetVersionInfoResponse);
+
+  // List the available OIDC providers for authentication. The "name" of the
+  // OIDC provider can be used with GetOIDCAuthURL and CompleteOIDCAuth to
+  // perform OIDC-based authentication.
+  rpc ListOIDCAuthMethods(google.protobuf.Empty) returns (ListOIDCAuthMethodsResponse);
+
+  // Get the URL to visit to start authentication with OIDC.
+  rpc GetOIDCAuthURL(GetOIDCAuthURLRequest) returns (GetOIDCAuthURLResponse);
+
+  // Complete the OIDC auth cycle after receiving the callback from the
+  // OIDC provider.
+  rpc CompleteOIDCAuth(CompleteOIDCAuthRequest) returns (CompleteOIDCAuthResponse);
+
+  //----------------------------------------------------------------------
+  // Authenticated endpoints for general API use.
+  //----------------------------------------------------------------------
 
   // GetUser returns the current logged in user or some other user.
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
@@ -28,6 +48,21 @@ service Waypoint {
   // Delete a user. This will invalidate all authentication for this user
   // as well since they no longer exist.
   rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
+
+  // UpsertAuthMethod upserts the auth method. All users logged in with
+  // this auth method will remain logged in even if settings change.
+  rpc UpsertAuthMethod(UpsertAuthMethodRequest) returns (UpsertAuthMethodResponse);
+
+  // GetAuthMethod returns the auth method.
+  rpc GetAuthMethod(GetAuthMethodRequest) returns (GetAuthMethodResponse);
+
+  // ListAuthMethods returns a list of all the auth methods.
+  rpc ListAuthMethods(google.protobuf.Empty) returns (ListAuthMethodsResponse);
+
+  // Delete an auth method. This will invalidate all users authenticated
+  // using this auth method and they will have to reauthenticate some other
+  // way.
+  rpc DeleteAuthMethod(DeleteAuthMethodRequest) returns (google.protobuf.Empty);
 
   // ListWorkspaces returns a list of all workspaces.
   //
@@ -332,7 +367,7 @@ message Variable {
   string name = 1;
 
   // value stores one of three simple types (string, number, bool) as their
-  // matching protobuf format, or any complex hcl type as a raw string. Values 
+  // matching protobuf format, or any complex hcl type as a raw string. Values
   // taken from cli -var arguments and env vars are all processed as strings;
   // if a complex type is assigned from one of these sources, it is checked
   // for being assigned a complex type in the variable evaluation stage.
@@ -340,7 +375,7 @@ message Variable {
     string str = 2;
     bool bool = 9;
     int64 num = 10;
-    // hcl stores values of any complex type in a raw string format, and 
+    // hcl stores values of any complex type in a raw string format, and
     // converts it to hcl when we evaluate variables. This is used when
     // loading values from a file or from the server/UI.
     string hcl = 3;
@@ -537,8 +572,13 @@ message User {
   // user/pass, etc.).
   message Link {
     oneof method {
-      // TODO: one day!
-      string todo = 1;
+      OIDC oidc = 1;
+    }
+
+    message OIDC {
+      // issuer and sub claims can be used to uniquely identify a user
+      string iss = 1;
+      string sub = 2;
     }
   }
 }
@@ -632,6 +672,11 @@ message Ref {
   // the ID should be used.
   message UserUsername {
     string username = 1;
+  }
+
+  // AuthMethod references an auth method.
+  message AuthMethod {
+    string name = 1;
   }
 }
 
@@ -809,6 +854,154 @@ message UpdateUserResponse {
 
 message DeleteUserRequest {
   Ref.User user = 1;
+}
+
+/********************************************************************
+* Auth Methods
+********************************************************************/
+
+// AuthMethod is a mechanism for authenticating to the Waypoint server.
+// An AuthMethod deals with AuthN only: it provides identity and trades
+// that for a Waypoint token.
+message AuthMethod {
+  // unique name for this auth method
+  string name = 1;
+
+  // human friendly name for display and description. This has no impact
+  // internally and is only helpful for the UI and API. This is optional.
+  string display_name = 2;
+  string description = 3;
+
+  // The method to configure.
+  oneof method {
+    // OIDC uses OpenID Connect for auth. OIDC is supported by most
+    // major identity providers.
+    OIDC oidc = 20;
+  }
+
+  message OIDC {
+    // client ID and secret provided by OIDC provider.
+    string client_id = 1;
+    string client_secret = 2;
+
+    // scopes is a list of scopes to request from the provider
+    repeated string scopes = 3;
+
+    // List of valid audience values to accept login. This can be
+    // used to restrict only certain folks in a shared OIDC domain.
+    repeated string auds = 4;
+
+    // List of allowed redirect URIs, since our redirect URIs
+    // are somewhat dynamic (UI for web UI, localhost server for
+    // CLI, etc.). This protects against attack since this is not
+    // generally recommended.
+    repeated string allowed_redirect_uris = 5;
+
+    // The signing algorithms supported by the OIDC connect server.
+    // If this isn't specified, this will default to RS256 since that
+    // should be supported according to the RFC. The string values here
+    // should be valid OIDC signing algorithms.
+    repeated string signing_algs = 11;
+
+    // Discovery URL endpoint to get other information.
+    // Required by OIDC.
+    string discovery_url = 6;
+
+    // Optional CA certificate chain to validate the discovery URL.
+    // Multiple CA certificates can be specified to support easier
+    // rotation.
+    repeated string discovery_ca_pem = 7;
+  }
+}
+
+// This is used by ListOIDCAuthMethods to return the minimal information
+// for an OIDC auth method in an unauthenticated setting.
+message OIDCAuthMethod {
+  // unique identifier used for this auth method. This may or may
+  // not be human friendly; use display_name for human display.
+  string name = 1;
+
+  // human friendly name
+  string display_name = 2;
+
+  // kind is a well known kind of OIDC provider. This is sniffed by
+  // the server heuristically and is only here to assist in the UI.
+  Kind kind = 3;
+
+  enum Kind {
+    UNKNOWN = 0;
+    GITHUB = 1;
+    GOOGLE = 2;
+  }
+}
+
+message UpsertAuthMethodRequest {
+  // AuthMethod to upsert. See the message for what fields to set.
+  AuthMethod auth_method = 1;
+}
+
+message UpsertAuthMethodResponse {
+  AuthMethod auth_method = 1;
+}
+
+message GetAuthMethodRequest {
+  Ref.AuthMethod auth_method = 1;
+}
+
+message GetAuthMethodResponse {
+  AuthMethod auth_method = 1;
+}
+
+message DeleteAuthMethodRequest {
+  Ref.AuthMethod auth_method = 1;
+}
+
+message ListAuthMethodsResponse {
+  repeated AuthMethod auth_methods = 1;
+}
+
+message ListOIDCAuthMethodsResponse {
+  repeated OIDCAuthMethod auth_methods = 1;
+}
+
+message GetOIDCAuthURLRequest {
+  // OIDC auth method to use
+  Ref.AuthMethod auth_method = 1;
+
+  // The URL that authorization should redirect to.
+  string redirect_uri = 2;
+
+  // Nonce is a randomly generated string to prevent replay attacks.
+  // It is up to the client to generate this. This must then be passed
+  // back to CompleteOIDCAuthRequest.
+  string nonce = 3;
+}
+
+message GetOIDCAuthURLResponse {
+  // The URL to begin authorization. The user should go here.
+  string url = 1;
+}
+
+message CompleteOIDCAuthRequest {
+  Ref.AuthMethod auth_method = 1;
+
+  // This should match the GetOIDCAuthURL RPC. This is not used anymore
+  // except for verification.
+  string redirect_uri = 2;
+
+  // This should be provided from the parameters given to the redirect URL.
+  string state = 3;
+  string nonce = 4;
+  string code = 5;
+}
+
+message CompleteOIDCAuthResponse {
+  string token = 1;
+
+  // The user that was authenticated. This is the same as if GetUser
+  // was called with the token returned. This is eager returned because
+  // it is commonly useful and also readily available as part of auth.
+  User user = 2;
 }
 
 /********************************************************************
