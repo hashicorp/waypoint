@@ -538,6 +538,12 @@ func Commands(
 			}, nil
 		},
 
+		"user modify": func() (cli.Command, error) {
+			return &UserModifyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
 		"user invite": func() (cli.Command, error) {
 			return &UserInviteCommand{
 				baseCommand: baseCommand,
