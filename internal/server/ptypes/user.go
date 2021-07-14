@@ -15,7 +15,7 @@ import (
 // UsernameRegexp is the valid username regular expression. This is
 // somewhat arbitrary but exactly matches the GitHub username requirements.
 // We can always loosen this later.
-var UsernameRegexp = regexp.MustCompile(`(?i)^([a-z\d]+_-)*[a-z\d]+$`)
+var UsernameRegexp = regexp.MustCompile(`(?i)^[a-z\d][a-z\d_-]*[a-z\d]+$`)
 
 // TestUser returns a valid user for tests.
 func TestUser(t testing.T, src *pb.User) *pb.User {
