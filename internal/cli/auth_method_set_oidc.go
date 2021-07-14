@@ -97,7 +97,8 @@ func (c *AuthMethodSetOIDCCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "issuer",
 			Target: &c.flagMethod.DiscoveryUrl,
-			Usage:  "URL of the OIDC provider.",
+			Usage: "Discovery URL of the OIDC provider that implements the " +
+				".well-known/openid-configuration metadata endpoint.",
 		})
 
 		f.StringSliceVar(&flag.StringSliceVar{
