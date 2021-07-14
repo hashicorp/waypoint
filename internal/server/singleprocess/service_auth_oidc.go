@@ -2,6 +2,7 @@ package singleprocess
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -179,10 +180,15 @@ func (s *service) CompleteOIDCAuth(
 		return nil, err
 	}
 
-	// Extract the claims for this token. We create a struct here that
-	// extracts only the claims we actually care about.
+	// Extract the claims as a raw JSON message.
+	var jsonClaims json.RawMessage
+	if err := oidcToken.IDToken().Claims(&jsonClaims); err != nil {
+		return nil, err
+	}
+
+	// Structurally extract only the claim fields we care about.
 	var idClaimVals idClaims
-	if err := oidcToken.IDToken().Claims(&idClaimVals); err != nil {
+	if err := json.Unmarshal([]byte(jsonClaims), &idClaimVals); err != nil {
 		return nil, err
 	}
 
@@ -208,8 +214,9 @@ func (s *service) CompleteOIDCAuth(
 	}
 
 	return &pb.CompleteOIDCAuthResponse{
-		Token: token,
-		User:  user,
+		Token:      token,
+		User:       user,
+		ClaimsJson: string(jsonClaims),
 	}, nil
 }
 
