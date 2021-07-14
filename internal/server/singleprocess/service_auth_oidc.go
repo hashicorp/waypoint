@@ -198,7 +198,7 @@ func (s *service) CompleteOIDCAuth(
 	}
 
 	// Look up a user by sub.
-	user, err := s.oidcInitUser(log, discovery.Issuer, idClaimVals.Sub, idClaimVals.Email)
+	user, err := s.oidcInitUser(log, discovery.Issuer, &idClaimVals)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func (s *service) CompleteOIDCAuth(
 }
 
 // oidcInitUser finds or creates the user for the given OIDC information.
-func (s *service) oidcInitUser(log hclog.Logger, iss, sub, email string) (*pb.User, error) {
+func (s *service) oidcInitUser(log hclog.Logger, iss string, claims *idClaims) (*pb.User, error) {
 	// This method attempts to find, link, or create a new user to the
 	// given OIDC result in the following order:
 	//
@@ -229,8 +229,15 @@ func (s *service) oidcInitUser(log hclog.Logger, iss, sub, email string) (*pb.Us
 	//   (3) create new user and link it
 	//
 
+	// The email for the user. We only set this if the email is known and
+	// verified. This prevents impersonation.
+	var email string
+	if claims.Email != "" && claims.EmailVerified {
+		email = claims.Email
+	}
+
 	// First look up by exact account link.
-	user, err := s.state.UserGetOIDC(iss, sub)
+	user, err := s.state.UserGetOIDC(iss, claims.Sub)
 	if err != nil {
 		if status.Code(err) != codes.NotFound {
 			return nil, err
@@ -275,7 +282,7 @@ func (s *service) oidcInitUser(log hclog.Logger, iss, sub, email string) (*pb.Us
 		Method: &pb.User_Link_Oidc{
 			Oidc: &pb.User_Link_OIDC{
 				Iss: iss,
-				Sub: sub,
+				Sub: claims.Sub,
 			},
 		},
 	})
@@ -288,7 +295,7 @@ func (s *service) oidcInitUser(log hclog.Logger, iss, sub, email string) (*pb.Us
 		"user_id", user.Id,
 		"username", user.Username,
 		"iss", iss,
-		"sub", sub,
+		"sub", claims.Sub,
 	)
 
 	return user, nil
