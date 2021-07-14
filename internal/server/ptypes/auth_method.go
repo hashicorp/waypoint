@@ -1,6 +1,8 @@
 package ptypes
 
 import (
+	"errors"
+
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/imdario/mergo"
@@ -45,7 +47,7 @@ func ValidateAuthMethod(v *pb.AuthMethod) error {
 // ValidateAuthMethodRules
 func ValidateAuthMethodRules(v *pb.AuthMethod) []*validation.FieldRules {
 	return []*validation.FieldRules{
-		validation.Field(&v.Name, validation.Required),
+		validation.Field(&v.Name, validation.Required, validation.By(isNotToken)),
 		validation.Field(&v.Method, validation.Required),
 
 		validationext.StructOneof(&v.Method, (*pb.AuthMethod_Oidc)(nil),
@@ -99,4 +101,12 @@ func ValidateCompleteOIDCAuthRequest(v *pb.CompleteOIDCAuthRequest) error {
 		validation.Field(&v.Code, validation.Required),
 		validation.Field(&v.Nonce, validation.Required),
 	))
+}
+
+func isNotToken(v interface{}) error {
+	if v.(string) == "token" {
+		return errors.New("name 'token' is reserved and cannot be used")
+	}
+
+	return nil
 }
