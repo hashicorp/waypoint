@@ -59,7 +59,7 @@ func (c *UserInspectCommand) Flags() *flag.Sets {
 		f.StringVar(&flag.StringVar{
 			Name:   "username",
 			Target: &c.flagUsername,
-			Usage: "The user to lookup. This defaults to the currently logged in user.",
+			Usage:  "The user to lookup. This defaults to the currently logged in user.",
 		})
 	})
 }
