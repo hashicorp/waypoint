@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpoidc "github.com/hashicorp/waypoint/internal/auth/oidc"
+	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -43,6 +44,19 @@ func (c *LoginCommand) Run(args []string) int {
 		return 1
 	}
 
+	// Get our default context. If the server address matches, then
+	// we will simply overwrite that. We grab this early so that any errors
+	// happen before we do the login loop.
+	var contextDefault *clicontext.Config
+	contextDefaultName, err := c.contextStorage.Default()
+	if err == nil && contextDefaultName != "" {
+		contextDefault, err = c.contextStorage.Load(contextDefaultName)
+	}
+	if err != nil {
+		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		return 1
+	}
+
 	// Login with OIDC
 	token, exitCode := c.loginOIDC()
 	if exitCode > 0 {
@@ -56,8 +70,14 @@ func (c *LoginCommand) Run(args []string) int {
 	newContext.Server.AuthToken = token
 	newContext.Server.RequireAuth = true
 
-	// Set our contexts
+	// If the default context matches the server address, then we overwrite
+	// that one. This prevents constant context sprawl as we reauth.
 	contextName := fmt.Sprintf("login_%d", time.Now().Unix())
+	if contextDefault != nil && newContext.Server.Address == contextDefault.Server.Address {
+		contextName = contextDefaultName
+	}
+
+	// Set our contexts
 	if err := c.contextStorage.Set(contextName, &newContext); err != nil {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
