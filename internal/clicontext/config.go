@@ -3,6 +3,7 @@ package clicontext
 import (
 	"io"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsimple"
@@ -36,6 +37,13 @@ func LoadPath(path string) (*Config, error) {
 // so we want to provide the smoothest experience there at the expense
 // of a slight risk.
 func (c *Config) FromURL(v string) error {
+	// Ensure our value is a valid URL. This turns example.com into
+	// "//example.com" for example. Tests verify this work.
+	// See https://github.com/golang/go/issues/19297
+	if !strings.Contains(v, "/") {
+		v = "//" + v
+	}
+
 	u, err := url.Parse(v)
 	if err != nil {
 		return err
