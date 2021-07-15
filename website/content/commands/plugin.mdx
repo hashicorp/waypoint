@@ -13,4 +13,18 @@ Execute a built-in plugin.
 
 @include "commands/plugin_desc.mdx"
 
+## Usage
+
+Usage: `waypoint plugin [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-debug` - set to true to run the plugin with support for debuggers like delve
+
 @include "commands/plugin_more.mdx"
