@@ -1,0 +1,37 @@
+---
+layout: commands
+page_title: 'Commands: Login'
+sidebar_title: 'login'
+description: 'Log in to a Waypoint server'
+---
+
+# Waypoint Login
+
+Command: `waypoint login`
+
+Log in to a Waypoint server
+
+@include "commands/login_desc.mdx"
+
+## Usage
+
+Usage: `waypoint login [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Connection Options
+
+- `-server-addr=<string>` - Address for the server.
+- `-server-tls` - True if the server should be connected to via TLS.
+- `-server-tls-skip-verify` - True to skip verification of the TLS certificate advertised by the server.
+
+#### Command Options
+
+- `-auth-method=<string>` - Auth method to use for login. This will default to the only available auth method if only one exists.
+- `-token=<string>` - Auth with a token. This will force auth-method to 'token'. This works with both login and invite tokens.
+
+@include "commands/login_more.mdx"
