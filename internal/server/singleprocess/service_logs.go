@@ -168,6 +168,7 @@ func (s *service) GetLogStream(
 		// This flag is set when we create the Deployment value by detecting if the plugin
 		// had a LogsFunc defined.
 		if deployment.HasLogsPlugin {
+			log.Debug("deployment supports log plugin. spawning log plugin")
 			inst, jobId, err := s.spawnLogPlugin(srv.Context(), log, deployment)
 			if err != nil {
 				return err
@@ -180,6 +181,7 @@ func (s *service) GetLogStream(
 			// when the reader is done.
 			go s.state.InstanceLogsDelete(inst.Id)
 
+			log.Debug("log plugin spawned", "job_id", jobId)
 			instanceFunc = func(ws memdb.WatchSet) ([]*streamRec, error) {
 				return []*streamRec{{
 					InstanceId:   inst.InstanceId,
@@ -188,14 +190,17 @@ func (s *service) GetLogStream(
 				}}, nil
 			}
 		} else {
+			log.Debug("deployment log will watch connected instances")
+			instanceLog := log.Named("instancefunc")
 			instanceFunc = func(ws memdb.WatchSet) ([]*streamRec, error) {
 				instances, err := s.state.InstancesByDeployment(scope.DeploymentId, ws)
 				if err != nil {
 					return nil, err
 				}
+				instanceLog.Trace("instances loaded for deployment",
+					"instances_len", len(instances))
 
 				var bufs []*streamRec
-
 				for _, i := range instances {
 					bufs = append(bufs, &streamRec{
 						InstanceId:   i.Id,
@@ -223,6 +228,7 @@ func (s *service) GetLogStream(
 			"application", scope.Application.Application.Application,
 			"workspace", scope.Application.Workspace.Workspace,
 		)
+		log.Debug("application-scope log stream requested")
 
 		// We don't want to respawn plugins if we don't need to, so this
 		// memoizes the instance created by launching a plugin for a deployment
@@ -236,6 +242,7 @@ func (s *service) GetLogStream(
 			}
 		}()
 
+		instanceLog := log.Named("instancefunc")
 		instanceFunc = func(ws memdb.WatchSet) ([]*streamRec, error) {
 			// The old version of this code just asked for all the instances (meaning
 			// live connected entrypoint processes) for the application. Because we need
@@ -259,9 +266,12 @@ func (s *service) GetLogStream(
 			if err != nil {
 				return nil, err
 			}
+			instanceLog.Trace(
+				"deployments refreshed for application",
+				"deployments_len", len(deployments),
+			)
 
 			var streams []*streamRec
-
 			for _, dep := range deployments {
 				// If this deployment uses a logs plugin, either used the previously spawn
 				// instance or spawn a new instance by invoking the logs pluign.
@@ -269,10 +279,12 @@ func (s *service) GetLogStream(
 					if inst, ok := deploymentToInstance[dep.Id]; ok {
 						streams = append(streams, inst)
 					} else {
+						instanceLog.Trace("deployment supports log plugin, spawning log plugin instance")
 						inst, jobId, err := s.spawnLogPlugin(srv.Context(), log, dep)
 						if err != nil {
 							return nil, err
 						}
+						instanceLog.Trace("log plugin spawned", "job_id", jobId)
 
 						rec := &streamRec{
 							InstanceId:     inst.InstanceId,
@@ -287,6 +299,7 @@ func (s *service) GetLogStream(
 						streams = append(streams, rec)
 					}
 				} else {
+					instanceLog.Trace("tracking instances for deployment", "deployment_id", dep.Id)
 					depInstances, err := s.state.InstancesByDeployment(dep.Id, ws)
 					if err != nil {
 						return nil, err
@@ -352,10 +365,9 @@ func (s *service) sendInstanceLogs(
 	if err != nil {
 		return err
 	}
-	log.Trace("instances loaded", "len", len(records))
+	log.Trace("initial instances loaded", "len", len(records))
 
 	var readers []logbuffer.MergeReader
-
 	for _, record := range records {
 		r := record.LogBuffer.Reader(backlog)
 		readerToInstance[r] = record
@@ -363,13 +375,11 @@ func (s *service) sendInstanceLogs(
 		readers = append(readers, r)
 	}
 
-	lm := logbuffer.NewMerger(readers...)
-
-	lines := make([]*pb.LogBatch_Entry, maxEntriesPerRead)
-
 	// Read out all the log entries from LogMerge. This never blocks waiting
 	// for new log entries, it will simply let each reader output all known
 	// entries and then loop exits.
+	lm := logbuffer.NewMerger(readers...)
+	lines := make([]*pb.LogBatch_Entry, maxEntriesPerRead)
 	for {
 		entries, err := lm.Read(len(lines))
 		if err != nil {
@@ -468,12 +478,12 @@ func (s *service) sendInstanceLogs(
 		}
 
 		// Get all current records
-		ws := memdb.NewWatchSet()
+		ws = memdb.NewWatchSet()
 		records, err := instanceFunc(ws)
 		if err != nil {
 			return err
 		}
-		log.Trace("instances loaded", "len", len(records))
+		log.Trace("instances reloaded", "len", len(records))
 
 		// For each record, start a goroutine that reads the log entries and sends them.
 		// This will skip any instance we already know about.
