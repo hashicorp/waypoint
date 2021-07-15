@@ -232,7 +232,8 @@ func (c *LoginCommand) loginOIDC() (string, int) {
 	c.Log.Warn("OIDC authentication complete",
 		"user_id", respToken.User.Id,
 		"username", respToken.User.Username,
-		"claims", respToken.ClaimsJson,
+		"id_claims", respToken.IdClaimsJson,
+		"user_claims", respToken.UserClaimsJson,
 	)
 
 	return respToken.Token, 0
