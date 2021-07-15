@@ -1,0 +1,3 @@
+```release-note:bug
+core: fix infinite loop that could happen in certain log streaming scenarios
+```
