@@ -205,10 +205,19 @@ func (s *service) CompleteOIDCAuth(
 		"sub", idClaimVals.Sub,
 	)
 
+	// Get the user info if we have a user account, and merge those claims in.
+	// User claims override all the claims in the ID token.
+	var userClaims json.RawMessage
+	if userTokenSource := oidcToken.StaticTokenSource(); userTokenSource != nil {
+		if err := provider.UserInfo(ctx, userTokenSource, idClaimVals.Sub, &userClaims); err != nil {
+			return nil, err
+		}
+	}
+
 	// Verify this user is allowed to auth at all.
 	if am.AccessSelector != "" {
 		// Get our data
-		selectorData, err := wpoidc.SelectorData(amMethod.Oidc, jsonClaims)
+		selectorData, err := wpoidc.SelectorData(amMethod.Oidc, jsonClaims, userClaims)
 		if err != nil {
 			return nil, err
 		}
@@ -254,9 +263,10 @@ func (s *service) CompleteOIDCAuth(
 	}
 
 	return &pb.CompleteOIDCAuthResponse{
-		Token:      token,
-		User:       user,
-		ClaimsJson: string(jsonClaims),
+		Token:          token,
+		User:           user,
+		IdClaimsJson:   string(jsonClaims),
+		UserClaimsJson: string(userClaims),
 	}, nil
 }
 

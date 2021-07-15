@@ -15,12 +15,34 @@ import (
 // This is useful for server-side OIDC implementations, not client.
 func SelectorData(
 	am *pb.AuthMethod_OIDC,
-	idClaims json.RawMessage,
+	idClaims, userClaims json.RawMessage,
 ) (map[string]interface{}, error) {
+	// Extract the claims into a map[string]interface{}
+	var all map[string]interface{}
+	if err := json.Unmarshal([]byte(idClaims), &all); err != nil {
+		return nil, err
+	}
+	if len(userClaims) > 0 {
+		// Keep these cause we never let these get overwritten
+		iss, issOk := all["iss"]
+		sub, subOk := all["sub"]
+
+		if err := json.Unmarshal([]byte(userClaims), &all); err != nil {
+			return nil, err
+		}
+
+		if issOk {
+			all["iss"] = iss
+		}
+		if subOk {
+			all["sub"] = sub
+		}
+	}
+
 	// I expect SelectorData will do more in the future which is why
 	// this is just calling this other function directly and not doing
 	// anything else today.
-	return extractClaims(am, idClaims)
+	return extractClaims(am, all)
 }
 
 // extractClaims takes the claim mapping configuration of the OIDC
@@ -28,14 +50,8 @@ func SelectorData(
 // be used with go-bexpr.
 func extractClaims(
 	am *pb.AuthMethod_OIDC,
-	rawClaims json.RawMessage,
+	all map[string]interface{},
 ) (map[string]interface{}, error) {
-	// Extract the claims into a map[string]interface{}
-	var all map[string]interface{}
-	if err := json.Unmarshal([]byte(rawClaims), &all); err != nil {
-		return nil, err
-	}
-
 	values, err := extractMappings(all, am.ClaimMappings)
 	if err != nil {
 		return nil, err

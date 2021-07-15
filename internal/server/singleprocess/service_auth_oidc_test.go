@@ -79,7 +79,8 @@ func TestOIDCAuth(t *testing.T) {
 	user := respAuth.User
 	require.NotNil(user)
 	require.NotEmpty(user.Links)
-	t.Logf(respAuth.ClaimsJson)
+	t.Logf("id claims %#v", respAuth.IdClaimsJson)
+	t.Logf("user claims %#v", respAuth.UserClaimsJson)
 
 	// Complete our auth again. We should get the same user.
 	{
