@@ -2,6 +2,7 @@ package ptypes
 
 import (
 	"errors"
+	"go/token"
 
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
@@ -64,6 +65,8 @@ func validateAuthMethodOIDCRules(v *pb.AuthMethod_Oidc) []*validation.FieldRules
 		validation.Field(&v.Oidc.ClientId, validation.Required),
 		validation.Field(&v.Oidc.ClientSecret, validation.Required),
 		validation.Field(&v.Oidc.DiscoveryUrl, validation.Required, is.URL),
+		validation.Field(&v.Oidc.ClaimMappings, validation.By(isClaimMapping)),
+		validation.Field(&v.Oidc.ListClaimMappings, validation.By(isClaimMapping)),
 	}
 }
 
@@ -106,6 +109,23 @@ func ValidateCompleteOIDCAuthRequest(v *pb.CompleteOIDCAuthRequest) error {
 func isNotToken(v interface{}) error {
 	if v.(string) == "token" {
 		return errors.New("name 'token' is reserved and cannot be used")
+	}
+
+	return nil
+}
+
+func isClaimMapping(v interface{}) error {
+	m := v.(map[string]string)
+	for m, v := range m {
+		if m == "" {
+			return errors.New("mapping key cannot be empty")
+		}
+
+		if !token.IsIdentifier(v) {
+			return errors.New(
+				"mapping value must be valid identifier made of " +
+					"alphanumeric characters and underscores.")
+		}
 	}
 
 	return nil
