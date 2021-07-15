@@ -46,6 +46,7 @@ export default function (this: Server) {
   this.post('/GetVersionInfo', versionInfo.get);
   this.post('/ListStatusReports', statusReport.list);
   this.post('/GetLatestStatusReport', statusReport.getLatest);
+  this.post('/ExpediteStatusReport', statusReport.expediteStatusReport);
   this.post('/GetJobStream', job.stream);
   this.post('/GetLogStream', log.stream);
 

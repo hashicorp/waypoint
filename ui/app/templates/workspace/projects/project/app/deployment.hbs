@@ -47,10 +47,9 @@
     </div>
   {{/if}}
   <div class="item">
-    <span>
-      <Pds::Icon @type="refresh-default" class="icon" />
+    <Pds::Button @variant="ghost" @iconStart="refresh-default" onclick={{on 'refreshHealthCheck'}}>
       Re-run health check
-    </span>
+    </Pds::Button>
   </div>
 </div>
 
