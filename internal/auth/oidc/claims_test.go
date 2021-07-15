@@ -1,8 +1,8 @@
 package oidc
 
-import(
-	"testing"
+import (
 	"encoding/json"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 
@@ -10,12 +10,12 @@ import(
 )
 
 func TestSelectorData(t *testing.T) {
-	cases := []struct{
-		Name string
-		Mapping map[string]string
+	cases := []struct {
+		Name        string
+		Mapping     map[string]string
 		ListMapping map[string]string
-		Data map[string]interface{}
-		Expected map[string]interface{}
+		Data        map[string]interface{}
+		Expected    map[string]interface{}
 	}{
 		{
 			"no mappings",
@@ -24,7 +24,7 @@ func TestSelectorData(t *testing.T) {
 			map[string]interface{}{"iss": "https://hashicorp.com"},
 			map[string]interface{}{
 				"value": map[string]string{},
-				"list": map[string][]string{},
+				"list":  map[string][]string{},
 			},
 		},
 
@@ -48,7 +48,7 @@ func TestSelectorData(t *testing.T) {
 			map[string]interface{}{"nope": "https://hashicorp.com"},
 			map[string]interface{}{
 				"value": map[string]string{},
-				"list": map[string][]string{},
+				"list":  map[string][]string{},
 			},
 		},
 
@@ -64,19 +64,19 @@ func TestSelectorData(t *testing.T) {
 			map[string]interface{}{
 				"value": map[string]string{},
 				"list": map[string][]string{
-					"g": []string{"A", "42", "false"},
+					"g": {"A", "42", "false"},
 				},
 			},
 		},
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.Name, func(t*testing.T){
-			require:=require.New(t)
+		t.Run(tt.Name, func(t *testing.T) {
+			require := require.New(t)
 
 			am := &pb.AuthMethod_OIDC{
-				ClaimMappings: tt.Mapping,
-				ListClaimMappings:tt.ListMapping,
+				ClaimMappings:     tt.Mapping,
+				ListClaimMappings: tt.ListMapping,
 			}
 
 			// Marshal our test data
