@@ -92,17 +92,7 @@ func (a *applicationPoll) PollJob(
 
 	// Default to poll on the "latest" lifecycle operation, so if there's a
 	// release, queue up a status on release. If the latest is deploy, then queue that.
-	if latestRelease != nil { // ignore me for now
-		//TODO(briancain): the issue right now is that waypoint always stores a release,
-		// even if the plugin didn't do one. We don't know if it's a real or fake release
-		// and we can't run a status report on a fake release especially if the plugin
-		// has not implemented a releaser.
-
-		// Returned latestRelease for a plugin that hasn't implemented a releaser
-		//panic: application:{application:"web" project:"nginx-project"} workspace:{workspace:"default"} sequence:1 id:"01FANWNRRVVCX9KKE0AV08X3HR" status:{state:SUCCESS start_time:{seconds:1626379838 nanos
-		//:234574394} complete_time:{seconds:1626379838 nanos:237627450}} state:CREATED component:{type:PLATFORM name:"docker"} deployment_id:"01FANWNPJHST0XQ7G8GC06PXN0" labels:{key:"waypoint/workspace" va
-		//lue:"default"} job_id:"01FANWNJY5NQWYQA00HQ2817P8" preload:{}
-
+	if latestRelease != nil && !latestRelease.Unimplemented {
 		log.Trace("using latest release as a status report target")
 		statusReportJob.StatusReport.Target = &pb.Job_StatusReportOp_Release{
 			Release: latestRelease,

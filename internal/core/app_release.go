@@ -166,11 +166,12 @@ type releaseOperation struct {
 
 func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 	release := &pb.Release{
-		Application:  app.ref,
-		Workspace:    app.workspace,
-		DeploymentId: op.Target.Id,
-		State:        pb.Operation_CREATED,
-		Component:    op.Target.Component,
+		Application:   app.ref,
+		Workspace:     app.workspace,
+		DeploymentId:  op.Target.Id,
+		State:         pb.Operation_CREATED,
+		Component:     op.Target.Component,
+		Unimplemented: true,
 	}
 
 	if v := op.Component; v != nil {
