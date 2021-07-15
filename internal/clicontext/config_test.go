@@ -50,6 +50,18 @@ func TestConfigFromURL(t *testing.T) {
 		},
 
 		{
+			"IP with port",
+			"127.0.0.1:9701",
+			Config{
+				Server: serverconfig.Client{
+					Address:       "127.0.0.1:9701",
+					Tls:           true,
+					TlsSkipVerify: true,
+				},
+			},
+		},
+
+		{
 			"http",
 			"http://foo.com:1234",
 			Config{
