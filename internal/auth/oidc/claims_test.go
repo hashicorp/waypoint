@@ -84,7 +84,7 @@ func TestSelectorData(t *testing.T) {
 			require.NoError(err)
 
 			// Get real selector data
-			actual, err := SelectorData(am, json.RawMessage(jsonRaw))
+			actual, err := SelectorData(am, json.RawMessage(jsonRaw), nil)
 			require.NoError(err)
 
 			require.Equal(actual, tt.Expected)
