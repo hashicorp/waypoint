@@ -2680,6 +2680,11 @@ message Release {
   // ID of the job that created this. This may be empty.
   string job_id = 13;
 
+  // A boolean to mark this release message as unimplemented by the plugin
+  // that generated the message. If true, that means there was not a releaser
+  // to execute for the release lifecycle phase.
+  bool unimplemented = 15;
+
   // A platform resource that this release has created, depends on, or manages.
   repeated DeclaredResource declared_resources = 19;
 
