@@ -30,6 +30,10 @@ Usage: `waypoint install [options]`
 - `-context-set-default` - Set the newly installed server as the default CLI context.
 - `-platform=<string>` - Platform to install the Waypoint server into.
 
+#### docker Options
+
+- `-docker-server-image=<string>` - Docker image for the Waypoint server.
+
 #### ecs Options
 
 - `-ecs-cluster=<string>` - Configures the Cluster to install into.
@@ -69,9 +73,5 @@ Usage: `waypoint install [options]`
 - `-nomad-runner-cpu=<string>` - CPU required to run this task in MHz.
 - `-nomad-runner-memory=<string>` - MB of Memory to allocate to the runner job task.
 - `-nomad-server-image=<string>` - Docker image for the Waypoint server.
-
-#### docker Options
-
-- `-docker-server-image=<string>` - Docker image for the Waypoint server.
 
 @include "commands/install_more.mdx"
