@@ -1064,7 +1064,8 @@ message CompleteOIDCAuthResponse {
   // when setting up an OIDC auth method and aren't meant for general purpose
   // use. These may also contain sensitive data so it shouldn't be stored.
   // These claims only include claims from the ID token.
-  string claims_json = 3;
+  string id_claims_json = 3;
+  string user_claims_json = 4;
 }
 
 /********************************************************************
