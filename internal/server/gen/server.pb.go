@@ -6911,8 +6911,8 @@ type Release struct {
 	// ID of the job that created this. This may be empty.
 	JobId string `protobuf:"bytes,13,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
 	// A boolean to mark this release message as unimplemented by the plugin
-	// that generated the message. If true, that means a release was never
-	// executed and Waypoint failed to build a valid releaser.
+	// that generated the message. If true, that means there was not a releaser
+	// to execute for the release lifecycle phase.
 	Unimplemented bool `protobuf:"varint,15,opt,name=unimplemented,proto3" json:"unimplemented,omitempty"`
 	// This is the populated preload data. Most of this data can be retrieved
 	// through additional API calls or manually computed, but certain API
