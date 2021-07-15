@@ -193,8 +193,8 @@ func (s *service) CompleteOIDCAuth(
 	}
 
 	// Valid OIDC providers should never behave this way.
-	if idClaimVals.Sub == "" {
-		return nil, status.Errorf(codes.Internal, "OIDC provider returned empty subscriber ID")
+	if idClaimVals.Iss == "" || idClaimVals.Sub == "" {
+		return nil, status.Errorf(codes.Internal, "OIDC provider returned empty issuer or subscriber ID")
 	}
 
 	// Look up a user by sub.
