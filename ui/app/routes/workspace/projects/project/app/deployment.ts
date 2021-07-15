@@ -5,7 +5,7 @@ import { GetDeploymentRequest, Deployment, Ref, StatusReport } from 'waypoint-pb
 import { AppRouteModel, ResolvedModel as ResolvedAppRouteModel } from '../app';
 
 interface DeploymentModelParams {
-  deployment_id: string;
+  sequence: number;
 }
 
 interface Breadcrumb {
@@ -38,8 +38,11 @@ export default class DeploymentDetail extends Route {
   }
 
   async model(params: DeploymentModelParams): Promise<Deployment.AsObject> {
+    let { deployments } = this.modelFor('workspace.projects.project.app');
+    let { id: deployment_id } = deployments.find((obj) => obj.sequence == Number(params.sequence));
+
     let ref = new Ref.Operation();
-    ref.setId(params.deployment_id);
+    ref.setId(deployment_id);
     let req = new GetDeploymentRequest();
     req.setRef(ref);
 
