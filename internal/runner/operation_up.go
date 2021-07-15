@@ -94,7 +94,7 @@ func (r *Runner) executeUpOp(
 	releaseResult := result.Release
 
 	if releaseResult.Release.Unimplemented {
-		app.UI.Output("Release not supported for platform, skipping...")
+		app.UI.Output("No release phase specified, skipping...")
 	}
 
 	// NOTE(briancain): Because executeReleaseOp returns an initialized struct
