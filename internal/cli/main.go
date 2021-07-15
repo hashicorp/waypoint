@@ -48,6 +48,9 @@ var (
 	// hiddenCommands are not shown in CLI help output.
 	hiddenCommands = map[string]struct{}{
 		"plugin": {},
+
+		// Deprecated:
+		"token": {}, // replaced by "user"
 	}
 
 	ExposeDocs bool
@@ -521,6 +524,37 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+
+		"user": func() (cli.Command, error) {
+			return &helpCommand{
+				SynopsisText: helpText["user"][0],
+				HelpText:     helpText["user"][1],
+			}, nil
+		},
+
+		"user inspect": func() (cli.Command, error) {
+			return &UserInspectCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"user modify": func() (cli.Command, error) {
+			return &UserModifyCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"user invite": func() (cli.Command, error) {
+			return &UserInviteCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+
+		"user token": func() (cli.Command, error) {
+			return &UserTokenCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 	}
 
 	// register our aliases
@@ -842,6 +876,20 @@ Authenticate and invite collaborators.
 
 Tokens are the primary form of authentication to Waypoint. Everyone who
 accesses a Waypoint server requires a token.
+`,
+	},
+
+	"user": {
+		"User information and management",
+		`
+View, manage, and invite users.
+
+Everyone who uses Waypoint is represented as a Waypoint user, including
+token authentication. This subcommand can be used to inspect information
+about the currently logged in user, generate new access, and invite new
+users directly into the Waypoint server.
+
+If you are looking to log in to Waypoint, use "waypoint login".
 `,
 	},
 }

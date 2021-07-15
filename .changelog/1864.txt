@@ -1,0 +1,3 @@
+```release-note:feature
+cli: new "waypoint user" CLI for user management
+```

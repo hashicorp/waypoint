@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -38,6 +39,9 @@ func (c *GetInviteCommand) Run(args []string) int {
 		c.project.UI.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
+
+	// Warn of deprecation
+	fmt.Fprintf(os.Stderr, strings.TrimSpace(warnTokenDeprecated)+"\n\n")
 
 	// We use fmt here and not the UI helpers because UI helpers will
 	// trim tokens horizontally on terminals that are narrow.
@@ -113,6 +117,9 @@ func (c *ExchangeInviteCommand) Run(args []string) int {
 		return 1
 	}
 
+	// Warn of deprecation
+	fmt.Fprintf(os.Stderr, strings.TrimSpace(warnTokenDeprecated)+"\n\n")
+
 	// We use fmt here and not the UI helpers because UI helpers will
 	// trim tokens horizontally on terminals that are narrow.
 	fmt.Println(resp.Token)
@@ -174,6 +181,9 @@ func (c *GetTokenCommand) Run(args []string) int {
 		return 1
 	}
 
+	// Warn of deprecation
+	fmt.Fprintf(os.Stderr, strings.TrimSpace(warnTokenDeprecated)+"\n\n")
+
 	// We use fmt here and not the UI helpers because UI helpers will
 	// trim tokens horizontally on terminals that are narrow.
 	fmt.Println(resp.Token)
@@ -206,3 +216,10 @@ Usage: waypoint token new [options]
 
 	return strings.TrimSpace(helpText)
 }
+
+const warnTokenDeprecated = `
+The "waypoint token" commands are deprecated. They have been replaced with
+the "waypoint user" set of commands. Everything that was possible with
+"waypoint token" is now possible with "waypoint user". For example,
+"waypoint token new" is now "waypoint user token".
+`
