@@ -3,7 +3,7 @@
   {{if (not-eq @deployment.sequence @latest.sequence) "app-item--previous"}}
   {{if (eq @deployment.state 4) "app-item--destroyed"}}"
 >
-  <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @deployment.id}}>
+  <LinkTo @route="workspace.projects.project.app.deployment" @models={{array @deployment.sequence}}>
     <p>
       <b class="badge badge--version">v{{@deployment.sequence}}</b>
     </p>
