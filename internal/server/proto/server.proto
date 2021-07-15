@@ -2681,8 +2681,8 @@ message Release {
   string job_id = 13;
 
   // A boolean to mark this release message as unimplemented by the plugin
-  // that generated the message. If true, that means a release was never
-  // executed and Waypoint failed to build a valid releaser.
+  // that generated the message. If true, that means there was not a releaser
+  // to execute for the release lifecycle phase.
   bool unimplemented = 15;
 
   // A platform resource that this release has created, depends on, or manages.
