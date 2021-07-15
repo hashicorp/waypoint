@@ -97,6 +97,22 @@ func (i *ECSInstaller) Install(
 		err error
 	)
 
+	// validate we have a memory/cpu combination that ECS will accept. See
+	// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+	// for more information on valid combinations
+	mem, err := strconv.Atoi(i.config.Memory)
+	if err != nil {
+		return nil, err
+	}
+	cpu, err := strconv.Atoi(i.config.CPU)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := utils.ValidateEcsMemCPUPair(mem, cpu); err != nil {
+		return nil, err
+	}
+
 	lf := &Lifecycle{
 		Init: func(ui terminal.UI) error {
 			sess, err = utils.GetSession(&utils.SessionConfig{
@@ -283,6 +299,8 @@ func (i *ECSInstaller) Launch(
 		return nil, err
 	}
 
+	// registerTaskDefinition() above ensures taskDef here is non-nil, if the
+	// error returned is nil
 	taskDefArn := *taskDef.TaskDefinitionArn
 
 	// Create the service
@@ -1964,7 +1982,7 @@ func registerTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.EC
 
 		// if we encounter an unrecoverable error, exit now.
 		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() == "ResourceConflictException" {
+			if aerr.Code() == "ResourceConflictException" || aerr.Code() == "ClientException" {
 				return nil, err
 			}
 		}
@@ -1972,6 +1990,13 @@ func registerTaskDefinition(def *ecs.RegisterTaskDefinitionInput, ecsSvc *ecs.EC
 		// otherwise sleep and try again
 		time.Sleep(2 * time.Second)
 	}
+
+	// the above loop could expire and never get a valid task definition, so
+	// guard against a nil taskOut here
+	if taskOut == nil {
+		return nil, fmt.Errorf("error registering task definition, last error: %w", err)
+	}
+
 	return taskOut.TaskDefinition, nil
 }
 
