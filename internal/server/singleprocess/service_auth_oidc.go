@@ -8,10 +8,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/cap/oidc"
+	"github.com/hashicorp/go-bexpr"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	wpoidc "github.com/hashicorp/waypoint/internal/auth/oidc"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
@@ -197,6 +199,44 @@ func (s *service) CompleteOIDCAuth(
 		return nil, status.Errorf(codes.Internal, "OIDC provider returned empty issuer or subscriber ID")
 	}
 
+	// From this point forward, log all data
+	log = log.With(
+		"iss", idClaimVals.Iss,
+		"sub", idClaimVals.Sub,
+	)
+
+	// Verify this user is allowed to auth at all.
+	if am.AccessSelector != "" {
+		// Get our data
+		selectorData, err := wpoidc.SelectorData(amMethod.Oidc, jsonClaims)
+		if err != nil {
+			return nil, err
+		}
+
+		eval, err := bexpr.CreateEvaluator(am.AccessSelector)
+		if err != nil {
+			// This shouldn't happen since we validate on auth method create.
+			return nil, err
+		}
+
+		allowed, err := eval.Evaluate(selectorData)
+		if err != nil {
+			return nil, err
+		}
+
+		if !allowed {
+			// Warn so an operator can detect
+			log.Warn("rejected OIDC login based on access selector",
+				"claims_json", string(jsonClaims),
+				"selector", am.AccessSelector,
+			)
+
+			return nil, status.Errorf(codes.PermissionDenied,
+				"Your account was denied access. Please contact your Waypoint "+
+					"server administrator for more information.")
+		}
+	}
+
 	// Look up a user by sub.
 	user, err := s.oidcInitUser(log, &idClaimVals)
 	if err != nil {
@@ -295,8 +335,6 @@ func (s *service) oidcInitUser(log hclog.Logger, claims *idClaims) (*pb.User, er
 	log.Info("new OIDC user linked",
 		"user_id", user.Id,
 		"username", user.Username,
-		"iss", claims.Iss,
-		"sub", claims.Sub,
 	)
 
 	return user, nil
