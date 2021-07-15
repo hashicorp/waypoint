@@ -29,6 +29,8 @@ Usage: `waypoint docs [options]`
 - `-remote` - True to use a remote runner to execute. This defaults to false
   unless 'runner.default' is set in your configuration.
 - `-remote-source=<key=value>` - Override configurations for how remote runners source data. This is specified to the data source type being used in your configuration. This is used for example to set a specific Git ref to run against.
+- `-var=<key=value>` - Variable value to set for this operation. Can be specified multiple times.
+- `-var-file=<string>` - HCL or JSON file containing variable values to set for this operation. If any "_.auto.wpvars" or "_.auto.wpvars.json" files are present, they will be automatically loaded.
 
 #### Command Options
 
