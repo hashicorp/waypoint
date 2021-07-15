@@ -910,6 +910,16 @@ message AuthMethod {
   string display_name = 2;
   string description = 3;
 
+  // A selector to determine whether a user who authenticates using this
+  // is allowed to authenticate at all. This runs before authentication
+  // completes. This can be used to check group membership and so on.
+  // Available variables depend on the auth method used.
+  //
+  // The syntax of this is this:
+  // https://github.com/hashicorp/go-bexpr
+  // (better docs to follow)
+  string access_selector = 4;
+
   // The method to configure.
   oneof method {
     // OIDC uses OpenID Connect for auth. OIDC is supported by most
@@ -949,6 +959,14 @@ message AuthMethod {
     // Multiple CA certificates can be specified to support easier
     // rotation.
     repeated string discovery_ca_pem = 7;
+
+    // Mapping claims to keys for usage in selectors such as the
+    // "access_selector" on the root auth method.
+    //
+    // claim mappings are available as "value.<name>" and list
+    // mappings are available as "list.<name>".
+    map<string, string> claim_mappings = 8;
+    map<string, string> list_claim_mappings = 9;
   }
 }
 
