@@ -2250,6 +2250,8 @@ message Release {
   // ID of the job that created this. This may be empty.
   string job_id = 13;
 
+  bool unimplemented = 15;
+
   // This is the populated preload data. Most of this data can be retrieved
   // through additional API calls or manually computed, but certain API
   // calls will pre-populate some of these fields for convenience. The exact

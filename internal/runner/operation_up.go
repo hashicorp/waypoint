@@ -93,6 +93,10 @@ func (r *Runner) executeUpOp(
 	}
 	releaseResult := result.Release
 
+	if releaseResult.Release.Unimplemented {
+		app.UI.Output("Release not supported for platform, skipping...")
+	}
+
 	// NOTE(briancain): Because executeReleaseOp returns an initialized struct
 	// of release results, we need this deep check here to really ensure that a
 	// release actually happened, otherwise we'd attempt to run a status report
