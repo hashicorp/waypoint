@@ -1065,9 +1065,6 @@ func (p *Platform) Launch(
 		runtime = aws.String("EC2")
 		cpuShares = p.config.CPU
 	} else {
-		// if p.config.Memory == 0 {
-		// 	return nil, fmt.Errorf("memory value required for fargate")
-		// }
 		if err := utils.ValidateEcsMemCPUPair(p.config.Memory, p.config.CPU); err != nil {
 			return nil, err
 		}
