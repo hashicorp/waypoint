@@ -2,10 +2,12 @@ package ptypes
 
 import (
 	"errors"
+	"fmt"
 	"go/token"
 
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/hashicorp/go-bexpr"
 	"github.com/imdario/mergo"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
@@ -49,8 +51,9 @@ func ValidateAuthMethod(v *pb.AuthMethod) error {
 func ValidateAuthMethodRules(v *pb.AuthMethod) []*validation.FieldRules {
 	return []*validation.FieldRules{
 		validation.Field(&v.Name, validation.Required, validation.By(isNotToken)),
-		validation.Field(&v.Method, validation.Required),
+		validation.Field(&v.AccessSelector, validation.By(isBExpr)),
 
+		validation.Field(&v.Method, validation.Required),
 		validationext.StructOneof(&v.Method, (*pb.AuthMethod_Oidc)(nil),
 			func() []*validation.FieldRules {
 				v := v.Method.(*pb.AuthMethod_Oidc)
@@ -109,6 +112,20 @@ func ValidateCompleteOIDCAuthRequest(v *pb.CompleteOIDCAuthRequest) error {
 func isNotToken(v interface{}) error {
 	if v.(string) == "token" {
 		return errors.New("name 'token' is reserved and cannot be used")
+	}
+
+	return nil
+}
+
+func isBExpr(v interface{}) error {
+	str := v.(string)
+	if str == "" {
+		return nil
+	}
+
+	_, err := bexpr.CreateEvaluator(str)
+	if err != nil {
+		return fmt.Errorf("invalid selector: %s", err)
 	}
 
 	return nil
