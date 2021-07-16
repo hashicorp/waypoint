@@ -291,7 +291,7 @@ func (p *Platform) Deploy(
 			if err != nil {
 				return err
 			}
-			cluster, err = p.SetupCluster(ctx, s, sess)
+			cluster, err = p.SetupCluster(ctx, s, *src, sess)
 			if err != nil {
 				return err
 			}
@@ -356,7 +356,7 @@ func defaultSubnets(ctx context.Context, sess *session.Session) ([]*string, erro
 	return subnets, nil
 }
 
-func (p *Platform) SetupCluster(ctx context.Context, s LifecycleStatus, sess *session.Session) (string, error) {
+func (p *Platform) SetupCluster(ctx context.Context, s LifecycleStatus, app component.Source, sess *session.Session) (string, error) {
 	ecsSvc := ecs.New(sess)
 
 	cluster := p.config.Cluster
@@ -383,10 +383,23 @@ func (p *Platform) SetupCluster(ctx context.Context, s LifecycleStatus, sess *se
 		return "", fmt.Errorf("EC2 clusters can not be automatically created")
 	}
 
+	var tags []*ecs.Tag
+	tags = append(tags, &ecs.Tag{
+		Key:   aws.String(defaultTagName),
+		Value: aws.String(app.App),
+	})
+	for k, v := range p.config.Tags {
+		tags = append(tags, &ecs.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+
 	s.Status("Creating new ECS cluster: %s", cluster)
 
 	_, err = ecsSvc.CreateCluster(&ecs.CreateClusterInput{
 		ClusterName: aws.String(cluster),
+		Tags:        tags,
 	})
 
 	if err != nil {
@@ -397,19 +410,22 @@ func (p *Platform) SetupCluster(ctx context.Context, s LifecycleStatus, sess *se
 	return cluster, nil
 }
 
-const rolePolicy = `{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-		  "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ecs-tasks.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}`
+const (
+	defaultTagName = "waypoint-app"
+	rolePolicy     = `{
+		"Version": "2012-10-17",
+		"Statement": [
+		  {
+				"Sid": "",
+			"Effect": "Allow",
+			"Principal": {
+			  "Service": "ecs-tasks.amazonaws.com"
+			},
+			"Action": "sts:AssumeRole"
+		  }
+		]
+	  }`
+)
 
 var fargateResources = map[int][]int{
 	512:  {256},
@@ -485,10 +501,23 @@ func (p *Platform) SetupExecutionRole(ctx context.Context, s LifecycleStatus, L 
 	L.Debug("creating new role")
 	s.Status("Creating IAM role: %s", roleName)
 
+	var tags []*iam.Tag
+	tags = append(tags, &iam.Tag{
+		Key:   aws.String(defaultTagName),
+		Value: aws.String(app.App),
+	})
+	for k, v := range p.config.Tags {
+		tags = append(tags, &iam.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(rolePolicy),
 		Path:                     aws.String("/"),
 		RoleName:                 aws.String(roleName),
+		Tags:                     tags,
 	}
 
 	result, err := svc.CreateRole(input)
@@ -631,6 +660,7 @@ func createALB(
 	sess *session.Session,
 	app *component.Source,
 	albConfig *ALBConfig,
+	config Config,
 	vpcId *string,
 	serviceName *string,
 	sgWebId *string,
@@ -640,6 +670,18 @@ func createALB(
 	s.Update("Creating ALB target group")
 	L.Debug("creating target group", "name", serviceName)
 
+	var tags []*elbv2.Tag
+	tags = append(tags, &elbv2.Tag{
+		Key:   aws.String(defaultTagName),
+		Value: aws.String(app.App),
+	})
+	for k, v := range config.Tags {
+		tags = append(tags, &elbv2.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+
 	elbsrv := elbv2.New(sess)
 	ctg, err := elbsrv.CreateTargetGroup(&elbv2.CreateTargetGroupInput{
 		HealthCheckEnabled: aws.Bool(true),
@@ -648,6 +690,7 @@ func createALB(
 		Protocol:           aws.String("HTTP"),
 		TargetType:         aws.String("ip"),
 		VpcId:              vpcId,
+		Tags:               tags,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -740,6 +783,7 @@ func createALB(
 				Subnets:        subnets,
 				SecurityGroups: []*string{sgWebId},
 				Scheme:         &scheme,
+				Tags:           tags,
 			})
 			if err != nil {
 				return nil, nil, err
@@ -779,6 +823,7 @@ func createALB(
 						Type: aws.String("forward"),
 					},
 				},
+				Tags: tags,
 			})
 
 			if err != nil {
@@ -967,6 +1012,18 @@ func (p *Platform) Launch(
 		},
 	}
 
+	var tags []*ecs.Tag
+	tags = append(tags, &ecs.Tag{
+		Key:   aws.String(defaultTagName),
+		Value: aws.String(app.App),
+	})
+	for k, v := range p.config.Tags {
+		tags = append(tags, &ecs.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+
 	for k, v := range p.config.Environment {
 		env = append(env, &ecs.KeyValuePair{
 			Name:  aws.String(k),
@@ -1142,12 +1199,7 @@ func (p *Platform) Launch(
 		NetworkMode:             aws.String("awsvpc"),
 		RequiresCompatibilities: []*string{runtime},
 
-		Tags: []*ecs.Tag{
-			{
-				Key:   aws.String("waypoint-app"),
-				Value: aws.String(app.App),
-			},
-		},
+		Tags: tags,
 	}
 
 	if taskRoleArn != "" {
@@ -1232,6 +1284,7 @@ func (p *Platform) Launch(
 			ctx, s, L, sess,
 			app,
 			p.config.ALB,
+			p.config,
 			vpcId,
 			&serviceName,
 			sgweb,
@@ -1275,6 +1328,7 @@ func (p *Platform) Launch(
 		NetworkConfiguration: &ecs.NetworkConfiguration{
 			AwsvpcConfiguration: netCfg,
 		},
+		Tags: tags,
 	}
 
 	if !p.config.DisableALB {
@@ -1564,6 +1618,9 @@ type Config struct {
 	// Name of the task IAM role to associate with the ECS service
 	TaskRoleName string `hcl:"task_role_name,optional"`
 
+	// Tags key/values to pass to the ECS resources.
+	Tags map[string]string `hcl:"tags"`
+
 	// Subnets to place the service into. Defaults to the subnets in the default VPC.
 	Subnets []string `hcl:"subnets,optional"`
 
@@ -1803,6 +1860,11 @@ deploy {
 				"When using non-blocking logging mode, this is the buffer size for message storage",
 			)
 		}),
+	)
+
+	doc.SetField(
+		"tags",
+		"tags key/values to pass to the ECS resources",
 	)
 
 	doc.SetField(
