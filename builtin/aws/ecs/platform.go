@@ -1619,7 +1619,7 @@ type Config struct {
 	TaskRoleName string `hcl:"task_role_name,optional"`
 
 	// Tags key/values to pass to the ECS resources.
-	Tags map[string]string `hcl:"tags"`
+	Tags map[string]string `hcl:"tags,optional"`
 
 	// Subnets to place the service into. Defaults to the subnets in the default VPC.
 	Subnets []string `hcl:"subnets,optional"`

@@ -1,0 +1,2 @@
+```release-note:improvement
+plugin/aws: add ability to add AWS tags to resources
