@@ -1529,7 +1529,7 @@ type Config struct {
 	// Subnets to place the service into. Defaults to the subnets in the default VPC.
 	Subnets []string `hcl:"subnets,optional"`
 
-	// SecurityGroups to pass security groups to deployment.
+	// Security Groups ARN to define existing security groups for ecs.
 	SecurityGroups []*string `hcl:"security_groups,optional"`
 
 	// How many tasks of the service to run. Default 1.
@@ -1632,6 +1632,14 @@ deploy {
 		"subnets",
 		"the VPC subnets to use for the application",
 		docs.Default("public subnets in the default VPC"),
+	)
+
+	doc.SetField(
+		"security_groups",
+		"security Groups ARN to define existing security groups for ecs",
+		docs.Summary(
+			"this field allows define existing groups to be specified for the ecs",
+		),
 	)
 
 	doc.SetField(
