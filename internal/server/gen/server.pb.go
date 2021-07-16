@@ -3158,7 +3158,6 @@ type CompleteOIDCAuthResponse struct {
 	// authentication. This is used for debugging and operator inspection
 	// when setting up an OIDC auth method and aren't meant for general purpose
 	// use. These may also contain sensitive data so it shouldn't be stored.
-	// These claims only include claims from the ID token.
 	IdClaimsJson   string `protobuf:"bytes,3,opt,name=id_claims_json,json=idClaimsJson,proto3" json:"id_claims_json,omitempty"`
 	UserClaimsJson string `protobuf:"bytes,4,opt,name=user_claims_json,json=userClaimsJson,proto3" json:"user_claims_json,omitempty"`
 }
