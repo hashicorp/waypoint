@@ -24,6 +24,8 @@ func (r *Runner) executeBuildOp(
 		panic("operation not expected type")
 	}
 
+	// TODO: determine when UpsertBuild is called, before or after this next line
+	// Need to make sure dataref is associated with build struct before it gets Upserted
 	build, push, err := app.Build(ctx, core.BuildWithPush(!op.Build.DisablePush))
 	if err != nil {
 		return nil, err
@@ -33,6 +35,7 @@ func (r *Runner) executeBuildOp(
 		Build: &pb.Job_BuildResult{
 			Build: build,
 			Push:  push,
+			//DataRef: &pb.DataRef_Stuff{}, // TODO maybe go here
 		},
 	}, nil
 }
