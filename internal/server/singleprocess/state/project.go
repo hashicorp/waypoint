@@ -549,9 +549,6 @@ type projectIndexRecord struct {
 
 	// Project polling is used for updating the project from a remote source
 	// on an interval
-	// TODO(briancain): Can we move these into a generic "Poll" struct and still
-	// index on the Poll and NextPoll fields? Not sure how to reference "subfields"
-	// for memdb in the project index schema func
 
 	// Poll is true if this project has polling enabled.
 	Poll bool
@@ -564,6 +561,8 @@ type projectIndexRecord struct {
 	LastPoll time.Time
 	NextPoll time.Time
 
+	// TODO(briancain): Currently app polling is only working with 1 app in a
+	// project.
 	// Application Polling is used for generating a status report on the current
 	// health of the application in a project.
 
