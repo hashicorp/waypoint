@@ -443,10 +443,6 @@ func (i *K8sInstaller) Upgrade(
 		log.Info("Pod(s) deleted, k8s will now restart waypoint server ", serverName)
 	} else if waypointStatefulSet.Spec.UpdateStrategy.Type == "RollingUpdate" {
 		log.Info("Update Strategy is 'RollingUpdate'; once the upgrade completes, you may need to restart the pod to update the server image")
-		s.Update("Update Strategy is 'RollingUpdate'; once the upgrade completes, you may need to restart the pod to update the server image")
-		s.Status(terminal.StatusWarn)
-		s.Done()
-		s = sg.Add("")
 	} else {
 		log.Warn("Update Strategy is not recognized, so no action is taken", "UpdateStrategy",
 			waypointStatefulSet.Spec.UpdateStrategy.Type)
@@ -566,7 +562,13 @@ func (i *K8sInstaller) Upgrade(
 
 	if waypointStatefulSet.Spec.UpdateStrategy.Type == "RollingUpdate" {
 		ui.Output("\nKubernetes is now set to upgrade waypoint server image with its\n" +
-			"'RollingUpdate' strategy. This means the pod might not be updated immediately.")
+			"'RollingUpdate' strategy. This means the pod might not be updated immediately.",
+			terminal.WithWarningStyle(),
+		)
+		s.Update("Update Strategy is 'RollingUpdate'; once the upgrade completes, you may need to restart the pod to update the server image")
+		s.Status(terminal.StatusWarn)
+		s.Done()
+		s = sg.Add("")
 	}
 	s.Update("Upgrade complete!")
 	s.Done()
