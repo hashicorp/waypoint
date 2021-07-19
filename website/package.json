@@ -6,9 +6,12 @@
   "dependencies": {
     "@hashicorp/mktg-global-styles": "3.0.1",
     "@hashicorp/nextjs-scripts": "19.0.2",
+    "@hashicorp/platform-runtime-error-monitoring": "^0.1.0",
+    "@hashicorp/platform-util": "^0.1.0",
     "@hashicorp/react-alert-banner": "6.1.1",
     "@hashicorp/react-button": "5.0.0",
     "@hashicorp/react-command-line-terminal": "2.0.1",
+    "@hashicorp/react-consent-manager": "^5.3.2",
     "@hashicorp/react-content": "7.0.0",
     "@hashicorp/react-docs-page": "13.2.0",
     "@hashicorp/react-hashi-stack-menu": "2.0.5",
@@ -29,6 +32,8 @@
     "semver": "7.3.4"
   },
   "devDependencies": {
+    "@hashicorp/platform-cli": "^0.1.2",
+    "@hashicorp/platform-nextjs-plugin": "^0.1.0",
     "@types/node": "^14.14.40",
     "@types/react": "^17.0.3",
     "husky": "4.3.8",
