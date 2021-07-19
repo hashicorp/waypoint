@@ -1,0 +1,60 @@
+---
+layout: docs
+page_title: variable - waypoint.hcl
+description: |-
+  The `variable` stanza declares a variable for use in other stanzas in the config.
+---
+
+# `variable` Stanza
+
+<Placement groups={[['variable']]} />
+
+The `variable` stanza declares a variable and makes it available for use in
+other stanzas in the config. Read more about
+[defining and using variables here](/docs/waypoint-hcl/variables/input).
+
+```hcl
+variable "key" {
+  # ...
+}
+```
+
+Multiple `variable` stanzas can be specified; there is no limit to the number
+of variables you can define for your configuration.
+
+```hcl
+variable "image" {
+  # ...
+}
+
+variable "tag" {
+  # ...
+}
+```
+
+Supply a value to a specified `variable` with one of the following methods:
+
+- the [`default`][inpage-default] value in the definition block
+- the parameter `-var key=value`
+- the parameter `-var-file=filename`, where `filename` is the name of a file
+  with variable values
+- an environment variable prefixed with `WP_VAR_`
+- a file of variable values with the suffix `.auto.wpvars`
+- the Waypoint UI
+
+## `variable` Parameters
+
+### Optional
+
+[inpage-default]: #default
+
+- `default` `(string: "")` - Sets a default value for the variable.
+  Must be set to `null` if no value is set by other sources.
+
+- `type` <code>(string: [expression][expression])</code> - A type constraint
+  to apply to values for the defined variable.
+
+- `description` `(string: "")` - A short summary documenting what the variable
+  is and its purpose.
+
+[expression]: /docs/waypoint-hcl/syntax/expressions#types-and-values 'Expressions: Types and Values'

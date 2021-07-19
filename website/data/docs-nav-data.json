@@ -127,6 +127,10 @@
             "path": "waypoint-hcl/variables"
           },
           {
+            "title": "Input Variables",
+            "path": "waypoint-hcl/variables/input"
+          },
+          {
             "title": "<code>artifact</code>",
             "path": "waypoint-hcl/variables/artifact"
           },
@@ -225,6 +229,10 @@
       {
         "title": "<code>use</code>",
         "path": "waypoint-hcl/use"
+      },
+      {
+        "title": "<code>variable</code>",
+        "path": "waypoint-hcl/variable"
       }
     ]
   },
