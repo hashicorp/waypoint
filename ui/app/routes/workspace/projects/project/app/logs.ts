@@ -2,7 +2,7 @@ import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { GetLogStreamRequest, Ref } from 'waypoint-pb';
-import { AppRouteModel } from '../app';
+import { Model as AppRouteModel } from '../app';
 
 export default class Logs extends Route {
   @service api!: ApiService;
