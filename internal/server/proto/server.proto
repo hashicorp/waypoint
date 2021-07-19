@@ -856,9 +856,9 @@ message TaskLaunchInfo {
 
   // The environment variables that will be exposed to the task.
   map<string, string> environment_variables = 2;
- 
+
   // The arguments that will be passed to the new container on boot
-  repeated string arguments = 3; 
+  repeated string arguments = 3;
 }
 
 /********************************************************************
@@ -910,6 +910,16 @@ message AuthMethod {
   string display_name = 2;
   string description = 3;
 
+  // A selector to determine whether a user who authenticates using this
+  // is allowed to authenticate at all. This runs before authentication
+  // completes. This can be used to check group membership and so on.
+  // Available variables depend on the auth method used.
+  //
+  // The syntax of this is this:
+  // https://github.com/hashicorp/go-bexpr
+  // (better docs to follow)
+  string access_selector = 4;
+
   // The method to configure.
   oneof method {
     // OIDC uses OpenID Connect for auth. OIDC is supported by most
@@ -949,6 +959,14 @@ message AuthMethod {
     // Multiple CA certificates can be specified to support easier
     // rotation.
     repeated string discovery_ca_pem = 7;
+
+    // Mapping claims to keys for usage in selectors such as the
+    // "access_selector" on the root auth method.
+    //
+    // claim mappings are available as "value.<name>" and list
+    // mappings are available as "list.<name>".
+    map<string, string> claim_mappings = 8;
+    map<string, string> list_claim_mappings = 9;
   }
 }
 
@@ -1040,6 +1058,13 @@ message CompleteOIDCAuthResponse {
   // was called with the token returned. This is eager returned because
   // it is commonly useful and also readily available as part of auth.
   User user = 2;
+
+  // These are all the claims that were associated with this OIDC
+  // authentication. This is used for debugging and operator inspection
+  // when setting up an OIDC auth method and aren't meant for general purpose
+  // use. These may also contain sensitive data so it shouldn't be stored.
+  string id_claims_json = 3;
+  string user_claims_json = 4;
 }
 
 /********************************************************************
