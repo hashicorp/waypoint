@@ -2,7 +2,6 @@
 /**
  * @fileoverview
  * @enhanceable
- * @suppress {missingRequire} reports error on implicit type usages.
  * @suppress {messageConventions} JS Compiler reports an error if a variable or
  *     field starts with 'MSG_' and isn't a translatable message.
  * @public
@@ -7935,6 +7934,7 @@ proto.hashicorp.waypoint.Project.toObject = function(includeInstance, msg) {
     remoteEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
     dataSource: (f = msg.getDataSource()) && proto.hashicorp.waypoint.Job.DataSource.toObject(includeInstance, f),
     dataSourcePoll: (f = msg.getDataSourcePoll()) && proto.hashicorp.waypoint.Project.Poll.toObject(includeInstance, f),
+    dataSourceRef: (f = msg.getDataSourceRef()) && proto.hashicorp.waypoint.Job.DataSource.Ref.toObject(includeInstance, f),
     waypointHcl: msg.getWaypointHcl_asB64(),
     waypointHclFormat: jspb.Message.getFieldWithDefault(msg, 6, 0),
     fileChangeSignal: jspb.Message.getFieldWithDefault(msg, 8, ""),
@@ -7998,6 +7998,11 @@ proto.hashicorp.waypoint.Project.deserializeBinaryFromReader = function(msg, rea
       var value = new proto.hashicorp.waypoint.Project.Poll;
       reader.readMessage(value,proto.hashicorp.waypoint.Project.Poll.deserializeBinaryFromReader);
       msg.setDataSourcePoll(value);
+      break;
+    case 10:
+      var value = new proto.hashicorp.waypoint.Job.DataSource.Ref;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.DataSource.Ref.deserializeBinaryFromReader);
+      msg.setDataSourceRef(value);
       break;
     case 5:
       var value = /** @type {!Uint8Array} */ (reader.readBytes());
@@ -8081,6 +8086,14 @@ proto.hashicorp.waypoint.Project.serializeBinaryToWriter = function(message, wri
       7,
       f,
       proto.hashicorp.waypoint.Project.Poll.serializeBinaryToWriter
+    );
+  }
+  f = message.getDataSourceRef();
+  if (f != null) {
+    writer.writeMessage(
+      10,
+      f,
+      proto.hashicorp.waypoint.Job.DataSource.Ref.serializeBinaryToWriter
     );
   }
   f = message.getWaypointHcl_asU8();
@@ -8428,6 +8441,43 @@ proto.hashicorp.waypoint.Project.prototype.clearDataSourcePoll = function() {
  */
 proto.hashicorp.waypoint.Project.prototype.hasDataSourcePoll = function() {
   return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional Job.DataSource.Ref data_source_ref = 10;
+ * @return {?proto.hashicorp.waypoint.Job.DataSource.Ref}
+ */
+proto.hashicorp.waypoint.Project.prototype.getDataSourceRef = function() {
+  return /** @type{?proto.hashicorp.waypoint.Job.DataSource.Ref} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Job.DataSource.Ref, 10));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Job.DataSource.Ref|undefined} value
+ * @return {!proto.hashicorp.waypoint.Project} returns this
+*/
+proto.hashicorp.waypoint.Project.prototype.setDataSourceRef = function(value) {
+  return jspb.Message.setWrapperField(this, 10, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Project} returns this
+ */
+proto.hashicorp.waypoint.Project.prototype.clearDataSourceRef = function() {
+  return this.setDataSourceRef(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Project.prototype.hasDataSourceRef = function() {
+  return jspb.Message.getField(this, 10) != null;
 };
 
 
@@ -37429,7 +37479,8 @@ proto.hashicorp.waypoint.Build.toObject = function(includeInstance, msg) {
     artifact: (f = msg.getArtifact()) && proto.hashicorp.waypoint.Artifact.toObject(includeInstance, f),
     labelsMap: (f = msg.getLabelsMap()) ? f.toObject(includeInstance, undefined) : [],
     templateData: msg.getTemplateData_asB64(),
-    jobId: jspb.Message.getFieldWithDefault(msg, 9, "")
+    jobId: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    dataSourceRef: (f = msg.getDataSourceRef()) && proto.hashicorp.waypoint.Job.DataSource.Ref.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -37512,6 +37563,11 @@ proto.hashicorp.waypoint.Build.deserializeBinaryFromReader = function(msg, reade
     case 9:
       var value = /** @type {string} */ (reader.readString());
       msg.setJobId(value);
+      break;
+    case 11:
+      var value = new proto.hashicorp.waypoint.Job.DataSource.Ref;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.DataSource.Ref.deserializeBinaryFromReader);
+      msg.setDataSourceRef(value);
       break;
     default:
       reader.skipField();
@@ -37612,6 +37668,14 @@ proto.hashicorp.waypoint.Build.serializeBinaryToWriter = function(message, write
     writer.writeString(
       9,
       f
+    );
+  }
+  f = message.getDataSourceRef();
+  if (f != null) {
+    writer.writeMessage(
+      11,
+      f,
+      proto.hashicorp.waypoint.Job.DataSource.Ref.serializeBinaryToWriter
     );
   }
 };
@@ -37917,6 +37981,43 @@ proto.hashicorp.waypoint.Build.prototype.getJobId = function() {
  */
 proto.hashicorp.waypoint.Build.prototype.setJobId = function(value) {
   return jspb.Message.setProto3StringField(this, 9, value);
+};
+
+
+/**
+ * optional Job.DataSource.Ref data_source_ref = 11;
+ * @return {?proto.hashicorp.waypoint.Job.DataSource.Ref}
+ */
+proto.hashicorp.waypoint.Build.prototype.getDataSourceRef = function() {
+  return /** @type{?proto.hashicorp.waypoint.Job.DataSource.Ref} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Job.DataSource.Ref, 11));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Job.DataSource.Ref|undefined} value
+ * @return {!proto.hashicorp.waypoint.Build} returns this
+*/
+proto.hashicorp.waypoint.Build.prototype.setDataSourceRef = function(value) {
+  return jspb.Message.setWrapperField(this, 11, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Build} returns this
+ */
+proto.hashicorp.waypoint.Build.prototype.clearDataSourceRef = function() {
+  return this.setDataSourceRef(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Build.prototype.hasDataSourceRef = function() {
+  return jspb.Message.getField(this, 11) != null;
 };
 
 

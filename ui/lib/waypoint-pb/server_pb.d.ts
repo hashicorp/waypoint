@@ -322,6 +322,11 @@ export class Project extends jspb.Message {
   hasDataSourcePoll(): boolean;
   clearDataSourcePoll(): Project;
 
+  getDataSourceRef(): Job.DataSource.Ref | undefined;
+  setDataSourceRef(value?: Job.DataSource.Ref): Project;
+  hasDataSourceRef(): boolean;
+  clearDataSourceRef(): Project;
+
   getWaypointHcl(): Uint8Array | string;
   getWaypointHcl_asU8(): Uint8Array;
   getWaypointHcl_asB64(): string;
@@ -353,6 +358,7 @@ export namespace Project {
     remoteEnabled: boolean,
     dataSource?: Job.DataSource.AsObject,
     dataSourcePoll?: Project.Poll.AsObject,
+    dataSourceRef?: Job.DataSource.Ref.AsObject,
     waypointHcl: Uint8Array | string,
     waypointHclFormat: Project.Format,
     fileChangeSignal: string,
@@ -4406,6 +4412,11 @@ export class Build extends jspb.Message {
   getJobId(): string;
   setJobId(value: string): Build;
 
+  getDataSourceRef(): Job.DataSource.Ref | undefined;
+  setDataSourceRef(value?: Job.DataSource.Ref): Build;
+  hasDataSourceRef(): boolean;
+  clearDataSourceRef(): Build;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Build.AsObject;
   static toObject(includeInstance: boolean, msg: Build): Build.AsObject;
@@ -4426,6 +4437,7 @@ export namespace Build {
     labelsMap: Array<[string, string]>,
     templateData: Uint8Array | string,
     jobId: string,
+    dataSourceRef?: Job.DataSource.Ref.AsObject,
   }
 }
 
