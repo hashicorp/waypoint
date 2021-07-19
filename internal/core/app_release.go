@@ -58,12 +58,12 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 			"err", err)
 	}
 
-	unimplemeneted := false
+	unimplemented := false
 	c, err := a.createReleaser(ctx, &evalCtx)
 	if status.Code(err) == codes.Unimplemented {
 		c = nil
 		err = nil
-		unimplemeneted = true
+		unimplemented = true
 	}
 	if err != nil {
 		return nil, nil, err
@@ -80,7 +80,7 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 
 	if releasepb != nil {
 		rpb := releasepb.(*pb.Release)
-		rpb.Unimplemented = unimplemeneted
+		rpb.Unimplemented = unimplemented
 		releasepb = rpb
 	}
 
