@@ -4,6 +4,7 @@ import ApiService from 'waypoint/services/api';
 import { Ref, Deployment, Build, Release, Project, StatusReport, PushedArtifact } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { hash } from 'rsvp';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
 export interface Params {
   app_id: string;
@@ -26,12 +27,6 @@ interface WithPushedArtifact {
   pushedArtifact?: PushedArtifact.AsObject;
 }
 
-interface Breadcrumb {
-  label: string;
-  icon: string;
-  args: string[];
-}
-
 export default class App extends Route {
   @service api!: ApiService;
   @service pollModel!: PollModelService;
@@ -43,7 +38,7 @@ export default class App extends Route {
       {
         label: model.application.project,
         icon: 'folder-outline',
-        args: ['workspace.projects.project.apps'],
+        route: 'workspace.projects.project.apps',
       },
     ];
   }

@@ -3,15 +3,10 @@ import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { GetReleaseRequest, Release, Ref, StatusReport } from 'waypoint-pb';
 import { Model as AppRouteModel } from '../app';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
 interface ReleaseModelParams {
   sequence: number;
-}
-
-interface Breadcrumb {
-  label: string;
-  icon: string;
-  args: string[];
 }
 
 interface WithStatusReport {
@@ -27,12 +22,12 @@ export default class ReleaseDetail extends Route {
       {
         label: model.application.application,
         icon: 'git-repository',
-        args: ['workspace.projects.project.app'],
+        route: 'workspace.projects.project.app',
       },
       {
         label: 'Releases',
         icon: 'public-default',
-        args: ['workspace.projects.project.app.releases'],
+        route: 'workspace.projects.project.app.releases',
       },
     ];
   }
