@@ -3,15 +3,10 @@ import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { GetDeploymentRequest, Deployment, Ref, StatusReport } from 'waypoint-pb';
 import { Model as AppRouteModel } from '../app';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
 interface DeploymentModelParams {
   sequence: number;
-}
-
-interface Breadcrumb {
-  label: string;
-  icon: string;
-  args: string[];
 }
 
 interface WithStatusReport {
@@ -27,12 +22,12 @@ export default class DeploymentDetail extends Route {
       {
         label: model.application.application,
         icon: 'git-repository',
-        args: ['workspace.projects.project.app'],
+        route: 'workspace.projects.project.app',
       },
       {
         label: 'Deployments',
         icon: 'upload',
-        args: ['workspace.projects.project.app.deployments'],
+        route: 'workspace.projects.project.app.deployments',
       },
     ];
   }

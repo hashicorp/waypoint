@@ -3,6 +3,8 @@ import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { Ref, GetProjectRequest } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
+
 interface ProjectModelParams {
   project_id: string;
 }
@@ -11,10 +13,10 @@ export default class ProjectDetail extends Route {
   @service api!: ApiService;
   @service pollModel!: PollModelService;
 
-  breadcrumbs = [
+  breadcrumbs: Breadcrumb[] = [
     {
       label: 'Projects',
-      args: ['workspace.projects'],
+      route: 'workspace.projects',
     },
   ];
 
