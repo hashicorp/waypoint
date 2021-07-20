@@ -2238,6 +2238,9 @@ message Build {
 
   // ID of the job that created this build. This may be empty.
   string job_id = 9;
+
+  // DataSourceRef is the datasource that triggered the build
+  Job.DataSource.Ref data_source_ref = 11;
 }
 
 // Artifact is the result of a build or registry. This is the metadata only.
