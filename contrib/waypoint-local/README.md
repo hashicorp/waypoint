@@ -1,6 +1,6 @@
 # Run Waypoint server and a single runner locally
 
-Sometimes it's easier to just the process locally for development. These
+Sometimes it's easier to run the process locally for development. These
 scripts will start up a local waypoint server and runner for dev.
 
 The shutdown scripts will attempt to stop the server and runner gracefully with
