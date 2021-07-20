@@ -362,7 +362,7 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 	if p := value.DataSourcePoll; p != nil && p.Enabled {
 		// If it's empty at this point, we'll set the default here.
 		if p.Interval == "" {
-			p.Interval = defaultPollInterval
+			p.Interval = defaultProjectPollInterval
 		}
 		interval, err := time.ParseDuration(p.Interval)
 		if err != nil {
@@ -411,7 +411,7 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 		// over the next projects to poll and do something.
 		if app := a.StatusReportPoll; app != nil && app.Enabled {
 			if app.Interval == "" {
-				app.Interval = defaultPollInterval
+				app.Interval = defaultAppPollInterval
 			}
 			interval, err := time.ParseDuration(app.Interval)
 			if err != nil {
@@ -539,9 +539,11 @@ const (
 
 	projectWaypointHclMaxSize = 5 * 1024 // 5 MB
 
-	// defaultPollInterval is used both by the project poll handler and the
-	// application poll handler for setting up a default interval time
-	defaultPollInterval = "30s"
+	// defaultProjectPollInterval is used the project poll handler
+	// for setting up a default interval time
+	defaultProjectPollInterval = "30s"
+
+	defaultAppPollInterval = "5m"
 )
 
 type projectIndexRecord struct {
