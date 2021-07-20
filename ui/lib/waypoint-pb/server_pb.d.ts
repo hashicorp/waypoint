@@ -5051,6 +5051,11 @@ export class Build extends jspb.Message {
   getJobId(): string;
   setJobId(value: string): Build;
 
+  getDataSourceRef(): Job.DataSource.Ref | undefined;
+  setDataSourceRef(value?: Job.DataSource.Ref): Build;
+  hasDataSourceRef(): boolean;
+  clearDataSourceRef(): Build;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): Build.AsObject;
   static toObject(includeInstance: boolean, msg: Build): Build.AsObject;
@@ -5071,6 +5076,7 @@ export namespace Build {
     labelsMap: Array<[string, string]>,
     templateData: Uint8Array | string,
     jobId: string,
+    dataSourceRef?: Job.DataSource.Ref.AsObject,
   }
 }
 

@@ -42772,7 +42772,8 @@ proto.hashicorp.waypoint.Build.toObject = function(includeInstance, msg) {
     artifact: (f = msg.getArtifact()) && proto.hashicorp.waypoint.Artifact.toObject(includeInstance, f),
     labelsMap: (f = msg.getLabelsMap()) ? f.toObject(includeInstance, undefined) : [],
     templateData: msg.getTemplateData_asB64(),
-    jobId: jspb.Message.getFieldWithDefault(msg, 9, "")
+    jobId: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    dataSourceRef: (f = msg.getDataSourceRef()) && proto.hashicorp.waypoint.Job.DataSource.Ref.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -42855,6 +42856,11 @@ proto.hashicorp.waypoint.Build.deserializeBinaryFromReader = function(msg, reade
     case 9:
       var value = /** @type {string} */ (reader.readString());
       msg.setJobId(value);
+      break;
+    case 11:
+      var value = new proto.hashicorp.waypoint.Job.DataSource.Ref;
+      reader.readMessage(value,proto.hashicorp.waypoint.Job.DataSource.Ref.deserializeBinaryFromReader);
+      msg.setDataSourceRef(value);
       break;
     default:
       reader.skipField();
@@ -42955,6 +42961,14 @@ proto.hashicorp.waypoint.Build.serializeBinaryToWriter = function(message, write
     writer.writeString(
       9,
       f
+    );
+  }
+  f = message.getDataSourceRef();
+  if (f != null) {
+    writer.writeMessage(
+      11,
+      f,
+      proto.hashicorp.waypoint.Job.DataSource.Ref.serializeBinaryToWriter
     );
   }
 };
@@ -43260,6 +43274,43 @@ proto.hashicorp.waypoint.Build.prototype.getJobId = function() {
  */
 proto.hashicorp.waypoint.Build.prototype.setJobId = function(value) {
   return jspb.Message.setProto3StringField(this, 9, value);
+};
+
+
+/**
+ * optional Job.DataSource.Ref data_source_ref = 11;
+ * @return {?proto.hashicorp.waypoint.Job.DataSource.Ref}
+ */
+proto.hashicorp.waypoint.Build.prototype.getDataSourceRef = function() {
+  return /** @type{?proto.hashicorp.waypoint.Job.DataSource.Ref} */ (
+    jspb.Message.getWrapperField(this, proto.hashicorp.waypoint.Job.DataSource.Ref, 11));
+};
+
+
+/**
+ * @param {?proto.hashicorp.waypoint.Job.DataSource.Ref|undefined} value
+ * @return {!proto.hashicorp.waypoint.Build} returns this
+*/
+proto.hashicorp.waypoint.Build.prototype.setDataSourceRef = function(value) {
+  return jspb.Message.setWrapperField(this, 11, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.hashicorp.waypoint.Build} returns this
+ */
+proto.hashicorp.waypoint.Build.prototype.clearDataSourceRef = function() {
+  return this.setDataSourceRef(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.hashicorp.waypoint.Build.prototype.hasDataSourceRef = function() {
+  return jspb.Message.getField(this, 11) != null;
 };
 
 
