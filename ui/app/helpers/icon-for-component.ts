@@ -4,8 +4,8 @@ import { helper } from '@ember/component/helper';
 export function iconForComponent([component]: [string]): string {
   switch (component) {
     case 'aws-ec2':
-      return 'logo-aws-color';
     case 'aws-ecs':
+    case 'aws-ecr':
       return 'logo-aws-color';
     case 'azure-container-instances':
       return 'logo-azure-color';

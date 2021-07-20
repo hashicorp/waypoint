@@ -6,4 +6,9 @@
   &--error {
     color: rgb(var(--error-text));
   }
+
+  &--match-typography {
+    font-size: inherit;
+    font-weight: inherit;
+  }
 }
