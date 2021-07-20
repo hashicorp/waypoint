@@ -3,6 +3,15 @@ import Service, { inject as service } from '@ember/service';
 import { computed } from '@ember/object';
 import classic from 'ember-classic-decorator';
 
+export interface Breadcrumb {
+  label: string;
+  route: string;
+  icon?: string;
+  isPending?: boolean;
+}
+
+type BreadcrumbBuilder = (model: unknown) => Breadcrumb[];
+
 @classic
 export default class BreadcrumbsService extends Service {
   @service router;
@@ -12,14 +21,14 @@ export default class BreadcrumbsService extends Service {
   // but it doesn't change when a transition to the same route with a different
   // model occurs.
   @computed('router.{currentURL,currentRouteName}')
-  get breadcrumbs() {
+  get breadcrumbs(): Breadcrumb[] {
     let owner = getOwner(this);
     let allRoutes = (this.router.currentRouteName || '')
       .split('.')
       .without('')
-      .map((segment, index, allSegments) => allSegments.slice(0, index + 1).join('.'));
+      .map((_segment, index, allSegments) => allSegments.slice(0, index + 1).join('.'));
 
-    let crumbs = [];
+    let crumbs: Breadcrumb[] = [];
     allRoutes.forEach((routeName) => {
       let route = owner.lookup(`route:${routeName}`);
 
@@ -32,7 +41,7 @@ export default class BreadcrumbsService extends Service {
       // Breadcrumbs are either an array of static crumbs
       // or a function that returns breadcrumbs given the current
       // model for the route's controller.
-      let breadcrumbs = route.breadcrumbs || [];
+      let breadcrumbs: BreadcrumbBuilder | Breadcrumb[] = route.breadcrumbs || [];
 
       if (typeof breadcrumbs === 'function') {
         breadcrumbs = breadcrumbs(route.get('controller.model')) || [];
