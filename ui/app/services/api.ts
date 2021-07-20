@@ -19,6 +19,8 @@ import {
   ListStatusReportsRequest,
   ListStatusReportsResponse,
   GetLatestStatusReportRequest,
+  ListPushedArtifactsRequest,
+  PushedArtifact,
 } from 'waypoint-pb';
 import config from 'waypoint/config/environment';
 
@@ -82,6 +84,25 @@ export default class ApiService extends Service {
     let resp: ListBuildsResponse = await this.client.listBuilds(req, this.WithMeta());
 
     return resp.getBuildsList().map((d) => d.toObject());
+  }
+
+  async listPushedArtifacts(
+    wsRef: Ref.Workspace,
+    appRef: Ref.Application
+  ): Promise<PushedArtifact.AsObject[]> {
+    let request = new ListPushedArtifactsRequest();
+
+    request.setApplication(appRef);
+    request.setWorkspace(wsRef);
+
+    // TODO(jgwhite): request.setIncludeBuild
+    // TODO(jgwhite): request.setOrder
+    // TODO(jgwhite): request.setStatusList
+
+    let response = await this.client.listPushedArtifacts(request, this.WithMeta());
+    let result = response.getArtifactsList().map((pa) => pa.toObject());
+
+    return result;
   }
 
   async listReleases(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Release.AsObject[]> {

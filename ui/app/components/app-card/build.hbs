@@ -9,28 +9,25 @@
     >
       <b class="badge badge--version">v{{@model.sequence}}</b>
     </LinkTo>
-    <OperationStatusIndicator @status={{@model.status}} />
+    <OperationStatusIndicator @status={{or @model.pushedArtifact.status @model.status}} />
   </:meta-primary>
 
   <:meta-secondary>
-    <Pds::Icon
-      @type={{icon-for-component @model.component.name}}
-      class="icon app-card__component-icon"
-    />
-
-    <span>
-      {{#if (eq @model.status.state 2)}}
-        Built with
-        <b>{{component-name @model.component.name}}</b>
-        in
-        {{date-format-distance @model.status.startTime.seconds @model.status.completeTime.seconds }}
-      {{else if (eq @model.status.state 3)}}
-        Failed to build with
-        <b>{{component-name @model.component.name}}</b>
-      {{else}}
-        Building with
-        <b>{{component-name @model.component.name}}</b>
-      {{/if}}
-    </span>
+    {{#let (or @model.pushedArtifact @model) as |operation|}}
+      <Pds::Icon
+        @type={{icon-for-component operation.component.name}}
+        class="icon app-card__component-icon"
+      />
+      <span>
+        {{t
+          (concat
+            "build_status"
+            ".type-" operation.component.type
+            ".state-" operation.status.state
+          )
+        }}
+        <b>{{component-name operation.component.name}}</b>
+      </span>
+    {{/let}}
   </:meta-secondary>
 </AppCard>
