@@ -206,6 +206,31 @@ func TestUser(t *testing.T) {
 		}
 	})
 
+	t.Run("Delete default user fails", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		err := s.UserPut(serverptypes.TestUser(t, &pb.User{
+			Id:       DefaultUserId,
+			Username: "foo",
+		}))
+		require.NoError(err)
+
+		// Delete
+		{
+			err := s.UserDelete(&pb.Ref_User{
+				Ref: &pb.Ref_User_Id{
+					Id: &pb.Ref_UserId{Id: DefaultUserId},
+				},
+			})
+			require.Error(err)
+			require.Equal(codes.FailedPrecondition, status.Code(err))
+		}
+	})
+
 	t.Run("User lookup by OIDC", func(t *testing.T) {
 		require := require.New(t)
 
