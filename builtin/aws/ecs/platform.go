@@ -1529,7 +1529,7 @@ type Config struct {
 	// Subnets to place the service into. Defaults to the subnets in the default VPC.
 	Subnets []string `hcl:"subnets,optional"`
 
-	// Security Groups ARN to define existing security groups for ecs.
+	// Security Group ID to define existing security groups for ecs.
 	SecurityGroups []*string `hcl:"security_groups,optional"`
 
 	// How many tasks of the service to run. Default 1.
