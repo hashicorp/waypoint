@@ -92,18 +92,21 @@ func (p *Platform) DefaultReleaserFunc() interface{} {
 	}
 }
 
-func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
+func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredResourcesResp) *resource.Manager {
 	return resource.NewManager(
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(p.getClientset),
+		resource.WithDeclaredResourcesResp(dcr),
 		resource.WithResource(resource.NewResource(
 			resource.WithName("deployment"),
 			resource.WithState(&Resource_Deployment{}),
 			resource.WithCreate(p.resourceDeploymentCreate),
 			resource.WithDestroy(p.resourceDeploymentDestroy),
+
+			resource.WithPlatform("kubernetes"),
+			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
 	)
-	return nil
 }
 
 // getClientset is a value provider for our resource manager and provides
@@ -585,6 +588,7 @@ func (p *Platform) Deploy(
 	src *component.Source,
 	img *docker.Image,
 	deployConfig *component.DeploymentConfig,
+	dcr *component.DeclaredResourcesResp,
 	ui terminal.UI,
 ) (*Deployment, error) {
 	// Create our deployment and set an initial ID
@@ -601,7 +605,7 @@ func (p *Platform) Deploy(
 	defer sg.Wait()
 
 	// Create our resource manager and create
-	rm := p.resourceManager(log)
+	rm := p.resourceManager(log, dcr)
 	if err := rm.CreateAll(
 		ctx, log, sg, ui,
 		src, img, deployConfig, &result,
@@ -625,7 +629,7 @@ func (p *Platform) Destroy(
 	sg := ui.StepGroup()
 	defer sg.Wait()
 
-	rm := p.resourceManager(log)
+	rm := p.resourceManager(log, nil)
 
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.

@@ -341,7 +341,8 @@ func (op *deployOperation) Do(ctx context.Context, log hclog.Logger, app *App, m
 	declaredResources := make([]*pb.DeclaredResource, len(declaredResourcesResp.DeclaredResources))
 	for i, resource := range declaredResourcesResp.DeclaredResources {
 		declaredResources[i] = &pb.DeclaredResource{
-			Type:                resource.Type,
+			Id:                  resource.Id,
+			Name:                resource.Name,
 			Platform:            resource.Platform,
 			State:               resource.State,
 			StateJson:           resource.StateJson,

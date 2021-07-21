@@ -816,21 +816,24 @@ message Generation {
 
 // A platform resource that an operation (release/deployment) has created, depends on, or manages.
 message DeclaredResource {
+  // The id of the declared resource. Automatically generated
+  string id = 1;
+
   // platform-specific name of the resource type. i.e. instance, pod, auto-scaling group, etc
-  string type = 1;
+  string name = 2;
 
   // The platform on which the resource should exist, i.e. docker, gcp, k8s, etc.
-  string platform = 2;
+  string platform = 3;
 
   // Internal ResourceManager representation of the resource.
-  google.protobuf.Any state = 3;
+  google.protobuf.Any state = 4;
 
   // Any additional information a plugin wants to expose on this resource.
   // EX: Availability zones on a load balancer, concurrency limit on a lambda function, etc.
-  string state_json = 4;
+  string state_json = 5;
 
   // high level type of the resource, used for display purposes.
-  ResourceCategoryDisplayHint category_display_hint = 5;
+  ResourceCategoryDisplayHint category_display_hint = 6;
 
 }
 
