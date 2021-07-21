@@ -27566,10 +27566,7 @@ type WaypointClient interface {
 	// ListApplications because applications are a part of projects and you
 	// can use GetProject to get more information about the project.
 	ListProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProjectsResponse, error)
-	// UpsertApplication upserts an application with a project. If an application
-	// has been deployed or released, the status report operation will use this
-	// to enable its polling. Otherwise, if the application already exists and
-	// there are no changes to the polling for a status report, this does nothing.
+	// UpsertApplication upserts an application with a project.
 	UpsertApplication(ctx context.Context, in *UpsertApplicationRequest, opts ...grpc.CallOption) (*UpsertApplicationResponse, error)
 	// ListBuilds returns the builds.
 	ListBuilds(ctx context.Context, in *ListBuildsRequest, opts ...grpc.CallOption) (*ListBuildsResponse, error)
@@ -28662,10 +28659,7 @@ type WaypointServer interface {
 	// ListApplications because applications are a part of projects and you
 	// can use GetProject to get more information about the project.
 	ListProjects(context.Context, *emptypb.Empty) (*ListProjectsResponse, error)
-	// UpsertApplication upserts an application with a project. If an application
-	// has been deployed or released, the status report operation will use this
-	// to enable its polling. Otherwise, if the application already exists and
-	// there are no changes to the polling for a status report, this does nothing.
+	// UpsertApplication upserts an application with a project.
 	UpsertApplication(context.Context, *UpsertApplicationRequest) (*UpsertApplicationResponse, error)
 	// ListBuilds returns the builds.
 	ListBuilds(context.Context, *ListBuildsRequest) (*ListBuildsResponse, error)

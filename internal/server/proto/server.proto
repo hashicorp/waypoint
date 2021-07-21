@@ -84,10 +84,7 @@ service Waypoint {
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse);
 
-  // UpsertApplication upserts an application with a project. If an application
-  // has been deployed or released, the status report operation will use this
-  // to enable its polling. Otherwise, if the application already exists and
-  // there are no changes to the polling for a status report, this does nothing.
+  // UpsertApplication upserts an application with a project.
   rpc UpsertApplication(UpsertApplicationRequest) returns (UpsertApplicationResponse);
 
   // ListBuilds returns the builds.
