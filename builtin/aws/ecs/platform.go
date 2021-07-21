@@ -1636,9 +1636,9 @@ deploy {
 
 	doc.SetField(
 		"security_groups",
-		"security Groups ARN to define existing security groups for ecs",
+		"Security Group IDs to define existing security groups for ecs",
 		docs.Summary(
-			"this field allows define existing groups to be specified for the ecs",
+			"list of existing groups to be specified for the ecs",
 		),
 	)
 
