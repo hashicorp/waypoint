@@ -59,7 +59,8 @@ func (s *State) AppGet(ref *pb.Ref_Application) (*pb.Application, error) {
 }
 
 // AppPollPeek peeks at the next available project that will be polled against,
-// and returns the projects application as the result along with the poll time.
+// and returns the project as the result along with the poll time. The poll queuer
+// will queue a job against every defined application for the given project.
 // For more information on how ProjectPollPeek works, refer to the ProjectPollPeek
 // docs.
 func (s *State) ApplicationPollPeek(

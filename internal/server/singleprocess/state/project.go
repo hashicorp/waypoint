@@ -544,6 +544,10 @@ const (
 	// for setting up a default interval time
 	defaultProjectPollInterval = "30s"
 
+	// defaultAppPollInterval is used for polling a status report job for each
+	// application defined in a project. It is initially set to a long interval
+	// so that Waypoint doesn't overrun and rate limit user accounts like on AWS.
+	// Users must opt into shorter interval times.
 	defaultAppPollInterval = "5m"
 )
 

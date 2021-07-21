@@ -48,6 +48,7 @@ func (pp *projectPoll) GeneratePollJobs(
 	log hclog.Logger,
 	project interface{},
 ) ([]*pb.QueueJobRequest, error) {
+	log.Trace("Generating list of poll jobs to queue for project")
 	var jobList []*pb.QueueJobRequest
 
 	job, err := pp.PollJob(log, project)
