@@ -465,7 +465,7 @@ func TestApplicationPollHandler(t *testing.T) {
 	client := server.TestServer(t, impl)
 
 	// Create a project with an application
-	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+	respProj, err := client.UpsertProject(ctx, &pb.UpsertProjectRequest{
 		Project: serverptypes.TestProject(t, &pb.Project{
 			Name: "Example",
 			DataSource: &pb.Job_DataSource{
@@ -490,6 +490,7 @@ func TestApplicationPollHandler(t *testing.T) {
 		}),
 	})
 	require.NoError(err)
+	project := respProj.Project
 
 	// Grab next poll time
 	state := testServiceImpl(impl).state
@@ -518,10 +519,11 @@ func TestApplicationPollHandler(t *testing.T) {
 	require.NotNil(resp)
 
 	// Update the app to start polling
-	_, err = client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
-		Project: &pb.Ref_Project{Project: "Example"},
-		Name:    "apple-app",
-		Poll:    true,
+	project.StatusReportPoll = &pb.Project_AppPoll{
+		Enabled: true,
+	}
+	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+		Project: project,
 	})
 	require.NoError(err)
 
