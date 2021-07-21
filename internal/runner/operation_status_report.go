@@ -95,29 +95,21 @@ func (r *Runner) enableApplicationPoll(
 		return nil
 	}
 
-	for _, a := range project.Applications {
-		// Find the application in the current project
-		if a.Name == appRef.Application {
-			// check that polling isn't enabled for app then do, otherwise break and return
-			if a.StatusReportPoll != nil && a.StatusReportPoll.Enabled {
-				// Status report polling is already enabled
-				log.Trace("application polling for status reports already enabled")
-				break
-			}
-
-			log.Info("enabling application polling")
-			// get project client and upsert update to app
-			_, err := r.client.UpsertApplication(ctx, &pb.UpsertApplicationRequest{
-				Project: &pb.Ref_Project{Project: project.Name},
-				Name:    appRef.Application,
-				Poll:    true,
-			})
-
-			if err != nil {
-				return err
-			} else {
-				break // we found the app we were trying to update
-			}
+	if project.StatusReportPoll != nil && project.StatusReportPoll.Enabled {
+		// Status report polling is already enabled
+		log.Trace("application polling for status reports already enabled")
+		return nil
+	} else {
+		log.Info("enabling application polling")
+		// get project client and upsert update to app
+		project.StatusReportPoll = &pb.Project_AppPoll{
+			Enabled: true,
+		}
+		_, err := r.client.UpsertProject(ctx, &pb.UpsertProjectRequest{
+			Project: project,
+		})
+		if err != nil {
+			return err
 		}
 	}
 

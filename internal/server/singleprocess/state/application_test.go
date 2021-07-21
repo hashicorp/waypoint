@@ -227,14 +227,14 @@ func TestApplicationPollPeek(t *testing.T) {
 		ref := &pb.Ref_Project{Project: "apple"}
 		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppPoll{
+				Enabled:  true,
+				Interval: "10s",
+			},
 		})))
 		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
-			StatusReportPoll: &pb.Application_Poll{
-				Enabled:  true,
-				Interval: "30s",
-			},
 		}))
 		require.NoError(err)
 
@@ -243,16 +243,15 @@ func TestApplicationPollPeek(t *testing.T) {
 		refOrg := &pb.Ref_Project{Project: "orange"}
 		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: refOrg.Project,
-		})))
-		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
-			Project: ref,
-			Name:    ref.Project,
-			StatusReportPoll: &pb.Application_Poll{
+			StatusReportPoll: &pb.Project_AppPoll{
 				Enabled:  true,
-				Interval: "30s",
+				Interval: "10s",
 			},
-		}))
-		require.NoError(err)
+			Applications: []*pb.Application{{
+				Project: ref,
+				Name:    ref.Project,
+			}},
+		})))
 
 		// Get exact
 		{
@@ -282,14 +281,14 @@ func TestApplicationPollPeek(t *testing.T) {
 		ref := &pb.Ref_Project{Project: "apple"}
 		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppPoll{
+				Enabled:  true,
+				Interval: "30s",
+			},
 		})))
 		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
-			StatusReportPoll: &pb.Application_Poll{
-				Enabled:  true,
-				Interval: "30s",
-			},
 		}))
 		require.NoError(err)
 
@@ -316,14 +315,14 @@ func TestApplicationPollPeek(t *testing.T) {
 		ref := &pb.Ref_Project{Project: "apple"}
 		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppPoll{
+				Enabled:  true,
+				Interval: "5s",
+			},
 		})))
 		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
-			StatusReportPoll: &pb.Application_Poll{
-				Enabled:  true,
-				Interval: "5s",
-			},
 		}))
 		require.NoError(err)
 
@@ -331,14 +330,14 @@ func TestApplicationPollPeek(t *testing.T) {
 		refOrg := &pb.Ref_Project{Project: "orange"}
 		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: refOrg.Project,
+			StatusReportPoll: &pb.Project_AppPoll{
+				Enabled:  true,
+				Interval: "5m", // 5 MINUTES, longer than A
+			},
 		})))
 		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: refOrg,
 			Name:    refOrg.Project,
-			StatusReportPoll: &pb.Application_Poll{
-				Enabled:  true,
-				Interval: "5m", // 5 MINUTES, longer than A
-			},
 		}))
 		require.NoError(err)
 
@@ -404,13 +403,13 @@ func TestApplicationPollComplete(t *testing.T) {
 		ref := &pb.Ref_Project{Project: "apple"}
 		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppPoll{
+				Enabled: false,
+			},
 		})))
 		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
-			StatusReportPoll: &pb.Application_Poll{
-				Enabled: false,
-			},
 		}))
 		require.NoError(err)
 
@@ -423,9 +422,9 @@ func TestApplicationPollComplete(t *testing.T) {
 		require.NoError(s.ApplicationPollComplete(pA, time.Now()))
 
 		// Peek does nothing
-		v, _, err := s.ApplicationPollPeek(nil)
+		_, _, err = s.ApplicationPollPeek(nil)
 		require.NoError(err)
-		require.False(v.StatusReportPoll.Enabled)
+		//require.False(v.StatusReportPoll.Enabled)
 	})
 
 	t.Run("schedules the next poll time", func(t *testing.T) {
@@ -438,14 +437,14 @@ func TestApplicationPollComplete(t *testing.T) {
 		ref := &pb.Ref_Project{Project: "apple"}
 		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppPoll{
+				Enabled:  true,
+				Interval: "5s",
+			},
 		})))
 		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: ref,
 			Name:    ref.Project,
-			StatusReportPoll: &pb.Application_Poll{
-				Enabled:  true,
-				Interval: "5s",
-			},
 		}))
 		require.NoError(err)
 
@@ -453,14 +452,14 @@ func TestApplicationPollComplete(t *testing.T) {
 		refOrg := &pb.Ref_Project{Project: "orange"}
 		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
 			Name: refOrg.Project,
+			StatusReportPoll: &pb.Project_AppPoll{
+				Enabled:  true,
+				Interval: "5m", // 5 MINUTES, longer than A
+			},
 		})))
 		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
 			Project: refOrg,
 			Name:    refOrg.Project,
-			StatusReportPoll: &pb.Application_Poll{
-				Enabled:  true,
-				Interval: "5m", // 5 MINUTES, longer than A
-			},
 		}))
 		require.NoError(err)
 

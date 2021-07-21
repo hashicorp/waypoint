@@ -398,13 +398,13 @@ func TestProjectPollHandler(t *testing.T) {
 				Enabled:  true,
 				Interval: "15ms",
 			},
+			StatusReportPoll: &pb.Project_AppPoll{
+				Enabled: false,
+			},
 			Applications: []*pb.Application{
 				{
 					Project: &pb.Ref_Project{Project: "Example"},
 					Name:    "apple-app",
-					StatusReportPoll: &pb.Application_Poll{
-						Enabled: false,
-					},
 				},
 			},
 		}),
@@ -477,14 +477,14 @@ func TestApplicationPollHandler(t *testing.T) {
 				Enabled:  true,
 				Interval: "15ms",
 			},
+			StatusReportPoll: &pb.Project_AppPoll{
+				Enabled:  false,
+				Interval: "15ms",
+			},
 			Applications: []*pb.Application{
 				{
 					Project: &pb.Ref_Project{Project: "Example"},
 					Name:    "apple-app",
-					StatusReportPoll: &pb.Application_Poll{
-						Enabled:  false,
-						Interval: "15ms",
-					},
 				},
 			},
 		}),

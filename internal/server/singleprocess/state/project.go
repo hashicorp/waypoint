@@ -199,6 +199,7 @@ func (s *State) ProjectPollComplete(p *pb.Project, t time.Time) error {
 	record = record.Copy()
 	record.LastPoll = t
 	record.NextPoll = t.Add(record.PollInterval)
+
 	if err := memTxn.Insert(projectIndexTableName, record); err != nil {
 		return err
 	}
@@ -401,51 +402,51 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 	}
 
 	// Insert application poll
+
 	// Note that application polling currently is turned on after the first
 	// status report is generated. Otherwise it's off by default to save
 	// polling cycles when someone just creates a new project
-	for _, a := range value.Applications {
-		// This entire if block sets up polling tracking for the application. In the
-		// state store we just maintain timestamps of when to poll next. It is
-		// up to downstream users to call ApplicationNextPoll repeatedly to iterate
-		// over the next projects to poll and do something.
-		if app := a.StatusReportPoll; app != nil && app.Enabled {
-			if app.Interval == "" {
-				app.Interval = defaultAppPollInterval
-			}
-			interval, err := time.ParseDuration(app.Interval)
-			if err != nil {
-				return err
-			}
 
-			// We're polling. By default we have no last polling time and
-			// we set the next polling time to now cause we want to poll ASAP.
-			// If we're updating an app without changing the poll settings,
-			// the next block will ensure we have the next poll time retained.
-			record.AppPoll = true
-			record.AppNextPoll = time.Now()
-			record.AppPollInterval = interval
+	// This entire if block sets up polling tracking for the application. In the
+	// state store we just maintain timestamps of when to poll next. It is
+	// up to downstream users to call ApplicationNextPoll repeatedly to iterate
+	// over the next projects to poll and do something.
+	if app := value.StatusReportPoll; app != nil && app.Enabled {
+		if app.Interval == "" {
+			app.Interval = defaultAppPollInterval
+		}
+		interval, err := time.ParseDuration(app.Interval)
+		if err != nil {
+			return err
+		}
 
-			// If there is a previous value with a last poll time, then we
-			// update the next poll time to use our new interval.
-			raw, err := txn.First(
-				projectIndexTableName,
-				projectIndexIdIndexName,
-				record.Id,
-			)
-			if err != nil {
-				return err
-			}
-			if raw != nil {
-				recordOld := raw.(*projectIndexRecord)
+		// We're polling. By default we have no last polling time and
+		// we set the next polling time to now cause we want to poll ASAP.
+		// If we're updating an app without changing the poll settings,
+		// the next block will ensure we have the next poll time retained.
+		record.AppPoll = true
+		record.AppNextPoll = time.Now()
+		record.AppPollInterval = interval
 
-				// If we have a last poll time, then set the next poll time.
-				// This also ensures that if we're updating an app w/o changing
-				// poll settings, that the previous settings are retained.
-				if !recordOld.AppLastPoll.IsZero() {
-					record.AppLastPoll = recordOld.AppLastPoll
-					record.AppNextPoll = record.AppLastPoll.Add(interval)
-				}
+		// If there is a previous value with a last poll time, then we
+		// update the next poll time to use our new interval.
+		raw, err := txn.First(
+			projectIndexTableName,
+			projectIndexIdIndexName,
+			record.Id,
+		)
+		if err != nil {
+			return err
+		}
+		if raw != nil {
+			recordOld := raw.(*projectIndexRecord)
+
+			// If we have a last poll time, then set the next poll time.
+			// This also ensures that if we're updating an app w/o changing
+			// poll settings, that the previous settings are retained.
+			if !recordOld.AppLastPoll.IsZero() {
+				record.AppLastPoll = recordOld.AppLastPoll
+				record.AppNextPoll = record.AppLastPoll.Add(interval)
 			}
 		}
 	}
@@ -563,10 +564,8 @@ type projectIndexRecord struct {
 	LastPoll time.Time
 	NextPoll time.Time
 
-	// TODO(briancain): Currently app polling is only working with 1 app in a
-	// project.
 	// Application Polling is used for generating a status report on the current
-	// health of the application in a project.
+	// health of all applications in a project.
 
 	// AppPoll is true if this projects applications has polling enabled.
 	AppPoll bool

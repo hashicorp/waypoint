@@ -204,6 +204,7 @@ func (s *State) appDefaultForRef(ref *pb.Ref_Application) *pb.Application {
 	}
 }
 
+// TODO: for some reason this returns the wrong AppNextPoll time
 func (s *State) appPollPeek(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
@@ -255,8 +256,7 @@ func (s *State) appPollPeek(
 		return err
 	})
 
-	// TODO(briancain): what about projects that define multiple apps?
-	// For now stick to 1 app to get it working
+	// TODO: return all apps
 	return result.Applications[0], rec.AppNextPoll, err
 }
 
