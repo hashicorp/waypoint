@@ -15,7 +15,7 @@ import * as job from './services/job';
 import * as log from './services/log';
 import * as pushedArtifact from './services/pushed-artifact';
 
-export default function (this: Server) {
+export default function (this: Server): void {
   this.namespace = 'hashicorp.waypoint.Waypoint';
   this.urlPrefix = '/grpc';
   this.timing = 0;
