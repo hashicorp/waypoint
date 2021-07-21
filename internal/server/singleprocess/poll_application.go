@@ -49,6 +49,31 @@ func (a *applicationPoll) Peek(
 	return app, pollTime, nil
 }
 
+func (a *applicationPoll) GeneratePollJobs(
+	log hclog.Logger,
+	p interface{},
+) ([]*pb.QueueJobRequest, error) {
+	//project, ok := p.(*pb.Project)
+	//if !ok || project == nil {
+	//	log.Error("could not generate poll job for projects applications, incorrect type passed in")
+	//	return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Application GeneratePollJobs")
+	//}
+	//log = log.Named(project.Name)
+	var jobList []*pb.QueueJobRequest
+
+	// for each app in project
+	// generate a PollJob and append to list
+
+	job, err := a.PollJob(log, p)
+	if err != nil {
+		return nil, err
+	}
+
+	jobList = append(jobList, job)
+
+	return jobList, nil
+}
+
 // PollJob will generate a job to queue a project on.
 // When determining what to generate a report on, either a Deployment or Release,
 // this job assumes that the _Release_ was the last operation taken on the application.
@@ -152,6 +177,8 @@ func (a *applicationPoll) PollJob(
 				},
 			},
 		},
+
+		// TODO define timeout interval based on projects app poll interval
 	}
 
 	return jobRequest, nil

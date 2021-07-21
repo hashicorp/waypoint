@@ -42,6 +42,24 @@ func (pp *projectPoll) Peek(
 	return p, pollTime, nil
 }
 
+// GeneratePollJobs for project polling will just return a single project
+// poll job.
+func (pp *projectPoll) GeneratePollJobs(
+	log hclog.Logger,
+	project interface{},
+) ([]*pb.QueueJobRequest, error) {
+	var jobList []*pb.QueueJobRequest
+
+	job, err := pp.PollJob(log, project)
+	if err != nil {
+		return nil, err
+	}
+
+	jobList = append(jobList, job)
+
+	return jobList, nil
+}
+
 // PollJob will generate a job to queue a project on
 func (pp *projectPoll) PollJob(
 	log hclog.Logger,

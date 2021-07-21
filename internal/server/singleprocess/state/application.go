@@ -204,7 +204,6 @@ func (s *State) appDefaultForRef(ref *pb.Ref_Application) *pb.Application {
 	}
 }
 
-// TODO: for some reason this returns the wrong AppNextPoll time
 func (s *State) appPollPeek(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
