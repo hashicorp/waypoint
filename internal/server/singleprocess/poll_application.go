@@ -33,43 +33,42 @@ func (a *applicationPoll) Peek(
 	log hclog.Logger,
 	ws memdb.WatchSet,
 ) (interface{}, time.Time, error) {
-	app, pollTime, err := a.state.ApplicationPollPeek(ws)
+	project, pollTime, err := a.state.ApplicationPollPeek(ws)
 	if err != nil {
 		log.Warn("error peeking for next application to poll", "err", err)
 		return nil, time.Time{}, err // continue loop
 	}
 
-	if app != nil {
-		log = log.With("application", app.Name)
-		log.Trace("returning peek for app")
+	if project != nil {
+		log = log.With("project", project.Name)
+		log.Trace("returning peek for apps")
 	} else {
 		log.Trace("no application returned from peek")
 	}
 
-	return app, pollTime, nil
+	return project, pollTime, nil
 }
 
 func (a *applicationPoll) GeneratePollJobs(
 	log hclog.Logger,
 	p interface{},
 ) ([]*pb.QueueJobRequest, error) {
-	//project, ok := p.(*pb.Project)
-	//if !ok || project == nil {
-	//	log.Error("could not generate poll job for projects applications, incorrect type passed in")
-	//	return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Application GeneratePollJobs")
-	//}
-	//log = log.Named(project.Name)
+	project, ok := p.(*pb.Project)
+	if !ok || project == nil {
+		log.Error("could not generate poll job for projects applications, incorrect type passed in")
+		return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Application GeneratePollJobs")
+	}
+	log = log.Named(project.Name)
 	var jobList []*pb.QueueJobRequest
 
-	// for each app in project
-	// generate a PollJob and append to list
+	for _, app := range project.Applications {
+		job, err := a.PollJob(log, app)
+		if err != nil {
+			return nil, err
+		}
 
-	job, err := a.PollJob(log, p)
-	if err != nil {
-		return nil, err
+		jobList = append(jobList, job)
 	}
-
-	jobList = append(jobList, job)
 
 	return jobList, nil
 }
@@ -188,18 +187,18 @@ func (a *applicationPoll) PollJob(
 // fails to do so, it will return false with the err to continue the loop
 func (a *applicationPoll) Complete(
 	log hclog.Logger,
-	appl interface{},
+	p interface{},
 ) error {
-	app, ok := appl.(*pb.Application)
-	if !ok || app == nil {
+	project, ok := p.(*pb.Project)
+	if !ok || project == nil {
 		log.Error("could not mark application poll as complete, incorrect type passed in")
 		return status.Error(codes.FailedPrecondition, "incorrect type passed into Application Complete")
 	}
-	log = log.Named(app.Name)
+	log = log.Named(project.Name)
 
 	// Mark this as complete so the next poll gets rescheduled.
 	log.Trace("marking app poll as complete")
-	if err := a.state.ApplicationPollComplete(app, time.Now()); err != nil {
+	if err := a.state.ApplicationPollComplete(project, time.Now()); err != nil {
 		return err
 	}
 	return nil

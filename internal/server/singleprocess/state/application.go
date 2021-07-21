@@ -64,11 +64,11 @@ func (s *State) AppGet(ref *pb.Ref_Application) (*pb.Application, error) {
 // docs.
 func (s *State) ApplicationPollPeek(
 	ws memdb.WatchSet,
-) (*pb.Application, time.Time, error) {
+) (*pb.Project, time.Time, error) {
 	memTxn := s.inmem.Txn(false)
 	defer memTxn.Abort()
 
-	var result *pb.Application
+	var result *pb.Project
 	var pollTime time.Time
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
 		var err error
@@ -82,14 +82,14 @@ func (s *State) ApplicationPollPeek(
 // AppPollComplete sets the next poll time for a given project given the app
 // reference along with the time interval "t".
 func (s *State) ApplicationPollComplete(
-	app *pb.Application,
+	project *pb.Project,
 	t time.Time,
 ) error {
 	memTxn := s.inmem.Txn(true)
 	defer memTxn.Abort()
 
 	err := s.db.View(func(dbTxn *bolt.Tx) error {
-		err := s.appPollComplete(dbTxn, memTxn, app, t)
+		err := s.appPollComplete(dbTxn, memTxn, project, t)
 		return err
 	})
 
@@ -208,7 +208,7 @@ func (s *State) appPollPeek(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
 	ws memdb.WatchSet,
-) (*pb.Application, time.Time, error) {
+) (*pb.Project, time.Time, error) {
 	// LowerBound doesn't support watches so we have to do a Get first
 	// to get a valid watch channel on these fields.
 	iter, err := memTxn.Get(
@@ -255,19 +255,18 @@ func (s *State) appPollPeek(
 		return err
 	})
 
-	// TODO: return all apps
-	return result.Applications[0], rec.AppNextPoll, err
+	return result, rec.AppNextPoll, err
 }
 
 func (s *State) appPollComplete(
 	dbTxn *bolt.Tx,
 	memTxn *memdb.Txn,
-	app *pb.Application,
+	project *pb.Project,
 	t time.Time,
 ) error {
 	// Get the project
 	p, err := s.projectGet(dbTxn, memTxn, &pb.Ref_Project{
-		Project: app.Project.Project,
+		Project: project.Name,
 	})
 	if status.Code(err) == codes.NotFound {
 		return nil

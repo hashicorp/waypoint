@@ -341,11 +341,11 @@ func TestApplicationPollPeek(t *testing.T) {
 		}))
 		require.NoError(err)
 
-		// Get applications
-		pA, err := s.AppGet(&pb.Ref_Application{Application: "apple", Project: "apple"})
+		// Get projects
+		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "apple"})
 		require.NoError(err)
 		require.NotNil(pA)
-		pB, err := s.AppGet(&pb.Ref_Application{Application: "orange", Project: "orange"})
+		pB, err := s.ProjectGet(&pb.Ref_Project{Project: "orange"})
 		require.NoError(err)
 		require.NotNil(pB)
 
@@ -389,7 +389,7 @@ func TestApplicationPollComplete(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
-		err := s.ApplicationPollComplete(&pb.Application{Name: "NOPE", Project: &pb.Ref_Project{}}, time.Now())
+		err := s.ApplicationPollComplete(&pb.Project{Name: "NOPE"}, time.Now())
 		require.NoError(err)
 	})
 
@@ -414,7 +414,7 @@ func TestApplicationPollComplete(t *testing.T) {
 		require.NoError(err)
 
 		// Get
-		pA, err := s.AppGet(&pb.Ref_Application{Application: "apple", Project: "apple"})
+		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "apple"})
 		require.NoError(err)
 		require.NotNil(pA)
 
@@ -463,11 +463,11 @@ func TestApplicationPollComplete(t *testing.T) {
 		}))
 		require.NoError(err)
 
-		// Get applications
-		pA, err := s.AppGet(&pb.Ref_Application{Application: "apple", Project: "apple"})
+		// Get projects
+		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "apple"})
 		require.NoError(err)
 		require.NotNil(pA)
-		pB, err := s.AppGet(&pb.Ref_Application{Application: "orange", Project: "orange"})
+		pB, err := s.ProjectGet(&pb.Ref_Project{Project: "orange"})
 		require.NoError(err)
 		require.NotNil(pB)
 
