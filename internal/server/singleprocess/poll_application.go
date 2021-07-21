@@ -23,11 +23,13 @@ type applicationPoll struct {
 	state *state.State
 
 	// the workspace to check for polling applications and running their status on
+	// Currently, the application poll handler is only expected to work for default
+	// workspaces due to the project poller only working on default workspaces.
 	workspace string
 }
 
 // Peek returns the latest project to poll on
-// If there is an error in the ProjectPollPeek, it will return nil
+// If there is an error in the ApplicationPollPeek, it will return nil
 // to allow the outer caller loop to continue and try again
 func (a *applicationPoll) Peek(
 	log hclog.Logger,
@@ -49,14 +51,17 @@ func (a *applicationPoll) Peek(
 	return project, pollTime, nil
 }
 
+// GeneratePollJobs will generate a QueuedJobRequest to generate a status report
+// for each application defined in the given project.
 func (a *applicationPoll) GeneratePollJobs(
 	log hclog.Logger,
 	p interface{},
 ) ([]*pb.QueueJobRequest, error) {
 	project, ok := p.(*pb.Project)
 	if !ok || project == nil {
-		log.Error("could not generate poll job for projects applications, incorrect type passed in")
-		return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Application GeneratePollJobs")
+		log.Error("could not generate poll jobs for projects applications, incorrect type passed in")
+		return nil, status.Error(codes.FailedPrecondition,
+			"incorrect type passed into Application GeneratePollJobs")
 	}
 	log = log.Named(project.Name)
 	var jobList []*pb.QueueJobRequest
