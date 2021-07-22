@@ -207,26 +207,6 @@
     "path": "token-new"
   },
   {
-    "title": "login",
-    "path": "login"
-  },
-  {
-    "title": "auth-method list",
-    "path": "auth-method-list"
-  },
-  {
-    "title": "auth-method inspect",
-    "path": "auth-method-inspect"
-  },
-  {
-    "title": "auth-method set oidc",
-    "path": "auth-method-set-oidc"
-  },
-  {
-    "title": "auth-method delete",
-    "path": "auth-method-delete"
-  },
-  {
     "title": "version",
     "path": "version"
   }
