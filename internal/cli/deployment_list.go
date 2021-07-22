@@ -421,7 +421,7 @@ func (c *DeploymentListCommand) Flags() *flag.Sets {
 		})
 
 		initIdFormat(f, &c.flagId)
-		initFilterFlags(set, &c.filterFlags, fillterOptionAll)
+		initFilterFlags(set, &c.filterFlags, filterOptionAll)
 	})
 }
 
