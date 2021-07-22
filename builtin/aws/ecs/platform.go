@@ -1529,8 +1529,8 @@ type Config struct {
 	// Subnets to place the service into. Defaults to the subnets in the default VPC.
 	Subnets []string `hcl:"subnets,optional"`
 
-	// Security Group ID of existing security groups to use for ECS.
-	SecurityGroupIDs []*string `hcl:"security_groups,optional"`
+	// Security Group IDs of existing security groups to use for ECS.
+	SecurityGroupIDs []*string `hcl:"security_group_ids,optional"`
 
 	// How many tasks of the service to run. Default 1.
 	Count int `hcl:"count,optional"`
@@ -1635,7 +1635,7 @@ deploy {
 	)
 
 	doc.SetField(
-		"security_groups",
+		"security_group_ids",
 		"Security Group IDs of existing security groups to use for ECS",
 		docs.Summary(
 			"list of existing group IDs to use for ECS",
