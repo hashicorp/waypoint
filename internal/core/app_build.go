@@ -47,6 +47,10 @@ func (a *App) Build(ctx context.Context, optFuncs ...BuildOption) (
 		return build, nil, nil
 	}
 
+	if opts.DataSourceRef != nil {
+		build.DataSourceRef = opts.DataSourceRef
+	}
+
 	// We're also pushing to a registry, so invoke that.
 	artifact, err := a.PushBuild(ctx, PushWithBuild(build))
 	return build, artifact, err
@@ -65,12 +69,14 @@ func BuildWithPush(v bool) BuildOption {
 }
 
 type buildOptions struct {
-	Push bool
+	Push          bool
+	DataSourceRef *pb.Job_DataSource_Ref
 }
 
 func defaultBuildOptions() *buildOptions {
 	return &buildOptions{
-		Push: true,
+		Push:          true,
+		DataSourceRef: nil,
 	}
 }
 

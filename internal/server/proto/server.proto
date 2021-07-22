@@ -1454,6 +1454,9 @@ message Job {
 
     // The artifact that was pushed. This will be nil if DisablePush was set.
     PushedArtifact push = 2;
+
+    // The DataSource that triggered the build. This will be nil if triggered manually.
+    Job.DataSource.Ref data_source_ref = 3;
   }
 
   message PushOp {

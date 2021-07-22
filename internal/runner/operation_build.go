@@ -12,6 +12,7 @@ func (r *Runner) executeBuildOp(
 	job *pb.Job,
 	project *core.Project,
 ) (*pb.Job_Result, error) {
+	log := r.logger
 	app, err := project.App(job.Application.Application)
 	if err != nil {
 		return nil, err
@@ -28,11 +29,17 @@ func (r *Runner) executeBuildOp(
 	if err != nil {
 		return nil, err
 	}
+	log.Info("DataSourceRef")
+	log.Info("%+v\n", job.DataSourceRef)
+	build.DataSourceRef = job.DataSourceRef
 
 	return &pb.Job_Result{
 		Build: &pb.Job_BuildResult{
 			Build: build,
 			Push:  push,
+			DataSourceRef: &pb.Job_DataSource_Ref{
+				Ref: build.DataSourceRef.Ref,
+			},
 		},
 	}, nil
 }
