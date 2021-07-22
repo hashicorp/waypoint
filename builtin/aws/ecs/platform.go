@@ -1205,13 +1205,13 @@ func (p *Platform) Launch(
 
 	L.Debug("creating service", "arn", *taskOut.TaskDefinition.TaskDefinitionArn)
 
-	if p.config.SecurityGroups == nil {
+	if p.config.SecurityGroupIDs == nil {
 		sgecsport, err := createSG(ctx, s, sess, fmt.Sprintf("%s-inbound-internal", app.App), vpcId, int(p.config.ServicePort))
 		if err != nil {
 			return nil, err
 		}
 
-		p.config.SecurityGroups = append(p.config.SecurityGroups, sgecsport)
+		p.config.SecurityGroupIDs = append(p.config.SecurityGroupIDs, sgecsport)
 	}
 
 	count := int64(p.config.Count)
@@ -1221,7 +1221,7 @@ func (p *Platform) Launch(
 
 	netCfg := &ecs.AwsVpcConfiguration{
 		Subnets:        subnets,
-		SecurityGroups: p.config.SecurityGroups,
+		SecurityGroups: p.config.SecurityGroupIDs,
 	}
 
 	if !p.config.EC2Cluster {
@@ -1529,8 +1529,8 @@ type Config struct {
 	// Subnets to place the service into. Defaults to the subnets in the default VPC.
 	Subnets []string `hcl:"subnets,optional"`
 
-	// Security Group ID to define existing security groups for ecs.
-	SecurityGroups []*string `hcl:"security_groups,optional"`
+	// Security Group ID of existing security groups to use for ECS.
+	SecurityGroupIDs []*string `hcl:"security_groups,optional"`
 
 	// How many tasks of the service to run. Default 1.
 	Count int `hcl:"count,optional"`
@@ -1636,9 +1636,9 @@ deploy {
 
 	doc.SetField(
 		"security_groups",
-		"Security Group IDs to define existing security groups for ecs",
+		"Security Group IDs of existing security groups to use for ECS",
 		docs.Summary(
-			"list of existing groups to be specified for the ecs",
+			"list of existing group IDs to use for ECS",
 		),
 	)
 
