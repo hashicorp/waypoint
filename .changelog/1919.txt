@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/aws/ecs: Add ability to specify security group IDs
+```
