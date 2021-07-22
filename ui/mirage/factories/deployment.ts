@@ -63,4 +63,8 @@ export default Factory.extend({
   'days-old-success': trait({
     status: association('random', 'success', 'days-old'),
   }),
+
+  '5-minutes-old-success': trait({
+    status: association('success', '5-minutes-old'),
+  }),
 });

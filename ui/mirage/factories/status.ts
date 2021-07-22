@@ -32,6 +32,10 @@ export default Factory.extend({
     completeTime: () => new Date(new Date().valueOf() - faker.random.number({ min: 1, max: 15 }) * 60 * 1000),
   }),
 
+  '5-minutes-old': trait({
+    completeTime: () => new Date(new Date().valueOf() - 5 * 60 * 1000),
+  }),
+
   'hours-old': trait({
     completeTime: () =>
       new Date(new Date().valueOf() - faker.random.number({ min: 1, max: 5 }) * 60 * 60 * 1000),
