@@ -1,3 +1,5 @@
+{{page-title (concat "Build" " v" @model.sequence)}}
+
 {{#let (or @model.pushedArtifact @model) as |operation|}}
   <PageHeader @iconName="build">
     <div class="title">
