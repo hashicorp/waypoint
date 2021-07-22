@@ -76,7 +76,7 @@ type buildOptions struct {
 func defaultBuildOptions() *buildOptions {
 	return &buildOptions{
 		Push:          true,
-		DataSourceRef: nil,
+		DataSourceRef: &pb.Job_DataSource_Ref{},
 	}
 }
 
@@ -105,9 +105,10 @@ type buildOperation struct {
 
 func (op *buildOperation) Init(app *App) (proto.Message, error) {
 	return &pb.Build{
-		Application: app.ref,
-		Workspace:   app.workspace,
-		Component:   op.Component.Info,
+		Application:   app.ref,
+		Workspace:     app.workspace,
+		Component:     op.Component.Info,
+		DataSourceRef: &pb.Job_DataSource_Ref{},
 	}, nil
 }
 
