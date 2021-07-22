@@ -17,7 +17,7 @@
     "@hashicorp/react-hashi-stack-menu": "^2.0.6",
     "@hashicorp/react-head": "^3.1.1",
     "@hashicorp/react-image": "^4.0.2",
-    "@hashicorp/react-product-downloader": "^8.0.0",
+    "@hashicorp/react-product-downloads-page": "^2.3.1",
     "@hashicorp/react-section-header": "^5.0.3",
     "@hashicorp/react-stepped-feature-list": "^4.0.2",
     "@hashicorp/react-subnav": "^8.4.0",
