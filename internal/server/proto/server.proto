@@ -323,6 +323,24 @@ service Waypoint {
 
   // UpsertStatusReport updates or inserts a statusreport.
   rpc UpsertStatusReport(UpsertStatusReportRequest) returns (UpsertStatusReportResponse);
+
+  //----------------------------------------------------------------------
+  // UI endpoints. The endpoints below are tailored for use by Waypoint’s UIs.
+  // They provide pre-fetching or related data and other optimizations that
+  // benefit the UIs.
+  //----------------------------------------------------------------------
+
+  // List deployments for a given application.
+  rpc UI_ListDeployments(UI.ListDeploymentsRequest) returns (UI.ListDeploymentsResponse);
+
+  // Get deployment by given reference.
+  rpc UI_GetDeployment(UI.GetDeploymentRequest) returns (UI.DeploymentBundle);
+
+  // List releases for a given application.
+  rpc UI_ListReleases(UI.ListReleasesRequest) returns (UI.ListReleasesResponse);
+
+  // Get release by given reference.
+  rpc UI_GetRelease(UI.GetReleaseRequest) returns (UI.ReleaseBundle);
 }
 
 /********************************************************************
@@ -3609,4 +3627,110 @@ message WaypointHclFmtRequest {
 
 message WaypointHclFmtResponse {
   bytes waypoint_hcl = 1;
+}
+
+message UI {
+
+  message ListDeploymentsRequest {
+    // Application that the deployments belong to
+    Ref.Application application = 1;
+
+    // Workspace that the deployments belong to.
+    // If undefined, deployments from all workspaces will be listed.
+    Ref.Workspace workspace = 2;
+
+    // Pagination settings.
+    PaginationRequest pagination = 3;
+  }
+
+  message ListDeploymentsResponse {
+    // The list of deployments with related messages prefetched.
+    repeated UI.DeploymentBundle deployments = 1;
+
+    // Pagination info.
+    PaginationResponse pagination = 2;
+  }
+
+  message GetDeploymentRequest {
+    Ref.Operation ref = 1;
+  }
+
+  // A deployment packaged alongside prefetched related messages.
+  message DeploymentBundle {
+    // The deployment in question.
+    Deployment deployment = 1;
+
+    // The most recent status report generated for this deployment.
+    StatusReport latest_status_report = 2;
+  }
+
+  message ListReleasesRequest {
+    // Application that the releases belong to
+    Ref.Application application = 1;
+
+    // Workspace that the releases belong to.
+    // If undefined, releases from all workspaces will be listed.
+    Ref.Workspace workspace = 2;
+
+    // Pagination settings.
+    PaginationRequest pagination = 3;
+  }
+
+  message ListReleasesResponse {
+    // The list of releases with related messages prefetched.
+    repeated UI.ReleaseBundle releases = 1;
+
+    // Pagination info.
+    PaginationResponse pagination = 2;
+  }
+
+  message GetReleaseRequest {
+    Ref.Operation ref = 1;
+  }
+
+  // A release packaged alongside prefetched related messages.
+  message ReleaseBundle {
+    // The release in question.
+    Release release = 1;
+
+    // The most recent status report generated for this release.
+    StatusReport latest_status_report = 2;
+  }
+
+  // PaginationRequest are the parameters for a paginated list request.
+  message PaginationRequest {
+    // The max number of results per page that should be returned. If the number
+    // of available results is larger than `page_size`, a `next_page_token` is
+    // returned which can be used to get the next page of results in subsequent
+    // requests. A value of zero will cause `page_size` to be defaulted.
+    uint32 page_size = 1;
+
+    // Specifies a page token to use to retrieve the next page. Set this to the
+    // `next_page_token` returned by previous list requests to get the next page of
+    // results. If set, `previous_page_token` must not be set.
+    string next_page_token = 2;
+
+    // Specifies a page token to use to retrieve the previous page. Set this to
+    // the `previous_page_token` returned by previous list requests to get the
+    // previous page of results. If set, `next_page_token` must not be set.
+    string previous_page_token = 3;
+  }
+
+  // PaginationResponse is the response holding the page tokens for a paginated
+  // list response.
+  message PaginationResponse {
+    // This token allows you to get the next page of results for list requests.
+    // If the number of results is larger than `page_size`, use the
+    // `next_page_token` as a value for the query parameter `next_page_token` in
+    // the next request. The value will become empty when there are no more pages.
+    string next_page_token = 1;
+
+    // This token allows you to get the previous page of results for list
+    // requests. If the number of results is larger than `page_size`, use the
+    // `previous_page_token` as a value for the query parameter
+    // `previous_page_token` in the next request. The value will become empty when
+    // there are no more pages.
+    string previous_page_token = 2;
+  }
+
 }
