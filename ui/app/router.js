@@ -53,6 +53,7 @@ Router.map(function () {
         this.route('settings', function () {
           this.route('repository', { path: '/' });
           this.route('input-variables');
+          this.route('config-variables');
         });
       });
       this.route('new');
