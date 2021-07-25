@@ -278,7 +278,16 @@
       },
       {
         "title": "Authentication",
-        "path": "server/auth"
+        "routes": [
+          {
+            "title": "Overview",
+            "path": "server/auth"
+          },
+          {
+            "title": "OIDC",
+            "path": "server/auth/oidc"
+          }
+        ]
       },
       {
         "title": "Running a Server",
