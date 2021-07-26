@@ -62,9 +62,10 @@ func (s *LocalSource) Changes(
 	ui terminal.UI,
 	source *pb.Job_DataSource,
 	current *pb.Job_DataSource_Ref,
-) (*pb.Job_DataSource_Ref, error) {
+	tempDir string,
+) (*pb.Job_DataSource_Ref, bool, error) {
 	// Never any changes.
-	return nil, nil
+	return nil, false, nil
 }
 
 var _ Sourcer = (*LocalSource)(nil)

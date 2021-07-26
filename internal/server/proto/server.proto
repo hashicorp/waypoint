@@ -1305,6 +1305,12 @@ message Job {
     // and may not contain ".."
     string path = 3;
 
+    // This setting only takes effect if both "path" is true AND the
+    // Git polling is enabled. Under those conditions, if this option
+    // is true, then only changes in Git commits within the "path" will
+    // trigger a deploy. Changes outside the "path" will be ignored.
+    bool ignore_changes_outside_path = 10;
+
     // auth is the auth mechanism to use for this data source. This is optional.
     // If this isn't set, then the data source will attempt to clone
     // without setting any explicit auth. This usually picks up machine
