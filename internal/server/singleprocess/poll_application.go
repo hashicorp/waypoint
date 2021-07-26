@@ -82,7 +82,7 @@ func (a *applicationPoll) GeneratePollJobs(
 // When determining what to generate a report on, either a Deployment or Release,
 // this job assumes that the _Release_ was the last operation taken on the application.
 // If there's a release, this job will queue a status report genreation on that.
-// Otherwise if there's just a deployment, it return a job to generate a
+// Otherwise if there's just a deployment, it returns a job to generate a
 // status report on the deployment.
 func (a *applicationPoll) PollJob(
 	log hclog.Logger,

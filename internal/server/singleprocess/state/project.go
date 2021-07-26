@@ -540,7 +540,7 @@ const (
 
 	projectWaypointHclMaxSize = 5 * 1024 // 5 MB
 
-	// defaultProjectPollInterval is used the project poll handler
+	// defaultProjectPollInterval is used by the project poll handler
 	// for setting up a default interval time
 	defaultProjectPollInterval = "30s"
 
