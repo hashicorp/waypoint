@@ -11,19 +11,19 @@ const INTERVAL = 15000;
 export default class PollModelService extends Service {
   route!: Route;
 
-  setup(route: Route) {
+  setup(route: Route): void {
     this.route = route;
 
     // Start polling
     this.start();
   }
 
-  willDestroy() {
+  willDestroy(): void {
     this.stop();
     super.willDestroy();
   }
 
-  start() {
+  start(): void {
     if (taskFor(this.poll).isRunning) {
       return;
     }
@@ -31,7 +31,7 @@ export default class PollModelService extends Service {
     taskFor(this.poll).perform();
   }
 
-  stop() {
+  stop(): void {
     taskFor(this.poll).cancelAll();
   }
 
@@ -39,7 +39,8 @@ export default class PollModelService extends Service {
     restartable: true,
     maxConcurrency: 1,
   })
-  async poll() {
+  async poll(): Promise<void> {
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       if (Ember.testing) {
         return;
