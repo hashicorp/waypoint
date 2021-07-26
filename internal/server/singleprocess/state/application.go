@@ -241,7 +241,7 @@ func (s *State) appPollPeek(
 	}
 
 	rec := raw.(*projectIndexRecord)
-	if rec.AppNextPoll.IsZero() {
+	if rec.AppStatusNextPoll.IsZero() {
 		// This happens if this applications poller hasn't been switched on
 		return nil, time.Time{}, nil
 	}
@@ -256,7 +256,7 @@ func (s *State) appPollPeek(
 		return err
 	})
 
-	return result, rec.AppNextPoll, err
+	return result, rec.AppStatusNextPoll, err
 }
 
 func (s *State) appPollComplete(
@@ -289,7 +289,7 @@ func (s *State) appPollComplete(
 	}
 
 	record := raw.(*projectIndexRecord)
-	if !record.AppPoll {
+	if !record.AppStatusPoll {
 		// If this project doesn't have polling enabled, then do nothing.
 		// This could happen if a project had polling when Peek was called,
 		// then between Peek and Complete, polling was disabled.
@@ -297,8 +297,8 @@ func (s *State) appPollComplete(
 	}
 
 	record = record.Copy()
-	record.AppLastPoll = t
-	record.AppNextPoll = t.Add(record.AppPollInterval)
+	record.AppStatusLastPoll = t
+	record.AppStatusNextPoll = t.Add(record.AppStatusPollInterval)
 	if err := memTxn.Insert(projectIndexTableName, record); err != nil {
 		return err
 	}

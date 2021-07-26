@@ -102,7 +102,7 @@ func (r *Runner) enableApplicationPoll(
 	} else {
 		log.Info("enabling application polling")
 		// get project client and upsert update to app
-		project.StatusReportPoll = &pb.Project_AppPoll{
+		project.StatusReportPoll = &pb.Project_AppStatusPoll{
 			Enabled: true,
 		}
 		_, err := r.client.UpsertProject(ctx, &pb.UpsertProjectRequest{

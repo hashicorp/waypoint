@@ -485,7 +485,7 @@ message Project {
   //
   // Each polling event is tracked as a separate job. You can query the
   // poll operations and their success/failure by using the ListJobs API.
-  AppPoll status_report_poll = 10;
+  AppStatusPoll status_report_poll = 10;
 
   enum Format {
     HCL = 0; // We assume HCL by default
@@ -502,7 +502,7 @@ message Project {
     string interval = 2;
   }
 
-  message AppPoll {
+  message AppStatusPoll {
     // enabled must be set to true to enable application polling for the project
     bool enabled = 1;
 

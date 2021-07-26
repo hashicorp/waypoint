@@ -411,7 +411,7 @@ func TestProjectPollHandler(t *testing.T) {
 				Enabled:  true,
 				Interval: "15ms",
 			},
-			StatusReportPoll: &pb.Project_AppPoll{
+			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled: false,
 			},
 			Applications: []*pb.Application{
@@ -490,7 +490,7 @@ func TestApplicationPollHandler(t *testing.T) {
 				Enabled:  true,
 				Interval: "15ms",
 			},
-			StatusReportPoll: &pb.Project_AppPoll{
+			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  false,
 				Interval: "15ms",
 			},
@@ -532,7 +532,7 @@ func TestApplicationPollHandler(t *testing.T) {
 	require.NotNil(resp)
 
 	// Update the app to start polling
-	project.StatusReportPoll = &pb.Project_AppPoll{
+	project.StatusReportPoll = &pb.Project_AppStatusPoll{
 		Enabled: true,
 	}
 	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
@@ -605,7 +605,7 @@ func TestApplicationPollHandler_turnoff(t *testing.T) {
 				Enabled:  true,
 				Interval: "15ms",
 			},
-			StatusReportPoll: &pb.Project_AppPoll{
+			StatusReportPoll: &pb.Project_AppStatusPoll{
 				Enabled:  false,
 				Interval: "15ms",
 			},
@@ -647,7 +647,7 @@ func TestApplicationPollHandler_turnoff(t *testing.T) {
 	require.NotNil(resp)
 
 	// Update the app to start polling
-	project.StatusReportPoll = &pb.Project_AppPoll{
+	project.StatusReportPoll = &pb.Project_AppStatusPoll{
 		Enabled: true,
 	}
 	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{
@@ -687,7 +687,7 @@ func TestApplicationPollHandler_turnoff(t *testing.T) {
 	}, 5*time.Second, 50*time.Millisecond)
 
 	// Update the app to stop polling
-	project.StatusReportPoll = &pb.Project_AppPoll{
+	project.StatusReportPoll = &pb.Project_AppStatusPoll{
 		Enabled: false,
 	}
 	_, err = client.UpsertProject(ctx, &pb.UpsertProjectRequest{

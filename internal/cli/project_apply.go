@@ -23,20 +23,20 @@ import (
 type ProjectApplyCommand struct {
 	*baseCommand
 
-	flagDataSource      string
-	flagGitURL          string
-	flagGitRef          string
-	flagGitAuthType     string
-	flagGitUsername     string
-	flagGitPassword     string
-	flagGitKeyPath      string
-	flagGitKeyPassword  string
-	flagFromWaypointHcl string
-	flagWaypointHcl     string
-	flagPoll            bool
-	flagPollInterval    string
-	flagAppPoll         bool
-	flagAppPollInterval string
+	flagDataSource            string
+	flagGitURL                string
+	flagGitRef                string
+	flagGitAuthType           string
+	flagGitUsername           string
+	flagGitPassword           string
+	flagGitKeyPath            string
+	flagGitKeyPassword        string
+	flagFromWaypointHcl       string
+	flagWaypointHcl           string
+	flagPoll                  bool
+	flagPollInterval          string
+	flagAppStatusPoll         bool
+	flagAppStatusPollInterval string
 }
 
 func (c *ProjectApplyCommand) Run(args []string) int {
@@ -173,15 +173,15 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 			proj.DataSourcePoll.Interval = c.flagPollInterval
 		}
 
-		if c.flagAppPoll {
+		if c.flagAppStatusPoll {
 			if proj.StatusReportPoll == nil {
-				proj.StatusReportPoll = &pb.Project_AppPoll{}
+				proj.StatusReportPoll = &pb.Project_AppStatusPoll{}
 			}
 
 			// Note we don't explicitly enable the poll, just the poll message
 			// and the interval. App polling will automatically become enabled
 			// once an app has been deployed or released.
-			proj.StatusReportPoll.Interval = c.flagAppPollInterval
+			proj.StatusReportPoll.Interval = c.flagAppStatusPollInterval
 		}
 
 		// If the project existing datasource is Git, then we're overriding.
@@ -469,8 +469,8 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 		})
 
 		f.BoolVar(&flag.BoolVar{
-			Name:    "app-poll",
-			Target:  &c.flagAppPoll,
+			Name:    "app-status-poll",
+			Target:  &c.flagAppStatusPoll,
 			Default: false,
 			Usage: "Enable polling to continuously generate status reports for apps. " +
 				"This is only valid if a Git data source is supplied.",
@@ -478,7 +478,7 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 
 		f.StringVar(&flag.StringVar{
 			Name:    "app-poll-interval",
-			Target:  &c.flagAppPollInterval,
+			Target:  &c.flagAppStatusPollInterval,
 			Default: "5m",
 			Usage:   "Interval between polling to generate status reports if polling is enabled.",
 		})
