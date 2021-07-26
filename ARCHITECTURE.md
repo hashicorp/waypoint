@@ -8,6 +8,31 @@ how something might work since its easy for that to get out of sync with the
 codebase. The recommended usage for this doc is to use it to hone in on a
 specific part of Waypoint, then study the code there for specifics.
 
+## Table of contents
+
+<!-- Generated from: https://luciopaiva.com/markdown-toc/ -->
+
+- [Bird's Eye View](#birds-eye-view)
+  - [Important Architectural Properties](#important-architectural-properties)
+- [Code Path of a Waypoint Operation (such as `waypoint up`)](#code-path-of-a-waypoint-operation-such-as-waypoint-up)
+- [Code Map](#code-map)
+  - [`internal/appconfig`](#internalappconfig)
+  - [`internal/auth`](#internalauth)
+  - [`internal/ceb`](#internalceb)
+  - [`internal/cli`](#internalcli)
+  - [`internal/clicontext`](#internalclicontext)
+  - [`internal/client`](#internalclient)
+  - [`internal/config`](#internalconfig)
+  - [`internal/core`](#internalcore)
+  - [`internal/datasource`](#internaldatasource)
+  - [`internal/pkg/*`](#internalpkg)
+  - [`internal/plugin`](#internalplugin)
+  - [`internal/runner`](#internalrunner)
+  - [`internal/server`](#internalserver)
+    - [`internal/server/ptypes`](#internalserverptypes)
+    - [`internal/server/singleprocess`](#internalserversingleprocess)
+    - [`internal/server/singleprocess/state`](#internalserversingleprocessstate)
+
 ## Bird's Eye View
 
 <p align="center"><img src=".github/images/birds-eye.png" width="70%"></p>
