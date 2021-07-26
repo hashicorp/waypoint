@@ -109,8 +109,8 @@ func (a *applicationPoll) buildPollJob(
 	latestRelease, err := a.state.ReleaseLatest(appRef, &pb.Ref_Workspace{Workspace: a.workspace})
 	// Some platforms don't release, so we shouldn't error here if we at least got a deployment
 	if err != nil && latestDeployment == nil {
-		log.Error("no deployment or release found, cannot generate a poll job")
-		return nil, err
+		log.Warn("no deployment or release found, cannot generate a poll job")
+		return nil, nil
 	}
 
 	statusReportJob := &pb.Job_StatusReport{
