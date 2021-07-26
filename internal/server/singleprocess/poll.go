@@ -185,7 +185,7 @@ func (s *service) runPollQueuer(
 		if failedQueueJob {
 			log.Warn("A job failed to be queued. Any further downstream jobs were " +
 				"not queued. This should not happen repeatedly. If you see this in your " +
-				"log frequently, report a bug.")
+				"log, report a bug.")
 			continue
 		}
 
