@@ -14,6 +14,12 @@ specific part of Waypoint, then study the code there for specifics.
 
 - [Bird's Eye View](#birds-eye-view)
   - [Important Architectural Properties](#important-architectural-properties)
+- [Feature Overview](#feature-overview)
+  - [Generic API Call](#generic-api-call)
+  - [Job System](#job-system)
+  - [Application Configuration](#application-configuration)
+  - [Application Logs](#application-logs)
+  - [Authentication](#authentication)
 - [Code Path of a Waypoint Operation (such as `waypoint up`)](#code-path-of-a-waypoint-operation-such-as-waypoint-up)
 - [Code Map](#code-map)
   - [`internal/appconfig`](#internalappconfig)
@@ -98,6 +104,40 @@ other data storage and access must go through APIs to the server.
 This property is very nice because the client, runner, and entrypoints
 are all stateless. They can be safely restarted and they will reconstruct
 their state. This makes operating a Waypoint cluster simpler.
+
+## Feature Overview
+
+This section looks at various specific features in Waypoint to bring
+you down from the 10,000 foot view down to maybe a 1,000 foot view. 
+The goal is to move from the Bird's Eye View section previously to
+something a bit more concrete, but still high enough level that we're
+not getting so detailed as to walk through the code (which would surely
+make this document too long and too out of sync as we iterate on
+the project).
+
+The feature overviews may reference specific Go packages
+that are involved. See the [Code Map](#code-map) section for details
+on this.
+
+### Generic API Call 
+
+TODO
+
+### Job System
+
+TODO
+
+### Application Configuration
+
+TODO
+
+### Application Logs
+
+TODO
+
+### Authentication
+
+TODO
 
 ## Code Path of a Waypoint Operation (such as `waypoint up`)
 
