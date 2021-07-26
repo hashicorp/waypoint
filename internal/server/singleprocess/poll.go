@@ -163,7 +163,8 @@ func (s *service) runPollQueuer(
 		totalRequests := len(queueJobRequests)
 		log.Trace("queueing jobs for poller", "job_total", totalRequests)
 
-		// If one job fails to queue, we break out of the entire queue loop
+		// Note: We queue all poll jobs transactionally and return any
+		// errors that occured
 		_, err = s.queueJobMulti(ctx, queueJobRequests)
 		if err != nil {
 			log.Warn("error queueing a poll job", "err", err)

@@ -178,9 +178,7 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 				proj.StatusReportPoll = &pb.Project_AppStatusPoll{}
 			}
 
-			// Note we don't explicitly enable the poll, just the poll message
-			// and the interval. App polling will automatically become enabled
-			// once an app has been deployed or released.
+			proj.StatusReportPoll.Enabled = c.flagAppStatusPoll
 			proj.StatusReportPoll.Interval = c.flagAppStatusPollInterval
 		}
 

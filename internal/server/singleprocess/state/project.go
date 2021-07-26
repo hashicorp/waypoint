@@ -403,9 +403,17 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 
 	// Insert application poll
 
-	// Note that application polling currently is turned on after the first
-	// status report is generated. Otherwise it's off by default to save
-	// polling cycles when someone just creates a new project
+	// Note that application status polling currently only turned on by default
+	// if project polling is enabled. This is because application status polling
+	// requires a data source, which currently is only possible through git polling.
+	app := value.StatusReportPoll
+	if app == nil && record.Poll {
+		// Auto-turn on app polling. Can be disabled if project settings explicitly
+		// disable app status polling
+		value.StatusReportPoll = &pb.Project_AppStatusPoll{
+			Enabled: true,
+		}
+	}
 
 	// This entire if block sets up polling tracking for the application. In the
 	// state store we just maintain timestamps of when to poll next. It is
