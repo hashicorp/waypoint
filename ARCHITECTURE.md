@@ -120,4 +120,173 @@ Waypoint repository and documents what their purpose is and some
 invariants and design decisions around these packages that should 
 be held true.
 
-TODO
+The package ordering is alphabetical. Some packages are omitted
+if they're trivial or otherwise unimportant.
+
+**Note:** All Go packages should have package documentation, so you
+can use `godoc` to view more information about a package.
+
+### `internal/appconfig`
+
+Package appconfig provides the logic for watching and reading application
+configuration values. Application configuration values may be static
+or they may be dynamically loaded from external systems such as Vault,
+Kubernetes, AWS SSM, etc. Application configuration can be key/values
+or might be configuration files.
+
+This package runs for both the entrypoint for deployments AND for
+runners (and maybe more in the future). Because the package is generic,
+it allows us to expose our "config" functionality easily to multiple
+types of users.
+
+**Architecture Invariant:** This package is independent of the mechanism
+by which configuration is loaded from the server. This allows config vars
+to come from different APIs easily, and also makes unit testing easy.
+
+**Architecture Invariant:** This package is independent of how configuration
+is physically exposed; it does not set env vars or physically write files.
+It exposes only structures that the caller can use to write env vars or files.
+This makes it easy to use in different contexts (runners, entrypoints, locally).
+
+### `internal/auth`
+
+Package auth contains helpers for both the server and client-side for
+autenticating with the Waypoint server. 
+
+### `internal/ceb`
+
+Package ceb contains the core logic for the Waypoint Entrypoint. It is called
+"ceb" because during the earliest Waypoint design, we called the Entrypoint
+the "custom entrypoint binary." This package is the primary entrypoint for 
+the entrypoint.
+
+**Architecture Invariant:** This package is not intended to be a reusable
+package by other components; it is only meant to encapsulate the entrypoint
+for the entrypoint. If there is reusable logic desired in this package, it should
+be extracted into another package. For example, this is how `internal/appconfig`
+came to be: we originally only did app-only config, then we extracted it to
+support runner config.
+
+### `internal/cli`
+
+Package cli contains the main entrypoint and logic for the CLI. 
+
+**Important note:** The CLI is our least unit-tested package. We have experience
+testing CLIs but we did a poor job of testing this one. Because of this, any
+testable logic should go into a separate package or extracted into a standalone
+unexported function within this package to be unit tested. For example, we
+extracted `internal/clicontext` because (1) we can fully unit test it and 
+(2) it is theoretically useful to reuse although we don't today.
+
+### `internal/clicontext`
+
+Package clicontext implements the logic around CLI "contexts". A context
+encapsulates the current configuration that applies to every CLI command
+such as server address, server authentication, etc. Contexts are persisted
+on the user machine.
+
+### `internal/client`
+
+Package client implements a high-level library for interacting with
+the Waypoint server. Rather than at a direct API level, the interface
+for this package is at an operation level. This is used by the CLI, but
+in theory can be used by other frontends.
+
+**Architecture Invariant:** The client package cannot expect a `waypoint.hcl`
+file or any project sources, because the client can also operate purely
+on remote projects in the server. 
+
+### `internal/config`
+
+Package config implements the `waypoint.hcl` configuration structure
+and parser. This also implements the parser for Waypoint input variables
+(such as `wpvars` files).
+
+**The runner _should_ be the only component that parses a `waypoint.hcl`
+file.** Because we regularly introduce new features into the `waypoint.hcl`
+file, we don't want to force users to upgrade every component to use
+the latest version of Waypoint. Therefore, we should attempt to only ever
+parse `waypoint.hcl` files in the runner.
+
+### `internal/core`
+
+Package core implements the core logic of Waypoint that actually executes
+things such as builds, deploys, etc. This core package parses `waypoint.hcl`
+files, starts and invokes plugins, and sends results to the server. This is
+the package used by runners to actually invoke the logic.
+
+The `core` package APIs are somewhat similar to the `client` package. The
+main difference is the `client` package executes operations such as build
+by queueing a job with the server and waiting for it to execute. The core
+package actually executes the operations (usually via a runner).
+
+### `internal/datasource`
+
+Package datasource implements the logic around downloading project 
+data from external VCS sources. 
+
+### `internal/pkg/*`
+
+The packages in `internal/pkg` are reusable packages that could in theory
+be extracted into separate repositories and be useful to projects
+other than Waypoint. For example, `internal/pkg/signalcontext` is a
+simple package for canceling a Go `context.Context` in response to an OS
+signal. This has nothing to do with Waypoint and you could imagine other
+projects may want to use this. While the package isn't usable externally
+in the `internal/` directory, we could in theory extract it or other Go users
+could just copy it out.
+
+### `internal/plugin`
+
+The plugin package is responsible for working with plugins: finding,
+loading, and invoking plugins. 
+
+**Architecture Invariant:** This package should be independent of
+parsing Waypoint configuration, using the Waypoint server API, etc.
+(unless it directly relates to plugins). This is similar to `appconfig`
+which depends on downstream users to determine _how_ config is
+loaded AND used.
+
+### `internal/runner`
+
+Package runner implements the main logic for runners and is the primary
+entrypoint for runners (`waypoint runner` uses this package). This package
+is mainly concerned with job management around runners; it uses `internal/core`
+to execute Waypoint-specific business logic.
+
+### `internal/server`
+
+Package server implements the Waypoint server and associated helper packages.
+This contains the main API implementation and persistent storage implementation.
+This package is so important and so large that its useful to dive into the 
+sub-packages:
+
+#### `internal/server/ptypes`
+
+Package ptypes contains helper functions for working with the various
+protobuf types that the server API uses. For example, this contains helpers
+for mock data creation, data validation, data conversion, etc.
+
+**Architecture Invariant:** This package should be independent of how the
+server is implemented (i.e. as a single process gRPC service, as a 
+SQL-backed data store, whatever). This package is generally useful to
+anyone trying to implement a Waypoint server.
+
+#### `internal/server/singleprocess`
+
+This is the main current implementation of the Waypoint server. This is
+a Waypoint server designed to be single process only; this server implementation
+is never intended to become multi-process (i.e. horizonally scalable). 
+
+#### `internal/server/singleprocess/state`
+
+Package state in the singleprocess folder contains the logic for state
+management based on MemDB and BoltDB. This is the primary mechanism for
+state in the single-process server implementation.
+
+Due to the style of this package, it has extremely high test coverage. 
+Any changes to this package should contain full coverage.
+
+**Architecture Invariant:** This package should be implemented using
+relatively simple CRUD-like operations on data. More complex logic
+is expected to be in the server implementation.
