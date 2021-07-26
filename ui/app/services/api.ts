@@ -2,7 +2,6 @@ import Service from '@ember/service';
 import { WaypointClient } from 'waypoint-client';
 import SessionService from 'waypoint/services/session';
 import { inject as service } from '@ember/service';
-import { assign } from '@ember/polyfills';
 import {
   ListDeploymentsRequest,
   Ref,
@@ -22,6 +21,7 @@ import {
   ListPushedArtifactsRequest,
   PushedArtifact,
 } from 'waypoint-pb';
+import { Metadata } from 'grpc-web';
 import config from 'waypoint/config/environment';
 
 const protocolVersions = {
@@ -41,14 +41,14 @@ export default class ApiService extends Service {
   client = new WaypointClient(`${config.apiAddress}/grpc`, null, null);
 
   // Merges metadata with required metadata for the request
-  WithMeta(meta?: any) {
+  WithMeta(meta?: Metadata): Metadata {
     // In the future we may want additional metadata per-request so this
     // helper merges that per-request metadata supplied at the client request
     // with our authentication metadata
-    return assign(this.meta, meta!).valueOf();
+    return { ...this.meta, ...meta };
   }
 
-  get meta() {
+  get meta(): Metadata {
     if (this.session.authConfigured) {
       return { ...protocolVersions, authorization: this.session.token };
     } else {
@@ -137,7 +137,7 @@ export default class ApiService extends Service {
   async getLatestStatusReport(
     _wsRef: Ref.Workspace,
     appRef: Ref.Application
-  ): Promise<StatusReport | undefined> {
+  ): Promise<StatusReport.AsObject | undefined> {
     let req = new GetLatestStatusReportRequest();
     req.setApplication(appRef);
     // We have to try/catch to avoid failing the hash request because the api errors if no statusReport is available
