@@ -477,7 +477,7 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 		})
 
 		f.StringVar(&flag.StringVar{
-			Name:    "app-poll-interval",
+			Name:    "app-status-poll-interval",
 			Target:  &c.flagAppStatusPollInterval,
 			Default: "5m",
 			Usage:   "Interval between polling to generate status reports if polling is enabled.",
