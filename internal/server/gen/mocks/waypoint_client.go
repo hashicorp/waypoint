@@ -1788,6 +1788,126 @@ func (_m *WaypointClient) StartExecStream(ctx context.Context, opts ...grpc.Call
 	return r0, r1
 }
 
+// UI_GetDeployment provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UI_GetDeployment(ctx context.Context, in *gen.UI_GetDeploymentRequest, opts ...grpc.CallOption) (*gen.UI_DeploymentBundle, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UI_DeploymentBundle
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_GetDeploymentRequest, ...grpc.CallOption) *gen.UI_DeploymentBundle); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_DeploymentBundle)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_GetDeploymentRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UI_GetRelease provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UI_GetRelease(ctx context.Context, in *gen.UI_GetReleaseRequest, opts ...grpc.CallOption) (*gen.UI_ReleaseBundle, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UI_ReleaseBundle
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_GetReleaseRequest, ...grpc.CallOption) *gen.UI_ReleaseBundle); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_ReleaseBundle)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_GetReleaseRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UI_ListDeployments provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UI_ListDeployments(ctx context.Context, in *gen.UI_ListDeploymentsRequest, opts ...grpc.CallOption) (*gen.UI_ListDeploymentsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UI_ListDeploymentsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_ListDeploymentsRequest, ...grpc.CallOption) *gen.UI_ListDeploymentsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_ListDeploymentsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListDeploymentsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UI_ListReleases provides a mock function with given fields: ctx, in, opts
+func (_m *WaypointClient) UI_ListReleases(ctx context.Context, in *gen.UI_ListReleasesRequest, opts ...grpc.CallOption) (*gen.UI_ListReleasesResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *gen.UI_ListReleasesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *gen.UI_ListReleasesRequest, ...grpc.CallOption) *gen.UI_ListReleasesResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*gen.UI_ListReleasesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *gen.UI_ListReleasesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // UpdateUser provides a mock function with given fields: ctx, in, opts
 func (_m *WaypointClient) UpdateUser(ctx context.Context, in *gen.UpdateUserRequest, opts ...grpc.CallOption) (*gen.UpdateUserResponse, error) {
 	_va := make([]interface{}, len(opts))
