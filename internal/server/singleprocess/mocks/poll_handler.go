@@ -32,29 +32,6 @@ func (_m *PollHandler) Complete(_a0 hclog.Logger, _a1 interface{}) error {
 	return r0
 }
 
-// GeneratePollJobs provides a mock function with given fields: _a0, _a1
-func (_m *PollHandler) GeneratePollJobs(_a0 hclog.Logger, _a1 interface{}) ([]*gen.QueueJobRequest, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 []*gen.QueueJobRequest
-	if rf, ok := ret.Get(0).(func(hclog.Logger, interface{}) []*gen.QueueJobRequest); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*gen.QueueJobRequest)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(hclog.Logger, interface{}) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // Peek provides a mock function with given fields: _a0, _a1
 func (_m *PollHandler) Peek(_a0 hclog.Logger, _a1 memdb.WatchSet) (interface{}, time.Time, error) {
 	ret := _m.Called(_a0, _a1)
@@ -86,15 +63,15 @@ func (_m *PollHandler) Peek(_a0 hclog.Logger, _a1 memdb.WatchSet) (interface{}, 
 }
 
 // PollJob provides a mock function with given fields: _a0, _a1
-func (_m *PollHandler) PollJob(_a0 hclog.Logger, _a1 interface{}) (*gen.QueueJobRequest, error) {
+func (_m *PollHandler) PollJob(_a0 hclog.Logger, _a1 interface{}) ([]*gen.QueueJobRequest, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 *gen.QueueJobRequest
-	if rf, ok := ret.Get(0).(func(hclog.Logger, interface{}) *gen.QueueJobRequest); ok {
+	var r0 []*gen.QueueJobRequest
+	if rf, ok := ret.Get(0).(func(hclog.Logger, interface{}) []*gen.QueueJobRequest); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*gen.QueueJobRequest)
+			r0 = ret.Get(0).([]*gen.QueueJobRequest)
 		}
 	}
 

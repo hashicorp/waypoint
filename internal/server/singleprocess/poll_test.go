@@ -246,11 +246,6 @@ func TestPollQueuer_queue(t *testing.T) {
 			Run(func(args mock.Arguments) {
 				atomic.AddUint32(&peekCounter, 1)
 			})
-		mockH.On("GeneratePollJobs", mock.Anything, 42).
-			Return(nil, errors.New("oh no")).
-			Run(func(args mock.Arguments) {
-				atomic.AddUint32(&pollCounter, 1)
-			})
 		mockH.On("PollJob", mock.Anything, 42).
 			Return(nil, errors.New("oh no")).
 			Run(func(args mock.Arguments) {
@@ -295,14 +290,10 @@ func TestPollQueuer_queue(t *testing.T) {
 			Run(func(args mock.Arguments) {
 				atomic.AddUint32(&peekCounter, 1)
 			})
-		mockH.On("GeneratePollJobs", mock.Anything, 42).
+		mockH.On("PollJob", mock.Anything, 42).
 			Return(nil, errors.New("oh no")).
 			Run(func(args mock.Arguments) {
 				atomic.AddUint32(&pollCounter, 1)
-			})
-		mockH.On("PollJob", mock.Anything, 42).
-			Return(&pb.QueueJobRequest{}, nil).
-			Run(func(args mock.Arguments) {
 			})
 		mockH.On("Complete", mock.Anything, 42).
 			Return(nil, nil).

@@ -53,7 +53,7 @@ func (a *applicationPoll) Peek(
 
 // GeneratePollJobs will generate a QueuedJobRequest to generate a status report
 // for each application defined in the given project.
-func (a *applicationPoll) GeneratePollJobs(
+func (a *applicationPoll) PollJob(
 	log hclog.Logger,
 	p interface{},
 ) ([]*pb.QueueJobRequest, error) {
@@ -67,7 +67,7 @@ func (a *applicationPoll) GeneratePollJobs(
 	var jobList []*pb.QueueJobRequest
 
 	for _, app := range project.Applications {
-		job, err := a.PollJob(log, app)
+		job, err := a.buildPollJob(log, app)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +84,7 @@ func (a *applicationPoll) GeneratePollJobs(
 // If there's a release, this job will queue a status report genreation on that.
 // Otherwise if there's just a deployment, it returns a job to generate a
 // status report on the deployment.
-func (a *applicationPoll) PollJob(
+func (a *applicationPoll) buildPollJob(
 	log hclog.Logger,
 	appl interface{},
 ) (*pb.QueueJobRequest, error) {

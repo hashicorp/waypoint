@@ -42,35 +42,18 @@ func (pp *projectPoll) Peek(
 	return p, pollTime, nil
 }
 
-// GeneratePollJobs for project polling will just return a single project
-// poll job.
-func (pp *projectPoll) GeneratePollJobs(
-	log hclog.Logger,
-	project interface{},
-) ([]*pb.QueueJobRequest, error) {
-	log.Trace("Generating list of poll jobs to queue for project")
-	var jobList []*pb.QueueJobRequest
-
-	job, err := pp.PollJob(log, project)
-	if err != nil {
-		return nil, err
-	}
-
-	jobList = append(jobList, job)
-
-	return jobList, nil
-}
-
 // PollJob will generate a job to queue a project on
 func (pp *projectPoll) PollJob(
 	log hclog.Logger,
 	project interface{},
-) (*pb.QueueJobRequest, error) {
+) ([]*pb.QueueJobRequest, error) {
 	p, ok := project.(*pb.Project)
 	if !ok || p == nil {
 		log.Error("could not generate poll job for project, incorrect type passed in")
 		return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Project PollJob")
 	}
+
+	var jobList []*pb.QueueJobRequest
 
 	jobRequest := &pb.QueueJobRequest{
 		Job: &pb.Job{
@@ -104,7 +87,9 @@ func (pp *projectPoll) PollJob(
 		},
 	}
 
-	return jobRequest, nil
+	jobList = append(jobList, jobRequest)
+
+	return jobList, nil
 }
 
 // Complete will mark the job that was queued as complete, if it

@@ -31,13 +31,7 @@ type pollHandler interface {
 	// PollJob generates a QueueJobRequest that is used to poll on.
 	// It is expected to be given a proto message obtained from Peek which
 	// is used to define the job returned.
-	PollJob(hclog.Logger, interface{}) (*pb.QueueJobRequest, error)
-
-	// GeneratePollJobs will build a list of QueueJobRequests through PollJob to
-	// schedule for execution. If a pollItem has multiple elements that need to
-	// be polled for, this is required for scheduling a job for each poll item.
-	// If there is only one poll item, the list should only contain one queue job request.
-	GeneratePollJobs(hclog.Logger, interface{}) ([]*pb.QueueJobRequest, error)
+	PollJob(hclog.Logger, interface{}) ([]*pb.QueueJobRequest, error)
 
 	// Complete will mark the job that was queued as complete using the specific
 	// state implementation.
@@ -157,7 +151,7 @@ func (s *service) runPollQueuer(
 
 		// Outcome (3)
 		log.Trace("queueing poll jobs")
-		queueJobRequests, err := handler.GeneratePollJobs(log, pollItem)
+		queueJobRequests, err := handler.PollJob(log, pollItem)
 		if err != nil {
 			log.Warn("error building a poll job request. This should not happen "+
 				"repeatedly. If you see this in your log repeatedly, report a bug.",
@@ -170,22 +164,10 @@ func (s *service) runPollQueuer(
 		log.Trace("queueing jobs for poller", "job_total", totalRequests)
 
 		// If one job fails to queue, we break out of the entire queue loop
-		failedQueueJob := false
-		for _, queueJobRequest := range queueJobRequests {
-			resp, err := s.QueueJob(ctx, queueJobRequest)
-			if err != nil {
-				failedQueueJob = true
-				log.Warn("error queueing a poll job", "err", err)
-				time.Sleep(1 * time.Second)
-				break
-			}
-			log.Debug("queued polling job", "job_id", resp.JobId)
-		}
-
-		if failedQueueJob {
-			log.Warn("A job failed to be queued. Any further downstream jobs were " +
-				"not queued. This should not happen repeatedly. If you see this in your " +
-				"log, report a bug.")
+		_, err = s.queueJobMulti(ctx, queueJobRequests)
+		if err != nil {
+			log.Warn("error queueing a poll job", "err", err)
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
