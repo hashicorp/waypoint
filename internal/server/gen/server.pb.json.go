@@ -208,7 +208,7 @@ func (msg *Project_Poll) UnmarshalJSON(b []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler
-func (msg *Project_AppPoll) MarshalJSON() ([]byte, error) {
+func (msg *Project_AppStatusPoll) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	err := (&jsonpb.Marshaler{
 		EnumsAsInts:  false,
@@ -219,7 +219,7 @@ func (msg *Project_AppPoll) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler
-func (msg *Project_AppPoll) UnmarshalJSON(b []byte) error {
+func (msg *Project_AppStatusPoll) UnmarshalJSON(b []byte) error {
 	return (&jsonpb.Unmarshaler{
 		AllowUnknownFields: false,
 	}).Unmarshal(bytes.NewReader(b), msg)
