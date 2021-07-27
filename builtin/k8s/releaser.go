@@ -18,6 +18,7 @@ import (
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 )
@@ -50,38 +51,44 @@ func (r *Releaser) StatusFunc() interface{} {
 	return r.Status
 }
 
-// Release creates a Kubernetes service configured for the deployment
-func (r *Releaser) Release(
+func (r *Releaser) resourceManager(log hclog.Logger) *resource.Manager {
+	return resource.NewManager(
+		resource.WithLogger(log.Named("resource_manager")),
+		resource.WithValueProvider(r.getClientset),
+		resource.WithResource(resource.NewResource(
+			resource.WithName("service"),
+			resource.WithState(&Resource_Service{}),
+			resource.WithCreate(r.resourceServiceCreate),
+			resource.WithDestroy(r.resourceServiceDestroy),
+		)),
+	)
+}
+
+func (r *Releaser) resourceServiceCreate( // ctx context.Context,
 	ctx context.Context,
 	log hclog.Logger,
-	src *component.Source,
-	ui terminal.UI,
 	target *Deployment,
-) (*Release, error) {
-	var result Release
-	result.ServiceName = src.App
 
-	sg := ui.StepGroup()
+	result *Release,
+	state *Resource_Service,
+	csinfo *clientsetInfo,
+	sg terminal.StepGroup,
+) error {
 	step := sg.Add("Initializing Kubernetes client...")
 	defer func() { step.Abort() }() // Defer in func in case more steps are added to this func in the future
-
-	// Get our clientset
-	clientset, ns, config, err := clientset(r.config.KubeconfigPath, r.config.Context)
-	if err != nil {
-		return nil, err
-	}
-
-	// Override namespace if set
+	// Prepare our namespace and override if set.
+	ns := csinfo.Namespace
 	if r.config.Namespace != "" {
 		ns = r.config.Namespace
 	}
 
-	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
+	step.Update("Kubernetes client connected to %s with namespace %s", csinfo.Config.Host, ns)
 	step.Done()
 
 	step = sg.Add("Preparing service...")
 
-	serviceclient := clientset.CoreV1().Services(ns)
+	clientSet := csinfo.Clientset
+	serviceclient := clientSet.CoreV1().Services(ns)
 
 	// Determine if we have a deployment that we manage already
 	create := false
@@ -92,8 +99,12 @@ func (r *Releaser) Release(
 		err = nil
 	}
 	if err != nil {
-		return nil, err
+		return err
 	}
+
+	// set the service name in state, at this point we've either created it or
+	// it already existed
+	state.Name = result.ServiceName
 
 	// Update the spec
 	service.Spec.Selector = map[string]string{
@@ -102,8 +113,8 @@ func (r *Releaser) Release(
 	}
 
 	if (r.config.Port != 0 || r.config.NodePort != 0) && r.config.Ports != nil {
-		return nil, fmt.Errorf("Cannot define both 'ports' and 'port' or 'node_port'." +
-			" Use 'ports' for configuring multiple service ports.")
+		return fmt.Errorf("cannot define both 'ports' and 'port' or 'node_port'." +
+			" Use 'ports' for configuring multiple service ports")
 	} else if r.config.Ports == nil && (r.config.Port != 0 || r.config.NodePort != 0) {
 		r.config.Ports = make([]map[string]string, 1)
 		r.config.Ports[0] = map[string]string{
@@ -182,7 +193,7 @@ func (r *Releaser) Release(
 		service, err = serviceclient.Update(ctx, service, metav1.UpdateOptions{})
 	}
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	step.Done()
@@ -201,8 +212,9 @@ func (r *Releaser) Release(
 			return service.Spec.ClusterIP != "", nil
 		}
 	})
+
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	step.Update("Service is ready!")
@@ -219,10 +231,10 @@ func (r *Releaser) Release(
 			result.Url = fmt.Sprintf("%s:%d", result.Url, service.Spec.Ports[0].Port)
 		}
 	} else if service.Spec.Ports[0].NodePort > 0 {
-		nodeclient := clientset.CoreV1().Nodes()
+		nodeclient := clientSet.CoreV1().Nodes()
 		nodes, err := nodeclient.List(ctx, metav1.ListOptions{})
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		nodeIP := nodes.Items[0].Status.Addresses[0].Address
@@ -230,6 +242,79 @@ func (r *Releaser) Release(
 	} else {
 		result.Url = fmt.Sprintf("http://%s:%d", service.Spec.ClusterIP, service.Spec.Ports[0].Port)
 	}
+
+	return nil
+}
+
+func (r *Releaser) resourceServiceDestroy( // ctx context.Context,
+	ctx context.Context,
+	state *Resource_Service,
+	sg terminal.StepGroup,
+	csinfo *clientsetInfo,
+) error {
+	step := sg.Add("Initializing Kubernetes client...")
+	defer step.Abort()
+
+	// Prepare our namespace and override if set.
+	ns := csinfo.Namespace
+	if r.config.Namespace != "" {
+		ns = r.config.Namespace
+	}
+
+	clientSet := csinfo.Clientset
+	serviceclient := clientSet.CoreV1().Services(ns)
+	step.Update("Kubernetes client connected to %s with namespace %s", csinfo.Config.Host, ns)
+	step.Done()
+
+	if err := serviceclient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
+		return err
+	}
+
+	step.Done()
+	return nil
+}
+
+// getClientset is a value provider for our resource manager and provides
+// the connection information used by resources to interact with Kubernetes.
+func (r *Releaser) getClientset() (*clientsetInfo, error) {
+	// Get our client
+	clientSet, ns, config, err := clientset(r.config.KubeconfigPath, r.config.Context)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clientsetInfo{
+		Clientset: clientSet,
+		Namespace: ns,
+		Config:    config,
+	}, nil
+}
+
+// Release creates a Kubernetes service configured for the deployment
+func (r *Releaser) Release(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	ui terminal.UI,
+	target *Deployment,
+) (*Release, error) {
+	var result Release
+	result.ServiceName = src.App
+
+	sg := ui.StepGroup()
+	defer sg.Wait()
+
+	// Create our resource manager and create
+	rm := r.resourceManager(log)
+	if err := rm.CreateAll(
+		ctx, log, sg, ui,
+		target, &result,
+	); err != nil {
+		return nil, err
+	}
+
+	// Store our resource state
+	result.ResourceState = rm.State()
 
 	return &result, nil
 }
@@ -241,40 +326,27 @@ func (r *Releaser) Destroy(
 	release *Release,
 	ui terminal.UI,
 ) error {
-	// This is possible if an older version of the Kubernetes plugin was used
-	// prior to service name existing. This was only in pre-0.1 releases so
-	// we just return nil and pretend the destroy succeeded. We can probably
-	// remove this very quickly post-release.
-	if release.ServiceName == "" {
-		return nil
-	}
 
 	sg := ui.StepGroup()
-	step := sg.Add("Initializing Kubernetes client...")
-	defer step.Abort()
+	defer sg.Wait()
 
-	// Get our client
-	clientset, ns, config, err := clientset(r.config.KubeconfigPath, r.config.Context)
-	if err != nil {
-		return err
+	rm := r.resourceManager(log)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if release.ResourceState == nil {
+		rm.Resource("service").SetState(&Resource_Service{
+			Name: release.ServiceName,
+		})
+	} else {
+		// Load our set state
+		if err := rm.LoadState(release.ResourceState); err != nil {
+			return err
+		}
 	}
 
-	// Override namespace if set
-	if r.config.Namespace != "" {
-		ns = r.config.Namespace
-	}
-
-	step.Update("Kubernetes client connected to %s with namespace %s", config.Host, ns)
-	step.Done()
-	step = sg.Add("Deleting service...")
-
-	serviceclient := clientset.CoreV1().Services(ns)
-	if err := serviceclient.Delete(ctx, release.ServiceName, metav1.DeleteOptions{}); err != nil {
-		return err
-	}
-
-	step.Done()
-	return nil
+	// Destroy
+	return rm.DestroyAll(ctx, log, sg, ui)
 }
 
 func (r *Releaser) Status(
@@ -461,12 +533,10 @@ func (r *Releaser) Documentation() (*docs.Documentation, error) {
 	return doc, nil
 }
 
-var (
-	mixedHealthReleaseWarn = strings.TrimSpace(`
+var mixedHealthReleaseWarn = strings.TrimSpace(`
 Waypoint detected that the current release is not ready, however your application
 might be available or still starting up.
 `)
-)
 
 var (
 	_ component.ReleaseManager = (*Releaser)(nil)
