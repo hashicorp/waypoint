@@ -51,7 +51,7 @@ func (a *applicationPoll) Peek(
 	return project, pollTime, nil
 }
 
-// GeneratePollJobs will generate a QueuedJobRequest to generate a status report
+// PollJob will generate a slice of QueuedJobRequests to generate a status report
 // for each application defined in the given project.
 func (a *applicationPoll) PollJob(
 	log hclog.Logger,
@@ -78,7 +78,7 @@ func (a *applicationPoll) PollJob(
 	return jobList, nil
 }
 
-// PollJob will generate a job to queue a project on.
+// buildPollJob will generate a job to queue a project on.
 // When determining what to generate a report on, either a Deployment or Release,
 // this job assumes that the _Release_ was the last operation taken on the application.
 // If there's a release, this job will queue a status report genreation on that.
