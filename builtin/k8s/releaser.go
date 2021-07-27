@@ -266,6 +266,7 @@ func (r *Releaser) resourceServiceDestroy(
 	step.Update("Kubernetes client connected to %s with namespace %s", csinfo.Config.Host, ns)
 	step.Done()
 
+	step = sg.Add("Deleting service...")
 	if err := serviceclient.Delete(ctx, state.Name, metav1.DeleteOptions{}); err != nil {
 		return err
 	}
