@@ -29,4 +29,14 @@ module('Acceptance | release detail', function (hooks) {
 
     assert.dom('[data-test-status-report-indicator]').doesNotExist();
   });
+
+  test('visiting a release by sequence', async function (assert) {
+    let project = this.server.create('project', { name: 'acme-project' });
+    let application = this.server.create('application', { name: 'acme-app', project });
+    let release = this.server.create('release', 'random', { application });
+
+    await visit(`/default/acme-project/app/acme-app/release/seq/${release.sequence}`);
+
+    assert.dom('h2').includesText(`v${release.sequence}`);
+  });
 });

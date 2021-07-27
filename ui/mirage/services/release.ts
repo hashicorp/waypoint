@@ -26,7 +26,21 @@ export function list(schema: any, { requestBody }: Request): Response {
 export function get(schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(GetReleaseRequest, requestBody);
   let id = requestMsg.getRef().getId();
-  let model = schema.releases.find(id);
+  let seqRef = requestMsg.getRef().getSequence();
+  let model;
+
+  if (id) {
+    model = schema.releases.find(id);
+  } else {
+    let appName = seqRef.getApplication().getApplication();
+    let projectName = seqRef.getApplication().getProject();
+    let sequence = seqRef.getNumber();
+    let project = schema.projects.findBy({ name: projectName });
+    let app = schema.applications.findBy({ name: appName, projectId: project.id });
+
+    model = schema.releases.findBy({ sequence, applicationId: app.id });
+  }
+
   let protobuf = model?.toProtobuf();
 
   return this.serialize(protobuf, 'application');

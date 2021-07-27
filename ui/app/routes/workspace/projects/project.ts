@@ -5,7 +5,7 @@ import { Ref, GetProjectRequest } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
-interface ProjectModelParams {
+export interface Params {
   project_id: string;
 }
 
@@ -20,7 +20,7 @@ export default class ProjectDetail extends Route {
     },
   ];
 
-  async model(params: ProjectModelParams) {
+  async model(params: Params) {
     // Setup the project request
     let ref = new Ref.Project();
     ref.setProject(params.project_id);
