@@ -121,7 +121,36 @@ on this.
 
 ### Generic API Call 
 
-TODO
+<p align="center"><img src=".github/images/generic-api-call.png"></p>
+
+The life of a generic API call goes from a client, to the server implementation,
+to some state store to read or write data, and then back to the client. The
+server implementation, state store, and databases are all on the same machine
+(represented as the bordering white box). The client can be a standalone
+external system. 
+
+We use [Protocol Buffers](https://developers.google.com/protocol-buffers) and
+[gRPC](https://grpc.io/) for our server API definition and protocol, respectively.
+The protobuf definitions can be found in `internal/server/proto/server.proto`.
+We use one giant protobuf file to avoid some of the pitfalls of a multi-file
+protobuf setup. The protobuf definitions are compiled during build-time for the server.
+This is represented by the dashed line, meaning we don't do this at runtime.
+
+The Go package paths that implement each component are noted alongside 
+the package. 
+
+For data storage in the single process implementation, we use BoltDB for
+persistent storage with MemDB for in-memory indexing and storage. On server
+startup, we build the MemDB database; we do not persist any part of the MemDB
+data so as the database increases, startup times will also increase but even
+large databases in testing have started in a few seconds.
+
+This arrangement may seem strange, but it is the same set of technology
+choices that back other high-scale software at HashiCorp: Consul, Nomad,
+and Vault. We are familiar with it and we know how to make it scale. 
+Additionally, it allows us to have a single-binary setup without any
+external dependencies (such as a SQL server). We plan on likely implementing
+a SQL backend for a multi-process-capable server implementation in the future.
 
 ### Job System
 
