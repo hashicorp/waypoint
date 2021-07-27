@@ -1,6 +1,6 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
-import { Deployment } from 'waypoint-pb';
+import { Deployment, UI } from 'waypoint-pb';
 import { action } from '@ember/object';
 export default class WorkspaceProjectsProjectAppDeployments extends Controller {
   queryParams = [
@@ -14,17 +14,24 @@ export default class WorkspaceProjectsProjectAppDeployments extends Controller {
   @tracked isShowingDestroyed = false;
 
   get hasMoreDeployments(): boolean {
-    return this.model.filter((deployment: Deployment.AsObject) => deployment.state == 4).length > 0;
+    return (
+      this.model.filter((bundle: UI.DeploymentBundle.AsObject) => bundle.deployment?.state == 4).length > 0
+    );
   }
 
-  get deployments(): Deployment.AsObject[] {
+  get deployments(): UI.DeploymentBundle.AsObject[] {
     return this.model;
   }
 
   get deploymentsByGeneration(): GenerationGroup[] {
     let result: GenerationGroup[] = [];
 
-    for (let deployment of this.deployments) {
+    for (let bundle of this.deployments) {
+      let { deployment } = bundle;
+
+      if (!deployment) {
+        continue;
+      }
       let id = deployment.generation?.id ?? deployment.id;
       let group = result.find((group) => group.generationID === id);
 
@@ -33,7 +40,7 @@ export default class WorkspaceProjectsProjectAppDeployments extends Controller {
         result.push(group);
       }
 
-      group.deployments.push(deployment);
+      group.bundles.push(bundle);
     }
 
     return result;
@@ -46,7 +53,7 @@ export default class WorkspaceProjectsProjectAppDeployments extends Controller {
 }
 
 class GenerationGroup {
-  deployments: Deployment.AsObject[] = [];
+  bundles: UI.DeploymentBundle.AsObject[] = [];
 
   constructor(public generationID: string) {}
 }

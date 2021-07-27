@@ -20,6 +20,7 @@ import {
   GetLatestStatusReportRequest,
   ListPushedArtifactsRequest,
   PushedArtifact,
+  UI,
 } from 'waypoint-pb';
 import { Metadata } from 'grpc-web';
 import config from 'waypoint/config/environment';
@@ -56,16 +57,15 @@ export default class ApiService extends Service {
     }
   }
 
-  async listDeployments(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Deployment.AsObject[]> {
-    let req = new ListDeploymentsRequest();
+  async listDeployments(
+    wsRef: Ref.Workspace,
+    appRef: Ref.Application
+  ): Promise<UI.DeploymentBundle.AsObject[]> {
+    let req = new UI.ListDeploymentsRequest();
     req.setWorkspace(wsRef);
     req.setApplication(appRef);
 
-    let order = new OperationOrder();
-    order.setDesc(true);
-    req.setOrder(order);
-
-    let resp: ListDeploymentsResponse = await this.client.listDeployments(req, this.WithMeta());
+    let resp: UI.ListDeploymentsResponse = await this.client.uI_ListDeployments(req, this.WithMeta());
 
     return resp.getDeploymentsList().map((d) => d.toObject());
   }

@@ -1,7 +1,7 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, Deployment, Build, Release, Project, StatusReport, PushedArtifact } from 'waypoint-pb';
+import { Ref, Build, Release, Project, StatusReport, PushedArtifact, UI } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { hash } from 'rsvp';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
@@ -12,7 +12,7 @@ export interface Params {
 
 export interface Model {
   application: Ref.Application.AsObject;
-  deployments: (Deployment.AsObject & WithStatusReport)[];
+  deployments: UI.DeploymentBundle.AsObject[];
   releases: (Release.AsObject & WithStatusReport)[];
   builds: (Build.AsObject & WithPushedArtifact)[];
   pushedArtifacts: PushedArtifact.AsObject[];
@@ -73,15 +73,10 @@ export default class App extends Route {
 }
 
 function injectStatusReports(model: Model): void {
-  let { deployments, releases, statusReports } = model;
+  let { releases, statusReports } = model;
 
   for (let statusReport of statusReports) {
-    if (statusReport.deploymentId) {
-      let deployment = deployments.find((d) => d.id === statusReport.deploymentId);
-      if (deployment) {
-        deployment.statusReport = statusReport;
-      }
-    } else if (statusReport.releaseId) {
+    if (statusReport.releaseId) {
       let release = releases.find((d) => d.id === statusReport.releaseId);
       if (release) {
         release.statusReport = statusReport;
