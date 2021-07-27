@@ -1,5 +1,4 @@
 import VERSION, { packageManagers } from 'data/version.js'
-import HashiHead from '@hashicorp/react-head'
 import { productName, productSlug } from 'data/metadata'
 import ProductDownloadsPage from '@hashicorp/react-product-downloads-page'
 import { generateStaticProps } from '@hashicorp/react-product-downloads-page/server'
@@ -7,49 +6,46 @@ import styles from './style.module.css'
 
 export default function DownloadsPage({ releases }) {
   return (
-    <span className={styles.downloads}>
-      <HashiHead title={`Downloads | ${productName} by HashiCorp`} />
-      <ProductDownloadsPage
-        releases={releases}
-        packageManagers={packageManagers}
-        productName={productName}
-        productId={productSlug}
-        latestVersion={VERSION}
-        getStartedDescription="Follow step-by-step tutorials on AWS, Azure, GCP, and localhost."
-        getStartedLinks={[
-          {
-            label: 'Deploy to Docker',
-            href:
-              'https://learn.hashicorp.com/collections/waypoint/get-started-docker',
-          },
-          {
-            label: 'Deploy to Kubernetes',
-            href:
-              'https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes',
-          },
-          {
-            label: 'Deploy to AWS',
-            href: 'https://learn.hashicorp.com/collections/waypoint/deploy-aws',
-          },
-          {
-            label: 'View all Waypoint tutorials',
-            href: 'https://learn.hashicorp.com/waypoint',
-          },
-        ]}
-        logo={
-          <img
-            className={styles.logo}
-            alt="Waypoint"
-            src={require('./img/waypoint-logo.svg')}
-          />
-        }
-        product="waypoint"
-        tutorialLink={{
+    <ProductDownloadsPage
+      releases={releases}
+      packageManagers={packageManagers}
+      productName={productName}
+      productId={productSlug}
+      latestVersion={VERSION}
+      getStartedDescription="Follow step-by-step tutorials on AWS, Azure, GCP, and localhost."
+      getStartedLinks={[
+        {
+          label: 'Deploy to Docker',
+          href:
+            'https://learn.hashicorp.com/collections/waypoint/get-started-docker',
+        },
+        {
+          label: 'Deploy to Kubernetes',
+          href:
+            'https://learn.hashicorp.com/collections/waypoint/get-started-kubernetes',
+        },
+        {
+          label: 'Deploy to AWS',
+          href: 'https://learn.hashicorp.com/collections/waypoint/deploy-aws',
+        },
+        {
+          label: 'View all Waypoint tutorials',
           href: 'https://learn.hashicorp.com/waypoint',
-          label: 'View Tutorials at HashiCorp Learn',
-        }}
-      />
-    </span>
+        },
+      ]}
+      logo={
+        <img
+          className={styles.logo}
+          alt="Waypoint"
+          src={require('./img/waypoint-logo.svg')}
+        />
+      }
+      product="waypoint"
+      tutorialLink={{
+        href: 'https://learn.hashicorp.com/waypoint',
+        label: 'View Tutorials at HashiCorp Learn',
+      }}
+    />
   )
 }
 
