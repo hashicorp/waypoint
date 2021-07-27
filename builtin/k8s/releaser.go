@@ -64,7 +64,7 @@ func (r *Releaser) resourceManager(log hclog.Logger) *resource.Manager {
 	)
 }
 
-func (r *Releaser) resourceServiceCreate( // ctx context.Context,
+func (r *Releaser) resourceServiceCreate(
 	ctx context.Context,
 	log hclog.Logger,
 	target *Deployment,
@@ -246,7 +246,7 @@ func (r *Releaser) resourceServiceCreate( // ctx context.Context,
 	return nil
 }
 
-func (r *Releaser) resourceServiceDestroy( // ctx context.Context,
+func (r *Releaser) resourceServiceDestroy(
 	ctx context.Context,
 	state *Resource_Service,
 	sg terminal.StepGroup,
