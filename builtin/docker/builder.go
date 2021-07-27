@@ -5,12 +5,14 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/versions"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/idtools"
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/moby/buildkit/session"
 	"github.com/oklog/ulid/v2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,7 +32,7 @@ import (
 	"github.com/hashicorp/waypoint/internal/pkg/epinject"
 )
 
-// Builder uses `docker build` to build a Docker iamge.
+// Builder uses `docker build` to build a Docker image.
 type Builder struct {
 	config BuilderConfig
 }
@@ -39,7 +42,7 @@ func (b *Builder) BuildFunc() interface{} {
 	return b.Build
 }
 
-// Config is the configuration structure for the registry.
+// BuilderConfig is the configuration structure for the registry.
 type BuilderConfig struct {
 	// Control whether or not to inject the entrypoint binary into the resulting image
 	DisableCEB bool `hcl:"disable_entrypoint,optional"`
@@ -341,13 +344,30 @@ func (b *Builder) buildWithDocker(
 		return err
 	}
 
-	resp, err := cli.ImageBuild(ctx, buildCtx, types.ImageBuildOptions{
+	buildOpts := types.ImageBuildOptions{
 		Version:    ver,
 		Dockerfile: relDockerfile,
 		Tags:       []string{tag},
 		Remove:     true,
 		BuildArgs:  buildArgs,
-	})
+	}
+
+	// Buildkit builds need a session under most circumstances, but sessions are only supported in >1.39
+	if ver == types.BuilderBuildKit && versions.GreaterThanOrEqualTo(cli.ClientVersion(), "1.39") {
+
+		s, _ := session.NewSession(ctx, "waypoint", "")
+
+		dialSession := func(ctx context.Context, proto string, meta map[string][]string) (net.Conn, error) {
+			return cli.DialHijack(ctx, "/session", proto, meta)
+		}
+
+		go s.Run(ctx, dialSession)
+		defer s.Close()
+
+		buildOpts.SessionID = s.ID()
+	}
+
+	resp, err := cli.ImageBuild(ctx, buildCtx, buildOpts)
 	if err != nil {
 		return status.Errorf(codes.Internal, "error building image: %s", err)
 	}
