@@ -2552,5 +2552,165 @@ export class WaypointClient {
     this.methodInfoUpsertStatusReport);
   }
 
+  methodInfoUI_ListDeployments = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.UI.ListDeploymentsResponse,
+    (request: internal_server_proto_server_pb.UI.ListDeploymentsRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.UI.ListDeploymentsResponse.deserializeBinary
+  );
+
+  uI_ListDeployments(
+    request: internal_server_proto_server_pb.UI.ListDeploymentsRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UI.ListDeploymentsResponse>;
+
+  uI_ListDeployments(
+    request: internal_server_proto_server_pb.UI.ListDeploymentsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.ListDeploymentsResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UI.ListDeploymentsResponse>;
+
+  uI_ListDeployments(
+    request: internal_server_proto_server_pb.UI.ListDeploymentsRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.ListDeploymentsResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/UI_ListDeployments',
+        request,
+        metadata || {},
+        this.methodInfoUI_ListDeployments,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/UI_ListDeployments',
+    request,
+    metadata || {},
+    this.methodInfoUI_ListDeployments);
+  }
+
+  methodInfoUI_GetDeployment = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.UI.DeploymentBundle,
+    (request: internal_server_proto_server_pb.UI.GetDeploymentRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.UI.DeploymentBundle.deserializeBinary
+  );
+
+  uI_GetDeployment(
+    request: internal_server_proto_server_pb.UI.GetDeploymentRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UI.DeploymentBundle>;
+
+  uI_GetDeployment(
+    request: internal_server_proto_server_pb.UI.GetDeploymentRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.DeploymentBundle) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UI.DeploymentBundle>;
+
+  uI_GetDeployment(
+    request: internal_server_proto_server_pb.UI.GetDeploymentRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.DeploymentBundle) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/UI_GetDeployment',
+        request,
+        metadata || {},
+        this.methodInfoUI_GetDeployment,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/UI_GetDeployment',
+    request,
+    metadata || {},
+    this.methodInfoUI_GetDeployment);
+  }
+
+  methodInfoUI_ListReleases = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.UI.ListReleasesResponse,
+    (request: internal_server_proto_server_pb.UI.ListReleasesRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.UI.ListReleasesResponse.deserializeBinary
+  );
+
+  uI_ListReleases(
+    request: internal_server_proto_server_pb.UI.ListReleasesRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UI.ListReleasesResponse>;
+
+  uI_ListReleases(
+    request: internal_server_proto_server_pb.UI.ListReleasesRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.ListReleasesResponse) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UI.ListReleasesResponse>;
+
+  uI_ListReleases(
+    request: internal_server_proto_server_pb.UI.ListReleasesRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.ListReleasesResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/UI_ListReleases',
+        request,
+        metadata || {},
+        this.methodInfoUI_ListReleases,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/UI_ListReleases',
+    request,
+    metadata || {},
+    this.methodInfoUI_ListReleases);
+  }
+
+  methodInfoUI_GetRelease = new grpcWeb.AbstractClientBase.MethodInfo(
+    internal_server_proto_server_pb.UI.ReleaseBundle,
+    (request: internal_server_proto_server_pb.UI.GetReleaseRequest) => {
+      return request.serializeBinary();
+    },
+    internal_server_proto_server_pb.UI.ReleaseBundle.deserializeBinary
+  );
+
+  uI_GetRelease(
+    request: internal_server_proto_server_pb.UI.GetReleaseRequest,
+    metadata: grpcWeb.Metadata | null): Promise<internal_server_proto_server_pb.UI.ReleaseBundle>;
+
+  uI_GetRelease(
+    request: internal_server_proto_server_pb.UI.GetReleaseRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.ReleaseBundle) => void): grpcWeb.ClientReadableStream<internal_server_proto_server_pb.UI.ReleaseBundle>;
+
+  uI_GetRelease(
+    request: internal_server_proto_server_pb.UI.GetReleaseRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.Error,
+               response: internal_server_proto_server_pb.UI.ReleaseBundle) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/hashicorp.waypoint.Waypoint/UI_GetRelease',
+        request,
+        metadata || {},
+        this.methodInfoUI_GetRelease,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/hashicorp.waypoint.Waypoint/UI_GetRelease',
+    request,
+    metadata || {},
+    this.methodInfoUI_GetRelease);
+  }
+
 }
 

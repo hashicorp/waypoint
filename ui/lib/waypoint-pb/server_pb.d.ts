@@ -2237,6 +2237,9 @@ export namespace Job {
     getPath(): string;
     setPath(value: string): Git;
 
+    getIgnoreChangesOutsidePath(): boolean;
+    setIgnoreChangesOutsidePath(value: boolean): Git;
+
     getBasic(): Job.Git.Basic | undefined;
     setBasic(value?: Job.Git.Basic): Git;
     hasBasic(): boolean;
@@ -2262,6 +2265,7 @@ export namespace Job {
       url: string,
       ref: string,
       path: string,
+      ignoreChangesOutsidePath: boolean,
       basic?: Job.Git.Basic.AsObject,
       ssh?: Job.Git.SSH.AsObject,
     }
@@ -8153,6 +8157,286 @@ export namespace WaypointHclFmtResponse {
   export type AsObject = {
     waypointHcl: Uint8Array | string,
   }
+}
+
+export class UI extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UI.AsObject;
+  static toObject(includeInstance: boolean, msg: UI): UI.AsObject;
+  static serializeBinaryToWriter(message: UI, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UI;
+  static deserializeBinaryFromReader(message: UI, reader: jspb.BinaryReader): UI;
+}
+
+export namespace UI {
+  export type AsObject = {
+  }
+
+  export class ListDeploymentsRequest extends jspb.Message {
+    getApplication(): Ref.Application | undefined;
+    setApplication(value?: Ref.Application): ListDeploymentsRequest;
+    hasApplication(): boolean;
+    clearApplication(): ListDeploymentsRequest;
+
+    getWorkspace(): Ref.Workspace | undefined;
+    setWorkspace(value?: Ref.Workspace): ListDeploymentsRequest;
+    hasWorkspace(): boolean;
+    clearWorkspace(): ListDeploymentsRequest;
+
+    getPagination(): UI.PaginationRequest | undefined;
+    setPagination(value?: UI.PaginationRequest): ListDeploymentsRequest;
+    hasPagination(): boolean;
+    clearPagination(): ListDeploymentsRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListDeploymentsRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ListDeploymentsRequest): ListDeploymentsRequest.AsObject;
+    static serializeBinaryToWriter(message: ListDeploymentsRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListDeploymentsRequest;
+    static deserializeBinaryFromReader(message: ListDeploymentsRequest, reader: jspb.BinaryReader): ListDeploymentsRequest;
+  }
+
+  export namespace ListDeploymentsRequest {
+    export type AsObject = {
+      application?: Ref.Application.AsObject,
+      workspace?: Ref.Workspace.AsObject,
+      pagination?: UI.PaginationRequest.AsObject,
+    }
+  }
+
+
+  export class ListDeploymentsResponse extends jspb.Message {
+    getDeploymentsList(): Array<UI.DeploymentBundle>;
+    setDeploymentsList(value: Array<UI.DeploymentBundle>): ListDeploymentsResponse;
+    clearDeploymentsList(): ListDeploymentsResponse;
+    addDeployments(value?: UI.DeploymentBundle, index?: number): UI.DeploymentBundle;
+
+    getPagination(): UI.PaginationResponse | undefined;
+    setPagination(value?: UI.PaginationResponse): ListDeploymentsResponse;
+    hasPagination(): boolean;
+    clearPagination(): ListDeploymentsResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListDeploymentsResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ListDeploymentsResponse): ListDeploymentsResponse.AsObject;
+    static serializeBinaryToWriter(message: ListDeploymentsResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListDeploymentsResponse;
+    static deserializeBinaryFromReader(message: ListDeploymentsResponse, reader: jspb.BinaryReader): ListDeploymentsResponse;
+  }
+
+  export namespace ListDeploymentsResponse {
+    export type AsObject = {
+      deploymentsList: Array<UI.DeploymentBundle.AsObject>,
+      pagination?: UI.PaginationResponse.AsObject,
+    }
+  }
+
+
+  export class GetDeploymentRequest extends jspb.Message {
+    getRef(): Ref.Operation | undefined;
+    setRef(value?: Ref.Operation): GetDeploymentRequest;
+    hasRef(): boolean;
+    clearRef(): GetDeploymentRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetDeploymentRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: GetDeploymentRequest): GetDeploymentRequest.AsObject;
+    static serializeBinaryToWriter(message: GetDeploymentRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetDeploymentRequest;
+    static deserializeBinaryFromReader(message: GetDeploymentRequest, reader: jspb.BinaryReader): GetDeploymentRequest;
+  }
+
+  export namespace GetDeploymentRequest {
+    export type AsObject = {
+      ref?: Ref.Operation.AsObject,
+    }
+  }
+
+
+  export class DeploymentBundle extends jspb.Message {
+    getDeployment(): Deployment | undefined;
+    setDeployment(value?: Deployment): DeploymentBundle;
+    hasDeployment(): boolean;
+    clearDeployment(): DeploymentBundle;
+
+    getLatestStatusReport(): StatusReport | undefined;
+    setLatestStatusReport(value?: StatusReport): DeploymentBundle;
+    hasLatestStatusReport(): boolean;
+    clearLatestStatusReport(): DeploymentBundle;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): DeploymentBundle.AsObject;
+    static toObject(includeInstance: boolean, msg: DeploymentBundle): DeploymentBundle.AsObject;
+    static serializeBinaryToWriter(message: DeploymentBundle, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): DeploymentBundle;
+    static deserializeBinaryFromReader(message: DeploymentBundle, reader: jspb.BinaryReader): DeploymentBundle;
+  }
+
+  export namespace DeploymentBundle {
+    export type AsObject = {
+      deployment?: Deployment.AsObject,
+      latestStatusReport?: StatusReport.AsObject,
+    }
+  }
+
+
+  export class ListReleasesRequest extends jspb.Message {
+    getApplication(): Ref.Application | undefined;
+    setApplication(value?: Ref.Application): ListReleasesRequest;
+    hasApplication(): boolean;
+    clearApplication(): ListReleasesRequest;
+
+    getWorkspace(): Ref.Workspace | undefined;
+    setWorkspace(value?: Ref.Workspace): ListReleasesRequest;
+    hasWorkspace(): boolean;
+    clearWorkspace(): ListReleasesRequest;
+
+    getPagination(): UI.PaginationRequest | undefined;
+    setPagination(value?: UI.PaginationRequest): ListReleasesRequest;
+    hasPagination(): boolean;
+    clearPagination(): ListReleasesRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListReleasesRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ListReleasesRequest): ListReleasesRequest.AsObject;
+    static serializeBinaryToWriter(message: ListReleasesRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListReleasesRequest;
+    static deserializeBinaryFromReader(message: ListReleasesRequest, reader: jspb.BinaryReader): ListReleasesRequest;
+  }
+
+  export namespace ListReleasesRequest {
+    export type AsObject = {
+      application?: Ref.Application.AsObject,
+      workspace?: Ref.Workspace.AsObject,
+      pagination?: UI.PaginationRequest.AsObject,
+    }
+  }
+
+
+  export class ListReleasesResponse extends jspb.Message {
+    getReleasesList(): Array<UI.ReleaseBundle>;
+    setReleasesList(value: Array<UI.ReleaseBundle>): ListReleasesResponse;
+    clearReleasesList(): ListReleasesResponse;
+    addReleases(value?: UI.ReleaseBundle, index?: number): UI.ReleaseBundle;
+
+    getPagination(): UI.PaginationResponse | undefined;
+    setPagination(value?: UI.PaginationResponse): ListReleasesResponse;
+    hasPagination(): boolean;
+    clearPagination(): ListReleasesResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListReleasesResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ListReleasesResponse): ListReleasesResponse.AsObject;
+    static serializeBinaryToWriter(message: ListReleasesResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListReleasesResponse;
+    static deserializeBinaryFromReader(message: ListReleasesResponse, reader: jspb.BinaryReader): ListReleasesResponse;
+  }
+
+  export namespace ListReleasesResponse {
+    export type AsObject = {
+      releasesList: Array<UI.ReleaseBundle.AsObject>,
+      pagination?: UI.PaginationResponse.AsObject,
+    }
+  }
+
+
+  export class GetReleaseRequest extends jspb.Message {
+    getRef(): Ref.Operation | undefined;
+    setRef(value?: Ref.Operation): GetReleaseRequest;
+    hasRef(): boolean;
+    clearRef(): GetReleaseRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): GetReleaseRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: GetReleaseRequest): GetReleaseRequest.AsObject;
+    static serializeBinaryToWriter(message: GetReleaseRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): GetReleaseRequest;
+    static deserializeBinaryFromReader(message: GetReleaseRequest, reader: jspb.BinaryReader): GetReleaseRequest;
+  }
+
+  export namespace GetReleaseRequest {
+    export type AsObject = {
+      ref?: Ref.Operation.AsObject,
+    }
+  }
+
+
+  export class ReleaseBundle extends jspb.Message {
+    getRelease(): Release | undefined;
+    setRelease(value?: Release): ReleaseBundle;
+    hasRelease(): boolean;
+    clearRelease(): ReleaseBundle;
+
+    getLatestStatusReport(): StatusReport | undefined;
+    setLatestStatusReport(value?: StatusReport): ReleaseBundle;
+    hasLatestStatusReport(): boolean;
+    clearLatestStatusReport(): ReleaseBundle;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ReleaseBundle.AsObject;
+    static toObject(includeInstance: boolean, msg: ReleaseBundle): ReleaseBundle.AsObject;
+    static serializeBinaryToWriter(message: ReleaseBundle, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ReleaseBundle;
+    static deserializeBinaryFromReader(message: ReleaseBundle, reader: jspb.BinaryReader): ReleaseBundle;
+  }
+
+  export namespace ReleaseBundle {
+    export type AsObject = {
+      release?: Release.AsObject,
+      latestStatusReport?: StatusReport.AsObject,
+    }
+  }
+
+
+  export class PaginationRequest extends jspb.Message {
+    getPageSize(): number;
+    setPageSize(value: number): PaginationRequest;
+
+    getNextPageToken(): string;
+    setNextPageToken(value: string): PaginationRequest;
+
+    getPreviousPageToken(): string;
+    setPreviousPageToken(value: string): PaginationRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): PaginationRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: PaginationRequest): PaginationRequest.AsObject;
+    static serializeBinaryToWriter(message: PaginationRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): PaginationRequest;
+    static deserializeBinaryFromReader(message: PaginationRequest, reader: jspb.BinaryReader): PaginationRequest;
+  }
+
+  export namespace PaginationRequest {
+    export type AsObject = {
+      pageSize: number,
+      nextPageToken: string,
+      previousPageToken: string,
+    }
+  }
+
+
+  export class PaginationResponse extends jspb.Message {
+    getNextPageToken(): string;
+    setNextPageToken(value: string): PaginationResponse;
+
+    getPreviousPageToken(): string;
+    setPreviousPageToken(value: string): PaginationResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): PaginationResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: PaginationResponse): PaginationResponse.AsObject;
+    static serializeBinaryToWriter(message: PaginationResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): PaginationResponse;
+    static deserializeBinaryFromReader(message: PaginationResponse, reader: jspb.BinaryReader): PaginationResponse;
+  }
+
+  export namespace PaginationResponse {
+    export type AsObject = {
+      nextPageToken: string,
+      previousPageToken: string,
+    }
+  }
+
 }
 
 export enum ResourceCategoryDisplayHint { 
