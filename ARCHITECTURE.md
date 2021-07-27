@@ -57,8 +57,9 @@ the server queues information that it then communicates to other components when
 connect.
 
 3. **Waypoint Runners** - One or more runners which are responsible for executing 
-logic for builds, deploys, etc. Importantly, these are the only components in the 
-entire architecture that need access to the target platform.
+logic for builds, deploys, etc. Runners connect out to the servers, wait for
+assigned jobs from the server, and execute those jobs. Importantly, these are the 
+only components in the entire architecture that need access to the target platform.
 
 4. **Waypoint Entrypoint** - An optional component a deployment may have that 
 connects back to the Waypoint server for features such as application configuration,
@@ -154,7 +155,59 @@ a SQL backend for a multi-process-capable server implementation in the future.
 
 ### Job System
 
-TODO
+Waypoint uses a [task queue system](https://en.wikipedia.org/wiki/Scheduling_(computing)#task_queue)
+internally to represent most operations such as builds, deploys, etc. The
+Waypoint Server queues jobs, and Waypoint Runners dequeue and execute the
+queued jobs. The Waypoint Server process itself never executes a job.
+
+#### State Machine
+
+A job is represented in Waypoint as a state machine. The diagram below shows
+the full state machine a job:
+
+<p align="center"><img src=".github/images/job-states.png" width="70%"></p>
+
+A job begins **QUEUED** as soon as it is enqueued using the `QueueJob` API. 
+Additionally, the Waypoint server sometimes self-queues jobs such as for
+polling. 
+
+When a Runner process starts or has capacity, it can request a job from
+the Waypoint server. If no jobs are available, this request will block and
+the runner will wait. If a job is available, the Waypoint server assigns the
+job and the job enters the **WAITING** state. During this state, we're waiting
+for the runner to acknowledge that it has taken responsibility for the job.
+
+During the **QUEUED** and **WAITING** states, a job may expire. A job may optionally
+have an expiration deadline associated with it. If a job has a deadline, then at
+that time, the job will immediately move to the **ERROR** state with a message noting
+it expired.
+
+While a job is in the **WAITING**, it will not be assigned to any other runner.
+
+After being assigned a job, the runner acknowledges (acks) the job. This means that
+the runner has taken responsibility for the job and the job enters the **RUNNING**
+state. If the runner nacks (negative acknowledgement) the job or the runner doesn't
+ack or nack within a specified timeout period, then the job moves back to the 
+**QUEUED** state and can be assigned to another runner.
+
+Once a job is in the **RUNNING** state, the runner must periodically heartbeat and
+let the server know it is still processing the job. If a timeout occurs since the
+last heartbeat, the job will move to the **ERROR** state. Once the job is complete,
+the runner can notify the server that the job is complete and the job moves to the
+**COMPLETE** state.
+
+#### Runner Job Stream
+
+The runner requests and executes a job via the `RunnerJobStream` RPC method. The 
+lifecycle of this RPC method is shown below for a happy path case of executing a job.
+It is during this job stream that the job moves between the states outlined in the
+state machine section previously.
+
+In the diagram below the "runner" line happens in the Waypoint Runner process, the
+"server" line happens in the Waypoint Server process, and the arrows represent
+RPC messages typically over a local area network.
+
+<p align="center"><img src=".github/images/job-stream-lifecycle.png" width="70%"></p>
 
 ### Application Configuration
 
