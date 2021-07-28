@@ -146,6 +146,6 @@ func (s *service) ExpediteStatusReport(
 	jobID := queueJobResponse.JobId
 
 	return &pb.ExpediteStatusReportResponse{
-		Id: jobID,
+		JobId: jobID,
 	}, nil
 }

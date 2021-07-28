@@ -194,7 +194,7 @@ func TestServiceStatusReport_ExpediteStatusReport(t *testing.T) {
 		})
 		require.NoError(err)
 		require.NotEmpty(t, jobResp)
-		require.NotNil(t, jobResp.Id)
+		require.NotNil(t, jobResp.JobId)
 	})
 
 	require.NoError(t, err)

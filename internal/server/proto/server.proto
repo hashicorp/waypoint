@@ -2831,7 +2831,7 @@ message ExpediteStatusReportRequest {
 
 // id of job expedited by the request
 message ExpediteStatusReportResponse {
-    string id = 1;
+    string job_id = 1;
 }
 
 // StatusReport is the report genrated when querying the overall health of
