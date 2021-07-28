@@ -1,25 +1,27 @@
-import { Ref, GetBuildRequest } from 'waypoint-pb';
-import BuildDetail from './build';
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
+import { Build, GetBuildRequest, Ref } from 'waypoint-pb';
+import ApiService from 'waypoint/services/api';
 
-interface BuildModelIdParams {
-  build_id: string;
-}
+type Params = { build_id: string };
+type Model = Build.AsObject;
 
-export default class WorkspaceProjectsProjectAppBuildId extends BuildDetail {
-  renderTemplate() {
-    this.render('workspace/projects/project/app/build', {
-      into: 'workspace/projects/project',
-    });
-  }
+export default class WorkspaceProjectsProjectAppBuildId extends Route {
+  @service api!: ApiService;
 
-  async model(params: BuildModelIdParams) {
-    // Setup the build request
-    let ref = new Ref.Operation();
-    ref.setId(params.build_id);
+  async model(params: Params): Promise<Model> {
     let req = new GetBuildRequest();
+    let ref = new Ref.Operation();
+
+    ref.setId(params.build_id);
     req.setRef(ref);
 
     let build = await this.api.client.getBuild(req, this.api.WithMeta());
+
     return build.toObject();
+  }
+
+  redirect(model: Model): void {
+    this.transitionTo('workspace.projects.project.app.build', model.sequence);
   }
 }
