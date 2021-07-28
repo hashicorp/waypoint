@@ -164,7 +164,7 @@ func (a *applicationPoll) buildPollJob(
 				Project:     app.Project.Project,
 			},
 
-			// Applicatioon polling requires a data source to be configured for the project
+			// Application polling requires a data source to be configured for the project
 			// Otherwise a status report can't properly eval the projects hcl context
 			// needed to query the deploy or release
 			DataSource: project.DataSource,
