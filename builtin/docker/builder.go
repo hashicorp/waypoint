@@ -55,6 +55,9 @@ type BuilderConfig struct {
 	// The name/path to the Dockerfile if it is not the root of the project
 	Dockerfile string `hcl:"dockerfile,optional"`
 
+	// Controls the passing of platform flag variables
+	Platform string `hcl:"platform,optional"`
+
 	// Controls the passing of build time variables
 	BuildArgs map[string]*string `hcl:"build_args,optional"`
 
@@ -135,6 +138,14 @@ build {
 		docs.Summary(
 			"An array of strings of build-time variables passed as build-arg to docker",
 			" or img for the build step.",
+		),
+	)
+
+	doc.SetField(
+		"platform",
+		"set platform if server is multi-platform capable",
+		docs.Summary(
+			"Recommended usage with buildkit enabled.",
 		),
 	)
 
@@ -253,7 +264,7 @@ func (b *Builder) Build(
 		step.Done()
 		step = nil
 		if err := b.buildWithDocker(
-			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.BuildArgs, log,
+			ctx, ui, sg, cli, contextDir, relDockerfile, result.Name(), b.config.Platform, b.config.BuildArgs, log,
 		); err != nil {
 			return nil, err
 		}
@@ -309,6 +320,7 @@ func (b *Builder) buildWithDocker(
 	contextDir string,
 	relDockerfile string,
 	tag string,
+	platform string,
 	buildArgs map[string]*string,
 	log hclog.Logger,
 ) error {
@@ -347,11 +359,16 @@ func (b *Builder) buildWithDocker(
 		return err
 	}
 
+	if platform != "" && ver != types.BuilderBuildKit {
+		return status.Errorf(codes.InvalidArgument, "buildkit is required to use platform option")
+	}
+
 	buildOpts := types.ImageBuildOptions{
 		Version:    ver,
 		Dockerfile: relDockerfile,
 		Tags:       []string{tag},
 		Remove:     true,
+		Platform:   platform,
 		BuildArgs:  buildArgs,
 	}
 
