@@ -12,13 +12,16 @@ specific part of Waypoint, then study the code there for specifics.
 
 <!-- Generated from: https://luciopaiva.com/markdown-toc/ -->
 
+- [Table of contents](#table-of-contents)
 - [Bird's Eye View](#birds-eye-view)
   - [Important Architectural Properties](#important-architectural-properties)
 - [Feature Overview](#feature-overview)
   - [Generic API Call](#generic-api-call)
   - [Job System](#job-system)
-  - [Application Configuration](#application-configuration)
-  - [Application Logs](#application-logs)
+    - [State Machine](#state-machine)
+    - [Runner Job Stream](#runner-job-stream)
+  - [Log Streaming](#log-streaming)
+    - [Blocking Behavior](#blocking-behavior)
   - [Authentication](#authentication)
 - [Code Path of a Waypoint Operation (such as `waypoint up`)](#code-path-of-a-waypoint-operation-such-as-waypoint-up)
 - [Code Map](#code-map)
