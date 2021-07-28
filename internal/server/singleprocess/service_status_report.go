@@ -92,14 +92,24 @@ func (s *service) ExpediteStatusReport(
 	var applicationRef *pb.Ref_Application
 	switch target := req.Target.(type) {
 	case *pb.ExpediteStatusReportRequest_Deployment:
-		applicationRef = target.Deployment.Application
+		d, err := s.state.DeploymentGet(target.Deployment)
+		if err != nil {
+			return nil, err
+		}
+
+		applicationRef = d.Application
 		statusReportJob.StatusReport.Target = &pb.Job_StatusReportOp_Deployment{
-			Deployment: target.Deployment,
+			Deployment: d,
 		}
 	case *pb.ExpediteStatusReportRequest_Release:
-		applicationRef = target.Release.Application
+		r, err := s.state.ReleaseGet(target.Release)
+		if err != nil {
+			return nil, err
+		}
+
+		applicationRef = r.Application
 		statusReportJob.StatusReport.Target = &pb.Job_StatusReportOp_Release{
-			Release: target.Release,
+			Release: r,
 		}
 	default:
 		return nil, status.Errorf(codes.FailedPrecondition, "unknown status report target: %T", req.Target)

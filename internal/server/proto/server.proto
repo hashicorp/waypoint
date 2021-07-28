@@ -2817,19 +2817,17 @@ message GetStatusReportRequest {
 }
 
 message ExpediteStatusReportRequest {
-  Ref.Operation ref = 1;
+  // The workspace that this exists in
+  Ref.Workspace workspace = 1;
 
   // Target is used to determine what a status report should be run against
   oneof target {
     // the deployment id that this status report was generated on
-    Deployment deployment = 2;
+    Ref.Operation deployment = 2;
 
     // the release id that this status report was generated on
-    Release release = 3;
+    Ref.Operation release = 3;
   }
-
-  // The workspace that this exists in
-  Ref.Workspace workspace = 4;
 }
 
 // id of job expedited by the request

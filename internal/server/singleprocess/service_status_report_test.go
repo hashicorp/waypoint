@@ -182,14 +182,15 @@ func TestServiceStatusReport_ExpediteStatusReport(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	deployment := resp.Deployment
 
 	t.Run("Expedite Status Report", func(t *testing.T) {
 		require := require.New(t)
 
 		jobResp, err := client.ExpediteStatusReport(ctx, &pb.ExpediteStatusReportRequest{
 			Target: &pb.ExpediteStatusReportRequest_Deployment{
-				Deployment: deployment,
+				Deployment: &pb.Ref_Operation{
+					Target: &pb.Ref_Operation_Id{Id: resp.Deployment.Id},
+				},
 			},
 			Workspace: &pb.Ref_Workspace{
 				Workspace: "default",
