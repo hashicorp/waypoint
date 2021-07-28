@@ -8965,6 +8965,8 @@ type ExpediteStatusReportRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	Ref *Ref_Operation `protobuf:"bytes,1,opt,name=ref,proto3" json:"ref,omitempty"`
+	// Target is used to determine what a status report should be run against
+	//
 	// Types that are assignable to Target:
 	//	*ExpediteStatusReportRequest_Deployment
 	//	*ExpediteStatusReportRequest_Release

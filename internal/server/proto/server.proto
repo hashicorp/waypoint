@@ -2819,6 +2819,7 @@ message GetStatusReportRequest {
 message ExpediteStatusReportRequest {
   Ref.Operation ref = 1;
 
+  // Target is used to determine what a status report should be run against
   oneof target {
     // the deployment id that this status report was generated on
     Deployment deployment = 2;
