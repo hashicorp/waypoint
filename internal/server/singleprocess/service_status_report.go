@@ -114,8 +114,8 @@ func (s *service) ExpediteStatusReport(
 	// build job
 	jobRequest := &pb.QueueJobRequest{
 		Job: &pb.Job{
-			// SingletonId so that we only have one poll operation at
-			// any time queued per application.
+			// SingletonId so that we only have one on demand
+			// status report any time queued per application.
 			SingletonId: fmt.Sprintf("status-report-ondemand/%s", applicationRef.Application),
 
 			Application: applicationRef,
