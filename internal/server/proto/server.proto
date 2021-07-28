@@ -247,6 +247,9 @@ service Waypoint {
   // ListStatusReports returns the deployments.
   rpc ListStatusReports(ListStatusReportsRequest) returns (ListStatusReportsResponse);
 
+  // ExpediteStatusReport returns the queued status report job id
+  rpc ExpediteStatusReport(ExpediteStatusReportRequest) returns (ExpediteStatusReportResponse);
+
   //----------------------------------------------------------------------
   // Runner endpoints. These are expected to be called only by a runner.
   // These are not meant to be public endpoints.
@@ -2811,6 +2814,23 @@ message GetStatusReportRequest {
 
   // TODO(briancain): Once polling is in place, provide a way to query for
   // a report by deployment or release operation id
+}
+
+message ExpediteStatusReportRequest {
+  Ref.Operation ref = 1;
+
+  oneof target {
+    // the deployment id that this status report was generated on
+    Deployment deployment = 2;
+
+    // the release id that this status report was generated on
+    Release release = 3;
+  }
+}
+
+// id of job expedited by the request
+message ExpediteStatusReportResponse {
+    string id = 1;
 }
 
 // StatusReport is the report genrated when querying the overall health of
