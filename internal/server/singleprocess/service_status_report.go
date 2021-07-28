@@ -125,7 +125,7 @@ func (s *service) ExpediteStatusReport(
 			// needed to query the deploy or release
 			DataSource: project.DataSource,
 
-			Workspace: &pb.Ref_Workspace{Workspace: "default"},
+			Workspace: &pb.Ref_Workspace{Workspace: req.Workspace.Workspace},
 
 			// Generate a status report
 			Operation: statusReportJob,

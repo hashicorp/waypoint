@@ -191,6 +191,9 @@ func TestServiceStatusReport_ExpediteStatusReport(t *testing.T) {
 			Target: &pb.ExpediteStatusReportRequest_Deployment{
 				Deployment: deployment,
 			},
+			Workspace: &pb.Ref_Workspace{
+				Workspace: "default",
+			},
 		})
 		require.NoError(err)
 		require.NotEmpty(t, jobResp)

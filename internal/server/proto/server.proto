@@ -2827,6 +2827,9 @@ message ExpediteStatusReportRequest {
     // the release id that this status report was generated on
     Release release = 3;
   }
+
+  // The workspace that this exists in
+  Ref.Workspace workspace = 4;
 }
 
 // id of job expedited by the request
