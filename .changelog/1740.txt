@@ -1,3 +1,0 @@
-```release-note:improvement
-plugin/aws: add ability to define existing security groups for ecs
-```
