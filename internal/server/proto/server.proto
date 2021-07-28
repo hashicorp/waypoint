@@ -84,8 +84,7 @@ service Waypoint {
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse);
 
-  // UpsertApplication upserts an application with a project. If the application
-  // is already registered this does nothing.
+  // UpsertApplication upserts an application with a project.
   rpc UpsertApplication(UpsertApplicationRequest) returns (UpsertApplicationResponse);
 
   // ListBuilds returns the builds.
@@ -479,6 +478,15 @@ message Project {
   // WIP: Variable values stored on the server. These values are set in the UI.
   repeated Variable variables = 9;
 
+  // Application polling settings. Polling will trigger a "StatusFunc" for collecting a
+  // report on the current status of the application.
+  // For now, polling is only done on the `default` workspace. A future
+  // version of Waypoint will expand polling to other workspaces.
+  //
+  // Each polling event is tracked as a separate job. You can query the
+  // poll operations and their success/failure by using the ListJobs API.
+  AppStatusPoll status_report_poll = 10;
+
   enum Format {
     HCL = 0; // We assume HCL by default
     JSON = 1;
@@ -486,6 +494,16 @@ message Project {
 
   message Poll {
     // enabled must be set to true to enable polling.
+    bool enabled = 1;
+
+    // interval is a duration string of how often to poll, such as "5s".
+    // The server may enforce minimum values, in which case a value lower
+    // than the minimum will be ignored.
+    string interval = 2;
+  }
+
+  message AppStatusPoll {
+    // enabled must be set to true to enable application polling for the project
     bool enabled = 1;
 
     // interval is a duration string of how often to poll, such as "5s".

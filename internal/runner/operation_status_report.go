@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/waypoint/internal/core"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 )
 
 func (r *Runner) executeStatusReportOp(
 	ctx context.Context,
+	log hclog.Logger,
 	job *pb.Job,
 	project *core.Project,
 ) (*pb.Job_Result, error) {
@@ -25,12 +27,17 @@ func (r *Runner) executeStatusReportOp(
 		panic("operation not expected type")
 	}
 
+	log = log.With("app", job.Application.Application)
+
+	log.Trace("generating status report")
 	var statusReportResult *pb.StatusReport
 
 	switch t := op.StatusReport.Target.(type) {
 	case *pb.Job_StatusReportOp_Deployment:
+		log.Trace("starting a status report against a deployment")
 		statusReportResult, err = app.DeploymentStatusReport(ctx, t.Deployment)
 	case *pb.Job_StatusReportOp_Release:
+		log.Trace("starting a status report against a release")
 		statusReportResult, err = app.ReleaseStatusReport(ctx, t.Release)
 	default:
 		err = fmt.Errorf("unknown status report target: %T", op.StatusReport.Target)

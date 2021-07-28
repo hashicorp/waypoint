@@ -119,7 +119,7 @@ func (s *service) queueJobReqToJob(
 	project, err := s.state.ProjectGet(&pb.Ref_Project{Project: job.Application.Project})
 	if status.Code(err) == codes.NotFound {
 		return nil, status.Errorf(codes.NotFound,
-			"Project %s was not found! Please ensure that 'waypoint init' was run with this project.",
+			"Project %q was not found! Please ensure that 'waypoint init' was run with this project.",
 			job.Application.Project,
 		)
 	}

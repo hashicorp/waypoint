@@ -31,7 +31,7 @@ type pollHandler interface {
 	// PollJob generates a QueueJobRequest that is used to poll on.
 	// It is expected to be given a proto message obtained from Peek which
 	// is used to define the job returned.
-	PollJob(hclog.Logger, interface{}) (*pb.QueueJobRequest, error)
+	PollJob(hclog.Logger, interface{}) ([]*pb.QueueJobRequest, error)
 
 	// Complete will mark the job that was queued as complete using the specific
 	// state implementation.
@@ -91,6 +91,7 @@ func (s *service) runPollQueuer(
 		var loopCtxCancel context.CancelFunc
 		loopCtx := ctx
 		if !pollTime.IsZero() {
+			log.Trace("next poll time", "time", pollTime)
 			loopCtx, loopCtxCancel = context.WithDeadline(ctx, pollTime)
 		}
 
@@ -117,12 +118,13 @@ func (s *service) runPollQueuer(
 
 		if err == nil {
 			// Outcome (1) above
-			log.Debug("dataset change, restarting poll queuer")
+			log.Trace("dataset change, restarting poll queuer")
 			continue
 		}
 
 		if ctx.Err() != nil {
 			// Outcome (2) above
+			log.Trace("context cancelled for poll queuer, returning from poll loop ctx")
 			return
 		}
 
@@ -148,8 +150,8 @@ func (s *service) runPollQueuer(
 		}
 
 		// Outcome (3)
-		log.Trace("queueing poll job")
-		queueJobRequest, err := handler.PollJob(log, pollItem)
+		log.Trace("queueing poll jobs")
+		queueJobRequests, err := handler.PollJob(log, pollItem)
 		if err != nil {
 			log.Warn("error building a poll job request. This should not happen "+
 				"repeatedly. If you see this in your log repeatedly, report a bug.",
@@ -158,16 +160,20 @@ func (s *service) runPollQueuer(
 			continue
 		}
 
-		resp, err := s.QueueJob(ctx, queueJobRequest)
+		totalRequests := len(queueJobRequests)
+		log.Trace("queueing jobs for poller", "job_total", totalRequests)
+
+		// Note: We queue all poll jobs transactionally and return any
+		// errors that occured
+		_, err = s.queueJobMulti(ctx, queueJobRequests)
 		if err != nil {
 			log.Warn("error queueing a poll job", "err", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		log.Debug("queued polling job", "job_id", resp.JobId)
 
 		// Mark this as complete so the next poll gets rescheduled.
-		log.Trace("scheduling next poll time")
+		log.Trace("completing poll and scheduling next poll time")
 		if err := handler.Complete(log, pollItem); err != nil {
 			// This should never happen so like above, if this happens we
 			// sleep for a minute so we don't completely overload the
