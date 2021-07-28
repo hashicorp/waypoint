@@ -239,15 +239,53 @@ Waypoint Server:
 
 Once the log entries are received by the server, they are written to
 the **log buffer**. A dedicated log buffer is usually allocated per deployment
-or per job. We have mechanisms for merging log buffers, if necessary.
+or per job. We have mechanisms for merging log buffers, if necessary. For
+internals, the log buffer is implemented at `internal/server/logbuffer`.
 
 The diagram below shows a high-level architecture of the log buffer:
 
 <p align="center"><img src=".github/images/log-buffer.png"></p>
 
-TODO
+The log buffer (orange) maintains a pointer to the current "chunk list"
+The chunk list is an array of "chunks" with each chunk representing 
+some number of lines. The log buffer also maintains a write cursor
+("current chunk") to the current non-filled chunk. The dark chunks 
+in the diagram are full while the lighter grey chunks are not full
+yet. The log buffer writes in sequential order as log messages are received.
+
+When the chunklist becomes completely full, the log buffer allocates a new
+chunklist and discards the old one (no longer points to it). The Go garbage
+collector will collect the chunk list once it is no longer in use, since
+some readers may still have read cursors into previous chunk lists.
+
+Next, we'll look at readers (purple and blue). Readers maintain pointers
+to the buffer, the chunk list and chunk in that list currently being read,
+and an exact cursor to the entry in the chunk. When reading, entries from
+the cursor in the current chunk of the current chunk list are read in
+sequential order. When the end of a single chunk is reached, the next
+chunk is started. When the end of a whole chunk list is reached, the reader
+goes back to the buffer and gets the current chunk list the buffer points to.
+
+In the diagram above, the purple reader points to the current chunk list
+and is almost caught up with the writer. The blue reader points to a past
+chunk list that is no longer in use by the writer. If the writer completes
+it's full chunk list before the blue reader catches up, then the blue
+reader may "skip" a chunk list. This is acceptable to have predictable
+memory usage and avoid poorly behaved readers from inflating memory usage
+on the system.
+
+Next, let's look at the internals of a single chunk:
 
 <p align="center"><img src=".github/images/log-chunk.png" width="50%"></p>
+
+A chunk is an array of log entries (a line and a timestamp). There is 
+exactly one write cursor that the main log buffer uses to write the next 
+entry. And there can be N read cursors for each reader that currently exists.
+While the read cursor is in the diagram above next to the chunk, note that
+the read cursor is maintained on each reader structure, not on the chunk 
+structure.
+
+#### Blocking Behavior
 
 TODO
 
