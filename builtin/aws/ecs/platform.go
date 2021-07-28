@@ -1636,9 +1636,9 @@ deploy {
 
 	doc.SetField(
 		"security_group_ids",
-		"Security Group IDs of existing security groups to use for ECS",
+		"Security Group IDs of existing security groups to use for the ECS service's network access",
 		docs.Summary(
-			"list of existing group IDs to use for ECS",
+			"list of existing group IDs to use for ECS the ECS service's network access",
 		),
 	)
 
