@@ -1,0 +1,3 @@
+```release-note:improvement
+plugin/nomad: Update Nomad platform to use SDK Resource Manager
+```
