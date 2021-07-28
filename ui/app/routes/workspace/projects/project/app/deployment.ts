@@ -5,9 +5,8 @@ import { GetDeploymentRequest, Deployment, Ref, StatusReport } from 'waypoint-pb
 import { Model as AppRouteModel } from '../app';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
-interface DeploymentModelParams {
-  sequence: number;
-}
+type Params = { sequence: string };
+type Model = Deployment.AsObject & WithStatusReport;
 
 interface WithStatusReport {
   statusReport?: StatusReport.AsObject;
@@ -16,11 +15,11 @@ interface WithStatusReport {
 export default class DeploymentDetail extends Route {
   @service api!: ApiService;
 
-  breadcrumbs(model: AppRouteModel): Breadcrumb[] {
+  breadcrumbs(model: Model): Breadcrumb[] {
     if (!model) return [];
     return [
       {
-        label: model.application.application,
+        label: model.application?.application ?? 'unknown',
         icon: 'git-repository',
         route: 'workspace.projects.project.app',
       },
@@ -32,12 +31,16 @@ export default class DeploymentDetail extends Route {
     ];
   }
 
-  async model(params: DeploymentModelParams): Promise<Deployment.AsObject> {
-    let { deployments } = this.modelFor('workspace.projects.project.app');
-    let { id: deployment_id } = deployments.find((obj) => obj.sequence == Number(params.sequence));
+  async model(params: Params): Promise<Model> {
+    let { deployments } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
+    let deploymentFromAppRoute = deployments.find((obj) => obj.sequence == Number(params.sequence));
+
+    if (!deploymentFromAppRoute) {
+      throw new Error(`Deployment v${params.sequence} not found`);
+    }
 
     let ref = new Ref.Operation();
-    ref.setId(deployment_id);
+    ref.setId(deploymentFromAppRoute.id);
     let req = new GetDeploymentRequest();
     req.setRef(ref);
 
