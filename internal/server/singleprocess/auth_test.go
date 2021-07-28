@@ -221,6 +221,37 @@ func TestServiceAuth(t *testing.T) {
 		}
 	})
 
+	t.Run("entrypoint token can only access entrypoint APIs (LEGACY as another user)", func(t *testing.T) {
+		require := require.New(t)
+
+		// Log in as some other user
+		ctx = userWithContext(ctx, &pb.User{Id: DefaultUserId + "0"})
+
+		// Get our invite token for the entrypoint
+		resp, err := s.GenerateInviteToken(ctx, &pb.InviteTokenRequest{
+			Duration:         "5m",
+			UnusedEntrypoint: &pb.Token_Entrypoint{DeploymentId: "A"},
+		})
+		require.NoError(err)
+
+		// Exchange it
+		resp, err = s.ConvertInviteToken(ctx, &pb.ConvertInviteTokenRequest{
+			Token: resp.Token,
+		})
+		require.NoError(err)
+		token := resp.Token
+
+		{
+			_, err := s.Authenticate(context.Background(), token, "EntrypointConfig", nil)
+			require.NoError(err)
+		}
+
+		{
+			_, err := s.Authenticate(context.Background(), token, "UpsertDeployment", nil)
+			require.Error(err)
+		}
+	})
+
 	t.Run("rejects tokens signed with unknown keys", func(t *testing.T) {
 		require := require.New(t)
 
