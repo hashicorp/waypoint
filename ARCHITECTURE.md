@@ -287,7 +287,15 @@ structure.
 
 #### Blocking Behavior
 
-TODO
+An important property of the log buffer system is that when readers
+are fully "caught up", they can efficiently block waiting for more
+writes. 
+
+This is implemented via condition variables. When a waiting reader sleeping
+on the condition variable is signaled, the reader checks to see if there is
+more data available. If there is more data available, the reader continues
+reading. When the reader is blocked again, it once again sleeps on the
+condition variable.
 
 ### Authentication
 
