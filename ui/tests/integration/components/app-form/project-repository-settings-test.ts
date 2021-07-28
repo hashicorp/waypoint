@@ -3,7 +3,7 @@ import { setupRenderingTest } from 'ember-qunit';
 import { render, clearRender, fillIn } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 
-module('Integration | Component | app-form/project-settings', function (hooks) {
+module('Integration | Component | app-form/project-repository-settings', function (hooks) {
   setupRenderingTest(hooks);
 
   test('second new project does not have previous input', async function (assert) {
@@ -92,7 +92,7 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
           ssh: {
             user: 'user',
             password: 'password',
-            privateKeyPem: 'private key',
+            privateKeyPem: btoa('private key'),
           },
         },
       },
@@ -116,5 +116,17 @@ module('Integration | Component | app-form/project-settings', function (hooks) {
     await render(hbs`<AppForm::ProjectRepositorySettings @project={{this.project}} />`);
 
     assert.dom('#git-auth-not-set').isChecked();
+  });
+
+  test('renders waypoint.hcl properly', async function (assert) {
+    this.set('project', {
+      waypointHcl: btoa('project = "example-project"'),
+    });
+
+    await render(hbs`
+      <AppForm::ProjectRepositorySettings @project={{this.project}} />
+    `);
+
+    assert.dom('#project-hcl-content').hasValue('project = "example-project"');
   });
 });

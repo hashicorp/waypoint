@@ -113,7 +113,7 @@
           <Pds::Textarea
             id="git-source-ssh-key"
             placeholder="*****************"
-            value={{this.git.ssh.privateKeyPem}}
+            value={{atob this.git.ssh.privateKeyPem}}
             required={{this.authSSH}}
             {{on "input" (fn this.setSshAuth "privateKeyPem")}}
           />
@@ -217,9 +217,9 @@
             class="pds-textarea__codeInput"
             spellcheck="false"
             rows="14"
-            value={{this.project.waypointHcl}}
+            value={{atob this.project.waypointHcl}}
             required={{this.this.serverHcl}}
-            {{on "input" (pick "target.value" (set this.project "waypointHcl"))}}
+            {{on "input" (pick "target.value" this.setWaypointHcl)}}
           />
         </div>
       {{else}}

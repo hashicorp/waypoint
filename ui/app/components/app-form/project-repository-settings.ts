@@ -182,6 +182,14 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
 
   @action
   setSshAuth(path: string, e: any) {
+    let value = e.target.value;
+
+    if (path === 'privateKeyPem') {
+      // We store privateKeyPem as a base64-encoded string to match the
+      // protobuf behavior for a `bytes` field.
+      value = btoa(value);
+    }
+
     if (!this.project.dataSource?.git?.ssh) {
       this.project.dataSource.git.ssh = {
         user: '',
@@ -189,7 +197,14 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
         privateKeyPem: '',
       };
     }
-    this.project.dataSource.git.ssh[path] = e.target.value;
+    this.project.dataSource.git.ssh[path] = value;
+  }
+
+  @action
+  setWaypointHcl(value: string): void {
+    // We store the waypointHcl as a base64-encoded string to match the
+    // protobuf behavior for a `bytes` field.
+    this.project.waypointHcl = btoa(value);
   }
 
   @action
@@ -226,8 +241,8 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
 
     if (this.authSSH) {
       let gitSSH = new Job.Git.SSH();
-      let encoder = new window.TextEncoder();
-      gitSSH.setPrivateKeyPem(encoder.encode(this.git.ssh.privateKeyPem));
+      // We’re assuming ssh.privateKeyPem is already a base64-encoded ascii string
+      gitSSH.setPrivateKeyPem(this.git.ssh.privateKeyPem);
       gitSSH.setUser(this.git.ssh.user);
       gitSSH.setPassword(this.git.ssh.password);
       git.setSsh(gitSSH);
@@ -244,11 +259,10 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     ref.setDataSourcePoll(dataSourcePoll);
 
     if (this.serverHcl && this.project.waypointHcl) {
-      let hclEncoder = new window.TextEncoder();
-      let waypointHcl = hclEncoder.encode(this.project.waypointHcl);
       // Hardcode hcl for now
       ref.setWaypointHclFormat(FORMAT.HCL);
-      ref.setWaypointHcl(waypointHcl);
+      // We’re assuming project.waypointHcl is already a base64-encoded ascii string
+      ref.setWaypointHcl(this.project.waypointHcl);
     }
     let applist = project.applicationsList.map((app: Application.AsObject) => {
       return new Application(app);
