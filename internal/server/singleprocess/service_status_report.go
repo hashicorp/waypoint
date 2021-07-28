@@ -80,7 +80,6 @@ func (s *service) GetStatusReport(
 }
 
 // Builds a status report job, queues it, and returns the job ID
-// TODO(briancain): test me
 func (s *service) ExpediteStatusReport(
 	ctx context.Context,
 	req *pb.ExpediteStatusReportRequest,
