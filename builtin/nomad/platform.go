@@ -22,8 +22,9 @@ import (
 )
 
 const (
-	metaId    = "waypoint.hashicorp.com/id"
-	metaNonce = "waypoint.hashicorp.com/nonce"
+	metaId            = "waypoint.hashicorp.com/id"
+	metaNonce         = "waypoint.hashicorp.com/nonce"
+	rmResourceJobName = "job"
 )
 
 var (
@@ -82,7 +83,7 @@ func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
 		resource.WithLogger(log.Named("resource_manager")),
 		resource.WithValueProvider(p.getNomadClient),
 		resource.WithResource(resource.NewResource(
-			resource.WithName("job"),
+			resource.WithName(rmResourceJobName),
 			resource.WithState(&Resource_Job{}),
 			resource.WithCreate(p.resourceJobCreate),
 			resource.WithDestroy(p.resourceJobDestroy),
@@ -266,7 +267,7 @@ func (p *Platform) Deploy(
 	result.ResourceState = rm.State()
 
 	// Get our service state
-	servState := rm.Resource("job").State().(*Resource_Job)
+	servState := rm.Resource(rmResourceJobName).State().(*Resource_Job)
 	if servState == nil {
 		return nil, status.Errorf(codes.Internal,
 			"service state is nil, this should never happen")
@@ -293,7 +294,7 @@ func (p *Platform) Destroy(
 	// If we don't have resource state, this state is from an older version
 	// and we need to manually recreate it.
 	if deployment.ResourceState == nil {
-		rm.Resource("job").SetState(&Resource_Job{
+		rm.Resource(rmResourceJobName).SetState(&Resource_Job{
 			Name: deployment.Name,
 		})
 	} else {
