@@ -14,7 +14,7 @@ export default Model.extend({
     result.setFileChangeSignal(this.fileChangeSignal);
     result.setName(this.name);
     result.setRemoteEnabled(this.remoteEnabled);
-    result.setWaypointHcl(this.waypointHcl);
+    result.setWaypointHcl(new TextEncoder().encode(this.waypointHcl));
     result.setWaypointHclFormat(Project.Format.HCL);
     let varProtosList = this.variables.models.map((a) => a.toProtobuf());
     result.setVariablesList(varProtosList);
