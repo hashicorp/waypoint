@@ -224,7 +224,6 @@ func (p *Platform) resourceJobCreate(
 }
 
 func (p *Platform) resourceJobDestroy(
-	ctx context.Context,
 	client *api.Client,
 	state *Resource_Job,
 	st terminal.Status,
@@ -304,7 +303,7 @@ func (p *Platform) Destroy(
 		}
 	}
 
-	return rm.DestroyAll(ctx, log, st, ui)
+	return rm.DestroyAll(st)
 }
 
 func (p *Platform) Status(
