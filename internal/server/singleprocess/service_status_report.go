@@ -88,6 +88,7 @@ func (s *service) ExpediteStatusReport(
 		StatusReport: &pb.Job_StatusReportOp{},
 	}
 
+	// Get target from request
 	var applicationRef *pb.Ref_Application
 	switch target := req.Target.(type) {
 	case *pb.ExpediteStatusReportRequest_Deployment:
@@ -110,8 +111,6 @@ func (s *service) ExpediteStatusReport(
 		return nil, err
 	}
 
-	// Get target from request
-
 	// build job
 	jobRequest := &pb.QueueJobRequest{
 		Job: &pb.Job{
@@ -121,7 +120,7 @@ func (s *service) ExpediteStatusReport(
 
 			Application: applicationRef,
 
-			// Application polling requires a data source to be configured for the project
+			// Status reports requires a data source to be configured for the project
 			// Otherwise a status report can't properly eval the projects hcl context
 			// needed to query the deploy or release
 			DataSource: project.DataSource,
