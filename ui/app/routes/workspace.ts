@@ -1,12 +1,11 @@
 import Route from '@ember/routing/route';
 import { Ref } from 'waypoint-pb';
 
-interface WSModelParams {
-  workspace_id: string;
-}
+export type Params = { workspace_id: string };
+export type Model = Ref.Workspace.AsObject;
 
 export default class Workspace extends Route {
-  async model(params: WSModelParams): Promise<Ref.Workspace.AsObject> {
+  async model(params: Params): Promise<Model> {
     // Workspace "id" which is a name, based on URL param
     let ws = new Ref.Workspace();
     ws.setWorkspace(params.workspace_id);
