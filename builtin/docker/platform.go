@@ -2,11 +2,13 @@ package docker
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -20,15 +22,15 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
-
-	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 )
 
 const (
@@ -112,6 +114,7 @@ func (p *Platform) Status(
 	ctx context.Context,
 	log hclog.Logger,
 	deployment *Deployment,
+	declaredResources *component.DeclaredResources,
 	ui terminal.UI,
 ) (*sdk.StatusReport, error) {
 	cli, err := p.getDockerClient(ctx)
@@ -141,9 +144,35 @@ func (p *Platform) Status(
 
 	log.Debug("querying docker for container health")
 
-	resources := []*sdk.StatusReport_Resource{{
-		Name: containerInfo.Name,
-	}}
+	// Find the declared resource that corresponds to our observed container
+	var containerDeclaredResource *sdk.DeclaredResource
+	for _, r := range declaredResources.Resources {
+		if r != nil && r.Name == "container" {
+			containerDeclaredResource = r
+		}
+	}
+
+	containerCreatedTime, err := time.Parse(time.RFC3339, containerInfo.Created)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to parse docker timestamp %q: %s", containerInfo.Created, err)
+	}
+
+	stateJson, err := json.Marshal(containerInfo)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to marshal container info to json: %s", err)
+	}
+
+	containerResource := &sdk.StatusReport_Resource{
+		Id:                  containerInfo.ID,
+		DeclaredResource:    &sdk.Ref_DeclaredResource{Id: containerDeclaredResource.Id},
+		Name:                containerInfo.Name,
+		Platform:            platformName,
+		Type:                containerDeclaredResource.Name,
+		CategoryDisplayHint: containerDeclaredResource.CategoryDisplayHint,
+		CreatedTime:         timestamppb.New(containerCreatedTime),
+		StateJson:           string(stateJson),
+	}
+	resources := []*sdk.StatusReport_Resource{containerResource}
 
 	if containerInfo.State.Health != nil {
 		// Built-in Docker health reporting
@@ -151,33 +180,33 @@ func (p *Platform) Status(
 
 		switch containerInfo.State.Health.Status {
 		case "Healthy":
-			resources[0].Health = sdk.StatusReport_READY
-			resources[0].HealthMessage = "container is running"
+			containerResource.Health = sdk.StatusReport_READY
+			containerResource.HealthMessage = "container is running"
 		case "Unhealthy":
-			resources[0].Health = sdk.StatusReport_DOWN
-			resources[0].HealthMessage = "container is down"
+			containerResource.Health = sdk.StatusReport_DOWN
+			containerResource.HealthMessage = "container is down"
 		case "Starting":
-			resources[0].Health = sdk.StatusReport_ALIVE
-			resources[0].HealthMessage = "container is starting"
+			containerResource.Health = sdk.StatusReport_ALIVE
+			containerResource.HealthMessage = "container is starting"
 		default:
-			resources[0].Health = sdk.StatusReport_UNKNOWN
-			resources[0].HealthMessage = "unknown status reported by docker for container"
+			containerResource.Health = sdk.StatusReport_UNKNOWN
+			containerResource.HealthMessage = "unknown status reported by docker for container"
 		}
 	} else {
 		// Waypoint container inspection
 
 		if containerInfo.State.Running && containerInfo.State.ExitCode == 0 {
-			resources[0].Health = sdk.StatusReport_READY
-			resources[0].HealthMessage = "container is running"
+			containerResource.Health = sdk.StatusReport_READY
+			containerResource.HealthMessage = "container is running"
 		} else if containerInfo.State.Restarting || containerInfo.State.Status == "created" {
-			resources[0].Health = sdk.StatusReport_ALIVE
-			resources[0].HealthMessage = "container is still starting"
+			containerResource.Health = sdk.StatusReport_ALIVE
+			containerResource.HealthMessage = "container is still starting"
 		} else if containerInfo.State.Dead || containerInfo.State.OOMKilled || containerInfo.State.ExitCode != 0 {
-			resources[0].Health = sdk.StatusReport_DOWN
-			resources[0].HealthMessage = "container is down"
+			containerResource.Health = sdk.StatusReport_DOWN
+			containerResource.HealthMessage = "container is down"
 		} else {
-			resources[0].Health = sdk.StatusReport_UNKNOWN
-			resources[0].HealthMessage = "unknown status for container"
+			containerResource.Health = sdk.StatusReport_UNKNOWN
+			containerResource.HealthMessage = "unknown status for container"
 		}
 	}
 
