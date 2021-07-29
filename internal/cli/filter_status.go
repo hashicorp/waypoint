@@ -119,11 +119,11 @@ func (ff *filterFlags) orderOp() *pb.OperationOrder {
 func initFilterFlags(set *flag.Sets, ff *filterFlags, opts filterOption) {
 	f := set.NewSet("Filter Options")
 
-	if opts == filterOptionAll || opts&filterOptionState != 0 {
+	if opts == filterOptionAll || opts == filterOptionState {
 		f.EnumVar(stateFlagVar(&ff.flagStatusFilter))
 	}
 
-	if opts == filterOptionAll || opts&filterOptionPhyState != 0 {
+	if opts == filterOptionAll || opts == filterOptionPhyState {
 		f.EnumSingleVar(phyStateFlagVar(&ff.flagPhysState))
 	}
 

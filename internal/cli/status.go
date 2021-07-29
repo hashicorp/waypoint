@@ -549,7 +549,7 @@ func (c *StatusCommand) Flags() *flag.Sets {
 			Usage:  "Output status about every project in a workspace.",
 		})
 
-		initFilterFlags(set, &c.filterFlags, filterOptionAll)
+		initFilterFlags(set, &c.filterFlags, filterOptionOrder)
 	})
 }
 
