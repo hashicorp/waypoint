@@ -1,0 +1,4 @@
+```release-note:improvement
+server: Continuously generate a status report for an application after the initial
+deployment or release for projects backed by a git data source
+```

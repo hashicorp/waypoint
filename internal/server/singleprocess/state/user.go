@@ -21,6 +21,12 @@ func init() {
 	schemas = append(schemas, userIndexSchema)
 }
 
+// See the docs in singleprocess.
+const (
+	DefaultUser   = "waypoint"
+	DefaultUserId = "00000000000000000000000001"
+)
+
 // UserPut creates or updates the given user. If the user has no ID set
 // then an ID will be written directly to the parameter.
 func (s *State) UserPut(user *pb.User) error {
@@ -300,6 +306,14 @@ func (s *State) userDelete(
 		}
 
 		return err
+	}
+
+	// If the user is the default user, then we can't delete them for now
+	if u.Id == DefaultUserId {
+		return status.Errorf(codes.FailedPrecondition,
+			"The initial Waypoint user can't currently be deleted. The initial "+
+				"user is used by deployments and runners for authentication. "+
+				"A future version of Waypoint will remove this restriction.")
 	}
 
 	// We can't delete the final user or the system will get into a state

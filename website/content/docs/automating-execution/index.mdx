@@ -40,7 +40,7 @@ to configure the server.
 Below is a list of commonly used environment variables for remote execution. These variables
 configure the Waypoint CLI for communication with the Waypoint server.
 
-- `WAYPOINT_SERVER_TOKEN`. Must be set to a Waypoint token, created with [`waypoint token new`](/commands/token-new)
+- `WAYPOINT_SERVER_TOKEN`. Must be set to a Waypoint token, created with [`waypoint user token`](/commands/user-token)
 - `WAYPOINT_SERVER_ADDR`. The address to the Waypoint server gRPC address. This must
   be accessible from the network that the client is running on.
 - `WAYPOINT_SERVER_TLS`. Should be set to a truthy value (e.g. "1") to configure the client to use TLS when

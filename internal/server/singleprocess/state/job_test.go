@@ -35,6 +35,27 @@ func TestJobCreate_singleton(t *testing.T) {
 		require.Len(jobs, 1)
 	})
 
+	t.Run("create multiple with no existing", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Create a job
+		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "A",
+			SingletonId: "1",
+		}), serverptypes.TestJobNew(t, &pb.Job{
+			Id:          "B",
+			SingletonId: "2",
+		})))
+
+		// Exactly one job should exist
+		jobs, err := s.JobList()
+		require.NoError(err)
+		require.Len(jobs, 2)
+	})
+
 	t.Run("create with an existing queued", func(t *testing.T) {
 		require := require.New(t)
 

@@ -16,7 +16,13 @@ export function componentName([component]: [string]): string {
   });
 
   // Replace any separators that are not human readable
-  return result.replace(replace, ' ');
+  result = result.replace(replace, ' ');
+
+  // Replace brand initialisms
+  result = result.replace('Aws', 'AWS');
+  result = result.replace('Ecr', 'ECR');
+
+  return result;
 }
 
 export default helper(componentName);

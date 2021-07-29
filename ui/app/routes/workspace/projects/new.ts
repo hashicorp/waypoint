@@ -1,14 +1,16 @@
 import Route from '@ember/routing/route';
 import { Project } from 'waypoint-pb';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
+
 export default class WorkspaceProjectsNew extends Route {
-  breadcrumbs = [
+  breadcrumbs: Breadcrumb[] = [
     {
       label: 'Projects',
-      args: ['workspace.projects'],
+      route: 'workspace.projects',
     },
     {
       label: 'New Project',
-      args: ['workspace.projects.new'],
+      route: 'workspace.projects.new',
     },
   ];
 

@@ -350,6 +350,8 @@ func (r *Runner) prepareAndExecuteJob(
 	client pb.Waypoint_RunnerJobStreamClient,
 	job *pb.Job,
 ) (*pb.Job_Result, error) {
+	log.Trace("preparing to execute job operation", "type", hclog.Fmt("%T", job.Operation))
+
 	// Some operation types don't need to download data, execute those here.
 	switch job.Operation.(type) {
 	case *pb.Job_Poll:

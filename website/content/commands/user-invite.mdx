@@ -1,0 +1,31 @@
+---
+layout: commands
+page_title: 'Commands: User invite'
+sidebar_title: 'user invite'
+description: 'Invite a user to join the Waypoint server'
+---
+
+# Waypoint User invite
+
+Command: `waypoint user invite`
+
+Invite a user to join the Waypoint server
+
+@include "commands/user-invite_desc.mdx"
+
+## Usage
+
+Usage: `waypoint user invite [options]`
+
+#### Global Options
+
+- `-plain` - Plain output: no colors, no animation.
+- `-app=<string>` - App to target. Certain commands require a single app target for Waypoint configurations with multiple apps. If you have a single app, then this can be ignored.
+- `-workspace=<string>` - Workspace to operate in.
+
+#### Command Options
+
+- `-expires-in=<duration>` - The duration until the token expires. i.e. '5m'.
+- `-username=<string>` - Invite a new user and provide a username hint. The user may still change their username after signing up. If this isn't specified, an invite token for your current user will be generated and no new user signup is performed.
+
+@include "commands/user-invite_more.mdx"

@@ -148,3 +148,18 @@ status_report_indicator:
     checking_now: Checking now…
     last_checked: Last checked
     unknown: Status unknown
+
+app_item_build:
+  built_in: Built in {duration}
+
+build_status:
+  type-1: # BUILDER
+    state-0: Building with # UNKNOWN
+    state-1: Building with # RUNNING
+    state-2: Built with # SUCCESS
+    state-3: Failed to build with # ERROR
+  type-2: # REGISTRY
+    state-0: Pushing to # UNKNOWN
+    state-1: Pushing to # RUNNING
+    state-2: Pushed to # SUCCESS
+    state-3: Failed to push to # ERROR

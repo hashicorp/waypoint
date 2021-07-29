@@ -1,0 +1,119 @@
+---
+layout: docs
+page_title: OIDC - Authentication
+description: |-
+  Waypoint can be configured to use OpenID Connect (OIDC) for authentication. This enables you to use existing identity providers such as Google, Okta, GitLab, and more.
+---
+
+# OpenID Connect (OIDC)
+
+Waypoint can be configured to use OpenID Connect (OIDC) for
+authentication. This enables you to use existing identity providers such
+as Google, Okta, GitLab, and more.
+
+OIDC doesn't replace the built-in token system. The token system can and
+should still be used for machine-oriented access. Humans can use OIDC to
+authenticate and acquire a token.
+
+## Configuring OIDC
+
+You can configure OIDC using the
+[waypoint auth-method set oidc](/commands/auth-method-set-oidc) CLI command.
+Please see the documentation for that command for all available options.
+
+Before you setup OIDC, you'll need at least the client ID and client secret
+for your identity provider. Please see the documentation for your identity
+provider to determine what these values are. See [Popular OIDC Providers](#popular-oidc-providers)
+for some help and guidance with specific popular providers.
+
+Once you have the required information, use the CLI:
+
+```shell-session
+$ waypoint auth-method set oidc \
+  -client-id=87a30dc693eb4db0a807c9faked4e0e643277f698aff83df5661021b6fc2d742 \
+  -client-secret=11360b5e9d7a54435dstillfake0b2c0e49ca866676f00ab02ad0e8e2a6c \
+  -issuer=https://accounts.google.com \
+  google
+```
+
+This will configure an OIDC auth method that is available to users immediately.
+You can use the other commands in the `waypoint auth-method` subcommand group
+to list, inspect, and delete auth methods.
+
+### Restricting Access
+
+You can restrict access to only certain users in your identity provider.
+Identity providers advertise a set of "claims" about a user. These claims
+can be used in rule expressions to restrict access.
+
+To determine what claims are available, please see the documentation for
+your identity provider. An alternate approach is to configure the OIDC
+provider with no restrictions, then log in with the `-v` flag, i.e.
+`waypoint login -v 127.0.0.1:9701`. The `-v` flag will log a WARN-level
+entry with all the claims for your account.
+
+Once you know what claims you want access to, you must specify them
+in the `waypoint auth-method set oidc` command, and create a rule. For
+example, for GitLab:
+
+```shell-session
+$ waypoint auth-method set oidc \
+  -client-id=myid \
+  -client-secret=mysecret \
+  -issuer=https://gitlab.com \
+  -list-claim-mapping="groups=groups" \
+  -access-selector="mycompany in list.groups" \
+  gitlab
+```
+
+The `-list-claim-mappings` flag maps the "groups" claim to be exposed
+as `list.groups` in the access selector. The `-list-` prefixed flag should
+be used for all list claims (arrays). The `-claim-mapping` flag should be
+used for all direct values and will be exposed as `value.<name>`.
+
+The selector `mycompany in list.groups` configures the provider to require
+the user to be in the group "mycompany" to authenticate. This can be used
+to restrict users to your Waypoint server. For full documentation on the
+available syntax, see the [Consul documentation](https://www.consul.io/api/features/filtering#creating-expressions) which uses the same syntax.
+
+## Account Mapping
+
+When logging in with OIDC, Waypoint will automatically create a new user
+account within Waypoint if one does not exist. Waypoint uses the following
+rules to find an existing user:
+
+1. Look for an existing user account that is linked to exactly the
+   user `(issuer ID, sub ID)` tuple.
+
+2. Look for an existing user account with an email address matching the
+   `email` claim. This is only done if the identity provider specifies
+   `email_verified` as true.
+
+3. Create and link a new user with a random username.
+
+Users of OIDC-created accounts can modify their account details
+using `waypoint user modify`.
+
+## Popular OIDC Providers
+
+This is a list of popular OIDC providers with a link to their help and
+any other information that might be useful for configuring OIDC.
+
+### Google
+
+- Help: https://developers.google.com/identity/protocols/oauth2/openid-connect
+- Issuer URL: `https://accounts.google.com`
+
+### GitLab
+
+- Help: https://docs.gitlab.com/ee/integration/openid_connect_provider.html
+- Issuer URL: `https://gitlab.com` (or the URL to your own installation)
+
+-> **Important:** use the `groups` claim to restrict access to GitLab users
+that are members of specific groups. Otherwise, every GitLab user in the
+installation can access your Waypoint server.
+
+### Okta
+
+- Help: https://developer.okta.com/docs/reference/api/oidc/
+- Issuer URL: `https://${yourOktaDomain}/`
