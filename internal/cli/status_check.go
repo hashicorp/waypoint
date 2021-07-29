@@ -89,7 +89,7 @@ func (c *StatusCheckCommand) AutocompleteFlags() complete.Flags {
 }
 
 func (c *StatusCheckCommand) Synopsis() string {
-	return "List status for the current project."
+	return "Performs an health check for the current project."
 }
 
 func (c *StatusCheckCommand) Help() string {
