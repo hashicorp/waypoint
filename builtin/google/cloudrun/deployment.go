@@ -171,7 +171,7 @@ func (d *Deployment) pollServiceReady(
 				return service, nil
 
 			case "False":
-				return nil, fmt.Errorf("service failed to get ready")
+				return nil, fmt.Errorf("Cloud Run service failed to get ready")
 			}
 		}
 
