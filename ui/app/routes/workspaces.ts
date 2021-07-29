@@ -5,8 +5,8 @@ import ApiService from 'waypoint/services/api';
 export default class Workspaces extends Route {
   @service api!: ApiService;
 
-  redirect() {
+  redirect(): void {
     // For now, we just support the default workspace
-    return this.transitionTo('workspace', 'default');
+    this.transitionTo('workspace', 'default');
   }
 }

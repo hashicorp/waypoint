@@ -9,7 +9,7 @@ const ErrInvalidToken = 'invalid authentication token';
 export default class Application extends Route {
   @service session!: SessionService;
 
-  async beforeModel(transition: Transition) {
+  async beforeModel(transition: Transition): Promise<void> {
     await super.beforeModel(transition);
     if (!this.session.authConfigured && !transition.to.name.startsWith('auth')) {
       this.transitionTo('auth');
@@ -17,7 +17,7 @@ export default class Application extends Route {
   }
 
   @action
-  error(error: Error) {
+  error(error: Error): boolean | void {
     console.log(error);
 
     if (error.message.includes(ErrInvalidToken)) {
