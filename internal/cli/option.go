@@ -34,15 +34,6 @@ func WithSingleApp() Option {
 	}
 }
 
-func WithMaybeApp() Option {
-	return func(c *baseConfig) {
-		c.AppTargetRequired = false
-		c.MaybeApp = true
-		c.Config = false
-		c.Client = true
-	}
-}
-
 // WithNoConfig configures the CLI to not expect any project configuration.
 // This will not read any configuration files.
 func WithNoConfig() Option {
@@ -98,7 +89,6 @@ type baseConfig struct {
 	ConfigOptional    bool
 	Client            bool
 	AppTargetRequired bool
-	MaybeApp          bool
 	UI                terminal.UI
 
 	// NoAutoServer is true if an in-memory server is not allowed.

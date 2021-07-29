@@ -35,11 +35,10 @@ type StatusCommand struct {
 func (c *StatusCommand) Run(args []string) int {
 	flagSet := c.Flags()
 	// Initialize. If we fail, we just exit since Init handles the UI.
-	// TODO: this doesn't support running waypoint commands outside of a project dir
 	if err := c.Init(
 		WithArgs(args),
 		WithFlags(flagSet),
-		WithMaybeApp(),
+		WithConfig(true), // optional config loading
 	); err != nil {
 		return 1
 	}
@@ -82,8 +81,12 @@ func (c *StatusCommand) Run(args []string) int {
 		}
 
 	} else if len(cmdArgs) == 0 {
-		// We're in a project dir
-		projectTarget = c.project.Ref().Project
+		// If we're in a project dir, load the name. Otherwise we'll
+		// show a list of all projects and their status and leave projectTarget
+		// blank
+		if c.project.Ref() != nil {
+			projectTarget = c.project.Ref().Project
+		}
 	}
 
 	if appTarget == "" && c.flagApp != "" {
@@ -107,7 +110,7 @@ func (c *StatusCommand) Run(args []string) int {
 		err = c.FormatProjectAppStatus(projectTarget)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
-				c.ui.Output(wpProjectNotFound, projectTarget, ctxConfig.Server.Address, terminal.WithErrorStyle())
+				c.ui.Output(wpProjectNotFound, projectTarget, c.serverCtx.Server.Address, terminal.WithErrorStyle())
 			} else {
 				c.ui.Output("CLI failed to format project app statuses:", terminal.WithErrorStyle())
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
@@ -119,7 +122,7 @@ func (c *StatusCommand) Run(args []string) int {
 		err = c.FormatAppStatus(projectTarget, appTarget)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
-				c.ui.Output(wpAppNotFound, appTarget, projectTarget, ctxConfig.Server.Address, terminal.WithErrorStyle())
+				c.ui.Output(wpAppNotFound, appTarget, projectTarget, c.serverCtx.Server.Address, terminal.WithErrorStyle())
 			} else {
 				c.ui.Output("CLI failed to format app status", terminal.WithErrorStyle())
 				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())

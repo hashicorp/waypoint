@@ -239,15 +239,6 @@ func (c *baseCommand) Init(opts ...Option) error {
 		}
 	}
 
-	// TODO: not sure if it's ok to move this. This is in support
-	// of getting a project ref with an app target isn't a hard requirement
-	// If we didn't get our ref, then we need to load config
-	// Add an additional option?
-	// if baseCfg.MaybeAppTarget {}
-	if c.refApp == nil && baseCfg.MaybeApp {
-		baseCfg.Config = true
-	}
-
 	// If we're loading the config, then get it.
 	if baseCfg.Config {
 		cfg, err := c.initConfig("", baseCfg.ConfigOptional)
