@@ -1,13 +1,12 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, GetProjectRequest } from 'waypoint-pb';
+import { GetProjectRequest, Project, Ref } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
-interface ProjectModelParams {
-  project_id: string;
-}
+export type Params = { project_id: string };
+export type Model = Project.AsObject;
 
 export default class ProjectDetail extends Route {
   @service api!: ApiService;
@@ -20,7 +19,7 @@ export default class ProjectDetail extends Route {
     },
   ];
 
-  async model(params: ProjectModelParams) {
+  async model(params: Params): Promise<Model> {
     // Setup the project request
     let ref = new Ref.Project();
     ref.setProject(params.project_id);
@@ -30,10 +29,16 @@ export default class ProjectDetail extends Route {
     let resp = await this.api.client.getProject(req, this.api.WithMeta());
     let project = resp.getProject();
 
-    return project?.toObject();
+    if (!project) {
+      // In reality the API will return an error in this circumstance
+      // but the types don’t tell us that.
+      throw new Error(`Project ${params.project_id} not found`);
+    }
+
+    return project.toObject();
   }
 
-  afterModel() {
+  afterModel(): void {
     this.pollModel.setup(this);
   }
 }
