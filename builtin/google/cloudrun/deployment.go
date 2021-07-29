@@ -171,7 +171,7 @@ func (d *Deployment) pollServiceReady(
 				return service, nil
 
 			case "False":
-				return nil, fmt.Errorf("service failed to get ready")
+				return nil, fmt.Errorf("Service failed to get ready; check GCR logs for troubleshooting info.")
 			}
 		}
 
