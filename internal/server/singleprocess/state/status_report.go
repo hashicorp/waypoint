@@ -61,6 +61,11 @@ func (s *State) StatusReportList(
 		} else {
 			theId = resId
 		}
+
+		if sr.Status.CompleteTime == nil {
+			continue
+		}
+
 		if mVal, ok := resMap[theId]; ok {
 			srTime := protoTimestampToTime(sr.Status.CompleteTime)
 			mValTime := protoTimestampToTime(mVal.Status.CompleteTime)
