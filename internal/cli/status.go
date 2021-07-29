@@ -156,7 +156,6 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	var workspace string
 	if len(resp.Workspaces) == 0 {
 		// this happens if you just wapyoint init
-		// probably a bug?
 		workspace = "???"
 	} else {
 		workspace = resp.Workspaces[0].Workspace.Workspace // TODO: assume the first workspace is correct??
@@ -187,9 +186,7 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 		})
 		if status.Code(err) == codes.NotFound {
 			// App doesn't have a status report yet, likely not deployed
-			// TODO: does this skip listing the app entirely?
 			err = nil
-			continue
 		}
 		if err != nil {
 			return err
@@ -252,7 +249,6 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	var workspace string
 	if len(projResp.Workspaces) == 0 {
 		// this happens if you just wapyoint init
-		// probably a bug?
 		workspace = "???"
 	} else {
 		workspace = projResp.Workspaces[0].Workspace.Workspace // TODO: assume the first workspace is correct??
@@ -283,7 +279,6 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	if status.Code(err) == codes.NotFound {
 		// App doesn't have a status report yet, likely not deployed
 		err = nil
-		// TODO: make statusReportComplete N/A
 	}
 	if err != nil {
 		return err
@@ -324,9 +319,6 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 		Workspace: &pb.Ref_Workspace{
 			Workspace: workspace,
 		},
-		//PhysicalState: phyState,
-		//Status:        c.filterFlags.statusFilters(),
-		//Order:         c.filterFlags.orderOp(),
 		LoadDetails: pb.Deployment_BUILD,
 	})
 	if err != nil {
@@ -387,7 +379,9 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 	} // else show no table
 
-	// TODO: Recent Events
+	// TODO(briancain): we don't yet store a list of recent events per app
+	// but it would go here if we did.
+	// Recent Events
 	//   Events List
 
 	if c.flagJson {
@@ -449,7 +443,6 @@ func (c *StatusCommand) FormatProjectStatus() error {
 		var workspace string
 		if len(resp.Workspaces) == 0 {
 			// this happens if you just wapyoint init
-			// probably a bug?
 			workspace = "???"
 		} else {
 			workspace = resp.Workspaces[0].Workspace.Workspace // TODO: assume the first workspace is correct??
@@ -457,6 +450,7 @@ func (c *StatusCommand) FormatProjectStatus() error {
 
 		// Get App Statuses
 		var appStatusReports []*pb.StatusReport
+		var ready, alive, down, unknown int
 		for _, app := range resp.Project.Applications {
 			if workspace == "???" {
 				workspace = "default"
@@ -479,15 +473,35 @@ func (c *StatusCommand) FormatProjectStatus() error {
 				return err
 			}
 
+			switch appStatusResp.Health.HealthStatus {
+			case "DOWN":
+				down++
+			case "UNKNOWN":
+				unknown++
+			case "READY":
+				ready++
+			case "ALIVE":
+				alive++
+			}
 			appStatusReports = append(appStatusReports, appStatusResp)
 		}
 
-		// TODO: generate aggregate health for all apps first
 		statusReportComplete := "N/A"
-		//var lastRelevantAppStatus *pb.StatusReport
 
 		if len(appStatusReports) != 0 {
-			statusReportComplete = c.FormatStatusReportComplete(appStatusReports[0])
+			statusReportComplete = ""
+			if ready > 0 {
+				statusReportComplete = statusReportComplete + fmt.Sprintf("%v READY ", ready)
+			}
+			if alive > 0 {
+				statusReportComplete = statusReportComplete + fmt.Sprintf("%v ALIVE ", alive)
+			}
+			if down > 0 {
+				statusReportComplete = statusReportComplete + fmt.Sprintf("%v DOWN ", down)
+			}
+			if alive > 0 {
+				statusReportComplete = statusReportComplete + fmt.Sprintf("%v UNKNOWN ", unknown)
+			}
 		}
 
 		statusColor := ""
@@ -511,7 +525,7 @@ func (c *StatusCommand) FormatProjectStatus() error {
 
 	// Render the table
 	if c.flagJson {
-		c.outputJsonProjects(tbl)
+		c.outputJsonProjectStatus(tbl)
 	} else {
 		c.ui.Output("")
 		c.ui.Table(tbl, terminal.WithStyle("Simple"))
@@ -522,7 +536,7 @@ func (c *StatusCommand) FormatProjectStatus() error {
 	return nil
 }
 
-func (c *StatusCommand) outputJsonProjects(t *terminal.Table) error {
+func (c *StatusCommand) outputJsonProjectStatus(t *terminal.Table) error {
 	var output []map[string]interface{}
 
 	// Add server context

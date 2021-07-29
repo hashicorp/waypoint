@@ -234,6 +234,7 @@ func (c *baseCommand) Init(opts ...Option) error {
 			}
 		}
 
+		// If we didn't get our ref, then we need to load config
 		if c.refApp == nil {
 			baseCfg.Config = true
 		}
