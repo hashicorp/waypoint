@@ -148,6 +148,7 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	if err != nil {
 		return err
 	}
+	project := resp.Project
 
 	var workspace string
 	if len(resp.Workspaces) == 0 {
@@ -168,14 +169,14 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	appTbl := terminal.NewTable(appHeaders...)
 
 	appFailures := false
-	for _, app := range resp.Project.Applications {
+	for _, app := range project.Applications {
 		if workspace == "???" {
 			workspace = "default"
 		}
 		appStatusResp, err := client.GetLatestStatusReport(c.Ctx, &pb.GetLatestStatusReportRequest{
 			Application: &pb.Ref_Application{
 				Application: app.Name,
-				Project:     resp.Project.Name,
+				Project:     project.Name,
 			},
 			Workspace: &pb.Ref_Workspace{
 				Workspace: workspace,
@@ -209,10 +210,14 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 		)
 	}
 
-	c.ui.Output("")
-	c.ui.Table(appTbl, terminal.WithStyle("Simple"))
-	c.ui.Output("")
-	c.ui.Output(wpStatusProjectSuccessMsg)
+	if c.flagJson {
+		c.outputJsonProjectAppStatus(appTbl, project)
+	} else {
+		c.ui.Output("")
+		c.ui.Table(appTbl, terminal.WithStyle("Simple"))
+		c.ui.Output("")
+		c.ui.Output(wpStatusProjectSuccessMsg)
+	}
 
 	if appFailures {
 		c.ui.Output("")
@@ -239,6 +244,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	if err != nil {
 		return err
 	}
+	project := projResp.Project
 
 	var workspace string
 	if len(projResp.Workspaces) == 0 {
@@ -252,7 +258,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	// App Summary
 	//  Summary of single app
 	var app *pb.Application
-	for _, a := range projResp.Project.Applications {
+	for _, a := range project.Applications {
 		if a.Name == appTarget {
 			app = a
 			break
@@ -265,7 +271,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	appStatusResp, err := client.GetLatestStatusReport(c.Ctx, &pb.GetLatestStatusReportRequest{
 		Application: &pb.Ref_Application{
 			Application: app.Name,
-			Project:     projResp.Project.Name,
+			Project:     project.Name,
 		},
 		Workspace: &pb.Ref_Workspace{
 			Workspace: workspace,
@@ -310,7 +316,7 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	respDeployList, err := client.ListDeployments(c.Ctx, &pb.ListDeploymentsRequest{
 		Application: &pb.Ref_Application{
 			Application: app.Name,
-			Project:     projResp.Project.Name,
+			Project:     project.Name,
 		},
 		Workspace: &pb.Ref_Workspace{
 			Workspace: workspace,
@@ -378,20 +384,24 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 	} // else show no table
 
-	// Recent Events
+	// TODO: Recent Events
 	//   Events List
 
-	c.ui.Output("")
-	c.ui.Output("Application Summary")
-	c.ui.Table(appTbl, terminal.WithStyle("Simple"))
-	c.ui.Output("")
-	c.ui.Output("Deployment Summary")
-	c.ui.Table(deployTbl, terminal.WithStyle("Simple"))
-	c.ui.Output("")
-	c.ui.Output("Deployment Resources Summary")
-	c.ui.Table(resourcesTbl, terminal.WithStyle("Simple"))
-	c.ui.Output("")
-	c.ui.Output(wpStatusAppSuccessMsg)
+	if c.flagJson {
+		c.outputJsonAppStatus(appTbl, deployTbl, resourcesTbl, project)
+	} else {
+		c.ui.Output("")
+		c.ui.Output("Application Summary")
+		c.ui.Table(appTbl, terminal.WithStyle("Simple"))
+		c.ui.Output("")
+		c.ui.Output("Deployment Summary")
+		c.ui.Table(deployTbl, terminal.WithStyle("Simple"))
+		c.ui.Output("")
+		c.ui.Output("Deployment Resources Summary")
+		c.ui.Table(resourcesTbl, terminal.WithStyle("Simple"))
+		c.ui.Output("")
+		c.ui.Output(wpStatusAppSuccessMsg)
+	}
 
 	if appFailures {
 		c.ui.Output("")
@@ -545,6 +555,130 @@ func (c *StatusCommand) outputJsonProjects(t *terminal.Table) error {
 	return nil
 }
 
+func (c *StatusCommand) outputJsonProjectAppStatus(
+	t *terminal.Table,
+	project *pb.Project,
+) error {
+	var output []map[string]interface{}
+
+	// Add server context
+	serverContext := map[string]interface{}{}
+	serverContext["Address"] = c.serverCtx.Server.Address
+	serverContext["ServerPlatform"] = c.serverCtx.Server.Platform
+
+	sc := map[string]interface{}{"ServerContext": serverContext}
+	output = append(output, sc)
+
+	// Add project info
+	projectInfo := map[string]interface{}{}
+	projectInfo["Name"] = project.Name
+
+	pc := map[string]interface{}{"Project": projectInfo}
+	output = append(output, pc)
+
+	a := []map[string]interface{}{}
+	for _, row := range t.Rows {
+		c := map[string]interface{}{}
+
+		for j, r := range row {
+			// Remove any whitespacess in key
+			header := strings.ReplaceAll(t.Headers[j], " ", "")
+			c[header] = r.Value
+		}
+		a = append(a, c)
+	}
+
+	ps := map[string]interface{}{"Applications": a}
+	output = append(output, ps)
+
+	data, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	c.ui.Output(string(data))
+
+	return nil
+}
+
+func (c *StatusCommand) outputJsonAppStatus(
+	appTbl *terminal.Table,
+	deployTbl *terminal.Table,
+	resourcesTbl *terminal.Table,
+	project *pb.Project,
+) error {
+	var output []map[string]interface{}
+
+	// Add server context
+	serverContext := map[string]interface{}{}
+	serverContext["Address"] = c.serverCtx.Server.Address
+	serverContext["ServerPlatform"] = c.serverCtx.Server.Platform
+
+	sc := map[string]interface{}{"ServerContext": serverContext}
+	output = append(output, sc)
+
+	// Add project info
+	projectInfo := map[string]interface{}{}
+	projectInfo["Name"] = project.Name
+
+	pc := map[string]interface{}{"Project": projectInfo}
+	output = append(output, pc)
+
+	a := []map[string]interface{}{}
+	for _, row := range appTbl.Rows {
+		c := map[string]interface{}{}
+
+		for j, r := range row {
+			// Remove any whitespacess in key
+			header := strings.ReplaceAll(appTbl.Headers[j], " ", "")
+			c[header] = r.Value
+		}
+		a = append(a, c)
+	}
+
+	ps := map[string]interface{}{"Applications": a}
+	output = append(output, ps)
+
+	d := []map[string]interface{}{}
+	for _, row := range deployTbl.Rows {
+		c := map[string]interface{}{}
+
+		for j, r := range row {
+			// Remove any whitespacess in key
+			header := strings.ReplaceAll(deployTbl.Headers[j], " ", "")
+			c[header] = r.Value
+		}
+		d = append(d, c)
+	}
+
+	ds := map[string]interface{}{"DeploymentSummary": d}
+	output = append(output, ds)
+
+	dr := []map[string]interface{}{}
+	for _, row := range resourcesTbl.Rows {
+		c := map[string]interface{}{}
+
+		for j, r := range row {
+			// Remove any whitespacess in key
+			header := strings.ReplaceAll(resourcesTbl.Headers[j], " ", "")
+			c[header] = r.Value
+		}
+		dr = append(dr, c)
+	}
+
+	drs := map[string]interface{}{"DeploymentResourcesSummary": dr}
+	output = append(output, drs)
+
+	data, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	c.ui.Output(string(data))
+
+	return nil
+}
+
 func (c *StatusCommand) FormatStatusReportComplete(statusReport *pb.StatusReport) string {
 	statusReportComplete := "N/A"
 
@@ -570,18 +704,6 @@ func (c *StatusCommand) FormatStatusReportComplete(statusReport *pb.StatusReport
 	}
 
 	return statusReportComplete
-}
-
-func (c *StatusCommand) displayJson() error {
-	var output []map[string]interface{}
-
-	data, err := json.MarshalIndent(output, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	c.ui.Output(string(data))
-	return nil
 }
 
 func (c *StatusCommand) Flags() *flag.Sets {
