@@ -76,7 +76,6 @@ func (s *State) StatusReportList(
 		result = append(result, v)
 	}
 
-
 	return result, nil
 }
 

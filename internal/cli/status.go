@@ -54,10 +54,10 @@ func (c *StatusCommand) Run(args []string) int {
 
 	resp, err := c.project.Client().ListStatusReports(c.Ctx, &pb.ListStatusReportsRequest{
 		Application: c.refApp,
-		Workspace: c.refWorkspace,
+		Workspace:   c.refWorkspace,
 		Order: &pb.OperationOrder{
 			Order: pb.OperationOrder_COMPLETE_TIME,
-			Desc: true,
+			Desc:  true,
 		},
 	})
 	if err != nil {

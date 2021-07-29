@@ -28,8 +28,8 @@ func (c *StatusCheckCommand) Run(args []string) int {
 
 	err := c.DoApp(c.Ctx, func(ctx context.Context, app *clientpkg.App) error {
 		deployments, err := c.project.Client().ListDeployments(c.Ctx, &pb.ListDeploymentsRequest{
-			Application: c.refApp,
-			Workspace: c.refWorkspace,
+			Application:   c.refApp,
+			Workspace:     c.refWorkspace,
 			PhysicalState: pb.Operation_CREATED,
 		})
 		if err != nil {
@@ -55,7 +55,7 @@ func (c *StatusCheckCommand) Run(args []string) int {
 					dep.Sequence,
 					resp.StatusReport.Health.HealthStatus,
 					resp.StatusReport.Health.HealthMessage,
-			), terminal.WithInfoStyle())
+				), terminal.WithInfoStyle())
 		}
 
 		return nil
@@ -65,10 +65,6 @@ func (c *StatusCheckCommand) Run(args []string) int {
 		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
 		return 1
 	}
-
-
-
-
 
 	c.ui.Output("Status report successfully requested",
 		terminal.WithSuccessStyle(),
