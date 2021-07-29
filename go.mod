@@ -45,6 +45,7 @@ require (
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-argmapper v0.2.0
+	github.com/hashicorp/go-bexpr v0.1.7
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-gcp-common v0.6.0
 	github.com/hashicorp/go-getter v1.4.1
@@ -75,8 +76,8 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/mitchellh/hashstructure/v2 v2.0.1
-	github.com/mitchellh/mapstructure v1.3.3
-	github.com/mitchellh/pointerstructure v1.0.0
+	github.com/mitchellh/mapstructure v1.4.1
+	github.com/mitchellh/pointerstructure v1.2.0
 	github.com/mitchellh/protoc-gen-go-json v0.0.0-20200917194518-364b693410ae
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/moby/buildkit v0.8.3 // indirect

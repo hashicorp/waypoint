@@ -65,7 +65,6 @@ func (p *Platform) ConfigSet(config interface{}) error {
 				validation.Empty.When(alb.CertificateId != "" || alb.ZoneId != "" || alb.FQDN != "").Error("listener_arn can not be used with other options"),
 			),
 		))
-
 		if err != nil {
 			return err
 		}
@@ -342,7 +341,6 @@ func defaultSubnets(ctx context.Context, sess *session.Session) ([]*string, erro
 			},
 		},
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +365,6 @@ func (p *Platform) SetupCluster(ctx context.Context, s LifecycleStatus, sess *se
 	desc, err := ecsSvc.DescribeClusters(&ecs.DescribeClustersInput{
 		Clusters: []*string{aws.String(cluster)},
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -529,7 +526,6 @@ func (p *Platform) SetupLogs(ctx context.Context, s LifecycleStatus, L hclog.Log
 		Limit:              aws.Int64(1),
 		LogGroupNamePrefix: aws.String(logGroup),
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -549,7 +545,6 @@ func (p *Platform) SetupLogs(ctx context.Context, s LifecycleStatus, L hclog.Log
 	}
 
 	return logGroup, nil
-
 }
 
 func createSG(
@@ -570,7 +565,6 @@ func createSG(
 			},
 		},
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -780,7 +774,6 @@ func createALB(
 					},
 				},
 			})
-
 			if err != nil {
 				return nil, nil, err
 			}
@@ -1063,58 +1056,26 @@ func (p *Platform) Launch(
 	L.Debug("registering task definition", "id", id)
 
 	var cpuShares int
+	family := "waypoint-" + app.App
+
+	s.Status("Registering Task definition: %s", family)
 
 	runtime := aws.String("FARGATE")
 	if p.config.EC2Cluster {
 		runtime = aws.String("EC2")
 		cpuShares = p.config.CPU
 	} else {
-		if p.config.Memory == 0 {
-			return nil, fmt.Errorf("Memory value required for fargate")
-		}
-		cpuValues, ok := fargateResources[p.config.Memory]
-		if !ok {
-			var (
-				allValues  []int
-				goodValues []string
-			)
-
-			for k := range fargateResources {
-				allValues = append(allValues, k)
-			}
-
-			sort.Ints(allValues)
-
-			for _, k := range allValues {
-				goodValues = append(goodValues, strconv.Itoa(k))
-			}
-
-			return nil, fmt.Errorf("Invalid memory value: %d (valid values: %s)",
-				p.config.Memory, strings.Join(goodValues, ", "))
+		if err := utils.ValidateEcsMemCPUPair(p.config.Memory, p.config.CPU); err != nil {
+			return nil, err
 		}
 
-		if p.config.CPU == 0 {
+		cpuValues := fargateResources[p.config.Memory]
+
+		// at this point we know that config.CPU is either 0, or a valid value
+		// for the memory given
+		cpuShares = p.config.CPU
+		if cpuShares == 0 {
 			cpuShares = cpuValues[0]
-		} else {
-			var (
-				valid      bool
-				goodValues []string
-			)
-
-			for _, c := range cpuValues {
-				goodValues = append(goodValues, strconv.Itoa(c))
-				if c == p.config.CPU {
-					valid = true
-					break
-				}
-			}
-
-			if !valid {
-				return nil, fmt.Errorf("Invalid cpu value: %d (valid values: %s)",
-					p.config.Memory, strings.Join(goodValues, ", "))
-			}
-
-			cpuShares = p.config.CPU
 		}
 	}
 
@@ -1124,10 +1085,6 @@ func (p *Platform) Launch(
 		cpus = nil
 	}
 	mems := strconv.Itoa(p.config.Memory)
-
-	family := "waypoint-" + app.App
-
-	s.Status("Registering Task definition: %s", family)
 
 	containerDefinitions := append([]*ecs.ContainerDefinition{&def}, additionalContainers...)
 
@@ -1247,9 +1204,14 @@ func (p *Platform) Launch(
 	// Create the service
 
 	L.Debug("creating service", "arn", *taskOut.TaskDefinition.TaskDefinitionArn)
-	sgecsport, err := createSG(ctx, s, sess, fmt.Sprintf("%s-inbound-internal", app.App), vpcId, int(p.config.ServicePort))
-	if err != nil {
-		return nil, err
+
+	if p.config.SecurityGroupIDs == nil {
+		sgecsport, err := createSG(ctx, s, sess, fmt.Sprintf("%s-inbound-internal", app.App), vpcId, int(p.config.ServicePort))
+		if err != nil {
+			return nil, err
+		}
+
+		p.config.SecurityGroupIDs = append(p.config.SecurityGroupIDs, sgecsport)
 	}
 
 	count := int64(p.config.Count)
@@ -1259,7 +1221,7 @@ func (p *Platform) Launch(
 
 	netCfg := &ecs.AwsVpcConfiguration{
 		Subnets:        subnets,
-		SecurityGroups: []*string{sgecsport},
+		SecurityGroups: p.config.SecurityGroupIDs,
 	}
 
 	if !p.config.EC2Cluster {
@@ -1567,6 +1529,9 @@ type Config struct {
 	// Subnets to place the service into. Defaults to the subnets in the default VPC.
 	Subnets []string `hcl:"subnets,optional"`
 
+	// Security Group IDs of existing security groups to use for ECS.
+	SecurityGroupIDs []*string `hcl:"security_group_ids,optional"`
+
 	// How many tasks of the service to run. Default 1.
 	Count int `hcl:"count,optional"`
 
@@ -1667,6 +1632,14 @@ deploy {
 		"subnets",
 		"the VPC subnets to use for the application",
 		docs.Default("public subnets in the default VPC"),
+	)
+
+	doc.SetField(
+		"security_group_ids",
+		"Security Group IDs of existing security groups to use for the ECS service's network access",
+		docs.Summary(
+			"list of existing group IDs to use for ECS the ECS service's network access",
+		),
 	)
 
 	doc.SetField(

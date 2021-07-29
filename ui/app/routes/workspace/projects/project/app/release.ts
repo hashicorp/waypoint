@@ -3,16 +3,10 @@ import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { GetReleaseRequest, Release, Ref, StatusReport } from 'waypoint-pb';
 import { Model as AppRouteModel } from '../app';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
-interface ReleaseModelParams {
-  sequence: number;
-}
-
-interface Breadcrumb {
-  label: string;
-  icon: string;
-  args: string[];
-}
+type Params = { sequence: string };
+type Model = Release.AsObject & WithStatusReport;
 
 interface WithStatusReport {
   statusReport?: StatusReport.AsObject;
@@ -21,28 +15,33 @@ interface WithStatusReport {
 export default class ReleaseDetail extends Route {
   @service api!: ApiService;
 
-  breadcrumbs(model: AppRouteModel): Breadcrumb[] {
+  breadcrumbs(model: Model): Breadcrumb[] {
     if (!model) return [];
+
     return [
       {
-        label: model.application.application,
+        label: model.application?.application ?? 'unknown',
         icon: 'git-repository',
-        args: ['workspace.projects.project.app'],
+        route: 'workspace.projects.project.app',
       },
       {
         label: 'Releases',
         icon: 'public-default',
-        args: ['workspace.projects.project.app.releases'],
+        route: 'workspace.projects.project.app.releases',
       },
     ];
   }
 
-  async model(params: ReleaseModelParams): Promise<Release.AsObject> {
-    let { releases } = this.modelFor('workspace.projects.project.app');
-    let { id: release_id } = releases.find((obj) => obj.sequence === Number(params.sequence));
+  async model(params: Params): Promise<Model> {
+    let { releases } = this.modelFor('workspace.projects.project.app') as AppRouteModel;
+    let releaseFromAppRoute = releases.find((obj) => obj.sequence === Number(params.sequence));
+
+    if (!releaseFromAppRoute) {
+      throw new Error(`Release v${params.sequence} not found`);
+    }
 
     let ref = new Ref.Operation();
-    ref.setId(release_id);
+    ref.setId(releaseFromAppRoute.id);
     let req = new GetReleaseRequest();
     req.setRef(ref);
 

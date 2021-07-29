@@ -1,25 +1,27 @@
-import DeploymentDetail from './deployment';
+import Route from '@ember/routing/route';
+import { inject as service } from '@ember/service';
 import { GetDeploymentRequest, Deployment, Ref } from 'waypoint-pb';
+import ApiService from 'waypoint/services/api';
 
-interface DeploymentIdModelParams {
-  deployment_id: string;
-}
+type Params = { deployment_id: string };
+type Model = Deployment.AsObject;
 
-export default class DeploymentIdDetail extends DeploymentDetail {
-  renderTemplate() {
-    this.render('workspace/projects/project/app/deployment', {
-      into: 'workspace/projects/project',
-    });
-  }
+export default class DeploymentIdDetail extends Route {
+  @service api!: ApiService;
 
-  async model(params: DeploymentIdModelParams): Promise<Deployment.AsObject> {
-    let ref = new Ref.Operation();
-    ref.setId(params.deployment_id);
+  async model(params: Params): Promise<Model> {
     let req = new GetDeploymentRequest();
+    let ref = new Ref.Operation();
+
+    ref.setId(params.deployment_id);
     req.setRef(ref);
 
-    let resp = await this.api.client.getDeployment(req, this.api.WithMeta());
-    let deploy: Deployment = resp;
-    return deploy.toObject();
+    let deployment = await this.api.client.getDeployment(req, this.api.WithMeta());
+
+    return deployment.toObject();
+  }
+
+  redirect(model: Model): void {
+    this.transitionTo('workspace.projects.project.app.deployment', model.sequence);
   }
 }

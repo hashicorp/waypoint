@@ -2,13 +2,11 @@ package state
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
-	/*
-		"google.golang.org/grpc/codes"
-		"google.golang.org/grpc/status"
-	*/
 
+	"github.com/hashicorp/go-memdb"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
@@ -204,5 +202,310 @@ func TestApplication(t *testing.T) {
 		require.NoError(err)
 
 		require.Equal("TERM", sig)
+	})
+}
+
+func TestApplicationPollPeek(t *testing.T) {
+	t.Run("returns nil if no values", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		v, _, err := s.ApplicationPollPeek(nil)
+		require.NoError(err)
+		require.Nil(v)
+	})
+
+	t.Run("returns next to poll", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		ref := &pb.Ref_Project{Project: "apple"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppStatusPoll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+		})))
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Project: ref,
+			Name:    ref.Project,
+		}))
+		require.NoError(err)
+
+		// Set another later
+		time.Sleep(10 * time.Millisecond)
+		refOrg := &pb.Ref_Project{Project: "orange"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: refOrg.Project,
+			StatusReportPoll: &pb.Project_AppStatusPoll{
+				Enabled:  true,
+				Interval: "10s",
+			},
+			Applications: []*pb.Application{{
+				Project: ref,
+				Name:    ref.Project,
+			}},
+		})))
+
+		// Get exact
+		{
+			resp, t, err := s.ApplicationPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("apple", resp.Name)
+			require.False(t.IsZero())
+		}
+	})
+
+	t.Run("watchset triggers from empty to available", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		ws := memdb.NewWatchSet()
+		v, _, err := s.ApplicationPollPeek(ws)
+		require.NoError(err)
+		require.Nil(v)
+
+		// Watch should block
+		require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+		// Set
+		ref := &pb.Ref_Project{Project: "apple"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppStatusPoll{
+				Enabled:  true,
+				Interval: "30s",
+			},
+		})))
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Project: ref,
+			Name:    ref.Project,
+		}))
+		require.NoError(err)
+
+		// Should be triggered.
+		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+
+		// Get exact
+		{
+			resp, t, err := s.ApplicationPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("apple", resp.Name)
+			require.False(t.IsZero())
+		}
+	})
+
+	t.Run("watchset triggers when records change", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		ref := &pb.Ref_Project{Project: "apple"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppStatusPoll{
+				Enabled:  true,
+				Interval: "5s",
+			},
+		})))
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Project: ref,
+			Name:    ref.Project,
+		}))
+		require.NoError(err)
+
+		// Set another later
+		refOrg := &pb.Ref_Project{Project: "orange"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: refOrg.Project,
+			StatusReportPoll: &pb.Project_AppStatusPoll{
+				Enabled:  true,
+				Interval: "5m", // 5 MINUTES, longer than A
+			},
+		})))
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Project: refOrg,
+			Name:    refOrg.Project,
+		}))
+		require.NoError(err)
+
+		// Get projects
+		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "apple"})
+		require.NoError(err)
+		require.NotNil(pA)
+		pB, err := s.ProjectGet(&pb.Ref_Project{Project: "orange"})
+		require.NoError(err)
+		require.NotNil(pB)
+
+		// Complete both first
+		now := time.Now()
+		require.NoError(s.ApplicationPollComplete(pA, now))
+		require.NoError(s.ApplicationPollComplete(pB, now))
+
+		// Peek, we should get A
+		ws := memdb.NewWatchSet()
+		p, ts, err := s.ApplicationPollPeek(ws)
+		require.NoError(err)
+		require.NotNil(p)
+		require.Equal("apple", p.Name)
+		require.False(ts.IsZero())
+
+		// Watch should block
+		require.True(ws.Watch(time.After(10 * time.Millisecond)))
+
+		// Set
+		require.NoError(s.ApplicationPollComplete(pA, now.Add(1*time.Second)))
+
+		// Should be triggered.
+		require.False(ws.Watch(time.After(100 * time.Millisecond)))
+
+		// Get exact
+		{
+			resp, t, err := s.ApplicationPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("apple", resp.Name)
+			require.False(t.IsZero())
+		}
+	})
+}
+
+func TestApplicationPollComplete(t *testing.T) {
+	t.Run("returns nil for application that doesn't exist", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		err := s.ApplicationPollComplete(&pb.Project{Name: "NOPE"}, time.Now())
+		require.NoError(err)
+	})
+
+	t.Run("does nothing for project that has polling disabled", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		ref := &pb.Ref_Project{Project: "apple"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppStatusPoll{
+				Enabled: false,
+			},
+		})))
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Project: ref,
+			Name:    ref.Project,
+		}))
+		require.NoError(err)
+
+		// Get
+		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "apple"})
+		require.NoError(err)
+		require.NotNil(pA)
+
+		// No error
+		require.NoError(s.ApplicationPollComplete(pA, time.Now()))
+
+		// Peek does nothing
+		_, _, err = s.ApplicationPollPeek(nil)
+		require.NoError(err)
+		//require.False(v.StatusReportPoll.Enabled)
+	})
+
+	t.Run("schedules the next poll time", func(t *testing.T) {
+		require := require.New(t)
+
+		s := TestState(t)
+		defer s.Close()
+
+		// Set
+		ref := &pb.Ref_Project{Project: "apple"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: ref.Project,
+			StatusReportPoll: &pb.Project_AppStatusPoll{
+				Enabled:  true,
+				Interval: "5s",
+			},
+		})))
+		_, err := s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Project: ref,
+			Name:    ref.Project,
+		}))
+		require.NoError(err)
+
+		// Set another later
+		refOrg := &pb.Ref_Project{Project: "orange"}
+		require.NoError(s.ProjectPut(serverptypes.TestProject(t, &pb.Project{
+			Name: refOrg.Project,
+			StatusReportPoll: &pb.Project_AppStatusPoll{
+				Enabled:  true,
+				Interval: "5m", // 5 MINUTES, longer than A
+			},
+		})))
+		_, err = s.AppPut(serverptypes.TestApplication(t, &pb.Application{
+			Project: refOrg,
+			Name:    refOrg.Project,
+		}))
+		require.NoError(err)
+
+		// Get projects
+		pA, err := s.ProjectGet(&pb.Ref_Project{Project: "apple"})
+		require.NoError(err)
+		require.NotNil(pA)
+		pB, err := s.ProjectGet(&pb.Ref_Project{Project: "orange"})
+		require.NoError(err)
+		require.NotNil(pB)
+
+		// Complete both first
+		now := time.Now()
+		require.NoError(s.ApplicationPollComplete(pA, now))
+		require.NoError(s.ApplicationPollComplete(pB, now))
+
+		// Peek should return A, lower interval
+		{
+			resp, t, err := s.ApplicationPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("apple", resp.Name)
+			require.False(t.IsZero())
+		}
+
+		// Complete again, a minute later. The result should be A again
+		// because of the lower interval.
+		{
+			require.NoError(s.ApplicationPollComplete(pA, now.Add(1*time.Minute)))
+
+			resp, t, err := s.ApplicationPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("apple", resp.Name)
+			require.False(t.IsZero())
+		}
+
+		// Complete A, now 6 minutes later. The result should be B now.
+		{
+			require.NoError(s.ApplicationPollComplete(pA, now.Add(6*time.Minute)))
+
+			resp, t, err := s.ApplicationPollPeek(nil)
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal("orange", resp.Name)
+			require.False(t.IsZero())
+		}
 	})
 }

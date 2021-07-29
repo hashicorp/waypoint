@@ -1,3 +1,5 @@
+{{page-title (concat @model.application.application "Exec")}}
+
 <h3>Exec</h3>
 
 <div class="output-pane">
@@ -15,7 +17,7 @@
 
   <div class="run-prompt">
     <Pds::Icon @type="chevron-right" class="prompt-icon" />
-    <input type="text" class="run-prompt-input" disabled />
+    <input type="text" class="run-prompt-input" disabled aria-label="Command" />
     <button type="button" class="button button--primary" disabled>
       <Pds::Icon @type="sub-right" class="icon" />
       <span>Run</span>

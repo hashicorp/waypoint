@@ -13,8 +13,9 @@ import * as versionInfo from './services/version-info';
 import * as statusReport from './services/status-report';
 import * as job from './services/job';
 import * as log from './services/log';
+import * as pushedArtifact from './services/pushed-artifact';
 
-export default function (this: Server) {
+export default function (this: Server): void {
   this.namespace = 'hashicorp.waypoint.Waypoint';
   this.urlPrefix = '/grpc';
   this.timing = 0;
@@ -48,6 +49,7 @@ export default function (this: Server) {
   this.post('/GetLatestStatusReport', statusReport.getLatest);
   this.post('/GetJobStream', job.stream);
   this.post('/GetLogStream', log.stream);
+  this.post('/ListPushedArtifacts', pushedArtifact.list);
 
   if (!Ember.testing) {
     // Pass through all other requests

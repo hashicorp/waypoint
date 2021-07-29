@@ -1,9 +1,10 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, Deployment, Build, Release, Project, StatusReport } from 'waypoint-pb';
+import { Ref, Deployment, Build, Release, Project, StatusReport, PushedArtifact } from 'waypoint-pb';
 import PollModelService from 'waypoint/services/poll-model';
 import { hash } from 'rsvp';
+import { Breadcrumb } from 'waypoint/services/breadcrumbs';
 
 export interface Params {
   app_id: string;
@@ -13,7 +14,8 @@ export interface Model {
   application: Ref.Application.AsObject;
   deployments: (Deployment.AsObject & WithStatusReport)[];
   releases: (Release.AsObject & WithStatusReport)[];
-  builds: Build.AsObject[];
+  builds: (Build.AsObject & WithPushedArtifact)[];
+  pushedArtifacts: PushedArtifact.AsObject[];
   statusReports: StatusReport.AsObject[];
 }
 
@@ -21,10 +23,8 @@ interface WithStatusReport {
   statusReport?: StatusReport.AsObject;
 }
 
-interface Breadcrumb {
-  label: string;
-  icon: string;
-  args: string[];
+interface WithPushedArtifact {
+  pushedArtifact?: PushedArtifact.AsObject;
 }
 
 export default class App extends Route {
@@ -38,7 +38,7 @@ export default class App extends Route {
       {
         label: model.application.project,
         icon: 'folder-outline',
-        args: ['workspace.projects.project.apps'],
+        route: 'workspace.projects.project.apps',
       },
     ];
   }
@@ -60,12 +60,14 @@ export default class App extends Route {
       deployments: this.api.listDeployments(wsRef, appRef),
       releases: this.api.listReleases(wsRef, appRef),
       builds: this.api.listBuilds(wsRef, appRef),
+      pushedArtifacts: this.api.listPushedArtifacts(wsRef, appRef),
       statusReports: this.api.listStatusReports(wsRef, appRef),
     });
   }
 
   afterModel(model: Model): void {
     injectStatusReports(model);
+    injectPushedArtifacts(model);
     this.pollModel.setup(this);
   }
 }
@@ -83,6 +85,19 @@ function injectStatusReports(model: Model): void {
       let release = releases.find((d) => d.id === statusReport.releaseId);
       if (release) {
         release.statusReport = statusReport;
+      }
+    }
+  }
+}
+
+function injectPushedArtifacts(model: Model): void {
+  let { builds, pushedArtifacts } = model;
+
+  for (let pushedArtifact of pushedArtifacts) {
+    if (pushedArtifact.buildId) {
+      let build = builds.find((b) => b.id === pushedArtifact.buildId);
+      if (build) {
+        build.pushedArtifact = pushedArtifact;
       }
     }
   }
