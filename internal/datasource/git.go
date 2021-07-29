@@ -7,12 +7,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
@@ -55,10 +53,9 @@ func (s *GitSource) ProjectSource(body hcl.Body, ctx *hcl.EvalContext) (*pb.Job_
 
 	// Start building the result
 	result := &pb.Job_Git{
-		Url:                      cfg.Url,
-		Path:                     cfg.Path,
-		IgnoreChangesOutsidePath: cfg.IgnoreChangesOutsidePath,
-		Ref:                      cfg.Ref,
+		Url:  cfg.Url,
+		Path: cfg.Path,
+		Ref:  cfg.Ref,
 	}
 	switch {
 	case cfg.Username != "":
@@ -281,14 +278,13 @@ func (s *GitSource) Changes(
 	ui terminal.UI,
 	raw *pb.Job_DataSource,
 	current *pb.Job_DataSource_Ref,
-	tempDir string,
-) (*pb.Job_DataSource_Ref, bool, error) {
+) (*pb.Job_DataSource_Ref, error) {
 	source := raw.Source.(*pb.Job_DataSource_Git)
 
 	// Build our auth mechanism
 	auth, err := s.auth(log, ui, source)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
 	// Get our remote
@@ -307,7 +303,7 @@ func (s *GitSource) Changes(
 	// List our refs, equivalent to git ls-remote
 	refs, err := remote.List(&git.ListOptions{Auth: auth})
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
 	// Build a map of our refs since we may have to do many lookups
@@ -360,7 +356,7 @@ func (s *GitSource) Changes(
 			limit--
 		}
 		if limit == 0 {
-			return nil, false, status.Errorf(codes.FailedPrecondition,
+			return nil, status.Errorf(codes.FailedPrecondition,
 				"Infinite reference in hash lookup for target: %s", targetRef)
 		}
 		if ref == nil {
@@ -372,43 +368,15 @@ func (s *GitSource) Changes(
 	}
 
 	if foundRef == nil {
-		return nil, false, status.Errorf(codes.Internal, "Hash for target ref not found: %s", targetRef)
+		return nil, status.Errorf(codes.Internal, "Hash for target ref not found: %s", targetRef)
 	}
-
-	// We maybe have changes. We set the ignore value later if we
-	// determine that the changes we have should be ignored.
-	ignore := false
 
 	// Compare
 	if current != nil {
 		currentRef := current.Ref.(*pb.Job_DataSource_Ref_Git).Git
 		if currentRef.Commit == foundRef.Hash().String() {
 			log.Trace("current ref matches last known ref, ignoring")
-			return nil, false, nil
-		}
-
-		// If there is a subpath specified for the data, then we go one step
-		// further and determine if there are any changes in this specific
-		// path. To do that, we have no choice but to check out the whole repo.
-		// We only do this if we had a previous value we used. If we don't,
-		// we've never run before and we consider ANY new ref changes.
-		if path := source.Git.Path; path != "" && source.Git.IgnoreChangesOutsidePath {
-			log.Trace("subpath specified, we'll check for changes within the subpath")
-			changes, err := s.changes(
-				ctx,
-				log,
-				raw,
-				tempDir,
-				foundRef.Hash().String(),
-				currentRef.Commit,
-				path,
-			)
-			if err != nil {
-				return nil, false, err
-			}
-
-			// We ignore if there are no changes in our subpath
-			ignore = !changes
+			return nil, nil
 		}
 	}
 
@@ -418,141 +386,7 @@ func (s *GitSource) Changes(
 				Commit: foundRef.Hash().String(),
 			},
 		},
-	}, ignore, nil
-}
-
-func (s *GitSource) changes(
-	ctx context.Context,
-	log hclog.Logger,
-	raw *pb.Job_DataSource,
-	baseDir string,
-	refNew, refCurrent string,
-	subpath string,
-) (bool, error) {
-	source := raw.Source.(*pb.Job_DataSource_Git)
-
-	// Normalize our subpath:
-	//   ./foo => foo
-	//   /foo  => foo
-	//
-	// Note that this SHOULD happen at the API level (we should reject
-	// any weird values) but we introduced validation later so we do this
-	// to clean up potentially old dirty values.
-	subpath = filepath.ToSlash(subpath)
-	if len(subpath) >= 2 && subpath[0] == '.' && subpath[1] == filepath.Separator {
-		subpath = subpath[2:]
-	} else if len(subpath) >= 1 && subpath[0] == filepath.Separator {
-		subpath = subpath[1:]
-	}
-
-	// Ensure our path ends with a '/' for comparison purposes later.
-	if !strings.HasSuffix(subpath, string(filepath.Separator)) {
-		subpath += string(filepath.Separator)
-	}
-
-	// Create a temporary directory where we will store the cloned data.
-	td, err := ioutil.TempDir(baseDir, "waypoint")
-	if err != nil {
-		return false, err
-	}
-	defer os.RemoveAll(td)
-
-	// Setup auth information
-	auth, err := s.auth(log, nil, source)
-	if err != nil {
-		return false, err
-	}
-
-	// Clone
-	var output bytes.Buffer
-	log.Trace("cloning repository", "url", source.Git.Url)
-	repo, err := git.PlainCloneContext(ctx, td, false, &git.CloneOptions{
-		URL:      source.Git.Url,
-		Auth:     auth,
-		Progress: &output,
-	})
-	if err != nil {
-		return false, status.Errorf(codes.Aborted,
-			"Git clone failed: %s", output.String())
-	}
-
-	// We have to fetch all the refs so that ResolveRevisoin can find them.
-	log.Trace("fetching refs")
-	err = repo.Fetch(&git.FetchOptions{
-		Auth:     auth,
-		RefSpecs: []config.RefSpec{"refs/*:refs/*", "HEAD:refs/heads/HEAD"},
-	})
-	if err != nil {
-		return false, status.Errorf(codes.Aborted,
-			"Failed to fetch refspecs: %s", err)
-	}
-
-	// ResolveRevision will determine the hash of a short-hash, branch,
-	// tag, etc. etc. basically anything "git checkout" accepts.
-	hashCurrent, err := repo.ResolveRevision(plumbing.Revision(refCurrent))
-	if err != nil {
-		return false, status.Errorf(codes.Aborted,
-			"Failed to resolve current revision for checkout: %s", err)
-	} else if hashCurrent == nil {
-		// should never happen but we don't want to panic if it does
-		return false, status.Errorf(codes.Aborted,
-			"Failed to resolve current revision for checkout: nil hash")
-	}
-
-	hashNew, err := repo.ResolveRevision(plumbing.Revision(refNew))
-	if err != nil {
-		return false, status.Errorf(codes.Aborted,
-			"Failed to resolve new revision for checkout: %s", err)
-	} else if hashNew == nil {
-		// should never happen but we don't want to panic if it does
-		return false, status.Errorf(codes.Aborted,
-			"Failed to resolve new revision for checkout: nil hash")
-	}
-
-	// Get our trees so we can compare
-	var treeCurrent, treeNew *object.Tree
-	log.Trace("getting current tree object", "hash", *hashCurrent)
-	commitCurrent, err := repo.CommitObject(*hashCurrent)
-	if err == nil {
-		treeCurrent, err = commitCurrent.Tree()
-	}
-	if err != nil {
-		return false, status.Errorf(codes.Aborted,
-			"Failed to get current tree object: %s", err)
-	}
-	log.Trace("getting new tree object", "hash", *hashNew)
-	commitNew, err := repo.CommitObject(*hashNew)
-	if err == nil {
-		treeNew, err = commitNew.Tree()
-	}
-	if err != nil {
-		return false, status.Errorf(codes.Aborted,
-			"Failed to get new tree object: %s", err)
-	}
-
-	log.Trace("diffing")
-	changes, err := treeCurrent.DiffContext(ctx, treeNew)
-	if err != nil {
-		return false, status.Errorf(codes.Aborted,
-			"Failed to diff tree objects: %s", err)
-	}
-
-	// Go through each change in our diff and if it has anything to
-	// do in our subpath (no matter what the action is) then we detect
-	// changes.
-	for _, change := range changes {
-		// The slashes in the Git object I _think_ are always / but regardless
-		// we want to make sure our slashes match our subpath.
-		from := filepath.ToSlash(change.From.Name)
-		to := filepath.ToSlash(change.To.Name)
-		if strings.HasPrefix(from, subpath) || strings.HasPrefix(to, subpath) {
-			log.Trace("detected change", "change", change.String())
-			return true, nil
-		}
-	}
-
-	// No changes
-	return false, nil
+	}, nil
 }
 
 func (s *GitSource) auth(
@@ -562,9 +396,7 @@ func (s *GitSource) auth(
 ) (transport.AuthMethod, error) {
 	switch authcfg := source.Git.Auth.(type) {
 	case *pb.Job_Git_Basic_:
-		if ui != nil {
-			ui.Output("Auth: username/password", terminal.WithInfoStyle())
-		}
+		ui.Output("Auth: username/password", terminal.WithInfoStyle())
 		return &http.BasicAuth{
 			Username: authcfg.Basic.Username,
 			Password: authcfg.Basic.Password,
@@ -577,9 +409,7 @@ func (s *GitSource) auth(
 			user = "git"
 		}
 
-		if ui != nil {
-			ui.Output("Auth: ssh", terminal.WithInfoStyle())
-		}
+		ui.Output("Auth: ssh", terminal.WithInfoStyle())
 		auth, err := ssh.NewPublicKeys(
 			user,
 			authcfg.Ssh.PrivateKeyPem,
@@ -608,14 +438,13 @@ func (s *GitSource) auth(
 }
 
 type gitConfig struct {
-	Url                      string `hcl:"url,attr"`
-	Path                     string `hcl:"path,optional"`
-	Username                 string `hcl:"username,optional"`
-	Password                 string `hcl:"password,optional"`
-	SSHKey                   string `hcl:"key,optional"`
-	SSHKeyPassword           string `hcl:"key_password,optional"`
-	Ref                      string `hcl:"ref,optional"`
-	IgnoreChangesOutsidePath bool   `hcl:"ignore_changes_outside_path,optional"`
+	Url            string `hcl:"url,attr"`
+	Path           string `hcl:"path,optional"`
+	Username       string `hcl:"username,optional"`
+	Password       string `hcl:"password,optional"`
+	SSHKey         string `hcl:"key,optional"`
+	SSHKeyPassword string `hcl:"key_password,optional"`
+	Ref            string `hcl:"ref,optional"`
 }
 
 var _ Sourcer = (*GitSource)(nil)

@@ -1,3 +1,0 @@
-```release-note:improvement
-plugin/k8s: Update K8s Releaser to use SDK Resource Manager
-```

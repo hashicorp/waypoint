@@ -48,10 +48,6 @@ export default Factory.extend({
     name: 'kubernetes-apply',
   }),
 
-  'aws-ecr': trait({
-    name: 'aws-ecr',
-  }),
-
   'with-random-name': trait({
     afterCreate(component) {
       component.update('name', randomNameForType(component.type));

@@ -84,7 +84,8 @@ service Waypoint {
   // can use GetProject to get more information about the project.
   rpc ListProjects(google.protobuf.Empty) returns (ListProjectsResponse);
 
-  // UpsertApplication upserts an application with a project.
+  // UpsertApplication upserts an application with a project. If the application
+  // is already registered this does nothing.
   rpc UpsertApplication(UpsertApplicationRequest) returns (UpsertApplicationResponse);
 
   // ListBuilds returns the builds.
@@ -478,15 +479,6 @@ message Project {
   // WIP: Variable values stored on the server. These values are set in the UI.
   repeated Variable variables = 9;
 
-  // Application polling settings. Polling will trigger a "StatusFunc" for collecting a
-  // report on the current status of the application.
-  // For now, polling is only done on the `default` workspace. A future
-  // version of Waypoint will expand polling to other workspaces.
-  //
-  // Each polling event is tracked as a separate job. You can query the
-  // poll operations and their success/failure by using the ListJobs API.
-  AppStatusPoll status_report_poll = 10;
-
   enum Format {
     HCL = 0; // We assume HCL by default
     JSON = 1;
@@ -494,16 +486,6 @@ message Project {
 
   message Poll {
     // enabled must be set to true to enable polling.
-    bool enabled = 1;
-
-    // interval is a duration string of how often to poll, such as "5s".
-    // The server may enforce minimum values, in which case a value lower
-    // than the minimum will be ignored.
-    string interval = 2;
-  }
-
-  message AppStatusPoll {
-    // enabled must be set to true to enable application polling for the project
     bool enabled = 1;
 
     // interval is a duration string of how often to poll, such as "5s".
@@ -874,9 +856,9 @@ message TaskLaunchInfo {
 
   // The environment variables that will be exposed to the task.
   map<string, string> environment_variables = 2;
-
+ 
   // The arguments that will be passed to the new container on boot
-  repeated string arguments = 3;
+  repeated string arguments = 3; 
 }
 
 /********************************************************************
@@ -928,16 +910,6 @@ message AuthMethod {
   string display_name = 2;
   string description = 3;
 
-  // A selector to determine whether a user who authenticates using this
-  // is allowed to authenticate at all. This runs before authentication
-  // completes. This can be used to check group membership and so on.
-  // Available variables depend on the auth method used.
-  //
-  // The syntax of this is this:
-  // https://github.com/hashicorp/go-bexpr
-  // (better docs to follow)
-  string access_selector = 4;
-
   // The method to configure.
   oneof method {
     // OIDC uses OpenID Connect for auth. OIDC is supported by most
@@ -977,14 +949,6 @@ message AuthMethod {
     // Multiple CA certificates can be specified to support easier
     // rotation.
     repeated string discovery_ca_pem = 7;
-
-    // Mapping claims to keys for usage in selectors such as the
-    // "access_selector" on the root auth method.
-    //
-    // claim mappings are available as "value.<name>" and list
-    // mappings are available as "list.<name>".
-    map<string, string> claim_mappings = 8;
-    map<string, string> list_claim_mappings = 9;
   }
 }
 
@@ -1076,13 +1040,6 @@ message CompleteOIDCAuthResponse {
   // was called with the token returned. This is eager returned because
   // it is commonly useful and also readily available as part of auth.
   User user = 2;
-
-  // These are all the claims that were associated with this OIDC
-  // authentication. This is used for debugging and operator inspection
-  // when setting up an OIDC auth method and aren't meant for general purpose
-  // use. These may also contain sensitive data so it shouldn't be stored.
-  string id_claims_json = 3;
-  string user_claims_json = 4;
 }
 
 /********************************************************************
@@ -1322,12 +1279,6 @@ message Job {
     // go into for the configuration. This must be a relative path
     // and may not contain ".."
     string path = 3;
-
-    // This setting only takes effect if both "path" is true AND the
-    // Git polling is enabled. Under those conditions, if this option
-    // is true, then only changes in Git commits within the "path" will
-    // trigger a deploy. Changes outside the "path" will be ignored.
-    bool ignore_changes_outside_path = 10;
 
     // auth is the auth mechanism to use for this data source. This is optional.
     // If this isn't set, then the data source will attempt to clone

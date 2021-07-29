@@ -16,15 +16,11 @@ message Release {
   // service_name is the name of the service in Kubernetes
   string service_name = 2;
   string Url = 1;
-  google.protobuf.Any resource_state = 3;
 }
 
 // Resource contains the internal resource states.
 message Resource {
   message Deployment {
-    string name = 1;
-  }
-  message Service {
     string name = 1;
   }
 }

@@ -2,6 +2,7 @@ import Service from '@ember/service';
 import { WaypointClient } from 'waypoint-client';
 import SessionService from 'waypoint/services/session';
 import { inject as service } from '@ember/service';
+import { assign } from '@ember/polyfills';
 import {
   ListDeploymentsRequest,
   Ref,
@@ -18,10 +19,7 @@ import {
   ListStatusReportsRequest,
   ListStatusReportsResponse,
   GetLatestStatusReportRequest,
-  ListPushedArtifactsRequest,
-  PushedArtifact,
 } from 'waypoint-pb';
-import { Metadata } from 'grpc-web';
 import config from 'waypoint/config/environment';
 
 const protocolVersions = {
@@ -41,14 +39,14 @@ export default class ApiService extends Service {
   client = new WaypointClient(`${config.apiAddress}/grpc`, null, null);
 
   // Merges metadata with required metadata for the request
-  WithMeta(meta?: Metadata): Metadata {
+  WithMeta(meta?: any) {
     // In the future we may want additional metadata per-request so this
     // helper merges that per-request metadata supplied at the client request
     // with our authentication metadata
-    return { ...this.meta, ...meta };
+    return assign(this.meta, meta!).valueOf();
   }
 
-  get meta(): Metadata {
+  get meta() {
     if (this.session.authConfigured) {
       return { ...protocolVersions, authorization: this.session.token };
     } else {
@@ -86,25 +84,6 @@ export default class ApiService extends Service {
     return resp.getBuildsList().map((d) => d.toObject());
   }
 
-  async listPushedArtifacts(
-    wsRef: Ref.Workspace,
-    appRef: Ref.Application
-  ): Promise<PushedArtifact.AsObject[]> {
-    let request = new ListPushedArtifactsRequest();
-
-    request.setApplication(appRef);
-    request.setWorkspace(wsRef);
-
-    // TODO(jgwhite): request.setIncludeBuild
-    // TODO(jgwhite): request.setOrder
-    // TODO(jgwhite): request.setStatusList
-
-    let response = await this.client.listPushedArtifacts(request, this.WithMeta());
-    let result = response.getArtifactsList().map((pa) => pa.toObject());
-
-    return result;
-  }
-
   async listReleases(wsRef: Ref.Workspace, appRef: Ref.Application): Promise<Release.AsObject[]> {
     let req = new ListReleasesRequest();
     req.setWorkspace(wsRef);
@@ -137,7 +116,7 @@ export default class ApiService extends Service {
   async getLatestStatusReport(
     _wsRef: Ref.Workspace,
     appRef: Ref.Application
-  ): Promise<StatusReport.AsObject | undefined> {
+  ): Promise<StatusReport | undefined> {
     let req = new GetLatestStatusReportRequest();
     req.setApplication(appRef);
     // We have to try/catch to avoid failing the hash request because the api errors if no statusReport is available

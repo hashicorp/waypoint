@@ -67,7 +67,7 @@
               data-test-input-variables-edit-cancel
               @variant="secondary"
               {{on "click"
-                (if this.isCreating this.cancelCreate this.cancelEdit)
+                (if this.isCreating (fn this.cancelCreate) (fn this.cancelEdit))
               }}>
               {{t "form.project_variables_settings.button_cancel"}}
             </Pds::Button>

@@ -1,39 +1,34 @@
-<li class="app-item" data-test-app-item-build>
+<li class="app-item">
   <LinkTo @route="workspace.projects.project.app.build" @models={{array @build.sequence}}>
-    <b class="badge badge--version">v{{@build.sequence}}</b>
+    <p>
+      <b class="badge badge--version">v{{@build.sequence}}</b>
+    </p>
     <small class="app-item__meta__secondary">
-      {{#let (or @build.pushedArtifact @build) as |operation|}}
-        <Pds::Icon
-          @type={{icon-for-component operation.component.name}}
-          class="icon"
-        />
-
-        <span>
-          {{t
-            (concat
-              "build_status"
-              ".type-" operation.component.type
-              ".state-" operation.status.state
-            )
-          }}
-          <b>{{component-name operation.component.name}}</b>
-          <OperationStatusIndicator @status={{operation.status}} @matchTypography={{true}} />
-        </span>
-      {{/let}}
+      <Pds::Icon @type={{icon-for-component @build.component.name}} class="icon" />
+      <span>{{if (eq @model.status.state 1) 'Building' 'Built'}} with
+        <b>{{titleize @build.component.name}}</b>
+        {{#if (eq @build.status.state 1)}}
+          (Started {{date-format-distance-to-now @build.status.startTime.seconds }})
+        {{else}}
+          {{date-format-distance-to-now @build.status.completeTime.seconds }}
+        {{/if}}
+      </span>
     </small>
   </LinkTo>
-
-  {{#if (and (eq @build.status.state 2) (eq @build.pushedArtifact.status.state 2))}}
-    <b class="badge badge--info">
+  {{#if (eq @build.status.state 1)}}
+    <b class="badge">
       <Pds::Icon @type="clock-outline" class="icon" />
-      <span>
-        {{t "app_item_build.built_in"
-          duration=(date-format-distance
-            @build.status.startTime.seconds
-            @build.status.completeTime.seconds
-          )
-        }}
-      </span>
+      <span>Building...</span>
+    </b>
+  {{else if (eq @build.status.state 2)}}
+    <b class="badge badge--success">
+      <Pds::Icon @type="check-plain" class="icon" />
+      <span>Built in {{date-format-distance @build.status.startTime.seconds @build.status.completeTime.seconds }}</span>
+    </b>
+  {{else if (eq @build.status.state 3)}}
+    <b class="badge badge--error">
+      <Pds::Icon @type="alert-triangle" class="icon" />
+      <span>Build failed</span>
     </b>
   {{/if}}
 </li>

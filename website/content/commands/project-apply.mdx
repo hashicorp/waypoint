@@ -37,7 +37,5 @@ Usage: `waypoint project apply [options]`
 - `-git-private-key-password=<string>` - Password for the private key specified by git-private-key-path if the key requires a password to decode. This is not required if the private key doesn't require a password.
 - `-poll` - Enable polling. This is only valid if a Git data source is supplied. This will watch the repo for changes and trigger a remote 'up'.
 - `-poll-interval=<string>` - Interval between polling if polling is enabled.
-- `-app-status-poll` - Enable polling to continuously generate status reports for apps. This is only valid if a Git data source is supplied.
-- `-app-status-poll-interval=<string>` - Interval between polling to generate status reports if polling is enabled.
 
 @include "commands/project-apply_more.mdx"

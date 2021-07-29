@@ -27,7 +27,6 @@ Usage: `waypoint auth-method set oidc [options]`
 
 - `-display-name=<string>` - Display name for the UI. Optional.
 - `-description=<string>` - Short description of this auth method. Optional.
-- `-access-selector=<string>` - Selector expression to control access based on claims. See docs for more details.
 
 #### OIDC Auth Method Options
 
@@ -38,7 +37,5 @@ Usage: `waypoint auth-method set oidc [options]`
 - `-issuer=<string>` - Discovery URL of the OIDC provider that implements the .well-known/openid-configuration metadata endpoint.
 - `-issuer-ca-pem=<string>` - PEM-encoded certificates for connecting to the issuer. May be specified multiple times.
 - `-allowed-redirect-uri=<string>` - Allowed URI for auth redirection. This automatically has localhost (for CLI auth) and the server address configured. If you have additional external addresses, you can specify them here. May be specified multiple times.
-- `-claim-mapping=<key=value>` - Mapping of a claim to a variable value for the access selector. This can be specified multiple times. Example value: 'http://example.com/key=key'
-- `-list-claim-mapping=<key=value>` - Same as claim-mapping but for list values. This can be repeated multiple times.
 
 @include "commands/auth-method-set-oidc_more.mdx"

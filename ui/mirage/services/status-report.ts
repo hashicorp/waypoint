@@ -3,7 +3,6 @@ import { ListStatusReportsRequest, ListStatusReportsResponse } from 'waypoint-pb
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { decode } from '../helpers/protobufs';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export function list(schema: any, { requestBody }: Request): Response {
   let requestMsg = decode(ListStatusReportsRequest, requestBody);
   let projectName = requestMsg.getApplication().getProject();

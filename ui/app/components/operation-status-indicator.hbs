@@ -1,21 +1,3 @@
-{{!--
-
-  ## Usage
-
-  <OperationStatusIndicator
-    @status={{build.status}}
-  />
-
-  If you would like the indicator to match the surrounding typography,
-  pass `@matchTypography={{true}}`:
-
-  <OperationStatusIndicator
-    @status={{build.status}}
-    @matchTypography={{true}}
-  />
-
---}}
-
 {{#let
   (hash
     state=(or
@@ -32,11 +14,10 @@
   as |vars|
 }}
   <span
-    data-test-operation-status-indicator={{vars.state}}
+    data-test-operation-status-indicator
     class="
       operation-status-indicator
       operation-status-indicator--{{vars.state}}
-      {{if @matchTypography "operation-status-indicator--match-typography"}}
       focus-ring
     "
     tabindex="0"

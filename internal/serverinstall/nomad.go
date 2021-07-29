@@ -824,7 +824,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-server-memory",
-		Target:  &i.config.serverResourcesMemory,
+		Target:  &i.config.serverResourcesCPU,
 		Usage:   "MB of Memory to allocate to the Server job task.",
 		Default: strconv.Itoa(defaultResourcesMemory),
 	})
@@ -838,7 +838,7 @@ func (i *NomadInstaller) InstallFlags(set *flag.Set) {
 
 	set.StringVar(&flag.StringVar{
 		Name:    "nomad-runner-memory",
-		Target:  &i.config.runnerResourcesMemory,
+		Target:  &i.config.runnerResourcesCPU,
 		Usage:   "MB of Memory to allocate to the runner job task.",
 		Default: strconv.Itoa(defaultResourcesMemory),
 	})

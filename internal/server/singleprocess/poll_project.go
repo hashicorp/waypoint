@@ -46,23 +46,18 @@ func (pp *projectPoll) Peek(
 func (pp *projectPoll) PollJob(
 	log hclog.Logger,
 	project interface{},
-) ([]*pb.QueueJobRequest, error) {
+) (*pb.QueueJobRequest, error) {
 	p, ok := project.(*pb.Project)
 	if !ok || p == nil {
 		log.Error("could not generate poll job for project, incorrect type passed in")
 		return nil, status.Error(codes.FailedPrecondition, "incorrect type passed into Project PollJob")
 	}
 
-	var jobList []*pb.QueueJobRequest
-
 	jobRequest := &pb.QueueJobRequest{
 		Job: &pb.Job{
 			// SingletonId so that we only have one poll operation at
 			// any time queued per project.
 			SingletonId: fmt.Sprintf("poll/%s", p.Name),
-
-			// Project polling requires a data source to be configured for the project
-			DataSource: p.DataSource,
 
 			Application: &pb.Ref_Application{
 				Project: p.Name,
@@ -87,9 +82,7 @@ func (pp *projectPoll) PollJob(
 		},
 	}
 
-	jobList = append(jobList, jobRequest)
-
-	return jobList, nil
+	return jobRequest, nil
 }
 
 // Complete will mark the job that was queued as complete, if it
