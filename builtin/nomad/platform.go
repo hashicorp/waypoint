@@ -12,15 +12,19 @@ import (
 	"github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
+	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	"github.com/hashicorp/waypoint/builtin/docker"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 )
 
 const (
-	metaId    = "waypoint.hashicorp.com/id"
-	metaNonce = "waypoint.hashicorp.com/nonce"
+	metaId            = "waypoint.hashicorp.com/id"
+	metaNonce         = "waypoint.hashicorp.com/nonce"
+	rmResourceJobName = "job"
 )
 
 var (
@@ -74,33 +78,39 @@ func (p *Platform) StatusFunc() interface{} {
 	return p.Status
 }
 
-// Deploy deploys an image to Nomad.
-func (p *Platform) Deploy(
-	ctx context.Context,
-	log hclog.Logger,
-	src *component.Source,
-	img *docker.Image,
-	deployConfig *component.DeploymentConfig,
-	ui terminal.UI,
-) (*Deployment, error) {
-	// Create our deployment and set an initial ID
-	var result Deployment
-	id, err := component.Id()
-	if err != nil {
-		return nil, err
-	}
-	result.Id = id
-	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
+func (p *Platform) resourceManager(log hclog.Logger) *resource.Manager {
+	return resource.NewManager(
+		resource.WithLogger(log.Named("resource_manager")),
+		resource.WithValueProvider(p.getNomadClient),
+		resource.WithResource(resource.NewResource(
+			resource.WithName(rmResourceJobName),
+			resource.WithState(&Resource_Job{}),
+			resource.WithCreate(p.resourceJobCreate),
+			resource.WithDestroy(p.resourceJobDestroy),
+		)),
+	)
+}
 
-	// We'll update the user in real time
-	st := ui.Status()
-	defer st.Close()
-
+// getNomadClient is a value provider for our resource manager and provides
+// the client connection used by resources to interact with Nomad.
+func (p *Platform) getNomadClient() (*api.Client, error) {
 	// Get our client
 	client, err := api.NewClient(api.DefaultConfig())
 	if err != nil {
 		return nil, err
 	}
+	return client, nil
+}
+
+func (p *Platform) resourceJobCreate(
+	ctx context.Context,
+	client *api.Client,
+	result *Deployment,
+	deployConfig *component.DeploymentConfig,
+	img *docker.Image,
+	st terminal.Status,
+	state *Resource_Job,
+) error {
 	jobclient := client.Jobs()
 
 	if p.config.ServicePort == 0 {
@@ -150,7 +160,7 @@ func (p *Platform) Deploy(
 		err = nil
 	}
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Build our env vars
@@ -196,18 +206,73 @@ func (p *Platform) Deploy(
 	st.Update("Registering job...")
 	regResult, _, err := jobclient.Register(job, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	evalID := regResult.EvalID
+	// Store our state so we can destroy it properly
+	state.Name = result.Name
 	st.Step(terminal.StatusOK, "Job registration successful")
 
 	// Wait on the allocation
+	evalID := regResult.EvalID
 	st.Update(fmt.Sprintf("Monitoring evaluation %q", evalID))
 
 	if err := NewMonitor(st, client).Monitor(evalID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Platform) resourceJobDestroy(
+	client *api.Client,
+	state *Resource_Job,
+	st terminal.Status,
+) error {
+	st.Step("Deleting job: %s", state.Name)
+	_, _, err := client.Jobs().Deregister(state.Name, true, nil)
+	return err
+}
+
+// Deploy deploys an image to Nomad.
+func (p *Platform) Deploy(
+	ctx context.Context,
+	log hclog.Logger,
+	src *component.Source,
+	img *docker.Image,
+	deployConfig *component.DeploymentConfig,
+	ui terminal.UI,
+) (*Deployment, error) {
+	// Create our deployment and set an initial ID
+	var result Deployment
+	id, err := component.Id()
+	if err != nil {
 		return nil, err
 	}
+	result.Id = id
+	result.Name = strings.ToLower(fmt.Sprintf("%s-%s", src.App, id))
+
+	// We'll update the user in real time
+	st := ui.Status()
+	defer st.Close()
+
+	rm := p.resourceManager(log)
+	if err := rm.CreateAll(
+		ctx, deployConfig, &result, img, st,
+	); err != nil {
+		return nil, err
+	}
+
+	// Store our resource state
+	result.ResourceState = rm.State()
+
+	// Get our service state
+	servState := rm.Resource(rmResourceJobName).State().(*Resource_Job)
+	if servState == nil {
+		return nil, status.Errorf(codes.Internal,
+			"service state is nil, this should never happen")
+	}
+
 	st.Step(terminal.StatusOK, "Deployment successfully rolled out!")
 
 	return &result, nil
@@ -224,14 +289,22 @@ func (p *Platform) Destroy(
 	st := ui.Status()
 	defer st.Close()
 
-	client, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		return err
+	rm := p.resourceManager(log)
+
+	// If we don't have resource state, this state is from an older version
+	// and we need to manually recreate it.
+	if deployment.ResourceState == nil {
+		rm.Resource(rmResourceJobName).SetState(&Resource_Job{
+			Name: deployment.Name,
+		})
+	} else {
+		// Load state
+		if err := rm.LoadState(deployment.ResourceState); err != nil {
+			return err
+		}
 	}
 
-	st.Update("Deleting job...")
-	_, _, err = client.Jobs().Deregister(deployment.Name, true, nil)
-	return err
+	return rm.DestroyAll(st)
 }
 
 func (p *Platform) Status(
