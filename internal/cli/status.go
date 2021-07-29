@@ -80,6 +80,10 @@ func (c *StatusCommand) listDeploymentsStatus(resp *pb.ListStatusReportsResponse
 	var dsr []deploymentStatusReport
 
 	for _, sr := range resp.StatusReports {
+		if sr.TargetId == nil {
+			continue
+		}
+
 		// Get Deployment
 		dep, err := c.project.Client().GetDeployment(c.Ctx, &pb.GetDeploymentRequest{
 			Ref: &pb.Ref_Operation{
