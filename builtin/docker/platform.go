@@ -2,11 +2,13 @@ package docker
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -18,17 +20,18 @@ import (
 	goUnits "github.com/docker/go-units"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/hashicorp/go-hclog"
+	"github.com/mitchellh/copystructure"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/component"
 	"github.com/hashicorp/waypoint-plugin-sdk/docs"
 	"github.com/hashicorp/waypoint-plugin-sdk/framework/resource"
+	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
 	wpdockerclient "github.com/hashicorp/waypoint/builtin/docker/client"
-
-	sdk "github.com/hashicorp/waypoint-plugin-sdk/proto/gen"
 )
 
 const (
@@ -112,6 +115,7 @@ func (p *Platform) Status(
 	ctx context.Context,
 	log hclog.Logger,
 	deployment *Deployment,
+	declaredResources *component.DeclaredResources,
 	ui terminal.UI,
 ) (*sdk.StatusReport, error) {
 	cli, err := p.getDockerClient(ctx)
@@ -126,65 +130,126 @@ func (p *Platform) Status(
 	s := sg.Add("Gathering health report for Docker platform...")
 	defer s.Abort()
 
-	// currently the docker platform only deploys 1 container
+	log.Debug("querying docker for container health")
+
+	// Creating our baseline container resource
+	containerResource := &sdk.StatusReport_Resource{
+		Type:                "container",
+		Platform:            platformName,
+		CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
+	}
+
+	// NOTE(briancain): The docker platform currently only deploys a single
+	// container, so for now the status report makes the same assumption.
 	containerInfo, err := cli.ContainerInspect(ctx, deployment.Container)
 	if err != nil {
-		return nil, err
+		if client.IsErrNotFound(err) {
+			// We expected this container to be present, but it's not.
+			// It has likely been killed and removed from the platform since it was deployed.
+			containerResource.Name = deployment.Container
+			containerResource.Health = sdk.StatusReport_MISSING
+		} else {
+			return nil, status.Errorf(codes.FailedPrecondition, "error quering docker for container status: %s", err)
+		}
+	} else {
+		// Add everything that docker knows about the running container to the container resource.
+		log.Debug("Found docker container", "name", deployment.Container)
+
+		containerResource.Id = containerInfo.ID
+
+		// NOTE(izaak): Docker container names officially begin with "/" when running on the local daemon, but the
+		// docker CLI strips the leading forward slash, so we'll do that too.
+		containerResource.Name = strings.TrimPrefix(containerInfo.Name, "/")
+
+		containerCreatedTime, err := time.Parse(time.RFC3339, containerInfo.Created)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to parse docker timestamp %q: %s", containerInfo.Created, err)
+		}
+		containerResource.CreatedTime = timestamppb.New(containerCreatedTime)
+
+		// Figure out the resource state based on container state or health
+		if containerInfo.State.Health != nil {
+			// Built-in Docker health reporting
+			// NOTE: this only works if the container has configured health checks
+
+			switch containerInfo.State.Health.Status {
+			case "Healthy":
+				containerResource.Health = sdk.StatusReport_READY
+				containerResource.HealthMessage = "container is running"
+			case "Unhealthy":
+				containerResource.Health = sdk.StatusReport_DOWN
+				containerResource.HealthMessage = "container is down"
+			case "Starting":
+				containerResource.Health = sdk.StatusReport_ALIVE
+				containerResource.HealthMessage = "container is starting"
+			default:
+				containerResource.Health = sdk.StatusReport_UNKNOWN
+				containerResource.HealthMessage = "unknown status reported by docker for container"
+			}
+		} else {
+			// Waypoint container inspection
+			if containerInfo.State.Running && containerInfo.State.ExitCode == 0 {
+				containerResource.Health = sdk.StatusReport_READY
+				containerResource.HealthMessage = "container is running"
+			} else if containerInfo.State.Restarting || containerInfo.State.Status == "created" {
+				containerResource.Health = sdk.StatusReport_ALIVE
+				containerResource.HealthMessage = "container is still starting"
+			} else if containerInfo.State.Dead || containerInfo.State.OOMKilled || containerInfo.State.ExitCode != 0 {
+				containerResource.Health = sdk.StatusReport_DOWN
+				containerResource.HealthMessage = "container is down"
+			} else {
+				containerResource.Health = sdk.StatusReport_UNKNOWN
+				containerResource.HealthMessage = "unknown status for container"
+			}
+		}
+
+		// Use docker's containerInfo as our resource's stateJson.
+		// Redact environment variables so we don't expose secrets on resources. Copying to avoid mutating containerInfo
+		containerInfoCopy, err := copystructure.Copy(containerInfo)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to copy container info: %s", err)
+		}
+		containerInfoRedacted := containerInfoCopy.(types.ContainerJSON)
+		containerInfoRedacted.Config.Env = []string{}
+
+		containerState := map[string]interface{}{
+			"dockerContainerInfo": containerInfoRedacted,
+		}
+
+		// Pull out some useful common fields if we can
+		if containerInfoRedacted.NetworkSettings != nil {
+			if len(containerInfoRedacted.NetworkSettings.Networks) == 1 { // we should only have one network (called "waypoint")
+				for _, dockerNetwork := range containerInfoRedacted.NetworkSettings.Networks {
+					containerState["ipAddress"] = dockerNetwork.IPAddress
+				}
+			}
+		}
+
+		stateJson, err := json.Marshal(containerState)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to marshal container info to json: %s", err)
+		}
+		containerResource.StateJson = string(stateJson)
+	}
+
+	// Find the declared resource that corresponds to our observed container
+	containerDeclaredResource, err := declaredResources.ByName("container")
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if containerDeclaredResource != nil {
+		containerResource.DeclaredResource = &sdk.Ref_DeclaredResource{Name: containerDeclaredResource.Name}
+	} else {
+		log.Warn("no container declared resource found - this must be a status check running on an old deployment, or is orphaned.")
 	}
 
 	// Create our status report
 	var result sdk.StatusReport
 	result.External = true
-
-	// NOTE(briancain): The docker platform currently only deploys a single
-	// container, so for now the status report makes the same assumption.
-
-	log.Debug("querying docker for container health")
-
-	resources := []*sdk.StatusReport_Resource{{
-		Name: containerInfo.Name,
-	}}
-
-	if containerInfo.State.Health != nil {
-		// Built-in Docker health reporting
-		// NOTE: this only works if the container has configured health checks
-
-		switch containerInfo.State.Health.Status {
-		case "Healthy":
-			resources[0].Health = sdk.StatusReport_READY
-			resources[0].HealthMessage = "container is running"
-		case "Unhealthy":
-			resources[0].Health = sdk.StatusReport_DOWN
-			resources[0].HealthMessage = "container is down"
-		case "Starting":
-			resources[0].Health = sdk.StatusReport_ALIVE
-			resources[0].HealthMessage = "container is starting"
-		default:
-			resources[0].Health = sdk.StatusReport_UNKNOWN
-			resources[0].HealthMessage = "unknown status reported by docker for container"
-		}
-	} else {
-		// Waypoint container inspection
-
-		if containerInfo.State.Running && containerInfo.State.ExitCode == 0 {
-			resources[0].Health = sdk.StatusReport_READY
-			resources[0].HealthMessage = "container is running"
-		} else if containerInfo.State.Restarting || containerInfo.State.Status == "created" {
-			resources[0].Health = sdk.StatusReport_ALIVE
-			resources[0].HealthMessage = "container is still starting"
-		} else if containerInfo.State.Dead || containerInfo.State.OOMKilled || containerInfo.State.ExitCode != 0 {
-			resources[0].Health = sdk.StatusReport_DOWN
-			resources[0].HealthMessage = "container is down"
-		} else {
-			resources[0].Health = sdk.StatusReport_UNKNOWN
-			resources[0].HealthMessage = "unknown status for container"
-		}
-	}
-
-	result.Resources = resources
+	result.Resources = []*sdk.StatusReport_Resource{containerResource}
 
 	// Determine overall deployment health based on its resource health
-	var ready, alive, down, unknown int
+	var ready, alive, down, unknown, missing int
 	for _, r := range result.Resources {
 		switch r.Health {
 		case sdk.StatusReport_DOWN:
@@ -195,24 +260,29 @@ func (p *Platform) Status(
 			ready++
 		case sdk.StatusReport_ALIVE:
 			alive++
+		case sdk.StatusReport_MISSING:
+			missing++
 		}
 	}
 
 	if ready == len(result.Resources) {
 		result.Health = sdk.StatusReport_READY
-		result.HealthMessage = fmt.Sprintf("Container %q is reporting ready!", containerInfo.Name)
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting ready!", containerResource.Name)
 	} else if down == len(result.Resources) {
 		result.Health = sdk.StatusReport_DOWN
-		result.HealthMessage = fmt.Sprintf("Container %q is reporting down!", containerInfo.Name)
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting down!", containerResource.Name)
 	} else if unknown == len(result.Resources) {
 		result.Health = sdk.StatusReport_UNKNOWN
-		result.HealthMessage = fmt.Sprintf("Container %q is reporting unknown!", containerInfo.Name)
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting unknown!", containerResource.Name)
 	} else if alive == len(result.Resources) {
 		result.Health = sdk.StatusReport_ALIVE
-		result.HealthMessage = fmt.Sprintf("Container %q is reporting alive!", containerInfo.Name)
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting alive!", containerResource.Name)
+	} else if missing == len(result.Resources) {
+		result.Health = sdk.StatusReport_MISSING
+		result.HealthMessage = fmt.Sprintf("Container %q is missing!", containerResource.Name)
 	} else {
 		result.Health = sdk.StatusReport_PARTIAL
-		result.HealthMessage = fmt.Sprintf("Container %q is reporting partially available!", containerInfo.Name)
+		result.HealthMessage = fmt.Sprintf("Container %q is reporting partially available!", containerResource.Name)
 	}
 
 	result.GeneratedTime = ptypes.TimestampNow()
