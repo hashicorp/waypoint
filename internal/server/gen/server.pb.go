@@ -9054,7 +9054,7 @@ func (x *GetStatusReportRequest) GetRef() *Ref_Operation {
 	return nil
 }
 
-// StatusReport is the report genrated when querying the overall health of
+// StatusReport is the report generated when querying the overall health of
 // a deployed or released application. This report is generated after the
 // an Up Operation, DeployOp or ReleaseOp. In the future Waypoint will be able
 // to generate these reports on demand in the UI, or on an interval using a poller.

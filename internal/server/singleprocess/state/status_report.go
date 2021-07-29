@@ -2,6 +2,8 @@ package state
 
 import (
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"time"
 )
 
 var statusReportOp = &appOperation{
@@ -27,9 +29,13 @@ func (s *State) StatusReportGet(ref *pb.Ref_Operation) (*pb.StatusReport, error)
 	return result.(*pb.StatusReport), nil
 }
 
-// create or update the latest status report
+// StatusReportPut creates or updates the latest status report
 func (s *State) StatusReportPut(update bool, report *pb.StatusReport) error {
 	return statusReportOp.Put(s, update, report)
+}
+
+func protoTimestampToTime(timestamp *timestamppb.Timestamp) time.Time {
+	return time.Unix(timestamp.Seconds, int64(timestamp.Nanos))
 }
 
 func (s *State) StatusReportList(
@@ -41,10 +47,35 @@ func (s *State) StatusReportList(
 		return nil, err
 	}
 
-	result := make([]*pb.StatusReport, len(raw))
-	for i, v := range raw {
-		result[i] = v.(*pb.StatusReport)
+	resMap := map[string]*pb.StatusReport{}
+
+	var result []*pb.StatusReport
+	for _, v := range raw {
+		sr := v.(*pb.StatusReport)
+		theId := ""
+		depId := sr.GetDeploymentId()
+		resId := sr.GetReleaseId()
+
+		if depId != "" {
+			theId = depId
+		} else {
+			theId = resId
+		}
+		if mVal, ok := resMap[theId]; ok {
+			srTime := protoTimestampToTime(sr.Status.CompleteTime)
+			mValTime := protoTimestampToTime(mVal.Status.CompleteTime)
+			if srTime.After(mValTime) {
+				resMap[theId] = sr
+			}
+		} else {
+			resMap[theId] = sr
+		}
 	}
+
+	for _, v := range resMap {
+		result = append(result, v)
+	}
+
 
 	return result, nil
 }

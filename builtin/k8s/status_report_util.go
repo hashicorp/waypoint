@@ -64,7 +64,7 @@ func buildStatusReport(
 	result.External = true
 	var resources []*sdk.StatusReport_Resource
 
-	// Build health for every possible pod for overal health report
+	// Build health for every possible pod for overall health report
 	var ready, alive, down, unknown int
 
 	// Report on most recently observed status of a deployments pod

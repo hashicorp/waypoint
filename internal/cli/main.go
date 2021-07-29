@@ -370,6 +370,16 @@ func Commands(
 				baseCommand: baseCommand,
 			}, nil
 		},
+		"status": func() (cli.Command, error) {
+			return &StatusCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
+		"status check": func() (cli.Command, error) {
+			return &StatusCheckCommand{
+				baseCommand: baseCommand,
+			}, nil
+		},
 		"token": func() (cli.Command, error) {
 			return &helpCommand{
 				SynopsisText: helpText["token"][0],
