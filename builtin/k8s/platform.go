@@ -98,12 +98,12 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 		resource.WithValueProvider(p.getClientset),
 		resource.WithDeclaredResourcesResp(dcr),
 		resource.WithResource(resource.NewResource(
-			resource.WithName("deployment"),
+			resource.WithName(platformName),
 			resource.WithState(&Resource_Deployment{}),
 			resource.WithCreate(p.resourceDeploymentCreate),
 			resource.WithDestroy(p.resourceDeploymentDestroy),
 
-			resource.WithPlatform("kubernetes"),
+			resource.WithPlatform(platformName),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE_MANAGER),
 		)),
 	)

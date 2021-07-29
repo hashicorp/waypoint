@@ -92,7 +92,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			// lingering around for now. This was the logic prior to
 			// refactoring into the resource manager so we kept it.
 
-			resource.WithPlatform("docker"),
+			resource.WithPlatform(platformName),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_ROUTER), // Not a perfect fit but good enough.
 		)),
 
@@ -102,7 +102,7 @@ func (p *Platform) resourceManager(log hclog.Logger, dcr *component.DeclaredReso
 			resource.WithCreate(p.resourceContainerCreate),
 			resource.WithDestroy(p.resourceContainerDestroy),
 
-			resource.WithPlatform("docker"),
+			resource.WithPlatform(platformName),
 			resource.WithCategoryDisplayHint(sdk.ResourceCategoryDisplayHint_INSTANCE),
 		)),
 	)
