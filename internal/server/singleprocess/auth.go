@@ -372,6 +372,9 @@ func (s *service) GenerateInviteToken(
 	// a request in the new (WP 0.5+) style. We do this right away so the rest of the
 	// request can assume the new style.
 	if ep := req.UnusedEntrypoint; ep != nil {
+		// NOTE(mitchellh): in the future, we will need to do some policy
+		// checks. For now, we allow all users to do this.
+
 		req.Signup = nil // not a signup token
 		req.Login = &pb.Token_Login{
 			UserId:     DefaultUserId,
@@ -385,9 +388,17 @@ func (s *service) GenerateInviteToken(
 		}
 	}
 
-	// We don't currently have any other users.
-	if req.Login.UserId != currentUser.Id {
-		return nil, status.Errorf(codes.PermissionDenied, "cannot create invite for other users")
+	// If we're creating a login token for another user and this is not
+	// a signup token, then we need to verify that user exists.
+	if req.Login.UserId != currentUser.Id && req.Signup == nil {
+		_, err := s.state.UserGet(&pb.Ref_User{
+			Ref: &pb.Ref_User_Id{
+				Id: &pb.Ref_UserId{Id: req.Login.UserId},
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	dur, err := time.ParseDuration(req.Duration)
