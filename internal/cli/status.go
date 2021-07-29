@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/waypoint-plugin-sdk/terminal"
+	"github.com/hashicorp/waypoint/internal/clicontext"
 	"github.com/hashicorp/waypoint/internal/clierrors"
 	"github.com/hashicorp/waypoint/internal/pkg/flag"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
@@ -27,6 +28,8 @@ type StatusCommand struct {
 	flagJson        bool
 	flagAllProjects bool
 	filterFlags     filterFlags
+
+	serverCtx *clicontext.Config
 }
 
 func (c *StatusCommand) Run(args []string) int {
@@ -58,6 +61,7 @@ func (c *StatusCommand) Run(args []string) int {
 		c.ui.Output("Error loading context %q: %s", ctxName, err.Error(), terminal.WithErrorStyle())
 		return 1
 	}
+	c.serverCtx = ctxConfig
 
 	cmdArgs := flagSet.Args()
 
@@ -92,7 +96,9 @@ func (c *StatusCommand) Run(args []string) int {
 	// Generate a status view
 	if projectTarget == "" || c.flagAllProjects {
 		// Show high-level status of all projects
-		c.ui.Output(wpStatusMsg, ctxConfig.Server.Address)
+		if !c.flagJson {
+			c.ui.Output(wpStatusMsg, ctxConfig.Server.Address)
+		}
 
 		err = c.FormatProjectStatus()
 		if err != nil {
@@ -102,22 +108,34 @@ func (c *StatusCommand) Run(args []string) int {
 		}
 	} else if projectTarget != "" && appTarget == "" {
 		// Show status of apps inside project
-		c.ui.Output(wpStatusProjectMsg, projectTarget, ctxConfig.Server.Address)
+		if !c.flagJson {
+			c.ui.Output(wpStatusProjectMsg, projectTarget, ctxConfig.Server.Address)
+		}
 
 		err = c.FormatProjectAppStatus(projectTarget)
 		if err != nil {
-			c.ui.Output("CLI failed to format project app statuses:", terminal.WithErrorStyle())
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			if status.Code(err) == codes.NotFound {
+				c.ui.Output(wpProjectNotFound, projectTarget, ctxConfig.Server.Address, terminal.WithErrorStyle())
+			} else {
+				c.ui.Output("CLI failed to format project app statuses:", terminal.WithErrorStyle())
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			}
 			return 1
 		}
 	} else if projectTarget != "" && appTarget != "" {
 		// Advanced view of a single app status
-		c.ui.Output(wpStatusAppProjectMsg, appTarget, projectTarget, ctxConfig.Server.Address)
+		if !c.flagJson {
+			c.ui.Output(wpStatusAppProjectMsg, appTarget, projectTarget, ctxConfig.Server.Address)
+		}
 
 		err = c.FormatAppStatus(projectTarget, appTarget)
 		if err != nil {
-			c.ui.Output("CLI failed to format app status", terminal.WithErrorStyle())
-			c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			if status.Code(err) == codes.NotFound {
+				c.ui.Output(wpAppNotFound, appTarget, projectTarget, ctxConfig.Server.Address, terminal.WithErrorStyle())
+			} else {
+				c.ui.Output("CLI failed to format app status", terminal.WithErrorStyle())
+				c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+			}
 			return 1
 		}
 	}
@@ -479,10 +497,50 @@ func (c *StatusCommand) FormatProjectStatus() error {
 	// might have to pre-sort by status since strings are ascii
 
 	// Render the table
-	c.ui.Output("")
-	c.ui.Table(tbl, terminal.WithStyle("Simple"))
-	c.ui.Output("")
-	c.ui.Output(wpStatusSuccessMsg)
+	if c.flagJson {
+		c.outputJsonProjects(tbl)
+	} else {
+		c.ui.Output("")
+		c.ui.Table(tbl, terminal.WithStyle("Simple"))
+		c.ui.Output("")
+		c.ui.Output(wpStatusSuccessMsg)
+	}
+
+	return nil
+}
+
+func (c *StatusCommand) outputJsonProjects(t *terminal.Table) error {
+	var output []map[string]interface{}
+
+	// Add server context
+	serverContext := map[string]interface{}{}
+	serverContext["Address"] = c.serverCtx.Server.Address
+	serverContext["ServerPlatform"] = c.serverCtx.Server.Platform
+
+	sc := map[string]interface{}{"ServerContext": serverContext}
+	output = append(output, sc)
+
+	p := []map[string]interface{}{}
+	for _, row := range t.Rows {
+		c := map[string]interface{}{}
+
+		for j, r := range row {
+			// Remove any whitespacess in key
+			header := strings.ReplaceAll(t.Headers[j], " ", "")
+			c[header] = r.Value
+		}
+		p = append(p, c)
+	}
+
+	ps := map[string]interface{}{"Projects": p}
+	output = append(output, ps)
+
+	data, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	c.ui.Output(string(data))
 
 	return nil
 }
@@ -621,7 +679,7 @@ No project name %q was found for the server context %q. To see a list of
 currently configured projects, run “waypoint project list”.
 
 If you want more information for a specific application, use the '-app' flag
-with “waypoint status PROJECT-NAME -app=APP-NAME”.
+with “waypoint status -app=APP-NAME PROJECT-NAME”.
 `)
 
 	wpAppFlagAndTargetIncludedMsg = strings.TrimSpace(`
@@ -631,7 +689,7 @@ The app flag will be ignored.
 
 	// TODO do we need a "waypoint application list"
 	wpAppNotFound = strings.TrimSpace(`
-No app name %q was found in project %q for the server context %q. To see a
+No application named %q was found in project %q for the server context %q. To see a
 list of currently configured projects, run “waypoint project list”.
 `)
 )

@@ -1,21 +1,21 @@
 ---
 layout: commands
-page_title: 'Commands: Artifact list'
-sidebar_title: 'artifact list'
-description: 'List pushed artifacts.'
+page_title: 'Commands: Status'
+sidebar_title: 'status'
+description: 'List statuses.'
 ---
 
-# Waypoint Artifact list
+# Waypoint Status
 
-Command: `waypoint artifact list`
+Command: `waypoint status`
 
-List pushed artifacts.
+List statuses.
 
-@include "commands/artifact-list_desc.mdx"
+@include "commands/status_desc.mdx"
 
 ## Usage
 
-Usage: `waypoint artifact list [options]`
+Usage: `waypoint status [options]`
 
 #### Global Options
 
@@ -25,10 +25,9 @@ Usage: `waypoint artifact list [options]`
 
 #### Command Options
 
-- `-workspace-all` - List builds in all workspaces for this project and application.
-- `-verbose` (`-V`) - Display more details about each deployment.
-- `-json` - Output the deployment information as JSON.
-- `-long-ids` - Show long identifiers rather than sequence numbers.
+- `-verbose` (`-V`) - Display more details.
+- `-json` - Output the status information as JSON.
+- `-all-projects` - Output status about every project in a workspace.
 
 #### Filter Options
 
@@ -36,4 +35,4 @@ Usage: `waypoint artifact list [options]`
 - `-desc` - Sort the values in descending order.
 - `-limit=<uint>` - How many values to show.
 
-@include "commands/artifact-list_more.mdx"
+@include "commands/status_more.mdx"
