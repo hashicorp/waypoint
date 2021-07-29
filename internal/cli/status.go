@@ -96,10 +96,6 @@ func (c *StatusCommand) Run(args []string) int {
 	// Generate a status view
 	if projectTarget == "" || c.flagAllProjects {
 		// Show high-level status of all projects
-		if !c.flagJson {
-			c.ui.Output(wpStatusMsg, ctxConfig.Server.Address)
-		}
-
 		err = c.FormatProjectStatus()
 		if err != nil {
 			c.ui.Output("CLI failed to build project statuses:", terminal.WithErrorStyle())
@@ -108,10 +104,6 @@ func (c *StatusCommand) Run(args []string) int {
 		}
 	} else if projectTarget != "" && appTarget == "" {
 		// Show status of apps inside project
-		if !c.flagJson {
-			c.ui.Output(wpStatusProjectMsg, projectTarget, ctxConfig.Server.Address)
-		}
-
 		err = c.FormatProjectAppStatus(projectTarget)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
@@ -124,10 +116,6 @@ func (c *StatusCommand) Run(args []string) int {
 		}
 	} else if projectTarget != "" && appTarget != "" {
 		// Advanced view of a single app status
-		if !c.flagJson {
-			c.ui.Output(wpStatusAppProjectMsg, appTarget, projectTarget, ctxConfig.Server.Address)
-		}
-
 		err = c.FormatAppStatus(projectTarget, appTarget)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
@@ -145,6 +133,10 @@ func (c *StatusCommand) Run(args []string) int {
 
 // FormatProjectAppStatus formats all applications inside a project
 func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
+	if !c.flagJson {
+		c.ui.Output(wpStatusProjectMsg, projectTarget, c.serverCtx.Server.Address)
+	}
+
 	// Get our API client
 	client := c.project.Client()
 
@@ -232,6 +224,10 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 }
 
 func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) error {
+	if !c.flagJson {
+		c.ui.Output(wpStatusAppProjectMsg, appTarget, projectTarget, c.serverCtx.Server.Address)
+	}
+
 	// Get our API client
 	client := c.project.Client()
 
@@ -408,6 +404,10 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 
 // FormatProjectStatus formats all known projects into a table
 func (c *StatusCommand) FormatProjectStatus() error {
+	if !c.flagJson {
+		c.ui.Output(wpStatusMsg, c.serverCtx.Server.Address)
+	}
+
 	// Get our API client
 	client := c.project.Client()
 
