@@ -165,7 +165,7 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	//   App list
 
 	appHeaders := []string{
-		"App", "Workspace", "Latest Status",
+		"App", "Workspace", "Latest Status", "Last Check",
 	}
 
 	appTbl := terminal.NewTable(appHeaders...)
@@ -192,13 +192,17 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 			return err
 		}
 
-		statusReportComplete := c.FormatStatusReportComplete(appStatusResp)
+		statusReportComplete, statusReportCheckTime, err := c.FormatStatusReportComplete(appStatusResp)
+		if err != nil {
+			return err
+		}
 
 		statusColor := ""
 		columns := []string{
 			app.Name,
 			workspace,
-			statusReportComplete, // app statuses overall
+			statusReportComplete,
+			statusReportCheckTime,
 		}
 
 		// Add column data to table
@@ -285,19 +289,23 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	}
 
 	appHeaders := []string{
-		"App", "Workspace", "Latest Status",
+		"App", "Workspace", "Latest Status", "Last Check",
 	}
 
 	appTbl := terminal.NewTable(appHeaders...)
 
 	appFailures := false
-	statusReportComplete := c.FormatStatusReportComplete(appStatusResp)
+	statusReportComplete, statusReportCheckTime, err := c.FormatStatusReportComplete(appStatusResp)
+	if err != nil {
+		return err
+	}
 
 	statusColor := ""
 	columns := []string{
 		app.Name,
 		workspace,
 		statusReportComplete, // app statuses overall
+		statusReportCheckTime,
 	}
 
 	// Add column data to table
@@ -696,11 +704,13 @@ func (c *StatusCommand) outputJsonAppStatus(
 	return nil
 }
 
-func (c *StatusCommand) FormatStatusReportComplete(statusReport *pb.StatusReport) string {
+func (c *StatusCommand) FormatStatusReportComplete(
+	statusReport *pb.StatusReport,
+) (string, string, error) {
 	statusReportComplete := "N/A"
 
 	if statusReport == nil {
-		return statusReportComplete
+		return statusReportComplete, "", nil
 	}
 
 	switch statusReport.Health.HealthStatus {
@@ -716,11 +726,12 @@ func (c *StatusCommand) FormatStatusReportComplete(statusReport *pb.StatusReport
 		statusReportComplete = "? UNKNOWN"
 	}
 
-	if t, err := ptypes.Timestamp(statusReport.GeneratedTime); err == nil {
-		statusReportComplete = fmt.Sprintf("%s - %s", statusReportComplete, humanize.Time(t))
+	t, err := ptypes.Timestamp(statusReport.GeneratedTime)
+	if err != nil {
+		return statusReportComplete, "", err
 	}
 
-	return statusReportComplete
+	return statusReportComplete, humanize.Time(t), nil
 }
 
 func (c *StatusCommand) Flags() *flag.Sets {
