@@ -358,14 +358,30 @@ func (op *statusReportOperation) Do(
 func (op *statusReportOperation) argsStatusReport() ([]argmapper.Arg, error) {
 	var args []argmapper.Arg
 
+	var drs []*pb.DeclaredResource
 	switch t := op.Target.(type) {
 	case *pb.Deployment:
 		args = append(args, plugin.ArgNamedAny("target", t.Deployment))
+		drs = t.DeclaredResources
 	case *pb.Release:
 		args = append(args, plugin.ArgNamedAny("target", t.Release))
+		drs = t.DeclaredResources
 	default:
 		return nil, status.Errorf(codes.FailedPrecondition, "unsupported status report target given")
 	}
+
+	var pluginDrs component.DeclaredResources
+	for _, dr := range drs {
+		pluginDrs.Resources = append(pluginDrs.Resources, &sdk.DeclaredResource{
+			Id:                  dr.Id,
+			Name:                dr.Name,
+			Platform:            dr.Platform,
+			State:               dr.State,
+			StateJson:           dr.StateJson,
+			CategoryDisplayHint: sdk.ResourceCategoryDisplayHint(dr.CategoryDisplayHint),
+		})
+	}
+	args = append(args, argmapper.Typed(&pluginDrs))
 
 	return args, nil
 }
