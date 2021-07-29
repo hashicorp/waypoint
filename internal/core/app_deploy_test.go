@@ -33,7 +33,8 @@ func TestAppDeploy_withDeclaredResource(t *testing.T) {
 		func(c context.Context, declaredResourcesResp *component.DeclaredResourcesResp) (component.Deployment, error) {
 			declaredResourcesResp.DeclaredResources = append(declaredResourcesResp.DeclaredResources,
 				&sdk.DeclaredResource{
-					Type:                "test-instance",
+					Id:                  "test-id",
+					Name:                "test-instance",
 					Platform:            "test-platform",
 					CategoryDisplayHint: sdk.ResourceCategoryDisplayHint_INSTANCE,
 				})

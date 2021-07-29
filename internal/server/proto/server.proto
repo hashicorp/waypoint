@@ -834,8 +834,11 @@ message Generation {
 
 // A platform resource that an operation (release/deployment) has created, depends on, or manages.
 message DeclaredResource {
+  // The id of the declared resource. Automatically generated
+  string id = 6;
+
   // platform-specific name of the resource type. i.e. instance, pod, auto-scaling group, etc
-  string type = 1;
+  string name = 1;
 
   // The platform on which the resource should exist, i.e. docker, gcp, k8s, etc.
   string platform = 2;
