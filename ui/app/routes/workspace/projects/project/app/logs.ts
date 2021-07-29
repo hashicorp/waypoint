@@ -3,13 +3,16 @@ import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
 import { GetLogStreamRequest, Ref } from 'waypoint-pb';
 import { Model as AppRouteModel } from '../app';
+import { Model as WorkspaceRouteModel } from 'waypoint/routes/workspace';
+
+type Model = GetLogStreamRequest;
 
 export default class Logs extends Route {
   @service api!: ApiService;
 
-  async model() {
+  async model(): Promise<Model> {
     let app = this.modelFor('workspace.projects.project.app') as AppRouteModel;
-    let ws = this.modelFor('workspace') as Ref.Workspace.AsObject;
+    let ws = this.modelFor('workspace') as WorkspaceRouteModel;
     let req = new GetLogStreamRequest();
     let appReq = new GetLogStreamRequest.Application();
 
