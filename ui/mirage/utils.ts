@@ -73,7 +73,7 @@ export function fakeComponentForKind(kind: Component.Type): string {
  * request and response bodies for debugging. This is only partially helpful and
  * dependent on the readability of the data being sent.
  */
-export function logRequestConsole(verb: string, path: string, request: FakeXMLHttpRequest): void {
+export function logRequestConsole(verb: string, path: string, request: FakeXMLHttpRequest) {
   console.groupCollapsed(`Mock: ${verb} ${path}`);
 
   let { requestBody, responseText } = request;

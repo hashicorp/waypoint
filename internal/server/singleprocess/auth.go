@@ -20,17 +20,16 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
-	"github.com/hashicorp/waypoint/internal/server/singleprocess/state"
 )
 
 const (
 	// The username of the initial user created during bootstrapping. This
 	// also is the user that Waypoint server versions prior to 0.5 used with
 	// their token, so we use this to detect that scenario as well.
-	DefaultUser = state.DefaultUser
+	DefaultUser = "waypoint"
 
 	// The ID of the initial user created during bootstrapping.
-	DefaultUserId = state.DefaultUserId
+	DefaultUserId = "00000000000000000000000001"
 
 	// The identifier for the default key to use to generating tokens.
 	DefaultKeyId = "k1"

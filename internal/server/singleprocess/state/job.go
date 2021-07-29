@@ -188,23 +188,13 @@ type Job struct {
 	Blocked bool
 }
 
-// JobCreate queues the given jobs. If any job fails to queue, no jobs
-// are queued. If partial failures are acceptible, call this multiple times
-// with a single job.
-func (s *State) JobCreate(jobs ...*pb.Job) error {
+// JobCreate queues the given job.
+func (s *State) JobCreate(jobpb *pb.Job) error {
 	txn := s.inmem.Txn(true)
 	defer txn.Abort()
 
 	err := s.db.Update(func(dbTxn *bolt.Tx) error {
-		// Go through each job one at a time. If any fail, the transaction
-		// is aborted so the whole thing will fail.
-		for _, job := range jobs {
-			if err := s.jobCreate(dbTxn, txn, job); err != nil {
-				return err
-			}
-		}
-
-		return nil
+		return s.jobCreate(dbTxn, txn, jobpb)
 	})
 	if err == nil {
 		txn.Commit()

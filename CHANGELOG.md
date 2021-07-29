@@ -1,20 +1,3 @@
-## 0.4.2 (July 22, 2021)
-
-FEATURES:
-
-* plugin: Allow debugging of plugins with tools like delve [[GH-1716](https://github.com/hashicorp/waypoint/issues/1716)]
-
-IMPROVEMENTS:
-
-* serverinstall/k8s: Add information to cli output for upgrade path [[GH-1886](https://github.com/hashicorp/waypoint/issues/1886)]
-* ui: Incorporate pushed artifacts into build display [[GH-1840](https://github.com/hashicorp/waypoint/issues/1840)]
-
-BUG FIXES:
-
-* plugin/aws/ecs: Validate memory and cpu values [[GH-1872](https://github.com/hashicorp/waypoint/issues/1872)]
-* plugin/nomad: Fix broken -nomad-runner-memory and -nomad-server-memory flags [[GH-1895](https://github.com/hashicorp/waypoint/issues/1895)]
-* serverinstall/ecs: Validate memory and cpu values [[GH-1872](https://github.com/hashicorp/waypoint/issues/1872)]
-
 ## 0.4.1 (July 1, 2021)
 
 FEATURES:

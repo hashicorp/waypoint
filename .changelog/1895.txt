@@ -1,3 +1,0 @@
-```release-note:bug
-plugin/nomad: Fix broken -nomad-runner-memory and -nomad-server-memory flags
-```

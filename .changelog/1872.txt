@@ -1,7 +1,0 @@
-```release-note:bug
-serverinstall/ecs: validate memory and cpu values
-```
-
-```release-note:bug
-plugin/aws/ecs: validate memory and cpu values
-```

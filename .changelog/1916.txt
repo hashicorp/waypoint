@@ -1,3 +1,0 @@
-```release-note:improvement
-ui: Add dynamic page titles
-```

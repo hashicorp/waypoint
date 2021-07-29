@@ -1,28 +1,28 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
 import ApiService from 'waypoint/services/api';
-import { Ref, GetProjectRequest, Project } from 'waypoint-pb';
-import { Breadcrumb } from 'waypoint/services/breadcrumbs';
-
+import { Ref, GetProjectRequest } from 'waypoint-pb';
 interface ProjectModelParams {
   project_id: string;
 }
 
+
+
 export default class WorkspaceProjectsProjectSettings extends Route {
   @service api!: ApiService;
 
-  breadcrumbs(model: Project.AsObject): Breadcrumb[] {
+  breadcrumbs(model: Project) {
     if (!model) return [];
     return [
       {
         label: model.name,
         icon: 'folder-outline',
-        route: 'workspace.projects.project.index',
+        args: ['workspace.projects.project.index'],
       },
       {
         label: 'Settings',
         icon: 'settings',
-        route: 'workspace.projects.project.settings',
+        args: ['workspace.projects.project.settings'],
       },
     ];
   }

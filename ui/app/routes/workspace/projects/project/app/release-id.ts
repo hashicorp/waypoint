@@ -1,27 +1,25 @@
-import Route from '@ember/routing/route';
-import { inject as service } from '@ember/service';
+import ReleaseDetail from './release';
 import { GetReleaseRequest, Release, Ref } from 'waypoint-pb';
-import ApiService from 'waypoint/services/api';
 
-type Params = { release_id: string };
-type Model = Release.AsObject;
+interface ReleaseModelParams {
+  release_id: string;
+}
 
-export default class ReleaseIdDetail extends Route {
-  @service api!: ApiService;
+export default class ReleaseIdDetail extends ReleaseDetail {
+  renderTemplate() {
+    this.render('workspace/projects/project/app/release', {
+      into: 'workspace/projects/project',
+    });
+  }
 
-  async model(params: Params): Promise<Model> {
-    let req = new GetReleaseRequest();
+  async model(params: ReleaseModelParams): Promise<Release.AsObject> {
     let ref = new Ref.Operation();
-
     ref.setId(params.release_id);
+    let req = new GetReleaseRequest();
     req.setRef(ref);
 
     let release: Release = await this.api.client.getRelease(req, this.api.WithMeta());
 
     return release.toObject();
-  }
-
-  redirect(model: Model): void {
-    this.transitionTo('workspace.projects.project.app.release', model.sequence);
   }
 }

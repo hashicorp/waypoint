@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/aws/ecs"
 	"github.com/hashicorp/waypoint/builtin/aws/lambda"
 	"github.com/hashicorp/waypoint/builtin/aws/ssm"
+	pluginAWSSSM "github.com/hashicorp/waypoint/builtin/aws/ssm"
 	"github.com/hashicorp/waypoint/builtin/azure/aci"
 	"github.com/hashicorp/waypoint/builtin/docker"
 	dockerpull "github.com/hashicorp/waypoint/builtin/docker/pull"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/waypoint/builtin/pack"
 	"github.com/hashicorp/waypoint/builtin/tfc"
 	"github.com/hashicorp/waypoint/builtin/vault"
+	pluginVault "github.com/hashicorp/waypoint/builtin/vault"
 )
 
 var (
@@ -71,13 +73,13 @@ var (
 	// hardcode them. This is used by the CEB.
 	ConfigSourcers = map[string]*Instance{
 		"aws-ssm": {
-			Component: &ssm.ConfigSourcer{},
+			Component: &pluginAWSSSM.ConfigSourcer{},
 		},
 		"kubernetes": {
 			Component: &k8s.ConfigSourcer{},
 		},
 		"vault": {
-			Component: &vault.ConfigSourcer{},
+			Component: &pluginVault.ConfigSourcer{},
 		},
 		"terraform-cloud": {
 			Component: &tfc.ConfigSourcer{},

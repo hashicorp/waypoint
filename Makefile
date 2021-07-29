@@ -84,7 +84,7 @@ gen/plugins:
 .PHONY: gen/server
 gen/server:
 	@test -s "thirdparty/proto/api-common-protos/.git" || { echo "git submodules not initialized, run 'git submodule update --init --recursive' and try again"; exit 1; }
-	go generate ./internal/server
+	go generate ./internal/server 
 
 .PHONY: gen/ts
 gen/ts:
@@ -123,7 +123,7 @@ static-assets:
 
 .PHONY: gen/doc
 gen/doc:
-	mkdir -p ./doc/
+	mkdir -p ./doc/ 
 	@rm -rf ./doc/* 2> /dev/null
 	protoc -I=. \
 		-I=./thirdparty/proto/api-common-protos/ \

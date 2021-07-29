@@ -6,8 +6,8 @@ export default class SessionService extends Service {
   @service api!: ApiService;
   @tracked authConfigured: boolean;
 
-  constructor(...args: ConstructorParameters<typeof Service>) {
-    super(...args);
+  constructor(owner: any) {
+    super(owner);
 
     this.authConfigured = false;
     if (this.token) {
@@ -19,12 +19,12 @@ export default class SessionService extends Service {
     return window.localStorage.waypointAuthToken;
   }
 
-  async setToken(value: string): Promise<void> {
+  async setToken(value: string) {
     this.authConfigured = true;
     window.localStorage.waypointAuthToken = value;
   }
 
-  async removeToken(): Promise<void> {
+  async removeToken() {
     this.authConfigured = false;
     window.localStorage.removeItem('waypointAuthToken');
   }

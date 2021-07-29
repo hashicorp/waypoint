@@ -11,10 +11,9 @@ import (
 type AuthMethodSetOIDCCommand struct {
 	*baseCommand
 
-	flagDisplayName    string
-	flagDescription    string
-	flagAccessSelector string
-	flagMethod         pb.AuthMethod_OIDC
+	flagDisplayName string
+	flagDescription string
+	flagMethod      pb.AuthMethod_OIDC
 }
 
 func (c *AuthMethodSetOIDCCommand) Run(args []string) int {
@@ -35,10 +34,9 @@ func (c *AuthMethodSetOIDCCommand) Run(args []string) int {
 	name := c.args[0]
 
 	am := &pb.AuthMethod{
-		Name:           name,
-		DisplayName:    c.flagDisplayName,
-		Description:    c.flagDescription,
-		AccessSelector: c.flagAccessSelector,
+		Name:        name,
+		DisplayName: c.flagDisplayName,
+		Description: c.flagDescription,
 		Method: &pb.AuthMethod_Oidc{
 			Oidc: &c.flagMethod,
 		},
@@ -69,13 +67,6 @@ func (c *AuthMethodSetOIDCCommand) Flags() *flag.Sets {
 			Name:   "description",
 			Target: &c.flagDescription,
 			Usage:  "Short description of this auth method. Optional.",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:   "access-selector",
-			Target: &c.flagAccessSelector,
-			Usage: "Selector expression to control access based on claims. " +
-				"See docs for more details.",
 		})
 
 		f = set.NewSet("OIDC Auth Method Options")
@@ -123,21 +114,6 @@ func (c *AuthMethodSetOIDCCommand) Flags() *flag.Sets {
 				"localhost (for CLI auth) and the server address configured. " +
 				"If you have additional external addresses, you can specify them here. " +
 				"May be specified multiple times.",
-		})
-
-		f.StringMapVar(&flag.StringMapVar{
-			Name:   "claim-mapping",
-			Target: &c.flagMethod.ClaimMappings,
-			Usage: "Mapping of a claim to a variable value for the access selector. " +
-				"This can be specified multiple times. Example value: " +
-				"'http://example.com/key=key'",
-		})
-
-		f.StringMapVar(&flag.StringMapVar{
-			Name:   "list-claim-mapping",
-			Target: &c.flagMethod.ListClaimMappings,
-			Usage: "Same as claim-mapping but for list values. " +
-				"This can be repeated multiple times.",
 		})
 	})
 }

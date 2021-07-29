@@ -64,7 +64,7 @@ func (r *Runner) executeUpOp(
 
 	// Status Report for Deployments
 	app.UI.Output("")
-	result, err = r.executeStatusReportOp(ctx, log, &pb.Job{
+	result, err = r.executeStatusReportOp(ctx, &pb.Job{
 		Application: job.Application,
 		Operation: &pb.Job_StatusReport{
 			StatusReport: &pb.Job_StatusReportOp{
@@ -105,7 +105,7 @@ func (r *Runner) executeUpOp(
 		releaseResult.Release.Release != nil {
 		// Status Report for Releases
 		app.UI.Output("")
-		result, err = r.executeStatusReportOp(ctx, log, &pb.Job{
+		result, err = r.executeStatusReportOp(ctx, &pb.Job{
 			Application: job.Application,
 			Operation: &pb.Job_StatusReport{
 				StatusReport: &pb.Job_StatusReportOp{

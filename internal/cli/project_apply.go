@@ -23,20 +23,18 @@ import (
 type ProjectApplyCommand struct {
 	*baseCommand
 
-	flagDataSource            string
-	flagGitURL                string
-	flagGitRef                string
-	flagGitAuthType           string
-	flagGitUsername           string
-	flagGitPassword           string
-	flagGitKeyPath            string
-	flagGitKeyPassword        string
-	flagFromWaypointHcl       string
-	flagWaypointHcl           string
-	flagPoll                  bool
-	flagPollInterval          string
-	flagAppStatusPoll         bool
-	flagAppStatusPollInterval string
+	flagDataSource      string
+	flagGitURL          string
+	flagGitRef          string
+	flagGitAuthType     string
+	flagGitUsername     string
+	flagGitPassword     string
+	flagGitKeyPath      string
+	flagGitKeyPassword  string
+	flagFromWaypointHcl string
+	flagWaypointHcl     string
+	flagPoll            bool
+	flagPollInterval    string
 }
 
 func (c *ProjectApplyCommand) Run(args []string) int {
@@ -171,15 +169,6 @@ func (c *ProjectApplyCommand) Run(args []string) int {
 
 			proj.DataSourcePoll.Enabled = true
 			proj.DataSourcePoll.Interval = c.flagPollInterval
-		}
-
-		if c.flagAppStatusPoll {
-			if proj.StatusReportPoll == nil {
-				proj.StatusReportPoll = &pb.Project_AppStatusPoll{}
-			}
-
-			proj.StatusReportPoll.Enabled = c.flagAppStatusPoll
-			proj.StatusReportPoll.Interval = c.flagAppStatusPollInterval
 		}
 
 		// If the project existing datasource is Git, then we're overriding.
@@ -464,21 +453,6 @@ func (c *ProjectApplyCommand) Flags() *flag.Sets {
 			Target:  &c.flagPollInterval,
 			Default: "30s",
 			Usage:   "Interval between polling if polling is enabled.",
-		})
-
-		f.BoolVar(&flag.BoolVar{
-			Name:    "app-status-poll",
-			Target:  &c.flagAppStatusPoll,
-			Default: false,
-			Usage: "Enable polling to continuously generate status reports for apps. " +
-				"This is only valid if a Git data source is supplied.",
-		})
-
-		f.StringVar(&flag.StringVar{
-			Name:    "app-status-poll-interval",
-			Target:  &c.flagAppStatusPollInterval,
-			Default: "5m",
-			Usage:   "Interval between polling to generate status reports if polling is enabled.",
 		})
 	})
 }

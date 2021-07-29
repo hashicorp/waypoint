@@ -127,10 +127,6 @@
             "path": "waypoint-hcl/variables"
           },
           {
-            "title": "Input Variables",
-            "path": "waypoint-hcl/variables/input"
-          },
-          {
             "title": "<code>artifact</code>",
             "path": "waypoint-hcl/variables/artifact"
           },
@@ -229,10 +225,6 @@
       {
         "title": "<code>use</code>",
         "path": "waypoint-hcl/use"
-      },
-      {
-        "title": "<code>variable</code>",
-        "path": "waypoint-hcl/variable"
       }
     ]
   },
@@ -278,16 +270,7 @@
       },
       {
         "title": "Authentication",
-        "routes": [
-          {
-            "title": "Overview",
-            "path": "server/auth"
-          },
-          {
-            "title": "OIDC",
-            "path": "server/auth/oidc"
-          }
-        ]
+        "path": "server/auth"
       },
       {
         "title": "Running a Server",

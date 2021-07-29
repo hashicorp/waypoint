@@ -199,7 +199,6 @@ func (s *State) ProjectPollComplete(p *pb.Project, t time.Time) error {
 	record = record.Copy()
 	record.LastPoll = t
 	record.NextPoll = t.Add(record.PollInterval)
-
 	if err := memTxn.Insert(projectIndexTableName, record); err != nil {
 		return err
 	}
@@ -351,9 +350,8 @@ func (s *State) projectDelete(
 // projectIndexSet writes an index record for a single project.
 func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) error {
 	record := &projectIndexRecord{
-		Id:            string(id),
-		Poll:          false, // being explicit that we want to default poll to false
-		AppStatusPoll: false, // application polling off by default until a deployment or release happens
+		Id:   string(id),
+		Poll: false, // being explicit that we want to default poll to false
 	}
 
 	// This entire if block sets up polling tracking for the project. In the
@@ -363,7 +361,7 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 	if p := value.DataSourcePoll; p != nil && p.Enabled {
 		// If it's empty at this point, we'll set the default here.
 		if p.Interval == "" {
-			p.Interval = defaultProjectPollInterval
+			p.Interval = defaultPollInterval
 		}
 		interval, err := time.ParseDuration(p.Interval)
 		if err != nil {
@@ -397,64 +395,6 @@ func (s *State) projectIndexSet(txn *memdb.Txn, id []byte, value *pb.Project) er
 			if !recordOld.LastPoll.IsZero() {
 				record.LastPoll = recordOld.LastPoll
 				record.NextPoll = record.LastPoll.Add(interval)
-			}
-		}
-	}
-
-	// Insert application poll
-
-	// Note that application status polling currently only turned on by default
-	// if project polling is enabled. This is because application status polling
-	// requires a data source, which currently is only possible through git polling.
-	app := value.StatusReportPoll
-	if app == nil && record.Poll {
-		// Auto-turn on app polling. Can be disabled if project settings explicitly
-		// disable app status polling
-		value.StatusReportPoll = &pb.Project_AppStatusPoll{
-			Enabled: true,
-		}
-	}
-
-	// This entire if block sets up polling tracking for the application. In the
-	// state store we just maintain timestamps of when to poll next. It is
-	// up to downstream users to call ApplicationNextPoll repeatedly to iterate
-	// over the next projects to poll and do something.
-	if app := value.StatusReportPoll; app != nil && app.Enabled {
-		if app.Interval == "" {
-			app.Interval = defaultAppStatusPollInterval
-		}
-		interval, err := time.ParseDuration(app.Interval)
-		if err != nil {
-			return err
-		}
-
-		// We're polling. By default we have no last polling time and
-		// we set the next polling time to now cause we want to poll ASAP.
-		// If we're updating an app without changing the poll settings,
-		// the next block will ensure we have the next poll time retained.
-		record.AppStatusPoll = true
-		record.AppStatusNextPoll = time.Now()
-		record.AppStatusPollInterval = interval
-
-		// If there is a previous value with a last poll time, then we
-		// update the next poll time to use our new interval.
-		raw, err := txn.First(
-			projectIndexTableName,
-			projectIndexIdIndexName,
-			record.Id,
-		)
-		if err != nil {
-			return err
-		}
-		if raw != nil {
-			recordOld := raw.(*projectIndexRecord)
-
-			// If we have a last poll time, then set the next poll time.
-			// This also ensures that if we're updating an app w/o changing
-			// poll settings, that the previous settings are retained.
-			if !recordOld.AppStatusLastPoll.IsZero() {
-				record.AppStatusLastPoll = recordOld.AppStatusLastPoll
-				record.AppStatusNextPoll = record.AppStatusLastPoll.Add(interval)
 			}
 		}
 	}
@@ -518,24 +458,6 @@ func projectIndexSchema() *memdb.TableSchema {
 					},
 				},
 			},
-
-			appIndexNextPollIndexName: {
-				Name:         appIndexNextPollIndexName,
-				AllowMissing: true,
-				Unique:       false,
-				Indexer: &memdb.CompoundIndex{
-					Indexes: []memdb.Indexer{
-						&memdb.BoolFieldIndex{
-							Field: "AppStatusPoll",
-						},
-
-						&IndexTime{
-							Field: "AppStatusNextPoll",
-							Asc:   true,
-						},
-					},
-				},
-			},
 		},
 	}
 }
@@ -544,51 +466,27 @@ const (
 	projectIndexTableName         = "project-index"
 	projectIndexIdIndexName       = "id"
 	projectIndexNextPollIndexName = "next-poll"
-	appIndexNextPollIndexName     = "app-next-poll"
 
 	projectWaypointHclMaxSize = 5 * 1024 // 5 MB
 
-	// defaultProjectPollInterval is used by the project poll handler
-	// for setting up a default interval time
-	defaultProjectPollInterval = "30s"
-
-	// defaultAppStatusPollInterval is used for polling a status report job for each
-	// application defined in a project. It is initially set to a long interval
-	// so that Waypoint doesn't overrun and rate limit user accounts like on AWS.
-	// Users must opt into shorter interval times.
-	defaultAppStatusPollInterval = "5m"
+	defaultPollInterval = "30s"
 )
 
 type projectIndexRecord struct {
 	Id string
 
-	// Project polling is used for updating the project from a remote source
-	// on an interval
-
 	// Poll is true if this project has polling enabled.
 	Poll bool
+
 	// PollInterval is the interval currently set between poll operations.
 	PollInterval time.Duration
+
 	// LastPoll is the time that the last polling operation was queued.
 	// NextPoll is the time when the next polling operation is expected.
 	// Storing NextPoll rather than the interval makes it easier to query
 	// for the next project.
 	LastPoll time.Time
 	NextPoll time.Time
-
-	// Application Polling is used for generating a status report on the current
-	// health of all applications in a project.
-
-	// AppStatusPoll is true if this projects applications has polling enabled.
-	AppStatusPoll bool
-	// AppStatusPollInterval is the interval currently set between poll operations.
-	AppStatusPollInterval time.Duration
-	// We separate project and application polling vars because project polling
-	// is used for updating the project, and application polling is used for
-	// generating status reports. So there are two separate Next and Last Poll
-	// vars for projects and applications
-	AppStatusLastPoll time.Time
-	AppStatusNextPoll time.Time
 }
 
 // Copy should be called prior to any modifications to an existing record.

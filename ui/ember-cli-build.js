@@ -2,6 +2,10 @@
 
 const EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
+const ENV = EmberApp.env();
+const isProd = ENV.environment === 'production';
+const isTest = ENV.environment === 'test';
+
 module.exports = function (defaults) {
   let app = new EmberApp(defaults, {
     babel: {

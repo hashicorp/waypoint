@@ -1,5 +1,4 @@
 import { VersionInfo, GetVersionInfoResponse } from 'waypoint-pb';
-import { Response } from 'miragejs';
 
 function createVersionInfo(): VersionInfo {
   let versionInfo = new VersionInfo();
@@ -11,7 +10,7 @@ function createVersionInfo(): VersionInfo {
   return versionInfo;
 }
 
-export function get(): Response {
+export function get(schema: any, { params, requestHeaders }) {
   let resp = new GetVersionInfoResponse();
   let versionInfo = createVersionInfo();
   resp.setInfo(versionInfo);

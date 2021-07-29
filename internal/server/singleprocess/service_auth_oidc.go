@@ -2,18 +2,15 @@ package singleprocess
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/hashicorp/cap/oidc"
-	"github.com/hashicorp/go-bexpr"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	wpoidc "github.com/hashicorp/waypoint/internal/auth/oidc"
 	pb "github.com/hashicorp/waypoint/internal/server/gen"
 	serverptypes "github.com/hashicorp/waypoint/internal/server/ptypes"
 )
@@ -182,68 +179,16 @@ func (s *service) CompleteOIDCAuth(
 		return nil, err
 	}
 
-	// Extract the claims as a raw JSON message.
-	var jsonClaims json.RawMessage
-	if err := oidcToken.IDToken().Claims(&jsonClaims); err != nil {
-		return nil, err
-	}
-
-	// Structurally extract only the claim fields we care about.
+	// Extract the claims for this token. We create a struct here that
+	// extracts only the claims we actually care about.
 	var idClaimVals idClaims
-	if err := json.Unmarshal([]byte(jsonClaims), &idClaimVals); err != nil {
+	if err := oidcToken.IDToken().Claims(&idClaimVals); err != nil {
 		return nil, err
 	}
 
 	// Valid OIDC providers should never behave this way.
-	if idClaimVals.Iss == "" || idClaimVals.Sub == "" {
-		return nil, status.Errorf(codes.Internal, "OIDC provider returned empty issuer or subscriber ID")
-	}
-
-	// From this point forward, log all data
-	log = log.With(
-		"iss", idClaimVals.Iss,
-		"sub", idClaimVals.Sub,
-	)
-
-	// Get the user info if we have a user account, and merge those claims in.
-	// User claims override all the claims in the ID token.
-	var userClaims json.RawMessage
-	if userTokenSource := oidcToken.StaticTokenSource(); userTokenSource != nil {
-		if err := provider.UserInfo(ctx, userTokenSource, idClaimVals.Sub, &userClaims); err != nil {
-			return nil, err
-		}
-	}
-
-	// Verify this user is allowed to auth at all.
-	if am.AccessSelector != "" {
-		// Get our data
-		selectorData, err := wpoidc.SelectorData(amMethod.Oidc, jsonClaims, userClaims)
-		if err != nil {
-			return nil, err
-		}
-
-		eval, err := bexpr.CreateEvaluator(am.AccessSelector)
-		if err != nil {
-			// This shouldn't happen since we validate on auth method create.
-			return nil, err
-		}
-
-		allowed, err := eval.Evaluate(selectorData)
-		if err != nil {
-			return nil, err
-		}
-
-		if !allowed {
-			// Warn so an operator can detect
-			log.Warn("rejected OIDC login based on access selector",
-				"claims_json", string(jsonClaims),
-				"selector", am.AccessSelector,
-			)
-
-			return nil, status.Errorf(codes.PermissionDenied,
-				"Your account was denied access. Please contact your Waypoint "+
-					"server administrator for more information.")
-		}
+	if idClaimVals.Sub == "" {
+		return nil, status.Errorf(codes.Internal, "OIDC provider returned empty subscriber ID")
 	}
 
 	// Look up a user by sub.
@@ -263,10 +208,8 @@ func (s *service) CompleteOIDCAuth(
 	}
 
 	return &pb.CompleteOIDCAuthResponse{
-		Token:          token,
-		User:           user,
-		IdClaimsJson:   string(jsonClaims),
-		UserClaimsJson: string(userClaims),
+		Token: token,
+		User:  user,
 	}, nil
 }
 
@@ -345,6 +288,8 @@ func (s *service) oidcInitUser(log hclog.Logger, claims *idClaims) (*pb.User, er
 	log.Info("new OIDC user linked",
 		"user_id", user.Id,
 		"username", user.Username,
+		"iss", claims.Iss,
+		"sub", claims.Sub,
 	)
 
 	return user, nil

@@ -58,12 +58,12 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 			"err", err)
 	}
 
-	unimplemented := false
+	unimplemeneted := false
 	c, err := a.createReleaser(ctx, &evalCtx)
 	if status.Code(err) == codes.Unimplemented {
 		c = nil
 		err = nil
-		unimplemented = true
+		unimplemeneted = true
 	}
 	if err != nil {
 		return nil, nil, err
@@ -80,7 +80,7 @@ func (a *App) Release(ctx context.Context, target *pb.Deployment) (
 
 	if releasepb != nil {
 		rpb := releasepb.(*pb.Release)
-		rpb.Unimplemented = unimplemented
+		rpb.Unimplemented = unimplemeneted
 		releasepb = rpb
 	}
 
@@ -166,12 +166,11 @@ type releaseOperation struct {
 
 func (op *releaseOperation) Init(app *App) (proto.Message, error) {
 	release := &pb.Release{
-		Application:   app.ref,
-		Workspace:     app.workspace,
-		DeploymentId:  op.Target.Id,
-		State:         pb.Operation_CREATED,
-		Component:     op.Target.Component,
-		Unimplemented: true,
+		Application:  app.ref,
+		Workspace:    app.workspace,
+		DeploymentId: op.Target.Id,
+		State:        pb.Operation_CREATED,
+		Component:    op.Target.Component,
 	}
 
 	if v := op.Component; v != nil {

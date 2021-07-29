@@ -93,37 +93,30 @@ export default Factory.extend({
         server.create('build', 'docker', 'days-old-success', {
           application,
           sequence: 1,
-          pushedArtifact: server.create('pushed-artifact', 'docker', 'days-old-success'),
         }),
         server.create('build', 'docker', 'days-old-success', {
           application,
           sequence: 2,
-          pushedArtifact: server.create('pushed-artifact', 'docker', 'days-old-success'),
         }),
         server.create('build', 'docker', 'hours-old-success', {
           application,
           sequence: 3,
-          pushedArtifact: server.create('pushed-artifact', 'docker', 'hours-old-success'),
         }),
         server.create('build', 'docker', 'hours-old-success', {
           application,
           sequence: 4,
-          pushedArtifact: server.create('pushed-artifact', 'docker', 'hours-old-success'),
         }),
         server.create('build', 'docker', 'minutes-old-success', {
           application,
           sequence: 5,
-          pushedArtifact: server.create('pushed-artifact', 'docker', 'minutes-old-success'),
         }),
         server.create('build', 'docker', 'minutes-old-success', {
           application,
           sequence: 6,
-          pushedArtifact: server.create('pushed-artifact', 'docker', 'minutes-old-success'),
         }),
         server.create('build', 'docker', 'seconds-old-success', {
           application,
           sequence: 7,
-          pushedArtifact: server.create('pushed-artifact', 'docker', 'seconds-old-success'),
         }),
       ];
 
