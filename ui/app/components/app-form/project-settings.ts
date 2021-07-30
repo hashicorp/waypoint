@@ -125,6 +125,14 @@ export default class AppFormProjectSettings extends Component<ProjectSettingsArg
     return this.dataSource?.git;
   }
 
+  get decodedWaypointHcl(): string {
+    return atob(this.project.waypointHcl)
+  }
+
+  get decodedPrivateKey(): string {
+    return atob(this.git.ssh.privateKeyPem)
+  }
+
   validateGitUrl() {
     let gitUrl = parseUrl(this.project.dataSource.git.url);
     // If basic auth, match https url
