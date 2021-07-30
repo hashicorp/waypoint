@@ -219,7 +219,7 @@
             rows="14"
             value={{this.decodedWaypointHcl}}
             required={{this.this.serverHcl}}
-            {{on "input" (pick "target.value" (set this.project "waypointHcl"))}}
+            {{on "input" (fn this.setWaypointHcl)}}
           />
         </div>
       {{else}}

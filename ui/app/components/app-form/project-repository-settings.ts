@@ -197,7 +197,19 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
         privateKeyPem: '',
       };
     }
-    this.project.dataSource.git.ssh[path] = e.target.value;
+
+    let value = e.target.value
+    // if private key, encode input to base 64  
+    if (path === "privateKeyPem") {
+      value = btoa(value)
+    }
+  
+    this.project.dataSource.git.ssh[path] = value;
+  }
+
+  @action
+  setWaypointHcl(e: any) {
+    this.project.waypointHcl = btoa(e.target.value)
   }
 
   @action
@@ -234,8 +246,7 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
 
     if (this.authSSH) {
       let gitSSH = new Job.Git.SSH();
-      let encoder = new window.TextEncoder();
-      gitSSH.setPrivateKeyPem(encoder.encode(this.git.ssh.privateKeyPem));
+      gitSSH.setPrivateKeyPem(this.git.ssh.privateKeyPem);
       gitSSH.setUser(this.git.ssh.user);
       gitSSH.setPassword(this.git.ssh.password);
       git.setSsh(gitSSH);
@@ -252,11 +263,9 @@ export default class AppFormProjectRepositorySettings extends Component<ProjectS
     ref.setDataSourcePoll(dataSourcePoll);
 
     if (this.serverHcl && this.project.waypointHcl) {
-      let hclEncoder = new window.TextEncoder();
-      let waypointHcl = hclEncoder.encode(this.project.waypointHcl);
       // Hardcode hcl for now
       ref.setWaypointHclFormat(FORMAT.HCL);
-      ref.setWaypointHcl(waypointHcl);
+      ref.setWaypointHcl(this.project.waypointHcl);
     }
     let applist = project.applicationsList.map((app: Application.AsObject) => {
       return new Application(app);
