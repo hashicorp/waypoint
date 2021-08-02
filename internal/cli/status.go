@@ -77,6 +77,8 @@ func (c *StatusCommand) Run(args []string) int {
 		if match != nil {
 			projectTarget = match[1]
 			appTarget = match[2]
+		} else {
+			projectTarget = cmdArgs[0]
 		}
 	} else if len(cmdArgs) == 0 {
 		// If we're in a project dir, load the name. Otherwise we'll
