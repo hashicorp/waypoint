@@ -127,7 +127,7 @@ func initFilterFlags(set *flag.Sets, ff *filterFlags, opts filterOption) {
 		f.EnumSingleVar(phyStateFlagVar(&ff.flagPhysState))
 	}
 
-	if opts == filterOptionAll || opts&filterOptionOrder != 0 {
+	if opts == filterOptionAll || opts == filterOptionOrder {
 		f.EnumSingleVar(&flag.EnumSingleVar{
 			Name:   "order-by",
 			Target: new(string),
