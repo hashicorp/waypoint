@@ -1,0 +1,4 @@
+```release-note:improvement
+entrypoint: Can disable `waypoint exec` only by setting the
+`WAYPOINT_CEB_DISABLE_EXEC` environment variable to a truthy value.
+```
