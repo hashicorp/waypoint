@@ -150,10 +150,9 @@ func (c *StatusCommand) FormatProjectAppStatus(projectTarget string) error {
 	}
 	project := resp.Project
 
-	var workspace string
-	if len(resp.Workspaces) != 0 {
-		// TODO: assume the first workspace is correct??
-		workspace = resp.Workspaces[0].Workspace.Workspace
+	workspace, err := c.getWorkspaceFromProject(resp)
+	if err != nil {
+		return err
 	}
 
 	// Summary
@@ -242,10 +241,9 @@ func (c *StatusCommand) FormatAppStatus(projectTarget string, appTarget string) 
 	}
 	project := projResp.Project
 
-	var workspace string
-	if len(projResp.Workspaces) != 0 {
-		// TODO: assume the first workspace is correct??
-		workspace = projResp.Workspaces[0].Workspace.Workspace
+	workspace, err := c.getWorkspaceFromProject(projResp)
+	if err != nil {
+		return err
 	}
 
 	// App Summary
@@ -418,8 +416,7 @@ func (c *StatusCommand) FormatProjectStatus() error {
 
 	projectResp, err := client.ListProjects(c.Ctx, &empty.Empty{})
 	if err != nil {
-		c.ui.Output("Failed to retrieve all projects", terminal.WithErrorStyle())
-		c.ui.Output(clierrors.Humanize(err), terminal.WithErrorStyle())
+		c.ui.Output("Failed to retrieve all projects:"+clierrors.Humanize(err), terminal.WithErrorStyle())
 		return err
 	}
 	projNameList := projectResp.Projects
@@ -438,10 +435,9 @@ func (c *StatusCommand) FormatProjectStatus() error {
 			return err
 		}
 
-		var workspace string
-		if len(resp.Workspaces) != 0 {
-			// TODO: assume the first workspace is correct??
-			workspace = resp.Workspaces[0].Workspace.Workspace
+		workspace, err := c.getWorkspaceFromProject(resp)
+		if err != nil {
+			return err
 		}
 
 		// Get App Statuses
@@ -689,6 +685,8 @@ func (c *StatusCommand) outputJsonAppStatus(
 	return nil
 }
 
+// Status Helpers
+
 func (c *StatusCommand) FormatStatusReportComplete(
 	statusReport *pb.StatusReport,
 ) (string, string, error) {
@@ -717,6 +715,30 @@ func (c *StatusCommand) FormatStatusReportComplete(
 	}
 
 	return statusReportComplete, humanize.Time(t), nil
+}
+
+func (c *StatusCommand) getWorkspaceFromProject(pr *pb.GetProjectResponse) (string, error) {
+	var workspace string
+
+	if len(pr.Workspaces) != 0 {
+		if c.flagWorkspace != "" {
+			for _, ws := range pr.Workspaces {
+				if ws.Workspace.Workspace == c.flagWorkspace {
+					workspace = ws.Workspace.Workspace
+					break
+				}
+			}
+
+			if workspace == "" {
+				return "", fmt.Errorf("Failed to find project in requested workspace %q", c.flagWorkspace)
+			}
+		} else {
+			// No workspace flag specified, try the "first" one
+			workspace = pr.Workspaces[0].Workspace.Workspace
+		}
+	}
+
+	return workspace, nil
 }
 
 func (c *StatusCommand) Flags() *flag.Sets {
