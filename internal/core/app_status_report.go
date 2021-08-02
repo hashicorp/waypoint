@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/mitchellh/mapstructure"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -371,16 +372,11 @@ func (op *statusReportOperation) argsStatusReport() ([]argmapper.Arg, error) {
 	}
 
 	var pluginDrs component.DeclaredResources
-	for _, dr := range drs {
-		pluginDrs.Resources = append(pluginDrs.Resources, &sdk.DeclaredResource{
-			Id:                  dr.Id,
-			Name:                dr.Name,
-			Platform:            dr.Platform,
-			State:               dr.State,
-			StateJson:           dr.StateJson,
-			CategoryDisplayHint: sdk.ResourceCategoryDisplayHint(dr.CategoryDisplayHint),
-		})
+
+	if err := mapstructure.Decode(drs, &pluginDrs.Resources); err != nil {
+		return nil, err
 	}
+
 	args = append(args, argmapper.Typed(&pluginDrs))
 
 	return args, nil
