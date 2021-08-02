@@ -70,6 +70,7 @@ func (ceb *CEB) initConfigStreamReceiver(
 	client, err := serverClient.EntrypointConfig(ctx, &pb.EntrypointConfigRequest{
 		DeploymentId: ceb.deploymentId,
 		InstanceId:   ceb.id,
+		DisableExec:  ceb.execDisable,
 	}, grpc.WaitForReady(isRetry || cfg.ServerRequired))
 	if err != nil {
 		// If the server is unavailable and this is our first time, then
