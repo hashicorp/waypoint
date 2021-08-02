@@ -157,9 +157,20 @@ func (p *Platform) Status(
 		return nil, status.Errorf(codes.Internal, "failed to parse docker timestamp %q: %s", containerInfo.Created, err)
 	}
 
+	// Redact environment variables so we don't expose secrets on resources. Unmarshal/remarshaling to avoid mutating
+	// containerInfo
 	stateJson, err := json.Marshal(containerInfo)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to marshal container info to json: %s", err)
+	}
+	var containerInfoRedacted types.ContainerJSON
+	if err := json.Unmarshal(stateJson, &containerInfoRedacted); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to unmarshal container info from json: %s", err)
+	}
+	containerInfoRedacted.Config.Env = []string{}
+	stateJson, err = json.Marshal(containerInfoRedacted)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to re-marshal container info to json: %s", err)
 	}
 
 	containerResource := &sdk.StatusReport_Resource{
